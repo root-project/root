@@ -1,0 +1,2682 @@
+diff rflx_test01_wv1.log rflx_test01_rv1NS.log
+Processing object of class: ClassA				Processing object of class: ClassA
+Processing bases of: ClassA					Processing bases of: ClassA
+  Processing object of class: ClassABase			  Processing object of class: ClassABase
+  [mem] p int m_a = 30						  [mem] p int m_a = 30
+  [mem] p double m_b = 0.16291					  [mem] p double m_b = 0.16291
+  End of ClassABase						  End of ClassABase
+End of bases of: ClassA						End of bases of: ClassA
+[mem] p double m_c = 0.282618				      |	[mem] p float m_c = 0.282618
+[mem] p ClassAIns m_d = 					[mem] p ClassAIns m_d = 
+  Processing object of class: ClassAIns				  Processing object of class: ClassAIns
+  [mem] p int m_a = 29						  [mem] p int m_a = 29
+  [mem] p double m_b = 0.231657					  [mem] p double m_b = 0.231657
+							      >	  [mem] p int m_unit = 290
+  End of ClassAIns						  End of ClassAIns
+[mem] p int m_e = 15						[mem] p int m_e = 15
+[mem] p int m_unit = 29					      |	[mem] p int m_unit = 290
+							      >	[mem] t bool m_md_set = 1
+End of ClassA							End of ClassA
+diff rflx_test01_wv1.log rflx_test01_rv1S.log
+Processing object of class: ClassA				Processing object of class: ClassA
+Processing bases of: ClassA					Processing bases of: ClassA
+  Processing object of class: ClassABase			  Processing object of class: ClassABase
+  [mem] p int m_a = 30						  [mem] p int m_a = 30
+  [mem] p double m_b = 0.16291					  [mem] p double m_b = 0.16291
+  End of ClassABase						  End of ClassABase
+End of bases of: ClassA						End of bases of: ClassA
+[mem] p double m_c = 0.282618				      |	[mem] p float m_c = 0.282618
+[mem] p ClassAIns m_d = 					[mem] p ClassAIns m_d = 
+  Processing object of class: ClassAIns				  Processing object of class: ClassAIns
+  [mem] p int m_a = 29						  [mem] p int m_a = 29
+  [mem] p double m_b = 0.231657					  [mem] p double m_b = 0.231657
+							      >	  [mem] p int m_unit = 290
+  End of ClassAIns						  End of ClassAIns
+[mem] p int m_e = 15						[mem] p int m_e = 15
+[mem] p int m_unit = 29					      |	[mem] p int m_unit = 290
+							      >	[mem] t bool m_md_set = 1
+End of ClassA							End of ClassA
+diff rflx_test02_wv1.log rflx_test02_rv1.log
+Processing object of class: ClassAIns				Processing object of class: ClassAIns
+[mem] p int m_a = 23						[mem] p int m_a = 23
+[mem] p double m_b = 0.540044					[mem] p double m_b = 0.540044
+							      >	[mem] p int m_unit = -1
+End of ClassAIns						End of ClassAIns
+diff rflx_test03_wv1.log rflx_test03_rv1.log
+Processing object of class: ClassD				Processing object of class: ClassD
+[mem] p float m_c = 0.739953					[mem] p float m_c = 0.739953
+[mem] p ClassAIns m_d = 					[mem] p ClassAIns m_d = 
+  Processing object of class: ClassAIns				  Processing object of class: ClassAIns
+  [mem] p int m_a = 23						  [mem] p int m_a = 23
+  [mem] p double m_b = 0.658637					  [mem] p double m_b = 0.658637
+							      >	  [mem] p int m_unit = -1
+  End of ClassAIns						  End of ClassAIns
+[mem] p int m_e = 10						[mem] p int m_e = 10
+End of ClassD							End of ClassD
+diff rflx_test03_wv1.log rflx_test03_rv1NS.log
+Processing object of class: ClassD				Processing object of class: ClassD
+[mem] p float m_c = 0.739953					[mem] p float m_c = 0.739953
+[mem] p ClassAIns m_d = 					[mem] p ClassAIns m_d = 
+  Processing object of class: ClassAIns				  Processing object of class: ClassAIns
+  [mem] p int m_a = 23						  [mem] p int m_a = 23
+  [mem] p double m_b = 0.658637					  [mem] p double m_b = 0.658637
+							      >	  [mem] p int m_unit = -1
+  End of ClassAIns						  End of ClassAIns
+[mem] p int m_e = 10						[mem] p int m_e = 10
+End of ClassD							End of ClassD
+diff rflx_test04_wv1.log rflx_test04_rv1.log
+Processing object of class: pair<int,double>			Processing object of class: pair<int,double>
+[mem] p int first = 25						[mem] p int first = 25
+[mem] p double second = 0.519672				[mem] p double second = 0.519672
+End of pair<int,double>						End of pair<int,double>
+diff rflx_test04_wv1.log rflx_test04_rv1NS.log
+Processing object of class: pair<int,double>			Processing object of class: pair<int,double>
+[mem] p int first = 25						[mem] p int first = 25
+[mem] p double second = 0.519672				[mem] p double second = 0.519672
+End of pair<int,double>						End of pair<int,double>
+diff rflx_test05_wv1.log rflx_test05_rv1.log
+Processing object of class: vector<double>			Processing object of class: vector<double>
+Length = 6							Length = 6
+[ele] [0] = 0.47553						[ele] [0] = 0.47553
+[ele] [1] = 0.392314						[ele] [1] = 0.392314
+[ele] [2] = 0.221668						[ele] [2] = 0.221668
+[ele] [3] = 0.21319						[ele] [3] = 0.21319
+[ele] [4] = 0.0303352						[ele] [4] = 0.0303352
+[ele] [5] = 0.333539						[ele] [5] = 0.333539
+End of vector<double>						End of vector<double>
+diff rflx_test06_wv1.log rflx_test06_rv1.log
+Processing object of class: vector<pair<int,double> >		Processing object of class: vector<pair<int,double> >
+Length = 6							Length = 6
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 29					  [mem] p int first = 29
+  [mem] p double second = 0.579932				  [mem] p double second = 0.579932
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 27					  [mem] p int first = 27
+  [mem] p double second = 0.665564				  [mem] p double second = 0.665564
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [2] = 							[ele] [2] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 15					  [mem] p int first = 15
+  [mem] p double second = 0.560628				  [mem] p double second = 0.560628
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [3] = 							[ele] [3] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 6						  [mem] p int first = 6
+  [mem] p double second = 0.296526				  [mem] p double second = 0.296526
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [4] = 							[ele] [4] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 4						  [mem] p int first = 4
+  [mem] p double second = 0.0629177				  [mem] p double second = 0.0629177
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [5] = 							[ele] [5] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 20					  [mem] p int first = 20
+  [mem] p double second = 0.725419				  [mem] p double second = 0.725419
+  End of pair<int,double>					  End of pair<int,double>
+End of vector<pair<int,double> >				End of vector<pair<int,double> >
+diff rflx_test06_wv1.log rflx_test06_rv1S.log
+Processing object of class: vector<pair<int,double> >		Processing object of class: vector<pair<int,double> >
+Length = 6							Length = 6
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 29					  [mem] p int first = 29
+  [mem] p double second = 0.579932				  [mem] p double second = 0.579932
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 27					  [mem] p int first = 27
+  [mem] p double second = 0.665564				  [mem] p double second = 0.665564
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [2] = 							[ele] [2] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 15					  [mem] p int first = 15
+  [mem] p double second = 0.560628				  [mem] p double second = 0.560628
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [3] = 							[ele] [3] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 6						  [mem] p int first = 6
+  [mem] p double second = 0.296526				  [mem] p double second = 0.296526
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [4] = 							[ele] [4] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 4						  [mem] p int first = 4
+  [mem] p double second = 0.0629177				  [mem] p double second = 0.0629177
+  End of pair<int,double>					  End of pair<int,double>
+[ele] [5] = 							[ele] [5] = 
+  Processing object of class: pair<int,double>			  Processing object of class: pair<int,double>
+  [mem] p int first = 20					  [mem] p int first = 20
+  [mem] p double second = 0.725419				  [mem] p double second = 0.725419
+  End of pair<int,double>					  End of pair<int,double>
+End of vector<pair<int,double> >				End of vector<pair<int,double> >
+diff rflx_test07_wv1.log rflx_test07_rv1NS.log
+Processing object of class: vector<ClassA>			Processing object of class: vector<ClassA>
+Length = 20							Length = 20
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 22					    [mem] p int m_a = 22
+    [mem] p double m_b = 0.0995762				    [mem] p double m_b = 0.0995762
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.699267				      |	  [mem] p float m_c = 0.699267
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 4						    [mem] p int m_a = 4
+    [mem] p double m_b = 0.129243				    [mem] p double m_b = 0.129243
+							      >	    [mem] p int m_unit = 70
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 16						  [mem] p int m_e = 16
+  [mem] p int m_unit = 7				      |	  [mem] p int m_unit = 70
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 9						    [mem] p int m_a = 9
+    [mem] p double m_b = 0.0831748				    [mem] p double m_b = 0.0831748
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.128124				      |	  [mem] p float m_c = 0.128124
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 17					    [mem] p int m_a = 17
+    [mem] p double m_b = 0.0823196				    [mem] p double m_b = 0.0823196
+							      >	    [mem] p int m_unit = 270
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 9						  [mem] p int m_e = 9
+  [mem] p int m_unit = 27				      |	  [mem] p int m_unit = 270
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [2] = 							[ele] [2] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 7						    [mem] p int m_a = 7
+    [mem] p double m_b = 0.431845				    [mem] p double m_b = 0.431845
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.140733				      |	  [mem] p float m_c = 0.140733
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 13					    [mem] p int m_a = 13
+    [mem] p double m_b = 0.686947				    [mem] p double m_b = 0.686947
+							      >	    [mem] p int m_unit = 140
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 6						  [mem] p int m_e = 6
+  [mem] p int m_unit = 14				      |	  [mem] p int m_unit = 140
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [3] = 							[ele] [3] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 2						    [mem] p int m_a = 2
+    [mem] p double m_b = 0.311296				    [mem] p double m_b = 0.311296
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.506181				      |	  [mem] p float m_c = 0.506181
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 6						    [mem] p int m_a = 6
+    [mem] p double m_b = 0.511032				    [mem] p double m_b = 0.511032
+							      >	    [mem] p int m_unit = 110
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 23						  [mem] p int m_e = 23
+  [mem] p int m_unit = 11				      |	  [mem] p int m_unit = 110
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [4] = 							[ele] [4] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.460107				    [mem] p double m_b = 0.460107
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.627836				      |	  [mem] p float m_c = 0.627836
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 21					    [mem] p int m_a = 21
+    [mem] p double m_b = 0.698197				    [mem] p double m_b = 0.698197
+							      >	    [mem] p int m_unit = 30
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 15						  [mem] p int m_e = 15
+  [mem] p int m_unit = 3				      |	  [mem] p int m_unit = 30
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [5] = 							[ele] [5] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.0952138				    [mem] p double m_b = 0.0952138
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.436542				      |	  [mem] p float m_c = 0.436542
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 15					    [mem] p int m_a = 15
+    [mem] p double m_b = 0.419246				    [mem] p double m_b = 0.419246
+							      >	    [mem] p int m_unit = 190
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 24						  [mem] p int m_e = 24
+  [mem] p int m_unit = 19				      |	  [mem] p int m_unit = 190
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [6] = 							[ele] [6] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 30					    [mem] p int m_a = 30
+    [mem] p double m_b = 0.37043				    [mem] p double m_b = 0.37043
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.830813				      |	  [mem] p float m_c = 0.830813
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.744085				    [mem] p double m_b = 0.744085
+							      >	    [mem] p int m_unit = 120
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 25						  [mem] p int m_e = 25
+  [mem] p int m_unit = 12				      |	  [mem] p int m_unit = 120
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [7] = 							[ele] [7] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 19					    [mem] p int m_a = 19
+    [mem] p double m_b = 0.346699				    [mem] p double m_b = 0.346699
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.0461695			      |	  [mem] p float m_c = 0.0461695
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 19					    [mem] p int m_a = 19
+    [mem] p double m_b = 0.567374				    [mem] p double m_b = 0.567374
+							      >	    [mem] p int m_unit = 220
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 15						  [mem] p int m_e = 15
+  [mem] p int m_unit = 22				      |	  [mem] p int m_unit = 220
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [8] = 							[ele] [8] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.0423032				    [mem] p double m_b = 0.0423032
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.310787				      |	  [mem] p float m_c = 0.310787
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 4						    [mem] p int m_a = 4
+    [mem] p double m_b = 0.24207				    [mem] p double m_b = 0.24207
+							      >	    [mem] p int m_unit = 140
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 12						  [mem] p int m_e = 12
+  [mem] p int m_unit = 14				      |	  [mem] p int m_unit = 140
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [9] = 							[ele] [9] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 18					    [mem] p int m_a = 18
+    [mem] p double m_b = 0.644575				    [mem] p double m_b = 0.644575
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.432626				      |	  [mem] p float m_c = 0.432626
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 17					    [mem] p int m_a = 17
+    [mem] p double m_b = 0.716841				    [mem] p double m_b = 0.716841
+							      >	    [mem] p int m_unit = 210
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 20						  [mem] p int m_e = 20
+  [mem] p int m_unit = 21				      |	  [mem] p int m_unit = 210
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [10] = 							[ele] [10] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 3						    [mem] p int m_a = 3
+    [mem] p double m_b = 0.122933				    [mem] p double m_b = 0.122933
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.0569974			      |	  [mem] p float m_c = 0.0569974
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 25					    [mem] p int m_a = 25
+    [mem] p double m_b = 0.125539				    [mem] p double m_b = 0.125539
+							      >	    [mem] p int m_unit = 60
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 10						  [mem] p int m_e = 10
+  [mem] p int m_unit = 6				      |	  [mem] p int m_unit = 60
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [11] = 							[ele] [11] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.66443				    [mem] p double m_b = 0.66443
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.685189				      |	  [mem] p float m_c = 0.685189
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 6						    [mem] p int m_a = 6
+    [mem] p double m_b = 0.436343				    [mem] p double m_b = 0.436343
+							      >	    [mem] p int m_unit = 270
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 29						  [mem] p int m_e = 29
+  [mem] p int m_unit = 27				      |	  [mem] p int m_unit = 270
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [12] = 							[ele] [12] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 4						    [mem] p int m_a = 4
+    [mem] p double m_b = 0.484442				    [mem] p double m_b = 0.484442
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.374654				      |	  [mem] p float m_c = 0.374654
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 28					    [mem] p int m_a = 28
+    [mem] p double m_b = 0.178657				    [mem] p double m_b = 0.178657
+							      >	    [mem] p int m_unit = 190
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 21						  [mem] p int m_e = 21
+  [mem] p int m_unit = 19				      |	  [mem] p int m_unit = 190
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [13] = 							[ele] [13] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 30					    [mem] p int m_a = 30
+    [mem] p double m_b = 0.440715				    [mem] p double m_b = 0.440715
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.804737				      |	  [mem] p float m_c = 0.804737
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 30					    [mem] p int m_a = 30
+    [mem] p double m_b = 0.541551				    [mem] p double m_b = 0.541551
+							      >	    [mem] p int m_unit = 200
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 8						  [mem] p int m_e = 8
+  [mem] p int m_unit = 20				      |	  [mem] p int m_unit = 200
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [14] = 							[ele] [14] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 18					    [mem] p int m_a = 18
+    [mem] p double m_b = 0.258721				    [mem] p double m_b = 0.258721
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.191593				      |	  [mem] p float m_c = 0.191593
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 14					    [mem] p int m_a = 14
+    [mem] p double m_b = 0.149267				    [mem] p double m_b = 0.149267
+							      >	    [mem] p int m_unit = 40
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 30						  [mem] p int m_e = 30
+  [mem] p int m_unit = 4				      |	  [mem] p int m_unit = 40
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [15] = 							[ele] [15] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 20					    [mem] p int m_a = 20
+    [mem] p double m_b = 0.0277951				    [mem] p double m_b = 0.0277951
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.389978				      |	  [mem] p float m_c = 0.389978
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 25					    [mem] p int m_a = 25
+    [mem] p double m_b = 0.283814				    [mem] p double m_b = 0.283814
+							      >	    [mem] p int m_unit = 80
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 19						  [mem] p int m_e = 19
+  [mem] p int m_unit = 8				      |	  [mem] p int m_unit = 80
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [16] = 							[ele] [16] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 13					    [mem] p int m_a = 13
+    [mem] p double m_b = 0.677715				    [mem] p double m_b = 0.677715
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.847127				      |	  [mem] p float m_c = 0.847127
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 20					    [mem] p int m_a = 20
+    [mem] p double m_b = 0.0813827				    [mem] p double m_b = 0.0813827
+							      >	    [mem] p int m_unit = 150
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 4						  [mem] p int m_e = 4
+  [mem] p int m_unit = 15				      |	  [mem] p int m_unit = 150
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [17] = 							[ele] [17] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 24					    [mem] p int m_a = 24
+    [mem] p double m_b = 0.471978				    [mem] p double m_b = 0.471978
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.943338				      |	  [mem] p float m_c = 0.943338
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 30					    [mem] p int m_a = 30
+    [mem] p double m_b = 0.334555				    [mem] p double m_b = 0.334555
+							      >	    [mem] p int m_unit = 110
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 7						  [mem] p int m_e = 7
+  [mem] p int m_unit = 11				      |	  [mem] p int m_unit = 110
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [18] = 							[ele] [18] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 20					    [mem] p int m_a = 20
+    [mem] p double m_b = 0.682759				    [mem] p double m_b = 0.682759
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.609936				      |	  [mem] p float m_c = 0.609936
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 3						    [mem] p int m_a = 3
+    [mem] p double m_b = 0.766255				    [mem] p double m_b = 0.766255
+							      >	    [mem] p int m_unit = 80
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 23						  [mem] p int m_e = 23
+  [mem] p int m_unit = 8				      |	  [mem] p int m_unit = 80
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [19] = 							[ele] [19] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 8						    [mem] p int m_a = 8
+    [mem] p double m_b = 0.96087				    [mem] p double m_b = 0.96087
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.423396				      |	  [mem] p float m_c = 0.423396
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.000249498				    [mem] p double m_b = 0.000249498
+							      >	    [mem] p int m_unit = 10
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 27						  [mem] p int m_e = 27
+  [mem] p int m_unit = 1				      |	  [mem] p int m_unit = 10
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+End of vector<ClassA>						End of vector<ClassA>
+diff rflx_test07_wv1.log rflx_test07_rv1S.log
+Processing object of class: vector<ClassA>			Processing object of class: vector<ClassA>
+Length = 20							Length = 20
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 22					    [mem] p int m_a = 22
+    [mem] p double m_b = 0.0995762				    [mem] p double m_b = 0.0995762
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.699267				      |	  [mem] p float m_c = 0.699267
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 4						    [mem] p int m_a = 4
+    [mem] p double m_b = 0.129243				    [mem] p double m_b = 0.129243
+							      >	    [mem] p int m_unit = 70
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 16						  [mem] p int m_e = 16
+  [mem] p int m_unit = 7				      |	  [mem] p int m_unit = 70
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 9						    [mem] p int m_a = 9
+    [mem] p double m_b = 0.0831748				    [mem] p double m_b = 0.0831748
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.128124				      |	  [mem] p float m_c = 0.128124
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 17					    [mem] p int m_a = 17
+    [mem] p double m_b = 0.0823196				    [mem] p double m_b = 0.0823196
+							      >	    [mem] p int m_unit = 270
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 9						  [mem] p int m_e = 9
+  [mem] p int m_unit = 27				      |	  [mem] p int m_unit = 270
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [2] = 							[ele] [2] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 7						    [mem] p int m_a = 7
+    [mem] p double m_b = 0.431845				    [mem] p double m_b = 0.431845
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.140733				      |	  [mem] p float m_c = 0.140733
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 13					    [mem] p int m_a = 13
+    [mem] p double m_b = 0.686947				    [mem] p double m_b = 0.686947
+							      >	    [mem] p int m_unit = 140
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 6						  [mem] p int m_e = 6
+  [mem] p int m_unit = 14				      |	  [mem] p int m_unit = 140
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [3] = 							[ele] [3] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 2						    [mem] p int m_a = 2
+    [mem] p double m_b = 0.311296				    [mem] p double m_b = 0.311296
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.506181				      |	  [mem] p float m_c = 0.506181
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 6						    [mem] p int m_a = 6
+    [mem] p double m_b = 0.511032				    [mem] p double m_b = 0.511032
+							      >	    [mem] p int m_unit = 110
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 23						  [mem] p int m_e = 23
+  [mem] p int m_unit = 11				      |	  [mem] p int m_unit = 110
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [4] = 							[ele] [4] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.460107				    [mem] p double m_b = 0.460107
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.627836				      |	  [mem] p float m_c = 0.627836
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 21					    [mem] p int m_a = 21
+    [mem] p double m_b = 0.698197				    [mem] p double m_b = 0.698197
+							      >	    [mem] p int m_unit = 30
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 15						  [mem] p int m_e = 15
+  [mem] p int m_unit = 3				      |	  [mem] p int m_unit = 30
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [5] = 							[ele] [5] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.0952138				    [mem] p double m_b = 0.0952138
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.436542				      |	  [mem] p float m_c = 0.436542
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 15					    [mem] p int m_a = 15
+    [mem] p double m_b = 0.419246				    [mem] p double m_b = 0.419246
+							      >	    [mem] p int m_unit = 190
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 24						  [mem] p int m_e = 24
+  [mem] p int m_unit = 19				      |	  [mem] p int m_unit = 190
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [6] = 							[ele] [6] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 30					    [mem] p int m_a = 30
+    [mem] p double m_b = 0.37043				    [mem] p double m_b = 0.37043
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.830813				      |	  [mem] p float m_c = 0.830813
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.744085				    [mem] p double m_b = 0.744085
+							      >	    [mem] p int m_unit = 120
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 25						  [mem] p int m_e = 25
+  [mem] p int m_unit = 12				      |	  [mem] p int m_unit = 120
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [7] = 							[ele] [7] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 19					    [mem] p int m_a = 19
+    [mem] p double m_b = 0.346699				    [mem] p double m_b = 0.346699
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.0461695			      |	  [mem] p float m_c = 0.0461695
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 19					    [mem] p int m_a = 19
+    [mem] p double m_b = 0.567374				    [mem] p double m_b = 0.567374
+							      >	    [mem] p int m_unit = 220
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 15						  [mem] p int m_e = 15
+  [mem] p int m_unit = 22				      |	  [mem] p int m_unit = 220
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [8] = 							[ele] [8] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.0423032				    [mem] p double m_b = 0.0423032
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.310787				      |	  [mem] p float m_c = 0.310787
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 4						    [mem] p int m_a = 4
+    [mem] p double m_b = 0.24207				    [mem] p double m_b = 0.24207
+							      >	    [mem] p int m_unit = 140
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 12						  [mem] p int m_e = 12
+  [mem] p int m_unit = 14				      |	  [mem] p int m_unit = 140
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [9] = 							[ele] [9] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 18					    [mem] p int m_a = 18
+    [mem] p double m_b = 0.644575				    [mem] p double m_b = 0.644575
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.432626				      |	  [mem] p float m_c = 0.432626
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 17					    [mem] p int m_a = 17
+    [mem] p double m_b = 0.716841				    [mem] p double m_b = 0.716841
+							      >	    [mem] p int m_unit = 210
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 20						  [mem] p int m_e = 20
+  [mem] p int m_unit = 21				      |	  [mem] p int m_unit = 210
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [10] = 							[ele] [10] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 3						    [mem] p int m_a = 3
+    [mem] p double m_b = 0.122933				    [mem] p double m_b = 0.122933
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.0569974			      |	  [mem] p float m_c = 0.0569974
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 25					    [mem] p int m_a = 25
+    [mem] p double m_b = 0.125539				    [mem] p double m_b = 0.125539
+							      >	    [mem] p int m_unit = 60
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 10						  [mem] p int m_e = 10
+  [mem] p int m_unit = 6				      |	  [mem] p int m_unit = 60
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [11] = 							[ele] [11] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.66443				    [mem] p double m_b = 0.66443
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.685189				      |	  [mem] p float m_c = 0.685189
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 6						    [mem] p int m_a = 6
+    [mem] p double m_b = 0.436343				    [mem] p double m_b = 0.436343
+							      >	    [mem] p int m_unit = 270
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 29						  [mem] p int m_e = 29
+  [mem] p int m_unit = 27				      |	  [mem] p int m_unit = 270
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [12] = 							[ele] [12] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 4						    [mem] p int m_a = 4
+    [mem] p double m_b = 0.484442				    [mem] p double m_b = 0.484442
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.374654				      |	  [mem] p float m_c = 0.374654
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 28					    [mem] p int m_a = 28
+    [mem] p double m_b = 0.178657				    [mem] p double m_b = 0.178657
+							      >	    [mem] p int m_unit = 190
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 21						  [mem] p int m_e = 21
+  [mem] p int m_unit = 19				      |	  [mem] p int m_unit = 190
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [13] = 							[ele] [13] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 30					    [mem] p int m_a = 30
+    [mem] p double m_b = 0.440715				    [mem] p double m_b = 0.440715
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.804737				      |	  [mem] p float m_c = 0.804737
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 30					    [mem] p int m_a = 30
+    [mem] p double m_b = 0.541551				    [mem] p double m_b = 0.541551
+							      >	    [mem] p int m_unit = 200
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 8						  [mem] p int m_e = 8
+  [mem] p int m_unit = 20				      |	  [mem] p int m_unit = 200
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [14] = 							[ele] [14] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 18					    [mem] p int m_a = 18
+    [mem] p double m_b = 0.258721				    [mem] p double m_b = 0.258721
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.191593				      |	  [mem] p float m_c = 0.191593
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 14					    [mem] p int m_a = 14
+    [mem] p double m_b = 0.149267				    [mem] p double m_b = 0.149267
+							      >	    [mem] p int m_unit = 40
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 30						  [mem] p int m_e = 30
+  [mem] p int m_unit = 4				      |	  [mem] p int m_unit = 40
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [15] = 							[ele] [15] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 20					    [mem] p int m_a = 20
+    [mem] p double m_b = 0.0277951				    [mem] p double m_b = 0.0277951
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.389978				      |	  [mem] p float m_c = 0.389978
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 25					    [mem] p int m_a = 25
+    [mem] p double m_b = 0.283814				    [mem] p double m_b = 0.283814
+							      >	    [mem] p int m_unit = 80
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 19						  [mem] p int m_e = 19
+  [mem] p int m_unit = 8				      |	  [mem] p int m_unit = 80
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [16] = 							[ele] [16] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 13					    [mem] p int m_a = 13
+    [mem] p double m_b = 0.677715				    [mem] p double m_b = 0.677715
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.847127				      |	  [mem] p float m_c = 0.847127
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 20					    [mem] p int m_a = 20
+    [mem] p double m_b = 0.0813827				    [mem] p double m_b = 0.0813827
+							      >	    [mem] p int m_unit = 150
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 4						  [mem] p int m_e = 4
+  [mem] p int m_unit = 15				      |	  [mem] p int m_unit = 150
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [17] = 							[ele] [17] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 24					    [mem] p int m_a = 24
+    [mem] p double m_b = 0.471978				    [mem] p double m_b = 0.471978
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.943338				      |	  [mem] p float m_c = 0.943338
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 30					    [mem] p int m_a = 30
+    [mem] p double m_b = 0.334555				    [mem] p double m_b = 0.334555
+							      >	    [mem] p int m_unit = 110
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 7						  [mem] p int m_e = 7
+  [mem] p int m_unit = 11				      |	  [mem] p int m_unit = 110
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [18] = 							[ele] [18] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 20					    [mem] p int m_a = 20
+    [mem] p double m_b = 0.682759				    [mem] p double m_b = 0.682759
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.609936				      |	  [mem] p float m_c = 0.609936
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 3						    [mem] p int m_a = 3
+    [mem] p double m_b = 0.766255				    [mem] p double m_b = 0.766255
+							      >	    [mem] p int m_unit = 80
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 23						  [mem] p int m_e = 23
+  [mem] p int m_unit = 8				      |	  [mem] p int m_unit = 80
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [19] = 							[ele] [19] = 
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 8						    [mem] p int m_a = 8
+    [mem] p double m_b = 0.96087				    [mem] p double m_b = 0.96087
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.423396				      |	  [mem] p float m_c = 0.423396
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.000249498				    [mem] p double m_b = 0.000249498
+							      >	    [mem] p int m_unit = 10
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 27						  [mem] p int m_e = 27
+  [mem] p int m_unit = 1				      |	  [mem] p int m_unit = 10
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+End of vector<ClassA>						End of vector<ClassA>
+diff rflx_test08_wv1.log rflx_test08_rv1NS.log
+Processing object of class: vector<ClassA*>			Processing object of class: vector<ClassA*>
+Length = 5							Length = 5
+[ele] [0] = 0							[ele] [0] = 0
+[ele] [1] =							[ele] [1] =
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 22					    [mem] p int m_a = 22
+    [mem] p double m_b = 0.613825				    [mem] p double m_b = 0.613825
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.965768				      |	  [mem] p float m_c = 0.965768
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 15					    [mem] p int m_a = 15
+    [mem] p double m_b = 0.529885				    [mem] p double m_b = 0.529885
+							      >	    [mem] p int m_unit = 220
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 14						  [mem] p int m_e = 14
+  [mem] p int m_unit = 22				      |	  [mem] p int m_unit = 220
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [2] =							[ele] [2] =
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 21					    [mem] p int m_a = 21
+    [mem] p double m_b = 0.953922				    [mem] p double m_b = 0.953922
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.0236552			      |	  [mem] p float m_c = 0.0236552
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 9						    [mem] p int m_a = 9
+    [mem] p double m_b = 0.869526				    [mem] p double m_b = 0.869526
+							      >	    [mem] p int m_unit = 100
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 9						  [mem] p int m_e = 9
+  [mem] p int m_unit = 10				      |	  [mem] p int m_unit = 100
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [3] = 0							[ele] [3] = 0
+[ele] [4] =							[ele] [4] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 26					      [mem] p int m_a = 26
+      [mem] p double m_b = 0.753346				      [mem] p double m_b = 0.753346
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.538244			      |	    [mem] p float m_c = 0.538244
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 13					      [mem] p int m_a = 13
+      [mem] p double m_b = 0.212371				      [mem] p double m_b = 0.212371
+							      >	      [mem] p int m_unit = 90
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 3						    [mem] p int m_e = 3
+    [mem] p int m_unit = 9				      |	    [mem] p int m_unit = 90
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 1					      |	  [mem] p short m_f = 1
+  [mem] p double m_g = 0.241248				      |	  [mem] p float m_g = 0.241248
+  End of ClassB							  End of ClassB
+End of vector<ClassA*>						End of vector<ClassA*>
+diff rflx_test08_wv1.log rflx_test08_rv1S.log
+Processing object of class: vector<ClassA*>			Processing object of class: vector<ClassA*>
+Length = 5							Length = 5
+[ele] [0] = 0							[ele] [0] = 0
+[ele] [1] =							[ele] [1] =
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 22					    [mem] p int m_a = 22
+    [mem] p double m_b = 0.613825				    [mem] p double m_b = 0.613825
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.965768				      |	  [mem] p float m_c = 0.965768
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 15					    [mem] p int m_a = 15
+    [mem] p double m_b = 0.529885				    [mem] p double m_b = 0.529885
+							      >	    [mem] p int m_unit = 220
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 14						  [mem] p int m_e = 14
+  [mem] p int m_unit = 22				      |	  [mem] p int m_unit = 220
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [2] =							[ele] [2] =
+  Processing object of class: ClassA				  Processing object of class: ClassA
+  Processing bases of: ClassA					  Processing bases of: ClassA
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 21					    [mem] p int m_a = 21
+    [mem] p double m_b = 0.953922				    [mem] p double m_b = 0.953922
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassA					  End of bases of: ClassA
+  [mem] p double m_c = 0.0236552			      |	  [mem] p float m_c = 0.0236552
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 9						    [mem] p int m_a = 9
+    [mem] p double m_b = 0.869526				    [mem] p double m_b = 0.869526
+							      >	    [mem] p int m_unit = 100
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 9						  [mem] p int m_e = 9
+  [mem] p int m_unit = 10				      |	  [mem] p int m_unit = 100
+							      >	  [mem] t bool m_md_set = 1
+  End of ClassA							  End of ClassA
+[ele] [3] = 0							[ele] [3] = 0
+[ele] [4] =							[ele] [4] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 26					      [mem] p int m_a = 26
+      [mem] p double m_b = 0.753346				      [mem] p double m_b = 0.753346
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.538244			      |	    [mem] p float m_c = 0.538244
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 13					      [mem] p int m_a = 13
+      [mem] p double m_b = 0.212371				      [mem] p double m_b = 0.212371
+							      >	      [mem] p int m_unit = 90
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 3						    [mem] p int m_e = 3
+    [mem] p int m_unit = 9				      |	    [mem] p int m_unit = 90
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 1					      |	  [mem] p short m_f = 1
+  [mem] p double m_g = 0.241248				      |	  [mem] p float m_g = 0.241248
+  End of ClassB							  End of ClassB
+End of vector<ClassA*>						End of vector<ClassA*>
+diff rflx_test09_wv1.log rflx_test09_rv1NS.log
+Processing object of class: vector<ClassB>			Processing object of class: vector<ClassB>
+Length = 12							Length = 12
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 14					      [mem] p int m_a = 14
+      [mem] p double m_b = 0.373983				      [mem] p double m_b = 0.373983
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.440189			      |	    [mem] p float m_c = 0.440189
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 4					      [mem] p int m_a = 4
+      [mem] p double m_b = 0.80543				      [mem] p double m_b = 0.80543
+							      >	      [mem] p int m_unit = 90
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 5						    [mem] p int m_e = 5
+    [mem] p int m_unit = 9				      |	    [mem] p int m_unit = 90
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 6					      |	  [mem] p short m_f = 6
+  [mem] p double m_g = 0.935842				      |	  [mem] p float m_g = 0.935842
+  End of ClassB							  End of ClassB
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 21					      [mem] p int m_a = 21
+      [mem] p double m_b = 0.133697				      [mem] p double m_b = 0.133697
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.254761			      |	    [mem] p float m_c = 0.254761
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 12					      [mem] p int m_a = 12
+      [mem] p double m_b = 0.369235				      [mem] p double m_b = 0.369235
+							      >	      [mem] p int m_unit = 90
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 22					    [mem] p int m_e = 22
+    [mem] p int m_unit = 9				      |	    [mem] p int m_unit = 90
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.500355				      |	  [mem] p float m_g = 0.500355
+  End of ClassB							  End of ClassB
+[ele] [2] = 							[ele] [2] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 4					      [mem] p int m_a = 4
+      [mem] p double m_b = 0.151303				      [mem] p double m_b = 0.151303
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.681447			      |	    [mem] p float m_c = 0.681447
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 22					      [mem] p int m_a = 22
+      [mem] p double m_b = 0.979647				      [mem] p double m_b = 0.979647
+							      >	      [mem] p int m_unit = 170
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 21					    [mem] p int m_e = 21
+    [mem] p int m_unit = 17				      |	    [mem] p int m_unit = 170
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.955352				      |	  [mem] p float m_g = 0.955352
+  End of ClassB							  End of ClassB
+[ele] [3] = 							[ele] [3] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 18					      [mem] p int m_a = 18
+      [mem] p double m_b = 0.770454				      [mem] p double m_b = 0.770454
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.913597			      |	    [mem] p float m_c = 0.913597
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 20					      [mem] p int m_a = 20
+      [mem] p double m_b = 0.670975				      [mem] p double m_b = 0.670975
+							      >	      [mem] p int m_unit = 290
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 18					    [mem] p int m_e = 18
+    [mem] p int m_unit = 29				      |	    [mem] p int m_unit = 290
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 5					      |	  [mem] p short m_f = 5
+  [mem] p double m_g = 0.335057				      |	  [mem] p float m_g = 0.335057
+  End of ClassB							  End of ClassB
+[ele] [4] = 							[ele] [4] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 29					      [mem] p int m_a = 29
+      [mem] p double m_b = 0.109662				      [mem] p double m_b = 0.109662
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.619302			      |	    [mem] p float m_c = 0.619302
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 29					      [mem] p int m_a = 29
+      [mem] p double m_b = 0.985243				      [mem] p double m_b = 0.985243
+							      >	      [mem] p int m_unit = 160
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 3						    [mem] p int m_e = 3
+    [mem] p int m_unit = 16				      |	    [mem] p int m_unit = 160
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.55332				      |	  [mem] p float m_g = 0.55332
+  End of ClassB							  End of ClassB
+[ele] [5] = 							[ele] [5] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 18					      [mem] p int m_a = 18
+      [mem] p double m_b = 0.691621				      [mem] p double m_b = 0.691621
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.462648			      |	    [mem] p float m_c = 0.462648
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 18					      [mem] p int m_a = 18
+      [mem] p double m_b = 0.0728901				      [mem] p double m_b = 0.0728901
+							      >	      [mem] p int m_unit = 120
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 20					    [mem] p int m_e = 20
+    [mem] p int m_unit = 12				      |	    [mem] p int m_unit = 120
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 7					      |	  [mem] p short m_f = 7
+  [mem] p double m_g = 0.0022318			      |	  [mem] p float m_g = 0.0022318
+  End of ClassB							  End of ClassB
+[ele] [6] = 							[ele] [6] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 15					      [mem] p int m_a = 15
+      [mem] p double m_b = 0.191317				      [mem] p double m_b = 0.191317
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.022265			      |	    [mem] p float m_c = 0.022265
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 28					      [mem] p int m_a = 28
+      [mem] p double m_b = 0.738628				      [mem] p double m_b = 0.738628
+							      >	      [mem] p int m_unit = 130
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 14					    [mem] p int m_e = 14
+    [mem] p int m_unit = 13				      |	    [mem] p int m_unit = 130
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 23					      |	  [mem] p short m_f = 23
+  [mem] p double m_g = 0.437753				      |	  [mem] p float m_g = 0.437753
+  End of ClassB							  End of ClassB
+[ele] [7] = 							[ele] [7] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 6					      [mem] p int m_a = 6
+      [mem] p double m_b = 0.577113				      [mem] p double m_b = 0.577113
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.132688			      |	    [mem] p float m_c = 0.132688
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 10					      [mem] p int m_a = 10
+      [mem] p double m_b = 0.486916				      [mem] p double m_b = 0.486916
+							      >	      [mem] p int m_unit = 290
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 29					    [mem] p int m_e = 29
+    [mem] p int m_unit = 29				      |	    [mem] p int m_unit = 290
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 3					      |	  [mem] p short m_f = 3
+  [mem] p double m_g = 0.612436				      |	  [mem] p float m_g = 0.612436
+  End of ClassB							  End of ClassB
+[ele] [8] = 							[ele] [8] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 16					      [mem] p int m_a = 16
+      [mem] p double m_b = 0.624664				      [mem] p double m_b = 0.624664
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.130645			      |	    [mem] p float m_c = 0.130645
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 20					      [mem] p int m_a = 20
+      [mem] p double m_b = 0.134149				      [mem] p double m_b = 0.134149
+							      >	      [mem] p int m_unit = 80
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 20					    [mem] p int m_e = 20
+    [mem] p int m_unit = 8				      |	    [mem] p int m_unit = 80
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 12					      |	  [mem] p short m_f = 12
+  [mem] p double m_g = 0.590215				      |	  [mem] p float m_g = 0.590215
+  End of ClassB							  End of ClassB
+[ele] [9] = 							[ele] [9] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 21					      [mem] p int m_a = 21
+      [mem] p double m_b = 0.554332				      [mem] p double m_b = 0.554332
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.0195048			      |	    [mem] p float m_c = 0.0195048
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 6					      [mem] p int m_a = 6
+      [mem] p double m_b = 0.99118				      [mem] p double m_b = 0.99118
+							      >	      [mem] p int m_unit = 200
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 18					    [mem] p int m_e = 18
+    [mem] p int m_unit = 20				      |	    [mem] p int m_unit = 200
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 18					      |	  [mem] p short m_f = 18
+  [mem] p double m_g = 0.515245				      |	  [mem] p float m_g = 0.515245
+  End of ClassB							  End of ClassB
+[ele] [10] = 							[ele] [10] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 10					      [mem] p int m_a = 10
+      [mem] p double m_b = 0.396742				      [mem] p double m_b = 0.396742
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.883965			      |	    [mem] p float m_c = 0.883965
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 24					      [mem] p int m_a = 24
+      [mem] p double m_b = 0.599075				      [mem] p double m_b = 0.599075
+							      >	      [mem] p int m_unit = 10
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 1						    [mem] p int m_e = 1
+    [mem] p int m_unit = 1				      |	    [mem] p int m_unit = 10
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.265991				      |	  [mem] p float m_g = 0.265991
+  End of ClassB							  End of ClassB
+[ele] [11] = 							[ele] [11] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 23					      [mem] p int m_a = 23
+      [mem] p double m_b = 0.999973				      [mem] p double m_b = 0.999973
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.749792			      |	    [mem] p float m_c = 0.749792
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 15					      [mem] p int m_a = 15
+      [mem] p double m_b = 0.823701				      [mem] p double m_b = 0.823701
+							      >	      [mem] p int m_unit = 280
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 19					    [mem] p int m_e = 19
+    [mem] p int m_unit = 28				      |	    [mem] p int m_unit = 280
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 2					      |	  [mem] p short m_f = 2
+  [mem] p double m_g = 0.739077				      |	  [mem] p float m_g = 0.739077
+  End of ClassB							  End of ClassB
+End of vector<ClassB>						End of vector<ClassB>
+diff rflx_test09_wv1.log rflx_test09_rv1S.log
+Processing object of class: vector<ClassB>			Processing object of class: vector<ClassB>
+Length = 12							Length = 12
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 14					      [mem] p int m_a = 14
+      [mem] p double m_b = 0.373983				      [mem] p double m_b = 0.373983
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.440189			      |	    [mem] p float m_c = 0.440189
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 4					      [mem] p int m_a = 4
+      [mem] p double m_b = 0.80543				      [mem] p double m_b = 0.80543
+							      >	      [mem] p int m_unit = 90
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 5						    [mem] p int m_e = 5
+    [mem] p int m_unit = 9				      |	    [mem] p int m_unit = 90
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 6					      |	  [mem] p short m_f = 6
+  [mem] p double m_g = 0.935842				      |	  [mem] p float m_g = 0.935842
+  End of ClassB							  End of ClassB
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 21					      [mem] p int m_a = 21
+      [mem] p double m_b = 0.133697				      [mem] p double m_b = 0.133697
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.254761			      |	    [mem] p float m_c = 0.254761
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 12					      [mem] p int m_a = 12
+      [mem] p double m_b = 0.369235				      [mem] p double m_b = 0.369235
+							      >	      [mem] p int m_unit = 90
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 22					    [mem] p int m_e = 22
+    [mem] p int m_unit = 9				      |	    [mem] p int m_unit = 90
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.500355				      |	  [mem] p float m_g = 0.500355
+  End of ClassB							  End of ClassB
+[ele] [2] = 							[ele] [2] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 4					      [mem] p int m_a = 4
+      [mem] p double m_b = 0.151303				      [mem] p double m_b = 0.151303
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.681447			      |	    [mem] p float m_c = 0.681447
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 22					      [mem] p int m_a = 22
+      [mem] p double m_b = 0.979647				      [mem] p double m_b = 0.979647
+							      >	      [mem] p int m_unit = 170
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 21					    [mem] p int m_e = 21
+    [mem] p int m_unit = 17				      |	    [mem] p int m_unit = 170
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.955352				      |	  [mem] p float m_g = 0.955352
+  End of ClassB							  End of ClassB
+[ele] [3] = 							[ele] [3] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 18					      [mem] p int m_a = 18
+      [mem] p double m_b = 0.770454				      [mem] p double m_b = 0.770454
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.913597			      |	    [mem] p float m_c = 0.913597
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 20					      [mem] p int m_a = 20
+      [mem] p double m_b = 0.670975				      [mem] p double m_b = 0.670975
+							      >	      [mem] p int m_unit = 290
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 18					    [mem] p int m_e = 18
+    [mem] p int m_unit = 29				      |	    [mem] p int m_unit = 290
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 5					      |	  [mem] p short m_f = 5
+  [mem] p double m_g = 0.335057				      |	  [mem] p float m_g = 0.335057
+  End of ClassB							  End of ClassB
+[ele] [4] = 							[ele] [4] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 29					      [mem] p int m_a = 29
+      [mem] p double m_b = 0.109662				      [mem] p double m_b = 0.109662
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.619302			      |	    [mem] p float m_c = 0.619302
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 29					      [mem] p int m_a = 29
+      [mem] p double m_b = 0.985243				      [mem] p double m_b = 0.985243
+							      >	      [mem] p int m_unit = 160
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 3						    [mem] p int m_e = 3
+    [mem] p int m_unit = 16				      |	    [mem] p int m_unit = 160
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.55332				      |	  [mem] p float m_g = 0.55332
+  End of ClassB							  End of ClassB
+[ele] [5] = 							[ele] [5] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 18					      [mem] p int m_a = 18
+      [mem] p double m_b = 0.691621				      [mem] p double m_b = 0.691621
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.462648			      |	    [mem] p float m_c = 0.462648
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 18					      [mem] p int m_a = 18
+      [mem] p double m_b = 0.0728901				      [mem] p double m_b = 0.0728901
+							      >	      [mem] p int m_unit = 120
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 20					    [mem] p int m_e = 20
+    [mem] p int m_unit = 12				      |	    [mem] p int m_unit = 120
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 7					      |	  [mem] p short m_f = 7
+  [mem] p double m_g = 0.0022318			      |	  [mem] p float m_g = 0.0022318
+  End of ClassB							  End of ClassB
+[ele] [6] = 							[ele] [6] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 15					      [mem] p int m_a = 15
+      [mem] p double m_b = 0.191317				      [mem] p double m_b = 0.191317
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.022265			      |	    [mem] p float m_c = 0.022265
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 28					      [mem] p int m_a = 28
+      [mem] p double m_b = 0.738628				      [mem] p double m_b = 0.738628
+							      >	      [mem] p int m_unit = 130
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 14					    [mem] p int m_e = 14
+    [mem] p int m_unit = 13				      |	    [mem] p int m_unit = 130
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 23					      |	  [mem] p short m_f = 23
+  [mem] p double m_g = 0.437753				      |	  [mem] p float m_g = 0.437753
+  End of ClassB							  End of ClassB
+[ele] [7] = 							[ele] [7] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 6					      [mem] p int m_a = 6
+      [mem] p double m_b = 0.577113				      [mem] p double m_b = 0.577113
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.132688			      |	    [mem] p float m_c = 0.132688
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 10					      [mem] p int m_a = 10
+      [mem] p double m_b = 0.486916				      [mem] p double m_b = 0.486916
+							      >	      [mem] p int m_unit = 290
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 29					    [mem] p int m_e = 29
+    [mem] p int m_unit = 29				      |	    [mem] p int m_unit = 290
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 3					      |	  [mem] p short m_f = 3
+  [mem] p double m_g = 0.612436				      |	  [mem] p float m_g = 0.612436
+  End of ClassB							  End of ClassB
+[ele] [8] = 							[ele] [8] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 16					      [mem] p int m_a = 16
+      [mem] p double m_b = 0.624664				      [mem] p double m_b = 0.624664
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.130645			      |	    [mem] p float m_c = 0.130645
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 20					      [mem] p int m_a = 20
+      [mem] p double m_b = 0.134149				      [mem] p double m_b = 0.134149
+							      >	      [mem] p int m_unit = 80
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 20					    [mem] p int m_e = 20
+    [mem] p int m_unit = 8				      |	    [mem] p int m_unit = 80
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 12					      |	  [mem] p short m_f = 12
+  [mem] p double m_g = 0.590215				      |	  [mem] p float m_g = 0.590215
+  End of ClassB							  End of ClassB
+[ele] [9] = 							[ele] [9] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 21					      [mem] p int m_a = 21
+      [mem] p double m_b = 0.554332				      [mem] p double m_b = 0.554332
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.0195048			      |	    [mem] p float m_c = 0.0195048
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 6					      [mem] p int m_a = 6
+      [mem] p double m_b = 0.99118				      [mem] p double m_b = 0.99118
+							      >	      [mem] p int m_unit = 200
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 18					    [mem] p int m_e = 18
+    [mem] p int m_unit = 20				      |	    [mem] p int m_unit = 200
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 18					      |	  [mem] p short m_f = 18
+  [mem] p double m_g = 0.515245				      |	  [mem] p float m_g = 0.515245
+  End of ClassB							  End of ClassB
+[ele] [10] = 							[ele] [10] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 10					      [mem] p int m_a = 10
+      [mem] p double m_b = 0.396742				      [mem] p double m_b = 0.396742
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.883965			      |	    [mem] p float m_c = 0.883965
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 24					      [mem] p int m_a = 24
+      [mem] p double m_b = 0.599075				      [mem] p double m_b = 0.599075
+							      >	      [mem] p int m_unit = 10
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 1						    [mem] p int m_e = 1
+    [mem] p int m_unit = 1				      |	    [mem] p int m_unit = 10
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.265991				      |	  [mem] p float m_g = 0.265991
+  End of ClassB							  End of ClassB
+[ele] [11] = 							[ele] [11] = 
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 23					      [mem] p int m_a = 23
+      [mem] p double m_b = 0.999973				      [mem] p double m_b = 0.999973
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.749792			      |	    [mem] p float m_c = 0.749792
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 15					      [mem] p int m_a = 15
+      [mem] p double m_b = 0.823701				      [mem] p double m_b = 0.823701
+							      >	      [mem] p int m_unit = 280
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 19					    [mem] p int m_e = 19
+    [mem] p int m_unit = 28				      |	    [mem] p int m_unit = 280
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 2					      |	  [mem] p short m_f = 2
+  [mem] p double m_g = 0.739077				      |	  [mem] p float m_g = 0.739077
+  End of ClassB							  End of ClassB
+End of vector<ClassB>						End of vector<ClassB>
+diff rflx_test10_wv1.log rflx_test10_rv1NS.log
+Processing object of class: vector<ClassB*>			Processing object of class: vector<ClassB*>
+Length = 12							Length = 12
+[ele] [0] = 0							[ele] [0] = 0
+[ele] [1] =							[ele] [1] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 26					      [mem] p int m_a = 26
+      [mem] p double m_b = 0.345082				      [mem] p double m_b = 0.345082
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.0818426			      |	    [mem] p float m_c = 0.0818426
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 7					      [mem] p int m_a = 7
+      [mem] p double m_b = 0.152476				      [mem] p double m_b = 0.152476
+							      >	      [mem] p int m_unit = 160
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 13					    [mem] p int m_e = 13
+    [mem] p int m_unit = 16				      |	    [mem] p int m_unit = 160
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 25					      |	  [mem] p short m_f = 25
+  [mem] p double m_g = 0.0407776			      |	  [mem] p float m_g = 0.0407776
+  End of ClassB							  End of ClassB
+[ele] [2] = 0							[ele] [2] = 0
+[ele] [3] =							[ele] [3] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 25					      [mem] p int m_a = 25
+      [mem] p double m_b = 0.204642				      [mem] p double m_b = 0.204642
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.238722			      |	    [mem] p float m_c = 0.238722
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 30					      [mem] p int m_a = 30
+      [mem] p double m_b = 0.258591				      [mem] p double m_b = 0.258591
+							      >	      [mem] p int m_unit = 260
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 27					    [mem] p int m_e = 27
+    [mem] p int m_unit = 26				      |	    [mem] p int m_unit = 260
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 10					      |	  [mem] p short m_f = 10
+  [mem] p double m_g = 0.0333625			      |	  [mem] p float m_g = 0.0333625
+  End of ClassB							  End of ClassB
+[ele] [4] =							[ele] [4] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 6					      [mem] p int m_a = 6
+      [mem] p double m_b = 0.508978				      [mem] p double m_b = 0.508978
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.0215451			      |	    [mem] p float m_c = 0.0215451
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 21					      [mem] p int m_a = 21
+      [mem] p double m_b = 0.813562				      [mem] p double m_b = 0.813562
+							      >	      [mem] p int m_unit = 150
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 25					    [mem] p int m_e = 25
+    [mem] p int m_unit = 15				      |	    [mem] p int m_unit = 150
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 17					      |	  [mem] p short m_f = 17
+  [mem] p double m_g = 0.780849				      |	  [mem] p float m_g = 0.780849
+  End of ClassB							  End of ClassB
+[ele] [5] = 0							[ele] [5] = 0
+[ele] [6] =							[ele] [6] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 13					      [mem] p int m_a = 13
+      [mem] p double m_b = 0.825241				      [mem] p double m_b = 0.825241
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.945614			      |	    [mem] p float m_c = 0.945614
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 17					      [mem] p int m_a = 17
+      [mem] p double m_b = 0.710495				      [mem] p double m_b = 0.710495
+							      >	      [mem] p int m_unit = 200
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 12					    [mem] p int m_e = 12
+    [mem] p int m_unit = 20				      |	    [mem] p int m_unit = 200
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 2					      |	  [mem] p short m_f = 2
+  [mem] p double m_g = 0.155477				      |	  [mem] p float m_g = 0.155477
+  End of ClassB							  End of ClassB
+[ele] [7] =							[ele] [7] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 22					      [mem] p int m_a = 22
+      [mem] p double m_b = 0.961667				      [mem] p double m_b = 0.961667
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.430301			      |	    [mem] p float m_c = 0.430301
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 4					      [mem] p int m_a = 4
+      [mem] p double m_b = 0.439331				      [mem] p double m_b = 0.439331
+							      >	      [mem] p int m_unit = 130
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 15					    [mem] p int m_e = 15
+    [mem] p int m_unit = 13				      |	    [mem] p int m_unit = 130
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 9					      |	  [mem] p short m_f = 9
+  [mem] p double m_g = 0.27851				      |	  [mem] p float m_g = 0.27851
+  End of ClassB							  End of ClassB
+[ele] [8] =							[ele] [8] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 25					      [mem] p int m_a = 25
+      [mem] p double m_b = 0.96851				      [mem] p double m_b = 0.96851
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.999723			      |	    [mem] p float m_c = 0.999723
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 29					      [mem] p int m_a = 29
+      [mem] p double m_b = 0.248551				      [mem] p double m_b = 0.248551
+							      >	      [mem] p int m_unit = 140
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 1						    [mem] p int m_e = 1
+    [mem] p int m_unit = 14				      |	    [mem] p int m_unit = 140
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.49648				      |	  [mem] p float m_g = 0.49648
+  End of ClassB							  End of ClassB
+[ele] [9] = 0							[ele] [9] = 0
+[ele] [10] =							[ele] [10] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 4					      [mem] p int m_a = 4
+      [mem] p double m_b = 0.0931516				      [mem] p double m_b = 0.0931516
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.890206			      |	    [mem] p float m_c = 0.890206
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 14					      [mem] p int m_a = 14
+      [mem] p double m_b = 0.906907				      [mem] p double m_b = 0.906907
+							      >	      [mem] p int m_unit = 230
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 17					    [mem] p int m_e = 17
+    [mem] p int m_unit = 23				      |	    [mem] p int m_unit = 230
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 25					      |	  [mem] p short m_f = 25
+  [mem] p double m_g = 0.532969				      |	  [mem] p float m_g = 0.532969
+  End of ClassB							  End of ClassB
+[ele] [11] = 0							[ele] [11] = 0
+End of vector<ClassB*>						End of vector<ClassB*>
+diff rflx_test10_wv1.log rflx_test10_rv1S.log
+Processing object of class: vector<ClassB*>			Processing object of class: vector<ClassB*>
+Length = 12							Length = 12
+[ele] [0] = 0							[ele] [0] = 0
+[ele] [1] =							[ele] [1] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 26					      [mem] p int m_a = 26
+      [mem] p double m_b = 0.345082				      [mem] p double m_b = 0.345082
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.0818426			      |	    [mem] p float m_c = 0.0818426
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 7					      [mem] p int m_a = 7
+      [mem] p double m_b = 0.152476				      [mem] p double m_b = 0.152476
+							      >	      [mem] p int m_unit = 160
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 13					    [mem] p int m_e = 13
+    [mem] p int m_unit = 16				      |	    [mem] p int m_unit = 160
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 25					      |	  [mem] p short m_f = 25
+  [mem] p double m_g = 0.0407776			      |	  [mem] p float m_g = 0.0407776
+  End of ClassB							  End of ClassB
+[ele] [2] = 0							[ele] [2] = 0
+[ele] [3] =							[ele] [3] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 25					      [mem] p int m_a = 25
+      [mem] p double m_b = 0.204642				      [mem] p double m_b = 0.204642
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.238722			      |	    [mem] p float m_c = 0.238722
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 30					      [mem] p int m_a = 30
+      [mem] p double m_b = 0.258591				      [mem] p double m_b = 0.258591
+							      >	      [mem] p int m_unit = 260
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 27					    [mem] p int m_e = 27
+    [mem] p int m_unit = 26				      |	    [mem] p int m_unit = 260
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 10					      |	  [mem] p short m_f = 10
+  [mem] p double m_g = 0.0333625			      |	  [mem] p float m_g = 0.0333625
+  End of ClassB							  End of ClassB
+[ele] [4] =							[ele] [4] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 6					      [mem] p int m_a = 6
+      [mem] p double m_b = 0.508978				      [mem] p double m_b = 0.508978
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.0215451			      |	    [mem] p float m_c = 0.0215451
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 21					      [mem] p int m_a = 21
+      [mem] p double m_b = 0.813562				      [mem] p double m_b = 0.813562
+							      >	      [mem] p int m_unit = 150
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 25					    [mem] p int m_e = 25
+    [mem] p int m_unit = 15				      |	    [mem] p int m_unit = 150
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 17					      |	  [mem] p short m_f = 17
+  [mem] p double m_g = 0.780849				      |	  [mem] p float m_g = 0.780849
+  End of ClassB							  End of ClassB
+[ele] [5] = 0							[ele] [5] = 0
+[ele] [6] =							[ele] [6] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 13					      [mem] p int m_a = 13
+      [mem] p double m_b = 0.825241				      [mem] p double m_b = 0.825241
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.945614			      |	    [mem] p float m_c = 0.945614
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 17					      [mem] p int m_a = 17
+      [mem] p double m_b = 0.710495				      [mem] p double m_b = 0.710495
+							      >	      [mem] p int m_unit = 200
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 12					    [mem] p int m_e = 12
+    [mem] p int m_unit = 20				      |	    [mem] p int m_unit = 200
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 2					      |	  [mem] p short m_f = 2
+  [mem] p double m_g = 0.155477				      |	  [mem] p float m_g = 0.155477
+  End of ClassB							  End of ClassB
+[ele] [7] =							[ele] [7] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 22					      [mem] p int m_a = 22
+      [mem] p double m_b = 0.961667				      [mem] p double m_b = 0.961667
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.430301			      |	    [mem] p float m_c = 0.430301
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 4					      [mem] p int m_a = 4
+      [mem] p double m_b = 0.439331				      [mem] p double m_b = 0.439331
+							      >	      [mem] p int m_unit = 130
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 15					    [mem] p int m_e = 15
+    [mem] p int m_unit = 13				      |	    [mem] p int m_unit = 130
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 9					      |	  [mem] p short m_f = 9
+  [mem] p double m_g = 0.27851				      |	  [mem] p float m_g = 0.27851
+  End of ClassB							  End of ClassB
+[ele] [8] =							[ele] [8] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 25					      [mem] p int m_a = 25
+      [mem] p double m_b = 0.96851				      [mem] p double m_b = 0.96851
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.999723			      |	    [mem] p float m_c = 0.999723
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 29					      [mem] p int m_a = 29
+      [mem] p double m_b = 0.248551				      [mem] p double m_b = 0.248551
+							      >	      [mem] p int m_unit = 140
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 1						    [mem] p int m_e = 1
+    [mem] p int m_unit = 14				      |	    [mem] p int m_unit = 140
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 21					      |	  [mem] p short m_f = 21
+  [mem] p double m_g = 0.49648				      |	  [mem] p float m_g = 0.49648
+  End of ClassB							  End of ClassB
+[ele] [9] = 0							[ele] [9] = 0
+[ele] [10] =							[ele] [10] =
+  Processing object of class: ClassB				  Processing object of class: ClassB
+  Processing bases of: ClassB					  Processing bases of: ClassB
+    Processing object of class: ClassA				    Processing object of class: ClassA
+    Processing bases of: ClassA					    Processing bases of: ClassA
+      Processing object of class: ClassABase			      Processing object of class: ClassABase
+      [mem] p int m_a = 4					      [mem] p int m_a = 4
+      [mem] p double m_b = 0.0931516				      [mem] p double m_b = 0.0931516
+      End of ClassABase						      End of ClassABase
+    End of bases of: ClassA					    End of bases of: ClassA
+    [mem] p double m_c = 0.890206			      |	    [mem] p float m_c = 0.890206
+    [mem] p ClassAIns m_d = 					    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns			      Processing object of class: ClassAIns
+      [mem] p int m_a = 14					      [mem] p int m_a = 14
+      [mem] p double m_b = 0.906907				      [mem] p double m_b = 0.906907
+							      >	      [mem] p int m_unit = 230
+      End of ClassAIns						      End of ClassAIns
+    [mem] p int m_e = 17					    [mem] p int m_e = 17
+    [mem] p int m_unit = 23				      |	    [mem] p int m_unit = 230
+							      >	    [mem] t bool m_md_set = 1
+    End of ClassA						    End of ClassA
+  End of bases of: ClassB					  End of bases of: ClassB
+  [mem] p int m_f = 25					      |	  [mem] p short m_f = 25
+  [mem] p double m_g = 0.532969				      |	  [mem] p float m_g = 0.532969
+  End of ClassB							  End of ClassB
+[ele] [11] = 0							[ele] [11] = 0
+End of vector<ClassB*>						End of vector<ClassB*>
+diff rflx_test11_wv1.log rflx_test11_rv1NS.log
+Processing object of class: vector<ClassC>			Processing object of class: vector<ClassC>
+Length = 2							Length = 2
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 27					    [mem] p int m_a = 27
+    [mem] p double m_b = 0.146907				    [mem] p double m_b = 0.146907
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.482647					  [mem] p double m_f = 0.482647
+  [mem] p double m_g = 0.067303				      |	  [mem] p float m_g = 0.067303
+  End of ClassC							  End of ClassC
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 9						    [mem] p int m_a = 9
+    [mem] p double m_b = 0.932849				    [mem] p double m_b = 0.932849
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.507318					  [mem] p double m_f = 0.507318
+  [mem] p double m_g = 0.564503				      |	  [mem] p float m_g = 0.564503
+  End of ClassC							  End of ClassC
+End of vector<ClassC>						End of vector<ClassC>
+diff rflx_test11_wv1.log rflx_test11_rv1S.log
+Processing object of class: vector<ClassC>			Processing object of class: vector<ClassC>
+Length = 2							Length = 2
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 27					    [mem] p int m_a = 27
+    [mem] p double m_b = 0.146907				    [mem] p double m_b = 0.146907
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.482647					  [mem] p double m_f = 0.482647
+  [mem] p double m_g = 0.067303				      |	  [mem] p float m_g = 0.067303
+  End of ClassC							  End of ClassC
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 9						    [mem] p int m_a = 9
+    [mem] p double m_b = 0.932849				    [mem] p double m_b = 0.932849
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.507318					  [mem] p double m_f = 0.507318
+  [mem] p double m_g = 0.564503				      |	  [mem] p float m_g = 0.564503
+  End of ClassC							  End of ClassC
+End of vector<ClassC>						End of vector<ClassC>
+diff rflx_test12_wv1.log rflx_test12_rv1NS.log
+Processing object of class: vector<ClassC*>			Processing object of class: vector<ClassC*>
+Length = 25							Length = 25
+[ele] [0] =							[ele] [0] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 10					    [mem] p int m_a = 10
+    [mem] p double m_b = 0.0478066				    [mem] p double m_b = 0.0478066
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.251966					  [mem] p double m_f = 0.251966
+  [mem] p double m_g = 0.713881				      |	  [mem] p float m_g = 0.713881
+  End of ClassC							  End of ClassC
+[ele] [1] =							[ele] [1] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 19					    [mem] p int m_a = 19
+    [mem] p double m_b = 0.148272				    [mem] p double m_b = 0.148272
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.79525					  [mem] p double m_f = 0.79525
+  [mem] p double m_g = 0.665277				      |	  [mem] p float m_g = 0.665277
+  End of ClassC							  End of ClassC
+[ele] [2] =							[ele] [2] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 25					    [mem] p int m_a = 25
+    [mem] p double m_b = 0.071144				    [mem] p double m_b = 0.071144
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.0687936				  [mem] p double m_f = 0.0687936
+  [mem] p double m_g = 0.890467				      |	  [mem] p float m_g = 0.890467
+  End of ClassC							  End of ClassC
+[ele] [3] =							[ele] [3] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 3						    [mem] p int m_a = 3
+    [mem] p double m_b = 0.852094				    [mem] p double m_b = 0.852094
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.775357					  [mem] p double m_f = 0.775357
+  [mem] p double m_g = 0.684895				      |	  [mem] p float m_g = 0.684895
+  End of ClassC							  End of ClassC
+[ele] [4] = 0							[ele] [4] = 0
+[ele] [5] = 0							[ele] [5] = 0
+[ele] [6] =							[ele] [6] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 20					    [mem] p int m_a = 20
+    [mem] p double m_b = 0.45968				    [mem] p double m_b = 0.45968
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.887824					  [mem] p double m_f = 0.887824
+  [mem] p double m_g = 0.574622				      |	  [mem] p float m_g = 0.574622
+  End of ClassC							  End of ClassC
+[ele] [7] = 0							[ele] [7] = 0
+[ele] [8] =							[ele] [8] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.609123				    [mem] p double m_b = 0.609123
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.217543					  [mem] p double m_f = 0.217543
+  [mem] p double m_g = 0.643761				      |	  [mem] p float m_g = 0.643761
+  End of ClassC							  End of ClassC
+[ele] [9] =							[ele] [9] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 25					    [mem] p int m_a = 25
+    [mem] p double m_b = 0.962336				    [mem] p double m_b = 0.962336
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.40177					  [mem] p double m_f = 0.40177
+  [mem] p double m_g = 0.996553				      |	  [mem] p float m_g = 0.996553
+  End of ClassC							  End of ClassC
+[ele] [10] =							[ele] [10] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 14					    [mem] p int m_a = 14
+    [mem] p double m_b = 0.395784				    [mem] p double m_b = 0.395784
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.12339					  [mem] p double m_f = 0.12339
+  [mem] p double m_g = 0.532615				      |	  [mem] p float m_g = 0.532615
+  End of ClassC							  End of ClassC
+[ele] [11] =							[ele] [11] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 28					    [mem] p int m_a = 28
+    [mem] p double m_b = 0.825608				    [mem] p double m_b = 0.825608
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.445915					  [mem] p double m_f = 0.445915
+  [mem] p double m_g = 0.267136				      |	  [mem] p float m_g = 0.267136
+  End of ClassC							  End of ClassC
+[ele] [12] =							[ele] [12] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 24					    [mem] p int m_a = 24
+    [mem] p double m_b = 0.665968				    [mem] p double m_b = 0.665968
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.503955					  [mem] p double m_f = 0.503955
+  [mem] p double m_g = 0.835154				      |	  [mem] p float m_g = 0.835154
+  End of ClassC							  End of ClassC
+[ele] [13] =							[ele] [13] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 14					    [mem] p int m_a = 14
+    [mem] p double m_b = 0.554983				    [mem] p double m_b = 0.554983
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.365814					  [mem] p double m_f = 0.365814
+  [mem] p double m_g = 0.656302				      |	  [mem] p float m_g = 0.656302
+  End of ClassC							  End of ClassC
+[ele] [14] =							[ele] [14] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 9						    [mem] p int m_a = 9
+    [mem] p double m_b = 0.121214				    [mem] p double m_b = 0.121214
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.966178					  [mem] p double m_f = 0.966178
+  [mem] p double m_g = 0.697439				      |	  [mem] p float m_g = 0.697439
+  End of ClassC							  End of ClassC
+[ele] [15] = 0							[ele] [15] = 0
+[ele] [16] =							[ele] [16] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 12					    [mem] p int m_a = 12
+    [mem] p double m_b = 0.238192				    [mem] p double m_b = 0.238192
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.300274					  [mem] p double m_f = 0.300274
+  [mem] p double m_g = 0.710332				      |	  [mem] p float m_g = 0.710332
+  End of ClassC							  End of ClassC
+[ele] [17] = 0							[ele] [17] = 0
+[ele] [18] = 0							[ele] [18] = 0
+[ele] [19] = 0							[ele] [19] = 0
+[ele] [20] = 0							[ele] [20] = 0
+[ele] [21] =							[ele] [21] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.764864				    [mem] p double m_b = 0.764864
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.9041					  [mem] p double m_f = 0.9041
+  [mem] p double m_g = 0.39611				      |	  [mem] p float m_g = 0.39611
+  End of ClassC							  End of ClassC
+[ele] [22] =							[ele] [22] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.266194				    [mem] p double m_b = 0.266194
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.367502					  [mem] p double m_f = 0.367502
+  [mem] p double m_g = 0.752316				      |	  [mem] p float m_g = 0.752316
+  End of ClassC							  End of ClassC
+[ele] [23] =							[ele] [23] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 15					    [mem] p int m_a = 15
+    [mem] p double m_b = 0.673474				    [mem] p double m_b = 0.673474
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.328296					  [mem] p double m_f = 0.328296
+  [mem] p double m_g = 0.853946				      |	  [mem] p float m_g = 0.853946
+  End of ClassC							  End of ClassC
+[ele] [24] =							[ele] [24] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.322411				    [mem] p double m_b = 0.322411
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.950174					  [mem] p double m_f = 0.950174
+  [mem] p double m_g = 0.0953767			      |	  [mem] p float m_g = 0.0953767
+  End of ClassC							  End of ClassC
+End of vector<ClassC*>						End of vector<ClassC*>
+diff rflx_test12_wv1.log rflx_test12_rv1S.log
+Processing object of class: vector<ClassC*>			Processing object of class: vector<ClassC*>
+Length = 25							Length = 25
+[ele] [0] =							[ele] [0] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 10					    [mem] p int m_a = 10
+    [mem] p double m_b = 0.0478066				    [mem] p double m_b = 0.0478066
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.251966					  [mem] p double m_f = 0.251966
+  [mem] p double m_g = 0.713881				      |	  [mem] p float m_g = 0.713881
+  End of ClassC							  End of ClassC
+[ele] [1] =							[ele] [1] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 19					    [mem] p int m_a = 19
+    [mem] p double m_b = 0.148272				    [mem] p double m_b = 0.148272
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.79525					  [mem] p double m_f = 0.79525
+  [mem] p double m_g = 0.665277				      |	  [mem] p float m_g = 0.665277
+  End of ClassC							  End of ClassC
+[ele] [2] =							[ele] [2] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 25					    [mem] p int m_a = 25
+    [mem] p double m_b = 0.071144				    [mem] p double m_b = 0.071144
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.0687936				  [mem] p double m_f = 0.0687936
+  [mem] p double m_g = 0.890467				      |	  [mem] p float m_g = 0.890467
+  End of ClassC							  End of ClassC
+[ele] [3] =							[ele] [3] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 3						    [mem] p int m_a = 3
+    [mem] p double m_b = 0.852094				    [mem] p double m_b = 0.852094
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.775357					  [mem] p double m_f = 0.775357
+  [mem] p double m_g = 0.684895				      |	  [mem] p float m_g = 0.684895
+  End of ClassC							  End of ClassC
+[ele] [4] = 0							[ele] [4] = 0
+[ele] [5] = 0							[ele] [5] = 0
+[ele] [6] =							[ele] [6] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 20					    [mem] p int m_a = 20
+    [mem] p double m_b = 0.45968				    [mem] p double m_b = 0.45968
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.887824					  [mem] p double m_f = 0.887824
+  [mem] p double m_g = 0.574622				      |	  [mem] p float m_g = 0.574622
+  End of ClassC							  End of ClassC
+[ele] [7] = 0							[ele] [7] = 0
+[ele] [8] =							[ele] [8] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.609123				    [mem] p double m_b = 0.609123
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.217543					  [mem] p double m_f = 0.217543
+  [mem] p double m_g = 0.643761				      |	  [mem] p float m_g = 0.643761
+  End of ClassC							  End of ClassC
+[ele] [9] =							[ele] [9] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 25					    [mem] p int m_a = 25
+    [mem] p double m_b = 0.962336				    [mem] p double m_b = 0.962336
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.40177					  [mem] p double m_f = 0.40177
+  [mem] p double m_g = 0.996553				      |	  [mem] p float m_g = 0.996553
+  End of ClassC							  End of ClassC
+[ele] [10] =							[ele] [10] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 14					    [mem] p int m_a = 14
+    [mem] p double m_b = 0.395784				    [mem] p double m_b = 0.395784
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.12339					  [mem] p double m_f = 0.12339
+  [mem] p double m_g = 0.532615				      |	  [mem] p float m_g = 0.532615
+  End of ClassC							  End of ClassC
+[ele] [11] =							[ele] [11] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 28					    [mem] p int m_a = 28
+    [mem] p double m_b = 0.825608				    [mem] p double m_b = 0.825608
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.445915					  [mem] p double m_f = 0.445915
+  [mem] p double m_g = 0.267136				      |	  [mem] p float m_g = 0.267136
+  End of ClassC							  End of ClassC
+[ele] [12] =							[ele] [12] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 24					    [mem] p int m_a = 24
+    [mem] p double m_b = 0.665968				    [mem] p double m_b = 0.665968
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.503955					  [mem] p double m_f = 0.503955
+  [mem] p double m_g = 0.835154				      |	  [mem] p float m_g = 0.835154
+  End of ClassC							  End of ClassC
+[ele] [13] =							[ele] [13] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 14					    [mem] p int m_a = 14
+    [mem] p double m_b = 0.554983				    [mem] p double m_b = 0.554983
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.365814					  [mem] p double m_f = 0.365814
+  [mem] p double m_g = 0.656302				      |	  [mem] p float m_g = 0.656302
+  End of ClassC							  End of ClassC
+[ele] [14] =							[ele] [14] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 9						    [mem] p int m_a = 9
+    [mem] p double m_b = 0.121214				    [mem] p double m_b = 0.121214
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.966178					  [mem] p double m_f = 0.966178
+  [mem] p double m_g = 0.697439				      |	  [mem] p float m_g = 0.697439
+  End of ClassC							  End of ClassC
+[ele] [15] = 0							[ele] [15] = 0
+[ele] [16] =							[ele] [16] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 12					    [mem] p int m_a = 12
+    [mem] p double m_b = 0.238192				    [mem] p double m_b = 0.238192
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.300274					  [mem] p double m_f = 0.300274
+  [mem] p double m_g = 0.710332				      |	  [mem] p float m_g = 0.710332
+  End of ClassC							  End of ClassC
+[ele] [17] = 0							[ele] [17] = 0
+[ele] [18] = 0							[ele] [18] = 0
+[ele] [19] = 0							[ele] [19] = 0
+[ele] [20] = 0							[ele] [20] = 0
+[ele] [21] =							[ele] [21] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.764864				    [mem] p double m_b = 0.764864
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.9041					  [mem] p double m_f = 0.9041
+  [mem] p double m_g = 0.39611				      |	  [mem] p float m_g = 0.39611
+  End of ClassC							  End of ClassC
+[ele] [22] =							[ele] [22] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.266194				    [mem] p double m_b = 0.266194
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.367502					  [mem] p double m_f = 0.367502
+  [mem] p double m_g = 0.752316				      |	  [mem] p float m_g = 0.752316
+  End of ClassC							  End of ClassC
+[ele] [23] =							[ele] [23] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 15					    [mem] p int m_a = 15
+    [mem] p double m_b = 0.673474				    [mem] p double m_b = 0.673474
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.328296					  [mem] p double m_f = 0.328296
+  [mem] p double m_g = 0.853946				      |	  [mem] p float m_g = 0.853946
+  End of ClassC							  End of ClassC
+[ele] [24] =							[ele] [24] =
+  Processing object of class: ClassC				  Processing object of class: ClassC
+  Processing bases of: ClassC					  Processing bases of: ClassC
+    Processing object of class: ClassABase			    Processing object of class: ClassABase
+    [mem] p int m_a = 5						    [mem] p int m_a = 5
+    [mem] p double m_b = 0.322411				    [mem] p double m_b = 0.322411
+    End of ClassABase						    End of ClassABase
+  End of bases of: ClassC					  End of bases of: ClassC
+  [mem] p double m_f = 0.950174					  [mem] p double m_f = 0.950174
+  [mem] p double m_g = 0.0953767			      |	  [mem] p float m_g = 0.0953767
+  End of ClassC							  End of ClassC
+End of vector<ClassC*>						End of vector<ClassC*>
+diff rflx_test13_wv1.log rflx_test13_rv1NS.log
+Processing object of class: vector<ClassD>			Processing object of class: vector<ClassD>
+Length = 7							Length = 7
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.860608					  [mem] p float m_c = 0.860608
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.984844				    [mem] p double m_b = 0.984844
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 1						  [mem] p int m_e = 1
+  End of ClassD							  End of ClassD
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.82865					  [mem] p float m_c = 0.82865
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 16					    [mem] p int m_a = 16
+    [mem] p double m_b = 0.489408				    [mem] p double m_b = 0.489408
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 29						  [mem] p int m_e = 29
+  End of ClassD							  End of ClassD
+[ele] [2] = 							[ele] [2] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.960132					  [mem] p float m_c = 0.960132
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 21					    [mem] p int m_a = 21
+    [mem] p double m_b = 0.860788				    [mem] p double m_b = 0.860788
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 14						  [mem] p int m_e = 14
+  End of ClassD							  End of ClassD
+[ele] [3] = 							[ele] [3] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.332391					  [mem] p float m_c = 0.332391
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 2						    [mem] p int m_a = 2
+    [mem] p double m_b = 0.452246				    [mem] p double m_b = 0.452246
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 7						  [mem] p int m_e = 7
+  End of ClassD							  End of ClassD
+[ele] [4] = 							[ele] [4] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.345607					  [mem] p float m_c = 0.345607
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 17					    [mem] p int m_a = 17
+    [mem] p double m_b = 0.317622				    [mem] p double m_b = 0.317622
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 27						  [mem] p int m_e = 27
+  End of ClassD							  End of ClassD
+[ele] [5] = 							[ele] [5] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.490045					  [mem] p float m_c = 0.490045
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 8						    [mem] p int m_a = 8
+    [mem] p double m_b = 0.968999				    [mem] p double m_b = 0.968999
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 28						  [mem] p int m_e = 28
+  End of ClassD							  End of ClassD
+[ele] [6] = 							[ele] [6] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.226718					  [mem] p float m_c = 0.226718
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 10					    [mem] p int m_a = 10
+    [mem] p double m_b = 0.286702				    [mem] p double m_b = 0.286702
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 5						  [mem] p int m_e = 5
+  End of ClassD							  End of ClassD
+End of vector<ClassD>						End of vector<ClassD>
+diff rflx_test13_wv1.log rflx_test13_rv1S.log
+Processing object of class: vector<ClassD>			Processing object of class: vector<ClassD>
+Length = 7							Length = 7
+[ele] [0] = 							[ele] [0] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.860608					  [mem] p float m_c = 0.860608
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 11					    [mem] p int m_a = 11
+    [mem] p double m_b = 0.984844				    [mem] p double m_b = 0.984844
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 1						  [mem] p int m_e = 1
+  End of ClassD							  End of ClassD
+[ele] [1] = 							[ele] [1] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.82865					  [mem] p float m_c = 0.82865
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 16					    [mem] p int m_a = 16
+    [mem] p double m_b = 0.489408				    [mem] p double m_b = 0.489408
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 29						  [mem] p int m_e = 29
+  End of ClassD							  End of ClassD
+[ele] [2] = 							[ele] [2] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.960132					  [mem] p float m_c = 0.960132
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 21					    [mem] p int m_a = 21
+    [mem] p double m_b = 0.860788				    [mem] p double m_b = 0.860788
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 14						  [mem] p int m_e = 14
+  End of ClassD							  End of ClassD
+[ele] [3] = 							[ele] [3] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.332391					  [mem] p float m_c = 0.332391
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 2						    [mem] p int m_a = 2
+    [mem] p double m_b = 0.452246				    [mem] p double m_b = 0.452246
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 7						  [mem] p int m_e = 7
+  End of ClassD							  End of ClassD
+[ele] [4] = 							[ele] [4] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.345607					  [mem] p float m_c = 0.345607
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 17					    [mem] p int m_a = 17
+    [mem] p double m_b = 0.317622				    [mem] p double m_b = 0.317622
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 27						  [mem] p int m_e = 27
+  End of ClassD							  End of ClassD
+[ele] [5] = 							[ele] [5] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.490045					  [mem] p float m_c = 0.490045
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 8						    [mem] p int m_a = 8
+    [mem] p double m_b = 0.968999				    [mem] p double m_b = 0.968999
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 28						  [mem] p int m_e = 28
+  End of ClassD							  End of ClassD
+[ele] [6] = 							[ele] [6] = 
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.226718					  [mem] p float m_c = 0.226718
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 10					    [mem] p int m_a = 10
+    [mem] p double m_b = 0.286702				    [mem] p double m_b = 0.286702
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 5						  [mem] p int m_e = 5
+  End of ClassD							  End of ClassD
+End of vector<ClassD>						End of vector<ClassD>
+diff rflx_test14_wv1.log rflx_test14_rv1NS.log
+Processing object of class: vector<ClassD*>			Processing object of class: vector<ClassD*>
+Length = 3							Length = 3
+[ele] [0] = 0							[ele] [0] = 0
+[ele] [1] = 0							[ele] [1] = 0
+[ele] [2] =							[ele] [2] =
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.391149					  [mem] p float m_c = 0.391149
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 24					    [mem] p int m_a = 24
+    [mem] p double m_b = 0.200816				    [mem] p double m_b = 0.200816
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 30						  [mem] p int m_e = 30
+  End of ClassD							  End of ClassD
+End of vector<ClassD*>						End of vector<ClassD*>
+diff rflx_test14_wv1.log rflx_test14_rv1S.log
+Processing object of class: vector<ClassD*>			Processing object of class: vector<ClassD*>
+Length = 3							Length = 3
+[ele] [0] = 0							[ele] [0] = 0
+[ele] [1] = 0							[ele] [1] = 0
+[ele] [2] =							[ele] [2] =
+  Processing object of class: ClassD				  Processing object of class: ClassD
+  [mem] p float m_c = 0.391149					  [mem] p float m_c = 0.391149
+  [mem] p ClassAIns m_d = 					  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns			    Processing object of class: ClassAIns
+    [mem] p int m_a = 24					    [mem] p int m_a = 24
+    [mem] p double m_b = 0.200816				    [mem] p double m_b = 0.200816
+							      >	    [mem] p int m_unit = -1
+    End of ClassAIns						    End of ClassAIns
+  [mem] p int m_e = 30						  [mem] p int m_e = 30
+  End of ClassD							  End of ClassD
+End of vector<ClassD*>						End of vector<ClassD*>

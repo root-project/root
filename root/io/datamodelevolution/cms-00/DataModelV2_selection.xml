@@ -1,0 +1,36 @@
+<lcgdict>
+  <class name="ClassAIns" ClassVersion="3" />
+  <class name="ClassABase" ClassVersion="2" />
+  <class name="ClassA" ClassVersion="3">
+     <field name="m_md_set" transient="TRUE"/>
+  </class>
+  <class name="ClassB" ClassVersion="3" />
+  <class name="ClassC" ClassVersion="3" />
+  <class name="ClassD" ClassVersion="3" />
+  <class name="std::vector<float>" />
+  <class name="std::pair<int,float>" />
+  <class name="std::vector<std::pair<int,float> >" />
+  <class name="std::vector<ClassA*>" />
+  <class name="std::vector<double>" />
+  <class name="std::pair<int,double>" />
+  <class name="std::vector<std::pair<int,double> >" />
+  <class name="std::vector<ClassB>" />
+  <class name="std::vector<ClassB*>" />
+  <class name="std::vector<ClassC>" />
+  <class name="std::vector<ClassC*>" />
+  <class name="std::vector<ClassD>" />
+  <class name="std::vector<ClassD*>" />
+  <class name="std::vector<ClassA>" />
+  <read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit" target="m_unit" >
+  <![CDATA[ { m_unit = 10*onfile.m_unit; } ]]>
+  </read>
+
+  <!-- read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit; ClassAIns m_d;" target="m_d.m_punit">
+  <![CDATA[ { newObj->SetMdPUnit( 10*onfile.m_unit ); } ]]>
+  </read -->
+
+  <ioread sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit" target="m_md_set">
+  <![CDATA[ { newObj->SetMdUnit( 10*onfile.m_unit ); m_md_set = true; newObj->Print(); } ]]>
+  </ioread>
+
+</lcgdict>
