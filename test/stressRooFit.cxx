@@ -788,7 +788,7 @@ int main(int argc,const char *argv[])
   Int_t dryRun    = kFALSE ;
   Bool_t doDump   = kFALSE ;
 
-  string refFileName = "http://root.cern.ch/files/stressRooFit_v524_ref.root" ;
+  string refFileName = "http://root.cern.ch/files/stressRooFit_v526_ref.root" ;
 
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {

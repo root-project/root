@@ -2266,7 +2266,7 @@ public:
 
   regTH(hh_decay,"rf306_model2d") ;
   regPlot(frame,"rf306_plot1") ;
-  regPlot(frame2,"rf306_plot2") ;
+  //regPlot(frame2,"rf306_plot2") ;
 
   delete expDataDterr ;
   delete data ;
@@ -2990,7 +2990,7 @@ public:
 
   // Print fit results to demonstrate absence of bias
   regResult(r,"rf314_fit") ;
-  regPlot(frame,"rf314_plot1") ;
+  //regPlot(frame,"rf314_plot1") ;
 
   delete tmp ;
   delete dacc ;
