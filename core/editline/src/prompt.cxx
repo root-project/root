@@ -98,10 +98,61 @@ prompt_print(EditLine_t* el, int op) {
       elp = &el->fRPrompt;
    }
    p = (elp->fFunc)(el);
-   ElColor_t col;
 
-   while (*p)
-      re_putc(el, *p++, 1, &prompt_color);
+   ElColor_t col(prompt_color);
+
+   while (*p) {
+      if (*p == '\033' && p[1] == '[') {
+         // escape sequence?
+         // we support up to 3 numbers separated by ';'
+         int num[3] = {0};
+         int i = 2;
+         int n = 0;
+         while(n < 3) {
+            while (isdigit(p[i])) {
+               num[n] *= 10;
+               num[n] += p[i] - '0';
+               ++i;
+            };
+            ++n;
+            if (p[i] != ';') {
+               // ';' is number separator
+               break;
+            }
+         }
+         if (p[i] == 'm') {
+            // color / bold / ...
+            const char* strColor = 0;
+            if (n < 2) {
+               if (num[0] == 0) {
+                  strColor = "default";
+               } else if (num[0] == 1) {
+                  strColor = "bold default";
+               } else if (num[0] == '4') {
+                  strColor = "under default";
+               } else if (num[0] == '5') {
+                  strColor = "bold default";
+               } else if (num[0] == '7') {
+                  // reverse, not supported
+                  // strColor = "reverse";
+               }
+            } else if (num[0] == '3') {
+               const char* colors[] = {
+                  "black", "red", "green", "yellow", "blue",
+                  "magenta" , "cyan", "white", "default"
+               };
+               strColor = colors[num[1]];
+            } else if (num[0] == '4') {
+               // bg color, not supported
+            }
+
+            col.fForeColor = term__atocolor(strColor);
+            p += i + 1; // skip escape
+            continue;
+         }
+      }
+      re_putc(el, *p++, 1, &col);
+   }
 
    elp->fPos.fV = el->fRefresh.r_cursor.fV;
    elp->fPos.fH = el->fRefresh.r_cursor.fH;
