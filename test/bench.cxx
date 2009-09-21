@@ -135,11 +135,44 @@ int main(int argc, char **argv)
    
    vector<TBenchData> results;
    vector<TBenchData> references;
-   references.push_back( TBenchData( "vector<THit> level=99", 0.42, 5.37, 39725046, 7394405, 0.96, 2.14, 0.32, 0.61 ) );
-   
+   references.push_back( TBenchData( "vector<THit> level=99",   0.44,   5.37, 39724266, 7392775,   0.96,   2.15,   0.32,   0.73 ) );
+   references.push_back( TBenchData( "vector<THit> level= 0",   0.29,   3.76, 42053455, 11177799,   0.85,   3.22,   0.68,   0.93 ) );
+   references.push_back( TBenchData( "vector<THit> level= 0 MW",   0.28,   4.96, 39654255, 7997901,   0.63,   1.91,   0.33,   0.52 ) );
+   references.push_back( TBenchData( "list<THit> level=99",   0.36,   5.37, 39724301, 7393378,   0.75,   2.33,   0.50,  0.64 ) );
+   references.push_back( TBenchData( "list<THit> level= 0",   0.37,   3.76, 42053474, 11177716,   0.94,   2.96,   0.64,   1.02 ) );
+   references.push_back( TBenchData( "list<THit> level= 0 MW",   0.37,   4.96, 39654274, 7998366,   0.76,   2.26,   0.37,   0.63 ) );
+   references.push_back( TBenchData( "deque<THit> level=99",   0.38,   5.37, 39724311, 7392970,   0.70,   2.01,   0.30,   0.79 ) );
+   references.push_back( TBenchData( "deque<THit> level= 0",   0.38,   3.76, 42053480, 11177240,   0.95,   2.70,   0.81,   0.97 ) );
+   references.push_back( TBenchData( "deque<THit> level= 0 MW",   0.37,   4.96, 39654280, 7998569,   0.76,   2.07,   0.42,   0.88 ) );
+   references.push_back( TBenchData( "set<THit> level=99",   0.41,   6.21, 39724292, 6396267,   0.81,   2.09,   0.62, 0.71 ) );
+   references.push_back( TBenchData( "set<THit> level= 0",   0.41,   4.39, 42053469, 9573788,   0.99,   2.65,   0.89, 1.10 ) );
+   references.push_back( TBenchData( "set<THit> level= 0 MW",   0.41,   5.79, 39654269, 6851326,   0.85,   1.62,   0.45,   0.69 ) );
+   references.push_back( TBenchData( "multiset<THit> level=99",   0.44,   6.21, 39724346, 6396195,   0.83,   2.25,   0.46,   0.71 ) );
+   references.push_back( TBenchData( "multiset<THit> level= 0",   0.43,   4.39, 42053503, 9573512,   1.04,   2.83,   0.76,   1.09 ) );
+   references.push_back( TBenchData( "multiset<THit> level= 0 MW",   0.44,   5.79, 39654303, 6851637,   0.88,   2.03, 0.62,   0.69 ) );
+   references.push_back( TBenchData( "map<THit> level=99",   0.48,   5.26, 41335814, 7861427,   0.91,   2.39,   0.67, 0.77 ) );
+   references.push_back( TBenchData( "map<THit> level= 0",   0.48,   3.84, 43653478, 11357815,   1.08,   2.69,   1.14,  1.19 ) );
+   references.push_back( TBenchData( "map<THit> level= 0 MW",   0.48,   3.68, 43655963, 11866052,   1.18,   2.94,   1.07,   1.17 ) );
+   references.push_back( TBenchData( "multimap<THit> level=99",   0.49,   5.26, 41335869, 7861144,   0.90,   2.52,   0.48,   0.78 ) );
+   references.push_back( TBenchData( "multimap<THit> level= 0",   0.49,   3.84, 43653510, 11358500,   1.09,   2.72,   1.13,   1.18 ) );
+   references.push_back( TBenchData( "multimap<THit> level= 0 MW",   0.48,   3.68, 43655998, 11866816,   1.15,   2.95,  1.04,   1.17 ) );
+   references.push_back( TBenchData( "vector<THit*> level=25599",   0.25,   5.14, 40137890, 7806511,   0.57,   1.78,0.33,   0.87 ) );
+   references.push_back( TBenchData( "list<THit*> level=25599",   0.33,   5.14, 40137936, 7806412,   0.63,   2.13,   0.42,   0.69 ) );
+   references.push_back( TBenchData( "deque<THit*> level=25599",   0.31,   5.14, 40137945, 7806520,   0.67,   1.89,   0.35,   0.88 ) );
+   references.push_back( TBenchData( "set<THit*> level=25599",   0.38,   5.74, 40137925, 6990746,   0.72,   2.20,   0.70,   0.95 ) );
+   references.push_back( TBenchData( "multiset<THit*> level=25599",   0.36,   5.85, 40137981, 6865586,   0.73,   2.17,  0.68,   0.86 ) );
+   references.push_back( TBenchData( "map<THit*> level=99",   0.37,   3.71, 46864802, 12643706,   1.28,   3.24,   1.34,   2.11 ) );
+   references.push_back( TBenchData( "multimap<THit*> level=99",   0.36,   3.71, 46864850, 12642782,   1.28,   3.20,1.38,   1.58 ) );
+   references.push_back( TBenchData( "vector<THit*> level=99 (NS)",   0.24,   3.72, 45257044, 12170238,   1.08,   3.05,   1.43,   1.44 ) );
+   references.push_back( TBenchData( "list<THit*> level=99 (NS)",   0.30,   3.72, 45257088, 12169539,   1.14,   2.88, 1.45,   1.49 ) );
+   references.push_back( TBenchData( "deque<THit*> level=99 (NS)",   0.32,   3.72, 45257098, 12167790,   1.16,   2.69,  1.41,   1.44 ) );
+   references.push_back( TBenchData( "set<THit*> level=99 (NS)",   0.38,   4.29, 45257081, 10550593,   1.23,   3.01,1.28,   2.14 ) );
+   references.push_back( TBenchData( "multiset<THit*> level=99 (NS)",   0.45,   4.28, 45257136, 10572288,   1.27,   3.03,   1.61,   1.50 ) );
+   references.push_back( TBenchData( "TClonesArray(TObjHit) level= 0",   0.28,   4.96, 39666751, 8006156,   0.55,   1.76,   0.16,   0.64 ) );
+   references.push_back( TBenchData( "TClonesArray(TObjHit) level=99",   0.37,   5.37, 39722797, 7392577,   0.55,   2.07,   0.17,   0.46 ) );    
+
    /// STL VECTOR
    runTest<TSTLhit>( "vector<THit> level=99", nevents, nhits, 99, cptot, results );
-   
    /// STL VECTOR not split.
    runTest<TSTLhit>( "vector<THit> level= 0", nevents, nhits,  0, cptot, results );
    
