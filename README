@@ -113,7 +113,7 @@ with
 ==============================================================================
 Disable a specific test:
 
-Create a file named !DISABLE contain the name of the test to skip.
+Create a file named !DISABLE containing the name of the test to skip.
 For example:
 
 echo operatorLessThanTemplate > cint/parsing/\!DISABLE
@@ -124,6 +124,16 @@ c:/root/roottest//scripts/Rules.mk:25: Test(s) operatorLessThanTemplate
 disabled!
 
 and it skips these tests (if not runnnig make clean).
+
+==============================================================================
+Prevent a subdirectory from being recursed into by the Makefile:
+
+Create a file named SpecialDirs containing the name of the subdirectory to skip.
+For example:
+
+echo cmake-build > cint/reflex_standalone/SpecialDirs
+
+and it skips this subdirectory
 
 ==============================================================================
 Running the test
