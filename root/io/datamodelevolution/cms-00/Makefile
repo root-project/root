@@ -75,9 +75,6 @@ test1: test1.clog
 rtest1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictrflx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+\(\"r\"\) > rtest1.clog 2>&1
 
-rtest1: rtest1.clog
-	$(TestDiff)
-
 test2_cxx.$(DllSuf): DataModelV2.h
 
 test2.clog: test2_cxx.$(DllSuf) test1 libDataModelV2_dictcint.$(DllSuf)
@@ -95,9 +92,6 @@ rtest2.clog: test2_cxx.$(DllSuf) libDataModelV2_dictrflx.$(DllSuf) rtest1
 rtest2.comp.log: rtest2.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 1 -d rflx_ ) > rtest2.comp.log
 
-rtest2: rtest2.comp.log
-	$(TestDiff)
-
 test3.clog: test3_cxx.$(DllSuf) test2  libDataModelV3_dictcint.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l test3.cxx+ > test3.clog 2>&1
 
@@ -113,5 +107,28 @@ rtest3.clog: test3_cxx.$(DllSuf) rtest2 libDataModelV3_dictrflx.$(DllSuf)
 rtest3.comp.log: rtest3.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 2 -d rflx_ ) > rtest3.comp.log
 
+ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
+
+rtest1: rtest1.clog
+	$(TestDiff)
+
+rtest2: rtest2.comp.log
+	$(TestDiff)
+
 rtest3: rtest3.clog
 	$(TestDiff)
+
+else
+
+rtest1:
+ifeq ($(HAVEGCCXML),"nocintex")
+	$(CMDECHO) echo "Your ROOT build does not include cintex: skipping test $@"
+else
+	$(CMDECHO) echo "GCCXML not in \$$PATH: skipping test $@"
+endif
+
+rtest2: rtest1
+
+rtest3: rtest2
+
+endif
