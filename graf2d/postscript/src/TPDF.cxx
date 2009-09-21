@@ -2009,8 +2009,16 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       t.SetTextSize(fTextSize);
       t.SetTextFont(fTextFont);
       t.GetTextExtent(w, h, chars);
-      if(txalh == 2) x = x - (gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0))/2;
-      if(txalh == 3) x = x - (gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0));
+      Double_t twx = gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0);
+      Double_t twy = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(w);
+      if(txalh == 2){
+         x = x-(twx/2)*TMath::Cos(kDEGRAD*fTextAngle);
+         y = y-(twy/2)*TMath::Sin(kDEGRAD*fTextAngle);
+      }
+      if(txalh == 3){
+         x = x-twx*TMath::Cos(kDEGRAD*fTextAngle);
+         y = y-twy*TMath::Sin(kDEGRAD*fTextAngle);
+      }
    }
 
    // Text angle
