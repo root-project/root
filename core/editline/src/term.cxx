@@ -1552,6 +1552,13 @@ el_protected void
 term__setcolor(int fgcol) {
    TTermManip& tm = term__gettermmanip();
 
+   int idx = (fgcol & 0xff);
+   if (idx == 0xff) {
+      tm.SetDefaultColor();
+   } else {
+      tm.SetColor(idx);
+   }
+
    if (fgcol != -1) {
       if (fgcol & 0x2000) {
          tm.StartBold();
@@ -1563,13 +1570,6 @@ term__setcolor(int fgcol) {
       } else {
          tm.StopUnderline();
       }
-   }
-
-   fgcol &= 0xff;
-   if (fgcol == 0xff) {
-      tm.SetDefaultColor();
-   } else {
-      tm.SetColor(fgcol);
    }
 
 } // term__setcolor
