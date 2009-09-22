@@ -694,7 +694,7 @@ Int_t TStyle::GetNumberOfColors() const
 }
 
 //______________________________________________________________________________
-void TStyle::GetPaperSize(Float_t &xsize, Float_t &ysize)
+void TStyle::GetPaperSize(Float_t &xsize, Float_t &ysize) const
 {
    //    Set paper size for PostScript output
    //

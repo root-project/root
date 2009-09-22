@@ -242,7 +242,7 @@ public:
    Int_t            GetOptLogy() const {return fOptLogy;}
    Int_t            GetOptLogz() const {return fOptLogz;}
    const char      *GetPaintTextFormat() const {return fPaintTextFormat.Data();}
-   void             GetPaperSize(Float_t &xsize, Float_t &ysize);
+   void             GetPaperSize(Float_t &xsize, Float_t &ysize) const;
    Int_t            GetShowEventStatus() const {return fShowEventStatus;}
    Int_t            GetShowEditor() const {return fShowEditor;}
    Int_t            GetShowToolBar() const {return fShowToolBar;}
