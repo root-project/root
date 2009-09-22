@@ -269,8 +269,8 @@ int main(int argc, char **argv)
    runTest<TCloneshit>( "TClonesArray(TObjHit) level= 0", nevents, nhits,  0, cptot, results );
    runTest<TCloneshit>( "TClonesArray(TObjHit) level=99", nevents, nhits, 99, cptot, results );
 
-   Double_t cpref = 104.43;
-   Double_t rootmarks = cpref*900/cptot;
+   Double_t cpref = 195.43;
+   Double_t rootmarks = cpref*800/cptot;
    
    for(unsigned int t=references.size(); t<results.size(); ++t) {
       references.push_back(TBenchData());
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
       if (!os) printf("*  Windows 95\n");
       else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
    }
-   printf("*     Reference machine pcbrun.cern.ch  RedHat Linux 7.3                      *\n");
+   printf("*     Reference machine pcbrun4.cern.ch  RedHat Linux 7.3                      *\n");
    printf("*         (Pentium IV 2.4 Ghz 512 Mbytes RAM, IDE disk)                       *\n");
    printf("*           (send your results to rootdev@root.cern.ch)                       *\n");
    printf("*******************************************************************************\n");
@@ -325,7 +325,7 @@ int main(int argc, char **argv)
    }
    printf("*******************************************************************************\n");
    printf("* Total CPU time              %8.2f    %8.2f                            *\n",cptot,cpref);
-   printf("* Estimated ROOTMARKS         %8.2f      900.00                            *\n",rootmarks);
+   printf("* Estimated ROOTMARKS         %8.2f      800.00                            *\n",rootmarks);
    printf("******************************************************************************\n");
    
    if (writereferences) {
