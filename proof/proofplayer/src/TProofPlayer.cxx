@@ -1673,7 +1673,6 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                // Add the collection to the output list for registration and/or to be returned
                // to the client
                fOutput->Add(fc);
-
                // Do not cleanup at destruction
                pf->ResetFileCollection();
                // Tell the main thread to register this dataset, if needed
@@ -1686,6 +1685,10 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                   TString tag = TString::Format("DATASET_%s", pf->GetTitle());
                   fOutput->Add(new TNamed(tag, opt));
                }
+               // Remove this object from the output list and schedule it for distruction
+               fOutput->Remove(pf);
+               if (!rmList) rmList = new TList;
+               rmList->Add(pf);
             }
          }
       }
