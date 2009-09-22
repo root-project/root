@@ -35,6 +35,7 @@
 
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientConn.hh"
+#include <XrdClient/XrdClientConst.hh>
 #include "XrdClient/XrdClientEnv.hh"
 #include "XProtocol/XProtocol.hh"
 
@@ -118,10 +119,17 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
       return cadm;
    }
 
+   // Do not block: restore old value after
+   Int_t maxOld = EnvGetLong(NAME_FIRSTCONNECTMAXCNT);
+
    // Try to connect to the server
+   gEnv->SetValue("XNet.FirstConnectMaxCnt", 1);
+   EnvPutInt(NAME_FIRSTCONNECTMAXCNT, 1);
    if (cadm->Connect()) {
       fIsXRootd = kTRUE;
+      EnvPutInt(NAME_FIRSTCONNECTMAXCNT, maxOld);
    } else {
+      EnvPutInt(NAME_FIRSTCONNECTMAXCNT, maxOld);
       if (fgRootdBC) {
          Bool_t isRootd =
             (cadm->GetClientConn()->GetServerType() == kSTRootd);
