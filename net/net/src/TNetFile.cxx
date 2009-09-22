@@ -901,7 +901,7 @@ void TNetSystem::Create(const char *url, TSocket *sock)
    else if (opts.Contains("remote=0"))
       forceRemote = kFALSE;
    if (!forceRemote) {
-      if ((fIsLocal = gSystem->IsPathLocal(url))) {
+      if ((fIsLocal = TSystem::IsPathLocal(url))) {
          fLocalPrefix = gEnv->GetValue("Path.Localroot","");
          // Nothing more to do
          return;
