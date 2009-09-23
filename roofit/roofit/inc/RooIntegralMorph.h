@@ -21,17 +21,17 @@ class RooBrentRootFinder ;
 
 class TH1D ;
  
-class RooLinearMorph : public RooAbsCachedPdf {
+class RooIntegralMorph : public RooAbsCachedPdf {
 public:
-  RooLinearMorph() {} ; 
-  RooLinearMorph(const char *name, const char *title,
+  RooIntegralMorph() {} ; 
+  RooIntegralMorph(const char *name, const char *title,
 	      RooAbsReal& _pdf1,
 	      RooAbsReal& _pdf2,
   	      RooAbsReal& _x,
 	      RooAbsReal& _alpha, Bool_t cacheAlpha=kFALSE);
-  RooLinearMorph(const RooLinearMorph& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooLinearMorph(*this,newname); }
-  inline virtual ~RooLinearMorph() { }
+  RooIntegralMorph(const RooIntegralMorph& other, const char* name=0) ;
+  virtual TObject* clone(const char* newname) const { return new RooIntegralMorph(*this,newname); }
+  inline virtual ~RooIntegralMorph() { }
 
   Bool_t selfNormalized() const { 
     // P.d.f is self normalized
@@ -50,7 +50,7 @@ public:
 
   class MorphCacheElem : public PdfCacheElem {
   public:
-    MorphCacheElem(RooLinearMorph& self, const RooArgSet* nset) ;
+    MorphCacheElem(RooIntegralMorph& self, const RooArgSet* nset) ;
     ~MorphCacheElem() ;
     void calculate(TIterator* iter) ;
     virtual RooArgList containedArgs(Action) ;
@@ -63,7 +63,7 @@ public:
     void fillGap(Int_t ixlo, Int_t ixhi,Double_t splitPoint=0.5) ;
     void interpolateGap(Int_t ixlo, Int_t ixhi) ;
 
-    RooLinearMorph* _self ; //
+    RooIntegralMorph* _self ; //
     RooArgSet* _nset ; 
     RooAbsPdf* _pdf1 ; // PDF1
     RooAbsPdf* _pdf2 ; // PDF2
@@ -106,7 +106,7 @@ protected:
 
 private:
 
-  ClassDef(RooLinearMorph,1) // Linear shape interpolation operator p.d.f
+  ClassDef(RooIntegralMorph,1) // Linear shape interpolation operator p.d.f
 };
  
 #endif

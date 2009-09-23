@@ -235,25 +235,39 @@ void RooCompositeDataStore::reset()
 
 
 //_____________________________________________________________________________
-void RooCompositeDataStore::cacheArgs(const RooAbsArg* /*owner*/, RooArgSet& /*newVarSet*/, const RooArgSet* /*nset*/) 
+void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset) 
 {
+  map<string,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    iter->second->cacheArgs(owner,newVarSet,nset) ;
+  }
 }
 
 
 
 //_____________________________________________________________________________
-void RooCompositeDataStore::setArgStatus(const RooArgSet& /*set*/, Bool_t /*active*/) 
+void RooCompositeDataStore::setArgStatus(const RooArgSet& set, Bool_t active) 
 {
+  map<string,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    RooArgSet* subset = (RooArgSet*) set.selectCommon(*iter->second->get()) ;
+    iter->second->setArgStatus(*subset,active) ;
+    delete subset ;
+  }
   return ;
 }
 
 
 
 //_____________________________________________________________________________
-void RooCompositeDataStore::attachCache(const RooAbsArg* /*newOwner*/, const RooArgSet& /*cachedVars*/) 
+void RooCompositeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& inCachedVars) 
 {
   // Initialize cache of dataset: attach variables of cache ArgSet
   // to the corresponding TTree branches
+  map<string,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    iter->second->attachCache(newOwner,inCachedVars) ;
+  }
   return ;
 }
 
@@ -262,6 +276,10 @@ void RooCompositeDataStore::attachCache(const RooAbsArg* /*newOwner*/, const Roo
 //_____________________________________________________________________________
 void RooCompositeDataStore::resetCache() 
 {
+  map<string,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    iter->second->resetCache() ;
+  }
   return ;
 }
 

@@ -43,6 +43,8 @@
 #pragma link C++ class RooWorkspace- ;
 #pragma link C++ class RooWorkspace::CodeRepo- ;
 #pragma link C++ class RooWorkspace::WSDir+ ;
+#pragma link C++ class list<TObject*>+ ;
+#pragma link C++ class list<RooAbsData*>+ ;
 #pragma link C++ class RooProfileLL+ ;
 #pragma link C++ class RooAbsCachedPdf+ ;
 #pragma link C++ class RooAbsSelfCachedPdf+ ;
@@ -68,7 +70,6 @@
 #pragma link C++ class RooSimWSTool::ObjSplitRule+ ;
 #pragma link C++ class RooSimWSTool::ObjBuildConfig+ ;
 #pragma link C++ class RooFracRemainder+ ;
-#pragma link C++ class RooLinearMorph+ ;
 #pragma link C++ class RooAbsCachedReal+ ;
 #pragma link C++ class RooAbsSelfCachedReal+ ;
 #pragma link C++ class RooCachedReal+ ;
@@ -101,8 +102,10 @@
 #pragma link C++ class RooTreeDataStore- ;
 #pragma link C++ class RooCompositeDataStore+ ;
 #pragma link C++ class RooTreeData+ ;
+#ifndef __ROOFIT_NOROOMINIMIZER
 #pragma link C++ class RooMinimizer+ ;
 #pragma link C++ class RooMinimizerFcn+ ;
+#endif
 #pragma link C++ class RooMoment+ ;
 #pragma link C++ class RooStudyManager+ ;
 #pragma link C++ class RooStudyPackage+ ;

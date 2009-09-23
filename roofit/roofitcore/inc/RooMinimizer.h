@@ -12,6 +12,9 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
+#ifndef __ROOFIT_NOROOMINIMIZER
+
 #ifndef ROO_MINIMIZER
 #define ROO_MINIMIZER
 
@@ -19,6 +22,7 @@
 #include "TStopwatch.h"
 #include <fstream>
 #include "TMatrixDSymfwd.h"
+
 
 #include "Fit/Fitter.h"
 #include "RooMinimizerFcn.h"
@@ -112,3 +116,4 @@ private:
 
 #endif
 
+#endif

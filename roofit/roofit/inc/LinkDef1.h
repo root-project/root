@@ -38,6 +38,7 @@
 #pragma link C++ class RooTFnPdfBinding+ ;
 #pragma link C++ class RooBernstein+ ;
 #pragma link C++ class RooChiSquarePdf+ ;
+#pragma link C++ class RooIntegralMorph+ ;
 #pragma link C++ class RooMomentMorph+ ;
 /* #pragma link C++ class std::vector< TVector2 >; */
 /* #pragma link C++ class std::vector< TVector2 >::iterator ; */

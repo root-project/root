@@ -982,8 +982,12 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t doWarn   = pc.getInt("doWarn") ;
   Int_t doSumW2  = pc.getInt("doSumW2") ;
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
+#ifdef __ROOFIT_NOROOMINIMIZER
+  const char* minType =0 ;
+#else
   const char* minType = pc.getString("mintype","",kTRUE) ;
   const char* minAlg = pc.getString("minalg","",kTRUE) ;
+#endif
 
   // Determine if the dataset has weights  
   Bool_t weightedData = data.isNonPoissonWeighted() ;
@@ -1014,8 +1018,10 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooFitResult *ret = 0 ;    
 
   // Instantiate MINUIT
+
   if (minType) {
 
+#ifndef __ROOFIT_NOROOMINIMIZER
     RooMinimizer m(*nll) ;
 
     m.setMinimizerType(minType) ;
@@ -1159,6 +1165,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     if (optConst) {
       m.optimizeConst(0) ;
     }
+
+#endif
 
   } else {
 
@@ -1699,9 +1707,8 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
 RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &whatVars, const RooDataSet *prototype,
 				Int_t nEvents, Bool_t /*verbose*/, Bool_t randProtoOrder, Bool_t resampleProto) const 
 {
-  // Internal method
-
-  if (nEvents==0) {
+  // Internal method  
+  if (nEvents==0 && (prototype==0 || prototype->numEntries()==0)) {
     return new RooDataSet("emptyData","emptyData",whatVars) ;
   }
 

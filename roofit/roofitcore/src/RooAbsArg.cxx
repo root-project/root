@@ -1623,7 +1623,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
       // Add to cache list
       cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
 
-      cacheList.add(*this) ;
+      cacheList.add(*this,kFALSE) ;
     }
 
   } else {

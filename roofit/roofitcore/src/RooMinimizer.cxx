@@ -39,6 +39,8 @@
 // END_HTML
 //
 
+#ifndef __ROOFIT_NOROOMINIZER
+
 #include "RooFit.h"
 #include "Riostream.h"
 
@@ -842,4 +844,5 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
 
 }
 
+#endif
 

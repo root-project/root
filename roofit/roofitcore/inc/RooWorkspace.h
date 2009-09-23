@@ -98,6 +98,15 @@ public:
   TObject* genobj(const char* name) ;
   TObject* obj(const char* name) ;
 
+  // Group accessors
+  RooArgSet allVars() ;
+  RooArgSet allCats() ;
+  RooArgSet allFunctions() ;
+  RooArgSet allCatFunctions() ;
+  RooArgSet allPdfs() ;
+  RooArgSet allResolutionModels() ;
+  std::list<RooAbsData*> allData() ;
+  std::list<TObject*> allGenericObjects() ;
 
   Bool_t makeDir() ; 
   Bool_t cd(const char* path = 0) ;

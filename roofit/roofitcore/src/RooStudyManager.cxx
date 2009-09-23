@@ -34,13 +34,13 @@
 #include "RooDataSet.h"
 #include "RooMsgService.h"
 #include "RooStudyPackage.h"
-#include "TProof.h"
 #include "TTree.h"
-#include "TDSet.h"
 #include "TFile.h"
 #include "TRegexp.h"
 #include "TKey.h"
 #include <string>
+#include "TROOT.h"
+#include "TSystem.h"
 
 using namespace std ;
 
@@ -98,19 +98,20 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost)
 {
   // Open PROOF-Lite session
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
-  TProof* p = TProof::Open(proofHost) ;
+  void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
 
   // Propagate workspace to proof nodes
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") sending work package to PROOF servers" << endl ;
-  p->AddInput(_pkg) ;
+  gROOT->ProcessLineFast(Form("((TProof*)0x%x)->AddInput((TObject*)0x%x) ;",p,(void*)_pkg) ) ;
 
   // Run selector in parallel
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") starting PROOF processing of " << nExperiments << " experiments" << endl ;
-  p->Process("RooProofDriverSelector",nExperiments) ;  
+			 
+  gROOT->ProcessLineFast(Form("((TProof*)0x%x)->Process(\"RooProofDriverSelector\",%d) ;",p,nExperiments)) ;
 
   // Aggregate results data
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") aggregating results data" << endl ;
-  TList* olist = p->GetOutputList() ;
+  TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)0x%x)->GetOutputList()",p)) ;
   aggregateData(olist) ;
 }
 

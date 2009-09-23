@@ -54,6 +54,7 @@
 #include "RooTObjWrap.h"
 #include "TROOT.h"
 #include "TFile.h"
+#include "TH1.h"
 #include "Api.h"
 #include <map>
 #include <string>
@@ -1185,6 +1186,171 @@ RooAbsData* RooWorkspace::data(const char* name)
 
 
 
+
+//_____________________________________________________________________________
+RooArgSet RooWorkspace::allVars() 
+{
+  // Return set with all variable objects
+  RooArgSet ret ;
+
+  // Split list of components in pdfs, functions and variables
+  TIterator* iter = _allOwnedNodes.createIterator() ;
+  RooAbsArg* parg ;
+  while((parg=(RooAbsArg*)iter->Next())) {
+    if (parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+      ret.add(*parg) ;
+    }
+  }
+  delete iter ;
+
+  return ret ;
+}
+
+
+//_____________________________________________________________________________
+RooArgSet RooWorkspace::allCats() 
+{
+  // Return set with all category objects
+  RooArgSet ret ;
+
+  // Split list of components in pdfs, functions and variables
+  TIterator* iter = _allOwnedNodes.createIterator() ;
+  RooAbsArg* parg ;
+  while((parg=(RooAbsArg*)iter->Next())) {
+    if (parg->IsA()->InheritsFrom(RooCategory::Class())) {
+      ret.add(*parg) ;
+    }
+  }
+  delete iter ;
+
+  return ret ;
+}
+
+
+
+//_____________________________________________________________________________
+RooArgSet RooWorkspace::allFunctions() 
+{
+  // Return set with all function objects
+  RooArgSet ret ;
+
+  // Split list of components in pdfs, functions and variables
+  TIterator* iter = _allOwnedNodes.createIterator() ;
+  RooAbsArg* parg ;
+  while((parg=(RooAbsArg*)iter->Next())) {
+    if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) && 
+	!parg->IsA()->InheritsFrom(RooAbsPdf::Class()) && 
+	!parg->IsA()->InheritsFrom(RooConstVar::Class()) && 
+	!parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+      ret.add(*parg) ;
+    }
+  }
+
+  return ret ;
+}
+
+
+//_____________________________________________________________________________
+RooArgSet RooWorkspace::allCatFunctions() 
+{
+  // Return set with all category function objects
+  RooArgSet ret ;
+
+  // Split list of components in pdfs, functions and variables
+  TIterator* iter = _allOwnedNodes.createIterator() ;
+  RooAbsArg* parg ;
+  while((parg=(RooAbsArg*)iter->Next())) {  
+    if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) && 
+	!parg->IsA()->InheritsFrom(RooCategory::Class())) {
+      ret.add(*parg) ;
+    }
+  }
+  return ret ;
+}
+
+
+
+//_____________________________________________________________________________
+RooArgSet RooWorkspace::allResolutionModels() 
+{
+  // Return set with all resolution model objects
+  RooArgSet ret ;
+
+  // Split list of components in pdfs, functions and variables
+  TIterator* iter = _allOwnedNodes.createIterator() ;
+  RooAbsArg* parg ;
+  while((parg=(RooAbsArg*)iter->Next())) {  
+    if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
+      if (!((RooResolutionModel*)parg)->isConvolved()) {
+	ret.add(*parg) ;
+      }
+    }
+  }
+  return ret ;
+}
+
+
+//_____________________________________________________________________________
+RooArgSet RooWorkspace::allPdfs() 
+{
+  // Return set with all probability density function objects
+  RooArgSet ret ;
+
+  // Split list of components in pdfs, functions and variables
+  TIterator* iter = _allOwnedNodes.createIterator() ;
+  RooAbsArg* parg ;
+  while((parg=(RooAbsArg*)iter->Next())) {  
+    if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
+	!parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
+      ret.add(*parg) ;
+    }
+  }
+  return ret ;
+}
+
+
+
+//_____________________________________________________________________________
+list<RooAbsData*> RooWorkspace::allData() 
+{
+  // Return list of all dataset in the workspace
+
+  list<RooAbsData*> ret ;
+  TIterator* iter = _dataList.MakeIterator() ;
+  RooAbsData* dat ;
+  while((dat=(RooAbsData*)iter->Next())) {
+    ret.push_back(dat) ;
+  }
+  delete iter ;
+  return ret ;
+}
+
+
+
+//_____________________________________________________________________________
+list<TObject*> RooWorkspace::allGenericObjects() 
+{
+  // Return list of all generic objects in the workspace
+
+  list<TObject*> ret ;
+  TIterator* iter = _genObjects.MakeIterator() ;
+  TObject* gobj ;
+  while((gobj=(RooAbsData*)iter->Next())) {    
+
+    // If found object is wrapper, return payload
+    if (gobj->IsA()==RooTObjWrap::Class()) {
+      ret.push_back(((RooTObjWrap*)gobj)->obj()) ;
+    } else {
+      ret.push_back(gobj) ;
+    }
+  }
+  delete iter ;
+  return ret ;
+}
+
+
+
+
 //_____________________________________________________________________________
 Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace) 
 {
@@ -1532,12 +1698,14 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
 			  << object.GetName() << " is already in workspace and replaceExisting flag is set to false" << endl ;
     return kTRUE ;
   }  
+  TH1::AddDirectory(kFALSE) ;
   if (oldObj) {
     _genObjects.Replace(oldObj,object.Clone()) ;
     delete oldObj ;
   } else {
     _genObjects.Add(object.Clone()) ;
   }
+  TH1::AddDirectory(kTRUE) ;
   return kFALSE ;
 }
 
@@ -1563,7 +1731,9 @@ Bool_t RooWorkspace::import(TObject& object, const char* aliasName, Bool_t repla
     return kTRUE ;
   }  
   
+  TH1::AddDirectory(kFALSE) ;
   RooTObjWrap* wrapper = new RooTObjWrap(object.Clone()) ;
+  TH1::AddDirectory(kTRUE) ;
   wrapper->setOwning(kTRUE) ;
   wrapper->SetName(aliasName) ;
   wrapper->SetTitle(aliasName) ;

@@ -184,8 +184,8 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
     RooSimultaneous* simComp = dynamic_cast<RooSimultaneous*>(iter->second) ;
     if (simComp) {
       ci.simPdf = simComp ;
-      ci.subIndex = &simComp->indexCat() ;
-      ci.subIndexComps = simComp->indexCat().getVariables() ;
+      ci.subIndex = &simComp->indexCat() ;      
+      ci.subIndexComps = simComp->indexCat().isFundamental() ? new RooArgSet(simComp->indexCat()) : simComp->indexCat().getVariables() ;
       allAuxCats.add(*(ci.subIndexComps),kTRUE) ;
     } else {
       ci.simPdf = 0 ;
