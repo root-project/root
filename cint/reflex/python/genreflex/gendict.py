@@ -1000,7 +1000,6 @@ class genDictionary(object) :
         # Process the data members
         #--------------------------------------------------------------------------
         sourceMembers = [member.strip() for member in rule['attrs']['source'].split(';')]
-        print sourceMembers
         sourceMembersSpl = []
         for member in sourceMembers:
           type = ''
