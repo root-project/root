@@ -340,9 +340,9 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
          Float_t x = padT;
          Float_t y = height + padT + 0.5*padF;
          fMenuFont.PreRender();
-         fMenuFont.RenderBitmap("X", x, y, 0, TGLFont::kLeft);
+         fMenuFont.Render("X", x, y, 0, TGLFont::kLeft, TGLFont::kCenterV);
          x += padM + padT;
-         fMenuFont.RenderBitmap("E", x, y, 0, TGLFont::kLeft);
+         fMenuFont.Render("E", x, y, 0, TGLFont::kLeft, TGLFont::kCenterV);
          fMenuFont.PostRender();
       }
 

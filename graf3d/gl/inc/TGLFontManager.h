@@ -30,7 +30,8 @@ public:
       kTexture, kOutline, kPolygon, kExtrude
    }; // Font-types of FTGL.
 
-   enum ETextAlign_e { kCenterDown, kCenterUp, kLeft, kRight };
+   enum ETextAlignH_e { kLeft, kRight, kCenterH };
+   enum ETextAlignV_e   { kBottom, kTop, kCenterV };
 
 private:
    TGLFont& operator=(const TGLFont& o); // Not implemented.
@@ -81,9 +82,11 @@ public:
               Float_t& llx, Float_t& lly, Float_t& llz,
               Float_t& urx, Float_t& ury, Float_t& urz) const;
 
-   void  Render(const char* txt) const;
    void  Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const;
-   void  RenderBitmap(const char* txt, Float_t x, Float_t y, Float_t zs, ETextAlign_e align) const;
+   void  Render(const TString &txt) const;
+   void  Render(const TString &txt, Float_t x, Float_t y, Float_t z, ETextAlignH_e alignH, ETextAlignV_e alignV) const;
+   void  Render(const TString &txt, const Float_t*, ETextAlignH_e alignH, ETextAlignV_e alignV) const;
+   void  Render(const TString &txt, const Double_t*, ETextAlignH_e alignH, ETextAlignV_e alignV) const;
 
    // helper gl draw functions
    virtual void PreRender(Bool_t autoLight=kTRUE, Bool_t lightOn=kFALSE) const;

@@ -222,6 +222,7 @@ public:
 
    void         UseDefaultColorSet(Bool_t x);
    Bool_t       IsUsingDefaultColorSet() const;
+   Bool_t       IsColorSetDark() const;
 
    void         SetClearColor(Color_t col);
 

@@ -14,6 +14,7 @@
 #include "TAxis.h"
 #include "TColor.h"
 #include "TROOT.h"
+#include "THLimitsFinder.h"
 
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
@@ -21,9 +22,12 @@
 #include "TGLUtil.h"
 #include "TGLCamera.h"
 #include "TGLAxisPainter.h"
+#include "TGLFontManager.h"
 
 #include "TEveCalo.h"
 #include "TEveCaloData.h"
+#include "TEveRGBAPalette.h"
+
 #include <KeySymbols.h>
 
 
@@ -43,11 +47,11 @@ TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
    fCalo(0),
 
    fShowScales(kTRUE),
-   fScaleColor(kWhite), fScaleTransparency(0),
+   fScaleColor(-1), fScaleTransparency(0),
    fScaleCoordX(0.85), fScaleCoordY(0.65),
    fCellX(-1), fCellY(-1),
 
-   fFrameColor(kGray), fFrameLineTransp(0), fFrameBgTransp(90),
+   fFrameColor(-1), fFrameLineTransp(70), fFrameBgTransp(90),
 
    fMouseX(0),  fMouseY(0),
    fInDrag(kFALSE),
@@ -102,37 +106,82 @@ Bool_t TEveCaloLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
 
    if (selRec.GetN() < 2) return kFALSE;
 
-   switch (event->fType)
+
+   if (rnrCtx.RefCamera().IsOrthographic())
    {
-      case kButtonPress:
-      {
-         fMouseX = event->fX;
-         fMouseY = event->fY;
-         fInDrag = kTRUE;
-         return kTRUE;
-      }
-      case kButtonRelease:
-      {
-         fInDrag = kFALSE;
-         return kTRUE;
-      }
-      case kMotionNotify:
-      {
-         if (fInDrag)
+      switch (event->fType)
+      {      case kButtonPress:
          {
-            const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
-            fScaleCoordX += (Float_t)(event->fX - fMouseX) / vp.Width();
-            fScaleCoordY -= (Float_t)(event->fY - fMouseY) / vp.Height();
             fMouseX = event->fX;
             fMouseY = event->fY;
+            fInDrag = kTRUE;
+            return kTRUE;
          }
-         return kTRUE;
-      }
-      default:
-      {
-         return kFALSE;
+         case kButtonRelease:
+         {
+            fInDrag = kFALSE;
+            return kTRUE;
+         }
+         case kMotionNotify:
+         {
+            if (fInDrag)
+            {
+               const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
+               fScaleCoordX += (Float_t)(event->fX - fMouseX) / vp.Width();
+               fScaleCoordY -= (Float_t)(event->fY - fMouseY) / vp.Height();
+               fMouseX = event->fX;
+               fMouseY = event->fY;
+            }
+            return kTRUE;
+         }
+         default:
+            break;
       }
    }
+
+   else
+   {
+      switch (event->fType)
+      {
+         case kMotionNotify:
+         {
+            Int_t item = selRec.GetN() < 2 ? -1 : (Int_t)selRec.GetItem(1);
+            if (fActiveID != item) {
+               fActiveID = item;
+               return kTRUE;
+            } else {
+               if (fActiveID == 2 && event->fState == 256)
+                  return SetSliderVal(event, rnrCtx);
+
+               return kFALSE;
+            }
+            break;
+         }
+         case kButtonPress:
+         {
+            if (event->fCode != kButton1) {
+               return kFALSE;
+            }
+            switch (selRec.GetItem(1))
+            {
+               case 1:
+                  fShowSlider = !fShowSlider;
+                  fCalo->SetDrawHPlane(fShowSlider);
+                  break;
+               case 2:
+                  return SetSliderVal(event, rnrCtx);
+               case 3:
+                  fHeaderSelected = !fHeaderSelected;
+               default:
+                  break;
+            }
+         }
+         default:
+            break;
+      }
+   }
+
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -143,7 +192,7 @@ Bool_t TEveCaloLegoOverlay::MouseEnter(TGLOvlSelectRecord& /*rec*/)
    return kTRUE;
 }
 
- //______________________________________________________________________________
+//______________________________________________________________________________
 void TEveCaloLegoOverlay::MouseLeave()
 {
    // Mouse has left overlay area.
@@ -163,7 +212,7 @@ void TEveCaloLegoOverlay::SetScaleColorTransparency(Color_t colIdx, UChar_t tran
 //______________________________________________________________________________
 void TEveCaloLegoOverlay::SetScalePosition(Double_t x, Double_t y)
 {
-   // Set scale coordinates in range [0,1]. 
+   // Set scale coordinates in range [0,1].
 
    fScaleCoordX = x;
    fScaleCoordY = y;
@@ -173,7 +222,7 @@ void TEveCaloLegoOverlay::SetScalePosition(Double_t x, Double_t y)
 void TEveCaloLegoOverlay:: SetFrameAttribs(Color_t frameColor, UChar_t lineTransp, UChar_t bgTransp)
 {
    // Set frame attribs.
-   
+
    fFrameColor = frameColor;
    fFrameLineTransp = lineTransp;
    fFrameBgTransp = bgTransp;
@@ -222,7 +271,6 @@ void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
 {
    // Render menu for plane-value and the plane if marked.
 
-   TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT | GL_POINT_BIT);
    glEnable(GL_POINT_SMOOTH);
    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
@@ -232,16 +280,15 @@ void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
    glDisable(GL_CULL_FACE);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   glPushName(0);
 
    // move to the center of menu
    Double_t maxVal = fCalo->GetMaxVal();
-   glScalef(fSliderH/(maxVal), fSliderH/maxVal, 1.);
 
    // button
    glPushMatrix();
-   glTranslatef(0, (1-fButtonW )*fMenuW*0.8, 0);
+   glTranslatef(1 -fMenuW, (1-fButtonW )*fMenuW*0.8, 0);
 
+   glPushName(0);
    glLoadName(1);
    Float_t a=0.6;
    (fActiveID == 1) ? TGLUtil::Color(fActiveCol):TGLUtil::Color4f(0, 1, 0, a);
@@ -255,10 +302,10 @@ void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
    glVertex2f(-bwt, bh);
    glEnd();
 
-   TGLUtil::Color(4);
 
    TGLUtil::LineWidth(1);
    glBegin(GL_LINES);
+   TGLUtil::Color(4);
    glVertex2f(0, 0); glVertex2f(0, bh);
    glVertex2f((bw+bwt)*0.5, bh*0.5); glVertex2f(-(bw+bwt)*0.5, bh*0.5);
    glEnd();
@@ -290,19 +337,16 @@ void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
       }
 
       // slider axis
-      glPushMatrix();
       fAxisPainter->SetLabelPixelFontSize(TMath::CeilNint(rnrCtx.GetCamera()->RefViewport().Height()*GetAttAxis()->GetLabelSize()));
       fAxisPainter->RefDir().Set(0, 1, 0);
       fAxisPainter->RefTMOff(0).Set(1, 0, 0);
-      fAxisPainter->SetLabelAlign(TGLFont::kLeft);
+      fAxisPainter->SetLabelAlign(TGLFont::kLeft, TGLFont::kCenterV);
       fPlaneAxis->SetRangeUser(0, maxVal);
       fPlaneAxis->SetLimits(0, maxVal);
       fPlaneAxis->SetNdivisions(710);
       fPlaneAxis->SetTickLength(0.02*maxVal);
       fPlaneAxis->SetLabelOffset(0.02*maxVal);
       fPlaneAxis->SetLabelSize(0.05);
-      fPlaneAxis->SetAxisColor(fAxisPlaneColor);
-      fPlaneAxis->SetLabelColor(fAxisPlaneColor);
 
       glPushMatrix();
       glScalef(fSliderH/(maxVal), fSliderH/maxVal, 1.);
@@ -318,16 +362,14 @@ void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
    }
 
    glPopName();
-   glPopAttrib();
    glPopMatrix();
+   glPopAttrib();
 }
 
 /******************************************************************************/
-void TEveCaloLegoOverlay::RenderScales(TGLRnrCtx& rnrCtx)
+void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
 {
-   // Draw slider of calo 2D.
-
-   // scale position
+   // Draw slider of calo 2D in mode TEveCalo:fValSize.
 
    TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
 
@@ -340,7 +382,7 @@ void TEveCaloLegoOverlay::RenderScales(TGLRnrCtx& rnrCtx)
 
    Double_t scaleStepY = 0.1; // step is 10% of screen
    Double_t scaleStepX =  scaleStepY*vp.Height()/vp.Width(); // step is 10% of screen
-  
+
 
    // define max starting exponent not to take more than scalStepY height
    while(cellY > scaleStepY)
@@ -357,7 +399,6 @@ void TEveCaloLegoOverlay::RenderScales(TGLRnrCtx& rnrCtx)
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT | GL_POINT_BIT);
    glEnable(GL_BLEND);
-   glDisable(GL_LIGHTING);
    glDisable(GL_CULL_FACE);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glEnable(GL_POLYGON_OFFSET_FILL);
@@ -365,19 +406,16 @@ void TEveCaloLegoOverlay::RenderScales(TGLRnrCtx& rnrCtx)
 
    glPushName(0);
    glLoadName(1);
+
    // draw cells
+   Color_t color = fScaleColor > -1 ? fScaleColor : rnrCtx.ColorSet().Markup().GetColorIndex();
+   TGLUtil::ColorTransparency(color, fScaleTransparency);
 
-   //  TColor* c = gROOT->GetColor(fScaleColor);
-   //glColor3f(c->GetRed(), c->GetGreen(), c->GetBlue());
-
-   TGLUtil::ColorTransparency(fScaleColor, fScaleTransparency);
-
-   //  printf("scale color %d\n", fScaleColor);
    Float_t pos, dx, dy;
    glBegin(GL_QUADS);
    Int_t ne = 3; // max number of columns
    for (Int_t i=0; i < ne; ++i)
-   { 
+   {
       Float_t valFac = TMath::Log10(TMath::Power(10, maxe-i)+1)/TMath::Log10(sqv);
       dx = 0.5* cellX * valFac;
       dy = 0.5* cellY * valFac;
@@ -395,9 +433,7 @@ void TEveCaloLegoOverlay::RenderScales(TGLRnrCtx& rnrCtx)
       glVertex2f(0, i* scaleStepY);
    glEnd();
 
-   // draw numbers 
-   // glColor4f(c->GetRed(), c->GetGreen(), c->GetBlue(),  1.0f - 0.01f*fScaleTransparency) ;
-
+   // draw numbers
    TGLFont fontB;
    Int_t fsb = TGLFontManager::GetFontSize(vp.Height()*0.03, 12, 36);
    rnrCtx.RegisterFont(fsb, "arial", TGLFont::kPixmap, fontB);
@@ -418,18 +454,18 @@ void TEveCaloLegoOverlay::RenderScales(TGLRnrCtx& rnrCtx)
    {
       if (i == maxe)
       {
-         fontB.RenderBitmap("1", 0, i*scaleStepY, 0, TGLFont::kLeft);
+         fontB.Render("1", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kBottom);
       }
       else if ( i == (maxe -1))
       {
-         fontB.RenderBitmap("10", 0, i*scaleStepY, 0, TGLFont::kLeft);
+         fontB.Render("10", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kBottom);
       }
       else
       {
-         fontB.RenderBitmap("10", 0, i*scaleStepY, 0, TGLFont::kLeft);
+         fontB.Render("10", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kBottom);
          fontB.BBox(Form("%d",  maxe-i), llx, lly, llz, urx, ury, urz);
          if (expOff >  urx/vp.Width()) expOff = urx/vp.Width();
-         fontE.RenderBitmap(Form("%d",  maxe-i), expX , i*scaleStepY+expY, 0, TGLFont::kLeft );
+         fontE.Render(Form("%d",  maxe-i), expX , i*scaleStepY+expY, 0, TGLFont::kLeft, TGLFont::kBottom );
       }
    }
    glPopMatrix();
@@ -442,33 +478,111 @@ void TEveCaloLegoOverlay::RenderScales(TGLRnrCtx& rnrCtx)
       Double_t off = 0.1;
       Double_t x0 = -(0.5+off) * scaleStepX;
       Double_t x1 =  (0.5+off) * scaleStepX + expX;
-      Double_t y0 = -(0.5+off) * scaleStepY; 
+      Double_t y0 = -(0.5+off) * scaleStepY;
       Double_t y1 =  scaleStepY * (ne - 0.5 + off);
       Double_t zf = +0.2;
 
-      // TColor* c = gROOT->GetColor(fFrameColor);
-      //glColor4f(c->GetRed(), c->GetGreen(), c->GetBlue(),  1.0f - 0.01f*fFrameLineTransp);
-      TGLUtil::ColorTransparency(fFrameColor, fFrameLineTransp);
+      color = fFrameColor > -1 ?  fFrameColor : rnrCtx.ColorSet().Markup().GetColorIndex();
+      TGLUtil::ColorTransparency(color, fFrameLineTransp);
 
       glBegin(GL_LINE_LOOP);
       glVertex3f(x0, y0, zf); glVertex3f(x1, y0, zf);
       glVertex3f(x1, y1, zf); glVertex3f(x0, y1, zf);
       glEnd();
 
-      //      glColor4f(c->GetRed(), c->GetGreen(), c->GetBlue(),  1.0f - 0.01f*fFrameBgTransp);
-      TGLUtil::ColorTransparency(fFrameColor, fFrameBgTransp);
+      TGLUtil::ColorTransparency(color, fFrameBgTransp);
       glBegin(GL_QUADS);
       glVertex2f(x0, y0); glVertex2f(x1, y0);
       glVertex2f(x1, y1); glVertex2f(x0, y1);
       glEnd();
    }
    glPopName();
-   
+
    glPopMatrix();
    glPopAttrib();
 } // end draw scales
 
- /******************************************************************************/
+
+/******************************************************************************/
+void TEveCaloLegoOverlay::RenderPaletteScales(TGLRnrCtx& rnrCtx)
+{
+   // Draw slider of calo 2D in mode TEveCalo:fValColor.
+
+   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(0.1, 1);
+
+   glPushMatrix();
+   glTranslatef(fScaleCoordX, fScaleCoordY, 0); // translate to lower left corner
+
+   glPushName(0);
+   glLoadName(1);
+
+   TGLRect& vp = rnrCtx.RefCamera().RefViewport();
+   Double_t maxVal = fCalo->GetMaxVal();
+
+   Int_t bn;
+   Double_t bw; // bin with first second order
+   Double_t bl, bh; // bin low, high first
+   THLimitsFinder::Optimize(0, maxVal, 10, bl, bh, bn, bw);
+   bn = TMath::CeilNint(maxVal/bw);
+
+   Double_t sH = 0.25; // relative height of the scale
+   glScalef(sH/(bn*bw), sH/(bn*bw), 1.);
+   Float_t h = 0.5 * bw  ;
+   Float_t w = h * 1.5/ vp.Aspect();
+
+   TGLAxisPainter::LabVec_t &labVec = fAxisPainter->RefLabVec();
+   labVec.clear();
+   Float_t val = 0;
+   for (Int_t l= 0; l<=bn; l++) {
+      labVec.push_back( TGLAxisPainter::Lab_t(val, val));
+      val += bw;
+   }
+
+   TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
+   fAxisPainter->RefDir().Set(0, 1, 0);
+   Int_t fs = TMath::CeilNint(rnrCtx.GetCamera()->RefViewport().Height()*0.02);
+   fAxisPainter->SetLabelFont(rnrCtx, "arial", fs);
+   fAxisPainter->SetTextFormat(0, maxVal, bw);
+   fAxisPainter->SetLabelAlign(TGLFont::kCenterH, TGLFont::kCenterV);
+   TAttAxis att;
+   fAxisPainter->SetAttAxis(&att);
+   fAxisPainter->RnrLabels();
+
+   UChar_t c[4];
+   Float_t y;
+   Double_t zf = +0.2;
+   glBegin(GL_QUADS);
+   for (TGLAxisPainter::LabVec_t::iterator it = labVec.begin(); it != labVec.end(); ++it)
+   {
+      fCalo->GetPalette()->ColorFromValue((Int_t)((*it).first), c);
+      glColor4ub( c[0], c[1], c[2], c[3]);
+
+      y = (*it).second;
+      glVertex3f( -w, y - h, zf); glVertex3f( +w, y - h, zf);
+      glVertex3f( +w, y + h, zf); glVertex3f( -w, y + h, zf);
+   }
+   glEnd();
+
+   TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
+   glBegin(GL_LINE_LOOP);
+   for (TGLAxisPainter::LabVec_t::iterator it = labVec.begin(); it != labVec.end(); ++it)
+   {
+      y = (*it).second;
+      glVertex3f( -w, y - h, zf); glVertex3f( +w, y - h, zf);
+      glVertex3f( +w, y + h, zf); glVertex3f( -w, y + h, zf);
+   }
+   glEnd();
+
+   glPopName();
+   glPopMatrix();
+   glPopAttrib();
+}
+
+/******************************************************************************/
 
 void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 {
@@ -497,6 +611,8 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
    glTranslatef(-1, -1, 0);
    glScalef(2, 2, 1);
 
+
+   TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
    TGLCamera& cam = rnrCtx.RefCamera();
    Bool_t drawOverlayAxis = kFALSE;
 
@@ -545,8 +661,10 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
          fCellX = (res.X()*sq)/(fCalo->GetEtaRng()*1.*cam.RefViewport().Width());
          fCellY = (res.Y()*sq)/(fCalo->GetPhiRng()*1.*cam.RefViewport().Height());
          // printf("bin width %f cells size %f %f\n", sq, fCellX, fCellY);
-
-         RenderScales(rnrCtx);
+         if (fCalo->Get2DMode() == TEveCaloLego::kValSize)
+            RenderLogaritmicScales(rnrCtx);
+         else if (fCalo->GetPalette())
+            RenderPaletteScales(rnrCtx);
       }
 
       // draw camera overlay if projected lego bbox to large

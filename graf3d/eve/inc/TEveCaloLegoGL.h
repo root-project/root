@@ -31,6 +31,9 @@ private:
 
    mutable Float_t   fDataMax; // cached
 
+   mutable Color_t   fGridColor; // cached
+   mutable Color_t   fFontColor; // cached
+
    // axis
    mutable TAxis    *fEtaAxis;
    mutable TAxis    *fPhiAxis;

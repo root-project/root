@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id: triangleset.C 26568 2008-12-01 20:55:50Z matevz $
+// @(#)root/eve:$Id: calorimeters.C 26568 2008-12-01 20:55:50Z matevz $
 // Author: Alja Mrak-Tadel
 
 // Demonstrates usage of EVE calorimetry classes.
@@ -7,7 +7,7 @@
 
 const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
 
-void cms_calo(Bool_t hdata = kTRUE)
+void calorimeters(Bool_t hdata = kTRUE)
 {
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);
 
@@ -27,9 +27,9 @@ void cms_calo(Bool_t hdata = kTRUE)
       TEveCaloDataHist* hd = new TEveCaloDataHist();
       Int_t slice;
       slice = hd->AddHistogram(ecalHist);
-      hd->RefSliceInfo(slice).Setup("ECAL", 0.3, kRed);
+      hd->RefSliceInfo(slice).Setup("ECAL", 0.3, kGreen+2);
       slice = hd->AddHistogram(hcalHist);
-      hd->RefSliceInfo(slice).Setup("HCAL", 0.1, kBlue);
+      hd->RefSliceInfo(slice).Setup("HCAL", 0.1, kRed);
       data = hd;
    }
    else
@@ -43,44 +43,55 @@ void cms_calo(Bool_t hdata = kTRUE)
    data->GetPhiBins()->SetTitle("f");
 
    // different calorimeter presentations
-   TEveViewer* v = (TEveViewer*)gEve->GetViewers()->FirstChild();
-   TEveScene* s = (TEveScene*)gEve->GetScenes()->FirstChild();
+
+   // Lego
+   TGLViewer* v = gEve->GetDefaultGLViewer();
+   TEveScene* s = (TEveScene*)gEve->GetEventScene();
    MakeCaloLego(data, v, s);
 
-   TEveViewer* v3D = gEve->SpawnNewViewer("3D Viewer");
-   TEveScene*  s3D = gEve->SpawnNewScene("3D scene");
+   // 3D
+   TEveViewer* v3D = gEve->SpawnNewViewer("3D Calo");
+   TEveScene*  s3D = gEve->SpawnNewScene("3D Scene");
    v3D->AddScene(s3D);
-   TEveCalo3D* calo3d = MakeCalo3D(data, v3D, s3D);
+   TEveCalo3D* calo3d = MakeCalo3D(data, v3D->GetGLViewer(), s3D);
 
-   TEveViewer* vP = gEve->SpawnNewViewer("2D Viewer");
-   TEveScene*  sP = gEve->SpawnNewScene("Projected Event");
+   // 2D
+   TEveViewer* vP = gEve->SpawnNewViewer("2D Calo");
+   TEveScene*  sP = gEve->SpawnNewScene("Projected");
    vP->AddScene(sP);
-   MakeCalo2D(calo3d, vP, sP);
+   MakeCalo2D(calo3d, vP->GetGLViewer(), sP);
 
    gEve->Redraw3D(1);
 }
 
 //______________________________________________________________________________
-void MakeCaloLego(TEveCaloData* data, TEveViewer* ev, TEveScene* s)
+void MakeCaloLego(TEveCaloData* data, TGLViewer* v, TEveScene* s)
 {
    // eta-phi histogram
 
-   TGLViewer*  v  = ev->GetGLViewer();
-
-   // lego
+   // histogram
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
-   lego->Set2DMode(TEveCaloLego::kValSize);
-   lego->SetName("TwoHistLego");
+
+   gStyle->SetPalette(1, 0);
+   Bool_t usePalette = kFALSE;
+   if (usePalette)
+   {  
+      lego->Set2DMode(TEveCaloLego::kValColor);
+   }
+   else
+   {
+      lego->Set2DMode(TEveCaloLego::kValSize);
+   }
+   // lego->SetAutoRebin(kFALSE);
+   lego->SetName("Calorimeter Lego");
    lego->SetPixelsPerBin(8);
    lego->InitMainTrans();
    Float_t sc = TMath::TwoPi();
    lego->RefMainTrans().SetScale(sc, sc, sc);
-   lego->SetAutoRebin(kFALSE);
 
    // add overlay lego draws scales in 2D
    TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
-   overlay->SetShowPlane(kTRUE);
    v->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
 
@@ -90,11 +101,12 @@ void MakeCaloLego(TEveCaloData* data, TEveViewer* ev, TEveScene* s)
 }
 
 //______________________________________________________________________________
-TEveCalo3D* MakeCalo3D(TEveCaloData* data, TEveViewer *v, TEveScene *s )
+TEveCalo3D* MakeCalo3D(TEveCaloData* data, TGLViewer* v, TEveScene *s )
 {
    // 3D towers
 
    TEveCalo3D* calo3d = new TEveCalo3D(data);
+   calo3d->SetName("Calorimter 3D");
    calo3d->SetBarrelRadius(129);
    calo3d->SetEndCapPos(300);
    s->AddElement(calo3d);
@@ -105,20 +117,17 @@ TEveCalo3D* MakeCalo3D(TEveCaloData* data, TEveViewer *v, TEveScene *s )
 }
 
 //______________________________________________________________________________
-void MakeCalo2D(TEveCalo3D* calo3d, TEveViewer *ev, TEveScene *s)
+void MakeCalo2D(TEveCalo3D* calo3d, TGLViewer *v, TEveScene *s)
 {
    // projected calorimeter
 
-   TGLViewer* v = ev->GetGLViewer();
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
    v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
-   v->ColorSet().Background().SetColor(kBlue + 4);
 
    TEveProjectionManager* mng = new TEveProjectionManager();
    mng->SetProjection(TEveProjection::kPT_RhoZ);
 
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
-   axes->SetTitle("TEveProjections demo");
    s->AddElement(axes);
    TEveCalo2D* calo2d = (TEveCalo2D*) mng->ImportElements(calo3d);
    s->AddElement(calo2d);

@@ -327,6 +327,12 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    Float_t t =  camera.FrustumPlane(TGLCamera::kTop).D();
    Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
 
+   if (fM->fUseColorSet)
+   {
+       TGLUtil::Color(rnrCtx.ColorSet().Markup());
+       fAxisPainter.SetUseAxisColors(kFALSE);
+   }
+
    fProjection = fM->GetManager()->GetProjection();
    glDisable(GL_LIGHTING);
    // Projection center and origin marker.
@@ -336,7 +342,6 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       if (fM->GetDrawCenter())
       {
          Float_t* c = fProjection->GetProjectedCenter();
-         TGLUtil::Color3f(1., 0., 0.);
          glBegin(GL_LINES);
          glVertex3f(c[0] + d, c[1], c[2]); glVertex3f(c[0] - d, c[1], c[2]);
          glVertex3f(c[0], c[1] + d, c[2]); glVertex3f(c[0], c[1] - d, c[2]);
@@ -347,7 +352,6 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       {
          TEveVector zero;
          fProjection->ProjectVector(zero);
-         TGLUtil::Color3f(1., 1., 1.);
          glBegin(GL_LINES);
          glVertex3f(zero[0] + d, zero[1], zero[2]); glVertex3f(zero[0] - d, zero[1], zero[2]);
          glVertex3f(zero[0], zero[1] + d, zero[2]); glVertex3f(zero[0], zero[1] - d, zero[2]);
@@ -380,7 +384,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          // Bottom.
          glPushMatrix();
          glTranslatef( 0, b, 0);
-         fAxisPainter.SetLabelAlign(TGLFont::kCenterDown);
+         fAxisPainter.SetLabelAlign(TGLFont::kCenterH, TGLFont::kTop);
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();
          glPopMatrix();
@@ -388,13 +392,13 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          // Top.
          glPushMatrix();
          glTranslatef( 0, t, 0);
-         fAxisPainter.SetLabelAlign(TGLFont::kCenterUp);
+         fAxisPainter.SetLabelAlign(TGLFont::kCenterH, TGLFont::kBottom);
          fAxisPainter.RefTMOff(0).Negate();
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();
          glPopMatrix();
       }
-     
+
       // Y-axis.
       if (fM->fAxesMode == TEveProjectionAxes::kAll ||
           fM->fAxesMode == TEveProjectionAxes::kVertical)
@@ -408,7 +412,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          // Left.
          glPushMatrix();
          glTranslatef(l, 0, 0);
-         fAxisPainter.SetLabelAlign(TGLFont::kLeft);
+         fAxisPainter.SetLabelAlign(TGLFont::kLeft, TGLFont::kCenterV);
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();
          glPopMatrix();
@@ -416,7 +420,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          // Right.
          glPushMatrix();
          glTranslatef(r, 0, 0);
-         fAxisPainter.SetLabelAlign(TGLFont::kRight);
+         fAxisPainter.SetLabelAlign(TGLFont::kRight, TGLFont::kCenterV);
          fAxisPainter.RefTMOff(0).Negate();
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();

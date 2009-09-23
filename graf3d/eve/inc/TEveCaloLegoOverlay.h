@@ -27,7 +27,8 @@ private:
 
 
 protected:
-   void   RenderScales(TGLRnrCtx& rnrCtx);
+   void   RenderLogaritmicScales(TGLRnrCtx& rnrCtx);
+   void   RenderPaletteScales(TGLRnrCtx& rnrCtx);
    void   RenderPlaneInterface(TGLRnrCtx& rnrCtx);
    void   RenderHeader(TGLRnrCtx& rnrCtx);
 
@@ -48,7 +49,7 @@ protected:
 
    // move of scales
    Int_t             fMouseX, fMouseY; //! last mouse position
-   Bool_t            fInDrag; 
+   Bool_t            fInDrag;
 
    // text top right corner
    TString        fHeaderTxt;

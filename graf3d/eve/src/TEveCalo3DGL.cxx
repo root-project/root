@@ -258,7 +258,7 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
 {
    // Draw frame reading eta, phi axis.
 
-   if (rnrCtx.Highlight() || rnrCtx.Selection()) return;
+   if (rnrCtx.Highlight() || rnrCtx.Selection() || rnrCtx.IsDrawPassOutlineLine()) return;
 
    Bool_t transparent_p = fM->fFrameTransparency > 0;
 

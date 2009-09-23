@@ -224,8 +224,6 @@ private:
 protected:
    TEveCaloData::vCellId_t fCellList;
 
-   Bool_t                  fTopViewUseMaxColor;
-   Color_t                 fTopViewTowerColor;
    Color_t                 fFontColor;
    Color_t                 fGridColor;
    Color_t                 fPlaneColor;
@@ -259,12 +257,6 @@ public:
    virtual ~TEveCaloLego(){}
 
    virtual void  SetData(TEveCaloData* d);
-
-   Bool_t   GetTopViewUseMaxColor() const { return fTopViewUseMaxColor; }
-   void     SetTopViewUseMaxColor(Bool_t x) { fTopViewUseMaxColor = x; }
-
-   Color_t  GetTopViewTowerColor() const { return fTopViewTowerColor; }
-   void     SetTopViewTowerColor(Color_t x) { fTopViewTowerColor = x; }
 
    Color_t  GetFontColor() const { return fFontColor; }
    void     SetFontColor(Color_t ci) { fFontColor=ci; }

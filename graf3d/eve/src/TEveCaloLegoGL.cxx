@@ -13,12 +13,14 @@
 #include "TH2.h"
 #include "THLimitsFinder.h"
 
+#include "TGLViewer.h"
 #include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
 #include "TGLSelectRecord.h"
 #include "TGLScene.h"
 #include "TGLCamera.h"
 #include "TGLUtil.h"
+#include "TColor.h"
 
 
 #include "TEveCaloLegoGL.h"
@@ -38,6 +40,8 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
       TGLObject(),
 
       fDataMax(0),
+      fGridColor(-1),
+      fFontColor(-1),
 
       fEtaAxis(0),
       fPhiAxis(0),
@@ -437,16 +441,16 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
    //
    if (fM->fData->Empty() == kFALSE)
    {
-      fZAxis->SetAxisColor(fM->fGridColor);
-      fZAxis->SetLabelColor(fM->fFontColor);
-      fZAxis->SetTitleColor(fM->fFontColor);
+      fZAxis->SetAxisColor(fGridColor);
+      fZAxis->SetLabelColor(fFontColor);
+      fZAxis->SetTitleColor(fFontColor);
       fZAxis->SetNdivisions(fM->fNZSteps*100 + 10);
       fZAxis->SetLimits(0, fDataMax);
       fZAxis->SetTitle(fM->GetPlotEt() ? "Et[GeV]" : "E[GeV]");
 
       fAxisPainter.SetTMNDim(1);
       fAxisPainter.RefDir().Set(0., 0., 1.);
-      fAxisPainter.SetLabelAlign(TGLFont::kRight);
+      fAxisPainter.SetLabelAlign(TGLFont::kRight, TGLFont::kCenterV);
       glPushMatrix();
       glTranslatef(fZAxisTitlePos.fX, fZAxisTitlePos.fY, 0);
 
@@ -479,7 +483,7 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
          // box verticals
          TGLUtil::LineWidth(1);
          glBegin(GL_LINES);
-         TGLUtil::Color(fM->GetGridColor());
+         TGLUtil::Color(fGridColor);
 
          glVertex3f(fBackPlaneXConst[0].fX   ,fBackPlaneXConst[0].fY   ,0);
          glVertex3f(fBackPlaneXConst[0].fX   ,fBackPlaneXConst[0].fY   ,fDataMax);
@@ -531,15 +535,15 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
    if (fYAxisTitlePos.fX < fM->GetEtaMax()) xOff = -xOff;
 
    TAxis ax;
-   ax.SetAxisColor(fM->fGridColor);
-   ax.SetLabelColor(fM->fFontColor);
-   ax.SetTitleColor(fM->fFontColor);
+   ax.SetAxisColor(fGridColor);
+   ax.SetLabelColor(fFontColor);
+   ax.SetTitleColor(fFontColor);
    ax.SetTitleFont(fM->GetData()->GetEtaBins()->GetTitleFont());
    ax.SetLabelOffset(0.02);
    ax.SetTickLength(0.05);
    fAxisPainter.SetTMNDim(2);
    fAxisPainter.RefTMOff(1).Set(0, 0, -fDataMax);
-   fAxisPainter.SetLabelAlign(TGLFont::kCenterUp);
+   fAxisPainter.SetLabelAlign(TGLFont::kCenterH, TGLFont::kBottom);
 
    // eta
    glPushMatrix();
@@ -573,9 +577,9 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    // Draw XY axis.
 
    TAxis ax;
-   ax.SetAxisColor(fM->fGridColor);
-   ax.SetLabelColor(fM->fFontColor);
-   ax.SetTitleColor(fM->fFontColor);
+   ax.SetAxisColor(fGridColor);
+   ax.SetLabelColor(fFontColor);
+   ax.SetTitleColor(fFontColor);
    ax.SetTitleFont(fM->GetData()->GetEtaBins()->GetTitleFont());
    ax.SetLabelOffset(0.01);
    ax.SetTickLength(0.05);
@@ -608,7 +612,7 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    fAxisPainter.RefTitlePos().Set(fM->GetEtaMax(), -fM->GetPhiRng()*(ax.GetTickLength()+ ax.GetLabelOffset()), 0 );
    fAxisPainter.RefDir().Set(1, 0, 0);
    fAxisPainter.RefTMOff(0).Set(0,  -fM->GetPhiRng(), 0);
-   fAxisPainter.SetLabelAlign(TGLFont::kCenterUp);
+   fAxisPainter.SetLabelAlign(TGLFont::kCenterH, TGLFont::kBottom);
 
    glPushMatrix();
    glTranslatef(0, fM->GetPhiMin(), 0);
@@ -624,7 +628,7 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    fAxisPainter.RefTitlePos().Set(-fM->GetEtaRng()*(ax.GetTickLength()+ ax.GetLabelOffset()), fM->GetPhiMax(), 0);
    fAxisPainter.RefDir().Set(0, 1, 0);
    fAxisPainter.RefTMOff(0).Set(-fM->GetEtaRng(), 0, 0);
-   fAxisPainter.SetLabelAlign(TGLFont::kRight);
+   fAxisPainter.SetLabelAlign(TGLFont::kRight, TGLFont::kCenterV);
 
    glPushMatrix();
    glTranslatef(fM->GetEtaMin(), 0, 0);
@@ -708,12 +712,11 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
    Float_t phi0 = fM->GetPhiMin();
    Float_t phi1 = fM->GetPhiMax();
 
-   TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
    TGLCapabilitySwitch sw_blend(GL_BLEND, kTRUE);
 
    // XY grid
    //
-   TGLUtil::Color(fM->fGridColor);
+   TGLUtil::Color(fGridColor);
    TGLUtil::LineWidth(1);
    glBegin(GL_LINES);
    glVertex2f(eta0, phi0);
@@ -822,7 +825,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
             fM->fData->GetCellData(*nextCell, nextCellData);
             Float_t energy = nextCellData.Value(fM->fPlotEt);
             sum += energy;
-            if (fM->fTopViewUseMaxColor && energy > max_energy) {
+            if (energy > max_energy) {
                max_energy       = energy;
                max_energy_slice = nextCell->fSlice;
             }
@@ -852,17 +855,16 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
       vec.assign((nEta + 2)*(nPhi + 2), 0.f);
       std::vector<Float_t> max_e;
       std::vector<Int_t>   max_e_slice;
-      if (fM->fTopViewUseMaxColor) {
-         max_e.assign((nEta + 2) * (nPhi + 2), 0.f);
-         max_e_slice.assign((nEta + 2) * (nPhi + 2), -1);
-      }
+      max_e.assign((nEta + 2) * (nPhi + 2), 0.f);
+      max_e_slice.assign((nEta + 2) * (nPhi + 2), -1);
+
       for (UInt_t bin = 0; bin < fRebinData.fBinData.size(); ++bin) {
          Float_t ssum = 0;
          if (fRebinData.fBinData[bin] != -1) {
             Float_t *val = fRebinData.GetSliceVals(bin);
             for (Int_t s = 0; s < fRebinData.fNSlices; ++s) {
                ssum += val[s];
-               if (fM->fTopViewUseMaxColor && val[s] > max_e[bin]) {
+               if (val[s] > max_e[bin]) {
                   max_e[bin]       = val[s];
                   max_e_slice[bin] = s;
                }
@@ -900,6 +902,9 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
    // drawcells
    //
 
+   Float_t bws = -1; //smallest bin
+   Float_t logMax = -1;
+
    if (fM->f2DMode == TEveCaloLego::kValColor ) {
       fM->AssertPalette();
       UChar_t col[4];
@@ -916,17 +921,23 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
          x2 = cellGeom[4*i+2];
          y2 = cellGeom[4*i+3];
 
-         glVertex3f(x1, y1, 0);
-         glVertex3f(x2, y1, 0);
-         glVertex3f(x2, y2, 0);
-         glVertex3f(x1, y2, 0);
+         glVertex3f(x1, y1, sumVal[i]);
+         glVertex3f(x2, y1, sumVal[i]);
+         glVertex3f(x2, y2, sumVal[i]);
+         glVertex3f(x1, y2, sumVal[i]);
          glEnd();
       }
    }
    else {
-      // antiflicekring
-      Float_t maxv =0;
+      bws = 1e5;
       Float_t x, y;
+      for (UInt_t i=0; i< cellGeom.size(); i += 4 ) {
+         if ( cellGeom[i+2] -cellGeom[i] < bws)   bws =  cellGeom[i+2] -cellGeom[i];
+         if ( cellGeom[i+3] -cellGeom[i+1] < bws) bws =  cellGeom[i+3] -cellGeom[i+1];
+      }
+      bws *= 0.5;
+
+      Float_t maxv =0;
       glBegin(GL_POINTS);
       for (UInt_t i=0; i< sumVal.size(); i++) {
          TGLUtil::Color(fM->fData->GetSliceColor(maxSlice[i]));
@@ -936,38 +947,31 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
          if (sumVal[i] > maxv) maxv = sumVal[i];
       }
       glEnd();
-
+      logMax = TMath::Log10(maxv + 1);
       // scale cells
-      Float_t logMax   = TMath::Log10(maxv + 1);
-
-      // get smallest bin to deduce bin size 
-      Float_t bw = 1e5;
-      for (UInt_t i=0; i< cellGeom.size(); i += 4 ) {
-         if ( cellGeom[i+2] -cellGeom[i] < bw)   bw =  cellGeom[i+2] -cellGeom[i];
-         if ( cellGeom[i+3] -cellGeom[i+1] < bw) bw =  cellGeom[i+3] -cellGeom[i+1];
-      }
-      bw *= 0.5;
 
       for (UInt_t i=0; i< sumVal.size(); i++) {
          glLoadName(id[i]);
          glBegin(GL_POLYGON);
          TGLUtil::Color(fM->fData->GetSliceColor(maxSlice[i]));
 
-         Float_t bws = bw*TMath::Log10(sumVal[i]+1)/logMax;
+         Float_t bw = bws* TMath::Log10(sumVal[i]+1)/logMax;
 
          x = 0.5* (cellGeom[4*i] +cellGeom[4*i+2]) ;
          y = 0.5* (cellGeom[4*i+1] +cellGeom[4*i+3]) ;
-         glVertex3f(x - bws, y - bws, 0);
-         glVertex3f(x + bws, y - bws, 0);
-         glVertex3f(x + bws, y + bws, 0);
-         glVertex3f(x - bws, y + bws, 0);
+         glVertex3f(x - bw, y - bw, sumVal[i]);
+         glVertex3f(x + bw, y - bw, sumVal[i]);
+         glVertex3f(x + bw, y + bw, sumVal[i]);
+         glVertex3f(x - bw, y + bw, sumVal[i]);
 
          glEnd();
 
       }
 
-      // get value to pixels
+   }
 
+   // print values on towers
+   if (rnrCtx.Selection() == kFALSE && rnrCtx.Highlight() == kFALSE) {
       // get projected length of diagonal to determine
       TGLMatrix mm;
       GLdouble pm[16];
@@ -983,19 +987,23 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
       Double_t etaLenPix = up[0]-dn[0];
       Float_t sx = etaLenPix/fM->GetEtaRng();
 
-      TGLUtil::Color(fM->GetFontColor());
-      Float_t llx, lly, llz, urx, ury, urz;
-      Float_t xOff, yOff;
+      TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
       TGLFont font;
+      Double_t cs;
+      Float_t x, y;
       rnrCtx.RegisterFont(TGLFontManager::GetFontSize(fM->fCellPixelFontSize), "arial", TGLFont::kPixmap, font);
       for (UInt_t i=0; i< sumVal.size(); i++) {
+         if (fM->f2DMode == TEveCaloLego::kValColor )
+            cs = TMath::Min(cellGeom[4*i+2] - cellGeom[4*i], cellGeom[4*i+3] - cellGeom[4*i+1]);
+         else
+            cs = bws*TMath::Log10(sumVal[i]+1)/logMax;
 
-         Float_t bws = bw*TMath::Log10(sumVal[i]+1)/logMax;
-         if (bws*sx >  fM->fDrawNumberCellPixels)
+         if (cs*sx >  fM->fDrawNumberCellPixels)
          {
             x = 0.5* (cellGeom[4*i]   + cellGeom[4*i+2]);
             y = 0.5* (cellGeom[4*i+1] + cellGeom[4*i+3]);
-
+            // can use same format as for axis
+            // space on top of towers is limited
             const char* txt;
             if (sumVal[i] > 10)
                txt = Form("%d", TMath::Nint(sumVal[i]));
@@ -1007,21 +1015,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
             {
                txt = Form("~1e%d", TMath::Nint(TMath::Log10(sumVal[i])));
             }
-
-            xOff = 0;
-            yOff = 0;
-            font.BBox(txt, llx, lly, llz, urx, ury, urz);
-            if (txt[0] == '-')
-               urx += (urx-llx)/strlen(txt);
-            xOff = -0.5 * urx;
-            yOff = -0.5 * (ury -lly);
-            glPushMatrix();
-            glTranslatef(x, y, 0.1);
-            glRasterPos2i(0, 0);
-            glBitmap(0, 0, 0, 0, xOff, yOff, 0);
-            font.Render(txt);
-            glPopMatrix();
-
+            font.Render(txt, x, y, sumVal[i]*1.2, TGLFont::kCenterH, TGLFont::kCenterV);
          }
       }
    }
@@ -1096,10 +1090,26 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       }
    }
 
+   fFontColor = fM->fFontColor > -1 ? fM->fFontColor :  rnrCtx.ColorSet().Markup().GetColorIndex();
+   fGridColor = fM->fGridColor;
+   if (fM->fGridColor < 0)
+   {
+      TGLViewer* glV = (TGLViewer*)rnrCtx.GetViewer();
+      if (glV->IsColorSetDark())
+      {
+         if (fM->fFontColor < 0) fFontColor = TColor::GetColorDark(fFontColor);
+         fGridColor = TColor::GetColorDark(fFontColor);     
+      }
+      else
+      {
+         if (fM->fFontColor < 0) fFontColor = TColor::GetColorBright(fFontColor);
+         fGridColor = TColor::GetColorBright(fFontColor);
+      }
+   }
+
    if (!fM->fData->Empty()) {
       glPushAttrib(GL_LINE_BIT | GL_POLYGON_BIT);
       TGLUtil::LineWidth(1);
-      glDisable(GL_LIGHTING);
       glEnable(GL_NORMALIZE);
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(0.8, 1);
@@ -1110,6 +1120,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          if (!fDLCacheOK) MakeDisplayList();
          DrawCells3D(rnrCtx);
       } else {
+         glDisable(GL_LIGHTING);
          DrawCells2D(rnrCtx);
       }
       glPopName();
@@ -1118,6 +1129,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    // draw histogram base
    if (rnrCtx.Selection() == kFALSE && rnrCtx.Highlight() == kFALSE) {
+      glDisable(GL_LIGHTING);
       DrawHistBase(rnrCtx);
       if (fM->fDrawHPlane) {
          glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);

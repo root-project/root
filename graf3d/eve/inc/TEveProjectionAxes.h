@@ -40,7 +40,7 @@ private:
 protected:
    TEveProjectionManager*  fManager;  // Model object.
 
-   Color_t fColor;                    // Main eve-element color.
+   Bool_t  fUseColorSet;
 
    ELabMode  fLabMode;                // Division of distorted space.
    EAxesMode fAxesMode;               // Axis vertical/hotrizontal orientation.
@@ -48,8 +48,9 @@ protected:
    Bool_t fDrawCenter;           // Draw center of distortion.
    Bool_t fDrawOrigin;           // Draw origin.
 
+
 public:
-   TEveProjectionAxes(TEveProjectionManager* m);
+   TEveProjectionAxes(TEveProjectionManager* m, Bool_t useColorSet = kTRUE);
    virtual ~TEveProjectionAxes();
 
    TEveProjectionManager* GetManager(){
@@ -66,7 +67,6 @@ public:
    void            SetDrawOrigin(Bool_t x)   { fDrawOrigin = x; }
    Bool_t          GetDrawOrigin() const     { return fDrawOrigin; }
 
-   virtual Bool_t  CanEditMainColor() const  { return kTRUE;}
    virtual void    Paint(Option_t* option="");
    virtual void    ComputeBBox();
    virtual const   TGPicture* GetListTreeIcon(Bool_t open=kFALSE);

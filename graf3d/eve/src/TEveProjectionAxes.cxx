@@ -28,12 +28,12 @@
 ClassImp(TEveProjectionAxes);
 
 //______________________________________________________________________________
-TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m) :
-   TEveElement(fColor),
+TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m, Bool_t useCS) :
+   TEveElement(),
    TNamed("TEveProjectionAxes", ""),
    fManager(m),
 
-   fColor(kGray),
+   fUseColorSet(useCS),
 
    fLabMode(kValue),
    fAxesMode(kAll),

@@ -73,7 +73,8 @@ protected:
    Double_t fTitle3DFontSize;
 
    // Labels options. Allready exist in TAttAxis, but can't be set.
-   TGLFont::ETextAlign_e fLabelAlign;
+   TGLFont::ETextAlignH_e fLabelAlignH;
+   TGLFont::ETextAlignV_e fLabelAlignV;
    TGLVector3 fTitlePos;
 
 public:
@@ -99,8 +100,7 @@ public:
    TGLVector3&  RefTitlePos() { return fTitlePos; }
 
 
-   TGLFont::ETextAlign_e GetLabelAlign() const { return fLabelAlign; }
-   void         SetLabelAlign(TGLFont::ETextAlign_e x) { fLabelAlign = x; }
+   void         SetLabelAlign(TGLFont::ETextAlignH_e, TGLFont::ETextAlignV_e);
 
    LabVec_t& RefLabVec() { return fLabVec; }
    TMVec_t&  RefTMVec()  { return fTMVec; }
@@ -118,8 +118,8 @@ public:
    void SetTextFormat(Double_t min, Double_t max, Double_t binWidth);
 
    // Renderers.
-   void RnrText (const char* txt, const TGLVector3 &pos, const TGLFont::ETextAlign_e align, const TGLFont &font) const;
-   void RnrTitle(const char* title, TGLVector3 &pos, TGLFont::ETextAlign_e align) const;
+   void RnrText (const TString &txt, const TGLVector3 &pos, TGLFont::ETextAlignH_e aH, TGLFont::ETextAlignV_e aV, const TGLFont &font) const;
+   void RnrTitle(const TString &title, TGLVector3 &pos, TGLFont::ETextAlignH_e aH, TGLFont::ETextAlignV_e aV) const;
    void RnrLabels() const;
    void RnrLines() const;
 

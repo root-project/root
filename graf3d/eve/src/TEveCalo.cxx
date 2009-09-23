@@ -589,10 +589,8 @@ ClassImp(TEveCaloLego);
 TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    TEveCaloViz(d, n, t),
 
-   fTopViewUseMaxColor(kTRUE),
-   fTopViewTowerColor(kGreen),
-   fFontColor(0),
-   fGridColor(kGray+2),
+   fFontColor(-1),
+   fGridColor(-1),
    fPlaneColor(kRed-5),
    fPlaneTransparency(60),
 
