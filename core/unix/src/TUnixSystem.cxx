@@ -4081,6 +4081,8 @@ int TUnixSystem::UnixRecv(int sock, void *buffer, int length, int flag)
       flag = 0;
       once = 1;
    }
+   if (flag == MSG_PEEK)
+      once = 1;
 
    int n, nrecv = 0;
    char *buf = (char *)buffer;
