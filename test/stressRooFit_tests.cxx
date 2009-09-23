@@ -2266,7 +2266,7 @@ public:
 
   regTH(hh_decay,"rf306_model2d") ;
   regPlot(frame,"rf306_plot1") ;
-  //regPlot(frame2,"rf306_plot2") ;
+  regPlot(frame2,"rf306_plot2") ;
 
   delete expDataDterr ;
   delete data ;
@@ -2990,7 +2990,7 @@ public:
 
   // Print fit results to demonstrate absence of bias
   regResult(r,"rf314_fit") ;
-  //regPlot(frame,"rf314_plot1") ;
+  regPlot(frame,"rf314_plot1") ;
 
   delete tmp ;
   delete dacc ;
@@ -5427,7 +5427,7 @@ public:
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooPolynomial.h"
-#include "RooLinearMorph.h"
+#include "RooIntegralMorph.h"
 #include "RooNLLVar.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
@@ -5472,7 +5472,7 @@ public:
 
   // Construct interpolating pdf in (x,a) represent g1(x) at a=a_min
   // and g2(x) at a=a_max
-  RooLinearMorph lmorph("lmorph","lmorph",g1,g2,x,alpha) ;
+  RooIntegralMorph lmorph("lmorph","lmorph",g1,g2,x,alpha) ;
 
 
 
