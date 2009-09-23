@@ -43,8 +43,6 @@ private:
    mutable TEveVector  fBackPlaneYConst[2];
 
    mutable TGLAxisPainter fAxisPainter;
-   mutable Int_t          fBinStep;
-
 
 protected:
    Int_t   GetGridStep(TGLRnrCtx &rnrCtx) const;
@@ -55,7 +53,7 @@ protected:
    void    DrawAxis2D(TGLRnrCtx &rnrCtx) const;
    void    DrawHistBase(TGLRnrCtx &rnrCtx) const;
 
-   void    DrawCells2D() const;
+   void    DrawCells2D(TGLRnrCtx & rnrCtx) const;
 
    void    DrawCells3D(TGLRnrCtx & rnrCtx) const;
    void    MakeQuad(Float_t x, Float_t y, Float_t z, Float_t xw, Float_t yw, Float_t zh) const;
@@ -73,7 +71,6 @@ protected:
    mutable TEveCaloData::RebinData_t fRebinData;
 
    mutable Bool_t                    fCells3D;
-
 public:
    TEveCaloLegoGL();
    virtual ~TEveCaloLegoGL();

@@ -145,7 +145,8 @@ public:
    void    SetExternalCenter(Bool_t x);
    Bool_t  GetExternalCenter(){ return fExternalCenter; }
 
-   void    SetCenterVec( Double_t x, Double_t y, Double_t z);
+   void    SetCenterVec(Double_t x, Double_t y, Double_t z);
+   void    SetCenterVecWarp(Double_t x, Double_t y, Double_t z);
    Double_t* GetCenterVec() { return fCenter->Arr(); }
 
    Double_t GetNearClip() const { return fNearClip; }
@@ -153,6 +154,9 @@ public:
 
    const TGLMatrix& GetCamBase()  const { return fCamBase;  }
    const TGLMatrix& GetCamTrans() const { return fCamTrans; }
+   // If you manipulate camera ... also call IncTimeStamp() before redraw.
+   TGLMatrix& RefCamBase()  { return fCamBase;  }
+   TGLMatrix& RefCamTrans() { return fCamTrans; }
 
    Double_t GetTheta() const;
 

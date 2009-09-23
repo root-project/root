@@ -28,15 +28,15 @@ protected:
    enum EMode_e   { kLocked, kFree };
 
    EMode_e  fMode;       // current rotation mode
-   Float_t  fTransTheta; // transition theta
+   Float_t  fTransTheta; // transition theta in radians
    Float_t  fTheta;
-
-   TEveCaloLego*  fLastPickedLego;
 
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
 
 public:
-   TEveLegoEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="");
+   TEveCaloLego*  fLego;
+
+   TEveLegoEventHandler(TEveCaloLego* lego, TGWindow *w, TObject *obj, const char *title="");
    virtual ~TEveLegoEventHandler() {}
 
    virtual Bool_t HandleKey(Event_t *event);
