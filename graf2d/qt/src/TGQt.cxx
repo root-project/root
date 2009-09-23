@@ -1568,7 +1568,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
          QFontInfo fi(*fQFont);
          proxy->setBaseFontPointSize(fi.pointSize());
          proxy->setForegroundColor(ColorIndex(fTextColor));
-         if (textProxy = proxy->setContent(text)) {
+         if (textProxy == proxy->setContent(text)) {
              w = proxy->width();
              h = proxy->height();
          }
@@ -1757,7 +1757,7 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
          proxy->clear();
          QFontInfo fi(*fQFont);
          proxy->setBaseFontPointSize(fi.pointSize());
-         if (textProxy = proxy->setContent(mess)) {
+         if (textProxy == proxy->setContent(mess)) {
             w = proxy->width();
             h = proxy->height();
          }
