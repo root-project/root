@@ -83,26 +83,26 @@ Bool_t TGLAnnotation::Handle(TGLRnrCtx&          rnrCtx,
    {
       case kButtonPress:
       {
-         // Chech selRec ... if pressed in 'X', 'E'
-         if (recID == 2)
-         {
-            delete this;
-         }
-         else if (recID == 3)
-         {
-            MakeEditor();
-         }
-         else
-         {
-            fMouseX = event->fX;
-            fMouseY = event->fY;
-            fInDrag = kTRUE;
-         }
+         fMouseX = event->fX;
+         fMouseY = event->fY;
+         fInDrag = kTRUE;
+         
          return kTRUE;
       }
       case kButtonRelease:
       {
          fInDrag = kFALSE;
+
+         if (recID == 2)
+         {
+            delete this;
+            fParent->RequestDraw(rnrCtx.ViewerLOD());
+         }
+         else if (recID == 3)
+         {
+            MakeEditor();
+         }
+
          return kTRUE;
       }
       case kMotionNotify:
@@ -116,20 +116,6 @@ Bool_t TGLAnnotation::Handle(TGLRnrCtx&          rnrCtx,
             fMouseY = event->fY;
          }
          return kTRUE;
-      }
-      case kGKeyPress:
-      {
-         switch (rnrCtx.GetEventKeySym())
-         {
-            case kKey_E: case kKey_e:
-               MakeEditor();
-               return kTRUE;
-            case kKey_X: case kKey_x:
-               delete this;
-               return kTRUE;
-            default:
-               return kFALSE;
-         }
       }
       default:
       {
@@ -160,8 +146,11 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
 {
    // Render the annotation.
 
-   glDisable(GL_LIGHTING);
+   Float_t old_depth_range[2];
+   glGetFloatv(GL_DEPTH_RANGE, old_depth_range);
+   glDepthRange(0, 0.001);
 
+   glDisable(GL_LIGHTING);
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POINT_BIT);
    Float_t r, g, b;
    // button
@@ -376,6 +365,7 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    glVertex3dv(fPointer.Arr());
    glEnd();
    glPopAttrib();
+   glDepthRange(old_depth_range[0], old_depth_range[1]);
 }
 
 //______________________________________________________________________________

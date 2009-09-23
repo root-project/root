@@ -73,6 +73,8 @@ TEveViewer::~TEveViewer()
 {
    // Destructor.
 
+   fGLViewer->SetEventHandler(0);
+
    fGLViewerFrame->UnmapWindow();
    GetGUICompositeFrame()->RemoveFrame(fGLViewerFrame);
    fGLViewerFrame->ReparentWindow(gClient->GetDefaultRoot());
