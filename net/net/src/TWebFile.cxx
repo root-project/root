@@ -90,7 +90,7 @@ void TWebSocket::ReOpen()
          if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
             gSystem->Sleep(i*10);
          } else {
-            ::Error("TWebSocket::ReOpen", "cannot connect to remote host %s (errno=%d)",
+            ::Error("TWebSocket::ReOpen", "cannot connect to host %s (errno=%d)",
                     fWebFile->fUrl.GetHost(), gSystem->GetErrno());
             return;
          }
@@ -293,15 +293,18 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
-   TString msg = "GET ";
-   msg += fUrl.GetProtocol();
-   msg += "://";
-   msg += fUrl.GetHost();
-   msg += ":";
-   msg += fUrl.GetPort();
-   msg += "/";
-   msg += fUrl.GetFile();
-   msg += "?";
+   if (fMsgReadBuffer == "") {
+      fMsgReadBuffer = "GET ";
+      fMsgReadBuffer += fUrl.GetProtocol();
+      fMsgReadBuffer += "://";
+      fMsgReadBuffer += fUrl.GetHost();
+      fMsgReadBuffer += ":";
+      fMsgReadBuffer += fUrl.GetPort();
+      fMsgReadBuffer += "/";
+      fMsgReadBuffer += fUrl.GetFile();
+      fMsgReadBuffer += "?";
+   }
+   TString msg = fMsgReadBuffer;
    msg += fOffset;
    msg += ":";
    msg += len;
@@ -323,28 +326,31 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
    // request and returns the buffer. Returns kTRUE in case of error.
 
    // Give full URL so Apache's virtual hosts solution works.
-   TString msg = "GET ";
-   msg += fUrl.GetProtocol();
-   msg += "://";
-   msg += fUrl.GetHost();
-   msg += ":";
-   msg += fUrl.GetPort();
-   msg += "/";
-   msg += fUrl.GetFile();
-   if (fHTTP11)
-      msg += " HTTP/1.1";
-   else
-      msg += " HTTP/1.0";
-   msg += "\r\n";
-   if (fHTTP11) {
-      msg += "Host: ";
-      msg += fUrl.GetHost();
-      msg += "\r\n";
+   if (fMsgReadBuffer10 == "") {
+      fMsgReadBuffer10 = "GET ";
+      fMsgReadBuffer10 += fUrl.GetProtocol();
+      fMsgReadBuffer10 += "://";
+      fMsgReadBuffer10 += fUrl.GetHost();
+      fMsgReadBuffer10 += ":";
+      fMsgReadBuffer10 += fUrl.GetPort();
+      fMsgReadBuffer10 += "/";
+      fMsgReadBuffer10 += fUrl.GetFile();
+      if (fHTTP11)
+         fMsgReadBuffer10 += " HTTP/1.1";
+      else
+         fMsgReadBuffer10 += " HTTP/1.0";
+      fMsgReadBuffer10 += "\r\n";
+      if (fHTTP11) {
+         fMsgReadBuffer10 += "Host: ";
+         fMsgReadBuffer10 += fUrl.GetHost();
+         fMsgReadBuffer10 += "\r\n";
+      }
+      fMsgReadBuffer10 += BasicAuthentication();
+      fMsgReadBuffer10 += gUserAgent;
+      fMsgReadBuffer10 += "\r\n";
+      fMsgReadBuffer10 += "Range: bytes=";
    }
-   msg += BasicAuthentication();
-   msg += gUserAgent;
-   msg += "\r\n";
-   msg += "Range: bytes=";
+   TString msg = fMsgReadBuffer10;
    msg += fOffset;
    msg += "-";
    msg += fOffset+len-1;
@@ -375,17 +381,18 @@ Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
-   TString msgh = "GET ";
-   msgh += fUrl.GetProtocol();
-   msgh += "://";
-   msgh += fUrl.GetHost();
-   msgh += ":";
-   msgh += fUrl.GetPort();
-   msgh += "/";
-   msgh += fUrl.GetFile();
-   msgh += "?";
-
-   TString msg = msgh;
+   if (fMsgReadBuffers == "") {
+      fMsgReadBuffers = "GET ";
+      fMsgReadBuffers += fUrl.GetProtocol();
+      fMsgReadBuffers += "://";
+      fMsgReadBuffers += fUrl.GetHost();
+      fMsgReadBuffers += ":";
+      fMsgReadBuffers += fUrl.GetPort();
+      fMsgReadBuffers += "/";
+      fMsgReadBuffers += fUrl.GetFile();
+      fMsgReadBuffers += "?";
+   }
+   TString msg = fMsgReadBuffers;
 
    Int_t k = 0, n = 0;
    for (Int_t i = 0; i < nbuf; i++) {
@@ -398,7 +405,7 @@ Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
          msg += "\r\n";
          if (GetFromWeb(&buf[k], n, msg) == -1)
             return kTRUE;
-         msg = msgh;
+         msg = fMsgReadBuffers;
          k += n;
          n = 0;
       }
@@ -423,30 +430,31 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
    // Returns kTRUE in case of failure.
 
    // Give full URL so Apache's virtual hosts solution works.
-   TString msgh = "GET ";
-   msgh += fUrl.GetProtocol();
-   msgh += "://";
-   msgh += fUrl.GetHost();
-   msgh += ":";
-   msgh += fUrl.GetPort();
-   msgh += "/";
-   msgh += fUrl.GetFile();
-   if (fHTTP11)
-      msgh += " HTTP/1.1";
-   else
-      msgh += " HTTP/1.0";
-   msgh += "\r\n";
-   if (fHTTP11) {
-      msgh += "Host: ";
-      msgh += fUrl.GetHost();
-      msgh += "\r\n";
+   if (fMsgReadBuffers10 == "") {
+      fMsgReadBuffers10 = "GET ";
+      fMsgReadBuffers10 += fUrl.GetProtocol();
+      fMsgReadBuffers10 += "://";
+      fMsgReadBuffers10 += fUrl.GetHost();
+      fMsgReadBuffers10 += ":";
+      fMsgReadBuffers10 += fUrl.GetPort();
+      fMsgReadBuffers10 += "/";
+      fMsgReadBuffers10 += fUrl.GetFile();
+      if (fHTTP11)
+         fMsgReadBuffers10 += " HTTP/1.1";
+      else
+         fMsgReadBuffers10 += " HTTP/1.0";
+      fMsgReadBuffers10 += "\r\n";
+      if (fHTTP11) {
+         fMsgReadBuffers10 += "Host: ";
+         fMsgReadBuffers10 += fUrl.GetHost();
+         fMsgReadBuffers10 += "\r\n";
+      }
+      fMsgReadBuffers10 += BasicAuthentication();
+      fMsgReadBuffers10 += gUserAgent;
+      fMsgReadBuffers10 += "\r\n";
+      fMsgReadBuffers10 += "Range: bytes=";
    }
-   msgh += BasicAuthentication();
-   msgh += gUserAgent;
-   msgh += "\r\n";
-   msgh += "Range: bytes=";
-
-   TString msg = msgh;
+   TString msg = fMsgReadBuffers10;
 
    Int_t k = 0, n = 0, r;
    for (Int_t i = 0; i < nbuf; i++) {
@@ -460,7 +468,7 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
          while ((r = GetFromWeb10(&buf[k], n, msg)) == -2) { }
          if (r == -1)
             return kTRUE;
-         msg = msgh;
+         msg = fMsgReadBuffers10;
          k += n;
          n = 0;
       }
@@ -491,17 +499,17 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
 
    TSocket s(connurl.GetHost(), connurl.GetPort());
    if (!s.IsValid()) {
-      Error("GetFromWeb", "cannot connect to remote host %s", fUrl.GetHost());
+      Error("GetFromWeb", "cannot connect to host %s", fUrl.GetHost());
       return -1;
    }
 
    if (s.SendRaw(msg.Data(), msg.Length()) == -1) {
-      Error("GetFromWeb", "error sending command to remote host %s", fUrl.GetHost());
+      Error("GetFromWeb", "error sending command to host %s", fUrl.GetHost());
       return -1;
    }
 
    if (s.RecvRaw(buf, len) == -1) {
-      Error("GetFromWeb", "error receiving data from remote host %s", fUrl.GetHost());
+      Error("GetFromWeb", "error receiving data from host %s", fUrl.GetHost());
       return -1;
    }
 
@@ -533,12 +541,12 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    TWebSocket ws(this);
 
    if (!fSocket || !fSocket->IsValid()) {
-      Error("GetFromWeb10", "cannot connect to remote host %s", fUrl.GetHost());
+      Error("GetFromWeb10", "cannot connect to host %s", fUrl.GetHost());
       return -1;
    }
 
    if (fSocket->SendRaw(msg.Data(), msg.Length()) == -1) {
-      Error("GetFromWeb10", "error sending command to remote host %s", fUrl.GetHost());
+      Error("GetFromWeb10", "error sending command to host %s", fUrl.GetHost());
       return -1;
    }
 
@@ -555,7 +563,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
          if (first >= 0) {
             Int_t ll = Int_t(last - first) + 1;
             if (fSocket->RecvRaw(&buf[ltot], ll) == -1) {
-               Error("GetFromWeb10", "error receiving data from remote host %s", fUrl.GetHost());
+               Error("GetFromWeb10", "error receiving data from host %s", fUrl.GetHost());
                return -1;
             }
             ltot += ll;
@@ -592,19 +600,16 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
             TString mess = res(13, 1000);
             Error("GetFromWeb10", "%s: %s (%d)", fUrl.GetUrl(), mess.Data(), code);
          }
-      }
-      if (res.BeginsWith("Content-Type: multipart")) {
+      } else if (res.BeginsWith("Content-Type: multipart")) {
          boundary = "--" + res(res.Index("boundary=")+9, 1000);
          boundaryEnd = boundary + "--";
-      }
-      if (res.BeginsWith("Content-range:")) {
+      } else if (res.BeginsWith("Content-range:")) {
 #ifdef R__WIN32
          sscanf(res.Data(), "Content-range: bytes %I64d-%I64d/%I64d", &first, &last, &tot);
 #else
          sscanf(res.Data(), "Content-range: bytes %lld-%lld/%lld", &first, &last, &tot);
 #endif
-      }
-      if (res.BeginsWith("Content-Range:")) {
+      } else if (res.BeginsWith("Content-Range:")) {
 #ifdef R__WIN32
          sscanf(res.Data(), "Content-Range: bytes %I64d-%I64d/%I64d", &first, &last, &tot);
 #else
@@ -621,7 +626,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    }
 
    if (ltot != len) {
-      Error("GetFromWeb10", "error receiving expected amount of data (got %d, expected %d) from remote host %s",
+      Error("GetFromWeb10", "error receiving expected amount of data (got %d, expected %d) from host %s",
             ltot, len, fUrl.GetHost());
       return -1;
    }
@@ -711,19 +716,22 @@ Int_t TWebFile::GetHead()
    fHTTP11     = kFALSE;
 
    // Give full URL so Apache's virtual hosts solution works.
-   TString msg = "HEAD ";
-   msg += fUrl.GetProtocol();
-   msg += "://";
-   msg += fUrl.GetHost();
-   msg += ":";
-   msg += fUrl.GetPort();
-   msg += "/";
-   msg += fUrl.GetFile();
-   msg += " HTTP/1.0";
-   msg += "\r\n";
-   msg += BasicAuthentication();
-   msg += gUserAgent;
-   msg += "\r\n\r\n";
+   if (fMsgGetHead == "") {
+      fMsgGetHead = "HEAD ";
+      fMsgGetHead += fUrl.GetProtocol();
+      fMsgGetHead += "://";
+      fMsgGetHead += fUrl.GetHost();
+      fMsgGetHead += ":";
+      fMsgGetHead += fUrl.GetPort();
+      fMsgGetHead += "/";
+      fMsgGetHead += fUrl.GetFile();
+      fMsgGetHead += " HTTP/1.0";
+      fMsgGetHead += "\r\n";
+      fMsgGetHead += BasicAuthentication();
+      fMsgGetHead += gUserAgent;
+      fMsgGetHead += "\r\n\r\n";
+   }
+   TString msg = fMsgGetHead;
 
    TUrl connurl;
    if (fProxy.IsValid())
@@ -740,7 +748,7 @@ Int_t TWebFile::GetHead()
             s = 0;
             gSystem->Sleep(i*10);
          } else {
-            Error("GetHead", "cannot connect to remote host %s (errno=%d)", fUrl.GetHost(),
+            Error("GetHead", "cannot connect to host %s (errno=%d)", fUrl.GetHost(),
                   gSystem->GetErrno());
             return -1;
          }
@@ -751,7 +759,7 @@ Int_t TWebFile::GetHead()
       return -1;
 
    if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
-      Error("GetHead", "error sending command to remote host %s", fUrl.GetHost());
+      Error("GetHead", "error sending command to host %s", fUrl.GetHost());
       delete s;
       return -1;
    }
@@ -785,8 +793,7 @@ Int_t TWebFile::GetHead()
             TString mess = res(13, 1000);
             Error("GetHead", "%s: %s (%d)", fUrl.GetUrl(), mess.Data(), code);
          }
-      }
-      if (res.BeginsWith("Content-Length:")) {
+      } else if (res.BeginsWith("Content-Length:")) {
          TString slen = res(16, 1000);
          fSize = slen.Atoll();
       }
@@ -797,31 +804,176 @@ Int_t TWebFile::GetHead()
 }
 
 //______________________________________________________________________________
-Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t size)
+Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t maxsize)
 {
    // Read a line from the socket. Reads at most one less than the number of
-   // characters specified by size. Reading stops when a newline character
+   // characters specified by maxsize. Reading stops when a newline character
    // is found, The newline (\n) and cr (\r), if any, are removed.
    // Returns -1 in case of error, or the number of characters read (>= 0)
    // otherwise.
 
-   char c;
-   Int_t err, n = 0;
-   while ((err = s->RecvRaw(&c, 1)) >= 0) {
-      if (n == size-1 || c == '\n' || err == 0) {
-         if (line[n-1] == '\r')
-            n--;
-         break;
-      }
-      line[n++] = c;
-   }
-   line[n] = '\0';
-   if (err < 0) {
+   Int_t n = GetHunk(s, line, maxsize);
+   if (n < 0) {
       if (!fHTTP11 || gDebug > 0)
-         Error("GetLine", "error receiving data from remote host %s", fUrl.GetHost());
+         Error("GetLine", "error receiving data from host %s", fUrl.GetHost());
       return -1;
    }
+
+   if (n > 0 && line[n-1] == '\n') {
+      n--;
+      if (n > 0 && line[n-1] == '\r')
+         n--;
+      line[n] = '\0';
+   }
    return n;
+}
+
+//______________________________________________________________________________
+Int_t TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
+{
+   // Read a hunk of data from the socket, up until a terminator. The hunk is
+   // limited by whatever the TERMINATOR callback chooses as its
+   // terminator. For example, if terminator stops at newline, the hunk
+   // will consist of a line of data; if terminator stops at two
+   // newlines, it can be used to read the head of an HTTP response.
+   // Upon determining the boundary, the function returns the data (up to
+   // the terminator) in hunk.
+   //
+   // In case of read error, -1 is returned. In case of having read some
+   // data, but encountering EOF before seeing the terminator, the data
+   // that has been read is returned, but it will (obviously) not contain the
+   // terminator.
+   //
+   // The TERMINATOR function is called with three arguments: the
+   // beginning of the data read so far, the beginning of the current
+   // block of peeked-at data, and the length of the current block.
+   // Depending on its needs, the function is free to choose whether to
+   // analyze all data or just the newly arrived data. If TERMINATOR
+   // returns 0, it means that the terminator has not been seen.
+   // Otherwise it should return a pointer to the character immediately
+   // following the terminator.
+   //
+   // The idea is to be able to read a line of input, or otherwise a hunk
+   // of text, such as the head of an HTTP request, without crossing the
+   // boundary, so that the next call to RecvRaw() etc. reads the data
+   // after the hunk. To achieve that, this function does the following:
+   //
+   // 1. Peek at incoming data.
+   //
+   // 2. Determine whether the peeked data, along with the previously
+   //    read data, includes the terminator.
+   //
+   // 3a. If yes, read the data until the end of the terminator, and
+   //     exit.
+   //
+   // 3b. If no, read the peeked data and goto 1.
+   //
+   // The function is careful to assume as little as possible about the
+   // implementation of peeking.  For example, every peek is followed by
+   // a read. If the read returns a different amount of data, the
+   // process is retried until all data arrives safely.
+   //
+   // Reads at most one less than the number of characters specified by maxsize.
+
+   if (maxsize <= 0) return 0;
+
+   Int_t bufsize = maxsize;
+   Int_t tail = 0;                 // tail position in HUNK
+
+   while (1) {
+      const char *end;
+      Int_t pklen, rdlen, remain;
+
+      // First, peek at the available data.
+      pklen = s->RecvRaw(hunk+tail, bufsize-1-tail, kPeek);
+      if (pklen < 0) {
+         return -1;
+      }
+      end = HttpTerminator(hunk, hunk+tail, pklen);
+      if (end) {
+         // The data contains the terminator: we'll drain the data up
+         // to the end of the terminator.
+         remain = end - (hunk + tail);
+         if (remain == 0) {
+            // No more data needs to be read.
+            hunk[tail] = '\0';
+            return tail;
+         }
+         if (bufsize - 1 < tail + remain) {
+            Error("GetHunk", "hunk buffer too small for data from host %s (%d bytes needed)",
+                  fUrl.GetHost(), tail + remain + 1);
+            hunk[tail] = '\0';
+            return -1;
+         }
+      } else {
+         // No terminator: simply read the data we know is (or should
+         // be) available.
+         remain = pklen;
+      }
+
+      // Now, read the data. Note that we make no assumptions about
+      // how much data we'll get. (Some TCP stacks are notorious for
+      // read returning less data than the previous MSG_PEEK.)
+      rdlen = s->RecvRaw(hunk+tail, remain, kDontBlock);
+      if (rdlen < 0) {
+         return -1;
+      }
+      tail += rdlen;
+      hunk[tail] = '\0';
+
+      if (rdlen == 0) {
+         if (tail == 0) {
+            // EOF without anything having been read
+            return tail;
+         } else {
+            // EOF seen: return the data we've read.
+            return tail;
+         }
+      }
+      if (end && rdlen == remain) {
+         // The terminator was seen and the remaining data drained --
+         // we got what we came for.
+         return tail;
+      }
+
+      // Keep looping until all the data arrives.
+
+      if (tail == bufsize - 1) {
+         Error("GetHunk", "hunk buffer too small for data from host %s",
+               fUrl.GetHost());
+         return -1;
+      }
+   }
+}
+
+//______________________________________________________________________________
+const char *TWebFile::HttpTerminator(const char *start, const char *peeked,
+                                     Int_t peeklen)
+{
+   // Determine whether [START, PEEKED + PEEKLEN) contains an HTTP new
+   // line [\r]\n. If so, return the pointer to the position after the line,
+   // otherwise return 0. This is used as callback to GetHunk(). The data
+   // between START and PEEKED has been read and cannot be "unread"; the
+   // data after PEEKED has only been peeked.
+
+   const char *p, *end;
+
+   // Look for "[\r]\n", and return the following position if found.
+   // Start one char before the current to cover the possibility that
+   // part of the terminator (e.g. "\r") arrived in the previous batch.
+   p = peeked - start < 1 ? start : peeked - 1;
+   end = peeked + peeklen;
+
+   // Check for \r\n anywhere in [p, end-2).
+   for (; p < end - 1; p++)
+      if (p[0] == '\r' && p[1] == '\n')
+         return p + 2;
+
+   // p==end-1: check for \r\n directly preceding END.
+   if (p[0] == '\r' && p[1] == '\n')
+      return p + 2;
+
+   return 0;
 }
 
 //______________________________________________________________________________
