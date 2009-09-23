@@ -24,6 +24,11 @@
 #endif
 
 #include "Rtypes.h"
+#include "Gtypes.h"
+
+class TAttFill;
+class TPoint;
+
    //
    // TQtBrush creates the QBrush Qt object based on the ROOT "fill" attributes 
    //
@@ -44,7 +49,10 @@ public:
       fStyle=src.fStyle;
       fFasi=src.fFasi;
    }
-   virtual ~TQtBrush(){;}
+   TQtBrush(const TAttFill &rootFillAttributes);
+   virtual ~TQtBrush();
+   TQtBrush &operator=(const TAttFill &rootFillAttributes);
+   void  SetFillAttributes(const TAttFill &rootFillAttributes);
    Bool_t IsTransparent() const;
    void SetStyle(int newStyle=1000){ if (newStyle < 0) fStyle = fFasi = -1;
                                      else  SetStyle(newStyle/1000,newStyle%1000); 

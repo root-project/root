@@ -24,6 +24,9 @@
    class QPolygon;
 #endif
 
+class TAttMarker;
+class QPainter;
+
 ////////////////////////////////////////////////////////////////////////
 //
 // TQtMarker - class-utility to convert the ROOT TMarker object shape 
@@ -43,26 +46,39 @@ private:
 public:
 
    TQtMarker(int n=0, TPoint *xy=0,int type=0);
-   void operator=(const TQtMarker&);
+   TQtMarker &operator=(const TQtMarker&);
    TQtMarker(const TQtMarker&);
+   TQtMarker &operator=(const TAttMarker&);
+   TQtMarker(const TAttMarker&);
    virtual ~TQtMarker();
+	void  DrawPolyMarker(QPainter &p, int n, TPoint *xy);
+	void  SetMarkerAttributes(const TAttMarker& markerAttributes);
+	void  SetColor(Color_t mcolor);
+	Color_t  GetColor() const;
+
    int     GetNumber()  const;
-   const QPolygon &GetNodes() const;
+   const   QPolygon &GetNodes() const;
    int     GetType()    const;
    void    SetMarker(int n, TPoint *xy, int type);
    ClassDef(TQtMarker,0) //  Convert  ROOT TMarker objects on to QPointArray
 };
 
 //_________________________________________________________
-inline void TQtMarker::operator=(const TQtMarker&m) 
+inline TQtMarker &TQtMarker::operator=(const TQtMarker&m) 
 {
-   fNumNode = m.fNumNode;
-   fChain   = m.fChain; 
-   fCindex  = m.fCindex;
+   fNumNode  = m.fNumNode;
+   fChain    = m.fChain; 
+   fCindex   = m.fCindex;
    fMarkerType=m.fMarkerType;
+	return *this;
 }
 //_________________________________________________________
 inline TQtMarker::TQtMarker(const TQtMarker&m) : fNumNode(m.fNumNode),
 fChain(m.fChain), fCindex(m.fCindex),fMarkerType(m.fMarkerType) {}
+
+//_________________________________________________________
+inline void  TQtMarker::SetColor(Color_t mcolor) { fCindex = mcolor; }
+//_________________________________________________________
+inline Color_t  TQtMarker::GetColor() const { return fCindex; }
 
 #endif

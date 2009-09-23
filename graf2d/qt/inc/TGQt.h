@@ -50,11 +50,17 @@
   class QEvent;
 #endif  /* CINT */
 
-class  QPen;
-class  QMarker;
+class QPainter;
+class QPen;
+class QMarker;
 //class  QFont;
-class  QPaintDevice;
-class  QTextCodec;
+class QPaintDevice;
+class QTextCodec;
+class QPoint;
+class QString;
+class QSize;
+class QColor;
+
 
 #include "TVirtualX.h"
 #include "TQtEmitter.h"
@@ -74,8 +80,38 @@ class TQtPen;
 class TQtPainter;
 class TQtFeedBackWidget;
 
-
 //#define TRACE_TGQt() fprintf(stdout, "TGQt::%s() %d\n", __FUNCTION__, __LINE__)
+class TQtTextProxy {
+private:
+    TQtTextProxy(const TQtTextProxy&);
+    void operator=(const TQtTextProxy&);
+protected:
+    TQtTextProxy(){;}
+public:
+    virtual  ~TQtTextProxy(){;}
+    virtual void clear() = 0;
+
+    bool setContent(const char *text, QString *errorMsg = 0,
+                    int *errorLine = 0, int *errorColumn = 0);
+    virtual bool setContent(const QString &text, QString *errorMsg   = 0,
+                    int *errorLine = 0, int *errorColumn = 0) = 0;
+    virtual bool setMmlContent(const QString &text, QString *errorMsg   = 0,
+                    int *errorLine = 0, int *errorColumn = 0) = 0;
+    virtual void paint(QPainter *p,unsigned int x, unsigned int y) const  = 0;
+    virtual unsigned int width() const = 0; 
+    virtual unsigned int height()    const = 0;
+
+    virtual void setFont(Font_t fontnumber) = 0;
+
+    virtual int baseFontPointSize() const   = 0;
+    virtual void setBaseFontPointSize(int size) = 0;
+    virtual void setForegroundColor(const QColor &) = 0;
+    virtual bool isMine() const { return false;};
+    virtual TQtTextProxy *Clone() = 0;
+};
+inline bool TQtTextProxy::setContent(const char *text, QString *errorMsg,
+                    int *errorLine, int *errorColumn )
+{ return setContent(QString(text),errorMsg, errorLine, errorColumn); }
 
 class TGQt  : public TVirtualX  {
 
@@ -96,6 +132,7 @@ class TGQt  : public TVirtualX  {
    friend class TQtPen; 
    friend class TQtBrush; 
    friend class TQtPainter;
+   friend class TQtTextProxy;
 
 protected:
    enum DEFWINDOWID { kDefault=1 };
@@ -149,8 +186,11 @@ protected:
     const char            *fSymbolFontFamily; // the name of the font to substiute the non-standard "Symbol"
     Int_t                 fQtEventHasBeenProcessed; // Flag whether the events were processed
     Bool_t                fFeedBackMode;      // TCanvas feedback mode 
-    TQtFeedBackWidget    *fFeedBackWidget;    // The dedicated widget for TCanvas feebback mode
-    Bool_t                fBlockRGB;          // Protect agaist color doubel setting
+    TQtFeedBackWidget    *fFeedBackWidget;    // The dedicated widget for TCanvas feedback mode
+    Bool_t                fBlockRGB;          // Protect against color double setting
+    Bool_t                fUseTTF;            // Flag whether ROOT font has a priority
+    
+    static TQtTextProxy   *fgTextProxy;       // proxy for the custom text rendering engine
 //
 //   Text management
 //
@@ -164,8 +204,6 @@ protected:
 //  Qt methods
    static QRect GetQRect(QPaintDevice &dev);
    int  UpdateColor(int cindex);
-   virtual const QColor&   ColorIndex(Color_t indx) const;
-
    QPaintDevice *GetDoubleBuffer(QPaintDevice *dev);
 
 #endif
@@ -216,7 +254,8 @@ public:
    static void           PrintEvent(Event_t &);
    static QString        SetFileName(const QString &fileName);
    static QString        GetNewFileName(const QString &fileNamePrototype);
-
+   static TQtTextProxy  *TextProxy();
+   static void           SetTextProxy(TQtTextProxy  *proxy);
 
    void SetQClientFilter(TQtClientFilter *filter) {fQClientFilter = filter;}
    TQtClientFilter  *QClientFilter() const {return fQClientFilter;}
@@ -230,6 +269,8 @@ public:
    virtual void      SetAlpha(Int_t cindex, Float_t a);
    virtual void      GetRGBA(Int_t cindex, Float_t &r, Float_t &g, Float_t &b, Float_t &a);
    virtual Float_t   GetAlpha(Int_t cindex);
+   virtual const QColor& ColorIndex(Color_t indx) const;
+
    virtual Int_t LoadQt(const char *shareLibFileName);
    static void PostQtEvent(QObject *receiver, QEvent *event);
    virtual Int_t processQtEvents(Int_t maxtime=300); //milliseconds

@@ -186,7 +186,7 @@ TQtWidget::TQtWidget(QWidget* mother, const char* name, Qt::WFlags f,bool embedd
         ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0),fPixmapScreen(0)
         ,fPaint(TRUE),fSizeChanged(FALSE),fDoubleBufferOn(FALSE),fEmbedded(embedded)
         ,fWrapper(0),fSaveFormat("PNG"),fInsidePaintEvent(false),fOldMousePos(-1,-1)
-        ,fIgnoreLeaveEnter(0)
+        ,fIgnoreLeaveEnter(0),fRefreshTimer(0)
 {
    if (name && name[0]) setObjectName(name);
    Init() ;
@@ -198,7 +198,7 @@ TQtWidget::TQtWidget(QWidget* mother, Qt::WFlags f,bool embedded) :
      ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0)
      ,fPixmapScreen(0),fPaint(TRUE),fSizeChanged(FALSE)
      ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
-     ,fInsidePaintEvent(false),fOldMousePos(-1,-1)
+     ,fInsidePaintEvent(false),fOldMousePos(-1,-1),fRefreshTimer(0)
 { setObjectName("tqtwidget"); Init() ;}
 
 //_____________________________________________________________________________
@@ -222,7 +222,7 @@ void TQtWidget::Init()
     fCanvas = new TCanvas(objectName().toStdString().c_str(),minw,minh, TGQt::RegisterWid(this));
     gROOT->SetBatch(batch);
     //   schedule the flush operation fCanvas->Flush(); via timer
-    QTimer::singleShot(0,this, SLOT(Refresh()));
+    Refresh();
   }
   fSizeHint = QWidget::sizeHint();
   setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::MinimumExpanding));
@@ -413,6 +413,20 @@ void TQtWidget::Disconnect()
 }
 //_____________________________________________________________________________
 void TQtWidget::Refresh()
+{
+   // [slot]  to allow Qt signal refreshing the ROOT TCanvas if needed
+   // use the permanent single shot timer to eliminate 
+   // the redundand refreshing for the sake of the performance
+   if (!fRefreshTimer) {
+      fRefreshTimer  = new QTimer(this);
+      fRefreshTimer->setSingleShot(true);
+      fRefreshTimer->setInterval(0);
+      connect(fRefreshTimer, SIGNAL(timeout()), this, SLOT(RefreshCB()));
+   }
+   fRefreshTimer->start();
+}
+//_____________________________________________________________________________
+void TQtWidget::RefreshCB()
 {
    // [slot]  to allow Qt signal refreshing the ROOT TCanvas if needed
 
@@ -808,7 +822,7 @@ void TQtWidget::exitSizeEvent ()
    TCanvas *c = Canvas();
    if (c)   c->Resize();
    // One more time to catch the last size
-   QTimer::singleShot(0,this, SLOT(Refresh()));
+   Refresh();
 }
 
 //____________________________________________________________________________

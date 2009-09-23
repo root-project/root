@@ -25,15 +25,40 @@
 #include "TStyle.h"
 #include "TObjString.h"
 #include "TObjArray.h"
+#include "TAttLine.h"
 
-#include <qfontmetrics.h>
-#if QT_VERSION >= 0x40000
-#  include <QDebug>
-#endif
+#include <QtGui/QFontMetrics>
+#include <QDebug>
 
 //______________________________________________________________________________
 TQtPen::TQtPen(): QPen(),TAttLine()
-{}
+{
+	// TQtPen default ctor
+}
+//______________________________________________________________________________
+TQtPen::TQtPen(const TAttLine &line) : QPen() 
+{
+	// Copy ctor to copy ROOT TAttLine object
+   SetLineAttributes(line);
+}
+
+//______________________________________________________________________________
+TQtPen &TQtPen::operator=(const TAttLine &line)
+{
+	// Assigns the  Qt pen attributes from ROOT TAttLine object
+   SetLineAttributes(line);
+	return *this;
+}
+
+//______________________________________________________________________________
+void  TQtPen::SetLineAttributes(const TAttLine &lineAttributes)
+{
+	// Maps the ROOT TAttLine attributes to QPen attributes
+	SetLineColor(lineAttributes.GetLineColor());
+	SetLineStyle(lineAttributes.GetLineStyle());
+	SetLineWidth(lineAttributes.GetLineWidth());
+}
+
 //______________________________________________________________________________
 void  TQtPen::SetLineColor(Color_t cindex)
 {
@@ -94,13 +119,11 @@ void  TQtPen::SetLineType(int n, int*dash)
     setStyle(styles[l]);
   }
   else if (dash) {
-#if QT_VERSION >= 0x40000
      // - A custom pattern defined using QPainterPathStroker::setDashPattern().
      QVector<qreal> dashes;
      int i;
      for (i=0;i<n;i++) dashes << dash[i];
      setDashPattern(dashes);
-#endif
   }
 }
 //______________________________________________________________________________

@@ -15,7 +15,7 @@
 #include "TAttLine.h"
 
 #ifndef __CINT__
-#  include <QPen>
+#  include <QtGui/QPen>
 #else
    class  QPen;
 #endif
@@ -28,11 +28,15 @@ class TQtPen : public QPen, public TAttLine
 public:
    TQtPen();
    TQtPen(const TQtPen &src):QPen(src),TAttLine(src) {}
+   TQtPen(const TAttLine &line);
+   TQtPen &operator=(const TAttLine &line);
    virtual ~TQtPen(){;}
+   void  SetLineAttributes() { TAttLine::SetLineAttributes(); }
+   void  SetLineAttributes(const TAttLine &lineAttributes);
    void  SetLineColor(Color_t cindex);
    void  SetLineType(int n, int*dash);
    void  SetLineStyle(Style_t linestyle);
-   void SetLineWidth(Width_t width);
+   void  SetLineWidth(Width_t width);
 };
 
 #endif

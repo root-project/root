@@ -141,6 +141,30 @@ ClassImp(TQtBrush)
 //______________________________________________________________________________
 TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0),fAlpha(255)
 {}
+//______________________________________________________________________________
+TQtBrush::TQtBrush(const TAttFill &rootFillAttributes)
+{
+	// TQtBrush ctor from ROOT TAttFill object
+	SetFillAttributes(rootFillAttributes);
+
+}
+//______________________________________________________________________________
+TQtBrush::~TQtBrush() 
+{
+	// TQtBrush dtor
+}
+//______________________________________________________________________________
+TQtBrush &TQtBrush::operator=(const TAttFill &rootFillAttributes)
+{
+	SetFillAttributes(rootFillAttributes);
+   return *this;
+}
+//______________________________________________________________________________
+void  TQtBrush::SetFillAttributes(const TAttFill &rootFillAttributes)
+{
+	SetColor(rootFillAttributes.GetFillColor());
+	SetStyle(rootFillAttributes.GetFillStyle());
+}
 
 //______________________________________________________________________________
  void TQtBrush::SetColor(Color_t cindex)

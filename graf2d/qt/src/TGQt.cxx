@@ -89,6 +89,23 @@
 
 TGQt *gQt=0;
 TVirtualX *TGQt::fgTQt = 0; // to remember the pointer foolishing ROOT PluginManager later.
+TQtTextProxy  *TGQt::fgTextProxy = 0; // The pointer to the custom text proxy;
+class TQtTextCloneProxy {
+private:
+   TQtTextProxy *fProxy;
+   void *operator new(size_t);
+   TQtTextCloneProxy(const TQtTextCloneProxy&);
+   void operator=(const TQtTextCloneProxy&);
+public:
+   TQtTextCloneProxy()  : fProxy(0) 
+   {
+      if ( TGQt::TextProxy())
+         fProxy = TGQt::TextProxy()->Clone();
+   }
+   inline ~TQtTextCloneProxy() { delete fProxy; }
+   inline TQtTextProxy *operator->() { return fProxy;}
+};
+
 #define NoOperation (QPaintDevice *)(-1)
 
 // static const int kDefault=2;
@@ -166,7 +183,7 @@ protected:
       QFrame::hideEvent(ev);
       if (fParentWidget) {
          fParentWidget->SetIgnoreLeaveEnter(0);         
-         SetParent(0); // reparent
+         SetParent(0);  // reparent // it is dangerous thing to do inside of the event processing
       }
    }
    virtual void paintEvent(QPaintEvent *ev) {
@@ -203,11 +220,17 @@ public:
    virtual ~TQtFeedBackWidget() 
    {
       fParentWidget = 0;
-      delete fPixBuffer; fPixBuffer = 0;
+      delete fPixBuffer; fPixBuffer   = 0;
       delete fGrabBuffer; fGrabBuffer = 0;
    }
    void SetParent(TQtWidget *w) {
       setParent(fParentWidget = w);
+   }
+   void Hide() {
+      if (fParentWidget) {
+         fParentWidget->SetIgnoreLeaveEnter(0);         
+         SetParent(0);  // reparent
+      }
    }
    void Show() {
       // Protect (Qt >= 4.5.x) TCanvas  against of 
@@ -216,7 +239,7 @@ public:
       QFrame::show();
       if (fParentWidget) fParentWidget->SetIgnoreLeaveEnter();
    }
-   QPaintDevice *PixBuffer() { 
+   QPaintDevice *PixBuffer() {
       // Create the feedback buffer if needed
       if (fParentWidget ) {
          // resize the feedback
@@ -768,7 +791,7 @@ void TGQt::PostQtEvent(QObject *receiver, QEvent *event)
 //______________________________________________________________________________
 TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuffer(0)
 ,fCodec(0),fSymbolFontFamily("Symbol"),fQtEventHasBeenProcessed(0)
-,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE)
+,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE),fUseTTF(kTRUE)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*Default Constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                    ===================
@@ -782,7 +805,7 @@ TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuf
 TGQt::TGQt(const char *name, const char *title) : TVirtualX(name,title),fDisplayOpened(kFALSE)
 ,fQPainter(0),fCursors(kNumCursors),fQClientFilter(0),fQClientFilterBuffer(0),fPointerGrabber(0)
 ,fCodec(0),fSymbolFontFamily("Symbol"),fQtEventHasBeenProcessed(0)
-,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE)
+,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE),fUseTTF(kTRUE)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Normal Constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ==================                              *-*
@@ -810,8 +833,9 @@ TGQt::~TGQt()
       }
        qDeleteAll(fCursors.begin(), fCursors.end());
 
-      delete fQClientFilter;
-      delete fQClientFilterBuffer;
+      delete fQClientFilter;       fQClientFilter = 0;
+      delete fQClientFilterBuffer; fQClientFilterBuffer = 0;
+      delete fgTextProxy;          fgTextProxy = 0;
  // ---     delete fQPainter; fQPainter = 0;
    }
    // Stop GUI thread
@@ -956,6 +980,7 @@ Bool_t TGQt::Init(void* /*display*/)
     }
     if (symbolFontFound) TQtPadFont::SetSymbolFontFamily(fontFamily.toAscii().data());
 #endif
+   fUseTTF=gEnv->GetValue("Qt.Screen.TTF",kTRUE);
    //  printf(" TGQt::Init finsihed\n");
    // Install filter for the desktop
    // QApplication::desktop()->installEventFilter(QClientFilter());
@@ -1496,71 +1521,22 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
    // n    : number of markers to draw
    // xy   : x,y coordinates of markers
    TQtLock lock;
-   if (fSelectedWindow)
-   {
-      TQtMarker *CurMarker = fQtMarker;
-      /* Set marker Color */
-      const QColor &mColor  = ColorIndex(fMarkerColor);
-
-      if( CurMarker->GetNumber() <= 0 )
-      {
-         TQtPainter p(this,TQtPainter::kNone);
-         p.setPen(mColor);
-         QPolygon qtPoints(n);
-         TPoint *rootPoint = xy;
-         for (int i=0;i<n;i++,rootPoint++)
-            qtPoints.setPoint(i,rootPoint->fX,rootPoint->fY);
-         p.drawPoints(qtPoints);
-      } else {
-         int r = CurMarker->GetNumber()/2;
-         TQtPainter p(this,TQtPainter::kNone);
-         p.setPen(mColor);
-         switch (CurMarker -> GetType())
-         {
-         case 1:
-         case 3:
-         default:
-            p.setBrush(mColor);
-            break;
-         case 0:
-         case 2:
-            p.setBrush(Qt::NoBrush);
-            break;
-         case 4:
-            break;
-         }
-
-         for( int m = 0; m < n; m++ )
-         {
-            int i;
-            switch( CurMarker->GetType() )
-            {
-            case 0:        /* hollow circle */
-            case 1:        /* filled circle */
-               p.drawEllipse(xy[m].fX-r, xy[m].fY-r, 2*r, 2*r);
-               break;
-            case 2:        /* hollow polygon */
-            case 3:        /* filled polygon */
-               {
-                  QPolygon mxy = fQtMarker->GetNodes();
-                  mxy.translate(xy[m].fX,xy[m].fY);
-                  p.drawPolygon(mxy);
-                  break;
-               }
-            case 4:        /* segmented line */
-               {
-                  QPolygon mxy = fQtMarker->GetNodes();
-                  mxy.translate(xy[m].fX,xy[m].fY);
-                  QVector<QLine> lines(CurMarker->GetNumber());
-                  for( i = 0; i < CurMarker->GetNumber(); i+=2 )
-                     lines.push_back(QLine(mxy.point(i),mxy.point(i+1)));
-                  p.drawLines(lines);
-                  break;
-               }
-            }
-         }
-      }
+   if (fSelectedWindow) {
+      TQtPainter p(this,TQtPainter::kNone);
+		fQtMarker->DrawPolyMarker(p,n,xy);
    }
+}
+//______________________________________________________________________________
+TQtTextProxy  *TGQt::TextProxy()
+{
+   // Get the text proxy implementation pointer
+   return fgTextProxy;
+}
+//______________________________________________________________________________
+void  TGQt::SetTextProxy(TQtTextProxy  *proxy)
+{
+   // Set the text proxy implementation pointer
+   fgTextProxy = proxy;
 }
 
 //______________________________________________________________________________
@@ -1577,13 +1553,6 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
    // text       : text string
 
 
-   //  We have to check angle to make sure we are setting the right font
-#if 0
-   if (fROOTFont.lfEscapement != (LONG) fTextAngle*10)  {
-      fTextFontModified=1;
-      fROOTFont.lfEscapement   = (LONG) fTextAngle*10;
-   }
-#endif
    // fprintf(stderr,"TGQt::DrawText: %s\n", text);
    if (text && text[0]) {
       TQtLock lock;
@@ -1591,27 +1560,45 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
       TQtPainter p(this,TQtPainter::kUpdateFont);
       p.setPen(ColorIndex(fTextColor));
       p.setBrush(ColorIndex(fTextColor));
-
-      QFontMetrics metrics(*fQFont);
-      QRect bRect = metrics.boundingRect(text);
-
+      unsigned int w=0;unsigned int h=0; unsigned int d = 0;
+      bool textProxy = false;
+      TQtTextCloneProxy proxy;
+      if (fgTextProxy) {
+         proxy->clear();
+         QFontInfo fi(*fQFont);
+         proxy->setBaseFontPointSize(fi.pointSize());
+         proxy->setForegroundColor(ColorIndex(fTextColor));
+         if (textProxy = proxy->setContent(text)) {
+             w = proxy->width();
+             h = proxy->height();
+         }
+      } 
+      if (!textProxy) {
+         QFontMetrics metrics(*fQFont);
+         QRect bRect = metrics.boundingRect(text);
+         w = bRect.width();
+         h = bRect.height();
+         d = metrics.descent();
+      }
       p.translate(x,y);
       if (TMath::Abs(angle) > 0.1 ) p.rotate(-angle);
       int dx =0; int dy =0;
-
+      
       switch( fTextAlignH ) {
-           case 2: dx = -bRect.width()/2;                    // h center;
+           case 2: dx = -int(w/2);                  // h center;
               break;
-           case 3: dx = -bRect.width();                      //  Right;
+           case 3: dx = -int(w);                    //  Right;
               break;
       };
       switch( fTextAlignV ) {
-          case 2: dy = bRect.height()/2 - metrics.descent(); // v center
+          case 2: dy = h/2 - d; // v center // metrics.strikeOutPos();
              break;
-          case 3: dy = bRect.height()   - metrics.descent(); // AlignTop;
+          case 3: dy = h   - d; // AlignTop;
       };
-
-      p.drawText (dx, dy, GetTextDecoder()->toUnicode (text));
+      if (textProxy)
+         proxy->paint(&p,dx,-dy);
+      else
+         p.drawText (dx, dy, GetTextDecoder()->toUnicode (text));
    }
 }
 
@@ -1764,15 +1751,57 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 
    TQtLock lock;
    if (fQFont) {
-      QSize textSize = QFontMetrics(*fQFont).size(Qt::TextSingleLine,GetTextDecoder()->toUnicode(mess)) ;
-      w = textSize.width() ;
-      h = (unsigned int)(textSize.height());
-//      fprintf(stderr,"  TGQt::GetTextExtent  w=%d h=%d font = %d size =%f\n", w,h,fTextFont, fTextSize);
+      bool textProxy = false;
+      if (fgTextProxy) {
+         TQtTextCloneProxy proxy;
+         proxy->clear();
+         QFontInfo fi(*fQFont);
+         proxy->setBaseFontPointSize(fi.pointSize());
+         if (textProxy = proxy->setContent(mess)) {
+            w = proxy->width();
+            h = proxy->height();
+         }
+      }
+      if (!textProxy) {
+         QSize textSize = QFontMetrics(*fQFont).size(Qt::TextSingleLine,GetTextDecoder()->toUnicode(mess)) ;
+         w = textSize.width() ;
+         h = (unsigned int)(textSize.height());
+      }
+      // qDebug() << "  TGQt::GetTextExtent  w=" <<w <<" h=" << h << "font = " 
+      //         << fTextFont << " size =" << fTextSize 
+      //         << mess;
    }
+}
+//______________________________________________________________________________
+Int_t TGQt::GetFontAscent() const
+{
+   // Returns ascent of the current font (in pixels).
+   // The ascent of a font is the distance from the baseline 
+   // to the highest position characters extend to
+   Int_t ascent = 0;
+   if (fQFont) {
+      QFontMetrics fm(*fQFont);
+      ascent = fm.ascent(); //+fm.descent();
+   }
+   return ascent;
 }
 
 //______________________________________________________________________________
-Bool_t  TGQt::HasTTFonts() const {return kTRUE;}
+Int_t TGQt::GetFontDescent() const 
+{ 
+   // Returns the descent of the current font (in pixels.
+   // The descent is the distance from the base line 
+   // to the lowest point characters extend to.
+   Int_t descent = 0;
+   if (fQFont) {
+      QFontMetrics fm(*fQFont);
+      descent = fm.descent();
+   }
+   return descent;
+}
+
+//______________________________________________________________________________
+Bool_t  TGQt::HasTTFonts() const {return fUseTTF;}
 
 //______________________________________________________________________________
 void  TGQt::MoveWindow(Int_t wd, Int_t x, Int_t y)
@@ -2069,9 +2098,10 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
 	 // TQtWidget::setAttribute(Qt::WA_PaintOnScreen) flag
 	 // TQtWidget keeps painting itself over the feedback windows. Wierd !!!
          // reparent if needed
+         fFeedBackWidget->SetParent(0);
          fFeedBackWidget->SetParent((TQtWidget *)fSelectedWindow);
       } else if (fFeedBackWidget) {
-         fFeedBackWidget->hide();
+         fFeedBackWidget->Hide();
       }
    }
 #if 0
@@ -2211,7 +2241,8 @@ void  TGQt::SetMarkerColor( Color_t cindex)
    //*-*  cindex : color index defined my IXSETCOL
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   if (fMarkerColor != cindex) fMarkerColor = UpdateColor(cindex);
+	if (fQtMarker->GetColor() != cindex)		
+		fQtMarker->SetColor(fMarkerColor = UpdateColor(cindex));
 }
 
 //______________________________________________________________________________
