@@ -131,6 +131,7 @@ void TEveScene::RetransHierarchically()
    fGLScene->EndUpdate();
 }
 
+//______________________________________________________________________________
 void TEveScene::RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& tp)
 {
    // Set transformation matrix for physical shape of element el in
