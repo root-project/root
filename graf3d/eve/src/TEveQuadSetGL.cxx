@@ -105,13 +105,6 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    TEveQuadSet& mQ = * fM;
 
-   if (mQ.fFrame != 0 && ! rnrCtx.SecSelection())
-   {
-      TGLUtil::LockColor(); // Keep color from TGLPhysicalShape.
-      TEveFrameBoxGL::Render(mQ.fFrame);
-      TGLUtil::UnlockColor();
-   }
-
    if (mQ.fPlex.Size() == 0)
       return;
    if ( ! mQ.fValueIsColor && mQ.fPalette == 0)
@@ -136,6 +129,11 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    else if (mQ.fQuadType < TEveQuadSet::kQT_Hexagon_End) RenderHexagons(rnrCtx);
 
    glPopAttrib();
+
+   if (mQ.fFrame != 0 && ! rnrCtx.SecSelection())
+   {
+      TEveFrameBoxGL::Render(mQ.fFrame);
+   }
 }
 
 //______________________________________________________________________________

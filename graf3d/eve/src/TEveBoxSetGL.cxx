@@ -11,12 +11,11 @@
 
 #include "TEveBoxSetGL.h"
 #include "TEveBoxSet.h"
+#include "TEveFrameBoxGL.h"
 
 #include "TGLIncludes.h"
 #include "TGLRnrCtx.h"
-#include "TGLScene.h"
 #include "TGLSelectRecord.h"
-#include "TGLContext.h"
 #include "TGLQuadric.h"
 
 //==============================================================================
@@ -406,6 +405,11 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    if (rnrCtx.SecSelection()) glPopName();
 
    glPopAttrib();
+
+   if (mB.fFrame != 0 && ! rnrCtx.SecSelection())
+   {
+      TEveFrameBoxGL::Render(mB.fFrame);
+   }
 }
 
 /******************************************************************************/

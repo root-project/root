@@ -29,11 +29,21 @@ void TEveFrameBoxGL::RenderFrame(const TEveFrameBox& b, Bool_t fillp)
 {
    // Render the frame with GL.
 
-   const Float_t*  p =  b.fFramePoints;
+   const Float_t * p = b.fFramePoints;
+   Float_t normal[3];
 
    if (b.fFrameType == TEveFrameBox::kFT_Quad)
    {
-      glBegin(fillp ? GL_POLYGON : GL_LINE_LOOP);
+      if (fillp)
+      {
+         TMath::Normal2Plane(p, p+3, p+6, normal);
+         glNormal3fv(normal);
+         glBegin(GL_POLYGON);
+      }
+      else
+      {
+         glBegin(GL_LINE_LOOP);
+      }
       Int_t nPoints = b.fFrameSize / 3;
       for (Int_t i = 0; i < nPoints; ++i, p += 3)
          glVertex3fv(p);
@@ -41,20 +51,56 @@ void TEveFrameBoxGL::RenderFrame(const TEveFrameBox& b, Bool_t fillp)
    }
    else if (b.fFrameType == TEveFrameBox::kFT_Box)
    {
-      // !!! frame-fill not implemented for 3D frame.
-      glBegin(GL_LINE_STRIP);
-      glVertex3fv(p);       glVertex3fv(p + 3);
-      glVertex3fv(p + 6);   glVertex3fv(p + 9);
-      glVertex3fv(p);
-      glVertex3fv(p + 12);  glVertex3fv(p + 15);
-      glVertex3fv(p + 18);  glVertex3fv(p + 21);
-      glVertex3fv(p + 12);
-      glEnd();
-      glBegin(GL_LINES);
-      glVertex3fv(p + 3);   glVertex3fv(p + 15);
-      glVertex3fv(p + 6);   glVertex3fv(p + 18);
-      glVertex3fv(p + 9);   glVertex3fv(p + 21);
-      glEnd();
+      if (fillp)
+      {
+         glBegin(GL_QUADS);
+         TMath::Normal2Plane(p, p+3, p+6, normal);
+         glNormal3fv(normal);
+         glVertex3fv(p);      glVertex3fv(p + 3);
+         glVertex3fv(p + 6);  glVertex3fv(p + 9);
+         // top:    7654
+         TMath::Normal2Plane(p+21, p+18, p+15, normal);
+         glNormal3fv(normal);
+         glVertex3fv(p + 21); glVertex3fv(p + 18);
+         glVertex3fv(p + 15); glVertex3fv(p + 12);
+         // back:  0451
+         TMath::Normal2Plane(p, p+12, p+15, normal);
+         glNormal3fv(normal);
+         glVertex3fv(p);      glVertex3fv(p + 12);
+         glVertex3fv(p + 15); glVertex3fv(p + 3);
+         // front:   3267
+         TMath::Normal2Plane(p+9, p+6, p+18, normal);
+         glNormal3fv(normal);
+         glVertex3fv(p + 9);   glVertex3fv(p + 6);
+         glVertex3fv(p + 18);  glVertex3fv(p + 21);
+         // left:    0374
+         TMath::Normal2Plane(p, p+9, p+21, normal);
+         glNormal3fv(normal);
+         glVertex3fv(p);       glVertex3fv(p + 9);
+         glVertex3fv(p + 21);  glVertex3fv(p + 12);
+         // right:   1562
+         TMath::Normal2Plane(p+3, p+15, p+18, normal);
+         glNormal3fv(normal);
+         glVertex3fv(p + 3);   glVertex3fv(p + 15);
+         glVertex3fv(p + 18);  glVertex3fv(p + 6);
+         glEnd();
+      }
+      else
+      {
+         glBegin(GL_LINE_STRIP);
+         glVertex3fv(p);       glVertex3fv(p + 3);
+         glVertex3fv(p + 6);   glVertex3fv(p + 9);
+         glVertex3fv(p);
+         glVertex3fv(p + 12);  glVertex3fv(p + 15);
+         glVertex3fv(p + 18);  glVertex3fv(p + 21);
+         glVertex3fv(p + 12);
+         glEnd();
+         glBegin(GL_LINES);
+         glVertex3fv(p + 3);   glVertex3fv(p + 15);
+         glVertex3fv(p + 6);   glVertex3fv(p + 18);
+         glVertex3fv(p + 9);   glVertex3fv(p + 21);
+         glEnd();
+      }
    }
 }
 
@@ -71,7 +117,7 @@ void TEveFrameBoxGL::Render(const TEveFrameBox* box)
    glEnable(GL_COLOR_MATERIAL);
    glDisable(GL_CULL_FACE);
 
-   if (b.fFrameType == TEveFrameBox::kFT_Quad && b.fDrawBack)
+   if (b.fDrawBack)
    {
       GLboolean lmts;
       glGetBooleanv(GL_LIGHT_MODEL_TWO_SIDE, &lmts);
@@ -81,10 +127,11 @@ void TEveFrameBoxGL::Render(const TEveFrameBox* box)
       glPolygonOffset(2, 2);
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-      const Float_t*  p =  b.fFramePoints;
-      Float_t normal[3];
-      TMath::Normal2Plane(p, p+3, p+6, normal);
-      glNormal3fv(normal);
+      if (b.fBackRGBA[3] < 255)
+      {
+         glEnable(GL_BLEND);
+         glDepthMask(GL_FALSE);
+      }
 
       TGLUtil::Color4ubv(b.fBackRGBA);
       RenderFrame(b, kTRUE);

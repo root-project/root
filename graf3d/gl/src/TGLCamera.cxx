@@ -950,7 +950,6 @@ Bool_t TGLCamera::Dolly(Int_t delta, Bool_t mod1, Bool_t mod2)
       return kFALSE;
 
    fCamTrans.MoveLF(1, -step);
-   printf("dolly\n");
 
    IncTimeStamp();
    return kTRUE;
