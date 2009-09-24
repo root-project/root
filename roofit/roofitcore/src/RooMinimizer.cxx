@@ -39,7 +39,7 @@
 // END_HTML
 //
 
-#ifndef __ROOFIT_NOROOMINIZER
+#ifndef __ROOFIT_NOROOMINIMIZER
 
 #include "RooFit.h"
 #include "Riostream.h"
