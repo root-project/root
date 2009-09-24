@@ -998,13 +998,8 @@ Int_t RooDataHist::calcTreeIndex() const
 void RooDataHist::dump2() 
 {  
   // Debug stuff, should go...
-  for (int i=0 ; i<(int)_idxMult.size() ; i++) {
-    cout << "idxMult[" << i << "] = " << _idxMult[i] << endl ;
-  }
-  return ;
-  Int_t i ;
   cout << "_arrSize = " << _arrSize << endl ;
-  for (i=0 ; i<_arrSize ; i++) {
+  for (Int_t i=0 ; i<_arrSize ; i++) {
     cout << "wgt[" << i << "] = " << _wgt[i] << "sumw2[" << i << "] = " << _sumw2[i] << " vol[" << i << "] = " << _binv[i] << endl ;
   }
 }
