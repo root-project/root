@@ -1094,7 +1094,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       if (glV->IsColorSetDark())
       {
          if (fM->fFontColor < 0) fFontColor = TColor::GetColorDark(fFontColor);
-         fGridColor = TColor::GetColorDark(fFontColor);     
+         fGridColor = TColor::GetColorDark(fFontColor);
       }
       else
       {
