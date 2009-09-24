@@ -208,7 +208,7 @@ void TGLAxisPainter::RnrText(const TString &txt, const TGLVector3 &p, TGLFont::E
 
    if (fFontMode == TGLFont::kPixmap || fFontMode ==  TGLFont::kBitmap)
    {
-      font.Render(txt, p.CArr(), aH, aV);
+     font.Render(txt, p.X(), p.Y(), p.Z(), aH, aV);
    }
    else
    {
@@ -225,7 +225,7 @@ void TGLAxisPainter::RnrText(const TString &txt, const TGLVector3 &p, TGLFont::E
 }
 
 //______________________________________________________________________________
-void TGLAxisPainter::SetLabelFont(TGLRnrCtx &rnrCtx, const char* fontName, Float_t fontSize, Double_t size3d)
+void TGLAxisPainter::SetLabelFont(TGLRnrCtx &rnrCtx, const char* fontName, Int_t fontSize, Double_t size3d)
 {
    // Set label font derived from TAttAxis.
 
@@ -263,7 +263,7 @@ void TGLAxisPainter::RnrLabels() const
 
 //______________________________________________________________________________
 void TGLAxisPainter::SetTitleFont(TGLRnrCtx &rnrCtx, const char* fontName,
-                                  Float_t fontSize, Double_t size3d)
+                                  Int_t fontSize, Double_t size3d)
 {
    // Set title font derived from TAttAxis.
 
@@ -424,8 +424,8 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
                                  (up[1] - dn[1]) * (up[1] - dn[1]) +
                                  (up[2] - dn[2]) * (up[2] - dn[2]));
 
-      fLabelPixelFontSize = len*fAttAxis->GetLabelSize();
-      fTitlePixelFontSize = len*fAttAxis->GetTitleSize();
+      fLabelPixelFontSize = TMath::Nint(len*fAttAxis->GetLabelSize());
+      fTitlePixelFontSize = TMath::Nint(len*fAttAxis->GetTitleSize());
    }
 
    SetLabelFont(rnrCtx, labFontName,   fLabelPixelFontSize, (max - min)*fAttAxis->GetLabelSize());

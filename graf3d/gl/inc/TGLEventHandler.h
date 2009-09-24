@@ -51,7 +51,7 @@ protected:
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
 
 public:
-   TGLEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="");
+   TGLEventHandler(TGWindow *w, TObject *obj);
    virtual ~TGLEventHandler();
 
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);

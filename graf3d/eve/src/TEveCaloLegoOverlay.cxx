@@ -236,7 +236,7 @@ void TEveCaloLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
    TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
 
    TGLFont font;
-   Float_t fs = TMath::Max(vp.Height()*0.035, 12.);
+   Int_t fs = TMath::Max(TMath::Nint(vp.Height()*0.035), 12);
    rnrCtx.RegisterFontNoScale(fs, "arial", TGLFont::kPixmap, font);
    font.PreRender();
    Float_t off = fs*0.2;
@@ -435,10 +435,10 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
 
    // draw numbers
    TGLFont fontB;
-   Float_t fsb = TMath::Max(vp.Height()*0.03, 12.);
+   Int_t fsb = TMath::Max(TMath::Nint(vp.Height()*0.03), 12);
    rnrCtx.RegisterFontNoScale(fsb, "arial", TGLFont::kPixmap, fontB);
    TGLFont fontE;
-   Float_t fsE = TMath::Max(vp.Height()*0.008, 8.);
+   Int_t fsE = TMath::Max(TMath::Nint(vp.Height()*0.008), 8);
    rnrCtx.RegisterFontNoScale(fsE, "arial", TGLFont::kPixmap, fontE);
 
    Float_t llx, lly, llz, urx, ury, urz;

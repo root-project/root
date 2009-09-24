@@ -110,7 +110,7 @@ void TGLEmbeddedViewer::CreateFrames()
    fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, 0, 10, 10);
 
    // Direct events from the TGWindow directly to the base viewer
-   fEventHandler = new TGLEventHandler("Default", 0, this);
+   fEventHandler = new TGLEventHandler(0, this);
    fGLWidget->SetEventHandler(fEventHandler);
 
    fFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,

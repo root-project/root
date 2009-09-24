@@ -11,6 +11,7 @@
 
 #include "TGLOverlayButton.h"
 #include "TColor.h"
+#include "TMath.h"
 
 #include <TGLRnrCtx.h>
 #include <TGLIncludes.h>
@@ -83,7 +84,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
    glPushName(0);
 
    // Text rendering
-   rnrCtx.RegisterFontNoScale(fHeight*0.8, "arial",  TGLFont::kPixmap, fFont);
+   rnrCtx.RegisterFontNoScale(TMath::Nint(fHeight*0.8), "arial",  TGLFont::kPixmap, fFont);
    fFont.PreRender(kFALSE);
 
    TColor::Pixel2RGB(fTextColor, r, g, b);

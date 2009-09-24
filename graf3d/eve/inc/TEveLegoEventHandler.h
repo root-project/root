@@ -36,7 +36,7 @@ protected:
 public:
    TEveCaloLego*  fLego;
 
-   TEveLegoEventHandler(TEveCaloLego* lego, TGWindow *w, TObject *obj, const char *title="");
+   TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLego* lego = 0);
    virtual ~TEveLegoEventHandler() {}
 
    virtual Bool_t HandleKey(Event_t *event);
@@ -44,6 +44,9 @@ public:
 
    Float_t GetTransTheta() {return fTransTheta;}
    void    SetTransTheta(Float_t h) {fTransTheta=h;}
+
+   TEveCaloLego* GetLego() { return fLego; }
+   void          SetLego( TEveCaloLego* x) { fLego = x; }
 
    ClassDef(TEveLegoEventHandler, 0); // A GL event handler class. Swiches perspective or orthographic camera.
 };

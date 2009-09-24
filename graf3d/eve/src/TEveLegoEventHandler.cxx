@@ -8,6 +8,7 @@
 
 
 #include "TEveLegoEventHandler.h"
+#include "TEveCaloLegoGL.h"
 
 #include "TGLViewer.h"
 #include "TGLWidget.h"
@@ -41,9 +42,8 @@ ClassImp(TEveLegoEventHandler);
 //
 
 //______________________________________________________________________________
-TEveLegoEventHandler::TEveLegoEventHandler(TEveCaloLego* lego, TGWindow *w, TObject *obj,
-                                 const char *title) :
-   TGLEventHandler("Lego", w, obj, title),
+TEveLegoEventHandler::TEveLegoEventHandler(TGWindow *w, TObject *obj, TEveCaloLego *lego):
+   TGLEventHandler(w, obj),
 
    fMode(kFree),
    fTransTheta(0.5f),
@@ -72,23 +72,31 @@ Bool_t TEveLegoEventHandler::HandleDoubleClick(Event_t *event)
    // Virtual from TGLEventHandler.
    // Sets id of the tower with scale.
 
-   if (fGLViewer->IsLocked()) return kFALSE;
 
-   if (event->fCode == kButton1)
+   if (fLego && fGLViewer->IsLocked() == kFALSE && event->fCode == kButton1)
    {
       fGLViewer->RequestSelect(event->fX, event->fY);
       TGLPhysicalShape* pshape = fGLViewer->GetSelRec().GetPhysShape();
       if (pshape && fGLViewer->GetSelRec().GetN() > 2)
       {
-         fLego->SetTowerPicked(fGLViewer->GetSelRec().GetItem(2));
+         TGLLogicalShape& lshape = const_cast<TGLLogicalShape&> (*pshape->GetLogical());
+         TGLLogicalShape* f = &lshape;
+         TEveCaloLegoGL* lego   = dynamic_cast<TEveCaloLegoGL*>(f);          
+         if (lego)
+         {
+            fLego->SetTowerPicked(fGLViewer->GetSelRec().GetItem(2));
+         }
       }
       else
       {
          fLego->SetTowerPicked(-1);
       }
       fGLViewer->RequestDraw();
+
+      return kTRUE;
    }
-   return kTRUE;
+
+   return TGLEventHandler::HandleDoubleClick(event);
 }
 
 //______________________________________________________________________________
@@ -98,11 +106,10 @@ Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Boo
    // view to bird-view bellow angle fTransTheta and restores view when accumulated theta is larger
    // than transition angle.
 
-   using namespace TMath;
+   if ( !fLego ) return TGLEventHandler::Rotate(xDelta, yDelta, mod1, mod2);
 
    TGLCamera &cam =  fGLViewer->GetRnrCtx()->RefCamera();
-   Double_t hRotate = cam.AdjustDelta(-yDelta, Pi()/cam.RefViewport().Height(), mod1, mod2);
-
+   Double_t hRotate = cam.AdjustDelta(-yDelta, TMath::Pi()/cam.RefViewport().Height(), mod1, mod2);
 
    // get lego bounding box
    Float_t *bb = fLego->GetBBox();
@@ -146,7 +153,7 @@ Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Boo
    {
       Double_t theta  = cam.GetTheta();
       Double_t thetaN = theta + hRotate;
-      if (thetaN > Pi() - cam.GetVAxisMinAngle()) thetaN = Pi() - cam.GetVAxisMinAngle();
+      if (thetaN > TMath::Pi() - cam.GetVAxisMinAngle()) thetaN = TMath::Pi() - cam.GetVAxisMinAngle();
       else if (thetaN < cam.GetVAxisMinAngle())   thetaN = cam.GetVAxisMinAngle();
 
       fTheta = thetaN;

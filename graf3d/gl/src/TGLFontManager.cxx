@@ -300,22 +300,6 @@ void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
 }
 
 //______________________________________________________________________________
-void   TGLFont::Render(const TString &txt, const Float_t* x, ETextAlignH_e alignH, ETextAlignV_e alignV) const
-{
-   // Render text with given alignment and at given position.
-
-   Render(txt, x[0], x[1], x[2], alignH, alignV);
-}
-
-//______________________________________________________________________________
-void   TGLFont::Render(const TString &txt, const Double_t* x, ETextAlignH_e alignH, ETextAlignV_e alignV) const
-{
-   // Render text with given alignment and at given position.
-
-   Render(txt, x[0], x[1], x[2], alignH, alignV);
-}
-
-//______________________________________________________________________________
 void TGLFont::PreRender(Bool_t autoLight, Bool_t lightOn) const
 {
    // Set-up GL state before FTFont rendering.
@@ -392,7 +376,7 @@ TGLFontManager::~TGLFontManager()
 }
 
 //______________________________________________________________________________
-void TGLFontManager::RegisterFont(Float_t sizeIn, Int_t fileID, TGLFont::EMode mode, TGLFont &out)
+void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mode, TGLFont &out)
 {
    // Provide font with given size, file and FTGL class.
 
@@ -458,7 +442,7 @@ void TGLFontManager::RegisterFont(Float_t sizeIn, Int_t fileID, TGLFont::EMode m
 }
 
 //______________________________________________________________________________
-void TGLFontManager::RegisterFont(Float_t size, const char* name, TGLFont::EMode mode, TGLFont &out)
+void TGLFontManager::RegisterFont(Int_t size, const char* name, TGLFont::EMode mode, TGLFont &out)
 {
    // Get mapping from ttf id to font names. Table taken from TTF.cxx.
 
@@ -518,7 +502,7 @@ TGLFontManager::FontSizeVec_t* TGLFontManager::GetFontSizeArray()
 }
 
 //______________________________________________________________________________
-Int_t TGLFontManager::GetFontSize(Float_t ds)
+Int_t TGLFontManager::GetFontSize(Int_t ds)
 {
    // Get availabe font size.
 
@@ -531,7 +515,7 @@ Int_t TGLFontManager::GetFontSize(Float_t ds)
 }
 
 //______________________________________________________________________________
-Int_t TGLFontManager::GetFontSize(Float_t ds, Int_t min, Int_t max)
+Int_t TGLFontManager::GetFontSize(Int_t ds, Int_t min, Int_t max)
 {
    // Get availabe font size.
 
