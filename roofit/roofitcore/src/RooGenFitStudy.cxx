@@ -226,7 +226,7 @@ Bool_t RooGenFitStudy::finalize()
 
 
 //_____________________________________________________________________________
-void RooGenFitStudy::Print(Option_t */*options*/) const
+void RooGenFitStudy::Print(Option_t* /*options*/) const
 {
 }
 
