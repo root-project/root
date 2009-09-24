@@ -140,8 +140,8 @@ public:
    TGLFontManager() : fFontMap(), fFontTrash() {}
    virtual ~TGLFontManager();
 
-   void   RegisterFont(Int_t size, Int_t file, TGLFont::EMode mode, TGLFont& out);
-   void   RegisterFont(Int_t size, const char* name, TGLFont::EMode mode, TGLFont& out);
+   void   RegisterFont(Float_t size, Int_t file, TGLFont::EMode mode, TGLFont& out);
+   void   RegisterFont(Float_t size, const char* name, TGLFont::EMode mode, TGLFont& out);
    void   ReleaseFont(TGLFont& font);
 
    static TObjArray*        GetFontFileArray();

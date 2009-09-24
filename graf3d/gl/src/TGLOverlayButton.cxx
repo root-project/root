@@ -83,17 +83,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
    glPushName(0);
 
    // Text rendering
-   Float_t cfs = fHeight*0.8;
-   Int_t fs = TGLFontManager::GetFontSize(cfs);
-   if (fFont.GetMode() == TGLFont::kUndef)
-   {
-      rnrCtx.RegisterFont(fs, "arial",  TGLFont::kPixmap, fFont);
-   }
-   else if (fFont.GetSize() != fs)
-   {
-      rnrCtx.ReleaseFont(fFont);
-      rnrCtx.RegisterFont(fs, "arial",  TGLFont::kPixmap, fFont);
-   }
+   rnrCtx.RegisterFontNoScale(fHeight*0.8, "arial",  TGLFont::kPixmap, fFont);
    fFont.PreRender(kFALSE);
 
    TColor::Pixel2RGB(fTextColor, r, g, b);

@@ -28,7 +28,6 @@ protected:
    mutable TGLFont        fFont;     // FTFont wrapper
    mutable Double_t       fX[4][3];  // 3D position of font
 
-   void    SetFont(TGLRnrCtx & rnrCtx) const;
 public:
    TEveTextGL();
    virtual ~TEveTextGL() {}

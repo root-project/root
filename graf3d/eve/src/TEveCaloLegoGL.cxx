@@ -434,8 +434,8 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
    TGLVertex3 worldRef(fZAxisTitlePos.fX, fZAxisTitlePos.fY, fZAxisTitlePos.fZ);
 
    fAxisPainter.RefTMOff(0) = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -len, 0,  &mm);
-   fAxisPainter.SetLabelPixelFontSize(TMath::CeilNint(len*fM->GetData()->GetEtaBins()->GetLabelSize()));
-   fAxisPainter.SetTitlePixelFontSize(TMath::CeilNint(len*fM->GetData()->GetEtaBins()->GetTitleSize()));
+   fAxisPainter.SetLabelPixelFontSize(len*fM->GetData()->GetEtaBins()->GetLabelSize());
+   fAxisPainter.SetTitlePixelFontSize(len*fM->GetData()->GetEtaBins()->GetTitleSize());
 
    // Z axis
    //
@@ -604,8 +604,8 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
                               + (up[2] - dn[2]) * (up[2] - dn[2]));
 
    // eta
-   fAxisPainter.SetLabelPixelFontSize(TMath::CeilNint(len*fM->GetData()->GetEtaBins()->GetLabelSize()));
-   fAxisPainter.SetTitlePixelFontSize(TMath::CeilNint(len*fM->GetData()->GetEtaBins()->GetTitleSize()));
+   fAxisPainter.SetLabelPixelFontSize(len*fM->GetData()->GetEtaBins()->GetLabelSize());
+   fAxisPainter.SetTitlePixelFontSize(len*fM->GetData()->GetEtaBins()->GetTitleSize());
    ax.SetNdivisions(710);
    ax.SetLimits(fM->GetEtaMin(), fM->GetEtaMax());
    ax.SetTitle(fM->GetData()->GetEtaBins()->GetTitle());
@@ -620,8 +620,6 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    glPopMatrix();
 
    // phi
-   fAxisPainter.SetLabelPixelFontSize(TMath::CeilNint(len*fM->GetData()->GetPhiBins()->GetLabelSize()));
-   fAxisPainter.SetTitlePixelFontSize(TMath::CeilNint(len*fM->GetData()->GetPhiBins()->GetTitleSize()));
    ax.SetNdivisions(510);
    ax.SetLimits(fM->GetPhiMin(), fM->GetPhiMax());
    ax.SetTitle(fM->GetData()->GetPhiBins()->GetTitle());
@@ -711,8 +709,6 @@ void TEveCaloLegoGL::DrawHistBase(TGLRnrCtx &rnrCtx) const
    Float_t eta1 = fM->fEtaMax;
    Float_t phi0 = fM->GetPhiMin();
    Float_t phi1 = fM->GetPhiMax();
-
-   TGLCapabilitySwitch sw_blend(GL_BLEND, kTRUE);
 
    // XY grid
    //
@@ -991,7 +987,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx & rnrCtx) const
       TGLFont font;
       Double_t cs;
       Float_t x, y;
-      rnrCtx.RegisterFont(TGLFontManager::GetFontSize(fM->fCellPixelFontSize), "arial", TGLFont::kPixmap, font);
+      rnrCtx.RegisterFontNoScale(fM->fCellPixelFontSize, "arial", TGLFont::kPixmap, font);
       for (UInt_t i=0; i< sumVal.size(); i++) {
          if (fM->f2DMode == TEveCaloLego::kValColor )
             cs = TMath::Min(cellGeom[4*i+2] - cellGeom[4*i], cellGeom[4*i+3] - cellGeom[4*i+1]);

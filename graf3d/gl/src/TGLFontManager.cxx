@@ -392,11 +392,15 @@ TGLFontManager::~TGLFontManager()
 }
 
 //______________________________________________________________________________
-void TGLFontManager::RegisterFont(Int_t size, Int_t fileID, TGLFont::EMode mode, TGLFont &out)
+void TGLFontManager::RegisterFont(Float_t sizeIn, Int_t fileID, TGLFont::EMode mode, TGLFont &out)
 {
    // Provide font with given size, file and FTGL class.
 
    if (fgStaticInitDone == kFALSE) InitStatics();
+
+   Int_t  size = GetFontSize(sizeIn);
+   if (mode == out.GetMode() && fileID == out.GetFile() && size == out.GetSize())
+      return;
 
    FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
    if (it == fFontMap.end())
@@ -454,7 +458,7 @@ void TGLFontManager::RegisterFont(Int_t size, Int_t fileID, TGLFont::EMode mode,
 }
 
 //______________________________________________________________________________
-void TGLFontManager::RegisterFont(Int_t size, const char* name, TGLFont::EMode mode, TGLFont &out)
+void TGLFontManager::RegisterFont(Float_t size, const char* name, TGLFont::EMode mode, TGLFont &out)
 {
    // Get mapping from ttf id to font names. Table taken from TTF.cxx.
 

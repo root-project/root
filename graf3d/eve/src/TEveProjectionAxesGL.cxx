@@ -342,6 +342,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       if (fM->GetDrawCenter())
       {
          Float_t* c = fProjection->GetProjectedCenter();
+         TGLUtil::LineWidth(1);
          glBegin(GL_LINES);
          glVertex3f(c[0] + d, c[1], c[2]); glVertex3f(c[0] - d, c[1], c[2]);
          glVertex3f(c[0], c[1] + d, c[2]); glVertex3f(c[0], c[1] - d, c[2]);
@@ -352,6 +353,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       {
          TEveVector zero;
          fProjection->ProjectVector(zero);
+         TGLUtil::LineWidth(1);
          glBegin(GL_LINES);
          glVertex3f(zero[0] + d, zero[1], zero[2]); glVertex3f(zero[0] - d, zero[1], zero[2]);
          glVertex3f(zero[0], zero[1] + d, zero[2]); glVertex3f(zero[0], zero[1] - d, zero[2]);

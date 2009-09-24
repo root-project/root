@@ -236,8 +236,8 @@ void TEveCaloLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
    TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
 
    TGLFont font;
-   Int_t fs = TGLFontManager::GetFontSize(vp.Height()*0.035, 12, 36);
-   rnrCtx.RegisterFont(fs, "arial", TGLFont::kPixmap, font);
+   Float_t fs = TMath::Max(vp.Height()*0.035, 12.);
+   rnrCtx.RegisterFontNoScale(fs, "arial", TGLFont::kPixmap, font);
    font.PreRender();
    Float_t off = fs*0.2;
    Float_t bb[6];
@@ -435,11 +435,11 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
 
    // draw numbers
    TGLFont fontB;
-   Int_t fsb = TGLFontManager::GetFontSize(vp.Height()*0.03, 12, 36);
-   rnrCtx.RegisterFont(fsb, "arial", TGLFont::kPixmap, fontB);
+   Float_t fsb = TMath::Max(vp.Height()*0.03, 12.);
+   rnrCtx.RegisterFontNoScale(fsb, "arial", TGLFont::kPixmap, fontB);
    TGLFont fontE;
-   Int_t fsE = TGLFontManager::GetFontSize(vp.Height()*0.008, 8, 36);
-   rnrCtx.RegisterFont(fsE, "arial", TGLFont::kPixmap, fontE);
+   Float_t fsE = TMath::Max(vp.Height()*0.008, 8.);
+   rnrCtx.RegisterFontNoScale(fsE, "arial", TGLFont::kPixmap, fontE);
 
    Float_t llx, lly, llz, urx, ury, urz;
    fontB.BBox("10", llx, lly, llz, urx, ury, urz);

@@ -106,16 +106,9 @@ void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx)
 
       TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
       TGLFont font;
-      Int_t fs = TGLFontManager::GetFontSize((vp.Width()+vp.Height())*0.01);
-      rnrCtx.RegisterFont(fs, "arial", TGLFont::kPixmap, font);
+      Float_t fs = (vp.Width()+vp.Height())*0.01;
+      rnrCtx.RegisterFontNoScale(fs, "arial", TGLFont::kPixmap, font);
       const char* txt = Form("(%f, %f, %f)", v[0], v[1], v[2]);
-      /*
-      Float_t bb[6];
-      font.BBox(txt, bb[0], bb[1], bb[2], bb[3], bb[4], bb[5]);
-      Float_t off = 1.5*bb[4];
-      off /= vp.Height() ;
-      font.RenderBitmap(txt, 1 -off, 1-off, 0, TGLFont::kRight);
-      */
       font.Render(txt, 1, 1, 0, TGLFont::kRight, TGLFont::kBottom);
 
       // render cross
