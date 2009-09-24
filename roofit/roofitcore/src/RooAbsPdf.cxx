@@ -720,7 +720,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t splitr   = pc.getInt("splitRange") ;
   Bool_t verbose = pc.getInt("verbose") ;
   Int_t optConst = pc.getInt("optConst") ;
-  Bool_t cloneData = pc.getInt("cloneData") ;
+  Int_t cloneData = pc.getInt("cloneData") ;
   
   // If no explicit cloneData command is specified, cloneData is set to true if optimization is activated
   if (cloneData==2) {
