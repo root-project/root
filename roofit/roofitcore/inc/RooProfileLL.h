@@ -31,6 +31,7 @@ public:
   void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
   Bool_t alwaysStartFromMin() const { return _startFromMin ; }
 
+  RooMinuit* minuit() { return _minuit ; }
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
   const RooArgSet& bestFitParams() const ;
 
