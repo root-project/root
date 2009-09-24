@@ -73,7 +73,7 @@ protected:
   void     initialize();
   CacheElem* getCache(const RooArgSet* nset) const ;
 
-  inline   const Int_t ij(const Int_t& i, const Int_t& j) const { return (i*_varList.getSize()+j); }
+  inline   Int_t ij(const Int_t& i, const Int_t& j) const { return (i*_varList.getSize()+j); }
   int      idxmin(const double& m) const;
   int      idxmax(const double& m) const;
 
