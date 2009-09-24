@@ -1190,7 +1190,7 @@ Int_t TProofLite::InitDataSetManager()
 
    // If no valid dataset manager has been created we instantiate the default one
    if (!fDataSetManager) {
-      TString opts("As:");
+      TString opts("Av:");
       TString dsetdir = gEnv->GetValue("ProofServ.DataSetDir", "");
       if (dsetdir.IsNull()) {
          // Use the default in the sandbox
@@ -1215,11 +1215,11 @@ Int_t TProofLite::InitDataSetManager()
    }
 
    if (gDebug > 0 && fDataSetManager) {
-      Info("InitDataSetManager", "datasetmgr Cq: %d, Ar: %d, Av: %d, As: %d, Sb: %d",
+      Info("InitDataSetManager", "datasetmgr Cq: %d, Ar: %d, Av: %d, Ti: %d, Sb: %d",
             fDataSetManager->TestBit(TDataSetManager::kCheckQuota),
             fDataSetManager->TestBit(TDataSetManager::kAllowRegister),
             fDataSetManager->TestBit(TDataSetManager::kAllowVerify),
-            fDataSetManager->TestBit(TDataSetManager::kAllowStaging),
+            fDataSetManager->TestBit(TDataSetManager::kTrustInfo),
             fDataSetManager->TestBit(TDataSetManager::kIsSandbox));
    }
 

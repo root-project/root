@@ -2620,7 +2620,7 @@ Int_t TProofServ::SetupCommon()
 
       // If no valid dataset manager has been created we instantiate the default one
       if (!fDataSetManager) {
-         TString opts("As:");
+         TString opts("Av:");
          TString dsetdir = gEnv->GetValue("ProofServ.DataSetDir", "");
          if (dsetdir.IsNull()) {
             // Use the default in the sandbox

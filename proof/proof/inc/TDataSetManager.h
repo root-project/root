@@ -88,7 +88,7 @@ public:
       kCheckQuota    = BIT(15),   // quota checking enabled
       kAllowRegister = BIT(16),   // allow registration of a new dataset
       kAllowVerify   = BIT(17),   // allow verification of a dataset (requires registration permit)
-      kAllowStaging  = BIT(18),   // allow staging of missing files (requires verification permit)
+      kTrustInfo     = BIT(18),   // during registration, trust the available information provided by the user
       kIsSandbox     = BIT(19)    // dataset dir is in the user sandbox (simplified naming)
    };
 

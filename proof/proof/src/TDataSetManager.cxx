@@ -119,7 +119,7 @@ void TDataSetManager::ParseInitOpts(const char *opts)
    //    Cq:               set kCheckQuota
    //    Ar:               set kAllowRegister
    //    Av:               set kAllowVerify
-   //    As:               set kAllowStaging
+   //    Ti:               set kTrustInfo
    //    Sb:               set kIsSandbox
    // The opts string may also contain additional unrelated info: in such a case
    // the field delimited by the prefix "opt:" is analyzed, e.g. if opts is
@@ -130,7 +130,7 @@ void TDataSetManager::ParseInitOpts(const char *opts)
    ResetBit(TDataSetManager::kCheckQuota);
    SetBit(TDataSetManager::kAllowRegister);
    SetBit(TDataSetManager::kAllowVerify);
-   ResetBit(TDataSetManager::kAllowStaging);
+   SetBit(TDataSetManager::kTrustInfo);
    ResetBit(TDataSetManager::kIsSandbox);
 
    if (opts && strlen(opts) > 0) {
@@ -147,19 +147,15 @@ void TDataSetManager::ParseInitOpts(const char *opts)
          ResetBit(TDataSetManager::kAllowRegister);
       if (opt.Contains("-Av:"))
          ResetBit(TDataSetManager::kAllowVerify);
-      if (opt.Contains("As:") && !opt.Contains("-As:"))
-         SetBit(TDataSetManager::kAllowStaging);
+      if (opt.Contains("-Ti:"))
+         ResetBit(TDataSetManager::kTrustInfo);
       if (opt.Contains("Sb:") && !opt.Contains("-Sb:"))
          SetBit(TDataSetManager::kIsSandbox);
    }
 
    // Check dependencies
-   if (TestBit(TDataSetManager::kAllowStaging)) {
-      // Staging of missing files requires verification permition
-      SetBit(TDataSetManager::kAllowVerify);
-   }
    if (TestBit(TDataSetManager::kAllowVerify)) {
-      // Dataset verification requires registration permition
+      // Dataset verification or requires registration permition
       SetBit(TDataSetManager::kAllowRegister);
    }
 }
