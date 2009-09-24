@@ -410,8 +410,14 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   // Call CINT to perform constructor call. Catch any error thrown by argument conversion method
   RooAbsArg* arg = (RooAbsArg*) gROOT->ProcessLineFast(cintExpr.c_str()) ;
 
-  if (arg) {
-    arg->setStringAttribute("factory_tag",Form("%s::%s(%s)",className,objName,varList)) ;
+  if (arg) {    
+    if (string(className)=="RooGenericPdf") {
+      arg->setStringAttribute("factory_tag",Form("EXPR::%s(%s)",objName,varList)) ;
+    } else if (string(className)=="RooFormulaVar") {
+      arg->setStringAttribute("factory_tag",Form("expr::%s(%s)",objName,varList)) ;
+    } else {
+      arg->setStringAttribute("factory_tag",Form("%s::%s(%s)",className,objName,varList)) ;
+    }
     if (_ws->import(*arg,Silence())) logError() ;
     RooAbsArg* ret = _ws->arg(objName) ;
     delete arg ;
@@ -470,6 +476,7 @@ RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool
   }
   
   RooAddPdf* pdf =  new RooAddPdf(objName,objName,pdfList,coefList,recursiveCoefs) ;
+  pdf->setStringAttribute("factory_tag",Form("SUM::%s(%s)",objName,specList)) ;
   if (_ws->import(*pdf,Silence())) logError() ;
   return (RooAddPdf*) _ws->pdf(objName) ;
 }
@@ -511,6 +518,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
   }
   
   RooRealSumPdf* pdf =  new RooRealSumPdf(objName,objName,amplList,coefList) ;
+  pdf->setStringAttribute("factory_tag",Form("ASUM::%s(%s)",objName,specList)) ;
   if (_ws->import(*pdf,Silence())) logError() ;
   return (RooRealSumPdf*) _ws->pdf(objName) ;
 }
@@ -565,6 +573,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   cmdList.Delete() ;
   
   if (pdf) {
+    pdf->setStringAttribute("factory_tag",Form("PROD::%s(%s)",objName,pdfList)) ;
     if (_ws->import(*pdf,Silence())) logError() ;
     delete pdf ;
     return (RooProdPdf*) _ws->pdf(objName) ;
@@ -615,6 +624,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   }
 
   // Import p.d.f into workspace
+  pdf->setStringAttribute("factory_tag",Form("SIMUL::%s(%s,%s)",objName,indexCat,pdfMap)) ;
   if (_ws->import(*pdf,Silence())) logError() ;
   return (RooSimultaneous*) _ws->pdf(objName) ;
 }
@@ -667,6 +677,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
     sum = new RooAddition(objName,objName,sumlist1) ;
   }
 
+  sum->setStringAttribute("factory_tag",Form("sum::%s(%s)",objName,specList)) ;
   if (_ws->import(*sum,Silence())) logError() ;
   delete sum ;
   return (RooAddition*) _ws->pdf(objName) ;
