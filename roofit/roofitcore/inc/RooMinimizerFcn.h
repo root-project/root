@@ -11,6 +11,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#ifndef __ROOFIT_NOROOMINIMIZER
+
 #ifndef ROO_MINIMIZER_FCN
 #define ROO_MINIMIZER_FCN
 
@@ -92,4 +94,5 @@ private:
 
 };
 
+#endif
 #endif

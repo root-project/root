@@ -11,6 +11,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#ifndef __ROOFIT_NOROOMINIMIZER
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // RooMinimizerFcn is am interface class to the ROOT::Math function 
@@ -510,4 +512,5 @@ double RooMinimizerFcn::DoEval(const double *x) const
   return fvalue;
 }
 
+#endif
 
