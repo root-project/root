@@ -279,6 +279,9 @@ RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph& self, const R
   _yatX = 0 ;
   _calcX = 0 ;
 
+  // Must do this here too: fillCache() may not be called if cache contents is retrieved from EOcache
+  pdf()->setUnitNorm(kTRUE) ;
+
 }
 
 
