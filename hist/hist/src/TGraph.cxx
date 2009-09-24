@@ -48,15 +48,11 @@ ClassImp(TGraph)
 /* Begin_Html
 <center><h2>Graph class</h2></center>
 A Graph is a graphics object made of two arrays X and Y with npoints each.
-This class supports essentially two graph categories:
-<ul>
-<li> General case with non equidistant points </li>
-<li> Special case with equidistant points </li>
-</ul>
-The various format options to draw a Graph are explained in
-<tt>TGraphPainter::PaintGraph</tt>  and <tt>TGraph::PaintGrapHist</tt>
-These two functions are derived from the HIGZ routines IGRAPH and IGHIST
-and many modifications.
+<p>
+The TGraph painting is permofed thanks to the
+<a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
+class. All details about the various painting options are given in
+<a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
 <p>
 The picture below gives an example:
 End_Html
@@ -641,9 +637,13 @@ Bool_t TGraph::CtorAllocate()
 //______________________________________________________________________________
 void TGraph::Draw(Option_t *option)
 {
-   // Draw this graph with its current attributes.
-   //
-   //   Options to draw a graph are described in TGraphPainter::PaintGraph
+   /* Begin_Html
+   Draw this graph with its current attributes.
+   <p>
+   The ptions to draw a graph are described in
+   <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
+   class.
+   End_Html */
 
    TString opt = option;
    opt.ToLower();
@@ -748,9 +748,9 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
 
 
    if (!spline) {
-      
+
       if (fNpoints == 0) return 0;
-      if (fNpoints == 1) return fY[0]; 
+      if (fNpoints == 1) return fY[0];
 
 
       TString opt = option;
@@ -758,13 +758,13 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       if (opt.Contains("s")) {
 
          // points must be sorted before using a TSpline
-         std::vector<Double_t> xsort(fNpoints); 
-         std::vector<Double_t> ysort(fNpoints); 
+         std::vector<Double_t> xsort(fNpoints);
+         std::vector<Double_t> ysort(fNpoints);
          std::vector<Int_t> indxsort(fNpoints);
          TMath::Sort(fNpoints, fX, &indxsort[0], false );
-         for (Int_t i = 0; i < fNpoints; ++i) { 
-            xsort[i] = fX[ indxsort[i] ]; 
-            ysort[i] = fY[ indxsort[i] ]; 
+         for (Int_t i = 0; i < fNpoints; ++i) {
+            xsort[i] = fX[ indxsort[i] ];
+            ysort[i] = fY[ indxsort[i] ];
          }
 
          // spline interpolation creating a new spline
@@ -776,23 +776,23 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       //linear interpolation
       //In case x is < fX[0] or > fX[fNpoints-1] return the extrapolated point
 
-      //find points in graph around x assuming points are not sorted 
-      // (if point are sorted could use binary search) 
+      //find points in graph around x assuming points are not sorted
+      // (if point are sorted could use binary search)
 
       // find neighbours simply looping  all points
-      // and find also the 2 adjacent points: (low2 < low < x < up < up2 ) 
+      // and find also the 2 adjacent points: (low2 < low < x < up < up2 )
       // needed in case x is outside the graph ascissa interval
-      Int_t low  = -1;  Int_t up  = -1; 
+      Int_t low  = -1;  Int_t up  = -1;
       Int_t low2 = -1;  Int_t up2 = -1;
 
-      for (Int_t i = 0; i < fNpoints; ++i) { 
-         if ( fX[i] < x ) { 
+      for (Int_t i = 0; i < fNpoints; ++i) {
+         if ( fX[i] < x ) {
             if  (low == -1 || fX[i] > fX[low] )  {  low2 = low;   low = i; }
-            else if ( low2 == -1  ) low2 = i;  
+            else if ( low2 == -1  ) low2 = i;
          }
-         if ( fX[i] > x) {   
+         if ( fX[i] > x) {
             if (up  == -1 || fX[i] < fX[up]  )  {  up2 = up;     up = i;  }
-            else if (up2 == -1) up2 = i; 
+            else if (up2 == -1) up2 = i;
          }
       }
 
@@ -800,10 +800,10 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       if (up == -1)  {up  = low; low = low2;}
       if (low == -1) {low = up;  up  = up2;  }
 
-      assert( low != -1 && up != -1); 
+      assert( low != -1 && up != -1);
 
       if (fX[low] == fX[up]) return fY[low];
-      Double_t yn = fY[up] + (x - fX[up] ) * (fY[low]-fY[up] ) / ( fX[low] - fX[up] ); 
+      Double_t yn = fY[up] + (x - fX[up] ) * (fY[low]-fY[up] ) / ( fX[low] - fX[up] );
       return yn;
    } else {
       //spline interpolation using the input spline
@@ -957,7 +957,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //                           0.x as a fraction of good points
    //
    //   When the fit is drawn (by default), the parameter goption may be used
-   //   to specify a list of graphics options. See TGraph::Paint for a complete
+   //   to specify a list of graphics options. See TGraphPainter for a complete
    //   list of these options.
    //
    //   In order to use the Range option, one must first create a function
@@ -1511,21 +1511,21 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
    //     if (first <0) the first point (0) is taken.
    //   : The graph segments should not intersect.
    //Method:
-   // There are many ways to calculate the surface of a polygon. It all depends on what kind of data 
-   // you have to deal with. The most evident solution would be to divide the polygon in triangles and 
-   // calculate the surface of them. But this can quickly become complicated as you will have to test 
-   // every segment of every triangle and check if they are intersecting with a current polygon’s 
-   // segment or if it goes outside the polygone. Many calculations that would lead to many problems…
+   // There are many ways to calculate the surface of a polygon. It all depends on what kind of data
+   // you have to deal with. The most evident solution would be to divide the polygon in triangles and
+   // calculate the surface of them. But this can quickly become complicated as you will have to test
+   // every segments of every triangles and check if they are intersecting with a current polygon's
+   // segment or if it goes outside the polygon. Many calculations that would lead to many problems…
    //      The solution (implemented by R.Brun)
-   // Fortunately for us, there is a simple way to solve this problem, as long as the polygon’s 
-   // segments don’t intersect.   
-   // It takes the x coordinate of the current vertex and multiply it by the y coordinate of the next 
+   // Fortunately for us, there is a simple way to solve this problem, as long as the polygon's
+   // segments don't intersect.
+   // It takes the x coordinate of the current vertex and multiply it by the y coordinate of the next
    // vertex. Then it subtracts from it the result of the y coordinate of the current vertex multiplied
    // by the x coordinate of the next vertex. Then divide the result by 2 to get the surface/area.
    //      Sources
    //      http://forums.wolfram.com/mathgroup/archive/1998/Mar/msg00462.html
    //      http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
-         
+
    if (first < 0) first = 0;
    if (last < 0) last = fNpoints-1;
    if(last >= fNpoints) last = fNpoints-1;

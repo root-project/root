@@ -38,8 +38,11 @@ namespace {
 /* Begin_Html
 <center><h2>TGraphAsymmErrors class</h2></center>
 A TGraphAsymmErrors is a TGraph with assymetric error bars.
-The various format options to draw a TGraphAsymmErrors are explained in
-<tt>TGraphAsymmErrors::Paint</tt>.
+<p>
+The TGraphAsymmErrors painting is permofed thanks to the
+<a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
+class. All details about the various painting options are given in
+<a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
 <p>
 The picture below gives an example:
 End_Html

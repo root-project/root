@@ -29,8 +29,11 @@ ClassImp(TGraphBentErrors)
 /* Begin_Html
 <center><h2>TGraphBentErrors class</h2></center>
 A TGraphBentErrors is a TGraph with bent, assymetric error bars.
-The various format options to draw a TGraphBentErrors are explained in
-<tt>TGraphBentErrors::Paint</tt>.
+<p>
+The TGraphBentErrors painting is permofed thanks to the
+<a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
+class. All details about the various painting options are given in
+<a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
 <p>
 The picture below gives an example:
 End_Html
@@ -237,7 +240,7 @@ void TGraphBentErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xm
    // Compute range.
 
    TGraph::ComputeRange(xmin,ymin,xmax,ymax);
-   
+
    for (Int_t i=0;i<fNpoints;i++) {
       if (fX[i] -fEXlow[i] < xmin) {
          if (gPad && gPad->GetLogx()) {
@@ -481,7 +484,7 @@ void TGraphBentErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    for (Int_t i=0;i<fNpoints;i++) {
       out<<"   grbe->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
       out<<"   grbe->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]
-                                       <<","<<fEYlow[i]<<","<<fEYhigh[i]              
+                                       <<","<<fEYlow[i]<<","<<fEYhigh[i]
                                        <<","<<fEXlowd[i]<<","<<fEXhighd[i]
                                        <<","<<fEYlowd[i]<<","<<fEYhighd[i]
                                        <<");"<<endl;

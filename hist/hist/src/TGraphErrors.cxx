@@ -34,8 +34,11 @@ ClassImp(TGraphErrors)
 /* Begin_Html
 <center><h2>TGraphErrors class</h2></center>
 A TGraphErrors is a TGraph with error bars.
-The various format options to draw a TGraphErrors are explained in
-<tt>TGraphErrors::Paint</tt>.
+<p>
+The TGraphErrors painting is permofed thanks to the
+<a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
+class. All details about the various painting options are given in
+<a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
 <p>
 The picture below gives an example:
 End_Html
@@ -340,7 +343,7 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
    // Compute range.
 
    TGraph::ComputeRange(xmin,ymin,xmax,ymax);
-   
+
    for (Int_t i=0;i<fNpoints;i++) {
       if (fX[i] -fEX[i] < xmin) {
          if (gPad && gPad->GetLogx()) {
