@@ -1,4 +1,113 @@
-<br> 
-<hr> 
-<a name="proof"></a> 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+</head><body>
+<br>
+<hr> <a name="proof"></a>
 <h3>Proof</h3>
+<ul>
+<li>New functionality</li>
+<ul>
+<li>&nbsp;TProofMgr</li>
+<ul>
+<li>Add support for the following functionality:</li>
+<ul>
+<li>sandbox file listing and browsing</li>
+<li>sandbox file removal</li>
+<li>file upload, download</li>
+<li>See
+http://root.cern.ch/drupal/content/accessing-sandbox for details.</li>
+</ul>
+</ul>
+<li>TProofDraw</li>
+<ul>
+<li>Allow to set a color, size, size, width for lines,
+area, markers; the attributes are transmitted via the input list and
+automatically derived from the ones of the chain</li>
+</ul>
+<li>Support automatic creation of a dataset out of files
+created on the worker nodes by worker processes. The implementation is
+an extension of the functionality of the class TProofOutputFile used
+for merging via file. See
+http://root.cern.ch/drupal/content/handling-large-outputs-root-files</li>
+</ul>
+<li>Improvements</li>
+<ul>
+<li>TFileMerger</li>
+<ul>
+<li>A few improvements on the way to make TFileMerger and
+hadd totally equivalent:</li>
+<ul>
+<li>import from hadd an optimization of key hashing</li>
+<li>import from hadd a better way to invoke Merge for
+generic objects</li>
+<li>add option to merge histograms in one go, instead of
+one-by-one as for generic objects (this option is not yet supported by
+hadd).</li>
+</ul>
+</ul>
+<li>TProofOutputFile</li>
+<ul>
+<li>Add support for the placeholded &lt;file&gt;
+the definition of the outputfile. This allows to have complete URL and
+to pass options to TFile::Open.</li>
+</ul>
+<li>XrdProofd plugin</li>
+<ul>
+<li>Add automatically the line 'Path.ForceRemote 1' to the
+session rootrc file if the ROOT version is &lt; 5.24/00 ; this acts
+as a workaround for the wrong TTreeCache initialization at the
+transition between local and remote files fixed in 5.24/00 .</li>
+</ul>
+</ul>
+<li>Fixes</li>
+<ul>
+<li>TFileMerger</li>
+<ul>
+<li>Fix a problem preventing correct transmission of all
+non-mergeable objects (fixes bug #52886)</li>
+<li>Remove the argument isdir from the function
+MergeRecursive</li>
+<li>Do not remove the first file in the list when returning
+from MergeRecursive (fixes bug #54591)</li>
+</ul>
+<li>PROOF-Lite</li>
+<ul>
+<li>Fix a couple of memory leaks showing up when running
+repeated queries</li>
+<li>Fix a problem in TProofServ::CopyFromCache affecting
+the case where the sandbox dir has a '.' and the macro name has no '.',
+e.g. compiled selectors in PROOF-Lite.</li>
+</ul>
+<li>TProofOutputFile</li>
+<ul>
+<li>Fix a problem with the determination of the fDir member
+affecting mostly PROOF-Lite</li>
+<li>Fix a serious issue whose net effect was to delete the
+outputfile just after having open it</li>
+</ul>
+<li>XrdProofd plugin</li>
+<ul>
+<li>&nbsp;Make sure that the limit on the number of old
+sessions is applied whenever a new session is started and not only when
+the daemon is started.</li>
+</ul>
+<li>DataSet manager</li>
+<ul>
+<li>Correctly classify as TTree all TTree derived classes
+(e.g. TNtuple's)</li>
+<li>Fix a problem in saving the end-point URL for local
+files</li>
+<li>Improve realtime notification during 'verify'</li>
+</ul>
+<li>TProofDraw</li>
+<ul>
+<li>Fix a problem with the axis ranges of the underlying
+histogram in PolyMarker3D</li>
+<li>Allow to use the default pad instead of forcing
+creation of one pad per object</li>
+<li>Add wrapper to handle the feedback default canvas</li>
+</ul>
+</ul>
+</ul>
+</body>
+</html>
