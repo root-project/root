@@ -38,6 +38,7 @@ class RooArgProxy ;
 class RooSetProxy ;
 class RooListProxy ;
 class RooExpensiveObjectCache ;
+/* class TGraphStruct ; */
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
@@ -286,6 +287,8 @@ public:
 
   void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
   void graphVizTree(ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
+
+/*   TGraphStruct* graph(Bool_t useFactoryTag=kFALSE, Double_t textSize=0.03) ; */
 
   void printComponentTree(const char* indent="",const char* namePat=0) ;
   void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;

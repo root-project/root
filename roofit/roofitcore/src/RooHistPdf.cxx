@@ -248,6 +248,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   // histogram. If interpolation is used on the integral over
   // all histogram observables is supported
 
+
   // Only analytical integrals over the full range are defined
   if (rangeName!=0) {
     return 0 ;
@@ -386,18 +387,32 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
 
 
 //_____________________________________________________________________________
-Int_t RooHistPdf::getMaxVal(const RooArgSet& /*vars*/) const 
+Int_t RooHistPdf::getMaxVal(const RooArgSet& vars) const 
 {
-  // Not implemented yet
+  // Only handle case of maximum in all variables
+  RooAbsCollection* common = _pdfObsList.selectCommon(vars) ;
+  if (common->getSize()==_pdfObsList.getSize()) {
+    delete common ;
+    return 1;
+  }
+  delete common ;
   return 0 ;
 }
 
 
 //_____________________________________________________________________________
-Double_t RooHistPdf::maxVal(Int_t /*code*/) const 
+Double_t RooHistPdf::maxVal(Int_t code) const 
 {
-  // Not implemented yet
-  return 0 ;
+  assert(code==1) ;
+
+  Double_t max(-1) ;
+  for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {
+    _dataHist->get(i) ;
+    Double_t wgt = _dataHist->weight() ;
+    if (wgt>max) max=wgt ;
+  }
+
+  return max*1.05 ;
 }
 
 

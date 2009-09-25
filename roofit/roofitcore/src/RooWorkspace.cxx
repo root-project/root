@@ -1086,7 +1086,7 @@ Bool_t RooWorkspace::loadSnapshot(const char* name)
 
 
 //_____________________________________________________________________________
-RooAbsPdf* RooWorkspace::pdf(const char* name) 
+RooAbsPdf* RooWorkspace::pdf(const char* name) const
 { 
   // Retrieve p.d.f (RooAbsPdf) with given name. A null pointer is returned if not found
 
@@ -1095,7 +1095,7 @@ RooAbsPdf* RooWorkspace::pdf(const char* name)
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooWorkspace::function(const char* name) 
+RooAbsReal* RooWorkspace::function(const char* name) const 
 { 
   // Retrieve function (RooAbsReal) with given name. Note that all RooAbsPdfs are also RooAbsReals. A null pointer is returned if not found.
 
@@ -1104,7 +1104,7 @@ RooAbsReal* RooWorkspace::function(const char* name)
 
 
 //_____________________________________________________________________________
-RooRealVar* RooWorkspace::var(const char* name) 
+RooRealVar* RooWorkspace::var(const char* name) const
 { 
   // Retrieve real-valued variable (RooRealVar) with given name. A null pointer is returned if not found
 
@@ -1113,7 +1113,7 @@ RooRealVar* RooWorkspace::var(const char* name)
 
 
 //_____________________________________________________________________________
-RooCategory* RooWorkspace::cat(const char* name) 
+RooCategory* RooWorkspace::cat(const char* name) const
 { 
   // Retrieve discrete variable (RooCategory) with given name. A null pointer is returned if not found
 
@@ -1122,7 +1122,7 @@ RooCategory* RooWorkspace::cat(const char* name)
 
 
 //_____________________________________________________________________________
-RooAbsCategory* RooWorkspace::catfunc(const char* name)
+RooAbsCategory* RooWorkspace::catfunc(const char* name) const
 {
   // Retrieve discrete function (RooAbsCategory) with given name. A null pointer is returned if not found
   return dynamic_cast<RooAbsCategory*>(_allOwnedNodes.find(name)) ; 
@@ -1131,7 +1131,7 @@ RooAbsCategory* RooWorkspace::catfunc(const char* name)
 
 
 //_____________________________________________________________________________
-RooAbsArg* RooWorkspace::arg(const char* name) 
+RooAbsArg* RooWorkspace::arg(const char* name) const
 {
   // Return RooAbsArg with given name. A null pointer is returned if none is found.
   return _allOwnedNodes.find(name) ;
@@ -1140,7 +1140,7 @@ RooAbsArg* RooWorkspace::arg(const char* name)
 
 
 //_____________________________________________________________________________
-RooArgSet RooWorkspace::argSet(const char* nameList) 
+RooArgSet RooWorkspace::argSet(const char* nameList) const
 {
   // Return set of RooAbsArgs matching to given list of names
   RooArgSet ret ;
@@ -1163,7 +1163,7 @@ RooArgSet RooWorkspace::argSet(const char* nameList)
 
 
 //_____________________________________________________________________________
-RooAbsArg* RooWorkspace::fundArg(const char* name) 
+RooAbsArg* RooWorkspace::fundArg(const char* name) const
 {
   // Return fundamental (i.e. non-derived) RooAbsArg with given name. Fundamental types
   // are e.g. RooRealVar, RooCategory. A null pointer is returned if none is found.
@@ -1177,7 +1177,7 @@ RooAbsArg* RooWorkspace::fundArg(const char* name)
 
 
 //_____________________________________________________________________________
-RooAbsData* RooWorkspace::data(const char* name) 
+RooAbsData* RooWorkspace::data(const char* name) const
 {
   // Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
 
@@ -1188,7 +1188,7 @@ RooAbsData* RooWorkspace::data(const char* name)
 
 
 //_____________________________________________________________________________
-RooArgSet RooWorkspace::allVars() 
+RooArgSet RooWorkspace::allVars() const
 {
   // Return set with all variable objects
   RooArgSet ret ;
@@ -1208,7 +1208,7 @@ RooArgSet RooWorkspace::allVars()
 
 
 //_____________________________________________________________________________
-RooArgSet RooWorkspace::allCats() 
+RooArgSet RooWorkspace::allCats() const
 {
   // Return set with all category objects
   RooArgSet ret ;
@@ -1229,7 +1229,7 @@ RooArgSet RooWorkspace::allCats()
 
 
 //_____________________________________________________________________________
-RooArgSet RooWorkspace::allFunctions() 
+RooArgSet RooWorkspace::allFunctions() const
 {
   // Return set with all function objects
   RooArgSet ret ;
@@ -1251,7 +1251,7 @@ RooArgSet RooWorkspace::allFunctions()
 
 
 //_____________________________________________________________________________
-RooArgSet RooWorkspace::allCatFunctions() 
+RooArgSet RooWorkspace::allCatFunctions() const
 {
   // Return set with all category function objects
   RooArgSet ret ;
@@ -1271,7 +1271,7 @@ RooArgSet RooWorkspace::allCatFunctions()
 
 
 //_____________________________________________________________________________
-RooArgSet RooWorkspace::allResolutionModels() 
+RooArgSet RooWorkspace::allResolutionModels() const
 {
   // Return set with all resolution model objects
   RooArgSet ret ;
@@ -1291,7 +1291,7 @@ RooArgSet RooWorkspace::allResolutionModels()
 
 
 //_____________________________________________________________________________
-RooArgSet RooWorkspace::allPdfs() 
+RooArgSet RooWorkspace::allPdfs() const
 {
   // Return set with all probability density function objects
   RooArgSet ret ;
@@ -1311,7 +1311,7 @@ RooArgSet RooWorkspace::allPdfs()
 
 
 //_____________________________________________________________________________
-list<RooAbsData*> RooWorkspace::allData() 
+list<RooAbsData*> RooWorkspace::allData() const 
 {
   // Return list of all dataset in the workspace
 
@@ -1328,7 +1328,7 @@ list<RooAbsData*> RooWorkspace::allData()
 
 
 //_____________________________________________________________________________
-list<TObject*> RooWorkspace::allGenericObjects() 
+list<TObject*> RooWorkspace::allGenericObjects() const 
 {
   // Return list of all generic objects in the workspace
 
@@ -1773,7 +1773,7 @@ void RooWorkspace::clearStudies()
 
 
 //_____________________________________________________________________________
-TObject* RooWorkspace::obj(const char* name)  
+TObject* RooWorkspace::obj(const char* name) const
 {
   // Return any type of object (RooAbsArg, RooAbsData or generic object) with given name)
 
@@ -1792,7 +1792,7 @@ TObject* RooWorkspace::obj(const char* name)
 
 
 //_____________________________________________________________________________
-TObject* RooWorkspace::genobj(const char* name)  
+TObject* RooWorkspace::genobj(const char* name)  const
 {
   // Return generic object with given name
 

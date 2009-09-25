@@ -84,29 +84,29 @@ public:
   //   RooAbsData* joinData(const char* jointDataName, const char* indexName, const char* inputMapping) ; 
 
   // Accessor functions 
-  RooAbsPdf* pdf(const char* name) ;
-  RooAbsReal* function(const char* name) ;
-  RooRealVar* var(const char* name) ;
-  RooCategory* cat(const char* name) ;
-  RooAbsCategory* catfunc(const char* name) ;
-  RooAbsData* data(const char* name) ;
-  RooAbsArg* arg(const char* name) ;
-  RooAbsArg* fundArg(const char* name) ;
-  RooArgSet argSet(const char* nameList) ;
-  TIterator* componentIterator() { return _allOwnedNodes.createIterator() ; }
+  RooAbsPdf* pdf(const char* name) const ;
+  RooAbsReal* function(const char* name) const ;
+  RooRealVar* var(const char* name) const ;
+  RooCategory* cat(const char* name) const ;
+  RooAbsCategory* catfunc(const char* name) const ;
+  RooAbsData* data(const char* name) const ;
+  RooAbsArg* arg(const char* name) const ;
+  RooAbsArg* fundArg(const char* name) const ;
+  RooArgSet argSet(const char* nameList) const ;
+  TIterator* componentIterator() const { return _allOwnedNodes.createIterator() ; }
   const RooArgSet& components() const { return _allOwnedNodes ; }
-  TObject* genobj(const char* name) ;
-  TObject* obj(const char* name) ;
+  TObject* genobj(const char* name) const ;
+  TObject* obj(const char* name) const ;
 
   // Group accessors
-  RooArgSet allVars() ;
-  RooArgSet allCats() ;
-  RooArgSet allFunctions() ;
-  RooArgSet allCatFunctions() ;
-  RooArgSet allPdfs() ;
-  RooArgSet allResolutionModels() ;
-  std::list<RooAbsData*> allData() ;
-  std::list<TObject*> allGenericObjects() ;
+  RooArgSet allVars() const;
+  RooArgSet allCats() const ;
+  RooArgSet allFunctions() const ;
+  RooArgSet allCatFunctions() const ;
+  RooArgSet allPdfs() const ;
+  RooArgSet allResolutionModels() const ;
+  std::list<RooAbsData*> allData() const ;
+  std::list<TObject*> allGenericObjects() const ;
 
   Bool_t makeDir() ; 
   Bool_t cd(const char* path = 0) ;

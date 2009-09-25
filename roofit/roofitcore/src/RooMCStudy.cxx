@@ -176,7 +176,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
     allConstraints.add(*constraints) ;
     delete constraints ;
   }
-
+  
   // Construct constraint p.d.f
   if (allConstraints.getSize()>0) {
     _constrPdf = new RooProdPdf("mcs_constr_prod","RooMCStudy constraints product",allConstraints) ;
