@@ -27,6 +27,9 @@ END_HTML
 #endif
 
 class RooAbsArg; 
+class RooAbsData; 
+class RooArgSet; 
+class RooAbsPdf;
 
 namespace RooStats {
 

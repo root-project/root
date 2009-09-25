@@ -96,7 +96,7 @@ LikelihoodInterval::LikelihoodInterval(const char* name, const char* title) :
 }
 
 //____________________________________________________________________
-LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, RooArgSet* params) :
+LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, const RooArgSet* params) :
    ConfInterval(name,name)
 {
    // Alternate constructor
@@ -105,7 +105,7 @@ LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, RooArgS
 }
 
 //____________________________________________________________________
-LikelihoodInterval::LikelihoodInterval(const char* name, const char* title, RooAbsReal* lr, RooArgSet* params) :
+LikelihoodInterval::LikelihoodInterval(const char* name, const char* title, RooAbsReal* lr, const RooArgSet* params) :
    ConfInterval(name,title)
 {
    // Alternate constructor
@@ -226,114 +226,215 @@ Bool_t LikelihoodInterval::CheckParameters(RooArgSet &parameterPoint) const
 
 
 //____________________________________________________________________
-Double_t LikelihoodInterval::LowerLimit(RooRealVar& param ) 
+Double_t LikelihoodInterval::LowerLimit(RooRealVar& param) 
 {  
-// A binary search to get lower/upper limit for a given parameter.  Slow.
 
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
-  RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(param.GetName());
 
-  // to do this cleanly, should start at minimum.  Either need minimum from somewhere else, or need to find it via Minuit.
-  // for testing, have param use min value
+  RooArgSet* vars = newProfile->getVariables() ;
+  RooRealVar* myarg = (RooRealVar *) vars->find(param.GetName());
+  delete vars ;
 
-  // do binary search for minimum
-  double target = TMath::ChisquareQuantile(fConfidenceLevel,fParameters->getSize());
+  double target = TMath::ChisquareQuantile(fConfidenceLevel,fParameters->getSize())/2.;
 
-  Double_t thisArgVal = param.getVal(); // need this to be MLE
-  myarg->setVal( thisArgVal );
-  //  std::cout << "lambda("<<thisArgVal<<") = " << newProfile->getVal() << std::endl;;
+  Double_t thisArgVal = param.getVal()*0.99;
+  myarg->setVal( thisArgVal);
 
+  Double_t maxStep = (myarg->getMax()-myarg->getMin())/10 ;
 
-  double step = thisArgVal - myarg->getMin();
-  double lastDiff = newProfile->getVal() - target, diff=lastDiff;
-  int nIterations = 0, maxIterations = 20;
-  //  std::cout << "about to do binary search" << std::endl;
-  while(fabs(diff) > 0.01 && nIterations < maxIterations){
+  double step=-1;
+  double L= newProfile->getVal();
+  double L_old=0;
+  double diff = L - target;
+  //the parameters for the linear approximation
+  double a=0, b=0;
+  double x_app=0;
+  int nIterations = 0, maxIterations = 100;
+  while(fabs(diff)>0.01 && nIterations<maxIterations){
+
     nIterations++;
-    if(diff<0)
-      thisArgVal -= step; // LR too small, reduce myarg
-    else
-      thisArgVal += step; // LR too big, increase myarg
+    L_old=L;
+    thisArgVal=thisArgVal+step;
+    if (thisArgVal<myarg->getMin())
+      {
+	thisArgVal=myarg->getMin(); 
 
-    if(lastDiff*diff < 0) // crossed target, reduce step size
-      step /=2; 
-
+	step=thisArgVal+step-x_app;
+	if (fabs(step)<1E-5) {
+	  std::cout<<"WARNING lower limit is outside the parameters bounderies. Abort!"<<std::endl;
+	  delete newProfile;
+	  double ret = myarg->getMin();
+	  //delete myarg;
+	  return ret;
+	}
+      }
+    
+        
     myarg->setVal( thisArgVal );
-    //    myarg->Print();
-    //    std::cout << "lambda("<<thisArgVal<<") = " << newProfile->getVal() << std::endl;;
-    lastDiff = diff;
-    // abs below to protect small negative numbers from numerical precision
-    diff = 2.*(newProfile->getVal()) - target; 
-    //    std::cout << "diff = " << diff << std::endl;
+    L=newProfile->getVal();
+
+    // If L is below target and we are at boundary stop here
+    if ((fabs(myarg->getVal()-myarg->getMin())<1e-5) && (L<target)) {
+      std::cout<<"WARNING lower limit is outside the parameters bounderies (L at lower bound of " << myarg->GetName() << " is " << L 
+	       << ", which is less than target value of " << target << "). Abort!"<<std::endl;
+      delete newProfile;
+      double ret = myarg->getMin();
+      return ret;      
+    }
+
+    //Compute the linear function
+    a=(L-L_old)/(step);
+    if (fabs(a)<1E-3) {
+      std::cout<<"WARNING: the slope of the Likelihood linear approximation is close to zero" <<std::endl;
+    }
+    b=L-a*thisArgVal;
+    //approximate the position of the desired L value
+    x_app=(target-b)/a;    
+    step=x_app-thisArgVal;
+    if (step>maxStep) step=maxStep ;
+    if (step<-maxStep) step=-maxStep ;
+    diff=L-target;
+
+    if(a>0) {
+      std::cout<<"WARNING: you are on the right of the MLE. Step towards MLE"<<std::endl;
+      step=-(myarg->getMax()-myarg->getMin())/100; //Do a constant step, typical for the dimenions of the problem towards the minimum
+     
+      
+    }
   }
   
-
-  RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
-
-  // put the parameters back to the way they were
-  //  (*fParameters) = (*snapshot);
-
+  
+  std::cout<<"LL search Iterations:"<< nIterations<<std::endl;
+ 
   delete newProfile;
-  return myarg->getVal();
-
+  double ret=myarg->getVal();
+  //delete myarg;
+  return ret;
 }
 
 
 
 //____________________________________________________________________
-Double_t LikelihoodInterval::UpperLimit(RooRealVar& param ) 
+Double_t LikelihoodInterval::UpperLimit(RooRealVar& param) 
 {  
-
-  // A binary search to get lower/upper limit for a given parameter.  Slow.
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
-
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
-  RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(param.GetName());
 
-  // to do this cleanly, should start at minimum.  Either need minimum from somewhere else, or need to find it via Minuit.
-  // for testing, have param use min value
+  RooArgSet* vars = newProfile->getVariables() ;
+  RooRealVar* myarg = (RooRealVar *)vars->find(param.GetName());
+  delete vars ;
 
-  // do binary search for minimum
-  double target = TMath::ChisquareQuantile(fConfidenceLevel,fParameters->getSize());
-
-  Double_t thisArgVal = param.getVal(); // need this to be MLE
+  double target = TMath::ChisquareQuantile(fConfidenceLevel,fParameters->getSize())/2.;
+  Double_t thisArgVal = param.getVal()*1.01 ;
   myarg->setVal( thisArgVal );
 
+  Double_t maxStep = (myarg->getMax()-myarg->getMin())/10 ;
 
-  double step = thisArgVal - myarg->getMin();
-  double lastDiff = newProfile->getVal() - target, diff=lastDiff;
-  int nIterations = 0, maxIterations = 20;
-  //  std::cout << "about to do binary search" << std::endl;
-  while(fabs(diff) > 0.01 && nIterations < maxIterations){
+  bool toggleplot=false; //For debugging purposes, could think of interfacing a Filepattern to outside to have controlplots stored
+  double step=1;
+  double L= newProfile->getVal();
+  double L_old=0;
+  double diff = L - target;
+  //the parameters for the linear approximation
+  double a=0, b=0;
+  double x_app=0;
+  int nIterations = 0, maxIterations = 100;
+  while(fabs(diff)>0.01 && nIterations<maxIterations){
     nIterations++;
-    if(diff<0)
-      thisArgVal += step; // LR too small, increase myarg
-    else
-      thisArgVal -= step; // LR too big, reduce myarg
-
-    if(lastDiff*diff < 0) // crossed target, reduce step size
-      step /=2; 
-
+    L_old=L;
+    thisArgVal=thisArgVal+step;
+    if (thisArgVal>myarg->getMax())
+      {
+	std::cout<<"WARNING: near the upper boundery"<<std::endl;
+	thisArgVal=myarg->getMax(); 
+	step=thisArgVal+step-x_app;
+	//std::cout<<"DEBUG: step:"<<step<<" thistArgVal:"<<thisArgVal<<std::endl;
+	if (fabs(step)<1E-5) {
+	  toggleplot=true;
+	  std::cout<<"WARNING upper limit is outside the parameters bounderies. Abort!"<<std::endl;
+	  // 	  TCanvas c1;
+	  // 	  c1.cd();
+	  // 	  RooPlot* frame=myarg->frame();
+	  // 	  newProfile->plotOn(frame);
+	  // 	  frame->Draw();
+	  // 	  TString fname("");
+	  // 	  fname+=MLE;
+	  // 	  fname+="_"; fname+="abort.ps";
+	  // 	  c1.Print(fname);
+	  //	  delete frame;
+	  delete newProfile;
+	  double ret=myarg->getMax();
+	  //delete myarg;
+	  return ret;
+	}
+      }
+    
     myarg->setVal( thisArgVal );
-    //    myarg->Print();
-    //    std::cout << "lambda("<<thisArgVal<<") = " << newProfile->getVal() << std::endl;;
-    lastDiff = diff;
-    // abs below to protect small negative numbers from numerical precision
-    diff = 2.*(newProfile->getVal()) - target; 
-    //    std::cout << "diff = " << diff << std::endl;
+    L=newProfile->getVal();
+
+    // If L is below target and we are at boundary stop here
+    if ((fabs(myarg->getVal()-myarg->getMax())<1e-5) && (L<target)) {
+      std::cout<<"WARNING upper limit is outside the parameters bounderies (L at upper bound of " << myarg->GetName() << " is " << L 
+	       << ", which is less than target value of " << target << "). Abort!"<<std::endl;
+      delete newProfile;
+      double ret = myarg->getMax();
+      return ret;      
+    }
+
+
+    //Compute the linear approximation
+    a=(L-L_old)/(step);
+   
+    if (fabs(a)<1E-3){
+      std::cout<<"WARNING: the slope of the Likelihood linear approximation is close to zero."<<std::endl;
+      toggleplot=true;
+    }
+    b=L-a*thisArgVal;
+    //approximate the position of the desired L value
+    x_app=(target-b)/a;
+    step=x_app-thisArgVal;
+    if (step>maxStep) step=maxStep ;
+    if (step<-maxStep) step=-maxStep ;
+    diff=L-target;
+
+    //If slope is negative you are below the minimum
+    if(a<0) {
+      std::cout<<"WARNING: you are on the left of the MLE. Step towards MLE"<<std::endl;
+      step=(myarg->getMax()-myarg->getMin())/100; //Do a constant step, typical for the dimenions of the problem towards the minimum
+      //L_old=0;
+      
+    }
+    
   }
   
+  //________________________________________
+  //Controlplots for debugging
+  if (toggleplot) {
+    //  TCanvas c1;
+    //     c1.cd();
+    //     RooPlot* frame=myarg->frame();
+    //     newProfile->plotOn(frame);
+    //     frame->Draw();
+    //     TString fname("/afs/cern.ch/user/r/ruthmann/development/c++/2009.08.14_higgs_combination_7tev/limit_controlplots/");
+    //     fname+=MLE;
+    //     fname+="_"; fname+=myarg->getVal(); fname+=".ps";
+    //     c1.Print(fname);
+    //     delete frame;
+  }
+  //_______________________________________
+  
+  std::cout<<"UL search Iterations:"<< nIterations<<std::endl;
+  
 
-  // delete newProfile;
+  delete newProfile;
+  double ret=myarg->getVal();
+  //delete myarg;
+  return ret;
+  //return x_app;
 
   RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
-
-  // put the parameters back to the way they were
-  //  (*fParameters) = (*snapshot);
-
-  return myarg->getVal();
-
 }
 
 

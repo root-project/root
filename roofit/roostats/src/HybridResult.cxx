@@ -45,12 +45,13 @@ using namespace RooStats;
 
 HybridResult::HybridResult( const char *name, const char *title,
                             std::vector<double>& testStat_sb_vals,
-                            std::vector<double>& testStat_b_vals) :
-  //TNamed(name,title),
+                            std::vector<double>& testStat_b_vals,
+			    bool sumLargerValues ) :
    HypoTestResult(name,title,0,0),
    fTestStat_data(-999.),
    fComputationsNulDoneFlag(false),
-   fComputationsAltDoneFlag(false)
+   fComputationsAltDoneFlag(false),
+   fSumLargerValues(sumLargerValues)
 {
    // HybridResult constructor (with name, title and vectors of S+B and B values)
 
@@ -72,7 +73,6 @@ HybridResult::HybridResult( const char *name, const char *title,
 ///////////////////////////////////////////////////////////////////////////
 
 HybridResult::HybridResult( const char *name, const char *title) :
-   //TNamed(name,title),
    HypoTestResult(name,title,0,0),
    fTestStat_data(-999.),
    fComputationsNulDoneFlag(false),
@@ -85,7 +85,6 @@ HybridResult::HybridResult( const char *name, const char *title) :
 
 HybridResult::HybridResult( ) :
    HypoTestResult("HybridResult_DefaultName","HybridResult",0,0),
-//   TNamed("HybridResult_DefaultName","HybridResult"),
    fTestStat_data(-999.),
    fComputationsNulDoneFlag(false),
    fComputationsAltDoneFlag(false)
@@ -129,8 +128,13 @@ double HybridResult::NullPValue() const
       }
 
       double larger_than_measured=0;
-      for (int iToy=0;iToy<nToys;++iToy)
-         if ( fTestStat_b[iToy] > fTestStat_data ) ++larger_than_measured;
+      if (fSumLargerValues) {
+	for (int iToy=0;iToy<nToys;++iToy)
+	  if ( fTestStat_b[iToy] >= fTestStat_data ) ++larger_than_measured;
+      } else {
+	for (int iToy=0;iToy<nToys;++iToy)
+	  if ( fTestStat_b[iToy] <= fTestStat_data ) ++larger_than_measured;
+      }
 
       if (larger_than_measured==0) std::cout << "Warning: CLb = 0 ... maybe more toys are needed!\n";
 
@@ -155,8 +159,13 @@ double HybridResult::AlternatePValue() const
       }
 
       double larger_than_measured=0;
-      for (int iToy=0;iToy<nToys;++iToy)
-         if ( fTestStat_sb[iToy] > fTestStat_data ) ++larger_than_measured;
+      if (fSumLargerValues) {
+	for (int iToy=0;iToy<nToys;++iToy)
+	  if ( fTestStat_sb[iToy] >= fTestStat_data ) ++larger_than_measured;
+      } else {
+	for (int iToy=0;iToy<nToys;++iToy)
+	  if ( fTestStat_sb[iToy] <= fTestStat_data ) ++larger_than_measured;
+      }
 
       if (larger_than_measured==0) std::cout << "Warning: CLsb = 0 ... maybe more toys are needed!\n";
 

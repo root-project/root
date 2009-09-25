@@ -27,6 +27,10 @@
 #include "RooStats/HybridResult.h"
 #endif
 
+#ifndef ROOSTATS_ModelConfig
+#include "RooStats/ModelConfig.h"
+#endif
+
 class TH1; 
 
 namespace RooStats {
@@ -36,7 +40,7 @@ namespace RooStats {
    public:
 
 
-      /// Constructor with only name and title 
+      /// Dummy Constructor with only name and title 
       HybridCalculator(const char *name = 0,
                        const char *title = 0); 
       
@@ -46,15 +50,17 @@ namespace RooStats {
                        RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
                        RooArgList& observables,
-                       RooArgSet* nuisance_parameters = 0,
-                       RooAbsPdf* prior_pdf = 0);
+                       const RooArgSet* nuisance_parameters = 0,
+                       RooAbsPdf* prior_pdf = 0,
+		       bool GenerateBinned = false);  //Nils 31.7.09
 
       /// Constructor for HybridCalculator using  a data set and pdf instances
       HybridCalculator(RooAbsData& data, 
                        RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
-                       RooArgSet* nuisance_parameters = 0,
-                       RooAbsPdf* prior_pdf = 0);
+                       const RooArgSet* nuisance_parameters = 0,
+                       RooAbsPdf* prior_pdf = 0,
+		       bool GenerateBinned = false);  //Nils 31.7.09
 
       /// Constructor for HybridCalculator using name, title, a data set and pdf instances
       HybridCalculator(const char *name,
@@ -62,51 +68,33 @@ namespace RooStats {
                        RooAbsData& data, 
                        RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
-                       RooArgSet* nuisance_parameters = 0,
-                       RooAbsPdf* prior_pdf = 0);
+                       const RooArgSet* nuisance_parameters = 0,
+                       RooAbsPdf* prior_pdf = 0,
+		       bool GenerateBinned = false);  //Nils 31.7.09
 
-
-   private: // not yet available 
- 
-      /// Constructor for HybridCalculator using name, title, a workspace and pdf names
-      HybridCalculator(RooWorkspace & wks, 
-                       const char* data, 
-                       const char* sb_model,
-                       const char* b_model,
-                       RooArgSet* nuisance_parameters,
-                       const char* prior_pdf);
-
-      /// Constructor for HybridCalculator using name, title, a workspace and pdf names
+      /// Constructor for HybridCalculator with ModelConfig
       HybridCalculator(const char *name,
                        const char *title,
-                       RooWorkspace & wks, 
-                       const char* data, 
-                       const char* sb_model,
-                       const char* b_model,
-                       RooArgSet* nuisance_parameters,
-                       const char* prior_pdf);
+                       RooAbsData& data, 
+                       const ModelConfig& sb_model, 
+                       const ModelConfig& b_model);
 
    public: 
 
       /// Destructor of HybridCalculator
       virtual ~HybridCalculator();
 
-      /// inherited methods from HypoTestCalculanterface
+      /// inherited methods from HypoTestCalculator interface
       virtual HybridResult* GetHypoTest() const;
 
       // inherited setter methods from HypoTestCalculator
 
-   private: 
-      // set a workspace that owns all the necessary components for the analysis
-      virtual void SetWorkspace(RooWorkspace& ws);
-      // set the PDF for the null hypothesis (only B)
-      virtual void SetNullPdf(const char* name) { fBModelName = name; }
-      // set the PDF for the alternate hypothesis  (S+B)
-      virtual void SetAlternatePdf(const char* name ) { fSbModelName = name;} 
-      // set a common PDF for both the null and alternate hypotheses
-      virtual void SetCommonPdf(const char* name) {fSbModelName = name; }
 
-   public: 
+      // set the model for the null hypothesis (only B)
+      virtual void SetNullModel(const ModelConfig & );
+      // set the model for the alternate hypothesis  (S+B)
+      virtual void SetAlternateModel(const ModelConfig & );
+
 
       // Set a common PDF for both the null and alternate
       virtual void SetCommonPdf(RooAbsPdf & pdf) { fSbModel = &pdf; }
@@ -115,15 +103,13 @@ namespace RooStats {
       // Set the PDF for the alternate hypothesis ( i.e. S+B)
       virtual void SetAlternatePdf(RooAbsPdf& pdf) { fSbModel = &pdf;  }
 
-      // specify the name of the dataset in the workspace to be used
-      virtual void SetData(const char* name) { fDataName = name; } 
-      // Set the DataSet, add to the the workspace if not already there
+      // Set the DataSet
       virtual void SetData(RooAbsData& data) { fData = &data; }
 
       // set parameter values for the null if using a common PDF
-      virtual void SetNullParameters(RooArgSet& ) { } // not needed
+      virtual void SetNullParameters(const RooArgSet& ) { } // not needed
       // set parameter values for the alternate if using a common PDF
-      virtual void SetAlternateParameters(RooArgSet&) {}  // not needed
+      virtual void SetAlternateParameters(const RooArgSet&) {}  // not needed
 
       // additional methods specific for HybridCalculator
       // set a  prior pdf for the nuisance parameters 
@@ -131,21 +117,18 @@ namespace RooStats {
          fPriorPdf = &prior_pdf; 
          fUsePriorPdf = true; // if set by default turn it on
       } 
-
-      // set name of a  prior pdf for the nuisance parameters in the previously given workspace
-      void SetNuisancePdf(const char * name) { 
-         fPriorPdfName = name; 
-         fUsePriorPdf = true; // if set by default turn it on
-      } 
       
       // set the nuisance parameters to be marginalized
-      void SetNuisanceParameters(RooArgSet & params) { fParameters = &params; }
+      void SetNuisanceParameters(const RooArgSet & params) { fNuisanceParameters = &params; }
 
       // set number of toy MC 
       void SetNumberOfToys(unsigned int ntoys) { fNToys = ntoys; }
 
       // control use of the pdf for the nuisance parameter and marginalize them
       void UseNuisance(bool on = true) { fUsePriorPdf = on; }
+
+      // control to use bin data generation 
+      void SetGenerateBinned(bool on = true) { fGenerateBinned = on; }
       
       void SetTestStatistics(int index);
 
@@ -156,31 +139,27 @@ namespace RooStats {
 
 
    private:
+
       void RunToys(std::vector<double>& bVals, std::vector<double>& sbVals, unsigned int nToys, bool usePriors) const;
 
       // check input parameters before performing the calculation
       bool DoCheckInputs() const; 
-      // initialize all the data and pdf by using a workspace as input 
-      bool DoInitializeFromWS();  
-
-      
 
       unsigned int fTestStatisticsIdx; // Index of the test statistics to use
       unsigned int fNToys;            // number of Toys MC
       bool  fUsePriorPdf;               // use a prior for nuisance parameters  
-
       RooAbsPdf* fSbModel; // The pdf of the signal+background model
       RooAbsPdf* fBModel; // The pdf of the background model
       mutable RooArgList* fObservables; // Collection of the observables of the model
-      RooArgSet* fParameters; // Collection of the nuisance parameters in the model
-      RooAbsPdf* fPriorPdf; // Prior PDF of the nuisance parameters
+      const RooArgSet* fNuisanceParameters;   // Collection of the nuisance parameters in the model
+      RooAbsPdf* fPriorPdf;   // Prior PDF of the nuisance parameters
       RooAbsData * fData;     // pointer to the data sets 
-      //bool fOwnsWorkspace;    // flag indicating if calculator manages the workspace 
-      RooWorkspace * fWS;     // a workspace that owns all the components to be used by the calculator
-      TString fSbModelName;   // name of pdf of the signal+background model
-      TString fBModelName;   // name of pdf of the background model
-      TString fPriorPdfName;   // name of pdf of the background model
-      TString fDataName;      // name of the dataset in the workspace
+      bool fGenerateBinned;   //Flag to control binned generation
+
+//       TString fSbModelName;   // name of pdf of the signal+background model
+//       TString fBModelName;   // name of pdf of the background model
+//       TString fPriorPdfName;   // name of pdf of the background model
+//       TString fDataName;      // name of the dataset in the workspace
 
    protected:
       ClassDef(HybridCalculator,1)  // Hypothesis test calculator using a Bayesian-frequentist hybrid method

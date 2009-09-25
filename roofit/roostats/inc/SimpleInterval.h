@@ -32,8 +32,8 @@ namespace RooStats {
     SimpleInterval();
     SimpleInterval(const char* name);
     SimpleInterval(const char* name, const char* title);
-    SimpleInterval(const char* name, RooAbsArg*, Double_t, Double_t);
-    SimpleInterval(const char* name, const char* title, RooAbsArg*, Double_t, Double_t);
+    SimpleInterval(const char* name, RooAbsArg* var, Double_t, Double_t);
+    SimpleInterval(const char* name, const char* title, RooAbsArg* var, Double_t, Double_t);
     virtual ~SimpleInterval();
         
     virtual Bool_t IsInInterval(RooArgSet&);

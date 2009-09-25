@@ -69,6 +69,7 @@ FeldmanCousins::FeldmanCousins() {
   fPdfName = "";
   fAdaptiveSampling=false;
   fPointsToTest = 0;
+  fTestStatSampler = 0;
   fNbins = 10;
   fFluctuateData=true;
   fDoProfileConstruction=true;

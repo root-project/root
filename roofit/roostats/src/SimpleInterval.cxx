@@ -107,7 +107,6 @@ Bool_t SimpleInterval::IsInInterval(RooArgSet &parameterPoint)
 
 
    return true;
-  
 }
 
 //____________________________________________________________________

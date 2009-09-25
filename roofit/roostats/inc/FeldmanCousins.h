@@ -96,6 +96,8 @@ namespace RooStats {
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
 
+    virtual void SetModel(const ModelConfig &) {} /* to be implemented */
+
       RooAbsData* GetPointsToScan() {
 	if(!fPointsToTest) CreateParameterPoints();	  
 	return fPointsToTest;
@@ -114,6 +116,7 @@ namespace RooStats {
 	if(flag) fCreateBelt = true;
       }
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
+
       
    private:
 

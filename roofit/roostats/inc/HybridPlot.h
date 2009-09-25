@@ -44,7 +44,7 @@ namespace RooStats {
                  const char* title,
                  std::vector<double> sb_values,
                  std::vector<double> b_values,
-                 double m2lnQ_data,
+                 double testStat_data,
                  int n_bins,
                  bool verbosity=true);
 
@@ -119,7 +119,7 @@ namespace RooStats {
       TH1F* fSb_histo_shaded; // The sb Histo shaded
       TH1F* fB_histo; // The b Histo
       TH1F* fB_histo_shaded; // The b Histo shaded
-      TLine* fData_m2lnQ_line; // The line for the data -2lnQ
+      TLine* fData_testStat_line; // The line for the data value of the test statistic
       TLegend* fLegend; // The legend of the plot
       bool fVerbose; // verbosity flag
       TCanvas* fCanvas; // plot canvas

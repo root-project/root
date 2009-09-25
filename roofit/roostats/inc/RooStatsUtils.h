@@ -22,6 +22,11 @@
 
 #include "RooArgSet.h"
 #include "RooRealVar.h"
+#include "RooAbsCollection.h"
+#include "TIterator.h"
+
+#include <iostream>
+using namespace std ;
 
 namespace RooStats {
 
@@ -39,16 +44,7 @@ namespace RooStats {
 
 
   inline void SetParameters(const RooArgSet* desiredVals, RooArgSet* paramsToChange){
-    TIter it = desiredVals->createIterator();
-    RooRealVar *myarg; 
-    RooRealVar *mytarget; 
-    while ((myarg = (RooRealVar *)it.Next())) { 
-      if(!myarg) continue;
-      mytarget = (RooRealVar*) paramsToChange->find(myarg->GetName());
-      if(!mytarget) continue;
-      mytarget->setVal( myarg->getVal() );
-      mytarget->setConstant(myarg->isConstant());
-    }
+    *paramsToChange=*desiredVals ;
   }
 
   inline void RemoveConstantParameters(RooArgSet* set){
@@ -62,6 +58,18 @@ namespace RooStats {
     set->remove(constSet);
   }
 
+  // Assuming all values in set are RooRealVars, randomize their values.
+  // Do not 
+  inline void RandomizeCollection(RooAbsCollection& set,
+                                  Bool_t randomizeConstants = kTRUE)
+  {
+    TIterator* it = set.createIterator();
+    RooRealVar* var;
+  
+    while ((var = (RooRealVar*)it->Next()) != NULL)
+      if (!var->isConstant() || randomizeConstants)
+         var->randomize();
+  }
 
 }
 

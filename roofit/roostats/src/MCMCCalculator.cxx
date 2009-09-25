@@ -14,69 +14,77 @@
 BEGIN_HTML
 <p>
 MCMCCalculator is a concrete implementation of IntervalCalculator.
-It creates a Markov Chain of data points using Monte Carlo, implementing the
-Metropolis algorithm.  From this Markov Chain, this class can generate a
-MCMCInterval as per user specification.
-</p>
-
-<p>
-Note: Currently the Markov Chain is created within this class, but this
-feature will be factored out in future implementations so that Markov
-Chains can be generated for other purposes.
-</p>
-
-<p>
-In the main algorithm, new points in the space of parameters
-are proposed and then visited based on their relative likelihoods.
-This class can accept any implementation of the ProposalFunction interface,
-including non-symmetric proposal functions, and still maintain detailed balance.
+It uses a MetropolisHastings object to construct a Markov Chain of data points in the
+parameter space.  From this Markov Chain, this class can generate a MCMCInterval as
+per user specification.
 </p>
 
 <p>
 The interface allows one to pass the model, data, and parameters via a workspace and
 then specify them with names.
 </p>
+
 <p>
 After configuring the calculator, one only needs to ask GetInterval(), which will
-return an ConfInterval (MCMCInterval in this case) pointer.
+return an ConfInterval (MCMCInterval in this case).
 </p>
 END_HTML
 */
 //_________________________________________________
 
-#ifndef RooStats_RooStatsUtils
-#include "RooStats/RooStatsUtils.h"
-#endif
-
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-
-#include "RooRealVar.h"
-#include "RooNLLVar.h"
+#ifndef ROO_GLOBAL_FUNC
 #include "RooGlobalFunc.h"
-#include "RooDataSet.h"
+#endif
+#ifndef ROO_ABS_REAL
+#include "RooAbsReal.h"
+#endif
+#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
+#endif
+#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#include "TRandom.h"
-#include "TH1.h"
-#include "TMath.h"
-#include "TFile.h"
+#endif
+#ifndef RooStats_RooStatsUtils
+#include "RooStats/RooStatsUtils.h"
+#endif
+#ifndef ROOSTATS_MCMCCalculator
 #include "RooStats/MCMCCalculator.h"
+#endif
+#ifndef ROOSTATS_MetropolisHastings
+#include "RooStats/MetropolisHastings.h"
+#endif
+#ifndef ROOSTATS_MarkovChain
+#include "RooStats/MarkovChain.h"
+#endif
+#ifndef RooStats_MCMCInterval
 #include "RooStats/MCMCInterval.h"
+#endif
+#ifndef ROOT_TIterator
+#include "TIterator.h"
+#endif
+#ifndef ROOSTATS_UniformProposal
+#include "RooStats/UniformProposal.h"
+#endif
+#ifndef ROOSTATS_PdfProposal
+#include "RooStats/PdfProposal.h"
+#endif
 
 ClassImp(RooStats::MCMCCalculator);
 
 using namespace RooFit;
 using namespace RooStats;
 
+// default constructor
 MCMCCalculator::MCMCCalculator()
 {
    // default constructor
    fWS = NULL;
    fPOI = NULL;
    fNuisParams = NULL;
-   fOwnsWorkspace = false;
+   fOwnsWorkspace = kFALSE;
    fPropFunc = NULL;
    fPdfName = NULL;
    fDataName = NULL;
@@ -84,8 +92,43 @@ MCMCCalculator::MCMCCalculator()
    fNumBurnInSteps = 0;
    fNumBins = 0;
    fAxes = NULL;
+   fUseKeys = kFALSE;
+   fUseSparseHist = kFALSE;
 }
 
+// Constructor for automatic configuration with basic settings.  Uses a
+// UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
+// RooRealVar, determines interval by keys, and turns on sparse histogram
+// mode in the MCMCInterval.  Finds a 95% confidence interval.
+MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
+      RooArgSet& paramsOfInterest)
+{
+   fWS = new RooWorkspace();
+   fOwnsWorkspace = true;
+   SetData(data);
+   SetPdf(pdf);
+   SetParameters(paramsOfInterest);
+
+   SetupBasicUsage();
+}
+
+// Constructor for automatic configuration with basic settings.  Uses a
+// UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
+// RooRealVar, determines interval by keys, and turns on sparse histogram
+// mode in the MCMCInterval.  Finds a 95% confidence interval.
+MCMCCalculator::MCMCCalculator(RooWorkspace& ws, RooAbsData& data,
+      RooAbsPdf& pdf, RooArgSet& paramsOfInterest)
+{
+   fOwnsWorkspace = false;
+   SetWorkspace(ws);
+   SetData(data);
+   SetPdf(pdf);
+   SetParameters(paramsOfInterest);
+
+   SetupBasicUsage();
+}
+
+// alternate constructor, specifying many arguments
 MCMCCalculator::MCMCCalculator(RooWorkspace& ws, RooAbsData& data,
                 RooAbsPdf& pdf, RooArgSet& paramsOfInterest,
                 ProposalFunction& proposalFunction, Int_t numIters,
@@ -102,8 +145,11 @@ MCMCCalculator::MCMCCalculator(RooWorkspace& ws, RooAbsData& data,
    fNumBurnInSteps = 0;
    fNumBins = 0;
    fAxes = axes;
+   fUseKeys = kFALSE;
+   fUseSparseHist = kFALSE;
 }
 
+// alternate constructor, specifying many arguments
 MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
                 RooArgSet& paramsOfInterest, ProposalFunction& proposalFunction,
                 Int_t numIters, RooArgList* axes, Double_t size)
@@ -120,6 +166,24 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
    fNumBurnInSteps = 0;
    fNumBins = 0;
    fAxes = axes;
+   fUseKeys = kFALSE;
+   fUseSparseHist = kFALSE;
+}
+
+// Constructor for automatic configuration with basic settings.  Uses a
+// UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
+// RooRealVar, determines interval by keys, and turns on sparse histogram
+// mode in the MCMCInterval.  Finds a 95% confidence interval.
+void MCMCCalculator::SetupBasicUsage()
+{
+   fPropFunc = new UniformProposal();
+   fNumIters = 10000;
+   fNumBurnInSteps = 40;
+   //fNumBins = 0;
+   fNumBins = 50;
+   fUseKeys = kTRUE;
+   fUseSparseHist = kTRUE;
+   SetTestSize(0.05);
 }
 
 MCMCInterval* MCMCCalculator::GetInterval() const
@@ -128,92 +192,42 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    RooAbsPdf* pdf = fWS->pdf(fPdfName);
    RooAbsData* data = fWS->data(fDataName);
-   if (!data || !pdf || !fPOI) return 0;
+   if (!data || !pdf || !fPOI || !fPropFunc) return 0;
 
-   RooArgSet x;
-   RooArgSet xPrime;
-   RooRealVar* w = new RooRealVar("w", "weight", 0);
-   RooArgSet* parameters = pdf->getParameters(data);
-   RemoveConstantParameters(parameters);
-   x.addClone(*parameters);
-   x.addOwned(*w);
-   xPrime.addClone(*parameters);
-
-   RooDataSet* points = new RooDataSet("points", "Markov Chain", x, WeightVar(*w));
-
-   TRandom gen;
    RooArgSet* constrainedParams = pdf->getParameters(*data);
    RooAbsReal* nll = pdf->createNLL(*data, Constrain(*constrainedParams));
    delete constrainedParams;
 
-   RooArgSet* nllParams = nll->getParameters(*data);
-   Int_t weight = 0;
-
-   for (int i = 0; i < fNumIters; i++) {
-     //       cout << "Iteration # " << i << endl;
-     if (i % 100 == 0){
-       fprintf(stdout, ".");
-       fflush(NULL);
-     }
-
-      fPropFunc->Propose(xPrime, x);
-
-      RooStats::SetParameters(&xPrime, nllParams);
-      Double_t xPrimeNLL = nll->getVal();
-      RooStats::SetParameters(&x, nllParams);
-      Double_t xNLL = nll->getVal();
-      Double_t diff = xPrimeNLL - xNLL;
-
-      if (!fPropFunc->IsSymmetric(xPrime, x))
-         diff += TMath::Log(fPropFunc->GetProposalDensity(xPrime, x)) - 
-                 TMath::Log(fPropFunc->GetProposalDensity(x, xPrime));
-
-      if (diff < 0.0) {
-         // The proposed point (xPrime) has a higher likelihood than the
-         // current (x), so go there
-
-         // add the current point with the current weight
-         points->addFast(x, (Double_t)weight);
-         // reset the weight and go to xPrime
-         weight = 1;
-         RooStats::SetParameters(&xPrime, &x);
-      }
-      else {
-         // generate numbers on a log distribution to decide
-         // whether to go to xPrime or stay at x
-         Double_t rand = TMath::Log(gen.Uniform(1.0));
-         if (-1.0 * rand >= diff) {
-            // we chose to go to the new proposed point xPrime
-            // even though it has a lower likelihood than x
-
-            // add the current point with the current weight
-            points->addFast(x, (Double_t)weight);
-            // reset the weight and go to xPrime
-            weight = 1;
-            RooStats::SetParameters(&xPrime, &x);
-         } else {
-            // stay at current point x
-            weight++;
-         }
+   RooArgSet* params = nll->getParameters(*data);
+   RemoveConstantParameters(params);
+   if (fNumBins > 0) {
+      SetBins(*params, fNumBins);
+      SetBins(*fPOI, fNumBins);
+      if (dynamic_cast<PdfProposal*>(fPropFunc)) {
+         RooArgSet* proposalVars = ((PdfProposal*)fPropFunc)->GetPdf()->
+                                               getParameters((RooAbsData*)NULL);
+         SetBins(*proposalVars, fNumBins);
       }
    }
-   delete nllParams;
-   printf("\n");
-   // make sure to add the last point
-   points->addFast(x, (Double_t)weight);
 
-   //TFile chainDataFile("chainData.root", "recreate");
-   //points->Write();
-   //chainDataFile.Close();
+   MetropolisHastings mh;
+   mh.SetFunction(*nll);
+   mh.SetType(MetropolisHastings::kLog);
+   mh.SetSign(MetropolisHastings::kNegative);
+   mh.SetParameters(*params);
+   mh.SetProposalFunction(*fPropFunc);
+   mh.SetNumIters(fNumIters);
+
+   MarkovChain* chain = mh.ConstructChain();
 
    MCMCInterval* interval = new MCMCInterval("mcmcinterval", "MCMCInterval",
-                                             *fPOI, *points);
+                                             *fPOI, *chain);
    if (fAxes != NULL)
       interval->SetAxes(*fAxes);
-   if (fNumBins > 0)
-      interval->SetNumBins(fNumBins);
    if (fNumBurnInSteps > 0)
       interval->SetNumBurnInSteps(fNumBurnInSteps);
+   interval->SetUseKeys(fUseKeys);
+   interval->SetUseSparseHist(fUseSparseHist);
    interval->SetConfidenceLevel(1.0 - fSize);
    return interval;
 }

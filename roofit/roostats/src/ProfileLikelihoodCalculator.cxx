@@ -62,6 +62,7 @@ END_HTML
 #include "RooProfileLL.h"
 #include "RooNLLVar.h"
 #include "RooGlobalFunc.h"
+#include "RooProdPdf.h"
 
 ClassImp(RooStats::ProfileLikelihoodCalculator) ;
 
@@ -76,30 +77,46 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() :
 
 }
 
-ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooWorkspace& ws, RooAbsData& data, RooAbsPdf& pdf, RooArgSet& paramsOfInterest, 
-                                                         Double_t size, RooArgSet* nullParams, RooArgSet* altParams) :
-   CombinedCalculator(ws,data,pdf, paramsOfInterest, size, nullParams, altParams)
-{}
+ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest, 
+                                                         Double_t size, const RooArgSet* nullParams ) :
+   CombinedCalculator(data,pdf, paramsOfInterest, size, nullParams )
+{
+   // constructor from pdf and parameters
+   // the pdf must contain eventually the nuisance parameters
+}
 
-ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, RooArgSet& paramsOfInterest, 
-                                                         Double_t size, RooArgSet* nullParams, RooArgSet* altParams):
-   CombinedCalculator(data,pdf, paramsOfInterest, size, nullParams, altParams)
-{}
+ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data,  ModelConfig& model, Double_t size) :
+   CombinedCalculator(data, model, size)
+{
+   assert(model.GetPdf() );
+   // construct from model config (pdf from the model config does not include the nuisance)
+   if (model.GetPriorPdf() ) { 
+      std::string name = std::string("Costrained_") + (model.GetPdf())->GetName() + std::string("_with_") + (model.GetPriorPdf())->GetName();
+      fPdf = new RooProdPdf(name.c_str(),name.c_str(), *(model.GetPdf()), *(model.GetPriorPdf()) );
+      // set pdf in ModelConfig which will import in WS  that will manage it 
+      model.SetPdf(*fPdf);
+   }
+}
 
 
 //_______________________________________________________
 ProfileLikelihoodCalculator::~ProfileLikelihoodCalculator(){
    // destructor
+   // cannot delete prod pdf because it will delete all the composing pdf's
+//    if (fOwnPdf) delete fPdf; 
+//    fPdf = 0; 
 }
 
 
 //_______________________________________________________
-ConfInterval* ProfileLikelihoodCalculator::GetInterval() const {
+LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    // Main interface to get a RooStats::ConfInterval.  
    // It constructs a profile likelihood ratio and uses that to construct a RooStats::LikelihoodInterval.
 
-   RooAbsPdf* pdf   = fWS->pdf(fPdfName);
-   RooAbsData* data = fWS->data(fDataName);
+//    RooAbsPdf* pdf   = fWS->pdf(fPdfName);
+//    RooAbsData* data = fWS->data(fDataName);
+   RooAbsPdf * pdf = GetPdf();
+   RooAbsData* data = GetData(); 
    if (!data || !pdf || !fPOI) return 0;
 
    RooArgSet* constrainedParams = pdf->getParameters(*data);
@@ -121,8 +138,8 @@ ConfInterval* ProfileLikelihoodCalculator::GetInterval() const {
    profile->getVal(); // do this so profile will cache the minimum
    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
-   LikelihoodInterval* interval 
-      = new LikelihoodInterval("LikelihoodInterval", profile, fPOI);
+   TString name = TString("LikelihoodInterval"); // + TString("_") + TString(GetName() ); 
+   LikelihoodInterval* interval = new LikelihoodInterval(name, profile, fPOI);
    interval->SetConfidenceLevel(1.-fSize);
    delete constrainedParams;
    return interval;
@@ -137,44 +154,94 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    // the ratio of the likelihood at the conditional MLE to the MLE is the profile likelihood ratio.
    // Wilks' theorem is used to get p-values 
 
-   RooAbsPdf* pdf   = fWS->pdf(fPdfName);
-   RooAbsData* data = fWS->data(fDataName);
+//    RooAbsPdf* pdf   = fWS->pdf(fPdfName);
+//    RooAbsData* data = fWS->data(fDataName);
+   RooAbsPdf * pdf = GetPdf();
+   RooAbsData* data = GetData(); 
+
    if (!data || !pdf) return 0;
 
-   // calculate MLE
+   if (!fNullParams) return 0; 
+
+   // get all non-const parameters
    RooArgSet* constrainedParams = pdf->getParameters(*data);
+   if (!constrainedParams) return 0; 
    RemoveConstantParameters(constrainedParams);
-   RooFitResult* fit = pdf->fitTo(*data,Extended(kFALSE), Constrain(*constrainedParams),Strategy(0),Hesse(kFALSE),Save(kTRUE),PrintLevel(-1));
+
+
+   // calculate MLE 
+   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(0),Hesse(kFALSE),Save(kTRUE),PrintLevel(-1));
   
 
    fit->Print();
    Double_t NLLatMLE= fit->minNll();
 
 
-   // set POI to null values, set constant, calculate conditional MLE
-   TIter it = fNullParams->createIterator();
-   RooRealVar *myarg; 
-   RooRealVar *mytarget; 
-   while ((myarg = (RooRealVar *)it.Next())) { 
-      if(!myarg) continue;
-
-      mytarget = fWS->var(myarg->GetName());
-      if(!mytarget) continue;
-      mytarget->setVal( myarg->getVal() );
-      mytarget->setConstant(kTRUE);
-      cout << "setting null parameter:" << endl;
-      mytarget->Print();
+   // set POI to given values, set constant, calculate conditional MLE
+   RooArgList poiList; /// make ordered list since a vectro will be associated to keep parameter values
+   poiList.add(*fNullParams); 
+   std::vector<double> oldValues(poiList.getSize() ); 
+   for (unsigned int i = 0; i < oldValues.size(); ++i) { 
+      RooRealVar * mytarget = (RooRealVar*) constrainedParams->find(poiList[i].GetName());
+      oldValues[i] = mytarget->getVal(); 
+      if (mytarget) { 
+         mytarget->setVal( ( (RooRealVar&) poiList[i] ).getVal() );
+         mytarget->setConstant(kTRUE);
+      }
    }
-  
-   RooFitResult* fit2 = pdf->fitTo(*data,Extended(kFALSE),Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
 
-   Double_t NLLatCondMLE= fit2->minNll();
-   fit2->Print();
+
+   // perform the fit only if nuisance parameters are available
+   // get nuisance parameters
+   // nuisance parameters are the non const parameters from the likelihood parameters
+   RooArgSet nuisParams(*constrainedParams);
+
+   // need to remove the parameter of interest
+   RemoveConstantParameters(&nuisParams);
+
+   // check there are variable parameter in order to do a fit 
+   bool existVarParams = false; 
+   TIter it = nuisParams.createIterator();
+   RooRealVar * myarg = 0; 
+   while ((myarg = (RooRealVar *)it.Next())) { 
+      if ( !myarg->isConstant() ) {
+         existVarParams = true; 
+         break;
+      }
+   }
+
+   Double_t NLLatCondMLE= NLLatMLE;
+   if (existVarParams) {
+
+      RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
+     
+      NLLatCondMLE = fit2->minNll();
+      fit2->Print();
+   }
+   else { 
+      // get just the likelihood value (no need to do a fit since the likelihood is a constant function)
+      RooAbsReal* nll = pdf->createNLL(*data, CloneData(kTRUE), Constrain(*constrainedParams));
+      NLLatCondMLE = nll->getVal();
+      delete nll;
+   }
 
    // Use Wilks' theorem to translate -2 log lambda into a signifcance/p-value
+   Double_t deltaNLL = std::max( NLLatCondMLE-NLLatMLE, 0.);
+
    HypoTestResult* htr = 
       new HypoTestResult("ProfileLRHypoTestResult",
-                         SignificanceToPValue(sqrt( 2*(NLLatCondMLE-NLLatMLE))), 0 );
+                         SignificanceToPValue(sqrt( 2*deltaNLL)), 0 );
+
+
+   // restore previous value of poi
+   for (unsigned int i = 0; i < oldValues.size(); ++i) { 
+      RooRealVar * mytarget = (RooRealVar*) constrainedParams->find(poiList[i].GetName());
+      if (mytarget) { 
+         mytarget->setVal(oldValues[i] ); 
+         mytarget->setConstant(false); 
+      }
+   }
+
    delete constrainedParams;
    return htr;
 

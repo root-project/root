@@ -13,9 +13,12 @@
 /*
 BEGIN_HTML
 <p>
-UniformProposal is a concrete implementation of the ProposalFunction interface for use with a Markov Chain Monte Carlo algorithm.  
-This proposal function is a uniformly random distribution over the parameter space.  The proposal ignores the current point 
-when it proposes a new point.  The proposal function is symmetric, though it may not be very efficient. 
+UniformProposal is a concrete implementation of the ProposalFunction interface
+for use with a Markov Chain Monte Carlo algorithm.  This proposal function is
+a uniformly random distribution over the parameter space.  The proposal
+ignores the current point when it proposes a new point.  The proposal
+function is symmetric, though it may not cause a MetropolisHastings run to
+converge as quickly as other proposal functions.
 </p>
 END_HTML
 */
@@ -25,11 +28,24 @@ END_HTML
 #include "Rtypes.h"
 #endif
 
+#ifndef RooStats_RooStatsUtils
+#include "RooStats/RooStatsUtils.h"
+#endif
+#ifndef ROOSTATS_UniformProposal
 #include "RooStats/UniformProposal.h"
+#endif
+#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
+#endif
+#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
+#endif
+#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
+#endif
+#ifndef ROOT_TIterator
 #include "TIterator.h"
+#endif
 
 ClassImp(RooStats::UniformProposal);
 
@@ -41,7 +57,7 @@ void UniformProposal::Propose(RooArgSet& xPrime, RooArgSet& /* x */)
 {
    // kbelasco: remember xPrime and x have not been checked for containing
    // only RooRealVars
-   randomizeSet(xPrime);
+   RooStats::RandomizeCollection(xPrime);
 }
 
 // Determine whether or not the proposal density is symmetric for
@@ -52,16 +68,16 @@ Bool_t UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
    return true;
 }
 
-// Return the probability of proposing the point xPrime given the starting
-// point x
-Double_t UniformProposal::GetProposalDensity(RooArgSet& /* xPrime */,
-                                              RooArgSet& x)
+// Return the probability of proposing the point x1 given the starting
+// point x2
+Double_t UniformProposal::GetProposalDensity(RooArgSet& /* x1 */,
+                                              RooArgSet& x2)
 {
    // For a uniform proposal, all points have equal probability and the
    // value of the proposal density function is:
    // 1 / (N-dimensional volume of interval)
    Double_t volume = 1.0;
-   TIterator* it = x.createIterator();
+   TIterator* it = x2.createIterator();
    RooRealVar* var;
    while ((var = (RooRealVar*)it->Next()) != NULL)
       volume *= (var->getMax() - var->getMin());

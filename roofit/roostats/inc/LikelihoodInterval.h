@@ -32,8 +32,8 @@ namespace RooStats {
       LikelihoodInterval();
       LikelihoodInterval(const char* name);
       LikelihoodInterval(const char* name, const char* title);
-      LikelihoodInterval(const char* name, RooAbsReal*, RooArgSet*);
-      LikelihoodInterval(const char* name, const char* title, RooAbsReal*, RooArgSet*);
+      LikelihoodInterval(const char* name, RooAbsReal*, const RooArgSet*);
+      LikelihoodInterval(const char* name, const char* title, RooAbsReal*, const RooArgSet*);
       virtual ~LikelihoodInterval();
         
       virtual Bool_t IsInInterval(RooArgSet&);
@@ -56,7 +56,7 @@ namespace RooStats {
 
    private:
 
-      RooArgSet* fParameters; // parameters of interest for this interval
+      const RooArgSet* fParameters; // parameters of interest for this interval
       RooAbsReal* fLikelihoodRatio; // likelihood ratio function used to make contours
       Double_t fConfidenceLevel; // Requested confidence level (eg. 0.95 for 95% CL)
 

@@ -30,7 +30,7 @@ namespace RooStats {
 
       /// Constructor for HybridResult
       HybridResult(const char *name,const char *title,std::vector<double>& testStat_sb_vals,
-                   std::vector<double>& testStat_b_vals);
+                   std::vector<double>& testStat_b_vals, bool sumLargerValues=true);
 
       HybridResult(const char *name,const char *title);
 
@@ -68,6 +68,7 @@ namespace RooStats {
 
       mutable bool fComputationsNulDoneFlag; // flag if the fNullPValue computation have been already done or not (ie need to be refreshed)
       mutable bool fComputationsAltDoneFlag; // flag if the fAlternatePValue computation have been already done or not (ie need to be refreshed)
+      bool fSumLargerValues; // p-value for velues of testStat >= testStat_data (or testStat <= testStat_data)
  
    protected:
 

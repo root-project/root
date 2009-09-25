@@ -79,6 +79,8 @@ namespace RooStats {
       // set a workspace that owns all the necessary components for the analysis
       virtual void SetWorkspace(RooWorkspace& ws) {fWS = &ws;}
 
+    virtual void SetModel(const ModelConfig &) {} /* to be implemented */
+
       // Set the DataSet, add to the the workspace if not already there
       virtual void SetData(RooAbsData& data) {      
          if (!fWS) {

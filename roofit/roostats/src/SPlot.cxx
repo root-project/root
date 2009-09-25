@@ -144,6 +144,18 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
   else
     fSData = (RooDataSet*) &data;
 
+  // Add check that yieldsList contains all RooRealVars
+  TIterator* iter = yieldsList.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (!dynamic_cast<RooRealVar*>(arg)) {
+      coutE(InputArguments) << "SPlot::SPlot(" << GetName() << ") input argument " 
+			    << arg->GetName() << " is not of type RooRealVar " << endl ;
+      throw string(Form("SPlot::SPlot(%s) input argument %s is not of type RooRealVar",GetName(),arg->GetName())) ;
+    }
+  }
+  delete iter ;
+
   //Construct a new SPlot class,
   //calculate sWeights, and include them
   //in the RooDataSet of this class.
