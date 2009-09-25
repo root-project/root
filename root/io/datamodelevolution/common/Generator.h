@@ -19,6 +19,7 @@
 #include <TROOT.h>
 #include <TClassTable.h>
 #include <TRandom.h>
+#include "TError.h"
 
 //------------------------------------------------------------------------------
 // Random number generators
@@ -49,6 +50,10 @@ short genShort()
 //------------------------------------------------------------------------------
 std::vector<TClass*> getConcreteClasses( TClass *base )
 {
+   Int_t oldlevel = gErrorIgnoreLevel;
+   // Hide the warning about the missing pair dictionary.
+   gErrorIgnoreLevel = kError;
+
    std::vector<TClass*> ret;
    for( int i = 0; i < gClassTable->Classes(); ++i )
    {
@@ -65,6 +70,7 @@ std::vector<TClass*> getConcreteClasses( TClass *base )
       if( cl && !(cl->Property() & kIsAbstract) && cl->GetBaseClass( base->GetName() ) )
          ret.push_back( cl );
    }
+   gErrorIgnoreLevel = oldlevel;
    return ret;
 }
 

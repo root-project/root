@@ -25,7 +25,7 @@
   code="{ m_unit = 10*onfile.m_unit; }"
 
 #pragma read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit" target="m_md_set" \
-  code="{ newObj->m_d.m_unit = 10*onfile.m_unit; m_md_set = true; newObj->Print(); }"
+  code="{ newObj->SetMdUnit( 10*onfile.m_unit) ; m_md_set = true; newObj->Print(); }"
 
 //#pragma read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit; ClassAIns m_d" target="m_d" \
 //  code="{ m_d = onfile.m_d; m_d.m_punit = 10*onfile.m_unit; }"
