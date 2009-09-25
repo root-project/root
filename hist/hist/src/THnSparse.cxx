@@ -20,10 +20,13 @@
 #include "TH1D.h"
 #include "TH2D.h"
 #include "TH3D.h"
+#include "TF1.h"
 #include "TInterpreter.h"
 #include "TMath.h"
 #include "TRandom.h"
 #include <cassert>
+
+#include "TError.h"
 
 //______________________________________________________________________________
 //
@@ -506,6 +509,89 @@ TH1* THnSparse::CreateHist(const char* name, const char* title,
    hist->Rebuild();
 
    return hist;
+}
+
+//______________________________________________________________________________
+THnSparse* THnSparse::CreateSparse(const char* name, const char* title,
+                                   const TH1* h, Int_t ChunkSize)
+{
+   //Arrays that will be needed later. Initialized to 0.
+   int nbins[3] = {0,0,0};
+   double minRange[3] = {0.,0.,0.};
+   double maxRange[3] = {0.,0.,0.};
+
+   // Get the dimension of the TH1
+   int ndim = 1;
+   if      ( dynamic_cast<const TH3*>(h) ) ndim = 3;
+   else if ( dynamic_cast<const TH2*>(h) ) ndim = 2;
+
+   // Start getting the arrays filled, depending on the dimension of
+   // TH1
+   if ( ndim >= 1 )
+   {
+      nbins[0]    = h->GetNbinsX();
+      minRange[0] = h->GetXaxis()->GetXmin();
+      maxRange[0] = h->GetXaxis()->GetXmax();
+   }
+
+   if ( ndim >= 2 )
+   {
+      nbins[1]    = h->GetNbinsY();
+      minRange[1] = h->GetYaxis()->GetXmin();
+      maxRange[1] = h->GetYaxis()->GetXmax();
+   }
+
+   if ( ndim >= 3 )
+   {
+      nbins[2]    = h->GetNbinsZ();
+      minRange[2] = h->GetZaxis()->GetXmin();
+      maxRange[2] = h->GetZaxis()->GetXmax();
+   }
+
+
+   // Create the corresponding THnSparse, depending on the storage
+   // type of the TH1. The class name will be "TH??\0" where the first
+   // ? is 1,2 or 3 and the second ? indicates the stograge as C, S,
+   // I, F or D.
+   THnSparse* s = 0;
+   const char* cname( h->ClassName() );
+   if      ( cname[3] == 'C' )
+      s = new THnSparseC(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
+   else if ( cname[3] == 'S' )
+      s = new THnSparseS(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
+   else if ( cname[3] == 'I' )
+      s = new THnSparseI(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
+   else if ( cname[3] == 'F' )
+      s = new THnSparseF(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
+   else if ( cname[3] == 'D' )
+      s = new THnSparseD(name, title, ndim, nbins, minRange, maxRange, ChunkSize);
+   else  
+   {
+      ::Warning("THnSparse::CreateSparse", "Unknown Type of Histogram");
+      return 0;
+   }
+
+   // Get the array to know the number of entries of the TH1
+   const TArray *array = dynamic_cast<const TArray*>(h);
+   if ( !array ) 
+   {
+      ::Warning("THnSparse::CreateSparse", "Unknown Type of Histogram");
+      return 0;
+   }
+
+   // Fill the THnSparse with the bins that have content.
+   for ( int i = 0; i < array->GetSize(); ++i )
+   {
+      double value = h->GetBinContent(i);
+      if ( !value ) continue;
+      double error = h->GetBinError(i);
+      int x[3] = {0,0,0};
+      h->GetBinXYZ(i, x[0], x[1], x[2]);
+      s->SetBinContent(x, value);
+      s->SetBinError(x, error);
+   }
+
+   return s;
 }
 
 //______________________________________________________________________________
@@ -1104,18 +1190,11 @@ void THnSparse::Multiply(const THnSparse* h)
    if (GetCalculateErrors() || h->GetCalculateErrors())
       wantErrors = kTRUE;
 
-   // Create a temporary histogram where to store the result
-   TObjArray newaxes(fNdimensions);
-   for (Int_t d = 0; d < fNdimensions; ++d) {
-      newaxes.AddAt(GetAxis(d),d);
-   }
-
    if (wantErrors) Sumw2();
 
    Double_t nEntries = GetEntries();
    // Now multiply the contents: in this case we have the intersection of the sets of bins
    Int_t* coord = new Int_t[fNdimensions];
-   memset(coord, 0, sizeof(Int_t) * fNdimensions);
    for (Long64_t i = 0; i < GetNbins(); ++i) {
       // Get the content of the bin from the current histogram
       Double_t v1 = GetBinContent(i, coord);
@@ -1130,8 +1209,50 @@ void THnSparse::Multiply(const THnSparse* h)
    }
    SetEntries(nEntries);
 
-   //now deposit the result in the original histogram....
    delete [] coord;
+}
+
+//______________________________________________________________________________
+void THnSparse::Multiply(TF1* f, Double_t c)
+{
+    // Performs the operation: this = this*c*f1
+    // if errors are defined, errors are also recalculated.
+    //
+    // Only bins inside the function range are recomputed.
+    // IMPORTANT NOTE: If you intend to use the errors of this histogram later
+    // you should call Sumw2 before making this operation.
+    // This is particularly important if you fit the histogram after THnSparse::Multiply
+
+   std::vector<Int_t>    coord(fNdimensions);
+   std::vector<Double_t> points(fNdimensions);
+   
+   Double_t value(0);
+   
+   Bool_t wantErrors( GetCalculateErrors() );
+   if (wantErrors) Sumw2();
+
+   ULong64_t nEntries = GetNbins();
+   for ( ULong64_t i = 0; i < nEntries; i++ )
+   {
+      value = GetBinContent( i, &coord[0] );
+      
+      // Get the bin co-ordinates given an coord
+      for ( Int_t j = 0; j < fNdimensions; j++ )
+         points[j] = GetAxis( j )->GetBinCenter( coord[j] );
+      
+      if ( !f->IsInside( &points[0] ) )
+         continue;
+      TF1::RejectPoint(kFALSE);
+      
+      // Evaulate function at points
+      Double_t fvalue = f->EvalPar( &points[0], NULL );
+      
+      SetBinContent( &coord[0], c * fvalue * value );
+      if (wantErrors) {
+         Double_t error( GetBinError( i ) );
+         SetBinError(&coord[0], c * fvalue * error);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1147,18 +1268,12 @@ void THnSparse::Divide(const THnSparse *h)
    if (!CheckConsistency(h, "Divide"))return;
 
    // Trigger error calculation if h has it
-   Bool_t wantErrors=kFALSE;
+   Bool_t wantErrors=GetCalculateErrors();
    if (!GetCalculateErrors() && h->GetCalculateErrors())
       wantErrors=kTRUE;
 
    // Remember original histogram statistics
    Double_t nEntries = fEntries;
-
-   // Create a temporary histogram where to store the result
-   TObjArray newaxes(fNdimensions);
-   for (Int_t d = 0; d < fNdimensions; ++d) {
-      newaxes.AddAt(GetAxis(d),d);
-   }
 
    if (wantErrors) Sumw2();
    Bool_t didWarn = kFALSE;
