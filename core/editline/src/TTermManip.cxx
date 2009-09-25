@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TTermManip.h"
+#include <strings.h>
 
 #ifndef _MSC_VER
 # include "rlcurses.h"
@@ -31,7 +32,7 @@ TTermManip::TTermManip():
    fSetDefault(0),
    fStartUnderline(0),
    fStopUnderline(0),
-   fPutc(DefaultPutchar),
+   fPutc((PutcFunc_t)DefaultPutchar),
    fCurrentColorIdx(-1),
    fCurrentlyBold(false),
    fCurrentlyUnderlined(false) {

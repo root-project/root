@@ -16,6 +16,8 @@
 #include <cstring>
 #include <stdio.h>
 
+extern "C" typedef int (*PutcFunc_t)(int);
+
 // setupterm must be called before TTermManip can be created!
 class TTermManip {
 public:
@@ -102,7 +104,6 @@ private:
    char* fSetDefault; // set normal color
    char* fStartUnderline; // start underline;
    char* fStopUnderline; // stop underline;
-   typedef int (*PutcFunc_t)(int);
    PutcFunc_t fPutc;
    int fCurrentColorIdx;   // index if the currently active color
    bool fCurrentlyBold;  // whether bold is active

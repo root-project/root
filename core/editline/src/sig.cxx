@@ -63,7 +63,7 @@ el_private const int sighdl[] = {
    - 1
 };
 
-el_private void sig_handler(int);
+el_private extern "C" void sig_handler(int);
 
 /* sig_handler():
  *	This is the handler called for all signals

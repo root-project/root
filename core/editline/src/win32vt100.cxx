@@ -14,6 +14,7 @@
 #include <cstring>
 #include <stdarg.h>
 #include <stdio.h>
+#include <strings.h>
 
 char*
 tigetstr(const char* cap) {
