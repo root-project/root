@@ -19,48 +19,94 @@ void calorimeters(Bool_t hdata = kTRUE)
    TFile* hf = TFile::Open(histFile, "CACHEREAD");
    TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
    TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
-
-   // fill data
    TEveCaloData* data = 0;
    if (hdata)
    {
       TEveCaloDataHist* hd = new TEveCaloDataHist();
       Int_t slice;
       slice = hd->AddHistogram(ecalHist);
-      hd->RefSliceInfo(slice).Setup("ECAL", 0.3, kGreen+2);
+      hd->RefSliceInfo(slice).Setup("ECAL", 0.3, 41);
       slice = hd->AddHistogram(hcalHist);
-      hd->RefSliceInfo(slice).Setup("HCAL", 0.1, kRed);
+      hd->RefSliceInfo(slice).Setup("HCAL", 0.1, 46);
       data = hd;
    }
    else
    {
       data = MakeVecData(ecalHist, hcalHist);
    }
-   // set eta, phi axis title with symbol.ttf font
+   // axis attrib
    data->GetEtaBins()->SetTitleFont(120);
    data->GetEtaBins()->SetTitle("h");
    data->GetPhiBins()->SetTitleFont(120);
    data->GetPhiBins()->SetTitle("f");
 
-   // different calorimeter presentations
 
-   // Lego
-   TGLViewer* v = gEve->GetDefaultGLViewer();
-   TEveScene* s = (TEveScene*)gEve->GetEventScene();
-   MakeCaloLego(data, v, s);
+   // window mng
+   TEveWindowSlot  *slot  = 0;
+   TEveWindowFrame *frame = 0;
+   TEveViewer *v = 0;
+   slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   TEveWindowPack* packH = slot->MakePack();
+   packH->SetShowTitleBar(kFALSE);
+   packH->SetHorizontal();
 
-   // 3D
-   TEveViewer* v3D = gEve->SpawnNewViewer("3D Calo");
-   TEveScene*  s3D = gEve->SpawnNewScene("3D Scene");
-   v3D->AddScene(s3D);
-   TEveCalo3D* calo3d = MakeCalo3D(data, v3D->GetGLViewer(), s3D);
+   {
+      // 3D calorimeter
+      TEveCalo3D* calo3d = MakeCalo3D(data, gEve->GetDefaultGLViewer(), gEve->GetEventScene());
 
-   // 2D
-   TEveViewer* vP = gEve->SpawnNewViewer("2D Calo");
-   TEveScene*  sP = gEve->SpawnNewScene("Projected");
-   vP->AddScene(sP);
-   MakeCalo2D(calo3d, vP->GetGLViewer(), sP);
+      // projected
+      slot = packH->NewSlot();
+      TEveWindowPack* pack1 = slot->MakePack();
+      // RPhi
+      slot = pack1->NewSlot();
+      v = new TEveViewer("RPhi-Viewer");
+      v->SpawnGLEmbeddedViewer();
+      slot->ReplaceWindow(v);
+      gEve->GetViewers()->AddElement(v);
+      TEveScene*  sP = gEve->SpawnNewScene("Projected");
+      v->AddScene(sP);
+      MakeCalo2D(calo3d, v->GetGLViewer(), sP, TEveProjection::kPT_RPhi);
+      // RhoZ
+      slot = pack1->NewSlot();
+      v = new TEveViewer("RhoZ-Viewer");
+      v->SpawnGLEmbeddedViewer();
+      slot->ReplaceWindow(v);
+      gEve->GetViewers()->AddElement(v);
+      TEveScene*  s = gEve->SpawnNewScene("RhoZ");
+      v->AddScene(s);
+      MakeCalo2D(calo3d, v->GetGLViewer(), s, TEveProjection::kPT_RhoZ);
+   }
+   {
+      // root canvas
+      slot = packH->NewSlot();
+      TEveWindowPack* pack2 = slot->MakePack();
+      pack2->SetShowTitleBar(kFALSE);
+      slot = pack2->NewSlot();
+      slot->StartEmbedding();
+      TCanvas* can = new TCanvas("Root Canvas");
+      can->ToggleEditor();
+      can->cd();
+      THStack *hs = new THStack("hs","Stacked 1D histograms");
+      ecalHist->SetFillColor(data->GetSliceColor(0));
+      hcalHist->SetFillColor(data->GetSliceColor(1));
+      hs->Add(ecalHist);;
+      hs->Add(hcalHist);
+      hs->Draw();
+      slot->StopEmbedding();
+   }
+   {
+      // calorimeter lego
+      slot = pack2->NewSlot();
+      v = new TEveViewer("LegoViewer");
+      v->SpawnGLViewer(gEve->GetEditor());
+      slot->ReplaceWindow(v);
+      gEve->GetViewers()->AddElement(v);
+      TEveScene*  sL = gEve->SpawnNewScene("Projected");
+      v->AddScene(sL);
+      MakeCaloLego(data, v->GetGLViewer(), sL);
+   }
 
+   gEve->GetBrowser()->GetTabRight()->SetTab(1);
    gEve->Redraw3D(1);
 }
 
@@ -75,14 +121,8 @@ void MakeCaloLego(TEveCaloData* data, TGLViewer* v, TEveScene* s)
 
    gStyle->SetPalette(1, 0);
    Bool_t usePalette = kFALSE;
-   if (usePalette)
-   {  
-      lego->Set2DMode(TEveCaloLego::kValColor);
-   }
-   else
-   {
-      lego->Set2DMode(TEveCaloLego::kValSize);
-   }
+   lego->Set2DMode(TEveCaloLego::kValSize);
+
    // lego->SetAutoRebin(kFALSE);
    lego->SetName("Calorimeter Lego");
    lego->SetPixelsPerBin(8);
@@ -96,7 +136,7 @@ void MakeCaloLego(TEveCaloData* data, TGLViewer* v, TEveScene* s)
    overlay->SetCaloLego(lego);
 
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   v->SetEventHandler(new TEveLegoEventHandler(lego, v->GetGLWidget(), v));
+   v->SetEventHandler(new TEveLegoEventHandler(v->GetGLWidget(), v, lego));
    gEve->AddToListTree(lego, kTRUE);
 }
 
@@ -117,21 +157,22 @@ TEveCalo3D* MakeCalo3D(TEveCaloData* data, TGLViewer* v, TEveScene *s )
 }
 
 //______________________________________________________________________________
-void MakeCalo2D(TEveCalo3D* calo3d, TGLViewer *v, TEveScene *s)
+void MakeCalo2D(TEveCalo3D* calo3d, TGLViewer *v, TEveScene *s, TEveProjection::EPType_e t)
 {
    // projected calorimeter
 
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
+   //   v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
 
    TEveProjectionManager* mng = new TEveProjectionManager();
-   mng->SetProjection(TEveProjection::kPT_RhoZ);
+   mng->SetProjection(t);
 
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
    s->AddElement(axes);
    TEveCalo2D* calo2d = (TEveCalo2D*) mng->ImportElements(calo3d);
    s->AddElement(calo2d);
 
+   gEve->AddToListTree(mng, kTRUE);
    gEve->AddToListTree(calo2d, kTRUE);
 }
 
