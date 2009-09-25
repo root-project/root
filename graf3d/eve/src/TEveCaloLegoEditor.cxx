@@ -120,7 +120,7 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    fCell2DTextMin->SetNELength(5);
    fCell2DTextMin->SetShowSlider(kFALSE);
    fCell2DTextMin->Build();
-   fCell2DTextMin->SetLimits(1, 1e3);
+   fCell2DTextMin->SetLimits(1, 1000);
    fCell2DTextMin->SetToolTip("Draw cell values above N pixels.");
    fCell2DTextMin->Connect("ValueSet(Double_t)", "TEveCaloLegoEditor", this, "DoCell2DTextMin()");
    AddFrame(fCell2DTextMin, new TGLayoutHints(kLHintsTop, 1, 2, 1, 2));
