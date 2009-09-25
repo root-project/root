@@ -134,7 +134,8 @@ protected:
    TGRadioButton       *fLibMinuit;        // set default minimization library (Minuit)
    TGRadioButton       *fLibMinuit2;       // set Minuit2 as minimization library
    TGRadioButton       *fLibFumili;        // set Fumili as minimization library
-   TGRadioButton       *fLibGSL;           // set Fumili as minimization library
+   TGRadioButton       *fLibGSL;           // set GSL as minimization library
+   TGRadioButton       *fLibGenetics;      // set Genetic/GALib as minimization library
    TGComboBox          *fMinMethodList;    // set the minimization method
    TGNumberEntryField  *fErrorScale;       // contains error scale set for minimization
    TGNumberEntryField  *fTolerance;        // contains tolerance set for minimization
