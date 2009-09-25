@@ -332,7 +332,6 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
 
    static const TEveException eh("TEveGeoNode::DumpShapeTree ");
 
-   printf("dump_shape_tree %s \n", geon->GetName());
    TGeoNode*   tnode   = 0;
    TGeoVolume* tvolume = 0;
    TGeoShape*  tshape  = 0;
