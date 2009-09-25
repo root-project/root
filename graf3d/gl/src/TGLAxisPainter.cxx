@@ -95,7 +95,8 @@ void TGLAxisPainter::FormAxisValue(Double_t  val, TString &s) const
    static char label[256];
 
    sprintf(label, &fFormat[0], val);
-   s =  label;
+   s = label;
+   s = s.Strip(TString::kLeading);
 
    if (s == "-." || s == "-0")
    {
