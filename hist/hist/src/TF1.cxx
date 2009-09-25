@@ -1171,6 +1171,10 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
    // interpolation error is decreased by making the step size h smaller.
    //
    // Author: Anna Kreshuk
+   
+   if (GetNdim() > 1) { 
+      Warning("Derivative","Function dimension is larger than one");
+   }
 
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
@@ -1231,6 +1235,9 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
+   if (GetNdim() > 1) { 
+      Warning("Derivative2","Function dimension is larger than one");
+   }
 
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
@@ -1291,6 +1298,10 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
+   if (GetNdim() > 1) { 
+      Warning("Derivative3","Function dimension is larger than one");
+   }
+
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
    GetRange(xmin, xmax);
@@ -1319,7 +1330,7 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
 //______________________________________________________________________________
 Double_t TF1::DerivativeError()
 {
-   // Static function returning the error of the last call to the Derivative
+   // Static function returning the error of the last call to the of Derivative's
    // functions
 
    return gErrorTF1;
