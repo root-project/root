@@ -28,18 +28,17 @@ void do_del( A* obj )
 int test3(const char *mode = "")
 {
    using namespace std;
-   srandom( time( 0 ) );
 
    Dumper out("", "01", "rv1");
 
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV2_dictcint.so";
+   const char* dictname = "./libDataModelV2_dictcint";
 
    if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV2_dictrflx.so";
+      dictname = "./libDataModelV2_dictrflx";
       gROOT->ProcessLine("ROOT :: Cintex :: Cintex :: Enable();");
       out.fPrefix = "rflx_";
    }

@@ -23,10 +23,10 @@ HAVEGCCXML?=$(shell which gccxml 2>/dev/null)
 %_cint.cpp: %.h %LinkDef.h
 	$(CMDECHO) rootcint -f $@ -c $^
 
-lib%_dictrflx.$(DllSuf): %_rflx.o
+lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf)
 	$(BuildFromObj)
 
-lib%_dictcint.$(DllSuf): %_cint.o
+lib%_dictcint.$(DllSuf): %_cint.$(ObjSuf)
 	$(BuildFromObj)
 
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)

@@ -26,16 +26,15 @@ void do_del( A* obj )
 
 int test1(const char *mode = "") {
    using namespace std;
-   srandom( time( 0 ) );
 
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV1_dictcint.so";
+   const char* dictname = "./libDataModelV1_dictcint";
    const char* prefix = ""; 
    if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV1_dictrflx.so";
+      dictname = "./libDataModelV1_dictrflx";
       gSystem->Load("libCintex");
       gROOT->ProcessLine("ROOT::Cintex::Cintex::Enable();");
       prefix = "rflx_";
