@@ -4,7 +4,7 @@
 // Demonstrates usage of class TEveText - 2D & 3D text in GL.
 
 
-TEveText* text_test()
+TEveText* text()
 {
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);
 

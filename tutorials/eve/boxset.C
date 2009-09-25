@@ -3,8 +3,8 @@
 
 // Demonstrates usage of TEveBoxSet class.
 
-TEveBoxSet* boxset_test(Float_t x=0, Float_t y=0, Float_t z=0,
-                        Int_t num=100, Bool_t register=kTRUE)
+TEveBoxSet* boxset(Float_t x=0, Float_t y=0, Float_t z=0,
+		   Int_t num=100, Bool_t register=kTRUE)
 {
    TEveManager::Create();
 
@@ -35,8 +35,8 @@ TEveBoxSet* boxset_test(Float_t x=0, Float_t y=0, Float_t z=0,
    return q;
 }
 
-TEveBoxSet* boxset_test_colisval(Float_t x=0, Float_t y=0, Float_t z=0,
-                                 Int_t num=100, Bool_t register=kTRUE)
+TEveBoxSet* boxset_colisval(Float_t x=0, Float_t y=0, Float_t z=0,
+			    Int_t num=100, Bool_t register=kTRUE)
 {
    TEveManager::Create();
 

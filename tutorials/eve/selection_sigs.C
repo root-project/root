@@ -39,7 +39,7 @@ public:
    }
 };
 
-void test_selection_sigs()
+void selection_sigs()
 {
    TEveManager::Create();
 

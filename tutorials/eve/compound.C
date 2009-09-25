@@ -20,7 +20,7 @@ TEveLine* random_line(TRandom& rnd, Int_t n, Float_t delta)
    return line;
 }
 
-void test_compound()
+void compound()
 {
    TEveManager::Create();
 

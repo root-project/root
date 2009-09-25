@@ -1,11 +1,11 @@
-// @(#)root/eve:$Id: quad_test.C 25245 2008-08-25 21:44:09Z matevz $
+// @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
-// Demonstates usage pre-scaling for automatic 2D projections.
+// Demonstates usage of automatic 2D projections - class TEveProjectionManager.
 
 const char* esd_geom_file_name = "http://root.cern.ch/files/alice_ESDgeometry.root";
 
-void projection_test_prescale()
+void projection()
 {
    TFile::SetCacheFileDir(".");
    TEveManager::Create();
@@ -20,33 +20,9 @@ void projection_test_prescale()
 
    // projections
    TEveProjectionManager* mng = new TEveProjectionManager();
-   {
-      mng->SetProjection(TEveProjection::kPT_RPhi);
-      TEveProjection* p = mng->GetProjection();
-      p->AddPreScaleEntry(0, 0,   4);     // r scale 2 from 0
-      p->AddPreScaleEntry(0, 45,  1);    // r scale 1 from 45
-      p->AddPreScaleEntry(0, 310, 0.5);
-      p->SetUsePreScale(1);
-   }
-   {
-      mng->SetProjection(TEveProjection::kPT_RhoZ);
-      TEveProjection* p = mng->GetProjection();
-      // Increase silicon tracker
-      p->AddPreScaleEntry(0, 0, 4);     // rho scale 4 from 0
-      p->AddPreScaleEntry(1, 0, 4);     // z   scale 4 from 0
-      // Normal for TPC
-      p->AddPreScaleEntry(0, 45,  1);   // rho scale 1 from 45
-      p->AddPreScaleEntry(1, 110, 1);   // z   scale 1 from 110
-      // Reduce the rest
-      p->AddPreScaleEntry(0, 310, 0.5);
-      p->AddPreScaleEntry(1, 250, 0.5);
-      p->SetUsePreScale(1);
-   }
-   mng->SetProjection(TEveProjection::kPT_RPhi);
    s->AddElement(mng);
-
-
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
+   axes->SetTitle("TEveProjections demo");
    s->AddElement(axes);
    gEve->AddToListTree(axes, kTRUE);
    gEve->AddToListTree(mng, kTRUE);

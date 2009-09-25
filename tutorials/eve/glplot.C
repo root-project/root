@@ -6,7 +6,7 @@
 // other scene objects - the usage of depth buffer destroys
 // depth-buffer coherence.
 
-void test_glplot()
+void glplot()
 {
    TEveManager::Create();
    gEve->GetDefaultGLViewer()->SetCurrentCamera(TGLViewer::kCameraPerspXOY);

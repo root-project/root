@@ -3,7 +3,7 @@
 
 // Demonstates usage of 2D digit class TEveQuadSet.
 
-TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
+TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
                        Int_t num=100, Bool_t register=kTRUE)
 {
    TEveManager::Create();
@@ -46,12 +46,12 @@ TEveQuadSet* quad_test(Float_t x=0, Float_t y=0, Float_t z=0,
       gEve->Redraw3D(kTRUE);
    }
 
-   Info("quad_test", "use alt-left-mouse to select individual digits.");
+   Info("quadset", "use alt-left-mouse to select individual digits.");
 
    return q;
 }
 
-TEveQuadSet* quad_test_emc(Float_t x=0, Float_t y=0, Float_t z=0,
+TEveQuadSet* quadset_emc(Float_t x=0, Float_t y=0, Float_t z=0,
                            Int_t num=100)
 {
    TEveManager::Create();
@@ -82,7 +82,7 @@ TEveQuadSet* quad_test_emc(Float_t x=0, Float_t y=0, Float_t z=0,
    return q;
 }
 
-TEveQuadSet* quad_test_circ()
+TEveQuadSet* quadset_circ()
 {
    TEveManager::Create();
 
@@ -130,7 +130,7 @@ TEveQuadSet* quad_test_circ()
    return q;
 }
 
-TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
+TEveQuadSet* quadset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
                            Int_t num=100, Bool_t register=kTRUE)
 {
    TEveManager::Create();
@@ -183,7 +183,7 @@ TEveQuadSet* quad_test_hex(Float_t x=0, Float_t y=0, Float_t z=0,
    return q;
 }
 
-TEveQuadSet* quad_test_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
+TEveQuadSet* quadset_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
                              Int_t num=100, Bool_t register=kTRUE)
 {
    TEveManager::Create();
@@ -217,13 +217,13 @@ TEveQuadSet* quad_test_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
    // This show another way of getting notified about
    // secondary selection hit. The callback function and the
    // setting of it must be done in compiled code.
-   gROOT->ProcessLine(".L quad_test_callback.cxx+");
-   quad_test_set_callback(q);
+   gROOT->ProcessLine(".L quadset_callback.cxx+");
+   quadset_set_callback(q);
 
    return q;
 }
 
-void quad_test_hierarchy(Int_t n=4)
+void quadset_hierarchy(Int_t n=4)
 {
    TEveManager::Create();
 
@@ -243,7 +243,7 @@ void quad_test_hierarchy(Int_t n=4)
 
    for (Int_t i=0; i<n; ++i)
    {
-      TEveQuadSet* qs = quad_test_hexid(0, 0, 50*i, 50, kFALSE);
+      TEveQuadSet* qs = quadset_hexid(0, 0, 50*i, 50, kFALSE);
       qs->SetPalette(pal);
       qs->SetFrame(box);
       gEve->AddElement(qs, l);

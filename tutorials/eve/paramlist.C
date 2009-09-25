@@ -7,8 +7,8 @@
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {
-   gSystem->CompileMacro("test_paramlist.C");
-   test_paramlist();
+   gSystem->CompileMacro("paramlist.C");
+   paramlist();
 }
 #else
 
@@ -42,7 +42,7 @@ public:
    ClassDef(TParamFollower, 0);
 };
 
-void test_paramlist()
+void paramlist()
 {
    TEveManager::Create();
 

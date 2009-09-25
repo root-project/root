@@ -3,7 +3,7 @@
 
 const char* esd_geom_file_name = "http://root.cern.ch/files/alice_ESDgeometry.root";
 
-void jetcone_test()
+void jetcone()
 {
    TEveManager::Create();
 

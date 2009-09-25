@@ -6,7 +6,7 @@
 TGFileBrowser *g_hlt_browser = 0;
 TCanvas       *g_hlt_canvas  = 0;
 
-void test_histobrowser(const char* name="HLT Histos")
+void histobrowser(const char* name="HLT Histos")
 {
    TEveManager::Create();
 

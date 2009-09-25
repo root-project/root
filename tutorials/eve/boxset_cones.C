@@ -3,7 +3,7 @@
 
 // Demonstrates usage of 'cone' mode in TEveBoxSet class.
 
-TEveBoxSet* cone_test(Float_t x=0, Float_t y=0, Float_t z=0,
+TEveBoxSet* boxset_cones(Float_t x=0, Float_t y=0, Float_t z=0,
 		      Int_t num=100, Bool_t register=kTRUE)
 {
   TEveManager::Create();
@@ -58,7 +58,7 @@ TEveBoxSet* cone_test(Float_t x=0, Float_t y=0, Float_t z=0,
 }
 
 TEveBoxSet*
-elliptic_cone_test(Float_t x=0, Float_t y=0, Float_t z=0,
+elliptic_boxset_cones(Float_t x=0, Float_t y=0, Float_t z=0,
                    Int_t num=100, Bool_t register=kTRUE)
 {
   TEveManager::Create();

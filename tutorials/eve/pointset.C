@@ -13,7 +13,7 @@
 
 #endif
 
-TEvePointSet* pointset_test(Int_t npoints = 512, TEveElement* parent=0)
+TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=0)
 {
    TEveManager::Create();
 
@@ -50,7 +50,7 @@ TEvePointSet* pointset_test(Int_t npoints = 512, TEveElement* parent=0)
 }
 
 TEvePointSet*
-pointset_test_hierarchy(Int_t level=3, Int_t nps=1, Int_t fac=2,
+pointset_hierarchy(Int_t level=3, Int_t nps=1, Int_t fac=2,
                         Int_t npoints=512, TEveElement* parent=0)
 {
    // This only works in compiled mode!
@@ -60,16 +60,16 @@ pointset_test_hierarchy(Int_t level=3, Int_t nps=1, Int_t fac=2,
    for (Int_t i=0; i<nps; ++i)
    {
       printf("level=%d nps=%d i=%d\n", level, nps, i);
-      ps = pointset_test(npoints, parent);
+      ps = pointset(npoints, parent);
       if (level)
       {
-         pointset_test_hierarchy(level, nps*fac, fac, npoints/fac, ps);
+         pointset_hierarchy(level, nps*fac, fac, npoints/fac, ps);
       }
    }
    return ps;
 }
 
-TEvePointSetArray* pointsetarray_test()
+TEvePointSetArray* pointsetarray()
 {
    TEveManager::Create();
 

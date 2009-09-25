@@ -12,11 +12,11 @@
 #include "TCanvas.h"
 #include "TGTab.h"
 
-void test_windows()
+void window_manager()
 {
    TEveManager::Create();
 
-   TEveUtil::Macro("pointset_test.C");
+   TEveUtil::Macro("pointset.C");
 
    PackTest();
    DetailTest();

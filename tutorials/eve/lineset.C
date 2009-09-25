@@ -3,7 +3,7 @@
 
 // Demonstrates usage of class TEveStraightLineSet.
 
-TEveStraightLineSet* lineset_test(Int_t nlines = 40, Int_t nmarkers = 4) 
+TEveStraightLineSet* lineset(Int_t nlines = 40, Int_t nmarkers = 4) 
 {
    TEveManager::Create();
 
@@ -32,7 +32,7 @@ TEveStraightLineSet* lineset_test(Int_t nlines = 40, Int_t nmarkers = 4)
    return ls;
 }
 
-TEveStraightLineSet* lineset_test_2d(Int_t nlines = 40, Int_t nmarkers = 4) 
+TEveStraightLineSet* lineset_2d(Int_t nlines = 40, Int_t nmarkers = 4) 
 {
    TEveManager::Create();
 

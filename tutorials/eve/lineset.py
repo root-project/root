@@ -1,10 +1,10 @@
-## Translated from 'lineset_test.C'.
-## Run as: python -i lineset_test.py
+## Translated from 'lineset.C'.
+## Run as: python -i lineset.py
 
 import ROOT
 ROOT.PyConfig.GUIThreadScheduleOnce += [ ROOT.TEveManager.Create ]
 
-def lineset_test(nlines = 40, nmarkers = 4):
+def lineset(nlines = 40, nmarkers = 4):
     r = ROOT.TRandom(0)
     s = 100
 
@@ -25,4 +25,4 @@ def lineset_test(nlines = 40, nmarkers = 4):
 
 if __name__=='__main__':
     ROOT.PyGUIThread.finishSchedule()
-    lineset_test()
+    lineset()
