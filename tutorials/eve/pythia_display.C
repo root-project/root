@@ -42,17 +42,15 @@ void pythia_make_gui();
 
 void pythia_display()
 {
-   const TString weh("pythia_display()");
-
    if (g_pythia != 0)
    {
-      Warning(weh, "Already initialized.");
+      Warning("pythia_display()", "Already initialized.");
       return;
    }
 #ifndef G__WIN32 // libPythia6 is a static library on Windoze
    if (gSystem->Load("libPythia6") < 0)
    {
-      Error(weh, "Could not load 'libPythia6', make sure it is available!");
+      Error("pythia_display()", "Could not load 'libPythia6', make sure it is available!");
       return;
    }
 #endif
@@ -60,7 +58,7 @@ void pythia_display()
 
    if (gROOT->LoadMacro("MultiView.C+") != 0)
    {
-      Error(weh, "Failed loading MultiView.C in compiled mode.");
+      Error("pythia_display()", "Failed loading MultiView.C in compiled mode.");
       return;
    }
 

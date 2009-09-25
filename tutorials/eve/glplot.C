@@ -16,6 +16,7 @@ void glplot()
    x = new TEvePlot3D("EvePlot - TF2");
    x->SetLogZ(kTRUE);
    x->SetPlot(f2,"glsurf4");
+   x->RefMainTrans().MoveLF(2, 1);
    gEve->AddElement(x);
 
 
@@ -24,15 +25,7 @@ void glplot()
    h31->SetFillColor(2);
    x = new TEvePlot3D("EvePlot - TH3F");
    x->SetPlot(h31, "glbox");
-   // This is useless now - the scale of plots can not be known.
-   // One Timur fixes them all to be in a unit-box, the following line
-   // should give resonable effects.
-   // x->RefMainTrans().MoveLF(2, -3);
-   // Until then, be a bit more brutal - set so that they fit together.
-   // This is completely different when log-scale is not used for the first plot.
-   x->RefMainTrans().MoveLF(2, -5);
-   x->RefMainTrans().Scale(1.8, 1.8, 1.8);
-
+   x->RefMainTrans().MoveLF(2, -1);
    gEve->AddElement(x);
 
    gEve->Redraw3D(kTRUE);

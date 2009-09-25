@@ -1,7 +1,29 @@
 // @(#)root/eve:$Id: text_test.C 26717 2008-12-07 22:07:55Z matevz $
 // Author: Alja Mrak-Tadel
 
-// Makes some tracks with three different magnetic field types.
+// Demonstrates usage of TEveTrackPRopagator with different magnetic
+// field configurations.
+// Needs to be run in compiled mode.
+// root
+//   .L track.C+
+//   track(3, kTRUE)
+//
+// void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
+// Modes are
+// 0 - B = 0, no difference btween signed and charge particles;
+// 1 - constant B field (along z, but could have arbitrary direction);
+// 2 - variable B field, sign change at  R = 200 cm;
+// 3 - magnetic field with a zero-field region;
+// 4 - CMS magnetic field - simple track;
+// 5 - CMS magnetic field - track with different path-marks.
+
+#if defined(__CINT__) && !defined(__MAKECINT__)
+{
+   Info("track.C", "Has to be run in compiled mode, esp. if you want to pass parameters.");
+   gSystem->CompileMacro("track.C");
+   track();
+}
+#else
 
 #include "TEveTrackPropagator.h"
 #include "TEveTrack.h"
@@ -140,7 +162,7 @@ TEveTrack* make_track(TEveTrackPropagator* prop, Int_t sign)
 }
 
 
-void track(Int_t bCase = 5, Bool_t isRungeKutta = kTRUE)
+void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
 {
 #if defined (__CINT__)
    Error("track.C", "Must be run in compiled mode!");
@@ -166,7 +188,7 @@ void track(Int_t bCase = 5, Bool_t isRungeKutta = kTRUE)
    }
 
    TEveTrack *track = 0;
-   switch (bCase)
+   switch (mode)
    {
       case 0:
       {
@@ -219,6 +241,7 @@ void track(Int_t bCase = 5, Bool_t isRungeKutta = kTRUE)
 
       case 4:
       {
+         // Magnetic field of CMS I.
          CmsMagField* mf = new CmsMagField;
          mf->setReverseState(true);
 
@@ -251,6 +274,7 @@ void track(Int_t bCase = 5, Bool_t isRungeKutta = kTRUE)
 
       case 5:
       {
+         // Magnetic field of CMS I.
          CmsMagField* mf = new CmsMagField;
          mf->setReverseState(true);
          mf->setSimpleModel(false);
@@ -297,7 +321,15 @@ void track(Int_t bCase = 5, Bool_t isRungeKutta = kTRUE)
 
    track->MakeTrack();
 
-   TEveViewer* v = gEve->GetDefaultViewer();
-   v->GetGLViewer()->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
-   gEve->Redraw3D(1);
+   TEveViewer *ev = gEve->GetDefaultViewer();
+   TGLViewer  *gv = ev->GetGLViewer();
+   gv->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
+
+   gEve->Redraw3D(kTRUE);
+   gSystem->ProcessEvents();
+
+   gv->CurrentCamera().RotateRad(-0.5, 1.4);
+   gv->RequestDraw();
 }
+
+#endif
