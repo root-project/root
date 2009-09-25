@@ -4747,7 +4747,7 @@ void TTreeFormula::ResetLoading()
    if ( fNoper < n ) {
       n = fNoper;
    }
-   for(Int_t k=0; k<n; ++k) {
+   for(Int_t k=0; k <= n; ++k) {
       TTreeFormula *f = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
       if (f) {
          f->ResetLoading();
@@ -5055,10 +5055,10 @@ void TTreeFormula::ResetDimensions() {
            // If the leaf belongs to a friend tree which has an index, we might
            // be in the case where some entry do not exist.
 
-           TTree *realtree = fTree->GetTree();
+           TTree *realtree = fTree ? fTree->GetTree() : 0;
            TTree *tleaf = leaf->GetBranch()->GetTree();
            if (tleaf && tleaf != realtree && tleaf->GetTreeIndex()) {
-              // reset the multiplicity
+              // Reset the multiplicity if we have a friend tree with an index.
               fMultiplicity = 1;
            }
 
