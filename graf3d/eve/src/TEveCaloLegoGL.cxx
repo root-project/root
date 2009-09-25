@@ -21,6 +21,7 @@
 #include "TGLCamera.h"
 #include "TGLUtil.h"
 #include "TColor.h"
+#include "TROOT.h"
 
 
 #include "TEveCaloLegoGL.h"
@@ -216,8 +217,6 @@ void TEveCaloLegoGL::MakeDisplayList() const
             fDLMap[s] = glGenLists(1);
 
          glNewList(fDLMap[s], GL_COMPILE);
-         glLoadName(s);
-         glPushName(0);
          for (Int_t i=1; i<=fEtaAxis->GetNbins(); ++i)
          {
             for (Int_t j=1; j<=fPhiAxis->GetNbins(); ++j)
@@ -242,7 +241,6 @@ void TEveCaloLegoGL::MakeDisplayList() const
                }
             }
          }
-         glPopName();
          glEndList();
       }
    }
@@ -464,11 +462,26 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 
       // repaint axis if tower dobule-clicked
       if (fM->fTowerPicked >= 0) {
-         TEveCaloData::CellData_t cd;
-         fM->fData->GetCellData(fM->fCellList[fM->fTowerPicked], cd);
-         WrapTwoPi(cd.fPhiMin, cd.fPhiMax);
+         Float_t x1, y1, y2;
+         if (fM->fBinStep == 1)
+         {
+            TEveCaloData::CellData_t cd;
+            fM->fData->GetCellData(fM->fCellList[fM->fTowerPicked], cd);
+            x1 = cd.EtaMin();
+            y1 = cd.PhiMin();
+            y2 =  cd.PhiMax();
+         }
+         else {
+            Int_t nEta   = fEtaAxis->GetNbins();
+            Int_t pB = Int_t(fM->fTowerPicked/(nEta+2));
+            Int_t eB = fM->fTowerPicked - pB*(nEta+2);
+            x1 = fEtaAxis->GetBinLowEdge(eB);
+            y1 = fPhiAxis->GetBinLowEdge(pB);
+            y2 = fPhiAxis->GetBinLowEdge(pB);
+         }
+         WrapTwoPi(y1, y2);
          glPushMatrix();
-         glTranslatef(cd.EtaMin(), cd.PhiMin(), 0);
+         glTranslatef(x1, y1, 0);
          fAxisPainter.RnrLines();
          fAxisPainter.RnrLabels();
          glPopMatrix();
@@ -1086,20 +1099,24 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       }
    }
 
-   fFontColor = fM->fFontColor > -1 ? fM->fFontColor :  rnrCtx.ColorSet().Markup().GetColorIndex();
+   fFontColor = fM->fFontColor;
    fGridColor = fM->fGridColor;
-   if (fM->fGridColor < 0)
+   if (fGridColor < 0 || fFontColor < 0)
    {
-      TGLViewer* glV = (TGLViewer*)rnrCtx.GetViewer();
-      if (glV->IsColorSetDark())
-      {
-         if (fM->fFontColor < 0) fFontColor = TColor::GetColorDark(fFontColor);
-         fGridColor = TColor::GetColorDark(fFontColor);
+      TColor* c1 = gROOT->GetColor(rnrCtx.ColorSet().Markup().GetColorIndex());
+      TColor* c2 = gROOT->GetColor(rnrCtx.ColorSet().Background().GetColorIndex());
+      Float_t f1, f2;
+      if (fFontColor < 0) {
+         f1 = 0.8; f2 = 0.2;
+         fFontColor = TColor::GetColor(c1->GetRed()  *f1  + c2->GetRed()  *f2,
+                                       c1->GetGreen()*f1  + c2->GetGreen()*f2,
+                                       c1->GetBlue() *f1  + c2->GetBlue() *f2);
       }
-      else
-      {
-         if (fM->fFontColor < 0) fFontColor = TColor::GetColorBright(fFontColor);
-         fGridColor = TColor::GetColorBright(fFontColor);
+      if (fGridColor < 0) {
+         f1 = 0.3; f2 = 0.3;
+         fGridColor = TColor::GetColor(c1->GetRed()  *f1  + c2->GetRed()  *f2,
+                                       c1->GetGreen()*f1  + c2->GetGreen()*f2,
+                                       c1->GetBlue() *f1  + c2->GetBlue() *f2);
       }
    }
 
@@ -1113,7 +1130,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       glPushName(0);
       glLoadName(0);
       if (fCells3D) {
-         if (!fDLCacheOK) MakeDisplayList();
+         if (fDLCacheOK == kFALSE || idCacheChanged ) MakeDisplayList();
          DrawCells3D(rnrCtx);
       } else {
          glDisable(GL_LIGHTING);
@@ -1155,24 +1172,17 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
 
    if (rec.GetN() < 2) return;
 
+   Int_t cellID = rec.GetItem(1);
+
    if (fM->fBinStep == 1) {
-      Int_t cellID = rec.GetItem(1);
       TEveCaloData::CellData_t cellData;
       fM->fData->GetCellData(fM->fCellList[cellID], cellData);
       printf(">> Selected cell in eta %f phi %f \n", cellData.Eta(), cellData.Phi());
 
-      if (fCells3D) {
-         printf("Tower %d in slice %d val %f\n",
-                fM->fCellList[cellID].fTower,
-                fM->fCellList[cellID].fSlice, cellData.fValue);
-      } else {
-         printf("Tower %d in slice %d val %f\n",
-                fM->fCellList[cellID].fTower,
-                fM->fCellList[cellID].fSlice, cellData.fValue);
-      }
-
+      printf("Tower %d in slice %d val %f\n",
+             fM->fCellList[cellID].fTower,
+             fM->fCellList[cellID].fSlice, cellData.fValue);
    } else {
-      Int_t cellID = fCells3D ? rec.GetItem(2) : rec.GetItem(1);
       if (cellID)
       {
          Int_t nEta   = fEtaAxis->GetNbins();
@@ -1180,18 +1190,12 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
          Int_t etaBin = cellID - phiBin*(nEta+2);
          Float_t* v = fRebinData.GetSliceVals(cellID);
 
-         printf(">> Selected cell in eta %f phi %f \n", fEtaAxis->GetBinCenter(etaBin), fPhiAxis->GetBinCenter(phiBin));
+         printf(">> Selected cell in eta %f phi %f \n",
+                fEtaAxis->GetBinCenter(etaBin), fPhiAxis->GetBinCenter(phiBin));
 
-         if (fCells3D) {
-            Int_t s = rec.GetItem(1);
-            printf("Tower %d slice %d val %f \n", rec.GetItem(2), s, v[s]);
-         }
-         else
-         {
-            printf("Tower %d vals: \n", cellID);
-            for (Int_t s = 0; s < fRebinData.fNSlices; s++) {
-               printf("slice %d val %f\n", s, v[s]);
-            }
+         printf("Tower %d vals: \n", cellID);
+         for (Int_t s = 0; s < fRebinData.fNSlices; s++) {
+            printf("slice %d val %f\n", s, v[s]);
          }
       }
    }

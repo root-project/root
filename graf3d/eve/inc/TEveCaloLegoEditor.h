@@ -38,11 +38,11 @@ protected:
    TGColorSelect     *fPlaneColor;
    TGNumberEntry     *fTransparency;
 
-   TEveGValuator     *fNZSteps;
-
    TGComboBox        *fProjection;
    TGComboBox        *f2DMode;
    TGComboBox        *fBoxMode;
+
+   TEveGValuator     *fCell2DTextMin;
 
    TGVerticalFrame   *fRebinFrame;
    TGCheckButton     *fAutoRebin;
@@ -63,11 +63,11 @@ public:
    void DoPlaneColor(Pixel_t color);
    void DoTransparency();
 
-   void DoNZSteps();
-
    void DoProjection();
    void Do2DMode();
    void DoBoxMode();
+
+   void DoCell2DTextMin();
 
    void DoAutoRebin();
    void DoPixelsPerBin();

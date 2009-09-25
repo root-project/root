@@ -106,10 +106,11 @@ void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx)
 
       TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
       TGLFont font;
-      Int_t fs = TMath::Nint(TMath::Sqrt(vp.Width()*vp.Width() + vp.Height()*vp.Height())*0.01);
+      Int_t fs = TMath::Nint(TMath::Sqrt(vp.Width()*vp.Width() + vp.Height()*vp.Height())*0.02);
       rnrCtx.RegisterFontNoScale(fs, "arial", TGLFont::kPixmap, font);
       const char* txt = Form("(%f, %f, %f)", v[0], v[1], v[2]);
-      font.Render(txt, 1, 1, 0, TGLFont::kRight, TGLFont::kBottom);
+      TGLUtil::Color(rnrCtx.ColorSet().Markup());
+      font.Render(txt, 0.98, 0.98, 0, TGLFont::kRight, TGLFont::kBottom);
 
       // render cross
       TGLUtil::Color(kRed);
@@ -145,7 +146,7 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
    fAxisPainter->SetAttAxis(fAxis);
    fAxisPainter->SetUseAxisColors(fUseAxisColors);
 
-   Color_t lineColor = fUseAxisColors ? fAxis->GetAxisColor() : rnrCtx.ColorSet().Foreground().GetColorIndex();
+   Color_t lineColor = fUseAxisColors ? fAxis->GetAxisColor() : rnrCtx.ColorSet().Markup().GetColorIndex();
 
    // font size calculated relative to viewport diagonal
    GLint   vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
@@ -170,8 +171,8 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
    Double_t minY = fFrustum[1] + off;
    Double_t maxY = fFrustum[3] - off;
    // grid lines
-   Char_t alpha = 70; //primary
-   Char_t alpha2 = 80; //seconndary
+   Char_t alpha = 80; //primary
+   Char_t alpha2 = 90; //seconndary
    Int_t secSteps = fAxis->GetNdivisions() % 100;
    GLushort stipple =  0x5555; // 33333 more rare
 
@@ -199,6 +200,7 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
    fAxisPainter->RnrLines();
    glPopMatrix();
 
+   TGLUtil::LineWidth(1);
    if (grid)
    {
       TGLAxisPainter::LabVec_t& labs = fAxisPainter->RefLabVec();
@@ -363,7 +365,7 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
    xdir.Normalise();
    ydir.Normalise();
 
-   TGLUtil::Color(rnrCtx.ColorSet().Markup());
+   TGLUtil::Color(rnrCtx.ColorSet().Foreground());
 
    const char* txt = Form("%.*f", (exp < 0) ? -exp : 0, red);
    Float_t bb[6];
