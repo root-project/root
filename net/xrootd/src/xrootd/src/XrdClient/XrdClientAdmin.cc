@@ -791,10 +791,11 @@ bool XrdClientAdmin::Prepare(vecString vs, kXR_char option, kXR_char prty)
    }
 
 
-   for (int i = 0; i < vs.GetSize()+50; i++) {
+   for (int i = 0; i < vs.GetSize()+50; i+=50) {
      joinStrings(buf, vs, i, i+49);
 
      if (!Prepare(buf.c_str(), option, prty)) return false;
+     buf = "";
    }
 
    return true;
