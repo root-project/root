@@ -97,7 +97,7 @@ public:
 #else 
 
       /* Initialized data */
-      static unsigned int work[n+1];
+      unsigned int work[n+1];
       for(unsigned int i=0; i<n+1; ++i) work[i] = 0;
 
       static typename MatrixRep::value_type det = 0;
