@@ -1,4 +1,94 @@
+<!-- DOCTYPE HTML --
+  -- SYSTEM><html><head><title>graf3d</title></head><body -->
+
 <br> 
 <hr> 
-<a name="graf3d"></a> 
+<a name="graf3d"></a>
+
+<h3>Eve</h3>
+
+<h4>Major changes</h4>
+
+<ul>
+
+<li> Add support for hierarchical positioning of TEveElements in any
+specific scene. This allows for easier positioning of elements in
+dynamic scenes when child elements are attached to their parent
+elements and are supposed to follow their movements / rotations.
+
+<li> Several significant improvements in TEveCaloLego classes.
+<ul>
+<li> In top view draw cell values, if their screen size is above given limit.
+<li> New energy-scales drawn as overlay (in color and size mode). The
+legend can be moved around the screen with the mouse.
+<li> Fix transition between orthographic and perspective camera in
+TEveCaloLego event handler.
+<li> Use color-sets in overlays and axis in order to automatically
+keep same contrast when changing background color.
+</ul>
+
+<li> In TEveTrackPropagator improve overall trajectory extrapolation
+through the path-marks. Fix a problem with path-mark / boundary
+approach with near-zero magnetic field.
+
+</ul>
+
+<h4>Minor changes</h4>
+
+<ul>
+
+<li> In TEveFrambox add support for drawing of back-polygons for 3D
+frame-boxes. Those should be transparent, otherwise the things inside
+are not visible.
+
+<li> TEveRGBAPalette - implement additional flag fFixColorRange specifying
+how the palette color range gets mapped onto signal values:<ol>
+<li>true  - LowLimit -> HighLimit
+<li>false - MinValue -> MaxValue.</ol>
+
+</ul>
+
+
+<!------------------------------------------------------------------------------>
+
+
+<br>
+<hr>
 <h3>OpenGL</h3>
+
+<h4>Major changes</h4>
+
+<ul>
+
+<li> Support for rendering into frame-buffer objects (FBO).
+
+<li> Using FBOs, it is now possible to save bitmap image formats at
+  any resolution and even when the GL window is not on screen.
+
+<li> Add support for global scaling of point-sizes, line-widths and font-sizes.
+
+<li> Editor for "gl5d" option was improved.
+
+<li> TGLTH3Composition class to combine several TH3s in one plot.
+
+</ul>
+
+<h4>Minor changes</h4>
+
+<ul>
+
+<li> Use Diagonal() instead of Volume() to determine if a bounding-box
+is empty and also for sorting of the scene-elements by size. The
+previous implementation caused problems with 2D and 1D objects.
+
+<li> Several improvements in camera configuration and handling.
+
+<li> When initializing TGLClipPlane for the first time, place it in
+the center of the scene's bounding-box. Before that, plane was always
+positioned at (0,0,0) which lead to unexpected behaviour when scene
+was not centered at the origin.
+
+</ul>
+
+
+<!-- /body></html -->
