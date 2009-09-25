@@ -2,7 +2,7 @@ CLEAN_TARGETS += *.log main *Dict* Event.root *~ copiedEvent$(ExeSuf) \
 	createfile.out readfile.out libEvent.$(DllSuf)\
 	Event.cxx Event.h EventLinkDef.h $(ALL_LIBRARIES) *.manifest \
         jetclass.root
-TEST_TARGETS += load Simple
+TEST_TARGETS += load Simple alias
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -24,4 +24,7 @@ endif
 load.log: loadcode_C.$(DllSuf)
 
 load: load.log
+	$(TestDiff)
+
+alias: alias.clog
 	$(TestDiff)
