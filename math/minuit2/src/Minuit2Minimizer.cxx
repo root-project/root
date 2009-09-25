@@ -56,7 +56,7 @@ namespace Minuit2 {
       gErrorIgnoreLevel = 1001; 
       return prevErrorIgnoreLevel; 
    }
-   return -1;  // no op in this case  
+   return -2;  // no op in this case  
 }
 
 void RestoreGlobalPrintLevel(int value) { 
@@ -333,8 +333,8 @@ bool Minuit2Minimizer::Minimize() {
       hesse( *fMinuitFCN, *fMinimum, maxfcn); 
    }
 
-
-   if (prev_level >= 0) RestoreGlobalPrintLevel(prev_level);
+   // -2 is the highest low invalid value for gErrorIgnoreLevel
+   if (prev_level > -2) RestoreGlobalPrintLevel(prev_level);
    
    fState = fMinimum->UserState(); 
    bool ok =  ExamineMinimum(*fMinimum);
