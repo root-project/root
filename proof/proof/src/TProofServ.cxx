@@ -2476,6 +2476,9 @@ Int_t TProofServ::SetupCommon()
       }
    }
 
+   // Set group
+   fGroup = gEnv->GetValue("ProofServ.ProofGroup", "default");
+
    // Check and make sure "cache" directory exists
    fCacheDir = gEnv->GetValue("ProofServ.CacheDir",
                                TString::Format("%s/%s", fWorkDir.Data(), kPROOF_CacheDir));
@@ -2584,8 +2587,7 @@ Int_t TProofServ::SetupCommon()
    // Server image
    fImage = gEnv->GetValue("ProofServ.Image", "");
 
-   // Set group and get the group priority
-   fGroup = gEnv->GetValue("ProofServ.ProofGroup", "");
+   // Get the group priority
    if (IsMaster()) {
       // Send session tag to client
       TMessage m(kPROOF_SESSIONTAG);
