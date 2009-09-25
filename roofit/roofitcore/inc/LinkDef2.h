@@ -13,7 +13,7 @@
 #pragma link C++ class RooEffGenContext+ ;
 #pragma link C++ class RooEllipse+ ;
 #pragma link C++ class RooErrorVar+ ;
-#pragma link C++ class RooFitResult+ ;
+#pragma link C++ class RooFitResult- ;
 #pragma link C++ class RooFormula+ ;
 #pragma link C++ class RooFormulaVar+ ;
 #pragma link C++ class RooGaussKronrodIntegrator1D+ ;

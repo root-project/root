@@ -1287,3 +1287,68 @@ RooPrintable::StyleOption RooFitResult::defaultPrintStyle(Option_t* opt) const
   return RooPrintable::defaultPrintStyle(opt) ;
 }
 
+
+//______________________________________________________________________________
+void RooFitResult::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooFitResult.
+    
+  if (R__b.IsReading()) {
+    UInt_t R__s, R__c;
+    Version_t R__v = R__b.ReadVersion(&R__s, &R__c);     
+    if (R__v>3) {    
+      R__b.ReadClassBuffer(RooFitResult::Class(),this,R__v,R__s,R__c);    
+    } else {
+      // backward compatibitily streaming 
+      TNamed::Streamer(R__b);
+      RooPrintable::Streamer(R__b);
+      RooDirItem::Streamer(R__b);
+      R__b >> _status;
+      R__b >> _covQual;
+      R__b >> _numBadNLL;
+      R__b >> _minNLL;
+      R__b >> _edm;
+      R__b >> _constPars;
+      R__b >> _initPars;
+      R__b >> _finalPars;
+      R__b >> _globalCorr;
+      _corrMatrix.Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, RooFitResult::IsA());
+
+      // Now fill new-style covariance and correlation matrix information
+      // from legacy form
+      _CM = new TMatrixDSym(_finalPars->getSize()) ;
+      _VM = new TMatrixDSym(_CM->GetNcols()) ;
+      _GC = new TVectorD(_CM->GetNcols()) ;
+      
+      TIterator *gcIter = _globalCorr->createIterator() ;
+      TIterator *parIter = _finalPars->createIterator() ;
+      RooRealVar* gcVal = 0;
+      for (unsigned int i = 0; i < (unsigned int)_CM->GetNcols() ; ++i) {
+	
+	// Find the next global correlation slot to fill, skipping fixed parameters
+	gcVal = (RooRealVar*) gcIter->Next() ;
+	(*_GC)(i) = gcVal->getVal() ;
+	
+	// Fill a row of the correlation matrix
+	TIterator* cIter = ((RooArgList*)_corrMatrix.At(i))->createIterator() ;
+	for (unsigned int it = 0; it < (unsigned int)_CM->GetNcols() ; ++it) {
+	  RooRealVar* cVal = (RooRealVar*) cIter->Next() ;	  
+	  double value = cVal->getVal() ;
+	  (*_CM)(it,i) = value ;
+	  (*_CM)(i,it) = value;
+	  (*_VM)(it,i) = value*((RooRealVar*)_finalPars->at(i))->getError()*((RooRealVar*)_finalPars->at(it))->getError() ;
+	  (*_VM)(i,it) = (*_VM)(it,i) ;
+	}
+	delete cIter ;
+      }
+      
+      delete gcIter ;
+      delete parIter ;                 
+    }
+
+   } else {
+      R__b.WriteClassBuffer(RooFitResult::Class(),this);
+   }
+}
+

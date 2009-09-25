@@ -62,7 +62,8 @@ RooRealIntegral::RooRealIntegral() :
   _valid(kFALSE),
   _numIntEngine(0),
   _numIntegrand(0),
-  _params(0)
+  _params(0),
+  _cacheNum(kFALSE)
 {
   _facListIter = _facList.createIterator() ;
   _jacListIter = _jacList.createIterator() ;
