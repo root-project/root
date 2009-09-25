@@ -678,18 +678,11 @@ Int_t TEveCaloLegoGL::GetGridStep(TGLRnrCtx &rnrCtx) const
    Int_t j0 = fM->fData->GetPhiBins()->FindBin(fM->GetPhiMin());
    Int_t j1 = fM->fData->GetPhiBins()->FindBin(fM->GetPhiMax());
 
-   Int_t pixelsPerBin = TMath::Nint(d / Sqrt((i0 - i1) * (i0 - i1) + (j0 - j1) * (j0 - j1)));
+   Int_t pixelsPerBin = 0.5 * TMath::Nint(d / Sqrt((i0 - i1) * (i0 - i1) + (j0 - j1) * (j0 - j1)));
    Int_t ngroup = 1;
-   if (fM->fAutoRebin)
-   {
-      if (pixelsPerBin < fM->fPixelsPerBin*0.5) {
-         ngroup = 4;
-      } else if (pixelsPerBin < fM->fPixelsPerBin) {
-         ngroup = 2;
-      } else {
-         ngroup = 1;
-      }
-   }
+   if (fM->fAutoRebin && fM->fPixelsPerBin > pixelsPerBin)
+      ngroup = TMath::Nint(fM->fPixelsPerBin*0.5/pixelsPerBin);
+
    return ngroup;
 }
 
