@@ -2526,7 +2526,6 @@ void XrdProofdProofServMgr::GetTagDirs(XrdProofdProtocol *p, XrdProofdProofServ 
                                        XrdOucString &sessiondir, XrdOucString &sesswrkdir)
 {
    // Determine the unique tag and relevant dirs for this session
-   XPDLOC(SMGR, "ProofServMgr::GetTagDirs")
 
    // Client sandbox
    XrdOucString udir = p->Client()->Sandbox()->Dir();
@@ -2535,9 +2534,7 @@ void XrdProofdProofServMgr::GetTagDirs(XrdProofdProtocol *p, XrdProofdProofServ 
    XrdOucString host = fMgr->Host();
    if (host.find(".") != STR_NPOS)
       host.erase(host.find("."));
-   TRACE(XERR, "sesstag: "<<sesstag);
    XPDFORM(sesstag, "%s-%d-%d", host.c_str(), (int)time(0), (int)getpid());
-   TRACE(XERR, "sesstag: "<<sesstag);
 
    // Session dir
    topsesstag = sesstag;
@@ -3505,7 +3502,8 @@ int XrdProofdProofServMgr::SetUserEnvironment(XrdProofdProtocol *p)
 
    if (fMgr->ChangeOwn()) {
       // acquire permanently target user privileges
-      TRACE(DBG, "acquiring target user identity");
+      TRACE(DBG, "acquiring target user identity: "<<(uid_t)p->Client()->UI().fUid<<
+                                               ", "<<(gid_t)p->Client()->UI().fGid);
       if (XrdSysPriv::ChangePerm((uid_t)p->Client()->UI().fUid,
                                  (gid_t)p->Client()->UI().fGid) != 0) {
          TRACE(XERR, "can't acquire "<< p->Client()->UI().fUser <<" identity");
