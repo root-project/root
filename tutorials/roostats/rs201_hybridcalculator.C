@@ -65,27 +65,22 @@ void rs201_hybridcalculator(int ntoys = 3000)
   /// run HybridCalculator on those inputs 
 
   // use interface from HypoTest calculator by default
-#ifndef USE_OLD_API
 
-    HybridCalculator myHybridCalc("myHybridCalc","HybridCalculator example",
+  HybridCalculator myHybridCalc("myHybridCalc","HybridCalculator example",
                                 *data, tot_pdf , bkg_ext_pdf ,
                                 &nuisance_parameters, &bkg_yield_prior); 
-
-  myHybridCalc.SetNumberOfToys(ntoys); 
-  //myHybridCalc.UseNuisance(false);                            
-
-  // calculate by running ntoys for the S+B and B hypothesis and retrieve the result
-  HybridResult* myHybridResult = myHybridCalc.GetHypoTest(); 
-
-#else // use old api 
-  HybridCalculator myHybridCalc("myHybridCalc","HybridCalculator example",tot_pdf,bkg_ext_pdf,observables,nuisance_parameters,bkg_yield_prior);
 
   // here I use the default test statistics: 2*lnQ (optional)
   myHybridCalc.SetTestStatistics(1);
 
-  /// run ntoys toys with gaussian prior on the background yield
-  HybridResult* myHybridResult = myHybridCalc.Calculate(*data,ntoys,true);
-#endif
+  myHybridCalc.SetNumberOfToys(ntoys); 
+  //myHybridCalc.UseNuisance(false);                            
+
+  // for speed up generation (do binned data) 
+  myHybridCalc.SetGenerateBinned(false); 
+
+  // calculate by running ntoys for the S+B and B hypothesis and retrieve the result
+  HybridResult* myHybridResult = myHybridCalc.GetHypoTest(); 
 
   if (! myHybridResult) { 
      std::cerr << "\nError returned from Hypothesis test" << std::endl;
@@ -121,6 +116,7 @@ void rs201_hybridcalculator(int ntoys = 3000)
   double clb_data = myHybridResult->CLb();
   double cls_data = myHybridResult->CLs();
   double data_significance = myHybridResult->Significance();
+  double min2lnQ_data = myHybridResult->GetTestStat_data();
 
   /// compute the mean expected significance from toys
   double mean_sb_toys_test_stat = myHybridPlot->GetSBmean();
@@ -128,7 +124,7 @@ void rs201_hybridcalculator(int ntoys = 3000)
   double toys_significance = myHybridResult->Significance();
 
   std::cout << "Completed HybridCalculator example:\n"; 
-  std::cout << " - -2lnQ = " << myHybridResult->GetTestStat_data() << endl;
+  std::cout << " - -2lnQ = " << min2lnQ_data << endl;
   std::cout << " - CL_sb = " << clsb_data << std::endl;
   std::cout << " - CL_b  = " << clb_data << std::endl;
   std::cout << " - CL_s  = " << cls_data << std::endl;

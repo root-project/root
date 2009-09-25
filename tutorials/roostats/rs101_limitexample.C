@@ -16,15 +16,6 @@
 #include "RooGlobalFunc.h"
 #endif
 
-#include "RooStats/ProfileLikelihoodCalculator.h"
-#include "RooStats/MCMCCalculator.h"
-#include "RooStats/UniformProposal.h"
-#include "RooStats/FeldmanCousins.h"
-#include "RooStats/NumberCountingPdfFactory.h"
-#include "RooStats/ConfInterval.h"
-#include "RooStats/PointSetInterval.h"
-#include "RooStats/LikelihoodInterval.h"
-#include "RooStats/LikelihoodIntervalPlot.h"
 #include "RooProfileLL.h"
 #include "RooAbsPdf.h"
 #include "RooStats/HypoTestResult.h"
@@ -37,7 +28,17 @@
 #include "TLine.h"
 #include "TStopwatch.h"
 
+#include "RooStats/ProfileLikelihoodCalculator.h"
+#include "RooStats/MCMCCalculator.h"
+#include "RooStats/UniformProposal.h"
+#include "RooStats/FeldmanCousins.h"
+#include "RooStats/NumberCountingPdfFactory.h"
+#include "RooStats/ConfInterval.h"
+#include "RooStats/PointSetInterval.h"
+#include "RooStats/LikelihoodInterval.h"
+#include "RooStats/LikelihoodIntervalPlot.h"
 #include "RooStats/RooStatsUtils.h"
+
 
 // use this order for safety on library loading
 using namespace RooFit ;
@@ -87,10 +88,7 @@ void rs101_limitexample()
   RooArgSet paramOfInterest(*s);
 
   // First, let's use a Calculator based on the Profile Likelihood Ratio
-  ProfileLikelihoodCalculator plc;
-  plc.SetPdf(*modelWithConstraints);
-  plc.SetData(*data); 
-  plc.SetParameters( paramOfInterest );
+  ProfileLikelihoodCalculator plc(*data, *modelWithConstraints, paramOfInterest); 
   plc.SetTestSize(.1);
   ConfInterval* lrint = plc.GetInterval();  // that was easy.
 
@@ -172,13 +170,13 @@ void rs101_limitexample()
   // 3-d plot of the parameter points
   dataCanvas->cd(2);
   // also plot the points in the markov chain
-  TTree& chain =  ((RooTreeDataStore*) ((MCMCInterval*)mcmcint)->GetChain()->store())->tree();
+  TTree& chain =  ((RooTreeDataStore*) ((MCMCInterval*)mcmcint)->GetChain()->GetAsConstDataSet())->tree();
   chain.SetMarkerStyle(6);
   chain.SetMarkerColor(kRed);
   chain.Draw("s:ratioSigEff:ratioBkgEff","w","box"); // 3-d box proporional to posterior
 
   // the points used in the profile construction
-  TTree& parameterScan =  ((RooTreeDataStore*) fc.GetPointsToScan()->store())->tree();
+  TTree& parameterScan =  ((RooTreeDataStore*) fc.GetPointsToScan()->GetAsConstDataSet())->tree();
   parameterScan.SetMarkerStyle(24);
   parameterScan.Draw("s:ratioSigEff:ratioBkgEff","","same");
 

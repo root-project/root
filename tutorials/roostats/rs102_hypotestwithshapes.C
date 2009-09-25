@@ -176,10 +176,14 @@ void DoHypothesisTest(RooWorkspace* wks){
 
 
   // Use a RooStats ProfileLikleihoodCalculator to do the hypothesis test.
-  ProfileLikelihoodCalculator plc;
-  plc.SetWorkspace(*wks);
-  plc.SetCommonPdf("model");
-  plc.SetData("data"); 
+  ModelConfig model; 
+  model.SetWorkspace(*wks);
+  model.SetPdf("model");
+
+  //plc.SetData("data");
+ 
+  ProfileLikelihoodCalculator plc; 
+  plc.SetData( *(wks->data("data") )); 
 
   // here we explicitly set the value of the parameters for the null.  
   // We want no signal contribution, eg. mu = 0
@@ -187,7 +191,18 @@ void DoHypothesisTest(RooWorkspace* wks){
   RooArgSet* nullParams = new RooArgSet("nullParams");
   nullParams->addClone(*mu);
   nullParams->setRealValue("mu",0); 
-  plc.SetNullParameters(*nullParams);
+
+  
+  //plc.SetNullParameters(*nullParams);
+  plc.SetModel(model);
+  // NOTE: using snapshot will import nullparams 
+  // in the WS and merge with existing "mu" 
+  // model.SetSnapshot(*nullParams);
+  
+  //use instead setNuisanceParameters
+  plc.SetNullParameters( *nullParams);
+
+ 
 
   // We get a HypoTestResult out of the calculator, and we can query it.
   HypoTestResult* htr = plc.GetHypoTest();
