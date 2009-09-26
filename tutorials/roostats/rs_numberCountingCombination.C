@@ -99,6 +99,7 @@ void rs_numberCountingCombination_expected()
   // Step 4, Define the null hypothesis for the calculator
   // Here you need to know the name of the variables corresponding to hypothesis.
   RooRealVar* mu = wspace->var("masterSignal"); 
+  RooArgSet* poi = new RooArgSet(*mu); 
   RooArgSet* nullParams = new RooArgSet("nullParams");
   nullParams->addClone(*mu);
   // here we explicitly set the value of the parameters for the null
@@ -107,11 +108,12 @@ void rs_numberCountingCombination_expected()
   // Step 5, Create a calculator for doing the hypothesis test.
   // because this is a 
   ProfileLikelihoodCalculator plc( *wspace->data("ExpectedNumberCountingData"),
-				   *wspace->pdf("TopLevelPdf"), *nullParams);
+				   *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
 				  
 
   // Step 6, Use the Calculator to get a HypoTestResult
   HypoTestResult* htr = plc.GetHypoTest();
+  assert(htr != 0);
   cout << "-------------------------------------------------" << endl;
   cout << "The p-value for the null is " << htr->NullPValue() << endl;
   cout << "Corresponding to a signifcance of " << htr->Significance() << endl;
@@ -174,6 +176,7 @@ void rs_numberCountingCombination_expected()
   delete lrint;
   delete htr;
   delete wspace;
+  delete poi; 
   delete nullParams;
 
 
@@ -260,6 +263,7 @@ void rs_numberCountingCombination_observed()
   // Step 4, Define the null hypothesis for the calculator
   // Here you need to know the name of the variables corresponding to hypothesis.
   RooRealVar* mu = wspace->var("masterSignal"); 
+  RooArgSet* poi = new RooArgSet(*mu); 
   RooArgSet* nullParams = new RooArgSet("nullParams");
   nullParams->addClone(*mu);
   // here we explicitly set the value of the parameters for the null
@@ -268,7 +272,7 @@ void rs_numberCountingCombination_observed()
   // Step 5, Create a calculator for doing the hypothesis test.
   // because this is a 
   ProfileLikelihoodCalculator plc( *wspace->data("ObservedNumberCountingData"),
-				   *wspace->pdf("TopLevelPdf"), *nullParams);
+				   *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
 	
   wspace->var("tau_0")->Print();
   wspace->var("tau_1")->Print();
@@ -306,7 +310,7 @@ void rs_numberCountingCombination_observed()
   delete htr;
   delete wspace;
   delete nullParams;
-
+  delete poi; 
 
   
 }
@@ -355,6 +359,7 @@ void rs_numberCountingCombination_observedWithTau()
   // Step 4, Define the null hypothesis for the calculator
   // Here you need to know the name of the variables corresponding to hypothesis.
   RooRealVar* mu = wspace->var("masterSignal"); 
+  RooArgSet* poi = new RooArgSet(*mu); 
   RooArgSet* nullParams = new RooArgSet("nullParams");
   nullParams->addClone(*mu);
   // here we explicitly set the value of the parameters for the null
@@ -363,7 +368,7 @@ void rs_numberCountingCombination_observedWithTau()
   // Step 5, Create a calculator for doing the hypothesis test.
   // because this is a 
   ProfileLikelihoodCalculator plc( *wspace->data("ObservedNumberCountingDataWithSideband"),
-				   *wspace->pdf("TopLevelPdf"), *nullParams);
+				   *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
 				  
 
 
@@ -402,7 +407,7 @@ void rs_numberCountingCombination_observedWithTau()
   delete htr;
   delete wspace;
   delete nullParams;
-
+  delete poi; 
 
   
 }
