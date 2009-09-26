@@ -6,7 +6,7 @@
 
 const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
 
-void cms_calo_detail()
+void calo_detail()
 {
    TEveManager::Create();
 
@@ -18,8 +18,21 @@ void cms_calo_detail()
    lego->SetElementName("Irregualar Lego");
    lego->SetAutoRebin(kFALSE);
    gEve->AddElement(lego);
+  
+   // lego's shortest bbox is (-0.5, 0.5)
+   // have to scale to movein real coordinates
+   lego->InitMainTrans();
+   Float_t sc = TMath::Min(lego->GetEtaRng(), lego->GetPhiRng());
+   lego->RefMainTrans().SetScale(sc, sc, sc);
+   lego->RefMainTrans().Move3PF(lego->GetEta(), lego->GetPhi(), 0);
 
-   TGLViewer* v = gEve->GetDefaultGLViewer(); // Default
+   // scales and axis on the border of window 
+   TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
+   gEve->GetDefaultGLViewer()->AddOverlayElement(overlay);
+   overlay->SetCaloLego(lego);
+
+   // automatic flip of othographic and perspective camera
+   TGLViewer* v = gEve->GetDefaultGLViewer();
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
    TEveLegoEventHandler* eh = new TEveLegoEventHandler((TGWindow*)v->GetGLWidget(), (TObject*)v, lego);
    v->SetEventHandler(eh);  

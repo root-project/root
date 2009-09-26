@@ -78,15 +78,15 @@ void MakeCaloLego(TEveCaloData* data)
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
    lego->Set2DMode(TEveCaloLego::kValSize);
+   lego->SetPixelsPerBin(8); // autrebin
 
-   // lego->SetAutoRebin(kFALSE);
+   // move to real world coordinates
    lego->SetName("Calorimeter Lego");
-   lego->SetPixelsPerBin(8);
    lego->InitMainTrans();
-   Float_t sc = TMath::TwoPi();
+   Float_t sc = TMath::Min(lego->GetEtaRng(), lego->GetPhiRng());
    lego->RefMainTrans().SetScale(sc, sc, sc);
 
-   // draws scales
+   // draws scales and axis on borders of window
    TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
    v->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
