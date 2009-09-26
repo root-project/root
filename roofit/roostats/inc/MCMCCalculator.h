@@ -34,9 +34,6 @@
 #ifndef ROO_WORKSPACE
 #include "RooWorkspace.h"
 #endif
-#ifndef ROO_GLOBAL_FUNC
-#include "RooGlobalFunc.h"
-#endif
 #ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
 #endif

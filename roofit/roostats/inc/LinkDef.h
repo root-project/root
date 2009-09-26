@@ -69,9 +69,9 @@
 #pragma link C++ class RooStats::FeldmanCousins+;
 
 #pragma link C++ class RooStats::BayesianCalculator+;
-/* #pragma link C++ class RooStats::HypoTestInvertor+; */
-/* #pragma link C++ class RooStats::HypoTestInvertorResult+; */
-/* #pragma link C++ class RooStats::HypoTestInvertorPlot+; */
+#pragma link C++ class RooStats::HypoTestInvertor+;
+#pragma link C++ class RooStats::HypoTestInvertorResult+;
+#pragma link C++ class RooStats::HypoTestInvertorPlot+;
 #pragma link C++ class RooStats::HLFactory+;
 
 // in progress

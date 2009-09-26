@@ -21,7 +21,7 @@
 
 namespace RooStats {
  class SimpleInterval : public ConfInterval {
-  private:
+  protected:
     RooArgSet* fParameters; // parameter of interest
     Double_t fLowerLimit; // lower limit
     Double_t fUpperLimit; // upper limit
@@ -41,9 +41,9 @@ namespace RooStats {
     virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
  
     // Method to return lower limit
-    Double_t LowerLimit() {return fLowerLimit;}
+    virtual Double_t LowerLimit() {return fLowerLimit;}
     // Method to return upper limit
-    Double_t UpperLimit() {return fUpperLimit;}
+    virtual Double_t UpperLimit() {return fUpperLimit;}
     
     // do we want it to return list of parameters
     virtual RooArgSet* GetParameters() const;

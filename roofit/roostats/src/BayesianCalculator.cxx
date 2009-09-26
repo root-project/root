@@ -59,6 +59,22 @@ BayesianCalculator::~BayesianCalculator()
 }
 
 
+// RooAbsPdf* BayesianNumIntCalculator::GetPosteriorPdf()
+// {
+//   if (fPosteriorPdf==0) {
+//     fProductPdf = new RooProdPdf("product","",RooArgList(*fPdf,*fPriorPOI));
+//     RooAbsReal* nll = product->createNLL(*fData);
+//     fLikelihood = new RooFormulaVar("fLikelihood","exp(-@0)",RooArgList(*nll));
+//     fIntegratedLikelihood = fLikelihood->createIntegral(*fNuisanceParameters);
+
+//     TString posterior_name = this->GetName();
+//     posterior_name += "_posteriorPdf";
+//     fPosteriorPdf = new RooGenericPdf(posterior_name,"@0",fIntegratedLikelihood);
+//   }
+//   return fPosteriorPdf;
+// }
+
+
 RooPlot* BayesianCalculator::PlotPosterior()
 {
    RooProdPdf posterior("posterior","",RooArgList(*fPdf,*fPriorPOI));
@@ -109,10 +125,10 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    RooAbsRealLValue * poi = dynamic_cast<RooAbsRealLValue *>( fPOI.first()); 
    assert(poi);
    
-   double y = 0.05;
+   double y = fSize;
    brf.findRoot(fLowerLimit,poi->getMin(),poi->getMax(),y);
    
-   y=0.95;
+   y=1-fSize;
    brf.findRoot(fUpperLimit,poi->getMin(),poi->getMax(),y);
    
    delete cdf_bind;

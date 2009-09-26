@@ -42,8 +42,7 @@
 
 
 
-ClassImp(RooStats::UpperLimitMCSModule)
-  ;
+ClassImp(RooStats::UpperLimitMCSModule);
 
 
 using namespace RooStats ;

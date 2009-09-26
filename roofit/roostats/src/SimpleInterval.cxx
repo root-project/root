@@ -83,6 +83,7 @@ SimpleInterval::SimpleInterval(const char* name, const char* title, RooAbsArg* v
 SimpleInterval::~SimpleInterval()
 {
    // Destructor
+  // NEED TO DELETE fParameters->addClone
 
 }
 
