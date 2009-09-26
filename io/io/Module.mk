@@ -66,7 +66,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-ifeq ($(GCC_VERS_FULL),gcc-4.4.0)
+#ifeq ($(GCC_VERS_FULL),gcc-4.4.0)
+ifeq ($(GCC_VERS),gcc-4.4)
 ifneq ($(filter -O%,$(OPT)),)
    $(IODIRS)/TStreamerInfoReadBuffer.o: CXXFLAGS += -DR__EXPLICIT_FUNCTION_INSTANTIATION
 endif
