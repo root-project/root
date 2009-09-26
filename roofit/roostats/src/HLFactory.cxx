@@ -585,7 +585,7 @@ int HLFactory::fParseLine(TString& line){
 
     // Transform the line o_name = o_class(o_descr) in o_class::o_name(o_descr)
     if (nequals==1 || 
-        (nequals > 1 and line.Contains("SIMUL"))){
+        (nequals > 1 &&  line.Contains("SIMUL"))){
         
         // Divide the line in 3 components: o_name,o_class and o_descr
         // assuming that o_name=o_class(o_descr)
@@ -609,7 +609,7 @@ int HLFactory::fParseLine(TString& line){
 
         const int n_descr_parts=descr_array->GetEntries();
     
-        if (n_descr_parts<2 or n_descr_parts>3) 
+        if (n_descr_parts<2 || n_descr_parts>3) 
           Error("fParseLine","Import wrong syntax: cannot process "+o_descr);
 
         TString obj_name (static_cast<TObjString*>(descr_array->At(n_descr_parts-1))->GetString());
