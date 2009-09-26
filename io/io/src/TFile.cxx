@@ -1567,7 +1567,8 @@ Int_t TFile::Recover()
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhci] = '\0';
       TDatime::GetDateTime(datime, date, time);
-      if (seekpdir == fSeekDir && !TClass::GetClass(classname)->InheritsFrom("TFile")
+      TClass *tclass = TClass::GetClass(classname);
+      if (seekpdir == fSeekDir && tclass && !tclass->InheritsFrom("TFile")
                                && strcmp(classname,"TBasket")) {
          key = new TKey(this);
          key->ReadKeyBuffer(bufread);
