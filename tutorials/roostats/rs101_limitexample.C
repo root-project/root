@@ -170,7 +170,7 @@ void rs101_limitexample()
   // 3-d plot of the parameter points
   dataCanvas->cd(2);
   // also plot the points in the markov chain
-  TTree& chain =  ((RooTreeDataStore*) ((MCMCInterval*)mcmcint)->GetChain()->GetAsConstDataSet())->tree();
+  TTree& chain =  ((RooTreeDataStore*) ((MCMCInterval*)mcmcint)->GetChainAsDataSet()->store())->tree();
   chain.SetMarkerStyle(6);
   chain.SetMarkerColor(kRed);
   chain.Draw("s:ratioSigEff:ratioBkgEff","w","box"); // 3-d box proporional to posterior
@@ -190,3 +190,6 @@ void rs101_limitexample()
   t.Stop();
   t.Print();
 }
+// int main() { 
+//    rs101_limitexample();
+// }
