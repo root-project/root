@@ -1,11 +1,6 @@
 // Preliminary demo for showing Timur's GL plots in EVE.
 // Author: Matevz Tadel, July 2009
 
-// The main purpose of this test is to demonstrate the problems with
-// rendering of sevaral GL plots or with rendering of GL plots with
-// other scene objects - the usage of depth buffer destroys
-// depth-buffer coherence.
-
 void glplot()
 {
    TEveManager::Create();
