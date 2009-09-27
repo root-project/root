@@ -26,6 +26,7 @@
 
 // include header file of this class 
 #include "RooStats/BayesianCalculator.h"
+#include "RooStats/ModelConfig.h"
 
 ClassImp(RooStats::BayesianCalculator)
 
@@ -47,15 +48,26 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
   fPriorPOI(&priorPOI),
   fNuisanceParameters(*nuisanceParameters)
 {
-  // constructor
-  fLowerLimit = -999;
-  fUpperLimit = +999;
+   // constructor
+   fLowerLimit = -999;
+   fUpperLimit = +999;
+}
+
+BayesianCalculator::BayesianCalculator( RooAbsData& data,
+                       ModelConfig & model) : 
+   fData(&data), 
+   fPdf(model.GetPdf()),
+   fPOI( *model.GetParametersOfInterest() ),
+   fPriorPOI( model.GetPriorPdf()),
+   fNuisanceParameters( *model.GetNuisanceParameters() )
+{
+   // constructor from Model Config
 }
 
 
 BayesianCalculator::~BayesianCalculator()
 {
-  // destructor
+   // destructor
 }
 
 
