@@ -23,7 +23,7 @@ HAVEGCCXML?=$(shell which gccxml 2>/dev/null)
 %_cint.cpp: %.h %LinkDef.h
 	$(CMDECHO) rootcint -f $@ -c $^
 
-lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf)
+lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf) $(ROOT_LOC)/lib/libReflex.$(DllSuf)
 	$(BuildFromObj)
 
 lib%_dictcint.$(DllSuf): %_cint.$(ObjSuf)
