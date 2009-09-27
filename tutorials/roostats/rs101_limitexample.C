@@ -176,7 +176,7 @@ void rs101_limitexample()
   chain.Draw("s:ratioSigEff:ratioBkgEff","w","box"); // 3-d box proporional to posterior
 
   // the points used in the profile construction
-  TTree& parameterScan =  ((RooTreeDataStore*) fc.GetPointsToScan()->GetAsConstDataSet())->tree();
+  TTree& parameterScan =  ((RooTreeDataStore*) fc.GetPointsToScan()->store())->tree();
   parameterScan.SetMarkerStyle(24);
   parameterScan.Draw("s:ratioSigEff:ratioBkgEff","","same");
 
