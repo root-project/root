@@ -205,6 +205,8 @@ Int_t TChain::Add(TChain* chain)
       delete[] fTreeOffset;
       fTreeOffset = trees;
    }
+   if (!chain) return 0;
+   chain->GetEntries(); //to force the computation of nentries
    TIter next(chain->GetListOfFiles());
    Int_t nf = 0;
    TChainElement* element = 0;
