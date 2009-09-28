@@ -173,7 +173,7 @@ void rs101_limitexample()
   TTree& chain =  ((RooTreeDataStore*) ((MCMCInterval*)mcmcint)->GetChainAsDataSet()->store())->tree();
   chain.SetMarkerStyle(6);
   chain.SetMarkerColor(kRed);
-  chain.Draw("s:ratioSigEff:ratioBkgEff","w","box"); // 3-d box proporional to posterior
+  chain.Draw("s:ratioSigEff:ratioBkgEff","weight_MarkovChain_local_","box"); // 3-d box proporional to posterior
 
   // the points used in the profile construction
   TTree& parameterScan =  ((RooTreeDataStore*) fc.GetPointsToScan()->store())->tree();
