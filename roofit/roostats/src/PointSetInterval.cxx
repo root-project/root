@@ -89,7 +89,7 @@ PointSetInterval::~PointSetInterval()
 
 
 //____________________________________________________________________
-Bool_t PointSetInterval::IsInInterval(RooArgSet &parameterPoint) 
+Bool_t PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) 
 {  
    // Method to determine if a parameter point is in the interval
 
@@ -144,7 +144,7 @@ RooArgSet* PointSetInterval::GetParameters() const
 }
 
 //____________________________________________________________________
-Bool_t PointSetInterval::CheckParameters(RooArgSet &parameterPoint) const
+Bool_t PointSetInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {  
    if (parameterPoint.getSize() != fParameterPointsInInterval->get()->getSize() ) {
      std::cout << "PointSetInterval: argument size is wrong, parameters don't match: arg=" << parameterPoint

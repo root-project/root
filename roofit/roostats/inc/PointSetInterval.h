@@ -38,7 +38,7 @@ namespace RooStats {
     PointSetInterval(const char* name, const char* title, RooAbsData&);
     virtual ~PointSetInterval();
         
-    virtual Bool_t IsInInterval(RooArgSet&);
+    virtual Bool_t IsInInterval(const RooArgSet&);
     virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl;}
     virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
  
@@ -53,7 +53,7 @@ namespace RooStats {
     RooAbsData* GetParameterPoints() const {return (RooAbsData*)fParameterPointsInInterval->Clone();}
 
     // check if parameters are correct. (dummy implementation to start)
-    Bool_t CheckParameters(RooArgSet&) const ;
+    Bool_t CheckParameters(const RooArgSet&) const ;
 
     // Method to return lower limit on a given parameter 
     Double_t LowerLimit(RooRealVar& param) ;

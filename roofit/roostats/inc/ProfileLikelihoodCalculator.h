@@ -21,7 +21,7 @@ namespace RooStats {
    
    class LikelihoodInterval; 
 
-   class ProfileLikelihoodCalculator : public CombinedCalculator {
+   class ProfileLikelihoodCalculator : public CombinedCalculator, public TNamed {
 
    public:
 

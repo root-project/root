@@ -33,7 +33,14 @@ ClassImp(RooStats::BayesianCalculator)
 namespace RooStats { 
 
 
-
+BayesianCalculator::BayesianCalculator() :
+  fData(0),
+  fPdf(0),
+  fPriorPOI(0),
+  fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0)
+{
+   // default constructor
+}
 
 BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title, */						   
 						    RooAbsData& data,
@@ -46,7 +53,8 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
   fPdf(&pdf),
   fPOI(POI),
   fPriorPOI(&priorPOI),
-  fNuisanceParameters(*nuisanceParameters)
+  fNuisanceParameters(*nuisanceParameters), 
+  fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0)
 {
    // constructor
    fLowerLimit = -999;
@@ -57,34 +65,58 @@ BayesianCalculator::BayesianCalculator( RooAbsData& data,
                        ModelConfig & model) : 
    fData(&data), 
    fPdf(model.GetPdf()),
-   fPOI( *model.GetParametersOfInterest() ),
    fPriorPOI( model.GetPriorPdf()),
-   fNuisanceParameters( *model.GetNuisanceParameters() )
+   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0)
 {
    // constructor from Model Config
+   SetModel(model);
 }
 
 
 BayesianCalculator::~BayesianCalculator()
 {
    // destructor
+     if (fProductPdf) delete fProductPdf; 
+     if (fLogLike) delete fLogLike; 
+     if (fLikelihood) delete fLikelihood; 
+     if (fIntegratedLikelihood) delete fIntegratedLikelihood; 
+     if (fPosteriorPdf) delete fPosteriorPdf;      
+}
+
+void BayesianCalculator::SetModel(const ModelConfig & model) {
+   // set the model
+   fPdf = model.GetPdf();
+   fPriorPOI =  model.GetPriorPdf(); 
+   // assignment operator = does not do a real copy the sets (must use add method) 
+   fPOI.removeAll();
+   fNuisanceParameters.removeAll();
+   if (model.GetParametersOfInterest()) fPOI.add( *(model.GetParametersOfInterest()) );
+   if (model.GetNuisanceParameters())  fNuisanceParameters.add( *(model.GetNuisanceParameters() ) );
 }
 
 
-// RooAbsPdf* BayesianNumIntCalculator::GetPosteriorPdf()
-// {
-//   if (fPosteriorPdf==0) {
-//     fProductPdf = new RooProdPdf("product","",RooArgList(*fPdf,*fPriorPOI));
-//     RooAbsReal* nll = product->createNLL(*fData);
-//     fLikelihood = new RooFormulaVar("fLikelihood","exp(-@0)",RooArgList(*nll));
-//     fIntegratedLikelihood = fLikelihood->createIntegral(*fNuisanceParameters);
+RooAbsPdf* BayesianCalculator::GetPosteriorPdf()
+{
+  if (fPosteriorPdf!=0) {
+     if (fProductPdf) delete fProductPdf; 
+     if (fLogLike) delete fLogLike; 
+     if (fLikelihood) delete fLikelihood; 
+     if (fIntegratedLikelihood) delete fIntegratedLikelihood; 
+     if (fPosteriorPdf) delete fPosteriorPdf;      
+  }
+  fProductPdf = new RooProdPdf("product","",RooArgList(*fPdf,*fPriorPOI));
+  fLogLike = fProductPdf->createNLL(*fData);
+  fLikelihood = new RooFormulaVar("fLikelihood","exp(-@0)",RooArgList(*fLogLike));
+  if (fNuisanceParameters.getSize() > 0) fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
 
-//     TString posterior_name = this->GetName();
-//     posterior_name += "_posteriorPdf";
-//     fPosteriorPdf = new RooGenericPdf(posterior_name,"@0",fIntegratedLikelihood);
-//   }
-//   return fPosteriorPdf;
-// }
+  TString posterior_name = this->GetName();
+  posterior_name += "_posteriorPdf";
+  if (fNuisanceParameters.getSize() > 0) 
+     fPosteriorPdf = new RooGenericPdf(posterior_name,"@0",*fIntegratedLikelihood);
+  else 
+     fPosteriorPdf = new RooGenericPdf(posterior_name,"@0",*fLikelihood);
+  return fPosteriorPdf;
+}
 
 
 RooPlot* BayesianCalculator::PlotPosterior()
@@ -93,7 +125,7 @@ RooPlot* BayesianCalculator::PlotPosterior()
    RooAbsReal* nll = posterior.createNLL(*fData);
    RooFormulaVar like("like","exp(-@0)",RooArgList(*nll));
 
-   like.createIntegral(fNuisanceParameters);
+   if (fNuisanceParameters.getSize() > 0) like.createIntegral(fNuisanceParameters);
 
    RooAbsRealLValue * poi = dynamic_cast<RooAbsRealLValue *>(fPOI.first() );
    assert(poi );
@@ -113,6 +145,7 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    // returns a SimpleInterval with the lower/upper limit on the scanned variable
 
    if (!fPdf || !fPriorPOI) return 0; 
+   if (fPOI.getSize() == 0) return 0; 
    if (fPOI.getSize() > 1) { 
       std::cerr << "BayesianCalculator::GetInterval - current implementation works only on 1D intervals" << std::endl;
       return 0; 

@@ -55,7 +55,7 @@ namespace RooStats {
 
    class ModelConfig; 
 
-   class IntervalCalculator {//: public TNamed {
+   class IntervalCalculator { 
 
    public:
       //IntervalCalculator();
@@ -71,7 +71,7 @@ namespace RooStats {
       // Set the DataSet ( add to the the workspace if not already there ?)
       virtual void SetData(RooAbsData&) = 0;
       // Set the Model 
-      virtual void SetModel(const ModelConfig & /* model */) {}  // make pure virtual ? /* = 0 */
+      virtual void SetModel(const ModelConfig & /* model */) = 0; // {}  // make pure virtual ? /* = 0 */
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) = 0;
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)

@@ -56,6 +56,7 @@ END_HTML
 
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/ToyMCSampler.h"
+#include "RooStats/ModelConfig.h"
 
 #include "RooMsgService.h"
 
@@ -75,16 +76,26 @@ using namespace RooStats;
 
 
 //_______________________________________________________
-NeymanConstruction::NeymanConstruction() {
+NeymanConstruction::NeymanConstruction() : 
+   fPdf(0),
+   fData(0),
+   fLeftSideFraction(0), 
+   fConfBelt(0),  // constructed with tree data 
+   fSaveBeltToFile(false),
+   fCreateBelt(false)
+{
    // default constructor
-  fWS = new RooWorkspace();
-  fOwnsWorkspace = true;
-  fDataName = "";
-  fPdfName = "";
-  fLeftSideFraction = 0.;
-  fConfBelt = 0; // constructed with tree data
-  fSaveBeltToFile = false;
-  fCreateBelt = false;
+//   fWS = new RooWorkspace();
+//   fOwnsWorkspace = true;
+//   fDataName = "";
+//   fPdfName = "";
+}
+
+void NeymanConstruction::SetModel(const ModelConfig & model) { 
+   // set the model
+   fPdf = model.GetPdf();
+   fPOI = model.GetParametersOfInterest(); 
+   fNuisParams = model.GetNuisanceParameters(); 
 }
 
 //_______________________________________________________
@@ -99,6 +110,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
   // Main interface to get a RooStats::ConfInterval.  
   // It constructs a RooStats::SetInterval.
 
+
   TFile* f=0;
   if(fSaveBeltToFile){
     oocoutI(f,Contents) << "NeymanConstruction saving ConfidenceBelt to file SamplingDistributions.root" << endl;
@@ -106,9 +118,9 @@ ConfInterval* NeymanConstruction::GetInterval() const {
   }
   
   // local variables
-  RooAbsData* data = fWS->data(fDataName);
+  RooAbsData* data = fData; //fWS->data(fDataName);
   if(!data) {
-    oocoutF(fWS,Contents) << "Neyman Construction: data is not set, can't get interval" << endl;
+    coutF(Contents) << "Neyman Construction: data is not set, can't get interval" << endl;
     return 0;
   }
   Int_t npass = 0;
@@ -185,7 +197,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
 	samplingDist->InverseCDF( fLeftSideFraction * fSize , 
 				  sigma, lowerEdgeMinusSigma);
 	
-	ooccoutD(fWS,Eval) << "NeymanConstruction: "
+	ccoutD(Eval) << "NeymanConstruction: "
 	     << "total MC = " << totalMC 
 	     << " this test stat = " << thisTestStatistic << endl
 	     << " upper edge -1sigma = " << upperEdgeMinusSigma
@@ -227,14 +239,14 @@ ConfInterval* NeymanConstruction::GetInterval() const {
     // printout some debug info
     TIter      itr = point->createIterator();
     RooRealVar* myarg;
-    oocoutP(fWS,Eval) << "NeymanConstruction: Prog: "<< i+1<<"/"<<fPointsToTest->numEntries()
+    ccoutP(Eval) << "NeymanConstruction: Prog: "<< i+1<<"/"<<fPointsToTest->numEntries()
 		      << " total MC = " << totalMC 
 		      << " this test stat = " << thisTestStatistic << endl;
-    ooccoutP(fWS,Eval) << " ";
+    ccoutP(Eval) << " ";
     while ((myarg = (RooRealVar *)itr.Next())) { 
-      ooccoutP(fWS,Eval) << myarg->GetName() << "=" << myarg->getVal() << " ";
+      ccoutP(Eval) << myarg->GetName() << "=" << myarg->getVal() << " ";
     }
-    ooccoutP(fWS,Eval) << "[" << lowerEdgeOfAcceptance << ", " 
+    ccoutP(Eval) << "[" << lowerEdgeOfAcceptance << ", " 
 		       << upperEdgeOfAcceptance << "] " << " in interval = " <<
       (thisTestStatistic >= lowerEdgeOfAcceptance && thisTestStatistic <= upperEdgeOfAcceptance) 
 	      << endl << endl;
@@ -263,7 +275,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
     delete samplingDist;
     delete point;
   }
-  oocoutI(fWS,Eval) << npass << " points in interval" << endl;
+  coutI(Eval) << npass << " points in interval" << endl;
 
   // create an interval based pointsInInterval
   PointSetInterval* interval 
@@ -278,7 +290,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
   }
 
   delete f;
-  delete data;
+  //delete data;
   return interval;
 }
 
@@ -333,7 +345,7 @@ ConfInterval* NeymanConstruction::GetIntervalUsingList() const {
   // It constructs a RooStats::PointSetInterval.
 
   // local variables
-  RooAbsData* data = fWS->data(fDataName);
+   RooAbsData* data = fData; // fWS->data(fDataName);
   if(!data) {
     cout << "Data is not set, NeymanConstruction not initialized" << endl;
     return 0;
@@ -355,7 +367,7 @@ ConfInterval* NeymanConstruction::GetInterval(const char* asciiFilePat) const {
   //the distribution from the file provided
 
   // local variables
-  RooAbsData* data = fWS->data(fDataName);
+   RooAbsData* data = fData; // fWS->data(fDataName);
   if(!data) {
     cout << "Data is not set, NeymanConstruction not initialized" << endl;
     return 0;
@@ -385,7 +397,7 @@ ConfInterval* NeymanConstruction::Run(TList *SamplingList) const {
   //Main method to perform the interval calculation
 
   // local variables
-  RooAbsData* data = fWS->data(fDataName);
+   RooAbsData* data = fData; // fWS->data(fDataName);
   if(!data) {
     cout << "Data is not set, NeymanConstruction not initialized" << endl;
     return 0;
@@ -430,10 +442,10 @@ ConfInterval* NeymanConstruction::Run(TList *SamplingList) const {
   cout << npass << " points in interval" << endl;
 
   // create an interval based fPointsToTest
-  PointSetInterval* interval 
-    = new PointSetInterval("ClassicalConfidenceInterval", "ClassicalConfidenceInterval", *fPointsToTest);
+  TString name = TString("ClassicalConfidenceInterval_") + TString(GetName() ); 
+  PointSetInterval* interval  = new PointSetInterval(name, name, *fPointsToTest);
   
-  delete data;
+  //delete data;
   return interval;
 }
 

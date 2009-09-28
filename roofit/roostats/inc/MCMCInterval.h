@@ -65,7 +65,7 @@ namespace RooStats {
       MCMCInterval();
       MCMCInterval(const char* name);
       MCMCInterval(const char* name, const char* title);
-      MCMCInterval(const char* name, const char* title, RooArgSet& parameters,
+      MCMCInterval(const char* name, const char* title, const RooArgSet& parameters,
                    MarkovChain& chain);
 
       enum {DEFAULT_NUM_BINS = 50};
@@ -86,7 +86,7 @@ namespace RooStats {
       }
         
       // determine whether this point is in the confidence interval
-      virtual Bool_t IsInInterval(RooArgSet& point);
+      virtual Bool_t IsInInterval(const RooArgSet& point);
 
       // set the desired confidence level (see GetActualConfidenceLevel())
       // Note: calling this function triggers the algorithm that determines
@@ -124,11 +124,11 @@ namespace RooStats {
       virtual void SetHistStrict(Bool_t isHistStrict) { fIsHistStrict = isHistStrict; }
 
       // check if parameters are correct. (dummy implementation to start)
-      Bool_t CheckParameters(RooArgSet& point) const;
+      Bool_t CheckParameters(const RooArgSet& point) const;
 
       // Set the parameters of interest for this interval
       // and change other internal data members accordingly
-      virtual void SetParameters(RooArgSet& parameters);
+      virtual void SetParameters(const RooArgSet& parameters);
 
       // Set the MarkovChain that this interval is based on
       virtual void SetChain(MarkovChain& chain) { fChain = &chain; }
@@ -264,7 +264,7 @@ namespace RooStats {
 
    protected:
       // data members
-      RooArgSet* fParameters; // parameters of interest for this interval
+      const RooArgSet * fParameters; // parameters of interest for this interval
       MarkovChain* fChain; // the markov chain
       RooDataHist* fDataHist; // the binned Markov Chain data
       RooNDKeysPdf* fKeysPdf; // the kernel estimation pdf

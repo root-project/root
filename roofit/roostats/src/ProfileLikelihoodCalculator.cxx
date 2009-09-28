@@ -138,7 +138,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    profile->getVal(); // do this so profile will cache the minimum
    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 
-   TString name = TString("LikelihoodInterval"); // + TString("_") + TString(GetName() ); 
+   TString name = TString("LikelihoodInterval_") + TString(GetName() ); 
    LikelihoodInterval* interval = new LikelihoodInterval(name, profile, fPOI);
    interval->SetConfidenceLevel(1.-fSize);
    delete constrainedParams;
@@ -228,9 +228,9 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    // Use Wilks' theorem to translate -2 log lambda into a signifcance/p-value
    Double_t deltaNLL = std::max( NLLatCondMLE-NLLatMLE, 0.);
 
+   TString name = TString("ProfileLRHypoTestResult_") + TString(GetName() ); 
    HypoTestResult* htr = 
-      new HypoTestResult("ProfileLRHypoTestResult",
-                         SignificanceToPValue(sqrt( 2*deltaNLL)), 0 );
+      new HypoTestResult(name, SignificanceToPValue(sqrt( 2*deltaNLL)), 0 );
 
 
    // restore previous value of poi

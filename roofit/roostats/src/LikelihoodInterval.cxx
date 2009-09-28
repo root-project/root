@@ -123,7 +123,7 @@ LikelihoodInterval::~LikelihoodInterval()
 
 
 //____________________________________________________________________
-Bool_t LikelihoodInterval::IsInInterval(RooArgSet &parameterPoint) 
+Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) 
 {  
   // This is the main method to satisfy the RooStats::ConfInterval interface.  
   // It returns true if the parameter point is in the interval.
@@ -208,7 +208,7 @@ RooArgSet* LikelihoodInterval::GetParameters() const
 }
 
 //____________________________________________________________________
-Bool_t LikelihoodInterval::CheckParameters(RooArgSet &parameterPoint) const
+Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {  
   // check that the parameters are correct
 

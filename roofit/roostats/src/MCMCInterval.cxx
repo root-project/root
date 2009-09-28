@@ -225,7 +225,7 @@ MCMCInterval::MCMCInterval(const char* name, const char* title)
 }
 
 MCMCInterval::MCMCInterval(const char* name, const char* title,
-        RooArgSet& parameters, MarkovChain& chain) : ConfInterval(name, title)
+        const RooArgSet& parameters, MarkovChain& chain) : ConfInterval(name, title)
 {
    fNumBurnInSteps = 0;
    fConfidenceLevel = 0.0;
@@ -273,12 +273,12 @@ struct CompareSparseHistBins {
    THnSparse* fSparseHist; 
 };
 
-Bool_t MCMCInterval::IsInInterval(RooArgSet& point) 
+Bool_t MCMCInterval::IsInInterval(const RooArgSet& point) 
 {
    if (fUseKeys) {
       // evaluate keyspdf at point and return whether >= cutoff
       // kbelasco: is this right?
-      RooStats::SetParameters(&point, fParameters);
+      RooStats::SetParameters(&point, const_cast<RooArgSet *>(fParameters) );
       return fKeysPdf->getVal(fParameters) >= fKeysCutoff;
    } else {
       if (fUseSparseHist) {
@@ -476,7 +476,7 @@ void MCMCInterval::CreateDataHist()
          EventRange(fNumBurnInSteps, fChain->Size()));
 }
 
-void MCMCInterval::SetParameters(RooArgSet& parameters)
+void MCMCInterval::SetParameters(const RooArgSet& parameters)
 {
    fParameters = &parameters;
    fDimension = fParameters->getSize();
@@ -1042,7 +1042,7 @@ void MCMCInterval::CreateKeysDataHist()
    fKeysDataHist = fProduct->fillDataHist(fKeysDataHist, fParameters, 1.);
 }
 
-Bool_t MCMCInterval::CheckParameters(RooArgSet& parameterPoint) const
+Bool_t MCMCInterval::CheckParameters(const RooArgSet& parameterPoint) const
 {  
    // check that the parameters are correct
 

@@ -28,6 +28,7 @@
 class RooAbsData; 
 class RooAbsPdf; 
 class RooPlot; 
+class RooAbsReal;
 
 namespace RooStats {
 
@@ -39,7 +40,7 @@ namespace RooStats {
    public:
 
       // constructor
-      BayesianCalculator( ) {}
+      BayesianCalculator( );
 
       BayesianCalculator( RooAbsData& data,
                           RooAbsPdf& pdf,
@@ -55,9 +56,14 @@ namespace RooStats {
 
       RooPlot* PlotPosterior() ; 
 
+      // return posterior pdf (object is managed by the BayesianCalculator class)
+      RooAbsPdf * GetPosteriorPdf(); 
+
       virtual SimpleInterval* GetInterval() const ; 
 
       virtual void  SetData(RooAbsData & data) { fData = &data; }
+
+      virtual void SetModel(const ModelConfig & model); 
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
@@ -75,6 +81,13 @@ namespace RooStats {
       RooArgSet fPOI;
       RooAbsPdf* fPriorPOI;
       RooArgSet fNuisanceParameters;
+
+      RooAbsPdf * fProductPdf; 
+      RooAbsReal * fLogLike; 
+      RooAbsReal * fLikelihood; 
+      RooAbsReal * fIntegratedLikelihood; 
+      RooAbsPdf * fPosteriorPdf; 
+      
 
       double fSize; 
 

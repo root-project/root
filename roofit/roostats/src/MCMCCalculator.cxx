@@ -47,6 +47,9 @@ END_HTML
 #ifndef ROO_ARG_LIST
 #include "RooArgList.h"
 #endif
+#ifndef ROOSTATS_ModelConfig
+#include "RooStats/ModelConfig.h"
+#endif
 #ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
 #endif
@@ -78,20 +81,17 @@ using namespace RooFit;
 using namespace RooStats;
 
 // default constructor
-MCMCCalculator::MCMCCalculator()
+MCMCCalculator::MCMCCalculator() : 
+   fPOI(0),
+   fPropFunc(0), 
+   fPdf(0), 
+   fData(0),
+   fAxes(0)
 {
    // default constructor
-   fWS = NULL;
-   fPOI = NULL;
-   fNuisParams = NULL;
-   fOwnsWorkspace = kFALSE;
-   fPropFunc = NULL;
-   fPdfName = NULL;
-   fDataName = NULL;
    fNumIters = 0;
    fNumBurnInSteps = 0;
    fNumBins = 0;
-   fAxes = NULL;
    fUseKeys = kFALSE;
    fUseSparseHist = kFALSE;
 }
@@ -101,14 +101,13 @@ MCMCCalculator::MCMCCalculator()
 // RooRealVar, determines interval by keys, and turns on sparse histogram
 // mode in the MCMCInterval.  Finds a 95% confidence interval.
 MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
-      RooArgSet& paramsOfInterest)
+                               const RooArgSet& paramsOfInterest) : 
+   fPOI(&paramsOfInterest),
+   fPropFunc(0), 
+   fPdf(&pdf), 
+   fData(&data),
+   fAxes(0)
 {
-   fWS = new RooWorkspace();
-   fOwnsWorkspace = true;
-   SetData(data);
-   SetPdf(pdf);
-   SetParameters(paramsOfInterest);
-
    SetupBasicUsage();
 }
 
@@ -116,52 +115,52 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
 // UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
 // RooRealVar, determines interval by keys, and turns on sparse histogram
 // mode in the MCMCInterval.  Finds a 95% confidence interval.
-MCMCCalculator::MCMCCalculator(RooWorkspace& ws, RooAbsData& data,
-      RooAbsPdf& pdf, RooArgSet& paramsOfInterest)
+MCMCCalculator::MCMCCalculator(RooAbsData& data, const ModelConfig & model) :
+   fPropFunc(0), 
+   fPdf(model.GetPdf()), 
+   fData(&data),
+   fAxes(0)
 {
-   fOwnsWorkspace = false;
-   SetWorkspace(ws);
-   SetData(data);
-   SetPdf(pdf);
-   SetParameters(paramsOfInterest);
-
+   SetModel(model);
    SetupBasicUsage();
 }
 
 // alternate constructor, specifying many arguments
-MCMCCalculator::MCMCCalculator(RooWorkspace& ws, RooAbsData& data,
-                RooAbsPdf& pdf, RooArgSet& paramsOfInterest,
-                ProposalFunction& proposalFunction, Int_t numIters,
-                RooArgList* axes, Double_t size)
+MCMCCalculator::MCMCCalculator(RooAbsData& data, const ModelConfig & model,
+                               ProposalFunction& proposalFunction, Int_t numIters,
+                               RooArgList* axes, Double_t size) : 
+   fPropFunc(&proposalFunction), 
+   fPdf(model.GetPdf()), 
+   fData(&data), 
+   fAxes(axes)
 {
-   fOwnsWorkspace = false;
-   SetWorkspace(ws);
-   SetData(data);
-   SetPdf(pdf);
-   SetParameters(paramsOfInterest);
+   SetModel(model);
    SetTestSize(size);
-   SetProposalFunction(proposalFunction);
    fNumIters = numIters;
    fNumBurnInSteps = 0;
    fNumBins = 0;
-   fAxes = axes;
    fUseKeys = kFALSE;
    fUseSparseHist = kFALSE;
 }
 
+void MCMCCalculator::SetModel(const ModelConfig & model) { 
+   // set the model
+   fPdf = model.GetPdf();  
+   if (model.GetParametersOfInterest() ) fPOI = model.GetParametersOfInterest();
+   if (model.GetNuisanceParameters() )   fNuisParams = model.GetNuisanceParameters();
+}
+
 // alternate constructor, specifying many arguments
 MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
-                RooArgSet& paramsOfInterest, ProposalFunction& proposalFunction,
-                Int_t numIters, RooArgList* axes, Double_t size)
+                               const RooArgSet& paramsOfInterest, ProposalFunction& proposalFunction,
+                               Int_t numIters, RooArgList* axes, Double_t size) : 
+   fPOI(&paramsOfInterest),
+   fPropFunc(&proposalFunction), 
+   fPdf(&pdf), 
+   fData(&data), 
+   fAxes(axes)
 {
-   // alternate constructor
-   fWS = new RooWorkspace();
-   fOwnsWorkspace = true;
-   SetData(data);
-   SetPdf(pdf);
-   SetParameters(paramsOfInterest);
    SetTestSize(size);
-   SetProposalFunction(proposalFunction);
    fNumIters = numIters;
    fNumBurnInSteps = 0;
    fNumBins = 0;
@@ -176,7 +175,7 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
 // mode in the MCMCInterval.  Finds a 95% confidence interval.
 void MCMCCalculator::SetupBasicUsage()
 {
-   fPropFunc = new UniformProposal();
+   fPropFunc = 0;
    fNumIters = 10000;
    fNumBurnInSteps = 40;
    //fNumBins = 0;
@@ -190,15 +189,17 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 {
    // Main interface to get a RooStats::ConfInterval.  
 
-   RooAbsPdf* pdf = fWS->pdf(fPdfName);
-   RooAbsData* data = fWS->data(fDataName);
-   if (!data || !pdf || !fPOI || !fPropFunc) return 0;
+   if (!fData || !fPdf || !fPOI  ) return 0;
 
-   RooArgSet* constrainedParams = pdf->getParameters(*data);
-   RooAbsReal* nll = pdf->createNLL(*data, Constrain(*constrainedParams));
+   // if a proposal funciton has not been specified create a default one
+   bool useDefaultPropFunc = (fPropFunc == 0); 
+   if (useDefaultPropFunc) fPropFunc = new UniformProposal(); 
+
+   RooArgSet* constrainedParams = fPdf->getParameters(*fData);
+   RooAbsReal* nll = fPdf->createNLL(*fData, Constrain(*constrainedParams));
    delete constrainedParams;
 
-   RooArgSet* params = nll->getParameters(*data);
+   RooArgSet* params = nll->getParameters(*fData);
    RemoveConstantParameters(params);
    if (fNumBins > 0) {
       SetBins(*params, fNumBins);
@@ -220,8 +221,8 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    MarkovChain* chain = mh.ConstructChain();
 
-   MCMCInterval* interval = new MCMCInterval("mcmcinterval", "MCMCInterval",
-                                             *fPOI, *chain);
+   TString name = TString("MCMCInterval_") + TString(GetName() ); 
+   MCMCInterval* interval = new MCMCInterval(name, name, *fPOI, *chain);
    if (fAxes != NULL)
       interval->SetAxes(*fAxes);
    if (fNumBurnInSteps > 0)
@@ -229,5 +230,8 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    interval->SetUseKeys(fUseKeys);
    interval->SetUseSparseHist(fUseSparseHist);
    interval->SetConfidenceLevel(1.0 - fSize);
+
+   if (useDefaultPropFunc) delete fPropFunc; 
+   
    return interval;
 }

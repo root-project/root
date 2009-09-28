@@ -47,7 +47,7 @@ namespace RooStats {
       virtual ~ConfInterval() {}
     
       //pure virtual?  where does =0 go with const?
-      virtual Bool_t IsInInterval(RooArgSet&) = 0; 
+      virtual Bool_t IsInInterval(const RooArgSet&) = 0; 
     
       // used to set confidence level.  Keep pure virtual
       virtual void SetConfidenceLevel(Double_t cl) = 0;
@@ -62,7 +62,7 @@ namespace RooStats {
       virtual RooArgSet* GetParameters() const = 0;
 
       // check if parameters are correct. (dummy implementation to start)
-      virtual Bool_t CheckParameters(RooArgSet&) const = 0;
+      virtual Bool_t CheckParameters(const RooArgSet&) const = 0;
 
 
    protected:

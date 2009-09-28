@@ -36,7 +36,7 @@ namespace RooStats {
     SimpleInterval(const char* name, const char* title, RooAbsArg* var, Double_t, Double_t);
     virtual ~SimpleInterval();
         
-    virtual Bool_t IsInInterval(RooArgSet&);
+    virtual Bool_t IsInInterval(const RooArgSet&);
     virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl;}
     virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
  
@@ -49,7 +49,7 @@ namespace RooStats {
     virtual RooArgSet* GetParameters() const;
 
     // check if parameters are correct. (dummy implementation to start)
-    Bool_t CheckParameters(RooArgSet&) const ;
+    Bool_t CheckParameters(const RooArgSet&) const ;
 
 
     
