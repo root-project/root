@@ -74,6 +74,13 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    //    multi_results       tell the server that the client can handle multiple
    //                        result sets from multiple-statement executions or
    //                        stored procedures
+   //    reconnect=0|1       enable or disable automatic reconnection to the server
+   //                        if the connection is found to have been lost
+   //    compress            use the compressed client/server protocol
+   //    cnf_file=filename   Read options from the named option file instead of
+   //                        from my.cnf
+   //    cnf_group=groupname Read options from the named group from my.cnf or the
+   //                        file specified with cnf_file option
    // If several parameters are specified, they should be separated by "&" symbol
    // Example of connection argument:
    //    TSQLServer::Connect("mysql://host.domain/test?timeout=10&multi_statements");
@@ -127,33 +134,41 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
          } else
          if (opt.Contains("read_timeout=")) {
             #if MYSQL_VERSION_ID >= 40101
-            opt.Remove(0, 13);
-            Int_t timeout = opt.Atoi();
-            if (timeout > 0) {
-               UInt_t mysqltimeout = (UInt_t) timeout;
-               mysql_options(fMySQL, MYSQL_OPT_READ_TIMEOUT, (const char*) &mysqltimeout);
-               if (gDebug) Info("TMySQLServer","Set read timeout %d", timeout);
-            }
+              opt.Remove(0, 13);
+              Int_t timeout = opt.Atoi();
+              if (timeout > 0) {
+                UInt_t mysqltimeout = (UInt_t) timeout;
+                mysql_options(fMySQL, MYSQL_OPT_READ_TIMEOUT, (const char*) &mysqltimeout);
+                if (gDebug) Info("TMySQLServer","Set read timeout %d", timeout);
+              }
             #else
-            Warning("TMySQLServer","MYSQL_OPT_READ_TIMEOUT option not supported by this version of MySql");
+              Warning("TMySQLServer","MYSQL_OPT_READ_TIMEOUT option not supported by this version of MySql");
             #endif
 
          } else
          if (opt.Contains("write_timeout=")) {
             #if MYSQL_VERSION_ID >= 40101
-            opt.Remove(0, 14);
-            Int_t timeout = opt.Atoi();
-            if (timeout > 0) {
-               UInt_t mysqltimeout = (UInt_t) timeout;
-               mysql_options(fMySQL, MYSQL_OPT_WRITE_TIMEOUT, (const char*) &mysqltimeout);
-               if (gDebug) Info("TMySQLServer","Set write timeout %d", timeout);
-            }
+              opt.Remove(0, 14);
+              Int_t timeout = opt.Atoi();
+              if (timeout > 0) {
+                 UInt_t mysqltimeout = (UInt_t) timeout;
+                 mysql_options(fMySQL, MYSQL_OPT_WRITE_TIMEOUT, (const char*) &mysqltimeout);
+                 if (gDebug) Info("TMySQLServer","Set write timeout %d", timeout);
+              }
             #else
-            Warning("TMySQLServer","MYSQL_OPT_WRITE_TIMEOUT option not supported by this version of MySql");
+              Warning("TMySQLServer","MYSQL_OPT_WRITE_TIMEOUT option not supported by this version of MySql");
             #endif
          } else
-
-
+         if (opt.Contains("reconnect=")) {
+            #if MYSQL_VERSION_ID >= 50013
+              opt.Remove(0, 10);
+              my_bool reconnect_on = (opt=="1") || (opt=="true");
+              mysql_options(fMySQL, MYSQL_OPT_RECONNECT, (const char*) &reconnect_on);
+              if (gDebug) Info("TMySQLServer","Set reconnect options %s", (reconnect_on ? "ON" : "OFF"));
+            #else
+              Warning("TMySQLServer","MYSQL_OPT_RECONNECT option not supported by this version of MySql");
+            #endif
+         } else
          if (opt.Contains("socket=")) {
             socket = (obj->GetName()+7);
             if (gDebug) Info("TMySQLServer","Use socket %s", socket.Data());
@@ -173,6 +188,20 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
             #else
                Warning("TMySQLServer","CLIENT_MULTI_RESULTS not supported by this version of MySql");
             #endif
+         } else
+         if (opt.Contains("compress")) {
+            mysql_options(fMySQL, MYSQL_OPT_COMPRESS, 0);
+            if (gDebug) Info("TMySQLServer","Use compressed client/server protocol");
+         } else
+         if (opt.Contains("cnf_file=")) {
+            const char* filename = (obj->GetName()+9);
+            mysql_options(fMySQL, MYSQL_READ_DEFAULT_FILE, filename);
+            if (gDebug) Info("TMySQLServer","Read mysql options from %s file", filename);
+         } else
+         if (opt.Contains("cnf_group=")) {
+            const char* groupname = (obj->GetName()+10);
+            mysql_options(fMySQL, MYSQL_READ_DEFAULT_GROUP, groupname);
+            if (gDebug) Info("TMySQLServer","Read mysql options from %s group of my.cnf file", groupname);
          }
       }
       optarr->Delete();
