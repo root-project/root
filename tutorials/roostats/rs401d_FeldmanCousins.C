@@ -299,7 +299,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
     // most of this code is just to switch x/y axes in the histogram
     TH1* posterior = ((MCMCInterval*)mcmcInterval)->GetPosteriorHist();
 
-    Double_t mcmclevel = ((MCMCInterval*)mcmcInterval)->GetCutoff();
+    Double_t mcmclevel = ((MCMCInterval*)mcmcInterval)->GetHistCutoff();
     posterior->SetContour(1,&mcmclevel);
     posterior->SetLineColor(kMagenta);
     posterior->SetLineWidth(2);
