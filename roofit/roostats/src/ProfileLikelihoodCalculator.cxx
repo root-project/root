@@ -178,13 +178,13 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
 
    // set POI to given values, set constant, calculate conditional MLE
-   RooArgList poiList; /// make ordered list since a vectro will be associated to keep parameter values
+   RooArgList poiList; /// make ordered list since a vector will be associated to keep parameter values
    poiList.add(*fNullParams); 
    std::vector<double> oldValues(poiList.getSize() ); 
    for (unsigned int i = 0; i < oldValues.size(); ++i) { 
       RooRealVar * mytarget = (RooRealVar*) constrainedParams->find(poiList[i].GetName());
-      oldValues[i] = mytarget->getVal(); 
       if (mytarget) { 
+         oldValues[i] = mytarget->getVal(); 
          mytarget->setVal( ( (RooRealVar&) poiList[i] ).getVal() );
          mytarget->setConstant(kTRUE);
       }

@@ -71,11 +71,11 @@ void rs502_ProfileLikelihoodCalculator_significance( const char* fileName="WS_Ga
 
 
    // create a copy of the POI parameters to set the values to zero
-   RooRealVar * parNull = (RooRealVar*) parameterOfInterest->Clone(); 
-   parNull->setVal(0); 
-   RooArgSet nullparams(*parNull);
-  
+   RooArgSet nullparams;
+   nullparams.addClone(*parameterOfInterest);
+   ( (RooRealVar *) (nullparams.first()))->setVal(0);
    plc.SetNullParameters(nullparams);
+
    HypoTestResult* testresult=plc.GetHypoTest();
    const double significance = testresult->Significance();
 
