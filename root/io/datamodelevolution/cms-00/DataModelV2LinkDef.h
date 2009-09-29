@@ -25,7 +25,7 @@
   code="{ m_unit = 10*onfile.m_unit; }"
 
 #pragma read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit" target="m_md_set" \
-  code="{ newObj->SetMdUnit( 10*onfile.m_unit) ; m_md_set = true; newObj->Print(); }"
+  code="{ newObj->SetMdUnit( 10*onfile.m_unit) ; m_md_set = true; /* newObj->Print(); */ }"
 
 //#pragma read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit; ClassAIns m_d" target="m_d" \
 //  code="{ m_d = onfile.m_d; m_d.m_punit = 10*onfile.m_unit; }"
@@ -39,5 +39,12 @@
 //#pragma read sourceClass="ClassC" version="[2]" targetClass="ClassC" source="ClassABase" target="ClassABase2"
 //#pragma read sourceClass="ClassB" version="[2]" targetClass="ClassB" source="ClassA" target="ClassA2"
 //#pragma read sourceClass="pair<int,double>" version="[*]" targetClass="pair<int,float>"
+
+
+// LHCb 
+
+#pragma link C++ class LHCb::Track+;
+#pragma link C++ class LHCb::Node+;
+#pragma link C++ class vector<LHCb::Node*>+;
 
 #endif

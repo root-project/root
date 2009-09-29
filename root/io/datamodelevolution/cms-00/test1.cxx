@@ -129,12 +129,15 @@ int test1(const char *mode = "") {
    generate( vDS );
    dump( vDS, o14 );
    
+   LHCb::Track ltrack;
+
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file
    //---------------------------------------------------------------------------
    TFile *file = new TFile( TString::Format("%stestv1.root",prefix), "RECREATE" );
    TTree *tree = new TTree( "TestTree", "" );
 
+   tree->Branch( "ltrack.", &ltrack, 32000, 99);
    tree->Branch( "TestAIns.",       &objAI, 32000, 99 );
    tree->Branch( "TestD.",          &objD, 32000, 99 );
    tree->Branch( "TestDNS.",        &objD, 32000,  0 );

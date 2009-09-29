@@ -20,4 +20,8 @@
 #pragma link C++ class std::vector<ClassD>+;
 #pragma link C++ class std::vector<ClassD*>+;
 
+#pragma link C++ class LHCb::Track+;
+#pragma link C++ class LHCb::Node+;
+#pragma link C++ class vector<LHCb::Node*>+;
+
 #endif

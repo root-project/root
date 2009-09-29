@@ -103,3 +103,49 @@ struct _dummy
 };
 
 
+// LHCb
+
+#include "Math/SMatrix.h"
+
+namespace Gaudi {
+   typedef ROOT::Math::SMatrix<double, 1, 5> TrackProjectionMatrix;
+}
+
+namespace LHCb {
+
+// The interesting part is LHCb::Node:  
+class Node  {
+public:
+   Node () /* : m_measurement(0) */ {}
+private:
+   double                          m_type;             ///< type of node
+   //LHCb::State                   m_state;            ///< state
+   //LHCb::StateVector             m_refVector;        ///< the reference vector
+   bool                            m_refIsSet;         ///< flag for the reference vector
+   //LHCb::Measurement*            m_measurement;      ///< pointer to the measurement (not owner)
+   double                          m_residual;         ///< the residual value
+   double                          m_errResidual;      ///< the residual error
+   double                          m_errMeasure;       ///< the measure error
+   Gaudi::TrackProjectionMatrix    m_projectionMatrix; ///< the projection matrix
+};
+
+class Track /* : public KeyedObject<int> */  {
+public:
+   Track() { m_nodes.push_back(new LHCb::Node()); }
+   ~Track() { for(unsigned int i=0; i<m_nodes.size(); ++i) { delete m_nodes[i]; }; m_nodes.clear(); }
+private:    
+   double                            m_chi2PerDoF;           ///< Chi2 per degree of freedom of the track
+   int                               m_nDoF;                 ///< Number of degrees of freedom of the track
+   double                            m_likelihood;           ///< Likelihood variable
+   double                            m_ghostProbability;     ///< ghost probability variable
+   unsigned int                      m_flags;                ///< The variety of track flags
+   //std::vector<LHCb::LHCbID>       m_lhcbIDs;              ///< Container of (sorted) LHCbIDs
+   //std::vector<LHCb::State*>       m_states;               ///< Container with pointers to all the states
+   //std::vector<LHCb::Measurement*> m_measurements;         ///< Container of Measurements
+   Gaudi::TrackProjectionMatrix      m_projections;      //! ///< the projection matrix
+   Node                              m_nothing;          //! ///< Just for testing 
+   std::vector<LHCb::Node*>          m_nodes;            //! ///< Container of Nodes
+   //ExtraInfo                       m_extraInfo;            ///< Additional pattern recognition information. Do not access directly, use *Info() methods instead.
+   //SmartRefVector<LHCb::Track>     m_ancestors;            ///< Ancestor tracks that created this one
+};
+}

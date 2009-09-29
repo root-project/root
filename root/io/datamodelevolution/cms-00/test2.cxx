@@ -109,6 +109,7 @@ int test2(const char *mode = "")
    vector<ClassD>             *vDNS   = 0;
    vector<ClassD*>            *vDS    = 0;
    vector<ClassD*>            *vDSS   = 0;
+   LHCb::Track                *ltrack = 0;
 
    //---------------------------------------------------------------------------
    // Store the objects in a ROOT file
@@ -122,32 +123,33 @@ int test2(const char *mode = "")
    }
 
    TTree *tree = (TTree*)file->Get( "TestTree" );
-   tree->SetBranchAddress( "TestAIns.",      &objAI  );
-   tree->SetBranchAddress( "TestD.",         &objD   );
-   tree->SetBranchAddress( "TestDNS.",       &objDNS );
-   tree->SetBranchAddress( "TestA.",         &objA   );
-   tree->SetBranchAddress( "TestANS.",       &objANS );
-   tree->SetBranchAddress( "TestPair.",      &pr     );
-   tree->SetBranchAddress( "TestPairNS.",    &prNS   );
+   tree->SetBranchAddress( "ltrack.",       &ltrack );
+   tree->SetBranchAddress( "TestAIns.",     &objAI  );
+   tree->SetBranchAddress( "TestD.",        &objD   );
+   tree->SetBranchAddress( "TestDNS.",      &objDNS );
+   tree->SetBranchAddress( "TestA.",        &objA   );
+   tree->SetBranchAddress( "TestANS.",      &objANS );
+   tree->SetBranchAddress( "TestPair.",     &pr     );
+   tree->SetBranchAddress( "TestPairNS.",   &prNS   );
    tree->SetBranchAddress( "TestVectorDbl", &vd     );
    tree->SetBranchAddress( "TestVectorP",   &vP     );
    tree->SetBranchAddress( "TestVectorPNS", &vPNS   );
    tree->SetBranchAddress( "TestVectorA",   &vA     );
    tree->SetBranchAddress( "TestVectorANS", &vANS   );
    tree->SetBranchAddress( "TestVectorAS",  &vAS    );
-   tree->SetBranchAddress( "TestVectorASS.", &vASS   );
+   tree->SetBranchAddress( "TestVectorASS.",&vASS   );
    tree->SetBranchAddress( "TestVectorB",   &vB     );
    tree->SetBranchAddress( "TestVectorBNS", &vBNS   );
    tree->SetBranchAddress( "TestVectorBS",  &vBS    );
-   tree->SetBranchAddress( "TestVectorBSS.", &vBSS   );
+   tree->SetBranchAddress( "TestVectorBSS.",&vBSS   );
    tree->SetBranchAddress( "TestVectorC",   &vC     );
    tree->SetBranchAddress( "TestVectorCNS", &vCNS   );
    tree->SetBranchAddress( "TestVectorCS",  &vCS    );
-   tree->SetBranchAddress( "TestVectorCSS.", &vCSS   );
+   tree->SetBranchAddress( "TestVectorCSS.",&vCSS   );
    tree->SetBranchAddress( "TestVectorD",   &vD     );
    tree->SetBranchAddress( "TestVectorDNS", &vDNS   );
    tree->SetBranchAddress( "TestVectorDS",  &vDS    );
-   tree->SetBranchAddress( "TestVectorDSS.", &vDSS   );
+   tree->SetBranchAddress( "TestVectorDSS.",&vDSS   );
    
    tree->GetEntry(0);
    file->Close();

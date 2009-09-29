@@ -15,5 +15,14 @@
   <class name="std::vector<ClassC>" />
   <class name="std::vector<ClassC*>" />
   <class name="std::vector<ClassD>" />
-  <class name="std::vector<ClassD*>" />
+  <class name="std::vector<ClassD*>" /> 
+
+  <class name="LHCb::Track" id="0000271a-0000-0000-0000-000000000000"> 
+     <field name="m_measurements" transient="true"/>
+     <field name="m_projections" transient="true"/>
+     <field name="m_nothing" transient="true"/>
+     <field name="m_nodes" transient="true"/>
+     <field name="m_nodes" transient="true"/>
+  </class>
+  <class name="LHCb::Node"/>
 </lcgdict>

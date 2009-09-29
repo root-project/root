@@ -30,7 +30,16 @@
   </read -->
 
   <ioread sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit" target="m_md_set">
-  <![CDATA[ { newObj->SetMdUnit( 10*onfile.m_unit ); m_md_set = true; newObj->Print(); } ]]>
+  <![CDATA[ { newObj->SetMdUnit( 10*onfile.m_unit ); m_md_set = true; /* newObj->Print(); */ } ]]>
   </ioread>
+
+  <class name="LHCb::Track" id="0000271a-0000-0000-0000-000000000000"> 
+     <field name="m_measurements" transient="true"/>
+     <field name="m_projections" transient="true"/>
+     <field name="m_nothing" transient="true"/>
+     <field name="m_nodes" transient="true"/>
+  </class>
+  <class name="LHCb::Node"/>
+  <class name="std::vector<LHCb::Node*>"/>
 
 </lcgdict>
