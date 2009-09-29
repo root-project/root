@@ -133,61 +133,61 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
             }
          } else
          if (opt.Contains("read_timeout=")) {
-            #if MYSQL_VERSION_ID >= 40101
-              opt.Remove(0, 13);
-              Int_t timeout = opt.Atoi();
-              if (timeout > 0) {
-                UInt_t mysqltimeout = (UInt_t) timeout;
-                mysql_options(fMySQL, MYSQL_OPT_READ_TIMEOUT, (const char*) &mysqltimeout);
-                if (gDebug) Info("TMySQLServer","Set read timeout %d", timeout);
-              }
-            #else
-              Warning("TMySQLServer","MYSQL_OPT_READ_TIMEOUT option not supported by this version of MySql");
-            #endif
+           #if MYSQL_VERSION_ID >= 40101
+            opt.Remove(0, 13);
+            Int_t timeout = opt.Atoi();
+            if (timeout > 0) {
+               UInt_t mysqltimeout = (UInt_t) timeout;
+               mysql_options(fMySQL, MYSQL_OPT_READ_TIMEOUT, (const char*) &mysqltimeout);
+               if (gDebug) Info("TMySQLServer","Set read timeout %d", timeout);
+            }
+           #else
+            Warning("TMySQLServer","MYSQL_OPT_READ_TIMEOUT option not supported by this version of MySql");
+           #endif
 
          } else
          if (opt.Contains("write_timeout=")) {
-            #if MYSQL_VERSION_ID >= 40101
-              opt.Remove(0, 14);
-              Int_t timeout = opt.Atoi();
-              if (timeout > 0) {
-                 UInt_t mysqltimeout = (UInt_t) timeout;
-                 mysql_options(fMySQL, MYSQL_OPT_WRITE_TIMEOUT, (const char*) &mysqltimeout);
-                 if (gDebug) Info("TMySQLServer","Set write timeout %d", timeout);
-              }
-            #else
-              Warning("TMySQLServer","MYSQL_OPT_WRITE_TIMEOUT option not supported by this version of MySql");
-            #endif
+           #if MYSQL_VERSION_ID >= 40101
+            opt.Remove(0, 14);
+            Int_t timeout = opt.Atoi();
+            if (timeout > 0) {
+               UInt_t mysqltimeout = (UInt_t) timeout;
+               mysql_options(fMySQL, MYSQL_OPT_WRITE_TIMEOUT, (const char*) &mysqltimeout);
+               if (gDebug) Info("TMySQLServer","Set write timeout %d", timeout);
+            }
+           #else
+            Warning("TMySQLServer","MYSQL_OPT_WRITE_TIMEOUT option not supported by this version of MySql");
+           #endif
          } else
          if (opt.Contains("reconnect=")) {
-            #if MYSQL_VERSION_ID >= 50013
-              opt.Remove(0, 10);
-              my_bool reconnect_on = (opt=="1") || (opt=="true");
-              mysql_options(fMySQL, MYSQL_OPT_RECONNECT, (const char*) &reconnect_on);
-              if (gDebug) Info("TMySQLServer","Set reconnect options %s", (reconnect_on ? "ON" : "OFF"));
-            #else
-              Warning("TMySQLServer","MYSQL_OPT_RECONNECT option not supported by this version of MySql");
-            #endif
+           #if MYSQL_VERSION_ID >= 50013
+            opt.Remove(0, 10);
+            my_bool reconnect_on = (opt=="1") || (opt=="true");
+            mysql_options(fMySQL, MYSQL_OPT_RECONNECT, (const char*) &reconnect_on);
+            if (gDebug) Info("TMySQLServer","Set reconnect options %s", (reconnect_on ? "ON" : "OFF"));
+           #else
+            Warning("TMySQLServer","MYSQL_OPT_RECONNECT option not supported by this version of MySql");
+           #endif
          } else
          if (opt.Contains("socket=")) {
             socket = (obj->GetName()+7);
             if (gDebug) Info("TMySQLServer","Use socket %s", socket.Data());
          } else
          if (opt.Contains("multi_statements")) {
-            #if MYSQL_VERSION_ID >= 40100
-               client_flag = client_flag | CLIENT_MULTI_STATEMENTS;
-               if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_STATEMENTS");
-            #else
-               Warning("TMySQLServer","CLIENT_MULTI_STATEMENTS not supported by this version of MySql");
-            #endif
+           #if MYSQL_VERSION_ID >= 40100
+            client_flag = client_flag | CLIENT_MULTI_STATEMENTS;
+            if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_STATEMENTS");
+           #else
+            Warning("TMySQLServer","CLIENT_MULTI_STATEMENTS not supported by this version of MySql");
+           #endif
          } else
          if (opt.Contains("multi_results")) {
-            #if MYSQL_VERSION_ID >= 40100
-               client_flag = client_flag | CLIENT_MULTI_RESULTS;
-               if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_RESULTS");
-            #else
-               Warning("TMySQLServer","CLIENT_MULTI_RESULTS not supported by this version of MySql");
-            #endif
+           #if MYSQL_VERSION_ID >= 40100
+            client_flag = client_flag | CLIENT_MULTI_RESULTS;
+            if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_RESULTS");
+           #else
+            Warning("TMySQLServer","CLIENT_MULTI_RESULTS not supported by this version of MySql");
+           #endif
          } else
          if (opt.Contains("compress")) {
             mysql_options(fMySQL, MYSQL_OPT_COMPRESS, 0);
