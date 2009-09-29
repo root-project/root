@@ -233,3 +233,29 @@ RooAddPdf::genmodel[ Nsig * sig + Nbkg * bkg ] = 0.502276
 </ul>
 
 
+<a name="roostats"></a> 
+<h3>RooStats</h3>
+
+<h4>Major Changes in LimitCalculator and HypoTestCalculator </h4>
+
+The RooStats calculator interfaces have been changed to use the ModelConfig class.
+All the setter methods with the parameter lists, pdf instances and name have been removed from the interfaces.
+The <tt>SetWorkspace(RooWorkspace & )</tt> has also been removed, while a <tt>SetModel(const ModelConfig &)</tt>
+function is introduced.
+<br>
+Users are supposed to pass all the model information using the <tt>ModelConfig</tt> class and not anymore the RooWorkspace. 
+Setters method via pdf instances and parameter lists have been mantained in the derived classes, like the ProfileLikelihoodCalculator or the HybridCalculator, but those passing a string for the name of the pdf have been removed. 
+<br>
+All the calculator classes do not keep anymore a pointer to the workspace, but they have pointers to the pdf, data and parameters required to run the calculator. These pointers are managed outside by the users or an external RooWorkspace. They can be passed either directly to the classes, for example  via the constructor, or by using the ModelConfig class. The ModelConfig class acts as an interface to the Workspace in order to load and store all the
+needed information. 
+
+
+<h4>BayesianCalculator</h4>
+New class for calculating Bayesian interval using numerical integration. It Implements the IntervalCalculator interface and returns as result a SimpleInterval. Works currently only for one-dimensional problems.
+
+<h4>HypoTestInvertor</h4>
+New class for performing an hypothesis test inversion by scanning the result of the HybridCalculator to compute an upper limit.
+The class implements the IntervalCalculator interface.
+
+<h4>Improvements and Bug fixes</h4>
+Various improvements and fixes have been applied also to all the other classes, like ProfileLikelihoodCalculator, HybridCalculator, MCMCCalculator and NeymanConstruction  
