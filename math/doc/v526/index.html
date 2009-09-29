@@ -2,3 +2,52 @@
 <hr> 
 <a name="math"></a> 
 <h3>Math Libraries</h3>
+
+<h4>TMath</h4>
+<ul>
+<li>Add 2 new functions to compare floating points:
+<pre>
+Bool_t AreEqualAbs(Double_t af, Double_t bf, Double_t epsilon) {
+//return kTRUE if absolute difference between af and bf is less than epsilon
+Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
+//return kTRUE if relative difference between af and bf is less than relPrec
+</pre>
+</ul>
+
+<h4>TMatrix</h4>
+
+ Various changes to the  Sparse Matrix  classes:
+  <ul>
+    <li>Fixed Savannah bugs 45807,45502 and 45415
+    <li>added a Streamer function to TMatrixTSparse to remove a memory
+    leak.
+    <li>Added vector functionality as proposed by Peter D Barnes from LNL
+  (<a><href="http://root.cern.ch/phpBB2/viewtopic.php?t=8351">http://root.cern.ch/phpBB2/viewtopic.php?t=8351</a>).
+    <pre>
+double   s = v1 * M * v2;  // Mult Function : e.g., physics matrix element 
+TMatrixD M = v1' * v2      // outer product of v1 and v2
+ </pre>
+  </ul>
+
+<h4>SMatrix</h4>
+<ul>
+  <li>Use specialized structures for building automatically static
+  tables for the indeces map of the symmetric matrices. This gives an
+  improvements of around 10-20% in testKalman and in the matrix
+  operations test.
+</ul>
+
+<h4>Minuit2</h4>
+  <ul>
+    <li>Fix a bug in MnFunctionCross. 
+    <li>Add a protection against very small step sizes which can cause
+  <em>nan</em> values in  InitialGradientCalculator.
+</ul>
+
+<h4>Fitting classes</h4>
+<ul>
+<li>Fix the fitting with the integral option in multi-dimensions. 
+<li>Force the gradient calculation when requested in the minimizer
+  classes and avoid to perform the check when using TMinuit. This was
+  already the case in Minuit2. 
+  </ul>
