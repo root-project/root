@@ -390,6 +390,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
      while ((destArg = (RooAbsArg*)_iterator->Next())) {              
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
        destArg->copyCache(sourceArg) ;
+       sourceArg->copyCache(destArg) ;
        if (!destArg->isValid()) {
 	 numInvalid++ ;
 	 allOK=kFALSE ;
