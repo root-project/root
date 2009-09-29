@@ -40,6 +40,7 @@ void rs701_BayesianCalculator()
   data.add(RooArgSet(*(w->var("x"))),w->var("n")->getVal());
 
   BayesianCalculator bcalc(data,*model,RooArgSet(*POI),*priorPOI,&nuisanceParameters);
+  bcalc.SetTestSize(0.05);
   SimpleInterval* interval = bcalc.GetInterval();
   std::cout << "90% CL interval: [ " << interval->LowerLimit() << " - " << interval->UpperLimit() << " ] or 95% CL limits\n";
   bcalc.PlotPosterior();

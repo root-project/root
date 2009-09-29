@@ -91,8 +91,6 @@ namespace RooStats {
 
       double fSize; 
 
-      mutable Double_t fLowerLimit;
-      mutable Double_t fUpperLimit;
 
    protected:
 

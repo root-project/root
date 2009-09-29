@@ -263,10 +263,9 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
 
 	step=thisArgVal+step-x_app;
 	if (fabs(step)<1E-5) {
-	  std::cout<<"WARNING lower limit is outside the parameters bounderies. Abort!"<<std::endl;
+          ccoutW(Eval) <<  "Lower limit is outside the parameters bounderies. Abort!" <<std::endl;
 	  delete newProfile;
 	  double ret = myarg->getMin();
-	  //delete myarg;
 	  return ret;
 	}
       }
@@ -277,7 +276,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
 
     // If L is below target and we are at boundary stop here
     if ((fabs(myarg->getVal()-myarg->getMin())<1e-5) && (L<target)) {
-      std::cout<<"WARNING lower limit is outside the parameters bounderies (L at lower bound of " << myarg->GetName() << " is " << L 
+      ccoutW(Eval) <<"WARNING lower limit is outside the parameters bounderies (L at lower bound of " << myarg->GetName() << " is " << L 
 	       << ", which is less than target value of " << target << "). Abort!"<<std::endl;
       delete newProfile;
       double ret = myarg->getMin();
@@ -287,7 +286,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
     //Compute the linear function
     a=(L-L_old)/(step);
     if (fabs(a)<1E-3) {
-      std::cout<<"WARNING: the slope of the Likelihood linear approximation is close to zero" <<std::endl;
+       ccoutD(Eval) <<"WARNING: the slope of the Likelihood linear approximation is close to zero" <<std::endl;
     }
     b=L-a*thisArgVal;
     //approximate the position of the desired L value
@@ -298,19 +297,17 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
     diff=L-target;
 
     if(a>0) {
-      std::cout<<"WARNING: you are on the right of the MLE. Step towards MLE"<<std::endl;
+      ccoutD(Eval) <<"WARNING: you are on the right of the MLE. Step towards MLE"<<std::endl;
       step=-(myarg->getMax()-myarg->getMin())/100; //Do a constant step, typical for the dimenions of the problem towards the minimum
      
       
     }
   }
-  
-  
-  std::cout<<"LL search Iterations:"<< nIterations<<std::endl;
+    
+  ccoutD(Eval) <<"LL search Iterations:"<< nIterations<<std::endl;
  
   delete newProfile;
   double ret=myarg->getVal();
-  //delete myarg;
   return ret;
 }
 
@@ -332,7 +329,6 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param)
 
   Double_t maxStep = (myarg->getMax()-myarg->getMin())/10 ;
 
-  bool toggleplot=false; //For debugging purposes, could think of interfacing a Filepattern to outside to have controlplots stored
   double step=1;
   double L= newProfile->getVal();
   double L_old=0;
@@ -346,41 +342,29 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param)
     L_old=L;
     thisArgVal=thisArgVal+step;
     if (thisArgVal>myarg->getMax())
-      {
-	std::cout<<"WARNING: near the upper boundery"<<std::endl;
+    {
+        ccoutD(Eval) <<"WARNING: near the upper boundery"<<std::endl;
 	thisArgVal=myarg->getMax(); 
 	step=thisArgVal+step-x_app;
 	//std::cout<<"DEBUG: step:"<<step<<" thistArgVal:"<<thisArgVal<<std::endl;
 	if (fabs(step)<1E-5) {
-	  toggleplot=true;
-	  std::cout<<"WARNING upper limit is outside the parameters bounderies. Abort!"<<std::endl;
-	  // 	  TCanvas c1;
-	  // 	  c1.cd();
-	  // 	  RooPlot* frame=myarg->frame();
-	  // 	  newProfile->plotOn(frame);
-	  // 	  frame->Draw();
-	  // 	  TString fname("");
-	  // 	  fname+=MLE;
-	  // 	  fname+="_"; fname+="abort.ps";
-	  // 	  c1.Print(fname);
-	  //	  delete frame;
+	  ccoutW(Eval) <<"Upper limit is outside the parameters bounderies. Abort!"<<std::endl;
 	  delete newProfile;
 	  double ret=myarg->getMax();
-	  //delete myarg;
 	  return ret;
 	}
-      }
+    }
     
     myarg->setVal( thisArgVal );
     L=newProfile->getVal();
 
     // If L is below target and we are at boundary stop here
     if ((fabs(myarg->getVal()-myarg->getMax())<1e-5) && (L<target)) {
-      std::cout<<"WARNING upper limit is outside the parameters bounderies (L at upper bound of " << myarg->GetName() << " is " << L 
+       ccoutW(Eval) <<"WARNING upper limit is outside the parameters bounderies (L at upper bound of " << myarg->GetName() << " is " << L 
 	       << ", which is less than target value of " << target << "). Abort!"<<std::endl;
-      delete newProfile;
-      double ret = myarg->getMax();
-      return ret;      
+       delete newProfile;
+       double ret = myarg->getMax();
+       return ret;      
     }
 
 
@@ -388,8 +372,7 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param)
     a=(L-L_old)/(step);
    
     if (fabs(a)<1E-3){
-      std::cout<<"WARNING: the slope of the Likelihood linear approximation is close to zero."<<std::endl;
-      toggleplot=true;
+       ccoutD(Eval) <<"WARNING: the slope of the Likelihood linear approximation is close to zero."<<std::endl;
     }
     b=L-a*thisArgVal;
     //approximate the position of the desired L value
@@ -401,38 +384,20 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param)
 
     //If slope is negative you are below the minimum
     if(a<0) {
-      std::cout<<"WARNING: you are on the left of the MLE. Step towards MLE"<<std::endl;
+      ccoutD(Eval)<<"WARNING: you are on the left of the MLE. Step towards MLE"<<std::endl;
       step=(myarg->getMax()-myarg->getMin())/100; //Do a constant step, typical for the dimenions of the problem towards the minimum
       //L_old=0;
       
     }
     
   }
-  
-  //________________________________________
-  //Controlplots for debugging
-  if (toggleplot) {
-    //  TCanvas c1;
-    //     c1.cd();
-    //     RooPlot* frame=myarg->frame();
-    //     newProfile->plotOn(frame);
-    //     frame->Draw();
-    //     TString fname("/afs/cern.ch/user/r/ruthmann/development/c++/2009.08.14_higgs_combination_7tev/limit_controlplots/");
-    //     fname+=MLE;
-    //     fname+="_"; fname+=myarg->getVal(); fname+=".ps";
-    //     c1.Print(fname);
-    //     delete frame;
-  }
-  //_______________________________________
-  
-  std::cout<<"UL search Iterations:"<< nIterations<<std::endl;
+    
+  ccoutD(Eval) <<"UL search Iterations:"<< nIterations<<std::endl;
   
 
   delete newProfile;
   double ret=myarg->getVal();
-  //delete myarg;
   return ret;
-  //return x_app;
 
   RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 }

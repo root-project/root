@@ -37,7 +37,8 @@ BayesianCalculator::BayesianCalculator() :
   fData(0),
   fPdf(0),
   fPriorPOI(0),
-  fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0)
+  fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0), 
+  fSize(0.05)
 {
    // default constructor
 }
@@ -54,11 +55,10 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
   fPOI(POI),
   fPriorPOI(&priorPOI),
   fNuisanceParameters(*nuisanceParameters), 
-  fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0)
+  fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
+  fSize(0.05)
 {
    // constructor
-   fLowerLimit = -999;
-   fUpperLimit = +999;
 }
 
 BayesianCalculator::BayesianCalculator( RooAbsData& data,
@@ -66,7 +66,8 @@ BayesianCalculator::BayesianCalculator( RooAbsData& data,
    fData(&data), 
    fPdf(model.GetPdf()),
    fPriorPOI( model.GetPriorPdf()),
-   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0)
+   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
+   fSize(0.05)
 {
    // constructor from Model Config
    SetModel(model);
@@ -171,17 +172,19 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    assert(poi);
    
    double y = fSize;
-   brf.findRoot(fLowerLimit,poi->getMin(),poi->getMax(),y);
+   double lowerLimit = 0; 
+   double upperLimit = 0; 
+   brf.findRoot(lowerLimit,poi->getMin(),poi->getMax(),y);
    
    y=1-fSize;
-   brf.findRoot(fUpperLimit,poi->getMin(),poi->getMax(),y);
+   brf.findRoot(upperLimit,poi->getMin(),poi->getMax(),y);
    
    delete cdf_bind;
    delete cdf;
    delete nll;
 
    TString interval_name = TString("BayesianInterval_a") + TString(this->GetName());
-   SimpleInterval* interval = new SimpleInterval(interval_name,"SimpleInterval from BayesianCalculator",poi,fLowerLimit,fUpperLimit);
+   SimpleInterval* interval = new SimpleInterval(interval_name,"SimpleInterval from BayesianCalculator",poi,lowerLimit,upperLimit);
   
    return interval;
 }
