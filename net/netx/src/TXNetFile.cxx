@@ -764,8 +764,13 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       Info("ReadBuffers", "XrdClient->ReadV failed, executing TFile::ReadBuffers");
 
    // If it wasnt able to use the specialized call
-   // then use the generic one that is like a queue
-   return TFile::ReadBuffers(buf, pos, len, nbuf);
+   // then use the generic one that is a plain loop
+   // of individual requests
+   if (buf)
+      return TFile::ReadBuffers(buf, pos, len, nbuf);
+   // If the async call was needed (buf == 0) and it got an error,
+   // just return error
+   else return kTRUE;
 }
 
 //_____________________________________________________________________________
