@@ -65,7 +65,7 @@ public:
    /** 
       Constructor from unbin data set and model function (pdf)
    */ 
-   LogLikelihoodFCN (const UnBinData & data, IModelFunction & func) : 
+   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func) : 
       BaseObjFunction(func.NPar(), data.Size() ),
       fData(data), 
       fFunc(func), 
@@ -155,7 +155,7 @@ private:
       //data member
 
    const UnBinData & fData; 
-   mutable IModelFunction & fFunc; 
+   const IModelFunction & fFunc; 
 
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit 
 

@@ -86,7 +86,7 @@ public:
    /** 
       Constructor from data set (binned ) and model function 
    */ 
-   Chi2FCN (const BinData & data, IModelFunction & func) : 
+   Chi2FCN (const BinData & data, const IModelFunction & func) : 
       BaseObjFunction(func.NPar(), data.Size() ),
       fData(data), 
       fFunc(func), 
@@ -184,7 +184,7 @@ private:
    }
 
    const BinData & fData; 
-   mutable IModelFunction & fFunc; 
+   const IModelFunction & fFunc; 
 
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit 
 

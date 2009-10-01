@@ -262,8 +262,7 @@ private:
 
 private: 
 
-   // need to be mutable since ofter operator()(x,p) is not a const method
-   mutable ParamFuncType fFunc; 
+   ParamFuncType fFunc; 
    const double * fX; 
    const double * fParams; 
    unsigned int fIpar;
