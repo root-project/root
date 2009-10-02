@@ -2185,7 +2185,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
             // The 'sub' StreamerInfo start with the main StreamerInfo name,
             // it subinfo is likely to be a nested class.
             const Int_t sublen = strlen(subinfo->GetName());
-            if ( (sublen > len) && subinfo->GetName()[len+1]==':') {
+            if ( (sublen > len) && subinfo->GetName()[len+1]==':'
+               && !subClasses.FindObject(subinfo->GetName()) /* We need to insure uniqueness */) 
+            {
                subClasses.Add(subinfo);
             }
          }
