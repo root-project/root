@@ -9,17 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TImage                                                               //
-//                                                                      //
-// Abstract interface to image processing library.                      //
-// It allows for the reading and writing of images in different         //
-// formats, several image manipulations (scaling, tiling, merging,      //
-// etc.) and displaying in pads.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TImage.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
@@ -28,10 +17,25 @@
 
 ClassImp(TImage)
 
+
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>Image class</h2></center>
+TImage is an abstract interface to image processing library.
+It allows for the reading and writing of images in different formats, several
+image manipulations (scaling, tiling, merging, etc.) and displaying in pads.
+<p>
+The concrete implementation of this class is done by the
+<a href="http://root.cern.ch/root/html/TASImage.html">TASImage</a> class. The 
+methods are documented in that class.
+End_Html */
+
+
 //______________________________________________________________________________
 TImage *TImage::Create()
 {
-   // Create an image. Use ReadImage() or SetImage() to initialize the image.
+   // Create an image.
+   // Use ReadImage() or SetImage() to initialize the image.
 
    static TPluginHandler *h = 0;
 
@@ -49,6 +53,7 @@ TImage *TImage::Create()
    return img;
 }
 
+
 //______________________________________________________________________________
 TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filename)
 {
@@ -58,7 +63,7 @@ TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filenam
    // kAnimGif is returned if the file extension is ".anim.gif".
 
    if (!filename) return kUnknown;
-   
+
    TString sFilename(filename);
    if (sFilename.EndsWith(".xpm.gz", TString::kIgnoreCase))
       return kGZCompressedXpm;
@@ -102,6 +107,7 @@ TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filenam
    return kUnknown;
 }
 
+
 //______________________________________________________________________________
 TImage *TImage::Open(const char *file, EImageFileTypes type)
 {
@@ -118,6 +124,7 @@ TImage *TImage::Open(const char *file, EImageFileTypes type)
    return img;
 }
 
+
 //______________________________________________________________________________
 TImage *TImage::Open(const char *name, const Double_t *imageData, UInt_t width,
                      UInt_t height, TImagePalette *palette)
@@ -132,6 +139,7 @@ TImage *TImage::Open(const char *name, const Double_t *imageData, UInt_t width,
    }
    return img;
 }
+
 
 //______________________________________________________________________________
 TImage *TImage::Open(const char *name, const TArrayD &imageData, UInt_t width,
@@ -148,6 +156,7 @@ TImage *TImage::Open(const char *name, const TArrayD &imageData, UInt_t width,
    return img;
 }
 
+
 //______________________________________________________________________________
 TImage *TImage::Open(const char *name, const TVectorD &imageData, UInt_t width,
                      TImagePalette *palette)
@@ -163,10 +172,11 @@ TImage *TImage::Open(const char *name, const TVectorD &imageData, UInt_t width,
    return img;
 }
 
+
 //______________________________________________________________________________
 TImage *TImage::Open(char **data)
 {
-   // create image from XPM data array
+   // Create image from XPM data array.
 
    TImage *img = Create();
 
@@ -180,5 +190,3 @@ TImage *TImage::Open(char **data)
 
 TImage operator+(const TImage &i1, const TImage &i2) { TImage ret(i1); ret.Append(&i2, "+"); return ret; }
 TImage operator/(const TImage &i1, const TImage &i2) { TImage ret(i1); ret.Append(&i2, "/"); return ret; }
-
-
