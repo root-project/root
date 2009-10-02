@@ -54,6 +54,7 @@ TPolyLine::TPolyLine(Int_t n, Option_t *option)
       :TObject(), TAttLine(), TAttFill()
 {
    // PolyLine normal constructor without initialisation.
+   // Allocates n points.  The option string is ignored.
 
    fOption = option;
    fLastPoint = -1;
@@ -73,7 +74,9 @@ TPolyLine::TPolyLine(Int_t n, Option_t *option)
 TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
       :TObject(), TAttLine(), TAttFill()
 {
-   // PolyLine normal constructor.
+   // PolyLine normal constructor (single precision).
+   // Makes n points with (x, y) coordinates from x and y.
+   // The option string is ignored.
 
    fOption = option;
    fLastPoint = -1;
@@ -96,7 +99,9 @@ TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       :TObject(), TAttLine(), TAttFill()
 {
-   // PolyLine normal constructor.
+   // PolyLine normal constructor (double precision).
+   // Makes n points with (x, y) coordinates from x and y.
+   // The option string is ignored.
 
    fOption = option;
    fLastPoint = -1;
@@ -175,12 +180,21 @@ void TPolyLine::Copy(TObject &obj) const
 //______________________________________________________________________________
 Int_t TPolyLine::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a polyline.
+   // Returns closest distance in pixels from point (px, py) to a polyline.
    //
-   //  Compute the closest distance of approach from point px,py to each segment
-   //  of the polyline.
-   //  Returns when the distance found is below DistanceMaximum.
-   //  The distance is computed in pixels units.
+   // First looks for distances to the points of the polyline.  Stops search
+   // and returns if a vertex of the polyline is found to be closer than 10
+   // pixels.  Thus the return value may depend on the ordering of points
+   // in the polyline.
+   //
+   // Then looks for distances to the lines of the polyline.  There is no
+   // arbitrary cutoff; any distance may be found.
+   //
+   // Finally checks whether (px, py) is inside a closed and filled polyline.
+   // (Must be EXACTLY closed.  "Filled" means fill color and fill style are
+   // both non-zero.) If so, returns zero.
+   //
+   // Returns 9999 if the polyline has no points.
 
    const Int_t big = 9999;
    const Int_t kMaxDiff = 10;
@@ -431,6 +445,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TPolyLine::ls(Option_t *) const
 {
    // List this polyline with its attributes.
+   // The option string is ignored.
 
    TROOT::IndentLevel();
    printf("TPolyLine  N=%d\n",fN);
@@ -494,8 +509,8 @@ void TPolyLine::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *optio
 {
    // Draw this polyline with new coordinates.
    //
-   //  if option = 'f' or 'F' the fill area is drawn
-   //  default is to draw the lines only
+   //  If option = 'f' or 'F' the fill area is drawn.
+   //  The default is to draw the lines only.
 
    if (n <= 0) return;
    TAttLine::Modify();  //Change line attributes only if necessary
@@ -532,6 +547,7 @@ void TPolyLine::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *op
 void TPolyLine::Print(Option_t *) const
 {
    // Dump this polyline with its attributes.
+   // The option string is ignored.
 
    printf("PolyLine  N=%d\n",fN);
 }
@@ -588,9 +604,9 @@ Int_t TPolyLine::SetNextPoint(Double_t x, Double_t y)
 //______________________________________________________________________________
 void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
 {
-   // set point number n
-   // if n is greater than the current size, the arrays are automatically
-   // extended
+   // Set point number n to (x, y)
+   // If n is greater than the current size, the arrays are automatically
+   // extended.
 
    if (n < 0) return;
    if (!fX || !fY || n >= fN) {
@@ -621,7 +637,9 @@ void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
 //______________________________________________________________________________
 void TPolyLine::SetPolyLine(Int_t n)
 {
-   // if n <= 0 the current arrays of points are deleted.
+   // Resize this polyline to size n.
+   // If n <= 0 the current arrays of points are deleted.
+   // If n is greater than the current size, the new points are set to (0, 0)
 
    if (n <= 0) {
       fN = 0;
@@ -643,9 +661,9 @@ void TPolyLine::SetPolyLine(Int_t n)
 //______________________________________________________________________________
 void TPolyLine::SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
-   // Set new values for this polyline.
+   // Set new values for this polyline (single precision).
    //
-   // if n <= 0 the current arrays of points are deleted.
+   // If n <= 0 the current arrays of points are deleted.
 
    if (n <= 0) {
       fN = 0;
@@ -672,9 +690,9 @@ void TPolyLine::SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 //______________________________________________________________________________
 void TPolyLine::SetPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
-   // Set new values for this polyline.
+   // Set new values for this polyline (double precision).
    //
-   // if n <= 0 the current arrays of points are deleted.
+   // If n <= 0 the current arrays of points are deleted.
 
    if (n <= 0) {
       fN = 0;
