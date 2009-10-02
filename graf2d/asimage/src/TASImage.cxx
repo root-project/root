@@ -30,30 +30,28 @@
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
-**************************************************************************/
+ **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TASImage                                                             //
-//                                                                      //
-// Interface to image processing library using libAfterImage.           //
-// It allows reading and writing of images in different                 //
-// formats, several image manipulations (scaling, tiling, merging,      //
-// etc.) and displaying in pads.                                        //
-// The size of the image on the screen does not depend on the original  //
-// size of the image but on the size of the pad. Therefore it is very   //
-// easy to resize the image on the screen by resizing the pad.          //
-//                                                                      //
-// Besides reading an image from a file an image can be defined by a    //
-// two dimensional array of values. A palette defines the color of      //
-// each value.                                                          //
-//                                                                      //
-// The image can be zoomed by defining a rectangle with the mouse.      //
-// The color palette can be modified with a GUI, just select            //
-// StartPaletteEditor() from the context menu.                          //
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>Image class</h2></center>
+TASImage is the concrete interface to the image processing library
+libAfterImage.
+<p>
+It allows reading and writing of images in different formats, several image
+manipulations (scaling, tiling, merging, etc.) and displaying in pads. The size
+of the image on the screen does not depend on the original size of the image but
+on the size of the pad. Therefore it is very easy to resize the image on the
+screen by resizing the pad.
+<p>
+Besides reading an image from a file an image can be defined by a two
+dimensional array of values. A palette defines the color of each value.
+<p>
+The image can be zoomed by defining a rectangle with the mouse. The color
+palette can be modified with a GUI, just select StartPaletteEditor() from the
+context menu.
+End_Html */
 
 #include "TASImage.h"
 #include "TASImagePlugin.h"
@@ -155,10 +153,11 @@ typedef struct {
 ClassImp(TASImage)
 ClassImp(TASImagePlugin)
 
+
 //______________________________________________________________________________
 void TASImage::DestroyImage()
 {
-   // helper class
+   // Destroy image.
 
    if (fImage) {
       destroy_asimage(&fImage);
@@ -173,10 +172,11 @@ void TASImage::DestroyImage()
    fImage      = 0;
 }
 
+
 //______________________________________________________________________________
 void TASImage::SetDefaults()
 {
-   // set default parameters
+   // Set default parameters.
 
    fImage         = 0;
    fScaledImage   = 0;
@@ -200,23 +200,26 @@ void TASImage::SetDefaults()
    }
 }
 
+
 //______________________________________________________________________________
 TASImage::TASImage()
 {
-   // Default image ctor.
+   // Default image constructor.
 
    SetDefaults();
 }
 
+
 //______________________________________________________________________________
 TASImage::TASImage(UInt_t w, UInt_t h) : TImage(w, h)
 {
-   // create an empty image
+   // Create an empty image.
 
    SetDefaults();
    fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
    UnZoom();
 }
+
 
 //______________________________________________________________________________
 TASImage::TASImage(const char *file, EImageFileTypes) : TImage(file)
@@ -229,11 +232,12 @@ TASImage::TASImage(const char *file, EImageFileTypes) : TImage(file)
    ReadImage(file);
 }
 
+
 //______________________________________________________________________________
 TASImage::TASImage(const char *name, const Double_t *imageData, UInt_t width,
                    UInt_t height, TImagePalette *palette) : TImage(name)
 {
-   // Creates an image depending on the values of imageData.
+   // Create an image depending on the values of imageData.
    // For more information see function SetImage() which is called
    // by this constructor.
 
@@ -241,25 +245,27 @@ TASImage::TASImage(const char *name, const Double_t *imageData, UInt_t width,
    SetImage(imageData, width, height, palette);
 }
 
+
 //______________________________________________________________________________
 TASImage::TASImage(const char *name, const TArrayD &imageData, UInt_t width,
                    TImagePalette *palette) : TImage(name)
 {
-   // Creates an image depending on the values of imageData. The size
-   // of the image is width X (imageData.fN / width).
+   // Create an image depending on the values of imageData.
+   // The size of the image is width X (imageData.fN / width).
    // For more information see function SetImage() which is called by
    // this constructor.
 
    SetDefaults();
    SetImage(imageData, width, palette);
 }
+
 
 //______________________________________________________________________________
 TASImage::TASImage(const char *name, const TVectorD &imageData, UInt_t width,
                    TImagePalette *palette) : TImage(name)
 {
-   // Creates an image depending on the values of imageData. The size
-   // of the image is width X (imageData.fN / width).
+   // Create an image depending on the values of imageData.
+   // The size of the image is width X (imageData.fN / width).
    // For more information see function SetImage() which is called by
    // this constructor.
 
@@ -267,10 +273,11 @@ TASImage::TASImage(const char *name, const TVectorD &imageData, UInt_t width,
    SetImage(imageData, width, palette);
 }
 
+
 //______________________________________________________________________________
 TASImage::TASImage(const TASImage &img) : TImage(img)
 {
-   // Image copy ctor.
+   // Image copy constructor.
 
    SetDefaults();
 
@@ -294,6 +301,7 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
       fIsGray     = img.fIsGray;
    }
 }
+
 
 //______________________________________________________________________________
 TASImage &TASImage::operator=(const TASImage &img)
@@ -331,20 +339,22 @@ TASImage &TASImage::operator=(const TASImage &img)
    return *this;
 }
 
+
 //______________________________________________________________________________
 TASImage::~TASImage()
 {
-   // Image dtor, clean up image and visual.
+   // Image destructor, clean up image and visual.
 
    DestroyImage();
    delete fScaledImage;
    fScaledImage = 0;
 }
 
+
 //______________________________________________________________________________
 static void init_icon_paths()
 {
-   // sets icons paths
+   // Set icons paths.
 
    const char *icons = "/icons";
 #ifdef R__WIN32
@@ -375,10 +385,11 @@ static void init_icon_paths()
    gIconPaths[6] = 0;
 }
 
+
 //______________________________________________________________________________
 const char *TASImage::TypeFromMagicNumber(const char *file)
 {
-   // Guess file type from the first byte of file
+   // Guess the file type from the first byte of file.
 
    UChar_t magic;
    FILE *fp = fopen(file, "rb");
@@ -429,17 +440,18 @@ const char *TASImage::TypeFromMagicNumber(const char *file)
    return ret;
 }
 
+
 //______________________________________________________________________________
 void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 {
-   // Read specified image file. The file type is determined by
-   // the file extension (the type argument is ignored). It will
-   // attempt to append .gz and then .Z to the filename and find such
-   // a file. If the filename ends with extension consisting of digits
+   // Read specified image file.
+   // The file type is determined by the file extension (the type argument is
+   // ignored). It will attempt to append .gz and then .Z to the filename and
+   // find such a file. If the filename ends with extension consisting of digits
    // only, it will attempt to find the file with this extension stripped
    // off. On success this extension will be used to load subimage from
    // the file with that number. Subimage is supported for GIF files
-   // (ICO, BMP, CUR, TIFF, XCF to be supported in futute).
+   // (ICO, BMP, CUR, TIFF, XCF to be supported in future).
    //  For example,
    //    i1 = TImage::Open("anim.gif.0"); // read the first subimage
    //    i4 = TImage::Open("anim.gif.3"); // read the forth subimage
@@ -553,19 +565,21 @@ end:
    fPaintMode  = 1;
 }
 
+
 //______________________________________________________________________________
 void TASImage::WriteImage(const char *file, EImageFileTypes type)
 {
-   // Write image to specified file. If there is no file extension or
-   // if the file extension is unknown, the type argument will be used
-   // to determine the file type. The quality and compression is derived from
-   // the TAttImage values.
-   // It's posiible to write image into an animated GIF file by specifying file name as
-   // "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying
+   // Write image to specified file.
+   // If there is no file extension or if the file extension is unknown, the
+   // type argument will be used to determine the file type. The quality and
+   // compression is derived from the TAttImage values.
+   // It's posiible to write image into an animated GIF file by specifying file
+   // name as "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying
    // subimages during animation in 10ms seconds units.
    // If NN is ommitted the delay between subimages is zero.
-   // For repeated animation the last subimage must be specified as "myfile.gif++NN",
-   // where NN is number of cycles. If NN is ommitted the animation will be infinite.
+   // For repeated animation the last subimage must be specified as
+   // "myfile.gif++NN", where NN is number of cycles. If NN is ommitted the
+   // animation will be infinite.
    //
    // The following macro creates animated gif from jpeg images with names
    //    imageNN.jpg, where 1<= NN <= 10
@@ -704,6 +718,7 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    }
 }
 
+
 //______________________________________________________________________________
 TImage::EImageFileTypes TASImage::GetFileType(const char *ext)
 {
@@ -747,6 +762,7 @@ TImage::EImageFileTypes TASImage::GetFileType(const char *ext)
 
    return kUnknown;
 }
+
 
 //______________________________________________________________________________
 void TASImage::MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas)
@@ -833,6 +849,7 @@ void TASImage::MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas)
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas)
 {
@@ -864,6 +881,7 @@ void TASImage::MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas
          quality = kImgBest;
    }
 }
+
 
 //______________________________________________________________________________
 void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
@@ -929,10 +947,11 @@ void TASImage::SetImage(const Double_t *imageData, UInt_t width, UInt_t height,
    fPaletteEnabled = kTRUE;
 }
 
+
 //______________________________________________________________________________
 void TASImage::SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *palette)
 {
-   // Deletes the old image and creates a new image depending on the values
+   // Delete the old image and creates a new image depending on the values
    // of imageData. The size of the image is width X (imageData.fN / width).
    // The color of each pixel depends on the imageData of the corresponding
    // pixel. The palette is used to convert an image value into its color.
@@ -942,10 +961,11 @@ void TASImage::SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *p
    SetImage(imageData.GetArray(), width, imageData.GetSize() / width, palette);
 }
 
+
 //______________________________________________________________________________
 void TASImage::SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette)
 {
-   // Deletes the old image and creates a new image depending on the values
+   // Delete the old image and creates a new image depending on the values
    // of imageData. The size of the image is width X (imageData.fN / width).
    // The color of each pixel depends on the imageData of the corresponding
    // pixel. The palette is used to convert an image value into its color.
@@ -955,6 +975,7 @@ void TASImage::SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *
    SetImage(imageData.GetMatrixArray(), width,
             imageData.GetNoElements() / width, palette);
 }
+
 
 //______________________________________________________________________________
 void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
@@ -1046,10 +1067,12 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::Draw(Option_t *option)
 {
-   // Draw image. Support the following drawing options:
+   // Draw image.
+   // Support the following drawing options:
    // "T[x,y[,tint]]" - tile image (use specified offset and tint),
    //                   e.g. "T100,100,#556655"
    //                   with this option the zooming is not possible
@@ -1104,6 +1127,7 @@ void TASImage::Draw(Option_t *option)
 
    TObject::Draw(option);
 }
+
 
 //______________________________________________________________________________
 void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
@@ -1214,6 +1238,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
    if (gc) gVirtualX->ChangeGC(gc, &gv);
 }
 
+
 //______________________________________________________________________________
 void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc, Int_t ysrc,
                           UInt_t wsrc, UInt_t hsrc, Option_t *opt)
@@ -1229,10 +1254,12 @@ void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc, Int_t ys
                   xsrc, ysrc, wsrc, hsrc, opt);
 }
 
+
 //______________________________________________________________________________
 void TASImage::Paint(Option_t *option)
 {
-   // Paint image. Support the following drawing options:
+   // Paint image.
+   // Support the following drawing options:
    // "T[x,y[,tint]]" - tile image (use specified offset and tint),
    //                   e.g. "T100,100,#556655"
    //                   with this option the zooming is not possible
@@ -1548,10 +1575,11 @@ void TASImage::Paint(Option_t *option)
    }
 }
 
+
 //______________________________________________________________________________
 Int_t TASImage::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Is the mouse in the image?
+   // Is the mouse in the image ?
 
    Int_t pxl, pyl, pxt, pyt;
 
@@ -1570,6 +1598,7 @@ Int_t TASImage::DistancetoPrimitive(Int_t px, Int_t py)
 
    return 999999;
 }
+
 
 //______________________________________________________________________________
 void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
@@ -1651,6 +1680,7 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 char *TASImage::GetObjectInfo(Int_t px, Int_t py) const
 {
@@ -1690,12 +1720,13 @@ char *TASImage::GetObjectInfo(Int_t px, Int_t py) const
    return info;
 }
 
+
 //______________________________________________________________________________
 void TASImage::SetPalette(const TImagePalette *palette)
 {
-   // Set a new palette to an image. Only images that were created with the
-   // SetImage() functions can be modified with this function.
-   // The previously used palette is destroyed.
+   // Set a new palette to an image.
+   // Only images that were created with the SetImage() functions can be
+   // modified with this function. The previously used palette is destroyed.
 
    TAttImage::SetPalette(palette);
 
@@ -1742,11 +1773,13 @@ void TASImage::SetPalette(const TImagePalette *palette)
    fScaledImage = 0;
 }
 
+
 //______________________________________________________________________________
 void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
 {
-   // Scales the original image. The size of the image on the screen does not
-   // change because it is defined by the size of the pad.
+   // Scale the original image.
+   // The size of the image on the screen does not change because it is defined
+   // by the size of the pad.
    // This function can be used to change the size of an image before writing
    // it into a file. The colors of the new pixels are interpolated.
    // An image created with the SetImage() functions cannot be modified with
@@ -1780,11 +1813,12 @@ void TASImage::Scale(UInt_t toWidth, UInt_t toHeight)
    fZoomUpdate = kZoomOps;
 }
 
+
 //______________________________________________________________________________
 void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
                      UInt_t toWidth, UInt_t toHeight)
 {
-   // Yet another method of enlarging images where corners remain unchanged,
+   // Another method of enlarging images where corners remain unchanged,
    // but middle part gets tiled.
 
    if (!IsValid()) {
@@ -1817,10 +1851,11 @@ void TASImage::Slice(UInt_t xStart, UInt_t xEnd, UInt_t yStart,  UInt_t yEnd,
    fZoomUpdate = kZoomOps;
 }
 
+
 //______________________________________________________________________________
 void TASImage::Tile(UInt_t toWidth, UInt_t toHeight)
 {
-   // Tiles the original image.
+   // Tile the original image.
 
    if (!IsValid()) {
       Warning("Tile", "Image not initiated");
@@ -1848,6 +1883,7 @@ void TASImage::Tile(UInt_t toWidth, UInt_t toHeight)
    UnZoom();
    fZoomUpdate = kZoomOps;
 }
+
 
 //______________________________________________________________________________
 void TASImage::Zoom(UInt_t offX, UInt_t offY, UInt_t width, UInt_t height)
@@ -1878,11 +1914,11 @@ void TASImage::Zoom(UInt_t offX, UInt_t offY, UInt_t width, UInt_t height)
       fZoomOffY = fImage->height - fZoomHeight;
 }
 
+
 //______________________________________________________________________________
 void TASImage::UnZoom()
 {
-   // Un-zooms the image to original size.
-   //
+   // Un-zoom the image to original size.
    // UnZoom() - performs undo for Zoom,Crop,Scale actions
 
    if (!IsValid()) {
@@ -1899,10 +1935,12 @@ void TASImage::UnZoom()
    fScaledImage = 0;
 }
 
+
 //______________________________________________________________________________
 void TASImage::Flip(Int_t flip)
 {
-   // Flip image in place. Flip is either 90, 180, 270, 180 is default.
+   // Flip image in place.
+   // Flip is either 90, 180, 270, 180 is default.
    // This function manipulates the original image and destroys the
    // scaled and zoomed image which will be recreated at the next call of
    // the Draw function. If the image is zoomed the zoom - coordinates are
@@ -1943,11 +1981,13 @@ void TASImage::Flip(Int_t flip)
    UnZoom();
 }
 
+
 //______________________________________________________________________________
 void TASImage::Mirror(Bool_t vert)
 {
-   // Mirror image in place. If vert is true mirror in vertical axis,
-   // horizontal otherwise. Vertical is default.
+   // Mirror image in place.
+   // If vert is true mirror in vertical axis, horizontal otherwise.
+   // Vertical is default.
    // This function manipulates the original image and destroys the
    // scaled and zoomed image which will be recreated at the next call of
    // the Draw function. If the image is zoomed the zoom - coordinates are
@@ -1980,6 +2020,7 @@ void TASImage::Mirror(Bool_t vert)
    UnZoom();
 }
 
+
 //______________________________________________________________________________
 UInt_t TASImage::GetWidth() const
 {
@@ -1988,6 +2029,7 @@ UInt_t TASImage::GetWidth() const
 
    return fScaledImage ? fScaledImage->fImage->width : (fImage ? fImage->width : 0);
 }
+
 
 //______________________________________________________________________________
 UInt_t TASImage::GetHeight() const
@@ -1998,6 +2040,7 @@ UInt_t TASImage::GetHeight() const
    return fScaledImage ? fScaledImage->fImage->height : (fImage ? fImage->height : 0);
 }
 
+
 //______________________________________________________________________________
 UInt_t TASImage::GetScaledWidth() const
 {
@@ -2006,6 +2049,7 @@ UInt_t TASImage::GetScaledWidth() const
 
    return fScaledImage ? fScaledImage->fImage->width : GetWidth();
 }
+
 
 //______________________________________________________________________________
 UInt_t TASImage::GetScaledHeight() const
@@ -2016,17 +2060,19 @@ UInt_t TASImage::GetScaledHeight() const
    return fScaledImage ? fScaledImage->fImage->height : GetHeight();
 }
 
+
 //______________________________________________________________________________
 void TASImage::GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const
 {
-   // Return the zoom parameters. This is useful when the zoom has been done
-   // interactively using the mouse.
+   // Return the zoom parameters.
+   // This is useful when the zoom has been done interactively using the mouse.
 
    x = fZoomOffX;
    y = fZoomOffY;
    w = fZoomWidth;
    h = fZoomHeight;
 }
+
 
 //______________________________________________________________________________
 Bool_t TASImage::InitVisual()
@@ -2076,6 +2122,7 @@ Bool_t TASImage::InitVisual()
    return kTRUE;
 }
 
+
 //______________________________________________________________________________
 void TASImage::StartPaletteEditor()
 {
@@ -2094,10 +2141,12 @@ void TASImage::StartPaletteEditor()
    TAttImage::StartPaletteEditor();
 }
 
+
 //______________________________________________________________________________
 Pixmap_t TASImage::GetPixmap()
 {
-   // Returns image pixmap. The pixmap must deleted by user.
+   // Returns image pixmap.
+   // The pixmap must deleted by user.
 
    if (!InitVisual()) {
       Warning("GetPixmap", "Visual not initiated");
@@ -2125,10 +2174,12 @@ Pixmap_t TASImage::GetPixmap()
    return ret;
 }
 
+
 //______________________________________________________________________________
 Pixmap_t TASImage::GetMask()
 {
-   // Returns image mask pixmap (alpha channel). The pixmap must deleted by user.
+   // Returns image mask pixmap (alpha channel).
+   // The pixmap must deleted by user.
 
    Pixmap_t pxmap = 0;
 
@@ -2186,10 +2237,11 @@ Pixmap_t TASImage::GetMask()
    return pxmap;
 }
 
+
 //______________________________________________________________________________
 void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
 {
-   // create image from pixmap
+   // Create image from pixmap.
 
    if (!InitVisual()) {
       Warning("SetImage", "Visual not initiated");
@@ -2230,10 +2282,11 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    }
 }
 
+
 //______________________________________________________________________________
 TArrayL *TASImage::GetPixels(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   // returns 2D array of machine dependent pixel values
+   // Return 2D array of machine dependent pixel values.
 
    if (!fImage) {
       Warning("GetPixels", "Wrong Image");
@@ -2300,11 +2353,13 @@ TArrayL *TASImage::GetPixels(Int_t x, Int_t y, UInt_t width, UInt_t height)
    return ret;
 }
 
+
 //______________________________________________________________________________
 Double_t *TASImage::GetVecArray()
 {
-   // Returns a pointer to internal array[width x height] of double values [0, 1]
-   // This array is directly accessible. That allows to manipulate/change the image
+   // Return a pointer to internal array[width x height] of double values [0,1].
+   // This array is directly accessible. That allows to manipulate/change the
+   // image.
 
    if (!fImage) {
       Warning("GetVecArray", "Bad Image");
@@ -2316,6 +2371,7 @@ Double_t *TASImage::GetVecArray()
    // vectorize
    return 0;
 }
+
 
 //______________________________________________________________________________
 TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
@@ -2383,6 +2439,7 @@ TArrayD *TASImage::GetArray(UInt_t w, UInt_t h, TImagePalette *palette)
    stop_image_decoding(&imdec);
    return ret;
 }
+
 
 //______________________________________________________________________________
 void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
@@ -2509,6 +2566,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
 {
@@ -2563,10 +2621,11 @@ void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
    UnZoom();
 }
 
+
 //______________________________________________________________________________
 void TASImage::Blur(Double_t hr, Double_t vr)
 {
-   // Performs Gaussian blurr of the image (usefull for drop shadows)
+   // Perform Gaussian blurr of the image (usefull for drop shadows).
    //    hr         - horizontal radius of the blurr
    //    vr         - vertical radius of the blurr
 
@@ -2594,10 +2653,11 @@ void TASImage::Blur(Double_t hr, Double_t vr)
    UnZoom();
 }
 
+
 //______________________________________________________________________________
 TObject *TASImage::Clone(const char *newname) const
 {
-   // clone image
+   // Clone image.
 
    if (!InitVisual() || !fImage) {
       Warning("Clone", "Image not initiated");
@@ -2632,10 +2692,12 @@ TObject *TASImage::Clone(const char *newname) const
    return im;
 }
 
+
 //______________________________________________________________________________
 Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_threshold)
 {
-   // Reduces colordepth of an image and fills vector of "scientific data" [0...1]
+   // Reduce colordepth of an image and fills vector of "scientific data"
+   // [0...1]
    //
    // Colors are reduced by allocating colorcells to most used colors first,
    // and then approximating other colors with those allocated.
@@ -2712,6 +2774,7 @@ Double_t *TASImage::Vectorize(UInt_t max_colors, UInt_t dither, Int_t opaque_thr
    UnZoom();
    return (Double_t*)fImage->alt.vector;
 }
+
 
 //______________________________________________________________________________
 void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
@@ -2790,6 +2853,7 @@ void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
    fImage = rendered_im;
    UnZoom();
 }
+
 
 //______________________________________________________________________________
 void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
@@ -2986,11 +3050,12 @@ void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
    UnZoom();
 }
 
-/////////////// auxilary funcs used in TASImage::Bevel method //////////////////
+
 //______________________________________________________________________________
 static CARD8 MakeComponentHilite(int cmp)
 {
-   //
+   // Make component hilite.
+   // (used internally)
 
    if (cmp < 51) {
       cmp = 51;
@@ -3000,10 +3065,12 @@ static CARD8 MakeComponentHilite(int cmp)
    return (cmp > 255) ? 255 : cmp;
 }
 
+
 //______________________________________________________________________________
 static ARGB32 GetHilite(ARGB32 background)
 {
-   // calculates highlite color
+   // Calculate highlite color.
+   // (used internally)
 
    return ((MakeComponentHilite((background>>24) & 0x000000FF) << 24) & 0xFF000000) |
            ((MakeComponentHilite((background & 0x00FF0000) >> 16) << 16) & 0x00FF0000) |
@@ -3011,18 +3078,22 @@ static ARGB32 GetHilite(ARGB32 background)
            ((MakeComponentHilite((background & 0x000000FF))) & 0x000000FF);
 }
 
+
 //______________________________________________________________________________
 static ARGB32 GetShadow(ARGB32 background)
 {
-   // calculates shadow color
+   // Calculate shadow color.
+   // (used internally)
 
    return (background >> 1) & 0x7F7F7F7F;
 }
 
+
 //______________________________________________________________________________
 static ARGB32 GetAverage(ARGB32 foreground, ARGB32 background)
 {
-   //
+   // Get average.
+   // (used internally)
 
    CARD16   a, r, g, b;
 
@@ -3038,12 +3109,13 @@ static ARGB32 GetAverage(ARGB32 foreground, ARGB32 background)
    return MAKE_ARGB32(a, r, g, b);
 }
 
+
 //______________________________________________________________________________
 void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
                      const char *hi_color, const char *lo_color, UShort_t thick,
                      Bool_t reverse)
 {
-   //  Bevel is used to create 3D effect while drawing buttons, or any other
+   // Bevel is used to create 3D effect while drawing buttons, or any other
    // image that needs to be framed. Bevel is drawn using 2 primary colors:
    // one for top and left sides - hi color, and another for bottom and
    // right sides - low color. Bevel can be drawn over exisiting image or
@@ -3051,7 +3123,6 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
    //
    //  TImage *img = TImage::Create();
    //  img->Bevel(0, 0, 400, 300, "#dddddd", "#000000", 3);
-   //
 
    if (!InitVisual()) {
       Warning("Bevel", "Visual not initiated");
@@ -3160,10 +3231,11 @@ void TASImage::Bevel(Int_t x, Int_t y, UInt_t width, UInt_t height,
    UnZoom();
 }
 
+
 //______________________________________________________________________________
 void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
 {
-   // Enlarges image, padding it with specified color on each side in
+   // Enlarge image, padding it with specified color on each side in
    // accordance with requested geometry.
 
    Int_t x, y;
@@ -3209,10 +3281,11 @@ void TASImage::Pad(const char *col, UInt_t l, UInt_t r, UInt_t t, UInt_t b)
    fZoomUpdate = kZoomOps;
 }
 
+
 //______________________________________________________________________________
 void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   // Crops an image
+   // Crop an image.
 
    if (!InitVisual()) {
       Warning("Crop", "Visual not initiated");
@@ -3280,10 +3353,11 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
    fZoomUpdate = kZoomOps;
 }
 
+
 //______________________________________________________________________________
 void TASImage::Append(const TImage *im, const char *option, const char *color )
 {
-   // Appends image
+   // Append image.
    //
    // option:
    //       "+" - appends to the right side
@@ -3320,12 +3394,15 @@ void TASImage::Append(const TImage *im, const char *option, const char *color )
    UnZoom();
 }
 
+
 //______________________________________________________________________________
 void TASImage::BeginPaint(Bool_t mode)
 {
-   // BeginPaint initializes internal array[width x height] of ARGB32 pixel values
+   // BeginPaint initializes internal array[width x height] of ARGB32 pixel
+   // values.
    // That provides quick access to image during paint operations.
-   // To RLE compress image one needs to call EndPaint method when paintinig is over
+   // To RLE compress image one needs to call EndPaint method when paintinig
+   // is over.
 
    if (!InitVisual()) {
       Warning("BeginPaint", "Visual not initiated");
@@ -3354,10 +3431,11 @@ void TASImage::BeginPaint(Bool_t mode)
    fImage = img;
 }
 
+
 //______________________________________________________________________________
 void TASImage::EndPaint()
 {
-   // EndPaint does internal RLE compression of image data
+   // EndPaint does internal RLE compression of image data.
 
    if (!fImage) {
       Warning("EndPaint", "no image");
@@ -3379,11 +3457,13 @@ void TASImage::EndPaint()
    fImage = img;
 }
 
+
 //______________________________________________________________________________
 UInt_t *TASImage::GetArgbArray()
 {
-   // Returns a pointer to internal array[width x height] of ARGB32 values
-   // This array is directly accessible. That allows to manipulate/change the image
+   // Return a pointer to internal array[width x height] of ARGB32 values
+   // This array is directly accessible. That allows to manipulate/change the
+   // image.
 
    if (!fImage) {
       Warning("GetArgbArray", "no image");
@@ -3406,10 +3486,11 @@ UInt_t *TASImage::GetArgbArray()
    return (UInt_t *)img->alt.argb32;
 }
 
+
 //______________________________________________________________________________
 UInt_t *TASImage::GetRgbaArray()
 {
-   // Returns a pointer to an array[width x height] of RGBA32 values.
+   // Return a pointer to an array[width x height] of RGBA32 values.
    // This array is created from internal ARGB32 array,
    // must be deleted after usage.
 
@@ -3454,10 +3535,11 @@ UInt_t *TASImage::GetRgbaArray()
    return ret;
 }
 
+
 //______________________________________________________________________________
 UInt_t *TASImage::GetScanline(UInt_t y)
 {
-   // return a pointer to scanline
+   // Return a pointer to scanline.
 
    if (!fImage) {
       Warning("GetScanline", "no image");
@@ -3490,8 +3572,12 @@ UInt_t *TASImage::GetScanline(UInt_t y)
    return (UInt_t*)ret;
 }
 
-/////////////////////////////// vector graphics ///////////////////////////////
+
+//______________________________________________________________________________
+//
+// Vector graphics
 // a couple of macros which can be "assembler accelerated"
+
 #if defined(R__GNU) && defined(__i386__) && !defined(__sun)
 #define _MEMSET_(dst, lng, val)   __asm__("movl  %0,%%eax \n"\
                                       "movl  %1,%%edi \n"              \
@@ -3522,7 +3608,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 //______________________________________________________________________________
 void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   // Fills rectangle of size (width, height) at position (x,y)
+   // Fill rectangle of size (width, height) at position (x,y)
    // within the existing image with specified color.
 
    ARGB32 color = (ARGB32)col;
@@ -3571,10 +3657,11 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   // Fills rectangle of size (width, height) at position (x,y)
+   // Fill rectangle of size (width, height) at position (x,y)
    // within the existing image with specified color.
    //
    // To create new image with Fill method the following code can be used:
@@ -3603,10 +3690,11 @@ void TASImage::FillRectangle(const char *col, Int_t x, Int_t y, UInt_t width, UI
    UnZoom();
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thick)
 {
-   // vertical line
+   // Draw a vertical line.
 
    ARGB32 color = (ARGB32)col;
    UInt_t half = 0;
@@ -3638,10 +3726,11 @@ void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thic
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thick)
 {
-   // horizontal line
+   // Draw an horizontal line.
 
    ARGB32 color = (ARGB32)col;
    UInt_t half = 0;
@@ -3673,23 +3762,24 @@ void TASImage::DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thic
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2,
                         const char *col, UInt_t thick)
-
 {
-   // draw line
+   // Draw a line.
 
    ARGB32 color;
    parse_argb_color(col, &color);
    DrawLineInternal(x1, y1, x2, y2, (UInt_t)color, thick);
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                                 UInt_t col, UInt_t thick)
 {
-   // internal drawing
+   // Internal line drawing.
 
    int dx, dy, d;
    int i1, i2;
@@ -3845,11 +3935,12 @@ void TASImage::DrawLineInternal(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
                              const char *col, UInt_t thick)
 {
-   // draw rectangle
+   // Draw a rectangle.
 
    if (!InitVisual()) {
       Warning("DrawRectangle", "Visual not initiated");
@@ -3885,11 +3976,12 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
    UnZoom();
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
                        UInt_t thick, Int_t mode)
 {
-   // draw box
+   // Draw a box.
 
    Int_t x = TMath::Min(x1, x2);
    Int_t y = TMath::Min(y1, y2);
@@ -3934,11 +4026,12 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
                              const char *pDash, UInt_t col, UInt_t thick)
 {
-   // draw dashed horizontal line
+   // Draw a dashed horizontal line.
 
    UInt_t iDash = 0;    // index of current dash
    int i = 0;
@@ -3990,11 +4083,12 @@ void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash,
                              const char *pDash, UInt_t col, UInt_t thick)
 {
-   // draw dashed vertical line
+   // Draw a dashed vertical line.
 
    UInt_t iDash = 0;    // index of current dash
    int i = 0;
@@ -4047,11 +4141,12 @@ void TASImage::DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash,
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                              UInt_t nDash, const char *tDash, UInt_t color)
 {
-   // draw dashed line with 1 pixel width
+   // Draw a dashed line with one pixel width.
 
    int dx, dy, d;
    int i, i1, i2;
@@ -4231,11 +4326,12 @@ void TASImage::DrawDashZLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    delete [] pDash;
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawDashZTLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                              UInt_t nDash, const char *tDash, UInt_t color, UInt_t thick)
 {
-   // draw dashed line with thick pixel width
+   // Draw a dashed line with thick pixel width.
 
    int dx, dy;
    int i;
@@ -4388,12 +4484,13 @@ void TASImage::DrawDashZTLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    delete [] yDash;
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawDashLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2, UInt_t nDash,
                             const char *pDash, const char *col, UInt_t thick)
 
 {
-   // draw dashed line
+   // Draw a dashed line.
 
    if (!InitVisual()) {
       Warning("DrawDashLine", "Visual not initiated");
@@ -4432,11 +4529,12 @@ void TASImage::DrawDashLine(UInt_t x1,  UInt_t y1, UInt_t x2, UInt_t y2, UInt_t 
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawPolyLine(UInt_t nn, TPoint *xy, const char *col, UInt_t thick,
                             TImage::ECoordMode mode)
 {
-   // draw polyline
+   // Draw a polyline.
 
    ARGB32 color;
    parse_argb_color(col, &color);
@@ -4457,10 +4555,11 @@ void TASImage::DrawPolyLine(UInt_t nn, TPoint *xy, const char *col, UInt_t thick
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::PutPixel(Int_t x, Int_t y, const char *col)
 {
-   // draw point at specified position
+   // Draw a point at the specified position.
 
    if (!InitVisual()) {
       Warning("PutPixel", "Visual not initiated");
@@ -4492,10 +4591,11 @@ void TASImage::PutPixel(Int_t x, Int_t y, const char *col)
    _alphaBlend(&fImage->alt.argb32[y*fImage->width + x], &color);
 }
 
+
 //______________________________________________________________________________
 void TASImage::PolyPoint(UInt_t npt, TPoint *ppt, const char *col, TImage::ECoordMode mode)
 {
-   // draw poly point
+   // Draw a poly point.
 
    if (!InitVisual()) {
       Warning("PolyPoint", "Visual not initiated");
@@ -4552,10 +4652,11 @@ void TASImage::PolyPoint(UInt_t npt, TPoint *ppt, const char *col, TImage::ECoor
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawSegments(UInt_t nseg, Segment_t *seg, const char *col, UInt_t thick)
 {
-   // draw segments
+   // Draw segments.
 
    if (!nseg || !seg) {
       Warning("DrawSegments", "Ivalid data nseg=%d seg=%d", nseg, seg);
@@ -4575,11 +4676,12 @@ void TASImage::DrawSegments(UInt_t nseg, Segment_t *seg, const char *col, UInt_t
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *col,
                          const char *stipple, UInt_t w, UInt_t h)
 {
-   // fill spans with specified color or/and stipple
+   // Fill spans with specified color or/and stipple.
 
    if (!InitVisual()) {
       Warning("FillSpans", "Visual not initiated");
@@ -4634,10 +4736,11 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, const char *co
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
 {
-   // fille spans with tile image
+   // Fill spans with tile image.
 
    if (!InitVisual()) {
       Warning("FillSpans", "Visual not initiated");
@@ -4689,10 +4792,11 @@ void TASImage::FillSpans(UInt_t npt, TPoint *ppt, UInt_t *widths, TImage *tile)
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
 {
-   //  crop spans
+   // Crop spans.
 
    if (!InitVisual()) {
       Warning("CropSpans", "Visual not initiated");
@@ -4755,6 +4859,7 @@ void TASImage::CropSpans(UInt_t npt, TPoint *ppt, UInt_t *widths)
       yy += fImage->width;
    }
 }
+
 
 //______________________________________________________________________________
 void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h,
@@ -4881,6 +4986,7 @@ void TASImage::CopyArea(TImage *dst, Int_t xsrc, Int_t ysrc, UInt_t w,  UInt_t h
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx,
                              Int_t ny, UInt_t *ic)
@@ -4918,10 +5024,11 @@ void TASImage::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx,
    }
 }
 
+
 //______________________________________________________________________________
 UInt_t TASImage::AlphaBlend(UInt_t bot, UInt_t top)
 {
-   // returns alphablended value computed from bottom and top pixel values
+   // Return alphablended value computed from bottom and top pixel values.
 
    UInt_t ret = bot;
 
@@ -4929,19 +5036,20 @@ UInt_t TASImage::AlphaBlend(UInt_t bot, UInt_t top)
    return ret;
 }
 
+
 //______________________________________________________________________________
 const ASVisual *TASImage::GetVisual()
 {
-   // return visual
+   // Return visual.
 
    return fgVisual;
 }
 
-//////////////////////// polygon filling //////////////////////////////
+
 //______________________________________________________________________________
 static int GetPolyYBounds(TPoint *pts, int n, int *by, int *ty)
 {
-   //
+   // Get poly bounds along Y.
 
    register TPoint *ptMin;
    int ymin, ymax;
@@ -4965,6 +5073,7 @@ static int GetPolyYBounds(TPoint *pts, int n, int *by, int *ty)
     *ty = ymax;
     return (ptMin - ptsStart);
 }
+
 
 //______________________________________________________________________________
 Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
@@ -5109,11 +5218,12 @@ Bool_t TASImage::GetPolygonSpans(UInt_t npt, TPoint *ppt, UInt_t *nspans,
    return ret;
 }
 
+
 //______________________________________________________________________________
 void TASImage::FillPolygon(UInt_t npt, TPoint *ppt, const char *col,
                            const char *stipple, UInt_t w, UInt_t h)
 {
-   // Fill a convex polygon with background color or bitmap
+   // Fill a convex polygon with background color or bitmap.
    // For non convex polygon one must use DrawFillArea method
 
    UInt_t  nspans = 0;
@@ -5138,6 +5248,7 @@ void TASImage::FillPolygon(UInt_t npt, TPoint *ppt, const char *col,
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::FillPolygon(UInt_t npt, TPoint *ppt, TImage *tile)
 {
@@ -5159,6 +5270,7 @@ void TASImage::FillPolygon(UInt_t npt, TPoint *ppt, TImage *tile)
       }
    }
 }
+
 
 //______________________________________________________________________________
 void TASImage::CropPolygon(UInt_t npt, TPoint *ppt)
@@ -5183,11 +5295,12 @@ void TASImage::CropPolygon(UInt_t npt, TPoint *ppt)
 
 static const UInt_t NUMPTSTOBUFFER = 512;
 
+
 //______________________________________________________________________________
 void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
                            const char *stipple, UInt_t w, UInt_t h)
 {
-   // fill a polygon (any type convex, non-convex)
+   // Fill a polygon (any type convex, non-convex).
 
    if (!InitVisual()) {
       Warning("DrawFillArea", "Visual not initiated");
@@ -5297,10 +5410,11 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, const char *col,
    FreeStorage(SLLBlock.next);
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
 {
-   // fill a polygon (any type convex, non-convex)
+   // Fill a polygon (any type convex, non-convex).
 
    if (!InitVisual()) {
       Warning("DrawFillArea", "Visual not initiated");
@@ -5386,106 +5500,11 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
    FreeStorage(SLLBlock.next);
 }
 
-/////______________________________________________________________________________
-///static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
-///                                     int x_to, CARD32)
-///{
-///   // Fill horizontal line
-///
-///   int cw = ctx->canvas_width;
-///
-///   if ((x_to >= 0) && (x_from < cw) && (y >= 0) && (y < ctx->canvas_height)) {
-///      CARD32 value = ctx->tool->matrix[0]; //color
-///      CARD32 *dst = (CARD32 *)(ctx->canvas + y*cw);
-///      int x1 = x_from;
-///      int x2 = x_to;
-///
-///      if (x1 < 0) {
-///         x1 = 0;
-///      }
-///      if (x2 >= cw) {
-///         x2 = cw - 1;
-///      }
-///
-///      while (x1 <= x2) {
-///         _alphaBlend(&dst[x1], &value);
-///         ++x1;
-///      }
-///   }
-///}
-
-/////______________________________________________________________________________
-///static void apply_tool_point_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
-///{
-///   // Apply tool point argb32.
-///
-///   int cw = ctx->canvas_width;
-///
-///   if (curr_x >= 0 && curr_x < cw && curr_y >= 0 && curr_y < ctx->canvas_height)  {
-///      CARD32 value = ctx->tool->matrix[0]; //color
-///      CARD32 *dst = (CARD32 *)(ctx->canvas);
-///      dst += curr_y * cw;
-///
-///      _alphaBlend(&dst[curr_x], &value);
-///   }
-///}
-
-/////______________________________________________________________________________
-///static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
-///{
-///   // Apply tool 2D argb32.
-///
-///   CARD32 *src = (CARD32 *)ctx->tool->matrix;
-///   int corner_x = curr_x - ctx->tool->center_x;
-///   int corner_y = curr_y - ctx->tool->center_y;
-///   int tw = ctx->tool->width;
-///   int th = ctx->tool->height;
-///   int cw = ctx->canvas_width;
-///   int ch = ctx->canvas_height;
-///   int aw = tw;
-///   int ah = th;
-///   CARD32 *dst = (CARD32 *)ctx->canvas;
-///   int x, y;
-///
-///   if ((corner_x+tw <= 0) || (corner_x >= cw) || (corner_y+th <= 0) || (corner_y >= ch)) {
-///      return;
-///   }
-///
-///   if (corner_y > 0) {
-///      dst += corner_y*cw;
-///   } else if (corner_y < 0) {
-///      ah -= -corner_y;
-///      src += -corner_y*tw;
-///   }
-///
-///   if (corner_x  > 0) {
-///      dst += corner_x;
-///   } else if (corner_x < 0) {
-///      src += -corner_x;
-///      aw -= -corner_x;
-///   }
-///
-///   if (corner_x + tw > cw) {
-///      aw = cw - corner_x;
-///   }
-///
-///   if (corner_y + th > ch) {
-///      ah = ch - corner_y;
-///   }
-///
-///   for (y = 0; y < ah; ++y) {
-///      for (x = 0; x < aw; ++x) {
-///         _alphaBlend(&dst[x], &src[x]);
-///      }
-///      src += tw;
-///      dst += cw;
-///   }
-///}
 
 //______________________________________________________________________________
 static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 {
-   // Create draw context
+   // Create draw context.
 
    ASDrawContext *ctx = new ASDrawContext;
 
@@ -5498,6 +5517,7 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
    asim_set_custom_brush_colored( ctx, brush);
    return ctx;
 }
+
 
 //______________________________________________________________________________
 static void destroy_asdraw_context32( ASDrawContext *ctx )
@@ -5513,11 +5533,12 @@ static void destroy_asdraw_context32( ASDrawContext *ctx )
 static const UInt_t kBrushCacheSize = 20;
 static CARD32 gBrushCache[kBrushCacheSize*kBrushCacheSize];
 
+
 //______________________________________________________________________________
 void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                             UInt_t color, UInt_t thick)
 {
-   // Draw wide line
+   // Draw wide line.
 
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -5549,10 +5570,11 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
    destroy_asdraw_context32(ctx);
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 {
-   // Draw glyph bitmap
+   // Draw glyph bitmap.
 
    static UInt_t col[5];
    Int_t x, y, yy, y0, xx;
@@ -5624,6 +5646,7 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
       yy += fImage->width;
    }
 }
+
 
 //______________________________________________________________________________
 void TASImage::DrawText(TText *text, Int_t x, Int_t y)
@@ -5763,6 +5786,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
                            UInt_t color, const char *font_name, Float_t angle)
@@ -5796,11 +5820,11 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
    }
 }
 
-/////////////////////////////////////////////////////////////////////////
+
 //______________________________________________________________________________
 void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
 {
-   // Returns in-memory buffer compressed according image type
+   // Return in-memory buffer compressed according image type.
    // Buffer must be deallocated after usage.
    // This method can be used for sending images over network.
 
@@ -5826,10 +5850,11 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
    }
 }
 
+
 //______________________________________________________________________________
 Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
 {
-   // create image from  compressed buffer
+   // Create image from compressed buffer.
    // Supported formats:
    //
    //    PNG - by default
@@ -5897,10 +5922,11 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
    return kTRUE;
 }
 
+
 //______________________________________________________________________________
 void TASImage::CreateThumbnail()
 {
-   // creates image thumbnail
+   // Create image thumbnail.
 
    int size;
    const int sz = 64;
@@ -5981,10 +6007,11 @@ void TASImage::CreateThumbnail()
    destroy_asimage(&padimg);
 }
 
+
 //______________________________________________________________________________
 void TASImage::Streamer(TBuffer &b)
 {
-   // streamer for ROOT I/O
+   // Streamer for ROOT I/O.
 
    Bool_t image_type = 0;
    char *buffer = 0;
@@ -6073,10 +6100,11 @@ void TASImage::Streamer(TBuffer &b)
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::Browse(TBrowser *)
 {
-   // browse image
+   // Browse image.
 
    if (fImage->alt.vector) {
       Draw("n");
@@ -6086,10 +6114,11 @@ void TASImage::Browse(TBrowser *)
    CreateThumbnail();
 }
 
+
 //______________________________________________________________________________
 const char *TASImage::GetTitle() const
 {
-   // title is used to keep 32x32 xpm image's thumbnail
+   // Title is used to keep 32x32 xpm image's thumbnail.
 
    if (!gDirectory || !gDirectory->IsWritable()) {
       return 0;
@@ -6104,10 +6133,11 @@ const char *TASImage::GetTitle() const
    return fTitle.Data();
 }
 
+
 //______________________________________________________________________________
 void TASImage::SetTitle(const char *title)
 {
-   // set a title for an image
+   // Set a title for an image.
 
    if (fTitle.IsNull()) {
       CreateThumbnail();
@@ -6125,11 +6155,12 @@ void TASImage::SetTitle(const char *title)
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                              Int_t x3, Int_t y3, const char *col, UInt_t thick)
 {
-   // draws cubic bezier line
+   // Draw a cubic bezier line.
 
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -6165,11 +6196,13 @@ void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
    destroy_asdraw_context32(ctx);
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
                                   const char *col, Int_t thick)
 {
-   // draws straight ellips. If thick < 0 - draw filled ellips
+   // Draw a straight ellipse.
+   // If thick < 0 - draw filled ellipse.
 
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
@@ -6204,10 +6237,12 @@ void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
    destroy_asdraw_context32(ctx);
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thick)
 {
-   // Draw circle. If thick < 0 - draw filled circle
+   // Draw a circle.
+   // If thick < 0 - draw filled circle
 
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
@@ -6243,11 +6278,13 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
    destroy_asdraw_context32(ctx);
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
                            const char *col, Int_t thick)
 {
-   // Draw ellips. If thick < 0 - draw filled ellips
+   // Draw an ellipse.
+   // If thick < 0 - draw filled ellips
 
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
@@ -6282,11 +6319,13 @@ void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
    destroy_asdraw_context32(ctx);
 }
 
+
 //______________________________________________________________________________
 void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
                            const char *col, Int_t thick)
 {
-   // Draw ellips. If thick < 0 - draw filled ellips
+   // Draw an ellipse.
+   // If thick < 0 - draw filled ellipse.
 
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
@@ -6321,19 +6360,19 @@ void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
    destroy_asdraw_context32(ctx);
 }
 
+
 //______________________________________________________________________________
 void TASImage::FloodFill(Int_t /*x*/, Int_t /*y*/, const char * /*col*/,
                          const char * /*minc*/, const char * /*maxc*/)
 {
-   // flood fill
-
-
+   // Flood fill.
 }
+
 
 //______________________________________________________________________________
 void TASImage::Gray(Bool_t on)
 {
-   // Converts RGB image to Gray image and vice versa.
+   // Convert RGB image to Gray image and vice versa.
 
    if (fIsGray == on) {
       return;
@@ -6443,10 +6482,11 @@ void TASImage::Gray(Bool_t on)
    fIsGray = kTRUE;
 }
 
+
 //______________________________________________________________________________
 void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // creates an image(screenshot) from  specified window
+   // Create an image (screenshot) from specified window.
 
    Int_t xy;
 
@@ -6494,10 +6534,11 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
 }
 
+
 //______________________________________________________________________________
 void TASImage::FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h)
 {
-   // creates an image(screenshot) from a RGBA buffer
+   // Creates an image (screenshot) from a RGBA buffer.
 
    DestroyImage();
    delete fScaledImage;
@@ -6514,10 +6555,12 @@ void TASImage::FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h)
    fImage = bitmap2asimage(buf, w, h, 0, 0);
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 void TASImage::SetPaletteEnabled(Bool_t on)
 {
-   // switch on/off image palette. That also invokes calling vectorizasion of image
+   // Switch on/off the image palette.
+   // That also invokes calling vectorization of image.
 
    if (!fImage) {
       return;
@@ -6543,10 +6586,11 @@ void TASImage::SetPaletteEnabled(Bool_t on)
 
 }
 
+
 //______________________________________________________________________________
 void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
-    // Save a primitive as a C++ statement(s) on output stream "out"
+    // Save a primitive as a C++ statement(s) on output stream "out".
 
    char *buf;
    int sz;
@@ -6581,10 +6625,11 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << "   " << name << "->Draw();" << endl;
 }
 
+
 //______________________________________________________________________________
 Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
 {
-   // Sets an image printing resolution in Dots Per Inch units.
+   // Set an image printing resolution in Dots Per Inch units.
    // name - the name of jpeg file.
    // set - dpi resolution.
    // Returns kFALSE in case of error.

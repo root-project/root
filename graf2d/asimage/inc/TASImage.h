@@ -12,28 +12,14 @@
 #ifndef ROOT_TASImage
 #define ROOT_TASImage
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TASImage                                                             //
 //                                                                      //
-// Interface to image processing library using libAfterImage.           //
-// It allows for the reading and writing of images in different         //
-// formats, several image manipulations (scaling, tiling, merging,      //
-// etc.) and displaying in pads.                                        //
-// The size of the image on the screen does not depend on the original  //
-// size of the image but on the size of the pad. Therefore it is very   //
-// easy to resize the image on the screen by resizing the pad.          //
-//                                                                      //
-// Besides reading an image from a file an image can be defined by a    //
-// two dimensional array of values. A palette defines the color of      //
-// each value.                                                          //
-//                                                                      //
-// The image can be zoomed by defining a rectangle with the mouse.      //
-// The color palette can be modified with a GUI, just select            //
-// StartPaletteEditor() from the context menu.                          //
+// Interface to image processing library libAfterImage.                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 
 #ifndef ROOT_TImage
 #include "TImage.h"
