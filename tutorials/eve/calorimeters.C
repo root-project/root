@@ -22,9 +22,9 @@ void calorimeters()
 
    TEveCaloDataHist* data = new TEveCaloDataHist();
    data->AddHistogram(ecalHist);
-   data->RefSliceInfo(0).Setup("ECAL", 0.3, 41);
+   data->RefSliceInfo(0).Setup("ECAL", 0.3, kBlue);
    data->AddHistogram(hcalHist);
-   data->RefSliceInfo(1).Setup("HCAL", 0.1, 46);
+   data->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
 
    // axis attrib
    data->GetEtaBins()->SetTitleFont(120);
@@ -64,6 +64,8 @@ void BuildProjectedView(TEveCaloData* data)
    TEveCalo3D* calo3d = MakeCalo3D(data, slotRightTop);
    MakeCalo2D(calo3d, slotLeft, TEveProjection::kPT_RPhi);
    MakeCalo2D(calo3d, slotRightBottom, TEveProjection::kPT_RhoZ);
+
+   gEve->GetViewers()->SwitchColorSet();
 }
 
 //______________________________________________________________________________
@@ -78,7 +80,8 @@ void MakeCaloLego(TEveCaloData* data)
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
    lego->Set2DMode(TEveCaloLego::kValSize);
-   lego->SetPixelsPerBin(8); // autrebin
+   lego->SetPixelsPerBin(8);
+   // lego->SetAutoRebin(kFALSE);
 
    // move to real world coordinates
    lego->SetName("Calorimeter Lego");

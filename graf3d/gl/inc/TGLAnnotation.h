@@ -30,22 +30,6 @@ private:
 
    void MakeEditor();
 
-protected:
-   TGMainFrame      *fMainFrame;
-   TGTextEdit       *fTextEdit;
-
-   TGLViewer        *fParent;
-
-   TString           fText;           // annotation text
-   Float_t           fLabelFontSize;  // relative font size
-   TGLFont           fLabelFont;      // font used to render labels
-   TGLFont           fMenuFont;       // font used to render menu buttons
-
-   Pixel_t           fBackColor;      // background color
-   Pixel_t           fBackHighColor;  // background active color
-   Pixel_t           fTextColor;      // text color
-   Pixel_t           fTextHighColor;  // text active color
-   Float_t           fAlpha;          // label transparency
 
    Float_t           fPosX;           // x position [0, 1]
    Float_t           fPosY;           // y position [0, 1]
@@ -56,9 +40,43 @@ protected:
    TGLVector3        fPointer;         // picked location in 3D space
    Bool_t            fActive;          // active item identifier
 
+   TGMainFrame      *fMainFrame;       // editors
+   TGTextEdit       *fTextEdit;        // editors
+
+   static Color_t    fgBackColor;
+   static Color_t    fgTextColor;
+
+protected:
+   TGLViewer        *fParent;
+
+   TString           fText;           // annotation text
+   Float_t           fTextSize;       // relative font size
+   TGLFont           fFont;           // font used to render labels
+   TGLFont           fMenuFont;       // font used to render menu buttons
+
+   Color_t           fBackColor;      // background color
+   Color_t           fTextColor;      // text color
+   Char_t            fTransparency;   // transparency of background
+
+   Bool_t            fDrawRefLine;    // draw 3D refrence line
+   Bool_t            fUseColorSet;    // use color set from rnrCtx
+
 public:
+   TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy);
    TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref);
    virtual ~TGLAnnotation();
+
+
+   void SetTransparency(Char_t x) { fTransparency = x;}
+   Char_t GetTransparency() const { return fTransparency;}
+   void SetUseColorSet(Bool_t x)  { fUseColorSet = x; }
+   Bool_t GetUseColorSet() const  { return fUseColorSet;}
+   void SetBackColor(Color_t x)   { fBackColor = x;}
+   Color_t GetBackColor() const   { return fBackColor;}
+   void SetTextColor(Color_t x)   { fTextColor = x;   }
+   Color_t GetTextColor() const   { return fTextColor;}
+   void SetTextSize(Float_t x)    { fTextSize = x;   }
+   Float_t getTextSize() const    { return fTextSize;}
 
    virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
    virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,

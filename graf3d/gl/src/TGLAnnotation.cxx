@@ -12,6 +12,7 @@
 #include "TGLAnnotation.h"
 
 #include "TGLIncludes.h"
+#include "TROOT.h"
 #include "TColor.h"
 #include "TGLUtil.h"
 #include "TGLCamera.h"
@@ -37,24 +38,58 @@
 
 ClassImp(TGLAnnotation);
 
+
+Color_t  TGLAnnotation::fgBackColor = (Color_t)TColor::GetColor(0.28f, 0.48f, 0.98f);
+Color_t  TGLAnnotation::fgTextColor = (Color_t)TColor::GetColor(0.98f, 0.75f, 0.52f);
+
 //______________________________________________________________________________
-TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref) :
+TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy) :
    TGLOverlayElement(TGLOverlayElement::kAnnotation),
-   fMainFrame(0), fTextEdit(0),
-   fParent(0),
-   fText(text),
-   fLabelFontSize(0.02),
-   fBackColor(0x4872fa),
-   fBackHighColor(0x488ffa),
-   fTextColor(0xfbbf84),
-   fTextHighColor(0xf1da44),
-   fAlpha(0.6),
+
    fPosX(posx), fPosY(posy),
    fMouseX(0),  fMouseY(0),
    fInDrag(kFALSE),
-   fActive(kFALSE)
+   fActive(kFALSE),
+   fMainFrame(0), fTextEdit(0),
+
+   fParent(0),
+
+   fText(text),
+   fTextSize(0.02),
+   fBackColor(fgBackColor),
+   fTextColor(fgTextColor),
+   fTransparency(100),
+   fDrawRefLine(kFALSE),
+   fUseColorSet(kTRUE)
 {
    // Constructor.
+   // Create annotation as plain text
+
+   parent->AddOverlayElement(this);
+   fParent = (TGLViewer*)parent;
+}
+
+//______________________________________________________________________________
+TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref) :
+   TGLOverlayElement(TGLOverlayElement::kAnnotation),
+   fPosX(posx), fPosY(posy),
+   fMouseX(0),  fMouseY(0),
+   fInDrag(kFALSE),
+   fActive(kFALSE),
+   fMainFrame(0), fTextEdit(0),
+
+   fParent(0),
+
+   fText(text),
+   fTextSize(0.02),
+   fBackColor(fgBackColor),
+   fTextColor(fgTextColor),
+   fTransparency(40),
+   fDrawRefLine(kTRUE),
+   fUseColorSet(kFALSE)
+{
+   // Constructor.
+   // Create annotaton by picking an object.
 
    fPointer = ref;
    parent->AddOverlayElement(this);
@@ -88,7 +123,7 @@ Bool_t TGLAnnotation::Handle(TGLRnrCtx&          rnrCtx,
          fMouseX = event->fX;
          fMouseY = event->fY;
          fInDrag = kTRUE;
-         
+
          return kTRUE;
       }
       case kButtonRelease:
@@ -152,209 +187,197 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    glGetFloatv(GL_DEPTH_RANGE, old_depth_range);
    glDepthRange(0, 0.001);
 
-   glDisable(GL_LIGHTING);
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POINT_BIT);
-   Float_t r, g, b;
-   // button
-   //
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
+   TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   glDisable(GL_CULL_FACE);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
+
+   // prepare colors
+   Color_t bgCol, fgCol;
+   if (fUseColorSet)
    {
-      glMatrixMode(GL_PROJECTION);
-      glPushMatrix();
-      glLoadIdentity();
-      if (rnrCtx.Selection())
-      {
-         TGLRect rect(*rnrCtx.GetPickRectangle());
-         rnrCtx.GetCamera()->WindowToViewport(rect);
-         gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(),
-                       (Int_t*) rnrCtx.GetCamera()->RefViewport().CArr());
-      }
-      const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
-      glOrtho(vp.X(), vp.Width(), vp.Y(), vp.Height(), 0, 1);
-      glMatrixMode(GL_MODELVIEW);
-      glPushMatrix();
-      glLoadIdentity();
+      fgCol = rnrCtx.ColorSet().Markup().GetColorIndex();
 
-      TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      glDisable(GL_CULL_FACE);
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      glShadeModel(GL_FLAT);
-      glClearColor(0.0, 0.0, 0.0, 0.0);
-
-      Float_t posX = vp.Width()  * fPosX;
-      Float_t posY = vp.Height() * fPosY;
-
-      // Text rendering
-      rnrCtx.RegisterFontNoScale(TMath::Nint(fLabelFontSize*vp.Width()), "arial",  TGLFont::kPixmap, fLabelFont);
-
-      // move to picked location
-      glTranslatef(posX, posY, -0.99);
-
-      glEnable(GL_POLYGON_OFFSET_FILL);
-      glPolygonOffset(1, 1);
-
-      TGLUtil::LineWidth(1);
-
-      // get size of bg area
-      Float_t ascent, descent, line_height;
-      fLabelFont.MeasureBaseLineParams(ascent, descent, line_height);
-
-      Float_t llx, lly, llz, urx, ury, urz;
-
-      TObjArray* lines = fText.Tokenize("\n");
-      Float_t width  = 0;
-      Float_t height = 0;
-      TIter  lit(lines);
-      TObjString* osl;
-      while ((osl = (TObjString*) lit()) != 0)
-      {
-         fLabelFont.BBox(osl->GetString().Data(), llx, lly, llz, urx, ury, urz);
-         width = TMath::Max(width, urx);
-         height += line_height + descent;
-      }
-      width  += 2 * descent;
-      height += 2 * descent;
-
-      // polygon background
-      Float_t padT =  2;
-      Int_t   padF = 10;
-      Float_t padM = padF + 2 * padT;
-
-      {
-         glPushName(0);
-
-         TColor::Pixel2RGB(fActive ? fBackHighColor : fBackColor, r, g, b);
-         TGLUtil::Color4f(r, g, b, fAlpha);
-
-         // bg plain
-         glLoadName(1);
-         glBegin(GL_QUADS);
-         glVertex2f(0, 0);
-         glVertex2f(0, height);
-         glVertex2f(width, height);
-         glVertex2f(width, 0);
-         glEnd();
-
-         // outline
-         TColor::Pixel2RGB(fActive?fTextHighColor:fTextColor, r, g, b);
-         TGLUtil::Color4f(r, g, b, fAlpha);
-
-         glBegin(GL_LINE_LOOP);
-         glVertex2f(0, 0);
-         glVertex2f(0, height);
-         glVertex2f(width, height);
-         glVertex2f(width, 0);
-         glEnd();
-
-         // edit area
-         if (fActive)
-         {
-            Float_t y = height;
-            Float_t x = 0;
-            TColor::Pixel2RGB(fBackHighColor, r, g, b);
-            TGLUtil::Color4f(r, g, b, fAlpha);
-
-            // edit button
-            glLoadName(2);
-            glBegin(GL_QUADS);
-            glVertex2f(x + padM, y);
-            glVertex2f(x,        y);
-            glVertex2f(x,        y + padM);
-            glVertex2f(x + padM, y + padM);
-            glEnd();
-            // close button
-            glLoadName(3);
-            x = padM;
-            TColor::Pixel2RGB(fBackHighColor, r, g, b);
-            TGLUtil::Color4f(r, g, b, fAlpha);
-            glBegin(GL_QUADS);
-            glVertex2f(x + padM, y);
-            glVertex2f(x,        y);
-            glVertex2f(x,        y + padM);
-            glVertex2f(x + padM, y + padM);
-            glEnd();
-
-            // outlines
-            TColor::Pixel2RGB(fTextHighColor, r, g, b);
-            TGLUtil::Color4f(r, g, b, fAlpha);
-            // left
-            x = 0;
-            glBegin(GL_LINE_LOOP);
-            glVertex2f(x + padM, y);
-            glVertex2f(x,        y);
-            glVertex2f(x,        y + padM);
-            glVertex2f(x + padM, y + padM);
-            glEnd();
-            // right
-            x = padM;
-            glBegin(GL_LINE_LOOP);
-            glVertex2f(x + padM, y);
-            glVertex2f(x,        y);
-            glVertex2f(x,        y + padM);
-            glVertex2f(x + padM, y + padM);
-            glEnd();
-         }
-         glPopName();
-      }
-
-      glDisable(GL_POLYGON_OFFSET_FILL);
-
-      // labels
-      fLabelFont.PreRender();
-      TColor::Pixel2RGB(fActive?fTextHighColor:fTextColor, r, g, b);
-      TGLUtil::Color3f(r, g, b);
-      TIter  next_base(lines);
-      TObjString* os;
-      glPushMatrix();
-      glTranslatef(descent, height, 0);
-      while ((os = (TObjString*) next_base()) != 0)
-      {
-         glTranslatef(0, -(line_height + descent), 0);
-         fLabelFont.BBox(os->GetString().Data(), llx, lly, llz, urx, ury, urz);
-         glRasterPos2i(0, 0);
-         glBitmap(0, 0, 0, 0, 0, 0, 0);
-         fLabelFont.Render(os->GetString().Data());
-      }
-      glPopMatrix();
-      fLabelFont.PostRender();
-
-      // menu
-      rnrCtx.RegisterFontNoScale(padF, "arial",  TGLFont::kPixmap, fMenuFont);
-
-      if (fActive)
-      {
-         TColor::Pixel2RGB(fTextHighColor, r, g, b);
-         TGLUtil::Color3f(r, g, b);
-         Float_t x = padT;
-         Float_t y = height + padT + 0.5*padF;
-         fMenuFont.PreRender();
-         fMenuFont.Render("X", x, y, 0, TGLFont::kLeft, TGLFont::kCenterV);
-         x += padM + padT;
-         fMenuFont.Render("E", x, y, 0, TGLFont::kLeft, TGLFont::kCenterV);
-         fMenuFont.PostRender();
-      }
-
-      glMatrixMode(GL_PROJECTION);
-      glPopMatrix();
-      glMatrixMode(GL_MODELVIEW);
-      glPopMatrix();
+      TColor* c1 = gROOT->GetColor(rnrCtx.ColorSet().Markup().GetColorIndex());
+      TColor* c2 = gROOT->GetColor(rnrCtx.ColorSet().Background().GetColorIndex());
+      Float_t f1 = 0.5, f2 = 0.5;
+      bgCol = TColor::GetColor(c1->GetRed()  *f1  + c2->GetRed()  *f2,
+                               c1->GetGreen()*f1  + c2->GetGreen()*f2,
+                               c1->GetBlue() *f1  + c2->GetBlue() *f2);
+   }
+   else {
+      fgCol = fTextColor;
+      bgCol = fBackColor;
    }
 
-   // line
-   //
-   TGLUtil::LineWidth(2);
-   TColor::Pixel2RGB(fActive ?fBackHighColor : fBackColor, r, g, b);
-   TGLUtil::Color4f(r, g, b, fAlpha);
-   glBegin(GL_LINES);
-   TGLRect& vp = rnrCtx.RefCamera().RefViewport();
-   TGLVertex3 v = rnrCtx.RefCamera().ViewportToWorld(TGLVertex3(fPosX*vp.Width(), fPosY*vp.Height(), 0));
+   if (fDrawRefLine)
+   {
+      TGLUtil::ColorTransparency(bgCol, fTransparency);
+      TGLUtil::LineWidth(2);
+      glBegin(GL_LINES);
+      TGLVertex3 v = rnrCtx.RefCamera().ViewportToWorld(TGLVertex3(fPosX*vp.Width(), fPosY*vp.Height(), 0));
+      glVertex3dv(v.Arr());
+      glVertex3dv(fPointer.Arr());
+      glEnd();
+   }
 
-   glVertex3dv(v.Arr());
-   glVertex3dv(fPointer.Arr());
+   // reset matrix
+   glMatrixMode(GL_PROJECTION);
+   glPushMatrix();
+   glLoadIdentity();
+   if (rnrCtx.Selection())
+   {
+      TGLRect rect(*rnrCtx.GetPickRectangle());
+      rnrCtx.GetCamera()->WindowToViewport(rect);
+      gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(),
+                    (Int_t*) rnrCtx.GetCamera()->RefViewport().CArr());
+   }
+   glOrtho(vp.X(), vp.Width(), vp.Y(), vp.Height(), 0, 1);
+   glMatrixMode(GL_MODELVIEW);
+   glPushMatrix();
+   glLoadIdentity();
+
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(0.1, 1);
+
+   // move to pos
+   Float_t posX = vp.Width()  * fPosX;
+   Float_t posY = vp.Height() * fPosY;
+   glTranslatef(posX, posY, -0.99);   TGLUtil::LineWidth(1);
+
+
+   // get size of bg area, look at font attributes
+   rnrCtx.RegisterFontNoScale(TMath::Nint(fTextSize*vp.Width()), "arial",  TGLFont::kPixmap, fFont);
+   Float_t ascent, descent, line_height;
+   fFont.MeasureBaseLineParams(ascent, descent, line_height);
+   TObjArray* lines = fText.Tokenize("\n");
+   Float_t width  = 0;
+   Float_t height = 0;
+   TIter  lit(lines);
+   TObjString* osl;
+   Float_t llx, lly, llz, urx, ury, urz;
+   while ((osl = (TObjString*) lit()) != 0)
+   {
+      fFont.BBox(osl->GetString().Data(), llx, lly, llz, urx, ury, urz);
+      width = TMath::Max(width, urx);
+      height += line_height + descent;
+   }
+   width  += 2 * descent;
+   height += 2 * descent;
+
+   // polygon background
+   Float_t padT =  2;
+   Int_t   padF = 10;
+   Float_t padM = padF + 2 * padT;
+
+
+   glPushName(0);
+
+   // bg plain
+   glLoadName(1);
+   TGLUtil::ColorTransparency(bgCol, fTransparency);
+   glBegin(GL_QUADS);
+   glVertex2f(0, 0);
+   glVertex2f(0, height);
+   glVertex2f(width, height);
+   glVertex2f(width, 0);
    glEnd();
-   glPopAttrib();
+
+   // outline
+   TGLUtil::ColorTransparency(fgCol, fTransparency);
+   glBegin(GL_LINE_LOOP);
+   glVertex2f(0, 0);
+   glVertex2f(0, height);
+   glVertex2f(width, height);
+   glVertex2f(width, 0);
+   glEnd();
+
+   if (fActive && fTransparency < 100)
+   {  // edit area
+      Float_t y = height;
+      Float_t x = 0;
+
+      TGLUtil::ColorTransparency(bgCol, fTransparency);
+      // edit button
+      glLoadName(2);
+      glBegin(GL_QUADS);
+      glVertex2f(x + padM, y);
+      glVertex2f(x,        y);
+      glVertex2f(x,        y + padM);
+      glVertex2f(x + padM, y + padM);
+      glEnd();
+      // close button
+      glLoadName(3);
+      x = padM;
+      glBegin(GL_QUADS);
+      glVertex2f(x + padM, y);
+      glVertex2f(x,        y);
+      glVertex2f(x,        y + padM);
+      glVertex2f(x + padM, y + padM);
+      glEnd();
+
+      // outlines
+      TGLUtil::ColorTransparency(fgCol, fTransparency);
+      x = 0; // left
+      glBegin(GL_LINE_LOOP);
+      glVertex2f(x + padM, y);
+      glVertex2f(x,        y);
+      glVertex2f(x,        y + padM);
+      glVertex2f(x + padM, y + padM);
+      glEnd(); // right
+      x = padM;
+      glBegin(GL_LINE_LOOP);
+      glVertex2f(x + padM, y);
+      glVertex2f(x,        y);
+      glVertex2f(x,        y + padM);
+      glVertex2f(x + padM, y + padM);
+      glEnd();
+   }
+   glPopName();
+
+   // text
+   Float_t zOff = 0.2; // more than 0, else not rendered
+   fFont.PreRender();
+   TGLUtil::Color(fgCol);
+   TIter  next_base(lines);
+   TObjString* os;
+   glPushMatrix();
+   glTranslatef(descent, height, zOff);
+   while ((os = (TObjString*) next_base()) != 0)
+   {
+      glTranslatef(0, -(line_height + descent), 0);
+      fFont.BBox(os->GetString().Data(), llx, lly, llz, urx, ury, urz);
+      glRasterPos2i(0, 0);
+      glBitmap(0, 0, 0, 0, 0, 0, 0);
+      fFont.Render(os->GetString().Data());
+   }
+   glPopMatrix();
+   fFont.PostRender();
+
+   // menu
+   if (fActive && fTransparency < 100)
+   {
+      rnrCtx.RegisterFontNoScale(padF, "arial",  TGLFont::kPixmap, fMenuFont);
+      Float_t x = padT;
+      Float_t y = height + padT + 0.5*padF;
+      fMenuFont.PreRender();
+      fMenuFont.Render("X", x, y, zOff, TGLFont::kLeft, TGLFont::kCenterV);
+      x += padM + padT;
+      fMenuFont.Render("E", x, y, zOff, TGLFont::kLeft, TGLFont::kCenterV);
+      fMenuFont.PostRender();
+   }
+
+   glMatrixMode(GL_PROJECTION);
+   glPopMatrix();
+   glMatrixMode(GL_MODELVIEW);
+   glPopMatrix();
+
    glDepthRange(old_depth_range[0], old_depth_range[1]);
+   glPopAttrib();
 }
 
 //______________________________________________________________________________
