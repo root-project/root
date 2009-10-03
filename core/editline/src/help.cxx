@@ -188,6 +188,8 @@ el_private const struct ElBindings_t el_func_help[] = {
      "Search previous in history for a line matching the current" },
    { "ed-search-next-history", ED_SEARCH_NEXT_HISTORY,
      "Search next in history for a line matching the current" },
+   { "ed-replay-hist", ED_REPLAY_HIST,
+     "Replay the current history line" },
    { "ed-prev-line", ED_PREV_LINE,
      "Move up one line" },
    { "ed-next-line", ED_NEXT_LINE,

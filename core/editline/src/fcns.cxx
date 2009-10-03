@@ -78,7 +78,7 @@ el_private const ElFunc_t el_func[] = {
    0, 0,
    0, 0,
 #endif
-   em_undo,
+   em_undo, ed_replay_hist,
 };
 
 el_protected const ElFunc_t*

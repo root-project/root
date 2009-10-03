@@ -513,6 +513,9 @@ el_gets(EditLine_t* el, int* nread) {
    /* save the last command here */
    el->fState.fLastCmd = cmdnum;
 
+   if (retval != CC_NEWLINE) {
+      el->fState.fReplayHist = -1;
+   }
    /* use any return value */
    switch (retval) {
    case CC_CURSOR:
@@ -659,6 +662,12 @@ el_gets_newline(EditLine_t* el, int* nread) {
    } else {
       // Only reset the buffer if we edit a whole new line
       ch_reset(el);
+      if (el->fState.fReplayHist >= 0) {
+	 el->fHistory.fEventNo = el->fState.fReplayHist;
+	 // load the entry
+	 ed_prev_history(el, 0);
+      }
+
    }
 
    if (!(el->fFlags & NO_TTY)) {

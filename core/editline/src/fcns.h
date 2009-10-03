@@ -142,7 +142,8 @@
 # define VI_ZERO ED_UNASSIGNED
 #endif
 #define EM_UNDO 90
-#define EL_NUM_FCNS 91
+#define ED_REPLAY_HIST 91
+#define EL_NUM_FCNS 92
 typedef ElAction_t (*ElFunc_t)(EditLine_t*, int);
 el_protected const ElFunc_t* func__get(void);
 #endif /* _h_fcns_c */

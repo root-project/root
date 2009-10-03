@@ -997,3 +997,23 @@ ed_command(EditLine_t* el, int /*c*/) {
       return CC_REFRESH;
    }
 } // ed_command
+
+
+/* ed_replay_hist():
+ *	Replay n-th history entry
+ *	[^O]
+ */
+el_protected ElAction_t
+/*ARGSUSED*/
+ed_replay_hist(EditLine_t* el, int /*c*/) {
+   static const char newline[] = "\n";
+   // current history idx:
+   if (el->fState.fReplayHist < 0) {
+      // store the hist idx for repeated ^O
+      el->fState.fReplayHist = el->fHistory.fEventNo - 1;
+   }
+   // execute the line as if the user pressed enter
+   el_push(el, newline);
+
+   return CC_NEWLINE;
+}

@@ -46,4 +46,5 @@ el_protected ElAction_t ed_search_next_history(EditLine_t*, int);
 el_protected ElAction_t ed_prev_line(EditLine_t*, int);
 el_protected ElAction_t ed_next_line(EditLine_t*, int);
 el_protected ElAction_t ed_command(EditLine_t*, int);
+el_protected ElAction_t ed_replay_hist(EditLine_t*, int);
 #endif /* _h_common_c */

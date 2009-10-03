@@ -114,6 +114,7 @@ struct ElState_t {
    int fArgument;                        /* Numeric argument		*/
    int fMetaNext;                        /* Is the next char a meta char */
    ElAction_t fLastCmd;                 /* Previous command		*/
+   int fReplayHist;                      /* Previous command		*/
 };
 
 /*

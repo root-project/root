@@ -480,6 +480,7 @@ ch_init(EditLine_t* el) {
    el->fState.fDoingArg = 0;
    el->fState.fMetaNext = 0;
    el->fState.fArgument = 1;
+   el->fState.fReplayHist = -1;
    el->fState.fLastCmd = ED_UNASSIGNED;
 
    el->fCharEd.fMacro.fNLine = NULL;

@@ -79,7 +79,8 @@ el_private const ElAction_t el_map_emacs[] = {
    /*  12 */ ED_CLEAR_SCREEN,                   /* ^L */
    /*  13 */ ED_NEWLINE,                        /* ^M */
    /*  14 */ ED_NEXT_HISTORY,                   /* ^N */
-   /*  15 */ ED_TTY_FLUSH_OUTPUT,               /* ^O */
+   /*  15 * / ED_TTY_FLUSH_OUTPUT,               / * ^O */
+   /*  15 */ ED_REPLAY_HIST,                    /* ^O */
    /*  16 */ ED_PREV_HISTORY,                   /* ^P */
    /*  17 */ ED_TTY_START_OUTPUT,               /* ^Q */
    /*  18 */ ED_REDISPLAY,                      /* ^R */
