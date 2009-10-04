@@ -473,6 +473,8 @@ void TRint::PrintLogo(Bool_t lite)
    if (!lite)
       gCint->PrintIntro();
 
+   gCint->SetGetline(Getline, Gl_histadd);
+
 #ifdef R__UNIX
    // Popdown X logo, only if started with -splash option
    for (int i = 0; i < Argc(); i++)

@@ -14,6 +14,9 @@
  ************************************************************************/
 
 #include "common.h"
+#include "Api.h"
+
+using namespace Cint;
 
 extern "C" {
 
@@ -21,6 +24,44 @@ int G__quiet=0;
 
 static int G__history_size_max = 51;
 static int G__history_size_min = 30;
+
+} // extern "C"
+
+
+namespace Cint {
+
+/************************************************************
+* External getline facility
+*************************************************************/
+static G__pGetline_t&
+G__GetGetlineFuncInternal() {
+   static G__pGetline_t sGetlineFunc = 0;
+   return sGetlineFunc;
+}
+
+static G__pHistadd_t&
+G__GetHistaddFuncInternal() {
+   static G__pHistadd_t sHistaddFunc = 0;
+   return sHistaddFunc;
+}
+
+G__pGetline_t G__GetGetlineFunc() {
+   return G__GetGetlineFuncInternal();
+}
+
+G__pHistadd_t G__GetHistaddFunc() {
+   return G__GetHistaddFuncInternal();
+}
+
+void G__SetGetlineFunc(G__pGetline_t glfcn, G__pHistadd_t hafcn) {
+   G__GetGetlineFuncInternal() = glfcn;
+   G__GetHistaddFuncInternal() = hafcn;
+}
+} // namespace Cint
+
+
+extern "C" {
+
 /************************************************************
 * G__set_history_size()
 *************************************************************/
@@ -201,9 +242,19 @@ char *G__input(const char *prompt)
       strcpy(line,pchar);
     }
     else {
-      fprintf(G__stdout,"%s",prompt);
-      /* scanf("%s",line); */
-      fgets(line,G__LONGLINE-5,G__stdin);
+      if (G__GetGetlineFuncInternal()) {
+	 pchar = G__GetGetlineFuncInternal()(prompt);
+	 if (pchar) {
+	    strcpy(line, pchar);
+	    if (G__GetHistaddFuncInternal()) {
+	       G__GetHistaddFuncInternal()(pchar);
+	    }
+	 }
+      } else {
+	 fprintf(G__stdout,"%s",prompt);
+	 /* scanf("%s",line); */
+	 fgets(line,G__LONGLINE-5,G__stdin);
+      }
     }
     
 #endif /* of G__GNUREADLINE */

@@ -252,6 +252,29 @@ int G__ExceptionWrapper(G__InterfaceMethod funcp
 
 unsigned long G__long_random(unsigned long limit);
    
+
+
+/*********************************************************************
+* External readline interface
+*********************************************************************/
+typedef char* (*G__pGetline_t)(const char* prompt);
+typedef void  (*G__pHistadd_t)(char* line);
+
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__pGetline_t G__GetGetlineFunc();
+
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__pHistadd_t G__GetHistaddFunc();
+
+#ifndef __CINT__
+G__EXPORT
+#endif
+   void G__SetGetlineFunc(G__pGetline_t glfcn, G__pHistadd_t hafcn);
+
 } // namespace Cint
 
 using namespace Cint;

@@ -526,6 +526,15 @@ void TCint::PrintIntro()
 }
 
 //______________________________________________________________________________
+void TCint::SetGetline(char*(*getlineFunc)(const char* prompt),
+		       void (*histaddFunc)(char* line))
+{
+   // Set a getline function to call when input is needed.
+   G__SetGetlineFunc(getlineFunc, histaddFunc);
+}
+
+
+//______________________________________________________________________________
 void TCint::RecursiveRemove(TObject *obj)
 {
    // Delete object from CINT symbol table so it can not be used anymore.
