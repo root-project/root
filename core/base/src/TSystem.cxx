@@ -1685,8 +1685,16 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       if (idx == 0 || libs[idx-1] == '/' || libs[idx-1] == '\\') {
          Ssiz_t len = libs.Length();
          idx += l.Length();
-         if (!l.EndsWith("."))
+         if (!l.EndsWith(".") && libs[idx]=='.')
             idx++;
+         // Skip the soversion.
+         while (idx < len && isdigit(libs[idx])) {
+            ++idx;
+            // No need to test for len here, at worse idx==len and lib[idx]=='\0'
+            if (libs[idx] == '.') {
+               ++idx;
+            }
+         }
          while (idx < len && libs[idx] != '.') {
             if (libs[idx] == ' ' || idx+1 == len) {
                return 1;
