@@ -280,12 +280,20 @@ el_get(EditLine_t* el, int op, void* ret) {
    switch (op) {
    case EL_PROMPT:
    case EL_RPROMPT:
-      rv = prompt_get(el, (ElPFunc_t*) &ret, op);
-      break;
+      {
+	 ElPFunc_t func;
+	 rv = prompt_get(el, &func, op);
+	 ret = (void*) func;
+	 break;
+      }
 
    case EL_EDITOR:
-      rv = map_get_editor(el, (const char**) &ret);
-      break;
+      {
+	 const char* str;
+	 rv = map_get_editor(el, &str);
+	 ret = (void*)str;
+	 break;
+      }
 
    case EL_SIGNAL:
       *((int*) ret) = (el->fFlags & HANDLE_SIGNALS);
