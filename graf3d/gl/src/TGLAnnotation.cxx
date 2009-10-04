@@ -38,9 +38,8 @@
 
 ClassImp(TGLAnnotation);
 
-
-Color_t  TGLAnnotation::fgBackColor = (Color_t)TColor::GetColor(0.28f, 0.48f, 0.98f);
-Color_t  TGLAnnotation::fgTextColor = (Color_t)TColor::GetColor(0.98f, 0.75f, 0.52f);
+Color_t  TGLAnnotation::fgBackColor = kAzure + 10;
+Color_t  TGLAnnotation::fgTextColor = kOrange;
 
 //______________________________________________________________________________
 TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy) :
