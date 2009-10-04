@@ -8,6 +8,8 @@
 //$Id: Shadow.cxx,v 1.14 2007/03/15 17:59:30 axel Exp $
 
 #include "Shadow.h"
+#include "common.h"
+#include "global.h"
 #include <ostream>
 #include <string>
 #include <list>
@@ -768,10 +770,16 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
    fOut << std::endl;
 }
 
-
 void Cint::G__ShadowMaker::WriteAllShadowClasses()
 {
    if (fgVetoShadow) return;
+
+   // In some case, WriteShadowClass will induce (via calls to G__ClassInfo) template instantiation,
+   // if the a function has a default value, we do not want to execute it.
+   // Setting G__globalcomp to something else then G__NOLINK is the only way 
+   // to accomplish this.
+   int store_G__globalcomp = G__globalcomp;
+   G__globalcomp = 7; // Intentionally not a valid value.
 
    fOut << "// START OF SHADOWS" << std::endl << std::endl;
 
@@ -809,4 +817,6 @@ void Cint::G__ShadowMaker::WriteAllShadowClasses()
       namespaceParts.pop_back();
    }
    fOut << "// END OF SHADOWS" << std::endl << std::endl;
+   
+   G__globalcomp = store_G__globalcomp;
 }

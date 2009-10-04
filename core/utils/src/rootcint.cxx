@@ -168,10 +168,13 @@
 #ifndef R__BUILDING_CINT7
 #include "Shadow.h"
 #include "cintdictversion.h"
+#include "FastAllocString.h"
 #else
 #include "cint7/Shadow.h"
 #include "cint7/cintdictversion.h"
+#include "cint7/FastAllocString.h"
 #endif
+extern int G__globalcomp;
 
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename
@@ -1442,11 +1445,9 @@ bool IsTemplateFloat16(G__ClassInfo &cl)
    if (!cl.IsTmplt()) return false;
 
    static G__TypeInfo ti;
-   char *arg, *current, *next;
-   arg = new char[strlen(cl.Name()) + 1];
-   auto_ptr<char> ap_arg(arg);
+   char *current, *next;
+   G__FastAllocString arg( cl.Name() );
 
-   strcpy(arg, cl.Name());
    // arg is now is the name of class template instantiation.
    // We first need to find the start of the list of its template arguments
    // then we have a comma separated list of type names.  We want to return
@@ -1503,9 +1504,8 @@ bool IsTemplateDouble32(G__ClassInfo &cl)
    if (!cl.IsTmplt()) return false;
 
    static G__TypeInfo ti;
-   char *arg, *current, *next;
-   arg = new char[strlen(cl.Name()) + 1];
-   auto_ptr<char> ap_arg(arg);
+   char *current, *next;
+   G__FastAllocString arg( cl.Name() );
 
    strcpy(arg, cl.Name());
    // arg is now is the name of class template instantiation.
@@ -1650,9 +1650,8 @@ G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
    // 1 second, etc.
 
    static G__TypeInfo ti;
-   char *arg, *current, *next;
-   arg = new char[strlen(m.Type()->TmpltArg()) + 1];
-   auto_ptr<char> ap_arg(arg);
+   char *current, *next;
+   G__FastAllocString arg( m.Name() );
 
    strcpy(arg, m.Type()->TmpltArg());
    // arg is now a comma separated list of type names, and we want
@@ -1690,9 +1689,8 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    // 1 second, etc.
 
    static G__TypeInfo ti;
-   char *arg, *current, *next;
-   arg = new char[strlen(m.Name()) + 1];
-   auto_ptr<char> ap_arg(arg);
+   char *current, *next;
+   G__FastAllocString arg( m.Name() );
 
    strcpy(arg, m.Name());
    // arg is now is the name of class template instantiation.
@@ -5298,7 +5296,17 @@ int main(int argc, char **argv)
             int reqlen = strlen(request)-1;
             while (request[reqlen]==' ' || request[reqlen]=='\t') request[reqlen--] = '\0';
             request = Compress(request); //no space between tmpl arguments allowed
+
+            // In some case, G__ClassInfo will induce template instantiation,
+            // if the a function has a default value, we do not want to execute it.
+            // Setting G__globalcomp to something else then G__NOLINK is the only way 
+            // to accomplish this.
+            int store_G__globalcomp = G__globalcomp;
+            G__globalcomp = 7; // Intentionally not a valid value.
+            
             G__ClassInfo clRequest(request);
+            
+            G__globalcomp = store_G__globalcomp;
 
             string fullname;
             if (clRequest.IsValid())
