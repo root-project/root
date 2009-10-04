@@ -47,6 +47,12 @@
 #include <set>
 #include <string>
 
+#if G__CINTVERSION == 70030000
+// Ignore SetGetLineFunc in Cint7
+void G__SetGetlineFunc(char*(*)(const char* prompt),
+                       void (*)(char* line)) {}
+#endif
+
 using namespace std;
 
 R__EXTERN int optind;

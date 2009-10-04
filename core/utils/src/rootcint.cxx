@@ -168,13 +168,27 @@
 #ifndef R__BUILDING_CINT7
 #include "Shadow.h"
 #include "cintdictversion.h"
+#if G__CINTVERSION == 70030000
+#include <string>
+typedef std::string G__FastAllocString;
+int strlen(const std::string &s) { return s.length(); }
+const char *strcpy(std::string &s,const char *right) { s = right; return s.c_str(); }
+namespace Cint { namespace Internal { extern int G__globalcomp; } } 
+using namespace Cint::Internal;
+#else
 #include "FastAllocString.h"
+extern int G__globalcomp;
+#endif
 #else
 #include "cint7/Shadow.h"
 #include "cint7/cintdictversion.h"
-#include "cint7/FastAllocString.h"
+#include <string>
+typedef std::string G__FastAllocString;
+int strlen(const std::string &s) { return s.length(); }
+const char *strcpy(std::string &s,const char *right) { s = right; return s.c_str(); }
+namespace Cint { namespace Internal { extern int G__globalcomp; } } 
+using namespace Cint::Internal;
 #endif
-extern int G__globalcomp;
 
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename
