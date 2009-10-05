@@ -769,6 +769,16 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
       dset->Reset();
 
+      // Set parameters controlling the iterator behaviour
+      Int_t useTreeCache = 1;
+      if (TProof::GetParameter(fInput, "PROOF_UseTreeCache", useTreeCache) == 0) {
+         if (useTreeCache > -1 && useTreeCache < 2) gEnv->SetValue("ProofPlayer.UseTreeCache", useTreeCache);
+      }
+      Long64_t cacheSize = 10000000;
+      if (TProof::GetParameter(fInput, "PROOF_CacheSize", cacheSize) == 0) {
+         TString sz = TString::Format("%lld", cacheSize);
+         gEnv->SetValue("ProofPlayer.CacheSize", sz.Data());
+      }
       fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
 
       if (version == 0) {
