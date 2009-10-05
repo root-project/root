@@ -297,7 +297,7 @@ public:
    virtual void     Rebuild(Option_t *option="");
    virtual void     RecursiveRemove(TObject *obj);
    virtual void     Reset(Option_t *option="");
-   virtual void     ResetStats() { fTsumw = 0; }
+   virtual void     ResetStats();
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     Scale(Double_t c1=1, Option_t *option="");
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");

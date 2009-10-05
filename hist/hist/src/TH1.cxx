@@ -870,15 +870,18 @@ void TH1::Add(const TH1 *h1, Double_t c1)
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
 
 //   - Add statistics
-   fEntries += c1*h1->GetEntries();
+   Double_t entries = TMath::Abs( GetEntries() + c1 * h1->GetEntries() ); 
    Double_t s1[kNstat], s2[kNstat];
-   Int_t i;
-   for (i=0;i<kNstat;i++) {s1[i] = s2[i] = 0;}
-   GetStats(s1);
-   h1->GetStats(s2);
-   for (i=0;i<kNstat;i++) {
-      if (i == 1) s1[i] += c1*c1*s2[i];
-      else        s1[i] += TMath::Abs(c1)*s2[i];
+// statistics can be preserbed only in case of positive coefficients
+// otherwise with negative c1 (histogram subtraction) one risks to get negative variances   
+   Bool_t resetStats = (c1 < 0);
+   if (!resetStats) { 
+      GetStats(s1);
+      h1->GetStats(s2);
+      for (Int_t i=0;i<kNstat;i++) {
+         if (i == 1) s1[i] += c1*c1*s2[i];
+         else        s1[i] += c1*s2[i];
+      }
    }
 
    SetMinimum();
@@ -917,7 +920,14 @@ void TH1::Add(const TH1 *h1, Double_t c1)
    }
 
    // update statistics (do here to avoid changes by SetBinContent)
-   PutStats(s1);
+   if (resetStats)  { 
+      // statistics need to be reset in case coefficient are negative
+      ResetStats(); 
+   }
+   else { 
+      PutStats(s1);
+      SetEntries(entries);
+   }
 }
 
 //______________________________________________________________________________
@@ -983,15 +993,19 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
 
 //   - Add statistics
-   Double_t nEntries = c1*h1->GetEntries() + c2*h2->GetEntries();
+   Double_t nEntries = TMath::Abs( c1*h1->GetEntries() + c2*h2->GetEntries() );
    Double_t s1[kNstat], s2[kNstat], s3[kNstat];
-   Int_t i;
-   for (i=0;i<kNstat;i++) {s1[i] = s2[i] = s3[i] = 0;}
-   h1->GetStats(s1);
-   h2->GetStats(s2);
-   for (i=0;i<kNstat;i++) {
-      if (i == 1) s3[i] = c1*c1*s1[i] + c2*c2*s2[i];
-      else        s3[i] = TMath::Abs(c1)*s1[i] + TMath::Abs(c2)*s2[i];
+   
+// statistics can be preserbed only in case of positive coefficients
+// otherwise with negative c1 (histogram subtraction) one risks to get negative variances   
+   Bool_t resetStats = (c1*c2 < 0);   
+   if (!resetStats) { 
+      h1->GetStats(s1);
+      h2->GetStats(s2);
+      for (Int_t i=0;i<kNstat;i++) {
+         if (i == 1) s3[i] = c1*c1*s1[i] + c2*c2*s2[i];
+         else        s3[i] = TMath::Abs(c1)*s1[i] + TMath::Abs(c2)*s2[i];
+      }
    }
 
    SetMinimum();
@@ -1045,9 +1059,15 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          }
       }
    }
-   // update statistics (do here to avoid changes by SetBinContent)
-   PutStats(s3);
-   SetEntries(nEntries);
+   if (resetStats)  { 
+      // statistics need to be reset in case coefficient are negative
+      ResetStats(); 
+   }
+   else { 
+      // update statistics (do here to avoid changes by SetBinContent)
+      PutStats(s3);
+      SetEntries(nEntries);
+   }
 }
 
 
@@ -2191,7 +2211,6 @@ void TH1::Divide(TF1 *f1, Double_t c1)
       }
    }
    ResetStats(); 
-   SetEntries( GetEffectiveEntries() );
 }
 
 //______________________________________________________________________________
@@ -2269,7 +2288,6 @@ void TH1::Divide(const TH1 *h1)
       }
    }
    ResetStats(); 
-   SetEntries( GetEffectiveEntries() );
 }
 
 
@@ -2393,8 +2411,6 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
    if (binomial)  
       // in case of binomial division use denominator for number of entries
       SetEntries ( h2->GetEntries() ); 
-   else 
-      SetEntries( GetEffectiveEntries() );
 }
 
 //______________________________________________________________________________
@@ -6469,6 +6485,23 @@ void TH1::PutStats(Double_t *stats)
    fTsumw2  = stats[1];
    fTsumwx  = stats[2];
    fTsumwx2 = stats[3];
+}
+
+//______________________________________________________________________________
+void TH1::ResetStats() 
+{ 
+   // Reset the statistics including the number of entries 
+   // and replace with values calculates from bin content
+   // The number of entries is set to the total bin content ot (in case of weighted histogram) 
+   // to number of effective entries 
+   Double_t stats[kNstat]; 
+   fTsumw = 0; 
+   fEntries = 1; // to force re-calculation of the statistics in TH1::GetStats 
+   GetStats(stats);
+   PutStats(stats);
+   fEntries = TMath::Abs(fTsumw);
+   // use effective entries for weighted histograms:  (sum_w) ^2 / sum_w2 
+   if (fSumw2.fN > 0 && fTsumw > 0) fEntries = stats[0]*stats[0]/ stats[1];
 }
 
 //______________________________________________________________________________
