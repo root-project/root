@@ -89,11 +89,9 @@
 #include "TNetFile.h"
 #include "TRandom.h"
 #include "TTree.h"
-#include "TTreeCache.h"
 #include "TBranch.h"
 #include "TClonesArray.h"
 #include "TStopwatch.h"
-#include "TTreeCacheUnzip.h"
 
 #include "Event.h"
 
@@ -158,7 +156,6 @@ int main(int argc, char **argv)
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
       } else
          hfile = new TFile("Event.root");
-      if(punzip) TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
       tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
@@ -168,9 +165,9 @@ int main(int argc, char **argv)
          //set the read cache
          Int_t cachesize = 10000000; //this is the default value: 10 MBytes
          tree->SetCacheSize(cachesize);
-         TTreeCache::SetLearnEntries(1); //one entry is sufficient to learn
-         TTreeCache *tc = (TTreeCache*)hfile->GetCacheRead();
-         tc->SetEntryRange(0,nevent);
+         tree->SetCacheLearnEntries(1); //one entry is sufficient to learn
+         tree->SetCacheEntryRange(0,nevent);
+         if(punzip) tree->SetParallelUnzip();
          for (ev = 0; ev < nevent; ev++) {
             tree->LoadTree(ev);  //this call is required when using the cache
             if (ev%printev == 0) {
