@@ -55,6 +55,7 @@ TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t po
 
    fText(text),
    fTextSize(0.02),
+   fTextAlign(TGLFont::kLeft),
    fBackColor(fgBackColor),
    fTextColor(fgTextColor),
    fTransparency(100),
@@ -81,6 +82,7 @@ TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t po
 
    fText(text),
    fTextSize(0.02),
+   fTextAlign(TGLFont::kLeft),
    fBackColor(fgBackColor),
    fTextColor(fgTextColor),
    fTransparency(40),
@@ -263,10 +265,10 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    {
       fFont.BBox(osl->GetString().Data(), llx, lly, llz, urx, ury, urz);
       width = TMath::Max(width, urx);
-      height += line_height + descent;
+      height -= (line_height + descent);
    }
    width  += 2 * descent;
-   height += 2 * descent;
+   height -= 2 * descent;
 
    // polygon background
    Float_t padT =  2;
@@ -277,28 +279,28 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    glPushName(0);
 
    // bg plain
+   Float_t y = line_height;
+   Float_t x = 0;
    glLoadName(1);
    TGLUtil::ColorTransparency(bgCol, fTransparency);
    glBegin(GL_QUADS);
-   glVertex2f(0, 0);
-   glVertex2f(0, height);
-   glVertex2f(width, height);
-   glVertex2f(width, 0);
+   glVertex2f(x, y);
+   glVertex2f(x, y + height);
+   glVertex2f(x+width, y + height);
+   glVertex2f(x+width, y);
    glEnd();
 
    // outline
    TGLUtil::ColorTransparency(fgCol, fTransparency);
    glBegin(GL_LINE_LOOP);
-   glVertex2f(0, 0);
-   glVertex2f(0, height);
-   glVertex2f(width, height);
-   glVertex2f(width, 0);
+   glVertex2f(x, y);
+   glVertex2f(x, y + height);
+   glVertex2f(x+width, y + height);
+   glVertex2f(x+width, y);
    glEnd();
 
    if (fActive && fTransparency < 100)
    {  // edit area
-      Float_t y = height;
-      Float_t x = 0;
 
       TGLUtil::ColorTransparency(bgCol, fTransparency);
       // edit button
@@ -345,24 +347,32 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    TIter  next_base(lines);
    TObjString* os;
    glPushMatrix();
-   glTranslatef(descent, height, zOff);
+   glTranslatef(descent, line_height, zOff);
+   Float_t tx = 0;
    while ((os = (TObjString*) next_base()) != 0)
    {
       glTranslatef(0, -(line_height + descent), 0);
-      fFont.BBox(os->GetString().Data(), llx, lly, llz, urx, ury, urz);
-      glRasterPos2i(0, 0);
-      glBitmap(0, 0, 0, 0, 0, 0, 0);
-      fFont.Render(os->GetString().Data());
+      if (fTextAlign == TGLFont::kLeft) {
+         tx = 0;
+      }
+      else if  (fTextAlign == TGLFont::kCenterH) {
+         tx = 0.5 * width - descent ;
+      }
+      else {
+         tx = width - 2*descent;
+      }
+      fFont.Render(os->GetString(), tx, 0, 0, fTextAlign, TGLFont::kTop);
    }
    glPopMatrix();
    fFont.PostRender();
 
    // menu
+
    if (fActive && fTransparency < 100)
    {
+      x = padT;
+      y = padT + 0.5*padF + line_height;
       rnrCtx.RegisterFontNoScale(padF, "arial",  TGLFont::kPixmap, fMenuFont);
-      Float_t x = padT;
-      Float_t y = height + padT + 0.5*padF;
       fMenuFont.PreRender();
       fMenuFont.Render("X", x, y, zOff, TGLFont::kLeft, TGLFont::kCenterV);
       x += padM + padT;

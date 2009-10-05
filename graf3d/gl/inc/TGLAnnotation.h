@@ -53,6 +53,7 @@ protected:
    Float_t           fTextSize;       // relative font size
    TGLFont           fFont;           // font used to render labels
    TGLFont           fMenuFont;       // font used to render menu buttons
+   TGLFont::ETextAlignH_e fTextAlign;
 
    Color_t           fBackColor;      // background color
    Color_t           fTextColor;      // text color
@@ -66,7 +67,6 @@ public:
    TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref);
    virtual ~TGLAnnotation();
 
-
    void SetTransparency(Char_t x) { fTransparency = x;}
    Char_t GetTransparency() const { return fTransparency;}
    void SetUseColorSet(Bool_t x)  { fUseColorSet = x; }
@@ -76,7 +76,9 @@ public:
    void SetTextColor(Color_t x)   { fTextColor = x;   }
    Color_t GetTextColor() const   { return fTextColor;}
    void SetTextSize(Float_t x)    { fTextSize = x;   }
-   Float_t getTextSize() const    { return fTextSize;}
+   Float_t GetTextSize() const    { return fTextSize;}
+   TGLFont::ETextAlignH_e GetTextAlign() const { return fTextAlign; }
+   void SetTextAlign(TGLFont::ETextAlignH_e a) { fTextAlign = a; }
 
    virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
    virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
