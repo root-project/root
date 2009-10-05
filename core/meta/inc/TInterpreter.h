@@ -84,7 +84,7 @@ public:
    virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
    virtual void     PrintIntro() = 0;
    virtual void     SetGetline(char*(*getlineFunc)(const char* prompt),
-			       void (*histaddFunc)(char* line)) = 0;
+                               void (*histaddFunc)(char* line)) = 0;
    virtual void     Reset() = 0;
    virtual void     ResetAll() = 0;
    virtual void     ResetGlobals() = 0;
