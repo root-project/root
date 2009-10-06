@@ -300,9 +300,16 @@ public :
    // ------ Manipulations -------------
   
    /**
-      negate the 4-vector
+      negate the 4-vector -  Note that the energy cannot be negate (would need an additional data member)
+      therefore negate will work only on the spatial components. 
+      One would need to use negate only with vectors having the energy as data members
    */
-   void Negate( ) { fX = -fX; fY = -fY;  fZ = -fZ; fM = -fM;}
+   void Negate( ) { 
+      fX = -fX; 
+      fY = -fY;  
+      fZ = -fZ; 
+      GenVector::Throw ("PxPyPzM4D::Negate - cannot negate the energy - can negate only the spatial components");
+   }
 
    /**
       scale coordinate values by a scalar quantity a
