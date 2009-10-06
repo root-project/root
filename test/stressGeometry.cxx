@@ -210,6 +210,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       if (opt.Contains(exps[i])) iexp[i] = 1;
       else                       iexp[i] = 0;
    }       
+   TFile::SetCacheFileDir(".");
    char fname[24];
    for (i=0; i<NG; i++) {
       if (!iexp[i]) continue;
@@ -220,9 +221,11 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       }   
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
          
-      sprintf(fname, "%s_ref.root", exps[i]);
+      sprintf(fname, "files/%s_ref_3.root", exps[i]);
       
-      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i]))) {
+      if (gen_ref ||
+     
+!TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i])),"CACHEREAD") {
          if (!gen_ref) fprintf(stderr,"File: %s does not exist, generating it\n", fname);
          else               fprintf(stderr,"Generating reference file %s\n", fname);
          WriteRef(i);
@@ -262,9 +265,9 @@ void ReadRef(Int_t kexp) {
    if (!gen_ref)
       sprintf(fname, "http://root.cern.ch/files/%s_ref_3.root", exps[kexp]);
    else
-      sprintf(fname, "%s_ref.root", exps[kexp]);
+      sprintf(fname, "files/%s_ref_3.root", exps[kexp]);
    
-   f = TFile::Open(fname);
+   f = TFile::Open(fname,"CACHEREAD");
    if (!f) {
       fprintf(stderr,"Reference file %s not found ! Skipping.\n", fname);
       return;
@@ -358,7 +361,7 @@ void WriteRef(Int_t kexp) {
    Double_t ymax = boxes[kexp][1]; //box->GetDY(); // 300;
    Double_t zmax = boxes[kexp][2]; //box->GetDZ(); // 500;
    char fname[24];
-   sprintf(fname, "%s_ref.root", exps[kexp]);
+   sprintf(fname, "files/%s_ref_3.root", exps[kexp]);
    TFile f(fname,"recreate");
    TTree *T = new TTree("T","TGeo stress");
    T->Branch("p",&p.x,"x/D:y/D:z/D:theta/D:phi/D:nbound/I:length/F:safe/F:rad/F");
@@ -522,7 +525,7 @@ void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
 void InspectRef(const char *exp) {
 // Inspect current reference.
    char fname[64];
-   sprintf(fname, "%s_ref_2.root", exp);
+   sprintf(fname, "%s_ref_3.root", exp);
    if (gSystem->AccessPathName(fname)) {
       fprintf(stderr,"ERROR: file %s does not exist\n", fname);
       return;
