@@ -276,6 +276,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fActive = 0;
    fFileNodes = 0;
    fMaxPerfIdx = 1;
+   fMaxSlaveCnt = 0;
 
    if (!fProgressStatus) {
       Error("TPacketizerAdaptive", "No progress status");
@@ -305,11 +306,6 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       fMaxSlaveCnt = maxSlaveCnt;
       PDB(kPacketizer,1)
          Info("TPacketizer", "setting max number of workers per node to %ld", fMaxSlaveCnt);
-   } else {
-      // Use number of CPUs as default cutting at 2
-      SysInfo_t si;
-      gSystem->GetSysInfo(&si);
-      fMaxSlaveCnt =  (si.fCpus > 2) ? si.fCpus : 2;
    }
 
    fPackets = new TList;
@@ -580,7 +576,7 @@ TPacketizer::TFileNode *TPacketizer::NextUnAllocNode()
    }
 
    TFileNode *fn = (TFileNode*) fUnAllocated->First();
-   if (fn != 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
+   if (fn != 0 && fMaxSlaveCnt > 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
       PDB(kPacketizer,1) Info("NextUnAllocNode","Reached Slaves per Node Limit (%d)",
                               fMaxSlaveCnt);
       fn = 0;
@@ -625,7 +621,7 @@ TPacketizer::TFileNode *TPacketizer::NextActiveNode()
    }
 
    TFileNode *fn = (TFileNode*) fActive->First();
-   if (fn != 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
+   if (fn != 0 && fMaxSlaveCnt > 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
       PDB(kPacketizer,1) Info("NextActiveNode","Reached Slaves per Node Limit (%d)", fMaxSlaveCnt);
       fn = 0;
    }
