@@ -278,9 +278,7 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
     cout << "******************************************************************" <<endl;
   }
 
-  //Backward Compatibilty of Streamers
-  if(0)
-  if (gROOT->GetVersionInt() > 40800)
+  //Backward Compatibility of Streamers
   {
     cout << "*  Starting  Backward IO compatibility - S T R E S S             *" <<endl;
     cout << "******************************************************************" <<endl;
@@ -4376,7 +4374,8 @@ void astress_decomp_io(Int_t msize)
 
 void stress_backward_io()
 {
-  TFile *f = new TFile("linearIO.root");
+  TFile::SetCacheFileDir(".");
+  TFile *f = TFile::Open("http://root.cern.ch/files/linearIO.root","CACHEREAD");
 
   TMatrixF mf1 = THilbertMatrixF(-5,5,-5,5);
   mf1[1][2] = TMath::Pi();
