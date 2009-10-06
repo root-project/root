@@ -259,7 +259,7 @@ private:
    inline void RestrictNegMass() {
       if ( fM >=0 ) return;
       if ( P2() - fM*fM  < 0 ) { 
-         GenVector::Throw ("PxPyPzM4D::unphysical value of mass, set to closest physical value");
+         GenVector::Throw ("PtEtaPhiM4D::unphysical value of mass, set to closest physical value");
          fM = - P();
       }
       return;
@@ -314,9 +314,15 @@ public:
    // ------ Manipulations -------------
 
    /**
-      negate the 4-vector -- Note that the mass becomes negative 
+      negate the 4-vector -- Note that the energy cannot be negate (would need an additional data member)
+      therefore negate will work only on the spatial components
+      One would need to use negate only with vectors having the energy as data members 
    */
-   void Negate( ) { fPhi = - fPhi; fEta = - fEta; fM = - fM; }
+   void Negate( ) {
+      fPhi = ( (fPhi > 0) ? fPhi - pi() : fPhi + pi()  );
+      fEta = - fEta; 
+      GenVector::Throw ("PtEtaPhiM4D::Negate - cannot negate the energy - can negate only the spatial components");
+   }
 
    /**
       Scale coordinate values by a scalar quantity a

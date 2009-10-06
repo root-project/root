@@ -290,7 +290,11 @@ public:
    /**
       negate the 4-vector
    */
-   void Negate( ) { fPhi = - fPhi; fEta = - fEta; fE = - fE; }
+   void Negate( ) { 
+      fPhi = ( fPhi > 0 ? fPhi - pi() : fPhi + pi()  );
+      fEta = - fEta; 
+      fE = - fE; 
+   }
 
    /**
       Scale coordinate values by a scalar quantity a
