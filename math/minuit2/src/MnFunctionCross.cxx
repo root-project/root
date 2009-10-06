@@ -460,7 +460,7 @@ L500:
          
          if(min2.HasReachedCallLimit()) 
             return MnCross(min2.UserState(), nfcn, MnCross::CrossFcnLimit());
-         if(!min2.IsValid()) return MnCross(fState,nfcn);
+         if(!min2.IsValid()) return MnCross(fState, nfcn);
          if(limset == true && min2.Fval() < aim) 
             return MnCross(min2.UserState(), nfcn, MnCross::CrossParLimit());
          
