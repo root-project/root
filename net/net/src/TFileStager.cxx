@@ -106,7 +106,8 @@ TFileStager *TFileStager::Open(const char *stager)
       return 0;
    }
 
-   if ((h = gROOT->GetPluginManager()->FindHandler("TFileStager", stager))) {
+   if (!gSystem->IsPathLocal(stager) &&
+      (h = gROOT->GetPluginManager()->FindHandler("TFileStager", stager))) {
       if (h->LoadPlugin() == -1)
          return 0;
       s = (TFileStager *) h->ExecPlugin(1, stager);

@@ -2730,14 +2730,18 @@ TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
       }
 
       // Resolve the file type; this also adjusts names
-      type = GetType(name, option);
+      TString lfname = gEnv->GetValue("Path.Localroot", "");
+      type = GetType(name, option, &lfname);
 
       if (type == kLocal) {
 
          // Local files
-         urlname.SetHost("");
-         urlname.SetProtocol("file");
-         f = new TFile(urlname.GetUrl(), option, ftitle, compress);
+         if (lfname.IsNull()) {
+            urlname.SetHost("");
+            urlname.SetProtocol("file");
+            lfname = urlname.GetUrl();
+         }
+         f = new TFile(lfname.Data(), option, ftitle, compress);
 
       } else if (type == kNet) {
 

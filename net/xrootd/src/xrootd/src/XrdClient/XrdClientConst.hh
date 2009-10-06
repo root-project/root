@@ -92,6 +92,9 @@
 #define DFLT_REMUSEDCACHEBLKS   0
 #define NAME_REMUSEDCACHEBLKS   (char *)"RemoveUsedCacheBlocks"
 
+#define DFLT_PURGEWRITTENBLOCKS   0
+#define NAME_PURGEWRITTENBLOCKS    (char *)"PurgeWrittenBlocks"
+
 #define NAME_REDIRDOMAINALLOW_RE   (char *)"RedirDomainAllowRE"
 #define NAME_REDIRDOMAINDENY_RE    (char *)"RedirDomainDenyRE"
 #define NAME_CONNECTDOMAINALLOW_RE (char *)"ConnectDomainAllowRE"

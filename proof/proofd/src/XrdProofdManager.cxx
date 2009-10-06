@@ -319,15 +319,17 @@ int XrdProofdManager::CheckUser(const char *usr,
       if (fAllowedUsers.Num() > 0) {
          // Look into the hash
          int *st = fAllowedUsers.Find(usr);
-         if (st) {
-            if (usrok && (*st == 0)) {
-               usrok = 0;
-               e = "CheckUser: user '";
-               e += usr;
+         if (st && (*st == 1)) {
+            usrok = 1;
+         } else {
+            e = "CheckUser: user '";
+            e += usr;
+            if (usrok) {
                e += "' is not allowed to connect";
-            } else if (!usrok && (*st == 1)) {
-               usrok = 1;
+            } else {
+               e += "' is unknown";
             }
+            usrok = 0;
          }
       }
       // Super users are always allowed

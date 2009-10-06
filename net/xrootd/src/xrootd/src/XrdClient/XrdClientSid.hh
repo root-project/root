@@ -31,7 +31,10 @@ struct  SidInfo {
    ClientRequest outstandingreq;
    long long reqbyteprogress;
    time_t sendtime;
-   ServerResponseHeader resp;
+
+   kXR_unt16 rspstatuscode;
+   kXR_unt32 rsperrno;
+   char *rsperrmsg;
 };
 
 class XrdClientSid {
@@ -82,7 +85,7 @@ class XrdClientSid {
    // Report the response for an outstanding request
    // Typically this is used to keep track of the received errors, expecially
    // for async writes
-   void ReportSidResp(kXR_unt16 sid, struct ServerResponseHeader *resp);
+   void ReportSidResp(kXR_unt16 sid, kXR_unt16 statuscode, kXR_unt32 errcode, char *errmsg);
 
    int GetFailedOutstandingWriteRequests(kXR_unt16 fathersid, XrdClientVector<ClientRequest> &reqvect);
    int GetAllOutstandingWriteRequests(kXR_unt16 fathersid, XrdClientVector<ClientRequest> &reqvect);

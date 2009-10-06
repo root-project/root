@@ -67,9 +67,9 @@ XrdClient::XrdClient(const char *url) {
     DebugSetLevel(EnvGetLong(NAME_DEBUG));
 
     if (!ConnectionManager)
-	Info(XrdClientDebug::kNODEBUG,
+	Info(XrdClientDebug::kUSERDEBUG,
 	     "Create",
-	     "(C) 2004 SLAC INFN XrdClient $Revision: 1.136 $ - Xrootd version: " << XrdVSTRING);
+	     "(C) 2004-2010 by the Xrootd group. XrdClient $Revision: 1.142 $ - Xrootd version: " << XrdVSTRING);
 
 #ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -111,7 +111,6 @@ XrdClient::~XrdClient()
    }
 
    fOpenProgCnd->UnLock(); 
-
 
    if (fConnModule)
       delete fConnModule;
@@ -369,6 +368,7 @@ bool XrdClient::Open(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 int XrdClient::Read(void *buf, long long offset, int len) {
     XrdClientIntvList cacheholes;
     long blkstowait;
+    char *tmpbuf = (char *)buf;
 
     Info( XrdClientDebug::kHIDEBUG, "Read",
 	  "Read(offs=" << offset <<
@@ -425,6 +425,7 @@ int XrdClient::Read(void *buf, long long offset, int len) {
     len = xrdmax(0, xrdmin(len, stinfo.size - offset));
 
     bool retrysync = false;
+    long totbytes = 0;
 
     
 	
@@ -447,13 +448,15 @@ int XrdClient::Read(void *buf, long long offset, int len) {
 
 	      
 
-		bytesgot = fConnModule->GetDataFromCache(buf, offset,
+		bytesgot = fConnModule->GetDataFromCache(tmpbuf+totbytes, offset + totbytes,
 							 len + offset - 1,
 							 true,
 							 cacheholes, blkstowait);
 
+                totbytes += bytesgot;
+
 		Info(XrdClientDebug::kHIDEBUG, "Read",
-		     "Cache response: got " << bytesgot << "@" << offset << " bytes. Holes= " <<
+		     "Cache response: got " << bytesgot << "@" << offset + totbytes << " bytes. Holes= " <<
 		     cacheholes.GetSize() << " Outstanding= " << blkstowait);
 
 		// If the cache gives the data to us
@@ -593,7 +596,7 @@ int XrdClient::Read(void *buf, long long offset, int len) {
 
 	    // Now it's time to sleep
 	    // This thread will be awakened when new data will arrive
-	    if ((blkstowait > 0)|| cacheholes.GetSize()) {
+	    if ( (blkstowait > 0) || cacheholes.GetSize() ) {
 		Info( XrdClientDebug::kHIDEBUG, "Read",
 		      "Waiting " << blkstowait+cacheholes.GetSize() << "outstanding blocks." );
 
@@ -660,7 +663,7 @@ kXR_int64 XrdClient::ReadV(char *buf, kXR_int64 *offsets, int *lens, int nbuf)
 
     // We pre-process the request list in order to make it compliant
     //  with the restrictions imposed by the server
-    XrdClientVector<XrdClientReadVinfo> reqvect;
+    XrdClientVector<XrdClientReadVinfo> reqvect(nbuf);
 
     // First we want to know how much data we expect
     kXR_int64 maxbytes = 0;
@@ -693,23 +696,48 @@ kXR_int64 XrdClient::ReadV(char *buf, kXR_int64 *offsets, int *lens, int nbuf)
       //  - are compliant with the max number of blocks the server supports
       //  - do not request more than maxbytes bytes each
       kXR_int64 tmpbytes = 0;
+
+      int maxchunkcnt = READV_MAXCHUNKS;
+      if (EnvGetLong(NAME_MULTISTREAMCNT) > 0)
+         maxchunkcnt = reqvect.GetSize() / EnvGetLong(NAME_MULTISTREAMCNT)+1;
+
+      if (maxchunkcnt < 2) maxchunkcnt = 2;
+      if (maxchunkcnt > READV_MAXCHUNKS) maxchunkcnt = READV_MAXCHUNKS;
+
       int chunkcnt = 0;
       while ( i < reqvect.GetSize() ) {
-	if (chunkcnt >= READV_MAXCHUNKS) break;
-	if (tmpbytes + reqvect[i].len >= spltsize) break;
+	if (chunkcnt >= maxchunkcnt) break;
+	if (tmpbytes + reqvect[i].len > spltsize) break;
 	tmpbytes += reqvect[i].len;
 	chunkcnt++;
 	i++;
       }
 
-      res = XrdClientReadV::ReqReadV(fConnModule, fHandle, buf+bytesread,
-				     reqvect, startitem, i-startitem,
-				     fConnModule->GetParallelStreamToUse(reqsperstream) );
+
+      if (i-startitem == 1) {
+         if (buf) {
+            // Synchronous
+            res = Read(buf, reqvect[startitem].offset, reqvect[startitem].len);
+            
+         } else {
+            // Asynchronous, res stays the same
+            Read_Async(reqvect[startitem].offset, reqvect[startitem].len);
+         }
+      } else {
+         if (buf)
+            res = XrdClientReadV::ReqReadV(fConnModule, fHandle, buf+bytesread,
+                                           reqvect, startitem, i-startitem,
+                                           fConnModule->GetParallelStreamToUse(reqsperstream) );
+         else
+            res = XrdClientReadV::ReqReadV(fConnModule, fHandle, 0,
+                                           reqvect, startitem, i-startitem,
+                                           fConnModule->GetParallelStreamToUse(reqsperstream) );
+      }
 
       // The next bunch of chunks to request starts from here
       startitem = i;
 
-      if ( res <= 0)
+      if ( res < 0 )
 	break;
 
       bytesread += res;
@@ -759,7 +787,7 @@ bool XrdClient::Write(const void *buf, long long offset, int len) {
     // Rather unfortunate but happens. One more weird metaphor of life?!?!?
     if (!fConnModule->DoWriteSoftCheckPoint()) return false;
 
-    fConnModule->RemoveDataFromCache(offset, offset+len+1, true);
+    fConnModule->RemoveDataFromCache(offset, offset+len-1, true);
 
     XrdClientVector<XrdClientMStream::ReadChunk> rl;
     XrdClientMStream::SplitReadRequest(fConnModule, offset, len, rl);
@@ -1427,6 +1455,10 @@ UnsolRespProcResult XrdClient::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *se
 			// purged
 			fConnModule->UnPinCacheBlk(req->write.offset, req->write.offset+req->header.dlen);
 
+                        // A bit cpu consuming... need to optimize this
+                        if (EnvGetLong(NAME_PURGEWRITTENBLOCKS))
+                           fConnModule->RemoveDataFromCache(req->write.offset, req->write.offset+req->header.dlen-1, true);
+
 		      // This streamid will be released
 		      return kUNSOL_DISPOSE;
 		    }
@@ -1441,7 +1473,7 @@ UnsolRespProcResult XrdClient::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *se
 		    case kXR_read: {
                         // We invalidate the whole request in the cache
 	    
-			Info(XrdClientDebug::kHIDEBUG, "ProcessUnsolicitedMsg",
+			Error("ProcessUnsolicitedMsg",
 			     "Got a kxr_read error. Req offset=" <<
 			     req->read.offset <<
 			     " len=" <<
@@ -1482,6 +1514,49 @@ UnsolRespProcResult XrdClient::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *se
 
 			break;
 		    }
+                    case kXR_write: {
+                       Error("ProcessUnsolicitedMsg",
+                              "Got a kxr_write error. Req offset=" <<
+                             req->write.offset <<
+                             " len=" <<
+                             req->write.dlen);
+                     
+  
+                       // Print out the error information, as received by the server	
+                       struct ServerResponseBody_Error *body_err;
+                       body_err = (struct ServerResponseBody_Error *)(unsolmsg->GetData());
+                       if (body_err) {
+                          Info(XrdClientDebug::kNODEBUG, "ProcessUnsolicitedMsg", "Server declared: " <<
+                               (const char*)body_err->errmsg << "(error code: " << ntohl(body_err->errnum) << ") writing " <<
+                               req->write.dlen << "@" << req->write.offset);
+                       
+                          // Save the last error received
+                          memset(&fConnModule->LastServerError, 0, sizeof(fConnModule->LastServerError));
+                          memcpy(&fConnModule->LastServerError, body_err,
+                                 xrdmin(sizeof(fConnModule->LastServerError), (unsigned)unsolmsg->DataLen()) );
+                          fConnModule->LastServerError.errnum = ntohl(body_err->errnum);
+                       
+                          // Mark the request as an error. It will be catched by the next write soft checkpoint
+                          ConnectionManager->SidManager()->ReportSidResp(unsolmsg->HeaderSID(),
+                                                                         unsolmsg->GetStatusCode(),
+                                                                         ntohl(body_err->errnum),
+                                                                         body_err->errmsg);
+                       }
+                       else
+                          ConnectionManager->SidManager()->ReportSidResp(unsolmsg->HeaderSID(),
+                                                                         unsolmsg->GetStatusCode(),
+                                                                         kXR_noErrorYet,
+                                                                         0);
+
+                       // Awaken all the waiting threads, some of them may be interested
+                       fReadWaitData->Broadcast();
+                       
+                       // This streamid must be kept as pending. It will be handled by the subsequent
+                       // write checkpoint
+                       return kUNSOL_KEEP;
+
+                       break;
+                    }
 
                     } // switch
                 } // else

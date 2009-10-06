@@ -362,7 +362,7 @@ TProofProgressStatus *TPacketizerAdaptive::TSlaveStat::AddProcessed(TProofProgre
 
 ClassImp(TPacketizerAdaptive)
 
-Long_t   TPacketizerAdaptive::fgMaxSlaveCnt = 2;
+Long_t   TPacketizerAdaptive::fgMaxSlaveCnt = -1;
 Int_t    TPacketizerAdaptive::fgPacketAsAFraction = 4;
 Double_t TPacketizerAdaptive::fgMinPacketTime = 3;
 Int_t    TPacketizerAdaptive::fgStrategy = 1;
@@ -399,7 +399,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    }
    if (strategy == 0) {
       fgStrategy = 0;
-      fgMaxSlaveCnt = 4; // can be overwritten by PROOF_MaxSlavesPerNode
       Info("TPacketizerAdaptive", "using the basic strategy of TPacketizer");
    } else if (strategy != 1) {
       Warning("TPacketizerAdaptive", "unsupported strategy index (%d): ignore", strategy);
@@ -431,12 +430,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       fgMaxSlaveCnt = maxSlaveCnt;
       Info("TPacketizerAdaptive", "Setting max number of workers per node to %ld",
            fgMaxSlaveCnt);
-   } else {
-      // Use the number of CPUs, if bigger than 2 (default)
-      SysInfo_t si;
-      gSystem->GetSysInfo(&si);
-      if (si.fCpus > 2)
-         fgMaxSlaveCnt =  si.fCpus;
    }
 
    // if forceLocal parameter is set to 1 then eliminate the cross-worker
@@ -761,7 +754,7 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextNode()
    }
 
    TFileNode *fn = (TFileNode*) fUnAllocated->First();
-   if (fn != 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
+   if (fn != 0 && fgMaxSlaveCnt > 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
       // unlike in TPacketizer we look at the number of ext slaves only.
       PDB(kPacketizer,1) Info("NextNode",
                               "Reached Slaves per Node Limit (%ld)", fgMaxSlaveCnt);
@@ -809,7 +802,7 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextActiveNode()
 
    TFileNode *fn = (TFileNode*) fActive->First();
    // look at only ext slaves
-   if (fn != 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
+   if (fn != 0 && fgMaxSlaveCnt > 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
       PDB(kPacketizer,1)
          Info("NextActiveNode","reached Workers-per-Node limit (%ld)", fgMaxSlaveCnt);
       fn = 0;
@@ -1382,7 +1375,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
             nonLocalNodePossible = 0;
          else
             nonLocalNodePossible = firstNonLocalNode?
-               (firstNonLocalNode->GetExtSlaveCnt() < fgMaxSlaveCnt):0;
+               (fgMaxSlaveCnt > 0 && firstNonLocalNode->GetExtSlaveCnt() < fgMaxSlaveCnt):0;
          openLocal = !nonLocalNodePossible;
          Float_t slaveRate = slstat->GetAvgRate();
          if ( nonLocalNodePossible && fgStrategy == 1) {

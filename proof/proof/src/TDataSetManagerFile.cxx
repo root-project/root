@@ -607,6 +607,7 @@ Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
       // Fail if it exists already
       if (ExistsDataSet(fGroup, fUser, dsName)) {
          //Dataset name does exist
+         Error("RegisterDataSet", "dataset '%s' exists already", uri);
          return -1;
       }
    }
@@ -769,10 +770,10 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
       return -1;
 
    // Parse options
-   Bool_t notify = (gDebug > 0 || (option & kDebug)) ? kTRUE : kFALSE;
+   Bool_t notify = (option & kDebug) ? kTRUE : kFALSE;
    // Max number of files
    Int_t maxFiles = ((option & kMaxFiles) && (filesmax > -1)) ? filesmax : -1;
-   if (maxFiles > -1 && notify)
+   if (maxFiles > -1 && gDebug > 0)
       Info("ScanDataSet", "processing a maximum of %d files", maxFiles);
    // Reopen
    Bool_t reopen = ((option & kReopen) || (option & kTouch)) ? kTRUE : kFALSE;
@@ -794,6 +795,9 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
    TIter iter2(dataset->GetList());
    TFileInfo *fileInfo = 0;
    while ((fileInfo = dynamic_cast<TFileInfo*> (iter2.Next()))) {
+
+      // For real time monitoring
+      gSystem->DispatchOneEvent();
 
       fileInfo->ResetUrl();
       if (!fileInfo->GetCurrentUrl()) {
@@ -866,7 +870,7 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
       Bool_t result = kFALSE;
       if (stager) {
          result = stager->IsStaged(url.GetUrl());
-         if (notify && gDebug > 0)
+         if (gDebug > 0)
             Info("ScanDataSet", "IsStaged: %s: %d", url.GetUrl(), result);
          if (createStager)
             SafeDelete(stager);
@@ -885,21 +889,27 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
 
    // loop over now staged files
    if (notify && newStagedFiles.GetEntries() > 0)
-      Info("ScanDataSet",
-           "opening %d files that appear to be newly staged.",
+      Info("ScanDataSet", "opening %d files that appear to be newly staged",
            newStagedFiles.GetEntries());
 
    // Prevent blocking of TFile::Open, if the file disappeared in the last nanoseconds
    Bool_t oldStatus = TFile::GetOnlyStaged();
    TFile::SetOnlyStaged(kTRUE);
 
+   // Notify each 'fqnot' files (min 1, max 100)
+   Int_t fqnot = (newStagedFiles.GetSize() > 10) ? newStagedFiles.GetSize() / 10 : 1;
+   if (fqnot > 100) fqnot = 100;
    Int_t count = 0;
    TIter iter3(&newStagedFiles);
    while ((fileInfo = dynamic_cast<TFileInfo*> (iter3.Next()))) {
 
-      if (notify && count++ % 100 == 0)
+      if (notify && (count%fqnot == 0))
          Info("ScanDataSet", "processing %d.'new' file: %s",
                              count, fileInfo->GetCurrentUrl()->GetUrl());
+      count++;
+
+      // For real time monitoring
+      gSystem->DispatchOneEvent();
 
       TUrl *url = fileInfo->GetCurrentUrl();
 
@@ -920,11 +930,12 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
       fileInfo->SetBit(TFileInfo::kStaged);
 
       // Add url of the disk server in front of the list
-      TUrl urlDiskServer(*url);
-      urlDiskServer.SetHost(file->GetEndpointUrl()->GetHost());
-      fileInfo->AddUrl(urlDiskServer.GetUrl(), kTRUE);
-      if (notify)
-        Info("ScanDataSet", "added URL %s", urlDiskServer.GetUrl());
+      TUrl eurl(*(file->GetEndpointUrl()));
+      eurl.SetOptions(url->GetOptions());
+      eurl.SetAnchor(url->GetAnchor());
+      fileInfo->AddUrl(eurl.GetUrl(kTRUE), kTRUE);
+      if (gDebug > 0)
+        Info("ScanDataSet", "added URL %s", eurl.GetUrl(kTRUE));
 
       if (file->GetSize() > 0)
           fileInfo->SetSize(file->GetSize());
@@ -952,8 +963,8 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
          TIter keyIter(file->GetListOfKeys());
          TKey *key = 0;
          while ((key = dynamic_cast<TKey*> (keyIter.Next()))) {
-            if (strcmp(key->GetClassName(), "TTree"))
-               continue;
+
+            if (!TClass::GetClass(key->GetClassName())->InheritsFrom("TTree")) continue;
 
             TString keyStr;
             keyStr.Form("/%s", key->GetName());
@@ -964,7 +975,7 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
                metaData = new TFileInfoMeta(keyStr, key->GetClassName());
                fileInfo->AddMetaData(metaData);
 
-               if (notify)
+               if (gDebug > 0)
                   Info("ScanDataSet", "created meta data for tree %s", keyStr.Data());
             }
 
@@ -972,12 +983,13 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
             // TODO if we cannot read the tree, is the file corrupted also?
             TTree *tree = dynamic_cast<TTree*> (file->Get(key->GetName()));
             if (tree) {
-               if (tree->GetEntries() > 0)
+               if (tree->GetEntries() >= 0) {
                   metaData->SetEntries(tree->GetEntries());
-               if (tree->GetTotBytes() > 0)
-                  metaData->SetTotBytes(tree->GetTotBytes());
-               if (tree->GetZipBytes() > 0)
-                  metaData->SetZipBytes(tree->GetZipBytes());
+                  if (tree->GetTotBytes() >= 0)
+                     metaData->SetTotBytes(tree->GetTotBytes());
+                  if (tree->GetZipBytes() >= 0)
+                     metaData->SetZipBytes(tree->GetZipBytes());
+               }
             }
          }
       }
@@ -1000,6 +1012,9 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
    if (result > 0 && notify)
       Info("ScanDataSet", "%d files 'new'; %d files touched; %d files disappeared",
                           GetNOpenedFiles(), GetNTouchedFiles(), GetNDisapparedFiles());
+
+   // For real time monitoring
+   gSystem->DispatchOneEvent();
 
    return result;
 }
