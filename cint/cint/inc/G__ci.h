@@ -1844,7 +1844,7 @@ extern G__EXPORT int G__search_typename2 G__P((G__CONST char *typenamein,int typ
 extern G__EXPORT void G__set_atpause G__P((void (*p2f)()));
 extern G__EXPORT void G__set_aterror G__P((void (*p2f)()));
 extern G__EXPORT void G__p2f_void_void G__P((void* p2f));
-extern G__EXPORT void G__setglobalcomp G__P((int globalcomp));
+extern G__EXPORT int G__setglobalcomp G__P((int globalcomp));
 extern G__EXPORT const char *G__getmakeinfo G__P((const char *item));
 extern G__EXPORT const char *G__getmakeinfo1 G__P((const char *item));
 extern G__EXPORT int G__get_security_error G__P((void));
@@ -2064,7 +2064,7 @@ static int (*G__search_typename2) G__P((G__CONST char *typenamein,int typein,int
 static void (*G__set_atpause) G__P((void (*p2f)()));
 static void (*G__set_aterror) G__P((void (*p2f)()));
 static void (*G__p2f_void_void) G__P((void* p2f));
-static void (*G__setglobalcomp) G__P((int globalcomp));
+static int (*G__setglobalcomp) G__P((int globalcomp));
 static char* (*G__getmakeinfo) G__P((char *item));
 static int (*G__get_security_error) G__P((void));
 static char* (*G__map_cpp_name) G__P((char *in));

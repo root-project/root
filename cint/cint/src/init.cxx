@@ -422,9 +422,11 @@ void G__setothermain(int othermain)
 }
 
 //______________________________________________________________________________
-void G__setglobalcomp(int globalcomp)
+int G__setglobalcomp(int globalcomp)
 {
+   int ret = G__globalcomp;
    G__globalcomp = globalcomp;
+   return ret;
 }
 
 //______________________________________________________________________________
