@@ -173,11 +173,8 @@
 typedef std::string G__FastAllocString;
 int strlen(const std::string &s) { return s.length(); }
 const char *strcpy(std::string &s,const char *right) { s = right; return s.c_str(); }
-namespace Cint { namespace Internal { extern int G__globalcomp; } } 
-using namespace Cint::Internal;
 #else
 #include "FastAllocString.h"
-extern int G__globalcomp;
 #endif
 #else
 #include "cint7/Shadow.h"
@@ -186,8 +183,6 @@ extern int G__globalcomp;
 typedef std::string G__FastAllocString;
 int strlen(const std::string &s) { return s.length(); }
 const char *strcpy(std::string &s,const char *right) { s = right; return s.c_str(); }
-namespace Cint { namespace Internal { extern int G__globalcomp; } } 
-using namespace Cint::Internal;
 #endif
 
 #ifdef __APPLE__
@@ -211,7 +206,7 @@ using namespace Cint::Internal;
 
 extern "C" {
    void  G__setothermain(int othermain);
-   void  G__setglobalcomp(int globalcomp);
+   int  G__setglobalcomp(int globalcomp);
    int   G__main(int argc, char **argv);
    void  G__exit(int rtn);
    struct G__includepath *G__getipathentry();
@@ -5315,12 +5310,11 @@ int main(int argc, char **argv)
             // if the a function has a default value, we do not want to execute it.
             // Setting G__globalcomp to something else then G__NOLINK is the only way 
             // to accomplish this.
-            int store_G__globalcomp = G__globalcomp;
-            G__globalcomp = 7; // Intentionally not a valid value.
+            int store_G__globalcomp = G__setglobalcomp(7); // Intentionally not a valid value.
             
             G__ClassInfo clRequest(request);
             
-            G__globalcomp = store_G__globalcomp;
+            G__setglobalcomp(store_G__globalcomp);
 
             string fullname;
             if (clRequest.IsValid())
