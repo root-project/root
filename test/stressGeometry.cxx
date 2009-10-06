@@ -223,9 +223,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
          
       sprintf(fname, "files/%s_ref_3.root", exps[i]);
       
-      if (gen_ref ||
-     
-!TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i])),"CACHEREAD") {
+      if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_3.root",exps[i])),"CACHEREAD") {
          if (!gen_ref) fprintf(stderr,"File: %s does not exist, generating it\n", fname);
          else               fprintf(stderr,"Generating reference file %s\n", fname);
          WriteRef(i);
@@ -242,6 +240,12 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
          fgets(line,60,fp); line[59] = 0;
          fprintf(stderr,"*  SYS: %s\n",line);
          gSystem->ClosePipe(fp);
+         if (strstr(gSystem->GetBuildNode(),"Linux")) {
+            fp = gSystem->OpenPipe("lsb_release -d", "r");
+            fgets(line,60,fp); line[59] = 0;
+            fprintf(stderr,"*  SYS: %s\n",line);
+            gSystem->ClosePipe(fp);
+         }
       } else {
          const char *os = gSystem->Getenv("OS");
          if (!os) fprintf(stderr,"*  SYS: Windows 95\n");

@@ -290,6 +290,12 @@ int main(int argc, char **argv)
       sprintf(line2,"%s",line);
       printf("*  %s\n",line);
       gSystem->ClosePipe(fp);
+      if (strstr(gSystem->GetBuildNode(),"Linux")) {
+         fp = gSystem->OpenPipe("lsb_release -d", "r");
+         fgets(line,60,fp); line[59] = 0;
+         fprintf(stderr,"*  SYS: %s\n",line);
+         gSystem->ClosePipe(fp);
+      }
    } else {
       const char *os = gSystem->Getenv("OS");
       sprintf(line2,"Windows");

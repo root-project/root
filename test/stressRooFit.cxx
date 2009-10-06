@@ -744,6 +744,12 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
     fgets(line,60,fp); line[59] = 0;
     printf("*  SYS: %s\n",line);
     gSystem->ClosePipe(fp);
+    if (strstr(gSystem->GetBuildNode(),"Linux")) {
+       fp = gSystem->OpenPipe("lsb_release -d", "r");
+       fgets(line,60,fp); line[59] = 0;
+       fprintf(stderr,"*  SYS: %s\n",line);
+       gSystem->ClosePipe(fp);
+    }
   } else {
     const Char_t *os = gSystem->Getenv("OS");
     if (!os) printf("*  SYS: Windows 95\n");
