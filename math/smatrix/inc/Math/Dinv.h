@@ -68,39 +68,17 @@ namespace ROOT {
 template <unsigned int idim, unsigned int n = idim>
 class Inverter {
 public:
-  ///
+  /// matrix inversion for a generic square matrix using LU factorization 
+  /// (code originally from CERNLIB and then ported in C++ for CLHEP)  
+  /// implementation is in file Math/MatrixInversion.icc 
   template <class MatrixRep>
   static bool Dinv(MatrixRep& rhs) {
 
-#ifdef XXX
-      if (n < 1 || n > idim) {
-	return false;
-      }
-#endif
-
-#ifdef OLD_IMPL
 
       /* Initialized data */
-      static unsigned int work[n];
-      for(unsigned int i=0; i<n; ++i) work[i] = 0;
+     unsigned int work[n+1] = {0};
 
-      static typename MatrixRep::value_type det = 0;
-
-      /* Function Body */
-      
-      /*  N.GT.3 CASES.  FACTORIZE MATRIX AND INVERT. */
-      if (Dfactir<MatrixRep,n,idim>(rhs,det,work) == false) {
-	std::cerr << "Dfactir failed!!" << std::endl;
-	return false;
-      }
-      return Dfinv<MatrixRep,n,idim>(rhs,work);
-#else 
-
-      /* Initialized data */
-      static unsigned int work[n+1];
-      for(unsigned int i=0; i<n+1; ++i) work[i] = 0;
-
-      static typename MatrixRep::value_type det = 0;
+     static typename MatrixRep::value_type det(0);
       
       if (DfactMatrix(rhs,det,work) != 0) {
 	std::cerr << "Dfact_matrix failed!!" << std::endl;
@@ -110,39 +88,31 @@ public:
       int ifail =  DfinvMatrix(rhs,work); 
       if (ifail == 0) return true; 
       return false; 
-#endif
   } // Dinv
 
 
-  // symmetric function (copy in a general one) 
+  ///  symmetric matrix inversion using 
+  ///   Bunch-kaufman pivoting method
+  ///   implementation in Math/MatrixInversion.icc 
   template <class T>
   static bool Dinv(MatRepSym<T,idim> & rhs) {
-    // not very efficient but need to re-do Dsinv for new storage of 
-    // symmetric matrices
-#ifdef OLD_IMPL
-    MatRepStd<T,idim>  tmp; 
-    for (unsigned int i = 0; i< idim*idim; ++i) 
-      tmp[i] = rhs[i];
-    if (! Inverter<idim>::Dinv(tmp) ) return false;
-    // recopy the data
-    for (unsigned int i = 0; i< idim*n; ++i) 
-      rhs[i] = tmp[i];
-
-    return true; 
-#else
     int ifail = 0; 
     InvertBunchKaufman(rhs,ifail); 
     if (ifail == 0) return true; 
     return false; 
-#endif
   }
 
 
   /**
-     Bunch-Kaufman method for inversion of symmetric matrices
+     LU Factorization method for inversion of general square matrices
+     (see implementation in Math/MatrixInversion.icc)
    */
   template <class T>
   static int DfactMatrix(MatRepStd<T,idim,n> & rhs, T & det, unsigned int * work); 
+  /**
+     LU inversion of general square matrices. To be called after DFactMatrix
+     (see implementation in Math/MatrixInversion.icc)
+   */
   template <class T>
   static int DfinvMatrix(MatRepStd<T,idim,n> & rhs, unsigned int * work); 
 
@@ -242,14 +212,14 @@ public:
   template <class MatrixRep>
   static bool Dinv(MatrixRep& rhs) {
 
-    typename MatrixRep::value_type det = rhs[0] * rhs[3] - rhs[2] * rhs[1];
+    typedef typename MatrixRep::value_type T; 
+    T det = rhs[0] * rhs[3] - rhs[2] * rhs[1];
     
-    if (det == 0.) { return false; }
+    if (det == T(0.) ) { return false; }
 
-    // use 1.0f to remove warning on Windows
-    typename MatrixRep::value_type s = 1.0f / det; 
+    T s = T(1.0) / det; 
 
-    typename MatrixRep::value_type c11 = s * rhs[3];
+    T c11 = s * rhs[3];
 
 
     rhs[2] = -s * rhs[2];
@@ -270,9 +240,9 @@ public:
     T det = rhs[0] * rhs[2] - rhs[1] * rhs[1];
 
     
-    if (det == 0.) { return false; }
+    if (det == T(0.)) { return false; }
 
-    T s = 1.0f / det;
+    T s = T(1.0) / det;
     T c11 = s * rhs[2];
 
     rhs[1] = -s * rhs[1];
@@ -285,7 +255,7 @@ public:
 
 
 /** 
-    3x3 direct matrix inversion  suing Cramer Rule
+    3x3 direct matrix inversion  using Cramer Rule
     use only for FastInverter
 */
 //==============================================================================

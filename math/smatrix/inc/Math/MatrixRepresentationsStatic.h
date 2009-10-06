@@ -106,7 +106,8 @@ namespace Math {
       };
       
    private:
-      T fArray[kSize];
+      //T __attribute__ ((aligned (16))) fArray[kSize];
+      T  fArray[kSize];
    };
     
     
@@ -124,7 +125,7 @@ namespace Math {
 
    template<unsigned int D>
    struct RowOffsets {
-      RowOffsets() {
+      inline RowOffsets() {
          int v[D];
          v[0]=0;
          for (unsigned int i=1; i<D; ++i)
@@ -136,10 +137,101 @@ namespace Math {
                fOff[i*D+j] = v[j]+i ;
          }
       }
-      int operator()(unsigned int i, unsigned int j) const { return fOff[i*D+j]; }
-      int apply(unsigned int i) const { return fOff[i]; }
+      inline int operator()(unsigned int i, unsigned int j) const { return fOff[i*D+j]; }
+      inline int apply(unsigned int i) const { return fOff[i]; }
       int fOff[D*D];
    };
+
+// Make the lookup tables available at compile time:
+// Add them to a namespace?
+static const int fOff1x1[] = {0};
+static const int fOff2x2[] = {0, 1, 1, 2};
+static const int fOff3x3[] = {0, 1, 3, 1, 2, 4, 3, 4, 5};
+static const int fOff4x4[] = {0, 1, 3, 6, 1, 2, 4, 7, 3, 4, 5, 8, 6, 7, 8, 9};
+static const int fOff5x5[] = {0, 1, 3, 6, 10, 1, 2, 4, 7, 11, 3, 4, 5, 8, 12, 6, 7, 8, 9, 13, 10, 11, 12, 13, 14};
+static const int fOff6x6[] = {0, 1, 3, 6, 10, 15, 1, 2, 4, 7, 11, 16, 3, 4, 5, 8, 12, 17, 6, 7, 8, 9, 13, 18, 10, 11, 12, 13, 14, 19, 15, 16, 17, 18, 19, 20};
+
+static const int fOff7x7[] = {0, 1, 3, 6, 10, 15, 21, 1, 2, 4, 7, 11, 16, 22, 3, 4, 5, 8, 12, 17, 23, 6, 7, 8, 9, 13, 18, 24, 10, 11, 12, 13, 14, 19, 25, 15, 16, 17, 18, 19, 20, 26, 21, 22, 23, 24, 25, 26, 27};
+
+static const int fOff8x8[] = {0, 1, 3, 6, 10, 15, 21, 28, 1, 2, 4, 7, 11, 16, 22, 29, 3, 4, 5, 8, 12, 17, 23, 30, 6, 7, 8, 9, 13, 18, 24, 31, 10, 11, 12, 13, 14, 19, 25, 32, 15, 16, 17, 18, 19, 20, 26, 33, 21, 22, 23, 24, 25, 26, 27, 34, 28, 29, 30, 31, 32, 33, 34, 35};
+
+static const int fOff9x9[] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 1, 2, 4, 7, 11, 16, 22, 29, 37, 3, 4, 5, 8, 12, 17, 23, 30, 38, 6, 7, 8, 9, 13, 18, 24, 31, 39, 10, 11, 12, 13, 14, 19, 25, 32, 40, 15, 16, 17, 18, 19, 20, 26, 33, 41, 21, 22, 23, 24, 25, 26, 27, 34, 42, 28, 29, 30, 31, 32, 33, 34, 35, 43, 36, 37, 38, 39, 40, 41, 42, 43, 44};
+
+static const int fOff10x10[] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 1, 2, 4, 7, 11, 16, 22, 29, 37, 46, 3, 4, 5, 8, 12, 17, 23, 30, 38, 47, 6, 7, 8, 9, 13, 18, 24, 31, 39, 48, 10, 11, 12, 13, 14, 19, 25, 32, 40, 49, 15, 16, 17, 18, 19, 20, 26, 33, 41, 50, 21, 22, 23, 24, 25, 26, 27, 34, 42, 51, 28, 29, 30, 31, 32, 33, 34, 35, 43, 52, 36, 37, 38, 39, 40, 41, 42, 43, 44, 53, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54};
+
+template<>
+	struct RowOffsets<1> {
+	  RowOffsets() {}
+	  int operator()(unsigned int , unsigned int ) const { return 0; } // Just one element
+	  int apply(unsigned int ) const { return 0; }
+	};
+
+template<>
+	struct RowOffsets<2> {
+	  RowOffsets() {}
+	  int operator()(unsigned int i, unsigned int j) const { return i+j; /*fOff2x2[i*2+j];*/ }
+	  int apply(unsigned int i) const { return fOff2x2[i]; }
+	};
+
+template<>
+	struct RowOffsets<3> {
+	  RowOffsets() {}
+	  int operator()(unsigned int i, unsigned int j) const { return fOff3x3[i*3+j]; }
+	  int apply(unsigned int i) const { return fOff3x3[i]; }
+	};
+
+template<>
+	struct RowOffsets<4> {
+	  RowOffsets() {}
+	  int operator()(unsigned int i, unsigned int j) const { return fOff4x4[i*4+j]; }
+	  int apply(unsigned int i) const { return fOff4x4[i]; }
+	};
+
+	template<>
+	struct RowOffsets<5> {
+	  inline RowOffsets() {}
+	  inline int operator()(unsigned int i, unsigned int j) const { return fOff5x5[i*5+j]; }
+//	int operator()(unsigned int i, unsigned int j) const {
+//	  if(j <= i) return (i * (i + 1)) / 2 + j;
+//		else return (j * (j + 1)) / 2 + i;
+//	  }  
+	inline int apply(unsigned int i) const { return fOff5x5[i]; }
+	};
+
+template<>
+	struct RowOffsets<6> {
+	  RowOffsets() {}
+	  int operator()(unsigned int i, unsigned int j) const { return fOff6x6[i*6+j]; }
+	  int apply(unsigned int i) const { return fOff6x6[i]; }
+	};
+
+template<>
+	struct RowOffsets<7> {
+	  RowOffsets() {}
+	  int operator()(unsigned int i, unsigned int j) const { return fOff7x7[i*7+j]; }
+	  int apply(unsigned int i) const { return fOff7x7[i]; }
+	};
+
+template<>
+	struct RowOffsets<8> {
+	  RowOffsets() {}
+	  int operator()(unsigned int i, unsigned int j) const { return fOff8x8[i*8+j]; }
+	  int apply(unsigned int i) const { return fOff8x8[i]; }
+	};
+
+template<>
+	struct RowOffsets<9> {
+	  RowOffsets() {}
+	  int operator()(unsigned int i, unsigned int j) const { return fOff9x9[i*9+j]; }
+	  int apply(unsigned int i) const { return fOff9x9[i]; }
+	};
+
+template<>
+	struct RowOffsets<10> {
+	  RowOffsets() {}
+	  int operator()(unsigned int i, unsigned int j) const { return fOff10x10[i*10+j]; }
+	  int apply(unsigned int i) const { return fOff10x10[i]; }
+	};
 
 //_________________________________________________________________________________
    /**
@@ -178,10 +270,12 @@ namespace Math {
 
       inline T& operator[](unsigned int i) { 
          return fArray[Offsets().apply(i) ];
+//return fArray[Offsets()(i/D, i%D)];
       }
 
       inline const T& operator[](unsigned int i) const {
          return fArray[Offsets().apply(i) ];
+//return fArray[Offsets()(i/D, i%D)];
       }
 
       inline T apply(unsigned int i) const {
@@ -254,7 +348,7 @@ namespace Math {
 
       
       void CreateOffsets() {
-         static RowOffsets<D> off;
+         const static RowOffsets<D> off;
          fOff = &off;
       }
       
@@ -263,9 +357,10 @@ namespace Math {
       }
 
    private:
+      //T __attribute__ ((aligned (16))) fArray[kSize];
       T fArray[kSize];
 
-      RowOffsets<D> * fOff;   //! transient
+      const RowOffsets<D> * fOff;   //! transient
 
    };
 

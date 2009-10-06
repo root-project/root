@@ -93,7 +93,8 @@ public:
     * that behave like an SMatrix in terms of using
     * operator()(int i, int j) for access to elements)
     */
-   template<class M> CholeskyDecomp(const M& m)
+   template<class M> CholeskyDecomp(const M& m) : 
+      fL( ), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposer;
       fOk = _decomposer<F, N, M>()(fL, m);
@@ -110,7 +111,8 @@ public:
     * element m(i,j) (j <= i) is supposed to be in array element
     * (i * (i + 1)) / 2 + j
     */
-   template<typename G> CholeskyDecomp(G* m)
+   template<typename G> CholeskyDecomp(G* m) : 
+      fL(), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposer;
       fOk = _decomposer<F, N, PackedArrayAdapter<G> >()(
