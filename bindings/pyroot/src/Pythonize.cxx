@@ -703,7 +703,7 @@ namespace {
       }
 
       if ( pyobj->GetObject() ) {
-      // accessing an entry will result get new, unitialized memory (if properly used)
+      // accessing an entry will result in new, unitialized memory (if properly used)
          TObject* object = (*cla)[index];
          pyobj->Release();
          TMemoryRegulator::RegisterObject( pyobj, object );
@@ -1263,18 +1263,6 @@ namespace {
 // for convenience
    using namespace PyROOT;
 
-//- TPySelector bahaviour ----------------------------------------------------
-   PyObject* TPySelectorInit( ObjectProxy* self )
-   {
-   // do nothing here, so that a NULL object is created (the address is later
-   // filled by the TPySelector/ProofPlayer interaction)
-      self->Set( (void*)0 );
-
-      Py_INCREF( Py_None );
-      return Py_None;                        // by definition
-   }
-
-
 //- TFN behavior --------------------------------------------------------------
    int TFNPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
@@ -1788,13 +1776,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       PyObject_SetAttrString(
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method ); method = 0;
-
-      return kTRUE;
-   }
-
-   if ( name == "TPySelector" ) {
-   // handicap the constructor to allow later injection of the earlier instantiation
-      Utility::AddToClass( pyclass, "__init__", (PyCFunction) TPySelectorInit, METH_NOARGS );
 
       return kTRUE;
    }

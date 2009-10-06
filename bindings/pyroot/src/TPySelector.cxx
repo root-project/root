@@ -7,6 +7,7 @@
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
 #include "RootWrapper.h"
+#include "MemoryRegulator.h"
 
 //- ROOT
 #include "TPython.h"
@@ -132,12 +133,18 @@ void TPySelector::SetupPySelf()
       return;
    }
 
-   Py_INCREF( self );
+// steal reference to new self, since the deletion will come from the C++ side
    Py_DECREF( fPySelf );
    fPySelf = self;
 
-// inject ourselves into the base of self
+// inject ourselves into the base of self; destroy old identity if need be (which happens
+// if the user calls the default ctor unnecessarily)
+   TPySelector* oldselector = (TPySelector*)((PyROOT::ObjectProxy*)fPySelf)->fObject;
    ((PyROOT::ObjectProxy*)fPySelf)->fObject = this;
+   if ( oldselector ) {
+      PyROOT::TMemoryRegulator::UnregisterObject( oldselector );
+      delete oldselector;
+   }
 }
 
 //____________________________________________________________________________
@@ -182,7 +189,7 @@ TPySelector::TPySelector( TTree*, PyObject* self ) : fChain( 0 ), fPySelf( 0 )
 // Construct a TSelector derived with <self> as the underlying, which is
 // generally 0 to start out with in the current PROOF framework.
    if ( self ) {
-      Py_INCREF( self );
+   // steal reference as this is us, as seen from python
       fPySelf = self;
    } else {
       Py_INCREF( Py_None );        // using None allows clearer diagnostics
@@ -193,8 +200,9 @@ TPySelector::TPySelector( TTree*, PyObject* self ) : fChain( 0 ), fPySelf( 0 )
 //____________________________________________________________________________
 TPySelector::~TPySelector()
 {
-// Destructor. Reference counting for the held python object is in effect.
-   Py_DECREF( fPySelf );
+// Destructor. Only deref if still holding on to Py_None (circular otherwise).
+   if ( fPySelf == Py_None )
+      Py_DECREF( fPySelf );
 }
 
 

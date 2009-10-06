@@ -170,17 +170,34 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 }
 
 //____________________________________________________________________________
-void PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
+Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
 {
 // start tracking <object> proxied by <pyobj>
    if ( ! ( pyobj && object ) )
-      return;
+      return kFALSE;
 
    ObjectMap_t::iterator ppo = fgObjectTable->find( object );
    if ( ppo == fgObjectTable->end() ) {
       object->SetBit( kMustCleanup );
       (*fgObjectTable)[ object ] = PyWeakref_NewRef( (PyObject*)pyobj, gObjectEraseCallback );
+      return kTRUE;
    }
+
+   return kFALSE;
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
+{
+// stop tracking <object>, without notification
+   ObjectMap_t::iterator ppo = fgObjectTable->find( object );
+
+   if ( ppo != fgObjectTable->end() ) {
+      fgObjectTable->erase( ppo );
+      return kTRUE;
+   }
+
+   return kFALSE;
 }
 
 //____________________________________________________________________________

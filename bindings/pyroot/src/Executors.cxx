@@ -281,7 +281,7 @@ PyObject* PyROOT::TPyObjectExecutor::Execute( G__CallFunc* func, void* self )
 PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 {
 // The matching of the fulltype to an executor factory goes through up to 4 levels:
-//   1) full, unqualified match
+//   1) full, qualified match
 //   2) drop '&' as as by ref/full type is often pretty much the same python-wise
 //   3) ROOT classes, either by ref/ptr or by value
 //   4) additional special case for enums
@@ -296,7 +296,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
    const std::string& cpd = Utility::Compound( resolvedType );
    std::string realType = TClassEdit::ShortType( resolvedType.c_str(), 1 );
 
-// a full, unqualified matching executor is preferred
+// a full, qualified matching executor is preferred
    ExecFactories_t::iterator h = gExecFactories.find( realType + cpd );
    if ( h != gExecFactories.end() )
       return (h->second)();

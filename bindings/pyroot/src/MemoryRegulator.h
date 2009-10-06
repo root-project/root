@@ -16,7 +16,7 @@ namespace PyROOT {
 /** Communicate object destruction across ROOT/CINT/PyROOT/
       @author  WLAV
       @date    11/23/2004
-      @version 2.1
+      @version 2.2
  */
 
    class ObjectProxy;
@@ -30,7 +30,10 @@ namespace PyROOT {
       virtual void RecursiveRemove( TObject* object );
 
    // add a python object to the table of managed objects
-      static void RegisterObject( ObjectProxy* pyobj, TObject* object );
+      static Bool_t RegisterObject( ObjectProxy* pyobj, TObject* object );
+
+   // remove a python object from the table of managed objects, w/o notification
+      static Bool_t UnregisterObject( TObject* object );
 
    // new reference to python object corresponding to object, or 0 on failure
       static PyObject* RetrieveObject( TObject* object );
