@@ -190,8 +190,11 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
    fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
 
    // set gradient 
-   // use default case to check for derivative calculations (not force it) 
-   fMinuit->mnexcm("SET GRAD",arglist,0,ierr);
+   // by default do not check gradient calculation 
+   // it cannot be done here, check can be done only after having defined the parameters
+   arglist[0] = 1; 
+   fMinuit->mnexcm("SET GRAD",arglist,1,ierr);
+
 }
 
 void TMinuitMinimizer::Fcn( int &, double * , double & f, double * x , int /* iflag */) { 
@@ -525,8 +528,13 @@ int TMinuitMinimizer::CovMatrixStatus() const {
 double TMinuitMinimizer::GlobalCC(unsigned int i) const { 
    // global correlation coefficient for parameter i 
    if (!fMinuit) return 0; 
-   if (!fMinuit->fGlobcc) return 0; 
-   return fMinuit->fGlobcc[i];   
+   if (!fMinuit->fGlobcc) return 0;
+   if (int(i) >= fMinuit->fNu) return 0; 
+   // get internal number in Minuit
+   int iin = fMinuit->fNiofex[i];  
+   // index in TMinuit starts from 1 
+   if (iin < 1) return 0; 
+   return fMinuit->fGlobcc[iin-1];   
 }
 
 bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & errUp) { 
