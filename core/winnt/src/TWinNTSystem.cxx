@@ -318,26 +318,37 @@ namespace {
          dynpath = newpath;
 
       } else if (dynpath == "") {
-         dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-         dynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
-         if (dynpath == "") {
-            dynpath.Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH"));
+         TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+         rdynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
+         if (rdynpath == "") {
+#ifdef ROOTBINDIR
+            rdynpath = ".;"; rdynpath += ROOTBINDIR;
+#else
+            rdynpath = ".;"; rdynpath += gRootDir; rdynpath += "/bin";
+#endif
          }
+         TString path = gSystem->Getenv("PATH");
+         if (path == "")
+            dynpath = rdynpath;
+         else {
+            dynpath = path; dynpath += ";"; dynpath += rdynpath;
+         }
+
       }
 #ifdef ROOTLIBDIR
       if (!dynpath.Contains(ROOTLIBDIR)) {
          dynpath += ";"; dynpath += ROOTLIBDIR;
       }
 #else
-      if (!dynpath.Contains(Form("%s/lib", gRootDir))) {
+      if (!dynpath.Contains(TString::Format("%s/lib", gRootDir))) {
          dynpath += ";"; dynpath += gRootDir; dynpath += "/lib";
       }
 #endif
-      
+
 #ifdef CINTINCDIR
-      TString cintinc( Form("%s/cint/stl",CINTINCDIR) );
+      TString cintinc(TString::Form("%s/cint/stl",CINTINCDIR));
 #else
-      TString cintinc( Form("%s/cint/cint/stl",gRootDir) );
+      TString cintinc(TString::Format("%s/cint/cint/stl",gRootDir));
 #endif
       if (!dynpath.Contains( cintinc)) {
          dynpath += ";"; dynpath += cintinc;
@@ -856,7 +867,7 @@ namespace {
    bool NeedSplash()
    {
       // return kFALSE if option "-l" was specified as main programm command arg
-      
+
       static bool once = true;
       if (!once || gROOT->IsBatch() || !gApplication) return false;
       TString arg = gSystem->BaseName(gApplication->Argv(0));
@@ -882,7 +893,7 @@ namespace {
 
       char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
       char pszOldWindowTitle[1024]; // contains original WindowTitle
-      HANDLE hStdout; 
+      HANDLE hStdout;
       CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
 
       if (!::GetConsoleTitle(pszOldWindowTitle, 1024))
@@ -903,7 +914,7 @@ namespace {
          ::SetConsoleTitle("ROOT session");
       }
       hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-      ::SetConsoleMode(hStdout, ENABLE_PROCESSED_OUTPUT | 
+      ::SetConsoleMode(hStdout, ENABLE_PROCESSED_OUTPUT |
                        ENABLE_WRAP_AT_EOL_OUTPUT);
       if (!::GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
          return;
@@ -1847,8 +1858,8 @@ const char *TWinNTSystem::GetDirEntry(void *dirp)
    if (dirp) {
       HANDLE searchFile = (HANDLE)dirp;
       if (fFirstFile) {
-         // when calling TWinNTSystem::OpenDirectory(), the fFindFileData 
-         // structure is filled by a call to FindFirstFile(). 
+         // when calling TWinNTSystem::OpenDirectory(), the fFindFileData
+         // structure is filled by a call to FindFirstFile().
          // So first returns this one, before calling FindNextFile()
          fFirstFile = kFALSE;
          return (const char *)fFindFileData.cFileName;
@@ -4794,8 +4805,8 @@ int TWinNTSystem::ConnectService(const char *servername, int port,
 
    if (!strcmp(servername, "unix")) {
       return WinNTUnixConnect(port);
-   } 
-   else if (!gSystem->AccessPathName(servername) || servername[0] == '/' || 
+   }
+   else if (!gSystem->AccessPathName(servername) || servername[0] == '/' ||
             (servername[1] == ':' && servername[2] == '/')) {
       return WinNTUnixConnect(servername);
    }
@@ -4843,10 +4854,10 @@ int TWinNTSystem::WinNTUnixConnect(int port)
 
    struct sockaddr_in myaddr;
    int sock;
-   
+
    memset(&myaddr, 0, sizeof(myaddr));
    myaddr.sin_family = AF_INET;
-   myaddr.sin_port = port; 
+   myaddr.sin_port = port;
    myaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
    // Open socket
@@ -4893,7 +4904,7 @@ int TWinNTSystem::WinNTUnixConnect(const char *sockpath)
       ::SysError("TWinNTSystem::WinNTUnixConnect", "invalid port");
       return -1;
    }
-   return WinNTUnixConnect(port); 
+   return WinNTUnixConnect(port);
 }
 
 
