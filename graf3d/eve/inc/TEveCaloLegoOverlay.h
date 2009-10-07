@@ -45,7 +45,7 @@ protected:
 
    Color_t        fFrameColor;
    UChar_t        fFrameLineTransp;
-   UChar_t        fFrameBgTransp;;
+   UChar_t        fFrameBgTransp;
 
    // move of scales
    Int_t             fMouseX, fMouseY; //! last mouse position
