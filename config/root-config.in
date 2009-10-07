@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # -*- sh-indentation: 3 -*-
 # This script returns the machine dependent compile options needed
 # to compile and link applications using the ROOT libraries.
@@ -9,11 +9,16 @@
 fullpath1=`readlink $0`
 if [ "$?" -ne "0" ]; then
    fullpath1=$0
+else
+   if [ ${fullpath1##/} = $fullpath1 ] && [ ${fullpath1##~} = $fullpath1 ]; then
+      # relative path, prepend directory where executable was found
+      lpath=`dirname $0`
+      fullpath1=$lpath/$fullpath1
+   fi
 fi
 progdir=`dirname $fullpath1`
 runningdir=`pwd`
-if echo $progdir | grep "^/" > /dev/null 2>& 1 || \
-   echo $progdir | grep "^~" > /dev/null 2>& 1; then
+if [ ${progdir##/} != $progdir ] || [ ${progdir##~} != $progdir ]; then
    # absolute path
    fullpath=$progdir
 else
