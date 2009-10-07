@@ -301,9 +301,11 @@ extern "C" void G__setothermain(int othermain)
 }
 
 //______________________________________________________________________________
-extern "C" void G__setglobalcomp(int globalcomp)
+extern "C" int G__setglobalcomp(int globalcomp)
 {
+   int oldvalue = G__globalcomp;
    G__globalcomp = globalcomp;
+   return oldvalue;
 }
 
 //______________________________________________________________________________

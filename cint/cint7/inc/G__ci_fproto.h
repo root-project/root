@@ -276,7 +276,7 @@ G__DECL_API(175, int, G__search_typename2, (G__CONST char *typenamein,int typein
 G__DECL_API(176, void, G__set_atpause, (void (*p2f)()))
 G__DECL_API(177, void, G__set_aterror, (void (*p2f)()))
 G__DECL_API(178, void, G__p2f_void_void, (void* p2f))
-G__DECL_API(179, void, G__setglobalcomp, (int globalcomp))
+G__DECL_API(179, int, G__setglobalcomp, (int globalcomp))
 G__DECL_API(180, const char, *G__getmakeinfo, (const char *item))
 G__DECL_API(181, const char, *G__getmakeinfo1, (const char *item))
 G__DECL_API(182, int, G__get_security_error, (void))
