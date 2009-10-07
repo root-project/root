@@ -201,8 +201,9 @@ TPySelector::TPySelector( TTree*, PyObject* self ) : fChain( 0 ), fPySelf( 0 )
 TPySelector::~TPySelector()
 {
 // Destructor. Only deref if still holding on to Py_None (circular otherwise).
-   if ( fPySelf == Py_None )
+   if ( fPySelf == Py_None ) {
       Py_DECREF( fPySelf );
+   }
 }
 
 
