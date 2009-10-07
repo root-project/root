@@ -19,6 +19,9 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+// For G__EXPORT
+#include "G__ci.h"
+
 namespace Cint {
    namespace Internal {
       class G__BufferReservoir;
@@ -43,7 +46,11 @@ namespace Cint {
 // buffer. This class is optimized for both speed and low memory
 // use despite the reservoir.
 //
-class G__FastAllocString {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__FastAllocString {
 public:
    G__FastAllocString(int reqsize = 1024): fBuf(0), fCapacity(reqsize) {
       // GetBuf takes as parameter the size in bytes
