@@ -346,7 +346,7 @@ namespace {
 #endif
 
 #ifdef CINTINCDIR
-      TString cintinc(TString::Form("%s/cint/stl",CINTINCDIR));
+      TString cintinc(TString::Format("%s/cint/stl",CINTINCDIR));
 #else
       TString cintinc(TString::Format("%s/cint/cint/stl",gRootDir));
 #endif
