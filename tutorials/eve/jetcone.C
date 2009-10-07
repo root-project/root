@@ -104,6 +104,7 @@ void jetcone()
 
       // -- Draw jet cone
       TEveJetCone* jetCone = new TEveJetCone("JetCone");
+      jetCone->SetPickable(kTRUE);
       jetCone->SetCylinder( 250., 250. );
       if ( (jetCone->AddCone( coneEta, conePhi, coneRadius   ) ) != -1)
          gEve->AddElement( jetCone );
