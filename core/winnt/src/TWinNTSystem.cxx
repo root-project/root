@@ -312,26 +312,37 @@ namespace {
          dynpath = newpath;
 
       } else if (dynpath == "") {
-         dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-         dynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
-         if (dynpath == "") {
-            dynpath.Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH"));
+         TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+         rdynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
+         if (rdynpath == "") {
+#ifdef ROOTBINDIR
+            rdynpath = ".;"; rdynpath += ROOTBINDIR;
+#else
+            rdynpath = ".;"; rdynpath += gRootDir; rdynpath += "/bin";
+#endif
          }
+         TString path = gSystem->Getenv("PATH");
+         if (path == "")
+            dynpath = rdynpath;
+         else {
+            dynpath = path; dynpath += ";"; dynpath += rdynpath;
+         }
+
       }
 #ifdef ROOTLIBDIR
       if (!dynpath.Contains(ROOTLIBDIR)) {
          dynpath += ";"; dynpath += ROOTLIBDIR;
       }
 #else
-      if (!dynpath.Contains(Form("%s/lib", gRootDir))) {
+      if (!dynpath.Contains(TString::Format("%s/lib", gRootDir))) {
          dynpath += ";"; dynpath += gRootDir; dynpath += "/lib";
       }
 #endif
-      
+
 #ifdef CINTINCDIR
-      TString cintinc( Form("%s/cint/stl",CINTINCDIR) );
+      TString cintinc(TString::Format("%s/cint/stl",CINTINCDIR));
 #else
-      TString cintinc( Form("%s/cint/cint/stl",gRootDir) );
+      TString cintinc(TString::Format("%s/cint/cint/stl",gRootDir));
 #endif
       if (!dynpath.Contains( cintinc)) {
          dynpath += ";"; dynpath += cintinc;
