@@ -4188,7 +4188,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       if (ldpath.IsNull())
          dynpath = rdynpath;
       else {
-         dynpath = rdynpath; dynpath += ":"; dynpath += ldpath;
+         dynpath = ldpath; dynpath += ":"; dynpath += rdynpath;
       }
 
 #ifdef ROOTLIBDIR
