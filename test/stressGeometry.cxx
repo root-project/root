@@ -235,16 +235,17 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       Float_t rootmarks = 800*tpsref/tpstot;
       Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
       if (UNIX) {
-         FILE *fp = gSystem->OpenPipe("uname -a", "r");
-         char line[60];
-         fgets(line,60,fp); line[59] = 0;
-         fprintf(stderr,"*  SYS: %s\n",line);
-         gSystem->ClosePipe(fp);
+         TString sp = gSystem->GetFromPipe("uname -a");
+         sp.Resize(60);
+         printf("*  SYS: %s\n",sp.Data());
          if (strstr(gSystem->GetBuildNode(),"Linux")) {
-            fp = gSystem->OpenPipe("lsb_release -d", "r");
-            fgets(line,60,fp); line[59] = 0;
-            fprintf(stderr,"*  SYS: %s\n",line);
-            gSystem->ClosePipe(fp);
+            sp = gSystem->GetFromPipe("lsb_release -d -s");
+            printf("*  SYS: %s\n",sp.Data());
+         }
+         if (strstr(gSystem->GetBuildNode(),"Darwin")) {
+            sp  = gSystem->GetFromPipe("sw_vers -productVersion");
+            sp += " Mac OS X ";
+            printf("*  SYS: %s\n",sp.Data());
          }
       } else {
          const char *os = gSystem->Getenv("OS");
