@@ -276,6 +276,7 @@ endif
 MODULES      += proof/proofx
 endif
 
+-include cint/cling/Module.mk   # irrelevant except for LLVM dev
 -include MyModules.mk   # allow local modules
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
