@@ -80,7 +80,6 @@ void MakeCaloLego(TEveCaloData* data)
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
    lego->Set2DMode(TEveCaloLego::kValSize);
-   lego->SetPixelsPerBin(8);
    // lego->SetAutoRebin(kFALSE);
 
    // move to real world coordinates

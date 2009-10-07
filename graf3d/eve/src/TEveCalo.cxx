@@ -598,7 +598,7 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    fZAxisStep(0.f),
 
    fAutoRebin(kTRUE),
-   fPixelsPerBin(4),
+   fPixelsPerBin(9),
    fNormalizeRebin(kTRUE),
 
    fProjection(kAuto),

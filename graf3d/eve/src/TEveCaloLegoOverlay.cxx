@@ -454,18 +454,18 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    {
       if (i == maxe)
       {
-         fontB.Render("1", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kBottom);
+         fontB.Render("1", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kCenterV);
       }
       else if ( i == (maxe -1))
       {
-         fontB.Render("10", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kBottom);
+         fontB.Render("10", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kCenterV);
       }
       else
       {
-         fontB.Render("10", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kBottom);
+         fontB.Render("10", 0, i*scaleStepY, 0, TGLFont::kLeft, TGLFont::kCenterV);
          fontB.BBox(Form("%d",  maxe-i), llx, lly, llz, urx, ury, urz);
          if (expOff >  urx/vp.Width()) expOff = urx/vp.Width();
-         fontE.Render(Form("%d",  maxe-i), expX , i*scaleStepY+expY, 0, TGLFont::kLeft, TGLFont::kBottom );
+         fontE.Render(Form("%d",  maxe-i), expX , i*scaleStepY+expY, 0, TGLFont::kLeft, TGLFont::kCenterV);
       }
    }
    glPopMatrix();
