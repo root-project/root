@@ -155,7 +155,6 @@ test/hsimple.C: $(ROOT_LOC)/tutorials/hsimple.C
 hsimple.root: test/hsimple.C
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q $< || true > /dev/null 2>&1
 	$(CMDECHO) cp -f test/$@ $@
-linearIO.root: test/linearIO.root
 	$(CMDECHO) cp -f $< $@
 stressGraphics.ref: test/stressGraphics.ref
 	$(CMDECHO) cp -f $< $@
@@ -174,4 +173,3 @@ stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSyste
 test/stress$(ExeSuf): test/libEvent.$(DllSuf)
 test/stressMathCore$(ExeSuf): test/libTrackMathCoreDict.$(DllSuf)
 stressGraphics-itest.log stressGraphics-ctest.log: hsimple.root stressGraphics.ref earth.dat
-test/stressLinear$(ExeSuf): linearIO.root
