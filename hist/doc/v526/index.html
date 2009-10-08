@@ -32,6 +32,17 @@ text sizes:
 <ul>
 <li> TGraphAsymmErrors and TGraphBentErrors were not correctly clipped when
      paint with the option E3 (filled band) and zoomed.
+<li> When drawn with the option B, a TGraph had the first or/and last bar missing
+     if its lowest or/and highest value were equal to the minimum or/and maximum 
+     of the pad. The following lines illustrate the problem:
+     <pre>
+     Int_t x[5] = {0,1,2,3,4};
+     Int_t y[5] = {10,1,2,3,0};
+     Int_t n = 5;
+     TGraph *gr = new TGraph(n,x,y);
+     gr->Draw("AB*");
+     </pre>
+     This problem was submited here: https://savannah.cern.ch/bugs/index.php?53949
 </ul>
 
 <h4>TFormula</h4>
