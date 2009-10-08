@@ -155,7 +155,6 @@ test/hsimple.C: $(ROOT_LOC)/tutorials/hsimple.C
 hsimple.root: test/hsimple.C
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q $< || true > /dev/null 2>&1
 	$(CMDECHO) cp -f test/$@ $@
-	$(CMDECHO) cp -f $< $@
 stressGraphics.ref: test/stressGraphics.ref
 	$(CMDECHO) cp -f $< $@
 earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
