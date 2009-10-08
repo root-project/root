@@ -31,7 +31,7 @@
 // to illustrate the various ways to loop on Root data sets.
 // Each data set contains a Root Tree named "h42"
 //
-// h1analysProxy.C can use either via TTree::Draw:
+// h1analysProxy.C can be used either via TTree::Draw:
 //       h42->Draw("h1analysisProxy.C");
 // or it can be used directly with TTree::MakeProxy, for example to generate a
 // shared library.   TTree::MakeProxy will generate a TSelector skeleton that
