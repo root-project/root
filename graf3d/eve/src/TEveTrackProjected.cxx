@@ -46,6 +46,8 @@ void TEveTrackProjected::SetProjection(TEveProjectionManager* mng, TEveProjectab
 
    SetTrackParams(*origTrack);
    SetPathMarks  (*origTrack);
+
+   SetLockPoints(origTrack->GetLockPoints());
 }
 
 /******************************************************************************/
@@ -107,7 +109,7 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
 }
 
 //______________________________________________________________________________
-Int_t  TEveTrackProjected::GetBreakPointIdx(Int_t start)
+Int_t TEveTrackProjected::GetBreakPointIdx(Int_t start)
 {
    // Findex index of the last point that lies within the same
    // segment of projected space.
@@ -145,7 +147,15 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
    // required for full representation.
 
    fBreakPoints.clear();
-   TEveTrack::MakeTrack(recurse);
+
+   if (GetLockPoints())
+   {
+      ClonePoints(*dynamic_cast<TEveTrack*>(fProjectable));
+   }
+   else
+   {
+      TEveTrack::MakeTrack(recurse);
+   }
    if (Size() == 0) return; // All points can be outside of MaxR / MaxZ limits.
 
    // Break segments additionally if required by the projection.
