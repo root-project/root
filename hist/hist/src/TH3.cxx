@@ -51,7 +51,6 @@ TH3::TH3()
    fDimension   = 3;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
-   SetBinsLength(27);
 }
 
 //______________________________________________________________________________
@@ -2879,9 +2878,11 @@ void TH3::Streamer(TBuffer &R__b)
 ClassImp(TH3C)
 
 //______________________________________________________________________________
-TH3C::TH3C(): TH3(), TArrayC(1)
+TH3C::TH3C(): TH3(), TArrayC()
 {
    // Constructor.
+   SetBinsLength(27);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3161,9 +3162,11 @@ TH3C operator/(TH3C &h1, TH3C &h2)
 ClassImp(TH3S)
 
 //______________________________________________________________________________
-TH3S::TH3S(): TH3(), TArrayS(1)
+TH3S::TH3S(): TH3(), TArrayS()
 {
    // Constructor.
+   SetBinsLength(27);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3413,9 +3416,11 @@ TH3S operator/(TH3S &h1, TH3S &h2)
 ClassImp(TH3I)
 
 //______________________________________________________________________________
-TH3I::TH3I(): TH3(), TArrayI(1)
+TH3I::TH3I(): TH3(), TArrayI()
 {
    // Constructor.
+   SetBinsLength(27);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3633,9 +3638,11 @@ TH3I operator/(TH3I &h1, TH3I &h2)
 ClassImp(TH3F)
 
 //______________________________________________________________________________
-TH3F::TH3F(): TH3(), TArrayF(1)
+TH3F::TH3F(): TH3(), TArrayF()
 {
    // Constructor.
+   SetBinsLength(27);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3864,9 +3871,11 @@ TH3F operator/(TH3F &h1, TH3F &h2)
 ClassImp(TH3D)
 
 //______________________________________________________________________________
-TH3D::TH3D(): TH3(), TArrayD(1)
+TH3D::TH3D(): TH3(), TArrayD()
 {
    // Constructor.
+   SetBinsLength(27);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________

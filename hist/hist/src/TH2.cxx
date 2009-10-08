@@ -46,7 +46,6 @@ TH2::TH2()
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
-   SetBinsLength(9);
 }
 
 //______________________________________________________________________________
@@ -2619,9 +2618,11 @@ void TH2::Streamer(TBuffer &R__b)
 ClassImp(TH2C)
 
 //______________________________________________________________________________
-TH2C::TH2C(): TH2(), TArrayC(1)
+TH2C::TH2C(): TH2(), TArrayC()
 {
    // Constructor.
+   SetBinsLength(9);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -2891,9 +2892,11 @@ TH2C operator/(TH2C &h1, TH2C &h2)
 ClassImp(TH2S)
 
 //______________________________________________________________________________
-TH2S::TH2S(): TH2(), TArrayS(1)
+TH2S::TH2S(): TH2(), TArrayS()
 {
    // Constructor.
+   SetBinsLength(9);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3163,9 +3166,11 @@ TH2S operator/(TH2S &h1, TH2S &h2)
 ClassImp(TH2I)
 
 //______________________________________________________________________________
-TH2I::TH2I(): TH2(), TArrayI(1)
+TH2I::TH2I(): TH2(), TArrayI()
 {
    // Constructor.
+   SetBinsLength(9);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3401,9 +3406,11 @@ TH2I operator/(TH2I &h1, TH2I &h2)
 ClassImp(TH2F)
 
 //______________________________________________________________________________
-TH2F::TH2F(): TH2(), TArrayF(1)
+TH2F::TH2F(): TH2(), TArrayF()
 {
    // Constructor.
+   SetBinsLength(9);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3682,9 +3689,11 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 ClassImp(TH2D)
 
 //______________________________________________________________________________
-TH2D::TH2D(): TH2(), TArrayD(1)
+TH2D::TH2D(): TH2(), TArrayD()
 {
    // Constructor.
+   SetBinsLength(9);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -3766,6 +3775,7 @@ TH2D::TH2D(const TMatrixDBase &m)
          SetCellContent(j-jlow+1,i-ilow+1,m(i,j));
       }
    }
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
