@@ -304,8 +304,8 @@ Begin_Html
 
 The option "4" is similar to the option "3" except that the band is smoothed.
 As the following picture shows, this option should be used carefuly because
-the smoothing algorithm may show some (huge) "bouncing" effects. In some case 
-looks nicer than the option "3" (because it is smooth) but it can be 
+the smoothing algorithm may show some (huge) "bouncing" effects. In some case
+looks nicer than the option "3" (because it is smooth) but it can be
 misleading.
 
 End_Html
@@ -326,7 +326,7 @@ End_Macro
 Begin_Html
 
 The following example shows how the option "[]" can be used to superimpose
-systematic errors on top of a graph with statistical errors. 
+systematic errors on top of a graph with statistical errors.
 
 End_Html
 Begin_Macro(source)
@@ -1268,8 +1268,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             xlow  = x[i-1] - dbar;
             xhigh = x[i-1] + dbar;
             yhigh = y[i-1];
-            if (xlow  < uxmin) continue;
-            if (xhigh > uxmax) continue;
+            if (xlow  < uxmin) xlow = uxmin;
+            if (xhigh > uxmax) xhigh = uxmax;
             if (!optionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
             else            ylow = gPad->GetUymin();
             gxwork[0] = xlow;
