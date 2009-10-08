@@ -464,7 +464,6 @@ Int_t TDSetElement::Lookup(Bool_t force)
    // Resolve end-point URL for this element
    // Return 0 on success and -1 otherwise
    static Int_t xNetPluginOK = -1;
-   static TString xNotRedir;
    static TFileStager *xStager = 0;
    Int_t retVal = 0;
 
@@ -472,9 +471,8 @@ Int_t TDSetElement::Lookup(Bool_t force)
    if (!force && HasBeenLookedUp())
       return retVal;
 
-   // Open the file as raw to avoid the (slow) initialization
    TUrl url(GetName());
-   // Save current options and anchor
+   // Save current options and anchor to be set ofthe final end URL
    TString anch = url.GetAnchor();
    TString opts = url.GetOptions();
    // The full path
@@ -494,20 +492,9 @@ Int_t TDSetElement::Lookup(Bool_t force)
             xNetPluginOK = 1;
       }
       doit = (xNetPluginOK == 1) ? kTRUE : kFALSE;
-
-      // The server may not be redirector: we might know this from the past
-      // experience, if any
-      if (xNotRedir.Length() > 0) {
-         TUrl u(GetName());
-         TString hp(Form("|%s:%d|", u.GetHostFQDN(), u.GetPort()));
-         if (xNotRedir.Contains(hp))
-            doit = kFALSE;
-      }
    }
 
-   // Do it by opening and closing the file. Ideally we could just
-   // AccessPathName the path, but the TXNetSystem implementation is very
-   // slow. To be fixed.
+   // Locate the file
    if (doit) {
       if (!xStager || !xStager->Matches(name)) {
          SafeDelete(xStager);
