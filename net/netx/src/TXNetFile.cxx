@@ -877,13 +877,16 @@ void TXNetFile::Init(Bool_t create)
          if (gMonitoringWriter)
             gMonitoringWriter->SendFileOpenProgress(this, fOpenPhases, "endopen", kTRUE);
 
-         // Set the Endpoint Url we are now connected to
-         fEndpointUrl = fClient->GetClientConn()->GetCurrentUrl().GetUrl().c_str();
-         // Check equivalence of initial and end-point Url to see whether we have
-         // been redirected
-         if (fEndpointUrl.GetPort() != fUrl.GetPort() ||
-            strcmp(fEndpointUrl.GetHostFQDN(), fUrl.GetHostFQDN()))
-            SetBit(TFile::kRedirected);
+         // Set the Endpoint Url we are now connected to. Unless there was some opaque info
+         // which cannot be re-used
+         if (fClient->GetClientConn() && fClient->GetClientConn()->fRedirOpaque.length() <= 0) {
+            fEndpointUrl = fClient->GetClientConn()->GetCurrentUrl().GetUrl().c_str();
+            // Check equivalence of initial and end-point Url to see whether we have
+            // been redirected
+            if (fEndpointUrl.GetPort() != fUrl.GetPort() ||
+               strcmp(fEndpointUrl.GetHostFQDN(), fUrl.GetHostFQDN()))
+               SetBit(TFile::kRedirected);
+         }
       } else {
          if (gDebug > 0)
             Info("Init","open request failed!");
