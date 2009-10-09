@@ -353,7 +353,7 @@ void TTreeSQL::CreateBranch(const TString &branchName, const TString &typeName)
    alterSQL += branchName.Data();;
    alterSQL += " ";
    alterSQL += typeName;
-   alterSQL += " null";
+   alterSQL += " ";
 
    fServer->Query(alterSQL);
 }
@@ -501,7 +501,7 @@ void TTreeSQL::CreateTable(const TString &table)
             createSQL += leafName;
             createSQL += " ";
             createSQL += typeName;
-            createSQL += " null";
+            createSQL += " ";
             createSQL += ")";
             createSQL += ";";
 
