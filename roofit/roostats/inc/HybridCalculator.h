@@ -23,7 +23,7 @@
 #include <vector>
 
 
-#ifndef ROOSTATS_HypoTestResult
+#ifndef ROOSTATS_HybridResult
 #include "RooStats/HybridResult.h"
 #endif
 
@@ -34,6 +34,8 @@
 class TH1; 
 
 namespace RooStats {
+
+   class HybridResult; 
 
    class HybridCalculator : public HypoTestCalculator , public TNamed {
 
