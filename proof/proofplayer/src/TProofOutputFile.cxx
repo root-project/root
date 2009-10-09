@@ -113,6 +113,11 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
       // Default dataset name
       SetTitle(GetName());
    }
+   // Options and anchor, if any
+   if (u.GetOptions() && strlen(u.GetOptions()) > 0)
+      fOptionsAnchor += TString::Format("?%s", u.GetOptions());
+   if (u.GetAnchor() && strlen(u.GetAnchor()) > 0)
+      fOptionsAnchor += TString::Format("#%s", u.GetAnchor());
    // Path
    fIsLocal = kFALSE;
    fDir = u.GetUrl();
@@ -316,6 +321,8 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
          }
       }
    } else {
+      // Get the reference MSS url, if any
+      TUrl mssUrl(gEnv->GetValue("ProofServ.PoolUrl",""));
       // Build-up the TFileCollection
       TFileCollection *dataset = GetFileCollection();
       if (!dataset) {
@@ -328,9 +335,19 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
       dataset->Update();
       if (dataset->GetNFiles() == 0) {
          // Save the export and raw urls
-         path.Form("%s/%s", GetDir(), GetFileName());
-         Info ("Merge", "file: %s", path.Data());
+         path.Form("%s/%s%s", GetDir(), GetFileName(), GetOptionsAnchor());
          fi = new TFileInfo(path);
+         // Add also an URL with the redirector path, if any
+         if (mssUrl.IsValid()) {
+            TUrl ur(fi->GetFirstUrl()->GetUrl());
+            ur.SetProtocol(mssUrl.GetProtocol());
+            ur.SetHost(mssUrl.GetHost());
+            ur.SetPort(mssUrl.GetPort());
+            if (mssUrl.GetUser() && strlen(mssUrl.GetUser()) > 0)
+               ur.SetUser(mssUrl.GetUser());
+            fi->AddUrl(ur.GetUrl());
+         }
+         // Add special local URL to keep track of the file
          path.Form("%s/%s?node=%s", GetDir(kTRUE), GetFileName(), GetLocalHost());
          fi->AddUrl(path);
          fi->Print();
@@ -344,10 +361,19 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
          TProofOutputFile *pFile = dynamic_cast<TProofOutputFile *>(o);
          if (pFile) {
             // Save the export and raw urls
-            path.Form("%s/%s", pFile->GetDir(), pFile->GetFileName());
-
-            Info ("Merge", "file: %s", path.Data());
+            path.Form("%s/%s%s", pFile->GetDir(), pFile->GetFileName(), pFile->GetOptionsAnchor());
             fi = new TFileInfo(path);
+            // Add also an URL with the redirector path, if any
+            if (mssUrl.IsValid()) {
+               TUrl ur(fi->GetFirstUrl()->GetUrl());
+               ur.SetProtocol(mssUrl.GetProtocol());
+               ur.SetHost(mssUrl.GetHost());
+               ur.SetPort(mssUrl.GetPort());
+               if (mssUrl.GetUser() && strlen(mssUrl.GetUser()) > 0)
+                  ur.SetUser(mssUrl.GetUser());
+               fi->AddUrl(ur.GetUrl());
+            }
+            // Add special local URL to keep track of the file
             path.Form("%s/%s?node=%s", pFile->GetDir(kTRUE), pFile->GetFileName(), pFile->GetLocalHost());
             fi->AddUrl(path);
             fi->Print();
@@ -369,7 +395,7 @@ void TProofOutputFile::Print(Option_t *) const
    Info("Print","-------------- %s : start (%s) ------------", GetName(), fLocalHost.Data());
    Info("Print"," dir:              %s", fDir.Data());
    Info("Print"," raw dir:          %s", fRawDir.Data());
-   Info("Print"," file name:        %s", fFileName.Data());
+   Info("Print"," file name:        %s%s", fFileName.Data(), fOptionsAnchor.Data());
    if (IsMerge()) {
       Info("Print"," run type:         create a merged file");
       Info("Print"," merging option:   %s",

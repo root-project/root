@@ -55,6 +55,7 @@ private:
    TString  fDir;            // name of the directory to be exported
    TString  fRawDir;         // name of the local directory where to create the file
    TString  fFileName;
+   TString  fOptionsAnchor;  // options and anchor string including delimiters, e.g. "?myopts#myanchor"
    TString  fOutputFileName;
    TString  fWorkerOrdinal;
    TString  fLocalHost;      // Host where the file was created
@@ -88,6 +89,7 @@ public:
    TFileMerger *GetFileMerger(Bool_t local = kFALSE);
    const char *GetFileName() const { return fFileName; }
    const char *GetLocalHost() const { return fLocalHost; }
+   const char *GetOptionsAnchor() const { return fOptionsAnchor; }
    const char *GetOutputFileName() const { return fOutputFileName; }
    const char *GetWorkerOrdinal() const { return fWorkerOrdinal; }
 
@@ -103,7 +105,7 @@ public:
    void SetOutputFileName(const char *name);
    void ResetFileCollection() { fDataSet = 0; }
 
-   ClassDef(TProofOutputFile,3) // Wrapper class to steer the merging of files produced on workers
+   ClassDef(TProofOutputFile,4) // Wrapper class to steer the merging of files produced on workers
 };
 
 #endif
