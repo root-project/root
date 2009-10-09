@@ -11,6 +11,7 @@
 </ul>
 
 
+
 <h4>THStack</h4>
 <ul>
 <li>The following macro produced two sets of superimposed labels with different
@@ -68,7 +69,19 @@ text sizes:
 </pre>
 </ul>
 
+<h4>TH1</h4>
+<ul>
+  <li>Fix problem in the resulting statistics of TH1::Add when the coeffient are negative, for an histogram subtraction. This fixes the issue
+  <a href="https://savannah.cern.ch/bugs/?55911">#55911</a>.
+  <li>In the implementation of  TH1::ResetStats(), set the statistics to the one calculated using the bin center and also reset the number of entries to the
+      total bin content or to the effective entries in case of a weighted histogram.
+  </ul>
 
+<h4>THistPainter</h4>
+  <ul>
+  <li>Round correctly the number of entries displayed in the statistics box to the closest integer value.
+  </ul>
+  
 <h4>TGraph</h4>
 <ul>
   <li>Fixed problem in &lt;http://root.cern.ch/phpBB2/viewtopic.php?t=9208&highlight=&gt;</li>

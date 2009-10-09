@@ -6446,7 +6446,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(fH->GetName());
    if (print_entries) {
-      if (fH->GetEntries() < 1e7) sprintf(t,"%s = %-7d",gStringEntries.Data(),Int_t(fH->GetEntries()));
+      if (fH->GetEntries() < 1e7) sprintf(t,"%s = %-7d",gStringEntries.Data(),Int_t(fH->GetEntries()+0.5));
       else                        sprintf(t,"%s = %14.7g",gStringEntries.Data(),Float_t(fH->GetEntries()));
       stats->AddText(t);
    }
@@ -6651,7 +6651,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(h2->GetName());
    if (print_entries) {
-      if (h2->GetEntries() < 1e7) sprintf(t,"%s = %-7d",gStringEntries.Data(),Int_t(h2->GetEntries()));
+      if (h2->GetEntries() < 1e7) sprintf(t,"%s = %-7d",gStringEntries.Data(),Int_t(h2->GetEntries()+0.5));
       else                        sprintf(t,"%s = %14.7g",gStringEntries.Data(),Float_t(h2->GetEntries()));
       stats->AddText(t);
    }
@@ -6862,8 +6862,8 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    }
    if (print_name)  stats->AddText(h3->GetName());
    if (print_entries) {
-      if (h3->GetEntries() < 1e7) sprintf(t,"%s = %-7d",gStringEntries.Data(),Int_t(h3->GetEntries()));
-      else                        sprintf(t,"%s = %14.7g",gStringEntries.Data(),Float_t(h3->GetEntries()));
+      if (h3->GetEntries() < 1e7) sprintf(t,"%s = %-7d",gStringEntries.Data(),Int_t(h3->GetEntries()+0.5));
+      else                        sprintf(t,"%s = %14.7g",gStringEntries.Data(),Float_t(h3->GetEntries()+0.5));
       stats->AddText(t);
    }
    char textstats[50];
