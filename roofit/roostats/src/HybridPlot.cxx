@@ -23,11 +23,12 @@ An example plot is available here:
 #include "TF1.h"
 #include "TAxis.h"
 #include "TH1.h"
-#include "TCanvas.h"
 #include "TLine.h"
 #include "TLegend.h"
 #include "TFile.h"
+#include "TVirtualPad.h"
 
+#include <algorithm>
 
 /// To build the THtml documentation
 ClassImp(RooStats::HybridPlot)
@@ -38,14 +39,19 @@ using namespace RooStats;
 
 HybridPlot::HybridPlot(const char* name,
                        const  char* title,
-                       std::vector<double> sb_vals,
-                       std::vector<double> b_vals,
+                       const std::vector<double> & sb_vals,
+                       const std::vector<double> & b_vals,
                        double testStat_data,
                        int n_bins,
                        bool verbosity):
   TNamed(name,title),
+  fSb_histo(NULL),
   fSb_histo_shaded(NULL),
+  fB_histo(NULL),
   fB_histo_shaded(NULL),
+  fData_testStat_line(0),
+  fLegend(0),
+  fPad(0),
   fVerbose(verbosity)
 {
   // HybridPlot constructor
@@ -56,18 +62,16 @@ HybridPlot::HybridPlot(const char* name,
   assert (nToysB >0);
 
   // Get the max and the min of the plots
-  double max = -1e40;
-  double min = +1e40;
+  double min = *std::min_element(sb_vals.begin(), sb_vals.end());
+  double max = *std::max_element(sb_vals.begin(), sb_vals.end());
 
-  // Extremes of the plot
-  for (int i=0;i<nToysSB;++i){
-    if (sb_vals[i]>max) max = sb_vals[i];
-    if (sb_vals[i]<min) min = sb_vals[i];
-  }
-  for (int i=0;i<nToysB;++i){
-    if (b_vals[i]>max) max = b_vals[i];
-    if (b_vals[i]<min) min = b_vals[i];
-  }
+  double min_b = *std::min_element(b_vals.begin(), b_vals.end());
+  double max_b = *std::max_element(b_vals.begin(), b_vals.end());
+  
+
+  if ( min_b < min) min = min_b; 
+  if ( max_b > max) max = max_b; 
+
   if (testStat_data<min) min = testStat_data;
   if (testStat_data>max) max = testStat_data;
 
@@ -75,7 +79,6 @@ HybridPlot::HybridPlot(const char* name,
   max *= 1.1;
 
   // Build the histos
-  //int n_bins=100;
 
   fSb_histo = new TH1F ("SB_model",title,n_bins,min,max);
   fSb_histo->SetTitle(fSb_histo->GetTitle());
@@ -124,19 +127,18 @@ HybridPlot::~HybridPlot()
   
   if (fSb_histo) delete fSb_histo;
   if (fB_histo) delete fB_histo;
+  if (fSb_histo_shaded) delete fSb_histo;
+  if (fB_histo_shaded) delete fB_histo;
   if (fData_testStat_line) delete fData_testStat_line;
   if (fLegend) delete fLegend;
 }
 
 /*----------------------------------------------------------------------------*/
 
-void HybridPlot::Draw(const char* options)
+void HybridPlot::Draw(const char* )
 {
-  // draw on canvas
+  // draw the S+B and B histogram in the current canvas
 
-   SetCanvas(new TCanvas(GetName(),GetTitle()));
-   GetCanvas()->cd();
-   GetCanvas()->Draw(options);
 
    // We don't want the statistics of the histos
    gStyle->SetOptStat(0);
@@ -184,6 +186,12 @@ void HybridPlot::Draw(const char* options)
    // The legend
    fLegend->Draw("same");
 
+   if (gPad) { 
+      gPad->SetName(GetName()); 
+      gPad->SetTitle(GetTitle() ); 
+   }
+
+   fPad = gPad; 
 
 }
 
@@ -216,6 +224,14 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options)
 
 }
 
+void HybridPlot::DumpToImage(const char * filename) { 
+   if (!fPad) { 
+      Error("HybridPlot","Hybrid plot has not yet been drawn "); 
+      return;
+   }
+   fPad->Print(filename); 
+}
+
 /*----------------------------------------------------------------------------*/
 
 // from Rsc.cxx
@@ -229,8 +245,8 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options)
 double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_result){
    // Get the center of the histo
    
-   TCanvas* c = new TCanvas();
-   c->cd();
+   TString optfit = "Q0";
+   if (display_result) optfit = "Q";
 
    TH1F* histo = (TH1F*)histo_orig->Clone();
 
@@ -246,7 +262,7 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
    gaus->SetParameter("Mean",histo->GetMean());
    gaus->SetParameter("Sigma",histo->GetRMS());
 
-   histo->Fit(gaus);
+   histo->Fit(gaus,optfit);
 
    // Second fit!
    double sigma = gaus->GetParameter("Sigma");
@@ -264,18 +280,21 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
    TF1* gaus2 = new TF1("mygaus2", "gaus", x_min, x_max);
    gaus2->SetParameter("Mean",mean);
 
-   histo->Fit(gaus2,"L","", x_min, x_max);
+   // second fit : likelihood fit
+   optfit += "L";
+   histo->Fit(gaus2,optfit,"", x_min, x_max);
 
-   histo->Draw();
-   gaus2->Draw("same");
 
    double center = gaus2->GetParameter("Mean");
 
-
-   delete gaus2;
-   delete histo;
-   if (! display_result)
-      delete c;
+   if (display_result) { 
+      histo->Draw();
+      gaus2->Draw("same");
+   }
+   else { 
+      delete histo;
+   }
+   delete gaus2; 
 
    return center;
 

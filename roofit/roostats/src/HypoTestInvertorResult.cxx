@@ -29,7 +29,8 @@ HypoTestInvertorResult::HypoTestInvertorResult( const char* name,
 						const char* title,
 						RooRealVar* scannedVariable,
 						double cl ) :
-  SimpleInterval(name,title,scannedVariable,-9999,+9999)
+   SimpleInterval(name,title,scannedVariable,-9999,+9999), 
+   fUseCLs(false)
   //TNamed( TString(name), TString(title) ),
   //fScannedVariable(scannedVariable)
 {
@@ -67,7 +68,11 @@ double HypoTestInvertorResult::GetYValue( int index ) const
     return -999;
   }
 
-  return ((HybridResult*)fYObjects.At(index))->CLs();
+  if (fUseCLs) 
+     return ((HybridResult*)fYObjects.At(index))->CLs();
+  else 
+     return ((HybridResult*)fYObjects.At(index))->AlternatePValue();  // CLs+b
+
 }
 
 
@@ -89,7 +94,6 @@ void HypoTestInvertorResult::CalculateLimits()
   if (Size()>2)
     for (int i=2; i<Size(); i++) {
       double vt = fabs(GetYValue(i)-cl);
-      std::cout << i << "  " << vt << endl;
       if ( vt<v1 || vt<v2 ) {
 	if ( v1<v2 ) {
 	  v2 = vt;

@@ -26,11 +26,12 @@
 // these  should be maybe forward decleared 
 // by moving implementations in source file 
 #include "TH1.h"
-#include "TCanvas.h"
 
 
 class TLine; 
 class TLegend; 
+class TH1; 
+class TVirtualPad; 
 
 
 namespace RooStats {
@@ -42,8 +43,8 @@ namespace RooStats {
       /// Constructor
       HybridPlot(const char* name,
                  const char* title,
-                 std::vector<double> sb_values,
-                 std::vector<double> b_values,
+                 const std::vector<double> & sb_values,
+                 const std::vector<double> & b_values,
                  double testStat_data,
                  int n_bins,
                  bool verbosity=true);
@@ -51,7 +52,7 @@ namespace RooStats {
       /// Destructor
       ~HybridPlot();
 
-      /// Draw on canvas
+      /// Draw on current pad
       void Draw (const char* options="");
 
       /// All the objects are written to rootfile
@@ -91,18 +92,12 @@ namespace RooStats {
       /// Get B histo
       TH1F* GetSBhisto(){return fSb_histo;}
 
-      /// from Statistical plot
-
-      /// Get the canvas
-      TCanvas* GetCanvas(){return fCanvas;}
-
-      /// Set the canvas
-      void SetCanvas(TCanvas* new_canvas){fCanvas=new_canvas;}
+       /// Get the pad (or canvas) where it has been drawn 
+      TVirtualPad * GetCanvas() { return fPad; }
 
       /// Write an image on disk
-      void DumpToImage (const char* filename){fCanvas->Print(filename);}
+      void DumpToImage (const char* filename);
 
-      // moved from Rsc.h
 
       /// Get the center of the histo
       double GetHistoCenter(TH1* histo, double n_rms=1,bool display_result=false);
@@ -121,8 +116,8 @@ namespace RooStats {
       TH1F* fB_histo_shaded; // The b Histo shaded
       TLine* fData_testStat_line; // The line for the data value of the test statistic
       TLegend* fLegend; // The legend of the plot
+      TVirtualPad * fPad;   // The pad where it has been drawn
       bool fVerbose; // verbosity flag
-      TCanvas* fCanvas; // plot canvas
 
       ClassDef(HybridPlot,1)   // Provides the plots for an HybridResult
    };

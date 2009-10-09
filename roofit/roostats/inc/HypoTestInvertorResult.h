@@ -44,6 +44,7 @@ namespace RooStats {
 
     int Size() const { return fXValues.size(); };
 
+    void UseCLs(bool on = true) { fUseCLs = on; }  
 
     Double_t LowerLimit() { CalculateLimits(); return fLowerLimit; }
     Double_t UpperLimit() { CalculateLimits(); return fUpperLimit; }
@@ -57,6 +58,8 @@ namespace RooStats {
 /*     RooAbsArg* fScannedVariable;  // pointer to the constrained variable */
     
   protected:
+
+     bool fUseCLs; 
 
      std::vector<double> fXValues;
 

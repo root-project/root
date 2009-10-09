@@ -54,11 +54,11 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
   fPdf(&pdf),
   fPOI(POI),
   fPriorPOI(&priorPOI),
-  fNuisanceParameters(*nuisanceParameters), 
   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
   fSize(0.05)
 {
    // constructor
+   if (nuisanceParameters) fNuisanceParameters.add(*nuisanceParameters); 
 }
 
 BayesianCalculator::BayesianCalculator( RooAbsData& data,
