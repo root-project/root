@@ -651,7 +651,6 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -677,7 +676,6 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
-   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
@@ -8165,6 +8163,7 @@ TH1I::TH1I(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    //
    fDimension = 1;
    TArrayI::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
 }
 
 //______________________________________________________________________________
