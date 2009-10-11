@@ -62,7 +62,7 @@ protected:
    void                   ResetQuery();
    TString                ConvertTypeName(const TString& typeName );
    virtual void           CreateBranch(const TString& branchName,const TString &typeName);
-   void                   CreateTable(const TString& table);
+   Bool_t                 CreateTable(const TString& table);
    virtual TBasket       *CreateBasket(TBranch * br); 
 
    virtual TBranch *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);

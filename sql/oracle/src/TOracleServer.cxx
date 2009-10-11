@@ -263,8 +263,8 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
 
    CheckConnect("GetTables",0);
 
-   TString sqlstr("SELECT owner, object_name FROM ALL_OBJECTS WHERE object_type='TABLE'");
-   if (dbname)
+   TString sqlstr("SELECT object_name,owner FROM ALL_OBJECTS WHERE object_type='TABLE'");
+   if (dbname && dbname[0])
       sqlstr = sqlstr + " AND owner='" + dbname + "'";
 
    return Query(sqlstr.Data());
@@ -312,8 +312,10 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
 
    if ((tablename==0) || (*tablename==0)) return 0;
 
+   TString table(tablename);
+   table.ToUpper();
    TString sql;
-   sql.Form("SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION, DATA_SCALE, NULLABLE, CHAR_COL_DECL_LENGTH FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", tablename);
+   sql.Form("SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION, DATA_SCALE, NULLABLE, CHAR_COL_DECL_LENGTH FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", table.Data());
 
    TSQLStatement* stmt = Statement(sql.Data(), 10);
    if (stmt==0) return 0;
@@ -419,8 +421,8 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
 }
 
 //______________________________________________________________________________
-TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table,
-                                      const char * /*wild*/)
+TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *tablename,
+                                      const char * wild)
 {
    // List all columns in specified table in the specified database.
    // Wild is for wildcarding "t%" list all columns starting with "t".
@@ -435,7 +437,14 @@ TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table
 //      return 0;
 //   }
 
-   return new TOracleResult(fConn, table);
+   TString sql;
+   TString table(tablename);
+   table.ToUpper();
+   if (wild && wild[0]) 
+      sql.Form("SELECT COLUMN_NAME FROM user_tab_columns WHERE table_name like '%s' ORDER BY COLUMN_ID", wild);
+   else 
+      sql.Form("SELECT COLUMN_NAME FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", table.Data());
+   return Query(sql);
 }
 
 //______________________________________________________________________________

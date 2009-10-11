@@ -183,6 +183,7 @@ void TTreeSQL::CheckBasket(TBranch *branch)
 
    if (basket==0) {
       basket = (TBasketSQL*)CreateBasket(branch);
+      if (basket==0) return;
       branch->GetListOfBaskets()->AddAtAndExpand(basket,0);
    }
    TBuffer * buffer = basket->GetBufferRef();
@@ -238,7 +239,7 @@ Bool_t TTreeSQL::CheckBranch(TBranch * tb)
       str += leafName;
 
       for (int i=0; i< rs->GetFieldCount(); ++i) {
-         if (strcmp(rs->GetFieldName(i), str.Data()) == 0) return kTRUE;
+         if (str.CompareTo(rs->GetFieldName(i),TString::kIgnoreCase) == 0) return kTRUE;
       }
       // We assume that if ONE of the leaf is in the table, then ALL the leaf are in
       // the table.
@@ -257,7 +258,7 @@ Bool_t TTreeSQL::CheckTable(const TString &table) const
    TSQLResult * tables = fServer->GetTables(fDB.Data(),table);
    TSQLRow * row = 0;
    while( (row = tables->Next()) ) {
-      if(strcmp(row->GetField(0),table.Data())==0){
+      if(table.CompareTo(row->GetField(0),TString::kIgnoreCase)==0){
          return kTRUE;
       }
    }
@@ -332,8 +333,12 @@ TBasket * TTreeSQL::CreateBasket(TBranch * tb)
       return 0;
    }
    vector<Int_t> *columnVec = GetColumnIndice(tb);
-   return new TBasketSQL(tb->GetName(), tb->GetName(), tb,
-                         &fResult, &fInsertQuery, columnVec, &fRow);
+   if (columnVec) {
+      return new TBasketSQL(tb->GetName(), tb->GetName(), tb,
+                            &fResult, &fInsertQuery, columnVec, &fRow);
+   } else {
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -463,13 +468,13 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
 }
 
 //______________________________________________________________________________
-void TTreeSQL::CreateTable(const TString &table)
+Bool_t TTreeSQL::CreateTable(const TString &table)
 {
    // Create the database table corresponding to this TTree.
 
    if (fServer==0) {
       Error("CreateTable","No TSQLServer specified");
-      return;
+      return false;
    }
    Int_t i, j;
    Int_t length;
@@ -503,11 +508,11 @@ void TTreeSQL::CreateTable(const TString &table)
             createSQL += typeName;
             createSQL += " ";
             createSQL += ")";
-            createSQL += ";";
 
             TSQLResult *sres = fServer->Query(createSQL.Data());
             if (!sres) {
                Error("CreateTable","May have failed");
+               return false;
             }
          }
          else {
@@ -522,6 +527,7 @@ void TTreeSQL::CreateTable(const TString &table)
    // retrieve table to initialize fResult
    delete fResult;
    fResult = fServer->Query(fQuery.Data());
+   return (fResult!=0);
 }
 
 //______________________________________________________________________________
@@ -552,7 +558,9 @@ Int_t TTreeSQL::Fill()
    if (fServer==0) return 0;
 
    if(!CheckTable(fTable.Data())) {
-      CreateTable(fTable.Data());
+      if (!CreateTable(fTable.Data())) {
+         return -1;
+      }
    }
 
    PrepEntry(fEntries);
@@ -575,11 +583,16 @@ Int_t TTreeSQL::Fill()
 
    TTree::Fill();
 
-   fInsertQuery.Remove(fInsertQuery.Length()-1);
-   fInsertQuery += ");";
-   TSQLResult *res = fServer?fServer->Query(fInsertQuery):0;
+   if (fInsertQuery[fInsertQuery.Length()-1]!='(') {
+      fInsertQuery.Remove(fInsertQuery.Length()-1);
+      fInsertQuery += ")";
+      TSQLResult *res = fServer?fServer->Query(fInsertQuery):0;
 
-   return res->GetRowCount();
+      if (res) {
+         return res->GetRowCount();
+      }
+   }
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -618,16 +631,12 @@ vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
       TString leafName = leaf->GetName();
       TString str;
 
-      if (leafName != branch->GetName()) {
-         str = "";
-         str = branch->GetName();
-         str += "__";
-         str += leafName;
-      } else {
-         str = leafName;
-      }
+      str = "";
+      str = branch->GetName();
+      str += "__";
+      str += leafName;
       for (Int_t i=0;i<rows;++i) {
-         if (str == names[i]) {
+         if (str.CompareTo(names[i],TString::kIgnoreCase)==0) {
             col = i;
             break;
          }
