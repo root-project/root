@@ -50,6 +50,16 @@ host=`hostname -s`
 dir=`dirname $0`
 . $dir/run_roottest.$host$configname.config
 
+if [ -z $ROOTSYS ] ; then 
+  export ROOTSYS=${ROOTLOC}
+  export PATH=${ROOTSYS}/bin:${PATH}
+  export LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}:.
+  export PYTHONPATH=${ROOTSYS}/lib
+fi
+
+mkdir -p $ROOTLOC
+cd $ROOTLOC
+
 export ROOTBUILD=opt
 
 echo "Running the nightly test on $host$configname from $ROOTLOC"
