@@ -9,6 +9,15 @@ test: tests ;
 # The previous line contains just ';' in order to disable the implicit 
 # rule building an executable 'test' from test.C
 
+ifneq ($(V),) 
+VERBOSE:=$(V)
+endif
+ifeq ($(VERBOSE),) 
+   CMDECHO=@
+else
+   CMDECHO=
+endif
+
 .PHONY: valgrind
 scripts/analyze_valgrind: scripts/analyze_valgrind.cxx
 	$(CXX) $< -o $@
@@ -139,15 +148,6 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 
 $(CLEAN_TARGETS_DIR): %.clean:
 	@(cd $*; $(MAKE) --no-print-directory clean)
-
-ifneq ($(V),) 
-VERBOSE:=$(V)
-endif
-ifeq ($(VERBOSE),) 
-   CMDECHO=@
-else
-   CMDECHO=
-endif
 
 clean:  $(CLEAN_TARGETS_DIR)
 	$(CMDECHO) rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)

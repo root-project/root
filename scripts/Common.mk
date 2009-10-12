@@ -22,7 +22,12 @@ $(SUCCESS_FILE): check $(TEST_TARGETS)
 	@touch $(SUCCESS_FILE)
 
 tests: $(SUCCESS_FILE) 
-	@len=`echo Tests in $(CALLDIR) | wc -c `;end=`expr 68 - $$len`;printf 'Tests in %s %.*s ' $(CALLDIR) $$end $(DOTS)
+	@len=`echo Tests in $(CALLDIR) | wc -c `;end=`expr 68 - $$len`; \
+         if [ printf 2>&1 | grep -q var ] ; then \
+           printf 'Tests in %s %.*s ' $(CALLDIR) $$end $(DOTS) ; \
+         else \
+           printf 'Tests in %s %*s ' $(CALLDIR) $$end $(DOTS) ; \
+         fi
 ifeq ($(RUNNINGWITHTIMING),)
 	@if [ -f $(SUCCESS_FILE) ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi
 else
