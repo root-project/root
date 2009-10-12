@@ -1539,9 +1539,19 @@ namespace {
       }
        */
       Bool_t operator!=(const TMemberInfo &other) {
-         return fName!=other.fName
-            || fClassName != other.fClassName
-            || fComment != other.fComment;
+         if (fName != other.fName) return kTRUE;
+         if (fClassName != other.fClassName) {
+            if ( (fClassName == "long" && (other.fClassName == "long long" || other.fClassName == "Long64_t"))
+                  || ( (fClassName == "long long" || fClassName == "Long64_t") && other.fClassName == "long") ) {
+               // This is okay both have the same on file format.
+            } else if ( (fClassName == "unsigned long" && (other.fClassName == "unsigned long long" || other.fClassName == "ULong64_t"))
+                       || ( (fClassName == "unsigned long long" || fClassName == "ULong64_t") && other.fClassName == "unsigned long") ) {
+               // This is okay both have the same on file format.
+            } else {
+               return kTRUE;
+            }
+         }
+         return fComment != other.fComment;
       }
    };
 }
