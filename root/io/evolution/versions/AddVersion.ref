@@ -383,3 +383,45 @@ StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
 
 StreamerInfo for class: MyClass, version=2, checksum=0x423a847
   float          a               offset= n/a type= 5                     
+
+Processing runAddVersion.cxx(3,"6")...
+
+Loading library lib6
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x4f48eb1f
+  long long      a               offset= n/a type=16                     
+   i= 0, a               type= 16, offset= n/a, len=1, method=0
+Loading myclass6.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x4f48eb1f
+  long long      a               offset= n/a type=16                     
+   i= 0, a               type= 16, offset= n/a, len=1, method=0
+Loading myclass7.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x4f48eb1f
+  long long      a               offset= n/a type=16                     
+   i= 0, a               type= 16, offset= n/a, len=1, method=0
+
+Processing runAddVersion.cxx(3,"7")...
+
+Loading library lib7
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x16138b1
+  long           a               offset= n/a type= 4                     
+   i= 0, a               type=  4, offset= n/a, len=1, method=0
+Loading myclass6.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x16138b1
+  long           a               offset= n/a type= 4                     
+   i= 0, a               type=  4, offset= n/a, len=1, method=0
+Loading myclass7.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x16138b1
+  long           a               offset= n/a type= 4                     
+   i= 0, a               type=  4, offset= n/a, len=1, method=0

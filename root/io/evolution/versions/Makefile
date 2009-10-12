@@ -50,6 +50,9 @@ lib5.$(DllSuf) : compile.cxx myclass.cxx myclass.h
 lib6.$(DllSuf) : compile.cxx myclass.cxx myclass.h
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("6")' > lib6.log 2>&1
 
+lib7.$(DllSuf) : compile.cxx myclass.cxx myclass.h
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("7")' > lib7s.log 2>&1
+
 myclass1.root: wcomp.cxx lib1.$(DllSuf) 
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("1")' > myclass1.log 2>&1 
 
@@ -59,9 +62,15 @@ myclass2.root: wcomp.cxx lib2.$(DllSuf)
 myclass3.root: wcomp.cxx lib3.$(DllSuf) 
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("3")' > myclass3.log 2>&1 
 
-FILES = myclass1.root myclass2.root myclass3.root
+myclass6.root: wcomp.cxx lib6.$(DllSuf) 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("6")' > myclass3.log 2>&1 
+
+myclass7.root: wcomp.cxx lib7.$(DllSuf) 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("7")' > myclass3.log 2>&1 
+
+FILES = myclass1.root myclass2.root myclass3.root myclass6.root myclass7.root
 LIBS = lib1.$(DllSuf) lib2.$(DllSuf) lib3.$(DllSuf) lib4.$(DllSuf) lib5.$(DllSuf) \
-        lib6.$(DllSuf) 
+        lib6.$(DllSuf) lib7.$(DllSuf)
 
 AddVersion.log: $(FILES) $(LIBS)
 	$(CMDECHO) ( $(CALLROOTEXE) -b -l -q 'runAddVersion.cxx(1,"1")' \
@@ -76,6 +85,8 @@ AddVersion.log: $(FILES) $(LIBS)
             && $(CALLROOTEXE) -b -l -q 'runAddVersion.cxx(2,"4")' \
             && $(CALLROOTEXE) -b -l -q 'runAddVersion.cxx(2,"5")' \
             && $(CALLROOTEXE) -b -l -q 'runAddVersion.cxx(2,"6")' \
+            && $(CALLROOTEXE) -b -l -q 'runAddVersion.cxx(3,"6")' \
+            && $(CALLROOTEXE) -b -l -q 'runAddVersion.cxx(3,"7")' \
 	    ) 2>&1 | sed -e 's@offset=  [0-9]*@offset= n/a@' > AddVersion.log
 
 AddVersion: AddVersion.log AddVersion.ref

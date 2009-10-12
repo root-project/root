@@ -23,7 +23,7 @@ int wcomp(const char *what)
    return r;
 }
 
-int checkLibFirst(const char *what)
+int checkLibFirst(const char *what, int part)
 {
    cout << "\nLoading library lib" << what << endl;
    int r = compile(what);
@@ -32,19 +32,35 @@ int checkLibFirst(const char *what)
    gROOT->GetClass("MyClass")->GetStreamerInfo();
    gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
    
-   for (int i=1; i<3; ++i) {
-      cout << endl << "Loading " << Form("myclass%d.root",i) << endl;
-      TFile *f = new TFile(Form("myclass%d.root",i));
-      gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
+   if (part==0) {
+      for (int i=1; i<3; ++i) {
+         cout << endl << "Loading " << Form("myclass%d.root",i) << endl;
+         TFile *f = new TFile(Form("myclass%d.root",i));
+         gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
+      }
+   } else {
+      for (int i=6; i<8; ++i) {
+         cout << "Loading " << Form("myclass%d.root",i) << endl;
+         TFile *f = new TFile(Form("myclass%d.root",i));
+         gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
+      }
    }
 }
 
-int checkFileFirst(const char *what)
+int checkFileFirst(const char *what, int part)
 {
-   for (int i=1; i<3; ++i) {
-      cout << "Loading " << Form("myclass%d.root",i) << endl;
-      TFile *f = new TFile(Form("myclass%d.root",i));
-      gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
+   if (part==0) {
+      for (int i=1; i<3; ++i) {
+         cout << "Loading " << Form("myclass%d.root",i) << endl;
+         TFile *f = new TFile(Form("myclass%d.root",i));
+         gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
+      }
+   } else {
+      for (int i=6; i<8; ++i) {
+         cout << "Loading " << Form("myclass%d.root",i) << endl;
+         TFile *f = new TFile(Form("myclass%d.root",i));
+         gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
+      }
    }
 
    cout << "\nLoading library lib" << what << endl;
@@ -64,9 +80,13 @@ int runAddVersion(int mode, const char *whatlib)
    case 0:
       return wcomp(whatlib);
    case 1:
-      return checkLibFirst(whatlib);
+      return checkLibFirst(whatlib,0);
    case 2:
-      return checkFileFirst(whatlib);
+      return checkFileFirst(whatlib,0);
+   case 3:
+      return checkLibFirst(whatlib,1);
+   case 4:
+      return checkFileFirst(whatlib,1);
    }
 }
 

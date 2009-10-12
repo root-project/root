@@ -14,6 +14,10 @@ public:
    long long a;
    virtual ~MyClass() {}
    ClassDef(MyClass,1);
+#elif VERSION==7
+   long a;
+   virtual ~MyClass() {}
+   ClassDef(MyClass,1);
 #endif
 };
 
