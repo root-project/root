@@ -23,7 +23,7 @@ $(SUCCESS_FILE): check $(TEST_TARGETS)
 
 tests: $(SUCCESS_FILE) 
 	@len=`echo Tests in $(CALLDIR) | wc -c `;end=`expr 68 - $$len`; \
-           printf 'Tests in %s %*.*s ' $(CALLDIR) $$end $$end $(DOTS) ; \
+           printf 'Tests in %s %*.*s ' $(CALLDIR) $$end $$end $(DOTS) ;
 ifeq ($(RUNNINGWITHTIMING),)
 	@if [ -f $(SUCCESS_FILE) ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi
 else
