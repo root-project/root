@@ -1,24 +1,24 @@
-int compile(const char *what)
+int compile(const char *version, const char *what = "myclass.h")
 {
-   //static const TString make( gSystem->GetMakeSharedLib() );
-   //TString work( make );
-   //work.ReplaceAll("$Opt","$Opt -Dregular");
-   //gSystem->SetMakeSharedLib( work );
-
    static const TString incs( gSystem->GetIncludePath() );
    TString work( incs );
-   TString mytype( what );
  
-   work.Append( Form(" -DCASE_%s -DVERSION=%s ",what,what) ); 
+   work.Append( Form(" -DCASE_%s -DVERSION=%s ",version,version) ); 
    gSystem->SetIncludePath( work );
-   TString lib( Form("lib%s",what) );
-   int r = !gSystem->CompileMacro("myclass.h","k",lib);
+   TString lib; 
+   if (strcmp(what,"myclass.h")==0) {
+      lib.Form("lib%s",version);
+   } else {
+      lib.Form("lib%s%s",what,version);
+      lib.ReplaceAll(".","_");
+   }
+   int r = !gSystem->CompileMacro(what,"k",lib);
    return r;
 }
 
-int wcomp(const char *what)
+int wcomp(const char *version, const char *what = "myclass.h")
 {
-   int r = compile(what);
+   int r = compile(version,what);
    if (!r) r = write_what(what);
    return r;
 }
@@ -90,4 +90,14 @@ int runAddVersion(int mode, const char *whatlib)
    }
 }
 
+int runVecLong(int mode, const char *whatlib)
+{
+   switch(mode) {
+      case 0:
+         return wcomp(whatlib,"veclong64.h"); 
+      case 1:
+         compile(whatlib,"veclong64.h");
+         return readfile();
+   }
+}
 

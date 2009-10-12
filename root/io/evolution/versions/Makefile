@@ -51,7 +51,7 @@ lib6.$(DllSuf) : compile.cxx myclass.cxx myclass.h
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("6")' > lib6.log 2>&1
 
 lib7.$(DllSuf) : compile.cxx myclass.cxx myclass.h
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("7")' > lib7s.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("7")' > lib7.log 2>&1
 
 myclass1.root: wcomp.cxx lib1.$(DllSuf) 
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("1")' > myclass1.log 2>&1 
@@ -92,6 +92,28 @@ AddVersion.log: $(FILES) $(LIBS)
 AddVersion: AddVersion.log AddVersion.ref
 	$(TestDiff)
 
+libveclong64_h1.$(DllSuf) : compile.cxx myclass.cxx myclass.h veclong64.h
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("1","veclong64.h")' > libveclong64_h1.log 2>&1
+
+libveclong64_h2.$(DllSuf) : compile.cxx myclass.cxx myclass.h veclong64.h
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.cxx("2","veclong64.h")' > libveclong64_h2.log 2>&1
+
+veclong-1.root: libveclong64_h1.$(DllSuf) wcomp.cxx
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("1","veclong64.h")' > veclong-1.log 2>&1 
+
+veclong-2.root: libveclong64_h2.$(DllSuf) wcomp.cxx
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("2","veclong64.h")' > veclong-2.log 2>&1 
+
+VECFILES = veclong-1.root veclong-2.root
+VECLIBS = libveclong64_h1.$(DllSuf) libveclong64_h2.$(DllSuf)
+
+VecLong.log: $(VECFILES) $(VECLIBS)
+	$(CMDECHO) ( $(CALLROOTEXE) -b -l -q 'runVecLong.cxx(1,"1")' \
+            && $(CALLROOTEXE) -b -l -q 'runVecLong.cxx(1,"2")' \
+	    ) 2>&1 | sed -e 's@offset=  [0-9]*@offset= n/a@' > VecLong.log
+
+VecLong: VecLong.log VecLong.ref64 VecLong.ref32
+	$(TestDiff)
 
 attmarker.log: hsimple14.root hsimple20.root
 	$(CMDECHO) hadd -f result.root hsimple14.root hsimple20.root > attmarker.log 2>&1
