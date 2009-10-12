@@ -1058,7 +1058,8 @@ if test "x$ccbin" = "x" ; then
 fi
 
 # For gcc on opteron force checking for 64-bit libs
-if test "x$ccflv" = "xgccx8664" || test "x$ccflv" = "xgccppc64" ; then
+if test "x$ccflv" = "xgccx8664" || test "x$ccflv" = "xgccppc64" || \
+   test "x$ccflv" = "xiccx8664"; then
    checklib64="yes"
 fi
 
