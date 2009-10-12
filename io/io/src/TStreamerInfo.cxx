@@ -1658,7 +1658,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
       }
       if (cl) {
          TDataMember *tdm = (TDataMember*)membernext();
-         while(tdm && ( tdm->IsPersistent() ) ) {
+         while(tdm && ( (!tdm->IsPersistent()) || (tdm->Property()&kIsStatic) )) {
             tdm = (TDataMember*)membernext();
          }
          if (tdm) {
@@ -1686,18 +1686,18 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
       if (local!=other) {
          if (warn) {
             if (!el) {
-               Warning("CompareContent","The following data member of the on-file layout version %d of class '%s' is missing from the in-memory layout version %d:\n"
+               Warning("CompareContent","The following data member of\nthe on-file layout version %d of class '%s' is missing from \nthe in-memory layout version %d:\n"
                        "   %s %s; //%s"
                        ,GetClassVersion(), GetName(), GetClassVersion()
                        ,other.fClassName.Data(),other.fName.Data(),other.fComment.Data());
 
             } else if (other.fName.Length()==0) {
-               Warning("CompareContent","The following data member of the in-memory layout version %d of class '%s' is missing from the on-file layout version %d:\n"
+               Warning("CompareContent","The following data member of\nthe in-memory layout version %d of class '%s' is missing from \nthe on-file layout version %d:\n"
                        "   %s %s; //%s"
                        ,GetClassVersion(), GetName(), GetClassVersion()
                        ,local.fClassName.Data(),local.fName.Data(),local.fComment.Data());
             } else {
-               Warning("CompareContent","The following data member of the on-file layout version %d of class '%s' differs from the in-memory layout version %d:\n"
+               Warning("CompareContent","The following data member of\nthe on-file layout version %d of class '%s' differs from \nthe in-memory layout version %d:\n"
                        "   %s %s; //%s\n"
                        "vs\n"
                        "   %s %s; //%s"
