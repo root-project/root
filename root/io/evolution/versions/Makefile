@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.rootmap result.root myclass*.ro
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += AddVersion attmarker
+TEST_TARGETS += AddVersion VecLong attmarker
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -63,10 +63,10 @@ myclass3.root: wcomp.cxx lib3.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("3")' > myclass3.log 2>&1 
 
 myclass6.root: wcomp.cxx lib6.$(DllSuf) 
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("6")' > myclass3.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("6")' > myclass6.log 2>&1 
 
 myclass7.root: wcomp.cxx lib7.$(DllSuf) 
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("7")' > myclass3.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'wcomp.cxx("7")' > myclass7.log 2>&1 
 
 FILES = myclass1.root myclass2.root myclass3.root myclass6.root myclass7.root
 LIBS = lib1.$(DllSuf) lib2.$(DllSuf) lib3.$(DllSuf) lib4.$(DllSuf) lib5.$(DllSuf) \
