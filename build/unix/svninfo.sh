@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
 # Store info about which svn branch, what revision and at what date/time
 # we executed make.
