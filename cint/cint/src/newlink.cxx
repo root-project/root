@@ -12313,7 +12313,7 @@ void G__specify_link(int link_stub)
         }
 #else
         if(G__dispmsg>=G__DISPNOTE) {
-           G__fprinterr(G__serr,"Note: link requested for unknown class %s",buf);
+           G__fprinterr(G__serr,"Note: link requested for unknown class %s",buf());
            G__printlinenum();
         }
 #endif
