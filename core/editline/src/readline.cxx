@@ -54,7 +54,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <limits.h>
+#ifndef __FreeBSD__
 #include <alloca.h>
+#endif // __FreeBSD__
 #include "histedit.h"
 // #include "readline/readline.h"
 #include "editline.h"
