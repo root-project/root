@@ -514,7 +514,7 @@ void TRootCanvas::CreateCanvas(const char *name)
                                 kSunkenFrame | kDoubleBorder);
 
    fCanvasID = -1;
-   
+
    if (fCanvas->UseGL()) {
       fCanvas->SetSupportGL(kFALSE);
       //first, initialize GL (if not yet)
@@ -548,7 +548,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    if (fCanvasID == -1)
       fCanvasID = gVirtualX->InitWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
-      
+
    Window_t win = gVirtualX->GetWindowID(fCanvasID);
    fCanvasContainer = new TRootContainer(this, win, fCanvasWindow->GetViewPort());
    fCanvasWindow->SetContainer(fCanvasContainer);
@@ -559,9 +559,9 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    // create the tooltip with a timeout of 250 ms
    fToolTip = new TGToolTip(fClient->GetDefaultRoot(), fCanvasWindow, "", 250);
-   
+
    fCanvas->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
-                    "TRootCanvas", this, 
+                    "TRootCanvas", this,
                     "EventInfo(Int_t, Int_t, Int_t, TObject*)");
 
    // Create status bar
@@ -1239,7 +1239,7 @@ void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
    // Set size of canvas (units in pixels).
 
    Resize(w, h);
-   
+
    // Make sure the change of size is really done.
    if (!gThreadXAR) {
       gSystem->ProcessEvents();
@@ -1350,7 +1350,7 @@ void TRootCanvas::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
    // Display a tooltip with infos about the primitive below the cursor.
 
    fToolTip->Hide();
-   if (!fCanvas->GetShowToolTips() || selected == 0 || 
+   if (!fCanvas->GetShowToolTips() || selected == 0 ||
        event != kMouseMotion || fButton != 0)
       return;
    TString tipInfo;
@@ -1372,7 +1372,7 @@ void TRootCanvas::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
          tipInfo += TString::Format("\n%d, %d", px, py);
       if (!objInfo.IsNull())
          tipInfo += TString::Format("\n%s", objInfo.Data());
-   }      
+   }
    fToolTip->SetText(tipInfo.Data());
    fToolTip->SetPosition(px+15, py+15);
    fToolTip->Reset();
@@ -1646,7 +1646,7 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
       fButton = button;
       if (button == kButton1) {
          if (event->fState & kKeyShiftMask)
-            fCanvas->HandleInput(EEventType(7), x, y);
+            fCanvas->HandleInput(kButton1Shift, x, y);
          else
             fCanvas->HandleInput(kButton1Down, x, y);
       }
@@ -1659,9 +1659,9 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
 
    } else if (event->fType == kButtonRelease) {
       if (button == kButton4)
-         fCanvas->HandleInput(EEventType(5), x, y);//hack
+         fCanvas->HandleInput(kWheelUp, x, y);
       if (button == kButton5)
-         fCanvas->HandleInput(EEventType(6), x, y);//hack
+         fCanvas->HandleInput(kWheelDown, x, y);
       if (button == kButton1)
          fCanvas->HandleInput(kButton1Up, x, y);
       if (button == kButton2)
@@ -1772,7 +1772,7 @@ Bool_t TRootCanvas::HandleContainerExpose(Event_t *event)
 
    if (event->fCount == 0) {
       fCanvas->Flush();
-   }   
+   }
 
    return kTRUE;
 }
@@ -1898,4 +1898,3 @@ void TRootContainer::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    out << GetName() << " = new TGCompositeFrame(gClient,winC"
        << "," << GetParent()->GetName() << ");" << endl;
 }
-

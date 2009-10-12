@@ -15,6 +15,7 @@
 enum EEventType {
    kNoEvent       =  0,
    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3, kKeyDown  =  4,
+   kWheelUp       =  5, kWheelDown     =  6, kButton1Shift  =  7,
    kButton1Up     = 11, kButton2Up     = 12, kButton3Up     = 13, kKeyUp    = 14,
    kButton1Motion = 21, kButton2Motion = 22, kButton3Motion = 23, kKeyPress = 24,
    kButton1Locate = 41, kButton2Locate = 42, kButton3Locate = 43, kESC      = 27,

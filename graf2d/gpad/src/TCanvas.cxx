@@ -1312,7 +1312,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       RunAutoExec();
 
       break;
-   case 7:
+   case kButton1Shift:
       // Try to select
       pad = Pick(px, py, prevSelObj);
 
@@ -1327,17 +1327,16 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       RunAutoExec();
 
       break;
-   default:
-      //kButton4/kButton5 for embedded gl/ glhistpainter
-      //5 and 6
-      if (event == 5 || event == 6)
-      {
-         pad = Pick(px, py, prevSelObj);
-         if (!pad) return;
+   case kWheelUp:
+   case kWheelDown:
+      pad = Pick(px, py, prevSelObj);
+      if (!pad) return;
 
-         gPad = pad;
-         fSelected->ExecuteEvent(event, px, py);
-      }
+      gPad = pad;
+      fSelected->ExecuteEvent(event, px, py);
+      break;
+   default:
+      break;
    }
 
    if (fPadSave && event != kButton2Down)
