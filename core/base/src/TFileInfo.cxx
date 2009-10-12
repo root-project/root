@@ -319,20 +319,18 @@ void TFileInfo::Print(Option_t * /* option */) const
    // Print information about this object.
 
    GetMD5()->Final();
-   cout << "UUID: " << GetUUID()->AsString() << "\n"
-        << "MD5:  " << GetMD5()->AsString() << "\n"
-        << "Size: " << GetSize() << endl;
+   Printf("UUID: %s\nMD5:  %s\nSize: %lld", GetUUID()->AsString(), GetMD5()->AsString(), GetSize());
 
    TIter next(fUrlList);
    TUrl *u;
-   cout << " === URLs ===" << endl;
+   Printf(" === URLs ===");
    while ((u = (TUrl*)next()))
-      cout << " URL: " << u->GetUrl() << endl;
+     Printf(" URL:  %s", u->GetUrl());
 
    TIter nextm(fMetaDataList);
    TObject *m = 0;   // can be any TObject not only TFileInfoMeta
    while ((m = (TObject*) nextm())) {
-      cout << " === Meta Data Object ===" << endl;
+      Printf(" === Meta Data Object ===");
       m->Print();
    }
 }
@@ -419,9 +417,7 @@ void TFileInfoMeta::Print(Option_t * /* option */) const
 {
    // Print information about this object.
 
-   cout << " Name:    " << fName << "\n"
-        << " Class:   " << fTitle << "\n"
-        << " Entries: " << fEntries << "\n"
-        << " First:   " << fFirst << "\n"
-        << " Last:    " << fLast << endl;
+   Printf(" Name:    %s\n Class:   %s\n Entries: %lld\n"
+          " First:   %lld\n Last:    %lld",
+          fName.Data(), fTitle.Data(), fEntries, fFirst, fLast);
 }
