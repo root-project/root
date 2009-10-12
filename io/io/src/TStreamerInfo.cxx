@@ -1501,6 +1501,9 @@ void TStreamerInfo::Clear(Option_t *option)
 }
 
 namespace {
+   // TMemberInfo
+   // Local helper class to be able to compare data member represened by
+   // 2 distinct TStreamerInfos
    class TMemberInfo {
    public:
       TString fName;
@@ -1527,11 +1530,14 @@ namespace {
          fClassName.Clear();
          fComment.Clear();
       }
+      /* Hide this not yet used implementation to suppress warnings message
+       from icc 11 
       Bool_t operator==(const TMemberInfo &other) {
          return fName==other.fName
             && fClassName == other.fClassName
             && fComment == other.fComment;
       }
+       */
       Bool_t operator!=(const TMemberInfo &other) {
          return fName!=other.fName
             || fClassName != other.fClassName
@@ -2876,7 +2882,9 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
       TStreamerElement *element;
       while ((element = (TStreamerElement*) next())) {
          if ( rule->HasTarget( element->GetName() ) ) {
-            match = kTRUE;
+            // If the rule targets an existing member but it is also a source,
+            // we still need to insert the rule.
+            match = ! ((ROOT::TSchemaMatch*)rules)->HasRuleWithSource( element->GetName() );
             // If the rule targets an existing member but it is also a source,
             // we still need to insert the rule.
             match = ! ((ROOT::TSchemaMatch*)rules)->HasRuleWithSource( element->GetName() );
