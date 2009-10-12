@@ -65,6 +65,7 @@ class TProofStats;
 class TMutex;
 class TStatus;
 class TTimer;
+class THashList;
 
 
 //------------------------------------------------------------------------
@@ -97,6 +98,8 @@ protected:
    TMutex       *fStopTimerMtx;    //To protect the stop timer
 
    TTimer       *fDispatchTimer;    //Dispatch pending events while processing
+
+   static THashList *fgDrawInputPars;  // List of input parameters to be kept on drawing actions
 
    void         *GetSender() { return this; }  //used to set gTQSender
 
@@ -135,6 +138,7 @@ public:
                          TString &selector, TString &objname);
    void      HandleGetTreeHeader(TMessage *mess);
    void      HandleRecvHisto(TMessage *mess);
+   void      FeedBackCanvas(const char *name, Bool_t create);
 
    void      StopProcess(Bool_t abort, Int_t timeout = -1);
    void      AddInput(TObject *inp);

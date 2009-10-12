@@ -128,6 +128,7 @@ const char* const kPROOF_CacheDir        = "cache";       // file cache dir, und
 const char* const kPROOF_PackDir         = "packages";    // package dir, under WorkDir
 const char* const kPROOF_QueryDir        = "queries";     // query dir, under WorkDir
 const char* const kPROOF_DataSetDir      = "datasets";    // dataset dir, under WorkDir
+const char* const kPROOF_DataDir         = "data";        // dir for produced data, under WorkDir
 const char* const kPROOF_CacheLockFile   = "proof-cache-lock-";   // cache lock file
 const char* const kPROOF_PackageLockFile = "proof-package-lock-"; // package lock file
 const char* const kPROOF_QueryLockFile   = "proof-query-lock-";   // query lock file
@@ -359,6 +360,11 @@ private:
    enum EProofShowQuotaOpt {
       kPerGroup = 0x1,
       kPerUser = 0x2
+   };
+   enum EProofClearData {
+      kPurge = 0,
+      kUnregistered = 1,
+      kDataset = 2
    };
 
    Bool_t          fValid;           //is this a valid proof object
@@ -715,6 +721,9 @@ public:
    TList       *FindDataSets(const char *searchString, const char* optStr = "");
 
    virtual Int_t SetDataSetTreeName( const char *dataset, const char *treename);
+
+   void         ShowData();
+   void         ClearData(UInt_t what = kUnregistered, const char *dsname = 0);
 
    const char *GetMaster() const { return fMaster; }
    const char *GetConfDir() const { return fConfDir; }

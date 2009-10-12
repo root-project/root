@@ -398,6 +398,7 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    if (printing) {
       TList *output = (TList *)result;
       output->Sort();
+      Printf("Dataset repository: %s", fDataSetDir.Data());
       Printf("Dataset URI                               | # Files | Default tree | # Events |   Disk   | Staged");
       TIter iter4(output);
       TObjString* formattedLine = 0;
@@ -933,9 +934,9 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
       TUrl eurl(*(file->GetEndpointUrl()));
       eurl.SetOptions(url->GetOptions());
       eurl.SetAnchor(url->GetAnchor());
-      fileInfo->AddUrl(eurl.GetUrl(kTRUE), kTRUE);
+      fileInfo->AddUrl(eurl.GetUrl(), kTRUE);
       if (gDebug > 0)
-        Info("ScanDataSet", "added URL %s", eurl.GetUrl(kTRUE));
+        Info("ScanDataSet", "added URL %s", eurl.GetUrl());
 
       if (file->GetSize() > 0)
           fileInfo->SetSize(file->GetSize());

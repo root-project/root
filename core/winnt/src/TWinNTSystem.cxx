@@ -2385,6 +2385,19 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
 }
 
 //______________________________________________________________________________
+Bool_t TWinNTSystem::IsPathLocal(const char *path)
+{
+   // Returns TRUE if the url in 'path' points to the local file system.
+   // This is used to avoid going through the NIC card for local operations.
+
+   TSystem *helper = FindHelper(path);
+   if (helper)
+      return helper->IsPathLocal(path);
+
+   return TSystem::IsPathLocal(path);
+}
+
+//______________________________________________________________________________
 const char *TWinNTSystem::PrependPathName(const char *dir, TString& name)
 {
    // Concatenate a directory and a file name.

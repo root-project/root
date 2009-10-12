@@ -444,14 +444,21 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 
    if (main && main != fTree) {
       // Set the file cache
-      if (fUseTreeCache && !localfile) {
-         TFile *curfile = main->GetCurrentFile();
-         if (!fTreeCache) {
-            main->SetCacheSize(fCacheSize);
-            fTreeCache = (TTreeCache *)curfile->GetCacheRead();
+      if (!localfile) {
+         if (fUseTreeCache) {
+            TFile *curfile = main->GetCurrentFile();
+            if (!fTreeCache) {
+               main->SetCacheSize(fCacheSize);
+               fTreeCache = (TTreeCache *)curfile->GetCacheRead();
+            } else {
+               curfile->SetCacheRead(fTreeCache);
+               main->SetCacheSize(fCacheSize); // Destroys fTreeCache
+               fTreeCache = (TTreeCache *)curfile->GetCacheRead();
+               fTreeCache->UpdateBranches(main, kTRUE);
+            }
          } else {
-            curfile->SetCacheRead(fTreeCache);
-            fTreeCache->UpdateBranches(main, kTRUE);
+            // Disable the cache
+            main->SetCacheSize(-1);
          }
       } else {
          fTreeCache = 0;

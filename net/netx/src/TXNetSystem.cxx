@@ -625,6 +625,25 @@ Bool_t TXNetSystem::GetPathsInfo(const char *paths, UChar_t *info)
    return kFALSE;
 }
 
+//______________________________________________________________________________
+Bool_t TXNetSystem::IsPathLocal(const char *path)
+{
+   // Returns TRUE if the url in 'path' points to the local file system.
+   // This is used to avoid going through the NIC card for local operations.
+
+   if (fIsXRootd) {
+      TXNetSystemConnectGuard cg(this, path);
+      if (cg.IsValid()) {
+         if (cg.ClientAdmin()->GetClientConn()->GetServerType() != kSTDataXrootd) {
+            // Not an end point data server: cannot assert locality
+            return kFALSE;
+         }
+      }
+   }
+   // Either an end-point data server or 'rootd': check for locality
+   return TSystem::IsPathLocal(path);
+}
+
 //_____________________________________________________________________________
 Int_t TXNetSystem::Locate(const char *path, TString &eurl)
 {

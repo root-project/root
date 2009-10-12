@@ -2233,7 +2233,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
 
    // Timeout counter
    Long_t nto = timeout;
-   if (gDebug > 2)
+   PDB(kCollect, 2)
       Info("Collect","active: %d", mon->GetActive());
 
    // On clients, handle Ctrl-C during collection
@@ -2241,9 +2241,30 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
       fIntHandler->Add();
 
    // Sockets w/o activity during the last 'sto' millisecs are deactivated
+   Int_t nact = 0;
    Long_t sto = -1;
    Int_t nsto = 60;
-   while (mon->GetActive(sto) && (nto < 0 || nto > 0)) {
+   while ((nact = mon->GetActive(sto)) && (nto < 0 || nto > 0)) {
+
+      // Dump last waiting sockets, if in debug mode
+      PDB(kCollect, 2) {
+         if (nact < 4) {
+            TList *al = mon->GetListOfActives();
+            if (al && al->GetSize() > 0) {
+               Info("Collect"," %d node(s) still active:", al->GetSize());
+               TIter nxs(al);
+               TSocket *xs = 0;
+               while ((xs = (TSocket *)nxs())) {
+                  TSlave *wrk = FindSlave(xs);
+                  if (wrk)
+                     Info("Collect","   %s", wrk->GetName());
+                  else
+                     Info("Collect","   %p: %s:%d", xs, xs->GetInetAddress().GetHostName(),
+                                                      xs->GetInetAddress().GetPort());
+               }
+            }
+         }
+      }
 
       // Wait for a ready socket
       TSocket *s = mon->Select(1000);
@@ -2254,7 +2275,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
          if (rc  == 1 || (rc == 2 && !savedMonitor)) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
-            PDB(kGlobal, 2)
+            PDB(kCollect, 2)
                Info("Collect","deactivating %p (active: %d, %p)",
                               s, mon->GetActive(),
                               mon->GetListOfActives()->First());
@@ -2263,7 +2284,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
             // Deactivate it if we are done with it
             if (savedMonitor) {
                savedMonitor->DeActivate(s);
-               PDB(kGlobal, 2)
+               PDB(kCollect, 2)
                   Info("Collect","save monitor: deactivating %p (active: %d, %p)",
                                  s, savedMonitor->GetActive(),
                                  savedMonitor->GetListOfActives()->First());
@@ -2353,7 +2374,7 @@ Int_t TProof::CollectInputFrom(TSocket *s, Int_t endtype)
 
    Int_t recvrc = 0;
    if ((recvrc = s->Recv(mess)) < 0) {
-      PDB(kGlobal,2)
+      PDB(kCollect,2)
          Info("CollectInputFrom","%p: got %d from Recv()", s, recvrc);
       Bool_t bad = kTRUE;
       if (recvrc == -5) {
@@ -2412,7 +2433,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
    // The message type
    Int_t what = mess->What();
 
-   PDB(kGlobal,3)
+   PDB(kCollect,3)
       Info("HandleInputMessage", "got type %d from '%s'", what, (sl ? sl->GetOrdinal() : "undef"));
 
    switch (what) {
@@ -2516,7 +2537,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
 
       case kPROOF_LOGDONE:
          (*mess) >> sl->fStatus >> sl->fParallel;
-         PDB(kGlobal,2)
+         PDB(kCollect,2)
             Info("HandleInputMessage","kPROOF_LOGDONE:%s: status %d  parallel %d",
                  sl->GetOrdinal(), sl->fStatus, sl->fParallel);
          if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
@@ -5020,6 +5041,95 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
 
    PDB(kGlobal,1) Info("GoParallel", "got %d node%s", n, n == 1 ? "" : "s");
    return n;
+}
+
+//______________________________________________________________________________
+void TProof::ShowData()
+{
+   // List contents of the data directory in the sandbox.
+   // This is the place where files produced by the client queries are kept
+
+   if (!IsValid() || !fManager) return;
+#if 0
+   // This is run via the manager
+   fManager->Find("~/data", "-type f", "all");
+#endif
+}
+
+//______________________________________________________________________________
+void TProof::ClearData(UInt_t, const char *)
+{
+   // Remove files for the data directory.
+   // The option 'what' can take the values:
+   //     kPurge                 remove all files and directories under '~/data' 
+   //     kUnregistered          remove only files not in registered datasets (default)
+   //     kDataset               remove files belonging to dataset 'dsname'
+
+   if (!IsValid() || !fManager) return;
+#if 0
+   // If all just send the request
+   if (what == TProof::kPurge) {
+      fManager->Rm("~/data/*", "-rf", "all");
+      return;
+   } else if (what == TProof::kDataset) {
+      // We must have got a name
+      if (!dsname || strlen(dsname) <= 0) {
+         Error("ClearData", "dataset name mandatory when removing a full dataset");
+         return;
+      }
+      // Check if the dataset is registered
+      if (!ExistsDataSet(dsname)) {
+         Error("ClearData", "dataset '%s' does not exists", dsname);
+         return;
+      }
+      // Get the file content
+      TFileCollection *fc = GetDataSet(dsname);
+      if (!fc) {
+         Error("ClearData", "could not retrieve info about dataset '%s'", dsname);
+         return;
+      }
+      // Loop through the files
+      Bool_t rmds = kTRUE;
+      TIter nxf(fc->GetList());
+      TFileInfo *fi = 0;
+      while ((fi = (TFileInfo *) nxf())) {
+         // Fill the host info
+         TString host, file;
+         // Take info from the current url
+         TUrl uf(*(fi->GetFirstUrl()));
+         file = uf.GetFile();
+         host = uf.GetHost();
+         // Now search for any "file:" url
+         Int_t nurl = fi->GetNUrls();
+         fi->ResetUrl();
+         TUrl *up = 0;
+         while (nurl-- && fi->NextUrl()) {
+            up = fi->GetCurrentUrl();
+            if (!strcmp(up->GetProtocol(), "file")) {
+               TString opt(up->GetOptions());
+               if (opt.BeginsWith("node=")) {
+                  host=opt;
+                  host.ReplaceAll("node=","");
+                  file = up->GetFile();
+                  break;
+               }
+            }
+         }
+         // Issue a remove request now
+         if (fManager->Rm(file.Data(), "-f", host.Data()) != 0) {
+            Error("ClearData", "problems removing '%s'", file.Data());
+            // Some files not removed: keep the meta info about this dataset
+            rmds = kFALSE;
+         }
+      }
+      if (rmds) {
+         // All files were removed successfully: remove also the dataset meta info
+         RemoveDataSet(dsname);
+      }
+   } else if (what == TProof::kUnregistered) {
+      Error("ClearData", "case not yet implemented");
+   }
+#endif
 }
 
 //______________________________________________________________________________
