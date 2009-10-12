@@ -33,7 +33,10 @@ using namespace RooStats;
 
 HypoTestInvertor::HypoTestInvertor( const char* name,
 				    const char* title ) :
-  TNamed( TString(name), TString(title) )
+   TNamed( TString(name), TString(title) ), 
+   fCalculator0(0),
+   fScannedVariable(0),
+   fResults(0)
 {
   // default constructor (doesn't do anything)
 }
@@ -64,7 +67,7 @@ HypoTestInvertor::~HypoTestInvertor()
   // destructor
   
   // delete the HypoTestInvertorResult
-  delete fResults;
+   if (fResults) delete fResults;
 }
 
 

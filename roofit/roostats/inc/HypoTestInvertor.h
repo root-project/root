@@ -32,11 +32,12 @@ namespace RooStats {
 
   class HypoTestInvertor : public IntervalCalculator, public TNamed {
 
-  public:
-
-    // default constructor
+  private:
+    // default constructor (make private, used only for I/O)
     HypoTestInvertor( const char* name,
 		      const char* title ) ;
+
+  public:
 
     // constructor
     HypoTestInvertor( const char* name, 
