@@ -1,6 +1,5 @@
 {
    TString roottest_home = gSystem->pwd();
-      fprintf(stderr,"we are here\n");
    {
       Int_t pos = roottest_home.Index("/roottest/");
       if (pos==TString::kNPOS) {
