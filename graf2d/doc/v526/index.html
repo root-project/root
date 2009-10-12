@@ -25,7 +25,8 @@
 </ul>
 
 <h4>TASImage</h4>
-<ul> The text size adjustment applied <tt>TASImage::DrawText</tt>
+<ul> 
+<li> The text size adjustment applied <tt>TASImage::DrawText</tt>
   was not valid (scale factor of 1.044). The text size was wrong and the 
   following macro produced a wrong title when ran in batch:
   <pre>
@@ -35,6 +36,11 @@
      canvas->Print("drawing.gif");
   }
   </pre>
+<li> Suppress annoying messages like:
+    <pre>
+    root : looking for image "filename" in path [/home/username/icons]
+    </pre>
+    printed by libAfterImage when using <tt>TImage::Open("filename")</tt>
 </ul>
 
 <h3>Graphics Primitives</h3>
