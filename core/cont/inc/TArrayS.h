@@ -39,7 +39,7 @@ public:
    virtual    ~TArrayS();
 
    void           Adopt(Int_t n, Short_t *array);
-   void           AddAt(Short_t c, Int_t idx);
+   void           AddAt(Short_t c, Int_t i);
    Short_t        At(Int_t i) const ;
    void           Copy(TArrayS &array) const {array.Set(fN,fArray);}
    const Short_t *GetArray() const { return fArray; }
