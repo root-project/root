@@ -20,6 +20,8 @@
 
 extern "C" {
 
+extern G__pMethodUpdateClassInfo G__UserSpecificUpdateClassInfo;
+
 // Static functions.
 static G__var_array* G__alloc_var_array(G__var_array* var, int* pig15);
 static void G__copy_unionmember(G__var_array* var, int ig15, G__var_array* envvar, int envig15, long offset, int access, int statictype);
@@ -1938,6 +1940,10 @@ int G__search_tagname(const char* tagname, int type)
       G__struct.type[i] = type;
       ++G__struct.nactives;
    }
+   if (G__struct.type[i] != 'a' && G__UserSpecificUpdateClassInfo) {
+      (*G__UserSpecificUpdateClassInfo)(G__struct.name[i],i);
+   }
+
    // Return tagnum.
    return i;
 }
