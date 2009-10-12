@@ -64,7 +64,7 @@ extern SHtmlTokenMap_t HtmlMarkupMap[];
 
 struct SgEsc_t {
    const char *fZName;      // The name of this escape sequence.  ex:  "amp"
-   const char  fValue[8];   // The value for this sequence.       ex:  "&"
+   char  fValue[8];         // The value for this sequence.       ex:  "&"
    SgEsc_t *fPNext;         // Next sequence with the same hash on zName
 };
 

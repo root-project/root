@@ -1466,7 +1466,7 @@ void TGTable::PreviousChunk()
 {
    // Move the table to the previous chunk of the data set with the same size.
 
-   MoveTable(-1 * GetNTableRows(), 0);
+   MoveTable(-1 * (Int_t)GetNTableRows(), 0);
    UpdateRangeFrame();
 }
 
