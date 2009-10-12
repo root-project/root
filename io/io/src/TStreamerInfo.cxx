@@ -1658,7 +1658,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
       }
       if (cl) {
          TDataMember *tdm = (TDataMember*)membernext();
-         while(tdm && ( (!tdm->IsPersistent()) || (tdm->Property()&kIsStatic) )) {
+         while(tdm && ( (!tdm->IsPersistent()) || (tdm->Property()&kIsStatic) || (el && local.fName != tdm->GetName()) )) {
             tdm = (TDataMember*)membernext();
          }
          if (tdm) {
