@@ -1412,9 +1412,11 @@ void TStreamerInfo::BuildOld()
             } else if (CollectionMatchDouble32(oldClass,newClass)) {
                // Actually nothing to do, since both are the same collection of double in memory.              
             } else if (CollectionMatchLong64(oldClass,newClass)) {
-               // Actually nothing to do, since both are the same collection of 8 bits entities on file.
+               // Not much to do since both are the same collection of 8 bits entities on file.
+               element->Update(oldClass, newClass.GetClass());
             } else if (CollectionMatchULong64(oldClass,newClass)) {
-               // Actually nothing to do, since both are the same collection of 8 bits unsigned entities on file              
+               // Not much to do since both are the same collection of 8 bits unsigned entities on file              
+               element->Update(oldClass, newClass.GetClass());
             } else {
                element->SetNewType(-2);
             }
