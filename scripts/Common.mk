@@ -23,7 +23,7 @@ $(SUCCESS_FILE): check $(TEST_TARGETS)
 
 tests: $(SUCCESS_FILE) 
 	@len=`echo Tests in $(CALLDIR) | wc -c `;end=`expr 68 - $$len`; \
-         if [ `printf 2>&1 | grep -q var` ] ; then \
+         if [ `printf 2>&1 | grep -c var` -eq 0 ] ; then \
            printf 'Tests in %s %.*s ' $(CALLDIR) $$end $(DOTS) ; \
          else \
            printf 'Tests in %s %*s ' $(CALLDIR) $$end $(DOTS) ; \
