@@ -4134,9 +4134,10 @@ if test ! "x$enable_afs" = "xno" ; then
     if test "x$afslib" = "x" ; then
         enable_afs="no"
     else
+        afsextracflags="-DR__AFS"
         # flag for error_message prototype
         if test "x$hasafserrormessage" = "xno" ; then
-           afsextracflags="-DR__AFSOLDCOMERR"
+           afsextracflags="$afsextracflags -DR__AFSOLDCOMERR"
         fi
         # Warn about usage of static libs to build a shared object
         if test "x$afsshared" = "xno" ; then
@@ -5027,8 +5028,8 @@ fi
 if test ! "x$enable_editline_explicit" = "x" ; then
    rm -f core/rint/src/TRint.o core/rint/src/TRint.d
 fi
-rm -f lib/libRXML* bin/libRXML* bin/xproofd etc/system.rootmap
-rm -f lib/libProofGui* bin/libProofGui* bin/xrdgsiproxy
+rm -f lib/libRXML* bin/libRXML* etc/system.rootmap
+rm -f lib/libProofGui* bin/libProofGui*
 rm -f lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld*
 rm -f lib/libSQL.* bin/libSQL.*
 rm -f lib/libASPluginGS.* bin/g2rootold*
