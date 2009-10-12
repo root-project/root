@@ -3767,7 +3767,7 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
 #endif
 
 #ifdef __INTEL_COMPILER
-      fprintf(fp,"#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER > 11)\n");
+      fprintf(fp,"#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 1100)\n");
       fprintf(fp,"# pragma warning (disable 21)\n");
       fprintf(fp,"# pragma warning (disable 191)\n");
       fprintf(fp,"#endif\n");
