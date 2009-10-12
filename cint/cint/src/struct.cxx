@@ -1940,7 +1940,9 @@ int G__search_tagname(const char* tagname, int type)
       G__struct.type[i] = type;
       ++G__struct.nactives;
    }
-   if (G__struct.type[i] != 'a' && G__UserSpecificUpdateClassInfo) {
+   if (G__struct.type[i] != 'a'
+       && G__struct.type[i] != 0
+       && G__UserSpecificUpdateClassInfo) {
       (*G__UserSpecificUpdateClassInfo)(G__struct.name[i],i);
    }
 
