@@ -1,5 +1,5 @@
-void build(const char *filename,const char *lib = 0, const char *obj = 0) {
-
+void build(const char *filename,const char *lib = 0, const char *obj = 0) 
+{
    if (obj!=0 && strlen(obj) ) {
       TString s = gSystem->GetMakeSharedLib();
       TString r(" $ObjectFiles ");
