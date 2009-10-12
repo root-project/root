@@ -3766,6 +3766,15 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
       fprintf(fp,"\n");
 #endif
 
+#ifdef __INTEL_COMPILER
+      fprintf(fp,"#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER > 11)\n");
+      fprintf(fp,"# pragma warning (disable 21)\n");
+      fprintf(fp,"# pragma warning (disable 191)\n");
+      fprintf(fp,"#endif\n");
+      fprintf(fp,"\n");
+      
+#endif
+
       if(G__dicttype!=kFunctionSymbols)
          fprintf(fp,"extern \"C\" void G__cpp_reset_tagtable%s();\n",G__DLLID);
 
