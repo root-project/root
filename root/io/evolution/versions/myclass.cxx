@@ -19,7 +19,7 @@ int compile(const char *version, const char *what = "myclass.h")
 int wcomp(const char *version, const char *what = "myclass.h")
 {
    int r = compile(version,what);
-   if (!r) r = write_what(what);
+   if (!r) r = write_what(version);
    return r;
 }
 
