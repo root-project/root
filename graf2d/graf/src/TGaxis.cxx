@@ -1242,9 +1242,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          xtick0 = 0;
          xtick1 = xtick;
 
+         if (fFunction) axis_length0 = binLow-wmin;
          if ((!optionNoopt || optionInt) && axis_length0) {
-            if (fFunction) nticks0 = Int_t((binLow-wmin)/dxtick);
-            else           nticks0 = Int_t(axis_length0/dxtick);
+            nticks0 = Int_t(axis_length0/dxtick);
             if (nticks0 > 1000) nticks0 = 1000;
             for (k=0; k<=nticks0; k++) {
                ltick = 2;
@@ -1286,9 +1286,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             }
          }
 
+         if (fFunction) axis_length1 = wmax-binHigh;
          if ((!optionNoopt || optionInt) && axis_length1) {
-            if (fFunction) nticks1 = int((wmax-binHigh)/dxtick);
-            else           nticks1 = int(axis_length1/dxtick);
+            nticks1 = int(axis_length1/dxtick);
             if (nticks1 > 1000) nticks1 = 1000;
             for (k=0; k<=nticks1; k++) {
                ltick = 2;
