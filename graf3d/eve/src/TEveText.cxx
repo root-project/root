@@ -54,6 +54,9 @@ TEveText::TEveText(const char* txt) :
 {
    // Constructor.
 
+   fPolygonOffset[0] = 0;
+   fPolygonOffset[1] = 0;
+
    InitMainTrans();
    SetFontMode(TGLFont::kPixmap);
 }
@@ -102,6 +105,16 @@ void TEveText::SetFontMode( Int_t mode)
    TEveTrans& t = RefMainTrans();
    t.SetEditRotation(edit);
    t.SetEditScale(edit);
+}
+
+//______________________________________________________________________________
+void TEveText::SetPolygonOffset(Float_t factor, Float_t units)
+{
+   // Set the scale and units used to calculate depth values.
+   // See glPolygonOffset manual page.
+
+   fPolygonOffset[0] = factor;
+   fPolygonOffset[1] = units;
 }
 
 //______________________________________________________________________________

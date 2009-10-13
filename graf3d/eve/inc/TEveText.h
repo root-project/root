@@ -40,6 +40,7 @@ protected:
    Bool_t    fAutoLighting; // use default lighting
    Bool_t    fLighting;     // force lighting
 
+   Float_t   fPolygonOffset[2]; // depth test
 
 public:
    TEveText(const char* txt="");
@@ -64,6 +65,9 @@ public:
 
    Float_t GetExtrude() const    { return fExtrude; }
    void    SetExtrude(Float_t x) { fExtrude = x;    }
+
+   Float_t  GetPolygonOffset(Int_t i) const { return fPolygonOffset[i]; }
+   void     SetPolygonOffset(Float_t factor, Float_t units);
 
    virtual Bool_t CanEditMainColor() const { return kTRUE; }
    virtual void   Paint(Option_t* option="");

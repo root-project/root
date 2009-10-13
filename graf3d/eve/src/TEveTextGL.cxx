@@ -139,6 +139,7 @@ void TEveTextGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       case TGLFont::kOutline:
       case TGLFont::kExtrude:
       case TGLFont::kPolygon:
+         glPolygonOffset(fM->GetPolygonOffset(0), fM->GetPolygonOffset(1));
          if (fM->GetExtrude() != 1.0) {
             glPushMatrix();
             glScalef(1.0f, 1.0f, fM->GetExtrude());
@@ -149,6 +150,7 @@ void TEveTextGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          }
          break;
       case TGLFont::kTexture:
+         glPolygonOffset(fM->GetPolygonOffset(0), fM->GetPolygonOffset(1));
          fFont.Render(fM->GetText());
          break;
       default:
