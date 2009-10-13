@@ -28,7 +28,7 @@ void arrow_standalone()
    eve_v->SetGLViewer(ev, ev->GetFrame());
    eve_v->IncDenyDestroy();
    eve_v->AddScene(gEve->GetEventScene());
-   gEve->AddElement(eve_v, gEve->GetViewers());
+   gEve->GetViewers()->AddElement(eve_v);
 
    // ----------------------------------------------------------------------
 

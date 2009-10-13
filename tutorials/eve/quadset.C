@@ -246,7 +246,7 @@ void quadset_hierarchy(Int_t n=4)
       TEveQuadSet* qs = quadset_hexid(0, 0, 50*i, 50, kFALSE);
       qs->SetPalette(pal);
       qs->SetFrame(box);
-      gEve->AddElement(qs, l);
+      l->AddElement(qs);
    }
 
    gEve->Redraw3D();

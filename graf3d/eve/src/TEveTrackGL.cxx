@@ -54,16 +54,19 @@ Bool_t TEveTrackGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 void TEveTrackGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
 {
    // Processes secondary selection from TGLViewer.
-   // Calls TPointSet3D::PointSelected(Int_t) with index of selected
-   // point as an argument.
+   // Just calls SecSelected(track) in model object which emits a signal.
+   // This is used in user code for alternate selection of good / bad tracks.
 
-   printf("TEveTrackGL::ProcessSelection %d names on the stack (z1=%g, z2=%g).\n",
-          rec.GetN(), rec.GetMinZ(), rec.GetMaxZ());
-   printf("  Names: ");
-   for (Int_t j=0; j<rec.GetN(); ++j) printf ("%d ", rec.GetItem(j));
-   printf("\n");
+   if (gDebug > 0)
+   {
+      printf("TEveTrackGL::ProcessSelection %d names on the stack (z1=%g, z2=%g).\n",
+             rec.GetN(), rec.GetMinZ(), rec.GetMaxZ());
+      printf("  Names: ");
+      for (Int_t j=0; j<rec.GetN(); ++j) printf ("%d ", rec.GetItem(j));
+      printf("\n");
+   }
 
-   ((TEveTrack*)fM)->SecSelected((TEveTrack*)fM);
+   fTrack->SecSelected(fTrack);
 }
 
 //______________________________________________________________________________

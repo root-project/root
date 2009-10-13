@@ -444,7 +444,7 @@ void alice_esd_read()
 
       TEveTrack* track = esd_make_track(trkProp, n, at, tp);
       track->SetAttLineAttMarker(track_list);
-      gEve->AddElement(track, track_list);
+      track_list->AddElement(track);
 
       // This needs further investigation. Clusters not shown.
       // if (frnd)

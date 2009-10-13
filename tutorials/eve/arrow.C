@@ -33,7 +33,7 @@ void arrow()
    t1->SetFontSize(20);
    TEveVector tv = a1->GetVector()*0.5+a1->GetOrigin();
    t1->RefMainTrans().SetPos(tv.Arr());
-   gEve->AddElement(t1, a1);
+   a1->AddElement(t1);
 
    TEveArrow* a2 = new TEveArrow(20., 1., 10., 3., 0., 4.);
    a2->SetMainColor(kGreen);
