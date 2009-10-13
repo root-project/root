@@ -2404,7 +2404,7 @@ if test ! "x$enable_qt" = "xno" || \
 	for j in $i/moc-qt${qtvers} $i/moc-qt${qtvers}.exe $i/moc $i/moc.exe ;
 	do
 	    if test -x $j ; then
-          moc_vers=`$j -v >/dev/stdout 2>&1 | \
+          moc_vers=`$j -v 2>&1 | \
           sed -e 's/.*(Qt //' -e 's/\.[0-9]*\.[0-9][-0-9a-z]*)//'`
                 if test ! "$moc_vers" = "$qtvers" ; then
 		    logmsg "$j: moc version ${moc_vers} does not match Qt version ${qtvers}"
