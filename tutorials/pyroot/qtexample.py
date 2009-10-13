@@ -30,6 +30,7 @@ class window(QMainWindow):
     # Create the main TQtWidget (using sip to get the pointer to the central widget).
         self.Address = sip.unwrapinstance(self.CentralWidget)
         self.Canvas = ROOT.TQtWidget(sip.voidptr(self.Address).ascobject())
+        ROOT.SetOwnership( self.Canvas, False )
   
     # Place the TQtWidget in the main grid layout and draw the histogram.
        
@@ -39,8 +40,9 @@ class window(QMainWindow):
    def quit(self):
        print 'Bye bye...'
        self.close()
-       
-       
+       ROOT.gApplication.Terminate()
+
+
 if __name__ == '__main__':
    application = qApp
    terminator = ROOT.TQtRootSlot.CintSlot()
