@@ -36,6 +36,8 @@ object.
 
 #include "RooRealVar.h"
 #include "RooPlot.h"
+//#include "RooProfileLL.h"
+#include "TF1.h"
 
 /// ClassImp for building the THtml documentation of the class 
 ClassImp(RooStats::LikelihoodIntervalPlot);
@@ -112,29 +114,71 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
   if(fNdimPlot == 1){
 
-    const Double_t xcont_min = fInterval->LowerLimit(*myparam);
-    const Double_t xcont_max = fInterval->UpperLimit(*myparam);
+
+//      RooArgList fittedParams(((RooProfileLL*) newProfile)->bestFitParams());
+
+     const Double_t xcont_min = fInterval->LowerLimit(*myparam);
+     const Double_t xcont_max = fInterval->UpperLimit(*myparam);
+
+//      std::cout << "BEST FIT PARAMETERS = " << std::endl;
+//      for (int i = 0; i < fittedParams.getSize(); ++i) 
+//         fittedParams[i].Print(); 
 
     RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(myparam->GetName());
+    //myarg->Print(); 
 
-    RooPlot *frame = myarg->frame();
-    frame->SetTitle(GetTitle());
-    frame->GetYaxis()->SetTitle("- log #lambda");
-    //    frame->GetYaxis()->SetTitle("- log profile likelihood ratio");
+//     myarg->setVal(xcont_min); 
+//     std::cout << " Profile for x = " << xcont_min << " PLL = " << newProfile->getVal() << std::endl;
+//     myarg->setVal(xcont_max); 
+//     std::cout << " Profile for x = " << xcont_max << " PLL = " << newProfile->getVal() << std::endl;
 
-    newProfile->plotOn(frame); 
 
-    frame->SetMaximum(fMaximum);
-    frame->SetMinimum(0.);
+//     RooPlot *frame = myarg->frame();
+//     frame->SetTitle(GetTitle());
+//     frame->GetYaxis()->SetTitle("- log #lambda");
+//     //    frame->GetYaxis()->SetTitle("- log profile likelihood ratio");
+
+//     newProfile->plotOn(frame); 
+
+
+//     frame->SetMaximum(fMaximum);
+//     frame->SetMinimum(0.);
+
+
+
+     TF1 * f1 = newProfile->asTF(*myarg); 
+     f1->SetTitle("- log profile likelihood ratio");
+     TString name = TString(GetName()) + TString("_PLL_") + TString(myarg->GetName());
+     f1->SetName(name);
+
+     // set range for value of fMaximum
+     // use a clone function which is sampled to avoid many profilell evaluations
+     TF1 * tmp = (TF1*) f1->Clone(); 
+     double x0 = tmp->GetX(0, myarg->getMin(), myarg->getMax()); 
+     double x1 = tmp->GetX(fMaximum, myarg->getMin(), x0); 
+     double x2 = tmp->GetX(fMaximum, x0, myarg->getMax()); 
+     delete tmp;
+
+     f1->SetMaximum(fMaximum);
+     f1->SetRange(x1,x2);
+
+
+     f1->SetLineColor(kBlue);
+     f1->GetXaxis()->SetTitle(myarg->GetName());
+     f1->GetYaxis()->SetTitle("- log #lambda");
+     f1->Draw();
+//     frame->addObject(f1);
+
+    //f1->Draw("SAME");
 
     // Double_t debug_var= newProfile->getVal();
-    myarg->setVal(xcont_min);
-    //const Double_t Yat_Xmin = newProfile->getVal();
+//     myarg->setVal(xcont_min);
+//     const Double_t Yat_Xmin = newProfile->getVal();
 
     myarg->setVal(xcont_max);
     const Double_t Yat_Xmax = newProfile->getVal();
 
-    TLine *Yline_cutoff = new TLine(myarg->getMin(),Yat_Xmax,myarg->getMax(),Yat_Xmax);
+    TLine *Yline_cutoff = new TLine(x1,Yat_Xmax,x2,Yat_Xmax);
     TLine *Yline_min = new TLine(xcont_min,0.,xcont_min,Yat_Xmax);
     TLine *Yline_max = new TLine(xcont_max,0.,xcont_max,Yat_Xmax);
 
@@ -145,11 +189,17 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
     Yline_min->SetLineColor(fLineColor);
     Yline_max->SetLineColor(fLineColor);
 
-    frame->addObject(Yline_cutoff);
-    frame->addObject(Yline_min);
-    frame->addObject(Yline_max);
+    Yline_cutoff->Draw();
+    Yline_min->Draw();
+    Yline_max->Draw();
 
-    frame->Draw(options);
+
+//     frame->addObject(Yline_cutoff);
+//     frame->addObject(Yline_min);
+//     frame->addObject(Yline_max);
+
+
+//     frame->Draw(options);
 
     return;
   }
