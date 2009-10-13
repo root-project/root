@@ -423,7 +423,7 @@ typedef unsigned long long G__uint64;
  * Define G__EH_DUMMY_DELETE in order to avoid some compiler dependency
  * about 'void operator delete(void*,[DLLID]_tag*);'
  ***********************************************************************/
-#if defined(__HP_aCC) || defined(G__VISUAL) || defined(G__INTEL_COMPILER)
+#if defined(__HP_aCC) || defined(G__VISUAL) || defined(__INTEL_COMPILER)
 #define G__EH_DUMMY_DELETE
 #endif
 
