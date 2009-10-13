@@ -2146,6 +2146,22 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
       }
    break;
 
+   case kWheelUp:
+      bin1 = axis->GetFirst()+1;
+      bin2 = axis->GetLast()-1;
+      axis->SetRange(bin1,bin2);
+      gPad->Modified();
+      gPad->Update();
+   break;
+
+   case kWheelDown:
+      bin1 = axis->GetFirst()-1;
+      bin2 = axis->GetLast()+1;
+      axis->SetRange(bin1,bin2);
+      gPad->Modified();
+      gPad->Update();
+   break;
+
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
