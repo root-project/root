@@ -85,3 +85,19 @@ the list of objects in the previous steps, but with different attributes.
      useful for big markers, because there is no need to pick exactly the 
      marker's center.
 </ul>
+
+</h4>TGaxis</h4>
+<ul>
+<li>An axis with a custom scale defined by a function did not display ticks all
+  the way along the axis, only between the lowest and the highest major tick.
+  This behaviour could be seen with:
+  <pre>
+  {
+     TF1* f = new TF1("f", "exp(x)", 0.467, 2.1345);
+     TGaxis* a = new TGaxis(0.1,0.4,0.9,0.4, "f", 50510, "-");
+     a->Draw();
+     TGaxis* b = new TGaxis(0.1,0.7,0.9,0.7, 0.4356, 1.56789, 50510, "-");
+     b->Draw();
+  }
+  </pre>
+</ul>
