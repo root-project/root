@@ -5728,15 +5728,15 @@ result "done"
 # macros/html.C
 #
 message "Writing $HTMLOUT"
-sed_args="-e s/@altf77@/$altf772/"
+sed_args="-e s|@altf77@|$altf772|"
 for opt in $options; do
-   sed_args="${sed_args} -e s/@$opt@/"
+   sed_args="${sed_args} -e s|@$opt@|"
    if eval "test x$`eval echo $opt` = xyes"; then
       sed_args="${sed_args}kTRUE"
    else
       sed_args="${sed_args}kFALSE"
    fi
-   sed_args="${sed_args}/g"
+   sed_args="${sed_args}|g"
 done
 sed $sed_args < $HTMLIN > $HTMLOUT
 result done
