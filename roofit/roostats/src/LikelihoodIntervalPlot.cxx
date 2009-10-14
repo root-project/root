@@ -55,6 +55,7 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot()
   fFillStyle = 4050; // half transparent
   fLineColor = 0;
   fMaximum = 2.;
+  fNPoints = 40;
 }
 
 //_______________________________________________________
@@ -68,6 +69,7 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
   fLineColor = kGreen;
   fFillStyle = 4050; // half transparent
   fMaximum = 2.;
+  fNPoints = 40;
 }
 
 //_______________________________________________________
@@ -145,19 +147,24 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 //     frame->SetMinimum(0.);
 
 
-
-     TF1 * f1 = newProfile->asTF(*myarg); 
+     TF1 * tmp = newProfile->asTF(*myarg); 
+     tmp->SetNpx(fNPoints);
+     TF1 * f1 = (TF1*) tmp->Clone(); 
+     delete tmp;
+     
      f1->SetTitle("- log profile likelihood ratio");
      TString name = TString(GetName()) + TString("_PLL_") + TString(myarg->GetName());
      f1->SetName(name);
 
+
      // set range for value of fMaximum
      // use a clone function which is sampled to avoid many profilell evaluations
-     TF1 * tmp = (TF1*) f1->Clone(); 
-     double x0 = tmp->GetX(0, myarg->getMin(), myarg->getMax()); 
-     double x1 = tmp->GetX(fMaximum, myarg->getMin(), x0); 
-     double x2 = tmp->GetX(fMaximum, x0, myarg->getMax()); 
-     delete tmp;
+
+     //TF1 * tmp = (TF1*) f1->Clone(); 
+     double x0 = f1->GetX(0, myarg->getMin(), myarg->getMax()); 
+     double x1 = f1->GetX(fMaximum, myarg->getMin(), x0); 
+     double x2 = f1->GetX(fMaximum, x0, myarg->getMax()); 
+
 
      f1->SetMaximum(fMaximum);
      f1->SetRange(x1,x2);
@@ -207,7 +214,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
     RooRealVar *myparamY = (RooRealVar*)it.Next();
 
-    TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparamY,RooFit::YVar(*myparam),RooFit::Binning(40),RooFit::Scaling(kFALSE));
+    TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparamY,RooFit::YVar(*myparam),RooFit::Binning(fNPoints),RooFit::Scaling(kFALSE));
 
 
     hist2D->SetTitle(GetTitle());

@@ -54,10 +54,10 @@ namespace RooStats {
       // destructor
       virtual ~BayesianCalculator() ;
 
-      RooPlot* PlotPosterior() ; 
+      RooPlot* GetPosteriorPlot() const; 
 
       // return posterior pdf (object is managed by the BayesianCalculator class)
-      RooAbsPdf * GetPosteriorPdf(); 
+      RooAbsPdf * GetPosteriorPdf(const char * = 0) const; 
 
       virtual SimpleInterval* GetInterval() const ; 
 
@@ -66,13 +66,20 @@ namespace RooStats {
       virtual void SetModel(const ModelConfig & model); 
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) {fSize = size;}
+      virtual void SetTestSize(Double_t size) {
+         fSize = size;
+         if (fInterval) delete fInterval; fInterval = 0;  
+      }
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
+      virtual void SetConfidenceLevel(Double_t cl) { SetTestSize( 1. - cl); }
       // Get the size of the test (eg. rate of Type I error)
       virtual Double_t Size() const {return fSize;}
       // Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+
+   protected:
+
+      void ClearAll() const; 
    
    private:
     
@@ -82,12 +89,12 @@ namespace RooStats {
       RooAbsPdf* fPriorPOI;
       RooArgSet fNuisanceParameters;
 
-      RooAbsPdf * fProductPdf; 
-      RooAbsReal * fLogLike; 
-      RooAbsReal * fLikelihood; 
-      RooAbsReal * fIntegratedLikelihood; 
-      RooAbsPdf * fPosteriorPdf; 
-      
+      mutable RooAbsPdf* fProductPdf; 
+      mutable RooAbsReal* fLogLike; 
+      mutable RooAbsReal* fLikelihood; 
+      mutable RooAbsReal* fIntegratedLikelihood; 
+      mutable RooAbsPdf* fPosteriorPdf; 
+      mutable SimpleInterval* fInterval;     // cached pointer to resulting interval
 
       double fSize; 
 

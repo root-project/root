@@ -43,6 +43,7 @@ namespace RooStats {
     void SetContourColor(const Color_t color) {fColor = color;}
     void SetLineColor(const Color_t color) {fLineColor = color;}
     void SetMaximum(const Double_t theMaximum) {fMaximum = theMaximum;}
+    void SetNPoints(Int_t np) { fNPoints = np; }
 
     void Draw(const Option_t *options=0);
 
@@ -52,6 +53,7 @@ namespace RooStats {
     Int_t fFillStyle;
     Int_t fLineColor;
     Int_t fNdimPlot;
+    Int_t fNPoints; // number of points used to scan the PL 
 
     Double_t fMaximum;
 

@@ -229,7 +229,14 @@ Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) cons
 Double_t LikelihoodInterval::LowerLimit(RooRealVar& param) 
 {  
 
-  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+   // compute upper limit, check first if limit has been computed 
+   std::map<std::string, double>::const_iterator itr = fLowerLimits.find(param.GetName());
+   if (itr != fLowerLimits.end() ) 
+      return itr->second;
+
+   // otherwise compute limit
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING) ;
 
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
 
@@ -306,8 +313,14 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
     
   ccoutD(Eval) <<"LL search Iterations:"<< nIterations<<std::endl;
  
+  //cout << "LL iterations " << nIterations << " value = " << myarg->getVal() << " PL = " << newProfile->getVal() << std::endl;
+
   delete newProfile;
   double ret=myarg->getVal();
+
+  fLowerLimits[param.GetName()] = ret; 
+  RooMsgService::instance().setGlobalKillBelow(RooFit::INFO) ;
+
   return ret;
 }
 
@@ -316,7 +329,14 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
 //____________________________________________________________________
 Double_t LikelihoodInterval::UpperLimit(RooRealVar& param) 
 {  
-  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+   // compute upper limit, check first if limit has been computed 
+   std::map<std::string, double>::const_iterator itr = fUpperLimits.find(param.GetName());
+   if (itr != fUpperLimits.end() ) 
+      return itr->second;
+
+   // otherwise compute limit
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING) ;
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
 
   RooArgSet* vars = newProfile->getVariables() ;
@@ -393,14 +413,22 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param)
   }
     
   ccoutD(Eval) <<"UL search Iterations:"<< nIterations<<std::endl;
-  
+
+  //cout << "UL iterations " << nIterations << " value = " << myarg->getVal() << " PL = " << newProfile->getVal() << std::endl;
+
+  // restore ROOT reporting message level
+  RooMsgService::instance().setGlobalKillBelow(RooFit::INFO) ;
 
   delete newProfile;
   double ret=myarg->getVal();
+
+  fUpperLimits[param.GetName()] = ret; 
   return ret;
 
-  RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
 }
 
-
-
+void LikelihoodInterval::ResetLimits() { 
+   // reset map with cached limits
+   fLowerLimits.clear(); 
+   fUpperLimits.clear(); 
+}

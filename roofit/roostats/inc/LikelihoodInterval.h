@@ -23,6 +23,8 @@
 #include "RooAbsReal.h"
 #endif
 
+#include <map>
+
 namespace RooStats {
 
    class LikelihoodInterval : public ConfInterval {
@@ -37,7 +39,8 @@ namespace RooStats {
       virtual ~LikelihoodInterval();
         
       virtual Bool_t IsInInterval(const RooArgSet&);
-      virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl;}
+
+      virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl; ResetLimits(); }
       virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
  
 
@@ -54,11 +57,18 @@ namespace RooStats {
     
       RooAbsReal* GetLikelihoodRatio() {return fLikelihoodRatio;}
 
+   protected: 
+      // reset the cached limit values
+      void ResetLimits(); 
+
    private:
 
       const RooArgSet* fParameters; // parameters of interest for this interval
       RooAbsReal* fLikelihoodRatio; // likelihood ratio function used to make contours
       Double_t fConfidenceLevel; // Requested confidence level (eg. 0.95 for 95% CL)
+      std::map<std::string, double> fLowerLimits; // map with cached lower limit values
+      std::map<std::string, double> fUpperLimits; // map with cached upper limit values
+      
 
       ClassDef(LikelihoodInterval,1)  // Concrete implementation of a ConfInterval based on a likelihood ratio
       
