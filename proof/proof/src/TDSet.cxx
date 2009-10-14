@@ -676,7 +676,8 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
 
    // First fill elements without friends()
    TIter next(chain.GetListOfFiles());
-   TChainElement *elem;
+   TChainElement *elem = 0;
+   TString key;
    while ((elem = (TChainElement *)next())) {
       TString file(elem->GetTitle());
       TString tree(elem->GetName());
@@ -690,12 +691,20 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
          dir = tree;
          tree = behindSlash;
       }
-      if (Add(file, tree, dir)) {
+      // Find MSD if any
+      TString msd(TUrl(file).GetOptions());
+      Int_t imsd = kNPOS;
+      if ((imsd = msd.Index("msd=")) != kNPOS) {
+         msd.Remove(0, imsd+4);
+      } else {
+         // Not an MSD option
+         msd = "";
+      }
+      if (Add(file, tree, dir, 0, -1, ((msd.IsNull()) ? 0 : msd.Data()))) {
          if (elem->HasBeenLookedUp()) {
             // Save lookup information, if any
             TDSetElement *dse = (TDSetElement *) fElements->Last();
-            if (dse)
-               dse->SetLookedUp();
+            if (dse) dse->SetLookedUp();
          }
       }
    }
