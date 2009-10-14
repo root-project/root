@@ -57,7 +57,7 @@ namespace RooStats {
       RooPlot* GetPosteriorPlot() const; 
 
       // return posterior pdf (object is managed by the BayesianCalculator class)
-      RooAbsPdf * GetPosteriorPdf(const char * = 0) const; 
+      RooAbsPdf * GetPosteriorPdf() const; 
 
       virtual SimpleInterval* GetInterval() const ; 
 

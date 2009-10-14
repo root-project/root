@@ -113,39 +113,41 @@ void BayesianCalculator::SetModel(const ModelConfig & model) {
 }
 
 
-RooAbsPdf* BayesianCalculator::GetPosteriorPdf(const char * name) const
+RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
 {
-   // get posterior pdf, optionally pass name of posterior 
- // run some checks
-  if (!fPdf || !fPriorPOI) return 0; 
-  if (fPOI.getSize() == 0) return 0; 
-  if (fPOI.getSize() > 1) { 
-    std::cerr << "BayesianCalculator::GetPosteriorPdf - current implementation works only on 1D intervals" << std::endl;
-    return 0; 
-  }
-  
-  TString pName; 
-  if (name) pName = name; 
-  TString tmp = TString(GetName()) + TString("_product_") + pName;   
-  fProductPdf = new RooProdPdf(tmp,"",RooArgList(*fPdf,*fPriorPOI));
-  RooArgSet* constrainedParams = fProductPdf->getParameters(*fData);
+   // get posterior pdf  
 
-  // use RooFit::Constrain() to make product of likelihood with prior pdf
-  fLogLike = fProductPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams) );
+   // run some checks
+   if (!fPdf || !fPriorPOI) return 0; 
+   if (fPOI.getSize() == 0) return 0; 
+   if (fPOI.getSize() > 1) { 
+      std::cerr << "BayesianCalculator::GetPosteriorPdf - current implementation works only on 1D intervals" << std::endl;
+      return 0; 
+   }
 
-  tmp = TString(GetName()) + TString("_likelihood_") + pName;   
-  fLikelihood = new RooFormulaVar(tmp,"exp(-@0)",RooArgList(*fLogLike));
-  if (fNuisanceParameters.getSize() > 0) fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
+   // create a unique name for the product pdf 
+   TString name = TString("product_") + TString(fPdf->GetName()) + TString("_") + TString(fPriorPOI->GetName() );   
+   fProductPdf = new RooProdPdf(name,"",RooArgList(*fPdf,*fPriorPOI));
+   RooArgSet* constrainedParams = fProductPdf->getParameters(*fData);
 
-  TString posterior_name = this->GetName() + TString("_posteriorPdf_") + pName; 
-  if (fNuisanceParameters.getSize() > 0) 
-     fPosteriorPdf = new RooGenericPdf(posterior_name,"@0",*fIntegratedLikelihood);
-  else 
-     fPosteriorPdf = new RooGenericPdf(posterior_name,"@0",*fLikelihood);
+   // use RooFit::Constrain() to make product of likelihood with prior pdf
+   fLogLike = fProductPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams) );
 
-  delete constrainedParams;
+   name = TString("likelihood_") + TString(fProductPdf->GetName());   
+   fLikelihood = new RooFormulaVar(name,"exp(-@0)",RooArgList(*fLogLike));
+   RooAbsReal * plike = fLikelihood; 
+   if (fNuisanceParameters.getSize() > 0) { 
+      fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
+      plike = fIntegratedLikelihood; 
+   }
 
-  return fPosteriorPdf;
+   // create a unique name on the posterior from the names of the components
+   TString posterior_name = this->GetName() + TString("_posteriorPdf_") + plike->GetName(); 
+   fPosteriorPdf = new RooGenericPdf(posterior_name,"@0",*plike);
+
+   delete constrainedParams;
+
+   return fPosteriorPdf;
 }
 
 
