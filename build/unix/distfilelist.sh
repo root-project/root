@@ -39,7 +39,7 @@ WILDCARDS="LICENSE README bin \
    include lib man cint/cint/include tutorials \
    cint/cint/lib cint/cint/stl geom/gdml/*.py \
    test/*.cxx test/*.h test/Makefile* test/README \
-   test/*.C test/*.sh test/dt_Makefile test/linearIO.root \
+   test/*.C test/*.sh test/dt_Makefile \
    test/RootShower/*.h test/RootShower/*.cxx \
    test/RootShower/*.rc test/RootShower/*.ico \
    test/RootShower/*.png test/RootShower/Makefile* \
