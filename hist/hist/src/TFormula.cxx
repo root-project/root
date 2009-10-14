@@ -3060,7 +3060,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
             Ssiz_t ind = funcname.First('(');
             funcname.Remove(ind);
          }
-         if (offset<0 && (spos+offset>=0)) {
+         if (offset<=0 && (spos+offset>=0)) {
             tab[spos+offset]=funcname+("("+tab[spos+offset]);
             for (j=offset+1; j<0; j++){
                tab[spos+offset]+=","+tab[spos+j];
