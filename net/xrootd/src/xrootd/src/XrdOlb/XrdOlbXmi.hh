@@ -197,7 +197,7 @@ virtual    ~XrdOlbXmi() {}
    library. This library is identified by the "olb.xmilib" directive. When
    the library is loaded the following extern "C" function is called to obtain
    an instance of the XrdOlbXmi object that will be used for request processing.
-   The fucntion is passed the command line arguments (xrd options stripped) and
+   The function is passed the command line arguments (xrd options stripped) and
    a pointer to the XrdOlbXmiEnv structure. If the function returns a null
    pointer, the olbd exits with an error.
 

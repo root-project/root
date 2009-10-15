@@ -3,7 +3,7 @@
 
 #include "TestTimer.h"
 
-// define funcitons for matrix operations
+// define functions for matrix operations
 
 //#define DEBUG
 //#ifndef NLOOP

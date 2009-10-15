@@ -48,7 +48,7 @@ struct G__var_array* G__initmemvar(int tagnum, int* pindex, G__value* pbuf);
 G__var_array* G__incmemvar(G__var_array* memvar, int* pindex, G__value* pbuf);
 }
 
-// Funtions in the C interface.
+// Functions in the C interface.
 // None.
 
 //______________________________________________________________________________

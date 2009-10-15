@@ -87,7 +87,7 @@ public:
      ROOT::Math::IMultiGenFunction
 #endif  
      * Clone() const { 
-      // copy the pdf funciton pointer
+      // copy the pdf function pointer
       return new WrapperRooPdf(fPdf, *fX, fNorm);
    }
 

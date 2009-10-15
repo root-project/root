@@ -13,13 +13,13 @@ FILES:
   testall      : Shell script to run demo
 
   test0.c      : openGL example program (interpreted)
-  display0.h   : Source/header for precompiled fuunction
+  display0.h   : Source/header for precompiled function
 
   test1.c      : openGL example program (interpreted)
-  display1.h   : Source/header for precompiled fuunction
+  display1.h   : Source/header for precompiled function
 
   test2.c      : openGL example program (interpreted)
-  display2.h   : Source/header for precompiled fuunction
+  display2.h   : Source/header for precompiled function
 
 
 DEMO0:

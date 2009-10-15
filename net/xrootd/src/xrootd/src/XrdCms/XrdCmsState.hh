@@ -63,7 +63,7 @@ int             dataPort;     // Current data port number
 
 char            currState;    // Current  state
 char            prevState;    // Previous state
-char            feOK;         // Front end functioing
+char            feOK;         // Front end functioning
 char            noSpace;      // We don't have enough space
 char            adminSuspend; // Admin asked for suspension
 char            adminNoStage; // Admin asked for no staging

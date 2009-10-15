@@ -82,7 +82,7 @@ public:
    virtual Type ReturnType() const;
 
 
-   /** static funtion that composes the At Name */
+   /** static function that composes the At Name */
    static std::string BuildTypeName(const Type& ret,
                                     const std::vector<Type>& param,
                                     unsigned int mod = SCOPED | QUALIFIED);

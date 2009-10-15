@@ -46,7 +46,7 @@ TUnuranMultiContDist::TUnuranMultiContDist(const TUnuranMultiContDist & rhs) :
 
 TUnuranMultiContDist & TUnuranMultiContDist::operator = (const TUnuranMultiContDist &rhs) 
 {
-   // Implementation of assignment operator (copy only the funciton pointer not the function itself)
+   // Implementation of assignment operator (copy only the function pointer not the function itself)
    if (this == &rhs) return *this;  // time saving self-test
    fXmin = rhs.fXmin;
    fXmax = rhs.fXmax;

@@ -17,7 +17,7 @@
 // functionality and iteration. The purpose of this implementation
 // is to shield any generated dictionary implementation from the
 // underlying streamer/proxy implementation and only expose
-// the creation fucntions.
+// the creation functions.
 //
 // In particular this is used to implement splitting and abstract
 // element access of any container. Access to compiled code is necessary

@@ -104,7 +104,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 {
    // Function to fill the binned Fit data structure from a TH1 
    // The dimension of the data is the same of the histogram dimension
-   // The funciton pointer is need in case of integral is used and to reject points 
+   // The function pointer is need in case of integral is used and to reject points 
    // rejected in the function
 
    // the TF1 pointer cannot be constant since EvalPar and InitArgs are not const methods

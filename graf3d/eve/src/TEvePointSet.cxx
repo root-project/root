@@ -400,7 +400,7 @@ TClass* TEvePointSet::ProjectedClass() const
 //______________________________________________________________________________
 void TEvePointSet::PointSelected(Int_t id)
 {
-   // Virtual method of base class TPointSet3D. The fuction call is
+   // Virtual method of base class TPointSet3D. The function call is
    // invoked with secondary selection in TPointSet3DGL.
 
    Emit("PointSelected(Int_t)", id);

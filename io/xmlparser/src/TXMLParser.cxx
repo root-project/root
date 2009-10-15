@@ -101,7 +101,7 @@ void TXMLParser::OnValidateError(const TString& message)
 //______________________________________________________________________________
 void TXMLParser::OnValidateWarning(const TString& message)
 {
-   // This fucntion is called when a warning from the parser has occured.
+   // This function is called when a warning from the parser has occured.
    // Message is the parse error.
 
    fValidateWarning += message;

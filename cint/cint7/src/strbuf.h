@@ -50,7 +50,7 @@ namespace Cint {
          }
          ~G__StrBuf();
 
-         // plenty of char* conversion fuctions:
+         // plenty of char* conversion functions:
          operator char*() { return fBuf; }
          operator const char*() const { return fBuf; }
          const char* operator()() const { return fBuf; }

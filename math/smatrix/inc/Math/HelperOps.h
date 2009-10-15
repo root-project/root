@@ -136,7 +136,7 @@ namespace Math {
        Force Expression evaluation from general to symmetric. 
        To be used when is known (like in similarity products) that the result 
        is symmetric
-       Note this is funciton used in the simmilarity product: no check for temporary is 
+       Note this is function used in the simmilarity product: no check for temporary is 
        done since in that case is not needed
    */
    struct AssignSym

@@ -27,7 +27,7 @@ MA  02110-1301  USA
 *       Adaptation in library for ROOT by G. Ganis, July 2003                  *
 *       (gerardo.ganis@cern.ch)                                                *
 *									                                                    *
-*       Header used by internal rsa funtions                                   *
+*       Header used by internal rsa functions                                   *
 *									                                                    *
 *******************************************************************************/
 

@@ -95,7 +95,7 @@ public:
 
 
 /**
-   Wrapper for a multi-dimensional funciton with derivatives used in GSL multidim
+   Wrapper for a multi-dimensional function with derivatives used in GSL multidim
    minimization algorithm
 
    @ingroup MultiMin

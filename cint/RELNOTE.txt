@@ -285,7 +285,7 @@ Recent changes ************************************************************
 * 5.15.158, Nov 2 2004
 * 6.0,22, Nov 2 2004
 *r2170, A** p=new A*[3]; p[0]=new A[2]; p[0][0];
-*r2171, G__ExceptionWrapper() returns value from running funciton
+*r2171, G__ExceptionWrapper() returns value from running function
 *r2172, virtual dtor free operation offset calculation in G__exec_asm
 * 2173, template function and member name conflict
 * 2174, loadfile.c fix by Philippe

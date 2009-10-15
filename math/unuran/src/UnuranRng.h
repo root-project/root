@@ -23,7 +23,7 @@ struct UnuranRng {
 
 public:   
 
-   /// funciton to delete object (not needed)
+   /// function to delete object (not needed)
    static void Delete(void * /* p */ ) { 
 //       Random * r = reinterpret_cast<Random *> (p); 
 //       delete r; 

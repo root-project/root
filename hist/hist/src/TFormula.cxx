@@ -2016,7 +2016,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                            chaine_error = chaine;
                         } else {
                            // We have a function call. Note that all the work was already,
-                           // eventually done in AnalyzeFuntion
+                           // eventually done in AnalyzeFunction
                            //fprintf(stderr,"We found a foreign function in %s\n",chaine.Data());
                         }
                      } else if (chaine(0,1) == "[" && chaine(lchain-1,1) == "]") {
@@ -3471,7 +3471,7 @@ void TFormula::Convert(UInt_t /* fromVersion */)
          newActionCode = action;
 
       } else if (action >= kOldFunctionCall) {
-         // Funtion call
+         // Function call
 
          newActionCode = kFunctionCall;
          newActionParam = action-kOldFunctionCall;

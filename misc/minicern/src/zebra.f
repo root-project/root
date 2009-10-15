@@ -1,7 +1,7 @@
 *-------------------------------------------------------------------------------
 *
 * This file contains the zebra's package subset needed to build h2root.
-* It cannot be used by any zebra application because many zebra functionnalities
+* It cannot be used by any zebra application because many zebra functionalities
 * are missing.
 *
 *-------------------------------------------------------------------------------

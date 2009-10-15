@@ -63,7 +63,7 @@ TUnuranDiscrDist::TUnuranDiscrDist(const TUnuranDiscrDist & rhs) :
 
 TUnuranDiscrDist & TUnuranDiscrDist::operator = (const TUnuranDiscrDist &rhs) 
 {
-   // Implementation of assignment operator (copy only the funciton pointer not the function itself)
+   // Implementation of assignment operator (copy only the function pointer not the function itself)
    if (this == &rhs) return *this;  // time saving self-test
    fPVec = rhs.fPVec;
    fPVecSum = rhs.fPVecSum;

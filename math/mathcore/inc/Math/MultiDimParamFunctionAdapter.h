@@ -74,7 +74,7 @@ public:
 
 
    /**
-      Copy constructor. Different behaviour according if funciton is owned or not
+      Copy constructor. Different behaviour according if function is owned or not
     */
    MultiDimParamFunctionAdapter (const MultiDimParamFunctionAdapter & rhs) : 
       BaseFunc(),
@@ -190,7 +190,7 @@ public:
 
 
    /**
-      Copy constructor. Different behaviour according if funciton is owned or not
+      Copy constructor. Different behaviour according if function is owned or not
     */
    MultiDimParamGradFunctionAdapter (const MultiDimParamGradFunctionAdapter & rhs) : 
       BaseFunc(),

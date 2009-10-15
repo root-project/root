@@ -312,7 +312,7 @@
  *
  *   4.0.7  14 Jul 1993
  *   21
- *   Bug fix, ANSI functioin header , parameter declaration appeared
+ *   Bug fix, ANSI function header , parameter declaration appeared
  *   in G__setup.c
  *
  *   4.0.8  20 Jul 1993
@@ -500,7 +500,7 @@
  *  4.0.48 25 Feb 1994
  *  argv[1][2] can be accessed
  *  memory management bug fixed, store_p_tempbuf
- *  bug fix, static variable in fucntion
+ *  bug fix, static variable in function
  *  G__scratch_all() closes all files.
  *
  *  4.0.49 2 Mar 1994
@@ -1865,7 +1865,7 @@
 *
 *  5.13.28 23 Sep 1997
 *  -                      , mkincld.c bug fix
-*  648, pointer to funciton typedef id, not complete
+*  648, pointer to function typedef id, not complete
 *  649, sizeof(const)
 *  650, typedef type x; x(5); constructor call
 *  651, #pragma link [C++|C|off] nestedclass;
@@ -4658,7 +4658,7 @@
 * 5.15.158, Nov 2 2004
 * 6.0,22, Nov 2 2004
 *r2170, A** p=new A*[3]; p[0]=new A[2]; p[0][0];
-*r2171, G__ExceptionWrapper() returns value from running funciton
+*r2171, G__ExceptionWrapper() returns value from running function
 *r2172, virtual dtor free operation offset calculation in G__exec_asm
 * 2173, template function and member name conflict
 * 2174, loadfile.c fix by Philippe

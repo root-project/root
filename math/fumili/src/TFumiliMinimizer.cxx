@@ -230,7 +230,7 @@ void TFumiliMinimizer::Fcn( int & , double * g , double & f, double * x , int /*
 
 // void TFumiliMinimizer::FcnGrad( int &, double * g, double & f, double * x , int iflag ) { 
 //    // implementation of FCN static function used internally by TFumili.
-//    // Adapt IMultiGradFunciton interface to TFumili FCN static function in the case of user 
+//    // Adapt IMultiGradFunction interface to TFumili FCN static function in the case of user 
 //    // provided gradient.
 //    ROOT::Math::IMultiGradFunction * gFunc = dynamic_cast<ROOT::Math::IMultiGradFunction *> ( fgFunc); 
 

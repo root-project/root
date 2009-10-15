@@ -216,7 +216,7 @@ virtual    ~XrdCmsXmi() {}
    library. This library is identified by the "cms.xmilib" directive. When
    the library is loaded the following extern "C" function is called to obtain
    an instance of the XrdCmsXmi object that will be used for request processing.
-   The fucntion is passed the command line arguments (xrd options stripped) and
+   The function is passed the command line arguments (xrd options stripped) and
    a pointer to the XrdCmsXmiEnv structure. If the function returns a null
    pointer, the cmsd exits with an error.
 

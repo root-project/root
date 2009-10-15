@@ -906,7 +906,7 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
          fout << "         fWeights[" << i+1 << "][o] += fabs(inputVal);" << endl;
       }
       fout << "      }" << endl;
-      if (i+1 != numLayers-1) // in the last layer no activation funciton is applied
+      if (i+1 != numLayers-1) // in the last layer no activation function is applied
          fout << "      fWeights[" << i+1 << "][o] = ActivationFnc(fWeights[" << i+1 << "][o]);" << endl;
       fout << "   }" << endl;
    }

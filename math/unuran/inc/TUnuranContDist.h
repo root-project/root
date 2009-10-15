@@ -135,7 +135,7 @@ public:
    }
 
    /**
-      check if a cdf fucntion is provided for the distribution 
+      check if a cdf function is provided for the distribution 
     */
    bool HasCdf() const { return fCdf != 0; } 
 

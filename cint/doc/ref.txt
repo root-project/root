@@ -1227,7 +1227,7 @@ K&R style function is called with simple function name match.
 ANSI style function is called only if type of parameter matches to 
 C++ function overloading rule.
 If a function with no parameter is declared as f() it is regarded as
-K&R style. ANSI style funciton must be explicitly declared as f(void).
+K&R style. ANSI style function must be explicitly declared as f(void).
 Hence, f1() and f2() in following example behaves differently.
 
 
@@ -2527,7 +2527,7 @@ FILE* G__dumpfile;
 
  G__dumpfile is a predefined global variable in Cint interpreter. It is
 set to NULL by default.  When writable file pointer is set, Cint dumps
-fuunction call history and trace coverage to the file. This variable is
+function call history and trace coverage to the file. This variable is
 automatically set by -d command line option. Alternatively, a user can
 set this manually for starting the dump at any time. 
 
@@ -2943,11 +2943,11 @@ processing system, special care is needed to deal with a pointer to function
 in a compiled code. When pointer to function is evaluated in interpreter
 environment, it returns either 1) pointer to an interpreted function, 2)
 pointer to an interface method of a compiled global function, 3) pointer to
-a true compiled funcion, or 4) pointer to a bytecode function. 
+a true compiled function, or 4) pointer to a bytecode function. 
 G__isinterpretedp2f() judges which of above case is the given pointer.
 Return value is shown in a table below.
 
- This funciton is only valid for global functions. If you use this API for 
+ This function is only valid for global functions. If you use this API for 
 ANSI C library function, it may return G__UNKNOWNFUNC.
 
  It is unneccessary to use G__isinterpretedp2f() API in interpreter environment

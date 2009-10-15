@@ -516,7 +516,7 @@ Limitation of CINT
 
 
 # Pointer to member
- + Pointer to member functioin
+ + Pointer to member function
    Pointer to member function is newly supported from cint5.14.9. This feature
   is normally turned off. In order to activate, you need to define 
   G__PTR2MEMFUNC macro in platform dependency file and re-compile Cint.

@@ -205,7 +205,7 @@ void TMinuitMinimizer::Fcn( int &, double * , double & f, double * x , int /* if
 
 void TMinuitMinimizer::FcnGrad( int &, double * g, double & f, double * x , int iflag ) { 
    // implementation of FCN static function used internally by TMinuit.
-   // Adapt IMultiGradFunciton interface to TMinuit FCN static function in the case of user 
+   // Adapt IMultiGradFunction interface to TMinuit FCN static function in the case of user 
    // provided gradient.
    ROOT::Math::IMultiGradFunction * gFunc = dynamic_cast<ROOT::Math::IMultiGradFunction *> ( fgFunc); 
 
@@ -616,7 +616,7 @@ void TMinuitMinimizer::PrintResults() {
 
 bool TMinuitMinimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned int &npoints, double * x, double * y) {
    // contour plot for parameter i and j
-   // need a valid FuncitonMinimum otherwise exits
+   // need a valid FunctionMinimum otherwise exits
    if (fMinuit == 0) { 
       Error("TMinuitMinimizer::Contour"," invalid TMinuit instance");
       return false;

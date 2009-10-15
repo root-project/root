@@ -895,7 +895,7 @@ GetType() {
 
 
 /**
- * @struct FuntionDistiller TypeBuilder.h Reflex/Builder/TypeBuilder.h
+ * @struct FunctionDistiller TypeBuilder.h Reflex/Builder/TypeBuilder.h
  * @author Pere Mato
  * @date 29/07/2004
  * @ingroup RefBld

@@ -152,7 +152,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       }
       else { 
          // Case when edm < edmval after Heasse but min is flagged eith a  bad edm: 
-         // make then a new Funciton minimum since now edm is ok 
+         // make then a new Function minimum since now edm is ok 
          if (min.IsAboveMaxEdm() ) {
             min = FunctionMinimum( min.Seed(), min.States(), min.Up() );
             break;
@@ -162,7 +162,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
       // end loop on iterations
       // ? need a maximum here (or max of function calls is enough ? ) 
-      // continnue iteration (re-calculate funciton Minimum if edm IS NOT sufficient) 
+      // continnue iteration (re-calculate function Minimum if edm IS NOT sufficient) 
       // no need to check that hesse calculation is done (if isnot done edm is OK anyway)
       // count the pass to exit second time when function Minimum is invalid
       // increase by 20% maxfcn for doing some more tests

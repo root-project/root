@@ -26,7 +26,7 @@ Linux shell:
 or from CINT:
   root [0] .x foam_kanwa.C
 Simulation will start and graphical canvas with plot
-of the distribution fuction appear. In this example 
+of the distribution function appear. In this example 
 we defined the distribution function simply as a global
 function function Camel2.
 

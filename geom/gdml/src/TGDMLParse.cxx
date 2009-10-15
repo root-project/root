@@ -118,7 +118,7 @@ TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename)
 {
   //creates the new instance of the XMLEngine called 'gdml', using the filename >>
   //then parses the file and creates the DOM tree. Then passes the DOM to the 
-  //next funtion to translate it. 
+  //next function to translate it. 
 
    // First create engine
    TXMLEngine* gdml = new TXMLEngine;

@@ -375,12 +375,12 @@ public:
 
    /**
       read only access to matrix element, with indices starting from 0.
-      Fuction will check index values and it will assert if they are wrong 
+      Function will check index values and it will assert if they are wrong 
    */ 
    const T& At(unsigned int i, unsigned int j) const;
    /**
       read/write access to matrix element with indices starting from 0.
-      Fuction will check index values and it will assert if they are wrong 
+      Function will check index values and it will assert if they are wrong 
    */ 
    T& At(unsigned int i, unsigned int j);
 

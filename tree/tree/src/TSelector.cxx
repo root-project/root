@@ -36,7 +36,7 @@
 //    event is selected histograms can be filled. Processing stops        //
 //    when this function returns kFALSE. This function combines the       //
 //    next two functions in one, avoiding to have to maintain state       //
-//    in the class to communicate between these two funtions.             //
+//    in the class to communicate between these two functions.             //
 //    See WARNING below about entry.                                      //
 //    This method is used by PROOF.                                       //
 // Bool_t TSelector::ProcessCut(Long64_t entry). This method is called    //

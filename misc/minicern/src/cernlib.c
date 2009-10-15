@@ -2,7 +2,7 @@
 //
 // This file contains the kernlib's package subset needed to build h2root.
 // It cannot be used by any kernlib application because many kernlib
-// functionnalities * are missing.
+// functionalities * are missing.
 //
 //------------------------------------------------------------------------------
 

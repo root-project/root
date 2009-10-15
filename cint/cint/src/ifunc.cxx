@@ -6272,7 +6272,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
                   }
 #ifdef G__ASM
                   /* It is not needed to explicitly create STORETEMP instruction
-                   * because it is preincluded in the compiled funciton call
+                   * because it is preincluded in the compiled function call
                    * interface */
 #endif
                   if (G__dispsource) {

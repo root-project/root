@@ -238,7 +238,7 @@ void TGTableHeader::UpdatePosition()
 {
    // Update the positon of the TGTableHeader.
 
-   // Verify funtionality. If rows are inserted or removed, internal
+   // Verify functionality. If rows are inserted or removed, internal
    // column numbers are no longer consistent.
 
    UInt_t nhdr = 0;

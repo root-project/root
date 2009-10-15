@@ -483,7 +483,7 @@ TEveTrack* esd_make_track(TEveTrackPropagator*   trkProp,
    trackGetMomentum(tp, pbuf); rt.fP.Set(pbuf);
 
    Double_t ep = trackGetP(at);
-   Double_t mc = 0.138; // at->GetMass(); - Complicated funciton, requiring PID.
+   Double_t mc = 0.138; // at->GetMass(); - Complicated function, requiring PID.
 
    rt.fBeta = ep/TMath::Sqrt(ep*ep + mc*mc);
  

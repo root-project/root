@@ -273,8 +273,8 @@ public:
    virtual bool Hesse() { return false; }
 
    /**
-      scan function minimum for variable i. Variable and funciton must be set before using Scan 
-      Return false if an error or if minimizer does not support this funcitonality
+      scan function minimum for variable i. Variable and function must be set before using Scan 
+      Return false if an error or if minimizer does not support this functionality
     */
    virtual bool Scan(unsigned int /* i */, unsigned int & /* nstep */, double * /* x */, double * /* y */, 
                      double /*xmin */ = 0, double /*xmax*/ = 0) {
@@ -362,7 +362,7 @@ protected:
    int fDebug;                  // print level
    int fStrategy;               // minimizer strategy
    int fStatus;                 // status of minimizer    
-   unsigned int fMaxCalls;      // max number of funciton calls 
+   unsigned int fMaxCalls;      // max number of function calls 
    unsigned int fMaxIter;       // max number or iterations used to find the minimum
    double fTol;                 // tolerance (absolute)
    double fUp;                  // error scale 

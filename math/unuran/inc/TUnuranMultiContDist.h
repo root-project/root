@@ -52,7 +52,7 @@ public:
 
 
    /** 
-      Constructor from a TF1 object representing the Probability density funciton. 
+      Constructor from a TF1 object representing the Probability density function. 
       The derivatives of the Pdf are estimated, when required by the UNURAN algorithm, 
       using numerical derivation. 
       If a value of dim 0 is passed , the dimension of the function is taken from TF1::GetNdim(). 

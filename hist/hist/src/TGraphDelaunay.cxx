@@ -162,7 +162,7 @@ Double_t TGraphDelaunay::ComputeZ(Double_t x, Double_t y)
 //______________________________________________________________________________
 void TGraphDelaunay::CreateTrianglesDataStructure()
 {
-   // Fonction used internally only. It creates the data structures needed to
+   // Function used internally only. It creates the data structures needed to
    // compute the Delaunay triangles.
 
    // Offset fX and fY so they average zero, and scale so the average 

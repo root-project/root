@@ -747,7 +747,7 @@ const TSeqCollection *TTabCom::GetListOfUsers()
 
 // ----------------------------------------------------------------------------
 //
-//                           static utility funcitons
+//                           static utility functions
 //
 
 //______________________________________________________________________________
@@ -1225,7 +1225,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
 }
 
 //
-//                           static utility funcitons
+//                           static utility functions
 //
 // ----------------------------------------------------------------------------
 

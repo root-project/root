@@ -70,7 +70,7 @@ SVector<T,D1> operator*(const SMatrix<T,D1,D2,R>& rhs, const SVector<T,D2>& lhs)
 
 
 // matrix-vector product: 
-// use apply(i) funciton for matrices. Tested  (11/05/06) with using (i,j) but 
+// use apply(i) function for matrices. Tested  (11/05/06) with using (i,j) but 
 // performances are slightly worse (not clear  why)
 
 //==============================================================================

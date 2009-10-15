@@ -60,7 +60,7 @@ h->GetXaxis()->SetTitle("x");
 
 h->Draw(); 
 
-// draw the funcitions 3 times in the separate ranges to avoid singularities 
+// draw the functions 3 times in the separate ranges to avoid singularities 
 f1a->SetLineWidth(2);
 f1a->SetLineColor(kBlue);
 

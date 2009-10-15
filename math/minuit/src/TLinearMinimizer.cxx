@@ -141,7 +141,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    for (unsigned int i = 0; i < fDim; ++i) { 
       // t.b.f: should not create TF1 classes
       // when creating TF1 (if onother function with same name exists it is 
-      // deleted since it is added in funciton list in gROOT 
+      // deleted since it is added in function list in gROOT 
       // fix the problem using meaniful names (difficult to re-produce)
       BasisFunction<const ModelFunc> bf(modfunc,i); 
       TUUID u; 

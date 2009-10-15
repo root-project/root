@@ -2643,7 +2643,7 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
    <p>
    <b>Peaks searching:</b>
    <p>
-   The goal of this funstion is to identify automatically the peaks in spectrum
+   The goal of this function is to identify automatically the peaks in spectrum
    with the presence of the continuous background and statistical
    fluctuations - noise.
    <p>

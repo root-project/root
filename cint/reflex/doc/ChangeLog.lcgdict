@@ -292,7 +292,7 @@
              [ Bug #1185 ] can I specify full output file name for lcgdict?
 
 ! 2003-07-25 Pere Mato
-  - FEATURE: Support for optional arguments in funtions/methods. The generated stub
+  - FEATURE: Support for optional arguments in functions/methods. The generated stub
              covers all possible number of arguments
   - FEATURE: Enum types are converted to "int"s. It is not guaranteed that it will
              work in all circustances.

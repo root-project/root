@@ -60,7 +60,7 @@ public:
    Type ToType() const;
 
 
-   /** static funtion that composes the At Name */
+   /** static function that composes the At Name */
    static std::string BuildTypeName(const Type& pointerToMemberType,
                                     const Scope& pointerToMemberScope,
                                     unsigned int mod = SCOPED | QUALIFIED);

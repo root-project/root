@@ -140,7 +140,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       
       // end loop on iterations
       // ? need a maximum here (or max of function calls is enough ? ) 
-      // continnue iteration (re-calculate funciton Minimum if edm IS NOT sufficient) 
+      // continnue iteration (re-calculate function Minimum if edm IS NOT sufficient) 
       // no need to check that hesse calculation is done (if isnot done edm is OK anyway)
       // count the pass to exit second time when function Minimum is invalid
       // increase by 20% maxfcn for doing some more tests

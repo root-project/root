@@ -451,7 +451,7 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
    std::cout << "ncalls = " << min->NCalls() << std::endl;
 #endif   
 
-//   std::cout << "funciton at the minimum " << func(xmin) << std::endl;
+//   std::cout << "function at the minimum " << func(xmin) << std::endl;
    std::copy(xmin,xmin+func.NDim(),minx);
    min->Clear();
 
@@ -597,7 +597,7 @@ int testRosenBrock() {
 
    double s0[2] = {0.01,0.01};
    
-   // minimize using Rosenbrock Funciton
+   // minimize using Rosenbrock Function
 #ifndef DEBUG
    gNmin = 10000;
 #endif

@@ -1,7 +1,7 @@
 *-------------------------------------------------------------------------------
 *
 * This file contains the hbook's package subset needed to build h2root.
-* It cannot be used by any hbook application because many hbook functionnalities
+* It cannot be used by any hbook application because many hbook functionalities
 * are missing.
 *
 *-------------------------------------------------------------------------------

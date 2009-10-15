@@ -1906,7 +1906,7 @@
 
 2003-08-26  sasha
 
-	*  added parameters to import funcions, to allow for sized
+	*  added parameters to import functions, to allow for sized
 	  image/preview stuff; Removed compression buffer from ASImage
 	  structure to save up some memory; Hopefully fixed hints handling
 	  on 64 bit hw

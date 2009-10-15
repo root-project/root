@@ -50,7 +50,7 @@ public:
    Type ToType() const;
 
 
-   /** static funtion that composes the typename */
+   /** static function that composes the typename */
    static std::string BuildTypeName(const Type& pointerType,
                                     unsigned int mod = SCOPED | QUALIFIED);
 

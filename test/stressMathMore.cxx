@@ -321,7 +321,7 @@ int StatFunction::TestDerivative() {
 
 }
 
-// funciton to be used in ROOT finding algorithm
+// function to be used in ROOT finding algorithm
 struct InvFunc { 
    InvFunc(const StatFunction * f, double y) : fFunc(f), fY(y)  {}
    double operator() (double x) { 

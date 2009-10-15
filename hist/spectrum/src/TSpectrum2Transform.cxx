@@ -99,7 +99,7 @@ void TSpectrum2Transform::Haar(Float_t *working_space, Int_t num, Int_t directio
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion calculates Haar transform of a part of data                   //
+//   This function calculates Haar transform of a part of data                   //
 //      Function parameters:                                                    //
 //              -working_space-pointer to vector of transformed data            //
 //              -num-length of processed data                                   //
@@ -182,7 +182,7 @@ void TSpectrum2Transform::Walsh(Float_t *working_space, Int_t num)
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion calculates Walsh transform of a part of data                  //
+//   This function calculates Walsh transform of a part of data                  //
 //      Function parameters:                                                    //
 //              -working_space-pointer to vector of transformed data            //
 //              -num-length of processed data                                   //
@@ -239,7 +239,7 @@ void TSpectrum2Transform::BitReverse(Float_t *working_space, Int_t num)
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion carries out bir-reverse reordering of data                    //
+//   This function carries out bir-reverse reordering of data                    //
 //      Function parameters:                                                    //
 //              -working_space-pointer to vector of processed data              //
 //              -num-length of processed data                                   //
@@ -280,7 +280,7 @@ void TSpectrum2Transform::Fourier(Float_t *working_space, Int_t num, Int_t hartl
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion calculates Fourier based transform of a part of data          //
+//   This function calculates Fourier based transform of a part of data          //
 //      Function parameters:                                                    //
 //              -working_space-pointer to vector of transformed data            //
 //              -num-length of processed data                                   //
@@ -405,7 +405,7 @@ void TSpectrum2Transform::BitReverseHaar(Float_t *working_space, Int_t shift, In
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion carries out bir-reverse reordering for Haar transform         //
+//   This function carries out bir-reverse reordering for Haar transform         //
 //      Function parameters:                                                    //
 //              -working_space-pointer to vector of processed data              //
 //              -shift-shift of position of processing                          //
@@ -453,7 +453,7 @@ Int_t TSpectrum2Transform::GeneralExe(Float_t *working_space, Int_t zt_clear, In
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion calculates generalized (mixed) transforms of different degrees//
+//   This function calculates generalized (mixed) transforms of different degrees//
 //      Function parameters:                                                    //
 //              -working_space-pointer to vector of transformed data            //
 //              -zt_clear-flag to clear imaginary data before staring           //
@@ -574,7 +574,7 @@ Int_t TSpectrum2Transform::GeneralInv(Float_t *working_space, Int_t num, Int_t d
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion calculates inverse generalized (mixed) transforms             //
+//   This function calculates inverse generalized (mixed) transforms             //
 //      Function parameters:                                                    //
 //              -working_space-pointer to vector of transformed data            //
 //              -num-length of processed data                                   //
@@ -696,7 +696,7 @@ void TSpectrum2Transform::HaarWalsh2(Float_t **working_matrix,
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion calculates 2D Haar and Walsh transforms                       //
+//   This function calculates 2D Haar and Walsh transforms                       //
 //      Function parameters:                                                    //
 //              -working_matrix-pointer to matrix of transformed data           //
 //              -working_vector-pointer to vector where the data are processed  //
@@ -789,7 +789,7 @@ void TSpectrum2Transform::FourCos2(Float_t **working_matrix, Float_t *working_ve
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion calculates 2D Fourier based transforms                        //
+//   This function calculates 2D Fourier based transforms                        //
 //      Function parameters:                                                    //
 //              -working_matrix-pointer to matrix of transformed data           //
 //              -working_vector-pointer to vector where the data are processed  //
@@ -1060,7 +1060,7 @@ void TSpectrum2Transform::General2(Float_t **working_matrix, Float_t *working_ve
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
-//   This funcion calculates generalized (mixed) 2D transforms                  //
+//   This function calculates generalized (mixed) 2D transforms                  //
 //      Function parameters:                                                    //
 //              -working_matrix-pointer to matrix of transformed data           //
 //              -working_vector-pointer to vector where the data are processed  //
@@ -1743,7 +1743,7 @@ href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpect
 source spectrum according to the given input parameters. Transformed data are
 written into dest spectrum. Before the Transform function is called the class
 must be created by constructor and the type of the transform as well as some
-other parameters must be set using a set of setter funcions:</p>
+other parameters must be set using a set of setter functions:</p>
 
 <p class=MsoNormal><span lang=FR>&nbsp;</span></p>
 
@@ -2297,7 +2297,7 @@ href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpect
 source spectrum (for details see Transform function).  Before the FilterZonal
 function is called the class must be created by constructor and the type of the
 transform as well as some other parameters must be set using a set of setter
-funcions. The FilterZonal function sets transformed coefficients in the given
+functions. The FilterZonal function sets transformed coefficients in the given
 region (fXmin, fXmax) to the given fFilterCoeff and transforms it back. Filtered
 data are written into dest spectrum. </p>
 
@@ -2741,7 +2741,7 @@ href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpect
 source spectrum (for details see Transform function).  Before the Enhance
 function is called the class must be created by constructor and the type of the
 transform as well as some other parameters must be set using a set of setter
-funcions. The Enhance function multiplies transformed coefficients in the given
+functions. The Enhance function multiplies transformed coefficients in the given
 region (fXmin, fXmax, fYmin, fYmax) by the given fEnhancCoeff and transforms it
 back. Enhanced data are written into dest spectrum.</p>
 
@@ -3134,7 +3134,7 @@ void TSpectrum2Transform::SetTransformType(Int_t transType, Int_t degree)
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      
 //                                                     
-//   This funcion sets the following parameters for transform:
+//   This function sets the following parameters for transform:
 //         -transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
 //         -degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
 //////////////////////////////////////////////////////////////////////////////      
@@ -3172,7 +3172,7 @@ void TSpectrum2Transform::SetRegion(Int_t xmin, Int_t xmax, Int_t ymin, Int_t ym
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      
 //                                                     
-//   This funcion sets the filtering or enhancement region:
+//   This function sets the filtering or enhancement region:
 //         -xmin, xmax, ymin, ymax
 //////////////////////////////////////////////////////////////////////////////         
    if(xmin<0 || xmax < xmin || xmax >= fSizeX){ 
@@ -3195,7 +3195,7 @@ void TSpectrum2Transform::SetDirection(Int_t direction)
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      
 //                                                     
-//   This funcion sets the direction of the transform:
+//   This function sets the direction of the transform:
 //         -direction (forward or inverse)
 //////////////////////////////////////////////////////////////////////////////      
    if(direction != kTransformForward && direction != kTransformInverse){ 
@@ -3211,7 +3211,7 @@ void TSpectrum2Transform::SetFilterCoeff(Float_t filterCoeff)
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      
 //                                                     
-//   This funcion sets the filter coefficient:
+//   This function sets the filter coefficient:
 //         -filterCoeff - after the transform the filtered region (xmin, xmax, ymin, ymax) is replaced by this coefficient. Applies only for filtereng operation.
 //////////////////////////////////////////////////////////////////////////////      
    fFilterCoeff = filterCoeff;
@@ -3223,7 +3223,7 @@ void TSpectrum2Transform::SetEnhanceCoeff(Float_t enhanceCoeff)
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      
 //                                                     
-//   This funcion sets the enhancement coefficient:
+//   This function sets the enhancement coefficient:
 //         -enhanceCoeff - after the transform the enhanced region (xmin, xmax, ymin, ymax) is multiplied by this coefficient. Applies only for enhancement operation.
 //////////////////////////////////////////////////////////////////////////////      
    fEnhanceCoeff = enhanceCoeff;

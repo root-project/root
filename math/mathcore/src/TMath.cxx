@@ -2298,7 +2298,7 @@ Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta
 //______________________________________________________________________________
 Double_t TMath::LaplaceDist(Double_t x, Double_t alpha, Double_t beta)
 {
-   // Computes the probability density funciton of Laplace distribution
+   // Computes the probability density function of Laplace distribution
    // at point x, with location parameter alpha and shape parameter beta.
    // By default, alpha=0, beta=1
    // This distribution is known under different names, most common is
@@ -2313,7 +2313,7 @@ Double_t TMath::LaplaceDist(Double_t x, Double_t alpha, Double_t beta)
 //______________________________________________________________________________
 Double_t TMath::LaplaceDistI(Double_t x, Double_t alpha, Double_t beta)
 {
-   // Computes the distribution funciton of Laplace distribution
+   // Computes the distribution function of Laplace distribution
    // at point x, with location parameter alpha and shape parameter beta.
    // By default, alpha=0, beta=1
    // This distribution is known under different names, most common is

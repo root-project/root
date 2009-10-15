@@ -72,7 +72,7 @@ public:
    /// evaluate the integral passing a new function
    double Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax);
 
-   /// set the integration function (must implement multi-dim funciton interface: IBaseFunctionMultiDim)
+   /// set the integration function (must implement multi-dim function interface: IBaseFunctionMultiDim)
    void SetFunction(const IMultiGenFunction &f);
 
    /// return result of integration 

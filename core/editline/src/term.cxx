@@ -569,7 +569,7 @@ term_alloc_display(EditLine_t* el) {                      // LOUISE COLOUR : dup
  *	Free the display buffers
  */
 el_private void
-term_free_display(EditLine_t* el) {               // LOUISE COLOUR : duplicated all display funcionality for colour
+term_free_display(EditLine_t* el) {               // LOUISE COLOUR : duplicated all display functionality for colour
    char** b;
    char** bufp;
    ElColor_t** c;

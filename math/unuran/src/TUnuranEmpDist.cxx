@@ -102,7 +102,7 @@ TUnuranEmpDist::TUnuranEmpDist(const TUnuranEmpDist & rhs) :
 
 TUnuranEmpDist & TUnuranEmpDist::operator = (const TUnuranEmpDist &rhs) 
 {
-   // Implementation of assignment operator (copy only the funciton pointer not the function itself)
+   // Implementation of assignment operator (copy only the function pointer not the function itself)
    if (this == &rhs) return *this;  // time saving self-test
    fData  = rhs.fData;
    fDim   = rhs.fDim;

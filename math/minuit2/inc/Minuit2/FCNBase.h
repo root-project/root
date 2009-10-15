@@ -107,7 +107,7 @@ public:
 
    /** 
        add interface to set dynamically a new error definition 
-       Re-implement this funciton if needed. 
+       Re-implement this function if needed. 
    */ 
    virtual void SetErrorDef(double ) {}; 
 

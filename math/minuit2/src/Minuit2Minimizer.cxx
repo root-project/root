@@ -593,14 +593,14 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
 
 bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned int & npoints, double * x, double * y) {
    // contour plot for parameter i and j
-   // need a valid FuncitonMinimum otherwise exits
+   // need a valid FunctionMinimum otherwise exits
    if (fMinimum == 0) { 
-      MN_ERROR_MSG2("Minuit2Minimizer::Contour"," no function minimum existing. Must minimize funciton before");
+      MN_ERROR_MSG2("Minuit2Minimizer::Contour"," no function minimum existing. Must minimize function before");
       return false;
    }
 
    if (!fMinimum->IsValid() ) { 
-      MN_ERROR_MSG2("Minuit2Minimizer::Contour","invalid funciton minimum");
+      MN_ERROR_MSG2("Minuit2Minimizer::Contour","invalid function minimum");
       return false;
    }
    assert(fMinuitFCN); 
@@ -638,7 +638,7 @@ bool Minuit2Minimizer::Hesse( ) {
     // find Hessian (full second derivative calculations)
    // the contained state will be updated with the Hessian result
    // in case a function minimum exists and is valid the result will be 
-   // appended in the funciton minimum
+   // appended in the function minimum
 
    if (!fMinuitFCN) { 
       MN_ERROR_MSG2("Minuit2Minimizer::Hesse","FCN function has not been set");

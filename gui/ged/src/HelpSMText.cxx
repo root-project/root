@@ -45,7 +45,7 @@ const char gHelpSMTopLevel[] =
 "   For drawings that take a time it is better to disable this option.\n"
 "\n"
 "Create a new style / delete a style:\n"
-"   You can access these functionnalities via the menu or the tool bar.\n"
+"   You can access these functionalities via the menu or the tool bar.\n"
 "   If you create a style, a clone of the selected style will be created;\n"
 "   you will have the opportunity to modify it later via the editor.\n"
 "   Moreover, during the creation process, you will be asked for a name and\n"

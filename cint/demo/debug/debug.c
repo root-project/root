@@ -115,5 +115,5 @@ func(int a,int b,int *pc)
 
 //   '->' represents where you are.  
 //
-//   Input "e" and Return to step out from the functioin
+//   Input "e" and Return to step out from the function
 //

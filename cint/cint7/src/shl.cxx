@@ -998,7 +998,7 @@ extern "C" int G__isinterpretedp2f(void *p2f)
 * Called by
 *   G__getvariable()
 *
-* Calling fucntion by pointer to function
+* Calling function by pointer to function
 ******************************************************************/
 G__value Cint::Internal::G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,int *known3)
 {

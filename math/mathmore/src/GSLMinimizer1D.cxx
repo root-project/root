@@ -92,7 +92,7 @@ GSLMinimizer1D & GSLMinimizer1D::operator = (const GSLMinimizer1D &rhs)
 }
 
 void GSLMinimizer1D::SetFunction(  GSLFuncPointer f, void * p, double xmin, double xlow, double xup) { 
-   // set the funciton to be minimized 
+   // set the function to be minimized 
    assert(fFunction);
    assert(fMinimizer);
    fXlow = xlow; 

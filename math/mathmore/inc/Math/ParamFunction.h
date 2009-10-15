@@ -46,7 +46,7 @@ namespace Math {
 //_____________________________________________________________________________________
    /** 
       Base template class for all Parametric Functions.
-      The template argument is the type of parameteric funciton interface is implementing like
+      The template argument is the type of parameteric function interface is implementing like
       Parameteric 1D, Multi-Dim or gradient parametric. 
 
       A parameteric function is a Generic Function with parameters, so 

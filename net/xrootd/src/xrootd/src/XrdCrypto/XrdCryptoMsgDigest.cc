@@ -11,7 +11,7 @@
 
 /* ************************************************************************** */
 /*                                                                            */
-/* Abstract interface for Message Digest crypto fucntionality.                */
+/* Abstract interface for Message Digest crypto functionality.                */
 /* Allows to plug-in modules based on different crypto implementation         */
 /* (OpenSSL, Botan, ...)                                                      */
 /*                                                                            */

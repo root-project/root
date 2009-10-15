@@ -191,7 +191,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    if (!fData || !fPdf || !fPOI  ) return 0;
 
-   // if a proposal funciton has not been specified create a default one
+   // if a proposal function has not been specified create a default one
    bool useDefaultPropFunc = (fPropFunc == 0); 
    if (useDefaultPropFunc) fPropFunc = new UniformProposal(); 
 

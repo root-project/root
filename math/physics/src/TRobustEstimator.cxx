@@ -72,7 +72,7 @@
 //   3a.If n is small:
 //    - repeat (say) 500 times:
 //    -- construct an initial h-subset, starting from a random (nvar+1)-subset
-//    -- carry out 2 C-steps (described in the comments of CStep funtion)
+//    -- carry out 2 C-steps (described in the comments of CStep function)
 //    - for the 10 results with lowest det(S):
 //    -- carry out C-steps until convergence
 //    - report the solution (T, S) with the lowest det(S)
@@ -126,7 +126,7 @@ const Double_t kChiQuant[50]={
 //_____________________________________________________________________________
 TRobustEstimator::TRobustEstimator(){
   //this constructor should be used in a univariate case:
-  //first call this constructor, then - the EvaluateUni(..) fucntion
+  //first call this constructor, then - the EvaluateUni(..) function
 
 }
 

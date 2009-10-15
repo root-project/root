@@ -1176,6 +1176,6 @@ Int_t TNetSystem::Unlink(const char *path)
    }
 
    // Not implemented for rootd
-   Warning("Unlink", "funtionality not implemented - ignored (path: %s)", path);
+   Warning("Unlink", "functionality not implemented - ignored (path: %s)", path);
    return -1;
 }

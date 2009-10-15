@@ -163,7 +163,7 @@ bool GSLSimAnMinimizer::Minimize() {
    // and transform from external variables (and steps)   to internals one 
    MinimTransformFunction * trFunc  = 0; 
    if (doTransform)   {   
-      // since objective funciton is gradient build a gradient function for the transformation
+      // since objective function is gradient build a gradient function for the transformation
       // although gradient is not needed
 
       trFunc =  new MinimTransformFunction ( new MultiNumGradFunction( *fObjFunc), fVarTypes, fValues, fBounds ); 

@@ -1428,7 +1428,7 @@ with <tt>TH1::SetContour()</tt> or <tt>TStyle::SetNumberContours()</tt>.
       gPad->Update();
 </pre>
 The contour are saved in <tt>TGraph</tt> objects once the pad is painted.
-Therefore to use this funtionnality in a macro, <tt>gPad->Update()</tt>
+Therefore to use this functionnality in a macro, <tt>gPad->Update()</tt>
 should be performed after the histogram drawing. Once the list is
 built, the contours are accessible in the following way:
 <pre>

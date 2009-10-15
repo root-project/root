@@ -83,7 +83,7 @@ using namespace std;
 #define HISTNAME   "ptSpectra"
 #define PDGNUMBER  211
 
-// This funtion just load the needed libraries if we're executing from
+// This function just load the needed libraries if we're executing from
 // an interactive session.
 void loadLibraries()
 {

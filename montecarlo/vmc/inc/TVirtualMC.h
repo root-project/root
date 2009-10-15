@@ -173,7 +173,7 @@ public:
    // In Geant3, the  data  structure JTMED contains the standard tracking
    // parameters (CUTS and flags to control the physics processes)  which
    // are used  by default for all tracking media.
-   // It is possible to redefine individually with this funstion any of these
+   // It is possible to redefine individually with this function any of these
    // parameters for a given tracking medium.
    //  itmed   tracking medium number
    //  param   is a character string (variable name)

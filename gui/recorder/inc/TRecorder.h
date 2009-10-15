@@ -375,9 +375,9 @@ public:
 //  TRecorder                                                           //
 //                                                                      //
 //  Class provides direct recorder/replayer interface for a user.       //
-//  See 'ROOT EVENT RECORDING SYSTEM' for more information abou usage.  //
+//  See 'ROOT EVENT RECORDING SYSTEM' for more information about usage. //
 //                                                                      //
-//  Implementation uses C++ design pattern State. Funcionality of       //
+//  Implementation uses C++ design pattern State. Functionality of      //
 //  recorder is divided into 4 classes according to the current         //
 //  state of recorder.                                                  //
 //                                                                      //

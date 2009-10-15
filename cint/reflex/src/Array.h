@@ -68,7 +68,7 @@ public:
    size_t CalculateSize() const;
 
 
-   /** static funtion that composes the At Name */
+   /** static function that composes the At Name */
    static std::string BuildTypeName(const Type& typ,
                                     size_t len,
                                     unsigned int mod = SCOPED | QUALIFIED);
