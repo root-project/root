@@ -75,17 +75,22 @@ SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
+SYSLIBS       = -limf -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
-CILIBS        = -lm -ldl -rdynamic
+CILIBS        = -limf -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
 ifeq ($(F77),ifort)
 F77           = ifort
 F77FLAGS      = -fPIC
+ifeq ($(ICC_MAJOR),11)
+F77LIBS      := -L$(shell which ifort | sed -e 's|bin/intel64/ifort|lib/intel64|') \
+                -lifcore
+else
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
+endif
 endif
 
 # Precompiled headers:
