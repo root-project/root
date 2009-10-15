@@ -51,8 +51,7 @@ extern "C" {
 }
 #endif
 
-#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) && \
-    !defined(__OpenBSD__)
+#if !defined(HAVE_SETRESUID)
 static int setresgid(gid_t r, gid_t e, gid_t)
 {
    if (r != NOGC && setgid(r) == -1)
