@@ -883,8 +883,10 @@ void TRecorderReplaying::ReplayRealtime()
 
    // If there are automatically generated ROOT events in the queue, they
    // are let to be handled first
-   if (gVirtualX->EventsPending())
+   if (gVirtualX->EventsPending()) {
+      gSystem->ProcessEvents();
       return;
+   }
 
    // Previous event has not been replayed yet and it is not allowed for
    // this event to be replayed more times
