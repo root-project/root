@@ -11,7 +11,7 @@ TYPELD     = icpc
 
 TYPEMISC   = -D_ALL_SOURCE -D_REENTRANT -D_GNU_SOURCE -fPIC -rdynamic \
              -ansi -D__linux__ -D__ICC__ -wd191 -wd468 -wd858 -wd1224 -wd1476 \
-             -wd1572 $(CFTRACE)
+             -wd1572 -i-dynamic $(CFTRACE)
 TYPECF32   =
 TYPECF64   = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 TYPEOPT    = $(TYPEMISC) -O2
