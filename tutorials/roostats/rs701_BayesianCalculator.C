@@ -43,7 +43,9 @@ void rs701_BayesianCalculator()
   bcalc.SetTestSize(0.05);
   SimpleInterval* interval = bcalc.GetInterval();
   std::cout << "90% CL interval: [ " << interval->LowerLimit() << " - " << interval->UpperLimit() << " ] or 95% CL limits\n";
-  bcalc.PlotPosterior();
+  RooPlot * plot = bcalc.GetPosteriorPlot();
+  plot->Draw();
+
   
   // observe one event while expecting one background event -> the 95% CL upper limit on s is 4.10
   // observe one event while expecting zero background event -> the 95% CL upper limit on s is 4.74

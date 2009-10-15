@@ -201,9 +201,9 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    delete cdf;
 
    TString interval_name = TString("BayesianInterval_a") + TString(this->GetName());
-   SimpleInterval* interval = new SimpleInterval(interval_name,"SimpleInterval from BayesianCalculator",poi,lowerLimit,upperLimit);
+   fInterval = new SimpleInterval(interval_name,"SimpleInterval from BayesianCalculator",poi,lowerLimit,upperLimit);
   
-   return interval;
+   return fInterval;
 }
 
 } // end namespace RooStats
