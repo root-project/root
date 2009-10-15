@@ -60,6 +60,9 @@ TGDMLParse Class
  TGeoParaboloid
  TGeoCompositeShape (subtraction, union, intersection)
 
+ Approximated Solids:
+ Ellipsoid (approximated to a TGeoBBox)
+
  Geometry:
  TGeoVolume
  TGeoVolumeAssembly
@@ -191,6 +194,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* parbstr = "paraboloid";
    const char* intestr = "intersection";
    const char* reflstr = "reflectedSolid";
+   const char* ellistr = "ellipsoid";
    
    if ((strcmp(name, posistr)) == 0){ 
       node = PosProcess(gdml, node, attr);
@@ -218,6 +222,9 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = VolProcess(gdml, node);
    } else if ((strcmp(name, bboxstr)) == 0){ 
       node = Box(gdml, node, attr);
+   } else if ((strcmp(name, ellistr)) == 0){
+      std::cout << "Warning: Ellipsoid is not supported, converting it to a box!" << std::endl; 
+      node = Ellipsoid(gdml, node, attr);
    } else if ((strcmp(name, cutTstr)) == 0){ 
       node = CutTube(gdml, node, attr);
    } else if ((strcmp(name, arb8str)) == 0){ 
@@ -1556,6 +1563,89 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
                         Evaluate(yline)/2,
                         Evaluate(zline)/2);
    
+   fsolmap[name] = box;
+   
+   return node;
+   
+}
+
+//___________________________________________________________________
+XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
+   //In the solids section of the GDML file, an ellipsoid may be declared. 
+   //Unfortunately, the ellipsoid is not supported under ROOT so,
+   //when the ellipsoid keyword is found, this function is called
+   //to convert it to a simple box with similar dimensions, and the 
+   //dimensions required are taken and stored, these are then bound and
+   //converted to type TGeoBBox and stored in fsolmap map using the name 
+   //as its key.
+   
+   const char* lunit = "mm"; 
+   const char* ax = "0"; 
+   const char* by = "0"; 
+   const char* cz = "0";
+   const char* zcut1 = "0"; 
+   const char* zcut2 = "0";
+   const char* name = "";
+   const char* tempattr; 
+
+   while (attr!=0) {
+      
+      tempattr = gdml->GetAttrName(attr);
+      
+      if(strcmp(tempattr, "name") == 0){ 
+         name = gdml->GetAttrValue(attr);
+      }
+      else if(strcmp(tempattr, "ax") == 0){ 
+         ax = gdml->GetAttrValue(attr);
+      }
+      else if(strcmp(tempattr, "by") == 0){
+         by = gdml->GetAttrValue(attr);
+      }
+      else if(strcmp(tempattr, "cz") == 0){
+         cz = gdml->GetAttrValue(attr);
+      }
+      else if(strcmp(tempattr, "zcut1") == 0){ 
+         zcut1 = gdml->GetAttrValue(attr);
+      }
+      else if(strcmp(tempattr, "zcut2") == 0){
+         zcut2 = gdml->GetAttrValue(attr);
+      }
+      else if(strcmp(tempattr, "lunit") == 0){
+         lunit = gdml->GetAttrValue(attr);
+      }
+      
+      attr = gdml->GetNextAttr(attr);   
+   }
+   
+   if((strcmp(fCurrentFile,fStartFile)) != 0){
+      name = Form("%s_%s", name, fCurrentFile);
+   }
+
+   const char* axline = "";
+   const char* byline = "";
+   const char* czline = "";
+   const char* zcut1line = "";
+   const char* zcut2line = "";
+   const char* retunit;
+   
+   retunit = GetScale(lunit);
+   
+   axline = Form("%s*%s", ax, retunit);
+   byline = Form("%s*%s", by, retunit);
+   czline = Form("%s*%s", cz, retunit);
+   zcut1line = Form("%s*%s", zcut1, retunit);
+   zcut2line = Form("%s*%s", zcut2, retunit);
+
+   TGeoBBox* box;
+   if(Evaluate(zcut1line)==0.0 && Evaluate(zcut2line)==0.0)
+   {
+    box = new TGeoBBox(NameShort(name),Evaluate(axline), Evaluate(byline), Evaluate(czline));
+   }
+   else
+   {
+    box = new TGeoBBox(NameShort(name),Evaluate(axline), Evaluate(byline), Evaluate(zcut2line)-Evaluate(zcut1line));
+   }
    fsolmap[name] = box;
    
    return node;
