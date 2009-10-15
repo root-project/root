@@ -1,6 +1,72 @@
 
+2009-05-04  sasha
+
+	* AfterStep release v 2.2.9
+
+2009-03-18  sasha
+
+	* added ifdef to avoid double fclose under MSVC2005 and newer
+
+2009-02-11  sasha
+
+	* Got rid of dpy global variable in libAfterBase and libAfterIMage
+	  for good. Moved it into libAfterStep instead, as it incorporates
+	  screen handling functionality.
+
+2009-01-30  sasha
+
+	* fixed warning in jpeg2ASImage
+
+2009-01-16  sasha
+
+	* fix to fill_hline_colored to work on scratch canvas + some
+	  debugging of reported fill bugs on 64bit systems
+
+2009-01-13  sasha
+
+	* fixed aliasing for drawing with brush wider then 1x1; Fixed areas
+	  of low intensity inside solid lines
+	* fixed clipping in straight ellips drawing where y+ry > height
+	* added missing declaration of Bool asim_set_custom_brush_colored()
+
+2009-01-12  sasha
+
+	* somewhat fixed drawing with ARGB brush over ARGB canvas; Still
+	  unclear what would happen if those are different ;
+
+2008-12-17  sasha
+
+	* fixed memory leak in ASImage2gif file needed to be closed even
+	  after Egif closes it too
+	* fixed Makefile to work on FBSD/Gentoo
+
+2008-11-12  sasha
+
+	* fixed references to the global variable dpy in GLX code
+
+2008-09-30  sasha
+
+	* [no log message]
+
+2008-08-15  sasha
+
+	* added utility to check if glyphs are available in the font for a
+	  certain char or a list of chars
+
+2008-06-24  sasha
+
+	* [no log message]
+	* Fixed root pixmap setting - to handle XKillClient failures and
+	  not free pixmap after it was put on the root
+
+2008-06-23  sasha
+
+	* [no log message]
+
 2008-06-18  sasha
 
+	* [no log message]
+	* Updated ChangeLog for libAfterImage 1.18 release
 	* libAfterImage 1.18 release
 
 2008-06-13  sasha

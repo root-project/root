@@ -494,6 +494,19 @@ asim_mystrndup (const char *str, size_t n)
 	return c;
 }
 
+char         *
+asim_mystrdup (const char *str)
+{
+	char         *c = NULL;
+
+	if (str)
+	{
+		c = malloc (strlen (str) + 1);
+		strcpy (c, str);
+	}
+	return c;
+}
+
 int
 asim_mystrcasecmp (const char *s1, const char *s2)
 {
@@ -1497,7 +1510,7 @@ static xml_elem_t *
 create_CDATA_tag()	
 { 
 	xml_elem_t *cdata = xml_elem_new();
-	cdata->tag = mystrdup(XML_CDATA_STR) ;
+	cdata->tag = strdup(XML_CDATA_STR) ;
 	cdata->tag_id = XML_CDATA_ID ;
 	return cdata;
 }
@@ -1506,7 +1519,7 @@ static xml_elem_t *
 create_CONTAINER_tag()	
 { 
 	xml_elem_t *container = xml_elem_new();
-	container->tag = mystrdup(XML_CONTAINER_STR) ;
+	container->tag = strdup(XML_CONTAINER_STR) ;
 	container->tag_id = XML_CONTAINER_ID ;
 	return container;
 }
@@ -1600,7 +1613,7 @@ int asim_xml_parse(const char* str, xml_elem_t* current, ASHashTable *vocabulary
 				for ( ; isspace((int)*tmp) ; tmp++);
 				if (*tmp != '=') { eparm = NULL; break; }
 
-				while (isspace((int)*++tmp));
+				do { ++tmp; } while (isspace((int)*tmp));
 
 				/* If the next character is a quote, spin until we see another one. */
 				if (*tmp == '"' || *tmp == '\'') {
@@ -2076,27 +2089,27 @@ asim_format_xml_buffer_state (ASXmlBuffer *xb)
 	if (xb->state < 0) 
 	{
 		state_xml = xml_elem_new();
-		state_xml->tag = mystrdup("error");
+		state_xml->tag = strdup("error");
 		state_xml->parm = safemalloc (64);
 		sprintf(state_xml->parm, "code=%d level=%d tag_count=%d", xb->state, xb->level ,xb->tags_count );
 		state_xml->child = create_CDATA_tag();
 		switch( xb->state ) 
 		{
-			case ASXML_BadStart : state_xml->child->parm = mystrdup("Text encountered before opening tag bracket - not XML format"); break;
-			case ASXML_BadTagName : state_xml->child->parm = mystrdup("Invalid characters in tag name" );break;
-			case ASXML_UnexpectedSlash : state_xml->child->parm = mystrdup("Unexpected '/' encountered");break;
-			case ASXML_UnmatchedClose : state_xml->child->parm = mystrdup("Closing tag encountered without opening tag" );break;
-			case ASXML_BadAttrName : state_xml->child->parm = mystrdup("Invalid characters in attribute name" );break;
-			case ASXML_MissingAttrEq : state_xml->child->parm = mystrdup("Attribute name not followed by '=' character" );break;
+			case ASXML_BadStart : state_xml->child->parm = strdup("Text encountered before opening tag bracket - not XML format"); break;
+			case ASXML_BadTagName : state_xml->child->parm = strdup("Invalid characters in tag name" );break;
+			case ASXML_UnexpectedSlash : state_xml->child->parm = strdup("Unexpected '/' encountered");break;
+			case ASXML_UnmatchedClose : state_xml->child->parm = strdup("Closing tag encountered without opening tag" );break;
+			case ASXML_BadAttrName : state_xml->child->parm = strdup("Invalid characters in attribute name" );break;
+			case ASXML_MissingAttrEq : state_xml->child->parm = strdup("Attribute name not followed by '=' character" );break;
 			default:
-				state_xml->child->parm = mystrdup("Premature end of the input");break;
+				state_xml->child->parm = strdup("Premature end of the input");break;
 		}
 	}else if (xb->state == ASXML_Start)
 	{
 		if (xb->tags_count > 0)
 		{
 			state_xml = xml_elem_new();
-			state_xml->tag = mystrdup("success");
+			state_xml->tag = strdup("success");
 			state_xml->parm = safemalloc(64);
 			sprintf(state_xml->parm, "tag_count=%d level=%d", xb->tags_count, xb->level );
 		}

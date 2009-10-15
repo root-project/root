@@ -224,12 +224,12 @@ void asim_nonGNUC_debugout_stub( const char *format, ...);
 #define	NEW_ARRAY(a,b)     		((a *)malloc((b)*sizeof(a)))
 
 /* from libAfterBase/mystring.h : */
-#include <string.h>
-#define mystrdup(s)     ((s)?strdup(s):NULL)
 
-char   *asim_mystrndup(const char *str, size_t n);
+char *asim_mystrdup (const char *str);
+char *asim_mystrndup(const char *str, size_t n);
 int asim_mystrcasecmp (const char *s1, const char *s2);
 int asim_mystrncasecmp (const char *s1, const char *s2, size_t n);
+#define mystrdup(s)    	 asim_mystrdup(s)
 #define mystrndup(s,n)    	 asim_mystrndup(s,n)
 #define mystrncasecmp(s,s2,n)    asim_mystrncasecmp(s,s2,n)
 #define mystrcasecmp(s,s2)       asim_mystrcasecmp(s,s2)
