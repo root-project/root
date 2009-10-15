@@ -944,14 +944,14 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //             = "R" Use the Range specified in the function range
    //             = "N" Do not store the graphics function, do not draw
    //             = "0" Do not plot the result of the fit. By default the fitted function
-   //                   is drawn unless the option"N" above is specified.
+   //                   is drawn unless the option "N" above is specified.
    //             = "+" Add this new fitted function to the list of fitted functions
    //                   (by default, any previous function is deleted)
-   //             = "C" In case of linear fitting, not calculate the chisquare
+   //             = "C" In case of linear fitting, do not calculate the chisquare
    //                    (saves time)
-   //             = "F" If fitting a polN, switch to minuit fitter
+   //             = "F" If fitting a polN, use the minuit fitter
    //             = "ROB" In case of linear fitting, compute the LTS regression
-   //                     coefficients (robust(resistant) regression), using
+   //                     coefficients (robust (resistant) regression), using
    //                     the default fraction of good points
    //               "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points
@@ -972,19 +972,19 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //
    //   Note that this function is called when calling TGraphErrors::Fit
    //   or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
-   //   see the discussion below on the errors calulation.
+   //   See the discussion below on error calulation.
    //
    // Linear fitting:
    //
    //   When the fitting function is linear (contains the "++" sign) or the fitting
    //   function is a polynomial, a linear fitter is initialised.
-   //   To create a linear function, use the following syntaxis: linear parts
+   //   To create a linear function, use the following syntax: linear parts
    //   separated by "++" sign.
    //   Example: to fit the parameters of "[0]*x + [1]*sin(x)", create a
    //    TF1 *f1=new TF1("f1", "x++sin(x)", xmin, xmax);
-   //   For such a TF1 you don't have to set the initial conditions
-   //   Going via the linear fitter for functions, linear in parameters, gives a considerable
-   //   advantage in speed.
+   //   For such a TF1 you don't have to set the initial conditions.
+   //   Going via the linear fitter for functions, linear in parameters, gives a 
+   //   considerable advantage in speed.
    //
    // Setting initial conditions:
    //
@@ -994,14 +994,14 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //   this automatic computation by specifying the option "B".
    //   You can specify boundary limits for some or all parameters via
    //        f1->SetParLimits(p_number, parmin, parmax);
-   //   if parmin>=parmax, the parameter is fixed
+   //   If parmin>=parmax, the parameter is fixed
    //   Note that you are not forced to fix the limits for all parameters.
    //   For example, if you fit a function with 6 parameters, you can do:
    //     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
    //     func->SetParLimits(4,-10,-4);
    //     func->SetParLimits(5, 1,1);
-   //   With this setup, parameters 0->3 can vary freely
-   //   Parameter 4 has boundaries [-10,-4] with initial value -8
+   //   With this setup, parameters 0->3 can vary freely.
+   //   Parameter 4 has boundaries [-10,-4] with initial value -8.
    //   Parameter 5 is fixed to 100.
    //
    // Fit range:
@@ -1018,11 +1018,14 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //   call the following functions:
    //     TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
    //   where MyFittingFunction is of type:
-   //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, 
+   //                                 Double_t *u, Int_t flag);
    //
-   // How errors are used in the chisquare function (see TFitter GraphFitChisquare)//   Access to the fit results
+   // How errors are used in the chisquare function (see TFitter GraphFitChisquare)
+   // 
+   //   Access to the fit results
    //
-   //   In case of a TGraphErrors object, ex, the error along x,  is projected
+   //   In case of a TGraphErrors object, ex, the error along x, is projected
    //   along the y-direction by calculating the function at the points x-exlow and
    //   x+exhigh.
    //
@@ -1032,15 +1035,16 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    // #frac{(y-f(x))^{2}}{ey^{2}+(#frac{1}{2}(exl+exh)f'(x))^{2}}
    // End_Latex
    //
-   //   where x and y are the point coordinates, and f'(x) is the derivative of function f(x).
+   //   where x and y are the point coordinates, and f'(x) is the derivative of the
+   //   function f(x).
    //
    //   In case the function lies below (above) the data point, ey is ey_low (ey_high).
    //
-   //   thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphasymmerrors
+   //   thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphAsymmErrors
    //             University of Washington
    //
    //   The approach used to approximate the uncertainty in y because of the
-   //   errors in x, is to make it equal the error in x times the slope of the line.
+   //   errors in x is to make it equal the error in x times the slope of the line.
    //   The improvement, compared to the first method (f(x+ exhigh) - f(x-exlow))/2
    //   is of (error of x)**2 order. This approach is called "effective variance method".
    //   This improvement has been made in version 4.00/08 by Anna Kreshuk.
@@ -1048,15 +1052,15 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    // NOTE:
    //   1) By using the "effective variance" method a simple linear regression
    //      becomes a non-linear case, which takes several iterations
-   //      instead of 0 as in the linear case .
+   //      instead of 0 as in the linear case.
    //
    //   2) The effective variance technique assumes that there is no correlation
-   //      between the x and y coordinate .
+   //      between the x and y coordinate.
    //
-   //   Note, that the linear fitter doesn't take into account the errors in x. If errors
+   //   Note that the linear fitter doesn't take into account the errors in x. If errors
    //   in x are important, go through minuit (use option "F" for polynomial fitting).
    //
-   //   3) When fitting a TGraph (ie no errors associated to each point),
+   //   3) When fitting a TGraph (i.e. no errors associated with each point),
    //   a correction is applied to the errors on the parameters with the following
    //   formula:
    //      errorp *= sqrt(chisquare/(ndf-1))
@@ -1064,15 +1068,14 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    // Associated functions:
    //
    //   One or more object (typically a TF1*) can be added to the list
-   //   of functions (fFunctions) associated to each graph.
+   //   of functions (fFunctions) associated with each graph.
    //   When TGraph::Fit is invoked, the fitted function is added to this list.
    //   Given a graph gr, one can retrieve an associated function
    //   with:  TF1 *myfunc = gr->GetFunction("myfunc");
    //
-   //   If the graph is made persistent, the list of
-   //   associated functions is also persistent. Given a pointer (see above)
-   //   to an associated function myfunc, one can retrieve the function/fit
-   //   parameters with calls such as:
+   //   If the graph is made persistent, the list of associated functions is also 
+   //   persistent. Given a pointer (see above) to an associated function myfunc, 
+   //   one can retrieve the function/fit parameters with calls such as:
    //     Double_t chi2 = myfunc->GetChisquare();
    //     Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
    //     Double_t err0 = myfunc->GetParError(0);  //error on first parameter
@@ -1098,9 +1101,9 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //
    //      Access to the fit status
    //      ========================
-   //   The function return the status of the fit (fitResult) in the following form
+   //   This function returns the status of the fit (fitResult) in the following form:
    //     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
-   //   The fitResult is 0 is the fit is OK.
+   //   The fitResult is 0 if the fit is OK.
    //   The fitResult is negative in case of an error not connected with the fit.
 
    return DoFit( f1 , option , goption, rxmin, rxmax);
