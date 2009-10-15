@@ -14,6 +14,8 @@
 #include "TEveVSDStructs.h"
 
 #include "TGLRnrCtx.h"
+#include "TGLCamera.h"
+#include "TGLPhysicalShape.h"
 #include "TGLIncludes.h"
 
 //==============================================================================
@@ -69,14 +71,34 @@ void TEvePolygonSetProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
 }
 
 //______________________________________________________________________________
-void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
+void TEvePolygonSetProjectedGL::DrawOutline() const
+{
+   // Draw polygons outline.
+
+   TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
+   if (refPS.fPols.size() == 0) return;
+
+   Int_t vi;
+   for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin();
+        i != refPS.fPols.end(); ++i)
+   {
+      glBegin(GL_LINE_LOOP);
+      for(Int_t k = 0; k < (*i).fNPnts; ++k)
+      {
+         vi = (*i).fPnts[k];
+         glVertex3fv(refPS.fPnts[vi].Arr());
+      }
+      glEnd();
+   }
+}
+
+//______________________________________________________________________________
+void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
    // Do GL rendering.
 
    TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
    if (refPS.fPols.size() == 0) return;
-
-   fMultiColor = (refPS.fFillColor != refPS.fLineColor);
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
 
@@ -85,6 +107,8 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    glEnable(GL_COLOR_MATERIAL);
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glDisable(GL_CULL_FACE);
+
+   fMultiColor = (refPS.fFillColor != refPS.fLineColor);
 
    // polygons
    glEnable(GL_POLYGON_OFFSET_FILL);
@@ -129,20 +153,62 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx & /*rnrCtx*/) const
    // outline
    TGLUtil::Color(refPS.fLineColor);
    glEnable(GL_LINE_SMOOTH);
-
    TGLUtil::LineWidth(refPS.fLineWidth);
-   Int_t vi;
-   for (TEvePolygonSetProjected::vpPolygon_ci i = refPS.fPols.begin();
-        i != refPS.fPols.end(); ++i)
-   {
-      glBegin(GL_LINE_LOOP);
-      for(Int_t k = 0; k < (*i).fNPnts; ++k)
-      {
-         vi = (*i).fPnts[k];
-         glVertex3fv(refPS.fPnts[vi].Arr());
-      }
-      glEnd();
-   }
+   DrawOutline();
 
    glPopAttrib();
+}
+
+//______________________________________________________________________________
+void TEvePolygonSetProjectedGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp) const
+{
+   // Draw polygons in highlight mode.
+
+   TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
+
+   if (refPS.GetHighlightFrame())
+   {
+      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
+      glDisable(GL_LIGHTING);
+      glEnable(GL_LINE_SMOOTH);
+
+      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
+
+      const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
+      Int_t inner[4][2] = { { 0,-1}, { 1, 0}, { 0, 1}, {-1, 0} };
+      Int_t outer[8][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
+                            { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
+
+      rnrCtx.SetHighlightOutline(kTRUE);
+      TGLUtil::LockColor();
+      Int_t first_outer = (rnrCtx.CombiLOD() == TGLRnrCtx::kLODHigh) ? 0 : 4;
+      for (int i = first_outer; i < 8; ++i)
+      {
+         glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
+         DrawOutline();
+      }
+      TGLUtil::UnlockColor();
+      rnrCtx.SetHighlightOutline(kFALSE);
+
+      TGLUtil::Color(refPS.fLineColor);
+      for (int i = 0; i < 4; ++i)
+      {
+         glViewport(vp.X() + inner[i][0], vp.Y() + inner[i][1], vp.Width(), vp.Height());
+         DrawOutline();
+      }
+      glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
+
+      pshp->SetupGLColors(rnrCtx);
+      Float_t dr[2];
+      glGetFloatv(GL_DEPTH_RANGE,dr);
+      glDepthRange(dr[0], 0.5*dr[1]);
+      DrawOutline();
+      glDepthRange(dr[0], dr[1]);
+
+      glPopAttrib();
+   }
+   else
+   {
+      TGLLogicalShape::DrawHighlight(rnrCtx, pshp);
+   }
 }

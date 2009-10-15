@@ -59,7 +59,9 @@ TEvePolygonSetProjected::TEvePolygonSetProjected(const char* n, const char* t) :
 
    fFillColor(5),
    fLineColor(3),
-   fLineWidth(1)
+   fLineWidth(1),
+
+   fHighlightFrame(kTRUE)
 {
    // Constructor.
 

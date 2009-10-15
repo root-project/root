@@ -78,6 +78,8 @@ protected:
    Color_t      fLineColor; // outline color of polygons
    Float_t      fLineWidth; // outline width of polygons
 
+   Bool_t       fHighlightFrame; // higlight mode
+
 public:
    TEvePolygonSetProjected(const char* n="TEvePolygonSetProjected", const char* t="");
    virtual ~TEvePolygonSetProjected();
@@ -103,10 +105,12 @@ public:
    virtual Color_t GetFillColor() const { return fFillColor; }
    virtual Color_t GetLineColor() const { return fLineColor; }
    virtual Float_t GetLineWidth() const { return fLineWidth;}
+   virtual Bool_t  GetHighlightFrame() const { return fHighlightFrame; }
 
    virtual void    SetFillColor(Color_t c)  { fFillColor = c; }
    virtual void    SetLineColor(Color_t c)  { fLineColor = c; }
    virtual void    SetLineWidth(Float_t lw) { fLineWidth = lw;}
+   virtual void    SetHighlightFrame(Bool_t f) { fHighlightFrame = f; }
 
    ClassDef(TEvePolygonSetProjected,0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
 

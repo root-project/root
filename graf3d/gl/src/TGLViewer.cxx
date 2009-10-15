@@ -549,12 +549,14 @@ void TGLViewer::DoDraw()
    if (fFader < 1)
    {
       RenderNonSelected();
+      RenderSelected();
       DrawGuides();
       RenderOverlay();
 
       glClear(GL_DEPTH_BUFFER_BIT);
+      fRnrCtx->SetHighlight(kTRUE);
       RenderSelected();
-
+      fRnrCtx->SetHighlight(kFALSE);
       glClear(GL_DEPTH_BUFFER_BIT);
       DrawDebugInfo();
    }

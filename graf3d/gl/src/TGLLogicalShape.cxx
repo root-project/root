@@ -5,6 +5,7 @@
 #include "TGLPhysicalShape.h"
 #include "TGLRnrCtx.h"
 #include "TGLScene.h"
+#include "TGLCamera.h"
 #include "TGLSelectRecord.h"
 #include "TGLContext.h"
 #include "TGLIncludes.h"
@@ -268,7 +269,7 @@ Bool_t TGLLogicalShape::SetDLCache(Bool_t cache)
 }
 
 //______________________________________________________________________________
-Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
+Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
    // Returns kTRUE if draws should be display list cached
    // kFALSE otherwise.
@@ -360,7 +361,7 @@ Short_t TGLLogicalShape::QuantizeShapeLOD(Short_t shapeLOD,
 }
 
 //______________________________________________________________________________
-void TGLLogicalShape::Draw(TGLRnrCtx & rnrCtx) const
+void TGLLogicalShape::Draw(TGLRnrCtx& rnrCtx) const
 {
    // Draw the GL drawable, using draw flags. If DL caching is enabled
    // (see SetDLCache) then attempt to draw from the cache, if not found
@@ -414,9 +415,47 @@ entry_point:
    }
 }
 
+//______________________________________________________________________________
+void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx,const TGLPhysicalShape* pshp) const
+{
+   // Draw the logical shape in highlight mode.
+
+   const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
+   Int_t inner[4][2] = { { 0,-1}, { 1, 0}, { 0, 1}, {-1, 0} };
+   Int_t outer[8][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
+                         { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
+
+   rnrCtx.SetHighlightOutline(kTRUE);
+   TGLUtil::LockColor();
+   Int_t first_outer = (rnrCtx.CombiLOD() == TGLRnrCtx::kLODHigh) ? 0 : 4;
+   for (int i = first_outer; i < 8; ++i)
+   {
+      glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
+      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
+      Draw(rnrCtx);
+   }
+   TGLUtil::UnlockColor();
+   rnrCtx.SetHighlightOutline(kFALSE);
+
+   pshp->SetupGLColors(rnrCtx);
+   for (int i = 0; i < 4; ++i)
+   {
+      glViewport(vp.X() + inner[i][0], vp.Y() + inner[i][1], vp.Width(), vp.Height());
+      glColor4fv(pshp->Color());
+      Draw(rnrCtx);
+   }
+   glViewport(vp.X(), vp.Y(), vp.Width(), vp.Height());
+
+   pshp->SetupGLColors(rnrCtx);
+   Float_t dr[2];
+   glGetFloatv(GL_DEPTH_RANGE,dr);
+   glDepthRange(dr[0], 0.5*dr[1]);
+   Draw(rnrCtx);
+   glDepthRange(dr[0], dr[1]);
+}
 
 //______________________________________________________________________________
-void TGLLogicalShape::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
+void TGLLogicalShape::ProcessSelection(TGLRnrCtx& /*rnrCtx*/, TGLSelectRecord& rec)
 {
    // Virtual method called-back after a secondary selection hit
    // is recorded (see TGLViewer::HandleButton(), Ctrl-Button1).
@@ -432,7 +471,7 @@ void TGLLogicalShape::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord &
 }
 
 //______________________________________________________________________________
-void TGLLogicalShape::InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const
+void TGLLogicalShape::InvokeContextMenu(TContextMenu& menu, UInt_t x, UInt_t y) const
 {
    // Invoke popup menu or our bound external TObject (if any), using passed
    // 'menu' object, at location 'x' 'y'

@@ -46,7 +46,7 @@ public:
 
 protected:
    mutable UInt_t             fRef;           //! physical instance ref counting
-   mutable TGLPhysicalShape * fFirstPhysical; //! first replica
+   mutable TGLPhysicalShape  *fFirstPhysical; //! first replica
 
    TObject           *fExternalObj; //! Also plays the role of ID.
    TGLBoundingBox     fBoundingBox; //! Shape's bounding box.
@@ -74,15 +74,15 @@ public:
    void   DestroyPhysicals();
    UInt_t UnrefFirstPhysical();
 
-   const TGLPhysicalShape * GetFirstPhysical() const { return fFirstPhysical; }
+   const TGLPhysicalShape* GetFirstPhysical() const { return fFirstPhysical; }
 
-   TObject  * ID()          const { return fExternalObj; }
-   TObject  * GetExternal() const { return fExternalObj; }
-   TGLScene * GetScene()    const { return fScene; }
+   TObject*  ID()          const { return fExternalObj; }
+   TObject*  GetExternal() const { return fExternalObj; }
+   TGLScene* GetScene()    const { return fScene; }
 
-   const TGLBoundingBox & BoundingBox() const { return fBoundingBox; }
-   virtual void           UpdateBoundingBox() {}
-   void                   UpdateBoundingBoxesOfPhysicals();
+   const TGLBoundingBox& BoundingBox() const { return fBoundingBox; }
+   virtual void          UpdateBoundingBox() {}
+   void                  UpdateBoundingBoxesOfPhysicals();
 
    // Display List Caching
            Bool_t SetDLCache(Bool_t cached);
@@ -94,8 +94,10 @@ public:
 
    virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
    virtual Short_t  QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const;
-   virtual void     Draw(TGLRnrCtx & rnrCtx) const;
-   virtual void     DirectDraw(TGLRnrCtx & rnrCtx) const = 0; // Actual draw method (non DL cached)
+   virtual void     Draw(TGLRnrCtx& rnrCtx) const;
+   virtual void     DirectDraw(TGLRnrCtx& rnrCtx) const = 0; // Actual draw method (non DL cached)
+
+   virtual void     DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp) const;
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kFALSE; }
 
@@ -103,7 +105,7 @@ public:
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
    // Override in sub-classes that support secondary selection (e.g. TPointSet3DGL).
    virtual Bool_t SupportsSecondarySelect() const { return kFALSE; }
-   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+   virtual void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec);
 
    void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
 

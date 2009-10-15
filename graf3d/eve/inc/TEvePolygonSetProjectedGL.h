@@ -23,9 +23,14 @@ public:
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
    virtual void   Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
+
+   virtual void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp) const;
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+
+private:
+   void DrawOutline() const;
 
    ClassDef(TEvePolygonSetProjectedGL,0);  // GL-renderer for TEvePolygonSetProjected class.
 };
