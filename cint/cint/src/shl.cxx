@@ -866,6 +866,7 @@ int G__shl_load(char *shlfile)
     }
     else {
       G__shl_load_error(shlfile,"Load Error");
+      G__sl_handle.pop_back();
       --G__allsl;
       return(-1);
     }
