@@ -104,6 +104,7 @@ extern El_in_key_hook_t rl_in_key_hook;
 /* supported functions */
 char* readline(const char*, bool newline);
 int rl_initialize(void);
+bool rl_isinitialized();
 
 void setEcho(bool echo);
 void termResize(void);

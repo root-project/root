@@ -249,7 +249,11 @@ const char* hist_file;  // file name for the command history (read and write)
 namespace {
    struct WriteHistoryTrigger_t {
       ~WriteHistoryTrigger_t() {
-         write_history(hist_file);
+         if (rl_isinitialized()) {
+            // Only write history if editline was actually used.
+            // It might be uninitialized when libCore was loaded into python.
+            write_history(hist_file);
+         }
       }
    };
 }

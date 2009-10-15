@@ -177,6 +177,11 @@ _move_history(int op) {
 }
 
 
+bool
+rl_isinitialized() {
+   return gEditLine != NULL;
+}
+
 /*
  * READLINE compatibility stuff
  */
