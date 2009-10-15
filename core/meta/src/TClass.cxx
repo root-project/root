@@ -2019,6 +2019,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // Static method returning pointer to TClass of the specified class name.
    // If load is true an attempt is made to obtain the class by loading
    // the appropriate shared library (directed by the rootmap file).
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
    // Returns 0 in case class is not found.
 
    if (!name || !strlen(name)) return 0;
@@ -2093,8 +2095,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (!load) return 0;
 
    TClass *loadedcl = 0;
-   if (cl) loadedcl = gROOT->LoadClass(cl->GetName());
-   else    loadedcl = gROOT->LoadClass(name);
+   if (cl) loadedcl = gROOT->LoadClass(cl->GetName(),silent);
+   else    loadedcl = gROOT->LoadClass(name,silent);
 
    if (loadedcl) return loadedcl;
 

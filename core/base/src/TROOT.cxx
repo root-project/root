@@ -879,21 +879,21 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 }
 
 //______________________________________________________________________________
-TClass *TROOT::GetClass(const char *name, Bool_t load) const
+TClass *TROOT::GetClass(const char *name, Bool_t load, Bool_t silent) const
 {
    // Return pointer to class with name. Obsolete, use TClass::GetClass directly
 
-   return TClass::GetClass(name,load);
+   return TClass::GetClass(name,load,silent);
 }
 
 
 //______________________________________________________________________________
-TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
+TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load, Bool_t silent) const
 {
    // Return pointer to class from its name. Obsolete, use TClass::GetClass directly
    // See TClass::GetClass
 
-   return TClass::GetClass(typeinfo,load);
+   return TClass::GetClass(typeinfo,load,silent);
 }
 
 //______________________________________________________________________________
@@ -1279,11 +1279,13 @@ void TROOT::InitThreads()
 }
 
 //______________________________________________________________________________
-TClass *TROOT::LoadClass(const char *classname) const
+TClass *TROOT::LoadClass(const char *classname, Bool_t silent) const
 {
    // Helper function used by TClass::GetClass().
    // This function attempts to load the dictionary for 'classname'
    // either from the TClassTable or from the list of generator.
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
 
    // This function does not (and should not) attempt to check in the
    // list of load classes or in the typedef.
@@ -1297,7 +1299,7 @@ TClass *TROOT::LoadClass(const char *classname) const
       // Try with Long64_t instead of long long
       long64name = TClassEdit::GetLong64_Name(classname);
       if (long64name != classname) {
-         TClass *res = LoadClass(long64name.Data());
+         TClass *res = LoadClass(long64name.Data(),silent);
          if (res) return res;
       } else {
          long64name.Clear();
@@ -1319,7 +1321,7 @@ TClass *TROOT::LoadClass(const char *classname) const
             // Try the typedefs again.
             
             if (long64name.Length()) {
-               TClass *res = LoadClass(long64name.Data());
+               TClass *res = LoadClass(long64name.Data(),silent);
                if (res) return res;
             }
             if (resolved.Length()) {
@@ -1333,7 +1335,7 @@ TClass *TROOT::LoadClass(const char *classname) const
       // The dictionary generation might change/delete classname
       TString clname(classname);
       (dict)();
-      TClass *ncl = TClass::GetClass(clname, kFALSE);
+      TClass *ncl = TClass::GetClass(clname, kFALSE, silent);
       if (ncl) ncl->PostLoadCheck();
       return ncl;
    }
@@ -1341,7 +1343,7 @@ TClass *TROOT::LoadClass(const char *classname) const
    TIter next(fClassGenerators);
    TClassGenerator *gen;
    while ((gen = (TClassGenerator*) next())) {
-      TClass *cl = gen->GetClass(classname, kTRUE);
+      TClass *cl = gen->GetClass(classname, kTRUE, silent);
       if (cl) {
          cl->PostLoadCheck();
          return cl;

@@ -151,8 +151,8 @@ public:
    TPluginManager   *GetPluginManager() const { return fPluginManager; }
    TApplication     *GetApplication() const { return fApplication; }
    TInterpreter     *GetInterpreter() const { return fInterpreter; }
-   TClass           *GetClass(const char *name, Bool_t load = kTRUE) const;
-   TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE) const;
+   TClass           *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
+   TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
    TColor           *GetColor(Int_t color) const;
    const char       *GetConfigOptions() const { return fConfigOptions; }
    const char       *GetCutClassName() const { return fCutClassName; }
@@ -221,7 +221,7 @@ public:
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
-   TClass           *LoadClass(const char *name) const;
+   TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
    Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
    Long_t            Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
    TCanvas          *MakeDefCanvas() const;
