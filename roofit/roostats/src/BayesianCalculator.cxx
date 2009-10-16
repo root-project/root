@@ -40,6 +40,7 @@ BayesianCalculator::BayesianCalculator() :
   fPdf(0),
   fPriorPOI(0),
   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0), 
+  fInterval(0),
   fSize(0.05)
 {
    // default constructor
@@ -57,6 +58,7 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
   fPOI(POI),
   fPriorPOI(&priorPOI),
   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
+  fInterval(0),
   fSize(0.05)
 {
    // constructor
@@ -69,6 +71,7 @@ BayesianCalculator::BayesianCalculator( RooAbsData& data,
    fPdf(model.GetPdf()),
    fPriorPOI( model.GetPriorPdf()),
    fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
+   fInterval(0),
    fSize(0.05)
 {
    // constructor from Model Config
