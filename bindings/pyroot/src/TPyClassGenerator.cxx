@@ -139,7 +139,7 @@ namespace {
 //- public members -----------------------------------------------------------
 TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 {
-   GetClass( name, load, kFALSE );
+   return GetClass( name, load, kFALSE );
 }
 
 //- public members -----------------------------------------------------------
