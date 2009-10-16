@@ -3759,7 +3759,7 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
       fprintf(fp,"#endif\n");
       fprintf(fp,"\n");
 
-#if defined(__GNUC__)  && !defined(__INTEL_COMPILER)
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
       fprintf(fp,"#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)\n");
       fprintf(fp,"#pragma GCC diagnostic ignored \"-Wstrict-aliasing\"\n");
       fprintf(fp,"#endif\n");

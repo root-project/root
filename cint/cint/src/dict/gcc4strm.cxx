@@ -11,7 +11,7 @@
 #undef free
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
 

@@ -67,7 +67,7 @@ template <> inline int & G__value_ref<int>(G__value  & buf){ return buf.obj.in;}
 template <> inline long & G__value_ref<long>(G__value  & buf){ return buf.obj.i;}
 template <> inline long long & G__value_ref<long long>(G__value  & buf){ return buf.obj.ll;}
 
-#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif // __GNUC__ && __GNUC__ > 3 && __GNUC_MINOR__ > 1
 template <> inline bool & G__value_ref<bool>(G__value  & buf)
@@ -76,7 +76,7 @@ template <> inline bool & G__value_ref<bool>(G__value  & buf)
 #else
 { return (bool&)buf.obj.uch; }
 #endif
-#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)
+#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic warning "-Wstrict-aliasing"
 #endif // __GNUC__ && __GNUC__ > 3 && __GNUC_MINOR__ > 1
 
