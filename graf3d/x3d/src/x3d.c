@@ -501,7 +501,7 @@ int x = 5, y = 5;
    XSetFillStyle(g->dpy, g->helpGc, FillOpaqueStippled);
 
    DrawLogo(g, (XTextWidth(g->font, LONGESTSTRING, strlen(LONGESTSTRING)) /
-   strlen(LONGESTSTRING)) / 2, FONTHEIGHT(g->font) / 3);
+   (int)strlen(LONGESTSTRING)) / 2, FONTHEIGHT(g->font) / 3);
 
    XSetFillStyle(g->dpy, g->helpGc, FillSolid);
 
