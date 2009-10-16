@@ -69,10 +69,10 @@ endif
 endif
 
 ifeq ($(ICC_MAJOR),11)
-CXXFLAGS     += -wd1572 -wd873 -wd672
-CFLAGS       += -wd1572
-CINTCXXFLAGS += -wd1572 -wd873
-CINTCFLAGS   += -wd1572
+CXXFLAGS     += -wd1572 -wd873 -wd672 -wd279
+CFLAGS       += -wd1572 -wd279
+CINTCXXFLAGS += -wd1572 -wd873 -wd279
+CINTCFLAGS   += -wd1572 -wd279
 USE_PCH       = -pch-use
 CREATE_PCH    = -pch-create
 ICC_GE_9      = 11
