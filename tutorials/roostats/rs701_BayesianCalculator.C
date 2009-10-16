@@ -24,6 +24,7 @@ using namespace RooStats;
 void rs701_BayesianCalculator()
 {
 
+/*
   RooWorkspace* w = new RooWorkspace("w",true);
   w->factory("SUM::pdf(s[0,15]*Uniform(x[0,1]),b[0.001,0,2]*Uniform(x))");
   w->factory("Gaussian::prior_b(b,0.001,1)");
@@ -45,7 +46,7 @@ void rs701_BayesianCalculator()
   std::cout << "90% CL interval: [ " << interval->LowerLimit() << " - " << interval->UpperLimit() << " ] or 95% CL limits\n";
   RooPlot * plot = bcalc.GetPosteriorPlot();
   plot->Draw();
-
+*/
   
   // observe one event while expecting one background event -> the 95% CL upper limit on s is 4.10
   // observe one event while expecting zero background event -> the 95% CL upper limit on s is 4.74
