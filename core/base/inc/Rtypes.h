@@ -154,7 +154,7 @@ const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
 
 //--- bit manipulation ---------------------------------------------------------
 
-#define BIT(n)       (1 << (n))
+#define BIT(n)       (R__ULL(1) << (n))
 #define SETBIT(n,i)  ((n) |= BIT(i))
 #define CLRBIT(n,i)  ((n) &= ~BIT(i))
 #define TESTBIT(n,i) ((Bool_t)(((n) & BIT(i)) != 0))

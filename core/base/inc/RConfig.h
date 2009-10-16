@@ -549,8 +549,10 @@
 
 #if defined(R__WIN32) || defined(__CINT__)
 #define R__LL(longlong) longlong
+#define R__ULL(ulonglong) ulonglong
 #else
 #define R__LL(longlong) _NAME2_(longlong,LL)
+#define R__ULL(ulonglong) _NAME2_(ulonglong,ULL)
 #endif
 
 #endif
