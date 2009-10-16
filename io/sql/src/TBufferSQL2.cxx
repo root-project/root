@@ -399,7 +399,7 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
             findptr = kTRUE; 
          } else {
             if ((fObjMap!=0) && (objid>=fFirstObjId)) {
-               void* obj1 = (void*) fObjMap->GetValue((Long_t) objid - fFirstObjId);
+               void* obj1 = (void*) (Long_t)fObjMap->GetValue((Long_t) objid - fFirstObjId);
                if (obj1!=0) {
                   obj = obj1;
                   findptr = kTRUE;

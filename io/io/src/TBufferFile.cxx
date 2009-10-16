@@ -2225,7 +2225,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    // (this can only happen when called via CheckObject())
    char *obj;
    if (fVersion > 0) {
-      obj = (char *) fMap->GetValue(startpos+kMapOffset);
+      obj = (char *) (Long_t)fMap->GetValue(startpos+kMapOffset);
       if (obj == (void*) -1) obj = 0;
       if (obj) {
          CheckByteCount(startpos, tag, (TClass*)0);
@@ -2257,8 +2257,8 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
             // exception
          }
       }
-      obj = (char *) fMap->GetValue(tag);
-      clRef = (TClass*) fClassMap->GetValue(tag);
+      obj = (char *) (Long_t)fMap->GetValue(tag);
+      clRef = (TClass*) (Long_t)fClassMap->GetValue(tag);
 
       if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
          //baseOffset will be -1 if clRef does not inherit from clCast.
@@ -2484,7 +2484,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       // add class to fMap for later reference
       if (fVersion > 0) {
          // check if class was already read
-         TClass *cl1 = (TClass *)fMap->GetValue(startpos+kMapOffset);
+         TClass *cl1 = (TClass *)(Long_t)fMap->GetValue(startpos+kMapOffset);
          if (cl1 != cl)
             MapObject(cl ? cl : (TObject*) -1, startpos+kMapOffset);
       } else
@@ -2507,7 +2507,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       }
 
       // class can be 0 if dictionary was not found
-      cl = (TClass *)fMap->GetValue(clTag);
+      cl = (TClass *)(Long_t)fMap->GetValue(clTag);
    }
 
    if (cl && clReq &&
@@ -2910,8 +2910,8 @@ void TBufferFile::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) con
       ptr = 0;
       ClassPtr = 0;
    } else {
-      ptr = (void*)fMap->GetValue(tag);
-      ClassPtr = (TClass*) fClassMap->GetValue(tag);
+      ptr = (void*)(Long_t)fMap->GetValue(tag);
+      ClassPtr = (TClass*) (Long_t)fClassMap->GetValue(tag);
    }
 }
 

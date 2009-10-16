@@ -499,7 +499,7 @@ Bool_t TBufferXML::ProcessPointer(const void* ptr, XMLNodePointer_t node)
 
       ULong_t hash = TString::Hash(&ptr, sizeof(void*));
 
-      XMLNodePointer_t refnode = (XMLNodePointer_t) fObjMap->GetValue(hash, (Long_t) ptr);
+      XMLNodePointer_t refnode = (XMLNodePointer_t) (Long_t)fObjMap->GetValue(hash, (Long_t) ptr);
       if (refnode==0) return kFALSE;
 
       if (fXML->HasAttr(refnode, xmlio::Ref))
@@ -561,7 +561,7 @@ Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void* &ptr, TClass* &cl
 
    TNamed* obj = (TNamed*) fIdArray->FindObject(ptrid);
    if (obj) {
-      ptr = (void*) fObjMap->GetValue((Long_t) fIdArray->IndexOf(obj));
+      ptr = (void*) (Long_t)fObjMap->GetValue((Long_t) fIdArray->IndexOf(obj));
       cl = TClass::GetClass(obj->GetTitle());
       return kTRUE;
    }

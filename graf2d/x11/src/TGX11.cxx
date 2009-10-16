@@ -250,7 +250,7 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
    Long64_t key, value;
    TExMapIter it(org.fColors);
    while (it.Next(key, value)) {
-      XColor_t *colo = (XColor_t *) value;
+      XColor_t *colo = (XColor_t *) (Long_t)value;
       XColor_t *col  = new XColor_t;
       col->fPixel   = colo->fPixel;
       col->fRed     = colo->fRed;
@@ -273,7 +273,7 @@ TGX11::~TGX11()
    Long64_t key, value;
    TExMapIter it(fColors);
    while (it.Next(key, value)) {
-      XColor_t *col = (XColor_t *) value;
+      XColor_t *col = (XColor_t *) (Long_t)value;
       delete col;
    }
    delete fColors;
@@ -842,7 +842,7 @@ XColor_t &TGX11::GetColor(Int_t cid)
    // Return reference to internal color structure associated
    // to color index cid.
 
-   XColor_t *col = (XColor_t*) fColors->GetValue(cid);
+   XColor_t *col = (XColor_t*) (Long_t)fColors->GetValue(cid);
    if (!col) {
       col = new XColor_t;
       fColors->Add(cid, (Long_t) col);
