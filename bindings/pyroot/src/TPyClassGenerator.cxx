@@ -139,7 +139,13 @@ namespace {
 //- public members -----------------------------------------------------------
 TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 {
-// called if all other class generators failed, attempt to build from python class
+   GetClass( name, load, kFALSE );
+}
+
+//- public members -----------------------------------------------------------
+TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silent )
+{
+   // called if all other class generators failed, attempt to build from python class
    if ( PyROOT::gDictLookupActive == kTRUE )
       return 0;                              // call originated from python
 
@@ -157,8 +163,8 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
    clName = clName.substr( pos+1, std::string::npos );
 
 // ROOT doesn't know about python modules; the class may exist (TODO: add scopes)
-   if ( TClass::GetClass( clName.c_str() ) )
-      return TClass::GetClass( clName.c_str() );
+   if ( TClass::GetClass( clName.c_str(), load, silent ) )
+      return TClass::GetClass( clName.c_str(), load, silent );
 
 // locate and get class
    PyObject* mod = PyImport_AddModule( const_cast< char* >( mdName.c_str() ) );
@@ -228,12 +234,17 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 // done, let ROOT manage the new class
    Py_DECREF( pyclass );
 
-   TClass* klass = new TClass( clName.c_str() );
+   TClass* klass = new TClass( clName.c_str(), silent );
    TClass::AddClass( klass );
 
    return klass;
 }
 
+//____________________________________________________________________________
+TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load, Bool_t silent )
+{
+   return GetClass( typeinfo.name(), load, silent );
+}
 //____________________________________________________________________________
 TClass* TPyClassGenerator::GetClass( const type_info& typeinfo, Bool_t load )
 {

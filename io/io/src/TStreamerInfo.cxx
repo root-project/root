@@ -2922,6 +2922,7 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
    if (!rules) return;
 
    TIter next(fElements);
+   UInt_t count = 0;
 
    for(Int_t art = 0; art < rules->GetEntries(); ++art) {
       ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
@@ -2943,29 +2944,43 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
       }
       if (!match) {
          TStreamerArtificial *newel;
-         TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
-         if (objstr) {
-            TString newName = objstr->String();
-            if ( fClass->GetDataMember( newName ) ) {
-               newel = new TStreamerArtificial(newName,"", 
-                  fClass->GetDataMemberOffset(newName), TStreamerInfo::kArtificial, 
-                  fClass->GetDataMember( newName )->GetTypeName());
-               newel->SetReadFunc( rule->GetReadFunctionPointer() );
-               newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-               fElements->Add(newel);
-            } else {
-               // This would be a completely new member (so it would need to be cached)
-               // TOBEDONE
-            }
-            for(Int_t other = 1; other < rule->GetTarget()->GetEntries(); ++other) {
-               objstr = (TObjString*)(rule->GetTarget()->At(other));
-               if (objstr) {
-                  newName = objstr->String();
-                  if ( fClass->GetDataMember( newName ) ) {
-                     newel = new TStreamerArtificial(newName,"", 
-                        fClass->GetDataMemberOffset(newName), TStreamerInfo::kArtificial, 
-                        fClass->GetDataMember( newName )->GetTypeName());
-                     fElements->Add(newel);
+         if (rule->GetTarget()==0) {
+            TString newName;
+            newName.Form("%s_rule%d",fClass->GetName(),count);
+            newel = new TStreamerArtificial(newName,"", 
+                                            fClass->GetDataMemberOffset(newName), 
+                                            TStreamerInfo::kArtificial, 
+                                            "void");
+            newel->SetReadFunc( rule->GetReadFunctionPointer() );
+            newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
+            fElements->Add(newel);
+         } else {
+            TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
+            if (objstr) {
+               TString newName = objstr->String();
+               if ( fClass->GetDataMember( newName ) ) {
+                  newel = new TStreamerArtificial(newName,"", 
+                                                  fClass->GetDataMemberOffset(newName),
+                                                  TStreamerInfo::kArtificial, 
+                                                  fClass->GetDataMember( newName )->GetTypeName());
+                  newel->SetReadFunc( rule->GetReadFunctionPointer() );
+                  newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
+                  fElements->Add(newel);
+               } else {
+                  // This would be a completely new member (so it would need to be cached)
+                  // TOBEDONE
+               }
+               for(Int_t other = 1; other < rule->GetTarget()->GetEntries(); ++other) {
+                  objstr = (TObjString*)(rule->GetTarget()->At(other));
+                  if (objstr) {
+                     newName = objstr->String();
+                     if ( fClass->GetDataMember( newName ) ) {
+                        newel = new TStreamerArtificial(newName,"", 
+                                                        fClass->GetDataMemberOffset(newName),
+                                                        TStreamerInfo::kArtificial, 
+                                                        fClass->GetDataMember( newName )->GetTypeName());
+                        fElements->Add(newel);
+                     }
                   }
                }
             } // For each target of the rule
