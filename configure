@@ -1274,6 +1274,9 @@ if test "x$platform" = "xmacosx" ; then
    if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 5 ]; then
       macosx105=yes
    fi
+   if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 6 ]; then
+      macosx106=yes
+   fi
 fi
 
 ######################################################################
@@ -5027,6 +5030,9 @@ if test ! "x$enable_editline" = "xno" ; then
 fi
 if test ! "x$enable_editline_explicit" = "x" ; then
    rm -f core/rint/src/TRint.o core/rint/src/TRint.d
+fi
+if test ! "x$macosx106" = "x"; then
+   rm -f bin/python64 bin/ruby64
 fi
 rm -f lib/libRXML* bin/libRXML* etc/system.rootmap
 rm -f lib/libProofGui* bin/libProofGui*
