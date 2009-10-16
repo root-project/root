@@ -88,6 +88,8 @@ public:
    const TGPicture     *GetPicture() const { return fBase; }
    TImage              *GetImage() const { return fImage; }
    Float_t              GetPeakVal() const { return fPeakVal; }
+   Float_t              GetScaleMin() const { return fScaleMin; }
+   Float_t              GetScaleMax() const { return fScaleMax; }
    Bool_t               IsThresholdActive() { return fThresholdActive; }
 
    void Build();
