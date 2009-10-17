@@ -169,7 +169,7 @@ void TMVA::MethodMLP::DeclareOptions()
    DeclareOptionRef(fBatchSize=-1, "BatchSize", 
                     "Batch size: number of events/batch, only set if in Batch Mode, -1 for BatchSize=number_of_events");
 
-   DeclareOptionRef(fImprovement=1e-100, "ConvergenceImprove", 
+   DeclareOptionRef(fImprovement=1e-30, "ConvergenceImprove", 
                     "Minimum improvement which counts as improvement (<0 means automatic convergence check is turned off)");
 
    DeclareOptionRef(fSteps=-1, "ConvergenceTests", 
