@@ -26,14 +26,14 @@
 ClassImp(TClassGenerator);
 
 //////////////////////////////////////////////////////////////////////////
-TClass *TClassGenerator::GetClass(const char* classname, Bool_t load, Bool_t silent)
+TClass *TClassGenerator::GetClass(const char* classname, Bool_t load, Bool_t /* silent */)
 {
    // Default implementation for backward compatibility ignoring the value of 'silent'
    return GetClass(classname,load);
 }
 
 //////////////////////////////////////////////////////////////////////////
-TClass *TClassGenerator::GetClass(const type_info& typeinfo, Bool_t load, Bool_t silent)
+TClass *TClassGenerator::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silent */)
 {
    // Default implementation for backward compatibility ignoring the value of 'silent'
    return GetClass(typeinfo,load);
