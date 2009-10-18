@@ -59,6 +59,8 @@ public:
                       kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY,
                       kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY };
 
+   enum ESecSelType { kNone, kAutomatic, kOnKeyMod1 };
+
 private:
    TGLViewer(const TGLViewer &);             // Not implemented
    TGLViewer & operator=(const TGLViewer &); // Not implemented
@@ -284,8 +286,10 @@ public:
    void DrawGuides();
    void DrawDebugInfo();
 
-   Bool_t RequestSelect(Int_t x, Int_t y, Bool_t trySecSel=kFALSE); // Cross thread select request
-   Bool_t DoSelect(Int_t x, Int_t y, Bool_t trySecSel=kFALSE);      // Window coords origin top left
+   Bool_t RequestSelect(Int_t x, Int_t y);          // Cross thread select request
+   Bool_t DoSelect(Int_t x, Int_t y);               // First level selecton (shapes/objects).
+   Bool_t RequestSecondarySelect(Int_t x, Int_t y); // Cross thread secondary select request
+   Bool_t DoSecondarySelect(Int_t x, Int_t y);      // Second level selecton (inner structure).
    void   ApplySelection();
 
    Bool_t RequestOverlaySelect(Int_t x, Int_t y); // Cross thread select request

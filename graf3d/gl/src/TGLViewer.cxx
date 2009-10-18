@@ -977,28 +977,26 @@ void TGLViewer::SwapBuffers() const
 }
 
 //______________________________________________________________________________
-Bool_t TGLViewer::RequestSelect(Int_t x, Int_t y, Bool_t trySecSel)
+Bool_t TGLViewer::RequestSelect(Int_t x, Int_t y)
 {
-   // Post request for select draw of viewer, picking objects round the WINDOW
-   // point (x,y).
-   // Request is directed via cross thread gVirtualGL object
+   // Post request for selection render pass viewer, picking objects
+   // around the window point (x,y).
 
    // Take select lock on scene immediately we enter here - it is released
-   // in the other (drawing) thread - see TGLViewer::Select()
-   // Removed when gVirtualGL removed
+   // in the other (drawing) thread - see TGLViewer::DoSelect()
 
    if ( ! TakeLock(kSelectLock)) {
       return kFALSE;
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSelect(%d, %d, %s)", this, x, y, trySecSel ? "kTRUE" : "kFALSE")));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSelect(%d, %d, %s)", this, x, y)));
    else
-      return DoSelect(x, y, trySecSel);
+      return DoSelect(x, y);
 }
 
 //______________________________________________________________________________
-Bool_t TGLViewer::DoSelect(Int_t x, Int_t y, Bool_t trySecSel)
+Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
 {
    // Perform GL selection, picking objects overlapping WINDOW
    // area described by 'rect'. Return kTRUE if selection should be
@@ -1043,68 +1041,81 @@ Bool_t TGLViewer::DoSelect(Int_t x, Int_t y, Bool_t trySecSel)
       fSelRec.Reset();
    }
 
-   if ( ! trySecSel)
+   ReleaseLock(kSelectLock);
+   return ! TGLSelectRecord::AreSameSelectionWise(fSelRec, fCurrentSelRec);
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::RequestSecondarySelect(Int_t x, Int_t y)
+{
+   // 
+   if (!gVirtualX->IsCmdThread())
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSecondarySelect(%d, %d, %s)", this, x, y)));
+   else
+      return DoSecondarySelect(x, y);
+}
+
+//______________________________________________________________________________
+Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
+{
+   // Secondary selection.
+
+   GLint nHits = 1;
+   //glGetIntegerv(GL_RENDER, &nHits);
+   if ( nHits < 1 || ! fSelRec.GetSceneInfo() || ! fSelRec.GetPhysShape() ||
+         ! fSelRec.GetPhysShape()->GetLogical()->SupportsSecondarySelect())
    {
-      ReleaseLock(kSelectLock);
-      return ! TGLSelectRecord::AreSameSelectionWise(fSelRec, fCurrentSelRec);
+      if (gDebug > 0)
+         Info("TGLViewer::SecondarySelect", "Skipping secondary selection "
+              "(nPrimHits=%d, sinfo=0x%lx, pshape=0x%lx).\n",
+              nHits, fSelRec.GetSceneInfo(), fSelRec.GetPhysShape());
+      fSecSelRec.Reset();
+      return kFALSE;
    }
 
-   //  Secondary selection.
+   TakeLock(kSelectLock);
+
+   TGLSceneInfo*    sinfo = fSelRec.GetSceneInfo();
+   TGLSceneBase*    scene = sinfo->GetScene();
+   TGLPhysicalShape* pshp = fSelRec.GetPhysShape();
+
+   SceneInfoList_t foo;
+   foo.push_back(sinfo);
+   fScenes.swap(foo);
+   fRnrCtx->BeginSelection(x, y, 3);
+   fRnrCtx->SetSecSelection(kTRUE);
+   glRenderMode(GL_SELECT);
+
+   PreRender();
+   fRnrCtx->SetSceneInfo(sinfo);
+   scene->PreRender(*fRnrCtx);
+   fRnrCtx->SetDrawPass(TGLRnrCtx::kPassFill);
+   fRnrCtx->SetShapeLOD(TGLRnrCtx::kLODHigh);
+   glPushName(pshp->ID());
+   // !!! Hack: does not use clipping and proper draw-pass settings.
+   pshp->Draw(*fRnrCtx);
+   glPopName();
+   scene->PostRender(*fRnrCtx);
+   fRnrCtx->SetSceneInfo(0);
+   PostRender();
+
+   Int_t nSecHits = glRenderMode(GL_RENDER);
+   fRnrCtx->EndSelection(nSecHits);
+   fScenes.swap(foo);
+
+   if (gDebug > 0) Info("TGLViewer::DoSelect", "Secondary select nSecHits=%d.", nSecHits);
+
+   ReleaseLock(kSelectLock);
+
+   if (nSecHits > 0)
    {
-      if ( nHits < 1 || ! fSelRec.GetSceneInfo() || ! fSelRec.GetPhysShape() ||
-           ! fSelRec.GetPhysShape()->GetLogical()->SupportsSecondarySelect())
-      {
-         if (gDebug > 0)
-            Info("TGLViewer::DoSelect", "Skipping secondary selection "
-                 "(nPrimHits=%d, sinfo=0x%lx, pshape=0x%lx).\n",
-                 nHits, fSelRec.GetSceneInfo(), fSelRec.GetPhysShape());
-         ReleaseLock(kSelectLock);
-         fSecSelRec.Reset();
-         return kFALSE;
-      }
-
-      TGLSceneInfo*    sinfo = fSelRec.GetSceneInfo();
-      TGLSceneBase*    scene = sinfo->GetScene();
-      TGLPhysicalShape* pshp = fSelRec.GetPhysShape();
-
-      SceneInfoList_t foo;
-      foo.push_back(sinfo);
-      fScenes.swap(foo);
-      fRnrCtx->BeginSelection(x, y, 3);
-      fRnrCtx->SetSecSelection(kTRUE);
-      glRenderMode(GL_SELECT);
-
-      PreRender();
-      fRnrCtx->SetSceneInfo(sinfo);
-      scene->PreRender(*fRnrCtx);
-      fRnrCtx->SetDrawPass(TGLRnrCtx::kPassFill);
-      fRnrCtx->SetShapeLOD(TGLRnrCtx::kLODHigh);
-      glPushName(pshp->ID());
-      // !!! Hack: does not use clipping and proper draw-pass settings.
-      pshp->Draw(*fRnrCtx);
-      glPopName();
-      scene->PostRender(*fRnrCtx);
-      fRnrCtx->SetSceneInfo(0);
-      PostRender();
-
-      Int_t nSecHits = glRenderMode(GL_RENDER);
-      fRnrCtx->EndSelection(nSecHits);
-      fScenes.swap(foo);
-
-      if (gDebug > 0) Info("TGLViewer::DoSelect", "Secondary select nSecHits=%d.", nSecHits);
-
-      ReleaseLock(kSelectLock);
-
-      if (nSecHits > 0)
-      {
-         fSecSelRec = fSelRec;
-         fSecSelRec.SetRawOnly(fRnrCtx->GetSelectBuffer()->RawRecord(0));
-         if (gDebug > 1) fSecSelRec.Print();
-         return kTRUE;
-      } else {
-         fSecSelRec.Reset();
-         return kFALSE;
-      }
+      fSecSelRec = fSelRec;
+      fSecSelRec.SetRawOnly(fRnrCtx->GetSelectBuffer()->RawRecord(0));
+      if (gDebug > 1) fSecSelRec.Print();
+      return kTRUE;
+   } else {
+      fSecSelRec.Reset();
+      return kFALSE;
    }
 }
 
@@ -1129,20 +1140,18 @@ void TGLViewer::ApplySelection()
 //______________________________________________________________________________
 Bool_t TGLViewer::RequestOverlaySelect(Int_t x, Int_t y)
 {
-   // Post request for select draw of viewer, picking objects round the WINDOW
-   // point (x,y).
-   // Request is directed via cross thread gVirtualGL object
+   // Post request for secondary selection rendering of selected object
+   // around the window point (x,y).
 
    // Take select lock on viewer immediately - it is released
-   // in the other (drawing) thread - see TGLViewer::Select().
-   // Removed when gVirtualGL removed
+   // in the other (drawing) thread - see TGLViewer::DoSecondarySelect().
 
    if ( ! TakeLock(kSelectLock)) {
       return kFALSE;
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSelect(%d, %d)", this, x, y)));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoOverlaySelect(%d, %d)", this, x, y)));
    else
       return DoOverlaySelect(x, y);
 }

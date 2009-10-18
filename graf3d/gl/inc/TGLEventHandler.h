@@ -47,6 +47,7 @@ protected:
    Bool_t            fMouseTimerRunning;
    Bool_t            fTooltipShown;
    Int_t             fTooltipPixelTolerance;
+   Int_t             fSecSelType; // secondary selection type
 
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
 
@@ -78,6 +79,9 @@ public:
 
    Int_t GetTooltipPixelTolerance()  const { return fTooltipPixelTolerance; }
    void  SetTooltipPixelTolerance(Int_t t) { fTooltipPixelTolerance = t; }
+
+   Int_t GetSecSelType()  const { return fSecSelType; }
+   void  SetSecSelType(Int_t t) { fSecSelType = t; }
 
    ClassDef(TGLEventHandler, 0); // Base-class and default implementation of event-handler for TGLViewer.
 };
