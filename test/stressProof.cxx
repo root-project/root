@@ -1657,7 +1657,7 @@ Int_t PT_AdminFunc(void *)
    gSystem->RedirectOutput(glogfile, "a", &gRH);
    TMacro macroLs(testLs);
    TString testLsLine = TString::Format("%s/testMacro.C", gsandbox.Data());
-   testLsLine.Remove(0, testLsLine.Index(".proof-tutorial")); // the first pat or <tmp> maybe sligthly different
+   testLsLine.Remove(0, testLsLine.Index(".proof-tutorial")); // the first part of <tmp> maybe sligthly different
    if (!macroLs.GetLineWith(testLsLine)) {
       printf("\n >>> Test failure: Ls: output not consistent (line: '%s')\n", testLsLine.Data());
       return -1;
@@ -1701,7 +1701,7 @@ Int_t PT_AdminFunc(void *)
    }
    if (strem.fSize != stloc.fSize) {
       // Stat failure
-      printf("\n >>> Test failure: stat sizes inconsistent\n");
+      printf("\n >>> Test failure: stat sizes inconsistent: %lld vs %lld (bytes)\n", strem.fSize, stloc.fSize);
       return -1;
    }
    PutPoint();
