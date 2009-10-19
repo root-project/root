@@ -1344,8 +1344,9 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
             break;
       }
       if (action != kFind) {
-         if (opt.length() > 0) { cmd += " "; cmd += opt; }
-         cmd += " "; cmd += fullpath;
+         if (cmd.length() > 0) cmd += " ";
+         if (opt.length() > 0) { cmd += opt; cmd += " ";}
+         cmd += fullpath;
       } else {
          cmd += " "; cmd += fullpath;
          if (opt.length() > 0) { cmd += " "; cmd += opt; }
