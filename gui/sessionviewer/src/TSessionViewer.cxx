@@ -545,7 +545,10 @@ void TSessionServerFrame::OnBtnConnectClicked()
       fViewer->GetActDesc()->fLogLevel   = fViewer->GetActDesc()->fProof->GetLogLevel();
       if (fViewer->GetActDesc()->fLogLevel < 0)
          fViewer->GetActDesc()->fLogLevel = 0;
-      fViewer->GetActDesc()->fAddress    = fViewer->GetActDesc()->fProof->GetMaster();
+      if (fViewer->GetActDesc()->fProof->IsLite())
+         fViewer->GetActDesc()->fAddress = "lite";
+      else
+         fViewer->GetActDesc()->fAddress = fViewer->GetActDesc()->fProof->GetMaster();
       fViewer->GetActDesc()->fConnected = kTRUE;
       fViewer->GetActDesc()->fProof->SetBit(TProof::kUsingSessionGui);
    }
@@ -2104,7 +2107,8 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
    fFrmMore->AddFrame(fTxtOptions = new TGTextEntry(fFrmMore,
          (const char *)0, 4), new TGTableLayoutHints(1, 2, 0, 1, 0, 17,
          0, 0, 8));
-   fTxtOptions->SetText("ASYN");
+   //fTxtOptions->SetText("ASYN");
+   fTxtOptions->SetText("");
 
    // add "Nb Entries" label and number entry
    fFrmMore->AddFrame(new TGLabel(fFrmMore, "Nb Entries :"),
@@ -3078,6 +3082,13 @@ void TSessionQueryFrame::OnBtnSubmit()
       fViewer->GetActDesc()->fProof->cd();
       // check if parameter file has been specified
       if (newquery->fChain) {
+         if (fViewer->GetActDesc()->fProof->IsLite()) {
+            newquery->fOptions = "";
+         }
+         // set query reference id
+         newquery->fReference= TString::Format("session-%s:q%d",
+                            fViewer->GetActDesc()->fProof->GetSessionTag(),
+                            fViewer->GetActDesc()->fProof->GetSeqNum()+1);
          if (newquery->fChain->IsA() == TChain::Class()) {
             // TChain case
             newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
@@ -3912,7 +3923,10 @@ void TSessionViewer::UpdateListOfProofs()
                if (p) {
                   newdesc->fConnected  = kTRUE;
                   newdesc->fAttached   = kTRUE;
-                  newdesc->fAddress    = p->GetMaster();
+                  if (p->IsLite())
+                     newdesc->fAddress = "lite";
+                  else
+                     newdesc->fAddress = p->GetMaster();
                   newdesc->fConfigFile = p->GetConfFile();
                   newdesc->fUserName   = p->GetUser();
                   newdesc->fPort       = p->GetPort();
@@ -3991,7 +4005,10 @@ void TSessionViewer::UpdateListOfProofs()
          newdesc->fLogLevel   = proof->GetLogLevel();
          if (newdesc->fLogLevel < 0)
             newdesc->fLogLevel = 0;
-         newdesc->fAddress    = proof->GetMaster();
+         if (proof->IsLite())
+            newdesc->fAddress = "lite";
+         else
+            newdesc->fAddress = proof->GetMaster();
          newdesc->fQueries    = new TList();
          newdesc->fPackages   = new TList();
          newdesc->fProof      = proof;
@@ -4054,7 +4071,10 @@ void TSessionViewer::UpdateListOfSessions()
             newdesc->fLogLevel   = proof->GetLogLevel();
             if (newdesc->fLogLevel < 0)
                newdesc->fLogLevel = 0;
-            newdesc->fAddress    = proof->GetMaster();
+            if (proof->IsLite())
+               newdesc->fAddress = "lite";
+            else
+               newdesc->fAddress = proof->GetMaster();
             newdesc->fProof      = proof;
          }
          else {
