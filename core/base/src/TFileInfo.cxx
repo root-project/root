@@ -325,7 +325,7 @@ void TFileInfo::Print(Option_t * /* option */) const
    TUrl *u;
    Printf(" === URLs ===");
    while ((u = (TUrl*)next()))
-     Printf(" URL:  %s", u->GetUrl());
+      Printf(" URL:  %s", u->GetUrl());
 
    TIter nextm(fMetaDataList);
    TObject *m = 0;   // can be any TObject not only TFileInfoMeta
