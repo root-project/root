@@ -237,7 +237,7 @@ int XrdProofdManager::CheckUser(const char *usr,
    // Return 0 if OK, -1 if not.
 
    su = 0;
-   // No 'root' logins
+   // User must be defined
    if (!usr || strlen(usr) <= 0) {
       e = "CheckUser: 'usr' string is undefined ";
       return -1;
@@ -298,17 +298,17 @@ int XrdProofdManager::CheckUser(const char *usr,
       // accepts connections from all group 'z2' except user 'jgrosseo' and from user 'ganis'
       // even if not belonging to group 'z2'.
 
-      bool usrok = 1;
+      bool grpok = 1;
       // Check unix group
       if (fAllowedGroups.Num() > 0) {
          // Reset the flag
-         usrok = 0;
+         grpok = 0;
          // Get full group info
          XrdProofGI gi;
          if (XrdProofdAux::GetGroupInfo(ui.fGid, gi) == 0) {
             int *st = fAllowedGroups.Find(gi.fGroup.c_str());
             if (st) {
-               usrok = 1;
+               grpok = 1;
             } else {
                e = "CheckUser: group '";
                e += gi.fGroup;
@@ -317,20 +317,19 @@ int XrdProofdManager::CheckUser(const char *usr,
          }
       }
       // Check username
+      bool usrok = grpok;
       if (fAllowedUsers.Num() > 0) {
          // Look into the hash
          int *st = fAllowedUsers.Find(usr);
-         if (st && (*st == 1)) {
-            usrok = 1;
-         } else {
-            e = "CheckUser: user '";
-            e += usr;
-            if (usrok) {
-               e += "' is not allowed to connect";
+         if (st) {
+            if ((*st == 1)) {
+               usrok = 1;
             } else {
-               e += "' is unknown";
+               e = "CheckUser: user '";
+               e += usr;
+               e += "' is not allowed to connect";
+               usrok = 0;
             }
-            usrok = 0;
          }
       }
       // Super users are always allowed
