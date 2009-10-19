@@ -507,8 +507,8 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
 
          if (phys_shape)
          {
-            if (phys_shape->GetLogical()->SupportsSecondarySelect()
-                && fSecSelType == TGLViewer::kAutomatic)
+            if (fSecSelType == TGLViewer::kAlways
+                && phys_shape->GetLogical()->AlwaysSecondarySelect())
             {
                fGLViewer->RequestSecondarySelect(fLastPos.fX, fLastPos.fY);
                if (fGLViewer->fSecSelRec.GetPhysShape() != 0)

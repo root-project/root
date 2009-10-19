@@ -105,6 +105,7 @@ public:
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
    // Override in sub-classes that support secondary selection (e.g. TPointSet3DGL).
    virtual Bool_t SupportsSecondarySelect() const { return kFALSE; }
+   virtual Bool_t AlwaysSecondarySelect()   const { return kFALSE; }
    virtual void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec);
 
    void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
