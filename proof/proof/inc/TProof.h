@@ -221,7 +221,7 @@ private:
    Int_t        fNWrks;
    static char  fgCr[4];
 public:
-   TProofMergePrg() : fIdx(-1), fNWrks(-1) { }
+   TProofMergePrg() : fExp(), fIdx(-1), fNWrks(-1) { }
 
    const char  *Export() { fExp.Form("%c (%d workers still sending)   ", fgCr[fIdx], fNWrks);
                            return fExp.Data(); }

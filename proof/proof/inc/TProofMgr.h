@@ -67,7 +67,7 @@ protected:
    static TList   fgListOfManagers; // Sub-list of TROOT::ListOfProofs for managers
 
    TProofMgr() : fRemoteProtocol(-1),
-                        fServType(kXProofd), fSessions(0), fUrl() { }
+                        fServType(kXProofd), fSessions(0), fUrl(), fIntHandler(0) { }
 
 public:
    TProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
