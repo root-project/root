@@ -80,7 +80,7 @@ public:
    };
    enum EParseContextFlag {
       kCXXComment = BIT(4), // kComment is a C++ comment, or macro/html/latex content is surrounded by /* */
-      kParseContextFlagMask = ~(BIT(4) - 1)
+      kParseContextFlagMask = (UInt_t)(~(BIT(4) - 1))
 
    };
 
