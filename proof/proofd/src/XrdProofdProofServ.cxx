@@ -313,7 +313,7 @@ int XrdProofdProofServ::FreeClientID(int pid)
    XPDLOC(SMGR, "ProofServ::FreeClientID")
 
    TRACE(DBG, "svrPID: "<<fSrvPID<< ", pid: "<<pid<<", session status: "<<
-              fStatus<<", # clients: "<< fClients.size());
+              fStatus<<", # clients: "<< fNClients);
    int rc = -1;
    if (pid <= 0) {
       TRACE(XERR, "undefined pid!");
@@ -326,24 +326,27 @@ int XrdProofdProofServ::FreeClientID(int pid)
       // Remove this from the list of clients
       std::vector<XrdClientID *>::iterator i;
       for (i = fClients.begin(); i != fClients.end(); ++i) {
-         if ((*i) && (*i)->P() && (*i)->P()->Pid() == pid) {
-            (*i)->Reset();
-            fNClients--;
-            // Record time of last disconnection
-            if (fNClients <= 0)
-               fDisconnectTime = time(0);
-            rc = 0;
-            break;
+         if ((*i) && (*i)->P()) {
+            if ((*i)->P()->Pid() == pid || (*i)->P()->Pid() == -1) {
+               (*i)->Reset();
+               XPDPRT("Resetting "<<*i);
+               fNClients--;
+               // Record time of last disconnection
+               if (fNClients <= 0)
+                  fDisconnectTime = time(0);
+               rc = 0;
+               break;
+            }
          }
       }
    }
-   if (TRACING(REQ)) {
+   if (TRACING(REQ) && (rc == 0)) {
       int spid = SrvPID();
       TRACE(REQ, spid<<": slot for client pid: "<<pid<<" has been reset");
    }
 
    // Out of range
-   return -1;
+   return rc;
 }
 
 //__________________________________________________________________________
