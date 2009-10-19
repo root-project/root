@@ -5513,17 +5513,36 @@ Int_t TProof::DisablePackage(const char *package)
    // Nothing more to do if we are a Lite-session
    if (IsLite()) return 0;
 
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(kDisablePackage) << pac;
-   Broadcast(mess, kUnique);
+   Int_t st = -1;
+   Bool_t done = kFALSE;
+   if (fManager) {
+      // Try to do it via XROOTD (new way)
+      TString path;
+      path.Form("~/packages/%s", package);
+      if (fManager->Rm(path, "-rf") != -1) {
+         path.Append(".par");
+         if (fManager->Rm(path, "-f") != -1) {
+            done = kTRUE;
+            st = 0;
+         }
+      }
+   }
+   if (!done) {
+      // Try via TProofServ (old way)
+      TMessage mess(kPROOF_CACHE);
+      mess << Int_t(kDisablePackage) << pac;
+      Broadcast(mess, kUnique);
 
-   TMessage mess2(kPROOF_CACHE);
-   mess2 << Int_t(kDisableSubPackage) << pac;
-   Broadcast(mess2, fNonUniqueMasters);
+      TMessage mess2(kPROOF_CACHE);
+      mess2 << Int_t(kDisableSubPackage) << pac;
+      Broadcast(mess2, fNonUniqueMasters);
 
-   Collect(kAllUnique);
+      Collect(kAllUnique);
+      st = fStatus;
+   }
 
-   return fStatus;
+   // Done
+   return st;
 }
 
 //______________________________________________________________________________
@@ -5533,7 +5552,7 @@ Int_t TProof::DisablePackageOnClient(const char *package)
    // Returns 0 in case of success and -1 in case of error.
 
    if (TestBit(TProof::kIsClient)) {
-      // remove the package directory and the par file
+      // Remove the package directory and the par file locally
       fPackageLock->Lock();
       gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(), package));
       gSystem->Exec(Form("%s %s/%s.par", kRM, fPackageDir.Data(), package));
