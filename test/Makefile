@@ -638,8 +638,9 @@ clean:
 
 distclean:      clean
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
-		   *.root *.ps *.so *.lib *.dll *.d *.log .def so_locations
-		@rm -rf cxx_repository files
+		   *.root *.ps *.so *.lib *.dll *.d *.log .def so_locations \
+		   files/*
+		@rm -rf cxx_repository
 		-@cd RootShower && $(MAKE) distclean
 		-@cd rhtml && $(MAKE) distclean
 		-@cd RootIDE && $(MAKE) distclean
