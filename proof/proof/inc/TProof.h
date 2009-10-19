@@ -746,6 +746,7 @@ public:
    Int_t       GetStatus() const { return fStatus; }
    Int_t       GetLogLevel() const { return fLogLevel; }
    Int_t       GetParallel() const;
+   Int_t       GetSeqNum() const { return fSeqNum; }
    Int_t       GetSessionID() const { return fSessionID; }
    TList      *GetListOfSlaveInfos();
    Bool_t      UseDynamicStartup() const { return fDynamicStartup; }
