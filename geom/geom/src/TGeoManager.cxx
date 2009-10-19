@@ -3481,7 +3481,9 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       TFile *old = gFile;
       // in case a web file is specified, use the cacheread option to cache
       // this file in the cache directory
-      TFile *f = TFile::Open(filename,"CACHEREAD");
+      TFile *f = 0;
+      if (strstr(filename,"http")) f = TFile::Open(filename,"CACHEREAD");
+      else                         f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          if (old) old->cd();
          ::Error("TGeoManager::Import", "Cannot open file");
