@@ -16,7 +16,7 @@ TUTORIALSTESTS_NONBATCH := \
   gui/% \
   hist/exec1 hist/exec2 \
   image/% \
-  graphics/psview graphics/gtime \
+  graphics/psview graphics/gtime graphics/graph_edit_playback \
   tree/tvdemo \
   eve/%
 
