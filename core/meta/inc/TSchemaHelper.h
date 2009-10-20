@@ -5,6 +5,9 @@
 #define ROOT_TSchemaHelper
 
 #include <string>
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
 
 namespace ROOT
 {

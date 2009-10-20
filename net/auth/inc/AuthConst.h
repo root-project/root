@@ -20,6 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 // Number of security levels and masks
 const Int_t       kMAXSEC         = 6;
 const Int_t       kMAXSECBUF      = 4096;

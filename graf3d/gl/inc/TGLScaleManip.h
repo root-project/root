@@ -15,9 +15,7 @@
 #ifndef ROOT_TGLManip
 #include "TGLManip.h"
 #endif
-#ifndef ROOT_TGLUtil
-#include "TGLUtil.h"
-#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

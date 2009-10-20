@@ -13,13 +13,23 @@
 #define ROOT_TGenericClassInfo
 
 #include <vector>
+//#ifndef ROOT_TSchemaHelper
 #include "TSchemaHelper.h"
+//#endif
+//#ifndef ROOT_Rtypes
+//#inlcude "Rtypes.h"
+//#endif
 
 // Forward declarations
 class TVirtualIsAProxy;
+//class TClass;
+//class TClassStreamer;
+//class TVirtualCollectionProxy;
+//class TCollectionProxyInfo;
+
 
 namespace ROOT {
-   
+
    class TCollectionProxyInfo;
 
    class TGenericClassInfo {
@@ -52,7 +62,7 @@ namespace ROOT {
       TCollectionProxyInfo       *fCollectionStreamerInfo;
       std::vector<TSchemaHelper>  fReadRules;
       std::vector<TSchemaHelper>  fReadRawRules;
-      
+
    public:
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
@@ -69,7 +79,7 @@ namespace ROOT {
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
-                       VoidFuncPtr_t dictionary, 
+                       VoidFuncPtr_t dictionary,
                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
@@ -127,9 +137,9 @@ namespace ROOT {
       void CreateRuleSet( std::vector<TSchemaHelper>& vect, Bool_t ProcessReadRules );
       TGenericClassInfo(const TGenericClassInfo&); // Not implemented
       TGenericClassInfo& operator=(const TGenericClassInfo&); // Not implemented
-      
+
    private:
-      TGenericClassInfo(); 
+      TGenericClassInfo();
 
    };
 

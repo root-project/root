@@ -20,6 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 template<class Element> class TMatrixTBase;
 typedef TMatrixTBase<Double_t> TMatrixDBase;
 

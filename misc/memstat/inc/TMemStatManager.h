@@ -8,8 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_TMEMSTATMANAGER
-#define ROOT_TMEMSTATMANAGER
+
+#ifndef ROOT_TMemStatManager
+#define ROOT_TMemStatManager
 
 //****************************************************************************//
 //
@@ -23,11 +24,19 @@
 #include <memory>
 #include <cstdlib>
 // ROOT
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TTimeStamp
 #include "TTimeStamp.h"
+#endif
 // Memstat
+#ifndef ROOT_TMemStatDepend
 #include "TMemStatDepend.h"
+#endif
+#ifndef ROOT_TmemStatInfo
 #include "TMemStatInfo.h"
+#endif
 
 
 class TTree;

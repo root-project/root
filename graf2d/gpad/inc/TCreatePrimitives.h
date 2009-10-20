@@ -23,6 +23,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 class TCreatePrimitives {
 
 public:
@@ -38,4 +42,3 @@ public:
 };
 
 #endif
-

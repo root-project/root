@@ -8,13 +8,20 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_HELPERS_
-#define ROOT_HELPERS_
+
+#ifndef ROOT_TMemStatHelpers
+#define ROOT_TMemStatHelpers
 
 // ROOT
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TObjString
 #include "TObjString.h"
+#endif
+#ifndef ROOT_TCollection
 #include "TCollection.h"
+#endif
 // STD
 #include <string>
 #include <functional>

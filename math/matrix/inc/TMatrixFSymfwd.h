@@ -17,6 +17,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 template<class Element> class TMatrixTSym;
 typedef TMatrixTSym<Float_t> TMatrixFSym;
 

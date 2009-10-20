@@ -19,6 +19,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#if !defined(__CINT__)
+#include <sys/types.h>
+#endif
+
 typedef unsigned short Pattern_t;
 
 int         Makepat(const char*, Pattern_t*, int);

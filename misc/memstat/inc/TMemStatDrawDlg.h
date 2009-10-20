@@ -8,15 +8,20 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef _ROOT_TMEMSTATDRAWDLG_H
-#define _ROOT_TMEMSTATDRAWDLG_H
+
+#ifndef ROOT_TMemStatDrawDlg
+#define ROOT_TMemStatDrawDlg
 
 // STD
 #include <vector>
 #include <string>
 // ROOT
+#ifndef ROOT_RQ_OBJECT
 #include "RQ_OBJECT.h"
+#endif
+#ifndef ROOT_TGFrame
 #include "TGFrame.h"
+#endif
 
 class TMemStat;
 class TGComboBox;

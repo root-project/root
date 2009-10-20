@@ -21,8 +21,8 @@
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
+#ifndef ROOT_TGLUtil
+#include "TGLUtil.h"
 #endif
 
 class TGLPhysicalShape;

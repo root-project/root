@@ -8,8 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_MEMSTAT_RESOURCE_
-#define ROOT_MEMSTAT_RESOURCE_
+
+#ifndef ROOT_TMemStatResource
+#define ROOT_TMemStatResource
 
 // radio buttons of SortStat IDs
 #define rbtnTotalAllocCount     30

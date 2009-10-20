@@ -8,8 +8,9 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_TMEMSTATINFO
-#define ROOT_TMEMSTATINFO
+
+#ifndef ROOT_TMemStatInfo
+#define ROOT_TMemStatInfo
 
 
 //****************************************************************************//
@@ -26,10 +27,13 @@
 #include <iomanip>
 #include <sstream>
 //ROOT
+#ifndef ROOT_TROOT
 #include "TROOT.h"
-#include "TObject.h"
+#endif
 // Memstat
+#ifndef ROOT_TMemStatHelpers
 #include "TMemStatHelpers.h"
+#endif
 
 class TMemStatStackInfo;
 class TMemStatManager;

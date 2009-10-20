@@ -31,7 +31,7 @@ class TGRadioButton;
 class TGNumberEntry;
 class TGColorSelect;
 class TGFontTypeComboBox;
-class TGComboox;
+class TGCombox;
 
 class TPieEditor : public TGedFrame {
 
@@ -52,20 +52,20 @@ protected:
    TGColorSelect       *fColorSelect; // font color selector
    TGFontTypeComboBox  *fTypeCombo; // font style
    TGComboBox          *fSizeCombo; // font size
-   
+
    virtual void ConnectSignals2Slots();
 
    static TGComboBox* BuildFontSizeComboBox(TGFrame*, Int_t);
-   
+
 public:
-   TPieEditor(const TGWindow *p = 0, 
+   TPieEditor(const TGWindow *p = 0,
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TPieEditor();
    virtual void SetModel(TObject* );
    virtual void ActivateBaseClassEditors(TClass*);
-   
+
    // slots related to graph attributes
    virtual void DoShape();
    virtual void DoMarkerOnOff(Bool_t on);
@@ -73,8 +73,7 @@ public:
    virtual void DoGraphLineWidth();
    virtual void DoChange3DAngle();
    virtual void DoTextChange();
-   
+
    ClassDef(TPieEditor,0)        // piechart editor
 };
 #endif
-

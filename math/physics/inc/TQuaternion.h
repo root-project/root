@@ -4,7 +4,13 @@
 #ifndef ROOT_TQuaternion
 #define ROOT_TQuaternion
 
+#ifndef ROOT_TVector3
 #include "TVector3.h"
+#endif
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
+
 
 class TQuaternion : public TObject {
 
@@ -117,13 +123,13 @@ public:
 inline TQuaternion& TQuaternion::SetRXYZ(Double_t r,Double_t x,Double_t y,Double_t z) {
    fRealPart = r;
    fVectorPart.SetXYZ(x,y,z);
-   return (*this); 
+   return (*this);
 }
 
 inline TQuaternion& TQuaternion::SetRV(Double_t r, TVector3& vect) {
    fRealPart = r;
    fVectorPart= vect;
-   return (*this); 
+   return (*this);
 }
 
 inline void TQuaternion::GetRXYZ(Double_t *carray) const {
@@ -160,18 +166,18 @@ inline TQuaternion& TQuaternion::operator+=(Double_t real) {
    return (*this);
 }
 
-inline TQuaternion& TQuaternion::operator-=(Double_t real) { 
-   fRealPart -= real; 
-   return (*this); 
+inline TQuaternion& TQuaternion::operator-=(Double_t real) {
+   fRealPart -= real;
+   return (*this);
 }
 
-inline TQuaternion& TQuaternion::operator*=(Double_t real) { 
+inline TQuaternion& TQuaternion::operator*=(Double_t real) {
    fRealPart *= real;
    fVectorPart *= real;
    return (*this);
 }
 
-inline TQuaternion& TQuaternion::operator/=(Double_t real) { 
+inline TQuaternion& TQuaternion::operator/=(Double_t real) {
    if (real!=0) {
       fRealPart /= real;
       fVectorPart.SetX(fVectorPart.x()/real); // keep numericaly compliant with operator/(Double_t)
@@ -248,7 +254,7 @@ inline TQuaternion& TQuaternion::operator-=(const TQuaternion &quaternion) {
 }
 
 inline TQuaternion TQuaternion::operator+(const TQuaternion &quaternion) const {
-        
+
    return TQuaternion(fVectorPart+quaternion.fVectorPart, fRealPart+quaternion.fRealPart);
 }
 
@@ -259,7 +265,7 @@ inline TQuaternion TQuaternion::operator-(const TQuaternion &quaternion) const {
 
 // ---------------- general
 inline Double_t TQuaternion::Norm() const {
-   return sqrt(Norm2());
+   return TMath::Sqrt(Norm2());
 }
 
 inline Double_t TQuaternion::Norm2() const {
@@ -267,7 +273,7 @@ inline Double_t TQuaternion::Norm2() const {
 }
 
 inline TQuaternion& TQuaternion::Normalize() {
-        
+
    (*this) /= Norm();
    return (*this);
 }
@@ -281,5 +287,4 @@ inline TQuaternion TQuaternion::Conjugate() const {
 }
 
 #endif
-
 

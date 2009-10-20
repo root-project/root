@@ -15,15 +15,19 @@
 //  used for the calibration monitor                                         //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef ALITPCCALIBVIEWERGUI
-#define ALITPCCALIBVIEWERGUI
+
+#ifndef ROOT_TMemStatViewerGUI
+#define ROOT_TMemStatViewerGUI
 
 // STD
 #include <string>
 #include <memory>
 // ROOT
+#ifndef ROOT_TGFrame
 #include "TGFrame.h"
+#endif
 
+class TMemStat;
 class TGTextView;
 class TGNumberEntry;
 class TGComboBox;

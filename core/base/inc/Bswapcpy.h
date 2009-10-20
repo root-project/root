@@ -38,6 +38,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#if !defined(__CINT__)
+#include <sys/types.h>
+#endif
+
 extern inline void * bswapcpy16(void * to, const void * from, size_t n)
 {
 int d0, d1, d2, d3;

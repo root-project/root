@@ -11,6 +11,10 @@
 #ifndef ROOT_Hepevt
 #define ROOT_Hepevt
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 extern "C" {
 
 #ifndef __CFORTRAN_LOADED

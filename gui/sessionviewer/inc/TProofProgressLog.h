@@ -38,6 +38,8 @@ class TGNumberEntry;
 class TGListBox;
 class TGSplitButton;
 class TGVerticalFrame;
+class TGCheckButton;
+
 
 class TProofProgressLog : public TGTransientFrame {
 

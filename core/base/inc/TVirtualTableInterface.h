@@ -11,6 +11,11 @@
 #ifndef ROOT_TVirtualTableInterface
 #define ROOT_TVirtualTableInterface
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
+
 class TVirtualTableInterface {
 
 public:
@@ -20,8 +25,8 @@ public:
    virtual Double_t    GetValue(UInt_t row, UInt_t column) = 0;
    virtual const char *GetValueAsString(UInt_t row, UInt_t column) = 0;
    virtual const char *GetRowHeader(UInt_t row) = 0;
-   virtual const char *GetColumnHeader(UInt_t column) = 0; 
-   virtual UInt_t      GetNRows() = 0; 
+   virtual const char *GetColumnHeader(UInt_t column) = 0;
+   virtual UInt_t      GetNRows() = 0;
    virtual UInt_t      GetNColumns() = 0;
 
    ClassDef(TVirtualTableInterface, 0)

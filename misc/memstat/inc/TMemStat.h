@@ -8,18 +8,27 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_TMEMSTAT
-#define ROOT_TMEMSTAT
+
+#ifndef ROOT_TMemStat
+#define ROOT_TMemStat
 
 // STD
 #include <memory>
 #include <vector>
 #include <set>
 // ROOT
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+#ifndef ROOT_TObjArray
 #include "TObjArray.h"
+#endif
+#ifndef ROOT_TFile
 #include "TFile.h"
+#endif
+#ifndef ROOT_TObjString
 #include "TObjString.h"
+#endif
 
 class TArrayI;
 class TBits;

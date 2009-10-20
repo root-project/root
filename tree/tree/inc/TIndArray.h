@@ -8,6 +8,11 @@
 #ifndef ROOT_TIndArray
 #define ROOT_TIndArray
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
+
 class TIndArray
 {
    public:
@@ -37,7 +42,7 @@ class TIndArray
       UInt_t   fElems;     // Number of elements stored in the array
       UInt_t   fCapacity;  //!Capacity of the array
       UChar_t *fArr;       //[fElems] The array
-      
+
 };
 
 #endif // ROOT_TIndArray

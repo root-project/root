@@ -1,4 +1,4 @@
-// $Id$
+// @(#)root/guihtml:$Id: TObject.h 20877 2007-11-19 11:17:07Z rdm $
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
@@ -34,6 +34,10 @@
 #ifndef ROOT_TGHtmlUri
 #define ROOT_TGHtmlUri
 
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+
 #define URI_SCHEME_MASK     (1<<0)
 #define URI_AUTH_MASK       (1<<1)
 #define URI_PATH_MASK       (1<<2)
@@ -61,13 +65,12 @@ public:
 
 public:
    int ComponentLength(const char *z, const char *zInit, const char *zTerm);
-  
+
    char *fZScheme;             // Ex: "http"
    char *fZAuthority;          // Ex: "192.168.1.1:8080"
    char *fZPath;               // Ex: "cgi-bin/printenv"
    char *fZQuery;              // Ex: "name=xyzzy&addr=none"
    char *fZFragment;           // Ex: "frag"
 };
-
 
 #endif  // ROOT_TGHtmlUri

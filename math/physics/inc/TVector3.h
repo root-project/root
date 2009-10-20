@@ -11,9 +11,15 @@
 #ifndef ROOT_TVector3
 #define ROOT_TVector3
 
+#ifndef ROOT_TError
 #include "TError.h"
+#endif
+#ifndef ROOT_TVector2
 #include "TVector2.h"
+#endif
+#ifndef ROOT_TMatrix
 #include "TMatrix.h"
+#endif
 
 class TRotation;
 
@@ -61,14 +67,14 @@ public:
    inline void SetXYZ(Double_t x, Double_t y, Double_t z);
    void        SetPtEtaPhi(Double_t pt, Double_t eta, Double_t phi);
    void        SetPtThetaPhi(Double_t pt, Double_t theta, Double_t phi);
-  
+
    inline void GetXYZ(Double_t *carray) const;
    inline void GetXYZ(Float_t *carray) const;
    // Get the components into an array
    // not checked!
 
    Double_t Phi() const;
-   // The azimuth angle. returns phi from -pi to pi 
+   // The azimuth angle. returns phi from -pi to pi
 
    Double_t Theta() const;
    // The polar angle.

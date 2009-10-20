@@ -26,6 +26,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
+
 enum EWidgetMessageTypes {
    kC_COMMAND          = 1,
       kCM_MENU            = 1,
