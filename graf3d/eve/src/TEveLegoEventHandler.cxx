@@ -67,39 +67,6 @@ Bool_t TEveLegoEventHandler::HandleKey(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TEveLegoEventHandler::HandleDoubleClick(Event_t *event)
-{
-   // Virtual from TGLEventHandler.
-   // Sets id of the tower with scale.
-
-
-   if (fLego && fGLViewer->IsLocked() == kFALSE && event->fCode == kButton1)
-   {
-      fGLViewer->RequestSelect(event->fX, event->fY);
-      TGLPhysicalShape* pshape = fGLViewer->GetSelRec().GetPhysShape();
-      if (pshape && fGLViewer->GetSelRec().GetN() > 2)
-      {
-         TGLLogicalShape& lshape = const_cast<TGLLogicalShape&> (*pshape->GetLogical());
-         TGLLogicalShape* f = &lshape;
-         TEveCaloLegoGL* lego   = dynamic_cast<TEveCaloLegoGL*>(f);          
-         if (lego)
-         {
-            fLego->SetTowerPicked(fGLViewer->GetSelRec().GetItem(2));
-         }
-      }
-      else
-      {
-         fLego->SetTowerPicked(-1);
-      }
-      fGLViewer->RequestDraw();
-
-      return kTRUE;
-   }
-
-   return TGLEventHandler::HandleDoubleClick(event);
-}
-
-//______________________________________________________________________________
 Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2)
 {
    // Method to handle action TGLViewer::kDragCameraRotate. It switches from standard perspective
@@ -112,10 +79,12 @@ Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Boo
    Double_t hRotate = cam.AdjustDelta(-yDelta, TMath::Pi()/cam.RefViewport().Height(), mod1, mod2);
 
    // get lego bounding box
-   Float_t *bb = fLego->GetBBox();
+   Float_t *bb = fLego->AssertBBox();
    TGLBoundingBox box;
    box.SetAligned(TGLVertex3(bb[0], bb[2], bb[4]), TGLVertex3(bb[1], bb[3], bb[5]));
    box.Transform(fLego->RefMainTrans().Array());
+
+   Bool_t camChanged = kFALSE;
 
    if (cam.IsOrthographic())
    {
@@ -147,6 +116,7 @@ Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Boo
          persp->Configure(fov*TMath::RadToDeg(), 0, 0, hR, vR);
 
          fMode = kFree;
+         camChanged = kTRUE;
       }
    }
    else
@@ -183,11 +153,12 @@ Bool_t TEveLegoEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Boo
          ortho->Configure(zoom, 0, 0, 0, 0);
 
          fMode = kLocked;
+         camChanged = kTRUE;
       }
       else
       {
-         fGLViewer->CurrentCamera().Rotate(xDelta, -yDelta, mod1, mod2);
+         camChanged = fGLViewer->CurrentCamera().Rotate(xDelta, -yDelta, mod1, mod2);
       }
    }
-   return kTRUE;
+   return camChanged;
 }

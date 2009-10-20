@@ -13,14 +13,14 @@
 #define ROOT_TEveCaloData
 
 #include <vector>
-#include "Rtypes.h"
-#include "TEveUtil.h"
+#include "TEveElement.h"
 
 class TH2F;
 class TAxis;
 class THStack;
 
-class TEveCaloData: public TEveRefBackPtr
+class TEveCaloData: public TEveElement,
+                    public TNamed
 {
 public:
    struct SliceInfo_t
@@ -141,7 +141,7 @@ protected:
 
    TAxis*       fEtaAxis;
    TAxis*       fPhiAxis;
-   
+
    Bool_t       fWrapTwoPi;
 
    Float_t      fMaxValEt; // cached
@@ -149,13 +149,17 @@ protected:
 
    Float_t      fEps;
 
+   vCellId_t    fCellsSelected;
+
 public:
-   TEveCaloData();
+   TEveCaloData(const char* n="TEveCalData", const char* t="");
    virtual ~TEveCaloData() {}
 
    virtual void    GetCellList(Float_t etaMin, Float_t etaMax,
                                Float_t phi,    Float_t phiRng,
                                vCellId_t &out) const = 0;
+
+   vCellId_t&      GetCellsSelected() { return fCellsSelected; }
 
    virtual void    Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const = 0;
 
@@ -187,11 +191,13 @@ public:
 
    virtual Float_t GetEps()      const { return fEps; }
    virtual void    SetEps(Float_t eps) { fEps=eps; }
-   
+
    Bool_t   GetWrapTwoPi() const { return fWrapTwoPi; }
    void     SetWrapTwoPi(Bool_t w) { fWrapTwoPi=w; }
 
    static  Float_t EtaToTheta(Float_t eta);
+
+   virtual void FillImpliedSelectedSet(Set_t& impSelSet);
 
    ClassDef(TEveCaloData, 0); // Manages calorimeter event data.
 };

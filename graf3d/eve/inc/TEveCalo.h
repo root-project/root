@@ -36,7 +36,8 @@ private:
    TEveCaloViz& operator=(const TEveCaloViz&); // Not implemented
 
 protected:
-   TEveCaloData* fData;  // event data reference
+   TEveCaloData* fData;           // event data reference
+   Bool_t        fCellIdCacheOK;  // data cell ids cache state
 
    Double_t      fEtaMin;
    Double_t      fEtaMax;
@@ -58,7 +59,6 @@ protected:
    Bool_t            fValueIsColor;   // Interpret signal value as RGBA color.
    TEveRGBAPalette*  fPalette;        // Pointer to signal-color palette.
 
-   Bool_t            fCellIdCacheOK;  // Flag cell ids cache state
 
    void AssignCaloVizParameters(TEveCaloViz* cv);
 
@@ -71,11 +71,19 @@ public:
 
    virtual ~TEveCaloViz();
 
-   TEveCaloData* GetData() const { return fData; }
-   virtual void  SetData(TEveCaloData* d);
-   virtual void  DataChanged();
+   virtual void IncImpliedSelected();
 
-   virtual Float_t GetValToHeight() const;
+   virtual TEveElement* ForwardSelection() const;
+
+   virtual void Paint(Option_t* option="");
+
+   virtual TClass* ProjectedClass() const;
+
+   TEveCaloData* GetData() const { return fData; }
+   void    SetData(TEveCaloData* d);
+   void    DataChanged();
+   Float_t GetMaxVal() const;
+   void    InvalidateCellIdCache() { fCellIdCacheOK=kFALSE; ResetBBox(); };
 
    Float_t GetDataSliceThreshold(Int_t slice) const;
    void    SetDataSliceThreshold(Int_t slice, Float_t val);
@@ -88,7 +96,7 @@ public:
    void    SetEndCapPos   (Float_t z) { fEndCapPos = z; ResetBBox(); }
 
    Bool_t  GetPlotEt() const { return fPlotEt; }
-   virtual void    SetPlotEt(Bool_t x);
+   void    SetPlotEt(Bool_t x);
 
    void    SetMaxTowerH(Float_t x) { fMaxTowerH = x; }
    Float_t GetMaxTowerH() const    { return fMaxTowerH; }
@@ -97,17 +105,19 @@ public:
    void    SetMaxValAbs(Float_t x) { fMaxValAbs = x; }
    Float_t GetMaxValAbs() const    { return fMaxValAbs; }
 
-   Float_t GetMaxVal() const;
-
    Float_t GetTransitionEta() const;
    Float_t GetTransitionTheta() const;
 
    TEveRGBAPalette* GetPalette() const { return fPalette; }
    void             SetPalette(TEveRGBAPalette* p);
-   TEveRGBAPalette* AssertPalette();
 
-   Bool_t GetValueIsColor()   const { return fValueIsColor;}
-   void   SetValueIsColor(Bool_t x) { fValueIsColor = x;}
+   TEveRGBAPalette* AssertPalette();
+   Bool_t  GetValueIsColor()   const { return fValueIsColor;}
+   void    SetValueIsColor(Bool_t x) { fValueIsColor = x;}
+
+   Float_t GetValToHeight() const;
+   Bool_t  GetAutoRange()   const { return fAutoRange; }
+   void    SetAutoRange(Bool_t x) { fAutoRange = x; }
 
    void    SetEta(Float_t l, Float_t u);
    Float_t GetEta()    const { return 0.5f*(fEtaMin+fEtaMax); }
@@ -115,22 +125,14 @@ public:
    Float_t GetEtaMax() const { return fEtaMax; }
    Float_t GetEtaRng() const { return fEtaMax-fEtaMin; }
 
-   virtual void SetPhi(Float_t phi)    { SetPhiWithRng(phi, fPhiOffset); }
-   virtual void SetPhiRng(Float_t rng) { SetPhiWithRng(fPhi, rng); }
-   virtual void SetPhiWithRng(Float_t x, Float_t r);
+   void    SetPhi(Float_t phi)    { SetPhiWithRng(phi, fPhiOffset); }
+   void    SetPhiRng(Float_t rng) { SetPhiWithRng(fPhi, rng); }
+   void    SetPhiWithRng(Float_t x, Float_t r);
    Float_t GetPhi()    const { return fPhi; }
    Float_t GetPhiMin() const { return fPhi-fPhiOffset; }
    Float_t GetPhiMax() const { return fPhi+fPhiOffset; }
    Float_t GetPhiRng() const { return 2.0f*fPhiOffset; }
 
-   Bool_t  GetAutoRange()   const { return fAutoRange; }
-   void    SetAutoRange(Bool_t x) { fAutoRange = x; }
-
-   void InvalidateCellIdCache() { fCellIdCacheOK=kFALSE; ResetBBox(); }
-
-   virtual void Paint(Option_t* option="");
-
-   virtual TClass* ProjectedClass() const;
 
    ClassDef(TEveCaloViz, 0); // Base-class for visualization of calorimeter eventdata.
 };
@@ -147,6 +149,7 @@ private:
 
 protected:
    TEveCaloData::vCellId_t fCellList;
+   TEveCaloData::vCellId_t fCellListSelected;
 
    Bool_t    fRnrEndCapFrame;
    Bool_t    fRnrBarrelFrame;
@@ -167,7 +170,7 @@ public:
    void SetRnrFrame(Bool_t e, Bool_t b)         { fRnrEndCapFrame = e; fRnrBarrelFrame = b; }
    void GetRnrFrame(Bool_t &e, Bool_t &b) const { e = fRnrEndCapFrame; b = fRnrBarrelFrame; }
 
-   virtual void SetFrameTransparency(UChar_t x) { fFrameTransparency = x; }
+   void    SetFrameTransparency(UChar_t x) { fFrameTransparency = x; }
    UChar_t GetFrameTransparency() const { return fFrameTransparency; }
 
    ClassDef(TEveCalo3D, 0); // Class for 3D visualization of calorimeter event data.
@@ -180,6 +183,10 @@ class TEveCalo2D : public TEveCaloViz,
                    public TEveProjected
 {
    friend class TEveCalo2DGL;
+
+   typedef std::vector<TEveCaloData::vCellId_t*>           vBinCells_t;
+   typedef std::vector<TEveCaloData::vCellId_t*>::iterator vBinCells_i;
+
 private:
    TEveCalo2D(const TEveCalo2D&);            // Not implemented
    TEveCalo2D& operator=(const TEveCalo2D&); // Not implemented
@@ -188,9 +195,12 @@ private:
 
 protected:
    std::vector<TEveCaloData::vCellId_t*>   fCellLists;
-   std::vector<Int_t>                      fBinIds;
+
+   std::vector<TEveCaloData::vCellId_t*>   fCellListsSelected;
+   std::vector<Int_t>                      fBinIdsSelected;
 
    virtual void BuildCellIdCache();
+   virtual void BuildCellIdCacheSelected();
 
 public:
    TEveCalo2D(const char* n="TEveCalo2D", const char* t="");
@@ -243,7 +253,6 @@ protected:
    Bool_t                  fDrawHPlane;
    Float_t                 fHPlaneVal;
 
-   Int_t                   fTowerPicked;
    Int_t                   fBinStep;
 
    Int_t                   fDrawNumberCellPixels;
@@ -253,9 +262,9 @@ protected:
 
 public:
    TEveCaloLego(TEveCaloData* data=0, const char* n="TEveCaloLego", const char* t="");
-
    virtual ~TEveCaloLego(){}
 
+   virtual void ComputeBBox();
    virtual void  SetData(TEveCaloData* d);
 
    Color_t  GetFontColor() const { return fFontColor; }
@@ -297,15 +306,10 @@ public:
    Float_t  GetHPlaneVal() const { return fHPlaneVal; }
    void     SetHPlaneVal(Float_t s) { fHPlaneVal = s;}
 
-   Int_t    GetTowerPicked() const { return fTowerPicked; }
-   void     SetTowerPicked(Int_t p) { fTowerPicked = p;}
-
    Int_t    GetDrawNumberCellPixels() { return fDrawNumberCellPixels; }
    void     SetDrawNumberCellPixels(Int_t x) { fDrawNumberCellPixels = x; }
    Int_t    GetCellPixelFontSize() { return fCellPixelFontSize; }
    void     SetCellPixelFontSize(Int_t x) { fCellPixelFontSize = x; }
-   
-   virtual void ComputeBBox();
 
    ClassDef(TEveCaloLego, 0);  // Class for visualization of calorimeter histogram data.
 };

@@ -25,12 +25,14 @@ private:
 
    void    CrossProduct(const Float_t a[3], const Float_t b[3], const Float_t c[3], Float_t out[3]) const;
 
+   void    DrawCellList(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId_t& list) const;
+
    void    RenderBox(const Float_t pnts[8]) const;
    void    RenderGridEndCap() const;
    void    RenderGridBarrel() const;
    void    RenderGrid(TGLRnrCtx & rnrCtx) const;
-   Float_t RenderBarrelCell(const TEveCaloData::CellData_t &cell, Float_t towerH, Float_t offset) const;
-   Float_t RenderEndCapCell(const TEveCaloData::CellData_t &cell, Float_t towerH, Float_t offset) const;
+   Float_t RenderBarrelCell(const TEveCaloData::CellGeom_t &cell, Float_t towerH, Float_t offset) const;
+   Float_t RenderEndCapCell(const TEveCaloData::CellGeom_t &cell, Float_t towerH, Float_t offset) const;
 
 protected:
    TEveCalo3D     *fM;  // Model object.
@@ -43,9 +45,11 @@ public:
    virtual void   SetBBox();
 
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   virtual void   DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* ps) const;
 
    virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
+   virtual Bool_t AlwaysSecondarySelect()   const { return kTRUE; }
    virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
    ClassDef(TEveCalo3DGL, 0); // GL renderer class for TEveCalo.

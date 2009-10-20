@@ -22,6 +22,10 @@
 #include <algorithm>
 
 
+//------------------------------------------------------------------------------
+// TEveCaloData::CellGeom_t
+//------------------------------------------------------------------------------
+
 
 //______________________________________________________________________________
 void TEveCaloData::CellGeom_t::Dump() const
@@ -29,6 +33,19 @@ void TEveCaloData::CellGeom_t::Dump() const
    // Print member data.
 
    printf("%f, %f %f, %f \n", fEtaMin, fEtaMax, fPhiMin, fPhiMax);
+}
+
+//______________________________________________________________________________
+void TEveCaloData::CellGeom_t::Configure(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax)
+{
+   fEtaMin = etaMin;
+   fEtaMax = etaMax;
+
+   fPhiMin = phiMin;
+   fPhiMax = phiMax;
+
+   fThetaMin = EtaToTheta(fEtaMax);
+   fThetaMax = EtaToTheta(fEtaMin);
 }
 
 //------------------------------------------------------------------------------
@@ -84,8 +101,9 @@ Float_t* TEveCaloData::RebinData_t::GetSliceVals(Int_t bin)
 ClassImp(TEveCaloData);
 
 //______________________________________________________________________________
-TEveCaloData::TEveCaloData():
-   TEveRefBackPtr(),
+TEveCaloData::TEveCaloData(const char* n, const char* t):
+   TEveElement(),
+   TNamed(n, t),
 
    fEtaAxis(0),
    fPhiAxis(0),
@@ -123,7 +141,10 @@ void TEveCaloData::SetSliceColor(Int_t slice, Color_t col)
    // Set color for given slice.
 
    fSliceInfos[slice].fColor = col;
-   StampBackPtrElements(TEveElement::kCBObjProps);
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      (*i)->AddStamp(TEveElement::kCBObjProps);
+   }
 }
 
 //______________________________________________________________________________
@@ -140,13 +161,11 @@ void TEveCaloData::InvalidateUsersCellIdCache()
    // Invalidate cell ids cache on back ptr references.
 
    TEveCaloViz* calo;
-   std::list<TEveElement*>::iterator i = fBackRefs.begin();
-   while (i != fBackRefs.end())
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       calo = dynamic_cast<TEveCaloViz*>(*i);
       calo->InvalidateCellIdCache();
       calo->StampObjProps();
-      ++i;
    }
 }
 
@@ -158,13 +177,11 @@ void TEveCaloData::DataChanged()
    // This is done by calling TEveCaloViz::DataChanged().
 
    TEveCaloViz* calo;
-   std::list<TEveElement*>::iterator i = fBackRefs.begin();
-   while (i != fBackRefs.end())
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       calo = dynamic_cast<TEveCaloViz*>(*i);
       calo->DataChanged();
       calo->StampObjProps();
-      ++i;
    }
 }
 
@@ -180,23 +197,21 @@ Float_t TEveCaloData::EtaToTheta(Float_t eta)
 }
 
 
-//------------------------------------------------------------------------------
-// TEveCaloData::CellGeom_t
-//------------------------------------------------------------------------------
-
 //______________________________________________________________________________
-void TEveCaloData::CellGeom_t::Configure(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax)
+void TEveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
 {
-   fEtaMin = etaMin;
-   fEtaMax = etaMax;
+   // Populate set impSelSet with derived / dependant elements.
+   //
 
-   fPhiMin = phiMin;
-   fPhiMax = phiMax;
+   //TEveElement::FillImpliedSelectedSet(impSelSet);
 
-   fThetaMin = EtaToTheta(fEtaMax);
-   fThetaMax = EtaToTheta(fEtaMin);
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      //printf("insert to imp selected %s \n", (*i)->GetElementName());
+         impSelSet.insert(*i);
+   }
+
 }
-
 
 //==============================================================================
 // TEveCaloDataVec
@@ -341,7 +356,7 @@ void TEveCaloDataVec::Rebin(TAxis* ax, TAxis* ay, vCellId_t &ids, Bool_t et, Reb
 
    CellData_t cd;
    Float_t left, right, up, down; // cell corners
-   for (TEveCaloData::vCellId_t::iterator it=ids.begin(); it!=ids.end(); ++it)
+   for (vCellId_i it = ids.begin(); it != ids.end(); ++it)
    {
       GetCellData(*it, cd);
       Int_t iMin = ax->FindBin(cd.EtaMin());

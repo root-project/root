@@ -10,127 +10,126 @@ const char* histFile = "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root"
 void calorimeters()
 {
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);
-
-   TFile::SetCacheFileDir(".");
    TEveManager::Create();
-   gEve->GetSelection()->SetPickToSelect(1);
 
    // event data
+   TFile::SetCacheFileDir(".");
    TFile* hf = TFile::Open(histFile, "CACHEREAD");
    TH2F* ecalHist = (TH2F*)hf->Get("ecalLego");
    TH2F* hcalHist = (TH2F*)hf->Get("hcalLego");
-
    TEveCaloDataHist* data = new TEveCaloDataHist();
    data->AddHistogram(ecalHist);
    data->RefSliceInfo(0).Setup("ECAL", 0.3, kBlue);
    data->AddHistogram(hcalHist);
    data->RefSliceInfo(1).Setup("HCAL", 0.1, kRed);
-
-   // axis attrib
    data->GetEtaBins()->SetTitleFont(120);
    data->GetEtaBins()->SetTitle("h");
    data->GetPhiBins()->SetTitleFont(120);
    data->GetPhiBins()->SetTitle("f");
+   data->IncDenyDestroy();
+   gEve->AddToListTree(data, kFALSE);
 
-   MakeCaloLego(data);
 
-   BuildProjectedView(data);
+   // first tab
+   TEveCaloLego* lego = MakeCaloLego(data, 0);
 
-   gEve->Redraw3D(1);
-}
+   //
+   // second tab
+   //
 
-//______________________________________________________________________________
-void BuildProjectedView(TEveCaloData* data)
-{
-   // Create a new tab with 3D calorimiter
-   //  and projected (RPhi/RhoZ) calorimiter.
-
-   TEveWindowSlot* slot;
-
-   slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   // frames
+   TEveWindowSlot* slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
    TEveWindowPack* packH = slot->MakePack();
    packH->SetElementName("Projections");
    packH->SetHorizontal();
    packH->SetShowTitleBar(kFALSE);
 
-   TEveWindowSlot* slotLeft = packH->NewSlot();
    slot = packH->NewSlot();
+   TEveWindowPack* pack0 = slot->MakePack();
+   pack0->SetShowTitleBar(kFALSE);
+   TEveWindowSlot*  slotLeftTop   = pack0->NewSlot();
+   TEveWindowSlot* slotLeftBottom = pack0->NewSlot();
 
+   slot = packH->NewSlot();
    TEveWindowPack* pack1 = slot->MakePack();
-   TEveWindowSlot* slotRightTop = pack1->NewSlot();
-   slotRightBottom = pack1->NewSlot();
+   pack1->SetShowTitleBar(kFALSE);
+   TEveWindowSlot* slotRightTop    = pack1->NewSlot();
+   TEveWindowSlot* slotRightBottom = pack1->NewSlot();
 
-   // build scenes
+   // viewers ans scenes in second tab
    TEveCalo3D* calo3d = MakeCalo3D(data, slotRightTop);
-   MakeCalo2D(calo3d, slotLeft, TEveProjection::kPT_RPhi);
-   MakeCalo2D(calo3d, slotRightBottom, TEveProjection::kPT_RhoZ);
+   MakeCalo2D(calo3d, slotLeftTop, TEveProjection::kPT_RPhi);
+   MakeCalo2D(calo3d, slotLeftBottom, TEveProjection::kPT_RhoZ);
+   TEveCaloLego* lego = MakeCaloLego(data, slotRightBottom);
 
-   gEve->GetViewers()->SwitchColorSet();
+
+   gEve->GetBrowser()->GetTabRight()->SetTab(1);
+   gEve->Redraw3D(kTRUE);
 }
 
 //______________________________________________________________________________
-void MakeCaloLego(TEveCaloData* data)
+TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
 {
    // Eta-phi lego view.
 
-   TGLViewer* v = gEve->GetDefaultGLViewer();
-   TEveScene* s = gEve->GetEventScene();
-   gStyle->SetPalette(1, 0);
+   TEveViewer* v;
+   TEveScene* s;
+   if (slot)
+   {
+      TEveViewer* v; TEveScene* s;
+      MakeViewerScene(slot, v, s);
+   } else {
+      v = gEve->GetDefaultViewer();
+      s = gEve->GetEventScene();
+   }
 
+   gStyle->SetPalette(1, 0);
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
    lego->Set2DMode(TEveCaloLego::kValSize);
-   // lego->SetAutoRebin(kFALSE);
 
    // move to real world coordinates
-   lego->SetName("Calorimeter Lego");
    lego->InitMainTrans();
    Float_t sc = TMath::Min(lego->GetEtaRng(), lego->GetPhiRng());
    lego->RefMainTrans().SetScale(sc, sc, sc);
 
    // draws scales and axis on borders of window
+   TGLViewer* glv = v->GetGLViewer();
    TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
-   v->AddOverlayElement(overlay);
+   glv->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
 
-   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   v->SetEventHandler(new TEveLegoEventHandler(v->GetGLWidget(), v, lego));
+   // set event handler to move from perspective to orthographic view.
+   glv->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+   glv->SetEventHandler(new TEveLegoEventHandler(glv->GetGLWidget(), glv, lego));
    gEve->AddToListTree(lego, kTRUE);
+
+   return lego;
 }
 
 //______________________________________________________________________________
 TEveCalo3D* MakeCalo3D(TEveCaloData* data, TEveWindowSlot* slot)
 {
-   // 3D catersian view. 
+   // 3D catersian view.
 
-   TEveViewer* v = new TEveViewer("3D Viewer");
-   v->SpawnGLEmbeddedViewer();
-   slot->ReplaceWindow(v);
-   gEve->GetViewers()->AddElement(v);
-   TEveScene*  s = gEve->SpawnNewScene("3D Scene");
-   v->AddScene(s);
+   TEveViewer* v; TEveScene* s;
+   MakeViewerScene(slot, v, s);
 
    TEveCalo3D* calo3d = new TEveCalo3D(data);
-   calo3d->SetName("Calorimter 3D");
    calo3d->SetBarrelRadius(129);
    calo3d->SetEndCapPos(300);
    s->AddElement(calo3d);
 
-   gEve->AddToListTree(calo3d, kTRUE);
    return calo3d;
 }
 
 //______________________________________________________________________________
-void MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot, TEveProjection::EPType_e t)
+TEveCalo2D* MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot, TEveProjection::EPType_e t)
 {
    // Projected calorimeter.
 
-   TEveViewer* v = new TEveViewer("2D Viewer");
-   v->SpawnGLEmbeddedViewer();
-   slot->ReplaceWindow(v);
-   gEve->GetViewers()->AddElement(v);
-   TEveScene*  s = gEve->SpawnNewScene("Scene");
-   v->AddScene(s);
+   TEveViewer* v; TEveScene* s;
+   MakeViewerScene(slot, v, s);
 
    TEveProjectionManager* mng = new TEveProjectionManager();
    mng->SetProjection(t);
@@ -144,4 +143,19 @@ void MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot, TEveProjection::EPType
 
    gEve->AddToListTree(mng, kTRUE);
    gEve->AddToListTree(calo2d, kTRUE);
+
+   return calo2d;
+}
+
+//______________________________________________________________________________
+void MakeViewerScene(TEveWindowSlot* slot, TEveViewer*& v, TEveScene*& s)
+{
+   // Create a scene and a viewer in the given slot.
+
+   v = new TEveViewer("Viewer");
+   v->SpawnGLEmbeddedViewer();
+   slot->ReplaceWindow(v);
+   gEve->GetViewers()->AddElement(v);
+   s = gEve->SpawnNewScene("Scene");
+   v->AddScene(s);
 }

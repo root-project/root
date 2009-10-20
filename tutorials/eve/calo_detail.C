@@ -12,13 +12,13 @@ void calo_detail()
 
    // data
    TEveCaloDataVec* data = MakeVecData(10);
+   data->IncDenyDestroy(); // don't delete if zero parent
 
    // lego
    TEveCaloLego* lego = new TEveCaloLego(data);
-   lego->SetElementName("Irregualar Lego");
    lego->SetAutoRebin(kFALSE);
    gEve->AddElement(lego);
-  
+
    // lego's shortest bbox is (-0.5, 0.5)
    // have to scale to movein real coordinates
    lego->InitMainTrans();
@@ -26,7 +26,7 @@ void calo_detail()
    lego->RefMainTrans().SetScale(sc, sc, sc);
    lego->RefMainTrans().Move3PF(lego->GetEta(), lego->GetPhi(), 0);
 
-   // scales and axis on the border of window 
+   // scales and axis on the border of window
    TEveCaloLegoOverlay* overlay = new TEveCaloLegoOverlay();
    gEve->GetDefaultGLViewer()->AddOverlayElement(overlay);
    overlay->SetCaloLego(lego);
@@ -35,7 +35,7 @@ void calo_detail()
    TGLViewer* v = gEve->GetDefaultGLViewer();
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
    TEveLegoEventHandler* eh = new TEveLegoEventHandler((TGWindow*)v->GetGLWidget(), (TObject*)v, lego);
-   v->SetEventHandler(eh);  
+   v->SetEventHandler(eh);
 
    lego->Set2DMode(TEveCaloLego::kValSize);
    gEve->Redraw3D(kTRUE);
@@ -84,7 +84,7 @@ TEveCaloDataVec* MakeVecData(Int_t ncells=0)
          data->FillSlice(0, h1->GetBinContent(i, j));
          data->FillSlice(1, h2->GetBinContent(i, j));
       }
-   }      
+   }
 
    // Add irregularities
    //
@@ -98,7 +98,7 @@ TEveCaloDataVec* MakeVecData(Int_t ncells=0)
    data->AddTower(ax->GetBinLowEdge(i) -off, ax->GetBinUpEdge(i)+off,
                   ay->GetBinLowEdge(j) -off, ay->GetBinUpEdge(j)+off);
    data->FillSlice(2, 12.);
-   
+
    data->DataChanged();
    data->SetAxisFromBins(0.001, 0.001);
    return data;

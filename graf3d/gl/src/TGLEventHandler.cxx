@@ -64,7 +64,7 @@ TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    fMouseTimerRunning  (kFALSE),
    fTooltipShown       (kFALSE),
    fTooltipPixelTolerance (3),
-   fSecSelType(TGLViewer::kOnKeyMod1)
+   fSecSelType(TGLViewer::kOnRequest)
 {
    // Constructor.
 
@@ -378,7 +378,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                   } else {
                      fGLViewer->SelectionChanged(); // Just notify clients.
                   }
-               } else if (fSecSelType == TGLViewer::kOnKeyMod1 && event->fState & kKeyMod1Mask) {
+               } else if ((fSecSelType == TGLViewer::kOnRequest || fSecSelType == TGLViewer::kOnKeyMod1) && (event->fState & kKeyMod1Mask)) {
                   fGLViewer->RequestSelect(event->fX, event->fY);
                   fGLViewer->RequestSecondarySelect(event->fX, event->fY);
                   if (fGLViewer->fSecSelRec.GetPhysShape() != 0)
@@ -507,7 +507,11 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
 
          if (phys_shape)
          {
-            if (fSecSelType == TGLViewer::kAlways
+            // primary
+            obj = phys_shape->GetLogical()->GetExternal();
+
+            // secondary
+            if (fSecSelType == TGLViewer::kOnRequest
                 && phys_shape->GetLogical()->AlwaysSecondarySelect())
             {
                fGLViewer->RequestSecondarySelect(fLastPos.fX, fLastPos.fY);
@@ -516,13 +520,16 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                   TGLLogicalShape& lshape = const_cast<TGLLogicalShape&>
                      (*fGLViewer->fSecSelRec.GetPhysShape()->GetLogical());
                   lshape.ProcessSelection(*fGLViewer->fRnrCtx, fGLViewer->fSecSelRec);
+                  if ( event->fState & kKeyControlMask)
+                  {
+                     Warning("TGLEventHandler::HandleButton", "Multiple select not supported in this mode.");
+                     event->fState ^= kKeyControlMask;
+                  }
                }
             }
-            obj = phys_shape->GetLogical()->GetExternal();
-            fGLViewer->Clicked(obj);
-            fGLViewer->Clicked(obj, event->fCode, event->fState);
-
          }
+         fGLViewer->Clicked(obj);
+         fGLViewer->Clicked(obj, event->fCode, event->fState);
 
          eventSt.fX = 0;
          eventSt.fY = 0;

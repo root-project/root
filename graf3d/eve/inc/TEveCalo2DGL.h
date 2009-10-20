@@ -14,6 +14,7 @@
 
 #include "TGLObject.h"
 #include "TEveCaloData.h"
+#include "TEveCalo.h"
 
 class TGLViewer;
 class TGLScene;
@@ -34,8 +35,10 @@ protected:
 
    Float_t   MakeRPhiCell(Float_t phiMin, Float_t phiMax, Float_t towerH, Float_t offset) const;
 
-   void      DrawRPhi(TGLRnrCtx & rnrCtx) const;
-   void      DrawRhoZ(TGLRnrCtx & rnrCtx) const;
+   void      DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t&) const;
+   void      DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t&) const;
+
+   Bool_t    IsRPhi() const;
 
 public:
    TEveCalo2DGL();
@@ -44,10 +47,12 @@ public:
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
    virtual void   SetBBox();
 
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   virtual void DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps) const;
 
    // To support two-level selection
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
+   virtual Bool_t AlwaysSecondarySelect()   const { return kTRUE; }
    virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
    ClassDef(TEveCalo2DGL, 0); // GL renderer class for TEveCalo2D.

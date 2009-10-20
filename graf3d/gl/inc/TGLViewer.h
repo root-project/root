@@ -59,7 +59,7 @@ public:
                       kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY,
                       kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY };
 
-   enum ESecSelType { kNone, kAlways, kOnKeyMod1 };
+   enum ESecSelType { kOnRequest, kOnKeyMod1 };
 
 private:
    TGLViewer(const TGLViewer &);             // Not implemented

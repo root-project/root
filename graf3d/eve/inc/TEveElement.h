@@ -298,14 +298,16 @@ public:
 
    Bool_t IsPickable()    const { return fPickable; }
    void   SetPickable(Bool_t p) { fPickable = p; }
+   
+   virtual TEveElement* ForwardSelection() const;
 
-   void SelectElement(Bool_t state);
-   void IncImpliedSelected();
-   void DecImpliedSelected();
+   virtual void SelectElement(Bool_t state);
+   virtual void IncImpliedSelected();
+   virtual void DecImpliedSelected();
 
-   void HighlightElement(Bool_t state);
-   void IncImpliedHighlighted();
-   void DecImpliedHighlighted();
+   virtual void HighlightElement(Bool_t state);
+   virtual void IncImpliedHighlighted();
+   virtual void DecImpliedHighlighted();
 
    virtual void FillImpliedSelectedSet(Set_t& impSelSet);
 

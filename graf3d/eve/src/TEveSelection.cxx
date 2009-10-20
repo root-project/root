@@ -257,6 +257,11 @@ TEveElement* TEveSelection::MapPickedToSelected(TEveElement* el)
    if (el == 0)
       return 0;
 
+   if (el->ForwardSelection())
+   {
+      return el->ForwardSelection();
+   }
+
    switch (fPickToSelect)
    {
       case kPS_Ignore:

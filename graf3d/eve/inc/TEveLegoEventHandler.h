@@ -40,7 +40,6 @@ public:
    virtual ~TEveLegoEventHandler() {}
 
    virtual Bool_t HandleKey(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
 
    Float_t GetTransTheta() {return fTransTheta;}
    void    SetTransTheta(Float_t h) {fTransTheta=h;}
