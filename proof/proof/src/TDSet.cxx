@@ -879,16 +879,21 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
 
    // check, if it already exists in the TDSet
    TDSetElement *el = (TDSetElement *) fElements->FindObject(fn);
-   if (el) {
-      Warning("Add", "duplicate, %40s is already in dataset, ignored", fn.Data());
-      return kFALSE;
+   if (!el) {
+      if (!objname)
+         objname = GetObjName();
+      if (!dir)
+         dir = GetDirectory();
+      fElements->Add(new TDSetElement(fn, objname, dir, first, num, msd));
+   } else {
+      TString msg;
+      msg.Form("duplication detected: %40s is already in dataset - ignored", fn.Data());
+      Warning("Add", msg.Data());
+      if (gProofServ) {
+         msg.Insert(0, "WARNING: ");
+         gProofServ->SendAsynMessage(msg);
+      }
    }
-   if (!objname)
-      objname = GetObjName();
-   if (!dir)
-      dir = GetDirectory();
-
-   fElements->Add(new TDSetElement(fn, objname, dir, first, num, msd));
 
    return kTRUE;
 }
@@ -943,8 +948,10 @@ Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
          if (!availableOnly ||
             (fi->TestBit(TFileInfo::kStaged) &&
             !fi->TestBit(TFileInfo::kCorrupted))) {
-            if (!Add(fi, meta))
-               return kFALSE;
+            Int_t nf = fElements->GetSize();
+            if (!Add(fi, meta)) return kFALSE;
+            // Duplications count as bad files
+            if (fElements->GetSize() <= nf) badlist->Add(fi);
          } else if (badlist && fi) {
             // Return list of non-usable files
             badlist->Add(fi);
@@ -973,6 +980,7 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
       Error("Add", "TFileInfo object name must be specified");
       return kFALSE;
    }
+   TString msg;
 
    // Element to be added
    TDSetElement *el = 0;
@@ -980,8 +988,13 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    // Check if it already exists in the TDSet
    const char *file = fi->GetFirstUrl()->GetUrl();
    if ((el = (TDSetElement *) fElements->FindObject(file))) {
-      Warning("Add", "duplicate, %40s is already in dataset, ignored", file);
-      return kFALSE;
+      msg.Form("duplication detected: %40s is already in dataset - ignored", file);
+      Warning("Add", msg.Data());
+      if (gProofServ) {
+         msg.Insert(0, "WARNING: ");
+         gProofServ->SendAsynMessage(msg);
+      }
+      return kTRUE;
    }
 
    // If more than one metadata info require the specification of the objpath;
@@ -991,7 +1004,7 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    if (!meta || strlen(meta) <= 0 || !strcmp(meta, "/")) {
       TList *fil = 0;
       if ((fil = fi->GetMetaDataList()) && fil->GetSize() > 1) {
-         TString msg = Form("\n  Object name unspecified and several objects available.\n");
+         msg.Form("\n  Object name unspecified and several objects available.\n");
          msg += "  Please choose one from the list below:\n";
          TIter nx(fil);
          while ((m = (TFileInfoMeta *) nx())) {
