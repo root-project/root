@@ -41,10 +41,20 @@ namespace RooStats {
       // main interface, implemented
       virtual HypoTestResult* GetHypoTest() const;   
     
+      
 
    protected:
 
+      // clear internal fit result
+      void DoReset() const; 
+
+      // perform a global fit 
+      void DoGlobalFit() const; 
+
       ClassDef(ProfileLikelihoodCalculator,1) // A concrete implementation of CombinedCalculator that uses the ProfileLikelihood ratio.
+
+      mutable RooFitResult * fFitResult;  // internal  result of gloabl fit 
+      
    };
 }
 #endif

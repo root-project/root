@@ -61,6 +61,7 @@ namespace RooStats {
 
     RooArgSet *fParamsPlot;
 
+
   protected:
 
     ClassDef(LikelihoodIntervalPlot,1)  // Class containing the results of the IntervalCalculator

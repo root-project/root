@@ -83,42 +83,44 @@ LikelihoodInterval::LikelihoodInterval() : fLikelihoodRatio(0)
 
 //____________________________________________________________________
 LikelihoodInterval::LikelihoodInterval(const char* name) :
-   ConfInterval(name,name), fLikelihoodRatio(0)
+   ConfInterval(name,name), fBestFitParams(0), fLikelihoodRatio(0)
 {
    // Alternate constructor
 }
 
 //____________________________________________________________________
 LikelihoodInterval::LikelihoodInterval(const char* name, const char* title) :
-   ConfInterval(name,title), fLikelihoodRatio(0)
+   ConfInterval(name,title), fBestFitParams(0), fLikelihoodRatio(0)
 {
    // Alternate constructor
 }
 
 //____________________________________________________________________
 LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, const RooArgSet* params) :
-   ConfInterval(name,name)
+   ConfInterval(name,name), 
+   fParameters(*params)
 {
-   // Alternate constructor
-  fLikelihoodRatio = lr;
-  fParameters = params;
+   // Alternate constructor taking a snaphot of best parameter of interest for interval
+   fLikelihoodRatio = lr;
+   fBestFitParams = (RooArgSet *) params->snapshot();
 }
 
 //____________________________________________________________________
 LikelihoodInterval::LikelihoodInterval(const char* name, const char* title, RooAbsReal* lr, const RooArgSet* params) :
-   ConfInterval(name,title)
+   ConfInterval(name,title), 
+   fParameters(*params)
 {
-   // Alternate constructor
-  fLikelihoodRatio = lr;
-  fParameters = params;
+   // Alternate constructor passing a snaphot of best parameter of interest for interval
+   fLikelihoodRatio = lr;
+   fBestFitParams = (RooArgSet *) params->snapshot();
 }
 
 //____________________________________________________________________
 LikelihoodInterval::~LikelihoodInterval()
 {
    // Destructor
-  if(fLikelihoodRatio) delete fLikelihoodRatio;
-
+   if (fBestFitParams) delete fBestFitParams; 
+   if (fLikelihoodRatio) delete fLikelihoodRatio;
 }
 
 
@@ -142,27 +144,6 @@ Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint)
   }
 
   
-  /*
-  ///////////////////////////
-  // Debugging
-  RooProfileLL* profile = (RooProfileLL*) fLikelihoodRatio;
-  profile->nll().Print();
-  //  profile->nll().printCompactTree();
-  RooNLLVar* nll = (RooNLLVar*) (profile->getComponents()->find("nll_modelWithConstraints_modelWithConstraintsData"));
-  RooDataSet* tmpData = (RooDataSet*) &(nll->data());
-  nll->Print();
-  std::cout << "nll = " << nll << " data = " << &(nll->data()) <<  " " << tmpData << std::endl;
-  tmpData->Print();
-  for(int i=0; i<tmpData->numEntries(); ++i)
-    tmpData->get(i)->Print("v");
-
-  std::cout<< "best fit params = " << std::endl;
-  profile->bestFitParams().Print("v");
-
-  SetParameters(&(profile->bestFitParams()), fLikelihoodRatio->getVariables() );
-  //////////////////////////
-  */
-
 
   // set parameters
   SetParameters(&parameterPoint, fLikelihoodRatio->getVariables() );
@@ -175,27 +156,13 @@ Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint)
   }
 
 
-  /*  
-    std::cout << "in likelihood interval: LR = " <<
-      fLikelihoodRatio->getVal() << " " << 
-    " ndof = " << parameterPoint.getSize() << 
-    " alpha = " << 1.-fConfidenceLevel << " cl = " << fConfidenceLevel <<
-    " with P = " <<
-    TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize())  <<
-    " and CL = " << fConfidenceLevel << std::endl;
-
-    parameterPoint.Print("v");
-    fLikelihoodRatio->getVariables()->Print("v");
-    //    fLikelihoodRatio->printCompactTree();
-    */
-    
-
   // here we use Wilks' theorem.
   if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize()) < (1.-fConfidenceLevel) )
     return false;
 
 
-  RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+  //RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+
   return true;
   
 }
@@ -204,7 +171,8 @@ Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint)
 RooArgSet* LikelihoodInterval::GetParameters() const
 {  
   // returns list of parameters
-  return (RooArgSet*) fParameters->clone((std::string(fParameters->GetName())+"_clone").c_str());
+  //return (RooArgSet*) fParameters->clone((std::string(fParameters->GetName())+"_clone").c_str());
+   return new RooArgSet(fParameters); 
 }
 
 //____________________________________________________________________
@@ -212,11 +180,11 @@ Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) cons
 {  
   // check that the parameters are correct
 
-  if (parameterPoint.getSize() != fParameters->getSize() ) {
+  if (parameterPoint.getSize() != fParameters.getSize() ) {
     std::cout << "size is wrong, parameters don't match" << std::endl;
     return false;
   }
-  if ( ! parameterPoint.equals( *fParameters ) ) {
+  if ( ! parameterPoint.equals( fParameters ) ) {
     std::cout << "size is ok, but parameters don't match" << std::endl;
     return false;
   }
@@ -236,7 +204,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
 
    // otherwise compute limit
 
-  RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING) ;
+   //RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING) ;
 
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
 
@@ -244,9 +212,17 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
   RooRealVar* myarg = (RooRealVar *) vars->find(param.GetName());
   delete vars ;
 
-  double target = TMath::ChisquareQuantile(fConfidenceLevel,fParameters->getSize())/2.;
+  // I think here ndf must be 1 
+  double target = TMath::ChisquareQuantile(fConfidenceLevel,1)/2.;
 
-  Double_t thisArgVal = param.getVal()*0.99;
+  //Double_t thisArgVal = param.getVal()*0.99;
+
+  // initial point for the scan - 
+  // start from  xmin - nsigma * error
+  Double_t nsigma = target * 2; 
+  RooRealVar * fitPar = (RooRealVar *) fBestFitParams->find(param.GetName() ); 
+  Double_t thisArgVal = fitPar->getVal() - nsigma * fitPar->getError(); 
+
   myarg->setVal( thisArgVal);
 
   Double_t maxStep = (myarg->getMax()-myarg->getMin())/10 ;
@@ -319,7 +295,7 @@ Double_t LikelihoodInterval::LowerLimit(RooRealVar& param)
   double ret=myarg->getVal();
 
   fLowerLimits[param.GetName()] = ret; 
-  RooMsgService::instance().setGlobalKillBelow(RooFit::INFO) ;
+  //RooMsgService::instance().setGlobalKillBelow(RooFit::INFO) ;
 
   return ret;
 }
@@ -336,15 +312,23 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param)
 
    // otherwise compute limit
 
-  RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING) ;
+   //RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING) ;
   RooAbsReal* newProfile = fLikelihoodRatio->createProfile(RooArgSet(param));
 
   RooArgSet* vars = newProfile->getVariables() ;
   RooRealVar* myarg = (RooRealVar *)vars->find(param.GetName());
   delete vars ;
 
-  double target = TMath::ChisquareQuantile(fConfidenceLevel,fParameters->getSize())/2.;
-  Double_t thisArgVal = param.getVal()*1.01 ;
+  double target = TMath::ChisquareQuantile(fConfidenceLevel, 1)/2.;
+  //Double_t thisArgVal = param.getVal()*1.01 ;
+
+  // start from  xmin + nsigma * error
+  Double_t nsigma = target * 2; 
+  RooRealVar * fitPar = (RooRealVar *) fBestFitParams->find(param.GetName() ); 
+  Double_t thisArgVal = fitPar->getVal() + nsigma * fitPar->getError(); 
+
+  //std::cout << " param UL - start value  " << thisArgVal << " val  " << myarg->getVal(); 
+
   myarg->setVal( thisArgVal );
 
   Double_t maxStep = (myarg->getMax()-myarg->getMin())/10 ;
@@ -353,14 +337,23 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param)
   double L= newProfile->getVal();
   double L_old=0;
   double diff = L - target;
+
+  //std::cout << " L =   " << L << " diff = " << diff << std::endl;
+
   //the parameters for the linear approximation
   double a=0, b=0;
   double x_app=0;
   int nIterations = 0, maxIterations = 100;
   while(fabs(diff)>0.01 && nIterations<maxIterations){
     nIterations++;
+
+//     std::cout << " iter " << nIterations << " step " << step << " val " << thisArgVal 
+//               << "  L_old " << L_old << "  L " << L << std::endl; 
+
     L_old=L;
     thisArgVal=thisArgVal+step;
+
+ 
     if (thisArgVal>myarg->getMax())
     {
         ccoutD(Eval) <<"WARNING: near the upper boundery"<<std::endl;
@@ -417,7 +410,7 @@ Double_t LikelihoodInterval::UpperLimit(RooRealVar& param)
   //cout << "UL iterations " << nIterations << " value = " << myarg->getVal() << " PL = " << newProfile->getVal() << std::endl;
 
   // restore ROOT reporting message level
-  RooMsgService::instance().setGlobalKillBelow(RooFit::INFO) ;
+  //RooMsgService::instance().setGlobalKillBelow(RooFit::INFO) ;
 
   delete newProfile;
   double ret=myarg->getVal();

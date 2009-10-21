@@ -45,7 +45,7 @@ namespace RooStats {
  
 
       // do we want it to return list of parameters
-      virtual RooArgSet* GetParameters() const;
+      virtual  RooArgSet* GetParameters() const;
 
       // check if parameters are correct. (dummy implementation to start)
       Bool_t CheckParameters(const RooArgSet&) const ;
@@ -63,7 +63,8 @@ namespace RooStats {
 
    private:
 
-      const RooArgSet* fParameters; // parameters of interest for this interval
+      RooArgSet   fParameters; // parameters of interest for this interval
+      RooArgSet *  fBestFitParams; // snapshot ag POI with best fit value
       RooAbsReal* fLikelihoodRatio; // likelihood ratio function used to make contours
       Double_t fConfidenceLevel; // Requested confidence level (eg. 0.95 for 95% CL)
       std::map<std::string, double> fLowerLimits; // map with cached lower limit values
