@@ -192,6 +192,7 @@ void TEveRGBAPaletteSubEditor::DoMinMax()
 
    fM->SetMinMax((Int_t) fMinMax->GetMin(), (Int_t) fMinMax->GetMax());
    Changed();
+   fM->MinMaxValChanged();
 }
 
 /******************************************************************************/

@@ -15,8 +15,11 @@
 #include "TEveUtil.h"
 
 #include "TObject.h"
+#include "TQObject.h"
 
-class TEveRGBAPalette : public TObject, public TEveRefCnt
+class TEveRGBAPalette : public TObject,
+                        public TQObject,
+                        public TEveRefCnt
 {
    friend class TEveRGBAPaletteEditor;
    friend class TEveRGBAPaletteSubEditor;
@@ -133,8 +136,7 @@ public:
 
    // ================================================================
 
-   // ?? Should we emit some *SIGNALS* ??
-   // ?? Should we have a RendererTimeStamp ??
+   void MinMaxValChanged(); // *SIGNAL*
 
    ClassDef(TEveRGBAPalette, 1); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
 };

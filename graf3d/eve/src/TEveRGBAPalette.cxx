@@ -29,7 +29,7 @@ ClassImp(TEveRGBAPalette)
 
 //______________________________________________________________________________
 TEveRGBAPalette::TEveRGBAPalette() :
-   TObject(),
+   TObject(), TQObject(),
    TEveRefCnt(),
 
    fLowLimit(0), fHighLimit(0), fMinVal(0), fMaxVal(0),
@@ -59,7 +59,7 @@ TEveRGBAPalette::TEveRGBAPalette() :
 //______________________________________________________________________________
 TEveRGBAPalette::TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp,
                                  Bool_t showdef, Bool_t fixcolrng) :
-   TObject(),
+   TObject(), TQObject(),
    TEveRefCnt(),
 
    fLowLimit(0), fHighLimit(0), fMinVal(0), fMaxVal(0),
@@ -331,4 +331,15 @@ void TEveRGBAPalette::SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t 
    fOverRGBA[1] = g;
    fOverRGBA[2] = b;
    fOverRGBA[3] = a;
+}
+
+//______________________________________________________________________________
+void TEveRGBAPalette::MinMaxValChanged()
+{
+   // Emit the "MinMaxValChanged()" signal.
+   // This is NOT called automatically from SetMin/Max functions but
+   // it IS called from TEveRGBAPaletteEditor after it changes the
+   // min/max values.
+
+   Emit("MinMaxValChanged()");
 }
