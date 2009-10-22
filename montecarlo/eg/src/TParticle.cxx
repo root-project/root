@@ -334,12 +334,16 @@ void TParticle::SetPdgCode(Int_t pdg)
    //Get a new pointer to a TParticlePDG from TDatabasePDG
    //Recompute the mass
 
+   static Int_t nWarnings = 0;
    fPdgCode = pdg;
    fParticlePDG = TDatabasePDG::Instance()->GetParticle(pdg);
    if (fParticlePDG) {
       fCalcMass    = fParticlePDG->Mass();
    } else {
-      Warning("SetPdg","PDG code %d unknown from TDatabasePDG",pdg);
+      if (nWarnings < 10) {
+         Warning("SetPdgCode","PDG code %d unknown from TDatabasePDG",pdg);
+         nWarnings++;
+      }
       Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
       if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
       else         fCalcMass = -TMath::Sqrt(-a2);
