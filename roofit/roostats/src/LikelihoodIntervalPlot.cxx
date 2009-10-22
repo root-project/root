@@ -34,6 +34,13 @@ object.
 #include "TGraph.h"
 #include "TPad.h"
 
+#include "Math/WrappedFunction.h"
+#include "Math/Minimizer.h"
+#include "Math/Factory.h"
+#include "Math/MinimizerOptions.h"
+#include "RooFunctor.h"
+#include "RooProfileLL.h"
+
 #include "RooRealVar.h"
 #include "RooPlot.h"
 //#include "RooProfileLL.h"
@@ -112,10 +119,15 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       
    RooAbsReal* newProfile = fInterval->GetLikelihoodRatio(); 
 
+   // analyze options 
    TString opt = options; 
    opt.ToLower(); 
+   // use ROoPLot for drawing the 1D PL
    bool useRooPlot = opt.Contains("rooplot");
    opt.ReplaceAll("rooplot","");
+   // use Minuit for drawing the contours of the PL 
+   bool useMinuit = !opt.Contains("nominuit");
+   opt.ReplaceAll("nominuit","");
 
    RooPlot * frame = 0; 
    
@@ -139,7 +151,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          double xmax = std::min( x2, 2*xcont_max - xcont_min); 
          
          TF1 * tmp = newProfile->asTF(*myarg); 
-         std::cout << "setting range to " << xmin << " , " << xmax << std::endl;
+         //std::cout << "setting range to " << xmin << " , " << xmax << std::endl;
          tmp->SetRange(xmin, xmax);      
          tmp->SetNpx(fNPoints);
 
@@ -220,46 +232,137 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       RooRealVar *myparamY = (RooRealVar*)it.Next();
 
-      TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparamY,RooFit::YVar(*myparam),RooFit::Binning(fNPoints),RooFit::Scaling(kFALSE));
-
-
-      hist2D->SetTitle(GetTitle());
-      hist2D->SetStats(kFALSE);
-
       Double_t cont_level = TMath::ChisquareQuantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
       cont_level = cont_level/2; // since we are plotting -log LR
-      hist2D->SetContour(1,&cont_level);
 
-      hist2D->SetFillColor(fColor); 
-      hist2D->SetFillStyle(fFillStyle); 
-      hist2D->SetLineColor(fLineColor);
+      RooArgList params(*newProfile->getVariables());
+      // set values and error for the POI to the best fit values 
+      for (int i = 0; i < params.getSize(); ++i) { 
+         RooRealVar & par =  (RooRealVar &) params[i];
+         RooRealVar * fitPar =  (RooRealVar *) (fInterval->GetBestFitParameters()->find(par.GetName() ) );
+         if (fitPar) {
+            par.setVal( fitPar->getVal() );
+         }
+      }
+      // do a profile evaluation to start from the best fit values of parameters 
+      newProfile->getVal(); 
 
-      TString tmpOpt(options);
+      if (!useMinuit) { 
+      
+         // draw directly the TH2 from the profile LL
+         TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparamY,RooFit::YVar(*myparam),RooFit::Binning(fNPoints),RooFit::Scaling(kFALSE));
 
-      if(!tmpOpt.Contains("CONT")) tmpOpt.Append("CONT");
-      if(!tmpOpt.Contains("LIST")) tmpOpt.Append("LIST"); // if you want the contour TGraphs
 
-      hist2D->Draw(tmpOpt.Data());
-      //    hist2D->Draw("cont2,list,same");
+         hist2D->SetTitle(GetTitle());
+         hist2D->SetStats(kFALSE);
 
-      gPad->Update();  // needed for get list of specials 
+         hist2D->SetContour(1,&cont_level);
 
-      // get TGraphs and add them
-      //    gROOT->GetListOfSpecials()->Print();
-      TObjArray *contours = (TObjArray*) gROOT->GetListOfSpecials()->FindObject("contours"); 
-      if(contours){
-         TList *list = (TList*)contours->At(0); 
-         TGraph *gr1 = (TGraph*)list->First();
-         gr1->SetLineColor(kBlack);
-         gr1->SetLineStyle(kDashed);
-         gr1->Draw("same");
-      } else{
-         std::cout << "no countours found in ListOfSpecials" << std::endl;
+         hist2D->SetFillColor(fColor); 
+         hist2D->SetFillStyle(fFillStyle); 
+         hist2D->SetLineColor(fLineColor);
+
+         TString tmpOpt(options);
+
+         if(!tmpOpt.Contains("CONT")) tmpOpt.Append("CONT");
+         if(!tmpOpt.Contains("LIST")) tmpOpt.Append("LIST"); // if you want the contour TGraphs
+
+         hist2D->Draw(tmpOpt.Data());
+         //    hist2D->Draw("cont2,list,same");
+
+         gPad->Update();  // needed for get list of specials 
+
+         // get TGraphs and add them
+         //    gROOT->GetListOfSpecials()->Print();
+         TObjArray *contours = (TObjArray*) gROOT->GetListOfSpecials()->FindObject("contours"); 
+         if(contours){
+            TList *list = (TList*)contours->At(0); 
+            TGraph *gr1 = (TGraph*)list->First();
+            gr1->SetLineColor(kBlack);
+            gr1->SetLineStyle(kDashed);
+            gr1->Draw("same");
+         } else{
+            std::cout << "no countours found in ListOfSpecials" << std::endl;
+         }
+      }
+      else { 
+         // use Minuit for drawing the contours of the profile likelihood
+         
+         // take first the nll function 
+         RooAbsReal & nll  = ((RooProfileLL*) newProfile)->nll(); 
+         // bind the nll function in the right interface for the Minimizer class 
+         // as a function of only the parameters (poi + nuisance parameters) 
+
+         // need to restore values and errors for POI
+         for (int i = 0; i < params.getSize(); ++i) { 
+            RooRealVar & par =  (RooRealVar &) params[i];
+            RooRealVar * fitPar =  (RooRealVar *) (fInterval->GetBestFitParameters()->find(par.GetName() ) );
+            if (fitPar) {
+               par.setVal( fitPar->getVal() );
+               par.setError( fitPar->getVal() );
+            }
+         }
+         // now do binding of NLL with a functor for Minimizer 
+         RooFunctor func(nll, RooArgSet(), params ); 
+         // create minimizer class 
+         ROOT::Math::Minimizer * minimizer = ROOT::Math::Factory::CreateMinimizer(
+            ROOT::Math::MinimizerOptions::DefaultMinimizerType(), 
+            ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo()); 
+
+         if (!minimizer) return;
+
+         ROOT::Math::WrappedMultiFunction<RooFunctor &> wfunc(func, func.nPar() );  
+         minimizer->SetFunction(wfunc); 
+
+         // set minimizer parameters 
+         assert( params.getSize() == int(wfunc.NDim()) ); 
+         unsigned int ivarX = 0; unsigned int ivarY = 0; 
+         for (unsigned int i = 0; i < wfunc.NDim(); ++i) { 
+            RooRealVar & v = (RooRealVar &) params[i]; 
+            minimizer->SetLimitedVariable( i, v.GetName(), v.getVal(), v.getError(), v.getMin(), v.getMax() ); 
+            if (TString(v.GetName()) == TString(myparam->GetName()) )  ivarY = i; 
+            if (TString(v.GetName()) == TString(myparamY->GetName()) ) ivarX = i; 
+         }
+         // for finding thecontour need to find first global minimum
+         bool iret = minimizer->Minimize();
+         if (!iret) { 
+            std::cout << "MINUIT MInimization failed - cannot find contours " << std::endl;
+         }
+         minimizer->PrintResults(); 
+         // find contours         
+         TGraph * gr = new TGraph(fNPoints+1); 
+         unsigned int ncp = fNPoints; 
+         minimizer->SetErrorDef(cont_level);
+         minimizer->Contour(ivarX, ivarY, ncp, gr->GetX(), gr->GetY() );
+         if (int(ncp) < fNPoints) {
+            std::cout << "Warning - Less points calculated in contours np = " << ncp << " / " << fNPoints << std::endl;
+            for (int i = ncp; i < fNPoints; ++i) gr->RemovePoint(i);
+         }
+         // add last point to same as first one to close the contour
+         gr->SetPoint(ncp, gr->GetX()[0], gr->GetY()[0] );
+         opt.Append("LF");
+         // draw first a dummy 2d histogram gfor the axis 
+         if (!opt.Contains("same")) { 
+            TString title = TString("Contour of ") + TString(myparam->GetName() ) + TString(" vs ") + TString(myparamY->GetName() ); 
+            TH2F* hist2D = new TH2F("_hist2D",title, fNPoints, myparamY->getMin(), myparamY->getMax(), fNPoints, myparam->getMin(), myparam->getMax() );
+            hist2D->GetXaxis()->SetTitle(myparamY->GetName());
+            hist2D->GetYaxis()->SetTitle(myparam->GetName());
+            hist2D->SetBit(TH1::kNoStats); // do not draw statistics
+            hist2D->SetFillStyle(fFillStyle); 
+            hist2D->SetMaximum(1);  // to avoid problem with subsequents draws
+            hist2D->Draw("AXIS");
+         }
+         gr->SetFillColor(fColor); 
+         //gr->SetFillStyle(fFillStyle); 
+         gr->SetLineColor(kBlack); 
+         if (opt.Contains("same"))  gr->SetFillStyle(fFillStyle); // put transparent
+         gr->Draw(opt);
+         TString name = TString("Graph_of_") + TString(fInterval->GetName());
+         gr->SetName(name);
+         
       }
 
-      return;
    }
-
 
    return;
 }

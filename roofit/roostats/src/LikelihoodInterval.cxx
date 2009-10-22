@@ -75,44 +75,34 @@ ClassImp(RooStats::LikelihoodInterval) ;
 
 using namespace RooStats;
 
-//____________________________________________________________________
-LikelihoodInterval::LikelihoodInterval() : fLikelihoodRatio(0)
-{
-   // Default constructor
-}
-
-//____________________________________________________________________
-LikelihoodInterval::LikelihoodInterval(const char* name) :
-   ConfInterval(name,name), fBestFitParams(0), fLikelihoodRatio(0)
-{
-   // Alternate constructor
-}
 
 //____________________________________________________________________
 LikelihoodInterval::LikelihoodInterval(const char* name, const char* title) :
    ConfInterval(name,title), fBestFitParams(0), fLikelihoodRatio(0)
 {
-   // Alternate constructor
+   // Default constructor with name and title
 }
 
 //____________________________________________________________________
-LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, const RooArgSet* params) :
+LikelihoodInterval::LikelihoodInterval(const char* name, RooAbsReal* lr, const RooArgSet* params,  RooArgSet * bestParams) :
    ConfInterval(name,name), 
-   fParameters(*params)
+   fParameters(*params), 
+   fBestFitParams(bestParams), 
+   fLikelihoodRatio(lr)
 {
-   // Alternate constructor taking a snaphot of best parameter of interest for interval
-   fLikelihoodRatio = lr;
-   fBestFitParams = (RooArgSet *) params->snapshot();
+   // Alternate constructor taking a pointer to the profile likelihood ratio, parameter of interest and 
+   // optionally a snaphot of best parameter of interest for interval
 }
 
 //____________________________________________________________________
-LikelihoodInterval::LikelihoodInterval(const char* name, const char* title, RooAbsReal* lr, const RooArgSet* params) :
+LikelihoodInterval::LikelihoodInterval(const char* name, const char* title, RooAbsReal* lr, const RooArgSet* params,   RooArgSet * bestParams) :
    ConfInterval(name,title), 
-   fParameters(*params)
+   fParameters(*params), 
+   fBestFitParams( bestParams ), 
+   fLikelihoodRatio(lr)
 {
-   // Alternate constructor passing a snaphot of best parameter of interest for interval
-   fLikelihoodRatio = lr;
-   fBestFitParams = (RooArgSet *) params->snapshot();
+   // Alternate constructor taking a pointer to the profile likelihood ratio, parameter of interest and 
+   // optionally a snaphot of best parameter of interest for interval
 }
 
 //____________________________________________________________________

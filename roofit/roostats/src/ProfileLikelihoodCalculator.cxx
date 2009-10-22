@@ -175,8 +175,8 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    // if fit fails return
    if (!fFitResult) return 0;
 
-   // t.b.f. " RooProfileLL should keep and prvide possibility to query on global minimum
-   // set POI to fit value (this will speed up profileLL calcualtion of global minimum)
+   // t.b.f. " RooProfileLL should keep and provide possibility to query on global minimum
+   // set POI to fit value (this will speed up profileLL calculation of global minimum)
    const RooArgList & fitParams = fFitResult->floatParsFinal(); 
    for (int i = 0; i < fitParams.getSize(); ++i) {
       RooRealVar & fitPar =  (RooRealVar &) fitParams[i];
@@ -187,21 +187,27 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
       }
    }
   
-   profile->getVal(); // do this so profile will cache the minimum
+   // do this so profile will cache inside the absolute minimum and 
+   // minimum values of nuisance parameters
+   profile->getVal(); 
    //RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
-   profile->Print();
+   //  profile->Print();
 
    TString name = TString("LikelihoodInterval_") + TString(GetName() ); 
-   // make a list of fPOI with fit result values 
+
+   // make a list of fPOI with fit result values and pass to LikelihoodInterval class
+   // bestPOI is a cloned list of POI only with their best fit values 
    TIter iter = fPOI->createIterator(); 
    RooArgSet fitParSet(fitParams); 
-   RooArgSet bestPOI; 
+   RooArgSet * bestPOI = new RooArgSet();  
    while (RooAbsArg * arg =  (RooAbsArg*) iter.Next() ) { 
       RooAbsArg * p  =  fitParSet.find( arg->GetName() );
-      if (p) bestPOI.add(*p);
-      else bestPOI.add(*arg);
+      if (p) bestPOI->addClone(*p);
+      else bestPOI->addClone(*arg);
    }
-   LikelihoodInterval* interval = new LikelihoodInterval(name, profile, &bestPOI);
+   // fPOI contains the paramter of interest of the PL object 
+   // and bestPOI contains a snapshot with the best fit values 
+   LikelihoodInterval* interval = new LikelihoodInterval(name, profile, fPOI, bestPOI);
    interval->SetConfidenceLevel(1.-fSize);
    delete constrainedParams;
    return interval;
