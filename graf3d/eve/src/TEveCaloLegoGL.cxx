@@ -273,7 +273,7 @@ void TEveCaloLegoGL::Make3DDisplayListRebin(TEveCaloData::RebinData_t& rebinData
       glNewList(dlMap[s], GL_COMPILE);
 
       if (selection) glLoadName(s);
-      glPushName(0);
+      if (selection) glPushName(0);
       for (Int_t i=1; i<= fEtaAxis->GetNbins(); ++i)
       {
          for (Int_t j=1; j <= fPhiAxis->GetNbins(); ++j)
@@ -298,7 +298,7 @@ void TEveCaloLegoGL::Make3DDisplayListRebin(TEveCaloData::RebinData_t& rebinData
             }
          }
       }
-      glPopName();
+      if (selection) glPopName();
       glEndList();
    }
 }
@@ -1242,12 +1242,7 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
       Int_t cellID = rec.GetItem(2);
       if (fM->fBinStep == 1)
       {
-         Int_t tower = fM->fCellList[cellID].fTower;
-         while (cellID > 0 && tower == fM->fCellList[cellID].fTower)
-         {
-            fM->fData->GetCellsSelected().push_back(fM->fCellList[cellID]);
-            --cellID;
-         }
+         fM->fData->GetCellsSelected().push_back(fM->fCellList[cellID]);
       }
       else  {
          if (cellID >0)
@@ -1262,7 +1257,7 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
 
             for(TEveCaloData::vCellId_i it = sl.begin(); it != sl.end(); ++it)
             {
-               if ((*it).fSlice <= slice )fM->fData->GetCellsSelected().push_back(*it);
+               if ((*it).fSlice == slice )fM->fData->GetCellsSelected().push_back(*it);
             }
          }
       }

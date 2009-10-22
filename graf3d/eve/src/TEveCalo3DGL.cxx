@@ -595,14 +595,7 @@ void TEveCalo3DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
    if (rec.GetN() > 1)
    {
       Int_t cellID = rec.GetItem(1);
-
-      Int_t id = cellID;
-      Int_t tower = fM->fCellList[cellID].fTower;
-      while (id > 0 && tower == fM->fCellList[id].fTower)
-      {
-         fM->fData->GetCellsSelected().push_back(fM->fCellList[id]);
-         --id;
-      }
+      fM->fData->GetCellsSelected().push_back(fM->fCellList[cellID]);
    }
 
    fM->fData->DataChanged();

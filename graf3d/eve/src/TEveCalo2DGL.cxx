@@ -362,7 +362,7 @@ void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
       for (TEveCaloData::vCellId_i it = fM->fCellLists[binID]->begin();
            it!=fM->fCellLists[binID]->end(); it++)
       {
-         if ((*it).fSlice <= slice)
+         if ((*it).fSlice == slice)
          {
             if (!IsRPhi())
             {

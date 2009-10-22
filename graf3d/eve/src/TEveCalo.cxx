@@ -83,7 +83,6 @@ TEveCaloViz::~TEveCaloViz()
    // Destructor.
 
    if (fPalette) fPalette->DecRefCount();
-   if (fData) fData->RemoveElement(this);
 }
 
 //______________________________________________________________________________
@@ -110,6 +109,8 @@ void TEveCaloViz::IncImpliedSelected()
    // It has same functionality as its base class with additional
    // debug print of selected cells list.
 
+   if (gDebug > 1)
+   {
       printf("%s::IncImpliedSelected, selected %d cells:\n", GetElementName(), (Int_t)fData->GetCellsSelected().size());
       TEveCaloData::CellData_t cellData;
       TEveCaloData::vCellId_t& sel = fData->GetCellsSelected();
@@ -119,6 +120,7 @@ void TEveCaloViz::IncImpliedSelected()
          printf("Tower [%d] Slice [%d] Value [%.2f] ", (*it).fTower, (*it).fSlice, cellData.fValue);
          printf("Eta:(%f, %f) Phi(%f, %f)\n",  cellData.fEtaMin, cellData.fEtaMax, cellData.fPhiMin, cellData.fPhiMax);
       }
+   }
 
    TEveElement::IncImpliedSelected();
 }
