@@ -119,7 +119,7 @@ void TGSpeedo::Build()
    Float_t step, mark[5];
    TString fp = gEnv->GetValue("Root.TTFontPath", "");
    TString ar = fp + "/arialbd.ttf";
-   Int_t i, offset;
+   Int_t i, nexe, offset;
 
    const TGFont *counterFont = fClient->GetFont("-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*");
    fCounterFS = counterFont->GetFontStruct();
@@ -145,22 +145,33 @@ void TGSpeedo::Build()
          mark[i] = mark[i-1] + step;
       }
       // format tick labels
-      Int_t nexe = 0;
-      Int_t nx = 3;
-      if (fScaleMax >= 1000) {
-         while ((Int_t)(fScaleMax) % (Int_t)(TMath::Power(10,nx)))
-            nx--;
+      if (fScaleMax >= 1000.0) {
+         nexe = 0;
          while (1) {
             nexe++;
             for (i=0; i<5; i++) {
                mark[i] /= 10.0;
             }
-            if (nexe%nx == 0 && mark[4] < 1000) break;
+            if (mark[4] < 1000.0) break;
          }
          // draw multiplier
-         fImage->DrawText((Int_t)xc - 10, (Int_t)yc + 15, "x10", 12, "#ffffff", ar);
+         fImage->DrawText((Int_t)xc - 11, (Int_t)yc + 15, "x10", 12, "#ffffff", ar);
          sc.Form("%d", nexe);
-         fImage->DrawText((Int_t)xc + 9, (Int_t)yc + 13, sc.Data(), 10, "#ffffff", ar);
+         fImage->DrawText((Int_t)xc + 11, (Int_t)yc + 13, sc.Data(), 10, "#ffffff", ar);
+      }
+      else if (fScaleMax < 100.0) {
+         nexe = 0;
+         while (1) {
+            nexe--;
+            for (i=0; i<5; i++) {
+               mark[i] *= 10.0;
+            }
+            if (mark[4] > 99.9 ) break;
+         }
+         // draw multiplier
+         fImage->DrawText((Int_t)xc - 11, (Int_t)yc + 15, "x10", 12, "#ffffff", ar);
+         sc.Form("%d", nexe);
+         fImage->DrawText((Int_t)xc + 11, (Int_t)yc + 13, sc.Data(), 10, "#ffffff", ar);
       }
       // Format and draw scale tickmarks
       sc.Form("%d",(Int_t)mark[0]);
@@ -397,15 +408,15 @@ void TGSpeedo::SetScaleValue(Float_t val, Int_t damping)
    else
       step = 0.15;
 
-   Float_t old_angle = fAngleMin + (old_val / ((fScaleMax - fScaleMin) /
-                      (fAngleMax - fAngleMin)));
-   Float_t new_angle = fAngleMin + (new_val / ((fScaleMax - fScaleMin) /
-                      (fAngleMax - fAngleMin)));
+   Float_t diff_angle = fAngleMax - fAngleMin;
+   Float_t diff_scale = fScaleMax - fScaleMin;
+   Float_t diff_ratio = diff_scale / diff_angle;
+   Float_t old_angle  = fAngleMin + (old_val / diff_ratio);
+   Float_t new_angle  = fAngleMin + (new_val / diff_ratio);
 
    if (new_angle > old_angle) {
       for (i=old_angle; i<new_angle; i+=step) {
-         new_val = (i - fAngleMin) * ((fScaleMax - fScaleMin) /
-                   (fAngleMax - fAngleMin));
+         new_val = (i - fAngleMin) * diff_ratio;
          SetScaleValue(new_val);
          if (damping > 0)
             gSystem->Sleep(damping);
@@ -413,8 +424,7 @@ void TGSpeedo::SetScaleValue(Float_t val, Int_t damping)
    }
    if (new_angle < old_angle) {
       for (i=old_angle; i>new_angle; i-=step) {
-         new_val = (i - fAngleMin) * ((fScaleMax - fScaleMin) /
-                   (fAngleMax - fAngleMin));
+         new_val = (i - fAngleMin) * diff_ratio;
          SetScaleValue(new_val);
          if (damping > 0)
             gSystem->Sleep(damping);
@@ -520,9 +530,9 @@ void TGSpeedo::DrawText()
             ww /= 10;
             if (nexe%3 == 0 && ww < 10000) break;
          }
-         fImage2->DrawText((Int_t)xc - 8, (Int_t)yc + 72, "x10", 10, "#ffffff", ar);
+         fImage2->DrawText((Int_t)xc - 9, (Int_t)yc + 72, "x10", 10, "#ffffff", ar);
          sprintf(sval,"%d", nexe);
-         fImage2->DrawText((Int_t)xc + 8, (Int_t)yc + 69, sval, 8, "#ffffff", ar);
+         fImage2->DrawText((Int_t)xc + 9, (Int_t)yc + 69, sval, 8, "#ffffff", ar);
       }
       sprintf(sval, "%04d", (int)ww);
       sprintf(dsval, "%c %c %c %c", sval[0], sval[1], sval[2], sval[3]);
@@ -600,9 +610,9 @@ void TGSpeedo::DoRedraw()
             ww /= 10;
             if (nexe%3 == 0 && ww < 10000) break;
          }
-         fImage2->DrawText((Int_t)xc - 8, (Int_t)yc + 72, "x10", 10, "#ffffff", ar);
+         fImage2->DrawText((Int_t)xc - 9, (Int_t)yc + 72, "x10", 10, "#ffffff", ar);
          sprintf(sval,"%d", nexe);
-         fImage2->DrawText((Int_t)xc + 8, (Int_t)yc + 69, sval, 8, "#ffffff", ar);
+         fImage2->DrawText((Int_t)xc + 9, (Int_t)yc + 69, sval, 8, "#ffffff", ar);
       }
       sprintf(sval, "%04d", (int)ww);
       sprintf(dsval, "%c %c %c %c", sval[0], sval[1], sval[2], sval[3]);
