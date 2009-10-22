@@ -1845,6 +1845,9 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
    // Copy the entries.
    if (fastClone) {
       // For each tree in the chain.
+      // disable the read and write cache
+      GetTree()->GetCurrentFile()->SetCacheRead(0);
+      newTree->GetCurrentFile()->SetCacheWrite(0);
       for (Long64_t i = 0; i < nentries; i += GetTree()->GetEntries()) {
          if (LoadTree(i) < 0) {
             break;
