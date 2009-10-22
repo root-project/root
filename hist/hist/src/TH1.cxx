@@ -429,7 +429,9 @@ All histogram classes are derived from the base class TH1
      affecting the aspect of the clone.
 <p>
      One can use TH1::SetMaximum() and TH1::SetMinimum() to force a particular
-     value for the maximum or the minimum scale on the plot.
+     value for the maximum or the minimum scale on the plot. (For 1-D 
+     histograms this means the y-axis, while for 2-D histograms these 
+     functions affect the z-axis).
 <p>
      TH1::UseCurrentStyle() can be used to change all histogram graphics
      attributes to correspond to the current selected style.
@@ -6978,7 +6980,14 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 //______________________________________________________________________________
 Double_t TH1::GetMaximum(Double_t maxval) const
 {
-   //  Return maximum value smaller than maxval of bins in the range*-*-*-*-*-*
+   //  Return maximum value smaller than maxval of bins in the range, 
+   //  unless the value has been overridden by TH1::SetMaximum,
+   //  in which case it returns that value. (This happens, for example, 
+   //  when the histogram is drawn and the y or z axis limits are changed
+   // 
+   //  To get the maximum value of bins in the histogram regardless of
+   //  whether the value has been overridden, use
+   //      h->GetBinContent(h->GetMaximumBin())
 
    if (fMaximum != -1111) return fMaximum;
    Int_t bin, binx, biny, binz;
@@ -7046,7 +7055,14 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 //______________________________________________________________________________
 Double_t TH1::GetMinimum(Double_t minval) const
 {
-   //  Return minimum value greater than minval of bins in the range
+   //  Return minimum value smaller than maxval of bins in the range, 
+   //  unless the value has been overridden by TH1::SetMinimum,
+   //  in which case it returns that value. (This happens, for example, 
+   //  when the histogram is drawn and the y or z axis limits are changed
+   // 
+   //  To get the minimum value of bins in the histogram regardless of
+   //  whether the value has been overridden, use
+   //     h->GetBinContent(h->GetMinimumBin())
 
    if (fMinimum != -1111) return fMinimum;
    Int_t bin, binx, biny, binz;
@@ -7250,11 +7266,12 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymi
 //______________________________________________________________________________
 void TH1::SetMaximum(Double_t maximum)
 {
-   //   -*-*-*-*-*-*-*Set the maximum value for the Y axis*-*-*-*-*-*-*-*-*-*-*-*
-   //                 ====================================
-   // By default the maximum value is automatically set to the maximum
-   // bin content plus a margin of 10 per cent.
-   // Use TH1::GetMaximum to find the maximum value of an histogram
+   // Set the maximum value for the Y axis, in case of 1-D histograms, 
+   // or the Z axis in case of 2-D histograms
+   //
+   // By default the maximum value used in drawing is the maximum value of the histogram plus a margin of 10 per cent. If this function has been called, the value of 'maximum' is used, with no extra margin.
+   //
+   // TH1::GetMaximum returns the maximum value of the bins in the histogram, unless the maximum has been set manually by this function or by altering the y/z axis limits
    // Use TH1::GetMaximumBin to find the bin with the maximum value of an histogram
    //
    fMaximum = maximum;
@@ -7264,11 +7281,12 @@ void TH1::SetMaximum(Double_t maximum)
 //______________________________________________________________________________
 void TH1::SetMinimum(Double_t minimum)
 {
-   //   -*-*-*-*-*-*-*Set the minimum value for the Y axis*-*-*-*-*-*-*-*-*-*-*-*
-   //                 ====================================
-   // By default the minimum value is automatically set to zero if all bin contents
-   // are positive or the minimum - 10 per cent otherwise.
-   // Use TH1::GetMinimum to find the minimum value of an histogram
+   // Set the minimum value for the Y axis, in case of 1-D histograms, 
+   // or the Z axis in case of 2-D histograms
+   //
+   // By default the minimum value used in drawing is the minimum value of the histogram plus a margin of 10 per cent. If this function has been called, the value of 'minimum' is used, with no extra margin.
+   //
+   // TH1::GetMinimum returns the minimum value of the bins in the histogram, unless the minimum has been set manually by this function or by altering the y/z axis limits
    // Use TH1::GetMinimumBin to find the bin with the minimum value of an histogram
    //
    fMinimum = minimum;
