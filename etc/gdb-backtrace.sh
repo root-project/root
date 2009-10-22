@@ -3,40 +3,50 @@
 # This script is almost identical to /usr/bin/gstack.
 # It is used by TUnixSystem::StackTrace() on Linux and MacOS X.
 
+tempname=`basename $0 .sh`
+
 if [ `uname -s` = "Darwin" ]; then
 
    if test $# -ne 2; then
-      echo "Usage: `basename $0 .sh` <executable> <process-id>" 1>&2
+      echo "Usage: ${tempname} <executable> <process-id>" 1>&2
       exit 1
    fi
 
    if test ! -x $1; then
-      echo "Process $1 not found." 1>&2
+      echo "${tempname}: process $1 not found." 1>&2
+      exit 1
+   fi
+
+   TMPFILE=`mktemp -q /tmp/${tempname}.XXXXXX`
+   if test $? -ne 0; then
+      echo "${tempname}: can't create temp file, exiting..." 1>&2
       exit 1
    fi
 
    backtrace="thread apply all bt"
 
+   echo $backtrace > $TMPFILE
+
    GDB=${GDB:-gdb}
 
    # Run GDB, strip out unwanted noise.
-   $GDB -q -batch -n -x /dev/stdin $1 $2 <<EOF 2>&1 |
-   $backtrace
-EOF
+   $GDB -q -batch -n -x $TMPFILE $1 $2 2>&1 |
    /usr/bin/sed -n \
     -e 's/^(gdb) //' \
     -e '/^#/p' \
     -e 's/\(^Thread.*\)/@\1/p' | tr "@" "\n"
 
+   rm -f $TMPFILE
+
 else
 
    if test $# -ne 1; then
-      echo "Usage: `basename $0 .sh` <process-id>" 1>&2
+      echo "Usage: ${tempname} <process-id>" 1>&2
       exit 1
    fi
 
    if test ! -r /proc/$1; then
-      echo "Process $1 not found." 1>&2
+      echo "${tempname}: process $1 not found." 1>&2
       exit 1
    fi
 
