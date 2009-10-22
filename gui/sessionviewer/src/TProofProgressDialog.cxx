@@ -27,6 +27,7 @@
 #include "TGTextBuffer.h"
 #include "TGTextEntry.h"
 #include "TGProgressBar.h"
+#include "TGSpeedo.h"
 #include "TProof.h"
 #include "TSlave.h"
 #include "TSystem.h"
@@ -39,6 +40,7 @@
 #include "TAxis.h"
 #include "TPaveText.h"
 #include "TMath.h"
+#include "THLimitsFinder.h"
 
 #ifdef PPD_SRV_NEWER
 #undef PPD_SRV_NEWER
@@ -80,9 +82,11 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fRatePoints    = 0;
    fRateGraph     = 0;
    fProcTime      = 0.;
+   fInitTime      = 0.;
    fAvgRate       = 0.;
    fAvgMBRate     = 0.;
    fSVNRev        = -1;
+   fRightInfo     = 0;
 
    // Make sure we are attached to a good instance
    if (!proof || !(proof->IsValid())) {
@@ -124,70 +128,114 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fDialog = new TGTransientFrame(0, 0, 10, 10);
    fDialog->Connect("CloseWindow()", "TProofProgressDialog", this, "DoClose()");
    fDialog->DontCallClose();
+   fDialog->SetCleanup(kDeepCleanup);
+
+//=======================================================================================
+
+   TGHorizontalFrame *hf4 = new TGHorizontalFrame(fDialog, 100, 100);
+
+   TGVerticalFrame *vf4 = new TGVerticalFrame(hf4, 100, 100);
 
    // Title label
    TString buf;
    buf = TString::Format("Executing on PROOF cluster \"%s\" with %d parallel workers:",
            fProof ? fProof->GetMaster() : "<dummy>",
            fProof ? fProof->GetParallel() : 0);
-   fTitleLab = new TGLabel(fDialog, buf),
-   fDialog->AddFrame(fTitleLab,
-                     new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
+   fTitleLab = new TGLabel(vf4, buf);
+   fTitleLab->SetTextJustify(kTextTop | kTextLeft);
+   vf4->AddFrame(fTitleLab, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
    buf = TString::Format("Selector: %s", selector);
-   fSelector = new TGLabel(fDialog, buf);
-   fDialog->AddFrame(fSelector,
-                     new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
+   fSelector = new TGLabel(vf4, buf);
+   fSelector->SetTextJustify(kTextTop | kTextLeft);
+   vf4->AddFrame(fSelector, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
    buf = TString::Format("%d files, number of events %lld, starting event %lld",
            fFiles, fEntries, fFirst);
-   fFilesEvents = new TGLabel(fDialog, buf);
-   fDialog->AddFrame(fFilesEvents, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
+   fFilesEvents = new TGLabel(vf4, buf);
+   fFilesEvents->SetTextJustify(kTextTop | kTextLeft);
+   vf4->AddFrame(fFilesEvents, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
 
    // Progress bar
-   fBar = new TGHProgressBar(fDialog, TGProgressBar::kFancy, 450);
+   fBar = new TGHProgressBar(vf4, TGProgressBar::kFancy, 200);
    fBar->SetBarColor("green");
    fBar->UsePercent();
    fBar->ShowPos(kTRUE);
-   fDialog->AddFrame(fBar, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-                     kLHintsExpandX, 10, 10, 20, 20));
+   vf4->AddFrame(fBar, new TGLayoutHints(kLHintsTop | kLHintsLeft |
+                     kLHintsExpandX, 10, 10, 5, 5));
 
    // Status labels
    if (PPD_SRV_NEWER(11)) {
-      TGHorizontalFrame *hf0 = new TGHorizontalFrame(fDialog, 0, 0);
+      TGHorizontalFrame *hf0 = new TGHorizontalFrame(vf4, 0, 0);
       TGCompositeFrame *cf0 = new TGCompositeFrame(hf0, 110, 0, kFixedWidth);
       cf0->AddFrame(new TGLabel(cf0, "Initialization time:"));
       hf0->AddFrame(cf0);
       fInit = new TGLabel(hf0, "- secs");
-      hf0->AddFrame(fInit, new TGLayoutHints(kLHintsNormal, 10, 10, 0, 0));
-      fDialog->AddFrame(hf0, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
+      fInit->SetTextJustify(kTextTop | kTextLeft);
+      hf0->AddFrame(fInit, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 0, 0));
+      vf4->AddFrame(hf0, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
    }
 
-   TGHorizontalFrame *hf1 = new TGHorizontalFrame(fDialog, 0, 0);
+   TGHorizontalFrame *hf1 = new TGHorizontalFrame(vf4, 0, 0);
    TGCompositeFrame *cf1 = new TGCompositeFrame(hf1, 110, 0, kFixedWidth);
-   fProcessed = new TGLabel(cf1, "Estimated time left:");
-   cf1->AddFrame(fProcessed);
+   cf1->AddFrame(new TGLabel(cf1, "Estimated time left:"));
    hf1->AddFrame(cf1);
-   fTotal= new TGLabel(hf1, "- sec (- events of - processed)");
-   hf1->AddFrame(fTotal, new TGLayoutHints(kLHintsNormal, 10, 10, 0, 0));
-   fDialog->AddFrame(hf1, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
+   fEstim = new TGLabel(hf1, "- sec");
+   fEstim->SetTextJustify(kTextTop | kTextLeft);
+   hf1->AddFrame(fEstim, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 0, 0));
+   vf4->AddFrame(hf1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
 
-   TGHorizontalFrame *hf2 = new TGHorizontalFrame(fDialog, 0, 0);
+   hf1 = new TGHorizontalFrame(vf4, 0, 0);
+   cf1 = new TGCompositeFrame(hf1, 110, 0, kFixedWidth);
+   fProcessed = new TGLabel(cf1, "Processing status:");
+   fProcessed->SetTextJustify(kTextTop | kTextLeft);
+   cf1->AddFrame(fProcessed, new TGLayoutHints(kLHintsLeft));
+   hf1->AddFrame(cf1);
+   fTotal= new TGLabel(hf1, "- / - events");
+   fTotal->SetTextJustify(kTextTop | kTextLeft);
+   hf1->AddFrame(fTotal, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 0, 0));
+
+   vf4->AddFrame(hf1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
+
+   TGHorizontalFrame *hf2 = new TGHorizontalFrame(vf4, 0, 0);
    TGCompositeFrame *cf2 = new TGCompositeFrame(hf2, 110, 0, kFixedWidth);
    cf2->AddFrame(new TGLabel(cf2, "Processing rate:"));
    hf2->AddFrame(cf2);
-   fRate = new TGLabel(hf2, "- events/sec");
-   hf2->AddFrame(fRate, new TGLayoutHints(kLHintsNormal, 10, 10, 0, 0));
-   fDialog->AddFrame(hf2, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
+   fRate = new TGLabel(hf2, "- events/sec \n");
+   fRate->SetTextJustify(kTextTop | kTextLeft);
+   hf2->AddFrame(fRate, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 0, 0));
+   vf4->AddFrame(hf2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
 
    // Keep toggle button
-   fKeepToggle = new TGCheckButton(fDialog,
+   fKeepToggle = new TGCheckButton(vf4,
                     new TGHotString("Close dialog when processing is complete"));
    if (!fKeep) fKeepToggle->SetState(kButtonDown);
    fKeepToggle->Connect("Toggled(Bool_t)",
                         "TProofProgressDialog", this, "DoKeep(Bool_t)");
-   fDialog->AddFrame(fKeepToggle, new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
+   vf4->AddFrame(fKeepToggle, new TGLayoutHints(kLHintsBottom, 10, 10, 10, 5));
+
+   hf4->AddFrame(vf4, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
+
+   TGHorizontalFrame *hf51 = new TGHorizontalFrame(hf4, 20, 20);
+
+   fSpeedo = new TGSpeedo(hf51, 0.0, 1.0, "", "  Ev/s");
+   fSpeedo->Connect("OdoClicked()", "TProofProgressDialog", this, "ToggleOdometerInfos()");
+   fSpeedo->Connect("LedClicked()", "TProofProgressDialog", this, "ToggleThreshold()");
+   hf51->AddFrame(fSpeedo);
+   fSpeedo->SetDisplayText("Init Time", "[ms]");
+   fSpeedo->EnablePeakMark();
+   fSpeedo->SetThresholds(0.0, 25.0, 50.0);
+   fSpeedo->SetThresholdColors(TGSpeedo::kRed, TGSpeedo::kOrange, TGSpeedo::kGreen);
+   fSpeedo->SetOdoValue(0);
+   fSpeedo->EnableMeanMark();
+
+   hf4->AddFrame(hf51, new TGLayoutHints(kLHintsBottom, 5, 5, 5, 5));
+
+   fDialog->AddFrame(hf4, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
+   
+
+//==========================================================================================
 
    // Stop, cancel and close buttons
-   TGHorizontalFrame *hf3 = new TGHorizontalFrame(fDialog, 60, 20, kFixedWidth);
+   TGHorizontalFrame *hf3 = new TGHorizontalFrame(fDialog, 60, 20);
 
    UInt_t  nb1 = 0, width1 = 0, height1 = 0;
 
@@ -225,17 +273,14 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    height1 = TMath::Max(height1, fClose->GetDefaultHeight());
    width1  = TMath::Max(width1, fClose->GetDefaultWidth()); ++nb1;
 
-   fDialog->AddFrame(hf3, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5, 5, 10, 5));
+   fDialog->AddFrame(hf3, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5, 5, 5, 5));
 
-   UInt_t  nb2 = 0, width2 = 0, height2 = 0;
-   TGHorizontalFrame *hf5 = new TGHorizontalFrame(fDialog, 60, 20, kFixedWidth);
+   TGHorizontalFrame *hf5 = new TGHorizontalFrame(fDialog, 60, 20);
 
    fLog = new TGTextButton(hf5, "&Show Logs");
    fLog->SetToolTipText("Show query log messages");
    fLog->Connect("Clicked()", "TProofProgressDialog", this, "DoLog()");
    hf5->AddFrame(fLog, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-   height2 = TMath::Max(height2, fLog->GetDefaultHeight());
-   width2  = TMath::Max(width2, fLog->GetDefaultWidth()); ++nb2;
 
    if (PPD_SRV_NEWER(11)) {
       fRatePlot = new TGTextButton(hf5, "&Rate plot");
@@ -243,18 +288,14 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
       fRatePlot->SetState(kButtonDisabled);
       fRatePlot->Connect("Clicked()", "TProofProgressDialog", this, "DoPlotRateGraph()");
       hf5->AddFrame(fRatePlot, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
-      height2 = TMath::Max(height2, fRatePlot->GetDefaultHeight());
-      width2  = TMath::Max(width2, fRatePlot->GetDefaultWidth()); ++nb2;
    }
 
    fMemPlot = new TGTextButton(hf5, "Memory Plot");
    fMemPlot->Connect("Clicked()", "TProofProgressDialog", this, "DoMemoryPlot()");
    fMemPlot->SetToolTipText("Show memory consumption vs entry / merging phase");
-   hf5->AddFrame(fMemPlot, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 10, 10, 0, 0));
-   height2 = TMath::Max(height2, fMemPlot->GetDefaultHeight());
-   width2  = TMath::Max(width2, fMemPlot->GetDefaultWidth()); ++nb2;
+   hf5->AddFrame(fMemPlot, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
 
-   fDialog->AddFrame(hf5, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5, 5, 10, 5));
+   fDialog->AddFrame(hf5, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5, 5, 5, 5));
 
    // Only enable if master supports it
    if (!PPD_SRV_NEWER(18)) {
@@ -265,12 +306,6 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    } else {
       fMemPlot->SetToolTipText("Show memory consumption");
    }
-
-   // Keep buttons centered and with the same width
-   UInt_t width, height, nb;
-   width = TMath::Max(width1, width2);
-   height = TMath::Max(height1, height2);
-   nb = TMath::Max(nb1, nb2);
 
    // Connect slot to proof progress signal
    if (fProof) {
@@ -301,12 +336,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    // Map all widgets and calculate size of dialog
    fDialog->MapSubwindows();
 
-   width  = fDialog->GetDefaultWidth();
-   height = fDialog->GetDefaultHeight();
-
-   // To allow for lengthening of lines when the number are displayed
-   width += 100;
-   fDialog->Resize(width, height);
+   fDialog->Resize(fDialog->GetDefaultSize());
 
    const TGWindow *main = gClient->GetRoot();
    // Position relative to the parent window (which is the root window)
@@ -314,6 +344,8 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    int      ax, ay;
    Int_t    mw = ((TGFrame *) main)->GetWidth();
    Int_t    mh = ((TGFrame *) main)->GetHeight();
+   Int_t    width  = fDialog->GetDefaultWidth();
+   Int_t    height = fDialog->GetDefaultHeight();
 
    gVirtualX->TranslateCoordinates(main->GetId(), main->GetId(),
                           (mw - width), (mh - height) >> 1, ax, ay, wdum);
@@ -334,6 +366,36 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fDialog->MapWindow();
 
    fStartTime = gSystem->Now();
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::ToggleOdometerInfos()
+{
+   // Toggle information displayed in Analog Meter
+
+   if (fRightInfo < 1)
+      fRightInfo++;
+   else
+      fRightInfo = 0;
+   if (fRightInfo == 0) {
+      fSpeedo->SetDisplayText("Init Time", "[ms]");
+      fSpeedo->SetOdoValue((Int_t)(fInitTime * 1000.0));
+   }
+   else if (fRightInfo == 1) {
+      fSpeedo->SetDisplayText("Proc Time", "[ms]");
+      fSpeedo->SetOdoValue((Int_t)(fProcTime * 1000.0));
+   }
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::ToggleThreshold()
+{
+   if (fSpeedo->IsThresholdActive()) {
+      fSpeedo->DisableThreshold();
+      fSpeedo->Glow(TGSpeedo::kNoglow);
+   }
+   else
+      fSpeedo->EnableThreshold();
 }
 
 //______________________________________________________________________________
@@ -470,8 +532,10 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       else
          sprintf(stm, "%d sec", ss);
       fProcessed->SetText("Processed:");
-      buf = TString::Format("%lld events in %s", total, stm);
+      buf = TString::Format("%lld events in %s\n", total, stm);
       fTotal->SetText(buf);
+
+      fEstim->SetText("0 sec");
 
       if (fProof) {
          fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
@@ -514,15 +578,15 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
          sprintf(stm, "%d min %d sec", mm, ss);
       else
          sprintf(stm, "%d sec", ss);
+
+      fEstim->SetText(stm);
+      buf = TString::Format("%lld / %lld events", evproc, total);
       if (fStatus > kDone) {
-         buf = TString::Format("%s (%lld events of %lld processed) - %s",
-                      stm, evproc, total, cproc[fStatus]);
-      } else {
-         buf = TString::Format("%s (%lld events of %lld processed)",
-                      stm, evproc, total);
+         buf += TString::Format(" - %s", cproc[fStatus]);
       }
       fTotal->SetText(buf);
-      buf = TString::Format("%.1f events/sec", Float_t(evproc)/Long_t(tdiff)*1000.);
+      
+      buf = TString::Format("%.1f events/sec\n", Float_t(evproc)/Long_t(tdiff)*1000.);
       fRate->SetText(buf);
 
       if (processed < 0) {
@@ -537,8 +601,6 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       }
    }
    fPrevProcessed = evproc;
-
-   fDialog->Layout();
 }
 
 //______________________________________________________________________________
@@ -550,6 +612,8 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
    // Update progress bar and status labels.
    // Use "processed == total" or "processed < 0" to indicate end of processing.
 
+   Double_t BinLow, BinHigh;
+   Int_t nbins;
    Long_t tt;
    UInt_t hh=0, mm=0, ss=0;
    TString buf;
@@ -565,9 +629,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
 
    if (initTime >= 0.) {
       // Set init time
+      fInitTime = initTime;
       buf = TString::Format("%.1f secs", initTime);
       fInit->SetText(buf);
-      fDialog->Layout();
+      if (fRightInfo == 0)
+         fSpeedo->SetOdoValue((Int_t)(fInitTime * 1000.0));
    }
 
    Bool_t over = kFALSE;
@@ -577,6 +643,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
    } else {
       fPrevTotal = total;
    }
+
+   // Show proc time by default when switching from init to proc
+   if (processed > 0 && fPrevProcessed <= 0)
+      while (fRightInfo != 1)
+         ToggleOdometerInfos();
 
    // Nothing to update
    if (fPrevProcessed == processed)
@@ -608,6 +679,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       fAvgMBRate = mbsproc / procTime;
    }
 
+   if (fRightInfo == 0)
+      fSpeedo->SetOdoValue((Int_t)(fInitTime * 1000.0));
+   else if (fRightInfo == 1)
+      fSpeedo->SetOdoValue((Int_t)(fProcTime * 1000.0));
+      
    if (over || (processed >= 0 && processed >= total)) {
 
       // A negative value for process indicates that we are finished,
@@ -636,10 +712,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       else
          sprintf(stm, "%d sec", ss);
       fProcessed->SetText("Processed:");
-      buf = TString::Format("%lld events (%.2f MBs) in %s %s",
+      buf = TString::Format("%lld events (%.2f MB) in %s %s\n",
               std::max(fPrevProcessed, processed), fAvgMBRate*fProcTime, stm, st.Data());
       fTotal->SetText(buf);
-      buf = TString::Format("%.1f evts/sec (%.1f MBs/sec)", fAvgRate, fAvgMBRate);
+      fEstim->SetText("0 sec");
+      buf = TString::Format("%.1f evts/sec (%.1f MB/sec)\n", fAvgRate, fAvgMBRate);
       fRate->SetText(buf);
       // Fill rate graph
       Bool_t useAvg = gEnv->GetValue("Proof.RatePlotUseAvg", 0);
@@ -670,6 +747,10 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       fStop->SetState(kButtonDisabled);
       fAbort->SetState(kButtonDisabled);
       fClose->SetState(kButtonUp);
+      
+      fSpeedo->SetScaleValue(0, 0);
+      fSpeedo->Glow(TGSpeedo::kNoglow);
+
       if (!fKeep) DoClose();
 
       // Set the status to done
@@ -698,23 +779,31 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          sprintf(stm, "%d min %d sec", mm, ss);
       else
          sprintf(stm, "%d sec", ss);
+
+      fEstim->SetText(stm);
+      buf = TString::Format("%lld / %lld events - %.2f MB", evproc, total, mbsproc);
       if (fStatus > kDone) {
-         buf = TString::Format("%s (processed %lld events out of %lld - %.2f MBs of data) - %s",
-                      stm, evproc, total, mbsproc, cproc[fStatus]);
-      } else {
-         buf = TString::Format("%s (processed %lld events out of %lld - %.2f MBs of data)",
-                      stm, evproc, total, mbsproc);
+         buf += TString::Format(" - %s", cproc[fStatus]);
       }
       fTotal->SetText(buf);
 
       // Post
       if (evtrti > 0.) {
-         buf = TString::Format("%.1f evts/sec (%.1f MBs/sec) - avg: %.1f evts/sec (%.1f MBs/sec)",
+         buf = TString::Format("%.1f evts/sec (%.1f MB/sec) \navg: %.1f evts/sec (%.1f MB/sec)",
                       evtrti, mbrti, fAvgRate, fAvgMBRate);
          fRatePoints->Fill(procTime, evtrti, mbrti);
          fRatePlot->SetState(kButtonUp);
+         if (evtrti > fSpeedo->GetScaleMax()) {
+            nbins = 4;
+            BinLow = fSpeedo->GetScaleMin();
+            BinHigh = 1.5 * evtrti;
+            THLimitsFinder::OptimizeLimits(4, nbins, BinLow, BinHigh, kFALSE);
+            fSpeedo->SetMinMaxScale(fSpeedo->GetScaleMin(), BinHigh);
+         }
+         fSpeedo->SetScaleValue(evtrti, 0);
+         fSpeedo->SetMeanValue(fAvgRate);
       } else {
-         buf = TString::Format("avg: %.1f evts/sec (%.1f MBs/sec)", fAvgRate, fAvgMBRate);
+         buf = TString::Format("avg: %.1f evts/sec (%.1f MB/sec)", fAvgRate, fAvgMBRate);
       }
       fRate->SetText(buf);
 
@@ -725,13 +814,14 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          fAbort->SetState(kButtonDisabled);
          fClose->SetState(kButtonUp);
 
+         fSpeedo->SetScaleValue(0, 0);
+         fSpeedo->Glow(TGSpeedo::kNoglow);
+
          // Set the status to done
          fStatus = kDone;
       }
    }
    fPrevProcessed = evproc;
-
-   fDialog->Layout();
 }
 
 //______________________________________________________________________________

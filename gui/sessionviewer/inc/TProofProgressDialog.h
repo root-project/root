@@ -40,7 +40,7 @@ class TProofProgressLog;
 class TProofProgressMemoryPlot;
 class TNtuple;
 class TGraph;
-
+class TGSpeedo;
 
 class TProofProgressDialog {
 
@@ -66,11 +66,13 @@ private:
    TGLabel            *fTitleLab;
    TGLabel            *fFilesEvents;
    TGLabel            *fProcessed;
+   TGLabel            *fEstim;
    TGLabel            *fTotal;
    TGLabel            *fRate;
    TGLabel            *fInit;
    TGLabel            *fSelector;
-   TProofProgressLog  *fLogWindow;       // transient frame for logs
+   TGSpeedo           *fSpeedo;           // speedo meter
+   TProofProgressLog  *fLogWindow;        // transient frame for logs
    TProofProgressMemoryPlot *fMemWindow;  // transient frame for memory plots
    TProof             *fProof;
    TTime               fStartTime;
@@ -85,10 +87,12 @@ private:
    Bool_t              fLogQuery;
    TNtuple            *fRatePoints;
    TGraph             *fRateGraph;
+   Float_t             fInitTime;
    Float_t             fProcTime;
    Double_t            fAvgRate;
    Double_t            fAvgMBRate;
    Int_t               fSVNRev;
+   Int_t               fRightInfo;
 
    TString             fSessionUrl;
 
@@ -120,6 +124,8 @@ public:
    void DoAsyn();
    void DoPlotRateGraph();
    void DoMemoryPlot();
+   void ToggleOdometerInfos();
+   void ToggleThreshold();
 
    ClassDef(TProofProgressDialog,0)  //PROOF progress dialog
 };
