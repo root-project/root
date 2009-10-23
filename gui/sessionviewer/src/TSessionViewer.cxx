@@ -469,7 +469,8 @@ void TSessionServerFrame::OnBtnConnectClicked()
 
    TProofDesc *desc;
    fViewer->GetActDesc()->fProofMgr = TProofMgr::Create(url);
-   if (!fViewer->GetActDesc()->fProofMgr->IsValid()) {
+   if (!fViewer->GetActDesc()->fProofMgr || 
+       !fViewer->GetActDesc()->fProofMgr->IsValid()) {
       // hide connection progress bar from status bar
       fViewer->GetStatusBar()->GetBarPart(0)->HideFrame(fViewer->GetConnectProg());
       // release busy flag
@@ -3661,7 +3662,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
             fBaseIcon);
    // add local session description
    TGListTreeItem *item = fSessionHierarchy->AddItem(fSessionItem, "Local",
-            fLocal, fLocal);
+                                                     fLocal, fLocal);
    fSessionHierarchy->SetToolTipItem(item, "Local Session");
    TSessionDescription *localdesc = new TSessionDescription();
    localdesc->fTag = "";
@@ -3686,6 +3687,38 @@ void TSessionViewer::ReadConfiguration(const char *filename)
    fSessions->Add((TObject *)localdesc);
    fActDesc = localdesc;
 
+   SysInfo_t info;
+   gSystem->GetSysInfo(&info);
+   // if the machine has more than one CPU, add one PROOF lite session
+   // (not supported on Windows yet)
+   if (!info.fOS.Contains("Microsoft") && info.fCpus > 1) {
+      // add proof lite session description
+      item = fSessionHierarchy->AddItem(fSessionItem, "Lite",
+                                        fProofDiscon, fProofDiscon);
+      fSessionHierarchy->SetToolTipItem(item, "PROOF Lite");
+      TSessionDescription *litedesc = new TSessionDescription();
+      litedesc->fTag = "";
+      litedesc->fName = "PROOF Lite";
+      litedesc->fAddress = "lite";
+      litedesc->fPort = 0;
+      litedesc->fConfigFile = "";
+      litedesc->fLogLevel = 0;
+      litedesc->fUserName = "";
+      litedesc->fQueries = new TList();
+      litedesc->fPackages = new TList();
+      litedesc->fActQuery = 0;
+      litedesc->fProof = 0;
+      litedesc->fProofMgr = 0;
+      litedesc->fAttached = kFALSE;
+      litedesc->fConnected = kFALSE;
+      litedesc->fLocal = kFALSE;
+      litedesc->fSync = kTRUE;
+      litedesc->fAutoEnable = kFALSE;
+      litedesc->fNbHistos = 0;
+      item->SetUserData(litedesc);
+      fSessions->Add((TObject *)litedesc);
+      fActDesc = litedesc;
+   }   
    TIter next(fViewerEnv->GetTable());
    TEnvRec *er;
    while ((er = (TEnvRec*) next())) {
