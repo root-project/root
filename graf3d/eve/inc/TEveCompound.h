@@ -64,6 +64,7 @@ private:
    TEveCompoundProjected& operator=(const TEveCompoundProjected&); // Not implemented
 
 protected:
+   virtual void SetDepthLocal(Float_t /*d*/) {}
 
 public:
    TEveCompoundProjected();
@@ -71,8 +72,6 @@ public:
 
    virtual void SetMainColor(Color_t color);
 
-   // Abstract from TEveProjected, we seem not to care.
-   virtual void SetDepth(Float_t /*d*/) {}
    virtual void UpdateProjection()      {}
 
    ClassDef(TEveCompoundProjected, 0); // Projected TEveCompund container.

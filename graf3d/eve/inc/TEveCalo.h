@@ -202,13 +202,14 @@ protected:
    virtual void BuildCellIdCache();
    virtual void BuildCellIdCacheSelected();
 
+   virtual void SetDepthLocal(Float_t x) { fDepth = x; }
+
 public:
    TEveCalo2D(const char* n="TEveCalo2D", const char* t="");
    virtual ~TEveCalo2D();
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection();
-   virtual void SetDepth(Float_t x){fDepth = x;}
 
    virtual void ComputeBBox();
 
