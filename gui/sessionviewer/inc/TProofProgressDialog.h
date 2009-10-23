@@ -71,7 +71,8 @@ private:
    TGLabel            *fRate;
    TGLabel            *fInit;
    TGLabel            *fSelector;
-   TGSpeedo           *fSpeedo;           // speedo meter
+   TGSpeedo           *fSpeedo;           // speedometer
+   TGCheckButton      *fSmoothSpeedo;     // use smooth speedometer update
    TProofProgressLog  *fLogWindow;        // transient frame for logs
    TProofProgressMemoryPlot *fMemWindow;  // transient frame for memory plots
    TProof             *fProof;

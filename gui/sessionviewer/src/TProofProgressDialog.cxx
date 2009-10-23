@@ -214,12 +214,12 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
 
    hf4->AddFrame(vf4, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
-   TGHorizontalFrame *hf51 = new TGHorizontalFrame(hf4, 20, 20);
+   TGVerticalFrame *vf51 = new TGVerticalFrame(hf4, 20, 20);
 
-   fSpeedo = new TGSpeedo(hf51, 0.0, 1.0, "", "  Ev/s");
+   fSpeedo = new TGSpeedo(vf51, 0.0, 1.0, "", "  Ev/s");
    fSpeedo->Connect("OdoClicked()", "TProofProgressDialog", this, "ToggleOdometerInfos()");
    fSpeedo->Connect("LedClicked()", "TProofProgressDialog", this, "ToggleThreshold()");
-   hf51->AddFrame(fSpeedo);
+   vf51->AddFrame(fSpeedo);
    fSpeedo->SetDisplayText("Init Time", "[ms]");
    fSpeedo->EnablePeakMark();
    fSpeedo->SetThresholds(0.0, 25.0, 50.0);
@@ -227,10 +227,13 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fSpeedo->SetOdoValue(0);
    fSpeedo->EnableMeanMark();
 
-   hf4->AddFrame(hf51, new TGLayoutHints(kLHintsBottom, 5, 5, 5, 5));
+   fSmoothSpeedo = new TGCheckButton(vf51, new TGHotString("Smooth speedometer update"));
+   fSmoothSpeedo->SetState(kButtonDown);
+   vf51->AddFrame(fSmoothSpeedo, new TGLayoutHints(kLHintsBottom, 0, 0, 5, 0));
+
+   hf4->AddFrame(vf51, new TGLayoutHints(kLHintsBottom, 5, 5, 5, 5));
 
    fDialog->AddFrame(hf4, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5));
-   
 
 //==========================================================================================
 
@@ -748,7 +751,10 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       fAbort->SetState(kButtonDisabled);
       fClose->SetState(kButtonUp);
       
-      fSpeedo->SetScaleValue(0, 0);
+      if (fSmoothSpeedo->GetState() == kButtonDown)
+         fSpeedo->SetScaleValue(0.0, 0);
+      else
+         fSpeedo->SetScaleValue(0.0);
       fSpeedo->Glow(TGSpeedo::kNoglow);
 
       if (!fKeep) DoClose();
@@ -800,7 +806,10 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
             THLimitsFinder::OptimizeLimits(4, nbins, BinLow, BinHigh, kFALSE);
             fSpeedo->SetMinMaxScale(fSpeedo->GetScaleMin(), BinHigh);
          }
-         fSpeedo->SetScaleValue(evtrti, 0);
+         if (fSmoothSpeedo->GetState() == kButtonDown)
+            fSpeedo->SetScaleValue(evtrti, 0);
+         else
+            fSpeedo->SetScaleValue(evtrti);
          fSpeedo->SetMeanValue(fAvgRate);
       } else {
          buf = TString::Format("avg: %.1f evts/sec (%.1f MB/sec)", fAvgRate, fAvgMBRate);
@@ -814,7 +823,10 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          fAbort->SetState(kButtonDisabled);
          fClose->SetState(kButtonUp);
 
-         fSpeedo->SetScaleValue(0, 0);
+         if (fSmoothSpeedo->GetState() == kButtonDown)
+            fSpeedo->SetScaleValue(0.0, 0);
+         else
+            fSpeedo->SetScaleValue(0.0);
          fSpeedo->Glow(TGSpeedo::kNoglow);
 
          // Set the status to done
