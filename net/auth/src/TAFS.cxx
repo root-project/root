@@ -135,9 +135,14 @@ TAFS::TAFS(const char *fpw, const char *user, int life)
          while (gROOT->IsInterrupted())
             gSystem->DispatchOneEvent(kFALSE);
       } else {
-         Gl_config("noecho", 1);
-         pw = Getline((char *) prompt.Data());
-         Gl_config("noecho", 0);
+         if (isatty(0) != 0 && isatty(1) != 0) {
+            Gl_config("noecho", 1);
+            pw = Getline((char *) prompt.Data());
+            Gl_config("noecho", 0);
+         } else {
+            Warning("TAFS", "not tty: cannot prompt for passwd: failure");
+            pw[0] = 0;
+         }
       }
 
       // Final checks
