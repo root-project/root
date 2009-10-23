@@ -229,7 +229,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
 
    fSmoothSpeedo = new TGCheckButton(vf51, new TGHotString("Smooth speedometer update"));
    fSmoothSpeedo->SetState(kButtonDown);
-   vf51->AddFrame(fSmoothSpeedo, new TGLayoutHints(kLHintsBottom, 0, 0, 5, 0));
+   vf51->AddFrame(fSmoothSpeedo, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 0));
 
    hf4->AddFrame(vf51, new TGLayoutHints(kLHintsBottom, 5, 5, 5, 5));
 
