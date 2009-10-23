@@ -917,6 +917,9 @@ void TGLVContainer::LineLeft(Bool_t select)
 {
    // Move current position one column left.
 
+   // in details mode just move one line up
+   if (fViewMode == kLVDetails) return LineUp(select);
+
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
@@ -925,28 +928,50 @@ void TGLVContainer::LineLeft(Bool_t select)
 
    TGFrameElement *old = fLastActiveEl;
 
+   if (fViewMode == kLVSmallIcons && fe == old) return;
+   
    if (old) DeActivateItem(old);   //
    else fLastActiveEl = fe;
-
-   TGFrameElement *la = fLastActiveEl;
 
    TGDimension ms = fListView->GetMaxItemSize();
    Int_t dx = ms.fWidth;
    Int_t dy = ms.fHeight;
-   Int_t y = la->fFrame->GetY();
-   Int_t x = la->fFrame->GetX() - dx;
+
+   Int_t y = fLastActiveEl->fFrame->GetY();
+   Int_t x = fLastActiveEl->fFrame->GetX() - dx + 2;
 
    Int_t hw = pos.fX + dim.fWidth;
 
    TGHScrollBar *hb = GetHScrollbar();
-   if (x<=0 && (hb && !hb->IsMapped())) { // move to previous line
+   if (hb && hb->IsMapped()) {
+      Int_t pg = (hb->GetPageSize()*GetWidth())/fViewPort->GetWidth();
+      hw += pg;
+   }
+   if (x <= 0) { // move one line up
       x = hw;
-      y = y - la->fFrame->GetDefaultHeight() - dy;
+      y = y - dy;
    }
 
    fe = FindFrame(x, y);
-   if (!fe) fe = (TGFrameElement*)fList->First();
-
+   if (fe && fe->fFrame->GetY() > fLastActiveEl->fFrame->GetY()) {
+      // cannot go down with the left key
+      x = hw;
+      y = y - dy;
+      fe = FindFrame(x, y);
+   }
+   if (fViewMode == kLVList) {
+      if (fe->fFrame->GetY() <= fLastActiveEl->fFrame->GetY() - (2 * dy)) {
+         // avoid jumping more than one line up
+         x = fe->fFrame->GetX() - dx;
+         fe = FindFrame(x, y);
+      }
+      // cannot go down and/or right with the left key
+      if (fe->fFrame->GetY() >= fLastActiveEl->fFrame->GetY() &&
+          fe->fFrame->GetX() >= fLastActiveEl->fFrame->GetX())
+         fe = fLastActiveEl;
+   }
+   if (!fe || fe->fFrame->GetY() > fLastActiveEl->fFrame->GetY())
+      fe = (TGFrameElement*)fList->First();
    if (!select) fSelected=1;
 
    ActivateItem(fe);
@@ -958,6 +983,9 @@ void TGLVContainer::LineRight(Bool_t select)
 {
    // Move current position one column right.
 
+   // in details mode just move one line down
+   if (fViewMode == kLVDetails) return LineDown(select);
+
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
@@ -965,6 +993,8 @@ void TGLVContainer::LineRight(Bool_t select)
    if (!fe) return;
 
    TGFrameElement *old = fLastActiveEl;
+
+   if (fViewMode == kLVSmallIcons && fe == old) return;
 
    if (old) DeActivateItem(old);
    else fLastActiveEl = (TGFrameElement*)fList->First();
@@ -974,18 +1004,31 @@ void TGLVContainer::LineRight(Bool_t select)
    Int_t dy = ms.fHeight;
 
    Int_t y = fLastActiveEl->fFrame->GetY();
-   Int_t x = fLastActiveEl->fFrame->GetX() + dx;
+   Int_t x = fLastActiveEl->fFrame->GetX() + dx - 2;
 
    Int_t hw = pos.fX + dim.fWidth - dx;
 
    TGHScrollBar *hb =  GetHScrollbar();
-   if (x >= hw && (hb && !hb->IsMapped())) { // move one line down
+   if (x > hw && (hb && !hb->IsMapped())) { // move one line down
       x = 0;
       y = y + dy;
    }
 
    fe = FindFrame(x, y);
-   if (!fe) fe = (TGFrameElement*)fList->Last();
+   if (fe && fe->fFrame->GetY() < fLastActiveEl->fFrame->GetY()) {
+      // cannot go up with the right key
+      x = 0;
+      y = y + dy;
+      fe = FindFrame(x, y);
+   }
+   if (fViewMode == kLVList) {
+      // cannot go up and/or left with the right key
+      if (fe->fFrame->GetY() <= fLastActiveEl->fFrame->GetY() &&
+          fe->fFrame->GetX() <= fLastActiveEl->fFrame->GetX())
+         fe = fLastActiveEl;
+   }
+   if (!fe || fe->fFrame->GetY() < fLastActiveEl->fFrame->GetY())
+      fe = (TGFrameElement*)fList->Last();
    if (!select) fSelected = 1;
 
    ActivateItem(fe);
