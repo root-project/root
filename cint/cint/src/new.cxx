@@ -800,7 +800,7 @@ void G__delete_operator(char* expression, int isarray)
       ) {
          // --
          int virtualtag = *(long*)(G__store_struct_offset + G__struct.virtual_offset[G__tagnum]);
-         buf.obj.i -= G__find_virtualoffset(virtualtag);
+         buf.obj.i -= G__find_virtualoffset(virtualtag, buf.obj.i);
       }
       //
       //  Push and set G__store_struct_offset.

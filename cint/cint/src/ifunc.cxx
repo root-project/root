@@ -5485,7 +5485,11 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             }
             p_ifunc = ifunc;
             ifn = iexist;
-            G__store_struct_offset -= G__find_virtualoffset(virtualtag);
+            G__store_struct_offset -= G__find_virtualoffset(virtualtag
+#ifdef G__VIRTUALBASE
+                                                            ,G__store_struct_offset
+#endif
+                                                            );
             G__tagnum = virtualtag;
             if ('~' == funcname[0]) {
                //strcpy(funcname + 1, G__struct.name[G__tagnum]);

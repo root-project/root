@@ -68,7 +68,7 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
       else {
          int store_tagnum = G__tagnum;
          G__tagnum = result3->tagnum;
-         offset = -G__find_virtualoffset(tagnum);
+         offset = G__find_virtualoffset(tagnum, result3->obj.i);
          G__tagnum = store_tagnum;
       }
 #else // G__VIRTUALBASE
@@ -299,7 +299,12 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
                else {
                   int store_tagnum = G__tagnum;
                   G__tagnum = result3.tagnum;
+#ifdef G__VIRTUALBASE
+                  offset = G__find_virtualoffset(tagnum, result3.obj.i);
+
+#else // G__VIRTUALBASE
                   offset = G__find_virtualoffset(tagnum);
+#endif // G__VIRTUALBASE
                   G__tagnum = store_tagnum;
                   if (offset) {
                      result3.obj.i -= offset;

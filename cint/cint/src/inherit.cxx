@@ -893,7 +893,12 @@ int G__isanybase(int basetagnum,int derivedtagnum
 *  Used in G__interpret_func to subtract offset for calling virtual function
 *
 **************************************************************************/
-int G__find_virtualoffset(int virtualtag)
+int G__find_virtualoffset(int virtualtag
+#ifdef G__VIRTUALBASE
+                          , long pobject
+#endif
+)
+
 {
   int i;
   struct G__inheritance *baseclass;
@@ -903,6 +908,13 @@ int G__find_virtualoffset(int virtualtag)
   for(i=0;i<baseclass->basen;i++) {
     if(G__tagnum==baseclass->herit[i]->basetagnum) {
       if(baseclass->herit[i]->property&G__ISVIRTUALBASE) {
+#ifdef G__VIRTUALBASE
+         if(G__CPPLINK==G__struct.iscpplink[virtualtag]) {
+            long (*f) G__P((long));
+            f = (long (*) G__P((long)))(baseclass->herit[i]->baseoffset);
+            return((*f)(pobject));
+         }
+#endif
         return(baseclass->herit[i]->baseoffset+G__DOUBLEALLOC);
       }
       else {

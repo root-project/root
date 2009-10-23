@@ -1958,7 +1958,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
                                           , *pstruct_offset + offset_sum))) {
          int store_tagnum = G__tagnum;
          G__tagnum = *ptagnum;
-         offset = -G__find_virtualoffset(scopetagnum); /* NEED REFINEMENT */
+         offset = -G__find_virtualoffset(scopetagnum, *pstruct_offset + offset_sum); /* NEED REFINEMENT */
          G__tagnum = store_tagnum;
       }
 #else

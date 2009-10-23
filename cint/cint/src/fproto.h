@@ -196,7 +196,11 @@ long G__getvirtualbaseoffset(long pobject,int tagnum,struct G__inheritance *base
 int G__ispublicbase(int basetagnum,int derivedtagnum);
 int G__isanybase(int basetagnum,int derivedtagnum);
 #endif
+#ifdef G__VIRTUALBASE
+int G__find_virtualoffset(int virtualtag, long pobject);
+#else
 int G__find_virtualoffset(int virtualtag);
+#endif
   /* int G__main(int argc,char **argv); */
 int G__init_globals(void);
 void G__set_stdio(void);
