@@ -113,7 +113,7 @@ protected:
   void     loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const;
   void     boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t code) const;
 
-  mutable RooDataSet& _data;
+  RooDataSet& _data;
   mutable TString _options;
   mutable Double_t _widthFactor;
   mutable Double_t _nSigma;
