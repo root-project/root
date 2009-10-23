@@ -324,8 +324,6 @@ void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp
 
    if ( !fM->fData->GetCellsSelected().size()) return;
 
-   fM->BuildCellIdCacheSelected();
-
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT  | GL_LINE_BIT );
    glDisable(GL_CULL_FACE);
    glDisable(GL_LIGHTING);

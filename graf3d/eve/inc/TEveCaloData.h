@@ -155,6 +155,9 @@ public:
    TEveCaloData(const char* n="TEveCalData", const char* t="");
    virtual ~TEveCaloData() {}
 
+   virtual void SelectElement(Bool_t state);
+   virtual void FillImpliedSelectedSet(Set_t& impSelSet);
+
    virtual void    GetCellList(Float_t etaMin, Float_t etaMax,
                                Float_t phi,    Float_t phiRng,
                                vCellId_t &out) const = 0;
@@ -197,7 +200,6 @@ public:
 
    static  Float_t EtaToTheta(Float_t eta);
 
-   virtual void FillImpliedSelectedSet(Set_t& impSelSet);
 
    ClassDef(TEveCaloData, 0); // Manages calorimeter event data.
 };

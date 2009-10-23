@@ -1017,7 +1017,7 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
    // Draw eta-phi range in highlight mode.
 
    if ( !fM->fData->GetCellsSelected().size()) return;
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT |GL_POLYGON_BIT );
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
    glDisable(GL_LIGHTING);
    glDisable(GL_CULL_FACE);
    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -1170,13 +1170,10 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       }
    }
 
-   if (!fM->fData->Empty()) {
-      glPushAttrib(GL_LINE_BIT | GL_POLYGON_BIT);
-      TGLUtil::LineWidth(1);
-      glEnable(GL_NORMALIZE);
-      glEnable(GL_POLYGON_OFFSET_FILL);
-      glPolygonOffset(0.8, 1);
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
+   TGLUtil::LineWidth(1);
 
+   if (!fM->fData->Empty()){
       glPushName(0);
       glLoadName(0);
       if (fCells3D) {
@@ -1188,10 +1185,13 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
                Make3DDisplayListRebin(fRebinData, fDLMap, kTRUE);
             fDLCacheOK = kTRUE;
          }
+         glEnable(GL_NORMALIZE);
+         glEnable(GL_POLYGON_OFFSET_FILL);
+         glPolygonOffset(0.8, 1);
+
          DrawCells3D(rnrCtx);
       } else {
          glDisable(GL_LIGHTING);
-
          vCell2D_t cells2D;
          if (fM->fBinStep == 1)
             PrepareCell2DData(fM->fCellList, cells2D);
@@ -1200,8 +1200,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
          DrawCells2D(rnrCtx, cells2D);
       }
-      glPopName();
-      glPopAttrib();
+      glPopName();;
    }
 
    // draw histogram base
@@ -1209,7 +1208,6 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       glDisable(GL_LIGHTING);
       DrawHistBase(rnrCtx);
       if (fM->fDrawHPlane) {
-         glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
          glEnable(GL_BLEND);
          glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -1222,10 +1220,10 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          glVertex3f(fM->fEtaMax, fM->GetPhiMax(), zhp);
          glVertex3f(fM->fEtaMin, fM->GetPhiMax(), zhp);
          glEnd();
-         glPopAttrib();
       }
    }
 
+   glPopAttrib();
    glPopMatrix();
 }
 

@@ -119,6 +119,36 @@ TEveCaloData::TEveCaloData(const char* n, const char* t):
 }
 
 //______________________________________________________________________________
+void TEveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
+{
+   // Populate set impSelSet with derived / dependant elements.
+   //
+
+   //TEveElement::FillImpliedSelectedSet(impSelSet);
+
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      //printf("insert to imp selected %s \n", (*i)->GetElementName());
+         impSelSet.insert(*i);
+   }
+
+}
+
+//______________________________________________________________________________
+void TEveCaloData::SelectElement(Bool_t state)
+{
+   // Virtual method od TEveElement::SelectElement(Bool_t state)
+   // Set element's selection state. Stamp appropriately.
+
+   if (!state)
+   {
+      GetCellsSelected().clear();
+      DataChanged();
+   }
+   TEveElement::SelectElement(state);
+}
+
+//______________________________________________________________________________
 void TEveCaloData::SetSliceThreshold(Int_t slice, Float_t val)
 {
    // Set threshold for given slice.
@@ -196,22 +226,6 @@ Float_t TEveCaloData::EtaToTheta(Float_t eta)
       return 2*ATan(Exp(- Abs(eta)));
 }
 
-
-//______________________________________________________________________________
-void TEveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
-{
-   // Populate set impSelSet with derived / dependant elements.
-   //
-
-   //TEveElement::FillImpliedSelectedSet(impSelSet);
-
-   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      //printf("insert to imp selected %s \n", (*i)->GetElementName());
-         impSelSet.insert(*i);
-   }
-
-}
 
 //==============================================================================
 // TEveCaloDataVec

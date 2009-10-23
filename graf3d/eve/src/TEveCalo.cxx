@@ -108,7 +108,6 @@ void TEveCaloViz::IncImpliedSelected()
    // Virtual method od TEveElement::IncImpliedSelected().
    // It has same functionality as its base class with additional
    // debug print of selected cells list.
-
    if (gDebug > 1)
    {
       printf("%s::IncImpliedSelected, selected %d cells:\n", GetElementName(), (Int_t)fData->GetCellsSelected().size());
@@ -565,6 +564,8 @@ void TEveCalo2D::BuildCellIdCache()
          }
       }
    }
+
+   BuildCellIdCacheSelected();
 
    fCellIdCacheOK= kTRUE;
 }
