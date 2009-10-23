@@ -176,7 +176,7 @@ Int_t TFeldmanCousins::FindLimitsFromTable( Double_t mu )
    }
 
    //rank the likelihood ratio
-   TMath::BubbleHigh(fNMax, r, rank);
+   TMath::Sort(fNMax, r, rank);
 
    //search through the probability table and get the i for the CL
    Double_t sum = 0.0;
