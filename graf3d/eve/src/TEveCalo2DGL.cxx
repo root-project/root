@@ -322,26 +322,27 @@ void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp
 {
    // Draw towers in highlight mode.
 
-   if ( !fM->fData->GetCellsSelected().size()) return;
+   if ((pshp->GetSelected() == 2) && fM->fData->GetCellsSelected().size())
+   {
+      glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT  | GL_LINE_BIT );
+      glDisable(GL_CULL_FACE);
+      glDisable(GL_LIGHTING);
+      glEnable(GL_LINE_SMOOTH);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      TGLUtil::LineWidth(2);
 
-   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT  | GL_LINE_BIT );
-   glDisable(GL_CULL_FACE);
-   glDisable(GL_LIGHTING);
-   glEnable(GL_LINE_SMOOTH);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   TGLUtil::LineWidth(2);
+      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
+      TGLUtil::LockColor();
 
-   glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
-   TGLUtil::LockColor();
+      if (IsRPhi())
+         DrawRPhi(rnrCtx, fM->fCellListsSelected);
+      else
+         DrawRhoZ(rnrCtx, fM->fCellListsSelected);
 
-   if (IsRPhi())
-      DrawRPhi(rnrCtx, fM->fCellListsSelected);
-   else
-      DrawRhoZ(rnrCtx, fM->fCellListsSelected);
+      TGLUtil::UnlockColor();
 
-   TGLUtil::UnlockColor();
-
-   glPopAttrib();
+      glPopAttrib();
+   }
 }
 
  //______________________________________________________________________________
@@ -350,10 +351,10 @@ void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
    // Processes tower selection in eta bin or phi bin.
    // Virtual function from TGLogicalShape. Called from TGLViewer.
 
-   fM->fData->GetCellsSelected().clear();
-
    if (rec.GetN() > 2)
    {
+      if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
+
       Int_t binID    = rec.GetItem(1);
       Int_t slice = rec.GetItem(2);
       TEveCaloData::CellData_t cellData;

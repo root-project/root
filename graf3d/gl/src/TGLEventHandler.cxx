@@ -519,12 +519,9 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                {
                   TGLLogicalShape& lshape = const_cast<TGLLogicalShape&>
                      (*fGLViewer->fSecSelRec.GetPhysShape()->GetLogical());
+
+                  fGLViewer->fSecSelRec.SetMultiple(event->fState & kKeyControlMask);
                   lshape.ProcessSelection(*fGLViewer->fRnrCtx, fGLViewer->fSecSelRec);
-                  if ( event->fState & kKeyControlMask)
-                  {
-                     Warning("TGLEventHandler::HandleButton", "Multiple select not supported in this mode.");
-                     event->fState ^= kKeyControlMask;
-                  }
                }
             }
          }

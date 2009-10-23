@@ -484,8 +484,10 @@ TEveCalo2D::~TEveCalo2D()
    for(UInt_t vi = 0; vi < fCellListsSelected.size(); ++vi)
    {
       TEveCaloData::vCellId_t* cids = fCellListsSelected[vi];
-      cids->clear();
-      delete cids;
+      if (cids) {
+         cids->clear();
+         delete cids;
+      }
    }
 }
 

@@ -568,20 +568,22 @@ void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* psh
 {
    // Draw polygons in highlight mode.
 
-   if ( !fM->fData->GetCellsSelected().size()) return;
 
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT |GL_POLYGON_BIT );
-   glDisable(GL_LIGHTING);
-   glDisable(GL_CULL_FACE);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   if ((pshp->GetSelected() == 2) && fM->fData->GetCellsSelected().size())
+   {
+      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT |GL_POLYGON_BIT );
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-   TGLUtil::LineWidth(2);
-   glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
-   TGLUtil::LockColor();
-   DrawCellList(rnrCtx, fM->fData->GetCellsSelected());
-   TGLUtil::UnlockColor();
+      TGLUtil::LineWidth(2);
+      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
+      TGLUtil::LockColor();
+      DrawCellList(rnrCtx, fM->fData->GetCellsSelected());
+      TGLUtil::UnlockColor();
 
-   glPopAttrib();
+      glPopAttrib();
+   }
 }
 
 //______________________________________________________________________________
@@ -590,7 +592,7 @@ void TEveCalo3DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
    // Processes tower selection.
    // Virtual function from TGLogicalShape. Called from TGLViewer.
 
-   fM->fData->GetCellsSelected().clear();
+   if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
 
    if (rec.GetN() > 1)
    {

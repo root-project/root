@@ -1016,67 +1016,70 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
 {
    // Draw eta-phi range in highlight mode.
 
-   if ( !fM->fData->GetCellsSelected().size()) return;
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
-   glDisable(GL_LIGHTING);
-   glDisable(GL_CULL_FACE);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-   TGLUtil::LineWidth(2);
-   glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
-   rnrCtx.SetHighlightOutline(kTRUE);
-   TGLUtil::LockColor();
-
-   // modelview matrix
-   Double_t em, eM, pm, pM;
-   fM->fData->GetEtaLimits(em, eM);
-   fM->fData->GetPhiLimits(pm, pM);
-   Double_t unit = ((eM - em) < (pM - pm)) ? (eM - em) : (pM - pm);
-   glPushMatrix();
-   Float_t sx = (eM - em) / fM->GetEtaRng();
-   Float_t sy = (pM - pm) / fM->GetPhiRng();
-   glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetValToHeight());
-   glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
-
-   // prepare rebin
-   TEveCaloData::RebinData_t rebinData;
-   if (fM->fBinStep> 1)  {
-      fM->fData->Rebin(fEtaAxis, fPhiAxis, fM->fData->GetCellsSelected(), fM->fPlotEt, rebinData);
-
-      Float_t scale = fM->GetMaxVal() / fMaxValRebin;
-      if (fM->fNormalizeRebin) {
-         for (std::vector<Float_t>::iterator it = rebinData.fSliceData.begin(); it != rebinData.fSliceData.end(); it++)
-            (*it) *= scale;
-      }
-   }
-   if (fCells3D)
+   if ((pshp->GetSelected() == 2) && fM->fData->GetCellsSelected().size())
    {
-      if (fM->fBinStep == 1)
-         Make3DDisplayList(fM->fData->GetCellsSelected(), fDLMapSelected, kFALSE);
+
+      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+      TGLUtil::LineWidth(2);
+      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
+      rnrCtx.SetHighlightOutline(kTRUE);
+      TGLUtil::LockColor();
+
+      // modelview matrix
+      Double_t em, eM, pm, pM;
+      fM->fData->GetEtaLimits(em, eM);
+      fM->fData->GetPhiLimits(pm, pM);
+      Double_t unit = ((eM - em) < (pM - pm)) ? (eM - em) : (pM - pm);
+      glPushMatrix();
+      Float_t sx = (eM - em) / fM->GetEtaRng();
+      Float_t sy = (pM - pm) / fM->GetPhiRng();
+      glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetValToHeight());
+      glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
+
+      // prepare rebin
+      TEveCaloData::RebinData_t rebinData;
+      if (fM->fBinStep> 1)  {
+         fM->fData->Rebin(fEtaAxis, fPhiAxis, fM->fData->GetCellsSelected(), fM->fPlotEt, rebinData);
+
+         Float_t scale = fM->GetMaxVal() / fMaxValRebin;
+         if (fM->fNormalizeRebin) {
+            for (std::vector<Float_t>::iterator it = rebinData.fSliceData.begin(); it != rebinData.fSliceData.end(); it++)
+               (*it) *= scale;
+         }
+      }
+      if (fCells3D)
+      {
+         if (fM->fBinStep == 1)
+            Make3DDisplayList(fM->fData->GetCellsSelected(), fDLMapSelected, kFALSE);
+         else
+         {
+            Make3DDisplayListRebin(rebinData, fDLMapSelected, kFALSE);
+         }
+         for (SliceDLMap_i i = fDLMapSelected.begin(); i != fDLMapSelected.end(); ++i) {
+            TGLUtil::Color(fM->GetDataSliceColor(i->first));
+            glCallList(i->second);
+         }
+      }
       else
       {
-         Make3DDisplayListRebin(rebinData, fDLMapSelected, kFALSE);
-      }
-      for (SliceDLMap_i i = fDLMapSelected.begin(); i != fDLMapSelected.end(); ++i) {
-         TGLUtil::Color(fM->GetDataSliceColor(i->first));
-         glCallList(i->second);
-      }
-   }
-   else
-   {
-      vCell2D_t cells2D;
-      if (fM->fBinStep == 1)
-         PrepareCell2DData(fM->fData->GetCellsSelected(), cells2D);
-      else
-         PrepareCell2DDataRebin(rebinData, cells2D);
+         vCell2D_t cells2D;
+         if (fM->fBinStep == 1)
+            PrepareCell2DData(fM->fData->GetCellsSelected(), cells2D);
+         else
+            PrepareCell2DDataRebin(rebinData, cells2D);
 
-      DrawCells2D(rnrCtx, cells2D);
-   }
+         DrawCells2D(rnrCtx, cells2D);
+      }
 
-   TGLUtil::UnlockColor();
-   rnrCtx.SetHighlightOutline(kFALSE);
-   glPopMatrix();
-   glPopAttrib();
+      TGLUtil::UnlockColor();
+      rnrCtx.SetHighlightOutline(kFALSE);
+      glPopMatrix();
+      glPopAttrib();
+   }
 }
 
 //______________________________________________________________________________
@@ -1232,7 +1235,7 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
 {
    // Processes tower selection from TGLViewer.
 
-   fM->fData->GetCellsSelected().clear();
+   if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
 
    if (rec.GetN() > 1)
    {

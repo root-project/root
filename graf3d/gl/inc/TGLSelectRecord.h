@@ -80,6 +80,7 @@ protected:
    TGLPhysicalShape *fPhysShape; // PhysicalShape, if applicable
    TObject          *fObject;    // Master TObject, if applicable
    void             *fSpecific;  // Scene specific, if applicable
+   Bool_t            fMultiple;  // Mutliple selection, requested by event handler
 
 public:
    TGLSelectRecord();
@@ -97,12 +98,14 @@ public:
    TGLPhysicalShape * GetPhysShape()   const { return fPhysShape; }
    TObject          * GetObject()      const { return fObject; }
    void             * GetSpecific()    const { return fSpecific; }
+   Bool_t             GetMultiple()    const { return fMultiple; }
 
    void SetTransparent(Bool_t t)               { fTransparent = t; }
    void SetSceneInfo  (TGLSceneInfo* si)       { fSceneInfo = si; }
    void SetPhysShape  (TGLPhysicalShape* pshp) { fPhysShape = pshp; }
    void SetObject     (TObject* obj)           { fObject = obj; }
    void SetSpecific   (void* spec)             { fSpecific = spec; }
+   void SetMultiple   (Bool_t multi)           { fMultiple = multi; }
 
    void Print();
 

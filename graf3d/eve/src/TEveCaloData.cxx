@@ -135,20 +135,6 @@ void TEveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
 }
 
 //______________________________________________________________________________
-void TEveCaloData::SelectElement(Bool_t state)
-{
-   // Virtual method od TEveElement::SelectElement(Bool_t state)
-   // Set element's selection state. Stamp appropriately.
-
-   if (!state)
-   {
-      GetCellsSelected().clear();
-      DataChanged();
-   }
-   TEveElement::SelectElement(state);
-}
-
-//______________________________________________________________________________
 void TEveCaloData::SetSliceThreshold(Int_t slice, Float_t val)
 {
    // Set threshold for given slice.
