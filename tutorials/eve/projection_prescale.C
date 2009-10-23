@@ -10,12 +10,15 @@ void projection_prescale()
    TFile::SetCacheFileDir(".");
    TEveManager::Create();
 
+   TEveViewer *pev = gEve->SpawnNewViewer("Projections");
+
    // camera
-   TEveScene* s = gEve->SpawnNewScene("Projected Event");
-   gEve->GetDefaultViewer()->AddScene(s);
-   TGLViewer* v = gEve->GetDefaultGLViewer();
-   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   TGLOrthoCamera* cam = (TGLOrthoCamera*) v->CurrentCamera();
+   TEveScene* s = gEve->SpawnNewScene("Projected Geom");
+   pev->AddScene(s);
+
+   TGLViewer* pgv = pev->GetGLViewer();
+   pgv->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+   TGLOrthoCamera* cam = (TGLOrthoCamera*) pgv->CurrentCamera();
    cam->SetZoomMinMax(0.2, 20);
 
    // projections
@@ -23,10 +26,10 @@ void projection_prescale()
    {
       mng->SetProjection(TEveProjection::kPT_RPhi);
       TEveProjection* p = mng->GetProjection();
-      p->AddPreScaleEntry(0, 0,   4);     // r scale 2 from 0
+      p->AddPreScaleEntry(0, 0,   4);    // r scale 4 from 0
       p->AddPreScaleEntry(0, 45,  1);    // r scale 1 from 45
       p->AddPreScaleEntry(0, 310, 0.5);
-      p->SetUsePreScale(1);
+      p->SetUsePreScale(kTRUE);
    }
    {
       mng->SetProjection(TEveProjection::kPT_RhoZ);
@@ -40,11 +43,10 @@ void projection_prescale()
       // Reduce the rest
       p->AddPreScaleEntry(0, 310, 0.5);
       p->AddPreScaleEntry(1, 250, 0.5);
-      p->SetUsePreScale(1);
+      p->SetUsePreScale(kTRUE);
    }
    mng->SetProjection(TEveProjection::kPT_RPhi);
    s->AddElement(mng);
-
 
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
    s->AddElement(axes);
@@ -61,7 +63,6 @@ void projection_prescale()
    geom->Close();
    delete geom;
    gEve->AddGlobalElement(gsre);
-   gEve->GetGlobalScene()->SetRnrState(kFALSE);
    mng->ImportElements(gsre);
 
    TEveLine* line = new TEveLine;
@@ -71,6 +72,28 @@ void projection_prescale()
    gEve->AddElement(line);
    mng->ImportElements(line);
    line->SetRnrSelf(kFALSE);
+
+
+   //---------------------------------------------------------------------------
+   // Scaled 3D "projection"
+   //---------------------------------------------------------------------------
+
+   TEveViewer *sev = gEve->SpawnNewViewer("Scaled 3D");
+   TEveProjectionManager* smng = new TEveProjectionManager(TEveProjection::kPT_3D);
+   TEveProjection* sp = smng->GetProjection();
+   sp->SetUsePreScale(kTRUE);
+   sp->AddPreScaleEntry(2,   0,  1);
+   sp->AddPreScaleEntry(2, 100,  0.2);
+
+   TEveScene* ss = gEve->SpawnNewScene("Scaled Geom");
+   sev->AddScene(ss);
+   ss->AddElement(smng);
+
+   smng->ImportElements(gsre);
+
+   //---------------------------------------------------------------------------
+
+   gEve->GetBrowser()->GetTabRight()->SetTab(1);
 
    gEve->Redraw3D(kTRUE);
 }

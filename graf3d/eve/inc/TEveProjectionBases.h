@@ -14,12 +14,11 @@
 
 #include "TEveUtil.h"
 
-#include <list>
-
 class TBuffer3D;
 
 class TEveElement;
 
+class TEveProjection;
 class TEveProjected;
 class TEveProjectionManager;
 
@@ -47,7 +46,7 @@ public:
    TEveProjectable();
    virtual ~TEveProjectable();
 
-   virtual TClass* ProjectedClass() const = 0;
+   virtual TClass* ProjectedClass(const TEveProjection* p) const = 0;
 
    virtual Bool_t HasProjecteds() const { return ! fProjectedList.empty(); }
 
@@ -83,6 +82,9 @@ protected:
    TEveProjectable       *fProjectable;   // link to original object
    Float_t                fDepth;         // z coordinate
 
+   void         SetDepthCommon(Float_t d, TEveElement* el, Float_t* bbox);
+   virtual void SetDepthLocal(Float_t d) = 0;
+
 public:
    TEveProjected();
    virtual ~TEveProjected();
@@ -92,11 +94,9 @@ public:
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void UnRefProjectable(TEveProjectable* assumed_parent);
 
-   virtual void SetDepth(Float_t d) = 0;
-
    virtual void UpdateProjection() = 0;
 
-   void SetDepthCommon(Float_t d, TEveElement* el, Float_t* bbox);
+   virtual void SetDepth(Float_t d);
 
    ClassDef(TEveProjected, 0); // Abstract base class for classes that hold results of a non-linear projection transformation.
 };

@@ -53,48 +53,72 @@ TEveProjection::TEveProjection() :
 }
 
 //______________________________________________________________________________
-void TEveProjection::ProjectVector(TEveVector& v)
+void TEveProjection::ProjectPointfv(Float_t* v, Float_t d)
 {
-   // Project TEveVector.
+   // Project float array.
 
-   ProjectPoint(v.fX, v.fY, v.fZ);
+   ProjectPoint(v[0], v[1], v[2], d);
 }
 
 //______________________________________________________________________________
-void TEveProjection::PreScalePoint(Float_t& v0, Float_t& v1)
+void TEveProjection::ProjectPointdv(Double_t* v, Float_t d)
 {
-   // Pre-scale point (v0, v1) in projected coordinates:
+   // Project double array.
+   // This is a bit piggish as we convert the doubles to floats and back.
+
+   Float_t x = v[0], y = v[1], z = v[2];
+   ProjectPoint(x, y, z, d);
+   v[0] = x; v[1] = y; v[2] = z;
+}
+
+//______________________________________________________________________________
+void TEveProjection::ProjectVector(TEveVector& v, Float_t d)
+{
+   // Project TEveVector.
+
+   ProjectPoint(v.fX, v.fY, v.fZ, d);
+}
+
+//______________________________________________________________________________
+void TEveProjection::PreScaleVariable(Int_t dim, Float_t& v)
+{
+   // Pre-scale single variable with pre-scale entry dim.
+
+   if (!fPreScales[dim].empty())
+   {
+      Bool_t invp = kFALSE;
+      if (v < 0) {
+         v    = -v;
+         invp = kTRUE;
+      }
+      vPreScale_i i = fPreScales[dim].begin();
+      while (v > i->fMax)
+         ++i;
+      v = i->fOffset + (v - i->fMin)*i->fScale;
+      if (invp)
+         v = -v;
+   }
+}
+
+//______________________________________________________________________________
+void TEveProjection::PreScalePoint(Float_t& x, Float_t& y)
+{
+   // Pre-scale point (x, y) in projected coordinates for 2D projections:
    //   RhoZ ~ (rho, z)
    //   RPhi ~ (r, phi), scaling phi doesn't make much sense.
 
-   if (!fPreScales[0].empty())
-   {
-      Bool_t invp = kFALSE;
-      if (v0 < 0) {
-         v0    = -v0;
-         invp = kTRUE;
-      }
-      vPreScale_i i = fPreScales[0].begin();
-      while (v0 > i->fMax)
-         ++i;
-      v0 = i->fOffset + (v0 - i->fMin)*i->fScale;
-      if (invp)
-         v0 = -v0;
-   }
-   if (!fPreScales[1].empty())
-   {
-      Bool_t invp = kFALSE;
-      if (v1 < 0) {
-         v1    = -v1;
-         invp = kTRUE;
-      }
-      vPreScale_i i = fPreScales[1].begin();
-      while (v1 > i->fMax)
-         ++i;
-      v1 = i->fOffset + (v1 - i->fMin)*i->fScale;
-      if (invp)
-         v1 = -v1;
-   }
+   PreScaleVariable(0, x);
+   PreScaleVariable(1, y);
+}
+
+//______________________________________________________________________________
+void TEveProjection::PreScalePoint(Float_t& x, Float_t& y, Float_t& z)
+{
+   // Pre-scale point (x, y, z) in projected coordinates for 3D projection.
+
+   PreScaleVariable(0, x);
+   PreScaleVariable(1, y);
+   PreScaleVariable(2, z);
 }
 
 //______________________________________________________________________________
@@ -102,7 +126,7 @@ void TEveProjection::AddPreScaleEntry(Int_t coord, Float_t value, Float_t scale)
 {
    // Add new scaling range for given coordinate.
    // Arguments:
-   //  coord    0 ~ x, 1 ~ y;
+   //  coord    0 ~ x, 1 ~ y, 2 ~ z
    //  value    value of input coordinate from which to apply this scale;
    //  scale    the scale to apply from value onwards.
    //
@@ -112,7 +136,7 @@ void TEveProjection::AddPreScaleEntry(Int_t coord, Float_t value, Float_t scale)
 
    static const TEveException eh("TEveProjection::AddPreScaleEntry ");
 
-   if (coord < 0 || coord > 1)
+   if (coord < 0 || coord > 2)
       throw (eh + "coordinate out of range.");
 
    const Float_t infty  = std::numeric_limits<Float_t>::infinity();
@@ -155,7 +179,7 @@ void TEveProjection::ChangePreScaleEntry(Int_t   coord, Int_t entry,
 
    static const TEveException eh("TEveProjection::ChangePreScaleEntry ");
 
-   if (coord < 0 || coord > 1)
+   if (coord < 0 || coord > 2)
       throw (eh + "coordinate out of range.");
 
    vPreScale_t& vec = fPreScales[coord];
@@ -180,6 +204,7 @@ void TEveProjection::ClearPreScales()
 
    fPreScales[0].clear();
    fPreScales[1].clear();
+   fPreScales[2].clear();
 }
 
 //______________________________________________________________________________
@@ -274,14 +299,14 @@ Float_t TEveProjection::GetValForScreenPos(Int_t i, Float_t sv)
    if (fDistortion > 0.0f && ((sv > 0 && sv > fUpLimit[i]) || (sv < 0 && sv < fLowLimit[i])))
       throw(eH + Form("screen value '%f' out of limit '%f'.", sv, sv > 0 ? fUpLimit[i] : fLowLimit[i]));
 
-   TEveVector zero; ProjectVector(zero);
+   TEveVector zero; ProjectVector(zero, 0);
    // search from -/+ infinity according to sign of screen value
    if (sv > zero[i])
    {
       xL = 0; xR = 1000;
       while (1)
       {
-         vec.Mult(dirVec, xR); ProjectVector(vec);
+         vec.Mult(dirVec, xR); ProjectVector(vec, 0);
          // printf("positive projected %f, value %f,xL, xR ( %f, %f)\n", vec[i], sv, xL, xR);
          if (vec[i] > sv || vec[i] == sv) break;
          xL = xR; xR *= 2;
@@ -292,7 +317,7 @@ Float_t TEveProjection::GetValForScreenPos(Int_t i, Float_t sv)
       xR = 0; xL = -1000;
       while (1)
       {
-         vec.Mult(dirVec, xL); ProjectVector(vec);
+         vec.Mult(dirVec, xL); ProjectVector(vec, 0);
          // printf("negative projected %f, value %f,xL, xR ( %f, %f)\n", vec[i], sv, xL, xR);
          if (vec[i] < sv || vec[i] == sv) break;
          xR = xL; xL *= 2;
@@ -307,7 +332,7 @@ Float_t TEveProjection::GetValForScreenPos(Int_t i, Float_t sv)
    {
       xM = 0.5f * (xL + xR);
       vec.Mult(dirVec, xM);
-      ProjectVector(vec);
+      ProjectVector(vec, 0);
       // printf("safr xL=%f, xR=%f; vec[i]=%f, sv=%f\n", xL, xR, vec[i], sv);
       if (vec[i] > sv)
          xR = xM;
@@ -325,7 +350,7 @@ Float_t TEveProjection::GetScreenVal(Int_t i, Float_t x)
 
    TEveVector dv;
    SetDirectionalVector(i, dv); dv = dv*x;
-   ProjectVector(dv);
+   ProjectVector(dv, 0);
    return dv[i];
 }
 
@@ -354,7 +379,7 @@ TEveRhoZProjection::TEveRhoZProjection() :
 
 //______________________________________________________________________________
 void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
-                                      EPProc_e proc)
+                                      Float_t  d, EPProc_e proc)
 {
    // Project point.
 
@@ -394,7 +419,7 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
       x += fProjectedCenter.fX;
       y += fProjectedCenter.fY;
    }
-   z = 0.0f;
+   z = d;
 }
 
 //______________________________________________________________________________
@@ -491,7 +516,7 @@ TEveRPhiProjection::TEveRPhiProjection() :
 
 //______________________________________________________________________________
 void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
-                                      EPProc_e proc)
+                                      Float_t d, EPProc_e proc)
 {
    // Project point.
 
@@ -524,5 +549,49 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
       x = r*Cos(phi) + fCenter.fX;
       y = r*Sin(phi) + fCenter.fY;
    }
-   z = 0.0f;
+   z = d;
+}
+
+
+//==============================================================================
+//==============================================================================
+// TEve3DProjection
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// 3D scaling projection. One has to use pre-scaling to make any ise of this.
+
+ClassImp(TEve3DProjection);
+
+//______________________________________________________________________________
+TEve3DProjection::TEve3DProjection() :
+   TEveProjection()
+{
+   // Constructor.
+
+   fType    = kPT_3D;
+   fGeoMode = kGM_Unknown;
+   fName    = "3D";
+}
+
+//______________________________________________________________________________
+void TEve3DProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
+                                    Float_t /*d*/, EPProc_e proc)
+{
+   // Project point.
+
+   using namespace TMath;
+
+   if (proc != kPP_Plane)
+   {
+      if (fUsePreScale)
+      {
+         PreScalePoint(x, y, z);
+      }
+
+      x -= fCenter.fX;
+      y -= fCenter.fY;
+      z -= fCenter.fZ;
+   }
 }

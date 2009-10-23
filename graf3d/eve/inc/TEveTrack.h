@@ -113,7 +113,7 @@ public:
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);
 
-   virtual TClass* ProjectedClass() const;
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
    Bool_t  ShouldBreakTrack() const;
 
@@ -131,7 +131,6 @@ public:
 /******************************************************************************/
 
 class TEveTrackList : public TEveElementList,
-		      public TEveProjectable,
 		      public TAttMarker,
 		      public TAttLine
 {
@@ -219,7 +218,7 @@ public:
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);
 
-   virtual TClass* ProjectedClass() const;
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
    ClassDef(TEveTrackList, 1); // A list of tracks supporting change of common attributes and selection based on track parameters.
 };

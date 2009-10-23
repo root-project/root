@@ -431,7 +431,7 @@ void TEveTrack::WriteVizParams(ostream& out, const TString& var)
 }
 
 //______________________________________________________________________________
-TClass* TEveTrack::ProjectedClass() const
+TClass* TEveTrack::ProjectedClass(const TEveProjection*) const
 {
    // Virtual from TEveProjectable, return TEveTrackProjected class.
 
@@ -1167,7 +1167,7 @@ void TEveTrackList::WriteVizParams(ostream& out, const TString& var)
 }
 
 //______________________________________________________________________________
-TClass* TEveTrackList::ProjectedClass() const
+TClass* TEveTrackList::ProjectedClass(const TEveProjection*) const
 {
    // Virtual from TEveProjectable, returns TEveTrackListProjected class.
 

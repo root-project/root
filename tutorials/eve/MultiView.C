@@ -58,8 +58,7 @@ struct MultiView
       // Projection managers
       //=====================
 
-      fRPhiMgr = new TEveProjectionManager();
-      fRPhiMgr->SetProjection(TEveProjection::kPT_RPhi);
+      fRPhiMgr = new TEveProjectionManager(TEveProjection::kPT_RPhi);
       gEve->AddToListTree(fRPhiMgr, kFALSE);
       {
          TEveProjectionAxes* a = new TEveProjectionAxes(fRPhiMgr);
@@ -72,8 +71,7 @@ struct MultiView
          fRPhiGeomScene->AddElement(a);
       }
 
-      fRhoZMgr = new TEveProjectionManager();
-      fRhoZMgr->SetProjection(TEveProjection::kPT_RhoZ);
+      fRhoZMgr = new TEveProjectionManager(TEveProjection::kPT_RhoZ);
       gEve->AddToListTree(fRhoZMgr, kFALSE);
       {
          TEveProjectionAxes* a = new TEveProjectionAxes(fRhoZMgr);

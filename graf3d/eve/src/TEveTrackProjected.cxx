@@ -53,16 +53,16 @@ void TEveTrackProjected::SetProjection(TEveProjectionManager* mng, TEveProjectab
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveTrackProjected::SetDepth(Float_t d)
+void TEveTrackProjected::SetDepthLocal(Float_t d)
 {
    // Set depth (z-coordinate) of the projected points.
 
    SetDepthCommon(d, this, fBBox);
 
    Int_t    n = Size();
-   Float_t *p = GetP();
+   Float_t *p = GetP() + 2;
    for (Int_t i = 0; i < n; ++i, p+=3)
-      p[2] = fDepth;
+      *p = fDepth;
 
    // !!!! Missing path-marks move. But they are not projected anyway
 }
@@ -88,8 +88,8 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
    while ((vL-vR).Mag() > 0.01)
    {
       vM.Mult(vL+vR, 0.5f);
-      vLP.Set(vL); fProjection->ProjectPoint(vLP.fX, vLP.fY, vLP.fZ);
-      vMP.Set(vM); fProjection->ProjectPoint(vMP.fX, vMP.fY, vMP.fZ);
+      vLP.Set(vL); fProjection->ProjectPoint(vLP.fX, vLP.fY, vLP.fZ, 0);
+      vMP.Set(vM); fProjection->ProjectPoint(vMP.fX, vMP.fY, vMP.fZ, 0);
       if (fProjection->AcceptSegment(vLP, vMP, 0.0f))
       {
          vL.Set(vM);
@@ -105,7 +105,7 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
    } else {
       x = vR.fX; y = vR.fY; z = vR.fZ;
    }
-   fProjection->ProjectPoint(x, y, z);
+   fProjection->ProjectPoint(x, y, z, fDepth);
 }
 
 //______________________________________________________________________________
@@ -167,8 +167,7 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
    for (Int_t i = 0; i < Size(); ++i, p+=3)
    {
       fOrigPnts[i].Set(p);
-      fProjection->ProjectPoint(p[0], p[1], p[2]);
-      p[2] = fDepth;
+      fProjection->ProjectPoint(p[0], p[1], p[2], fDepth);
    }
 
    Float_t x, y, z;
@@ -289,6 +288,16 @@ void TEveTrackListProjected::SetProjection(TEveProjectionManager* proj, TEveProj
 }
 
 //______________________________________________________________________________
+void TEveTrackListProjected::SetDepthLocal(Float_t /*d*/)
+{
+   // This is not needed for functionality as SetDepth(Float_t d)
+   // is overriden -- but SetDepthLocal() is abstract.
+   // Just emits a warning if called.
+
+   Warning("SetDepthLocal", "This function only exists to fulfill an abstract interface.");
+}
+
+//______________________________________________________________________________
 void TEveTrackListProjected::SetDepth(Float_t d)
 {
    // Set depth of all children inheriting from TEveTrackProjected.
@@ -302,7 +311,7 @@ void TEveTrackListProjected::SetDepth(Float_t d, TEveElement* el)
    // Set depth of all children of el inheriting from TEveTrackProjected.
 
    TEveTrackProjected* ptrack;
-   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
+   for (List_i i = el->BeginChildren(); i != el->EndChildren(); ++i)
    {
       ptrack = dynamic_cast<TEveTrackProjected*>(*i);
       if (ptrack)

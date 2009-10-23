@@ -80,12 +80,13 @@ protected:
 
    Bool_t       fHighlightFrame; // higlight mode
 
+   virtual void SetDepthLocal(Float_t d);
+
 public:
    TEvePolygonSetProjected(const char* n="TEvePolygonSetProjected", const char* t="");
    virtual ~TEvePolygonSetProjected();
 
    virtual void    SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void    SetDepth(Float_t d);
    virtual void    UpdateProjection();
 
    void            ProjectBuffer3D();

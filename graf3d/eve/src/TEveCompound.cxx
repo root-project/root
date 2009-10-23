@@ -26,7 +26,6 @@ ClassImp(TEveCompound);
 //______________________________________________________________________________
 TEveCompound::TEveCompound(const char* n, const char* t, Bool_t doColor) :
    TEveElementList (n, t, doColor),
-   TEveProjectable (),
    fCompoundOpen   (0)
 {
    // Constructor.
@@ -115,7 +114,7 @@ void TEveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
 //******************************************************************************
 
 //______________________________________________________________________________
-TClass* TEveCompound::ProjectedClass() const
+TClass* TEveCompound::ProjectedClass(const TEveProjection*) const
 {
    // Virtual from TEveProjectable, returns TEveCompoundProjected class.
 

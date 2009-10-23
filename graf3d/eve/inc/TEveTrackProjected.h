@@ -35,13 +35,13 @@ protected:
    std::vector<Int_t>   fBreakPoints; // indices of track break-points
    TEveProjection      *fProjection;  // projection
 
+   virtual void SetDepthLocal(Float_t d);
+
 public:
    TEveTrackProjected();
    virtual ~TEveTrackProjected() {}
 
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-
-   virtual void SetDepth(Float_t d);
 
    virtual void UpdateProjection();
    virtual void MakeTrack(Bool_t recurse=kTRUE);
@@ -65,14 +65,17 @@ private:
    TEveTrackListProjected(const TEveTrackListProjected&);            // Not implemented
    TEveTrackListProjected& operator=(const TEveTrackListProjected&); // Not implemented
 
+protected:
+   virtual void SetDepthLocal(Float_t d);
+
 public:
    TEveTrackListProjected();
    virtual ~TEveTrackListProjected() {}
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-   virtual void SetDepth(Float_t d);
    virtual void UpdateProjection()  {}
 
+   virtual void SetDepth(Float_t d);
    virtual void SetDepth(Float_t d, TEveElement* el);
 
    ClassDef(TEveTrackListProjected, 1); // Specialization of TEveTrackList for holding TEveTrackProjected objects.

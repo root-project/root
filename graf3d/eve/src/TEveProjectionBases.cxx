@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TEveProjectionBases.h"
+#include "TEveProjectionManager.h"
 #include "TEveManager.h"
 
 #include <cassert>
@@ -23,8 +24,9 @@
 //
 // Abstract base-class for non-linear projectable objects.
 //
-// Via ProjectedClass() method it returns a TClass instance for the
-// projected class and keeps references to the projected objects.
+// Via ProjectedClass(const TEveProjection* p) method it returns a
+// TClass instance for the projected class and keeps references to the
+// projected objects.
 //
 // It is assumed that all classes deriving from TEveProjectable are also
 // derived from TEveElement.
@@ -174,6 +176,23 @@ void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent)
 
    fProjectable->RemoveProjected(this);
    fProjectable = 0;
+}
+
+//______________________________________________________________________________
+void TEveProjected::SetDepth(Float_t d)
+{
+   // Set depth coordinate for the element.
+   // Bounding-box should also be updated.
+   // If projection type is 3D, this only sets fDepth member.
+
+   if (fManager->GetProjection()->Is2D())
+   {
+      SetDepthLocal(d);
+   }
+   else
+   {
+      fDepth = d;
+   }
 }
 
 //______________________________________________________________________________

@@ -104,7 +104,7 @@ public:
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);
 
-   virtual TClass* ProjectedClass() const;
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
    virtual void ComputeBBox();
    virtual void Paint(Option_t* option="");
@@ -122,12 +122,14 @@ private:
    TEveStraightLineSetProjected(const TEveStraightLineSetProjected&);            // Not implemented
    TEveStraightLineSetProjected& operator=(const TEveStraightLineSetProjected&); // Not implemented
 
+protected:
+   virtual void SetDepthLocal(Float_t d);
+
 public:
    TEveStraightLineSetProjected();
    virtual ~TEveStraightLineSetProjected() {}
 
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void SetDepth(Float_t d);
    virtual void UpdateProjection();
 
    ClassDef(TEveStraightLineSetProjected, 1); // Projected copy of a TEveStraightLineSet.

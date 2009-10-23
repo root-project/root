@@ -13,6 +13,7 @@
 #define ROOT_TEveElement
 
 #include "TEveUtil.h"
+#include "TEveProjectionBases.h"
 
 #include "TNamed.h"
 #include "TRef.h"
@@ -398,7 +399,8 @@ public:
 /******************************************************************************/
 
 class TEveElementList : public TEveElement,
-                        public TNamed
+                        public TNamed,
+                        public TEveProjectable
 {
 private:
    TEveElementList& operator=(const TEveElementList&); // Not implemented
@@ -435,7 +437,34 @@ public:
 
    virtual Bool_t AcceptElement(TEveElement* el);
 
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+
    ClassDef(TEveElementList, 0); // List of TEveElement objects with a possibility to limit the class of accepted elements.
+};
+
+
+/******************************************************************************/
+// TEveElementListProjected
+/******************************************************************************/
+
+class TEveElementListProjected : public TEveElementList,
+                                 public TEveProjected
+{
+private:
+   TEveElementListProjected(const TEveElementListProjected&);            // Not implemented
+   TEveElementListProjected& operator=(const TEveElementListProjected&); // Not implemented
+
+
+protected:
+   virtual void SetDepthLocal(Float_t d);
+
+public:
+   TEveElementListProjected();
+   virtual ~TEveElementListProjected() {}
+
+   virtual void UpdateProjection();
+
+   ClassDef(TEveElementListProjected, 0);
 };
 
 #endif

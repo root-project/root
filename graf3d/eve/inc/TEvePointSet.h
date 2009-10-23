@@ -92,7 +92,7 @@ public:
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);
 
-   virtual TClass* ProjectedClass() const;
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
    ClassDef(TEvePointSet, 1); // Set of 3D points with same marker attributes; optionally each point can be assigned an external TRef or a number of integer indices.
 };
@@ -172,12 +172,14 @@ private:
    TEvePointSetProjected(const TEvePointSetProjected&);            // Not implemented
    TEvePointSetProjected& operator=(const TEvePointSetProjected&); // Not implemented
 
+protected:
+   virtual void SetDepthLocal(Float_t d);
+
 public:
    TEvePointSetProjected();
    virtual ~TEvePointSetProjected() {}
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-   virtual void SetDepth(Float_t d);
    virtual void UpdateProjection();
 
    ClassDef(TEvePointSetProjected, 1); // Projected copy of a TEvePointSet.

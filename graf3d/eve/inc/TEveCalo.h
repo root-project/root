@@ -77,7 +77,7 @@ public:
 
    virtual void Paint(Option_t* option="");
 
-   virtual TClass* ProjectedClass() const;
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
    TEveCaloData* GetData() const { return fData; }
    void    SetData(TEveCaloData* d);

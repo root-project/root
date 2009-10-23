@@ -390,7 +390,7 @@ void TEvePointSet::WriteVizParams(ostream& out, const TString& var)
 //******************************************************************************
 
 //______________________________________________________________________________
-TClass* TEvePointSet::ProjectedClass() const
+TClass* TEvePointSet::ProjectedClass(const TEveProjection*) const
 {
    // Virtual from TEveProjectable, returns TEvePointSetProjected class.
 
@@ -764,16 +764,16 @@ void TEvePointSetProjected::SetProjection(TEveProjectionManager* proj,
 }
 
 //______________________________________________________________________________
-void TEvePointSetProjected::SetDepth(Float_t d)
+void TEvePointSetProjected::SetDepthLocal(Float_t d)
 {
    // Set depth (z-coordinate) of the projected points.
 
    SetDepthCommon(d, this, fBBox);
 
    Int_t    n = Size();
-   Float_t *p = GetP();
+   Float_t *p = GetP() + 2;
    for (Int_t i = 0; i < n; ++i, p+=3)
-      p[2] = fDepth;
+      *p = fDepth;
 }
 
 //______________________________________________________________________________
@@ -792,7 +792,6 @@ void TEvePointSetProjected::UpdateProjection()
    for (Int_t i = 0; i < n; ++i, o+=3, p+=3)
    {
       p[0] = o[0]; p[1] = o[1]; p[2] = o[2];
-      proj.ProjectPoint(p[0], p[1], p[2]);
-      p[2] = fDepth;
+      proj.ProjectPoint(p[0], p[1], p[2], fDepth);
    }
 }

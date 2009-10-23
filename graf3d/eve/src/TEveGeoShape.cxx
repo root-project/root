@@ -13,6 +13,8 @@
 #include "TEveTrans.h"
 #include "TEveManager.h"
 #include "TEvePolygonSetProjected.h"
+#include "TEveProjections.h"
+#include "TEveProjectionManager.h"
 
 #include "TEveGeoShapeExtract.h"
 #include "TEveGeoPolyShape.h"
@@ -288,12 +290,17 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
 /******************************************************************************/
 
 //______________________________________________________________________________
-TClass* TEveGeoShape::ProjectedClass() const
+TClass* TEveGeoShape::ProjectedClass(const TEveProjection* p) const
 {
-   // Return class for projected objects, TEvePolygonSetProjected.
+   // Return class for projected objects:
+   //  - 2D projections: TEvePolygonSetProjected,
+   //  - 3D projections: TEveGeoShapeProjected.
    // Virtual from TEveProjectable.
 
-   return TEvePolygonSetProjected::Class();
+   if (p->Is2D())
+      return TEvePolygonSetProjected::Class();
+   else
+      return TEveGeoShapeProjected::Class();
 }
 
 /******************************************************************************/
@@ -325,4 +332,118 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
       }
    }
    return buff;
+}
+
+
+//==============================================================================
+//==============================================================================
+// TEveGeoShapeProjected
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// A 3D projected TEveGeoShape.
+
+ClassImp(TEveGeoShapeProjected);
+
+//______________________________________________________________________________
+TEveGeoShapeProjected::TEveGeoShapeProjected() :
+   TEveElementList("TEveGeoShapeProjected", "", kTRUE),
+   fBuff(0)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+void TEveGeoShapeProjected::SetDepthLocal(Float_t /*d*/)
+{
+   // This should never be called as this class is only used for 3D
+   // projections.
+   // The implementation is required as this metod is abstract.
+   // Just emits a warning if called.
+
+   Warning("SetDepthLocal", "This function only exists to fulfill an abstract interface.");
+}
+
+//______________________________________________________________________________
+void TEveGeoShapeProjected::SetProjection(TEveProjectionManager* mng,
+                                          TEveProjectable* model)
+{
+   // This is virtual method from base-class TEveProjected.
+
+   TEveProjected::SetProjection(mng, model);
+
+   TEveGeoShape* gre = dynamic_cast<TEveGeoShape*>(fProjectable);
+
+   SetMainColor(gre->GetMainColor());
+   SetMainTransparency(gre->GetMainTransparency());
+}
+
+//______________________________________________________________________________
+void TEveGeoShapeProjected::UpdateProjection()
+{
+   // This is virtual method from base-class TEveProjected.
+
+   TEveGeoShape   *gre = dynamic_cast<TEveGeoShape*>(fProjectable);
+   TEveProjection *prj = fManager->GetProjection();
+
+   delete fBuff;
+   fBuff = gre->MakeBuffer3D();
+
+   if (fBuff)
+   {
+      fBuff->SetSectionsValid(TBuffer3D::kCore | TBuffer3D::kRawSizes | TBuffer3D::kRaw);
+
+      Double_t *p = fBuff->fPnts;
+      for (UInt_t i = 0; i < fBuff->NbPnts(); ++i, p+=3)
+      {
+         prj->ProjectPointdv(p, 0);
+      }
+   }
+
+   ResetBBox();
+}
+
+//______________________________________________________________________________
+void TEveGeoShapeProjected::ComputeBBox()
+{
+   // Override of virtual method from TAttBBox.
+
+   if (fBuff && fBuff->NbPnts() > 0)
+   {
+      BBoxInit();
+
+      Double_t *p = fBuff->fPnts;
+      for (UInt_t i = 0; i < fBuff->NbPnts(); ++i, p+=3)
+      {
+         BBoxCheckPoint(p[0], p[1], p[2]);
+      }
+   }
+   else
+   {
+      BBoxZero();
+   }
+}
+
+//______________________________________________________________________________
+void TEveGeoShapeProjected::Paint(Option_t* /*option*/)
+{
+   // Paint object.
+
+   static const TEveException eh("TEveGeoShapeProjected::Paint ");
+
+   if (fBuff == 0)
+      return;
+
+   TBuffer3D &buff = *fBuff;
+
+   buff.fID           = this;
+   buff.fColor        = GetMainColor();
+   buff.fTransparency = GetMainTransparency();
+   buff.fLocalFrame   = kTRUE;
+
+   Int_t reqSec = gPad->GetViewer3D()->AddObject(buff);
+
+   if (reqSec != TBuffer3D::kNone)
+      Warning(eh, "Extra section required: reqSec=%d, shape=%s.", reqSec, GetName());
 }

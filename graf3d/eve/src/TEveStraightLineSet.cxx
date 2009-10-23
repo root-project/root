@@ -110,7 +110,7 @@ void TEveStraightLineSet::WriteVizParams(ostream& out, const TString& var)
 /******************************************************************************/
 
 //______________________________________________________________________________
-TClass* TEveStraightLineSet::ProjectedClass() const
+TClass* TEveStraightLineSet::ProjectedClass(const TEveProjection*) const
 {
    // Return class of projected object.
    // Virtual from TEveProjectable.
@@ -200,7 +200,7 @@ void TEveStraightLineSetProjected::SetProjection(TEveProjectionManager* mng,
 }
 
 //______________________________________________________________________________
-void TEveStraightLineSetProjected::SetDepth(Float_t d)
+void TEveStraightLineSetProjected::SetDepthLocal(Float_t d)
 {
    // Set depth (z-coordinate) of the projected points.
 
@@ -247,9 +247,9 @@ void TEveStraightLineSetProjected::UpdateProjection()
       mx.MultiplyIP(p2);
       p1[0] += x; p1[1] += y; p1[2] += z;
       p2[0] += x; p2[1] += y; p2[2] += z;
-      proj.ProjectPointFv(p1);
-      proj.ProjectPointFv(p2);
-      AddLine(p1[0], p1[1], fDepth, p2[0], p2[1], fDepth);
+      proj.ProjectPointfv(p1, fDepth);
+      proj.ProjectPointfv(p2, fDepth);
+      AddLine(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
    }
 
    // Markers
@@ -264,7 +264,7 @@ void TEveStraightLineSetProjected::UpdateProjection()
       TEveVector t1, d, xx;
 
       t1.Set(lo->fV1); xx.Set(lo->fV2); xx -= t1; xx *= m->fPos; xx += t1;
-      proj.ProjectVector(xx);
+      proj.ProjectVector(xx, 0);
       t1.Set(lp->fV1); d.Set(lp->fV2); d -= t1; xx -= t1;
 
       AddMarker(m->fLineID, d.Dot(xx) / d.Mag2());

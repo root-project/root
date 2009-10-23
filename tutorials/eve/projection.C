@@ -19,7 +19,7 @@ void projection()
    cam->SetZoomMinMax(0.2, 20);
 
    // projections
-   TEveProjectionManager* mng = new TEveProjectionManager();
+   TEveProjectionManager* mng = new TEveProjectionManager(TEveProjection::kPT_RPhi);
    s->AddElement(mng);
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
    axes->SetTitle("TEveProjections demo");

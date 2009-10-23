@@ -40,7 +40,7 @@ protected:
    virtual void    UpdateDependentElsAndScenes(TEveElement* root);
 
 public:
-   TEveProjectionManager();
+   TEveProjectionManager(TEveProjection::EPType_e type=TEveProjection::kPT_Unknown);
    virtual ~TEveProjectionManager();
 
    void AddDependent(TEveElement* el);

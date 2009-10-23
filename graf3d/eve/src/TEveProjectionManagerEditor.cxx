@@ -56,6 +56,7 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
       fType = new TGComboBox(f);
       fType->AddEntry("RPhi", TEveProjection::kPT_RPhi);
       fType->AddEntry("RhoZ", TEveProjection::kPT_RhoZ);
+      fType->AddEntry("3D",   TEveProjection::kPT_3D);
       TGListBox* lb = fType->GetListBox();
       lb->Resize(lb->GetWidth(), 2*18);
       fType->Resize(80, 20);
@@ -201,9 +202,17 @@ void TEveProjectionManagerEditor::DoType(Int_t type)
 {
    // Slot for setting of projection type.
 
-   fM->SetProjection((TEveProjection::EPType_e)type);
-   fM->ProjectChildren();
-   Update();
+   try
+   {
+      fM->SetProjection((TEveProjection::EPType_e)type);
+      fM->ProjectChildren();
+      Update();
+   }
+   catch (...)
+   {
+      SetModel(fM);
+      throw;
+   }
 }
 
 //______________________________________________________________________________

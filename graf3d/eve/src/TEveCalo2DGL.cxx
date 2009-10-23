@@ -96,8 +96,8 @@ Float_t TEveCalo2DGL::MakeRPhiCell(Float_t phiMin, Float_t phiMax,
       x = pnts[2*i];
       y = pnts[2*i+1];
       z = 0.f;
-      fM->fManager->GetProjection()->ProjectPoint(x, y, z);
-      glVertex3f(x, y, fM->fDepth);
+      fM->fManager->GetProjection()->ProjectPoint(x, y, z, fM->fDepth);
+      glVertex3f(x, y, z);
    }
    glEnd();
    return offset + towerH;
@@ -211,8 +211,8 @@ void TEveCalo2DGL::MakeRhoZCell(Float_t thetaMin, Float_t thetaMax,
       x = 0.f;
       y = phiPlus ? Abs(pnts[2*i]) : -Abs(pnts[2*i]);
       z = pnts[2*i+1];
-      fM->fManager->GetProjection()->ProjectPoint(x, y, z);
-      glVertex3f(x, y, fM->fDepth);
+      fM->fManager->GetProjection()->ProjectPoint(x, y, z, fM->fDepth);
+      glVertex3f(x, y, z);
    }
    glEnd();
    glPopName();

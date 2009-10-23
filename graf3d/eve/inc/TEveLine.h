@@ -61,7 +61,7 @@ public:
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(ostream& out, const TString& var);
 
-   virtual TClass* ProjectedClass() const;
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
    static Bool_t GetDefaultSmooth()       { return fgDefaultSmooth; }
    static void SetDefaultSmooth(Bool_t r) { fgDefaultSmooth = r;    }
@@ -81,12 +81,14 @@ private:
    TEveLineProjected(const TEveLineProjected&);            // Not implemented
    TEveLineProjected& operator=(const TEveLineProjected&); // Not implemented
 
+protected:
+   virtual void SetDepthLocal(Float_t d);
+
 public:
    TEveLineProjected();
    virtual ~TEveLineProjected() {}
 
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void SetDepth(Float_t d);
    virtual void UpdateProjection();
 
    ClassDef(TEveLineProjected, 0); // Projected replica of a TEveLine.

@@ -40,7 +40,7 @@
 ClassImp(TEveProjectionManager);
 
 //______________________________________________________________________________
-TEveProjectionManager::TEveProjectionManager():
+TEveProjectionManager::TEveProjectionManager(TEveProjection::EPType_e type):
    TEveElementList("TEveProjectionManager",""),
    TAttBBox(),
    fProjection  (0),
@@ -51,7 +51,9 @@ TEveProjectionManager::TEveProjectionManager():
 
    for (Int_t i = 0; i < TEveProjection::kPT_End; ++i)
       fProjections[i] = 0;
-   SetProjection(TEveProjection::kPT_RPhi);
+
+   if (type != TEveProjection::kPT_Unknown)
+      SetProjection(type);
 }
 
 //______________________________________________________________________________
@@ -91,7 +93,10 @@ void TEveProjectionManager::UpdateName()
 {
    // Updates name to have consitent information with prjection.
 
-   SetName(Form ("%s (%3.1f)", fProjection->GetName(), fProjection->GetDistortion()*1000));
+   if (fProjection->Is2D())
+      SetName(Form ("%s (%3.1f)", fProjection->GetName(), fProjection->GetDistortion()*1000));
+   else
+      SetName(fProjection->GetName());
 }
 
 //______________________________________________________________________________
@@ -115,11 +120,22 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type)
             fProjections[type] = new TEveRhoZProjection();
             break;
          }
+	 case TEveProjection::kPT_3D:
+         {
+            fProjections[type] = new TEve3DProjection();
+            break;
+         }
          default:
-            throw(eH + "projection type not valid.");
+            throw eH + "projection type not valid.";
             break;
       }
    }
+
+   if (fProjection && fProjection->Is2D() != fProjections[type]->Is2D())
+   {
+      throw eH + "switching between 2D and 3D projections not implemented.";
+   }
+
    fProjection = fProjections[type];
    fProjection->SetCenter(fCenter);
    UpdateName();
@@ -158,7 +174,7 @@ Bool_t TEveProjectionManager::ShouldImport(TEveElement* el)
    if (fImportEmpty)
       return kTRUE;
 
-   if (el->IsA()->InheritsFrom(TEveProjectable::Class()))
+   if (el->IsA() != TEveElementList::Class() && el->IsA()->InheritsFrom(TEveProjectable::Class()))
       return kTRUE;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
       if (ShouldImport(*i))
@@ -205,7 +221,7 @@ TEveElement* TEveProjectionManager::ImportElementsRecurse(TEveElement* el,
       TEveProjectable *pble   = dynamic_cast<TEveProjectable*>(el);
       if (pble)
       {
-         new_el = (TEveElement*) pble->ProjectedClass()->New();
+         new_el = (TEveElement*) pble->ProjectedClass(fProjection)->New();
          new_pr = dynamic_cast<TEveProjected*>(new_el);
          new_pr->SetProjection(this, pble);
          new_pr->SetDepth(fCurrentDepth);

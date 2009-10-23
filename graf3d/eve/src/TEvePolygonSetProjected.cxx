@@ -99,7 +99,7 @@ void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* mng,
 }
 
 //______________________________________________________________________________
-void TEvePolygonSetProjected::SetDepth(Float_t d)
+void TEvePolygonSetProjected::SetDepthLocal(Float_t d)
 {
    // Set depth (z-coordinate) of the projected points.
 
@@ -142,17 +142,17 @@ Int_t* TEvePolygonSetProjected::ProjectAndReducePoints()
 
    Int_t buffN = fBuff->NbPnts();
    TEveVector*  pnts  = new TEveVector[buffN];
-   for (Int_t i = 0; i<buffN; ++i)
+   for (Int_t i = 0; i < buffN; ++i)
    {
       pnts[i].Set(fBuff->fPnts[3*i],fBuff->fPnts[3*i+1], fBuff->fPnts[3*i+2]);
-      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ,
+      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, 0,
                                TEveProjection::kPP_Plane);
    }
 
    if (fPnts) delete [] fPnts;
    fNPnts=0;
-   Int_t* idxMap   = new Int_t[buffN];
-   Int_t* ra = new Int_t[buffN];  // list of reduced vertices
+   Int_t *idxMap = new Int_t[buffN];
+   Int_t *ra     = new Int_t[buffN];  // list of reduced vertices
    for (UInt_t v = 0; v < (UInt_t)buffN; ++v)
    {
       idxMap[v] = -1;
@@ -178,9 +178,8 @@ Int_t* TEvePolygonSetProjected::ProjectAndReducePoints()
    for (Int_t idx = 0; idx < fNPnts; ++idx)
    {
       Int_t i = ra[idx];
-      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ,
+      projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, fDepth,
                                TEveProjection::kPP_Distort);
-      pnts[i].fZ = fDepth;
       fPnts[idx].Set(pnts[i]);
    }
    delete [] ra;

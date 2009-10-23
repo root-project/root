@@ -16,18 +16,17 @@
 
 #include <vector>
 
-////////////////////////////////////////////////////////////////
-//                                                            //
-// TEveProjection                                             //
-//                                                            //
-////////////////////////////////////////////////////////////////
+
+//==============================================================================
+// TEveProjection
+//==============================================================================
 
 class TEveProjection
 {
 public:
-   enum EPType_e   { kPT_Unknown, kPT_RPhi, kPT_RhoZ, kPT_End };// type
-   enum EPProc_e   { kPP_Plane, kPP_Distort, kPP_Full };        // procedure
-   enum EGeoMode_e { kGM_Unknown, kGM_Polygons, kGM_Segments }; // reconstruction of geometry
+   enum EPType_e   { kPT_Unknown, kPT_RPhi, kPT_RhoZ, kPT_3D, kPT_End }; // projection type
+   enum EPProc_e   { kPP_Plane, kPP_Distort, kPP_Full };                 // projection procedure
+   enum EGeoMode_e { kGM_Unknown, kGM_Polygons, kGM_Segments };          // strategy for geometry projections
 
    struct PreScaleEntry_t
    {
@@ -57,7 +56,7 @@ protected:
    TEveVector          fZeroPosVal;    // projected origin (0, 0, 0)
 
    Bool_t              fUsePreScale;   // use pre-scaling
-   vPreScale_t         fPreScales[2];  // scaling before the distortion
+   vPreScale_t         fPreScales[3];  // scaling before the distortion
 
    Float_t             fDistortion;    // distortion
    Float_t             fFixR;          // radius from which scaling remains constant
@@ -73,25 +72,31 @@ protected:
    TEveVector          fLowLimit;      // convergence of point +infinity
    TEveVector          fUpLimit;       // convergence of point -infinity
 
+   void PreScaleVariable(Int_t dim, Float_t& v);
+
 public:
    TEveProjection();
    virtual ~TEveProjection() {}
 
-   virtual   void      ProjectPoint(Float_t&, Float_t&, Float_t&, EPProc_e p = kPP_Full ) = 0;
-   virtual   void      ProjectPointFv(Float_t* v) { ProjectPoint(v[0], v[1], v[2]); }
-   virtual   void      ProjectVector(TEveVector& v);
+   virtual Bool_t      Is2D() const = 0;
+   virtual Bool_t      Is3D() const = 0;
 
-   const     char*     GetName() { return fName.Data(); }
-   void                SetName(const char* txt) { fName = txt; }
+   virtual void        ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e p = kPP_Full) = 0;
+   virtual void        ProjectPointfv(Float_t* v, Float_t d);
+   virtual void        ProjectPointdv(Double_t* v, Float_t d);
+   virtual void        ProjectVector(TEveVector& v, Float_t d);
 
-   virtual void        SetCenter(TEveVector& v) { fCenter = v; UpdateLimit(); }
-   virtual Float_t*    GetProjectedCenter() { return fCenter.Arr(); }
+   const   Char_t*     GetName() const            { return fName.Data(); }
+   void                SetName(const Char_t* txt) { fName = txt; }
 
-   void                SetType(EPType_e t) { fType = t; }
-   EPType_e            GetType() { return fType; }
+   virtual void        SetCenter(TEveVector& v)   { fCenter = v; UpdateLimit(); }
+   virtual Float_t*    GetProjectedCenter()       { return fCenter.Arr(); }
 
-   void                SetGeoMode(EGeoMode_e m) { fGeoMode = m; }
-   EGeoMode_e          GetGeoMode() { return fGeoMode; }
+   void                SetType(EPType_e t)        { fType = t; }
+   EPType_e            GetType() const            { return fType; }
+
+   void                SetGeoMode(EGeoMode_e m)   { fGeoMode = m; }
+   EGeoMode_e          GetGeoMode() const         { return fGeoMode; }
 
    virtual void        UpdateLimit();
 
@@ -99,6 +104,7 @@ public:
    void     SetUsePreScale(Bool_t x) { fUsePreScale = x; }
 
    void     PreScalePoint(Float_t& x, Float_t& y);
+   void     PreScalePoint(Float_t& x, Float_t& y, Float_t& z);
    void     AddPreScaleEntry(Int_t coord, Float_t max_val, Float_t scale);
    void     ChangePreScaleEntry(Int_t coord, Int_t entry, Float_t new_scale);
    void     ClearPreScales();
@@ -130,11 +136,9 @@ public:
 };
 
 
-////////////////////////////////////////////////////////////////
-//                                                            //
-// TEveRhoZProjection                                         //
-//                                                            //
-////////////////////////////////////////////////////////////////
+//==============================================================================
+// TEveRhoZProjection
+//==============================================================================
 
 class TEveRhoZProjection: public TEveProjection
 {
@@ -145,7 +149,10 @@ public:
    TEveRhoZProjection();
    virtual ~TEveRhoZProjection() {}
 
-   virtual   void      ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = kPP_Full);
+   virtual Bool_t      Is2D() const { return kTRUE;  }
+   virtual Bool_t      Is3D() const { return kFALSE; }
+
+   virtual   void      ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
 
    virtual   void      SetCenter(TEveVector& center);
    virtual   Float_t*  GetProjectedCenter() { return fProjectedCenter.Arr(); }
@@ -159,11 +166,9 @@ public:
 };
 
 
-////////////////////////////////////////////////////////////////
-//                                                            //
-// TEveRPhiProjection                                         //
-//                                                            //
-////////////////////////////////////////////////////////////////
+//==============================================================================
+// TEveRPhiProjection
+//==============================================================================
 
 class TEveRPhiProjection : public TEveProjection
 {
@@ -171,9 +176,31 @@ public:
    TEveRPhiProjection();
    virtual ~TEveRPhiProjection() {}
 
-   virtual void ProjectPoint(Float_t& x, Float_t& y, Float_t& z, EPProc_e proc = kPP_Full);
+   virtual Bool_t Is2D() const { return kTRUE;  }
+   virtual Bool_t Is3D() const { return kFALSE; }
+
+   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
 
    ClassDef(TEveRPhiProjection, 0); // XY non-linear projection.
+};
+
+
+//==============================================================================
+// TEve3DProjection
+//==============================================================================
+
+class TEve3DProjection : public TEveProjection
+{
+public:
+   TEve3DProjection();
+   virtual ~TEve3DProjection() {}
+
+   virtual Bool_t Is2D() const { return kFALSE; }
+   virtual Bool_t Is3D() const { return kTRUE;  }
+
+   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+
+   ClassDef(TEve3DProjection, 0); // 3D scaling "projection"
 };
 
 #endif

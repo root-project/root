@@ -122,8 +122,8 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
                pnt[0] = pm->fV.fX;
                pnt[1] = pm->fV.fY;
                pnt[2] = pm->fV.fZ;
-               fM->fProjection->ProjectPointFv(pnt);
-               pnt   += 3;
+               fM->fProjection->ProjectPointfv(pnt, fM->fDepth);
+               pnt += 3;
                ++pntsN;
             }
          }

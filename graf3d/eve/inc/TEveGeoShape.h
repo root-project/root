@@ -14,6 +14,7 @@
 
 #include "TEveElement.h"
 #include "TEveProjectionBases.h"
+#include "TAttBBox.h"
 
 class TGeoShape;
 class TEveGeoShapeExtract;
@@ -22,6 +23,7 @@ class TEveGeoShape : public TEveElement,
                      public TNamed,
                      public TEveProjectable
 {
+private:
    TEveGeoShape(const TEveGeoShape&);            // Not implemented
    TEveGeoShape& operator=(const TEveGeoShape&); // Not implemented
 
@@ -58,11 +60,41 @@ public:
 
    // GeoProjectable
    virtual TBuffer3D*   MakeBuffer3D();
-   virtual TClass*      ProjectedClass() const;
+   virtual TClass*      ProjectedClass(const TEveProjection* p) const;
 
    static TGeoManager*  GetGeoMangeur();
 
    ClassDef(TEveGeoShape, 1); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
+};
+
+//------------------------------------------------------------------------------
+
+class TEveGeoShapeProjected : public TEveElementList,
+                              public TEveProjected,
+                              public TAttBBox
+{
+private:
+   TEveGeoShapeProjected(const TEveGeoShapeProjected&);            // Not implemented
+   TEveGeoShapeProjected& operator=(const TEveGeoShapeProjected&); // Not implemented
+
+protected:
+   TBuffer3D*  fBuff;
+
+   virtual void SetDepthLocal(Float_t d);
+
+public:
+   TEveGeoShapeProjected();
+   virtual ~TEveGeoShapeProjected() {}
+
+   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
+
+   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
+   virtual void UpdateProjection();
+
+   virtual void ComputeBBox();
+   virtual void Paint(Option_t* option = "");
+
+   ClassDef(TEveGeoShapeProjected, 0);
 };
 
 #endif
