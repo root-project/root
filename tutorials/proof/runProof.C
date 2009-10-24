@@ -118,6 +118,12 @@
 //      Use parallel unzipping in reading files where relevant
 //      E.g. root[] runProof("eventproc(punzip)")
 //
+//   5. cache=<bytes> (or <kbytes>K or <mbytes>M) 
+//
+//      Change the size of the tree cache; 0 or <0 disables the cache; value cane be in
+//      bytes (no suffix), kilobytes (suffix 'K') or megabytes (suffix 'M')
+//      E.g. root[] runProof("eventproc(cache=0)") 
+//
 //
 //
 //   In all cases, to run on a remote Proof cluster, the master URL must be passed as
@@ -308,7 +314,8 @@ void runProof(const char *what = "simple",
    }
 
    // Parse out number of events and  'asyn' option, used almost by every test
-   TString aNevt, aNwrk, opt, sel, punzip("off");
+   TString aNevt, aNwrk, opt, sel, punzip("off"), aCache;
+   Long64_t suf = 1;
    while (args.Tokenize(tok, from, " ")) {
       // Number of events
       if (tok.BeginsWith("nevt=")) {
@@ -334,6 +341,18 @@ void runProof(const char *what = "simple",
       // Parallel unzipping ?
       if (tok.BeginsWith("punzip"))
          punzip = "on";
+      // Number of workers
+      if (tok.BeginsWith("cache=")) {
+         aCache = tok;
+         aCache.ReplaceAll("cache=","");
+         if (aCache.EndsWith("k")) { aCache.Remove(TString::kTrailing, 'k'); suf = 1024; }
+         if (aCache.EndsWith("K")) { aCache.Remove(TString::kTrailing, 'K'); suf = 1024; }
+         if (aCache.EndsWith("M")) { aCache.Remove(TString::kTrailing, 'M'); suf = 1024*1024; }
+         if (!aCache.IsDigit()) {
+            Printf("runProof: %s: error parsing the 'cache=' option (%s) - ignoring", act.Data(), tok.Data());
+            aCache = "";
+         }
+      }
    }
    Long64_t nevt = (aNevt.IsNull()) ? -1 : aNevt.Atoi();
    Long64_t nwrk = (aNwrk.IsNull()) ? -1 : aNwrk.Atoi();
@@ -354,6 +373,23 @@ void runProof(const char *what = "simple",
       Printf("runProof: %s: parallel unzip enabled", act.Data());
    } else {
       proof->SetParameter("PROOF_UseParallelUnzip", (Int_t)0);
+   }
+
+   // Tree cache
+   if (!aCache.IsNull()) {
+      Long64_t cachesz = aCache.Atoi() * suf;
+      if (cachesz <= 0) {
+         proof->SetParameter("PROOF_UseTreeCache", (Int_t)0);
+         Printf("runProof: %s: disabling tree cache", act.Data());
+      } else {
+         proof->SetParameter("PROOF_UseTreeCache", (Int_t)1);
+         proof->SetParameter("PROOF_CacheSize", cachesz);
+         Printf("runProof: %s: setting cache size to %lld", act.Data(), cachesz);
+      }
+   } else {
+      // Use defaults
+      proof->DeleteParameters("PROOF_UseTreeCache");
+      proof->DeleteParameters("PROOF_CacheSize");
    }
 
    // Action
