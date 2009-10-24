@@ -1189,7 +1189,7 @@ void TProofProgressDialog::DoPlotRateGraph()
 
    // MB Rate plot
    if (fMBRtGraph) {
-      TPad *cpad = (TPad *) c1->GetPad(kMBrt);
+      cpad = (TPad *) c1->GetPad(kMBrt);
       cpad->cd();
       cpad->SetFillColor(0);
       cpad->SetBorderMode(0);
@@ -1209,7 +1209,7 @@ void TProofProgressDialog::DoPlotRateGraph()
 
    // MB Rate plot
    if (fActWGraph) {
-      TPad *cpad = (TPad *) c1->GetPad(kActW);
+      cpad = (TPad *) c1->GetPad(kActW);
       cpad->cd();
       cpad->SetFillColor(0);
       cpad->SetBorderMode(0);
@@ -1229,7 +1229,7 @@ void TProofProgressDialog::DoPlotRateGraph()
 
    // MB Rate plot
    if (fTotSGraph) {
-      TPad *cpad = (TPad *) c1->GetPad(kSess);
+      cpad = (TPad *) c1->GetPad(kSess);
       cpad->cd();
       cpad->SetFillColor(0);
       cpad->SetBorderMode(0);
