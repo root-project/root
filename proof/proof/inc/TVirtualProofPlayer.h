@@ -41,6 +41,7 @@ class TProof;
 class TSocket;
 class TVirtualPacketizer;
 class TProofProgressStatus;
+class TProofProgressInfo;
 
 
 class TVirtualProofPlayer : public TObject, public TQObject {
@@ -90,6 +91,8 @@ public:
    virtual void      Progress(TSlave *, Long64_t total, Long64_t processed,
                               Long64_t bytesread, Float_t initTime, Float_t procTime,
                               Float_t evtrti, Float_t mbrti) = 0; // *SIGNAL*
+   virtual void      Progress(TProofProgressInfo *) = 0; // *SIGNAL*
+   virtual void      Progress(TSlave *, TProofProgressInfo *) = 0; // *SIGNAL*
    virtual void      Feedback(TList *objs) = 0; // *SIGNAL*
 
    virtual TDrawFeedback *CreateDrawFeedback(TProof *p) = 0;
@@ -116,6 +119,8 @@ public:
    virtual void      SetStopTimer(Bool_t on = kTRUE,
                                   Bool_t abort = kFALSE, Int_t timeout = 0) = 0;
    virtual void      SetInitTime() = 0;
+   virtual Long64_t  GetCacheSize() = 0;
+   virtual Int_t     GetLearnEntries() = 0;
 
    virtual TVirtualPacketizer   *GetPacketizer() const { return 0; }
    static TVirtualProofPlayer *Create(const char *player, TProof *p, TSocket *s = 0);

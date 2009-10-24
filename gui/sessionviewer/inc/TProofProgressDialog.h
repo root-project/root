@@ -65,6 +65,7 @@ private:
    TGTextEntry        *fEntry;
    TGLabel            *fTitleLab;
    TGLabel            *fFilesEvents;
+   TGLabel            *fTimeLab;
    TGLabel            *fProcessed;
    TGLabel            *fEstim;
    TGLabel            *fTotal;
@@ -88,6 +89,10 @@ private:
    Bool_t              fLogQuery;
    TNtuple            *fRatePoints;
    TGraph             *fRateGraph;
+   TGraph             *fMBRtGraph;
+   TGraph             *fActWGraph;
+   TGraph             *fTotSGraph;
+   TGraph             *fEffSGraph;
    Float_t             fInitTime;
    Float_t             fProcTime;
    Double_t            fAvgRate;
@@ -110,7 +115,12 @@ public:
    void Progress(Long64_t total, Long64_t processed);
    void Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
                  Float_t initTime, Float_t procTime,
-                 Float_t evtrti, Float_t mbrti);
+                 Float_t evtrti, Float_t mbrti) {
+                 Progress(total, processed, bytesread, initTime, procTime,
+                          evtrti, mbrti, -1, -1, -1.); }
+   void Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                 Float_t initTime, Float_t procTime,
+                 Float_t evtrti, Float_t mbrti, Int_t actw, Int_t tses, Float_t eses);
    void DisableAsyn();
    void IndicateStop(Bool_t aborted);
    void LogMessage(const char *msg, Bool_t all);

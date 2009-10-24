@@ -40,6 +40,7 @@
 #include "TAxis.h"
 #include "TPaveText.h"
 #include "TMath.h"
+#include "TH1F.h"
 #include "THLimitsFinder.h"
 
 #ifdef PPD_SRV_NEWER
@@ -81,6 +82,10 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    fLogQuery      = fgLogQueryDefault;
    fRatePoints    = 0;
    fRateGraph     = 0;
+   fMBRtGraph     = 0;
+   fActWGraph     = 0;
+   fTotSGraph     = 0;
+   fEffSGraph     = 0;
    fProcTime      = 0.;
    fInitTime      = 0.;
    fAvgRate       = 0.;
@@ -122,8 +127,11 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
       Warning("TProofProgressDialog", "list of active workers is empty!");
    }
 
-   if (PPD_SRV_NEWER(11))
+   if (PPD_SRV_NEWER(25)) {
+      fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr:act:tos:efs");
+   } else if (PPD_SRV_NEWER(11)) {
       fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr");
+   }
 
    fDialog = new TGTransientFrame(0, 0, 10, 10);
    fDialog->Connect("CloseWindow()", "TProofProgressDialog", this, "DoClose()");
@@ -176,7 +184,9 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
 
    TGHorizontalFrame *hf1 = new TGHorizontalFrame(vf4, 0, 0);
    TGCompositeFrame *cf1 = new TGCompositeFrame(hf1, 110, 0, kFixedWidth);
-   cf1->AddFrame(new TGLabel(cf1, "Estimated time left:"));
+   fTimeLab = new TGLabel(cf1, "Estimated time left:");
+   fTimeLab->SetTextJustify(kTextTop | kTextLeft);
+   cf1->AddFrame(fTimeLab, new TGLayoutHints(kLHintsLeft));
    hf1->AddFrame(cf1);
    fEstim = new TGLabel(hf1, "- sec");
    fEstim->SetTextJustify(kTextTop | kTextLeft);
@@ -286,8 +296,8 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    hf5->AddFrame(fLog, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
 
    if (PPD_SRV_NEWER(11)) {
-      fRatePlot = new TGTextButton(hf5, "&Rate plot");
-      fRatePlot->SetToolTipText("Show processing rate vs time");
+      fRatePlot = new TGTextButton(hf5, "&Performance plot");
+      fRatePlot->SetToolTipText("Show rates, chunck sizes, cluster activities ... vs time");
       fRatePlot->SetState(kButtonDisabled);
       fRatePlot->Connect("Clicked()", "TProofProgressDialog", this, "DoPlotRateGraph()");
       hf5->AddFrame(fRatePlot, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
@@ -317,6 +327,9 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
       fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                       "TProofProgressDialog", this,
                       "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
+      fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+                      "TProofProgressDialog", this,
+                      "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)");
       fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this,
                       "IndicateStop(Bool_t)");
       fProof->Connect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
@@ -427,8 +440,9 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    buf = TString::Format("Selector: %s", selec);
    fSelector->SetText(buf);
 
-   // Reset 'processed' text
-   fProcessed->SetText("Estimated time left:");
+   // Reset 'estim' and 'processed' text
+   fTimeLab->SetText("Estimated time left:");
+   fProcessed->SetText("Processing status:");
 
    // Update numbers
    buf = TString::Format("%d files, number of events %lld, starting event %lld",
@@ -456,6 +470,9 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
       fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                       "TProofProgressDialog", this,
                       "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
+      fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+                      "TProofProgressDialog", this,
+                      "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)");
       fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this,
                       "IndicateStop(Bool_t)");
       fProof->Connect("DisableGoAsyn()", "TProofProgressDialog", this, "DisableAsyn()");
@@ -468,6 +485,10 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    if (PPD_SRV_NEWER(11))
       fRatePoints->Reset();
    SafeDelete(fRateGraph);
+   SafeDelete(fMBRtGraph);
+   SafeDelete(fActWGraph);
+   SafeDelete(fTotSGraph);
+   SafeDelete(fEffSGraph);
    fAvgRate = 0.;
    fAvgMBRate = 0.;
 }
@@ -610,7 +631,8 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
                                     Long64_t bytesread,
                                     Float_t initTime, Float_t procTime,
-                                    Float_t evtrti, Float_t mbrti)
+                                    Float_t evtrti, Float_t mbrti,
+                                    Int_t actw, Int_t tses, Float_t eses)
 {
    // Update progress bar and status labels.
    // Use "processed == total" or "processed < 0" to indicate end of processing.
@@ -715,10 +737,12 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       else
          sprintf(stm, "%d sec", ss);
       fProcessed->SetText("Processed:");
-      buf = TString::Format("%lld events (%.2f MB) in %s %s\n",
-              std::max(fPrevProcessed, processed), fAvgMBRate*fProcTime, stm, st.Data());
+      buf = TString::Format("%lld events (%.2f MB)\n",
+                            std::max(fPrevProcessed, processed), fAvgMBRate*fProcTime);
       fTotal->SetText(buf);
-      fEstim->SetText("0 sec");
+      buf = TString::Format("%s %s\n", stm, st.Data());
+      fTimeLab->SetText("Processing time:");
+      fEstim->SetText(buf);
       buf = TString::Format("%.1f evts/sec (%.1f MB/sec)\n", fAvgRate, fAvgMBRate);
       fRate->SetText(buf);
       // Fill rate graph
@@ -730,7 +754,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          }
       } else {
          if (evtrti > 0.) {
-            fRatePoints->Fill(procTime, evtrti, mbrti);
+            fRatePoints->Fill(procTime, evtrti, mbrti, (Float_t)actw, (Float_t)tses, eses);
             fRatePlot->SetState(kButtonUp);
          }
       }
@@ -741,6 +765,9 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                             this,
                             "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
+         fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+                            this,
+                            "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)");
          fProof->Disconnect("StopProcess(Bool_t)", this, "IndicateStop(Bool_t)");
          fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
       }
@@ -795,9 +822,9 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
 
       // Post
       if (evtrti > 0.) {
-         buf = TString::Format("%.1f evts/sec (%.1f MB/sec) \navg: %.1f evts/sec (%.1f MB/sec)",
-                      evtrti, mbrti, fAvgRate, fAvgMBRate);
-         fRatePoints->Fill(procTime, evtrti, mbrti);
+         buf = TString::Format("%.1f evts/sec \navg: %.1f evts/sec (%.1f MB/sec)",
+                      evtrti, fAvgRate, fAvgMBRate);
+         fRatePoints->Fill(procTime, evtrti, mbrti, (Float_t)actw, (Float_t)tses, eses);
          fRatePlot->SetState(kButtonUp);
          if (evtrti > fSpeedo->GetScaleMax()) {
             nbins = 4;
@@ -847,6 +874,9 @@ TProofProgressDialog::~TProofProgressDialog()
       fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                          this,
                          "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
+      fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+                         this,
+                         "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)");
       fProof->Disconnect("StopProcess(Bool_t)", this, "IndicateStop(Bool_t)");
       fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
       fProof->Disconnect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
@@ -899,6 +929,9 @@ void TProofProgressDialog::IndicateStop(Bool_t aborted)
       fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                          this,
                          "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
+      fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+                         this,
+                         "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)");
       fProof->Disconnect("StopProcess(Bool_t)", this, "IndicateStop(Bool_t)");
       fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
       // These buttons are meaningless at this point
@@ -1039,32 +1072,95 @@ void TProofProgressDialog::DoPlotRateGraph()
       return;
    }
 
+   // Fill the graphs
+   Int_t np = (Int_t)fRatePoints->GetEntries();
+   Double_t eymx = -1., bymx = -1., wymx = -1., tymx=-1., symx = -1.;
+   SafeDelete(fRateGraph);
+   SafeDelete(fMBRtGraph);
+   SafeDelete(fActWGraph);
+   SafeDelete(fTotSGraph);
+   SafeDelete(fEffSGraph);
+   fRateGraph = new TGraph(np);
+   fMBRtGraph = new TGraph(np);
+   if (PPD_SRV_NEWER(25)) {
+      fActWGraph = new TGraph(np);
+      fTotSGraph = new TGraph(np);
+      fEffSGraph = new TGraph(np);
+   }
+   Float_t *nar = fRatePoints->GetArgs();
+   Int_t ii = 0;
+   for ( ; ii < np; ++ii) {
+      fRatePoints->GetEntry(ii);
+      if (!(nar[1] > 0.)) continue;
+      // Evts/s
+      fRateGraph->SetPoint(ii, (Double_t) nar[0], (Double_t) nar[1]);
+      eymx = (nar[1] > eymx) ? nar[1] : eymx;
+      // MBs/s
+      fMBRtGraph->SetPoint(ii, (Double_t) nar[0], (Double_t) nar[2]);
+      bymx = (nar[2] > bymx) ? nar[2] : bymx;
+      // Active workers
+      if (PPD_SRV_NEWER(25)) {
+         fActWGraph->SetPoint(ii, (Double_t) nar[0], (Double_t) nar[3]);
+         wymx = (nar[3] > wymx) ? nar[3] : wymx;
+      }
+      // Sessions info
+      if (PPD_SRV_NEWER(25)) {
+         fTotSGraph->SetPoint(ii, (Double_t) nar[0], (Double_t) nar[4]);
+         tymx = (nar[4] > tymx) ? nar[4] : tymx;
+         fEffSGraph->SetPoint(ii, (Double_t) nar[0], (Double_t) nar[5]);
+         symx = (nar[5] > symx) ? nar[5] : symx;
+      }
+   }
+
+   // Pad numbering
+   Int_t npads = 4;
+   Int_t kEvrt = 1;
+   Int_t kMBrt = 2;
+   Int_t kActW = 3;
+   Int_t kSess = 4;
+   if (bymx <= 0.) {
+      SafeDelete(fMBRtGraph);
+      npads--;
+      kActW--;
+      kSess--;
+   }
+   if (wymx <= 0.) {
+      SafeDelete(fActWGraph);
+      npads--;
+      kSess--;
+   }
+   if (tymx <= 0. && symx <= 0.) {
+      npads--;
+      kSess--;
+   }
+   if (tymx <= 0.) SafeDelete(fTotSGraph);
+   if (symx <= 0.) SafeDelete(fEffSGraph);
+
    // Create a canvas
-   TCanvas *c1 = new TCanvas("c1","Rate vs Time",200,10,700,500);
+   Int_t jsz = 200*npads;
+   TCanvas *c1 = new TCanvas("c1","Rate vs Time",200,10,700,jsz);
    c1->SetFillColor(0);
    c1->SetGrid();
    c1->SetBorderMode(0);
    c1->SetFrameBorderMode(0);
 
-   // Fill TGraph
-   Int_t np = (Int_t)fRatePoints->GetEntries();
-   Double_t ymx = -1.;
-   SafeDelete(fRateGraph);
-   fRateGraph = new TGraph(np);
-   Float_t *nar = fRatePoints->GetArgs();
-   Int_t ii = 0;
-   for ( ; ii < np; ++ii) {
-      fRatePoints->GetEntry(ii);
-      fRateGraph->SetPoint(ii, (Double_t) nar[0], (Double_t) nar[1]);
-      ymx = (nar[1] > ymx) ? nar[1] : ymx;
-   }
+   // Padding
+   c1->Divide(1, npads);
+
+   // Event Rate plot
+   TPad *cpad = (TPad *) c1->GetPad(kEvrt);
+   cpad->cd();
+   cpad->SetFillColor(0);
+   cpad->SetBorderMode(20);
+   cpad->SetFrameBorderMode(0);
 
    fRateGraph->SetMinimum(0.);
-   fRateGraph->SetMaximum(ymx*1.1);
-   fRateGraph->SetLineColor(2);
-   fRateGraph->SetLineWidth(4);
-   fRateGraph->SetMarkerColor(4);
-   fRateGraph->SetMarkerStyle(21);
+   fRateGraph->SetMaximum(eymx*1.1);
+   fRateGraph->SetLineColor(50);
+   fRateGraph->SetLineWidth(2);
+   fRateGraph->SetMarkerColor(38);
+   fRateGraph->SetMarkerStyle(25);
+   fRateGraph->SetMarkerSize(0.8);
    fRateGraph->SetTitle("Processing rate (evts/sec)");
    fRateGraph->GetXaxis()->SetTitle("elapsed time (sec)");
    fRateGraph->Draw("ALP");
@@ -1072,17 +1168,16 @@ void TProofProgressDialog::DoPlotRateGraph()
    // Line with average
    TLine *line = new TLine(fRateGraph->GetXaxis()->GetXmin(),fAvgRate,
                            fRateGraph->GetXaxis()->GetXmax(),fAvgRate);
-   Int_t ci;   // for color index setting
-   ci = TColor::GetColor("#008200");
-   line->SetLineColor(ci);
+   line->SetLineColor(8);
+   line->SetLineStyle(2);
    line->SetLineWidth(2);
-   line->Draw("P");
+   line->Draw();
 
    // Label
    Double_t xax0 = fRateGraph->GetXaxis()->GetXmin();
    Double_t xax1 = fRateGraph->GetXaxis()->GetXmax();
    Double_t yax0 = 0.;
-   Double_t yax1 = ymx*1.1;
+   Double_t yax1 = eymx*1.1;
    Double_t x0 = xax0 + 0.05 * (xax1 - xax0);
    Double_t x1 = xax0 + 0.60 * (xax1 - xax0);
    Double_t y0 = yax0 + 0.10 * (yax1 - yax0);
@@ -1091,6 +1186,78 @@ void TProofProgressDialog::DoPlotRateGraph()
    pt->SetFillColor(0);
    pt->AddText(Form("Global average: %.2f evts/sec", fAvgRate));
    pt->Draw();
+
+   // MB Rate plot
+   if (fMBRtGraph) {
+      TPad *cpad = (TPad *) c1->GetPad(kMBrt);
+      cpad->cd();
+      cpad->SetFillColor(0);
+      cpad->SetBorderMode(0);
+      cpad->SetFrameBorderMode(0);
+
+      fMBRtGraph->SetFillColor(38);
+      TH1F *graph2 = new TH1F("graph2","Average read chunck size (MBs/request)",100,
+                               fRateGraph->GetXaxis()->GetXmin(),fRateGraph->GetXaxis()->GetXmax());
+      graph2->SetMinimum(0);
+      graph2->SetMaximum(1.1*bymx);
+      graph2->SetDirectory(0);
+      graph2->SetStats(0);
+      graph2->GetXaxis()->SetTitle("elapsed time (sec)");
+      fMBRtGraph->SetHistogram(graph2);
+      fMBRtGraph->Draw("AB");
+   }
+
+   // MB Rate plot
+   if (fActWGraph) {
+      TPad *cpad = (TPad *) c1->GetPad(kActW);
+      cpad->cd();
+      cpad->SetFillColor(0);
+      cpad->SetBorderMode(0);
+      cpad->SetFrameBorderMode(0);
+
+      fActWGraph->SetMinimum(0.);
+      fActWGraph->SetMaximum(wymx*1.1);
+      fActWGraph->SetLineColor(50);
+      fActWGraph->SetLineWidth(2);
+      fActWGraph->SetMarkerColor(38);
+      fActWGraph->SetMarkerStyle(25);
+      fActWGraph->SetMarkerSize(0.8);
+      fActWGraph->SetTitle("Active workers");
+      fActWGraph->GetXaxis()->SetTitle("elapsed time (sec)");
+      fActWGraph->Draw("ALP");
+   }
+
+   // MB Rate plot
+   if (fTotSGraph) {
+      TPad *cpad = (TPad *) c1->GetPad(kSess);
+      cpad->cd();
+      cpad->SetFillColor(0);
+      cpad->SetBorderMode(0);
+      cpad->SetFrameBorderMode(0);
+
+      fTotSGraph->SetMinimum(0.);
+      fTotSGraph->SetMaximum(tymx*1.1);
+      fTotSGraph->SetLineColor(50);
+      fTotSGraph->SetLineWidth(2);
+      fTotSGraph->SetMarkerColor(38);
+      fTotSGraph->SetMarkerStyle(25);
+      fTotSGraph->SetMarkerSize(0.8);
+      fTotSGraph->SetTitle("Active, Effective sessions");
+      fTotSGraph->GetXaxis()->SetTitle("elapsed time (sec)");
+      fTotSGraph->Draw("ALP");
+
+      // Effective sessions
+      if (fEffSGraph) {
+         fEffSGraph->SetMinimum(0.);
+         fEffSGraph->SetMaximum(tymx*1.1);
+         fEffSGraph->SetLineColor(38);
+         fEffSGraph->SetLineWidth(2);
+         fEffSGraph->SetMarkerColor(50);
+         fEffSGraph->SetMarkerStyle(21);
+         fEffSGraph->SetMarkerSize(0.6);
+         fEffSGraph->Draw("SLP");
+      }
+   }
 
    c1->Modified();
 }

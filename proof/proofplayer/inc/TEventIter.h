@@ -76,6 +76,8 @@ public:
    TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
    virtual ~TEventIter();
 
+   virtual Long64_t  GetCacheSize() = 0;
+   virtual Int_t     GetLearnEntries() = 0;
    virtual Long64_t  GetNextEvent() = 0;
    virtual void      StopProcess(Bool_t abort);
 
@@ -99,6 +101,8 @@ public:
    TEventIterUnit(TDSet *dset, TSelector *sel, Long64_t num);
    ~TEventIterUnit() { }
 
+   Long64_t GetCacheSize() {return -1;}
+   Int_t    GetLearnEntries() {return -1;}
    Long64_t GetNextEvent();
 
    ClassDef(TEventIterUnit,0)  // Event iterator for objects
@@ -120,6 +124,8 @@ public:
    TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
    ~TEventIterObj();
 
+   Long64_t GetCacheSize() {return -1;}
+   Int_t    GetLearnEntries() {return -1;}
    Long64_t GetNextEvent();
 
    ClassDef(TEventIterObj,0)  // Event iterator for objects
@@ -133,8 +139,10 @@ private:
    TString     fTreeName;     // name of the tree object to iterate over
    TTree      *fTree;         // tree we are iterating over
    TTreeCache *fTreeCache;    // instance of the tree cache for the tree
+   Bool_t      fTreeCacheIsLearning; // Whether cache is in learning phase
    Bool_t      fUseTreeCache; // Control usage of the tree cache
    Long64_t    fCacheSize;    // Cache size
+   Bool_t      fUseParallelUnzip; // Control usage of parallel unzip
    TList      *fFileTrees;    // Files && Trees currently open
 
    // Auxilliary class to keep track open files and loaded trees
@@ -155,6 +163,8 @@ public:
    TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
    ~TEventIterTree();
 
+   Long64_t GetCacheSize();
+   Int_t    GetLearnEntries();
    Long64_t GetNextEvent();
 
    ClassDef(TEventIterTree,0)  // Event iterator for Trees

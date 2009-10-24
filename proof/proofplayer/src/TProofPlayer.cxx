@@ -674,6 +674,14 @@ void TProofPlayer::Progress(Long64_t /*total*/, Long64_t /*processed*/,
 }
 
 //______________________________________________________________________________
+void TProofPlayer::Progress(TProofProgressInfo */*pi*/)
+{
+   // Report progress (may not be used in this class).
+
+   MayNotUse("Progress");
+}
+
+//______________________________________________________________________________
 void TProofPlayer::Feedback(TList *)
 {
    // Set feedback list (may not be used in this class).
@@ -772,12 +780,19 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       // Set parameters controlling the iterator behaviour
       Int_t useTreeCache = 1;
       if (TProof::GetParameter(fInput, "PROOF_UseTreeCache", useTreeCache) == 0) {
-         if (useTreeCache > -1 && useTreeCache < 2) gEnv->SetValue("ProofPlayer.UseTreeCache", useTreeCache);
+         if (useTreeCache > -1 && useTreeCache < 2)
+            gEnv->SetValue("ProofPlayer.UseTreeCache", useTreeCache);
       }
       Long64_t cacheSize = 10000000;
       if (TProof::GetParameter(fInput, "PROOF_CacheSize", cacheSize) == 0) {
          TString sz = TString::Format("%lld", cacheSize);
          gEnv->SetValue("ProofPlayer.CacheSize", sz.Data());
+      }
+      // Parallel unzipping
+      Int_t useParallelUnzip = 0;
+      if (TProof::GetParameter(fInput, "PROOF_UseParallelUnzip", useParallelUnzip) == 0) {
+         if (useParallelUnzip > -1 && useParallelUnzip < 2)
+            gEnv->SetValue("ProofPlayer.UseParallelUnzip", useParallelUnzip);
       }
       fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
 
@@ -813,8 +828,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       Info("Process","Looping over Process()");
 
    // get the byte read counter at the beginning of processing
-   Long64_t readbytesatstart = 0;
-   readbytesatstart = TFile::GetFileBytesRead();
+   Long64_t readbytesatstart = TFile::GetFileBytesRead();
+   Long64_t readcallsatstart = TFile::GetFileReadCalls();
    // force the first monitoring info
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingProgress(0,0,kTRUE);
@@ -826,10 +841,6 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    gAbort = kFALSE;
    Long64_t entry;
    fProgressStatus->Reset();
-
-   // Signal the master that we start processing
-   if (gProofServ)
-      gProofServ->GetSocket()->Send(kPROOF_ENDINIT);
 
    // Get the frequency for logging memory consumption information
    TParameter<Long64_t> *par = (TParameter<Long64_t>*)fInput->FindObject("PROOF_MemLogFreq");
@@ -866,6 +877,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          if (fSelStatus->IsOk()) {
             fProgressStatus->IncEntries();
             fProgressStatus->SetBytesRead(TFile::GetFileBytesRead()-readbytesatstart);
+            fProgressStatus->SetReadCalls(TFile::GetFileReadCalls()-readcallsatstart);
             if (gMonitoringWriter)
                gMonitoringWriter->SendProcessingProgress(fProgressStatus->GetEntries(),
                        TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
@@ -1193,6 +1205,24 @@ void TProofPlayer::FeedBackCanvas(const char *name, Bool_t create)
    return;
 }
 
+//______________________________________________________________________________
+Long64_t TProofPlayer::GetCacheSize()
+{
+   // Return the size in bytes of the cache
+
+   if (fEvIter) return fEvIter->GetCacheSize();
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TProofPlayer::GetLearnEntries()
+{
+   // Return the number of entries in the learning phase
+
+   if (fEvIter) return fEvIter->GetLearnEntries();
+   return -1;
+}
+
 //------------------------------------------------------------------------------
 
 ClassImp(TProofPlayerLocal)
@@ -1400,11 +1430,11 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
          Int_t ngood = dset->GetListOfElements()->GetSize();
          Int_t nbad = listOfMissingFiles->GetSize();
          Double_t xb = Double_t(nbad) / Double_t(ngood + nbad);
-         msg = Form(" About %.2f %c of the requested files (%d out of %d) were missing; details in"
+         msg = Form(" About %.2f %c of the requested files (%d out of %d) were missing or unusable; details in"
                     " the 'missingFiles' list", xb * 100., '%', nbad, nbad + ngood);
          tmpStatus->Add(msg.Data());
          msg = Form(" +++\n"
-                    " +++ About %.2f %c of the requested files (%d out of %d) are missing; details in"
+                    " +++ About %.2f %c of the requested files (%d out of %d) are missing or unusable; details in"
                     " the 'MissingFiles' list\n"
                     " +++", xb * 100., '%', nbad, nbad + ngood);
          if (gProofServ) gProofServ->SendAsynMessage(msg.Data());
@@ -2064,6 +2094,30 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed,
       gProofServ->GetSocket()->Send(m);
    }
 }
+
+//______________________________________________________________________________
+void TProofPlayerRemote::Progress(TProofProgressInfo *pi)
+{
+   // Progress signal.
+
+   PDB(kGlobal,1)
+      Info("Progress","%lld %lld %lld %f %f %f %f %d %f", pi->fTotal, pi->fProcessed, pi->fBytesRead,
+                      pi->fInitTime, pi->fProcTime, pi->fEvtRateI, pi->fMBRateI,
+                      pi->fActWorkers, pi->fEffSessions);
+
+   if (IsClient()) {
+      fProof->Progress(pi->fTotal, pi->fProcessed, pi->fBytesRead,
+                       pi->fInitTime, pi->fProcTime,
+                       pi->fEvtRateI, pi->fMBRateI,
+                       pi->fActWorkers, pi->fTotSessions, pi->fEffSessions);
+   } else {
+      // Send to the previous tier
+      TMessage m(kPROOF_PROGRESS);
+      m << &pi;
+      gProofServ->GetSocket()->Send(m);
+   }
+}
+
 
 //______________________________________________________________________________
 void TProofPlayerRemote::Feedback(TList *objs)
@@ -2816,6 +2870,9 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
 {
    // Get next packet for specified slave.
 
+   // The first call to this determines the end of initialization
+   SetInitTime();
+
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if (e == 0) {
@@ -2977,10 +3034,23 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 
    // If in sequential (0-slave-PROOF) mode we do not have a packetizer
    // so we also send the info to update the progress bar.
-   if (gProofServ && gProofServ->IsMaster() && !gProofServ->IsParallel()) {
+   if (gProofServ) {
+      Bool_t sendm = kFALSE;
       TMessage m(kPROOF_PROGRESS);
-      m << fTotalEvents << GetEventsProcessed();
-      gProofServ->GetSocket()->Send(m);
+      if (gProofServ->IsMaster() && !gProofServ->IsParallel()) {
+         sendm = kTRUE;
+         if (gProofServ->GetProtocol() > 25) {
+            m << GetProgressStatus();
+         } else if (gProofServ->GetProtocol() > 11) {
+            TProofProgressStatus *ps = GetProgressStatus();
+            m << fTotalEvents << ps->GetEntries() << ps->GetBytesRead()
+              << (Float_t) -1. << (Float_t) ps->GetProcTime()
+              << (Float_t) ps->GetRate() << (Float_t) -1.;
+         } else {
+            m << fTotalEvents << GetEventsProcessed();
+         }
+      }
+      if (sendm) gProofServ->GetSocket()->Send(m);
    }
 
    if (fFeedback == 0) return kFALSE;
@@ -3344,6 +3414,17 @@ void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total,
 }
 
 //______________________________________________________________________________
+void TProofPlayerSuperMaster::Progress(TSlave *wrk, TProofProgressInfo *pi)
+{
+   // Progress signal.
+
+   // Not implemented yet
+   Progress(wrk, pi->fTotal, pi->fProcessed, pi->fBytesRead,
+                 pi->fInitTime, pi->fProcTime, pi->fEvtRateI, pi->fMBRateI);
+}
+
+
+//______________________________________________________________________________
 Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
 {
    // Send progress and feedback to client.
@@ -3387,8 +3468,16 @@ Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
    srti = (nsrti > 0) ? srti / nerti : 0.;
 
    TMessage m(kPROOF_PROGRESS);
+   if (gProofServ->GetProtocol() > 25) {
+      // Fill the message now
+      TProofProgressInfo pi(tot, proc, bytes, init, ptime,
+                              erti, srti, -1.,
+                              gProofServ->GetTotSessions(), gProofServ->GetEffSessions());
+      m << &pi;
+   } else {
 
-   m << tot << proc << bytes << init << ptime << erti << srti;
+      m << tot << proc << bytes << init << ptime << erti << srti;
+   }
 
    // send message to client;
    gProofServ->GetSocket()->Send(m);

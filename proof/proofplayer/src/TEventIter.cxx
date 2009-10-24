@@ -30,6 +30,7 @@
 #include "TTimeStamp.h"
 #include "TTree.h"
 #include "TTreeCache.h"
+#include "TTreeCacheUnzip.h"
 #include "TVirtualPerfStats.h"
 #include "TEventList.h"
 #include "TEntryList.h"
@@ -37,6 +38,7 @@
 #include "TMap.h"
 #include "TObjString.h"
 #include "TRegexp.h"
+#include "TProofServ.h"
 
 #include "TError.h"
 
@@ -411,10 +413,17 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
    fTreeName = dset->GetObjName();
    fTree = 0;
    fTreeCache = 0;
+   fTreeCacheIsLearning = kTRUE;
    fFileTrees = new TList;
    fFileTrees->SetOwner();
    fUseTreeCache = gEnv->GetValue("ProofPlayer.UseTreeCache", 1);
    fCacheSize = gEnv->GetValue("ProofPlayer.CacheSize", 10000000);
+   fUseParallelUnzip = gEnv->GetValue("ProofPlayer.UseParallelUnzip", 0);
+   if (fUseParallelUnzip) {
+      TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
+   } else {
+      TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kDisable);
+   }
 }
 
 //______________________________________________________________________________
@@ -425,6 +434,24 @@ TEventIterTree::~TEventIterTree()
    // The cache is deleted in here
    SafeDelete(fFileTrees);
    SafeDelete(fTreeCache);
+}
+
+//______________________________________________________________________________
+Long64_t TEventIterTree::GetCacheSize()
+{
+   // Return the size in bytes of the cache, if any
+   // Return -1 if not used
+
+   if (fUseTreeCache) return fCacheSize;
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TEventIterTree::GetLearnEntries()
+{
+   // Return the number of entries in the learning phase
+
+   return TTreeCache::GetLearnEntries();
 }
 
 //______________________________________________________________________________
@@ -456,6 +483,9 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
                fTreeCache = (TTreeCache *)curfile->GetCacheRead();
                fTreeCache->UpdateBranches(main, kTRUE);
             }
+            fTreeCacheIsLearning = fTreeCache->IsLearning();
+            if (fTreeCacheIsLearning)
+               Info("GetTrees","the tree cache is in learning phase");
          } else {
             // Disable the cache
             main->SetCacheSize(-1);
@@ -749,6 +779,14 @@ Long64_t TEventIterTree::GetNextEvent()
       --fNum;
       ++fCur;
       rv = fElemCur;
+   }
+
+   // Signal ending of learning phase
+   if (fTreeCache && fTreeCacheIsLearning) {
+      if (!(fTreeCache->IsLearning())) {
+         fTreeCacheIsLearning = kFALSE;
+         if (gProofServ) gProofServ->RestartComputeTime();
+      }
    }
 
    // For prefetching

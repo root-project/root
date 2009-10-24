@@ -888,6 +888,16 @@ Bool_t TXProofServ::HandleInput(const void *in)
       Info("HandleInput", "kXPD_priority: group %s priority set to %f",
            fGroup.Data(), (Float_t) fGroupPriority / 100.);
 
+   } else if (acod == kXPD_clusterinfo) {
+
+      // Information about the cluster status
+      fTotSessions     = hin->fInt2;
+      fActSessions     = hin->fInt3;
+      fEffSessions     = (hin->fInt4)/1000.;
+      // Notify
+      Info("HandleInput", "kXPD_clusterinfo: tot: %d, act: %d, eff: %f",
+           fTotSessions, fActSessions, fEffSessions);
+
    } else {
       // Standard socket input
       HandleSocketInput();

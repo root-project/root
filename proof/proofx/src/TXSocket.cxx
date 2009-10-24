@@ -799,6 +799,40 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
          // process the next query (in the TXProofServ)
          PostMsg(kPROOF_STARTPROCESS);
          break;
+      case kXPD_clusterinfo:
+         //
+         // Broadcast cluster information
+         {
+            kXR_int32 nsess = -1, nacti = -1, neffs = -1;
+            if (len > 0) {
+               // Total sessions
+               memcpy(&nsess, pdata, sizeof(kXR_int32));
+               nsess = net2host(nsess);
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+               // Active sessions
+               memcpy(&nacti, pdata, sizeof(kXR_int32));
+               nacti = net2host(nacti);
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+               // Effective sessions
+               memcpy(&neffs, pdata, sizeof(kXR_int32));
+               neffs = net2host(neffs);
+               pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+               len -= sizeof(kXR_int32);
+            }
+            if (gDebug > 1)
+               Info("ProcessUnsolicitedMsg","kXPD_clusterinfo: # sessions: %d,"
+                    " # active: %d, # effective: %f", nsess, nacti, neffs/1000.);
+            // Handle this input in this thread to avoid queuing on the
+            // main thread
+            XHandleIn_t hin = {acod, nsess, nacti, neffs};
+            if (fHandler)
+               fHandler->HandleInput((const void *)&hin);
+            else
+               Error("ProcessUnsolicitedMsg","handler undefined");
+         }
+         break;
      default:
          Error("ProcessUnsolicitedMsg","%p: unknown action code: %d received from '%s' - disabling",
                                        this, acod, GetTitle());

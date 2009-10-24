@@ -50,6 +50,7 @@
 #pragma link C++ class TProofResources;
 #pragma link C++ class TProofResourcesStatic;
 #pragma link C++ class TProofProgressStatus;
+#pragma link C++ class TProofProgressInfo;
 
 #pragma link C++ class TDataSetManager;
 #pragma link C++ class TDataSetManagerFile;

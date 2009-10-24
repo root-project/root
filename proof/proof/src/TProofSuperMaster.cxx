@@ -66,6 +66,7 @@ TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile
    fMasterServ = kTRUE;
    ResetBit(TProof::kIsClient);
    SetBit(TProof::kIsMaster);
+   SetBit(TProof::kIsTopMaster);
 
    Init(masterurl, conffile, confdir, loglevel, alias);
 

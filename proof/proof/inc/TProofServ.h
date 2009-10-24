@@ -119,6 +119,10 @@ private:
    TStopwatch    fCompute;          //measures time spend processing a packet
    Int_t         fQuerySeqNum;      //sequential number of the current or last query
 
+   Int_t         fTotSessions;      //Total number of PROOF sessions on the cluster 
+   Int_t         fActSessions;      //Total number of active PROOF sessions on the cluster 
+   Float_t       fEffSessions;      //Effective Number of PROOF sessions on the assigned machines
+
    TFileHandler *fInputHandler;     //Input socket handler
 
    TQueryResultManager *fQMgr;      //Query-result manager
@@ -225,6 +229,10 @@ public:
    Float_t        GetCpuTime()    const { return fCpuTime; }
    Int_t          GetQuerySeqNum() const { return fQuerySeqNum; }
 
+   Int_t          GetTotSessions() const { return fTotSessions; }
+   Int_t          GetActSessions() const { return fActSessions; }
+   Float_t        GetEffSessions() const { return fEffSessions; }
+
    void           GetOptions(Int_t *argc, char **argv);
    TList         *GetEnabledPackages() const { return fEnabledPackages; }
 
@@ -258,6 +266,8 @@ public:
    void           Run(Bool_t retrn = kFALSE);
 
    void           Print(Option_t *option="") const;
+
+   void           RestartComputeTime();
 
    TObject       *Get(const char *namecycle);
    TDSetElement  *GetNextPacket(Long64_t totalEntries = -1);

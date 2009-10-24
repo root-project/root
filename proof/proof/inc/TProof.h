@@ -118,9 +118,10 @@ class TDataSetManager;
 // 22 -> 23: New dataset features (default tree name; classification per fileserver)
 // 23 -> 24: Merging optimization
 // 24 -> 25: Handling of 'data' dir; group information
+// 25 -> 26: Use new TProofProgressInfo class
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 25;            // protocol version number
+const Int_t       kPROOF_Protocol        = 26;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -157,6 +158,30 @@ const char* const kGUNZIP = "gunzip";
 R__EXTERN TVirtualMutex *gProofMutex;
 
 typedef void (*PrintProgress_t)(Long64_t tot, Long64_t proc, Float_t proctime);
+
+// Structure for the progress information
+class TProofProgressInfo : public TObject {
+public:
+   Long64_t  fTotal;       // Total number of events to process
+   Long64_t  fProcessed;   // Number of events processed
+   Long64_t  fBytesRead;   // Number of bytes read
+   Float_t   fInitTime;    // Time for initialization
+   Float_t   fProcTime;    // Time for processing
+   Float_t   fEvtRateI;    // Instantaneous event rate
+   Float_t   fMBRateI;     // Instantaneous byte read rate
+   Int_t     fActWorkers;  // Numebr of workers still active
+   Int_t     fTotSessions; // Numebr of PROOF sessions running currently on the clusters
+   Float_t   fEffSessions; // Number of effective sessions running on the machines allocated to this session
+   TProofProgressInfo(Long64_t tot = -1, Long64_t proc = -1, Long64_t bytes = 0,
+                      Float_t initt = 0., Float_t proct = 0.,
+                      Float_t evts = 1., Float_t mbs = -1.,
+                      Int_t actw = -1, Int_t tsess = -1., Float_t esess = -1.) :
+                      fTotal(tot), fProcessed(proc), fBytesRead(bytes),
+                      fInitTime(initt), fProcTime(proct), fEvtRateI(evts), fMBRateI(mbs),
+                      fActWorkers(actw), fTotSessions(tsess), fEffSessions(esess) { }
+   virtual ~TProofProgressInfo() { }
+   ClassDef(TProofProgressInfo, 1); // Progress information
+};
 
 // PROOF Interrupt signal handler
 class TProofInterruptHandler : public TSignalHandler {
@@ -261,7 +286,8 @@ public:
       kUsingSessionGui     = BIT(14),
       kNewInputData        = BIT(15),
       kIsClient            = BIT(16),
-      kIsMaster            = BIT(17)
+      kIsMaster            = BIT(17),
+      kIsTopMaster         = BIT(18)
    };
    enum EQueryMode {
       kSync                = 0,
@@ -817,6 +843,10 @@ public:
    void        Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
                         Float_t initTime, Float_t procTime,
                         Float_t evtrti, Float_t mbrti); // *SIGNAL*
+   void        Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                        Float_t initTime, Float_t procTime,
+                        Float_t evtrti, Float_t mbrti,
+                        Int_t actw, Int_t tses, Float_t eses); // *SIGNAL*
    void        Feedback(TList *objs); //*SIGNAL*
    void        QueryResultReady(const char *ref); //*SIGNAL*
    void        CloseProgressDialog(); //*SIGNAL*

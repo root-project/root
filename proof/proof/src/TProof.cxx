@@ -3006,13 +3006,17 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
          {
             PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_PROGRESS: enter");
 
-            if (GetRemoteProtocol() > 11) {
+            if (GetRemoteProtocol() > 25) {
                // New format
+               TProofProgressInfo *pi = 0;
+               (*mess) >> pi;
+               fPlayer->Progress(pi);
+            } else if (GetRemoteProtocol() > 11) {
                Long64_t total, processed, bytesread;
                Float_t initTime, procTime, evtrti, mbrti;
                (*mess) >> total >> processed >> bytesread
-                       >> initTime >> procTime
-                       >> evtrti >> mbrti;
+                     >> initTime >> procTime
+                     >> evtrti >> mbrti;
                if (fPlayer)
                   fPlayer->Progress(sl, total, processed, bytesread,
                                     initTime, procTime, evtrti, mbrti);
@@ -3232,8 +3236,10 @@ void TProof::UpdateDialog()
               "processing was stopped - %lld events processed",
               fPlayer->GetEventsProcessed());
 
-      if (GetRemoteProtocol() > 11) {
+      if (GetRemoteProtocol() > 25) {
          // New format
+         Progress(-1, fPlayer->GetEventsProcessed(), -1, -1., -1., -1., -1., -1, -1, -1.);
+      } else if (GetRemoteProtocol() > 11) {
          Progress(-1, fPlayer->GetEventsProcessed(), -1, -1., -1., -1., -1.);
       } else {
          Progress(-1, fPlayer->GetEventsProcessed());
@@ -3242,7 +3248,12 @@ void TProof::UpdateDialog()
    }
 
    // Final update of the dialog box
-   if (GetRemoteProtocol() > 11) {
+   if (GetRemoteProtocol() > 25) {
+      // New format
+      EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+              10, (Long64_t)(-1), (Long64_t)(-1), (Long64_t)(-1),(Float_t)(-1.),(Float_t)(-1.),
+                  (Float_t)(-1.),(Float_t)(-1.),(Int_t)(-1),(Int_t)(-1),(Float_t)(-1.));
+   } else if (GetRemoteProtocol() > 11) {
       // New format
       EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
                7, (Long64_t)(-1), (Long64_t)(-1), (Long64_t)(-1),
@@ -6828,6 +6839,28 @@ void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
    } else {
       EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
              7, total, processed, bytesread, initTime, procTime, evtrti, mbrti);
+   }
+}
+
+//______________________________________________________________________________
+void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                      Float_t initTime, Float_t procTime,
+                      Float_t evtrti, Float_t mbrti, Int_t actw, Int_t tses, Float_t eses)
+{
+   // Get query progress information. Connect a slot to this signal
+   // to track progress.
+
+   PDB(kGlobal,1)
+      Info("Progress","%lld %lld %lld %f %f %f %f %d %f", total, processed, bytesread,
+                                initTime, procTime, evtrti, mbrti, actw, eses);
+
+   if (gROOT->IsBatch()) {
+      // Simple progress bar
+      if (total > 0)
+         PrintProgress(total, processed, procTime);
+   } else {
+      EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,Int_t,Int_t,Float_t)",
+             10, total, processed, bytesread, initTime, procTime, evtrti, mbrti, actw, tses, eses);
    }
 }
 

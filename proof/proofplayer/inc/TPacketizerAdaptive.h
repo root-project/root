@@ -103,16 +103,21 @@ public:
                                   // is (#events processed by 1 slave) / fPacketSizeAsAFraction.
                                   // It can be set with PROOF_PacketAsAFraction in input list.
    static Double_t fgMinPacketTime; // minimum packet time
+   static Double_t fgMaxPacketTime; // maximum packet time
    static Int_t    fgStrategy;    // 0 means the classic and 1 (default) - the adaptive strategy
 
    TPacketizerAdaptive(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                        TList *input, TProofProgressStatus *st);
    virtual ~TPacketizerAdaptive();
 
-   Int_t         GetEstEntriesProcessed(Float_t t, Long64_t &ent, Long64_t &bytes);
-   Int_t         CalculatePacketSize(TObject *slstat);
+   Int_t         GetEstEntriesProcessed(Float_t, Long64_t &ent, Long64_t &bytes, Long64_t &calls);
+   Float_t       GetCurrentRate(Bool_t &all);
+   Int_t         CalculatePacketSize(TObject *slstat, Long64_t cachesz, Int_t learnent);
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
    void          MarkBad(TSlave *s, TProofProgressStatus *status, TList **missingFiles);
+
+   Int_t         GetActiveWorkers();
+
    ClassDef(TPacketizerAdaptive,0)  //Generate work packets for parallel processing
 };
 

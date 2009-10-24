@@ -84,8 +84,8 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fTimeUpdt = -1.;
 
    // Init circularity ntple for performance calculations
-   fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");
-   fCircN = 10;
+   fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb:rc:al");
+   fCircN = 5;
    TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
    fCircProg->SetCircular(fCircN);
 
@@ -228,6 +228,7 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
    Float_t now = (Float_t) (Long_t(tnow) - fStartTime) / (Double_t)1000.;
    Long64_t estent = GetEntriesProcessed();
    Long64_t estmb = GetBytesRead();
+   Long64_t estrc = GetReadCalls();
 
    // Times and counters
    Float_t evtrti = -1., mbrti = -1.;
@@ -237,43 +238,51 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
    } else {
       // Fill the reference as first
       if (fCircProg->GetEntries() <= 0) {
-         fCircProg->Fill((Double_t)0., 0., 0.);
-         // Best estimation of the init time
-         fInitTime = (now + fInitTime) / 2.;
+         fCircProg->Fill((Double_t)0., 0., 0., 0., 0.);
       }
       // Time between updates
       fTimeUpdt = now - fProcTime;
       // Update proc time
       fProcTime = now - fInitTime;
-      // Estimated number of processed events
-      GetEstEntriesProcessed(fProcTime, estent, estmb);
+      // Get the last entry
+      Double_t *ar = fCircProg->GetArgs();
+      fCircProg->GetEntry(fCircProg->GetEntries()-1);
+      // The current rate
+      Bool_t all = kTRUE;
+      evtrti = GetCurrentRate(all);
+      Double_t xall = (all) ? 1. : 0.;
+      GetEstEntriesProcessed(0, estent, estmb, estrc);
+      // Fill entry
       Double_t evts = (Double_t) estent;
-      Double_t mbs = (estmb > 0) ?  estmb / TMath::Power(2.,20.) : 0.; //--> MB
-      // Good entry
-      fCircProg->Fill((Double_t)fProcTime, evts, mbs);
-      // Instantaneous rates (at least 5 reports)
-      if (fCircProg->GetEntries() > 4) {
-         Double_t *ar = fCircProg->GetArgs();
-         fCircProg->GetEntry(0);
+      Double_t mbs = (estmb > 0) ? estmb / TMath::Power(2.,20.) : 0.; //--> MB
+      Double_t rcs = (Double_t) estrc;
+      fCircProg->Fill((Double_t)fProcTime, evts, mbs, rcs, xall);
+      fCircProg->GetEntry(fCircProg->GetEntries()-2);
+      if (all && (evts > ar[1])) {
          Double_t dt = (Double_t)fProcTime - ar[0];
-         evtrti = (dt > 0) ? (Float_t) (evts - ar[1]) / dt : -1. ;
-         mbrti = (dt > 0) ? (Float_t) (mbs - ar[2]) / dt : -1. ;
          if (gPerfStats != 0)
             gPerfStats->RateEvent((Double_t)fProcTime, dt,
                                  (Long64_t) (evts - ar[1]),
                                  (Long64_t) ((mbs - ar[2])*TMath::Power(2.,20.)));
+         // Get the last to spot the cache readings
+         Double_t rc = (Double_t)estrc - ar[3];
+         mbrti = (rc > 0 && mbs > ar[2]) ? (Float_t) (mbs - ar[2]) / rc : 0. ;
       }
-
       // Final report only once (to correctly determine the proc time)
       if (fTotalEntries > 0 && GetEntriesProcessed() >= fTotalEntries)
          SetBit(TVirtualPacketizer::kIsDone);
    }
 
    if (gProofServ) {
-
       // Message to be sent over
       TMessage m(kPROOF_PROGRESS);
-      if (gProofServ->GetProtocol() > 11) {
+      if (gProofServ->GetProtocol() > 25) {
+         // Fill the message now
+         TProofProgressInfo pi(fTotalEntries, estent, estmb, fInitTime,
+                               fProcTime, evtrti, mbrti, GetActiveWorkers(),
+                               gProofServ->GetActSessions(), gProofServ->GetEffSessions());
+         m << &pi;
+      } else if (gProofServ->GetProtocol() > 11) {
          // Fill the message now
          m << fTotalEntries << estent << estmb << fInitTime << fProcTime
            << evtrti << mbrti;
@@ -307,7 +316,7 @@ void TVirtualPacketizer::SetInitTime()
    if (TestBit(TVirtualPacketizer::kIsInitializing)) {
       fInitTime = (Float_t) (Long_t(gSystem->Now()) - fStartTime) / (Double_t)1000.;
       ResetBit(TVirtualPacketizer::kIsInitializing);
+      PDB(kPacketizer,2)
+         Info("SetInitTime","fInitTime set to %f s", fInitTime);
    }
-   PDB(kPacketizer,2)
-      Info("SetInitTime","fInitTime: %f s", fInitTime);
 }

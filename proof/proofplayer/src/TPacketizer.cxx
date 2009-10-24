@@ -1077,6 +1077,8 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       }
       file = 0;
    }
+   // Reset the current file field
+   slstat->fCurFile = file;
 
    if (!file) {
 
@@ -1135,4 +1137,20 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       slstat->fCurElem->SetEntryList(base->GetEntryList(), first, num);
 
    return slstat->fCurElem;
+}
+
+//______________________________________________________________________________
+Int_t TPacketizer::GetActiveWorkers()
+{
+   // Return the number of workers still processing
+
+   Int_t actw = 0;   
+   TIter nxw(fSlaveStats);
+   TObject *key;
+   while ((key = nxw())) {
+      TSlaveStat *wrkstat = (TSlaveStat *) fSlaveStats->GetValue(key);
+      if (wrkstat && wrkstat->fCurFile) actw++;
+   }
+   // Done
+   return actw;
 }

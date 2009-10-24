@@ -522,6 +522,10 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fEnabledPackages = new TList;
    fEnabledPackages->SetOwner();
 
+   fTotSessions     = -1;
+   fActSessions     = -1;
+   fEffSessions     = -1.;
+
    fGlobalPackageDirList = 0;
 
    fLogFile         = flog;
@@ -922,6 +926,21 @@ TObject *TProofServ::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
+void TProofServ::RestartComputeTime()
+{
+   // Reset the compute time
+
+   fCompute.Stop();
+   if (fPlayer) {
+      TProofProgressStatus *status = fPlayer->GetProgressStatus();
+      if (status) status->SetLearnTime(fCompute.RealTime());
+      Info("RestartComputeTime", "compute time restarted after %f secs (%lld entries)",
+                                 fCompute.RealTime(), fPlayer->GetLearnEntries());
+   }
+   fCompute.Start(kFALSE);
+}
+
+//______________________________________________________________________________
 TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
 {
    // Get next range of entries to be processed on this server.
@@ -966,9 +985,21 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       }
       // the CPU and wallclock proc times are kept in the TProofServ and here
       // added to the status object in the fPlayer.
-      status->IncProcTime(realtime);
-      status->IncCPUTime(cputime);
+      if (status->GetEntries() > 0) {
+         status->Print(GetOrdinal());
+         status->IncProcTime(realtime);
+         status->IncCPUTime(cputime);
+      }
       req << status;
+      // Send tree cache information
+      Long64_t cacheSize = (fPlayer) ? fPlayer->GetCacheSize() : -1;
+      Int_t learnent = (fPlayer) ? fPlayer->GetLearnEntries() : -1;
+      req << cacheSize << learnent;
+
+      PDB(kLoop, 1) {
+         status->Print();
+         Info("GetNextPacket","cacheSize: %lld, learnent: %d", cacheSize, learnent);
+      }
       status = 0; // status is owned by the player.
    } else {
       req << fLatency.RealTime() << realtime << cputime
