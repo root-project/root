@@ -887,3 +887,61 @@ void XrdProofdProofServ::RemoveQuery(const char *tag)
    // Done
    return;
 }
+
+//__________________________________________________________________________
+static int CountEffectiveSessions(const char *, XrdProofWorker *w, void *s)
+{
+   // Decrease active session counters on worker w
+
+   int *actw = (int *)s;
+   if (w && actw) {
+      *actw += w->GetNActiveSessions();
+      // Check next
+      return 0;
+   }
+
+   // Not enough info: stop
+   return 1;
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServ::SendClusterInfo(int nsess, int nacti)
+{
+   // Calculate the effective number of users on this session nodes
+   // and communicate it to the master together with the total number
+   // of sessions and the number of active sessions. for monitoring issues.
+   XPDLOC(PMGR, "SendClusterInfo")
+
+   // Only if we are active
+   if (fWorkers.Num() <= 0) return;
+
+   int actw = 0;
+   fWorkers.Apply(CountEffectiveSessions, (void *)&actw);
+   // The number of effective sessions * 1000
+   int neffs = (actw*1000)/fWorkers.Num();
+   TRACE(DBG, "# sessions: "<<nsess<<", # active: "<<nacti<<", # effective: "<<neffs/1000.);
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   // Prepare buffer
+   int len = 3*sizeof(kXR_int32);
+   char *buf = new char[len];
+   kXR_int32 off = 0;
+   kXR_int32 itmp = nsess;
+   itmp = static_cast<kXR_int32>(htonl(itmp));
+   memcpy(buf + off, &itmp, sizeof(kXR_int32));
+   off += sizeof(kXR_int32);
+   itmp = nacti;
+   itmp = static_cast<kXR_int32>(htonl(itmp));
+   memcpy(buf + off, &itmp, sizeof(kXR_int32));
+   off += sizeof(kXR_int32);
+   itmp = neffs;
+   itmp = static_cast<kXR_int32>(htonl(itmp));
+   memcpy(buf + off, &itmp, sizeof(kXR_int32));
+   // Send over
+   if (!fResponse || fResponse->Send(kXR_attn, kXPD_clusterinfo, buf, len) != 0) {
+      // Failure
+      TRACE(XERR,"problems sending proofserv");
+   }
+
+}

@@ -1217,6 +1217,12 @@ void XrdProofdProtocol::PostSession(int on, const char *u, const char *g,
          }
       }
    }
+   // Tell the session manager
+   if (fgMgr && fgMgr->SessionMgr()) {
+      if (fgMgr->SessionMgr()->Pipe()->Post(XrdProofdProofServMgr::kChgSessionSt, 0) != 0) {
+         TRACE(XERR, "problem posting the session manager pipe");
+      }
+   }
    // Done
    return;
 }

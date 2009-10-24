@@ -181,7 +181,8 @@ enum XProofActionCode {
    kXPD_priority,  // 5111     // Server request to propagate a group priority
    kXPD_wrkmortem, // 5112     // A worker just died or terminated
    kXPD_touch,     // 5113     // Touch the connection and schedule an asynchronous remote touch
-   kXPD_resume     // 5114     // process the next query (to be sent to TXSocket in TXProofServ)
+   kXPD_resume,     // 5114    // process the next query (to be sent to TXSocket in TXProofServ)
+   kXPD_clusterinfo // 5115    // Information about running sessions
 };
 
 //_______________________________________________

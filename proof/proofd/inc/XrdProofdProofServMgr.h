@@ -157,7 +157,7 @@ public:
    XrdProofdProofServMgr(XrdProofdManager *mgr, XrdProtocol_Config *pi, XrdSysError *e);
    virtual ~XrdProofdProofServMgr() { }
 
-   enum PSMProtocol { kSessionRemoval = 0, kClientDisconnect = 1, kCleanSessions = 2, kProcessReq = 3} ;
+   enum PSMProtocol { kSessionRemoval = 0, kClientDisconnect = 1, kCleanSessions = 2, kProcessReq = 3, kChgSessionSt = 4} ;
    enum PSMCounters { kCreateCnt = 0, kCleanSessionsCnt = 1, kProcessCnt = 2} ;
 
    XrdSysRecMutex   *Mutex() { return &fMutex; }
@@ -197,6 +197,7 @@ public:
                                  XrdSysMutexHelper mhp(fMutex); cnt = fCounters[t];}
                                  return cnt; }
 
+   void              BroadcastClusterInfo();
    int               BroadcastPriorities();
    int               CurrentSessions(bool recalculate = 0);
    void              DisconnectFromProofServ(int pid);

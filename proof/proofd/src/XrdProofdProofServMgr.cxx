@@ -174,6 +174,9 @@ void *XrdProofdProofServCron(void *p)
          } else if (msg.Type() == XrdProofdProofServMgr::kProcessReq) {
             // Process request from some client: if we are here it means they can go ahead
             mgr->ProcessSem()->Post();
+         } else if (msg.Type() == XrdProofdProofServMgr::kChgSessionSt) {
+            // Propagate cluster information to active sessions after one session changed its state
+            mgr->BroadcastClusterInfo();
          } else {
             TRACE(XERR, "unknown type: "<<msg.Type());
             continue;
@@ -3636,6 +3639,32 @@ static int BroadcastPriority(const char *, XrdProofdProofServ *ps, void *s)
    // Some problem
    TRACE(XERR,"protocol error: "<<emsg);
    return 1;
+}
+
+//__________________________________________________________________________
+void XrdProofdProofServMgr::BroadcastClusterInfo()
+{
+   // Broadcast cluster info to the active sessions
+   XPDLOC(SMGR, "ProofServMgr::BroadcastClusterInfo")
+
+   TRACE(REQ, "enter");
+
+   int tot = 0, act = 0;
+   std::list<XrdProofdProofServ *>::iterator si = fActiveSessions.begin();
+   while (si != fActiveSessions.end()) {
+      if ((*si)->SrvType() != kXPD_Worker) {
+         tot++;
+         if ((*si)->Status() == kXPD_running) act++;
+      }
+      si++;
+   }
+   XPDPRT("tot: "<<tot<<", act: "<<act);
+   // Now propagate
+   si = fActiveSessions.begin();
+   while (si != fActiveSessions.end()) {
+      if ((*si)->Status() == kXPD_running) (*si)->SendClusterInfo(tot, act);
+      si++;
+   }
 }
 
 //__________________________________________________________________________
