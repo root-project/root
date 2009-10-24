@@ -18,8 +18,8 @@
 //      This will create a local PROOF session and run an analysis filling 100 histos
 //      with 100000 gaussian random numbers, and displaying them in a canvas with 100
 //      pads (10x10).
-//      The number of entries and the number of histograms can be passed as 'arguments'
-//      to 'simple': e.g. to fill 16 histos with 1000000 entries use
+//      The number of histograms can be passed as 'arguments' to 'simple': e.g. to fill
+//      16 histos with 1000000 entries use
 //
 //      root[] runProof("simple(nevt=1000000,nhist=16)")
 //
@@ -43,6 +43,13 @@
 //      This is an example of using PROOF par files and process 'event' data from the root HTTP
 //      server. It runs the ProofEventProc selector which is derived from the EventTree_Proc
 //      one found under test/ProofBench.
+//      The following specific arguments are available:
+//      - 'readall'  to read the whole event; by default only the braches needed by the analysis
+//                   are read (read 25% more bytes)
+//      - 'datasrc=<dir-with-files>' to read the files from another server; the files must be named
+//                                   'event_<num>.root' where <num>=1,2,...
+//      - 'files=N' to change the number of files to be analysed (default is 10; max is 50 for
+//                  the HTTP server).
 //
 //   root[] runProof("eventproc")
 //
@@ -84,10 +91,32 @@
 //
 //   root[] runProof("dataset")
 //
+//   General arguments
+//   -----------------
 //
-//   In all cases, to run in non blocking mode the option 'asyn' is available, e.g.
+//   The following arguments are valid for all examples (the ones specific to each
+//   tutorial have been explained above)
 //
-//   root[] runProof("h1(asyn)")
+//   1. nevt=N
+//
+//      Set the number of entries to N
+//      E.g. runProof("simple(nevt=1000000000)") runs simple with 1000000000
+//
+//   2. asyn
+//
+//      Run in non blocking mode
+//      E.g. root[] runProof("h1(asyn)")
+//
+//   3. nwrk=N
+//
+//      Set the number of active workers to N; usefull to test performance on a remote
+//      cluster where control about the number of workers is not possible.
+//      E.g. runProof("event(nwrk=2)") runs 'event' with 2 workers
+//
+//   4. punzip
+//
+//      Use parallel unzipping in reading files where relevant
+//      E.g. root[] runProof("eventproc(punzip)")
 //
 //
 //
@@ -279,23 +308,53 @@ void runProof(const char *what = "simple",
    }
 
    // Parse out number of events and  'asyn' option, used almost by every test
-   TString aNevt, opt, sel;
+   TString aNevt, aNwrk, opt, sel, punzip("off");
    while (args.Tokenize(tok, from, " ")) {
       // Number of events
       if (tok.BeginsWith("nevt=")) {
          aNevt = tok;
          aNevt.ReplaceAll("nevt=","");
          if (!aNevt.IsDigit()) {
-            Printf("runProof: pythia8: error parsing the 'nevt=' option (%s) - ignoring", tok.Data());
+            Printf("runProof: %s: error parsing the 'nevt=' option (%s) - ignoring", act.Data(), tok.Data());
             aNevt = "";
          }
       }
       // Sync or async ?
       if (tok.BeginsWith("asyn"))
          opt = "ASYN";
+      // Number of workers
+      if (tok.BeginsWith("nwrk=")) {
+         aNwrk = tok;
+         aNwrk.ReplaceAll("nwrk=","");
+         if (!aNwrk.IsDigit()) {
+            Printf("runProof: %s: error parsing the 'nwrk=' option (%s) - ignoring", act.Data(), tok.Data());
+            aNwrk = "";
+         }
+      }
+      // Parallel unzipping ?
+      if (tok.BeginsWith("punzip"))
+         punzip = "on";
    }
    Long64_t nevt = (aNevt.IsNull()) ? -1 : aNevt.Atoi();
+   Long64_t nwrk = (aNwrk.IsNull()) ? -1 : aNwrk.Atoi();
    from = 0;
+
+   // Set number workers
+   if (nwrk > 0) {
+      if (proof->GetParallel() < nwrk) {
+         Printf("runProof: %s: request for a number of workers larger then available - ignored", act.Data());
+      } else {
+         proof->SetParallel(nwrk);
+      }
+   }
+
+   // Parallel unzip
+   if (punzip == "on") {
+      proof->SetParameter("PROOF_UseParallelUnzip", (Int_t)1);
+      Printf("runProof: %s: parallel unzip enabled", act.Data());
+   } else {
+      proof->SetParameter("PROOF_UseParallelUnzip", (Int_t)0);
+   }
 
    // Action
    if (act == "simple") {
@@ -430,8 +489,10 @@ void runProof(const char *what = "simple",
       Printf("Enabled packages...\n");
       proof->ShowEnabledPackages(); 
 
-      // Extract the number of files to process
-      TString aFiles;
+      // Extract the number of files to process, data source and
+      // other parameters controlling the run ... 
+      TString aFiles, aDataSrc("http://root.cern.ch/files/data");
+      proof->SetParameter("ProofEventProc_Read", "optimized");
       while (args.Tokenize(tok, from, " ")) {
          // Number of events
          if (tok.BeginsWith("files=")) {
@@ -441,24 +502,40 @@ void runProof(const char *what = "simple",
                Printf("runProof: error parsing the 'files=' option (%s) - ignoring", tok.Data());
                aFiles = "";
             }
+         } else if (tok.BeginsWith("datasrc=")) {
+            aDataSrc = tok;
+            aDataSrc.ReplaceAll("datasrc=","");
+            if (aDataSrc.IsDigit()) {
+               Printf("runProof: error parsing the 'datasrc=' option (%s) - ignoring", tok.Data());
+               aFiles = "";
+            }
+         } else if (tok == "readall") {
+            proof->SetParameter("ProofEventProc_Read", "readall");
+            Printf("runProof: eventproc: reading the full event");
          }
       }
       Int_t nFiles = (aFiles.IsNull()) ? 10 : aFiles.Atoi();
          Printf("runProof: found aFiles: '%s', nFiles: %d", aFiles.Data(), nFiles);
-      if (nFiles > 100) {
-         Printf("runProof: max number of files is 100 - resizing request");
-         nFiles = 100;
+      if (nFiles > 50) {
+         Printf("runProof: max number of files is 50 - resizing request");
+         nFiles = 50;
       }
 
-      // Create the file collection
-      TString inlist = TString::Format("%s/proof/event-http.txt", tutorials.Data());
-      gSystem->ExpandPathName(inlist);
-      TFileCollection *fc = new TFileCollection("event-http", "dum", inlist.Data(), nFiles);
+      // Create the chain
+      TChain *c = new TChain("EventTree");
+      Int_t i = 1;
+      TString fn;
+      for (i = 1; i <= nFiles; i++) {
+         fn.Form("%s/event_%d.root", aDataSrc.Data(), i);
+         c->AddFile(fn.Data());
+      }
+      c->SetProof();
+
       // The selector
       sel.Form("%s/proof/ProofEventProc.C+", tutorials.Data());
       // Run it
       Printf("\nrunProof: running \"eventproc\"\n");
-      proof->Process(fc, sel.Data(), opt);
+      c->Process(sel.Data(), opt);
 
    } else if (act == "ntuple") {
 

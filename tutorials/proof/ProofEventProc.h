@@ -36,6 +36,9 @@ public :
    TBits           fTriggerBits;
    Bool_t          fIsValid;
 
+   // Read controller
+   Bool_t          fFullRead;
+
    //Output hist
    TH1F* fPtHist;
    TH1I* fNTracksHist;
@@ -61,7 +64,7 @@ public :
    TBranch        *b_event_fTriggerBits;   //!
    TBranch        *b_event_fIsValid;   //!
 
-   ProofEventProc(TTree *) { }
+   ProofEventProc(TTree *) { fFullRead = kTRUE; }
    ProofEventProc() { }
    virtual ~ProofEventProc() { }
    virtual Int_t   Version() const {return 1;}

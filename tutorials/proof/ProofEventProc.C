@@ -48,6 +48,13 @@ void ProofEventProc::SlaveBegin(TTree *tree)
 
    Init(tree);
 
+   // How much to read
+   fFullRead = kFALSE;
+   TNamed *nm = dynamic_cast<TNamed *>(fInput->FindObject("ProofEventProc_Read"));
+   if (nm && !strcmp(nm->GetTitle(), "readall"))
+      fFullRead = kTRUE;
+   Info("SlaveBegin", "'%s' reading", (fFullRead ? "full" : "optimized"));
+
    TString option = GetOption();
 
    fPtHist = new TH1F("pt_dist","p_{T} Distribution",100,0,5);
@@ -86,15 +93,22 @@ Bool_t ProofEventProc::Process(Long64_t entry)
    //  Assuming that fChain is the pointer to the TChain being processed,
    //  use fChain->GetTree()->GetEntry(entry).
 
-   fChain->GetTree()->GetEntry(entry);
+   if (fFullRead) {
+      fChain->GetTree()->GetEntry(entry);
+   } else {
+      b_event_fNtrack->GetEntry(entry);
+   }
 
    fNTracksHist->Fill(fNtrack);
 
-   for(Int_t j=0;j<fTracks->GetEntries();j++){
-     Track* curtrack = dynamic_cast<Track*>(fTracks->At(j));
-     fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
+   if (fNtrack > 0) {
+      if (!fFullRead) b_fTracks->GetEntry(entry);
+      for (Int_t j=0;j<fTracks->GetEntries();j++){
+         Track *curtrack = dynamic_cast<Track*>(fTracks->At(j));
+         fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
+      }
+      fTracks->Clear("C");
    }
-   fTracks->Clear("C");
 
    return kTRUE;
 }
