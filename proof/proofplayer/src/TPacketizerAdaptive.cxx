@@ -1354,7 +1354,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          Long64_t totev = 0;
          if (r->BufferSize() > r->Length()) (*r) >> totev;
 
-         status = new TProofProgressStatus(totev, bytesRead, proctime, proccpu);
+         status = new TProofProgressStatus(totev, bytesRead, -1, proctime, proccpu);
       }
 
       if (AddProcessed(sl, status, latency))

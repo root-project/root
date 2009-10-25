@@ -3471,8 +3471,8 @@ Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
    if (gProofServ->GetProtocol() > 25) {
       // Fill the message now
       TProofProgressInfo pi(tot, proc, bytes, init, ptime,
-                              erti, srti, -1.,
-                              gProofServ->GetTotSessions(), gProofServ->GetEffSessions());
+                            erti, srti, -1,
+                            gProofServ->GetTotSessions(), gProofServ->GetEffSessions());
       m << &pi;
    } else {
 
