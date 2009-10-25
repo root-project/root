@@ -333,10 +333,9 @@ void TPacketizerAdaptive::TSlaveStat::UpdateRates(TProofProgressStatus *st)
       fCurProcessed += st->GetEntries() - GetEntriesProcessed();
    }
    fCurFile->GetNode()->IncProcessed(st->GetEntries() - GetEntriesProcessed());
+   st->SetLastEntries(st->GetEntries() - fStatus->GetEntries());
    SafeDelete(fStatus);
    fStatus = st;
-   fStatus->SetLastEntries(fCurProcessed);
-   fStatus->SetLastProcTime(fCurProcTime);
 }
 
 //______________________________________________________________________________

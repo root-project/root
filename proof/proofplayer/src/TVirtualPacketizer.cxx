@@ -258,12 +258,12 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
       Double_t rcs = (Double_t) estrc;
       fCircProg->Fill((Double_t)fProcTime, evts, mbs, rcs, xall);
       fCircProg->GetEntry(fCircProg->GetEntries()-2);
-      if (all && (evts > ar[1])) {
+      if (all) {
          Double_t dt = (Double_t)fProcTime - ar[0];
+         Long64_t de = (evts > ar[1]) ? (Long64_t) (evts - ar[1]) : 0;
+         Long64_t db = (mbs > ar[2]) ? (Long64_t) ((mbs - ar[2])*TMath::Power(2.,20.)) : 0;
          if (gPerfStats != 0)
-            gPerfStats->RateEvent((Double_t)fProcTime, dt,
-                                 (Long64_t) (evts - ar[1]),
-                                 (Long64_t) ((mbs - ar[2])*TMath::Power(2.,20.)));
+            gPerfStats->RateEvent((Double_t)fProcTime, dt, de, db);
          // Get the last to spot the cache readings
          Double_t rc = (Double_t)estrc - ar[3];
          mbrti = (rc > 0 && mbs > ar[2]) ? (Float_t) (mbs - ar[2]) / rc : 0. ;
@@ -271,8 +271,11 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
       // Final report only once (to correctly determine the proc time)
       if (fTotalEntries > 0 && GetEntriesProcessed() >= fTotalEntries)
          SetBit(TVirtualPacketizer::kIsDone);
+      PDB(kPacketizer,2) 
+         Info("HandleTimer", "ent:%lld, bytes:%lld, proct:%f, evtrti:%f, mbrti:%f (%f,%f)",
+                             estent, estmb, fProcTime, evtrti, mbrti, mbs, ar[2]);
    }
-
+ 
    if (gProofServ) {
       // Message to be sent over
       TMessage m(kPROOF_PROGRESS);

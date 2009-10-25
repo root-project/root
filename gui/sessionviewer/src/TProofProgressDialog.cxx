@@ -737,8 +737,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       else
          sprintf(stm, "%d sec", ss);
       fProcessed->SetText("Processed:");
-      buf = TString::Format("%lld events (%.2f MB)\n",
-                            std::max(fPrevProcessed, processed), fAvgMBRate*fProcTime);
+      TString sf("MB");
+      Float_t xb = fAvgMBRate*fProcTime;
+      xb = AdjustBytes(xb, sf);
+      buf = TString::Format("%lld events (%.2f %s)\n",
+                            std::max(fPrevProcessed, processed), xb, sf.Data());
       fTotal->SetText(buf);
       buf = TString::Format("%s %s\n", stm, st.Data());
       fTimeLab->SetText("Processing time:");
@@ -814,7 +817,9 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          sprintf(stm, "%d sec", ss);
 
       fEstim->SetText(stm);
-      buf = TString::Format("%lld / %lld events - %.2f MB", evproc, total, mbsproc);
+      TString sf("MB");
+      Float_t xb = AdjustBytes(mbsproc, sf);
+      buf = TString::Format("%lld / %lld events - %.2f %s", evproc, total, xb, sf.Data());
       if (fStatus > kDone) {
          buf += TString::Format(" - %s", cproc[fStatus]);
       }
@@ -861,6 +866,25 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       }
    }
    fPrevProcessed = evproc;
+}
+
+//______________________________________________________________________________
+Float_t TProofProgressDialog::AdjustBytes(Float_t mbs, TString &sf)
+{
+   // Transform MBs to GBs ot TBs and get the correct suffix
+
+   Float_t xb = mbs;
+   sf = "MB";
+   if (xb > 1024.) {
+      xb = xb / 1024.;
+      sf = "GB";
+   }
+   if (xb > 1024.) {
+      xb = xb / 1024.;
+      sf = "TB";
+   }
+   // Done
+   return xb;
 }
 
 //______________________________________________________________________________

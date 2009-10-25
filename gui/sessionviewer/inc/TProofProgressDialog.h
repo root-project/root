@@ -102,6 +102,8 @@ private:
 
    TString             fSessionUrl;
 
+   Float_t             AdjustBytes(Float_t mbs, TString &sf);
+
    static Bool_t       fgKeepDefault;
    static Bool_t       fgLogQueryDefault;
    static TString      fgTextQueryDefault;
