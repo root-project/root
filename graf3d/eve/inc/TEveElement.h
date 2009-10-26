@@ -464,7 +464,7 @@ public:
 
    virtual void UpdateProjection();
 
-   ClassDef(TEveElementListProjected, 0);
+   ClassDef(TEveElementListProjected, 0); // Projected TEveElementList.
 };
 
 #endif
