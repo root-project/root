@@ -743,7 +743,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
       gEve->GetViewers()->AddElement(fViewer[0]);
       s = gEve->SpawnNewScene("Rho-Z Projection");
       // projections
-      fRhoZMgr = new TEveProjectionManager();
+      fRhoZMgr = new TEveProjectionManager(TEveProjection::kPT_RhoZ);
       s->AddElement(fRhoZMgr);
       gEve->AddToListTree(fRhoZMgr, kTRUE);
       TEveProjectionAxes* a = new TEveProjectionAxes(fRhoZMgr);
@@ -781,14 +781,13 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    if (fIsEmbedded && gEve) {
       fRhoZMgr->ImportElements((TEveElement *)gEve->GetGlobalScene());
       fRhoZMgr->ImportElements((TEveElement *)gEve->GetEventScene());
-      fRhoZMgr->SetProjection(TEveProjection::kPT_RhoZ);
       fViewer[1]->AddScene(s);
       gEve->GetViewers()->AddElement(fViewer[1]);
       gRhoZMgr = fRhoZMgr;
 
       s = gEve->SpawnNewScene("R-Phi Projection");
       // projections
-      fRPhiMgr = new TEveProjectionManager();
+      fRPhiMgr = new TEveProjectionManager(TEveProjection::kPT_RPhi);
       s->AddElement(fRPhiMgr);
       gEve->AddToListTree(fRPhiMgr, kTRUE);
       TEveProjectionAxes* a = new TEveProjectionAxes(fRPhiMgr);
@@ -826,7 +825,6 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    if (fIsEmbedded && gEve) {
       fRPhiMgr->ImportElements((TEveElement *)gEve->GetGlobalScene());
       fRPhiMgr->ImportElements((TEveElement *)gEve->GetEventScene());
-      fRPhiMgr->SetProjection(TEveProjection::kPT_RPhi);
       fViewer[2]->AddScene(s);
       gEve->GetViewers()->AddElement(fViewer[2]);
       gRPhiMgr = fRPhiMgr;
