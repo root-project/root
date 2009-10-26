@@ -175,7 +175,7 @@ public:
    TProofProgressInfo(Long64_t tot = -1, Long64_t proc = -1, Long64_t bytes = 0,
                       Float_t initt = 0., Float_t proct = 0.,
                       Float_t evts = 1., Float_t mbs = -1.,
-                      Int_t actw = -1, Int_t tsess = -1., Float_t esess = -1.) :
+                      Int_t actw = -1, Int_t tsess = -1, Float_t esess = -1.) :
                       fTotal(tot), fProcessed(proc), fBytesRead(bytes),
                       fInitTime(initt), fProcTime(proct), fEvtRateI(evts), fMBRateI(mbs),
                       fActWorkers(actw), fTotSessions(tsess), fEffSessions(esess) { }
