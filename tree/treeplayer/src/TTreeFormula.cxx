@@ -1987,8 +1987,10 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       const char *funcname = 0;
       if (objClass == TString::Class()) {
          funcname = "Data";
+         //tobetested: numberOfVarDim += RegisterDimensions(code,1,0); // Register the dim of the implied char*
       } else if (objClass == stdStringClass) {
          funcname = "c_str";
+         //tobetested: numberOfVarDim += RegisterDimensions(code,1,0); // Register the dim of the implied char*
       }
       if (funcname) {
          TMethodCall *method = new TMethodCall(objClass, funcname, "");
@@ -2051,6 +2053,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             else fLookupType[code] = kTreeMember;
          }            
 
+         //tobetested: numberOfVarDim += RegisterDimensions(code,1,0); // Register the dim of the implied char*
          return kDefinedString;
       }
       if (method->IsValid()
@@ -2552,9 +2555,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 
       // Check for an alias.
       const char *aliasValue = fTree->GetAlias(left);
-      if (aliasValue && strcspn(aliasValue,"+*/-%&!=<>|")==strlen(aliasValue)) {
+      if (aliasValue && strcspn(aliasValue,"[]+*/-%&!=<>|")==strlen(aliasValue)) {
          // First check whether we are using this alias recursively (this would
-         // lead to an infinite recursion.
+         // lead to an infinite recursion).
          if (find(aliasUsed.begin(),
                   aliasUsed.end(),
                   left) != aliasUsed.end()) {
@@ -2780,27 +2783,42 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             return -3;
          }
 
-         std::vector<std::string> aliasSofar = fAliasesUsed;
-         aliasSofar.push_back( cname );
 
-         // Need to check the aliases used so far
-         TTreeFormula *subform = new TTreeFormula(cname,aliasValue,fTree,aliasSofar); // Need to pass the aliases used so far.
+         if (strcspn(aliasValue,"+*/-%&!=<>|")!=strlen(aliasValue)) {
+            // If the alias contains an operator, we need to use a nested formula
+            // (since DefinedVariable must only add one entry to the operation's list).
+            
+            // Need to check the aliases used so far
+            std::vector<std::string> aliasSofar = fAliasesUsed;
+            aliasSofar.push_back( cname );
 
-         if (subform->GetNdim()==0) {
-            Error("DefinedVariable",
-                  "The substitution of the alias \"%s\" by \"%s\" failed.",cname,aliasValue);
-            return -3;
-         }
+            TString subValue( aliasValue );
+            if (dims[0]) {
+               subValue += dims;
+            }
 
-         fManager->Add(subform);
-         fAliases.AddAtAndExpand(subform,fNoper);
+            TTreeFormula *subform = new TTreeFormula(cname,subValue,fTree,aliasSofar); // Need to pass the aliases used so far.
 
-         if (subform->IsString()) {
-            action = kAliasString;
-            return 0;
-         } else {
-            action = kAlias;
-            return 0;
+            if (subform->GetNdim()==0) {
+               Error("DefinedVariable",
+                     "The substitution of the alias \"%s\" by \"%s\" failed.",cname,aliasValue);
+               return -3;
+            }
+
+            fManager->Add(subform);
+            fAliases.AddAtAndExpand(subform,fNoper);
+
+            if (subform->IsString()) {
+               action = kAliasString;
+               return 0;
+            } else {
+               action = kAlias;
+               return 0;
+            }
+         } else { /* assumes strcspn(aliasValue,"[]")!=strlen(aliasValue) */
+            TString thisAlias( aliasValue );
+            thisAlias += dims;
+            return DefinedVariable(thisAlias,action);
          }
       }
    }
