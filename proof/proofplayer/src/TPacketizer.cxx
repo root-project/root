@@ -232,7 +232,6 @@ TPacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
 {
    fSlave = slave;
    fStatus = new TProofProgressStatus();
-   fWrkFQDN = TUrl(slave->GetName()).GetHostFQDN();
 }
 
 //______________________________________________________________________________

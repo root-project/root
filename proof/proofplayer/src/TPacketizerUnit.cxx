@@ -95,7 +95,6 @@ TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
    fCircNtp->SetCircular(fCircLvl);
    fSlave = slave;
    fStatus = new TProofProgressStatus();
-   fWrkFQDN = TUrl(slave->GetName()).GetHostFQDN();
 }
 
 //______________________________________________________________________________
