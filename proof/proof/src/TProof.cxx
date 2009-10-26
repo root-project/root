@@ -5530,9 +5530,9 @@ Int_t TProof::DisablePackage(const char *package)
       // Try to do it via XROOTD (new way)
       TString path;
       path.Form("~/packages/%s", package);
-      if (fManager->Rm(path, "-rf") != -1) {
+      if (fManager->Rm(path, "-rf", "all") != -1) {
          path.Append(".par");
-         if (fManager->Rm(path, "-f") != -1) {
+         if (fManager->Rm(path, "-f", "all") != -1) {
             done = kTRUE;
             st = 0;
          }
