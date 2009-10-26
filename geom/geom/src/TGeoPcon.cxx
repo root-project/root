@@ -389,13 +389,19 @@ Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    if (ipl<0) ipl=0;
    if (ipl==(fNz-1)) ipl--;
    Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+   Bool_t special_case = kFALSE;
    if (dz<1e-9) {
-      // radius changing segment, check if a close point is still contained
-      point_new[0] = point[0]+sstep*dir[0];
-      point_new[1] = point[1]+sstep*dir[1];
-      point_new[2] = point[2]+sstep*dir[2];
-      if (!Contains(point_new)) return 0.;
-      return (DistFromInside(point_new,dir,iact,step,safe)+sstep);
+      // radius changing segment, make sure track is not in the XY plane
+      if (TGeoShape::IsSameWithinTolerance(dir[2], 0)) {
+         special_case = kTRUE;
+      } else {
+         //check if a close point is still contained
+         point_new[0] = point[0]+sstep*dir[0];
+         point_new[1] = point[1]+sstep*dir[1];
+         point_new[2] = point[2]+sstep*dir[2];
+         if (!Contains(point_new)) return 0.;
+         return (DistFromInside(point_new,dir,iact,step,safe)+sstep);
+      }   
    }   
    // determine if the current segment is a tube or a cone
    Bool_t intub = kTRUE;
@@ -419,6 +425,14 @@ Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    Double_t cm = TMath::Cos(phim*TMath::DegToRad());
    Double_t sm = TMath::Sin(phim*TMath::DegToRad());
    Double_t cdfi = TMath::Cos(0.5*fDphi*TMath::DegToRad());
+   if (special_case) {
+      if (inphi) snxt = TGeoTubeSeg::DistFromInsideS(point_new, dir, 
+               TMath::Min(fRmin[ipl],fRmin[ipl+1]), TMath::Max(fRmax[ipl],fRmax[ipl+1]),
+               dz, c1,s1,c2,s2,cm,sm,cdfi);
+      else       snxt = TGeoTube::DistFromInsideS(point_new, dir, 
+               TMath::Min(fRmin[ipl],fRmin[ipl+1]), TMath::Max(fRmax[ipl],fRmax[ipl+1]),dz);
+      return snxt;
+   }   
    if (intub) {
       if (inphi) snxt=TGeoTubeSeg::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, c1,s1,c2,s2,cm,sm,cdfi); 
       else snxt=TGeoTube::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz);
