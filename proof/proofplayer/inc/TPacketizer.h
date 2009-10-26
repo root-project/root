@@ -92,6 +92,7 @@ public:
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
 
+   Float_t       GetCurrentRate(Bool_t &all);
    Int_t         GetActiveWorkers();
 
    ClassDef(TPacketizer,0)  //Generate work packets for parallel processing

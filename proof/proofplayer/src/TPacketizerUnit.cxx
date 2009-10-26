@@ -77,8 +77,6 @@ public:
 
    void        GetCurrentTime();
 
-   const char *GetName() const { return fSlave->GetName(); }
-
    void        UpdatePerformance(Double_t time);
    TProofProgressStatus *AddProcessed(TProofProgressStatus *st);
 };
@@ -97,6 +95,7 @@ TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
    fCircNtp->SetCircular(fCircLvl);
    fSlave = slave;
    fStatus = new TProofProgressStatus();
+   fWrkFQDN = TUrl(slave->GetName()).GetHostFQDN();
 }
 
 //______________________________________________________________________________
@@ -144,8 +143,15 @@ TProofProgressStatus *TPacketizerUnit::TSlaveStat::AddProcessed(TProofProgressSt
    // return the difference (*st - *fStatus)
 
    if (st) {
+      // The entriesis not correct in 'st'
+      Long64_t lastEntries = st->GetEntries() - fStatus->GetEntries();
+      // The last proc time should not be added
+      fStatus->SetLastProcTime(0.);
+      // Get the diff
       TProofProgressStatus *diff = new TProofProgressStatus(*st - *fStatus);
       *fStatus += *diff;
+      // Set the correct value
+      fStatus->SetLastEntries(lastEntries);
       return diff;
    } else {
       Error("AddProcessed", "status arg undefined");
@@ -216,6 +222,32 @@ Double_t TPacketizerUnit::GetCurrentTime()
    Double_t retValue = fStopwatch->RealTime();
    fStopwatch->Continue();
    return retValue;
+}
+
+//______________________________________________________________________________
+Float_t TPacketizerUnit::GetCurrentRate(Bool_t &all)
+{
+   // Get Estimation of the current rate; just summing the current rates of
+   // the active workers
+
+   all = kTRUE;
+   // Loop over the workers
+   Float_t currate = 0.;
+   if (fSlaveStats && fSlaveStats->GetSize() > 0) {
+      TIter nxw(fSlaveStats);
+      TObject *key;
+      while ((key = nxw()) != 0) {
+         TSlaveStat *slstat = (TSlaveStat *) fSlaveStats->GetValue(key);
+         if (slstat && slstat->GetProgressStatus() && slstat->GetEntriesProcessed() > 0) {
+            // Sum-up the current rates
+            currate += slstat->GetProgressStatus()->GetCurrentRate();
+         } else {
+            all = kFALSE;
+         }
+      }
+   }
+   // Done
+   return currate;
 }
 
 //______________________________________________________________________________

@@ -73,6 +73,7 @@ public:
 
    Double_t      GetCurrentTime();
 
+   Float_t       GetCurrentRate(Bool_t &all);
    Int_t         GetActiveWorkers() { return fSlaveStats->GetSize(); }
 
    ClassDef(TPacketizerUnit,0)  //Generate work packets for parallel processing

@@ -222,7 +222,6 @@ public:
    ~TSlaveStat();
 
    TFileNode  *GetFileNode() const { return fFileNode; }
-   const char *GetName() const { return fSlave->GetName(); }
 
    void        SetFileNode(TFileNode *node) { fFileNode = node; }
 };
@@ -233,6 +232,7 @@ TPacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
 {
    fSlave = slave;
    fStatus = new TProofProgressStatus();
+   fWrkFQDN = TUrl(slave->GetName()).GetHostFQDN();
 }
 
 //______________________________________________________________________________
@@ -243,14 +243,24 @@ TPacketizer::TSlaveStat::~TSlaveStat()
    SafeDelete(fStatus);
 }
 
-TProofProgressStatus* TPacketizer::TSlaveStat::AddProcessed(TProofProgressStatus *st)
+TProofProgressStatus *TPacketizer::TSlaveStat::AddProcessed(TProofProgressStatus *st)
 {
+   // Update the status info to the 'st'.
+   // return the difference (*st - *fStatus)
+
    if (st) {
+      // The entriesis not correct in 'st'
+      Long64_t lastEntries = st->GetEntries() - fStatus->GetEntries();
+      // The last proc time should not be added
+      fStatus->SetLastProcTime(0.);
+      // Get the diff
       TProofProgressStatus *diff = new TProofProgressStatus(*st - *fStatus);
       *fStatus += *diff;
+      // Set the correct value
+      fStatus->SetLastEntries(lastEntries);
       return diff;
    } else {
-      Error("AddProcessed", "status of the worker undefined");
+      Error("AddProcessed", "status arg undefined");
       return 0;
    }
 }
@@ -450,7 +460,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
            strncmp(url.GetProtocol(),"rfio", 4)) ) {
          host = "no-host";
       } else {
-         host = url.GetHost();
+         host = url.GetHostFQDN();
       }
 
       TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
@@ -975,6 +985,32 @@ Long64_t TPacketizer::GetEntriesProcessed(TSlave *slave) const
    if ( slstat == 0 ) return 0;
 
    return slstat->GetEntriesProcessed();
+}
+
+//______________________________________________________________________________
+Float_t TPacketizer::GetCurrentRate(Bool_t &all)
+{
+   // Get Estimation of the current rate; just summing the current rates of
+   // the active workers
+
+   all = kTRUE;
+   // Loop over the workers
+   Float_t currate = 0.;
+   if (fSlaveStats && fSlaveStats->GetSize() > 0) {
+      TIter nxw(fSlaveStats);
+      TObject *key;
+      while ((key = nxw()) != 0) {
+         TSlaveStat *slstat = (TSlaveStat *) fSlaveStats->GetValue(key);
+         if (slstat && slstat->GetProgressStatus() && slstat->GetEntriesProcessed() > 0) {
+            // Sum-up the current rates
+            currate += slstat->GetProgressStatus()->GetCurrentRate();
+         } else {
+            all = kFALSE;
+         }
+      }
+   }
+   // Done
+   return currate;
 }
 
 //______________________________________________________________________________
