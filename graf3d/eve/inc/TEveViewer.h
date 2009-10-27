@@ -110,6 +110,8 @@ public:
 
    void OnMouseOver(TGLPhysicalShape* shape, UInt_t state);
    void OnClicked(TObject *obj, UInt_t button, UInt_t state);
+   void OnReClicked(TObject *obj, UInt_t button, UInt_t state);
+   void OnUnClicked(TObject *obj, UInt_t button, UInt_t state);
 
    // --------------------------------
 

@@ -343,8 +343,15 @@ void TEveViewerList::Connect()
 
    TQObject::Connect("TGLViewer", "MouseOver(TGLPhysicalShape*,UInt_t)",
                      "TEveViewerList", this, "OnMouseOver(TGLPhysicalShape*,UInt_t)");
+
    TQObject::Connect("TGLViewer", "Clicked(TObject*,UInt_t,UInt_t)",
                      "TEveViewerList", this, "OnClicked(TObject*,UInt_t,UInt_t)");
+
+   TQObject::Connect("TGLViewer", "ReClicked(TObject*,UInt_t,UInt_t)",
+                     "TEveViewerList", this, "OnReClicked(TObject*,UInt_t,UInt_t)");
+
+   TQObject::Connect("TGLViewer", "UnClicked(TObject*,UInt_t,UInt_t)",
+                     "TEveViewerList", this, "OnUnClicked(TObject*,UInt_t,UInt_t)");
 }
 
 /******************************************************************************/
@@ -478,7 +485,7 @@ void TEveViewerList::OnMouseOver(TGLPhysicalShape *pshape, UInt_t state)
 }
 
 //______________________________________________________________________________
-void TEveViewerList::OnClicked(TObject *obj, UInt_t button, UInt_t state)
+void TEveViewerList::OnClicked(TObject *obj, UInt_t /*button*/, UInt_t state)
 {
    // Slot for global TGLViewer::Clicked().
    //
@@ -488,13 +495,45 @@ void TEveViewerList::OnClicked(TObject *obj, UInt_t button, UInt_t state)
    // If TEveElement::IsPickable() returns false, the element is not
    // selected.
 
-   if (button != kButton1 || state & kKeyShiftMask || state & kKeyMod1Mask)
-      return;
-
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
    gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
+}
+
+//______________________________________________________________________________
+void TEveViewerList::OnReClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state*/)
+{
+   // Slot for global TGLViewer::ReClicked().
+   //
+   // The obj is dyn-casted to the TEveElement and global selection is
+   // updated accordingly.
+   //
+   // If TEveElement::IsPickable() returns false, the element is not
+   // selected.
+
+   TEveElement* el = dynamic_cast<TEveElement*>(obj);
+   if (el && !el->IsPickable())
+      el = 0;
+
+   gEve->GetSelection()->SelectionRepeated(el);
+}
+
+//______________________________________________________________________________
+void TEveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state*/)
+{
+   // Slot for global TGLViewer::UnClicked().
+   //
+   // The obj is dyn-casted to the TEveElement and global selection is
+   // updated accordingly.
+   //
+   // If TEveElement::IsPickable() returns false, the element is not
+   // selected.
+
+   TEveElement* el = dynamic_cast<TEveElement*>(obj);
+   if (el && !el->IsPickable())
+      el = 0;
+   gEve->GetSelection()->UserRePickedElement(el);
 }
 
 //______________________________________________________________________________

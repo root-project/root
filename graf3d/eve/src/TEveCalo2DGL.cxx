@@ -351,11 +351,14 @@ void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
    // Processes tower selection in eta bin or phi bin.
    // Virtual function from TGLogicalShape. Called from TGLViewer.
 
+
+   Int_t prev = fM->fData->GetCellsSelected().size();
+   if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
+
+   Int_t binID = -1;
    if (rec.GetN() > 2)
    {
-      if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
-
-      Int_t binID    = rec.GetItem(1);
+      binID       = rec.GetItem(1);
       Int_t slice = rec.GetItem(2);
       TEveCaloData::CellData_t cellData;
       for (TEveCaloData::vCellId_i it = fM->fCellLists[binID]->begin();
@@ -376,6 +379,13 @@ void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
          }
       }
    }
+
+   if (prev == 0 && binID >= 0)
+      rec.SetSecSelResult(TGLSelectRecord::kEnteringSelection);
+   else if (prev  && binID < 0)
+      rec.SetSecSelResult(TGLSelectRecord::kLeavingSelection);
+   else if (prev  && binID >= 0)
+      rec.SetSecSelResult(TGLSelectRecord::kModifyingInternalSelection);
 
    fM->fData->DataChanged();
 }

@@ -330,6 +330,8 @@ public:
    virtual void Activated() { Emit("Activated()"); } // *SIGNAL*
    virtual void Clicked(TObject *obj); //*SIGNAL*
    virtual void Clicked(TObject *obj, UInt_t button, UInt_t state); //*SIGNAL*
+   virtual void ReClicked(TObject *obj, UInt_t button, UInt_t state); //*SIGNAL*
+   virtual void UnClicked(TObject *obj, UInt_t button, UInt_t state); //*SIGNAL*
    virtual void DoubleClicked() { Emit("DoubleClicked()"); } // *SIGNAL*
 
    TGEventHandler *GetEventHandler() const { return fEventHandler; }

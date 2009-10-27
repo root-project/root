@@ -505,28 +505,42 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
          fGLViewer->RequestSelect(fLastPos.fX, fLastPos.fY);
          TGLPhysicalShape *phys_shape = fGLViewer->fSelRec.GetPhysShape();
 
-         if (phys_shape)
+         if (phys_shape) obj = phys_shape->GetLogical()->GetExternal();
+      
+         // secondary selection
+         if (phys_shape && fSecSelType == TGLViewer::kOnRequest
+             && phys_shape->GetLogical()->AlwaysSecondarySelect())
          {
-            // primary
-            obj = phys_shape->GetLogical()->GetExternal();
+            fGLViewer->RequestSecondarySelect(fLastPos.fX, fLastPos.fY);
+            fGLViewer->fSecSelRec.SetMultiple(event->fState & kKeyControlMask);
 
-            // secondary
-            if (fSecSelType == TGLViewer::kOnRequest
-                && phys_shape->GetLogical()->AlwaysSecondarySelect())
+            if (fGLViewer->fSecSelRec.GetPhysShape() != 0)
             {
-               fGLViewer->RequestSecondarySelect(fLastPos.fX, fLastPos.fY);
-               if (fGLViewer->fSecSelRec.GetPhysShape() != 0)
-               {
-                  TGLLogicalShape& lshape = const_cast<TGLLogicalShape&>
-                     (*fGLViewer->fSecSelRec.GetPhysShape()->GetLogical());
+               TGLLogicalShape& lshape = const_cast<TGLLogicalShape&>
+                  (*fGLViewer->fSecSelRec.GetPhysShape()->GetLogical());
 
-                  fGLViewer->fSecSelRec.SetMultiple(event->fState & kKeyControlMask);
-                  lshape.ProcessSelection(*fGLViewer->fRnrCtx, fGLViewer->fSecSelRec);
-               }
+               lshape.ProcessSelection(*fGLViewer->fRnrCtx, fGLViewer->fSecSelRec);
+               switch (fGLViewer->fSecSelRec.GetSecSelResult())
+               {
+                  case TGLSelectRecord::kEnteringSelection:
+                     fGLViewer->Clicked(obj, event->fCode, event->fState);
+                     break;
+                  case TGLSelectRecord::kLeavingSelection:
+                     fGLViewer->UnClicked(obj, event->fCode, event->fState);
+                     break;
+                  case TGLSelectRecord::kModifyingInternalSelection:
+                     fGLViewer->ReClicked(obj, event->fCode, event->fState);
+                     break;
+                  default:
+                     break;
+               };
             }
          }
-         fGLViewer->Clicked(obj);
-         fGLViewer->Clicked(obj, event->fCode, event->fState);
+         else
+         {
+            fGLViewer->Clicked(obj);
+            fGLViewer->Clicked(obj, event->fCode, event->fState);
+         }
 
          eventSt.fX = 0;
          eventSt.fY = 0;

@@ -78,6 +78,8 @@ public:
    void SelectionAdded(TEveElement* el);   // *SIGNAL*
    void SelectionRemoved(TEveElement* el); // *SIGNAL*
    void SelectionCleared();                // *SIGNAL*
+   void UserRePickedElement(TEveElement* el);
+   void SelectionRepeated(TEveElement* el); // *SIGNAL*
 
    // ----------------------------------------------------------------
    // Interface to make selection active/non-active.

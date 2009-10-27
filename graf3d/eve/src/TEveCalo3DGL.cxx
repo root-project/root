@@ -627,13 +627,23 @@ void TEveCalo3DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
    // Processes tower selection.
    // Virtual function from TGLogicalShape. Called from TGLViewer.
 
-   if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
+   Int_t prev = fM->fData->GetCellsSelected().size();
 
+   if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
+   Int_t cellID = -1;
    if (rec.GetN() > 1)
    {
-      Int_t cellID = rec.GetItem(1);
+      cellID = rec.GetItem(1);
       fM->fData->GetCellsSelected().push_back(fM->fCellList[cellID]);
    }
+
+   if (prev == 0 && cellID >= 0)
+      rec.SetSecSelResult(TGLSelectRecord::kEnteringSelection);
+   else if (prev  && cellID < 0)
+      rec.SetSecSelResult(TGLSelectRecord::kLeavingSelection);
+   else if (prev  && cellID >= 0)
+      rec.SetSecSelResult(TGLSelectRecord::kModifyingInternalSelection);
+
 
    fM->fData->DataChanged();
 }

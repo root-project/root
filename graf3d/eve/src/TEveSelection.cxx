@@ -218,6 +218,26 @@ void TEveSelection::SelectionCleared()
    Emit("SelectionCleared()");
 }
 
+//______________________________________________________________________________
+void TEveSelection::UserRePickedElement(TEveElement* el)
+{
+   // Called when secondary selection becomes empty.
+
+   el = MapPickedToSelected(el);
+   RemoveElement(el);
+}
+
+//______________________________________________________________________________
+void TEveSelection::SelectionRepeated(TEveElement* el)
+{
+   // Called when secondary selection changed internally.
+
+   el = MapPickedToSelected(el);
+   Emit("InternaSelectionChanged(TEveElement*)", (Long_t)el);
+
+   gEve->Redraw3D();
+}
+
 /******************************************************************************/
 // Activation / deactivation of selection
 /******************************************************************************/
