@@ -915,7 +915,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          glVertex3f(cells2D[i].fGeom[0], cells2D[i].fGeom[1], val);
          glVertex3f(cells2D[i].fGeom[2], cells2D[i].fGeom[1], val);
          glVertex3f(cells2D[i].fGeom[2], cells2D[i].fGeom[3], val);
-         glVertex3f(cells2D[i].fGeom[1], cells2D[i].fGeom[3], val);
+         glVertex3f(cells2D[i].fGeom[0], cells2D[i].fGeom[3], val);
          glEnd();
       }
    }
