@@ -2800,6 +2800,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             TTreeFormula *subform = new TTreeFormula(cname,subValue,fTree,aliasSofar); // Need to pass the aliases used so far.
 
             if (subform->GetNdim()==0) {
+               delete subform;
                Error("DefinedVariable",
                      "The substitution of the alias \"%s\" by \"%s\" failed.",cname,aliasValue);
                return -3;
@@ -2818,7 +2819,22 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
          } else { /* assumes strcspn(aliasValue,"[]")!=strlen(aliasValue) */
             TString thisAlias( aliasValue );
             thisAlias += dims;
-            return DefinedVariable(thisAlias,action);
+            Int_t aliasRes = DefinedVariable(thisAlias,action);
+            if (aliasRes<0) {
+               // We failed but DefinedVariable has not printed why yet.
+               // and because we want thoses to be printed _before_ the notice
+               // of the failure of the substitution, we need to print them here.
+               if (aliasRes==-1) {
+                  Error("Compile", " Bad numerical expression : \"%s\"",thisAlias.Data()); 
+               } else if (aliasRes==-2) {
+                  Error("Compile", " Part of the Variable \"%s\" exists but some of it is not accessible or useable",thisAlias.Data()); 
+                  
+               }
+               Error("DefinedVariable",
+                     "The substitution of the alias \"%s\" by \"%s\" failed.",cname,aliasValue);
+               return -3;               
+            }
+            return aliasRes;
          }
       }
    }
