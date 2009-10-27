@@ -1353,17 +1353,47 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
    // This function is overloaded by TNetFile, TWebFile, etc.
    // Returns kTRUE in case of failure.
-
+   
+   const Int_t kMAXBUF = 2000000;
    Int_t k = 0;
    Bool_t result = kTRUE;
    TFileCacheRead *old = fCacheRead;
    fCacheRead = 0;
-   for (Int_t i = 0; i < nbuf; i++) {
-      Seek(pos[i]);
-      result = ReadBuffer(&buf[k], len[i]);
-      if (result) break;
-      k += len[i];
-   }
+   Long64_t curbegin = pos[0];
+   Long64_t cur;
+   char *buf2 = 0;
+   Int_t i = 0, n = 0;
+   while (i < nbuf) {
+      cur = pos[i]+len[i];
+      Bool_t bigRead = kTRUE;
+      if (cur -curbegin < kMAXBUF) {n++; i++; bigRead = kFALSE;}
+      if (bigRead || (i>=nbuf)) {
+         if (n == 0) {
+            //if the block to read is about the same size as the read-ahead buffer
+            //we read the block directly
+            Seek(pos[i]);
+            result = ReadBuffer(&buf[k], len[i]);
+            if (result) break;
+            k += len[i];
+            i++;
+         } else {
+            //otherwise we read all blocks that fit in the read-ahead buffer
+            Seek(curbegin);
+            if (buf2 == 0) buf2 = new char[kMAXBUF];
+            //we read ahead
+            result = ReadBuffer(buf2, pos[i-1]+len[i-1]-curbegin);
+            if (result) break;
+            //now copy from the read-ahead buffer to the cache
+            for (Int_t j=0;j<n;j++) {
+               memcpy(&buf[k],&buf2[pos[i-n+j]-curbegin],len[i-n+j]);
+               k += len[i-n+j];
+            }
+            n = 0;
+         }
+         curbegin = pos[i];
+      }
+   } 
+   if (buf2) delete [] buf2;
    fCacheRead = old;
    return result;
 }
