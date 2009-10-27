@@ -25,8 +25,6 @@ private:
 
    void    CrossProduct(const Float_t a[3], const Float_t b[3], const Float_t c[3], Float_t out[3]) const;
 
-   void    DrawCellList(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId_t& list) const;
-
    void    RenderBox(const Float_t pnts[8]) const;
    void    RenderGridEndCap() const;
    void    RenderGridBarrel() const;
@@ -36,6 +34,8 @@ private:
 
 protected:
    TEveCalo3D     *fM;  // Model object.
+
+   mutable std::vector<Float_t>     fOffset;
 
 public:
    TEveCalo3DGL();

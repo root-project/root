@@ -516,49 +516,57 @@ Float_t TEveCalo3DGL::RenderEndCapCell(const TEveCaloData::CellGeom_t &cellData,
    return offset+towerH*Cos(cellData.ThetaMin());
 } // end RenderEndCapCell
 
-//______________________________________________________________________________
-void TEveCalo3DGL::DrawCellList(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId_t& list) const
-{
-   TEveCaloData::CellData_t cellData;
-   Float_t towerH;
-   Int_t   prevTower = 0;
-   Float_t offset = 0;
-
-   for (UInt_t i=0; i < list.size(); i++)
-   {
-      fM->fData->GetCellData(list[i], cellData);
-
-      if (list[i].fTower != prevTower)
-      {
-         offset = 0;
-         prevTower = list[i].fTower;
-      }
-      fM->SetupColorHeight(cellData.Value(fM->fPlotEt), list[i].fSlice, towerH);
-      if (rnrCtx.SecSelection()) glLoadName(i);
-      if (TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta())
-         offset = RenderBarrelCell(cellData, towerH, offset);
-      else
-         offset = RenderEndCapCell(cellData, towerH, offset);
-   }
-}
 
 //______________________________________________________________________________
 void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 {
    // GL rendering.
 
-   RenderGrid(rnrCtx);
+   if ( fM->GetValueIsColor())  fM->AssertPalette();
 
+   // check if eta phi range has changed
    if (fM->fCellIdCacheOK == kFALSE)
       fM->BuildCellIdCache();
 
+
+   glEnable(GL_LIGHTING);
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
    glEnable(GL_NORMALIZE);
-   glEnable(GL_LIGHTING);
 
-   fM->AssertPalette();
+   RenderGrid(rnrCtx);
+
+   TEveCaloData::CellData_t cellData;
+   Float_t towerH;
+   Int_t   tower = 0;
+   Int_t   prevTower = -1;
+   Float_t offset = 0;
+   Int_t cellID = 0;
+
    if (rnrCtx.SecSelection()) glPushName(0);
-   DrawCellList(rnrCtx, fM->fCellList);
+
+   fOffset.assign(fM->fCellList.size(), 0);
+   for (TEveCaloData::vCellId_i i = fM->fCellList.begin(); i != fM->fCellList.end(); ++i)
+   {
+      fM->fData->GetCellData((*i), cellData);
+      tower = i->fTower;
+      if (tower != prevTower)
+      {
+         offset = 0;
+         prevTower = tower;
+      }
+      fOffset[cellID] = offset;
+      fM->SetupColorHeight(cellData.Value(fM->fPlotEt), (*i).fSlice, towerH);
+
+      if (rnrCtx.SecSelection()) glLoadName(cellID);
+
+      if (TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta())
+         offset = RenderBarrelCell(cellData, towerH, offset);
+      else
+         offset = RenderEndCapCell(cellData, towerH, offset);
+
+      ++cellID;
+   }
+
    if (rnrCtx.SecSelection()) glPopName();
    glPopAttrib();
 }
@@ -579,9 +587,36 @@ void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* psh
       TGLUtil::LineWidth(2);
       glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
       TGLUtil::LockColor();
-      DrawCellList(rnrCtx, fM->fData->GetCellsSelected());
-      TGLUtil::UnlockColor();
 
+      TEveCaloData::CellData_t cellData;
+      Float_t towerH;
+      Int_t nCells =  fM->fCellList.size();
+
+      for (TEveCaloData::vCellId_i i = fM->fData->GetCellsSelected().begin();
+           i != fM->fData->GetCellsSelected().end(); i++)
+      {
+         fM->fData->GetCellData(*i, cellData);
+         fM->SetupColorHeight(cellData.Value(fM->fPlotEt), (*i).fSlice, towerH);
+
+         // find tower with offsets
+         Float_t offset = 0;
+         for (Int_t j = 0; j < nCells; ++j)
+         {
+            if (fM->fCellList[j].fTower == i->fTower && fM->fCellList[j].fSlice == i->fSlice )
+            {
+               offset = fOffset[j];
+               break;
+            }
+         }
+
+         if (TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta())
+            RenderBarrelCell(cellData, towerH, offset);
+         else
+            RenderEndCapCell(cellData, towerH, offset);
+      }
+
+
+      TGLUtil::UnlockColor();
       glPopAttrib();
    }
 }
