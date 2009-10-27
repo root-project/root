@@ -1,15 +1,6 @@
 
 Processing runaliases.C...
-Error in <TTreeFormula::Compile>:  Bad numerical expression : "twos"
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
-Error in <TTreeFormula::Compile>:  Bad numerical expression : "crap"
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed
-	because "add" is recursively used in its own definition!
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "crap" by "add" failed.
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
-Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
+Test part1
 ************************
 *    Row   *  objs.one *
 ************************
@@ -25,6 +16,8 @@ Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by
 ************************
 *        0 *         1 *
 ************************
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "twos"
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
 ************************
 *    Row   *       add *
 ************************
@@ -35,13 +28,79 @@ Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by
 ************************
 *        0 *         3 *
 ************************
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "crap"
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
 ************************
 *    Row   *       add *
 ************************
 *        0 *           *
 ************************
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed
+	because "add" is recursively used in its own definition!
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "crap" by "add" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "twos" by "crap" failed.
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "add" by "ones+twos" failed.
 ************************
 *    Row   *       add *
 ************************
 *        0 *           *
+************************
+Test part2
+************************
+*    Row   * vec.fElem *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   *        a2 *
+************************
+*        0 *         1 *
+************************
+************************
+*    Row   *        a1 *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   *         a *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   * vec.fElem *
+************************
+*        0 *         3 *
+************************
+Error in <TTreeFormula::Compile>:  Bad numerical expression : "1[0]"
+Error in <TTreeFormula::DefinedVariable>: The substitution of the alias "a2" by "vec.fElements[3]>1" failed.
+************************
+*    Row   *     a2[0] *
+************************
+*        0 *           *
+************************
+************************
+*    Row   *     a1[0] *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   *      a[0] *
+************************
+*        0 *         3 *
+************************
+************************
+*    Row   * arr[3][1] *
+************************
+*        0 *        99 *
+************************
+************************
+*    Row   *     b1[1] *
+************************
+*        0 *        99 *
+************************
+************************
+*    Row   *      b[1] *
+************************
+*        0 *        99 *
 ************************
