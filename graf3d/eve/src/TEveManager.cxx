@@ -878,11 +878,21 @@ TEveManager* TEveManager::Create(Bool_t map_window, Option_t* opt)
    // If global TEveManager* gEve is not set initialize it.
    // Returns gEve.
 
+   static const TEveException eh("TEveManager::Create ");
+
    if (gEve == 0)
    {
       // Make sure that the GUI system is initialized.
+      if (gROOT->IsBatch())
+      {
+         throw eh + "ROOT is running in batch mode.";
+      }
       TApplication::NeedGraphicsLibs();
       gApplication->InitializeGraphics();
+      if (gROOT->IsBatch() || gClient == 0 || gClient->IsZombie())
+      {
+         throw eh + "window system not initialized.";
+      }
 
       Int_t w = 1024;
       Int_t h =  768;

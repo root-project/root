@@ -82,7 +82,7 @@ void TGLContext::GlewInit()
    GLenum status = glewInit();
    if (status != GLEW_OK)
       Warning("TGLContext::GlewInit", "GLEW initalization failed.");
-   else
+   else if (gDebug > 0)
       Info("TGLContext::GlewInit", "GLEW initalization successful.");
    fgGlewInitDone = kTRUE;
 }
