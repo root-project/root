@@ -476,7 +476,7 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
             if ((dmclass != cl) && !dm->IsaPointer()) {
                if (dmclass->GetCollectionProxy()) {
                   TClass* valcl = dmclass->GetCollectionProxy()->GetValueClass();
-                  if (valcl) valcl->BuildRealData(0, isTransient || TestBit(TRealData::kTransient));
+                  if (valcl && valcl->HasDefaultConstructor()) valcl->BuildRealData(0, isTransient || TestBit(TRealData::kTransient));
                } else {
                   dmclass->BuildRealData(const_cast<void*>(add), isTransient || TestBit(TRealData::kTransient));
                }
