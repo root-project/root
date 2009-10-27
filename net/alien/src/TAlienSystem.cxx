@@ -385,6 +385,35 @@ const char *TAlienSystem::FindFile(const char *, TString&, EAccessMode)
    return 0;
 }
 
+//______________________________________________________________________________
+Bool_t TAlienSystem::AccessPathName(const char *path, EAccessMode mode)
+{
+   // Returns FALSE if one can access a file using the specified access mode.
+   // The file name must not contain any special shell characters line ~ or $,
+   // in those cases first call ExpandPathName().
+   // Attention, bizarre convention of return value!!
+
+   if (!gGrid)
+      return -1;
+
+   if (strcmp(gGrid->GetGrid(),"alien")) {
+      Error("TAlienSystem","You are not connected to AliEn");
+      return -1;
+   }
+
+   TUrl url(path);
+   if (strcmp(url.GetProtocol(),"alien")) {
+      Info("AccessPathname","Assuming an AliEn URL alien://%s",path);
+      url.SetProtocol("alien",kTRUE);
+   }
+   if(!gapi_access(url.GetUrl(),mode)) {
+      return kFALSE;
+   } else {
+      return kTRUE;
+   }
+}
+
+
 //---- Users & Groups ----------------------------------------------------------
 
 //______________________________________________________________________________
@@ -471,4 +500,3 @@ UserGroup_t *TAlienSystem::GetGroupInfo(const char * /*group*/)
    AbstractMethod("GetGroupInfo");
    return 0;
 }
-

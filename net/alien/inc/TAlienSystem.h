@@ -68,6 +68,7 @@ public:
    virtual int             Umask(Int_t mask);
    virtual int             Utime(const char *file, Long_t modtime, Long_t actime);
    virtual const char     *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
+   virtual Bool_t          AccessPathName(const char *path, EAccessMode mode = kFileExists);
 
    //---- Users & Groups
    virtual Int_t           GetUid(const char *user = 0);

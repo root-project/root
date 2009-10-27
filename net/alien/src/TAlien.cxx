@@ -61,8 +61,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
-#include "TUrl.h"
 #include "TAlien.h"
+#include "TUrl.h"
+#include "Riostream.h"
 #include "TString.h"
 #include "TObjString.h"
 #include "TObjArray.h"
@@ -90,6 +91,8 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
 {
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
 
+   SetAliEnSettings();
+
    // Connect to the AliEn grid.
    TUrl *gurl = new TUrl(gridurl);
 
@@ -116,6 +119,14 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
    if (!strlen(uid)) {
       if (gSystem->Getenv("alien_API_USER")) {
          fUser = gSystem->Getenv("alien_API_USER");
+      } else {
+         if (gSystem->Getenv("LOGNAME")) {
+            // we try the LOGNAME env
+            fUser = gSystem->Getenv("LOGNAME");
+         } else {
+            // we set the USER env
+            fUser = gSystem->Getenv("USER");
+         }
       }
    } else {
       fUser = uid;
@@ -765,4 +776,40 @@ TGridResult* TAlien::ListPackages(const char* alienpackagedir)
       delete result;
    }
    return gr;
+}
+
+//______________________________________________________________________________
+void TAlien::SetAliEnSettings()
+{
+   // Set AliEn settings.
+
+   ifstream fileIn;
+   fileIn.open(Form("/tmp/gclient_env_%d",gSystem->GetUid()));
+
+   TString lineS,tmp;
+   char line[512];
+
+   while (fileIn.good()) {
+      fileIn.getline(line,512,'\n');
+      lineS = line;
+      if (lineS.IsNull()) continue;
+      if (lineS.Contains("export ")) {
+         lineS.ReplaceAll("export ","");
+
+         TObjArray* array = lineS.Tokenize("=");
+
+         TObjString *strVar = (TObjString *) array->At(0);
+         TObjString *strVal = (TObjString *) array->At(1);
+         if ((strVar)&&(strVal)) {
+            tmp = strVal->GetString();
+            tmp.ReplaceAll("\"","");
+            gSystem->Unsetenv(strVar->GetString().Data());
+            gSystem->Setenv(strVar->GetString().Data(),tmp.Data());
+            if (!strVar->GetString().CompareTo("GCLIENT_SERVER_LIST")) {
+               gSystem->Unsetenv("alien_API_SERVER_LIST");
+               gSystem->Setenv("alien_API_SERVER_LIST",strVal->GetString().Data());
+            }
+         }
+      }
+   }
 }
