@@ -2765,7 +2765,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
          timer = new TProcessEventTimer(interval);
 
       //loop on entries (elist or all entries)
-      Long_t entry, entryNumber, localEntry;
+      Long64_t entry, entryNumber, localEntry;
 
       Bool_t useCutFill = selector->Version() == 0;
 
