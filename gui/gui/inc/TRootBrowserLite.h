@@ -156,6 +156,7 @@ public:
    void             SetDrawOption(Option_t *option="");
    Option_t        *GetDrawOption() const;
    void             SetSortMode(Int_t new_mode);
+   TGMainFrame     *GetMainFrame() const { return (TGMainFrame *)this; }
 
    // overridden from TGMainFrame
    void     CloseWindow();

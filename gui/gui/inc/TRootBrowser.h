@@ -142,6 +142,7 @@ public:
    virtual void      Refresh(Bool_t force = kFALSE);
    virtual void      Show() { MapRaised(); }
    Option_t         *GetDrawOption() const;
+   TGMainFrame      *GetMainFrame() const { return (TGMainFrame *)this; }
 
    virtual Long_t    ExecPlugin(const char *name = 0, const char *fname = 0,
                                 const char *cmd = 0, Int_t pos = kRight,

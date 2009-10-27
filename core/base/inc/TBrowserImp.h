@@ -26,7 +26,7 @@
 #endif
 
 class TBrowser;
-
+class TGMainFrame;
 
 class TBrowserImp {
 
@@ -64,6 +64,8 @@ public:
    virtual void      SetStatusText(const char *, Int_t) { }
    virtual void      StartEmbedding(Int_t, Int_t) { }
    virtual void      StopEmbedding(const char *) { }
+
+   virtual TGMainFrame *GetMainFrame() const { return 0; }
 
    virtual TBrowser *GetBrowser() const      { return fBrowser; }
    virtual void      SetBrowser(TBrowser *b) { fBrowser = b; }
