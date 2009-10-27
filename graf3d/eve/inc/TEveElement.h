@@ -300,7 +300,8 @@ public:
    Bool_t IsPickable()    const { return fPickable; }
    void   SetPickable(Bool_t p) { fPickable = p; }
    
-   virtual TEveElement* ForwardSelection() const;
+   virtual TEveElement* ForwardSelection();
+   virtual TEveElement* ForwardEdit();
 
    virtual void SelectElement(Bool_t state);
    virtual void IncImpliedSelected();

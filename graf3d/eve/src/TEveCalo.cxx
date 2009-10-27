@@ -94,12 +94,22 @@ Float_t TEveCaloViz::GetDataSliceThreshold(Int_t slice) const
 }
 
 //______________________________________________________________________________
-TEveElement* TEveCaloViz::ForwardSelection() const
+TEveElement* TEveCaloViz::ForwardSelection()
 {
-   // Management of selection state and ownershih of selected cell list
+   // Management of selection state and ownership of selected cell list
    // is done in TEveCaloData. This is a reason selection is forwared to it.
 
    return fData;
+}
+
+//______________________________________________________________________________
+TEveElement* TEveCaloViz::ForwardEdit()
+{
+   // Management of selection state and ownership of selected cell list
+   // is done in TEveCaloData. We still want GUI editor to disply
+   // concrete calo-viz object.
+
+   return this;
 }
 
 //______________________________________________________________________________

@@ -1535,12 +1535,23 @@ void TEveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 /******************************************************************************/
 // Select/hilite
 /******************************************************************************/
+
 //______________________________________________________________________________
-TEveElement* TEveElement::ForwardSelection() const
+TEveElement* TEveElement::ForwardSelection()
 {
    // Returns element to be selected on click.
-   // If value is zero the selected object will follow 
-   // rules in TEveSelection. 
+   // If value is zero the selected object will follow rules in
+   // TEveSelection.
+
+   return 0;
+}
+
+//______________________________________________________________________________
+TEveElement* TEveElement::ForwardEdit()
+{
+   // Returns element to be displayed in GUI editor on click.
+   // If value is zero the displayed object will follow rules in
+   // TEveSelection.
 
    return 0;
 }

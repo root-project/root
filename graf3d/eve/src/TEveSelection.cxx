@@ -219,23 +219,11 @@ void TEveSelection::SelectionCleared()
 }
 
 //______________________________________________________________________________
-void TEveSelection::UserRePickedElement(TEveElement* el)
-{
-   // Called when secondary selection becomes empty.
-
-   el = MapPickedToSelected(el);
-   RemoveElement(el);
-}
-
-//______________________________________________________________________________
 void TEveSelection::SelectionRepeated(TEveElement* el)
 {
    // Called when secondary selection changed internally.
 
-   el = MapPickedToSelected(el);
-   Emit("InternaSelectionChanged(TEveElement*)", (Long_t)el);
-
-   gEve->Redraw3D();
+   Emit("SelectionRepeated(TEveElement*)", (Long_t)el);
 }
 
 /******************************************************************************/
@@ -335,6 +323,8 @@ void TEveSelection::UserPickedElement(TEveElement* el, Bool_t multi)
    // associated with control-key being pressed at the time of pick
    // event).
 
+   TEveElement *edit_el = el ? el->ForwardEdit() : 0;
+
    el = MapPickedToSelected(el);
 
    if (el || HasChildren())
@@ -349,7 +339,33 @@ void TEveSelection::UserPickedElement(TEveElement* el, Bool_t multi)
             AddElement(el);
       }
       if (fIsMaster)
-         gEve->ElementSelect(el);
+         gEve->ElementSelect(edit_el ? edit_el : el);
+      gEve->Redraw3D();
+   }
+}
+
+//______________________________________________________________________________
+void TEveSelection::UserRePickedElement(TEveElement* el)
+{
+   // Called when secondary selection becomes empty.
+
+   el = MapPickedToSelected(el);
+   if (el && HasChild(el))
+   {
+      SelectionRepeated(el);
+      gEve->Redraw3D();
+   }
+}
+
+//______________________________________________________________________________
+void TEveSelection::UserUnPickedElement(TEveElement* el)
+{
+   // Called when secondary selection becomes empty.
+
+   el = MapPickedToSelected(el);
+   if (el)
+   {
+      RemoveElement(el);
       gEve->Redraw3D();
    }
 }

@@ -75,10 +75,9 @@ public:
 
    virtual void RemoveImpliedSelected(TEveElement* el);
 
-   void SelectionAdded(TEveElement* el);   // *SIGNAL*
-   void SelectionRemoved(TEveElement* el); // *SIGNAL*
-   void SelectionCleared();                // *SIGNAL*
-   void UserRePickedElement(TEveElement* el);
+   void SelectionAdded(TEveElement* el);    // *SIGNAL*
+   void SelectionRemoved(TEveElement* el);  // *SIGNAL*
+   void SelectionCleared();                 // *SIGNAL*
    void SelectionRepeated(TEveElement* el); // *SIGNAL*
 
    // ----------------------------------------------------------------
@@ -94,6 +93,8 @@ public:
    TEveElement* MapPickedToSelected(TEveElement* el);
 
    virtual void UserPickedElement(TEveElement* el, Bool_t multi=kFALSE);
+   virtual void UserRePickedElement(TEveElement* el);
+   virtual void UserUnPickedElement(TEveElement* el);
 
    // ----------------------------------------------------------------
 

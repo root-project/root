@@ -73,7 +73,8 @@ public:
 
    virtual void IncImpliedSelected();
 
-   virtual TEveElement* ForwardSelection() const;
+   virtual TEveElement* ForwardSelection();
+   virtual TEveElement* ForwardEdit();
 
    virtual void Paint(Option_t* option="");
 
