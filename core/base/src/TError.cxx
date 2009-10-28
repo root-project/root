@@ -48,6 +48,12 @@ Bool_t gPrintViaErrorHandler = kFALSE;
 const char *kAssertMsg = "%s violated at line %d of `%s'";
 const char *kCheckMsg  = "%s not true at line %d of `%s'";
 
+// Integrate with crash reporter.
+#ifdef __APPLE__
+extern "C" const char *__crashreporter_info__;
+const char *__crashreporter_info__ = 0;
+#endif
+
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 
 
@@ -156,14 +162,23 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    if (level >= kFatal)
       type = "Fatal";
 
+   TString smsg;
    if (level >= kPrint && level < kInfo)
-      DebugPrint("%s\n", msg);
+      smsg.Form("%s", msg);
    else if (level >= kBreak && level < kSysError)
-      DebugPrint("%s %s\n", type, msg);
+      smsg.Form("%s %s", type, msg);
    else if (!location || strlen(location) == 0)
-      DebugPrint("%s: %s\n", type, msg);
+      smsg.Form("%s: %s", type, msg);
    else
-      DebugPrint("%s in <%s>: %s\n", type, location, msg);
+      smsg.Form("%s in <%s>: %s", type, location, msg);
+
+   DebugPrint("%s\n", smsg.Data());
+
+#ifdef __APPLE__
+   if (__crashreporter_info__)
+      delete [] __crashreporter_info__;
+   __crashreporter_info__ = StrDup(smsg);
+#endif
 
    fflush(stderr);
    if (abort_bool) {
