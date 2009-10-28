@@ -16,7 +16,7 @@ class Simple {
     float   m_data0;
     Simple() : m_data0(0.)  {  }
     virtual ~Simple() {}
-    void set(int i, int j)  {
+    void set(int i, int )  {
       m_data0 = float(i+1);
     }
     void dump() const  {

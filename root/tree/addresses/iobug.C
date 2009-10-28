@@ -54,8 +54,9 @@ void iobug(int split = 0, int classtype = 0, int clonesmode = 0, int show = 0, i
    delete gFile;
    gFile = 0;
 
-   TFile* f = new TFile("problem.root", "RECREATE");                      
-   TTree* t = new TTree("graphs", "problematic graphs");                
+   TFile* f =  new TFile("problem.root", "RECREATE");
+   TTree* t = new TTree("graphs", "problematic graphs");
+   if (!f || !t) return;
 
    if (clonesmode & 0x1) {
       // Remember "g" is local, so we must break the
@@ -153,5 +154,7 @@ void iobug(int split = 0, int classtype = 0, int clonesmode = 0, int show = 0, i
    if (clonesmode & 0x2) {
       t->SetBranchAddress("graphCl", 0);
    }
+
+   // return f;
 }
 

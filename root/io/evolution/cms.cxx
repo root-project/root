@@ -59,7 +59,7 @@ void CMSTestWrite()  {
   printf("File version: %d\n\n",f->GetVersion());
   TTree*  t  = new TTree("test", "An example of a ROOT tree");
   CMSColl* obj = new CMSColl;
-  TBranch* b = t->Branch("Coll_test", "CMSColl", &obj);      
+  /* TBranch* b = */ t->Branch("Coll_test", "CMSColl", &obj);      
   for ( size_t i = 0; i < 10; ++i )   {
     obj->collection.push_back(B());
     t->Fill();

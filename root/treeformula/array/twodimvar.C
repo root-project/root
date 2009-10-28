@@ -124,6 +124,6 @@ void tscan(const char *input) {
 
 void ss() {
    A a;
-   fprintf(stdout,"A::aa=%d A::aaa=%d\n",
+   fprintf(stdout,"A::aa=%ld A::aaa=%ld\n",
            sizeof(a.aa),sizeof(a.aaa));
 }

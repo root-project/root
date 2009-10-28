@@ -3,12 +3,12 @@
 class Track : public TObject {
 public:
    int a;
-   float b[2];
+   float bb[2];
    double c[2][3];
    void Set(int i= 3) {
       a = i;
       for(int j=0;j<2;++j) {
-         b[j] = i*100+j*10;
+         bb[j] = i*100+j*10;
          for(int k=0;k<3;++k) {
             c[j][k] = i*100+j*10+k;
          }

@@ -42,18 +42,18 @@ namespace genie {
    
    template<class T> class RegistryItem;
    template<class T>
-   ostream & operator << (ostream & stream, const RegistryItem<T> & rec)
+   ostream & operator << (ostream & stream, const RegistryItem<T> & )
    { return stream; };
    
    template<class T> class RegistryItem;
    template<class T>
-   ostream & operator >> (ostream & stream, const RegistryItem<T> & rec)
+   ostream & operator >> (ostream & stream, const RegistryItem<T> & )
    { return stream; };
    
-   template<class T> bool operator< (const RegistryItem<T> & lhs, const RegistryItem<T> & rhs) 
+   template<class T> bool operator< (const RegistryItem<T> & , const RegistryItem<T> & ) 
    { return false; };
    
-   template<class T> bool operator> (const RegistryItem<T> & lhs, const RegistryItem<T> & rhs) 
+   template<class T> bool operator> (const RegistryItem<T> & , const RegistryItem<T> & ) 
    { return false; };
    
    template<class T> class RegistryItem : public RegistryItemI {
@@ -61,13 +61,13 @@ namespace genie {
    public:
       
       RegistryItem() { };
-      RegistryItem(T item) {};
+      RegistryItem(T ) {};
       ~RegistryItem() { }
       
       const type_info & TypeInfo (void) const { return typeid(fItem); }
       const T &         Data     (void) const { return fItem;         }
       
-      void Print(ostream& stream) const {};
+      void Print(ostream& ) const {};
       
       friend ostream & operator<< <T>(ostream & stream, const RegistryItem<T> & rec); 
       friend ostream & operator>> <T>(ostream & stream, const RegistryItem<T> & rec); 
@@ -84,7 +84,7 @@ namespace genie {
    public:
       
       Registry() {};
-      Registry(const char * name, bool isReadOnly = true) {};
+      Registry(const char * /* name */, bool /* isReadOnly */ = true) {};
       Registry(const Registry &) {};
       virtual ~Registry() {}
       
@@ -93,47 +93,47 @@ namespace genie {
       void   Lock        (void) {}
       void   UnLock      (void) {}
       bool   LockStatus  (void) const { return false; }
-      void   Set         (const char * key, bool         item) {}
-      void   Set         (string       key, bool         item) {}
-      void   Set         (const char * key, int          item) {}
-      void   Set         (string       key, int          item) {}
-      void   Set         (const char * key, double       item) {}
-      void   Set         (string       key, double       item) {}
-      void   Set         (const char * key, const char * item) {}
-      void   Set         (const char * key, string       item) {}
-      void   Set         (string       key, string       item) {}
-      void   Get         (const char * key, bool &       item) const {}
-      void   Get         (string       key, bool &       item) const {}
-      void   Get         (const char * key, int &        item) const {}
-      void   Get         (string       key, int &        item) const {}
-      void   Get         (const char * key, double &     item) const {}
-      void   Get         (string       key, double &     item) const {}
-      void   Get         (const char * key, string &     item) const {}
-      void   Get         (string       key, string &     item) const {}
+      void   Set         (const char * /* key */, bool         /* item */) {}
+      void   Set         (string       /* key */, bool         /* item */) {}
+      void   Set         (const char * /* key */, int          /* item */) {}
+      void   Set         (string       /* key */, int          /* item */) {}
+      void   Set         (const char * /* key */, double       /* item */) {}
+      void   Set         (string       /* key */, double       /* item */) {}
+      void   Set         (const char * /* key */, const char * /* item */) {}
+      void   Set         (const char * /* key */, string       /* item */) {}
+      void   Set         (string       /* key */, string       /* item */) {}
+      void   Get         (const char * /* key */, bool &       /* item */) const {}
+      void   Get         (string       /* key */, bool &       /* item */) const {}
+      void   Get         (const char * /* key */, int &        /* item */) const {}
+      void   Get         (string       /* key */, int &        /* item */) const {}
+      void   Get         (const char * /* key */, double &     /* item */) const {}
+      void   Get         (string       /* key */, double &     /* item */) const {}
+      void   Get         (const char * /* key */, string &     /* item */) const {}
+      void   Get         (string       /* key */, string &     /* item */) const {}
       int    NEntries    (void) const { return 0; }
-      bool   Exists      (const char * key) const {return false; }
-      bool   Exists      (string       key) const {return false; }
-      bool   DeleteEntry (const char * key) {return false; }
-      bool   DeleteEntry (string       key) {return false; }
-      void   SetName     (const char * name) {}
-      void   SetName     (string name) {}
+      bool   Exists      (const char * /* key */) const {return false; }
+      bool   Exists      (string       /* key */) const {return false; }
+      bool   DeleteEntry (const char * /* key */) {return false; }
+      bool   DeleteEntry (string       /* key */) {return false; }
+      void   SetName     (const char * /* name */) {}
+      void   SetName     (string /* name */) {}
       string Name        (void) const { return ""; }
-      void   Print       (ostream & stream) const {}
+      void   Print       (ostream & /* stream */) const {}
       
-      friend ostream& operator<<(ostream& stream, const Registry& registry);
-      friend ostream& operator>>(ostream& stream, const Registry& registry);
+      friend ostream& operator<<(ostream& /* stream */, const Registry& registry);
+      friend ostream& operator>>(ostream& /* stream */, const Registry& registry);
       
-      void operator () (const char * key,  int          item) {}
-      void operator () (string       key,  int          item) {}
-      void operator () (const char * key,  bool         item) {}
-      void operator () (string       key,  bool         item) {}
-      void operator () (const char * key,  double       item) {}  
-      void operator () (string       key,  double       item) {}
-      void operator () (const char * key,  string       item) {}  
-      void operator () (string       key,  string       item) {}
-      void operator () (const char * key,  const char * item) {}
+      void operator () (const char * /* key */,  int          /* item */) {}
+      void operator () (string       /* key */,  int          /* item */) {}
+      void operator () (const char * /* key */,  bool         /* item */) {}
+      void operator () (string       /* key */,  bool         /* item */) {}
+      void operator () (const char * /* key */,  double       /* item */) {}  
+      void operator () (string       /* key */,  double       /* item */) {}
+      void operator () (const char * /* key */,  string       /* item */) {}  
+      void operator () (string       /* key */,  string       /* item */) {}
+      void operator () (const char * /* key */,  const char * /* item */) {}
       
-      Registry * operator =  (const Registry & reg) { return this; }
+      Registry * operator =  (const Registry & ) { return this; }
       
    private:
       
@@ -143,11 +143,11 @@ namespace genie {
       map<string, genie::RegistryItemI *> fRegistry;
    };
    
-   ostream& operator<<(ostream& stream, const Registry& registry) {
+   ostream& operator<<(ostream& stream, const Registry& /* registry */) {
       return stream;
    }
    
-   ostream& operator>>(ostream& stream, const Registry& registry) {
+   ostream& operator>>(ostream& stream, const Registry& /* registry */) {
       return stream;
    }
    
@@ -157,9 +157,9 @@ namespace genie {
       
       static ConfigPool * Instance() { return 0; }
       
-      Registry * FindRegistry(const Algorithm * algorithm) const { return 0; }
+      Registry * FindRegistry(const Algorithm * ) const { return 0; }
       
-      void Print(ostream & stream) const {}
+      void Print(ostream &) const {}
       
       friend ostream& operator<<(ostream& stream, const ConfigPool & config_pool);
       friend ostream& operator>>(ostream& stream, const ConfigPool & config_pool);
@@ -167,7 +167,7 @@ namespace genie {
    private:
       
       ConfigPool() {} 
-      ConfigPool(const ConfigPool & config_pool) {}
+      ConfigPool(const ConfigPool & ) {}
       virtual ~ConfigPool() {}
       
       bool LoadXMLConfig(void) { return false; }
@@ -185,10 +185,10 @@ namespace genie {
       friend struct Cleaner;
    };
    
-   ostream& operator<<(ostream& stream, const ConfigPool & config_pool) {
+   ostream& operator<<(ostream& stream, const ConfigPool & ) {
       return stream;
    }
-   ostream& operator>>(ostream& stream, const ConfigPool & config_pool) {
+   ostream& operator>>(ostream& stream, const ConfigPool & ) {
       return stream;
    }
    

@@ -86,7 +86,7 @@ tar: FORCE
 	gzip badio.tar
 
 abstractInVector: abstractInVector_C.$(DllSuf)
-	$(CMDECHO) echo > /dev/null
+	$(CMDECHO) test -e abstractInVector_C.$(DllSuf)  > /dev/null
 
 read_test.log: $(CXXSO)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q read_test.C > read_test.log

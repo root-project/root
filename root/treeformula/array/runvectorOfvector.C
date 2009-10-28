@@ -19,7 +19,7 @@ typedef std::vector<collection> third;
 #include "TObject.h"
 struct One : public TObject {
    One() : fN(0),fVecPtr(new subCollection) {}
-   One(const One &rhs) : fN(rhs.fN),fVecPtr(new subCollection(*rhs.fVecPtr)) {}
+   One(const One &rhs) : TObject(),fN(rhs.fN),fVecPtr(new subCollection(*rhs.fVecPtr)) {}
    ~One() { delete fVecPtr; }
    int GetN1() { return fN+1; }
    int fN;
@@ -277,7 +277,7 @@ bool runvectorOfvector() {
    bool success = true;
 
 
-   TCanvas *c = new TCanvas("mycanvas");
+   /* TCanvas *c = */ new TCanvas("mycanvas");
    TTree *t;
    t = generateTree(10,1);
    success &= testing(t,"vec",10);

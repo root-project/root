@@ -12,9 +12,9 @@ public:
       return fT; }
 
    template <typename T>
-   void set(T t) {
+   void set(T targ) {
       std::cout << "called set(T)" << std::endl;
-      fT = t; }
+      fT = targ; }
 private:
    float fT;
 };

@@ -10,7 +10,7 @@
 class TStrip: public TObject {
   
 public:
-  TStrip(const char *name=0){}; 
+  TStrip(const char * /* name */ =0){}; 
   ~TStrip() { // delete all hists here - well, not in your example case where you have 5 global ones 
   }
   void pushback(TH1F *histog){fHists.push_back(histog);};
@@ -22,7 +22,7 @@ private:
 class TPlate: public TObject {
   
 public:
-  TPlate(const char *name=0){};
+  TPlate(const char * /* name */ =0){};
   ~TPlate() { // delete all entries in fStrips here 
   }
   void pushback(TStrip *strip){fStrips.push_back(strip);};

@@ -22,7 +22,7 @@ public:
    TestClass(int seed):      a(seed),m_id(seed){     }
    TestClass():      a(0),m_id(0){     }
     virtual ~TestClass() {    }
-    const int id() const {      return m_id.id;    }
+    int id() const {      return m_id.id;    }
     bool operator==(const TestClass& t) const {
       bool ret = true;
       if(a!=t.a) ret = false;

@@ -52,7 +52,7 @@ class TMrbSubevent_Caen:public TObject {
  public:
    TMrbSubevent_Caen() { cerr << "ctor TMrbSubevent_Caen: " << this << endl;}
    virtual ~TMrbSubevent_Caen() {}
-   void Clear(Option_t *opt="") {fHitBuffer.Clear();};
+   void Clear(Option_t* /* opt */ ="") {fHitBuffer.Clear();};
 
    Int_t           GetTimeStamp() {return fTimeStamp;}
    TUsrHitBuffer * GetHitBuffer() {return &fHitBuffer;};
@@ -68,7 +68,7 @@ class TMrbSubevent_Nice {
  public:
    TMrbSubevent_Nice() { cerr << "ctor TMrbSubevent_Nice: " << this << endl;}
    virtual ~TMrbSubevent_Nice() {}
-   void Clear(Option_t *opt="") {};
+   void Clear(Option_t* /* opt */ ="") {};
    
    Int_t GetNiceTrig() { return fNiceTrig; }
 

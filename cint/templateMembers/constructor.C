@@ -12,19 +12,21 @@ struct A {
   A() { };
 
   template <class U>
-  A(const U& u) { 
 #if defined(__CINT__) || defined(_MSC_VER)
+  A(const U& u) { 
 	  cout << "A::A(const U &) [with U = " << nameof((U*)0) << "]" << endl;
 #else
+  A(const U&) { 
 	  cout << __PRETTY_FUNCTION__ << endl; 
 #endif
   }
 
   template <class U>
-  void doit(const U& u) { 
 #if defined(__CINT__) || defined(_MSC_VER)
+  void doit(const U& u) { 
 	  cout << "void A::doit(const U &) [with U = " << nameof((U*)0) << "]" << endl;
 #else
+  void doit(const U&) { 
 	  cout << __PRETTY_FUNCTION__ << endl; 
 #endif
   } 

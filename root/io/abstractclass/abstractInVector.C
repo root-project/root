@@ -61,8 +61,8 @@ public:
 
 private:
     // physically build the modules
-    void MakeModule(const string& mName) {};
-    void MakeSequence(const string& mName) {};
+    void MakeModule(const string& /* mName */) {};
+    void MakeSequence(const string& /* mName */) {};
 
     // modules and sequences
     vector<SimuModule*> fModules;

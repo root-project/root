@@ -28,14 +28,17 @@ void Write(bool write=false)
          obj->m_direct.m_entries.push_back(std::pair<int,float>(10*i,i));
          DataTObject *dobj = new ( obj->m_direct.m_tentries[0] ) DataTObject(i*22,i*22/3.0);
          DataTObject *dobj2 = new ( (*(obj->m_direct.m_ptentries))[0] ) DataTObject(i*44,i*44/3.0);
+	 if (!dobj || !dobj2) return;
 
          printf("byte written for entry   #%d: %d\n",i,tree->Fill());
 
          if (gDebug>0) {
             printf("byte re-read for the same entry: %d %p\n", tree->GetEvent(i), obj); 
          }
-//          fprintf(stderr,"the pointer are %p and %p\n",
-//                 dobj,obj->m_direct.m_tentries.At(0));
+	 if (i<0) {
+           fprintf(stderr,"the pointer are %p and %p\n",
+                   dobj,obj->m_direct.m_tentries.At(0));
+         }
          printf("values written for entry #%d: %d, %f, %d, %f, %d, %f\n", i,
                 obj->m_direct.m_entries[0].first,
                 obj->m_direct.m_entries[0].second,

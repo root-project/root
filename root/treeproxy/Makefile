@@ -88,11 +88,11 @@ red.h:
 
 Track_C.$(DllSuf): Track.h
 
-forproxy.root: val3dimSel.h
+forproxy.root: createvaldim3_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
 
-val3dimSel.h: createvaldim3_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
+val3dimSel.h: createvaldim3_C.$(DllSuf) forproxy.root
+	$(CMDECHO) rm -f val3dimSel.h; $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
 
 createvaldim3_C.$(DllSuf): createvaldim3.C Track_C.$(DllSuf)
 	$(BuildWithLib)

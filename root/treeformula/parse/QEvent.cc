@@ -15,7 +15,7 @@ QRawPulse::QRawPulse()  : TObject(){
 }
 
 //______________________________________________________________________________
-QRawPulse::QRawPulse(const QRawPulse& P) : fSample(0) {
+QRawPulse::QRawPulse(const QRawPulse& P) : TObject(), fSample(0) {
     //
     //  copy ctor
     //
@@ -28,7 +28,7 @@ QRawPulse::QRawPulse(const QRawPulse& P) : fSample(0) {
 }
 
 //_____________________________________________________________________
-QRawPulse::QRawPulse(Int_t nsamples, UInt_t* s) : fSample(0) {
+QRawPulse::QRawPulse(Int_t nsamples, UInt_t* s) : TObject(), fSample(0) {
     //
     // ctor
     //

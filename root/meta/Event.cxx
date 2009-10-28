@@ -176,7 +176,7 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
 }  
 
 //______________________________________________________________________________
-Track *Event::AddTrack(Float_t random, Float_t ptmin)
+Track *Event::AddTrack(Float_t random, Float_t /* ptmin */)
 {
    // Add a new track to the list of tracks for this event.
    // To avoid calling the very time consuming operator new for each track,

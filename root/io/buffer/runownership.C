@@ -54,7 +54,7 @@ int runownership()
    int a = 3;
    bool success = true;
    try {
-      for (int i=0; i< (128-8)/sizeof(a); ++i) { // 8 is take into account TBuffer's kExtraSpace 
+      for (unsigned int i=0; i< (128-8)/sizeof(a); ++i) { // 8 is take into account TBuffer's kExtraSpace 
          (*buf) << a;
       }
    } catch (myexception e) {
@@ -74,7 +74,7 @@ int runownership()
    buf->SetBuffer(gMyBuffer, 3, kFALSE, R__MyReAllocChar);
    
    try {
-      for (int i=0; i< 128/sizeof(a); ++i) {
+      for (unsigned int i=0; i< 128/sizeof(a); ++i) {
          (*buf) << a;
       }
       (*buf) << a;

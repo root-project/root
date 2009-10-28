@@ -129,7 +129,6 @@ int MainEvent(Int_t nevent = 400,Int_t comp = 1, Int_t split = 1,
    if (split < 0) {branchStyle = 0; split = -1-split;}
 
    TFile *hfile;
-   TTree *tree;
    Event *event = 0;
 
    // Fill event, header and tracks with some random numbers
@@ -155,7 +154,7 @@ int MainEvent(Int_t nevent = 400,Int_t comp = 1, Int_t split = 1,
          hfile->UseCache(10);
       } else
          hfile = new TFile("Event.root");
-      tree = (TTree*)hfile->Get("T");
+      TTree *tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();

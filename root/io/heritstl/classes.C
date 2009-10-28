@@ -7,7 +7,7 @@
 
 class PlexItem {
 public:
-   int b;
+   int fB;
    PlexItem() {};
    virtual ~PlexItem() {};   
    ClassDef(PlexItem,1)

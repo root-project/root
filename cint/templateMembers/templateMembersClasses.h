@@ -78,7 +78,7 @@ class shared_ptr {
     shared_ptr<T>* n2(const shared_ptr<U>&)  { SHOW; return this; }
 
   template <class U>
-    shared_ptr<T>* const n3(const shared_ptr<U>&)  { SHOW; return this; }
+    shared_ptr<T>* /* const */ n3(const shared_ptr<U>&)  { SHOW; return this; }
 
   template <class U>
     shared_ptr<T> const*n4(const shared_ptr<U>&)  { SHOW; return this; }

@@ -4,7 +4,7 @@
 int runcircular() {
    int i = 0;
    int j = 1;
-   int k = 2;;
+   // int k = 2;;
    TTree *master = new TTree("master","master");
    master->Branch("i",&i);
    TTree *slave = new TTree("slave","slave");

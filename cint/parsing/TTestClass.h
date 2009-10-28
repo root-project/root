@@ -9,13 +9,13 @@ class TTestClass {
    public: 
    
    unsigned   GetI() { return fInt; }
-   unsigned int GetII(void* arg) { return fInt; }
-   unsigned  GetIII(void* arg) { return fInt; }
+   unsigned int GetII(void* ) { return fInt; }
+   unsigned  GetIII(void* ) { return fInt; }
 
 
    unsigned * GetPI() { return &fInt; }
-   unsigned int* GetPII(void* arg) { return &fInt; }
-   unsigned * GetPIII(void* arg) { return &fInt; }
+   unsigned int* GetPII(void* ) { return &fInt; }
+   unsigned * GetPIII(void* ) { return &fInt; }
 
    
    TTestClass() {}

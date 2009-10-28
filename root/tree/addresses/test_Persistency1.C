@@ -80,7 +80,7 @@ void writeTree()  {
   Event* d = new Event();
   TFile f("dummy1.root","RECREATE");
   TTree* t = new TTree("T","T");
-  TBranch* b = t->Branch("Event","Event",&d);
+  /* TBranch* b = */ t->Branch("Event","Event",&d);
   std::cout << "Filling: ";
   for ( int i=0; i < 10; ++i )  {
     d->m_evt = d->m_run = i;
