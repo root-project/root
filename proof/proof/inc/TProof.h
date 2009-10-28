@@ -172,10 +172,10 @@ public:
    Int_t     fActWorkers;  // Numebr of workers still active
    Int_t     fTotSessions; // Numebr of PROOF sessions running currently on the clusters
    Float_t   fEffSessions; // Number of effective sessions running on the machines allocated to this session
-   TProofProgressInfo(Long64_t tot = -1, Long64_t proc = -1, Long64_t bytes = 0,
-                      Float_t initt = 0., Float_t proct = 0.,
-                      Float_t evts = 1., Float_t mbs = -1.,
-                      Int_t actw = -1, Int_t tsess = -1, Float_t esess = -1.) :
+   TProofProgressInfo(Long64_t tot = 0, Long64_t proc = 0, Long64_t bytes = 0,
+                      Float_t initt = -1., Float_t proct = -1.,
+                      Float_t evts = -1., Float_t mbs = -1.,
+                      Int_t actw = 0, Int_t tsess = 0, Float_t esess = 0.) :
                       fTotal(tot), fProcessed(proc), fBytesRead(bytes),
                       fInitTime(initt), fProcTime(proct), fEvtRateI(evts), fMBRateI(mbs),
                       fActWorkers(actw), fTotSessions(tsess), fEffSessions(esess) { }

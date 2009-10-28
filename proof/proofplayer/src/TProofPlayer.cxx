@@ -2100,21 +2100,25 @@ void TProofPlayerRemote::Progress(TProofProgressInfo *pi)
 {
    // Progress signal.
 
-   PDB(kGlobal,1)
-      Info("Progress","%lld %lld %lld %f %f %f %f %d %f", pi->fTotal, pi->fProcessed, pi->fBytesRead,
-                      pi->fInitTime, pi->fProcTime, pi->fEvtRateI, pi->fMBRateI,
-                      pi->fActWorkers, pi->fEffSessions);
+   if (pi) {
+      PDB(kGlobal,1)
+         Info("Progress","%lld %lld %lld %f %f %f %f %d %f", pi->fTotal, pi->fProcessed, pi->fBytesRead,
+                           pi->fInitTime, pi->fProcTime, pi->fEvtRateI, pi->fMBRateI,
+                           pi->fActWorkers, pi->fEffSessions);
 
-   if (IsClient()) {
-      fProof->Progress(pi->fTotal, pi->fProcessed, pi->fBytesRead,
-                       pi->fInitTime, pi->fProcTime,
-                       pi->fEvtRateI, pi->fMBRateI,
-                       pi->fActWorkers, pi->fTotSessions, pi->fEffSessions);
+      if (IsClient()) {
+         fProof->Progress(pi->fTotal, pi->fProcessed, pi->fBytesRead,
+                           pi->fInitTime, pi->fProcTime,
+                           pi->fEvtRateI, pi->fMBRateI,
+                           pi->fActWorkers, pi->fTotSessions, pi->fEffSessions);
+      } else {
+         // Send to the previous tier
+         TMessage m(kPROOF_PROGRESS);
+         m << pi;
+         gProofServ->GetSocket()->Send(m);
+      }
    } else {
-      // Send to the previous tier
-      TMessage m(kPROOF_PROGRESS);
-      m << &pi;
-      gProofServ->GetSocket()->Send(m);
+      Warning("Progress","TProofProgressInfo object undefined!");
    }
 }
 
@@ -3310,6 +3314,12 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
                fSlaveEvtRti[fSlaveEvtRti.GetSize()-1] = -1.;
                fSlaveMBRti.Set(fSlaveMBRti.GetSize()+1);
                fSlaveMBRti[fSlaveMBRti.GetSize()-1] = -1.;
+               fSlaveActW.Set(fSlaveActW.GetSize()+1);
+               fSlaveActW[fSlaveActW.GetSize()-1] = 0.;
+               fSlaveTotS.Set(fSlaveTotS.GetSize()+1);
+               fSlaveTotS[fSlaveTotS.GetSize()-1] = 0.;
+               fSlaveEffS.Set(fSlaveEffS.GetSize()+1);
+               fSlaveEffS[fSlaveEffS.GetSize()-1] = 0.;
             }
          }
       }
@@ -3407,7 +3417,6 @@ void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total,
             nsrti++;
          }
    }
-   erti = (nerti > 0) ? erti / nerti : 0.;
    srti = (nsrti > 0) ? srti / nerti : 0.;
 
    Progress(tot, proc, bytes, init, ptime, erti, srti);
@@ -3418,11 +3427,67 @@ void TProofPlayerSuperMaster::Progress(TSlave *wrk, TProofProgressInfo *pi)
 {
    // Progress signal.
 
-   // Not implemented yet
-   Progress(wrk, pi->fTotal, pi->fProcessed, pi->fBytesRead,
-                 pi->fInitTime, pi->fProcTime, pi->fEvtRateI, pi->fMBRateI);
-}
+   if (pi) {
+      PDB(kGlobal,2)
+         Info("Progress","%s: %lld %lld %lld %f %f %f %f %d %f", wrk->GetOrdinal(),
+                         pi->fTotal, pi->fProcessed, pi->fBytesRead,
+                         pi->fInitTime, pi->fProcTime, pi->fEvtRateI, pi->fMBRateI,
+                         pi->fActWorkers, pi->fEffSessions);
 
+      Int_t idx = fSlaves.IndexOf(wrk);
+      if (fSlaveTotals[idx] != pi->fTotal)
+         Warning("Progress", "total events has changed for worker %s", wrk->GetName());
+      fSlaveTotals[idx] = pi->fTotal;
+      fSlaveProgress[idx] = pi->fProcessed;
+      fSlaveBytesRead[idx] = pi->fBytesRead;
+      fSlaveInitTime[idx] = (pi->fInitTime > -1.) ? pi->fInitTime : fSlaveInitTime[idx];
+      fSlaveProcTime[idx] = (pi->fProcTime > -1.) ? pi->fProcTime : fSlaveProcTime[idx];
+      fSlaveEvtRti[idx] = (pi->fEvtRateI > -1.) ? pi->fEvtRateI : fSlaveEvtRti[idx];
+      fSlaveMBRti[idx] = (pi->fMBRateI > -1.) ? pi->fMBRateI : fSlaveMBRti[idx];
+      fSlaveActW[idx] = (pi->fActWorkers > -1) ? pi->fActWorkers : fSlaveActW[idx];
+      fSlaveTotS[idx] = (pi->fTotSessions > -1) ? pi->fTotSessions : fSlaveTotS[idx];
+      fSlaveEffS[idx] = (pi->fEffSessions > -1.) ? pi->fEffSessions : fSlaveEffS[idx];
+
+      Int_t i;
+      Int_t nerti = 0;
+      Int_t nsrti = 0;
+      TProofProgressInfo pisum(0, 0, 0, -1., -1., 0., 0., 0, 0, 0.);
+      for (i = 0; i < fSlaveTotals.GetSize(); i++) {
+         pisum.fTotal += fSlaveTotals[i];
+         if (i < fSlaveProgress.GetSize())
+            pisum.fProcessed += fSlaveProgress[i];
+         if (i < fSlaveBytesRead.GetSize())
+            pisum.fBytesRead += fSlaveBytesRead[i];
+         if (i < fSlaveInitTime.GetSize())
+            if (fSlaveInitTime[i] > -1. && (pisum.fInitTime < 0. || fSlaveInitTime[i] < pisum.fInitTime))
+               pisum.fInitTime = fSlaveInitTime[i];
+         if (i < fSlaveProcTime.GetSize())
+            if (fSlaveProcTime[i] > -1. && (pisum.fProcTime < 0. || fSlaveProcTime[i] > pisum.fProcTime))
+               pisum.fProcTime = fSlaveProcTime[i];
+         if (i < fSlaveEvtRti.GetSize())
+            if (fSlaveEvtRti[i] > -1.) {
+               pisum.fEvtRateI += fSlaveEvtRti[i];
+               nerti++;
+            }
+         if (i < fSlaveMBRti.GetSize())
+            if (fSlaveMBRti[i] > -1.) {
+               pisum.fMBRateI += fSlaveMBRti[i];
+               nsrti++;
+            }
+         if (i < fSlaveActW.GetSize())
+            pisum.fActWorkers += fSlaveActW[i];
+         if (i < fSlaveTotS.GetSize())
+            if (fSlaveTotS[i] > -1 && (pisum.fTotSessions < 0. || fSlaveTotS[i] > pisum.fTotSessions))
+               pisum.fTotSessions = fSlaveTotS[i];
+         if (i < fSlaveEffS.GetSize())
+            if (fSlaveEffS[i] > -1. && (pisum.fEffSessions < 0. || fSlaveEffS[i] > pisum.fEffSessions))
+               pisum.fEffSessions = fSlaveEffS[i];
+      }
+      pisum.fMBRateI = (nsrti > 0) ? pisum.fMBRateI / nerti : 0.;
+
+      Progress(&pisum);
+   }
+}
 
 //______________________________________________________________________________
 Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)

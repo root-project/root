@@ -39,6 +39,9 @@
 #ifndef ROOT_TArrayF
 #include "TArrayF.h"
 #endif
+#ifndef ROOT_TArrayI
+#include "TArrayI.h"
+#endif
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
@@ -351,6 +354,9 @@ private:
    TArrayF   fSlaveProcTime;
    TArrayF   fSlaveEvtRti;
    TArrayF   fSlaveMBRti;
+   TArrayI   fSlaveActW;
+   TArrayI   fSlaveTotS;
+   TArrayF   fSlaveEffS;
    TList     fSlaves;
    Bool_t    fReturnFeedback;
 

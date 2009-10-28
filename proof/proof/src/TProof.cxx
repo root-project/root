@@ -3010,7 +3010,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                // New format
                TProofProgressInfo *pi = 0;
                (*mess) >> pi;
-               fPlayer->Progress(pi);
+               fPlayer->Progress(sl,pi);
             } else if (GetRemoteProtocol() > 11) {
                Long64_t total, processed, bytesread;
                Float_t initTime, procTime, evtrti, mbrti;
