@@ -674,7 +674,7 @@ void TProofPlayer::Progress(Long64_t /*total*/, Long64_t /*processed*/,
 }
 
 //______________________________________________________________________________
-void TProofPlayer::Progress(TProofProgressInfo */*pi*/)
+void TProofPlayer::Progress(TProofProgressInfo * /*pi*/)
 {
    // Report progress (may not be used in this class).
 
