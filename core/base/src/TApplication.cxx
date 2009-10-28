@@ -429,8 +429,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                   argv[i] = null;
                }
             } else {
-               char *mac, *s = Strip(dir, '+');
-               if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
+               TString mode,fargs,io;
+               TString fname = gSystem->SplitAclicMode(dir,mode,fargs,io);
+               char *mac;
+               if ((mac = gSystem->Which(TROOT::GetMacroPath(), fname,
                                          kReadPermission))) {
                   // if file add to list of files to be processed
                   if (!fFiles) fFiles = new TObjArray;
@@ -441,9 +443,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                   // only warn if we're plain root,
                   // other progs might have their own params
                   if (!strcmp(gROOT->GetName(), "Rint"))
-                     Warning("GetOptions", "macro %s not found", s);
+                     Warning("GetOptions", "macro %s not found", fname.Data());
                }
-               delete [] s;
             }
          }
          delete [] dir;
