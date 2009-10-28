@@ -305,6 +305,7 @@ TPacketizerAdaptive::TSlaveStat::TSlaveStat(TSlave *slave)
    fDSubSet->SetOwner();
    fSlave = slave;
    fStatus = new TProofProgressStatus();
+   fWrkFQDN = TUrl(slave->GetName()).GetHostFQDN();
 }
 
 //______________________________________________________________________________
@@ -629,7 +630,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
            strncmp(url.GetProtocol(),"rfio", 4)) ) {
          host = "no-host";
       } else {
-         host = url.GetHost();
+         host = url.GetHostFQDN();
       }
 
       TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
@@ -838,7 +839,7 @@ void TPacketizerAdaptive::RemoveActiveNode(TFileNode *node)
 //______________________________________________________________________________
 void TPacketizerAdaptive::Reset()
 {
-   // Reset the internal datastructure for packet distribution.
+   // Reset the internal data structure for packet distribution.
 
    fUnAllocated->Clear();
    fUnAllocated->AddAll(fFileNodes);

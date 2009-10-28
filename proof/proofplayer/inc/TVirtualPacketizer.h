@@ -109,7 +109,7 @@ public:
    Long64_t                GetEntriesProcessed() const { return (fProgressStatus? fProgressStatus->GetEntries() : 0); }
    virtual Int_t           GetEstEntriesProcessed(Float_t, Long64_t &ent, Long64_t &bytes, Long64_t &calls)
                            { ent = GetEntriesProcessed(); bytes = GetBytesRead(); calls = GetReadCalls(); return 0; }
-   virtual Float_t         GetCurrentRate(Bool_t &) { return (fProgressStatus? fProgressStatus->GetCurrentRate() : 0.); }
+   virtual Float_t         GetCurrentRate(Bool_t &all) { all = kTRUE; return (fProgressStatus? fProgressStatus->GetCurrentRate() : 0.); }
    Long64_t                GetTotalEntries() const { return fTotalEntries; }
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
    virtual void            SetInitTime();
@@ -141,11 +141,13 @@ friend class TPacketizerAdaptive;
 friend class TPacketizer;
 
 protected:
-   TSlave        *fSlave;        // corresponding TSlave record
+   TString        fWrkFQDN;       // Worker FQDN
+   TSlave        *fSlave;         // corresponding TSlave record
    TProofProgressStatus *fStatus; // status as of the last finished packet
 
 public:
-   const char *GetName() const { return fSlave->GetOrdinal(); }
+   const char *GetName() const { return fWrkFQDN.Data(); }
+   const char *GetOrdinal() const { return fSlave->GetOrdinal(); }
    Long64_t    GetEntriesProcessed() const { return fStatus?fStatus->GetEntries():-1; }
    Double_t    GetProcTime() const { return fStatus?fStatus->GetProcTime():-1; }
    Float_t     GetAvgRate() { return fStatus->GetRate(); }
