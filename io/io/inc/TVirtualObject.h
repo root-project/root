@@ -28,6 +28,11 @@
 
 
 class TVirtualObject {
+private:
+
+   TVirtualObject(const TVirtualObject&);             // not implemented
+   TVirtualObject &operator=(const TVirtualObject&);  // not implemented
+
 public:
    TClassRef  fClass;
    void      *fObject;
@@ -35,8 +40,6 @@ public:
    TVirtualObject(TClass *cl) : fClass(cl), fObject(cl ? cl->New() : 0) { }
    ~TVirtualObject() { if (fClass) fClass->Destructor(fObject); }
 
-   TVirtualObject(const TVirtualObject&);             // not implemented
-   TVirtualObject &operator=(const TVirtualObject&);  // not implemented
 
    TClass *GetClass() const { return fClass; }
    void   *GetObject() const { return fObject; }
