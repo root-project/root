@@ -17,6 +17,32 @@
 //                                                                      //
 // Cannot be stored in a TCollection... use TObjString instead.         //
 //                                                                      //
+// The underlying string is stored as a char* that can be accessed via  //
+// TString::Data().                                                     //
+// TString provides copy-on-write semantics with reference counting     //
+// so that multiple TString objects can refer to the same data.         //
+// For example:                                                         //
+//   root [0] TString orig("foo")                                       //
+//   root [1] TString copy(orig)  // 'orig' and 'copy' point to the     //
+//                                // same data...                       //
+//   root [2] orig.Data()                                               //
+//   (const char* 0x98936f8)"foo"                                       //
+//   root [3] copy.Data()                                               //
+//   (const char* 0x98936f8)"foo"                                       //
+//   root [4] copy="bar"          // Editing 'copy' makes it point      //
+//                                // elsewhere
+//   (class TString)"bar"                                               //
+//   root [5] copy.Data()                                               //
+//   (const char* 0x98939b8)"bar"                                       //
+//                                                                      //
+// Substring operations are provided by the TSubString class, which     //
+// holds a reference to the original string and its data, along with    //
+// the offset and length of the substring. To retrieve the substring    //
+// as a TString, construct a TString from it, eg:                       //
+//   root [0] TString s("hello world")                                  //
+//   root [1] TString s2( s(0,5) )                                      //
+//   root [2] s2                                                        //
+//   (class TString)"hello"                                             //
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfig.h"

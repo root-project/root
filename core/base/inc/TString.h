@@ -582,7 +582,23 @@ inline char TString::operator()(Ssiz_t i) const
 { return fData[i]; }
 
 inline const char *TSubString::Data() const
-{ return fStr.Data() + fBegin; }
+{ 
+   // Return a pointer to the beginning of the substring. Note that the
+   // terminating null is in the same place as for the original
+   // TString, so this method is not appropriate for converting the
+   // TSubString to a string. To do that, construct a TString from the
+   // TSubString. For example:
+   //
+   //   root [0] TString s("hello world")
+   //   root [1] TSubString sub=s(0, 5)
+   //   root [2] sub.Data()
+   //   (const char* 0x857c8b8)"hello world"
+   //   root [3] TString substr(sub)
+   //   root [4] substr
+   //   (class TString)"hello"
+   
+   return fStr.Data() + fBegin; 
+}
 
 // Access to elements of sub-string with bounds checking
 inline char TSubString::operator[](Ssiz_t i) const
