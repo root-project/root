@@ -60,6 +60,8 @@
 #include "TVirtualCollectionProxy.h"
 #include "TInterpreter.h"
 
+#include "TMemberInspector.h"
+
 #include "TMakeProject.h"
 
 #include "TSchemaRuleSet.h"
@@ -1594,6 +1596,76 @@ namespace {
          return fComment != other.fComment;
       }
    };
+}
+
+//______________________________________________________________________________
+void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp, char *parent) const
+{
+   // Emulated a call ShowMembers() on the obj of this class type, passing insp and parent.
+
+   const Int_t ncp = strlen(parent);
+
+   TIter next(fElements);
+   TStreamerElement* element = (TStreamerElement*) next();
+
+   TString elementName;
+   
+   for (; element; element = (TStreamerElement*) next()) {
+      
+      // Skip elements which have not been allocated memory.
+      if (element->GetOffset() == kMissing) {
+         continue;
+      }
+
+      char* eaddr = ((char*)obj) + element->GetOffset();
+     
+      if (element->IsBase()) {
+         // Nothing to do this round.
+      } else if (element->IsaPointer()) {
+         elementName.Form("*%s",element->GetFullName());
+         insp.Inspect(fClass, parent, elementName.Data(), eaddr);
+      } else {
+         insp.Inspect(fClass, parent, element->GetFullName(), eaddr);         
+         Int_t etype = element->GetType();
+         switch(etype) {
+            case kObject:
+            case kAny:
+            case kTObject:
+            case kTString:
+            case kTNamed:
+            case kSTL:
+            {
+               TClass *ecl = element->GetClassPointer();
+               if (ecl && (fClass!=ecl /* This happens 'artificially for stl container see the use of "This" */)) { 
+                  strcat(parent,element->GetName());
+                  strcat(parent,".");
+                  ecl->CallShowMembers(eaddr, insp, parent);
+               }
+               parent[ncp] = 0;
+               break;
+            }
+         } // switch(etype)
+      } // if IsaPointer()
+   } // Loop over elements
+   
+   // And now do the base classes
+   next.Reset();
+   element = (TStreamerElement*) next();
+   for (; element; element = (TStreamerElement*) next()) {
+      if (element->IsBase()) {
+         // Skip elements which have not been allocated memory.
+         if (element->GetOffset() == kMissing) {
+            continue;
+         }
+      
+         char* eaddr = ((char*)obj) + element->GetOffset();
+         
+         TClass *ecl = element->GetClassPointer();
+         if (ecl) {
+            ecl->CallShowMembers(eaddr, insp, parent);
+         }
+      } // If is a abse
+   } // Loop over elements
 }
 
 //______________________________________________________________________________

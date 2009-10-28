@@ -103,6 +103,7 @@ public:
    virtual void        BuildEmulated(TFile *file) = 0;
    virtual void        BuildOld() = 0;
    virtual Bool_t      BuildFor( const TClass *cl ) = 0;
+   virtual void        CallShowMembers(void* obj, TMemberInspector &insp, char *parent) const = 0;
    virtual void        Clear(Option_t *) = 0;
    virtual Bool_t      CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete) = 0;
    virtual void        Compile() = 0;
