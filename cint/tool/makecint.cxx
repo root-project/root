@@ -537,7 +537,7 @@ void G__outputmakefile(int argc,char **argv)
       // << "CINTINCDIRW := " << G__CFG_INCLUDEDIRCINT << std::endl;
 
       // new code
-      out << "CINTINCDIRU := $(shell cint-config --incdir)/cint" << std::endl;
+      out << "CINTINCDIRU := $(shell cint-config --incdir)" << std::endl;
       out << "CINTINCDIRW := $(shell " << G__CFG_MANGLEPATHS << " $(CINTINCDIRU) )" << std::endl;
 
       //???

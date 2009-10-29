@@ -813,8 +813,8 @@ while [ \$# -gt 0 ] ; do
   case \$1 in
     --unix|-u) pathconvert="$MANGLEPATHSU" ;;
     --bindir)  \$pathconvert "${BINDIR}" ;;
-    --incdir)  \$pathconvert "${INCLUDEDIR}" ;;
-    --cflags)  \$pathconvert "${INCP}${INCLUDEDIR} ${INCP}$CINTSYSDIR/reflex/inc" ;;
+    --incdir)  \$pathconvert "${INCLUDEDIRCINT}" ;;
+    --cflags)  \$pathconvert "${INCP}${INCLUDEDIRCINT} ${INCP}$CINTSYSDIR/reflex/inc" ;;
     --libs)    \$pathconvert "${LIBP}${LIBDIR} -lCint -lReflex" ;;
     --libdir)  \$pathconvert "${LIBDIR}" ;;
     --datadir) \$pathconvert "${DATADIR}/cint" ;;
