@@ -3315,9 +3315,9 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
                fSlaveMBRti.Set(fSlaveMBRti.GetSize()+1);
                fSlaveMBRti[fSlaveMBRti.GetSize()-1] = -1.;
                fSlaveActW.Set(fSlaveActW.GetSize()+1);
-               fSlaveActW[fSlaveActW.GetSize()-1] = 0.;
+               fSlaveActW[fSlaveActW.GetSize()-1] = 0;
                fSlaveTotS.Set(fSlaveTotS.GetSize()+1);
-               fSlaveTotS[fSlaveTotS.GetSize()-1] = 0.;
+               fSlaveTotS[fSlaveTotS.GetSize()-1] = 0;
                fSlaveEffS.Set(fSlaveEffS.GetSize()+1);
                fSlaveEffS[fSlaveEffS.GetSize()-1] = 0.;
             }
