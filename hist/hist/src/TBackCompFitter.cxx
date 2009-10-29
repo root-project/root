@@ -623,7 +623,7 @@ Int_t TBackCompFitter::SetParameter(Int_t ipar,const char *parname,Double_t valu
    // if the stepsize (verr) == 0 the parameter is treated as fixed   
 
    std::vector<ROOT::Fit::ParameterSettings> & parlist = fFitter->Config().ParamsSettings(); 
-   if ( ipar >= (int) parlist.size() ) parlist.resize(ipar); 
+   if ( ipar >= (int) parlist.size() ) parlist.resize(ipar+1); 
    ROOT::Fit::ParameterSettings ps(parname, value, verr); 
    if (verr == 0) ps.Fix(); 
    if (vlow < vhigh) ps.SetLimits(vlow, vhigh); 
