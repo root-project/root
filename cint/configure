@@ -780,7 +780,7 @@ echo Writing bin/cint-config...
 [ "x$LIBDIR" = "x" ] && LIBDIR='$CINTSYSDIR/lib'
 [ "x$DATADIR" = "x" ] && DATADIR='$CINTSYSDIR/'${COREVERSION}'/'
 
-cat >> bin/cint-config << ___EOF
+cat > bin/cint-config << ___EOF
 
 printhelp() {
 cat <<_EOF
