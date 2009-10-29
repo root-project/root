@@ -262,6 +262,7 @@ int main(int argc, char **argv)
    printf("\n%d events and %lld bytes processed.\n",nevent,nb);
    printf("RealTime=%f seconds, CpuTime=%f seconds\n",rtime,ctime);
    if (read) {
+      tree->PrintCacheStats();
       printf("You read %f Mbytes/Realtime seconds\n",mbytes/rtime);
       printf("You read %f Mbytes/Cputime seconds\n",mbytes/ctime);
    } else {
