@@ -88,7 +88,14 @@ the list of objects in the previous steps, but with different attributes.
 
 </h4>TPad</h4>
 <ul>
-<li> It s now possible to zoom and unzoom axis using the mouse wheel.
+<li> It is now possible to zoom and unzoom axis using the mouse wheel.
+</ul>
+
+</h4>TPie</h4>
+<ul>
+<li> <tt>TPie::GetEntryVal(i)</tt> returned <tt>GetSlice(i)->GetRadiusOffset()</tt>
+instead of <tt>GetSlice(i)->GetValue()</tt>. Very likely the code was 
+copied/pasted from the method <tt>TPie::GetEntryRadiusOffset(i)</tt>.
 </ul>
 
 </h4>TGaxis</h4>
