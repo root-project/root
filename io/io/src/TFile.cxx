@@ -110,6 +110,7 @@ TFile *gFile;                 //Pointer to current file
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
 Long64_t TFile::fgFileCounter = 0;
+Int_t    TFile::fgReadaheadSize = 2000000;
 Int_t    TFile::fgReadCalls = 0;
 Bool_t   TFile::fgReadInfo = kTRUE;
 TList   *TFile::fgAsyncOpenRequests = 0;
@@ -296,6 +297,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fSumBuffer    = 0;
    fSum2Buffer   = 0;
    fBytesRead    = 0;
+   fBytesReadExtra = 0;
    fBytesWrite   = 0;
    fClassIndex   = 0;
    fSeekInfo     = 0;
@@ -1354,7 +1356,6 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    // This function is overloaded by TNetFile, TWebFile, etc.
    // Returns kTRUE in case of failure.
    
-   const Int_t kMAXBUF = 2000000;
    Int_t k = 0;
    Bool_t result = kTRUE;
    TFileCacheRead *old = fCacheRead;
@@ -1366,7 +1367,7 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    while (i < nbuf) {
       cur = pos[i]+len[i];
       Bool_t bigRead = kTRUE;
-      if (cur -curbegin < kMAXBUF) {n++; i++; bigRead = kFALSE;}
+      if (cur -curbegin < fgReadaheadSize) {n++; i++; bigRead = kFALSE;}
       if (bigRead || (i>=nbuf)) {
          if (n == 0) {
             //if the block to read is about the same size as the read-ahead buffer
@@ -1379,15 +1380,22 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
          } else {
             //otherwise we read all blocks that fit in the read-ahead buffer
             Seek(curbegin);
-            if (buf2 == 0) buf2 = new char[kMAXBUF];
+            if (buf2 == 0) buf2 = new char[fgReadaheadSize];
             //we read ahead
-            result = ReadBuffer(buf2, pos[i-1]+len[i-1]-curbegin);
+            Long64_t nahead = pos[i-1]+len[i-1]-curbegin;
+            result = ReadBuffer(buf2, nahead);
             if (result) break;
             //now copy from the read-ahead buffer to the cache
+            Int_t kold = k;
             for (Int_t j=0;j<n;j++) {
                memcpy(&buf[k],&buf2[pos[i-n+j]-curbegin],len[i-n+j]);
                k += len[i-n+j];
             }
+            Int_t nok = k-kold;
+            Long64_t extra = nahead-nok;
+            fBytesReadExtra += extra;
+            fBytesRead      -= extra;
+            fgBytesRead     -= extra;
             n = 0;
          }
          curbegin = pos[i];
@@ -3157,6 +3165,17 @@ Int_t TFile::GetFileReadCalls()
 
    return fgReadCalls;
 }
+
+//______________________________________________________________________________
+Int_t TFile::GetReadaheadSize()
+{
+   // Static function returning the readahead buffer size.
+   
+   return fgReadaheadSize;
+}
+
+//______________________________________________________________________________
+void TFile::SetReadaheadSize(Int_t bytes) { fgReadaheadSize = bytes; }
 
 //______________________________________________________________________________
 void TFile::SetFileBytesRead(Long64_t bytes) { fgBytesRead = bytes; }

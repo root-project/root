@@ -53,6 +53,7 @@ protected:
    Double_t         fSum2Buffer;     //Sum of squares of buffer sizes of objects written so far
    Long64_t         fBytesWrite;     //Number of bytes written to this file
    Long64_t         fBytesRead;      //Number of bytes read from this file
+   Long64_t         fBytesReadExtra; //Number of extra bytes (overhead) read by the readahead buffer
    Long64_t         fBEGIN;          //First used byte in file
    Long64_t         fEND;            //Last used byte in file
    Long64_t         fSeekFree;       //Location on disk of free segments structure
@@ -93,13 +94,14 @@ protected:
    static TString   fgCacheFileDir;          //Directory where to locally stage files
    static Bool_t    fgCacheFileDisconnected; //Indicates, we trust in the files in the cache dir without stat on the cached file
    static Bool_t    fgCacheFileForce;        //Indicates, to force all READ to CACHEREAD
-   static UInt_t    fgOpenTimeout; //Timeout for open operations in ms  - 0 corresponds to blocking i/o
-   static Bool_t    fgOnlyStaged ; //Before the file is opened, it is checked, that the file is staged, if not, the open fails
-   static Long64_t  fgBytesWrite;  //Number of bytes written by all TFile objects
-   static Long64_t  fgBytesRead;   //Number of bytes read by all TFile objects
-   static Long64_t  fgFileCounter; //Counter for all opened files
-   static Int_t     fgReadCalls;   //Number of bytes read from all TFile objects
-   static Bool_t    fgReadInfo;    //if true (default) ReadStreamerInfo is called when opening a file
+   static UInt_t    fgOpenTimeout;           //Timeout for open operations in ms  - 0 corresponds to blocking i/o
+   static Bool_t    fgOnlyStaged ;           //Before the file is opened, it is checked, that the file is staged, if not, the open fails
+   static Long64_t  fgBytesWrite;            //Number of bytes written by all TFile objects
+   static Long64_t  fgBytesRead;             //Number of bytes read by all TFile objects
+   static Long64_t  fgFileCounter;           //Counter for all opened files
+   static Int_t     fgReadCalls;             //Number of bytes read from all TFile objects
+   static Int_t     fgReadaheadSize;         //Readahead buffer size
+   static Bool_t    fgReadInfo;              //if true (default) ReadStreamerInfo is called when opening a file
 
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
    Long64_t      GetRelOffset() const { return fOffset - fArchiveOffset; }
@@ -179,6 +181,7 @@ public:
    virtual Int_t       GetNProcessIDs() const { return fNProcessIDs; }
    Option_t           *GetOption() const { return fOption.Data(); }
    virtual Long64_t    GetBytesRead() const { return fBytesRead; }
+   virtual Long64_t    GetBytesReadExtra() const { return fBytesReadExtra; }
    virtual Long64_t    GetBytesWritten() const;
    virtual Int_t       GetReadCalls() const { return fReadCalls; }
    Int_t               GetVersion() const { return fVersion; }
@@ -250,10 +253,12 @@ public:
    static Long64_t     GetFileBytesRead();
    static Long64_t     GetFileBytesWritten();
    static Int_t        GetFileReadCalls();
+   static Int_t        GetReadaheadSize();
 
    static void         SetFileBytesRead(Long64_t bytes = 0);
    static void         SetFileBytesWritten(Long64_t bytes = 0);
    static void         SetFileReadCalls(Int_t readcalls = 0);
+   static void         SetReadaheadSize(Int_t bufsize = 256000);
    static void         SetReadStreamerInfo(Bool_t readinfo=kTRUE);
 
    static Long64_t     GetFileCounter();
@@ -271,7 +276,7 @@ public:
    static Bool_t       SetOnlyStaged(Bool_t onlystaged);
    static Bool_t       GetOnlyStaged();
 
-   ClassDef(TFile,7)  //ROOT file
+   ClassDef(TFile,8)  //ROOT file
 };
 
 

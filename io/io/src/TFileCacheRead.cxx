@@ -194,6 +194,7 @@ void TFileCacheRead::Print(Option_t *option) const
    opt.ToLower();
    printf("******TreeCache statistics for file: %s ******\n",fFile->GetName());
    printf("Reading %lld bytes in %d transactions\n",fFile->GetBytesRead(),  fFile->GetReadCalls());
+   printf("Readahead = %d bytes with overhead = %lld bytes\n",TFile::GetReadaheadSize(),fFile->GetBytesReadExtra());
    printf("Average transaction = %f Kbytes\n",0.001*Double_t(fFile->GetBytesRead())/Double_t(fFile->GetReadCalls()));
    printf("Number of blocks in current cache: %d, total size : %d\n",fNseek,fNtot);
    if (!opt.Contains("a")) return;
