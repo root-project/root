@@ -204,12 +204,14 @@ const Mask_t kButton2Mask    = BIT(9);
 const Mask_t kButton3Mask    = BIT(10);
 const Mask_t kButton4Mask    = BIT(11);
 const Mask_t kButton5Mask    = BIT(12);
+const Mask_t kButton6Mask    = BIT(13);
+const Mask_t kButton7Mask    = BIT(14);
 const Mask_t kAnyModifier    = BIT(15);
 
 // Button names. Used as arguments to GrabButton and as Event_t::fCode
 // for button events. Maps to the X11 values.
 enum EMouseButton { kAnyButton, kButton1, kButton2, kButton3,
-                    kButton4, kButton5 };
+                    kButton4, kButton5, kButton6, kButton7 };
 
 // Some magic X notify modes used in TGTextEntry widget.
 // Values must match the ones in /usr/include/X11/X.h. Check when porting.
