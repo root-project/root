@@ -182,7 +182,7 @@ public:
    inline void         SetSkipCheck() { XrdSysMutexHelper mhp(fMutex); fSkipCheck = true; }
    void                SetSrvPID(int pid) { XrdSysMutexHelper mhp(fMutex); fSrvPID = pid; }
    inline void         SetSrvType(int id) { XrdSysMutexHelper mhp(fMutex); fSrvType = id; }
-   inline void         SetStartMsg(XrdSrvBuffer *sm) { XrdSysMutexHelper mhp(fMutex); fStartMsg = sm; }
+   inline void         SetStartMsg(XrdSrvBuffer *sm) { XrdSysMutexHelper mhp(fMutex); delete fStartMsg; fStartMsg = sm; }
    inline void         SetStatus(int st) { XrdSysMutexHelper mhp(fMutex); fStatus = st; }
    void                SetTag(const char *t) { XrdSysMutexHelper mhp(fMutex); fTag = t; }
    void                SetUNIXSockPath(const char *s) { XrdSysMutexHelper mhp(fMutex); fUNIXSockPath = s; };

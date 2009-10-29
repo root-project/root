@@ -234,8 +234,7 @@ XrdProofdResponse *XrdProofdProtocol::Response(kXR_unt16 sid)
 
    if (sid > 0)
       if (sid <= fResponses.size())
-         if (fResponses[sid-1])
-            return fResponses[sid-1];
+         return fResponses[sid-1];
 
    return (XrdProofdResponse *)0;
 }
@@ -713,7 +712,7 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
 
 //______________________________________________________________________________
 int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
-                                kXR_int32 sid, XrdSrvBuffer **buf)
+                                kXR_int32 sid, XrdSrvBuffer **buf, bool savebuf)
 {
    // Send data over the open link. Segmentation is done here, if required.
    XPDLOC(ALL, "Protocol::SendData")
@@ -742,7 +741,7 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
          { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
          return 0;
       }
-      if (buf && !(*buf))
+      if (buf && !(*buf) && savebuf)
          *buf = new XrdSrvBuffer(argp->buff, quantum, 1);
       // Send
       if (sid > -1) {
@@ -786,7 +785,7 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
 
 //______________________________________________________________________________
 int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
-                                 XrdSrvBuffer **buf)
+                                 XrdSrvBuffer **buf, bool savebuf)
 {
    // Send data over the open client links of session 'xps'.
    // Used when all the connected clients are eligible to receive the message.
@@ -813,7 +812,7 @@ int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
          XrdProofdProtocol::ReleaseBuff(argp);
          return 0;
       }
-      if (buf && !(*buf))
+      if (buf && !(*buf) && savebuf)
          *buf = new XrdSrvBuffer(argp->buff, quantum, 1);
 
       // Send to connected clients
@@ -866,10 +865,12 @@ int XrdProofdProtocol::SendMsg()
 
    if (!Internal()) {
 
-      // Notify
-      XPDFORM(msg, "EXT: sending %d bytes to proofserv (psid: %d, xps: %p, status: %d,"
-                   " cid: %d)", len, psid, xps, xps->Status(), fCID);
-      TRACEP(this, REQ, msg.c_str());
+      if (TRACING(HDBG)) {
+         // Notify
+         XPDFORM(msg, "EXT: sending %d bytes to proofserv (psid: %d, xps: %p, status: %d,"
+                     " cid: %d)", len, psid, xps, xps->Status(), fCID);
+         TRACEP(this, HDBG, msg.c_str());
+      }
 
       // Send to proofsrv our client ID
       if (fCID == -1) {
@@ -888,11 +889,12 @@ int XrdProofdProtocol::SendMsg()
 
    } else {
 
-      // Notify
-      XPDFORM(msg, "INT: sending %d bytes to client/master (psid: %d, xps: %p, status: %d)",
-                   len, psid, xps, xps->Status());
-      TRACEP(this, REQ, msg.c_str());
-
+      if (TRACING(HDBG)) {
+          // Notify
+          XPDFORM(msg, "INT: sending %d bytes to client/master (psid: %d, xps: %p, status: %d)",
+                       len, psid, xps, xps->Status());
+          TRACEP(this, HDBG, msg.c_str());
+      }
       bool saveStartMsg = 0;
       XrdSrvBuffer *savedBuf = 0;
       // Additional info about the message
@@ -903,8 +905,6 @@ int XrdProofdProtocol::SendMsg()
                          fPClient->UI().fGroup.c_str(), xps);
       } else if (opt & kXPD_querynum) {
          TRACEP(this, DBG, "INT: got message with query number");
-         // Save query num message for later clients
-         savedBuf = xps->QueryNum();
       } else if (opt & kXPD_startprocess) {
          TRACEP(this, DBG, "INT: setting proofserv in 'running' state");
          xps->SetStatus(kXPD_running);
@@ -926,14 +926,14 @@ int XrdProofdProtocol::SendMsg()
       if (!fbprog) {
          //
          // The message is strictly for the client requiring it
-         if (SendData(xps, -1, &savedBuf) != 0) {
+         if (SendData(xps, -1, &savedBuf, saveStartMsg) != 0) {
             response->Send(kXP_reconnecting,
                            "SendMsg: INT: session is reconnecting: retry later");
             return 0;
          }
       } else {
          // Send to all connected clients
-         if (SendDataN(xps, &savedBuf) != 0) {
+         if (SendDataN(xps, &savedBuf, saveStartMsg) != 0) {
             response->Send(kXP_reconnecting,
                            "SendMsg: INT: session is reconnecting: retry later");
             return 0;
@@ -1233,17 +1233,16 @@ void XrdProofdProtocol::TouchAdminPath()
    // Recording time of the last request on this instance
    XPDLOC(ALL, "Protocol::TouchAdminPath")
 
-   XrdOucString apath = fAdminPath;
-
    XPD_SETRESPV(this, "TouchAdminPath");
-   TRACEP(this, HDBG, apath);
+   TRACEP(this, HDBG, fAdminPath);
 
-   if (apath.length() > 0) {
+   if (fAdminPath.length() > 0) {
       int rc = 0;
-      if ((rc = XrdProofdAux::Touch(apath.c_str())) != 0) {
+      if ((rc = XrdProofdAux::Touch(fAdminPath.c_str())) != 0) {
          // In the case the file was not found and the connetion is internal
          // try also the terminated sessions, as the file could have been moved
          // in the meanwhile
+         XrdOucString apath = fAdminPath;
          if (rc == -ENOENT && Internal()) {
             apath.replace("/activesessions/", "/terminatedsessions/");
             rc = XrdProofdAux::Touch(apath.c_str());

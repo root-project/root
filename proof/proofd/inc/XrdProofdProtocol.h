@@ -119,8 +119,8 @@ public:
    int           Ping();
    int           Process2();
    void          Reset();
-   int           SendData(XrdProofdProofServ *xps, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
-   int           SendDataN(XrdProofdProofServ *xps, XrdSrvBuffer **buf = 0);
+   int           SendData(XrdProofdProofServ *xps, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0, bool sb = 0);
+   int           SendDataN(XrdProofdProofServ *xps, XrdSrvBuffer **buf = 0, bool sb = 0);
    int           SendMsg();
    int           CtrlC();
    void          TouchAdminPath();
