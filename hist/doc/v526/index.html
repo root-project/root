@@ -27,6 +27,33 @@ text sizes:
    hst->GetHistogram()->SetLabelSize(0.07, "xy");
 }
 </pre>
+<li> Change <tt>THStack::GetMaximum()</tt> and <tt>THStack::GetMinimum()</tt>
+     to make sure the error bars fit entirely on the plot when a 
+     <tt>THStack</tt> is plotted with the option E. The following 
+     macro showed the problem:
+<pre>
+{
+   TH1D *h1 = new TH1D("h1","h1",10,0,10);
+   TH1D *h2 = new TH1D("h2","h2",10,0,10);
+   THStack h;
+
+   h1->SetLineColor(kRed);   
+   h1->SetMarkerStyle(20),   
+   h2->SetLineColor(kBlue);   
+   h2->SetMarkerStyle(21);   
+
+   for(int i=0; i<11; i++){
+      h1->SetBinContent(i,1.5-i/10);
+      h1->SetBinError(i,0.5*i);
+      h2->SetBinContent(i,10.5-i/10);
+      h2->SetBinError(i,0.7*i);
+   }
+
+   h.Add(h1);
+   h.Add(h2);
+   h.Draw("nostack E1");
+}
+<pre>
 </ul>
 
 <h4>TGraphPainter</h4>
