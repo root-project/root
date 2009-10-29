@@ -717,7 +717,7 @@ Double_t TPie::GetEntryVal(Int_t i)
 {
    // Return the value associated with the slice number "i".
 
-   return GetSlice(i)->GetRadiusOffset();
+   return GetSlice(i)->GetValue();
 }
 
 
