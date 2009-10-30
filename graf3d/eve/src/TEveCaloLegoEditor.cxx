@@ -107,6 +107,7 @@ TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t hei
    f2DMode = MakeLabeledCombo("2DMode:", 4);
    f2DMode->AddEntry("ValColor", TEveCaloLego::kValColor);
    f2DMode->AddEntry("ValSize",  TEveCaloLego::kValSize);
+   f2DMode->AddEntry("ValSize",  TEveCaloLego::kValSizeOutline);
    f2DMode->Connect("Selected(Int_t)", "TEveCaloLegoEditor", this, "Do2DMode()");
 
    fBoxMode = MakeLabeledCombo("Box:", 4);

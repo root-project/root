@@ -679,7 +679,7 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    fNormalizeRebin(kTRUE),
 
    fProjection(kAuto),
-   f2DMode(kValColor),
+   f2DMode(kValSize),
    fBoxMode(kBack),
 
    fDrawHPlane(kFALSE),

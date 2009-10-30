@@ -86,7 +86,6 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
    gStyle->SetPalette(1, 0);
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
-   lego->Set2DMode(TEveCaloLego::kValSize);
 
    // move to real world coordinates
    lego->InitMainTrans();

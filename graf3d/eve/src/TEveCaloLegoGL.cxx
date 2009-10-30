@@ -890,17 +890,17 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
       fM->AssertPalette();
       UChar_t col[4];
 
-      for (UInt_t i=0; i < cells2D.size(); i++) {
-         if (rnrCtx.SecSelection()) glLoadName(cells2D[i].fId);
 
+      for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+         if (rnrCtx.SecSelection()) glLoadName(i->fId);
          glBegin(GL_POLYGON);
-         Float_t val = cells2D[i].fSumVal;
+         Float_t val = i->fSumVal;
          fM->fPalette->ColorFromValue(TMath::FloorNint(val), col);
          TGLUtil::Color4ubv(col);
-         glVertex3f(cells2D[i].fX0, cells2D[i].fY0, val);
-         glVertex3f(cells2D[i].fX1, cells2D[i].fY0, val);
-         glVertex3f(cells2D[i].fX1, cells2D[i].fY1, val);
-         glVertex3f(cells2D[i].fX0, cells2D[i].fY1, val);
+         glVertex3f(i->fX0, i->fY0, val);
+         glVertex3f(i->fX1, i->fY0, val);
+         glVertex3f(i->fX1, i->fY1, val);
+         glVertex3f(i->fX0, i->fY1, val);
          glEnd();
       }
    }
@@ -913,11 +913,12 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             if ( i->MinSize() < bws)   bws = i->MinSize();
             if ( i->fSumVal > maxv)   maxv = i->fSumVal;
          }
-         bws *= 0.5;
+         bws   *= 0.5;
          logMax = TMath::Log10(maxv + 1);
          fValToPixel =  bws/logMax;
       }
 
+      // special draw for name stack
       if (rnrCtx.SecSelection())
       {
          for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
@@ -946,7 +947,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          }
       }
       else
-      {
+      {// optimised draw without name stack
          if (!rnrCtx.HighlightOutline())
          {
             glBegin(GL_POINTS);
@@ -969,6 +970,34 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             glVertex3f(x - bw, y + bw, i->fSumVal);
          }
          glEnd();
+
+         if (fM->f2DMode == TEveCaloLego::kValSizeOutline)
+         { 
+            Float_t z    = 0;
+            Float_t zOff = fDataMax*0.1 ;
+            glBegin(GL_QUADS);
+            for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+               TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), 80);
+               z = i->fSumVal - zOff;
+               glVertex3f(i->fX0, i->fY0, z);
+               glVertex3f(i->fX1, i->fY0, z);
+               glVertex3f(i->fX1, i->fY1, z);
+               glVertex3f(i->fX0, i->fY1, z);
+            }
+            glEnd();
+
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glBegin(GL_QUADS);
+            for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+               TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), 60);
+               z = i->fSumVal + zOff;
+               glVertex3f(i->fX0, i->fY0, z);
+               glVertex3f(i->fX1, i->fY0, z);
+               glVertex3f(i->fX1, i->fY1, z);
+               glVertex3f(i->fX0, i->fY1, z);
+            }
+            glEnd();
+         }
       }
    }
 
@@ -1232,6 +1261,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
    TGLUtil::LineWidth(1);
+   glEnable(GL_BLEND);
 
    if (!fM->fData->Empty()){
       glPushName(0);
@@ -1269,7 +1299,6 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       glDisable(GL_LIGHTING);
       DrawHistBase(rnrCtx);
       if (fM->fDrawHPlane) {
-         glEnable(GL_BLEND);
          glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
          glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
          glDisable(GL_CULL_FACE);

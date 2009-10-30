@@ -37,7 +37,12 @@ void calo_detail()
    TEveLegoEventHandler* eh = new TEveLegoEventHandler((TGWindow*)v->GetGLWidget(), (TObject*)v, lego);
    v->SetEventHandler(eh);
 
-   lego->Set2DMode(TEveCaloLego::kValSize);
+   // add annotation
+   const char* txt = Form("Irregular Cells \nMaxVal = %f", data->GetMaxVal(kTRUE));
+   TGLAnnotation* an = new TGLAnnotation(gEve->GetDefaultGLViewer(), txt, 0.02, 0.95); 
+
+
+   lego->Set2DMode(TEveCaloLego::kValSizeOutline);
    gEve->Redraw3D(kTRUE);
 }
 
@@ -89,18 +94,20 @@ TEveCaloDataVec* MakeVecData(Int_t ncells=0)
    // Add irregularities
    //
    Float_t off = 0.02;
-   i = cx + 5; j = cy+2;
+   i = cx + 1; j = cy - 2;
    data->AddTower(ax->GetBinLowEdge(i) -off, ax->GetBinUpEdge(i)+off,
                   ay->GetBinLowEdge(j) -off, ay->GetBinUpEdge(j)+off);
    data->FillSlice(2, 2.);
 
-   i = cx-3; j = cy+3;
+   i = cx - 4; j = cy + 6;
    data->AddTower(ax->GetBinLowEdge(i) -off, ax->GetBinUpEdge(i)+off,
                   ay->GetBinLowEdge(j) -off, ay->GetBinUpEdge(j)+off);
    data->FillSlice(2, 12.);
 
    data->DataChanged();
    data->SetAxisFromBins(0.001, 0.001);
+   data->GetEtaBins()->SetTitle("X[cm]");
+   data->GetPhiBins()->SetTitle("Y[cm]");
    return data;
 }
 
