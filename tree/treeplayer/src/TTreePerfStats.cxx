@@ -22,6 +22,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TAxis.h"
+#include "TVirtualPad.h"
 #include "TPaveText.h"
 #include "TGraphErrors.h"
 #include "TStopwatch.h"
@@ -51,6 +52,8 @@ void TTreePerfStats::Draw(Option_t * /*option*/)
    // Draw the graph
    
    fGraph->Draw("ap");
+   gPad->SetGridx();
+   gPad->SetGridy();
    fGraph->GetXaxis()->SetTitle("Tree entry number");
    fGraph->GetYaxis()->SetTitle("file position");
    Double_t extra = 100.*fFile->GetBytesReadExtra()/fFile->GetBytesRead();
