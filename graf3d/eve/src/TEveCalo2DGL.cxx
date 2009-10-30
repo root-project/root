@@ -268,7 +268,8 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
    Bool_t   isBarrel;
    Float_t  towerH;
 
-   for (UInt_t etaBin = 1; etaBin <= cellLists.size(); ++etaBin)
+   UInt_t nEta = data->GetPhiBins()->GetNbins();
+   for (UInt_t etaBin = 1; etaBin <= nEta; ++etaBin)
    {
       if (cellLists[etaBin] )
       {
