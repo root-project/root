@@ -104,7 +104,6 @@ protected:
    static Bool_t    fgReadInfo;              //if true (default) ReadStreamerInfo is called when opening a file
 
    virtual EAsyncOpenStatus GetAsyncOpenStatus() { return fAsyncOpenStatus; }
-   Long64_t      GetRelOffset() const { return fOffset - fArchiveOffset; }
    virtual void  Init(Bool_t create);
    Bool_t        FlushWriteCache();
    Int_t         ReadBufferViaCache(char *buf, Int_t len);
@@ -189,6 +188,7 @@ public:
                                        Int_t &nbytes, Int_t &objlen, Int_t &keylen);
    virtual Int_t       GetNbytesInfo() const {return fNbytesInfo;}
    virtual Int_t       GetNbytesFree() const {return fNbytesFree;}
+   Long64_t            GetRelOffset() const { return fOffset - fArchiveOffset; }
    virtual Long64_t    GetSeekFree() const {return fSeekFree;}
    virtual Long64_t    GetSeekInfo() const {return fSeekInfo;}
    virtual Long64_t    GetSize() const;
