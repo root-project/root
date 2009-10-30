@@ -39,7 +39,7 @@ template<class scalar>
 complex<scalar>
 operator +(complex<scalar>& a,complex<scalar>& b)
 {
-  return complex<scalar>(a.real()+b.real(), a.imag()+b.imag())
+  return complex<scalar>(a.real()+b.real(), a.imag()+b.imag());
 }
  
 template<class scalar>
