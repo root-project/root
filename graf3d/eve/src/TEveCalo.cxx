@@ -113,28 +113,6 @@ TEveElement* TEveCaloViz::ForwardEdit()
 }
 
 //______________________________________________________________________________
-void TEveCaloViz::IncImpliedSelected()
-{
-   // Virtual method od TEveElement::IncImpliedSelected().
-   // It has same functionality as its base class with additional
-   // debug print of selected cells list.
-   if (gDebug > 1)
-   {
-      printf("%s::IncImpliedSelected, selected %d cells:\n", GetElementName(), (Int_t)fData->GetCellsSelected().size());
-      TEveCaloData::CellData_t cellData;
-      TEveCaloData::vCellId_t& sel = fData->GetCellsSelected();
-      for (TEveCaloData::vCellId_i it = sel.begin(); it != sel.end(); ++it)
-      {
-         fData->GetCellData((*it), cellData);
-         printf("Tower [%d] Slice [%d] Value [%.2f] ", (*it).fTower, (*it).fSlice, cellData.fValue);
-         printf("Eta:(%f, %f) Phi(%f, %f)\n",  cellData.fEtaMin, cellData.fEtaMax, cellData.fPhiMin, cellData.fPhiMax);
-      }
-   }
-
-   TEveElement::IncImpliedSelected();
-}
-
-//______________________________________________________________________________
 void TEveCaloViz::SetDataSliceThreshold(Int_t slice, Float_t val)
 {
    // Set threshold for given slice.
@@ -484,21 +462,28 @@ TEveCalo2D::~TEveCalo2D()
 {
    // Destructor.
 
-   for(UInt_t vi = 0; vi < fCellLists.size(); ++vi)
-   {
-      TEveCaloData::vCellId_t* cids = fCellLists[vi];
-      cids->clear();
-      delete cids;
-   }
+   TEveCaloData::vCellId_t* cids;
+   UInt_t n;
 
-   for(UInt_t vi = 0; vi < fCellListsSelected.size(); ++vi)
-   {
-      TEveCaloData::vCellId_t* cids = fCellListsSelected[vi];
+   // clear selected cell ids
+   n = fCellListsSelected.size();
+   for(UInt_t i = 0; i < n; ++i) {
+      cids = fCellListsSelected[i];
       if (cids) {
-         cids->clear();
-         delete cids;
+         cids->clear(); delete cids;
       }
    }
+   fCellListsSelected.clear();
+
+   // clear all cell dds
+   n = fCellLists.size();
+   for(UInt_t i = 0; i < n; ++i) {
+      cids = fCellLists[i];
+      if (cids) {
+         cids->clear(); delete cids;
+      }
+   }
+   fCellLists.clear();
 }
 
 //______________________________________________________________________________
@@ -531,49 +516,51 @@ void TEveCalo2D::BuildCellIdCache()
 
    // clear old cache
    for (vBinCells_i it = fCellLists.begin(); it != fCellLists.end(); it++)
-      delete *it;
+   {
+      if (*it)
+      {
+         (*it)->clear();
+         delete *it;
+      }
+   }
    fCellLists.clear();
+   fCellLists.push_back(0);
 
    TEveProjection::EPType_e pt = fManager->GetProjection()->GetType();
-   TEveCaloData::vCellId_t*  clv; // ids per phi bin in r-phi projection else ids per eta bins in rho-z projection
-
+   TEveCaloData::vCellId_t* clv; // ids per phi bin in r-phi projection else ids per eta bins in rho-z projection
    if (pt == TEveProjection::kPT_RPhi)
    {
-      // build list on basis of phi bins
       const TAxis* ay = fData->GetPhiBins();
-      assert(ay);
       Int_t nBins = ay->GetNbins();
-      for (Int_t ibin = 1; ibin <= nBins; ++ibin)
-      {
+      for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
+         clv = 0;
          if ( TEveUtil::IsU1IntervalOverlappingByMinMax
               (GetPhiMin(), GetPhiMax(), ay->GetBinLowEdge(ibin), ay->GetBinUpEdge(ibin)))
          {
             clv = new TEveCaloData::vCellId_t();
             fData->GetCellList(GetEta(), GetEtaRng(), ay->GetBinCenter(ibin), ay->GetBinWidth(ibin), *clv);
-            if (clv->size())
-               fCellLists.push_back(clv);
-            else
-               delete clv;
+            if (!clv->size()) {
+               delete clv; clv = 0;
+            }
          }
+         fCellLists.push_back(clv);
       }
    }
    else if (pt == TEveProjection::kPT_RhoZ)
    {
-      // build list on basis of eta bins
       const TAxis *ax    = fData->GetEtaBins();
-      assert(ax);
       const Int_t  nBins = ax->GetNbins();
-      for (Int_t ibin = 1; ibin <= nBins; ++ibin)
-      {
+      for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
+         clv = 0;
          if (ax->GetBinLowEdge(ibin) > fEtaMin && ax->GetBinUpEdge(ibin) <= fEtaMax)
          {
             clv = new TEveCaloData::vCellId_t();
             fData->GetCellList(ax->GetBinCenter(ibin), ax->GetBinWidth(ibin), fPhi, GetPhiRng(), *clv);
-            if (clv->size())
-               fCellLists.push_back(clv);
-            else
-               delete clv;
+            if (!clv->size()) {
+               delete clv; clv = 0;
+            }
          }
+         fCellLists.push_back(clv);
       }
    }
 
@@ -589,33 +576,41 @@ void TEveCalo2D::BuildCellIdCacheSelected()
 
    // clear old cache
    for (vBinCells_i it = fCellListsSelected.begin(); it != fCellListsSelected.end(); it++)
-      delete *it;
+   {
+      if (*it)
+      {
+         (*it)->clear();
+         delete *it;
+      }
+   }
    fCellListsSelected.clear();
 
-   TEveCaloData::CellData_t cellData;
-   UInt_t ncs = fData->GetCellsSelected().size();
-   if (ncs)
+   TEveCaloData::vCellId_t&  cells = fData->GetCellsSelected();
+   TEveCaloData::CellData_t  cellData;
+   if (cells.size())
    {
       Bool_t rPhi  = fManager->GetProjection()->GetType() == TEveProjection::kPT_RPhi;
       UInt_t nBins = rPhi ? fData->GetPhiBins()->GetNbins() : fData->GetEtaBins()->GetNbins();
 
-      fCellListsSelected.resize(nBins);
-      for (UInt_t vi = 0; vi < nBins; ++vi)
-         fCellListsSelected[vi] = 0;
+      fCellListsSelected.resize(nBins+1);
+      for (UInt_t b = 0; b <= nBins; ++b)
+         fCellListsSelected[b] = 0;
 
       Int_t bin;
-      for (UInt_t i=0; i < ncs; i++)
+      for (TEveCaloData::vCellId_i i=cells.begin(); i!=cells.end(); i++)
       {
-         fData->GetCellData(fData->GetCellsSelected()[i], cellData);
+         fData->GetCellData(*i, cellData);
          if (rPhi)
+         {
             bin = fData->GetPhiBins()->FindBin(cellData.Phi());
-         else
+         }
+         else {
             bin = fData->GetEtaBins()->FindBin(cellData.Eta());
-
+         }
          if (fCellListsSelected[bin] == 0)
             fCellListsSelected[bin] = new TEveCaloData::vCellId_t();
 
-         fCellListsSelected[bin]->push_back(fData->GetCellsSelected()[i]);
+         fCellListsSelected[bin]->push_back(*i);
       }
    }
 }
@@ -680,7 +675,7 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
 
    fAutoRebin(kTRUE),
 
-   fPixelsPerBin(9),
+   fPixelsPerBin(12),
    fNormalizeRebin(kTRUE),
 
    fProjection(kAuto),
@@ -691,8 +686,8 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    fHPlaneVal(0),
 
    fBinStep(-1),
-   fDrawNumberCellPixels(8), // draw numbers on cell above 30 pixels
-   fCellPixelFontSize(15) // size of cell fonts in pixels
+   fDrawNumberCellPixels(18), // draw numbers on cell above 30 pixels
+   fCellPixelFontSize(12) // size of cell fonts in pixels
 {
    // Constructor.
 

@@ -33,10 +33,12 @@ protected:
 
    void      MakeRhoZCell(Float_t thetaMin, Float_t thetaMax, Float_t& offset, Bool_t isBarrel, Bool_t phiPlus, Float_t towerH) const;
 
-   Float_t   MakeRPhiCell(Float_t phiMin, Float_t phiMax, Float_t towerH, Float_t offset) const;
+   void      MakeRPhiCell(Float_t phiMin, Float_t phiMax, Float_t towerH, Float_t offset) const;
 
    void      DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t&) const;
+   void      DrawRPhiHighlighted(TGLRnrCtx & rnrCtx) const;
    void      DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t&) const;
+   void      DrawRhoZHighlighted(TGLRnrCtx & rnrCtx) const;
 
    Bool_t    IsRPhi() const;
 

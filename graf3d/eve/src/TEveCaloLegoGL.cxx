@@ -106,9 +106,6 @@ void TEveCaloLegoGL::DLCacheDrop()
    for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i)
       i->second = 0;
 
-   for (SliceDLMap_i i = fDLMapSelected.begin(); i != fDLMapSelected.end(); ++i)
-      i->second = 0;
-
    TGLObject::DLCacheDrop();
 }
 
@@ -127,17 +124,6 @@ void TEveCaloLegoGL::DLCachePurge()
          }
       }
    }
-
-   // selection cells 
-   if (! fDLMapSelected.empty()) {
-      for (SliceDLMap_i i = fDLMapSelected.begin(); i != fDLMapSelected.end(); ++i) {
-         if (i->second) {
-            PurgeDLRange(i->second, 1);
-            i->second = 0;
-         }
-      }
-   }
-
    TGLObject::DLCachePurge();
 }
 
@@ -676,18 +662,18 @@ Int_t TEveCaloLegoGL::GetGridStep(TGLRnrCtx &rnrCtx) const
    Int_t j0 = fM->fData->GetPhiBins()->FindBin(fM->GetPhiMin());
    Int_t j1 = fM->fData->GetPhiBins()->FindBin(fM->GetPhiMax());
 
-   Float_t pixelsPerBin = 0.5 * d / Sqrt((i0 - i1) * (i0 - i1) + (j0 - j1) * (j0 - j1));
+   Float_t ppb = 0.5 * d / Sqrt((i0 - i1) * (i0 - i1) + (j0 - j1) * (j0 - j1));
    Int_t ngroup = 1;
-   if (fM->fAutoRebin && fM->fPixelsPerBin > pixelsPerBin)
+   if (fM->fAutoRebin && fM->fPixelsPerBin > ppb)
    {
-      ngroup = Nint(fM->fPixelsPerBin*0.5/pixelsPerBin);
+      ngroup = Nint(fM->fPixelsPerBin*0.5/ppb);
       Int_t minN = Min(fM->fData->GetEtaBins()->GetNbins(), fM->fData->GetPhiBins()->GetNbins());
       if (ngroup * 4 > minN)
       {
          ngroup = minN/4;
       }
    }
-
+   fCurrentPixelsPerBin = Nint(ppb);
    return ngroup;
 }
 
@@ -835,9 +821,8 @@ void TEveCaloLegoGL::PrepareCell2DData(TEveCaloData::vCellId_t& cellList, vCell2
 
       WrapTwoPi(currentCellData.fPhiMin, currentCellData.fPhiMax);
       cells2D.push_back(Cell2D_t(cellID, sum, max_energy_slice));
-      cells2D.back().SetGeom(currentCellData.fEtaMin, currentCellData.fPhiMin,
-                             currentCellData.fEtaMax, currentCellData.fPhiMax);
-
+      cells2D.back().SetGeom(currentCellData.fEtaMin, currentCellData.fEtaMax,
+                             currentCellData.fPhiMin, currentCellData.fPhiMax);
       currentCell = nextCell;
       ++nextCell;
       ++cellID;
@@ -886,8 +871,8 @@ void TEveCaloLegoGL::PrepareCell2DDataRebin(TEveCaloData::RebinData_t& rebinData
          const Int_t bin = j * (nEta + 2) + i;
          if (vec[bin] > threshold && rebinData.fBinData[bin] != -1) {
             cells2D.push_back(Cell2D_t(bin, vec[bin], max_e_slice[bin]));
-            cells2D.back().SetGeom(fEtaAxis->GetBinLowEdge(i), fPhiAxis->GetBinLowEdge(j),
-                                   fEtaAxis->GetBinUpEdge(i),  fPhiAxis->GetBinUpEdge(j));
+            cells2D.back().SetGeom(fEtaAxis->GetBinLowEdge(i), fEtaAxis->GetBinUpEdge(i),
+                                   fPhiAxis->GetBinLowEdge(j), fPhiAxis->GetBinUpEdge(j));
          }
       }
    }
@@ -898,7 +883,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
 {
    // Draw cells in top view.
 
-   Float_t bws = -1; //smallest bin
+   Float_t bws    = -1; //smallest bin
    Float_t logMax = -1;
 
    if (fM->f2DMode == TEveCaloLego::kValColor ) {
@@ -907,96 +892,96 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
 
       for (UInt_t i=0; i < cells2D.size(); i++) {
          if (rnrCtx.SecSelection()) glLoadName(cells2D[i].fId);
-         glBegin(GL_POLYGON);
 
+         glBegin(GL_POLYGON);
          Float_t val = cells2D[i].fSumVal;
          fM->fPalette->ColorFromValue(TMath::FloorNint(val), col);
          TGLUtil::Color4ubv(col);
-         glVertex3f(cells2D[i].fGeom[0], cells2D[i].fGeom[1], val);
-         glVertex3f(cells2D[i].fGeom[2], cells2D[i].fGeom[1], val);
-         glVertex3f(cells2D[i].fGeom[2], cells2D[i].fGeom[3], val);
-         glVertex3f(cells2D[i].fGeom[0], cells2D[i].fGeom[3], val);
+         glVertex3f(cells2D[i].fX0, cells2D[i].fY0, val);
+         glVertex3f(cells2D[i].fX1, cells2D[i].fY0, val);
+         glVertex3f(cells2D[i].fX1, cells2D[i].fY1, val);
+         glVertex3f(cells2D[i].fX0, cells2D[i].fY1, val);
          glEnd();
       }
    }
    else {
-      Float_t x, y, val;
-      if (!rnrCtx.HighlightOutline())
-      {
+      Float_t x, y;
+      if (!rnrCtx.HighlightOutline()) {
+         Float_t maxv = 0;
          bws = 1e5;
-         for (UInt_t i=0; i< cells2D.size(); i++) {
-            if ( cells2D[i].MinSize() < bws)   bws = cells2D[i].MinSize();
+         for ( vCell2D_i i = fCells2D.begin(); i != fCells2D.end(); ++i) {
+            if ( i->MinSize() < bws)   bws = i->MinSize();
+            if ( i->fSumVal > maxv)   maxv = i->fSumVal;
          }
          bws *= 0.5;
-
-         Float_t maxv = 0;
-         glBegin(GL_POINTS);
-         for (UInt_t i=0; i< cells2D.size(); i++) {
-            TGLUtil::Color(fM->fData->GetSliceColor(cells2D[i].fMaxSlice));
-            glVertex3f(cells2D[i].X(), cells2D[i].Y() , cells2D[i].fSumVal);
-            if (cells2D[i].fSumVal > maxv) maxv = cells2D[i].fSumVal;
-         }
-         glEnd();
          logMax = TMath::Log10(maxv + 1);
          fValToPixel =  bws/logMax;
       }
 
-      // draw
-      for (UInt_t i=0; i< cells2D.size(); i++) {
-         if (rnrCtx.SecSelection())
-         {
-            glLoadName(cells2D[i].fMaxSlice);
-            glPushName(0);
-            glLoadName(cells2D[i].fId);
+      if (rnrCtx.SecSelection())
+      {
+         for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+            // point
+            glLoadName(i->fMaxSlice);
+            glPushName(i->fId);
+            TGLUtil::Color(fM->fData->GetSliceColor(i->fMaxSlice));
+            glBegin(GL_POINTS);
+            glVertex3f(i->X(), i->Y() , i->fSumVal);
+            glEnd();
+            glPopName();
+
+            // polygon
+            glLoadName(i->fMaxSlice);
+            glPushName(i->fId);
+            glBegin(GL_QUADS);
+            Float_t bw = fValToPixel*TMath::Log10(i->fSumVal+1);
+            x = i->X();
+            y = i->Y();
+            glVertex3f(x - bw, y - bw, i->fSumVal);
+            glVertex3f(x + bw, y - bw, i->fSumVal);
+            glVertex3f(x + bw, y + bw, i->fSumVal);
+            glVertex3f(x - bw, y + bw, i->fSumVal);
+            glEnd();
+            glPopName();
          }
-         glBegin(GL_POLYGON);
-         TGLUtil::Color(fM->fData->GetSliceColor(cells2D[i].fMaxSlice));
-         val = cells2D[i].fSumVal;
-         Float_t bw = fValToPixel*TMath::Log10(val+1);
-         x = cells2D[i].X();
-         y = cells2D[i].Y();
-         glVertex3f(x - bw, y - bw, val);
-         glVertex3f(x + bw, y - bw, val);
-         glVertex3f(x + bw, y + bw, val);
-         glVertex3f(x - bw, y + bw, val);
+      }
+      else
+      {
+         if (!rnrCtx.HighlightOutline())
+         {
+            glBegin(GL_POINTS);
+            for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+               TGLUtil::Color(fM->fData->GetSliceColor(i->fMaxSlice));
+               glVertex3f(i->X(), i->Y() , i->fSumVal);
+            }
+            glEnd();
+         }
+
+         glBegin(GL_QUADS);
+         for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+            TGLUtil::Color(fM->fData->GetSliceColor(i->fMaxSlice));
+            Float_t bw = fValToPixel*TMath::Log10(i->fSumVal+1);
+            x = i->X();
+            y = i->Y();
+            glVertex3f(x - bw, y - bw, i->fSumVal);
+            glVertex3f(x + bw, y - bw, i->fSumVal);
+            glVertex3f(x + bw, y + bw, i->fSumVal);
+            glVertex3f(x - bw, y + bw, i->fSumVal);
+         }
          glEnd();
-         if (rnrCtx.SecSelection()) glPopName();
       }
    }
 
-   if (rnrCtx.Selection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline() ) return;
-
    // text
-   TGLMatrix mm;
-   GLdouble pm[16];
-   GLint    vp[4];
-   glGetDoublev(GL_MODELVIEW_MATRIX, mm.Arr());
-   glGetDoublev(GL_PROJECTION_MATRIX, pm);
-   glGetIntegerv(GL_VIEWPORT, vp);
+   if (rnrCtx.Selection() || rnrCtx.SecSelection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline() ) return;
+   if ( fCurrentPixelsPerBin >  fM->fDrawNumberCellPixels) {
+      TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
+      TGLFont font;
+      rnrCtx.RegisterFontNoScale(fM->fCellPixelFontSize, "arial", TGLFont::kPixmap, font);
+      const char* txt;
+      for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
 
-   GLdouble dn[3];
-   GLdouble up[3];
-   gluProject(fM->GetEtaMin(), 0, 0, mm.Arr(), pm, vp, &dn[0], &dn[1], &dn[2]);
-   gluProject(fM->GetEtaMax(), 0, 0, mm.Arr(), pm, vp, &up[0], &up[1], &up[2]);
-   Double_t etaLenPix = up[0]-dn[0];
-   Float_t sx = etaLenPix/fM->GetEtaRng();
-
-   TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
-   TGLFont font;
-   Double_t cs;
-   rnrCtx.RegisterFontNoScale(fM->fCellPixelFontSize, "arial", TGLFont::kPixmap, font);
-
-   for (UInt_t i=0; i< cells2D.size(); i++) {
-      if (fM->f2DMode == TEveCaloLego::kValColor )
-         cs = cells2D[i].MinSize();
-      else
-         cs = fValToPixel*TMath::Log10(cells2D[i].fSumVal+1);
-
-      if (cs*sx >  fM->fDrawNumberCellPixels) {
-         // can not use same format as for axis
-         // space on top of towers is limited
-         const char* txt;
-         Float_t val = cells2D[i].fSumVal;
+         Float_t val = i->fSumVal;
          if (val > 10)
             txt = Form("%d", TMath::Nint(val));
          else if (val > 1 )
@@ -1006,7 +991,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          else
             txt = Form("~1e%d", TMath::Nint(TMath::Log10(val)));
 
-         font.Render(txt, cells2D[i].X(), cells2D[i].Y(), val*1.2, TGLFont::kCenterH, TGLFont::kCenterV);
+         font.Render(txt, i->X(), i->Y(), val*1.2, TGLFont::kCenterH, TGLFont::kCenterV);
       }
    }
 }
@@ -1016,70 +1001,142 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
 {
    // Draw eta-phi range in highlight mode.
 
-   if ((pshp->GetSelected() == 2) && fM->fData->GetCellsSelected().size())
+   if (!fM->fData->GetCellsSelected().size() || pshp->GetSelected() != 2) return;
+
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
+   glDisable(GL_LIGHTING);
+   glDisable(GL_CULL_FACE);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+   TGLUtil::LineWidth(2);
+   glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
+   rnrCtx.SetHighlightOutline(kTRUE);
+   TGLUtil::LockColor();
+
+   // modelview matrix
+   glPushMatrix();
+   Double_t em, eM, pm, pM;
+   fM->fData->GetEtaLimits(em, eM);
+   fM->fData->GetPhiLimits(pm, pM);
+   Double_t unit = ((eM - em) < (pM - pm)) ? (eM - em) : (pM - pm);
+   Float_t sx = (eM - em) / fM->GetEtaRng();
+   Float_t sy = (pM - pm) / fM->GetPhiRng();
+   glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetValToHeight());
+   glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
+
+   TEveCaloData::vCellId_t cellsSelected = fM->fData->GetCellsSelected();
+
+   // prepare rebin for 2D or 3D if necessary
+   TEveCaloData::RebinData_t rebinDataSelected;
+   if (fM->fBinStep > 1)
    {
-
-      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
-      glDisable(GL_LIGHTING);
-      glDisable(GL_CULL_FACE);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-      TGLUtil::LineWidth(2);
-      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
-      rnrCtx.SetHighlightOutline(kTRUE);
-      TGLUtil::LockColor();
-
-      // modelview matrix
-      Double_t em, eM, pm, pM;
-      fM->fData->GetEtaLimits(em, eM);
-      fM->fData->GetPhiLimits(pm, pM);
-      Double_t unit = ((eM - em) < (pM - pm)) ? (eM - em) : (pM - pm);
-      glPushMatrix();
-      Float_t sx = (eM - em) / fM->GetEtaRng();
-      Float_t sy = (pM - pm) / fM->GetPhiRng();
-      glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetValToHeight());
-      glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
-
-      // prepare rebin
-      TEveCaloData::RebinData_t rebinData;
-      if (fM->fBinStep> 1)  {
-         fM->fData->Rebin(fEtaAxis, fPhiAxis, fM->fData->GetCellsSelected(), fM->fPlotEt, rebinData);
-
-         Float_t scale = fM->GetMaxVal() / fMaxValRebin;
-         if (fM->fNormalizeRebin) {
-            for (std::vector<Float_t>::iterator it = rebinData.fSliceData.begin(); it != rebinData.fSliceData.end(); it++)
-               (*it) *= scale;
-         }
+      fM->fData->Rebin(fEtaAxis, fPhiAxis, cellsSelected, fM->fPlotEt, rebinDataSelected);
+      Float_t scale = fM->GetMaxVal() / fMaxValRebin;
+      if (fM->fNormalizeRebin) {
+         for (std::vector<Float_t>::iterator it = rebinDataSelected.fSliceData.begin(); it != rebinDataSelected.fSliceData.end(); it++)
+            (*it) *= scale;
       }
-      if (fCells3D)
+   }
+
+
+   if (fCells3D)
+   {
+      TEveCaloData::CellData_t cellData;
+      Int_t   prevTower = 0;
+      Float_t offset    = 0;
+      Int_t   nSlices   = fM->fData->GetNSlices();
+      if (fM->fBinStep == 1)
       {
-         if (fM->fBinStep == 1)
-            Make3DDisplayList(fM->fData->GetCellsSelected(), fDLMapSelected, kFALSE);
-         else
-         {
-            Make3DDisplayListRebin(rebinData, fDLMapSelected, kFALSE);
-         }
-         for (SliceDLMap_i i = fDLMapSelected.begin(); i != fDLMapSelected.end(); ++i) {
-            TGLUtil::Color(fM->GetDataSliceColor(i->first));
-            glCallList(i->second);
+         TEveCaloData::vCellId_i      j = cellsSelected.begin();
+         for (TEveCaloData::vCellId_i i = fM->fCellList.begin(); i != fM->fCellList.end(); ++i) {
+            if (i->fTower != prevTower) {
+               offset = 0;
+               prevTower = i->fTower;
+            }
+
+            // ceheck if this cell is in the list of slected cells
+            if (j->fTower == i->fTower && j->fSlice == i->fSlice)
+            {
+               fM->fData->GetCellData((*j), cellData);
+               WrapTwoPi(cellData.fPhiMin, cellData.fPhiMax);
+               MakeQuad(cellData.EtaMin(), cellData.PhiMin(), offset,
+                        cellData.EtaDelta(), cellData.PhiDelta(), cellData.Value(fM->fPlotEt));
+               j++;
+               if (j == cellsSelected.end())
+                  break;
+            }
+
+            fM->fData->GetCellData((*i), cellData);
+            offset += cellData.Value(fM->fPlotEt);
          }
       }
       else
       {
-         vCell2D_t cells2D;
-         if (fM->fBinStep == 1)
-            PrepareCell2DData(fM->fData->GetCellsSelected(), cells2D);
-         else
-            PrepareCell2DDataRebin(rebinData, cells2D);
-
-         DrawCells2D(rnrCtx, cells2D);
+         Int_t bin;
+         Float_t *vals;
+         Float_t *valsRef;
+         Float_t y0, y1;
+         for (Int_t i=1; i<= fEtaAxis->GetNbins(); ++i)
+         {
+            for (Int_t j=1; j <= fPhiAxis->GetNbins(); ++j)
+            {
+               bin = (i)+(j)*(fEtaAxis->GetNbins()+2);
+               if (rebinDataSelected.fBinData[bin] !=-1)
+               {
+                  offset  = 0;
+                  vals    = rebinDataSelected.GetSliceVals(bin);
+                  valsRef = fRebinData.GetSliceVals(bin);
+                  for (Int_t s = 0; s < nSlices; ++s)
+                  {
+                     if (vals[s] > 0)
+                     {
+                        y0 = fPhiAxis->GetBinLowEdge(j);
+                        y1 = fPhiAxis->GetBinUpEdge(j);
+                        WrapTwoPi(y0, y1);
+                        MakeQuad(fEtaAxis->GetBinLowEdge(i), y0, offset,
+                                 fEtaAxis->GetBinWidth(i), y1-y0, vals[s]);
+                     }
+                     offset += valsRef[s];
+                  }
+               }
+            }
+         }
       }
-
-      TGLUtil::UnlockColor();
-      rnrCtx.SetHighlightOutline(kFALSE);
-      glPopMatrix();
-      glPopAttrib();
    }
+   else
+   {
+      vCell2D_t cells2DSelected;
+      if (fM->fBinStep == 1)
+      {
+         // could be exact and call
+         // PrepareCell2DData( fM->fData->GetCellsSelected(), cells2DSelected);
+         // but is confusing since top view does no tdraw all slices at same time
+         TEveCaloData::vCellId_i j    = fM->fData->GetCellsSelected().begin();
+         TEveCaloData::vCellId_i jEnd = fM->fData->GetCellsSelected().end();
+         for ( vCell2D_i i = fCells2D.begin(); i != fCells2D.end(); ++i) {
+            TEveCaloData::CellId_t cell = fM->fCellList[i->fId];
+            if (cell.fTower == j->fTower)
+            {
+               cells2DSelected.push_back(*i);
+               while (cell.fTower == j->fTower && j != jEnd)
+                  j++;
+
+            }
+
+         }
+      }
+      else
+         PrepareCell2DDataRebin(rebinDataSelected, cells2DSelected);
+
+      DrawCells2D(rnrCtx, cells2DSelected);
+      fCells2D.clear(); // clear cache
+   }
+
+
+   TGLUtil::UnlockColor();
+   rnrCtx.SetHighlightOutline(kFALSE);
+   glPopMatrix();
+   glPopAttrib();
 }
 
 //______________________________________________________________________________
@@ -1195,13 +1252,14 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          DrawCells3D(rnrCtx);
       } else {
          glDisable(GL_LIGHTING);
-         vCell2D_t cells2D;
-         if (fM->fBinStep == 1)
-            PrepareCell2DData(fM->fCellList, cells2D);
-         else
-            PrepareCell2DDataRebin(fRebinData, cells2D);
 
-         DrawCells2D(rnrCtx, cells2D);
+         fCells2D.clear();
+         if (fM->fBinStep == 1)
+            PrepareCell2DData(fM->fCellList, fCells2D);
+         else
+            PrepareCell2DDataRebin(fRebinData, fCells2D);
+
+         DrawCells2D(rnrCtx, fCells2D);
       }
       glPopName();;
    }
@@ -1242,11 +1300,18 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
 
    if (rec.GetN() > 1)
    {
-      Int_t slice  = rec.GetItem(1);
       cellID = rec.GetItem(2);
+      Int_t slice  = rec.GetItem(1);
+
       if (fM->fBinStep == 1)
       {
-         fM->fData->GetCellsSelected().push_back(fM->fCellList[cellID]);
+         Int_t tower = fM->fCellList[cellID].fTower;
+         while (cellID > 0 && tower == fM->fCellList[cellID].fTower)
+         {
+            fM->fData->GetCellsSelected().push_back(fM->fCellList[cellID]);
+            if (fCells3D) break;
+            --cellID;
+         }
       }
       else  {
          if (cellID >0)
@@ -1261,7 +1326,12 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
 
             for(TEveCaloData::vCellId_i it = sl.begin(); it != sl.end(); ++it)
             {
-               if ((*it).fSlice == slice )fM->fData->GetCellsSelected().push_back(*it);
+               if (fCells3D) {
+                  if ((*it).fSlice == slice )fM->fData->GetCellsSelected().push_back(*it);
+               } else {
+                  if ((*it).fSlice <= slice )fM->fData->GetCellsSelected().push_back(*it);
+               }
+
             }
          }
       }

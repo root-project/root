@@ -71,8 +71,6 @@ public:
 
    virtual ~TEveCaloViz();
 
-   virtual void IncImpliedSelected();
-
    virtual TEveElement* ForwardSelection();
    virtual TEveElement* ForwardEdit();
 

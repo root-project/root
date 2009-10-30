@@ -31,7 +31,8 @@ private:
       Int_t   fId;
       Float_t fSumVal;
       Int_t   fMaxSlice;
-      Float_t fGeom[4];
+
+      Float_t  fX0, fX1, fY0, fY1;
 
       Cell2D_t(Int_t id, Float_t sumVal, Int_t maxSlice)
       {
@@ -40,17 +41,15 @@ private:
          fMaxSlice = maxSlice;
       }
 
-      void SetGeom(Float_t etaMin, Float_t phiMin, Float_t etaMax, Float_t phiMax)
+      void SetGeom(Float_t x0, Float_t x1, Float_t y0, Float_t y1)
       {
-         fGeom[0] = etaMin;
-         fGeom[1] = phiMin;
-         fGeom[2] = etaMax;
-         fGeom[3] = phiMax;
+         fX0 = x0; fX1 = x1;
+         fY0 = y0; fY1 = y1;
       }
 
-      Float_t MinSize() { return TMath::Min(fGeom[2] - fGeom[0], fGeom[3] - fGeom[1]); }
-      Float_t X()       { return 0.5*(fGeom[2] + fGeom[0]); }
-      Float_t Y()       { return 0.5*(fGeom[1] + fGeom[3]); }
+      Float_t MinSize() { return TMath::Min(fX1- fX0, fY1 - fY0); }
+      Float_t X()       { return 0.5*(fX0 + fX1); }
+      Float_t Y()       { return 0.5*(fY0 + fY1); }
    };
 
    typedef std::vector<Cell2D_t>             vCell2D_t;
@@ -59,11 +58,11 @@ private:
    typedef std::map<Int_t, UInt_t>           SliceDLMap_t;
    typedef std::map<Int_t, UInt_t>::iterator SliceDLMap_i;
 
-   mutable Float_t   fDataMax;   // cached
-   mutable Color_t   fGridColor; // cached
-   mutable Color_t   fFontColor; // cached
+   // histogram base
+   mutable Float_t                   fDataMax;
+   mutable Color_t                   fGridColor;
+   mutable Color_t                   fFontColor;
 
-   // axis
    mutable TAxis      *fEtaAxis;
    mutable TAxis      *fPhiAxis;
    mutable TAxis      *fZAxis;
@@ -75,16 +74,17 @@ private:
 
    mutable TGLAxisPainter fAxisPainter;
 
+   // cached
    TEveCaloLego                     *fM;
    mutable Bool_t                    fDLCacheOK;
+   mutable vCell2D_t                 fCells2D;
 
-   // cached
    mutable TEveCaloData::RebinData_t fRebinData;
    mutable Float_t                   fMaxValRebin;
    mutable Float_t                   fValToPixel; // top logaritmic viewview
-   
+   mutable Int_t                     fCurrentPixelsPerBin;
+
    mutable SliceDLMap_t              fDLMap;
-   mutable SliceDLMap_t              fDLMapSelected;
    mutable Bool_t                    fCells3D;
 
    TEveCaloLegoGL(const TEveCaloLegoGL&);            // Stop default

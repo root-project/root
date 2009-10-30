@@ -155,6 +155,7 @@ public:
    TEveCaloData(const char* n="TEveCalData", const char* t="");
    virtual ~TEveCaloData() {}
 
+   virtual void    SelectElement(Bool_t state);
    virtual void    FillImpliedSelectedSet(Set_t& impSelSet);
 
    virtual void    GetCellList(Float_t etaMin, Float_t etaMax,
@@ -162,6 +163,7 @@ public:
                                vCellId_t &out) const = 0;
 
    vCellId_t&      GetCellsSelected() { return fCellsSelected; }
+   void            PrintCellsSelected();
 
    virtual void    Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const = 0;
 

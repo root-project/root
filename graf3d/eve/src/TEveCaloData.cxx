@@ -119,6 +119,18 @@ TEveCaloData::TEveCaloData(const char* n, const char* t):
 }
 
 //______________________________________________________________________________
+void TEveCaloData::SelectElement(Bool_t s)
+{
+   // Virtual method TEveElement::SelectElement.
+   // Clear selected towers when deselected.
+
+   if (s == kFALSE)
+      fCellsSelected.clear();
+
+   TEveElement::SelectElement(s);
+}
+
+//______________________________________________________________________________
 void TEveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
 {
    // Populate set impSelSet with derived / dependant elements.
@@ -132,6 +144,22 @@ void TEveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
          impSelSet.insert(*i);
    }
 
+}
+
+//______________________________________________________________________________
+void TEveCaloData::PrintCellsSelected()
+{
+   // Print selected cells info.
+
+   printf("%d Selected selected cells:\n", (Int_t)fCellsSelected.size());
+   CellData_t cellData;
+
+   for (vCellId_i i = fCellsSelected.begin(); i != fCellsSelected.end(); ++i)
+   {
+      GetCellData(*i, cellData);
+      printf("Tower [%d] Slice [%d] Value [%.2f] ", i->fTower, i->fSlice, cellData.fValue);
+      printf("Eta:(%f, %f) Phi(%f, %f)\n",  cellData.fEtaMin, cellData.fEtaMax, cellData.fPhiMin, cellData.fPhiMax);
+   }
 }
 
 //______________________________________________________________________________
@@ -219,7 +247,7 @@ Float_t TEveCaloData::EtaToTheta(Float_t eta)
 
 //______________________________________________________________________________
 //
-// Calo data for universal cell geometry. 
+// Calo data for universal cell geometry.
 
 ClassImp(TEveCaloDataVec);
 
@@ -458,8 +486,8 @@ void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
    std::vector<Double_t> newX;
    newX.push_back(binX.front()); // underflow
    Int_t nX = binX.size()-1;
-   for(Int_t i=0; i<nX; i++) 
-   { 
+   for(Int_t i=0; i<nX; i++)
+   {
       val = (sum +binX[i])/(cnt+1);
       if (binX[i+1] -val > epsX)
       {
@@ -467,7 +495,7 @@ void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
          cnt = 0;
          sum = 0;
       }
-      else 
+      else
       {
          sum += binX[i];
          cnt++;
@@ -483,7 +511,7 @@ void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
    epsY *= dy;
    newY.push_back(binY.front());// underflow
    Int_t nY = binY.size()-1;
-   for(Int_t i=0 ; i<nY; i++) 
+   for(Int_t i=0 ; i<nY; i++)
    {
       val = (sum +binY[i])/(cnt+1);
       if (binY[i+1] -val > epsY )
@@ -492,7 +520,7 @@ void  TEveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
          cnt = 0;
          sum = 0;
       }
-      else 
+      else
       {
          sum += binY[i];
          cnt++;
@@ -615,13 +643,13 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
             {
                accept = TEveUtil::IsU1IntervalContainedByMinMax
                   (phiMin, phiMax, fPhiAxis->GetBinLowEdge(iphi), fPhiAxis->GetBinUpEdge(iphi));
-            }         
+            }
             else
             {
                accept = fPhiAxis->GetBinLowEdge(iphi) >= phiMin &&  fPhiAxis->GetBinUpEdge(iphi) <= phiMax &&
                   fPhiAxis->GetBinLowEdge(iphi) >= phiMin &&  fPhiAxis->GetBinUpEdge(iphi) <= phiMax;
             }
-         
+
             if (accept)
             {
                bin = h0->GetBin(ieta, iphi);
