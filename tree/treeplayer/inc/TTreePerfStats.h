@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/treeplayer:$Id$
 // Author: Rene Brun 29/10/09
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected:
    TTree        *fTree;   //pointer to the Tree being monitored
    TGraphErrors *fGraph ; //pointer to the graph
    TStopwatch   *fWatch;  //TStopwatch pointer
-      
+
 public:
    TTreePerfStats(TTree *T);
    virtual ~TTreePerfStats() {}

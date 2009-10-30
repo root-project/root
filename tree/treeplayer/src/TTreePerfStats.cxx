@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/treeplayer:$Id$
 // Author: Rene Brun 29/10/09
 
 /*************************************************************************
@@ -33,8 +33,8 @@ ClassImp(TTreePerfStats)
 //______________________________________________________________________________
 TTreePerfStats::TTreePerfStats(TTree *T) : TVirtualPerfStats()
 {
-   // Return the name of the event type.
-   
+   // Create a TTree I/O perf stats object.
+
    fTree = T;
    fFile = T->GetCurrentFile();
    fGraph = new TGraphErrors(0);
@@ -42,15 +42,15 @@ TTreePerfStats::TTreePerfStats(TTree *T) : TVirtualPerfStats()
    fGraph->SetTitle(Form("%s/%s",fFile->GetName(),T->GetName()));
    fGraph->SetUniqueID(999999999);
    fWatch  = new TStopwatch();
-   fWatch->Start(); 
+   fWatch->Start();
    gPerfStats = this;
 }
 
 //______________________________________________________________________________
 void TTreePerfStats::Draw(Option_t * /*option*/)
 {
-   // Draw the graph
-   
+   // Draw the TTree I/O perf graph.
+
    fGraph->Draw("ap");
    gPad->SetGridx();
    gPad->SetGridy();
@@ -75,8 +75,8 @@ void TTreePerfStats::Draw(Option_t * /*option*/)
 //______________________________________________________________________________
 void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t /*proctime*/)
 {
-   // Return the name of the event type.
-   
+   // Record TTree file read event.
+
    Long64_t offset = file->GetRelOffset();
    Int_t np = fGraph->GetN();
    Int_t entry = fTree->GetReadEntry();
@@ -88,8 +88,8 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t /*proctime*/
 //______________________________________________________________________________
 void TTreePerfStats::Print(Option_t * /*option*/) const
 {
-   // Draw the graph
-   
+   // Print the TTree I/O perf stats.
+
    Double_t extra = 100.*fFile->GetBytesReadExtra()/fFile->GetBytesRead();
    printf("TreeCache = %d MBytes\n",Int_t(fTree->GetCacheSize()/1000000));
    printf("ReadTotal = %g MBytes\n",1e-6*fFile->GetBytesRead());
