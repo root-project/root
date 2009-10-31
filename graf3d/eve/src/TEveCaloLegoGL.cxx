@@ -886,6 +886,30 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
    Float_t bws    = -1; //smallest bin
    Float_t logMax = -1;
 
+   // text
+   if ( fCurrentPixelsPerBin >  fM->fDrawNumberCellPixels && 
+        (rnrCtx.Selection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline()) == kFALSE) 
+   {
+      TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
+      TGLFont font;
+      rnrCtx.RegisterFontNoScale(fM->fCellPixelFontSize, "arial", TGLFont::kPixmap, font);
+      const char* txt;
+      for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+
+         Float_t val = i->fSumVal;
+         if (val > 10)
+            txt = Form("%d", TMath::Nint(val));
+         else if (val > 1 )
+            txt = Form("%.1f", val);
+         else if (val > 0.01 )
+            txt = Form("%.2f", 0.01*TMath::Nint(val*100));
+         else
+            txt = Form("~1e%d", TMath::Nint(TMath::Log10(val)));
+
+         font.Render(txt, i->X(), i->Y(), val*1.2, TGLFont::kCenterH, TGLFont::kCenterV);
+      }
+   }
+
    if (fM->f2DMode == TEveCaloLego::kValColor ) {
       fM->AssertPalette();
       UChar_t col[4];
@@ -1001,28 +1025,6 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
       }
    }
 
-   // text
-   if (rnrCtx.Selection() || rnrCtx.SecSelection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline() ) return;
-   if ( fCurrentPixelsPerBin >  fM->fDrawNumberCellPixels) {
-      TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
-      TGLFont font;
-      rnrCtx.RegisterFontNoScale(fM->fCellPixelFontSize, "arial", TGLFont::kPixmap, font);
-      const char* txt;
-      for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
-
-         Float_t val = i->fSumVal;
-         if (val > 10)
-            txt = Form("%d", TMath::Nint(val));
-         else if (val > 1 )
-            txt = Form("%.1f", val);
-         else if (val > 0.01 )
-            txt = Form("%.2f", 0.01*TMath::Nint(val*100));
-         else
-            txt = Form("~1e%d", TMath::Nint(TMath::Log10(val)));
-
-         font.Render(txt, i->X(), i->Y(), val*1.2, TGLFont::kCenterH, TGLFont::kCenterV);
-      }
-   }
 }
 
 //______________________________________________________________________________
@@ -1293,8 +1295,10 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       }
       glPopName();;
    }
+   glPopAttrib();
 
    // draw histogram base
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
    if (rnrCtx.Selection() == kFALSE) {
       glDisable(GL_LIGHTING);
       DrawHistBase(rnrCtx);
@@ -1312,9 +1316,9 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          glEnd();
       }
    }
-
    glPopAttrib();
    glPopMatrix();
+
 }
 
 //______________________________________________________________________________
