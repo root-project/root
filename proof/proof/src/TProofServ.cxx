@@ -986,7 +986,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       // the CPU and wallclock proc times are kept in the TProofServ and here
       // added to the status object in the fPlayer.
       if (status->GetEntries() > 0) {
-         status->Print(GetOrdinal());
+         PDB(kLoop, 2) status->Print(GetOrdinal());
          status->IncProcTime(realtime);
          status->IncCPUTime(cputime);
       }
@@ -997,7 +997,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       req << cacheSize << learnent;
 
       PDB(kLoop, 1) {
-         status->Print();
+         PDB(kLoop, 2) status->Print();
          Info("GetNextPacket","cacheSize: %lld, learnent: %d", cacheSize, learnent);
       }
       status = 0; // status is owned by the player.
