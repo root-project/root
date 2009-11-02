@@ -583,10 +583,9 @@ void TEveCaloDataHist::DataChanged()
 
    if (GetNSlices() < 1) return;
 
-   TH2  *ah = (TH2*) RefSliceInfo(0).fHist;
-   fEtaAxis = ah->GetXaxis();
-   fPhiAxis = ah->GetYaxis();
-
+   TH2* hist = GetHist(0);
+   fEtaAxis  = hist->GetXaxis();
+   fPhiAxis  = hist->GetYaxis();
    for (Int_t ieta = 1; ieta <= fEtaAxis->GetNbins(); ++ieta)
    {
       Double_t eta = fEtaAxis->GetBinCenter(ieta); // conversion E/Et
@@ -595,8 +594,9 @@ void TEveCaloDataHist::DataChanged()
          Double_t value = 0;
          for (Int_t i = 0; i < GetNSlices(); ++i)
          {
-            Int_t bin = RefSliceInfo(i).fHist->GetBin(ieta, iphi);
-            value += RefSliceInfo(i).fHist->GetBinContent(bin);
+            hist = GetHist(i);
+            Int_t bin = hist->GetBin(ieta, iphi);
+            value += hist->GetBinContent(bin);
          }
 
          if (value > fMaxValEt ) fMaxValEt = value;
@@ -628,9 +628,8 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
    Int_t nPhi = fPhiAxis->GetNbins();
    Int_t nSlices = GetNSlices();
 
-
-   TH2   *h0  = fSliceInfos[0].fHist;
-   Int_t  bin = 0;
+   TH2F* hist = GetHist(0);
+   Int_t bin  = 0;
 
    Bool_t accept;
    for (Int_t ieta = 1; ieta <= nEta; ++ieta)
@@ -652,10 +651,11 @@ void TEveCaloDataHist::GetCellList(Float_t eta, Float_t etaD,
 
             if (accept)
             {
-               bin = h0->GetBin(ieta, iphi);
                for (Int_t s = 0; s < nSlices; ++s)
                {
-                  if (fSliceInfos[s].fHist->GetBinContent(bin) > fSliceInfos[s].fThreshold )
+                  hist = GetHist(s);
+                  bin = hist->GetBin(ieta, iphi);
+                  if (hist->GetBinContent(bin) > fSliceInfos[s].fThreshold)
                      out.push_back(TEveCaloData::CellId_t(bin, s));
                } // hist slices
             }
@@ -679,7 +679,7 @@ void TEveCaloDataHist::Rebin(TAxis* ax, TAxis* ay, TEveCaloData::vCellId_t &ids,
    for (vCellId_i it=ids.begin(); it!=ids.end(); ++it)
    {
       GetCellData(*it, cd);
-      fSliceInfos[(*it).fSlice].fHist->GetBinXYZ((*it).fTower, i, j, w);
+      GetHist(it->fSlice)->GetBinXYZ((*it).fTower, i, j, w);
       binx = ax->FindBin(fEtaAxis->GetBinCenter(i));
       biny = ay->FindBin(fPhiAxis->GetBinCenter(j));
       bin = biny*(ax->GetNbins()+2)+binx;
@@ -695,7 +695,7 @@ void TEveCaloDataHist::GetCellData(const TEveCaloData::CellId_t &id,
 {
    // Get cell geometry and value from cell ID.
 
-   TH2F* hist  = fSliceInfos[id.fSlice].fHist;
+   TH2F* hist = GetHist(id.fSlice);
 
    Int_t x, y, z;
    hist->GetBinXYZ(id.fTower, x, y, z);
@@ -716,18 +716,23 @@ Int_t TEveCaloDataHist::AddHistogram(TH2F* hist)
    // Return last index in the vector of slice infos.
 
    fHStack->Add(hist);
-
-   Int_t id = fSliceInfos.size();
-   fSliceInfos.push_back(SliceInfo_t(hist));
-   fSliceInfos[id].fName  = hist->GetName();
-   fSliceInfos[id].fColor = hist->GetLineColor();
-   fSliceInfos[id].fID    = id;
-
+   fSliceInfos.push_back(SliceInfo_t());
+   fSliceInfos.back().fName  = hist->GetName();
+   fSliceInfos.back().fColor = hist->GetLineColor();
+   
    DataChanged();
-
-   return id;
+   
+   return fSliceInfos.size() - 1;
 }
 
+//______________________________________________________________________________
+TH2F* TEveCaloDataHist::GetHist(Int_t slice) const
+{
+   // Get histogram in given slice.
+   
+   return (TH2F*) fHStack->GetHists()->At(slice);
+}
+   
 //______________________________________________________________________________
 void TEveCaloDataHist::GetEtaLimits(Double_t &min, Double_t &max) const
 {

@@ -27,12 +27,9 @@ public:
    {
       TString  fName;      // Name of the slice, eg. ECAL, HCAL.
       Float_t  fThreshold; // Only display towers with higher energy.
-      Int_t    fID;        // Unique identification of the slice.
       Color_t  fColor;     // Color used to draw this longitudinal slice.
-      TH2F    *fHist;
-
-      SliceInfo_t(): fName(""), fThreshold(0), fID(-1), fColor(Color_t(4)), fHist(0){}
-      SliceInfo_t(TH2F* h): fName(""), fThreshold(0), fID(-1), fColor(Color_t(4)), fHist(h) {}
+      
+      SliceInfo_t(): fName(""), fThreshold(0), fColor(kRed) {}
 
       virtual ~SliceInfo_t() {}
 
@@ -291,6 +288,8 @@ public:
 
    THStack* GetStack() { return fHStack; }
 
+   TH2F*    GetHist(Int_t slice) const;
+   
    Int_t   AddHistogram(TH2F* hist);
 
    ClassDef(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data.

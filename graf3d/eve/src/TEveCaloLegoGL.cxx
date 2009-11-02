@@ -636,44 +636,40 @@ Int_t TEveCaloLegoGL::GetGridStep(TGLRnrCtx &rnrCtx) const
 {
    // Calculate view-dependent grid density.
 
-   using namespace TMath;
+   TGLCamera &camera = rnrCtx.RefCamera();
+   Float_t l = -camera.FrustumPlane(TGLCamera::kLeft).D();
+   Float_t r =  camera.FrustumPlane(TGLCamera::kRight).D();
+   Float_t t =  camera.FrustumPlane(TGLCamera::kTop).D();
+   Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
+   Float_t frustD    = TMath::Hypot(r-l, t-b);
 
-   GLdouble x0, y0, z0, x1, y1, z1;
-   GLdouble mm[16];
-   GLint    vp[4];
-   glGetDoublev(GL_MODELVIEW_MATRIX,  mm);
-   glGetIntegerv(GL_VIEWPORT, vp);
-   const GLdouble *pmx = rnrCtx.RefCamera().RefLastNoPickProjM().CArr();
+   GLint   vp[4]; glGetIntegerv(GL_VIEWPORT, vp);
+   Float_t viewportD = TMath::Sqrt((vp[1] - vp[0]) * (vp[1] - vp[0]) + (vp[3] - vp[1]) * (vp[3] - vp[1]));
+   Float_t deltaToViewport = viewportD/frustD;
 
+   // average bin width
    GLdouble em, eM, pm, pM;
    fM->GetData()->GetEtaLimits(pm, pM);
    fM->GetData()->GetPhiLimits(em, eM);
-   gluProject(em, pm, 0.f , mm, pmx, vp, &x0, &y0, &z0);
-   gluProject(eM, pM, 0.f , mm, pmx, vp, &x1, &y1, &z1);
-   Float_t d0 = Sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1) + (z0 - z1) * (z0 - z1));
-
-   gluProject(em, pm, 0.f , mm, pmx, vp, &x0, &y0, &z0);
-   gluProject(eM, pM, 0.f , mm, pmx, vp, &x1, &y1, &z1);
-   Float_t d1 = Sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1) + (z0 - z1) * (z0 - z1));
-
-   Float_t d = d1 > d0 ? d1 : d0;
    Int_t i0 = fM->fData->GetEtaBins()->FindBin(fM->GetEtaMin());
    Int_t i1 = fM->fData->GetEtaBins()->FindBin(fM->GetEtaMax());
    Int_t j0 = fM->fData->GetPhiBins()->FindBin(fM->GetPhiMin());
    Int_t j1 = fM->fData->GetPhiBins()->FindBin(fM->GetPhiMax());
 
-   Float_t ppb = 0.5 * d / Sqrt((i0 - i1) * (i0 - i1) + (j0 - j1) * (j0 - j1));
+   Float_t averageBinWidth = TMath::Hypot(eM - em, pM - pm)/TMath::Sqrt((i0 - i1) * (i0 - i1) + (j0 - j1) * (j0 - j1));
+   Float_t ppb = deltaToViewport*averageBinWidth;
+
    Int_t ngroup = 1;
    if (fM->fAutoRebin && fM->fPixelsPerBin > ppb)
    {
-      ngroup = Nint(fM->fPixelsPerBin*0.5/ppb);
-      Int_t minN = Min(fM->fData->GetEtaBins()->GetNbins(), fM->fData->GetPhiBins()->GetNbins());
+      ngroup = TMath::Nint(fM->fPixelsPerBin*0.5/ppb); // symetrical rebin factor 2
+      // limit rebin realtive to number of axis bins
+      Int_t minN = TMath::Min(fM->fData->GetEtaBins()->GetNbins(), fM->fData->GetPhiBins()->GetNbins());
       if (ngroup * 4 > minN)
-      {
          ngroup = minN/4;
-      }
    }
-   fCurrentPixelsPerBin = Nint(ppb);
+   fCurrentPixelsPerBin = TMath::Nint(ppb);
+
    return ngroup;
 }
 
@@ -886,30 +882,6 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
    Float_t bws    = -1; //smallest bin
    Float_t logMax = -1;
 
-   // text
-   if ( fCurrentPixelsPerBin >  fM->fDrawNumberCellPixels && 
-        (rnrCtx.Selection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline()) == kFALSE) 
-   {
-      TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
-      TGLFont font;
-      rnrCtx.RegisterFontNoScale(fM->fCellPixelFontSize, "arial", TGLFont::kPixmap, font);
-      const char* txt;
-      for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
-
-         Float_t val = i->fSumVal;
-         if (val > 10)
-            txt = Form("%d", TMath::Nint(val));
-         else if (val > 1 )
-            txt = Form("%.1f", val);
-         else if (val > 0.01 )
-            txt = Form("%.2f", 0.01*TMath::Nint(val*100));
-         else
-            txt = Form("~1e%d", TMath::Nint(TMath::Log10(val)));
-
-         font.Render(txt, i->X(), i->Y(), val*1.2, TGLFont::kCenterH, TGLFont::kCenterV);
-      }
-   }
-
    if (fM->f2DMode == TEveCaloLego::kValColor ) {
       fM->AssertPalette();
       UChar_t col[4];
@@ -997,6 +969,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
 
          if (fM->f2DMode == TEveCaloLego::kValSizeOutline)
          { 
+            glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
             Float_t z    = 0;
             Float_t zOff = fDataMax*0.1 ;
             glBegin(GL_QUADS);
@@ -1021,10 +994,34 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
                glVertex3f(i->fX0, i->fY1, z);
             }
             glEnd();
+            glPopAttrib();
          }
       }
    }
 
+   // text
+   if ( fCurrentPixelsPerBin >  fM->fDrawNumberCellPixels && 
+        (rnrCtx.Selection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline()) == kFALSE) 
+   {
+      TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
+      TGLFont font;
+      rnrCtx.RegisterFontNoScale(fM->fCellPixelFontSize, "arial", TGLFont::kPixmap, font);
+      const char* txt;
+      for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+
+         Float_t val = i->fSumVal;
+         if (val > 10)
+            txt = Form("%d", TMath::Nint(val));
+         else if (val > 1 )
+            txt = Form("%.1f", val);
+         else if (val > 0.01 )
+            txt = Form("%.2f", 0.01*TMath::Nint(val*100));
+         else
+            txt = Form("~1e%d", TMath::Nint(TMath::Log10(val)));
+
+         font.Render(txt, i->X(), i->Y(), val*1.2, TGLFont::kCenterH, TGLFont::kCenterV);
+      }
+   }
 }
 
 //______________________________________________________________________________
