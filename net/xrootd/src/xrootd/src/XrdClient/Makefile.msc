@@ -93,7 +93,7 @@ HEADERS =   XrdClient.hh XrdClientAbs.hh XrdClientAdmin_c.hh \
             XrdClientSid.hh XrdClientSock.hh XrdClientThread.hh XrdClientUnsolMsg.hh \
             XrdClientUrlInfo.hh XrdClientUrlSet.hh XrdClientVector.hh XrdCpMthrQueue.hh \
             XrdCpWorkLst.hh XrdClientMStream.hh XrdClientPSock.hh XrdClientReadV.hh \
-            XrdcpXtremeRead.hh
+            XrdcpXtremeRead.hh XrdClientReadAhead.hh
 
 SOURCES =   XrdClient.cc XrdClientAbs.cc XrdClientConn.cc XrdClientAdmin_c.cc \
             XrdClientAdmin.cc \
@@ -102,7 +102,7 @@ SOURCES =   XrdClient.cc XrdClientAbs.cc XrdClientConn.cc XrdClientAdmin_c.cc \
             XrdClientProtocol.cc XrdClientReadCache.cc XrdClientSid.cc XrdClientSock.cc \
             XrdClientThread.cc XrdClientUrlInfo.cc XrdClientUrlSet.cc XrdCpMthrQueue.cc \
             XrdCpWorkLst.cc XrdClientMStream.cc XrdClientPSock.cc XrdClientReadV.cc \
-            XrdcpXtremeRead.cc
+            XrdcpXtremeRead.cc XrdClientReadAhead.cc
 
 OBJECTS =   $(OUTDIR)/XrdClient.obj $(OUTDIR)/XrdClientAbs.obj \
             $(OUTDIR)/XrdClientAdmin.obj \
@@ -114,7 +114,7 @@ OBJECTS =   $(OUTDIR)/XrdClient.obj $(OUTDIR)/XrdClientAbs.obj \
             $(OUTDIR)/XrdClientThread.obj $(OUTDIR)/XrdClientUrlInfo.obj \
             $(OUTDIR)/XrdClientUrlSet.obj $(OUTDIR)/XrdCpMthrQueue.obj $(OUTDIR)/XrdCpWorkLst.obj \
             $(OUTDIR)/XrdClientMStream.obj $(OUTDIR)/XrdClientPSock.obj $(OUTDIR)/XrdClientReadV.obj \
-            $(OUTDIR)/XrdcpXtremeRead.obj
+            $(OUTDIR)/XrdcpXtremeRead.obj $(OUTDIR)/XrdClientReadAhead.obj
 
 ####### Build rules
 
