@@ -944,8 +944,8 @@ Begin_Macro(source)
 
    TH1F *h1b = new TH1F("h1b","Option B example",nx,0,nx);
    h1b->SetFillColor(4);
-   h1b->SetBarWidth(0.4); 
-   h1b->SetBarOffset(0.1); 
+   h1b->SetBarWidth(0.4);
+   h1b->SetBarOffset(0.1);
    h1b->SetStats(0);
    h1b->SetMinimum(-5);
    h1b->SetMaximum(5);
@@ -1606,11 +1606,25 @@ Draw a surface plot using colors to show the cell contents.
 </td></tr>
 
 <tr><th valign=top>"SURF3"</th><td>
-Same as <tt>SURF</tt> with in addition a contour view drawn on the top.
+Same as <tt>SURF</tt> with an additionial filled contour plot on top.
 </td></tr>
 
 <tr><th valign=top>"SURF4"</th><td>
 Draw a surface using the Gouraud shading technique.
+</td></tr>
+
+<tr><th valign=top>"SURF5"</th><td>
+Used with one of the options CYL, PSR and CYL this option allows to draw a
+a filled contour plot.
+</td></tr>
+
+<tr><th valign=top>"SURF6"</th><td>
+This option should not be used directly. It is used internally when the
+CONT is used with option the option SAME on a 3D plot.
+</td></tr>
+
+<tr><th valign=top>"SURF7"</th><td>
+Same as <tt>SURF2</tt> with an additionial line contour plot on top.
 </td></tr>
 
 </table>
@@ -1686,7 +1700,7 @@ Begin_Html
 
 The following example shows a 2D histogram plotted with the option
 <tt>"SURF3"</tt>. The option <tt>"SURF3"</tt> draws a surface plot using the
-hidden line removal technique with, in addition, a contour view drawn on the
+hidden line removal technique with, in addition, a filled contour view drawn on the
 top.  Combined with the option <tt>"SURF3"</tt>, the option <tt>"Z"</tt> allows
 to display the color palette defined by <tt>gStyle->SePalette()</tt>.
 
@@ -1724,6 +1738,51 @@ Begin_Macro(source)
    }
    hsurf4->SetFillColor(kOrange);
    hsurf4->Draw("SURF4");
+   return c2;
+}
+End_Macro
+Begin_Html
+
+The following example shows a 2D histogram plotted with the option
+<tt>"SURF5 CYL"</tt>.  Combined with the option <tt>"SURF5"</tt>, the option
+<tt>"Z"</tt> allows to display the color palette defined by <tt>gStyle->SePalette()</tt>.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   TH2F *hsurf5 = new TH2F("hsurf4","Option SURF5 example ",30,-4,4,30,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      hsurf5->Fill(px-1,5*py);
+      hsurf5->Fill(2+0.5*px,2*py-10.,0.1);
+   }
+   hsurf5->SetFillColor(kOrange);
+   hsurf5->Draw("SURF5 CYL");
+   return c2;
+}
+End_Macro
+Begin_Html
+
+The following example shows a 2D histogram plotted with the option
+<tt>"SURF7"</tt>. The option <tt>"SURF7"</tt> draws a surface plot using the
+hidden surfaces removal technique with, in addition, a line contour view drawn on the
+top.  Combined with the option <tt>"SURF7"</tt>, the option <tt>"Z"</tt> allows
+to display the color palette defined by <tt>gStyle->SePalette()</tt>.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   TH2F *hsurf7 = new TH2F("hsurf3","Option SURF7 example ",30,-4,4,30,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      hsurf7->Fill(px-1,5*py);
+      hsurf7->Fill(2+0.5*px,2*py-10.,0.1);
+   }
+   hsurf7->Draw("SURF7");
    return c2;
 }
 End_Macro
@@ -2987,6 +3046,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '4') { Hoption.Surf = 14; l[4] = ' '; }
       if (l[4] == '5') { Hoption.Surf = 15; l[4] = ' '; }
       if (l[4] == '6') { Hoption.Surf = 16; l[4] = ' '; }
+      if (l[4] == '7') { Hoption.Surf = 17; l[4] = ' '; }
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
@@ -6976,7 +7036,7 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
       }
    }
    if (print_under || print_over) {
-      // no underflow - overflow printing for a 3D histogram 
+      // no underflow - overflow printing for a 3D histogram
       // one would need a 3D table
 //       //get 3*3 under/overflows for 2d hist
 //       Double_t unov[9];
@@ -7109,7 +7169,7 @@ void THistPainter::PaintSurface(Option_t *)
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
    if (Hoption.Surf == 13 || Hoption.Surf == 15) fLego->SetMesh(3);
-   if (Hoption.Surf == 12 || Hoption.Surf == 14) fLego->SetMesh(0);
+   if (Hoption.Surf == 12 || Hoption.Surf == 14 || Hoption.Surf == 17) fLego->SetMesh(0);
 
    //     Close the surface in case of non cartesian coordinates.
 
@@ -7167,7 +7227,7 @@ void THistPainter::PaintSurface(Option_t *)
    if (raster) fLego->InitRaster(-1.1,-1.1,1.1,1.1,1000,800);
    else        fLego->InitMoveScreen(-1.1,1.1);
 
-   if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 14) {
+   if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 14 || Hoption.Surf == 17) {
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
@@ -7209,32 +7269,46 @@ void THistPainter::PaintSurface(Option_t *)
    // The surface is not drawn in this case.
    } else {
    //     Draw the surface
-      if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 16) {
+      if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 16 || Hoption.Surf == 17) {
          DefineColorLevels(ndivz);
       } else {
          fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       }
       fLego->SetSurfaceFunction(&TPainter3dAlgorithms::SurfaceFunction);
       if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceRaster1);
-      if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
+      if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 17) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
       if (Hoption.System == kPOLAR) {
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfacePolar(1,nx,ny,"FB");
-         if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfacePolar(1,nx,ny,"BF");
+         if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 17) fLego->SurfacePolar(1,nx,ny,"BF");
       } else if (Hoption.System == kCYLINDRICAL) {
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfaceCylindrical(1,nx,ny,"FB");
-         if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceCylindrical(1,nx,ny,"BF");
+         if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 17) fLego->SurfaceCylindrical(1,nx,ny,"BF");
       } else if (Hoption.System == kSPHERICAL) {
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfaceSpherical(0,1,nx,ny,"FB");
-         if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceSpherical(0,1,nx,ny,"BF");
+         if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 17) fLego->SurfaceSpherical(0,1,nx,ny,"BF");
       } else if (Hoption.System == kRAPIDITY) {
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfaceSpherical(1,1,nx,ny,"FB");
-         if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceSpherical(1,1,nx,ny,"BF");
+         if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 17) fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       } else {
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          if (Hoption.Surf == 16) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove3);
          if (Hoption.Surf ==  1 || Hoption.Surf == 13 || Hoption.Surf == 16) fLego->SurfaceCartesian(90,nx,ny,"FB");
-         if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceCartesian(90,nx,ny,"BF");
+         if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 17) fLego->SurfaceCartesian(90,nx,ny,"BF");
       }
+   }
+
+   // Paint the line contour on top for option SURF7
+   if (Hoption.Surf == 17) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      Hoption.Surf = 23;
+      fLego->SetSurfaceFunction(&TPainter3dAlgorithms::SurfaceFunction);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove3);
+      if (Hoption.System == kPOLAR)       fLego->SurfacePolar(1,nx,ny,"FB");
+      if (Hoption.System == kCYLINDRICAL) fLego->SurfaceCylindrical(1,nx,ny,"FB");
+      if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"FB");
+      if (Hoption.System == kRAPIDITY )   fLego->SurfaceSpherical(1,1,nx,ny,"FB");
+      if (Hoption.System == kCARTESIAN)   fLego->SurfaceCartesian(90,nx,ny,"FB");
    }
 
    if ((!Hoption.Same) &&
