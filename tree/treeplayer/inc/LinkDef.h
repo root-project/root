@@ -23,7 +23,7 @@
 #pragma link C++ class TChainIndex::TChainIndexEntry+;
 #pragma link C++ class TTreeFormulaManager;
 #pragma link C++ class TTreeDrawArgsParser+;
-#pragma link C++ class TTreePerfStats;
+#pragma link C++ class TTreePerfStats+;
 #pragma link C++ class TTreeTableInterface;
 
 #pragma link C++ namespace ROOT;
