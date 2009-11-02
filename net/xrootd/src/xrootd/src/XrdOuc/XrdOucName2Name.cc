@@ -8,6 +8,10 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
+//         $Id$
+
+const char *XrdOucName2NameCVSID = "$Id$";
+  
 // This file implements an instance of the XrdOucName2Name abstract class.
 
 #include <errno.h>

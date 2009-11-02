@@ -8,8 +8,9 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
-  
 //          $Id$
+ 
+const char *XrdOssCopyCVSID = "$Id$";
 
 #include <errno.h>
 #include <fcntl.h>

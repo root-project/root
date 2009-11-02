@@ -10,6 +10,8 @@
 
 //       $Id$
 
+const char *XrdcpCVSID = "$Id$";
+
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdClient/XrdClient.hh"
@@ -86,7 +88,7 @@ struct XrdCpInfo {
 
 #define XRDCP_BLOCKSIZE          (4*1024*1024)
 #define XRDCP_XRDRASIZE          (20*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.97 $ - Xrootd version: "XrdVSTRING
+#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.99 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -685,7 +687,7 @@ int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
       cout << endl;
    }
 
-   if ((unsigned)cpnfo.len != bytesread) retvalue = 13;
+   if (cpnfo.len != bytesread) retvalue = 13;
 
 #ifdef HAVE_XRDCRYPTO
    if (md5) MD_5->Final();
@@ -957,7 +959,7 @@ int doCp_xrd2loc(const char *src, const char *dst) {
       cout << endl;
    }
 
-   if ((unsigned)cpnfo.len != bytesread) retvalue = 13;
+   if (cpnfo.len != bytesread) retvalue = 13;
 
 #ifdef HAVE_XRDCRYPTO
    if (md5) MD_5->Final();

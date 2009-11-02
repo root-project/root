@@ -46,7 +46,7 @@ XrdOucSxeq::XrdOucSxeq(const char *sfx1, const char *sfx2, const char *Dir)
 
 // Open the file, creating it
 //
-   if ((lokFD = open(lokFN, O_CREAT|O_RDWR, AMode))) lokRC = errno;
+   if ((lokFD = open(lokFN, O_CREAT|O_RDWR, AMode)) < 0) lokRC = errno;
       else lokRC = 0;
 }
 

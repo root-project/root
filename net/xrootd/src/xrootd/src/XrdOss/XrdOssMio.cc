@@ -8,6 +8,8 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
+//         $Id$
+
 const char *XrdOssMioCVSID = "$Id$";
   
 #include <unistd.h>

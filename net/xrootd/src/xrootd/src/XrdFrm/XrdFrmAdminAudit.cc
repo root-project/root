@@ -460,12 +460,12 @@ int XrdFrmAdmin::AuditSpaceXA(const char *Space, const char *Path)
 {
    XrdFrmFileset *sP;
    XrdFrmFiles   *fP;
-   char buff[1032];
+   char tmpv[8], *buff;
    int ec = 0, Act = 1;
 
 // Construct the right space path and get a files object
 //
-   strcpy(buff, Path); strcat(buff, Space);
+   buff = XrdOssPath::genPath(Path, Space, tmpv);
    fP = new XrdFrmFiles(buff, XrdFrmFiles::Recursive);
 
 // Go and check out the files
@@ -479,6 +479,7 @@ int XrdFrmAdmin::AuditSpaceXA(const char *Space, const char *Path)
 // All done
 //
    if (ec) finalRC = 4;
+   free(buff);
    delete fP;
    return Act;
 }
@@ -662,12 +663,12 @@ int XrdFrmAdmin::AuditUsageXA(const char *Path, const char *Space)
 {
    XrdFrmFileset *sP;
    XrdFrmFiles   *fP;
-   char buff[1032];
+   char tmpv[8], *buff;
    int ec = 0;
 
 // Construct the right space path and get a files object
 //
-   strcpy(buff, Path); strcat(buff, Space);
+   buff = XrdOssPath::genPath(Path, Space, tmpv);
    fP = new XrdFrmFiles(buff, XrdFrmFiles::Recursive);
 
 // Go and check out the files
@@ -679,6 +680,7 @@ int XrdFrmAdmin::AuditUsageXA(const char *Path, const char *Space)
 
 // All done
 //
+   free(buff);
    delete fP;
    return ec;
 }

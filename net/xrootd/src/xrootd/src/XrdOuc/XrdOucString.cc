@@ -6,6 +6,8 @@
 /*     All Rights Reserved. See XrdInfo.cc for complete License Terms         */
 /******************************************************************************/
 
+//         $Id$
+
 const char *XrdOucStringCVSID = "$Id$";
 
 #include <stdio.h>

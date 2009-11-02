@@ -10,6 +10,8 @@
   
 //         $Id$
 
+const char *XrdCmsRRDataCVSID = "$Id$";
+
 #include <unistd.h>
 
 #include "XrdCms/XrdCmsRRData.hh"

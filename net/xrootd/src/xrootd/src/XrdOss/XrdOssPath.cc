@@ -9,6 +9,8 @@
 /******************************************************************************/
 
 //         $Id$
+ 
+const char *XrdOssPathCVSID = "$Id$";
 
 #include <errno.h>
 #include <fcntl.h>
@@ -68,6 +70,41 @@ int XrdOssPath::Convert(char *dst, int dln, const char *oldP, const char *newP)
 }
   
 /******************************************************************************/
+/*                               E x t r a c t                                */
+/******************************************************************************/
+  
+const char *XrdOssPath::Extract(char *path, char *lbuf, int &lbsz)
+{
+   struct stat Stat;
+   char *pP;
+   int j, lnklen = 0;
+
+// If path is 0, the caller already has read the link; else read it.
+//
+        if (!path) lnklen = lbsz;
+   else if (!lstat(path, &Stat) && S_ISLNK(Stat.st_mode))
+           lnklen = readlink(path, lbuf, lbsz);
+   else {lnklen = strlen(path);
+         if (lnklen >= lbsz) lnklen = lbsz-1;
+         strncpy(lbuf, path, lnklen); *(lbuf+lnklen) = '\0';
+        }
+
+// Extract out the cache group name from "<path>/cgroup/nn/fn" if possible
+//
+   if (lnklen >= 4 && lbuf[lnklen-1] == xChar && (pP=posCname(lbuf,lnklen,j)))
+      {*(pP+j) = '\0';
+       if (pP != lbuf) *(pP-1) = '\0';
+       return pP;
+      }
+
+// This is not a normal cache, so do something reasonable
+//
+   if ((pP = index(lbuf, xChar))) *pP = '\0';
+      else *(lbuf+1) = '\0';
+   return "public";
+}
+
+/******************************************************************************/
 /*                               g e n P a t h                                */
 /******************************************************************************/
   
@@ -91,11 +128,11 @@ char *XrdOssPath::genPath(const char *inPath, const char *cgrp, char *sfx)
       }
 
 // Construct a suffix that will allow us to quickly find the group name
-// We rely on the fact that group names are less than 16 characters and cache
-// group paths are less than 240 characters
+// We rely on the fact that group names are typically less than 16 characters 
+// and cache group paths are less than 240 characters
 //
-   n = strlen(cgrp) & 0x0f;
-   sfx[2] = h2c[n];
+   if ((n = strlen(cgrp)) > 15) sfx[2] = 'f';
+      else sfx[2] = h2c[n];
    n = (dirP - pbuff + 1) & 0xff;
    sfx[1] = h2c[(n & 0x0f)]; n = n >> 4; sfx[0] = h2c[(n & 0x0f)];
    sfx[3] = xChar;
@@ -178,9 +215,8 @@ int  XrdOssPath::getCname(const char *path, char *Cache,
                                 char *lbuf, int   lbsz)
 {
    struct stat lbuff;
-   char *xP, *eP, lnkbuff[MAXPATHLEN+64];
-   long xCode;
-   int j, k, lnklen = 0;
+   char *xP, lnkbuff[MAXPATHLEN+64];
+   int j, lnklen = 0;
 
 // Set up local buffer or remote buffer
 //
@@ -197,14 +233,11 @@ int  XrdOssPath::getCname(const char *path, char *Cache,
 //
    if (lnklen < 4 || lbuf[lnklen-1] != xChar)
       {strcpy(Cache, "public"); return (lnklen < 0 ? 0 : lnklen);}
-   xP = lbuf+lnklen-4;
 
 // Extract out the cache group name from "<path>/cgroup/nn/fn"
 //
-   if ((xCode = strtol(xP, &eP, 16)) && *eP == xChar
-   &&  (j = xCode & 0x0f) && (k = xCode>>4) && k < (lnklen-j))
-      {strncpy(Cache, lbuf+k, j); *(Cache+j) = '\0';}
-      else strcpy(Cache, "public");
+   if (!(xP = posCname(lbuf, lnklen, j))) strcpy(Cache, "public");
+      else {strncpy(Cache, xP, j); *(Cache+j)='\0';}
 
 // All done
 //
@@ -284,5 +317,27 @@ int XrdOssPath::Init(char *pfnPfx)
 //
    xTime.binT = static_cast<int>(theTime);
    bin2hex(xTime.chrT, sizeof(xTime.binT), pfnPfx);
+   return 0;
+}
+
+/******************************************************************************/
+/*                              p o s C n a m e                               */
+/******************************************************************************/
+
+char *XrdOssPath::posCname(char *lbuf, int lbsz, int &cnsz)
+{
+   char *eP, *xP = lbuf + lbsz - 4;
+   long xCode;
+   int k;
+
+// Extract out the cache group name from "<path>/cgroup/nn/fn"
+//
+   if ((xCode = strtol(xP, &eP, 16)) && *eP == xChar
+   &&  (cnsz = xCode & 0x0f) && (k = xCode>>4) && k < (lbsz-cnsz))
+      {xP = lbuf + k;
+       if (cnsz == 15 && *(xP+cnsz) != '/' && (eP = index(xP+cnsz,'/'))
+       &&  eP-xP <= XrdOssSpace::maxSNlen) cnsz = eP - xP;
+       return xP;
+      }
    return 0;
 }

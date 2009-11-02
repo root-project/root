@@ -40,6 +40,8 @@ static int        Init(const char *aPath, const char *qFile, int isSOL);
 
 static int        Quotas();
 
+static int        Readjust();
+
 static void       Refresh();
 
 static int        Unassign(const char *GName);
@@ -58,7 +60,6 @@ static long long  Usage(const char *GName, struct uEnt &uVal, int rrd=0);
 
 private:
 static int    findEnt(const char *GName);
-static int    Readjust();
 static int    Readjust(int);
 static int    UsageLock(int Dolock=1);
 

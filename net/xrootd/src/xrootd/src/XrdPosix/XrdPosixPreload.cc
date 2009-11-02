@@ -10,6 +10,8 @@
 
 //           $Id$
 
+const char *XrdPosixPreloadCVSID = "$Id$";
+
 #include <sys/types.h>
 #include <stdarg.h>
 #include <unistd.h>

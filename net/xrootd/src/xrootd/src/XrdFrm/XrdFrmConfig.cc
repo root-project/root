@@ -357,7 +357,7 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
    if (isMum)
       {close(STDERR_FILENO);
        theSE.mySem.Wait();
-       if (NoGo) write(STDERR_FILENO, theSE.Buff, theSE.BLen);
+       if (NoGo && write(STDERR_FILENO, theSE.Buff, theSE.BLen)) {}
       }
 
 // All done

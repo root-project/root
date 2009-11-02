@@ -10,6 +10,8 @@
   
 //         $Id$
 
+const char *XrdBwmPolicy1CVSID = "$Id$";
+
 #include <string.h>
 
 #include "XrdBwm/XrdBwmPolicy1.hh"

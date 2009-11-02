@@ -23,80 +23,54 @@ const char *XrdCnsDaemonCVSID = "$Id$";
 
 #include "Xrd/XrdTrace.hh"
 
-#include "XrdNet/XrdNetDNS.hh"
-
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
-#include "XrdOuc/XrdOucUtils.hh"
 
-#include "XrdPosix/XrdPosixXrootd.hh"
-
+#include "XrdOuc/XrdOucStream.hh"
 #include "XrdCns/XrdCnsDaemon.hh"
-#include "XrdCns/XrdCnsEvent.hh"
+#include "XrdCns/XrdCnsLogRec.hh"
 
 /******************************************************************************/
 /*                        G l o b a l   O b j e c t s                         */
 /******************************************************************************/
 
-extern XrdSysError       XrdLog;
+namespace XrdCns
+{
+extern XrdSysError       MLog;
 
 extern XrdOucTrace       XrdTrace;
- 
-extern XrdCnsDaemon      XrdCnsd;
 
-       XrdPosixXrootd    XrdPosix;
-
-/******************************************************************************/
-/*                            d o R e q u e s t s                             */
-/******************************************************************************/
-  
-void XrdCnsDaemon::doRequests()
-{
-   XrdCnsEvent *evP;
-   unsigned char eType;
-
-// Process requests as they come in
-//
-   do {evP = XrdCnsEvent::Remove(eType);
-       switch (eType)
-              {case XrdCnsEvent::evClosew: do_Trunc (evP); break;
-               case XrdCnsEvent::evCreate: do_Create(evP); break;
-               case XrdCnsEvent::evMkdir:  do_Mkdir (evP); break;
-               case XrdCnsEvent::evMv:     do_Mv    (evP); break;
-               case XrdCnsEvent::evRm:     do_Rm    (evP); break;
-               case XrdCnsEvent::evRmdir:  do_Rmdir (evP); break;
-               default: XrdLog.Emsg("doReq","Invalid event for", evP->Lfn1());
-              }
-       evP->Recycle();
-      } while(1);
+       XrdCnsDaemon      XrdCnsd;
 }
+
+using namespace XrdCns;
 
 /******************************************************************************/
 /*                             g e t E v e n t s                              */
 /******************************************************************************/
   
-void XrdCnsDaemon::getEvents(XrdOucStream &Events)
+void XrdCnsDaemon::getEvents(XrdOucStream &Events, const char *Who)
 {
-   const char *Miss = 0, *TraceID = "doEvents";
+   const char *Miss = 0, *TraceID = "getEvents";
    long long Size;
    mode_t    Mode;
    const char *eP;
    char *tp, *etp;
-   XrdCnsEvent *evP = 0;
+   XrdCnsLogRec *evP = 0;
 
 // Each ofs request comes in as:
 // <traceid> {closew <lfn> <size> | create <mode> <lfn> | mkdir <mode> <lfn> |
 //            mv <lfn1> <lfn2>    | rm            <lfn> | rmdir        <lfn>}
 //
-   while((tp = Events.GetLine()))
+   while((tp = Events.GetLine()) && *tp)
         {TRACE(DEBUG, "Event: '" <<tp <<"'");
          eP = "?";
                if (!(tp = Events.GetToken()))          Miss = "traceid";
-         else {evP = XrdCnsEvent::Alloc();
+         else {evP = XrdCnsLogRec::Alloc();
                if (!(eP = Events.GetToken())
                ||  !evP->setType(eP))                  Miss = "eventid";
          else {switch(evP->Type())
-                     {case XrdCnsEvent::evClosew:
+                     {case XrdCnsLogRec::lrClosew:
                            if (!(tp=Events.GetToken())) {Miss = "lfn";   break;}
                            evP->setLfn1(tp);
                            if (!(tp=Events.GetToken())) {Miss = "size";  break;}
@@ -104,8 +78,9 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events)
                            if (*etp)                    {Miss = "size";  break;}
                            evP->setSize(Size);
                            break;
-                      case XrdCnsEvent::evCreate:
-                      case XrdCnsEvent::evMkdir:
+                      case XrdCnsLogRec::lrMkdir:
+                           evP->setSize(-1);
+                      case XrdCnsLogRec::lrCreate:
                            if (!(tp=Events.GetToken())) {Miss = "mode";  break;}
                            Mode = strtol(tp, &etp, 8);
                            if (*etp)                    {Miss = "mode";  break;}
@@ -113,7 +88,7 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events)
                            if (!(tp=Events.GetToken())) {Miss = "lfn";   break;}
                            evP->setLfn1(tp);
                            break;
-                      case XrdCnsEvent::evMv:
+                      case XrdCnsLogRec::lrMv:
                            if (!(tp=Events.GetToken())) {Miss = "lfn1";  break;}
                            evP->setLfn1(tp);
                            if (!(tp=Events.GetToken())) {Miss = "lfn2";  break;}
@@ -126,7 +101,7 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events)
                      }
               } }
 
-         if (Miss) {XrdLog.Emsg("doEvents", Miss, "missing in event", eP);
+         if (Miss) {MLog.Emsg("doEvents", Miss, "missing in event", eP);
                     evP->Recycle();
                     Miss = 0;
                     continue;
@@ -137,78 +112,5 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events)
 
 // If we exit then we lost the connection
 //
-   XrdLog.Emsg("doEvents", "Exiting; lost event connection to xrootd!");
-   exit(8);
-}
-
-/******************************************************************************/
-/*                             d o _ C r e a t e                              */
-/******************************************************************************/
-  
-void XrdCnsDaemon::do_Create(XrdCnsEvent *evP)
-{
-   int myFD;
-
-// For now, simply open and create the file
-//
-   if ((myFD = XrdPosixXrootd::Open(evP->Lfn1(), O_WRONLY|O_CREAT, 0664)) >= 0)
-      XrdPosixXrootd::Close(myFD);
-      else XrdLog.Emsg("do_Create", errno, "create", evP->Lfn1());
-}
-
-/******************************************************************************/
-/*                              d o _ M k d i r                               */
-/******************************************************************************/
-  
-void XrdCnsDaemon::do_Mkdir(XrdCnsEvent *evP)
-{
-   if (XrdPosixXrootd::Mkdir(evP->Lfn1(), 0664))
-      XrdLog.Emsg("do_Mkdir", errno, "mkdir", evP->Lfn1());
-}
-
-/******************************************************************************/
-/*                                 d o _ M v                                  */
-/******************************************************************************/
-  
-void XrdCnsDaemon::do_Mv(XrdCnsEvent *evP)
-{
-   if (XrdPosixXrootd::Rename(evP->Lfn1(), evP->Lfn2()))
-      XrdLog.Emsg("do_Mv", errno, "mv", evP->Lfn1());
-}
-
-/******************************************************************************/
-/*                                 d o _ R m                                  */
-/******************************************************************************/
-  
-void XrdCnsDaemon::do_Rm(XrdCnsEvent *evP)
-{
-   if (XrdPosixXrootd::Unlink(evP->Lfn1()))
-      XrdLog.Emsg("do_Rm", errno, "rm", evP->Lfn1());
-}
-
-/******************************************************************************/
-/*                              d o _ R m d i r                               */
-/******************************************************************************/
-  
-void XrdCnsDaemon::do_Rmdir(XrdCnsEvent *evP)
-{
-   if (XrdPosixXrootd::Rmdir(evP->Lfn1()))
-      XrdLog.Emsg("do_Rmdir", errno, "rmdir", evP->Lfn1());
-}
-
-/******************************************************************************/
-/*                              d o _ T r u n c                               */
-/******************************************************************************/
-  
-void XrdCnsDaemon::do_Trunc(XrdCnsEvent *evP)
-{
-   int myFD;
-
-// For now, simply open and trunc the file
-//
-   if ((myFD = XrdPosixXrootd::Open(evP->Lfn1(), O_WRONLY)) >= 0)
-      {XrdPosixXrootd::Ftruncate(myFD, evP->Size());
-       XrdPosixXrootd::Close(myFD);
-      }
-      else XrdLog.Emsg("do_Create", errno, "trunc", evP->Lfn1());
+   MLog.Emsg("doEvents", "Lost event connection to", Who, "!");
 }

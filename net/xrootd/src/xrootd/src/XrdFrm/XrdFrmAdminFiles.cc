@@ -10,6 +10,8 @@
   
 //          $Id$
 
+const char *XrdFrmAdminFilesCVSID = "$Id$";
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -25,8 +27,6 @@
 #include "XrdFrm/XrdFrmFiles.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
 #include "XrdOss/XrdOssPath.hh"
-
-const char *XrdFrmAdminFilesCVSID = "$Id$";
 
 using namespace XrdFrm;
 

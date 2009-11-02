@@ -1,3 +1,6 @@
+//         $Id$
+
+// const char *TestXrdClient_readCVSID = "$Id$";
 #include "XrdClient/XrdClient.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdSys/XrdSysHeaders.hh"
@@ -8,7 +11,7 @@
 #include <math.h>
 
 kXR_unt16 open_mode = (kXR_ur | kXR_uw);
-kXR_unt16 open_opts = (kXR_open_updt);
+kXR_unt16 open_opts = (0);
  
 int ReadSome(kXR_int64 *offs, kXR_int32 *lens, int maxnread, long long &totalbytes) {
 
@@ -125,6 +128,33 @@ int main(int argc, char **argv) {
     if (argc > 4)
 	vectored_style = atol(argv[4]);
 
+    cout << "Read style: ";
+    switch (vectored_style) {
+    case 0:
+       cout << "Synchronous reads, ev. with read ahead." << endl;
+       break;
+    case 1:
+       cout << "Synchronous readv" << endl;
+       break;
+    case 2:
+       cout << "Asynchronous readv, data is not processed." << endl;
+       break;
+    case 3:
+       cout << "Asynchronous readv." << endl;
+       break;
+    case 4:
+       cout << "Asynchronous reads." << endl;
+       break;
+    case 5:
+       cout << "Write test file." << endl;
+       open_opts |= kXR_open_updt;
+       break;
+    default:
+       cout << "Unknown." << endl;
+       break;
+    }
+
+
     if (argc > 5)
 	read_delay = atol(argv[5]);
 
@@ -207,7 +237,7 @@ int main(int argc, char **argv) {
 			    break;
 			  }
 		      }
-		      Think(read_delay);
+		      if (!((iii+1) % 100)) Think(read_delay);
 		    }
 
 		}		
@@ -216,7 +246,12 @@ int main(int argc, char **argv) {
 		retval = cli->ReadV((char *)buf, v_offsets, v_lens, ntoread);
 		cout << endl << "---ReadV returned " << retval << endl;
 
-		if (retval > 0) Think(read_delay * ntoread);
+		if (retval > 0)
+                   for (int iii = 0; iii < ntoread; iii++){
+                      if (!((iii+1) % 100)) Think(read_delay);
+                      
+                   }
+
 		else {
 		  iserror = true;
 		  break;
@@ -230,7 +265,7 @@ int main(int argc, char **argv) {
 		break;
 		
 	    case 3: // async and immediate read, optimized!
-		
+                cli->RemoveAllDataFromCache();
 		for (int ii = 0; ii < ntoread+512; ii+=512) {
 
                     if (ii < ntoread) {
@@ -264,7 +299,7 @@ int main(int argc, char **argv) {
 			    }
 			  }
 			
-			Think(read_delay);
+			if (!((iii+1) % 100)) Think(read_delay);
 		    }
 		    
 		}
@@ -275,6 +310,7 @@ int main(int argc, char **argv) {
 		
 	    
     	    case 4: // read async and then read
+                cli->RemoveAllDataFromCache();
 		for (int iii = -512; iii < ntoread; iii++) {
 		    if (iii + 512 < ntoread)
 		      retval = cli->Read_Async(v_offsets[iii+512], v_lens[iii+512]);
@@ -299,7 +335,7 @@ int main(int argc, char **argv) {
 			break;
 		      }
 
-		      Think(read_delay);
+		      if (!((iii+1) % 100)) Think(read_delay);
 		    }
 
 		}
@@ -323,7 +359,7 @@ int main(int argc, char **argv) {
 		  }
 
 		  if (retval > 0) {
-		    Think(read_delay);
+		    if (!((iii+1) % 100)) Think(read_delay);
 		  }
 	      }
 		

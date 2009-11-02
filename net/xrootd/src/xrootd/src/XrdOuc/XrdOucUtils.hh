@@ -24,6 +24,8 @@ public:
 
 static const mode_t pathMode = S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH;
 
+static char *eText(int rc, char *eBuff, int eBlen, int AsIs=0);
+
 static int   doIf(XrdSysError *eDest, XrdOucStream &Config,
                   const char *what, const char *hname, 
                                     const char *nname, const char *pname);

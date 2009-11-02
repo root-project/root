@@ -10,6 +10,8 @@
   
 //         $Id$
 
+const char *XrdBwmLoggerCVSID = "$Id$";
+
 #include <ctype.h>
 #include <stddef.h>
 #include <stdlib.h>

@@ -1,3 +1,6 @@
+//          $Id$
+
+//const char *XrdWin32CVSID = "$Id$";
 
 #include "XrdSys/XrdWin32.hh"
 #include <Windows.h>

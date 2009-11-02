@@ -9,6 +9,8 @@
 /******************************************************************************/
 
 //         $Id$
+ 
+const char *XrdOssSpaceCVSID = "$Id$";
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -279,7 +281,7 @@ int XrdOssSpace::Quotas()
   XrdOssCache_Group *fsg;
   struct stat buf;
   long long qval;
-  char cgroup[16], *val;
+  char cgroup[minSNbsz], *val;
   int qFD, NoGo = 0;
 
 // See if the file has changed (note the firs time through it will have)
@@ -331,16 +333,22 @@ int XrdOssSpace::Quotas()
 }
 
 /******************************************************************************/
-/* private:                     R e a d j u s t                               */
+/*                              R e a d j u s t                               */
 /******************************************************************************/
   
 int XrdOssSpace::Readjust()
 {
+   static time_t lastUtime = 0;
+   struct stat buf;
    int k, rwsz, updt = 0;
 
 // No readjustment needed if we are not a server or we have nothing
 //
    if (fencEnt <= 0) return 0;
+   if (!fstat(aFD, &buf))
+      {if (buf.st_mtime == lastUtime) return 0;
+       lastUtime = buf.st_mtime;
+      }
    rwsz = sizeof(uEnt)*(uDvec[fencEnt-1] + 1);
 
 // Lock the file

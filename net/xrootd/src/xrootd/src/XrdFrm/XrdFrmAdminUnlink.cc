@@ -8,6 +8,10 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
+//         $Id$
+
+const char *XrdFrmAdminUnlinkCVSID = "$Id$";
+
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/param.h>
@@ -22,8 +26,6 @@
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssPath.hh"
 #include "XrdOuc/XrdOucNSWalk.hh"
-
-const char *XrdFrmAdminUnlinkCVSID = "$Id$";
 
 using namespace XrdFrm;
   

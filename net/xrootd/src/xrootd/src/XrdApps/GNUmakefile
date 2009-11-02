@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.4 2009/07/28 20:01:46 ganis Exp $
+#              $Id: GNUmakefile,v 1.5 2009/08/26 22:22:28 abh Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -19,7 +19,14 @@ XRDADLERLIBS = $(PTHREAD) $(LIBS) $(LIBM) $(LIBZ)
 XRDADLER32_OBJ = $(OBJDIR)/Xrdadler32.o
 XRDADLER32 = $(BINDIR)/xrdadler32
 
-TARGETS = $(XRDADLER32) $(XRDMPXBIN)
+
+XRDw41DEPS = $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
+XRDW41LIBS = $(LIBS) -L$(LIBDIR) -lXrdOuc -lXrdSys
+
+XRDW41_OBJ = $(OBJDIR)/XrdWait41.o
+XRDW41     = $(BINDIR)/wait41
+
+TARGETS = $(XRDADLER32) $(XRDMPXBIN) $(XRDW41)
 
 #------------------------------------------------------------------------------#
 #                           S e a r c h   P a t h s                           -
@@ -64,3 +71,14 @@ $(XRDMPXOBJ): XrdMpxStats.cc \
               XrdSysHeaders.hh   XrdSysPlatform.hh XrdSysPthread.hh
 	@echo Compiling XrdMpxStats.cc 
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(XRDMPXOBJ) XrdMpxStats.cc
+
+$(XRDW41): $(XRDW41_OBJ) $(XRDW41_DEPS)
+	@echo Creating executable $(XRDW41)
+	$(ECHO)$(LD) $(LDOP) $(XRDW41_OBJ) $(BINLIBS) $(XRDW41LIBS) -o $(XRDW41)
+
+$(XRDW41_OBJ): XrdWait41.cc \
+                   XrdOucTList.hh \
+                   XrdSysHeaders.hh     XrdSysPlatform.hh \
+                   XrdSysPthread.hh
+	@echo Compiling XrdWait41.cc
+	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(XRDW41_OBJ) XrdWait41.cc

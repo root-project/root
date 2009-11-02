@@ -10,6 +10,8 @@
 
 //       $Id$
 
+const char *XrdCmsRoutingCVSID = "$Id$";
+
 #include "XrdCms/XrdCmsNode.hh"
 #include "XrdCms/XrdCmsRouting.hh"
 

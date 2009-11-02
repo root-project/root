@@ -46,6 +46,9 @@
 #include "XrdSys/XrdSysSemWait.hh"
 #include "XrdVersion.hh"
 
+
+class XrdClientReadAheadMgr;
+
 struct XrdClientOpenInfo {
     bool      inprogress;
     bool      opened;
@@ -82,11 +85,11 @@ private:
 
     bool                        fOpenWithRefresh;
 
-    int                         fReadAheadSize;
-
     XrdSysCondVar              *fReadWaitData;  // Used to wait for outstanding data   
 
     struct XrdClientStatInfo    fStatInfo;
+
+    long                        fReadTrimBlockSize;
 
     bool                        fUseCache;
 
@@ -102,12 +105,7 @@ private:
 					kXR_unt16 options,
 					char *additionalquery = 0);
 
-    // The first position not read by the last read ahead
-    long long                   fReadAheadLast;
-
     void                        TerminateOpenAttempt();
-
-    bool                        TrimReadRequest(kXR_int64 &offs, kXR_int32 &len, kXR_int32 rasize);
 
     void                        WaitForNewAsyncData();
 
@@ -116,15 +114,16 @@ private:
     // interface should be ReadV()
     kXR_int64                   ReadVEach(char *buf, kXR_int64 *offsets, int *lens, int &nbuf);
 
-    bool IsOpenedForWrite() {
-      // This supposes that no options means read only
-      if (!fOpenPars.options) return false;
-      
-      if (fOpenPars.options & kXR_open_read) return false;
-      
-      return true;
+    bool                        IsOpenedForWrite() {
+       // This supposes that no options means read only
+       if (!fOpenPars.options) return false;
+       
+       if (fOpenPars.options & kXR_open_read) return false;
+       
+       return true;
     }
 
+   XrdClientReadAheadMgr       *fReadAheadMgr;
 protected:
 
     virtual bool                OpenFileWhenRedirected(char *newfhandle,
@@ -249,14 +248,16 @@ public:
     // To set at run time the cache/readahead parameters for this instance only
     // If a parameter is < 0 then it's left untouched.
     // To simply enable/disable the caching, just use UseCache(), not this function
-    void                        SetCacheParameters(int CacheSize, int ReadAheadSize, int RmPolicy) {
-        if (fConnModule) {
-	  if (CacheSize >= 0) fConnModule->SetCacheSize(CacheSize);
-	  if (RmPolicy >= 0) fConnModule->SetCacheRmPolicy(RmPolicy);
-	}
+    void                        SetCacheParameters(int CacheSize, int ReadAheadSize, int RmPolicy);
 
-	if (ReadAheadSize >= 0) fReadAheadSize = ReadAheadSize;
-    }
+    // To enable/disable different read ahead strategies. Defined in XrdClientReadAhead.hh
+    void                        SetReadAheadStrategy(int strategy);
+    
+    // To enable the trimming of the blocks to read. Blocksize will be rounded to a multiple of 512.
+    // Each read request will have the offset and length aligned with a multiple of blocksize
+    // This strategy is similar to a read ahead, but not quite. Here we see it as a transformation
+    // of the stream of the read accesses to request
+    void                        SetBlockReadTrimming(int blocksize);
     
     // Truncates the open file at a specified length
     bool                        Truncate(long long len);

@@ -8,7 +8,9 @@
 /* and file on a remote xrootd data server. Support using XROOTD_VMP.   */
 /************************************************************************/
 
-/*   $Id$           */
+//   $Id$
+
+const char *Xrdadler32CVSID = "$Id$";
 
 #define _FILE_OFFSET_BITS 64
 

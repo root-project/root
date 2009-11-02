@@ -120,6 +120,7 @@ FSOpts              opts;
 XrdOssCache_FSData *fsdata;
 XrdOssCache_Group  *fsgroup;
 
+static int          Add(const char *Path);
 static long long    freeSpace(long long         &Size,  const char *path=0);
 static long long    freeSpace(XrdOssCache_Space &Space, const char *path);
 
@@ -209,11 +210,14 @@ static void           *Scan(int cscanint);
 
 static XrdSysMutex         Mutex;    // Cache context lock
 
+static long long           fsTotal;  // Total number of bytes known
+static long long           fsTotFr;  // Total number of bytes free
 static long long           fsFree;   // Maximum contiguous free space
 static long long           fsSize;   // Size of partition with fsFree
 static XrdOssCache_FS     *fsfirst;  // -> First  filesystem
 static XrdOssCache_FS     *fslast;   // -> Last   filesystem
 static XrdOssCache_FSData *fsdata;   // -> Filesystem data
+static int                 fsCount;  // Number of file systems
 
 private:
 

@@ -10,6 +10,8 @@
 
 //       $Id$
 
+const char *XrdCryptoLiteCVSID = "$Id$";
+
 #include <errno.h>
 #include <string.h>
 

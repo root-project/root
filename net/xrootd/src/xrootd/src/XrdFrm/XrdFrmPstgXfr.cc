@@ -10,6 +10,8 @@
 
 //          $Id$
 
+const char *XrdFrmPstgXfrCVSID = "$Id$";
+
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>

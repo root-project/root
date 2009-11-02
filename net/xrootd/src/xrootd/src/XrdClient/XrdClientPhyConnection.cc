@@ -12,6 +12,8 @@
 
 //       $Id$
 
+const char *XrdClientPhyConnectionCVSID = "$Id$";
+
 #include <time.h>
 #include <stdlib.h>
 #include "XrdClient/XrdClientPhyConnection.hh"

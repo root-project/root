@@ -10,6 +10,8 @@
 
 //           $Id$
 
+const char *XrdPosixPreload32CVSID = "$Id$";
+
 #if !defined(SUNX86) && defined(__LP64__) && !defined(_LP64)
 #undef  _LARGEFILE_SOURCE
 #undef  _FILE_OFFSET_BITS

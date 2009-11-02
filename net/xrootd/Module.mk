@@ -114,7 +114,8 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		macosxicc:*)     xopt="--ccflavour=icc";; \
 		macosx*:*)       xopt="--ccflavour=macos";; \
 		solaris64*:*:i86pc:*) xopt="--ccflavour=sunCCamd --use-xrd-strlcpy";; \
-		solaris*:*:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy";; \
+                solaris*:5.1*:i86pc:*) xopt="--use-xrd-strlcpy";; \
+                solaris*:*:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy";; \
 		solarisgcc:5.8)  xopt="--ccflavour=gcc";; \
 		solaris*:5.8)    xopt="--ccflavour=sunCC";; \
 		solarisgcc:5.9)  xopt="--ccflavour=gcc";; \

@@ -10,6 +10,8 @@
 
 //   $Id$
 
+const char *XrdCpWorkLstCVSID = "$Id$";
+
 #include "XrdClient/XrdCpWorkLst.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdSys/XrdSysDir.hh"

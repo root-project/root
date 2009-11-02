@@ -10,6 +10,8 @@
 
 //          $Id$
 
+const char *XrdOfsStatsCVSID = "$Id$";
+
 #include <stdio.h>
 
 #include "XrdOfs/XrdOfsStats.hh"

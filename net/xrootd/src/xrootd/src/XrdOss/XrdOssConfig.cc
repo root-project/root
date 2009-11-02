@@ -261,15 +261,22 @@ int XrdOssSys::Configure(const char *configfn, XrdSysError &Eroute)
 //
    RPList.Set(DirFlags);
 
+// Configure space (final pass)
+//
+   ConfigSpace();
+
 // Configure statiscal reporting
 //
    if (!NoGo) ConfigStats(Eroute);
 
-// Start up the cache scan thread
+// Start up the cache scan thread unless specifically told not to. Some programs
+// like the cmsd manually handle space updates.
 //
-   if ((retc = XrdSysThread::Run(&tid, XrdOssCacheScan,
-                            (void *)&cscanint, 0, "cache scan")))
-      Eroute.Emsg("Config", retc, "create cache scan thread");
+   if (!(val = getenv("XRDOSSCSCAN")) || strcmp(val, "off"))
+      {if ((retc = XrdSysThread::Run(&tid, XrdOssCacheScan,
+                                    (void *)&cscanint, 0, "cache scan")))
+          Eroute.Emsg("Config", retc, "create cache scan thread");
+      }
 
 // Display the final config if we can continue
 //
@@ -534,6 +541,50 @@ int XrdOssSys::ConfigProc(XrdSysError &Eroute)
 }
 
 /******************************************************************************/
+/*                           C o n f i g S p a c e                            */
+/******************************************************************************/
+
+void XrdOssSys::ConfigSpace()
+{
+   XrdOucPList *fp = RPList.First();
+   int noCacheFS = !(OptFlags & XrdOss_CacheFS);
+
+// Configure space for each non-cached exported path. We only keep track of
+// space that can actually be modified in some way.
+//
+   while(fp)
+        {if ((noCacheFS || (fp->Flag() & XRDEXP_INPLACE))
+         &&  ((fp->Flag() & (XRDEXP_REMOTE | XRDEXP_PURGE))
+         ||  !(fp->Flag() & XRDEXP_READONLY)))
+            ConfigSpace(fp->Path());
+         fp = fp->Next();
+        }
+}
+
+/******************************************************************************/
+
+void XrdOssSys::ConfigSpace(const char *Lfn)
+{
+   struct stat statbuff;
+   char Pfn[MAXPATHLEN+1+8], *Slash;
+
+// Get local path for this lfn
+//
+   if (GenLocalPath(Lfn, Pfn)) return;
+
+// Now try to find the actual existing base path
+//
+   while(stat(Pfn, &statbuff))
+        {if (!(Slash = rindex(Pfn, '/')) || Slash == Pfn) return;
+         *Slash = '\0';
+        }
+
+// Add this path to the file system data. We need to do this to track space
+//
+   XrdOssCache_FS::Add(Pfn);
+}
+  
+/******************************************************************************/
 /*                           C o n f i g S t a g e                            */
 /******************************************************************************/
 
@@ -554,6 +605,7 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
 //
    dflags = (MSSgwCmd ? XRDEXP_MIG : XRDEXP_NOCHECK|XRDEXP_NODREAD);
    if (!StageCmd) dflags |= XRDEXP_NOSTAGE;
+      else        dflags |= XRDEXP_PURGE;
    DirFlags = DirFlags | (dflags & (~(DirFlags >> XRDEXP_MASKSHIFT)));
    if ((MSSgwCmd &&  (DirFlags & XRDEXP_MIG))
    ||  (StageCmd && !(DirFlags & XRDEXP_NOSTAGE))) DirFlags |= XRDEXP_REMOTE;
@@ -1048,6 +1100,7 @@ int XrdOssSys::xcacheBuild(char *grp, char *fn, int isxa, XrdSysError &Eroute)
         if (fsp) delete fsp;
         return 0;
        }
+    OptFlags |= XrdOss_CacheFS;
     return 1;
 }
 
@@ -1589,8 +1642,8 @@ void XrdOssSys::List_Path(const char *pfx, const char *pname,
      if (flags & XRDEXP_FORCERO) rwmode = (char *)" forcero";
         else if (flags & XRDEXP_READONLY) rwmode = (char *)" r/o ";
                 else rwmode = (char *)" r/w ";
-                                 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3
-     snprintf(buff, sizeof(buff), "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+                                 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+     snprintf(buff, sizeof(buff), "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
               pfx, pname,                                           // 0
               (flags & XRDEXP_COMPCHK  ?  " compchk" : ""),         // 1
               rwmode,                                               // 2
@@ -1606,7 +1659,8 @@ void XrdOssSys::List_Path(const char *pfx, const char *pname,
               (flags & XRDEXP_MLOK     ? " mlock"   : " nomlock")),
               (flags & XRDEXP_MMAP     ? " mmap"    : ""),          // 11
               (flags & XRDEXP_RCREATE  ? " rcreate" : " norcreate"),// 12
-              (flags & XRDEXP_NOSTAGE  ? " nostage" : " stage")     // 13
+              (flags & XRDEXP_PURGE    ? " purge"   : " nopurge"),  // 13
+              (flags & XRDEXP_NOSTAGE  ? " nostage" : " stage")     // 14
               );
      Eroute.Say(buff); 
 }

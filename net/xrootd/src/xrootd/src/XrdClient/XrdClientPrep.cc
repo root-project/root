@@ -1,3 +1,7 @@
+//         $Id$
+
+const char *XrdClientPrepCVSID = "$Id$";
+
 #include <ctype.h>
 #include <limits.h>
 #include <stdlib.h>

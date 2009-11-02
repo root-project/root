@@ -11,6 +11,8 @@
 
 //       $Id$
 
+const char *XrdCmsSupervisorCVSID = "$Id$";
+
 #include "Xrd/XrdInet.hh"
 #include "Xrd/XrdLink.hh"
 

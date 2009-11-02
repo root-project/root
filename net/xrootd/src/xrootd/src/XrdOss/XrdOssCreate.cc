@@ -127,7 +127,9 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
        close(datfd);
        if (Opts>>8 & O_TRUNC && buf.st_size)
           {off_t theSize = buf.st_size;
-           if (isLink) XrdOssCache::Adjust(local_path, -theSize, &buf);
+           if (isLink) {buf.st_mode = (buf.st_mode & ~S_IFMT) | S_IFLNK;
+                        XrdOssCache::Adjust(local_path, -theSize, &buf);
+                       }
           }
        return 0;
       }

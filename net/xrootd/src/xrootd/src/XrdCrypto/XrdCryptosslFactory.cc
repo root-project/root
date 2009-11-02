@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptosslFactoryCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*            X r d C r y p t o S s l F a c t o r y . c c                     */

@@ -12,35 +12,19 @@
 
 //         $Id$
 
-#include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPthread.hh"
-  
-class XrdCnsEvent;
+
+class XrdOucStream;
 
 class XrdCnsDaemon
 {
 public:
 
-int   Configure(int argc, char **argv);
+void  getEvents(XrdOucStream &, const char *Who);
 
-void  doRequests();
-
-void  getEvents(XrdOucStream &);
-
-      XrdCnsDaemon();
+      XrdCnsDaemon() {}
      ~XrdCnsDaemon() {}
 
 private:
-
-void  do_Create(XrdCnsEvent *evP);
-void  do_Mkdir(XrdCnsEvent *evP);
-void  do_Mv(XrdCnsEvent *evP);
-void  do_Rm(XrdCnsEvent *evP);
-void  do_Rmdir(XrdCnsEvent *evP);
-void  do_Trunc(XrdCnsEvent *evP);
-
-XrdOucStream    stdinEvents;    // STDIN fed events
-XrdOucStream    fifoEvents;     // FIFO  fed events
-char           *myName;
 };
 #endif

@@ -10,6 +10,8 @@
 
 /*   $Id$           */
 
+const char *XrdMpxStatsCVSID = "$Id$";
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>

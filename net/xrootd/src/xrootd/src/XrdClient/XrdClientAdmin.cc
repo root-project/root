@@ -13,6 +13,8 @@
 
 //       $Id$
 
+const char *XrdClientAdminCVSID = "$Id$";
+
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientDebug.hh"
 #include "XrdClient/XrdClientUrlSet.hh"
@@ -114,6 +116,9 @@ bool XrdClientAdmin::Connect()
       return FALSE;
    }
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    //
    // Now start the connection phase, picking randomly from UrlArray
    //
@@ -126,6 +131,13 @@ bool XrdClientAdmin::Connect()
 
       XrdClientUrlInfo *thisUrl = 0;
       urlstried = (urlstried == urlArray.Size()) ? 0 : urlstried;
+
+      if ( fConnModule->IsOpTimeLimitElapsed(time(0)) ) {
+         // We have been so unlucky and wasted too much time in connecting and being redirected
+         fConnModule->Disconnect(TRUE);
+         Error("Connect", "Access to server failed: Too much time elapsed without success.");
+         break;
+      }
 
       bool nogoodurl = TRUE;
       while (urlArray.Size() > 0) {
@@ -208,9 +220,9 @@ bool XrdClientAdmin::Connect()
 	 if (DebugLevel() >= XrdClientDebug::kUSERDEBUG)
 	    Info(XrdClientDebug::kUSERDEBUG, "Connect",
 	         "Connection attempt failed. Sleeping " <<
-	         EnvGetLong(NAME_RECONNECTTIMEOUT) << " seconds.");
+	         EnvGetLong(NAME_RECONNECTWAIT) << " seconds.");
      
-         sleep(EnvGetLong(NAME_RECONNECTTIMEOUT));
+         sleep(EnvGetLong(NAME_RECONNECTWAIT));
 
       }
 
@@ -256,6 +268,9 @@ bool XrdClientAdmin::Stat(const char *fname, long &id, long long &size, long &fl
    // identical to TSystem::GetPathInfo().
 
    bool ok;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
 
    // asks the server for stat file informations
    ClientRequest statFileRequest;
@@ -312,6 +327,9 @@ bool XrdClientAdmin::Stat_vfs(const char *fname,
    // asks the server for stat file informations
    ClientRequest statFileRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &statFileRequest, 0, sizeof(ClientRequest) );
 
    fConnModule->SetSID(statFileRequest.header.streamid);
@@ -363,6 +381,9 @@ bool XrdClientAdmin::SysStatX(const char *paths_list, kXR_char *binInfo)
    // asks the server for stat file informations
    ClientRequest statXFileRequest;
   
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &statXFileRequest, 0, sizeof(ClientRequest) );
    fConnModule->SetSID(statXFileRequest.header.streamid);
    statXFileRequest.header.requestid = kXR_statx;
@@ -481,6 +502,9 @@ bool XrdClientAdmin::Rmdir(const char *path)
    // Remove an empty remote directory
    ClientRequest rmdirFileRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &rmdirFileRequest, 0, sizeof(rmdirFileRequest) );
    fConnModule->SetSID(rmdirFileRequest.header.streamid);
    rmdirFileRequest.header.requestid = kXR_rmdir;
@@ -497,6 +521,9 @@ bool XrdClientAdmin::Rm(const char *file)
    // Remove a remote file
    ClientRequest rmFileRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &rmFileRequest, 0, sizeof(rmFileRequest) );
    fConnModule->SetSID(rmFileRequest.header.streamid);
    rmFileRequest.header.requestid = kXR_rm;
@@ -511,6 +538,9 @@ bool XrdClientAdmin::Chmod(const char *file, int user, int group, int other)
 {
    // Change the permission of a remote file
    ClientRequest chmodFileRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
 
    memset( &chmodFileRequest, 0, sizeof(chmodFileRequest) );
 
@@ -551,6 +581,9 @@ bool XrdClientAdmin::Mkdir(const char *dir, int user, int group, int other)
 {
    // Create a remote directory
    ClientRequest mkdirRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
 
    memset( &mkdirRequest, 0, sizeof(mkdirRequest) );
 
@@ -598,6 +631,10 @@ bool XrdClientAdmin::Mv(const char *fileSrc, const char *fileDest)
 
    // Rename a remote file
    ClientRequest mvFileRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
 
    memset( &mvFileRequest, 0, sizeof(mvFileRequest) );
 
@@ -758,6 +795,9 @@ bool XrdClientAdmin::Protocol(kXR_int32 &proto, kXR_int32 &kind)
 {
    ClientRequest protoRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &protoRequest, 0, sizeof(protoRequest) );
 
    fConnModule->SetSID(protoRequest.header.streamid);
@@ -785,6 +825,9 @@ bool XrdClientAdmin::Prepare(vecString vs, kXR_char option, kXR_char prty)
 
    XrdOucString buf;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    if (vs.GetSize() < 75) {
      joinStrings(buf, vs);
      return Prepare(buf.c_str(), option, prty);
@@ -807,6 +850,9 @@ bool XrdClientAdmin::Prepare(const char *buf, kXR_char option, kXR_char prty)
    // Send a bulk prepare request for a '\n' separated list in buf
 
    ClientRequest prepareRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
 
    memset( &prepareRequest, 0, sizeof(prepareRequest) );
 
@@ -831,6 +877,9 @@ bool  XrdClientAdmin::DirList(const char *dir, vecString &entries) {
    ClientRequest DirListFileRequest;
    kXR_char *dl;
   
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &DirListFileRequest, 0, sizeof(ClientRequest) );
    fConnModule->SetSID(DirListFileRequest.header.streamid);
    DirListFileRequest.header.requestid = kXR_dirlist;
@@ -882,6 +931,10 @@ long XrdClientAdmin::GetChecksum(kXR_char *path, kXR_char **chksum)
 {
    ClientRequest chksumRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
+
    memset( &chksumRequest, 0, sizeof(chksumRequest) );
 
    fConnModule->SetSID(chksumRequest.header.streamid);
@@ -907,6 +960,7 @@ int XrdClientAdmin::LocalLocate(kXR_char *path, XrdClientVector<XrdClientLocate_
   // not found); else returns the number of non-data servers.
 
    ClientRequest locateRequest;
+
    char *resp = 0;
    int retval = (all) ? 0 : -1;
 
@@ -1007,6 +1061,10 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool wri
 
    if (!fConnModule) return 0;
    if (!fConnModule->IsConnected()) return 0;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
 
 
    // Old servers will use what's there
@@ -1125,6 +1183,11 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info
    if (!fConnModule->IsConnected()) return 0;
 
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
+
+
    // Old servers will use what's there
    if (fConnModule->GetServerProtocol() < 0x290) {
      long id, flags, modtime;
@@ -1205,6 +1268,10 @@ bool XrdClientAdmin::Truncate(const char *path, long long newsize) {
    ClientRequest truncateRequest;
    int l = strlen(path);
    if (!l) return false;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
 
    memset( &truncateRequest, 0, sizeof(truncateRequest) );
 

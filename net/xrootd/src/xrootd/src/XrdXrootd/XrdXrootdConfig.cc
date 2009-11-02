@@ -189,6 +189,26 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    if (rdf && Config(rdf)) return 0;
    if (pi->DebugON) XrdXrootdTrace->What = TRACE_ALL;
 
+// Check if we are exporting anything
+//
+   if (!(xp = XPList.Next()))
+      {XPList.Insert("/tmp"); n = 8;
+       eDest.Say("Config warning: only '/tmp' will be exported.");
+      } else {
+       n = 0;
+       while(xp) {eDest.Say("Config exporting ", xp->Path(i));
+                  n += i+2; xp = xp->Next();
+                 }
+      }
+
+// Export the exports
+//
+   bP = tmp = (char *)malloc(n);
+   xp = XPList.Next();
+   while(xp) {strcpy(bP, xp->Path(i)); bP += i; *bP++ = ' '; xp = xp->Next();}
+   *(bP-1) = '\0';
+   XrdOucEnv::Export("XRDEXPORTS", tmp); free(tmp);
+
 // Initialiaze for AIO
 //
    if (!as_noaio) XrdXrootdAioReq::Init(as_segsize, as_maxperreq, as_maxpersrv);
@@ -261,26 +281,6 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
            xp = xp->Next();
           } while(xp);
       }
-
-// Check if we are exporting anything
-//
-   if (!(xp = XPList.Next()))
-      {XPList.Insert("/tmp"); n = 13;
-       eDest.Say("Config warning: only '/tmp' will be exported.");
-      } else {
-       n = 0;
-       while(xp) {eDest.Say("Config exporting ", xp->Path(i));
-                  n += i; xp = xp->Next();
-                 }
-      }
-
-// Export the exports
-//
-   bP = tmp = (char *)malloc(n);
-   xp = XPList.Next();
-   while(xp) {strcpy(bP, xp->Path(i)); bP += i; *bP++ = ' '; xp = xp->Next();}
-   *(bP-1) = '\0';
-   XrdOucEnv::Export("XRDEXPORTS", tmp); free(tmp);
 
 // Set the redirect flag if we are a pure redirector
 //

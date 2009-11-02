@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.64 2009/07/29 15:55:16 ganis Exp $
+#              $Id: GNUmakefile,v 1.65 2009/09/18 14:46:48 furano Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -47,7 +47,8 @@ SOURCES = \
 	XrdClientPSock.cc               \
 	XrdClientMStream.cc             \
 	XrdClientReadV.cc               \
-	XrdcpXtremeRead.cc
+	XrdcpXtremeRead.cc              \
+	XrdClientReadAhead.cc
 
   
 OBJECTS = \
@@ -73,7 +74,8 @@ OBJECTS = \
 	$(OBJDIR)/XrdClientSid.o                \
 	$(OBJDIR)/XrdClientPSock.o              \
 	$(OBJDIR)/XrdClientMStream.o            \
-	$(OBJDIR)/XrdClientReadV.o
+	$(OBJDIR)/XrdClientReadV.o              \
+	$(OBJDIR)/XrdClientReadAhead.o
 
 OBJECTB = $(OBJDIR)/TestXrdClient.o $(OBJDIR)/XrdClientAdmin_c.o
 
@@ -271,7 +273,8 @@ $(OBJDIR)/XrdClient.o: XrdClient.cc ../XrdClient/XrdClient.hh \
   ../XrdClient/XrdClientConnMgr.hh ../XrdClient/XrdClientLogConnection.hh \
   ../XrdClient/XrdClientPhyConnection.hh ../XrdClient/XrdClientThread.hh \
   ../XrdClient/XrdClientSid.hh ../XrdOuc/XrdOucRash.hh \
-  ../XrdOuc/XrdOucRash.icc ../XrdSys/XrdSysPlatform.hh
+  ../XrdOuc/XrdOucRash.icc ../XrdSys/XrdSysPlatform.hh \
+  ../XrdClient/XrdClientReadAhead.hh
 	@echo Compiling XrdClient.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClient.o XrdClient.cc
 
@@ -541,7 +544,7 @@ $(OBJDIR)/Xrdcp.o: Xrdcp.cc ../XrdClient/XrdClientUrlInfo.hh \
   ../XrdCrypto/XrdCryptoAux.hh ../XrdCrypto/XrdCryptoMsgDigest.hh \
   ../XrdCrypto/XrdCryptoBasic.hh ../XrdSut/XrdSutBucket.hh \
   ../XrdSut/XrdSutAux.hh ../XrdClient/XrdClientAbsMonIntf.hh \
-  ../XrdClient/XrdcpXtremeRead.hh
+  ../XrdClient/XrdcpXtremeRead.hh ../XrdClient/XrdClientReadAhead.hh
 	@echo Compiling Xrdcp.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFHASXRDCRYPTO) $(INCLUDE) -o $(OBJDIR)/Xrdcp.o Xrdcp.cc
 
@@ -664,3 +667,7 @@ $(OBJDIR)/XrdcpXtremeRead.o: XrdcpXtremeRead.cc  ../XrdClient/XrdcpXtremeRead.hh
   ../XrdVersion.hh ../XrdClient/XrdClientAdmin.hh
 	@echo Compiling XrdcpXtremeRead.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdcpXtremeRead.o XrdcpXtremeRead.cc
+
+$(OBJDIR)/XrdClientReadAhead.o: XrdClientReadAhead.cc ../XrdClient/XrdClientReadAhead.hh
+	@echo Compiling XrdClientReadAhead.cc
+	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClientReadAhead.o XrdClientReadAhead.cc

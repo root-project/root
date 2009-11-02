@@ -10,6 +10,8 @@
 
 //       $Id$
 
+const char *XrdCmsLoginCVSID = "$Id$";
+
 #include <netinet/in.h>
 
 #include "XProtocol/YProtocol.hh"

@@ -11,6 +11,8 @@
   
 //       $Id$
 
+const char *XrdSecTLayerCVSID = "$Id$";
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>

@@ -6,6 +6,8 @@
 /******************************************************************************/
 
 //           $Id$
+
+const char *XrdOfsFSCVSID = "$Id$";
   
 // If you are replacing the standard definition of the file system interface,
 // with a derived class to perform additional or enhanced functions, you MUST

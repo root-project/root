@@ -84,7 +84,8 @@ private:
                          Bool_t parallelopen);
 
    Int_t   ParseOptions(const char *opts, Int_t &cachesz, Int_t &readaheadsz,
-                        Int_t &rmpolicy, Int_t &mxredir);
+                        Int_t &rmpolicy, Int_t &mxredir, Int_t &rastrategy, Int_t &readtrimblksz);
+
    // Synchronizes the cache size in XrdClient
    // XrdClient cannot have a cache size smaller than the one in TFile
    void    SynchronizeCacheSize();

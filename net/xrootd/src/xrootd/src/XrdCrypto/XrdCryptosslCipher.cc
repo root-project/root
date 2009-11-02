@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptosslCipherCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                  X r d C r y p t o S s l C i p h e r . c c                 */

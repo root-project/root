@@ -10,6 +10,8 @@
   
 //          $Id$
 
+const char *XrdFrmAdminRelockCVSID = "$Id$";
+
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>

@@ -192,11 +192,11 @@ void TXNetFile::FormUrl(TUrl uu, TString &uus)
 //_____________________________________________________________________________
 Int_t TXNetFile::ParseOptions(const char *opts,
                               Int_t &cachesz, Int_t &readaheadsz,
-                              Int_t &rmpolicy, Int_t &mxredir)
+                              Int_t &rmpolicy, Int_t &mxredir, Int_t &rastrategy, Int_t &readtrimblksz)
 {
    // Parse input options for cache parameters
-   static const char *keys[4] = { "cachesz=", "readaheadsz=", "rmpolicy=",
-                                  "mxredir=" };
+   static const char *keys[6] = { "cachesz=", "readaheadsz=", "rmpolicy=",
+                                  "mxredir=", "readaheadstrategy=", "readtrimblksz=" };
    Int_t fo = 0;
    TString s(opts);
 
@@ -222,6 +222,10 @@ Int_t TXNetFile::ParseOptions(const char *opts,
                rmpolicy = val.Atoi();
             else if (i == 3)
                mxredir = val.Atoi();
+            else if (i == 4)
+               rastrategy = val.Atoi();
+            else if (i == 5)
+               readtrimblksz = val.Atoi();
          }
       }
    }
@@ -229,8 +233,9 @@ Int_t TXNetFile::ParseOptions(const char *opts,
    // Notify
    if (gDebug > 0)
       Info("ParseCacheOptions","found: cachesz = %d, readaheadsz = %d, "
-                               "rmpolicy = %d, mxredir = %d",
-                               cachesz, readaheadsz, rmpolicy, mxredir);
+           "rmpolicy = %d, mxredir = %d, rastrategy = %d, readtrimblksz = %d",
+           cachesz, readaheadsz, rmpolicy, mxredir, rastrategy, readtrimblksz);
+
    // Done
    return fo;
 }
@@ -242,6 +247,7 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
    // The real creation work is done here.
 
    Int_t cachesz = -1, readaheadsz = -1, rmpolicy = -1, mxredir = -1, np = 0;
+   Int_t readaheadstrategy = -1, readtrimblksz = -1;
 
    fClient = 0;
    fNetopt = netopt;
@@ -285,7 +291,9 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
 
    // Get client (cache, redir) parameters, if any
    np = ParseOptions(TUrl(url).GetOptions(),
-                     cachesz, readaheadsz, rmpolicy, mxredir);
+                     cachesz, readaheadsz, rmpolicy, mxredir,
+                     readaheadstrategy, readtrimblksz);
+
    // Set max redir, if asked
    if (mxredir > 0) {
       if (fClient->GetClientConn()) {
@@ -302,6 +310,19 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
                                "rmpolicy = %d",
                                cachesz, readaheadsz, rmpolicy);
       fClient->SetCacheParameters(cachesz, readaheadsz, rmpolicy);
+
+      if (readaheadstrategy >= 0) {
+         if (gDebug > 0)
+            Info("CreateXClient", "setting readaheadstrategy = %d", readaheadstrategy);
+         fClient->SetReadAheadStrategy(readaheadstrategy);
+      }
+
+      if (readtrimblksz >= 0) {
+         if (gDebug > 0)
+            Info("CreateXClient", "setting readtrimblksz = %d", readtrimblksz);
+         fClient->SetBlockReadTrimming(readtrimblksz);
+      }
+
    }
 
    //
@@ -1145,9 +1166,14 @@ void TXNetFile::SetEnv()
    EnvPutInt(NAME_CONNECTTIMEOUT, connTO);
 
    // Reconnect Timeout
-   Int_t recoTO = gEnv->GetValue("XNet.ReconnectTimeout",
-                                  DFLT_RECONNECTTIMEOUT);
-   EnvPutInt(NAME_RECONNECTTIMEOUT, recoTO);
+   Int_t recoTO = gEnv->GetValue("XNet.ReconnectWait",
+                                  DFLT_RECONNECTWAIT);
+   if (recoTO == DFLT_RECONNECTWAIT) {
+      // Check also the old variable name
+      recoTO = gEnv->GetValue("XNet.ReconnectTimeout",
+                                  DFLT_RECONNECTWAIT);
+   }
+   EnvPutInt(NAME_RECONNECTWAIT, recoTO);
 
    // Request Timeout
    Int_t requTO = gEnv->GetValue("XNet.RequestTimeout",
@@ -1159,15 +1185,12 @@ void TXNetFile::SetEnv()
                                     DFLT_MAXREDIRECTCOUNT);
    EnvPutInt(NAME_MAXREDIRECTCOUNT, maxRedir);
 
-   // Whether to use a separate thread for garbage collection
-   Int_t garbCollTh = gEnv->GetValue("XNet.StartGarbageCollectorThread",
-                                      DFLT_STARTGARBAGECOLLECTORTHREAD);
-   EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
 
    // Read ahead size
    Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize",
                                      DFLT_READAHEADSIZE);
    EnvPutInt(NAME_READAHEADSIZE, rAheadsiz);
+
 
    // Cache size (<= 0 disables cache)
    Int_t rCachesiz = gEnv->GetValue("XNet.ReadCacheSize",

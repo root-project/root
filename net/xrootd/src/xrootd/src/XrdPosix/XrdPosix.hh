@@ -44,7 +44,7 @@
 
 #define ftello(a)        XrdPosix_Ftello(a)
 
-#define ftuncate(a,b)    XrdPosix_Ftruncate(a,b)
+#define ftruncate(a,b)   XrdPosix_Ftruncate(a,b)
 
 #define fwrite(b,s,n,f)  XrdPosix_Fwrite(b,s,n,f)
 
@@ -84,7 +84,7 @@
 
 #define telldir(a)       XrdPosix_Telldir(a)
 
-#define tuncate(a,b)     XrdPosix_Truncate(a,b)
+#define truncate(a,b)    XrdPosix_Truncate(a,b)
 
 #define unlink(a)        XrdPosix_Unlink(a)
 

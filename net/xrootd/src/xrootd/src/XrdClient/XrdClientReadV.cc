@@ -8,6 +8,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
+const char *XrdClientReadVCVSID = "$Id$";
+
 #include "XrdClient/XrdClientReadV.hh"
 #include "XrdClient/XrdClientConn.hh"
 #include "XrdClient/XrdClientDebug.hh"

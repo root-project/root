@@ -20,6 +20,7 @@
 #define XRD_CLIIDXVEC_H
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "XrdSys/XrdSysHeaders.hh"
 

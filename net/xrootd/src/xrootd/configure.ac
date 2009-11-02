@@ -12,7 +12,7 @@
 ## Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: configure.ac,v 1.55 2009/06/03 08:17:35 dfeich Exp $
+## Version info: $Id: configure.ac,v 1.56 2009/09/30 11:00:34 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
@@ -21,7 +21,7 @@
 
 
 AC_PREREQ(2.57)
-AC_INIT(xrootd,CVS20090603,xrootd-l@slac.stanford.edu)
+AC_INIT(xrootd,v20090930-1117,xrootd-l@slac.stanford.edu)
 AC_CONFIG_SRCDIR([src/XrdVersion.hh])
 
 # use C++ for the compilation of tests

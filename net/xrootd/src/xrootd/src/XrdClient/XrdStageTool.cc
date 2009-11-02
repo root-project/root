@@ -11,6 +11,8 @@
 
 //       $Id$
 
+const char *XrdStageToolCVSID = "$Id$";
+
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdClient/XrdClient.hh"
 #include "XrdClient/XrdClientAdmin.hh"
@@ -68,7 +70,7 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////
 
 
-#define XRDSTAGETOOL_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.7 $ - Xrootd version: "XrdVSTRING
+#define XRDSTAGETOOL_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.8 $ - Xrootd version: "XrdVSTRING
 
 
 ///////////////////////////////////////////////////////////////////////

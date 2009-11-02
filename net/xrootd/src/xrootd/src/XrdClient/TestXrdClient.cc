@@ -1,4 +1,6 @@
 //       $Id$
+
+//const char *TestClientCVSID = "$Id$";
 // Simple keleton for simple tests of Xrdclient and XrdClientAdmin
 //
 

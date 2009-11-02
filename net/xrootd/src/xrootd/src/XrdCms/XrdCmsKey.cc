@@ -10,6 +10,8 @@
 
 //         $Id$
 
+const char *XrdCmsKeyCVSID = "$Id$";
+
 #include <errno.h>
 #include <string.h>
 

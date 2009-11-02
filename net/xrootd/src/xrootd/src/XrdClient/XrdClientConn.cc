@@ -11,6 +11,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
 const char *XrdClientConnCVSID = "$Id$";
 
 #include "XrdClient/XrdClientDebug.hh"
@@ -135,12 +137,10 @@ XrdClientConn::XrdClientConn(): fOpenError((XErrorCode)0), fUrl(""),
 				fREQWaitTimeLimit(0),
 				fREQConnectWaitTimeLimit(0) {
     // Constructor
-
+    ClearLastServerError();
     memset(&LastServerResp, 0, sizeof(LastServerResp));
-    memset(&LastServerError, 0, sizeof(LastServerError));
     LastServerResp.status = kXR_noResponsesYet;
-    LastServerError.errnum = kXR_noErrorYet;
-
+ 
     fREQUrl.Clear();
     fREQWait = new XrdSysCondVar(0);
     fREQConnectWait = new XrdSysCondVar(0);
@@ -391,6 +391,7 @@ XrdClientMessage *XrdClientConn::ClientServerCmd(ClientRequest *req, const void 
 	} while (xmsg && (xmsg->HeaderStatus() == kXR_oksofar));
 
     } while ((fGlobalRedirCnt < fMaxGlobalRedirCnt) &&
+             !IsOpTimeLimitElapsed(time(0)) &&
 	     xmsg && (xmsg->HeaderStatus() == kXR_redirect)); 
 
     // We collected all the partial responses into a single memory block.
@@ -480,18 +481,27 @@ bool XrdClientConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
 	if (cmdrespMex)
 	    memcpy(&LastServerResp, &cmdrespMex->fHdr,sizeof(struct ServerResponseHeader));
 
-	// Check for the redir count limit
-	if (fGlobalRedirCnt >= fMaxGlobalRedirCnt) {
-	    Error("SendGenCommand",
-		  "Too many redirections for request  " <<
-		  convertRequestIdToChar(req->header.requestid) <<
-		  ". Aborting command.");
-
-	    abortcmd = TRUE;
-	}
-	else {
-
-	    // On serious communication error we retry for a number of times,
+        // Check for the max time allowed for this request
+        if (IsOpTimeLimitElapsed(time(0))) {
+           Error("SendGenCommand",
+                 "Max time limit elapsed for request  " <<
+                 convertRequestIdToChar(req->header.requestid) <<
+                 ". Aborting command.");
+           abortcmd = TRUE;
+           
+        } else
+           // Check for the redir count limit
+           if (fGlobalRedirCnt >= fMaxGlobalRedirCnt) {
+              Error("SendGenCommand",
+                    "Too many redirections for request  " <<
+                    convertRequestIdToChar(req->header.requestid) <<
+                    ". Aborting command.");
+              
+              abortcmd = TRUE;
+           }
+           else {
+              
+            // On serious communication error we retry for a number of times,
 	    // waiting for the server to come back
 	    if (!cmdrespMex || cmdrespMex->IsError()) {
 
@@ -1816,13 +1826,6 @@ XrdClientConn::HandleServerError(XReqErrorType &errorType, XrdClientMessage *xms
     // We cycle repeatedly trying to ask the dlb for a working redir destination
     do {
     
-	// Consider the timeout for the count of the redirections
-	// this instance got in the last period of time
-	if ( (time(0) - fGlobalRedirLastUpdateTimestamp) > EnvGetLong(NAME_REDIRCNTTIMEOUT)) {
-	    fGlobalRedirCnt = 0;
-	    fGlobalRedirLastUpdateTimestamp = time(0);
-	}
-
 	// Anyway, let's update the counter, we have just been redirected
 	fGlobalRedirCnt++;
 
@@ -1852,9 +1855,8 @@ XrdClientConn::HandleServerError(XReqErrorType &errorType, XrdClientMessage *xms
            }
         }
 
-// 	// An error in kxr_bind must not be repeated
-// 	if (req->header.requestid == kXR_bind)
-// 	    return kSEHRReturnNoMsgToCaller;
+        // If the time limit has expired... exit
+        if (IsOpTimeLimitElapsed(time(0))) return kSEHRContinue;
 
 	newhost = "";
 	newport = 0;
@@ -1969,7 +1971,7 @@ XrdClientConn::HandleServerError(XReqErrorType &errorType, XrdClientMessage *xms
            if (LastServerError.errnum == kXR_NotAuthorized)
               return kSEHRReturnMsgToCaller;
 
-           sleep(EnvGetLong(NAME_RECONNECTTIMEOUT));
+           sleep(EnvGetLong(NAME_RECONNECTWAIT));
         }
 
 	// We keep trying the connection to the same host (we have only one)
@@ -2310,9 +2312,12 @@ void XrdClientConn::CheckREQPauseState() {
     while (1) {
 	timenow = time(0);
       
-	if (timenow < fREQWaitTimeLimit)
-	    // If still to wait... wait
-	    fREQWait->Wait(fREQWaitTimeLimit - timenow);
+	if ((timenow < fREQWaitTimeLimit) && !IsOpTimeLimitElapsed(timenow)) {
+           // If still to wait... wait in relatively small steps
+           time_t tt = xrdmin(fREQWaitTimeLimit - timenow, 10);
+           
+           fREQWait->Wait(tt);
+        }
 	else break;
     }
    
@@ -2336,9 +2341,12 @@ void XrdClientConn::CheckREQConnectWaitState() {
     while (1) {
 	timenow = time(0);
       
-	if (timenow < fREQConnectWaitTimeLimit)
-	    // If still to wait... wait
-	    fREQConnectWait->Wait(fREQConnectWaitTimeLimit - timenow);
+	if ((timenow < fREQConnectWaitTimeLimit) && !IsOpTimeLimitElapsed(timenow)) {
+           // If still to wait... wait in relatively small steps
+           time_t tt = xrdmin(fREQWaitTimeLimit - timenow, 10);
+           // If still to wait... wait
+           fREQConnectWait->Wait(tt);
+        }
 	else break;
     }
    
@@ -2352,13 +2360,9 @@ bool XrdClientConn::WaitResp(int secsmax) {
     // In this case the calling thread
     // is put to sleep into a condvar until the timeout or the response arrives.
 
-    // Returns true on timeout.
+    // Returns true on timeout, false if a signal was caught
 
-    int rc = false;
-
-
-   
-
+    int rc = true;
 
     // Lock mutex
     fREQWaitResp->Lock();
@@ -2366,19 +2370,35 @@ bool XrdClientConn::WaitResp(int secsmax) {
     // We don't have to wait if the info already arrived
     if (!fREQWaitRespData) {
 
-	Info(XrdClientDebug::kHIDEBUG,
-	     "WaitResp", "Waiting response for " << secsmax << " secs." );
+       Info(XrdClientDebug::kHIDEBUG,
+            "WaitResp", "Waiting response for " << secsmax << " secs." );
 
-	// If still to wait... wait
-	rc = fREQWaitResp->Wait(secsmax);
+       time_t timelimit = time(0)+secsmax;
 
-	Info(XrdClientDebug::kHIDEBUG,
-	     "WaitResp", "Signal or timeout elapsed. Data=" << fREQWaitRespData );
+       while (rc) {
+          time_t timenow = time(0);
+          
+          if ((timenow < timelimit) && !IsOpTimeLimitElapsed(timenow)) {
+             // If still to wait... wait in relatively small steps
+             time_t tt = xrdmin(timelimit - timenow, 10);
+             // If still to wait... wait
+             rc = fREQWaitResp->Wait(tt);           
+          }
+          else {
+             rc = true;
+             break;
+          }
+
+       }
+       
+       
+       Info(XrdClientDebug::kHIDEBUG,
+            "WaitResp", "Signal or timeout elapsed. Data=" << fREQWaitRespData );
     }
-   
+    
     // Unlock mutex
     fREQWaitResp->UnLock();
-
+    
     return rc;
 }
 
@@ -2661,4 +2681,15 @@ bool XrdClientConn::DoWriteHardCheckPoint() {
     fWriteWaitAck->Wait(1);
   }
 
+}
+
+
+//_____________________________________________________________________________
+
+void XrdClientConn::SetOpTimeLimit(int delta_secs) {
+   fOpTimeLimit = time(0)+delta_secs;
+}
+
+bool XrdClientConn::IsOpTimeLimitElapsed(time_t timenow) {
+   return (timenow > fOpTimeLimit);
 }

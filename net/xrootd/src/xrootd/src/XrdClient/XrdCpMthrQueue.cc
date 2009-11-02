@@ -10,6 +10,8 @@
 
 //       $Id$
 
+const char *XrdCpMthrQueueCVSID = "$Id$";
+
 #include "XrdClient/XrdCpMthrQueue.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdClient/XrdClientDebug.hh"

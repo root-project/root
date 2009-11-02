@@ -10,6 +10,8 @@
 
 //         $Id$
 
+const char *XrdNetMsgCVSID = "$Id$";
+
 #include <sys/poll.h>
 
 #include "XrdNet/XrdNet.hh"

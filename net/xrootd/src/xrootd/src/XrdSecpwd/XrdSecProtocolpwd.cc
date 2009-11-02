@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSecProtocolpwdCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                 X r d S e c P r o t o c o l p w d . c c                    */

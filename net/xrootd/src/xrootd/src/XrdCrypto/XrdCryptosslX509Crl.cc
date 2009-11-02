@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptosslX509CrlCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                X r d C r y p t o s s l X 5 0 9 C r l. c c                  */
@@ -224,7 +226,10 @@ int XrdCryptosslX509Crl::InitFromURI(const char *uri, const char *hash)
 
    // Execute 'wget'
    DEBUG("executing ... "<<cmd);
-   system(cmd.c_str());
+   if (system(cmd.c_str()) == -1) {
+      DEBUG("'system' could not fork to execute command '"<<cmd<<"'");
+      return -1;
+   }
    struct stat st;
    if (stat(outder.c_str(), &st) != 0) {
       DEBUG("did not manage to get the CRL file from "<<uri);

@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSutPFileCVSID = "$Id$";
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

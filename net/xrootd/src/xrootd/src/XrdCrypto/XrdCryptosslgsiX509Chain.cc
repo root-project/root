@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptosslgsiX509ChainCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*           X r d C r y p t o s s l g s i X 5 0 9 C h a i n . h h            */

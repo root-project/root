@@ -10,6 +10,8 @@
 
 //          $Id$
 
+const char *XrdOucExportCVSID = "$Id$";
+
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdSys/XrdSysPlatform.hh"
   
@@ -69,6 +71,8 @@ unsigned long long XrdOucExport::ParseDefs(XrdOucStream      &Config,
         {"mlock",         0,              XRDEXP_MLOK,    XRDEXP_MLOK_X},
         {"nommap",        XRDEXP_MMAP,    0,              XRDEXP_MMAP_X},
         {"mmap",          0,              XRDEXP_MMAP,    XRDEXP_MMAP_X},
+        {"nopurge",       XRDEXP_PURGE,   0,              XRDEXP_PURGE_X},
+        {"purge",         0,              XRDEXP_PURGE,   XRDEXP_PURGE_X},
         {"nostage",       0,              XRDEXP_NOSTAGE, XRDEXP_STAGE_X},
         {"stage",         XRDEXP_NOSTAGE, 0,              XRDEXP_STAGE_X},
         {"dread",         XRDEXP_NODREAD, 0,              XRDEXP_DREAD_X},

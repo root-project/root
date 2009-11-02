@@ -1754,7 +1754,7 @@ int XrdOfs::stat(const char             *path,        // In
 
 // Now try to find the file or directory
 //
-   if (!(retc = XrdOfsOss->Stat(path, &buf, 1))) mode = buf.st_mode;
+   if (!(retc = XrdOfsOss->Stat(path, &buf, XRDOSS_resonly))) mode=buf.st_mode;
       else if ((-ENOMSG) != retc) return XrdOfsFS.Emsg(epname, einfo, retc,
                                                     "locate", path);
    return SFS_OK;

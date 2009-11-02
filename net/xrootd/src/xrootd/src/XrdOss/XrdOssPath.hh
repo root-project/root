@@ -32,6 +32,9 @@ static const int  sfxLen = 4;
 
 static int   Convert(char *dst, int dln, const char *oldP, const char *newP);
 
+static
+const  char *Extract(char *path, char *lbuf, int &lbsz);
+
 static char *genPath(const char *inPath, const char *cgrp, char *sfx);
 
 static char *genPFN(fnInfo &Info, char *buff, int blen, const char *Path=0);
@@ -67,6 +70,7 @@ static void  Trim2Base(char *eP);
 private:
 static char *bin2hex(char *inbuff, int dlen, char *buff);
 static int   Init(char *pfnPfx);
+static char *posCname(char *lbuf, int lbsz, int &cnsz);
 
 static char h2c[16];
 };

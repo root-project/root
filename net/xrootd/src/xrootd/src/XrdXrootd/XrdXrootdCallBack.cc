@@ -10,6 +10,8 @@
 
 //        $Id$
 
+const char *XrdXrootdCallBackCVSID = "$Id$";
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>

@@ -11,6 +11,8 @@
   
 //         $Id$
 
+const char *XrdOfsEvsCVSID = "$Id$";
+
 #include <ctype.h>
 #include <stdarg.h>
 #include <stddef.h>

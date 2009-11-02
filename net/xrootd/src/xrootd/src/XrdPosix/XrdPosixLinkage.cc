@@ -10,6 +10,8 @@
 
 //           $Id$
 
+const char *XrdPosixLinkageCVSID = "$Id$";
+
 // Bypass Solaris ELF madness
 //
 #ifdef __solaris__

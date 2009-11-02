@@ -9,6 +9,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
+const char *XrdXtremeReadCVSID = "$Id$";
+
 #include "XrdClient/XrdcpXtremeRead.hh"
 #include "XrdClient/XrdClientAdmin.hh"
 

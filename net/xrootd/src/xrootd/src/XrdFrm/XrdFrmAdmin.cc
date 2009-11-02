@@ -519,6 +519,7 @@ int XrdFrmAdmin::Parse(const char *What, XrdOucArgs &Spec, const char **Reqs)
                           break;
                 case 'p': Opt.MPType  ='p';break;
                 case 'r': Opt.Recurse = 1; break;
+                case '?': return 0;
                 default:  Emsg("Internal error mapping options!");
                           return 0;
                }

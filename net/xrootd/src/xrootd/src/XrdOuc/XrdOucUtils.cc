@@ -10,6 +10,9 @@
 
 //         $Id$
 
+const char *XrdOucUtilsCVSID = "$Id$";
+
+#include <ctype.h>
 #include <errno.h>
 
 #ifdef WIN32
@@ -22,6 +25,31 @@
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdOuc/XrdOucUtils.hh"
   
+/******************************************************************************/
+/*                                 e T e x t                                  */
+/******************************************************************************/
+  
+// eText() returns the text associated with the error, making the first
+// character in the text lower case. The text buffer pointer is returned.
+
+char *XrdOucUtils::eText(int rc, char *eBuff, int eBlen, int AsIs)
+{
+   const char *etP;
+
+// Get error text
+//
+   if (!(etP = strerror(rc)) || !(*etP)) etP = "reason unknown";
+
+// Copy the text and lower case the first letter
+//
+   strlcpy(eBuff, etP, eBlen);
+   if (!AsIs) *eBuff = tolower(*eBuff);
+
+// All done
+//
+   return eBuff;
+}
+
 /******************************************************************************/
 /*                                  d o I f                                   */
 /******************************************************************************/

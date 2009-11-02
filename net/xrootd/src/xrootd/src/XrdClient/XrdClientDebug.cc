@@ -6,6 +6,8 @@
 /***********************************************************/
 //
 //   $Id$
+
+const char *XrdClientDebugCVSID = "$Id$";
 //
 // Author: Alvise Dorigo, Fabrizio Furano
 

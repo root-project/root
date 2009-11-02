@@ -7,6 +7,8 @@
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
+
+//         $Id$
   
 const char *XrdPosixXrootdCVSID = "$Id$";
 
@@ -172,6 +174,9 @@ XrdPosixXrootd XrdPosixXrootd;
   
 XrdPosixAdminNew::XrdPosixAdminNew(const char *path) : Admin(path)
 {
+
+// Now Connect to the target host
+//
    if (!Admin.Connect())
        eNum = XrdPosixXrootd::mapError(Admin.LastServerError()->errnum);
        else eNum = 0;
@@ -201,6 +206,9 @@ int XrdPosixAdminNew::Fault()
 
 XrdPosixDir::XrdPosixDir(int dirno, const char *path) : XAdmin(path)
 {
+
+// Now connect up
+//
    if (!XAdmin.Connect())
       eNum = XrdPosixXrootd::mapError(XAdmin.LastServerError()->errnum);
       else eNum = 0;
@@ -291,12 +299,6 @@ XrdPosixFile::XrdPosixFile(int fd, const char *path)
                currOffset(0),
                doClose(0)
 {
-   static int initDone = 0;
-
-// Initialize environment if not done before. This avoid static initialization
-// dependencies as we need to do it once but we must be the last ones to do it.
-//
-   if (!initDone) {XrdPosixXrootd::initEnv(); initDone = 1;}
 
 // Allocate a new client object
 //
@@ -328,12 +330,24 @@ XrdPosixFile::~XrdPosixFile()
 XrdPosixXrootd::XrdPosixXrootd(int fdnum, int dirnum)
 {
    extern XrdPosixLinkage Xunix;
+   static int initDone = 0;
    struct rlimit rlim;
    long isize;
 
-// Initialize the linkage table first
+// Only static fields are initialized here. We need to do this only once!
+//
+   if (initDone) return;
+   initDone = 1;
+
+// Initialize the linkage table first before any C calls!
 //
    Xunix.Init();
+
+// Initialize environment if not done before. To avoid static initialization
+// dependencies, we need to do it once but we must be the last ones to do it
+// before any XrdClient library routines are called.
+//
+   initEnv();
 
 // Compute size of table
 //
@@ -735,7 +749,7 @@ ssize_t XrdPosixXrootd::Pread(int fildes, void *buf, size_t nbyte, off_t offset)
 // Issue the read
 //
    offs = static_cast<long long>(offset);
-   if ((bytes = fp->XClient->Read(buf, offs, (int)iosz))<0) return Fault(fp);
+   if ((bytes = fp->XClient->Read(buf,offs,(int)iosz))<=0) return Fault(fp,-1);
 
 // All went well
 //
@@ -796,8 +810,8 @@ ssize_t XrdPosixXrootd::Read(int fildes, void *buf, size_t nbyte)
 
 // Issue the read
 //
-   if ((bytes = fp->XClient->Read(buf, fp->Offset(), iosz)) < 0)
-      return Fault(fp);
+   if ((bytes = fp->XClient->Read(buf, fp->Offset(), iosz)) <= 0)
+      return Fault(fp,-1);
 
 // All went well
 //
@@ -818,9 +832,10 @@ ssize_t XrdPosixXrootd::Readv(int fildes, const struct iovec *iov, int iovcnt)
 // Return the results of the read for each iov segment
 //
    for (i = 0; i < iovcnt; i++)
-       {if ((bytes = Read(fildes,(void *)iov[i].iov_base,(size_t)iov[i].iov_len)))
-           return -1;
-        totbytes += bytes;
+       {bytes = Read(fildes,(void *)iov[i].iov_base,(size_t)iov[i].iov_len);
+             if (bytes > 0) totbytes += bytes;
+        else if (bytes < 0) return -1;
+        else                break;
        }
 
 // All done
@@ -1236,8 +1251,7 @@ void XrdPosixXrootd::initEnv()
           {"XRDPOSIX_RTO",         NAME_REQUESTTIMEOUT,       0},
           {"XRDPSOIX_PSPC",        NAME_MULTISTREAMCNT,       0},
           {"XRDPSOIX_CTO",         NAME_CONNECTTIMEOUT,       0},
-          {"XRDPSOIX_CTOWAN",      NAME_CONNECTTIMEOUTWAN,    0},
-          {"XRDPSOIX_CRDELAY",     NAME_RECONNECTTIMEOUT,     0},
+          {"XRDPSOIX_CRDELAY",     NAME_RECONNECTWAIT,        0},
           {"XRDPSOIX_CRETRY",      NAME_FIRSTCONNECTMAXCNT,   0},
           {"XRDPSOIX_TCPWSZ",      NAME_DFLTTCPWINDOWSIZE,    0}
           };
@@ -1361,15 +1375,22 @@ void XrdPosixXrootd::setEnv(const char *var, long val)
 int XrdPosixXrootd::Fault(XrdPosixFile *fp, int complete)
 {
    char *etext = fp->XClient->LastServerError()->errmsg;
-   int   rc = mapError(fp->XClient->LastServerError()->errnum);
+   int   ecode = fp->XClient->LastServerError()->errnum;
+   int   rc = -1;
 
-   if (rc != ENOENT && *etext && XrdPosixXrootd::Debug > -2)
-      cerr <<"XrdPosix: " <<etext <<endl;
+   if (complete < 0)
+      {if (ecode && ecode != kXR_noErrorYet) ecode = mapError(ecode);
+          else ecode = rc = 0;
+      } else {
+       ecode = mapError(ecode);
+       if (ecode != ENOENT && *etext && XrdPosixXrootd::Debug > -2)
+          cerr <<"XrdPosix: " <<etext <<endl;
+      }
 
    if (!complete) return rc;
    fp->UnLock();
-   errno = rc;
-   return -1;
+   errno = ecode;
+   return rc;
 }
   
 /******************************************************************************/

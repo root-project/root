@@ -10,6 +10,8 @@
 
 //       $Id$
 
+const char *XrdClientReadCacheCVSID = "$Id$";
+
 #include "XrdClient/XrdClientReadCache.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdClient/XrdClientDebug.hh"

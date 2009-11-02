@@ -18,6 +18,7 @@ const char *XrdOssStatCVSID = "$Id$";
 #include <stdio.h>
 #include <strings.h>
 #include <time.h>
+#include <utime.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -47,7 +48,7 @@ const char *XrdOssStatCVSID = "$Id$";
   Output:   Returns XrdOssOK upon success and -errno upon failure.
 */
 
-int XrdOssSys::Stat(const char *path, struct stat *buff, int resonly)
+int XrdOssSys::Stat(const char *path, struct stat *buff, int opts)
 {
     const int ro_Mode = ~(S_IWUSR | S_IWGRP | S_IWOTH);
     char actual_path[MAXPATHLEN+1], *local_path, *remote_path;
@@ -66,14 +67,24 @@ int XrdOssSys::Stat(const char *path, struct stat *buff, int resonly)
          else local_path = actual_path;
       else local_path = (char *)path;
 
-// Stat the file in the local filesystem first.
+// Stat the file in the local filesystem first. If there. make sure the mode
+// bits correspond to our reality and update access time if so requested.
 //
    if (!stat(local_path, buff)) 
       {if (popts & XRDEXP_NOTRW) buff->st_mode &= ro_Mode;
+       if (opts & XRDOSS_updtatm && (buff->st_mode & S_IFMT) == S_IFREG)
+          {struct utimbuf times;
+           times.actime  = time(0);
+           times.modtime = buff->st_mtime;
+           utime(local_path, &times);
+          }
        return XrdOssOK;
       }
+
+// The file may be offline in a mass storage system, check if this is possible
+//
    if (!IsRemote(path)) return -errno;
-   if (resonly || !MSSgwCmd) return -ENOMSG;
+   if (opts & XRDOSS_resonly || !MSSgwCmd) return -ENOMSG;
 
 // Generate remote path
 //
@@ -227,6 +238,61 @@ int XrdOssSys::StatLS(XrdOucEnv &env, const char *path, char *buff, int &blen)
 //
    blen = snprintf(buff,blen,Resp,cgrp,CSpace.Total,CSpace.Free,CSpace.Maxfree,
                                        CSpace.Usage,CSpace.Quota);
+   return XrdOssOK;
+}
+
+/******************************************************************************/
+/*                                S t a t V S                                 */
+/******************************************************************************/
+  
+/*
+  Function: Return space information for space name "sname".
+
+  Input:    sname       - The name of the same, null if all space wanted.
+            sP          - pointer to XrdOssVSInfo to hold information.
+
+  Output:   Returns XrdOssOK upon success and -errno upon failure.
+            Note that quota is zero when sname is null.
+*/
+
+int XrdOssSys::StatVS(XrdOssVSInfo *sP, const char *sname, int updt)
+{
+   XrdOssCache_Space   CSpace;
+   XrdOssCache_Group  *fsg = XrdOssCache_Group::fsgroups;
+
+// Check if we should update the statistics
+//
+   if (updt) XrdOssCache::Scan(0);
+
+// If no space name present or no spaces defined and the space is public then
+// return information on all spaces.
+//
+   if (!sname || (!fsg && !strcmp("public", sname)))
+      {XrdOssCache::Mutex.Lock();
+       sP->Total  = XrdOssCache::fsTotal;
+       sP->Free   = XrdOssCache::fsTotFr;
+       sP->Contig = XrdOssCache::fsFree;
+       sP->Extents= XrdOssCache::fsCount;
+       XrdOssCache::Mutex.UnLock();
+       return XrdOssOK;
+      }
+
+// Try to find the cache group.
+//
+   while(fsg && strcmp(sname, fsg->group)) fsg = fsg->next;
+   if (!fsg) return -ENOENT;
+
+// Accumulate the stats
+//
+   sP->Extents = getSpace(fsg, CSpace);
+
+// Return the result
+//
+   sP->Total = CSpace.Total;
+   sP->Free  = CSpace.Free;
+   sP->Contig= CSpace.Maxfree;
+   sP->Usage = CSpace.Usage;
+   sP->Quota = CSpace.Quota;
    return XrdOssOK;
 }
 

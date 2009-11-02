@@ -111,7 +111,7 @@ int XrdCmsClientConfig::Configure(char *cfn, configWhat What, configHow How)
        while(tpe) {i += strlen(tpe->text) + 9; tpe = tpe->next;}
        bP = temp = (char *)malloc(i);
        while(tpl)
-            {strcpy(bP, "%s:%d "); bP += sprintf(bP, tpl->text, tpl->val);
+            {bP += sprintf(bP, "%s:%d ", tpl->text, tpl->val);
              tpl = tpl->next;
             }
        *(bP-1) = '\0';

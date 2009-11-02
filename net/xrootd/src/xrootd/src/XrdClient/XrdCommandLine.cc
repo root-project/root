@@ -11,6 +11,8 @@
 
 //       $Id$
 
+const char *XrdCommandLineCVSID = "$Id$";
+
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdClient/XrdClient.hh"
 #include "XrdClient/XrdClientAdmin.hh"
@@ -69,7 +71,7 @@ extern "C" {
 
 
 
-#define XRDCLI_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.23 $ - Xrootd version: "XrdVSTRING
+#define XRDCLI_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.24 $ - Xrootd version: "XrdVSTRING
 
 
 ///////////////////////////////////////////////////////////////////////

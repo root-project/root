@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSecpwdSrvAdminCVSID = "$Id$";
 // ---------------------------------------------------------------------- //
 //                                                                        //
 //   Password file administration                                         //
