@@ -3363,7 +3363,8 @@ void TAuthenticate::InitRandom()
       if ((fd = open(randdev, O_RDONLY)) != -1) {
          if (gDebug > 2)
             ::Info("InitRandom", "taking seed from %s", randdev);
-         read(fd, &seed, sizeof(seed));
+         if (read(fd, &seed, sizeof(seed)) != sizeof(seed))
+            ::Warning("InitRandom", "could not read seed from %s", randdev);
          close(fd);
       } else {
          if (gDebug > 2)
