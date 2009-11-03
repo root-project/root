@@ -739,7 +739,7 @@ void THStack::Paint(Option_t *option)
       }
    }
 
-   if (!lsame) fHistogram->Paint(loption);
+   if (!lsame) fHistogram->Paint("0");
 
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);
    if (strstr(loption,"lego")) return;
