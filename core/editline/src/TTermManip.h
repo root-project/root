@@ -82,8 +82,6 @@ private:
 
    bool WriteTerm(char* termstr, int i);
 
-   int AllocColor(const Color& col);
-
    static int
    DefaultPutchar(int c) {
       // tputs takes int(*)(char) on solaris, so wrap putchar
@@ -91,14 +89,8 @@ private:
    }
 
 
-   bool fColorCapable;
-   bool fUsePairs;
+   int fNumColors; // number of available colors
    bool fAnsiColors; // whether fSetFg, Bg use ANSI
-   bool fCanChangeColors; // whether the terminal can redefine existing colors
-   char* fOrigColors; // reset colors
-   char* fInitColor; // initialize a color
-   char* fInitPair; // initialize pair
-   char* fSetPair; // set color to a pair
    char* fSetFg; // set foreground color
    char* fSetBold; // set bold color
    char* fSetDefault; // set normal color
@@ -108,10 +100,6 @@ private:
    int fCurrentColorIdx;   // index if the currently active color
    bool fCurrentlyBold;  // whether bold is active
    bool fCurrentlyUnderlined;  // whether underlining is active
-
-   static const int fgStartColIdx = 12;
-   typedef std::map<Color, int> ColorMap_t;
-   ColorMap_t fColors;
 };
 
 #endif // INCLUDE_TTERMMANIP_H

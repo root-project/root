@@ -19,14 +19,8 @@
 #endif
 
 TTermManip::TTermManip():
-   fColorCapable(false),
-   fUsePairs(false),
+   fNumColors(-1),
    fAnsiColors(true),
-   fCanChangeColors(false),
-   fOrigColors(0),
-   fInitColor(0),
-   fInitPair(0),
-   fSetPair(0),
    fSetFg(0),
    fSetBold(0),
    fSetDefault(0),
@@ -35,20 +29,13 @@ TTermManip::TTermManip():
    fPutc((PutcFunc_t)DefaultPutchar),
    fCurrentColorIdx(-1),
    fCurrentlyBold(false),
-   fCurrentlyUnderlined(false) {
+   fCurrentlyUnderlined(false)
+{
    // Initialize color management
-   fOrigColors = GetTermStr("oc");
    ResetTerm();
-   // Use pairs where possible
-   fInitPair = GetTermStr("initp");
-   fUsePairs = (fInitPair != 0);
-
-   if (fUsePairs) {
-      fSetPair = GetTermStr("scp");
-      fCanChangeColors = true;
-   } else {
-      fInitColor = GetTermStr("initc");
-      fCanChangeColors = (fInitColor != 0);
+   // Use colors where possible
+   fNumColors = GetTermNum("colors");
+   if (fNumColors > 16) {
       fSetFg = GetTermStr("setaf");
       fAnsiColors = true;
 
@@ -67,36 +54,7 @@ TTermManip::TTermManip():
    }
    fStartUnderline = GetTermStr("smul");
    fStopUnderline = GetTermStr("rmul");
-
-   fColorCapable = fUsePairs || fSetFg;
 }
-
-
-int
-TTermManip::AllocColor(const Color& col) {
-   ColorMap_t::iterator iCol2 = fColors.find(col);
-   int idx = -1;
-
-   if (iCol2 != fColors.end()) {
-      idx = iCol2->second;
-   } else {
-      // inserted; set pair idx starting at fgStartColIdx
-      idx = fColors.size() - 1 + fgStartColIdx;
-      fColors[col] = idx;
-      char* initcolcmd = 0;
-
-      if (fUsePairs) {
-         initcolcmd = tparm(fInitPair, idx, 0, 0, 0, col.fR, col.fG, col.fB, 0, 0);
-      } else if (fInitColor) {
-         initcolcmd = tparm(fInitColor, idx, col.fR, col.fG, col.fB, 0, 0, 0, 0, 0);
-      }
-
-      if (initcolcmd) {
-         tputs(initcolcmd, 1, fPutc);
-      }
-   }
-   return idx;
-} // AllocColor
 
 
 void
@@ -144,24 +102,97 @@ TTermManip::StopBold() {
 
 int
 TTermManip::GetColorIndex(unsigned char r, unsigned char g, unsigned char b) {
-   // RGB colors range from 0 to 255
-   if (fCanChangeColors) {
-      return AllocColor(Color(r, g, b));
-   } else {
+   // Determine the color index givenan RGB triplet, each within [0..255].
+   int idx = -1;
+
+   if (fNumColors > 255) {
+      static unsigned char rgb256[256][3] = {{0}};
+      if (rgb256[0][0] == 0) {
+         // initialize the array with the expected standard colors:
+         // (from http://frexx.de/xterm-256-notes)
+         unsigned char rgbidx = 0;
+         // this is not what I see, though it's supposedly the default:
+         //   rgb[0][0] =   0; rgb[0][1] =   0; rgb[0][1] =   0;
+         // use this instead, just to be on the safe side:
+         rgb256[0][0] =  46; rgb256[0][1] =  52; rgb256[0][1] =  64;
+         rgb256[1][0] = 205; rgb256[1][1] =   0; rgb256[1][1] =   0;
+         rgb256[2][0] =   0; rgb256[2][1] = 205; rgb256[2][1] =   0;
+         rgb256[3][0] = 205; rgb256[3][1] = 205; rgb256[3][1] =   0;
+         rgb256[4][0] =   0; rgb256[4][1] =   0; rgb256[4][1] = 238;
+         rgb256[5][0] = 205; rgb256[5][1] =   0; rgb256[5][1] = 205;
+         rgb256[6][0] =   0; rgb256[6][1] = 205; rgb256[6][1] = 205;
+         rgb256[7][0] = 229; rgb256[7][1] = 229; rgb256[7][1] = 229;
+
+         // this is not what I see, though it's supposedly the default:
+         //   rgb256[ 8][0] = 127; rgb256[ 8][1] = 127; rgb256[ 8][1] = 127;
+         // use this instead, just to be on the safe side:
+         rgb256[ 8][0] =   0; rgb256[ 8][1] =   0; rgb256[ 8][1] =   0;
+         rgb256[ 9][0] = 255; rgb256[ 9][1] =   0; rgb256[ 9][1] =   0;
+         rgb256[10][0] =   0; rgb256[10][1] = 255; rgb256[10][1] =   0;
+         rgb256[11][0] = 255; rgb256[11][1] = 255; rgb256[11][1] =   0;
+         rgb256[12][0] =  92; rgb256[12][1] =  92; rgb256[12][1] = 255;
+         rgb256[13][0] = 255; rgb256[13][1] =   0; rgb256[13][1] = 255;
+         rgb256[14][0] =   0; rgb256[14][1] = 255; rgb256[14][1] = 255;
+         rgb256[15][0] = 255; rgb256[15][1] = 255; rgb256[15][1] = 255;
+
+         for (unsigned char red = 0; red < 6; ++red) {
+            for (unsigned char green = 0; green < 6; ++green) {
+               for (unsigned char blue = 0; blue < 6; ++blue) {
+                  rgbidx = 16 + (red * 36) + (green * 6) + blue;
+                  rgb256[rgbidx][0] = red ? (red * 40 + 55) : 0;
+                  rgb256[rgbidx][1] = green ? (green * 40 + 55) : 0;
+		  rgb256[rgbidx][2] = blue ? (blue * 40 + 55) : 0;
+               }
+            }
+         }
+         // colors 232-255 are a grayscale ramp, intentionally leaving out
+         // black and white
+         for (unsigned char gray = 0; gray < 24; ++gray) {
+            unsigned char level = (gray * 10) + 8;
+            rgb256[232 + gray][0] = level;
+            rgb256[232 + gray][1] = level;
+            rgb256[232 + gray][2] = level;
+         }
+      }
+
+      // Find the closest index.
+      // A: the closest color match (square of geometric distance in RGB)
+      // B: the closest brightness match
+      // Treat them equally, which suppresses differences
+      // in color due to squared distance.
+
+      // start with black:
+      idx = 0;
+      int graylvl = (r + g + b)/3;
+      long mindelta = (r*r + g*g + b*b) + graylvl;
+      if (mindelta) {
+         for (unsigned int i = 1; i < 256; ++i) {
+            long delta = (rgb256[i][0] + rgb256[i][1] + rgb256[i][2])/3 - graylvl;
+            if (delta < 0) delta = -delta;
+            delta += (r-rgb256[i][0])*(r-rgb256[i][0]) +
+                     (g-rgb256[i][1])*(g-rgb256[i][1]) +
+                     (b-rgb256[i][2])*(b-rgb256[i][2]);
+            
+            if (delta < mindelta) {
+               mindelta = delta;
+               idx = i;
+               if (mindelta == 0) break;
+            }
+         }
+      }
+   } else if (fNumColors > 15) {
       int sum = r + g + b;
       r = r > sum / 4;
       g = g > sum / 4;
       b = b > sum / 4;
-      int idx = 0;
 
       if (fAnsiColors) {
          idx = r + (g * 2) + (b * 4);
       } else {
          idx = (r * 4) + (g * 2) + b;
       }
-      return idx;
    }
-   return -1;
+   return idx;
 }
 
 bool
@@ -173,20 +204,9 @@ TTermManip::SetColor(unsigned char r, unsigned char g, unsigned char b) {
 bool
 TTermManip::SetColor(int idx) {
    // Set color to a certain index as returned by GetColorIdx.
-   if (fCanChangeColors) {
-      if (idx != fCurrentColorIdx) {
-         if (fSetPair) {
-            WriteTerm(fSetPair, idx);
-         } else if (fSetFg) {
-            WriteTerm(fSetFg, idx);
-         }
-         fCurrentColorIdx = idx;
-      }
-   } else {
-      if (fSetFg && idx != fCurrentColorIdx) {
-         WriteTerm(fSetFg, idx);
-         fCurrentColorIdx = idx;
-      }
+   if (fSetFg && idx != fCurrentColorIdx) {
+      WriteTerm(fSetFg, idx);
+      fCurrentColorIdx = idx;
    }
    return true;
 } // SetColor
@@ -221,9 +241,6 @@ TTermManip::ResetTerm() {
    WriteTerm(fSetDefault);
    WriteTerm(fStopUnderline);
 
-   if (fOrigColors) {
-      WriteTerm(fOrigColors);
-   }
    fCurrentColorIdx = -1;
    fCurrentlyBold = false;
    fCurrentlyUnderlined = false;
