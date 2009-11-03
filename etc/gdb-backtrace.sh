@@ -76,6 +76,7 @@ EOF
    /bin/sed -n \
     -e 's/^(gdb) //' \
     -e '/^#/p' \
+    -e '/^   /p' \
     -e 's/\(^Thread.*\)/@\1/p' | tr "@" "\n"
 
 fi
