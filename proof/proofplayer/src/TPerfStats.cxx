@@ -115,7 +115,8 @@ void TPerfEvent::Print(Option_t *) const
 TPerfStats::TPerfStats(TList *input, TList *output)
    : fTrace(0), fPerfEvent(0), fPacketsHist(0), fEventsHist(0), fLatencyHist(0),
       fProcTimeHist(0), fCpuTimeHist(0), fBytesRead(0),
-      fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fSlaves(0), fDoHist(kFALSE),
+      fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fNumEvents(0),
+      fSlaves(0), fDoHist(kFALSE),
       fDoTrace(kFALSE), fDoTraceRate(kFALSE), fDoSlaveTrace(kFALSE), fDoQuota(kFALSE),
       fMonitoringWriter(0)
 {
@@ -327,6 +328,38 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       fTotCpuTime += cputime;
       fTotBytesRead += bytesRead;
       fTotEvents += eventsprocessed;
+   }
+
+   // Write to monitoring system, if requested
+   if (fMonitoringWriter) {
+      if (!gProofServ || !gProofServ->GetSessionTag() || !gProofServ->GetProof() ||
+          !gProofServ->GetProof()->GetQueryResult()) {
+         Error("PacketEvent", "some required object are undefined (0x%lx 0x%lx 0x%lx 0x%lx)",
+               gProofServ, (gProofServ ? gProofServ->GetSessionTag() : 0),
+              (gProofServ ? gProofServ->GetProof() : 0),
+              ((gProofServ && gProofServ->GetProof()) ?
+                gProofServ->GetProof()->GetQueryResult() : 0));
+         return;
+      }
+
+      TTimeStamp stop;
+      TString identifier;
+      identifier.Form("Progress-%s-%d", gProofServ->GetSessionTag(),
+                      gProofServ->GetProof()->GetQueryResult()->GetSeqNum());
+
+      TList values;
+      values.SetOwner();
+      values.Add(new TParameter<int>("id", 0));
+      values.Add(new TNamed("user", gProofServ->GetUser()));
+      values.Add(new TNamed("group", gProofServ->GetGroup()));
+      values.Add(new TNamed("begin", fTzero.AsString("s")));
+      values.Add(new TParameter<int>("walltime", stop.GetSec()-fTzero.GetSec()));
+      values.Add(new TParameter<Long64_t>("bytesread", fTotBytesRead));
+      values.Add(new TParameter<Long64_t>("events", fTotEvents));
+      values.Add(new TParameter<Long64_t>("totevents", fNumEvents));
+      values.Add(new TParameter<int>("workers", fSlaves));
+      if (!fMonitoringWriter->SendParameters(&values, identifier))
+         Error("PacketEvent", "sending of monitoring info failed");
    }
 }
 

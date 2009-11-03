@@ -90,6 +90,7 @@ private:
    Double_t       fTotCpuTime;   //!total cpu time of all slaves
    Long64_t       fTotBytesRead; //!total bytes read on all slaves
    Long64_t       fTotEvents;    //!total number of events processed
+   Long64_t       fNumEvents;    //!total number of events to be processed
    Int_t          fSlaves;       //!number of active slaves
 
    Bool_t         fDoHist;       //!Fill histos
@@ -119,6 +120,8 @@ public:
                   Long64_t eventsprocessed, Long64_t bytesRead);
    void SetBytesRead(Long64_t num);
    Long64_t GetBytesRead() const;
+   void SetNumEvents(Long64_t num) { fNumEvents = num; }
+   Long64_t GetNumEvents() const { return fNumEvents; }
 
    static void Start(TList *input, TList *output);
    static void Stop();

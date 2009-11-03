@@ -486,6 +486,10 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       Info("TPacketizer","Processing %lld entries in %d files on %d hosts",
                          fTotalEntries, files, fFileNodes->GetSize());
 
+   // Set the total number for monitoring
+   if (gPerfStats)
+      gPerfStats->SetNumEvents(fTotalEntries);
+
    Reset();
 
    if (fFileNodes->GetSize() == 0) {

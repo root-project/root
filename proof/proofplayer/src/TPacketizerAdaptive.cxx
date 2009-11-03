@@ -657,6 +657,11 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    PDB(kGlobal,1)
       Info("TPacketizerAdaptive", "processing %lld entries in %d files on %d hosts",
                                   fTotalEntries, files, fFileNodes->GetSize());
+
+   // Set the total number for monitoring
+   if (gPerfStats)
+      gPerfStats->SetNumEvents(fTotalEntries);
+
    Reset();
 
    InitStats();
