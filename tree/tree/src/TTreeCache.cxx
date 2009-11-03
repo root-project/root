@@ -40,6 +40,21 @@
 //   if the Tree or TChain has a TEventlist, only the buffers           //
 //   referenced by the list are put in the cache.                       //
 //                                                                      //
+//  The learning period is started or restarted when:
+//     - TTree::SetCache is called for the first time.
+//     - TTree::SetCache is called a second time with a different size.
+//     - TTreeCache::StartLearningPhase is called.
+//     - TTree[Cache]::SetEntryRange is called
+//          * and the learning is not yet finished
+//          * and has not been set to manual
+//          * and the new minimun entry is different.
+//
+//  The learning period is stopped (and prefetching is actually started) when:
+//     - TTree[Cache]::StopLearningPhase is called.
+//     - An entry outside the 'learning' range is requested
+//       The 'learning range is from fEntryMin (default to 0) to
+//       fEntryMin + fgLearnEntries (default to 100).
+//     - A 'cached' TChain switches over to a new file.
 //
 //     WHY DO WE NEED the TreeCache when doing data analysis?
 //     ======================================================
@@ -232,7 +247,8 @@ ClassImp(TTreeCache)
 TTreeCache::TTreeCache() : TFileCacheRead(),
    fEntryMin(0),
    fEntryMax(1),
-   fEntryNext(1),
+   fEntryCurrent(-1),
+   fEntryNext(-1),
    fZipBytes(0),
    fNbranches(0),
    fNReadOk(0),
@@ -252,6 +268,7 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
 TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->GetCurrentFile(),buffersize),
    fEntryMin(0),
    fEntryMax(tree->GetEntriesFast()),
+   fEntryCurrent(-1),
    fEntryNext(0),
    fZipBytes(0),
    fNbranches(0),
@@ -412,10 +429,14 @@ Bool_t TTreeCache::FillBuffer()
    TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
    Long64_t entry = tree->GetReadEntry();
    
-   if (!fIsManual && fIsLearning && entry < fEntryNext) return kFALSE;
+   // If the entry is in the range we previously prefetched, there is 
+   // no point in retrying.   Note that this will also return false
+   // during the training phase (fEntryNext is then set intentional to 
+   // the end of the training phase).
+   if (fEntryCurrent <= entry && entry < fEntryNext) return kFALSE;
    
    // Triggered by the user, not the learning phase
-   if (entry == -1)  entry=0;
+   if (entry == -1)  entry = 0;
 
    // Estimate number of entries that can fit in the cache compare it
    // to the original value of fBufferSize not to the real one
@@ -427,6 +448,8 @@ Bool_t TTreeCache::FillBuffer()
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
 
+   fEntryCurrent = entry;
+   
    // Check if owner has a TEventList set. If yes we optimize for this
    // Special case reading only the baskets containing entries in the
    // list.
@@ -471,10 +494,15 @@ Bool_t TTreeCache::FillBuffer()
             if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
          }
          fNReadPref++;
+
          TFileCacheRead::Prefetch(pos,len);
          //we allow up to twice the default buffer size. When using eventlist in particular
          //it may happen that the evaluation of fEntryNext is bad, hence this protection
-         if (fNtot > 2*fBufferSizeMin) {TFileCacheRead::Prefetch(0,0);mustBreak = kTRUE; break;}
+         if (fNtot > 2*fBufferSizeMin) {
+            TFileCacheRead::Prefetch(0,0);
+            mustBreak = kTRUE; 
+            break;
+         }
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
    }
@@ -588,17 +616,17 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
    // when prefetching the branch buffers.
 
    // This is called by TTreePlayer::Process in an automatic way...
-   // don't do it if the user has specified the branches.
-   if(fIsManual)
-      return;
-
+   // don't restart it if the user has specified the branches.
+   Bool_t needLearningStart = (fEntryMin != emin) && fIsLearning && !fIsManual;
+   
    fEntryMin  = emin;
    fEntryMax  = emax;
    fEntryNext  = fEntryMin + fgLearnEntries;
    if (gDebug > 0)
       Info("SetEntryRange", "fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld",
                              fEntryMin, fEntryMax, fEntryNext);
-   if (fIsLearning) {
+
+   if (needLearningStart) {
       // Restart learning
       fIsLearning = kTRUE;
       fIsManual = kFALSE;
@@ -634,14 +662,19 @@ void TTreeCache::StartLearningPhase()
 }
 
 //_____________________________________________________________________________
-void TTreeCache::StopLearningPhase() {
+void TTreeCache::StopLearningPhase() 
+{
    // This is the counterpart of StartLearningPhase() and can be used to stop
    // the learning phase. It's useful when the user knows exactly what branches
    // he is going to use.
    // For the moment it's just a call to FillBuffer() since that method
    // will create the buffer lists from the specified branches.
    
-   fIsLearning = kFALSE;
+   if (fIsLearning) {
+      // This will force FillBuffer to read the buffers.
+      fEntryNext = -1;
+      fIsLearning = kFALSE;
+   }
    fIsManual = kTRUE;
    FillBuffer();
 
@@ -650,7 +683,7 @@ void TTreeCache::StopLearningPhase() {
 //_____________________________________________________________________________
 void TTreeCache::UpdateBranches(TTree *tree, Bool_t owner)
 {
-   //update pointer to current Tree and recompute pointers to the branches in the cache
+   // Update pointer to current Tree and recompute pointers to the branches in the cache.
 
    if (owner) {
       fOwner = tree;
@@ -660,9 +693,16 @@ void TTreeCache::UpdateBranches(TTree *tree, Bool_t owner)
 
    fEntryMin  = 0;
    fEntryMax  = fTree->GetEntries();
-   fEntryNext = fEntryMin + fgLearnEntries;
-   if (fBrNames->GetEntries() > 0) {
+   
+   fEntryCurrent = -1;
+   
+   if (fBrNames->GetEntries() == 0 && fIsLearning) {
+      // We still need to learn.
+      fEntryNext = fEntryMin + fgLearnEntries;
+   } else {      
+      // We learnt from a previous file.
       fIsLearning = kFALSE;
+      fEntryNext = -1;
    }
    fZipBytes  = 0;
    fNbranches = 0;

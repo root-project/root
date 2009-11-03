@@ -36,6 +36,7 @@ class TTreeCache : public TFileCacheRead {
 protected:
    Long64_t        fEntryMin;    //! first entry in the cache
    Long64_t        fEntryMax;    //! last entry in the cache
+   Long64_t        fEntryCurrent;//! current lowest entry number in the cache
    Long64_t        fEntryNext;   //! next entry number where cache must be filled
    Long64_t        fZipBytes;    //! Total compressed size of branches in cache
    Int_t           fNbranches;   //! Number of branches in the cache
