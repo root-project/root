@@ -207,7 +207,7 @@ int XrdClientReadV::SubmitToCacheReadVResp(XrdClientConn *xrdc, char *respdata,
 	}
 	res = pos_from;
 
-	delete respdata;
+	free( respdata );
 
     return res;
 
