@@ -66,6 +66,8 @@ public:
 
    virtual void SetBytesRead(Long64_t num) = 0;
    virtual Long64_t GetBytesRead() const = 0;
+   virtual void SetNumEvents(Long64_t num) = 0;
+   virtual Long64_t GetNumEvents() const = 0;
 
    static const char *EventType(EEventType type);
 

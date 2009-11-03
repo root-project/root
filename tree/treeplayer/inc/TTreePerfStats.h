@@ -68,6 +68,7 @@ public:
    TGraphErrors    *GetGraph()     {return fGraph;}
    const char      *GetName() const{return fName.Data();}
    virtual Int_t    GetNleaves() const {return fNleaves;}
+   virtual Long64_t GetNumEvents() const {return 0;}
    TPaveText       *GetPave()      {return fPave;}
    virtual Int_t    GetReadaheadSize() const {return fReadaheadSize;}
    virtual Int_t    GetReadCalls() const {return fReadCalls;}
@@ -89,6 +90,7 @@ public:
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetBytesRead(Long64_t nbytes) {fBytesRead = nbytes;}
    virtual void     SetBytesReadExtra(Long64_t nbytes) {fBytesReadExtra = nbytes;}
+   virtual void     SetNumEvents(Long64_t) {}
    virtual void     SetCpuTime(Double_t cptime) {fCpuTime = cptime;}
    virtual void     SetGraph(TGraphErrors *gr) {fGraph = gr;}
    virtual void     SetName(const char *name) {fName = name;}
