@@ -242,24 +242,6 @@ Ssiz_t TString::Index(const TRegexp& r, Ssiz_t* extent, Ssiz_t start) const
 }
 
 //______________________________________________________________________________
-TSubString TString::operator()(const TRegexp& r, Ssiz_t start)
-{
-   // Return the substring found by applying the regexp starting at start.
-
-   Ssiz_t len;
-   Ssiz_t begin = Index(r, &len, start);
-   return TSubString(*this, begin, len);
-}
-
-//______________________________________________________________________________
-TSubString TString::operator()(const TRegexp& r)
-{
-   // Return the substring found by applying the regexp.
-
-   return (*this)(r,0);
-}
-
-//______________________________________________________________________________
 TSubString TString::operator()(const TRegexp& r, Ssiz_t start) const
 {
    // Return the substring found by applying the regexp starting at start.

@@ -274,19 +274,12 @@ public:
    // Indexing operators
    char         &operator[](Ssiz_t i);         // Indexing with bounds checking
    char         &operator()(Ssiz_t i);         // Indexing with optional bounds checking
-   TSubString    operator()(Ssiz_t start, Ssiz_t len);   // Sub-string operator
-   TSubString    operator()(const TRegexp &re);          // Match the RE
-   TSubString    operator()(const TRegexp &re, Ssiz_t start);
-   TSubString    operator()(TPRegexp &re);               // Match the Perl compatible Regular Expression
-   TSubString    operator()(TPRegexp &re, Ssiz_t start);
-   TSubString    SubString(const char *pat, Ssiz_t start = 0,
-                           ECaseCompare cmp = kExact);
    char          operator[](Ssiz_t i) const;
    char          operator()(Ssiz_t i) const;
-   TSubString    operator()(Ssiz_t start, Ssiz_t len) const;
-   TSubString    operator()(const TRegexp &re) const;   // Match the RE
+   TSubString    operator()(Ssiz_t start, Ssiz_t len) const;   // Sub-string operator
+   TSubString    operator()(const TRegexp &re) const;          // Match the RE
    TSubString    operator()(const TRegexp &re, Ssiz_t start) const;
-   TSubString    operator()(TPRegexp &re) const;        // Match the Perl compatible Regular Expression
+   TSubString    operator()(TPRegexp &re) const;               // Match the Perl compatible Regular Expression
    TSubString    operator()(TPRegexp &re, Ssiz_t start) const;
    TSubString    SubString(const char *pat, Ssiz_t start = 0,
                            ECaseCompare cmp = kExact) const;
@@ -372,7 +365,6 @@ public:
    TString     &ReplaceAll(const char *s1, const char *s2);       // Find&Replace all s1 with s2 if any
    TString     &ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2, Ssiz_t ls2);  // Find&Replace all s1 with s2 if any
    void         Resize(Ssiz_t n);                       // Truncate or add blanks as necessary
-   TSubString   Strip(EStripType s = kTrailing, char c = ' ');
    TSubString   Strip(EStripType s = kTrailing, char c = ' ') const;
    void         ToLower();                              // Change self to lower-case
    void         ToUpper();                              // Change self to upper-case
