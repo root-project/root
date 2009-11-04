@@ -38,7 +38,6 @@ XrdProofdProofServ::XrdProofdProofServ()
    fProtocol = 0;
    fParent = 0;
    fPingSem = 0;
-   fQueryNum = 0;
    fStartMsg = 0;
    fStatus = kXPD_idle;
    fSrvPID = -1;
@@ -72,7 +71,6 @@ XrdProofdProofServ::~XrdProofdProofServ()
 {
    // Destructor
 
-   SafeDelete(fQueryNum);
    SafeDelete(fStartMsg);
    SafeDelete(fPingSem);
 
@@ -198,7 +196,6 @@ void XrdProofdProofServ::Reset()
    fResponse = 0;
    fProtocol = 0;
    fParent = 0;
-   SafeDelete(fQueryNum);
    SafeDelete(fStartMsg);
    SafeDelete(fPingSem);
    fSrvPID = -1;
@@ -329,7 +326,6 @@ int XrdProofdProofServ::FreeClientID(int pid)
          if ((*i) && (*i)->P()) {
             if ((*i)->P()->Pid() == pid || (*i)->P()->Pid() == -1) {
                (*i)->Reset();
-               XPDPRT("Resetting "<<*i);
                fNClients--;
                // Record time of last disconnection
                if (fNClients <= 0)

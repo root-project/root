@@ -151,7 +151,6 @@ public:
    inline XrdProofdProtocol *Protocol() const { XrdSysMutexHelper mhp(fMutex); return fProtocol; }
    inline std::list<XrdProofQuery *> *Queries() const
                        { return (std::list<XrdProofQuery *> *)&fQueries; }
-   inline XrdSrvBuffer *QueryNum() const { XrdSysMutexHelper mhp(fMutex); return fQueryNum; }
    void                RemoveQuery(const char *tag);
    void                RemoveWorker(const char *o);
    void                Reset();
@@ -219,7 +218,6 @@ public:
 
    XrdSysSemWait            *fPingSem;   // To sychronize ping requests
 
-   XrdSrvBuffer             *fQueryNum;  // Msg with sequential number of currebt query
    XrdSrvBuffer             *fStartMsg;  // Msg with start processing info
 
    time_t                    fDisconnectTime; // Time at which all clients disconnected

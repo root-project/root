@@ -1424,12 +1424,6 @@ int XrdProofdProofServMgr::Attach(XrdProofdProtocol *p)
    } else
       response->SendI(psid, protvers, (kXR_int16)XPROOFD_VERSBIN);
 
-   // Send saved query num message
-   if (xps->QueryNum()) {
-      TRACEP(p, XERR, "sending query num message ("<<xps->QueryNum()->fSize<<" bytes)");
-      response->Send(kXR_attn, kXPD_msg,
-                          xps->QueryNum()->fBuff, xps->QueryNum()->fSize);
-   }
    // Send saved start processing message, if not idle
    if (xps->Status() == kXPD_running && xps->StartMsg()) {
       TRACEP(p, XERR, "sending start process message ("<<xps->StartMsg()->fSize<<" bytes)");
