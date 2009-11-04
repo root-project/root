@@ -38,6 +38,7 @@
 #include "TParameter.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "TTimeStamp.h"
 #include "TVirtualMonitoring.h"
 
 
@@ -391,7 +392,7 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
 }
 
 //______________________________________________________________________________
-void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proctime)
+void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t start)
 {
    // Open file event.
 
@@ -401,7 +402,7 @@ void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proct
       pe.fType = kFileOpen;
       pe.fFileName = filename;
       pe.fFileClass = file != 0 ? file->ClassName() : "none";
-      pe.fProcTime = proctime;
+      pe.fProcTime = double(TTimeStamp())-start;
       pe.fIsOk = (file != 0);
 
       fPerfEvent = &pe;
@@ -412,7 +413,7 @@ void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proct
 }
 
 //______________________________________________________________________________
-void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
+void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 {
    // Read file event.
 
@@ -423,7 +424,7 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
       pe.fFileName = file->GetName();
       pe.fFileClass = file->ClassName();
       pe.fLen = len;
-      pe.fProcTime = proctime;
+      pe.fProcTime = double(TTimeStamp())-start;
 
       fPerfEvent = &pe;
       fTrace->SetBranchAddress("PerfEvents",&fPerfEvent);

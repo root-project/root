@@ -114,8 +114,8 @@ public:
    void FileEvent(const char *slave, const char *slavename, const char *nodename, const char *filename,
                   Bool_t isStart);
 
-   void FileOpenEvent(TFile *file, const char *filename, Double_t proctime);
-   void FileReadEvent(TFile *file, Int_t len, Double_t proctime);
+   void FileOpenEvent(TFile *file, const char *filename, Double_t start);
+   void FileReadEvent(TFile *file, Int_t len, Double_t start);
    void RateEvent(Double_t proctime, Double_t deltatime,
                   Long64_t eventsprocessed, Long64_t bytesRead);
    void SetBytesRead(Long64_t num);

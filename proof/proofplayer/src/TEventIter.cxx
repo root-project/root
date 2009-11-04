@@ -142,7 +142,7 @@ Int_t TEventIter::LoadDir()
       fFile = TFile::Open(fname);
 
       if (gPerfStats != 0) {
-         gPerfStats->FileOpenEvent(fFile, fFilename, double(TTimeStamp())-start);
+         gPerfStats->FileOpenEvent(fFile, fFilename, start);
          fOldBytesRead = 0;
       }
 
