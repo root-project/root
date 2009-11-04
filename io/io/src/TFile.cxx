@@ -1342,7 +1342,7 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       if (gMonitoringWriter)
          gMonitoringWriter->SendFileReadProgress(this);
       if (gPerfStats != 0) {
-         gPerfStats->FileReadEvent(this, len, double(TTimeStamp())-start);
+         gPerfStats->FileReadEvent(this, len, start);
       }
       return kFALSE;
    }
