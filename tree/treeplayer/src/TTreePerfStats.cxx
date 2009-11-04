@@ -10,11 +10,45 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreePerfStats                                                       //
-//                                                                      //
-// TTree I/O performance measurement                                    //
-//                                                                      //
+//                                                                      
+//                       TTreePerfStats                                                       
+//                                                                      
+//        TTree I/O performance measurement. see example of use below.
+//
+// The function FileReadEvent is called from TFile::ReadBuffer.
+// For each call the following information is stored in fGraphIO
+//     - x[i]  = Tree entry number
+//     - y[i]  = file position
+//     - ey[i] = 0.5*number of bytes read
+// For each call the following information is stored in fGraphTime
+//     - x[i]  = Tree entry number
+//     - y[i]  = Time now
+//     - ey[i] = 0.5*readtime, eg timenow - start
+// The TTreePerfStats object can be saved in a ROOT file in such a way that
+// its inspection can be done outside the job that generated it.
+//
+//       Example of use                                                 
+// {
+//   TFile *f = TFile::Open("RelValMinBias-GEN-SIM-RECO.root");
+//   T = (TTree*)f->Get("Events");
+//   Long64_t nentries = T->GetEntries();
+//   T->SetCacheSize(10000000);
+//   T->SetCacheEntryRange(0,nentries);
+//   T->AddBranchToCache("*");
+//
+//   TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
+//
+//   for (Int_t i=0;i<nentries;i++) {
+//      T->GetEntry(i);
+//   }
+//   ps->SaveAs("cmsperf.root");
+// }
+//
+// then, in a root interactive session, one can do:
+//    root > TFile f("cmsperf.root");
+//    root > ioperf->Draw();
+//    root > ioperf->Print();
+//
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -28,7 +62,10 @@
 #include "TPaveText.h"
 #include "TGraphErrors.h"
 #include "TStopwatch.h"
+#include "TGaxis.h"
+#include "TTimeStamp.h"
 
+const Double_t kScaleTime = 1e-20;
 
 ClassImp(TTreePerfStats)
 
@@ -37,20 +74,23 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
 {
    // default constructor (used when reading an object only)
 
-   fName   = "";
-   fTree   = 0;
-   fNleaves=0;
-   fFile   = 0;
-   fGraph  = 0;
-   fWatch  = 0;
-   fPave   = 0;
+   fName      = "";
+   fTree      = 0;
+   fNleaves   = 0;
+   fFile      = 0;
+   fGraphIO   = 0;
+   fGraphTime = 0;
+   fWatch     = 0;
+   fPave      = 0;
    fTreeCacheSize = 0;
    fReadCalls     = 0;
    fReadaheadSize = 0;
    fBytesRead     = 0;
    fBytesReadExtra= 0;
+   fRealNorm      = 0;
    fRealTime      = 0;
    fCpuTime       = 0;
+   fTimeAxis      = 0;
 }
 
 //______________________________________________________________________________
@@ -62,10 +102,14 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fTree   = T;
    fNleaves= T->GetListOfLeaves()->GetEntries();
    fFile   = T->GetCurrentFile();
-   fGraph  = new TGraphErrors(0);
-   fGraph->SetName("ioperf");
-   fGraph->SetTitle(Form("%s/%s",fFile->GetName(),T->GetName()));
-   fGraph->SetUniqueID(999999999);
+   fGraphIO  = new TGraphErrors(0);
+   fGraphIO->SetName("ioperf");
+   fGraphIO->SetTitle(Form("%s/%s",fFile->GetName(),T->GetName()));
+   fGraphIO->SetUniqueID(999999999);
+   fGraphTime = new TGraphErrors(0);   
+   fGraphTime->SetLineColor(kRed);
+   fGraphTime->SetName("iotime");
+   fGraphTime->SetTitle("Real time vs entries");
    fWatch  = new TStopwatch();
    fWatch->Start();
    fPave  = 0;
@@ -74,8 +118,10 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fReadaheadSize = 0;
    fBytesRead     = 0;
    fBytesReadExtra= 0;
+   fRealNorm      = 0;
    fRealTime      = 0;
    fCpuTime       = 0;
+   fTimeAxis      = 0;
    gPerfStats = this;
 }
 
@@ -86,7 +132,8 @@ TTreePerfStats::~TTreePerfStats()
    
    fTree = 0;
    fFile = 0;
-   delete fGraph;
+   delete fGraphIO;
+   delete fGraphTime;
    delete fPave;
    delete fWatch;
 }
@@ -97,17 +144,23 @@ Int_t TTreePerfStats::DistancetoPrimitive(Int_t px, Int_t py)
    // Return distance to one of the objects in the TTreePerfStats
    
    const Int_t kMaxDiff = 7;
-   Int_t distance;
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
-   if (px > puxmax) return 9999;
    if (py < puymax) return 9999;
-   distance = fGraph->DistancetoPrimitive(px,py);
-   if (distance <kMaxDiff) {if (px > puxmin && py < puymin) gPad->SetSelected(fGraph); return distance;}
+   //on the fGraphIO ?
+   Int_t distance = fGraphIO->DistancetoPrimitive(px,py);
+   if (distance <kMaxDiff) {if (px > puxmin && py < puymin) gPad->SetSelected(fGraphIO); return distance;}
+   // on the fGraphTime ?
+   distance = fGraphTime->DistancetoPrimitive(px,py);
+   if (distance <kMaxDiff) {if (px > puxmin && py < puymin) gPad->SetSelected(fGraphTime); return distance;}
+   // on the pave ?
    distance = fPave->DistancetoPrimitive(px,py);
    if (distance <kMaxDiff) {gPad->SetSelected(fPave);  return distance;}
+   // on the time axis ?
+   distance = fTimeAxis->DistancetoPrimitive(px,py);
+   if (distance <kMaxDiff) {gPad->SetSelected(fTimeAxis);  return distance;}
    if (px > puxmax-300) return 2;
    return 999;
 }
@@ -149,16 +202,22 @@ void TTreePerfStats::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 }
 
 //______________________________________________________________________________
-void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t /*proctime*/)
+void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 {
    // Record TTree file read event.
+   // start is the TimeStamp before reading
+   // len is the number of bytes read
 
    Long64_t offset = file->GetRelOffset();
-   Int_t np = fGraph->GetN();
+   Int_t np = fGraphIO->GetN();
    Int_t entry = fTree->GetReadEntry();
    Double_t err = len/2.;
-   fGraph->SetPoint(np,entry,offset-err);
-   fGraph->SetPointError(np,0.01,len);
+   fGraphIO->SetPoint(np,entry,offset-err);
+   fGraphIO->SetPointError(np,0.001,len);
+   Double_t tnow = TTimeStamp();
+   Double_t dtime = 0.5*(tnow-start);
+   fGraphTime->SetPoint(np,entry,tnow);
+   fGraphTime->SetPointError(np,0.001,dtime);
 }
 
 //______________________________________________________________________________
@@ -178,6 +237,17 @@ void TTreePerfStats::Finish()
    fBytesReadExtra= fFile->GetBytesReadExtra();
    fRealTime      = fWatch->RealTime();
    fCpuTime       = fWatch->CpuTime();
+   Int_t npoints  = fGraphIO->GetN();
+   Double_t ymax  = fGraphIO->GetY()[npoints-1];
+   Double_t tmax  = fGraphTime->GetY()[npoints-1];
+   Double_t t0    = fGraphTime->GetY()[0];
+   fRealNorm      = ymax/(tmax-t0);
+   // we normalize the fGraphTime such that it can be drawn on top of fGraphIO
+   for (Int_t i=0;i<npoints;i++) {
+      fGraphTime->GetY()[i]  -= t0;
+      fGraphTime->GetY()[i]  *= fRealNorm;
+      fGraphTime->GetEY()[i] *= fRealNorm;
+   }
 }
    
 
@@ -186,10 +256,31 @@ void TTreePerfStats::Paint(Option_t *option)
 {
    // Draw the TTree I/O perf graph.
 
-   fGraph->Paint(option);
-   fGraph->GetXaxis()->SetTitle("Tree entry number");
-   fGraph->GetYaxis()->SetTitle("file position");
-   fGraph->GetYaxis()->SetTitleOffset(1.2);
+   fGraphIO->GetXaxis()->SetTitle("Tree entry number");
+   fGraphIO->GetYaxis()->SetTitle("file position");
+   fGraphIO->GetYaxis()->SetTitleOffset(1.2);
+   fGraphIO->Paint(option);
+   //gPad->Modified();
+   //gPad->Update();
+   
+   //superimpose the time info (max 10 points)
+   if (fGraphTime) {
+      fGraphTime->Paint("l");
+      if (!fTimeAxis) {
+         Int_t npoints  = fGraphIO->GetN();
+         Double_t uxmax = gPad->GetUxmax();
+         Double_t uymax = gPad->GetUymax();
+         Double_t tmax  = fGraphTime->GetY()[npoints-1]/fRealNorm;
+         fTimeAxis = new TGaxis(uxmax,0,uxmax,uymax,0.,tmax,510,"+L");
+         fTimeAxis->SetName("axisTime");
+         fTimeAxis->SetLineColor(kRed);
+         fTimeAxis->SetTitle("RealTime (s)");
+         fTimeAxis->SetTitleColor(kRed);
+         fTimeAxis->SetTitleOffset(1.2);
+         fTimeAxis->SetLabelColor(kRed);
+      }
+      fTimeAxis->Paint();
+   }
 
    Double_t extra = 100.*fBytesReadExtra/fBytesRead;
    if (!fPave) {
@@ -262,14 +353,23 @@ void TTreePerfStats::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out<<"   ps->SetRealTime("<<fRealTime<<");"<<endl;
    out<<"   ps->SetCpuTime("<<fCpuTime<<");"<<endl;
 
-   Int_t npoints = fGraph->GetN();
-   out<<"   TGraphErrors *psGraph = new TGraphErrors("<<npoints<<");"<<endl;
-   out<<"   psGraph->SetName("<<quote<<fGraph->GetName()<<quote<<");"<<endl;
-   out<<"   psGraph->SetTitle("<<quote<<fGraph->GetTitle()<<quote<<");"<<endl;
-   out<<"   ps->SetGraph(psGraph);"<<endl;
-   for (Int_t i=0;i<npoints;i++) {
-      out<<"   psGraph->SetPoint("<<i<<","<<fGraph->GetX()[i]<<","<<fGraph->GetY()[i]<<");"<<endl;
-      out<<"   psGraph->SetPointError("<<i<<",0,"<<fGraph->GetEY()[i]<<");"<<endl;
+   Int_t i, npoints = fGraphIO->GetN();
+   out<<"   TGraphErrors *psGraphIO = new TGraphErrors("<<npoints<<");"<<endl;
+   out<<"   psGraphIO->SetName("<<quote<<fGraphIO->GetName()<<quote<<");"<<endl;
+   out<<"   psGraphIO->SetTitle("<<quote<<fGraphIO->GetTitle()<<quote<<");"<<endl;
+   out<<"   ps->SetGraphIO(psGraphIO);"<<endl;
+   for (i=0;i<npoints;i++) {
+      out<<"   psGraphIO->SetPoint("<<i<<","<<fGraphIO->GetX()[i]<<","<<fGraphIO->GetY()[i]<<");"<<endl;
+      out<<"   psGraphIO->SetPointError("<<i<<",0,"<<fGraphIO->GetEY()[i]<<");"<<endl;
+   }
+   npoints = fGraphTime->GetN();
+   out<<"   TGraph *psGraphTime = new TGraphErrors("<<npoints<<");"<<endl;
+   out<<"   psGraphTime->SetName("<<quote<<fGraphTime->GetName()<<quote<<");"<<endl;
+   out<<"   psGraphTime->SetTitle("<<quote<<fGraphTime->GetTitle()<<quote<<");"<<endl;
+   out<<"   ps->SetGraphTime(psGraphTime);"<<endl;
+   for (i=0;i<npoints;i++) {
+      out<<"   psGraphTime->SetPoint("<<i<<","<<fGraphTime->GetX()[i]<<","<<fGraphTime->GetY()[i]<<");"<<endl;
+      out<<"   psGraphTime->SetPointError("<<i<<",0,"<<fGraphTime->GetEY()[i]<<");"<<endl;
    }
 
    out<<"   ps->Draw("<<quote<<option<<quote<<");"<<endl;

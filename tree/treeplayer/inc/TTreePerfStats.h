@@ -34,7 +34,7 @@ class TTree;
 class TStopwatch;
 class TPaveText;
 class TGraphErrors;
-
+class TGaxis;
 class TTreePerfStats : public TVirtualPerfStats {
 
 protected:
@@ -44,15 +44,18 @@ protected:
    Int_t         fReadaheadSize; //Readahead cache size
    Long64_t      fBytesRead;     //Number of bytes read
    Long64_t      fBytesReadExtra;//Number of bytes (overhead) of the readahead cache
+   Double_t      fRealNorm;      //Real time scale factor for fGraphTime
    Double_t      fRealTime;      //Real time 
    Double_t      fCpuTime;       //Cpu time
    
    TString       fName;          //name of this TTreePerfStats
    TFile        *fFile;          //!pointer to the file containing the Tree
    TTree        *fTree;          //!pointer to the Tree being monitored
-   TGraphErrors *fGraph ;        //pointer to the graph
+   TGraphErrors *fGraphIO ;      //pointer to the graph with IO data
+   TGraphErrors *fGraphTime ;    //pointer to the graph with timestamp info
    TPaveText    *fPave;          //pointer to annotation pavetext
    TStopwatch   *fWatch;         //TStopwatch pointer
+   TGaxis       *fTimeAxis;      //pointer to TGaxis object
    
 public:
    TTreePerfStats();
@@ -65,7 +68,8 @@ public:
    virtual Long64_t GetBytesRead() const {return fBytesRead;}
    virtual Long64_t GetBytesReadExtra() const {return fBytesReadExtra;}
    virtual Double_t GetCpuTime()   const {return fCpuTime;}
-   TGraphErrors    *GetGraph()     {return fGraph;}
+   TGraphErrors    *GetGraphIO()     {return fGraphIO;}
+   TGraphErrors    *GetGraphTime()   {return fGraphTime;}
    const char      *GetName() const{return fName.Data();}
    virtual Int_t    GetNleaves() const {return fNleaves;}
    virtual Long64_t GetNumEvents() const {return 0;}
@@ -92,7 +96,8 @@ public:
    virtual void     SetBytesReadExtra(Long64_t nbytes) {fBytesReadExtra = nbytes;}
    virtual void     SetNumEvents(Long64_t) {}
    virtual void     SetCpuTime(Double_t cptime) {fCpuTime = cptime;}
-   virtual void     SetGraph(TGraphErrors *gr) {fGraph = gr;}
+   virtual void     SetGraphIO(TGraphErrors *gr) {fGraphIO = gr;}
+   virtual void     SetGraphTime(TGraphErrors *gr) {fGraphTime = gr;}
    virtual void     SetName(const char *name) {fName = name;}
    virtual void     SetNleaves(Int_t nleaves) {fNleaves = nleaves;}
    virtual void     SetReadaheadSize(Int_t nbytes) {fReadaheadSize = nbytes;}
