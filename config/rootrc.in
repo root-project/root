@@ -450,9 +450,9 @@ Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 # (module netx, libNetx.so).
 #
 # XNet.ConnectTimeout   - maximum time to wait before server's
-#                         response on a connect [10 s]
+#                         response on a connect [120 s]
 # XNet.RequestTimeout   - maximum time to wait before considering
-#                         a read/write failure [60 s]
+#                         a read/write failure [300 s]
 # XNet.ConnectDomainAllowRE
 #                       - sequence of TRegexp regular expressions
 #                         separated by a |.
@@ -482,7 +482,7 @@ Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 #                         regexps. Example:
 #                         slac.stanford.edu|pd.infn.it|fe.infn.it
 # XNet.MaxRedirectCount - maximum number of redirections from
-#                         server [255]
+#                         server [16]
 # XNet.Debug            - log verbosity level
 #                         (0=nothing,
 #                          1=messages of interest to the user,
@@ -491,10 +491,11 @@ Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 #                          3=dump of all sent/received data buffers
 #                            (includes also user and developers
 #                             messages). [0]
-# XNet.ReconnectTimeout - sleep-time before going back to the
+#                          4=dump also the data received/sent at the lower level
+# XNet.ReconnectWait    - sleep-time before going back to the
 #                         load balancer (or rebouncing to the same
 #                         failing host) after a read/write error
-#                         [10 s]
+#                         [5 s]
 # XNet.ReadAheadSize    - read ahead value, in bytes, to use with the XrdClient
 #                         internal caching scheme
 #                         Generally not much useful together with the TFile cache,
@@ -507,7 +508,7 @@ Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 #                         If > 0, TXNetFile will switch it on again if it sees that
 #                         synchronous ReadBuffer requests are issued again
 
-XNet.ReadAheadSize: 500000
+XNet.ReadAheadSize: 0
 
 # XNet.ReadCacheSize    - Default read cache size inside XrdClient, in bytes.
 #                         TXNetFile/TFileReadCache automatically sets this to a
