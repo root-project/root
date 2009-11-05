@@ -262,9 +262,11 @@ void TTreePerfStats::Finish()
    fRealTime      = fWatch->RealTime();
    fCpuTime       = fWatch->CpuTime();
    Int_t npoints  = fGraphIO->GetN();
+   if (!npoints) return;
    Double_t ymax  = fGraphIO->GetY()[npoints-1];
    Double_t tmax  = fGraphTime->GetY()[npoints-1];
    Double_t t0    = fGraphTime->GetY()[0];
+   if (tmax <= t0) tmax = t0+1;
    fRealNorm      = ymax/(tmax-t0);
    // we normalize the fGraphTime such that it can be drawn on top of fGraphIO
    for (Int_t i=0;i<npoints;i++) {
@@ -280,16 +282,19 @@ void TTreePerfStats::Paint(Option_t *option)
 {
    // Draw the TTree I/O perf graph.
 
+   Int_t npoints  = fGraphIO->GetN();
+   if (!npoints) return;
    fGraphIO->GetXaxis()->SetTitle("Tree entry number");
    fGraphIO->GetYaxis()->SetTitle("file position");
    fGraphIO->GetYaxis()->SetTitleOffset(1.2);
+   fGraphIO->GetXaxis()->SetLabelSize(0.03);
+   fGraphIO->GetYaxis()->SetLabelSize(0.03);
    fGraphIO->Paint(option);
    
    //superimpose the time info (max 10 points)
    if (fGraphTime) {
       fGraphTime->Paint("l");
       if (!fTimeAxis) {
-         Int_t npoints  = fGraphIO->GetN();
          Double_t uxmax = gPad->GetUxmax();
          Double_t uymax = gPad->GetUymax();
          Double_t tmax  = fGraphTime->GetY()[npoints-1]/fRealNorm;
@@ -299,6 +304,7 @@ void TTreePerfStats::Paint(Option_t *option)
          fTimeAxis->SetTitle("RealTime (s)");
          fTimeAxis->SetTitleColor(kRed);
          fTimeAxis->SetTitleOffset(1.2);
+         fTimeAxis->SetLabelSize(0.03);
          fTimeAxis->SetLabelColor(kRed);
       }
       fTimeAxis->Paint();
