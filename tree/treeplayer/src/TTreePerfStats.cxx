@@ -49,6 +49,24 @@
 //    root > ioperf->Draw();
 //    root > ioperf->Print();
 //
+// The Draw or Print functions print the following information:
+//   TreeCache = TTree cache size in MBytes
+//   N leaves  = Number of leaves in the TTree
+//   ReadTotal = Total number of zipped bytes read
+//   ReadUnZip = Total number of unzipped bytes read
+//   ReadCalls = Total number of disk reads
+//   ReadSize  = Average read size in KBytes
+//   Readahead = Readahead size in KBytes
+//   Readextra = Readahead overhead in percent
+//   Real Time = Real Time in seconds
+//   CPU  Time = CPU Time in seconds
+//   Disk Time = Real Time spent in pure raw disk IO
+//   Disk IO   = Raw disk IO speed in MBytes/second
+//   ReadUZRT  = Unzipped MBytes per RT second
+//   ReadUZCP  = Unipped MBytes per CP second
+//   ReadRT    = Zipped MBytes per RT second
+//   ReadCP    = Zipped MBytes per CP second
+//
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -90,6 +108,8 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    fRealNorm      = 0;
    fRealTime      = 0;
    fCpuTime       = 0;
+   fDiskTime      = 0;
+   fCompress      = 0;
    fTimeAxis      = 0;
 }
 
@@ -121,7 +141,9 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fRealNorm      = 0;
    fRealTime      = 0;
    fCpuTime       = 0;
+   fDiskTime      = 0;
    fTimeAxis      = 0;
+   fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
    gPerfStats = this;
 }
 
@@ -187,6 +209,7 @@ void TTreePerfStats::Draw(Option_t *option)
       gROOT->MakeDefCanvas();
    }
    if (opt.Contains("a")) {
+      gPad->SetLeftMargin(0.35);
       gPad->Clear();
       gPad->SetGridx();
       gPad->SetGridy();
@@ -215,9 +238,10 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
    fGraphIO->SetPoint(np,entry,offset-err);
    fGraphIO->SetPointError(np,0.001,len);
    Double_t tnow = TTimeStamp();
-   Double_t dtime = 0.5*(tnow-start);
+   Double_t dtime = tnow-start;
+   fDiskTime += dtime;
    fGraphTime->SetPoint(np,entry,tnow);
-   fGraphTime->SetPointError(np,0.001,dtime);
+   fGraphTime->SetPointError(np,0.001,0.5*dtime);
 }
 
 //______________________________________________________________________________
@@ -260,8 +284,6 @@ void TTreePerfStats::Paint(Option_t *option)
    fGraphIO->GetYaxis()->SetTitle("file position");
    fGraphIO->GetYaxis()->SetTitleOffset(1.2);
    fGraphIO->Paint(option);
-   //gPad->Modified();
-   //gPad->Update();
    
    //superimpose the time info (max 10 points)
    if (fGraphTime) {
@@ -284,17 +306,22 @@ void TTreePerfStats::Paint(Option_t *option)
 
    Double_t extra = 100.*fBytesReadExtra/fBytesRead;
    if (!fPave) {
-      fPave = new TPaveText(.2,.55,.5,.88,"brNDC");
+      fPave = new TPaveText(.01,.10,.24,.90,"brNDC");
       fPave->SetTextAlign(12);
       fPave->AddText(Form("TreeCache = %d MBytes",fTreeCacheSize/1000000));
       fPave->AddText(Form("N leaves  = %d",fNleaves));
       fPave->AddText(Form("ReadTotal = %g MBytes",1e-6*fBytesRead));
+      fPave->AddText(Form("ReadUnZip = %g MBytes",1e-6*fBytesRead*fCompress));
       fPave->AddText(Form("ReadCalls = %d",fReadCalls));
-      fPave->AddText(Form("ReadSize  = %g KBytes/read",0.001*fBytesRead/fReadCalls));
+      fPave->AddText(Form("ReadSize  = %7.3f KBytes/read",0.001*fBytesRead/fReadCalls));
       fPave->AddText(Form("Readahead = %d KBytes",fReadaheadSize/1000));
       fPave->AddText(Form("Readextra = %5.2f per cent",extra));
       fPave->AddText(Form("Real Time = %7.3f seconds",fRealTime));
       fPave->AddText(Form("CPU  Time = %7.3f seconds",fCpuTime));
+      fPave->AddText(Form("Disk Time = %7.3f seconds",fDiskTime));
+      fPave->AddText(Form("Disk IO   = %7.3f MBytes/s",1e-6*fBytesRead/fDiskTime));
+      fPave->AddText(Form("ReadUZRT  = %7.3f MBytes/s",1e-6*fCompress*fBytesRead/fRealTime));
+      fPave->AddText(Form("ReadUZCP  = %7.3f MBytes/s",1e-6*fCompress*fBytesRead/fCpuTime));
       fPave->AddText(Form("ReadRT    = %7.3f MBytes/s",1e-6*fBytesRead/fRealTime));
       fPave->AddText(Form("ReadCP    = %7.3f MBytes/s",1e-6*fBytesRead/fCpuTime));
    }
@@ -310,12 +337,17 @@ void TTreePerfStats::Print(Option_t * /*option*/) const
    printf("TreeCache = %d MBytes\n",Int_t(fTreeCacheSize/1000000));
    printf("N leaves  = %d\n",fNleaves);
    printf("ReadTotal = %g MBytes\n",1e-6*fBytesRead);
+   printf("ReadUnZip = %g MBytes\n",1e-6*fBytesRead*fCompress);
    printf("ReadCalls = %d\n",fReadCalls);
-   printf("ReadSize  = %g KBytes/read\n",0.001*fBytesRead/fReadCalls);
+   printf("ReadSize  = %7.3f KBytes/read\n",0.001*fBytesRead/fReadCalls);
    printf("Readahead = %d KBytes\n",fReadaheadSize/1000);
    printf("Readextra = %5.2f per cent\n",extra);
    printf("Real Time = %7.3f seconds\n",fRealTime);
    printf("CPU  Time = %7.3f seconds\n",fCpuTime);
+   printf("Disk Time = %7.3f seconds\n",fDiskTime);
+   printf("Disk IO   = %7.3f MBytes/s\n",1e-6*fBytesRead/fDiskTime);
+   printf("ReadUZRT  = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/fRealTime);
+   printf("ReadUZCP  = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/fCpuTime);
    printf("ReadRT    = %7.3f MBytes/s\n",1e-6*fBytesRead/fRealTime);
    printf("ReadCP    = %7.3f MBytes/s\n",1e-6*fBytesRead/fCpuTime);
 }
@@ -350,23 +382,32 @@ void TTreePerfStats::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out<<"   ps->SetReadaheadSize("<<fReadaheadSize<<");"<<endl;
    out<<"   ps->SetBytesRead("<<fBytesRead<<");"<<endl;
    out<<"   ps->SetBytesReadExtra("<<fBytesReadExtra<<");"<<endl;
+   out<<"   ps->SetRealNorm("<<fRealNorm<<");"<<endl;
    out<<"   ps->SetRealTime("<<fRealTime<<");"<<endl;
    out<<"   ps->SetCpuTime("<<fCpuTime<<");"<<endl;
+   out<<"   ps->SetDiskTime("<<fDiskTime<<");"<<endl;
+   out<<"   ps->SetCompress("<<fCompress<<");"<<endl;
 
    Int_t i, npoints = fGraphIO->GetN();
    out<<"   TGraphErrors *psGraphIO = new TGraphErrors("<<npoints<<");"<<endl;
    out<<"   psGraphIO->SetName("<<quote<<fGraphIO->GetName()<<quote<<");"<<endl;
    out<<"   psGraphIO->SetTitle("<<quote<<fGraphIO->GetTitle()<<quote<<");"<<endl;
    out<<"   ps->SetGraphIO(psGraphIO);"<<endl;
+   fGraphIO->SaveFillAttributes(out,"psGraphIO",0,1001);
+   fGraphIO->SaveLineAttributes(out,"psGraphIO",1,1,1);
+   fGraphIO->SaveMarkerAttributes(out,"psGraphIO",1,1,1);
    for (i=0;i<npoints;i++) {
       out<<"   psGraphIO->SetPoint("<<i<<","<<fGraphIO->GetX()[i]<<","<<fGraphIO->GetY()[i]<<");"<<endl;
       out<<"   psGraphIO->SetPointError("<<i<<",0,"<<fGraphIO->GetEY()[i]<<");"<<endl;
    }
    npoints = fGraphTime->GetN();
-   out<<"   TGraph *psGraphTime = new TGraphErrors("<<npoints<<");"<<endl;
+   out<<"   TGraphErrors *psGraphTime = new TGraphErrors("<<npoints<<");"<<endl;
    out<<"   psGraphTime->SetName("<<quote<<fGraphTime->GetName()<<quote<<");"<<endl;
    out<<"   psGraphTime->SetTitle("<<quote<<fGraphTime->GetTitle()<<quote<<");"<<endl;
    out<<"   ps->SetGraphTime(psGraphTime);"<<endl;
+   fGraphTime->SaveFillAttributes(out,"psGraphTime",0,1001);
+   fGraphTime->SaveLineAttributes(out,"psGraphTime",1,1,1);
+   fGraphTime->SaveMarkerAttributes(out,"psGraphTime",1,1,1);
    for (i=0;i<npoints;i++) {
       out<<"   psGraphTime->SetPoint("<<i<<","<<fGraphTime->GetX()[i]<<","<<fGraphTime->GetY()[i]<<");"<<endl;
       out<<"   psGraphTime->SetPointError("<<i<<",0,"<<fGraphTime->GetEY()[i]<<");"<<endl;

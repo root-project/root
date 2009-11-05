@@ -47,7 +47,8 @@ protected:
    Double_t      fRealNorm;      //Real time scale factor for fGraphTime
    Double_t      fRealTime;      //Real time
    Double_t      fCpuTime;       //Cpu time
-
+   Double_t      fDiskTime;      //Time spent in pure raw disk IO
+   Double_t      fCompress;      //Tree compression factor      
    TString       fName;          //name of this TTreePerfStats
    TFile        *fFile;          //!pointer to the file containing the Tree
    TTree        *fTree;          //!pointer to the Tree being monitored
@@ -68,6 +69,7 @@ public:
    virtual Long64_t GetBytesRead() const {return fBytesRead;}
    virtual Long64_t GetBytesReadExtra() const {return fBytesReadExtra;}
    virtual Double_t GetCpuTime()   const {return fCpuTime;}
+   virtual Double_t GetDiskTime()  const {return fDiskTime;}
    TGraphErrors    *GetGraphIO()     {return fGraphIO;}
    TGraphErrors    *GetGraphTime()   {return fGraphTime;}
    const char      *GetName() const{return fName.Data();}
@@ -94,6 +96,8 @@ public:
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetBytesRead(Long64_t nbytes) {fBytesRead = nbytes;}
    virtual void     SetBytesReadExtra(Long64_t nbytes) {fBytesReadExtra = nbytes;}
+   virtual void     SetCompress(Double_t cx) {fCompress = cx;}
+   virtual void     SetDiskTime(Double_t t) {fDiskTime = t;}
    virtual void     SetNumEvents(Long64_t) {}
    virtual void     SetCpuTime(Double_t cptime) {fCpuTime = cptime;}
    virtual void     SetGraphIO(TGraphErrors *gr) {fGraphIO = gr;}
@@ -102,6 +106,7 @@ public:
    virtual void     SetNleaves(Int_t nleaves) {fNleaves = nleaves;}
    virtual void     SetReadaheadSize(Int_t nbytes) {fReadaheadSize = nbytes;}
    virtual void     SetReadCalls(Int_t ncalls) {fReadCalls = ncalls;}
+   virtual void     SetRealNorm(Double_t rnorm) {fRealNorm = rnorm;}
    virtual void     SetRealTime(Double_t rtime) {fRealTime = rtime;}
    virtual void     SetTreeCacheSize(Int_t nbytes) {fTreeCacheSize = nbytes;}
 
