@@ -3406,7 +3406,7 @@ Double_t TH1::GetEffectiveEntries() const
 
    Stat_t s[kNstat];
    this->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
-   return (s[1] ? s[0]*s[0]/s[1] : 0.);
+   return (s[1] ? s[0]*s[0]/s[1] : TMath::Abs(s[0]) );
 }
 
 //______________________________________________________________________________
@@ -6501,7 +6501,7 @@ void TH1::ResetStats()
    PutStats(stats);
    fEntries = TMath::Abs(fTsumw);
    // use effective entries for weighted histograms:  (sum_w) ^2 / sum_w2 
-   if (fSumw2.fN > 0 && fTsumw > 0) fEntries = stats[0]*stats[0]/ stats[1];
+   if (fSumw2.fN > 0 && fTsumw > 0 && stats[1] > 0 ) fEntries = stats[0]*stats[0]/ stats[1];
 }
 
 //______________________________________________________________________________
