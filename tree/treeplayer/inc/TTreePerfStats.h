@@ -45,9 +45,9 @@ protected:
    Long64_t      fBytesRead;     //Number of bytes read
    Long64_t      fBytesReadExtra;//Number of bytes (overhead) of the readahead cache
    Double_t      fRealNorm;      //Real time scale factor for fGraphTime
-   Double_t      fRealTime;      //Real time 
+   Double_t      fRealTime;      //Real time
    Double_t      fCpuTime;       //Cpu time
-   
+
    TString       fName;          //name of this TTreePerfStats
    TFile        *fFile;          //!pointer to the file containing the Tree
    TTree        *fTree;          //!pointer to the Tree being monitored
@@ -56,13 +56,13 @@ protected:
    TPaveText    *fPave;          //pointer to annotation pavetext
    TStopwatch   *fWatch;         //TStopwatch pointer
    TGaxis       *fTimeAxis;      //pointer to TGaxis object
-   
+
 public:
    TTreePerfStats();
    TTreePerfStats(const char *name, TTree *T);
    virtual ~TTreePerfStats();
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option=""); 
+   virtual void     Draw(Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     Finish();
    virtual Long64_t GetBytesRead() const {return fBytesRead;}
@@ -87,10 +87,10 @@ public:
                             Long64_t , Double_t ,Double_t , Double_t ,Long64_t ) {}
    virtual void     FileEvent(const char *, const char *, const char *, const char *, Bool_t) {}
    virtual void     FileOpenEvent(TFile *, const char *, Double_t) {}
-   virtual void     FileReadEvent(TFile *file, Int_t len, Double_t proctime);
+   virtual void     FileReadEvent(TFile *file, Int_t len, Double_t start);
    virtual void     RateEvent(Double_t , Double_t , Long64_t , Long64_t) {}
 
-   virtual void     SaveAs(const char *filename="",Option_t *option="") const; 
+   virtual void     SaveAs(const char *filename="",Option_t *option="") const;
    virtual void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual void     SetBytesRead(Long64_t nbytes) {fBytesRead = nbytes;}
    virtual void     SetBytesReadExtra(Long64_t nbytes) {fBytesReadExtra = nbytes;}
@@ -104,7 +104,7 @@ public:
    virtual void     SetReadCalls(Int_t ncalls) {fReadCalls = ncalls;}
    virtual void     SetRealTime(Double_t rtime) {fRealTime = rtime;}
    virtual void     SetTreeCacheSize(Int_t nbytes) {fTreeCacheSize = nbytes;}
-   
+
    ClassDef(TTreePerfStats,1)  // TTree I/O performance measurement
 };
 
