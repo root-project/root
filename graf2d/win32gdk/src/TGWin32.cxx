@@ -7033,8 +7033,9 @@ unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
    BITMAPINFO bmi;
    HGDIOBJ oldbitmap1, oldbitmap2;
    BITMAP bm;
-   HBITMAP ximage;
-   VOID  *bmbits;
+   HBITMAP ximage = 0;
+   VOID  *bmbits = 0;
+   unsigned char *ret = 0;
 
    if (GDK_DRAWABLE_TYPE(wid) == GDK_DRAWABLE_PIXMAP) {
       hdc = ::CreateCompatibleDC(NULL);
@@ -7043,7 +7044,6 @@ unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
    } else {
       hdc = ::GetDC((HWND)GDK_DRAWABLE_XID(wid));
    }
-
    memdc = ::CreateCompatibleDC(hdc);
 
    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -7059,10 +7059,11 @@ unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
 
    ximage = ::CreateDIBSection(hdc, (BITMAPINFO *) &bmi, DIB_RGB_COLORS, &bmbits, NULL, 0);
 
-   oldbitmap2 = ::SelectObject(memdc, ximage);
-
-   ::BitBlt(memdc, x, y, width, height, hdc, 0, 0, SRCCOPY);
-   ::SelectObject(memdc, oldbitmap2);
+   if (ximage && bmbits) {
+      oldbitmap2 = ::SelectObject(memdc, ximage);
+      ::BitBlt(memdc, x, y, width, height, hdc, 0, 0, SRCCOPY);
+      ::SelectObject(memdc, oldbitmap2);
+   }
    ::DeleteDC(memdc);
    if (GDK_DRAWABLE_TYPE(wid) == GDK_DRAWABLE_PIXMAP) {
       ::SelectObject(hdc, oldbitmap1);
@@ -7070,9 +7071,12 @@ unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
    } else {
       ::ReleaseDC((HWND)GDK_DRAWABLE_XID(wid), hdc);
    }
-   ULong_t sz = width*height*4;
-   unsigned char *ret = new unsigned char[sz];
-   memcpy(ret, bmbits, sz);
+   if (ximage && bmbits) {
+      ULong_t sz = width*height*4;
+      ret = new unsigned char[sz];
+      memcpy(ret, bmbits, sz);
+      ::DeleteObject(ximage);
+   }
    return ret;
 }
 
