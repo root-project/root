@@ -19,7 +19,7 @@
 // For each call the following information is stored in fGraphIO
 //     - x[i]  = Tree entry number
 //     - y[i]  = file position
-//     - ey[i] = 0.5*number of bytes read
+//     - ey[i] = 0.001*number of bytes read
 // For each call the following information is stored in fGraphTime
 //     - x[i]  = Tree entry number
 //     - y[i]  = Time now
@@ -234,9 +234,8 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
    Long64_t offset = file->GetRelOffset();
    Int_t np = fGraphIO->GetN();
    Int_t entry = fTree->GetReadEntry();
-   Double_t err = len/2.;
-   fGraphIO->SetPoint(np,entry,offset-err);
-   fGraphIO->SetPointError(np,0.001,len);
+   fGraphIO->SetPoint(np,entry,offset);
+   fGraphIO->SetPointError(np,0.001,0.001*len);
    Double_t tnow = TTimeStamp();
    Double_t dtime = tnow-start;
    fDiskTime += dtime;
