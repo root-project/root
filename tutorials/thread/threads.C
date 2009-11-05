@@ -18,7 +18,7 @@ void *handle(void *ptr)
       //printf("Here I am loop index: %3d , thread: %d\n",i,nr);
       //TThread::UnLock();
 
-      TThread::Printf("Here I am loop index: %3d , thread: %lld", i, nr);
+      TThread::Printf("Here I am loop index: %d , thread: %ld", i, nr);
       gSystem->Sleep(1000);
    }
    return 0;
