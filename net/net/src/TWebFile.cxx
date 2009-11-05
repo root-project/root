@@ -25,6 +25,7 @@
 #include "TError.h"
 #include "TSystem.h"
 #include "TBase64.h"
+#include "TVirtualPerfStats.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -490,6 +491,9 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
    // 0 in case of success.
 
    if (!len) return 0;
+   
+   Double_t start = 0;
+   if (gPerfStats != 0) start = TTimeStamp();
 
    TUrl connurl;
    if (fProxy.IsValid())
@@ -523,6 +527,9 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
    fgBytesRead += len;
    fgReadCalls++;
 #endif
+   if (gPerfStats != 0) {
+      gPerfStats->FileReadEvent(this, len, start);
+   }
 
    return 0;
 }
@@ -536,6 +543,9 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    // has to be retried, -1 in case of error, 0 in case of success.
 
    if (!len) return 0;
+   
+   Double_t start = 0;
+   if (gPerfStats != 0) start = TTimeStamp();
 
    // open fSocket and close it when going out of scope
    TWebSocket ws(this);
@@ -641,6 +651,9 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
    fgBytesRead += len;
    fgReadCalls++;
 #endif
+   if (gPerfStats != 0) {
+      gPerfStats->FileReadEvent(this, len, start);
+   }
 
    return 0;
 }
