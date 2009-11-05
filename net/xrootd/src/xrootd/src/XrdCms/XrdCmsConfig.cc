@@ -35,6 +35,7 @@ const char *XrdCmsConfigCVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/un.h>
 #include <dirent.h>
+#include <stdio.h>
 
 #include "../XrdVersion.hh"
 #include "Xrd/XrdScheduler.hh"
@@ -871,7 +872,8 @@ int XrdCmsConfig::PidFile()
 {
     static const char *envPIDFN = "XRDCMSPIDFN=";
     int rc, xfd;
-    char buff[1024], *Space;
+    char buff[1024];
+    char *Space;
     char pidFN[1200], *ppath=XrdOucUtils::genPath(pidPath,
                               (strcmp("anon",myInsName)?myInsName:0));
     const char *xop = 0;
@@ -882,7 +884,7 @@ int XrdCmsConfig::PidFile()
         return 1;
        }
 
-    if ((Space = index(mySID, ' '))) *Space = '\0';
+    if ((Space = (char*)index(mySID, ' '))) *Space = '\0';
 
          if (isManager && isServer)
             snprintf(pidFN, sizeof(pidFN), "%s/cmsd.super.pid", ppath);

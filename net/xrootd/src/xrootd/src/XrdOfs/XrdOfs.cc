@@ -1252,7 +1252,7 @@ int XrdOfs::fsctl(const int               cmd,
 //
    if (opcode == SFS_FSCTL_STATLS)
       {const char *path;
-       char pbuff[1024], *opq = index(args, '?');
+       char pbuff[1024], *opq = (char*)index(args, '?');
        XrdOucEnv statls_Env(opq ? opq+1 : 0);
        if (!opq) path = args;
           else {int plen = opq-args;

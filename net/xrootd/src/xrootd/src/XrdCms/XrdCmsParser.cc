@@ -20,6 +20,7 @@ const char *XrdCmsParserCVSID = "$Id$";
 #include <string.h>
 #include <netinet/in.h>
 #include <sys/types.h>
+#include <stdio.h>
 
 #include "XrdCms/XrdCmsParser.hh"
 #include "XrdCms/XrdCmsRRData.hh"

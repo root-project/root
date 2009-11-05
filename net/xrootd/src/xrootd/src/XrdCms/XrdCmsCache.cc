@@ -15,6 +15,7 @@
 const char *XrdCmsCacheCVSID = "$Id$";
   
 #include <sys/types.h>
+#include <stdio.h>
 
 #include "XrdCms/XrdCmsCache.hh"
 #include "XrdCms/XrdCmsRRQ.hh"

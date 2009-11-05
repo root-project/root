@@ -471,7 +471,8 @@ int XrdNetDNS::getProtoID(const char *pname)
 int XrdNetDNS::Host2Dest(const char      *hostname,
                          struct sockaddr &DestAddr,
                          char           **errtxt)
-{ char *cp, hbuff[256];
+{ const char *cp;
+  char hbuff[256];
   int port, i;
   struct sockaddr_in InetAddr;
 

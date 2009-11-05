@@ -64,3 +64,11 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(IODEP) $(IODS) $(IODH) $(IOLIB) $(IOMAP)
 
 distclean::     distclean-$(MODNAME)
+
+##### extra rules ######
+ifeq ($(GCC_VERS),gcc-4.4)
+ifneq ($(filter -O%,$(OPT)),)
+   $(IODIRS)/TStreamerInfoReadBuffer.o: CXXFLAGS += -DR__EXPLICIT_FUNCTION_INSTANTIATION
+endif
+endif
+

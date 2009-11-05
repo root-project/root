@@ -16,6 +16,7 @@ const char *XrdCmsRespCVSID = "$Id$";
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
   
 #include "XrdCms/XrdCmsClientMsg.hh"
 #include "XrdCms/XrdCmsParser.hh"
