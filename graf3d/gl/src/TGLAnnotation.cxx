@@ -152,6 +152,15 @@ Bool_t TGLAnnotation::Handle(TGLRnrCtx&          rnrCtx,
             fPosY -= (Float_t)(event->fY - fMouseY) / vp.Height();
             fMouseX = event->fX;
             fMouseY = event->fY;
+            // Make sure we don't go offscreen (use fDraw variables set in draw)
+            if (fPosX < 0)
+               fPosX = 0;
+            else if (fPosX + fDrawW > 1.0f)
+               fPosX = 1.0f - fDrawW;
+            if (fPosY - fDrawH + fDrawY < 0)
+               fPosY = fDrawH - fDrawY;
+            else if (fPosY + fDrawY > 1.0f)
+               fPosY = 1.0f - fDrawY;
          }
          return kTRUE;
       }
@@ -245,10 +254,12 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(0.1, 1);
 
+   TGLUtil::LineWidth(1);
+
    // move to pos
    Float_t posX = vp.Width()  * fPosX;
    Float_t posY = vp.Height() * fPosY;
-   glTranslatef(posX, posY, -0.99);   TGLUtil::LineWidth(1);
+   glTranslatef(posX, posY, -0.99);
 
 
    // get size of bg area, look at font attributes
@@ -270,11 +281,15 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    width  += 2 * descent;
    height -= 2 * descent;
 
+   // Store variables needed for border check when box is dragged.
+   fDrawW = (Float_t) width / vp.Width();
+   fDrawH = (Float_t) - height / vp.Height();
+   fDrawY = line_height / vp.Height();
+
    // polygon background
    Float_t padT =  2;
    Int_t   padF = 10;
    Float_t padM = padF + 2 * padT;
-
 
    glPushName(0);
 
@@ -449,5 +464,6 @@ void TGLAnnotation::UpdateText()
    // Modify the annotation text from the text-edit widget.
 
    fText = fTextEdit->GetText()->AsString();
+   fMainFrame->UnmapWindow();
    fParent->RequestDraw();
 }

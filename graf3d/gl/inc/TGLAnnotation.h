@@ -36,6 +36,8 @@ private:
 
    Int_t             fMouseX, fMouseY; //! last mouse position
    Bool_t            fInDrag;          //!
+   Float_t           fDrawW, fDrawH;   //! width/height of drawn annotation
+   Float_t           fDrawY;           //! y-position of annotation box
 
    TGLVector3        fPointer;         // picked location in 3D space
    Bool_t            fActive;          // active item identifier
