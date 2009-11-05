@@ -257,6 +257,16 @@ void TEveCaloViz::DataChanged()
 }
 
 //______________________________________________________________________________
+void TEveCaloViz::AssertCellIdCache() const
+{
+   // Assert cell id cache is ok.
+ 
+   TEveCaloViz* cv = const_cast<TEveCaloViz*>(this);
+   if (!fCellIdCacheOK)
+      cv->BuildCellIdCache();
+}
+
+//______________________________________________________________________________
 void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
 {
    // Assign paramteres from given model.
@@ -649,6 +659,8 @@ Float_t TEveCalo2D::GetValToHeight() const
 {
    // Virtual function of TEveCaloViz.
    // Get transformation factor from E/Et to height.
+
+   AssertCellIdCache();
 
    if (fScaleAbs)
    {
