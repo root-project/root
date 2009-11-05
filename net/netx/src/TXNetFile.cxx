@@ -52,6 +52,8 @@
 #include "TVirtualMonitoring.h"
 #include "TFileStager.h"
 #include "TFileCacheRead.h"
+#include "TTimeStamp.h"
+#include "TVirtualPerfStats.h"
 
 #include <XrdClient/XrdClient.hh>
 #include <XrdClient/XrdClientConst.hh>
@@ -624,6 +626,9 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
       }
    }
 
+   Double_t start = 0;
+   if (gPerfStats) start = TTimeStamp();
+
    // Read from the remote xrootd
    Int_t nr = fClient->Read(buffer, fOffset, bufferLength);
 
@@ -648,6 +653,9 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
      fgReadCalls++;
 #endif
    }
+
+   if (gPerfStats)
+      gPerfStats->FileReadEvent(this, bufferLength, start);
 
    if (gMonitoringWriter)
       gMonitoringWriter->SendFileReadProgress(this);
@@ -680,6 +688,9 @@ Bool_t TXNetFile::ReadBufferAsync(Long64_t offs, Int_t bufferLength)
       return kTRUE;
    }
 
+   Double_t start = 0;
+   if (gPerfStats) start = TTimeStamp();
+
    Bool_t result = kFALSE;
 
    if (bufferLength==0)
@@ -705,6 +716,9 @@ Bool_t TXNetFile::ReadBufferAsync(Long64_t offs, Int_t bufferLength)
    fgBytesRead += bufferLength;
    fgReadCalls++;
 #endif
+
+   if (gPerfStats)
+      gPerfStats->FileReadEvent(this, bufferLength, start);
 
    if (gDebug > 1)
       Info("ReadBufferAsync", "%d bytes of data read request from offset"
@@ -740,11 +754,13 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       Error("ReadBuffers","The remote file is not open");
       return kTRUE;
    }
- 
+
+   Double_t start = 0;
+   if (gPerfStats) start = TTimeStamp();
+
    if (fArchiveOffset)
       for (Int_t i = 0; i < nbuf; i++)
          pos[i] += fArchiveOffset;
-
 
    // A null buffer means that we want to use the async stuff
    //  hence we have to sync the cache size in XrdClient with the supposed
@@ -778,6 +794,9 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       fgBytesRead += nr;
       fgReadCalls++;
 #endif
+
+      if (gPerfStats)
+         gPerfStats->FileReadEvent(this, nr, start);
 
       if (gMonitoringWriter)
          gMonitoringWriter->SendFileReadProgress(this);
