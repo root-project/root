@@ -78,7 +78,7 @@ namespace {
       if ( result == (PyObject*)TPyExceptionMagic )
          return 0;              // exception info was already set
 
-   // if this is creates new objects, always take ownership
+   // if this method creates new objects, always take ownership
       if ( ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) &&
            ObjectProxy_Check( result ) )
          ((ObjectProxy*)result)->HoldOn();
@@ -309,12 +309,17 @@ namespace {
    PyObject* mp_getcreates( MethodProxy* pymeth, void* )
    {
       return PyInt_FromLong(
-         (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) );
+         (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator) );
    }
 
 //____________________________________________________________________________
    int mp_setcreates( MethodProxy* pymeth, PyObject* value, void* )
    {
+      if ( ! value ) {        // means that _creates is being deleted
+         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
+         return 0;
+      }
+
       Long_t iscreator = PyLong_AsLong( value );
       if ( iscreator == -1 && PyErr_Occurred() ) {
          PyErr_SetString( PyExc_ValueError, "a boolean 1 or 0 is required for _creates" );
