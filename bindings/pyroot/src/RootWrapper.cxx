@@ -331,7 +331,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 // add the methods to the class dictionary
    for ( CallableCache_t::iterator imd = cache.begin(); imd != cache.end(); ++imd ) {
    // in order to prevent removing templated editions of this method (which were set earlier,
-   // above, as a different proxy object, we'll check and add this method flagged as a generic
+   // above, as a different proxy object), we'll check and add this method flagged as a generic
    // one (to be picked up by the templated one as appropriate) if a template exists
       PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( imd->first.c_str() ) );
       MethodProxy* method = 0;
