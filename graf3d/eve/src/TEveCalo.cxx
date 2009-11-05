@@ -452,7 +452,9 @@ ClassImp(TEveCalo2D);
 TEveCalo2D::TEveCalo2D(const char* n, const char* t):
    TEveCaloViz(0, n, t),
    TEveProjected(),
-   fOldProjectionType(TEveProjection::kPT_Unknown)
+   fOldProjectionType(TEveProjection::kPT_Unknown),
+   fMaxESumBin( 0),
+   fMaxEtSumBin(0)
 {
    // Constructor.
 }
@@ -528,17 +530,21 @@ void TEveCalo2D::BuildCellIdCache()
 
    TEveProjection::EPType_e pt = fManager->GetProjection()->GetType();
    TEveCaloData::vCellId_t* clv; // ids per phi bin in r-phi projection else ids per eta bins in rho-z projection
-   if (pt == TEveProjection::kPT_RPhi)
+
+   Bool_t isRPhi = (pt == TEveProjection::kPT_RPhi);
+
+   const TAxis* axis = isRPhi ? fData->GetPhiBins() :  fData->GetEtaBins();
+   Int_t nBins = axis->GetNbins();
+
+   if (isRPhi)
    {
-      const TAxis* ay = fData->GetPhiBins();
-      Int_t nBins = ay->GetNbins();
       for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
          clv = 0;
          if ( TEveUtil::IsU1IntervalOverlappingByMinMax
-              (GetPhiMin(), GetPhiMax(), ay->GetBinLowEdge(ibin), ay->GetBinUpEdge(ibin)))
+              (GetPhiMin(), GetPhiMax(), axis->GetBinLowEdge(ibin), axis->GetBinUpEdge(ibin)))
          {
             clv = new TEveCaloData::vCellId_t();
-            fData->GetCellList(GetEta(), GetEtaRng(), ay->GetBinCenter(ibin), ay->GetBinWidth(ibin), *clv);
+            fData->GetCellList(GetEta(), GetEtaRng(), axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), *clv);
             if (!clv->size()) {
                delete clv; clv = 0;
             }
@@ -546,26 +552,49 @@ void TEveCalo2D::BuildCellIdCache()
          fCellLists.push_back(clv);
       }
    }
-   else if (pt == TEveProjection::kPT_RhoZ)
+   else
    {
-      const TAxis *ax    = fData->GetEtaBins();
-      const Int_t  nBins = ax->GetNbins();
       for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
          clv = 0;
-         if (ax->GetBinLowEdge(ibin) > fEtaMin && ax->GetBinUpEdge(ibin) <= fEtaMax)
+         if (axis->GetBinLowEdge(ibin) > fEtaMin && axis->GetBinUpEdge(ibin) <= fEtaMax)
          {
             clv = new TEveCaloData::vCellId_t();
-            fData->GetCellList(ax->GetBinCenter(ibin), ax->GetBinWidth(ibin), fPhi, GetPhiRng(), *clv);
+            fData->GetCellList(axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), fPhi, GetPhiRng(), *clv);
             if (!clv->size()) {
                delete clv; clv = 0;
             }
          }
          fCellLists.push_back(clv);
       }
+   }
+
+   // cache max bin sum for auto scale
+   if (!fScaleAbs)
+   {
+      fMaxESumBin  = 0;
+      fMaxEtSumBin = 0;
+      Float_t sumE  = 0;
+      Float_t sumEt = 0;
+      TEveCaloData::CellData_t  cellData;
+      for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
+         TEveCaloData::vCellId_t* cids = fCellLists[ibin];
+         if (cids)
+         {
+            sumE = 0; sumEt = 0;
+            for (TEveCaloData::vCellId_i it = cids->begin(); it != cids->end(); it++)
+            {  
+               fData->GetCellData(*it, cellData);
+               sumE  += cellData.Value(kFALSE);
+               sumEt += cellData.Value(kTRUE);
+            }
+            fMaxESumBin  = TMath::Max(fMaxESumBin,  sumE);
+            fMaxEtSumBin = TMath::Max(fMaxEtSumBin, sumEt);  
+         }
+      }
+      ComputeBBox();
    }
 
    BuildCellIdCacheSelected();
-
    fCellIdCacheOK= kTRUE;
 }
 
@@ -616,6 +645,28 @@ void TEveCalo2D::BuildCellIdCacheSelected()
 }
 
 //______________________________________________________________________________
+Float_t TEveCalo2D::GetValToHeight() const
+{
+   // Virtual function of TEveCaloViz.
+   // Get transformation factor from E/Et to height.
+
+   if (fScaleAbs)
+   {
+      return fMaxTowerH/fMaxValAbs;
+   }
+   else
+   {
+     if (fData->Empty())
+       return 1;
+
+     if (fPlotEt)
+      return fMaxTowerH/fMaxEtSumBin;
+     else
+      return fMaxTowerH/fMaxESumBin;
+   }
+}
+
+//______________________________________________________________________________
 void TEveCalo2D::ComputeBBox()
 {
    // Fill bounding-box information of the base-class TAttBBox (virtual method).
@@ -624,7 +675,7 @@ void TEveCalo2D::ComputeBBox()
    BBoxZero();
 
    Float_t x, y, z;
-   Float_t th = fData ? GetValToHeight()*fData->GetMaxVal(fPlotEt) :0;
+   Float_t th = fMaxTowerH                                           ;
    Float_t r  = fBarrelRadius + th;
    Float_t ze = fEndCapPos + th;
 

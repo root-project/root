@@ -77,6 +77,7 @@ public:
    virtual void Paint(Option_t* option="");
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   virtual Float_t GetValToHeight() const;
 
    TEveCaloData* GetData() const { return fData; }
    void    SetData(TEveCaloData* d);
@@ -114,7 +115,6 @@ public:
    Bool_t  GetValueIsColor()   const { return fValueIsColor;}
    void    SetValueIsColor(Bool_t x) { fValueIsColor = x;}
 
-   Float_t GetValToHeight() const;
    Bool_t  GetAutoRange()   const { return fAutoRange; }
    void    SetAutoRange(Bool_t x) { fAutoRange = x; }
 
@@ -198,6 +198,9 @@ protected:
    std::vector<TEveCaloData::vCellId_t*>   fCellListsSelected;
    std::vector<Int_t>                      fBinIdsSelected;
 
+   Float_t                                 fMaxESumBin;
+   Float_t                                 fMaxEtSumBin;
+
    virtual void BuildCellIdCache();
    virtual void BuildCellIdCacheSelected();
 
@@ -209,8 +212,9 @@ public:
 
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection();
-
    virtual void ComputeBBox();
+
+   virtual Float_t GetValToHeight() const;
 
    ClassDef(TEveCalo2D, 0); // Class for visualization of projected calorimeter event data.
 };

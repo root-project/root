@@ -268,11 +268,12 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
    Bool_t   isBarrel;
    Float_t  towerH;
 
-   UInt_t nEta = data->GetPhiBins()->GetNbins();
+   UInt_t nEta = data->GetEtaBins()->GetNbins();
    for (UInt_t etaBin = 1; etaBin <= nEta; ++etaBin)
    {
       if (cellLists[etaBin] )
       {
+         assert(fM->fCellLists[etaBin]);
          // clear
          Float_t offUp  = 0;
          Float_t offLow = 0;
