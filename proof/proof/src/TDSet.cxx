@@ -359,7 +359,7 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
       return fEntries;
 
    Double_t start = 0;
-   if (gPerfStats != 0) start = TTimeStamp();
+   if (gPerfStats) start = TTimeStamp();
 
    // Take into account possible prefixes
    TFile::EFileType typ = TFile::kDefault;
@@ -370,9 +370,8 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
       fname = GetName();
    TFile *file = TFile::Open(fname);
 
-   if (gPerfStats != 0) {
-      gPerfStats->FileOpenEvent(file, GetName(), double(TTimeStamp())-start);
-   }
+   if (gPerfStats)
+      gPerfStats->FileOpenEvent(file, GetName(), start);
 
    if (file == 0) {
       ::SysError("TDSet::GetEntries", "cannot open file %s", GetName());
@@ -1169,7 +1168,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
    // case of error.
 
    Double_t start = 0;
-   if (gPerfStats != 0) start = TTimeStamp();
+   if (gPerfStats) start = TTimeStamp();
 
    // Take into acoount possible prefixes
    TFile::EFileType typ = TFile::kDefault;
@@ -1180,9 +1179,8 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
       fname = filename;
    TFile *file = TFile::Open(fname);
 
-   if (gPerfStats != 0) {
-      gPerfStats->FileOpenEvent(file, filename, double(TTimeStamp())-start);
-   }
+   if (gPerfStats)
+      gPerfStats->FileOpenEvent(file, filename, start);
 
    if (file == 0) {
       ::SysError("TDSet::GetEntries", "cannot open file %s", filename);
