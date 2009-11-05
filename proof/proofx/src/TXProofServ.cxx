@@ -37,6 +37,7 @@
 #include "TException.h"
 #include "THashList.h"
 #include "TInterpreter.h"
+#include "TParameter.h"
 #include "TProofDebug.h"
 #include "TProof.h"
 #include "TProofPlayer.h"
@@ -746,21 +747,37 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
          return kQueryEnqueued;
       }
 
-      // Honour a max number of workers request (typically when running in valgrind
+      // Honour a max number of workers request (typically when running in valgrind)
       Int_t nwrks = -1;
+      Bool_t pernode = kFALSE;
       if (gSystem->Getenv("PROOF_NWORKERS")) {
          TString s(gSystem->Getenv("PROOF_NWORKERS"));
+         if (s.EndsWith("x")) {
+            pernode = kTRUE;
+            s.ReplaceAll("x", "");
+         }
          if (s.IsDigit()) {
             nwrks = s.Atoi();
-            // Notify
-            TString msg;
-            msg.Form("+++ Starting max %d workers following the setting of PROOF_NWORKERS", nwrks);
-            SendAsynMessage(msg);
+            if (nwrks > 0) {
+               // Notify
+               TString msg;
+               if (pernode) {
+                  msg.Form("+++ Starting max %d workers per node following the setting of PROOF_NWORKERS", nwrks);
+               } else {
+                  msg.Form("+++ Starting max %d workers following the setting of PROOF_NWORKERS", nwrks);
+               }
+               SendAsynMessage(msg);
+            } else {
+               nwrks = -1;
+            }
+         } else {
+            pernode = kFALSE;
          }
       }
 
       TString tok;
       Ssiz_t from = 0;
+      TList *nodecnt = (pernode) ? new TList : 0 ;
       if (fl.Tokenize(tok, from, "&")) {
          if (!tok.IsNull()) {
             TProofNodeInfo *master = new TProofNodeInfo(tok);
@@ -776,15 +793,42 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
             // Now the workers
             while (fl.Tokenize(tok, from, "&") && (nwrks == -1 || nwrks > 0)) {
                if (!tok.IsNull()) {
-                  if (workers)
-                     workers->Add(new TProofNodeInfo(tok));
                   // We have the minimal set of information to start
                   rc = kQueryOK;
-                  // Count down
-                  if (nwrks != -1) nwrks--;
+                  if (pernode && nodecnt) {
+                     TProofNodeInfo *ni = new TProofNodeInfo(tok);
+                     TParameter<Int_t> *p = 0;
+                     Int_t nw = 0;
+                     if (!(p = (TParameter<Int_t> *) nodecnt->FindObject(ni->GetNodeName().Data()))) {
+                        p = new TParameter<Int_t>(ni->GetNodeName().Data(), nw);
+                        nodecnt->Add(p);
+                     }
+                     nw = p->GetVal();
+                     if (gDebug > 0)
+                        Info("GetWorkers","%p: name: %s (%s) val: %d (nwrks: %d)",
+                                          p, p->GetName(), ni->GetNodeName().Data(),  nw, nwrks);
+                     if (nw < nwrks) {
+                        if (workers) workers->Add(ni);
+                        nw++;
+                        p->SetVal(nw);
+                     } else {
+                        // Two many workers on this machine already
+                        SafeDelete(ni);
+                     }
+                  } else {
+                     if (workers)
+                        workers->Add(new TProofNodeInfo(tok));
+                     // Count down
+                     if (nwrks != -1) nwrks--;
+                  }
                }
             }
          }
+      }
+      // Cleanup
+      if (nodecnt) {
+         nodecnt->SetOwner(kTRUE);
+         SafeDelete(nodecnt);
       }
    }
 

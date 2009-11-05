@@ -1575,8 +1575,16 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                fSocket->Send(answ);
             } else {
                TMessage answ(kPROOF_GETSLAVEINFO);
-               answ << (TList *)0;
+               TList *info = new TList;
+               TSlaveInfo *wi = new TSlaveInfo(GetOrdinal(), gSystem->HostName(), 0);
+               SysInfo_t si;
+               gSystem->GetSysInfo(&si);
+               wi->SetSysInfo(si);
+               info->Add(wi);
+               answ << (TList *)info;
                fSocket->Send(answ);
+               info->SetOwner(kTRUE);
+               delete info;
             }
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Done");

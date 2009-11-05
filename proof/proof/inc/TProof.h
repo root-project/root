@@ -219,23 +219,26 @@ public:
    TString      fHostName;     //hostname this slave is running on
    TString      fMsd;          //mass storage domain slave is in
    Int_t        fPerfIndex;    //relative performance of this slave
+   SysInfo_t    fSysInfo;      //Infomation about its hardware
    ESlaveStatus fStatus;       //slave status
 
    TSlaveInfo(const char *ordinal = "", const char *host = "", Int_t perfidx = 0,
               const char *msd = "") :
               fOrdinal(ordinal), fHostName(host), fMsd(msd),
-              fPerfIndex(perfidx), fStatus(kNotActive) { }
+              fPerfIndex(perfidx), fSysInfo(), fStatus(kNotActive) { }
 
    const char *GetMsd() const { return fMsd; }
    const char *GetName() const { return fHostName; }
    const char *GetOrdinal() const { return fOrdinal; }
+   SysInfo_t   GetSysInfo() const { return fSysInfo; }
    void        SetStatus(ESlaveStatus stat) { fStatus = stat; }
+   void        SetSysInfo(SysInfo_t si);
 
    Int_t  Compare(const TObject *obj) const;
    Bool_t IsSortable() const { return kTRUE; }
    void   Print(Option_t *option="") const;
 
-   ClassDef(TSlaveInfo,2) //basic info on slave
+   ClassDef(TSlaveInfo,3) //basic info on slave
 };
 
 // Small auxilliary class for merging progress notification
