@@ -175,7 +175,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    // use 8K ( default ) read-ahead buffer to get file header.
    // vector read are not affected by read-ahead buffer
    if(read) {
-     dc_setBufferSize(fD, RAHEAD_BUFFER_SIZE); 
+     dc_setBufferSize(fD, RAHEAD_BUFFER_SIZE);
    }else{
      dc_noBuffering(fD);
    }
@@ -232,7 +232,7 @@ Bool_t TDCacheFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf
    Int_t total_len = 0;
    for (Int_t i = 0; i < nbuf; i++) {
 	   vector[i].buf    = &buf[total_len];
-	   vector[i].offset = pos[i];
+	   vector[i].offset = pos[i] + fArchiveOffset;
 	   vector[i].len    = len[i];
 	   total_len       += len[i];
    }
