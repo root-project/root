@@ -401,7 +401,7 @@ public:
 #endif
    virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = 0);
    static  void            SetBranchStyle(Int_t style = 1);  //style=0 for old branch, =1 for new branch style
-   virtual void            SetCacheSize(Long64_t cachesize = 10000000);
+   virtual void            SetCacheSize(Long64_t cachesize = -1);
    virtual void            SetCacheEntryRange(Long64_t first, Long64_t last);
    virtual void            SetCacheLearnEntries(Int_t n=10);
    virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }

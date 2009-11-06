@@ -3561,21 +3561,22 @@ Int_t TTree::Fill()
       KeepCircular();
    }
    // Is it time to flush, autosave or optimize baskets?
-   if ((fTotBytes - fFlushedBytes) > fAutoFlush) {
+   if ((fZipBytes - fFlushedBytes) > fAutoFlush) {
       if (fFlushedBytes <= 0) {
          //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
          OptimizeBaskets(fAutoFlush,1,"");
-         if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fTotBytes=%lld, fFlushedBytes=%lld\n",fEntries,fTotBytes,fFlushedBytes);
-      } else if ((fTotBytes - fSavedBytes) > fAutoSave) {
+         if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+      } else if ((fZipBytes - fSavedBytes) > fAutoSave) {
          //we have read an AutoSave point. It flushes baskets and save the Tree header
          AutoSave();
-         if (gDebug > 0) printf("AutoSave called at entry %lld, fTotBytes=%lld, fSavedBytes=%lld\n",fEntries,fTotBytes,fSavedBytes);
+         if (fAutoSave < fAutoFlush) fAutoSave = 2*fAutoFlush;
+         if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
       } else {
          //we only FlushBaskets
          FlushBaskets();
-         if (gDebug > 0) printf("FlushBasket called at entry %lld, fTotBytes=%lld, fFlushedBytes=%lld\n",fEntries,fTotBytes,fFlushedBytes);
+         if (gDebug > 0) printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
       }
-      fFlushedBytes = fTotBytes;
+      fFlushedBytes = fZipBytes;
    }
    // Check that output file is still below the maximum size.
    // If above, close the current file and continue on a new file.
@@ -6139,14 +6140,17 @@ void TTree::SetBranchStyle(Int_t style)
 //______________________________________________________________________________
 void TTree::SetCacheSize(Long64_t cacheSize)
 {
-   // Set maximum size of the file cache (default is 10000000, i.e., 10 MB).
-   // if cachesize <= 0 the existing cache (if any) is deleted
+   // Set maximum size of the file cache .
+   // if cachesize = 0 the existing cache (if any) is deleted.
+   // if cachesize = -1 (default) it is set to the AutoFlush value when writing 
+   //    the Tree (default is 30 MBytes).
    // WARNING: Currently only ONE TTree object can be 'cached' per TFile object.
    // This call disable the cache for the other TTree objects read from the same
    // TFile object as this TTree (The SetCacheSize called __last__ wins).
    // To cache multiple TTree objects in the same ROOT file, you must create
    // one TFile object per TTree object.
 
+   if (cacheSize < 0) cacheSize = fAutoFlush;
    TFile* file = GetCurrentFile();
    if (!file) {
       fCacheSize = cacheSize;
@@ -6159,14 +6163,14 @@ void TTree::SetCacheSize(Long64_t cacheSize)
       }
       delete pf;
       pf = 0;
-      if (cacheSize <= 0) {
+      if (cacheSize == 0) {
          file->SetCacheRead(0);
          fCacheSize=0;
          return;
       }
    }
    fCacheSize = cacheSize;
-   if (cacheSize <= 0) {
+   if (cacheSize == 0) {
       return;
    }
 
@@ -6668,7 +6672,9 @@ void TTree::Streamer(TBuffer& b)
          if (fEstimate <= 10000) {
             fEstimate = 1000000;
          }
-         fSavedBytes = fTotBytes;
+         fSavedBytes   = fZipBytes;
+         fFlushedBytes = fZipBytes;
+         fCacheSize    = fAutoFlush;
          ResetBit(kMustCleanup);
          return;
       }
