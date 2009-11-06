@@ -60,6 +60,7 @@ TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    fTooltip            (0),
    fActiveButtonID     (0),
    fLastEventState     (0),
+   fIgnoreButtonUp     (kFALSE),
    fInPointerGrab      (kFALSE),
    fMouseTimerRunning  (kFALSE),
    fTooltipShown       (kFALSE),
@@ -378,6 +379,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                   } else {
                      fGLViewer->SelectionChanged(); // Just notify clients.
                   }
+                  fIgnoreButtonUp = kTRUE;
                } else if ((fSecSelType == TGLViewer::kOnRequest || fSecSelType == TGLViewer::kOnKeyMod1) && (event->fState & kKeyMod1Mask)) {
                   fGLViewer->RequestSelect(event->fX, event->fY);
                   fGLViewer->RequestSecondarySelect(event->fX, event->fY);
@@ -388,10 +390,9 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                      lshape.ProcessSelection(*fGLViewer->fRnrCtx, fGLViewer->fSecSelRec);
                      handled = kTRUE;
                   }
+                  fIgnoreButtonUp = kTRUE;
                }
-               // Switch to rotate -- thus we avoid Clicked() being sent on release.
-               // Admittedly, this is a hack.
-               // if ( ! handled)
+               if ( ! handled)
                {
                   fGLViewer->fDragAction = TGLViewer::kDragCameraRotate;
                   grabPointer = kTRUE;
@@ -448,13 +449,19 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
    // Button UP
    else if (event->fType == kButtonRelease)
    {
+      if (fIgnoreButtonUp)
+      {
+         fIgnoreButtonUp = kFALSE;
+         return kTRUE;
+      }
+
       if (fInPointerGrab)
       {
          gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
          fInPointerGrab = kFALSE;
       }
 
-      if (fGLViewer->GetPushAction() !=  TGLViewer::kPushStd)
+      if (fGLViewer->GetPushAction() != TGLViewer::kPushStd)
       {
          // This should be 'tool' dependant.
          fGLViewer->fPushAction = TGLViewer::kPushStd;

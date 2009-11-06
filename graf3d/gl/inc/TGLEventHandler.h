@@ -43,6 +43,7 @@ protected:
    TPoint            fTooltipPos;
    UInt_t            fActiveButtonID;
    UInt_t            fLastEventState;
+   Bool_t            fIgnoreButtonUp;
    Bool_t            fInPointerGrab;
    Bool_t            fMouseTimerRunning;
    Bool_t            fTooltipShown;
