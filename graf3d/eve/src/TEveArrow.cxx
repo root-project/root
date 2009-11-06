@@ -31,7 +31,8 @@ TEveArrow::TEveArrow(Float_t xVec, Float_t yVec, Float_t zVec,
    TAtt3D(), TAttBBox(),
 
    fTubeR(0.02), fConeR(0.04), fConeL(0.08),
-   fOrigin(xOrg, yOrg, zOrg), fVector(xVec, yVec, zVec)
+   fOrigin(xOrg, yOrg, zOrg), fVector(xVec, yVec, zVec),
+   fDrawQuality(10)
 {
    // Constructor.
    // Org - starting point.

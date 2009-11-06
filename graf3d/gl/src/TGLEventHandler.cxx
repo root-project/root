@@ -389,7 +389,10 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                      handled = kTRUE;
                   }
                }
-               if ( ! handled) {
+               // Switch to rotate -- thus we avoid Clicked() being sent on release.
+               // Admittedly, this is a hack.
+               // if ( ! handled)
+               {
                   fGLViewer->fDragAction = TGLViewer::kDragCameraRotate;
                   grabPointer = kTRUE;
                   if (fMouseTimer) {

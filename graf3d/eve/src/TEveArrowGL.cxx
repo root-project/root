@@ -60,11 +60,7 @@ void TEveArrowGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
    // Render with OpenGL.
 
-   // printf("TEveArrowGL::DirectDraw LOD \n");
-
    static TGLQuadric quad;
-   UInt_t drawQuality = 10;
-   // Draw 3D line (tube) with optional head shape
 
    glPushMatrix();
 
@@ -77,16 +73,16 @@ void TEveArrowGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    // Line (tube) component
    Float_t r = size*fM->fTubeR;
    Float_t h = size*fM->fConeL;
-   gluCylinder(quad.Get(), r, r, size - h, drawQuality, 1);
+   gluCylinder(quad.Get(), r, r, size - h, fM->fDrawQuality, 1);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_INSIDE);
-   gluDisk(quad.Get(), 0.0, r, drawQuality, 1);
+   gluDisk(quad.Get(), 0.0, r, fM->fDrawQuality, 1);
 
    // Arrow cone
    r = size*fM->fConeR;
    glTranslated(0.0, 0.0, size -h );
-   gluDisk(quad.Get(), 0.0, r, drawQuality, 1);
+   gluDisk(quad.Get(), 0.0, r, fM->fDrawQuality, 1);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
-   gluCylinder(quad.Get(), r, 0., h , drawQuality, 1);
+   gluCylinder(quad.Get(), r, 0., h , fM->fDrawQuality, 1);
 
    glPopMatrix();
 }

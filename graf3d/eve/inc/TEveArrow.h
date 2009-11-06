@@ -40,6 +40,8 @@ protected:
    TEveVector  fOrigin;
    TEveVector  fVector;
 
+   Int_t       fDrawQuality; // Number of segments of circles.
+
 public:
    TEveArrow(Float_t xVec=0, Float_t yVec=0, Float_t zVec=1,
              Float_t xOrg=0, Float_t yOrg=0, Float_t zOrg=0);
@@ -55,6 +57,9 @@ public:
 
    TEveVector GetVector() { return fVector; }
    TEveVector GetOrigin() { return fOrigin; }
+
+   Int_t GetDrawQuality() const  { return fDrawQuality; }
+   void  SetDrawQuality(Int_t q) { fDrawQuality = q; }
 
    virtual void ComputeBBox();
    virtual void Paint(Option_t* option="");

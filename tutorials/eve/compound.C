@@ -57,7 +57,7 @@ void compound()
    }
 
    // projections
-   TEveProjectionManager* mng = new TEveProjectionManager();
+   TEveProjectionManager* mng = new TEveProjectionManager(TEveProjection::kPT_RPhi);
    scene->AddElement(mng);
    TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
    scene->AddElement(axes);
