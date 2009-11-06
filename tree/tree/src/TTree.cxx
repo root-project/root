@@ -361,7 +361,7 @@
 #include <stdio.h>
 
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
-Long64_t TTree::fgMaxTreeSize = 100000000000L;
+Long64_t TTree::fgMaxTreeSize = 100000000000LL;
 
 TTree* gTree;
 
@@ -5164,8 +5164,8 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
    if (opt.Contains("d")) pDebug = kTRUE;
    TObjArray *leaves = this->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntries();
-   Int_t bmin = 2048;
-   Int_t bmax = 512000;
+   Int_t bmin = 512;
+   Int_t bmax = 256000;
    Double_t treeSize = (Double_t)this->GetTotBytes();
    Double_t aveSize = treeSize/nleaves;
    Double_t memFactor = 1;
