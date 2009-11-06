@@ -5630,6 +5630,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    return nlines;
 }
 
+//______________________________________________________________________________
 void TTree::RecursiveRemove(TObject *obj)
 {
    // Make sure that obj (which is being deleted or will soon be) is no
@@ -6672,8 +6673,6 @@ void TTree::Streamer(TBuffer& b)
          if (fEstimate <= 10000) {
             fEstimate = 1000000;
          }
-         fSavedBytes   = fZipBytes;
-         fFlushedBytes = fZipBytes;
          fCacheSize    = fAutoFlush;
          ResetBit(kMustCleanup);
          return;
