@@ -313,7 +313,7 @@ void TTreePerfStats::Paint(Option_t *option)
       if (!fTimeAxis) {
          Double_t uxmax = gPad->GetUxmax();
          Double_t uymax = gPad->GetUymax();
-         Double_t tmax  = fGraphTime->GetY()[npoints-1]/fRealNorm;
+         Double_t tmax  = uymax/fRealNorm;
          fTimeAxis = new TGaxis(uxmax,0,uxmax,uymax,0.,tmax,510,"+L");
          fTimeAxis->SetName("axisTime");
          fTimeAxis->SetLineColor(kRed);
