@@ -33,6 +33,27 @@
 #include "TLeafI.h"
 #include "TLeafL.h"
 
+#include <algorithm>
+
+bool TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
+{
+   if (fObject->fBasketSeek[i1] ==  fObject->fBasketSeek[i2]) {
+      if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
+         return i1 < i2;         
+      }
+      return  fObject->fBasketEntry[i1] <  fObject->fBasketEntry[i2];
+   }
+   return fObject->fBasketSeek[i1] <  fObject->fBasketSeek[i2];
+}
+
+bool TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
+{
+   if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
+      return i1 < i2;         
+   }
+   return  fObject->fBasketEntry[i1] <  fObject->fBasketEntry[i2];
+}
+
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method) :
    fIsValid(kTRUE),
    fFromTree(from),
@@ -295,6 +316,7 @@ void TTreeCloner::CollectBaskets()
          fBasketBranchNum[bi] = i;
          fBasketNum[bi] = b;
          fBasketSeek[bi] = from->GetBasketSeek(b);
+         //fprintf(stderr,"For %s %d %lld\n",from->GetName(),bi,fBasketSeek[bi]);
          fBasketEntry[bi] = from->GetBasketEntry()[b];
          fBasketIndex[bi] = bi;
       }
@@ -428,13 +450,17 @@ void TTreeCloner::SortBaskets()
       case kSortBasketsByBranch:
          // nothing to do, it is already sorted.
          break;
-      case kSortBasketsByEntry:
-         TMath::Sort( fMaxBaskets, fBasketEntry, fBasketIndex, kFALSE );
+      case kSortBasketsByEntry: {
+         for(UInt_t i = 0; i < fMaxBaskets; ++i) { fBasketIndex[i] = i; }
+         std::sort(fBasketIndex, fBasketIndex+fMaxBaskets, CompareEntry( this) );
          break;
+      }
       case kSortBasketsByOffset:
-      default:
-         TMath::Sort( fMaxBaskets, fBasketSeek, fBasketIndex, kFALSE );
+      default: {
+         for(UInt_t i = 0; i < fMaxBaskets; ++i) { fBasketIndex[i] = i; }
+         std::sort(fBasketIndex, fBasketIndex+fMaxBaskets, CompareSeek( this) );
          break;
+      }
    }
 }
 

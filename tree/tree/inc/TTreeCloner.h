@@ -64,6 +64,20 @@ class TTreeCloner {
       kSortBasketsByEntry  = 3
    };
    
+   class CompareSeek {
+      TTreeCloner *fObject;
+   public:
+       CompareSeek(TTreeCloner *obj) : fObject(obj) {}
+      bool operator()(UInt_t i1, UInt_t i2);
+   };
+    
+   class CompareEntry {
+      TTreeCloner *fObject;
+   public:
+      CompareEntry(TTreeCloner *obj) : fObject(obj) {}
+      bool operator()(UInt_t i1, UInt_t i2);
+   };
+
 public:
    TTreeCloner(TTree *from, TTree *to, Option_t *method);
    virtual ~TTreeCloner();
