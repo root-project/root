@@ -72,6 +72,7 @@
 
 #include "TTreePerfStats.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "Riostream.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -82,6 +83,7 @@
 #include "TStopwatch.h"
 #include "TGaxis.h"
 #include "TTimeStamp.h"
+#include "TDatime.h"
 
 const Double_t kScaleTime = 1e-20;
 
@@ -93,6 +95,7 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    // default constructor (used when reading an object only)
 
    fName      = "";
+   fMachine   = "";
    fTree      = 0;
    fNleaves   = 0;
    fFile      = 0;
@@ -111,6 +114,7 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    fDiskTime      = 0;
    fCompress      = 0;
    fTimeAxis      = 0;
+   fMachineText   = 0;
 }
 
 //______________________________________________________________________________
@@ -144,6 +148,16 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fDiskTime      = 0;
    fTimeAxis      = 0;
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
+   
+   Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+   if (UNIX) fMachine = gSystem->GetFromPipe("uname -a");
+   else      fMachine = "Windows ";
+   fMachine.Resize(20);
+   fMachine += Form("Root%s, SVN :%d",gROOT->GetVersion(),gROOT->GetSvnRevision());
+   TDatime dt;
+   fMachine += Form(" %s",dt.AsString());
+   fMachineText   = 0;
+
    gPerfStats = this;
 }
 
@@ -183,6 +197,9 @@ Int_t TTreePerfStats::DistancetoPrimitive(Int_t px, Int_t py)
    // on the time axis ?
    distance = fTimeAxis->DistancetoPrimitive(px,py);
    if (distance <kMaxDiff) {gPad->SetSelected(fTimeAxis);  return distance;}
+   // on the machine label ?
+   distance = fMachineText->DistancetoPrimitive(px,py);
+   if (distance <kMaxDiff) {gPad->SetSelected(fMachineText);  return distance;}
    if (px > puxmax-300) return 2;
    return 999;
 }
@@ -331,6 +348,13 @@ void TTreePerfStats::Paint(Option_t *option)
       fPave->AddText(Form("ReadCP    = %7.3f MBytes/s",1e-6*fBytesRead/fCpuTime));
    }
    fPave->Paint();
+   
+   if (!fMachineText) {
+      fMachineText = new TText(0.01,0.01,fMachine.Data());
+      fMachineText->SetNDC();
+      fMachineText->SetTextSize(0.02);
+   }
+   fMachineText->Paint();
 }
 
 //______________________________________________________________________________

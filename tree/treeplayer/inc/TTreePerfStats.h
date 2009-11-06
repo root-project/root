@@ -35,6 +35,7 @@ class TStopwatch;
 class TPaveText;
 class TGraphErrors;
 class TGaxis;
+class TText;
 class TTreePerfStats : public TVirtualPerfStats {
 
 protected:
@@ -50,6 +51,7 @@ protected:
    Double_t      fDiskTime;      //Time spent in pure raw disk IO
    Double_t      fCompress;      //Tree compression factor      
    TString       fName;          //name of this TTreePerfStats
+   TString       fMachine;       //name of the system, ROOT version and date
    TFile        *fFile;          //!pointer to the file containing the Tree
    TTree        *fTree;          //!pointer to the Tree being monitored
    TGraphErrors *fGraphIO ;      //pointer to the graph with IO data
@@ -57,7 +59,8 @@ protected:
    TPaveText    *fPave;          //pointer to annotation pavetext
    TStopwatch   *fWatch;         //TStopwatch pointer
    TGaxis       *fTimeAxis;      //pointer to TGaxis object
-
+   TText        *fMachineText;   //Text object with the fMachine data
+      
 public:
    TTreePerfStats();
    TTreePerfStats(const char *name, TTree *T);
@@ -72,7 +75,8 @@ public:
    virtual Double_t GetDiskTime()  const {return fDiskTime;}
    TGraphErrors    *GetGraphIO()     {return fGraphIO;}
    TGraphErrors    *GetGraphTime()   {return fGraphTime;}
-   const char      *GetName() const{return fName.Data();}
+   const char      *GetMachine() const{return fMachine.Data();}
+   const char      *GetName()    const{return fName.Data();}
    virtual Int_t    GetNleaves() const {return fNleaves;}
    virtual Long64_t GetNumEvents() const {return 0;}
    TPaveText       *GetPave()      {return fPave;}
