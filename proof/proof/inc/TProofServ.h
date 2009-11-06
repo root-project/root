@@ -129,6 +129,7 @@ private:
 
    TList        *fWaitingQueries;   //list of TProofQueryResult waiting to be processed
    Bool_t        fIdle;             //TRUE if idle
+   TMutex       *fQMtx;             // To protect async msg queue
 
    TList        *fQueuedMsg;        //list of messages waiting to be processed
 
@@ -180,6 +181,14 @@ private:
    void          SendResults(TSocket *sock, TList *outlist = 0, TQueryResult *pq = 0);
    Int_t         RegisterDataSets(TList *in, TList *out);
 
+   // Waiting queries handlers
+   void          SetIdle(Bool_t st = kTRUE);
+   Bool_t        IsWaiting();
+   Int_t         WaitingQueries();
+   Int_t         QueueQuery(TProofQueryResult *pq);
+   TProofQueryResult *NextQuery();
+   Int_t         CleanupWaitingQueries(Bool_t del = kTRUE, TList *qls = 0);
+
 protected:
    virtual void  HandleArchive(TMessage *mess);
    virtual Int_t HandleCache(TMessage *mess);
@@ -200,6 +209,8 @@ protected:
    virtual void  DeletePlayer();
 
    virtual Int_t Fork();
+   Int_t         GetSessionStatus();
+   Bool_t        IsIdle();
 
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);

@@ -1245,6 +1245,7 @@ void XrdProofdProtocol::TouchAdminPath()
          XrdOucString apath = fAdminPath;
          if (rc == -ENOENT && Internal()) {
             apath.replace("/activesessions/", "/terminatedsessions/");
+            apath.replace(".status", "");
             rc = XrdProofdAux::Touch(apath.c_str());
          }
          if (rc != 0) {

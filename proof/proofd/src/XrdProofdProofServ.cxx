@@ -733,6 +733,7 @@ int XrdProofdProofServ::SetAdminPath(const char *a)
 
    fAdminPath = a;
 
+   // The session file
    struct stat st;
    if (stat(a, &st) != 0 && errno == ENOENT) {
       // Create the file
@@ -744,6 +745,22 @@ int XrdProofdProofServ::SetAdminPath(const char *a)
       TRACE(XERR, "unable to open / create admin path "<< fAdminPath << "; errno = "<<errno);
       return -1;
    }
+
+   // The status file
+   XrdOucString fn;
+   XPDFORM(fn, "%s.status", a);
+   if (stat(fn.c_str(), &st) != 0 && errno == ENOENT) {
+      // Create the file
+      FILE *fpid = fopen(fn.c_str(), "w");
+      if (fpid) {
+         fprintf(fpid, "%d", fStatus);
+         fclose(fpid);
+      } else {
+         TRACE(XERR, "unable to open / create admin path "<< fn << "; errno = "<<errno);
+         return -1;
+      }
+   }
+
    // Done
    return 0;
 }
@@ -796,7 +813,7 @@ static int ExportWorkerDescription(const char *k, XrdProofWorker *w, void *s)
          // Add export version of the info
          (*wrks) += w->Export(k);
       }
-      TRACE(ALL, k <<" : "<<w->fHost.c_str()<<":"<<w->fPort <<" act: "<<w->Active());
+      TRACE(HDBG, k <<" : "<<w->fHost.c_str()<<":"<<w->fPort <<" act: "<<w->Active());
       // Check next
       return 0;
    }

@@ -460,7 +460,8 @@ void TQueryResultManager::SaveQuery(TProofQueryResult *qr, const char *fout)
 //______________________________________________________________________________
 void TQueryResultManager::RemoveQuery(const char *queryref, TList *otherlist)
 {
-   // Remove everything about query queryref; also from 'otherlist', if defined
+   // Remove everything about query queryref; if defined 'otherlist' will containe
+   // the list of removed pointers (already deleted)
 
    PDB(kGlobal, 1)
       Info("RemoveQuery", "Enter");
@@ -473,7 +474,7 @@ void TQueryResultManager::RemoveQuery(const char *queryref, TList *otherlist)
    if (pqr) {
       if (qry > -1) {
          fQueries->Remove(pqr);
-         if (otherlist) otherlist->Remove(pqr);
+         if (otherlist) otherlist->Add(pqr);
       } else
          fPreviousQueries->Remove(pqr);
       delete pqr;

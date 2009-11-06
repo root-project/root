@@ -486,18 +486,28 @@ void TXProofServ::HandleUrgentData()
          // Touch the admin path to show we are alive
          if (fAdminPath.IsNull()) {
             fAdminPath = gEnv->GetValue("ProofServ.AdminPath", "");
-            TString spid = Form(".%d", getpid());
-            if (!fAdminPath.IsNull() && !fAdminPath.EndsWith(spid))
-               fAdminPath += spid;
          }
 
          if (!fAdminPath.IsNull()) {
-            // Update file time stamps
-            if (utime(fAdminPath.Data(), 0) != 0)
-               Info("HandleUrgentData", "problems touching path: %s", fAdminPath.Data());
-            else
-               if (gDebug > 0)
-                  Info("HandleUrgentData", "touching path: %s", fAdminPath.Data());
+            if (!fAdminPath.EndsWith(".status")) {
+               // Update file time stamps
+               if (utime(fAdminPath.Data(), 0) != 0)
+                  Info("HandleUrgentData", "problems touching path: %s", fAdminPath.Data());
+               else
+                  if (gDebug > 0)
+                     Info("HandleUrgentData", "touching path: %s", fAdminPath.Data());
+            } else {
+               // Update the status in the file
+               FILE *fs = fopen(fAdminPath.Data(), "w");
+               if (fs) {
+                  fprintf(fs, "%d", GetSessionStatus());
+                  fclose(fs);
+                  if (gDebug > 0)
+                     Info("HandleUrgentData", "status update in path: %s", fAdminPath.Data());
+               } else {
+                  Error("HandleUrgentData", "problems opening status path: %s", fAdminPath.Data());
+               }
+            }
          } else {
             Info("HandleUrgentData", "admin path undefined");
          }

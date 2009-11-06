@@ -461,7 +461,6 @@ bool XrdProofdProofServMgr::IsSessionSocket(const char *fpid)
    return 1;
 }
 
-
 //______________________________________________________________________________
 int XrdProofdProofServMgr::MvSession(const char *fpid)
 {
@@ -481,17 +480,22 @@ int XrdProofdProofServMgr::MvSession(const char *fpid)
    if (!opath.beginswith(fActiAdminPath.c_str())) {
       // We are given a partial path: create full paths
       XPDFORM(opath, "%s/%s", fActiAdminPath.c_str(), fpid);
+      opath.replace(".status", "");
       XPDFORM(npath, "%s/%s", fTermAdminPath.c_str(), fpid);
    } else {
       // Full path: just create the new path
-      npath = fpid;
+      opath.replace(".status", "");
+      npath = opath;
       npath.replace(fActiAdminPath.c_str(), fTermAdminPath.c_str());
    }
-
    // Remove the socket path
    XrdOucString spath = opath;
    spath += ".sock";
-   unlink(spath.c_str());
+   if (unlink(spath.c_str()) != 0 && errno != ENOENT)
+      TRACE(XERR, "problems removing the UNIX socket path: "<<spath<<"; errno: "<<errno);
+   spath.replace(".sock", ".status");
+   if (unlink(spath.c_str()) != 0 && errno != ENOENT)
+      TRACE(XERR, "problems removing the status file: "<<spath<<"; errno: "<<errno);
 
    // Move the file
    errno = 0;
@@ -552,7 +556,7 @@ int XrdProofdProofServMgr::TouchSession(const char *fpid, const char *fpath)
    // Path
    XrdOucString path(fpath);
    if (!fpath || strlen(fpath) == 0)
-      XPDFORM(path, "%s/%s", fActiAdminPath.c_str(), fpid);
+      XPDFORM(path, "%s/%s.status", fActiAdminPath.c_str(), fpid);
 
    // Update file time stamps
    if (utime(path.c_str(), 0) == 0)
@@ -582,14 +586,14 @@ int XrdProofdProofServMgr::VerifySession(const char *fpid,
    // Path
    XrdOucString path;
    if (fpath && strlen(fpath) > 0)
-      XPDFORM(path, "%s/%s", fpath, fpid);
+      XPDFORM(path, "%s/%s.status", fpath, fpid);
    else
-      XPDFORM(path, "%s/%s", fActiAdminPath.c_str(), fpid);
+      XPDFORM(path, "%s/%s.status", fActiAdminPath.c_str(), fpid);
 
    // Current settings
    struct stat st;
    if (stat(path.c_str(), &st)) {
-      TRACE(XERR, "session pid file cannot be stat'ed: "<<
+      TRACE(XERR, "session status file cannot be stat'ed: "<<
                   path<<"; error: "<<errno);
       return -1;
    }
@@ -850,6 +854,8 @@ int XrdProofdProofServMgr::CheckActiveSessions(bool verify)
    // Scan the active sessions admin path
    struct dirent *ent = 0;
    while ((ent = (struct dirent *)readdir(dir))) {
+      // If a status path, go to the next
+      if (strstr(ent->d_name, ".status")) continue;
       // If a socket path, make sure that the associated session still exists
       // and go to the next
       if (strstr(ent->d_name, ".sock") && IsSessionSocket(ent->d_name)) continue;
@@ -1059,7 +1065,7 @@ int XrdProofdProofServMgr::CleanClientSessions(const char *usr, int srvtype)
          // Get the session instance
          int pid = XrdProofdAux::ParsePidPath(ent->d_name, rest);
          if (!XPD_LONGOK(pid) || pid <= 0) continue;
-         // Read info from file and check that we are intersted in this session
+         // Read info from file and check that we are interested in this session
          XPDFORM(path, "%s/%s", fActiAdminPath.c_str(), ent->d_name);
          XrdProofSessionInfo info(path.c_str());
          if (!all && info.fUser != usr) continue;
@@ -2111,6 +2117,7 @@ int XrdProofdProofServMgr::Accept(XrdProofdProofServ *xps,
    if (go) {
       // Save path into the protocol instance: it may be needed during Process
       XrdOucString apath(xps->AdminPath());
+      apath += ".status";
       ((XrdProofdProtocol *)xp)->SetAdminPath(apath.c_str());
       // Take a short-cut and process the initial request as a sticky request
       if (xp->Process(linkpsrv) != 0) {
@@ -2695,7 +2702,7 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
 
    // Session admin path
    fprintf(frc, "# Session admin path\n");
-   fprintf(frc, "ProofServ.AdminPath: %s\n", xps->AdminPath());
+   fprintf(frc, "ProofServ.AdminPath: %s.status\n", xps->AdminPath());
 
    // Whether user specific config files are enabled
    if (fMgr->NetMgr()->WorkerUsrCfg()) {
@@ -3895,7 +3902,7 @@ int XrdProofSessionInfo::SaveToFile(const char *file)
    if (fpid) {
       fprintf(fpid, "%s %s\n", fUser.c_str(), fGroup.c_str());
       fprintf(fpid, "%s\n", fUnixPath.c_str());
-      fprintf(fpid, "%d %d %d %d\n", fPid, fID, fSrvType, fStatus);
+      fprintf(fpid, "%d %d %d\n", fPid, fID, fSrvType);
       fprintf(fpid, "%s %s %s\n", fOrdinal.c_str(), fTag.c_str(), fAlias.c_str());
       fprintf(fpid, "%s\n", fLogFile.c_str());
       fprintf(fpid, "%d %s\n", fSrvProtVers, fROOTTag.c_str());
@@ -3955,7 +3962,7 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
 
    Reset();
 
-   // Open the file
+   // Open the session file
    FILE *fpid = fopen(file,"r");
    if (fpid) {
       char line[4096];
@@ -3974,7 +3981,7 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
          fUnixPath = line;
       }
       if (fgets(line, sizeof(line), fpid)) {
-         sscanf(line, "%d %d %d %d", &fPid, &fID, &fSrvType, &fStatus);
+         sscanf(line, "%d %d %d", &fPid, &fID, &fSrvType);
       }
       if (fgets(line, sizeof(line), fpid)) {
          int ns = 0;
@@ -4024,9 +4031,24 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
       struct stat st;
       if (!stat(file, &st))
          fLastAccess = st.st_atime;
-      return 0;
+   } else {
+      TRACE(XERR,"session file cannot be open: "<< file<<"; error: "<<errno);
+      return -1;
    }
 
-   TRACE(XERR,"session pid file cannot be open: "<< file<<"; error: "<<errno);
-   return -1;
+   // Read the last status now
+   XrdOucString fs(file);
+   fs += ".status";
+   fpid = fopen(fs.c_str(),"r");
+   if (fpid) {
+      char line[64];
+      if (fgets(line, sizeof(line), fpid)) {
+         sscanf(line, "%d", &fStatus);
+      }
+   } else {
+      TRACE(XERR,"session status file cannot be open: "<< fs<<"; error: "<<errno);
+   }
+
+   // Done
+   return 0;
 }

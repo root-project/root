@@ -539,6 +539,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fQueryLock       = 0;
 
    fQMgr            = 0;
+   fQMtx            = new TMutex(kTRUE);
    fWaitingQueries  = new TList;
    fIdle            = kTRUE;
    fQuerySeqNum     = -1;
@@ -807,6 +808,7 @@ TProofServ::~TProofServ()
    // live anyway.
 
    SafeDelete(fWaitingQueries);
+   SafeDelete(fQMtx);
    SafeDelete(fEnabledPackages);
    SafeDelete(fSocket);
    SafeDelete(fPackageLock);
@@ -1737,7 +1739,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          if (all) {
             // This message resumes the session; should not come during processing.
 
-            if (fWaitingQueries->IsEmpty()) {
+            if (WaitingQueries() == 0) {
                Error("HandleSocketInput", "no queries enqueued");
                break;
             }
@@ -1755,10 +1757,10 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                } else {
                   ProcessNext();
                   // Set idle
-                  fIdle = kTRUE;
+                  SetIdle(kTRUE);
                   // Signal the client that we are idle
                   TMessage m(kPROOF_SETIDLE);
-                  Bool_t waiting = (fWaitingQueries->GetSize() > 0) ? kTRUE : kFALSE;
+                  Bool_t waiting = (WaitingQueries() > 0) ? kTRUE : kFALSE;
                   m << waiting;
                   fSocket->Send(m);
                }
@@ -1780,7 +1782,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          {  // The client requested to switch to asynchronous mode:
             // communicate the sequential number of the running query for later
             // identification, if any
-            if (!fIdle && fPlayer) {
+            if (!IsIdle() && fPlayer) {
                // Get query currently being processed
                TProofQueryResult *pq = (TProofQueryResult *) fPlayer->GetCurrentQuery();
                TMessage m(kPROOF_QUERYSUBMITTED);
@@ -3078,7 +3080,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       Info("HandleProcess", "Enter");
 
    // Nothing to do for slaves if we are not idle
-   if (!IsTopMaster() && !fIdle)
+   if (!IsTopMaster() && !IsIdle())
       return;
 
    TDSet *dset;
@@ -3147,7 +3149,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       }
 
       // Add anyhow to the waiting lists
-      fWaitingQueries->Add(pq);
+      QueueQuery(pq);
 
       // Call get Workers
       // if we are not idle the scheduler will just enqueue the query and
@@ -3197,7 +3199,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       }
 
       // Nothing more to do if we are not idle
-      if (!fIdle) {
+      if (!IsIdle()) {
          // Notify submission
          Info("HandleProcess",
               "query \"%s:%s\" submitted", pq->GetTitle(), pq->GetName());
@@ -3209,7 +3211,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       // (there is no way to enqueue if idle).
       // in the dynamic mode we will process here only if the session was idle and got workers!
       Bool_t doprocess = kFALSE;
-      while (fWaitingQueries->GetSize() > 0 && !enqueued) {
+      while (WaitingQueries() > 0 && !enqueued) {
          doprocess = kTRUE;
          //
          ProcessNext();
@@ -3220,12 +3222,12 @@ void TProofServ::HandleProcess(TMessage *mess)
       } // Loop on submitted queries
 
       // Set idle
-      fIdle = kTRUE;
+      SetIdle(kTRUE);
 
       // Signal the client that we are idle
       if (doprocess) {
          m.Reset(kPROOF_SETIDLE);
-         Bool_t waiting = (fWaitingQueries->GetSize() > 0) ? kTRUE : kFALSE;
+         Bool_t waiting = (WaitingQueries() > 0) ? kTRUE : kFALSE;
          m << waiting;
          fSocket->Send(m);
       }
@@ -3233,7 +3235,7 @@ void TProofServ::HandleProcess(TMessage *mess)
    } else {
 
       // Set not idle
-      fIdle = kFALSE;
+      SetIdle(kFALSE);
 
       MakePlayer();
 
@@ -3309,7 +3311,7 @@ void TProofServ::HandleProcess(TMessage *mess)
    }
 
    // Set idle
-   fIdle = kTRUE;
+   SetIdle(kTRUE);
 
    PDB(kGlobal, 1) Info("HandleProcess", "Done");
 
@@ -3504,12 +3506,12 @@ void TProofServ::ProcessNext()
 
    // Process
 
-   // Get query info
-   pq = (TProofQueryResult *)(fWaitingQueries->First());
+   // Get next query info (also removes query from the list)
+   pq = NextQuery();
    if (pq) {
 
       // Set not idle
-      fIdle = kFALSE;
+      SetIdle(kFALSE);
       opt      = pq->GetOptions();
       input    = pq->GetInputList();
       nentries = pq->GetEntries();
@@ -3543,12 +3545,9 @@ void TProofServ::ProcessNext()
          gSystem->Exec(TString::Format("%s %s", kRM, pq->GetSelecHdr()->GetName()));
          pq->GetSelecHdr()->SaveSource(pq->GetSelecHdr()->GetName());
       }
-      //
-      // Remove processed query from the list
-      fWaitingQueries->Remove(pq);
    } else {
       // Should never get here
-      Error("ProcessNext", "empty fWaitingQueries queue!");
+      Error("ProcessNext", "empty waiting queries list!");
       return;
    }
 
@@ -3832,9 +3831,8 @@ void TProofServ::HandleRemove(TMessage *mess)
    (*mess) >> queryref;
 
    if (queryref == "cleanupqueue") {
-      Int_t pend = fWaitingQueries->GetSize();
       // Remove pending requests
-      fWaitingQueries->Delete();
+      Int_t pend = CleanupWaitingQueries();
       // Notify
       Info("HandleRemove", "%d queries removed from the waiting list", pend);
       // We are done
@@ -3858,7 +3856,9 @@ void TProofServ::HandleRemove(TMessage *mess)
       if (fQMgr->LockSession(queryref, &lck) == 0) {
 
          // Remove query
-         fQMgr->RemoveQuery(queryref, fWaitingQueries);
+         TList qtorm;
+         fQMgr->RemoveQuery(queryref, &qtorm);
+         CleanupWaitingQueries(kFALSE, &qtorm);
 
          // Unlock and remove the lock file
          if (lck) {
@@ -5707,6 +5707,100 @@ void TProofServ::ResolveKeywords(TString &fname, const char *path)
    }
 }
 
+//______________________________________________________________________________
+Int_t TProofServ::GetSessionStatus()
+{
+   // Return the status of this session:
+   //     0     idle
+   //     1     running
+   //     2     being terminated  (currently unused)
+   //     3     queued
+   // This is typically run in the reader thread, so access needs to be protected
+
+   R__LOCKGUARD(fQMtx);
+   Int_t st = (fIdle) ? 0 : 1;
+   if (fIdle && fWaitingQueries->GetSize() > 0) st = 3;
+   return st;
+}
+
+//______________________________________________________________________________
+Bool_t TProofServ::IsIdle()
+{
+   // Return the idle status
+   R__LOCKGUARD(fQMtx);
+   return fIdle;
+}
+
+//______________________________________________________________________________
+void TProofServ::SetIdle(Bool_t st)
+{
+   // Change the idle status
+   R__LOCKGUARD(fQMtx);
+   fIdle = st;
+}
+
+//______________________________________________________________________________
+Bool_t TProofServ::IsWaiting()
+{
+   // Return kTRUE if the session is waiting for the OK to start processing
+   R__LOCKGUARD(fQMtx);
+   if (fIdle && fWaitingQueries->GetSize() > 0) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::WaitingQueries()
+{
+   // Return the number of waiting queries
+   R__LOCKGUARD(fQMtx);
+   return fWaitingQueries->GetSize();
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::QueueQuery(TProofQueryResult *pq)
+{
+   // Add a query to the waiting list
+   // Returns the number of queries in the list
+   R__LOCKGUARD(fQMtx);
+   fWaitingQueries->Add(pq);
+   return fWaitingQueries->GetSize();
+}
+
+//______________________________________________________________________________
+TProofQueryResult *TProofServ::NextQuery()
+{
+   // Get the next query from the waiting list.
+   // The query is removed from the list.
+   R__LOCKGUARD(fQMtx);
+   TProofQueryResult *pq = (TProofQueryResult *) fWaitingQueries->First();
+   fWaitingQueries->Remove(pq);
+   return pq;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::CleanupWaitingQueries(Bool_t del, TList *qls)
+{
+   // Cleanup the waiting queries list. The objects are deleted if 'del' is true.
+   // If 'qls' is non null, only objects in 'qls' are removed.
+   // Returns the number of cleanup queries
+   R__LOCKGUARD(fQMtx);
+   Int_t ncq = 0;
+   if (qls) {
+      TIter nxq(qls);
+      TObject *o = 0;
+      while ((o = nxq())) {
+         if (fWaitingQueries->FindObject(o)) ncq++;
+         fWaitingQueries->Remove(o);
+         if (del) delete o;
+      }
+   } else {
+      ncq = fWaitingQueries->GetSize();
+      fWaitingQueries->SetOwner(del);
+      fWaitingQueries->Delete();
+   }
+   // Done
+   return ncq;
+}
 
 //______________________________________________________________________________
 Int_t TProofLockPath::Lock()
