@@ -18,6 +18,7 @@
 #include "CINTTypedefBuilder.h"
 #include "Api.h"
 
+#include <set>
 
 using namespace ROOT::Reflex;
 using namespace std;
@@ -31,6 +32,16 @@ namespace ROOT {
          if ( t.IsTypedef() )  {
 
             std::string nam = CintName(t.Name(SCOPED));
+
+            static bool init = false;
+            static std::set<std::string> exclusionList;
+            if (!init) {
+               exclusionList.insert("stringstream");
+               init = true;
+            }
+            if ( exclusionList.find(nam) != exclusionList.end() ) {
+               return -1;
+            }
 
             Type rt(t);
             Scope scope = rt.DeclaringScope();
