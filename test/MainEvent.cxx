@@ -33,7 +33,6 @@
 //  if split = -2 the event is split using the old TBranchObject mechanism
 //  if split = -1 the event is streamed using the old TBranchObject mechanism
 //  if split > 0  the event is split using the new TBranchElement mechanism.
-//  if split > 90 the branch buffer sizes are optimized once 10 MBytes written to the file
 //
 //  if comp = 0 no compression at all.
 //  if comp = 1 event is compressed.
@@ -147,9 +146,6 @@ int main(int argc, char **argv)
    if (arg5 < 100) printev = 1000;
    if (arg5 < 10)  printev = 10000;
 
-   //Authorize Trees up to 2 Terabytes (if the system can do it)
-   TTree::SetMaxTreeSize(1000*Long64_t(2000000000));
-
 //         Read case
    if (read) {
       if (netf) {
@@ -162,8 +158,8 @@ int main(int argc, char **argv)
       Int_t nentries = (Int_t)tree->GetEntries();
       nevent = TMath::Min(nevent,nentries);
       if (read == 1) {  //read sequential
-         //set the read cache
-         Int_t cachesize = 10000000; //this is the default value: 10 MBytes
+         //by setting the read cache to -1 we set it to the AutoFlush value when writing
+         Int_t cachesize = -1; 
          tree->SetCacheSize(cachesize);
          tree->SetCacheLearnEntries(1); //one entry is sufficient to learn
          tree->SetCacheEntryRange(0,nevent);
@@ -221,8 +217,6 @@ int main(int argc, char **argv)
       if(split >= 0 && branchStyle) tree->BranchRef();
       Float_t ptmin = 1;
 
-      Bool_t optimize = kTRUE;
-      if (split < 90) optimize = kFALSE;
       for (ev = 0; ev < nevent; ev++) {
          if (ev%printev == 0) {
             tnew = timer.RealTime();
@@ -236,12 +230,6 @@ int main(int argc, char **argv)
          event->Build(ev, arg5, ptmin);
 
          if (write) nb += tree->Fill();  //fill the tree
-         if (optimize) { //optimize baskets sizes once we have written 10 MBytes
-            if (tree->GetZipBytes() > 10000000) {
-               tree->OptimizeBaskets(5000000,1); // 5Mbytes for basket buffers
-               optimize = kFALSE;
-            }
-         }
 
          if (hm) hm->Hfill(event);      //fill histograms
       }
