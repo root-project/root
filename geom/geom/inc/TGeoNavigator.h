@@ -127,6 +127,7 @@ public :
    Double_t               GetLastSafety() const        {return fLastSafety;}
    Double_t               GetStep() const              {return fStep;}
    void                   InspectState() const;
+   Bool_t                 IsSafeStep(Double_t proposed, Double_t &newsafety) const;
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change=kFALSE);
    Bool_t                 IsSameLocation() const {return fIsSameLocation;}
    Bool_t                 IsSamePoint(Double_t x, Double_t y, Double_t z) const;

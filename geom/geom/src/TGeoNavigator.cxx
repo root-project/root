@@ -33,6 +33,7 @@
 #include "TGeoVolume.h"
 #include "TGeoPatternFinder.h"
 #include "TGeoVoxelFinder.h"
+#include "TMath.h"
 
 #include "TGeoNavigator.h"
 
@@ -603,20 +604,24 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
          stepmax = - stepmax;
          computeGlobal = kTRUE;
       }
-//      if (stepmax<1E29) {
-         if (fLastSafety>0 && IsSamePoint(fPoint[0], fPoint[1], fPoint[2])) fSafety = fLastSafety;
-         else fSafety = Safety();
-         fSafety = TMath::Abs(fSafety);
-         memcpy(fLastPoint, fPoint, kN3);
-         fLastSafety = fSafety;
-         if (fSafety<gTolerance) fIsOnBoundary = kTRUE;
-         else fIsOnBoundary = kFALSE;
+      // Try to get out easy if proposed step within safe region
+      if (!frombdr && IsSafeStep(stepmax+gTolerance, fSafety)) {
          fStep = stepmax;
-         if (stepmax<fSafety) {
-            fStep = stepmax;
-            return fCurrentNode;
-         }
-//      }   
+         fNextNode = fCurrentNode;
+         return fCurrentNode;
+      }   
+//      if (fLastSafety>0 && IsSamePoint(fPoint[0], fPoint[1], fPoint[2])) fSafety = fLastSafety;
+      fSafety = Safety();
+      fSafety = TMath::Abs(fSafety);
+      memcpy(fLastPoint, fPoint, kN3);
+      fLastSafety = fSafety;
+      if (fSafety<gTolerance) fIsOnBoundary = kTRUE;
+      else fIsOnBoundary = kFALSE;
+      fStep = stepmax;
+      if (stepmax+gTolerance<fSafety) {
+         fNextNode = fCurrentNode;
+         return fCurrentNode;
+      }   
    }
    if (computeGlobal) fCurrentMatrix->CopyFrom(fGlobalMatrix);
    Double_t snext  = TGeoShape::Big();
@@ -1058,10 +1063,24 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    fStep = stepmax;
    Double_t snext = TGeoShape::Big();
    if (compsafe) {
+      // Try to get out easy if proposed step within safe region
       fIsOnBoundary = kFALSE;
+      if (IsSafeStep(stepmax+gTolerance, fSafety)) {
+         fPoint[0] += stepmax*fDirection[0];
+         fPoint[1] += stepmax*fDirection[1];
+         fPoint[2] += stepmax*fDirection[2];
+         return fCurrentNode;
+      }   
       Safety();
+      fLastSafety = fSafety;
+      memcpy(fLastPoint, fPoint, kN3);
       // If proposed step less than safety, nothing to check
-      if (fSafety > stepmax+gTolerance) return fCurrentNode;
+      if (fSafety > stepmax+gTolerance) {
+         fPoint[0] += stepmax*fDirection[0];
+         fPoint[1] += stepmax*fDirection[1];
+         fPoint[2] += stepmax*fDirection[2];
+         return fCurrentNode;
+      }   
    }   
    Double_t extra = (fIsOnBoundary)?gTolerance:0.0;
    fIsOnBoundary = kFALSE;
@@ -2225,6 +2244,31 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
       }
    }
    if (!change) PopPath();
+   return kTRUE;
+}
+
+//_____________________________________________________________________________
+Bool_t TGeoNavigator::IsSafeStep(Double_t proposed, Double_t &newsafety) const
+{
+// In case a previous safety value was computed, check if the safety region is
+// still safe for the current point and proposed step. Return value changed only
+// if proposed distance is safe.
+
+   // Last safety not computed.
+   if (fLastSafety < gTolerance) return kFALSE;
+   // Proposed step too small
+   if (proposed < gTolerance) {
+      newsafety = fLastSafety - proposed;
+      return kTRUE;
+   }
+   // Normal step
+   Double_t dist = (fPoint[0]-fLastPoint[0])*(fPoint[0]-fLastPoint[0])+
+                   (fPoint[1]-fLastPoint[1])*(fPoint[1]-fLastPoint[1])+
+                   (fPoint[2]-fLastPoint[2])*(fPoint[2]-fLastPoint[2]);
+   dist = TMath::Sqrt(dist);
+   Double_t safe =  fLastSafety - dist;
+   if (safe < proposed) return kFALSE;
+   newsafety = safe;
    return kTRUE;
 }
 
