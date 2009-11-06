@@ -51,7 +51,7 @@ protected:
    Double_t      fDiskTime;      //Time spent in pure raw disk IO
    Double_t      fCompress;      //Tree compression factor      
    TString       fName;          //name of this TTreePerfStats
-   TString       fMachine;       //name of the system, ROOT version and date
+   TString       fHostInfo;      //name of the host system, ROOT version and date
    TFile        *fFile;          //!pointer to the file containing the Tree
    TTree        *fTree;          //!pointer to the Tree being monitored
    TGraphErrors *fGraphIO ;      //pointer to the graph with IO data
@@ -59,7 +59,7 @@ protected:
    TPaveText    *fPave;          //pointer to annotation pavetext
    TStopwatch   *fWatch;         //TStopwatch pointer
    TGaxis       *fTimeAxis;      //pointer to TGaxis object
-   TText        *fMachineText;   //Text object with the fMachine data
+   TText        *fHostInfoText;  //Graphics Text object with the fHostInfo data
       
 public:
    TTreePerfStats();
@@ -75,7 +75,7 @@ public:
    virtual Double_t GetDiskTime()  const {return fDiskTime;}
    TGraphErrors    *GetGraphIO()     {return fGraphIO;}
    TGraphErrors    *GetGraphTime()   {return fGraphTime;}
-   const char      *GetMachine() const{return fMachine.Data();}
+   const char      *GetHostInfo() const{return fHostInfo.Data();}
    const char      *GetName()    const{return fName.Data();}
    virtual Int_t    GetNleaves() const {return fNleaves;}
    virtual Long64_t GetNumEvents() const {return 0;}
@@ -106,6 +106,7 @@ public:
    virtual void     SetCpuTime(Double_t cptime) {fCpuTime = cptime;}
    virtual void     SetGraphIO(TGraphErrors *gr) {fGraphIO = gr;}
    virtual void     SetGraphTime(TGraphErrors *gr) {fGraphTime = gr;}
+   virtual void     SetHostInfo(const char *info) {fHostInfo = info;}
    virtual void     SetName(const char *name) {fName = name;}
    virtual void     SetNleaves(Int_t nleaves) {fNleaves = nleaves;}
    virtual void     SetReadaheadSize(Int_t nbytes) {fReadaheadSize = nbytes;}

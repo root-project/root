@@ -95,7 +95,7 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    // default constructor (used when reading an object only)
 
    fName      = "";
-   fMachine   = "";
+   fHostInfo  = "";
    fTree      = 0;
    fNleaves   = 0;
    fFile      = 0;
@@ -114,7 +114,7 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    fDiskTime      = 0;
    fCompress      = 0;
    fTimeAxis      = 0;
-   fMachineText   = 0;
+   fHostInfoText  = 0;
 }
 
 //______________________________________________________________________________
@@ -150,13 +150,13 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
    
    Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
-   if (UNIX) fMachine = gSystem->GetFromPipe("uname -a");
-   else      fMachine = "Windows ";
-   fMachine.Resize(20);
-   fMachine += Form("Root%s, SVN :%d",gROOT->GetVersion(),gROOT->GetSvnRevision());
+   if (UNIX) fHostInfo = gSystem->GetFromPipe("uname -a");
+   else      fHostInfo = "Windows ";
+   fHostInfo.Resize(20);
+   fHostInfo += Form("Root%s, SVN :%d",gROOT->GetVersion(),gROOT->GetSvnRevision());
    TDatime dt;
-   fMachine += Form(" %s",dt.AsString());
-   fMachineText   = 0;
+   fHostInfo += Form(" %s",dt.AsString());
+   fHostInfoText   = 0;
 
    gPerfStats = this;
 }
@@ -172,6 +172,7 @@ TTreePerfStats::~TTreePerfStats()
    delete fGraphTime;
    delete fPave;
    delete fWatch;
+   delete fHostInfoText;
 }
 
 //______________________________________________________________________________
@@ -197,9 +198,9 @@ Int_t TTreePerfStats::DistancetoPrimitive(Int_t px, Int_t py)
    // on the time axis ?
    distance = fTimeAxis->DistancetoPrimitive(px,py);
    if (distance <kMaxDiff) {gPad->SetSelected(fTimeAxis);  return distance;}
-   // on the machine label ?
-   distance = fMachineText->DistancetoPrimitive(px,py);
-   if (distance <kMaxDiff) {gPad->SetSelected(fMachineText);  return distance;}
+   // on the host info label ?
+   distance = fHostInfoText->DistancetoPrimitive(px,py);
+   if (distance <kMaxDiff) {gPad->SetSelected(fHostInfoText);  return distance;}
    if (px > puxmax-300) return 2;
    return 999;
 }
@@ -349,12 +350,12 @@ void TTreePerfStats::Paint(Option_t *option)
    }
    fPave->Paint();
    
-   if (!fMachineText) {
-      fMachineText = new TText(0.01,0.01,fMachine.Data());
-      fMachineText->SetNDC();
-      fMachineText->SetTextSize(0.02);
+   if (!fHostInfoText) {
+      fHostInfoText = new TText(0.01,0.01,fHostInfo.Data());
+      fHostInfoText->SetNDC();
+      fHostInfoText->SetTextSize(0.02);
    }
-   fMachineText->Paint();
+   fHostInfoText->Paint();
 }
 
 //______________________________________________________________________________
@@ -408,6 +409,7 @@ void TTreePerfStats::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    out<<"ps = new TTreePerfStats();"<<endl;
    out<<"   ps->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+   out<<"   ps->SetHostInfo("<<quote<<GetHostInfo()<<quote<<");"<<endl;
    out<<"   ps->SetTreeCacheSize("<<fTreeCacheSize<<");"<<endl;
    out<<"   ps->SetNleaves("<<fNleaves<<");"<<endl;
    out<<"   ps->SetReadCalls("<<fReadCalls<<");"<<endl;
