@@ -361,7 +361,7 @@
 #include <stdio.h>
 
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
-Long64_t TTree::fgMaxTreeSize = 1900000000;
+Long64_t TTree::fgMaxTreeSize = 100000000000L;
 
 TTree* gTree;
 
@@ -474,6 +474,7 @@ TTree::TTree()
 , fTotBytes(0)
 , fZipBytes(0)
 , fSavedBytes(0)
+, fFlushedBytes(0)
 , fWeight(1)
 , fTimerInterval(0)
 , fScanField(25)
@@ -482,7 +483,8 @@ TTree::TTree()
 , fMaxEntries(0)
 , fMaxEntryLoop(0)
 , fMaxVirtualSize(0)
-, fAutoSave(100000000)
+, fAutoSave(300000000)
+, fAutoFlush(30000000)
 , fEstimate(1000000)
 , fCacheSize(10000000)
 , fChainOffset(0)
@@ -534,6 +536,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fTotBytes(0)
 , fZipBytes(0)
 , fSavedBytes(0)
+, fFlushedBytes(0)
 , fWeight(1)
 , fTimerInterval(0)
 , fScanField(25)
@@ -542,7 +545,8 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fMaxEntries(0)
 , fMaxEntryLoop(0)
 , fMaxVirtualSize(0)
-, fAutoSave(100000000)
+, fAutoSave(300000000)
+, fAutoFlush(30000000)
 , fEstimate(1000000)
 , fCacheSize(10000000)
 , fChainOffset(0)
@@ -2133,7 +2137,7 @@ TFile* TTree::ChangeFile(TFile* file)
    // a file named "__N", then "___N", etc.
    //
    // fgMaxTreeSize can be set via the static function TTree::SetMaxTreeSize.
-   // The default value of fgMaxTreeSize is 1.9 Gigabytes.
+   // The default value of fgMaxTreeSize is 100 Gigabytes.
    //
    // If the current file contains other objects like TH1 and TTree,
    // these objects are automatically moved to the new file.
@@ -3497,6 +3501,19 @@ Int_t TTree::Fill()
    //   If no data are written, because, e.g., the branch is disabled,
    //   the number of bytes returned is 0.
    //
+   //        The baskets are flushed and the Tree header saved at regular intervals
+   //         ---------------------------------------------------------------------
+   //   At regular intervals, when the amount of data written so far (fTotBytes) is
+   //   greater than fAutoFlush (see SetAutoFlush) all the baskets are flushed to disk.
+   //   This makes future reading faster as it guarantees that baskets belonging to nearby
+   //   entries will be on the same disk region.
+   //   When the first call to flush the baskets happen, we also take this opportunity
+   //   to optimize the baskets buffers.
+   //   We also check if the number of bytes written is greater than fAutoSave (see SetAutoSave).
+   //   In this case we also write the Tree header. This makes the Tree recoverable up to this point
+   //   in case the program writing the Tree crashes.
+   //   Note that the user can also decide to call FlushBaskets and AutoSave in her event loop
+   //   on the base of the number of events written instead of the number of bytes written.
 
    Int_t nbytes = 0;
    Int_t nerror = 0;
@@ -3543,8 +3560,22 @@ Int_t TTree::Fill()
    if (fEntries > fMaxEntries) {
       KeepCircular();
    }
-   if ((fTotBytes - fSavedBytes) > fAutoSave) {
-      AutoSave();
+   // Is it time to flush, autosave or optimize baskets?
+   if ((fTotBytes - fFlushedBytes) > fAutoFlush) {
+      if (fFlushedBytes <= 0) {
+         //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
+         OptimizeBaskets(fAutoFlush,1,"");
+         if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fTotBytes=%lld, fFlushedBytes=%lld\n",fEntries,fTotBytes,fFlushedBytes);
+      } else if ((fTotBytes - fSavedBytes) > fAutoSave) {
+         //we have read an AutoSave point. It flushes baskets and save the Tree header
+         AutoSave();
+         if (gDebug > 0) printf("AutoSave called at entry %lld, fTotBytes=%lld, fSavedBytes=%lld\n",fEntries,fTotBytes,fSavedBytes);
+      } else {
+         //we only FlushBaskets
+         FlushBaskets();
+         if (gDebug > 0) printf("FlushBasket called at entry %lld, fTotBytes=%lld, fFlushedBytes=%lld\n",fEntries,fTotBytes,fFlushedBytes);
+      }
+      fFlushedBytes = fTotBytes;
    }
    // Check that output file is still below the maximum size.
    // If above, close the current file and continue on a new file.
@@ -5807,6 +5838,32 @@ Bool_t TTree::SetAlias(const char* aliasName, const char* aliasFormula)
    TNamed* holder = new TNamed(aliasName, aliasFormula);
    fAliases->Add(holder);
    return kTRUE;
+}
+
+//_______________________________________________________________________
+void TTree::SetAutoFlush(Long64_t autof)
+{
+   //This function may be called at the start of a program to change
+   //the default value for fAutoFlush(30000000, ie 30 MBytes).
+   //When filling the Tree the branch buffers will be flushed to disk when
+   //more than fAutoFlush bytes have been written to the file.
+   //Flushing the buffers at regular intervals optimize the location of
+   //consecutive entries on the disk.
+   
+   fAutoFlush = autof;
+}
+
+//_______________________________________________________________________
+void TTree::SetAutoSave(Long64_t autos)
+{
+   //This function may be called at the start of a program to change
+   //the default value for fAutoSave(300000000, ie 300 MBytes).
+   //When filling the Tree the branch buffers as well as the Tree header 
+   //will be flushed to disk when more than fAutoSave bytes have been written to the file.
+   //In case of a program crash, it will be possible to recover the data in the Tree
+   //up to the last AutoSave point.
+   
+   fAutoSave = autos;
 }
 
 //_______________________________________________________________________

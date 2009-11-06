@@ -94,6 +94,7 @@ protected:
    Long64_t       fTotBytes;          //  Total number of bytes in all branches before compression
    Long64_t       fZipBytes;          //  Total number of bytes in all branches after compression
    Long64_t       fSavedBytes;        //  Number of autosaved bytes
+   Long64_t       fFlushedBytes;      //  Number of autoflushed bytes
    Double_t       fWeight;            //  Tree weight (see TTree::SetWeight)
    Int_t          fTimerInterval;     //  Timer interval in milliseconds
    Int_t          fScanField;         //  Number of runs before prompting in Scan
@@ -103,6 +104,7 @@ protected:
    Long64_t       fMaxEntryLoop;      //  Maximum number of entries to process
    Long64_t       fMaxVirtualSize;    //  Maximum total size of buffers kept in memory
    Long64_t       fAutoSave;          //  Autosave tree when fAutoSave bytes produced
+   Long64_t       fAutoFlush;         //  Autoflush tree when fAutoFlush bytes produced
    Long64_t       fEstimate;          //  Number of entries to estimate histogram limits
    Long64_t       fCacheSize;         //! Maximum size of file buffers
    Long64_t       fChainOffset;       //! Offset of 1st entry of this Tree in a TChain
@@ -264,6 +266,8 @@ public:
    virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
    virtual Int_t           FlushBaskets() const;
    virtual const char     *GetAlias(const char* aliasName) const;
+   virtual Long64_t        GetAutoFlush() const {return fAutoFlush;}
+   virtual Long64_t        GetAutoSave()  const {return fAutoSave;}
    virtual TBranch        *GetBranch(const char* name);
    virtual TBranchRef     *GetBranchRef() const { return fBranchRef; };
    virtual Bool_t          GetBranchStatus(const char* branchname) const;
@@ -377,7 +381,8 @@ public:
    virtual void            ResetBranchAddresses();
    virtual Long64_t        Scan(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
    virtual Bool_t          SetAlias(const char* aliasName, const char* aliasFormula);
-   virtual void            SetAutoSave(Long64_t autos = 10000000) { fAutoSave=autos; }
+   virtual void            SetAutoSave(Long64_t autos = 300000000);
+   virtual void            SetAutoFlush(Long64_t autof = 30000000);
    virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
 #if !defined(__CINT__)
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
@@ -430,7 +435,7 @@ public:
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 
-   ClassDef(TTree,17)  //Tree descriptor (the main ROOT I/O class)
+   ClassDef(TTree,18)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////
