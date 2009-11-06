@@ -362,7 +362,8 @@ void TTreePerfStats::Print(Option_t * /*option*/) const
 {
    // Print the TTree I/O perf stats.
 
-   Finish();
+   TTreePerfStats *ps = (TTreePerfStats*)this;
+   ps->Finish();
       
    Double_t extra = 100.*fBytesReadExtra/fBytesRead;
    printf("TreeCache = %d MBytes\n",Int_t(fTreeCacheSize/1000000));
