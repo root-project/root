@@ -6688,7 +6688,7 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
 
    // Check type of action
    if ((type != "lib") && (type != "inc")) {
-      Error("HandleLibIncPath","unknown action type: %s", type.Data());
+      Error("HandleLibIncPath","unknown action type: %s - protocol error?", type.Data());
       return;
    }
 
@@ -6699,7 +6699,7 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
    TObjArray *op = 0;
    if (path.Length() > 0 && path != "-") {
       if (!(op = path.Tokenize(" "))) {
-         Error("HandleLibIncPath","decomposing path %s", path.Data());
+         Warning("HandleLibIncPath","decomposing path %s", path.Data());
          return;
       }
    }
@@ -6727,8 +6727,9 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
                   gSystem->SetDynamicPath(newlibpath);
                }
             } else {
-               Info("HandleLibIncPath",
-                    "libpath %s does not exist or cannot be read - not added", xlib.Data());
+               if (gDebug > 0)
+                  Info("HandleLibIncPath",
+                       "libpath %s does not exist or cannot be read - not added", xlib.Data());
             }
          }
 
@@ -6747,8 +6748,9 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
                if (curincpath.Index(xinc) == kNPOS)
                   gSystem->AddIncludePath(Form("-I%s", xinc.Data()));
             } else
-               Info("HandleLibIncPath",
-                    "incpath %s does not exist or cannot be read - not added", xinc.Data());
+               if (gDebug > 0)
+                   Info("HandleLibIncPath",
+                        "incpath %s does not exist or cannot be read - not added", xinc.Data());
          }
       }
 
