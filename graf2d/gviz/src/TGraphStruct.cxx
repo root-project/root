@@ -135,7 +135,10 @@ void TGraphStruct::DumpAsDotFile(const char *filename)
 {
    // Dump this graph structure as a "dot" file.
 
-   if (!fGVGraph) Layout();
+   if (!fGVGraph) {
+     Int_t ierr = Layout();
+     if (ierr) return;
+   }
    FILE  *file;
    file=fopen(filename,"wt");
    agwrite(fGVGraph, file);
@@ -148,7 +151,10 @@ void TGraphStruct::Draw(Option_t *option)
 {
    // Draw the graph
 
-   if (!fGVGraph) Layout();
+   if (!fGVGraph) {
+     Int_t ierr = Layout();
+     if (ierr) return;
+   }
 
    // Get the bounding box
    if (gPad) {
@@ -183,7 +189,7 @@ void TGraphStruct::Draw(Option_t *option)
 
 
 //______________________________________________________________________________
-void TGraphStruct::Layout()
+Int_t TGraphStruct::Layout()
 {
    // Layout the graph into a GraphViz data structure
 
@@ -222,7 +228,8 @@ void TGraphStruct::Layout()
    }
 
    // Layout the graph
-   gvLayout(fGVC, fGVGraph, (char*)"dot");
+   int ierr = gvLayout(fGVC, fGVGraph, (char*)"dot");
+   if (ierr) return ierr;
 
    // Layout the nodes
    if (fNodes) {
@@ -243,6 +250,8 @@ void TGraphStruct::Layout()
          edge->Layout();
       }
    }
+
+   return 0;
 }
 
 

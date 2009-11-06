@@ -60,7 +60,7 @@ public:
    void         DumpAsDotFile(const char *filename);
    TList       *GetListOfNodes() const { return fNodes; }
    TList       *GetListOfEdges() const { return fEdges; }
-   void         Layout();
+   Int_t        Layout();
    virtual void SavePrimitive(ostream &out, Option_t *option = "");
    void         SetMargin(Double_t m=10) {fMargin = m;}
 
