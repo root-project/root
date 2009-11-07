@@ -2,7 +2,7 @@
 Processing runtemplateName.C...
 ******************************************************************************
 *Tree    :mytree    : Icecube                                                *
-*Entries :      100 : Total =           13061 bytes  File  Size =          0 *
+*Entries :      100 : Total =           13077 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Branch  :my_c                                                               *
@@ -86,7 +86,7 @@ Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
 ************************************
 ******************************************************************************
 *Tree    :mytreemk  : foo                                                    *
-*Entries :        1 : Total =            2701 bytes  File  Size =          0 *
+*Entries :        1 : Total =            2717 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Branch  :my_c                                                               *

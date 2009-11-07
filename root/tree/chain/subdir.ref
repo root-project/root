@@ -5,7 +5,7 @@ Trying subdir.root/data1.root with a tree name
 subdir.root/data1.root tree:tree entries=1234567890
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             852 bytes  File  Size =        395 *
+*Entries :        3 : Total =             868 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
@@ -16,7 +16,7 @@ Trying subdir.root/data2.root
 subdir.root/data2.root tree:tree entries=1234567890
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             852 bytes  File  Size =        395 *
+*Entries :        3 : Total =             868 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
@@ -29,7 +29,7 @@ subdir.root/data1.root tree:tree entries=1234567890
 subdir.root/data2.root tree:tree entries=1234567890
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             852 bytes  File  Size =        395 *
+*Entries :        3 : Total =             868 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
@@ -38,7 +38,7 @@ subdir.root/data2.root tree:tree entries=1234567890
 *............................................................................*
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             852 bytes  File  Size =        395 *
+*Entries :        3 : Total =             868 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
@@ -50,7 +50,7 @@ subdir.root/data1.root tree:tree entries=1234567890
 subdir.root/data2.root tree:tree entries=1234567890
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             852 bytes  File  Size =        395 *
+*Entries :        3 : Total =             868 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
@@ -59,7 +59,7 @@ subdir.root/data2.root tree:tree entries=1234567890
 *............................................................................*
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             852 bytes  File  Size =        395 *
+*Entries :        3 : Total =             868 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
@@ -70,7 +70,7 @@ Trying subdir.root/data1.root/tree
 subdir.root/data1.root tree:tree entries=1234567890
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             852 bytes  File  Size =        395 *
+*Entries :        3 : Total =             868 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
@@ -81,7 +81,7 @@ Trying subdir.root/data2.root
 subdir.root/data2.root tree:tree entries=1234567890
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             852 bytes  File  Size =        395 *
+*Entries :        3 : Total =             868 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
