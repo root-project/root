@@ -23,7 +23,7 @@
 // For each call the following information is stored in fGraphTime
 //     - x[i]  = Tree entry number
 //     - y[i]  = Time now
-//     - ey[i] = 0.5*readtime, eg timenow - start
+//     - ey[i] = readtime, eg timenow - start
 // The TTreePerfStats object can be saved in a ROOT file in such a way that
 // its inspection can be done outside the job that generated it.
 //
@@ -258,7 +258,7 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
    Double_t dtime = tnow-start;
    fDiskTime += dtime;
    fGraphTime->SetPoint(np,entry,tnow);
-   fGraphTime->SetPointError(np,0.001,0.5*dtime);
+   fGraphTime->SetPointError(np,0.001,dtime);
 }
 
 //______________________________________________________________________________
@@ -281,14 +281,13 @@ void TTreePerfStats::Finish()
    Int_t npoints  = fGraphIO->GetN();
    if (!npoints) return;
    Double_t ymax  = fGraphIO->GetY()[npoints-1];
-   Double_t tmax  = fGraphTime->GetY()[npoints-1];
-   Double_t t0    = fGraphTime->GetY()[0];
+   Double_t tmax  = fGraphTime->GetY()[npoints-1]+fGraphTime->GetEY()[npoints-1];
+   Double_t t0    = fGraphTime->GetY()[0]-fGraphTime->GetEY()[0];
    if (tmax <= t0) tmax = t0+1;
    fRealNorm      = ymax/(tmax-t0);
    // we normalize the fGraphTime such that it can be drawn on top of fGraphIO
    for (Int_t i=0;i<npoints;i++) {
-      fGraphTime->GetY()[i]  -= t0;
-      fGraphTime->GetY()[i]  *= fRealNorm;
+      fGraphTime->GetY()[i]   = fRealNorm*(fGraphTime->GetY()[i]-t0 +fGraphTime->GetEY()[i]);
       fGraphTime->GetEY()[i] *= fRealNorm;
    }
 }
@@ -315,6 +314,7 @@ void TTreePerfStats::Paint(Option_t *option)
          Double_t uxmax = gPad->GetUxmax();
          Double_t uymax = gPad->GetUymax();
          Double_t tmax  = uymax/fRealNorm;
+         tmax = fRealTime*uymax/fGraphIO->GetY()[npoints-1];
          fTimeAxis = new TGaxis(uxmax,0,uxmax,uymax,0.,tmax,510,"+L");
          fTimeAxis->SetName("axisTime");
          fTimeAxis->SetLineColor(kRed);
