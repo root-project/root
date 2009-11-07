@@ -2,8 +2,6 @@
 Processing reflexrun.C...
 IsA()
 ShowMembers(TMemberInspector&, char*)
-Streamer(TBuffer&)
-StreamerNVirtual(TBuffer&)
 __getNewDelFunctions()
 get() const
 get<double>() const
