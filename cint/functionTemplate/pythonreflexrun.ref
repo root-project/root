@@ -1,4 +1,4 @@
-['IsA', 'ShowMembers', 'Streamer', 'StreamerNVirtual', 'get', 'get<double>', 'get<float>', 'get<int>', 'getfloat', 'set', 'set<double>', 'set<float>', 'set<int>']
+['IsA', 'ShowMembers', 'get', 'get<double>', 'get<float>', 'get<int>', 'getfloat', 'set', 'set<double>', 'set<float>', 'set<int>']
 called get<double()
 called get<int>()
 called get<float>()
