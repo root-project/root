@@ -58,7 +58,7 @@ protected:
    TGraphErrors *fGraphTime ;    //pointer to the graph with timestamp info
    TPaveText    *fPave;          //pointer to annotation pavetext
    TStopwatch   *fWatch;         //TStopwatch pointer
-   TGaxis       *fTimeAxis;      //pointer to TGaxis object
+   TGaxis       *fRealTimeAxis;  //pointer to TGaxis object showing real-time
    TText        *fHostInfoText;  //Graphics Text object with the fHostInfo data
       
 public:

@@ -18,8 +18,8 @@
 // The function FileReadEvent is called from TFile::ReadBuffer.
 // For each call the following information is stored in fGraphIO
 //     - x[i]  = Tree entry number
-//     - y[i]  = file position
-//     - ey[i] = 0.001*number of bytes read
+//     - y[i]  = 1e-6*(file position)
+//     - ey[i] = 1e-9*number of bytes read
 // For each call the following information is stored in fGraphTime
 //     - x[i]  = Tree entry number
 //     - y[i]  = Time now
@@ -113,7 +113,7 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    fCpuTime       = 0;
    fDiskTime      = 0;
    fCompress      = 0;
-   fTimeAxis      = 0;
+   fRealTimeAxis  = 0;
    fHostInfoText  = 0;
 }
 
@@ -146,7 +146,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fRealTime      = 0;
    fCpuTime       = 0;
    fDiskTime      = 0;
-   fTimeAxis      = 0;
+   fRealTimeAxis  = 0;
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
    
    Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
@@ -172,6 +172,7 @@ TTreePerfStats::~TTreePerfStats()
    delete fGraphTime;
    delete fPave;
    delete fWatch;
+   delete fRealTimeAxis;
    delete fHostInfoText;
 }
 
@@ -195,9 +196,9 @@ Int_t TTreePerfStats::DistancetoPrimitive(Int_t px, Int_t py)
    // on the pave ?
    distance = fPave->DistancetoPrimitive(px,py);
    if (distance <kMaxDiff) {gPad->SetSelected(fPave);  return distance;}
-   // on the time axis ?
-   distance = fTimeAxis->DistancetoPrimitive(px,py);
-   if (distance <kMaxDiff) {gPad->SetSelected(fTimeAxis);  return distance;}
+   // on the real time axis ?
+   distance = fRealTimeAxis->DistancetoPrimitive(px,py);
+   if (distance <kMaxDiff) {gPad->SetSelected(fRealTimeAxis);  return distance;}
    // on the host info label ?
    distance = fHostInfoText->DistancetoPrimitive(px,py);
    if (distance <kMaxDiff) {gPad->SetSelected(fHostInfoText);  return distance;}
@@ -252,8 +253,8 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
    Long64_t offset = file->GetRelOffset();
    Int_t np = fGraphIO->GetN();
    Int_t entry = fTree->GetReadEntry();
-   fGraphIO->SetPoint(np,entry,offset);
-   fGraphIO->SetPointError(np,0.001,0.001*len);
+   fGraphIO->SetPoint(np,entry,1e-6*offset);
+   fGraphIO->SetPointError(np,0.001,1e-9*len);
    Double_t tnow = TTimeStamp();
    Double_t dtime = tnow-start;
    fDiskTime += dtime;
@@ -280,15 +281,13 @@ void TTreePerfStats::Finish()
    fCpuTime       = fWatch->CpuTime();
    Int_t npoints  = fGraphIO->GetN();
    if (!npoints) return;
-   Double_t ymax  = fGraphIO->GetY()[npoints-1];
-   Double_t tmax  = fGraphTime->GetY()[npoints-1]+fGraphTime->GetEY()[npoints-1];
-   Double_t t0    = fGraphTime->GetY()[0]-fGraphTime->GetEY()[0];
-   if (tmax <= t0) tmax = t0+1;
-   fRealNorm      = ymax/(tmax-t0);
+   Double_t iomax = fGraphIO->GetY()[npoints-1];
+   fRealNorm      = iomax/fRealTime;
+   fGraphTime->GetY()[0] = fRealNorm*fGraphTime->GetEY()[0];
    // we normalize the fGraphTime such that it can be drawn on top of fGraphIO
-   for (Int_t i=0;i<npoints;i++) {
-      fGraphTime->GetY()[i]   = fRealNorm*(fGraphTime->GetY()[i]-t0 +fGraphTime->GetEY()[i]);
-      fGraphTime->GetEY()[i] *= fRealNorm;
+   for (Int_t i=1;i<npoints;i++) {
+      fGraphTime->GetY()[i]   = fGraphTime->GetY()[i-1] +fRealNorm*fGraphTime->GetEY()[i];
+      fGraphTime->GetEY()[i]  = 0;
    }
 }
    
@@ -300,9 +299,12 @@ void TTreePerfStats::Paint(Option_t *option)
 
    Int_t npoints  = fGraphIO->GetN();
    if (!npoints) return;
+   Double_t iomax = fGraphIO->GetY()[npoints-1];
+   Double_t toffset=1;
+   if (iomax >= 1e9) toffset = 1.2;
    fGraphIO->GetXaxis()->SetTitle("Tree entry number");
-   fGraphIO->GetYaxis()->SetTitle("file position");
-   fGraphIO->GetYaxis()->SetTitleOffset(1.2);
+   fGraphIO->GetYaxis()->SetTitle("file position (MBytes)  ");
+   fGraphIO->GetYaxis()->SetTitleOffset(toffset);
    fGraphIO->GetXaxis()->SetLabelSize(0.03);
    fGraphIO->GetYaxis()->SetLabelSize(0.03);
    fGraphIO->Paint(option);
@@ -310,21 +312,28 @@ void TTreePerfStats::Paint(Option_t *option)
    //superimpose the time info (max 10 points)
    if (fGraphTime) {
       fGraphTime->Paint("l");
-      if (!fTimeAxis) {
+      TText tdisk(fGraphTime->GetX()[npoints-1],1.1*fGraphTime->GetY()[npoints-1],"RAW IO");
+      tdisk.SetTextAlign(31);
+      tdisk.SetTextSize(0.03);
+      tdisk.SetTextColor(kRed);
+      tdisk.Paint();
+      if (!fRealTimeAxis) {
          Double_t uxmax = gPad->GetUxmax();
          Double_t uymax = gPad->GetUymax();
-         Double_t tmax  = uymax/fRealNorm;
-         tmax = fRealTime*uymax/fGraphIO->GetY()[npoints-1];
-         fTimeAxis = new TGaxis(uxmax,0,uxmax,uymax,0.,tmax,510,"+L");
-         fTimeAxis->SetName("axisTime");
-         fTimeAxis->SetLineColor(kRed);
-         fTimeAxis->SetTitle("RealTime (s)");
-         fTimeAxis->SetTitleColor(kRed);
-         fTimeAxis->SetTitleOffset(1.2);
-         fTimeAxis->SetLabelSize(0.03);
-         fTimeAxis->SetLabelColor(kRed);
+         Double_t rtmax = fRealTime*uymax/iomax;
+         fRealTimeAxis = new TGaxis(uxmax,0,uxmax,uymax,0.,rtmax,510,"+L");
+         fRealTimeAxis->SetName("RealTimeAxis");
+         fRealTimeAxis->SetLineColor(kRed);
+         fRealTimeAxis->SetTitle("RealTime (s)  ");
+         fRealTimeAxis->SetTitleColor(kRed);
+         toffset = 1;
+         if (fRealTime >=  100) toffset = 1.2;
+         if (fRealTime >= 1000) toffset = 1.4;
+         fRealTimeAxis->SetTitleOffset(toffset);
+         fRealTimeAxis->SetLabelSize(0.03);
+         fRealTimeAxis->SetLabelColor(kRed);
       }
-      fTimeAxis->Paint();
+      fRealTimeAxis->Paint();
    }
 
    Double_t extra = 100.*fBytesReadExtra/fBytesRead;
@@ -353,7 +362,7 @@ void TTreePerfStats::Paint(Option_t *option)
    if (!fHostInfoText) {
       fHostInfoText = new TText(0.01,0.01,fHostInfo.Data());
       fHostInfoText->SetNDC();
-      fHostInfoText->SetTextSize(0.02);
+      fHostInfoText->SetTextSize(0.025);
    }
    fHostInfoText->Paint();
 }
