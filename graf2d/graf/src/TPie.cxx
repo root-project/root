@@ -1252,7 +1252,7 @@ void TPie::SetEntryLineColor(Int_t i, Int_t color)
 {
    // Set the color for the slice's outline. "i" is the slice number.
 
-   fPieSlices[i]->SetLineColor(color);
+   if (i>=0 && i<fNvals) fPieSlices[i]->SetLineColor(color);
 }
 
 
@@ -1261,7 +1261,7 @@ void TPie::SetEntryLineStyle(Int_t i, Int_t style)
 {
    // Set the style for the slice's outline. "i" is the slice number.
 
-   fPieSlices[i]->SetLineStyle(style);
+   if (i>=0 && i<fNvals) fPieSlices[i]->SetLineStyle(style);
 }
 
 
@@ -1270,7 +1270,7 @@ void TPie::SetEntryLineWidth(Int_t i, Int_t width)
 {
    // Set the width of the slice's outline. "i" is the slice number.
 
-   fPieSlices[i]->SetLineWidth(width);
+   if (i>=0 && i<fNvals) fPieSlices[i]->SetLineWidth(width);
 }
 
 
@@ -1279,7 +1279,7 @@ void TPie::SetEntryFillColor(Int_t i, Int_t color)
 {
    // Set the color for the slice "i".
 
-   fPieSlices[i]->SetFillColor(color);
+   if (i>=0 && i<fNvals) fPieSlices[i]->SetFillColor(color);
 }
 
 
@@ -1288,7 +1288,7 @@ void TPie::SetEntryFillStyle(Int_t i, Int_t style)
 {
    // Set the fill style for the "i" slice
 
-   fPieSlices[i]->SetFillStyle(style);
+   if (i>=0 && i<fNvals) fPieSlices[i]->SetFillStyle(style);
 }
 
 
@@ -1297,7 +1297,7 @@ void TPie::SetEntryRadiusOffset(Int_t i, Double_t shift)
 {
    // Set the distance, in the direction of the radius of the slice.
 
-   fPieSlices[i]->SetRadiusOffset(shift);
+   if (i>=0 && i<fNvals) fPieSlices[i]->SetRadiusOffset(shift);
 }
 
 
