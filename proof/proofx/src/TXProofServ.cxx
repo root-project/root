@@ -463,7 +463,7 @@ void TXProofServ::HandleUrgentData()
       return;
    }
 
-   PDB(kGlobal, 5)
+   PDB(kGlobal, 2)
       Info("HandleUrgentData", "got interrupt: %d\n", iLev);
 
    if (fProof)
@@ -472,7 +472,7 @@ void TXProofServ::HandleUrgentData()
    switch (iLev) {
 
       case TProof::kPing:
-         PDB(kGlobal, 5)
+         PDB(kGlobal, 2)
             Info("HandleUrgentData", "*** Ping");
 
          // If master server, propagate interrupt to slaves
@@ -494,18 +494,19 @@ void TXProofServ::HandleUrgentData()
                if (utime(fAdminPath.Data(), 0) != 0)
                   Info("HandleUrgentData", "problems touching path: %s", fAdminPath.Data());
                else
-                  if (gDebug > 0)
+                  PDB(kGlobal, 2)
                      Info("HandleUrgentData", "touching path: %s", fAdminPath.Data());
             } else {
                // Update the status in the file
                FILE *fs = fopen(fAdminPath.Data(), "w");
                if (fs) {
-                  fprintf(fs, "%d", GetSessionStatus());
+                  Int_t st = GetSessionStatus();
+                  fprintf(fs, "%d", st);
                   fclose(fs);
-                  if (gDebug > 0)
-                     Info("HandleUrgentData", "status update in path: %s", fAdminPath.Data());
+                  PDB(kGlobal, 2)
+                     Info("HandleUrgentData", "status (=%d) update in path: %s", st, fAdminPath.Data());
                } else {
-                  Error("HandleUrgentData", "problems opening status path: %s", fAdminPath.Data());
+                  Error("HandleUrgentData", "problems opening status path: %s (errno: %d)", fAdminPath.Data(), errno);
                }
             }
          } else {
