@@ -158,7 +158,6 @@ STRESSGS      = stressGraphics.$(SrcSuf)
 STRESSG       = stressGraphics$(ExeSuf)
 
 !if exist("$(ROOTSYS)\lib\libGenVector.lib")
-
 STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
 STRESSVEC    = stressVector$(ExeSuf)
@@ -172,16 +171,13 @@ TRACKMATHOBJ = TrackMathCoreDict.$(ObjSuf)
 TRACKMATHLIB = libTrackMathCoreDict.$(DllSuf)
  
 STRESSMATH    = stressMathCore$(ExeSuf)
-
 !endif
 
 !if exist("$(ROOTSYS)\lib\libMathMore.lib")
-
 STRESSMATHMOREO   = stressMathMore.$(ObjSuf) 
 STRESSMATHMORES   = stressMathMore.$(SrcSuf)  
 STRESSMATHMORELIBS = $(ROOTSYS)\lib\libMathMore.lib  
 STRESSMATHMORE    = stressMathMore$(ExeSuf)
-
 !endif
 
 VLAZYO        = vlazy.$(ObjSuf)
@@ -220,9 +216,11 @@ STRESSSHAPESO   = stressShapes.$(ObjSuf)
 STRESSSHAPESS   = stressShapes.$(SrcSuf)
 STRESSSHAPES    = stressShapes$(ExeSuf)
 
+!if exist("$(ROOTSYS)\lib\libRooFit.lib")
 STRESSROOFITO  = stressRooFit.$(ObjSuf)
 STRESSROOFITS  = stressRooFit.$(SrcSuf)
 STRESSROOFIT   = stressRooFit$(ExeSuf)
+!endif
 
 STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
@@ -467,13 +465,6 @@ $(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
                 $(LD) $(LDFLAGS) $(STRESSHEPIXO) $(LIBS) $(OutPutOpt)$@
                 $(MT_EXE)
                 @echo "$@ done"
-
-!if exist("$(ROOTSYS)\lib\libRooFit.lib")
-$(STRESSROOFIT): $(STRESSROOFITO)
-                 $(LD) $(LDFLAGS) $(STRESSROOFITO) $(LIBS) $(ROOTSYS)\lib\libRooFit.lib $(ROOTSYS)\lib\libRooFitCore.lib $(ROOTSYS)\lib\libHtml.lib $(ROOTSYS)\lib\libThread.lib $(ROOTSYS)\lib\libMinuit.lib $(OutPutOpt)$@
-                 $(MT_EXE)
-                 @echo "$@ done"
-!endif
 
 $(STRESSPROOF): $(STRESSPROOFO)
                 $(LD) $(LDFLAGS) $(STRESSPROOFO) $(LIBS) $(ROOTSYS)\lib\libProof.lib $(ROOTSYS)\lib\libThread.lib $(OutPutOpt)$@
