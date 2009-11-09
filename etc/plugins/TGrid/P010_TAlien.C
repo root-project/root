@@ -73,24 +73,30 @@ void SetAliEnSettings()
 
 void P010_TAlien()
 {
-   // you can enforce 
-   if ((!gSystem->Getenv("GBBOX_ENVFILE")) || 
-       ( gSystem->Getenv("ALIEN_SOURCE_GCLIENT_ENV")) ||
-       (!gSystem->Getenv("ALIEN_SKIP_GCLIENT_ENV")) ) {
-      SetAliEnSettings();
-   }
+   TString configfeatures = gROOT->GetConfigFeatures();
+   TString ralienpath = gSystem->Getenv("ROOTSYS");
+   ralienpath += "/lib/"; ralienpath += "libRAliEn.so";
+   // only if ROOT was compiled with the alien plugin
+   // do library setup and configure a handler
+   if ((!gSystem->AccessPathName(ralienpath))) ||
+       (configfeatures.contains("alien"))) {
+      // you can enforce 
+      if ((!gSystem->Getenv("GBBOX_ENVFILE")) || 
+         (gSystem->Getenv("ALIEN_SOURCE_GCLIENT_ENV")) ||
+         (!gSystem->Getenv("ALIEN_SKIP_GCLIENT_ENV"))) {
+         SetAliEnSettings();
+      }
 #ifdef __APPLE__
-   const char* hlib = "libRAliEn.so";
-   if (gSystem->Load(hlib)>=0) {
+      const char* hlib = "libRAliEn.so";
+      if (gSystem->Load(hlib)>=0) {
 #else
-   const char* hlib = "libgapiUI.so";
-   if (gSystem->Load(hlib)>=0) {
+      const char* hlib = "libgapiUI.so";
+      if (gSystem->Load(hlib)>=0) {
 #endif
-      gPluginMgr->AddHandler("TGrid", "^alien", "TAlien",
-                             "RAliEn", "TAlien(const char*,const char*,const char*,const char*)");
-   } else {
-      Error("P010_TAlien","Please fix your library search path to be able to load %s!",hlib);
-   }
-}
-
-
+         gPluginMgr->AddHandler("TGrid", "^alien", "TAlien",
+                                "RAliEn", "TAlien(const char*,const char*,const char*,const char*)");
+      } else {
+         Error("P010_TAlien","Please fix your library search path to be able to load %s!",hlib);
+      }
+  }
+} 
