@@ -224,6 +224,8 @@ void TEveStraightLineSetProjected::UpdateProjection()
    TEveProjection&      proj = * fManager->GetProjection();
    TEveStraightLineSet& orig = * dynamic_cast<TEveStraightLineSet*>(fProjectable);
 
+   BBoxClear();
+
    // Lines
    fLinePlex.Reset(sizeof(Line_t), orig.GetLinePlex().Size());
    Float_t p1[3];
