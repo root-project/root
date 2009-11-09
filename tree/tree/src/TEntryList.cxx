@@ -488,10 +488,10 @@ Int_t TEntryList::Contains(Long64_t entry, TTree *tree)
       }
       return 0;
    } else {
-      tree->LoadTree(entry);
+      Long64_t localEntry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
       if (fCurrent)
-         return fCurrent->Contains(entry);
+         return fCurrent->Contains(localEntry);
    }
    return 0;
 
