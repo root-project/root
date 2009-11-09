@@ -5504,8 +5504,25 @@ result "done"
 # include/RConfigOptions.h
 #
 message "Writing $CONFIGOPTOUT"
+
+features=""
+for f in $options ; do
+    bar="$`echo $f`"
+    if test "x`eval echo $bar`" = "xyes" ; then
+       feat=`echo $f | sed 's/enable_//'`
+       if test -z "$features"; then
+          features="$feat"
+       else
+          features="$features $feat"
+       fi
+    fi
+done
+# threads are now always enabled
+features="$features thread"
+
 sed \
     -e "s|@configoptions@|$configoptions|" \
+    -e "s|@configfeatures@|$features|"     \
     < RConfigOptions.tmp > RConfigOptions-out.tmp
 rm -f RConfigOptions.tmp
 
@@ -5559,17 +5576,6 @@ if test ! "x$altldorg" = "x" ; then
 else
     altld2="$altld"
 fi
-
-features=""
-for f in $options ; do
-    bar="$`echo $f`"
-    if test "x`eval echo $bar`" = "xyes" ; then
-       feat=`echo $f | sed 's/enable_//'`
-       features="$features $feat"
-    fi
-done
-# threads are now always enabled
-features="$features thread"
 
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@platform@|$platform|"           \

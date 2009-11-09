@@ -2,5 +2,6 @@
 #define ROOT_RConfigOptions
 
 #define R__CONFIGUREOPTIONS   "@configoptions@"
+#define R__CONFIGUREFEATURES  "@configfeatures@"
 
 #endif

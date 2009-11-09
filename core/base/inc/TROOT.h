@@ -69,8 +69,8 @@ private:
    TROOT& operator=(const TROOT&);        //Not implemented
 
 protected:
-
-   TString         fConfigOptions;        //ROOT ./configure build options
+   TString         fConfigOptions;        //ROOT ./configure set build options
+   TString         fConfigFeatures;       //ROOT ./configure detected build features
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
    Int_t           fVersionInt;           //ROOT version in integer format (501)
    Int_t           fVersionCode;          //ROOT version code as used in RVersion.h
@@ -155,6 +155,7 @@ public:
    TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE) const;
    TColor           *GetColor(Int_t color) const;
    const char       *GetConfigOptions() const { return fConfigOptions; }
+   const char       *GetConfigFeatures() const { return fConfigFeatures; }
    const char       *GetCutClassName() const { return fCutClassName; }
    const char       *GetDefCanvasName() const { return fDefCanvasName; }
    Bool_t            GetEditHistograms() const { return fEditHistograms; }
@@ -278,4 +279,3 @@ namespace ROOT {
    TROOT *GetROOT();
 }
 #endif
-

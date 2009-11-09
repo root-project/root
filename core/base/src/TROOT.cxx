@@ -339,6 +339,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 #endif
 
    fConfigOptions   = R__CONFIGUREOPTIONS;
+   fConfigFeatures  = R__CONFIGUREFEATURES;
    fVersion         = ROOT_RELEASE;
    fVersionCode     = ROOT_VERSION_CODE;
    fVersionInt      = IVERSQ();
@@ -527,7 +528,7 @@ TROOT::~TROOT()
       fGeometries->Delete(); SafeDelete(fGeometries);
       fBrowsers->Delete();   SafeDelete(fBrowsers);
       //fBrowsables->Delete(); SafeDelete(fBrowsables);
-      
+
       // Stop emitting signals
       TQObject::BlockAllSignals(kTRUE);
 
@@ -874,7 +875,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
    // return a TClass object corresponding to 'name' assuming it is an STL container.
    // In particular we looking for possible alternative name (default template
    // parameter, typedefs template arguments, typedefed name).
-   
+
    return R__FindSTLClass(name,load,name);
 }
 
@@ -1294,7 +1295,7 @@ TClass *TROOT::LoadClass(const char *classname, Bool_t silent) const
 
    TString long64name;
    TString resolved;
-   
+
    if (!dict) {
       // Try with Long64_t instead of long long
       long64name = TClassEdit::GetLong64_Name(classname);
@@ -1319,7 +1320,7 @@ TClass *TROOT::LoadClass(const char *classname, Bool_t silent) const
          dict = TClassTable::GetDict(classname);
          if (!dict) {
             // Try the typedefs again.
-            
+
             if (long64name.Length()) {
                TClass *res = LoadClass(long64name.Data(),silent);
                if (res) return res;
@@ -1330,7 +1331,7 @@ TClass *TROOT::LoadClass(const char *classname, Bool_t silent) const
          }
       }
    }
-   
+
    if (dict) {
       // The dictionary generation might change/delete classname
       TString clname(classname);
