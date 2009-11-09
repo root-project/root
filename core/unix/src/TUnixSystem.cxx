@@ -419,8 +419,14 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
 #ifndef ROOTPREFIX
    if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so")) {
-      TString rs = gSystem->DirName(lib);
-      gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
+      char respath[kMAXPATHLEN];
+      if (!realpath(lib, respath)) {
+         if (!gSystem->Getenv("ROOTSYS"))
+            ::SysError("TUnixSystem::DylibAdded", "error getting realpath of libCore, please set ROOTSYS in the shell");
+      } else {
+         TString rs = gSystem->DirName(respath);
+         gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
+      }
    }
 #endif
 
