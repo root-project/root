@@ -528,6 +528,7 @@ bool XrdProofdClient::VerifySession(XrdProofdProofServ *xps, XrdProofdResponse *
       TRACE(XERR, "admin path is empty! - protocol error");
       return 0;
    }
+   path += ".status";
 
    // Stat the admin file
    struct stat st0;

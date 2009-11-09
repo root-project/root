@@ -756,9 +756,19 @@ int XrdProofdProofServ::SetAdminPath(const char *a)
          fprintf(fpid, "%d", fStatus);
          fclose(fpid);
       } else {
-         TRACE(XERR, "unable to open / create admin path "<< fn << "; errno = "<<errno);
+         TRACE(XERR, "unable to open / create status path "<< fn << "; errno = "<<errno);
          return -1;
       }
+   }
+   // Set the ownership of the status file to the user
+   XrdProofUI ui;
+   if (XrdProofdAux::GetUserInfo(fClient.c_str(), ui) != 0) {
+      TRACE(XERR, "unable to get info for user "<<fClient<<"; errno = "<<errno);
+      return -1;
+   }
+   if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
+      TRACE(XERR, "unable to give ownership of the status file "<< fn << " to user; errno = "<<errno);
+      return -1;
    }
 
    // Done
