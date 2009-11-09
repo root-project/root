@@ -3560,37 +3560,34 @@ Int_t TTree::Fill()
    if (fEntries > fMaxEntries) {
       KeepCircular();
    }
-printf ("fEntries=%lld, fAutoFlush=%lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fAutoFlush,fZipBytes,fFlushedBytes);
    if (fAutoFlush < 0) {
       // Is it time to flush, autosave or optimize baskets?
+      // case when -fAutoFlush is the number of bytes triggering the FlushBaskets
       if ((fZipBytes - fFlushedBytes) > -fAutoFlush) {
          if (fFlushedBytes <= 0) {
             //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
             OptimizeBaskets(fTotBytes,1,"");
-            //if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
-            printf("OptimizeBaskets1 called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          }
          fFlushedBytes = fZipBytes;
          fAutoFlush    = fEntries;
       }
    } else if (fAutoFlush > 0) {
       // Is it time to flush, autosave or optimize baskets?
+      // case when fAutoFlush is the number of entries triggering the FlushBaskets
       if (fEntries > 1 && fEntries%fAutoFlush == 0) {
          if (fFlushedBytes <= 0) {
             //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
             OptimizeBaskets(fTotBytes,1,"");
-            //if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
-            printf("OptimizeBaskets2 called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          } else if ((fZipBytes - fSavedBytes) > fAutoSave) {
             //we have read an AutoSave point. It flushes baskets and save the Tree header
             AutoSave();
-            //if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
-            printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+            if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
          } else {
             //we only FlushBaskets
             FlushBaskets();
-            //if (gDebug > 0) printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
-            printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            if (gDebug > 0) printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          }
          fFlushedBytes = fZipBytes;
       }
