@@ -62,6 +62,7 @@
 //End_Html
 //////////////////////////////////////////////////////////////////////////
 
+#include "TError.h"
 #include "TGFrame.h"
 #include "TGResourcePool.h"
 #include "TGPicture.h"
@@ -112,9 +113,16 @@ const TGGC   *TGGroupFrame::fgDefaultGC = 0;
 
 TGLayoutHints *TGCompositeFrame::fgDefaultHints = 0;
 
-static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
-                                         "All files",   "*",
-                                          0,             0 };
+static const char *gSaveMacroTypes[] = { 
+   "ROOT macros", "*.C",
+   "GIF",         "*.gif",
+   "PNG",         "*.png",
+   "JPEG",        "*.jpg",
+   "TIFF",        "*.tiff",
+   "XPM",         "*.xpm",
+   "All files",   "*",
+   0,             0
+};
 
 TList *gListOfHiddenFrames = new TList();
 
@@ -1485,16 +1493,41 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
          if (!fi.fFilename) return kTRUE;
          dir = fi.fIniDir;
          overwr = fi.fOverwrite;
-         const char *fname = gSystem->UnixPathName(fi.fFilename);
-         if (strstr(fname, ".C"))
-            main->SaveSource(fname, "");
+         TString fname = gSystem->UnixPathName(fi.fFilename);
+         if (fname.EndsWith(".C"))
+            main->SaveSource(fname.Data(), "");
          else {
-            Int_t retval;
-            new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                         TString::Format("file (%s) must have extension .C", fname),
-                         kMBIconExclamation, kMBRetry | kMBCancel, &retval);
-            if (retval == kMBRetry)
-               HandleKey(event);
+            TImage::EImageFileTypes gtype = TImage::kUnknown;
+            if (fname.EndsWith("gif")) {
+               gtype = TImage::kGif;
+            } else if (fname.EndsWith(".png")) {
+               gtype = TImage::kPng;
+            } else if (fname.EndsWith(".jpg")) {
+               gtype = TImage::kJpeg;
+            } else if (fname.EndsWith(".tiff")) {
+               gtype = TImage::kTiff;
+            } else if (fname.EndsWith(".xpm")) {
+               gtype = TImage::kXpm;
+            }
+            if (gtype != TImage::kUnknown) {
+               Int_t saver = gErrorIgnoreLevel;
+               gErrorIgnoreLevel = kFatal;
+               TImage *img = TImage::Create();
+               RaiseWindow();
+               img->FromWindow(GetId());
+               img->WriteImage(fname, gtype);
+               gErrorIgnoreLevel = saver;
+               delete img;
+            }
+            else {
+               Int_t retval;
+               new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
+                            TString::Format("file (%s) cannot be saved with this extension", 
+                            fname.Data()), kMBIconExclamation, 
+                            kMBRetry | kMBCancel, &retval);
+               if (retval == kMBRetry)
+                  HandleKey(event);
+            }
          }
          return kTRUE;
       }
