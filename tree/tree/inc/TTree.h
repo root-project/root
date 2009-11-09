@@ -104,7 +104,7 @@ protected:
    Long64_t       fMaxEntryLoop;      //  Maximum number of entries to process
    Long64_t       fMaxVirtualSize;    //  Maximum total size of buffers kept in memory
    Long64_t       fAutoSave;          //  Autosave tree when fAutoSave bytes produced
-   Long64_t       fAutoFlush;         //  Autoflush tree when fAutoFlush bytes produced
+   Long64_t       fAutoFlush;         //  Autoflush tree when fAutoFlush entries written
    Long64_t       fEstimate;          //  Number of entries to estimate histogram limits
    Long64_t       fCacheSize;         //! Maximum size of file buffers
    Long64_t       fChainOffset;       //! Offset of 1st entry of this Tree in a TChain

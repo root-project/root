@@ -440,10 +440,19 @@ Bool_t TTreeCache::FillBuffer()
 
    // Estimate number of entries that can fit in the cache compare it
    // to the original value of fBufferSize not to the real one
-   if (fZipBytes==0) {
-      fEntryNext = entry + tree->GetEntries();;    
-   } else {
-      fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
+   Long64_t autoFlush = tree->GetAutoFlush();
+   if (autoFlush > 0) {
+      //case when the tree autoflush has been set
+      Int_t nauto = fBufferSizeMin/(tree->GetZipBytes()/autoFlush);
+      if (nauto < 1) nauto = 1;
+      fEntryNext = entry - entry%autoFlush + nauto*autoFlush;
+   } else { 
+      //case of old files before November 9 2009
+      if (fZipBytes==0) {
+         fEntryNext = entry + tree->GetEntries();;    
+      } else {
+         fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
+      }
    }
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
@@ -486,7 +495,8 @@ Bool_t TTreeCache::FillBuffer()
          Long64_t pos = b->GetBasketSeek(j);
          Int_t len = lbaskets[j];
          if (pos <= 0 || len <= 0) continue;
-         if (entries[j] > fEntryNext) continue;
+         //important: do not try to read fEntryNext, otherwise you jump to the next autoflush
+         if (entries[j] >= fEntryNext) continue;
          if (entries[j] < entry && (j<nb-1 && entries[j+1] < entry)) continue;
          if (elist) {
             Long64_t emax = fEntryMax;
@@ -498,11 +508,11 @@ Bool_t TTreeCache::FillBuffer()
          TFileCacheRead::Prefetch(pos,len);
          //we allow up to twice the default buffer size. When using eventlist in particular
          //it may happen that the evaluation of fEntryNext is bad, hence this protection
-         if (fNtot > 2*fBufferSizeMin) {
-            TFileCacheRead::Prefetch(0,0);
-            mustBreak = kTRUE; 
-            break;
-         }
+         //if (fNtot > 2*fBufferSizeMin) {
+         //   TFileCacheRead::Prefetch(0,0);
+         //   mustBreak = kTRUE; 
+         //   break;
+         //}
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
    }

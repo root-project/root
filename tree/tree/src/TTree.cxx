@@ -484,7 +484,7 @@ TTree::TTree()
 , fMaxEntryLoop(0)
 , fMaxVirtualSize(0)
 , fAutoSave(300000000)
-, fAutoFlush(30000000)
+, fAutoFlush(-30000000)
 , fEstimate(1000000)
 , fCacheSize(10000000)
 , fChainOffset(0)
@@ -546,7 +546,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fMaxEntryLoop(0)
 , fMaxVirtualSize(0)
 , fAutoSave(300000000)
-, fAutoFlush(30000000)
+, fAutoFlush(-30000000)
 , fEstimate(1000000)
 , fCacheSize(10000000)
 , fChainOffset(0)
@@ -3560,23 +3560,40 @@ Int_t TTree::Fill()
    if (fEntries > fMaxEntries) {
       KeepCircular();
    }
-   // Is it time to flush, autosave or optimize baskets?
-   if ((fZipBytes - fFlushedBytes) > fAutoFlush) {
-      if (fFlushedBytes <= 0) {
-         //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
-         OptimizeBaskets(fAutoFlush,1,"");
-         if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
-      } else if ((fZipBytes - fSavedBytes) > fAutoSave) {
-         //we have read an AutoSave point. It flushes baskets and save the Tree header
-         AutoSave();
-         if (fAutoSave < fAutoFlush) fAutoSave = 2*fAutoFlush;
-         if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
-      } else {
-         //we only FlushBaskets
-         FlushBaskets();
-         if (gDebug > 0) printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+printf ("fEntries=%lld, fAutoFlush=%lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fAutoFlush,fZipBytes,fFlushedBytes);
+   if (fAutoFlush < 0) {
+      // Is it time to flush, autosave or optimize baskets?
+      if ((fZipBytes - fFlushedBytes) > -fAutoFlush) {
+         if (fFlushedBytes <= 0) {
+            //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
+            OptimizeBaskets(fTotBytes,1,"");
+            //if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            printf("OptimizeBaskets1 called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+         }
+         fFlushedBytes = fZipBytes;
+         fAutoFlush    = fEntries;
       }
-      fFlushedBytes = fZipBytes;
+   } else if (fAutoFlush > 0) {
+      // Is it time to flush, autosave or optimize baskets?
+      if (fEntries > 1 && fEntries%fAutoFlush == 0) {
+         if (fFlushedBytes <= 0) {
+            //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
+            OptimizeBaskets(fTotBytes,1,"");
+            //if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            printf("OptimizeBaskets2 called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+         } else if ((fZipBytes - fSavedBytes) > fAutoSave) {
+            //we have read an AutoSave point. It flushes baskets and save the Tree header
+            AutoSave();
+            //if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+            printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+         } else {
+            //we only FlushBaskets
+            FlushBaskets();
+            //if (gDebug > 0) printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+         }
+         fFlushedBytes = fZipBytes;
+      }
    }
    // Check that output file is still below the maximum size.
    // If above, close the current file and continue on a new file.
@@ -5845,12 +5862,33 @@ Bool_t TTree::SetAlias(const char* aliasName, const char* aliasFormula)
 //_______________________________________________________________________
 void TTree::SetAutoFlush(Long64_t autof)
 {
-   //This function may be called at the start of a program to change
-   //the default value for fAutoFlush(30000000, ie 30 MBytes).
-   //When filling the Tree the branch buffers will be flushed to disk when
-   //more than fAutoFlush bytes have been written to the file.
-   //Flushing the buffers at regular intervals optimize the location of
-   //consecutive entries on the disk.
+   // This function may be called at the start of a program to change
+   // the default value for fAutoFlush.
+   //
+   //     CASE 1 : autof > 0
+   //     ------------------
+   // autof is the number of consecutive entries after which TTree::Fill will
+   // flush all branch buffers to disk.
+   //
+   //     CASE 2 : autof < 0
+   //     ------------------
+   // When filling the Tree the branch buffers will be flushed to disk when
+   // more than autof bytes have been written to the file. At the first FlushBaskets
+   // TTree::Fill will replace fAutoFlush by the current value of fEntries.
+   //
+   // Calling this function with autof<0 is interesting when it is hard to estimate
+   // the size of one entry. This value is also independent of the Tree.
+   //
+   // When calling SetAutoFlush with no arguments, the
+   // default value is -30000000, ie that the first AutoFlush will be done when
+   // 30 MBytes of data are written to the file.
+   //
+   //     CASE 3 : autof = 0
+   //     ------------------
+   // The AutoFlush mechanism is disabled.
+   //
+   // Flushing the buffers at regular intervals optimize the location of
+   // consecutive entries on the disk.
    
    fAutoFlush = autof;
 }
@@ -6151,7 +6189,10 @@ void TTree::SetCacheSize(Long64_t cacheSize)
    // To cache multiple TTree objects in the same ROOT file, you must create
    // one TFile object per TTree object.
 
-   if (cacheSize < 0) cacheSize = fAutoFlush;
+   if (cacheSize < 0) {
+      if (fAutoFlush < 0) cacheSize = -fAutoFlush;
+      else cacheSize = Long64_t(1.5*fAutoFlush*fZipBytes/(fEntries+1));
+   }
    TFile* file = GetCurrentFile();
    if (!file) {
       fCacheSize = cacheSize;
