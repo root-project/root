@@ -233,6 +233,17 @@ void TDatime::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
+UInt_t TDatime::Get() const
+{
+   // Return raw date/time as encoded by TDatime. Note, this value cannot
+   // be used to e.g. calculate time differences, as it is an encoded value.
+   // To calculate time differences use the Convert() method to get a time
+   // in seconds and then subtract the values.
+
+   return fDatime;
+}
+
+//______________________________________________________________________________
 Int_t TDatime::GetDate() const
 {
    // Return date in form of 19971224 (i.e. 24/12/1997)

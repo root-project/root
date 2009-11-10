@@ -60,7 +60,7 @@ public:
    const char  *AsSQLString() const;
    UInt_t       Convert(Bool_t toGMT = kFALSE) const;
    void         Copy(TDatime &datime) const;
-   UInt_t       Get() const { return fDatime; }
+   UInt_t       Get() const;
    Int_t        GetDate() const;
    Int_t        GetTime() const;
    Int_t        GetYear() const { return (fDatime>>26) + 1995; }
