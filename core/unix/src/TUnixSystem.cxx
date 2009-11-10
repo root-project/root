@@ -2062,6 +2062,7 @@ void TUnixSystem::StackTrace()
    gdbscript += GetExePath();
    gdbscript += " ";
    gdbscript += GetPid();
+   gdbscript += " 1>&2";
    Exec(gdbscript);
    delete [] gdb;
    return;
@@ -2144,6 +2145,7 @@ void TUnixSystem::StackTrace()
       gdbscript.Form("%s/etc/gdb-backtrace.sh ", gSystem->Getenv("ROOTSYS"));
 # endif
       gdbscript += GetPid();
+      gdbscript += " 1>&2";
       Exec(gdbscript);
       delete [] gdb;
    } else {
