@@ -78,11 +78,11 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
    virtual Float_t GetValToHeight() const;
+   virtual void    CellSelectionChanged() {}
 
    TEveCaloData* GetData() const { return fData; }
    void    SetData(TEveCaloData* d);
-   void    DataChanged();
-   Float_t GetMaxVal() const;
+   void    DataChanged();   Float_t GetMaxVal() const;
 
    void    AssertCellIdCache() const;
    void    InvalidateCellIdCache() { fCellIdCacheOK=kFALSE; ResetBBox(); };
@@ -134,6 +134,7 @@ public:
    Float_t GetPhiMax() const { return fPhi+fPhiOffset; }
    Float_t GetPhiRng() const { return 2.0f*fPhiOffset; }
 
+   Bool_t  CellInEtaPhiRng (TEveCaloData::CellData_t&) const;
 
    ClassDef(TEveCaloViz, 0); // Base-class for visualization of calorimeter eventdata.
 };
@@ -204,7 +205,6 @@ protected:
    Float_t                                 fMaxEtSumBin;
 
    virtual void BuildCellIdCache();
-   virtual void BuildCellIdCacheSelected();
 
    virtual void SetDepthLocal(Float_t x) { fDepth = x; }
 
@@ -215,6 +215,8 @@ public:
    virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
    virtual void UpdateProjection();
    virtual void ComputeBBox();
+
+   virtual void CellSelectionChanged();
 
    virtual Float_t GetValToHeight() const;
 

@@ -136,14 +136,10 @@ void TEveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
    // Populate set impSelSet with derived / dependant elements.
    //
 
-   //TEveElement::FillImpliedSelectedSet(impSelSet);
-
    for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
-      //printf("insert to imp selected %s \n", (*i)->GetElementName());
-         impSelSet.insert(*i);
+      impSelSet.insert(*i);
    }
-
 }
 
 //______________________________________________________________________________
@@ -225,6 +221,22 @@ void TEveCaloData::DataChanged()
    {
       calo = dynamic_cast<TEveCaloViz*>(*i);
       calo->DataChanged();
+      calo->StampObjProps();
+   }
+}
+
+//______________________________________________________________________________
+void TEveCaloData::CellSelectionChanged()
+{
+   // Tell users (TEveCaloViz instances using this data) that cell selection
+   // has changed and they should update selection cache if necessary. 
+   // This is done by calling TEveCaloViz::CellSelectionChanged().
+
+   TEveCaloViz* calo;
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      calo = dynamic_cast<TEveCaloViz*>(*i);
+      calo->CellSelectionChanged();
       calo->StampObjProps();
    }
 }

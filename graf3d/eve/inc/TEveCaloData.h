@@ -169,6 +169,7 @@ public:
 
    virtual void    InvalidateUsersCellIdCache();
    virtual void    DataChanged();
+   virtual void    CellSelectionChanged();
 
    Int_t           GetNSlices()    const { return fSliceInfos.size(); }
    SliceInfo_t&    RefSliceInfo(Int_t s) { return fSliceInfos[s]; }

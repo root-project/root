@@ -513,5 +513,5 @@ void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
    else if (prev  && binID >= 0)
       rec.SetSecSelResult(TGLSelectRecord::kModifyingInternalSelection);
 
-   fM->fData->DataChanged();
+   fM->fData->CellSelectionChanged();
 }

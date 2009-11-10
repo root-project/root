@@ -267,6 +267,20 @@ void TEveCaloViz::AssertCellIdCache() const
 }
 
 //______________________________________________________________________________
+Bool_t TEveCaloViz::CellInEtaPhiRng(TEveCaloData::CellData_t& cellData) const
+{
+   // Returns true if given cell is in the ceta phi range.
+
+   if (cellData.EtaMin() >= fEtaMin && cellData.EtaMax() <= fEtaMax)
+   {
+      if (TEveUtil::IsU1IntervalContainedByMinMax
+          (fPhi-fPhiOffset, fPhi+fPhiOffset, cellData.PhiMin(), cellData.PhiMax()))
+         return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
 {
    // Assign paramteres from given model.
@@ -611,12 +625,11 @@ void TEveCalo2D::BuildCellIdCache()
       ComputeBBox();
    }
 
-   BuildCellIdCacheSelected();
    fCellIdCacheOK= kTRUE;
 }
 
 //______________________________________________________________________________
-void TEveCalo2D::BuildCellIdCacheSelected()
+void TEveCalo2D::CellSelectionChanged()
 {
    // Sort slected cells in eta or phi bins.
 
@@ -646,17 +659,20 @@ void TEveCalo2D::BuildCellIdCacheSelected()
       for (TEveCaloData::vCellId_i i=cells.begin(); i!=cells.end(); i++)
       {
          fData->GetCellData(*i, cellData);
-         if (rPhi)
+         if (CellInEtaPhiRng(cellData))
          {
-            bin = fData->GetPhiBins()->FindBin(cellData.Phi());
-         }
-         else {
-            bin = fData->GetEtaBins()->FindBin(cellData.Eta());
-         }
-         if (fCellListsSelected[bin] == 0)
-            fCellListsSelected[bin] = new TEveCaloData::vCellId_t();
+            if (rPhi)
+            {
+               bin = fData->GetPhiBins()->FindBin(cellData.Phi());
+            }
+            else {
+               bin = fData->GetEtaBins()->FindBin(cellData.Eta());
+            }
+            if (fCellListsSelected[bin] == 0)
+               fCellListsSelected[bin] = new TEveCaloData::vCellId_t();
 
-         fCellListsSelected[bin]->push_back(*i);
+            fCellListsSelected[bin]->push_back(*i);
+         }
       }
    }
 }

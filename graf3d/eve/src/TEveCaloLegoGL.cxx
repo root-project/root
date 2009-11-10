@@ -1052,7 +1052,15 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
    glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetValToHeight());
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
 
-   TEveCaloData::vCellId_t cellsSelected = fM->fData->GetCellsSelected();
+   // check eta&phi range of selected cells
+   TEveCaloData::vCellId_t cellsSelected;
+   TEveCaloData::CellData_t cellData;
+   for (TEveCaloData::vCellId_i i = fM->fData->GetCellsSelected().begin(); i != fM->fData->GetCellsSelected().end(); i++)
+   {
+      fM->fData->GetCellData((*i), cellData);
+      if(fM->CellInEtaPhiRng(cellData))
+         cellsSelected.push_back(*i); 
+   }
 
    // prepare rebin for 2D or 3D if necessary
    TEveCaloData::RebinData_t rebinDataSelected;
@@ -1069,7 +1077,6 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
 
    if (fCells3D)
    {
-      TEveCaloData::CellData_t cellData;
       Int_t   prevTower = 0;
       Float_t offset    = 0;
       Int_t   nSlices   = fM->fData->GetNSlices();
@@ -1374,5 +1381,5 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
    else if (prev  && cellID >= 0)
       rec.SetSecSelResult(TGLSelectRecord::kModifyingInternalSelection);
 
-   fM->fData->DataChanged();
+   fM->fData->CellSelectionChanged();
 }

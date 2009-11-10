@@ -609,12 +609,14 @@ void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* psh
             }
          }
 
-         if (TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta())
-            RenderBarrelCell(cellData, towerH, offset);
-         else
-            RenderEndCapCell(cellData, towerH, offset);
+         if (fM->CellInEtaPhiRng(cellData)) 
+         {
+            if (TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta())
+               RenderBarrelCell(cellData, towerH, offset);
+            else
+               RenderEndCapCell(cellData, towerH, offset);
+         }  
       }
-
 
       TGLUtil::UnlockColor();
       glPopAttrib();
@@ -645,5 +647,5 @@ void TEveCalo3DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
       rec.SetSecSelResult(TGLSelectRecord::kModifyingInternalSelection);
 
 
-   fM->fData->DataChanged();
+   fM->fData->CellSelectionChanged();
 }
