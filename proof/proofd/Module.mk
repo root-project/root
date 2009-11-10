@@ -12,6 +12,19 @@ PROOFDDIR    := $(MODDIR)
 PROOFDDIRS   := $(PROOFDDIR)/src
 PROOFDDIRI   := $(PROOFDDIR)/inc
 
+# When using an external XROOTD distribution XROOTDDIRI and XROOTDDIRL
+# are undefined and have to point to the specified inc and lib dirs.
+ifneq ($(XRDINCDIR),)
+ifeq ($(XROOTDDIRI),)
+XROOTDDIRI   := $(XRDINCDIR)
+endif
+endif
+ifneq ($(XRDLIBDIR),)
+ifeq ($(XROOTDDIRL),)
+XROOTDDIRL   := $(XRDLIBDIR)
+endif
+endif
+
 ifeq ($(PLATFORM),win32)
 
 ##### XrdProofd plugin ####
@@ -96,19 +109,6 @@ XPDLIB       := $(LPATH)/libXrdProofd.$(SOEXT)
 ##### Object files used by libProofx #####
 XPCONNO      := $(MODDIRS)/XrdProofConn.o $(MODDIRS)/XrdProofPhyConn.o \
                 $(MODDIRS)/XProofProtUtils.o
-
-# These are undefined if using an external XROOTD distribution
-# The new XROOTD build system based on autotools installs the headers
-# under <dir>/include/xrootd, while the old system under <dir>/src
-ifneq ($(XROOTDDIR),)
-ifeq ($(XROOTDDIRI),)
-XROOTDDIRI   := $(XROOTDDIR)/include/xrootd
-ifeq ($(wildcard $(XROOTDDIRI)/*.hh),)
-XROOTDDIRI   := $(XROOTDDIR)/src
-endif
-XROOTDDIRL   := $(XROOTDDIR)/lib
-endif
-endif
 
 # Extra include paths and libs
 XPROOFDEXELIBS :=

@@ -245,7 +245,7 @@ ifneq ($(F77),)
 MODULES      += misc/minicern hist/hbook
 endif
 ifeq ($(BUILDXRD),yes)
-ifneq ($(XROOTDDIR),)
+ifneq ($(XRDLIBDIR),)
 MODULES      += net/netx
 else
 MODULES      += net/xrootd net/netx

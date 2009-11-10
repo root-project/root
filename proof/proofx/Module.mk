@@ -44,17 +44,16 @@ ALLMAPS      += $(PROOFXMAP)
 # include all dependency files
 INCLUDEFILES += $(PROOFXDEP)
 
-# These are undefined if using an external XROOTD distribution
-# The new XROOTD build system based on autotools installs the headers
-# under <dir>/include/xrootd, while the old system under <dir>/src
-ifneq ($(XROOTDDIR),)
+# When using an external XROOTD distribution XROOTDDIRI and XROOTDDIRL
+# are undefined and have to point to the specified inc and lib dirs.
+ifneq ($(XRDINCDIR),)
 ifeq ($(XROOTDDIRI),)
-XROOTDDIRI   := $(XROOTDDIR)/include/xrootd
-ifeq ($(wildcard $(XROOTDDIRI)/*.hh),)
-XROOTDDIRI   := $(XROOTDDIR)/src
+XROOTDDIRI   := $(XRDINCDIR)
 endif
-XROOTDDIRL   := $(XROOTDDIR)/lib
-XROOTDDIRP   := $(XROOTDDIRL)
+endif
+ifneq ($(XRDLIBDIR),)
+ifeq ($(XROOTDDIRL),)
+XROOTDDIRL   := $(XRDLIBDIR)
 endif
 endif
 
