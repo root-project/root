@@ -861,7 +861,9 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
                   xmpname.ReplaceAll("_t.xpm", "_s.xpm");
                if (xmpname.EndsWith("_t.xpm__16x16"))
                   xmpname.ReplaceAll("_t.xpm__16x16", "_s.xpm");
-               SetDragPixmap(fClient->GetPicture(xmpname.Data()));
+               const TGPicture *pic = fClient->GetPicture(xmpname.Data());
+               if (!pic) pic = item->GetPicture();
+               if (pic) SetDragPixmap(pic);
                //SetDragPixmap(item->GetPicture());
                gDNDManager->StartDrag(this, event->fXRoot, event->fYRoot);
             }
