@@ -1,6 +1,13 @@
 # Makefile to create all the files debian/* necessary for
 # debian package creation, and the package itself.
 
+# Read the configure flags from config.status. Create a new
+# file debian/confflags with the same flags. This file can
+# be edited by users who later want to get the deb-src 
+# package, and rebuild it with different configure flags.
+# The --with-prefix and --prefix=/usr flags are removed
+# from debian/confflags so that users do not believe
+# that they can modify it (these flags are added in debian/control)
 
 .PHONY : deb debinstall
 
@@ -34,7 +41,7 @@ pkgfilename = cint_$(G__CFG_CINTVERSION)-1_$(deb_arch).deb
 
 pkg  = debian/package-files/$(pkgfilename)
 
-CONFIGCMD = ./configure  --with-prefix --prefix=/usr 
+CONFIGCMD := ./configure
 #--host=$$(DEB_HOST_GNU_TYPE) --build=$$(DEB_BUILD_GNU_TYPE)
 
 # make deb          -- creates the .deb package in the parent directory
@@ -52,16 +59,15 @@ origtgz_deb = $(shell pwd | sed 's|/[^/]*$$||g')/cint_${G__CFG_CINTVERSION}.orig
 
 ignore = '(?:^|/).*~$$|(?:^|/)\.\#.*$$|(?:^|/)\..*\.swp$$|(?:^|/),,.*(?:$$|/.*$$)|(?:^|/)(?:DEADJOE|\.cvsignore|\.arch-inventory|\.bzrignore|\.gitignore)$$|(?:^|/)(?:CVS|RCS|\.deps|\{arch\}|\.arch-ids|\.svn|\.hg|_darcs|\.git|\.shelf|\.bzr(?:\.backup|tags)?)(?:$$|/.*$$)|.*\.png$$|.*\.o$$|.*\.exe$$|.*\.a$$|/config\..*$$|.*\.dvi$$|.*\.gz$$|.*\.deb$$|.*\.rpm$$|.*build-stamp$$|.*\.ps$$|rmkdepend|mktypes|.*\.dll$$|.*\.d'
 
-$(pkg) : $(origtgz_deb) debian/control debian/copyright debian/cint.dirs debian/cint.docs debian/changelog debian/rules debian/compat debian/cint.postinst debian/cint.prerm
+$(pkg) : $(origtgz_deb) debian/control debian/copyright debian/cint.dirs debian/cint.docs debian/changelog debian/rules debian/compat debian/cint.postinst debian/cint.prerm debian/confflags debian/README.txt
 	@if [ "x$(G__CFG_PREFIX)" = "x" ] ; then \
-	  echo; \
-	  echo YOU MUST RUN ./configure WITH THE --with-prefix --prefix=/usr OPTIONS; \
-	  echo; \
-	  exit 1; \
+	  echo configure was not called with the --with-prefix --prefix=/usr options; \
+	  echo therefore we clean up the source directory, and reconfigure; \
+	  make distclean; \
 	fi
 	@$(ECHO) '###  Creating the package files'
 	rm -f config.status
-	make distclean
+#	make distclean
 	@wd=`pwd | sed 's|^.*/||g'`; \
 	if [ "$$wd" != cint-${G__CFG_CINTVERSION} ] ; then \
 	  cd ..; \
@@ -199,7 +205,6 @@ debian/changelog : $(cint_signature_file) build/deb.mk
 	@$(ECHO) '' >> $@
 	@$(ECHO) " -- $(cint_signature)  `date -R`" >> $@
 
-
 debian/rules : build/deb.mk
 	@if [ ! -d debian ] ; then mkdir debian; fi
 	@$(ECHO) '###  Creating $@'
@@ -220,9 +225,14 @@ debian/rules : build/deb.mk
 	@$(ECHO) '        CFLAGS += -O2' >> $@
 	@$(ECHO) 'endif' >> $@
 	@$(ECHO) '' >> $@
+	@$(ECHO) 'include debian/confflags' >> $@
+	@$(ECHO) '# Make sure the user rebuilding this package has not added ' >> $@
+	@$(ECHO) '# --with-prefix --prefix=/some/other/location flags ' >> $@
+	@$(ECHO) 'confflags := $$(subst   --with-prefix, ,$$(confflags))' >> $@
+	@$(ECHO) 'confflags := $$(patsubst   --prefix=%, ,$$(confflags))' >> $@
 	@$(ECHO) 'config.status: configure' >> $@
 	@$(ECHO) -e '\tdh_testdir' >> $@
-	@$(ECHO) -e '\t$(CONFIGCMD)' >> $@
+	@$(ECHO) -e '\t$(CONFIGCMD) $$(confflags) --with-prefix --prefix=/usr' >> $@
 	@$(ECHO) '' >> $@
 	@$(ECHO) 'build: build-stamp' >> $@
 	@$(ECHO) 'build-stamp:  config.status' >> $@
@@ -268,3 +278,29 @@ debian/rules : build/deb.mk
 	@$(ECHO) '.PHONY: build clean binary-indep binary-arch binary install' >> $@
 	@chmod +x $@
 
+confflags := $(shell cat config.status)
+confflags := $(subst     --with-prefix, ,$(confflags))
+confflags := $(patsubst  --prefix=%, ,$(confflags))
+debian/confflags : build/deb.mk config.status
+	@$(ECHO) '# This file contains the configure flags, which were used' >> $@
+	@$(ECHO) '# to build the debian package. Feel free to modify them, and' >> $@
+	@$(ECHO) '# then recompile the package by debuild -us -uc' >> $@
+	@$(ECHO) '' >> $@
+	@$(ECHO) 'confflags := $(confflags)' >> $@
+
+debian/README.txt : build/deb.mk
+	@$(ECHO) 'CINT has a built-in debian packaging scheme by calling "make deb"' >> $@
+	@$(ECHO) 'If you read these lines, then this debian package was most probably' >> $@
+	@$(ECHO) 'created by this scheme (or otherwise somebody faked this file... :-)' >> $@
+	@$(ECHO) '' >> $@
+	@$(ECHO) 'The idea is: ' >> $@
+	@$(ECHO) '1) Download the official CINT source code, which has built-in' >> $@
+	@$(ECHO) '   possibility to build a debian package' >> $@
+	@$(ECHO) '2) Run ./configure [flags], with the flags you want. ' >> $@
+	@$(ECHO) '   The flags are written to config.status so that the packaging' >> $@
+	@$(ECHO) '   can make use of it, and build the package with these flags' >> $@
+	@$(ECHO) '3) Run "make deb", which creates the debian/ subdirectory with' >> $@
+	@$(ECHO) '   all the necessary control files, etc. There will be also a' >> $@
+	@$(ECHO) '   replica of the confflags file, so that the debian source package' >> $@
+	@$(ECHO) '   also contains the configuration flags in an easily editable' >> $@
+	@$(ECHO) '   way, so that further rebuilding volunteers can easily change them' >> $@

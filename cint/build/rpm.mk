@@ -56,6 +56,12 @@ ifneq ($(build_requires),)
   build_requires := BuildRequires: $(build_requires)
 endif
 
+confflags := $(shell cat config.status)
+confflags := $(subst     --with-prefix, ,$(confflags))
+confflags := $(patsubst  --prefix=%, ,$(confflags))
+confflags += --with-prefix --prefix=/usr
+CONFIGCMD := ./configure $(confflags)
+
 cintspec = RPM/SPECS/cint.spec
 $(cintspec) : Makefile $(rpmdirs)
 	@$(ECHO) Creating $@
@@ -86,7 +92,7 @@ $(cintspec) : Makefile $(rpmdirs)
 	@$(ECHO) %prep >> $@
 	@$(ECHO) %setup -q >> $@
 	@$(ECHO) %build >> $@
-	@$(ECHO) ./configure --with-prefix --prefix=/usr >> $@
+	@$(ECHO) $(CONFIGCMD) >> $@
 	@$(ECHO) make >> $@
 	@$(ECHO) %install >> $@
 	@$(ECHO) 'rm -rf $$RPM_BUILD_ROOT' >> $@
