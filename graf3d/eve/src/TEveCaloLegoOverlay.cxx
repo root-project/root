@@ -438,7 +438,7 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    Int_t fsb = TMath::Max(TMath::Nint(vp.Height()*0.03), 12);
    rnrCtx.RegisterFontNoScale(fsb, "arial", TGLFont::kPixmap, fontB);
    TGLFont fontE;
-   Int_t fsE = TMath::Max(TMath::Nint(vp.Height()*0.008), 8);
+   Int_t fsE = TMath::Max(TMath::Nint(vp.Height()*0.01), 8);
    rnrCtx.RegisterFontNoScale(fsE, "arial", TGLFont::kPixmap, fontE);
 
    Float_t llx, lly, llz, urx, ury, urz;

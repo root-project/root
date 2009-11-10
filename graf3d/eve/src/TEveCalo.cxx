@@ -546,12 +546,15 @@ void TEveCalo2D::BuildCellIdCache()
    const TAxis* axis = isRPhi ? fData->GetPhiBins() :  fData->GetEtaBins();
    Int_t nBins = axis->GetNbins();
 
+   Float_t min, max;
    if (isRPhi)
    {
+      min = GetPhiMin() - fData->GetEps();
+      max = GetPhiMax() + fData->GetEps();
       for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
          clv = 0;
          if ( TEveUtil::IsU1IntervalOverlappingByMinMax
-              (GetPhiMin(), GetPhiMax(), axis->GetBinLowEdge(ibin), axis->GetBinUpEdge(ibin)))
+              (min, max, axis->GetBinLowEdge(ibin), axis->GetBinUpEdge(ibin)))
          {
             clv = new TEveCaloData::vCellId_t();
             fData->GetCellList(GetEta(), GetEtaRng(), axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), *clv);
@@ -564,9 +567,13 @@ void TEveCalo2D::BuildCellIdCache()
    }
    else
    {
+      min = GetEtaMin() - fData->GetEps();
+      max = GetEtaMax() + fData->GetEps();
       for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
          clv = 0;
-         if (axis->GetBinLowEdge(ibin) > fEtaMin && axis->GetBinUpEdge(ibin) <= fEtaMax)
+         Float_t low = axis->GetBinLowEdge(ibin);
+         Float_t up = axis->GetBinUpEdge(ibin) ;
+         if (low >= min && up <= max)
          {
             clv = new TEveCaloData::vCellId_t();
             fData->GetCellList(axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), fPhi, GetPhiRng(), *clv);
