@@ -165,8 +165,8 @@ public:
    TEveElement* FindChild(TPRegexp& regexp, const TClass* cls=0);
    Int_t        FindChildren(List_t& matches, const TString&  name, const TClass* cls=0);
    Int_t        FindChildren(List_t& matches, TPRegexp& regexp, const TClass* cls=0);
-   TEveElement* FirstChild() const { return fChildren.front(); }
-   TEveElement* LastChild () const { return fChildren.back();  }
+   TEveElement* FirstChild() const { return fChildren.empty() ? 0 : fChildren.front(); }
+   TEveElement* LastChild () const { return fChildren.empty() ? 0 : fChildren.back();  }
 
    void EnableListElements (Bool_t rnr_self=kTRUE,  Bool_t rnr_children=kTRUE);  // *MENU*
    void DisableListElements(Bool_t rnr_self=kFALSE, Bool_t rnr_children=kFALSE); // *MENU*
