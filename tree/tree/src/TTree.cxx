@@ -718,9 +718,10 @@ TTree::~TTree()
 //______________________________________________________________________________
 void TTree::AddBranchToCache(const char*bname, Bool_t subbranches)
 {
-   // Add branch with name bname to the Tree cache, if subbranches is true
-   // all the branches of the subbranches are also put to the cache.
+   // Add branch with name bname to the Tree cache.
    // If bname="*" all branches are added to the cache.
+   // if subbranches is true all the branches of the subbranches are 
+   // also put to the cache.
 
    TFile *f = GetCurrentFile();
    if (!f) return;
@@ -731,8 +732,9 @@ void TTree::AddBranchToCache(const char*bname, Bool_t subbranches)
 //______________________________________________________________________________
 void TTree::AddBranchToCache(TBranch *b, Bool_t subbranches)
 {
-   // Add branch b to the Tree cache, if subbranches is true all the branches
-   // of the subbranches are also put to the cache.
+   // Add branch b to the Tree cache.
+   // if subbranches is true all the branches of the subbranches are 
+   // also put to the cache.
 
    TFile *f = GetCurrentFile();
    if (!f) return;
@@ -3515,7 +3517,10 @@ Int_t TTree::Fill()
    //   in case the program writing the Tree crashes.
    //   Note that the user can also decide to call FlushBaskets and AutoSave in her event loop
    //   on the base of the number of events written instead of the number of bytes written.
-
+   //
+   //   Note that calling FlushBaskets too often increases the IO time.
+   //   Note that calling AutoSave too often increases the IO time and also the file size.
+   
    Int_t nbytes = 0;
    Int_t nerror = 0;
    Int_t nb = fBranches.GetEntriesFast();
