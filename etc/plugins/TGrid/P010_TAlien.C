@@ -9,30 +9,34 @@ void SetAliEnSettings()
    if (gDebug>0) {printf("P010_TAlien.C: parsing /tmp/gclient_env_$UID\n");}
    TString lineS,tmp;
    char line[4096];
-   
+
    while (fileIn.good()){
       fileIn.getline(line,4096,'\n');
       lineS = line;
       if (lineS.IsNull()) continue;
       if (lineS.Contains("export ")) {
          lineS.ReplaceAll("export ","");
- 
+
          TObjArray* array = lineS.Tokenize("=");
- 
+
          if (array->GetEntries() == 2) {
             TObjString *strVar = (TObjString *) array->At(0);
             TObjString *strVal = (TObjString *) array->At(1);
-    
+
             if ((strVar)&&(strVal)) {
                tmp = strVal->GetString();
                tmp.ReplaceAll("\"","");
-               tmp.ReplaceAll("$LD_LIBRARY_PATH","");
-               gSystem->Unsetenv(strVar->GetString().Data());
-               gSystem->Setenv(strVar->GetString().Data(),tmp.Data());
-               if (gDebug>0) {printf("P010_TAlien.C: setting environemnt %s=\"%s\"\n", strVar->GetString().Data(),tmp.Data());}
+               tmp.ReplaceAll("$LD_LIBRARY_PATH",gSystem->Getenv("LD_LIBRARY_PATH"));
+               tmp.ReplaceAll("$DYLD_LIBRARY_PATH",gSystem->Getenv("DYLD_LIBRARY_PATH"));
+               tmp.ReplaceAll(" ","");
+               gSystem->Unsetenv(strVar->GetString());
+               gSystem->Setenv(strVar->GetString(), tmp);
+               if (gDebug>0) {
+                  Info("P010_TAlien", "setting environment %s=\"%s\"", strVar->GetString().Data(), tmp.Data());
+               }
                if (!strVar->GetString().CompareTo("GCLIENT_SERVER_LIST")) {
                   gSystem->Unsetenv("alien_API_SERVER_LIST");
-                  gSystem->Setenv("alien_API_SERVER_LIST",tmp.Data());
+                  gSystem->Setenv("alien_API_SERVER_LIST", tmp);
                }
             }
             if (array) {
@@ -40,7 +44,7 @@ void SetAliEnSettings()
                array = 0 ;
             }
          } else {
-            // parse the MONA_ stuff 
+            // parse the MONA_ stuff
             TObjArray* array = lineS.Tokenize("\" ");
             TString key="";
             TString val="";
@@ -48,9 +52,11 @@ void SetAliEnSettings()
                if ( ((TObjString*) array->At(i))->GetString().Contains("=")) {
                   if (key.Length() && val.Length()) {
                      val.Resize(val.Length()-1);
-                     if (gDebug>0) {printf("P010_TAlien.C: setting environemnt %s=\"%s\"\n", key.Data(),val.Data());}
-                     gSystem->Unsetenv(key.Data());
-                     gSystem->Setenv(key.Data(),val.Data());
+                     if (gDebug>0) {
+                        Info("P010_TAlien", "setting environment %s=\"%s\"", key.Data(), val.Data());
+                     }
+                     gSystem->Unsetenv(key);
+                     gSystem->Setenv(key, val);
                      key="";
                      val="";
                   }
@@ -62,9 +68,11 @@ void SetAliEnSettings()
                }
             }
             if (key.Length() && val.Length()) {
-               if (gDebug>0) {printf("P010_TAlien.C: setting environemnt %s=\"%s\"\n", key.Data(),val.Data());}
-               gSystem->Unsetenv(key.Data());
-               gSystem->Setenv(key.Data(),val.Data());
+               if (gDebug>0) {
+                  Info("P010_TAlien", "setting environment %s=\"%s\"", key.Data(), val.Data());
+               }
+               gSystem->Unsetenv(key);
+               gSystem->Setenv(key, val);
             }
          }
       }
@@ -75,28 +83,34 @@ void P010_TAlien()
 {
    TString configfeatures = gROOT->GetConfigFeatures();
    TString ralienpath = gSystem->Getenv("ROOTSYS");
+   TString GSHELL_ROOT="/opt/alien/api/";
+
    ralienpath += "/lib/"; ralienpath += "libRAliEn.so";
-   // only if ROOT was compiled with the alien plugin
-   // do library setup and configure a handler
-   if ((!gSystem->AccessPathName(ralienpath))) ||
-       (configfeatures.contains("alien"))) {
-      // you can enforce 
-      if ((!gSystem->Getenv("GBBOX_ENVFILE")) || 
-         (gSystem->Getenv("ALIEN_SOURCE_GCLIENT_ENV")) ||
-         (!gSystem->Getenv("ALIEN_SKIP_GCLIENT_ENV"))) {
-         SetAliEnSettings();
+   // only if ROOT was compiled with enable-alien we do library setup and configure a handler
+   if ((!gSystem->AccessPathName(ralienpath))) || (configfeatures.contains("alien"))) {
+      // you can enforce
+      if ((!gSystem->Getenv("GBBOX_ENVFILE")) ||
+          ( gSystem->Getenv("ALIEN_SOURCE_GCLIENT_ENV")) ||
+          (!gSystem->Getenv("ALIEN_SKIP_GCLIENT_ENV")) ) {
+       SetAliEnSettings();
       }
+
+      if (gSystem->Getenv("GSHELL_ROOT")) {
+         GSHELL_ROOT = gSystem->Getenv("GSHELL_ROOT");
+      }
+
+      TString loadpath = GSHELL_ROOT;
 #ifdef __APPLE__
-      const char* hlib = "libRAliEn.so";
-      if (gSystem->Load(hlib)>=0) {
+      loadpath = "libRAliEn.so";
 #else
-      const char* hlib = "libgapiUI.so";
-      if (gSystem->Load(hlib)>=0) {
+      loadpath += "/lib/libgapiUI.so";
 #endif
+      const char* hlib = loadpath;
+      if (gSystem->Load(hlib) >= 0) {
          gPluginMgr->AddHandler("TGrid", "^alien", "TAlien",
                                 "RAliEn", "TAlien(const char*,const char*,const char*,const char*)");
       } else {
-         Error("P010_TAlien","Please fix your library search path to be able to load %s!",hlib);
+         Error("P010_TAlien","Please fix your GSHELL_ROOT environment variable to be able to load %s!",hlib);
       }
   }
-} 
+}
