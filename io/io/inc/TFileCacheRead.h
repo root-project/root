@@ -26,6 +26,7 @@
 #endif
 
 class TFile;
+class TBranch;
 
 class TFileCacheRead : public TObject {
 
@@ -61,13 +62,17 @@ public:
    TFileCacheRead();
    TFileCacheRead(TFile *file, Int_t buffersize);
    virtual ~TFileCacheRead();
+   virtual void        AddBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) {}
+   virtual void        AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) {}
    virtual Int_t       GetBufferSize() const { return fBufferSize; };
    virtual Bool_t      IsAsyncReading() const { return fAsyncReading; };
+   virtual Bool_t      IsLearning() const {return kFALSE;}
    virtual void        Prefetch(Long64_t pos, Int_t len);
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual void        SetFile(TFile *file);
+   virtual void        SetSkipZip(Bool_t /*skip*/ = kTRUE) {} // This function is only used by TTreeCacheUnzip (ignore it)
    virtual void        Sort();
 
    ClassDef(TFileCacheRead,1)  //TFile cache when reading

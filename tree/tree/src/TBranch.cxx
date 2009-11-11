@@ -1058,10 +1058,9 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    }
    //add branch to cache (if any)
    TFileCacheRead *pf = file ? file->GetCacheRead() : 0;
-   if (pf && pf->InheritsFrom(TTreeCache::Class())){
-      TTreeCache *tpf = (TTreeCache*)pf;
-      tpf->AddBranch(this);
-      if (fSkipZip) tpf->SetSkipZip();
+   if (pf){
+      if (pf->IsLearning()) pf->AddBranch(this);
+      if (fSkipZip) pf->SetSkipZip();
    }
 
    //now read basket
