@@ -83,9 +83,8 @@ void P010_TAlien()
 {
    TString configfeatures = gROOT->GetConfigFeatures();
    TString ralienpath = gSystem->Getenv("ROOTSYS");
-   TString GSHELL_ROOT="/opt/alien/api/";
-
    ralienpath += "/lib/"; ralienpath += "libRAliEn.so";
+
    // only if ROOT was compiled with enable-alien we do library setup and configure a handler
    if ((!gSystem->AccessPathName(ralienpath))) || (configfeatures.contains("alien"))) {
       // you can enforce
@@ -95,22 +94,11 @@ void P010_TAlien()
        SetAliEnSettings();
       }
 
-      if (gSystem->Getenv("GSHELL_ROOT")) {
-         GSHELL_ROOT = gSystem->Getenv("GSHELL_ROOT");
-      }
-
-      TString loadpath = GSHELL_ROOT;
-#ifdef __APPLE__
-      loadpath = "libRAliEn.so";
-#else
-      loadpath += "/lib/libgapiUI.so";
-#endif
-      const char* hlib = loadpath;
-      if (gSystem->Load(hlib) >= 0) {
+      if ( ((gSystem->Load("libgapiUI.so")>=0) && (gSystem->Load("libRAliEn.so")>=0)))  {
          gPluginMgr->AddHandler("TGrid", "^alien", "TAlien",
                                 "RAliEn", "TAlien(const char*,const char*,const char*,const char*)");
       } else {
-         Error("P010_TAlien","Please fix your GSHELL_ROOT environment variable to be able to load %s!",hlib);
+         Error("P010_TAlien","Please fix your loader path environment variable to be able to load libRAliEn.so");
       }
   }
 }
