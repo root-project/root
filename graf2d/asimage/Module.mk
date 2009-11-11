@@ -114,6 +114,7 @@ else
 		ACFLAGS="-O"; \
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
+			ACFLAGS+=" -wd188 -wd869 -wd2259 -wd1418 -wd1419 -wd593 -wd981 -wd1599 -wd181 -wd177 -wd1572"; \
 		fi; \
 		if [ "$(ARCH)" = "solarisCC5" ]; then \
 			ACFLAGS+=" -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
