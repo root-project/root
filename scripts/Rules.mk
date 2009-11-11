@@ -289,17 +289,28 @@ SOFLAGS       = -shared
 endif
 
 ifeq ($(ARCH),linuxicc)
-# Linux with linuxicc
+# Linux with Intel icc compiler in 32-bit mode
 CXX = icc
-LD  = icc
+LD  = icpc
 ifeq ($(ROOTBUILD),debug)
-CXXFLAGS += -g -wd191 
+CXXFLAGS += -g -wd191 -fPIC 
 else
-CXXFLAGS += -O -wd191 
+CXXFLAGS += -O -wd191 -fPIC
 endif
 SOFLAGS  = -shared 
 endif
 
+ifeq ($(ARCH),linuxx8664icc)
+# Linux with Intel icc compiler in 64-bit mode
+CXX = icc
+LD  = icpc
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS += -g -wd191 -fPIC
+else
+CXXFLAGS += -O -wd191 -fPIC
+endif
+SOFLAGS  = -shared
+endif
 
 ifeq ($(ARCH),macosx)
 
