@@ -358,11 +358,13 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
 
    // first pass, loop on all branches
    // for leafcount branches activate/deactivate in function of status
+   Bool_t all = kFALSE;
+   if (!strcmp(bname,"*")) all = kTRUE;
    for (i=0;i<nleaves;i++)  {
       leaf = (TLeaf*)(fOwner->GetListOfLeaves())->UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
-      if (strcmp(bname,"*")) { //Regexp gives wrong result for [] in name
+      if (!all) { //Regexp gives wrong result for [] in name
          TString longname; 
          longname.Form("%s.%s",fOwner->GetName(),branch->GetName());
          if (strcmp(bname,branch->GetName()) 
@@ -370,9 +372,10 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
              && s.Index(re) == kNPOS) continue;
       }
       nb++;
+      printf("i=%d, nb=%d\n",i,nb);
       AddBranch(branch, subbranches);
       leafcount = leaf->GetLeafCount();
-      if (leafcount) {
+      if (leafcount && !all) {
          bcount = leafcount->GetBranch();
          AddBranch(bcount, subbranches);
       }
