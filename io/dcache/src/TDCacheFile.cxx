@@ -175,11 +175,18 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
       fWritable = kFALSE;
    }
 
-   // use 8K ( default ) read-ahead buffer to get file header.
+   // use 128K ( default ) read-ahead buffer to get file header,
+   // the buffer size can be overriden by env var "DCACHE_RA_BUFFER",
    // vector read are not affected by read-ahead buffer
-   if(read) {
+   if (read) {
+     int dcache_RAHEAD_SIZE = RAHEAD_BUFFER_SIZE;
+     char *DCACHE_RA_BUFFER = gSystem->Getenv("DCACHE_RA_BUFFER");
+     if (DCACHE_RA_BUFFER) {
+        int ra_buffer = atoi(DCACHE_RA_BUFFER);
+        dcache_RAHEAD_SIZE = ra_buffer<=0 ? dcache_RAHEAD_SIZE : ra_buffer;
+     }
      dc_setBufferSize(fD, RAHEAD_BUFFER_SIZE); 
-   }else{
+   } else {
      dc_noBuffering(fD);
    }
 
