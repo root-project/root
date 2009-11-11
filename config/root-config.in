@@ -249,7 +249,7 @@ linuxhppa)
 linuxicc)
    # Linux with the Intel icc compiler
    auxcflags=
-   auxlibs="-lm -ldl"
+   auxlibs="-limf -lm -ldl"
    ;;
 linuxppcgcc)
    # PPC Linux with gcc
@@ -281,7 +281,7 @@ linuxx8664gcc)
 linuxx8664icc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc
    auxcflags=
-   auxlibs="-lm -ldl"
+   auxlibs="-limf -lm -ldl"
    ;;
 linuxalphagcc)
    # Alpha Linux with gcc
