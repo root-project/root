@@ -1297,7 +1297,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
          DrawCells2D(rnrCtx, fCells2D);
       }
-      glPopName();;
+      glPopName();
    }
    glPopAttrib();
 

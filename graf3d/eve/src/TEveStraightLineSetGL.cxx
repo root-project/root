@@ -180,7 +180,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          TEveStraightLineSet::Line_t& l = * (TEveStraightLineSet::Line_t*) mL.GetLinePlex().Atom(lidx);
          pnt[0] = l.fV1[0] + (l.fV2[0] - l.fV1[0])*m.fPos;
          pnt[1] = l.fV1[1] + (l.fV2[1] - l.fV1[1])*m.fPos;
-         pnt[2] = l.fV1[2] + (l.fV2[2] - l.fV1[2])*m.fPos;;
+         pnt[2] = l.fV1[2] + (l.fV2[2] - l.fV1[2])*m.fPos;
          pnt   += 3;
       }
       if (rnrCtx.SecSelection()) glPushName(2);

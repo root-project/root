@@ -612,7 +612,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
       TGLRect rect(*rnrCtx.GetPickRectangle());
       rnrCtx.GetCamera()->WindowToViewport(rect);
       gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(),
-                    (Int_t*) rnrCtx.GetCamera()->RefViewport().CArr());;
+                    (Int_t*) rnrCtx.GetCamera()->RefViewport().CArr());
    }
    glMatrixMode(GL_MODELVIEW);
    glPushMatrix();
