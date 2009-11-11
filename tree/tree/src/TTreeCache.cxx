@@ -372,7 +372,6 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
              && s.Index(re) == kNPOS) continue;
       }
       nb++;
-      printf("i=%d, nb=%d\n",i,nb);
       AddBranch(branch, subbranches);
       leafcount = leaf->GetLeafCount();
       if (leafcount && !all) {
