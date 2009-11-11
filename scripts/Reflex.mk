@@ -6,6 +6,8 @@
 ifeq ($(PLATFORM),win32)
 GENREFLEX = genreflex.bat
 GENREFLEXCXXFLAGS = --gccxmlopt='-include "$(ROOTSYS)/include/w32pragma.h"'
+# pulls in a different STL!
+GENREFLEXCXXFLAGS += $(subst -MDd,-D_DEBUG,$(findstring -MDd,$(shell root-config --cflags)))
 else
 GENREFLEX = genreflex
 endif
