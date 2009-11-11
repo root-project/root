@@ -858,7 +858,7 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
    // Execute a file containing a C++ macro (static method). Can be used
    // while TApplication is not yet created.
 
-   const Int_t kBufSize = 1024;
+   static const Int_t kBufSize = 1024;
 
    if (!file || !*file) return 0;
 
@@ -883,6 +883,7 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
    }
 
    char currentline[kBufSize];
+   char dummyline[kBufSize];
    int tempfile = 0;
    int comment  = 0;
    int ifndefc  = 0;
@@ -892,8 +893,16 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
    Long_t retval = 0;
 
    while (1) {
-      macro.getline(currentline, kBufSize);
+      bool res = macro.getline(currentline, kBufSize);
       if (macro.eof()) break;
+      if (!res) {
+         // Probably only read kBufSize, let's ignore the remainder of
+         // the line.
+         macro.clear();
+         while (!macro.getline(dummyline, kBufSize) && !macro.eof()) {
+            macro.clear();
+         }
+      }
       s = currentline;
       while (s && (*s == ' ' || *s == '\t')) s++;   // strip-off leading blanks
 
