@@ -131,6 +131,15 @@ Bool_t TEveCaloLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
                fScaleCoordY -= (Float_t)(event->fY - fMouseY) / vp.Height();
                fMouseX = event->fX;
                fMouseY = event->fY;
+               // Make sure we don't go offscreen (use fDraw variables set in draw)
+               if (fScaleCoordX < 0)
+                  fScaleCoordX = 0;
+               else if (fScaleCoordX + fScaleW > 1.0f)
+                  fScaleCoordX = 1.0f - fScaleW;
+               if (fScaleCoordY < 0)
+                  fScaleCoordY = 0;
+               else if (fScaleCoordY + fScaleH > 1.0f)
+                  fScaleCoordY = 1.0f - fScaleH;
             }
             return kTRUE;
          }
@@ -374,15 +383,16 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    TGLRect &vp = rnrCtx.GetCamera()->RefViewport();
 
    Double_t maxVal = fCalo->GetMaxVal();
-   Int_t maxe = TMath::CeilNint(TMath::Log10(maxVal+1)); // max round exponent
-   Double_t sqv = TMath::Power(10, maxe)+1; // starting max square value
-   Double_t fc = TMath::Log10(sqv)/TMath::Log10(fCalo->GetMaxVal()+1);
+   Int_t    maxe   = TMath::CeilNint(TMath::Log10(maxVal+1)); // max round exponent
+   Double_t sqv    = TMath::Power(10, maxe)+1; // starting max square value
+   Double_t fc     = TMath::Log10(sqv)/TMath::Log10(fCalo->GetMaxVal()+1);
    Double_t cellX = fCellX*fc;
    Double_t cellY = fCellY*fc;
 
    Double_t scaleStepY = 0.1; // step is 10% of screen
-   Double_t scaleStepX =  scaleStepY*vp.Height()/vp.Width(); // step is 10% of screen
+   Double_t scaleStepX = scaleStepY*vp.Height()/vp.Width(); // step is 10% of screen
 
+   Double_t frameOff = 0.01;
 
    // define max starting exponent not to take more than scalStepY height
    while(cellY > scaleStepY)
@@ -395,7 +405,7 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
 
    sqv =  TMath::Power(10, maxe)+1;
    glPushMatrix();
-   glTranslatef(fScaleCoordX, fScaleCoordY, 0); // translate to lower left corner
+   glTranslatef(fScaleCoordX + 0.5*scaleStepX + frameOff, fScaleCoordY + 0.5*scaleStepY + frameOff, 0); // translate to lower left corner
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT | GL_POINT_BIT);
    glEnable(GL_BLEND);
@@ -472,14 +482,16 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    fontB.PostRender();
    fontE.PostRender();
    if (expOff < 1)  expX += expOff;
+   glPopMatrix();
 
    // draw frame
    {
-      Double_t off = 0.1;
-      Double_t x0 = -(0.5+off) * scaleStepX;
-      Double_t x1 =  (0.5+off) * scaleStepX + expX;
-      Double_t y0 = -(0.5+off) * scaleStepY;
-      Double_t y1 =  scaleStepY * (ne - 0.5 + off);
+      fScaleW = scaleStepX + expX+ frameOff*2;
+      fScaleH = scaleStepY * ne + frameOff*2;
+      Double_t x0 = fScaleCoordX;
+      Double_t x1 = x0 + fScaleW;
+      Double_t y0 = fScaleCoordY;
+      Double_t y1 = y0 + fScaleH;
       Double_t zf = +0.2;
 
       color = fFrameColor > -1 ?  fFrameColor : rnrCtx.ColorSet().Markup().GetColorIndex();
@@ -498,7 +510,6 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    }
    glPopName();
 
-   glPopMatrix();
    glPopAttrib();
 } // end draw scales
 
@@ -514,30 +525,29 @@ void TEveCaloLegoOverlay::RenderPaletteScales(TGLRnrCtx& rnrCtx)
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(0.1, 1);
 
-   glPushMatrix();
-   glTranslatef(fScaleCoordX, fScaleCoordY, 0); // translate to lower left corner
-
-   glPushName(0);
-   glLoadName(1);
-
    TGLRect& vp = rnrCtx.RefCamera().RefViewport();
    Double_t maxVal = fCalo->GetMaxVal();
-
-   Int_t bn;
+   Int_t    bn;
    Double_t bw; // bin with first second order
    Double_t bl, bh; // bin low, high first
    THLimitsFinder::Optimize(0, maxVal, 10, bl, bh, bn, bw);
-   bn = TMath::CeilNint(maxVal/bw);
+   bn = TMath::CeilNint(maxVal/bw) + 1;
 
-   Double_t sH = 0.25; // relative height of the scale
-   glScalef(sH/(bn*bw), sH/(bn*bw), 1.);
+   fScaleH = 0.25; // relative height of the scale
+   fScaleW = fScaleH*1.5/(bn*vp.Aspect());
    Float_t h = 0.5 * bw  ;
    Float_t w = h * 1.5/ vp.Aspect();
 
+   glPushMatrix();
+   glTranslatef(fScaleCoordX + fScaleW*0.5, fScaleCoordY + fScaleH/bn*0.5, 0); // translate to lower left corner
+   glScalef(fScaleH/(bn*bw), fScaleH/(bn*bw), 1.);
+
+   glPushName(0);
+   glLoadName(1);   
    TGLAxisPainter::LabVec_t &labVec = fAxisPainter->RefLabVec();
    labVec.clear();
    Float_t val = 0;
-   for (Int_t l= 0; l<=bn; l++) {
+   for (Int_t l= 0; l<bn; l++) {
       labVec.push_back( TGLAxisPainter::Lab_t(val, val));
       val += bw;
    }
