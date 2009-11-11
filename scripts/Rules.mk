@@ -371,6 +371,40 @@ LibSuf        = so
 endif
 endif
 
+ifeq ($(ARCH),macosxicc)
+
+# MacOSX 32/64 bit with Intel icc
+export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
+CXX           = icc
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -g -fPIC -wd191 -wd1476
+else
+CXXFLAGS      += -O -fPIC -wd191 -wd1476
+endif
+ifeq ($(MACOSX_MINOR),) 
+  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+endif
+ifeq ($(subst $(MACOSX_MINOR),,123),123)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) icpc
+else
+ifeq ($(MACOSX_MINOR),3)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) icpc
+else
+UNDEFOPT      = suppress
+LD            = icpc
+endif
+endif
+LDFLAGS       =
+SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+DllSuf        = so
+LibSuf        = dylib
+ifeq ($(subst $(MACOSX_MINOR),,01234),01234)
+LibSuf        = so
+endif
+endif
+
 CALLROOTEXE  ?= root.exe
 export CALLROOTEXE
 
