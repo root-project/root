@@ -208,7 +208,6 @@ namespace ROOT { namespace Cintex {
          return;
       }
       else    {
-         Type int_t  = Type::ByName("int");
          Type void_t = Type::ByName("void");
          Type char_t = Type::ByName("char");
          Type signature;
@@ -221,10 +220,9 @@ namespace ROOT { namespace Cintex {
          signature = FunctionTypeBuilder( void_t,
                                           ReferenceBuilder(TypeBuilder("TMemberInspector")),
                                           PointerBuilder(char_t));
-         AddFunction("ShowMembers", signature, Stub_ShowMembers, ctxt, VIRTUAL);
-         signature = FunctionTypeBuilder( void_t, ReferenceBuilder(TypeBuilder("TBuffer")));
-         AddFunction("Streamer", signature, Stub_Streamer, ctxt, VIRTUAL);
-         AddFunction("StreamerNVirtual", signature, Stub_StreamerNVirtual, ctxt, 0);
+         AddFunction("ShowMembers", signature, Stub_ShowMembers, ctxt,
+                     /*should be VIRTUAL but avoid vtable creation:*/
+                     fType.IsVirtual() ? VIRTUAL : 0);
       }
       //--- create TGenericClassInfo Instance
       //createInfo();
