@@ -220,26 +220,45 @@ Bool_t TTreeCacheUnzip::FillBuffer()
    TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
    Long64_t entry = tree->GetReadEntry();
 
-   if (!fIsManual && entry < fEntryNext) return kFALSE;
+   // If the entry is in the range we previously prefetched, there is 
+   // no point in retrying.   Note that this will also return false
+   // during the training phase (fEntryNext is then set intentional to 
+   // the end of the training phase).
+   if (!fIsManual && fEntryCurrent <= entry  && entry < fEntryNext) return kFALSE;
 
    // Triggered by the user, not the learning phase
    if (entry == -1)  entry=0;
 
    // Estimate number of entries that can fit in the cache compare it
    // to the original value of fBufferSize not to the real one
-   if (fZipBytes==0) {
-      fEntryNext = entry + tree->GetEntries();
-   } else {
-      fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
+   Long64_t autoFlush = tree->GetAutoFlush();
+   if (autoFlush > 0) {
+      //case when the tree autoflush has been set
+      Int_t averageEntrySize = tree->GetZipBytes()/tree->GetEntries();
+      Int_t nauto = fBufferSizeMin/(averageEntrySize*autoFlush);
+      if (nauto < 1) nauto = 1;
+      fEntryNext = entry - entry%autoFlush + nauto*autoFlush;
+   } else { 
+      //case of old files before November 9 2009
+      if (fZipBytes==0) {
+         fEntryNext = entry + tree->GetEntries();;    
+      } else {
+         fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
+      }
    }
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
 
-   //check if owner has a TEventList set. If yes we optimize for this special case
-   //reading only the baskets containing entries in the list
+
+   fEntryCurrent = entry;
+   
+   // Check if owner has a TEventList set. If yes we optimize for this
+   // Special case reading only the baskets containing entries in the
+   // list.
+   TEventList *elist = fOwner->GetEventList();
    Long64_t chainOffset = 0;
-   if (fOwner->GetEventList()) {
-      if (fOwner->IsA() == TChain::Class()) {
+   if (elist) {
+      if (fOwner->IsA() ==TChain::Class()) {
          TChain *chain = (TChain*)fOwner;
          Int_t t = chain->GetTreeNumber();
          chainOffset = chain->GetTreeOffset()[t];
@@ -254,31 +273,41 @@ Bool_t TTreeCacheUnzip::FillBuffer()
    for (Int_t i=0;i<fNbranches;i++) {
       if (mustBreak) break;
       TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
+      if (b->GetDirectory()==0) continue;
+      if (b->GetDirectory()->GetFile() != fFile) continue;
       Int_t nb = b->GetMaxBaskets();
       Int_t *lbaskets   = b->GetBasketBytes();
       Long64_t *entries = b->GetBasketEntry();
       if (!lbaskets || !entries) continue;
       //we have found the branch. We now register all its baskets
       //from the requested offset to the basket below fEntrymax
+      Int_t blistsize = b->GetListOfBaskets()->GetSize();
       for (Int_t j=0;j<nb;j++) {
          // This basket has already been read, skip it
-         if (b->GetListOfBaskets()->UncheckedAt(j)) continue;
+         if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
 
          Long64_t pos = b->GetBasketSeek(j);
          Int_t len = lbaskets[j];
          if (pos <= 0 || len <= 0) continue;
-         if (entries[j] > fEntryNext) continue;
-         if (entries[j] < entry && (j<nb-1 && entries[j+1] < entry)) continue;
-         if (fOwner->GetEventList()) {
+         //important: do not try to read fEntryNext, otherwise you jump to the next autoflush
+         if (entries[j] >= fEntryNext) continue;
+         if (entries[j] < entry && (j<nb-1 && entries[j+1] <= entry)) continue;
+         if (elist) {
             Long64_t emax = fEntryMax;
             if (j<nb-1) emax = entries[j+1]-1;
-            if (!(fOwner->GetEventList())->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
+            if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
          }
          fNReadPref++;
+
          TFileCacheRead::Prefetch(pos,len);
          //we allow up to twice the default buffer size. When using eventlist in particular
          //it may happen that the evaluation of fEntryNext is bad, hence this protection
-         if (fNtot > 2*fBufferSizeMin) {TFileCacheRead::Prefetch(0,0);mustBreak = kTRUE; break;}
+         //if (fNtot > 2*fBufferSizeMin) {
+            //printf("entry=%lld, fEntryNext=%lld, fNtot=%lld, fBufferSizeMin=%d\n",entry,fEntryNext,fNtot,fBufferSizeMin);
+            //TFileCacheRead::Prefetch(0,0);
+            //mustBreak = kTRUE; 
+            //break;
+         //}
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
    }
