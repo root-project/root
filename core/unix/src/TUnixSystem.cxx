@@ -955,7 +955,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       mxfd++;
 
       // if nothing to select (socket or timer) return
-      if (mxfd == -1 && nextto == -1)
+      if (mxfd == 0 && nextto == -1)
          return;
 
       fNfd = UnixSelect(mxfd, fReadready, fWriteready, nextto);
