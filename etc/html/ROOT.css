@@ -195,7 +195,7 @@ a.descrheadentry {
    color: #FFFFFF;
    text-decoration: none;
    margin: 0;
-   font-weight: 95%;
+   font-weight: lighter;
    border: none;
    border-left: solid 1px #dddddd;
    padding: 0px 14px;
@@ -216,7 +216,6 @@ div.location {
    clear: both;
    margin-bottom: 0.5em;
    padding-bottom: 0.5em;
-   padding-left: -16px;
    padding-top: 3px;
    font-size: 80%;   
 }
