@@ -324,14 +324,13 @@ void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
       const Int_t flagEnumConst = G__BIT_ISENUM | G__BIT_ISCONSTANT | G__BIT_ISSTATIC;
       if ((dm->Property() & flagEnumConst) == flagEnumConst
           && dm->GetDataType() && dm->GetDataType()->GetType() == kInt_t) {
-         mtype = 3;
+         mtype = 5;
          // The access of the enum constant is defined by the access of the enum:
          // for CINT, all enum constants are public.
          // There is no TClass or TDataType for enum types; instead, use CINT:
          /*
            No - CINT does not know their access restriction.
            With CINT5 we have no way of determining it...
-           Wait for CINT57
 
          ClassInfo_t* enumCI = gInterpreter->ClassInfo_Factory(dm->GetTypeName());
          if (enumCI) {
