@@ -211,19 +211,19 @@ extern "C" void  type_of_call hdelet(const int&);
 extern "C" void  type_of_call hix(const int&,const int&,const float&);
 extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
 
-#ifndef R__B64
+//#ifndef R__B64
 extern "C" float type_of_call hi(const int&,const int&);
 extern "C" float type_of_call hie(const int&,const int&);
 extern "C" float type_of_call hif(const int&,const int&);
 extern "C" float type_of_call hij(const int&,const int&,const int&);
 extern "C" float type_of_call hije(const int&,const int&,const int&);
-#else
-extern "C" double type_of_call hi(const int&,const int&);
-extern "C" double type_of_call hie(const int&,const int&);
-extern "C" double type_of_call hif(const int&,const int&);
-extern "C" double type_of_call hij(const int&,const int&,const int&);
-extern "C" double type_of_call hije(const int&,const int&,const int&);
-#endif
+//#else
+//extern "C" double type_of_call hi(const int&,const int&);
+//extern "C" double type_of_call hie(const int&,const int&);
+//extern "C" double type_of_call hif(const int&,const int&);
+//extern "C" double type_of_call hij(const int&,const int&,const int&);
+//extern "C" double type_of_call hije(const int&,const int&,const int&);
+//#endif
 
 #ifndef WIN32
 extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
