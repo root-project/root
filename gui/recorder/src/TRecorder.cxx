@@ -178,18 +178,11 @@ ClassImp(TRecorder)
 class TGCursorWindow : public TGFrame {
 
 protected:
-   virtual void DoRedraw();
-
    Pixmap_t fPic, fMask;            // Pixmaps used as Window shape
-   UInt_t   fPw, fPh;               // Hot point coordinates (x and y)
 
 public:
    TGCursorWindow();
    virtual ~TGCursorWindow();
-
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fPw, fPh); }
-
-   virtual void Layout();
 };
 
 static TGCursorWindow *gCursorWin = 0;
@@ -197,27 +190,24 @@ static Int_t gDecorWidth  = 0;
 static Int_t gDecorHeight = 0;
 
 //______________________________________________________________________________
-TGCursorWindow::TGCursorWindow() : TGFrame(gClient->GetDefaultRoot(), 32, 32)
+TGCursorWindow::TGCursorWindow() : 
+      TGFrame(gClient->GetDefaultRoot(), 32, 32, kTempFrame)
 {
    // TGCursorWindow constructor.
 
+   SetWindowAttributes_t wattr;
    const TGPicture *pbg = fClient->GetPicture("recursor.png");
    fPic  = pbg->GetPicture();
    fMask = pbg->GetMask();
 
-   SetWindowAttributes_t wattr;
+   gVirtualX->ShapeCombineMask(fId, 0, 0, fMask);
+   SetBackgroundPixmap(fPic);
 
    wattr.fMask = kWAOverrideRedirect | kWASaveUnder;
    wattr.fSaveUnder = kTRUE;
    wattr.fOverrideRedirect = kTRUE;
 
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
-
-   int x, y;
-   gVirtualX->GetWindowSize(fPic, x, y, fPw, fPh);
-   Resize(GetDefaultSize());
-
-   gVirtualX->ShapeCombineMask(fId, 0, 0, fMask);
 }
 
 //______________________________________________________________________________
@@ -228,22 +218,6 @@ TGCursorWindow::~TGCursorWindow()
    if (fPic != kNone) gVirtualX->DeletePixmap(fPic);
    if (fMask != kNone) gVirtualX->DeletePixmap(fMask);
 }
-//______________________________________________________________________________
-void TGCursorWindow::Layout()
-{
-   // Layout TGCursorWindow.
-
-   gVirtualX->ShapeCombineMask(fId, 0, 0, fMask);
-}
-
-//______________________________________________________________________________
-void TGCursorWindow::DoRedraw()
-{
-   // Redraw TGCursorWindow.
-
-   gVirtualX->CopyArea(fPic, fId, GetBckgndGC()(), 0, 0, fWidth, fHeight, 0, 0);
-}
-
 
 //______________________________________________________________________________
 TRecorder::TRecorder()
@@ -2138,11 +2112,11 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
    if (showMouseCursor && e->fType == kMotionNotify) {
       if (gCursorWin && e->fWindow == gVirtualX->GetDefaultRootWindow()) {
          if (!gCursorWin->IsMapped()) {
-            gCursorWin->MapSubwindows();
             gCursorWin->MapRaised();
          }
-         gCursorWin->RaiseWindow();
-         gCursorWin->Move(e->fXRoot + gDecorWidth, e->fYRoot + gDecorHeight);
+         if (gVirtualX->GetDrawMode() == TVirtualX::kCopy) {
+            gCursorWin->Move(e->fXRoot + gDecorWidth, e->fYRoot + gDecorHeight);
+         }
       }
    }
 
