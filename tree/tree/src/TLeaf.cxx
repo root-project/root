@@ -110,9 +110,9 @@ TLeaf::~TLeaf()
    if (fBranch) {
       TTree* tree = fBranch->GetTree();
       fBranch = 0;
-      if (tree) {
-         tree->GetListOfLeaves()->Remove(this);
-      }
+      //if (tree) {
+         //tree->GetListOfLeaves()->Remove(this);
+      //}
    }
    fLeafCount = 0;
 }

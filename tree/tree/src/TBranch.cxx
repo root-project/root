@@ -423,13 +423,14 @@ TBranch::~TBranch()
 
    fBaskets.Delete();
 
+   //following code commented. The list of leaves in teh Tree is done in the TTree destructor
    // Remove our leaves from our tree's list of leaves.
-   if (fTree) {
-      TObjArray* lst = fTree->GetListOfLeaves();
-      if (lst) {
-         lst->RemoveAll(&fLeaves);
-      }
-   }
+   //if (fTree) {
+   //   TObjArray* lst = fTree->GetListOfLeaves();
+   //   if (lst) {
+   //      //lst->RemoveAll(&fLeaves);
+   //   }
+   //}
    // And delete our leaves.
    fLeaves.Delete();
 
