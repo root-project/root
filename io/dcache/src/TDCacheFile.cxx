@@ -180,7 +180,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    // vector read are not affected by read-ahead buffer
    if (read) {
      int dcache_RAHEAD_SIZE = RAHEAD_BUFFER_SIZE;
-     char *DCACHE_RA_BUFFER = gSystem->Getenv("DCACHE_RA_BUFFER");
+     const char *DCACHE_RA_BUFFER = gSystem->Getenv("DCACHE_RA_BUFFER");
      if (DCACHE_RA_BUFFER) {
         int ra_buffer = atoi(DCACHE_RA_BUFFER);
         dcache_RAHEAD_SIZE = ra_buffer<=0 ? dcache_RAHEAD_SIZE : ra_buffer;
