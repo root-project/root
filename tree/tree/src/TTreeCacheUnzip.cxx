@@ -1181,3 +1181,13 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
    return 0;
 }
 
+void  TTreeCacheUnzip::Print(Option_t* option) const {
+
+   printf("******TreeCacheUnzip statistics for file: %s ******\n",fFile->GetName());
+   printf("Parallel unzip peak cache size: %lld\n", fUnzipBufferSize);
+   printf("Number of blocks unzipped by threads: %d\n", fNUnzip);
+   printf("Number of hits: %d\n", fNFound);
+   printf("Number of misses: %d\n", fNMissed);
+   
+   TTreeCache::Print(option);
+}

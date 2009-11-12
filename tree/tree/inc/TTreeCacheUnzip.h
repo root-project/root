@@ -134,6 +134,8 @@ public:
    Int_t  GetNFound() { return fNFound; }
    Int_t  GetNMissed(){ return fNMissed; }
 
+   void Print(Option_t* option = "") const;
+
    // static members
    static void* UnzipLoop(void *arg);
    ClassDef(TTreeCacheUnzip,0)  //Specialization of TTreeCache for parallel unzipping
