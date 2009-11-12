@@ -122,7 +122,9 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
    // loop to get a pointers to method names
 
    classFile << endl << "<div id=\"functions\">" << endl;
-   classFile << "<h2><a id=\"" << fCurrentClass->GetName()
+   TString mangled(fCurrentClass->GetName());
+   NameSpace2FileName(mangled);
+   classFile << "<h2><a id=\"" << mangled
       << ":Function_Members\"></a>Function Members (Methods)</h2>" << endl;
 
    const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -179,24 +181,24 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
          if (!isctor && !isdtor)
             fParser->DecorateKeywords(classFile, method->GetReturnTypeName());
 
-         TString mangled(method->GetClass()->GetName());
-         NameSpace2FileName(mangled);
+         TString mangledM(method->GetClass()->GetName());
+         NameSpace2FileName(mangledM);
          classFile << "</td><td class=\"funcname\"><a class=\"funcname\" href=\"";
          if (method->GetClass() != fCurrentClass) {
             TString htmlFile;
             fHtml->GetHtmlFileName(method->GetClass(), htmlFile);
             classFile << htmlFile;
          }
-         classFile << "#" << mangled;
+         classFile << "#" << mangledM;
          classFile << ":";
-         mangled = method->GetName();
-         NameSpace2FileName(mangled);
+         mangledM = method->GetName();
+         NameSpace2FileName(mangledM);
          Int_t overloadIdx = methWrap->GetOverloadIdx();
          if (overloadIdx) {
-            mangled += "%";
-            mangled += overloadIdx;
+            mangledM += "%";
+            mangledM += overloadIdx;
          }
-         classFile << mangled << "\">";
+         classFile << mangledM << "\">";
          if (method->GetClass() != fCurrentClass) {
             classFile << "<span class=\"baseclass\">";
             ReplaceSpecialChars(classFile, method->GetClass()->GetName());
@@ -253,7 +255,9 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
    if (!haveDataMembers) return;
 
    classFile << endl << "<div id=\"datamembers\">" << endl;
-   classFile << "<h2><a name=\"" << fCurrentClass->GetName()
+   TString mangled(fCurrentClass->GetName());
+   NameSpace2FileName(mangled);
+   classFile << "<h2><a name=\"" << mangled
       << ":Data_Members\"></a>Data Members</h2>" << endl;
 
    for (Int_t access = 5; access >= 0 && !fHtml->IsNamespace(fCurrentClass); --access) {
@@ -326,8 +330,8 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
                fParser->DecorateKeywords(classFile, shortTypeName.c_str());
             }
 
-         TString mangled(member->GetClass()->GetName());
-         NameSpace2FileName(mangled);
+         TString mangledM(member->GetClass()->GetName());
+         NameSpace2FileName(mangledM);
          classFile << "</td><td class=\"dataname\"><a ";
          if (member->GetClass() != fCurrentClass) {
             classFile << "href=\"";
@@ -336,11 +340,11 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
             classFile << htmlFile << "#";
          } else
             classFile << "name=\"";
-         classFile << mangled;
+         classFile << mangledM;
          classFile << ":";
-         mangled = member->GetName();
-         NameSpace2FileName(mangled);
-         classFile << mangled << "\">";
+         mangledM = member->GetName();
+         NameSpace2FileName(mangledM);
+         classFile << mangledM << "\">";
          if (member->GetClass() == fCurrentClass)
             classFile << "</a>";
          if (access < 3 && member->GetClass() != fCurrentClass) {
@@ -1410,7 +1414,7 @@ void TClassDocOutput::WriteClassDescription(std::ostream& out, const TString& de
    ListDataMembers(out);
 
    // create dot class charts or an html inheritance tree
-   out << "<h2><a id=\"" << fCurrentClass->GetName()
+   out << "<h2><a id=\"" << anchor
       << ":Class_Charts\"></a>Class Charts</h2>" << endl;
    if (!fHtml->IsNamespace(fCurrentClass))
       if (!ClassDotCharts(out))
