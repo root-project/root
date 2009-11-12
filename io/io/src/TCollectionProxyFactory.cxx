@@ -64,6 +64,7 @@ namespace {
             case TClassEdit::kMap:
             case TClassEdit::kMultiMap:
                result = new TEmulatedMapProxy(class_name);
+               break;
             default:
                result = new TEmulatedCollectionProxy(class_name);
          }
