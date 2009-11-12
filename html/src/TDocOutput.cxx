@@ -293,11 +293,10 @@ void TDocOutput::AdjustSourcePath(TString& line, const char* relpath /*= "../"*/
    // adjust the path of links for source files, which are in src/, but need
    // to point to relpath (usually "../"). Simply replaces "=\"./" by "=\"../"
 
-   TString replWithRelPath("=\"");
-   replWithRelPath += relpath;
-   line.ReplaceAll("=\"./", replWithRelPath);
-   replWithRelPath.ReplaceAll("=\"", "=\"../");
-   line.ReplaceAll("=\"../", replWithRelPath);
+   TString replWithRelPath("=\"@!@");
+   line.ReplaceAll("=\"../", replWithRelPath + "../" + relpath);
+   line.ReplaceAll("=\"./", replWithRelPath + relpath);
+   line.ReplaceAll("=\"@!@","=\"");
 }
 
 //______________________________________________________________________________

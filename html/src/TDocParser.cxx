@@ -921,7 +921,7 @@ void TDocParser::ExpandCPPLine(TString& line, Ssiz_t& pos)
                for (Ssiz_t i = pos; i < line.Length();)
                   fDocOutput->ReplaceSpecialChars(line, i);
 
-               line += "<a href=\"../";
+               line += "<a href=\"./";
                line += gSystem->BaseName(filename);
                line += "\">";
                line += filename + "</a>" + endOfLine[0]; // add include file's closing '>' or '"'
