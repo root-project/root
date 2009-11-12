@@ -1051,7 +1051,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    // create/decode basket parameters from buffer
    TFile *file = GetFile(0);
    basket = new TBasket(file);
-   if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
+   //if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
    basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
@@ -1060,7 +1060,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    TFileCacheRead *pf = file ? file->GetCacheRead() : 0;
    if (pf){
       if (pf->IsLearning()) pf->AddBranch(this);
-      if (fSkipZip) pf->SetSkipZip();
+      //if (fSkipZip) pf->SetSkipZip();
    }
 
    //now read basket
