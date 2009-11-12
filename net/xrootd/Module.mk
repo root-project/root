@@ -91,6 +91,11 @@ ifeq ($(PLATFORM),win32)
 TARGETS    += $(XRDEXECS)
 endif
 
+# Make sure that PWD is defined (it may not be for example when running 'make' via 'sudo')
+ifeq ($(PWD),)
+PWD := $(shell pwd)
+endif
+
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
