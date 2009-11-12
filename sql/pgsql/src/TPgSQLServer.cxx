@@ -301,7 +301,7 @@ const char *TPgSQLServer::ServerInfo()
       return 0;
    }
 
-   char *sql = "select setting from pg_settings where name='server_version'";
+   static const char *sql = "select setting from pg_settings where name='server_version'";
    PGresult *res = PQexec(fPgSQL, sql);
    int stat = PQresultStatus(res);
    if (stat == PGRES_TUPLES_OK && PQntuples(res)) {
