@@ -296,6 +296,8 @@ void TDocOutput::AdjustSourcePath(TString& line, const char* relpath /*= "../"*/
    TString replWithRelPath("=\"");
    replWithRelPath += relpath;
    line.ReplaceAll("=\"./", replWithRelPath);
+   replWithRelPath.ReplaceAll("=\"", "=\"../");
+   line.ReplaceAll("=\"../", replWithRelPath);
 }
 
 //______________________________________________________________________________
