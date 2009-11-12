@@ -35,7 +35,7 @@ TTermManip::TTermManip():
    ResetTerm();
    // Use colors where possible
    fNumColors = GetTermNum("colors");
-   if (fNumColors > 16) {
+   if (fNumColors > 1) {
       fSetFg = GetTermStr("setaf");
       fAnsiColors = true;
 
@@ -180,7 +180,7 @@ TTermManip::GetColorIndex(unsigned char r, unsigned char g, unsigned char b) {
             }
          }
       }
-   } else if (fNumColors > 15) {
+   } else if (fNumColors > 1) {
       int sum = r + g + b;
       r = r > sum / 4;
       g = g > sum / 4;
