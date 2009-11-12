@@ -1691,11 +1691,17 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
 
          // write previous method
          if (methodName.Length() && !wroteMethodNowWaitingForOpenBlock) {
-            if (useDocxxStyle && docxxComment.Length())
+            TString savedComment;
+            if (useDocxxStyle && docxxComment.Length()) {
+               savedComment = fComment;
                fComment = docxxComment;
+            }
             WriteMethod(out, methodRet, methodName, methodParam, 
                gSystem->BaseName(srcHtmlOutName), anchor, codeOneLiner);
             docxxComment.Remove(0);
+            if (savedComment[0]) {
+               fComment = savedComment;
+            }
          }
 
          if (!wroteMethodNowWaitingForOpenBlock) {
