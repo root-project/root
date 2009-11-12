@@ -114,6 +114,9 @@ public:
    virtual void Streamer(TBuffer &buff, void *pObj, int siz) {
       TGenCollectionProxy::Streamer(buff,pObj,siz);
    }
+   
+   // Check validity of the proxy itself
+   Bool_t IsValid() const;
 };
 
 #endif

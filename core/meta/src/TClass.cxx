@@ -1003,7 +1003,11 @@ void TClass::Init(const char *name, Version_t cversion,
 
    if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
       fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName() );
-      fSizeof = fCollectionProxy->Sizeof();
+      if (fCollectionProxy) {
+         fSizeof = fCollectionProxy->Sizeof();
+      } else if (!silent) {
+         Warning("Init","Collection proxy for %s was not properly initialized!",GetName());
+      }
       if (fStreamer==0) {
          fStreamer =  TVirtualStreamerInfo::Factory()->GenEmulatedClassStreamer( GetName() );
       }
@@ -2125,7 +2129,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
       } else {
 
-         cl = gROOT->FindSTLClass(name,kFALSE);
+         cl = gROOT->FindSTLClass(name,kFALSE,silent);
 
          if (cl) {
             if (cl->IsLoaded()) return cl;
@@ -2156,7 +2160,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    }
    if (TClassEdit::IsSTLCont(name)) {
 
-      return gROOT->FindSTLClass(name,kTRUE);
+      return gROOT->FindSTLClass(name,kTRUE,silent);
 
    } else if ( strncmp(name,"std::",5)==0 ) {
 

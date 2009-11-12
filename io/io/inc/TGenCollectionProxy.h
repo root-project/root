@@ -78,6 +78,8 @@ public:
       Value(const std::string& info);
       // Delete individual item from STL container
       void DeleteItem(void* ptr);
+      
+      Bool_t IsValid();
    };
 
    /**@class StreamHelper

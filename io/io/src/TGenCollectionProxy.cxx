@@ -462,10 +462,18 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
    }
    if ( fSize == std::string::npos ) {
       if ( fType == 0 ) {
-         Fatal("TGenCollectionProxy","Could not find %s!",inside.c_str());
+         // The caller should check the validity by calling IsValid()
+      } else {
+         fSize = fType->Size();
       }
-      fSize = fType->Size();
    }
+}
+
+Bool_t TGenCollectionProxy::Value::IsValid()
+{
+   // Return true if the Value has been properly initialized.
+   
+   return fSize != std::string::npos;
 }
 
 void TGenCollectionProxy::Value::DeleteItem(void* ptr)
@@ -694,6 +702,17 @@ void TGenCollectionProxy::CheckFunctions() const
 }
 
 //______________________________________________________________________________
+static TGenCollectionProxy::Value *R__CreateValue(const std::string &name)
+{
+   // Utility routine to issue a Fatal error is the Value object is not valid
+   TGenCollectionProxy::Value *val = new TGenCollectionProxy::Value( name );
+   if ( !val->IsValid() ) {
+      Fatal("TGenCollectionProxy","Could not find %s!",name.c_str());
+   }
+   return val;
+}
+      
+//______________________________________________________________________________
 TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
 {
    // Proxy initializer
@@ -721,10 +740,10 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
          case TClassEdit::kMultiMap:
             nam = "pair<"+inside[1]+","+inside[2];
             nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-            fValue = new Value(nam);
+            fValue = R__CreateValue(nam);
 
-            fVal   = new Value(inside[2]);
-            fKey   = new Value(inside[1]);
+            fVal   = R__CreateValue(inside[2]);
+            fKey   = R__CreateValue(inside[1]);
             fPointers = fPointers || (0 != (fKey->fCase&G__BIT_ISPOINTER));
             if ( 0 == fValDiff ) {
                fValDiff = fKey->fSize + fVal->fSize;
@@ -740,7 +759,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
             inside[1] = "bool";
             // Intentional fall through
          default:
-            fValue = new Value(inside[1]);
+            fValue = R__CreateValue(inside[1]);
 
             fVal   = new Value(*fValue);
             if ( 0 == fValDiff ) {

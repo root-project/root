@@ -53,8 +53,9 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name)
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 
    fName = cl_name;
-   this->TEmulatedCollectionProxy::InitializeEx();
-   fCreateEnv = TGenCollectionProxy::Env_t::Create;
+   if ( this->TEmulatedCollectionProxy::InitializeEx() ) {
+      fCreateEnv = TGenCollectionProxy::Env_t::Create;
+   }
 }
 
 TEmulatedCollectionProxy::~TEmulatedCollectionProxy()
@@ -135,6 +136,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
                fValue = new Value(nam);
                fKey   = new Value(inside[1]);
                fVal   = new Value(inside[2]);
+               if ( !fValue->IsValid() || !fKey->IsValid() || !fVal->IsValid() ) {
+                  return 0;
+               }
                fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
                if ( 0 == fValDiff )  {
                   fValDiff = fKey->fSize + fVal->fSize;
@@ -152,6 +156,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
             default:
                fValue = new Value(inside[1]);
                fVal   = new Value(*fValue);
+               if ( !fValue->IsValid() || !fVal->IsValid() ) {
+                  return 0;
+               }
                if ( 0 == fValDiff )  {
                   fValDiff  = fVal->fSize;
                   if (fVal->fCase != G__BIT_ISFUNDAMENTAL) {
@@ -168,6 +175,12 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
    }
    Fatal("TEmulatedCollectionProxy","Collection class %s not found!",fTypeinfo.name());
    return 0;
+}
+
+Bool_t TEmulatedCollectionProxy::IsValid() const 
+{
+   // Return true if the collection proxy was well initialized.
+   return  (0 != fCreateEnv.call);
 }
 
 UInt_t TEmulatedCollectionProxy::Size() const

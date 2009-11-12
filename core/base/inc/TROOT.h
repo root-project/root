@@ -145,7 +145,7 @@ public:
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
    const char       *FindObjectPathName(const TObject *obj) const;
-   TClass           *FindSTLClass(const char *name, Bool_t load) const;
+   TClass           *FindSTLClass(const char *name, Bool_t load, Bool_t silent = kFALSE) const;
    void              ForceStyle(Bool_t force = kTRUE) { fForceStyle = force; }
    Bool_t            FromPopUp() const { return fFromPopUp; }
    TPluginManager   *GetPluginManager() const { return fPluginManager; }

@@ -543,7 +543,7 @@ namespace ROOT { namespace Cintex {
             insp.Inspect(tcl, par, nam.c_str(), add);
             if ( !typ.IsFundamental() && !typ.IsPointer() ) {
                string tnam  = mem.Properties().HasProperty("iotype") ? CintName(mem.Properties().PropertyAsString("iotype")) : CintName(typ);
-               TClass* tmcl = ROOT::GetROOT()->GetClass(tnam.c_str());
+               TClass* tmcl = ROOT::GetROOT()->GetClass(tnam.c_str(), kTRUE, mem.IsTransient());
                if ( tmcl ) {
                   ::strcat(par,nam.c_str());
                   ::strcat(par,".");
