@@ -43,6 +43,12 @@ class TClassDocOutput;
 class TDocOutput;
 class THtml;
 
+class TDocMethodWrapper: public TObject {
+public:
+   virtual TMethod* GetMethod() const = 0;
+   virtual Int_t GetOverloadIdx() const = 0;
+};
+
 class TDocParser: public TObject {
 protected:
    enum EDocContext {
@@ -84,11 +90,6 @@ public:
 
    };
 
-   class TMethodWrapper: public TObject {
-   public:
-      virtual const TMethod* GetMethod() const = 0;
-   };
-
 protected:
    THtml*         fHtml;            // THtml object using us
    TDocOutput*    fDocOutput;       // TDocOutput invoking us
@@ -107,7 +108,7 @@ protected:
    Int_t          fDirectiveCount;  // index of directive for current method
    Long_t         fLineNumber;      // source line number
    TString        fCurrentFile;     // current source / header file name
-   std::map<std::string /*name*/, Int_t > fMethodCounts;     // current class's method names
+   std::map<std::string /*name*/, Int_t > fMethodCounts;     // number of undocumented overloads
    EDocContext    fDocContext;      // current context of parsed sources for documenting
    std::list<UInt_t> fParseContext; // current context of parsed sources
    Bool_t         fCheckForMethod;  // whether to check the current line for a method

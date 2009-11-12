@@ -17,6 +17,7 @@
 #endif
 
 class TDocParser;
+class TDocMethodWrapper;
 
 class TClassDocOutput: public TDocOutput {
 protected:
@@ -49,7 +50,7 @@ protected:
                               TString& name, TString& params,
                               const char* file, TString& anchor,
                               TString& comment, TString& codeOneLiner,
-                              TMethod* guessedMethod);
+                              TDocMethodWrapper* guessedMethod);
    virtual void   WriteClassDescription(std::ostream& out, const TString& description);
 
 public:

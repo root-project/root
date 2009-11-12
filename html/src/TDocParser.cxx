@@ -24,6 +24,7 @@
 #include "THtml.h"
 #include "TInterpreter.h"
 #include "TMethod.h"
+#include "TPRegexp.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TVirtualMutex.h"
@@ -31,16 +32,20 @@
 
 namespace {
 
-   class TMethodWrapperImpl: public TDocParser::TMethodWrapper {
+   class TMethodWrapperImpl: public TDocMethodWrapper {
    public:
-      TMethodWrapperImpl(const TMethod* m): fMeth(m) {}
+      TMethodWrapperImpl(TMethod* m, int overloadIdx):
+         fMeth(m), fOverloadIdx(overloadIdx) {}
 
       static void SetClass(const TClass* cl) { fgClass = cl; }
 
       const char* GetName() const { return fMeth->GetName(); }
+      ULong_t Hash() const { return fMeth->Hash();}
       Int_t GetNargs() const { return fMeth->GetNargs(); }
-      virtual const TMethod* GetMethod() const { return fMeth; }
+      virtual TMethod* GetMethod() const { return fMeth; }
       Bool_t IsSortable() const { return kTRUE; }
+
+      Int_t GetOverloadIdx() const { return fOverloadIdx; }
 
       Int_t Compare(const TObject *obj) const {
          const TMethodWrapperImpl* m = dynamic_cast<const TMethodWrapperImpl*>(obj);
@@ -78,7 +83,8 @@ namespace {
 
    private:
       static const TClass* fgClass; // current class, defining inheritance sort order
-      const TMethod* fMeth; // my method
+      TMethod* fMeth; // my method
+      Int_t fOverloadIdx; // this is the n-th overload
    };
 
    const TClass* TMethodWrapperImpl::fgClass = 0;
@@ -148,6 +154,10 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fClassDescrTag = fHtml->GetClassDocTag();
 
    TMethodWrapperImpl::SetClass(cl);
+
+   for (int ia = 0; ia < 3; ++ia) {
+      fMethods[ia].Rehash(101);
+   }
 
    AddClassMethodsRecursively(0);
    AddClassDataMembersRecursively(0);
@@ -221,6 +231,7 @@ void TDocParser::AddClassMethodsRecursively(TBaseClass* bc)
 
    TMethod *method;
    TIter nextMethod(cl->GetListOfMethods());
+   std::map<std::string, int> methOverloads;
 
    while ((method = (TMethod *) nextMethod())) {
 
@@ -258,8 +269,10 @@ void TDocParser::AddClassMethodsRecursively(TBaseClass* bc)
          TMethodWrapperImpl* other = (TMethodWrapperImpl*) fMethods[access].FindObject(method->GetName());
          hidden |= (other) && (other->GetMethod()->GetClass() != method->GetClass());
       }
-      if (!hidden)
-         fMethods[mtype].Add(new TMethodWrapperImpl(method));
+      if (!hidden) {
+         fMethods[mtype].Add(new TMethodWrapperImpl(method, methOverloads[method->GetName()]));
+         ++methOverloads[method->GetName()];
+      }
    }
 
    TIter iBase(cl->GetListOfBases());
@@ -1589,7 +1602,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
       return;
    }
 
-   TString pattern(methodPattern);
+   TPMERegexp patternRE(methodPattern ? methodPattern : "");
 
    TString codeOneLiner;
    TString methodRet;
@@ -1687,8 +1700,11 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
 
          if (!wroteMethodNowWaitingForOpenBlock) {
             // check for method
-            Ssiz_t posPattern = pattern.Length() ? fLineRaw.Index(pattern) : kNPOS;
-            if (posPattern != kNPOS && pattern.Length()) {
+            Ssiz_t posPattern = kNPOS;
+            if (methodPattern) {
+               posPattern = fLineRaw.Index((TPRegexp&)patternRE);
+            }
+            if (posPattern != kNPOS && methodPattern) {
                // no strings, no blocks in front of function declarations / implementations
                static const char vetoChars[] = "{\"";
                for (int ich = 0; posPattern != kNPOS && vetoChars[ich]; ++ich) {
@@ -1697,8 +1713,11 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                      posPattern = kNPOS;
                }
             }
-            if (posPattern != kNPOS || !pattern.Length()) {
-               posPattern += pattern.Length();
+            if (posPattern != kNPOS || !methodPattern) {
+               if (methodPattern) {
+                  patternRE.Match(fLineRaw);
+                  posPattern += patternRE[0].Length();
+               }
                LocateMethodInCurrentLine(posPattern, methodRet, methodName, 
                   methodParam, srcHtmlOut, anchor, sourceFile, allowPureVirtual);
                if (methodName.Length()) {
@@ -1806,9 +1825,20 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
    pattern += "::";
    
    TString implFileName;
-   if (fHtml->GetImplFileName(fCurrentClass, kTRUE, implFileName))
+   if (fHtml->GetImplFileName(fCurrentClass, kTRUE, implFileName)) {
       LocateMethods(out, implFileName, kFALSE /*source info*/, useDocxxStyle, 
                     kFALSE /*allowPureVirtual*/, pattern, ".cxx.html");
+      Ssiz_t posGt = pattern.Index('>');
+      if (posGt != kNPOS) {
+         // template! Re-run with pattern '...<.*>::'
+         Ssiz_t posLt = pattern.Index('<');
+         if (posLt != kNPOS && posLt < posGt) {
+            pattern.Replace(posLt + 1, posGt - posLt - 1, ".*");
+            LocateMethods(out, implFileName, kFALSE /*source info*/, useDocxxStyle, 
+                    kFALSE /*allowPureVirtual*/, pattern, ".cxx.html");
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1828,9 +1858,20 @@ void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
    pattern += "::";
    
    TString declFileName;
-   if (fHtml->GetDeclFileName(fCurrentClass, kTRUE, declFileName))
+   if (fHtml->GetDeclFileName(fCurrentClass, kTRUE, declFileName)) {
       LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle, 
                     kFALSE /*allowPureVirtual*/, pattern, 0);
+      Ssiz_t posGt = pattern.Index('>');
+      if (posGt != kNPOS) {
+         // template! Re-run with pattern '...<.*>::'
+         Ssiz_t posLt = pattern.Index('<');
+         if (posLt != kNPOS && posLt < posGt) {
+            pattern.Replace(posLt + 1, posGt - posLt - 1, ".*");
+            LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle, 
+                    kFALSE /*allowPureVirtual*/, pattern, 0);
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -2042,7 +2083,7 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
    if (fClassDocState < kClassDoc_Written)
       WriteClassDoc(out);
 
-   TMethod* guessedMethod = 0;
+   TDocMethodWrapper* guessedMethod = 0;
    int nparams = params.CountChar(',');
    TString strippedParams(params);
    if (strippedParams[0] == '(') {
@@ -2052,18 +2093,20 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
    if (strippedParams.Strip(TString::kBoth).Length())
       ++nparams;
 
-   TMethod* method = 0;
-   TIter nextMethod(fCurrentClass->GetListOfMethods());
-   while ((method = (TMethod *) nextMethod()))
-      if (name == method->GetName()
-          && method->GetListOfMethodArgs()->GetSize() == nparams) {
-         if (guessedMethod) {
-            // not unique, don't try to solve overload
-            guessedMethod = 0;
-            break;
-         } else
-            guessedMethod = method;
-      }
+   TList candidates;
+   for (int access = 0; access < 3; ++access) {
+      TList* methList = fMethods[access].GetListForObject(name);
+      TIter nextMethod(methList);
+      TDocMethodWrapper* method = 0;
+      while ((method = (TDocMethodWrapper *) nextMethod()))
+         if (name == method->GetName()
+             && method->GetMethod()->GetListOfMethodArgs()->GetSize() == nparams) {
+            candidates.Add(method);
+         }
+   }
+
+   if (candidates.GetSize() == 1)
+      guessedMethod = (TDocMethodWrapper*) candidates.First();
 
    dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteMethod(out, ret, name, params, filename, anchor,
                                                            fComment, codeOneLiner, guessedMethod);
