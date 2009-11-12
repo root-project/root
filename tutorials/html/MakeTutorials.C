@@ -65,8 +65,8 @@ void AppendLink(TString& links, int id, const TNamed* n)
 }
 
 
-void MakeTopLinks(TString &links, const char* title, const char* upLink, const char* upTitle,
-                  TObjLink *lnk)
+void MakeTopLinks(TString &links, const char* name, const char* title, const char* upLink, const char* upTitle,
+                  TObjLink *lnk, const char* dir)
 {
 // Create the html code for the navigation box at the top of each page,
 // showing a link to the previous and next tutorial and to the upper level.
@@ -93,7 +93,18 @@ void MakeTopLinks(TString &links, const char* title, const char* upLink, const c
    TNamed* nextname = nextlnk ? (TNamed*)nextlnk->GetObject() : 0;
    AppendLink(links, 2, nextname);
 
-   links += TString("</tr></table></div><h1 class=\"convert\">") + title + "</h1></div>";
+   links += TString("</tr></table></div><h1 class=\"convert\">") + title + "</h1></div>\n";
+   TString suburl = dir;
+   TString subtitle = dir;
+   if (name) {
+      if (!subtitle.EndsWith("/")) {
+         subtitle += '/';
+      }
+      subtitle += TString(name);
+      suburl = subtitle + "?view=markup";
+   }
+   links += TString::Format("<div class=\"location\"><h2>From <a href=\"http://root.cern.ch/viewvc/trunk/tutorials/%s\">$ROOTSYS/tutorials/%s</a></h2></div>",
+                            suburl.Data(), subtitle.Data());
 }
 
 void writeHeader(THtml& html, ostream& out, const char *title, const char* relPath="../") {
@@ -198,7 +209,7 @@ void writeTutorials(THtml& html) {
    ofstream fptop("htmldoc/tutorials/index.html");
    writeHeader(html, fptop,"ROOT Tutorials");
    TString topLinks;
-   MakeTopLinks(topLinks, "ROOT Tutorials", "../index", "ROOT", 0);
+   MakeTopLinks(topLinks, 0, "ROOT Tutorials", "../index", "ROOT", 0, "");
    fptop << topLinks << endl;
    fptop << "<ul id=\"indx\">" << endl;
 
@@ -394,10 +405,12 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
 
    TString topLinks;
    // Creates links to prev: "hist.html", up: ".html", next: "graph.html".
-   MakeTopLinks(topLinks, title, ".", "ROOT Tutorials", toplnk);
+   MakeTopLinks(topLinks, 0, title, ".", "ROOT Tutorials", toplnk, dir);
    // But we need links to prev: "../hist/index.html", up: "../index.html", next: "graph/index.html",
    // so the following works:
    topLinks.ReplaceAll("href=\"", "href=\"../");
+   topLinks.ReplaceAll("href=\"../http://", "href=\"http://");
+   topLinks.ReplaceAll("href=\"../https://", "href=\"https://");
    topLinks.ReplaceAll(".html\"", "/index.html\"");
    // Also prepend "ROOT Tutorials" to the current title:
    topLinks.ReplaceAll("<h1 class=\"convert\">", "<h1 class=\"convert\">ROOT Tutorials: ");
@@ -412,7 +425,6 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
    void *thedir = gSystem->OpenDirectory(inpath);
    const char *direntry;
    THashList h;
-   Bool_t compile;
    while ((direntry = gSystem->GetDirEntry(thedir))) {
       if(*direntry =='.') continue;
       const char *CC = strstr(direntry,".C");
@@ -430,6 +442,7 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
       if(strstr(direntry,"cms_calo_detail")) continue;
       TString atut(inpath + direntry);
       TString comment;
+      Bool_t compile;
       GetMacroTitle(atut,comment, compile);
       TNamed *named = new TNamed(direntry,comment.Data());
       if (compile) named->SetBit(BIT(14));
@@ -466,7 +479,7 @@ void scandir(THtml& html, const char *dir, const char *title, TObjLink* toplnk) 
       TString tutTitle(named->GetName());
       tutTitle += ": ";
       tutTitle += named->GetTitle();
-      MakeTopLinks(links,tutTitle,"index",title,lnk);
+      MakeTopLinks(links,named->GetName(),tutTitle,"index",title,lnk, dir);
       html.Convert(atut,named->GetTitle(),outpath,"../../",includeOutput,links);
       gROOT->GetListOfCanvases()->Delete();
       gROOT->GetListOfFiles()->Delete();
