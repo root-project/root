@@ -1,0 +1,10 @@
+<lcgdict>
+  <class name="Content" ClassVersion="2">
+	<field name="fMMap" transient="TRUE" />
+	<field name="fMap" transient="TRUE" />
+	<field name="fCache" transient="TRUE" />
+        <field name="fValue" transient="TRUE" />
+  </class>
+  <function name="missingdict"/>
+</lcgdict>
+

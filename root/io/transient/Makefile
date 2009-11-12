@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += transientTest
+TEST_TARGETS += transientTest missingdict
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -12,6 +12,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 
 transientTest.log: TBigDSWriteEvent_cxx.$(DllSuf)  TBigDSWriteParticle_cxx.$(DllSuf)
@@ -31,4 +32,12 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
+missingdict.log: missingdict_rflx_cpp.$(DllSuf)
+
+missingdict: missingdict.log
+	$(TestDiff)
+else
+missingdict:
+endif
 
