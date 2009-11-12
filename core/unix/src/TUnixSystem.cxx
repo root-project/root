@@ -952,7 +952,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       *fWriteready = *fWritemask;
 
       int mxfd = TMath::Max(fMaxrfd, fMaxwfd);
-      if (mxfd > -1) mxfd++;
+      mxfd++;
 
       // if nothing to select (socket or timer) return
       if (mxfd == -1 && nextto == -1)
