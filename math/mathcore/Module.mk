@@ -36,8 +36,6 @@ MATHCOREDH2  := $(MODDIRI)/TRandom.h \
 		$(MODDIRI)/TRandom3.h \
                 $(MODDIRI)/TVirtualFitter.h \
                 $(MODDIRI)/TKDTree.h \
-                $(MODDIRI)/Math/SpecFuncMathCore.h \
-                $(MODDIRI)/Math/DistFuncMathCore.h \
                 $(MODDIRI)/Math/IParamFunction.h \
                 $(MODDIRI)/Math/IFunction.h \
                 $(MODDIRI)/Math/ParamFunctor.h \
@@ -58,7 +56,9 @@ MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/Math/RichardsonDerivator.h \
                 $(MODDIRI)/Math/BrentMethods.h \
                 $(MODDIRI)/Math/BrentMinimizer1D.h \
-                $(MODDIRI)/Math/BrentRootFinder.h
+                $(MODDIRI)/Math/BrentRootFinder.h \
+                $(MODDIRI)/Math/SpecFuncMathCore.h \
+                $(MODDIRI)/Math/DistFuncMathCore.h
 MATHCOREDH3  := $(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))
 MATHCOREDH3  := $(filter-out $(MODDIRI)/Fit/LinkDef%,$(MATHCOREDH3))
 
