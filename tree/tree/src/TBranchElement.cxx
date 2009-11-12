@@ -3146,20 +3146,23 @@ void TBranchElement::ReadLeaves(TBuffer& b)
    } else if (fType == 41) {
       // STL container sub-branch (contains the elements).
       fNdata = fBranchCount->GetNdata();
-      if (!fObject) {
+      if (!fNdata || !fObject) {
          return;
       }
       TStreamerInfo *info = GetInfo();
-      TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
+      TVirtualCollectionProxy *proxy = GetCollectionProxy();
+      TVirtualCollectionProxy::TPushPop helper(proxy, fObject);
       if( fSplitLevel >= 100 ) {
-         info->ReadBufferSTLPtrs(b, GetCollectionProxy(), fNdata, fID, fOffset);
+         info->ReadBufferSTLPtrs(b, proxy, fNdata, fID, fOffset);
          for(UInt_t ii=0; ii < fIDs.size(); ++ii) {
-            info->ReadBufferSTLPtrs(b, GetCollectionProxy(), fNdata, fIDs[ii], fOffset);
+            info->ReadBufferSTLPtrs(b, proxy, fNdata, fIDs[ii], fOffset);
          }
       } else {
-         info->ReadBufferSTL(b, GetCollectionProxy(), fNdata, fID, fOffset);
+         //info->ReadBufferSTL(b, GetCollectionProxy(), fNdata, fID, fOffset);
+         info->ReadBuffer(b, *proxy, fID, fNdata, fOffset,1);
          for(UInt_t ii=0; ii < fIDs.size(); ++ii) {
-            info->ReadBufferSTL(b, GetCollectionProxy(), fNdata, fIDs[ii], fOffset);
+            //info->ReadBufferSTL(b, GetCollectionProxy(), fNdata, fIDs[ii], fOffset);
+            info->ReadBuffer(b, *proxy,  fIDs[ii], fNdata, fOffset,1);
          }
       }
 
