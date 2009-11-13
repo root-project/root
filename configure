@@ -465,8 +465,9 @@ check_library() {
 	    found_raw_dir=${found_dir}
 	    found_dir=""
 	else
+	    found_raw_lib=${found_lib}
 	    found_lib=`echo $found_lib | sed 's|^lib\(.*\)\..*|-l\1|'`
-       found_raw_dir=${found_dir}
+	    found_raw_dir=${found_dir}
 	    found_dir=-L${found_dir}
             # Avoid inclusion of /usr/lib, which is always included anyway
             if test "x$found_dir" = "x-L/usr/lib"   || \
@@ -2758,6 +2759,7 @@ if test ! "x$enable_gviz" = "xno"; then
     check_library "libgvc" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
     gvizlib1=$found_lib
+    gvizlib1raw=$found_raw_lib
     gvizlibir=$found_dir
     check_library "libgraph" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
@@ -2779,7 +2781,10 @@ if test ! "x$enable_gviz" = "xno"; then
        test "x$gvizlib4"   = "x" || test "x$gvizlibp1" = "x" ; then
         enable_gviz="no"
     else
-       if test "x$gvizlibir" = "x" ; then
+       for gvsharedext in .so .sl .dylib .dll.a; do
+           gvizshared="$gvizshared `echo $gvizlib1raw | grep '\\'$gvsharedext'\$'`"
+       done
+       if test "x$gvizshared" = "x" ; then
            gvizcflags=-DGVIZ_STATIC
            gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
        else
