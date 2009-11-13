@@ -935,6 +935,40 @@ namespace {
       }
       return kFALSE;
    }
+
+   Bool_t CollectionMatchLong64(const TClass *oldClass, const TClass* newClass)
+   {
+      // Return true if oldClass and newClass points to 2 compatible collection.
+      // i.e. they contains the exact same type.
+      
+      TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+      TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+      
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 0
+          && (oldProxy->GetType() == kLong_t || oldProxy->GetType() == kLong64_t)
+          && (newProxy->GetType() == kLong_t || newProxy->GetType() == kLong64_t )) {
+         // We have compatibles collections (they have the same content)!
+         return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
+      }
+      return kFALSE;
+   }
+   
+   Bool_t CollectionMatchULong64(const TClass *oldClass, const TClass* newClass)
+   {
+      // Return true if oldClass and newClass points to 2 compatible collection.
+      // i.e. they contains the exact same type.
+      
+      TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+      TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+      
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 0
+          && (oldProxy->GetType() == kULong_t || oldProxy->GetType() == kULong64_t)
+          && (newProxy->GetType() == kULong_t || newProxy->GetType() == kULong64_t )) {
+         // We have compatibles collections (they have the same content)!
+         return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
+      }
+      return kFALSE;
+   }
 }
 
 //______________________________________________________________________________
@@ -1311,6 +1345,12 @@ void TStreamerInfo::BuildOld()
                // Actually nothing to do, since both are the same collection of double in memory.
             } else if (CollectionMatchDouble32(oldClass,newClass)) {
                // Actually nothing to do, since both are the same collection of double in memory.              
+            } else if (CollectionMatchLong64(oldClass,newClass)) {
+               // Not much to do since both are the same collection of 8 bits entities on file.
+               element->Update(oldClass, newClass.GetClass());
+            } else if (CollectionMatchULong64(oldClass,newClass)) {
+               // Not much to do since both are the same collection of 8 bits unsigned entities on file              
+               element->Update(oldClass, newClass.GetClass());
             } else {
                element->SetNewType(-2);
             }
