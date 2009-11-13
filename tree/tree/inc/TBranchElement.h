@@ -47,7 +47,8 @@ protected:
       kBranchFolder = BIT(14),
       kDeleteObject = BIT(16),  //  We are the owner of fObject.
       kCache        = BIT(18),  //  Need to pushd/pop fOnfileObject.
-      kOwnOnfileObj = BIT(19)   //  We are the owner of fOnfileObject.
+      kOwnOnfileObj = BIT(19),  //  We are the owner of fOnfileObject.
+      kAddressSet   = BIT(20)   //  The addressing set have been called for this branch
    };
 
 // Data Members
