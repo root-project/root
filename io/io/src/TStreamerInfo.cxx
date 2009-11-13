@@ -1001,6 +1001,40 @@ namespace {
       }
       return kFALSE;
    }
+
+   Bool_t CollectionMatchLong64(const TClass *oldClass, const TClass* newClass)
+   {
+      // Return true if oldClass and newClass points to 2 compatible collection.
+      // i.e. they contains the exact same type.
+      
+      TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+      TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+      
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 0
+          && (oldProxy->GetType() == kLong_t || oldProxy->GetType() == kLong64_t)
+          && (newProxy->GetType() == kLong_t || newProxy->GetType() == kLong64_t )) {
+         // We have compatibles collections (they have the same content)!
+         return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
+      }
+      return kFALSE;
+   }
+   
+   Bool_t CollectionMatchULong64(const TClass *oldClass, const TClass* newClass)
+   {
+      // Return true if oldClass and newClass points to 2 compatible collection.
+      // i.e. they contains the exact same type.
+      
+      TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+      TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+      
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 0
+          && (oldProxy->GetType() == kULong_t || oldProxy->GetType() == kULong64_t)
+          && (newProxy->GetType() == kULong_t || newProxy->GetType() == kULong64_t )) {
+         // We have compatibles collections (they have the same content)!
+         return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
+      }
+      return kFALSE;
+   }
 }
 
 //______________________________________________________________________________
@@ -1377,6 +1411,12 @@ void TStreamerInfo::BuildOld()
                // Actually nothing to do, since both are the same collection of double in memory.
             } else if (CollectionMatchDouble32(oldClass,newClass)) {
                // Actually nothing to do, since both are the same collection of double in memory.              
+            } else if (CollectionMatchLong64(oldClass,newClass)) {
+               // Not much to do since both are the same collection of 8 bits entities on file.
+               element->Update(oldClass, newClass.GetClass());
+            } else if (CollectionMatchULong64(oldClass,newClass)) {
+               // Not much to do since both are the same collection of 8 bits unsigned entities on file              
+               element->Update(oldClass, newClass.GetClass());
             } else {
                element->SetNewType(-2);
             }
@@ -1533,9 +1573,19 @@ namespace {
             && fComment == other.fComment;
       }
       Bool_t operator!=(const TMemberInfo &other) {
-         return fName!=other.fName
-            || fClassName != other.fClassName
-            || fComment != other.fComment;
+         if (fName != other.fName) return kTRUE;
+         if (fClassName != other.fClassName) {
+            if ( (fClassName == "long" && (other.fClassName == "long long" || other.fClassName == "Long64_t"))
+                  || ( (fClassName == "long long" || fClassName == "Long64_t") && other.fClassName == "long") ) {
+               // This is okay both have the same on file format.
+            } else if ( (fClassName == "unsigned long" && (other.fClassName == "unsigned long long" || other.fClassName == "ULong64_t"))
+                       || ( (fClassName == "unsigned long long" || fClassName == "ULong64_t") && other.fClassName == "unsigned long") ) {
+               // This is okay both have the same on file format.
+            } else {
+               return kTRUE;
+            }
+         }
+         return fComment != other.fComment;
       }
    };
 }
@@ -1652,7 +1702,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
       }
       if (cl) {
          TDataMember *tdm = (TDataMember*)membernext();
-         while(tdm && ( tdm->IsPersistent() ) ) {
+         while(tdm && ( (!tdm->IsPersistent()) || (tdm->Property()&kIsStatic) || (el && local.fName != tdm->GetName()) )) {
             tdm = (TDataMember*)membernext();
          }
          if (tdm) {
@@ -1680,18 +1730,18 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
       if (local!=other) {
          if (warn) {
             if (!el) {
-               Warning("CompareContent","The following data member of the on-file layout version %d of class '%s' is missing from the in-memory layout version %d:\n"
+               Warning("CompareContent","The following data member of\nthe on-file layout version %d of class '%s' is missing from \nthe in-memory layout version %d:\n"
                        "   %s %s; //%s"
                        ,GetClassVersion(), GetName(), GetClassVersion()
                        ,other.fClassName.Data(),other.fName.Data(),other.fComment.Data());
 
             } else if (other.fName.Length()==0) {
-               Warning("CompareContent","The following data member of the in-memory layout version %d of class '%s' is missing from the on-file layout version %d:\n"
+               Warning("CompareContent","The following data member of\nthe in-memory layout version %d of class '%s' is missing from \nthe on-file layout version %d:\n"
                        "   %s %s; //%s"
                        ,GetClassVersion(), GetName(), GetClassVersion()
                        ,local.fClassName.Data(),local.fName.Data(),local.fComment.Data());
             } else {
-               Warning("CompareContent","The following data member of the on-file layout version %d of class '%s' differs from the in-memory layout version %d:\n"
+               Warning("CompareContent","The following data member of\nthe on-file layout version %d of class '%s' differs from \nthe in-memory layout version %d:\n"
                        "   %s %s; //%s\n"
                        "vs\n"
                        "   %s %s; //%s"
