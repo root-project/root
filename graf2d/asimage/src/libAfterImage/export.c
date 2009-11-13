@@ -277,13 +277,17 @@ ASImage2xpm ( ASImage *im, const char *path, ASImageExportParams *params )
 	ASXpmCharmap       xpm_cmap ;
 	int transp_idx = 0;
 	START_TIME(started);
-	ASXpmExportParams defaults = { ASIT_Xpm, EXPORT_ALPHA, 4, 127, 512 } ;
+	static const ASXpmExportParams defaultsXPM = { ASIT_Xpm, EXPORT_ALPHA, 4, 127, 512 };
+	ASImageExportParams defaults;
 	register char *ptr ;
 
 	LOCAL_DEBUG_CALLER_OUT ("(\"%s\")", path);
 
-	if( params == NULL )
-		params = (ASImageExportParams *)&defaults ;
+	if( params == NULL ) {
+           defaults.type = defaultsXPM.type;
+           defaults.xpm = defaultsXPM;
+           params = &defaults ;
+        }
 
 	if ((outfile = open_writeable_image_file( path )) == NULL)
 		return False;
@@ -355,12 +359,16 @@ ASImage2xpmRawBuff ( ASImage *im, CARD8 **buffer, int *size, ASImageExportParams
 	ASXpmCharmap       xpm_cmap ;
 	int transp_idx = 0;
 	START_TIME(started);
-	ASXpmExportParams defaults = { ASIT_Xpm, EXPORT_ALPHA, 4, 127, 512 } ;
+	static const ASXpmExportParams defaultsXPM = { ASIT_Xpm, EXPORT_ALPHA, 4, 127, 512 };
+        ASImageExportParams defaults;
 	register char *ptr ;
    char *curr;
 
-	if( params == NULL )
-		params = (ASImageExportParams *)&defaults ;
+   if( params == NULL ) {
+      defaults.type = defaultsXPM.type;
+      defaults.xpm = defaultsXPM;
+      params = &defaults ;
+   }
 
     mapped_im = colormap_asimage( im, &cmap, params->xpm.max_colors, params->xpm.dither, params->xpm.opaque_threshold );
 	if( !get_flags( params->xpm.flags, EXPORT_ALPHA) )
@@ -478,7 +486,7 @@ ASImage2png_int ( ASImage *im, void *data, png_rw_ptr write_fn, png_flush_ptr fl
 	png_color_16 back_color ;
 
 	START_TIME(started);
-	static ASPngExportParams defaults = { ASIT_Png, EXPORT_ALPHA, -1 };
+	static const ASPngExportParams defaults = { ASIT_Png, EXPORT_ALPHA, -1 };
 
 	png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, NULL, NULL, NULL );
     if ( png_ptr != NULL )
@@ -735,7 +743,8 @@ ASImage2jpeg( ASImage *im, const char *path,  ASImageExportParams *params )
 	FILE 		 *outfile;		/* target file */
     JSAMPROW      row_pointer[1];/* pointer to JSAMPLE row[s] */
 	int 		  y;
-	ASJpegExportParams defaults = { ASIT_Jpeg, 0, -1 };
+	static const ASJpegExportParams defaultsJpeg = { ASIT_Jpeg, 0, -1 };
+	ASImageExportParams defaults;
 	Bool grayscale;
 	ASImageDecoder *imdec ;
 	CARD32 *r, *g, *b ;
@@ -744,8 +753,11 @@ ASImage2jpeg( ASImage *im, const char *path,  ASImageExportParams *params )
 	if( im == NULL )
 		return False;
 
-	if( params == NULL )
-		params = (ASImageExportParams *)&defaults ;
+	if( params == NULL ) {
+           defaults.type = defaultsJpeg.type;
+           defaults.jpeg = defaultsJpeg;
+           params = &defaults ;
+        }
 
 	if ((outfile = open_writeable_image_file( path )) == NULL)
 		return False;
@@ -1021,7 +1033,8 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 	GifFileType *gif = NULL ;
 	ColorMapObject *gif_cmap ;
 	Bool dont_save_cmap = False ;
-	ASGifExportParams defaults = { ASIT_Gif,EXPORT_ALPHA|EXPORT_APPEND, 3, 127, 10 };
+	static const ASGifExportParams defaultsGif = { ASIT_Gif,EXPORT_ALPHA|EXPORT_APPEND, 3, 127, 10 };
+        ASImageExportParams defaults;
 	ASColormap         cmap;
 	int *mapped_im ;
 	int y ;
@@ -1039,8 +1052,11 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 															   		*/
 	LOCAL_DEBUG_CALLER_OUT ("(\"%s\")", path);
 
-	if( params == NULL )
-		params = (ASImageExportParams *)&defaults ;
+	if( params == NULL ) {
+           defaults.type = defaultsGif.type;
+           defaults.gif = defaultsGif;
+           params = &defaults ;
+        }
 
 	mapped_im = colormap_asimage( im, &cmap, 255, params->gif.dither, params->gif.opaque_threshold );
 
@@ -1217,7 +1233,8 @@ Bool
 ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 {
 	TIFF *out;
-	ASTiffExportParams defaults = { ASIT_Tiff, 0, -1, TIFF_COMPRESSION_NONE, 100, 0 };
+	static const ASTiffExportParams defaultsTiff = { ASIT_Tiff, 0, -1, TIFF_COMPRESSION_NONE, 100, 0 };
+        ASImageExportParams defaults;
 	uint16 photometric = PHOTOMETRIC_RGB;
 	tsize_t linebytes, scanline;
 	ASImageDecoder *imdec ;
@@ -1228,8 +1245,11 @@ ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 	int nsamples = 3 ;
 	START_TIME(started);
 
-	if( params == NULL )
-		params = (ASImageExportParams *)&defaults ;
+	if( params == NULL ) {
+           defaults.type = defaultsTiff.type;
+           defaults.tiff = defaultsTiff;
+           params = &defaults ;
+        }
 
 	if( path == NULL )
 	{
@@ -1275,7 +1295,7 @@ ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE,   8);
 	TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
 	if( params->tiff.compression_type == -1  )
-		params->tiff.compression_type = defaults.compression_type ;
+		params->tiff.compression_type = defaultsTiff.compression_type ;
 	TIFFSetField(out, TIFFTAG_COMPRESSION,  params->tiff.compression_type);
 	switch (params->tiff.compression_type )
 	{
