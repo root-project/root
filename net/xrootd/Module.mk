@@ -310,6 +310,7 @@ else
 		   nmake -f Makefile.msc clean; \
 		fi)
 endif
+		@rm -f $(XROOTDBUILD)
 
 clean::         clean-$(MODNAME)
 
@@ -330,5 +331,6 @@ else
 		   rm -f GNUmakefile; \
 		fi)
 endif
+		@rm -f $(XROOTDMAKE)
 
 distclean::     distclean-$(MODNAME)
