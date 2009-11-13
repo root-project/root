@@ -38,7 +38,7 @@ typedef char* caddr_t;
 #  include <sys/mman.h>
 #endif
 
-#if defined(R__LINUX) && !defined(R__GLIBC)
+#if defined(R__LINUX) && !defined(R__GLIBC) && !defined(__CYGWIN__)
 extern size_t getpagesize PARAMS ((void));
 #else
 extern int getpagesize PARAMS ((void));
