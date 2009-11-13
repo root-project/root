@@ -608,24 +608,30 @@ history_load(HistoryFcns_t* h, const char* fname) {
 
 /* history_save():
  *	HistoryFcns_t save function
+ *  mod for ROOT: only append the most recent line!
  */
 el_private int
 history_save(HistoryFcns_t* h, const char* fname) {
    FILE* fp;
    HistEvent_t ev;
-   int i = 0, retval;
+   int i = 0;
 
-   if ((fp = fopen(fname, "w")) == NULL) {
+   if ((fp = fopen(fname, "a")) == NULL) {
       return -1;
    }
 
    (void) fchmod(fileno(fp), S_IRUSR | S_IWUSR);
 
+   /*
    for (retval = HLAST(h, &ev);
         retval != -1;
         retval = HPREV(h, &ev), i++) {
       (void) fprintf(fp, "%s\n", ev.fStr);
    }
+   */
+   HFIRST(h, &ev);
+   fprintf(fp, "%s\n", ev.fStr);
+
    (void) fclose(fp);
    return i;
 } // history_save

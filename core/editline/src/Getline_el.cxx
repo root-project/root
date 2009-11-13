@@ -240,32 +240,28 @@ int (* Gl_in_key)(int ch) = 0;
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <list>
+#include <string>
+#include <fstream>
 
 /** newer imported interfaces **/
 #include "editline.h"
 
 const char* hist_file = 0;  // file name for the command history (read and write)
 
-namespace {
-   struct WriteHistoryTrigger_t {
-      ~WriteHistoryTrigger_t() {
-         if (hist_file && rl_isinitialized()) {
-            // Only write history if editline was actually used.
-            // It might be uninitialized when libCore was loaded into python.
-            write_history(hist_file);
-         }
-      }
-   };
-}
-
-
 /******************** internal interface *********************************/
 
 #define BUF_SIZE 1024
 
-extern "C" {
-//static int      gl_notty = 0;           /* 1 when not a tty */
-} // extern "C"
+// # History file size, once HistSize is reached remove all but HistSave entries,
+// # set to 0 to turn off command recording.
+// # Can be overridden by environment variable ROOT_HIST=size[:save],
+// # the ":save" part is optional.
+// # Rint.HistSize:         500
+// # Set to -1 for sensible default (80% of HistSize), set to 0 to disable history.
+// # Rint.HistSave:         400
+int size_lines = 500;
+int save_lines = -1;
 
 /************************ nonportable part *********************************/
 
@@ -410,15 +406,61 @@ Getline(const char* prompt) {
 /******************* History_t stuff **************************************/
 
 void
-Gl_histsize(int /*size*/, int save) {
+Gl_histsize(int size, int save) {
    stifle_history(save);
+   size_lines = size;
+   save_lines = save;
 }
 
 
 void
 Gl_histinit(char* file) {
-   static WriteHistoryTrigger_t history_write_trigger;
+   if (size_lines == 0 || save_lines == 0) {
+      // history recording disabled
+      return;
+   }
+
    hist_file = file;
+   if (size_lines > 0) {
+      int linecount = 0;
+      std::list<std::string> lines;
+      {
+         std::ifstream in(file);
+         if (!in) {
+            return;
+         }
+
+         lines.push_back(std::string());
+         while(in && std::getline(in, lines.back())) {
+            lines.push_back(std::string());
+            ++linecount;
+         }
+         lines.pop_back();
+      }
+
+      if (linecount > size_lines) {
+         // we need to reduce it to 
+         if (save_lines == -1) {
+            // set default
+            save_lines = size_lines * 80 / 100;
+         }
+         std::ofstream out(file);
+         if (!out) {
+            return;
+         }
+
+         int skipLines = linecount - save_lines;
+         for (std::list<std::string>::const_iterator iS = lines.begin(),
+                 eS = lines.end(); iS != eS; ++iS) {
+            if (skipLines) {
+               --skipLines;
+            } else {
+               out << *iS << std::endl;
+            }
+         }
+
+      }
+   }
 }
 
 
