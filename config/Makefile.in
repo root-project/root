@@ -197,6 +197,7 @@ BUILDGVIZ      := @buildgviz@
 GRAPHVIZLIBDIR := @gvizlibdir@
 GRAPHVIZLIB    := @gvizlib@
 GRAPHVIZINCDIR := $(filter-out /usr/include, @gvizincdir@)
+GRAPHVIZCFLAGS := @gvizcflags@
 
 BUILDPYTHON    := @buildpython@
 PYTHONLIBDIR   := @pythonlibdir@

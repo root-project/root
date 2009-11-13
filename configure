@@ -2756,13 +2756,35 @@ if test ! "x$enable_gviz" = "xno"; then
     # At this time, libgvplugin_core.a should always be prefered over .so,
     # to avoid forcing users to install graphviz.
     check_library "libgvc" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
-                  $GVIZ/.libs /usr/local/lib /usr/local/lib/graphviz \
-                  /usr/lib /usr/lib/graphviz /opt/local/lib
-    gvizlib=$found_lib
-    gvizlibdir=$found_dir
+                  $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
+    gvizlib1=$found_lib
+    gvizlibir=$found_dir
+    check_library "libgraph" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+                  $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
+    gvizlib2=$found_lib
+    check_library "libcdt" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+                  $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
+    gvizlib3=$found_lib
+    check_library "libpathplan" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+                  $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
+    gvizlib4=$found_lib
+    check_library "libgvplugin_dot_layout" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+                  $GVIZ/.libs /usr/local/lib/graphviz /usr/lib/graphviz \
+                  /opt/local/lib/graphviz
+    gvizlibp1=$found_lib
+    gvizlibpir=$found_dir
 
-    if test "x$gvizincdir" = "x" || test "x$gvizlib" = "x"; then
+    if test "x$gvizincdir" = "x" || test "x$gvizlib1"  = "x" ||
+       test "x$gvizlib2"   = "x" || test "x$gvizlib3"  = "x" || 
+       test "x$gvizlib4"   = "x" || test "x$gvizlibp1" = "x" ; then
         enable_gviz="no"
+    else
+       if test "x$gvizlibir" = "x" ; then
+           gvizcflags=-DGVIZ_STATIC
+           gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
+       else
+           gvizlib="$gvizlibir $gvizlib1"
+       fi
     fi
 fi
 check_explicit "$enable_gviz" "$enable_gviz_explicit" \
@@ -5349,6 +5371,7 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@gvizincdir@|$gvizincdir|"            \
     -e "s|@gvizlib@|$gvizlib|"                  \
     -e "s|@gvizlibdir@|$gvizlibdir|"            \
+    -e "s|@gvizcflags@|$gvizcflags|"            \
     -e "s|@dnssdincdir@|$dnssdincdir|"          \
     -e "s|@dnssdlib@|$dnssdlib|"                \
     -e "s|@dnssdlibdir@|$dnssdlibdir|"          \
