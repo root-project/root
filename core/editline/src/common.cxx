@@ -1015,5 +1015,6 @@ ed_replay_hist(EditLine_t* el, int /*c*/) {
    // execute the line as if the user pressed enter
    el_push(el, newline);
 
-   return CC_NEWLINE;
+   // run whatever would be run if was entered
+   return (*el->fMap.fFunc[12])(el, '\n');
 }
