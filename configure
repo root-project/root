@@ -443,6 +443,7 @@ check_library() {
     if test "x$found_dir" = "xno" || test "x$found_lib" = "xno" ; then
 	found_dir=""
 	found_lib=""
+	found_raw_lib=""
 	logmsg " library not found"
     else
 	flib=""
@@ -461,6 +462,7 @@ check_library() {
 
 	if (test "x$found_lib" = "x$flib" && test "x$shared" = "xno") || \
            test "x$maclib" = "xyes" ; then
+		found_raw_lib=${found_lib}
 	    found_lib=${found_dir}/${found_lib}
 	    found_raw_dir=${found_dir}
 	    found_dir=""
@@ -2782,7 +2784,7 @@ if test ! "x$enable_gviz" = "xno"; then
         enable_gviz="no"
     else
        for gvsharedext in .so .sl .dylib .dll.a; do
-           gvizshared="$gvizshared `echo $gvizlib1raw | grep '\\'$gvsharedext'\$'`"
+           gvizshared="$gvizshared`echo $gvizlib1raw | grep '\\'$gvsharedext'\$'`"
        done
        if test "x$gvizshared" = "x" ; then
            gvizcflags=-DGVIZ_STATIC
