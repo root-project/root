@@ -520,6 +520,21 @@ namespace {
 
 } // unnamed namespace
 
+
+//____________________________________________________________________________
+Bool_t PyROOT::TNonConstCStringConverter::SetArg(
+      PyObject* pyobject, TParameter& para, G__CallFunc* func, Long_t )
+{
+// attempt base class first (i.e. passing a string), but if that fails, try a buffer
+   if ( this->TCStringConverter::SetArg( pyobject, para, func ) )
+      return kTRUE;
+
+// apparently failed, try char buffer
+   PyErr_Clear();
+   return CArraySetArg( pyobject, para, func, 'c', sizeof(char) );
+}
+
+
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, void*& address )
 {
@@ -1062,6 +1077,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
    PYROOT_BASIC_CONVERTER_FACTORY( ULongLong )
    PYROOT_ARRAY_CONVERTER_FACTORY( CString )
+   PYROOT_ARRAY_CONVERTER_FACTORY( NonConstCString )
    PYROOT_ARRAY_CONVERTER_FACTORY( ShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( UShortArray )
    PYROOT_ARRAY_CONVERTER_FACTORY( IntArray )
@@ -1121,7 +1137,7 @@ namespace {
 
    // factories for special cases
       NFp_t( "const char*",        &CreateCStringConverter            ),
-      NFp_t( "char*",              &CreateCStringConverter            ),
+      NFp_t( "char*",              &CreateNonConstCStringConverter    ),
       NFp_t( "TString",            &CreateTStringConverter            ),
       NFp_t( "TString&",           &CreateTStringConverter            ),
       NFp_t( "std::string",        &CreateSTLStringConverter          ),

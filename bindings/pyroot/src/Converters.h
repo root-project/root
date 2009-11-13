@@ -126,6 +126,14 @@ namespace PyROOT {
       UInt_t fMaxSize;
    };
 
+   class TNonConstCStringConverter : public TCStringConverter {
+   public:
+      TNonConstCStringConverter( UInt_t maxSize = UINT_MAX ) : TCStringConverter( maxSize ) {}
+
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter&, G__CallFunc* = 0, Long_t = 0 );
+   };
+
 // pointer/array conversions
    class TVoidArrayConverter : public TConverter {
    public:
