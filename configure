@@ -2772,7 +2772,13 @@ if test ! "x$enable_gviz" = "xno"; then
     check_library "libpathplan" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
     gvizlib4=$found_lib
-    check_library "libgvplugin_dot_layout" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+
+       # the plugin libraries are in the directory "$gvizlibdir"/graphviz
+       gvizlibpdir=""
+       if test "x$gvizlibdir" != "x" ; then
+           gvizlibpdir="$gvizlibdir"/graphviz
+       fi
+    check_library "libgvplugin_dot_layout" "no" "$gvizlibpdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib/graphviz /usr/lib/graphviz \
                   /opt/local/lib/graphviz
     gvizlibp1=$found_lib
