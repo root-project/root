@@ -185,7 +185,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
         int ra_buffer = atoi(DCACHE_RA_BUFFER);
         dcache_RAHEAD_SIZE = ra_buffer<=0 ? dcache_RAHEAD_SIZE : ra_buffer;
      }
-     dc_setBufferSize(fD, RAHEAD_BUFFER_SIZE); 
+     dc_setBufferSize(fD, dcache_RAHEAD_SIZE); 
    } else {
      dc_noBuffering(fD);
    }
