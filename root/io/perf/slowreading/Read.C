@@ -1,13 +1,14 @@
-#include <TBenchmark.h>
+#include <TStopwatch.h>
 
 int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
 {
-   std::string markfilename = "NuEvents_DST.mark";
-   const int tolerance = 20;
+   std::string markfilename = "NuEvent_DST.mark";
+   const int tolerance = 100;
+
+   gSystem->Load(library);  
 
    gBenchmark = new TBenchmark(); 
    gBenchmark->Start("Read");
-   gSystem->Load(library);  
 
    // Open the input file and prepare for event reading
    TChain input("s", "s");
@@ -23,18 +24,18 @@ int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
    // Loop over all input NuEvents
    for (Int_t i=0;i<input.GetEntries();++i) {
       // Print the progress
-      cout << "Reading event " << i << endl;
+      if (i%10 == 0) cout << "Reading event " << i << endl;
       
-      if (i >= 10) {
+      if (i >= 100) {
          break;
       }
       
       // Get the event
       branch->GetEntry(i);
    }
-   
-   cout << "All events read." << endl;
    gBenchmark->Stop("Read");
+
+   cout << "All events read." << endl;
    Float_t ct = gBenchmark->GetCpuTime("Read");
    Float_t refct;
    //cout << "Cputime: " << ct << endl;

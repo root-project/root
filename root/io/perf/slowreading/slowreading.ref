@@ -5,15 +5,6 @@ Processing Read.C("NuEvent_60_cxx.so", "rootfiles/DST_60.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0
@@ -24,15 +15,6 @@ Processing Read.C("NuEvent_60_cxx.so", "rootfiles/DST_61.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0
@@ -43,15 +25,6 @@ Processing Read.C("NuEvent_60_cxx.so", "rootfiles/DST_62.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0
@@ -62,15 +35,6 @@ Processing Read.C("NuEvent_61_cxx.so", "rootfiles/DST_60.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0
@@ -81,15 +45,6 @@ Processing Read.C("NuEvent_61_cxx.so", "rootfiles/DST_61.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0
@@ -100,15 +55,6 @@ Processing Read.C("NuEvent_61_cxx.so", "rootfiles/DST_62.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0
@@ -119,15 +65,6 @@ Processing Read.C("NuEvent_62_cxx.so", "rootfiles/DST_60.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0
@@ -138,15 +75,6 @@ Processing Read.C("NuEvent_62_cxx.so", "rootfiles/DST_61.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0
@@ -157,15 +85,6 @@ Processing Read.C("NuEvent_62_cxx.so", "rootfiles/DST_62.root", 0)...
 ***      Starting main loop                  ***
 ************************************************
 Reading event 0
-Reading event 1
-Reading event 2
-Reading event 3
-Reading event 4
-Reading event 5
-Reading event 6
-Reading event 7
-Reading event 8
-Reading event 9
 Reading event 10
 All events read.
 (int)0

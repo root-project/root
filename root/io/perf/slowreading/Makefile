@@ -59,34 +59,34 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-NuEvents_DST.mark: Read.C NuEvent_60_cxx.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_60.root", 1)' > NuEvents_DST.log 2>&1
+NuEvent_DST.mark: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_61_cxx.$(DllSuf) NuEvent_62_cxx.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_60.root", 1)' > NuEvent_DST.log 2>&1
 
-readDST.00.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.00.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_60.root", 0)' > readDST.00.log 2>&1
 
-readDST.01.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.01.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_61.root", 0)' > readDST.01.log 2>&1
 
-readDST.02.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.02.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_62.root", 0)' > readDST.02.log 2>&1
 
-readDST.10.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.10.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_61_cxx.$(DllSuf)", "rootfiles/DST_60.root", 0)' > readDST.10.log 2>&1
 
-readDST.11.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.11.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_61_cxx.$(DllSuf)", "rootfiles/DST_61.root", 0)' > readDST.11.log 2>&1
 
-readDST.12.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.12.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_61_cxx.$(DllSuf)", "rootfiles/DST_62.root", 0)' > readDST.12.log 2>&1
 
-readDST.20.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.20.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_62_cxx.$(DllSuf)", "rootfiles/DST_60.root", 0)' > readDST.20.log 2>&1
 
-readDST.21.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.21.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_62_cxx.$(DllSuf)", "rootfiles/DST_61.root", 0)' > readDST.21.log 2>&1
 
-readDST.22.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.mark
+readDST.22.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_62_cxx.$(DllSuf)", "rootfiles/DST_62.root", 0)' > readDST.22.log 2>&1
 
 
