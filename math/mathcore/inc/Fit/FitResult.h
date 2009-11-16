@@ -112,6 +112,8 @@ public:
 
    ///   get total number of parameters 
    unsigned int NTotalParameters() const { return fParams.size(); } 
+   /// total number of parameters (abbreviation)
+   unsigned int NPar() const { return NTotalParameters(); }
    
    /// get total number of free parameters
    unsigned int NFreeParameters() const { return fNFree; }
@@ -134,11 +136,15 @@ public:
    /// p value of the fit (chi2 probability)
    double Prob() const;  
 
-   /// parameter errors
+   /// parameter errors (return st::vector) 
    const std::vector<double> & Errors() const { return fErrors; }
+   /// parameter errors (return const pointer)
+   const double * GetErrors() const { return &fErrors.front(); }
 
-   /// parameter values
+   /// parameter values (return std::vector)
    const std::vector<double> & Parameters() const { return fParams; }
+   /// parameter values (return const pointer)
+   const double * GetParams() const { return &fParams.front();}
 
    /// parameter value by index
    double Value(unsigned int i) const { return fParams[i]; }
