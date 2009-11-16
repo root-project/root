@@ -3319,6 +3319,7 @@ void TBranchElement::ResetAddress()
 
    ReleaseObject();
 
+   ResetBit(kAddressSet);
    fAddress = 0;
    fObject = 0;
 }
@@ -3868,11 +3869,13 @@ void TBranchElement::SetAddress(void* addr)
       // FIXME: This is a tail recursion!
       if (fBranchOffset[i] != TStreamerInfo::kMissing) {
          abranch->SetAddress(fObject + fBranchOffset[i]);
+         abranch->SetBit(kAddressSet);
       } else {
          // When the member is missing, just leave the address alone
          // (since setting explicitly to 0 would trigger error/warning
          // messages).
          // abranch->SetAddress(0);
+         abranch->SetBit(kAddressSet);        
       }
    }
 }
@@ -3972,8 +3975,10 @@ void TBranchElement::SetupAddresses()
       return;
    }
 
-   if (TestBit(kDoNotProcess)) {
+   if (TestBit(kDoNotProcess|kAddressSet)) {
       // -- Do nothing if we have been told not to.
+      // Or the data member in this branch is not longer part of the
+      // parent's layout.
       return;
    }
 
@@ -4037,7 +4042,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
       // The fAddress and fObject data members are not persistent,
       // therefore we do not own anything.
       // Also clear the bit possibly set by the schema evolution.
-      ResetBit(kDeleteObject|kCache|kOwnOnfileObj);
+      ResetBit(kDeleteObject|kCache|kOwnOnfileObj|kAddressSet);
       // Fixup a case where the TLeafElement was missing
       if ((fType == 0) && (fLeaves.GetEntriesFast() == 0)) {
          TLeaf* leaf = new TLeafElement(this, GetTitle(), fID, fStreamerType);

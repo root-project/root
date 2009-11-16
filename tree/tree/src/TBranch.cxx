@@ -1429,6 +1429,7 @@ TBranch* TBranch::GetSubBranch(const TBranch* child) const
       }
       if (branch == child) {
          // We are the direct parent of child.
+         const_cast<TBranch*>(child)->fParent = (TBranch*)this; // We can not yet use the 'mutable' keyword
          // Note: We cast away any const-ness of "this".
          return (TBranch*) this;
       }
