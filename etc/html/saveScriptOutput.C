@@ -9,6 +9,8 @@
 #include "TRootCanvas.h"
 #include "TCanvas.h"
 #include "TVirtualViewer3D.h"
+#include "TEnv.h"
+#include "TVirtualX.h"
 
 int saveScriptOutput(const char* script, const char* outdir, Bool_t compiled) {
    // Run script and save all windows to
@@ -30,6 +32,8 @@ int saveScriptOutput(const char* script, const char* outdir, Bool_t compiled) {
    cmd += gSystem->BaseName(script);
    if (compiled)
       cmd += "+";
+   if (!gROOT->IsBatch())
+      gVirtualX->Sync(1);
    gROOT->ProcessLine(cmd, &err);
    if (err != TInterpreter::kNoError)
       return kCannotRunScript;
@@ -73,5 +77,7 @@ int saveScriptOutput(const char* script, const char* outdir, Bool_t compiled) {
          pad->SaveAs(TString::Format("%s_%d.png", gSystem->BaseName(script), nCanvases++));
       }
    }
+   if (!gROOT->IsBatch() && !gEnv->GetValue("X11.Sync", 0))
+      gVirtualX->Sync(0);
    return kSuccess;
 }
