@@ -29,7 +29,6 @@
 #include "Fit/FitResult.h"
 #endif
 
-#include "TMatrixDSym.h"
 
 class TFitResult:public TNamed, public ROOT::Fit::FitResult {
 public:
@@ -46,8 +45,6 @@ public:
 
    virtual ~TFitResult() {};
 
-   // method using TMatrix 
-   TMatrixDSym  GetCovarianceMatrix() const;
 
    ClassDef(TFitResult,1)  // Class holding the result of the fit 
 };
