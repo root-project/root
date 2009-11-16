@@ -56,13 +56,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "rlcurses.h"
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <string>
 
 #include "el.h"
 #include "TTermManip.h"
+
+// termcap.h an be extremely "dirty", polluting with CPP macros,
+// so #include last!
+#include "rlcurses.h"
 
 /*
  * IMPORTANT NOTE: these routines are allowed to look at the current screen
