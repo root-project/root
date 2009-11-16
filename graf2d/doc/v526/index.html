@@ -43,6 +43,93 @@
     printed by libAfterImage when using <tt>TImage::Open("filename")</tt>
 </ul>
 
+<h3>Interface to <em>graphviz</em></h3>
+
+Thanks to three new classes (<tt>TGraphStruct</tt>, <tt>TGraphNode</tt> and 
+<tt>TGraphEdge</tt>) ROOT provides
+an interface to the graphs visualization package <em>graphviz</em>. Graph 
+visualization is a way of representing structural information as diagrams of
+abstract graphs and networks. 
+<br>
+Example:
+<center>
+<img alt="Example of TGraphStruct" src="graphstruct.gif">
+</center>
+The previous image is produced by the following ROOT macro:
+   <pre>
+   // Draw a simple graph structure.
+   // The graph layout is made using graphviz. This macro creates some
+   // nodes and edges and change a few graphical attributes on some of them.
+   // Author: Olivier Couet
+   {
+      TGraphStruct *gs = new TGraphStruct();
+   
+      // create some nodes and put them in the graph in one go ...
+      TGraphNode *n0 = gs->AddNode("n0","Node 0");
+      TGraphNode *n1 = gs->AddNode("n1","First node");
+      TGraphNode *n2 = gs->AddNode("n2","Second node");
+      TGraphNode *n3 = gs->AddNode("n3","Third node");
+      TGraphNode *n4 = gs->AddNode("n4","Fourth node");
+      TGraphNode *n5 = gs->AddNode("n5","5th node");
+      TGraphNode *n6 = gs->AddNode("n6","Node number six");
+      TGraphNode *n7 = gs->AddNode("n7","Node 7");
+      TGraphNode *n8 = gs->AddNode("n8","Node 8");
+      TGraphNode *n9 = gs->AddNode("n9","Node 9");
+
+      n4->SetTextSize(0.03);
+      n6->SetTextSize(0.03);
+      n2->SetTextSize(0.04);
+
+      n3->SetTextFont(132);
+
+      n0->SetTextColor(kRed);
+
+      n9->SetFillColor(kRed-10);
+      n0->SetFillColor(kYellow-9);
+      n7->SetFillColor(kViolet-9);
+
+      // some edges ...
+      gs->AddEdge(n0,n1)->SetLineColor(kRed);
+      TGraphEdge *e06 = gs->AddEdge(n0,n6);
+      e06->SetLineColor(kRed-3);
+      e06->SetLineWidth(4);
+      gs->AddEdge(n1,n7);
+      gs->AddEdge(n4,n6);
+      gs->AddEdge(n3,n9);
+      gs->AddEdge(n6,n8);
+      gs->AddEdge(n7,n2);
+      gs->AddEdge(n8,n3);
+      gs->AddEdge(n2,n3);
+      gs->AddEdge(n9,n0);
+      gs->AddEdge(n1,n4);
+      gs->AddEdge(n1,n6);
+      gs->AddEdge(n2,n5);
+      gs->AddEdge(n3,n6);
+      gs->AddEdge(n4,n5);
+
+      TCanvas *c = new TCanvas("c","c",800,600);
+      c->SetFillColor(38);
+      gs->Draw();
+      return c;
+   }
+   </pre>
+
+This new funtionnality relies on the <em>graphivz</em> package.
+This package can be downloaded from 
+<a href="http://www.graphviz.org/">http://www.graphviz.org/</a>.
+<p>
+At installation time, to find <em>graphviz</em>, the ROOT's configure file looks in
+standard locations. It is possible to define a specific location using the
+configure flags:
+<pre>
+--with-gviz-incdir="the directory where gvc.h is"
+--with-gviz-libdir="the directory where the libgvc library is"
+</pre>
+To install <em>graphviz</em> it is recommended to use the following configure flags:
+<pre>
+--enable-static=yes --enable-shared=no --with-pic --prefix="graphviz installed here" 
+</pre>
+
 <h3>Graphics Primitives</h3>
 
 <h4>New class TGraphTime</h4>
