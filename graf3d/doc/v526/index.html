@@ -1,6 +1,3 @@
-<!-- DOCTYPE HTML --
-  -- SYSTEM><html><head><title>graf3d</title></head><body -->
-
 <br> 
 <hr> 
 <a name="graf3d"></a>
@@ -31,6 +28,60 @@ keep same contrast when changing background color.
 through the path-marks. Fix a problem with path-mark / boundary
 approach with near-zero magnetic field.
 
+<li> Generalization of selection from GL viewers to support internal
+multiple selection from the elements.
+
+<li> Add support for selection of individual calorimeter towers in
+TEveCalo classes.
+
+<li> Add support for 3D -> 3D projections. This also allows for
+scaling (compression/extension) of certain space region as required by
+NA62 to show the 200m long detector in a meaningful way.
+
+Several generalizations of the projection infrastructure were
+required:<ol>
+
+<li> TEveProjectable::ProjectedClass() takes an argument:
+     virtual TClass* ProjectedClass(const TEveProjection* p) const = 0;
+   thus allowing different projected classes for different projections.
+
+<li> All TEveProjection::ProjectPoint/Vector(...) functions have an
+   additional "depth" argument thus allowing the projected classes to
+   skip explicit setting of depth after the point has been projected
+   -- this could damage the 3rd component.
+
+   <br> Pre-scaling now supports 3 dimensions.
+
+<li> Abstract TEveProjected::SetDepth() has been split into two parts:
+   <ul>
+   <li> It has been implemented in the base class where it checks for
+      the projection type (2d) before calling the local function;
+   <li> Abstract SetDepthLocal() has been added to provide the same
+      functionality.
+   </ul>
+   This allows for the 2d/3d check to be done in place only.
+
+<li> New projection class has been introduced: TEve3DProjection.
+   It performs pre-scaling and offsets the center.
+
+<li> To simplify the projection of lists TEveElementList has been made
+   projectable and corresponding TEveElementListProjected class
+   introduced. This also fixed the problem with render-state not being
+   propagated to projected classes.
+
+   <br> The check whether to project a sub-tree of elements is still performed.
+
+<li> TEveGeoShapeProjected has been introduced to represent the 3D
+   projection of a TEveGeoShape (2D projection is handled by
+   TEvePolygonSetProjected).
+
+   <br> Points, lines and tracks use the same projected class for both 2D
+   and 3D projections.
+</ol>
+
+An example showing this functionality has been added as a new tab in
+tutorials/eve/projection_prescale.C.
+
 </ul>
 
 <h4>Minor changes</h4>
@@ -45,6 +96,11 @@ are not visible.
 how the palette color range gets mapped onto signal values:<ol>
 <li>true  - LowLimit -> HighLimit
 <li>false - MinValue -> MaxValue.</ol>
+
+<li> Add signal emitting TEveRGBAPalette::MinMaxValChanged(). Ged
+editor calls this after setting the min/max range.
+
+
 
 </ul>
 
@@ -66,6 +122,14 @@ how the palette color range gets mapped onto signal values:<ol>
   any resolution and even when the GL window is not on screen.
 
 <li> Add support for global scaling of point-sizes, line-widths and font-sizes.
+
+<li> Generalize secondary-selection handling so that it is possible to
+implement various handling schemes. For example see individual
+calorimeter tower selection in TEveCalo-classes.
+
+<li> Generalize handling of highlight feedback -- this is now done via
+a virtual TGLLogicalShape::DrawHighlight(...) so that it can be
+changed by sub-classes.
 
 <li> Editor for "gl5d" option was improved.
 
@@ -89,6 +153,3 @@ positioned at (0,0,0) which lead to unexpected behaviour when scene
 was not centered at the origin.
 
 </ul>
-
-
-<!-- /body></html -->
