@@ -2147,20 +2147,48 @@ Double_t TF1::GetSave(const Double_t *xx)
 
    if (fNsave <= 0) return 0;
    if (fSave == 0) return 0;
-   Int_t np = fNsave - 3;
-   Double_t xmin = Double_t(fSave[np+1]);
-   Double_t xmax = Double_t(fSave[np+2]);
    Double_t x    = Double_t(xx[0]);
-   Double_t dx   = (xmax-xmin)/np;
+   Double_t y,dx,xmin,xmax,xlow,xup,ylow,yup;
+   if (fParent && fParent->InheritsFrom(TH1::Class())) {
+      //if parent is a histogram the function had been savedat the center of the bins
+      //we make a linear interpolation between the saved values
+      xmin = fSave[fNsave-3];
+      xmax = fSave[fNsave-2];
+      if (fSave[fNsave-1] == xmax) {
+         TH1 *h = (TH1*)fParent;
+         TAxis *xaxis = h->GetXaxis();
+         Int_t bin1  = xaxis->FindBin(xmin);
+         Int_t binup = xaxis->FindBin(xmax);
+         Int_t bin   = xaxis->FindBin(x);
+         if (bin < binup) {
+            xlow = xaxis->GetBinCenter(bin);
+            xup  = xaxis->GetBinCenter(bin+1);
+            ylow = fSave[bin-bin1];
+            yup  = fSave[bin-bin1+1];
+         } else {
+            xlow = xaxis->GetBinCenter(bin-1);
+            xup  = xaxis->GetBinCenter(bin);
+            ylow = fSave[bin-bin1-1];
+            yup  = fSave[bin-bin1];
+         }
+         dx = xup-xlow;
+         y  = ((xup*ylow-xlow*yup) + x*(yup-ylow))/dx;
+         return y;
+      }
+   }
+   Int_t np = fNsave - 3;
+   xmin = Double_t(fSave[np+1]);
+   xmax = Double_t(fSave[np+2]);
+   dx   = (xmax-xmin)/np;
    if (x < xmin || x > xmax) return 0;
    if (dx <= 0) return 0;
 
    Int_t bin     = Int_t((x-xmin)/dx);
-   Double_t xlow = xmin + bin*dx;
-   Double_t xup  = xlow + dx;
-   Double_t ylow = fSave[bin];
-   Double_t yup  = fSave[bin+1];
-   Double_t y    = ((xup*ylow-xlow*yup) + x*(yup-ylow))/dx;
+   xlow = xmin + bin*dx;
+   xup  = xlow + dx;
+   ylow = fSave[bin];
+   yup  = fSave[bin+1];
+   y    = ((xup*ylow-xlow*yup) + x*(yup-ylow))/dx;
    return y;
 }
 
@@ -2810,10 +2838,29 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
    // Save values of function in array fSave
 
    if (fSave != 0) {delete [] fSave; fSave = 0;}
+   if (fParent && fParent->InheritsFrom(TH1::Class())) {
+      //if parent is a histogram save the function at the center of the bins
+      if ((xmin >0 && xmax > 0) && TMath::Abs(TMath::Log10(xmax/xmin) > TMath::Log10(fNpx))) {
+         TH1 *h = (TH1*)fParent;
+         Int_t bin1 = h->GetXaxis()->FindBin(xmin);
+         Int_t bin2 = h->GetXaxis()->FindBin(xmax);
+         fNsave = bin2-bin1+4;
+         fSave  = new Double_t[fNsave];
+         Double_t xv[1];
+         InitArgs(xv,fParams);
+         for (Int_t i=bin1;i<=bin2;i++) {
+            xv[0]    = h->GetXaxis()->GetBinCenter(i);
+            fSave[i-bin1] = EvalPar(xv,fParams);
+         }
+         fSave[fNsave-3] = xmin;
+         fSave[fNsave-2] = xmax;
+         fSave[fNsave-1] = xmax;
+         return;
+      }
+   }
    fNsave = fNpx+3;
    if (fNsave <= 3) {fNsave=0; return;}
    fSave  = new Double_t[fNsave];
-   Int_t i;
    Double_t dx = (xmax-xmin)/fNpx;
    if (dx <= 0) {
       dx = (fXmax-fXmin)/fNpx;
@@ -2823,7 +2870,7 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
    }
    Double_t xv[1];
    InitArgs(xv,fParams);
-   for (i=0;i<=fNpx;i++) {
+   for (Int_t i=0;i<=fNpx;i++) {
       xv[0]    = xmin + dx*i;
       fSave[i] = EvalPar(xv,fParams);
    }
