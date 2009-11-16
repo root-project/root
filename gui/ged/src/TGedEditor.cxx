@@ -214,7 +214,7 @@ TGedTabInfo* TGedEditor::GetEditorTabInfo(const char* name)
    fTab->RemoveFrame(te);
 
    // create a title frame for each tab
-   TGedNameFrame* nf = new TGedNameFrame(tc);
+   TGedFrame* nf = CreateNameFrame(tc, name);
    nf->SetGedEditor(this);
    nf->SetModelClass(0);
    tc->AddFrame(nf, nf->GetLayoutHints());
@@ -646,6 +646,14 @@ void TGedEditor::ConfigureGedFrames(Bool_t objChanged)
       }
    }
    fTabContainer->Layout();
+}
+
+//______________________________________________________________________________
+TGedFrame* TGedEditor::CreateNameFrame(const TGWindow* parent, const char* /*tab_name*/)
+{
+   // Virtual function for creation of top name-frame in each tab.
+
+   return new TGedNameFrame(parent);
 }
 
 //______________________________________________________________________________

@@ -72,6 +72,8 @@ protected:
 
    void              ConfigureGedFrames(Bool_t objChaged);
 
+   virtual TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name); 
+
    static TGedEditor *fgFrameCreator; 
 
 public:
