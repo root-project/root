@@ -13,14 +13,17 @@
 #include "HFitInterface.h"
 
 #include "Fit/BinData.h"
+#include "Fit/SparseData.h"
 #include "Fit/FitResult.h"
 #include "Math/IParamFunction.h"
 
+#include <vector>
 
 #include <cassert> 
 #include <cmath>
 
 #include "TH1.h"
+#include "THnSparse.h"
 #include "TF1.h"
 #include "TGraph2D.h"
 #include "TGraph.h" 
@@ -112,6 +115,9 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    // get fit option 
    const DataOptions & fitOpt = dv.Opt();
 
+
+   // store instead of bin center the bin edges 
+   bool useBinEdges = fitOpt.fIntegral || fitOpt.fBinVolume;
    
    assert(hfit != 0); 
    
@@ -153,7 +159,6 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    
    
    int n = (hxlast-hxfirst+1)*(hylast-hyfirst+1)*(hzlast-hzfirst+1); 
-   if (fitOpt.fIntegral) n += 1;
    
 #ifdef DEBUG
    std::cout << "THFitInterface: ifirst = " << hxfirst << " ilast =  " << hxlast 
@@ -172,9 +177,9 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    //typedef  BinPoint::CoordData CoordData; 
    //CoordData x = CoordData( hfit->GetDimension() );
    dv.Initialize(n,ndim); 
-   std::vector<double> x(hdim); 
-   std::vector<double> s; 
-   if (fitOpt.fIntegral) s.resize(hdim);
+
+   double x[3];
+   double s[3];
 
    int binx = 0; 
    int biny = 0; 
@@ -184,9 +189,8 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    TAxis *yaxis  = hfit->GetYaxis();
    TAxis *zaxis  = hfit->GetZaxis();
 
-   
    for ( binx = hxfirst; binx <= hxlast; ++binx) {
-      if (fitOpt.fIntegral) {
+      if (useBinEdges) {
          x[0] = xaxis->GetBinLowEdge(binx);       
          s[0] = xaxis->GetBinUpEdge(binx);
       }
@@ -194,95 +198,97 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
          x[0] = xaxis->GetBinCenter(binx);
       
 
-      // need to evaluate function to know about rejected points
-      // hugly but no other solutions
-      if (func != 0) { 
-         func->RejectPoint(false);
-         (*func)( &x[0] );  // evaluate using stored function parameters
-         if (func->RejectedPoint() ) continue; 
-      }
-
-      if ( hdim > 1 ) { 
-         for ( biny = hyfirst; biny <= hylast; ++biny) {
-            if (fitOpt.fIntegral) {
-               x[1] = yaxis->GetBinLowEdge(biny);
-               s[1] = yaxis->GetBinUpEdge(biny);
+      for ( biny = hyfirst; biny <= hylast; ++biny) {
+         if (useBinEdges) {
+            x[1] = yaxis->GetBinLowEdge(biny);
+            s[1] = yaxis->GetBinUpEdge(biny);
+         }
+         else
+            x[1] = yaxis->GetBinCenter(biny);
+            
+         for ( binz = hzfirst; binz <= hzlast; ++binz) {
+            if (useBinEdges) {
+               x[2] = zaxis->GetBinLowEdge(binz);
+               s[2] = zaxis->GetBinUpEdge(binz);
             }
             else
-               x[1] = yaxis->GetBinCenter(biny);
-            
-            if ( hdim >  2 ) { 
-               for ( binz = hzfirst; binz <= hzlast; ++binz) {
-                  if (fitOpt.fIntegral) {
-                     x[2] = zaxis->GetBinLowEdge(binz);
-                     s[2] = zaxis->GetBinUpEdge(binz);
-                  }
-                  else
-                     x[2] = zaxis->GetBinCenter(binz);
-//                  if (fitOpt.fUseRange && HFitInterface::IsPointOutOfRange(func,&x.front()) ) continue;
-                  double value =  hfit->GetBinContent(binx, biny, binz);
-                  double error =  hfit->GetBinError(binx, biny, binz); 
-                  if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
-                  //dv.Add(BinPoint(  x,  hfit->GetBinContent(binx, biny, binz), error ) );
-                  if (ndim < hdim) // case of fitting a function with less dimension
-                     dv.Add(   &x.front(),  x[2], error * zaxis->GetBinWidth(binz)  );
-                  else { 
-                     dv.Add(   &x.front(),  value, error  );
-                     if (fitOpt.fIntegral) dv.AddBinUpEdge( &s.front() ); 
-                  }
-               }  // end loop on z bins
-            }
-            else if (hdim == 2) { 
-               // for dim == 2
-//               if (fitOpt.fUseRange && HFitInterface::IsPointOutOfRange(func,&x.front()) ) continue;
-               double value =  hfit->GetBinContent(binx, biny);
-               double error =  hfit->GetBinError(binx, biny); 
-               if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
-               if (ndim < hdim) // case of fitting a function with less dimension
-                  dv.Add(   &x.front(),  x[1], error * yaxis->GetBinWidth(biny)  );
-               else {
-                  dv.Add( &x.front(), value, error  );
-                  if (fitOpt.fIntegral) dv.AddBinUpEdge( &s.front());
-               }
-            }   
-            
-         }  // end loop on y bins
-         
-      }
-      else if (ndim == 1) { 
-#ifdef DEBUG
-         std::cout << "bin " << binx << " add point " << x[0] << "  " << hfit->GetBinContent(binx) << std::endl;
-#endif
-         // for 1D 
-//         if (fitOpt.fUseRange && HFitInterface::IsPointOutOfRange(func,&x.front()) ) continue;
-         double value =  hfit->GetBinContent(binx);
-         double error =  hfit->GetBinError(binx); 
-         if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
-         dv.Add( x.front(),  value, error  );
-         // in case of integral fits add also bin width
-         if (fitOpt.fIntegral) dv.AddBinUpEdge(&s.front());
+               x[2] = zaxis->GetBinCenter(binz);
 
-      }
-      
-   }   // end 1D loop 
+            // need to evaluate function to know about rejected points
+            // hugly but no other solutions
+            if (func != 0) { 
+               func->RejectPoint(false);
+               (*func)( &x[0] );  // evaluate using stored function parameters
+               if (func->RejectedPoint() ) continue; 
+            }
+
+
+            double value =  hfit->GetBinContent(binx, biny, binz);
+            double error =  hfit->GetBinError(binx, biny, binz); 
+            if (!HFitInterface::AdjustError(fitOpt,error,value) ) continue; 
+
+            if (ndim == hdim -1) { // case of fitting a function with  dimension -1
+               if (hdim == 2)  dv.Add(  x,  x[1], error * yaxis->GetBinWidth(biny)  );
+               if (hdim == 3)  dv.Add(  x,  x[2], error * zaxis->GetBinWidth(binz)  );
+            } else { 
+               dv.Add(   x,  value, error  );
+               if (useBinEdges) { 
+                  dv.AddBinUpEdge( s ); 
+               }
+            }
+
+           
+#ifdef DEBUG
+            std::cout << "bin " << binx << " add point " << x[0] << "  " << hfit->GetBinContent(binx) << std::endl;
+#endif
+
+         }  // end loop on z bins
+      }  // end loop on y bins
+   }   // end loop on x axis 
    
-//    // in case of integral store additional point with upper x values 
-//    if (fitOpt.fIntegral) { 
-//       x[0] = xaxis->GetBinLowEdge(hxlast) +  xaxis->GetBinWidth(hxlast); 
-//       if (ndim > 1) { 
-//          x[1] = yaxis->GetBinLowEdge(hylast) +  yaxis->GetBinWidth(hylast); 
-//       }
-//       if (ndim > 2) { 
-//          x[2] = zaxis->GetBinLowEdge(hzlast) +  zaxis->GetBinWidth(hzlast); 
-//       }
-//       //dv.Add(BinPoint( x, 0, 1.) ); // use dummy y= 0  &  err =1  for this extra point needed for integral
-//       dv.Add( &x.front() , 0, 1. ); // use dummy y= 0  &  err =1  for this extra point needed for integral
-//    }
    
 #ifdef DEBUG
    std::cout << "THFitInterface::FillData: Hist FitData size is " << dv.Size() << std::endl;
 #endif
    
+}
+
+//______________________________________________________________________________
+void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1)
+{
+   //   -*-*-*-*Compute rough values of parameters for an  exponential
+   //           ===================================================
+
+   unsigned int n = data.Size();
+   if (n == 0) return; 
+
+   // find xmin and xmax of the data
+   double valxmin;
+   double xmin = *(data.GetPoint(0,valxmin));
+   double xmax = xmin;
+   double valxmax = valxmin;    
+
+   for (unsigned int i = 1; i < n; ++ i) { 
+      double val; 
+      double x = *(data.GetPoint(i,val) );
+      if (x < xmin) { 
+         xmin = x; 
+         valxmin = val; 
+      }
+      else if (x > xmax) { 
+         xmax = x; 
+         valxmax = val; 
+      }
+   }
+
+   // avoid negative values of valxmin/valxmax
+   if (valxmin <= 0 && valxmax > 0 ) valxmin = valxmax; 
+   else if (valxmax <=0 && valxmin > 0) valxmax = valxmin; 
+   else if (valxmin <=0 && valxmax <= 0) { valxmin = 1; valxmax = 1; }
+
+   double slope = std::log( valxmax/valxmin) / (xmax - xmin); 
+   double constant = std::log(valxmin) - slope * xmin;
+   f1->SetParameters(constant, slope);
 }
 
 
@@ -292,7 +298,7 @@ void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1)
    //   -*-*-*-*Compute Initial values of parameters for a gaussian
    //           derivaed from function H1InitGaus defined in TH1.cxx  
    //           ===================================================
-
+   
 
    static const double sqrtpi = 2.506628;
 
@@ -365,6 +371,97 @@ void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1)
 
 #ifdef DEBUG
    std::cout << "Gaussian initial par values" << constant << "   " << mean << "  " << rms << std::endl;
+#endif
+
+}
+
+//______________________________________________________________________________
+void Init2DGaus(const ROOT::Fit::BinData & data, TF1 * f1)
+{
+   //   -*-*-*-*Compute Initial values of parameters for a gaussian
+   //           derivaed from function H1InitGaus defined in TH1.cxx  
+   //           ===================================================
+
+
+   static const double sqrtpi = 2.506628;
+
+   //   - Compute mean value and RMS of the data
+   unsigned int n = data.Size();
+   if (n == 0) return; 
+   double sumx = 0, sumy = 0;
+   double sumx2 = 0, sumy2 = 0; 
+   double allcha = 0;
+   double valmax = 0; 
+   double rangex = data.Coords(n-1)[0] - data.Coords(0)[0];
+   double rangey = data.Coords(n-1)[1] - data.Coords(0)[1];
+   // to avoid binwidthx = 0 set arbitrarly to 1
+   double binwidthx = 1, binwidthy = 1;
+   if ( rangex > 0) binwidthx = rangex; 
+   if ( rangey > 0) binwidthy = rangey; 
+   double x0 = 0, y0 = 0;
+   for (unsigned int i = 0; i < n; ++i) { 
+      double val; 
+      const double *coords = data.GetPoint(i,val);
+      double x = coords[0], y = coords[1];
+      sumx  += val*x; 
+      sumy  += val*y;
+      sumx2 += val*x*x; 
+      sumy2 += val*y*y;
+      allcha += val; 
+      if (val > valmax) valmax = val; 
+      if (i > 0) { 
+         double dx = x - x0; 
+         if (dx < binwidthx) binwidthx = dx; 
+         double dy = y - y0;
+         if (dy < binwidthy) binwidthy = dy; 
+      }         
+      x0 = x; 
+      y0 = y;
+   }
+
+   if (allcha <= 0) return;
+   double meanx = sumx/allcha, meany = sumy/allcha;
+   double rmsx  = sumx2/allcha - meanx*meanx;
+   double rmsy  = sumy2/allcha - meany*meany;
+
+
+   if (rmsx > 0) 
+      rmsx  = std::sqrt(rmsx);
+   else
+      rmsx  = binwidthx*n/4;
+
+   if (rmsy > 0) 
+      rmsy  = std::sqrt(rmsy);
+   else
+      rmsy  = binwidthy*n/4;
+
+
+    //if the distribution is really gaussian, the best approximation
+   //is binwidx*allcha/(sqrtpi*rmsx)
+   //However, in case of non-gaussian tails, this underestimates
+   //the normalisation constant. In this case the maximum value
+   //is a better approximation.
+   //We take the average of both quantities
+
+   double constant = 0.5 * (valmax+ binwidthx*allcha/(sqrtpi*rmsx))*
+                           (valmax+ binwidthy*allcha/(sqrtpi*rmsy));
+
+   f1->SetParameter(0,constant);
+   f1->SetParameter(1,meanx);
+   f1->SetParameter(2,rmsx);
+   f1->SetParLimits(2,0,10*rmsx);
+   f1->SetParameter(3,meany);
+   f1->SetParameter(4,rmsy);
+   f1->SetParLimits(4,0,10*rmsy);
+
+#ifdef DEBUG
+   std::cout << "2D Gaussian initial par values" 
+             << constant << "   " 
+             << meanx    << "   " 
+             << rmsx
+             << meany    << "   " 
+             << rmsy
+             << std::endl;
 #endif
 
 }
@@ -553,6 +650,125 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
    std::cout << "TGraphFitInterface::FillData Graph FitData size is " << dv.Size() << std::endl;
 #endif
   
+}
+
+void FillData(SparseData & dv, const TH1 * h1, TF1 * /*func*/) 
+{
+   const int dim = h1->GetDimension();
+   vector<double> min(dim);
+   vector<double> max(dim);
+   
+   const TArray *array(dynamic_cast<const TArray*>(h1));
+   assert(array && "THIS SHOULD NOT HAPPEN!");
+   for ( int i = 0; i < array->GetSize(); ++i ) {
+//       printf("i: %d; OF: %d; UF: %d; C: %f\n"
+//              , i
+//              , h1->IsBinOverflow(i) , h1->IsBinUnderflow(i)
+//              , h1->GetBinContent(i));
+      if ( !( h1->IsBinOverflow(i) || h1->IsBinUnderflow(i) )
+           && h1->GetBinContent(i))
+      {
+         int x,y,z;
+         h1->GetBinXYZ(i, x, y, z);
+         
+//          cout << "FILLDATA: h1(" << i << ")"
+//               << "[" << h1->GetXaxis()->GetBinLowEdge(x) << "-" << h1->GetXaxis()->GetBinUpEdge(x) << "]";
+//          if ( dim >= 2 )
+//             cout   << "[" << h1->GetYaxis()->GetBinLowEdge(y) << "-" << h1->GetYaxis()->GetBinUpEdge(y) << "]";
+//          if ( dim >= 3 )
+//             cout   << "[" << h1->GetZaxis()->GetBinLowEdge(z) << "-" << h1->GetZaxis()->GetBinUpEdge(z) << "]";
+
+//          cout << h1->GetBinContent(i) << endl;
+         
+         min[0] = h1->GetXaxis()->GetBinLowEdge(x);
+         max[0] = h1->GetXaxis()->GetBinUpEdge(x);
+         if ( dim >= 2 )
+         {
+            min[1] = h1->GetYaxis()->GetBinLowEdge(y);
+            max[1] = h1->GetYaxis()->GetBinUpEdge(y);
+         } 
+         if ( dim >= 3 ) {
+            min[2] = h1->GetZaxis()->GetBinLowEdge(z);
+            max[2] = h1->GetZaxis()->GetBinUpEdge(z);
+         }
+
+         dv.Add(min, max, h1->GetBinContent(i), h1->GetBinError(i));
+      }
+   }
+}
+
+void FillData(SparseData & dv, const THnSparse * h1, TF1 * /*func*/) 
+{
+   const int dim = h1->GetNdimensions();
+   vector<double> min(dim);
+   vector<double> max(dim);
+   vector<Int_t>  coord(dim);
+
+   ULong64_t nEntries = h1->GetNbins();
+   for ( ULong64_t i = 0; i < nEntries; i++ )
+   {
+      double value = h1->GetBinContent( i, &coord[0] );
+      if ( !value ) continue;
+
+//       cout << "FILLDATA(SparseData): h1(" << i << ")";
+
+      // Exclude underflows and oveflows! (defect behaviour with the TH1*)
+      bool insertBox = true;
+      for ( int j = 0; j < dim && insertBox; ++j )
+      {
+         TAxis* axis = h1->GetAxis(j);
+         if ( ( axis->GetBinLowEdge(coord[j]) < axis->GetXmin() ) ||
+              ( axis->GetBinUpEdge(coord[j])  > axis->GetXmax() ) ) {
+            insertBox = false;
+         }
+         min[j] = h1->GetAxis(j)->GetBinLowEdge(coord[j]);
+         max[j] = h1->GetAxis(j)->GetBinUpEdge(coord[j]);
+      }
+      if ( !insertBox ) { 
+//          cout << "NOT INSERTED!"<< endl; 
+         continue; 
+      }
+
+//       for ( int j = 0; j < dim; ++j )
+//       {
+//          cout << "[" << h1->GetAxis(j)->GetBinLowEdge(coord[j]) 
+//               << "-" << h1->GetAxis(j)->GetBinUpEdge(coord[j]) << "]";
+//       }
+//       cout << h1->GetBinContent(i) << endl;
+
+      dv.Add(min, max, value, h1->GetBinError(i));
+   }
+}
+
+void FillData(BinData & dv, const THnSparse * s1, TF1 * func) 
+{
+   // Fill the Range of the THnSparse
+   unsigned int const ndim = s1->GetNdimensions();
+   vector<double> xmin(ndim);
+   vector<double> xmax(ndim);
+   for ( unsigned int i = 0; i < ndim; ++i ) {
+      TAxis* axis = s1->GetAxis(i);
+      xmin[i] = axis->GetXmin();
+      xmax[i] = axis->GetXmax();
+   }
+
+   // Put default options, needed for the likelihood fitting of sparse
+   // data.
+   ROOT::Fit::DataOptions& dopt = dv.Opt();
+   dopt.fUseEmpty = true;
+   // when using sparse data need to set option bin volume
+   //if (!dopt.fIntegral) dopt.fBinVolume = true; 
+   dopt.fBinVolume = true;
+
+   // Get the sparse data
+   ROOT::Fit::SparseData d(ndim, &xmin[0], &xmax[0]);
+   ROOT::Fit::FillData(d, s1, func);
+
+//    cout << "FillData(BinData & dv, const THnSparse * s1, TF1 * func) (1)" << endl;
+
+   // Create the bin data from the sparse data
+   d.GetBinDataIntegral(dv);
+
 }
 
 void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {  

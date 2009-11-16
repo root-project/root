@@ -74,8 +74,6 @@ private:
 
 protected: 
 
-   virtual Int_t    DoFit(TF2 *f2,Option_t *option,Option_t *goption); 
-
 public:
 
    TGraph2D();

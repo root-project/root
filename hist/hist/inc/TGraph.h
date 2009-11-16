@@ -73,8 +73,6 @@ protected:
    virtual void       FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
    Double_t         **ShrinkAndCopy(Int_t size, Int_t iend);
 
-   virtual Int_t      DoFit(TF1 *f1,Option_t *option,Option_t *goption, Axis_t xmin, Axis_t xmax);
-
 public:
    // TGraph status bits
    enum {

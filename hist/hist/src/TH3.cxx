@@ -2679,11 +2679,9 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
    Double_t entries = fEntries; 
    // recalculate the statistics
    if (resetStats) { 
-      p2->GetStats(stats); 
-      entries = stats[0]; 
-      // calculate effective entries in case of weighted profile
-//       if (useWeights & stats[1] > 0) 
-//          entries = stats[0] * stats[0] / stats[1];
+      entries =  p2->GetEffectiveEntries();
+      if (!useWeights) entries = TMath::Floor( entries + 0.5); // to avoid numerical rounding
+      p2->SetEntries( entries );  
    }
 
    p2->SetEntries(entries);

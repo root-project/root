@@ -639,10 +639,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*  -----------------
 //*-*  By default, the formula is assigned fNumber=0. However, the following
 //*-*  formula built with simple functions are assigned  fNumber:
-//*-*    "gaus"    100  (or gausn)
-//*-*    "expo"    200
-//*-*    "polN"    300+N
-//*-*    "landau"  400
+//*-*    "gaus"      100  (or gausn)
+//*-*    "xygaus"    110
+//*-*    "expo"      200
+//*-*    "polN"      300+N
+//*-*    "landau"    400
+//*-*    "xylandau"  410
 //*-*  Note that expressions like gaus(0), expo(1) will force fNumber=0
 //*-*
 //*-*  Warning when deriving a class from TFormula
@@ -1648,6 +1650,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               if (fNdim < 2) fNdim = 2;
                               chaine=chaine(2,lchain-2);
                               lchain=chaine.Length();
+                              SetNumber(110); // xygaus
                            }
                         }
                         if (lchain == 4 && err==0) {
@@ -1731,6 +1734,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               if (fNdim < 2) fNdim = 2;
                               chaine=chaine(2,lchain-2);
                               lchain=chaine.Length();
+                              SetNumber(410);
                            }
                         }
                         if (lchain == 6 && err==0) {
@@ -2326,12 +2330,30 @@ Int_t TFormula::Compile(const char *expression)
    //*-*- if no errors, copy local parameters to formula objects
    if (!err) {
       if (fNdim <= 0) fNdim = 1;
-      if (chaine.Length() > 4 && GetNumber() != 400) SetNumber(0);
+      if (chaine.Length() > 4)
+      {
+         if ( GetNumber() != 400 && 
+              GetNumber() != 410 &&
+              GetNumber() != 110 ) 
+            SetNumber(0);
+         else if ( GetNumber() == 110 && chaine.Length() > 6 )
+            SetNumber(0);
+         else if ( GetNumber() == 410 && chaine.Length() > 8 )
+            SetNumber(0);
+      }
       //*-*- if formula is a gaussian, set parameter names
       if (GetNumber() == 100) {
          SetParName(0,"Constant");
          SetParName(1,"Mean");
          SetParName(2,"Sigma");
+      }
+      //*-*- if formula is a 2D gaussian, set parameter names
+      if (GetNumber() == 110){
+         SetParName(0,"Constant");
+         SetParName(1,"MeanX");
+         SetParName(2,"SigmaX");
+         SetParName(3,"MeanY");
+         SetParName(4,"SigmaY");
       }
       //*-*- if formula is an exponential, set parameter names
       if (GetNumber() == 200) {
@@ -2347,6 +2369,14 @@ Int_t TFormula::Compile(const char *expression)
          SetParName(0,"Constant");
          SetParName(1,"MPV");
          SetParName(2,"Sigma");
+      }
+      //*-*- if formula is a 2D landau, set parameter names
+      if (GetNumber() == 410) {
+         SetParName(0,"Constant");
+         SetParName(1,"MPVX");
+         SetParName(2,"SigmaX");
+         SetParName(3,"MPVY");
+         SetParName(4,"SigmaY");
       }
    }
 

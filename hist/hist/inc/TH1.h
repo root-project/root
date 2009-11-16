@@ -72,6 +72,8 @@ class TCollection;
 class TVirtualFFT;
 class TVirtualHistPainter;
 
+#include "TFitResultPtr.h"
+
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
@@ -113,6 +115,8 @@ private:
 
    TH1& operator=(const TH1&); // Not implemented
 
+   static bool CheckConsistency(const TH1* h1, const TH1* h2);
+
 protected:
    TH1();
    TH1(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
@@ -125,7 +129,6 @@ protected:
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
 
-   virtual Int_t    DoFit(TF1 *f1,Option_t *option,Option_t *goption, Double_t xmin, Double_t xmax);
    virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err, 
                                Option_t * opt, Bool_t doerr = kFALSE) const;
 
@@ -190,8 +193,8 @@ public:
    virtual Int_t    FindLastBinAbove (Double_t threshold=0, Int_t axis=1) const;
    virtual TObject *FindObject(const char *name) const;
    virtual TObject *FindObject(const TObject *obj) const;
-   virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Double_t xmin=0, Double_t xmax=0); // *MENU*
-   virtual Int_t    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Double_t xmin=0, Double_t xmax=0);
+   virtual TFitResultPtr    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Double_t xmin=0, Double_t xmax=0); // *MENU*
+   virtual TFitResultPtr    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Double_t xmin=0, Double_t xmax=0);
    virtual void     FitPanel(); // *MENU*
    TH1             *GetAsymmetry(TH1* h2, Double_t c2=1, Double_t dc2=0);
    Int_t            GetBufferLength() const {return fBuffer ? (Int_t)fBuffer[0] : 0;}

@@ -28,6 +28,11 @@
 
 #include "TError.h"
 
+#include "HFitInterface.h"
+#include "Fit/SparseData.h"
+#include "Fit/Fitter.h"
+#include "Math/WrappedMultiTF1.h"
+
 //______________________________________________________________________________
 //
 // THnSparseCompactBinCoord is a class used by THnSparse internally. It
@@ -595,6 +600,49 @@ THnSparse* THnSparse::CreateSparse(const char* name, const char* title,
 }
 
 //______________________________________________________________________________
+TFitResultPtr THnSparse::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
+{
+//   Fit a THnSparse with function f
+// 
+//   since the data is sparse by default a likelihood fit is performed 
+//   merging all the regions with empty bins for betetr performance efficiency
+// 
+//  Since the THnSparse is not drawn no graphics options are passed 
+//  Here is the list of possible options 
+// 
+//                = "I"  Use integral of function in bin instead of value at bin center
+//                = "X"  Use chi2 method (default is log-likelihood method)
+//                = "U"  Use a User specified fitting algorithm (via SetFCN)
+//                = "Q"  Quiet mode (minimum printing)
+//                = "V"  Verbose mode (default is between Q and V)
+//                = "E"  Perform better Errors estimation using Minos technique
+//                = "B"  Use this option when you want to fix one or more parameters
+//                       and the fitting function is like "gaus", "expo", "poln", "landau".
+//                = "M"  More. Improve fit results
+//                = "R"  Use the Range specified in the function range
+
+
+   Foption_t fitOption;
+
+   if (!TH1::FitOptionsMake(option,fitOption)) return 0;
+
+   // The function used to fit cannot be stored in a THnSparse. It
+   // cannot be drawn either. Perhaps in the future.
+   fitOption.Nostore = true;
+   // Use likelihood fit if not specified
+   if (!fitOption.Chi2) fitOption.Like = true;
+   // create range and minimizer options with default values 
+   ROOT::Fit::DataRange range(GetNdimensions()); 
+   for ( int i = 0; i < GetNdimensions(); ++i ) {
+      TAxis *axis = GetAxis(i);
+      range.AddRange(i, axis->GetXmin(), axis->GetXmax());
+   }
+   ROOT::Math::MinimizerOptions minOption; 
+   
+   return ROOT::Fit::FitObject(this, f , fitOption , minOption, goption, range); 
+}
+
+//______________________________________________________________________________
 Long_t THnSparse::GetBin(const Double_t* x, Bool_t allocate /* = kTRUE */)
 {
    // Get the bin index for the n dimensional tuple x,
@@ -1051,9 +1099,12 @@ TObject* THnSparse::ProjectionAny(Int_t ndim, const Int_t* dim,
    delete [] coord;
 
    if (wantSparse)
+      // need to check also when producing a THNSParse how to reset the number of entries
       sparse->SetEntries(fEntries);
-   else
-      hist->SetEntries(fEntries);
+   else  
+      // need to reset the statistics which will set also the number of entries
+      // according to the bins filled
+      hist->ResetStats(); 
 
    if (hadRange) {
       // reset kAxisRange bit:

@@ -21,7 +21,8 @@ namespace ROOT {
 namespace Math { 
 
 // static value for epsilon used in derivative calculations
-double WrappedTF1::fgEps = 0.001; 
+double WrappedTF1::fgEps      = 0.001; 
+double WrappedMultiTF1::fgEps = 0.001; 
 
 
 WrappedTF1::WrappedTF1 ( TF1 & f  )  : 
@@ -53,6 +54,7 @@ WrappedTF1::WrappedTF1 ( TF1 & f  )  :
 WrappedTF1::WrappedTF1(const WrappedTF1 & rhs) :
    BaseFunc(),
    BaseGradFunc(),
+   IGrad(), 
    fLinear(rhs.fLinear), 
    fPolynomial(rhs.fPolynomial),
    fFunc(rhs.fFunc), 
@@ -99,7 +101,6 @@ double WrappedTF1::DoDerivative( double  x  ) const {
 double WrappedTF1::DoParameterDerivative(double x, const double * p, unsigned int ipar ) const { 
    // evaluate the derivative of the function with respect to the parameters
 
-   // not very efficient - use ParameterGradient
    if (! fLinear ) {  
       fFunc->SetParameters( p );
       return fFunc->GradientPar(ipar, &x,fgEps);
@@ -109,7 +110,7 @@ double WrappedTF1::DoParameterDerivative(double x, const double * p, unsigned in
       return std::pow(x, static_cast<int>(ipar) );  
    }
    else { 
-      // case of general linear function (bbuilt with ++ )
+      // case of general linear function (built in TFormula with ++ )
       const TFormula * df = dynamic_cast<const TFormula*>( fFunc->GetLinearPart(ipar) );
       assert(df != 0); 
       fX[0] = x; 
@@ -128,6 +129,7 @@ double WrappedTF1::GetDerivPrecision( ) { return fgEps; }
 
 
 WrappedMultiTF1::WrappedMultiTF1 (TF1 & f, unsigned int dim  )  : 
+   fLinear(false), 
    fFunc(&f),
    fDim(dim),
    fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
@@ -136,12 +138,25 @@ WrappedMultiTF1::WrappedMultiTF1 (TF1 & f, unsigned int dim  )  :
    // pass a dimension if dimension specified in TF1 does not correspond to real dimension
    // for example in case of multi-dimensional TF1 objects defined as TF1 (i.e. for functions with dims > 3 )
    if (fDim == 0) fDim = fFunc->GetNdim(); 
+
+   // check that in case function is linear the linear terms are not zero
+   // function is linear when is a TFormula created with "++" 
+   // hyperplane are not yet existing in TFormula
+   if (fFunc->IsLinear() ) { 
+      unsigned int ip = 0; 
+      fLinear = true;
+      while (fLinear && ip < fParams.size() )  { 
+         fLinear &= (fFunc->GetLinearPart(ip) != 0) ; 
+         ip++;
+      }
+   }      
 }
 
 
 WrappedMultiTF1::WrappedMultiTF1(const WrappedMultiTF1 & rhs) :
    BaseFunc(),
    BaseParamFunc(),
+   fLinear(rhs.fLinear), 
    fFunc(rhs.fFunc),
    fDim(rhs.fDim),
    fParams(rhs.fParams) 
@@ -153,12 +168,47 @@ WrappedMultiTF1::WrappedMultiTF1(const WrappedMultiTF1 & rhs) :
 WrappedMultiTF1 & WrappedMultiTF1::operator= (const WrappedMultiTF1 & rhs) { 
    // Assignment operator
    if (this == &rhs) return *this;  // time saving self-test
+   fLinear = rhs.fLinear;  
    fFunc = rhs.fFunc; 
    fDim = rhs.fDim;
    fParams = rhs.fParams;
    return *this;
 } 
 
+
+void  WrappedMultiTF1::ParameterGradient(const double * x, const double * par, double * grad ) const {
+   // evaluate the gradient of the function with respect to the parameters 
+   if (!fLinear) { 
+      // need to set parameter values
+      fFunc->SetParameters( par );
+      // no need to call InitArgs (it is called in TF1::GradientPar)
+      fFunc->GradientPar(x,grad,fgEps);
+   }
+   else {  // case of linear functions
+      unsigned int np = NPar();
+      for (unsigned int i = 0; i < np; ++i) 
+         grad[i] = DoParameterDerivative(x, par, i);
+   }
+}
+
+double WrappedMultiTF1::DoParameterDerivative(const double * x, const double * p, unsigned int ipar ) const { 
+   // evaluate the derivative of the function with respect to parameter ipar
+   if (! fLinear ) {  
+      fFunc->SetParameters( p );
+      return fFunc->GradientPar(ipar, x,fgEps);
+   }
+   else { 
+      // case of general linear function (built in TFormula with ++ )
+      const TFormula * df = dynamic_cast<const TFormula*>( fFunc->GetLinearPart(ipar) );
+      assert(df != 0); 
+      // hack since TFormula::EvalPar is not const
+      return (const_cast<TFormula*> ( df) )->EvalPar( x ) ; // derivatives should not depend on parameters since func is linear 
+   }
+}
+
+void WrappedMultiTF1::SetDerivPrecision(double eps) { fgEps = eps; }
+
+double WrappedMultiTF1::GetDerivPrecision( ) { return fgEps; }
 
 
 } // end namespace Fit

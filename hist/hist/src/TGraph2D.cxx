@@ -24,6 +24,10 @@
 #include "TSystem.h"
 #include <stdlib.h>
 
+#include "HFitInterface.h"
+#include "Fit/DataRange.h"
+#include "Math/MinimizerOptions.h"
+
 ClassImp(TGraph2D)
 
 
@@ -736,7 +740,15 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //  Root > st->SetX1NDC(newx1); //new x start position
    //  Root > st->SetX2NDC(newx2); //new x end position
 
-   return DoFit(f2, option, "");
+   // internal graph2D fitting methods
+   Foption_t fitOption;
+   Option_t *goption = "";
+   ROOT::Fit::FitOptionsMake(option,fitOption);
+
+   // create range and minimizer options with default values 
+   ROOT::Fit::DataRange range(2); 
+   ROOT::Math::MinimizerOptions minOption; 
+   return ROOT::Fit::FitObject(this, f2 , fitOption , minOption, goption, range); 
 }
 
 

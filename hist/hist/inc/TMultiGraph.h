@@ -44,8 +44,6 @@ protected:
    TMultiGraph(const TMultiGraph&);
    TMultiGraph& operator=(const TMultiGraph&);
 
-   virtual Int_t     DoFit(TF1 *f1,Option_t *option,Option_t *goption, Axis_t xmin, Axis_t xmax);
-  
 public:
    TMultiGraph();
    TMultiGraph(const char *name, const char *title);

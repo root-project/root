@@ -36,11 +36,11 @@ namespace ROOT {
 
    @ingroup CppFunctions
 */ 
-class WrappedMultiTF1 : public ROOT::Math::IParamMultiFunction {
+class WrappedMultiTF1 : public ROOT::Math::IParamMultiGradFunction {
 
 public: 
 
-   typedef  ROOT::Math::IParamMultiFunction            BaseParamFunc; 
+   typedef  ROOT::Math::IParamMultiGradFunction        BaseParamFunc; 
    typedef  ROOT::Math::IParamMultiFunction::BaseFunc  BaseFunc; 
  
 
@@ -105,6 +105,16 @@ public:
       return std::string(fFunc->GetParName(i)); 
    } 
 
+   /// evaluate the derivative of the function with respect to the parameters
+   void  ParameterGradient(const double * x, const double * par, double * grad ) const;
+
+   /// precision value used for calculating the derivative step-size 
+   /// h = eps * |x|. The default is 0.001, give a smaller in case function changes rapidly
+   static void SetDerivPrecision(double eps); 
+
+   /// get precision value used for calculating the derivative step-size 
+   static double GetDerivPrecision();
+
 
 private: 
 
@@ -114,11 +124,17 @@ private:
       return fFunc->EvalPar(x,p); 
    }
 
+   /// evaluate the partial derivative with respect to the parameter
+   double DoParameterDerivative(const double * x, const double * p, unsigned int ipar) const; 
 
+
+   bool fLinear;                 // flag for linear functions 
+   bool fPolynomial;             // flag for polynomial functions 
    TF1 * fFunc;                   // pointer to ROOT function
    unsigned int fDim;             // cached value of dimension
    std::vector<double> fParams;   // cached vector with parameter values
 
+   static double fgEps;          // epsilon used in derivative calculation h ~ eps |p|
 }; 
 
    } // end namespace Fit
