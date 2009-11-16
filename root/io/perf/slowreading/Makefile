@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog NuEvents_DST.mark
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -59,34 +59,34 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-NuEvents_DST.ref: Read.C NuEvent_60_cxx.$(DllSuf)
+NuEvents_DST.mark: Read.C NuEvent_60_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_60.root", 1)' > NuEvents_DST.log 2>&1
 
-readDST.00.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.00.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_60.root", 0)' > readDST.00.log 2>&1
 
-readDST.01.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.01.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_61.root", 0)' > readDST.01.log 2>&1
 
-readDST.02.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.02.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx.$(DllSuf)", "rootfiles/DST_62.root", 0)' > readDST.02.log 2>&1
 
-readDST.10.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.10.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_61_cxx.$(DllSuf)", "rootfiles/DST_60.root", 0)' > readDST.10.log 2>&1
 
-readDST.11.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.11.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_61_cxx.$(DllSuf)", "rootfiles/DST_61.root", 0)' > readDST.11.log 2>&1
 
-readDST.12.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.12.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_61_cxx.$(DllSuf)", "rootfiles/DST_62.root", 0)' > readDST.12.log 2>&1
 
-readDST.20.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.20.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_62_cxx.$(DllSuf)", "rootfiles/DST_60.root", 0)' > readDST.20.log 2>&1
 
-readDST.21.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.21.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_62_cxx.$(DllSuf)", "rootfiles/DST_61.root", 0)' > readDST.21.log 2>&1
 
-readDST.22.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.ref
+readDST.22.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvents_DST.mark
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_62_cxx.$(DllSuf)", "rootfiles/DST_62.root", 0)' > readDST.22.log 2>&1
 
 

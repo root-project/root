@@ -2,8 +2,8 @@
 
 int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
 {
-   std::string reffilename = "NuEvents_DST.ref";
-   const int tolerance = 10;
+   std::string markfilename = "NuEvents_DST.mark";
+   const int tolerance = 20;
 
    gBenchmark = new TBenchmark(); 
    gBenchmark->Start("Read");
@@ -39,12 +39,12 @@ int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
    Float_t refct;
    //cout << "Cputime: " << ct << endl;
    if (ref) {
-      ofstream reffile(reffilename.c_str());
-      reffile << ct << '\n';
+      ofstream markfile(markfilename.c_str());
+      markfile << ct << '\n';
       return 0; // Success.
    } else {
-      ifstream reffile(reffilename.c_str());
-      reffile >> refct;
+      ifstream markfile(markfilename.c_str());
+      markfile >> refct;
       if ( TMath::Abs( (refct - ct) / refct ) > (tolerance/100.0)) {
          cout << "Reading time for " << rootfilename << " with " << library 
               << " takes " << tolerance << "% more than the reference " << ct << " vs " << refct << "\n";
