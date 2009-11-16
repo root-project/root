@@ -80,6 +80,9 @@ else
 		fi; \
 		cd $(FREETYPEVERS); \
 		FREECC=$(CC); \
+		if [ "$(CC)" = "icc" ]; then \
+			FREECC="icc -wd188 -wd181"; \
+		fi; \
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			FREECC="cc"; \
 		fi; \
