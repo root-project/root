@@ -201,6 +201,15 @@ void TEveElement::PreDeleteElement()
 }
 
 //______________________________________________________________________________
+TEveElement* TEveElement::CloneElement() const
+{
+   // Clone the element via copy constructor.
+   // Should be implemented for all classes that require cloning support.
+
+   return new TEveElement(*this);
+}
+
+//______________________________________________________________________________
 TEveElement* TEveElement::CloneElementRecurse(Int_t level) const
 {
    // Clone elements and recurse 'level' deep over children.
@@ -228,7 +237,11 @@ void TEveElement::CloneChildrenRecurse(TEveElement* dest, Int_t level) const
    }
 }
 
-/******************************************************************************/
+//==============================================================================
+
+
+
+//==============================================================================
 
 //______________________________________________________________________________
 const char* TEveElement::GetElementName() const
@@ -497,8 +510,11 @@ void TEveElement::VizDB_Apply(const char* tag)
 {
    // Set visual parameters for this object for given tag.
 
-   ApplyVizTag(tag);
-   gEve->Redraw3D();
+   if (ApplyVizTag(tag))
+   {
+      PropagateVizParamsToProjecteds();
+      gEve->Redraw3D();
+   }
 }
 
 //______________________________________________________________________________
@@ -507,8 +523,12 @@ void TEveElement::VizDB_Reapply()
    // Reset visual parameters for this object from VizDB.
    // The model object must be already set.
 
-   CopyVizParamsFromDB();
-   gEve->Redraw3D();
+   if (fVizModel)
+   {
+      CopyVizParamsFromDB();
+      PropagateVizParamsToProjecteds();
+      gEve->Redraw3D();
+   }
 }
 
 //______________________________________________________________________________
@@ -1410,7 +1430,24 @@ Int_t TEveElement::FindChildren(List_t& matches,
    return count;
 }
 
-/******************************************************************************/
+//______________________________________________________________________________
+TEveElement* TEveElement::FirstChild() const
+{
+   // Returns the first child element or 0 if the list is empty.
+
+   return fChildren.empty() ? 0 : fChildren.front();
+}
+
+//______________________________________________________________________________
+TEveElement* TEveElement::LastChild () const
+{
+   // Returns the last child element or 0 if the list is empty.
+
+   return fChildren.empty() ? 0 : fChildren.back();
+}
+
+
+//==============================================================================
 
 //______________________________________________________________________________
 void TEveElement::EnableListElements(Bool_t rnr_self,  Bool_t rnr_children)
@@ -1511,7 +1548,85 @@ void TEveElement::DestroyElements()
    gEve->Redraw3D();
 }
 
-/******************************************************************************/
+//______________________________________________________________________________
+Bool_t TEveElement::GetDestroyOnZeroRefCnt() const
+{
+   // Returns state of flag determining if the element will be
+   // destroyed when reference count reaches zero.
+   // This is true by default.
+
+   return fDestroyOnZeroRefCnt;
+}
+
+//______________________________________________________________________________
+void TEveElement::SetDestroyOnZeroRefCnt(Bool_t d)
+{
+   // Sets the state of flag determining if the element will be
+   // destroyed when reference count reaches zero.
+   // This is true by default.
+
+   fDestroyOnZeroRefCnt = d;
+}
+
+//______________________________________________________________________________
+Int_t TEveElement::GetDenyDestroy() const
+{
+   // Returns the number of times deny-destroy has been requested on
+   // the element.
+
+   return fDenyDestroy;
+}
+
+//______________________________________________________________________________
+void TEveElement::IncDenyDestroy()
+{
+   // Increases the deny-destroy count of the element.
+   // Call this if you store an external pointer to the element.
+
+   ++fDenyDestroy;
+}
+
+//______________________________________________________________________________
+void TEveElement::DecDenyDestroy()
+{
+   // Decreases the deny-destroy count of the element.
+   // Call this after releasing an external pointer to the element.
+
+   if (--fDenyDestroy <= 0)
+      CheckReferenceCount("TEveElement::DecDenyDestroy ");
+}
+
+//______________________________________________________________________________
+Int_t TEveElement::GetParentIgnoreCnt() const
+{
+   // Get number of parents that should be ignored in doing
+   // reference-counting.
+   //
+   // For example, this is used when subscribing an element to a
+   // visualization-database model object.
+
+   return fParentIgnoreCnt;
+}
+
+//______________________________________________________________________________
+void TEveElement::IncParentIgnoreCnt()
+{
+   // Increase number of parents ignored in reference-counting.
+
+   ++fParentIgnoreCnt;
+}
+
+//______________________________________________________________________________
+void TEveElement::DecParentIgnoreCnt()
+{
+   // Decrease number of parents ignored in reference-counting.
+
+   if (--fParentIgnoreCnt <= 0)
+      CheckReferenceCount("TEveElement::DecParentIgnoreCnt ");
+}
+
+
+//==============================================================================
 
 //______________________________________________________________________________
 Bool_t TEveElement::HandleElementPaste(TEveElement* el)
@@ -1747,6 +1862,15 @@ TEveElementObjectPtr::TEveElementObjectPtr(const TEveElementObjectPtr& e) :
 }
 
 //______________________________________________________________________________
+TEveElementObjectPtr* TEveElementObjectPtr::CloneElement() const
+{
+   // Clone the element via copy constructor.
+   // Virtual from TEveElement.
+
+   return new TEveElementObjectPtr(*this);
+}
+
+//______________________________________________________________________________
 TObject* TEveElementObjectPtr::GetObject(const TEveException& eh) const
 {
    // Return external object.
@@ -1824,6 +1948,15 @@ TEveElementList::TEveElementList(const TEveElementList& e) :
    fChildClass (e.fChildClass)
 {
    // Copy constructor.
+}
+
+//______________________________________________________________________________
+TEveElementList* TEveElementList::CloneElement() const
+{
+   // Clone the element via copy constructor.
+   // Virtual from TEveElement.
+
+   return new TEveElementList(*this);
 }
 
 //______________________________________________________________________________

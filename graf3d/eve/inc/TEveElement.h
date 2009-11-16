@@ -108,7 +108,7 @@ public:
    TEveElement(const TEveElement& e);
    virtual ~TEveElement();
 
-   virtual TEveElement* CloneElement() const { return new TEveElement(*this); }
+   virtual TEveElement* CloneElement() const;
    virtual TEveElement* CloneElementRecurse(Int_t level=0) const;
    virtual void         CloneChildrenRecurse(TEveElement* dest, Int_t level=0) const;
 
@@ -165,22 +165,22 @@ public:
    TEveElement* FindChild(TPRegexp& regexp, const TClass* cls=0);
    Int_t        FindChildren(List_t& matches, const TString&  name, const TClass* cls=0);
    Int_t        FindChildren(List_t& matches, TPRegexp& regexp, const TClass* cls=0);
-   TEveElement* FirstChild() const { return fChildren.empty() ? 0 : fChildren.front(); }
-   TEveElement* LastChild () const { return fChildren.empty() ? 0 : fChildren.back();  }
+   TEveElement* FirstChild() const;
+   TEveElement* LastChild () const;
 
    void EnableListElements (Bool_t rnr_self=kTRUE,  Bool_t rnr_children=kTRUE);  // *MENU*
    void DisableListElements(Bool_t rnr_self=kFALSE, Bool_t rnr_children=kFALSE); // *MENU*
 
-   Bool_t GetDestroyOnZeroRefCnt() const   { return fDestroyOnZeroRefCnt; }
-   void   SetDestroyOnZeroRefCnt(Bool_t d) { fDestroyOnZeroRefCnt = d; }
+   Bool_t GetDestroyOnZeroRefCnt() const;
+   void   SetDestroyOnZeroRefCnt(Bool_t d);
 
-   Int_t  GetDenyDestroy() const { return fDenyDestroy; }
-   void   IncDenyDestroy()       { ++fDenyDestroy; }
-   void   DecDenyDestroy()       { if (--fDenyDestroy <= 0) CheckReferenceCount("TEveElement::DecDenyDestroy "); }
+   Int_t  GetDenyDestroy() const;
+   void   IncDenyDestroy();
+   void   DecDenyDestroy();
 
-   Int_t  GetParentIgnoreCnt() const { return fParentIgnoreCnt; }
-   void   IncParentIgnoreCnt()       { ++fParentIgnoreCnt; }
-   void   DecParentIgnoreCnt()       { if (--fParentIgnoreCnt <= 0) CheckReferenceCount("TEveElement::DecParentIgnoreCnt "); }
+   Int_t  GetParentIgnoreCnt() const;
+   void   IncParentIgnoreCnt();
+   void   DecParentIgnoreCnt();
 
    virtual void PadPaint(Option_t* option);
 
@@ -383,7 +383,7 @@ public:
    TEveElementObjectPtr(const TEveElementObjectPtr& e);
    virtual ~TEveElementObjectPtr();
 
-   virtual TEveElementObjectPtr* CloneElement() const { return new TEveElementObjectPtr(*this); }
+   virtual TEveElementObjectPtr* CloneElement() const;
 
    virtual TObject* GetObject(const TEveException& eh="TEveElementObjectPtr::GetObject ") const;
    virtual void     ExportToCINT(char* var_name);
@@ -417,7 +417,7 @@ public:
    TEveElementList(const TEveElementList& e);
    virtual ~TEveElementList() {}
 
-   virtual TEveElementList* CloneElement() const { return new TEveElementList(*this); }
+   virtual TEveElementList* CloneElement() const;
 
    virtual const char* GetElementName()  const { return GetName();  }
    virtual const char* GetElementTitle() const { return GetTitle(); }
