@@ -57,12 +57,24 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
    fFitFunc(0), 
    fParams(std::vector<double>( min.NDim() ) )
 {
+
+   // set minimizer type 
+   fMinimType = fconfig.MinimizerType();
+
+   // append algorithm name for minimizer that support it  
+   if ( (fMinimType.find("Fumili") == std::string::npos) &&
+        (fMinimType.find("GSLMultiFit") == std::string::npos) 
+      ) { 
+      if (fconfig.MinimizerAlgoType() != "") fMinimType += " / " + fconfig.MinimizerAlgoType(); 
+   }
+
    // replace ncalls if minimizer does not support it (they are taken then from the FitMethodFunction)
    if (fNCalls == 0) fNCalls = ncalls;
 
    // Constructor from a minimizer, fill the data. ModelFunction  is passed as non const 
    // since it will be managed by the FitResult
    const unsigned int npar = fParams.size();
+   if (npar == 0) return;
 
    if (min.X() ) std::copy(min.X(), min.X() + npar, fParams.begin());
    else { 
@@ -77,7 +89,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
 
    // set right parameters in function (in case minimizer did not do before)
    // do also when fit is not valid
-   if (func) { 
+   if (func ) { 
       fFitFunc = dynamic_cast<IModelFunction *>( func->Clone() ); 
       assert(fFitFunc);
       fFitFunc->SetParameters(&fParams.front());
@@ -104,7 +116,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
       if (chi2func == 0) 
          fChi2 = fVal;
       else { 
-         // compute chi2 equivalent
+         // compute chi2 equivalent for likelihood fits
          fChi2 = (*chi2func)(&fParams[0]); 
       }
    }
@@ -143,15 +155,6 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
       
    }
 
-   fMinimType = fconfig.MinimizerType();
-
-   // append algorithm name for minimizer that support it  
-   if ( (fMinimType.find("Fumili") == std::string::npos) &&
-        (fMinimType.find("GSLMultiFit") == std::string::npos) 
-      ) { 
-      if (fconfig.MinimizerAlgoType() != "") fMinimType += " / " + fconfig.MinimizerAlgoType(); 
-   }
-
 }
 
 FitResult::~FitResult() { 
@@ -159,7 +162,9 @@ FitResult::~FitResult() {
    if (fFitFunc) delete fFitFunc;   
 }
 
-FitResult::FitResult(const FitResult &rhs) { 
+FitResult::FitResult(const FitResult &rhs) : 
+   fFitFunc(0) 
+{ 
    // Implementation of copy constructor
    (*this) = rhs; 
 }
@@ -337,14 +342,16 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    if (!fValid) { 
       os << "\n****************************************\n";
       os << "            Invalid FitResult            ";
-      os << "\n****************************************\n";
-      return; 
    }
-
+   
    os << "\n****************************************\n";
    //os << "            FitResult                   \n\n";
    os << "Minimizer is " << fMinimType << std::endl;
    unsigned int npar = fParams.size(); 
+   if (npar == 0) { 
+      std::cout << "Error: FitResult is empty !" << std::endl;
+      return;
+   }
    const unsigned int nw = 25; 
    if (fVal != fChi2 || fChi2 < 0) 
       os << std::setw(nw) << std::left << "LogLikelihood" << " =\t" << fVal << std::endl;

@@ -103,7 +103,10 @@ int testHisto1DFit() {
    printData(d);
 
    // create the function
-   ROOT::Math::WrappedMultiTF1 f(*func); 
+   ROOT::Math::WrappedMultiTF1 wf(*func); 
+   // need to do that to avoid gradient calculation
+   ROOT::Math::IParamMultiFunction & f = wf; 
+
    double p[3] = {100,0,3.}; 
    f.SetParameters(p); 
 
@@ -710,7 +713,9 @@ int testUnBin1DFit() {
    // printData(d);
 
    // create the function
-   ROOT::Math::WrappedMultiTF1 f(*func); 
+   ROOT::Math::WrappedMultiTF1 wf(*func); 
+   // need to do that to avoid gradient calculation
+   ROOT::Math::IParamMultiFunction & f = wf; 
    double p[3] = {1,2,10.}; 
    f.SetParameters(p); 
 
@@ -812,7 +817,9 @@ int testGraphFit() {
    TF1 * func = new TF1("f","pol1",0,10);
    func->SetParameters(p);
 
-   ROOT::Math::WrappedMultiTF1 f(*func); 
+   ROOT::Math::WrappedMultiTF1 wf(*func); 
+   // need to do that to avoid gradient calculation
+   ROOT::Math::IParamMultiFunction & f = wf; 
    f.SetParameters(p); 
 
    ROOT::Fit::Fitter fitter; 

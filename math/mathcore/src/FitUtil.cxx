@@ -346,35 +346,59 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    
    // get fit option and check case if using integral of bins
    const DataOptions & fitOpt = data.Opt();
-   bool useBinIntegral = fitOpt.fIntegral; 
+   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
+   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+
    IntegralEvaluator<> igEval( func, p, useBinIntegral); 
 
    double maxResValue = std::numeric_limits<double>::max() /n;
+   double wrefVolume = 1.0; 
+   std::vector<double> xc; 
+   if (useBinVolume) { 
+      wrefVolume /= data.RefVolume();
+      xc.resize(data.NDim() );
+   }
 
    for (unsigned int i = 0; i < n; ++ i) { 
 
 
       double y, invError; 
       // in case of no error in y invError=1 is returned
-      const double * x = data.GetPoint(i,y, invError);
-
+      const double * x1 = data.GetPoint(i,y, invError);
 
       double fval = 0;
 
-      if (!useBinIntegral ) 
-         fval = func ( x, p ); 
-      else { 
-         // calculate normalized integral (divided by bin volume)
-         // need to set function and parameters here in case loop is parallelized
-         fval = igEval( x, data.BinUpEdge(i)) ; 
+      double binVolume = 1.0; 
+      if (useBinVolume) { 
+         unsigned int ndim = data.NDim(); 
+         const double * x2 = data.BinUpEdge(i);  
+         for (unsigned int j = 0; j < ndim; ++j) {
+            binVolume *= std::abs( x2[j]-x1[j] );
+            xc[j] = 0.5*(x2[j]+ x1[j]);
+         }
+         // normalize the bin volume using a reference value
+         binVolume *= wrefVolume;
       }
+
+      const double * x = (useBinVolume) ? &xc.front() : x1;
+
+      if (!useBinIntegral) {
+         fval = func ( x, p );
+      }
+      else {
+         // calculate integral normalized by bin volume
+         // need to set function and parameters here in case loop is parallelized
+         fval = igEval( x1, data.BinUpEdge(i)) ; 
+      }
+      // normalize result if requested according to bin volume
+      if (useBinVolume) fval *= binVolume;
 
 //#define DEBUG
 #ifdef DEBUG      
       std::cout << x[0] << "  " << y << "  " << 1./invError << " params : "; 
       for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar) 
          std::cout << p[ipar] << "\t";
-      std::cout << "\tfval = " << fval << std::endl; 
+      std::cout << "\tfval = " << fval << " bin volume " << binVolume << " ref " << wrefVolume << std::endl; 
 #endif
 //#undef DEBUG
 
@@ -535,20 +559,44 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    //func.SetParameters(p);
 
    double y, invError = 0; 
-   const double * x = data.GetPoint(i,y, invError);
 
-   bool useBinIntegral = data.Opt().fIntegral;
+   const DataOptions & fitOpt = data.Opt();
+   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
+   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+
+   const double * x1 = data.GetPoint(i,y, invError);
+
    IntegralEvaluator<> igEval( func, p, useBinIntegral); 
    double fval = 0; 
+   unsigned int ndim = data.NDim(); 
+   double binVolume = 1.0; 
    const double * x2 = 0; 
-   if (!useBinIntegral ) 
-      fval = func ( x, p ); 
-   else { 
-      x2 = data.BinUpEdge(i);
-      // calculate normalized integral (divided by bin volume)
-      // need to set function and parameters here in case loop is parallelized 
-      fval = igEval( x, x2 ) ; 
+   if (useBinVolume || useBinIntegral) x2 = data.BinUpEdge(i);  
+
+   double * xc = 0;
+ 
+   if (useBinVolume) { 
+      xc = new double[ndim];
+      for (unsigned int j = 0; j < ndim; ++j) {
+         binVolume *= std::abs( x2[j]-x1[j] );
+         xc[j] = 0.5*(x2[j]+ x1[j]);         
+      }
+      // normalize the bin volume using a reference value
+      binVolume /= data.RefVolume();
    }
+
+   const double * x = (useBinVolume) ? xc : x1;
+
+   if (!useBinIntegral) {
+      fval = func ( x, p );
+   }
+   else {
+      // calculate integral (normalized by bin volume) 
+      // need to set function and parameters here in case loop is parallelized
+      fval = igEval( x1, x2) ; 
+   }
+   // normalize result if requested according to bin volume
+   if (useBinVolume) fval *= binVolume;
 
    double resval =   ( y -fval )* invError;  	   
 
@@ -563,11 +611,12 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 
    if (gfunc != 0) { 
       //case function provides gradient
-      if (!useBinIntegral ) 
+      if (!useBinIntegral ) {
          gfunc->ParameterGradient(  x , p, g );  
+      }
       else { 
          // needs to calculate the integral for each partial derivative
-         CalculateGradientIntegral( *gfunc, x, x2, p, g); 
+         CalculateGradientIntegral( *gfunc, x1, x2, p, g); 
       }
    }
    else { 
@@ -576,26 +625,27 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
          gc.ParameterGradient(x, p, fval, g); 
       else { 
          // needs to calculate the integral for each partial derivative
-         CalculateGradientIntegral( gc, x, x2, p, g); 
+         CalculateGradientIntegral( gc, x1, x2, p, g); 
       }
    }
    // mutiply by - 1 * weight
    for (unsigned int k = 0; k < npar; ++k) {
       g[k] *= - invError;
+      if (useBinVolume) g[k] *= binVolume;      
    }       
 
+   if (useBinVolume) delete [] xc;
 
    return resval; 
 
 }
 
 void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & data, const double * p, double * grad, unsigned int & nPoints) { 
-   // evaluate gradient of chi2
+   // evaluate the gradient of the chi2 function
    // this function is used when the model function knows how to calculate the derivative and we can  
    // avoid that the minimizer re-computes them 
    //
-   // need to implement cases with integral option and errors on the coordinates
-   
+   // case of chi2 effective (errors on coordinate) is not supported
 
    if ( data.GetErrorType() == BinData::kCoordError && data.Opt().fCoordErrors ) {
       MATH_ERROR_MSG("FitUtil::EvaluateChi2Residual","Error on the coordinates are not used in calculating Chi2 gradient");            return; // it will assert otherwise later in GetPoint
@@ -615,14 +665,24 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
    std::cout << "evaluate chi2 using function gradient " << &func << "  " << p << std::endl; 
 #endif
 
-   bool useBinIntegral = data.Opt().fIntegral;
+   const DataOptions & fitOpt = data.Opt();
+   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
+   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+
+   double wrefVolume = 1.0; 
+   std::vector<double> xc; 
+   if (useBinVolume) { 
+      wrefVolume /= data.RefVolume();
+      xc.resize(data.NDim() );
+   }
+
    IntegralEvaluator<> igEval( func, p, useBinIntegral); 
 
    //int nRejected = 0; 
    // set values of parameters 
 
    unsigned int npar = func.NPar(); 
-//   assert (npar == NDim() );  // npar MUST be  Chi2 dimension
+   //   assert (npar == NDim() );  // npar MUST be  Chi2 dimension
    std::vector<double> gradFunc( npar ); 
    // set all vector values to zero
    std::vector<double> g( npar); 
@@ -631,23 +691,37 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
 
 
       double y, invError = 0; 
-      const double * x = data.GetPoint(i,y, invError);
+      const double * x1 = data.GetPoint(i,y, invError);
 
       double fval = 0; 
       const double * x2 = 0; 
-      if (!useBinIntegral ) 
-         fval = func ( x, p ); 
-      else { 
-         x2 = data.BinUpEdge(i); 
-         // calculate normalized integral (divided by bin volume)
-         // need to set function and parameters here in case loop is parallelized 
-         fval = igEval( x, x2 ) ; 
+
+      double binVolume = 1; 
+      if (useBinVolume) { 
+         unsigned int ndim = data.NDim(); 
+         x2 = data.BinUpEdge(i);  
+         for (unsigned int j = 0; j < ndim; ++j) {
+            binVolume *= std::abs( x2[j]-x1[j] );
+            xc[j] = 0.5*(x2[j]+ x1[j]);
+         }
+         // normalize the bin volume using a reference value
+         binVolume *= wrefVolume;
       }
 
-      if (!useBinIntegral ) 
+      const double * x = (useBinVolume) ? &xc.front() : x1;
+
+      if (!useBinIntegral ) {
+         fval = func ( x, p ); 
          func.ParameterGradient(  x , p, &gradFunc[0] ); 
-      else 
-         CalculateGradientIntegral( func, x, x2, p, &gradFunc[0]); 
+      }
+      else { 
+         x2 = data.BinUpEdge(i); 
+         // calculate normalized integral and gradient (divided by bin volume)
+         // need to set function and parameters here in case loop is parallelized 
+         fval = igEval( x1, x2 ) ; 
+         CalculateGradientIntegral( func, x1, x2, p, &gradFunc[0]); 
+      }
+      if (useBinVolume) fval *= binVolume;
 
 #ifdef DEBUG      
       std::cout << x[0] << "  " << y << "  " << 1./invError << " params : "; 
@@ -663,6 +737,9 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
       // loop on the parameters
       unsigned int ipar = 0; 
       for ( ; ipar < npar ; ++ipar) { 
+
+         // correct gradient for bin volumes
+         if (useBinVolume) gradFunc[ipar] *= binVolume;
 
          // avoid singularity in the function (infinity and nan ) in the chi2 sum 
          // eventually add possibility of excluding some points (like singularity) 
@@ -708,7 +785,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
 // for LogLikelihood functions
 
 double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g) {  
-   // evaluate the pdf contribution to the logl
+   // evaluate the pdf contribution to the generic logl function in case of bin data
    // return actually the log of the pdf and its derivatives 
 
    //func.SetParameters(p);
@@ -839,24 +916,46 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & d
 // for binned log likelihood functions      
 //------------------------------------------------------------------------------------------------
 double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g ) {  
-   // evaluate the pdf contribution to the logl (return actually log of pdf)
+   // evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
+   // and its gradient
 
 
    double y = 0; 
-   const double * x = data.GetPoint(i,y);
+   const double * x1 = data.GetPoint(i,y);
 
-   bool useBinIntegral = data.Opt().fIntegral;
+   const DataOptions & fitOpt = data.Opt();
+   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
+   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+
    IntegralEvaluator<> igEval( func, p, useBinIntegral); 
    double fval = 0; 
    const double * x2 = 0; 
-   if (!useBinIntegral ) 
-      fval = func ( x, p ); 
-   else { 
-      // calculate normalized integral (divided by bin volume)
-      // need to set function and parameters here in case loop is parallelized 
-      x2 =  data.BinUpEdge(i);
-      fval = igEval( x, x2 ) ; 
+   // calculate the bin volume
+   double binVolume = 1; 
+   std::vector<double> xc; 
+   if (useBinVolume) { 
+      unsigned int ndim = data.NDim(); 
+      xc.resize(ndim);
+      x2 = data.BinUpEdge(i);  
+      for (unsigned int j = 0; j < ndim; ++j) {
+         binVolume *= std::abs( x2[j]-x1[j] );
+         xc[j] = 0.5*(x2[j]+ x1[j]);
+      }
+      // normalize the bin volume using a reference value
+      binVolume /= data.RefVolume();
    }
+
+   const double * x = (useBinVolume) ? &xc.front() : x1;
+
+   if (!useBinIntegral ) {
+      fval = func ( x, p ); 
+   }
+   else { 
+      // calculate integral normalized (divided by bin volume) 
+      x2 =  data.BinUpEdge(i);
+      fval = igEval( x1, x2 ) ; 
+   }
+   if (useBinVolume) fval *= binVolume;
 
    // logPdf for Poisson: ignore constant term depending on N
    fval = std::max(fval, 0.0);  // avoid negative or too small values 
@@ -878,7 +977,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
          gfunc->ParameterGradient(  x , p, g );  
       else { 
          // needs to calculate the integral for each partial derivative
-         CalculateGradientIntegral( *gfunc, x, x2, p, g); 
+         CalculateGradientIntegral( *gfunc, x1, x2, p, g); 
       }
 
    }
@@ -888,11 +987,15 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
          gc.ParameterGradient(x, p, fval, g); 
       else { 
         // needs to calculate the integral for each partial derivative
-         CalculateGradientIntegral( gc, x, x2, p, g);  
+         CalculateGradientIntegral( gc, x1, x2, p, g);  
       } 
    }
    // correct g[] do be derivative of poisson term 
    for (unsigned int k = 0; k < npar; ++k) {
+      // apply bin volume correction
+      if (useBinVolume) g[k] *= binVolume;  
+
+      // correct for Poisson term
       if ( fval > 0) 
          g[k] *= ( y/fval - 1.) ;//* pdfval; 
       else if (y > 0) { 
@@ -921,25 +1024,73 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
 
    unsigned int n = data.Size();
 
+#ifdef DEBUG
+   std::cout << "Evaluate PoissonLogL for params = [ "; 
+   for (unsigned int j=0; j < func.NPar(); ++j) std::cout << p[j] << " , ";
+   std::cout << "]\n";
+#endif
    
    double loglike = 0;
    int nRejected = 0; 
 
    // get fit option and check case of using integral of bins
    const DataOptions & fitOpt = data.Opt();
+   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
+   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+
+   double wrefVolume = 1.0; 
+   std::vector<double> xc; 
+   if (useBinVolume) { 
+      wrefVolume /= data.RefVolume();
+      xc.resize(data.NDim() );
+   }
+
    IntegralEvaluator<> igEval( func, p, fitOpt.fIntegral); 
 
    for (unsigned int i = 0; i < n; ++ i) { 
-      const double * x = data.Coords(i);
+      const double * x1 = data.Coords(i);
       double y = data.Value(i);
 
       double fval = 0;   
-      if (!fitOpt.fIntegral )
-         fval = func ( x, p ); 
-      else { 
-         fval = igEval( x, data.BinUpEdge(i) ) ; 
+      double binVolume = 1.0; 
+
+      if (useBinVolume) { 
+         unsigned int ndim = data.NDim(); 
+         const double * x2 = data.BinUpEdge(i);  
+         for (unsigned int j = 0; j < ndim; ++j) {
+            binVolume *= std::abs( x2[j]-x1[j] );
+            xc[j] = 0.5*(x2[j]+ x1[j]);
+         }
+         // normalize the bin volume using a reefrence value
+         binVolume *= wrefVolume;
       }
-      
+
+      const double * x = (useBinVolume) ? &xc.front() : x1;
+
+      if (!useBinIntegral) {
+         fval = func ( x, p );
+      }
+      else {
+         // calculate integral (normalized by bin volume) 
+         // need to set function and parameters here in case loop is parallelized
+         fval = igEval( x1, data.BinUpEdge(i)) ; 
+      }
+      if (useBinVolume) fval *= binVolume;
+
+
+#ifdef DEBUG
+      std::cout << "x1 = [ "; 
+      for (unsigned int j=0; j < func.NDim(); ++j) std::cout << x[j] << " , ";
+      std::cout << "]  ";
+      if (fitOpt.fIntegral) { 
+         std::cout << "x2 = [ "; 
+         for (unsigned int j=0; j < func.NDim(); ++j) std::cout << data.BinUpEdge(i)[j] << " , ";
+         std::cout << "] ";
+      }
+      std::cout << "   fval = " << fval << std::endl;
+#endif
+
+
       // EvalLog protects against 0 values of fval but don't want to add in the -log sum 
       // negative values of fval 
       fval = std::max(fval, 0.0);
@@ -958,7 +1109,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
 }
 
 void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinData & data, const double * p, double * grad ) { 
-   // evaluate the gradient of the log likelihood function
+   // evaluate the gradient of the Poisson log likelihood function
 
    const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f); 
    assert (fg != 0); // must be called by a grad function
@@ -966,7 +1117,17 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
 
    unsigned int n = data.Size();
 
-   bool useBinIntegral = data.Opt().fIntegral;
+   const DataOptions & fitOpt = data.Opt();
+   bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
+   bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+
+   double wrefVolume = 1.0;
+   std::vector<double> xc;  
+   if (useBinVolume) {
+      wrefVolume /= data.RefVolume();
+      xc.resize(data.NDim() );
+   }
+
    IntegralEvaluator<> igEval( func, p, useBinIntegral); 
 
    unsigned int npar = func.NPar(); 
@@ -974,25 +1135,44 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
    std::vector<double> g( npar); 
 
    for (unsigned int i = 0; i < n; ++ i) { 
-      const double * x = data.Coords(i);
+      const double * x1 = data.Coords(i);
       double y = data.Value(i);
       double fval = 0; 
       const double * x2 = 0; 
-      if (!useBinIntegral ) 
-         fval = func ( x, p ); 
-      else { 
-         x2 = data.BinUpEdge(i); 
-         // calculate normalized integral (divided by bin volume)
-         // need to set function and parameters here in case loop is parallelized 
-         fval = igEval( x, x2 ) ; 
+
+      double binVolume = 1.0; 
+      if (useBinVolume) { 
+         x2 = data.BinUpEdge(i);  
+         unsigned int ndim = data.NDim(); 
+         for (unsigned int j = 0; j < ndim; ++j) { 
+            binVolume *= std::abs( x2[j]-x1[j] );
+            xc[j] = 0.5*(x2[j]+ x1[j]);
+         }
+         // normalize the bin volume using a reference value
+         binVolume *= wrefVolume;
       }
-      
-      if (!useBinIntegral ) 
+
+      const double * x = (useBinVolume) ? &xc.front() : x1;
+
+      if (!useBinIntegral) {
+         fval = func ( x, p );
          func.ParameterGradient(  x , p, &gradFunc[0] ); 
-      else 
-         CalculateGradientIntegral( func, x, x2, p, &gradFunc[0]); 
+      }
+      else {
+         // calculate integral (normalized by bin volume) 
+         // need to set function and parameters here in case loop is parallelized
+         x2 = data.BinUpEdge(i);
+         fval = igEval( x1, x2) ; 
+         CalculateGradientIntegral( func, x1, x2, p, &gradFunc[0]); 
+      }
+      if (useBinVolume) fval *= binVolume;
       
+      // correct the gradient
       for (unsigned int kpar = 0; kpar < npar; ++ kpar) { 
+
+         // correct gradient for bin volumes
+         if (useBinVolume) gradFunc[kpar] *= binVolume; 
+
          // df/dp * (1.  - y/f )
          if (fval > 0)  
             g[kpar] += gradFunc[ kpar ] * ( 1. - y/fval ); 

@@ -93,6 +93,7 @@ public:
       fMaxCalls(0), 
       fMaxIter(0),
       fTol(1.E-6), 
+      fPrec(-1),
       fUp(1.)
    {} 
 
@@ -296,9 +297,14 @@ public:
    /// print the result according to set level (implemented for TMinuit for mantaining Minuit-style printing)
    virtual void PrintResults() {}
 
-   // get name of variables (override if minimizer support storing of variable names)
-   //virtual std::string VariableName(unsigned int ivar) const { return "x_" + ROOT::Math::Util::ToString(ivar); }
+   /// get name of variables (override if minimizer support storing of variable names)
+   /// return an empty string if variable is not found
+   virtual std::string VariableName(unsigned int ) const { return std::string();}  // return empty string 
 
+   /// get index of variable given a variable given a name
+   /// return -1 if variable is not found
+   virtual int VariableIndex(const std::string &) const { return -1; }
+      
    /** minimizer configuration parameters **/
 
    /// set print level
@@ -313,6 +319,10 @@ public:
    /// absolute tolerance 
    double Tolerance() const { return  fTol; }
 
+   /// precision of minimizer in the evaluation of the objective function
+   /// ( a value <=0 corresponds to the let the minimizer choose its default one)
+   double Precision() const { return fPrec; }
+   
    /// strategy 
    int Strategy() const { return fStrategy; }
 
@@ -337,6 +347,10 @@ public:
 
    /// set the tolerance
    void SetTolerance(double tol) { fTol = tol; }
+
+   /// set in the minimizer the objective function evaluation precision 
+   /// ( a value <=0 means the minimizer will choose its optimal value automatically, i.e. default case)
+   void SetPrecision(double prec) { fPrec = prec; }
 
    ///set the strategy 
    void SetStrategy(int strategyLevel) { fStrategy = strategyLevel; }  
@@ -365,6 +379,7 @@ protected:
    unsigned int fMaxCalls;      // max number of function calls 
    unsigned int fMaxIter;       // max number or iterations used to find the minimum
    double fTol;                 // tolerance (absolute)
+   double fPrec;                // precision
    double fUp;                  // error scale 
 
 }; 

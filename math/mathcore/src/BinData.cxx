@@ -30,6 +30,7 @@ BinData::BinData(unsigned int maxpoints , unsigned int dim , ErrorType err ) :
    fDim(dim),
    fPointSize(GetPointSize(err,dim) ),
    fNPoints(0),
+   fRefVolume(1.0),
    fDataVector(0),
    fDataWrapper(0)
 { 
@@ -47,6 +48,7 @@ BinData::BinData (const DataOptions & opt, unsigned int maxpoints, unsigned int 
    fDim(dim),
    fPointSize(GetPointSize(err,dim) ),
    fNPoints(0),
+   fRefVolume(1.0),
    fDataVector(0),
    fDataWrapper(0)
 { 
@@ -68,6 +70,7 @@ BinData::BinData (const DataOptions & opt, const DataRange & range, unsigned int
    fDim(dim),
    fPointSize(GetPointSize(err,dim) ),
    fNPoints(0),
+   fRefVolume(1.0),
    fDataVector(0),
    fDataWrapper(0)
 { 
@@ -87,6 +90,7 @@ BinData::BinData(unsigned int n, const double * dataX, const double * val, const
    fDim(1), 
    fPointSize(2),
    fNPoints(n),
+   fRefVolume(1.0),
    fDataVector(0)
 { 
    if (eval != 0) { 
@@ -105,6 +109,7 @@ BinData::BinData(unsigned int n, const double * dataX, const double * dataY, con
    fDim(2), 
    fPointSize(3),
    fNPoints(n),
+   fRefVolume(1.0),
    fDataVector(0)
 { 
    if (eval != 0) { 
@@ -121,6 +126,7 @@ BinData::BinData(unsigned int n, const double * dataX, const double * dataY, con
    fDim(3), 
    fPointSize(4),
    fNPoints(n),
+   fRefVolume(1.0),
    fDataVector(0)
 { 
    if (eval != 0) { 
@@ -137,6 +143,7 @@ BinData::BinData(const BinData & rhs) :
    fDim(rhs.fDim), 
    fPointSize(rhs.fPointSize), 
    fNPoints(rhs.fNPoints), 
+   fRefVolume(1.0),
    fDataVector(0),
    fDataWrapper(0), 
    fBinEdge(rhs.fBinEdge)
@@ -154,6 +161,7 @@ BinData & BinData::operator= (const BinData & rhs) {
    fPointSize = rhs.fPointSize;  
    fNPoints = rhs.fNPoints;  
    fBinEdge = rhs.fBinEdge;
+   fRefVolume = rhs.fRefVolume;
    // delete previous pointers 
    if (fDataVector) delete fDataVector; 
    if (fDataWrapper) delete fDataWrapper; 
@@ -373,13 +381,30 @@ void BinData::Add(const double *x, double val, const double * ex, double  eval) 
    fNPoints++;
 }
 
-void BinData::AddBinUpEdge(const double *dx ) { 
+void BinData::AddBinUpEdge(const double *xup ) { 
 //      add multi dim bin upper edge data (coord2)
 
-   fBinEdge.insert( fBinEdge.end(), dx, dx + fDim);
+   fBinEdge.insert( fBinEdge.end(), xup, xup + fDim);
    
    // check that is consistent with number of points added in the data
    assert( fNPoints * fDim == fBinEdge.size() );
+
+   // compute the bin volume 
+   const double * xlow = Coords(fNPoints-1);
+
+   double binVolume = 1;
+   for (unsigned int j = 0; j < fDim; ++j) {
+      binVolume *= (xup[j]-xlow[j]);
+   }
+      
+   // store the minimum bin volume found as  reference for future normalizations
+   if (fNPoints == 1) {
+      fRefVolume = binVolume;
+      return;
+   }
+
+   if (binVolume < fRefVolume) 
+      fRefVolume = binVolume;
    
 }
 

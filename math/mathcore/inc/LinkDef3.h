@@ -23,6 +23,7 @@
 #pragma link C++ class ROOT::Fit::FitData+;
 #pragma link C++ class ROOT::Fit::BinData+;
 #pragma link C++ class ROOT::Fit::UnBinData+;
+#pragma link C++ class ROOT::Fit::SparseData+;
 #pragma link C++ class ROOT::Fit::FitResult+;
 #pragma link C++ class ROOT::Fit::ParameterSettings+;
 

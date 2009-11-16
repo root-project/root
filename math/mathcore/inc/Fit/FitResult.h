@@ -265,7 +265,7 @@ protected:
 
 
 
-private: 
+protected: 
 
 
    /// Return pointer non const pointer to model (fit) function with fitted parameter values.
@@ -285,7 +285,7 @@ private:
    double fVal;             // minimum function value
    double fEdm;             // expected distance from mimimum
    double fChi2;            // fit chi2 value (different than fval in case of chi2 fits)
-   IModelFunction * fFitFunc; // model function resulting  from the fit. It is given by Fitter but it is managed by FitResult
+   IModelFunction * fFitFunc; //! model function resulting  from the fit. It is given by Fitter but it is managed by FitResult
    std::vector<unsigned int>   fFixedParams; // list of fixed parameters
    std::vector<unsigned int>   fBoundParams; // list of limited parameters
    std::vector<double>         fParams;  // parameter values. Size is total number of parameters

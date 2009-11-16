@@ -68,6 +68,14 @@ void printData(const ROOT::Fit::UnBinData & data) {
    std::cout << "\ndata size is " << data.Size() << std::endl;
 }    
 
+void printResult(int iret) { 
+   std::cout << "\n************************************************************\n"; 
+   std::cout << "Test\t\t\t\t";
+   if (iret == 0) std::cout << "OK"; 
+   else std::cout << "FAILED"; 
+   std::cout << "\n************************************************************\n"; 
+}
+
 bool USE_BRANCH = false;
 ROOT::Fit::UnBinData * FillUnBinData(TTree * tree, bool copyData = true, unsigned int dim = 1 ) { 
 
@@ -340,6 +348,9 @@ int FitUsingNewFitter(FitObj * fitobj, Func & func, bool useGrad=false) {
    // std::cout << "initial Parameters " << iniPar << "  " << *iniPar << "   " <<  *(iniPar+1) << std::endl;
    func.SetParameters(iniPar);
    iret |= DoFit<MinType>(fitobj,func,true, useGrad);
+   if (iret != 0) {
+      std::cout << "Fit failed " << std::endl;
+   }
 
 #else
    for (int i = 0; i < nfit; ++i) { 
@@ -388,7 +399,10 @@ int FitUsingTFit(T * hist, TF1 * func) {
    for (int i = 0; i < nfit; ++i) { 
       func->SetParameters(iniPar);
       iret |= hist->Fit(func,opt.c_str());
-      if (iret != 0) return iret; 
+      if (iret != 0) { 
+         std::cout << "Fit failed " << std::endl;
+         return iret; 
+      }
    }
    // std::cout << "iret " << iret << std::endl;
 #ifdef DEBUG
@@ -436,7 +450,10 @@ int FitUsingTTreeFit(TTree * tree, TF1 * func, const std::string & vars = "x") {
    for (int i = 0; i < nfit; ++i) { 
       func->SetParameters(iniPar);
       iret |= tree->UnbinnedFit(func->GetName(),vars.c_str(),sel.c_str(),"Q");
-      if (iret != 0) return iret; 
+      if (iret != 0) { 
+         std::cout << "Fit failed : iret = " << iret << std::endl;
+         return iret; 
+      }
    }
    // std::cout << "iret " << iret << std::endl;
 #ifdef DEBUG
@@ -550,7 +567,7 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
 
       RooProdPdf pdf("gausxy","gausxy",RooArgSet(pdfx,pdfy) );
 
-     
+
 #ifdef DEBUG
       int level = 3; 
       std::cout << "num entries = " << data.numEntries() << std::endl;
@@ -561,11 +578,11 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
       bool save = false; 
 #endif
 
-#ifndef _WIN32 // until a bug 30762 is fixed
+//#ifndef _WIN32 // until a bug 30762 is fixed
       RooFitResult * result = pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) );
-#else
-      RooFitResult * result = pdf.fitTo(data );
-#endif
+// #else
+//       RooFitResult * result = pdf.fitTo(data );
+// #endif
 
 #ifdef DEBUG
       mean.Print(); 
@@ -574,9 +591,12 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
       std::cout << " Roofit status " << result->status() << std::endl; 
       result->Print();
 #endif
-      iret |= (result == 0);
+      if (save) iret |= (result == 0);
 
-      if (iret != 0) return iret; 
+      if (iret != 0) { 
+         std::cout << "Fit failed " << std::endl;
+         return iret; 
+      }
 
    }
 
@@ -763,6 +783,8 @@ int testPolyFit() {
 
    iret |= FitUsingNewFitter<MINUIT2>(gr2,f2);
 
+   printResult(iret);
+
    return iret;
 }
 
@@ -825,6 +847,7 @@ int testGausFit() {
 
    iret |= FitUsingNewFitter<MINUIT2>(h2,f2);
    iret |= FitUsingNewFitter<TMINUIT>(h2,f2);
+
 //    iret |= FitUsingNewFitter<GSL_PR>(h2,f2);
 
 
@@ -872,12 +895,15 @@ int testGausFit() {
    std::cout << "\n\nTest Least Square algorithms\n\n";
    iret |= FitUsingNewFitter<GSL_NLS>(h2,f2);
    iret |= FitUsingNewFitter<FUMILI2>(h2,f2);
+   iret |= FitUsingNewFitter<TFUMILI>(h2,f2);
 
-   iret |= FitUsingTFit<TH1,FUMILI2>(h2,f1);
-   iret |= FitUsingTFit<TH1,TFUMILI>(h2,f1);
+//    iret |= FitUsingTFit<TH1,FUMILI2>(h2,f1);
+//    iret |= FitUsingTFit<TH1,TFUMILI>(h2,f1);
 //#endif
 
    //iret |= FitUsingRooFit(h2,f1);
+
+   printResult(iret);
 
    return iret; 
 }
@@ -958,12 +984,12 @@ int testTreeFit() {
 
    iret |= FitUsingRooFit(&t1,f1);
 
-   
+   printResult(iret);
    return iret; 
 
 }
 
-int testLargeTreeFit() { 
+int testLargeTreeFit(int nevt = 1000) { 
 
    std::cout << "\n\n************************************************************\n"; 
    std::cout << "\t UNBINNED TREE (GAUSSIAN MULTI-DIM)  FIT\n";
@@ -977,7 +1003,7 @@ int testLargeTreeFit() {
    
    //fill the tree
    TRandom3 r; 
-   for (Int_t i=0;i<1000;i++) {
+   for (Int_t i=0;i<nevt;i++) {
       for (int j = 0;  j < N; ++j) { 
          double mu = double(j)/10.; 
          double s  = 1.0 + double(j)/10.;  
@@ -1005,10 +1031,13 @@ int testLargeTreeFit() {
    iret |= FitUsingNewFitter<TMINUIT>(&t1,f2);
    iret |= FitUsingNewFitter<GSL_BFGS2>(&t1,f2);
 
+
+
+   printResult(iret);
    return iret; 
 
 }
-int testLargeTreeRooFit() { 
+int testLargeTreeRooFit(int nevt = 1000) { 
 
    int iret = 0; 
 
@@ -1023,7 +1052,7 @@ int testLargeTreeRooFit() {
    t2.Branch("ev",&ev,"ev/I");
    //fill the tree
    TRandom3 r; 
-   for (Int_t i=0;i<1000;i++) {
+   for (Int_t i=0;i<nevt;i++) {
       for (int j = 0;  j < N; ++j) { 
          double mu = double(j)/10.; 
          double s  = 1.0 + double(j)/10.;  
@@ -1045,6 +1074,8 @@ int testLargeTreeRooFit() {
    
    iret |= FitUsingRooFit2(&t2);
 
+
+   printResult(iret);
    
    return iret; 
 
@@ -1082,8 +1113,8 @@ int testFitPerf() {
 
 
   nfit = 1;
- iret |= testLargeTreeRooFit(); 
- iret |= testLargeTreeFit(); 
+ iret |= testLargeTreeRooFit(500); 
+ iret |= testLargeTreeFit(500); 
 
 
    if (iret != 0) 

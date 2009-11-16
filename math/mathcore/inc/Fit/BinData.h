@@ -465,6 +465,13 @@ public :
       if (fBinEdge.size() == 0 || icoord*fDim > fBinEdge.size() ) return 0; 
       return &fBinEdge[ icoord * fDim];
    }
+   
+   /**
+      query if the data store the bin edges instead of the center
+   */
+   bool HasBinEdges() const {
+      return fBinEdge.size() > 0 && fBinEdge.size() == fDim*fNPoints;
+   }
 
    /** 
        add the bin width data, a pointer to an array with the bin upper edge information.
@@ -473,6 +480,16 @@ public :
        BinData::Add  must be called before
    */
    void AddBinUpEdge(const double * binwidth); 
+
+   /** 
+       retrieve the reference volume used to normalize the data when the option bin volume is set
+    */ 
+   double RefVolume() const { return fRefVolume; }
+
+   /**
+      set the reference volume used to normalize the data when the option bin volume is set
+    */
+   void SetRefVolume(double value) { fRefVolume = value; }
 
 protected: 
 
@@ -484,6 +501,7 @@ private:
    unsigned int fDim;       // coordinate dimension
    unsigned int fPointSize; // total point size including value and errors (= fDim + 2 for error in only Y ) 
    unsigned int fNPoints;   // number of contained points in the data set (can be different than size of vector)
+   double fRefVolume;  // reference bin volume - used to normalize the bins in case of variable bins data
 
    DataVector * fDataVector;  // pointer to the copied in data vector
    DataWrapper * fDataWrapper;  // pointer to the external data wrapper structure
