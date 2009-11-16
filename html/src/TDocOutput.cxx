@@ -23,6 +23,7 @@
 #include "THtml.h"
 #include "TInterpreter.h"
 #include "TMethod.h"
+#include "TPRegexp.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TUrl.h"
@@ -404,11 +405,40 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
       if (!numReuseCanvases) {
          // need to run the script
          if (includeOutput & THtml::kSeparateProcessOutput) {
+            TString baseInFileName = gSystem->BaseName(infilename);
+            TPMERegexp reOutFile(baseInFileName + "_[[:digit:]]+\\.png");
+
+            // remove all files matching what saveScriptOutput.C could produce:
+            void* outdirH = gSystem->OpenDirectory(gSystem->DirName(outfilename));
+            if (outdirH) {
+               // the directory exists.
+               const char* outdirE = 0;
+               while ((outdirE = gSystem->GetDirEntry(outdirH))) {
+                  if (reOutFile.Match(outdirE)) {
+                     gSystem->Unlink(outdirE);
+                  }
+               }
+               gSystem->FreeDirectory(outdirH);
+            }
+
             gSystem->Exec(TString::Format("ROOT_HIST=0 root.exe -l -q %s $ROOTSYS/etc/html/saveScriptOutput.C\\(\\\"%s\\\",\\\"%s\\\",%d\\)",
                           gROOT->IsBatch() ? "-b" : "",
                           infilename,
                           gSystem->DirName(outfilename),
                           includeOutput & THtml::kCompiledOutput));
+
+            // determine how many output files were created:
+            outdirH = gSystem->OpenDirectory(gSystem->DirName(outfilename));
+            if (outdirH) {
+               // the directory exists.
+               const char* outdirE = 0;
+               while ((outdirE = gSystem->GetDirEntry(outdirH))) {
+                  if (reOutFile.Match(outdirE)) {
+                     ++nCanvases;
+                  }
+               }
+               gSystem->FreeDirectory(outdirH);
+            }
          } else {
             // run in this ROOT process
             TString pwd(gSystem->pwd());
