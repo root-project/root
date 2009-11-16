@@ -3331,6 +3331,7 @@ void TBranchElement::ResetAddress()
 
    ReleaseObject();
 
+   ResetBit(kAddressSet);
    fAddress = 0;
    fObject = 0;
 }
