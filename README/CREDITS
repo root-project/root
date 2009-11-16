@@ -383,6 +383,10 @@ N: Luke Jones
 E: jones@netoffice.com
 D: class TGraphDelaunay
 
+N: Pierre Juillot
+E: juillot@in2p3.fr
+D: various contributions to the postscript driver
+
 N: Michal Kapalka
 E: kapalka@icslab.agh.edu.pl
 D: improvements in the ZIP package
