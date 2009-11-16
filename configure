@@ -214,8 +214,8 @@ configoptions=`echo $configoptions | sed 's,\\\,\\\\\\\,g'`
 message() {
     # Write a simple message to std out
     if test $# -lt 1 ; then
-	echo "message: Too few arguments"
-	return 1
+        echo "message: Too few arguments"
+        return 1
     fi
     echo $ac_n "$* ... $ac_c"
     logmsg "$*"
@@ -225,8 +225,8 @@ message() {
 logmsg() {
     # Write a simple message to std out
     if test $# -lt 1 ; then
-	echo "logmsg: Too few arguments"
-	return 1
+        echo "logmsg: Too few arguments"
+        return 1
     fi
     if test "x$1" = "x-n"; then
        shift
@@ -246,19 +246,19 @@ result() {
 checking_msg() {
     # Write a simple "checking" message to std out.
     if test $# -lt 1 ; then
-	echo "checking_msg: Too few arguments"
-	return 1
+        echo "checking_msg: Too few arguments"
+        return 1
     fi
     echo $ac_n "Checking for$ac_c"
     logmsg $ac_n "Checking for$ac_c"
     while test $# -gt 1 ; do
-	echo $ac_n " $1,$ac_c"
-	logmsg $ac_n " $1,$ac_c"
-	shift
-	if test $# -eq 1 ; then
-	    echo $ac_n " or$ac_c"
-	    logmsg $ac_n " or$ac_c"
-	fi
+        echo $ac_n " $1,$ac_c"
+        logmsg $ac_n " $1,$ac_c"
+        shift
+        if test $# -eq 1 ; then
+            echo $ac_n " or$ac_c"
+            logmsg $ac_n " or$ac_c"
+        fi
     done
     echo $ac_n " $1 ... $ac_c"
     logmsg " $1 ... "
@@ -276,8 +276,8 @@ check_lib64() {
 
     # Assert that we got enough arguments
     if test $# -ne 1 ; then
-	echo "check_lib64: not 1 argument"
-	return 1
+        echo "check_lib64: not 1 argument"
+        return 1
     fi
 
     # Save arguments in logical names
@@ -285,18 +285,18 @@ check_lib64() {
     logmsg "Checking if $chklib64 is a 64bit library"
     if [ "x`basename $chklib64 .a`" != "x`basename $chklib64`" ]; then
         # we have an archive .a file
-	logmsg " objdump -a $chklib64 | grep 'x86-64'"
+        logmsg " objdump -a $chklib64 | grep 'x86-64'"
         objdump -a $chklib64 | grep 'x86-64' > /dev/null 2>& 1
-	ret=$?
+        ret=$?
     else
-	logmsg " file -L $chklib64 | grep '64-bit'"
+        logmsg " file -L $chklib64 | grep '64-bit'"
         file -L $chklib64 | grep '64-bit' > /dev/null 2>& 1
-	ret=$?
+        ret=$?
     fi
     logmsg " result: $ret"
     if test $ret -eq 0 ; then
         is_lib64=1
-	logmsg " is a 64bit library"
+        logmsg " is a 64bit library"
     fi
 }
 
@@ -311,8 +311,8 @@ check_library() {
 
     # Assert that we got enough arguments
     if test $# -lt 4 ; then
-	echo "check_library: Too few arguments"
-	return 1
+        echo "check_library: Too few arguments"
+        return 1
     fi
 
     # Save arguments in local names
@@ -337,9 +337,9 @@ check_library() {
     # the .lib export library to link.
     libs=""
     for i in $lib ; do
-	for ext in .a .lib "" ; do     # lib without extension for MacOS X
-	    libs="$libs $i$ext"
-	done
+        for ext in .a .lib "" ; do     # lib without extension for MacOS X
+            libs="$libs $i$ext"
+        done
     done
     slibs=""
     for i in $lib ; do
@@ -348,7 +348,7 @@ check_library() {
         done
     done
     if test ! "x$shared" = "xno" ; then
-	libs="$slibs $libs"
+        libs="$slibs $libs"
     else
         libs="$libs $slibs"
     fi
@@ -383,21 +383,21 @@ check_library() {
             i64=`echo $i | sed 's|\(lib\)|\1/amd64|'`
             i="$i64"
         fi
-	logmsg " Checking in directories $i for $libs"
+        logmsg " Checking in directories $i for $libs"
         for l in $i ; do
             l=`echo $l | sed 's,^//,/,'`
             if test ! -d $l ; then
-		continue
+                continue
             fi
             for j in ${libs} ; do
-		logmsg "  Checking for library $j in directory $i"
-	        # if we found the file (it's readable by user), we set the
-	        # logical variables and are on our way, otherwise we continue
+                logmsg "  Checking for library $j in directory $i"
+                # if we found the file (it's readable by user), we set the
+                # logical variables and are on our way, otherwise we continue
                 liblist=`echo $l/$j`    # expands wildcard in $l/$j
                 for n in ${liblist} ; do
-		    logmsg "   Checking $n"
+                    logmsg "   Checking $n"
                     if test -f $n ; then
-			logmsg "   Found file $n"
+                        logmsg "   Found file $n"
                         if test "x$checklib64" = "xyes" ; then
                             check_lib64 $n
                             if test $is_lib64 -eq 1 ; then
@@ -428,8 +428,8 @@ check_library() {
                                 fi
                             fi
                         fi
-		    else
-			logmsg "  $j not found in $j"
+                    else
+                        logmsg "  $j not found in $j"
                     fi
                 done
             done
@@ -441,43 +441,43 @@ check_library() {
     unset libdirs
 
     if test "x$found_dir" = "xno" || test "x$found_lib" = "xno" ; then
-	found_dir=""
-	found_lib=""
-	found_raw_lib=""
-	logmsg " library not found"
+        found_dir=""
+        found_lib=""
+        found_raw_lib=""
+        logmsg " library not found"
     else
-	flib=""
+        flib=""
         maclib=""
-	for i in $lib ; do
-	    for ext in .a .lib "" ; do     # lib without extension for MacOS X
-		if test "x$found_lib" = "x$i$ext" ; then
-		    flib=$i$ext
+        for i in $lib ; do
+            for ext in .a .lib "" ; do     # lib without extension for MacOS X
+                if test "x$found_lib" = "x$i$ext" ; then
+                    flib=$i$ext
                     if test "x$ext" = "x" ; then
                         maclib="yes"
                     fi
                     break 2
-		fi
-	    done
-	done
+                fi
+            done
+        done
 
-	if (test "x$found_lib" = "x$flib" && test "x$shared" = "xno") || \
+        if (test "x$found_lib" = "x$flib" && test "x$shared" = "xno") || \
            test "x$maclib" = "xyes" ; then
-		found_raw_lib=${found_lib}
-	    found_lib=${found_dir}/${found_lib}
-	    found_raw_dir=${found_dir}
-	    found_dir=""
-	else
-	    found_raw_lib=${found_lib}
-	    found_lib=`echo $found_lib | sed 's|^lib\(.*\)\..*|-l\1|'`
-	    found_raw_dir=${found_dir}
-	    found_dir=-L${found_dir}
+                found_raw_lib=${found_lib}
+            found_lib=${found_dir}/${found_lib}
+            found_raw_dir=${found_dir}
+            found_dir=""
+        else
+            found_raw_lib=${found_lib}
+            found_lib=`echo $found_lib | sed 's|^lib\(.*\)\..*|-l\1|'`
+            found_raw_dir=${found_dir}
+            found_dir=-L${found_dir}
             # Avoid inclusion of /usr/lib, which is always included anyway
             if test "x$found_dir" = "x-L/usr/lib"   || \
                test "x$found_dir" = "x-L/usr/lib32" || \
                test "x$found_dir" = "x-L/usr/lib64" ; then
-		found_dir=""
-	    fi
-	fi
+                found_dir=""
+            fi
+        fi
 
         # Correct path for win32
         if test "x$platform" = "xwin32"; then
@@ -507,8 +507,8 @@ check_header()  {
 
     # Assert that we got enough arguments
     if test $# -lt 3 ; then
-	echo "check_header: Too few arguments"
-	return 1
+        echo "check_header: Too few arguments"
+        return 1
     fi
 
     # Save arguments in logical names
@@ -531,13 +531,13 @@ check_header()  {
     # find any of the library files as determind above.
 
     for i in $hdrdirs; do
-	logmsg " Checking in directory $i"
+        logmsg " Checking in directory $i"
         for j in ${hdrs} ; do
-	    logmsg "  Checking for $j in directory $i"
-	    # if we found the file (it's readable by user), we set the
-	    # logical variables and are on our way, otherwise we continue
+            logmsg "  Checking for $j in directory $i"
+            # if we found the file (it's readable by user), we set the
+            # logical variables and are on our way, otherwise we continue
             if test -r $i/$j ; then
-		logmsg "  $i/$j is read-able"
+                logmsg "  $i/$j is read-able"
                 found_dir=$i
                 found_hdr=$j
                 # skip cygwin headers when in pure Win32 mode
@@ -556,13 +556,13 @@ check_header()  {
     echo $found_dir
 
     if test "x$found_hdr" = "xno" || test "x$found_dir" = "xno" ; then
-	found_hdr=""
-	found_dir=""
+        found_hdr=""
+        found_dir=""
     fi
 
     # Avoid inclusion of /usr/include, which is always included anyway
     #if test "x$found_dir" = "x/usr/include" ; then
-	# found_dir="include"
+        # found_dir="include"
     #fi
 
     # Correct path for win32
@@ -590,9 +590,9 @@ check_symbol() {
 
     # Assert that we got enough arguments
     if test $# -ne 3 ; then
-	echo "check_symbol: not 3 arguments"
+        echo "check_symbol: not 3 arguments"
         found_symbol=0
-	return 1
+        return 1
     fi
 
     # Save arguments in logical names
@@ -616,9 +616,9 @@ check_symbol() {
     symbolfile=$symbollib
     exts=".so .lib .dylib"
     if test ! "x$shared" = "xno" ; then
-	exts="$exts .a"
+        exts="$exts .a"
     else
-	exts=".a $exts"
+        exts=".a $exts"
     fi
 
     usrlib="/usr/lib"
@@ -644,15 +644,15 @@ check_symbol() {
     fi
 
     for d in "$symboldir" $usrlib ; do
-	logmsg " Checking in $d"
-	if test ! -r $d/$symbollib ; then
-	    logmsg "  $d/$symbollib not readable"
-	    for i in $exts ; do
-		logmsg "   Checking extension $i with $d/$symbollib"
-		if test -r $d/$symbollib$i ; then
-		    logmsg "   $d/$symbollib$i readable"
-		    symbolfile=$d/$symbollib$i
-		    break 2
+        logmsg " Checking in $d"
+        if test ! -r $d/$symbollib ; then
+            logmsg "  $d/$symbollib not readable"
+            for i in $exts ; do
+                logmsg "   Checking extension $i with $d/$symbollib"
+                if test -r $d/$symbollib$i ; then
+                    logmsg "   $d/$symbollib$i readable"
+                    symbolfile=$d/$symbollib$i
+                    break 2
                 fi
              done
         else
@@ -674,13 +674,13 @@ check_symbol() {
         found_symbol=1
         logmsg " Symbol found"
     else
-	nm $symbolfile 2>&1 | grep "no symbols" > /dev/null 2>&1
-	if test $? -eq 0 ; then
-	    logmsg " $symbolfile is stripped, trying a link"
-	    # stripped library - only safe test is to link against the
-	    # library!  However, we do not know what compiler to use
-	    # so we can not do the test.  Assume the symbol is in
-	    cat <<EOF > conftest.mk
+        nm $symbolfile 2>&1 | grep "no symbols" > /dev/null 2>&1
+        if test $? -eq 0 ; then
+            logmsg " $symbolfile is stripped, trying a link"
+            # stripped library - only safe test is to link against the
+            # library!  However, we do not know what compiler to use
+            # so we can not do the test.  Assume the symbol is in
+            cat <<EOF > conftest.mk
 include config/Makefile.${arch}
 conftest:conftest.c $symbolfile
 	\$(CC) \$(CFLAGS) \$(LDFLAGS) $symbolfile \$< -o \$@
@@ -689,24 +689,24 @@ conftest.c:
 	echo "extern int $symbol (); " > \$@
 	echo "int main() { $symbol (); return 0; }" >> \$@
 EOF
-	    $gnumake -f conftest.mk >> $logfile 2>&1
-	    if test $? -eq 0 ; then
-		found_symbol=1
-		logmsg " Link OK"
-	    else
-		found_symbol=0
-		logmsg " Failed code was"
-		cat conftest.mk >> $logfile
-	    fi
-	    rm -rf conftest.c conftest.mk conftest
-	else
-	    found_symbol=0
-	fi
+            $gnumake -f conftest.mk >> $logfile 2>&1
+            if test $? -eq 0 ; then
+                found_symbol=1
+                logmsg " Link OK"
+            else
+                found_symbol=0
+                logmsg " Failed code was"
+                cat conftest.mk >> $logfile
+            fi
+            rm -rf conftest.c conftest.mk conftest
+        else
+            found_symbol=0
+        fi
     fi
     if test $found_symbol -eq 1 ; then
-	result "ok"
+        result "ok"
     else
-	result "no"
+        result "no"
     fi
 }
 
@@ -823,8 +823,8 @@ check_explicit()
     if test "x$fail_on_missing" = "xno" ; then return 0 ; fi
     if test ! "x$expl" = "xyes" ; then return 0 ; fi
     if test ! "x$feat" = "xyes" ; then
-	result $emsg
-	exit 1
+        result $emsg
+        exit 1
     fi
 }
 
@@ -878,7 +878,7 @@ guess_architecture() {
         cygwin_*:ia64)         arch=win32           ;;
         *)
             echo "Attempts at guessing your architecture failed."
-	    echo "(triplet is $arch:$chip:$rele)"
+            echo "(triplet is $arch:$chip:$rele)"
             echo "Please specify the architecture as the first argument."
             echo "Do '$0 --help' for a list of avaliable architectures."
             echo "Or file a bug at https://savannah.cern.ch/projects/savroot/"
@@ -1055,7 +1055,7 @@ enable/disable options, prefix with either --enable- or --disable-
   gfal               GFAL support, requires libgfal
   g4root             GEANT4 navigator based on TGeo, requires GEANT4 installed
   globus             Globus authentication support, requires Globus toolkit
-  glite	             gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
+  glite              gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
   gsl-shared         enable linking against shared libraries for GSL (default no)
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
@@ -1789,9 +1789,9 @@ if test "x$enable_thread" = "xyes" && \
    test ! "x$platform" = "xwin32"  && \
    test "x$threadlib" = "x" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
-	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
-	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
-	/usr/X11/lib /usr/shlib
+        $THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
+        /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
+        /usr/X11/lib /usr/shlib
     threadlib=$found_lib
     threadlibdir=$found_dir
 
@@ -1863,14 +1863,14 @@ if test "x$enable_builtin_ftgl" = "x" || \
 
       message "Checking for libftgl"
       if pkg-config --exists ftgl ; then
-	  result "ok"
-	  ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
-	  ftgllibs=`pkg-config --libs-only-l ftgl`
-	  ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
-	  enable_builtin_ftgl=no
+          result "ok"
+          ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
+          ftgllibs=`pkg-config --libs-only-l ftgl`
+          ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
+          enable_builtin_ftgl=no
       else
-	  enable_builtin_ftgl=yes
-	  result "no"
+          enable_builtin_ftgl=yes
+          result "no"
       fi
    fi
 fi
@@ -1917,26 +1917,26 @@ result "$enable_builtin_pcre"
 #
 if test "x$enable_builtin_zlib" = "xno" ; then
     check_header "zlib.h" "/usr/include"  $ZLIB $ZLIB/include \
-	/usr/local/include /usr/include/zlib /usr/local/include/zlib \
-	/opt/zlib/include
+        /usr/local/include /usr/include/zlib /usr/local/include/zlib \
+        /opt/zlib/include
     if test "x$found_dir" = "x" ; then
-	enable_builtin_zlib=yes
+        enable_builtin_zlib=yes
     else
         zlibinc=$found_hdr
         zlibincdir=$found_dir
     fi
 
     check_library "libz" "$enable_shared" "" "/usr/lib" \
-	$ZLIB $ZLIB/lib /usr/local/zlib/lib /usr/local/lib \
+        $ZLIB $ZLIB/lib /usr/local/zlib/lib /usr/local/lib \
             /usr/lib/zlib /usr/local/lib/zlib /usr/zlib/lib /usr/lib \
             /usr/zlib /usr/local/zlilb /opt/zlib /opt/zlib/lib
     if test "x$found_lib" = "x" ; then
-	zliblib=""
-	zliblibdir=""
-	enable_builtin_zlib="yes"
+        zliblib=""
+        zliblibdir=""
+        enable_builtin_zlib="yes"
     else
-	zliblib="$found_lib"
-	zliblibdir="$found_dir"
+        zliblib="$found_lib"
+        zliblibdir="$found_dir"
     fi
 
     if test "x$zlibincdir" = "x" || test "x$zliblib" = "x"; then
@@ -1981,25 +1981,25 @@ check_explicit "$enable_editline" "$enable_editline_explicit" \
 if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
     # Check for OpenGL compatible include and library
     openglincdirs="$OPENGL $OPENGL/include \
-	/usr/include /usr/include/X11 /usr/X11/include \
-	/usr/X11R6/include /usr/local/include/X11 \
-	/usr/local/X11R6/include /usr/local/include \
-	/usr/include/Mesa /usr/local/include/Mesa /usr/Mesa/include \
-	/usr/local/Mesa/include /usr/Mesa /usr/local/Mesa /opt/Mesa \
-	/opt/Mesa/include /opt/graphics/OpenGL/include"
+        /usr/include /usr/include/X11 /usr/X11/include \
+        /usr/X11R6/include /usr/local/include/X11 \
+        /usr/local/X11R6/include /usr/local/include \
+        /usr/include/Mesa /usr/local/include/Mesa /usr/Mesa/include \
+        /usr/local/Mesa/include /usr/Mesa /usr/local/Mesa /opt/Mesa \
+        /opt/Mesa/include /opt/graphics/OpenGL/include"
     check_header "GL/gl.h" "$openglincdir" $openglincdirs
     openglinc=$found_hdr
     openglincdir=$found_dir
 
     opengllibdirs="$OPENGL $OPENGL/lib /usr/lib /usr/local/lib /usr/lib/X11 \
-	/usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
+        /usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
         /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
-	/usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
-	/opt/Mesa/lib /opt/graphics/OpenGL/lib"
+        /usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
+        /opt/Mesa/lib /opt/graphics/OpenGL/lib"
 
     keep=$opengllibdir
     check_library "libGL libMesaGL" "$enable_shared" \
-	"$opengllibdir" $opengllibdirs
+        "$opengllibdir" $opengllibdirs
     opengllib=$found_lib
     opengllibdir=$found_dir
 
@@ -2011,7 +2011,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
     fi
 
     check_library "libGLU libMesaGLU" "$enable_shared" \
-	"$keep" $opengllibdirs
+        "$keep" $opengllibdirs
     openglulib=$found_lib
     openglulibdir=$found_dir
 
@@ -2104,11 +2104,11 @@ if test ! "x$enable_mysql" = "xno"; then
        result "not found"
        # fall back in case mysql_config is not found
        check_header "mysql.h" "$mysqlincdir" \
-	   $MYSQL $MYSQL/include $MYSQL/include/mysql /usr/local/include \
-	   /usr/local/include/mysql /usr/local/mysql /usr/local/mysql/include \
-	   /opt/mysql /opt/mysql/include \
-	   /usr/include /usr/include/mysql /usr/mysql /usr/mysql/include \
-	   $finkdir/include/mysql
+           $MYSQL $MYSQL/include $MYSQL/include/mysql /usr/local/include \
+           /usr/local/include/mysql /usr/local/mysql /usr/local/mysql/include \
+           /opt/mysql /opt/mysql/include \
+           /usr/include /usr/include/mysql /usr/mysql /usr/mysql/include \
+           $finkdir/include/mysql
        mysqlinc=$found_hdr
        mysqlincdir=$found_dir
 
@@ -2118,10 +2118,10 @@ if test ! "x$enable_mysql" = "xno"; then
        fi
 
        check_library "$mysqlclientlibs" "$enable_shared" "$mysqllibdir" \
-	   $MYSQL $MYSQL/lib $MYSQL/lib/mysql /usr/local/lib \
-	   /usr/local/lib/mysql /usr/local/mysql /usr/local/mysql/lib \
-	   /opt/mysql /opt/mysql/lib \
-	   /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib \
+           $MYSQL $MYSQL/lib $MYSQL/lib/mysql /usr/local/lib \
+           /usr/local/lib/mysql /usr/local/mysql /usr/local/mysql/lib \
+           /opt/mysql /opt/mysql/lib \
+           /usr/lib /usr/lib/mysql /usr/mysql /usr/mysql/lib \
            $finkdir/lib/mysql
        mysqllib=$found_lib
        mysqllibdir=$found_dir
@@ -2129,10 +2129,10 @@ if test ! "x$enable_mysql" = "xno"; then
        # on linux, but maybe also other systems, explicitely add libz
        # (formally only needed when linking against the static libmysqlclient.a)
        if test ! "x$mysqllib" = "x" ; then
-	   case $platform in
-	       linux) mysqllib="$mysqllib -lz" ;;
-	       win32) mysqllib="`echo $mysqllib | sed 's/mysqlclient/libmysql/'` $mysqllib" ;;
-	   esac
+           case $platform in
+               linux) mysqllib="$mysqllib -lz" ;;
+               win32) mysqllib="`echo $mysqllib | sed 's/mysqlclient/libmysql/'` $mysqllib" ;;
+           esac
        fi
 
        if test "x$mysqlincdir" = "x" || test "x$mysqllib" = "x"; then
@@ -2192,19 +2192,19 @@ check_explicit "$enable_oracle" "$enable_oracle_explicit" \
 if test ! "x$enable_pgsql" = "xno"; then
     # Check for PgSQL include and library
     check_header "libpq-fe.h" "$pgsqlincdir" $PGSQL $PGSQL/include \
-	/usr/include /usr/local/include /usr/local/pgsql/include \
+        /usr/include /usr/local/include /usr/local/pgsql/include \
         /usr/include/pgsql /usr/include/postgresql \
-	/usr/include/postgresql/8.0 /usr/pgsql/include \
+        /usr/include/postgresql/8.0 /usr/pgsql/include \
         /usr/local/include/pgsql /usr/local/include/postgresql \
-	/usr/include/postgresql/8.0 /usr/pgsql /usr/local/pgsql \
-	/opt/pgsql /opt/pgsql/include
+        /usr/include/postgresql/8.0 /usr/pgsql /usr/local/pgsql \
+        /opt/pgsql /opt/pgsql/include
     pgsqlinc=$found_hdr
     pgsqlincdir=$found_dir
 
     check_library "libpq" "$enable_shared" "$pgsqllibdir" \
-	$PGSQL $PGSQL/lib /usr/local/pgsql/lib /usr/local/lib \
-	/usr/lib/pgsql /usr/local/lib/pgsql /usr/pgsql/lib /usr/lib \
-	/usr/pgsql /usr/local/pgsql /opt/pgsql /opt/pgsql/lib
+        $PGSQL $PGSQL/lib /usr/local/pgsql/lib /usr/local/lib \
+        /usr/lib/pgsql /usr/local/lib/pgsql /usr/pgsql/lib /usr/lib \
+        /usr/pgsql /usr/local/pgsql /opt/pgsql /opt/pgsql/lib
     pgsqllib=$found_lib
     pgsqllibdir=$found_dir
 
@@ -2227,24 +2227,24 @@ check_explicit "$enable_pgsql" "$enable_pgsql_explicit" \
 if test ! "x$enable_sapdb" = "xno"; then
     # Check for SapDB include and library
     check_header "sql.h" "$sapdbincdir" $SAPDB $SAPDB/include \
-	/opt/sapdb/interfaces/odbc/incl /usr/sapdb/interfaces/odbc/incl \
-	/usr/sapdb/include /usr/local/sapdb/interfaces/odbc/incl \
-	/usr/sapdb/web/incl /usr/include/sapdb /usr/include/maxdb \
-	/usr/local/include/sapdb /usr/local/include/maxdb \
-	/usr/local/sapdb/include /usr/local/sapdb/web/incl /usr/sapdb \
-	/usr/local/sapdb /opt/sapdb /opt/sapdb/include /opt/sapdb/web/incl
+        /opt/sapdb/interfaces/odbc/incl /usr/sapdb/interfaces/odbc/incl \
+        /usr/sapdb/include /usr/local/sapdb/interfaces/odbc/incl \
+        /usr/sapdb/web/incl /usr/include/sapdb /usr/include/maxdb \
+        /usr/local/include/sapdb /usr/local/include/maxdb \
+        /usr/local/sapdb/include /usr/local/sapdb/web/incl /usr/sapdb \
+        /usr/local/sapdb /opt/sapdb /opt/sapdb/include /opt/sapdb/web/incl
     sapdbinc=$found_hdr
     sapdbincdir=$found_dir
 
     check_library "libsqlod" "$enable_shared" "$sapdblibdir" \
-	$SAPDB $SAPDB/lib /opt/sapdb/interfaces/odbc/lib \
-	/usr/sapdb/interfaces/odbc/lib /usr/sapdb/lib \
-	/usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
-	/usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
-	/usr/local/sapdb/lib /usr/sapdb /usr/local/sapdb \
-	/opt/sapdb /opt/sapdb/lib /usr/sapdb/web/lib \
-	/usr/local/sapdb/web/lib /opt/sapdb/web/lib \
-	/usr/lib /usr/local/lib
+        $SAPDB $SAPDB/lib /opt/sapdb/interfaces/odbc/lib \
+        /usr/sapdb/interfaces/odbc/lib /usr/sapdb/lib \
+        /usr/local/sapdb/interfaces/odbc/lib /usr/local/sapdb/lib \
+        /usr/lib/sapdb /usr/local/lib/sapdb /usr/sapdb/lib \
+        /usr/local/sapdb/lib /usr/sapdb /usr/local/sapdb \
+        /opt/sapdb /opt/sapdb/lib /usr/sapdb/web/lib \
+        /usr/local/sapdb/web/lib /opt/sapdb/web/lib \
+        /usr/lib /usr/local/lib
     sapdblib=$found_lib
     sapdblibdir=$found_dir
 
@@ -2311,28 +2311,28 @@ check_qtvers()
         sed '-e s/[^"]*"//' -e 's/".*$//' 2>> $logfile`
     qtvers=0
     if test $? -eq 0 ; then
-	logmsg " Got Qt version $qtverstr"
-	qtgot=`echo $qtverstr | \
-	    awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`
-	qtneed=`echo $qtverneed | \
-	    awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
-	qtnew=`echo $qttoonew | \
-	    awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
-	logmsg " Got $qtgot, min $qtneed, max $qtnew"
-	if test $qtgot -lt $qtneed ; then
-	    res="no"
-	    resprint="no (found version $qtverstr)"
-	elif test $qtgot -ge $qtnew; then
-	    res="no"
-	    resprint="no (found version $qtverstr)"
-	else
-	    res="$qtverstr"
-	    resprint="$res"
-	    qtvers=`echo $qtverstr | awk 'BEGIN {FS="."} {print $1}'`
-	fi
+        logmsg " Got Qt version $qtverstr"
+        qtgot=`echo $qtverstr | \
+            awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`
+        qtneed=`echo $qtverneed | \
+            awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
+        qtnew=`echo $qttoonew | \
+            awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
+        logmsg " Got $qtgot, min $qtneed, max $qtnew"
+        if test $qtgot -lt $qtneed ; then
+            res="no"
+            resprint="no (found version $qtverstr)"
+        elif test $qtgot -ge $qtnew; then
+            res="no"
+            resprint="no (found version $qtverstr)"
+        else
+            res="$qtverstr"
+            resprint="$res"
+            qtvers=`echo $qtverstr | awk 'BEGIN {FS="."} {print $1}'`
+        fi
     else
-	res="no"
-	resprint="$res"
+        res="no"
+        resprint="$res"
     fi
     result $resprint
 }
@@ -2360,50 +2360,50 @@ if test ! "x$enable_qt" = "xno" || \
                 qtincdir="$qtincdir $i"
             fi
         done
-	qtverneed="4.3.0"
-	qttoonew="5.0.0"
-	qttestdir=$qtmainincdir/../src/corelib/global
-	if test ! -d $qttestdir ; then
-	    qttestdir=$qtmainincdir/Qt
-	fi
-	check_qtvers "$qttestdir" $qtverneed $qttoonew
-	if test $qtvers -eq 4 ; then
-	    qt4suffix="4"
-	    if test "x$enable_winrtdebug" = "xyes"; then
-	        qt4suffix="d4"
-	    fi
-	    check_library "libQtCore QtCore QtCore$qt4suffix QtCore4" \
-		"$enable_shared" \
-		"$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib \
-		/usr/local/qt/lib /usr/lib /usr/qt/lib
-	    qtlib=$found_lib
-	    qtlibdir=$found_dir
-	    check_library "libQtGui QtGui QtGui$qt4suffix QtGui4" \
-		"$enable_shared" "$found_raw_dir" ""
-	    qtlib="$qtlib $found_lib"
-	    check_library "libQt3Support Qt3Support Qt3Support$qt4suffix Qt3Support4" \
-		"$enable_shared" "$found_raw_dir" ""
-	    qtlib="$qtlib $found_lib"
-	    check_library "libQtOpenGL QtOpenGL QtOpenGL$qt4suffix QtOpenGL4" \
-		"$enable_shared" "$found_raw_dir" ""
-	    qtlib="$qtlib $found_lib"
-	    check_library "libQtSvg QtSvg QtSvg$qt4suffix QtSvg4" \
-		"$enable_shared" "$found_raw_dir" ""
-	    qtlib="$qtlib $found_lib"
-	    check_library "libQtXml QtXml QtXml$qt4suffix QtXml4" \
-		"$enable_shared" "$found_raw_dir" ""
-	    qtlib="$qtlib $found_lib"
-	    check_library "libQtWebKit QtWebKit QtWebKit$qt4suffix QtWebKit4" \
-		"$enable_shared" "$found_raw_dir" ""
-	    qtlib="$qtlib $found_lib"
-	    check_library "libQtNetwork QtNetwork QtNetwork$qt4suffix QtNetwork4" \
-		"$enable_shared" "$found_raw_dir" ""
-	    qtlib="$qtlib $found_lib"
-	else
+        qtverneed="4.3.0"
+        qttoonew="5.0.0"
+        qttestdir=$qtmainincdir/../src/corelib/global
+        if test ! -d $qttestdir ; then
+            qttestdir=$qtmainincdir/Qt
+        fi
+        check_qtvers "$qttestdir" $qtverneed $qttoonew
+        if test $qtvers -eq 4 ; then
+            qt4suffix="4"
+            if test "x$enable_winrtdebug" = "xyes"; then
+                qt4suffix="d4"
+            fi
+            check_library "libQtCore QtCore QtCore$qt4suffix QtCore4" \
+                "$enable_shared" \
+                "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib \
+                /usr/local/qt/lib /usr/lib /usr/qt/lib
+            qtlib=$found_lib
+            qtlibdir=$found_dir
+            check_library "libQtGui QtGui QtGui$qt4suffix QtGui4" \
+                "$enable_shared" "$found_raw_dir" ""
+            qtlib="$qtlib $found_lib"
+            check_library "libQt3Support Qt3Support Qt3Support$qt4suffix Qt3Support4" \
+                "$enable_shared" "$found_raw_dir" ""
+            qtlib="$qtlib $found_lib"
+            check_library "libQtOpenGL QtOpenGL QtOpenGL$qt4suffix QtOpenGL4" \
+                "$enable_shared" "$found_raw_dir" ""
+            qtlib="$qtlib $found_lib"
+            check_library "libQtSvg QtSvg QtSvg$qt4suffix QtSvg4" \
+                "$enable_shared" "$found_raw_dir" ""
+            qtlib="$qtlib $found_lib"
+            check_library "libQtXml QtXml QtXml$qt4suffix QtXml4" \
+                "$enable_shared" "$found_raw_dir" ""
+            qtlib="$qtlib $found_lib"
+            check_library "libQtWebKit QtWebKit QtWebKit$qt4suffix QtWebKit4" \
+                "$enable_shared" "$found_raw_dir" ""
+            qtlib="$qtlib $found_lib"
+            check_library "libQtNetwork QtNetwork QtNetwork$qt4suffix QtNetwork4" \
+                "$enable_shared" "$found_raw_dir" ""
+            qtlib="$qtlib $found_lib"
+        else
             qtinc=
             qtmainincdir=
             qtincdir=
-	fi
+        fi
     fi
 
     message "Checking for moc or moc.exe"
@@ -2411,21 +2411,21 @@ if test ! "x$enable_qt" = "xno" || \
              /usr/bin /usr/qt4/bin /usr/lib/qt4/bin /usr/share/qt4/bin ; do
     logmsg " Checking for $qtmocexe in $i"
 
-	for j in $i/moc-qt${qtvers} $i/moc-qt${qtvers}.exe $i/moc $i/moc.exe ;
-	do
-	    if test -x $j ; then
+        for j in $i/moc-qt${qtvers} $i/moc-qt${qtvers}.exe $i/moc $i/moc.exe ;
+        do
+            if test -x $j ; then
           moc_vers=`$j -v 2>&1 | \
           sed -e 's/.*(Qt //' -e 's/\.[0-9]*\.[0-9][-0-9a-z]*)//'`
                 if test ! "$moc_vers" = "$qtvers" ; then
-		    logmsg "$j: moc version ${moc_vers} does not match Qt version ${qtvers}"
-		    continue
-		fi
-		qtmocexe=$j
-		logmsg " $qtmocexe is executable"
-		break
-	    fi
-	done
-	if test ! "x$qtmocexe" = "x" ; then break ; fi
+                    logmsg "$j: moc version ${moc_vers} does not match Qt version ${qtvers}"
+                    continue
+                fi
+                qtmocexe=$j
+                logmsg " $qtmocexe is executable"
+                break
+            fi
+        done
+        if test ! "x$qtmocexe" = "x" ; then break ; fi
     done
 
     # Correct path for win32
@@ -2463,15 +2463,15 @@ if test ! "x$enable_rfio" = "xno" ; then
     # Check for RFIO include and library
     keepincdir=$shiftincdir
     check_header "rfio_api.h" "$shiftincdir" $RFIO $RFIO/include $RFIO/h \
-	/cern/pro/include /cern/new/include /cern/old/include \
-	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
-	/usr/local/include/shift /usr/include /usr/local/include
+        /cern/pro/include /cern/new/include /cern/old/include \
+        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /usr/local/include/shift /usr/include /usr/local/include
     shiftinc=$found_hdr
     shiftincdir=$found_dir
 
     if test ! "x$shiftincdir" = "x"; then
         message "Checking whether rfio_fchmod declared in $shiftinc"
-	logmsg " grep rfio_fchmod $shiftincdir/$shiftinc"
+        logmsg " grep rfio_fchmod $shiftincdir/$shiftinc"
         if `grep rfio_fchmod $shiftincdir/$shiftinc >> $logfile 2>&1` ; then
             result "yes"
         else
@@ -2483,10 +2483,10 @@ if test ! "x$enable_rfio" = "xno" ; then
     fi
 
     check_library "librfio libshift shiftmd shift" "$enable_shared" \
-	"$shiftlibdir" \
-	$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
-	/opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
-	/usr/local/lib/shift /usr/lib /usr/local/lib
+        "$shiftlibdir" \
+        $RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
+        /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
+        /usr/local/lib/shift /usr/lib /usr/local/lib
     shiftlib=$found_lib
     shiftlibdir=$found_dir
 
@@ -2495,21 +2495,21 @@ if test ! "x$enable_rfio" = "xno" ; then
     else
         case $platform in
            linux)      shiftlib="$shiftlib -lnsl"
-		for i in "" -ladns ; do
-		    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
-		    logmsg " Checking if we can link against $shiflib"
-		    logmsg " gcc conftest.c $shiftlibdir $shiftlib $i -o conftest"
-		    gcc conftest.c $shiftlibdir $shiftlib $i -o conftest >> $logfile 2>&1
-		    if test $? -eq 0 ; then
-			shiftlib="$shiftlib $i" ;
-			break ;
-		    else
-			logmsg " Failed program was:"
-			cat conftest.c >> $logfile
-		    fi
-		done
-		rm -f conftest.c conftest
-		;;
+                for i in "" -ladns ; do
+                    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
+                    logmsg " Checking if we can link against $shiflib"
+                    logmsg " gcc conftest.c $shiftlibdir $shiftlib $i -o conftest"
+                    gcc conftest.c $shiftlibdir $shiftlib $i -o conftest >> $logfile 2>&1
+                    if test $? -eq 0 ; then
+                        shiftlib="$shiftlib $i" ;
+                        break ;
+                    else
+                        logmsg " Failed program was:"
+                        cat conftest.c >> $logfile
+                    fi
+                done
+                rm -f conftest.c conftest
+                ;;
            solaris)    shiftlib="$shiftlib -lposix4" ;;
            win32)      shiftincdir="$shiftincdir $shiftincdir/../win32"
                        shiftlib="$shiftlib WSock32.lib Ws2_32.lib" ;;
@@ -2532,15 +2532,15 @@ if test ! "x$enable_castor" = "xno" ; then
     # Check for Castor include and library
     keepincdir=$castorincdir
     check_header "rfio_api.h" "$castorincdir" $CASTOR $CASTOR/include $CASTOR/h \
-	/cern/pro/include /cern/new/include /cern/old/include \
-	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
-	/usr/local/include/shift /usr/include /usr/local/include
+        /cern/pro/include /cern/new/include /cern/old/include \
+        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /usr/local/include/shift /usr/include /usr/local/include
     castorinc=$found_hdr
     castorincdir=$found_dir
 
     if test ! "x$castorincdir" = "x"; then
         message "Checking whether rfio_fchmod declared in $castorinc"
-	logmsg " grep rfio_fchmod $castorincdir/$castorinc"
+        logmsg " grep rfio_fchmod $castorincdir/$castorinc"
         if `grep rfio_fchmod $castorincdir/$castorinc >> $logfile 2>&1` ; then
             result "yes"
         else
@@ -2552,9 +2552,9 @@ if test ! "x$enable_castor" = "xno" ; then
     fi
 
     check_header "stager_api.h" "$keepincdir" $CASTOR $CASTOR/include $CASTOR/h \
-	/cern/pro/include /cern/new/include /cern/old/include \
-	/opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
-	/usr/local/include/shift /usr/include /usr/local/include
+        /cern/pro/include /cern/new/include /cern/old/include \
+        /opt/shift/include /usr/local/shift/inlcude /usr/include/shift \
+        /usr/local/include/shift /usr/include /usr/local/include
     stagerinc=$found_hdr
 
     if test ! "x$stagerinc" = "x"; then
@@ -2573,9 +2573,9 @@ if test ! "x$enable_castor" = "xno" ; then
     fi
 
     check_library "libshift shiftmd shift" "$enable_shared" "$castorlibdir" \
-	$CASTOR $CASTOR/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
-	/opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
-	/usr/local/lib/shift /usr/lib /usr/local/lib
+        $CASTOR $CASTOR/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
+        /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
+        /usr/local/lib/shift /usr/lib /usr/local/lib
     castorlib=$found_lib
     castorlibdir=$found_dir
 
@@ -2584,21 +2584,21 @@ if test ! "x$enable_castor" = "xno" ; then
     else
         case $platform in
            linux)      castorlib="$castorlib -lnsl"
-		for i in "" -ladns ; do
-		    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
-		    logmsg " Checking if we can link against $castorlib"
-		    logmsg " gcc conftest.c $castorlibdir $castorlib $i -o conftest"
-		    gcc conftest.c $castorlibdir $castorlib $i -o conftest >> $logfile 2>&1
-		    if test $? -eq 0 ; then
-			castorlib="$castorlib $i" ;
-			break ;
-		    else
-			logmsg " Failed program was:"
-			cat conftest.c >> $logfile
-		    fi
-		done
-		rm -f conftest.c conftest
-		;;
+                for i in "" -ladns ; do
+                    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
+                    logmsg " Checking if we can link against $castorlib"
+                    logmsg " gcc conftest.c $castorlibdir $castorlib $i -o conftest"
+                    gcc conftest.c $castorlibdir $castorlib $i -o conftest >> $logfile 2>&1
+                    if test $? -eq 0 ; then
+                        castorlib="$castorlib $i" ;
+                        break ;
+                    else
+                        logmsg " Failed program was:"
+                        cat conftest.c >> $logfile
+                    fi
+                done
+                rm -f conftest.c conftest
+                ;;
            solaris)    castorlib="$castorlib -lposix4" ;;
            win32)      castorincdir="$castorincdir $castorincdir/../win32"
                        castorlib="$castorlib WSock32.lib Ws2_32.lib" ;;
@@ -2620,14 +2620,14 @@ check_explicit "$enable_castor" "$enable_castor_explicit" \
 if test ! "x$enable_gfal" = "xno"; then
     # Check for GFAL include and library
     check_header "gfal_api.h" "$gfalincdir" $GFAL $GFAL/include \
-	/opt/lcg/include /opt/gfal/include /usr/local/lcg/include \
-	/usr/local/gfal/include
+        /opt/lcg/include /opt/gfal/include /usr/local/lcg/include \
+        /usr/local/gfal/include
     gfalinc=$found_hdr
     gfalincdir=$found_dir
 
     check_library "libgfal" "$enable_shared" "$gfallibdir" \
-	$GFAL $GFAL/lib /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
-	/usr/local/gfal/lib
+        $GFAL $GFAL/lib /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
+        /usr/local/gfal/lib
     gfallib=$found_lib
     gfallibdir=$found_dir
 
@@ -2659,7 +2659,7 @@ if test ! "x$enable_g4root" = "xno"; then
         G4SYSLIBDIR=$G4LIB/$G4SYSTEM
     fi
     check_library "libG4navigation" "$enable_shared" "$g4libdir" \
-	$G4SYSLIBDIR /opt/geant4/lib /opt/g4/lib /usr/local/lib /usr/lib
+        $G4SYSLIBDIR /opt/geant4/lib /opt/g4/lib /usr/local/lib /usr/lib
 
     g4rootlib=$found_lib
     g4libdir=$found_dir
@@ -2689,13 +2689,13 @@ check_explicit "$enable_g4root" "$enable_g4root_explicit" \
 if test ! "x$enable_monalisa" = "xno"; then
     # Check for Monalisa include and library
     check_header "ApMon.h" "$monalisaincdir" $MONALISA $MONALISA/include \
-	/usr/local/include /opt/alien/api/include /opt/monalisa/include \
+        /usr/local/include /opt/alien/api/include /opt/monalisa/include \
         /usr/include
     monalisainc=$found_hdr
     monalisaincdir=$found_dir
 
     check_library "libapmoncpp" "$enable_shared" "$monalisalibdir" \
-	$MONALISA $MONALISA/lib $MONALISA/.libs /usr/local/lib \
+        $MONALISA $MONALISA/lib $MONALISA/.libs /usr/local/lib \
         /opt/alien/api/lib /opt/monalisa/lib /usr/lib
     monalisalib=$found_lib
     monalisalibdir=$found_dir
@@ -2785,7 +2785,7 @@ if test ! "x$enable_gviz" = "xno"; then
     gvizlibpir=$found_dir
 
     if test "x$gvizincdir" = "x" || test "x$gvizlib1"  = "x" ||
-       test "x$gvizlib2"   = "x" || test "x$gvizlib3"  = "x" || 
+       test "x$gvizlib2"   = "x" || test "x$gvizlib3"  = "x" ||
        test "x$gvizlib4"   = "x" || test "x$gvizlibp1" = "x" ; then
         enable_gviz="no"
     else
@@ -2815,48 +2815,48 @@ if test ! "x$enable_pythia6" = "xno" ; then
     if test "x$pythia6uscore" = "xDOUBLE" || \
        test "x$pythia6uscore" = "xSINGLE" || \
        test "x$pythia6uscore" = "xNO" ; then
-	pythia6cppflags=-DPYTHIA6_${pythia6uscore}_UNDERSCORE
-	pythia6lib=
-	pythia6dir=
-	result "Using custom pythia6 library with $pythia6uscore underscore"
+        pythia6cppflags=-DPYTHIA6_${pythia6uscore}_UNDERSCORE
+        pythia6lib=
+        pythia6dir=
+        result "Using custom pythia6 library with $pythia6uscore underscore"
     else
-	check_library "libPythia6" "$enable_shared" "$pythia6libdir" \
-	    $PYTHIA6 $PYTHIA6/lib /cern/pro/lib /opt/pythia /opt/pythia6 \
-	    /usr/lib/pythia /usr/local/lib/pythia /usr/lib/pythia6 \
-	    /usr/local/lib/pythia6 /usr/lib /usr/local/lib
-	pythia6lib=$found_lib
-	pythia6libdir=$found_dir
+        check_library "libPythia6" "$enable_shared" "$pythia6libdir" \
+            $PYTHIA6 $PYTHIA6/lib /cern/pro/lib /opt/pythia /opt/pythia6 \
+            /usr/lib/pythia /usr/local/lib/pythia /usr/lib/pythia6 \
+            /usr/local/lib/pythia6 /usr/lib /usr/local/lib
+        pythia6lib=$found_lib
+        pythia6libdir=$found_dir
 
-	if test "x$pythia6lib" = "x" ; then
-	    enable_pythia6=no
-	else
-	    check_symbol pythia6_common_block_address__ \
-		"$found_lib" "$found_dir"
-	    if test $found_symbol -eq 1 ; then
-		pythia6cppflags=-DPYTHIA6_DOUBLE_UNDERSCORE
-	    else
-		check_symbol pythia6_common_block_address_ \
-		    "$found_lib" "$found_dir"
-		if test $found_symbol -eq 1  ; then
-		    pythia6cppflags=-DPYTHIA6_SINGLE_UNDERSCORE
-		else
-		    check_symbol pythia6_common_address \
-			"$found_lib" "$found_dir"
-		    if test $found_symbol -eq 1  ; then
-			pythia6cppflags=-DPYTHIA6_NO_UNDERSCORE
-		    else
-			result " didn't find pythia6_common_block_address[_]* in $found_lib"
-			enable_pythia6=no
-		    fi
-		fi
-	    fi
-	    if test "x$platform" = "xmacosx" ; then
-		check_symbol intel_cpu_indicator "$found_lib" "$found_dir"
-		if test $found_symbol -eq 1 ; then
-		    pythia6lib="$pythia6lib -L`$cwhich ifort | sed -e 's|bin/ifort|lib|'` -lifcore  -lirc -limf"
-		fi
+        if test "x$pythia6lib" = "x" ; then
+            enable_pythia6=no
+        else
+            check_symbol pythia6_common_block_address__ \
+                "$found_lib" "$found_dir"
+            if test $found_symbol -eq 1 ; then
+                pythia6cppflags=-DPYTHIA6_DOUBLE_UNDERSCORE
+            else
+                check_symbol pythia6_common_block_address_ \
+                    "$found_lib" "$found_dir"
+                if test $found_symbol -eq 1  ; then
+                    pythia6cppflags=-DPYTHIA6_SINGLE_UNDERSCORE
+                else
+                    check_symbol pythia6_common_address \
+                        "$found_lib" "$found_dir"
+                    if test $found_symbol -eq 1  ; then
+                        pythia6cppflags=-DPYTHIA6_NO_UNDERSCORE
+                    else
+                        result " didn't find pythia6_common_block_address[_]* in $found_lib"
+                        enable_pythia6=no
+                    fi
+                fi
             fi
-	fi
+            if test "x$platform" = "xmacosx" ; then
+                check_symbol intel_cpu_indicator "$found_lib" "$found_dir"
+                if test $found_symbol -eq 1 ; then
+                    pythia6lib="$pythia6lib -L`$cwhich ifort | sed -e 's|bin/ifort|lib|'` -lifcore  -lirc -limf"
+                fi
+            fi
+        fi
     fi
 fi
 check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
@@ -2903,7 +2903,7 @@ if test ! "x$enable_dcache" = "xno" ; then
     dcapincdir=$found_dir
 
     check_library "libdcap" "$enable_shared" "$dcaplibdir" $DCACHE $DCACHE/lib \
-	/opt/d-cache/dcap/lib /products/dcache/lib /opt/dcache/lib \
+        /opt/d-cache/dcap/lib /products/dcache/lib /opt/dcache/lib \
         /usr/lib /usr/local/lib
     dcaplib=$found_lib
     dcaplibdir=$found_dir
@@ -2935,14 +2935,14 @@ check_explicit "$enable_dcache" "$enable_dcache_explicit" \
 #
 if test ! "x$enable_chirp" = "xno" ; then
     check_header "chirp_client.h" "$chirpincdir" $CHIRP $CHIRP/include \
-	/opt/chirp/include /usr/include /usr/local/include
+        /opt/chirp/include /usr/include /usr/local/include
     chirpincdir=$found_dir
 
     #At this time, libchirp_client.a should always be prefered over .so,
     #to avoid problems with linkage on grid execute machines.
 
     check_library "libchirp_client" "no" "$chirplibdir" $CHIRP $CHIRP/lib \
-	/opt/chirp/lib /usr/lib /usr/local/lib
+        /opt/chirp/lib /usr/lib /usr/local/lib
     chirplib=$found_lib
     chirplibdir=$found_dir
 
@@ -2967,11 +2967,11 @@ if test ! "x$enable_bonjour" = "xno" ; then
     # Bonjour is built-in on MacOS X (i.e. available in libSystem)
     if test ! "x$platform" = "xmacosx"; then
         check_header "dns_sd.h" "$dnssdincdir" $DNSSD $DNSSD/include \
-	/opt/dnssd/include /usr/include /usr/local/include
+        /opt/dnssd/include /usr/include /usr/local/include
         dnssdincdir=$found_dir
 
         check_library "libdns_sd" "$enable_shared" "$dnssdlibdir" \
-	$DNSSD $DNSSD/lib /opt/dnssd/lib /usr/lib /usr/local/lib
+        $DNSSD $DNSSD/lib /opt/dnssd/lib /usr/lib /usr/local/lib
         dnssdlib=$found_lib
         dnssdlibdir=$found_dir
 
@@ -3015,12 +3015,12 @@ check_explicit "$enable_glite" "$enable_glite_explicit" \
 #
 if test ! "x$enable_alien" = "xno" ; then
     check_header "gapiUI.h" "$alienincdir" $ALIEN $ALIEN/include \
-	/opt/alien/api/include /usr/local/alien/api/include /usr/include \
-	/usr/local/include
+        /opt/alien/api/include /usr/local/alien/api/include /usr/include \
+        /usr/local/include
     alienincdir=$found_dir
 
     check_library "libgapiUI" "$enable_shared" "$alienlibdir" \
-	$ALIEN $ALIEN/lib /opt/alien/api/lib /usr/local/alien/api/lib /usr/lib \
+        $ALIEN $ALIEN/lib /opt/alien/api/lib /usr/local/alien/api/lib /usr/lib \
         /usr/local/lib
     alienlib=$found_lib
     alienlibdir=$found_dir
@@ -3147,10 +3147,10 @@ check_explicit "$enable_asimage" "$enable_asimage_explicit" \
 if test ! "x$enable_ldap" = "xno"; then
     # Check for ldap include and library
     check_header "ldap.h" "$ldapincdir" $LDAP $LDAP/include \
-	/usr/include /usr/local/include /usr/local/ldap/include \
+        /usr/include /usr/local/include /usr/local/ldap/include \
         /usr/include/ldap /usr/include/openldap /usr/ldap/include \
         /usr/local/include/ldap /usr/local/include/openldap \
-	/usr/ldap /usr/local/ldap /opt/ldap /opt/ldap/include
+        /usr/ldap /usr/local/ldap /opt/ldap /opt/ldap/include
     ldapinc=$found_hdr
     ldapincdir=$found_dir
 
@@ -3922,7 +3922,7 @@ if test "x$enable_ssl" = "xyes" ; then
         else
             for i in $ssl_incdir ; do
                 if test "x$i" != "x$found_dir" ; then
-		    ssl_incdir="$found_dir $ssl_incdir"
+                    ssl_incdir="$found_dir $ssl_incdir"
                 fi
             done
         fi
@@ -3955,7 +3955,7 @@ srpextracflags=""
 havesrp=""
 if test ! "x$enable_srp" = "xno" ; then
     if test "x$srpincdir" = "x" && test ! "x$srpdir" = "x" ; then
-	srpincdir=$srpdir/include
+        srpincdir=$srpdir/include
         if test ! -d $srpincdir ; then
             srpincdir=$srpdir/libsrp
         fi
@@ -3968,11 +3968,11 @@ if test ! "x$enable_srp" = "xno" ; then
     srpincdir=$found_dir
 
     if test "x$srpincdir" = "x" ; then
-	enable_srp="no"
+        enable_srp="no"
     fi
 
     if test "x$srplibdir" = "x" && test ! "x$srpdir" = "x" ; then
-	srplibdir=$srpdir/lib
+        srplibdir=$srpdir/lib
         if test ! -d $srplibdir ; then
             srplibdir=$srpdir/libsrp
         fi
@@ -4020,32 +4020,32 @@ if test ! "x$enable_srp" = "xno" ; then
         /usr/local/srp/lib /usr/local/lib/srp /usr/srp/lib /usr/lib/srp \
         /usr/local/lib /usr/lib"
     for i in libmisc libshadow ; do
-	check_library "$i" "no" "" $srplibdirs
-	if test "x$found_lib" = "x" ; then
-	    srputillib=""
-	    srputillibdir=""
-	    enable_srp="no"
-	    break
+        check_library "$i" "no" "" $srplibdirs
+        if test "x$found_lib" = "x" ; then
+            srputillib=""
+            srputillibdir=""
+            enable_srp="no"
+            break
         fi
-	srputillib="$srputillib $found_lib"
-	srputillibdir="$srputillibdir $found_dir"
+        srputillib="$srputillib $found_lib"
+        srputillibdir="$srputillibdir $found_dir"
     done
 
 
     if test ! "x$srpdir" = "x" ; then
-	srputilincdir=$srpdir/base/lib
+        srputilincdir=$srpdir/base/lib
     fi
     check_header "pwauth.h" "$srputilincdir" $SRP $SRP/base/lib \
         /usr/local/srp/base/lib /usr/srp/base/lib
     srputilincdir=$found_dir
 
     if test "x$srputilincdir" = "x" ; then
-	enable_srp="no"
+        enable_srp="no"
     fi
 
     if test "x$enable_srp" = "xno" ; then
-	srplib=""
-	srputillib=""
+        srplib=""
+        srputillib=""
     else
         srpextracflags="-DR__SRP"
         havesrp="srp"
@@ -4234,14 +4234,14 @@ havekrb5=""
 if test ! "x$enable_krb5" = "xno" ; then
     enable_krb5="yes"
     if test "x$krb5incdir" = "x" && test ! "x$krb5dir" = "x" ; then
-	krb5incdir=$krb5dir/include
+        krb5incdir=$krb5dir/include
     fi
     krb5heff=
     check_header "krb5.h" "$krb5incdir" /usr/kerberos/include \
-	    /usr/krb5/include /usr/local/kerberos/include \
-	    /usr/include /usr/include/kerberosV /usr/local/include
+            /usr/krb5/include /usr/local/kerberos/include \
+            /usr/include /usr/include/kerberosV /usr/local/include
     if test "x$found_dir" = "x" ; then
-	enable_krb5=no
+        enable_krb5=no
     else
         krb5heff=$found_dir/$found_hdr
         krb5inc=$found_hdr
@@ -4324,20 +4324,20 @@ if test ! "x$enable_krb5" = "xno" ; then
             fi
          else
             echo "Either 'krb5_c_valid_cksumtype' or 'valid_cksumtype' are available; disabling krb5"
-   	    enable_krb5=no
-	 fi
+               enable_krb5=no
+         fi
       fi
 
       if test ! "x$enable_krb5" = "xno" ; then
 
          check_library libkrb5 "$enable_shared" "$krb5libdirorg" $krb5libdirs
          if test "x$found_lib" = "x" ; then
-   	 enable_krb5=no
+            enable_krb5=no
          else
-   	 # The order is important here
-   	 krb5lib="$found_lib $krb5lib"
-   	 krb5libdir="$found_dir $krb5libdir"
-   	 if test "x$cryptolib" = "x" ; then
+            # The order is important here
+            krb5lib="$found_lib $krb5lib"
+            krb5libdir="$found_dir $krb5libdir"
+            if test "x$cryptolib" = "x" ; then
                check_library "libcrypto" "$enable_shared" "$krb5libdirorg" \
                              $krb5libdirs
                cryptolib=$found_lib
@@ -4347,16 +4347,16 @@ if test ! "x$enable_krb5" = "xno" ; then
                       linux) cryptolib="$cryptolib -ldl"
                   esac
                fi
-   	    if test "x$cryptolib" = "x" ; then
+               if test "x$cryptolib" = "x" ; then
                    enable_krb5=no
-   	    fi
-   	 fi
+               fi
+            fi
          fi
 
          krb5init=""
          krb5bindir=""
          if test ! "x$krb5dir" = "x" ; then
-   	 krb5bindir=$krb5dir/bin
+            krb5bindir=$krb5dir/bin
          fi
          for i in "$krb5bindir" /usr/kerberos/bin \
                 /usr/krb5/bin /usr/local/kerberos/bin \
@@ -4409,24 +4409,24 @@ if test "x$enable_afs" = "xyes" || test "x$enable_krb5" = "xyes" ; then
     check_library libcom_err "$enable_shared" "$comerrlibdir" \
                                               "$afssearchlibdirs $krb5libdirs"
     if test "x$found_lib" = "x" ; then
-	enable_krb5=no
+        enable_krb5=no
         krb5incdir=""
         krb5lib=""
         krb5libdir=""
         krb5extracflags=""
-	enable_afs=no
+        enable_afs=no
         afslib=""
-	comerrlib=""
-	comerrlibdir=""
+        comerrlib=""
+        comerrlibdir=""
     else
-	comerrlib=$found_lib
-	comerrlibdir=$found_dir
+        comerrlib=$found_lib
+        comerrlibdir=$found_dir
     fi
 
     case $platform in
-	linux|solaris) # Resolver lives in separate library
-	    resolvlib="-lresolv"
-	    ;;
+        linux|solaris) # Resolver lives in separate library
+            resolvlib="-lresolv"
+            ;;
     esac
 fi
 
@@ -4467,73 +4467,73 @@ if test ! "x$enable_mathmore" = "xno"; then
     # enable_gsl_shared=$enable_shared"
 
     check_header "gsl/gsl_version.h" "$gslincdir" $GSL $GSL/include \
-	$GSL/api /usr/local/include /usr/include /opt/gsl/include \
-	$finkdir/include
+        $GSL/api /usr/local/include /usr/include /opt/gsl/include \
+        $finkdir/include
 
     # check for gsl version >= 1.8
     if test ! "x$found_dir" = "x"; then
-	message "Checking for GSL version >= 1.8"
-	gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\..*[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-	if test $gsl_version -lt 1008; then
-	    gslskip="skip"
-	    result "no"
+        message "Checking for GSL version >= 1.8"
+        gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\..*[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+        if test $gsl_version -lt 1008; then
+            gslskip="skip"
+            result "no"
             enable_mathmore="no"
-	else
-	    result "ok"
-	    gslinc=$found_hdr
-	    gslincdir=$found_dir
-	    gslflags=-I$gslincdir
-	    gslversion=$gsl_version
-	fi
+        else
+            result "ok"
+            gslinc=$found_hdr
+            gslincdir=$found_dir
+            gslflags=-I$gslincdir
+            gslversion=$gsl_version
+        fi
     fi
 
     if test ! "x$gslflags" = "x"; then
-	#check for the library now
-	gsllibdir0=$gsllibdir
-	check_library "libgsl gslML gsl" "$enable_gsl_shared" "$gsllibdir" \
-	    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
-	    $finkdir/lib
+        #check for the library now
+        gsllibdir0=$gsllibdir
+        check_library "libgsl gslML gsl" "$enable_gsl_shared" "$gsllibdir" \
+            $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
+            $finkdir/lib
 
-	if test ! "x$found_lib" = "x"; then
-	    gsllibs=$found_lib
-	    gsllibdir=$found_dir
-	    # in case of shared libs (gsllibdir is not empty) need gslcblas
-	    # assume libgslcblas is in same dir as libgsl or in ../cblas/
-	    #if test ! "x$gsllibdir" = "x"; then
-		if test ! "x$gsllibdir0" = "x"; then
-		    gsllibdir1=$gsllibdir0/../cblas/.libs
-		fi
-		check_library "libgslcblas gslcblasML gslcblas cblas" \
-		    "$enable_gsl_shared" "" \
-		    $gsllibdir0 $gsllibdir1 $GSL $GSL/lib \
-		    $GSL/.libs $GSL/cblas/.libs /usr/local/lib \
-		    /usr/lib /opt/gsl/lib $finkdir/lib
-		if test ! "x$found_lib" = "x"; then
-		    gsllibs="$gsllibs $found_lib"
-		    gsllibdir=$found_dir
-		else
-		    #cblas not found
-		    gsllibs=""
-		fi
-	    #fi
-	fi
+        if test ! "x$found_lib" = "x"; then
+            gsllibs=$found_lib
+            gsllibdir=$found_dir
+            # in case of shared libs (gsllibdir is not empty) need gslcblas
+            # assume libgslcblas is in same dir as libgsl or in ../cblas/
+            #if test ! "x$gsllibdir" = "x"; then
+                if test ! "x$gsllibdir0" = "x"; then
+                    gsllibdir1=$gsllibdir0/../cblas/.libs
+                fi
+                check_library "libgslcblas gslcblasML gslcblas cblas" \
+                    "$enable_gsl_shared" "" \
+                    $gsllibdir0 $gsllibdir1 $GSL $GSL/lib \
+                    $GSL/.libs $GSL/cblas/.libs /usr/local/lib \
+                    /usr/lib /opt/gsl/lib $finkdir/lib
+                if test ! "x$found_lib" = "x"; then
+                    gsllibs="$gsllibs $found_lib"
+                    gsllibdir=$found_dir
+                else
+                    #cblas not found
+                    gsllibs=""
+                fi
+            #fi
+        fi
     fi
     #
     # if gslincdir not specified look for gsl-config
     #
     # gsl-config check does not work on Solaris so lets skip it
     if test "x$platform" = "xsolaris"; then
-	if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
-	    gslskip="skip"
-	    enable_mathmore="no"
-	fi
+        if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
+            gslskip="skip"
+            enable_mathmore="no"
+        fi
     fi
     # skip cygwin gsl-config when in pure Win32 mode
     if test "x$platform" = "xwin32"; then
-	if `$cwhich gsl-config > /dev/null 2>&1` ; then
+        if `$cwhich gsl-config > /dev/null 2>&1` ; then
             case `$cwhich gsl-config` in
                 /bin/*|/usr/bin/*)
-	            if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
+                    if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x"); then
                         gslskip="skip"
                         enable_mathmore="no"
                     fi
@@ -4543,9 +4543,9 @@ if test ! "x$enable_mathmore" = "xno"; then
     fi
     if (test "x$gslincdir" = "x" || test "x$gsllibs" = "x") && \
         test ! "x$gslskip" = "xskip"; then
-	checking_msg "gsl-config"
-	if `$cwhich gsl-config > /dev/null 2>&1` ; then
-	    $cwhich gsl-config
+        checking_msg "gsl-config"
+        if `$cwhich gsl-config > /dev/null 2>&1` ; then
+            $cwhich gsl-config
             # we found gsl-config - now check the version number
             message "Checking for GSL version >= 1.8"
             gsl_version=`gsl-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
@@ -4553,24 +4553,24 @@ if test ! "x$enable_mathmore" = "xno"; then
                 result "no (`gsl-config --version`)"
                 enable_mathmore="no"
             else
-	        # We've found `gsl-config' - use that to get the compiler
-	        # and linker flags
-		result "ok"
-	        gslflags=`gsl-config --cflags`
-	        if test "x$enable_gsl_shared" = "xyes"; then
-		    gsllibs=`gsl-config --libs`
-		else
-		    # use static libs
-		    gslprefix=`gsl-config --prefix`
-		    gsllibs="$gslprefix/lib/libgsl.a $gslprefix/lib/libgslcblas.a"
-	        fi
-		gsllibdir=""
+                # We've found `gsl-config' - use that to get the compiler
+                # and linker flags
+                result "ok"
+                gslflags=`gsl-config --cflags`
+                if test "x$enable_gsl_shared" = "xyes"; then
+                    gsllibs=`gsl-config --libs`
+                else
+                    # use static libs
+                    gslprefix=`gsl-config --prefix`
+                    gsllibs="$gslprefix/lib/libgsl.a $gslprefix/lib/libgslcblas.a"
+                fi
+                gsllibdir=""
                 gslversion=$gsl_version
             fi
         else
-	    enable_mathmore="no"
-	    result "not found"
-	fi
+            enable_mathmore="no"
+            result "not found"
+        fi
     fi
 fi
 message "Checking whether to build libMathMore"
@@ -4767,20 +4767,20 @@ if test ! "x$enable_clarens" = "xno" ; then
     myxmlrpc=`$cwhich xmlrpc-c-config 2> /dev/null`
     if test ! "x$myxmlrpc" = "x" && test -x "$myxmlrpc" ; then
         clarensincdir=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
-	if test $? -ne 0 ; then clarensincdir= ; fi
+        if test $? -ne 0 ; then clarensincdir= ; fi
         clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
-	if test $? -ne 0 ; then clarenslibs= ; fi
-	if test "x$clarensincdir" = "x" ; then
+        if test $? -ne 0 ; then clarenslibs= ; fi
+        if test "x$clarensincdir" = "x" ; then
             clarensincdir=`xmlrpc-c-config client --cflags 2> /dev/null`
-	    if test $? -ne 0 ; then clarensincdir= ; fi
+            if test $? -ne 0 ; then clarensincdir= ; fi
             clarenslibs=`xmlrpc-c-config client --ldadd 2> /dev/null`
-	    if test $? -ne 0 ; then clarenslibs= ; fi
+            if test $? -ne 0 ; then clarenslibs= ; fi
         fi
         if test "x$clarensincdir" = "x" ; then
             clarensincdir=`xmlrpc-c-config --cflags 2> /dev/null`
-	    if test $? -ne 0 ; then clarensincdir= ; fi
+            if test $? -ne 0 ; then clarensincdir= ; fi
             clarenslibs=`xmlrpc-c-config --ldadd 2> /dev/null`
-	    if test $? -ne 0 ; then clarenslibs= ; fi
+            if test $? -ne 0 ; then clarenslibs= ; fi
         fi
     else
         clarensincdir=""
