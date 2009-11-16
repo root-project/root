@@ -132,15 +132,15 @@ char			*malloc();
 char			*realloc();
 #endif
 
-char			*copy();
-char			*base_name();
-char			*rgetline();
-struct symtab		**slookup();
-struct symtab		**isdefined();
+char			*copy(char*);
+char			*base_name(char*);
+char			*rgetline(struct filepointer*);
+struct symtab		**slookup(char*, struct inclist*);
+struct symtab		**isdefined(char*,struct inclist*, struct inclist**);
 struct symtab		**fdefined();
-struct filepointer	*getfile();
-struct inclist		*newinclude();
-struct inclist		*inc_path();
+struct filepointer	*getfile(char*);
+struct inclist		*newinclude(char*,char*);
+struct inclist		*inc_path(char*, char*, boolean);
 void			undefine_all(struct inclist *);
 
 extern void fatalerr(char *, ...);

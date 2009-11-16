@@ -56,10 +56,10 @@ in this Software without prior written authorization from the X Consortium.
 #if defined(__APPLE__)
 #include <AvailabilityMacros.h>
 #if !defined(MAC_OS_X_VERSION_10_4)
-extern int fchmod();
+extern int fchmod(int, int);
 #endif
 #else
-extern int fchmod();
+extern int fchmod(int, int);
 #endif
 #endif
 
@@ -114,8 +114,8 @@ boolean	verbose = FALSE;
 boolean	show_where_not = FALSE;
 boolean warn_multiple = FALSE;	/* Warn on multiple includes of same file */
 
-void freefile();
-void redirect();
+void freefile(struct filepointer*);
+void redirect(char*, char*);
 
 static
 #ifdef SIGNALRETURNSINT
