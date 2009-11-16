@@ -175,11 +175,14 @@ public:
    double Value(const std::string &) const;
    double Error(const std::string &) const;
   
-   //convert Name into external number of Parameter
+   //convert Name into external number of Parameter (will assert if parameter  is not found)
    unsigned int Index(const std::string &) const;
-   //convert external number into Name of Parameter
+   // find parameter index given a name. If it is not found return a -1 
+   int FindIndex(const std::string & ) const;
+
+   //convert external number into Name of Parameter (will assert if index is out of range)
    const std::string & GetName(unsigned int) const; 
-   // mantain interface with const char * for backward compatibility
+   // mantain interface with const char * for backward compatibility 
    const char* Name(unsigned int) const;
 
 private:

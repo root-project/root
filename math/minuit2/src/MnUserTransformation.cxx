@@ -407,6 +407,14 @@ unsigned int MnUserTransformation::Index(const std::string & name) const {
    return (*ipar).Number();
 }
 
+int MnUserTransformation::FindIndex(const std::string & name) const {
+   // find index (external) corresponding to name - return -1 if not found
+   std::vector<MinuitParameter>::const_iterator ipar = 
+   std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name));
+   if (ipar == fParameters.end() ) return -1; 
+   return (*ipar).Number();
+}
+
 
 const std::string & MnUserTransformation::GetName(unsigned int n) const {
    // get name corresponding to index (external)

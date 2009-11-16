@@ -17,6 +17,14 @@
 
 #include <math.h>
 
+//#define DEBUG 
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
+
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -29,6 +37,10 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& 
    
    unsigned int n = Trafo().VariableParameters();
    assert(n == par.Vec().size());
+
+#ifdef DEBUG
+   std::cout << "Initial gradient calculator - params " << par.Vec() << std::endl;
+#endif
    
    MnAlgebraicVector gr(n), gr2(n), gst(n);
    

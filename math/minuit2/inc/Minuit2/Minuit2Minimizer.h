@@ -122,7 +122,22 @@ public:
    /// get name of variables (override if minimizer support storing of variable names)
    virtual std::string VariableName(unsigned int ivar) const;
 
-   /// method to perform the minimization
+   /// get index of variable given a variable given a name
+   /// return -1 if variable is not found
+   virtual int VariableIndex(const std::string & name) const;
+
+   /** 
+       method to perform the minimization. 
+       Return false in case the minimization did not converge. In this case a 
+       status code different than zero is set 
+       (retrieved by the derived method Minimizer::Status() )" 
+       
+       status = 1    : Covariance was made pos defined
+       status = 2    : Hesse is invalid
+       status = 3    : Edm is above max 
+       status = 4    : Reached call limit
+       status = 5    : Any other failure 
+   */
    virtual  bool Minimize(); 
 
    /// return minimum function value
@@ -191,6 +206,14 @@ public:
    /**
       get the minos error for parameter i, return false if Minos failed
       A minimizaiton must be performed befre, return false if no minimization has been done
+      In case of Minos failed the status error is updated as following 
+      status += 10 * minosStatus where the minos status is:
+       status = 1    : maximum number of function calls exceeded when running for lower error
+       status = 2    : maximum number of function calls exceeded when running for upper error
+       status = 3    : new minimum found when running for lower error
+       status = 4    : new minimum found when running for upper error
+       status = 5    : any other failure 
+
    */
    virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp); 
 
@@ -209,8 +232,13 @@ public:
    
    /**
       perform a full calculation of the Hessian matrix for error calculation
-      If a valid minimum exists the calculation is done on theminimum point otherwise is performed 
+      If a valid minimum exists the calculation is done on the minimum point otherwise is performed 
       in the current set values of parameters
+      Status code of minimizer is updated according to the following convention (in case Hesse failed)
+      status += 100*hesseStatus where hesse status is: 
+      status = 1 : hesse failed
+      status = 2 : matrix inversion failed
+      status = 3 : matrix is not pos defined 
     */
    virtual bool Hesse();
 
