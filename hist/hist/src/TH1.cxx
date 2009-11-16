@@ -5725,11 +5725,16 @@ void TH1::Streamer(TBuffer &b)
       if (R__v > 2) {
          b.ReadClassBuffer(TH1::Class(), this, R__v, R__s, R__c);
 
+         ResetBit(kCanDelete);
+         ResetBit(kMustCleanup);
          fXaxis.SetParent(this);
          fYaxis.SetParent(this);
          fZaxis.SetParent(this);
-         ResetBit(kCanDelete);
-         ResetBit(kMustCleanup);
+         TIter next(fFunctions);
+         TObject *obj;
+         while ((obj=next())) {
+            if (obj->InheritsFrom(TF1::Class())) ((TF1*)obj)->SetParent(this);
+         }
          return;
       }
       //process old versions before automatic schema evolution
