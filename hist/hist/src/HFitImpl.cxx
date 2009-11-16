@@ -487,6 +487,8 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, const TF1 * f1, const ROOT::F
       funcList->Add(fnew3);
       fnew3->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
       fnew3->SetParent( h1 );
+      fnew3->Save(xmin,xmax,ymin,ymax,zmin,zmax);
+      if (!drawFunction) fnew3->SetBit(TF1::kNotDraw);
       fnew3->SetBit(TFormula::kNotGlobal);
    }
    if (h1->TestBit(kCanDelete)) return;
