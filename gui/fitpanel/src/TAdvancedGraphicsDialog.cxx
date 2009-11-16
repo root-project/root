@@ -1,3 +1,23 @@
+// @(#)root/fitpanel:$Id$
+// Author: David Gonzalez Maline 11/12/2008
+
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TAdvancedGraphicsDialog                                              //
+//                                                                      //
+// Allows to create advanced graphics from the last fit made in the     //
+// fitpanel. This includes the scan graphics, the contour and the       //
+// confidence levels.                                                   //
+//////////////////////////////////////////////////////////////////////////
+
 #include "TAdvancedGraphicsDialog.h"
 #include "TGraph.h"
 #include "TAxis.h"

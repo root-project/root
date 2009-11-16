@@ -32,7 +32,9 @@ ClassImp(TTreeInput)
 //______________________________________________________________________________
    TTreeInput::TTreeInput(const TGWindow *p, const TGWindow *main,
                           char *strvars, char *strcuts):
-      TGTransientFrame(p, main, 10, 10, kVerticalFrame)
+      TGTransientFrame(p, main, 10, 10, kVerticalFrame),
+      fStrvars(strvars),
+      fStrcuts(strcuts)
 {
    // Create simple input dialog.
 
@@ -110,9 +112,6 @@ ClassImp(TTreeInput)
    // popup dialog and wait till user replies
    MapWindow();
    fTEVars->SetFocus();
-
-   fStrvars = strvars;
-   fStrcuts = strcuts;
 
    gClient->WaitFor(this);
 }

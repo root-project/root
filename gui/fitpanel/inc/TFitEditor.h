@@ -32,6 +32,8 @@
 #include "Fit/DataRange.h"
 
 #include <vector>
+#include <map>
+#include <utility>
 
 //--- Object types
 enum EObjectType {
@@ -66,6 +68,7 @@ protected:
    TGCompositeFrame    *fTabContainer;     // main tab container
    TGCompositeFrame    *fGeneral;          // general tab
    TGCompositeFrame    *fMinimization;     // minimization tab
+   TGTextButton        *fUpdateButton;     // updates data from gROOT and gDirectory
    TGTextButton        *fFitButton;        // performs fitting
    TGTextButton        *fResetButton;      // resets fit parameters
    TGTextButton        *fCloseButton;      // close the fit panel
@@ -127,9 +130,10 @@ protected:
       Double_t & operator[](UInt_t i) { return fP[i];}
       Double_t fP[3];
    };
-   std::vector<FuncParamData_t>  fFuncPars;         // function parameters (value + limits)
+   std::vector<FuncParamData_t> fFuncPars; // function parameters (value + limits)
 
-   std::vector<TF1*> fPrevFit;             // Previous succesful fits.
+   std::multimap<TObject*, TF1*> fPrevFit; // Previous succesful fits.
+   std::vector<TF1*> fSystemFuncs;         // functions managed by the fitpanel
 
    TGRadioButton       *fLibMinuit;        // set default minimization library (Minuit)
    TGRadioButton       *fLibMinuit2;       // set Minuit2 as minimization library
@@ -145,7 +149,12 @@ protected:
    
    static TFitEditor *fgFitDialog;         // singleton fit panel
 
-   TGComboBox* BuildDataSetList(TGFrame *parent, Int_t id);
+protected:
+   void        GetFunctionsFromSystem();
+   void        ProcessTreeInput(TObject* objSelected, Int_t selected,
+                                TString variables, TString cuts);
+   TF1*        FindFunction();
+   void        FillDataSetList();
    TGComboBox* BuildMethodList(TGFrame *parent, Int_t id);
    void        GetRanges(ROOT::Fit::DataRange&);
    TF1*        GetFitFunction();
@@ -169,8 +178,9 @@ public:
    TFitEditor(TVirtualPad* pad, TObject *obj);
    virtual ~TFitEditor();
 
-//   static TFitEditor *&GetFP();
-   static  TFitEditor *GetInstance(TVirtualPad* pad, TObject *obj);
+   TList*  GetListOfFittingFunctions(TObject* obj = 0);
+
+   static  TFitEditor *GetInstance(TVirtualPad* pad = 0, TObject *obj = 0);
    virtual Option_t  *GetDrawOption() const;
    virtual void       Hide();
    virtual void       Show(TVirtualPad* pad, TObject *obj);
@@ -201,6 +211,7 @@ public:
    virtual void   DoClose();
    virtual void   DoEmptyBinsAllWeights1();
    virtual void   DoEnteredFunction();
+   virtual void   DoUpdate();
    virtual void   DoFit();
    virtual void   DoMaxIterations();
    virtual void   DoDataSet(Int_t sel);
@@ -227,7 +238,7 @@ public:
 public:
    typedef std::vector<FuncParamData_t > FuncParams_t; 
 
-   
+   friend class FitEditorUnitTesting;
    ClassDef(TFitEditor,0)  //Fit Panel interface
 };
 

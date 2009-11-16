@@ -1,3 +1,26 @@
+// @(#)root/fitpanel:$Id$
+// Author: David Gonzalez Maline 11/12/2008
+
+/*************************************************************************
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT__TAdvancedGraphicsDialog__
+#define ROOT__TAdvancedGraphicsDialog__
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TAdvancedGraphicsDialog                                              //
+//                                                                      //
+// Allows to create advanced graphics from the last fit made in the     //
+// fitpanel. This includes the scan graphics, the contour and the       //
+// confidence levels.                                                   //
+//////////////////////////////////////////////////////////////////////////
+
 #include "TGFrame.h"
 #include "TTreeInput.h"
 #include "TGButton.h"
@@ -20,9 +43,6 @@ enum EAdvanceGraphicsDialog {
 
    kAGD_PARCOUNTER = 1000
 };
-
-#ifndef __TAdvancedGraphicsDialog__
-#define __TAdvancedGraphicsDialog__
 
 class TAdvancedGraphicsDialog : public TGTransientFrame {
 

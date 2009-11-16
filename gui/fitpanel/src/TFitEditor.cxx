@@ -153,6 +153,7 @@
 #include "Fit/BinData.h"
 #include "TMultiGraph.h"
 #include "TTree.h"
+#include "TTreePlayer.h"
 #include "TTreeInput.h"
 #include "TAdvancedGraphicsDialog.h"
 
@@ -164,51 +165,105 @@
 #include <queue>
 using std::vector;
 using std::queue;
+using std::pair;
+using std::ostringstream;
+using std::make_pair;
 
-#include "Riostream.h"
+#include "CommonDefs.h"
 
-enum EFitPanel {
-   kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
-   kFP_POL0,  kFP_POL1,  kFP_POL2,  kFP_POL3,  kFP_POL4,  kFP_POL5,
-   kFP_POL6,  kFP_POL7,  kFP_POL8,  kFP_POL9,  
-   kFP_XYGAUS,kFP_XYEXP, kFP_XYLAN, kFP_XYLANN,
-// Above here -> All editable formulaes!
-   kFP_USER,
-   kFP_NONE,  kFP_ADD,   kFP_CONV,  kFP_FILE,  kFP_PARS,  kFP_RBUST, kFP_EMPW1,
-   kFP_INTEG, kFP_IMERR, kFP_USERG, kFP_ADDLS, kFP_ALLW1, kFP_IFITR, kFP_NOCHI,
-   kFP_MLIST, kFP_MCHIS, kFP_MBINL, kFP_MUBIN, kFP_MUSER, kFP_MLINF, kFP_MUSR,
-   kFP_DSAME, kFP_DNONE, kFP_DADVB, kFP_DNOST, kFP_PDEF,  kFP_PVER,  kFP_PQET,
-   kFP_XMIN,  kFP_XMAX,  kFP_YMIN,  kFP_YMAX,  kFP_ZMIN,  kFP_ZMAX,
-   
-   kFP_LMIN,  kFP_LMIN2, kFP_LFUM,  kFP_LGSL,  kFP_LGAS,  kFP_MIGRAD,kFP_SIMPLX,
-   kFP_FUMILI,kFP_COMBINATION,      kFP_MINMETHOD, 
-   kFP_GSLFR, kFP_GSLPR, kFP_BFGS,  kFP_BFGS2, kFP_GSLLM, kFP_GSLSA,
-   kFP_SCAN,  kFP_TMVAGA,kFP_GALIB,
-
-   kFP_MERR,  kFP_MTOL,  kFP_MITR,  
-   
-   kFP_FIT,   kFP_RESET, kFP_CLOSE,
-
-   // New GUI elements from here!
-   kFP_TLIST, kFP_PRED1D, kFP_PRED2D, kFP_PRED3D, kFP_UFUNC, kFP_PREVFIT, kFP_ROOFIT,
-   kFP_DATAS,
-
-   kFP_NOSEL = 8000,
-   kFP_ALTFUNC = 10000
-
-};
-
-enum EParStruct {
-   PAR_VAL = 0,
-   PAR_MIN = 1,
-   PAR_MAX = 2
-};
+// #include <iostream>
+// using std::cout;
+// using std::endl;
 
 void SearchCanvases(TSeqCollection* canvases, vector<TObject*>& objects);
 
+//______________________________________________________________________________
+TF1* TFitEditor::FindFunction()
+{
+   // This method looks among the functions stored by the fitpanel, the
+   // one that is currently selected in the fFuncList
+
+   // Get the list of functions from the system
+   std::vector<TF1*>& funcList(fSystemFuncs);
+
+   // Get the title/name of the function from fFuncList
+   TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
+   if ( !te ) return 0;
+   TString name(te->GetTitle());
+
+   // Look for a system function if it's USER DEFINED function
+   if ( fTypeFit->GetSelected() == kFP_UFUNC ) {
+      for ( fSystemFuncIter it = funcList.begin(); 
+            it != funcList.end(); ++it ) {
+         TF1* f = (*it);
+         if ( strcmp( f->GetName(), name ) == 0 )
+            // If found, return it.
+            return f;
+      }
+   // If we are looking for previously fitted functions, look in the
+   // fPrevFit data structure.
+   } else if ( fTypeFit->GetSelected() == kFP_PREVFIT ) {
+      pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(fFitObject);
+      for ( fPrevFitIter it = look.first; it != look.second; ++it ) {
+         TF1* f = it->second;
+         if ( strcmp( f->GetName(), name ) == 0 )
+            // If found, return it
+            return f;
+      }
+   }
+
+   // Return a pointer to null if the function does not exist. This
+   // will eventually create a segmentation fault, but the line should
+   // never be executed.
+   return 0;
+}
+
+//______________________________________________________________________________
+TF1* copyTF1(TF1* f)
+{
+   //Copies f into a new TF1 to be stored in the fitpanel with it's
+   //own ownership. This is taken from Fit::StoreAndDrawFitFunction in
+   //HFitImpl.cxx
+
+   double xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0; 
+
+   if ( dynamic_cast<TF3*>(f) != 0 ) {
+      TF3* fnew = (TF3*)f->IsA()->New();
+      f->Copy(*fnew);
+      f->GetRange(xmin,ymin,zmin,xmax,ymax,zmax);
+      fnew->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
+      fnew->SetParent( 0 );
+      fnew->SetBit(TFormula::kNotGlobal);
+      return fnew;
+   } else if ( dynamic_cast<TF2*>(f) != 0 ) {
+      TF2* fnew = (TF2*)f->IsA()->New();
+      f->Copy(*fnew);
+      f->GetRange(xmin,ymin,xmax,ymax);
+      fnew->SetRange(xmin,ymin,xmax,ymax);
+      fnew->Save(xmin,xmax,ymin,ymax,0,0);
+      fnew->SetParent( 0 );
+      fnew->SetBit(TFormula::kNotGlobal);
+      return fnew;
+   } else {
+      TF1* fnew = (TF1*)f->IsA()->New();
+      f->Copy(*fnew);
+      f->GetRange(xmin,xmax);
+      fnew->SetRange(xmin,xmax);
+      // This next line is added, as fnew-Save fails with gausND! As
+      // the number of dimensions is unknown...
+      if ( '\0' != fnew->GetExpFormula()[0] )
+         fnew->Save(xmin,xmax,0,0,0,0);
+      fnew->SetParent( 0 );
+      fnew->SetBit(TFormula::kNotGlobal);
+      return fnew;
+   }
+}
+
+//______________________________________________________________________________
 void GetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
 {
    // Stores the parameters of the given function into pars
+
    int npar = func->GetNpar(); 
    if (npar != (int) pars.size() ) pars.resize(npar);
    for ( Int_t i = 0; i < npar; ++i )
@@ -221,9 +276,11 @@ void GetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
    }
 }
 
+//______________________________________________________________________________
 void SetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
 {
    // Restore the parameters from pars into the function
+
    int npar = func->GetNpar(); 
    if (npar > (int) pars.size() ) pars.resize(npar);
    for ( Int_t i = 0; i < npar; ++i )
@@ -233,18 +290,44 @@ void SetParameters(TFitEditor::FuncParams_t & pars, TF1* func)
    }
 }
 
+//______________________________________________________________________________
 template<class FitObject>
 void InitParameters(TF1* func, FitObject * fitobj)
 {
    // Parameter initialization for the function
-   int special = func->GetNumber(); 
-   if (special == 100 || special == 400) { 
+
+   const int special = func->GetNumber(); 
+   if (100 == special || 400 == special) { 
       ROOT::Fit::BinData data; 
       ROOT::Fit::FillData(data,fitobj,func); 
       ROOT::Fit::InitGaus(data, func);
       // case gaussian or Landau
+   } else if ( 110 == special || 410 == special ) {
+      ROOT::Fit::BinData data;
+      ROOT::Fit::FillData(data,fitobj,func);
+      ROOT::Fit::Init2DGaus(data,func);
    }
 }
+
+//______________________________________________________________________________
+void GetTreeVarsAndCuts(TGComboBox* dataSet, TString& variablesStr, TString& cutsStr)
+{
+   // Splits the entry in fDataSet to get the selected variables and cuts
+   // from the text.
+
+   // Get the entry
+   TGTextLBEntry* textEntry = 
+      static_cast<TGTextLBEntry*>( dataSet->GetListBox()->GetEntry( dataSet->GetSelected() ) );
+   // Get the name of the tree
+   TString nameStr ( textEntry->GetText()->GetString() );
+   // Get the variables selected
+   variablesStr = nameStr(nameStr.First('(') + 2, nameStr.First(',') - nameStr.First('(') - 3);
+   // Get the cuts selected
+   cutsStr = nameStr( nameStr.First(',') + 3, nameStr.First(')') - nameStr.First(',') - 4 );
+
+   return;
+}
+
 
 ClassImp(TFitEditor)
 
@@ -255,6 +338,7 @@ TFitEditor * TFitEditor::GetInstance(TVirtualPad* pad, TObject *obj)
 {
    // Static method - opens the fit panel.
 
+   // Get the default pad if not provided.
    if (!pad)
    {
       if (!gPad)
@@ -292,11 +376,10 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    TGLabel *label = new TGLabel(tf,"Data Set: ");
    tf->AddFrame(label, new TGLayoutHints(kLHintsNormal, 15, 0, 5, 0));
 
-   fDataSet = BuildDataSetList(tf, kFP_DATAS);
+   fDataSet = new TGComboBox(tf, kFP_DATAS);
+   FillDataSetList();
    fDataSet->Resize(264, 20);
 
-   TGListBox *lb = fDataSet->GetListBox();
-   lb->Resize(lb->GetWidth(), 200);
    tf->AddFrame(fDataSet, new TGLayoutHints(kLHintsNormal, 13, 0, 5, 0));
    fDataSet->Associate(this);
 
@@ -309,22 +392,28 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fTab->SetCleanup(kDeepCleanup);
    fTab->Associate(this);
    
-   TGHorizontalFrame *cf1 = new TGHorizontalFrame(this, 250, 20, kFixedWidth);
+   TGHorizontalFrame *cf1 = new TGHorizontalFrame(this, 350, 20, kFixedWidth);
    cf1->SetCleanup(kDeepCleanup);
+   fUpdateButton = new TGTextButton(cf1, "&Update", kFP_UPDATE);
+   fUpdateButton->Associate(this);
+   cf1->AddFrame(fUpdateButton, new TGLayoutHints(kLHintsTop |
+                                                  kLHintsExpandX, 0, 20, 2, 2));
+
+
    fFitButton = new TGTextButton(cf1, "&Fit", kFP_FIT);
    fFitButton->Associate(this);
    cf1->AddFrame(fFitButton, new TGLayoutHints(kLHintsTop |
-                                               kLHintsExpandX, 2, 2, 2, 2));
+                                               kLHintsExpandX, 15, -6, 2, 2));
 
    fResetButton = new TGTextButton(cf1, "&Reset", kFP_RESET);
    fResetButton->Associate(this);
    cf1->AddFrame(fResetButton, new TGLayoutHints(kLHintsTop |
-                                                 kLHintsExpandX, 3, 2, 2, 2));
+                                                 kLHintsExpandX, 11, -2, 2, 2));
 
    fCloseButton = new TGTextButton(cf1, "&Close", kFP_CLOSE);
    fCloseButton->Associate(this);
    cf1->AddFrame(fCloseButton, new TGLayoutHints(kLHintsTop |
-                                                 kLHintsExpandX, 3, 2, 2, 2));
+                                                 kLHintsExpandX, 7, 2, 2, 2));
    AddFrame(cf1, new TGLayoutHints(kLHintsNormal |
                                    kLHintsRight, 0, 5, 5, 5));
 
@@ -357,6 +446,8 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
                kMWMInputModeless);
 
    ConnectSlots();
+
+   GetFunctionsFromSystem();
 
    if (!obj) {
       TList* l = new TList();
@@ -417,15 +508,22 @@ TFitEditor::~TFitEditor()
    // Fit editor destructor.
 
    DisconnectSlots();
+
+   // Disconnect all the slot that were no disconnected in DisconnecSlots
    fCloseButton->Disconnect("Clicked()");
+   fDataSet->Disconnect("Selected(Int_t)");
+   fUpdateButton->Disconnect("Clicked()");
    TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)",
                         this, "SetFitObject(TVirtualPad *, TObject *, Int_t)");
    gROOT->GetListOfCleanups()->Remove(this);
 
+   //Clean up the members that are not automatically cleaned.
    Cleanup();
    delete fLayoutNone;
    delete fLayoutAdd;
    delete fLayoutConv;
+
+   // Set the singleton reference to null
    fgFitDialog = 0;
 }
 
@@ -443,7 +541,6 @@ void TFitEditor::CreateFunctionGroup()
 
    fTypeFit = new TGComboBox(tf0, kFP_TLIST);
    fTypeFit->AddEntry("User Func", kFP_UFUNC);
-   fTypeFit->AddEntry("Prev. Fit", kFP_PREVFIT);
    fTypeFit->AddEntry("Predef-1D", kFP_PRED1D);
    fTypeFit->Resize(90, 20);
    fTypeFit->Select(kFP_PRED1D, kFALSE);
@@ -956,6 +1053,7 @@ void TFitEditor::ConnectSlots()
    fNoStoreDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoStoreDrawing()");
 
    // fit, reset, close buttons
+   fUpdateButton->Connect("Clicked()", "TFitEditor", this, "DoUpdate()");
    fFitButton->Connect("Clicked()", "TFitEditor", this, "DoFit()");
    fResetButton->Connect("Clicked()", "TFitEditor", this, "DoReset()");
    fCloseButton->Connect("Clicked()", "TFitEditor", this, "DoClose()");
@@ -965,7 +1063,7 @@ void TFitEditor::ConnectSlots()
    // advanced draw options
    fDrawAdvanced->Connect("Clicked()", "TFitEditor", this, "DoAdvancedOptions()");
 
-   if (fDim > 0) {
+   if (fType != kObjectTree) {
       fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
       fSliderXMax->Connect("ValueSet(Long_t)", "TFitEditor", this, "DoNumericSliderXChanged()");
       fSliderXMin->Connect("ValueSet(Long_t)", "TFitEditor", this, "DoNumericSliderXChanged()");
@@ -1009,7 +1107,6 @@ void TFitEditor::DisconnectSlots()
 
    Disconnect("CloseWindow()");
 
-   fDataSet->Disconnect("Selected(Int_t)");
    fFuncList->Disconnect("Selected(Int_t)");
    fEnteredFunc->Disconnect("ReturnPressed()");
    fSetParam->Disconnect("Clicked()");
@@ -1034,7 +1131,7 @@ void TFitEditor::DisconnectSlots()
    fUserButton->Disconnect("Clicked()");
    fDrawAdvanced->Disconnect("Clicked()");
 
-   if (fDim > 0) {
+   if (fType != kObjectTree) {
       fSliderX->Disconnect("PositionChanged()");
       fSliderXMax->Disconnect("ValueChanged(Long_t)");
       fSliderXMin->Disconnect("ValueChanged(Long_t)");
@@ -1157,8 +1254,13 @@ void TFitEditor::UpdateGUI()
 
    DrawSelection(true);
 
+   if ( fType == kObjectTree )
+      // Don't do anything with the sliders, as they work with TAxis
+      // that are not defined for the TTree
+      return;
+
    // sliders
-   if (fDim > 0) {
+   if (fType != kObjectTree) { // This is as fDim > 0
       TH1* hist = 0;
       switch (fType) {
          case kObjectHisto:
@@ -1187,8 +1289,10 @@ void TFitEditor::UpdateGUI()
       
 
       if (!hist) {
-         Error("UpdateGUI","No hist is present - this should not happen, aborting");
-         assert(hist);
+         Error("UpdateGUI","No hist is present - this should not happen, please report."
+               "The FitPanel might be in an inconsistent state");
+         //assert(hist);
+         return;
       }
 
       fSliderX->Disconnect("PositionChanged()");
@@ -1351,21 +1455,29 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
 
       TString tmpStr = fitFunc->GetExpFormula();
       TGLBEntry *en = 0;
+      // If the function comes from a C raw function.
       if ( tmpStr.Length() == 0 )
       {
+         // Show the name of the function
          fEnteredFunc->SetText(fitFunc->GetName());
          en= fFuncList->FindEntry(fitFunc->GetName());
+         // Don't allow edition!
          SetEditable(kFALSE);
       }
+      // otherwise, it's got a formula
       else
       {
+         // Show the formula
          fEnteredFunc->SetText(fitFunc->GetExpFormula().Data());
          en= fFuncList->FindEntry(fitFunc->GetExpFormula().Data());
          SetEditable(kTRUE);
       }
+      // Select the proper entry in the function list
       if (en) fFuncList->Select(en->EntryId());
-   } else {
+   } else { // if there is no fit function in the object
+      // Use the selected function in fFuncList
       TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
+      // Add the text to fEnteredFunc
       if (te && fNone->GetState() == kButtonDown)
          fEnteredFunc->SetText(te->GetTitle());
       else if (fAdd->GetState() == kButtonDown) {
@@ -1376,9 +1488,9 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
       } else if ( !te )
          // If there is no space, an error message is shown:
          // Error in <TString::AssertElement>: out of bounds: i = -1, Length = 0
+         // If there is no function selected, then put nothing.
          fEnteredFunc->SetText(" ");
    }
-   fEnteredFunc->Home();
    fEnteredFunc->SelectAll();
 
 
@@ -1395,15 +1507,16 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
 //______________________________________________________________________________
 void TFitEditor::DoNoSelection()
 {
-   // Slot called when users close a TCanvas. 
+   // Slot called when users close a TCanvas or when the user select
+   // no object.
 
    if (gROOT->GetListOfCanvases()->IsEmpty()) {
       Terminate();
       return;
    }
    
+   // Minimize user interaction until an object is selected
    DisconnectSlots();
-   fDataSet->Connect("Selected(Int_t)", "TFitEditor", this, "DoDataSet(Int_t)");
    fParentPad = 0;
    fFitObject = 0;
    fStatusBar->SetText("No selection",0);
@@ -1437,6 +1550,8 @@ void TFitEditor::RecursiveRemove(TObject* obj)
                         "SetFitObject(TVirtualPad *, TObject *, Int_t)");
       TQObject::Connect("TCanvas", "Closed()", "TFitEditor", this, 
                         "DoNoSelection()");
+
+      DoUpdate();
       return;
    }
    if (obj == fParentPad) {
@@ -1460,6 +1575,7 @@ void TFitEditor::FillFunctionList(Int_t)
    // selected.
 
    fFuncList->RemoveAll();
+   // Case when the user has selected predefined functions in 1D.
    if ( fTypeFit->GetSelected() == kFP_PRED1D && fDim <= 1 ) {
       // Fill function list combo box.
       fFuncList->AddEntry("gaus" ,  kFP_GAUS);
@@ -1480,12 +1596,14 @@ void TFitEditor::FillFunctionList(Int_t)
       fFuncList->AddEntry("user",   kFP_USER);
 
       // Need to be setted this way, otherwise when the functions
-      // are removed, the list doesn't show them.x
+      // are removed, the list doesn't show them.
       TGListBox *lb = fFuncList->GetListBox();
       lb->Resize(lb->GetWidth(), 200);
 
+      // Select Gaus1D by default
       fFuncList->Select(kFP_GAUS);
    }
+   // Case for predefined 2D functions
    else if ( fTypeFit->GetSelected() == kFP_PRED2D && fDim == 2 ) {
       fFuncList->AddEntry("xygaus", kFP_XYGAUS);
       fFuncList->AddEntry("xyexpo", kFP_XYEXP);
@@ -1497,54 +1615,74 @@ void TFitEditor::FillFunctionList(Int_t)
       TGListBox *lb = fFuncList->GetListBox(); 
       lb->Resize(lb->GetWidth(), 200);
 
+      // Select Gaus2D by default
       fFuncList->Select(kFP_XYGAUS);
    }
+   // Case for user defined functions. References to these functions
+   // are kept by the fitpanel, so the information is gathered from
+   // there.
    else if ( fTypeFit->GetSelected() == kFP_UFUNC ) {
       Int_t newid = kFP_ALTFUNC;
-      TIter functionsIter(gROOT->GetListOfFunctions());
-      TObject* obj;
-      while( ( obj = (TObject*) functionsIter() ) ) {
-         if ( TF1* func = dynamic_cast<TF1*>(obj) ) {
-            // Do not include functions used previously to fit
-            if ( strncmp(func->GetName(), "PrevFit", 7) != 0 )
-               fFuncList->AddEntry(func->GetName(), newid++); 
+
+      // Add system functions
+      for ( fSystemFuncIter it = fSystemFuncs.begin();
+            it != fSystemFuncs.end(); ++it ) {
+         TF1* f = (*it);
+         // Don't include system functions that has been previously
+         // used to fit, as those are included under the kFP_PREVFIT
+         // section.
+         if ( strncmp(f->GetName(), "PrevFit", 7) != 0 ) {
+            // If the dimension of the object coincides with the
+            // dimension of the function, then include the function in
+            // the list. It will also include de function if the
+            // dimension of the object is 0 (i.e. a multivariable
+            // TTree) as it is currently imposible to know how many
+            // dimensions a TF1 coming from a C raw function has.
+            if ( f->GetNdim() == fDim || fDim == 0) {
+               fFuncList->AddEntry(f->GetName(), newid++); 
+            }
          }
       }
-       if ( newid != kFP_ALTFUNC )
-            fFuncList->Select(newid-1);
-       else if( fDim == 1 ) {
-          fTypeFit->Select(kFP_PRED1D, kTRUE);
-       } else if( fDim == 2 ) {
-          fTypeFit->Select(kFP_PRED2D, kTRUE);
-       }
+
+      // If no function was added
+      if ( newid != kFP_ALTFUNC )
+         fFuncList->Select(newid-1);
+      else if( fDim == 1 ) {
+         // Select predefined 1D functions for 1D objects
+         fTypeFit->Select(kFP_PRED1D, kTRUE);
+      } else if( fDim == 2 ) {
+         // Select predefined 2D functions for 2D objects
+         fTypeFit->Select(kFP_PRED2D, kTRUE);
+      }
    } 
+   // Case for previously used functions.
    else if ( fTypeFit->GetSelected() == kFP_PREVFIT ) {
       Int_t newid = kFP_ALTFUNC;
-
-      for ( std::vector<TF1*>::iterator i = fPrevFit.begin();
-            i != fPrevFit.end(); ++i ) {
-         fFuncList->AddEntry((*i)->GetName(), newid++);
+      
+      // Look only for those functions used in the selected object
+      pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(fFitObject);
+      // Then go over all those functions and add them to the list
+      for ( fPrevFitIter it = look.first; it != look.second; ++it ) {
+         fFuncList->AddEntry(it->second->GetName(), newid++);
       }
 
-      TList *listOfFunctions = GetFitObjectListOfFunctions();
-      if ( listOfFunctions ) {
-         TIter next(listOfFunctions, kIterForward);
-         TObject* obj;
-         while ((obj = next()))
-            if (obj->InheritsFrom(TF1::Class())) {
-               fFuncList->AddEntry(obj->GetName(), newid++);
-            }
-      }
+      // If no functions were added.
       if ( newid == kFP_ALTFUNC ) {
+         // Remove the entry previous fit from fTypeFit
          fTypeFit->RemoveEntry(kFP_PREVFIT);
          if( fDim == 1 )
+            // Select predefined 1D functions for 1D objects
             fTypeFit->Select(kFP_PRED1D, kTRUE);
          else if ( fDim == 2 )
+            // Select predefined 2D functions for 2D objects
             fTypeFit->Select(kFP_PRED2D, kTRUE);
          else
+            // For more than 2 dimensions, select the user functions.
             fTypeFit->Select(kFP_UFUNC, kTRUE);
       }
       else
+         // If there is there are previously used functions, select
+         // the last one inserted.
          fFuncList->Select(newid-1, kTRUE);
    }
 }
@@ -1553,7 +1691,7 @@ void TFitEditor::FillFunctionList(Int_t)
 void TFitEditor::FillMinMethodList(Int_t)
 {
    // Fills the list of methods depending on the minimization library
-   // selected
+   // selected.
 
    fMinMethodList->RemoveAll();
    
@@ -1605,10 +1743,15 @@ void SearchCanvases(TSeqCollection* canvases, vector<TObject*>& objects)
 {
    // Auxiliary function to recursively search for objects inside the
    // current canvases.
+
    TIter canvasIter(canvases);
+   // Iterate over all the canvases in canvases.
    while(TObject* obj = (TObject*) canvasIter()) {
+      // If the object is another canvas, call this function
+      // recursively.
       if ( TPad* can = dynamic_cast<TPad*>(obj))
          SearchCanvases(can->GetListOfPrimitives(), objects);
+      // Otherwhise, if it's a recognised object, add it to the vector
       else if (    dynamic_cast<TH1*>(obj)
                 || dynamic_cast<TGraph*>(obj)
                 || dynamic_cast<TGraph2D*>(obj)
@@ -1616,28 +1759,41 @@ void SearchCanvases(TSeqCollection* canvases, vector<TObject*>& objects)
                 || dynamic_cast<THStack*>(obj)
                 || dynamic_cast<TTree*>(obj) ) {
          bool insertNew = true;
+         // Be careful no to insert the same element twice.
          for ( vector<TObject*>::iterator i = objects.begin(); i != objects.end(); ++i )
             if ( (*i) == obj ) {
                insertNew = false;
                break;
             }
+         // If the object is not already in the vector, then insert
+         // it.
          if ( insertNew ) objects.push_back(obj);
       }
    }
 }
 
 //______________________________________________________________________________
-TGComboBox* TFitEditor::BuildDataSetList(TGFrame* parent, Int_t id)
+void TFitEditor::FillDataSetList()
 {
    // Create a combo box with all the possible objects to be fitted.
 
-   TGComboBox *c = new TGComboBox(parent, id);
-   Int_t newid = kFP_NOSEL;
+   // Get the title of the entry selected, so that we can select it
+   // again once the fDataSet has been refilled.
+   TGTextLBEntry * entry = (TGTextLBEntry*) fDataSet->GetSelectedEntry();
+   TString selEntryStr;
+   if ( entry ) {
+      selEntryStr = entry->GetTitle();
+   }
+
+   // Remove all the elements
+   fDataSet->RemoveAll();
    vector<TObject*> objects;
 
+   // Get all the objects registered in gDirectory
    TIter next(gDirectory->GetList());
    TObject* obj = NULL;
    while ( (obj = (TObject*) next()) ) {
+      // But only if they are of a type recognized by the FitPanel
       if ( dynamic_cast<TH1*>(obj) || 
            dynamic_cast<TGraph2D*>(obj) ||
            dynamic_cast<TTree*>(obj) ) {
@@ -1645,14 +1801,31 @@ TGComboBox* TFitEditor::BuildDataSetList(TGFrame* parent, Int_t id)
       }
    }
 
+   // Look for all the drawn objects. The method will take care the
+   // same objects are not inserted twice.
    SearchCanvases(gROOT->GetListOfCanvases(), objects);
-   c->AddEntry("No Selection", newid++);
+
+   // Add all the objects stored in the vector
+   int selected = kFP_NOSEL;
+   // Add the No selection.
+   Int_t newid = kFP_NOSEL;
+   fDataSet->AddEntry("No Selection", newid++);
    for ( vector<TObject*>::iterator i = objects.begin(); i != objects.end(); ++i ) {
+      // Insert the name as the class name followed by the name of the
+      // object.
       TString name = (*i)->ClassName(); name.Append("::"); name.Append((*i)->GetName());
-      c->AddEntry(name, newid++);
+      // Check whether the names are the same!
+      if ( selEntryStr && name == selEntryStr )
+         selected = newid;
+      fDataSet->AddEntry(name, newid++);
    }
 
-   return c;
+   // If there was an entry selected (which should be always the case
+   // except the first time this method is executed), then make it the
+   // selected one again.
+   if (entry) {
+      fDataSet->Select(selected);
+   }
 }
 
 //______________________________________________________________________________
@@ -1690,26 +1863,32 @@ void TFitEditor::DoEmptyBinsAllWeights1()
 //______________________________________________________________________________
 void TFitEditor::DoUseFuncRange()
 {
+   
    if ( fUseRange->GetState() == kButtonDown ) {
       if (fNone->GetState() == kButtonDown || fNone->GetState() == kButtonDisabled) {
-         TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-         TF1* tmpTF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+         // Get the function
+         TF1* tmpTF1 = FindFunction();
          if ( !tmpTF1 ) {
-            if (GetFitObjectListOfFunctions())
+            if (GetFitObjectListOfFunctions()) {
+               TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
                tmpTF1 = (TF1*) GetFitObjectListOfFunctions()->FindObject( te->GetTitle() );
+            }
          }
+         // If the function has been retrieved, i.e. is a registered function.
          if ( tmpTF1 ) {
             Double_t xmin, ymin, zmin, xmax, ymax, zmax;
+            // Get the range
             tmpTF1->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
-            if ( fDim > 0 ) {
+            // And set the sliders
+            if ( fType != kObjectTree ) {
                fSliderXMin->SetNumber( xmin );
                fSliderXMax->SetNumber( xmax );
                DoNumericSliderXChanged();
-            }
-            if ( fDim > 1 ) {
-               fSliderYMin->SetNumber( ymin );
-               fSliderYMax->SetNumber( ymax );
-               DoNumericSliderYChanged();
+               if ( fDim > 1 ) {
+                  fSliderYMin->SetNumber( ymin );
+                  fSliderYMax->SetNumber( ymax );
+                  DoNumericSliderYChanged();
+               }
             }
          }
       }
@@ -1736,6 +1915,14 @@ void TFitEditor::DoClose()
 }
 
 //______________________________________________________________________________
+void TFitEditor::DoUpdate()
+{
+   // Easy here!
+   GetFunctionsFromSystem();
+   FillDataSetList();
+}
+
+//______________________________________________________________________________
 void TFitEditor::DoFit()
 {
    // Perform a fit with current parameters' settings.
@@ -1743,14 +1930,21 @@ void TFitEditor::DoFit()
    if (!fFitObject) return;
    //if (!fParentPad) return;
 
+   // If fNone->GetState() == kButtonDisabled means the function is
+   // not editable, i.e. it comes from a raw C function. So in this
+   // case, it is editable and we have to check wheather the formula
+   // is well built.
    if ( fNone->GetState() != kButtonDisabled && CheckFunctionString(fEnteredFunc->GetText()) )
    {
+      // If not, then show an error message and leave.
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
                    "Error...", "DoFit\nVerify the entered function string!",
                    kMBIconStop,kMBOk, 0);
       return;
    }
-   
+
+   // Set the button so that the user cannot use it while fitting, set
+   // the mouse to watch type and so on.
    fFitButton->SetState(kButtonEngaged);
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
@@ -1765,11 +1959,6 @@ void TFitEditor::DoFit()
       fParentPad->GetCanvas()->SetCursor(kWatch);
    }
 
-   // Option Retrieval!
-   ROOT::Math::MinimizerOptions mopts;
-   Foption_t fitOpts;
-   TString strDrawOpts;
-
    // Get the ranges from the sliders
    ROOT::Fit::DataRange drange; 
    GetRanges(drange);
@@ -1779,16 +1968,23 @@ void TFitEditor::DoFit()
    // the function after the fitting in case we want to do Advaced
    // graphics. The VirtualFitter need the function to be alived. One
    // problem, after the last fit the function is never deleted, but
-   // ROOT's garbaga collector will do the job for us.
+   // ROOT's garbage collector will do the job for us.
    static TF1 *fitFunc = 0;
    if ( fitFunc )
       delete fitFunc;
    fitFunc = GetFitFunction();
+   // This assert
+   assert(fitFunc && "This should have never happend, the fitfunc pointer is NULL!"
+          " Please report");
    // set parameters from panel in function
-   assert(fitFunc);
    SetParameters(fFuncPars, fitFunc);
+   // Get the options stored in the GUI elements.
+   ROOT::Math::MinimizerOptions mopts;
+   Foption_t fitOpts;
+   TString strDrawOpts;
    RetrieveOptions(fitOpts, strDrawOpts, mopts, fitFunc->GetNpar());
 
+   // Call the fit method, depending on the object to fit.
    switch (fType) {
       case kObjectHisto: {
          
@@ -1800,20 +1996,6 @@ void TFitEditor::DoFit()
       case kObjectGraph: {
 
          TGraph *gr = dynamic_cast<TGraph*>(fFitObject);
-         // not sure if this is needed 
-//         TH1F *hist = gr->GetHistogram();
-//          if (hist) { //!!! for many graphs in a pad, use the xmin/xmax of pad!!!
-//             Int_t npoints = gr->GetN();
-//             Double_t *gx = gr->GetX();
-//             Double_t gxmin, gxmax;
-//             const Int_t imin =  TMath::LocMin(npoints,gx);
-//             const Int_t imax =  TMath::LocMax(npoints,gx);
-//             gxmin = gx[imin];
-//             gxmax = gx[imax];
-//             if (xmin < gxmin) xmin = gxmin;
-//             if (xmax > gxmax) xmax = gxmax;
-//          }
-
          FitObject(gr, fitFunc, fitOpts, mopts, strDrawOpts, drange);
          break;
       }
@@ -1826,8 +2008,8 @@ void TFitEditor::DoFit()
       }
       case kObjectGraph2D: {
 
-         TGraph2D *mg = dynamic_cast<TGraph2D*>(fFitObject);
-         FitObject(mg, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+         TGraph2D *g2d = dynamic_cast<TGraph2D*>(fFitObject);
+         FitObject(g2d, fitFunc, fitOpts, mopts, strDrawOpts, drange);
 
          break;
       }
@@ -1836,13 +2018,84 @@ void TFitEditor::DoFit()
          break;
       }
       case kObjectTree:  {
-         TGTextLBEntry* textEntry = 
-            static_cast<TGTextLBEntry*>( fDataSet->GetListBox()->GetEntry( fDataSet->GetSelected() ) );
-         string name = textEntry->GetText()->GetString();
-         dynamic_cast<TTree*>(fFitObject)->UnbinnedFit("gausND",
-                                                       name.substr( name.find('(') + 2, name.find(',') - name.find('(') - 3 ).c_str(),
-                                                       name.substr( name.find(',') + 3, name.find(')') - name.find(',') - 4 ).c_str(),
-                                                       "");
+         // The three is a much more special case. The steps for
+         // fitting have to be done manually here until they are
+         // properly implemented within a FitObject method in
+         // THFitImpl.cxx
+
+         // Retrieve the variables and cuts selected from the current
+         // tree.
+         TString variables;
+         TString cuts;
+         GetTreeVarsAndCuts(fDataSet, variables, cuts);
+
+         // This should be straight forward and the return should
+         // never be called.
+         TTree *tree = dynamic_cast<TTree*>(fFitObject);
+         if ( !tree ) return;
+
+         // These method calls are just to set up everything for the
+         // fitting. It's taken from another script.
+         gROOT->ls();
+         tree->Draw(variables,cuts,"goff candle");
+
+         TTreePlayer * player = (TTreePlayer*) tree->GetPlayer();
+         if ( !player ) {
+            Error("DoFit","Player reference is NULL"); 
+            return; 
+         }
+
+         TSelectorDraw * selector = (TSelectorDraw* ) player->GetSelector(); 
+         if ( !selector ) {
+            Error("DoFit","Selector reference is NULL"); 
+            return; 
+         }
+
+         // use pointer stored in the tree (not copy the data in)
+         unsigned int ndim = player->GetDimension();
+         if ( ndim == 0 ) {
+            Error("DoFit","NDIM == 0"); 
+            return; 
+         }
+
+         std::vector<double *> vlist; 
+         for (unsigned int i = 0; i < ndim; ++i) {  
+            double * v =  selector->GetVal(i);
+            if (v != 0) vlist.push_back(v);
+            else 
+               std::cerr << "pointer for variable " << i << " is zero" << std::endl;
+         } 
+         if (vlist.size() != ndim) { 
+            Error("DoFit","Vector is not complete"); 
+            return; 
+         }
+         
+         // fill the data 
+         Long64_t nrows = player->GetSelectedRows();
+         if ( !nrows ) {
+            Error("DoFit","NROWS == 0"); 
+            return; 
+         }
+
+         ROOT::Fit::UnBinData * fitdata = new ROOT::Fit::UnBinData(nrows, ndim, vlist.begin());
+         
+         for ( int i = 0; i < std::min(int(fitdata->Size()),10); ++i) { 
+            // print j coordinate 
+            for (unsigned int j = 0; j < ndim; ++j) {  
+               printf(" x_%d [%d] = %f  \n", j, i,*(fitdata->Coords(i)+j) );
+            } 
+            printf("\n");
+         }
+         
+   
+         //TVirtualFitter::SetDefaultFitter("Minuit");
+         Foption_t fitOption; 
+         ROOT::Math::MinimizerOptions minOption;
+         fitOption.Verbose=1;
+
+         // After all the set up is performed, then do the Fit!!
+         ROOT::Fit::UnBinFit(fitdata, fitFunc, fitOption, minOption);
+         
          break;
       }
    }
@@ -1858,12 +2111,15 @@ void TFitEditor::DoFit()
    //if (!fFuncPars) fFuncPars = new Double_t[fitFunc->GetNpar()][3];
    GetParameters(fFuncPars,fitFunc);
 
-   // Save fit data for future use
-   TF1* tmpTF1 = static_cast<TF1*>( fitFunc->Clone() );
+   // Save fit data for future use as a PrevFit function.
+   TF1* tmpTF1 = static_cast<TF1*>( copyTF1(fitFunc) );
    ostringstream name;
-   name << "PrevFit" << fPrevFit.size() + 1;
+   name << "PrevFit-" << fPrevFit.size() + 1;
+   if ( strcmp(tmpTF1->GetName(), "PrevFitTMP") != 0 )
+      name << "-" << tmpTF1->GetName();
    tmpTF1->SetName(name.str().c_str());
-   fPrevFit.push_back(tmpTF1);
+   fPrevFit.insert(make_pair(fFitObject, tmpTF1));
+   fSystemFuncs.push_back( copyTF1(tmpTF1) );
 
    float xmin, xmax, ymin, ymax, zmin, zmax;
    if ( fParentPad ) {
@@ -1872,7 +2128,7 @@ void TFitEditor::DoFit()
       // after the GUI has been updated.  It would be more elegant to
       // disconnect the signal from fParentPad, however, this doesn't
       // work for unknown reasons.
-      if ( fDim > 0 ) fSliderX->GetPosition(xmin, xmax);
+      if ( fType != kObjectTree ) fSliderX->GetPosition(xmin, xmax);
       if ( fDim > 1 ) fSliderY->GetPosition(ymin, ymax);
       if ( fDim > 2 ) fSliderZ->GetPosition(zmin, zmax);
       fParentPad->Update();
@@ -1882,10 +2138,11 @@ void TFitEditor::DoFit()
    fParentPad = gPad;
    UpdateGUI();
 
+   // Change the sliders if necessary.
    if ( fParentPad ) {
-      if ( fDim > 0 ) { fSliderX->SetPosition(xmin, xmax); DoSliderXMoved(); }
-      if ( fDim > 1 ) { fSliderY->SetPosition(ymin, ymax); DoSliderYMoved(); }
-      if ( fDim > 2 ) { fSliderZ->SetPosition(zmin, zmax); DoSliderZMoved(); }
+      if ( fType != kObjectTree ) { fSliderX->SetPosition(xmin, xmax); DoSliderXMoved(); }
+      if ( fType != kObjectTree && fDim > 1 ) { fSliderY->SetPosition(ymin, ymax); DoSliderYMoved(); }
+      if ( fType != kObjectTree && fDim > 2 ) { fSliderZ->SetPosition(zmin, zmax); DoSliderZMoved(); }
       fParentPad->GetCanvas()->SetCursor(kPointer);
       fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
       
@@ -1895,6 +2152,7 @@ void TFitEditor::DoFit()
          fSetParam->SetState(kButtonUp);
    }
 
+   // Restore the Fit button and mouse cursor to their proper state.
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
    fFitButton->SetState(kButtonUp);
@@ -1927,7 +2185,9 @@ Int_t TFitEditor::CheckFunctionString(const char *fname)
 //______________________________________________________________________________
 void TFitEditor::DoAddition(Bool_t on)
 {
-   // Slot connected to addition of predefined functions.
+   // Slot connected to addition of predefined functions. It will
+   // insert the next selected function with a plus sign so that it
+   // doesn't override the current content of the formula.
 
    static Bool_t first = kFALSE;
    TString s = fEnteredFunc->GetText();
@@ -1953,32 +2213,45 @@ void TFitEditor::DoDataSet(Int_t selected)
       return;
    }
 
-   // Get the name of the object
+   // Get the name and class of the selected object.
    TGTextLBEntry* textEntry = static_cast<TGTextLBEntry*>(fDataSet->GetListBox()->GetEntry(selected));
-   string name = textEntry->GetText()->GetString()+textEntry->GetText()->First(':')+2;
+   TString textEntryStr = textEntry->GetText()->GetString();
+   TString name = textEntry->GetText()->GetString()+textEntry->GetText()->First(':')+2;
+   TString className = textEntryStr(0,textEntry->GetText()->First(':'));
    
-   // Check the object exists and it is registered
-   TObject* objSelected = gROOT->FindObject(name.c_str());
-   if ( !objSelected ) return;
+   // Check the object exists in the ROOT session and it is registered
+   TObject* objSelected(0);
+   if ( className == "TTree" ) {
+      // It's a tree, so the name is before the space (' ')
+      TString lookStr;
+      if ( name.First(' ') == kNPOS )
+         lookStr = name;
+      else 
+         lookStr = name(0, name.First(' '));
+      //cout << "\t1 SITREE: '" << lookStr << "'" << endl;
+      objSelected = gROOT->FindObject(lookStr);
+   } else {
+      // It's not a tree, so the name is the complete string
+      //cout << "\t1 NOTREE: '" << name << "'" << endl;
+      objSelected = gROOT->FindObject(name);
+   }
+   if ( !objSelected ) 
+   {
+      //cerr << "Object not found! Please report the error! " << endl;
+      return;
+   }
 
-   // If it is a tree, and there is no variables selected, show a dialog
+   // If it is a tree, and there are no variables selected, show a dialog
    if ( objSelected->InheritsFrom("TTree") && 
-        name.find(' ') == string::npos ) {
-      char variables[256]; char cuts[256];
+        name.First(' ') == kNPOS ) {
+      char variables[256] = {0}; char cuts[256] = {0};
       strcpy(variables, "Sin input!");
       new TTreeInput( fClient->GetRoot(), GetMainFrame(), variables, cuts );
       if ( strcmp ( variables, "" ) == 0 ) {
          DoNoSelection();
          return;
       }
-
-      // If the input is valid, insert the tree with the selections as an entry to fDataSet
-      TString entryName = (objSelected)->ClassName(); entryName.Append("::"); entryName.Append((objSelected)->GetName());
-      entryName.Append(" (\""); entryName.Append(variables); entryName.Append("\", \"");
-      entryName.Append(cuts); entryName.Append("\")");
-      Int_t newid = fDataSet->GetNumberOfEntries() + kFP_NOSEL;
-      fDataSet->InsertEntry(entryName, newid, selected );
-      fDataSet->Select(newid);
+      ProcessTreeInput(objSelected, selected, variables, cuts);
    }
 
    // Search the canvas where the object is drawn, if any
@@ -2008,6 +2281,17 @@ void TFitEditor::DoDataSet(Int_t selected)
    SetFitObject( found?currentPad:NULL, objSelected, kButton1Down);
 }
 
+void TFitEditor::ProcessTreeInput(TObject* objSelected, Int_t selected, TString variables, TString cuts)
+{
+   // If the input is valid, insert the tree with the selections as an entry to fDataSet
+   TString entryName = (objSelected)->ClassName(); entryName.Append("::"); entryName.Append((objSelected)->GetName());
+   entryName.Append(" (\""); entryName.Append(variables); entryName.Append("\", \"");
+   entryName.Append(cuts); entryName.Append("\")");
+   Int_t newid = fDataSet->GetNumberOfEntries() + kFP_NOSEL;
+   fDataSet->InsertEntry(entryName, newid, selected );
+   fDataSet->Select(newid);
+}
+
 //______________________________________________________________________________
 void TFitEditor::DoFunction(Int_t selected)
 {
@@ -2016,7 +2300,9 @@ void TFitEditor::DoFunction(Int_t selected)
    TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
    bool editable = false;
    if (fNone->GetState() == kButtonDown || fNone->GetState() == kButtonDisabled) {
-      TF1* tmpTF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+      // Get the function selected and check weather it is a raw C
+      // function or not
+      TF1* tmpTF1 = FindFunction();
       if ( !tmpTF1 ) {
          if (GetFitObjectListOfFunctions())
             tmpTF1 = (TF1*) GetFitObjectListOfFunctions()->FindObject( te->GetTitle() );
@@ -2034,8 +2320,10 @@ void TFitEditor::DoFunction(Int_t selected)
             editable = kFALSE;
          fEnteredFunc->SetText(te->GetTitle());
       }
+      // Once you have the function, set the editable.
       SetEditable(editable);
    } else if (fAdd->GetState() == kButtonDown) {
+      // If the add button is down don't replace the fEnteredFunc text
       Int_t np = 0;
       TString s = "";
       if (!strcmp(fEnteredFunc->GetText(), "")) {
@@ -2052,6 +2340,9 @@ void TFitEditor::DoFunction(Int_t selected)
       fEnteredFunc->SetText(s.Data());
       editable = true;
    }
+
+   // Get the final name in fEnteredFunc to process the function that
+   // it would create
    TString tmpStr = fEnteredFunc->GetText();
 
    // create TF1 with the passed string. Delete previous one if existing
@@ -2081,6 +2372,7 @@ void TFitEditor::DoEnteredFunction()
 
    if (!strcmp(fEnteredFunc->GetText(), "")) return;
    
+   // Check if the function is well built
    Int_t ok = CheckFunctionString(fEnteredFunc->GetText());
 
    if (ok != 0) {
@@ -2090,6 +2382,7 @@ void TFitEditor::DoEnteredFunction()
       return;
    }
 
+   // And set the label with the entered text if everything is fine.
    TString s = fEnteredFunc->GetText();
    fSelLabel->SetText(s.Sizeof()>30?s(0,30)+"...":s);
    ((TGCompositeFrame *)fSelLabel->GetParent())->Layout();
@@ -2135,6 +2428,8 @@ void TFitEditor::DoPrintOpt(Bool_t on)
 {
    // Slot connected to print option settings.
 
+   // Change the states of the buttons depending of which one is
+   // selected.
    TGButton *btn = (TGButton *) gTQSender;
    Int_t id = btn->WidgetId();
    switch (id) {
@@ -2232,11 +2527,15 @@ void TFitEditor::DoSetParameters()
 {
    // Open set parameters dialog.
 
+   // Get the function.
    TF1* fitFunc = GetFitFunction();
 
    if (!fitFunc) { Error("DoSetParameters","NUll function"); return; }
 
-   // case of special functions (gaus, expo, etc...)
+   // case of special functions (gaus, expo, etc...) if the function
+   // has not defined the parameters yet. For those, don't let the
+   // parameters to be all equal to 0, as we can provide some good
+   // starting value.
    if (fFuncPars.size() == 0) { 
       switch (fType) {
       case kObjectHisto:
@@ -2256,21 +2555,20 @@ void TFitEditor::DoSetParameters()
       default:
          break;
       }
+      // The put these parameters into the fFuncPars structure
       GetParameters(fFuncPars, fitFunc);
    }                            
    else {
+      // Otherwise, put the parameters in the function
       SetParameters(fFuncPars, fitFunc);
    }
 
    if ( fParentPad ) fParentPad->Disconnect("RangeAxisChanged()");
-//    Double_t xmin, xma> x;
-//    fitFunc->GetRange(xmin, xmax);
    Int_t ret = 0;
    new TFitParametersDialog(gClient->GetDefaultRoot(), GetMainFrame(), 
                             fitFunc, fParentPad, &ret);
    
-   //if ( fFuncPars ) delete fFuncPars;
-   //fFuncPars = new Double_t[fitFunc->GetNpar()][3];
+   // Once the parameters are set in the fitfunction, save them.
    GetParameters(fFuncPars, fitFunc);
    
    if ( fParentPad ) fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
@@ -2443,6 +2741,8 @@ Bool_t TFitEditor::SetObjectType(TObject* obj)
    
    Bool_t set = kFALSE;
 
+   // For each kind of object, set a different status in the fit
+   // panel.
    if (obj->InheritsFrom("TGraph")) {
       fType = kObjectGraph;
       set = kTRUE;
@@ -2470,7 +2770,15 @@ Bool_t TFitEditor::SetObjectType(TObject* obj)
    } else if (obj->InheritsFrom("TTree")) {
       fType = kObjectTree;
       set = kTRUE;
-      fDim = 0; 
+      TString variables, cuts;
+      GetTreeVarsAndCuts(fDataSet, variables, cuts);
+      fDim = 1;
+      for ( int i = 0; i < variables.Length() && fDim <= 2; ++i )
+         if ( ':' == variables[i] ) fDim += 1;
+      // For any three  of dimension bigger than 2,  set the dimension
+      // to 0,  as we cannot infer  the dimension from  the TF1s, it's
+      // better to have 0 as reference.
+      if ( fDim > 2 ) fDim = 0;
       fMethodList->RemoveAll();
       fMethodList->AddEntry("Unbinned Likelihood", kFP_MUBIN);
       fMethodList->Select(kFP_MUBIN, kFALSE);      
@@ -2493,16 +2801,19 @@ Bool_t TFitEditor::SetObjectType(TObject* obj)
       fRobustValue->GetNumberEntry()->SetToolTipText("Set robust value");
    }
 
-   if ( fDim < 2 )
+   // Depending on the dimension of the object, allow the
+   // visualization of sliders.
+   if ( fDim < 2 || fType == kObjectTree )
       fGeneral->HideFrame(fSliderYParent);
    else
       fGeneral->ShowFrame(fSliderYParent);
 
-   if ( fDim < 1 )
+   if ( fDim < 1 || fType == kObjectTree )
       fGeneral->HideFrame(fSliderXParent);
    else
       fGeneral->ShowFrame(fSliderXParent);
 
+   // And also, depending on the dimension, add predefined functions.
    if ( fDim == 1 ) {
       if ( !fTypeFit->FindEntry("Predef-1D") ) 
          fTypeFit->InsertEntry("Predef-1D", kFP_PRED1D, kFP_PREVFIT);
@@ -2528,12 +2839,14 @@ void TFitEditor::ShowObjectName(TObject* obj)
    // Show object name on the top.
 
    TString name;
+   bool isTree = false;
    
    // Build the string to be compared to look for the object.
    if (obj) {
       name = obj->ClassName();
       name.Append("::");
       name.Append(obj->GetName());
+      isTree = strcmp(obj->ClassName(), "TTree") == 0;
    } else {
       name = "No object selected";
    }
@@ -2543,8 +2856,10 @@ void TFitEditor::ShowObjectName(TObject* obj)
    // to search through the list
    TGTextLBEntry* selectedEntry = static_cast<TGTextLBEntry*> ( fDataSet->GetSelectedEntry());
    if ( selectedEntry ) {
-      string selectedName = selectedEntry->GetText()->GetString();
-      if ( name.CompareTo(selectedName.c_str()) == 0 ) {
+      TString selectedName = selectedEntry->GetText()->GetString();
+      if ( isTree )
+         selectedName = selectedName(0, selectedName.First(' '));
+      if ( name.CompareTo(selectedName) == 0 ) {
          Layout();
          return;
       }
@@ -2555,8 +2870,10 @@ void TFitEditor::ShowObjectName(TObject* obj)
    bool found = false;
    while ( TGTextLBEntry* entry = static_cast<TGTextLBEntry*> 
            ( fDataSet->GetListBox()->GetEntry(entryId)) ) {
-      string compareName = entry->GetText()->GetString();
-      if ( name.CompareTo(compareName.c_str()) == 0 ) {
+      TString compareName = entry->GetText()->GetString();
+      if ( isTree ) 
+         compareName = compareName(0, compareName.First(' '));
+      if ( name.CompareTo(compareName) == 0 ) {
          // If the object is found, select it
          fDataSet->Select(entryId, false);
          found = true;
@@ -2599,6 +2916,8 @@ void TFitEditor::DoLibrary(Bool_t on)
 
    switch (id) {
 
+      // Depending on the selected library, set the state of the rest
+      // of the buttons.
       case kFP_LMIN:
          {
             if (on) {
@@ -2741,27 +3060,55 @@ TF1* TFitEditor::HasFitFunction()
    // Look in the list of function for TF1. If a TF1 is
    // found in the list of functions, it will be returned
    
+   // Get the list of functions of the fit object
    TList *lf = GetFitObjectListOfFunctions();
 
+   // If it exists
    if ( lf ) {
+      // Add the posibility to select previous fit function
       if ( !fTypeFit->FindEntry("Prev. Fit") )
          fTypeFit->InsertEntry("Prev. Fit",kFP_PREVFIT, kFP_UFUNC);
-      fTypeFit->Select(kFP_PREVFIT);
-      FillFunctionList();
-      fDrawAdvanced->SetState(kButtonUp);
 
+      // Then add all these functions to the fPrefFit structure.
       TObject *obj2;
       TIter next(lf, kIterBackward);
+      // Go over all the elements in lf
       while ((obj2 = next())) {
          if (obj2->InheritsFrom(TF1::Class())) {
             TF1* func = (TF1 *)obj2;
-            TGLBEntry *le = fFuncList->FindEntry(func->GetName());
-            if (le) {
-               fFuncList->Select(le->EntryId(), kTRUE);
+            fPrevFitIter it;
+            // No go over all elements in fPrevFit
+            for ( it = fPrevFit.begin(); it != fPrevFit.end(); ++it) {
+               // To see wheather the object corresponds with fFitObject
+               if ( it->first != fFitObject ) continue;
+               // And if so, whether the function is already included
+               if ( strcmp( func->GetName(), it->second->GetName() ) == 0 )
+                  break;
+               if ( strcmp( func->GetName(), "PrevFitTMP" ) == 0 )
+                  break;
             }
-            return func;
+            // Only if the function is not already in fPrevFit, the
+            // breaks in the loops would make it to be different to
+            // fPrevFit.end() if the function is already stored
+            if ( it == fPrevFit.end() ) {
+               fPrevFit.insert( make_pair( fFitObject, static_cast<TF1*>( copyTF1( func ) ) ) );
+            }
          }
       }
+
+      // Select the PrevFit set
+      fTypeFit->Select(kFP_PREVFIT);
+      // And fill the function list
+      FillFunctionList();
+      fDrawAdvanced->SetState(kButtonUp);
+
+   } else {
+      // If there is no prev fit functions.
+      fTypeFit->Select(kFP_UFUNC);
+      // Call FillFunctionList as it might happen that the user is
+      // changing from a TTree to another one, and thus the fFuncList
+      // if not properly filled
+      FillFunctionList();
    }
 
    fDrawAdvanced->SetState(kButtonDisabled);
@@ -2873,6 +3220,7 @@ void TFitEditor::SetEditable(Bool_t state)
    {
       fEnteredFunc->SetState(kTRUE);
       fAdd->SetState(kButtonUp, kFALSE);
+      // fNone::State is the one used as reference
       fNone->SetState(kButtonDown, kFALSE);
    } else {
       fEnteredFunc->SetState(kFALSE);
@@ -2884,11 +3232,17 @@ void TFitEditor::SetEditable(Bool_t state)
 void TFitEditor::GetRanges(ROOT::Fit::DataRange& drange)
 {
    // Return the ranges selected by the sliders.
-   Int_t ixmin = (Int_t)(fSliderX->GetMinPosition()); 
-   Int_t ixmax = (Int_t)(fSliderX->GetMaxPosition()); 
-   Double_t xmin = fXaxis->GetBinLowEdge(ixmin);
-   Double_t xmax = fXaxis->GetBinUpEdge(ixmax);
-   drange.AddRange(0,xmin, xmax);
+   
+   // It's not working for trees as they don't have TAxis.
+   if ( fType == kObjectTree ) return;
+
+   if ( fType != kObjectTree ) {
+      Int_t ixmin = (Int_t)(fSliderX->GetMinPosition()); 
+      Int_t ixmax = (Int_t)(fSliderX->GetMaxPosition()); 
+      Double_t xmin = fXaxis->GetBinLowEdge(ixmin);
+      Double_t xmax = fXaxis->GetBinUpEdge(ixmax);
+      drange.AddRange(0,xmin, xmax);
+   }
 
    if ( fDim > 1 ) {
       assert(fYaxis); 
@@ -2910,6 +3264,8 @@ void TFitEditor::GetRanges(ROOT::Fit::DataRange& drange)
 
 TList* TFitEditor::GetFitObjectListOfFunctions()
 {
+   // Get the list of functions previously used in the fitobject.
+
    TList *listOfFunctions = 0;
    if ( fFitObject ) {
       switch (fType) {
@@ -2939,13 +3295,84 @@ TList* TFitEditor::GetFitObjectListOfFunctions()
    return listOfFunctions;
 }
 
+void TFitEditor::GetFunctionsFromSystem()
+{
+   // Looks for all the functions registered in the current ROOT
+   // session.
+
+   // First, clean the copies stored in fSystemFunc
+   for ( fSystemFuncIter it = fSystemFuncs.begin();
+         it != fSystemFuncs.end();
+         ++it ) {
+      delete (*it);
+   }
+
+   fSystemFuncs.clear();
+
+   // Be carefull not to store functions that will be in the
+   // predefined section
+   const unsigned int nfuncs = 16;
+   const char* fnames[nfuncs] = { "gaus" ,   "gausn", "expo", "landau",
+                                  "landaun", "pol0",  "pol1", "pol2",
+                                  "pol3",    "pol4",  "pol5", "pol6",
+                                  "pol7",    "pol8",  "pol9", "user"
+   };
+
+   // No go through all the objects registered in gROOT
+   TIter functionsIter(gROOT->GetListOfFunctions());
+   TObject* obj;
+   while( ( obj = (TObject*) functionsIter() ) ) {
+      // And if they are TF1s
+      if ( TF1* func = dynamic_cast<TF1*>(obj) ) {
+         bool addFunction = true;
+         // And they are not already registered in fSystemFunc
+         for ( unsigned int i = 0; i < nfuncs; ++i ) {
+            if ( strcmp( func->GetName(), fnames[i] ) == 0 ) {
+               addFunction = false;
+               break;
+            }
+         }
+         // Add them.
+         if ( addFunction )
+            fSystemFuncs.push_back( copyTF1(func) ); 
+      }
+   }
+}
+
+TList* TFitEditor::GetListOfFittingFunctions(TObject* obj)
+{
+   // This function returns a TList with all the functions used in the
+   // FitPanel to fit a given object. If the object passed is NULL,
+   // then the object used is the currently selected one. It is
+   // important to notice that the FitPanel is still the owner of
+   // those functions. This means that the user SHOULD NOT delete any
+   // of these functions, as the FitPanel will do so in the
+   // destructor.
+
+   if (!obj) obj = fFitObject;
+
+   TList *retList = new TList();
+
+   pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(obj);
+   for ( fPrevFitIter it = look.first; it != look.second; ++it ) {
+      retList->Add(it->second);
+   }
+
+   return retList;
+}
+
 TF1* TFitEditor::GetFitFunction() 
 {
+   // Get the fit function selected or declared in the fiteditor
+
    TF1 *fitFunc = 0;
+   // If the function is not editable ==> it means it is registered in
+   // gROOT
    if ( fNone->GetState() == kButtonDisabled )
    {
-      TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-      TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+      // So we find it
+      TF1* tmpF1 = FindFunction();
+      // And if we don't find it, then it means there is something wrong!
       if ( tmpF1 == 0 )
       {
                new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
@@ -2953,10 +3380,28 @@ TF1* TFitEditor::GetFitFunction()
                             kMBIconStop,kMBOk, 0);
                return 0;
       }
+
+      // Now we make a copy that will be used temporary. The caller of
+      // the function should delete the returned function.
       fitFunc = (TF1*)tmpF1->IsA()->New();
       tmpF1->Copy(*fitFunc);
+      // Copy the parameters of the function, if and only if the
+      // parameters stored does not correspond with the ones of these
+      // functions. Perhaps the user has already called
+      // DoSetParameters. There is no way to know whether the
+      // parameters have been modified, so we check the size of
+      // fFuncPars against number of parameters.
+      if ( int(fFuncPars.size()) != tmpF1->GetNpar() )
+      {
+         fitFunc->SetParameters(tmpF1->GetParameters());
+         GetParameters(fFuncPars, fitFunc);
+      } else {
+         SetParameters(fFuncPars, fitFunc);
+      }
    }
 
+   // If, we have no function at this point, it means that is is
+   // described in fEnteredFunc, so we create it from scratch.
    if ( fitFunc == 0 )
    {
       ROOT::Fit::DataRange drange; 
@@ -2964,19 +3409,24 @@ TF1* TFitEditor::GetFitFunction()
       double xmin, xmax, ymin, ymax, zmin, zmax;
       drange.GetRange(xmin, xmax, ymin, ymax, zmin, zmax);
 
-      if ( fDim == 1 || fDim == 0 )
-         fitFunc = new TF1("lastFitFunc",fEnteredFunc->GetText(), xmin, xmax );
-      else if ( fDim == 2 )
-         fitFunc = new TF2("lastFitFunc",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax );
-      else if ( fDim == 3 )
-         fitFunc = new TF3("lastFitFunc",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax, zmin, zmax );
+      // Depending of course on the number of dimensions the object
+      // has. These commands will raise an error message if the user
+      // has not defined the function properly
+      if ( fDim == 1 || fDim == 0 ) {
+         fitFunc = new TF1("PrevFitTMP",fEnteredFunc->GetText(), xmin, xmax );
+      }
+      else if ( fDim == 2 ) {
+         fitFunc = new TF2("PrevFitTMP",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax );
+      }
+      else if ( fDim == 3 ) {
+         fitFunc = new TF3("PrevFitTMP",fEnteredFunc->GetText(), xmin, xmax, ymin, ymax, zmin, zmax );
+      }
 
       // if the function is not a C defined
       if ( fNone->GetState() != kButtonDisabled )
       {
          // and the formulas are the same
-         TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-         TF1* tmpF1 = (TF1*) gROOT->GetListOfFunctions()->FindObject(te->GetTitle());
+         TF1* tmpF1 = FindFunction();
          if ( tmpF1 != 0 && fitFunc != 0 && 
               strcmp(tmpF1->GetExpFormula(), fEnteredFunc->GetText()) == 0 ) {
             // copy the parameters!
