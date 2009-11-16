@@ -177,6 +177,8 @@ using std::make_pair;
 
 void SearchCanvases(TSeqCollection* canvases, vector<TObject*>& objects);
 
+typedef std::multimap<TObject*, TF1*> FitFuncMap_t;
+
 //______________________________________________________________________________
 TF1* TFitEditor::FindFunction()
 {
@@ -2118,7 +2120,7 @@ void TFitEditor::DoFit()
    if ( strcmp(tmpTF1->GetName(), "PrevFitTMP") != 0 )
       name << "-" << tmpTF1->GetName();
    tmpTF1->SetName(name.str().c_str());
-   fPrevFit.insert(make_pair(fFitObject, tmpTF1));
+   fPrevFit.insert(FitFuncMap_t::value_type(fFitObject, tmpTF1));
    fSystemFuncs.push_back( copyTF1(tmpTF1) );
 
    float xmin, xmax, ymin, ymax, zmin, zmax;
@@ -3091,7 +3093,7 @@ TF1* TFitEditor::HasFitFunction()
             // breaks in the loops would make it to be different to
             // fPrevFit.end() if the function is already stored
             if ( it == fPrevFit.end() ) {
-               fPrevFit.insert( make_pair( fFitObject, static_cast<TF1*>( copyTF1( func ) ) ) );
+               fPrevFit.insert( FitFuncMap_t::value_type( fFitObject, static_cast<TF1*>( copyTF1( func ) ) ) );
             }
          }
       }
