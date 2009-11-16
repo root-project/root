@@ -11,7 +11,7 @@
 
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
-#include <cassert>
+#include "TError.h"
 
 /**
 TFitResultPtr provides an indirection to the TFitResult class and with a semantics
@@ -23,6 +23,14 @@ The class
  */
 
 ClassImp(TFitResultPtr)
+
+TFitResultPtr::TFitResultPtr(TFitResult * p) :  
+   fStatus(-1), 
+   fPointer(p) 
+{
+   // constructor from a TFitResult pointer
+   if (fPointer != 0) fStatus = fPointer->Status(); 
+}
 
 TFitResultPtr::TFitResultPtr(const TFitResultPtr& rhs) : 
    fStatus(rhs.fStatus), fPointer(0)
@@ -38,21 +46,12 @@ TFitResultPtr::~TFitResultPtr()
       delete fPointer;
 }
 
-TFitResultPtr::operator int() const 
-{
-   // automatic integer conversion. Needed for backward-compatibility with int TH1::FIt
-   // The returned integer is the fit status code from FitResult
-   if ( fPointer == 0 )
-      return fStatus;
-   else
-      return fPointer->Status();
-}
 
 TFitResult& TFitResultPtr::operator*() const
 {
    // impelment the de-reference operator to make the class acts as a pointer to a TFitResult
    // assert in case the class does not contain a pointer to TFitResult
-   assert (fPointer != 0);
+   R__ASSERT (fPointer != 0);
    return *fPointer;
 }
 
@@ -60,7 +59,7 @@ TFitResult* TFitResultPtr::operator->() const
 {
    // implement the -> operator to make the class acts as a pointer to a TFitResult
    // assert in case the class does not contain a pointer to TFitResult
-   assert (fPointer != 0);
+   R__ASSERT (fPointer != 0);
    return fPointer;
 }
 

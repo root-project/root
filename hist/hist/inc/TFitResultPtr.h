@@ -31,13 +31,13 @@ class TFitResult;
 class TFitResultPtr {
 public:
 
-   TFitResultPtr(int status = 0): fStatus(status), fPointer(0) {};
+   TFitResultPtr(int status = -1): fStatus(status), fPointer(0) {};
 
-   TFitResultPtr(TFitResult* p): fStatus(0), fPointer(p) {};
+   TFitResultPtr(TFitResult* p);
 
    TFitResultPtr(const TFitResultPtr& rhs); 
 
-   operator int() const;
+   operator int() const { return fStatus; }
    
    TFitResult& operator*() const;
 
