@@ -114,7 +114,7 @@ TLinearMinimizer & TLinearMinimizer::operator = (const TLinearMinimizer &rhs)
 void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & ) { 
    // Set function to be minimized. Flag an error since only support Gradient objective functions
 
-   Error("SetFunction1","Wrong type of function used for Linear fitter");
+   Error("TLinearMinimizer::SetFunction(IMultiGenFunction)","Wrong type of function used for Linear fitter");
 }
 
 
@@ -125,7 +125,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    typedef ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGradFunction> Chi2Func; 
    const Chi2Func * chi2func = dynamic_cast<const Chi2Func *>(&objfunc); 
    if (chi2func ==0) { 
-      Error("SetFunction2","Wrong type of function used for Linear fitter");
+      Error("TLinearMinimizer::SetFunction(IMultiGradFunction)","Wrong type of function used for Linear fitter");
       return; 
    }
    fObjFunc = chi2func;

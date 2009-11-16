@@ -6816,6 +6816,7 @@ L500:
 //*-*-        finished with scan of parameter IPAR
    fU[ipar-1] = ubest;
    mnexin(fX);
+   if (fISW[4] >= 1)
    Printf("%dSCAN OF PARAMETER NO. %d,  %s"
          ,fNewpag,ipar,(const char*)fCpnam[ipar-1]);
    mnplot(fXpt, fYpt, fChpt, nxypt, fNpagwd, fNpagln);
@@ -6826,7 +6827,7 @@ L800:
    if (iparwd <= 0) goto L100;
 //*-*-        finished with all parameters
 L900:
-   mnprin(5, fAmin);
+   if (fISW[4] >= 0) mnprin(5, fAmin);
 } /* mnscan_ */
 
 //______________________________________________________________________________
