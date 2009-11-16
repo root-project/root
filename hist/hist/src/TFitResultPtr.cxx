@@ -74,5 +74,6 @@ TFitResultPtr & TFitResultPtr::operator=(const TFitResultPtr& rhs)
    if ( fPointer ) delete fPointer;
    fPointer = 0;
    if (rhs.fPointer != 0)  fPointer = new TFitResult(*rhs);
+   return *this;
 }
 
