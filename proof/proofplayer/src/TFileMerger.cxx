@@ -335,6 +335,10 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                   TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(key->GetName());
                   if (key2) {
                      TObject *hobj = key2->ReadObj();
+                     // Set ownership for collections
+                     if (hobj->InheritsFrom(TCollection::Class())) {
+                        ((TCollection*)hobj)->SetOwner(); 
+                     }   
                      hobj->ResetBit(kMustCleanup);
                      listH.Add(hobj);
                      Int_t error = 0;
@@ -395,6 +399,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                }
             } else if (obj->IsA()->InheritsFrom( "TCollection" )) {
                obj->Write( key->GetName(), TObject::kSingleKey );
+               ((TCollection*)obj)->SetOwner();
             } else {
                obj->Write( key->GetName() );
             }
