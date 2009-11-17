@@ -4638,8 +4638,18 @@ fi
 #
 message "Checking whether to build libCintex"
 if test ! "x$enable_cintex" = "xno"; then
-    enable_cintex="yes"
-    result "yes"
+    # only enable on i386, i686, x86_64:
+    case "$chip" in
+        i*86 | x86_64)
+            enable_cintex="yes"
+            result "yes"
+            ;;
+        *)
+            logmsg " incompatible Cintex architecture $chip"
+            enable_cintex=""
+            result "no"
+            ;;
+     esac
 else
     enable_cintex=""
     result "no"
@@ -5092,6 +5102,9 @@ if test -d pcre/src/pcre-6.4 ; then
 fi
 if test -d core/pcre/src/pcre-7.4 ; then
    rm -rf core/pcre/src/pcre-7.4
+fi
+if test -d math/unuran/src/unuran-1.3.0-root ; then
+   rm -rf math/unuran/src/unuran-1.3.0-root
 fi
 if test ! "x$enable_editline" = "xno" ; then
    rm -f core/clib/src/Getline.o core/clib/src/Getline.d
