@@ -50,7 +50,9 @@ void ProofEventProc::SlaveBegin(TTree *tree)
 
    // How much to read
    fFullRead = kFALSE;
-   TNamed *nm = dynamic_cast<TNamed *>(fInput->FindObject("ProofEventProc_Read"));
+   TNamed *nm = 0;
+   if (fInput) 
+      nm = dynamic_cast<TNamed *>(fInput->FindObject("ProofEventProc_Read"));
    if (nm && !strcmp(nm->GetTitle(), "readall"))
       fFullRead = kTRUE;
    Info("SlaveBegin", "'%s' reading", (fFullRead ? "full" : "optimized"));
@@ -105,7 +107,8 @@ Bool_t ProofEventProc::Process(Long64_t entry)
       if (!fFullRead) b_fTracks->GetEntry(entry);
       for (Int_t j=0;j<fTracks->GetEntries();j++){
          Track *curtrack = dynamic_cast<Track*>(fTracks->At(j));
-         fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
+         if (curtrack)
+            fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
       }
       fTracks->Clear("C");
    }
