@@ -77,6 +77,7 @@ void TEveStraightLineSet::AddMarker(Int_t line, Float_t pos)
 
 /******************************************************************************/
 
+//______________________________________________________________________________
 void TEveStraightLineSet::CopyVizParams(const TEveElement* el)
 {
    // Copy visualization parameters from element el.
@@ -103,8 +104,8 @@ void TEveStraightLineSet::WriteVizParams(ostream& out, const TString& var)
    TString t = "   " + var + "->";
    TAttMarker::SaveMarkerAttributes(out, var);
    TAttLine  ::SaveLineAttributes  (out, var);
-   out << t << "SetRnrMarkers(" << fRnrMarkers << ");\n";
-   out << t << "SetRnrLines("   << fRnrLines   << ");\n";
+   out << t << "SetRnrMarkers(" << (fRnrMarkers ? "kTRUE" : "kFALSE") << ");\n";
+   out << t << "SetRnrLines("   << (fRnrLines   ? "kTRUE" : "kFALSE") << ");\n";
 }
 
 /******************************************************************************/

@@ -341,13 +341,13 @@ void TEveElement::SetVizModel(TEveElement* model)
    // viz-model.
 
    if (fVizModel) {
-      fVizModel->RemoveElement(this);
       --fParentIgnoreCnt;
+      fVizModel->RemoveElement(this);
    }
    fVizModel = model;
    if (fVizModel) {
-      ++fParentIgnoreCnt;
       fVizModel->AddElement(this);
+      ++fParentIgnoreCnt;
    }
 }
 

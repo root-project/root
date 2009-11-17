@@ -617,17 +617,22 @@ Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
    {
       if (replace)
       {
-         TEveElement* old_model = dynamic_cast<TEveElement*>(pair->Value());
-         for (TEveElement::List_i i = old_model->BeginChildren(); i != old_model->EndChildren(); ++i)
-         {
-            (*i)->SetVizModel(model);
-            if (update)
-               (*i)->CopyVizParams(model);
-         }
-         old_model->DecDenyDestroy();
-         old_model->Destroy();
          model->IncDenyDestroy();
          model->SetRnrChildren(kFALSE);
+
+         TEveElement* old_model = dynamic_cast<TEveElement*>(pair->Value());
+         while (old_model->HasChildren())
+         {
+            TEveElement *el = old_model->FirstChild();
+            el->SetVizModel(model);
+            if (update)
+            {
+               el->CopyVizParams(model);
+               el->PropagateVizParamsToProjecteds();
+            }
+         }
+         old_model->DecDenyDestroy();
+
          pair->SetValue(dynamic_cast<TObject*>(model));
          return kTRUE;
       }
@@ -692,6 +697,7 @@ void TEveManager::LoadVizDB(const TString& filename)
    // how the registered entries are handled.
 
    TEveUtil::Macro(filename);
+   Redraw3D();
 }
 
 //______________________________________________________________________________
@@ -705,7 +711,10 @@ void TEveManager::SaveVizDB(const TString& filename)
       return;
    }
 
-   ofstream out(filename, ios::out | ios::trunc);
+   TString exp_filename(filename);
+   gSystem->ExpandPathName(exp_filename);
+
+   ofstream out(exp_filename, ios::out | ios::trunc);
    out << "void " << re[1] << "()\n";
    out << "{\n";
    out << "   TEveManager::Create();\n";

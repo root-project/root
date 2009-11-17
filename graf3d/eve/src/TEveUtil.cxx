@@ -120,14 +120,19 @@ void TEveUtil::SetupGUI()
 namespace
 {
 //______________________________________________________________________________
-void ChompTail(TString& s, char c='.')
+void ChompTailAndDir(TString& s, char c='.')
 {
    // Remove last part of string 's', starting from the last
    // occurrence of character 'c'.
+   // Remove directory part -- everything until the last '/'.
 
    Ssiz_t p = s.Last(c);
    if (p != kNPOS)
       s.Remove(p);
+
+   Ssiz_t ls = s.Last('/');
+   if (ls != kNPOS)
+      s.Remove(0, ls + 1);
 }
 }
 
@@ -142,14 +147,7 @@ Bool_t TEveUtil::CheckMacro(const char* mac)
    // Previous version expected function with same name and used ROOT's
    // list of global functions.
 
-   TString foo(mac); ChompTail(foo);
-   /*
-     if(recreate) {
-     TCollection* logf = gROOT->GetListOfGlobalFunctions(kFALSE);
-     logf->SetOwner();
-     logf->Clear();
-     }
-   */
+   TString foo(mac); ChompTailAndDir(foo);
    if (gROOT->GetGlobalFunction(foo.Data(), 0, kFALSE) != 0)
       return kTRUE;
    else
@@ -174,7 +172,7 @@ void TEveUtil::Macro(const char* mac)
    if (CheckMacro(mac) == kFALSE) {
       gROOT->LoadMacro(mac);
    }
-   TString foo(mac); ChompTail(foo); foo += "()";
+   TString foo(mac); ChompTailAndDir(foo); foo += "()";
    gROOT->ProcessLine(foo.Data());
 }
 
