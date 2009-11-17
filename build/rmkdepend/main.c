@@ -53,14 +53,16 @@ in this Software without prior written authorization from the X Consortium.
 #include <io.h>
 #endif
 #if !defined(__hpux)
-#if defined(__APPLE__)
-#include <AvailabilityMacros.h>
-#if !defined(MAC_OS_X_VERSION_10_4)
+# if defined(__APPLE__)
+#  include <AvailabilityMacros.h>
+#  if !defined(MAC_OS_X_VERSION_10_4)
 extern int fchmod(int, int);
-#endif
+#  endif
+# elif defined(__CYGWIN__)
+extern int fchmod(int, mode_t);
 #else
 extern int fchmod(int, int);
-#endif
+# endif
 #endif
 
 #ifdef MINIX
