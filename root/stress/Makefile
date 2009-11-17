@@ -18,6 +18,9 @@ endif
 ifeq ($(findstring mathmore,$(shell root-config --features)),)
 STRESSTESTS  := $(filter-out stressMathMore-test,$(STRESSTESTS))
 endif
+ifeq ($(findstring unuran,$(shell root-config --features)),)
+STRESSTESTS  := $(filter-out stressHistoFit-test,$(STRESSTESTS))
+endif
 
 TEST_TARGETS += $(STRESSTESTS)
 
