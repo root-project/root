@@ -8,7 +8,7 @@
 #include "Event.h"
 
 class TH1F;
-class TH1I;
+class TH2F;
 
 class ProofEventProc : public TSelector {
 public :
@@ -41,7 +41,8 @@ public :
 
    //Output hist
    TH1F* fPtHist;
-   TH1I* fNTracksHist;
+   TH1F* fPzHist;
+   TH2F* fPxPyHist;
 
    // List of branches
    TBranch        *b_event_fType;   //!

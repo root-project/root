@@ -26,8 +26,9 @@
 #include "ProofEventProc.h"
 #include <TStyle.h>
 #include "TCanvas.h"
+#include "TPad.h"
 #include "TH1F.h"
-#include "TH1I.h"
+#include "TH2F.h"
 
 
 void ProofEventProc::Begin(TTree *)
@@ -66,12 +67,19 @@ void ProofEventProc::SlaveBegin(TTree *tree)
 
    fOutput->Add(fPtHist);
 
-   fNTracksHist = new TH1I("ntracks_dist","N_{Tracks} per Event Distribution",5,0,5);
-   fNTracksHist->SetDirectory(0);
-   fNTracksHist->GetXaxis()->SetTitle("N_{Tracks}");
-   fNTracksHist->GetYaxis()->SetTitle("N_{Events}");
+   fPzHist = new TH1F("pz_dist","p_{Z} Distribution",100,0,5.);
+   fPzHist->SetDirectory(0);
+   fPzHist->GetXaxis()->SetTitle("p_{Z}");
+   fPzHist->GetYaxis()->SetTitle("dN/dp_{Z}");
 
-   fOutput->Add(fNTracksHist);
+   fOutput->Add(fPzHist);
+
+   fPxPyHist = new TH2F("px_py","p_{X} vs p_{Y} Distribution",100,-5.,5.,100,-5.,5.);
+   fPxPyHist->SetDirectory(0);
+   fPxPyHist->GetXaxis()->SetTitle("p_{X}");
+   fPxPyHist->GetYaxis()->SetTitle("p_{Y}");
+
+   fOutput->Add(fPxPyHist);
 
 }
 
@@ -101,16 +109,20 @@ Bool_t ProofEventProc::Process(Long64_t entry)
       b_event_fNtrack->GetEntry(entry);
    }
 
-   fNTracksHist->Fill(fNtrack);
 
    if (fNtrack > 0) {
       if (!fFullRead) b_fTracks->GetEntry(entry);
-      for (Int_t j=0;j<fTracks->GetEntries();j++){
-         Track *curtrack = dynamic_cast<Track*>(fTracks->At(j));
-         if (curtrack)
-            fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
+      if (fTracks) {
+         for (Int_t j=0;j<fTracks->GetEntries();j++){
+            Track *curtrack = dynamic_cast<Track*>(fTracks->At(j));
+            if (curtrack) {
+               fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
+               fPxPyHist->Fill(curtrack->GetPx(),curtrack->GetPy());
+               fPzHist->Fill(curtrack->GetPz());
+            }
+         }
+         fTracks->Clear("C");
       }
-      fTracks->Clear("C");
    }
 
    return kTRUE;
@@ -130,11 +142,49 @@ void ProofEventProc::Terminate()
    // a query. It always runs on the client, it can be used to present
    // the results graphically or save the results to file.
 
-   TCanvas* canvas = new TCanvas("can","can",800,600);
-   canvas->SetBorderMode(0);
-   canvas->SetLogy();
-   TH1F* h = dynamic_cast<TH1F*>(fOutput->FindObject("pt_dist"));
-   if (h) h->DrawCopy();
-   else Warning("Terminate", "no pt dist found");
+   TCanvas* canvas = new TCanvas("event","event",800,10,700,780);
+   canvas->Divide(2,2);
+   TPad *pad1 = (TPad *) canvas->GetPad(1);
+   TPad *pad2 = (TPad *) canvas->GetPad(2);
+   TPad *pad3 = (TPad *) canvas->GetPad(3);
+   TPad *pad4 = (TPad *) canvas->GetPad(4);
 
+   // The number of tracks
+   pad1->cd();
+   pad1->SetLogy();
+   TH1F *hi = dynamic_cast<TH1F*>(fOutput->FindObject("pz_dist"));
+   if (hi) {
+      hi->SetFillColor(30);
+      hi->SetLineColor(9);
+      hi->SetLineWidth(2);
+      hi->DrawCopy();
+   } else { Warning("Terminate", "no pz dist found"); }
+
+   // The Pt distribution
+   pad2->cd();
+   pad2->SetLogy();
+   TH1F *hf = dynamic_cast<TH1F*>(fOutput->FindObject("pt_dist"));
+   if (hf) {
+      hf->SetFillColor(30);
+      hf->SetLineColor(9);
+      hf->SetLineWidth(2);
+      hf->DrawCopy();
+   } else { Warning("Terminate", "no pt dist found"); }
+
+   // The Px,Py distribution, color surface
+   TH2F *h2f = dynamic_cast<TH2F*>(fOutput->FindObject("px_py"));
+   if (h2f) {
+      // Color surface
+      pad3->cd();
+      h2f->DrawCopy("SURF1 ");
+      // Lego
+      pad4->cd();
+      h2f->DrawCopy("CONT2COL");
+   } else {
+      Warning("Terminate", "no px py found");
+   }
+
+   // Final update
+   canvas->cd();
+   canvas->Update();
 }
