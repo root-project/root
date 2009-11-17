@@ -132,6 +132,21 @@ TBranchSTL::~TBranchSTL()
 }
 
 //------------------------------------------------------------------------------
+void TBranchSTL::Browse( TBrowser *b )
+{
+   //browse a STL branch
+   Int_t nbranches = fBranches.GetEntriesFast();
+   if (nbranches > 0) {
+      TList persistentBranches;
+      TBranch* branch=0;
+      TIter iB(&fBranches);
+      while( (branch = (TBranch*)iB()) )
+         persistentBranches.Add(branch);
+      persistentBranches.Browse( b );
+   }
+}
+
+//------------------------------------------------------------------------------
 Int_t TBranchSTL::Fill()
 {
    //---------------------------------------------------------------------------
@@ -462,20 +477,51 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
 }
 
 //------------------------------------------------------------------------------
-void TBranchSTL::Browse( TBrowser *b )
+TStreamerInfo* TBranchSTL::GetInfo()
 {
-   //browse a STL branch
-   Int_t nbranches = fBranches.GetEntriesFast();
-   if (nbranches > 0) {
-      TList persistentBranches;
-      TBranch* branch=0;
-      TIter iB(&fBranches);
-      while( (branch = (TBranch*)iB()) )
-         persistentBranches.Add(branch);
-      persistentBranches.Browse( b );
+   //---------------------------------------------------------------------------
+   // Check if we don't have the streamer info
+   //---------------------------------------------------------------------------
+   if( !fInfo ) {
+      //------------------------------------------------------------------------
+      // Get the class info
+      //------------------------------------------------------------------------
+      TClass *cl = TClass::GetClass( fClassName );
+      
+      //------------------------------------------------------------------------
+      // Get unoptimized streamer info
+      //------------------------------------------------------------------------
+      Bool_t optim = TVirtualStreamerInfo::CanOptimize();
+      TVirtualStreamerInfo::Optimize( kFALSE );
+      fInfo = (TStreamerInfo*)cl->GetStreamerInfo( fClassVersion );
+      
+      //------------------------------------------------------------------------
+      // If the checksum is there and we're dealing with the foreign class
+      //------------------------------------------------------------------------
+      if( fClCheckSum && cl->IsForeign() ) {
+         //---------------------------------------------------------------------
+         // Loop over the infos
+         //---------------------------------------------------------------------
+         Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast() - 1;
+         for( Int_t i = -1; i < ninfos; ++i ) {
+            TVirtualStreamerInfo* info = (TVirtualStreamerInfo*) cl->GetStreamerInfos()->UncheckedAt(i);
+            if( !info )
+               continue;
+            
+            //------------------------------------------------------------------
+            // If the checksum matches then retriev the info
+            //------------------------------------------------------------------
+            if( info->GetCheckSum() == fClCheckSum ) {
+               fClassVersion = i;
+               fInfo = (TStreamerInfo*)cl->GetStreamerInfo( fClassVersion );
+            }
+         }
+      }
+      TVirtualStreamerInfo::Optimize( optim );
+      fInfo->BuildOld();
    }
+   return fInfo;
 }
-
 
 //------------------------------------------------------------------------------
 Bool_t TBranchSTL::IsFolder() const
@@ -535,51 +581,3 @@ void TBranchSTL::SetAddress( void* addr )
       }
    }
 }
-
-//------------------------------------------------------------------------------
-TStreamerInfo* TBranchSTL::GetInfo()
-{
-   //---------------------------------------------------------------------------
-   // Check if we don't have the streamer info
-   //---------------------------------------------------------------------------
-   if( !fInfo ) {
-      //------------------------------------------------------------------------
-      // Get the class info
-      //------------------------------------------------------------------------
-      TClass *cl = TClass::GetClass( fClassName );
-
-      //------------------------------------------------------------------------
-      // Get unoptimized streamer info
-      //------------------------------------------------------------------------
-      Bool_t optim = TVirtualStreamerInfo::CanOptimize();
-      TVirtualStreamerInfo::Optimize( kFALSE );
-      fInfo = (TStreamerInfo*)cl->GetStreamerInfo( fClassVersion );
-
-      //------------------------------------------------------------------------
-      // If the checksum is there and we're dealing with the foreign class
-      //------------------------------------------------------------------------
-      if( fClCheckSum && cl->IsForeign() ) {
-         //---------------------------------------------------------------------
-         // Loop over the infos
-         //---------------------------------------------------------------------
-         Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast() - 1;
-         for( Int_t i = -1; i < ninfos; ++i ) {
-            TVirtualStreamerInfo* info = (TVirtualStreamerInfo*) cl->GetStreamerInfos()->UncheckedAt(i);
-            if( !info )
-               continue;
-
-            //------------------------------------------------------------------
-            // If the checksum matches then retriev the info
-            //------------------------------------------------------------------
-            if( info->GetCheckSum() == fClCheckSum ) {
-               fClassVersion = i;
-               fInfo = (TStreamerInfo*)cl->GetStreamerInfo( fClassVersion );
-            }
-         }
-      }
-      TVirtualStreamerInfo::Optimize( optim );
-      fInfo->BuildOld();
-   }
-   return fInfo;
-}
-
