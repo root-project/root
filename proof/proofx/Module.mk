@@ -67,7 +67,7 @@ ifeq ($(PLATFORM),win32)
 PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
 PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet \
-                  -L$(XROOTDDIRP) -lXrdClient
+                  -lXrdClient
 endif
 
 ##### local rules #####

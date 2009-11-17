@@ -62,7 +62,6 @@ XRDLIBS     := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a \
 XRDNETXD    := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdSys.a \
                $(LPATH)/libXrdClient.$(XRDSOEXT)
 XRDPROOFXD  := $(XRDLIBS) $(XROOTDDIRL)/libXrd.a
-XROOTDDIRP  := $(LPATH)
 ifeq ($(ARCH),win32gcc)
 XRDLIBS     := $(patsubst $(LPATH)/%.$(XRDSOEXT),bin/%.$(XRDSOEXT),$(XRDLIBS))
 endif
