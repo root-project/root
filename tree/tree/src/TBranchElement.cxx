@@ -809,7 +809,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
          return;
       }
       fClonesName = valueClass->GetName();
-      TString branchname;
+      TString branchname( name );
       branchname += "_";
       SetTitle(branchname);
       leaf->SetName(branchname);
