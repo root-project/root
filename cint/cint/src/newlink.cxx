@@ -3760,7 +3760,7 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
       fprintf(fp,"\n");
 
 #if defined(__GNUC__) && !defined(__INTEL_COMPILER)
-      fprintf(fp,"#if defined(__GNUC__) && (__GNUC__ > 3) && (__GNUC_MINOR__ > 1)\n");
+      fprintf(fp,"#if defined(__GNUC__) && __GNUC__ >= 4 && ((__GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ >= 1) || (__GNUC_MINOR__ >= 3))\n");
       fprintf(fp,"#pragma GCC diagnostic ignored \"-Wstrict-aliasing\"\n");
       fprintf(fp,"#endif\n");
       fprintf(fp,"\n");
