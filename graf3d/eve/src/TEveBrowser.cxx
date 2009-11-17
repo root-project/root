@@ -121,6 +121,8 @@ void TEveListTreeItem::Toggle()
 
 ClassImp(TEveGListTreeEditorFrame);
 
+TString TEveGListTreeEditorFrame::fgEditorClass("TEveGedEditor");
+
 //______________________________________________________________________________
 TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow* p, Int_t width, Int_t height) :
    TGMainFrame (p ? p : gClient->GetRoot(), width, height),
@@ -160,7 +162,7 @@ TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow* p, Int_t widt
    // Editor
    fFrame->SetEditDisabled(kEditEnable);
    fFrame->SetEditable();
-   fEditor = new TEveGedEditor(0, width, 4*height/7);
+   fEditor = (TEveGedEditor*) gROOT->GetClass(fgEditorClass)->New();
    fEditor->SetGlobal(kFALSE);
    fEditor->ChangeOptions(fEditor->GetOptions() | kFixedHeight);
    fFrame->SetEditable(kEditDisable);
@@ -206,6 +208,14 @@ TEveGListTreeEditorFrame::~TEveGListTreeEditorFrame()
    delete fLTCanvas;
    delete fLTFrame;
    delete fFrame;
+}
+
+//______________________________________________________________________________
+void TEveGListTreeEditorFrame::SetEditorClass(const char* edclass)
+{
+   // Set GED editor class.
+
+   fgEditorClass = edclass;
 }
 
 //______________________________________________________________________________
@@ -283,10 +293,6 @@ void TEveGListTreeEditorFrame::ReconfToHorizontal()
    fSplitter->SetFrame(fEditor, kFALSE);
 
    Layout();
-   //fFrame->Layout();
-   //fLTFrame->Layout();
-   //fLTCanvas->Layout();
-   //fListTree->ClearViewPort();
    MapSubwindows();
    MapWindow();
 }
@@ -328,15 +334,11 @@ void TEveGListTreeEditorFrame::ReconfToVertical()
    fSplitter->SetFrame(fEditor, kFALSE);
 
    Layout();
-   //fFrame->Layout();
-   //fLTFrame->Layout();
-   //fLTCanvas->Layout();
-   //fListTree->ClearViewPort();
    MapSubwindows();
    MapWindow();
 }
 
-/******************************************************************************/
+//==============================================================================
 
 //______________________________________________________________________________
 void TEveGListTreeEditorFrame::ItemBelowMouse(TGListTreeItem *entry, UInt_t /*mask*/)

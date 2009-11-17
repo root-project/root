@@ -98,6 +98,8 @@ protected:
 
    Bool_t            fSignalsConnected;
 
+   static TString    fgEditorClass;
+
 public:
    TEveGListTreeEditorFrame(const TGWindow* p=0, Int_t width=250, Int_t height=700);
    virtual ~TEveGListTreeEditorFrame();
@@ -115,6 +117,8 @@ public:
    void ItemClicked(TGListTreeItem *entry, Int_t btn, UInt_t mask, Int_t x, Int_t y);
    void ItemDblClicked(TGListTreeItem* item, Int_t btn);
    void ItemKeyPress(TGListTreeItem *entry, UInt_t keysym, UInt_t mask);
+
+   static void SetEditorClass(const char* edclass);
 
    ClassDef(TEveGListTreeEditorFrame, 0); // Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
 };

@@ -88,15 +88,12 @@ void TEveGedEditor::DisplayObject(TObject* obj)
    TGedEditor::SetModel(fPad, obj, kButton1Down);
 }
 
-/******************************************************************************/
+//==============================================================================
 
 //______________________________________________________________________________
 void TEveGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
    // Set model object.
-
-   // !!!! do something so that such calls from elswhere will also
-   // now the render element
 
    fElement = dynamic_cast<TEveElement*>(obj);
    fObject  = obj;
@@ -109,27 +106,11 @@ void TEveGedEditor::Update(TGedFrame* /*gframe*/)
    // Virtual method from TGedEditor, called on every change.
    // Propagates changes to TEveElement and TEveManager.
 
-   if (fElement) {
+   if (fElement)
+   {
       fElement->ElementChanged();
       fElement->PropagateVizParamsToProjecteds();
    }
 
    gEve->Redraw3D();
 }
-
-/******************************************************************************/
-
-/*
-// Attempt to enable mouse-wheel in geditor -- failed.
-Bool_t TEveGedEditor::HandleButton(Event_t *event)
-{
-// Handle mouse button event in container.
-
-printf("odfjgsf\n");
-if (event->fCode == kButton4 || event->fCode == kButton5) {
-return fCan->GetContainer()->HandleButton(event);
-} else {
-return TGedEditor::HandleButton(event);
-}
-}
-*/

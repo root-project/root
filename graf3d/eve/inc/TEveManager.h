@@ -90,8 +90,6 @@ private:
 
    TEveBrowser              *fBrowser;
    TEveGListTreeEditorFrame *fLTEFrame;
-   TEveGedEditor            *fEditor;
-   TGStatusBar              *fStatusBar;
 
    TFolder                  *fMacroFolder;
 
@@ -138,8 +136,8 @@ public:
 
    TEveBrowser*      GetBrowser()   const { return fBrowser;   }
    TEveGListTreeEditorFrame* GetLTEFrame()  const { return fLTEFrame;  }
-   TEveGedEditor*    GetEditor()    const { return fEditor;    }
-   TGStatusBar*      GetStatusBar() const { return fStatusBar; }
+   TEveGedEditor*    GetEditor()    const;
+   TGStatusBar*      GetStatusBar() const;
 
    TEveWindowManager* GetWindowManager() const { return fWindowManager; }
 
