@@ -1128,7 +1128,14 @@ void TStreamerInfo::BuildOld()
          //---------------------------------------------------------------------
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase* base = (TStreamerBase*) element;
-            TClass* baseclass =  base->GetClassPointer(); // fClass->GetBaseClass( base->GetName() );
+#if defined(PROPER_IMPLEMEMANTION_OF_BASE_CLASS_RENAMING)
+            TClass* baseclass =  fClass->GetBaseClass( base->GetName() );
+#else
+            // Currently the base class renaming does not work, so we use the old
+            // version of the code which essentially disable the next if(!baseclass ..
+            // statement.
+            TClass* baseclass =  base->GetClassPointer();
+#endif
 
             //------------------------------------------------------------------
             // We do not have this base class - check if we're renaming
@@ -1190,9 +1197,13 @@ void TStreamerInfo::BuildOld()
          } else {
             // Not a base elem but still base, string or STL as a base
             nBaze++;
-            TBaseClass* bc = 0;
             TList* listOfBases = fClass->GetListOfBases();
+            Int_t baseOffset = -1;
+            Int_t asize = 0;
             if (listOfBases) {
+               // Do a search for the classname and some of its alternatives spelling.
+               
+               TBaseClass* bc = 0;
                TIter nextBC(fClass->GetListOfBases());
                while ((bc = (TBaseClass*) nextBC())) {
                   if (strchr(bc->GetName(), '<') || !strcmp(bc->GetName(),"string")) {
@@ -1203,26 +1214,59 @@ void TStreamerInfo::BuildOld()
                      }
                   }
                }
+               
+               if (!bc) {
+                  Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
+                  continue;
+               }
+               baseOffset = bc->GetDelta();
+               asize = bc->GetClassPointer()->Size();
+               
+            } else if (fClass->TestBit( TClass::kIsEmulation )) {
+               // Do a search for the classname and some of its alternatives spelling.
+
+               TStreamerInfo* newInfo = (TStreamerInfo*) fClass->GetStreamerInfos()->At(fClass->GetClassVersion());
+               if (newInfo == this) {
+                  baseOffset = offset;
+                  asize = element->GetSize();
+               } else if (newInfo) {
+                  TIter newElems( newInfo->GetElements() );
+                  TStreamerElement *newElement;
+                  while( (newElement = (TStreamerElement*)newElems()) ) {
+                     const char *newElName = newElement->GetName();
+                     if (newElement->IsBase() && (strchr(newElName,'<') || !strcmp(newElName,"string")) ) {
+                        TString bcName(TClassEdit::ShortType(newElName, TClassEdit::kDropStlDefault).c_str());
+                        TString elName(TClassEdit::ShortType(element->GetTypeName(), TClassEdit::kDropStlDefault).c_str());
+                        if (bcName == elName) {
+                           break;
+                        }
+                     }
+                  }
+                  if (!newElement) {
+                     Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
+                     continue;
+                  }
+                  baseOffset = newElement->GetOffset();
+                  asize = newElement->GetSize();
+               }
             }
-            if (!bc) {
-               Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
-               continue;
-            }
-            int baseOffset = bc->GetDelta();
             if (baseOffset == -1) {
                TClass* cb = element->GetClassPointer();
                if (!cb) {
                   element->SetNewType(-1);
                   continue;
                }
+               asize = cb->Size();
                baseOffset = fClass->GetBaseClassOffset(cb);
             }
+
             //  we know how to read but do we know where to read?
             if (baseOffset < 0) {
                element->SetNewType(-1);
                continue;
             }
             element->SetOffset(baseOffset);
+            offset += asize;
             continue;
          }
       }
