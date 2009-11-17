@@ -158,7 +158,7 @@ public:
 
    int parameters(int npar, double val, double ref) const
    { 
-      double ret = 0;
+      int ret = 0;
       if ( refValue && (opts & cmpPars) ) 
       {
          ret = compareResult(val, refValue->pars[npar], tolPar*ref);
@@ -374,12 +374,12 @@ double gausNd(double *x, double *p) {
    return 0; 
 }
 
-double minX = -5.;
-double maxX = +5.;
-double minY = -5.;
-double maxY = +5.;
-int nbinsX = 30;
-int nbinsY = 30;
+const double minX = -5.;
+const double maxX = +5.;
+const double minY = -5.;
+const double maxY = +5.;
+const int nbinsX = 30;
+const int nbinsY = 30;
 
 // Options to indicate how the test has to be run
 enum testOpt {
@@ -661,7 +661,7 @@ int test1DObjects(vector< vector<struct algoType> >& listH,
       for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
          h1->Fill( h1->GetBinCenter(i), rndm.Poisson( func->Eval( h1->GetBinCenter(i) ) ) );
 
-      double v[nbinsX];
+      double v[nbinsX + 1];
       FillVariableRange(v, nbinsX, minX, maxX);
       if ( h2 ) delete h2;
       h2 = new TH1D("Histogram 1D Variable","h2-title",nbinsX, v);
@@ -771,9 +771,9 @@ int test2DObjects(vector< vector<struct algoType> >& listH,
          }
 
       if ( h2 ) delete h2;
-      double x[nbinsX];
+      double x[nbinsX + 1];
       FillVariableRange(x, nbinsX, minX, maxX);
-      double y[nbinsY];
+      double y[nbinsY + 1];
       FillVariableRange(y, nbinsY, minY, maxY);
       h2 = new TH2D("Histogram 2D Variable","h2-title",nbinsX, x, nbinsY, y);
       for ( int i = 0; i <= h2->GetNbinsX() + 1; ++i )
