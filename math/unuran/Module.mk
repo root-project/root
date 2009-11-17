@@ -82,6 +82,10 @@ $(UNURANETAG):	$(UNRSRCS)
 		   gunzip -c $(UNRVERS).tar.gz | tar xf -; \
 		   etag=`basename $(UNURANETAG)` ; \
 		   touch $$etag ; \
+                   echo "patching unuran file besselK.c"; \
+                   cat $(UNRVERS)/src/specfunct/besselK.c | \
+                   sed -e 's#0./0.#sqrt(-1)#g' > tmp.c; \
+                   mv tmp.c $(UNRVERS)/src/specfunct/besselK.c;\
 		fi); 
 
 #configure unuran (required for creating the config.h used by unuran source files)
