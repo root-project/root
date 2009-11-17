@@ -453,6 +453,11 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    fBar->SetBarColor("green");
    fBar->Reset();
 
+   // Reset speedo
+   fSpeedo->SetMinMaxScale(0.0, 1.0);
+   fSpeedo->SetMeanValue(0.0);
+   fSpeedo->ResetPeakVal();
+
    // Reset buttons
    fStop->SetState(kButtonUp);
    fAbort->SetState(kButtonUp);
@@ -1153,7 +1158,10 @@ void TProofProgressDialog::DoPlotRateGraph()
       npads--;
       kSess--;
    }
-   if (tymx <= 0. && symx <= 0.) {
+   // Plot only if more than one active session during the query
+   if (tymx <= 1.) {
+      SafeDelete(fTotSGraph);
+      SafeDelete(fEffSGraph);
       npads--;
       kSess--;
    }
