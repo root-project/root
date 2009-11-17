@@ -20,6 +20,8 @@
 #include <string>
 #include <utility>
 
+#include "TError.h"
+
 ClassImp(TBranchSTL)
 
 //------------------------------------------------------------------------------
@@ -31,7 +33,8 @@ TBranchSTL::TBranchSTL():
    fObject( 0 ),
    fID( -2 )
 {
-   // default constructor
+   // Default constructor.
+   
    fIndArrayCl = TClass::GetClass( "TIndArray" );
    fBranchVector.reserve( 25 );
    fNleaves = 0;
@@ -39,11 +42,11 @@ TBranchSTL::TBranchSTL():
 
 //------------------------------------------------------------------------------
 TBranchSTL::TBranchSTL( TTree *tree, const char *name,
-                          TVirtualCollectionProxy *collProxy,
-                          Int_t buffsize, Int_t splitlevel )
+                        TVirtualCollectionProxy *collProxy,
+                        Int_t buffsize, Int_t splitlevel )
 {
-   //normal constructor
-   
+   // Normal constructor, called from TTree.
+
    fTree         = tree;
    fCollProxy    = collProxy;
    fBasketSize   = buffsize;
@@ -79,12 +82,12 @@ TBranchSTL::TBranchSTL( TTree *tree, const char *name,
 
 //------------------------------------------------------------------------------
 TBranchSTL::TBranchSTL( TBranch* parent, const char* name,
-                          TVirtualCollectionProxy* collProxy,
-                          Int_t buffsize, Int_t splitlevel,
-                          TStreamerInfo* info, Int_t id )
+                        TVirtualCollectionProxy* collProxy,
+                        Int_t buffsize, Int_t splitlevel,
+                        TStreamerInfo* info, Int_t id )
 {
-   //TO BE DOCUMENTED
-   
+   // Normal constructor, called from another branch.
+
    fTree         = parent->GetTree();
    fCollProxy    = collProxy;
    fBasketSize   = buffsize;
@@ -450,9 +453,21 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
          //---------------------------------------------------------------------
          // Calculate the base class offset
          //---------------------------------------------------------------------
-         tmpClass = elemBranch->GetCollectionProxy()->GetValueClass();
-         fBranchVector[index].fBaseOffset = tmpClass->GetBaseClassOffset( elClass );
-         fBranchVector[index].fPosition = 0;
+         TVirtualCollectionProxy *proxy = elemBranch->GetCollectionProxy();
+         if (!proxy) {
+            proxy =  TClass::GetClass(elemBranch->GetClassName())->GetCollectionProxy();
+         }
+         if (proxy) {
+            tmpClass = proxy->GetValueClass();
+            if (tmpClass) {
+               fBranchVector[index].fBaseOffset = tmpClass->GetBaseClassOffset( elClass );
+               fBranchVector[index].fPosition = 0;
+            } else {
+               Error("GetEntry","Missing TClass for %s (%s)",elemBranch->GetName(),elemBranch->GetClassName());
+            }
+         } else {
+            Error("GetEntry","Missing CollectionProxy for %s (%s)",elemBranch->GetName(),elemBranch->GetClassName());
+         }
       }
 
       //------------------------------------------------------------------------
@@ -477,7 +492,7 @@ Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
 }
 
 //------------------------------------------------------------------------------
-TStreamerInfo* TBranchSTL::GetInfo()
+TStreamerInfo* TBranchSTL::GetInfo() const
 {
    //---------------------------------------------------------------------------
    // Check if we don't have the streamer info
@@ -536,9 +551,52 @@ Bool_t TBranchSTL::IsFolder() const
 //------------------------------------------------------------------------------
 void TBranchSTL::FillLeaves( TBuffer& b )
 {
-      //TO BE DOCUMENTED
+   //TO BE DOCUMENTED
    
    b.WriteClassBuffer( fIndArrayCl, &fInd );
+}
+
+//------------------------------------------------------------------------------
+void TBranchSTL::Print(const char *option) const
+{
+   // Print the branch parameters.
+   
+   if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
+      if (strlen(GetName())>24) Printf("%-24s\n%-24s ", GetName(),"");
+      else Printf("%-24s ", GetName());
+
+      TBranchElement *parent = dynamic_cast<TBranchElement*>(GetMother()->GetSubBranch(this));
+      Int_t ind = parent ? parent->GetListOfBranches()->IndexOf(this) : -1;
+      TVirtualStreamerInfo *info = GetInfo();
+      Int_t *branchOffset = parent ? parent->GetBranchOffset() : 0;
+      
+      Printf("%-16s %2d SplitCollPtr %-16s %-16s %8x %8x n/a\n",
+             info ? info->GetName() : "StreamerInfo unvailable", fID,
+             GetClassName(), fParent ? fParent->GetName() : "n/a",
+             (branchOffset && parent && ind>=0) ? branchOffset[ind] : 0,
+             fObject);
+      for( Int_t i = 0; i < fBranches.GetEntriesFast(); ++i ) {
+         TBranch *br = (TBranch *)fBranches.UncheckedAt(i);
+         br->Print("debugAddressSub");
+      }
+   } else if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
+      Printf("Branch %s uses:\n",GetName());
+      if (fID>=0) {
+         ULong_t* elems = GetInfo()->GetElems();
+         ((TStreamerElement*) elems[fID])->ls();
+      }
+      for (Int_t i = 0; i < fBranches.GetEntriesFast(); ++i) {
+         TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
+         subbranch->Print("debugInfoSub");
+      }
+      return;
+   } else {
+      TBranch::Print(option);
+      for( Int_t i = 0; i < fBranches.GetEntriesFast(); ++i ) {
+         TBranch *br = (TBranch *)fBranches.UncheckedAt(i);
+         br->Print(option);
+      }
+   }
 }
 
 //------------------------------------------------------------------------------

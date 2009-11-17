@@ -34,8 +34,10 @@ class TBranchSTL: public TBranch {
       virtual Bool_t         IsFolder() const;
       virtual Int_t          Fill();
       virtual void           FillLeaves( TBuffer& b );
+      virtual const char    *GetClassName() const { return fClassName.Data(); }
       virtual Int_t          GetEntry( Long64_t entry = 0, Int_t getall = 0 );
-      virtual TStreamerInfo* GetInfo();
+      virtual TStreamerInfo *GetInfo() const;
+      virtual void           Print(Option_t*) const;
       virtual void           ReadLeaves( TBuffer& b );
       virtual void           SetAddress( void* addr );
 
@@ -68,9 +70,9 @@ class TBranchSTL: public TBranch {
       TIndArray                fInd;          //! Indices
       TString                  fContName;     //  Class name of referenced object
       TString                  fClassName;    //  Name of the parent class, if we're the data member
-      Int_t                    fClassVersion; //  Version number of the class
+      mutable Int_t            fClassVersion; //  Version number of the class
       UInt_t                   fClCheckSum;   //  Class checksum
-      TStreamerInfo*           fInfo;         //! The streamer info
+      mutable TStreamerInfo   *fInfo;         //! The streamer info
       char*                    fObject;       //! Pointer to object at address or the
       Int_t                    fID;           //  Element serial number in the streamer info
 };

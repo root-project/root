@@ -2175,21 +2175,6 @@ void TBranchElement::InitializeOffsets()
          return;
       }
 
-
-      //------------------------------------------------------------------------
-      // Extract the name of the STL branch in case we're splitting the
-      // collection of pointers
-      //------------------------------------------------------------------------
-      TString stlParentName;
-      if( fType == 4 && fSplitLevel > 100 )
-      {
-         TBranch *br = GetMother()->GetSubBranch( this );
-         stlParentName = br->GetName();
-         stlParentName.Strip( TString::kTrailing, '.' );
-         //         stlParentName.Remove( stlParentName.Last( '.' ), stlParentName.Length() );
-         //        stlParentName.Remove( 0, stlParentName.Last( '.' ) );
-      }
-
       // Get the class we are a member of now (which is the
       // type of our containing subobject) and get our offset
       // inside of our containing subobject (our local offset).
@@ -2231,6 +2216,24 @@ void TBranchElement::InitializeOffsets()
          fInitOffsets = kTRUE;
          return;
       }
+
+      //------------------------------------------------------------------------
+      // Extract the name of the STL branch in case we're splitting the
+      // collection of pointers
+      //------------------------------------------------------------------------
+      TString stlParentName;
+      Bool_t stlParentNameUpdated = kFALSE;
+      if( fType == 4 && fSplitLevel > 100 )
+      {
+         TBranch *br = GetMother()->GetSubBranch( this );
+         stlParentName = br->GetName();
+         stlParentName.Strip( TString::kTrailing, '.' );
+         
+         // We may ourself contain the 'Mother' branch name.
+         // To avoid code duplication, we delegate the removal 
+         // of the mother's name to the first sub-branch loop.
+      }
+      
       // Loop over our sub-branches and compute their offsets.
       for (Int_t subBranchIdx = 0; subBranchIdx < nbranches; ++subBranchIdx) {
          fBranchOffset[subBranchIdx] = 0;
@@ -2345,6 +2348,10 @@ void TBranchElement::InitializeOffsets()
          if (motherDotAtEnd) {
             // -- Remove the top-level branch name from our name.
             dataName.Remove(0, motherName.Length());
+            if (!stlParentNameUpdated && stlParentName.Length()) {
+               stlParentName.Remove(0, motherName.Length());
+               stlParentNameUpdated = kTRUE;
+            }
          } else if (motherDot) {
             // -- Remove the top-level branch name from our name, folder case.
             //
@@ -2361,14 +2368,21 @@ void TBranchElement::InitializeOffsets()
                //       this matches the exact test in TTree::Bronch().
                if (dataName.Length() == motherName.Length()) {
                   dataName.Remove(0, motherName.Length());
+                  if (!stlParentNameUpdated && stlParentName.Length()) {
+                     stlParentName.Remove(0, motherName.Length());
+                  }
                }
             } else {
                // -- Remove the mother name and the dot.
                if (dataName.Length() > motherName.Length()) {
                   dataName.Remove(0, motherName.Length() + 1);
+                  if (!stlParentNameUpdated && stlParentName.Length()) {
+                     stlParentName.Remove(0, motherName.Length());
+                  }
                }
             }
          }
+         stlParentNameUpdated = kTRUE;
          if (isBaseSubBranch) {
             // -- Remove the base class name suffix from our name.
             // Note: The pattern is the name of the base class.
@@ -2673,7 +2687,7 @@ Bool_t TBranchElement::IsMissingCollection() const
 //______________________________________________________________________________
 void TBranchElement::Print(Option_t* option) const
 {
-   // -- Print TBranch parameters.
+   // Print branch parameters.
 
    Int_t nbranches = fBranches.GetEntriesFast();
    if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
@@ -2681,14 +2695,17 @@ void TBranchElement::Print(Option_t* option) const
          Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s\n",
                 "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject");
       }
-      TBranchElement *parent = (TBranchElement*) GetMother()->GetSubBranch(this);
-      Int_t ind = parent->GetListOfBranches()->IndexOf(this);
       if (strlen(GetName())>24) Printf("%-24s\n%-24s ", GetName(),"");
       else Printf("%-24s ", GetName());
+
+      TBranchElement *parent = dynamic_cast<TBranchElement*>(GetMother()->GetSubBranch(this));
+      Int_t ind = parent ? parent->GetListOfBranches()->IndexOf(this) : -1;
+      TVirtualStreamerInfo *info = ((TBranchElement*)this)->GetInfo();
+      
       Printf("%-16s %2d %4d %-16s %-16s %8x %8x %8x\n",
-             ((TBranchElement*)this)->GetInfo()->GetName(), GetID(), GetType(),
+             info ? info->GetName() : "StreamerInfo unvailable", GetID(), GetType(),
              GetClassName(), GetParentName(),
-             (fBranchOffset&&parent) ? parent->fBranchOffset[ind] : 0,
+             (fBranchOffset&&parent && ind>=0) ? parent->fBranchOffset[ind] : 0,
              GetOffset(), GetObject());
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
