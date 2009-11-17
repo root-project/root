@@ -24,9 +24,11 @@ extern "C" {
    int tgetent(char*, const char*);
 }
 #else
+extern "C" {
 # include R__CURSESHDR
 # include <termcap.h>
-extern "C" int setupterm(const char* term, int fd, int* perrcode);
+int setupterm(const char* term, int fd, int* perrcode);
+}
 #endif
 
 // un-be-lievable: termcap.h / term.h often #define these.
