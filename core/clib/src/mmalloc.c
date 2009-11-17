@@ -63,13 +63,13 @@ initialize (mdp)
   struct mdesc *mdp;
 {
   mdp -> heapsize = HEAP / BLOCKSIZE;
-  mdp -> heapinfo = (malloc_info *)
-    align (mdp, mdp -> heapsize * sizeof (malloc_info));
+  mdp -> heapinfo = (mmalloc_info *)
+    align (mdp, mdp -> heapsize * sizeof (mmalloc_info));
   if (mdp -> heapinfo == NULL)
     {
       return (0);
     }
-  memset ((PTR)mdp -> heapinfo, 0, mdp -> heapsize * sizeof (malloc_info));
+  memset ((PTR)mdp -> heapinfo, 0, mdp -> heapsize * sizeof (mmalloc_info));
   mdp -> heapinfo[0].free.size = 0;
   mdp -> heapinfo[0].free.next = mdp -> heapinfo[0].free.prev = 0;
   mdp -> heapindex = 0;
@@ -87,7 +87,7 @@ morecore (mdp, size)
   size_t size;
 {
   PTR result;
-  malloc_info *newinfo, *oldinfo;
+  mmalloc_info *newinfo, *oldinfo;
   size_t newsize;
 
   result = align (mdp, size);
@@ -104,19 +104,19 @@ morecore (mdp, size)
 	{
 	  newsize *= 2;
 	}
-      newinfo = (malloc_info *) align (mdp, newsize * sizeof (malloc_info));
+      newinfo = (mmalloc_info *) align (mdp, newsize * sizeof (mmalloc_info));
       if (newinfo == NULL)
 	{
 	  mdp -> morecore (mdp, -(ptrdiff_t)size);
 	  return (NULL);
 	}
-      memset ((PTR) newinfo, 0, newsize * sizeof (malloc_info));
+      memset ((PTR) newinfo, 0, newsize * sizeof (mmalloc_info));
       memcpy ((PTR) newinfo, (PTR) mdp -> heapinfo,
-	      mdp -> heapsize * sizeof (malloc_info));
+	      mdp -> heapsize * sizeof (mmalloc_info));
       oldinfo = mdp -> heapinfo;
       newinfo[BLOCK (oldinfo)].busy.type = 0;
       newinfo[BLOCK (oldinfo)].busy.info.size
-	= BLOCKIFY (mdp -> heapsize * sizeof (malloc_info));
+	= BLOCKIFY (mdp -> heapsize * sizeof (mmalloc_info));
       mdp -> heapinfo = newinfo;
       __mmalloc_free (mdp, (PTR)oldinfo);
       mdp -> heapsize = newsize;

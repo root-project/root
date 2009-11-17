@@ -141,7 +141,7 @@ typedef union
 	size_t next;		/* Index of next free cluster.  */
 	size_t prev;		/* Index of previous free cluster.  */
       } free;
-  } malloc_info;
+  } mmalloc_info;
 
 /* List of blocks allocated with `mmemalign' (or `mvalloc').  */
 
@@ -267,7 +267,7 @@ struct mdesc
      Allocated with malign/__mmalloc_free (not mmalloc/mfree).  */
   /* Table indexed by block number giving per-block information.  */
 
-  malloc_info *heapinfo;
+  mmalloc_info *heapinfo;
 
   /* Instrumentation.  */
 
