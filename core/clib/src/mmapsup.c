@@ -38,7 +38,12 @@ typedef char* caddr_t;
 #  include <sys/mman.h>
 #endif
 
-#if defined(R__LINUX) && !defined(R__GLIBC) && !defined(__CYGWIN__)
+#ifdef __CYGWIN__
+#include <cygwin/version.h>
+#endif /* __CYGWIN__ */
+
+#if defined(R__LINUX) && !defined(R__GLIBC) && !defined(__CYGWIN__) \
+   || (defined(__CYGWIN__) && (CYGWIN_VERSION_API_MAJOR > 0 || CYGWIN_VERSION_API_MINOR < 213))
 extern size_t getpagesize PARAMS ((void));
 #else
 extern int getpagesize PARAMS ((void));
