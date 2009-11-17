@@ -218,9 +218,9 @@ void TEveLine::WriteVizParams(ostream& out, const TString& var)
 
    TString t = "   " + var + "->";
    TAttLine::SaveLineAttributes(out, var);
-   out << t << "SetRnrLine("   << fRnrLine   << ");\n";
-   out << t << "SetRnrPoints(" << fRnrPoints << ");\n";
-   out << t << "SetSmooth("    << fSmooth    << ");\n";
+   out << t << "SetRnrLine("   << ToString(fRnrLine)   << ");\n";
+   out << t << "SetRnrPoints(" << ToString(fRnrPoints) << ");\n";
+   out << t << "SetSmooth("    << ToString(fSmooth)    << ");\n";
 }
 
 //______________________________________________________________________________

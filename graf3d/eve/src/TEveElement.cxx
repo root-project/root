@@ -1806,6 +1806,15 @@ const TGPicture* TEveElement::GetListTreeCheckBoxIcon()
    return fgRnrIcons[idx];
 }
 
+//______________________________________________________________________________
+const char* TEveElement::ToString(Bool_t b)
+{
+   // Convert Bool_t to string - kTRUE or kFALSE.
+   // Needed in WriteVizParams().
+
+   return b ? "kTRUE" : "kFALSE";
+}
+
 
 /******************************************************************************/
 /******************************************************************************/

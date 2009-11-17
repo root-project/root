@@ -102,6 +102,8 @@ protected:
    virtual void PreDeleteElement();
    virtual void RemoveElementsInternal();
 
+   static const char* ToString(Bool_t b);
+
 public:
    TEveElement();
    TEveElement(Color_t& main_color);

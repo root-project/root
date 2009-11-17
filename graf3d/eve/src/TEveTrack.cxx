@@ -1135,6 +1135,7 @@ void TEveTrackList::CopyVizParams(const TEveElement* el)
       TAttLine::operator=(*m);
       fRecurse = m->fRecurse;
       fRnrLine = m->fRnrLine;
+      fRnrPoints = m->fRnrPoints;
       fMinPt   = m->fMinPt;
       fMaxPt   = m->fMaxPt;
       fLimPt   = m->fLimPt;
@@ -1156,14 +1157,15 @@ void TEveTrackList::WriteVizParams(ostream& out, const TString& var)
    TString t = "   " + var + "->";
    TAttMarker::SaveMarkerAttributes(out, var);
    TAttLine  ::SaveLineAttributes  (out, var);
-   out << t << "SetRecurse(" << fRecurse << ");\n";
-   out << t << "SetRnrLine(" << fRnrLine << ");\n";
-   out << t << "SetMinPt("   << fMinPt   << ");\n";
-   out << t << "SetMaxPt("   << fMaxPt   << ");\n";
-   out << t << "SetLimPt("   << fLimPt   << ");\n";
-   out << t << "SetMinP("    << fMinP    << ");\n";
-   out << t << "SetMaxP("    << fMaxP    << ");\n";
-   out << t << "SetLimP("    << fLimP    << ");\n";
+   out << t << "SetRecurse("   << ToString(fRecurse)   << ");\n";
+   out << t << "SetRnrLine("   << ToString(fRnrLine)   << ");\n";
+   out << t << "SetRnrPoints(" << ToString(fRnrPoints) << ");\n";
+   out << t << "SetMinPt(" << fMinPt << ");\n";
+   out << t << "SetMaxPt(" << fMaxPt << ");\n";
+   out << t << "SetLimPt(" << fLimPt << ");\n";
+   out << t << "SetMinP("  << fMinP  << ");\n";
+   out << t << "SetMaxP("  << fMaxP  << ");\n";
+   out << t << "SetLimP("  << fLimP  << ");\n";
 }
 
 //______________________________________________________________________________
