@@ -3253,6 +3253,9 @@ void TProofServ::HandleProcess(TMessage *mess)
          Warning("HandleProcess", "could not get query sequential number!");
 
       // Make the ordinal number available in the selector
+      TObject *nord = 0;
+      while ((nord = input->FindObject("PROOF_Ordinal")))
+         input->Remove(nord);
       input->Add(new TNamed("PROOF_Ordinal", GetOrdinal()));
 
       // Set input
