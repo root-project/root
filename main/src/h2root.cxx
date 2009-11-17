@@ -40,6 +40,7 @@
 // Also, the arrays must be declared extern like on Windows
 #ifndef WIN32
 #define PAWC_SIZE 4000000
+#  define bigbuf bigbuf_
 #  define pawc pawc_
 #  define quest quest_
 #  define hcbits hcbits_
@@ -70,7 +71,7 @@ extern "C" int hcbook[51];
 extern "C" int rzcl[11];
 #endif
 
-char bigbuf[4000000]; //this variable must be global for amd64
+extern "C" char bigbuf[4000000]; //this variable must be global for amd64
 int *iq, *lq;
 float *q;
 char idname[128];
@@ -676,10 +677,18 @@ void convert_cwn(Int_t id)
 #else
    hgiven(id,chtitl,80,nvar,chtag_out,kNchar,rmin[0],rmax[0]);
 #endif
+   //Long_t add0 = (Long_t)&bigbuf[0];
+   //Long_t addpaw = (Long_t)&pawc[18];
+   //printf("ALIGN add0 = %lld, mod=%d, addpaw=%lld, modpaw=%d\n",add0,add0%4,addpaw,addpaw%4);
+   Long_t add = (Long_t)&bigbuf[0] - (Long_t)&pawc[18];
+   add /= 4;
+   Int_t addq = Int_t(add);
 #ifndef WIN32
-   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
+   //hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
+   hbnam(id,PASSCHAR(" "),addq,PASSCHAR("$CLEAR"),0,1,6);
 #else
-   hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0);
+   //hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0);
+   hbnam(id,PASSCHAR(" "),addq,PASSCHAR("$CLEAR"),0);
 #endif
 
    Int_t bufpos = 0;
@@ -785,11 +794,14 @@ void convert_cwn(Int_t id)
          strcpy(oldblock,block);
          oldischar = ischar;
          Int_t lblock   = strlen(block);
-         Long_t add= (Long_t)&bigbuf[bufpos];
+         //Long_t add= (Long_t)&bigbuf[bufpos];
+         add= (Long_t)&bigbuf[bufpos] - (Long_t)&pawc[18];
+	 add /= 4;
+	 addq = Int_t(add);
 #ifndef WIN32
-         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
+         hbnam(id,PASSCHAR(block),addq,PASSCHAR("$SET"),ischar,lblock,4);
 #else
-         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar);
+         hbnam(id,PASSCHAR(block),addq,PASSCHAR("$SET"),ischar);
 #endif
 
       }
