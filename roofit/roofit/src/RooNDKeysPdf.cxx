@@ -815,6 +815,8 @@ RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) con
 
     Double_t g(1.);
 
+    if(i>=(Int_t)_idx.size()) {continue;} //---> 1.myline 
+
     const vector<Double_t>& point  = _dataPts[i];
     const vector<Double_t>& weight = weights[_idx[i]];
 

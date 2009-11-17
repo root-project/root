@@ -159,7 +159,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   // Process constraints specifications
   const RooArgSet* cPars = pc.getSet("cPars") ;
   const RooArgSet* extCons = pc.getSet("extCons") ;
-
+  
   // If constraints are specified, add to fit options
   if (cPars) {
     _fitOptList.Add(RooFit::Constrain(*cPars).Clone()) ;

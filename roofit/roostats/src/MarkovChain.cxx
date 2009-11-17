@@ -115,8 +115,7 @@ void MarkovChain::SetParameters(RooArgSet& parameters)
    fNLL = (RooRealVar*)fDataEntry->find(NLL_NAME);
    fWeight = (RooRealVar*)fDataEntry->find(WEIGHT_NAME);
 
-   fChain = new RooDataSet(DATASET_NAME, "Markov Chain", *fDataEntry);
-   fChain->setWeightVar(*fWeight);
+   fChain = new RooDataSet(DATASET_NAME, "Markov Chain", *fDataEntry,WEIGHT_NAME);
 }
 
 void MarkovChain::Add(RooArgSet& entry, Double_t nllValue, Double_t weight)

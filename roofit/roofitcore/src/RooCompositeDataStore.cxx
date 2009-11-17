@@ -42,7 +42,7 @@ ClassImp(RooCompositeDataStore)
 
 
 //_____________________________________________________________________________
-RooCompositeDataStore::RooCompositeDataStore() 
+RooCompositeDataStore::RooCompositeDataStore() : _curStore(0), _curIndex(0)
 {
 }
 
@@ -50,7 +50,7 @@ RooCompositeDataStore::RooCompositeDataStore()
 
 //_____________________________________________________________________________
 RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat,map<string,RooAbsDataStore*> inputData) :
-  RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _dataMap(inputData), _indexCat(&indexCat)
+  RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _dataMap(inputData), _indexCat(&indexCat), _curStore(0), _curIndex(0)
 {
 }
 
@@ -59,14 +59,14 @@ RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title
 
 //_____________________________________________________________________________
 RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other, const char* newname) :
-  RooAbsDataStore(other,newname), _dataMap(other._dataMap), _indexCat(other._indexCat)
+  RooAbsDataStore(other,newname), _dataMap(other._dataMap), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex)
 {
 }
 
 
 //_____________________________________________________________________________
 RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname) :
-  RooAbsDataStore(other,vars,newname), _dataMap(other._dataMap), _indexCat(other._indexCat)
+  RooAbsDataStore(other,vars,newname), _dataMap(other._dataMap), _indexCat(other._indexCat), _curStore(other._curStore), _curIndex(other._curIndex)
 {
 }
 
@@ -118,11 +118,67 @@ const RooArgSet* RooCompositeDataStore::get(Int_t index) const
     }    
     const_cast<RooCompositeDataStore*>(this)->_vars = (*iter->second->get(index-offset)) ;
     _indexCat->setLabel(iter->first.c_str()) ;
+    _curStore = iter->second ;
+    _curIndex = index-offset ;
     
     return &_vars ;
   }
   return 0 ;
 }
+
+
+
+//_____________________________________________________________________________
+Double_t RooCompositeDataStore::weight() const 
+{  
+  if (!_curStore) get(0) ;
+  return _curStore->weight(_curIndex) ;
+}
+
+
+
+
+
+//_____________________________________________________________________________
+Double_t RooCompositeDataStore::weight(Int_t index) const 
+{
+  get(index) ;
+  return weight() ;
+}
+
+
+
+
+//_____________________________________________________________________________
+Double_t RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const 
+{  
+  if (!_curStore) get(0) ;
+  return _curStore->weightError(etype) ;
+}
+
+
+
+
+//_____________________________________________________________________________
+void RooCompositeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype) const 
+{
+  if (!_curStore) get(0) ;
+  return _curStore->weightError(lo,hi,etype) ;
+}
+
+
+
+
+//_____________________________________________________________________________
+Bool_t RooCompositeDataStore::isWeighted() const 
+{
+  map<string,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    if (iter->second->isWeighted()) return kTRUE ;
+  }
+  return kFALSE ; ;
+}
+
 
 
 

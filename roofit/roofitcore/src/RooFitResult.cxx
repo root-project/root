@@ -573,8 +573,9 @@ void RooFitResult::fillCorrMatrix(const std::vector<double>& globalCC, const TMa
   _VM = new TMatrixDSym(covs) ;
   _GC = new TVectorD(_CM->GetNcols()) ;
   for(int i=0 ; i<_CM->GetNcols() ; i++) {
-    _GC[i] = globalCC[i] ;
+    (*_GC)[i] = globalCC[i] ;
   }
+  fillLegacyCorrMatrix() ;
 }
 
 

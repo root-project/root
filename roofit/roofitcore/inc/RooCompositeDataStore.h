@@ -50,6 +50,11 @@ public:
   // Retrieve a row
   using RooAbsDataStore::get ;
   virtual const RooArgSet* get(Int_t index) const ;
+  virtual Double_t weight() const ;
+  virtual Double_t weight(Int_t index) const ;
+  virtual Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const ;
+  virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const ; 
+  virtual Bool_t isWeighted() const ;
 
   // Change observable name
   virtual Bool_t changeObservableName(const char* from, const char* to) ;
@@ -81,6 +86,8 @@ public:
 
   std::map<std::string,RooAbsDataStore*> _dataMap ;
   RooCategory* _indexCat ;
+  mutable RooAbsDataStore* _curStore ; //! Datastore associated with current event
+  mutable Int_t _curIndex ; //! Index associated with current event
 
   ClassDef(RooCompositeDataStore,1) // Composite Data Storage class
 };

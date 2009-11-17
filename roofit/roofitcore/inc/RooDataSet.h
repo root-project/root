@@ -76,15 +76,12 @@ public:
 			  const char *indexCatName=0) ;
   Bool_t write(const char* filename) ;
 
-  void setWeightVar(const char* name=0) ;
-  void setWeightVar(const RooAbsArg& arg) { 
-    // Interpret given argument as event weight
-    setWeightVar(arg.GetName()) ; 
-  }
-  virtual Bool_t isWeighted() const { 
-    // Return true if dataset contains weighted events
-    return _wgtVar ? kTRUE : kFALSE ; 
-  }
+/*   void setWeightVar(const char* name=0) ; */
+/*   void setWeightVar(const RooAbsArg& arg) {  */
+/*     // Interpret given argument as event weight */
+/*     setWeightVar(arg.GetName()) ;  */
+/*   } */
+  virtual Bool_t isWeighted() const ;
   virtual Bool_t isNonPoissonWeighted() const ;
 
   virtual Double_t weight() const ; 
@@ -134,12 +131,12 @@ protected:
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
 	                Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
-	     const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange, int nStart, int nStop, Bool_t copyCache);
+	     const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange, int nStart, int nStop, Bool_t copyCache, const char* wgtVarName=0);
   
-  RooArgSet addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar) ;
-
-  RooArgSet _varsNoWgt ;   // Vars without weight variable
-  RooRealVar* _wgtVar ;    // Pointer to weight variable (if set)
+  RooArgSet addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar) ; 
+  
+  RooArgSet _varsNoWgt ;   // Vars without weight variable 
+  RooRealVar* _wgtVar ;    // Pointer to weight variable (if set) 
 
   ClassDef(RooDataSet,2) // Unbinned data set
 };

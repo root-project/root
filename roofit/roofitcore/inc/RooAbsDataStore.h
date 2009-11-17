@@ -18,8 +18,10 @@
 
 #include "Rtypes.h"
 #include "RooArgSet.h" 
+#include "RooAbsData.h"
 #include "TNamed.h"
 #include <list>
+
 
 class RooAbsArg ;
 class RooArgList ;
@@ -38,10 +40,18 @@ public:
 
   // Write current row
   virtual Int_t fill() = 0 ;
-
+  
   // Retrieve a row
   virtual const RooArgSet* get(Int_t index) const = 0 ;
   virtual const RooArgSet* get() const { return &_vars ; } 
+  virtual Double_t weight() const = 0 ;
+
+  virtual Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ;
+  virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ; 
+
+  virtual Double_t weight(Int_t index) const = 0 ;
+
+  virtual Bool_t isWeighted() const = 0 ;
 
   // Change observable name
   virtual Bool_t changeObservableName(const char* from, const char* to) =0 ;

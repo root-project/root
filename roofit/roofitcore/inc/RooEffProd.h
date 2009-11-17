@@ -64,7 +64,7 @@ protected:
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
 
 
   // the real stuff...
@@ -74,7 +74,7 @@ protected:
 
   RooArgSet* _fixedNset ; //! Fixed normalization set overriding default normalization set (if provided)
 
-  ClassDef(RooEffProd,1) // Product operator p.d.f of (PDF x efficiency) implementing optimized generator context
+  ClassDef(RooEffProd,2) // Product operator p.d.f of (PDF x efficiency) implementing optimized generator context
 };
 
 #endif

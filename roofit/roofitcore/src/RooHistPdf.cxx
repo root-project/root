@@ -248,12 +248,10 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   // histogram. If interpolation is used on the integral over
   // all histogram observables is supported
 
-
   // Only analytical integrals over the full range are defined
   if (rangeName!=0) {
     return 0 ;
   }
-
 
   // First make list of pdf observables to histogram observables
   RooArgList hobsl(_histObsList),pobsl(_pdfObsList) ;
@@ -298,8 +296,10 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   iter = _histObsList.createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    if (allVars.find(arg->GetName())) code |= (1<<n) ;
-    analVars.add(*pobsl.at(n)) ;
+    if (allVars.find(arg->GetName())) {
+      code |= (1<<n) ;
+      analVars.add(*pobsl.at(n)) ;
+    }
     n++ ;
   }
   delete iter ;
@@ -336,7 +336,27 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
   }
   delete iter ;
 
+  // WVE must sync hist slice list values to pdf slice list
+  // Transfer values from   
+  if (_pdfObsList.getSize()>0) {
+    _histObsIter->Reset() ;
+    _pdfObsIter->Reset() ;
+    RooAbsArg* harg, *parg ;
+    while((harg=(RooAbsArg*)_histObsIter->Next())) {
+      parg = (RooAbsArg*)_pdfObsIter->Next() ;
+      if (harg != parg) {
+	parg->syncCache() ;
+	harg->copyCache(parg,kTRUE) ;
+      }
+    }
+  }  
+
+
   Double_t ret =  _dataHist->sum(intSet,_histObsList,kTRUE) ;
+//   cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
+//   cout << "intSet = " << intSet << endl ;
+//   cout << "slice position = " << endl ;
+//   _histObsList.Print("v") ;
   return ret ;
 }
 

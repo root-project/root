@@ -118,7 +118,7 @@ RooCmdArg Import(TH1& histo) ;
 RooCmdArg WeightVar(const char* name) ;
 RooCmdArg WeightVar(const RooRealVar& arg) ;
 RooCmdArg Import(const char* state, RooDataSet& data) ;
-RooCmdArg Link(const char* state, RooDataSet& data) ;
+RooCmdArg Link(const char* state, RooAbsData& data) ;
 RooCmdArg Import(RooDataSet& data) ;
 RooCmdArg Import(TTree& tree) ;
 RooCmdArg ImportFromFile(const char* fname, const char* tname) ;
@@ -199,6 +199,7 @@ RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, Bool_t d
 // RooAbsPdf::generate arguments
 RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE, Bool_t resample=kFALSE) ;
 RooCmdArg NumEvents(Int_t numEvents) ;
+RooCmdArg NumEvents(Double_t numEvents) ;
 RooCmdArg ExpectedData(Bool_t flag=kTRUE) ; 
 RooCmdArg Asimov(Bool_t flag=kTRUE) ; 
 
