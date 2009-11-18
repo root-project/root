@@ -19,15 +19,17 @@ UNRDIRS      := $(MODDIRS)/$(UNRVERS)
 UNURANETAG   := $(UNURANDIRS)/headers.d
 UNRCFG       := $(UNURANDIRS)/$(UNRVERS)/config.h
 
-UNRS 	     := $(wildcard $(UNRDIRS)/src/utils/*.c)\
-                $(wildcard $(UNRDIRS)/src/methods/*.c) \
-                $(wildcard $(UNRDIRS)/src/specfunct/*.c) \
-                $(wildcard $(UNRDIRS)/src/distr/*.c) \
-                $(wildcard $(UNRDIRS)/src/distributions/*.c) \
-                $(wildcard $(UNRDIRS)/src/parser/*.c) \
-                $(wildcard $(UNRDIRS)/src/tests/*.c) \
-                $(wildcard $(UNRDIRS)/src/uniform/*.c) \
-                $(wildcard $(UNRDIRS)/src/urng/*.c)
+UNRTARCONTENT:=$(subst $(UNRVERS),$(UNRDIRS),$(shell cd $(UNURANDIRS); gunzip -c $(UNRVERS).tar.gz | tar tf -))
+UNRS         := $(filter %.c,\
+                $(filter $(UNRDIRS)/src/utils/%,$(UNRTARCONTENT))\
+                $(filter $(UNRDIRS)/src/methods/%,$(UNRTARCONTENT)) \
+                $(filter $(UNRDIRS)/src/specfunct/%,$(UNRTARCONTENT)) \
+                $(filter $(UNRDIRS)/src/distr/%,$(UNRTARCONTENT)) \
+                $(filter $(UNRDIRS)/src/distributions/%,$(UNRTARCONTENT)) \
+                $(filter $(UNRDIRS)/src/parser/%,$(UNRTARCONTENT)) \
+                $(filter $(UNRDIRS)/src/tests/%,$(UNRTARCONTENT)) \
+                $(filter $(UNRDIRS)/src/uniform/%,$(UNRTARCONTENT)) \
+                $(filter $(UNRDIRS)/src/urng/%,$(UNRTARCONTENT)))
 UNRO         := $(UNRS:.c=.o)
 
 ifeq ($(PLATFORM),win32)
@@ -70,6 +72,7 @@ include/%.h: 	$(UNURANDIRI)/%.h $(UNURANETAG)
 		cp $< $@
 
 $(UNURANDEP):   $(UNRCFG)
+$(UNRS): $(UNURANETAG)
 
 $(UNURANETAG):	$(UNRSRCS)
 		@echo "**** untarring UNURAN !!!!"
