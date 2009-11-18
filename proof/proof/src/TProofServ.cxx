@@ -949,7 +949,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
 
    Long64_t bytesRead = 0;
 
-   if (gPerfStats != 0) bytesRead = gPerfStats->GetBytesRead();
+   if (gPerfStats) bytesRead = gPerfStats->GetBytesRead();
 
    if (fCompute.Counter() > 0)
       fCompute.Stop();

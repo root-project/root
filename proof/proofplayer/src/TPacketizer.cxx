@@ -1087,10 +1087,9 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
                               sl->GetOrdinal(), sl->GetName(),
                               numev, latency, proctime, proccpu, bytesRead);
 
-      if (gPerfStats != 0) {
+      if (gPerfStats)
          gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), slstat->fCurElem->GetFileName(),
                                  numev, latency, proctime, proccpu, bytesRead);
-      }
 
       slstat->fCurElem = 0;
       if (fProgressStatus && fProgressStatus->GetEntries() == fTotalEntries) {
@@ -1110,10 +1109,9 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
    if ( file != 0 && file->IsDone() ) {
       file->GetNode()->DecSlaveCnt(slstat->GetName());
-      if (gPerfStats != 0) {
+      if (gPerfStats)
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
                                file->GetElement()->GetFileName(), kFALSE);
-      }
       file = 0;
    }
    // Reset the current file field
@@ -1143,11 +1141,10 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
       slstat->fCurFile = file;
       file->GetNode()->IncSlaveCnt(slstat->GetName());
-      if (gPerfStats != 0) {
+      if (gPerfStats)
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(),
                                file->GetNode()->GetName(),
                                file->GetElement()->GetFileName(), kTRUE);
-      }
    }
 
    // get a packet
@@ -1183,7 +1180,7 @@ Int_t TPacketizer::GetActiveWorkers()
 {
    // Return the number of workers still processing
 
-   Int_t actw = 0;   
+   Int_t actw = 0;
    TIter nxw(fSlaveStats);
    TObject *key;
    while ((key = nxw())) {

@@ -1264,7 +1264,7 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
               sl->GetOrdinal(), sl->GetName(), progress->GetEntries(), latency,
               progress->GetProcTime(), progress->GetCPUTime(), progress->GetBytesRead());
 
-      if (gPerfStats != 0) {
+      if (gPerfStats)
          gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(),
                                  slstat->fCurElem->GetFileName(),
                                  progress->GetEntries(),
@@ -1272,7 +1272,6 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
                                  progress->GetProcTime(),
                                  progress->GetCPUTime(),
                                  progress->GetBytesRead());
-      }
       delete progress;
       if (numev != expectedNumEv) {
          // The last packet was not fully processed
@@ -1383,10 +1382,9 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    if ( file != 0 && file->IsDone() ) {
       file->GetNode()->DecExtSlaveCnt(slstat->GetName());
       file->GetNode()->DecRunSlaveCnt();
-      if (gPerfStats != 0) {
+      if (gPerfStats)
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
                                file->GetElement()->GetFileName(), kFALSE);
-      }
       file = 0;
    }
    // Reset the current file field
@@ -1486,11 +1484,10 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       }
       file->GetNode()->IncExtSlaveCnt(slstat->GetName());
       file->GetNode()->IncRunSlaveCnt();
-      if (gPerfStats != 0) {
+      if (gPerfStats)
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(),
                                file->GetNode()->GetName(),
                                file->GetElement()->GetFileName(), kTRUE);
-      }
    }
 
    Long64_t num = CalculatePacketSize(slstat, cachesz, learnent);
@@ -1527,7 +1524,7 @@ Int_t TPacketizerAdaptive::GetActiveWorkers()
 {
    // Return the number of workers still processing
 
-   Int_t actw = 0;   
+   Int_t actw = 0;
    TIter nxw(fSlaveStats);
    TObject *key;
    while ((key = nxw())) {

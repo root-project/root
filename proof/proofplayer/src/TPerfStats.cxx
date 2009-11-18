@@ -592,9 +592,8 @@ void TPerfStats::Start(TList *input, TList *output)
 {
    // Initialize PROOF statistics run.
 
-   if (gPerfStats != 0) {
+   if (gPerfStats)
       delete gPerfStats;
-   }
 
    gPerfStats = new TPerfStats(input, output);
    if (gPerfStats && !gPerfStats->TestBit(TObject::kInvalidObject)) {
@@ -609,7 +608,7 @@ void TPerfStats::Stop()
 {
    // Terminate the PROOF statistics run.
 
-   if (gPerfStats == 0) return;
+   if (!gPerfStats) return;
 
    gPerfStats->SimpleEvent(TVirtualPerfStats::kStop);
 

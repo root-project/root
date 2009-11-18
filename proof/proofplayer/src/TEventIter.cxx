@@ -130,7 +130,7 @@ Int_t TEventIter::LoadDir()
       TDirectory *dirsave = gDirectory;
 
       Double_t start = 0;
-      if (gPerfStats != 0) start = TTimeStamp();
+      if (gPerfStats) start = TTimeStamp();
 
       // Take into acoount possible prefixes
       TFile::EFileType typ = TFile::kDefault;
@@ -141,7 +141,7 @@ Int_t TEventIter::LoadDir()
          fname = fFilename;
       fFile = TFile::Open(fname);
 
-      if (gPerfStats != 0) {
+      if (gPerfStats) {
          gPerfStats->FileOpenEvent(fFile, fFilename, start);
          fOldBytesRead = 0;
       }
@@ -287,7 +287,7 @@ Long64_t TEventIterObj::GetNextEvent()
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
 
-      if (gPerfStats != 0 && fFile != 0) {
+      if (gPerfStats && fFile) {
          Long64_t bytesRead = fFile->GetBytesRead();
          gPerfStats->SetBytesRead(bytesRead - fOldBytesRead);
          fOldBytesRead = bytesRead;
@@ -666,7 +666,7 @@ Long64_t TEventIterTree::GetNextEvent()
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
 
-      if (gPerfStats != 0 && fTree != 0) {
+      if (gPerfStats && fTree) {
          Long64_t totBytesRead = fTree->GetCurrentFile()->GetBytesRead();
          Long64_t bytesRead = totBytesRead - fOldBytesRead;
          gPerfStats->SetBytesRead(bytesRead);
