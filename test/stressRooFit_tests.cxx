@@ -3416,7 +3416,8 @@ public:
   RooRealVar* w = (RooRealVar*) data->addColumn(wFunc) ;
 
   // Instruct dataset d in interpret w as event weight rather than as observable
-  data->setWeightVar(*w) ;
+  RooDataSet dataw(data->GetName(),data->GetTitle(),data,*data->get(),0,w->GetName()) ;
+  //data->setWeightVar(*w) ;
 
 
   // U n b i n n e d   M L   f i t   t o   w e i g h t e d   d a t a 
@@ -3435,7 +3436,7 @@ public:
   //       event weights represent Poisson statistics themselves.
   //       In general, parameter error reflect precision of SumOfWeights
   //       events rather than NumEvents events. See comparisons below
-  RooFitResult* r_ml_wgt = p2.fitTo(*data,Save()) ;
+  RooFitResult* r_ml_wgt = p2.fitTo(dataw,Save()) ;
 
 
 
@@ -3446,7 +3447,7 @@ public:
   RooPlot* frame = x.frame(Title("Unbinned ML fit, binned chi^2 fit to weighted data")) ;
 
   // Plot data using sum-of-weights-squared error rather than Poisson errors
-  data->plotOn(frame,DataError(RooAbsData::SumW2)) ;
+  dataw.plotOn(frame,DataError(RooAbsData::SumW2)) ;
 
   // Overlay result of 2nd order polynomial fit to weighted data
   p2.plotOn(frame) ;
@@ -3474,7 +3475,7 @@ public:
   // ------------------------------------------------------------------------------------
 
   // Construct binned clone of unbinned weighted dataset
-  RooDataHist* binnedData = data->binnedClone() ;
+  RooDataHist* binnedData = dataw.binnedClone() ;
 
   // Perform chi2 fit to binned weighted dataset using sum-of-weights errors
   // 
