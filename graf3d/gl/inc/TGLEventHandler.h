@@ -53,6 +53,9 @@ protected:
 
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
 
+   virtual void   GrabMouse();
+   virtual void   UnGrabMouse();
+
 public:
    TGLEventHandler(TGWindow *w, TObject *obj);
    virtual ~TGLEventHandler();

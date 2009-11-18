@@ -84,6 +84,32 @@ TGLEventHandler::~TGLEventHandler()
 }
 
 //______________________________________________________________________________
+void TGLEventHandler::GrabMouse()
+{
+   // Acquire mouse grab.
+
+   if (!fInPointerGrab)
+   {
+      gVirtualX->GrabPointer(fGLViewer->GetGLWidget()->GetId(),
+                             kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
+                             kNone, kNone, kTRUE, kFALSE);
+      fInPointerGrab = kTRUE;
+   }
+}
+
+//______________________________________________________________________________
+void TGLEventHandler::UnGrabMouse()
+{
+   // Release mouse grab.
+
+   if (fInPointerGrab)
+   {
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+      fInPointerGrab = kFALSE;
+   }
+}
+
+//______________________________________________________________________________
 void TGLEventHandler::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    // Process event of type 'event' - one of EEventType types,
@@ -354,13 +380,11 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       fActiveButtonID = event->fCode;
    }
 
+
    // Button DOWN
    if (event->fType == kButtonPress)
    {
-      gVirtualX->GrabPointer(fGLViewer->GetGLWidget()->GetId(),
-                             kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
-                             kNone, kNone, kTRUE, kFALSE);
-      fInPointerGrab = kTRUE;
+      GrabMouse();
 
       fGLViewer->MouseIdle(0, 0, 0);
 
@@ -472,7 +496,11 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                                                   gClient->GetDefaultRoot()->GetId(),
                                                   event->fX, event->fY, x, y, childdum);
                   const TGLPhysicalShape * selected = fGLViewer->fSelRec.GetPhysShape();
-                  if (selected) {
+                  if (selected)
+                  {
+                     fActiveButtonID = 0;
+                     UnGrabMouse();
+
                      selected->InvokeContextMenu(*fGLViewer->fContextMenu, x, y);
                   }
                   // This is dangerous ... should have special menu.
@@ -480,7 +508,9 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
                   // {
                   //    fGLViewer->fContextMenu->Popup(x, y, fGLViewer);
                   // }
-               } else {
+               }
+               else
+               {
                   fGLViewer->fDragAction = TGLViewer::kDragCameraDolly;
                }
                break;
@@ -495,8 +525,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
 
       if (fInPointerGrab)
       {
-         gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
-         fInPointerGrab = kFALSE;
+         UnGrabMouse();
       }
       else
       {
@@ -601,14 +630,14 @@ Bool_t TGLEventHandler::HandleDoubleClick(Event_t *event)
       return kFALSE;
    }
 
+   if (event->fCode > 3)
+      return kTRUE;
+
    if (fActiveButtonID)
       return kTRUE;
 
    fActiveButtonID = event->fCode;
-   gVirtualX->GrabPointer(fGLViewer->GetGLWidget()->GetId(),
-                          kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
-                          kNone, kNone, kTRUE, kFALSE);
-   fInPointerGrab = kTRUE;
+   GrabMouse();
 
    fGLViewer->MouseIdle(0, 0, 0);
    if (event->fCode == kButton1)
