@@ -23,6 +23,8 @@
 
 #include "Fit/SparseData.h"
 
+#include <limits>
+
 using namespace std;
 
 namespace ROOT { 
@@ -116,7 +118,7 @@ namespace ROOT {
       class AreaComparer
       {
       public:
-         AreaComparer(vector<double>::iterator iter, double cmpLimit = 1e-16): 
+         AreaComparer(vector<double>::iterator iter, double cmpLimit = 8*std::numeric_limits<double>::epsilon() ): 
             thereIsArea(true), 
             it(iter),
             limit(cmpLimit)
