@@ -1189,13 +1189,13 @@ bool CheckBinLimits(const TArrayD* h1Array, const TArrayD* h2Array)
    Int_t fN = h1Array->fN;
    if ( fN != 0 ) {
       if ( h2Array->fN != fN ) {
-         throw(DifferentBinLimits());
+         throw DifferentBinLimits();
          return false;
       }
       else {
          for ( int i = 0; i < fN; ++i ) {
             if ( ! TMath::AreEqualAbs( h1Array->GetAt(i), h2Array->GetAt(i), 1E-10 ) ) {
-               throw(DifferentBinLimits());
+               throw DifferentBinLimits();
                return false;
             }
          }
@@ -1215,7 +1215,7 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 
    // Check whether the histograms have the same number of bins.
    if (nbinsx != h2->GetNbinsX() || nbinsy != h2->GetNbinsY() || nbinsz != h2->GetNbinsZ()) {
-      throw(DifferentNumberOfBins());
+      throw DifferentNumberOfBins();
       return false;
    }
    // Check that the axis limits of the histograms are the same
@@ -1225,7 +1225,7 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
        h1->fYaxis.GetXmax() != h2->fYaxis.GetXmax() ||
        h1->fZaxis.GetXmin() != h2->fZaxis.GetXmin() ||
        h1->fZaxis.GetXmax() != h2->fZaxis.GetXmax()) {
-      throw(DifferentAxisLimits());
+      throw DifferentAxisLimits();
       return false;
    }
 
