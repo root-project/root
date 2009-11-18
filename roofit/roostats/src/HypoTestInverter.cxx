@@ -150,18 +150,23 @@ bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon, in
 	rightCL = centerCL;
 	rightCLError = centerCLError;
       }
-//       if ( fabs(centerCL-target) > nSigma*centerCLError && centerCLError > epsilon  ) {
+      if ( fabs(centerCL-target) < nSigma*centerCLError && centerCLError > epsilon  ) {
 // 	do {
 	// add statistics to the number of toys to gain precision
 
 	  int nToys = ((HybridCalculator*)fCalculator0)->GetNumberOfToys(); // current number of toys
-	  int nToysTarget = (int) TMath::Min(nToys*1.5, 1.2*nToys*pow(centerCLError/epsilon,2)); // estimated number of toys until the target precision is reached
+	  int nToysTarget = (int) TMath::Max(nToys*1.5, 1.2*nToys*pow(centerCLError/epsilon,2)); // estimated number of toys until the target precision is reached
 	  ((HybridCalculator*)fCalculator0)->SetNumberOfToys(nToysTarget);
+      
+	  std::cout << "Increasing the number of toys to: " << nToysTarget << " (CL error was: " << centerCLError << ")\n";
 
-// 	} while ( fabs(centerCL-target) > nSigma*centerCLError && centerCLError > epsilon )
-//       }
+// 	  centerCL = fResults->GetYValue(fResults->Size()-1);
+// 	  centerCLError = fResults->GetYValue(fResults->Size()-1);
 
-    } while ( fabs(centerCL-target) > nSigma*centerCLError && centerCLError <= epsilon );
+//  	} while ( fabs(centerCL-target) < nSigma*centerCLError && centerCLError > epsilon )
+       }
+
+    } while ( fabs(centerCL-target) > nSigma*centerCLError || centerCLError > epsilon );
     std::cout << "Converged in " << fResults->Size() << " iterations\n";
     return true;
   } else if ( numAlgorithm==1 ) {
@@ -242,22 +247,22 @@ bool HypoTestInverter::RunOnePoint( double thisX )
    CreateResults();
 
   // check if thisX is in the range specified for fScannedVariable
-  if ( thisX<fScannedVariable->getMin() || thisX>fScannedVariable->getMax() ) {
-    std::cout << "I will not run because the specified value in not in the range of the variable being scanned\n";
-    return false;
+  if ( thisX<fScannedVariable->getMin() ) {
+    std::cout << "Out of range: using the lower bound on the scanned variable rather than " << thisX<< "\n";
+    thisX = fScannedVariable->getMin();
+  }
+  if ( thisX>fScannedVariable->getMax() ) {
+    std::cout << "Out of range: using the upper bound on the scanned variable rather than " << thisX<< "\n";
+    thisX = fScannedVariable->getMax();
   }
 
-  std::cout << "Running for " << fScannedVariable->GetName() << " = " << thisX << endl;
-  
   double oldValue = fScannedVariable->getVal();
 
   fScannedVariable->setVal(thisX);
+  std::cout << "Running for " << fScannedVariable->GetName() << " = " << thisX << endl;
 
-  // create a clone of the HypoTestCalculator
-  HypoTestCalculator* calculator = fCalculator0;
-  
   // compute the results
-  HypoTestResult* myHybridResult =  calculator->GetHypoTest(); 
+  HypoTestResult* myHybridResult = fCalculator0->GetHypoTest(); 
 
   // fill the results in the HypoTestInverterResult
   fResults->fXValues.push_back(thisX);

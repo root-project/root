@@ -95,53 +95,61 @@ double HypoTestInverterResult::GetYError( int index ) const
 }
 
 void HypoTestInverterResult::CalculateLimits()
-{ 
+{
   double cl = 1-ConfidenceLevel();
 
-  // find the 2 objects the closer to the limit and make a linear extrapolation to the target
 
-//   if (Size()<2) {
-//     std::cout << "not enough points to get the inverted interval\n";
-//   }
+  if (fInterpolate) {
 
-//   double v1 = fabs(GetYValue(0)-cl);
-//   int i1 = 0;
-//   double v2 = fabs(GetYValue(1)-cl);
-//   int i2 = 1;
+    std::cout << "Interpolate the upper limit between the 2 results closest to the target confidence level" << endl;
 
-//   if (Size()>2)
-//     for (int i=2; i<Size(); i++) {
-//       double vt = fabs(GetYValue(i)-cl);
-//       if ( vt<v1 || vt<v2 ) {
-// 	if ( v1<v2 ) {
-// 	  v2 = vt;
-// 	  i2 = i;
-// 	} else {
-// 	  v1 = vt;
-// 	  i1 = i;
-// 	}
-//       }
-//     }
+    // Interpolate (linear) the upper limit between the 2 results closest to the target confidence level
 
-//   fLowerLimit = ((RooRealVar*)fParameters.first())->getMin();
-//   fUpperLimit = GetXValue(i1)+(cl-GetYValue(i1))*(GetXValue(i2)-GetXValue(i1))/(GetYValue(i2)-GetYValue(i1));
-
-  // find the object the closest to the target and take it as the upper limit
-
-  double v1 = fabs(GetYValue(0)-cl);
-  int i1 = 0;
-  for (int i=1; i<Size(); i++) {
-    double vt = fabs(GetYValue(i)-cl);
-    if ( vt<v1 ) {
-      v1 = vt;
-      i1 = i;
+    if (Size()<2) {
+      std::cout << "not enough points to get the inverted interval\n";
+      return;
     }
+
+    double v1 = fabs(GetYValue(0)-cl);
+    int i1 = 0;
+    double v2 = fabs(GetYValue(1)-cl);
+    int i2 = 1;
+
+    if (Size()>2)
+      for (int i=2; i<Size(); i++) {
+	double vt = fabs(GetYValue(i)-cl);
+	if ( vt<v1 || vt<v2 ) {
+	  if ( v1<v2 ) {
+	    v2 = vt;
+	    i2 = i;
+	  } else {
+	    v1 = vt;
+	    i1 = i;
+	  }
+	}
+      }
+
+    fLowerLimit = ((RooRealVar*)fParameters.first())->getMin();
+    fUpperLimit = GetXValue(i1)+(cl-GetYValue(i1))*(GetXValue(i2)-GetXValue(i1))/(GetYValue(i2)-GetYValue(i1));
+
+  } else {
+
+    // find the object with the smallest error that is < 1 sigma from the target
+    double bestValue = fabs(GetYValue(0)-cl);
+    int bestIndex = 0;
+    for (int i=1; i<Size(); i++) {
+      if ( fabs(GetYValue(i)-cl)<GetYError(i) ) { // less than 1 sigma from target CL
+	double value = fabs(GetYValue(i)-cl);
+	if ( value<bestValue ) {
+	  bestValue = value;
+	  bestIndex = i;
+	}
+      }
+    }
+
+    fLowerLimit = ((RooRealVar*)fParameters.first())->getMin();
+    fUpperLimit = GetXValue(bestIndex);
   }
-
-
-  fLowerLimit = ((RooRealVar*)fParameters.first())->getMin();
-  fUpperLimit = GetXValue(i1);
-
 
   return;
 }
@@ -190,5 +198,8 @@ Double_t HypoTestInverterResult::UpperLimitEstimatedError()
 
   delete graph;
   
+  std::cout << "The HypoTestInverterResult::UpperLimitEstimatedError() function evaluates only a rought error on the upper limit. Be careful when using this estimation\n";
+  if (fInterpolate) std::cout << "The upper limit was an interpolated results... in this case the error is even less reliable (the y error bar is currently not used in the interpolation).\n";
+
   return fUpperLimitError;
 }
