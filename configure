@@ -4645,10 +4645,17 @@ if test ! "x$enable_cintex" = "xno"; then
             result "yes"
             ;;
         *)
-            logmsg " incompatible Cintex architecture $chip"
-            enable_cintex=""
-            result "no"
-            ;;
+            case `uname -m` in
+                i*86 | x86_64)
+                    enable_cintex="yes"
+                    result "yes"
+                    ;;
+                *)
+                    logmsg " incompatible Cintex architecture $chip"
+                    enable_cintex=""
+                    result "no"
+                    ;;
+            esac
      esac
 else
     enable_cintex=""
