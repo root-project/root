@@ -480,8 +480,12 @@ $(STRESSFIT):   $(STRESSFITO)
 		@echo "$@ done"
 
 $(STRESSHISTOFIT):   $(STRESSHISTOFITO)
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lUnuran $(OutPutOpt)$@
+ifeq ($(PLATFORM),win32)
+		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libGeom.lib' $(OutPutOpt)$@
 		$(MT_EXE)
+else
+		$(LD) $(LDFLAGS) $^ $(LIBS) -lUnuran $(OutPutOpt)$@
+endif
 		@echo "$@ done"
 
 $(STRESSTMVA): $(STRESSTMVAO)
