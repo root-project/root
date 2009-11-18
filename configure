@@ -2758,18 +2758,18 @@ if test ! "x$enable_gviz" = "xno"; then
 
     # At this time, libgvplugin_core.a should always be prefered over .so,
     # to avoid forcing users to install graphviz.
-    check_library "libgvc" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+    check_library "libgvc gvc" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
     gvizlib1=$found_lib
     gvizlib1raw=$found_raw_lib
     gvizlibir=$found_dir
-    check_library "libgraph" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+    check_library "libgraph graph" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
     gvizlib2=$found_lib
-    check_library "libcdt" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+    check_library "libcdt cdt" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
     gvizlib3=$found_lib
-    check_library "libpathplan" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
+    check_library "libpathplan pathplan" "no" "$gvizlibdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
     gvizlib4=$found_lib
 
@@ -2778,7 +2778,10 @@ if test ! "x$enable_gviz" = "xno"; then
        if test "x$gvizlibdir" != "x" ; then
            gvizlibpdir="$gvizlibdir"/graphviz
        fi
-    check_library "libgvplugin_dot_layout" "no" "$gvizlibpdir" $GVIZ $GVIZ/lib \
+       if test "x$platform" = "xwin32"; then
+           gvizlibpdir="$gvizlibdir"
+       fi
+    check_library "libgvplugin_dot_layout gvplugin_dot_layout" "no" "$gvizlibpdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib/graphviz /usr/lib/graphviz \
                   /opt/local/lib/graphviz
     gvizlibp1=$found_lib
@@ -2797,6 +2800,10 @@ if test ! "x$enable_gviz" = "xno"; then
            gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
        else
            gvizlib="$gvizlibir $gvizlib1"
+       fi
+       if test "x$platform" = "xwin32"; then
+           gvizcflags=
+           gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4"
        fi
     fi
 fi
