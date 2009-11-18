@@ -36,7 +36,8 @@ namespace ROOT {
       public:
          // Creates a Box with limits specified by the vectors and
          // content=value and error=error
-         Box(vector<double>& min, vector<double>& max, double value = 0.0, double error = 1.0):
+         Box(const vector<double>& min, const vector<double>& max, 
+             const double value = 0.0, const double error = 1.0):
             _min(min), _max(max), _val(value), _error(error)
          { }
          
@@ -179,7 +180,7 @@ namespace ROOT {
          void push_back(Box& box) { l.push_back(box); }
          list<Box>::iterator begin() { return l.begin(); }
          list<Box>::iterator end() { return l.end(); }
-         void remove(Box& box) { l.remove(box); }
+         void remove(list<Box>::iterator it) { l.erase(it); }
          list<Box>& getList() { return l; }
       private:
          list<Box> l;
@@ -244,7 +245,7 @@ namespace ROOT {
                       it->getMin().size(), it->getMin().size() - 1,
                       l->getList(), content, error );
             // and remove it from the list
-            l->remove(*it);
+            l->remove(it);
          }
       }
 

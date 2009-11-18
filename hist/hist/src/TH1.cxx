@@ -861,12 +861,12 @@ void TH1::Add(const TH1 *h1, Double_t c1)
 
    try {
       CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins& e) {
+   } catch(DifferentNumberOfBins&) {
       Error("Add","Attempt to add histograms with different number of bins");
       return;
-   } catch(DifferentAxisLimits& e) {
+   } catch(DifferentAxisLimits&) {
       Warning("Add","Attempt to add histograms with different axis limits");
-   } catch(DifferentBinLimits& e) {
+   } catch(DifferentBinLimits&) {
       Warning("Add","Attempt to add histograms with different bin limits");
    }
 
@@ -973,12 +973,12 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    try {
       CheckConsistency(h1,h2);
       CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins& e) {
+   } catch(DifferentNumberOfBins&) {
       Error("Add","Attempt to add histograms with different number of bins");
       return;
-   } catch(DifferentAxisLimits& e) {
+   } catch(DifferentAxisLimits&) {
       Warning("Add","Attempt to add histograms with different axis limits");
-   } catch(DifferentBinLimits& e) {
+   } catch(DifferentBinLimits&) {
       Warning("Add","Attempt to add histograms with different bin limits");
    }
 
@@ -2294,12 +2294,12 @@ void TH1::Divide(const TH1 *h1)
 
    try {
       CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins& e) {
+   } catch(DifferentNumberOfBins&) {
       Error("Divide","Attempt to divide histograms with different number of bins");
       return;
-   } catch(DifferentAxisLimits& e) {
+   } catch(DifferentAxisLimits&) {
       Warning("Divide","Attempt to divide histograms with different axis limits");
-   } catch(DifferentBinLimits& e) {
+   } catch(DifferentBinLimits&) {
       Warning("Divide","Attempt to divide histograms with different bin limits");
    }
 
@@ -2381,12 +2381,12 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
    try {
       CheckConsistency(h1,h2);
       CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins& e) {
+   } catch(DifferentNumberOfBins&) {
       Error("Divide","Attempt to divide histograms with different number of bins");
       return;
-   } catch(DifferentAxisLimits& e) {
+   } catch(DifferentAxisLimits&) {
       Warning("Divide","Attempt to divide histograms with different axis limits");
-   } catch(DifferentBinLimits& e) {
+   } catch(DifferentBinLimits&) {
       Warning("Divide","Attempt to divide histograms with different bin limits");
    }
 
@@ -4964,12 +4964,12 @@ void TH1::Multiply(const TH1 *h1)
 
    try {
       CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins& e) {
+   } catch(DifferentNumberOfBins&) {
       Error("Multiply","Attempt to multiply histograms with different number of bins");
       return;
-   } catch(DifferentAxisLimits& e) {
+   } catch(DifferentAxisLimits&) {
       Warning("Multiply","Attempt to multiply histograms with different axis limits");
-   } catch(DifferentBinLimits& e) {
+   } catch(DifferentBinLimits&) {
       Warning("Multiply","Attempt to multiply histograms with different bin limits");
    }
 
@@ -5042,12 +5042,12 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    try {
       CheckConsistency(h1,h2);
       CheckConsistency(this,h1);
-   } catch(DifferentNumberOfBins& e) {
+   } catch(DifferentNumberOfBins&) {
       Error("Multiply","Attempt to multiply histograms with different number of bins");
       return;
-   } catch(DifferentAxisLimits& e) {
+   } catch(DifferentAxisLimits&) {
       Warning("Multiply","Attempt to multiply histograms with different axis limits");
-   } catch(DifferentBinLimits& e) {
+   } catch(DifferentBinLimits&) {
       Warning("Multiply","Attempt to multiply histograms with different bin limits");
    }
 
