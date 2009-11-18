@@ -125,10 +125,23 @@ configure flags:
 --with-gviz-incdir="the directory where gvc.h is"
 --with-gviz-libdir="the directory where the libgvc library is"
 </pre>
-To install <em>graphviz</em> it is recommended to use the following configure flags:
+To install <em>graphviz</em> (if needed) it is recommended to use the following configure flags:
 <pre>
 --enable-static=yes --enable-shared=no --with-pic --prefix="graphviz installed here" 
 </pre>
+On 64 bits machines, the ROOT sources are compiled with the option -m64. In
+that case graphviz should be also compiled in 64 bits mode. It might be the
+default option, but on some machine it is not. In that case the environment
+variable CC should be defined as:
+<pre>
+CC="gcc -m64"
+</pre>
+before doing configure. 
+<p>
+On Windows machines it recommended to not install graphviz but to download the
+pre-installed version from http://www.graphviz.org/. The ROOT configure command
+remains the same.
+
 
 <h3>Graphics Primitives</h3>
 
