@@ -1021,6 +1021,16 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
    // if not, try leaf
       TLeaf* leaf = tree->GetLeaf( name );
+      if ( branch && ! leaf ) {
+         leaf = branch->GetLeaf( name );
+         if ( ! leaf ) {
+            TObjArray* leaves = branch->GetListOfLeaves();
+     	    if ( leaves->First() == leaves->Last() ) { // i.e., if unambiguously only this one
+               leaf = (TLeaf*)leaves->At( 0 );
+            }
+         }
+      }
+
       if ( leaf ) {
       // found a leaf, extract value and wrap
          if ( 1 < leaf->GetLenStatic() || leaf->GetLeafCount() ) {
