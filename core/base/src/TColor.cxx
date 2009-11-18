@@ -29,19 +29,49 @@ TArrayI TColor::fgPalette(0);
 
 //______________________________________________________________________________
 /* Begin_Html
-<center><h2>TColor: Color Creation and Management</h2></center>
- Color defined by RGB or HLS.
- At initialization time, a table of colors is generated. This linked
- list can be accessed from the TROOT object via the color index, e.g.
- <pre>
- TColor *color = gROOT->GetColor(kOrange);
- </pre>
-<p> Two sets of colors are initialized;
- <ul>
-    <li>Colors with index 0 to 50 (old style palette)
-    <li>The Color Wheel (recommended) with color indices from 300 to 1000.
- </ul>
-<h4>Old Style Palette</h4>
+<center><h2>The color creation and management class</h2></center>
+
+<ul>
+<li><a href="#C00">Introduction</li></a>
+<li><a href="#C01">Basic colors</li></a>
+<li><a href="#C02">The color wheel</li></a>
+<li><a href="#C03">Bright and dark colors</li></a>
+<li><a href="#C04">Gray scale view of of canvas with colors</li></a>
+<li><a href="#C05">Color palettes</li></a>
+</ul>
+
+<a name="C00"></a><h3>Introduction</h3>
+
+Colors are defined by their Red, Green and blue components, simply called the
+RGB components. The colors are also known by the Hue, Light and saturation 
+components also known as the HLS components. When a new color is created the
+components of both color systems are computed.
+<p>
+At initialization time, a table of colors is generated. An existing color can
+be retrieve thanks to its index:
+<br><pre>
+   TColor *color = gROOT->GetColor(10);
+</pre>
+<br>Then it can be manipulated. For example its RGB components can be modified:
+<p>
+<pre>
+   color->SetRGB(0.1, 0.2, 0.3);
+</pre>
+<br>A new color can be created the following way:
+<p>
+<pre>
+   Int_t ci = 1756; // color index
+   TColor *color = new TColor(ci, 0.1, 0.2, 0.3);
+</pre>
+<p>
+Two sets of colors are initialized;
+<ul>
+<li> The basic colors: colors with index from 0 to 50.
+<li> The color wheel: colors with indices from 300 to 1000.
+</ul>
+
+<a name="C01"></a><h3>Basic colors</h3>
+The following image displays the 50 basic colors.
 End_Html
 Begin_Macro(source)
 {
@@ -52,19 +82,25 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<h4>The ROOT Color Wheel</h4>
+<a name="C02"></a><h3>The color wheel</h3>
 The wheel contains the recommended 216 colors to be used in web applications.
-The colors in the Color Wheel are created by TColor::CreateColorWheel.
-<p>Using this color set for your text, background or graphics will give your
+C
+The colors in the color wheel are created by <tt>TColor::CreateColorWheel</tt>.
+<p>
+Using this color set for your text, background or graphics will give your
 application a consistent appearance across different platforms and browsers.
-<p>Colors are grouped by hue, the aspect most important in human perception.
-Touching color chips have the same hue, but with different brightness and vividness.
-<p>Colors of slightly different hues <b>clash</b>. If you intend to display
+<p>
+Colors are grouped by hue, the aspect most important in human perception.
+Touching color chips have the same hue, but with different brightness and
+vividness.
+<p>
+Colors of slightly different hues <b>clash</b>. If you intend to display
 colors of the same hue together, you should pick them from the same group.
-<p>Each color chip is identified by a mnemonic (e.g. kYellow) and a number.
-The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file <b>Rtypes.h</b>
-that is included in all ROOT other header files. We strongly recommend to use these keywords
-in your code instead of hardcoded color numbers, e.g.:
+<p>
+Each color chip is identified by a mnemonic (e.g. kYellow) and a number.
+The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file
+<b>Rtypes.h</b> that is included in all ROOT other header files. It is better
+to use these keywords in user code instead of hardcoded color numbers, e.g.:
 <pre>
    myObject.SetFillColor(kRed);
    myObject.SetFillColor(kYellow-10);
@@ -81,9 +117,9 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<h4>Bright and Dark colors</h4>
- The dark and bright color are used to give 3-D effects when drawing
- various boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
+<a name="C03"></a><h3>Bright and dark colors</h3>
+The dark and bright color are used to give 3-D effects when drawing various
+boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
 <ul>
    <li>The Dark colors have an index = color_index+100
    <li>The Bright colors have an index = color_index+150
@@ -94,13 +130,13 @@ Begin_Html
    </pre>
 </ul>
 
- <h4> Gray scale view of of canvas with colors</h4>
- One can toggle between a grayscale preview and the regular
- colored mode using TCanvas::SetGrayscale(). Note that in grayscale mode,
- access via RGB will return grayscale values according to ITU
- standards (and close to b&w printer grayscales), while access via
- HLS returns de-saturated grayscales. The table below show the ROOT Color Wheel
-in grayscale mode.
+<a name="C04"></a><h3>Gray scale view of of canvas with colors</h3>
+One can toggle between a grayscale preview and the regular colored mode using
+<tt>TCanvas::SetGrayscale()</tt>. Note that in grayscale mode, access via RGB
+will return grayscale values according to ITU standards (and close to b&w
+printer grayscales), while access via HLS returns de-saturated grayscales. The
+image below shows the ROOT color wheel in grayscale mode.
+
 End_Html
 Begin_Macro(source)
 {
@@ -111,13 +147,102 @@ Begin_Macro(source)
    w->GetCanvas()->Update();
    return w->GetCanvas();
 }
+End_Macro
+Begin_Html
+
+<a name="C05"></a><h3>Color palettes</h3>
+It is often very useful to represent a variable with a color map. The concept
+of "color palette" allows to do that. One color palette is active at any time.
+This "current palette" is set using:
+<p>
+<pre>
+gStyle->SetPalette(...);
+</pre> 
+<p>
+This function has two parameters: the number of colors in the palette and an
+array of containing the indices of colors in the pallette. The following small
+example demonstrates how to define and use the color palette: 
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1  = new TCanvas("c1","c1",0,0,600,400);
+   TF2 *f1 = new TF2("f1","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
+   Int_t palette[5];
+   palette[0] = 15;
+   palette[1] = 20;
+   palette[2] = 23;
+   palette[3] = 30;
+   palette[4] = 32;
+   gStyle->SetPalette(5,palette);
+   f1->Draw("colz");
+   return c1;
+}
+End_Macro
+Begin_Html
+
+<p> To define more a complexe palette with a continous gradient of color, one
+should use the static function <tt>TColor::CreateGradientColorTable()</tt>.
+The following example demostrates how to proceed:
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c2  = new TCanvas("c2","c2",0,0,600,400);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
+   UInt_t Number = 3;
+   Double_t Red[Number]    = { 1.00, 0.00, 0.00};
+   Double_t Green[Number]  = { 0.00, 1.00, 0.00};
+   Double_t Blue[Number]   = { 1.00, 0.00, 1.00};
+   Double_t Length[Number] = { 0.00, 0.50, 1.00 };
+   Int_t nb=50;
+   TColor::CreateGradientColorTable(Number,Length,Red,Green,Blue,nb);
+   f2->SetContour(nb);
+   f2->Draw("surf1z");
+   return c2;
+}
+End_Macro
+Begin_Html
+
+<p>The function <tt>TColor::CreateGradientColorTable()</tt> performs automatically
+a call to </tt>gStyle->SetPalette()</tt>. So there is not need to add one.
+<p>
+After a call to <tt>TColor::CreateGradientColorTable()</tt> it is sometimes
+useful to store the newly create palette for further use. In particular, it is 
+recomended to do if one wants to switch between several user define palettes.
+To store a palette in an array it is enough to do:
+<br>
+<pre>
+   Int_t MyPalette[100];
+   Double_t r[]    = {0., 0.0, 1.0, 1.0, 1.0};
+   Double_t g[]    = {0., 0.0, 0.0, 1.0, 1.0};
+   Double_t b[]    = {0., 1.0, 0.0, 0.0, 1.0};
+   Double_t stop[] = {0., .25, .50, .75, 1.0};
+   Int_t FI = TColor::CreateGradientColorTable(5, stop, r, g, b, 100);
+   for (int i=0;i<100;i++) MyPalette[i] = FI+i;
+</pre>
+<p>
+Later on to reuse the palette <tt>MyPalette</tt> it will be enough to do
+<p>
+<pre>
+   gStyle->SetPalette(100, MyPalette);
+</pre>
+<p>
+As only one palette is active, one need to use <tt>TExec</tt> to be able to 
+display plots using differents palettes on the same pad.
+The following macro illustrate this feature.
+End_Html
+Begin_Macro(source)
+../../../tutorials/graphs/multipalette.C
 End_Macro */
 
 
 //______________________________________________________________________________
 TColor::TColor(): TNamed()
 {
-   // Default ctor.
+   /* Begin_html
+   Default constructor.
+   End_html */
 
    fNumber = -1;
    fRed = fGreen = fBlue = fHue = fLight = fSaturation = -1;
@@ -130,8 +255,10 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
                Float_t a)
       : TNamed(name,"")
 {
-   // Normal color constructor. Initialize a color structure.
-   // Compute the RGB and HLS parameters
+   /* Begin_html
+   Normal color constructor. Initialize a color structure.
+   Compute the RGB and HLS color components.
+   End_html */
 
    TColor::InitializeColors();
    // do not enter if color number already exist
@@ -170,7 +297,9 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
 //______________________________________________________________________________
 TColor::~TColor()
 {
-   // Color destructor.
+   /* Begin_html
+   Color destructor.
+   End_html */
 
    gROOT->GetListOfColors()->Remove(this);
    if (gROOT->GetListOfColors()->GetEntries() == 0) {fgPalette.Set(0); fgPalette=0;}
@@ -180,7 +309,9 @@ TColor::~TColor()
 //______________________________________________________________________________
 TColor::TColor(const TColor &color) : TNamed(color)
 {
-   // Color copy ctor.
+   /* Begin_html
+   Color copy constructor.
+   End_html */
 
    ((TColor&)color).Copy(*this);
 }
@@ -189,9 +320,11 @@ TColor::TColor(const TColor &color) : TNamed(color)
 //______________________________________________________________________________
 void TColor::InitializeColors()
 {
-   // Initialize colors used by the TCanvas based graphics (via TColor objects).
-   // This method should be called before the ApplicationImp is created (which
-   // initializes the GUI colors).
+   /* Begin_html
+   Initialize colors used by the TCanvas based graphics (via TColor objects).
+   This method should be called before the ApplicationImp is created (which
+   initializes the GUI colors).
+   End_html */
 
    if (fgInitDone)
       return;
@@ -315,9 +448,11 @@ void TColor::InitializeColors()
 //______________________________________________________________________________
 const char *TColor::AsHexString() const
 {
-   // Return color as hexidecimal string. This string can be directly passed
-   // to, for example, TGClient::GetColorByName(). String will be reused so
-   // copy immediately if needed.
+   /* Begin_html
+   Return color as hexidecimal string. This string can be directly passed
+   to, for example, TGClient::GetColorByName(). String will be reused so
+   copy immediately if needed.
+   End_html */
 
    static TString tempbuf;
 
@@ -339,7 +474,9 @@ const char *TColor::AsHexString() const
 //______________________________________________________________________________
 void TColor::Copy(TObject &obj) const
 {
-   // Copy this color to obj.
+   /* Begin_html
+   Copy this color to obj.
+   End_html */
 
    TNamed::Copy((TNamed&)obj);
    ((TColor&)obj).fRed   = fRed;
@@ -356,7 +493,9 @@ void TColor::Copy(TObject &obj) const
 //______________________________________________________________________________
 void TColor::CreateColorsGray()
 {
-   // Create the Gray scale colors in the Color Wheel
+   /* Begin_html
+   Create the Gray scale colors in the Color Wheel
+   End_html */
 
    if (gROOT->GetColor(kGray)) return;
    TColor *gray  = new TColor(kGray,204./255.,204./255.,204./255.);
@@ -373,7 +512,9 @@ void TColor::CreateColorsGray()
 //______________________________________________________________________________
 void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb)
 {
-   // Create the "circle" colors in the Color Wheel
+   /* Begin_html
+   Create the "circle" colors in the color wheel.
+   End_html */
 
    TString colorname;
    for (Int_t n=0;n<15;n++) {
@@ -394,7 +535,9 @@ void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb)
 //______________________________________________________________________________
 void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb)
 {
-   // Create the "rectangular" colors in the Color Wheel
+   /* Begin_html
+   Create the "rectangular" colors in the color wheel.
+   End_html */
 
    TString colorname;
    for (Int_t n=0;n<20;n++) {
@@ -415,7 +558,9 @@ void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb)
 //______________________________________________________________________________
 void TColor::CreateColorWheel()
 {
-   // Static function steering the creation of all colors in the ROOT Color Wheel
+   /* Begin_html
+   Static function steering the creation of all colors in the color wheel.
+   End_html */
 
    UChar_t magenta[46]= {255,204,255
                         ,255,153,255, 204,153,204
@@ -504,7 +649,10 @@ void TColor::CreateColorWheel()
 //______________________________________________________________________________
 Int_t TColor::GetColorPalette(Int_t i)
 {
-   // static function Return color number i in current palette.
+   /* Begin_html
+   Static function returning the color number i in current palette.
+   End_html */
+
    Int_t ncolors = fgPalette.fN;
    if (ncolors == 0) return 0;
    Int_t icol    = i%ncolors;
@@ -516,7 +664,9 @@ Int_t TColor::GetColorPalette(Int_t i)
 //______________________________________________________________________________
 Int_t TColor::GetNumberOfColors()
 {
-   // static function: Return number of colors in the color palette
+   /* Begin_html
+   Static function returning number of colors in the color palette.
+   End_html */
 
    return fgPalette.fN;
 }
@@ -525,9 +675,11 @@ Int_t TColor::GetNumberOfColors()
 //______________________________________________________________________________
 ULong_t TColor::GetPixel() const
 {
-   // Return pixel value corresponding to this color. This pixel value can
-   // be used in the GUI classes. This call does not work in batch mode since
-   // it needs to communicate with the graphics system.
+   /* Begin_html
+   Return pixel value corresponding to this color. This pixel value can
+   be used in the GUI classes. This call does not work in batch mode since
+   it needs to communicate with the graphics system.
+   End_html */
 
    if (gVirtualX && !gROOT->IsBatch()) {
       if (gApplication) {
@@ -545,8 +697,10 @@ ULong_t TColor::GetPixel() const
 void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
                      Float_t &r, Float_t &g, Float_t &b)
 {
-   // Static method to compute RGB from HLS. The l and s are between [0,1]
-   // and h is between [0,360]. The returned r,g,b triplet is between [0,1].
+   /* Begin_html
+   Static method to compute RGB from HLS. The l and s are between [0,1]
+   and h is between [0,360]. The returned r,g,b triplet is between [0,1].
+   End_html */
 
    Float_t rh, rl, rs, rm1, rm2;
    rh = rl = rs = 0;
@@ -570,7 +724,9 @@ void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
 //______________________________________________________________________________
 Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 {
-   // Static method. Auxiliary to HLS2RGB().
+   /* Begin_html
+   Static method. Auxiliary to HLS2RGB().
+   End_html */
 
    Float_t hue = huei;
    if (hue > 360) hue = hue - 360;
@@ -585,8 +741,10 @@ Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 //______________________________________________________________________________
 void TColor::HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b)
 {
-   // Static method to compute RGB from HLS. The h,l,s are between [0,255].
-   // The returned r,g,b triplet is between [0,255].
+   /* Begin_html
+   Static method to compute RGB from HLS. The h,l,s are between [0,255].
+   The returned r,g,b triplet is between [0,255].
+   End_html */
 
    Float_t hh, ll, ss, rr, gg, bb;
 
@@ -606,13 +764,17 @@ void TColor::HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b)
 void TColor::HSV2RGB(Float_t hue, Float_t satur, Float_t value,
                      Float_t &r, Float_t &g, Float_t &b)
 {
-   // Static method to compute RGB from HSV.
-   // - The hue value runs from 0 to 360.
-   // - The saturation is the degree of strength or purity and is from 0 to 1.
-   //   Purity is how much white is added to the color, so S=1 makes the purest
-   //   color (no white).
-   // - Brightness value also ranges from 0 to 1, where 0 is the black.
-   // The returned r,g,b triplet is between [0,1].
+   /* Begin_html
+   Static method to compute RGB from HSV:
+   <ul>
+   <li> The hue value runs from 0 to 360.
+   <li> The saturation is the degree of strength or purity and is from 0 to 1.
+        Purity is how much white is added to the color, so S=1 makes the purest
+        color (no white).
+   <li> Brightness value also ranges from 0 to 1, where 0 is the black.
+   </ul>
+   The returned r,g,b triplet is between [0,1].
+   End_html */
 
    Int_t i;
    Float_t f, p, q, t;
@@ -668,7 +830,9 @@ void TColor::HSV2RGB(Float_t hue, Float_t satur, Float_t value,
 //______________________________________________________________________________
 void TColor::ls(Option_t *) const
 {
-   // List this color with its attributes.
+   /* Begin_html
+   List this color with its attributes.
+   End_html */
 
    printf("Color:%d  Red=%f Green=%f Blue=%f Name=%s\n",
           fNumber, fRed, fGreen, fBlue, GetName());
@@ -678,7 +842,9 @@ void TColor::ls(Option_t *) const
 //______________________________________________________________________________
 void TColor::Print(Option_t *) const
 {
-   // Dump this color with its attributes.
+   /* Begin_html
+   Dump this color with its attributes.
+   End_html */
 
    ls();
 }
@@ -688,8 +854,10 @@ void TColor::Print(Option_t *) const
 void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
                      Float_t &hue, Float_t &light, Float_t &satur)
 {
-   // Static method to compute HLS from RGB. The r,g,b triplet is between
-   // [0,1], hue is between [0,360], light and satur are [0,1].
+   /* Begin_html
+   Static method to compute HLS from RGB. The r,g,b triplet is between
+   [0,1], hue is between [0,360], light and satur are [0,1].
+   End_html */
 
    Float_t rnorm, gnorm, bnorm, minval, maxval, msum, mdiff, r, g, b;
    minval = maxval =0 ;
@@ -739,14 +907,23 @@ void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
 void TColor::RGB2HSV(Float_t r, Float_t g, Float_t b,
                      Float_t &hue, Float_t &satur, Float_t &value)
 {
-   // Static method to compute HSV from RGB.
-   // - r,g,b triplet is between [0,1].
-   // The returned value:
-   // - The hue value runs from 0 to 360.
-   // - The saturation is the degree of strength or purity and is from 0 to 1.
-   //   Purity is how much white is added to the color, so S=1 makes the purest
-   //   color (no white).
-   // - Brightness value also ranges from 0 to 1, where 0 is the black.
+   /* Begin_html
+   Static method to compute HSV from RGB.
+   <ul>
+   <li> The input values:
+   <ul>
+   <li> r,g,b triplet is between [0,1].
+   </ul>
+   <li> The returned values:
+   <ul>
+   <li> The hue value runs from 0 to 360.
+   <li> The saturation is the degree of strength or purity and is from 0 to 1.
+        Purity is how much white is added to the color, so S=1 makes the purest
+        color (no white).
+   <li> Brightness value also ranges from 0 to 1, where 0 is the black.
+   </ul>
+   </ul>
+   End_html */
 
    Float_t min, max, delta;
 
@@ -780,8 +957,10 @@ void TColor::RGB2HSV(Float_t r, Float_t g, Float_t b,
 //______________________________________________________________________________
 void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
 {
-   // Static method to compute HLS from RGB. The r,g,b triplet is between
-   // [0,255], hue, light and satur are between [0,255].
+   /* Begin_html
+   Static method to compute HLS from RGB. The r,g,b triplet is between
+   [0,255], hue, light and satur are between [0,255].
+   End_html */
 
    Float_t rr, gg, bb, hue, light, satur;
 
@@ -800,7 +979,9 @@ void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
 //______________________________________________________________________________
 void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 {
-   // Initialize this color and its associated colors.
+   /* Begin_html
+   Initialize this color and its associated colors.
+   End_html */
 
    TColor::InitializeColors();
    fRed   = r;
@@ -847,7 +1028,9 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 //______________________________________________________________________________
 void TColor::Allocate()
 {
-   // Make this color known to the graphics system.
+   /* Begin_html
+   Make this color known to the graphics system.
+   End_html */
 
    if (gVirtualX && !gROOT->IsBatch())
 
@@ -858,11 +1041,14 @@ void TColor::Allocate()
 //______________________________________________________________________________
 Int_t TColor::GetColor(const char *hexcolor)
 {
-   // Static method returning color number for color specified by
-   // hex color string of form: #rrggbb, where rr, gg and bb are in
-   // hex between [0,FF], e.g. "#c0c0c0".
-   // If specified color does not exist it will be created with as
-   // name "#rrggbb" with rr, gg and bb in hex between [0,FF].
+   /* Begin_html
+   Static method returning color number for color specified by
+   hex color string of form: #rrggbb, where rr, gg and bb are in
+   hex between [0,FF], e.g. "#c0c0c0".
+   <br>
+   If specified color does not exist it will be created with as
+   name "#rrggbb" with rr, gg and bb in hex between [0,FF].
+   End_html */
 
    if (hexcolor && *hexcolor == '#') {
       Int_t r, g, b;
@@ -877,11 +1063,14 @@ Int_t TColor::GetColor(const char *hexcolor)
 //______________________________________________________________________________
 Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
 {
-   // Static method returning color number for color specified by
-   // r, g and b. The r,g,b should be in the range [0,1].
-   // If specified color does not exist it will be created
-   // with as name "#rrggbb" with rr, gg and bb in hex between
-   // [0,FF].
+   /* Begin_html
+   Static method returning color number for color specified by
+   r, g and b. The r,g,b should be in the range [0,1].
+   <br>
+   If specified color does not exist it will be created
+   with as name "#rrggbb" with rr, gg and bb in hex between
+   [0,FF].
+   End_html */
 
    Int_t rr, gg, bb;
    rr = Int_t(r * 255);
@@ -895,9 +1084,11 @@ Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
 //______________________________________________________________________________
 Int_t TColor::GetColor(ULong_t pixel)
 {
-   // Static method returning color number for color specified by
-   // system dependent pixel value. Pixel values can be obtained, e.g.,
-   // from the GUI color picker.
+   /* Begin_html
+   Static method returning color number for color specified by
+   system dependent pixel value. Pixel values can be obtained, e.g.,
+   from the GUI color picker.
+   End_html */
 
    Int_t r, g, b;
 
@@ -910,11 +1101,13 @@ Int_t TColor::GetColor(ULong_t pixel)
 //______________________________________________________________________________
 Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 {
-   // Static method returning color number for color specified by
-   // r, g and b. The r,g,b should be in the range [0,255].
-   // If the specified color does not exist it will be created
-   // with as name "#rrggbb" with rr, gg and bb in hex between
-   // [0,FF].
+   /* Begin_html
+   Static method returning color number for color specified by
+   r, g and b. The r,g,b should be in the range [0,255].
+   If the specified color does not exist it will be created
+   with as name "#rrggbb" with rr, gg and bb in hex between
+   [0,FF].
+   End_html */
 
    TColor::InitializeColors();
    if (r < 0) r = 0;
@@ -973,9 +1166,11 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 //______________________________________________________________________________
 Int_t TColor::GetColorBright(Int_t n)
 {
-   // Static function: Returns the bright color number corresponding to n
-   // If the TColor object does not exist, it is created.
-   // The convention is that the bright color nb = n+150
+   /* Begin_html
+   Static function: Returns the bright color number corresponding to n
+   If the TColor object does not exist, it is created.
+   The convention is that the bright color nb = n+150
+   End_html */
 
    if (n < 0) return -1;
 
@@ -1006,9 +1201,11 @@ Int_t TColor::GetColorBright(Int_t n)
 //______________________________________________________________________________
 Int_t TColor::GetColorDark(Int_t n)
 {
-   // Static function: Returns the dark color number corresponding to n
-   // If the TColor object does not exist, it is created.
-   // The convention is that the dark color nd = n+100
+   /* Begin_html
+   Static function: Returns the dark color number corresponding to n
+   If the TColor object does not exist, it is created.
+   The convention is that the dark color nd = n+100
+   End_html */
 
    if (n < 0) return -1;
 
@@ -1039,10 +1236,12 @@ Int_t TColor::GetColorDark(Int_t n)
 //______________________________________________________________________________
 ULong_t TColor::Number2Pixel(Int_t ci)
 {
-   // Static method that given a color index number, returns the corresponding
-   // pixel value. This pixel value can be used in the GUI classes. This call
-   // does not work in batch mode since it needs to communicate with the
-   // graphics system.
+   /* Begin_html
+   Static method that given a color index number, returns the corresponding
+   pixel value. This pixel value can be used in the GUI classes. This call
+   does not work in batch mode since it needs to communicate with the
+   graphics system.
+   End_html */
 
 
    TColor::InitializeColors();
@@ -1059,8 +1258,10 @@ ULong_t TColor::Number2Pixel(Int_t ci)
 //______________________________________________________________________________
 ULong_t TColor::RGB2Pixel(Float_t r, Float_t g, Float_t b)
 {
-   // Convert r,g,b to graphics system dependent pixel value.
-   // The r,g,b triplet must be [0,1].
+   /* Begin_html
+   Convert r,g,b to graphics system dependent pixel value.
+   The r,g,b triplet must be [0,1].
+   End_html */
 
    if (r < 0) r = 0;
    if (g < 0) g = 0;
@@ -1082,8 +1283,10 @@ ULong_t TColor::RGB2Pixel(Float_t r, Float_t g, Float_t b)
 //______________________________________________________________________________
 ULong_t TColor::RGB2Pixel(Int_t r, Int_t g, Int_t b)
 {
-   // Convert r,g,b to graphics system dependent pixel value.
-   // The r,g,b triplet must be [0,255].
+   /* Begin_html
+   Convert r,g,b to graphics system dependent pixel value.
+   The r,g,b triplet must be [0,255].
+   End_html */
 
    if (r < 0) r = 0;
    if (g < 0) g = 0;
@@ -1105,9 +1308,11 @@ ULong_t TColor::RGB2Pixel(Int_t r, Int_t g, Int_t b)
 //______________________________________________________________________________
 void TColor::Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b)
 {
-   // Convert machine dependent pixel value (obtained via RGB2Pixel or
-   // via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
-   // The r,g,b triplet will be [0,1].
+   /* Begin_html
+   Convert machine dependent pixel value (obtained via RGB2Pixel or
+   via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
+   The r,g,b triplet will be [0,1].
+   End_html */
 
    ColorStruct_t color;
    color.fPixel = pixel;
@@ -1121,9 +1326,11 @@ void TColor::Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b)
 //______________________________________________________________________________
 void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
 {
-   // Convert machine dependent pixel value (obtained via RGB2Pixel or
-   // via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
-   // The r,g,b triplet will be [0,255].
+   /* Begin_html
+   Convert machine dependent pixel value (obtained via RGB2Pixel or
+   via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
+   The r,g,b triplet will be [0,255].
+   End_html */
 
    ColorStruct_t color;
    color.fPixel = pixel;
@@ -1137,11 +1344,13 @@ void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
 //______________________________________________________________________________
 const char *TColor::PixelAsHexString(ULong_t pixel)
 {
-   // Convert machine dependent pixel value (obtained via RGB2Pixel or
-   // via Number2Pixel() or via TColor::GetPixel()) to a hexidecimal string.
-   // This string can be directly passed to, for example,
-   // TGClient::GetColorByName(). String will be reused so copy immediately
-   // if needed.
+   /* Begin_html
+   Convert machine dependent pixel value (obtained via RGB2Pixel or
+   via Number2Pixel() or via TColor::GetPixel()) to a hexidecimal string.
+   This string can be directly passed to, for example,
+   TGClient::GetColorByName(). String will be reused so copy immediately
+   if needed.
+   End_html */
 
    static TString tempbuf;
    Int_t r, g, b;
@@ -1154,7 +1363,9 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
 //______________________________________________________________________________
 void TColor::SaveColor(ostream &out, Int_t ci)
 {
-    // Save a color with index > 228 as a C++ statement(s) on output stream out.
+   /* Begin_html
+   Save a color with index > 228 as a C++ statement(s) on output stream out.
+   End_html */
 
    char quote = '"';
 
@@ -1175,7 +1386,10 @@ void TColor::SaveColor(ostream &out, Int_t ci)
 //______________________________________________________________________________
 Bool_t TColor::IsGrayscale()
 {
-   // Return whether all colors return grayscale values
+   /* Begin_html
+   Return whether all colors return grayscale values.
+   End_html */
+
    return fgGrayscaleMode;
 }
 
@@ -1183,7 +1397,10 @@ Bool_t TColor::IsGrayscale()
 //______________________________________________________________________________
 void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 {
-   // Set whether all colors should return grayscale values
+   /* Begin_html
+   Set whether all colors should return grayscale values.
+   End_html */
+
    if (fgGrayscaleMode == set) return;
 
    fgGrayscaleMode = set;
@@ -1203,51 +1420,53 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                               Double_t* Red, Double_t* Green,
                               Double_t* Blue, UInt_t NColors)
 {
-  // STATIC function.
-  // Creates a color table with several connected linear gradients.
-  // 
-  // Number: The number of end point colors that will form the gradients.
-  //         Must be at least 2.
-  // Stops:  Where in the whole table the end point colors should lie.
-  //         Each entry must be on [0, 1], each entry must be greater than
-  //         the previous entry.
-  // Red, Green, Blue: The end point color values.
-  //                   Each entry must be on [0, 1]
-  // NColors: Total number of colors in the table
-  //          Must be at least 1.
-  //
-  // Returns a positive value on sucess and -1 on error.
-  // 
-  // The table is constructed by tracing lines between the given points in 
-  // RGB space.  Each color value may have a value between 0 and 1.  The 
-  // difference between consecutive "Stops" values gives the fraction of 
-  // space in the whole table that should be used for the interval between 
-  // the corresponding color values.
-  //
-  // Normally the first element of Stops should be 0 and the last should be 1.
-  // If this is not true, fewer than NColors will be used in proportion with
-  // the total interval between the first and last elements of Stops.
-  // 
-  // This definition is similar to the povray-definition of gradient
-  // color tables.
-  //
-  // For instance:
-  // UInt_t Number = 3;
-  // Double_t Red[3]   = { 0.0, 1.0, 1.0 };
-  // Double_t Green[3] = { 0.0, 0.0, 1.0 };
-  // Double_t Blue[3]  = { 1.0, 0.0, 1.0 };
-  // Double_t Stops[3] = { 0.0, 0.4, 1.0 };
-  //
-  // This defines a table in which there are three color end points:
-  // RGB = {0, 0, 1}, {1, 0, 0}, and {1, 1, 1} = blue, red, white
-  // The first 40% of the table is used to go linearly from blue to red.
-  // The remaining 60% of the table is used to go linearly from red to white.
-  //
-  // If you define a very short interval such that less than one color fits
-  // in it, no colors at all will be allocated.  If this occurs for all
-  // intervals, ROOT will revert to the default palette.
-  // 
-  // Original code by Andreas Zoglauer <zog@mpe.mpg.de>
+   /* Begin_html
+   Static function creating a color table with several connected linear gradients.
+   <ul>   
+   <li>Number: The number of end point colors that will form the gradients.
+               Must be at least 2.
+   <li>Stops: Where in the whole table the end point colors should lie.
+              Each entry must be on [0, 1], each entry must be greater than
+              the previous entry.
+   <li>Red, Green, Blue: The end point color values.
+                         Each entry must be on [0, 1]
+   <li>NColors: Total number of colors in the table. Must be at least 1.
+   </ul>   
+  
+   Returns a positive value on sucess and -1 on error.
+   <p> 
+   The table is constructed by tracing lines between the given points in 
+   RGB space.  Each color value may have a value between 0 and 1.  The 
+   difference between consecutive "Stops" values gives the fraction of 
+   space in the whole table that should be used for the interval between 
+   the corresponding color values.
+   <p> 
+   Normally the first element of Stops should be 0 and the last should be 1.
+   If this is not true, fewer than NColors will be used in proportion with
+   the total interval between the first and last elements of Stops.
+   <p> 
+   This definition is similar to the povray-definition of gradient
+   color tables.
+   <p> 
+   For instance:
+   <pre>
+   UInt_t Number = 3;
+   Double_t Red[3]   = { 0.0, 1.0, 1.0 };
+   Double_t Green[3] = { 0.0, 0.0, 1.0 };
+   Double_t Blue[3]  = { 1.0, 0.0, 1.0 };
+   Double_t Stops[3] = { 0.0, 0.4, 1.0 };
+   </pre>
+   This defines a table in which there are three color end points:
+   RGB = {0, 0, 1}, {1, 0, 0}, and {1, 1, 1} = blue, red, white
+   The first 40% of the table is used to go linearly from blue to red.
+   The remaining 60% of the table is used to go linearly from red to white.
+   <p> 
+   If you define a very short interval such that less than one color fits
+   in it, no colors at all will be allocated.  If this occurs for all
+   intervals, ROOT will revert to the default palette.
+   <p> 
+   Original code by Andreas Zoglauer (zog@mpe.mpg.de)
+   End_html */
 
    TColor::InitializeColors();
 
@@ -1328,39 +1547,41 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
 //______________________________________________________________________________
 void TColor::SetPalette(Int_t ncolors, Int_t *colors)
 {
-// static function
-// The color palette is used by the histogram classes
-//  (see TH1::Draw options).
-// For example TH1::Draw("col") draws a 2-D histogram with cells
-// represented by a box filled with a color CI function of the cell content.
-// if the cell content is N, the color CI used will be the color number
-// in colors[N],etc. If the maximum cell content is > ncolors, all
-// cell contents are scaled to ncolors.
-//
-// if ncolors <= 0 a default palette (see below) of 50 colors is defined.
-//     the colors defined in this palette are OK for coloring pads, labels
-//
-// if ncolors == 1 && colors == 0, then
-//     a Pretty Palette with a Spectrum Violet->Red is created.
-//   It is recommended to use this Pretty palette when drawing legos,
-//   surfaces or contours.
-//
-// if ncolors > 50 and colors=0, the DeepSea palette is used.
-//     (see TStyle::CreateGradientColorTable for more details)
-//
-// if ncolors > 0 and colors = 0, the default palette is used
-// with a maximum of ncolors.
-//
-// The default palette defines:
-//   index 0->9   : grey colors from light to dark grey
-//   index 10->19 : "brown" colors
-//   index 20->29 : "blueish" colors
-//   index 30->39 : "redish" colors
-//   index 40->49 : basic colors
-//
-//  The color numbers specified in the palette can be viewed by selecting
-//  the item "colors" in the "VIEW" menu of the canvas toolbar.
-//  The color parameters can be changed via TColor::SetRGB.
+   /* Begin_html
+   Static function.
+   The color palette is used by the histogram classes
+    (see TH1::Draw options).
+   For example TH1::Draw("col") draws a 2-D histogram with cells
+   represented by a box filled with a color CI function of the cell content.
+   if the cell content is N, the color CI used will be the color number
+   in colors[N],etc. If the maximum cell content is > ncolors, all
+   cell contents are scaled to ncolors.
+   <p> 
+   <tt>if ncolors <= 0</tt> a default palette (see below) of 50 colors is
+   defined. The colors defined in this palette are OK for coloring pads, labels.
+   <p> 
+   <tt>if ncolors == 1 && colors == 0</tt>, then a Pretty Palette with a
+   Spectrum Violet->Red is created. It is recommended to use this Pretty
+   palette when drawing legos, surfaces or contours.
+   <p> 
+   if ncolors > 50 and colors=0, the DeepSea palette is used.
+   (see TStyle::CreateGradientColorTable for more details)
+   <p> 
+   <tt>if ncolors > 0 and colors = 0</tt>, the default palette is used
+   with a maximum of ncolors.
+   <p> 
+   The default palette defines:
+   <pre>
+   index 0->9   : grey colors from light to dark grey
+   index 10->19 : "brown" colors
+   index 20->29 : "blueish" colors
+   index 30->39 : "redish" colors
+   index 40->49 : basic colors
+   </pre> 
+   The color numbers specified in the palette can be viewed by selecting
+   the item "colors" in the "VIEW" menu of the canvas toolbar.
+   The color parameters can be changed via TColor::SetRGB.
+   End_html */
 
    Int_t i;
    static Int_t paletteType = 0;
