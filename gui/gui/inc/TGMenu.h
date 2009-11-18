@@ -353,6 +353,7 @@ public:
    virtual TGPopupMenu *GetPopup(const char *s);
    virtual TGPopupMenu *RemovePopup(const char *s);
 
+   virtual TGMenuTitle *GetCurrent() const { return fCurrent; }
    virtual TList  *GetTitles() const { return fTitles; }
    virtual Bool_t  HandleButton(Event_t *event);
    virtual Bool_t  HandleMotion(Event_t *event);
