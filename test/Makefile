@@ -162,9 +162,13 @@ STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
 STRESSFIT     = stressFit$(ExeSuf)
 
+ifeq ($(shell $(ROOTCONFIG) --has-unuran),yes)
+ifeq ($(shell $(ROOTCONFIG) --has-minuit2),yes)
 STRESSHISTOFITO    = stressHistoFit.$(ObjSuf)
 STRESSHISTOFITS    = stressHistoFit.$(SrcSuf)
 STRESSHISTOFIT     = stressHistoFit$(ExeSuf)
+endif
+endif
 
 STRESSTMVAO    = stressTMVA.$(ObjSuf)
 STRESSTMVAS    = stressTMVA.$(SrcSuf)
