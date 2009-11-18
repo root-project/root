@@ -54,7 +54,7 @@ private:
    int fStatus;          // fit status code
    TFitResult* fPointer; // Smart Pointer to TFitResult class  
 
-   ClassDef(TFitResultPtr,1)
+   ClassDef(TFitResultPtr,1)  //indirection to TFitResult
 };
 
 #endif
