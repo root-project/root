@@ -37,7 +37,6 @@ private:
    TGColorSelect    *fClearColor;
    TGCheckButton    *fIgnoreSizesOnUpdate;
    TGCheckButton    *fResetCamerasOnUpdate;
-   TGCheckButton    *fResetCameraOnDoubleClick;
    TGTextButton     *fUpdateScene;
    TGTextButton     *fCameraHome;
 
@@ -108,7 +107,6 @@ public:
    void DoClearColor(Pixel_t color);
    void DoIgnoreSizesOnUpdate();
    void DoResetCamerasOnUpdate();
-   void DoResetCameraOnDoubleClick();
    void DoUpdateScene();
    void DoCameraHome();
    void UpdateMaxDrawTimes();

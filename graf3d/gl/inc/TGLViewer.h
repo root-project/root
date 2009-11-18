@@ -44,7 +44,8 @@ class TGLContextIdentity;
 class TTimer;
 
 class TContextMenu;
-
+class TGedEditor;
+class TGLPShapeObj;
 
 class TGLViewer : public TVirtualViewer3D,
                   public TGLViewerBase,
@@ -102,6 +103,8 @@ protected:
    TGLOvlSelectRecord   fOvlSelRec;            //! select record from last overlay select
 
    TGEventHandler      *fEventHandler;         //! event handler
+   TGedEditor          *fGedEditor;            //! GED editor
+   TGLPShapeObj        *fPShapeWrap;
 
    // Mouse ineraction
 public:
@@ -171,7 +174,6 @@ protected:
    Bool_t           fIgnoreSizesOnUpdate;      // ignore sizes of bounding-boxes on update
    Bool_t           fResetCamerasOnUpdate;     // reposition camera on each update
    Bool_t           fResetCamerasOnNextUpdate; // reposition camera on next update
-   Bool_t           fResetCameraOnDoubleClick; // reposition camera on double-click
 
 public:
    TGLViewer(TVirtualPad* pad, Int_t x, Int_t y, Int_t width, Int_t height);
@@ -203,8 +205,6 @@ public:
    virtual void   PrintObjects();
    virtual void   ResetCameras()                { SetupCameras(kTRUE); }
    virtual void   ResetCamerasAfterNextUpdate() { fResetCamerasOnNextUpdate = kTRUE; }
-
-   virtual void   RefreshPadEditor(TObject* = 0) {}
 
    TGLWidget* GetGLWidget() { return fGLWidget; }
 
@@ -317,13 +317,9 @@ public:
    void   ResetCurrentCamera();
    Bool_t GetResetCamerasOnUpdate() const       { return fResetCamerasOnUpdate; }
    void   SetResetCamerasOnUpdate(Bool_t v)     { fResetCamerasOnUpdate = v; }
-   Bool_t GetResetCameraOnDoubleClick() const   { return fResetCameraOnDoubleClick; }
-   void   SetResetCameraOnDoubleClick(Bool_t v) { fResetCameraOnDoubleClick = v; }
 
    virtual void PostSceneBuildSetup(Bool_t resetCameras);
 
-   virtual void SelectionChanged();    // *SIGNAL*
-   virtual void OverlayDragFinished(); // *SIGNAL*
    virtual void MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t); // *SIGNAL*
    virtual void MouseOver(TGLPhysicalShape*); // *SIGNAL*
    virtual void MouseOver(TGLPhysicalShape*, UInt_t state); // *SIGNAL*
@@ -336,6 +332,13 @@ public:
 
    TGEventHandler *GetEventHandler() const { return fEventHandler; }
    virtual void    SetEventHandler(TGEventHandler *handler);
+
+   TGedEditor*  GetGedEditor() const { return fGedEditor; }
+   virtual void SetGedEditor(TGedEditor* ed) { fGedEditor = ed; }
+
+   virtual void SelectionChanged();
+   virtual void OverlayDragFinished();
+   virtual void RefreshPadEditor(TObject* obj=0);
 
    virtual void RemoveOverlayElement(TGLOverlayElement* el);
 

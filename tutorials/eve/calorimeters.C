@@ -82,6 +82,8 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
       v = gEve->GetDefaultViewer();
       s = gEve->GetEventScene();
    }
+   v->SetElementName("Viewer - Lego");
+   s->SetElementName("Scene - Lego");
 
    gStyle->SetPalette(1, 0);
    TEveCaloLego* lego = new TEveCaloLego(data);
@@ -113,6 +115,8 @@ TEveCalo3D* MakeCalo3D(TEveCaloData* data, TEveWindowSlot* slot)
 
    TEveViewer* v; TEveScene* s;
    MakeViewerScene(slot, v, s);
+   v->SetElementName("Viewer - 3D");
+   s->SetElementName("Scene - 3D");
 
    TEveCalo3D* calo3d = new TEveCalo3D(data);
    calo3d->SetBarrelRadius(129);
@@ -129,6 +133,8 @@ TEveCalo2D* MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot, TEveProjection:
 
    TEveViewer* v; TEveScene* s;
    MakeViewerScene(slot, v, s);
+   v->SetElementName("Viewer - 2D");
+   s->SetElementName("Scene - 2D");
 
    TEveProjectionManager* mng = new TEveProjectionManager();
    mng->SetProjection(t);
@@ -152,7 +158,7 @@ void MakeViewerScene(TEveWindowSlot* slot, TEveViewer*& v, TEveScene*& s)
    // Create a scene and a viewer in the given slot.
 
    v = new TEveViewer("Viewer");
-   v->SpawnGLEmbeddedViewer();
+   v->SpawnGLViewer(gEve->GetEditor());
    slot->ReplaceWindow(v);
    gEve->GetViewers()->AddElement(v);
    s = gEve->SpawnNewScene("Scene");

@@ -48,6 +48,8 @@
 #include "TGLWidget.h"
 #include "TGLFBO.h"
 #include "TGLViewerEditor.h"
+#include "TGedEditor.h"
+#include "TGLPShapeObj.h"
 
 #include "KeySymbols.h"
 #include "TContextMenu.h"
@@ -117,6 +119,8 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fCurrentOvlElm     (0),
 
    fEventHandler(0),
+   fGedEditor(0),
+   fPShapeWrap(0),
    fPushAction(kPushStd), fDragAction(kDragNone),
    fRedrawTimer(0),
    fMaxSceneDrawTimeHQ(5000),
@@ -139,8 +143,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fGLCtxId(0),
    fIgnoreSizesOnUpdate(kFALSE),
    fResetCamerasOnUpdate(kTRUE),
-   fResetCamerasOnNextUpdate(kFALSE),
-   fResetCameraOnDoubleClick(kTRUE)
+   fResetCamerasOnNextUpdate(kFALSE)
 {
    // Construct the viewer object, with following arguments:
    //    'pad' - external pad viewer is bound to
@@ -174,6 +177,8 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fCurrentOvlElm     (0),
 
    fEventHandler(0),
+   fGedEditor(0),
+   fPShapeWrap(0),
    fPushAction(kPushStd), fDragAction(kDragNone),
    fRedrawTimer(0),
    fMaxSceneDrawTimeHQ(5000),
@@ -196,8 +201,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fGLCtxId(0),
    fIgnoreSizesOnUpdate(kFALSE),
    fResetCamerasOnUpdate(kTRUE),
-   fResetCamerasOnNextUpdate(kFALSE),
-   fResetCameraOnDoubleClick(kTRUE)
+   fResetCamerasOnNextUpdate(kFALSE)
 {
    //gl-embedded viewer's ctor
    // Construct the viewer object, with following arguments:
@@ -229,6 +233,8 @@ void TGLViewer::InitSecondaryObjects()
    fSelectedPShapeRef = new TGLManipSet;
    fSelectedPShapeRef->SetDrawBBox(kTRUE);
    AddOverlayElement(fSelectedPShapeRef);
+
+   fPShapeWrap = new TGLPShapeObj(0, this);
 
    fLightColorSet.StdLightBackground();
    if (fgUseDefaultColorSetForNewViewers) {
@@ -1644,22 +1650,6 @@ const TGLPhysicalShape * TGLViewer::GetSelected() const
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLViewer::SelectionChanged()
-{
-   // Emit signal indicating selection has changed.
-
-   Emit("SelectionChanged()");
-}
-
-//______________________________________________________________________________
-void TGLViewer::OverlayDragFinished()
-{
-   // Emit signal indicating that an overlay drag has finished.
-
-   Emit("OverlayDragFinished()");
-}
-
-//______________________________________________________________________________
 void TGLViewer::MouseOver(TGLPhysicalShape *shape)
 {
    // Emit MouseOver signal.
@@ -1773,6 +1763,48 @@ void TGLViewer::PrintObjects()
    // Pass viewer for print capture by TGLOutput.
 
    TGLOutput::Capture(*this);
+}
+
+//______________________________________________________________________________
+void TGLViewer::SelectionChanged()
+{
+   // Update GUI components for embedded viewer selection change.
+
+   if (!fGedEditor)
+      return;
+
+   TGLPhysicalShape *selected = const_cast<TGLPhysicalShape*>(GetSelected());
+
+   if (selected) {
+      fPShapeWrap->fPShape = selected;
+      fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
+   } else {
+      fPShapeWrap->fPShape = 0;
+      fGedEditor->SetModel(fPad, this, kButton1Down);
+   }
+}
+
+//______________________________________________________________________________
+void TGLViewer::OverlayDragFinished()
+{
+   // An overlay operation can result in change to an object.
+   // Refresh geditor.
+
+   if (fGedEditor)
+   {
+      fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
+   }
+}
+
+//______________________________________________________________________________
+void TGLViewer::RefreshPadEditor(TObject* obj)
+{
+   // Update GED editor if it is set.
+
+   if (fGedEditor && (obj == 0 || fGedEditor->GetModel() == obj))
+   {
+      fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
+   }
 }
 
 //______________________________________________________________________________

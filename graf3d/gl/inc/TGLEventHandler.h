@@ -35,6 +35,7 @@ class TGLEventHandler : public TGEventHandler
 protected:
    TGLViewer        *fGLViewer;
    TTimer           *fMouseTimer;     // mouse delay timer
+   TPoint            fButtonPushPos;
    TPoint            fLastPos;
    TPoint            fLastMouseOverPos;
    TGLPhysicalShape *fLastMouseOverShape;

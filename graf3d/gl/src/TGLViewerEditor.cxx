@@ -35,7 +35,6 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fClearColor(0),
    fIgnoreSizesOnUpdate(0),
    fResetCamerasOnUpdate(0),
-   fResetCameraOnDoubleClick(0),
    fUpdateScene(0),
    fCameraHome(0),
    fMaxSceneDrawTimeHQ(0),
@@ -90,7 +89,6 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fClearColor->Connect("ColorSelected(Pixel_t)", "TGLViewerEditor", this, "DoClearColor(Pixel_t)");
    fIgnoreSizesOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoIgnoreSizesOnUpdate()");
    fResetCamerasOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoResetCamerasOnUpdate()");
-   fResetCameraOnDoubleClick->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoResetCameraOnDoubleClick()");
    fUpdateScene->Connect("Pressed()", "TGLViewerEditor", this, "DoUpdateScene()");
    fCameraHome->Connect("Pressed()", "TGLViewerEditor", this, "DoCameraHome()");
    fMaxSceneDrawTimeHQ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateMaxDrawTimes()");
@@ -157,7 +155,6 @@ void TGLViewerEditor::SetModel(TObject* obj)
    fClearColor->Enable(!fViewer->IsUsingDefaultColorSet());
    fIgnoreSizesOnUpdate->SetState(fViewer->GetIgnoreSizesOnUpdate() ? kButtonDown : kButtonUp);
    fResetCamerasOnUpdate->SetState(fViewer->GetResetCamerasOnUpdate() ? kButtonDown : kButtonUp);
-   fResetCameraOnDoubleClick->SetState(fViewer->GetResetCameraOnDoubleClick() ? kButtonDown : kButtonUp);
    fMaxSceneDrawTimeHQ->SetNumber(fViewer->GetMaxSceneDrawTimeHQ());
    fMaxSceneDrawTimeLQ->SetNumber(fViewer->GetMaxSceneDrawTimeLQ());
    fPointSizeScale->SetNumber(fViewer->GetPointScale());
@@ -211,17 +208,9 @@ void TGLViewerEditor::DoResetCamerasOnUpdate()
 }
 
 //______________________________________________________________________________
-void TGLViewerEditor::DoResetCameraOnDoubleClick()
-{
-   // ResetCameraOnDoubleClick was toggled.
-
-   fViewer->SetResetCameraOnDoubleClick(fResetCameraOnDoubleClick->IsOn());
-}
-
-//______________________________________________________________________________
 void TGLViewerEditor::DoUpdateScene()
 {
-   // ResetCameraOnDoubleClick was toggled.
+   // UpdateScene was clicked.
 
    fViewer->UpdateScene();
 }
@@ -229,7 +218,7 @@ void TGLViewerEditor::DoUpdateScene()
 //______________________________________________________________________________
 void TGLViewerEditor::DoCameraHome()
 {
-   // ResetCameraOnDoubleClick was toggled.
+   // CameraHome was clicked.
 
    fViewer->ResetCurrentCamera();
    ViewerRedraw();
@@ -392,9 +381,6 @@ void TGLViewerEditor::CreateStyleTab()
    fResetCamerasOnUpdate = new TGCheckButton(this, "Reset on update");
    fResetCamerasOnUpdate->SetToolTipText("Reset camera on scene update");
    AddFrame(fResetCamerasOnUpdate, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
-   fResetCameraOnDoubleClick = new TGCheckButton(this, "Reset on dbl-click");
-   fResetCameraOnDoubleClick->SetToolTipText("Reset cameras on double-click");
-   AddFrame(fResetCameraOnDoubleClick, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
 
    TGCompositeFrame* af = this;
    fUpdateScene = new TGTextButton(af, "Update Scene", 130);

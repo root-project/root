@@ -40,7 +40,7 @@ void PackTest()
    // Embedded viewer.
    slot = pack1->NewSlot();
    v = new TEveViewer("BarViewer");
-   v->SpawnGLEmbeddedViewer();
+   v->SpawnGLEmbeddedViewer(gEve->GetEditor());
    slot->ReplaceWindow(v);
    v->SetElementName("Bar Embedded Viewer");
 
@@ -117,8 +117,8 @@ void DetailTest()
       latex->DrawLatex(x, y, "#color[5]{#Box} color");
    }
 
-   // viwer
-   TGLEmbeddedViewer* ev = new TGLEmbeddedViewer(hf, 0, 0);
+   // viewer
+   TGLEmbeddedViewer* ev = new TGLEmbeddedViewer(hf, 0, 0, 0);
    TEveViewer *v = new TEveViewer();
    v->SetGLViewer(ev,ev->GetFrame());
    gEve->GetViewers()->AddElement(v);

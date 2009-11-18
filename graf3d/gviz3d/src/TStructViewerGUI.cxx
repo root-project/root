@@ -214,7 +214,6 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fGLViewer->PadPaint(fCanvas);
    fGLViewer->Connect("MouseOver(TGLPhysicalShape*)", "TStructViewerGUI", this, "MouseOverSlot(TGLPhysicalShape*)");
    fGLViewer->GetGLWidget()->Connect("ProcessedEvent(Event_t*)", "TStructViewerGUI", this, "GLWidgetProcessedEventSlot(Event_t*))");
-   fGLViewer->SetResetCameraOnDoubleClick(false);
    fGLViewer->Connect("DoubleClicked()", "TStructViewerGUI", this, "DoubleClickedSlot()");
    fGLViewer->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
    Update();

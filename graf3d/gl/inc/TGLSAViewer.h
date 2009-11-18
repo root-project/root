@@ -12,21 +12,17 @@
 #ifndef ROOT_TGLSAViewer
 #define ROOT_TGLSAViewer
 
-#ifndef ROOT_TGLViewer
 #include "TGLViewer.h"
-#endif
-
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
+class TGLSAFrame;
 class TGWindow;
 class TGFrame;
 class TGCompositeFrame;
 class TGPopupMenu;
+class TGButton;
 
 class TGedEditor;
-class TGLPShapeObj;
 class TGLEventHandler;
 class TGMenuBar;
 
@@ -52,7 +48,7 @@ public:
 
 private:
    // GUI components
-   TGCompositeFrame  *fFrame;
+   TGLSAFrame        *fFrame;
    TGPopupMenu       *fFileMenu;
    TGPopupMenu       *fFileSaveMenu;
    TGPopupMenu       *fCameraMenu;
@@ -60,8 +56,6 @@ private:
 
    // Ged
    TGCompositeFrame  *fLeftVerticalFrame;
-   TGedEditor        *fGedEditor;
-   TGLPShapeObj      *fPShapeWrap;
 
    TGCompositeFrame  *fRightVerticalFrame;
 
@@ -69,6 +63,8 @@ private:
    Int_t              fTypeIdx;
    Bool_t             fOverwrite;
    TGMenuBar         *fMenuBar;
+   TGButton          *fMenuBut;
+   Bool_t             fHideMenuBar;
    Bool_t             fDeleteMenuBar;
 
    // Initial window positioning
@@ -89,7 +85,7 @@ private:
 
 public:
    TGLSAViewer(TVirtualPad *pad);
-   TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged = 0);
+   TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged=0);
    ~TGLSAViewer();
 
    virtual void CreateGLWidget();
@@ -97,21 +93,21 @@ public:
 
    virtual const char* GetName() const { return "GLViewer"; }
 
-   virtual void SelectionChanged();     // *SIGNAL*
-   virtual void OverlayDragFinished(); // *SIGNAL*
-
-   virtual void RefreshPadEditor(TObject* changed=0);
+   virtual void SelectionChanged();
 
    void   Show();
    void   Close();
    void   DeleteMenuBar();
+   void   DisableCloseMenuEntries();
+   void   EnableMenuBarHiding();
+
+   void   HandleMenuBarHiding(Event_t* ev);
 
    // GUI events - editors, frame etc
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);
 
-   TGCompositeFrame* GetFrame() const { return fFrame; }
+   TGCompositeFrame* GetFrame() const;
    TGCompositeFrame* GetLeftVerticalFrame() const { return fLeftVerticalFrame; }
-   TGedEditor*       GetGedEditor() const { return fGedEditor; }
 
    void ToggleEditObject();
    void ToggleOrthoRotate();

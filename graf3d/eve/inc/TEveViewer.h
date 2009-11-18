@@ -53,7 +53,7 @@ public:
    void SetGLViewer(TGLViewer* viewer, TGFrame* frame);
 
    TGLSAViewer*       SpawnGLViewer(TGedEditor* ged);
-   TGLEmbeddedViewer* SpawnGLEmbeddedViewer(Int_t border=0);
+   TGLEmbeddedViewer* SpawnGLEmbeddedViewer(TGedEditor* ged, Int_t border=0);
 
    void Redraw(Bool_t resetCameras=kFALSE);
 

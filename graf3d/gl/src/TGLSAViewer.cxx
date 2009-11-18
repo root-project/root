@@ -23,6 +23,7 @@
 #include "TGFrame.h"
 #include "TGLabel.h"
 #include "TGMenu.h"
+#include "TGButton.h"
 #include "TGSplitter.h"
 #include "TColor.h"
 
@@ -51,6 +52,7 @@
 #include "TGLOutput.h"
 #include "TGLEventHandler.h"
 
+
 const char * TGLSAViewer::fgHelpText1 = "\
 DIRECT SCENE INTERACTIONS\n\n\
    Press:\n\
@@ -61,65 +63,103 @@ DIRECT SCENE INTERACTIONS\n\n\
    \tj          --- ZOOM in\n\
    \tk          --- ZOOM out\n\
    \tArrow Keys --- PAN (TRUCK) across scene\n\
-   \tHome       --- reset current camera\n\n\
-   You can ROTATE (ORBIT) the scene by holding the left mouse button and moving\n\
-   the mouse (perspective camera, needs to be enabled for orthograpic camers).\n\
+   \tHome       --- reset current camera\n\
+\n\
+   LEFT mouse button -- ROTATE (ORBIT) the scene by holding the mouse button and moving\n\
+   the mouse (perspective camera, needs to be enabled in menu for orthograpic cameras).\n\
    By default, the scene will be rotated about its center. To select arbitrary center\n\
-   bring up the viewer-editor and use 'Camera center' controls in the 'Guides' tab.\n\n\
-   You can PAN (TRUCK) the camera using the middle mouse button or arrow keys.\n\n\
-   You can ZOOM the camera by dragging side to side holding the right\n\
-   mouse button (in perspective mode the camera is translated along viewing axis).\n\n\
-   Mouse wheel action depends on the camera type:\n\
+   bring up the viewer-editor (e.g., shift-click into empty background) and use\n\
+   'Camera center' controls in the 'Guides' tab.\n\
+\n\
+   MIDDLE mouse button or arrow keys --  PAN (TRUCK) the camera.\n\
+\n\
+   RIGHT mouse button action depends on camera type:\n\
      orthographic -- zoom,\n\
-     perspective  -- change field-of-view (focal length)\n\n\
-   RESET the camera via the button in viewer-editor or Home key.\n\n\
-   SELECT a shape with Shift+Left mouse button click.\n\n\
-   SELECT the viewer with Shift+Left mouse button click on a free space.\n\n\
-   MOVE a selected shape using Shift+Mid mouse drag.\n\n\
+     perspective  -- move camera forwards / backwards\n\
+\n\
+   By pressing Ctrl and Shift keys the mouse precision can be changed:\n\
+     Shift      -- 10 times less precise\n\
+     Ctrl       -- 10 times more precise\n\
+     Ctrl Shift -- 100 times more precise\n\
+\n\
+   Mouse wheel action depends on camera type:\n\
+     orthographic -- zoom,\n\
+     perspective  -- change field-of-view (focal length)\n\
+\n\
+   Double clik will show GUI editor of the viewer (if assigned).\n\
+\n\
+   RESET the camera via the button in viewer-editor or Home key.\n\
+\n\
+   SELECT a shape with Shift+Left mouse button click.\n\
+\n\
+   SELECT the viewer with Shift+Left mouse button click on a free space.\n\
+\n\
+   MOVE a selected shape using Shift+Mid mouse drag.\n\
+\n\
    Invoke the CONTEXT menu with Shift+Right mouse click.\n\n"
    "Secondary selection and direct render object interaction is initiated\n\
-   by Alt+Left mouse click (Mod1, actually). Only few classes support this option.\n\n\
-CAMERA\n\n\
+   by Alt+Left mouse click (Mod1, actually). Only few classes support this option.\n\
+   When 'Alt' is taken by window manager, try Alt-Ctrl-Left.\n\
+\n\
+CAMERA\n\
+\n\
    The \"Camera\" menu is used to select the different projections from \n\
-   the 3D world onto the 2D viewport. There are three perspective cameras:\n\n\
+   the 3D world onto the 2D viewport. There are three perspective cameras:\n\
+\n\
    \tPerspective (Floor XOZ)\n\
    \tPerspective (Floor YOZ)\n\
-   \tPerspective (Floor XOY)\n\n\
-   In each case the floor plane (defined by two axes) is kept level.\n\n\
-   There are also three orthographic cameras:\n\n\
+   \tPerspective (Floor XOY)\n\
+\n\
+   In each case the floor plane (defined by two axes) is kept level.\n\
+\n\
+   There are also three orthographic cameras:\n\
+\n\
    \tOrthographic (XOY)\n\
    \tOrthographic (XOZ)\n\
-   \tOrthographic (ZOY)\n\n\
+   \tOrthographic (ZOY)\n\
+\n\
    In each case the first axis is placed horizontal, the second vertical e.g.\n\
    XOY means X horizontal, Y vertical.\n\n";
 
 const char * TGLSAViewer::fgHelpText2 = "\
-SHAPES COLOR AND MATERIAL\n\n\
+SHAPES COLOR AND MATERIAL\n\
+\n\
    The selected shape's color can be modified in the Shapes-Color tabs.\n\
    Shape's color is specified by the percentage of red, green, blue light\n\
    it reflects. A surface can reflect DIFFUSE, AMBIENT and SPECULAR light.\n\
    A surface can also emit light. The EMISSIVE parameter allows to define it.\n\
-   The surface SHININESS can also be modified.\n\n\
-SHAPES GEOMETRY\n\n\
+   The surface SHININESS can also be modified.\n\
+\n\
+SHAPES GEOMETRY\n\
+\n\
    The selected shape's location and geometry can be modified in the Shapes-Geom\n\
-   tabs by entering desired values in respective number entry controls.\n\n\
-SCENE CLIPPING\n\n\
-   In the Scene-Clipping tabs select a 'Clip Type': None, Plane, Box\n\n\
-   For 'Plane' and 'Box' the lower pane shows the relevant parameters:\n\n\
+   tabs by entering desired values in respective number entry controls.\n\
+\n\
+SCENE CLIPPING\n\
+\n\
+   In the Scene-Clipping tabs select a 'Clip Type': None, Plane, Box\n\
+\n\
+   For 'Plane' and 'Box' the lower pane shows the relevant parameters:\n\
+\n\
 \tPlane: Equation coefficients of form aX + bY + cZ + d = 0\n\
 \tBox: Center X/Y/Z and Length X/Y/Z\n\n"
    "For Box checking the 'Show / Edit' checkbox shows the clip box (in light blue)\n\
    in viewer. It also attaches the current manipulator to the box - enabling\n\
-   direct editing in viewer.\n\n\
-MANIPULATORS\n\n\
+   direct editing in viewer.\n\
+\n\
+MANIPULATORS\n\
+\n\
    A widget attached to the selected object - allowing direct manipulation\n\
-   of the object with respect to its local axes.\n\n\
-   There are three modes, toggled with keys while manipulator is active:\n\
+   of the object with respect to its local axes.\n\
+\n\
+   There are three modes, toggled with keys while manipulator is active, that is,\n\
+   mouse pointer is above it (switches color to yellow):\n\
    \tMode\t\tWidget Component Style\t\tKey\n\
    \t----\t\t----------------------\t\t---\n\
    \tTranslation\tLocal axes with arrows\t\tv\n\
    \tScale\t\tLocal axes with boxes\t\tx\n\
-   \tRotate\t\tLocal axes rings\t\tc\n\n\
+   \tRotate\t\tLocal axes rings\t\tc\n\
+\n\
    Each widget has three axis components - red (X), green (Y) and blue (Z).\n\
    The component turns yellow, indicating an active state, when the mouse is moved\n\
    over it. Left click and drag on the active component to adjust the objects\n\
@@ -165,33 +205,31 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad) :
    fCameraMenu(0),
    fHelpMenu(0),
    fLeftVerticalFrame(0),
-   fGedEditor(0),
-   fPShapeWrap(0),
    fRightVerticalFrame(0),
    fDirName("."),
    fTypeIdx(0),
    fOverwrite(kFALSE),
    fMenuBar(0),
+   fMenuBut(0),
+   fHideMenuBar(kFALSE),
    fDeleteMenuBar(kFALSE)
 {
    // Construct a standalone viewer, bound to supplied 'pad'.
 
-   TGLSAFrame* gl_frame = new TGLSAFrame(*this);
-   fFrame = gl_frame;
+   fFrame = new TGLSAFrame(*this);
 
    CreateMenus();
    CreateFrames();
 
-   gl_frame->SetWindowName("ROOT's GL viewer");
-   gl_frame->SetClassHints("GLViewer", "GLViewer");
-   gl_frame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
-   gl_frame->MapSubwindows();
+   fFrame->SetWindowName("ROOT's GL viewer");
+   fFrame->SetClassHints("GLViewer", "GLViewer");
+   fFrame->SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
+   fFrame->MapSubwindows();
+   fFrame->HideFrame(fMenuBut);
 
-   gl_frame->Resize(fFrame->GetDefaultSize());
-   gl_frame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
-   gl_frame->SetWMPosition(fgInitX, fgInitY);
-
-   fPShapeWrap = new TGLPShapeObj(0, this);
+   fFrame->Resize(fFrame->GetDefaultSize());
+   fFrame->MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
+   fFrame->SetWMPosition(fgInitX, fgInitY);
 
    // set recursive cleanup, but exclude fGedEditor
    // destructor of fGedEditor has own way of handling child nodes
@@ -211,11 +249,11 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
    fCameraMenu(0),
    fHelpMenu(0),
    fLeftVerticalFrame(0),
-   fGedEditor(ged),
-   fPShapeWrap(0),
    fRightVerticalFrame(0),
    fTypeIdx(0),
    fMenuBar(0),
+   fMenuBut(0),
+   fHideMenuBar(kFALSE),
    fDeleteMenuBar(kFALSE)
 {
    // Construct an embedded standalone viewer, bound to supplied 'pad'.
@@ -223,16 +261,16 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
    // Modified version of the previous constructor for embedding the
    // viewer into another frame (parent).
 
+   fGedEditor = ged;
    fFrame = new TGLSAFrame(parent, *this);
 
    CreateMenus();
    CreateFrames();
 
    fFrame->MapSubwindows();
+   fFrame->HideFrame(fMenuBut);
    fFrame->Resize(fFrame->GetDefaultSize());
    fFrame->Resize(fgInitW, fgInitH);
-
-   fPShapeWrap = new TGLPShapeObj(0, this);
 
    // set recursive cleanup, but exclude fGedEditor
    // destructor of fGedEditor has own way of handling child nodes
@@ -263,6 +301,14 @@ TGLSAViewer::~TGLSAViewer()
    }
    delete fFrame;
    fGLWidget = 0;
+}
+
+//______________________________________________________________________________
+TGCompositeFrame* TGLSAViewer::GetFrame() const
+{
+   // Return the main-frame.
+
+   return fFrame;
 }
 
 //______________________________________________________________________________
@@ -306,16 +352,6 @@ void TGLSAViewer::DestroyGLWidget()
    fRightVerticalFrame->RemoveFrame(fGLWidget);
    fGLWidget->DeleteWindow();
    fGLWidget = 0;
-}
-
-//______________________________________________________________________________
-void TGLSAViewer::RefreshPadEditor(TObject* changed)
-{
-   // Refresh pad editor.
-
-   if (changed == 0 || fGedEditor->GetModel() == changed) {
-      fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
-   }
 }
 
 //______________________________________________________________________________
@@ -363,12 +399,21 @@ void TGLSAViewer::CreateMenus()
    fHelpMenu->Associate(fFrame);
 
    // Create menubar
-   fMenuBar = new TGMenuBar(fFrame, 1, 1, kHorizontalFrame);
+   fMenuBar = new TGMenuBar(fFrame);
    fMenuBar->AddPopup("&File", fFileMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
    fMenuBar->AddPopup("&Camera", fCameraMenu, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
    fMenuBar->AddPopup("&Help",    fHelpMenu,    new TGLayoutHints(kLHintsTop | kLHintsRight));
    fFrame->AddFrame(fMenuBar, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1));
+   gVirtualX->SelectInput(fMenuBar->GetId(),
+                          kKeyPressMask | kExposureMask | kPointerMotionMask
+                          | kStructureNotifyMask | kFocusChangeMask
+                          | kEnterWindowMask | kLeaveWindowMask);
 
+   fMenuBut = new TGButton(fFrame);
+   fMenuBut->ChangeOptions(kRaisedFrame | kFixedHeight);
+   fMenuBut->Resize(20, 4);
+   fMenuBut->SetBackgroundColor(0x80A0C0);
+   fFrame->AddFrame(fMenuBut, new TGLayoutHints(kLHintsNormal | kLHintsExpandX, 0, 0, 1, 1));
 }
 
 //______________________________________________________________________________
@@ -414,6 +459,25 @@ void TGLSAViewer::CreateFrames()
    fRightVerticalFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 }
 
+//______________________________________________________________________________
+void TGLSAViewer::SelectionChanged()
+{
+   // Update GUI components for embedded viewer selection change.
+   // Override from TGLViewer.
+
+   TGLPhysicalShape *selected = const_cast<TGLPhysicalShape*>(GetSelected());
+
+   if (selected) {
+      fPShapeWrap->fPShape = selected;
+      if (fFileMenu->IsEntryChecked(kGLEditObject))
+         fGedEditor->SetModel(fPad, selected->GetLogical()->GetExternal(), kButton1Down);
+      else
+         fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
+   } else {
+      fPShapeWrap->fPShape = 0;
+      fGedEditor->SetModel(fPad, this, kButton1Down);
+   }
+}
 
 //______________________________________________________________________________
 void TGLSAViewer::Show()
@@ -438,6 +502,77 @@ void TGLSAViewer::DeleteMenuBar()
 {
    // Delete the menu bar.
    fDeleteMenuBar=kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::DisableCloseMenuEntries()
+{
+   // Deactivate menu entries for closing the GL window and exiting ROOT.
+
+   fFileMenu->DeleteEntry(kGLCloseViewer);
+   fFileMenu->DeleteEntry(kGLQuitROOT);
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::EnableMenuBarHiding()
+{
+   // Enable hiding of menu bar.
+
+   if (fHideMenuBar)
+      return;
+
+   fHideMenuBar = kTRUE;
+
+   fMenuBar->Connect("ProcessedEvent(Event_t*)", "TGLSAViewer", this, "HandleMenuBarHiding(Event_t*)");
+   fMenuBut->Connect("ProcessedEvent(Event_t*)", "TGLSAViewer", this, "HandleMenuBarHiding(Event_t*)");
+
+   fFrame->HideFrame(fMenuBar);
+   fFrame->ShowFrame(fMenuBut);
+   fFrame->Layout();
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::HandleMenuBarHiding(Event_t* ev)
+{
+   // Maybe switch menu-bar / menu-button.
+
+   TGFrame *f = (TGFrame*) gTQSender;
+
+   if (f == fMenuBut)
+   {
+      if (ev->fType == kEnterNotify)
+      {
+         fFrame->HideFrame(fMenuBut);
+         fFrame->ShowFrame(fMenuBar);
+         fFrame->Layout();
+      }
+   }
+   else if (f == fMenuBar)
+   {
+      if (ev->fType == kLeaveNotify &&
+          (ev->fX < 0 || ev->fX >= (Int_t) f->GetWidth() ||
+           ev->fY < 0 || ev->fY >= (Int_t) f->GetHeight()))
+      {
+         if (fMenuBar->GetCurrent() == 0)
+         {
+            fFrame->HideFrame(fMenuBar);
+            fFrame->ShowFrame(fMenuBut);
+            fFrame->Layout();
+         }
+         else
+         {
+            fMenuBar->GetCurrent()->Connect("ProcessedEvent(Event_t*)", "TGLSAViewer", this, "HandleMenuBarHiding(Event_t*)");
+         }
+      }
+   }
+   else
+   {
+      f->Disconnect("ProcessedEvent(Event_t*)", this);
+
+      fFrame->HideFrame(fMenuBar);
+      fFrame->ShowFrame(fMenuBut);
+      fFrame->Layout();
+   }
 }
 
 //______________________________________________________________________________
@@ -476,7 +611,7 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             break;
          }
          case kGLHelpViewer: {
-            TRootHelpDialog * hd = new TRootHelpDialog(fFrame, "Help on GL Viewer...", 600, 400);
+            TRootHelpDialog * hd = new TRootHelpDialog(fFrame, "Help on GL Viewer...", 660, 400);
             hd->AddText(fgHelpText1);
             hd->AddText(fgHelpText2);
             hd->Popup();
@@ -572,58 +707,24 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          case kGLCloseViewer:
             // Exit needs to be delayed to avoid bad drawable X ids - GUI
             // will all be changed in future anyway
-
             TTimer::SingleShot(50, "TGLSAFrame", fFrame, "SendCloseMessage()");
             break;
          case kGLQuitROOT:
             if (!gApplication->ReturnFromRun())
                delete this;
             gApplication->Terminate(0);
-            default:
             break;
-            }
-            default:
+         default:
             break;
+         }
+      default:
+         break;
       }
    default:
       break;
    }
 
    return kTRUE;
-}
-
-//______________________________________________________________________________
-void TGLSAViewer::SelectionChanged()
-{
-   // Update GUI components for embedded viewer selection change.
-
-   // !!! MT this whole selection-signal-stuff is verrrry strange.
-   // At least, shouldn't we emit a signal here?
-   //
-   // I misuse this function after overlay-mouse-drag as well.
-   // Need something like refresh-viewer-gui which also does ged update.
-
-   TGLPhysicalShape *selected = const_cast<TGLPhysicalShape*>(GetSelected());
-
-   if (selected) {
-      fPShapeWrap->fPShape = selected;
-      if (fFileMenu->IsEntryChecked(kGLEditObject))
-         fGedEditor->SetModel(fPad, selected->GetLogical()->GetExternal(), kButton1Down);
-      else
-         fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
-   } else {
-      fPShapeWrap->fPShape = 0;
-      fGedEditor->SetModel(fPad, this, kButton1Down);
-   }
-}
-
-//______________________________________________________________________________
-void TGLSAViewer::OverlayDragFinished()
-{
-   // An overlay operation can result in change to an object.
-   // Refresh geditor.
-
-   fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
 }
 
 //______________________________________________________________________________

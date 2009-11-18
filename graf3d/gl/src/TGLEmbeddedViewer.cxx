@@ -31,7 +31,8 @@
 ClassImp(TGLEmbeddedViewer);
 
 //______________________________________________________________________________
-TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, Int_t border) :
+TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad,
+                                     TGedEditor *ged, Int_t border) :
    TGLViewer(pad, 0, 0, 400, 300),
    fFrame(0),
    fBorder(border)
@@ -39,6 +40,8 @@ TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, I
    // Constructor.
    // Argument 'border' specifies how many pixels to pad on each side of the
    // viewer. This area can be used for highlightning of the active viewer.
+
+   fGedEditor = ged;
 
    fFrame = new TGCompositeFrame(parent);
 
