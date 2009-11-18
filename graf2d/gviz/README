@@ -21,3 +21,8 @@ variable CC should be defined as:
 CC="gcc -m64"
 
 before doing configure. 
+
+On Windows machines it recommended to not install graphviz but to download the
+pre-installed version from http://www.graphviz.org/. The ROOT configure command
+remains the same.
+
