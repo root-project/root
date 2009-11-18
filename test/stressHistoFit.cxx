@@ -1142,8 +1142,8 @@ int stressFit()
    bm.Stop("stressHistoFit");
    std::cout <<"\n****************************************************************************\n";
    bm.Print("stressHistoFit");
-   const double reftime = 32; // needs to be updated // ref time on  pcbrun4
-   double rootmarks = 860 * reftime / bm.GetCpuTime("stressHistoFit");
+   const double reftime = 124; // ref time on  pcbrun4
+   double rootmarks = 800 * reftime / bm.GetCpuTime("stressHistoFit");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
              << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
    std::cout <<"****************************************************************************\n";
