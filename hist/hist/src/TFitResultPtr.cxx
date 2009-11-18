@@ -51,7 +51,10 @@ TFitResult& TFitResultPtr::operator*() const
 {
    // impelment the de-reference operator to make the class acts as a pointer to a TFitResult
    // assert in case the class does not contain a pointer to TFitResult
-   R__ASSERT (fPointer != 0);
+   if  (fPointer == 0) { 
+      Error("TFitResultPtr","TFitResult is empty - use the fit option S");
+      return *(new TFitResult() );
+   }
    return *fPointer;
 }
 
@@ -59,7 +62,10 @@ TFitResult* TFitResultPtr::operator->() const
 {
    // implement the -> operator to make the class acts as a pointer to a TFitResult
    // assert in case the class does not contain a pointer to TFitResult
-   R__ASSERT (fPointer != 0);
+   if  (fPointer == 0) { 
+      Error("TFitResultPtr","TFitResult is empty - use the fit option S");
+      return new TFitResult();
+   }
    return fPointer;
 }
 

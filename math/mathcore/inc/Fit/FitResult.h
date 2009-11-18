@@ -210,13 +210,8 @@ public:
       for (unsigned int i = 0; i< npar; ++i) { 
          for (unsigned int j = 0; j<=i; ++j) { 
             double tmp = fCovMatrix[i * (i +3)/2 ] * fCovMatrix[ j * (j+3)/2 ]; 
-            if (tmp < 0) 
-               mat(i,j) = 0; 
-            else 
-               mat(i,j) = fCovMatrix[j + i*(i+1)/2 ] / std::sqrt(tmp); 
-
+            mat(i,j) = (tmp > 0) ? fCovMatrix[j + i*(i+1)/2 ] / std::sqrt(tmp) : 0; 
             if (i != j) mat(j,i) = mat(i,j); 
-
          }
       }
    }

@@ -338,20 +338,20 @@ std::string FitResult::GetParameterName(unsigned int ipar) const {
 
 void FitResult::Print(std::ostream & os, bool doCovMatrix) const { 
    // print the result in the given stream 
-   // need to add minos errors , globalCC, etc..
-   if (!fValid) { 
-      os << "\n****************************************\n";
-      os << "            Invalid FitResult            ";
-   }
-   
-   os << "\n****************************************\n";
-   //os << "            FitResult                   \n\n";
-   os << "Minimizer is " << fMinimType << std::endl;
+   // need to add also minos errors , globalCC, etc..
    unsigned int npar = fParams.size(); 
    if (npar == 0) { 
-      std::cout << "Error: FitResult is empty !" << std::endl;
+      std::cout << "Error: Empty  FitResult  ! " << std::endl;
       return;
    }
+   os << "\n****************************************\n";
+   if (!fValid) { 
+      os << "            Invalid FitResult            ";
+      os << "\n****************************************\n";
+   }
+   
+   //os << "            FitResult                   \n\n";
+   os << "Minimizer is " << fMinimType << std::endl;
    const unsigned int nw = 25; 
    if (fVal != fChi2 || fChi2 < 0) 
       os << std::setw(nw) << std::left << "LogLikelihood" << " =\t" << fVal << std::endl;

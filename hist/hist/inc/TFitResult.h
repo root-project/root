@@ -29,8 +29,12 @@
 #include "Fit/FitResult.h"
 #endif
 
+#ifndef ROOT_TMatrixDSym
+#include "TMatrixDSym.h"
+#endif
 
 class TFitResult:public TNamed, public ROOT::Fit::FitResult {
+
 public:
 
    // Default constructor for I/O
@@ -43,9 +47,16 @@ public:
    TFitResult(const ROOT::Fit::FitResult& f): TNamed("TFitResult","TFitResult"),
                                               ROOT::Fit::FitResult(f) {};
 
-   virtual ~TFitResult() {};
+   virtual ~TFitResult() {}
 
 
+   virtual void  Print(Option_t *option="") const;
+
+   TMatrixDSym GetCovarianceMatrix() const;
+
+   TMatrixDSym GetCorrelationMatrix() const;
+
+private:
    ClassDef(TFitResult,1)  // Class holding the result of the fit 
 };
 
