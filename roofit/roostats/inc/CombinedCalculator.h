@@ -79,11 +79,7 @@ namespace RooStats {
 
       CombinedCalculator() : 
          fPdf(0),
-         fData(0),
-         fPOI(0), 
-         fNullParams(0), 
-         fAlternateParams(0), 
-         fNuisParams(0)
+         fData(0)
       {}
 
       CombinedCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest, 
@@ -91,11 +87,11 @@ namespace RooStats {
 
          fPdf(&pdf),
          fData(&data),
-         fPOI(&paramsOfInterest), 
-         fNullParams(nullParams), 
-         fAlternateParams(altParams), 
-         fNuisParams(nuisParams) 
+         fPOI(paramsOfInterest)
       {
+         if (nullParams) fNullParams.add(*nullParams); 
+         if (altParams) fAlternateParams.add(*altParams); 
+         if (nuisParams) fNuisParams.add(*nuisParams); 
          SetTestSize(size);
       }
 
@@ -103,11 +99,7 @@ namespace RooStats {
       CombinedCalculator(RooAbsData& data, const ModelConfig& model,
                          Double_t size = 0.05) : 
          fPdf(0),
-         fData(&data),
-         fPOI(0), 
-         fNullParams(0), 
-         fAlternateParams(0), 
-         fNuisParams(0)
+         fData(&data)
       {
          SetModel(model);
          SetTestSize(size);
@@ -116,14 +108,7 @@ namespace RooStats {
 
       // destructor.
       virtual ~CombinedCalculator() { }
-//          if( fOwnsWorkspace && fWS) delete fWS;
-//          // commented out b/c currently the calculator does not own these.  Change if we clone.
-//          //      if (fWS) delete fWS;
-//          //      if (fNullParams) delete fNullParams;
-//          //      if (fAlternateParams) delete fAlternateParams;
-//          //      if (fPOI) delete fPOI;
-//          //      if (fNuisParams) delete fNuisParams;
-//       }
+
 
     
       // Main interface to get a ConfInterval, pure virtual
@@ -145,12 +130,12 @@ namespace RooStats {
          fData = &data;
       }
 
-      // set the model 
+      // set the model (in this case can set only the parameters for the null hypothesis)
       virtual void SetModel(const ModelConfig & model) { 
          fPdf = model.GetPdf();
-         fPOI = model.GetParametersOfInterest(); 
-         fNullParams = model.GetSnapshot();
-         fNuisParams = model.GetNuisanceParameters(); 
+         if (model.GetParametersOfInterest()) SetParameters(*model.GetParametersOfInterest()); 
+         if (model.GetSnapshot()) SetNullParameters(*model.GetSnapshot());
+         if (model.GetNuisanceParameters()) SetNuisanceParameters(*model.GetNuisanceParameters()); 
       }
       
       virtual void SetNullModel( const ModelConfig &) {  // to be understood what to do 
@@ -164,14 +149,16 @@ namespace RooStats {
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }
 
       // specify the parameters of interest in the interval
-      virtual void SetParameters(const RooArgSet& set) {fPOI = &set;}
+      virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
+
        // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams = &set;}
+      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams.removeAll(); fNuisParams.add(set);}
     
       // set parameter values for the null if using a common PDF
-      virtual void SetNullParameters(const RooArgSet& set) {fNullParams = &set;}
+      virtual void SetNullParameters(const RooArgSet& set) {fNullParams.removeAll(); fNullParams.add(set);}
+
       // set parameter values for the alternate if using a common PDF
-      virtual void SetAlternateParameters(const RooArgSet& set) {fAlternateParams = &set;}
+      virtual void SetAlternateParameters(const RooArgSet& set) {fAlternateParams.removeAll(); fAlternateParams.add(set);}
 
          
    protected:
@@ -183,10 +170,10 @@ namespace RooStats {
 
       RooAbsPdf  * fPdf; 
       RooAbsData * fData; 
-      const RooArgSet* fPOI; // RooArgSet specifying  parameters of interest for interval
-      const RooArgSet* fNullParams; // RooArgSet specifying null parameters for hypothesis test
-      const RooArgSet* fAlternateParams; // RooArgSet specifying alternate parameters for hypothesis test       // Is it used ????
-      const RooArgSet* fNuisParams;// RooArgSet specifying  nuisance parameters for interval
+      RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
+      RooArgSet fNullParams; // RooArgSet specifying null parameters for hypothesis test
+      RooArgSet fAlternateParams; // RooArgSet specifying alternate parameters for hypothesis test       // Is it used ????
+      RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
 
 
       ClassDef(CombinedCalculator,1) // A base class that is for tools that can be both HypoTestCalculators and IntervalCalculators

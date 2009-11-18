@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: MarkovChain.h 26805 2009-06-17 14:31:02Z kbelasco $
+// @(#)root/roostats:$Id$
 // Authors: Kevin Belasco        17/06/2009
 // Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************
@@ -121,8 +121,8 @@ namespace RooStats {
       }
 
    protected:
-      RooArgSet* fParameters;
-      RooArgSet* fDataEntry;
+      RooArgSet * fParameters;
+      RooArgSet * fDataEntry;
       RooDataSet* fChain;
       RooRealVar* fNLL;
       RooRealVar* fWeight;

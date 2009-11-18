@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: MCMCIntervalPlot.h 29342 2009-06-12 15:45:36Z kbelasco $
+// @(#)root/roostats:$Id$
 // Authors: Kevin Belasco        17/06/2009
 // Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************

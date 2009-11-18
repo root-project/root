@@ -305,9 +305,12 @@ void MakePlots(RooWorkspace* ws){
   // The SPlot class adds a new variable that has the name of the corresponding
   // yield + "_sw".
   cdata->cd(2);
-  data->setWeightVar("zYield_sw");
+
+  // create weightfed data set 
+  RooDataSet * dataw_z = new RooDataSet(data->GetName(),data->GetTitle(),data,*data->get(),0,"zYield_sw") ;
+
   RooPlot* frame2 = isolation->frame() ; 
-  data->plotOn(frame2, DataError(RooAbsData::SumW2) ) ; 
+  dataw_z->plotOn(frame2, DataError(RooAbsData::SumW2) ) ; 
     
   frame2->SetTitle("isolation distribution for Z");
   frame2->Draw() ;
@@ -317,9 +320,9 @@ void MakePlots(RooWorkspace* ws){
   // The SPlot class adds a new variable that has the name of the corresponding
   // yield + "_sw".
   cdata->cd(3);
-  data->setWeightVar("qcdYield_sw");
+  RooDataSet * dataw_qcd = new RooDataSet(data->GetName(),data->GetTitle(),data,*data->get(),0,"qcdYield_sw") ;
   RooPlot* frame3 = isolation->frame() ; 
-  data->plotOn(frame3,DataError(RooAbsData::SumW2) ) ; 
+  dataw_qcd->plotOn(frame3,DataError(RooAbsData::SumW2) ) ; 
     
   frame3->SetTitle("isolation distribution for QCD");
   frame3->Draw() ;

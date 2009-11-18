@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: SamplingDistribution.h 26427 2009-01-13 15:45:36Z cranmer $
+// @(#)root/roostats:$Id$
 
 /*************************************************************************
  * Project: RooStats                                                     *

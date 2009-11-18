@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: MCMCInterval.cxx 26805 2009-06-17 14:31:02Z kbelasco $
+// @(#)root/roostats:$Id$
 // Authors: Kevin Belasco        17/06/2009
 // Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************
@@ -142,7 +142,9 @@ using namespace std;
 
 static const Double_t DEFAULT_EPSILON = 0.01;
 
-MCMCInterval::MCMCInterval() : ConfInterval()
+
+MCMCInterval::MCMCInterval(const char* name)
+   : ConfInterval(name)
 {
    fConfidenceLevel = 0.0;
    fHistConfLevel = 0.0;
@@ -166,66 +168,10 @@ MCMCInterval::MCMCInterval() : ConfInterval()
    fUseSparseHist = kFALSE;
    fIsHistStrict = kTRUE;
    fEpsilon = DEFAULT_EPSILON;
-   fParameters = NULL;
 }
 
-MCMCInterval::MCMCInterval(const char* name) : ConfInterval(name, name)
-{
-   fConfidenceLevel = 0.0;
-   fHistConfLevel = 0.0;
-   fKeysConfLevel = 0.0;
-   fFull = 0.0;
-   fChain = NULL;
-   fAxes = NULL;
-   fDataHist = NULL;
-   fSparseHist = NULL;
-   fKeysPdf = NULL;
-   fProduct = NULL;
-   fHeavyside = NULL;
-   fKeysDataHist = NULL;
-   fCutoffVar = NULL;
-   fHist = NULL;
-   fNumBurnInSteps = 0;
-   fHistCutoff = -1;
-   fKeysCutoff = -1;
-   fDimension = 1;
-   fUseKeys = kFALSE;
-   fUseSparseHist = kFALSE;
-   fIsHistStrict = kTRUE;
-   fEpsilon = DEFAULT_EPSILON;
-   fParameters = NULL;
-}
-
-MCMCInterval::MCMCInterval(const char* name, const char* title)
-   : ConfInterval(name, title)
-{
-   fConfidenceLevel = 0.0;
-   fHistConfLevel = 0.0;
-   fKeysConfLevel = 0.0;
-   fFull = 0.0;
-   fChain = NULL;
-   fAxes = NULL;
-   fDataHist = NULL;
-   fSparseHist = NULL;
-   fKeysPdf = NULL;
-   fProduct = NULL;
-   fHeavyside = NULL;
-   fKeysDataHist = NULL;
-   fCutoffVar = NULL;
-   fHist = NULL;
-   fNumBurnInSteps = 0;
-   fHistCutoff = -1;
-   fKeysCutoff = -1;
-   fDimension = 1;
-   fUseKeys = kFALSE;
-   fUseSparseHist = kFALSE;
-   fIsHistStrict = kTRUE;
-   fEpsilon = DEFAULT_EPSILON;
-   fParameters = NULL;
-}
-
-MCMCInterval::MCMCInterval(const char* name, const char* title,
-        const RooArgSet& parameters, MarkovChain& chain) : ConfInterval(name, title)
+MCMCInterval::MCMCInterval(const char* name,
+        const RooArgSet& parameters, MarkovChain& chain) : ConfInterval(name)
 {
    fNumBurnInSteps = 0;
    fConfidenceLevel = 0.0;
@@ -251,6 +197,22 @@ MCMCInterval::MCMCInterval(const char* name, const char* title,
    SetParameters(parameters);
 }
 
+MCMCInterval::~MCMCInterval()
+{
+   // destructor
+   delete[] fAxes;
+   delete fHist;
+   delete fChain;
+   // kbelasco: check here for memory management errors
+   delete fDataHist;
+   delete fSparseHist;
+   delete fKeysPdf;
+   delete fProduct;
+   delete fHeavyside;
+   delete fKeysDataHist;
+   delete fCutoffVar;
+}
+
 struct CompareDataHistBins {
    CompareDataHistBins(RooDataHist* hist) : fDataHist(hist) {}
    bool operator() (Int_t bin1 , Int_t bin2) { 
@@ -273,13 +235,13 @@ struct CompareSparseHistBins {
    THnSparse* fSparseHist; 
 };
 
-Bool_t MCMCInterval::IsInInterval(const RooArgSet& point) 
+Bool_t MCMCInterval::IsInInterval(const RooArgSet& point) const 
 {
    if (fUseKeys) {
       // evaluate keyspdf at point and return whether >= cutoff
       // kbelasco: is this right?
-      RooStats::SetParameters(&point, const_cast<RooArgSet *>(fParameters) );
-      return fKeysPdf->getVal(fParameters) >= fKeysCutoff;
+      RooStats::SetParameters(&point, const_cast<RooArgSet *>(&fParameters) );
+      return fKeysPdf->getVal(&fParameters) >= fKeysCutoff;
    } else {
       if (fUseSparseHist) {
          Long_t bin;
@@ -347,13 +309,13 @@ void MCMCInterval::CreateKeysPdf()
    // kbelasco: check here for memory leak.  does RooNDKeysPdf use
    // the RooArgList passed to it or does it make a clone?
    // also check for memory leak from chain, does RooNDKeysPdf clone that?
-   if (fAxes == NULL || fParameters == NULL) {
+   if (fAxes == NULL || fParameters.getSize() == 0) {
       coutE(InputArguments) << "Error in MCMCInterval::CreateKeysPdf: "
          << "parameters have not been set." << endl;
       return;
    }
 
-   RooDataSet* chain = fChain->GetAsDataSet(SelectVars(*fParameters),
+   RooDataSet* chain = fChain->GetAsDataSet(SelectVars(fParameters),
          EventRange(fNumBurnInSteps, fChain->Size()));
    RooArgList* paramsList = new RooArgList();
    for (Int_t i = 0; i < fDimension; i++)
@@ -466,24 +428,25 @@ void MCMCInterval::CreateSparseHist()
 
 void MCMCInterval::CreateDataHist()
 {
-   if (fParameters == NULL || fChain == NULL) {
+   if (fParameters.getSize() == 0 || fChain == NULL) {
       coutE(Eval) << "* Error in MCMCInterval::CreateDataHist(): " <<
                      "Crucial data member was NULL." << endl;
       coutE(Eval) << "Make sure to fully construct/initialize." << endl;
       return;
    }
-   fDataHist = fChain->GetAsDataHist(SelectVars(*fParameters),
+   fDataHist = fChain->GetAsDataHist(SelectVars(fParameters),
          EventRange(fNumBurnInSteps, fChain->Size()));
 }
 
 void MCMCInterval::SetParameters(const RooArgSet& parameters)
 {
-   fParameters = &parameters;
-   fDimension = fParameters->getSize();
+   fParameters.removeAll();
+   fParameters.add(parameters);
+   fDimension = fParameters.getSize();
    if (fAxes != NULL)
       delete[] fAxes;
    fAxes = new RooRealVar*[fDimension];
-   TIterator* it = fParameters->createIterator();
+   TIterator* it = fParameters.createIterator();
    Int_t n = 0;
    TObject* obj;
    while ((obj = it->Next()) != NULL) {
@@ -513,7 +476,7 @@ void MCMCInterval::DetermineByKeys()
 
    Double_t cutoff = 0.0;
    fCutoffVar->setVal(cutoff);
-   RooAbsReal* integral = fProduct->createIntegral(*fParameters, NormSet(*fParameters));
+   RooAbsReal* integral = fProduct->createIntegral(fParameters, NormSet(fParameters));
    Double_t full = integral->getVal(fParameters);
    fFull = full;
    delete integral;
@@ -526,10 +489,10 @@ void MCMCInterval::DetermineByKeys()
    // kbelasco: Is there a better way to set the search range?
    // from 0 to max value of Keys
    // kbelasco: how to get max value?
-   //Double_t max = product.maxVal(product.getMaxVal(*fParameters));
+   //Double_t max = product.maxVal(product.getMaxVal(fParameters));
 
    Double_t volume = 1.0;
-   TIterator* it = fParameters->createIterator();
+   TIterator* it = fParameters.createIterator();
    RooRealVar* var;
    while ((var = (RooRealVar*)it->Next()) != NULL)
       volume *= (var->getMax() - var->getMin());
@@ -737,6 +700,10 @@ Double_t MCMCInterval::GetActualConfidenceLevel()
       return fKeysConfLevel;
    else
       return fHistConfLevel;
+}
+
+Double_t  MCMCInterval::GetSumOfWeights() const { 
+   return fDataHist->sum(kFALSE);
 }
 
 Double_t MCMCInterval::LowerLimit(RooRealVar& param)
@@ -984,7 +951,7 @@ Double_t MCMCInterval::CalcConfLevel(Double_t cutoff, Double_t full)
    RooAbsReal* integral;
    Double_t confLevel;
    fCutoffVar->setVal(cutoff);
-   integral = fProduct->createIntegral(*fParameters, NormSet(*fParameters));
+   integral = fProduct->createIntegral(fParameters, NormSet(fParameters));
    confLevel = integral->getVal(fParameters) / full;
    coutI(Eval) << "cutoff = " << cutoff << ", conf = " << confLevel << endl;
    delete integral;
@@ -1024,7 +991,7 @@ RooProduct* MCMCInterval::GetPosteriorKeysProduct()
 RooArgSet* MCMCInterval::GetParameters() const
 {  
    // returns list of parameters
-   return (RooArgSet*) fParameters->clone((std::string(fParameters->GetName())+"_clone").c_str());
+   return new RooArgSet(fParameters);
 }
 
 Bool_t MCMCInterval::AcceptableConfLevel(Double_t confLevel)
@@ -1038,19 +1005,19 @@ void MCMCInterval::CreateKeysDataHist()
       DetermineByKeys();
 
    fKeysDataHist = new RooDataHist("_productDataHist",
-         "Keys PDF & Heavyside Product Data Hist", *fParameters);
-   fKeysDataHist = fProduct->fillDataHist(fKeysDataHist, fParameters, 1.);
+         "Keys PDF & Heavyside Product Data Hist", fParameters);
+   fKeysDataHist = fProduct->fillDataHist(fKeysDataHist, &fParameters, 1.);
 }
 
 Bool_t MCMCInterval::CheckParameters(const RooArgSet& parameterPoint) const
 {  
    // check that the parameters are correct
 
-   if (parameterPoint.getSize() != fParameters->getSize() ) {
+   if (parameterPoint.getSize() != fParameters.getSize() ) {
      coutE(Eval) << "MCMCInterval: size is wrong, parameters don't match" << std::endl;
      return kFALSE;
    }
-   if ( ! parameterPoint.equals( *fParameters ) ) {
+   if ( ! parameterPoint.equals( fParameters ) ) {
      coutE(Eval) << "MCMCInterval: size is ok, but parameters don't match" << std::endl;
      return kFALSE;
    }

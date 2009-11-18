@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: LikelihoodIntervalPlot.h 26427 2009-05-20 15:45:36Z pellicci $
+// @(#)root/roostats:$Id$
 
 /*************************************************************************
  * Project: RooStats                                                     *
@@ -34,12 +34,6 @@ object.
 #include "TGraph.h"
 #include "TPad.h"
 
-#include "Math/WrappedFunction.h"
-#include "Math/Minimizer.h"
-#include "Math/Factory.h"
-#include "Math/MinimizerOptions.h"
-#include "RooFunctor.h"
-#include "RooProfileLL.h"
 
 #include "RooRealVar.h"
 #include "RooPlot.h"
@@ -286,54 +280,12 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          }
       }
       else { 
-         // use Minuit for drawing the contours of the profile likelihood
-         
-         // take first the nll function 
-         RooAbsReal & nll  = ((RooProfileLL*) newProfile)->nll(); 
-         // bind the nll function in the right interface for the Minimizer class 
-         // as a function of only the parameters (poi + nuisance parameters) 
 
-         // need to restore values and errors for POI
-         for (int i = 0; i < params.getSize(); ++i) { 
-            RooRealVar & par =  (RooRealVar &) params[i];
-            RooRealVar * fitPar =  (RooRealVar *) (fInterval->GetBestFitParameters()->find(par.GetName() ) );
-            if (fitPar) {
-               par.setVal( fitPar->getVal() );
-               par.setError( fitPar->getVal() );
-            }
-         }
-         // now do binding of NLL with a functor for Minimizer 
-         RooFunctor func(nll, RooArgSet(), params ); 
-         // create minimizer class 
-         ROOT::Math::Minimizer * minimizer = ROOT::Math::Factory::CreateMinimizer(
-            ROOT::Math::MinimizerOptions::DefaultMinimizerType(), 
-            ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo()); 
-
-         if (!minimizer) return;
-
-         ROOT::Math::WrappedMultiFunction<RooFunctor &> wfunc(func, func.nPar() );  
-         minimizer->SetFunction(wfunc); 
-
-         // set minimizer parameters 
-         assert( params.getSize() == int(wfunc.NDim()) ); 
-         unsigned int ivarX = 0; unsigned int ivarY = 0; 
-         for (unsigned int i = 0; i < wfunc.NDim(); ++i) { 
-            RooRealVar & v = (RooRealVar &) params[i]; 
-            minimizer->SetLimitedVariable( i, v.GetName(), v.getVal(), v.getError(), v.getMin(), v.getMax() ); 
-            if (TString(v.GetName()) == TString(myparam->GetName()) )  ivarY = i; 
-            if (TString(v.GetName()) == TString(myparamY->GetName()) ) ivarX = i; 
-         }
-         // for finding thecontour need to find first global minimum
-         bool iret = minimizer->Minimize();
-         if (!iret) { 
-            std::cout << "MINUIT MInimization failed - cannot find contours " << std::endl;
-         }
-         minimizer->PrintResults(); 
-         // find contours         
+         // find contours  using Minuit       
          TGraph * gr = new TGraph(fNPoints+1); 
-         unsigned int ncp = fNPoints; 
-         minimizer->SetErrorDef(cont_level);
-         minimizer->Contour(ivarX, ivarY, ncp, gr->GetX(), gr->GetY() );
+         
+         int ncp = fInterval->GetContourPoints(*myparam, *myparamY, gr->GetX(), gr->GetY(),fNPoints); 
+
          if (int(ncp) < fNPoints) {
             std::cout << "Warning - Less points calculated in contours np = " << ncp << " / " << fNPoints << std::endl;
             for (int i = ncp; i < fNPoints; ++i) gr->RemovePoint(i);

@@ -41,31 +41,30 @@ namespace RooStats {
 
    public:
 
-      ConfInterval() : TNamed() {} 
-      ConfInterval(const char* name) :  TNamed(name,name) {}
-      ConfInterval(const char* name, const char* title) : TNamed(name,title) {} 
+      // constructor given name and title 
+      explicit ConfInterval(const char* name = 0) : TNamed(name,name) {} 
+
+      // destructor
       virtual ~ConfInterval() {}
     
-      //pure virtual?  where does =0 go with const?
-      virtual Bool_t IsInInterval(const RooArgSet&) = 0; 
+      // check if given point is in the interval
+      virtual Bool_t IsInInterval(const RooArgSet&) const = 0; 
     
       // used to set confidence level.  Keep pure virtual
       virtual void SetConfidenceLevel(Double_t cl) = 0;
+
       // return confidence level
       virtual Double_t ConfidenceLevel() const = 0;
-      // 
-      // if so does this implement it?
-      // private fSize;
-    
 
-      // do we want it to return list of parameters
+      // return list of parameters of interest defining this interval (return a new cloned list)
       virtual RooArgSet* GetParameters() const = 0;
 
-      // check if parameters are correct. (dummy implementation to start)
+      // check if parameters are correct (i.e. they are the POI of this interval)
       virtual Bool_t CheckParameters(const RooArgSet&) const = 0;
 
 
    protected:
+
       ClassDef(ConfInterval,1) // Interface for Confidence Intervals
 
    };

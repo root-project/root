@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: MetropolisHastings.cxx 28978 2009-06-17 14:33:31Z kbelasco $
+// @(#)root/roostats:$Id$
 // Authors: Kevin Belasco        17/06/2009
 // Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************

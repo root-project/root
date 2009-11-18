@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: ConfidenceBelt.cxx 26317 2009-01-13 15:31:05Z cranmer $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -11,7 +11,7 @@
 /*****************************************************************************
  * Project: RooStats
  * Package: RooFit/RooStats  
- * @(#)root/roofit/roostats:$Id: ConfidenceBelt.cxx 26317 2009-01-13 15:31:05Z cranmer $
+ * @(#)root/roofit/roostats:$Id$
  * Original Author: Kyle Cranmer
  *   Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
  *
@@ -246,7 +246,7 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
 RooArgSet* ConfidenceBelt::GetParameters() const
 {  
    // returns list of parameters
-  return (RooArgSet*) fParameterPoints->get()->Clone();
+   return new RooArgSet(*(fParameterPoints->get()));
 }
 
 //____________________________________________________________________

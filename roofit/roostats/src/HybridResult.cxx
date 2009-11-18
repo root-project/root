@@ -17,12 +17,14 @@
 /*
 HybridResult class: this class is a fresh rewrite in RooStats of
 	RooStatsCms/LimitResults developped by D. Piparo and G. Schott
+New contributions to this class have been written by Matthias Wolf (error estimation)
 
 The objects of this class store and access with lightweight methods the
 information calculated by LimitResults through a Lent calculation using
 MC toy experiments.
 In some ways can be considered an extended and extensible implementation of the
 TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
+
 */
 
 #include "RooDataHist.h"
@@ -43,11 +45,22 @@ using namespace RooStats;
 
 ///////////////////////////////////////////////////////////////////////////
 
-HybridResult::HybridResult( const char *name, const char *title,
+HybridResult::HybridResult( const char *name) :
+   HypoTestResult(name),
+   fTestStat_data(-999.),
+   fComputationsNulDoneFlag(false),
+   fComputationsAltDoneFlag(false)
+{
+   // HybridResult default constructor (with name )
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+HybridResult::HybridResult( const char *name,
                             std::vector<double>& testStat_sb_vals,
                             std::vector<double>& testStat_b_vals,
 			    bool sumLargerValues ) :
-   HypoTestResult(name,title,0,0),
+   HypoTestResult(name,0,0),
    fTestStat_data(-999.),
    fComputationsNulDoneFlag(false),
    fComputationsAltDoneFlag(false),
@@ -70,27 +83,6 @@ HybridResult::HybridResult( const char *name, const char *title,
       fTestStat_b.push_back(testStat_b_vals[i]);
 }
 
-///////////////////////////////////////////////////////////////////////////
-
-HybridResult::HybridResult( const char *name, const char *title) :
-   HypoTestResult(name,title,0,0),
-   fTestStat_data(-999.),
-   fComputationsNulDoneFlag(false),
-   fComputationsAltDoneFlag(false)
-{
-   // HybridResult constructor (with name and title)
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-HybridResult::HybridResult( ) :
-   HypoTestResult("HybridResult_DefaultName","HybridResult",0,0),
-   fTestStat_data(-999.),
-   fComputationsNulDoneFlag(false),
-   fComputationsAltDoneFlag(false)
-{
-   // HybridResult default constructor
-}
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -174,6 +166,57 @@ double HybridResult::AlternatePValue() const
    }
 
    return fAlternatePValue;
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+Double_t HybridResult::CLbError() const
+{
+  // Returns an estimate of the error on CLb assuming a binomial error on
+  // CLb:
+  // BEGIN_LATEX
+  // #sigma_{CL_{b}} &=& #sqrt{CL_{b} #left( 1 - CL_{b} #right) /
+  //   n_{toys}} 
+  // END_LATEX
+  unsigned const int n = fTestStat_b.size();
+  return TMath::Sqrt(CLb() * (1. - CLb()) / n);
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+Double_t HybridResult::CLsplusbError() const
+{
+  // Returns an estimate of the error on CLsplusb assuming a binomial
+  // error on CLsplusb:
+  // BEGIN_LATEX
+  // #sigma_{CL_{s+b}} &=& #sqrt{CL_{s+b} #left( 1 - CL_{s+b} #right) /
+  //   n_{toys}} 
+  // END_LATEX
+  unsigned const int n = fTestStat_sb.size();
+  return TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / n);
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+Double_t HybridResult::CLsError() const
+{
+  // Returns an estimate of the error on CLs through combination of the
+  // errors on CLb and CLsplusb:
+  // BEGIN_LATEX
+  // #sigma_{CL_s} &=& CL_s
+  //   #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 +
+  //     #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
+  // END_LATEX
+  unsigned const int n_b = fTestStat_b.size();
+  unsigned const int n_sb = fTestStat_sb.size();
+  
+  if (CLb() == 0 || CLsplusb() == 0)
+    return 0;
+  
+  double cl_b_err = (1. - CLb()) / (n_b * CLb());
+  double cl_sb_err = (1. - CLsplusb()) / (n_sb * CLsplusb());
+  
+  return CLs() * TMath::Sqrt(cl_b_err + cl_sb_err);
 }
 
 ///////////////////////////////////////////////////////////////////////////

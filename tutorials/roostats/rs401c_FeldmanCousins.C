@@ -84,7 +84,7 @@ void rs401c_FeldmanCousins()
   //  belt = fc.GetConfidenceBelt();
 
   // make a canvas for plots
-  TCanvas* intervalCanvas =  new TCanvas("intervalCanvas");
+  new TCanvas("intervalCanvas");
   
   std::cout << "is this point in the interval? " << 
     interval->IsInInterval(parameters) << std::endl;

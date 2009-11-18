@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: MCMCInterval.h 26805 2009-06-17 14:31:02Z kbelasco $
+// @(#)root/roostats:$Id$
 // Authors: Kevin Belasco        17/06/2009
 // Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************
@@ -25,68 +25,64 @@
 #ifndef ROO_ARG_LIST
 #include "RooArgList.h"
 #endif
-#ifndef ROO_DATA_HIST
-#include "RooDataHist.h"
-#endif
-#ifndef ROO_DATA_SET
-#include "RooDataSet.h"
-#endif
-#ifndef ROO_REAL_VAR
-#include "RooRealVar.h"
-#endif
-#ifndef ROO_KEYS_PDF
-#include "RooNDKeysPdf.h"
-#endif
+// #ifndef ROO_DATA_HIST
+// #include "RooDataHist.h"
+// #endif
+// #ifndef ROO_DATA_SET
+// #include "RooDataSet.h"
+// #endif
+// #ifndef ROO_REAL_VAR
+// #include "RooRealVar.h"
+// #endif
+// #ifndef ROO_KEYS_PDF
+// #include "RooNDKeysPdf.h"
+// #endif
 #ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
 #endif
-#ifndef ROOT_TH1
-#include "TH1.h"
-#endif
-#ifndef ROO_PRODUCT
-#include "RooProduct.h"
-#endif
-#ifndef RooStats_Heavyside
-#include "RooStats/Heavyside.h"
-#endif
-#ifndef ROO_PRODUCT
-#include "RooProduct.h"
-#endif
-#ifndef ROOT_THnSparse
-#include "THnSparse.h"
-#endif
+// #ifndef ROOT_TH1
+// #include "TH1.h"
+// #endif
+// #ifndef ROO_PRODUCT
+// #include "RooProduct.h"
+// #endif
+// #ifndef RooStats_Heavyside
+// #include "RooStats/Heavyside.h"
+// #endif
+// #ifndef ROO_PRODUCT
+// #include "RooProduct.h"
+// #endif
+// #ifndef ROOT_THnSparse
+// #include "THnSparse.h"
+// #endif
+
+class RooNDKeysPdf;
+class RooProduct;
+
 
 namespace RooStats {
+
+   class Heavyside;
+
 
    class MCMCInterval : public ConfInterval {
 
 
    public:
-      MCMCInterval();
-      MCMCInterval(const char* name);
-      MCMCInterval(const char* name, const char* title);
-      MCMCInterval(const char* name, const char* title, const RooArgSet& parameters,
+
+      // default constructor
+      explicit MCMCInterval(const char* name = 0);
+
+      // constructor from parameter of interest and Markov chain object
+      MCMCInterval(const char* name, const RooArgSet& parameters,
                    MarkovChain& chain);
 
       enum {DEFAULT_NUM_BINS = 50};
 
-      virtual ~MCMCInterval()
-      {
-         delete[] fAxes;
-         delete fHist;
-         delete fChain;
-         // kbelasco: check here for memory management errors
-         delete fDataHist;
-         delete fSparseHist;
-         delete fKeysPdf;
-         delete fProduct;
-         delete fHeavyside;
-         delete fKeysDataHist;
-         delete fCutoffVar;
-      }
+      virtual ~MCMCInterval();
         
       // determine whether this point is in the confidence interval
-      virtual Bool_t IsInInterval(const RooArgSet& point);
+      virtual Bool_t IsInInterval(const RooArgSet& point) const;
 
       // set the desired confidence level (see GetActualConfidenceLevel())
       // Note: calling this function triggers the algorithm that determines
@@ -116,8 +112,7 @@ namespace RooStats {
       virtual Double_t GetActualConfidenceLevel();
 
       // get the sum of all bin weights
-      virtual Double_t GetSumOfWeights() const
-      { return fDataHist->sum(kFALSE); }
+      virtual Double_t GetSumOfWeights() const;
 
       // whether the specified confidence level is a floor for the actual
       // confidence level (strict), or a ceiling (not strict)
@@ -264,7 +259,7 @@ namespace RooStats {
 
    protected:
       // data members
-      const RooArgSet * fParameters; // parameters of interest for this interval
+      RooArgSet  fParameters; // parameters of interest for this interval
       MarkovChain* fChain; // the markov chain
       RooDataHist* fDataHist; // the binned Markov Chain data
       RooNDKeysPdf* fKeysPdf; // the kernel estimation pdf

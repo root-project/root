@@ -66,12 +66,11 @@ void rs201_hybridcalculator(int ntoys = 3000)
 
   // use interface from HypoTest calculator by default
 
-  HybridCalculator myHybridCalc("myHybridCalc","HybridCalculator example",
-                                *data, tot_pdf , bkg_ext_pdf ,
+  HybridCalculator myHybridCalc(*data, tot_pdf , bkg_ext_pdf ,
                                 &nuisance_parameters, &bkg_yield_prior); 
 
   // here I use the default test statistics: 2*lnQ (optional)
-  myHybridCalc.SetTestStatistics(1);
+  myHybridCalc.SetTestStatistic(1);
 
   myHybridCalc.SetNumberOfToys(ntoys); 
   //myHybridCalc.UseNuisance(false);                            

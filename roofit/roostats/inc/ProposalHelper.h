@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: ProposalHelper.h 29524 2009-07-22 14:31:02Z kbelasco $
+// @(#)root/roostats:$Id$
 // Authors: Kevin Belasco        7/22/2009
 // Authors: Kyle Cranmer         7/22/2009
 /*************************************************************************

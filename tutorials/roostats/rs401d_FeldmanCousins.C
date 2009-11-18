@@ -241,7 +241,9 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
       UniformProposal up;
 
       RooArgList axisList(sinSq2theta, deltaMSq);
-      MCMCCalculator mc(*data, model, parameters, up, 10000);
+      MCMCCalculator mc(*data, model, parameters);
+      mc.SetProposalFunction(up);
+      mc.SetNumIters(10000);
       mc.SetTestSize(.1);
       mc.SetAxes(axisList); // set which is x and y axis in posterior histogram
       mcmcInterval = mc.GetInterval();

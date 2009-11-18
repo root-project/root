@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: ProfileLikelihoodCalculator.cxx 27519 2009-02-19 13:31:41Z pellicci $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer   28/07/2008
 
 /*************************************************************************

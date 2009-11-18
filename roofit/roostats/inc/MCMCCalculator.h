@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: MCMCCalculator.h 26805 2009-06-17 14:31:02Z kbelasco $
+// @(#)root/roostats:$Id$
 // Authors: Kevin Belasco        17/06/2009
 // Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************
@@ -58,15 +58,23 @@ namespace RooStats {
       // ProposalFunction, number of iterations, burn in steps, confidence
       // level, and interval determination method. Any of these basic
       // settings can be overridden by calling one of the Set...() methods.
-      MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest);
+      // Force to pass the a prior PDF for the parameter of interest 
+      MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest, RooAbsPdf & priorPdf );
 
+      // Constructor as before but without a  prior.
+      // In this case it is assumed the prior is already included in the model
+      // This constructor will set up a basic settings package including a
+      // ProposalFunction, number of iterations, burn in steps, confidence
+      // level, and interval determination method. Any of these basic
+      // settings can be overridden by calling one of the Set...() methods.
+      MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest );
+
+      // Constructor from a ModelConfig class. 
       // This constructor will set up a basic settings package including a
       // ProposalFunction, number of iterations, burn in steps, confidence
       // level, and interval determination method. Any of these basic
       // settings can be overridden by calling one of the Set...() methods.
       MCMCCalculator(RooAbsData& data, const ModelConfig& model);
-//       MCMCCalculator(RooWorkspace& ws, RooAbsData& data, RooAbsPdf& pdf,
-//             RooArgSet& paramsOfInterest);
 
       // alternate constructor, no automatic basic settings
       MCMCCalculator(RooAbsData& data, const ModelConfig& model, ProposalFunction& proposalFunction,
@@ -77,7 +85,7 @@ namespace RooStats {
 
       // alternate constructor, no automatic basic settings
       MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
-         const RooArgSet& paramsOfInterest, ProposalFunction& proposalFunction,
+                     const RooArgSet& paramsOfInterest, RooAbsPdf & priorPdf, ProposalFunction& proposalFunction,
          Int_t numIters, RooArgList* axes = NULL, Double_t size = 0.05);
 
       virtual ~MCMCCalculator() {}
@@ -92,26 +100,35 @@ namespace RooStats {
 
       virtual void SetModel(const ModelConfig & model); 
 
-      // Set the DataSet, add to the the workspace if not already there
+      // Set the DataSet if not already there
       virtual void SetData(RooAbsData& data) { fData = &data; }
 
-      // Set the Pdf, add to the the workspace if not already there
+      // Set the Pdf if not already there
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }
 
+      // Set the Prior Pdf if not already there
+      virtual void SetPriorPdf(RooAbsPdf& pdf) { fPriorPdf = &pdf; }
+
       // specify the parameters of interest in the interval
-      virtual void SetParameters(const RooArgSet& set) { fPOI = &set; }
+      virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
+
       // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams = &set;}
+      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams.removeAll(); fNuisParams.add(set);}
+
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
+
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
+
       // set the proposal function for suggesting new points for the MCMC
       virtual void SetProposalFunction(ProposalFunction& proposalFunction)
       { fPropFunc = &proposalFunction; }
+
       // set the number of iterations to run the metropolis algorithm
       virtual void SetNumIters(Int_t numIters)
       { fNumIters = numIters; }
+
       // set the number of steps in the chain to discard as burn-in,
       // starting from the first
       virtual void SetNumBurnInSteps(Int_t numBurnInSteps)
@@ -130,16 +147,13 @@ namespace RooStats {
 
    protected:
 
-      Double_t fSize; // size of the test (eg. specified rate of Type I error)
-      //RooWorkspace* fWS; // owns all the components used by the calculator
-      const RooArgSet  * fPOI; // parameters of interest for interval
-      const RooArgSet  * fNuisParams; // nuisance parameters for interval
-      //Bool_t fOwnsWorkspace; // whether we own the workspace
+      Double_t fSize;          // size of the test (eg. specified rate of Type I error)
+      RooArgSet   fPOI;        // parameters of interest for interval
+      RooArgSet   fNuisParams; // nuisance parameters for interval (not really used)
       mutable ProposalFunction* fPropFunc; // Proposal function for MCMC integration
-      RooAbsPdf * fPdf;   // pointer to common PDF (owned by the workspace) 
-      RooAbsData * fData;  // pointer to the data (owned by the workspace)
-//       const char* fPdfName; // name of common PDF in workspace
-//       const char* fDataName; // name of data set in workspace
+      RooAbsPdf * fPdf;        // pointer to common PDF (owned by the workspace) 
+      RooAbsPdf * fPriorPdf;   // pointer to prior  PDF (owned by the workspace) 
+      RooAbsData * fData;     // pointer to the data (owned by the workspace)
       Int_t fNumIters; // number of iterations to run metropolis algorithm
       Int_t fNumBurnInSteps; // number of iterations to discard as burn-in, starting from the first
       Int_t fNumBins; // set the number of bins to create for each

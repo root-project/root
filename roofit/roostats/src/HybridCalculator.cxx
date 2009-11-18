@@ -70,9 +70,8 @@ using namespace RooStats;
 
 ///////////////////////////////////////////////////////////////////////////
 
-HybridCalculator::HybridCalculator(const char *name,
-                                   const char *title ) : 
-   TNamed(TString(name), TString(title)),
+HybridCalculator::HybridCalculator(const char *name) :
+   TNamed(name,name),
    fSbModel(0),
    fBModel(0),
    fObservables(0),
@@ -82,22 +81,21 @@ HybridCalculator::HybridCalculator(const char *name,
 {
    // constructor with name and title
    // set default parameters
-   SetTestStatistics(1); 
+   SetTestStatistic(1); 
    SetNumberOfToys(1000); 
    UseNuisance(false); 
 }
 
 
 /// constructor without the data - is it needed ???????????
-HybridCalculator::HybridCalculator( const char *name,
-                                    const char *title,
-                                    RooAbsPdf& sbModel,
+HybridCalculator::HybridCalculator( RooAbsPdf& sbModel,
                                     RooAbsPdf& bModel,
                                     RooArgList& observables,
                                     const RooArgSet* nuisance_parameters,
                                     RooAbsPdf* priorPdf ,
-				    bool GenerateBinned ) :
-   TNamed(name,title),
+				    bool GenerateBinned,
+                                    int testStatistics, 
+                                    int numToys) :
    fSbModel(&sbModel),
    fBModel(&bModel),
    fNuisanceParameters(nuisance_parameters),
@@ -117,14 +115,10 @@ HybridCalculator::HybridCalculator( const char *name,
   //fObservables=new RooArgList("fObservables");
   //fNuisanceParameters=new RooArgSet("fNuisanceParameters");
   // if (priorPdf){
-    
-    
-  // }
-  
+      
 
-
-  SetTestStatistics(1); /// set to default
-  SetNumberOfToys(1000); 
+  SetTestStatistic(testStatistics); 
+  SetNumberOfToys(numToys); 
   if (priorPdf) UseNuisance(true); 
   
    // this->Print();
@@ -137,14 +131,15 @@ HybridCalculator::HybridCalculator( RooAbsData & data,
                                     RooAbsPdf& bModel,
                                     const RooArgSet* nuisance_parameters,
                                     RooAbsPdf* priorPdf,
-				    bool GenerateBinned ) :
+				    bool GenerateBinned,
+                                    int testStatistics, 
+                                    int numToys) :
    fSbModel(&sbModel),
    fBModel(&bModel),
    fObservables(0),
    fNuisanceParameters(nuisance_parameters),
    fPriorPdf(priorPdf),
    fData(&data),
-//   fWS(0),
    fGenerateBinned(GenerateBinned)
 {
    /// HybridCalculator constructor for performing hypotesis test 
@@ -152,58 +147,27 @@ HybridCalculator::HybridCalculator( RooAbsData & data,
    /// In case of treatment of nuisance parameter, the user need to specify the  
    /// the list of parameters  that are marginalised and the prior distribution of those parameters
 
-   //Initialize(data, bModel, sbModel, 0, 0, nuisance_parameters, priorPdf); 
 
-   SetTestStatistics(1); /// set to default
-   SetNumberOfToys(1000); 
+   SetTestStatistic(testStatistics);
+   SetNumberOfToys(numToys); 
    if (priorPdf) UseNuisance(true); 
 }
 
-HybridCalculator::HybridCalculator( const char *name,
-                                    const char *title,
-                                    RooAbsData & data, 
-                                    RooAbsPdf& sbModel,
-                                    RooAbsPdf& bModel,
-                                    const RooArgSet* nuisance_parameters,
-                                    RooAbsPdf* priorPdf, 
-				    bool GenerateBinned ) :
-   TNamed(name,title),
-   fSbModel(&sbModel),
-   fBModel(&bModel),
-   fObservables(0),
-   fNuisanceParameters(nuisance_parameters),
-   fPriorPdf(priorPdf),
-   fData(&data),
-   // fWS(0),
-   fGenerateBinned(GenerateBinned)
-{
-   /// HybridCalculator constructor for performing hypotesis test 
-   /// the user need to specify the data set, the models in the S+B case and B-only case. 
-   /// In case of treatment of nuisance parameter, the user need to specify the  
-   /// the list of parameters  that are marginalised and the prior distribution of those parameters
-
-   //Initialize(data, bModel, sbModel, 0, 0, nuisance_parameters, priorPdf); 
-
-   SetTestStatistics(1); /// set to default
-   SetNumberOfToys(1000); 
-   if (priorPdf) UseNuisance(true); 
-
-}
 
 
-HybridCalculator::HybridCalculator( const char *name,
-                                    const char *title,
-                                    RooAbsData& data, 
+HybridCalculator::HybridCalculator( RooAbsData& data, 
                                     const ModelConfig& sbModel, 
-                                    const ModelConfig& bModel) :
-   TNamed(name,title),
+                                    const ModelConfig& bModel, 
+				    bool GenerateBinned,
+                                    int testStatistics, 
+                                    int numToys) :
    fSbModel(sbModel.GetPdf()),
    fBModel(bModel.GetPdf()),
    fObservables(0),  // no need to set them - can be taken from the data
    fNuisanceParameters((sbModel.GetNuisanceParameters()) ? sbModel.GetNuisanceParameters()  :  bModel.GetNuisanceParameters()),
    fPriorPdf((sbModel.GetPriorPdf()) ? sbModel.GetPriorPdf()  :  bModel.GetPriorPdf()),
-   fData(&data)
-   //fWS(0) 
+   fData(&data),
+   fGenerateBinned(GenerateBinned)
 {
   /// Constructor with a ModelConfig object representing the signal + background model and 
   /// another model config representig the background only model
@@ -213,8 +177,8 @@ HybridCalculator::HybridCalculator( const char *name,
    if (fPriorPdf) 
       UseNuisance(true);
 
-  SetTestStatistics(1);
-  SetNumberOfToys(1000); 
+  SetTestStatistic(testStatistics);
+  SetNumberOfToys(numToys); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -222,7 +186,6 @@ HybridCalculator::HybridCalculator( const char *name,
 HybridCalculator::~HybridCalculator()
 {
    /// HybridCalculator destructor
-   //if( fOwnsWorkspace && fWS) delete fWS;
    if (fObservables) delete fObservables; 
 }
 
@@ -243,7 +206,7 @@ void HybridCalculator::SetAlternateModel(const ModelConfig& model)
    fNuisanceParameters = model.GetNuisanceParameters(); 
 }
 
-void HybridCalculator::SetTestStatistics(int index)
+void HybridCalculator::SetTestStatistic(int index)
 {
    /// set the desired test statistics:
    /// index=1 : 2 * log( L_sb / L_b )  (DEFAULT)
@@ -317,10 +280,12 @@ HybridResult* HybridCalculator::Calculate(unsigned int nToys, bool usePriors) co
 
    HybridResult* result;
 
+   TString name = "HybridResult_" + TString(GetName() );
+
    if ( fTestStatisticsIdx==2 )
-     result = new HybridResult(GetName(),GetTitle(),sbVals,bVals,false);
+     result = new HybridResult(name,sbVals,bVals,false);
    else 
-     result = new HybridResult(GetName(),GetTitle(),sbVals,bVals);
+     result = new HybridResult(name,sbVals,bVals);
 
    return result;
 }

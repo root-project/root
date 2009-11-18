@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: NeymanConstruction.h 26805 2009-01-13 17:45:57Z cranmer $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer   January 2009
 
 /*************************************************************************
@@ -94,8 +94,10 @@ NeymanConstruction::NeymanConstruction() :
 void NeymanConstruction::SetModel(const ModelConfig & model) { 
    // set the model
    fPdf = model.GetPdf();
-   fPOI = model.GetParametersOfInterest(); 
-   fNuisParams = model.GetNuisanceParameters(); 
+   fPOI.removeAll();
+   fNuisParams.removeAll();
+   if (model.GetParametersOfInterest() ) fPOI.add(*model.GetParametersOfInterest());
+   if (model.GetNuisanceParameters() )   fNuisParams.add(*model.GetNuisanceParameters());
 }
 
 //_______________________________________________________
@@ -279,7 +281,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
 
   // create an interval based pointsInInterval
   PointSetInterval* interval 
-    = new PointSetInterval("ClassicalConfidenceInterval", "ClassicalConfidenceInterval", *pointsInInterval);
+    = new PointSetInterval("ClassicalConfidenceInterval", *pointsInInterval);
   
 
   if(fSaveBeltToFile){
@@ -443,7 +445,7 @@ ConfInterval* NeymanConstruction::Run(TList *SamplingList) const {
 
   // create an interval based fPointsToTest
   TString name = TString("ClassicalConfidenceInterval_") + TString(GetName() ); 
-  PointSetInterval* interval  = new PointSetInterval(name, name, *fPointsToTest);
+  PointSetInterval* interval  = new PointSetInterval(name, *fPointsToTest);
   
   //delete data;
   return interval;

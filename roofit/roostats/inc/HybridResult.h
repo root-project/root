@@ -28,14 +28,13 @@ namespace RooStats {
 
    public:
 
+      /// Default constructor 
+      explicit HybridResult(const char *name = 0);
+
       /// Constructor for HybridResult
-      HybridResult(const char *name,const char *title,std::vector<double>& testStat_sb_vals,
+      HybridResult(const char *name,std::vector<double>& testStat_sb_vals,
                    std::vector<double>& testStat_b_vals, bool sumLargerValues=true);
 
-      HybridResult(const char *name,const char *title);
-
-     /// Default constructor for HybridResult
-      HybridResult();
 
       /// Destructor of HybridResult
       virtual ~HybridResult();
@@ -43,7 +42,9 @@ namespace RooStats {
       void SetDataTestStatistics(double testStat_data_val);
 
       void Add(HybridResult* other);
+
       HybridPlot* GetPlot(const char* name,const char* title, int n_bins);
+
       void PrintMore(const char* options);
 
       /// Get test statistics values for the sb model
@@ -61,7 +62,17 @@ namespace RooStats {
       // Return p-value for alternate hypothesis
       Double_t AlternatePValue() const;
 
+      /// The error on the "confidence level" of the null hypothesis
+      Double_t CLbError() const;
+      
+      /// The error on the "confidence level" of the alternative hypothesis
+      Double_t CLsplusbError() const;
+      
+      /// The error on the ratio CLs+b/CLb
+      Double_t CLsError() const;
+
    private:
+
       std::vector<double> fTestStat_b; // vector of results for B-only toy-MC
       std::vector<double> fTestStat_sb; // vector of results for S+B toy-MC
       double fTestStat_data; // results (test statistics) evaluated for data

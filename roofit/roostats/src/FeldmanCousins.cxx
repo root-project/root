@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: FeldmanCousins.h 26805 2009-01-13 17:45:57Z cranmer $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer   January 2009
 
 /*************************************************************************
@@ -94,8 +94,10 @@ FeldmanCousins::~FeldmanCousins() {
 void FeldmanCousins::SetModel(const ModelConfig & model) { 
    // set the model
    fPdf = model.GetPdf();
-   fPOI = model.GetParametersOfInterest(); 
-   fNuisParams = model.GetNuisanceParameters(); 
+   fPOI.removeAll();
+   fNuisParams.removeAll();
+   if (model.GetParametersOfInterest() ) fPOI.add(*model.GetParametersOfInterest());
+   if (model.GetNuisanceParameters() )   fNuisParams.add(*model.GetNuisanceParameters());
 }
 
 //_______________________________________________________
@@ -160,18 +162,18 @@ void FeldmanCousins::CreateParameterPoints() const{
     //    fPointsToTest= new RooDataHist("parameterScan", "", *fPOI);
 
 
-    if( ! fPOI->equals(*parameters) && fDoProfileConstruction ) {
+    if( ! fPOI.equals(*parameters) && fDoProfileConstruction ) {
       // if parameters include nuisance parameters, do profile construction
       cout << " nuisance parameters, will do profile construction" << endl;
 
-      TIter it2 = fPOI->createIterator();
+      TIter it2 = fPOI.createIterator();
       RooRealVar *myarg2; 
       while ((myarg2 = (RooRealVar *)it2.Next())) { 
 	if(!myarg2) continue;
 	myarg2->setBins(fNbins);
       }
 
-      RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *fPOI);
+      RooDataHist* parameterScan = new RooDataHist("parameterScan", "", fPOI);
       cout << "# points to test = " << parameterScan->numEntries() << endl;
       // make profile construction
       RooArgSet* tmpPoint;
@@ -179,7 +181,7 @@ void FeldmanCousins::CreateParameterPoints() const{
       RooFit::MsgLevel previous  = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
       RooAbsReal* nll = pdf->createNLL(*data, Constrain(*parameters));
-      RooAbsReal* profile = nll->createProfile(*fPOI);
+      RooAbsReal* profile = nll->createProfile(fPOI);
       
       RooDataSet* profileConstructionPoints = new RooDataSet("profileConstruction",
 							     "profileConstruction",

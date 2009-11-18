@@ -42,19 +42,16 @@ namespace RooStats {
    public:
 
 
-      /// Dummy Constructor with only name and title 
-      HybridCalculator(const char *name = 0,
-                       const char *title = 0); 
+      /// Dummy Constructor with only name 
+      explicit HybridCalculator(const char *name = 0);
       
-      /// Constructor for HybridCalculator
-      HybridCalculator(const char *name,
-                       const char *title,
-                       RooAbsPdf& sb_model,
+      /// Constructor for HybridCalculator from pdf instances but without a data-set
+      HybridCalculator(RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
                        RooArgList& observables,
                        const RooArgSet* nuisance_parameters = 0,
                        RooAbsPdf* prior_pdf = 0,
-		       bool GenerateBinned = false);  //Nils 31.7.09
+                       bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
 
       /// Constructor for HybridCalculator using  a data set and pdf instances
       HybridCalculator(RooAbsData& data, 
@@ -62,24 +59,15 @@ namespace RooStats {
                        RooAbsPdf& b_model,
                        const RooArgSet* nuisance_parameters = 0,
                        RooAbsPdf* prior_pdf = 0,
-		       bool GenerateBinned = false);  //Nils 31.7.09
+                       bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
 
-      /// Constructor for HybridCalculator using name, title, a data set and pdf instances
-      HybridCalculator(const char *name,
-                       const char *title,
-                       RooAbsData& data, 
-                       RooAbsPdf& sb_model,
-                       RooAbsPdf& b_model,
-                       const RooArgSet* nuisance_parameters = 0,
-                       RooAbsPdf* prior_pdf = 0,
-		       bool GenerateBinned = false);  //Nils 31.7.09
 
-      /// Constructor for HybridCalculator with ModelConfig
-      HybridCalculator(const char *name,
-                       const char *title,
-                       RooAbsData& data, 
+      /// Constructor passing a ModelConfig for the SBmodel and a ModelConfig for the B Model
+      HybridCalculator(RooAbsData& data, 
                        const ModelConfig& sb_model, 
-                       const ModelConfig& b_model);
+                       const ModelConfig& b_model,
+                       bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
+
 
    public: 
 
@@ -123,16 +111,22 @@ namespace RooStats {
       // set the nuisance parameters to be marginalized
       void SetNuisanceParameters(const RooArgSet & params) { fNuisanceParameters = &params; }
 
-      // set number of toy MC 
+      // set number of toy MC (Default is 1000)
       void SetNumberOfToys(unsigned int ntoys) { fNToys = ntoys; }
+      unsigned int GetNumberOfToys() { return fNToys; }
 
       // control use of the pdf for the nuisance parameter and marginalize them
       void UseNuisance(bool on = true) { fUsePriorPdf = on; }
 
       // control to use bin data generation 
       void SetGenerateBinned(bool on = true) { fGenerateBinned = on; }
-      
-      void SetTestStatistics(int index);
+
+      /// set the desired test statistics:
+      /// index=1 : 2 * log( L_sb / L_b )  (DEFAULT)
+      /// index=2 : number of generated events
+      /// index=3 : profiled likelihood ratio
+      /// if the index is different to any of those values, the default is used
+      void SetTestStatistic(int index);
 
       HybridResult* Calculate(TH1& data, unsigned int nToys, bool usePriors) const;
       HybridResult* Calculate(RooAbsData& data, unsigned int nToys, bool usePriors) const;

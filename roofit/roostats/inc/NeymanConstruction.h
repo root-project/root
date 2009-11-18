@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: NeymanConstruction.h 26805 2009-01-13 17:45:57Z cranmer $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -39,6 +39,7 @@ namespace RooStats {
    public:
 
      NeymanConstruction();
+
      virtual ~NeymanConstruction();
     
       // Main interface to get a ConfInterval (will be a PointSetInterval)
@@ -74,6 +75,7 @@ namespace RooStats {
 
       // Get the size of the test (eg. rate of Type I error)
       virtual Double_t Size() const {return fSize;}
+
       // Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
 
@@ -86,9 +88,11 @@ namespace RooStats {
       virtual void SetPdf(RooAbsPdf& pdf) { 	fPdf = &pdf; }  
 
       // specify the parameters of interest in the interval
-      virtual void SetParameters(const RooArgSet& set) {fPOI = &set;}
+      virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
+
       // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams = &set;}
+      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams.removeAll(); fNuisParams.add(set);}
+
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
@@ -109,8 +113,8 @@ namespace RooStats {
       Double_t fSize; // size of the test (eg. specified rate of Type I error)
       RooAbsPdf * fPdf; // common PDF
       RooAbsData * fData; // data set 
-      const RooArgSet* fPOI; // RooArgSet specifying  parameters of interest for interval
-      const RooArgSet* fNuisParams;// RooArgSet specifying  nuisance parameters for interval
+      RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
+      RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
       TestStatSampler* fTestStatSampler;
       RooAbsData* fPointsToTest;
       Double_t fLeftSideFraction;

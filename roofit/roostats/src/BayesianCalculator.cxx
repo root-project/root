@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: ModelConfig.h 27519 2009-02-19 13:31:41Z pellicci $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -16,7 +16,7 @@
 
 #include "RooAbsFunc.h"
 #include "RooAbsReal.h"
-#include "RooAbsRealLValue.h"
+#include "RooRealVar.h"
 #include "RooArgSet.h"
 #include "RooBrentRootFinder.h"
 #include "RooFormulaVar.h"
@@ -121,23 +121,28 @@ RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
    // get posterior pdf  
 
    // run some checks
-   if (!fPdf || !fPriorPOI) return 0; 
+   if (!fPdf ) return 0; 
+   if (!fPriorPOI) { 
+      std::cerr << "BayesianCalculator::GetPosteriorPdf - missing prior pdf" << std::endl;
+   }
    if (fPOI.getSize() == 0) return 0; 
    if (fPOI.getSize() > 1) { 
       std::cerr << "BayesianCalculator::GetPosteriorPdf - current implementation works only on 1D intervals" << std::endl;
       return 0; 
    }
 
+
    // create a unique name for the product pdf 
-   TString name = TString("product_") + TString(fPdf->GetName()) + TString("_") + TString(fPriorPOI->GetName() );   
-   fProductPdf = new RooProdPdf(name,"",RooArgList(*fPdf,*fPriorPOI));
+   TString prodName = TString("product_") + TString(fPdf->GetName()) + TString("_") + TString(fPriorPOI->GetName() );   
+   fProductPdf = new RooProdPdf(prodName,"",RooArgList(*fPdf,*fPriorPOI));
+
    RooArgSet* constrainedParams = fProductPdf->getParameters(*fData);
 
    // use RooFit::Constrain() to make product of likelihood with prior pdf
    fLogLike = fProductPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams) );
 
-   name = TString("likelihood_") + TString(fProductPdf->GetName());   
-   fLikelihood = new RooFormulaVar(name,"exp(-@0)",RooArgList(*fLogLike));
+   TString likeName = TString("likelihood_") + TString(fProductPdf->GetName());   
+   fLikelihood = new RooFormulaVar(likeName,"exp(-@0)",RooArgList(*fLogLike));
    RooAbsReal * plike = fLikelihood; 
    if (fNuisanceParameters.getSize() > 0) { 
       fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
@@ -145,8 +150,8 @@ RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
    }
 
    // create a unique name on the posterior from the names of the components
-   TString posterior_name = this->GetName() + TString("_posteriorPdf_") + plike->GetName(); 
-   fPosteriorPdf = new RooGenericPdf(posterior_name,"@0",*plike);
+   TString posteriorName = this->GetName() + TString("_posteriorPdf_") + plike->GetName(); 
+   fPosteriorPdf = new RooGenericPdf(posteriorName,"@0",*plike);
 
    delete constrainedParams;
 
@@ -189,10 +194,10 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    RooBrentRootFinder brf(*cdf_bind);
    brf.setTol(0.00005);
    
-   RooAbsRealLValue * poi = dynamic_cast<RooAbsRealLValue *>( fPOI.first()); 
+   RooRealVar * poi = dynamic_cast<RooRealVar *>( fPOI.first()); 
    assert(poi);
    
-   double y = fSize;
+   double y = fSize*2;
    double lowerLimit = 0; 
    double upperLimit = 0; 
    brf.findRoot(lowerLimit,poi->getMin(),poi->getMax(),y);
@@ -204,7 +209,8 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    delete cdf;
 
    TString interval_name = TString("BayesianInterval_a") + TString(this->GetName());
-   fInterval = new SimpleInterval(interval_name,"SimpleInterval from BayesianCalculator",poi,lowerLimit,upperLimit);
+   fInterval = new SimpleInterval(interval_name,*poi,lowerLimit,upperLimit,ConfidenceLevel());
+   fInterval->SetTitle("SimpleInterval from BayesianCalculator");
   
    return fInterval;
 }

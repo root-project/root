@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: SimpleInterval.h 30478 2009-09-25 19:42:07Z schott $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -8,39 +8,39 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOSTATS_HypoTestInvertorPlot
-#define ROOSTATS_HypoTestInvertorPlot
+#ifndef ROOSTATS_HypoTestInverterPlot
+#define ROOSTATS_HypoTestInverterPlot
 
 #include "TNamed.h"
 
-class TGraph; 
+class TGraphErrors; 
 
 
 namespace RooStats {
 
-  class HypoTestInvertorResult; 
+  class HypoTestInverterResult; 
 
-  class HypoTestInvertorPlot : public TNamed {
+  class HypoTestInverterPlot : public TNamed {
 
   public:
 
     // constructor
-    HypoTestInvertorPlot( const char* name, 
+    HypoTestInverterPlot( const char* name, 
 			  const char* title,
-			  HypoTestInvertorResult* results ) ;
+			  HypoTestInverterResult* results ) ;
 
-    TGraph* MakePlot() ;
+    TGraphErrors* MakePlot() ;
 
     // destructor
-    ~HypoTestInvertorPlot() ;
+    ~HypoTestInverterPlot() ;
 
   private:
 
-    HypoTestInvertorResult* fResults;
+    HypoTestInverterResult* fResults;
 
   protected:
 
-    ClassDef(HypoTestInvertorPlot,1)  // HypoTestInvertorPlot class
+    ClassDef(HypoTestInverterPlot,1)  // HypoTestInverterPlot class
 
   };
 }

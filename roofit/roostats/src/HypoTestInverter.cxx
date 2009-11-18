@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: SimpleInterval.h 30478 2009-09-25 19:42:07Z schott $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -9,8 +9,9 @@
  *************************************************************************/
 
 /**
-   HypoTestInvertor class
+   HypoTestInverter class
 
+   New contributions to this class have been written by Matthias Wolf (advanced AutoRun algorithm)
 **/
 
 // include other header files
@@ -23,55 +24,53 @@
 #include "RooStats/HybridResult.h"
 
 // include header file of this class 
-#include "RooStats/HypoTestInvertor.h"
+#include "RooStats/HypoTestInverter.h"
 
 
-ClassImp(RooStats::HypoTestInvertor)
+ClassImp(RooStats::HypoTestInverter)
 
 using namespace RooStats;
 
 
-HypoTestInvertor::HypoTestInvertor( const char* name,
-				    const char* title ) :
-   TNamed( TString(name), TString(title) ), 
+HypoTestInverter::HypoTestInverter( ) :
    fCalculator0(0),
    fScannedVariable(0),
    fResults(0)
 {
-  // default constructor (doesn't do anything)
+  // default constructor (doesn't do anything) 
 }
 
 
-HypoTestInvertor::HypoTestInvertor( const char* name,
-				    const char* title,
+HypoTestInverter::HypoTestInverter( const char* name,
 				    HypoTestCalculator* myhc0,
 				    RooRealVar* scannedVariable ) :
-  TNamed( TString(name), TString(title) ),
+  TNamed( name, name ),
   fCalculator0(myhc0),
   fScannedVariable(scannedVariable)
 {
   // constructor
+  if (name==0) SetName("HypoTestInverter");
 
   //if (myhc0->ClassName()!="HybridCalculator") std::cout << "NOT SUPPORTED\n";
 
-  // create a new HypoTestInvertorResult to hold all computed results
+  // create a new HypoTestInverterResult to hold all computed results
   TString results_name = this->GetName();
   results_name += "_results";
-  fResults = new HypoTestInvertorResult(results_name,"HypoTestInvertorResult",scannedVariable,ConfidenceLevel());
-
+  fResults = new HypoTestInverterResult(results_name,*scannedVariable,ConfidenceLevel());
+  fResults->SetTitle("HypoTestInverter Result");
 }
 
 
-HypoTestInvertor::~HypoTestInvertor()
+HypoTestInverter::~HypoTestInverter()
 {
   // destructor
   
-  // delete the HypoTestInvertorResult
+  // delete the HypoTestInverterResult
    if (fResults) delete fResults;
 }
 
 
-bool HypoTestInvertor::RunAutoScan( double xMin, double xMax, double epsilon )
+bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon )
 {
   double target = Size();
   bool status;
@@ -108,8 +107,72 @@ bool HypoTestInvertor::RunAutoScan( double xMin, double xMax, double epsilon )
   return true;
 }
 
+bool HypoTestInverter::RunAutoScan2( double xMin, double xMax, double nSigma )
+{
+  // Search for the value of the searched variable where the CL is within
+  // nSigma of the desired level.  This is done by consecutively replacing
+  // the worst value of the interval with one that has been interpolated
+  // exponentially.
 
-bool HypoTestInvertor::RunFixedScan( int nBins, double xMin, double xMax )
+  double target = Size();
+
+  double leftX = xMin;
+  double rightX = xMax;
+  if (!RunOnePoint(leftX)) return false;
+  double leftCL = fResults->GetYValue(fResults->Size()-1);
+  double leftCLError = fResults->GetYError(fResults->Size()-1);
+  if (!RunOnePoint(rightX)) return false;
+  double rightCL = fResults->GetYValue(fResults->Size()-1);
+  double rightCLError = fResults->GetYError(fResults->Size()-1);
+  double centerCL;
+  double centerCLError;
+
+  do {
+    if (!leftCL) leftCL = DBL_EPSILON;
+    if (!rightCL) rightCL = DBL_EPSILON;
+
+    double a = (log(leftCL) - log(rightCL)) / (leftX - rightX);
+    double b = leftCL / exp(a * leftX);
+    double x = (log(target) - log(b)) / a;
+    if (isnan(x)) {
+      std::cout << "ERROR: Failed the auto run for finding target\n";
+      return false;
+    }
+
+    if (!RunOnePoint(x)) return false;
+    centerCL = fResults->GetYValue(fResults->Size()-1);
+    centerCLError = fResults->GetYError(fResults->Size()-1);
+
+    // Test if the interval points are on different sides, then replace the
+    // one on the "right" side with the center
+    if ( (leftCL > target) == (rightCL < target) ) {
+      if ( (centerCL > target) == (leftCL > target) ) {
+        leftX = x;
+	leftCL = centerCL;
+	leftCLError = centerCLError;
+      } else {
+        rightX = x;
+	rightCL = centerCL;
+	rightCLError = centerCLError;
+      }
+    // Otherwise replace the point farest away from target (measured in
+    // sigmas)
+    } else if ( (fabs(leftCL - target) / leftCLError) >
+	        (fabs(rightCL - target) / rightCLError) ) {
+      leftX = x;
+      leftCL = centerCL;
+      leftCLError = centerCLError;
+    } else {
+      rightX = x;
+      rightCL = centerCL;
+      rightCLError = centerCLError;
+    }
+  } while ( fabs(centerCL-target) > nSigma*centerCLError );
+
+  return true;
+}
+
+bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax )
 {
   // safety checks
   if ( nBins<=0 ) {
@@ -143,7 +206,7 @@ bool HypoTestInvertor::RunFixedScan( int nBins, double xMin, double xMax )
 }
 
 
-bool HypoTestInvertor::RunOnePoint( double thisX )
+bool HypoTestInverter::RunOnePoint( double thisX )
 {
   // check if thisX is in the range specified for fScannedVariable
   if ( thisX<fScannedVariable->getMin() || thisX>fScannedVariable->getMax() ) {
@@ -158,19 +221,16 @@ bool HypoTestInvertor::RunOnePoint( double thisX )
   fScannedVariable->setVal(thisX);
 
   // create a clone of the HypoTestCalculator
-  //HypoTestCalculator* calculator = (HypoTestCalculator*) ((HybridCalculator*) fCalculator0)->Clone(); // MAYBE WE DON'T NEED
   HypoTestCalculator* calculator = fCalculator0;
   
   // compute the results
   HypoTestResult* myHybridResult =  calculator->GetHypoTest(); 
 
-  // fill the results in the HypoTestInvertorResult
+  // fill the results in the HypoTestInverterResult
   fResults->fXValues.push_back(thisX);
-  fResults->fYObjects.Add(myHybridResult); // TO DO vector of HypoTestResult
+  fResults->fYObjects.Add(myHybridResult);
 
   //delete calculator;
-
-  //std::cout << "DONE\n";
 
   fScannedVariable->setVal(oldValue);
 

@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: BernsteinCorrection.h 26805 2009-02-19 10:00:00 pellicci $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *

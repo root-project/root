@@ -18,43 +18,52 @@
 #include "RooStats/ConfInterval.h"
 #endif
 
+class RooRealVar; 
 
 namespace RooStats {
  class SimpleInterval : public ConfInterval {
-  protected:
-    RooArgSet* fParameters; // parameter of interest
-    Double_t fLowerLimit; // lower limit
-    Double_t fUpperLimit; // upper limit
-    Double_t fConfidenceLevel; // confidence level
 
   public:
-    // constructors,destructors
-    SimpleInterval();
-    SimpleInterval(const char* name);
-    SimpleInterval(const char* name, const char* title);
-    SimpleInterval(const char* name, RooAbsArg* var, Double_t, Double_t);
-    SimpleInterval(const char* name, const char* title, RooAbsArg* var, Double_t, Double_t);
+    // default constructors
+    explicit SimpleInterval(const char* name = 0);
+
+    // constructor from name, the Parameter of interest and lower/upper bound values 
+    SimpleInterval(const char* name, const RooRealVar & var, Double_t lower, Double_t upper, Double_t cl);
+
+    // destructor
     virtual ~SimpleInterval();
-        
-    virtual Bool_t IsInInterval(const RooArgSet&);
-    virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl;}
+       
+    // check if parameter is in the interval
+    virtual Bool_t IsInInterval(const RooArgSet&) const;
+
+    // set the confidence level for the interval. Simple interval is defined at construction time so this function 
+    // has no effect
+    virtual void SetConfidenceLevel(Double_t ) {}
+
+    // return the confidence interval 
     virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
  
-    // Method to return lower limit
+    // return the interval lower limit 
     virtual Double_t LowerLimit() {return fLowerLimit;}
-    // Method to return upper limit
+    // return the interval upper limit
     virtual Double_t UpperLimit() {return fUpperLimit;}
     
-    // do we want it to return list of parameters
+    // return a cloned list with the parameter of interest
     virtual RooArgSet* GetParameters() const;
 
-    // check if parameters are correct. (dummy implementation to start)
+    // check if parameters are correct (i.e. they are the POI of this interval)
     Bool_t CheckParameters(const RooArgSet&) const ;
 
 
     
-  protected:
+  private:
+
     ClassDef(SimpleInterval,1)  // Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
+
+    RooArgSet fParameters; // set containing the parameter of interest
+    Double_t  fLowerLimit; // lower interval limit
+    Double_t  fUpperLimit; // upper interval limit
+    Double_t  fConfidenceLevel; // confidence level
       
   };
 }

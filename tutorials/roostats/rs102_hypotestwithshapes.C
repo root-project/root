@@ -188,8 +188,10 @@ void DoHypothesisTest(RooWorkspace* wks){
   // here we explicitly set the value of the parameters for the null.  
   // We want no signal contribution, eg. mu = 0
   RooRealVar* mu = wks->var("mu");
-  RooArgSet* nullParams = new RooArgSet("nullParams");
-  nullParams->addClone(*mu);
+//   RooArgSet* nullParams = new RooArgSet("nullParams");
+//   nullParams->addClone(*mu);
+  RooArgSet poi(*mu);
+  RooArgSet * nullParams = (RooArgSet*) poi.snapshot(); 
   nullParams->setRealValue("mu",0); 
 
   
@@ -236,10 +238,11 @@ void MakePlots(RooWorkspace* wks) {
   // Make plots for the Alternate hypothesis, eg. let mu float
 
   mu->setConstant(kFALSE);
-  RooFitResult* fitResult = model->fitTo(*data,Save(kTRUE),Minos(kFALSE), Hesse(kFALSE),PrintLevel(-1));
+
+  model->fitTo(*data,Save(kTRUE),Minos(kFALSE), Hesse(kFALSE),PrintLevel(-1));
   
   //plot sig candidates, full model, and individual componenets
-  TCanvas* cdata = new TCanvas();
+  new TCanvas();
   RooPlot* frame = invMass->frame() ; 
   data->plotOn(frame ) ; 
   model->plotOn(frame) ;   
@@ -257,10 +260,10 @@ void MakePlots(RooWorkspace* wks) {
   mu->setVal(0); // set signal fraction to 0
   mu->setConstant(kTRUE); // set constant 
 
-  RooFitResult* fitResult2 = model->fitTo(*data, Save(kTRUE), Minos(kFALSE), Hesse(kFALSE),PrintLevel(-1));
+  model->fitTo(*data, Save(kTRUE), Minos(kFALSE), Hesse(kFALSE),PrintLevel(-1));
 
   // plot signal candidates with background model and components
-  TCanvas* cbkgonly = new TCanvas();
+  new TCanvas();
   RooPlot* xframe2 = invMass->frame() ; 
   data->plotOn(xframe2, DataError(RooAbsData::SumW2)) ; 
   model->plotOn(xframe2) ; 

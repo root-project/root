@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: SimpleInterval.h 30478 2009-09-25 19:42:07Z schott $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOSTATS_HypoTestInvertor
-#define ROOSTATS_HypoTestInvertor
+#ifndef ROOSTATS_HypoTestInverter
+#define ROOSTATS_HypoTestInverter
 
 
 
@@ -21,8 +21,8 @@
 #include "RooStats/HypoTestCalculator.h"
 #endif
 
-#ifndef  ROOSTATS_HypoTestInvertorResult
-#include "RooStats/HypoTestInvertorResult.h"
+#ifndef  ROOSTATS_HypoTestInverterResult
+#include "RooStats/HypoTestInverterResult.h"
 #endif
 
 class RooRealVar;
@@ -30,24 +30,23 @@ class RooRealVar;
 
 namespace RooStats {
 
-  class HypoTestInvertor : public IntervalCalculator, public TNamed {
-
-  private:
-    // default constructor (make private, used only for I/O)
-    HypoTestInvertor( const char* name,
-		      const char* title ) ;
+  class HypoTestInverter : public IntervalCalculator, public TNamed {
 
   public:
 
+    // default constructor (used only for I/O)
+    HypoTestInverter();
+
+
     // constructor
-    HypoTestInvertor( const char* name, 
-		      const char* title, 
+    HypoTestInverter( const char* name, 
 		      HypoTestCalculator* myhc0,
 		      RooRealVar* scannedVariable  ) ;
 
-    virtual HypoTestInvertorResult* GetInterval() const { return fResults; } ;
+    virtual HypoTestInverterResult* GetInterval() const { return fResults; } ;
 
-    bool RunAutoScan( double xMin, double xMax, double epsilon );
+    bool RunAutoScan( double xMin, double xMax, double epsilon=0.005 );
+    bool RunAutoScan2( double xMin, double xMax, double nSigma=1 );
 
     bool RunFixedScan( int nBins, double xMin, double xMax );
 
@@ -67,19 +66,19 @@ namespace RooStats {
     virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
  
     // destructor
-    virtual ~HypoTestInvertor() ;
+    virtual ~HypoTestInverter() ;
 
   private:
 
     HypoTestCalculator* fCalculator0;   // pointer to the calculator passed in the constructor
     RooRealVar* fScannedVariable;     // pointer to the constrained variable
-    HypoTestInvertorResult* fResults;
+    HypoTestInverterResult* fResults;
     
     double fSize;
 
   protected:
 
-    ClassDef(HypoTestInvertor,1)  // HypoTestInvertor class
+    ClassDef(HypoTestInverter,1)  // HypoTestInverter class
 
   };
 }

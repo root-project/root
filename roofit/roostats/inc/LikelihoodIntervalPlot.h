@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: LikelihoodIntervalPlot.h 26427 2009-06-12 15:45:36Z pellicci $
+// @(#)root/roostats:$Id$
 
 /*************************************************************************
  * Project: RooStats                                                     *

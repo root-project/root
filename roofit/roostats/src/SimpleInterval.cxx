@@ -33,6 +33,7 @@
 #include "RooStats/SimpleInterval.h"
 #endif
 #include "RooAbsReal.h"
+#include "RooRealVar.h"
 #include <string>
 
 
@@ -40,56 +41,32 @@ ClassImp(RooStats::SimpleInterval) ;
 
 using namespace RooStats;
 
+
 //____________________________________________________________________
-SimpleInterval::SimpleInterval() : fLowerLimit(0), fUpperLimit(0)
+SimpleInterval::SimpleInterval(const char* name) :
+   ConfInterval(name),  fLowerLimit(0), fUpperLimit(0), fConfidenceLevel(0)
 {
    // Default constructor
 }
 
 //____________________________________________________________________
-SimpleInterval::SimpleInterval(const char* name) :
-   ConfInterval(name,name), fLowerLimit(0), fUpperLimit(0)
+SimpleInterval::SimpleInterval(const char* name, const RooRealVar & var, Double_t lower, Double_t upper, Double_t cl) :
+   ConfInterval(name), fParameters(var), fLowerLimit(lower), fUpperLimit(upper), fConfidenceLevel(cl)
 {
    // Alternate constructor
 }
 
-//____________________________________________________________________
-SimpleInterval::SimpleInterval(const char* name, const char* title) :
-   ConfInterval(name,title), fLowerLimit(0), fUpperLimit(0)
-{
-   // Alternate constructor
-}
-
-//____________________________________________________________________
-SimpleInterval::SimpleInterval(const char* name, RooAbsArg* var, Double_t lower, Double_t upper) :
-   ConfInterval(name,name), fLowerLimit(lower), fUpperLimit(upper)
-{
-   // Alternate constructor
-   fParameters = new RooArgSet((std::string(name)+"_parameters").c_str());
-   fParameters->addClone( *var );
-}
-
-//____________________________________________________________________
-SimpleInterval::SimpleInterval(const char* name, const char* title, RooAbsArg* var, Double_t lower, Double_t upper):
-   ConfInterval(name,title), fLowerLimit(lower), fUpperLimit(upper)
-{
-   // Alternate constructor
-   fParameters = new RooArgSet((std::string(name)+"_parameters").c_str());
-   fParameters->addClone( *var );
-}
 
 
 //____________________________________________________________________
 SimpleInterval::~SimpleInterval()
 {
    // Destructor
-  // NEED TO DELETE fParameters->addClone
-
 }
 
 
 //____________________________________________________________________
-Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) 
+Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const 
 {  
 
    // Method to determine if a parameter point is in the interval
@@ -113,19 +90,19 @@ Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint)
 //____________________________________________________________________
 RooArgSet* SimpleInterval::GetParameters() const
 {  
-   // returns list of parameters
-   return (RooArgSet*) fParameters->clone((std::string(fParameters->GetName())+"_clone").c_str());
+   // return cloned list of parameters
+   return new RooArgSet(fParameters);
 }
 
 //____________________________________________________________________
 Bool_t SimpleInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {  
 
-   if (parameterPoint.getSize() != fParameters->getSize() ) {
+   if (parameterPoint.getSize() != fParameters.getSize() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;
       return false;
    }
-   if ( ! parameterPoint.equals( *fParameters ) ) {
+   if ( ! parameterPoint.equals( fParameters ) ) {
       std::cout << "size is ok, but parameters don't match" << std::endl;
       return false;
    }

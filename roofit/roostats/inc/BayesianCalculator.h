@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: ModelConfig.h 27519 2009-02-19 13:31:41Z pellicci $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -96,7 +96,7 @@ namespace RooStats {
       mutable RooAbsPdf* fPosteriorPdf; 
       mutable SimpleInterval* fInterval;     // cached pointer to resulting interval
 
-      double fSize; 
+      double fSize;   // size used for getting the interval
 
 
    protected:

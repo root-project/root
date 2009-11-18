@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: CombinedCalculator.h 30450 2009-09-25 13:30:32Z moneta $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke, Nils Ruthmann
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
