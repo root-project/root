@@ -6747,7 +6747,6 @@ void TMinuit::mnscan()
    if (fAmin == fUndefi) mnamin();
    iparwd  = Int_t((fWord7[0] + .1));
    ipar    = TMath::Max(iparwd,0);
-   iint    = fNiofex[ipar-1];
    fCstatu = "NO CHANGE";
    if (iparwd > 0) goto L200;
 
@@ -6759,6 +6758,7 @@ L100:
    if (iint <= 0) goto L100;
 //*-*-        set up range for parameter IPAR
 L200:
+   iint    = fNiofex[ipar-1];
    ubest    = fU[ipar-1];
    fXpt[0]  = ubest;
    fYpt[0]  = fAmin;
