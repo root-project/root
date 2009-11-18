@@ -45,6 +45,11 @@ namespace RooStats {
 
     int Size() const { return fXValues.size(); };
 
+    // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
+    virtual void SetTestSize(Double_t size) {fConfidenceLevel = 1.-size;  }
+    // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
+    virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl;  }
+
     void UseCLs(bool on = true) { fUseCLs = on; }  
 
     Double_t LowerLimit() { CalculateLimits(); return fLowerLimit; }
@@ -59,6 +64,7 @@ namespace RooStats {
   protected:
 
     bool fUseCLs; 
+    bool fInterpolate;
     Double_t fUpperLimitError;
 
     std::vector<double> fXValues;

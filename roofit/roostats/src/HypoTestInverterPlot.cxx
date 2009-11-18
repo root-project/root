@@ -65,6 +65,9 @@ TGraphErrors* HypoTestInverterPlot::MakePlot()
 	tmp = yArray[i-1];
 	yArray[i-1] = yArray[i];
 	yArray[i] = tmp;
+	tmp = yErrArray[i-1];
+	yErrArray[i-1] = yErrArray[i];
+	yErrArray[i] = tmp;
 	i--;
       }
     }

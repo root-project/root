@@ -35,7 +35,9 @@ using namespace RooStats;
 HypoTestInverter::HypoTestInverter( ) :
    fCalculator0(0),
    fScannedVariable(0),
-   fResults(0)
+   fResults(0),
+   fUseCLs(false),
+   fSize(0)
 {
   // default constructor (doesn't do anything) 
 }
@@ -43,21 +45,19 @@ HypoTestInverter::HypoTestInverter( ) :
 
 HypoTestInverter::HypoTestInverter( const char* name,
 				    HypoTestCalculator* myhc0,
-				    RooRealVar* scannedVariable ) :
+				    RooRealVar* scannedVariable, double size ) :
   TNamed( name, name ),
   fCalculator0(myhc0),
-  fScannedVariable(scannedVariable)
+  fScannedVariable(scannedVariable), 
+  fResults(0),
+  fUseCLs(false),
+  fSize(size)
 {
   // constructor
   if (name==0) SetName("HypoTestInverter");
 
   //if (myhc0->ClassName()!="HybridCalculator") std::cout << "NOT SUPPORTED\n";
 
-  // create a new HypoTestInverterResult to hold all computed results
-  TString results_name = this->GetName();
-  results_name += "_results";
-  fResults = new HypoTestInverterResult(results_name,*scannedVariable,ConfidenceLevel());
-  fResults->SetTitle("HypoTestInverter Result");
 }
 
 
@@ -66,114 +66,145 @@ HypoTestInverter::~HypoTestInverter()
   // destructor
   
   // delete the HypoTestInverterResult
-   if (fResults) delete fResults;
+  if (fResults) delete fResults;
+}
+
+void  HypoTestInverter::CreateResults() { 
+  // create a new HypoTestInverterResult to hold all computed results
+   if (fResults == 0) {
+      TString results_name = this->GetName();
+      results_name += "_results";
+      fResults = new HypoTestInverterResult(results_name,*fScannedVariable,ConfidenceLevel());
+      fResults->SetTitle("HypoTestInverter Result");
+      fResults->fInterpolate = true; 
+   }
+   fResults->UseCLs(fUseCLs);
 }
 
 
-bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon )
+bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon, int numAlgorithm  )
 {
-  double target = Size();
-  bool status;
-
-  double xLow = xMin;
-  status = RunOnePoint(xMin);
-  if ( !status ) return false;
-  double yLow = fResults->GetYValue(fResults->Size()-1);
-
-  double xHigh = xMax;
-  status = RunOnePoint(xMax);
-  if ( !status ) return false;
-  double yHigh = fResults->GetYValue(fResults->Size()-1);
-
-  // after the initial points, check the point in the middle of the last two 
-  // closest points, until the value is in the range target+/-epsilon
-  // the final value becomes the inverted upper limit value
-
-  bool stopNow = false;
-  while ( !stopNow || fResults->Size()==30 ) {
-    double xMiddle = xLow+0.5*(xHigh-xLow);
-    status = RunOnePoint(xMiddle);
-    if ( !status ) return false;
-    double yMiddle = fResults->GetYValue(fResults->Size()-1);
-    if (fabs(yMiddle-target)<epsilon) stopNow = true;
-    else if ( yMiddle>target && yHigh<target ) { xLow = xMiddle; yLow = yMiddle; }
-    else if ( yMiddle<target && yHigh<target ) { xHigh = xMiddle; yHigh = yMiddle; }
-    else if ( yMiddle<target && yHigh>target ) { xLow = xMiddle; yLow = yMiddle; }
-    else if ( yMiddle>target && yHigh>target ) { xHigh = xMiddle; yHigh = yMiddle; }
-  }
-
-  std::cout << "Converged in " << fResults->Size() << " iterations\n";
-
-  return true;
-}
-
-bool HypoTestInverter::RunAutoScan2( double xMin, double xMax, double nSigma )
-{
-  // Search for the value of the searched variable where the CL is within
-  // nSigma of the desired level.  This is done by consecutively replacing
-  // the worst value of the interval with one that has been interpolated
-  // exponentially.
 
   double target = Size();
+  CreateResults();
+  fResults->fInterpolate = false; 
 
-  double leftX = xMin;
-  double rightX = xMax;
-  if (!RunOnePoint(leftX)) return false;
-  double leftCL = fResults->GetYValue(fResults->Size()-1);
-  double leftCLError = fResults->GetYError(fResults->Size()-1);
-  if (!RunOnePoint(rightX)) return false;
-  double rightCL = fResults->GetYValue(fResults->Size()-1);
-  double rightCLError = fResults->GetYError(fResults->Size()-1);
-  double centerCL;
-  double centerCLError;
 
-  do {
-    if (!leftCL) leftCL = DBL_EPSILON;
-    if (!rightCL) rightCL = DBL_EPSILON;
+  if (numAlgorithm==0) {
 
-    double a = (log(leftCL) - log(rightCL)) / (leftX - rightX);
-    double b = leftCL / exp(a * leftX);
-    double x = (log(target) - log(b)) / a;
-    if (isnan(x)) {
-      std::cout << "ERROR: Failed the auto run for finding target\n";
-      return false;
-    }
+    // Search for the value of the searched variable where the CL is within
+    // 1 sigma of the desired level and sigma smaller than epsilon.  This is done by consecutively replacing
+    // the worst value of the interval with one that has been interpolated
+    // exponentially.
 
-    if (!RunOnePoint(x)) return false;
-    centerCL = fResults->GetYValue(fResults->Size()-1);
-    centerCLError = fResults->GetYError(fResults->Size()-1);
+    double nSigma = 1;
 
-    // Test if the interval points are on different sides, then replace the
-    // one on the "right" side with the center
-    if ( (leftCL > target) == (rightCL < target) ) {
-      if ( (centerCL > target) == (leftCL > target) ) {
-        leftX = x;
+    double leftX = xMin;
+    double rightX = xMax;
+    if (!RunOnePoint(leftX)) return false;
+    double leftCL = fResults->GetYValue(fResults->Size()-1);
+    double leftCLError = fResults->GetYError(fResults->Size()-1);
+    if (!RunOnePoint(rightX)) return false;
+    double rightCL = fResults->GetYValue(fResults->Size()-1);
+    double rightCLError = fResults->GetYError(fResults->Size()-1);
+    double centerCL;
+    double centerCLError;
+
+    do {
+      if (!leftCL) leftCL = DBL_EPSILON;
+      if (!rightCL) rightCL = DBL_EPSILON;
+
+      double a = (log(leftCL) - log(rightCL)) / (leftX - rightX);
+      double b = leftCL / exp(a * leftX);
+      double x = (log(target) - log(b)) / a;
+      if (isnan(x)) {
+	std::cout << "ERROR: Failed the auto run for finding target\n";
+	return false;
+      }
+
+      if (!RunOnePoint(x)) return false;
+      centerCL = fResults->GetYValue(fResults->Size()-1);
+      centerCLError = fResults->GetYError(fResults->Size()-1);
+
+      // Test if the interval points are on different sides, then replace the
+      // one on the "right" side with the center
+      if ( (leftCL > target) == (rightCL < target) ) {
+	if ( (centerCL > target) == (leftCL > target) ) {
+	  leftX = x;
+	  leftCL = centerCL;
+	  leftCLError = centerCLError;
+	} else {
+	  rightX = x;
+	  rightCL = centerCL;
+	  rightCLError = centerCLError;
+	}
+	// Otherwise replace the point farest away from target (measured in
+	// sigmas)
+      } else if ( (fabs(leftCL - target) / leftCLError) >
+		  (fabs(rightCL - target) / rightCLError) ) {
+	leftX = x;
 	leftCL = centerCL;
 	leftCLError = centerCLError;
       } else {
-        rightX = x;
+	rightX = x;
 	rightCL = centerCL;
 	rightCLError = centerCLError;
       }
-    // Otherwise replace the point farest away from target (measured in
-    // sigmas)
-    } else if ( (fabs(leftCL - target) / leftCLError) >
-	        (fabs(rightCL - target) / rightCLError) ) {
-      leftX = x;
-      leftCL = centerCL;
-      leftCLError = centerCLError;
-    } else {
-      rightX = x;
-      rightCL = centerCL;
-      rightCLError = centerCLError;
-    }
-  } while ( fabs(centerCL-target) > nSigma*centerCLError );
+//       if ( fabs(centerCL-target) > nSigma*centerCLError && centerCLError > epsilon  ) {
+// 	do {
+	// add statistics to the number of toys to gain precision
 
-  return true;
+	  int nToys = ((HybridCalculator*)fCalculator0)->GetNumberOfToys(); // current number of toys
+	  int nToysTarget = (int) TMath::Min(nToys*1.5, 1.2*nToys*pow(centerCLError/epsilon,2)); // estimated number of toys until the target precision is reached
+	  ((HybridCalculator*)fCalculator0)->SetNumberOfToys(nToysTarget);
+
+// 	} while ( fabs(centerCL-target) > nSigma*centerCLError && centerCLError > epsilon )
+//       }
+
+    } while ( fabs(centerCL-target) > nSigma*centerCLError && centerCLError <= epsilon );
+    std::cout << "Converged in " << fResults->Size() << " iterations\n";
+    return true;
+  } else if ( numAlgorithm==1 ) {
+    // Newton search
+
+    double xLow = xMin;
+    bool status = RunOnePoint(xMin);
+    if ( !status ) return false;
+    double yLow = fResults->GetYValue(fResults->Size()-1);
+
+    double xHigh = xMax;
+    status = RunOnePoint(xMax);
+    if ( !status ) return false;
+    double yHigh = fResults->GetYValue(fResults->Size()-1);
+
+    // after the initial points, check the point in the middle of the last two 
+    // closest points, until the value is in the range target+/-epsilon
+    // the final value becomes the inverted upper limit value
+
+    bool stopNow = false;
+    while ( !stopNow || fResults->Size()==30 ) {
+      double xMiddle = xLow+0.5*(xHigh-xLow);
+      status = RunOnePoint(xMiddle);
+      if ( !status ) return false;
+      double yMiddle = fResults->GetYValue(fResults->Size()-1);
+      if (fabs(yMiddle-target)<epsilon) stopNow = true;
+      else if ( yMiddle>target && yHigh<target ) { xLow = xMiddle; yLow = yMiddle; }
+      else if ( yMiddle<target && yHigh<target ) { xHigh = xMiddle; yHigh = yMiddle; }
+      else if ( yMiddle<target && yHigh>target ) { xLow = xMiddle; yLow = yMiddle; }
+      else if ( yMiddle>target && yHigh>target ) { xHigh = xMiddle; yHigh = yMiddle; }
+    }
+    std::cout << "Converged in " << fResults->Size() << " iterations\n";
+    return true;
+  } else {
+    std::cout << "not valid algorithm option specified\n";
+    return false;
+  }
 }
+
 
 bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax )
 {
+   CreateResults();
   // safety checks
   if ( nBins<=0 ) {
     std::cout << "Please provide nBins>0\n";
@@ -208,6 +239,8 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax )
 
 bool HypoTestInverter::RunOnePoint( double thisX )
 {
+   CreateResults();
+
   // check if thisX is in the range specified for fScannedVariable
   if ( thisX<fScannedVariable->getMin() || thisX>fScannedVariable->getMax() ) {
     std::cout << "I will not run because the specified value in not in the range of the variable being scanned\n";

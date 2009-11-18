@@ -56,7 +56,7 @@ namespace RooStats {
 
 
     
-  private:
+  protected:
 
     ClassDef(SimpleInterval,1)  // Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
 

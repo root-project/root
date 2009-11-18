@@ -33,7 +33,7 @@ using namespace RooStats;
 HypoTestInverterResult::HypoTestInverterResult(const char * name ) :
    SimpleInterval(name),
    fUseCLs(false),
-   fUpperLimitError(0)
+   fUpperLimitError(-1)
 {
   // default constructor
 }
@@ -43,7 +43,8 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
 						const RooRealVar& scannedVariable,
 						double cl ) :
    SimpleInterval(name,scannedVariable,-999,999,cl), 
-   fUseCLs(false)
+   fUseCLs(false),
+   fUpperLimitError(-1)
 {
   // constructor 
    fYObjects.SetOwner();
@@ -95,35 +96,52 @@ double HypoTestInverterResult::GetYError( int index ) const
 
 void HypoTestInverterResult::CalculateLimits()
 { 
-  // find the 2 objects the closer to the limit and make a linear extrapolation to the target
-
   double cl = 1-ConfidenceLevel();
 
-  if (Size()<2) {
-    std::cout << "not enough points to get the inverted interval\n";
-  }
+  // find the 2 objects the closer to the limit and make a linear extrapolation to the target
+
+//   if (Size()<2) {
+//     std::cout << "not enough points to get the inverted interval\n";
+//   }
+
+//   double v1 = fabs(GetYValue(0)-cl);
+//   int i1 = 0;
+//   double v2 = fabs(GetYValue(1)-cl);
+//   int i2 = 1;
+
+//   if (Size()>2)
+//     for (int i=2; i<Size(); i++) {
+//       double vt = fabs(GetYValue(i)-cl);
+//       if ( vt<v1 || vt<v2 ) {
+// 	if ( v1<v2 ) {
+// 	  v2 = vt;
+// 	  i2 = i;
+// 	} else {
+// 	  v1 = vt;
+// 	  i1 = i;
+// 	}
+//       }
+//     }
+
+//   fLowerLimit = ((RooRealVar*)fParameters.first())->getMin();
+//   fUpperLimit = GetXValue(i1)+(cl-GetYValue(i1))*(GetXValue(i2)-GetXValue(i1))/(GetYValue(i2)-GetYValue(i1));
+
+  // find the object the closest to the target and take it as the upper limit
 
   double v1 = fabs(GetYValue(0)-cl);
   int i1 = 0;
-  double v2 = fabs(GetYValue(1)-cl);
-  int i2 = 1;
-
-  if (Size()>2)
-    for (int i=2; i<Size(); i++) {
-      double vt = fabs(GetYValue(i)-cl);
-      if ( vt<v1 || vt<v2 ) {
-	if ( v1<v2 ) {
-	  v2 = vt;
-	  i2 = i;
-	} else {
-	  v1 = vt;
-	  i1 = i;
-	}
-      }
+  for (int i=1; i<Size(); i++) {
+    double vt = fabs(GetYValue(i)-cl);
+    if ( vt<v1 ) {
+      v1 = vt;
+      i1 = i;
     }
+  }
+
 
   fLowerLimit = ((RooRealVar*)fParameters.first())->getMin();
-  fUpperLimit = GetXValue(i1)+(cl-GetYValue(i1))*(GetXValue(i2)-GetXValue(i1))/(GetYValue(i2)-GetYValue(i1)); // MAYBE TOO MANY GETYVALUE CALLS!
+  fUpperLimit = GetXValue(i1);
+
 
   return;
 }
@@ -150,11 +168,9 @@ Double_t HypoTestInverterResult::UpperLimitEstimatedError()
   const double minX = xs[0];
   const double maxX = xs[Size()-1];
 
-  TF1* fct = new TF1("fct", "exp([0] * x + [1] * x**2)", minX, maxX);
-  graph->Fit(fct);
+  TF1 fct("fct", "exp([0] * x + [1] * x**2)", minX, maxX);
+  graph->Fit(&fct,"Q");
 
-  delete fct;
-  delete graph;
 
   // find the object the closest to the limit
   double cl = 1-ConfidenceLevel();
@@ -169,9 +185,10 @@ Double_t HypoTestInverterResult::UpperLimitEstimatedError()
       }
     }
 
-  double m = fct->Derivative( GetXValue(i1) );
-
+  double m = fct.Derivative( GetXValue(i1) );
   fUpperLimitError = fabs( GetYError(i1) / m);
+
+  delete graph;
   
   return fUpperLimitError;
 }

@@ -41,25 +41,27 @@ namespace RooStats {
     // constructor
     HypoTestInverter( const char* name, 
 		      HypoTestCalculator* myhc0,
-		      RooRealVar* scannedVariable  ) ;
+		      RooRealVar* scannedVariable, 
+                      double size = 0.05) ;
 
     virtual HypoTestInverterResult* GetInterval() const { return fResults; } ;
 
-    bool RunAutoScan( double xMin, double xMax, double epsilon=0.005 );
-    bool RunAutoScan2( double xMin, double xMax, double nSigma=1 );
+    bool RunAutoScan( double xMin, double xMax, double epsilon=0.005, int numAlgorithm=0 );
 
     bool RunFixedScan( int nBins, double xMin, double xMax );
 
     bool RunOnePoint( double thisX );
+
+    void UseCLs( bool on = true) { fUseCLs = on; if (fResults) fResults->UseCLs(on);   }
 
     virtual void  SetData(RooAbsData &) { } // not needed
 
     virtual void SetModel(const ModelConfig &) { } // not needed 
 
     // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-    virtual void SetTestSize(Double_t size) {fSize = size; fResults->SetConfidenceLevel(1-fSize); }
+     virtual void SetTestSize(Double_t size) {fSize = size; if (fResults) fResults->SetTestSize(size); }
     // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-    virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl; fResults->SetConfidenceLevel(1-fSize); }
+    virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
     // Get the size of the test (eg. rate of Type I error)
     virtual Double_t Size() const {return fSize;}
     // Get the Confidence level for the test
@@ -70,10 +72,13 @@ namespace RooStats {
 
   private:
 
+    void CreateResults(); 
+
     HypoTestCalculator* fCalculator0;   // pointer to the calculator passed in the constructor
     RooRealVar* fScannedVariable;     // pointer to the constrained variable
     HypoTestInverterResult* fResults;
-    
+
+    bool fUseCLs;
     double fSize;
 
   protected:

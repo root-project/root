@@ -22,6 +22,7 @@
 #include "RooStats/HypoTestInverterPlot.h"
 #include "RooStats/HybridCalculator.h"
 
+#include "TGraphErrors.h"
 
 using namespace RooFit;
 using namespace RooStats;
@@ -42,23 +43,31 @@ void rs801_HypoTestInverter()
   RooDataSet* data = totPdf.generate(x,1);
 
   // prepare the calculator
-  HybridCalculator myhc("myhc","",*data, totPdf, bkgPdf,0,0);
+  HybridCalculator myhc(*data, totPdf, bkgPdf,0,0);
   myhc.SetTestStatistic(2);
-  myhc.SetNumberOfToys(1000);
+  myhc.SetNumberOfToys(500);
   myhc.UseNuisance(false);                            
 
   // run the hypothesis-test invertion
-  HypoTestInverter myInverter("myInverter","",&myhc,&r);
+  HypoTestInverter myInverter("myInverter",&myhc,&r);
   myInverter.SetTestSize(0.05);
+  myInverter.UseCLs(true);
   // myInverter.RunFixedScan(5,1,6);
-  myInverter.RunAutoScan(1,6,0.005);
-  myInverter.RunOnePoint(3.9);
+  myInverter.RunAutoScan(1,6,0.005);  
+  // myInverter.RunAutoScan(1,6,0.005,1);  // run an alternative autoscan algorithm 
+  //myInverter.RunOnePoint(3.9);
+
 
   HypoTestInverterResult* results = myInverter.GetInterval();
+
   HypoTestInverterPlot myInverterPlot("myInverterPlot","",results);
-  TGraph* gr1 = myInverterPlot.MakePlot();
-  gr1->Draw("ALP*");
+  TGraphErrors* gr1 = myInverterPlot.MakePlot();
+  gr1->Draw("ALP");
 
   std::cout << "The computed upper limit is: " << results->UpperLimit() << std::endl;
+  std::cout << "an estimated error on this upper limit is: " << results->UpperLimitEstimatedError() << std::endl;
   // expected result: 4.10
+}
+int main() { 
+   rs801_HypoTestInverter();
 }
