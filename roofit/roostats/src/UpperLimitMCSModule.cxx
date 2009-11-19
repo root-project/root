@@ -210,7 +210,7 @@ Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
 
   //Go to the fit Value for zour POI to make sure upperlimit works correct.
-  fitModel()->fitTo(*genSample());
+  //fitModel()->fitTo(*genSample());
   
 
 
