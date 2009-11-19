@@ -218,15 +218,15 @@ Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
   
   _data->add(RooArgSet(*_ul));
   std::cout<<"UL:"<<_ul->getVal()<<std::endl;
-  if (_ul->getVal()<1){
+//   if (_ul->getVal()<1){
     
-  RooStats::LikelihoodIntervalPlot plotpll((RooStats::LikelihoodInterval*) pllint);
-  TCanvas c1;
-  plotpll.Draw();
-  c1.Print("test.ps");
-  std::cout<<" UL<1 whats going on here?"<<std::endl;
-  abort();
-  }
+//   RooStats::LikelihoodIntervalPlot plotpll((RooStats::LikelihoodInterval*) pllint);
+//   TCanvas c1;
+//   plotpll.Draw();
+//   c1.Print("test.ps");
+//   std::cout<<" UL<1 whats going on here?"<<std::endl;
+//   abort();
+//   }
   
   delete pllint;
   

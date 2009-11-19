@@ -188,7 +188,7 @@ Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param)
    double lower = param.getMin(); 
    double upper = param.getMax(); 
    FindLimits(param, lower, upper); 
-   return upper; 
+   return lower; 
 }
 
 //____________________________________________________________________
@@ -323,14 +323,14 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    ret = fMinimizer->GetMinosError(ivarX, elow, eup );
    // WHEN error is zero normally is at limit
    if (elow == 0) { 
-      ccoutW(Minimization) << "Warning: lower value for " << param.GetName() << " is at limit " << std::endl; 
       lower = param.getMin();
+      ccoutW(Minimization) << "Warning: lower value for " << param.GetName() << " is at limit " << lower << std::endl; 
    }
    else 
       lower = fMinimizer->X()[ivarX] + elow;  // elow is negative 
 
    if (eup == 0) { 
-      ccoutW(Minimization) << "Warning: upper value for " << param.GetName() << " is at limit " << std::endl; 
+      ccoutW(Minimization) << "Warning: upper value for " << param.GetName() << " is at limit " << upper << std::endl; 
       upper = param.getMax();
    }
    else 
