@@ -132,6 +132,7 @@
 #include "TLatex.h"
 #include "TVirtualDragManager.h"
 #include "TGPicture.h"
+#include "KeySymbols.h"
 
 // Names of ROOT GUI events. Used for listing event logs.
 const char *kRecEventNames[] = {
@@ -848,6 +849,9 @@ void TRecorderReplaying::ReplayRealtime()
    // The excpetions are determined by TRecorderReplaying::CanOverlap()
    //
 
+   UInt_t keysym;
+   char str[2];
+
    if ((gROOT->GetEditorMode() == kText) ||
        (gROOT->GetEditorMode() == kPaveLabel)){
       gROOT->SetEditorMode();
@@ -873,6 +877,22 @@ void TRecorderReplaying::ReplayRealtime()
       // Remembers its execution time to compute time difference with
       // the next event
       fPreviousEventTime = fNextEvent->GetTime();
+
+      // Special execution of events causing potential deadlocks
+      if (fNextEvent->GetType() == TRecEvent::kGuiEvent) {
+         TRecGuiEvent *ev = (TRecGuiEvent *)fNextEvent;
+         if (ev->fType == kGKeyPress && ev->fState & kKeyControlMask) {
+            Event_t *e = ev->CreateEvent(ev);
+            gVirtualX->LookupString(e, str, sizeof(str), keysym);
+            // catch the ctrl-s event
+            if ((keysym & ~0x20) == kKey_S) {
+               fEventReplayed = 1;
+               PrepareNextEvent();
+               ev->ReplayEvent(fShowMouseCursor);
+               return;
+            }
+         }
+      }
 
       // REPLAYS CURRENT EVENT
       fNextEvent->ReplayEvent(fShowMouseCursor);
