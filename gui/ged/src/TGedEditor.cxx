@@ -96,8 +96,8 @@ void TGedEditor::SetFrameCreator(TGedEditor* e)
 }
 
 //______________________________________________________________________________
-TGedEditor::TGedEditor(TCanvas* canvas) :
-   TGMainFrame(gClient->GetRoot(), 175, 20),
+TGedEditor::TGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
+   TGMainFrame(gClient->GetRoot(), width, height),
    fCan          (0),
    fTab          (0),
    fTabContainer (0),
@@ -129,7 +129,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
       else
          Resize(GetWidth(), fCanvas->GetWh()<450 ? 450 : fCanvas->GetWh() + 4);
    } else {
-      Resize(GetDefaultSize());
+      Resize(width, height);
    }
 
    MapSubwindows();

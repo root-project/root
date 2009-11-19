@@ -77,7 +77,7 @@ protected:
    static TGedEditor *fgFrameCreator; 
 
 public:
-   TGedEditor(TCanvas* canvas = 0);
+   TGedEditor(TCanvas* canvas = 0, UInt_t width = 175, UInt_t height = 20);
    virtual ~TGedEditor();
 
    void          PrintFrameStat();
