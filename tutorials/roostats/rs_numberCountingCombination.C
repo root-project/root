@@ -137,13 +137,18 @@ void rs_numberCountingCombination_expected()
   lrint->SetConfidenceLevel(0.95);
 
   // Step 9, make a plot of the likelihood ratio and the interval obtained
-  paramsOfInterest->setRealValue("masterSignal",1.); 
+  //paramsOfInterest->setRealValue("masterSignal",1.); 
+  // find limits
+  double lower = lrint->LowerLimit(*mu);
+  double upper = lrint->UpperLimit(*mu);
+
   LikelihoodIntervalPlot lrPlot(lrint);
+  lrPlot.SetMaximum(3.);
   lrPlot.Draw();
 
   // Step 10a. Get upper and lower limits
-  cout << "lower limit on master signal = " <<   lrint->LowerLimit(*mu ) << endl;
-  cout << "upper limit on master signal = " <<   lrint->UpperLimit(*mu ) << endl;
+  cout << "lower limit on master signal = " <<  lower << endl;
+  cout << "upper limit on master signal = " <<  upper << endl;
 
 
   // Step 10b, Ask if masterSignal=0 is in the interval.

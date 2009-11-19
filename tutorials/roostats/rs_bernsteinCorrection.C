@@ -27,6 +27,7 @@
 #endif
 #include "RooDataSet.h"
 #include "RooRealVar.h"
+#include "RooConstVar.h".
 #include "RooBernstein.h"
 #include "TCanvas.h"
 #include "RooAbsPdf.h"

@@ -37,11 +37,14 @@
 // you need to include this for compiled macro.
 // But for CINT, it needs to be in this ifndef/endif condition
 #include "RooStats/NumberCountingUtils.h"
+#include "RooGlobalFunc.h"
 #endif
+
+#include "RooStats/RooStatsUtils.h"
 
 #include <iostream>
 
-using namespace RooFit ;
+using namespace RooFit;
 using namespace RooStats ; // the utilities are in the RooStats namespace
 using namespace std ;
 
