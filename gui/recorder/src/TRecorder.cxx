@@ -2065,7 +2065,8 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
             // Linux: movement of the window
             // first get window attribute to compensate the border size
             gVirtualX->GetWindowAttributes(e->fWindow, attr);
-            w->Move(e->fX - attr.fX, e->fY - attr.fY);
+            if ((e->fX - attr.fX > 0) && (e->fY - attr.fY > 0))
+               w->Move(e->fX - attr.fX, e->fY - attr.fY);
          }
          else {
             if (e->fUser[4] == TRecGuiEvent::kCNResize) {
