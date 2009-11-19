@@ -846,7 +846,7 @@ void TRecorderReplaying::ReplayRealtime()
    // If fTimer times out too early and the previous event has not been yet
    // replayed, it is usually postponed in order
    // to keep events execution in the right order.
-   // The excpetions are determined by TRecorderReplaying::CanOverlap()
+   // The exceptions are determined by TRecorderReplaying::CanOverlap()
    //
 
    UInt_t keysym;
@@ -878,7 +878,7 @@ void TRecorderReplaying::ReplayRealtime()
       // the next event
       fPreviousEventTime = fNextEvent->GetTime();
 
-      // Special execution of events causing potential deadlocks
+      // don't wait on events causing potential deadlocks
       if (fNextEvent->GetType() == TRecEvent::kGuiEvent) {
          TRecGuiEvent *ev = (TRecGuiEvent *)fNextEvent;
          if (ev->fType == kGKeyPress && ev->fState & kKeyControlMask) {
