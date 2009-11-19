@@ -1,13 +1,13 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log $(RFLXDICT_LIB) t.exe t_rflx.* *.rootmap
 TEST_TARGETS += cintrun
 
-# Which tests to run depends on availability of reflex / python:
+# Which tests to run depends on availability of cintex / python:
 HAVEGCCXML := $(shell which gccxml 2>/dev/null)
 ifeq ($(findstring gccxml,$(notdir $(HAVEGCCXML))),gccxml)
- HAVEREFLEX := $(shell root-config --has-reflex)
+ HAVECINTEX := $(findstring cintex,$(shell root-config --features))
 endif
 
-ifeq ($(HAVEREFLEX),yes)
+ifeq ($(HAVECINTEX),cintex)
  TEST_TARGETS += reflexrun
 endif
 
@@ -20,7 +20,7 @@ endif
 
 ifeq ($(HAVEPYTHON),yes)
  TEST_TARGETS += pythoncintrun
- ifeq ($(HAVEREFLEX),yes)
+ ifeq ($(HAVECINTEX),cintex)
   TEST_TARGETS += pythonreflexrun
  endif
 endif
