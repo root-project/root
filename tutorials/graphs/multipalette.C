@@ -10,7 +10,7 @@
    
 void Pal1()
 {
-   Int_t  colors[50];
+   static Int_t  colors[50];
    static Bool_t initialized = kFALSE;
 
    Double_t Red[3]    = { 1.00, 0.00, 0.00};
@@ -29,7 +29,7 @@ void Pal1()
 
 void Pal2()
 {
-   Int_t  colors[50];
+   static Int_t  colors[50];
    static Bool_t initialized = kFALSE;
 
    Double_t Red[3]    = { 1.00, 0.50, 0.00};
