@@ -409,7 +409,8 @@ void TEveManager::DoRedraw3D()
    for (TEveElement::Set_i i = fStampedElements.begin(); i != fStampedElements.end(); ++i)
    {
       if (GetEditor()->GetModel() == (*i)->GetEditorObject(eh))
-         EditElement((*i));
+         EditElement(*i);
+      TEveGedEditor::ElementChanged(*i);
 
       (*i)->ClearStamps();
    }
@@ -443,6 +444,7 @@ void TEveManager::ElementChanged(TEveElement* element, Bool_t update_scenes, Boo
 
    if (GetEditor()->GetModel() == element->GetEditorObject(eh))
       EditElement(element);
+   TEveGedEditor::ElementChanged(element);
 
    if (update_scenes) {
       TEveElement::List_t scenes;
@@ -564,6 +566,7 @@ void TEveManager::PreDeleteElement(TEveElement* element)
 
    if (GetEditor()->GetEveElement() == element)
       EditElement(0);
+   TEveGedEditor::ElementDeleted(element);
 
    if (fScenes)
       fScenes->DestroyElementRenderers(element);
@@ -933,6 +936,8 @@ void TEveManager::Terminate()
    // Properly terminate global TEveManager.
 
    if (!gEve) return;
+
+   TEveGedEditor::DestroyEditors();
 
    TEveGListTreeEditorFrame *lf = gEve->fLTEFrame;
    TEveBrowser              *b  = gEve->GetBrowser();

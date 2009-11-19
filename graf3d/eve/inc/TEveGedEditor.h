@@ -13,8 +13,14 @@
 #define ROOT_TEveGedEditor
 
 #include "TGedEditor.h"
+#include "TGedFrame.h"
 
 class TEveElement;
+
+
+//==============================================================================
+// TEveGedEditor
+//==============================================================================
 
 class TEveGedEditor : public TGedEditor
 {
@@ -28,12 +34,17 @@ protected:
    TEveElement   *fElement;    // Cached eve-element pointer.
    TObject       *fObject;     // Cached tobj pointer.
 
-   // Implement this in sub-class to override name-labels on top.
-   // virtual TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name); 
+   virtual TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name); 
+
+   static Int_t   fgMaxExtraEditors;
+   static TList  *fgExtraEditors;
 
 public:
-   TEveGedEditor(TCanvas* canvas=0, Int_t width=250, Int_t height=400);
-   virtual ~TEveGedEditor() {}
+   TEveGedEditor(TCanvas* canvas=0, UInt_t width=250, UInt_t height=400);
+   virtual ~TEveGedEditor();
+
+   virtual void CloseWindow();
+   virtual void DeleteWindow();
 
    TEveElement* GetEveElement() const;
 
@@ -43,7 +54,41 @@ public:
    virtual void SetModel(TVirtualPad* pad, TObject* obj, Int_t event);
    virtual void Update(TGedFrame* gframe=0);
 
+   // --- Statics for extra editors. ---
+
+   static void SpawnNewEditor(TObject* obj);
+   static void ElementChanged(TEveElement* el);
+   static void ElementDeleted(TEveElement* el);
+
+   static void DestroyEditors();
+
    ClassDef(TEveGedEditor, 0); // Specialization of TGedEditor for proper update propagation to TEveManager.
+};
+
+
+//==============================================================================
+// TEveGedNameFrame
+//==============================================================================
+
+class TEveGedNameFrame  : public TGedFrame
+{
+private:
+   TEveGedNameFrame(const TEveGedNameFrame&);            // Not implemented
+   TEveGedNameFrame& operator=(const TEveGedNameFrame&); // Not implemented
+
+protected:
+   TGTextButton   *fNCButton; // Name/Class button.
+
+public:
+   TEveGedNameFrame(const TGWindow *p=0, Int_t width=140, Int_t height=30,
+                    UInt_t options=kChildFrame | kHorizontalFrame);
+   virtual ~TEveGedNameFrame();
+
+   virtual void SetModel(TObject* obj);
+
+   void SpawnEditorClone();
+
+   ClassDef(TEveGedNameFrame, 0); // Top name-frame used in EVE.
 };
 
 #endif
