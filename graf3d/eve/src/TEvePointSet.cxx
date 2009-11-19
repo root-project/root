@@ -795,3 +795,13 @@ void TEvePointSetProjected::UpdateProjection()
       proj.ProjectPoint(p[0], p[1], p[2], fDepth);
    }
 }
+
+//______________________________________________________________________________
+void TEvePointSetProjected::PointSelected(Int_t id)
+{
+   // Virtual method of base class TPointSet3D.
+   // Forward to projectable.
+
+   TEvePointSet *ps = dynamic_cast<TEvePointSet*>(fProjectable);
+   ps->PointSelected(id);
+}
