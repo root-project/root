@@ -389,8 +389,6 @@ TRecorderReplaying::~TRecorderReplaying()
    // delete fTimer;
 
    gClient->Disconnect(gClient, "RegisteredWindow(Window_t)", this,
-                       "WaitForWindow(Window_t)");
-   gClient->Disconnect(gClient, "RegisteredWindow(Window_t)", this,
                        "RegisterWindow(Window_t)");
 
    if (fFile) {
