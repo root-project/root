@@ -2773,14 +2773,14 @@ if test ! "x$enable_gviz" = "xno"; then
                   $GVIZ/.libs /usr/local/lib /usr/lib /opt/local/lib
     gvizlib4=$found_lib
 
-       # the plugin libraries are in the directory "$gvizlibdir"/graphviz
-       gvizlibpdir=""
-       if test "x$gvizlibdir" != "x" ; then
-           gvizlibpdir="$gvizlibdir"/graphviz
-       fi
-       if test "x$platform" = "xwin32"; then
-           gvizlibpdir="$gvizlibdir"
-       fi
+    # the plugin libraries are in the directory "$gvizlibdir"/graphviz
+    gvizlibpdir=""
+    if test "x$gvizlibdir" != "x" ; then
+        gvizlibpdir="$gvizlibdir"/graphviz
+    fi
+    if test "x$platform" = "xwin32"; then
+        gvizlibpdir="$gvizlibdir"
+    fi
     check_library "libgvplugin_dot_layout gvplugin_dot_layout" "no" "$gvizlibpdir" $GVIZ $GVIZ/lib \
                   $GVIZ/.libs /usr/local/lib/graphviz /usr/lib/graphviz \
                   /opt/local/lib/graphviz
@@ -2789,15 +2789,19 @@ if test ! "x$enable_gviz" = "xno"; then
 
     if test "x$gvizincdir" = "x" || test "x$gvizlib1"  = "x" ||
        test "x$gvizlib2"   = "x" || test "x$gvizlib3"  = "x" ||
-       test "x$gvizlib4"   = "x" || test "x$gvizlibp1" = "x" ; then
+       test "x$gvizlib4"   = "x" ; then
         enable_gviz="no"
     else
        for gvsharedext in .so .sl .dylib .dll.a; do
            gvizshared="$gvizshared`echo $gvizlib1raw | grep '\\'$gvsharedext'\$'`"
        done
        if test "x$gvizshared" = "x" ; then
-           gvizcflags=-DGVIZ_STATIC
-           gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
+           if test "x$gvizlibp1" = "x" ; then
+               enable_gviz="no"
+           else
+               gvizcflags=-DGVIZ_STATIC
+               gvizlib="$gvizlibp1 $gvizlib1 $gvizlib2 $gvizlib3 $gvizlib4 -lexpat"
+           fi
        else
            gvizlib="$gvizlibir $gvizlib1"
        fi
