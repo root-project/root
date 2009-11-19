@@ -31,13 +31,15 @@ private:
    TGCompositeFrame  *fFrame;
    Int_t              fBorder;
 
+   void Init(const TGWindow *parent);
    void CreateFrames();
 
    TGLEmbeddedViewer(const TGLEmbeddedViewer&); // Not implemented
    TGLEmbeddedViewer& operator=(const TGLEmbeddedViewer&); // Not implemented
 
 public:
-   TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad=0, TGedEditor *ged=0, Int_t border=2);
+   TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad=0, Int_t border=2);
+   TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged, Int_t border=2);
    ~TGLEmbeddedViewer();
 
    virtual void CreateGLWidget();
