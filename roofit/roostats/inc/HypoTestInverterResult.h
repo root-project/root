@@ -36,36 +36,46 @@ namespace RooStats {
     // destructor
     virtual ~HypoTestInverterResult();
 
-    // function to return the yValue
-
+    // function to return the value of the parameter of interest for the i^th entry in the results
     double GetXValue( int index ) const ;
 
+    // function to return the value of the confidence level for the i^th entry in the results
     double GetYValue( int index ) const ;
+
+    // function to return the estimated error on the value of the confidence level for the i^th entry in the results
     double GetYError( int index ) const ;
 
-    int Size() const { return fXValues.size(); };
+    // number of entries in the results array
+    int ArraySize() const { return fXValues.size(); };
 
-    // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-    virtual void SetTestSize(Double_t size) {fConfidenceLevel = 1.-size;  }
+    // set the size of the test (rate of Type I error) (eg. 0.05 for a 95% Confidence Interval)
+    virtual void SetTestSize( Double_t size ) { fConfidenceLevel = 1.-size; }
+
     // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-    virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl;  }
+    virtual void SetConfidenceLevel( Double_t cl ) { fConfidenceLevel = cl; }
 
-    void UseCLs(bool on = true) { fUseCLs = on; }  
+    // flag to switch between using CLsb (default) or CLs as confidence level
+    void UseCLs( bool on = true ) { fUseCLs = on; }  
 
-    Double_t LowerLimit() { CalculateLimits(); return fLowerLimit; }
-    Double_t UpperLimit() { CalculateLimits(); return fUpperLimit; }
+    // lower and upper bound of the confidence interval (to get upper/lower limits, multiply the size( = 1-confidence level ) by 2
+    Double_t LowerLimit();
+    Double_t UpperLimit();
 
+    // rough estimation of the error on the computed bound of the confidence interval 
+    Double_t LowerLimitEstimatedError();
     Double_t UpperLimitEstimatedError();
 
   private:
 
-    void CalculateLimits() ;
+    double CalculateEstimatedError(double target);
+    int FindClosestPointIndex(double target);
+    double FindInterpolatedLimit(double target);
 
   protected:
 
     bool fUseCLs; 
-    bool fInterpolate;
-    Double_t fUpperLimitError;
+    bool fInterpolateLowerLimit;
+    bool fInterpolateUpperLimit;
 
     std::vector<double> fXValues;
 

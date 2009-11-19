@@ -76,19 +76,17 @@ void  HypoTestInverter::CreateResults() {
       results_name += "_results";
       fResults = new HypoTestInverterResult(results_name,*fScannedVariable,ConfidenceLevel());
       fResults->SetTitle("HypoTestInverter Result");
-      fResults->fInterpolate = true; 
    }
    fResults->UseCLs(fUseCLs);
 }
 
 
-bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon, int numAlgorithm  )
+bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double target, double epsilon, int numAlgorithm  )
 {
 
-  double target = Size();
   CreateResults();
-  fResults->fInterpolate = false; 
-
+  if ( target==Size()/2 ) fResults->fInterpolateLowerLimit = false;
+  if ( target==(1-Size()/2) ) fResults->fInterpolateUpperLimit = false;
 
   if (numAlgorithm==0) {
 
@@ -102,11 +100,11 @@ bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon, in
     double leftX = xMin;
     double rightX = xMax;
     if (!RunOnePoint(leftX)) return false;
-    double leftCL = fResults->GetYValue(fResults->Size()-1);
-    double leftCLError = fResults->GetYError(fResults->Size()-1);
+    double leftCL = fResults->GetYValue(fResults->ArraySize()-1);
+    double leftCLError = fResults->GetYError(fResults->ArraySize()-1);
     if (!RunOnePoint(rightX)) return false;
-    double rightCL = fResults->GetYValue(fResults->Size()-1);
-    double rightCLError = fResults->GetYError(fResults->Size()-1);
+    double rightCL = fResults->GetYValue(fResults->ArraySize()-1);
+    double rightCLError = fResults->GetYError(fResults->ArraySize()-1);
     double centerCL;
     double centerCLError;
 
@@ -123,8 +121,8 @@ bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon, in
       }
 
       if (!RunOnePoint(x)) return false;
-      centerCL = fResults->GetYValue(fResults->Size()-1);
-      centerCLError = fResults->GetYError(fResults->Size()-1);
+      centerCL = fResults->GetYValue(fResults->ArraySize()-1);
+      centerCLError = fResults->GetYError(fResults->ArraySize()-1);
 
       // Test if the interval points are on different sides, then replace the
       // one on the "right" side with the center
@@ -160,14 +158,14 @@ bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon, in
       
 	  std::cout << "Increasing the number of toys to: " << nToysTarget << " (CL error was: " << centerCLError << ")\n";
 
-// 	  centerCL = fResults->GetYValue(fResults->Size()-1);
-// 	  centerCLError = fResults->GetYValue(fResults->Size()-1);
+// 	  centerCL = fResults->GetYValue(fResults->ArraySize()-1);
+// 	  centerCLError = fResults->GetYValue(fResults->ArraySize()-1);
 
 //  	} while ( fabs(centerCL-target) < nSigma*centerCLError && centerCLError > epsilon )
        }
 
     } while ( fabs(centerCL-target) > nSigma*centerCLError || centerCLError > epsilon );
-    std::cout << "Converged in " << fResults->Size() << " iterations\n";
+    std::cout << "Converged in " << fResults->ArraySize() << " iterations\n";
     return true;
   } else if ( numAlgorithm==1 ) {
     // Newton search
@@ -175,30 +173,30 @@ bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double epsilon, in
     double xLow = xMin;
     bool status = RunOnePoint(xMin);
     if ( !status ) return false;
-    double yLow = fResults->GetYValue(fResults->Size()-1);
+    double yLow = fResults->GetYValue(fResults->ArraySize()-1);
 
     double xHigh = xMax;
     status = RunOnePoint(xMax);
     if ( !status ) return false;
-    double yHigh = fResults->GetYValue(fResults->Size()-1);
+    double yHigh = fResults->GetYValue(fResults->ArraySize()-1);
 
     // after the initial points, check the point in the middle of the last two 
     // closest points, until the value is in the range target+/-epsilon
     // the final value becomes the inverted upper limit value
 
     bool stopNow = false;
-    while ( !stopNow || fResults->Size()==30 ) {
+    while ( !stopNow || fResults->ArraySize()==30 ) {
       double xMiddle = xLow+0.5*(xHigh-xLow);
       status = RunOnePoint(xMiddle);
       if ( !status ) return false;
-      double yMiddle = fResults->GetYValue(fResults->Size()-1);
+      double yMiddle = fResults->GetYValue(fResults->ArraySize()-1);
       if (fabs(yMiddle-target)<epsilon) stopNow = true;
       else if ( yMiddle>target && yHigh<target ) { xLow = xMiddle; yLow = yMiddle; }
       else if ( yMiddle<target && yHigh<target ) { xHigh = xMiddle; yHigh = yMiddle; }
       else if ( yMiddle<target && yHigh>target ) { xLow = xMiddle; yLow = yMiddle; }
       else if ( yMiddle>target && yHigh>target ) { xHigh = xMiddle; yHigh = yMiddle; }
     }
-    std::cout << "Converged in " << fResults->Size() << " iterations\n";
+    std::cout << "Converged in " << fResults->ArraySize() << " iterations\n";
     return true;
   } else {
     std::cout << "not valid algorithm option specified\n";

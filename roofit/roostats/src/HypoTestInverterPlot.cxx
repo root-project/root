@@ -39,7 +39,7 @@ HypoTestInverterPlot::HypoTestInverterPlot( const char* name,
 
 TGraphErrors* HypoTestInverterPlot::MakePlot()
 {
-  const int nEntries = fResults->Size();
+  const int nEntries = fResults->ArraySize();
 
   std::vector<Double_t> xArray(nEntries);
   std::vector<Double_t> yArray(nEntries);
