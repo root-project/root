@@ -1035,6 +1035,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
    // search for branch first (typical for objects)
       TBranch* branch = tree->GetBranch( name );
+      if ( ! branch ) {
+      // for benefit of naming of sub-branches, the actual name may have a trailing '.'
+         branch = tree->GetBranch( (std::string( name ) + '.' ).c_str() );
+      }
+
       if ( branch ) {
       // found a branched object, wrap its address for the object it represents
          TClass* klass = TClass::GetClass( branch->GetClassName() );
