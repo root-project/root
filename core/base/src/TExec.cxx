@@ -22,8 +22,8 @@ ClassImp(TExec)
 //   The command in turn can invoke a CINT macro to paint graphics objects
 //   at positions depending on the histogram or graph contents.
 //
-// case 1
-// ======
+// Case 1:
+//
 // The TExec object is in the list of pad primitives (after exec.Draw()).
 // When the pad is drawn, the TExec::Paint function is called. This function
 // will execute the specified command.
@@ -45,8 +45,8 @@ ClassImp(TExec)
 //   ex.Draw();
 //}
 //
-// case 2
-// ======
+// Case 2:
+//
 // The TExec object may be added to the list of functions of a TH1 or TGraph
 // object via hist->GetListOfFunctions()->Add(exec).
 // When the histogram (or graph) is drawn, the TExec will be executed.
@@ -63,8 +63,8 @@ ClassImp(TExec)
 //  When the Paint function for the histogram will be called, the "DoSomething"
 //  function will be called (interpreted or compiled) and also the macro.C.
 //
-// case 3
-// ======
+// Case 3:
+//
 // A TExec object is automatically generated when invoking TPad::AddExec.
 // Each pad contains a TList of TExecs (0, 1 or more). When a mouse event
 // (motion, click, etc) happens, the pad object executes ssequentially
@@ -88,48 +88,49 @@ ClassImp(TExec)
 //
 // The 3 options above can be combined.
 
+
 //______________________________________________________________________________
 TExec::TExec(): TNamed()
 {
-//*-*-*-*-*-*-*-*-*-*-*Exec default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Exec default constructor.
 }
+
+
 //______________________________________________________________________________
 TExec::TExec(const char *name, const char *command) : TNamed(name,command)
 {
-//*-*-*-*-*-*-*-*-*-*-*Exec normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
-
+   // Exec normal constructor.
 }
+
 
 //______________________________________________________________________________
 TExec::~TExec()
 {
-//*-*-*-*-*-*-*-*-*-*-*Exec default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
-
+   // Exec default destructor.
 }
+
 
 //______________________________________________________________________________
 TExec::TExec(const TExec &e) : TNamed(e)
 {
    // Copy constructor.
+
    TNamed::Copy(*this);
 }
+
 
 //______________________________________________________________________________
 void TExec::Exec(const char *command)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute the command referenced by this object*-*-*-*
-//*-*                  =============================================
-//
-//  if command is given, this command is executed
-// otherwise the default command of the object is executed
-//
-// if the default command (in the exec title) is empty, an attemp is made
-// to execute the exec name if it contains a "." or a "(", otherwise
-// the command ".x execname.C" is executed.
-// The function returns the result of the user function/script.
+   // Execute the command referenced by this object.
+   //
+   //  if command is given, this command is executed
+   // otherwise the default command of the object is executed
+   //
+   // if the default command (in the exec title) is empty, an attemp is made
+   // to execute the exec name if it contains a "." or a "(", otherwise
+   // the command ".x execname.C" is executed.
+   // The function returns the result of the user function/script.
 
    if (command && (strlen(command) > 1))  gROOT->ProcessLine(command);
    else  {
@@ -144,20 +145,20 @@ void TExec::Exec(const char *command)
    }
 }
 
+
 //______________________________________________________________________________
 void TExec::Paint(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute the command referenced by this object*-*-*-*
-//*-*                  =============================================
-//
-//
+   // Execute the command referenced by this object.
+
    Exec();
 }
+
 
 //______________________________________________________________________________
 void TExec::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out.
 
    char quote = '"';
    if (gROOT->ClassSaved(TExec::Class())) {
