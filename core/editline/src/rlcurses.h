@@ -26,7 +26,11 @@ extern "C" {
 #else
 extern "C" {
 # include R__CURSESHDR
-# include <termcap.h>
+   // some curses.h include a curses-version of termcap.h which
+   // conflicts with the system one:
+# ifndef _TERMCAP_H
+#  include <termcap.h>
+# endif
 int setupterm(const char* term, int fd, int* perrcode);
 }
 #endif
