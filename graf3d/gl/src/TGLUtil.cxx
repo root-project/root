@@ -1841,11 +1841,12 @@ void TGLUtil::RenderCrosses(const TAttMarker& marker, Float_t* op, Int_t n,
    {
       glEnable(GL_BLEND);
       glEnable(GL_LINE_SMOOTH);
-      LineWidth(2);
+      TGLUtil::LineWidth(2);
    }
    else
    {
       glDisable(GL_LINE_SMOOTH);
+      TGLUtil::LineWidth(1);
    }
 
    // cross dim
@@ -1875,6 +1876,30 @@ void TGLUtil::RenderCrosses(const TAttMarker& marker, Float_t* op, Int_t n,
          glVertex3f(p[0],   p[1],   p[2]-d); glVertex3f(p[0],   p[1],   p[2]+d);
       }
       glEnd();
+   }
+
+   // Anti-flickering -- when crosses get too small they
+   // appear / disappear randomly.
+   {
+      glDisable(GL_POINT_SMOOTH);
+      TGLUtil::PointSize(1);
+
+      glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+      glVertexPointer(3, GL_FLOAT, 0, op);
+      glEnableClientState(GL_VERTEX_ARRAY);
+      { // Circumvent bug in ATI's linux drivers.
+         Int_t nleft = n;
+         Int_t ndone = 0;
+         const Int_t maxChunk = 8192;
+         while (nleft > maxChunk)
+         {
+            glDrawArrays(GL_POINTS, ndone, maxChunk);
+            nleft -= maxChunk;
+            ndone += maxChunk;
+         }
+         glDrawArrays(GL_POINTS, ndone, nleft);
+      }
+      glPopClientAttrib();
    }
 }
 
