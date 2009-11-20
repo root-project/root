@@ -46,7 +46,7 @@ if [ $Cleanup = "yes" ] ; then
      # Need to go through a file so that we don't see the temporary sub-shell in the list of files
      ps -s $prev_sid h -o pid,command > /var/tmp/run_roottest.tmp.$$
      old_pids=`cat /var/tmp/run_roottest.tmp.$$ | grep -v $exclusions | grep $inclusions | cut -d' ' -f1 | tr '\n' ' ' `
-     # rm /var/tmp/run_roottest.tmp.$$
+     rm /var/tmp/run_roottest.tmp.$$
      if [ x"$old_pids" != x ] ; then 
         echo "The previous run_roottest for id $id is still running.  We will terminate it to start a new one."
 #        ps -s $prev_sid h -o pid,command
