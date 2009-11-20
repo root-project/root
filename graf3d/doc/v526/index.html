@@ -80,7 +80,16 @@ required:<ol>
 </ol>
 
 An example showing this functionality has been added as a new tab in
-tutorials/eve/projection_prescale.C.
+<code>projection_prescale.C</code>.
+
+<li> TEveManager now allows simultaneous usage of several objects
+  editors. Simply click on the top name-button in object editor to
+  create a standalone editor for this object in a separate
+  window. This facilitates operation when several objects need to be
+  modifed in parallel.
+
+<li> New tutorial <code>alice_vsd.C</code> has been added. It shows
+  how to read Visualization Summary Data files (VSD).
 
 </ul>
 
@@ -99,8 +108,6 @@ how the palette color range gets mapped onto signal values:<ol>
 
 <li> Add signal emitting TEveRGBAPalette::MinMaxValChanged(). Ged
 editor calls this after setting the min/max range.
-
-
 
 </ul>
 
@@ -130,6 +137,11 @@ calorimeter tower selection in TEveCalo-classes.
 <li> Generalize handling of highlight feedback -- this is now done via
 a virtual TGLLogicalShape::DrawHighlight(...) so that it can be
 changed by sub-classes.
+
+<li> The stand-alone GL viewer now supports hiding of menu-bar. It
+  collapses into a narrow band on top of the viewer that expands when
+  mouse pointer enters its area. This allows for better utilization of
+  the screen while still providing the controls available from the menu.
 
 <li> Editor for "gl5d" option was improved.
 
