@@ -1047,7 +1047,8 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'r':
                   case 'h':
                   case 'k': {
-                     G__letULonglong(defined, 'm', ulldefined >> ullexpression);
+                     G__letULonglong(defined, 'm', 0);
+                     defined->obj.ulo = ulldefined >> ullexpression;
                   }
                   break;
                   default:
@@ -1063,7 +1064,8 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'r':
                   case 'h':
                   case 'k': {
-                     G__letULonglong(defined, 'm', ulldefined << ullexpression);
+                     G__letULonglong(defined, 'm', 0);
+                     defined->obj.ulo = ulldefined << ullexpression;
                   }
                   break;
                   default:
@@ -1276,7 +1278,8 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'r':
                   case 'h':
                   case 'k': {
-                     G__letLonglong(defined, 'n', G__ULonglong(*defined) >> llexpression);
+                     G__letULonglong(defined, 'n', 0);
+                     defined->obj.ulo = G__ULonglong(*defined) >> llexpression;
                   }
                   break;
                   default:
@@ -1291,7 +1294,8 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'r':
                   case 'h':
                   case 'k': {
-                     G__letLonglong(defined, 'n', G__ULonglong(*defined) << llexpression);
+                     G__letULonglong(defined, 'n', 0);
+                     defined->obj.ulo = G__ULonglong(*defined) << llexpression;
                   }
                   break;
                   default:
@@ -1530,7 +1534,8 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'h':
                   case 'k': {
                      unsigned long uudefined = udefined;
-                     G__letint(defined, 'k', uudefined >> uexpression);
+                     G__letint(defined, 'k', 0);
+                     defined->obj.ulo = uudefined >> uexpression;
                   }
                   break;
                   default:
@@ -1546,7 +1551,8 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'h':
                   case 'k': {
                      unsigned long uudefined = udefined;
-                     G__letint(defined, 'k', uudefined << uexpression);
+                     G__letint(defined, 'k', 0);
+                     defined->obj.ulo = uudefined << uexpression;
                   }
                   break;
                   default:
@@ -1774,12 +1780,12 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'h':
                   case 'k': {
                      unsigned long udefined = (unsigned long)G__uint(*defined);
-                     G__letint(defined, defined->type, udefined >> lexpression);
+                     G__letint(defined, defined->type, 0);
                      defined->obj.ulo = udefined >> lexpression;
                   }     
                   break;
                   default:
-                     G__letint(defined, defined->type, ldefined >> lexpression);
+                     G__letint(defined, defined->type, 0);
                      defined->obj.i = ldefined >> lexpression;
                   }
                }
@@ -1796,12 +1802,12 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'h':
                   case 'k': {
                      unsigned long udefined = (unsigned long)G__uint(*defined);
-                     G__letint(defined, defined->type, udefined << lexpression);
-                     defined->obj.i = udefined << lexpression;
+                     G__letint(defined, defined->type, 0);
+                     defined->obj.ulo = udefined << lexpression;
                   }
                   break;
                   default:
-                     G__letint(defined, defined->type, ldefined << lexpression);
+                     G__letint(defined, defined->type, 0);
                      defined->obj.i = ldefined << lexpression;
                   }
                }
