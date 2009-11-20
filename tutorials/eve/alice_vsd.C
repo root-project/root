@@ -119,7 +119,7 @@ public:
       fVSD = new TEveVSD;
    }
 
-   ~TVSDReader()
+   virtual ~TVSDReader()
    {
       // Destructor.
 
