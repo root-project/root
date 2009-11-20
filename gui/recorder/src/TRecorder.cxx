@@ -1668,7 +1668,7 @@ void TRecorderRecording::CopyEvent(Event_t *e, Window_t wid)
    for(Int_t i=0; i<5; ++i)
       fGuiEvent->fUser[i] = e->fUser[i];
 
-   if (fGuiEvent->fUser[0] == gWM_DELETE_WINDOW)
+   if (fGuiEvent->fUser[0] == (Int_t)gWM_DELETE_WINDOW)
       fGuiEvent->fUser[0] = TRecGuiEvent::kWM_DELETE_WINDOW;
 
    if (e->fType == kGKeyPress || e->fType == kKeyRelease) {
