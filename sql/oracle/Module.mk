@@ -25,7 +25,7 @@ ORACLEO       := $(ORACLES:.cxx=.o)
 ORACLEDEP     := $(ORACLEO:.o=.d) $(ORACLEDO:.o=.d)
 
 ORACLELIB     := $(LPATH)/libOracle.$(SOEXT)
-ORCALEMAP     := $(ORACLELIB:.$(SOEXT)=.rootmap)
+ORACLEMAP     := $(ORACLELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ORACLEH))
