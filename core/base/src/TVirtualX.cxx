@@ -370,6 +370,22 @@ void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char * /*mess*/)
 
    w = h = 0;
 }
+//______________________________________________________________________________
+Int_t   TVirtualX::GetFontAscent() const
+{
+   // Returns the ascent of the current font (in pixels).
+   // The ascent of a font is the distance from the baseline 
+   // to the highest position characters extend to
+   return 0;
+}
+//______________________________________________________________________________
+Int_t   TVirtualX::GetFontDescent() const
+{
+  // Returns the descent of the current font (in pixels.
+  // The descent is the distance from the base line 
+  // to the lowest point characters extend to.
+   return 0;
+}
 
 //______________________________________________________________________________
 Float_t TVirtualX::GetTextMagnitude()

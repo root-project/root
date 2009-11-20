@@ -107,6 +107,8 @@ public:
    virtual void      GetPlanes(Int_t &nplanes);
    virtual void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
+   virtual Int_t     GetFontAscent() const;
+   virtual Int_t     GetFontDescent() const ;
    virtual Float_t   GetTextMagnitude();
    virtual Window_t  GetWindowID(Int_t wid);
    virtual Bool_t    HasTTFonts() const;
