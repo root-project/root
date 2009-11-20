@@ -1047,8 +1047,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'r':
                   case 'h':
                   case 'k': {
-                     G__letULonglong(defined, 'm', 0);
-                     defined->obj.ulo = ulldefined >> ullexpression;
+                     G__letULonglong(defined, 'm', ulldefined >> ullexpression);
                   }
                   break;
                   default:
@@ -1064,8 +1063,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                   case 'r':
                   case 'h':
                   case 'k': {
-                     G__letULonglong(defined, 'm', 0);
-                     defined->obj.ulo = ulldefined << ullexpression;
+                     G__letULonglong(defined, 'm', ulldefined << ullexpression);
                   }
                   break;
                   default:
