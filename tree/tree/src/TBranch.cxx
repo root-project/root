@@ -1716,6 +1716,9 @@ void TBranch::ResetAddress()
    // Reset the address of the branch.
 
    fAddress = 0;
+   
+   //  Reset last read entry number, we have will had new user object now.
+   fReadEntry = -1;   
 
    for (Int_t i = 0; i < fNleaves; ++i) {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
