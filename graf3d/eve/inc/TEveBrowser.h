@@ -152,6 +152,10 @@ public:
 
    void EveMenu(Int_t id);
 
+   // Some getters missing in TRootBrowser
+   TGMenuBar*         GetMenuBar()      const { return fMenuBar; }
+   TGHorizontalFrame* GetTopMenuFrame() const { return fTopMenuFrame; }
+
    ClassDef(TEveBrowser, 0); // Specialization of TRootBrowser for Eve.
 };
 
