@@ -152,6 +152,9 @@ endif
 ifeq ($(BUILDCHIRP),yes)
 MODULES      += io/chirp
 endif
+ifeq ($(BUILDHDFS),yes)
+MODULES      += io/hdfs
+endif
 ifeq ($(BUILDMEMSTAT),yes)
 MODULES      += misc/memstat
 endif
