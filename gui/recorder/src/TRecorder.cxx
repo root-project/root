@@ -653,11 +653,11 @@ Bool_t TRecorderReplaying::FilterEvent(TRecGuiEvent *e)
 
    // We do not replay any client messages except closing of windows
    if (e->fType == kClientMessage) {
-      if (!((e->fFormat == 32) && ((Atom_t)e->fUser[0] == gWM_DELETE_WINDOW) &&
-            (e->fHandle != gROOT_MESSAGE)))
-         return kTRUE;
-      else
+      if ((e->fFormat == 32) && (e->fHandle != TRecGuiEvent::kROOT_MESSAGE)
+          && ((Atom_t)e->fUser[0] == TRecGuiEvent::kWM_DELETE_WINDOW))
          return kFALSE;
+      else
+         return kTRUE;
    }
 
    // See TRecorderRecording::SetTypeOfConfigureNotify to get know
@@ -846,7 +846,7 @@ void TRecorderReplaying::ReplayRealtime()
    // If fTimer times out too early and the previous event has not been yet
    // replayed, it is usually postponed in order
    // to keep events execution in the right order.
-   // The exceptions are determined by TRecorderReplaying::CanOverlap()
+   // The excpetions are determined by TRecorderReplaying::CanOverlap()
    //
 
    UInt_t keysym;
@@ -878,7 +878,7 @@ void TRecorderReplaying::ReplayRealtime()
       // the next event
       fPreviousEventTime = fNextEvent->GetTime();
 
-      // don't wait on events causing potential deadlocks
+      // Special execution of events causing potential deadlocks
       if (fNextEvent->GetType() == TRecEvent::kGuiEvent) {
          TRecGuiEvent *ev = (TRecGuiEvent *)fNextEvent;
          if (ev->fType == kGKeyPress && ev->fState & kKeyControlMask) {
@@ -1662,8 +1662,14 @@ void TRecorderRecording::CopyEvent(Event_t *e, Window_t wid)
    fGuiEvent->fHandle      = e->fHandle;
    fGuiEvent->fFormat      = e->fFormat;
 
+   if (fGuiEvent->fHandle == gROOT_MESSAGE)
+      fGuiEvent->fHandle = TRecGuiEvent::kROOT_MESSAGE;
+
    for(Int_t i=0; i<5; ++i)
       fGuiEvent->fUser[i] = e->fUser[i];
+
+   if (fGuiEvent->fUser[0] == gWM_DELETE_WINDOW)
+      fGuiEvent->fUser[0] = TRecGuiEvent::kWM_DELETE_WINDOW;
 
    if (e->fType == kGKeyPress || e->fType == kKeyRelease) {
       char tmp[10] = {0};
@@ -2187,8 +2193,14 @@ Event_t *TRecGuiEvent::CreateEvent(TRecGuiEvent *ge)
    e->fHandle = ge->fHandle;
    e->fFormat = ge->fFormat;
 
+   if (e->fHandle == TRecGuiEvent::kROOT_MESSAGE)
+      e->fHandle = gROOT_MESSAGE;
+
    for(Int_t i=0; i<5; ++i)
       e->fUser[i] = ge->fUser[i];
+
+   if (e->fUser[0] == TRecGuiEvent::kWM_DELETE_WINDOW)
+      e->fUser[0] = gWM_DELETE_WINDOW;
 
    if (ge->fType == kGKeyPress || ge->fType == kKeyRelease) {
       e->fCode    = gVirtualX->KeysymToKeycode(ge->fCode);

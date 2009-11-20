@@ -329,6 +329,11 @@ public:
       kCNMoveResize = 2,      // Movement, resize or both (Windows)
       kCNFilter     = 3       // Not replaybale (filtered event).
    };
+   //---- Aliases for non cross-platform atoms.
+   enum ERootAtoms {
+      kWM_DELETE_WINDOW = 10001,
+      kROOT_MESSAGE     = 10002
+   };
 
    virtual ERecEventType GetType() const {
       // Returns what kind of event it stores (GUI event)
