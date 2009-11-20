@@ -1,6 +1,7 @@
 #!/bin/sh
 
 Setup=yes
+Cleanup=no
 configname=""
 while test "x$1" != "x"; do
    case $1 in 
@@ -9,6 +10,7 @@ while test "x$1" != "x"; do
       "-cintdlls") cintdlls=x; shift;;
       "-mail") mail=x; shift; mailto=$1; shift;;
       "--config") shift; configname=-$1; shift;;
+      --cleanup) Cleanup=yes shift;;
       *) help=x; shift;;
    esac
 done
@@ -19,11 +21,41 @@ if test "x$help" != "x"; then
     echo "  -v : verbose"
     echo "  -cintdlls : also built the cintdlls"
     echo "  -config configname"
+    echo "  --cleanup : if set, this will terminate any unfinished run "
     exit
 fi
 
 if [ "x$verbose" = "xx" ] ; then
    set -x
+fi
+
+host=`hostname -s`
+dir=`dirname $0`
+
+config_filename=$dir/run_roottest.$host$configname.config
+sid_filename=run_roottest.$host$configname.sid
+
+if [ $Cleanup = "yes" ] ; then
+  echo "Checking for previous run."
+  current_sid=`ps h -o sid --pid $$`
+
+  if [ -e $sid_filename ] ; then
+     prev_sid=`cat $sid_filename `
+     inclusions=" -e root.exe -e run_roottest -e make -e cint "
+     exclusions=" -e $$ -e grep "
+     # Need to go through a file so that we don't see the temporary sub-shell in the list of files
+     ps -s $prev_sid h -o pid,command > /var/tmp/run_roottest.tmp.$$
+     old_pids=`cat /var/tmp/run_roottest.tmp.$$ | grep -v $exclusions | grep $inclusions | cut -d' ' -f1 | tr '\n' ' ' `
+     # rm /var/tmp/run_roottest.tmp.$$
+     if [ x"$old_pids" != x ] ; then 
+        echo "The previous run_roottest for id $id is still running.  We will terminate it to start a new one."
+#        ps -s $prev_sid h -o pid,command
+	 kill -9 $old_pids
+     fi
+  fi
+  echo $current_sid > $sid_filename
+#  echo Current pids:
+#  ps -s $current_sid h -o pid,command
 fi
 
 # No sub-process should ever used up more than one hour of CPU time.
@@ -46,14 +78,16 @@ export CVSROOT=:pserver:cvs@root.cern.ch:/user/cvs
 # ROOTTESTLOC and any of the customization
 # above (MAKE, etc.)
 # and the method to acquire the `load`
-host=`hostname -s`
-dir=`dirname $0`
-. $dir/run_roottest.$host$configname.config
+. $config_filename
 
 if [ -z $ROOTSYS ] ; then 
   export ROOTSYS=${ROOTLOC}
   export PATH=${ROOTSYS}/bin:${PATH}
-  export LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}:.
+  if [ -z ${LD_LIBRARY_PATH} ] ; then 
+    export LD_LIBRARY_PATH=${ROOTSYS}/lib:.
+  else 
+    export LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}:.
+  fi
   export PYTHONPATH=${ROOTSYS}/lib
 fi
 
