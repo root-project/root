@@ -119,6 +119,42 @@ public:
       fVSD = new TEveVSD;
    }
 
+   ~TVSDReader()
+   {
+      // Destructor.
+
+      DropEvent();
+
+      delete fVSD;
+      delete fEvDirKeys;
+
+      fFile->Close();
+      delete fFile;
+   }
+
+   void AttachEvent()
+   {
+      // Attach event data from current directory.
+
+      fVSD->LoadTrees();
+      fVSD->SetBranchAddresses();
+   }
+
+   void DropEvent()
+   {
+      // Drup currently held event data, release current directory.
+
+      // Drop old visualization structures.
+
+      gEve->GetViewers()->DeleteAnnotations();
+      gEve->GetCurrentEvent()->DestroyElements();
+
+      // Drop old event-data.
+
+      fVSD->DeleteTrees();
+      delete fDirectory;
+      fDirectory = 0;
+   }
 
    //---------------------------------------------------------------------------
    // Event navigation
@@ -142,24 +178,15 @@ public:
          return kFALSE;
       }
 
-      // Drop old visualization structures.
-
-      gEve->GetViewers()->DeleteAnnotations();
-      gEve->GetCurrentEvent()->DestroyElements();
-
-      // Drop old event-data.
-
-      fVSD->DeleteTrees();
-      delete fDirectory;
+      DropEvent();
 
       // Connect to new event-data.
 
       fCurEv = ev;
       fDirectory = (TDirectory*) ((TKey*) fEvDirKeys->At(fCurEv))->ReadObj();
-
       fVSD->SetDirectory(fDirectory);
-      fVSD->LoadTrees();
-      fVSD->SetBranchAddresses();
+
+      AttachEvent();
 
       // Load event data into visualization structures.
 
