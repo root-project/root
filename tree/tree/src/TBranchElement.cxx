@@ -3514,7 +3514,7 @@ void TBranchElement::SetAddress(void* addr)
    }
 
    //
-   //  Reset last read entry number, we have a new i/o buffer now.
+   //  Reset last read entry number, we have a new user object now.
    //
 
    fReadEntry = -1;
