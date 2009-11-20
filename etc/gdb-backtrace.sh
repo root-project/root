@@ -133,15 +133,18 @@ if ! test "x$OUTFILE" = "x/dev/stdout"; then
             ;;
       esac
       if test "x${skip}" = "x"; then
-         tag=`echo $line|sed 's,^.* in ,,'`
+         tag=`echo $line|sed 's,^.*[0-9a-fA-F] in ,,'`
          if test "x$ininterp" = "xcheck next"; then
             ininterp="check this"
          fi
          case $tag in
             SigHandler* )
                signal=`echo $line | sed 's/^.*\(kSig[^)]*\).*$/\1/'`
+               wantthread="yes"
+               ininterp="check next"
+               frames=""
                ;;
-            sighandler* )
+            sighandler* | TUnixSystem::DispatchSignals* )
                wantthread="yes"
                ininterp="check next"
                frames=""
@@ -185,17 +188,20 @@ $line"
 
    # Only print the informative text if we actually have a crash
    # but not when TSystem::Stacktrace() was called.
-   if ! test "x$signal" = "x"; then
+   if ! test "x$ininterp" = "x"; then
+      if ! test "x$signal" = "x"; then
+          signal=' ('${signal}')'
+      fi
       echo ""
       echo ""
       echo ""
       echo "==========================================================="
-      echo "There was a crash ($signal)."
+      echo "There was a crash${signal}."
       echo "This is the entire stack trace of all threads:"
       echo "==========================================================="
    fi
    cat $OUTFILE
-   if ! test "x$signal" = "x"; then
+   if ! test "x$ininterp" = "x"; then
       echo "==========================================================="
       if test "x$ininterp" = "xyes"; then
          echo ""
