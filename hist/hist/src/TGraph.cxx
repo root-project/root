@@ -960,6 +960,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //                     the default fraction of good points
    //               "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points
+   //             = "S"  The result of the fit is returned in the TFitResultPtr 
+   //                     (see below Access to the Fit Result) 
    //
    //   When the fit is drawn (by default), the parameter goption may be used
    //   to specify a list of graphics options. See TGraphPainter for a complete
@@ -1030,7 +1032,21 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //
    // How errors are used in the chisquare function (see TFitter GraphFitChisquare)
    // 
-   //   Access to the fit results
+   //      Access to the fit result 
+   //      ========================  
+   //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
+   //  By default the TFitResultPtr contains only the status of the fit and it converts automatically to an
+   //  integer. If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart 
+   //  pointer to it. For example one can do: 
+   //     TFitResult r    = graph->Fit("myFunc","S");
+   //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
+   //     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0 
+   //     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0 
+   //     r->Print("V");     // print full information of fit including covariance matrix
+   //     r->Write();        // store the result in a file
+   //
+   //   The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also 
+   //   from the fitted function. 
    //
    //   In case of a TGraphErrors object, ex, the error along x, is projected
    //   along the y-direction by calculating the function at the points x-exlow and
@@ -1113,7 +1129,8 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Ax
    //
    //      Access to the fit status
    //      ========================
-   //   This function returns the status of the fit (fitResult) in the following form:
+   //   This function returns (if option "S" is not used) the status of the fit (fitResult) 
+   //   in the following form:
    //     fitResult = migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
    //   The fitResult is 0 if the fit is OK.
    //   The fitResult is negative in case of an error not connected with the fit.

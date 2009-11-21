@@ -3118,6 +3118,8 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //                = "C"  In case of linear fitting, don't calculate the chisquare
 //                       (saves time)
 //                = "F"  If fitting a polN, switch to minuit fitter
+//                = "S"  The result of the fit is returned in the TFitResultPtr 
+//                       (see below Access to the Fit Result) 
 //
 //      When the fit is drawn (by default), the parameter goption may be used
 //      to specify a list of graphics options. See TH1::Draw for a complete
@@ -3194,21 +3196,22 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //     Given an histogram h, one can retrieve an associated function
 //     with:  TF1 *myfunc = h->GetFunction("myfunc");
 //
-//      Access to the fit status
+//      Access to the fit result 
 //      ========================
-//     The function return the status of the fit (fitResult) in the following form
-//     fitResult = minimizerResultCode 
-//     when Minuit (or Minuit2) is used as minimizer the result obtained is 
-//     fitResult =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
-//     The fitResult is 0 is the fit is OK.
-//     The other resulting code will depend on the minimizer used. For example in the case of
-//     TMinuit the returns errors will be either 0 or 4 in case of a failed minmization 
-//     (see the documentation of TMinuit::mnexcm)  
-//     For Minuit2 see the documentation of Minuit2Minimizer::Minimize
-//     The value of fitResult is negative in case of an error not connected with the fit.
+//     The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
+//     By default the TFitResultPtr contains only the status of the fit and it converts automatically to an
+//     integer. If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart 
+//     pointer to it. For example one can do: 
+//     TFitResult r = h->Fit("myFunc","S");
+//     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
+//     Double_t chi2   = r->Chi2(); // to retrieve the fit chi2 
+//     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0 
+//     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0 
+//     r->Print("V");     // print full information of fit including covariance matrix
+//     r->Write();        // store the result in a file
 //
-//      Access to the fit results
-//      =========================
+//     The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also 
+//     from the fitted function. 
 //     If the histogram is made persistent, the list of
 //     associated functions is also persistent. Given a pointer (see above)
 //     to an associated function myfunc, one can retrieve the function/fit
@@ -3217,22 +3220,19 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //       Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 //       Double_t err0 = myfunc->GetParError(0);  //error on first parameter
 //
-//      Access to the fit covariance matrix
-//      ===================================
-//      Example1:
-//         TH1F h("h", "test", 100, -2, 2);
-//         h.FillRandom("gaus", 1000);
-//         h.Fit("gaus");
-//         Double_t matrix[3][3];
-//         gMinuit->mnemat(&matrix[0][0], 3);
-//      Example2:
-//         TH1F h("h", "test", 100, -2, 2);
-//         h.FillRandom("gaus", 1000);
-//         h.Fit("gaus");
-//         TVirtualFitter *fitter = TVirtualFitter::GetFitter();
-//         TMatrixD matrix(npar, npar, fitter->GetCovarianceMatrix());
-//         Double_t errorFirstPar = fitter->GetCovarianceMatrixElement(0, 0);
 //
+//     Access to the fit status
+//     =====================
+//     The status of the fit (the integer value obtained directly from the conversion of TFitResultPtr) is returned 
+//     in the following form:   fitStatus = minimizerResultCode 
+//     when Minuit (or Minuit2) is used as minimizer the status obtained is 
+//     fitStatus =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult
+//     The fitStatus is 0 if the fit is OK.
+//     The other resulting code will depend on the minimizer used. For example in the case of
+//     TMinuit the returns errors will be either 0 or 4 in case of a failed minmization 
+//     (see the documentation of TMinuit::mnexcm)  
+//     For Minuit2 see the documentation of Minuit2Minimizer::Minimize
+//     The value of the fit status code is negative in case of an error not connected with the fit.
 //
 //      Changing the maximum number of parameters
 //      =========================================

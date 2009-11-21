@@ -655,11 +655,14 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //                  (by default, any previous function is deleted)
    //            = "C" In case of linear fitting, not calculate the chisquare
    //                  (saves time)
+   //            = "EX0" When fitting a TGraphErrors do not consider errors in the coordinate
    //            = "ROB" In case of linear fitting, compute the LTS regression
    //                     coefficients (robust (resistant) regression), using
    //                     the default fraction of good points
    //              "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points
+   //            = "S"  The result of the fit is returned in the TFitResultPtr 
+   //                     (see below Access to the Fit Result) 
    //
    //  In order to use the Range option, one must first create a function
    //  with the expression to be fitted. For example, if your graph2d
@@ -713,6 +716,19 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //
    //  Access to the fit results
    //  =========================
+   //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
+   //  By default the TFitResultPtr contains only the status of the fit and it converts automatically to an
+   //  integer. If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart 
+   //  pointer to it. For example one can do: 
+   //     TFitResult r    = graph->Fit("myFunc","S");
+   //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
+   //     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0 
+   //     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0 
+   //     r->Print("V");     // print full information of fit including covariance matrix
+   //     r->Write();        // store the result in a file
+   // 
+   //  The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also 
+   //  from the fitted function. 
    //  If the graph is made persistent, the list of
    //  associated functions is also persistent. Given a pointer (see above)
    //  to an associated function myfunc, one can retrieve the function/fit
