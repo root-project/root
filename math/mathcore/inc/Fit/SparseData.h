@@ -64,7 +64,7 @@ namespace ROOT {
          void GetBinDataNoZeros(BinData&) const;
          
       private : 
-         ProxyListBox *l;
+         ProxyListBox *fList;
       };
       
    } // end namespace Fit

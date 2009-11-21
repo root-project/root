@@ -20,10 +20,10 @@
 #include <stdexcept>
 
 #include <cmath>
-
-#include "Fit/SparseData.h"
-
 #include <limits>
+
+// #include "TMath.h"
+#include "Fit/SparseData.h"
 
 using namespace std;
 
@@ -40,35 +40,35 @@ namespace ROOT {
          // content=value and error=error
          Box(const vector<double>& min, const vector<double>& max, 
              const double value = 0.0, const double error = 1.0):
-            _min(min), _max(max), _val(value), _error(error)
+            fMin(min), fMax(max), fVal(value), fError(error)
          { }
          
          // Compares to Boxes to see if they are equal in all its
          // variables. This is to be used by the std::find algorithm
          bool operator==(const Box& b)
-         { return (_min == b._min) && (_max == b._max) 
-               && (_val == b._val) && (_error == b._error);  }
+         { return (fMin == b.fMin) && (fMax == b.fMax) 
+               && (fVal == b.fVal) && (fError == b.fError);  }
          
          // Get the list of minimum coordinates
-         const vector<double>& getMin() const { return _min; }
+         const vector<double>& GetMin() const { return fMin; }
          // Get the list of maximum coordinates
-         const vector<double>& getMax() const { return _max; }
+         const vector<double>& GetMax() const { return fMax; }
          // Get the value of the Box
-         double getVal() const { return _val; }
+         double GetVal() const { return fVal; }
          // Get the rror of the Box
-         double getError() const { return _error; }
+         double GetError() const { return fError; }
          
          // Add an amount to the content of the Box
-         void addVal(const double value) { _val += value; }
+         void AddVal(const double value) { fVal += value; }
          
          friend class BoxContainer;
          friend ostream& operator <<(ostream& os, const Box& b);
          
       private:
-         vector<double> _min;
-         vector<double> _max;
-         double _val;
-         double _error;
+         vector<double> fMin;
+         vector<double> fMax;
+         double fVal;
+         double fError;
       };
       
       // This class is just a helper to be used in std::for_each to
@@ -77,31 +77,31 @@ namespace ROOT {
       class BoxContainer
       {
       private:
-         const Box& _b;
+         const Box& fBox;
       public:
          //Constructs the BoxContainer object with a Box that is meant
          //to include another one that will be provided later
-         BoxContainer(const Box& b): _b(b) {}
+         BoxContainer(const Box& b): fBox(b) {}
          
          bool operator() (const Box& b1)
-         { return operator()(_b, b1);  }
+         { return operator()(fBox, b1);  }
          
          // Looks if b2 is included in b1
          bool operator() (const Box& b1, const Box& b2)
          {
             bool isIn = true;
-            vector<double>::const_iterator boxit = b2._min.begin();
-            vector<double>::const_iterator bigit = b1._max.begin();
-            while ( isIn && boxit != b2._min.end() )
+            vector<double>::const_iterator boxit = b2.fMin.begin();
+            vector<double>::const_iterator bigit = b1.fMax.begin();
+            while ( isIn && boxit != b2.fMin.end() )
             {
                if ( (*boxit) >= (*bigit) ) isIn = false;
                boxit++;
                bigit++;
             }
             
-            boxit = b2._max.begin();
-            bigit = b1._min.begin();
-            while ( isIn && boxit != b2._max.end() )
+            boxit = b2.fMax.begin();
+            bigit = b1.fMin.begin();
+            while ( isIn && boxit != b2.fMax.end() )
             {
                if ( (*boxit) <= (*bigit) ) isIn = false;
                boxit++;
@@ -118,26 +118,27 @@ namespace ROOT {
       class AreaComparer
       {
       public:
-         AreaComparer(vector<double>::iterator iter, double cmpLimit = 8*std::numeric_limits<double>::epsilon() ): 
-            thereIsArea(true), 
-            it(iter),
-            limit(cmpLimit)
+         AreaComparer(vector<double>::iterator iter): 
+            fThereIsArea(true), 
+            fIter(iter),
+            fLimit(8 * std::numeric_limits<double>::epsilon())
          {};
          
          void operator() (double value)
          {
-            if ( fabs(value- (*it)) < limit )
-               thereIsArea = false;
+            if ( fabs(value- (*fIter)) < fLimit )
+//             if ( TMath::AreEqualRel(value, (*fIter), fLimit) )
+               fThereIsArea = false;
             
-            it++;
+            fIter++;
          }
          
-         bool isThereArea() { return thereIsArea; }
+         bool IsThereArea() { return fThereIsArea; }
          
       private:
-         bool thereIsArea;
-         vector<double>::iterator it;
-         double limit;
+         bool fThereIsArea;
+         vector<double>::iterator fIter;
+         double fLimit;
       };
       
 
@@ -157,14 +158,14 @@ namespace ROOT {
          
          boxmin[n] = min[n];
          boxmax[n] = bmin[n];
-         if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).isThereArea() )
+         if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).IsThereArea() )
             l.push_back(Box(boxmin, boxmax));
          
          boxmin[n] = bmin[n];
          boxmax[n] = bmax[n];
          if ( n == 0 ) 
          {
-            if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).isThereArea() )
+            if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).IsThereArea() )
                l.push_back(Box(boxmin, boxmax, val, error));
          }
          else
@@ -172,62 +173,74 @@ namespace ROOT {
          
          boxmin[n] = bmax[n];
          boxmax[n] = max[n];
-         if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).isThereArea() )
+         if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).IsThereArea() )
             l.push_back(Box(boxmin, boxmax));
       }
       
       class ProxyListBox
       {
       public:
-         void push_back(Box& box) { l.push_back(box); }
-         list<Box>::iterator begin() { return l.begin(); }
-         list<Box>::iterator end() { return l.end(); }
-         void remove(list<Box>::iterator it) { l.erase(it); }
-         list<Box>& getList() { return l; }
+         void PushBack(Box& box) { fProxy.push_back(box); }
+         list<Box>::iterator Begin() { return fProxy.begin(); }
+         list<Box>::iterator End() { return fProxy.end(); }
+         void Remove(list<Box>::iterator it) { fProxy.erase(it); }
+         list<Box>& GetList() { return fProxy; }
       private:
-         list<Box> l;
+         list<Box> fProxy;
       };
 
 
       SparseData::SparseData(vector<double>& min, vector<double>& max)
       {
+         // Creates a SparseData convering the range defined by min
+         // and max. For this it will create an empty Box for that
+         // range.
          Box originalBox(min, max);
-         l = new ProxyListBox();
-         l->push_back(originalBox);
+         fList = new ProxyListBox();
+         fList->PushBack(originalBox);
       }
 
       SparseData::SparseData(const unsigned int dim, double min[], double max[])
       {
+         // Creates a SparseData convering the range defined by min
+         // and max. For this it will create an empty Box for that
+         // range.
          vector<double> minv(min,min+dim);
          vector<double> maxv(max,max+dim);
          Box originalBox(minv, maxv);
-         l = new ProxyListBox();
-         l->push_back(originalBox);
+         fList = new ProxyListBox();
+         fList->PushBack(originalBox);
       }
 
       SparseData::~SparseData()
-      { delete l; }
+      { delete fList; }
 
       unsigned int SparseData::NPoints() const
       {
-         return l->getList().size();
+         // Returns the number of points stored, including the 0 ones.
+         return fList->GetList().size();
       }
       
       unsigned int SparseData::NDim() const
       {
-         return l->begin()->getMin().size();
+         // Returns the number of dimension of the SparseData object.
+         return fList->Begin()->GetMin().size();
       }
 
       void SparseData::Add(std::vector<double>& min, std::vector<double>& max, 
                            const double content, const double error)
       {
+         // Add a box to the stored ones. For that, it will look for
+         // the box that contains the new data and either replace it
+         // or updated it.
+
          // Little box is the new Bin to be added
          Box littleBox(min, max);
          list<Box>::iterator it;
          // So we look for the Bin already in the list that contains
          // littleBox
-         it = std::find_if(l->begin(), l->end(), BoxContainer(littleBox));
-         if ( it != l->end() )
+         it = std::find_if(fList->Begin(), fList->End(), BoxContainer(littleBox));
+         if ( it != fList->End() )
 //             cout << "Found: " << *it << endl;
             ;
          else {
@@ -237,17 +250,17 @@ namespace ROOT {
                     // underflow/overflow bin
          }
          // If it happens to have a value, then we add the value,
-         if ( it->getVal() )
-            it->addVal( content );
+         if ( it->GetVal() )
+            it->AddVal( content );
          else
          {
             // otherwise, we divide the container!
-            DivideBox(it->getMin(), it->getMax(),
-                      littleBox.getMin(), littleBox.getMax(),
-                      it->getMin().size(), it->getMin().size() - 1,
-                      l->getList(), content, error );
+            DivideBox(it->GetMin(), it->GetMax(),
+                      littleBox.GetMin(), littleBox.GetMax(),
+                      it->GetMin().size(), it->GetMin().size() - 1,
+                      fList->GetList(), content, error );
             // and remove it from the list
-            l->remove(it);
+            fList->Remove(it);
          }
       }
 
@@ -255,82 +268,94 @@ namespace ROOT {
                                 std::vector<double>& min, std::vector<double>&max,
                                 double& content, double& error)
       {
+         // Get the point number i. This is a method to explore the
+         // data stored in the class.
+
          unsigned int counter = 0;
-         list<Box>::iterator it = l->begin();
-         while ( it != l->end() && counter != i ) {
+         list<Box>::iterator it = fList->Begin();
+         while ( it != fList->End() && counter != i ) {
             ++it; 
             ++counter;
          }
 
-         if ( (it == l->end()) || (counter != i) )
+         if ( (it == fList->End()) || (counter != i) )
             throw std::out_of_range("SparseData::GetPoint");
 
-         min = it->getMin();
-         max = it->getMax();
-         content = it->getVal();
-         error = it->getError();
+         min = it->GetMin();
+         max = it->GetMax();
+         content = it->GetVal();
+         error = it->GetError();
       }
 
       void SparseData::PrintList() const
       {
-         copy(l->begin(), l->end(), ostream_iterator<Box>(cout, "\n------\n"));
+         // Debug method to print a list with all the data stored.
+         copy(fList->Begin(), fList->End(), ostream_iterator<Box>(cout, "\n------\n"));
       }
 
 
       void SparseData::GetBinData(BinData& bd) const
       {
-         list<Box>::iterator it = l->begin();
-         const unsigned int dim = it->getMin().size();
+         // Created the corresponding BinData
 
-         bd.Initialize(l->getList().size(), dim); 
+         list<Box>::iterator it = fList->Begin();
+         const unsigned int dim = it->GetMin().size();
+
+         bd.Initialize(fList->GetList().size(), dim); 
          // Visit all the stored Boxes
-         for ( ; it != l->end(); ++it )
+         for ( ; it != fList->End(); ++it )
          {
             vector<double> mid(dim);
             // fill up the vector with the mid point of the Bin
             for ( unsigned int i = 0; i < dim; ++i)
             {
-               mid[i] = ((it->getMax()[i] - it->getMin()[i]) /2) + it->getMin()[i];
+               mid[i] = ((it->GetMax()[i] - it->GetMin()[i]) /2) + it->GetMin()[i];
             }
             // And store it into the BinData structure
-            bd.Add(&mid[0], it->getVal(), it->getError());
+            bd.Add(&mid[0], it->GetVal(), it->GetError());
          }
       }
 
       void SparseData::GetBinDataIntegral(BinData& bd) const
       {
-         list<Box>::iterator it = l->begin();
+         // Created the corresponding BinData as with the Integral
+         // option.
 
-         bd.Initialize(l->getList().size(), it->getMin().size()); 
+         list<Box>::iterator it = fList->Begin();
+
+         bd.Initialize(fList->GetList().size(), it->GetMin().size()); 
          // Visit all the stored Boxes
-         for ( ; it != l->end(); ++it )
+         for ( ; it != fList->End(); ++it )
          {
             //Store the minimum value
-            bd.Add(&(it->getMin()[0]), it->getVal(), it->getError());
+            bd.Add(&(it->GetMin()[0]), it->GetVal(), it->GetError());
             //and the maximum
-            bd.AddBinUpEdge(&(it->getMax()[0]));
+            bd.AddBinUpEdge(&(it->GetMax()[0]));
          }
       }
 
       void SparseData::GetBinDataNoZeros(BinData& bd) const
       {
-         list<Box>::iterator it = l->begin();
-         const unsigned int dim = it->getMin().size();
+         // Created the corresponding BinData, but it does not include
+         // all the data with value equal to 0.
 
-         bd.Initialize(l->getList().size(), dim);
+         list<Box>::iterator it = fList->Begin();
+         const unsigned int dim = it->GetMin().size();
+
+         bd.Initialize(fList->GetList().size(), dim);
          // Visit all the stored Boxes
-         for ( ; it != l->end(); ++it )
+         for ( ; it != fList->End(); ++it )
          {
             // if the value is zero, jump to the next
-            if ( it->getVal() == 0 ) continue;
+            if ( it->GetVal() == 0 ) continue;
             vector<double> mid(dim);
             // fill up the vector with the mid point of the Bin
             for ( unsigned int i = 0; i < dim; ++i)
             {
-               mid[i] = ((it->getMax()[i] - it->getMin()[i]) /2) + it->getMin()[i];
+               mid[i] = ((it->GetMax()[i] - it->GetMin()[i]) /2) + it->GetMin()[i];
             }
             // And store it into the BinData structure
-            bd.Add(&mid[0], it->getVal(), it->getError());
+            bd.Add(&mid[0], it->GetVal(), it->GetError());
          }
       }
 
@@ -338,10 +363,10 @@ namespace ROOT {
       ostream& operator <<(ostream& os, const ROOT::Fit::Box& b)
       {
          os << "min: ";
-         copy(b.getMin().begin(), b.getMin().end(), ostream_iterator<double>(os, " "));
+         copy(b.GetMin().begin(), b.GetMin().end(), ostream_iterator<double>(os, " "));
          os << "max: ";
-         copy(b.getMax().begin(), b.getMax().end(), ostream_iterator<double>(os, " "));
-         os << "val: " << b.getVal();
+         copy(b.GetMax().begin(), b.GetMax().end(), ostream_iterator<double>(os, " "));
+         os << "val: " << b.GetVal();
          
          return os;
       }     
