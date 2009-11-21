@@ -5179,16 +5179,19 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
    //Flush existing baskets if the file is writable
    if (this->GetDirectory()->IsWritable()) this->FlushBaskets();
 
-   TString opt = option;
+   TString opt( option );
    opt.ToLower();
-   Bool_t pDebug = kFALSE;
-   if (opt.Contains("d")) pDebug = kTRUE;
+   Bool_t pDebug = opt.Contains("d");
    TObjArray *leaves = this->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntries();
+   Double_t treeSize = (Double_t)this->GetTotBytes();
+   if (nleaves == 0 || treeSize == 0) {
+      // We're being called too early, we really have nothing to do ...
+      return;
+   }
+   Double_t aveSize = treeSize/nleaves;
    Int_t bmin = 512;
    Int_t bmax = 256000;
-   Double_t treeSize = (Double_t)this->GetTotBytes();
-   Double_t aveSize = treeSize/nleaves;
    Double_t memFactor = 1;
    Int_t i, oldMemsize,newMemsize,oldBaskets,newBaskets;
    //we make two passes
@@ -5214,8 +5217,8 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
          }
          Int_t newBsize = Int_t(oldBsize*idealFactor*memFactor);
          newBsize = newBsize - newBsize%512;
-         if (newBsize <bmin) newBsize = bmin;
-         if (newBsize >bmax) newBsize = bmax;
+         if (newBsize < bmin) newBsize = bmin;
+         if (newBsize > bmax) newBsize = bmax;
          if (pass) {
             if (pDebug) printf("Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
             branch->SetBasketSize(newBsize);
