@@ -261,6 +261,7 @@ void  TQtPadFont::SetTextSize(Float_t textsize)
  {
     // Set the text pixel size
     TAttText::SetTextSizePixels(npixels);
+    if (npixels <=0) npixels=1;
     this->setPixelSize(npixels);
  }
 //______________________________________________________________________________
@@ -297,7 +298,7 @@ void TQtPadFont::SetSymbolFontFamily(const char *symbolFnName)
 }
 
 //______________________________________________________________________________
-void   TQtPadFont::SetTextMaginfy(Float_t  mgn)
+void   TQtPadFont::SetTextMagnify(Float_t  mgn)
 {
    //
    // Scale the font accroding the inout mgn magnification factor
@@ -306,5 +307,9 @@ void   TQtPadFont::SetTextMaginfy(Float_t  mgn)
    // see: TVirtualX::DrawText(int x, int y, float angle, float mgn, const char *text, TVirtualX::ETextMode /*mode*/)
    //
     Int_t tsize = (Int_t)(fTextSize+0.5);
-    if (TMath::Abs(mgn-1) >0.05)  this->setPixelSize(int(mgn*FontMagicFactor(tsize)));
+    if (TMath::Abs(mgn-1) >0.05)  {
+       int pxSize = mgn*FontMagicFactor(tsize);
+       if(pxSize<=0) pxSize=1;
+       this->setPixelSize(pxSize);
+    }
 }

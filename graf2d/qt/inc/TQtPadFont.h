@@ -39,7 +39,7 @@ public:
    void  SetTextFont(Font_t fontnumber=62);
    void  SetTextSize(Float_t textsize=1);
    void  SetTextSizePixels(Int_t npixels);
-   void  SetTextMaginfy(Float_t mgn);
+   void  SetTextMagnify(Float_t mgn);
    static const char *RomanFontName();
    static const char *ArialFontName();
    static const char *CourierFontName();

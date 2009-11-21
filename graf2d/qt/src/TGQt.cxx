@@ -1556,7 +1556,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
    // fprintf(stderr,"TGQt::DrawText: %s\n", text);
    if (text && text[0]) {
       TQtLock lock;
-      fQFont->SetTextMaginfy(mgn);
+      fQFont->SetTextMagnify(mgn);
       TQtPainter p(this,TQtPainter::kUpdateFont);
       p.setPen(ColorIndex(fTextColor));
       p.setBrush(ColorIndex(fTextColor));
