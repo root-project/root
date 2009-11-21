@@ -24,11 +24,12 @@
 ClassImp(TEveVSD);
 
 //______________________________________________________________________________
-TEveVSD::TEveVSD() :
+TEveVSD::TEveVSD(const char* , const char*) :
    TObject(),
 
    fFile      (0),
    fDirectory (0),
+   fBuffSize  (32000),
    fVerbose   (0),
 
    fTreeK  (0),

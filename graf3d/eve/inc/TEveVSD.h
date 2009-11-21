@@ -25,6 +25,7 @@ protected:
    TFile             *fFile;        //!
    TDirectory        *fDirectory;   //!
 
+   Int_t              fBuffSize;    //!
    Int_t              fVerbose;     //!
 
 public:
@@ -47,7 +48,7 @@ public:
    TEveMCRecCrossRef  fGI, *fpGI;   //!
 
 public:
-   TEveVSD();
+   TEveVSD(const char* name="TEveVSD", const char* title="");
    virtual ~TEveVSD();
 
    virtual void SetDirectory(TDirectory* dir);
