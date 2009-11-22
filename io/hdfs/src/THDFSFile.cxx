@@ -40,7 +40,7 @@ static const size_t R__HDFS_PREFIX_LEN = 7;
 #define TRACE(x) \
   Debug("THDFSFile", "%s", x);
 #else
-#define TRACE(x); 
+#define TRACE(x);
 #endif
 
 ClassImp(THDFSFile)
@@ -51,11 +51,11 @@ THDFSFile::THDFSFile(const char *path, Option_t *option,
    TFile(path, "NET", ftitle, compress)
 {
    // Usual Constructor.  See the TFile constructor for details.
-   
+
    fHdfsFH = 0;
    fFS = 0;
    fSize = -1;
-   fPath = NULL;
+   fPath = 0;
 
    fOption = option;
    fOption.ToUpper();
@@ -121,21 +121,21 @@ zombie:
    // Error in opening file; make this a zombie
    MakeZombie();
    gDirectory = gROOT;
-
 }
 
 //______________________________________________________________________________
 THDFSFile::~THDFSFile()
 {
    // Close and clean-up HDFS file.
+
    TRACE("destroy")
 
-   if (NULL != fPath)
+   if (0 != fPath)
       free(fPath);
 
    // We assume that the file is closed in SysClose
 /*
-   if (NULL != fHdfsFH && NULL != fFS) {
+   if (0 != fHdfsFH && 0 != fFS) {
       if (hdfsCloseFile(fFS, (hdfsFile)fHdfsFH) != 0) {
           SysError("THDFSFile", "Error closing file %s", fPath);
       }
@@ -144,9 +144,9 @@ THDFSFile::~THDFSFile()
    // Explicitly release reference to HDFS filesystem object.
    // Turned off now due to compilation issues.
 /*
-   if (NULL != fFS) {
+   if (0 != fFS) {
       JNIEnv* env = getJNIEnv();
-      if (env == NULL) {
+      if (env == 0) {
           SysError("THDFSFile", "Internal error; cannot get JNI env");
       } else {
          env->DeleteGlobalRef((jobject)fFS);
@@ -160,6 +160,7 @@ Bool_t THDFSFile::WriteBuffer(const char *, Int_t)
 {
    // Write specified byte range to remote file via HDFS
    // We do not support writes, so an error is always returned.
+
    SysError("THDFSFile", "Writes are not supported by THDFSFile");
    return kTRUE;
 }
@@ -168,7 +169,8 @@ Bool_t THDFSFile::WriteBuffer(const char *, Int_t)
 Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
 {
    // Read specified number of bytes from current offset into the buffer.
-   // See documentation for TFile::SysRead
+   // See documentation for TFile::SysRead().
+
    TRACE("READ")
    tSize num_read = hdfsPread(fFS, (hdfsFile)fHdfsFH, fOffset, buf, len);
    fOffset += len;
@@ -183,6 +185,7 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 {
    // Seek to a specified position in the file.  See TFile::SysSeek.
    // Note that THDFSFile does not support seeks when the file is open for write.
+
    TRACE("SEEK")
    if (whence == SEEK_SET)
       fOffset = offset;
@@ -195,7 +198,7 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
       }
       if (fSize == -1) {
          hdfsFileInfo *info = hdfsGetPathInfo(fFS, fPath);
-         if (info != NULL) {
+         if (info != 0) {
             fSize = info->mSize;
             free(info);
          } else {
@@ -215,10 +218,11 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
 {
    // Open a file in HDFS.
+
    Long64_t path_len = strlen(pathname + R__HDFS_PREFIX_LEN);
    fPath = (char*)malloc((path_len+1)*sizeof(char));
    strcpy(fPath, pathname + R__HDFS_PREFIX_LEN);
-   if ((fHdfsFH = hdfsOpenFile(fFS, pathname + R__HDFS_PREFIX_LEN, flags, 0, 0, 0)) == NULL) {
+   if ((fHdfsFH = hdfsOpenFile(fFS, pathname + R__HDFS_PREFIX_LEN, flags, 0, 0, 0)) == 0) {
       SysError("THDFSFile", "Unable to open file %s in HDFS", pathname + R__HDFS_PREFIX_LEN);
       return -1;
    }
@@ -229,9 +233,10 @@ Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
 Int_t THDFSFile::SysClose(Int_t)
 {
    // Close the file in HDFS.
+
    int result = hdfsCloseFile(fFS, (hdfsFile)fHdfsFH);
-   fFS = NULL;
-   fHdfsFH = NULL;
+   fFS = 0;
+   fHdfsFH = 0;
    return result;
 }
 
@@ -239,6 +244,7 @@ Int_t THDFSFile::SysClose(Int_t)
 Int_t THDFSFile::SysWrite(Int_t, const void *, Int_t)
 {
    // Write a buffer into the file; this is not supported currently.
+
    errno = ENOSYS;
    return -1;
 }
@@ -246,11 +252,12 @@ Int_t THDFSFile::SysWrite(Int_t, const void *, Int_t)
 //______________________________________________________________________________
 Int_t THDFSFile::SysStat(Int_t, Long_t* id, Long64_t* size, Long_t* flags, Long_t* modtime)
 {
-   // Perform a stat on the HDFS file; see TFile::SysStat
+   // Perform a stat on the HDFS file; see TFile::SysStat().
+
    *id = ::Hash(fPath);
 
    hdfsFileInfo *info = hdfsGetPathInfo(fFS, fPath);
-   if (info != NULL) {
+   if (info != 0) {
       fSize = info->mSize;
       *size = fSize;
       if (info->mKind == kObjectKindFile)
@@ -262,7 +269,7 @@ Int_t THDFSFile::SysStat(Int_t, Long_t* id, Long64_t* size, Long_t* flags, Long_
    } else {
       return 1;
    }
- 
+
 
    return 0;
 }
@@ -270,7 +277,8 @@ Int_t THDFSFile::SysStat(Int_t, Long_t* id, Long64_t* size, Long_t* flags, Long_
 //______________________________________________________________________________
 Int_t THDFSFile::SysSync(Int_t)
 {
-   // Sync remaining data to disk; Not supported by HDFS
+   // Sync remaining data to disk; Not supported by HDFS.
+
    errno = ENOSYS;
    return -1;
 }
@@ -278,8 +286,7 @@ Int_t THDFSFile::SysSync(Int_t)
 //______________________________________________________________________________
 void THDFSFile::ResetErrno() const
 {
-   // ResetErrno; simply calls TSystem::ResetErrno
+   // ResetErrno; simply calls TSystem::ResetErrno().
+
    TSystem::ResetErrno();
 }
-
-

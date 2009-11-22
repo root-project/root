@@ -2,7 +2,7 @@
 // Author: Brian Bockelman 29/09/2009
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2009, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -29,10 +29,10 @@
 class THDFSFile : public TFile {
 
 private:
-   void* fHdfsFH;
-   void* fFS;
-   Long64_t fSize;
-   char * fPath;
+   void     *fHdfsFH;   // HDFS file handle
+   void     *fFS;       // HDFS user handle
+   Long64_t  fSize;     // file size
+   char     *fPath;     // HDFS path name
 
    Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    Int_t    SysClose(Int_t fd);
@@ -45,8 +45,7 @@ private:
 public:
    THDFSFile(const char *path, Option_t *option="",
              const char *ftitle="", Int_t compress=1);
-
-   ~THDFSFile();
+   virtual ~THDFSFile();
 
    Bool_t  WriteBuffer(const char *buf, Int_t len);
 
