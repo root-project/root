@@ -953,17 +953,12 @@ Int_t TChain::GetEntryWithIndex(Int_t major, Int_t minor)
 {
    // -- Return entry corresponding to major and minor number.
    //
-   // For example:
-   //
-   //      Int_t run = 1234;
-   //      Int_t event = 345;
-   //      Long64_t serial = chain.GetEntryNumberWithIndex(run, event);
-   //
-   // Now the variable serial is in the range [0,nentries] and one can do
-   // chain.GetEntry(serial);
-   //
-   // WARNING: This function will not work if teh chain has friend chains.
-
+   //  The function returns the total number of bytes read.
+   //  If the Tree has friend trees, the corresponding entry with
+   //  the index values (major,minor) is read. Note that the master Tree
+   //  and its friend may have different entry serial numbers corresponding
+   //  to (major,minor).
+   
    Long64_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;
    return GetEntry(serial);
