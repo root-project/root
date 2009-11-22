@@ -102,6 +102,7 @@ text sizes:
   <a href="https://savannah.cern.ch/bugs/?55911">#55911</a>.
   <li>In the implementation of  TH1::ResetStats(), set the statistics to the one calculated using the bin center and also reset the number of entries to the
       total bin content or to the effective entries in case of a weighted histogram.
+  <li>Add check of compatibility for each bins when using hstogram operation mtehods like Add on variable bin histograms.
   </ul>
 
 <h4>THistPainter</h4>
@@ -117,6 +118,14 @@ that the surface is plotted with colors and the contours on top with lines.
   <li>Fixed problem in &lt;http://root.cern.ch/phpBB2/viewtopic.php?t=9208&highlight=&gt;</li>
 </ul>
 
+<h4>TGraphErrors</h4>
+<ul>
+  <li>Add a new fitting option "EX0", to neglect the error in X when fitting
+  </li>
+  </ul>
+
+  
+
 <h4>THnSparse</h4>
 <ul>
   <li>Make a function to generate a THnSparse from a corresponding TH1.</li>
@@ -125,7 +134,30 @@ that the surface is plotted with colors and the contours on top with lines.
   <li>Implement the multiplication proposal in
     &lt;http://root.cern.ch/phpBB2/viewtopic.php?t=7692&gt;, as weel
     as implemeting unit tests for it.</li>
+    <li>Add a new method <tt>Fit()</tt> for fitting a THNSparse. By default the likelihood method is used. For using a least square
+    method (not really reccomended) if the histogram is really sparse, the option "X" must be used.  
 </ul>
+
+<h4>new classes TFitResult, TFitResultPtr</h4>
+<ul>
+ <li> All the <tt>Fit</tt> method of the Hist library now instead of returning an integer returns a <tt>TFitResultPtr</tt> object. The TFitResultPtr is an object that converts automatically to an integer, the status code of the fit. There is a no visible change for the user, if the Fit method is used as before.
+  <li>When using the fit option "S", the TFitResultPtr will contain a pointer to the new <tt>TFitResult</tt> class. In addition it will behave as a smart pointer to TFitResult, so by using the -> operator the user can call the TFitResult methods or by using the de-reference operator * or Get(), access directly the TFitResult object. 
+  <li><tt>TFitResult</tt> derives from the <tt>ROOT::Math::FitResult</tt> which contains all the result information from a fit and from <tt>TNamed</tt>. It provides then I/O capabilities for the FitResult object and conevenience methods like Print(), Write() and GetCovarianceMatrix() and GetCorrelationMatrix() which return a TMatrixDSym object.
+  <li>Example of usage:
+  <pre>
+     TFitResult r = h->Fit("myFunc","S");
+     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
+     Double_t chi2   = r->Chi2(); // to retrieve the fit chi2 
+     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0 
+     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0 
+     r->Print("V");     // print full information of fit including covariance matrix
+     r->Write();        // store the result in a file
+</pre>
+  </ul>
+  
+
+
+  
 
 <h3>FitPanel</h3>
 <ul>

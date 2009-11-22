@@ -37,17 +37,42 @@ TMatrixD M = v1' * v2      // outer product of v1 and v2
   operations test.
 </ul>
 
+<h4>Minuit</h4>
+<ul>
+  <li>Implement in the TMinuitMinimizer class the method SetPrecision() using the "SET EPS" Minuit command
+  <li>Fix a problem when using the user provided gradient in TMinuitMinimizer. The gradient calculation is always forced.
+  <li>Implement in TMinuitMinimizer method to retrieve the variable name given the index
+  <li>Fix a printout in TMinuit::mnscan and a problem observed with valgrind>
+ </ul>
+
 <h4>Minuit2</h4>
   <ul>
     <li>Fix a bug in MnFunctionCross. 
     <li>Add a protection against very small step sizes which can cause
   <em>nan</em> values in  InitialGradientCalculator.
+    <li> Implement a new function in MnUserTransformation.h, FindIndex(name)  which retunrs -1 when the parameter name does not exist.
+    <li> Implement new methods in Minuit2Minimizer as requested by the Minimizer interface:
+    SetPrecision(eps), which changes the value in MnPrecision,  VariableName(index) to return the name of a varaible (parameter) given an index and VariableIndex(name) to return the index of a variable given a name.  
+<li> Set a  status code in Minuit2Minimizer according to the following convention: status = minimizeStatus + 10 * minosStatus + 100 * hesseStatus. See the Minuit2Minimizer reference documentation for the possible values of minimizeStatus , minosStatus and hesseStatus. 
+    <li> In MnHesse when inversion failed return MnInvertFailed instead of MnHesseFailed
 </ul>
 
-<h4>Fitting classes</h4>
+<h4>Mathcore Fitting classes</h4>
 <ul>
 <li>Fix the fitting with the integral option in multi-dimensions. 
 <li>Force the gradient calculation when requested in the minimizer
   classes and avoid to perform the check when using TMinuit. This was
-  already the case in Minuit2. 
+  already the case in Minuit2.
+<li>Add new class <tt>ROOT::Fit::SparseData</tt> for dealing with binned sparse data. This class automatically merges the empty region, so they can be considered,  whenever possible as a larger single bin. This imporves the performances when performing likelihood fits on the sparse data
+</li>
+<li>Fix the likelihood fits for variable bin histograms. Now a correct normalization is applied according to the bin volume.
+<li>Add new methods in Minimizer class :
+<ul>
+<li><tt>Minimizer::SetPrecision(double eps)</tt>  to change in the minimizer the precision on which the objective functions are evaluated. By default the numerical double precision is used inside the minimizers. This method should be used only if the precision in the function evaluation is worse than the double precision. 
+  <li><tt>std::string Minimizer::VariableName (unsigned int index)</tt> to return a name of the minimizer  variable (i.e. a fitting parameter) given the integer index. Return an empty string if the variable is not found or of the minimizer does not re-implement this method. 
+  <li><tt>int Minimizer::VariableIndex(const std::string & name)</tt> to return the index of a variable given a name. Return -1 if the variable is not found or if the specific minimizer does not re-implement this function.  
+  </ul>
+
+  <li><tt>ROOT::Fit::FitResult</tt>: fix a problem in the I/O, the function pointer is made temporary and cannot be saved. Change also the Print() method to print now the results also when the fit is invalid (i.e. did not converge correctly).
+  
   </ul>
