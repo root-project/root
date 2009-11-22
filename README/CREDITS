@@ -53,7 +53,7 @@ N: Daniel Barna
 E: daniel.barna@cern.ch
 D: CINT install target
 
-N: Jean-Francois Bastien 
+N: Jean-Francois Bastien
 E: jfbastien@cae.com
 D: contribution to Reflex
 
@@ -85,6 +85,10 @@ D: TMath::BubbleHigh, TMath::BubbleLow
 N: Marek Biskup
 E: Marek.Biskup@cern.ch
 D: PROOF contributions
+
+N: Brian Bockelman
+E: bbockelm@math.unl.edu
+D: THDFSFile for accessing the Hadoop file system
 
 N: Sebastian Boeser
 E: sboeser@ifh.de
@@ -752,7 +756,7 @@ E: Kai.Voss@cern.ch
 D: contribution to the TMVA package
 
 N: Shaowen Wang
-E: shaowen-wang@uiowa.edu 
+E: shaowen-wang@uiowa.edu
 D: TOracleResult
 
 N: Hady Zalek
