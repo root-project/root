@@ -308,7 +308,7 @@ void   TQtPadFont::SetTextMagnify(Float_t  mgn)
    //
     Int_t tsize = (Int_t)(fTextSize+0.5);
     if (TMath::Abs(mgn-1) >0.05)  {
-       int pxSize = mgn*FontMagicFactor(tsize);
+       int pxSize = int(mgn*FontMagicFactor(tsize));
        if(pxSize<=0) pxSize=1;
        this->setPixelSize(pxSize);
     }
