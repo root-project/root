@@ -990,7 +990,7 @@ fi
 confhelp() {
 vers=`cat build/version_number`
 cat <<EOF
-\`configure' configures ROOT $vers to adapt to many kind of systems.
+'configure' configures ROOT $vers to adapt to many kind of systems.
 
 Usage:     $0 [architecture] [flag=value]
 
@@ -1956,85 +1956,6 @@ if test "x$enable_builtin_zlib" = "xno" ; then
 fi
 message "Checking whether to build included zlib"
 result "$enable_builtin_zlib"
-
-### echo %%% HDFS Support - Third party libraries
-#
-# (See http://hadoop.apache.org/hdfs)
-#
-# Check for hdfs.h of HDFS and libhdfs
-#
-shiftold=""
-if test ! "x$enable_yes" = "xno" ; then
-    # Check for hdfs include and library
-    keepincdir=$hdfsincdir
-    check_header "hdfs.h" "$hdfsincdir" $HDFS $HDFS/include $HDFS/src/c++/libhdfs \
-        $HADOOP_HOME $HADOOP_HOME/src/c++/libhdfs /usr/include \
-        /usr/local/include
-    hdfsinc=$found_hdr
-    hdfsincdir=$found_dir
-
-    keepincdir=$jniincdir
-    check_header "jni.h" "$jniincdir" $JAVA_HOME/include \
-        /usr/java/default/include /usr/include /usr/local/include
-    jniinc=$found_hdr
-    jniincdir=$found_dir
-
-    check_library "libhdfs" "$enable_shared" \
-        "$hdfslibdir" \
-        $HDFS $HDFS/lib $HDFS/build/libhdfs $HADOOP_HOME $HADOOP_HOME/build/libhdfs \
-        /usr/lib /usr/local/lib
-    hdfslib=$found_lib
-    hdfslibdir=$found_dir
-
-    check_library "libjvm" "$enable_shared" \
-        "$jvmlibdir" \
-        $JAVA_HOME/jre/lib/amd64/server $JAVA_HOME/jre/lib/i386/server \
-        /usr/java/default/jre/lib/amd64/server \
-        /usr/java/default/jre/lib/i386/server /usr/lib /usr/local/lib
-    jvmlib=$found_lib
-    jvmlibdir=$found_dir
-
-    if test "x$hdfsincdir" = "x" || test "x$hdfslib" = "x" || test "x$jniincdir" = "x" || test "x$jvmlib" = "x"; then
-        enable_hdfs="no"
-    else
-        case $platform in
-           linux)      hdfslib="$hdfslib"
-                for i in "" -ladns ; do
-                    echo 'extern hdfsConnect(const char *, uint16_t); int main() { hdfsConnect("default", 0); return 0; }' > conftest.c
-                    logmsg " Checking if we can link against $hdfslib"
-                    logmsg " gcc conftest.c $hdfslibdir $hdfslib $i -o conftest"
-                    gcc conftest.c $hdfslibdir $hdfslib $i -o conftest >> $logfile 2>&1
-                    if test $? -eq 0 ; then
-                        hdfslib="$hdfslib $i" ;
-                        break ;
-                    else
-                        logmsg " Failed program was:"
-                        cat conftest.c >> $logfile
-                    fi
-                done
-                rm -f conftest.c conftest
-
-                jvmlib="$jvmlib"
-                for i in "" -ladns ; do
-                    echo '#include "jni.h"; extern JNI_CreateJavaVM(JavaVM*, JNIEnv*, JavaVMInitArgs*); int main() { JNI_CreateJavaVM(NULL, NULL, NULL); return 0; }' > conftest.c
-                    logmsg " Checking if we can link against $jvmlib"
-                    logmsg " gcc conftest.c $jniincdir $jvmlibdir $jvmlib $i -o conftest"
-                    gcc conftest.c $jvmlibdir $jvmlib $i -o conftest >> $logfile 2>&1
-                    if test $? -eq 0 ; then
-                        jvmlib="$jvmlib $i" ;
-                        break ;
-                    else
-                        logmsg " Failed program was:"
-                        cat conftest.c >> $logfile
-                    fi
-                done
-                rm -f conftest.c conftest
-                ;;
-        esac
-    fi
-fi
-check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
-     "Explicitly required RFIO dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3053,6 +2974,89 @@ if test ! "x$enable_chirp" = "xno" ; then
 fi
 check_explicit "$enable_chirp" "$enable_chirp_explicit" \
      "Explicitly required Chirp dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% HDFS Support - Third party libraries
+#
+# (See http://hadoop.apache.org/hdfs)
+#
+# Check for hdfs.h of HDFS and libhdfs
+#
+if test ! "x$enable_hdfs" = "xno" ; then
+    # Check for hdfs include and library
+    keepincdir=$hdfsincdir
+    check_header "hdfs.h" "$hdfsincdir" $HDFS $HDFS/include $HDFS/src/c++/libhdfs \
+        $HADOOP_HOME $HADOOP_HOME/src/c++/libhdfs /usr/include \
+        /usr/local/include
+    hdfsinc=$found_hdr
+    hdfsincdir=$found_dir
+
+    keepincdir=$jniincdir
+    check_header "jni.h" "$jniincdir" $JAVA_HOME/include \
+        /usr/java/default/include /usr/include /usr/local/include
+    jniinc=$found_hdr
+    jniincdir=$found_dir
+
+    check_library "libhdfs" "$enable_shared" \
+        "$hdfslibdir" \
+        $HDFS $HDFS/lib $HDFS/build/libhdfs $HADOOP_HOME $HADOOP_HOME/build/libhdfs \
+        /usr/lib /usr/local/lib
+    hdfslib=$found_lib
+    hdfslibdir=$found_dir
+
+    check_library "libjvm" "$enable_shared" \
+        "$jvmlibdir" \
+        $JAVA_HOME/jre/lib/amd64/server $JAVA_HOME/jre/lib/i386/server \
+        /usr/java/default/jre/lib/amd64/server \
+        /usr/java/default/jre/lib/i386/server /usr/lib /usr/local/lib
+    jvmlib=$found_lib
+    jvmlibdir=$found_dir
+
+    if test "x$hdfsincdir" = "x" || test "x$hdfslib" = "x" || test "x$jniincdir" = "x" || test "x$jvmlib" = "x"; then
+        enable_hdfs="no"
+    else
+        case $platform in
+           linux)
+                hdfslib="$hdfslib"
+                for i in "" -ladns ; do
+                    echo 'extern hdfsConnect(const char *, uint16_t); int main() { hdfsConnect("default", 0); return 0; }' > conftest.c
+                    logmsg " Checking if we can link against $hdfslib"
+                    logmsg " gcc conftest.c $hdfslibdir $hdfslib $i -o conftest"
+                    gcc conftest.c $hdfslibdir $hdfslib $i -o conftest >> $logfile 2>&1
+                    if test $? -eq 0 ; then
+                        hdfslib="$hdfslib $i" ;
+                        break ;
+                    else
+                        logmsg " Failed program was:"
+                        cat conftest.c >> $logfile
+                        enable_hdfs="no"
+                    fi
+                done
+                rm -f conftest.c conftest
+
+                jvmlib="$jvmlib"
+                for i in "" -ladns ; do
+                    echo '#include "jni.h"; extern JNI_CreateJavaVM(JavaVM*, JNIEnv*, JavaVMInitArgs*); int main() { JNI_CreateJavaVM(NULL, NULL, NULL); return 0; }' > conftest.c
+                    logmsg " Checking if we can link against $jvmlib"
+                    logmsg " gcc conftest.c $jniincdir $jvmlibdir $jvmlib $i -o conftest"
+                    gcc conftest.c $jvmlibdir $jvmlib $i -o conftest >> $logfile 2>&1
+                    if test $? -eq 0 ; then
+                        jvmlib="$jvmlib $i" ;
+                        break ;
+                    else
+                        logmsg " Failed program was:"
+                        cat conftest.c >> $logfile
+                        enable_hdfs="no"
+                    fi
+                done
+                rm -f conftest.c conftest
+                ;;
+        esac
+    fi
+fi
+check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
+     "Explicitly required HDFS dependencies not fulfilled"
 
 ######################################################################
 #

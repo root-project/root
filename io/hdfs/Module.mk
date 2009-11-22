@@ -44,7 +44,7 @@ include/%.h:    $(HDFSDIRI)/%.h
 $(HDFSLIB):     $(HDFSO) $(HDFSDO) $(ORDER_) $(MAINLIBS) $(HDFSLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHDFS.$(SOEXT) $@ "$(HDFSO) $(HDFSDO)" \
-		   "$(HDFSLIBDIR) $(HDFSLIBEXTRA) $(HDFSCLILIB) $(JVMLIBDIR) $(JVMCLILIB)"
+		   "$(HDFSLIBEXTRA) $(HDFSLIBDIR) $(HDFSCLILIB) $(JVMLIBDIR) $(JVMCLILIB)"
 
 $(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
@@ -68,4 +68,3 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(HDFSO) $(HDFSDO) $(HDFSSO) $(HDFSDS): CXXFLAGS += $(HDFSCFLAGS) $(HDFSINCDIR:%=-I%) $(JNIINCDIR:%=-I%)
-

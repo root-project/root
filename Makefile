@@ -292,7 +292,7 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                cint/cintexcompat tmva \
+                cint/cintexcompat tmva io/hdfs \
                 cint/cint7 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat \
