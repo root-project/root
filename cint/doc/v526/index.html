@@ -59,6 +59,8 @@ scope) and take at least one argument that is a reference, pointer, or value arg
   <li>Cintex
   <ul>
     <li>Fix the implementation of ShowMembers in the case where the members are of type with a rootcint dictionary and no genreflex dictionary.</li>
+    <li>Don't add artificial <tt>Streamer()</tt> or <tt>StreamerNVirtual()</tt> methods to class passed through Cintex anymore. This speeds up the I/O of classes with Reflex dictionaries.</li>
+    <li>Only flag the artificial <tt>ShowMembers()</tt> as <tt>virtual</tt> if the class already has a virtual function table; otherwise ROOT will wrongly expect the class to have a virtual function table.</li>
   </ul>
   </li>
 </ul>
