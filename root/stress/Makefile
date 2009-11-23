@@ -21,6 +21,9 @@ endif
 ifeq ($(findstring unuran,$(shell root-config --features)),)
 STRESSTESTS  := $(filter-out stressHistoFit-test,$(STRESSTESTS))
 endif
+ifeq ($(findstring minuit2,$(shell root-config --features)),)
+STRESSTESTS  := $(filter-out stressHistoFit-test,$(STRESSTESTS))
+endif
 
 TEST_TARGETS += $(STRESSTESTS)
 
