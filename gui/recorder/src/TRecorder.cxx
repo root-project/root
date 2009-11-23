@@ -806,9 +806,8 @@ Bool_t TRecorderReplaying::CanOverlap()
       return kFALSE;
    }
 
-   // Commandline events.
-   // Overlapping not allowed
-   if (fNextEvent->GetType() == TRecEvent::kCmdEvent)
+   // only GUI events overlapping is allowed
+   if (fNextEvent->GetType() != TRecEvent::kGuiEvent)
       return kFALSE;
 
 
@@ -821,12 +820,9 @@ Bool_t TRecorderReplaying::CanOverlap()
    // GUI event
    TRecGuiEvent *e  = (TRecGuiEvent*) fNextEvent;
 
-   // Overlapping allowed only for ButtonPress
-   if (e->fType == kButtonPress)
-      return kTRUE;
-
-   // and ButtonRelease events
-   if (e->fType == kButtonRelease)
+   // Overlapping allowed for ButtonPress, ButtonRelease and MotionNotify
+   if (e->fType == kButtonPress || e->fType == kButtonRelease ||
+       e->fType == kMotionNotify)
       return kTRUE;
 
    return kFALSE;
