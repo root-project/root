@@ -40,6 +40,7 @@
 // Also, the arrays must be declared extern like on Windows
 #ifndef WIN32
 #define PAWC_SIZE 4000000
+#  define bigbuf bigbuf_
 #  define pawc pawc_
 #  define quest quest_
 #  define hcbits hcbits_
@@ -50,6 +51,7 @@
 //int hcbits[37];
 //int hcbook[51];
 //int rzcl[11];
+extern "C" char bigbuf[PAWC_SIZE];
 extern "C" int pawc[PAWC_SIZE];
 extern "C" int quest[100];
 extern "C" int hcbits[37];
@@ -70,7 +72,6 @@ extern "C" int hcbook[51];
 extern "C" int rzcl[11];
 #endif
 
-char bigbuf[4000000]; //this variable must be global for amd64
 int *iq, *lq;
 float *q;
 char idname[128];

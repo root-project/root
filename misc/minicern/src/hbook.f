@@ -25,6 +25,8 @@
      +       NCHAR ,NRHIST,IERR  ,NV
       INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
       REAL                                       FENC   ,      HCV
+      COMMON/BIGBUF/BIGB(4000000)
+      character BIGB
       COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
      +HCV(4000000-11)
       INTEGER   IQ        ,LQ
