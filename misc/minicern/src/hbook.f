@@ -25,8 +25,6 @@
      +       NCHAR ,NRHIST,IERR  ,NV
       INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
       REAL                                       FENC   ,      HCV
-      common/bigbuf/bigb(4000000)
-      character bigb
       COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
      +HCV(4000000-11)
       INTEGER   IQ        ,LQ
@@ -2557,11 +2555,10 @@
             ENDIF
             IELEM = IELEM*IE
    10    CONTINUE
-*         IADDW = ISHFT(IADD, -2)
-*         IBYOF = IAND(IADD, IBYPW-1)
-*         IF (IBYOF .NE. 0) GOTO 40
-*         IQ(LNAME+IOFF+ZNADDR) = IADDW - LOCF(IQ(1))
-         IQ(LNAME+IOFF+ZNADDR) = IADD
+         IADDW = ISHFT(IADD, -2)
+         IBYOF = IAND(IADD, IBYPW-1)
+         IF (IBYOF .NE. 0) GOTO 40
+         IQ(LNAME+IOFF+ZNADDR) = IADDW - LOCF(IQ(1))
          IADD = IADD + IELEM*ISIZE
    20    IOFF = IOFF + ZNADDR
    30 CONTINUE

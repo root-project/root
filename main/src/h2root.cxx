@@ -40,7 +40,6 @@
 // Also, the arrays must be declared extern like on Windows
 #ifndef WIN32
 #define PAWC_SIZE 4000000
-#  define bigbuf bigbuf_
 #  define pawc pawc_
 #  define quest quest_
 #  define hcbits hcbits_
@@ -59,7 +58,6 @@ extern "C" int rzcl[11];
 #else
 // on windows /pawc/ must have the same length as in libPacklib.a !!
 #define PAWC_SIZE 4000000
-#  define bigbuf BIGBUF
 #  define pawc   PAWC
 #  define quest  QUEST
 #  define hcbits HCBITS
@@ -72,7 +70,7 @@ extern "C" int hcbook[51];
 extern "C" int rzcl[11];
 #endif
 
-extern "C" char bigbuf[4000000]; //this variable must be global for amd64
+char bigbuf[4000000]; //this variable must be global for amd64
 int *iq, *lq;
 float *q;
 char idname[128];
@@ -213,19 +211,19 @@ extern "C" void  type_of_call hdelet(const int&);
 extern "C" void  type_of_call hix(const int&,const int&,const float&);
 extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
 
-//#ifndef R__B64
+#ifndef R__B64
 extern "C" float type_of_call hi(const int&,const int&);
 extern "C" float type_of_call hie(const int&,const int&);
 extern "C" float type_of_call hif(const int&,const int&);
 extern "C" float type_of_call hij(const int&,const int&,const int&);
 extern "C" float type_of_call hije(const int&,const int&,const int&);
-//#else
-//extern "C" double type_of_call hi(const int&,const int&);
-//extern "C" double type_of_call hie(const int&,const int&);
-//extern "C" double type_of_call hif(const int&,const int&);
-//extern "C" double type_of_call hij(const int&,const int&,const int&);
-//extern "C" double type_of_call hije(const int&,const int&,const int&);
-//#endif
+#else
+extern "C" double type_of_call hi(const int&,const int&);
+extern "C" double type_of_call hie(const int&,const int&);
+extern "C" double type_of_call hif(const int&,const int&);
+extern "C" double type_of_call hij(const int&,const int&,const int&);
+extern "C" double type_of_call hije(const int&,const int&,const int&);
+#endif
 
 #ifndef WIN32
 extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
@@ -669,7 +667,6 @@ void convert_cwn(Int_t id)
    Int_t *lenbool  = new Int_t[nvar];
    UChar_t *boolarr = new UChar_t[10000];
    x = new float[nvar];
-   //bigbuf = new char[2500000];
 
    chtag_out[nvar*kNchar]=0;
    for (i=0;i<80;i++)chtitl[i]=0;
@@ -678,18 +675,11 @@ void convert_cwn(Int_t id)
 #else
    hgiven(id,chtitl,80,nvar,chtag_out,kNchar,rmin[0],rmax[0]);
 #endif
-   //Long_t add0 = (Long_t)&bigbuf[0];
-   //Long_t addpaw = (Long_t)&pawc[18];
-   //printf("ALIGN add0 = %lld, mod=%d, addpaw=%lld, modpaw=%d\n",add0,add0%4,addpaw,addpaw%4);
-   Long_t add = (Long_t)&bigbuf[0] - (Long_t)&pawc[18];
-   add /= 4;
-   Int_t addq = Int_t(add);
+   Long_t add= (Long_t)&bigbuf[0];
 #ifndef WIN32
-   //hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
-   hbnam(id,PASSCHAR(" "),addq,PASSCHAR("$CLEAR"),0,1,6);
+   hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0,1,6);
 #else
-   //hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0);
-   hbnam(id,PASSCHAR(" "),addq,PASSCHAR("$CLEAR"),0);
+   hbnam(id,PASSCHAR(" "),add,PASSCHAR("$CLEAR"),0);
 #endif
 
    Int_t bufpos = 0;
@@ -795,14 +785,11 @@ void convert_cwn(Int_t id)
          strcpy(oldblock,block);
          oldischar = ischar;
          Int_t lblock   = strlen(block);
-         //Long_t add= (Long_t)&bigbuf[bufpos];
-         add= (Long_t)&bigbuf[bufpos] - (Long_t)&pawc[18];
-	 add /= 4;
-	 addq = Int_t(add);
+         add= (Long_t)&bigbuf[bufpos];
 #ifndef WIN32
-         hbnam(id,PASSCHAR(block),addq,PASSCHAR("$SET"),ischar,lblock,4);
+         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
 #else
-         hbnam(id,PASSCHAR(block),addq,PASSCHAR("$SET"),ischar);
+         hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar);
 #endif
 
       }
@@ -887,6 +874,7 @@ void convert_cwn(Int_t id)
                }
             }
             bufpos += isize*ielem;
+            
          }
       }
 
@@ -896,7 +884,6 @@ void convert_cwn(Int_t id)
    tree->Write();
    delete tree;
    delete [] x;
-   //delete [] bigbuf;
    delete [] charflag;
    delete [] lenchar;
    delete [] boolflag;
