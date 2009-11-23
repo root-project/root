@@ -60,11 +60,13 @@ extern "C" int rzcl[11];
 #else
 // on windows /pawc/ must have the same length as in libPacklib.a !!
 #define PAWC_SIZE 4000000
+#  define bigbuf BIGBUF
 #  define pawc   PAWC
 #  define quest  QUEST
 #  define hcbits HCBITS
 #  define hcbook HCBOOK
 #  define rzcl   RZCL
+extern "C" int bigbuf[PAWC_SIZE];
 extern "C" int pawc[PAWC_SIZE];
 extern "C" int quest[100];
 extern "C" int hcbits[37];
