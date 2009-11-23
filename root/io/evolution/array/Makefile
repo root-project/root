@@ -59,10 +59,10 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-oldArrayObject.root:
+oldArrayObject.root: WriteOldObject.C MyClass_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l WriteOldObject.C > oldArrayObject.log 2>&1
 
-fixed2var.log: oldArrayObject.root
+fixed2var.log: oldArrayObject.root MyClassOld_cxx.$(DllSuf)
 
 fixed2var: fixed2var.log
 	$(TestDiff)
