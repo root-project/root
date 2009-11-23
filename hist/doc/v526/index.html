@@ -102,7 +102,7 @@ text sizes:
   <a href="https://savannah.cern.ch/bugs/?55911">#55911</a>.
   <li>In the implementation of  TH1::ResetStats(), set the statistics to the one calculated using the bin center and also reset the number of entries to the
       total bin content or to the effective entries in case of a weighted histogram.
-  <li>Add check of compatibility for each bins when using hstogram operation mtehods like Add on variable bin histograms.
+  <li>Check the histogram compatibility, by comparing each bin, in the case of variable bin histogram, when using the histogram operation methods <tt>TH1::Add</tt> or  <tt>TH1::Multiply</tt> or <tt>TH1::Divide</tt>
   </ul>
 
 <h4>THistPainter</h4>
@@ -120,7 +120,7 @@ that the surface is plotted with colors and the contours on top with lines.
 
 <h4>TGraphErrors</h4>
 <ul>
-  <li>Add a new fitting option "EX0", to neglect the error in X when fitting
+  <li>Add a new fitting option <tt>"EX0"</tt>, to neglect the error in X when fitting
   </li>
   </ul>
 
@@ -140,9 +140,11 @@ that the surface is plotted with colors and the contours on top with lines.
 
 <h4>new classes TFitResult, TFitResultPtr</h4>
 <ul>
- <li> All the <tt>Fit</tt> method of the Hist library now instead of returning an integer returns a <tt>TFitResultPtr</tt> object. The TFitResultPtr is an object that converts automatically to an integer, the status code of the fit. There is a no visible change for the user, if the Fit method is used as before.
-  <li>When using the fit option "S", the TFitResultPtr will contain a pointer to the new <tt>TFitResult</tt> class. In addition it will behave as a smart pointer to TFitResult, so by using the -> operator the user can call the TFitResult methods or by using the de-reference operator * or Get(), access directly the TFitResult object. 
-  <li><tt>TFitResult</tt> derives from the <tt>ROOT::Math::FitResult</tt> which contains all the result information from a fit and from <tt>TNamed</tt>. It provides then I/O capabilities for the FitResult object and conevenience methods like Print(), Write() and GetCovarianceMatrix() and GetCorrelationMatrix() which return a TMatrixDSym object.
+ <li> All the <tt>Fit</tt> methods of the Hist library instead of returning an integer now return a <tt>TFitResultPtr</tt> object. The <tt>TFitResultPtr</tt> is an object that converts automatically to an integer, which represents the status code of the fit. If the Fit method is used as before, there is a no visible change for the user.
+  <li>When using the fit option <tt>"S"</tt>, the <tt>TFitResultPtr</tt> will now contain a pointer to the new <tt>TFitResult</tt> class. It will behave as a smart pointer to <tt>TFitResult</tt>,
+by using the <tt>-></tt> operator the user can call the <tt>TFitResult</tt> methods or access directly the <tt>TFitResult</tt> object, by using the de-reference operator <tt>*</tt> or
+  <tt>TFitResultPtr::Get()</tt>. 
+  <li>The <tt>TFitResult</tt> class derives from the <tt>ROOT::Math::FitResult</tt>, which contains all the result information from a fit and from <tt>TNamed</tt>. It provides then I/O capabilities for the FitResult object and convenience methods like <tt>Print()</tt>, <tt>Write()</tt>, <tt>GetCovarianceMatrix()</tt> and <tt>GetCorrelationMatrix()</tt> which return a TMatrixDSym object.
   <li>Example of usage:
   <pre>
      TFitResult r = h->Fit("myFunc","S");
@@ -157,14 +159,14 @@ that the surface is plotted with colors and the contours on top with lines.
   
 
 
-  
-
 <h3>FitPanel</h3>
 <ul>
   <li>Added predefined 2D Functions.</li>
-  <li>Addition of new minimization algorithms from the GSL library and
-  two genetic minimzers.</li>
+  <li>Addition of new minimization algorithms from the GSL library and foreseen the addition of 
+  genetic minimizers when will be released.</li>
   <li>Fixed up to three bugs from the previous release</li>
+  <li>Added the Update Button. This way the user can update the content of the fitpanel with all the new objects and functions created in the current ROOT session.
+  <li>Changed the way the TF1s were being copied internally. Instead of using TObject::Clone, now it's using the TF1 copy constructor</li>
 </ul>
 
 <h4>new tutorial rebin.C</h4>
