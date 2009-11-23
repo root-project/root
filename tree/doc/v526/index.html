@@ -143,6 +143,67 @@ Changed the default value of AutoSave from 10 to 30 MBytes.
 
 
 
+<h4>New class TTreePerfStats</h4>
+This new class is an important tool to measure the I/O performance of a Tree.
+It shows the locations in the file when reading a Tree. In particular it is easy
+to see the performance of the Tree Cache. The results can be:
+<ul>
+<li>drawn in a canvas.</li>
+<li>printed on standard output.</li>
+<li>saved to a file for processing later.</li>
+</ul>
+<pre>
+       Example of use                                                 
+ {
+   TFile *f = TFile::Open("RelValMinBias-GEN-SIM-RECO.root");
+   T = (TTree*)f->Get("Events");
+   Long64_t nentries = T->GetEntries();
+   T->SetCacheSize(10000000);
+   T->AddBranchToCache("*");
+
+   TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
+
+   for (Int_t i=0;i<nentries;i++) {
+      T->GetEntry(i);
+   }
+   ps->SaveAs("atlas_perf.root");
+ }
+</pre>
+<p>
+ then, in a root interactive session, one can do:
+<pre>
+    root > TFile f("atlas_perf.root");
+    root > ioperf->Draw();
+    root > ioperf->Print();
+</pre>
+
+<p> The Draw or Print functions print the following information:
+<pre.
+   TreeCache = TTree cache size in MBytes
+   N leaves  = Number of leaves in the TTree
+   ReadTotal = Total number of zipped bytes read
+   ReadUnZip = Total number of unzipped bytes read
+   ReadCalls = Total number of disk reads
+   ReadSize  = Average read size in KBytes
+   Readahead = Readahead size in KBytes
+   Readextra = Readahead overhead in percent
+   Real Time = Real Time in seconds
+   CPU  Time = CPU Time in seconds
+   Disk Time = Real Time spent in pure raw disk IO
+   Disk IO   = Raw disk IO speed in MBytes/second
+   ReadUZRT  = Unzipped MBytes per RT second
+   ReadUZCP  = Unipped MBytes per CP second
+   ReadRT    = Zipped MBytes per RT second
+   ReadCP    = Zipped MBytes per CP second
+</pre>
+<p>
+The Figure below shows the result for an original non optimized file when
+the Tree Cache is not used.
+<p><img src="perfstats_atlas_original.gif"></img></p>
+The Figure below shows the result for the above data file written with the
+new version of ROOT and when the Tree cache is activated.
+<p><img src="perfstats_atlas_flushed.gif"></img></p>
+
 
 
 
