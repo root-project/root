@@ -1673,6 +1673,17 @@ void TBranchElement::InitInfo()
                   }
                   fIDs.push_back(i);
                }
+            } else if (elt && offset==TStreamerInfo::kMissing) {
+               // Still re-assign fID properly.
+               fIDs.clear();
+               size_t ndata = fInfo->GetNdata();
+               ULong_t* elems = fInfo->GetElems();
+               for (size_t i = 0; i < ndata; ++i) {
+                  if (((TStreamerElement*) elems[i]) == elt) {
+                     fID = i;
+                     break;
+                  }
+               }
             }
             if (fOnfileObject==0 && (fType==31 || fType==41 || (0 <= fType && fType <=2) ) && fInfo->GetNdata()
                 && ((TStreamerElement*) fInfo->GetElems()[0])->GetType() == TStreamerInfo::kCacheNew) 
