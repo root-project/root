@@ -94,6 +94,14 @@ else
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "linuxicc" ]; then \
+			FREECC="$$FREECC -m32 -wd188 -wd181"; \
+			FREE_CFLAGS="-m32"; \
+		fi; \
+		if [ $(ARCH) = "linuxx8664icc" ]; then \
+			FREECC="$$FREECC -m64 -wd188 -wd181"; \
+			FREE_CFLAGS="-m64"; \
+		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
 			FREECC="$$FREECC -m32"; \
 			FREE_CFLAGS="-m32"; \

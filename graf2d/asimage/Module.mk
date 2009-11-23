@@ -146,6 +146,12 @@ else
 			ACC="gcc -m64"; \
 			MMX="--enable-mmx-optimization=no"; \
 		fi; \
+		if [ "$(ARCH)" = "linuxicc" ]; then \
+			ACC="icc -m32"; \
+		fi; \
+		if [ "$(ARCH)" = "linuxx8664icc" ]; then \
+			ACC="icc -m64"; \
+		fi; \
 		if [ "$(ASJPEGINCDIR)" != "" ]; then \
 			JPEGINCDIR="--with-jpeg-includes=$(ASJPEGINCDIR)"; \
 		fi; \

@@ -23,6 +23,12 @@ RFLX_REFLEXLL   = lib/libReflex.lib
 else
 # test suite
 RFLX_REFLEXLL   = -Llib -lReflex
+ifeq ($(ARCH),linuxicc)
+RFLX_REFLEXLL   += -limf
+endif
+ifeq ($(ARCH),linuxx8664icc)
+RFLX_REFLEXLL   += -limf
+endif
 ifneq ($(PLATFORM),fbsd)
 ifneq ($(PLATFORM),obsd)
 RFLX_REFLEXLL   += -ldl

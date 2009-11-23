@@ -111,6 +111,14 @@ $(UNRCFG):	$(UNRANETAG)
 			ACC="gcc"; \
 			ACFLAGS="-m64 -fPIC"; \
 		fi; \
+		if [ "$(ARCH)" = "linuxicc" ]; then \
+			ACC="icc"; \
+			ACFLAGS="-m32"; \
+		fi; \
+		if [ "$(ARCH)" = "linuxx8664icc" ]; then \
+			ACC="icc"; \
+			ACFLAGS="-m64"; \
+		fi; \
 		if [ "$(ARCH)" = "win32" ]; then \
 			export LD="cl"; \
 			ACC="cl.exe"; \

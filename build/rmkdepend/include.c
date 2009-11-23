@@ -242,10 +242,7 @@ inc_clean ()
 	}
 }
 
-struct inclist *inc_path(file, include, dot)
-	register char	*file,
-			*include;
-	boolean	dot;
+struct inclist *inc_path(char *file, char *include, boolean dot)
 {
 	static char	path[ BUFSIZ ];
 	register char		**pp, *p;
