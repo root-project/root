@@ -119,9 +119,9 @@ void TEveGedEditor::DeleteWindow()
 //______________________________________________________________________________
 TGedFrame* TEveGedEditor::CreateNameFrame(const TGWindow* parent, const char* /*tab_name*/)
 {
-  // Create name-frame for a tab.
+   // Create name-frame for a tab.
 
-  return new TEveGedNameFrame(parent);
+   return new TEveGedNameFrame(parent);
 }
 
 //______________________________________________________________________________
