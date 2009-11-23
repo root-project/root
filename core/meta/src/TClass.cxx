@@ -2333,7 +2333,16 @@ Long_t TClass::GetDataMemberOffset(const char *name) const
 
    TRealData *rd = GetRealData(name);
    if (rd) return rd->GetThisOffset();
-
+   if (strchr(name,'[')==0) {
+      // If this is a simple name there is a chance to find it in the
+      // StreamerInfo even if we did not find it in the RealData.
+      // For example an array name would be fArray[3] in RealData but
+      // just fArray in the streamerInfo.
+      TVirtualStreamerInfo *info = const_cast<TClass*>(this)->GetCurrentStreamerInfo();
+      if (info) {
+         return info->GetOffset(name);
+      }
+   }
    return 0;
 }
 

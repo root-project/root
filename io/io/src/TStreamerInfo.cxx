@@ -449,8 +449,9 @@ void TStreamerInfo::Build()
    InsertArtificialElements(rules);
 
    if (needAllocClass) {
-      TVirtualStreamerInfo *infoalloc  = (TVirtualStreamerInfo *)Clone(TString::Format("%s@@%d",fClass->GetName(),GetClassVersion()));
+      TStreamerInfo *infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",fClass->GetName(),GetClassVersion()));
       infoalloc->BuildCheck();
+      infoalloc->BuildOld();
       TClass *allocClass = infoalloc->GetClass();
       
       {
@@ -471,7 +472,7 @@ void TStreamerInfo::Build()
          TStreamerElement* element;
          while ((element = (TStreamerElement*) next())) {
             if (element->TestBit(TStreamerElement::kCache)) {
-               element->SetOffset(allocClass->GetDataMemberOffset(element->GetName()));            
+               element->SetOffset(infoalloc->GetOffset(element->GetName()));            
             }
          }
       }
@@ -1099,7 +1100,8 @@ void TStreamerInfo::BuildOld()
    }
 
    TClass *allocClass = 0;
-
+   TStreamerInfo *infoalloc = 0;
+   
    //---------------------------------------------------------------------------
    // Get schema rules for this class
    //---------------------------------------------------------------------------
@@ -1499,8 +1501,9 @@ void TStreamerInfo::BuildOld()
 
       if ( !wasCompiled && rules && rules->HasRuleWithSource( element->GetName() ) ) {
          if (allocClass == 0) {
-            TVirtualStreamerInfo *infoalloc  = (TVirtualStreamerInfo *)Clone(TString::Format("%s@@%d",fClass->GetName(),GetOnFileClassVersion()));
+            infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",fClass->GetName(),GetOnFileClassVersion()));
             infoalloc->BuildCheck();
+            infoalloc->BuildOld();
             allocClass = infoalloc->GetClass();
          }
 
@@ -1518,7 +1521,7 @@ void TStreamerInfo::BuildOld()
          }
          element->SetBit(TStreamerElement::kCache);
          element->SetNewType( element->GetType() );
-         element->SetOffset(allocClass->GetDataMemberOffset(element->GetName()));
+         element->SetOffset(infoalloc->GetOffset(element->GetName()));
       }
 
       if (element->GetNewType() == -2) {
