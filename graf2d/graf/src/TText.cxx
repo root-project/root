@@ -394,7 +394,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       w = x2-x1;
       h = y2-y1;
    } else {
-      if (TTF::IsInitialized() || gPad->IsBatch()) {
+      if ((gVirtualX->HasTTFonts() && TTF::IsInitialized()) || gPad->IsBatch()) {
          TTF::GetTextExtent(w, h, (char*)GetTitle());
       } else {
          gVirtualX->GetTextExtent(w, h, (char*)GetTitle());
