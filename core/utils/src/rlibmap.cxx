@@ -336,6 +336,12 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
       if (solibdeps.size() > 0) {
          vector<string>::const_iterator depit;
          for (depit = solibdeps.begin(); depit != solibdeps.end(); depit++) {
+#ifdef WIN32
+            string::size_type i = depit->find(".lib");
+            if (i != string::npos)
+               continue;
+#endif
+
             const char *deplib = depit->c_str();
             if (!fullpath) {
                if ((deplib = strrchr(deplib, '/')))
