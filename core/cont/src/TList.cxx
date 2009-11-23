@@ -67,6 +67,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TList.h"
+#include "TClass.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -380,6 +381,8 @@ void TList::Delete(Option_t *option)
 
    Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
+   TList removeDirectory; // need to deregistere these from their directory
+
    if (slow) {
 
       while (fFirst) {
@@ -389,6 +392,8 @@ void TList::Delete(Option_t *option)
          // delete only heap objects
          if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
             TCollection::GarbageCollect(tlk->GetObject());
+         else if (tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
+            removeDirectory.Add(tlk->GetObject());
 
          delete tlk;
       }
@@ -406,9 +411,21 @@ void TList::Delete(Option_t *option)
          // delete only heap objects
          if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
             TCollection::GarbageCollect(tlk->GetObject());
+         else if (tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
+            removeDirectory.Add(tlk->GetObject());
 
          delete tlk;
       }
+   }
+
+   // These objects cannot expect to have a valid TDirectory anymore;
+   // e.g. because *this is the TDirectory's list of objects. Even if
+   // not, they are supposed to be deleted, so we can as well unregister
+   // them from their directory, even if they are stack-based:
+   TIter iRemDir(&removeDirectory);
+   TObject* dirRem = 0;
+   while ((dirRem = iRemDir())) {
+      (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
    }
    Changed();
 }
