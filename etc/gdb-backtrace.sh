@@ -119,6 +119,7 @@ if ! test "x$OUTFILE" = "x/dev/stdout"; then
       case $line in
          *'<signal handler called>'* )
             # this frame doesn't exist
+            skip="yes"
             continue
             ;;
          Thread* )
@@ -143,11 +144,13 @@ if ! test "x$OUTFILE" = "x/dev/stdout"; then
                wantthread="yes"
                ininterp="check next"
                frames=""
+               skip="yes"
                ;;
             sighandler* | TUnixSystem::DispatchSignals* )
                wantthread="yes"
                ininterp="check next"
                frames=""
+               skip="yes"
                ;;
             G__* | Cint::G__* )
                if test "x$ininterp" = "xcheck this"; then
@@ -206,20 +209,20 @@ $line"
       if test "x$ininterp" = "xyes"; then
          echo ""
          echo ""
-         echo "The crash is most likely caused by a problem in your script."
+         echo 'The crash is most likely caused by a problem in your script.'
          echo 'Try to compile it (.L myscript.C+g) and fix any errors.'
-         echo 'If that does not help then please submit a bug report'
-         echo 'at http://root.cern.ch/bugs. Please post the ENTIRE stack'
-         echo 'trace from above as an attachment in addition to anything else'
+         echo 'If that does not help then please submit a bug report at'
+         echo 'http://root.cern.ch/bugs. Please post the ENTIRE stack trace'
+         echo 'from above as an attachment in addition to anything else'
          echo 'that might help us fixing this issue.'
       elif ! test "x$frames" = "x"; then
          echo ""
          echo ""
-         echo "The crash is most likely caused by a problem in your compiled code."
-         echo "The lines below might give you a hint. If they do not help you then"
-         echo "please submit a bug report at http://root.cern.ch/bugs. Please"
-         echo "post the ENTIRE stack trace from above as an attachment in"
-         echo "addition to anything else that might help us fixing this issue."
+         echo 'The lines below might hint at the cause of the crash.'
+         echo 'If they do not help you then please submit a bug report at'
+         echo 'http://root.cern.ch/bugs. Please post the ENTIRE stack trace'
+         echo 'from above as an attachment in addition to anything else'
+         echo 'that might help us fixing this issue.'
          echo "==========================================================="
          echo "$frames"
          echo "==========================================================="
