@@ -133,6 +133,7 @@ enum cmpOpts {
 struct RefValue {
    const double* pars;
    const double  chi;
+   RefValue(const double* p = 0, const double c = 0.0): pars(p), chi(c) {};
 };
 
 // Class that keeps a reference structure and some tolerance values to
@@ -582,7 +583,7 @@ int testFitters(T* object, F* func, vector< vector<struct algoType> >& listAlgos
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(commonAlgos[0].type, commonAlgos[0].algo);
    object->Fit(func, "Q0");
    if ( defaultOptions & testOptDebug ) printTitle(func);
-   struct RefValue ref = { origpars, func->GetChisquare() };
+   struct RefValue ref(origpars, func->GetChisquare());
    commonAlgos[0].cmpResult.setRefValue(&ref);
    int defMinOptions = testOptPars | testOptChi | testOptErr | defaultOptions;
    status += testFit(commonAlgos[0].type, commonAlgos[0].algo

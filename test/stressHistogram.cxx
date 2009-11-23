@@ -6080,7 +6080,8 @@ bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
 //            << endl;
 
       int bin = findBin(bd2, x1);
-      assert(bin >= 0 && "BIN NOT FOUND!");
+      if ( bin < 0 )
+         Fatal("operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)","BIN NOT FOUND!");
 
       double value2 = 0, error2;
       const double *x2 = bd2.GetPoint(bin, value2, error2);
@@ -9052,7 +9053,8 @@ int equals(const char* msg, THnSparse* s, TH1* h2, int options, double ERRORLIMI
       return 1;
               
    TArray* array = dynamic_cast<TArray*>(h2);
-   assert(array && "NO ARRAY!");
+   if ( !array )
+      Fatal( "equals(const char* msg, THnSparse* s, TH1* h2, int options, double ERRORLIMIT)" ,"NO ARRAY!");
 
    Int_t* coord = new Int_t[3];
    for (Long64_t i = 0; i < s->GetNbins(); ++i) 
