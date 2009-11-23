@@ -5,13 +5,23 @@
 <ul>
 <li>The following architectures have been obsoleted: linuxkcc, alphakcc,
 linuxia64sgi, linuxdeb2ppc, solariskcc, sgikcc and linuxpgcc.</li>
-<li>
+<li>Add support for 'Dump' and 'Browse' of 'emulated' object.<li>
 TBits equality operator nows return true if the 2 operands have different
 length and all the bits in the longer TBits that are passed the length
 of the shorter TBits are zero (i.e. the default value of each
 bits is zero).</li>
+<li>Properly handle scripts with line longer than 1024 characters.</li>
+<li>Repair the handling of ACLiC options on the command line (for example a.C+g).</li>
+<li>In TClass::BuildEmulatedRealData properly handle the case of TNamed member that are not base class.</li>
+<li>On the command line:
+    <ul>
+    <li>Fix the tab-completion of filenames in the sub-directories.</li>
+    <li>Prevent the unadvertent replacement of an arrow with a dot when the left side is actually a pointer</li>
+    </ul>
+</li>
 </ul>
 <p>
+<h4>New module  <tt>editline</tt> </h4>
 The new module <tt>editline</tt> enhances the prompt, giving type and syntax feedback using e.g. colors.
 Class names are highlighted blue when typed, indicating that it is known to ROOT.  
 Matching parenthesis pairs are highlighted green when typed, or when the cursor is moved to a bracket. This works for () {} and [] brackets.
