@@ -561,6 +561,8 @@ endif
 %.neutral.log: %.log
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
 
+.PRECIOUS: %.clog %.log 
+
 ifneq ($(PLATFORM),macosx)
 
 define BuildWithLib
