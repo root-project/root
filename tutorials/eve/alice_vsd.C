@@ -263,7 +263,7 @@ public:
    {
       // Check is track-flag specified by mask are set.
 
-      return (t->fStatus & mask) > 0;
+      return (t->GetStatus() & mask) > 0;
    }
 
    void LoadEsdTracks()
