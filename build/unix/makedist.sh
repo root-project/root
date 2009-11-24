@@ -7,7 +7,8 @@
 
 ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
 TYPE=`bin/root-config --arch`
-if [ "x$TYPE" = "xmacosx" ]; then
+if [ "x`bin/root-config --platform`" = "xmacosx" ]; then
+   TYPE=$TYPE-`sw_vers -productVersion | cut -d . -f1 -f2`
    TYPE=$TYPE-`uname -p`
 fi
 
@@ -48,7 +49,7 @@ else
       TARFILE=${TARFILE}".gz"
       TARCMD="${TAR} zcvf ${TARFILE} -T ${TARFILE}.filelist"
    else
-      TARCMD="tar cvf ${TARFILE} `cat ${TARFILE}.filelist`"
+      TARCMD="tar cvf ${TARFILE}"
       DOGZIP="y"
    fi
 fi
@@ -62,7 +63,11 @@ fi
 
 ${pwd}/build/unix/distfilelist.sh $dir > ${TARFILE}.filelist
 rm -f ${TARFILE}
-$TARCMD || exit 1
+if [ "x${TAR}" != "x" ]; then
+   $TARCMD || exit 1
+else
+   $TARCMD `cat ${TARFILE}.filelist` || exit 1
+fi
 rm ${TARFILE}.filelist 
 
 if [ "x$DOGZIP" = "xy" ]; then
