@@ -7,6 +7,7 @@ void geom_cms()
 {
    TEveManager::Create();
 
+   TFile::SetCacheFileDir(".");
    gGeoManager = gEve->GetGeometry("http://root.cern.ch/files/cms.root");
    gGeoManager->DefaultColors();
 
