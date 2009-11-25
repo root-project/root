@@ -601,17 +601,29 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                "Missing File Name", txt2, kMBIconExclamation,
                                kMBOk);
                   return kTRUE;
-               } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists) &&
-                          !strcmp(fOk->GetTitle(), "Save") &&
-                          (!(fCheckB->GetState() == kButtonDown))) {
-                  Int_t ret;
-                  txt = TString::Format("File name %s already exists, OK to overwrite it?",
-                                        fTbfname->GetString());
-                  new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                               "File Name Exist", txt.Data(), kMBIconExclamation,
-                               kMBYes | kMBNo, &ret);
-                  if (ret == kMBNo)
+               } else if (!gSystem->AccessPathName(fTbfname->GetString(), kFileExists)) {
+                  FileStat_t buf;
+                  gSystem->GetPathInfo(fTbfname->GetString(), buf);
+                  if (R_ISDIR(buf.fMode)) {
+                     fFc->ChangeDirectory(fTbfname->GetString());
+                     fTreeLB->Update(fFc->GetDirectory());
+                     if (strcmp(gSystem->WorkingDirectory(), fFc->GetDirectory())) {
+                        gSystem->cd(fFc->GetDirectory());
+                     }
+                     fName->SetText("", kFALSE);
                      return kTRUE;
+                  }
+                  else if (!strcmp(fOk->GetTitle(), "Save") && 
+                          (!(fCheckB->GetState() == kButtonDown))) {
+                     Int_t ret;
+                     txt = TString::Format("File name %s already exists, OK to overwrite it?",
+                                           fTbfname->GetString());
+                     new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                                  "File Name Exist", txt.Data(), kMBIconExclamation,
+                                  kMBYes | kMBNo, &ret);
+                     if (ret == kMBNo)
+                        return kTRUE;
+                  }
                }
                fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                               fTbfname->GetString());
