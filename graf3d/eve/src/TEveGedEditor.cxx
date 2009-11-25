@@ -20,6 +20,7 @@
 #include "TGMsgBox.h"
 
 #include "TClass.h"
+#include "TContextMenu.h"
 
 //==============================================================================
 // TEveGedEditor
@@ -35,6 +36,7 @@ ClassImp(TEveGedEditor);
 Int_t   TEveGedEditor::fgMaxExtraEditors = 10;
 TList  *TEveGedEditor::fgExtraEditors    = new TList;
 
+TContextMenu *TEveGedEditor::fgContextMenu = 0;
 
 //______________________________________________________________________________
 TEveGedEditor::TEveGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
@@ -261,6 +263,17 @@ void TEveGedEditor::DestroyEditors()
    }
 }
 
+//______________________________________________________________________________
+TContextMenu* TEveGedEditor::GetContextMenu()
+{
+   // Return context menu object shared among eve-ged-editors.
+
+   if (fgContextMenu == 0)
+      fgContextMenu = new TContextMenu("", "");
+   return fgContextMenu;
+}
+
+
 //==============================================================================
 // TEveGedNameFrame
 //==============================================================================
@@ -281,7 +294,7 @@ TEveGedNameFrame::TEveGedNameFrame(const TGWindow *p, Int_t width, Int_t height,
 {
    // Constructor.
 
-   fNCButton = new TGTextButton(this, "");
+   fNCButton = new TEveGedNameTextButton(this);
    fNCButton->SetTextColor(0x0020a0);
    AddFrame(fNCButton, new TGLayoutHints(kLHintsNormal | kLHintsExpandX));
    fNCButton->Connect("Clicked()", "TEveGedNameFrame", this, "SpawnEditorClone()");
@@ -318,4 +331,61 @@ void TEveGedNameFrame::SpawnEditorClone()
    // Create a new floating editor with current object.
 
    TEveGedEditor::SpawnNewEditor(fGedEditor->GetModel());
+}
+
+
+//==============================================================================
+// TEveGedNameTextButton
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// Specialization of TGTextButton for EVE name frame.
+// It opens a context-menu on right-click.
+
+ClassImp(TEveGedNameTextButton);
+
+//______________________________________________________________________________
+TEveGedNameTextButton::TEveGedNameTextButton(TEveGedNameFrame* p) :
+   TGTextButton(p, ""),
+   fFrame(p)
+{
+   // Constructor.
+
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
+                         kButtonPressMask | kButtonReleaseMask,
+                         kNone, kNone);
+}
+
+//______________________________________________________________________________
+TEveGedNameTextButton::~TEveGedNameTextButton()
+{
+   // Destructor.
+}
+
+//______________________________________________________________________________
+Bool_t TEveGedNameTextButton::HandleButton(Event_t* event)
+{
+   // Handle button.
+
+   if (fTip) fTip->Hide();
+   if (fState == kButtonDisabled) return kTRUE;
+
+   if (event->fCode == kButton3 && event->fType == kButtonPress)
+   {
+      TEveGedEditor *eged = (TEveGedEditor*) fFrame->GetGedEditor();
+      TEveElement   *el   = eged->GetEveElement();
+      if (el)
+         TEveGedEditor::GetContextMenu()->Popup(event->fXRoot, event->fYRoot,
+                                                el->GetObject());
+      return 1;
+   }
+   else if (event->fCode == kButton1)
+   {
+      return TGTextButton::HandleButton(event);
+   }
+   else
+   {
+      return 0;
+   }
 }

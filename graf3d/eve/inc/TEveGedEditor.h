@@ -14,9 +14,10 @@
 
 #include "TGedEditor.h"
 #include "TGedFrame.h"
+#include "TGButton.h"
 
 class TEveElement;
-
+class TContextMenu;
 
 //==============================================================================
 // TEveGedEditor
@@ -38,6 +39,8 @@ protected:
 
    static Int_t   fgMaxExtraEditors;
    static TList  *fgExtraEditors;
+
+   static TContextMenu *fgContextMenu;
 
 public:
    TEveGedEditor(TCanvas* canvas=0, UInt_t width=250, UInt_t height=400);
@@ -62,6 +65,8 @@ public:
 
    static void DestroyEditors();
 
+   static TContextMenu* GetContextMenu();
+
    ClassDef(TEveGedEditor, 0); // Specialization of TGedEditor for proper update propagation to TEveManager.
 };
 
@@ -70,7 +75,7 @@ public:
 // TEveGedNameFrame
 //==============================================================================
 
-class TEveGedNameFrame  : public TGedFrame
+class TEveGedNameFrame : public TGedFrame
 {
 private:
    TEveGedNameFrame(const TEveGedNameFrame&);            // Not implemented
@@ -89,6 +94,24 @@ public:
    void SpawnEditorClone();
 
    ClassDef(TEveGedNameFrame, 0); // Top name-frame used in EVE.
+};
+
+
+//==============================================================================
+// TEveGedNameTextButton
+//==============================================================================
+
+class TEveGedNameTextButton : public TGTextButton
+{
+   TEveGedNameFrame *fFrame;
+
+public:
+   TEveGedNameTextButton(TEveGedNameFrame* p);
+   virtual ~TEveGedNameTextButton();
+
+   virtual Bool_t HandleButton(Event_t* event);
+
+   ClassDef(TEveGedNameTextButton, 0); // Button for GED name-frame.
 };
 
 #endif
