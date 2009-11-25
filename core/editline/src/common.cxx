@@ -1016,5 +1016,5 @@ ed_replay_hist(EditLine_t* el, int /*c*/) {
    el_push(el, newline);
 
    // run whatever would be run if was entered
-   return (*el->fMap.fFunc[12])(el, '\n');
+   return ed_newline(el, '\n');
 }

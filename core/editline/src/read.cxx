@@ -513,7 +513,7 @@ el_gets(EditLine_t* el, int* nread) {
    /* save the last command here */
    el->fState.fLastCmd = cmdnum;
 
-   if (retval != CC_NEWLINE) {
+   if (el->fMap.fFunc[cmdnum] != ed_replay_hist) {
       el->fState.fReplayHist = -1;
    }
    /* use any return value */
