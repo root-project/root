@@ -41,6 +41,15 @@
     root : looking for image "filename" in path [/home/username/icons]
     </pre>
     printed by libAfterImage when using <tt>TImage::Open("filename")</tt>
+<li> In <tt>TImageDump</tt> the hollow filled areas were not correct:
+    <ol>
+    <li> they used the line attributes,
+    <li> a line was drawn around the polygons filled with patterns.
+    </ol>
+    This fixes the problem mentionned here:
+    https://savannah.cern.ch/bugs/index.php?59263
+    as well as the test #22 in stressGraphics (no need to change
+    the reference file).
 </ul>
 
 <h3>Interface to <em>graphviz</em></h3>
