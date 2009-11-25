@@ -162,8 +162,7 @@ TRefArray& TRefArray::operator=(const TRefArray &a)
 //______________________________________________________________________________
 TRefArray::~TRefArray()
 {
-   // Delete an array. Objects are not deleted unless the TRefArray is the
-   // owner (set via SetOwner()).
+   // Usual destructor (The object pointed to by the array are never deleted).
 
    if (fUIDs) delete [] fUIDs;
    fPID  = 0;
@@ -364,8 +363,7 @@ TObject *TRefArray::Before(const TObject *obj) const
 //______________________________________________________________________________
 void TRefArray::Clear(Option_t *)
 {
-   // Remove all objects from the array. Does not delete the objects
-   // unless the TRefArray is the owner (set via SetOwner()).
+   // Remove all objects from the array. 
 
    fLast = - 1;
 
@@ -396,7 +394,7 @@ void TRefArray::Compress()
 //______________________________________________________________________________
 void TRefArray::Delete(Option_t *)
 {
-   // Remove all objects from the array.
+   // Remove all objects from the array and free the internal memory.
 
    fLast = -1;
 
