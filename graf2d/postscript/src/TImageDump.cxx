@@ -560,14 +560,17 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    }
 
    // hollow polygon or polyline is drawn
-   if (line || !fFillStyle || (fFillStyle == 4000) || stipple) {
+   if (line || !fFillStyle || (fFillStyle == 4000)) {
       if (!lcol) return;
-
-      if (fLineStyle < 2) { // solid
-         fImage->DrawPolyLine(line ? n : n+1, pt, lcol->AsHexString(), fLineWidth);
-      } else { // dashed
-         DrawDashPolyLine(line ? n : n+1, pt,  dashSize, (const char*)dashList,
-                         lcol->AsHexString(), fLineWidth);
+      if (!line) {
+         fImage->DrawPolyLine(n+1, pt, fcol->AsHexString(), 1);
+      } else {
+         if (fLineStyle < 2) { // solid
+            fImage->DrawPolyLine(n, pt, lcol->AsHexString(), fLineWidth);
+         } else { // dashed
+            DrawDashPolyLine(n, pt,  dashSize, (const char*)dashList,
+                            lcol->AsHexString(), fLineWidth);
+         }
       }
    }
    if (del) delete [] pt;
