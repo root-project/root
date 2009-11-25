@@ -214,7 +214,7 @@ extern "C" void  type_of_call hdelet(const int&);
 extern "C" void  type_of_call hix(const int&,const int&,const float&);
 extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
 
-#ifndef R__B64
+#ifndef R__B64BUG
 extern "C" float type_of_call hi(const int&,const int&);
 extern "C" float type_of_call hie(const int&,const int&);
 extern "C" float type_of_call hif(const int&,const int&);
@@ -474,10 +474,11 @@ void convert_1d(Int_t id)
       h1->GetListOfFunctions()->Add(gr);
    }
 
-   Float_t x;
+   Float_t x,yx;
    for (i=0;i<=ncx+1;i++) {
       x = h1->GetBinCenter(i);
-      h1->Fill(x,hi(id,i));
+      yx = hi(id,i);
+      h1->Fill(x,yx);
       if (hcbits[8]) h1->SetBinError(i,hie(id,i));
       if (gr && i>0 && i<=ncx) gr->SetPoint(i,x,hif(id,i));
    }
