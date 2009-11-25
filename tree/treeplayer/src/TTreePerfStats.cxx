@@ -179,7 +179,7 @@ TTreePerfStats::~TTreePerfStats()
 
 
 //______________________________________________________________________________
-void TTreePerfStats::Browse(TBrowser *b)
+void TTreePerfStats::Browse(TBrowser * /*b*/)
 {
    // Browse
    
