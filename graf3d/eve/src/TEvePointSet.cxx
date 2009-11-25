@@ -256,6 +256,50 @@ void TEvePointSet::SetPointIntIds(Int_t n, Int_t* ids)
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEvePointSet::SetMarkerStyle(Style_t mstyle)
+{
+   // Set marker style, propagate to projecteds.
+
+   static const TEveException eh("TEvePointSet::SetMarkerStyle ");
+
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEvePointSet* pt = dynamic_cast<TEvePointSet*>(*pi);
+      if (pt)
+      {
+         pt->SetMarkerStyle(mstyle);
+         pt->StampObjProps();
+      }
+      ++pi;
+   }
+   TAttMarker::SetMarkerStyle(mstyle);
+}
+
+//______________________________________________________________________________
+void TEvePointSet::SetMarkerSize(Size_t msize)
+{
+   // Set marker size, propagate to projecteds.
+
+   static const TEveException eh("TEvePointSet::SetMarkerSize ");
+
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEvePointSet* pt = dynamic_cast<TEvePointSet*>(*pi);
+      if (pt)
+      {
+         pt->SetMarkerSize(msize);
+         pt->StampObjProps();
+      }
+      ++pi;
+   }
+   TAttMarker::SetMarkerSize(msize);
+}
+
+/******************************************************************************/
+
+//______________________________________________________________________________
 void TEvePointSet::Paint(Option_t* /*option*/)
 {
    // Paint point-set.

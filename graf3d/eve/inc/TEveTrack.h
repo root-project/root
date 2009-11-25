@@ -106,7 +106,6 @@ public:
    //-------------------------------------------------------------------
 
    virtual void SecSelected(TEveTrack*); // *SIGNAL*
-   virtual void SetLineStyle(Style_t lstyle);
 
    virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 

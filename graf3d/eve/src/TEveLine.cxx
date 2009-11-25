@@ -63,11 +63,51 @@ void TEveLine::SetMarkerColor(Color_t col)
       if (l && fMarkerColor == l->GetMarkerColor())
       {
          l->SetMarkerColor(col);
-         l->ElementChanged();
+         l->StampObjProps();
       }
       ++pi;
    }
    TAttMarker::SetMarkerColor(col);
+}
+
+//______________________________________________________________________________
+void TEveLine::SetLineStyle(Style_t lstyle)
+{
+   // Set line-style of the line.
+   // The style is propagated to projecteds.
+
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEveLine* pt = dynamic_cast<TEveLine*>(*pi);
+      if (pt)
+      {
+         pt->SetLineStyle(lstyle);
+         pt->StampObjProps();
+      }
+      ++pi;
+   }
+   TAttLine::SetLineStyle(lstyle);
+}
+
+//______________________________________________________________________________
+void TEveLine::SetLineWidth(Width_t lwidth)
+{
+   // Set line-style of the line.
+   // The style is propagated to projecteds.
+
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEveLine* pt = dynamic_cast<TEveLine*>(*pi);
+      if (pt)
+      {
+         pt->SetLineWidth(lwidth);
+         pt->StampObjProps();
+      }
+      ++pi;
+   }
+   TAttLine::SetLineWidth(lwidth);
 }
 
 //______________________________________________________________________________
@@ -112,6 +152,7 @@ void TEveLine::SetRnrPoints(Bool_t r)
 void TEveLine::SetSmooth(Bool_t r)
 {
    // Set smooth rendering. Propagate to projected lines.
+
    fSmooth = r;
    std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
    while (pi != fProjectedList.end())

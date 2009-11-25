@@ -503,26 +503,6 @@ void TEveTrack::SecSelected(TEveTrack* track)
    Emit("SecSelected(TEveTrack*)", (Long_t)track);
 }
 
-//______________________________________________________________________________
-void TEveTrack::SetLineStyle(Style_t lstyle)
-{
-   // Set line-style of the track.
-   // The style is propagated to projected tracks.
-
-   TAttLine::SetLineStyle(lstyle);
-   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
-   while (pi != fProjectedList.end())
-   {
-      TEveTrack* pt = dynamic_cast<TEveTrack*>(*pi);
-      if (pt)
-      {
-         pt->SetLineStyle(lstyle);
-         pt->ElementChanged();
-      }
-      ++pi;
-   }
-}
-
 
 //==============================================================================
 //==============================================================================
@@ -826,7 +806,7 @@ void TEveTrackList::SetLineWidth(Width_t width)
       if (fRecurse)
          SetLineWidth(width, *i);
    }
-   fLineWidth=width;
+   fLineWidth = width;
 }
 
 //______________________________________________________________________________
@@ -860,7 +840,7 @@ void TEveTrackList::SetLineStyle(Style_t style)
       if (fRecurse)
          SetLineStyle(style, *i);
    }
-   fLineStyle=style;
+   fLineStyle = style;
 }
 
 //______________________________________________________________________________
@@ -894,7 +874,7 @@ void TEveTrackList::SetMarkerStyle(Style_t style)
       if (fRecurse)
          SetMarkerStyle(style, *i);
    }
-   fMarkerStyle=style;
+   fMarkerStyle = style;
 }
 
 //______________________________________________________________________________
@@ -928,7 +908,7 @@ void TEveTrackList::SetMarkerColor(Color_t col)
       if (fRecurse)
          SetMarkerColor(col, *i);
    }
-   fMarkerColor=col;
+   fMarkerColor = col;
 }
 
 //______________________________________________________________________________
@@ -962,7 +942,7 @@ void TEveTrackList::SetMarkerSize(Size_t size)
       if (fRecurse)
          SetMarkerSize(size, *i);
    }
-   fMarkerSize=size;
+   fMarkerSize = size;
 }
 
 //______________________________________________________________________________
