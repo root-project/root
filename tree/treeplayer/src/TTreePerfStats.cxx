@@ -77,6 +77,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TAxis.h"
+#include "TBrowser.h"
 #include "TVirtualPad.h"
 #include "TPaveText.h"
 #include "TGraphErrors.h"
@@ -174,6 +175,16 @@ TTreePerfStats::~TTreePerfStats()
    delete fWatch;
    delete fRealTimeAxis;
    delete fHostInfoText;
+}
+
+
+//______________________________________________________________________________
+void TTreePerfStats::Browse(TBrowser *b)
+{
+   // Browse
+   
+   Draw();
+   gPad->Update();
 }
 
 //______________________________________________________________________________
@@ -340,22 +351,22 @@ void TTreePerfStats::Paint(Option_t *option)
    if (!fPave) {
       fPave = new TPaveText(.01,.10,.24,.90,"brNDC");
       fPave->SetTextAlign(12);
-      fPave->AddText(Form("TreeCache = %d MBytes",fTreeCacheSize/1000000));
+      fPave->AddText(Form("TreeCache = %d MB",fTreeCacheSize/1000000));
       fPave->AddText(Form("N leaves  = %d",fNleaves));
-      fPave->AddText(Form("ReadTotal = %g MBytes",1e-6*fBytesRead));
-      fPave->AddText(Form("ReadUnZip = %g MBytes",1e-6*fBytesRead*fCompress));
+      fPave->AddText(Form("ReadTotal = %g MB",1e-6*fBytesRead));
+      fPave->AddText(Form("ReadUnZip = %g MB",1e-6*fBytesRead*fCompress));
       fPave->AddText(Form("ReadCalls = %d",fReadCalls));
-      fPave->AddText(Form("ReadSize  = %7.3f KBytes/read",0.001*fBytesRead/fReadCalls));
-      fPave->AddText(Form("Readahead = %d KBytes",fReadaheadSize/1000));
+      fPave->AddText(Form("ReadSize  = %7.3f KB",0.001*fBytesRead/fReadCalls));
+      fPave->AddText(Form("Readahead = %d KB",fReadaheadSize/1000));
       fPave->AddText(Form("Readextra = %5.2f per cent",extra));
-      fPave->AddText(Form("Real Time = %7.3f seconds",fRealTime));
-      fPave->AddText(Form("CPU  Time = %7.3f seconds",fCpuTime));
-      fPave->AddText(Form("Disk Time = %7.3f seconds",fDiskTime));
-      fPave->AddText(Form("Disk IO   = %7.3f MBytes/s",1e-6*fBytesRead/fDiskTime));
-      fPave->AddText(Form("ReadUZRT  = %7.3f MBytes/s",1e-6*fCompress*fBytesRead/fRealTime));
-      fPave->AddText(Form("ReadUZCP  = %7.3f MBytes/s",1e-6*fCompress*fBytesRead/fCpuTime));
-      fPave->AddText(Form("ReadRT    = %7.3f MBytes/s",1e-6*fBytesRead/fRealTime));
-      fPave->AddText(Form("ReadCP    = %7.3f MBytes/s",1e-6*fBytesRead/fCpuTime));
+      fPave->AddText(Form("Real Time = %7.3f s",fRealTime));
+      fPave->AddText(Form("CPU  Time = %7.3f s",fCpuTime));
+      fPave->AddText(Form("Disk Time = %7.3f s",fDiskTime));
+      fPave->AddText(Form("Disk IO   = %7.3f MB/s",1e-6*fBytesRead/fDiskTime));
+      fPave->AddText(Form("ReadUZRT  = %7.3f MB/s",1e-6*fCompress*fBytesRead/fRealTime));
+      fPave->AddText(Form("ReadUZCP  = %7.3f MB/s",1e-6*fCompress*fBytesRead/fCpuTime));
+      fPave->AddText(Form("ReadRT    = %7.3f MB/s",1e-6*fBytesRead/fRealTime));
+      fPave->AddText(Form("ReadCP    = %7.3f MB/s",1e-6*fBytesRead/fCpuTime));
    }
    fPave->Paint();
    

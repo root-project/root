@@ -29,6 +29,7 @@
 #endif
 
 
+class TBrowser;
 class TFile;
 class TTree;
 class TStopwatch;
@@ -65,6 +66,7 @@ public:
    TTreePerfStats();
    TTreePerfStats(const char *name, TTree *T);
    virtual ~TTreePerfStats();
+   virtual void     Browse(TBrowser *b);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual void     Draw(Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
