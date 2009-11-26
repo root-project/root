@@ -417,7 +417,7 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
    fFileTrees = new TList;
    fFileTrees->SetOwner();
    fUseTreeCache = gEnv->GetValue("ProofPlayer.UseTreeCache", 1);
-   fCacheSize = gEnv->GetValue("ProofPlayer.CacheSize", 10000000);
+   fCacheSize = gEnv->GetValue("ProofPlayer.CacheSize", -1);
    fUseParallelUnzip = gEnv->GetValue("ProofPlayer.UseParallelUnzip", 0);
    if (fUseParallelUnzip) {
       TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
@@ -471,27 +471,21 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 
    if (main && main != fTree) {
       // Set the file cache
-      if (!localfile) {
-         if (fUseTreeCache) {
-            TFile *curfile = main->GetCurrentFile();
-            if (!fTreeCache) {
-               main->SetCacheSize(fCacheSize);
-               fTreeCache = (TTreeCache *)curfile->GetCacheRead();
-            } else {
-               curfile->SetCacheRead(fTreeCache);
-               main->SetCacheSize(fCacheSize); // Destroys fTreeCache
-               fTreeCache = (TTreeCache *)curfile->GetCacheRead();
-               fTreeCache->UpdateBranches(main, kTRUE);
-            }
-            fTreeCacheIsLearning = fTreeCache->IsLearning();
-            if (fTreeCacheIsLearning)
-               Info("GetTrees","the tree cache is in learning phase");
+      if (fUseTreeCache) {
+         TFile *curfile = main->GetCurrentFile();
+         if (!fTreeCache) {
+            main->SetCacheSize(fCacheSize);
+            fTreeCache = (TTreeCache *)curfile->GetCacheRead();
          } else {
-            // Disable the cache
-            main->SetCacheSize(-1);
+            curfile->SetCacheRead(fTreeCache);
+            fTreeCache->UpdateBranches(main, kTRUE);
          }
+         fTreeCacheIsLearning = fTreeCache->IsLearning();
+         if (fTreeCacheIsLearning)
+            Info("GetTrees","the tree cache is in learning phase");
       } else {
-         fTreeCache = 0;
+         // Disable the cache
+         main->SetCacheSize(0);
       }
 
       Bool_t loc = kFALSE;
