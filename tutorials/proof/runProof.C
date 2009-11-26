@@ -539,11 +539,12 @@ void runProof(const char *what = "simple",
                aFiles = "";
             }
          } else if (tok.BeginsWith("datasrc=")) {
-            aDataSrc = tok;
-            aDataSrc.ReplaceAll("datasrc=","");
-            if (aDataSrc.IsDigit()) {
+            tok.ReplaceAll("datasrc=","");
+            if (tok.IsDigit()) {
                Printf("runProof: error parsing the 'datasrc=' option (%s) - ignoring", tok.Data());
-               aFiles = "";
+            } else {
+               aDataSrc = tok;
+               Printf("runProof: reading files from: %s", aDataSrc.Data());
             }
          } else if (tok == "readall") {
             proof->SetParameter("ProofEventProc_Read", "readall");
