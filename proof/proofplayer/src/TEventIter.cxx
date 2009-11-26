@@ -235,9 +235,11 @@ Long64_t TEventIterUnit::GetNextEvent()
          fNum = 0;
          return -1;
       }
+      fFirst = fElem->GetFirst();
    }
+   Long64_t event = fNum - fCurrent + fFirst ;
    --fCurrent;
-   return fCurrent;
+   return event;
 }
 
 //------------------------------------------------------------------------

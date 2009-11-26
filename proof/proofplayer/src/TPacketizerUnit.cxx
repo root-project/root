@@ -433,7 +433,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    PDB(kPacketizer,2)
       Info("GetNextPacket", "worker-%s: num %lld, processing %lld, remaining %lld",sl->GetOrdinal(),
                             num, fProcessing, (fTotalEntries - fAssigned - fProcessing));
-   TDSetElement *elem = new TDSetElement("", "", "", 0, fProcessing);
+   TDSetElement *elem = new TDSetElement("", "", "", fAssigned, fProcessing);
    elem->SetBit(TDSetElement::kEmpty);
 
    // Update the total counter
