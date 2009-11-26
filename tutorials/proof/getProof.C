@@ -174,10 +174,15 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
       pid = getXrootdPid(lportx);
       Printf("getProof: daemon found listening on dedicated ports {%d,%d} (pid: %d)",
               lportx, lportp, pid);
-      if (!strcmp(opt,"ask")) {
-         char *answer = Getline("getProof: would you like to restart it (N,Y)? [N] ");
-         if (answer && (answer[0] == 'Y' || answer[0] == 'y'))
-            restart = kTRUE;
+      if (isatty(0) == 0 || isatty(1) == 0) {
+         if (!strcmp(opt,"ask")) {
+            char *answer = Getline("getProof: would you like to restart it (N,Y)? [N] ");
+            if (answer && (answer[0] == 'Y' || answer[0] == 'y'))
+               restart = kTRUE;
+         }
+      } else {
+         // Cannot ask: always restart
+         restart = kTRUE;
       }
       if (!strcmp(opt,"force"))
          // Always restart
