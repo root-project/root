@@ -72,7 +72,7 @@ include/%.h: 	$(UNURANDIRI)/%.h $(UNURANETAG)
 		cp $< $@
 
 $(UNURANDEP):   $(UNRCFG)
-$(UNRS): $(UNURANETAG)
+$(UNRS):        $(UNURANETAG)
 
 $(UNURANETAG):	$(UNRSRCS)
 		@echo "**** untarring UNURAN !!!!"
@@ -92,7 +92,7 @@ $(UNURANETAG):	$(UNRSRCS)
 		fi); 
 
 #configure unuran (required for creating the config.h used by unuran source files)
-$(UNRCFG):	$(UNRANETAG)
+$(UNRCFG):	$(UNURANETAG)
 		@(cd $(UNURANDIRS)/$(UNRVERS) ; \
 		ACC=$(CC); \
 		if [ "$(CC)" = "icc" ]; then \
