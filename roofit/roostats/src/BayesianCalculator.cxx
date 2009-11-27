@@ -197,12 +197,12 @@ SimpleInterval* BayesianCalculator::GetInterval() const
    RooRealVar * poi = dynamic_cast<RooRealVar *>( fPOI.first()); 
    assert(poi);
    
-   double y = fSize*2;
+   double y = fSize/2;
    double lowerLimit = 0; 
    double upperLimit = 0; 
    brf.findRoot(lowerLimit,poi->getMin(),poi->getMax(),y);
    
-   y=1-fSize;
+   y=1-fSize/2;
    brf.findRoot(upperLimit,poi->getMin(),poi->getMax(),y);
    
    delete cdf_bind;
