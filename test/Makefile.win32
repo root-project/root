@@ -459,10 +459,14 @@ $(STRESSFIT):   $(STRESSFITO)
                 $(MT_EXE)
                 @echo "$@ done"
 
+!if exist("$(ROOTSYS)\lib\libUnuran.lib")
+!if exist("$(ROOTSYS)\lib\libminuit2.lib")
 $(STRESSHISTOFIT): $(STRESSHISTOFITO)
                    $(LD) $(LDFLAGS) $(STRESSHISTOFITO) $(LIBS) $(ROOTSYS)\lib\libUnuran.lib $(OutPutOpt)$@
                    $(MT_EXE)
                    @echo "$@ done"
+!endif
+!endif
 
 $(STRESSTMVA): $(STRESSTMVAO)
                $(LD) $(LDFLAGS) $(STRESSTMVAO) $(LIBS) $(ROOTSYS)\lib\libTMVA.lib $(ROOTSYS)\lib\libMinuit.lib $(ROOTSYS)\lib\libMLP.lib $(ROOTSYS)\lib\libTreePlayer.lib $(OutPutOpt)$@
@@ -519,10 +523,10 @@ $(STRESSHIST):  $(STRESSHISTO)
                 @echo "$@ done"
 
 clean:
-                @del *.obj *Dict.* *.def *.exp *.d *.log .def *.pdb *.ilk *.manifest
+      @del *.obj *Dict.* *.def *.exp *.d *.log .def *.pdb *.ilk *.manifest >nul 2>&1
 
 distclean:      clean
-       @del *.exe *.root *.ps *.lib *.dll
+      @del /q *.exe *.root *.ps *.lib *.dll >nul 2>&1
 
 ###
 Event.$(ObjSuf): Event.h
