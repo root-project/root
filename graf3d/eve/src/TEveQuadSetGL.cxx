@@ -105,30 +105,31 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    TEveQuadSet& mQ = * fM;
 
-   if (mQ.fPlex.Size() == 0)
-      return;
-   if ( ! mQ.fValueIsColor && mQ.fPalette == 0)
+   if (mQ.fPlex.Size() > 0)
    {
-      mQ.AssertPalette();
+      if ( ! mQ.fValueIsColor && mQ.fPalette == 0)
+      {
+         mQ.AssertPalette();
+      }
+
+      glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
+      glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
+      glEnable(GL_COLOR_MATERIAL);
+      glDisable(GL_CULL_FACE);
+
+      if (mQ.fRenderMode == TEveDigitSet::kRM_Fill)
+         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      else if (mQ.fRenderMode == TEveDigitSet::kRM_Line)
+         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+      if (mQ.fDisableLigting)  glDisable(GL_LIGHTING);
+
+      if (mQ.fQuadType < TEveQuadSet::kQT_Rectangle_End)    RenderQuads(rnrCtx);
+      else if (mQ.fQuadType < TEveQuadSet::kQT_Line_End)    RenderLines(rnrCtx);
+      else if (mQ.fQuadType < TEveQuadSet::kQT_Hexagon_End) RenderHexagons(rnrCtx);
+
+      glPopAttrib();
    }
-
-   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
-   glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-   glEnable(GL_COLOR_MATERIAL);
-   glDisable(GL_CULL_FACE);
-
-   if (mQ.fRenderMode == TEveDigitSet::kRM_Fill)
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   else if (mQ.fRenderMode == TEveDigitSet::kRM_Line)
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-   if (mQ.fDisableLigting)  glDisable(GL_LIGHTING);
-
-   if (mQ.fQuadType < TEveQuadSet::kQT_Rectangle_End)    RenderQuads(rnrCtx);
-   else if (mQ.fQuadType < TEveQuadSet::kQT_Line_End)    RenderLines(rnrCtx);
-   else if (mQ.fQuadType < TEveQuadSet::kQT_Hexagon_End) RenderHexagons(rnrCtx);
-
-   glPopAttrib();
 
    if (mQ.fFrame != 0 && ! rnrCtx.SecSelection())
    {

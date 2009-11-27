@@ -31,6 +31,8 @@ protected:
    void   RenderBox(const Float_t p[24]) const;
    void   MakeDisplayList() const;
 
+   void   RenderBoxes(TGLRnrCtx & rnrCtx) const;
+
 public:
    TEveBoxSetGL();
    virtual ~TEveBoxSetGL();
