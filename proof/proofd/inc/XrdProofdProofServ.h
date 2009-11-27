@@ -162,7 +162,7 @@ public:
    int                 SendData(int cid, void *buff, int len);
    int                 SendDataN(void *buff, int len);
    void                SendClusterInfo(int nsess, int nacti);
-   int                 SetAdminPath(const char *a);
+   int                 SetAdminPath(const char *a, bool assert);
    void                SetAlias(const char *a) { XrdSysMutexHelper mhp(fMutex); fAlias = a; }
    void                SetClient(const char *c) { XrdSysMutexHelper mhp(fMutex); fClient = c; }
    inline void         SetConnection(XrdProofdResponse *r) { XrdSysMutexHelper mhp(fMutex); fResponse = r;}

@@ -2253,7 +2253,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
    fStatus = 0;
    fRecvMessages->Clear();
 
-   Long_t actto = (Long_t)(gEnv->GetValue("Proof.SocketActivityTimeout", 600) * 1000);
+   Long_t actto = (Long_t)(gEnv->GetValue("Proof.SocketActivityTimeout", -1) * 1000);
 
    if (!mon->GetActive(actto)) return 0;
 

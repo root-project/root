@@ -979,7 +979,7 @@ int XrdProofdProtocol::Urgent()
    // Find server session
    XrdProofdProofServ *xps = 0;
    if (!fPClient || !(xps = fPClient->GetServer(psid))) {
-      TRACEP(this, XERR, "session ID not found");
+      TRACEP(this, XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"Urgent: session ID not found");
       return 0;
    }
@@ -1043,8 +1043,8 @@ int XrdProofdProtocol::Interrupt()
    // Find server session
    XrdProofdProofServ *xps = 0;
    if (!fPClient || !(xps = fPClient->GetServer(psid))) {
-      TRACEP(this, XERR, "session ID not found");
-      response->Send(kXR_InvalidRequest,"nterrupt: session ID not found");
+      TRACEP(this, XERR, "session ID not found: "<<psid);
+      response->Send(kXR_InvalidRequest,"Interrupt: session ID not found");
       return 0;
    }
 
@@ -1098,30 +1098,43 @@ int XrdProofdProtocol::Ping()
 
    // Unmarshall the data
    int psid = ntohl(fRequest.sendrcv.sid);
-   int opt = ntohl(fRequest.sendrcv.opt);
+   int asyncopt = ntohl(fRequest.sendrcv.opt);
 
-   TRACEP(this, REQ, "psid: "<<psid<<", opt: "<<opt);
+   TRACEP(this, REQ, "psid: "<<psid<<", async: "<<asyncopt);
 
-   // Find server session
+   // For connections to servers find the server session; manager connections
+   // (psid == -1) do not have any session attached 
    XrdProofdProofServ *xps = 0;
-   if (!fPClient || !(xps = fPClient->GetServer(psid))) {
-      TRACEP(this,  XERR, "session ID not found");
+   if (!fPClient || (psid > -1 && !(xps = fPClient->GetServer(psid)))) {
+      TRACEP(this,  XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"session ID not found");
       return 0;
    }
 
-   kXR_int32 pingres = 0;
-   if (xps && xps->IsValid()) {
+   // For manager connections we are done
+   kXR_int32 pingres = (psid > -1) ? 0 : 1;
+   if (psid > -1 && xps && xps->IsValid()) {
 
       TRACEP(this,  DBG, "EXT: psid: "<<psid);
+
+      // This is the max time we will privide an answer
+      kXR_int32 checkfq = fgMgr->SessionMgr()->CheckFrequency();
+
+      // If asynchronous return the timeout for an answer
+      if (asyncopt == 1) {
+         TRACEP(this, DBG, "EXT: async: notifying timeout to client: "<<checkfq<<" secs");
+         response->Send(kXR_ok, checkfq);
+      }
 
       // Admin path
       XrdOucString path(xps->AdminPath());
       if (path.length() <= 0) {
          TRACEP(this,  XERR, "EXT: admin path is empty! - protocol error");
-         response->Send(kXP_ServerError, "EXT: admin path is empty! - protocol error");
+         if (asyncopt == 0)
+            response->Send(kXP_ServerError, "EXT: admin path is empty! - protocol error");
          return 0;
       }
+      path += ".status";
 
       // Current time
       int now = time(0);
@@ -1130,7 +1143,8 @@ int XrdProofdProtocol::Ping()
       struct stat st0;
       if (stat(path.c_str(), &st0) != 0) {
          TRACEP(this,  XERR, "EXT: cannot stat admin path: "<<path);
-         response->Send(kXP_ServerError, "EXT: cannot stat admin path");
+         if (asyncopt == 0)
+            response->Send(kXP_ServerError, "EXT: cannot stat admin path");
          return 0;
       }
 
@@ -1138,18 +1152,18 @@ int XrdProofdProtocol::Ping()
       int pid = xps->SrvPID();
       // If the session is alive ...
       if (XrdProofdAux::VerifyProcessByID(pid) != 0) {
-         // If it as not touched during the last 5 secs we ask for a refresh
-         if ((now - st0.st_mtime) > 5) {
+         // If it as not touched during the last ~checkfq secs we ask for a refresh
+         if ((now - st0.st_mtime) > checkfq - 5) {
             // Send the request (asking for further propagation)
             if (xps->VerifyProofServ(1) != 0) {
                TRACEP(this,  XERR, "EXT: could not send verify request to proofsrv");
-               response->Send(kXP_ServerError, "EXT: could not verify reuqest to proofsrv");
+               if (asyncopt == 0)
+                  response->Send(kXP_ServerError, "EXT: could not verify reuqest to proofsrv");
                return 0;
             }
-            // Wait for the action for fgMgr->SessionMgr()->VerifyTimeOut() secs,
-            // checking every 1 sec
+            // Wait for the action for checkfq secs, checking every 1 sec
             struct stat st1;
-            int ns = fgMgr->SessionMgr()->VerifyTimeOut();
+            int ns = checkfq;
             while (ns--) {
                if (stat(path.c_str(), &st1) == 0) {
                   if (st1.st_mtime > st0.st_mtime) {
@@ -1174,12 +1188,25 @@ int XrdProofdProtocol::Ping()
 
       // Notify the client
       TRACEP(this, DBG, "EXT: notified the result to client: "<<pingres);
-      response->Send(kXR_ok, pingres);
+      if (asyncopt == 0) {
+         response->Send(kXR_ok, pingres);
+      } else {
+         // Prepare buffer for asynchronous notification
+         int len = sizeof(kXR_int32);
+         char *buf = new char[len];
+         // Option
+         kXR_int32 ifw = (kXR_int32)0;
+         ifw = static_cast<kXR_int32>(htonl(ifw));
+         memcpy(buf, &ifw, sizeof(kXR_int32));
+         response->Send(kXR_attn, kXPD_ping, buf, len);
+      }
       return 0;
+   } else if (psid > -1)  {
+      // This is a failure for connections to sessions
+      TRACEP(this, XERR, "session ID not found: "<<psid);
    }
 
-   // Failure
-   TRACEP(this, XERR, "session ID not found");
+   // Send the result
    response->Send(kXR_ok, pingres);
 
    // Done
@@ -1249,7 +1276,8 @@ void XrdProofdProtocol::TouchAdminPath()
             rc = XrdProofdAux::Touch(apath.c_str());
          }
          if (rc != 0) {
-            TRACEP(this, XERR, "problems touching "<<apath<<"; errno: "<<-rc);
+            const char *type = Internal() ? "internal" : "external";
+            TRACEP(this, XERR, type<<": problems touching "<<apath<<"; errno: "<<-rc);
          }
       }
    }

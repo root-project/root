@@ -460,7 +460,7 @@ int XrdProofdAdmin::GetWorkers(XrdProofdProtocol *p)
    // Find server session
    XrdProofdProofServ *xps = 0;
    if (!p->Client() || !(xps = p->Client()->GetServer(psid))) {
-      TRACEP(p, XERR, "session ID not found");
+      TRACEP(p, XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"session ID not found");
       return 0;
    }
@@ -956,7 +956,7 @@ int XrdProofdAdmin::SetSessionAlias(XrdProofdProtocol *p)
    int psid = ntohl(p->Request()->proof.sid);
    XrdProofdProofServ *xps = 0;
    if (!p->Client() || !(xps = p->Client()->GetServer(psid))) {
-      TRACEP(p, XERR, "session ID not found");
+      TRACEP(p, XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"SetSessionAlias: session ID not found");
       return 0;
    }
@@ -996,7 +996,7 @@ int XrdProofdAdmin::SetSessionTag(XrdProofdProtocol *p)
    int psid = ntohl(p->Request()->proof.sid);
    XrdProofdProofServ *xps = 0;
    if (!p->Client() || !(xps = p->Client()->GetServer(psid))) {
-      TRACEP(p, XERR, "session ID not found");
+      TRACEP(p, XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"SetSessionTag: session ID not found");
       return 0;
    }
@@ -1036,7 +1036,7 @@ int XrdProofdAdmin::ReleaseWorker(XrdProofdProtocol *p)
    int psid = ntohl(p->Request()->proof.sid);
    XrdProofdProofServ *xps = 0;
    if (!p->Client() || !(xps = p->Client()->GetServer(psid))) {
-      TRACEP(p, XERR, "session ID not found");
+      TRACEP(p, XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"ReleaseWorker: session ID not found");
       return 0;
    }
@@ -1563,7 +1563,7 @@ int XrdProofdAdmin::ExecCmd(XrdProofdProtocol *p, XrdProofdResponse *r,
       while ((prc = pp.Poll(60)) > 0) {
          XpdMsg msg;
          if (pp.Recv(msg) != 0) {
-            emsg = "error receiving message from pipe";;
+            emsg = "error receiving message from pipe";
             return -1;
          }
          // Status is the message type

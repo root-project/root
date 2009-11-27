@@ -723,7 +723,7 @@ int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
 }
 
 //__________________________________________________________________________
-int XrdProofdProofServ::SetAdminPath(const char *a)
+int XrdProofdProofServ::SetAdminPath(const char *a, bool assert)
 {
    // Set the admin path and make sure the file exists
 
@@ -733,6 +733,9 @@ int XrdProofdProofServ::SetAdminPath(const char *a)
 
    fAdminPath = a;
 
+   // If we are not asked to assert the file we are done
+   if (!assert) return 0;
+
    // The session file
    struct stat st;
    if (stat(a, &st) != 0 && errno == ENOENT) {
@@ -740,10 +743,10 @@ int XrdProofdProofServ::SetAdminPath(const char *a)
       FILE *fpid = fopen(a, "w");
       if (fpid) {
          fclose(fpid);
-         return 0;
+      } else {
+         TRACE(XERR, "unable to open / create admin path "<< fAdminPath << "; errno = "<<errno);
+         return -1;
       }
-      TRACE(XERR, "unable to open / create admin path "<< fAdminPath << "; errno = "<<errno);
-      return -1;
    }
 
    // The status file
@@ -769,6 +772,13 @@ int XrdProofdProofServ::SetAdminPath(const char *a)
    if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
       TRACE(XERR, "unable to give ownership of the status file "<< fn << " to user; errno = "<<errno);
       return -1;
+   }
+   // Check
+   if (stat(fn.c_str(), &st) != 0) {
+      TRACE(XERR, "creation/assertion of the status path "<< fn << " failed; errno = "<<errno);
+      return -1;
+   } else {
+      TRACE(ALL, "creation/assertion of the status path "<< fn << " was successful!");
    }
 
    // Done

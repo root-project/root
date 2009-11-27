@@ -65,7 +65,6 @@ class XrdProofdClient {
    XrdProofdProofServ     *GetServer(XrdProofdProtocol *p);
    void                    EraseServer(int psid);
    int                     GetTopServers();
-   void                    CheckServerSlots();
 
    int                     ResetClientSlot(int ic);
    XrdProofdProtocol      *GetProtocol(int ic);

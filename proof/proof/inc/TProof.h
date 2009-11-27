@@ -119,9 +119,10 @@ class TDataSetManager;
 // 23 -> 24: Merging optimization
 // 24 -> 25: Handling of 'data' dir; group information
 // 25 -> 26: Use new TProofProgressInfo class
+// 26 -> 27: Use new file for updating the session status
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 26;            // protocol version number
+const Int_t       kPROOF_Protocol        = 27;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir

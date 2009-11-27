@@ -673,8 +673,8 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
 
             // Signal it and release the mutex
             if (gDebug > 2)
-               Info("ProcessUnsolicitedMsg","%p: posting semaphore: %p (%d bytes)",
-                    this,&fASem,len);
+               Info("ProcessUnsolicitedMsg","%p: %s: posting semaphore: %p (%d bytes)",
+                                            this, GetTitle(), &fASem, len);
             fASem.Post();
          }
 
@@ -1350,7 +1350,7 @@ Int_t TXSocket::PickUpReady()
    fByteLeft = 0;
    fByteCur = 0;
    if (gDebug > 2)
-      Info("PickUpReady","%p: going to sleep", this);
+      Info("PickUpReady", "%p: %s: going to sleep", this, GetTitle());
 
    // User can choose whether to wait forever or for a fixed amount of time
    if (!fDontTimeout) {
@@ -1365,7 +1365,8 @@ Int_t TXSocket::PickUpReady()
                return -1;
             } else {
                if (gDebug > 0)
-                  Info("PickUpReady","%p: got timeout: retring (%d secs)", this, to/1000);
+                  Info("PickUpReady", "%p: %s: got timeout: retring (%d secs)",
+                                      this, GetTitle(), to/1000);
             }
          } else
             break;
@@ -1384,7 +1385,7 @@ Int_t TXSocket::PickUpReady()
       }
    }
    if (gDebug > 2)
-      Info("PickUpReady","%p: waken up", this);
+      Info("PickUpReady", "%p: %s: waken up", this, GetTitle());
 
    R__LOCKGUARD(fAMtx);
 
@@ -1401,7 +1402,8 @@ Int_t TXSocket::PickUpReady()
       fByteLeft = fBufCur->fLen;
 
    if (gDebug > 2)
-      Info("PickUpReady","%p: got message (%d bytes)", this, (Int_t)(fBufCur ? fBufCur->fLen : 0));
+      Info("PickUpReady", "%p: %s: got message (%d bytes)",
+                          this, GetTitle(), (Int_t)(fBufCur ? fBufCur->fLen : 0));
 
    // Update counters
    fBytesRecv += fBufCur->fLen;
@@ -2188,7 +2190,7 @@ Int_t TXSockPipe::Post(TSocket *s)
 
    if (gDebug > 2)
       Printf("TXSockPipe::Post: %s: %p: pipe posted (pending %d)",
-                                   fLoc.Data(), s, sz);
+                               fLoc.Data(), s, sz);
    // We are done
    return 0;
 }

@@ -294,7 +294,7 @@ XrdProofdProofServ *XrdProofdClient::GetServer(XrdProofdProtocol *p)
    if (!fIsValid) return xps;
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ++ip) {
       xps = (*ip);
-      if (xps->SrvPID() == p->Pid())
+      if (xps && xps->SrvPID() == p->Pid())
          break;
       xps = 0;
    }
@@ -338,24 +338,6 @@ void XrdProofdClient::EraseServer(int psid)
 }
 
 //______________________________________________________________________________
-void XrdProofdClient::CheckServerSlots()
-{
-   // Free slots corresponding to invalid server instances
-
-   std::vector<XrdProofdProofServ *>::iterator ip;
-   XrdSysMutexHelper mh(fMutex);
-   if (!fIsValid) return;
-
-   for (ip = fProofServs.begin(); ip != fProofServs.end();) {
-      if (*ip && !(*ip)->IsValid()) {
-         ip = fProofServs.erase(ip);
-      } else {
-         ip++;
-      }
-   }
-}
-
-//______________________________________________________________________________
 int XrdProofdClient::GetTopServers()
 {
    // Return the number of valid proofserv topmaster sessions in the list
@@ -389,8 +371,8 @@ int XrdProofdClient::ResetClientSlot(int ic)
    XrdSysMutexHelper mh(fMutex);
    if (fIsValid) {
       if (ic >= 0 && ic < (int) fClients.size()) {
-	 fClients[ic]->Reset();
-	 return 0;
+         fClients[ic]->Reset();
+         return 0;
       }
    }
    // Done
@@ -410,7 +392,7 @@ XrdProofdProtocol *XrdProofdClient::GetProtocol(int ic)
    XrdSysMutexHelper mh(fMutex);
    if (fIsValid) {
       if (ic >= 0 && ic < (int) fClients.size()) {
-	 p = fClients[ic]->P();
+         p = fClients[ic]->P();
       }
    }
    // Done
@@ -694,8 +676,8 @@ void XrdProofdClient::ResetSessions()
    XrdSysMutexHelper mh(fMutex);
    std::vector<XrdProofdProofServ *>::iterator ip;
    for (ip = fProofServs.begin(); ip != fProofServs.end(); ip++) {
-     // Reset (invalidate) the server instance
-     (*ip)->Reset();
+      // Reset (invalidate) the server instance
+      if (*ip) (*ip)->Reset();
    }
 }
 
