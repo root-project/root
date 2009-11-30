@@ -890,12 +890,12 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    } // scope of the lock!
 
    if (len > fCompBufferSize) {
-      delete fCompBuffer;
+      delete [] fCompBuffer;
       fCompBuffer = new char[len];
       fCompBufferSize = len;
    } else {
       if (fCompBufferSize > len*4) {
-      delete fCompBuffer;
+      delete [] fCompBuffer;
       fCompBuffer = new char[len*2];
       fCompBufferSize = len*2;
       }
