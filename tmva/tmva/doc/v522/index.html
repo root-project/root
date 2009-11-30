@@ -1,0 +1,94 @@
+    <br>
+    <hr> 
+    <a name="tmva"></a> 
+    <h3>TMVA</h3>
+    
+    This version corresponds to TMVA version 3.9.5.
+    
+    <ul>      
+      <li>
+        <a href="http://tmva.sourceforge.net/optionRef.html">New
+        <b>reference page for configuration options</b></a><br> The
+        page is automatically generated for each new release. Next to
+        the classifiers also exist information links for hints to
+        improve the classifier performance (click on the "i"
+        button). Many thanks to Zhiyi Liu (Fraser U) for suggesting
+        this.
+      <li>
+        <strong>Methods:</strong> 
+        <ul>
+          <li>
+            <em>BDT: New Decision Tree Pruning algorithm:</em> Cost
+            Complexity Pruning a la CART.  Written by Doug Schouten
+            (Fraser U.). It replaces the old CostComplexity and
+            CostComplexity2 algorithms.
+          </li>
+          <li>
+            <em>BDT:</em> New no splitting option (choosable with
+            NCuts<0) that finds best split point by first sorting the
+            events for each variable and then looping through all
+            events, placing the cuts always in the middle between two
+            of the sorted events, and finding the true possible
+            maximum separation gain in the training sample by cutting
+            on this variable.
+          </li>
+          <li>
+            <em>BDT, AdaBoost</em> The beta parameter is now an
+            option (default is 1).
+          </li>
+          <li>
+            <em>BDT:</em> The node purity at which a node is
+            classified as signal (respective background node) for
+            determining the error fraction in the pruning became a
+            parameter that can be set via the option NodePurityLimit
+            (default is 0.5).
+          </li>
+        </ul>
+      <li>
+      </li>
+        <strong>Dataset preparation:</strong> 
+        <ul>
+          <li>
+            First implementation of a <em>new preprocessing method</em>: transformation of the
+            variables first into a <em>Gaussian distribution</em>, then performing a decorrelation of
+            the "Gaussianised" variables. The transformation is again done by default such that
+            (by default) the signal distributions become Gaussian and are decorrelated. Note 
+            that simultaneous Gaussianisation and decorrelation of signal and background is 
+            only possible (and done) for methods, such as Likelihood, which test both hypotheses.
+          </li>
+        </ul>
+      <li>
+      </li>
+        <strong>Bug fixes:</strong> 
+        <ul>
+          <li>
+            <em>Fix in Expected error pruning:</em> Rather than multiplying both sides, the error on 
+            the node and the sub-tree, with the prune strength, now only the expected error 
+            of the sub-tree is scaled.
+          </li>
+          <li>
+            Fix in FDA parsing of the input formula. There were problems when treating
+            more than 10 parameters (thanks to Hugh Skottowe for reporting this).
+          </li>
+          <li>
+            Calculation of "Separation": fixed bin-shift and
+            normalisation bugs. Thanks to Dag Gillberg (Fraser U) for
+            spotting these.
+          </li>
+          <li>
+            Fixed problem in "SetSignal(Background)WeightExpression":
+            signal (background weight expressions not existing in the
+            background (signal) tree led to an abort of the tree
+            reading ("Bad numerical expression"). Thanks to Alfio
+            Rizzo (Brussels) for pointing this out.
+          </li>
+          <li>
+            Fixed problem when specifying train and test tree
+            explicitly. Some code was forgotten in the background
+            part, creating incompatibilities. Thanks to Zhiyi Liu
+            (Fraser U) for reporting this.
+          </li>
+        </ul>
+      </li>
+    </ul>
+  
