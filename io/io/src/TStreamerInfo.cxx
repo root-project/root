@@ -449,7 +449,7 @@ void TStreamerInfo::Build()
    InsertArtificialElements(rules);
 
    if (needAllocClass) {
-      TStreamerInfo *infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",fClass->GetName(),GetClassVersion()));
+      TStreamerInfo *infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",GetName(),GetClassVersion()));
       infoalloc->BuildCheck();
       infoalloc->BuildOld();
       TClass *allocClass = infoalloc->GetClass();
@@ -1501,7 +1501,7 @@ void TStreamerInfo::BuildOld()
 
       if ( !wasCompiled && rules && rules->HasRuleWithSource( element->GetName() ) ) {
          if (allocClass == 0) {
-            infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",fClass->GetName(),GetOnFileClassVersion()));
+            infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()));
             infoalloc->BuildCheck();
             infoalloc->BuildOld();
             allocClass = infoalloc->GetClass();
