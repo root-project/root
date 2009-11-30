@@ -93,18 +93,18 @@ namespace TMVA {
    typedef std::vector< Int_t >                               NumberPerClass;
    typedef std::map<Types::ETreeType,  NumberPerClass >       NumberPerClassOfTreeType;
 
-// =============== maybe move these elswhere (e.g. into the tools )
+   // =============== maybe move these elswhere (e.g. into the tools )
 
-// =============== functors =======================
+   // =============== functors =======================
 
 
    class RandomGenerator {
    public:
       RandomGenerator( UInt_t seed ){
-	 fRandom.SetSeed( seed );
+         fRandom.SetSeed( seed );
       }
       UInt_t operator() ( UInt_t n ) {
-	 return fRandom.Integer(n);
+         return fRandom.Integer(n);
       }
    private:
       TRandom3 fRandom; // random generator
@@ -116,8 +116,8 @@ namespace TMVA {
    struct DeleteFunctor_t
    {
       DeleteFunctor_t& operator()(T* p) {
-	 delete p;
-	 return *this;
+         delete p;
+         return *this;
       }
    };
 
@@ -134,14 +134,14 @@ namespace TMVA {
    public:
       Increment( T start ) : value( start ){ }
       T operator()() {
-	 return value++;
+         return value++;
       }
    };
 
 
 
    template <typename F>
-      class null_t 
+   class null_t 
    {
    private:
       // returns argF
@@ -149,40 +149,40 @@ namespace TMVA {
       typedef F argument_type;
       F operator()(const F& argF) const 
       {
-	 return argF;
+         return argF;
       }
    };
 
    template <typename F>
-      inline null_t<F> null() {
+   inline null_t<F> null() {
       return null_t<F>();
    }
 
 
-
+   
    template <typename F, typename G, typename H>
-      class compose_binary_t : public std::binary_function<typename G::argument_type,
-      typename H::argument_type,
-      typename F::result_type>
-      {
-      private:
-	 const F& f;    // f(g(argG),h(argH))
-	 const G& g;
-	 const H& h;
-      public:
+   class compose_binary_t : public std::binary_function<typename G::argument_type,
+                                                        typename H::argument_type,
+                                                        typename F::result_type>
+   {
+   private:
+      const F& f;    // f(g(argG),h(argH))
+      const G& g;
+      const H& h;
+   public:
       compose_binary_t(const F& _f, const G& _g, const H& _h) : f(_f), g(_g), h(_h) 
-	 {
-	 }
-
-	 typename F::result_type operator()(const typename G::argument_type& argG,
-					    const typename H::argument_type& argH) const 
-	 {
-	    return f(g(argG),h(argH));
-	 }
-      };
+      {
+      }
+      
+      typename F::result_type operator()(const typename G::argument_type& argG,
+                                         const typename H::argument_type& argH) const 
+      {
+         return f(g(argG),h(argH));
+      }
+   };
 
    template <typename F, typename G, typename H>
-      inline compose_binary_t<F,G,H> compose_binary(const F& _f, const G& _g, const H& _h) {
+   inline compose_binary_t<F,G,H> compose_binary(const F& _f, const G& _g, const H& _h) {
       return compose_binary_t<F,G,H>(_f,_g,_h);
    }
 
@@ -190,32 +190,32 @@ namespace TMVA {
 
 
    template <typename F, typename G>
-      class compose_unary_t : public std::unary_function<typename G::argument_type,
-      typename F::result_type>
-      {
-      private:
-	 const F& f;    // f(g(argG))
-	 const G& g;
-      public:
+   class compose_unary_t : public std::unary_function<typename G::argument_type,
+                                                      typename F::result_type>
+   {
+   private:
+      const F& f;    // f(g(argG))
+      const G& g;
+   public:
       compose_unary_t(const F& _f, const G& _g) : f(_f), g(_g) 
-	 {
-	 }
+      {
+      }
 
-	 typename F::result_type operator()(const typename G::argument_type&  argG) const 
-	 {
-	    return f(g(argG));
-	 }
-      };
+      typename F::result_type operator()(const typename G::argument_type&  argG) const 
+      {
+         return f(g(argG));
+      }
+   };
 
    template <typename F, typename G>
-      inline compose_unary_t<F,G> compose_unary(const F& _f, const G& _g) {
+   inline compose_unary_t<F,G> compose_unary(const F& _f, const G& _g) {
       return compose_unary_t<F,G>(_f,_g);
    }
 
    // =============== functors =======================
 
 
-// =========================================================
+   // =========================================================
 
 
    class DataSetFactory {
@@ -265,23 +265,23 @@ namespace TMVA {
 #else
       // ---------- new versions
       void      BuildEventVector    ( DataSetInfo& dsi, 
-				      DataInputHandler& dataInput, 
-				      EventVectorOfClassesOfTreeType& tmpEventVector);
+                                      DataInputHandler& dataInput, 
+                                      EventVectorOfClassesOfTreeType& tmpEventVector);
       
       DataSet*  MixEvents           ( DataSetInfo& dsi, 
-				      EventVectorOfClassesOfTreeType& tmpEventVector, 
-				      NumberPerClassOfTreeType& nTrainTestEvents,
-				      const TString& splitMode,
-				      const TString& mixMode, 
-				      const TString& normMode, 
-				      UInt_t splitSeed);
+                                      EventVectorOfClassesOfTreeType& tmpEventVector, 
+                                      NumberPerClassOfTreeType& nTrainTestEvents,
+                                      const TString& splitMode,
+                                      const TString& mixMode, 
+                                      const TString& normMode, 
+                                      UInt_t splitSeed);
 
       void      RenormEvents        ( DataSetInfo& dsi, 
-				      EventVectorOfClassesOfTreeType& tmpEventVector,
-				      const TString& normMode );
+                                      EventVectorOfClassesOfTreeType& tmpEventVector,
+                                      const TString& normMode );
 
       void      InitOptions         ( DataSetInfo& dsi, 
-				      NumberPerClassOfTreeType& nTrainTestEvents, 
+                                      NumberPerClassOfTreeType& nTrainTestEvents, 
                                       TString& normMode, UInt_t& splitSeed, TString& splitMode, TString& mixMode );
       
 

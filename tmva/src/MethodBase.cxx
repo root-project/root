@@ -1671,7 +1671,7 @@ Bool_t TMVA::MethodBase::GetLine(std::istream& fin, char* buf )
 
       Log() << kINFO << "Method was trained for " 
             << (GetAnalysisType() == Types::kRegression ? "Regression" : 
-		(GetAnalysisType() == Types::kMulticlass ? "Multiclass" : "Classification")) << Endl;
+                (GetAnalysisType() == Types::kMulticlass ? "Multiclass" : "Classification")) << Endl;
    }
 
    return true;

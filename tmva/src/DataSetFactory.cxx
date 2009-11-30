@@ -1315,8 +1315,8 @@ void TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
 
 //_______________________________________________________________________
 void  TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi, 
-					      TMVA::DataInputHandler& dataInput, 
-					      TMVA::EventVectorOfClassesOfTreeType& tmpEventVector )
+                                              TMVA::DataInputHandler& dataInput, 
+                                              TMVA::EventVectorOfClassesOfTreeType& tmpEventVector )
 {
    // build empty event vectors
    // distributes events between kTraining/kTesting/kMaxTreeType
@@ -1604,25 +1604,20 @@ void  TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
 
 //_______________________________________________________________________
 TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi, 
-						 TMVA::EventVectorOfClassesOfTreeType& tmpEventVector, 
-						 TMVA::NumberPerClassOfTreeType& nTrainTestEvents,
-						 const TString& splitMode,
-						 const TString& mixMode, 
-						 const TString& normMode, 
-						 UInt_t splitSeed)
+                                                 TMVA::EventVectorOfClassesOfTreeType& tmpEventVector, 
+                                                 TMVA::NumberPerClassOfTreeType& nTrainTestEvents,
+                                                 const TString& splitMode,
+                                                 const TString& mixMode, 
+                                                 const TString& normMode, 
+                                                 UInt_t splitSeed)
 {
    // Select and distribute unassigned events to kTraining and kTesting
-   Bool_t emptyTraining   = kTRUE;
-   Bool_t emptyTesting    = kTRUE;
    Bool_t emptyUndefined  = kTRUE;
 
-   // check if the vectors of all classes are empty
-   emptyTraining  = dsi.GetNClasses()  <= UInt_t(std::count_if( tmpEventVector[Types::kTraining].begin(), tmpEventVector[Types::kTraining].end(), 
-								std::mem_fun_ref(&EventVector::empty) ) );
-   emptyTesting   = dsi.GetNClasses()  <= UInt_t(std::count_if( tmpEventVector[Types::kTesting].begin(), tmpEventVector[Types::kTesting].end(), 
-								std::mem_fun_ref(&EventVector::empty) ) );
-   emptyUndefined = dsi.GetNClasses()  <= UInt_t(std::count_if( tmpEventVector[Types::kMaxTreeType].begin(), tmpEventVector[Types::kMaxTreeType].end(), 
-								std::mem_fun_ref(&EventVector::empty) ) );
+//    // check if the vectors of all classes are empty
+   for( Int_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
+      emptyUndefined |= tmpEventVector[Types::kMaxTreeType].at(cls).empty();
+   }
 
    TMVA::RandomGenerator rndm( splitSeed );
    
@@ -1633,9 +1628,9 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       Log() << kDEBUG << "randomly shuffling events which are not yet associated to testing or training"<<Endl;
       // random shuffle the undefined events of each class
       for( UInt_t cls = 0; cls < dsi.GetNClasses(); ++cls ){
-	 std::random_shuffle(tmpEventVector[Types::kMaxTreeType].at(cls).begin(), 
-			     tmpEventVector[Types::kMaxTreeType].at(cls).end(),
-			     rndm );
+         std::random_shuffle(tmpEventVector[Types::kMaxTreeType].at(cls).begin(), 
+                             tmpEventVector[Types::kMaxTreeType].at(cls).end(),
+                             rndm );
       }
    }
 
@@ -1656,7 +1651,7 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
 
       Int_t requestedTraining          = nTrainTestEvents.find( Types::kTraining )->second.at(cls);
       Int_t requestedTesting           = nTrainTestEvents.find( Types::kTesting  )->second.at(cls);
-				
+      
       Log() << kDEBUG << "availableTraining  " << alreadyAvailableTraining << Endl;
       Log() << kDEBUG << "availableTesting   " << alreadyAvailableTesting << Endl;
       Log() << kDEBUG << "availableUndefined " << availableUndefined << Endl;
@@ -1750,69 +1745,69 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       
       // associate undefined events 
       if( splitMode == "ALTERNATE" ){
-	 Log() << kDEBUG << "split 'ALTERNATE'" << Endl;
-	 for( EventVector::iterator it = eventVectorUndefined.begin(), itEnd = eventVectorUndefined.end(); it != itEnd; ){
-	    eventVectorTraining.insert( eventVectorTraining.end(), (*it) );
-	    ++it;
-	    if( it != itEnd ){
-	       eventVectorTesting.insert( eventVectorTesting.end(), (*it) );
-	       ++it;
-	    }
-	 }
+         Log() << kDEBUG << "split 'ALTERNATE'" << Endl;
+         for( EventVector::iterator it = eventVectorUndefined.begin(), itEnd = eventVectorUndefined.end(); it != itEnd; ){
+            eventVectorTraining.insert( eventVectorTraining.end(), (*it) );
+            ++it;
+            if( it != itEnd ){
+               eventVectorTesting.insert( eventVectorTesting.end(), (*it) );
+               ++it;
+            }
+         }
       }else{
-	 Log() << kDEBUG << "split 'RANDOM'" << Endl;
-	 if (useForTraining>alreadyAvailableTraining){
-	    eventVectorTraining.insert(  eventVectorTraining.end() , eventVectorUndefined.begin(), eventVectorUndefined.begin()+ useForTraining- alreadyAvailableTraining );
-	    eventVectorUndefined.erase( eventVectorUndefined.begin(), eventVectorUndefined.begin() + useForTraining- alreadyAvailableTraining);
-	 }
-	 if (useForTesting>alreadyAvailableTesting){
-	    eventVectorTesting.insert(  eventVectorTesting.end() , eventVectorUndefined.begin(), eventVectorUndefined.begin()+ useForTesting- alreadyAvailableTesting );
-	 }
+         Log() << kDEBUG << "split 'RANDOM'" << Endl;
+         if (useForTraining>alreadyAvailableTraining){
+            eventVectorTraining.insert(  eventVectorTraining.end() , eventVectorUndefined.begin(), eventVectorUndefined.begin()+ useForTraining- alreadyAvailableTraining );
+            eventVectorUndefined.erase( eventVectorUndefined.begin(), eventVectorUndefined.begin() + useForTraining- alreadyAvailableTraining);
+         }
+         if (useForTesting>alreadyAvailableTesting){
+            eventVectorTesting.insert(  eventVectorTesting.end() , eventVectorUndefined.begin(), eventVectorUndefined.begin()+ useForTesting- alreadyAvailableTesting );
+         }
       }
       eventVectorUndefined.clear();      
       // finally shorten the event vectors to the requested size by removing random events
       if (splitMode.Contains( "RANDOM" )){
-	 UInt_t sizeTraining  = eventVectorTraining.size();
-	 if( sizeTraining > UInt_t(requestedTraining) ){
-	    std::vector<UInt_t> indicesTraining( sizeTraining );
-	    // make indices
-	    std::generate( indicesTraining.begin(), indicesTraining.end(), TMVA::Increment<UInt_t>(0) );
-	    // shuffle indices
-	    std::random_shuffle( indicesTraining.begin(), indicesTraining.end(), rndm );
-	    // erase indices of not needed events
-	    indicesTraining.erase( indicesTraining.begin()+sizeTraining-UInt_t(requestedTraining), indicesTraining.end() );
-	    // delete all events with the given indices
-	    for( std::vector<UInt_t>::iterator it = indicesTraining.begin(), itEnd = indicesTraining.end(); it != itEnd; ++it ){
-	       delete eventVectorTraining.at( (*it) ); // delete event
-	       eventVectorTraining.at( (*it) ) = NULL; // set pointer to NULL
-	    }
-	    // now remove and erase all events with pointer==NULL
-	    eventVectorTraining.erase( std::remove( eventVectorTraining.begin(), eventVectorTraining.end(), (void*)NULL ), eventVectorTraining.end() );
-	 }
+         UInt_t sizeTraining  = eventVectorTraining.size();
+         if( sizeTraining > UInt_t(requestedTraining) ){
+            std::vector<UInt_t> indicesTraining( sizeTraining );
+            // make indices
+            std::generate( indicesTraining.begin(), indicesTraining.end(), TMVA::Increment<UInt_t>(0) );
+            // shuffle indices
+            std::random_shuffle( indicesTraining.begin(), indicesTraining.end(), rndm );
+            // erase indices of not needed events
+            indicesTraining.erase( indicesTraining.begin()+sizeTraining-UInt_t(requestedTraining), indicesTraining.end() );
+            // delete all events with the given indices
+            for( std::vector<UInt_t>::iterator it = indicesTraining.begin(), itEnd = indicesTraining.end(); it != itEnd; ++it ){
+               delete eventVectorTraining.at( (*it) ); // delete event
+               eventVectorTraining.at( (*it) ) = NULL; // set pointer to NULL
+            }
+            // now remove and erase all events with pointer==NULL
+            eventVectorTraining.erase( std::remove( eventVectorTraining.begin(), eventVectorTraining.end(), (void*)NULL ), eventVectorTraining.end() );
+         }
 
-	 UInt_t sizeTesting   = eventVectorTesting.size();
-	 if( sizeTesting > UInt_t(requestedTesting) ){
-	    std::vector<UInt_t> indicesTesting( sizeTesting );
-	    // make indices
-	    std::generate( indicesTesting.begin(), indicesTesting.end(), TMVA::Increment<UInt_t>(0) );
-	    // shuffle indices
-	    std::random_shuffle( indicesTesting.begin(), indicesTesting.end(), rndm );
-	    // erase indices of not needed events
-	    indicesTesting.erase( indicesTesting.begin()+sizeTesting-UInt_t(requestedTesting), indicesTesting.end() );
-	    // delete all events with the given indices
-	    for( std::vector<UInt_t>::iterator it = indicesTesting.begin(), itEnd = indicesTesting.end(); it != itEnd; ++it ){
-	       delete eventVectorTesting.at( (*it) ); // delete event
-	       eventVectorTesting.at( (*it) ) = NULL; // set pointer to NULL
-	    }
-	    // now remove and erase all events with pointer==NULL
-	    eventVectorTesting.erase( std::remove( eventVectorTesting.begin(), eventVectorTesting.end(), (void*)NULL ), eventVectorTesting.end() );
-	 }
+         UInt_t sizeTesting   = eventVectorTesting.size();
+         if( sizeTesting > UInt_t(requestedTesting) ){
+            std::vector<UInt_t> indicesTesting( sizeTesting );
+            // make indices
+            std::generate( indicesTesting.begin(), indicesTesting.end(), TMVA::Increment<UInt_t>(0) );
+            // shuffle indices
+            std::random_shuffle( indicesTesting.begin(), indicesTesting.end(), rndm );
+            // erase indices of not needed events
+            indicesTesting.erase( indicesTesting.begin()+sizeTesting-UInt_t(requestedTesting), indicesTesting.end() );
+            // delete all events with the given indices
+            for( std::vector<UInt_t>::iterator it = indicesTesting.begin(), itEnd = indicesTesting.end(); it != itEnd; ++it ){
+               delete eventVectorTesting.at( (*it) ); // delete event
+               eventVectorTesting.at( (*it) ) = NULL; // set pointer to NULL
+            }
+            // now remove and erase all events with pointer==NULL
+            eventVectorTesting.erase( std::remove( eventVectorTesting.begin(), eventVectorTesting.end(), (void*)NULL ), eventVectorTesting.end() );
+         }
       }
       else { // erase at end
-	 std::for_each( eventVectorTraining.begin()+requestedTraining, eventVectorTraining.end(), DeleteFunctor<Event>() );
+         std::for_each( eventVectorTraining.begin()+requestedTraining, eventVectorTraining.end(), DeleteFunctor<Event>() );
          eventVectorTraining.erase(eventVectorTraining.begin()+requestedTraining,eventVectorTraining.end());
 
-	 std::for_each( eventVectorTesting.begin()+requestedTesting, eventVectorTesting.end(), DeleteFunctor<Event>() );
+         std::for_each( eventVectorTesting.begin()+requestedTesting, eventVectorTesting.end(), DeleteFunctor<Event>() );
          eventVectorTesting.erase(eventVectorTesting.begin()+requestedTesting,eventVectorTesting.end());
       }
    }
@@ -1865,57 +1860,57 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       // insert other classes
       EvtVecIt itTarget;
       for( UInt_t cls = 1; cls < dsi.GetNClasses(); ++cls ){
-	 Log() << kDEBUG << "insert class " << cls << Endl;
-	 // training vector
-	 itTarget = --(trainingEventVector->begin()); // start one before begin
-	 // loop over source 
-	 for( itEvent = tmpEventVector[Types::kTraining].at(cls).begin(), itEventEnd = tmpEventVector[Types::kTraining].at(cls).end(); itEvent != itEventEnd; ++itEvent ){
-	    if( std::distance( itTarget, trainingEventVector->end()) < Int_t(cls+1) ) {
-	       itTarget = trainingEventVector->end();
-	       trainingEventVector->insert( itTarget, itEvent, itEventEnd ); // fill in the rest without mixing
-	       break;
-	    }else{ 
-	       itTarget += cls+1;
-	       trainingEventVector->insert( itTarget, (*itEvent) ); // fill event
-	    }
-	 }
-	 // testing vector
-	 itTarget = --(testingEventVector->begin());
-	 // loop over source 
-	 for( itEvent = tmpEventVector[Types::kTesting].at(cls).begin(), itEventEnd = tmpEventVector[Types::kTesting].at(cls).end(); itEvent != itEventEnd; ++itEvent ){
-	    if( std::distance( itTarget, testingEventVector->end()) < Int_t(cls+1) ) {
-	       itTarget = testingEventVector->end();
-	       testingEventVector->insert( itTarget, itEvent, itEventEnd ); // fill in the rest without mixing
-	       break;
-	    }else{ 
-	       itTarget += cls+1;
-	       testingEventVector->insert( itTarget, (*itEvent) ); // fill event
-	    }
-	 }
+         Log() << kDEBUG << "insert class " << cls << Endl;
+         // training vector
+         itTarget = trainingEventVector->begin() - 1; // start one before begin
+         // loop over source 
+         for( itEvent = tmpEventVector[Types::kTraining].at(cls).begin(), itEventEnd = tmpEventVector[Types::kTraining].at(cls).end(); itEvent != itEventEnd; ++itEvent ){
+            if( std::distance( itTarget, trainingEventVector->end()) < Int_t(cls+1) ) {
+               itTarget = trainingEventVector->end();
+               trainingEventVector->insert( itTarget, itEvent, itEventEnd ); // fill in the rest without mixing
+               break;
+            }else{ 
+               itTarget += cls+1;
+               trainingEventVector->insert( itTarget, (*itEvent) ); // fill event
+            }
+         }
+         // testing vector
+         itTarget = testingEventVector->begin() - 1;
+         // loop over source 
+         for( itEvent = tmpEventVector[Types::kTesting].at(cls).begin(), itEventEnd = tmpEventVector[Types::kTesting].at(cls).end(); itEvent != itEventEnd; ++itEvent ){
+            if( std::distance( itTarget, testingEventVector->end()) < Int_t(cls+1) ) {
+               itTarget = testingEventVector->end();
+               testingEventVector->insert( itTarget, itEvent, itEventEnd ); // fill in the rest without mixing
+               break;
+            }else{ 
+               itTarget += cls+1;
+               testingEventVector->insert( itTarget, (*itEvent) ); // fill event
+            }
+         }
       }
 
       // debugging output: classnumbers of all events in training and testing vectors
-//       std::cout << std::endl;
-//       std::cout << "TRAINING VECTOR" << std::endl;
-//       std::transform( trainingEventVector->begin(), trainingEventVector->end(), ostream_iterator<Int_t>(std::cout, "|"), std::mem_fun(&TMVA::Event::GetClass) );
+      //       std::cout << std::endl;
+      //       std::cout << "TRAINING VECTOR" << std::endl;
+      //       std::transform( trainingEventVector->begin(), trainingEventVector->end(), ostream_iterator<Int_t>(std::cout, "|"), std::mem_fun(&TMVA::Event::GetClass) );
       
-//       std::cout << std::endl;
-//       std::cout << "TESTING VECTOR" << std::endl;
-//       std::transform( testingEventVector->begin(), testingEventVector->end(), ostream_iterator<Int_t>(std::cout, "|"), std::mem_fun(&TMVA::Event::GetClass) );
-//       std::cout << std::endl;
+      //       std::cout << std::endl;
+      //       std::cout << "TESTING VECTOR" << std::endl;
+      //       std::transform( testingEventVector->begin(), testingEventVector->end(), ostream_iterator<Int_t>(std::cout, "|"), std::mem_fun(&TMVA::Event::GetClass) );
+      //       std::cout << std::endl;
 
    }else{ 
       for( UInt_t cls = 0; cls < dsi.GetNClasses(); ++cls ){
-	 trainingEventVector->insert( trainingEventVector->end(), tmpEventVector[Types::kTraining].at(cls).begin(), tmpEventVector[Types::kTraining].at(cls).end() );
-	 testingEventVector->insert ( testingEventVector->end(),  tmpEventVector[Types::kTesting].at(cls).begin(),  tmpEventVector[Types::kTesting].at(cls).end()  );
+         trainingEventVector->insert( trainingEventVector->end(), tmpEventVector[Types::kTraining].at(cls).begin(), tmpEventVector[Types::kTraining].at(cls).end() );
+         testingEventVector->insert ( testingEventVector->end(),  tmpEventVector[Types::kTesting].at(cls).begin(),  tmpEventVector[Types::kTesting].at(cls).end()  );
       }
    }
 
-//    std::cout << "trainingEventVector " << trainingEventVector->size() << std::endl;
-//    std::cout << "testingEventVector  " << testingEventVector->size() << std::endl;
+   //    std::cout << "trainingEventVector " << trainingEventVector->size() << std::endl;
+   //    std::cout << "testingEventVector  " << testingEventVector->size() << std::endl;
 
-//    std::transform( trainingEventVector->begin(), trainingEventVector->end(), ostream_iterator<Int_t>(std::cout, "> \n"), std::mem_fun(&TMVA::Event::GetNVariables) );
-//    std::transform( testingEventVector->begin(), testingEventVector->end(), ostream_iterator<Int_t>(std::cout, "> \n"), std::mem_fun(&TMVA::Event::GetNVariables) );
+   //    std::transform( trainingEventVector->begin(), trainingEventVector->end(), ostream_iterator<Int_t>(std::cout, "> \n"), std::mem_fun(&TMVA::Event::GetNVariables) );
+   //    std::transform( testingEventVector->begin(), testingEventVector->end(), ostream_iterator<Int_t>(std::cout, "> \n"), std::mem_fun(&TMVA::Event::GetNVariables) );
 
    // delete the tmpEventVector (but not the events therein)
    tmpEventVector[Types::kTraining].clear();
@@ -1926,14 +1921,14 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
    if (mixMode == "RANDOM") {
       Log() << kDEBUG << "shuffling events"<<Endl;
 
-//       std::cout << "before" << std::endl;
-//       std::for_each( trainingEventVector->begin(), trainingEventVector->begin()+10, std::bind2nd(std::mem_fun(&TMVA::Event::Print),std::cout) );
+      //       std::cout << "before" << std::endl;
+      //       std::for_each( trainingEventVector->begin(), trainingEventVector->begin()+10, std::bind2nd(std::mem_fun(&TMVA::Event::Print),std::cout) );
       
       std::random_shuffle( trainingEventVector->begin(), trainingEventVector->end(), rndm );
       std::random_shuffle( testingEventVector->begin(),  testingEventVector->end(),  rndm  );
 
-//       std::cout << "after" << std::endl;
-//       std::for_each( trainingEventVector->begin(), trainingEventVector->begin()+10, std::bind2nd(std::mem_fun(&TMVA::Event::Print),std::cout) );
+      //       std::cout << "after" << std::endl;
+      //       std::for_each( trainingEventVector->begin(), trainingEventVector->begin()+10, std::bind2nd(std::mem_fun(&TMVA::Event::Print),std::cout) );
    }
 
    Log() << kDEBUG << "trainingEventVector " << trainingEventVector->size() << Endl;
@@ -1956,8 +1951,8 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
 
 //_______________________________________________________________________
 void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi, 
-					  TMVA::EventVectorOfClassesOfTreeType& tmpEventVector, 
-					  const TString&        normMode )
+                                          TMVA::EventVectorOfClassesOfTreeType& tmpEventVector, 
+                                          const TString&        normMode )
 {
    // ============================================================
    // renormalisation
@@ -2005,18 +2000,18 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
       //
       // all together sums up all the event-weights of the events in the vector and returns it
       trainingSumWeightsPerClass.at(cls) = std::accumulate( tmpEventVector[Types::kTraining].at(cls).begin(),
-							    tmpEventVector[Types::kTraining].at(cls).end(),
-							    Double_t(0),
-							    compose_binary( std::plus<Double_t>(),
-									    null<Double_t>(),
-									    std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
+                                                            tmpEventVector[Types::kTraining].at(cls).end(),
+                                                            Double_t(0),
+                                                            compose_binary( std::plus<Double_t>(),
+                                                                            null<Double_t>(),
+                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
 
       testingSumWeightsPerClass.at(cls)  = std::accumulate( tmpEventVector[Types::kTesting].at(cls).begin(),
-							    tmpEventVector[Types::kTesting].at(cls).end(),
-							    Double_t(0),
-							    compose_binary( std::plus<Double_t>(),
-									    null<Double_t>(),
-									    std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
+                                                            tmpEventVector[Types::kTesting].at(cls).end(),
+                                                            Double_t(0),
+                                                            compose_binary( std::plus<Double_t>(),
+                                                                            null<Double_t>(),
+                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
 
 
       trainingSumWeights += trainingSumWeightsPerClass.at(cls);
@@ -2035,8 +2030,8 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
 
 
       for( UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
-	 renormFactor.at(cls) = (trainingSizePerClass.at(cls)+testingSizePerClass.at(cls) )/
-	    (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls) );
+         renormFactor.at(cls) = (trainingSizePerClass.at(cls)+testingSizePerClass.at(cls) )/
+            (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls) );
 
       }
    }
@@ -2046,15 +2041,15 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
       Log() << kINFO << "   (note that N_j is the sum of training and test events)" << Endl;
 
       for (UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ) {
-	 renormFactor.at(cls) = Float_t(trainingSizePerClass.at(cls)+testingSizePerClass.at(cls))/
-	    (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls));
+         renormFactor.at(cls) = Float_t(trainingSizePerClass.at(cls)+testingSizePerClass.at(cls))/
+            (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls));
       }
       // normalize to size of first class
       UInt_t referenceClass = 0;
       for (UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ) {
-	 if( cls == referenceClass ) continue;
-	 renormFactor.at(cls) *= Float_t(trainingSizePerClass.at(referenceClass)+testingSizePerClass.at(referenceClass) )/
-	    Float_t( trainingSizePerClass.at(cls)+testingSizePerClass.at(cls) );
+         if( cls == referenceClass ) continue;
+         renormFactor.at(cls) *= Float_t(trainingSizePerClass.at(referenceClass)+testingSizePerClass.at(referenceClass) )/
+            Float_t( trainingSizePerClass.at(cls)+testingSizePerClass.at(cls) );
       }
    }
    else {
@@ -2066,11 +2061,11 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    for (UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls<clsEnd; ++cls) { 
       Log() << kINFO << "Rescale " << dsi.GetClassInfo(cls)->GetName() << " event weights by factor: " << renormFactor.at(cls) << Endl;
       std::for_each( tmpEventVector[Types::kTraining].at(cls).begin(), 
-		     tmpEventVector[Types::kTraining].at(cls).end(),
-		     std::bind2nd(std::mem_fun(&TMVA::Event::ScaleWeight),renormFactor.at(cls)) );
+                     tmpEventVector[Types::kTraining].at(cls).end(),
+                     std::bind2nd(std::mem_fun(&TMVA::Event::ScaleWeight),renormFactor.at(cls)) );
       std::for_each( tmpEventVector[Types::kTesting].at(cls).begin(), 
-		     tmpEventVector[Types::kTesting].at(cls).end(),
-		     std::bind2nd(std::mem_fun(&TMVA::Event::ScaleWeight),renormFactor.at(cls)) );
+                     tmpEventVector[Types::kTesting].at(cls).end(),
+                     std::bind2nd(std::mem_fun(&TMVA::Event::ScaleWeight),renormFactor.at(cls)) );
    }
 
 
@@ -2092,18 +2087,18 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    for( UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
 
       trainingSumWeightsPerClass.at(cls) = (std::accumulate( tmpEventVector[Types::kTraining].at(cls).begin(),  // accumulate --> start at begin
-							     tmpEventVector[Types::kTraining].at(cls).end(),    //    until end()
-							     Double_t(0),                                       // values are of type double
-							     compose_binary( std::plus<Double_t>(),             // define addition for doubles
-									     null<Double_t>(),                  // take the argument, don't do anything and return it
-									     std::mem_fun(&TMVA::Event::GetOriginalWeight) ) )); // take the value from GetOriginalWeight
+                                                             tmpEventVector[Types::kTraining].at(cls).end(),    //    until end()
+                                                             Double_t(0),                                       // values are of type double
+                                                             compose_binary( std::plus<Double_t>(),             // define addition for doubles
+                                                                             null<Double_t>(),                  // take the argument, don't do anything and return it
+                                                                             std::mem_fun(&TMVA::Event::GetOriginalWeight) ) )); // take the value from GetOriginalWeight
 
       testingSumWeightsPerClass.at(cls)  = std::accumulate( tmpEventVector[Types::kTesting].at(cls).begin(),
-							    tmpEventVector[Types::kTesting].at(cls).end(),
-							    Double_t(0),
-							    compose_binary( std::plus<Double_t>(),
-									    null<Double_t>(),
-									    std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
+                                                            tmpEventVector[Types::kTesting].at(cls).end(),
+                                                            Double_t(0),
+                                                            compose_binary( std::plus<Double_t>(),
+                                                                            null<Double_t>(),
+                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
 
 
 
@@ -2112,11 +2107,11 @@ void  TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
       testingSumWeights  += testingSumWeightsPerClass.at(cls);
 
       Log() << kINFO << dsi.GetClassInfo(cls)->GetName() << " - " << "training events             : number of events : " << trainingSizePerClass.at(cls) 
-	    <<  " / " << "sum of weights : " << trainingSumWeightsPerClass.at(cls) << Endl;
+            <<  " / " << "sum of weights : " << trainingSumWeightsPerClass.at(cls) << Endl;
       Log() << kINFO << dsi.GetClassInfo(cls)->GetName() << " - " << "testing events              : number of events : " << testingSizePerClass.at(cls) 
-	    <<  " / " << "sum of weights : " << testingSumWeightsPerClass.at(cls) << Endl;
+            <<  " / " << "sum of weights : " << testingSumWeightsPerClass.at(cls) << Endl;
       Log() << kINFO << dsi.GetClassInfo(cls)->GetName() << " - " << "training and testing events : number of events : " << (trainingSizePerClass.at(cls)+testingSizePerClass.at(cls)) 
-	    << " / " << "sum of weights : " << (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls)) << Endl;
+            << " / " << "sum of weights : " << (trainingSumWeightsPerClass.at(cls)+testingSumWeightsPerClass.at(cls)) << Endl;
    }
 
 }

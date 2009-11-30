@@ -415,100 +415,100 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
       toteventsOld = GetBuildUpCellEvents(cell);
 
    /////////////////////////////////////////////////////
-   //    Special Short MC sampling to probe cell      //
-   /////////////////////////////////////////////////////
-   ceSum[0]=0;
-   ceSum[1]=0;
-   ceSum[2]=0;
-   ceSum[3]=gHigh;  //wtmin
-   ceSum[4]=gVlow;  //wtmax
+      //    Special Short MC sampling to probe cell      //
+      /////////////////////////////////////////////////////
+      ceSum[0]=0;
+      ceSum[1]=0;
+      ceSum[2]=0;
+      ceSum[3]=gHigh;  //wtmin
+      ceSum[4]=gVlow;  //wtmax
 
-   for (i=0;i<fDim;i++) ((TH1D *)(*fHistEdg)[i])->Reset(); // Reset histograms
+      for (i=0;i<fDim;i++) ((TH1D *)(*fHistEdg)[i])->Reset(); // Reset histograms
 
-   Double_t nevEff=0.;
-   // ||||||||||||||||||||||||||BEGIN MC LOOP|||||||||||||||||||||||||||||
-   for (iev=0;iev<fNSampl;iev++){
-      MakeAlpha();               // generate uniformly vector inside hypercube
+      Double_t nevEff=0.;
+      // ||||||||||||||||||||||||||BEGIN MC LOOP|||||||||||||||||||||||||||||
+      for (iev=0;iev<fNSampl;iev++){
+         MakeAlpha();               // generate uniformly vector inside hypercube
 
-      if (fDim>0){
-	 for (j=0; j<fDim; j++)
-	    xRand[j]= cellPosi[j] +fAlpha[j]*(cellSize[j]);
+         if (fDim>0){
+            for (j=0; j<fDim; j++)
+               xRand[j]= cellPosi[j] +fAlpha[j]*(cellSize[j]);
+         }
+
+         wt         = dx*Eval(xRand, event_density);
+         totevents += dx*event_density;
+
+         nProj = 0;
+         if (fDim>0) {
+            for (k=0; k<fDim; k++) {
+               xproj =fAlpha[k];
+               ((TH1D *)(*fHistEdg)[nProj])->Fill(xproj,wt);
+               nProj++;
+            }
+         }
+
+         ceSum[0] += wt;    // sum of weights
+         ceSum[1] += wt*wt; // sum of weights squared
+         ceSum[2]++;        // sum of 1
+         if (ceSum[3]>wt) ceSum[3]=wt;  // minimum weight;
+         if (ceSum[4]<wt) ceSum[4]=wt;  // maximum weight
+         // test MC loop exit condition
+         nevEff = ceSum[0]*ceSum[0]/ceSum[1];
+         if ( nevEff >= fNBin*fEvPerBin) break;
+      }   // ||||||||||||||||||||||||||END MC LOOP|||||||||||||||||||||||||||||
+      totevents /= fNSampl;
+
+      // make shure that, if root cell is explored, more than zero
+      // events were found.
+      if (cell==fCells[0] && ceSum[0]<=0.0){
+         if (ceSum[0]==0.0)
+            Log() << kFATAL << "No events were found during exploration of "
+                  << "root cell.  Please check PDEFoam parameters nSampl "
+                  << "and VolFrac." << Endl;
+         else
+            Log() << kWARNING << "Negative number of events found during "
+                  << "exploration of root cell" << Endl;
       }
 
-      wt         = dx*Eval(xRand, event_density);
-      totevents += dx*event_density;
-
-      nProj = 0;
-      if (fDim>0) {
-	 for (k=0; k<fDim; k++) {
-	    xproj =fAlpha[k];
-	    ((TH1D *)(*fHistEdg)[nProj])->Fill(xproj,wt);
-	    nProj++;
-	 }
+      //------------------------------------------------------------------
+      //---  predefine logics of searching for the best division edge ---
+      for (k=0; k<fDim;k++){
+         fMaskDiv[k] =1;                       // default is all
+         if ( fInhiDiv[k]==1) fMaskDiv[k] =0; // inhibit some...
       }
+      kBest=-1;
 
-      ceSum[0] += wt;    // sum of weights
-      ceSum[1] += wt*wt; // sum of weights squared
-      ceSum[2]++;        // sum of 1
-      if (ceSum[3]>wt) ceSum[3]=wt;  // minimum weight;
-      if (ceSum[4]<wt) ceSum[4]=wt;  // maximum weight
-      // test MC loop exit condition
-      nevEff = ceSum[0]*ceSum[0]/ceSum[1];
-      if ( nevEff >= fNBin*fEvPerBin) break;
-   }   // ||||||||||||||||||||||||||END MC LOOP|||||||||||||||||||||||||||||
-   totevents /= fNSampl;
+      //------------------------------------------------------------------
+      nevMC            = ceSum[2];
+      Double_t intTrue = ceSum[0]/(nevMC+0.000001);
+      Double_t intDriv=0.;
 
-   // make shure that, if root cell is explored, more than zero
-   // events were found.
-   if (cell==fCells[0] && ceSum[0]<=0.0){
-      if (ceSum[0]==0.0)
-	 Log() << kFATAL << "No events were found during exploration of "
-	       << "root cell.  Please check PDEFoam parameters nSampl "
-	       << "and VolFrac." << Endl;
+      if (kBest == -1) Varedu(ceSum,kBest,xBest,yBest); // determine the best edge,
+      if (CutRMSmin())
+         intDriv =sqrt( ceSum[1]/nevMC -intTrue*intTrue ); // Older ansatz, numerically not bad
       else
-	 Log() << kWARNING << "Negative number of events found during "
-	       << "exploration of root cell" << Endl;
-   }
+         intDriv =sqrt(ceSum[1]/nevMC) -intTrue; // Foam build-up, sqrt(<w**2>) -<w>
 
-   //------------------------------------------------------------------
-   //---  predefine logics of searching for the best division edge ---
-   for (k=0; k<fDim;k++){
-      fMaskDiv[k] =1;                       // default is all
-      if ( fInhiDiv[k]==1) fMaskDiv[k] =0; // inhibit some...
-   }
-   kBest=-1;
-
-   //------------------------------------------------------------------
-   nevMC            = ceSum[2];
-   Double_t intTrue = ceSum[0]/(nevMC+0.000001);
-   Double_t intDriv=0.;
-
-   if (kBest == -1) Varedu(ceSum,kBest,xBest,yBest); // determine the best edge,
-   if (CutRMSmin())
-      intDriv =sqrt( ceSum[1]/nevMC -intTrue*intTrue ); // Older ansatz, numerically not bad
-   else
-      intDriv =sqrt(ceSum[1]/nevMC) -intTrue; // Foam build-up, sqrt(<w**2>) -<w>
-
-   //=================================================================================
-   cell->SetBest(kBest);
-   cell->SetXdiv(xBest);
-   cell->SetIntg(intTrue);
-   cell->SetDriv(intDriv);
-   if (CutNmin())
-      SetCellElement(cell, 0, totevents);
-
-   // correct/update integrals in all parent cells to the top of the tree
-   Double_t  parIntg, parDriv;
-   for (parent = cell->GetPare(); parent!=0; parent = parent->GetPare()){
-      parIntg = parent->GetIntg();
-      parDriv = parent->GetDriv();
-      parent->SetIntg( parIntg   +intTrue -intOld );
-      parent->SetDriv( parDriv   +intDriv -driOld );
+      //=================================================================================
+      cell->SetBest(kBest);
+      cell->SetXdiv(xBest);
+      cell->SetIntg(intTrue);
+      cell->SetDriv(intDriv);
       if (CutNmin())
-	 SetCellElement( parent, 0, GetBuildUpCellEvents(parent) + totevents - toteventsOld);
-   }
-   delete [] volPart;
-   delete [] xRand;
+         SetCellElement(cell, 0, totevents);
+
+      // correct/update integrals in all parent cells to the top of the tree
+      Double_t  parIntg, parDriv;
+      for (parent = cell->GetPare(); parent!=0; parent = parent->GetPare()){
+         parIntg = parent->GetIntg();
+         parDriv = parent->GetDriv();
+         parent->SetIntg( parIntg   +intTrue -intOld );
+         parent->SetDriv( parDriv   +intDriv -driOld );
+         if (CutNmin())
+            SetCellElement( parent, 0, GetBuildUpCellEvents(parent) + totevents - toteventsOld);
+      }
+      delete [] volPart;
+      delete [] xRand;
 }
 
 //_____________________________________________________________________
@@ -919,7 +919,7 @@ void TMVA::PDEFoam::PrintCellElements()
 
       Log() << "cell[" << iCell << "] elements: [";
       for (UInt_t i=0; i<GetNElements(); i++){
-	 if (i>0) Log() << " ; ";
+         if (i>0) Log() << " ; ";
          Log() << GetCellElement(fCells[iCell], i);
       }
       Log() << "]" << Endl;
@@ -1211,7 +1211,7 @@ Double_t TMVA::PDEFoam::GetCellRegValue0( std::vector<Float_t> xvec, EKernel ker
 
 //_____________________________________________________________________
 Double_t TMVA::PDEFoam::GetAverageNeighborsValue( std::vector<Float_t> txvec,
-						  ECellValue cv )
+                                                  ECellValue cv )
 {
    // This function returns the average value 'cv' of only nearest
    // neighbor cells.  It is used in cases, where empty cells shall
@@ -1523,30 +1523,30 @@ Double_t TMVA::PDEFoam::GetCellValue( PDEFoamCell* cell, ECellValue cv )
 
    case kNev:
       if (GetFoamType() == kSeparate || GetFoamType() == kMultiTarget) 
-	 return GetCellElement(cell, 0);
+         return GetCellElement(cell, 0);
       break;
 
    case kDensity: {
       
       Double_t volume  = cell->GetVolume();
       if ( volume > 1.0e-10 ){
-	 return GetCellValue(cell, kNev)/volume;
+         return GetCellValue(cell, kNev)/volume;
       } else {
-	 if (volume<=0){
-	    cell->Print("1"); // debug output
-	    Log() << kWARNING << "<GetCellDensity(cell)>: ERROR: cell volume"
-		  << " negative or zero!"
-		  << " ==> return cell density 0!"
-		  << " cell volume=" << volume
-		  << " cell entries=" << GetCellValue(cell, kNev) << Endl;
-	    return 0;
-	 } else
-	    Log() << kWARNING << "<GetCellDensity(cell)>: WARNING: cell volume"
-		  << " close to zero!"
-		  << " cell volume: " << volume << Endl;
+         if (volume<=0){
+            cell->Print("1"); // debug output
+            Log() << kWARNING << "<GetCellDensity(cell)>: ERROR: cell volume"
+                  << " negative or zero!"
+                  << " ==> return cell density 0!"
+                  << " cell volume=" << volume
+                  << " cell entries=" << GetCellValue(cell, kNev) << Endl;
+            return 0;
+         } else
+            Log() << kWARNING << "<GetCellDensity(cell)>: WARNING: cell volume"
+                  << " close to zero!"
+                  << " cell volume: " << volume << Endl;
       }
    } // kDensity
-
+      
    default:
       return 0;
    }
@@ -1654,7 +1654,7 @@ Double_t TMVA::PDEFoam::WeightLinNeighbors( std::vector<Float_t> txvec, ECellVal
 
 //_____________________________________________________________________
 Float_t TMVA::PDEFoam::WeightGaus( PDEFoamCell* cell, std::vector<Float_t> txvec,
-				   UInt_t dim )
+                                   UInt_t dim )
 {
    // Returns the gauss weight between the 'cell' and a given coordinate 'txvec'.
    //
@@ -1692,8 +1692,8 @@ Float_t TMVA::PDEFoam::WeightGaus( PDEFoamCell* cell, std::vector<Float_t> txvec
    // calc position of nearest edge of cell
    std::vector<Float_t> cell_center;
    for (UInt_t i=0; i<dims; i++){
-     if (txvec[i]<0.) txvec[i]=0.;
-     if (txvec[i]>1.) txvec[i]=1.;
+      if (txvec[i]<0.) txvec[i]=0.;
+      if (txvec[i]>1.) txvec[i]=1.;
       //cell_center.push_back(cellPosi[i] + (0.5*cellSize[i]));
       if (cellPosi[i] > txvec.at(i))
          cell_center.push_back(cellPosi[i]);
@@ -1895,9 +1895,8 @@ TH1D* TMVA::PDEFoam::Draw1Dim( const char *opt, Int_t nbin )
          }
 
          // filling value to histogram
-         h1->SetBinContent(
-	    ibinx, 
-	    GetCellValue(fCells[iCell], cell_value) + h1->GetBinContent(ibinx));
+         h1->SetBinContent(ibinx, 
+                           GetCellValue(fCells[iCell], cell_value) + h1->GetBinContent(ibinx));
       }
    }
    return h1;
@@ -2115,8 +2114,8 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, const char *opt, const 
 
 //_____________________________________________________________________
 Double_t TMVA::PDEFoam::GetProjectionCellValue( PDEFoamCell* cell,
-						Int_t idim1,
-						Int_t idim2,
+                                                Int_t idim1,
+                                                Int_t idim2,
                                                 ECellValue cv )
 {
    // Helper function for projection function Project2().  It returns
@@ -2233,10 +2232,10 @@ void TMVA::PDEFoam::OutputGrow( Bool_t finished )
 
    if (finished) {
       Log() << kINFO << "Elapsed time: " + fTimer->GetElapsedTime()
-	    << "                                 " << Endl;
+            << "                                 " << Endl;
       return;
    }
-
+   
    Int_t modulo = 1;
 
    if (fNCells        >= 100) modulo = Int_t(fNCells/100);
@@ -2256,7 +2255,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, std::string what,
 
    if (GetTotDim() != 2)
       Log() << kFATAL << "RootPlot2dim() can only be used with "
-	    << "two-dimensional foams!" << Endl;
+            << "two-dimensional foams!" << Endl;
 
    // select value to plot
    ECellValue cell_value = kNev;
@@ -2298,14 +2297,14 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, std::string what,
    outfile<<"{" << std::endl;
 
    if (!colors) { // define grayscale colors from light to dark,
-		  // starting from color index 1000
+      // starting from color index 1000
       outfile << "TColor *graycolors[100];" << std::endl;
       outfile << "for (Int_t i=0.; i<100; i++)" << std::endl;
       outfile << "  graycolors[i]=new TColor(1000+i, 1-(Float_t)i/100.,1-(Float_t)i/100.,1-(Float_t)i/100.);"<< std::endl;
    }
    if (CreateCanvas)
       outfile << "cMap = new TCanvas(\"" << fName << "\",\"Cell Map for "
-	      << fName << "\",600,600);" << std::endl;
+              << fName << "\",600,600);" << std::endl;
 
    outfile<<"TBox*a=new TBox();"<<std::endl;
    outfile<<"a->SetFillStyle(0);"<<std::endl;  // big frame
@@ -2313,7 +2312,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, std::string what,
    outfile<<"TBox *b1=new TBox();"<<std::endl;  // single cell
    if (fillcells) {
       outfile << (colors ? "gStyle->SetPalette(1, 0);" : "gStyle->SetPalette(0);") 
-	      << std::endl;
+              << std::endl;
       outfile <<"b1->SetFillStyle(1001);"<<std::endl;
       outfile<<"TBox *b2=new TBox();"<<std::endl;  // single cell
       outfile <<"b2->SetFillStyle(0);"<<std::endl;
@@ -2333,7 +2332,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, std::string what,
    Double_t value=0.;
    for (iCell=1; iCell<=lastcell; iCell++) {
       if ( fCells[iCell]->GetStat() == 1) {
-	 if (plotcellnumber)
+         if (plotcellnumber)
             value = iCell;
          else
             value = GetCellValue(fCells[iCell], cell_value);
@@ -2370,43 +2369,43 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, std::string what,
    outfile << "// =========== Rectangular cells  ==========="<< std::endl;
    for (iCell=1; iCell<=lastcell; iCell++) {
       if ( fCells[iCell]->GetStat() == 1) {
-	 fCells[iCell]->GetHcub(cellPosi,cellSize);
-	 x1 = offs+lpag*(cellPosi[0]);             
-	 y1 = offs+lpag*(cellPosi[1]);
-	 x2 = offs+lpag*(cellPosi[0]+cellSize[0]); 
-	 y2 = offs+lpag*(cellPosi[1]+cellSize[1]);
+         fCells[iCell]->GetHcub(cellPosi,cellSize);
+         x1 = offs+lpag*(cellPosi[0]);             
+         y1 = offs+lpag*(cellPosi[1]);
+         x2 = offs+lpag*(cellPosi[0]+cellSize[0]); 
+         y2 = offs+lpag*(cellPosi[1]+cellSize[1]);
+         
+         value = 0;
+         if (fillcells) {
+            if (plotcellnumber) 
+               value = iCell;
+            else 
+               value = GetCellValue(fCells[iCell], cell_value);
 
-	 value = 0;
-	 if (fillcells) {
-	    if (plotcellnumber) 
-	       value = iCell;
-	    else 
-	       value = GetCellValue(fCells[iCell], cell_value);
+            if (log_colors) {
+               if (value<1.) value=1;
+               value = TMath::Log(value);
+            }
 
-	    if (log_colors) {
-	       if (value<1.) value=1;
-	       value = TMath::Log(value);
-	    }
+            Int_t color;
+            if (colors)
+               color = gStyle->GetColorPalette(Int_t((value-zmin)*scale));
+            else
+               color = 1000+(Int_t((value-zmin)*scale));
 
-	    Int_t color;
-	    if (colors)
-	       color = gStyle->GetColorPalette(Int_t((value-zmin)*scale));
-	    else
-	       color = 1000+(Int_t((value-zmin)*scale));
+            outfile << "b1->SetFillColor(" << color << ");" << std::endl;
+         }
 
-	    outfile << "b1->SetFillColor(" << color << ");" << std::endl;
-	 }
+         //     cell rectangle
+         outfile<<"b1->DrawBox("<<x1<<","<<y1<<","<<x2<<","<<y2<<");"<<std::endl;
+         if (fillcells)
+            outfile<<"b2->DrawBox("<<x1<<","<<y1<<","<<x2<<","<<y2<<");"<<std::endl;
 
-	 //     cell rectangle
-	 outfile<<"b1->DrawBox("<<x1<<","<<y1<<","<<x2<<","<<y2<<");"<<std::endl;
-	 if (fillcells)
-	    outfile<<"b2->DrawBox("<<x1<<","<<y1<<","<<x2<<","<<y2<<");"<<std::endl;
-
-	 //     cell number
-	 if (lastcell<=250) {
-	    x = offs+lpag*(cellPosi[0]+0.5*cellSize[0]); 
-	    y = offs+lpag*(cellPosi[1]+0.5*cellSize[1]);
-	 }
+         //     cell number
+         if (lastcell<=250) {
+            x = offs+lpag*(cellPosi[0]+0.5*cellSize[0]); 
+            y = offs+lpag*(cellPosi[1]+0.5*cellSize[1]);
+         }
       }
    }
    outfile<<"// ============== End Rectangles ==========="<< std::endl;

@@ -86,7 +86,7 @@ namespace TMVA {
    //                  fDriver and fIntegral)
    // kDensity       : number of events/cell volume
    enum ECellValue { kNev, kDiscriminator, kDiscriminatorError, kTarget0, 
-		     kTarget0Error, kMeanValue, kRms, kRmsOvMean, kDensity };
+                     kTarget0Error, kMeanValue, kRms, kRmsOvMean, kDensity };
 }
 
 namespace TMVA {
@@ -153,9 +153,9 @@ namespace TMVA {
       Float_t WeightGaus(PDEFoamCell*, std::vector<Float_t>, UInt_t dim=0);
 
       Double_t WeightLinNeighbors( std::vector<Float_t> txvec, ECellValue cv, 
-				   Int_t dim1=-1, Int_t dim2=-1, 
-				   Bool_t TreatEmptyCells=kFALSE );
-
+                                   Int_t dim1=-1, Int_t dim2=-1, 
+                                   Bool_t TreatEmptyCells=kFALSE );
+      
       // ---------- Foam build-up functions
 
       // Internal foam initialization functions
@@ -188,13 +188,13 @@ namespace TMVA {
 
       // find cells, which fit a given event vector
       void FindCellsRecursive(std::vector<Float_t>, PDEFoamCell*, 
-			      std::vector<PDEFoamCell*> &);
-
+                              std::vector<PDEFoamCell*> &);
+      
       // calculates the mean/ mpv target values for a given event 'tvals'
       std::vector<Float_t> GetCellTargets( std::vector<Float_t> tvals, ETargetSelection ts );
       // get number of events in cell during foam build-up
       Double_t GetBuildUpCellEvents(PDEFoamCell* cell);
-
+      
       // ---------- Public functions ----------------------------------
    public:
       PDEFoam();                  // Default constructor (used only by ROOT streamer)
@@ -296,20 +296,20 @@ namespace TMVA {
 
       // project foam to two-dimensional histogram
       TH2D* Project2(Int_t idim1, Int_t idim2, const char *opt="nev", 
-		     const char *ker="kNone", UInt_t maxbins=0);
+                     const char *ker="kNone", UInt_t maxbins=0);
 
       // helper function for Project2()
       Double_t GetProjectionCellValue( PDEFoamCell* cell, 
-				       Int_t idim1, Int_t idim2, ECellValue cv );
+                                       Int_t idim1, Int_t idim2, ECellValue cv );
 
       // Project one-dimensional foam to a 1-dim histogram
       TH1D* Draw1Dim(const char *opt, Int_t nbin);
 
       // Generates C++ code (root macro) for drawing foam with boxes (only 2-dim!)
       void RootPlot2dim( const TString& filename, std::string what,
-			 Bool_t CreateCanvas = kTRUE, Bool_t colors = kTRUE, 
-			 Bool_t log_colors = kFALSE  );
-
+                         Bool_t CreateCanvas = kTRUE, Bool_t colors = kTRUE, 
+                         Bool_t log_colors = kFALSE  );
+      
       // ---------- Foam evaluation functions
 
       // get cell value for a given event

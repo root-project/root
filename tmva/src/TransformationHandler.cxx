@@ -689,8 +689,8 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
    // computes ranking of input variables
    // separation for 2-class classification
    else if (fDataSetInfo.GetNClasses() == 2 
-	    && fDataSetInfo.GetClassInfo("Signal") != NULL 
-	    && fDataSetInfo.GetClassInfo("Background") != NULL 
+            && fDataSetInfo.GetClassInfo("Signal") != NULL 
+            && fDataSetInfo.GetClassInfo("Background") != NULL 
       ) { // TODO: ugly hack.. adapt to new framework
       fRanking.push_back( new Ranking( GetName() + "Transformation", "Separation" ) );
       for (UInt_t i=0; i<nvar; i++) {   

@@ -352,7 +352,7 @@ void TMVA::MethodCategory::Train()
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if (!mva->HasAnalysisType( analysisType, 
                                  mva->DataInfo().GetNClasses(), 
-				 mva->DataInfo().GetNTargets() ) ) {
+                                 mva->DataInfo().GetNTargets() ) ) {
          Log() << kWARNING << "Method " << mva->GetMethodTypeName() << " is not capable of handling " ;
          if (analysisType == Types::kRegression)
             Log() << "regression with " << mva->DataInfo().GetNTargets() << " targets." << Endl;

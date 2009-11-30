@@ -91,7 +91,7 @@ void TMVA::PDEFoamDistr::Initialize( Int_t ndim )
 
    if (!fBst){
       Log() << kFATAL << "<PDEFoamDistr::Initialize> "
-	    << "ERROR: an not create binary tree !" << Endl;
+            << "ERROR: an not create binary tree !" << Endl;
    }
 
    fBst->SetPeriode(fDim);

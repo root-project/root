@@ -299,7 +299,7 @@ void TMVA::Factory::AddTestEvent( const TString& className, const std::vector<Do
 
 //_______________________________________________________________________
 void TMVA::Factory::AddEvent( const TString& className, Types::ETreeType tt,
-			      const std::vector<Double_t>& event, Double_t weight ) 
+                              const std::vector<Double_t>& event, Double_t weight ) 
 {
    // add event
    // vector event : the order of values is: variables + targets + spectators
@@ -648,17 +648,17 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
 
    if( fAnalysisType == Types::kNoAnalysisType ){
       if( DefaultDataSetInfo().GetNClasses()==2 
-	  && DefaultDataSetInfo().GetClassInfo("Signal") != NULL 
-	  && DefaultDataSetInfo().GetClassInfo("Background") != NULL 
-	 ){
-	 fAnalysisType = Types::kClassification; // default is classification
+          && DefaultDataSetInfo().GetClassInfo("Signal") != NULL 
+          && DefaultDataSetInfo().GetClassInfo("Background") != NULL 
+          ){
+         fAnalysisType = Types::kClassification; // default is classification
       } else if( DefaultDataSetInfo().GetNClasses() >= 2 ){
-	 fAnalysisType = Types::kMulticlass;    // if two classes, but not named "Signal" and "Background"
+         fAnalysisType = Types::kMulticlass;    // if two classes, but not named "Signal" and "Background"
       } else
-	 Log() << kFATAL << "No analysis type for " << DefaultDataSetInfo().GetNClasses() << " classes and "
-	       << DefaultDataSetInfo().GetNTargets() << " regression targets." << Endl;
+         Log() << kFATAL << "No analysis type for " << DefaultDataSetInfo().GetNClasses() << " classes and "
+               << DefaultDataSetInfo().GetNTargets() << " regression targets." << Endl;
    }
-
+   
    // booking via name; the names are translated into enums and the 
    // corresponding overloaded BookMethod is called
    if (GetMethod( methodTitle ) != 0) {
@@ -888,7 +888,7 @@ void TMVA::Factory::TrainAllMethods()
    if(fAnalysisType == Types::kRegression && DefaultDataSetInfo().GetNTargets() < 1 )
       Log() << kFATAL << "You want to do regression training without specifying a target." << Endl;
    else if( (fAnalysisType == Types::kMulticlass || fAnalysisType == Types::kClassification) 
-	    && DefaultDataSetInfo().GetNClasses() < 2 ) 
+            && DefaultDataSetInfo().GetNClasses() < 2 ) 
       Log() << kFATAL << "You want to do classification training, but specified less than two classes." << Endl;
 
    // iterates over all MVAs that have been booked, and calls their training methods
