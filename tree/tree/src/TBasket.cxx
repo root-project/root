@@ -331,7 +331,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       fBufferRef = new TBufferFile(TBuffer::kRead, len);
       fBufferRef->SetParent(file);
 
-      char *buffer = fBufferRef->Buffer();
+      buffer = fBufferRef->Buffer();
       file->Seek(pos);
       if (file->ReadBuffer(buffer,len)) {
          badread = 1;
