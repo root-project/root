@@ -188,16 +188,12 @@ void TDSetElement::Print(Option_t *opt) const
    // Print a TDSetElement. When option="a" print full data.
 
    if (opt && opt[0] == 'a') {
-      cout << IsA()->GetName()
-           << " file=\"" << GetName()
-           << "\" dir=\"" << fDirectory
-           << "\" obj=\"" << GetTitle()
-           << "\" first=" << fFirst
-           << " num=" << fNum
-           << " msd=\"" << fMsd
-           << "\"" << endl;
-   } else
-      cout << "\tLFN: " << GetName() << endl;
+      Printf("%s file=\"%s\" dir=\"%s\" obj=\"%s\" first=%lld num=%lld msd=\"%s\"",
+             IsA()->GetName(), GetName(), fDirectory.Data(), GetTitle(),
+             fFirst, fNum, fMsd.Data());
+   } else {
+      Printf("\tLFN: %s", GetName());
+   }
 }
 
 //______________________________________________________________________________
@@ -822,9 +818,8 @@ void TDSet::Print(const Option_t *opt) const
 {
    // Print TDSet basic or full data. When option="a" print full data.
 
-   cout <<"OBJ: " << IsA()->GetName() << "\ttype " << GetName() << "\t"
-        << fObjName << "\tin " << GetTitle()
-        << "\telements " << GetListOfElements()->GetSize() << endl;
+   Printf("OBJ: %s\ttype %s\t%s\tin %s\telements %d", IsA()->GetName(), GetName(),
+          fObjName.Data(), GetTitle(), GetListOfElements()->GetSize());
 
    if (opt && opt[0] == 'a') {
       TIter next(GetListOfElements());
