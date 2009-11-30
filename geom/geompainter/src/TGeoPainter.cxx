@@ -78,6 +78,7 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    fIsRaytracing = kFALSE;
    fTopVisible = kFALSE;
    fPaintingOverlaps = kFALSE;
+   fPlugin = 0;
    fVisVolumes = new TObjArray();
    fOverlap = 0;
    fGlobal = new TGeoHMatrix();
@@ -102,6 +103,7 @@ TGeoPainter::~TGeoPainter()
    delete fVisVolumes;
    delete fGlobal;
    delete fBuffer;
+   if (fPlugin) delete fPlugin;
 }
 //______________________________________________________________________________
 void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
@@ -1243,11 +1245,12 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
 
    // Iterate the volume content
    TGeoIterator next(vol);
+   if (fPlugin) next.SetUserPlugin(fPlugin);
    TGeoNode *daughter;
 //   TGeoMatrix *glmat;
    Int_t level, nd;
    Bool_t last;
-
+   Int_t line_color=0, line_width=0, line_style=0;
    while ((daughter=next())) {
       vol = daughter->GetVolume();
       fGeoManager->SetPaintVolume(vol);
@@ -1257,6 +1260,12 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
       drawDaughters = kTRUE;
       if (top->IsVisContainers()) {
          if (vis && level<=fVisLevel) {
+            if (fPlugin) {
+               line_color = vol->GetLineColor();
+               line_width = vol->GetLineWidth();
+               line_style = vol->GetLineStyle();
+               fPlugin->ProcessNode();
+            }   
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
             if (global) {
                *fGlobal  = *global;
@@ -1266,6 +1275,11 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
             }
             fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
             drawDaughters = PaintShape(*(vol->GetShape()),option);
+            if (fPlugin) {
+               vol->SetLineColor(line_color);
+               vol->SetLineWidth(line_width);
+               vol->SetLineStyle(line_style);
+            }   
             if (!fVisLock && !daughter->IsOnScreen()) {
                fVisVolumes->Add(vol);
                vol->SetAttBit(TGeoAtt::kVisOnScreen);
@@ -1279,6 +1293,12 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
       } else if (top->IsVisLeaves()) {
          last = ((nd==0) || (level==fVisLevel) || (!daughter->IsVisDaughters()))?kTRUE:kFALSE;
          if (vis && last) {
+            if (fPlugin) {
+               line_color = vol->GetLineColor();
+               line_width = vol->GetLineWidth();
+               line_style = vol->GetLineStyle();
+               fPlugin->ProcessNode();
+            }   
             if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
             if (global) {
                *fGlobal  = *global;
@@ -1288,6 +1308,11 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
             }
             fGeoManager->SetMatrixReflection(fGlobal->IsReflection());
             drawDaughters = PaintShape(*(vol->GetShape()),option);
+            if (fPlugin) {
+               vol->SetLineColor(line_color);
+               vol->SetLineWidth(line_width);
+               vol->SetLineStyle(line_style);
+            }   
             if (!fVisLock && !daughter->IsOnScreen()) {
                fVisVolumes->Add(vol);
                vol->SetAttBit(TGeoAtt::kVisOnScreen);
@@ -1297,6 +1322,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
          if (!drawDaughters || last || !daughter->IsVisDaughters()) next.Skip();
       }
    }
+   if (fPlugin) fPlugin->SetIterator(0);
    fGeoManager->SetMatrixReflection(kFALSE);
    fVisLock = kTRUE;
 }

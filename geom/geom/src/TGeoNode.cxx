@@ -862,8 +862,8 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode() const
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+ClassImp(TGeoIteratorPlugin)
 ClassImp(TGeoIterator)
-
 //_____________________________________________________________________________
 TGeoIterator::TGeoIterator(TGeoVolume *top)
 {
@@ -876,6 +876,8 @@ TGeoIterator::TGeoIterator(TGeoVolume *top)
    fArray = new Int_t[30];
    fMatrix = new TGeoHMatrix();
    fTopName = fTop->GetName();
+   fPlugin = 0;
+   fPluginAutoexec = kFALSE;
 }   
 
 //_____________________________________________________________________________
@@ -891,6 +893,8 @@ TGeoIterator::TGeoIterator(const TGeoIterator &iter)
    for (Int_t i=0; i<fLevel+1; i++) fArray[i] = iter.GetIndex(i);
    fMatrix = new TGeoHMatrix(*iter.GetCurrentMatrix());
    fTopName = fTop->GetName();
+   fPlugin = iter.fPlugin;
+   fPluginAutoexec = iter.fPluginAutoexec;;
 }
 
 //_____________________________________________________________________________
@@ -905,6 +909,7 @@ TGeoIterator::~TGeoIterator()
 TGeoIterator &TGeoIterator::operator=(const TGeoIterator &iter)
 {
 // Assignment.
+   if (&iter == this) return *this;
    fTop = iter.GetTopVolume();
    fLevel = iter.GetLevel();
    fMustResume = kFALSE;
@@ -916,6 +921,8 @@ TGeoIterator &TGeoIterator::operator=(const TGeoIterator &iter)
    if (!fMatrix) fMatrix = new TGeoHMatrix();
    *fMatrix = *iter.GetCurrentMatrix();
    fTopName = fTop->GetName();
+   fPlugin = iter.fPlugin;
+   fPluginAutoexec = iter.fPluginAutoexec;;
    return *this;   
 }   
 
@@ -935,6 +942,7 @@ TGeoNode *TGeoIterator::Next()
    if (!fLevel) {
       fArray[++fLevel] = 0;
       next = fTop->GetNode(0);
+      if (fPlugin && fPluginAutoexec) fPlugin->ProcessNode();
       return next;
    }   
    next = fTop->GetNode(fArray[1]);
@@ -945,6 +953,7 @@ TGeoNode *TGeoIterator::Next()
    }   
    if (fMustResume) {
       fMustResume = kFALSE;
+      if (fPlugin && fPluginAutoexec) fPlugin->ProcessNode();
       return next;
    }   
    
@@ -956,6 +965,7 @@ TGeoNode *TGeoIterator::Next()
             fLevel++;
             if ((fLevel%30)==0) IncreaseArray();
             fArray[fLevel] = 0;
+            if (fPlugin && fPluginAutoexec) fPlugin->ProcessNode();
             return next->GetDaughter(0);
          }
          // cd up and pick next
@@ -963,12 +973,20 @@ TGeoNode *TGeoIterator::Next()
             next = GetNode(fLevel-1);
             if (!next) {
                nd = fTop->GetNdaughters();
-               if (fArray[fLevel]<nd-1) return fTop->GetNode(++fArray[fLevel]);
+               if (fArray[fLevel]<nd-1) {
+                  fArray[fLevel]++;
+                  if (fPlugin && fPluginAutoexec) fPlugin->ProcessNode();
+                  return fTop->GetNode(fArray[fLevel]);
+               }   
                fMustStop = kTRUE;
                return 0;
             } else {
                nd = next->GetNdaughters();
-               if (fArray[fLevel]<nd-1) return next->GetDaughter(++fArray[fLevel]);
+               if (fArray[fLevel]<nd-1) {
+                  fArray[fLevel]++;
+                  if (fPlugin && fPluginAutoexec) fPlugin->ProcessNode();
+                  return next->GetDaughter(fArray[fLevel]);
+               }   
             }   
             fLevel--;
          }   
@@ -976,8 +994,10 @@ TGeoNode *TGeoIterator::Next()
       case 1:  // one level search
          if (mother) nd = mother->GetNdaughters();
          if (fArray[fLevel]<nd-1) {
-            if (!mother) return fTop->GetNode(++fArray[fLevel]);
-            else return mother->GetDaughter(++fArray[fLevel]);
+            fArray[fLevel]++;
+            if (fPlugin && fPluginAutoexec) fPlugin->ProcessNode();
+            if (!mother) return fTop->GetNode(fArray[fLevel]);
+            else return mother->GetDaughter(fArray[fLevel]);
          }
    }
    fMustStop = kTRUE;
@@ -1096,3 +1116,11 @@ void TGeoIterator::Skip()
          break;
    }
 }         
+
+//_____________________________________________________________________________
+void TGeoIterator::SetUserPlugin(TGeoIteratorPlugin *plugin)
+{
+// Set a plugin.
+   fPlugin = plugin;
+   if (plugin) plugin->SetIterator(this);
+}   

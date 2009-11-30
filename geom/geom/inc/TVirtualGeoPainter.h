@@ -37,6 +37,7 @@ class TObjArray;
 class TH2F;
 class TStopwatch;
 class TGeoBatemanSol;
+class TGeoIteratorPlugin;
 
 class TVirtualGeoPainter : public TObject {
 
@@ -129,6 +130,7 @@ public:
    virtual void       SetClippingShape(TGeoShape *shape) = 0;
    virtual void       SetExplodedView(Int_t iopt=0) = 0;
    virtual void       SetGeoManager(TGeoManager *geom) = 0;
+   virtual void       SetIteratorPlugin(TGeoIteratorPlugin *plugin) = 0;
    virtual void       SetCheckedNode(TGeoNode *node) = 0;
    virtual void       SetNsegments(Int_t nseg=20) = 0;    
    virtual void       SetNmeshPoints(Int_t npoints) = 0;

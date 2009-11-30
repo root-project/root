@@ -69,6 +69,8 @@ private:
    TGeoShape         *fClippingShape;    // clipping shape
    TGeoVolume        *fTopVolume;        // top drawn volume
    TGeoVolume        *fLastVolume;       // last drawn volume
+   TGeoIteratorPlugin
+                     *fPlugin;           // User iterator plugin for changing pain volume properties
    TObjArray         *fVisVolumes;       // list of visible volumes
    Bool_t             fIsEditable;       // flag that geometry is editable
    
@@ -154,6 +156,7 @@ public:
    virtual void       SetNsegments(Int_t nseg=20);
    virtual void       SetNmeshPoints(Int_t npoints);
    virtual void       SetGeoManager(TGeoManager *geom) {fGeoManager=geom;}
+   virtual void       SetIteratorPlugin(TGeoIteratorPlugin *plugin) {fPlugin = plugin; ModifiedPad();}
    virtual void       SetCheckedNode(TGeoNode *node);
    virtual void       SetRaytracing(Bool_t flag=kTRUE) {fIsRaytracing = flag;}
    virtual void       SetTopVisible(Bool_t vis=kTRUE);
