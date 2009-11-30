@@ -491,7 +491,7 @@ void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& i
 
          sstr  >> type >> ivar >> hname >> nbins >> fElementsperbin;
 
-         Float_t Binnings[nbins+1];
+         Float_t *Binnings = new Float_t[nbins+1];
          Float_t val;
          istr >> devnullS; // read the line "BinBoundaries" ..
          for (Int_t ibin=0; ibin<nbins+1; ibin++) {
@@ -520,6 +520,7 @@ void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& i
          fCumulativePDF.resize(ivar+1);
          fCumulativePDF[ivar].resize(type+1);
          fCumulativePDF[ivar][type] = pdf;
+         delete [] Binnings;
       }
 
       if (strvar=="TransformToFlatInsetadOfGaussD=") { // don't correct this spelling mistake
