@@ -600,8 +600,9 @@ void TFile::Init(Bool_t create)
          }
       }
       //*-*-------------Read directory info
-      Int_t nk = sizeof(Int_t) +sizeof(Version_t) +2*sizeof(Int_t)+2*sizeof(Short_t)
-                +2*sizeof(Int_t);
+      // buffer_keyloc is the start of the key record.
+      char *buffer_keyloc = 0;
+
       Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
       if (nbytes+fBEGIN > kBEGIN+200) {
          delete [] header;
@@ -610,9 +611,10 @@ void TFile::Init(Bool_t create)
          Seek(fBEGIN);
          ReadBuffer(buffer,nbytes);
          buffer = header+fNbytesName;
+         buffer_keyloc = header;
       } else {
          buffer = header+fBEGIN+fNbytesName;
-         nk += kBEGIN;
+         buffer_keyloc = header+fBEGIN;
       }
       Version_t version,versiondir;
       frombuf(buffer,&version); versiondir = version%1000;
@@ -633,7 +635,16 @@ void TFile::Init(Bool_t create)
       if (versiondir > 1) fUUID.ReadBuffer(buffer);
 
       //*-*---------read TKey::FillBuffer info
-      buffer = header+nk;
+      buffer_keyloc += sizeof(Int_t); // Skip NBytes;
+      Version_t keyversion;
+      frombuf(buffer_keyloc, &keyversion);
+      // Skip ObjLen, DateTime, KeyLen, Cycle, SeekKey, SeekPdir
+      if (keyversion > 1000) {
+         // Large files
+         buffer_keyloc += 2*sizeof(Int_t)+2*sizeof(Short_t)+2*sizeof(Long64_t);
+      } else {
+         buffer_keyloc += 2*sizeof(Int_t)+2*sizeof(Short_t)+2*sizeof(Int_t);
+      }
       TString cname;
       cname.ReadBuffer(buffer);
       cname.ReadBuffer(buffer); // fName.ReadBuffer(buffer); file may have been renamed
