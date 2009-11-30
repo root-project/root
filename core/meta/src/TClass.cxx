@@ -2771,6 +2771,30 @@ void TClass::ResetMenuList()
 }
 
 //______________________________________________________________________________
+void TClass::ls(Option_t *options) const
+{
+   // The ls function lists the contents of a class on stdout. Ls output
+   // is typically much less verbose then Dump().
+   // If options contains 'streamerinfo', run ls on the list of streamerInfos
+   // and the list of conversion streamerInfos.
+   
+   TNamed::ls(options);
+   if (options==0 || options[0]==0) return;
+   
+   if (strstr(options,"streamerinfo")!=0) {
+      GetStreamerInfos()->ls(options);
+
+      if (fConversionStreamerInfo) {
+         std::map<std::string, TObjArray*>::iterator it;
+         std::map<std::string, TObjArray*>::iterator end = fConversionStreamerInfo->end();
+         for( it = fConversionStreamerInfo->begin(); it != end; ++it ) {
+            it->second->ls(options);
+         }
+      }
+   }
+}
+   
+//______________________________________________________________________________
 void TClass::MakeCustomMenuList()
 {
    // Makes a customizable version of the popup menu list, i.e. makes a list

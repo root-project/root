@@ -288,6 +288,7 @@ public:
    Bool_t             IsForeign() const;
    Bool_t             IsStartingWithTObject() const;
    Bool_t             IsTObject() const;
+   void               ls(Option_t *opt="") const;
    void               MakeCustomMenuList();
    void               Move(void *arenaFrom, void *arenaTo) const;
    void              *New(ENewType defConstructor = kClassNew) const;
