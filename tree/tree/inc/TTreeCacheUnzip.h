@@ -121,7 +121,7 @@ public:
    virtual void   ResetCache();
    virtual Int_t  GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free);
    void           SetUnzipBufferSize(Long64_t bufferSize);
-   static void    SetUnzipRelBufferSize(Float_t relbufferSize) {fgRelBuffSize = relbufferSize; };
+   static void    SetUnzipRelBufferSize(Float_t relbufferSize);
    Int_t          UnzipBuffer(char **dest, char *src);
    Int_t          UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&locbuff);
 

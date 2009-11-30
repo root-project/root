@@ -6561,12 +6561,17 @@ void TTree::SetObject(const char* name, const char* title)
 }
 
 //______________________________________________________________________________
-void TTree::SetParallelUnzip(Bool_t opt)
+void TTree::SetParallelUnzip(Bool_t opt, Float_t RelSize)
 {
    //enable or disable parallel unzipping of Tree buffers
 
    if (opt) TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
    else     TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kDisable);
+
+   if (RelSize > 0)
+     TTreeCacheUnzip::SetUnzipRelBufferSize(RelSize);
+
+
 
 }
 

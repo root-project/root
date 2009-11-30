@@ -421,7 +421,7 @@ public:
    virtual void            SetName(const char* name); // *MENU*
    virtual void            SetNotify(TObject* obj) { fNotify = obj; }
    virtual void            SetObject(const char* name, const char* title);
-   virtual void            SetParallelUnzip(Bool_t opt=kTRUE);
+   virtual void            SetParallelUnzip(Bool_t opt=kTRUE, Float_t RelSize=-1);
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
    virtual void            SetTimerInterval(Int_t msec = 333) { fTimerInterval=msec; }
    virtual void            SetTreeIndex(TVirtualIndex*index);

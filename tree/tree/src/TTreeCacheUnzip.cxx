@@ -776,6 +776,9 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 
             do {
 
+
+
+
                // If the block is ready we get it immediately.
                // And also we don't have to alloc the blks. This is supposed to be
                // the main thread of the app.
@@ -932,12 +935,22 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 
 
 //_____________________________________________________________________________
+void TTreeCacheUnzip::SetUnzipRelBufferSize(Float_t relbufferSize)
+{
+   // static function: Sets the unzip relatibe buffer size
+   // FABRIZIO: PLEASE DOCUMENT and also in TTree::Set...
+
+   fgRelBuffSize = relbufferSize;
+}
+
+
+//_____________________________________________________________________________
 void TTreeCacheUnzip::SetUnzipBufferSize(Long64_t bufferSize)
 {
    // Sets the size for the unzipping cache... by default it should be
    // two times the size of the prefetching cache
    R__LOCKGUARD(fMutexList);
-
+   
    fUnzipBufferSize = bufferSize;
 }
 
@@ -1161,6 +1174,11 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
             Info("UnzipCache", "Sudden paging Break!!! IsActiveThread(): %d, fNseek: %d, fIsLearning:%d",
                  IsActiveThread(), fNseek, fIsLearning);
 
+         fUnzipStatus[idxtounzip] = 2; // Set it as not done
+         fUnzipChunks[idxtounzip] = 0;
+         fUnzipLen[idxtounzip] = 0;
+	      fUnzipDoneCondition->Signal();
+
          startindex = 0;
          return 1;
       }
@@ -1180,10 +1198,10 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
 
       Int_t len = (objlen > nbytes-keylen)? keylen+objlen : nbytes;
 
-      // If the single unzipped chunk is bigger than the cache, reset it to not processable
+      // If the single unzipped chunk is really too big, reset it to not processable
       // I.e. mark it as done but set the pointer to 0
       // This block will be unzipped synchronously in the main thread
-      if (len > fUnzipBufferSize) {
+      if (len > 4*fUnzipBufferSize) {
 
          //if (gDebug > 0)
             Info("UnzipCache", "Block %d is too big, skipping.", idxtounzip);
@@ -1213,7 +1231,12 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
                  IsActiveThread(), fNseek, fIsLearning);
          delete [] ptr;
 
-         startindex = 10;
+         fUnzipStatus[idxtounzip] = 2; // Set it as not done
+         fUnzipChunks[idxtounzip] = 0;
+         fUnzipLen[idxtounzip] = 0;
+
+         startindex = 0;
+	      fUnzipDoneCondition->Signal();
          return 1;
       }
 
@@ -1247,7 +1270,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
 void  TTreeCacheUnzip::Print(Option_t* option) const {
 
    printf("******TreeCacheUnzip statistics for file: %s ******\n",fFile->GetName());
-   printf("Parallel unzip peak cache size: %lld\n", fUnzipBufferSize);
+   printf("Max allowed mem for pending buffers: %lld\n", fUnzipBufferSize);
    printf("Number of blocks unzipped by threads: %d\n", fNUnzip);
    printf("Number of hits: %d\n", fNFound);
    printf("Number of stalls: %d\n", fNStalls);
