@@ -64,7 +64,7 @@ public:
    Double_t            GetEfficiency();
    Double_t            GetEfficiencyRel();
    static Int_t        GetLearnEntries();
-   virtual Bool_t      GetSkipZip() { return kFALSE; } // This function is only used by TTreeCacheUnzip (ignore it)
+
    virtual Bool_t      FillBuffer();
    TTree              *GetOwner() const;
    TTree              *GetTree() const;

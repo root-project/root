@@ -652,10 +652,11 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
      fgBytesRead += nr;
      fgReadCalls++;
 #endif
-   }
 
-   if (gPerfStats)
-      gPerfStats->FileReadEvent(this, bufferLength, start);
+     if (gPerfStats)
+        gPerfStats->FileReadEvent(this, bufferLength, start);
+
+   }
 
    if (gMonitoringWriter)
       gMonitoringWriter->SendFileReadProgress(this);
@@ -783,6 +784,10 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
          Info("ReadBuffers", "%lld bytes of data read from a list of %d buffers",
               nr, nbuf);
 
+      if (GetCacheRead()->GetBufferSize() < nr)
+         Info("ReadBuffers", "%lld bytes of data read with a smaller (%ld) TFileCacheRead buffer size?",
+              nr, GetCacheRead()->GetBufferSize());
+
       // Where should we leave the offset ?
       // fOffset += bufferLength;
       fBytesRead += nr;
@@ -795,8 +800,10 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       fgReadCalls++;
 #endif
 
-      if (gPerfStats)
-         gPerfStats->FileReadEvent(this, nr, start);
+      if (gPerfStats) {
+         fOffset = pos[0];
+         gPerfStats->FileReadEvent(this, pos[nbuf-1]+len[nbuf-1]-pos[0], start);         
+      }
 
       if (gMonitoringWriter)
          gMonitoringWriter->SendFileReadProgress(this);
@@ -810,7 +817,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    // If it wasnt able to use the specialized call
    // then use the generic one that is a plain loop
    // of individual requests
-   if (buf)
+   if (buf && nbuf)
       return TFile::ReadBuffers(buf, pos, len, nbuf);
    // If the async call was needed (buf == 0) and it got an error,
    // just return error
@@ -1357,7 +1364,7 @@ void TXNetFile::SynchronizeCacheSize()
 
    }
 
-   if (newbsz)
+   if (newbsz > 0)
       fClient->SetCacheParameters(newbsz, 0, XrdClientReadCache::kRmBlk_FIFO);
 }
 

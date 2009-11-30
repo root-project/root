@@ -284,17 +284,13 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
 
    TFileCacheRead *pf = file->GetCacheRead();
-   if (pf && pf->InheritsFrom(TTreeCacheUnzip::Class())) {
-      TTreeCacheUnzip *tpfu = (TTreeCacheUnzip*)pf;
-      char *buffer = 0;
-      Bool_t free = kTRUE; // Must we free this buffer or does it make part of the cache? 
-      Int_t res = tpfu->GetUnzipBuffer(&buffer, pos, len, &free);
+   char *buffer = 0;
+   Bool_t free = kTRUE; // Must we free this buffer or does it make part of the cache? 
+   Int_t res = -1;
 
-      // there was some error reading the buffer
-	  if (res == -1) {
-         badread = 1;
-         return badread;
-      }
+   if (pf) res = pf->GetUnzipBuffer(&buffer, pos, len, &free);
+
+   if (res >= 0) {
 
       // We always create the TBuffer for the basket but it will be a shell only,
       // since we pass the pointer to the low level buffer

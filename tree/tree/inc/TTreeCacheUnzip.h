@@ -54,15 +54,13 @@ protected:
    Bool_t      fParallel;              // Indicate if we want to activate the parallelism (for this instance)
    Bool_t      fAsyncReading;
    TMutex     *fMutexList;             // Mutex to protect the various lists. Used by the condvars.
-
+   TMutex     *fIOMutex;
 
    Int_t       fCycle;
    static TTreeCacheUnzip::EParUnzipMode fgParallel;  // Indicate if we want to activate the parallelism
 
    Int_t       fLastReadPos;
-
-   // Members to keep track of the unzipping buffer
-   Long64_t    fPosWrite;
+   Int_t       fBlocksToGo;
 
    // Unzipping related members
    Int_t      *fUnzipLen;         //! [fNseek] Length of the unzipped buffers
@@ -73,16 +71,12 @@ protected:
    Int_t       fNseekMax;         //!  fNseek can change so we need to know its max size
    Long64_t    fUnzipBufferSize;  //!  Max Size for the ready unzipped blocks (default is 2*fBufferSize)
 
-   Bool_t      fSkipZip;          //  say if we should skip the uncompression of all buffers
    static Double_t fgRelBuffSize; // This is the percentage of the TTreeCacheUnzip that will be used
-
-   //! keep track of the buffer set we are currently unzipping
-   Int_t       fUnzipStart;       //! This will give uf the start index (fSeekSort)
-   Int_t       fUnzipEnd;         //! Unzipped buffers go from fUnzipStart to fUnzipEnd
 
    // Members use to keep statistics
    Int_t       fNUnzip;           //! number of blocks that were unzipped
    Int_t       fNFound;           //! number of blocks that were found in the cache
+   Int_t       fNStalls;          //! number of hits which caused a stall
    Int_t       fNMissed;          //! number of blocks that were not found in the cache and were unzipped
 
    std::queue<Int_t>       fActiveBlks; // The blocks which are active now
@@ -91,6 +85,8 @@ private:
    TTreeCacheUnzip(const TTreeCacheUnzip &);            //this class cannot be copied
    TTreeCacheUnzip& operator=(const TTreeCacheUnzip &);
 
+   char *fCompBuffer;
+   Int_t fCompBufferSize;
 
    // Private methods
    void  Init();
@@ -104,6 +100,7 @@ public:
    virtual void        AddBranch(TBranch *b, Bool_t subbranches = kFALSE);
    virtual void        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
    Bool_t              FillBuffer();
+   virtual Int_t       ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    void                SetEntryRange(Long64_t emin,   Long64_t emax);
    virtual void        StopLearningPhase();
    void                UpdateBranches(TTree *tree, Bool_t owner = kFALSE);
@@ -121,11 +118,10 @@ public:
 
    // Unzipping related methods
    Int_t          GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
-   virtual Bool_t GetSkipZip() { return fSkipZip; }
    virtual void   ResetCache();
-   Int_t          GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free);
+   virtual Int_t  GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free);
    void           SetUnzipBufferSize(Long64_t bufferSize);
-   virtual void   SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
+   static void    SetUnzipRelBufferSize(Float_t relbufferSize) {fgRelBuffSize = relbufferSize; };
    Int_t          UnzipBuffer(char **dest, char *src);
    Int_t          UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&locbuff);
 
