@@ -435,7 +435,6 @@ TEventIterTree::~TEventIterTree()
 
    // The cache is deleted in here
    SafeDelete(fFileTrees);
-   SafeDelete(fTreeCache);
 }
 
 //______________________________________________________________________________
