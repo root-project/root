@@ -50,6 +50,7 @@
 #include "TPaletteAxis.h"
 #include "TPrincipal.h"
 #include "TMath.h"
+#include "TObjString.h"
 
 #include "TMVA/Factory.h"
 #include "TMVA/ClassifierFactory.h"
@@ -89,7 +90,9 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
     fTransformations      ( "" ),
     fVerbose              ( kFALSE ),
     fJobName              ( jobName ),
-    fDataAssignType       ( kAssignEvents )
+    fDataAssignType       ( kAssignEvents ),
+    fATreeEvent           ( NULL ),
+    fAnalysisType         ( Types::kClassification )
 {  
    // standard constructor
    //   jobname       : this name will appear in all weight file names produced by the MVAs
@@ -122,6 +125,14 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    DeclareOptionRef( drawProgressBar,   
                      "DrawProgressBar", "Draw progress bar to display training, testing and evaluation schedule (default: True)" );
 
+   TString analysisType("Auto");
+   DeclareOptionRef( analysisType,   
+                     "AnalysisType", "Set the analysis type (Classification, Regression, Multiclass, Auto) (default: Auto)" );
+   AddPreDefVal(TString("Classification"));
+   AddPreDefVal(TString("Regression"));
+   AddPreDefVal(TString("Multiclass"));
+   AddPreDefVal(TString("Auto"));
+
    ParseOptions();
    CheckForUnusedOptions();
 
@@ -132,6 +143,12 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    gConfig().SetSilent( silent );
    gConfig().SetDrawProgressBar( drawProgressBar );
    
+   analysisType.ToLower();
+   if     ( analysisType == "classification" ) fAnalysisType = Types::kClassification;
+   else if( analysisType == "regression" )     fAnalysisType = Types::kRegression;
+   else if( analysisType == "multiclass" )     fAnalysisType = Types::kMulticlass;
+   else if( analysisType == "auto" )           fAnalysisType = Types::kNoAnalysisType;
+
    Greetings();
 }
 
@@ -150,6 +167,8 @@ void TMVA::Factory::Greetings()
 TMVA::Factory::~Factory( void )
 {
    // destructor
+//   delete fATreeEvent;
+
    std::vector<TMVA::VariableTransformBase*>::iterator trfIt = fDefaultTrfs.begin();
    for (;trfIt != fDefaultTrfs.end(); trfIt++) delete (*trfIt);
 
@@ -212,11 +231,26 @@ TTree* TMVA::Factory::CreateEventAssignTrees( const TString& name )
    TTree * assignTree = new TTree( name, name );
    assignTree->Branch( "type",   &fATreeType,   "ATreeType/I" );
    assignTree->Branch( "weight", &fATreeWeight, "ATreeWeight/I" );
+
    std::vector<VariableInfo>& vars = DefaultDataSetInfo().GetVariableInfos();
-   if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()];
+   std::vector<VariableInfo>& tgts = DefaultDataSetInfo().GetTargetInfos();
+   std::vector<VariableInfo>& spec = DefaultDataSetInfo().GetSpectatorInfos();
+
+   if (!fATreeEvent) fATreeEvent = new Float_t[vars.size()+tgts.size()+spec.size()];
+   // add variables
    for (UInt_t ivar=0; ivar<vars.size(); ivar++) {
       TString vname = vars[ivar].GetExpression();
       assignTree->Branch( vname, &(fATreeEvent[ivar]), vname + "/F" );
+   }
+   // add targets
+   for (UInt_t itgt=0; itgt<tgts.size(); itgt++) {
+      TString vname = tgts[itgt].GetExpression();
+      assignTree->Branch( vname, &(fATreeEvent[vars.size()+itgt]), vname + "/F" );
+   }
+   // add spectators
+   for (UInt_t ispc=0; ispc<spec.size(); ispc++) {
+      TString vname = spec[ispc].GetExpression();
+      assignTree->Branch( vname, &(fATreeEvent[vars.size()+tgts.size()+ispc]), vname + "/F" );
    }
    return assignTree;
 }
@@ -231,15 +265,15 @@ void TMVA::Factory::AddSignalTrainingEvent( const std::vector<Double_t>& event, 
 //_______________________________________________________________________
 void TMVA::Factory::AddSignalTestEvent( const std::vector<Double_t>& event, Double_t weight ) 
 {
-   // add signal training event
-   AddEvent( "Signal", Types::kTraining, event, weight );
+   // add signal testing event
+   AddEvent( "Signal", Types::kTesting, event, weight );
 }
 
 //_______________________________________________________________________
 void TMVA::Factory::AddBackgroundTrainingEvent( const std::vector<Double_t>& event, Double_t weight ) 
 {
    // add signal training event
-   AddEvent( "Background", Types::kTesting, event, weight );
+   AddEvent( "Background", Types::kTraining, event, weight );
 }
 
 //_______________________________________________________________________
@@ -259,17 +293,24 @@ void TMVA::Factory::AddTrainingEvent( const TString& className, const std::vecto
 //_______________________________________________________________________
 void TMVA::Factory::AddTestEvent( const TString& className, const std::vector<Double_t>& event, Double_t weight ) 
 {
-   // add signal training event
-   AddEvent( className, Types::kTraining, event, weight );
+   // add signal test event
+   AddEvent( className, Types::kTesting, event, weight );
 }
 
 //_______________________________________________________________________
 void TMVA::Factory::AddEvent( const TString& className, Types::ETreeType tt,
-                                   const std::vector<Double_t>& event, Double_t weight ) 
+			      const std::vector<Double_t>& event, Double_t weight ) 
 {
    // add event
+   // vector event : the order of values is: variables + targets + spectators
    ClassInfo* theClass = DefaultDataSetInfo().AddClass(className); // returns class (creates it if necessary)
    UInt_t clIndex = theClass->GetNumber();
+
+
+   // set analysistype to "kMulticlass" if more than two classes and analysistype == kNoAnalysisType
+   if( fAnalysisType == Types::kNoAnalysisType && DefaultDataSetInfo().GetNClasses() > 2 )
+      fAnalysisType = Types::kMulticlass;
+
    
    if (clIndex>=fTrainAssignTree.size()) {
       fTrainAssignTree.resize(clIndex+1, 0);
@@ -335,6 +376,11 @@ void TMVA::Factory::AddTree( TTree* tree, const TString& className, Double_t wei
                              const TCut& cut, Types::ETreeType tt )
 {
    DefaultDataSetInfo().AddClass( className );
+
+   // set analysistype to "kMulticlass" if more than two classes and analysistype == kNoAnalysisType
+   if( fAnalysisType == Types::kNoAnalysisType && DefaultDataSetInfo().GetNClasses() > 2 )
+      fAnalysisType = Types::kMulticlass;
+
    DataInput().AddTree(tree, className, weight, cut, tt );
 }
 
@@ -462,12 +508,16 @@ void TMVA::Factory::AddTarget( const TString& expression, const TString& title, 
                                Double_t min, Double_t max )
 {
    // user inserts target in data set info
+
+   if( fAnalysisType == Types::kNoAnalysisType )
+      fAnalysisType = Types::kRegression;
+
    DefaultDataSetInfo().AddTarget( expression, title, unit, min, max ); 
 }
 
 //_______________________________________________________________________
 void TMVA::Factory::AddSpectator( const TString& expression, const TString& title, const TString& unit, 
-                                Double_t min, Double_t max )
+                                  Double_t min, Double_t max )
 {
    // user inserts target in data set info
    DefaultDataSetInfo().AddSpectator( expression, title, unit, min, max ); 
@@ -596,6 +646,19 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
 {
    // Book a classifier or regression method
 
+   if( fAnalysisType == Types::kNoAnalysisType ){
+      if( DefaultDataSetInfo().GetNClasses()==2 
+	  && DefaultDataSetInfo().GetClassInfo("Signal") != NULL 
+	  && DefaultDataSetInfo().GetClassInfo("Background") != NULL 
+	 ){
+	 fAnalysisType = Types::kClassification; // default is classification
+      } else if( DefaultDataSetInfo().GetNClasses() >= 2 ){
+	 fAnalysisType = Types::kMulticlass;    // if two classes, but not named "Signal" and "Background"
+      } else
+	 Log() << kFATAL << "No analysis type for " << DefaultDataSetInfo().GetNClasses() << " classes and "
+	       << DefaultDataSetInfo().GetNTargets() << " regression targets." << Endl;
+   }
+
    // booking via name; the names are translated into enums and the 
    // corresponding overloaded BookMethod is called
    if (GetMethod( methodTitle ) != 0) {
@@ -636,6 +699,23 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
 
    MethodBase *method = (dynamic_cast<MethodBase*>(im));
 
+
+
+   if (!method->HasAnalysisType( fAnalysisType, 
+                                 DefaultDataSetInfo().GetNClasses(),
+                                 DefaultDataSetInfo().GetNTargets() )) {
+      Log() << kWARNING << "Method " << method->GetMethodTypeName() << " is not capable of handling " ;
+      if (fAnalysisType == Types::kRegression) {
+         Log() << "regression with " << DefaultDataSetInfo().GetNTargets() << " targets." << Endl;
+      } else if (fAnalysisType == Types::kMulticlass ) {
+         Log() << "multiclass classification with " << DefaultDataSetInfo().GetNClasses() << " classes." << Endl;
+      } else {
+         Log() << "classification with " << DefaultDataSetInfo().GetNClasses() << " classes." << Endl;
+      }
+      return 0;
+   }
+
+   method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
    method->ParseOptions();
    method->ProcessSetup(); 
@@ -652,7 +732,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
 TMVA::MethodBase* TMVA::Factory::BookMethod( Types::EMVA theMethod, TString methodTitle, TString theOption ) 
 {
    // books MVA method; the option configuration string is custom for each MVA
-   // the TString field "theNameAppendix" serves to define (and distringuish) 
+   // the TString field "theNameAppendix" serves to define (and distinguish) 
    // several instances of a given MVA, eg, when one wants to compare the 
    // performance of various configurations
    return BookMethod( Types::Instance().GetMethodName( theMethod ), methodTitle, theOption );
@@ -801,64 +881,53 @@ void TMVA::Factory::WriteDataInformation()
 }
 
 //_______________________________________________________________________
-void TMVA::Factory::TrainAllMethods( TString what ) 
+void TMVA::Factory::TrainAllMethods() 
 {     
    // iterates through all booked methods and calls training
    
-   what.ToLower();
-   Types::EAnalysisType analysisType = ( what.CompareTo("regression")==0 ? Types::kRegression : Types::kClassification );
+   if(fAnalysisType == Types::kRegression && DefaultDataSetInfo().GetNTargets() < 1 )
+      Log() << kFATAL << "You want to do regression training without specifying a target." << Endl;
+   else if( (fAnalysisType == Types::kMulticlass || fAnalysisType == Types::kClassification) 
+	    && DefaultDataSetInfo().GetNClasses() < 2 ) 
+      Log() << kFATAL << "You want to do classification training, but specified less than two classes." << Endl;
 
    // iterates over all MVAs that have been booked, and calls their training methods
 
    // first print some information about the default dataset
    WriteDataInformation();
 
-   // here the training starts
-   Log() << kINFO << "Train all methods for " 
-         << (analysisType == Types::kRegression ? "Regression" : "Classification") << " ..." << Endl;
-
    // don't do anything if no method booked
    if (fMethods.size() == 0) {
       Log() << kINFO << "...nothing found to train" << Endl;
       return;
    }
-   
+
+   // here the training starts
+   Log() << kINFO << "Train all methods for " 
+         << (fAnalysisType == Types::kRegression ? "Regression" : "Classification") << " ..." << Endl;
+
    MVector::iterator itrMethod;
 
    // iterate over methods and train
-   for (itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ) {
+   for( itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod ) {
 
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
-      if (!mva->HasAnalysisType( analysisType, 
-                                 DefaultDataSetInfo().GetNClasses(), DefaultDataSetInfo().GetNTargets() )) {
-         Log() << kWARNING << "Method " << mva->GetMethodTypeName() << " is not capable of handling " ;
-         if (analysisType == Types::kRegression) {
-            Log() << "regression with " << DefaultDataSetInfo().GetNTargets() << " targets." << Endl;
-         }
-         else {
-            Log() << "classification with " << DefaultDataSetInfo().GetNClasses() << " classes." << Endl;
-         }
-         itrMethod = fMethods.erase( itrMethod );
+
+      if (mva->Data()->GetNTrainingEvents() < MinNoTrainingEvents) {
+         Log() << kWARNING << "Method " << mva->GetMethodName() 
+               << " not trained (training tree has less entries ["
+               << mva->Data()->GetNTrainingEvents() 
+               << "] than required [" << MinNoTrainingEvents << "]" << Endl; 
          continue;
       }
-      mva->SetAnalysisType( analysisType );
-      //      mva->Init();
-      if (mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
-         Log() << kINFO << "Train method: " << mva->GetMethodName() << " for " 
-                 << (analysisType == Types::kRegression ? "Regression" : "Classification") << Endl;
-         mva->TrainMethod();
-         Log() << kINFO << "Training finished" << Endl;
-      }
-      else {
-         Log() << kWARNING << "Method " << mva->GetMethodName() 
-                 << " not trained (training tree has less entries ["
-                 << mva->Data()->GetNTrainingEvents() 
-                 << "] than required [" << MinNoTrainingEvents << "]" << Endl; 
-      }
-      itrMethod++;
+
+      Log() << kINFO << "Train method: " << mva->GetMethodName() << " for " 
+            << (fAnalysisType == Types::kRegression ? "Regression" : "Classification") << Endl;
+      mva->TrainMethod();
+      Log() << kINFO << "Training finished" << Endl;
    }
 
-   if (analysisType != Types::kRegression) {
+   if (fAnalysisType != Types::kRegression) {
 
       // variable ranking 
       Log() << Endl;
@@ -1097,10 +1166,10 @@ void TMVA::Factory::EvaluateAllMethods( void )
          mname[0].push_back( theMethod->GetMethodName() );
          nmeth_used[0]++;
 
-         Log() << kINFO << "Write Evaluation Histos to file" << Endl;
-         theMethod->WriteEvaluationHistosToFile();
-      }
-      else {
+         Log() << kINFO << "Write evaluation histograms to file" << Endl;
+         theMethod->WriteEvaluationHistosToFile(Types::kTesting);
+         theMethod->WriteEvaluationHistosToFile(Types::kTraining);
+      } else {
          
          Log() << kINFO << "Evaluate classifier: " << theMethod->GetMethodName() << Endl;
          isel = (theMethod->GetMethodTypeName().Contains("Variable")) ? 1 : 0;
@@ -1129,8 +1198,9 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
          nmeth_used[isel]++;
 
-         Log() << kINFO << "Write Evaluation Histos to file" << Endl;
-         theMethod->WriteEvaluationHistosToFile();
+         Log() << kINFO << "Write evaluation histograms to file" << Endl;
+         theMethod->WriteEvaluationHistosToFile(Types::kTesting);
+         theMethod->WriteEvaluationHistosToFile(Types::kTraining);
       }
    }
    if (doRegression) {
@@ -1271,7 +1341,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
                }
                else dvec[im] = retval;
             }
-            for (Int_t iv=0; iv<nvar;  iv++) dvec[iv+nmeth]  = (Double_t)ev->GetVal(iv);
+            for (Int_t iv=0; iv<nvar;  iv++) dvec[iv+nmeth]  = (Double_t)ev->GetValue(iv);
             if (DefaultDataSetInfo().IsSignal(ev)) { tpSig->AddRow( dvec ); theMat = overlapS; }
             else                                   { tpBkg->AddRow( dvec ); theMat = overlapB; }
 
@@ -1486,5 +1556,6 @@ void TMVA::Factory::EvaluateAllMethods( void )
    // write test tree
    RootBaseDir()->cd();
    DefaultDataSetInfo().GetDataSet()->GetTree(Types::kTesting)->Write( "", TObject::kOverwrite );
+   DefaultDataSetInfo().GetDataSet()->GetTree(Types::kTraining)->Write( "", TObject::kOverwrite );
 }
 

@@ -102,6 +102,7 @@ End_Html */
 
 #include <iomanip>
 #include <vector>
+#include <cstdlib>
 
 #include "TMatrixD.h"
 #include "TVector.h"
@@ -129,7 +130,7 @@ TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
                                           const TString& theOption,
                                           TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kLikelihood, methodTitle, theData, theOption, theTargetDir ),
-   fEpsilon       ( 1e-300 ),
+   fEpsilon       ( 1.e3 * DBL_MIN ), 
    fTransformLikelihoodOutput( kFALSE ),
    fDropVariable  ( 0 ),
    fHistSig       ( 0 ),
@@ -148,7 +149,7 @@ TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
                                           const TString& theWeightFile,  
                                           TDirectory* theTargetDir ) :
    TMVA::MethodBase( Types::kLikelihood, theData, theWeightFile, theTargetDir ),
-   fEpsilon       ( 1e-300 ),
+   fEpsilon       ( 1.e3 * DBL_MIN ),
    fTransformLikelihoodOutput( kFALSE ),
    fDropVariable  ( 0 ),
    fHistSig       ( 0 ),
@@ -209,7 +210,7 @@ void TMVA::MethodLikelihood::DeclareOptions()
    // define the options (their key words) that can be set in the option string 
    // TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
 
-   DeclareOptionRef( fTransformLikelihoodOutput = kFALSE, "TransformOutput", 	 
+   DeclareOptionRef( fTransformLikelihoodOutput = kFALSE, "TransformOutput",
                      "Transform likelihood output by inverse sigmoid function" );
 
    // initialize 
@@ -237,6 +238,41 @@ void TMVA::MethodLikelihood::DeclareOptions()
    SetOptions( updatedOptions );
 }
 
+
+void TMVA::MethodLikelihood::DeclareCompatibilityOptions()
+{
+   MethodBase::DeclareCompatibilityOptions();
+   DeclareOptionRef( fNsmooth = 1, "NSmooth",
+                     "Number of smoothing iterations for the input histograms");
+   DeclareOptionRef( fAverageEvtPerBin = 50, "NAvEvtPerBin",
+                     "Average number of events per PDF bin");
+   DeclareOptionRef( fKDEfineFactor =1. , "KDEFineFactor",
+                     "Fine tuning factor for Adaptive KDE: Factor to multyply the width of the kernel");
+   DeclareOptionRef( fBorderMethodString = "None", "KDEborder",
+                     "Border effects treatment (1=no treatment , 2=kernel renormalization, 3=sample mirroring)" );
+   DeclareOptionRef( fKDEiterString = "Nonadaptive", "KDEiter",
+                     "Number of iterations (1=non-adaptive, 2=adaptive)" );
+   DeclareOptionRef( fKDEtypeString = "Gauss", "KDEtype",
+                     "KDE kernel type (1=Gauss)" );
+   fAverageEvtPerBinVarS = new Int_t[GetNvar()];
+   fAverageEvtPerBinVarB = new Int_t[GetNvar()];
+   DeclareOptionRef( fAverageEvtPerBinVarS, GetNvar(), "NAvEvtPerBinSig",
+                     "Average num of events per PDF bin and variable (signal)");
+   DeclareOptionRef( fAverageEvtPerBinVarB, GetNvar(), "NAvEvtPerBinBkg",
+                     "Average num of events per PDF bin and variable (background)");
+   fNsmoothVarS = new Int_t[GetNvar()];
+   fNsmoothVarB = new Int_t[GetNvar()];
+   DeclareOptionRef(fNsmoothVarS, GetNvar(), "NSmoothSig",
+                    "Number of smoothing iterations for the input histograms");
+   DeclareOptionRef(fNsmoothVarB, GetNvar(), "NSmoothBkg",
+                    "Number of smoothing iterations for the input histograms");
+   fInterpolateString = new TString[GetNvar()];
+   DeclareOptionRef(fInterpolateString, GetNvar(), "PDFInterpol", "Method of interpolating reference histograms (e.g. Spline2 or KDE)");
+}
+
+
+
+
 //_______________________________________________________________________
 void TMVA::MethodLikelihood::ProcessOptions() 
 {
@@ -258,7 +294,28 @@ void TMVA::MethodLikelihood::Train( void )
    // create reference distributions (PDFs) from signal and background events:
    // fill histograms and smooth them; if decorrelation is required, compute 
    // corresponding square-root matrices
-
+   // the reference histograms require the correct boundaries. Since in Likelihood classification
+   // the transformations are applied using both classes, also the corresponding boundaries
+   // need to take this into account
+   vector<Double_t> xmin(GetNvar()), xmax(GetNvar());      
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {xmin[ivar]=1e30; xmax[ivar]=-1e30;}      
+   for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {         
+      // use the true-event-type's transformation
+      // set the event true event types transformation
+      const Event* origEv = Data()->GetEvent(ievt);
+      if (IgnoreEventsWithNegWeightsInTraining() && origEv->GetWeight()<=0) continue;
+      // loop over classes
+      for (int cls=0;cls<2;cls++){
+         GetTransformationHandler().SetTransformationReferenceClass(cls);
+         const Event* ev = GetTransformationHandler().Transform( origEv );
+         for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+            Float_t value  = ev->GetValue(ivar);
+            if (value < xmin[ivar]) xmin[ivar] = value;
+            if (value > xmax[ivar]) xmax[ivar] = value;
+         }         
+      }
+   }
+   
    // create reference histograms
    // (KDE smoothing requires very finely binned reference histograms)
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -267,33 +324,27 @@ void TMVA::MethodLikelihood::Train( void )
       // the reference histograms require the correct boundaries. Since in Likelihood classification
       // the transformations are applied using both classes, also the corresponding boundaries
       // need to take this into account
-      Double_t xmin(+1e30), xmax(-1e30);      
-      for (UInt_t iclass=0; iclass<DataInfo().GetNClasses(); iclass++) {
-         // transform variables using the transformation belonging to class 'iclass'
-         GetTransformationHandler().SetTransformationReferenceClass( iclass );
-         xmin = TMath::Min(xmin, GetXmin(ivar));
-         xmax = TMath::Max(xmax, GetXmax(ivar));
-      }
 
       // special treatment for discrete variables
       if (DataInfo().GetVariableInfo(ivar).GetVarType() == 'I') {
          // special treatment for integer variables
-         Int_t ixmin = TMath::Nint( xmin );
-         Int_t ixmax = TMath::Nint( xmax + 1 );
+         Int_t ixmin = TMath::Nint( xmin[ivar] );
+         Int_t ixmax = TMath::Nint( xmax[ivar] + 1 );
          Int_t nbins = ixmax - ixmin;
 
          (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     nbins, ixmin, ixmax );
          (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", nbins, ixmin, ixmax );
-      }
-      else {
+
+      } else {
+
          UInt_t minNEvt = TMath::Min(Data()->GetNEvtSigTrain(),Data()->GetNEvtBkgdTrain());
          Int_t nbinsS = (*fPDFSig)[ivar]->GetHistNBins( minNEvt );
          Int_t nbinsB = (*fPDFBgd)[ivar]->GetHistNBins( minNEvt );
 
          (*fHistSig)[ivar] = new TH1F( Form("%s_sig",var.Data()),
-                                       Form("%s signal training",var.Data()), nbinsS, xmin, xmax );
+                                       Form("%s signal training",var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
          (*fHistBgd)[ivar] = new TH1F( Form("%s_bgd",var.Data()),
-                                       Form("%s background training",var.Data()), nbinsB, xmin, xmax );
+                                       Form("%s background training",var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
       }
    }
 
@@ -302,7 +353,7 @@ void TMVA::MethodLikelihood::Train( void )
 
    // event loop   
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
-
+      
       // use the true-event-type's transformation
       // set the event true event types transformation
       const Event* origEv = Data()->GetEvent(ievt);
@@ -315,12 +366,26 @@ void TMVA::MethodLikelihood::Train( void )
 
       // fill variable vector
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-         Float_t value  = ev->GetVal(ivar);
+         Double_t value  = ev->GetValue(ivar);
+         // verify limits
+         if (value >= xmax[ivar]) value = xmax[ivar] - 1.0e-10;
+         else if (value < xmin[ivar]) value = xmin[ivar] + 1.0e-10;
+         // inserting check if there are events in overflow or underflow
+         if (value >=(*fHistSig)[ivar]->GetXaxis()->GetXmax() || 
+             value <(*fHistSig)[ivar]->GetXaxis()->GetXmin()){
+            Log()<<kWARNING
+                 <<"error in filling likelihood reference histograms var=" 
+                 <<(*fInputVars)[ivar]
+                 << ", xmin="<<(*fHistSig)[ivar]->GetXaxis()->GetXmin()
+                 << ", value="<<value
+                 << ", xmax="<<(*fHistSig)[ivar]->GetXaxis()->GetXmax()
+                 << Endl;
+         }
          if (ev->IsSignal()) (*fHistSig)[ivar]->Fill( value, weight );
          else                (*fHistBgd)[ivar]->Fill( value, weight );
       }
    }
-
+   
    // building the pdfs
    Log() << kINFO << "Building PDF out of reference histograms" << Endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -359,15 +424,15 @@ Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err )
    //GetTransformationHandler().SetTransformationReferenceClass( DataInfo().GetClassInfo("Signal")->GetNumber() );
    // temporary: JS  --> FIX
    GetTransformationHandler().SetTransformationReferenceClass( 0 );
-   const Event* ev = GetTransformationHandler().Transform(Data()->GetEvent());
-   for (ivar=0; ivar<GetNvar(); ivar++) vs(ivar) = ev->GetVal(ivar);
+   const Event* ev = GetEvent();
+   for (ivar=0; ivar<GetNvar(); ivar++) vs(ivar) = ev->GetValue(ivar);
 
    //GetTransformationHandler().SetTransformationReferenceClass( DataInfo().GetClassInfo("Background")->GetNumber() );
    // temporary: JS  --> FIX
    GetTransformationHandler().SetTransformationReferenceClass( 1 );
-   ev = GetTransformationHandler().Transform(Data()->GetEvent());
-   for (ivar=0; ivar<GetNvar(); ivar++) vb(ivar) = ev->GetVal(ivar);
-   
+   ev = GetEvent();
+   for (ivar=0; ivar<GetNvar(); ivar++) vb(ivar) = ev->GetValue(ivar);
+
    // compute the likelihood (signal)
    Double_t ps(1), pb(1), p(0);
    for (ivar=0; ivar<GetNvar(); ivar++) {
@@ -380,7 +445,7 @@ Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err )
       for (UInt_t itype=0; itype < 2; itype++) {
 
          // verify limits
-         if      (x[itype] > (*fPDFSig)[ivar]->GetXmax()) x[itype] = (*fPDFSig)[ivar]->GetXmax() - 1.0e-15;
+         if      (x[itype] >= (*fPDFSig)[ivar]->GetXmax()) x[itype] = (*fPDFSig)[ivar]->GetXmax() - 1.0e-10;
          else if (x[itype] < (*fPDFSig)[ivar]->GetXmin()) x[itype] = (*fPDFSig)[ivar]->GetXmin();
 
          // find corresponding histogram from cached indices                 
@@ -397,9 +462,7 @@ Double_t TMVA::MethodLikelihood::GetMvaValue( Double_t* err )
          if ((*fPDFSig)[ivar]->GetInterpolMethod() == TMVA::PDF::kSpline0 || 
              DataInfo().GetVariableInfo(ivar).GetVarType() == 'N') { 
             p = TMath::Max( hist->GetBinContent(bin), fEpsilon );
-         }
-         else { // splined PDF
-
+         } else { // splined PDF
             Int_t nextbin = bin;
             if ((x[itype] > hist->GetBinCenter(bin) && bin != hist->GetNbinsX()) || bin == 1) 
                nextbin++;
@@ -540,26 +603,6 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
    fDropVariable = -1;
    
    return fRanking;
-}
-
-//_______________________________________________________________________
-void  TMVA::MethodLikelihood::WriteWeightsToStream( ostream& o ) const
-{  
-   // write weights to stream 
-
-   if (TxtWeightsOnly()) {
-      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-         if ( (*fPDFSig)[ivar]==0 || (*fPDFBgd)[ivar]==0 )
-            Log() << kFATAL << "Reference histograms for variable " << ivar 
-                  << " don't exist, can't write it to weight file" << Endl;
-         o << *(*fPDFSig)[ivar];
-         o << *(*fPDFBgd)[ivar];
-      }
-   } 
-   else {
-      TString rfname( GetWeightFileName() ); rfname.ReplaceAll( ".txt", ".root" );
-      o << "# weights stored in root i/o file: " << rfname << endl;  
-   }
 }
 
 //_______________________________________________________________________

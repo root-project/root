@@ -107,6 +107,12 @@ void TMVA::MethodKNN::DeclareOptions()
 }
 
 //_______________________________________________________________________
+void TMVA::MethodKNN::DeclareCompatibilityOptions() {
+   MethodBase::DeclareCompatibilityOptions();
+   DeclareOptionRef(fTreeOptDepth = 6, "TreeOptDepth", "Binary tree optimisation depth");
+}
+
+//_______________________________________________________________________
 void TMVA::MethodKNN::ProcessOptions() 
 {
    // process the options specified by the user
@@ -219,7 +225,7 @@ void TMVA::MethodKNN::Train()
       if (IgnoreEventsWithNegWeightsInTraining() && weight <= 0) continue;          
 
       kNN::VarVec vvec(GetNVariables(), 0.0);      
-      for (UInt_t ivar = 0; ivar < evt_ -> GetNVars(); ++ivar) vvec[ivar] = evt_->GetVal(ivar);
+      for (UInt_t ivar = 0; ivar < evt_ -> GetNVariables(); ++ivar) vvec[ivar] = evt_->GetValue(ivar);
       
       Short_t event_type = 0;
 
@@ -267,7 +273,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
    kNN::VarVec vvec(static_cast<UInt_t>(nvar), 0.0);
    
    for (Int_t ivar = 0; ivar < nvar; ++ivar) {
-      vvec[ivar] = ev->GetVal(ivar);
+      vvec[ivar] = ev->GetValue(ivar);
    }   
 
    // search for fnkNN+2 nearest neighbors, pad with two 
@@ -346,7 +352,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err )
       if (fUseWeight) weight_all += evweight;
       else          ++weight_all;
 
-      if (node.GetEvent().GetType() == 1) { // signal type = 1	 
+      if (node.GetEvent().GetType() == 1) { // signal type = 1
          if (fUseWeight) weight_sig += evweight;
          else          ++weight_sig;
       }
@@ -409,7 +415,7 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
    kNN::VarVec vvec(static_cast<UInt_t>(nvar), 0.0);
    
    for (Int_t ivar = 0; ivar < nvar; ++ivar) {
-      vvec[ivar] = evt->GetVal(ivar);
+      vvec[ivar] = evt->GetValue(ivar);
    }   
 
    // search for fnkNN+2 nearest neighbors, pad with two 
@@ -476,40 +482,6 @@ const TMVA::Ranking* TMVA::MethodKNN::CreateRanking()
 {
    // no ranking available
    return 0;
-}
-
-//_______________________________________________________________________
-void TMVA::MethodKNN::WriteWeightsToStream(ostream& os) const
-{
-   // save the weights   
-   Log() << kINFO << "Starting WriteWeightsToStream(ostream& os) function..." << Endl;
-   
-   if (fEvent.empty()) {
-      Log() << kWARNING << "MethodKNN contains no events " << Endl;
-      return;
-   }
- 
-   os << "# MethodKNN will write " << fEvent.size() << " events " << std::endl;
-   os << "# event number, type, weight, variable values" << std::endl;
-
-   const std::string delim = ", ";
-
-   UInt_t ievent = 0;
-   for (kNN::EventVec::const_iterator event = fEvent.begin(); event != fEvent.end(); ++event, ++ievent) {
-
-      os << ievent << delim;
-      os << event->GetType() << delim;
-      os << event->GetWeight() << delim; 
-      
-      for (UInt_t ivar = 0; ivar < event->GetNVar(); ++ivar) {
-         if (ivar + 1 < event->GetNVar()) {
-            os << event->GetVar(ivar) << delim;
-         }
-         else {
-            os << event->GetVar(ivar) << std::endl;
-         }
-      }
-   }
 }
 
 //_______________________________________________________________________
@@ -631,7 +603,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
             vstring = line.substr(prev, ipos - prev + 1);
          }
          
-         if (vstring.empty()) {	    
+         if (vstring.empty()) {
             Log() << kFATAL << "Failed to parse string" << Endl;
          }
          
@@ -644,7 +616,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
          else if (vcount == 2) {
             weight = std::atof(vstring.c_str());
          }
-         else if (vcount - 3 < vvec.size()) {	 
+         else if (vcount - 3 < vvec.size()) {
             vvec[vcount - 3] = std::atof(vstring.c_str());
          }
          else {
@@ -889,7 +861,7 @@ const std::vector<Double_t> TMVA::MethodKNN::getRMS(const kNN::List &rlist, cons
          if (rvec.empty()) {
             rvec.insert(rvec.end(), event_.GetNVar(), 0.0);
          }
-         else if (rvec.size() != event_.GetNVar()) {	 
+         else if (rvec.size() != event_.GetNVar()) {
             Log() << kFATAL << "Wrong number of variables, should never happen!" << Endl;
             rvec.clear();
             return rvec;
@@ -934,7 +906,7 @@ Double_t TMVA::MethodKNN::getLDAValue(const kNN::List &rlist, const kNN::Event &
       const kNN::Node<kNN::Event> &node = *(lit->first);
       const kNN::VarVec &tvec = node.GetEvent().GetVars();
 
-      if (node.GetEvent().GetType() == 1) { // signal type = 1	 
+      if (node.GetEvent().GetType() == 1) { // signal type = 1
          sig_vec.push_back(tvec);
       }
       else if (node.GetEvent().GetType() == 2) { // background type = 2

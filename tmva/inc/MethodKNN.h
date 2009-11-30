@@ -80,10 +80,8 @@ namespace TMVA
       Double_t GetMvaValue( Double_t* err = 0 );
       const std::vector<Float_t>& GetRegressionValues();
 
-      using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
-      void WriteWeightsToStream(std::ostream& o) const;
       void WriteWeightsToStream(TFile& rf) const;
       void AddWeightsXMLTo( void* parent ) const;
       void ReadWeightsFromXML( void* wghtnode );
@@ -106,6 +104,7 @@ namespace TMVA
       // the option handling methods
       void DeclareOptions();
       void ProcessOptions();
+      void DeclareCompatibilityOptions();
 
       // default initialisation called by all constructors
       void Init( void );
@@ -146,6 +145,9 @@ namespace TMVA
       kNN::EventVec fEvent;   //! (untouched) events used for learning
 
       LDA fLDA;               //! Experimental feature for local knn analysis
+
+      // for backward compatibility
+      Int_t fTreeOptDepth;    // number of binary tree levels used for optimization
 
       ClassDef(MethodKNN,0) // k Nearest Neighbour classifier
    };

@@ -77,11 +77,9 @@ namespace TMVA {
       // training method
       void Train( void );
 
-      using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to stream
-      void WriteWeightsToStream( std::ostream & o) const;
       void AddWeightsXMLTo     ( void* parent ) const;
 
       // read weights from stream

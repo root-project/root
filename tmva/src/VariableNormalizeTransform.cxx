@@ -100,6 +100,7 @@ Bool_t TMVA::VariableNormalizeTransform::PrepareTransformation( const std::vecto
 //_______________________________________________________________________
 const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Event* const ev, Int_t cls ) const
 {
+
    // apply the decorrelation transformation
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
@@ -125,7 +126,7 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
       Float_t offset = min;
       Float_t scale  = 1.0/(max-min);
 
-      Float_t valnorm = (ev->GetVal(ivar)-offset)*scale * 2 - 1;
+      Float_t valnorm = (ev->GetValue(ivar)-offset)*scale * 2 - 1;
       fTransformedEvent->SetVal(ivar,valnorm);  
    }
    for (Int_t itgt=ntgts-1; itgt>=0; itgt--) {
@@ -217,7 +218,7 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
    std::vector<Event*>::const_iterator evIt = events.begin();
    for (;evIt!=events.end();evIt++) {
       for (UInt_t ivar=0; ivar<nvars; ivar++) {
-         Float_t val = (*evIt)->GetVal(ivar);
+         Float_t val = (*evIt)->GetValue(ivar);
          UInt_t cls = (*evIt)->GetClass();
 
          if (fMin.at(cls).at(ivar) > val) fMin.at(cls).at(ivar) = val;
@@ -374,9 +375,38 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
    SetCreated();
 }
 
+//_______________________________________________________________________
+void
+TMVA::VariableNormalizeTransform::BuildTransformationFromVarInfo( const std::vector<TMVA::VariableInfo>& var ) {
+   // this method is only used when building a normalization transformation 
+   // from old text files
+   // in this case regression didn't exist and there were no targets
+
+   UInt_t nvars = GetNVariables();
+
+   if(var.size() != nvars)
+      Log() << kFATAL << "<BuildTransformationFromVarInfo> can't build transformation,"
+            << " since the number of variables disagree" << Endl;
+
+   UInt_t numC = (GetNClasses()<=1)?1:GetNClasses()+1;
+   fMin.clear();fMin.resize( numC ); 
+   fMax.clear();fMax.resize( numC ); 
+
+
+   for(UInt_t cls=0; cls<numC; ++cls) {
+      fMin[cls].resize(nvars+GetNTargets(),0);
+      fMax[cls].resize(nvars+GetNTargets(),0);
+      UInt_t vidx(0);
+      for(std::vector<TMVA::VariableInfo>::const_iterator v = var.begin(); v!=var.end(); ++v, ++vidx) {
+         fMin[cls][vidx] = v->GetMin();
+         fMax[cls][vidx] = v->GetMax();
+      }
+   }
+   SetCreated();
+}
 
 //_______________________________________________________________________
-void TMVA::VariableNormalizeTransform::ReadTransformationFromStream( std::istream& istr )
+void TMVA::VariableNormalizeTransform::ReadTransformationFromStream( std::istream& istr, const TString& )
 {
    // Read the variable ranges from an input stream
 

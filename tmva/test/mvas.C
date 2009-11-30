@@ -1,4 +1,3 @@
-
 #include "TLegend.h"
 #include "TText.h"
 #include "TH2.h"
@@ -19,7 +18,7 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
    TMVAGlob::Initialize( useTMVAStyle );
 
    // switches
-   const Bool_t Save_Images     = kTRUE;
+   const Bool_t Save_Images = kTRUE;
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
@@ -98,14 +97,6 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
                            Form("TMVA comparison %s",methodTitle.Data()) :
                            Form("TMVA Rarity %s",methodTitle.Data()));
          
-         TString cname = ((htype == MVAType) ? 
-                          Form("output_%s",methodTitle.Data()) : 
-                          (htype == ProbaType) ? 
-                          Form("probability_%s",methodTitle.Data()) :
-                          (htype == CompareType) ? 
-                          Form("comparison_%s",methodTitle.Data()) :
-                          Form("rarity_%s",methodTitle.Data()));
-
          c = new TCanvas( Form("canvas%d", countCanvas+1), ctitle, 
                           countCanvas*50+200, countCanvas*20, width, (Int_t)width*0.78 ); 
     

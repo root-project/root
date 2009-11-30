@@ -425,7 +425,7 @@ Double_t TMVA::MethodSeedDistance::EstimatorFunction( std::vector<Double_t>& par
       // loop over specific events
       for (itev = eventVecs[itype]->begin(); itev != eventVecs[itype]->end(); itev++) {
          point.clear();
-         for (UInt_t ivar=0;  ivar<GetNvar();   ivar++) point.push_back( (**itev).GetVal(ivar) );
+         for (UInt_t ivar=0;  ivar<GetNvar();   ivar++) point.push_back( (**itev).GetValue(ivar) );
 
          std::vector< Double_t >& distances = fSeedDistance->GetDistances( point );
          
@@ -472,7 +472,7 @@ Double_t TMVA::MethodSeedDistance::GetMvaValue( Double_t* err )
    Double_t distBack;
 
    point.clear();
-   for (UInt_t ivar=0;  ivar<GetNvar();   ivar++) point.push_back( ev->GetVal(ivar) );
+   for (UInt_t ivar=0;  ivar<GetNvar();   ivar++) point.push_back( ev->GetValue(ivar) );
 
    std::vector< Double_t >& distances = fSeedDistance->GetDistances( point );
 
@@ -495,36 +495,6 @@ Double_t TMVA::MethodSeedDistance::GetMvaValue( Double_t* err )
    return looksLike;
 }
 
-//_______________________________________________________________________
-void  TMVA::MethodSeedDistance::WriteWeightsToStream( ostream& o ) const
-{
-   // write the weight from the training to a file (stream)
-
-   // save seeds
-   o << fSeeds.size() << std::endl;
-//   Log() << kINFO << fSeeds.size() << " ";
-   for( unsigned int i = 0; i< fSeeds.size(); i++ ){
-      o << fSeeds[i].size() << std::endl;
-//      Log() << kINFO << fSeeds[i].size() << " ";
-      for( unsigned int j = 0; j< fSeeds[i].size(); j++ ){
-         o << fSeeds[i][j] << std::endl;
-//         Log() << kINFO << fSeeds[i][j] << " ";
-      }
-   }
-   o << fDataSeeds << std::endl;
-   o << fBackSeeds << std::endl;
-   o << fScalingFactor << std::endl;
-   
-   // save metric parameters
-   o << fMetricType << std::endl;
-   o << fMetricPars.size() << std::endl;
-//   Log() << kINFO << fMetricPars.size() << " ";
-   for( unsigned int i = 0; i< fMetricPars.size(); i++ ){
-      o << fMetricPars[i] << std::endl;
-//      Log() << kINFO << fMetricPars[i] << " ";
-   }
-}
- 
 //_______________________________________________________________________
 void TMVA::MethodSeedDistance::AddWeightsXMLTo( void* /*parent*/ ) const 
 {

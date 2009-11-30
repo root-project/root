@@ -7,23 +7,14 @@
 typedef enum { kNEV, kDISCR, kMONO, kRMS, kRMSOVMEAN } EPlotType;
 typedef enum { kSEPARATE, kUNIFIED, kMONOTARGET, kMULTITARGET } EFoamType;
 
-void PlotFoams(	TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.xml", 
+void PlotFoams(	TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.root", 
                 bool useTMVAStyle=kTRUE )
 {
    cout << "read file: " << fin << endl;
-   TXMLFile *file = TXMLFile::Open(fin);
+   TFile *file = TFile::Open(fin);
 
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
-
-   Int_t vers = gROOT->GetVersionInt();
-   if ( fin.Contains(".xml") && vers>=52000 && vers<=52104 ){
-      cout << "Error: can not load foam from xml file because this root version " 
-           << gROOT->GetVersion() << " contains a bug!" << endl;
-      cout << "See http://savannah.cern.ch/bugs/?41600 for details." << endl;
-      cout << "Please use a root version >= 5.22 or <= 5.19" << endl;
-      return;
-   }
 
    // create control bar
    TControlBar* cbar = new TControlBar( "vertical", "Choose cell value for plot:", 50, 50 );
@@ -52,10 +43,10 @@ void PlotFoams(	TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.
 }
 
 // foam plotting macro
-void Plot( TString fin = "weights/TMVAClassification_PDEFoam.xml", EPlotType pt )
+void Plot( TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.root", EPlotType pt )
 {
    cout << "read file: " << fin << endl;
-   TXMLFile *file = TXMLFile::Open(fin);
+   TFile *file = TFile::Open(fin);
 
    gStyle->SetNumberContours(999);
    TMVAGlob::SetTMVAStyle();
@@ -64,15 +55,15 @@ void Plot( TString fin = "weights/TMVAClassification_PDEFoam.xml", EPlotType pt 
    string cellval_long = ""; // name of quantity to draw in foam projection
 
    if (pt == kNEV){
-      cellval      = "nev";
+      cellval      = "cell_value";
       cellval_long = "Event density";
    }
    else if (pt == kDISCR){
-      cellval      = "discr";
+      cellval      = "cell_value";
       cellval_long = "Discriminator";
    }
    else if (pt == kMONO){
-      cellval      = "MonoTargetRegression";
+      cellval      = "cell_value";
       cellval_long = "Target";
    }
    else if (pt == kRMS){

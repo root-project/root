@@ -55,7 +55,7 @@ TMVA::CCTreeWrapper::CCTreeNode::~CCTreeNode() {
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::CCTreeWrapper::CCTreeNode::ReadDataRecord( std::istream& in ) {
+Bool_t TMVA::CCTreeWrapper::CCTreeNode::ReadDataRecord( std::istream& in, UInt_t /* tmva_Version_Code */ ) {
    // initialize a node from a data record
    
    std::string header, title;
@@ -248,7 +248,7 @@ void TMVA::CCTreeWrapper::CCTreeNode::AddContentToNode( std::stringstream& /*s*/
 {}
 
 //_______________________________________________________________________
-void TMVA::CCTreeWrapper::CCTreeNode::ReadAttributes( void* /*node*/ )
+void TMVA::CCTreeWrapper::CCTreeNode::ReadAttributes( void* /*node*/, UInt_t /* tmva_Version_Code */  )
 {}
 
 //_______________________________________________________________________

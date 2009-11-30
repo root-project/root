@@ -42,7 +42,7 @@
 //_______________________________________________________________________
 TMVA::SVWorkingSet::SVWorkingSet() 
    : fdoRegression(kFALSE),
-      fInputData(0),
+     fInputData(0),
      fSupVec(0),
      fKFunction(0),
      fKMatrix(0),
@@ -59,22 +59,22 @@ TMVA::SVWorkingSet::SVWorkingSet()
 //_______________________________________________________________________
 TMVA::SVWorkingSet::SVWorkingSet(std::vector<TMVA::SVEvent*>*inputVectors, SVKernelFunction* kernelFunction,Float_t tol, Bool_t doreg)
    : fdoRegression(doreg),
-   fInputData(inputVectors),
-   fSupVec(0),
-   fKFunction(kernelFunction),
-   fTEventUp(0),
-   fTEventLow(0),
-   fB_low(1.),
-   fB_up(-1.),
-   fTolerance(tol),      
-   fLogger( new MsgLogger( "SVWorkingSet", kINFO ) )
+     fInputData(inputVectors),
+     fSupVec(0),
+     fKFunction(kernelFunction),
+     fTEventUp(0),
+     fTEventLow(0),
+     fB_low(1.),
+     fB_up(-1.),
+     fTolerance(tol),      
+     fLogger( new MsgLogger( "SVWorkingSet", kINFO ) )
 {
    // constructor
    fKMatrix = new TMVA::SVKernelMatrix(inputVectors, kernelFunction);
    Float_t *pt;
    for( UInt_t i = 0; i < fInputData->size(); i++){ 
-      pt = fKMatrix->GetLine(i);	
-      fInputData->at(i)->SetLine(pt);	
+      pt = fKMatrix->GetLine(i);
+      fInputData->at(i)->SetLine(pt);
       fInputData->at(i)->SetNs(i);
       if(fdoRegression) fInputData->at(i)->SetErrorCache(fInputData->at(i)->GetTarget());
    }
@@ -367,7 +367,7 @@ Bool_t  TMVA::SVWorkingSet::Terminated()
 }
 
 //_______________________________________________________________________
-void TMVA::SVWorkingSet::Train() 
+void TMVA::SVWorkingSet::Train(UInt_t nMaxIter) 
 {
    // train the SVM
    
@@ -377,7 +377,7 @@ void TMVA::SVWorkingSet::Train()
 
    Float_t numChangedOld = 0;
    Int_t deltaChanges = 0;
-   Int_t numit    = 0;
+   UInt_t numit    = 0;
    
    std::vector<TMVA::SVEvent*>::iterator fIDIter;
 
@@ -410,8 +410,7 @@ void TMVA::SVWorkingSet::Train()
       numChangedOld = numChanged;
       ++numit;
 
-      Int_t fMaxIter=10000; //TODO not here
-      if ( numit >= fMaxIter){
+      if (numit >= nMaxIter) {
          *fLogger << kWARNING 
                   << "Max number of iterations exceeded. "
                   << "Training may not be completed. Try use less Cost parameter" << Endl;
@@ -498,8 +497,7 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
    Float_t deltafi = ievt->GetErrorCache()-jevt->GetErrorCache();
    
    // main loop
-   while(!terminated)
-   {
+   while(!terminated) {
       const Float_t null = 0.; //!!! dummy float null declaration because of problems with TMath::Max/Min(Float_t, Float_t) function
       Float_t low, high;
       Float_t tmp_alpha_i, tmp_alpha_j;
@@ -507,156 +505,158 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
       
       //TODO check this conditions, are they proper
       if((caseA == kFALSE) && (b_alpha_i > 0 || (b_alpha_i_p == 0 && deltafi > 0)) && (b_alpha_j > 0 || (b_alpha_j_p == 0 && deltafi < 0)))
-      {
-         //compute low, high w.r.t a_i, a_j
-         low  = TMath::Max( null, gamma - b_cost_j );
-         high = TMath::Min( b_cost_i , gamma);
+         {
+            //compute low, high w.r.t a_i, a_j
+            low  = TMath::Max( null, gamma - b_cost_j );
+            high = TMath::Min( b_cost_i , gamma);
          
-         if(low<high){
-            tmp_alpha_j = b_alpha_j - (deltafi/eta);
-            tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
-            tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
-            tmp_alpha_i = b_alpha_i - (tmp_alpha_j - b_alpha_j);
+            if(low<high){
+               tmp_alpha_j = b_alpha_j - (deltafi/eta);
+               tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
+               tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
+               tmp_alpha_i = b_alpha_i - (tmp_alpha_j - b_alpha_j);
             
-            //update Li & Lj if change is significant (??)
-            if( IsDiffSignificant(b_alpha_j,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i,tmp_alpha_i, epsilon)){
-               b_alpha_j = tmp_alpha_j;
-               b_alpha_i = tmp_alpha_i;
+               //update Li & Lj if change is significant (??)
+               if( IsDiffSignificant(b_alpha_j,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i,tmp_alpha_i, epsilon)){
+                  b_alpha_j = tmp_alpha_j;
+                  b_alpha_i = tmp_alpha_i;
+               }
+            
             }
-            
-         }
-         else
-            terminated = kTRUE;
+            else
+               terminated = kTRUE;
          
-         caseA = kTRUE;
-      }
+            caseA = kTRUE;
+         }
       else if((caseB==kFALSE) && (b_alpha_i>0 || (b_alpha_i_p==0 && deltafi >2*epsilon )) && (b_alpha_j_p>0 || (b_alpha_j==0 && deltafi>2*epsilon)))
-      {
-         //compute LH w.r.t. a_i, a_j*
-         low  = TMath::Max( null, gamma );		//TODO 
-         high = TMath::Min( b_cost_i , b_cost_j + gamma);
+         {
+            //compute LH w.r.t. a_i, a_j*
+            low  = TMath::Max( null, gamma );  //TODO 
+            high = TMath::Min( b_cost_i , b_cost_j + gamma);
 
          
-         if(low<high){
-            tmp_alpha_j = b_alpha_j_p - ((deltafi-2*epsilon)/eta);
-            tmp_alpha_j = TMath::Min(tmp_alpha_j,high);
-            tmp_alpha_j = TMath::Max(low,tmp_alpha_j);
-            tmp_alpha_i = b_alpha_i - (tmp_alpha_j - b_alpha_j_p);
+            if(low<high){
+               tmp_alpha_j = b_alpha_j_p - ((deltafi-2*epsilon)/eta);
+               tmp_alpha_j = TMath::Min(tmp_alpha_j,high);
+               tmp_alpha_j = TMath::Max(low,tmp_alpha_j);
+               tmp_alpha_i = b_alpha_i - (tmp_alpha_j - b_alpha_j_p);
             
-            //update alphai alphaj_p
-            if( IsDiffSignificant(b_alpha_j_p,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i,tmp_alpha_i, epsilon)){
-               b_alpha_j_p = tmp_alpha_j;
-               b_alpha_i   = tmp_alpha_i;
+               //update alphai alphaj_p
+               if( IsDiffSignificant(b_alpha_j_p,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i,tmp_alpha_i, epsilon)){
+                  b_alpha_j_p = tmp_alpha_j;
+                  b_alpha_i   = tmp_alpha_i;
+               }
             }
-         }
-         else
-            terminated = kTRUE;
+            else
+               terminated = kTRUE;
          
-         caseB = kTRUE;
-      }
+            caseB = kTRUE;
+         }
       else if((caseC==kFALSE) && (b_alpha_i_p>0 || (b_alpha_i==0 && deltafi < -2*epsilon )) && (b_alpha_j>0 || (b_alpha_j_p==0 && deltafi< -2*epsilon)))
-      {
-         //compute LH w.r.t. alphai_p alphaj
-         low  = TMath::Max(null, -gamma  );
-         high = TMath::Min(b_cost_i, -gamma+b_cost_j);
+         {
+            //compute LH w.r.t. alphai_p alphaj
+            low  = TMath::Max(null, -gamma  );
+            high = TMath::Min(b_cost_i, -gamma+b_cost_j);
          
-         if(low<high){
-            tmp_alpha_j = b_alpha_j - ((deltafi+2*epsilon)/eta);
-            tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
-            tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
-            tmp_alpha_i = b_alpha_i_p - (tmp_alpha_j - b_alpha_j);
+            if(low<high){
+               tmp_alpha_j = b_alpha_j - ((deltafi+2*epsilon)/eta);
+               tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
+               tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
+               tmp_alpha_i = b_alpha_i_p - (tmp_alpha_j - b_alpha_j);
             
-            //update alphai_p alphaj
-            if( IsDiffSignificant(b_alpha_j,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i_p,tmp_alpha_i, epsilon)){
-               b_alpha_j     = tmp_alpha_j;
-               b_alpha_i_p   = tmp_alpha_i;
-            } 
-         }
-         else
-            terminated = kTRUE;
+               //update alphai_p alphaj
+               if( IsDiffSignificant(b_alpha_j,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i_p,tmp_alpha_i, epsilon)){
+                  b_alpha_j     = tmp_alpha_j;
+                  b_alpha_i_p   = tmp_alpha_i;
+               } 
+            }
+            else
+               terminated = kTRUE;
          
-         caseC = kTRUE;
-      }
+            caseC = kTRUE;
+         }
       else if((caseD == kFALSE) && 
-               (b_alpha_i_p>0 || (b_alpha_i==0 && deltafi <0 )) && 
-               (b_alpha_j_p>0 || (b_alpha_j==0 && deltafi >0 )))
-      {
-         //compute LH w.r.t. alphai_p alphaj_p
-         low  = TMath::Max(null,-gamma - b_cost_j);
-         high = TMath::Min(b_cost_i, -gamma);
+              (b_alpha_i_p>0 || (b_alpha_i==0 && deltafi <0 )) && 
+              (b_alpha_j_p>0 || (b_alpha_j==0 && deltafi >0 )))
+         {
+            //compute LH w.r.t. alphai_p alphaj_p
+            low  = TMath::Max(null,-gamma - b_cost_j);
+            high = TMath::Min(b_cost_i, -gamma);
          
-         if(low<high){
-            tmp_alpha_j = b_alpha_j_p + (deltafi/eta);
-            tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
-            tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
-            tmp_alpha_i = b_alpha_i_p - (tmp_alpha_j - b_alpha_j_p);
+            if(low<high){
+               tmp_alpha_j = b_alpha_j_p + (deltafi/eta);
+               tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
+               tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
+               tmp_alpha_i = b_alpha_i_p - (tmp_alpha_j - b_alpha_j_p);
             
-            if( IsDiffSignificant(b_alpha_j_p,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i_p,tmp_alpha_i, epsilon)){
-               b_alpha_j_p   = tmp_alpha_j;
-               b_alpha_i_p   = tmp_alpha_i;
-            } 
-         }
-         else
-            terminated = kTRUE;
+               if( IsDiffSignificant(b_alpha_j_p,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i_p,tmp_alpha_i, epsilon)){
+                  b_alpha_j_p   = tmp_alpha_j;
+                  b_alpha_i_p   = tmp_alpha_i;
+               } 
+            }
+            else
+               terminated = kTRUE;
          
-         caseD = kTRUE;
-      }
+            caseD = kTRUE;
+         }
       else
          terminated = kTRUE;
    }
-	// TODO ad commment how it was calculated
-      deltafi += ievt->GetDeltaAlpha()*(kernel_II - kernel_IJ) + jevt->GetDeltaAlpha()*(kernel_IJ - kernel_JJ); 
+   // TODO ad commment how it was calculated
+   deltafi += ievt->GetDeltaAlpha()*(kernel_II - kernel_IJ) + jevt->GetDeltaAlpha()*(kernel_IJ - kernel_JJ); 
 
-      if( IsDiffSignificant(b_alpha_i, ievt->GetAlpha(), epsilon) ||
-          IsDiffSignificant(b_alpha_j, jevt->GetAlpha(), epsilon) ||
-          IsDiffSignificant(b_alpha_i_p, ievt->GetAlpha_p(), epsilon) ||
-          IsDiffSignificant(b_alpha_j_p, jevt->GetAlpha_p(), epsilon) ){
+   if( IsDiffSignificant(b_alpha_i, ievt->GetAlpha(), epsilon) ||
+       IsDiffSignificant(b_alpha_j, jevt->GetAlpha(), epsilon) ||
+       IsDiffSignificant(b_alpha_i_p, ievt->GetAlpha_p(), epsilon) ||
+       IsDiffSignificant(b_alpha_j_p, jevt->GetAlpha_p(), epsilon) ){
          
-         //TODO check if these conditions might be easier
-         //TODO write documentation for this
-         const Float_t diff_alpha_i = ievt->GetDeltaAlpha()+b_alpha_i_p - ievt->GetAlpha();
-         const Float_t diff_alpha_j = jevt->GetDeltaAlpha()+b_alpha_j_p - jevt->GetAlpha();
+      //TODO check if these conditions might be easier
+      //TODO write documentation for this
+      const Float_t diff_alpha_i = ievt->GetDeltaAlpha()+b_alpha_i_p - ievt->GetAlpha();
+      const Float_t diff_alpha_j = jevt->GetDeltaAlpha()+b_alpha_j_p - jevt->GetAlpha();
 
-         //update error cache
-         Int_t k = 0; 
-         for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
-            k++;
-            //there will be some changes in Idx notation
-            if((*fIDIter)->GetIdx()==0){
-               Float_t k_ii = fKMatrix->GetElement(ievt->GetNs(), (*fIDIter)->GetNs());
-               Float_t k_jj = fKMatrix->GetElement(jevt->GetNs(), (*fIDIter)->GetNs());
+      //update error cache
+      Int_t k = 0; 
+      for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
+         k++;
+         //there will be some changes in Idx notation
+         if((*fIDIter)->GetIdx()==0){
+            Float_t k_ii = fKMatrix->GetElement(ievt->GetNs(), (*fIDIter)->GetNs());
+            Float_t k_jj = fKMatrix->GetElement(jevt->GetNs(), (*fIDIter)->GetNs());
          
-               (*fIDIter)->UpdateErrorCache(diff_alpha_i * k_ii + diff_alpha_j * k_jj);
-            }
+            (*fIDIter)->UpdateErrorCache(diff_alpha_i * k_ii + diff_alpha_j * k_jj);
          }
+      }
          
-         //store new alphas in SVevents
-         ievt->SetAlpha(b_alpha_i);
-         jevt->SetAlpha(b_alpha_j);
-         ievt->SetAlpha_p(b_alpha_i_p);
-         jevt->SetAlpha_p(b_alpha_j_p);
+      //store new alphas in SVevents
+      ievt->SetAlpha(b_alpha_i);
+      jevt->SetAlpha(b_alpha_j);
+      ievt->SetAlpha_p(b_alpha_i_p);
+      jevt->SetAlpha_p(b_alpha_j_p);
          
-         //TODO update Idexes
+      //TODO update Idexes
          
-         // compute fI_low, fB_low
+      // compute fI_low, fB_low
 
-         fB_low = -1*1e30;
-         fB_up =1e30;
+      fB_low = -1*1e30;
+      fB_up =1e30;
    
-         for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
-            if((!(*fIDIter)->IsInI3()) && ((*fIDIter)->GetErrorCache()> fB_low)){
-                  fB_low = (*fIDIter)->GetErrorCache();
-                  fTEventLow = (*fIDIter);
+      for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
+         if((!(*fIDIter)->IsInI3()) && ((*fIDIter)->GetErrorCache()> fB_low)){
+            fB_low = (*fIDIter)->GetErrorCache();
+            fTEventLow = (*fIDIter);
                   
-            }
-            if((!(*fIDIter)->IsInI2()) && ((*fIDIter)->GetErrorCache()< fB_up)){
-                  fB_up =(*fIDIter)->GetErrorCache();
-                  fTEventUp = (*fIDIter);
-            }
          }
-    return kTRUE;
-    } else return kFALSE;
+         if((!(*fIDIter)->IsInI2()) && ((*fIDIter)->GetErrorCache()< fB_up)){
+            fB_up =(*fIDIter)->GetErrorCache();
+            fTEventUp = (*fIDIter);
+         }
+      }
+      return kTRUE;
+   } else return kFALSE;
 }
+
+
 //_______________________________________________________________________
 Bool_t TMVA::SVWorkingSet::ExamineExampleReg(TMVA::SVEvent* jevt)
 {
@@ -673,7 +673,7 @@ Bool_t TMVA::SVWorkingSet::ExamineExampleReg(TMVA::SVEvent* jevt)
       
       UInt_t k=0;
       for(fIDIter = fInputData->begin(); fIDIter != fInputData->end(); fIDIter++){
-            fErrorC_J -= (*fIDIter)->GetDeltaAlpha()*fKVals[k];
+         fErrorC_J -= (*fIDIter)->GetDeltaAlpha()*fKVals[k];
          k++;
       }
       
@@ -682,13 +682,13 @@ Bool_t TMVA::SVWorkingSet::ExamineExampleReg(TMVA::SVEvent* jevt)
       
       if(jevt->IsInI1()){
          if(fErrorC_J + feps < fB_up ){
-         fB_up = fErrorC_J + feps;
-         fTEventUp = jevt;
-      	}
-      	else if(fErrorC_J -feps > fB_low) {
-        	 fB_low = fErrorC_J - feps;
-         	fTEventLow = jevt;
-        }
+            fB_up = fErrorC_J + feps;
+            fTEventUp = jevt;
+         }
+         else if(fErrorC_J -feps > fB_low) {
+            fB_low = fErrorC_J - feps;
+            fTEventLow = jevt;
+         }
       }else if((jevt->IsInI2()) && (fErrorC_J + feps > fB_low)){
          fB_low = fErrorC_J + feps;
          fTEventLow = jevt;

@@ -97,7 +97,7 @@ namespace TMVA {
       virtual const Event* InverseTransform(const Event* const, Int_t cls ) const;
 
       void WriteTransformationToStream ( std::ostream& ) const;
-      void ReadTransformationFromStream( std::istream& );
+      void ReadTransformationFromStream( std::istream&, const TString& );
      
       virtual void AttachXMLTo(void* parent);
       virtual void ReadFromXML( void* trfnode );
@@ -108,10 +108,10 @@ namespace TMVA {
       virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );
     
    private:
+
       Bool_t           fFlatNotGaussD;
       Int_t            fPdfMinSmooth;
       Int_t            fPdfMaxSmooth;
-      UInt_t           fElementsPerBin;
       //      mutable Event*   fTransformedEvent;
 
       std::vector< std::vector< TH1F* > >      fCumulativeDist;   //! The Cummulative distributions 
@@ -121,6 +121,10 @@ namespace TMVA {
 
       void GetCumulativeDist( const std::vector<Event*>& );
       void CleanUpCumulativeArrays(TString opt = "ALL");
+
+      // needed for backward compatibility
+      UInt_t fElementsperbin;  // av number of events stored per bin in cum dist
+      Double_t OldCumulant(Float_t x, TH1* h ) const;
 
       ClassDef(VariableGaussTransform,0) // Variable transformation: Gauss transformation
    };

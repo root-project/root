@@ -243,7 +243,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
    UInt_t nevents = eventSample.size();
 
    if (nevents > 0 ) {
-      fNvars = eventSample[0]->GetNVars();
+      fNvars = eventSample[0]->GetNVariables();
       fVariableImportance.resize(fNvars);
    }
    else Log() << kFATAL << ":<BuildTree> eventsample Size == 0 " << Endl;
@@ -272,7 +272,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
       }
 
       for (UInt_t ivar=0; ivar<fNvars; ivar++) {
-         const Float_t val = evt->GetVal(ivar);
+         const Float_t val = evt->GetValue(ivar);
          if (iev==0) xmin[ivar]=xmax[ivar]=val;
          if (val < xmin[ivar]) xmin[ivar]=val; 
          if (val > xmax[ivar]) xmax[ivar]=val; 
@@ -922,7 +922,7 @@ Float_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSam
          // now scan trough the cuts for each varable and find which one gives
          // the best separationGain at the current stage.
          if ( useVariable[ivar] ) {
-            Float_t eventData = eventSample[iev]->GetVal(ivar); 
+            Float_t eventData = eventSample[iev]->GetValue(ivar); 
             // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
             iBin = TMath::Min(Int_t(nBins-1),TMath::Max(0,int (nBins*(eventData-xmin[ivar])/(xmax[ivar]-xmin[ivar]) ) ));
             if (eventType) {
@@ -980,7 +980,7 @@ Float_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSam
             // left or the right from this node if "these" cuts were used in the Node:
             // hereby: nSelS and nSelB would go to the right branch
             //        (nTotS - nSelS) + (nTotB - nSelB)  would go to the left branch;
-	
+
             // only allow splits where both daughter nodes match the specified miniumum number
             // for this use the "unweighted" events, as you are interested in statistically 
             // significant splits, which is determined by the actual number of entries

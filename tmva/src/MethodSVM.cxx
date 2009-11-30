@@ -132,13 +132,32 @@ void TMVA::MethodSVM::Init()
 void TMVA::MethodSVM::DeclareOptions() 
 {
    // declare options available for this method
-   DeclareOptionRef( fCost      = 1.,   "C",        "Cost parameter" );
+   DeclareOptionRef( fCost,   "C",        "Cost parameter" );
+   if (DoRegression()) {
+      fCost = 0.002;
+   }else{
+      fCost = 1.;
+   }
    DeclareOptionRef( fTolerance = 0.01, "Tol",      "Tolerance parameter" );  //should be fixed
    DeclareOptionRef( fMaxIter   = 1000, "MaxIter",  "Maximum number of training loops" );
    DeclareOptionRef( fNSubSets  = 1,    "NSubSets", "Number of training subsets" );
 
    // for gaussian kernel parameter(s)
    DeclareOptionRef( fGamma = 1., "Gamma", "RBF kernel parameter: Gamma");
+}
+
+
+void TMVA::MethodSVM::DeclareCompatibilityOptions()
+{
+   MethodBase::DeclareCompatibilityOptions();
+   DeclareOptionRef( fTheKernel = "Gauss", "Kernel", "Uses kernel function");
+   // for gaussian kernel parameter(s)
+   DeclareOptionRef( fDoubleSigmaSquared = 2., "Sigma", "Kernel parameter: sigma");
+   // for polynomiarl kernel parameter(s)
+   DeclareOptionRef( fOrder = 3, "Order", "Polynomial Kernel parameter: polynomial order");
+   // for sigmoid kernel parameters
+   DeclareOptionRef( fTheta = 1., "Theta", "Sigmoid Kernel parameter: theta");
+   DeclareOptionRef( fKappa = 1., "Kappa", "Sigmoid Kernel parameter: kappa");
 }
 
 //_______________________________________________________________________
@@ -175,43 +194,13 @@ void TMVA::MethodSVM::Train()
    Timer timer( GetName() );
    Log() << kINFO << "Sorry, no computing time forecast available for SVM, please wait ..." << Endl;
    
-   fWgSet->Train();
+   fWgSet->Train(fMaxIter);
 
    Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime()    
          << "                                          " << Endl;
     
    fBparm          = fWgSet->GetBpar();
    fSupportVectors = fWgSet->GetSupportVectors();
-}
-//_______________________________________________________________________
-void  TMVA::MethodSVM::WriteWeightsToStream( ostream& o ) const
-{
-   // write configuration to output stream
-   if (TxtWeightsOnly()) {
-      o << fBparm << std::endl;
-      o << fGamma << std::endl;
-      o << fSupportVectors->size() << std::endl;
-      
-
-      for (UInt_t isv = 0; isv <fSupportVectors->size() ; isv++ ) {
-         o << isv;
-         fSupportVectors->at(isv)->Print(o);
-      }
-
-      //TODO why it returns 1 or -1
-      // write max data values
-      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++) o << GetXmax( ivar ) << " ";
-      o << endl;
-
-      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++) o << GetXmin( ivar ) << " ";
-      o << endl;
-
-   } 
-   else {
-      TString rfname( GetWeightFileName() ); rfname.ReplaceAll( ".txt", ".root" );
-      o << "# weights stored in root i/o file: " << rfname << endl;  
-      o << fBparm << endl;
-   }
 }
 
 //_______________________________________________________________________
@@ -307,43 +296,54 @@ void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
    fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
    
    // read configuration from input stream
-   if (TxtWeightsOnly()) {
-      istr >> fBparm;
-      istr >> fGamma;
+   istr >> fBparm;
       
-      UInt_t fNsupv;
-      istr >> fNsupv;
-      
-      Float_t alpha=0.;
-      Int_t typeFlag=-1;
-      UInt_t ns = 0;
-      std::vector<Float_t>* svector = new std::vector<Float_t>(GetNvar());
-      
-      fMaxVars = new TVectorD( GetNvar() );
-      fMinVars = new TVectorD( GetNvar() );
+   UInt_t fNsupv;
+   istr >> fNsupv;
+   fSupportVectors->reserve(fNsupv);      
 
-      for (UInt_t ievt = 0; ievt < fNsupv; ievt++) {
-         istr>>ns;
-         istr>>typeFlag;
-         istr>>alpha;
-         for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
-            istr>>svector->at(ivar);
+   Float_t typeTalpha=0.;
+   Float_t alpha=0.;
+   Int_t typeFlag=-1;
+   UInt_t ns = 0;
+   std::vector<Float_t>* svector = new std::vector<Float_t>(GetNvar());
+      
+   fMaxVars = new TVectorD( GetNvar() );
+   fMinVars = new TVectorD( GetNvar() );
+
+   for (UInt_t ievt = 0; ievt < fNsupv; ievt++) {
+      istr>>ns;
+      istr>>typeTalpha;
+      typeFlag = typeTalpha<0?-1:1;
+      alpha = typeTalpha<0?-typeTalpha:typeTalpha;
+      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
+         istr>>svector->at(ivar);
          
-         fSupportVectors->push_back(new SVEvent(svector,alpha,typeFlag,ns));
-      }
+      fSupportVectors->push_back(new SVEvent(svector,alpha,typeFlag,ns));
+   }
 
-      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
-         istr >> (*fMaxVars)[ivar];
+   for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
+      istr >> (*fMaxVars)[ivar];
      
-      for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
-         istr >> (*fMinVars)[ivar];
-       
-      fSVKernelFunction = new SVKernelFunction(fGamma);
-   } 
-   else {
-      istr >> fBparm;
+   for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
+      istr >> (*fMinVars)[ivar];
+
+   delete fSVKernelFunction;
+   if (fTheKernel == "Gauss" ) {
+      fSVKernelFunction = new SVKernelFunction(1/fDoubleSigmaSquared);
+   } else {
+      SVKernelFunction::EKernelType k = SVKernelFunction::kLinear;
+      if(fTheKernel == "Linear")           k = SVKernelFunction::kLinear;
+      else if (fTheKernel == "Polynomial") k = SVKernelFunction::kPolynomial;
+      else if (fTheKernel == "Sigmoid"   ) k = SVKernelFunction::kSigmoidal;
+      else {
+         Log() << kFATAL <<"Unknown kernel function found in weight file!" << Endl;
+      }
+      fSVKernelFunction = new SVKernelFunction();
+      fSVKernelFunction->setCompatibilityParams(k, fOrder, fTheta, fKappa);
    }
 }
+
 //_______________________________________________________________________
 void TMVA::MethodSVM::ReadWeightsFromStream( TFile& /* fFin */ )
 {
@@ -356,13 +356,15 @@ Double_t TMVA::MethodSVM::GetMvaValue( Double_t* err )
    // returns MVA value for given event
    Double_t myMVA = 0;
    
+   
    SVEvent* ev = new SVEvent( GetEvent(),0. ); //check for specificators
 
    for (UInt_t ievt = 0; ievt < fSupportVectors->size() ; ievt++) {
       myMVA += ( fSupportVectors->at(ievt)->GetAlpha()
-                 *fSupportVectors->at(ievt)->GetTypeFlag()
-                 *fSVKernelFunction->Evaluate( fSupportVectors->at(ievt), ev ) );
-   }   
+                 * fSupportVectors->at(ievt)->GetTypeFlag()
+                 * fSVKernelFunction->Evaluate( fSupportVectors->at(ievt), ev ) );
+   }
+
    myMVA -= fBparm;
 
    // cannot determine error

@@ -53,7 +53,7 @@ namespace TMVA {
       Bool_t PrepareTransformation( const std::vector<Event*>& );
 
       void WriteTransformationToStream ( std::ostream& ) const {}
-      void ReadTransformationFromStream( std::istream& ) { SetCreated(); }
+      void ReadTransformationFromStream( std::istream&, const TString& ) { SetCreated(); }
 
       virtual void AttachXMLTo(void* parent);
       virtual void ReadFromXML( void* trfnode );

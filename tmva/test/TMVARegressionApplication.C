@@ -54,6 +54,7 @@ void TMVARegressionApplication( TString myMethodList = "" )
    Use["MLP"]             = 1; 
    // ---
    Use["BDT"]             = 0;
+   Use["BDTG"]            = 0;
    // ---------------------------------------------------------------
 
    std::cout << std::endl;
@@ -87,6 +88,11 @@ void TMVARegressionApplication( TString myMethodList = "" )
    Float_t var1, var2;
    reader->AddVariable( "var1", &var1 );
    reader->AddVariable( "var2", &var2 );
+
+   //Spectator variables declared in the training have to be added to the reader, too
+   Float_t spec1,spec2;
+   reader->AddSpectator( "spec1:=var1*2",  &spec1 );
+   reader->AddSpectator( "spec2:=var1*3",  &spec2 );
 
    //
    // book the MVA methods

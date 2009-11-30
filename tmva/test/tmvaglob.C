@@ -418,7 +418,7 @@ namespace TMVAGlob {
          
       while ((key = (TKey*)next())) {
          if (key->GetCycle() != 1) continue;        
-         if (TString(key->GetName()).Contains("train_Quadr_Deviation_target")) noTrgts++;
+         if (TString(key->GetName()).Contains("__Regression_target")) noTrgts++;
       }
       return noTrgts;
    }
@@ -432,8 +432,8 @@ namespace TMVAGlob {
       while ((key = (TKey*)next())) {
          if (key->GetCycle() != 1) continue;
          
-         // count number of variables (signal is sufficient)
-         if (TString(key->GetName()).Contains("__Signal") || TString(key->GetName()).Contains("__Regression")) noVars++;
+         // count number of variables (signal is sufficient), exclude target(s)
+         if (TString(key->GetName()).Contains("__Signal") || (TString(key->GetName()).Contains("__Regression") && !(TString(key->GetName()).Contains("__Regression_target")))) noVars++;
       }
       
       return noVars;

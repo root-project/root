@@ -25,8 +25,10 @@ void regression_averagedevs(TString fin, Int_t Nevt=-1, Bool_t useTMVAStyle = kT
    Bool_t __PLOT_LOGO__  = kTRUE;
    Bool_t __SAVE_IMAGE__ = kTRUE;
 
-   TDirectory* dir0 = (TDirectory*) (jobDirList.At(0));
+   //TDirectory* dir0 = (TDirectory*) (jobDirList.At(0));
+   TDirectory* dir0 = (TDirectory*) (file->Get("InputVariables_Id"));   
    Int_t nTargets = TMVAGlob::GetNumberOfTargets( dir0);
+
    if (debug) cout << "found targets " << nTargets<<endl;
    TCanvas* c=0;
    for (Int_t itrgt = 0 ; itrgt < nTargets; itrgt++){

@@ -13,6 +13,7 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
+ *      Peter Speckmayer  <Peter.Speckmayer@cern.ch>  - CERN, Switzerland         *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -106,9 +107,6 @@
 
 ClassImp(TMVA::MethodBase)
 
-#define WRITEXML kTRUE
-#define WRITETXT kFALSE
-
 using std::endl;
 
 const Int_t    MethodBase_MaxIterations_ = 200;
@@ -131,14 +129,16 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
                               TDirectory* theBaseDir) :
    IMethod(),
    Configurable               ( theOption ),
-   fAnalysisType              ( Types::kClassification ),
+   fTmpEvent                  ( 0 ),
+   fAnalysisType              ( Types::kNoAnalysisType ),
+   fRegressionReturnVal       ( 0 ),
+   fDisableWriting            ( kFALSE ),
    fDataSetInfo               ( dsi ),
    fSignalReferenceCut        ( 0.5 ),
    fVariableTransformType     ( Types::kSignal ),
    fJobName                   ( jobName ),
    fMethodName                ( methodTitle ),
    fMethodType                ( methodType ),
-   fTestvarPrefix             ( "MVA_" ),
    fTestvar                   ( "" ),
    fTMVATrainingVersion       ( TMVA_VERSION_CODE ),
    fROOTTrainingVersion       ( ROOT_VERSION_CODE ),
@@ -185,13 +185,13 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
                               TDirectory* theBaseDir ) :
    IMethod(),
    Configurable(""),
+   fTmpEvent                  ( 0 ),
    fDataSetInfo               ( dsi ),
    fSignalReferenceCut        ( 0.5 ),
    fVariableTransformType     ( Types::kSignal ),
    fJobName                   ( "" ),
    fMethodName                ( "MethodBase"  ),
    fMethodType                ( methodType ),
-   fTestvarPrefix             ( "MVA_" ),
    fTestvar                   ( "" ),
    fTMVATrainingVersion       ( 0 ),
    fROOTTrainingVersion       ( 0 ),
@@ -418,46 +418,7 @@ void TMVA::MethodBase::ProcessBaseOptions()
       SetOptions( fMVAPdfS->GetOptions() );
    }
    
-   if (fVarTransformString != "None") {
-      TList* trList = gTools().ParseFormatLine( fVarTransformString, "," );
-      TListIter trIt(trList);
-
-      while (TObjString* os = (TObjString*)trIt()) {
-         TList* trClsList = gTools().ParseFormatLine( os->GetString(), "_" ); // split entry to get trf-name and class-name
-         TListIter trClsIt(trClsList);
-	 
-         const TString& trName = ((TObjString*)trClsList->At(0))->GetString();
-         TString trCls = "AllClasses";
-         ClassInfo *ci = NULL;
-         Int_t idxCls = -1;
-         if (trClsList->GetEntries() > 1) {
-            trCls  = ((TObjString*)trClsList->At(1))->GetString();
-            if (trCls == "AllClasses") {
-               // do nothing, everything is set already
-            }
-            else {
-               ci = DataInfo().GetClassInfo( trCls );
-               if (ci == NULL)
-                  Log() << kFATAL << "Class " << trCls << " not known for variable transformation "
-                        << trName << ", please check." << Endl;
-               else
-                  idxCls = ci->GetNumber();
-            }
-         }
-
-         if      (trName == "D" || trName == "Deco" || trName == "Decorrelate")
-            GetTransformationHandler().AddTransformation( new VariableDecorrTransform   ( DataInfo()) , idxCls );
-         else if (trName == "P" || trName == "PCA")
-            GetTransformationHandler().AddTransformation( new VariablePCATransform      ( DataInfo()), idxCls );
-         else if (trName == "G" || trName == "Gauss")
-            GetTransformationHandler().AddTransformation( new VariableGaussTransform    ( DataInfo()), idxCls );
-         else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize")
-            GetTransformationHandler().AddTransformation( new VariableNormalizeTransform( DataInfo()), idxCls );
-         else
-            Log() << kFATAL << "<ProcessOptions> Variable transform '"
-                  << trName << "' unknown." << Endl;
-      }
-   }
+   CreateVariableTransforms( fVarTransformString );
 
    if (!HasMVAPdfs()) {
       if (fDefaultPDF!= 0) { delete fDefaultPDF; fDefaultPDF = 0; }
@@ -482,6 +443,70 @@ void TMVA::MethodBase::ProcessBaseOptions()
 }
 
 //_______________________________________________________________________
+void TMVA::MethodBase::CreateVariableTransforms(const TString& trafoDefinition )
+{
+   if (trafoDefinition != "None") {
+      TList* trList = gTools().ParseFormatLine( trafoDefinition, "," );
+      TListIter trIt(trList);
+      while (TObjString* os = (TObjString*)trIt()) {
+         Int_t idxCls = -1;
+
+         TList* trClsList = gTools().ParseFormatLine( os->GetString(), "_" ); // split entry to get trf-name and class-name
+         TListIter trClsIt(trClsList);
+         const TString& trName = ((TObjString*)trClsList->At(0))->GetString();
+
+         if (trClsList->GetEntries() > 1) {
+            TString trCls = "AllClasses";
+            ClassInfo *ci = NULL;
+            trCls  = ((TObjString*)trClsList->At(1))->GetString();
+            if (trCls != "AllClasses") {
+               ci = DataInfo().GetClassInfo( trCls );
+               if (ci == NULL)
+                  Log() << kFATAL << "Class " << trCls << " not known for variable transformation "
+                        << trName << ", please check." << Endl;
+               else
+                  idxCls = ci->GetNumber();
+            }
+         }
+
+         if      (trName == "D" || trName == "Deco" || trName == "Decorrelate")
+            GetTransformationHandler().AddTransformation( new VariableDecorrTransform   ( DataInfo()) , idxCls );
+         else if (trName == "P" || trName == "PCA")
+            GetTransformationHandler().AddTransformation( new VariablePCATransform      ( DataInfo()), idxCls );
+         else if (trName == "G" || trName == "Gauss")
+            GetTransformationHandler().AddTransformation( new VariableGaussTransform    ( DataInfo()), idxCls );
+         else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize")
+            GetTransformationHandler().AddTransformation( new VariableNormalizeTransform( DataInfo()), idxCls );
+         else
+            Log() << kFATAL << "<ProcessOptions> Variable transform '"
+                  << trName << "' unknown." << Endl;
+      }
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBase::DeclareCompatibilityOptions()
+{
+   DeclareOptionRef( fNormalise=kFALSE, "Normalise", "Normalise input variables" ); // don't change the default !!!
+   DeclareOptionRef( fUseDecorr=kFALSE, "D", "Use-decorrelated-variables flag" );
+   DeclareOptionRef( fVariableTransformTypeString="Signal", "VarTransformType",
+                     "Use signal or background events to derive for variable transformation (the transformation is applied on both types of, course)" );
+   AddPreDefVal( TString("Signal") );
+   AddPreDefVal( TString("Background") );
+   DeclareOptionRef( fTxtWeightsOnly=kTRUE, "TxtWeightFilesOnly", "If True: write all training results (weights) as text files (False: some are written in ROOT format)" );
+   DeclareOptionRef( fVerbosityLevelString="Default", "VerboseLevel", "Verbosity level" );
+   AddPreDefVal( TString("Default") ); // uses default defined in MsgLogger header
+   AddPreDefVal( TString("Debug")   );
+   AddPreDefVal( TString("Verbose") );
+   AddPreDefVal( TString("Info")    );
+   AddPreDefVal( TString("Warning") );
+   AddPreDefVal( TString("Error")   );
+   AddPreDefVal( TString("Fatal")   );
+   DeclareOptionRef( fNbinsMVAPdf   = 60, "NbinsMVAPdf",   "Number of bins used for the PDFs of classifier outputs" );
+   DeclareOptionRef( fNsmoothMVAPdf = 2,  "NsmoothMVAPdf", "Number of smoothing iterations for classifier PDFs" );
+}
+
+//_______________________________________________________________________
 void TMVA::MethodBase::TrainMethod()
 {
    Data()->SetCurrentType(Types::kTraining);
@@ -497,7 +522,6 @@ void TMVA::MethodBase::TrainMethod()
    // call training of derived MVA
    Log() << kINFO << "Begin training" << Endl;
    Long64_t nEvents = Data()->GetNEvents();
-   // use timer
    Timer traintimer( nEvents, GetName(), kTRUE );
    Train();
    Log() << kINFO << "End of training                                              " << Endl;
@@ -509,14 +533,16 @@ void TMVA::MethodBase::TrainMethod()
 
    // create PDFs for the signal and background MVA distributions (if required)
    if (!DoRegression()) {
+
       Log() << "classification on training sample" << Endl;
       AddClassifierOutput(Types::kTraining);
       if (HasMVAPdfs()) {
          CreateMVAPdfs();
          AddClassifierOutputProb(Types::kTraining);
       }
-   }
-   else {
+
+   } else {
+
       Log() << "regression on training sample" << Endl;
       AddRegressionOutput( Types::kTraining );
 
@@ -528,10 +554,10 @@ void TMVA::MethodBase::TrainMethod()
 
    // write the current MVA state into stream
    // produced are one text file and one ROOT file
-   WriteStateToFile();
+   if( !fDisableWriting ) WriteStateToFile();
 
    // produce standalone make class (presently only supported for classification)
-   if (!DoRegression()) MakeClass();
+   if ((!DoRegression()) && (!fDisableWriting)) MakeClass();
 
    // write additional monitoring histograms to main target file (not the weight file)
    // again, make sure the histograms go into the method's subdirectory
@@ -578,6 +604,14 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
    regRes->CreateDeviationHistograms( histNamePrefix );
 }
 
+//_______________________________________________________________________
+Double_t TMVA::MethodBase::GetMvaValue( const Event* const ev, Double_t* err ) {
+   fTmpEvent = ev;
+   Double_t val = GetMvaValue(err);
+   fTmpEvent = 0;
+   return val;
+}
+
 
 //_______________________________________________________________________
 void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
@@ -595,16 +629,17 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
    Timer timer( nEvents, GetName(), kTRUE );
 
    Log() << kINFO << "Evaluation of " << GetMethodName() << " on "
-         << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
+         << (type==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
 
    clRes->Resize( nEvents );
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
 
-      Data()->SetCurrentEvent(ievt);
+      SetCurrentEvent(ievt);
       clRes->SetValue( GetMvaValue(), ievt );
 
       // print progress
       Int_t modulo = Int_t(nEvents/100);
+      if( modulo <= 0 ) modulo = 1;
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
@@ -645,6 +680,7 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
 
       // print progress
       Int_t modulo = Int_t(nEvents/100);
+      if( modulo <= 0 ) modulo = 1;
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
@@ -878,7 +914,7 @@ void TMVA::MethodBase::TestClassification()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) const
+void TMVA::MethodBase::WriteStateToStream( std::ostream& tf ) const
 {
    // general method used in writing the header of the weight files where
    // the used variables, variable transformation type etc. is specified
@@ -901,7 +937,7 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) co
 
    TString analysisType(((const_cast<TMVA::MethodBase*>(this)->GetAnalysisType()==Types::kRegression) ? "Regression" : "Classification"));
 
-   tf << prefix << "Analysis type  : " << "[" << analysisType.Data() << "]" << endl;
+   tf << prefix << "Analysis type  : " << "[" << ((GetAnalysisType()==Types::kRegression) ? "Regression" : "Classification") << "]" << endl;
    tf << prefix << endl;
 
    delete userInfo;
@@ -915,28 +951,6 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf, Bool_t isClass ) co
    tf << prefix << endl << prefix << "#VAR -*-*-*-*-*-*-*-*-*-*-*-* variables *-*-*-*-*-*-*-*-*-*-*-*-" << endl << prefix << endl;
    WriteVarsToStream( tf, prefix );
    tf << prefix << endl;
-
-   // Third write transformation data if available
-   // this is weight file specific information: not written if class is made
-   if (isClass) return;
-
-   tf << endl << "#MAT -*-*-*-*-*-*-*-*-* transformation data -*-*-*-*-*-*-*-*-*-" << endl;
-   GetTransformationHandler().WriteToStream( tf );
-   tf << endl;
-   
-   // Fourth write the MVA variable distributions
-   if (HasMVAPdfs()) {
-      tf << endl << "#MVAPDFS -*-*-*-*-*-*-*-*-*-*-* MVA PDFS -*-*-*-*-*-*-*-*-*-*-*-" << endl;
-      tf << *fMVAPdfS << endl;
-      tf << *fMVAPdfB << endl;
-      tf << endl;
-   }
-   
-   // Lst, write weights
-   tf << endl << "#WGT -*-*-*-*-*-*-*-*-*-*-*-*- weights -*-*-*-*-*-*-*-*-*-*-*-*-" << endl << endl;
-   
-   // no weights when standalone class is produced, which would be duplication
-   WriteWeightsToStream( tf );
 }
 
 //_______________________________________________________________________
@@ -946,6 +960,17 @@ void TMVA::MethodBase::AddInfoItem( void* gi, const TString& name, const TString
    void* it = gTools().xmlengine().NewChild(gi,0,"Info");
    gTools().xmlengine().NewAttr(it,0,"name", name);
    gTools().xmlengine().NewAttr(it,0,"value", value);
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBase::AddOutput( Types::ETreeType type, Types::EAnalysisType analysisType ) {
+   if (analysisType == Types::kRegression) {
+      AddRegressionOutput( type );
+   } else {
+      AddClassifierOutput( type );
+      if (HasMVAPdfs()) 
+         AddClassifierOutputProb( type );
+   }
 }
 
 //_______________________________________________________________________
@@ -978,6 +1003,10 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
    // write variable info
    AddVarsXMLTo( parent );
 
+   // write spectator info
+   if(!fDisableWriting)
+      AddSpectatorsXMLTo( parent );
+
    // write target info if in regression mode
    if(DoRegression())
       AddTargetsXMLTo(parent);
@@ -993,21 +1022,6 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
    
    // write weights
    AddWeightsXMLTo( parent );
-}
-
-//_______________________________________________________________________
-void TMVA::MethodBase::WriteStateToStream( TFile& rf ) const
-{
-   // write reference MVA distributions (and other information)
-   // to a ROOT type weight file
-
-   rf.cd();
-   if (fMVAPdfS && fMVAPdfB) {
-      fMVAPdfS->Write("MVA_PDF_Signal");
-      fMVAPdfB->Write("MVA_PDF_Background");
-   }
-
-   WriteWeightsToStream( rf );
 }
 
 //_______________________________________________________________________
@@ -1038,44 +1052,16 @@ void TMVA::MethodBase::WriteStateToFile() const
    // ---- create the text file
    TString tfname( GetWeightFileName() );
 
-   if (WRITETXT) {
-      Log() << kINFO << "Creating weight file in text format: "
-            << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
-
-
-      ofstream tfile( tfname );
-      if (!tfile.good()) { // file could not be opened --> Error
-         Log() << kFATAL << "<WriteStateToFile> "
-               << "Unable to open output weight file: " << tfname << Endl;
-      }
-      
-      WriteStateToStream( tfile, kFALSE );
-
-      tfile.close();
-   }
-
-   if (!fTxtWeightsOnly) {
-      // ---- create the ROOT file
-      TString rfname( tfname ); rfname.ReplaceAll( ".txt", ".root" );
-      Log() << kINFO << "Creating weight file in root format: "
-            << gTools().Color("lightblue") << rfname << gTools().Color("reset") << Endl;
-      TFile* rfile = TFile::Open( rfname, "RECREATE" );
-      WriteStateToStream( *rfile );
-      rfile->Close();
-   }
-
    // writing xml file
-   if (WRITEXML) {
-      TString xmlfname( tfname ); xmlfname.ReplaceAll( ".txt", ".xml" );
-      Log() << kINFO << "Creating weight file in xml format: "
-            << gTools().Color("lightblue") << xmlfname << gTools().Color("reset") << Endl;
-      void* doc      = gTools().xmlengine().NewDoc();
-      void* rootnode = gTools().xmlengine().NewChild(0,0,"MethodSetup");
-      gTools().xmlengine().DocSetRootElement(doc,rootnode);
-      gTools().xmlengine().NewAttr(rootnode,0,"Method", GetMethodTypeName() + "::" + GetMethodName());
-      WriteStateToXML(rootnode);
-      gTools().xmlengine().SaveDoc(doc,xmlfname);
-   }
+   TString xmlfname( tfname ); xmlfname.ReplaceAll( ".txt", ".xml" );
+   Log() << kINFO << "Creating weight file in xml format: "
+         << gTools().Color("lightblue") << xmlfname << gTools().Color("reset") << Endl;
+   void* doc      = gTools().xmlengine().NewDoc();
+   void* rootnode = gTools().xmlengine().NewChild(0,0,"MethodSetup");
+   gTools().xmlengine().DocSetRootElement(doc,rootnode);
+   gTools().xmlengine().NewAttr(rootnode,0,"Method", GetMethodTypeName() + "::" + GetMethodName());
+   WriteStateToXML(rootnode);
+   gTools().xmlengine().SaveDoc(doc,xmlfname);
 }
 
 //_______________________________________________________________________
@@ -1132,38 +1118,46 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
    Log().SetSource( GetName() );
    Log() << kINFO << "Read method \"" << GetMethodName() << "\" of type \"" << GetMethodTypeName() << "\"" << Endl;
 
-   void* ch = 0;
    TString nodeName("");
-
-   ch = gTools().xmlengine().GetChild(methodNode);
+   void* ch = gTools().xmlengine().GetChild(methodNode);
    while (ch!=0) {
       nodeName = TString( gTools().xmlengine().GetNodeName(ch) );
 
       if (nodeName=="GeneralInfo") {
          // read analysis type
-         TString readAnalysisType;
 
+         TString name(""),val("");
          void* antypeNode = gTools().xmlengine().GetChild(ch);
-
-         readAnalysisType = "no type defined";
          while (antypeNode) {
-            nodeName = TString( gTools().xmlengine().GetNodeName(antypeNode) );
-
-            TString name;
-            gTools().ReadAttr( antypeNode, "name",   name   );
-            gTools().ReadAttr( antypeNode, "value",  readAnalysisType );
-            if (name == "TrainingTime")
+            gTools().ReadAttr( antypeNode, "name",   name );
+            
+            if (name == "TrainingTime") 
                gTools().ReadAttr( antypeNode, "value",  fTrainTime );
       
-            if (name == "AnalysisType") break;
+            if (name == "AnalysisType") {
+               gTools().ReadAttr( antypeNode, "value",  val );
+               val.ToLower();
+               if      (val == "regression" )     SetAnalysisType( Types::kRegression );
+               else if (val == "classification" ) SetAnalysisType( Types::kClassification );
+               else if (val == "multiclass" )     SetAnalysisType( Types::kMulticlass );
+               else Log() << kFATAL << "Analysis type " << val << " is not known." << Endl;
+            }
+            
+            if (name == "TMVA Release" || name == "TMVA" ){
+               TString s;
+               gTools().ReadAttr( antypeNode, "value", s);
+               fTMVATrainingVersion = TString(s(s.Index("[")+1,s.Index("]")-s.Index("[")-1)).Atoi();
+               Log() << kINFO << "MVA method was trained with TMVA Version: " << GetTrainingTMVAVersionString() << Endl;
+            }
 
+            if (name == "ROOT Release" || name == "ROOT" ){
+               TString s;
+               gTools().ReadAttr( antypeNode, "value", s);
+               fROOTTrainingVersion = TString(s(s.Index("[")+1,s.Index("]")-s.Index("[")-1)).Atoi();
+               Log() << kINFO << "MVA method was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
+            }
             antypeNode = gTools().xmlengine().GetNext(antypeNode);
          }
-
-         readAnalysisType.ToLower();
-         if      (readAnalysisType == "regression" )     SetAnalysisType( Types::kRegression );
-         else if (readAnalysisType == "classification" ) SetAnalysisType( Types::kClassification );
-         else Log() << kFATAL << "Analysis type " << readAnalysisType << " is not known." << Endl;
       } 
       else if (nodeName=="Options") {
          ReadOptionsFromXML(ch);
@@ -1173,13 +1167,16 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
       else if (nodeName=="Variables") {
          ReadVariablesFromXML(ch);
       }
+      else if (nodeName=="Spectators") {
+         ReadSpectatorsFromXML(ch);
+      }
       else if (nodeName=="Targets") {
          if(DataInfo().GetNTargets()==0 && DoRegression())
             ReadTargetsFromXML(ch);
       }
       else if (nodeName=="Transformations") {
          GetTransformationHandler().ReadFromXML(ch);
-      } 
+      }
       else if (nodeName=="MVAPdfs") {
          TString pdfname;
          if (fMVAPdfS) delete fMVAPdfS;
@@ -1210,6 +1207,10 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
 {
    // read the header from the weight files of the different MVA methods
    char buf[512];
+
+   // when reading from stream, we assume the files are produced with TMVA<=397
+   SetAnalysisType(Types::kClassification);
+
 
    // first read the method name
    GetLine(fin,buf);
@@ -1251,41 +1252,43 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    while (!TString(buf).BeginsWith("#VAR")) fin.getline(buf,512);
    ReadVarsFromStream(fin);
 
-   Log() << kINFO << "Create VariableTransformation \"" << fVarTransformString << "\"" << Endl;
-   TList* trList = gTools().ParseFormatLine( fVarTransformString, "," );
-   TListIter trIt(trList);
-
-   while (TObjString* os = (TObjString*)trIt()) {
-      const TString& s = os->GetString();
-      Int_t idxCls = -1;
-      
-      if (s == "Decorrelate" || s == "D" ) {
-         GetTransformationHandler().AddTransformation( new VariableDecorrTransform(DataInfo()), idxCls );
-      }
-      else if (s == "PCA" || s == "P" ) {
-         GetTransformationHandler().AddTransformation( new VariablePCATransform(DataInfo()), idxCls );
-      }
-      else if (s == "Gauss" || s == "G" ) {
-         GetTransformationHandler().AddTransformation( new VariableGaussTransform(DataInfo()), idxCls );
-      }
-      else if (s == "Norm" || s == "N" ) {
-         GetTransformationHandler().AddTransformation( new VariableNormalizeTransform(DataInfo()), idxCls );
-      }
-      else {
-         if (s != "None")
-            Log() << kFATAL << "<ProcessOptions> Variable transform '"
-                  << s << "' unknown." << Endl;
-      }
-   }
-
    // now we process the options (of the derived class)
    ProcessOptions();
+
+   if(IsNormalised()) {
+      VariableNormalizeTransform* norm = (VariableNormalizeTransform*)
+         GetTransformationHandler().AddTransformation( new VariableNormalizeTransform(DataInfo()), -1 );
+      norm->BuildTransformationFromVarInfo( DataInfo().GetVariableInfos() );
+   }
+   VariableTransformBase *varTrafo(0), *varTrafo2(0);
+   if ( fVarTransformString == "None") {
+      if (fUseDecorr)
+         varTrafo = GetTransformationHandler().AddTransformation( new VariableDecorrTransform(DataInfo()), -1 );
+   } else if ( fVarTransformString == "Decorrelate" ) {
+      varTrafo = GetTransformationHandler().AddTransformation( new VariableDecorrTransform(DataInfo()), -1 );
+   } else if ( fVarTransformString == "PCA"  ) {
+      varTrafo = GetTransformationHandler().AddTransformation( new VariablePCATransform(DataInfo()), -1 );
+   } else if ( fVarTransformString == "GaussDecorr" ) {
+      varTrafo  = GetTransformationHandler().AddTransformation( new VariableGaussTransform(DataInfo()), -1 );
+      varTrafo2 = GetTransformationHandler().AddTransformation( new VariableDecorrTransform(DataInfo()), -1 );
+   } else {
+      Log() << kFATAL << "<ProcessOptions> Variable transform '"
+            << fVarTransformString << "' unknown." << Endl;
+   }
    // Now read decorrelation matrix if available
    if (GetTransformationHandler().GetTransformationList().GetSize() > 0) {
       fin.getline(buf,512);
       while (!TString(buf).BeginsWith("#MAT")) fin.getline(buf,512);
-      GetTransformationHandler().ReadFromStream(fin);
+      if(varTrafo) {
+         TString trafo(fVariableTransformTypeString); trafo.ToLower();
+         varTrafo->ReadTransformationFromStream(fin, trafo );
+      }
+      if(varTrafo2) {
+         TString trafo(fVariableTransformTypeString); trafo.ToLower();
+         varTrafo2->ReadTransformationFromStream(fin, trafo );
+      }
    }
+
 
    if (HasMVAPdfs()) {
       // Now read the MVA PDFs
@@ -1317,6 +1320,9 @@ void TMVA::MethodBase::WriteVarsToStream( std::ostream& o, const TString& prefix
    o << prefix << "NVar " << DataInfo().GetNVariables() << endl;
    std::vector<VariableInfo>::const_iterator varIt = DataInfo().GetVariableInfos().begin();
    for (; varIt!=DataInfo().GetVariableInfos().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
+   o << prefix << "NSpec " << DataInfo().GetNSpectators() << endl;
+   varIt = DataInfo().GetSpectatorInfos().begin();
+   for (; varIt!=DataInfo().GetSpectatorInfos().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
 }
 
 //_______________________________________________________________________
@@ -1373,6 +1379,33 @@ void TMVA::MethodBase::AddVarsXMLTo( void* parent ) const
 }
 
 //_______________________________________________________________________
+void TMVA::MethodBase::AddSpectatorsXMLTo( void* parent ) const 
+{
+   // write spectator info to XML 
+   void* specs = gTools().xmlengine().NewChild(parent, 0, "Spectators");
+
+   UInt_t writeIdx=0;
+   for (UInt_t idx=0; idx<DataInfo().GetSpectatorInfos().size(); idx++) {
+
+      VariableInfo& vi = DataInfo().GetSpectatorInfos()[idx];
+
+      // we do not want to write spectators that are category-cuts,
+      // except if the method is the category method and the spectators belong to it
+      if( vi.GetVarType()=='C' ) {
+         continue;
+         if(GetMethodTypeName()!="Category")
+            continue;
+         if(!vi.GetTitle().BeginsWith(GetMethodName()+":") )
+            continue;
+      }
+      void* spec = gTools().xmlengine().NewChild( specs, 0, "Spectator" );
+      gTools().AddAttr( spec, "SpecIndex", writeIdx++ );
+      vi.AddToXML( spec );
+   }
+   gTools().xmlengine().NewAttr( specs, 0, "NSpec", gTools().StringFromInt(writeIdx) );
+}
+
+//_______________________________________________________________________
 void TMVA::MethodBase::AddTargetsXMLTo( void* parent ) const 
 {
    // write target info to XML 
@@ -1420,6 +1453,45 @@ void TMVA::MethodBase::ReadVariablesFromXML( void* varnode )
          Log() << kINFO << "the correct working of the method):" << Endl;
          Log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << existingVarInfo.GetExpression() << Endl;
          Log() << kINFO << "   var #" << varIdx <<" declared in file  : " << readVarInfo.GetExpression() << Endl;
+         Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
+      }
+      ch = gTools().xmlengine().GetNext(ch);
+   }
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBase::ReadSpectatorsFromXML( void* specnode ) 
+{
+   // read spectator info from XML
+   UInt_t readNSpec;
+   gTools().ReadAttr( specnode, "NSpec", readNSpec);
+
+   if (readNSpec!=DataInfo().GetNSpectators(kFALSE)) {
+      Log() << kFATAL << "You declared "<< DataInfo().GetNSpectators(kFALSE) << " spectators in the Reader"
+            << " while there are " << readNSpec << " spectators declared in the file"
+            << Endl;
+   }
+
+   // we want to make sure all variables are read in the order they are defined
+   VariableInfo readSpecInfo, existingSpecInfo;
+   int specIdx = 0;
+   void* ch = gTools().xmlengine().GetChild(specnode);
+   while (ch) {
+      gTools().ReadAttr( ch, "SpecIndex", specIdx);
+      existingSpecInfo = DataInfo().GetSpectatorInfos()[specIdx];
+      readSpecInfo.ReadFromXML(ch);
+      
+      if (existingSpecInfo.GetExpression() == readSpecInfo.GetExpression()) {
+         readSpecInfo.SetExternalLink(existingSpecInfo.GetExternalLink());
+         existingSpecInfo = readSpecInfo;
+      } 
+      else {
+         Log() << kINFO << "ERROR in <ReadVariablesFromXML>" << Endl;
+         Log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
+         Log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
+         Log() << kINFO << "the correct working of the method):" << Endl;
+         Log() << kINFO << "   var #" << specIdx <<" declared in Reader: " << existingSpecInfo.GetExpression() << Endl;
+         Log() << kINFO << "   var #" << specIdx <<" declared in file  : " << readSpecInfo.GetExpression() << Endl;
          Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
       }
       ch = gTools().xmlengine().GetNext(ch);
@@ -1526,7 +1598,7 @@ TString TMVA::MethodBase::GetWeightFileName() const
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::WriteEvaluationHistosToFile()
+void TMVA::MethodBase::WriteEvaluationHistosToFile(Types::ETreeType treetype)
 {
    // writes all MVA evaluation histograms to file
    BaseDir()->cd();
@@ -1543,23 +1615,15 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile()
       fMVAPdfB->GetPDFHist()->Write();
    }
 
-   Log() << kINFO << "Write Results Histos to File" << Endl;
-
    // write result-histograms
-   Results* results = Data()->GetResults( GetMethodName(), Types::kTesting, Types::kMaxAnalysisType );
-   if (!results) Log() << kFATAL << "<WriteEvaluationHistosToFile> Unknown result: "
-                       << GetTestvarName()+TString("_testing")
-                       << endl;
+   Results* results = Data()->GetResults( GetMethodName(), treetype, Types::kMaxAnalysisType );
+   if (!results)
+      Log() << kFATAL << "<WriteEvaluationHistosToFile> Unknown result: "
+            << GetMethodName() << (treetype==Types::kTraining?"/kTraining":"/kTesting") << "/kMaxAnalysisType" << Endl;
    results->GetStorage()->Write();
 
-   results = Data()->GetResults( GetMethodName(), Types::kTraining, Types::kMaxAnalysisType );
-   if (!results) Log() << kFATAL << "<WriteEvaluationHistosToFile> Unknown result: "
-                       << GetTestvarName()+TString("_training")
-                       << endl;
-   results->GetStorage()->Write();
-
-   GetTransformationHandler().PlotVariables( GetEventCollection( Types::kTesting ), BaseDir() );
-
+   if(treetype==Types::kTesting)
+      GetTransformationHandler().PlotVariables( GetEventCollection( Types::kTesting ), BaseDir() );
 }
 
 //_______________________________________________________________________
@@ -1602,10 +1666,12 @@ Bool_t TMVA::MethodBase::GetLine(std::istream& fin, char* buf )
       s >> analysisType;
       if      (analysisType == "regression"     || analysisType == "Regression")     SetAnalysisType( Types::kRegression );
       else if (analysisType == "classification" || analysisType == "Classification") SetAnalysisType( Types::kClassification );
+      else if (analysisType == "multiclass"     || analysisType == "Multiclass")     SetAnalysisType( Types::kMulticlass );
       else Log() << kFATAL << "Analysis type " << analysisType << " from weight-file not known!" << std::endl;
 
       Log() << kINFO << "Method was trained for " 
-            << (GetAnalysisType() == Types::kRegression ? "Regression" : "Classification") << Endl;
+            << (GetAnalysisType() == Types::kRegression ? "Regression" : 
+		(GetAnalysisType() == Types::kMulticlass ? "Multiclass" : "Classification")) << Endl;
    }
 
    return true;
@@ -2269,7 +2335,7 @@ void TMVA::MethodBase::Statistics( Types::ETreeType treeType, const TString& the
 
       const Event* ev = GetEvent(ievt);
 
-      Double_t theVar = ev->GetVal(varIndex);
+      Double_t theVar = ev->GetValue(varIndex);
       Double_t weight = ev->GetWeight();
 
       if (DataInfo().IsSignal(ev)) {
@@ -2327,7 +2393,7 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    // print general information and configuration state
    fout << endl;
    fout << "/* configuration options =====================================================" << endl << endl;
-   WriteStateToStream( fout, kTRUE );
+   WriteStateToStream( fout );
    fout << endl;
    fout << "============================================================================ */" << endl;
 
@@ -2617,4 +2683,40 @@ Double_t TMVA::MethodBase::GetEffForRoot( Double_t theCut )
    else if (fXmax-theCut < eps) retval = (GetCutOrientation() == kPositive) ? 0.0 : 1.0;
 
    return retval;
+}
+
+//_______________________________________________________________________
+const std::vector<TMVA::Event*>& TMVA::MethodBase::GetEventCollection( Types::ETreeType type) 
+{
+   if (GetTransformationHandler().GetTransformationList().GetEntries() <= 0) {
+      return (Data()->GetEventCollection(type));
+   }
+   Int_t idx = Data()->TreeIndex(type);
+   if (fEventCollections.at(idx) == 0) {
+      fEventCollections.at(idx) = &(Data()->GetEventCollection(type));
+      fEventCollections.at(idx) = GetTransformationHandler().CalcTransformations(*(fEventCollections.at(idx)),kTRUE);
+   }
+   return *(fEventCollections.at(idx));
+}
+
+//_______________________________________________________________________
+TString TMVA::MethodBase::GetTrainingTMVAVersionString() const
+{
+   // calculates the TMVA version string from the training version code on the fly
+   UInt_t a = GetTrainingTMVAVersionCode() & 0xff0000; a>>=16;
+   UInt_t b = GetTrainingTMVAVersionCode() & 0x00ff00; b>>=8;
+   UInt_t c = GetTrainingTMVAVersionCode() & 0x0000ff;
+
+   return TString(Form("%i.%i.%i",a,b,c));
+}
+
+//_______________________________________________________________________
+TString TMVA::MethodBase::GetTrainingROOTVersionString() const
+{
+   // calculates the ROOT version string from the training version code on the fly
+   UInt_t a = GetTrainingROOTVersionCode() & 0xff0000; a>>=16;
+   UInt_t b = GetTrainingROOTVersionCode() & 0x00ff00; b>>=8;
+   UInt_t c = GetTrainingROOTVersionCode() & 0x0000ff;
+
+   return TString(Form("%i.%02i/%02i",a,b,c));
 }

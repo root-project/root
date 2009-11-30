@@ -72,7 +72,7 @@ TMVA::SVKernelMatrix::~SVKernelMatrix()
       fSVKernelMatrix[i] = 0;
    }
    delete fSVKernelMatrix;
-   fSVKernelMatrix = 0;	
+   fSVKernelMatrix = 0;
 }
 
 //_______________________________________________________________________

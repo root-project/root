@@ -128,13 +128,13 @@ void TMVA::BinarySearchTree::Insert( const Event* event )
       fNNodes = 1;
       fSumOfWeights = event->GetWeight();
       ((BinarySearchTreeNode*)this->GetRoot())->SetSelector((UInt_t)0);
-      this->SetPeriode(event->GetNVars());
+      this->SetPeriode(event->GetNVariables());
    }
    else {
       // sanity check:
-      if (event->GetNVars() != (UInt_t)this->GetPeriode()) {
+      if (event->GetNVariables() != (UInt_t)this->GetPeriode()) {
          Log() << kFATAL << "<Insert> event vector length != Periode specified in Binary Tree" << Endl
-               << "--- event size: " << event->GetNVars() << " Periode: " << this->GetPeriode() << Endl
+               << "--- event size: " << event->GetNVariables() << " Periode: " << this->GetPeriode() << Endl
                << "--- and all this when trying filling the "<<fNNodes+1<<"th Node" << Endl;
       }
       // insert a new node at the propper position  
@@ -163,7 +163,7 @@ void TMVA::BinarySearchTree::Insert( const Event *event,
          BinarySearchTreeNode* current = new BinarySearchTreeNode(event); 
          fNNodes++;
          fSumOfWeights += event->GetWeight();
-         current->SetSelector(fCurrentDepth%((Int_t)event->GetNVars()));
+         current->SetSelector(fCurrentDepth%((Int_t)event->GetNVariables()));
          current->SetParent(node);          // Set the new node's previous node.
          current->SetPos('l');
          current->SetDepth( node->GetDepth() + 1 );
@@ -180,7 +180,7 @@ void TMVA::BinarySearchTree::Insert( const Event *event,
          BinarySearchTreeNode* current = new BinarySearchTreeNode(event);   
          fNNodes++;
          fSumOfWeights += event->GetWeight();
-         current->SetSelector(fCurrentDepth%((Int_t)event->GetNVars()));
+         current->SetSelector(fCurrentDepth%((Int_t)event->GetNVariables()));
          current->SetParent(node);              // Set the new node's previous node.
          current->SetPos('r');
          current->SetDepth( node->GetDepth() + 1 );
@@ -290,7 +290,7 @@ void TMVA::BinarySearchTree::NormalizeTree ( std::vector< std::pair<Double_t, co
    
    if (actDim == fPeriod)  actDim = 0;
    for (std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator i=leftBound; i!=rightBound; i++) {
-      i->first = i->second->GetVal( actDim );
+      i->first = i->second->GetValue( actDim );
    }
    
    std::sort( leftBound, rightBound );
@@ -302,11 +302,11 @@ void TMVA::BinarySearchTree::NormalizeTree ( std::vector< std::pair<Double_t, co
    while (true) {
       rightTemp--; 
       if (rightTemp == leftTemp ) {
-	 break;
+         break;
       }
       leftTemp++;  
       if (leftTemp  == rightTemp) {
-	 break;
+         break;
       }
    }
   
@@ -315,7 +315,7 @@ void TMVA::BinarySearchTree::NormalizeTree ( std::vector< std::pair<Double_t, co
 
    if (mid!=leftBound) midTemp--;
 
-   while (mid != leftBound && mid->second->GetVal( actDim ) == midTemp->second->GetVal( actDim ))  {
+   while (mid != leftBound && mid->second->GetValue( actDim ) == midTemp->second->GetValue( actDim ))  {
       mid--; 
       midTemp--;
    }

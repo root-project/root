@@ -10,10 +10,10 @@
  *      Linear Discriminant (Simple Linear Regression)                            *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- * 	  Krzysztof Danielowski <danielow@cern.ch> - IFJ PAN & AGH, Poland          *
- *  	  Kamil Kraszewski      <kalq@cern.ch>     - IFJ PAN & UJ, Poland           *
+ *      Krzysztof Danielowski <danielow@cern.ch> - IFJ PAN & AGH, Poland          *
+ *      Kamil Kraszewski      <kalq@cern.ch>     - IFJ PAN & UJ, Poland           *
  *      Maciej Kruk           <mkruk@cern.ch>    - IFJ PAN & AGH, Poland          *
- *      Peter Speckmayer <peter.speckmayer@cern.ch>  - CERN, Switzerland          *
+ *      Peter Speckmayer      <peter.speckmayer@cern.ch>  - CERN, Switzerland     *
  *      Jan Therhaag          <therhaag@physik.uni-bonn.de> - Uni Bonn, Germany   *
  *                                                                                *
  * Copyright (c) 2008:                                                            *
@@ -31,11 +31,11 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// MethodLD	                                                            //
+// MethodLD                                                             //
 //                                                                      //
-// Linear Discriminant 						                              	//
-// Can compute multidimensional output for regression		               //
-// (although it computes every dimension separately)		               // 
+// Linear Discriminant                                                  //
+// Can compute multidimensional output for regression                   //
+// (although it computes every dimension separately)                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +54,7 @@ namespace TMVA {
 
    public:
    
-      // constructor	  
+      // constructor
       MethodLD( const TString& jobName, 
                 const TString& methodTitle, 
                 DataSetInfo& dsi,
@@ -65,7 +65,7 @@ namespace TMVA {
       MethodLD( DataSetInfo& dsi, 
                 const TString& theWeightFile, 
                 TDirectory* theTargetDir = 0 );
-		
+
       // destructor
       virtual ~MethodLD( void );
 
@@ -76,14 +76,12 @@ namespace TMVA {
 
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0 );
-		
+
       // calculate the Regression value
       virtual const std::vector<Float_t>& GetRegressionValues();
 
-      using MethodBase::WriteWeightsToStream;    
       using MethodBase::ReadWeightsFromStream;   
 
-      void WriteWeightsToStream ( std::ostream & o ) const;
       void AddWeightsXMLTo      ( void* parent ) const;
 
       void ReadWeightsFromStream( std::istream & i );
@@ -100,20 +98,19 @@ namespace TMVA {
 
    private:
 
-		
-      Int_t fNRegOut;	// size of the output
+      Int_t fNRegOut; // size of the output
  
       TMatrixD *fSumMatx;              // Sum of coordinates product matrix 
       TMatrixD *fSumValMatx;           // Sum of values multiplied by coordinates
       TMatrixD *fCoeffMatx;            // Matrix of coefficients
       std::vector< std::vector<Double_t>* > *fLDCoeff; // LD coefficients
-		
+
       // default initialisation called by all constructors
       void Init( void );
-		
+
       // Initialization and allocation of matrices
       void InitMatrices( void );
-		
+
       // Compute fSumMatx
       void GetSum( void );
 
@@ -125,7 +122,7 @@ namespace TMVA {
       
       // nice output
       void PrintCoefficients( void );
-		
+
       ClassDef(MethodLD,0) //Linear discriminant analysis
          };
 } // namespace TMVA

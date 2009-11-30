@@ -123,19 +123,19 @@ namespace TMVA {
 ///
 /////////////////////////////////////////////////////////////////
 
-#define REGISTER_METHOD(CLASS)					\
-   namespace								\
-   {									\
+#define REGISTER_METHOD(CLASS) \
+   namespace \
+   { \
       TMVA::IMethod* CreateMethod##CLASS(const TString& job, const TString& title, TMVA::DataSetInfo& dsi, const TString& option) \
-      {									\
+      { \
          if(job=="" && title=="") { \
             return (TMVA::IMethod*) new TMVA::Method##CLASS(dsi, option); \
          } else {  \
             return (TMVA::IMethod*) new TMVA::Method##CLASS(job, title, dsi, option); \
          }  \
       }  \
-      Bool_t RegisteredMethod = TMVA::ClassifierFactory::Instance().	\
-	       Register(#CLASS, CreateMethod##CLASS);				\
+      Bool_t RegisteredMethod = TMVA::ClassifierFactory::Instance(). \
+         Register(#CLASS, CreateMethod##CLASS);                         \
       Bool_t AddedTypeMapping = TMVA::Types::Instance().AddTypeMapping(TMVA::Types::k##CLASS, #CLASS); \
    }
 

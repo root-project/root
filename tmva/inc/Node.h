@@ -41,6 +41,10 @@
 #include "Rtypes.h"
 #endif
 
+#ifndef ROOT_TMVA_Version
+#include "TMVA/Version.h"
+#endif
+
 namespace TMVA {
 
    class Node;
@@ -107,7 +111,7 @@ namespace TMVA {
       virtual void PrintRec ( std::ostream& os ) const = 0;
 
       void* AddXMLTo(void* parent) const;
-      void  ReadXML(void* node);
+      void  ReadXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void AddAttributesToNode(void* node) const = 0;
       virtual void AddContentToNode(std::stringstream& s) const = 0;
 
@@ -131,8 +135,8 @@ namespace TMVA {
 
       int GetCount(){return fgCount;}
 
-      virtual Bool_t ReadDataRecord( std::istream& ) = 0;
-      virtual void ReadAttributes(void* node) = 0;
+      virtual Bool_t ReadDataRecord( std::istream&, UInt_t tmva_Version_Code = TMVA_VERSION_CODE ) = 0;
+      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE  ) = 0;
       virtual void ReadContent(std::stringstream& s) =0;
 
    private: 

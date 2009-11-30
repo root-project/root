@@ -60,7 +60,7 @@ namespace TMVA {
       virtual const Event* InverseTransform(const Event* const, Int_t cls ) const;
 
       void WriteTransformationToStream ( std::ostream& ) const;
-      void ReadTransformationFromStream( std::istream& );
+      void ReadTransformationFromStream( std::istream&, const TString& );
 
       virtual void AttachXMLTo(void* parent);
       virtual void ReadFromXML( void* trfnode );
@@ -71,7 +71,7 @@ namespace TMVA {
    private:
 
       void CalculatePrincipalComponents( const std::vector<Event*>& );
-      std::vector<Double_t> X2P( const std::vector<Float_t>&, Int_t cls ) const;
+      std::vector<Float_t> X2P( const std::vector<Float_t>&, Int_t cls ) const;
 
       //      mutable Event*     fTransformedEvent;
 

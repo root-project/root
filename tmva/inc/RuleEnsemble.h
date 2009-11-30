@@ -554,7 +554,7 @@ inline Double_t TMVA::RuleEnsemble::EvalLinEventRaw( UInt_t vind, const TMVA::Ev
 {
    // evaluate the event linearly (not normalized)
 
-   Double_t val  = e.GetVal(vind);
+   Double_t val  = e.GetValue(vind);
    Double_t rval = TMath::Min( fLinDP[vind], TMath::Max( fLinDM[vind], val ) );
    if (norm) rval *= fLinNorm[vind];
    return rval;
@@ -565,7 +565,7 @@ inline Double_t TMVA::RuleEnsemble::EvalLinEventRaw( UInt_t vind, UInt_t evtidx,
 {
    // evaluate the event linearly (not normalized)
 
-   Double_t val  = (*fRuleMapEvents)[evtidx]->GetVal(vind);
+   Double_t val  = (*fRuleMapEvents)[evtidx]->GetValue(vind);
    Double_t rval = TMath::Min( fLinDP[vind], TMath::Max( fLinDM[vind], val ) );
    if (norm) rval *= fLinNorm[vind];
    return rval;

@@ -48,14 +48,14 @@ TMVA::SVEvent::SVEvent()
 {
 }
 
-//_______________________________________________________________________	 
+//_______________________________________________________________________
 TMVA::SVEvent::SVEvent( const Event* event, const Float_t C_par )
    : fDataVector(event->GetValues()),
      fCweight(C_par*event->GetWeight()),
      fAlpha(0),
      fAlpha_p(0),
      fErrorCache(0),
-     fNVar(event->GetNVariables()),					
+     fNVar(event->GetNVariables()),
      fTypeFlag(2*event->GetClass()-1),
      fIdx(2*event->GetClass()-1),
      fNs(0),

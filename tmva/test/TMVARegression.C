@@ -13,7 +13,7 @@
  * The methods to be used can be switched on and off by means of booleans, or     *
  * via the prompt command, for example:                                           *
  *                                                                                *
- *    root -l TMVARegression.C\(\"Fisher,Likelihood\"\)                           *
+ *    root -l TMVARegression.C\(\"LD,MLP\"\)                                      *
  *                                                                                *
  * (note that the backslashes are mandatory)                                      *
  * If no method given, a default set is used.                                     *
@@ -79,9 +79,10 @@ void TMVARegression( TString myMethodList = "" )
    // ---
    Use["MLP"]             = 1; 
    // ---
-   Use["SVM"]             = 1;
+   Use["SVM"]             = 0;
    // ---
-   Use["BDT"]             = 1;
+   Use["BDT"]             = 0;
+   Use["BDTG"]            = 0;
    // ---------------------------------------------------------------
 
    std::cout << std::endl;
@@ -215,7 +216,7 @@ void TMVARegression( TString myMethodList = "" )
 
    if (Use["PDEFoam"])
        factory->BookMethod( TMVA::Types::kPDEFoam, "PDEFoam", 
-			    "!H:!V:MultiTargetRegression=F:TargetSelection=Mpv:TailCut=0.001:VolFrac=0.0333:nActiveCells=1500:nSampl=2000:nBin=5:Compress=T:Kernel=None:CutNmin=F:Nmin=100:VarTransform=None" );
+			    "!H:!V:MultiTargetRegression=F:TargetSelection=Mpv:TailCut=0.001:VolFrac=0.0333:nActiveCells=500:nSampl=2000:nBin=5:Compress=T:Kernel=None:CutNmin=T:Nmin=10:VarTransform=None" );
 
 
    // K-Nearest Neighbour classifier (KNN)
@@ -253,17 +254,20 @@ void TMVARegression( TString myMethodList = "" )
    if (Use["SVM"])
       factory->BookMethod( TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm" );
 
-   // Boosted Decision Trees (second one with decorrelation)
+   // Boosted Decision Trees
    if (Use["BDT"])
      factory->BookMethod( TMVA::Types::kBDT, "BDT",
                            "!H:!V:NTrees=100:nEventsMin=5:BoostType=AdaBoostR2:SeparationType=RegressionVariance:nCuts=20:PruneMethod=CostComplexity:PruneStrength=30" );
 
+   if (Use["BDTG"])
+     factory->BookMethod( TMVA::Types::kBDT, "BDTG",
+                           "!H:!V:NTrees=200::BoostType=Grad:Shrinkage=1.0:UseBaggedGrad:SeparationType=GiniIndex:nCuts=20:NNodesMax=5" );
    // --------------------------------------------------------------------------------------------------
 
    // ---- Now you can tell the factory to train, test, and evaluate the MVAs
 
    // Train MVAs using the set of training events
-   factory->TrainAllMethodsForRegression();
+   factory->TrainAllMethods();
 
    // ---- Evaluate all MVAs using the set of test events
    factory->TestAllMethods();

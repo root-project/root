@@ -252,10 +252,10 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
          else {
             continue;
          }
-	 
+
          for (UInt_t d = 0; d < fDimn; ++d) {
             fVar[d].push_back(event->GetVar(d));
-         }	 
+         }
 
          evec.push_back(*event);
       }
@@ -474,7 +474,7 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
 
       if (dvec.size() < 2) {
          Log() << kFATAL << "Missing " << mod << " variable" << Endl;
-         return 0;	 
+         return 0;
       }
       
       UInt_t ichild = 1;
@@ -571,7 +571,7 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
       
       if (!(lpos < rpos)) {
          Log() << kFATAL << "ModulekNN::ComputeMetric() - min value is greater than max value" << Endl;
-         continue;	 
+         continue;
       }
       
       // Rustem: please find a solution that does not use distance (it does not exist on solaris)
@@ -591,7 +591,7 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
       
       for (UInt_t ivar = 0; ivar < fDimn; ++ivar) {
          fVar[ivar].push_back(fEvent[ievent].GetVar(ivar));
-      }	 
+      }
    }
 }
 
@@ -654,7 +654,7 @@ void TMVA::kNN::ModulekNN::Print(ostream &os) const
       os << ++count << ": " << it->second << ": " << it->first->GetEvent() << std::endl;
       
       const Event &event = it->first->GetEvent();
-      for (UShort_t ivar = 0; ivar < event.GetNVar(); ++ivar) {	 
+      for (UShort_t ivar = 0; ivar < event.GetNVar(); ++ivar) {
          if (min.find(ivar) == min.end()) {
             min[ivar] = event.GetVar(ivar);
          }

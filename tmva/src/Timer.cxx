@@ -169,7 +169,7 @@ void TMVA::Timer::DrawProgressBar( TString theString )
 }
 
 //_______________________________________________________________________
-void TMVA::Timer::DrawProgressBar( Int_t icounts ) 
+void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  ) 
 {
    // draws progress bar in color or B&W
    // caution: 
@@ -207,6 +207,9 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts )
       std::clog << "] " ;
       std::clog << "(" << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" 
                << ", " << "time left: " << this->GetLeftTime( icounts ) << ") ";
+   }
+   if (comment != "") {
+      std::clog << "[" << comment << "]  ";
    }
    std::clog << "\r" << std::flush; 
 }

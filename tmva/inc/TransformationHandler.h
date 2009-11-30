@@ -77,7 +77,7 @@ namespace TMVA {
       // overrides the reference classes of all added transformations. Handle with care!!!
       void         SetTransformationReferenceClass( Int_t cls ); 
 
-      void         AddTransformation(VariableTransformBase*, Int_t cls );
+      VariableTransformBase* AddTransformation(VariableTransformBase*, Int_t cls );
       const TList& GetTransformationList()   const { return fTransformations; }
       Int_t        GetNumOfTransformations() const { return fTransformations.GetSize(); }
       std::vector<Event*>* CalcTransformations( const std::vector<Event*>&, Bool_t createNewVector = kFALSE );

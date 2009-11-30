@@ -93,7 +93,7 @@ namespace TMVA {
       // Adds an item to the tree, 
       void Insert( const Event * );
     
-      //get sum of weights of the nodes;
+      // get sum of weights of the nodes;
       Double_t GetSumOfWeights( void ) const;
 
       //get sum of weights of the nodes of given type;
@@ -101,6 +101,7 @@ namespace TMVA {
     
       //set the periode (number of variables)
       void SetPeriode( Int_t p )      { fPeriod = p; }
+
       // return periode (number of variables)
       UInt_t  GetPeriode( void ) const { return fPeriod; }
 

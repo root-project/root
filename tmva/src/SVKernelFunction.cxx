@@ -32,14 +32,22 @@
 
 //_______________________________________________________________________
 TMVA::SVKernelFunction::SVKernelFunction()
-   : fGamma(0.) 
+   : fGamma(0.),
+     fKernel(kRBF),  // kernel, order, theta, and kappa are for backward compatibility
+     fOrder(0),
+     fTheta(0),
+     fKappa(0)
 {
    // constructor
 }
 
 //_______________________________________________________________________
 TMVA::SVKernelFunction::SVKernelFunction( Float_t gamma )
-   : fGamma(gamma)
+   : fGamma(gamma),
+     fKernel(kRBF),  // kernel, order, theta, and kappa are for backward compatibility
+     fOrder(0),
+     fTheta(0),
+     fKappa(0)
 {
    // constructor
 }
@@ -51,14 +59,63 @@ TMVA::SVKernelFunction::~SVKernelFunction()
 }
 
 //_______________________________________________________________________
+void TMVA::SVKernelFunction::setCompatibilityParams(EKernelType k, UInt_t order, Float_t theta, Float_t kappa) {
+   // set old options for compatibility mode
+   fKernel = k;
+   fOrder = order;
+   fTheta = theta;
+   fKappa = kappa;
+}
+
+//_______________________________________________________________________
 Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
 {
-   std::vector<Float_t> *v1 = ev1->GetDataVector();
-   std::vector<Float_t> *v2 = ev2->GetDataVector();
 
-   Float_t norm = 0;
-   for (UInt_t i = 0; i < v1->size(); i++) norm += ((*v1)[i] -(*v2)[i]) *((*v1)[i] -(*v2)[i]) ;
+   switch(fKernel) {
+   case kRBF:
+      {
+         std::vector<Float_t> *v1 = ev1->GetDataVector();
+         std::vector<Float_t> *v2 = ev2->GetDataVector();
+         
+         Float_t norm = 0;
+         for (UInt_t i = 0; i < v1->size(); i++) norm += ((*v1)[i] -(*v2)[i]) *((*v1)[i] -(*v2)[i]) ;
+         
+         return TMath::Exp(-norm*fGamma);
+      }
+   case kPolynomial:
+      {
+         std::vector<Float_t> *v1 = ev1->GetDataVector();
+         std::vector<Float_t> *v2 = ev2->GetDataVector();
+         Float_t prod = fTheta;
+         for (UInt_t i = 0; i < v1->size(); i++) prod += (*v1)[i] * (*v2)[i];
 
-   return TMath::Exp(-norm*fGamma);
+         Float_t result = 1.;
+         Int_t i = fOrder;
+         for (; i > 0; i /= 2) {
+            if (i%2) result = prod; 
+            prod *= prod; 
+         } 
+         return result;
+      }
+   case kLinear:
+      {
+         std::vector<Float_t> *v1 = ev1->GetDataVector();
+         std::vector<Float_t> *v2 = ev2->GetDataVector();
+         Float_t prod = 0;
+         for (UInt_t i = 0; i < v1->size(); i++) prod += (*v1)[i] * (*v2)[i];
+         return prod;
+      }
+   case kSigmoidal:
+      {
+         std::vector<Float_t> *v1 = ev1->GetDataVector();
+         std::vector<Float_t> *v2 = ev2->GetDataVector();
+         Float_t prod = 0;
+         for (UInt_t i = 0; i < v1->size(); i++) prod += ((*v1)[i] -(*v2)[i]) *((*v1)[i] -(*v2)[i]) ;
+         prod *= fKappa;
+         prod += fTheta;
+         return TMath::TanH( prod );
+      }
+   }
+   return 0;
 }
 

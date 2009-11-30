@@ -348,18 +348,6 @@ Double_t TMVA::MethodCommittee::Bagging( UInt_t imember )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodCommittee::WriteWeightsToStream( ostream& o ) const
-{
-   // write the state of the method to an output stream
-   for (UInt_t imember=0; imember<GetCommittee().size(); imember++) {
-      o << endl;
-      o << "------------------------------ new member: " << imember << " ---------------" << endl;
-      o << "boost weight: " << GetBoostWeights()[imember] << endl;
-      (dynamic_cast<MethodBase*>(GetCommittee()[imember]))->WriteStateToStream( o );
-   }   
-}
-
-//_______________________________________________________________________
 void TMVA::MethodCommittee::AddWeightsXMLTo( void* /*parent*/ ) const {
    Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }

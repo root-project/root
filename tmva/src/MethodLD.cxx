@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Linear Discriminant - Simple Linear Regression and Classification 	       *
+ *      Linear Discriminant - Simple Linear Regression and Classification         *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Krzysztof Danielowski   <danielow@cern.ch>      - IFJ PAN & AGH, Poland   *
@@ -58,7 +58,7 @@ TMVA::MethodLD::MethodLD( const TString& jobName,
    fCoeffMatx ( 0 ),
    fLDCoeff   ( 0 )
 {
-	// standard constructor for the LD 
+   // standard constructor for the LD 
 }
 
 //_______________________________________________________________________
@@ -69,7 +69,7 @@ TMVA::MethodLD::MethodLD( DataSetInfo& theData, const TString& theWeightFile, TD
      fCoeffMatx ( 0 ),
      fLDCoeff   ( 0 )
 {
-	// constructor from weight file
+   // constructor from weight file
 }
 
 //_______________________________________________________________________
@@ -96,7 +96,7 @@ TMVA::MethodLD::~MethodLD( void )
    if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = 0; }
    if (fLDCoeff) { 
       for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++)
-         if (*vi) {	delete *vi;	*vi = 0;	}
+         if (*vi) { delete *vi; *vi = 0; }
       delete fLDCoeff; fLDCoeff = 0; 
    }
 }
@@ -153,7 +153,7 @@ Double_t TMVA::MethodLD::GetMvaValue( Double_t* err )
 
    return (*fRegressionReturnVal)[0];
 }
-		  
+
 //_______________________________________________________________________
 const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 {
@@ -178,10 +178,8 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 
    const Event* evT2 = GetTransformationHandler().InverseTransform( evT );
    fRegressionReturnVal->clear();
-   for (Int_t iout = 0; iout<fNRegOut; iout++) {
-      fRegressionReturnVal->push_back(evT2->GetTarget(iout));
-      //std::cout<< "==LD :: ["<< iout<<"]\t"<< evT2->GetTarget(iout)<<std::endl;
-   }
+   for (Int_t iout = 0; iout<fNRegOut; iout++) fRegressionReturnVal->push_back(evT2->GetTarget(iout));
+
    delete evT;
    return (*fRegressionReturnVal);
 }
@@ -215,19 +213,19 @@ void TMVA::MethodLD::GetSum( void )
 
       if (IgnoreEventsWithNegWeightsInTraining() && weight <= 0) continue;
 
-      // Sum of weights		
+      // Sum of weights
       (*fSumMatx)( 0, 0 ) += weight;
 
       // Sum of coordinates
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
-         (*fSumMatx)( ivar+1, 0 ) += ev->GetVal( ivar ) * weight;
-         (*fSumMatx)( 0, ivar+1 ) += ev->GetVal( ivar ) * weight;
+         (*fSumMatx)( ivar+1, 0 ) += ev->GetValue( ivar ) * weight;
+         (*fSumMatx)( 0, ivar+1 ) += ev->GetValue( ivar ) * weight;
       }
-		
+
       // Sum of products of coordinates
       for (UInt_t ivar=0; ivar<nvar; ivar++)
          for (UInt_t jvar=0; jvar<nvar; jvar++)
-            (*fSumMatx)( ivar+1, jvar+1 ) += ev->GetVal( ivar ) * ev->GetVal( jvar ) * weight;
+            (*fSumMatx)( ivar+1, jvar+1 ) += ev->GetValue( ivar ) * ev->GetValue( jvar ) * weight;
    }
 }
 
@@ -236,11 +234,11 @@ void TMVA::MethodLD::GetSumVal( void )
 {
    //Calculates the vector transposed(X)*W*Y with Y being the target vector
    const UInt_t nvar = DataInfo().GetNVariables();
-	
+
    for (Int_t ivar = 0; ivar<fNRegOut; ivar++)
       for (UInt_t jvar = 0; jvar<=nvar; jvar++)
          (*fSumValMatx)(jvar,ivar) = 0;
-		
+
    // Sum of coordinates multiplied by values
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
 
@@ -251,19 +249,18 @@ void TMVA::MethodLD::GetSumVal( void )
       // in case event with neg weights are to be ignored
       if (IgnoreEventsWithNegWeightsInTraining() && weight <= 0) continue; 
 
-	
       for (Int_t ivar=0; ivar<fNRegOut; ivar++) {
 
          Double_t val = weight;
 
          if (!DoRegression())
             val *= ev->IsSignal();
-         else	//for regression
+         else //for regression
             val *= ev->GetTarget( ivar ); 
-	 
+
          (*fSumValMatx)( 0,ivar ) += val; 
          for (UInt_t jvar=0; jvar<nvar; jvar++) 
-            (*fSumValMatx)(jvar+1,ivar ) += ev->GetVal(jvar) * val;
+            (*fSumValMatx)(jvar+1,ivar ) += ev->GetValue(jvar) * val;
       }
    }
 }
@@ -275,7 +272,6 @@ void TMVA::MethodLD::GetLDCoeff( void )
    const UInt_t nvar = DataInfo().GetNVariables();
 
    for (Int_t ivar = 0; ivar<fNRegOut; ivar++){
-	
       TMatrixD invSum( *fSumMatx );
       if ( TMath::Abs(invSum.Determinant()) < 10E-24 ) {
          Log() << kWARNING << "<GetCoeff> matrix is almost singular with determinant="
@@ -306,24 +302,12 @@ void TMVA::MethodLD::GetLDCoeff( void )
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodLD::WriteWeightsToStream( std::ostream& o ) const
-{  
-   // save the weights
-   for (Int_t iout=0; iout<fNRegOut; iout++){
-      for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++)
-         o << std::setprecision(12) << (*(*fLDCoeff)[iout])[icoeff] << endl;
-   }
-}
-
-//_______________________________________________________________________
 void  TMVA::MethodLD::ReadWeightsFromStream( istream& istr )
 {
    // read LD coefficients from weight file
-   for (Int_t iout=0; iout<fNRegOut; iout++) {
-     for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++) {
-	  istr >> (*(*fLDCoeff)[iout])[icoeff];
-     }
-   }
+   for (Int_t iout=0; iout<fNRegOut; iout++)
+      for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++)
+         istr >> (*(*fLDCoeff)[iout])[icoeff];
 }
 
 //_______________________________________________________________________
@@ -360,7 +344,7 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
    // create vector with coefficients (double vector due to arbitrary output dimension)
    if (fLDCoeff) { 
       for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++)
-         if (*vi) {	delete *vi;	*vi = 0;	}
+         if (*vi) { delete *vi; *vi = 0; }
       delete fLDCoeff; fLDCoeff = 0; 
    }
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);
@@ -437,7 +421,7 @@ const TMVA::Ranking* TMVA::MethodLD::CreateRanking()
 void TMVA::MethodLD::DeclareOptions()
 {
    //MethodLD options
-	AddPreDefVal(TString("LD"));
+   AddPreDefVal(TString("LD"));
 }
 
 //_______________________________________________________________________

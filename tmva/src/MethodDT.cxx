@@ -458,13 +458,6 @@ Double_t TMVA::MethodDT::TestTreeQuality( DecisionTree *dt )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodDT::WriteWeightsToStream( ostream& o) const
-{  
-   // and save the Weights
-   fTree->Print(o);
-}
-
-//_______________________________________________________________________
 void TMVA::MethodDT::AddWeightsXMLTo( void* /*parent*/ ) const 
 {
    Log() << kFATAL << "Please implement writing of weights as XML" << Endl;

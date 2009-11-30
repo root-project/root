@@ -47,6 +47,7 @@
 #include "Riostream.h"
 #include "TRandom3.h"
 #include "TH2F.h"
+#include "TH1.h"
 #include "TXMLEngine.h"
 
 #include "TMVA/MethodBase.h"
@@ -106,9 +107,9 @@ void TMVA::MethodANNBase::DeclareOptions()
    //                                                       used at the neuronn
    //                
 
-   DeclareOptionRef( fNcycles    = 500,       "NCycles",      "Number of training cycles" );
-   DeclareOptionRef( fLayerSpec  = "N,N-1",   "HiddenLayers", "Specification of hidden layer architecture" );
-   DeclareOptionRef( fNeuronType = "sigmoid", "NeuronType",   "Neuron activation function type" );
+   DeclareOptionRef( fNcycles    = 500,       "NCycles",         "Number of training cycles" );
+   DeclareOptionRef( fLayerSpec  = "N,N-1",   "HiddenLayers",    "Specification of hidden layer architecture" );
+   DeclareOptionRef( fNeuronType = "sigmoid", "NeuronType",      "Neuron activation function type" );
 
    TActivationChooser aChooser;
    vector<TString>* names = aChooser.GetAllActivationNames();
@@ -126,21 +127,12 @@ void TMVA::MethodANNBase::DeclareOptions()
 }
 
 
-//_______________________________________________________________________
-void TMVA::MethodANNBase::SetAnalysisType( Types::EAnalysisType type )
-{
-   // decode the options in the option string (can only be done after the analysis type is known)
-   MethodBase::SetAnalysisType( type );
-
-   vector<Int_t>* layout = ParseLayoutString(fLayerSpec);
-   BuildNetwork(layout);
-}
-
-
 //______________________________________________________________________________
 void TMVA::MethodANNBase::ProcessOptions()
 {
    // do nothing specific at this moment
+   vector<Int_t>* layout = ParseLayoutString(fLayerSpec);
+   BuildNetwork(layout);
 }
 
 //______________________________________________________________________________
@@ -191,7 +183,10 @@ void TMVA::MethodANNBase::InitANNBase()
    fEstimatorHistTrain = NULL;  
    fEstimatorHistTest  = NULL;  
 
-   //SetNormalised( kTRUE ); obsolete!
+   // reset monitorign histogram vectors
+   fEpochMonHistS.clear();
+   fEpochMonHistB.clear();
+   fEpochMonHistW.clear();
 
    // these will be set in BuildNetwork()
    fInputLayer = NULL;
@@ -549,7 +544,7 @@ Double_t TMVA::MethodANNBase::GetMvaValue( Double_t* err )
 
    for (UInt_t i = 0; i < GetNvar(); i++) {
       neuron = (TNeuron*)inputLayer->At(i);
-      neuron->ForceValue( ev->GetVal(i) );
+      neuron->ForceValue( ev->GetValue(i) );
    }
    ForceNetworkCalculations();
 
@@ -575,7 +570,7 @@ const std::vector<Float_t> &TMVA::MethodANNBase::GetRegressionValues()
 
    for (UInt_t i = 0; i < GetNvar(); i++) {
       neuron = (TNeuron*)inputLayer->At(i);
-      neuron->ForceValue( ev->GetVal(i) );
+      neuron->ForceValue( ev->GetValue(i) );
    }
    ForceNetworkCalculations();
 
@@ -597,30 +592,8 @@ const std::vector<Float_t> &TMVA::MethodANNBase::GetRegressionValues()
    }
 
    delete evT;
-	
-   return *fRegressionReturnVal;
-}
 
-//_______________________________________________________________________
-void TMVA::MethodANNBase::WriteWeightsToStream( ostream & o) const
-{
-   // write the weights stream
-   Int_t numLayers = fNetwork->GetEntriesFast();
-   o << "Weights" << endl;
-   for (Int_t i = 0; i < numLayers; i++) {
-      TObjArray* layer = (TObjArray*)fNetwork->At(i);
-      Int_t numNeurons = layer->GetEntriesFast();
-      for (Int_t j = 0; j < numNeurons; j++) {
-         TNeuron* neuron = (TNeuron*)layer->At(j);
-         Int_t numSynapses = neuron->NumPostLinks();
-         for (Int_t k = 0; k < numSynapses; k++) {
-            TSynapse* synapse = neuron->PostLinkAt(k);
-            o << "(layer" << i << ",neuron" << j << ")-(layer" 
-              << i+1 << ",neuron" << k << "): " 
-              << synapse->GetWeight() << endl;
-         }
-      }
-   }
+   return *fRegressionReturnVal;
 }
 
 //_______________________________________________________________________
@@ -731,6 +704,7 @@ void TMVA::MethodANNBase::ReadWeightsFromStream( istream & istr)
 
    ForceWeights(weights);
    
+
    delete weights;
 }
 
@@ -776,16 +750,11 @@ const TMVA::Ranking* TMVA::MethodANNBase::CreateRanking()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
+void TMVA::MethodANNBase::CreateWeightMonitoringHists( const TString& bulkname, 
+                                                       std::vector<TH1*>* hv ) const
 {
-   // write histograms to file
-   PrintMessage(Form("write special histos to file: %s", BaseDir()->GetPath()), kTRUE);
-
-   TH2F*      hist;
+   TH2F* hist;
    Int_t numLayers = fNetwork->GetEntriesFast();
-
-   if (fEstimatorHistTrain) fEstimatorHistTrain->Write();
-   if (fEstimatorHistTest ) fEstimatorHistTest ->Write();
 
    for (Int_t i = 0; i < numLayers-1; i++) {
       
@@ -794,7 +763,7 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
       Int_t numNeurons1 = layer1->GetEntriesFast();
       Int_t numNeurons2 = layer2->GetEntriesFast();
       
-      TString name = Form("weights_hist%i%i", i, i+1);
+      TString name = Form("%s%i%i", bulkname.Data(), i, i+1);
       hist = new TH2F(name + "", name + "", 
                       numNeurons1, 0, numNeurons1, numNeurons2, 0, numNeurons2);
       
@@ -811,9 +780,42 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
          }
       }
       
-      hist->Write();
-      delete hist;
+      if (hv) hv->push_back( hist );
+      else {
+         hist->Write();
+         delete hist;
+      }
    }
+}
+
+//_______________________________________________________________________
+void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
+{
+   // write histograms to file
+   PrintMessage(Form("write special histos to file: %s", BaseDir()->GetPath()), kTRUE);
+
+   if (fEstimatorHistTrain) fEstimatorHistTrain->Write();
+   if (fEstimatorHistTest ) fEstimatorHistTest ->Write();
+
+   // histograms containing weights for architecture plotting (used in macro "network.C")
+   CreateWeightMonitoringHists( "weights_hist" );
+
+   // now save all the epoch-wise monitoring information
+   TDirectory* epochdir = BaseDir()->mkdir( "EpochMonitoring" );
+   epochdir->cd();
+   for (std::vector<TH1*>::const_iterator it = fEpochMonHistS.begin(); it != fEpochMonHistS.end(); it++) {
+      (*it)->Write();
+      delete (*it);
+   }
+   for (std::vector<TH1*>::const_iterator it = fEpochMonHistB.begin(); it != fEpochMonHistB.end(); it++) {
+      (*it)->Write();
+      delete (*it);
+   }
+   for (std::vector<TH1*>::const_iterator it = fEpochMonHistW.begin(); it != fEpochMonHistW.end(); it++) {
+      (*it)->Write();
+      delete (*it);
+   }
+   BaseDir()->cd();
 }
 
 //_______________________________________________________________________

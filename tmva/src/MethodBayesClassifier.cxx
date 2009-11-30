@@ -99,13 +99,6 @@ void TMVA::MethodBayesClassifier::Train( void )
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodBayesClassifier::WriteWeightsToStream( ostream & o ) const
-{  
-   // write the weight from the training to a file (stream)
-   o << "whatever" << endl;
-}
-
-//_______________________________________________________________________
 void TMVA::MethodBayesClassifier::AddWeightsXMLTo( void* /*parent*/ ) const {
    Log() << kFATAL << "Please implement writing of weights as XML" << Endl;
 }

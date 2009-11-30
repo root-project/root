@@ -205,7 +205,7 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
       sumOfWeights += weight;
 
       // mean values
-      for (ivar=0; ivar<nvar; ivar++) xval[ivar] = ev->GetVal(ivar);
+      for (ivar=0; ivar<nvar; ivar++) xval[ivar] = ev->GetValue(ivar);
 
       // covariance matrix         
       for (ivar=0; ivar<nvar; ivar++) {
@@ -258,7 +258,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event* e,  Types::ESBType type ) co
    UInt_t ivar,jvar;
    vector<Double_t> val( GetNvar() );
    for (ivar=0; ivar<GetNvar(); ivar++) {
-      val[ivar] = e->GetVal(ivar);
+      val[ivar] = e->GetValue(ivar);
       if (IsNormalised()) val[ivar] = gTools().NormVariable( val[ivar], GetXmin( ivar ), GetXmax( ivar ) );    
    }
 
@@ -290,7 +290,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
    // loop over variables
    UInt_t ivar,jvar;
    vector<Double_t> val( GetNvar() );
-   for (ivar=0; ivar<GetNvar(); ivar++) val[ivar] = ev->GetVal( ivar );
+   for (ivar=0; ivar<GetNvar(); ivar++) val[ivar] = ev->GetValue( ivar );
 
    Double_t chi2 = 0;
    for (ivar=0; ivar<GetNvar(); ivar++) {
@@ -308,37 +308,6 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
    if (chi2 < 0) Log() << kFATAL << "<GetChi2> negative chi2: " << chi2 << Endl;
 
    return chi2;
-}
-  
-//_______________________________________________________________________
-void  TMVA::MethodHMatrix::WriteWeightsToStream( ostream& o ) const
-{  
-   // write variable names and min/max 
-   // NOTE: the latter values are mandatory for the normalisation 
-   // in the reader application !!!
-   UInt_t ivar,jvar;
-   o << this->GetMethodTypeName() <<endl;
-
-   // mean vectors
-   for (ivar=0; ivar<GetNvar(); ivar++) {
-      o << (*fVecMeanS)(ivar) << "  " << (*fVecMeanB)(ivar) << endl;
-   }
-
-   // inverse covariance matrices (signal)
-   for (ivar=0; ivar<GetNvar(); ivar++) {
-      for (jvar=0; jvar<GetNvar(); jvar++) {
-         o << (*fInvHMatrixS)(ivar,jvar) << "  ";
-      }
-      o << endl;
-   }
-
-   // inverse covariance matrices (background)
-   for (ivar=0; ivar<GetNvar(); ivar++) {
-      for (jvar=0; jvar<GetNvar(); jvar++) {
-         o << (*fInvHMatrixB)(ivar,jvar) << "  ";
-      }
-      o << endl;
-   }
 }
 
 //_______________________________________________________________________

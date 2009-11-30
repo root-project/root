@@ -166,7 +166,7 @@ Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
    // test event if it decends the tree at this node to the right  
    Bool_t result;
   
-   result =  (e.GetVal(this->GetSelector()) > this->GetCutValue() );
+   result =  (e.GetValue(this->GetSelector()) > this->GetCutValue() );
   
    if (fCutType == kTRUE) return result; //the cuts are selecting Signal ;
    else return !result;
@@ -259,18 +259,17 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is ) 
+Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is, UInt_t tmva_Version_Code ) 
 {
    // Read the data block
 
    string tmp;
-   Float_t dtmp1, dtmp2, dtmp3, dtmp4, dtmp5, dtmp6, dtmp7, dtmp8, dtmp9, dtmp10, dtmp11, dtmp12;
-   Int_t depth, itmp1, itmp2;
+   
+   Float_t cutVal, cutType, nsig, nbkg, nEv, nsig_unweighted, nbkg_unweighted, nEv_unweighted;
+   Float_t separationIndex, separationGain, response(-99), cc(0);
+   Int_t   depth, ivar, nodeType;
    ULong_t lseq;
    char pos;
-   
-   // the format is
-   // 2 r seq: 2 ivar: 0 cut: -1.5324 cType: 0 s: 353 b: 1053 nEv: 1406 suw: 353 buw: 1053 nEvuw: 1406 sepI: 0.188032 sepG: 8.18513 nType: 0
 
    is >> depth;                                         // 2
    if ( depth==-1 ) { return kFALSE; }
@@ -279,37 +278,54 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is )
    this->SetDepth(depth);
    this->SetPos(pos);
 
-   is >> tmp >> lseq                                    // seq: 2
-      >> tmp >> itmp1                                   // ivar: 0
-      >> tmp >> dtmp1                                   // cut: -1.5324       
-      >> tmp >> dtmp2                                   // cType: 0           
-      >> tmp >> dtmp3                                   // s: 353             
-      >> tmp >> dtmp4                                   // b: 1053            
-      >> tmp >> dtmp5                                   // nEv: 1406          
-      >> tmp >> dtmp6                                   // suw: 353             
-      >> tmp >> dtmp7                                   // buw: 1053            
-      >> tmp >> dtmp8                                   // nEvuw: 1406          
-      >> tmp >> dtmp9                                   // sepI: 0.188032     
-      >> tmp >> dtmp10                                  // sepG: 8.18513      
-      >> tmp >> dtmp11
-      >> tmp >> itmp2                                   // nType: 0           
-      >> tmp >> dtmp12;
+   if (tmva_Version_Code < TMVA_VERSION(4,0,0)) {
+      is >> tmp >> lseq 
+         >> tmp >> ivar 
+         >> tmp >> cutVal  
+         >> tmp >> cutType 
+         >> tmp >> nsig    
+         >> tmp >> nbkg    
+         >> tmp >> nEv     
+         >> tmp >> nsig_unweighted 
+         >> tmp >> nbkg_unweighted   
+         >> tmp >> nEv_unweighted    
+         >> tmp >> separationIndex   
+         >> tmp >> separationGain    
+         >> tmp >> nodeType;         
+   } else { 
+      is >> tmp >> lseq 
+         >> tmp >> ivar 
+         >> tmp >> cutVal  
+         >> tmp >> cutType 
+         >> tmp >> nsig    
+         >> tmp >> nbkg    
+         >> tmp >> nEv     
+         >> tmp >> nsig_unweighted 
+         >> tmp >> nbkg_unweighted   
+         >> tmp >> nEv_unweighted    
+         >> tmp >> separationIndex   
+         >> tmp >> separationGain    
+         >> tmp >> response
+         >> tmp >> nodeType           
+         >> tmp >> cc;
+   }
 
-   this->SetSelector((UInt_t)itmp1);
-   this->SetCutValue(dtmp1);
-   this->SetCutType(dtmp2);
-   this->SetNSigEvents(dtmp3);
-   this->SetNBkgEvents(dtmp4);
-   this->SetNEvents(dtmp5);
-   this->SetNSigEvents_unweighted(dtmp6);
-   this->SetNBkgEvents_unweighted(dtmp7);
-   this->SetNEvents_unweighted(dtmp8);
-   this->SetSeparationIndex(dtmp9);
-   this->SetSeparationGain(dtmp10);
-   this->SetNodeType(itmp2);
-   this->SetResponse(dtmp11);
+   this->SetSelector((UInt_t)ivar);
+   this->SetCutValue(cutVal);
+   this->SetCutType(cutType);
+   this->SetNSigEvents(nsig);
+   this->SetNBkgEvents(nbkg);
+   this->SetNEvents(nEv);
+   this->SetNSigEvents_unweighted(nsig_unweighted);
+   this->SetNBkgEvents_unweighted(nbkg_unweighted);
+   this->SetNEvents_unweighted(nEv_unweighted);
+   this->SetSeparationIndex(separationIndex);
+   this->SetSeparationGain(separationGain);
+   this->SetNodeType(nodeType);
+   
+   this->SetResponse(response);
    this->SetSequence(lseq);
-   this->SetCC(dtmp12);
+   this->SetCC(cc);
 
    return kTRUE;
 }
@@ -406,8 +422,9 @@ void TMVA::DecisionTreeNode::SetSampleMax(UInt_t ivar, Float_t xmax){
 }
 
 //_______________________________________________________________________
-void TMVA::DecisionTreeNode::ReadAttributes(void* node) 
+void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_Code */  ) 
 {   
+
    // read attribute from xml
    gTools().ReadAttr(node, "Seq",   fSequence               );
    gTools().ReadAttr(node, "IVar",  fSelector               );

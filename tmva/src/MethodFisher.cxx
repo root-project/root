@@ -253,9 +253,11 @@ void TMVA::MethodFisher::Train( void )
 Double_t TMVA::MethodFisher::GetMvaValue( Double_t* err )
 {
    // returns the Fisher value (no fixed range)
+   
    const Event * ev = GetEvent();
    Double_t result = fF0;
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) result += (*fFisherCoeff)[ivar]*ev->GetVal(ivar);
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++)
+      result += (*fFisherCoeff)[ivar]*ev->GetValue(ivar);
 
    // cannot determine error
    if (err != 0) *err = -1;
@@ -310,7 +312,7 @@ void TMVA::MethodFisher::GetMean( void )
 
       Double_t* sum = DataInfo().IsSignal(ev) ? sumS : sumB;
 
-      for (UInt_t ivar=0; ivar<nvar; ivar++) sum[ivar] += ev->GetVal( ivar )*weight;
+      for (UInt_t ivar=0; ivar<nvar; ivar++) sum[ivar] += ev->GetValue( ivar )*weight;
    }
 
    for (UInt_t ivar=0; ivar<nvar; ivar++) {   
@@ -355,7 +357,7 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
 
       Double_t weight = GetTWeight(ev); // may ignore events with negative weights
 
-      for (Int_t x=0; x<nvar; x++) xval[x] = ev->GetVal( x );
+      for (Int_t x=0; x<nvar; x++) xval[x] = ev->GetValue( x );
       Int_t k=0;
       for (Int_t x=0; x<nvar; x++) {
          for (Int_t y=0; y<nvar; y++) {            
@@ -562,14 +564,6 @@ void TMVA::MethodFisher::PrintCoefficients( void )
       Log() << kINFO << "implemented -- or the \"Normalise\" option is removed and Fisher retrained." << Endl;
       Log() << kINFO << Endl;
    }   
-}
-  
-//_______________________________________________________________________
-void  TMVA::MethodFisher::WriteWeightsToStream( std::ostream& o ) const
-{  
-   // save the weights
-   o << std::setprecision(12) << fF0 << endl;
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) o << std::setprecision(12) << (*fFisherCoeff)[ivar] << endl;
 }
   
 //_______________________________________________________________________

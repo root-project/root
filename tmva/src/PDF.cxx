@@ -83,7 +83,7 @@ TMVA::PDF::PDF( const TString& name, Bool_t norm )
      fLogger        ( 0 )
 {
    // default constructor needed for ROOT I/O
-   fLogger = new MsgLogger(this);
+   fLogger   = new MsgLogger(this);
    fgThisPDF = this;
 }
 
@@ -125,7 +125,7 @@ TMVA::PDF::PDF( const TString& name,
    fLogger        ( 0 )
 {  
    // constructor of spline based PDF: 
-   fLogger = new MsgLogger(this);
+   fLogger   = new MsgLogger(this);
    BuildPDF( hist );
 }
 
@@ -168,7 +168,7 @@ TMVA::PDF::PDF( const TString& name,
    fLogger        ( 0 )
 {
    // constructor of kernel based PDF:
-   fLogger = new MsgLogger(this);
+   fLogger   = new MsgLogger(this);
    BuildPDF( hist );
 }
 
@@ -208,7 +208,7 @@ TMVA::PDF::PDF( const TString& name,
    fSuffix        ( suffix ),
    fLogger        ( 0 )
 {
-   fLogger = new MsgLogger(this);
+   fLogger   = new MsgLogger(this);
    if (defaultPDF != 0) {
       fNsmooth            = defaultPDF->fNsmooth;
       fMinNsmooth         = defaultPDF->fMinNsmooth;
@@ -296,6 +296,7 @@ Int_t TMVA::PDF::GetHistNBins ( Int_t evtNum )
       Log() << kFATAL << "No number of bins or average event per bin set for PDF" << fHistAvgEvtPerBin << Endl;
    return 0;
 }
+
 //_______________________________________________________________________
 void TMVA::PDF::BuildSplinePDF() 
 {
@@ -348,6 +349,7 @@ void TMVA::PDF::BuildSplinePDF()
       fSpline->SetTitle( (TString)fHist->GetTitle() + fSpline->GetTitle() );
       fSpline->SetName ( (TString)fHist->GetName()  + fSpline->GetName()  );
    }
+
 
    // sanity check
    Double_t integral = GetIntegral();
@@ -432,6 +434,7 @@ void TMVA::PDF::BuildKDEPDF()
 //_______________________________________________________________________
 void TMVA::PDF::SmoothHistogram()
 {
+   if(fHist->GetNbinsX()==1) return;
    if (fMaxNsmooth == fMinNsmooth) {
       fHist->Smooth( fMinNsmooth );
       return;
@@ -680,7 +683,7 @@ Double_t TMVA::PDF::GetVal( Double_t x ) const
    Int_t bin = fPDFHist->FindBin(x);
    bin = TMath::Max(bin,1);
    bin = TMath::Min(bin,fPDFHist->GetNbinsX());
-   
+
    Double_t retval = 0;
 
    if (UseHistogram()) {
@@ -694,7 +697,7 @@ Double_t TMVA::PDF::GetVal( Double_t x ) const
          nextbin++;
       else
          nextbin--;  
-      
+
       // linear interpolation between adjacent bins
       Double_t dx = fPDFHist->GetBinCenter( bin )  - fPDFHist->GetBinCenter( nextbin );
       Double_t dy = fPDFHist->GetBinContent( bin ) - fPDFHist->GetBinContent( nextbin );
@@ -1016,8 +1019,11 @@ istream& TMVA::operator>> ( istream& istr, PDF& pdf )
    pdf.fHist->SetTitle( hnameSmooth );
    pdf.fHist->SetDirectory(0);
 
-   if (pdf.fMinNsmooth>0) pdf.BuildSplinePDF();
-   else                   pdf.BuildKDEPDF();
+   if (pdf.fMinNsmooth>=0) pdf.BuildSplinePDF();
+   else {
+      pdf.fInterpolMethod = PDF::kKDE;
+      pdf.BuildKDEPDF();
+   }
 
    return istr;
 }

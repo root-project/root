@@ -32,7 +32,8 @@ void variables( TString fin = "TMVA.root", TString dirName = "InputVariables_Id"
    dir->cd();
 
    // how many plots are in the directory?
-   Int_t noPlots = TMVAGlob::GetNumberOfInputVariables( dir );
+   Int_t noPlots = TMVAGlob::GetNumberOfInputVariables( dir ) +
+      TMVAGlob::GetNumberOfTargets( dir );
 
    // define Canvas layout here!
    // default setting
@@ -42,7 +43,7 @@ void variables( TString fin = "TMVA.root", TString dirName = "InputVariables_Id"
    Int_t height;
    switch (noPlots) {
    case 1:
-      xPad = 1; yPad = 1; width = 550; height = 0.50*width; break;
+      xPad = 1; yPad = 1; width = 550; height = 0.90*width; break;
    case 2:
       xPad = 2; yPad = 1; width = 600; height = 0.50*width; break;
    case 3:
@@ -52,6 +53,7 @@ void variables( TString fin = "TMVA.root", TString dirName = "InputVariables_Id"
    default:
       xPad = 3; yPad = 2; width = 800; height = 0.55*width; break;
    }
+
    Int_t noPadPerCanv = xPad * yPad ;
 
    // counter variables

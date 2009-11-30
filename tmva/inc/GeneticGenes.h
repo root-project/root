@@ -51,7 +51,7 @@ namespace TMVA {
       std::vector<Double_t>& GetFactors() { return fFactors; }
       
       void SetFitness(Double_t fitness) { fFitness = fitness; }
-      Double_t GetFitness() { return fFitness; }
+      Double_t GetFitness() const { return fFitness; }
       
       friend Bool_t operator <(const GeneticGenes&, const GeneticGenes&);
       

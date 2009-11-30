@@ -130,9 +130,10 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
 //_______________________________________________________________________
 TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSetInfo& theData, 
                                       const TString& theWeightFile,  
-                                      TDirectory* theTargetDir )
-   : TMVA::MethodBase( Types::kCFMlpANN, theData, theWeightFile, theTargetDir ) 
-   , fNodes(0)
+                                      TDirectory* theTargetDir ):
+   TMVA::MethodBase( Types::kCFMlpANN, theData, theWeightFile, theTargetDir ),
+   fNodes(0),
+   fYNN(0)
 {
    // constructor from weight file
 }
@@ -217,7 +218,7 @@ void TMVA::MethodCFMlpANN::ProcessOptions()
       
          // use normalized input Data
          for (ivar=0; ivar<GetNvar(); ivar++) {
-            (*fData)( ievt, ivar ) = ev->GetVal(ivar);
+            (*fData)( ievt, ivar ) = ev->GetValue(ivar);
          }
       }
 
@@ -301,7 +302,7 @@ Double_t TMVA::MethodCFMlpANN::GetMvaValue( Double_t* err )
 
    // copy of input variables
    vector<Double_t> inputVec( GetNvar() );
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) inputVec[ivar] = ev->GetVal(ivar);
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) inputVec[ivar] = ev->GetValue(ivar);
 
    Double_t myMVA = EvalANN( inputVec, isOK );
    if (!isOK) Log() << kFATAL << "EvalANN returns (!isOK) for event " << Endl;
@@ -468,6 +469,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
    }
 
    fNlayers = fParam_1.layerm;
+   delete dumchar;
 }
 
 //_______________________________________________________________________
@@ -501,68 +503,6 @@ Int_t TMVA::MethodCFMlpANN::DataInterface( Double_t* /*tout2*/, Double_t*  /*tin
    ++TMVA::MethodCFMlpANN_nsel;
 
    return 0;
-}
-
-//_______________________________________________________________________
-void TMVA::MethodCFMlpANN::WriteWeightsToStream( std::ostream& o ) const
-{
-   // write number of variables and classes
-   o << fParam_1.nvar << "    " << fParam_1.lclass << endl;
-   
-   // number of output classes must be 2
-   if (fParam_1.lclass != 2) // wrong file
-      Log() << kFATAL << "<WriteWeightsToStream> mismatch in number of classes" << Endl;
-
-
-   // write extrema of input variables
-   for (Int_t ivar=0; ivar<fParam_1.nvar; ivar++) 
-      o << fVarn_1.xmax[ivar] << "   " << fVarn_1.xmin[ivar] << endl;
-        
-   // write number of layers (sum of: input + output + hidden)
-   o << fParam_1.layerm << endl;
-        
-   for (Int_t layer=0; layer<fParam_1.layerm; layer++) {              
-      // write number of neurons for each layer
-      o << fNeur_1.neuron[layer] << "     ";
-   }
-   o << endl;
-        
-   // write weights
-   for (Int_t layer=1; layer<=fParam_1.layerm-1; layer++) { 
-          
-      Int_t nq = fNeur_1.neuron[layer]/10;
-      Int_t nr = fNeur_1.neuron[layer] - nq*10;
-          
-      Int_t kk(0);
-      if (nr==0) kk = nq;
-      else       kk = nq+1;
-          
-      for (Int_t k=1; k<=kk; k++) {
-         Int_t jmin = 10*k - 9;
-         Int_t jmax = 10*k;
-         Int_t i, j;
-         if (fNeur_1.neuron[layer]<jmax) jmax = fNeur_1.neuron[layer];
-         for (j=jmin; j<=jmax; j++) {
-            o << setw(20) << Ww_ref(fNeur_1.ww, layer+1, j) << "  ";
-         }
-         o << endl;
-         for (i=1; i<=fNeur_1.neuron[layer-1]; i++) {
-            for (j=jmin; j<=jmax; j++) {
-               o << setw(20) << W_ref(fNeur_1.w, layer+1, j, i) << "  ";
-            }
-            o << endl;
-         }
-            
-         // skip two empty lines
-         o << endl << endl;
-      }
-   }
-   for (Int_t layer=0; layer<fParam_1.layerm; layer++) {
-          
-      // skip 2 empty lines
-      o << endl << endl;          
-      o << fDel_1.temp[layer] << endl;
-   }      
 }
 
 //_______________________________________________________________________

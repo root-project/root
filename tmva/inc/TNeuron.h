@@ -32,6 +32,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <iostream>
+
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
@@ -125,15 +127,20 @@ namespace TMVA {
       void      SetDEDw( Double_t DEDw )        { fDEDw = DEDw;                           }
       Bool_t    IsInputNeuron() const           { return fLinksIn == NULL;                }
       Bool_t    IsOutputNeuron() const          { return fLinksOut == NULL;               }
-      void      PrintPreLinks()                 { PrintLinks(fLinksIn); return;           }
-      void      PrintPostLinks()                { PrintLinks(fLinksOut); return;          }
+      void      PrintPreLinks() const           { PrintLinks(fLinksIn); return;           }
+      void      PrintPostLinks() const          { PrintLinks(fLinksOut); return;          }
+
+      virtual void Print(Option_t* = "") const {
+         std::cout << fValue << std::endl;
+         //PrintPreLinks(); PrintPostLinks();
+      }
 
    private:
 
       // prviate helper functions
       void InitNeuron();
       void DeleteLinksArray( TObjArray*& links );
-      void PrintLinks      ( TObjArray* links );
+      void PrintLinks      ( TObjArray* links ) const;
       void PrintMessage    ( EMsgType, TString message );
 
       // inlined helper functions

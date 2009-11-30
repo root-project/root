@@ -132,7 +132,7 @@ namespace TMVA {
       void     InitializeLearningRates(); // although this is only needed by backprop
 
       // used as a measure of success in all minimization techniques
-      Double_t CalculateEstimator( Types::ETreeType treeType = Types::kTraining );
+      Double_t CalculateEstimator( Types::ETreeType treeType = Types::kTraining, Int_t iEpoch = -1 );
 
       // BFGS functions
       void     BFGSMinimize( Int_t nEpochs );
@@ -166,9 +166,6 @@ namespace TMVA {
 
       // genetic algorithm functions
       void GeneticMinimize();
-
-      // the neuronal network can be initialized after the analysis type has been set.
-      void   SetAnalysisType( Types::EAnalysisType type );
       
 
 #ifdef MethodMLP_UseMinuit__
@@ -201,6 +198,7 @@ namespace TMVA {
       TString         fBpModeS;        // backprop learning mode option string (sequential or batch)
       Int_t           fBatchSize;      // batch size, only matters if in batch learning mode
       Int_t           fTestRate;       // test for overtraining performed at each #th epochs
+      Bool_t          fEpochMon;       // create and fill epoch-wise monitoring histograms (makes outputfile big!)
       
       // genetic algorithm variables
       Int_t           fGA_nsteps;      // GA settings: number of steps

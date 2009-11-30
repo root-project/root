@@ -58,7 +58,7 @@ namespace TMVA {
 
    private:
 
-      UInt_t    	   fSize;              // matrix size
+      UInt_t               fSize;              // matrix size
       SVKernelFunction*    fKernelFunction;    // kernel function
       Float_t**            fSVKernelMatrix;    // kernel matrix
 

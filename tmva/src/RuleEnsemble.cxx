@@ -565,7 +565,7 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
 
    const std::vector<Event *> *events = GetTrainingEvents();
    UInt_t neve  = events->size();
-   UInt_t nvars = ((*events)[0])->GetNVars(); // Event -> GetNVars();
+   UInt_t nvars = ((*events)[0])->GetNVariables(); // Event -> GetNVariables();
    Double_t val,ew;
    typedef std::pair< Double_t, Int_t> dataType;
    typedef std::pair< Double_t, dataType > dataPoint;
@@ -580,8 +580,8 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
    for (UInt_t i=0; i<neve; i++) {
       ew   = ((*events)[i])->GetWeight();
       for (UInt_t v=0; v<nvars; v++) {
-         val = ((*events)[i])->GetVal(v);
-         vardata[v].push_back( dataPoint( val, dataType(ew,((*events)[i])->Type()) ) );
+         val = ((*events)[i])->GetValue(v);
+         vardata[v].push_back( dataPoint( val, dataType(ew,((*events)[i])->GetClass()) ) );
       }
    }
    //
@@ -1078,7 +1078,7 @@ void TMVA::RuleEnsemble::ReadFromXML( void* wghtnode )
    // read rules
    DeleteRules();
 
-   UInt_t i;
+   UInt_t i = 0;
    fRules.resize( nrules  );
    void* ch = gTools().xmlengine().GetChild( wghtnode );
    for (i=0; i<nrules; i++) {
@@ -1098,8 +1098,8 @@ void TMVA::RuleEnsemble::ReadFromXML( void* wghtnode )
    fLinImportance  .resize( nlinear );
 
    Int_t iok;
-   i = 0;
-   while (ch) {
+   i=0;
+   while(ch) {
       gTools().ReadAttr( ch, "OK",         iok );
       fLinTermOK[i] = (iok == 1);
       gTools().ReadAttr( ch, "Coeff",      fLinCoefficients[i]  );

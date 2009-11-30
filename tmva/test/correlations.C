@@ -10,6 +10,7 @@
 void correlations( TString fin = "TMVA.root", Bool_t isRegression = kFALSE, 
                    Bool_t greyScale = kFALSE, Bool_t useTMVAStyle = kTRUE )
 {
+
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 

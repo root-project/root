@@ -92,7 +92,7 @@ TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
 //_______________________________________________________________________
 void TMVA::MethodFDA::Init( void )
 {
-   // default initialisation	
+   // default initialisation
    fNPars    = 0;
 
    fBestPars.clear();
@@ -231,12 +231,13 @@ void TMVA::MethodFDA::ProcessOptions()
       TString str = ((TObjString*)parList->At(ipar))->GetString();
       Ssiz_t istr = str.First( ',' );
       TString pminS(str(1,istr-1));
-      TString pmaxS(str(istr+1,str.Length()-2-istr));
+      TString pmaxS(str(istr+1,str.Length()-2-istr));      
 
       stringstream stmin; Float_t pmin; stmin << pminS.Data(); stmin >> pmin;       
       stringstream stmax; Float_t pmax; stmax << pmaxS.Data(); stmax >> pmax;
 
       // sanity check
+      if (TMath::Abs(pmax-pmin) < 1.e-30) pmax = pmin;
       if (pmin > pmax) Log() << kFATAL << "<ProcessOptions> max > min in interval for parameter: [" 
                                << ipar << "] : [" << pmin  << ", " << pmax << "] " << Endl;
 
@@ -316,13 +317,12 @@ void TMVA::MethodFDA::Train( void )
 
       // true event copy
       Float_t w  = GetTWeight(ev);
-	
+
       if (!DoRegression()) {
          if (ev->IsSignal()) { fSumOfWeightsSig += w; }
          else                { fSumOfWeightsBkg += w; }
       }
       fSumOfWeights += w;
-	
    }
 
    // sanity check
@@ -412,7 +412,7 @@ Double_t TMVA::MethodFDA::InterpretFormula( const Event* event, std::vector<Doub
 {
    // formula interpretation
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) fFormula->SetParameter( ipar, pars[ipar] );
-   for (UInt_t ivar=0;  ivar<GetNvar();  ivar++) fFormula->SetParameter( fNPars+ivar, event->GetVal(ivar) );
+   for (UInt_t ivar=0;  ivar<GetNvar();  ivar++) fFormula->SetParameter( fNPars+ivar, event->GetValue(ivar) );
 
    return fFormula->Eval( 0 );
 }
@@ -445,16 +445,6 @@ std::vector<Float_t>& TMVA::MethodFDA::GetRegressionValues()
    delete evT;
 
    return (*fRegressionReturnVal);
-}
-
-//_______________________________________________________________________
-void  TMVA::MethodFDA::WriteWeightsToStream( ostream& o ) const
-{  
-   // write the weight from the training to a file (stream)
-
-   // save fitted function parameters
-   o << fNPars << endl;
-   for (Int_t ipar=0; ipar<fNPars; ipar++) o << fBestPars[ipar] << endl;
 }
   
 //_______________________________________________________________________

@@ -77,9 +77,6 @@ namespace TMVA {
       // training method
       virtual void Train( void ) = 0;
 
-      // write weights to output stream
-      virtual void WriteWeightsToStream( std::ostream& ) const = 0;
-
       // read weights from output stream
       virtual void ReadWeightsFromStream( std::istream& ) = 0;
       

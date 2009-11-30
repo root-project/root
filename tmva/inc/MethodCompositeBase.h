@@ -65,11 +65,9 @@ namespace TMVA {
                            const TString& weightFile, 
                            TDirectory* theBaseDir = 0 );
 
-      using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void WriteWeightsToStream( ostream& o ) const;
       void AddWeightsXMLTo( void* parent ) const;
       void ReadWeightsFromXML( void* wghtnode );
 

@@ -124,7 +124,7 @@ namespace TMVA {
       void WriteMonitoringHistosToFile( void ) const;
 
       // write evaluation histograms into target file
-      virtual void WriteEvaluationHistosToFile();
+      virtual void WriteEvaluationHistosToFile(Types::ETreeType treetype);
 
       // performs the MethodBase testing + testing of each boosted classifier
       virtual void TestClassification();

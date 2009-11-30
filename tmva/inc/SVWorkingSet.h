@@ -52,7 +52,7 @@ namespace TMVA {
       Bool_t  ExamineExample( SVEvent*);
       Bool_t  TakeStep      ( SVEvent*, SVEvent*);
       Bool_t  Terminated();
-      void    Train();
+      void    Train(UInt_t nIter=1000);
       void    PrintStat();
       std::vector<TMVA::SVEvent*>* GetSupportVectors();
       Float_t GetBpar() {return 0.5*(fB_low + fB_up);}
@@ -74,7 +74,7 @@ namespace TMVA {
 
       SVEvent                     *fTEventUp;   // last optimized event
       SVEvent                     *fTEventLow;  // last optimized event
-         	
+
       Float_t                     fB_low;       // documentation
       Float_t                     fB_up;        // documentation
       Float_t                     fTolerance;   // documentation

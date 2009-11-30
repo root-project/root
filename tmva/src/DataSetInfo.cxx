@@ -181,6 +181,14 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const TString& expression, c
 }
 
 //_______________________________________________________________________
+TMVA::VariableInfo& TMVA::DataSetInfo::AddVariable( const VariableInfo& varInfo){
+   // add variable with given VariableInfo
+   fVariables.push_back(VariableInfo( varInfo ));
+   fNeedsRebuilding = kTRUE;
+   return fVariables.back();
+}
+
+//_______________________________________________________________________
 TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const TString& expression, const TString& title, const TString& unit, 
                                                   Double_t min, Double_t max, 
                                                   Bool_t normalized, void* external )
@@ -197,21 +205,35 @@ TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const TString& expression, con
 }
 
 //_______________________________________________________________________
+TMVA::VariableInfo& TMVA::DataSetInfo::AddTarget( const VariableInfo& varInfo){
+   // add target with given VariableInfo
+   fTargets.push_back(VariableInfo( varInfo ));
+   fNeedsRebuilding = kTRUE;
+   return fTargets.back();
+}
+
+//_______________________________________________________________________
 TMVA::VariableInfo& TMVA::DataSetInfo::AddSpectator( const TString& expression, const TString& title, const TString& unit, 
-                                                  Double_t min, Double_t max, 
-                                                  Bool_t normalized, void* external )
+                                                     Double_t min, Double_t max, char type,
+                                                     Bool_t normalized, void* external )
 {
    // add a spectator (can be a complex expression) to the set of spectator variables used in
    // the MV analysis
    TString regexpr = expression; // remove possible blanks
    regexpr.ReplaceAll(" ", "" );
-   char type='F';
    fSpectators.push_back(VariableInfo( regexpr, title, unit, 
-                                     fSpectators.size()+1, type, external, min, max, normalized ));
+                                       fSpectators.size()+1, type, external, min, max, normalized ));
    fNeedsRebuilding = kTRUE;
    return fSpectators.back();
 }
 
+//_______________________________________________________________________
+TMVA::VariableInfo& TMVA::DataSetInfo::AddSpectator( const VariableInfo& varInfo){
+   // add spectator with given VariableInfo
+   fSpectators.push_back(VariableInfo( varInfo ));
+   fNeedsRebuilding = kTRUE;
+   return fSpectators.back();
+}
 
 //_______________________________________________________________________
 Int_t TMVA::DataSetInfo::FindVarIndex(const TString& var) const
@@ -381,6 +403,19 @@ TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const
    return fDataSet;
 }
 
+//_______________________________________________________________________
+UInt_t TMVA::DataSetInfo::GetNSpectators(bool all) const
+{
+   if(all)
+      return fSpectators.size();
+   UInt_t nsp(0);
+   for(std::vector<VariableInfo>::const_iterator spit=fSpectators.begin(); spit!=fSpectators.end(); ++spit) {
+      if(spit->GetVarType()!='C') nsp++;
+   }
+   return nsp;
+}
+
+//_______________________________________________________________________
 Int_t TMVA::DataSetInfo::GetClassNameMaxLength() const
 {
    Int_t maxL = 0;

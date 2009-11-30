@@ -26,6 +26,7 @@
 #if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
+#include "TMVA/MethodCuts.h"
 #endif
 
 using namespace TMVA;
@@ -83,6 +84,8 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    // ---
    Use["RuleFit"]         = 0;
    // ---
+   Use["Category"]        = 0;
+   // ---
    Use["Plugin"]          = 0;
    // ---------------------------------------------------------------
 
@@ -121,6 +124,18 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    reader->AddVariable( "var3",                &var3 );
    reader->AddVariable( "var4",                &var4 );
 
+   //Spectator variables declared in the training have to be added to the reader, too
+   Float_t spec1,spec2;
+   reader->AddSpectator( "spec1 := var1*2",   &spec1 );
+   reader->AddSpectator( "spec2 := var1*3",   &spec2 );
+
+   Float_t Category_cat1, Category_cat2, Category_cat3;
+   if (Use["Category"]){
+      // add artificial spectators for distinguishing categories
+      reader->AddSpectator( "Category_cat1 := var3<=0",             &Category_cat1 );
+      reader->AddSpectator( "Category_cat2 := (var3>0)&&(var4<0)",  &Category_cat2 );
+      reader->AddSpectator( "Category_cat3 := (var3>0)&&(var4>=0)", &Category_cat3 );
+   }
    //
    // book the MVA methods
    //
@@ -167,7 +182,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    TH1F *histLk(0), *histLkD(0), *histLkPCA(0), *histLkKDE(0), *histLkMIX(0), *histPD(0), *histPDD(0);
    TH1F *histPDPCA(0), *histPDEFoam(0), *histPDEFoamErr(0), *histPDEFoamSig(0), *histKNN(0), *histHm(0);
    TH1F *histFi(0), *histFiG(0), *histFiB(0), *histLD(0), *histNn(0), *histNnC(0), *histNnT(0), *histBdt(0), *histBdtG(0), *histBdtD(0);
-   TH1F *histRf(0), *histSVMG(0), *histSVMP(0), *histSVML(0), *histFDAMT(0), *histFDAGA(0), *histPBdt(0);
+   TH1F *histRf(0), *histSVMG(0), *histSVMP(0), *histSVML(0), *histFDAMT(0), *histFDAGA(0), *histCat(0), *histPBdt(0);
 
    if (Use["Likelihood"])    histLk      = new TH1F( "MVA_Likelihood",    "MVA_Likelihood",    nbin, -1, 1 );
    if (Use["LikelihoodD"])   histLkD     = new TH1F( "MVA_LikelihoodD",   "MVA_LikelihoodD",   nbin, -1, 0.9999 );
@@ -195,6 +210,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["SVM_Lin"])       histSVML    = new TH1F( "MVA_SVM_Lin",       "MVA_SVM_Lin",       nbin, 0.0, 1.0 );
    if (Use["FDA_MT"])        histFDAMT   = new TH1F( "MVA_FDA_MT",        "MVA_FDA_MT",        nbin, -2.0, 3.0 );
    if (Use["FDA_GA"])        histFDAGA   = new TH1F( "MVA_FDA_GA",        "MVA_FDA_GA",        nbin, -2.0, 3.0 );
+   if (Use["Category"])      histCat     = new TH1F( "MVA_Category",      "MVA_Category",           nbin, -2., 2. );
    if (Use["Plugin"])        histPBdt    = new TH1F( "MVA_PBDT",          "MVA_BDT",           nbin, -0.8, 0.8 );
 
    // PDEFoam also returns per-event error, fill in histogram, and also fill significance
@@ -297,6 +313,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       if (Use["SVM_Lin"      ])   histSVML   ->Fill( reader->EvaluateMVA( "SVM_Lin method"       ) );
       if (Use["FDA_MT"       ])   histFDAMT  ->Fill( reader->EvaluateMVA( "FDA_MT method"        ) );
       if (Use["FDA_GA"       ])   histFDAGA  ->Fill( reader->EvaluateMVA( "FDA_GA method"        ) );
+      if (Use["Category"     ])   histCat    ->Fill( reader->EvaluateMVA( "Category method"         ) );
       if (Use["Plugin"       ])   histPBdt   ->Fill( reader->EvaluateMVA( "P_BDT method"         ) );
 
       // retrieve also per-event error
@@ -376,6 +393,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["SVM_Lin"      ])   histSVML   ->Write();
    if (Use["FDA_MT"       ])   histFDAMT  ->Write();
    if (Use["FDA_GA"       ])   histFDAGA  ->Write();
+   if (Use["Category"     ])   histCat    ->Write();
    if (Use["Plugin"       ])   histPBdt   ->Write();
 
    // write also error and significance histos

@@ -89,7 +89,7 @@ namespace TMVA {
       TString GetShortName() const { TString a(fTransformName); a.ReplaceAll("Transform",""); return a; }
 
       virtual void WriteTransformationToStream ( std::ostream& o ) const = 0;
-      virtual void ReadTransformationFromStream( std::istream& istr ) = 0;
+      virtual void ReadTransformationFromStream( std::istream& istr, const TString& classname ) = 0;
 
       virtual void AttachXMLTo(void* parent) = 0;
       virtual void ReadFromXML( void* trfnode ) = 0;
@@ -108,6 +108,8 @@ namespace TMVA {
       const std::vector<TMVA::VariableInfo>& Targets()   const { return fTargets;   }
 
       MsgLogger& Log() const { return *fLogger; }                       
+
+      void SetTMVAVersion(TMVAVersion_t v) { fTMVAVersion = v; }
 
    protected:
 
@@ -146,6 +148,8 @@ namespace TMVA {
       std::vector<TMVA::VariableInfo>  fTargets;            // event targets [saved to weight file --> TODO ]
 
    protected:
+
+      TMVAVersion_t                    fTMVAVersion;
 
       mutable MsgLogger* fLogger;                     //! message logger      
 

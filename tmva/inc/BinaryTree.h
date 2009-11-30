@@ -28,6 +28,10 @@
 #ifndef ROOT_TMVA_BinaryTree
 #define ROOT_TMVA_BinaryTree
 
+#ifndef ROOT_TMVA_Version
+#include "TMVA/Version.h"
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // BinaryTree                                                           //
@@ -73,7 +77,7 @@ namespace TMVA {
 
       virtual Node* CreateNode(UInt_t size=0) const = 0;
       virtual BinaryTree* CreateTree() const = 0;
-      static  BinaryTree* CreateFromXML(void* node);
+      static  BinaryTree* CreateFromXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
       virtual const char* ClassName() const = 0;
 
       // set the root node of the tree
@@ -99,9 +103,9 @@ namespace TMVA {
       Node* GetRightDaughter( Node* n);
 
       virtual void Print( ostream& os ) const;
-      virtual void Read ( istream& istr );
+      virtual void Read ( istream& istr, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void* AddXMLTo(void* parent) const;
-      virtual void  ReadXML(void* node);
+      virtual void  ReadXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
 
    private:
   

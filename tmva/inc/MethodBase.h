@@ -41,6 +41,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include "assert.h"
 
 #ifndef ROOT_TMVA_IMethod
 #include "TMVA/IMethod.h"
@@ -107,10 +108,7 @@ namespace TMVA {
       // ---------- main training and testing methods ------------------------------
 
       // prepare tree branch with the method's discriminating variable
-      void             AddOutput( Types::ETreeType type, Types::EAnalysisType analysisType ) {
-         if (analysisType == Types::kRegression) AddRegressionOutput( type );
-         else { AddClassifierOutput( type ); if (HasMVAPdfs()) AddClassifierOutputProb( type ); }
-      }
+      void             AddOutput( Types::ETreeType type, Types::EAnalysisType analysisType );
 
       // performs classifier training
       // calls methods Train() implemented by derived classes
@@ -139,15 +137,18 @@ namespace TMVA {
       // classifier response - some methods may return a per-event error estimate (unless: *err = -1)
       virtual Double_t GetMvaValue( Double_t* err = 0 ) = 0;
 
+      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = 0 );
+
       // options treatment
       virtual void     Init()           = 0;
       virtual void     DeclareOptions() = 0;
       virtual void     ProcessOptions() = 0;
+      virtual void     DeclareCompatibilityOptions(); // declaration of past options
 
       // regression response
       virtual const std::vector<Float_t>& GetRegressionValues() {
          std::vector<Float_t>* ptr = new std::vector<Float_t>(0);
-         return (*ptr); 
+         return (*ptr);
       }
 
       // probability of classifier response (mvaval) to be signal (requires "CreateMvaPdf" option set)
@@ -168,40 +169,45 @@ namespace TMVA {
       // print help message
       void             PrintHelpMessage() const;
 
+      //
       // streamer methods for training information (creates "weight" files) --------
-      // meta data characterising the method
-      void             WriteStateToFile     () const;                                             
-      void             WriteStateToStream   ( std::ostream& tf, Bool_t isClass = kFALSE ) const;   // obsolete
-      void             WriteStateToStream   ( TFile&        rf ) const;                            // obsolete
-      void             WriteStateToXML      ( void* parent     ) const;
+      //
+   public:
+      void WriteStateToFile     () const;
+      void ReadStateFromFile    ();
 
-      void             ReadStateFromFile    ();                            
-      void             ReadStateFromStream  ( std::istream& tf );           // obsolete
-      void             ReadStateFromStream  ( TFile&        rf );           // obsolete
-      void             ReadStateFromXML     ( void* parent     );
-      
-      // the variable information
-      void             WriteVarsToStream    ( std::ostream& o, const TString& prefix = "" ) const;  // obsolete
-      void             AddVarsXMLTo         ( void* parent  ) const;
-      void             AddTargetsXMLTo         ( void* parent  ) const;
-
-      void             ReadVarsFromStream   ( std::istream& istr );         // obsolete
-      void             ReadVariablesFromXML ( void* varnode );
-      void             ReadTargetsFromXML   ( void* tarnode );
-
+   protected:      
       // the actual "weights"
-      virtual void     WriteWeightsToStream ( std::ostream&  ) const = 0;   // obsolete
-      virtual void     WriteWeightsToStream ( TFile&         ) const {}     // obsolete
-      virtual void     AddWeightsXMLTo      ( void* parent   ) const = 0;
+      virtual void AddWeightsXMLTo      ( void* parent ) const = 0;
+      virtual void ReadWeightsFromXML   ( void* wghtnode ) = 0;
+      virtual void ReadWeightsFromStream( std::istream& ) = 0;       // backward compatibility
+      virtual void ReadWeightsFromStream( TFile& ) {}                // backward compatibility
 
-      virtual void     ReadWeightsFromStream( std::istream&  ) = 0;         // obsolete
-      virtual void     ReadWeightsFromStream( TFile&         ) {}           // obsolete
-      virtual void     ReadWeightsFromXML   ( void* wghtnode ) = 0;
+   private:
+      friend class MethodCategory;
+      friend class MethodCommittee;
+      friend class MethodCompositeBase;
+      void WriteStateToXML      ( void* parent ) const;
+      void ReadStateFromXML     ( void* parent );
+      void WriteStateToStream   ( std::ostream& tf ) const;   // needed for MakeClass
+      void WriteVarsToStream    ( std::ostream& tf, const TString& prefix = "" ) const;  // needed for MakeClass
+      void ReadStateFromStream  ( std::istream& tf );         // backward compatibility
+      void ReadStateFromStream  ( TFile&        rf );         // backward compatibility
 
+      // the variable information
+      void AddVarsXMLTo         ( void* parent  ) const;
+      void AddSpectatorsXMLTo   ( void* parent  ) const;
+      void AddTargetsXMLTo      ( void* parent  ) const;
+      void ReadVariablesFromXML ( void* varnode );
+      void ReadSpectatorsFromXML( void* specnode);
+      void ReadTargetsFromXML   ( void* tarnode );
+      void ReadVarsFromStream   ( std::istream& istr );       // backward compatibility
+
+   public:
       // ---------------------------------------------------------------------------
 
       // write evaluation histograms into target file
-      virtual void     WriteEvaluationHistosToFile();
+      virtual void     WriteEvaluationHistosToFile(Types::ETreeType treetype);
 
       // write classifier-specific monitoring information to target file
       virtual void     WriteMonitoringHistosToFile() const;
@@ -242,8 +248,7 @@ namespace TMVA {
 
       // build classifier name in Test tree
       // MVA prefix (e.g., "TMVA_")
-      void             SetTestvarPrefix( TString prefix )       { fTestvarPrefix = prefix; }
-      void             SetTestvarName  ( const TString & v="" ) { fTestvar = (v=="") ? (fTestvarPrefix + GetMethodName()) : v; }
+      void             SetTestvarName  ( const TString & v="" ) { fTestvar = (v=="") ? ("MVA_" + GetMethodName()) : v; }
 
       // number of input variable used by classifier
       UInt_t           GetNvar()       const { return DataInfo().GetNVariables(); }
@@ -271,6 +276,8 @@ namespace TMVA {
       TDirectory*      BaseDir()       const;
       TDirectory*      MethodBaseDir() const;
       void             SetMethodDir ( TDirectory* methodDir ) { fBaseDir = fMethodBaseDir  = methodDir; }
+      void             SetBaseDir( TDirectory* methodDir ){ fBaseDir = methodDir; }
+      void             SetMethodBaseDir( TDirectory* methodDir ){ fMethodBaseDir = methodDir; }
 
       // the TMVA version can be obtained and checked using
       //    if (GetTrainingTMVAVersionCode()>TMVA_VERSION(3,7,2)) {...}
@@ -288,6 +295,8 @@ namespace TMVA {
 
       // returns reference to data set
       DataSetInfo&     DataInfo() const { return fDataSetInfo; }
+
+      mutable const Event*   fTmpEvent; //! temporary event when testing on a different DataSet than the own one
 
       // event reference and update
       UInt_t           GetNEvents      () const { return Data()->GetNEvents(); }
@@ -312,6 +321,9 @@ namespace TMVA {
       virtual void          SetAnalysisType( Types::EAnalysisType type ) { fAnalysisType = type; }
       Types::EAnalysisType  GetAnalysisType() const { return fAnalysisType; }
       Bool_t                DoRegression() const { return fAnalysisType == Types::kRegression; }
+
+      // setter method for suppressing writing to XML and writing of standalone classes
+      void                  DisableWriting(Bool_t setter){ fDisableWriting = setter; }
 
    protected:
 
@@ -364,7 +376,7 @@ namespace TMVA {
                        Double_t&, Double_t&, Double_t& );
 
       // if TRUE, write weights only to text files 
-      Bool_t           TxtWeightsOnly() const { return fTxtWeightsOnly; }
+      Bool_t           TxtWeightsOnly() const { return kTRUE; }
 
    protected:
       
@@ -373,6 +385,14 @@ namespace TMVA {
       Float_t GetTWeight( const Event* ev ) const { 
          return (fIgnoreNegWeightsInTraining && (ev->GetWeight() < 0)) ? 0. : ev->GetWeight(); 
       }
+
+      Bool_t           IsConstructedFromWeightFile() const { return fConstructedFromWeightFile; }
+
+   public:
+      virtual void SetCurrentEvent( Long64_t ievt ) const {
+         Data()->SetCurrentEvent(ievt);
+      }
+
 
    private:
 
@@ -408,11 +428,13 @@ namespace TMVA {
       virtual void     AddClassifierOutputProb( Types::ETreeType type );
       virtual void     AddRegressionOutput    ( Types::ETreeType type );
 
-      // ========== class members ==================================================
-
    private:
 
       void             AddInfoItem( void* gi, const TString& name, const TString& value) const;
+      void             CreateVariableTransforms(const TString& trafoDefinition );
+
+
+      // ========== class members ==================================================
 
    protected:
 
@@ -428,12 +450,12 @@ namespace TMVA {
 
       std::vector<Float_t>* fRegressionReturnVal;  // holds the return-value for the regression
 
-      Bool_t           IsConstructedFromWeightFile() const { return fConstructedFromWeightFile; }
-
    private:
 
       // MethodCuts redefines some of the evaluation variables and histograms -> must access private members
       friend class MethodCuts; 
+
+      Bool_t           fDisableWriting;       //! set to true in order to suppress writing to XML
 
       // data sets
       DataSetInfo&     fDataSetInfo;         //! the data set information (sometimes needed)
@@ -445,11 +467,9 @@ namespace TMVA {
       TString          fJobName;             // name of job -> user defined, appears in weight files
       TString          fMethodName;          // name of the method (set in derived class)
       Types::EMVA      fMethodType;          // type of method (set in derived class)      
-      TString          fTestvarPrefix;       // 'MVA_' prefix of MVA variable
       TString          fTestvar;             // variable used in evaluation, etc (mostly the MVA)
       UInt_t           fTMVATrainingVersion; // TMVA version used for training
       UInt_t           fROOTTrainingVersion; // ROOT version used for training
-      Bool_t           fNormalise;           // normalise input variables
       Bool_t           fConstructedFromWeightFile; // is it obtained from weight file? 
 
       // Directory structure: fMethodBaseDir/fBaseDir
@@ -490,9 +510,7 @@ namespace TMVA {
       Double_t         fXmax;                // maximum (signal and background)
 
       // variable preprocessing
-      Bool_t           fUseDecorr;                   // kept for backward compatibility
       TString          fVarTransformString;          // labels variable transform method
-      TString          fVariableTransformTypeString; // labels variable transform type
 
       TransformationHandler fTransformation;         // the list of transformations
 
@@ -509,7 +527,6 @@ namespace TMVA {
    protected:
 
       Bool_t           IgnoreEventsWithNegWeightsInTraining() const { return fIgnoreNegWeightsInTraining; }
-      Bool_t           fTxtWeightsOnly;        // if TRUE, write weights only to text files 
 
       // for signal/background
       UInt_t           fSignalClass;           // index of the Signal-class
@@ -541,12 +558,28 @@ namespace TMVA {
       // this carrier
       static MethodBase* fgThisBase;         // this pointer
 
+
+      // ===== depriciated options, kept for backward compatibility  =====
+   private:
+
+      Bool_t           fNormalise;                   // normalise input variables
+      Bool_t           fUseDecorr;                   // synonymous for decorrelation
+      TString          fVariableTransformTypeString; // labels variable transform type
+      Bool_t           fTxtWeightsOnly;              // if TRUE, write weights only to text files 
+      Int_t            fNbinsMVAPdf;                 // number of bins used in histogram that creates PDF
+      Int_t            fNsmoothMVAPdf;               // number of times a histogram is smoothed before creating the PDF
+
    protected:
 
       ClassDef(MethodBase,0)  // Virtual base class for all TMVA method
 
    };
 } // namespace TMVA
+
+
+
+
+
 
 
 // ========== INLINE FUNCTIONS =========================================================
@@ -560,62 +593,34 @@ inline const TMVA::Event* TMVA::MethodBase::GetEvent( const TMVA::Event* ev ) co
 
 inline const TMVA::Event* TMVA::MethodBase::GetEvent() const 
 {
-   return GetTransformationHandler().Transform(Data()->GetEvent());
+   if(fTmpEvent)
+      return GetTransformationHandler().Transform(fTmpEvent);
+   else
+      return GetTransformationHandler().Transform(Data()->GetEvent());
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt ) const 
 {
+   assert(fTmpEvent==0);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt));
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt, Types::ETreeType type ) const 
 {
+   assert(fTmpEvent==0);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt, type));
-}
-
-inline const std::vector<TMVA::Event*>& TMVA::MethodBase::GetEventCollection( Types::ETreeType type) 
-{
-   if (GetTransformationHandler().GetTransformationList().GetEntries() <= 0) {
-      return (Data()->GetEventCollection(type));
-   }
-   Int_t idx = Data()->TreeIndex(type);
-   if (fEventCollections.at(idx) == 0) {
-      fEventCollections.at(idx) = &(Data()->GetEventCollection(type));
-      fEventCollections.at(idx) = GetTransformationHandler().CalcTransformations(*(fEventCollections.at(idx)),kTRUE);
-   }
-   return *(fEventCollections.at(idx));
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetTrainingEvent( Long64_t ievt ) const 
 {
+   assert(fTmpEvent==0);
    return GetEvent(ievt, Types::kTraining);
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetTestingEvent( Long64_t ievt ) const 
 {
+   assert(fTmpEvent==0);
    return GetEvent(ievt, Types::kTesting);
-}
-
-//_______________________________________________________________________
-inline TString TMVA::MethodBase::GetTrainingTMVAVersionString() const
-{
-   // calculates the TMVA version string from the training version code on the fly
-   UInt_t a = GetTrainingTMVAVersionCode() & 0xff0000; a>>=16;
-   UInt_t b = GetTrainingTMVAVersionCode() & 0x00ff00; b>>=8;
-   UInt_t c = GetTrainingTMVAVersionCode() & 0x0000ff;
-
-   return TString(Form("%i.%i.%i",a,b,c));
-}
-
-//_______________________________________________________________________
-inline TString TMVA::MethodBase::GetTrainingROOTVersionString() const
-{
-   // calculates the ROOT version string from the training version code on the fly
-   UInt_t a = GetTrainingROOTVersionCode() & 0xff0000; a>>=16;
-   UInt_t b = GetTrainingROOTVersionCode() & 0x00ff00; b>>=8;
-   UInt_t c = GetTrainingROOTVersionCode() & 0x0000ff;
-
-   return TString(Form("%i.%02i/%02i",a,b,c));
 }
 
 #endif

@@ -129,7 +129,7 @@ inline Bool_t TMVA::RuleCut::EvalEvent( const Event &eve )
    UInt_t nc=0;
    while (!done) {
       sel = fSelector[nc];
-      val = eve.GetVal(sel);
+      val = eve.GetValue(sel);
       minOK = (fCutDoMin[nc] ? (val>fCutMin[nc]):kTRUE); // min cut ok
       cutOK = (minOK ? ((fCutDoMax[nc] ? (val<fCutMax[nc]):kTRUE)) : kFALSE); // cut ok
       nc++;

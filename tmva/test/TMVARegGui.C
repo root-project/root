@@ -170,7 +170,7 @@ void TMVARegGui( const char* fName = "TMVAReg.root" )
 
    ActionButton( cbar,  
                  Form( "(%i) Plot Foams", ++ic ),
-                 Form( ".x PlotFoams.C(\"weights/TMVARegression_PDEFoam.weights_foams.xml\")", fName ),
+                 Form( ".x PlotFoams.C(\"weights/TMVARegression_PDEFoam.weights_foams.root\")", fName ),
                  "Plot Foams (macro PlotFoams.C)",
                  buttonType, "PDEFoam" );
 

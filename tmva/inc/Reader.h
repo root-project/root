@@ -120,8 +120,15 @@ namespace TMVA {
       
       void     AddVariable( const TString& expression, Float_t* );
       void     AddVariable( const TString& expression, Int_t* );
+
+      void     AddSpectator( const TString& expression, Float_t* );
+      void     AddSpectator( const TString& expression, Int_t* );
+
+
   
    private:
+
+      TString GetMethodTypeFromFile( const TString& filename );
 
       // this booking method is internal
       IMethod* BookMVA( Types::EMVA method,  const TString& weightfile );

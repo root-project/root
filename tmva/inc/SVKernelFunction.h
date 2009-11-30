@@ -34,21 +34,31 @@
 
 namespace TMVA {
 
-	class SVEvent;
-	class SVKernelFunction {
+   class SVEvent;
+   class SVKernelFunction {
 
    public:
 
       SVKernelFunction();
       SVKernelFunction( Float_t );
       ~SVKernelFunction();
-
+      
       Float_t Evaluate( SVEvent* ev1, SVEvent* ev2 );
 
+      enum EKernelType { kLinear , kRBF, kPolynomial, kSigmoidal };
+
+      void setCompatibilityParams(EKernelType k, UInt_t order, Float_t theta, Float_t kappa);
+         
    private:
 
       Float_t fGamma;   // documentation
-	};
+
+      // kernel, order, theta, and kappa are for backward compatibility
+      EKernelType fKernel;
+      UInt_t      fOrder;
+      Float_t     fTheta;
+      Float_t     fKappa;
+   };
 }
 
 #endif

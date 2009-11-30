@@ -149,15 +149,14 @@ Double_t TMVA::GeneticAlgorithm::CalculateFitness()
 
 #else 
 
-   for ( int index = 0; index < fPopulation.GetPopulationSize(); ++index )
-   {
-         GeneticGenes* genes = fPopulation.GetGenes(index);
-         Double_t fitness = NewFitness( genes->GetFitness(),
-                                        fFitterTarget.EstimatorFunction(genes->GetFactors()) );
-         genes->SetFitness( fitness );
-         
-         if ( fBestFitness  > fitness )
-            fBestFitness = fitness;
+   for ( int index = 0; index < fPopulation.GetPopulationSize(); ++index ) {
+      GeneticGenes* genes = fPopulation.GetGenes(index);
+      Double_t fitness = NewFitness( genes->GetFitness(),
+                                     fFitterTarget.EstimatorFunction(genes->GetFactors()) );
+      genes->SetFitness( fitness );
+      
+      if ( fBestFitness  > fitness )
+         fBestFitness = fitness;
       
    }
 

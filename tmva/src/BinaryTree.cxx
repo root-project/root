@@ -132,17 +132,17 @@ void* TMVA::BinaryTree::AddXMLTo(void* parent) const {
 }
 
 //_______________________________________________________________________
-void TMVA::BinaryTree::ReadXML(void* node) {
+void TMVA::BinaryTree::ReadXML(void* node, UInt_t tmva_Version_Code ) {
    // read attributes from XML
    this->DeleteNode( fRoot );
    fRoot= CreateNode();
    void* trnode = gTools().xmlengine().GetChild(node);
-   fRoot->ReadXML(trnode);
+   fRoot->ReadXML(trnode, tmva_Version_Code);
    this->SetTotalTreeDepth();
 }
 
 //_______________________________________________________________________
-TMVA::BinaryTree* TMVA::BinaryTree::CreateFromXML(void* node) {
+TMVA::BinaryTree* TMVA::BinaryTree::CreateFromXML(void* node, UInt_t tmva_Version_Code ) {
    // re-create a new tree (decision tree or search tree) from XML
    std::string type("");
    gTools().ReadAttr(node,"type", type);
@@ -154,7 +154,7 @@ TMVA::BinaryTree* TMVA::BinaryTree::CreateFromXML(void* node) {
    } else {
       gTools().Log() << kFATAL << "Can't read binary tree of type '" << type << "'" << Endl;
    }
-   bt->ReadXML( node );
+   bt->ReadXML( node, tmva_Version_Code );
    return bt;
 }
 
@@ -167,7 +167,7 @@ ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
 }
 
 //_______________________________________________________________________
-void TMVA::BinaryTree::Read(istream & istr)
+void TMVA::BinaryTree::Read(istream & istr, UInt_t tmva_Version_Code )
 {
    // Read the binary tree from an input stream.
    // The input stream format depends on the tree type,
@@ -182,7 +182,7 @@ void TMVA::BinaryTree::Read(istream & istr)
    }
 
    while(1) {
-      if ( ! currentNode->ReadDataRecord(istr) ) {
+      if ( ! currentNode->ReadDataRecord(istr, tmva_Version_Code) ) {
          delete currentNode;
          this->SetTotalTreeDepth();
          return;

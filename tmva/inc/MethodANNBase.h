@@ -67,6 +67,8 @@
 #include "TMVA/TNeuronInput.h"
 #endif
 
+class TH1;
+
 namespace TMVA {
 
    class MethodANNBase : public MethodBase {
@@ -106,11 +108,9 @@ namespace TMVA {
       // print network, for debugging
       virtual void PrintNetwork() const;
       
-      using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
       void AddWeightsXMLTo( void* parent ) const;
       void ReadWeightsFromXML( void* wghtnode );
 
@@ -155,20 +155,23 @@ namespace TMVA {
       TNeuron* GetOutputNeuron( Int_t index = 0) { return fOutputNeurons.at(index); }
       
       // protected variables
-      TObjArray*    fNetwork;     // TObjArray of TObjArrays representing network
-      TObjArray*    fSynapses;    // array of pointers to synapses, no structural data
-      TActivation*  fActivation;  // activation function to be used for hidden layers
-      TActivation*  fIdentity;    // activation for input and output layers
-      TRandom3*     frgen;        // random number generator for various uses
+      TObjArray*    fNetwork;         // TObjArray of TObjArrays representing network
+      TObjArray*    fSynapses;        // array of pointers to synapses, no structural data
+      TActivation*  fActivation;      // activation function to be used for hidden layers
+      TActivation*  fIdentity;        // activation for input and output layers
+      TRandom3*     frgen;            // random number generator for various uses
       TNeuronInput* fInputCalculator; // input calculator for all neurons
 
       // monitoring histograms
       TH1F* fEstimatorHistTrain; // monitors convergence of training sample
       TH1F* fEstimatorHistTest;  // monitors convergence of independent test sample
-
-      // the neuronal network can be initialized after the analysis type has been set.
-      void   SetAnalysisType( Types::EAnalysisType type );
       
+      // monitoring histograms (not available for regression)
+      void CreateWeightMonitoringHists( const TString& bulkname, std::vector<TH1*>* hv = 0 ) const;
+      std::vector<TH1*> fEpochMonHistS; // epoch monitoring hitograms for signal
+      std::vector<TH1*> fEpochMonHistB; // epoch monitoring hitograms for background
+      std::vector<TH1*> fEpochMonHistW; // epoch monitoring hitograms for weights
+
    private:
       
       // helper functions for building network
@@ -190,12 +193,12 @@ namespace TMVA {
       void PrintNeuron(TNeuron* neuron) const;
       
       // private variables
-      Int_t      fNcycles;         // number of epochs to train
-      TString    fNeuronType;      // name of neuron activation function class
-      TString    fNeuronInputType; // name of neuron input calculator class
-      TObjArray* fInputLayer;      // cache this for fast access
-      std::vector<TNeuron*>   fOutputNeurons;    // cache this for fast access
-      TString    fLayerSpec;       // layout specification option
+      Int_t                   fNcycles;         // number of epochs to train
+      TString                 fNeuronType;      // name of neuron activation function class
+      TString                 fNeuronInputType; // name of neuron input calculator class
+      TObjArray*              fInputLayer;      // cache this for fast access
+      std::vector<TNeuron*>   fOutputNeurons;   // cache this for fast access
+      TString                 fLayerSpec;       // layout specification option
       
       // some static flags
       static const Bool_t fgDEBUG      = kTRUE;  // debug flag

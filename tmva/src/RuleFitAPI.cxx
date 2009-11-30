@@ -372,7 +372,7 @@ Bool_t TMVA::RuleFitAPI::WriteTrain()
    for (UInt_t ivar=0; ivar<fMethodRuleFit->DataInfo().GetNVariables(); ivar++) {
       for (Int_t ievt=0;ievt<fMethodRuleFit->Data()->GetNTrainingEvents(); ievt++) {
          const Event * ev = fMethodRuleFit->GetTrainingEvent(ievt);
-         x = ev->GetVal(ivar);
+         x = ev->GetValue(ivar);
          WriteFloat(fx,&x,1);
          if (ivar==0) {
             w = ev->GetWeight();
@@ -409,7 +409,7 @@ Bool_t TMVA::RuleFitAPI::WriteTest()
    // ...
    for (UInt_t ivar=0; ivar<fMethodRuleFit->DataInfo().GetNVariables(); ivar++) {
       for (Int_t ievt=0;ievt<fMethodRuleFit->Data()->GetNEvents(); ievt++) {
-         vf =   fMethodRuleFit->GetEvent(ievt)->GetVal(ivar);
+         vf =   fMethodRuleFit->GetEvent(ievt)->GetValue(ivar);
          WriteFloat(f,&vf,1);
       }
    }

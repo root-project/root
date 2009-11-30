@@ -43,7 +43,7 @@ ClassImp(TMVA::MsgLogger)
 // this is the hard-coded maximum length of the source names
 UInt_t TMVA::MsgLogger::fgMaxSourceSize = 25;
 Bool_t TMVA::MsgLogger::fgInhibitOutput = kFALSE;
-void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }	 
+void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }
 void   TMVA::MsgLogger::EnableOutput()  { fgInhibitOutput = kFALSE; }
 
 //_______________________________________________________________________
@@ -184,11 +184,11 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    // putting the output string, the message type, and the color
    // switcher together into a single string
 
-   if (type < fMinType || fgInhibitOutput) return; // no output
+   if (type < fMinType || (fgInhibitOutput && type!=kFATAL)) return; // no output
 
    std::map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
-   if (!gConfig().IsSilent()) {
+   if (!gConfig().IsSilent() || type==kFATAL) {
       if (gConfig().UseColor()) {
          // no text for INFO or VERBOSE
          if (type == kINFO || type == kVERBOSE) 
@@ -204,7 +204,7 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    }
    // take decision to stop if fatal error
    if (type == kFATAL) { 
-      if (!gConfig().IsSilent()) std::cout << "***> abort program execution" << std::endl;
+      std::cout << "***> abort program execution" << std::endl;
       std::exit(1);
    }
 }

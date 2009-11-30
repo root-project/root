@@ -752,8 +752,9 @@ void TMVA::RuleFit::MakeVisHists()
       return;
    }   
    corrDir = (TDirectory*)varDir->Get( corrDirName );
-   if (methodDir==0) {
-      Log() << kWARNING << "No correlation directory found - BUG?" << Endl;
+   if (corrDir==0) {
+      Log() << kWARNING << "No correlation directory found" << Endl;
+      Log() << kWARNING << "Check for other warnings related to correlation histograms" << Endl;
       return;
    }
    if (methodDir==0) {

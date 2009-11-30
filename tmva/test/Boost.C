@@ -67,7 +67,7 @@ void Boost(){
    factory->BookMethod( TMVA::Types::kFisher, "FisherBoostStep3", fisher+":Boost_Num=100:Boost_Transform=step:Boost_Type=AdaBoost:Boost_AdaBoostBeta=1.5" );
 
   // Train MVAs using the set of training events
-   factory->TrainAllMethodsForClassification();
+   factory->TrainAllMethods();
 
    // ---- Evaluate all MVAs using the set of test events
    factory->TestAllMethods();

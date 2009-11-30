@@ -89,7 +89,7 @@ namespace TMVA {
       void InitDelta()           { fDelta = 0.0; fCount = 0; }
 
       void SetDEDw(Double_t DEDw)              { fDEDw = DEDw;           }
-      Double_t GetDEDw()                       { return fDEDw;           }	
+      Double_t GetDEDw()                       { return fDEDw;           }
       Double_t GetDelta()                      { return fDelta;          }
 
    private:

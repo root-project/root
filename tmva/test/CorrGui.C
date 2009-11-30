@@ -44,7 +44,8 @@ void CorrGui(  TString fin = "TMVA.root", TString dirName = "InputVariables_Id",
    dir->cd();
 
    // how many variables  are in the directory?
-   Int_t noVar = ((dir->GetListOfKeys())->GetEntries()) / 2 + 1;
+   Int_t noVar = TMVAGlob::GetNumberOfInputVariables(dir);
+   cout << "found number of variables='" << noVar<< endl;
    TString Var[noVar]; 
 
    TIter next(dir->GetListOfKeys());
@@ -59,7 +60,7 @@ void CorrGui(  TString fin = "TMVA.root", TString dirName = "InputVariables_Id",
          TH1 *sig = (TH1*)key->ReadObj();
          TString hname = sig->GetName();
          // check for all signal histograms
-         if (hname.Contains("__Signal") || hname.Contains("__Regression")) { // found a new signal plot
+         if (hname.Contains("__Signal") || (hname.Contains("__Regression") && !hname.Contains("__Regression_target"))) { // found a new signal plot
             hname.ReplaceAll(extension,"");
             hname.ReplaceAll("__Signal","");
             hname.ReplaceAll("__Regression","");
@@ -68,7 +69,8 @@ void CorrGui(  TString fin = "TMVA.root", TString dirName = "InputVariables_Id",
          }
       }
    }
-
+   cout << "found histos for "<< it <<" variables='" << endl;
+  
    for (Int_t ic=0;ic<it;ic++) {    
       cbar->AddButton( (Var[ic].Contains("_target") ? 
                         Form( "      Target: %s      ", Var[ic].ReplaceAll("_target","").Data()) : 

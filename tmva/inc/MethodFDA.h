@@ -41,8 +41,8 @@
 // (background) events. The parameter fitting is done via the abstract  //
 // class FitterBase, featuring Monte Carlo sampling, Genetic            //
 // Algorithm, Simulated Annealing, MINUIT and combinations of these.    //
-//																								//
-// Can compute one-dimensional regression											//
+//                                                                      //
+// Can compute one-dimensional regression                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -82,10 +82,8 @@ namespace TMVA {
       // training method
       void Train( void );
 
-      using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
-      void WriteWeightsToStream ( std::ostream & o ) const;
       void AddWeightsXMLTo      ( void* parent     ) const;
 
       void ReadWeightsFromStream( std::istream & i );
@@ -94,7 +92,7 @@ namespace TMVA {
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0 );
 
-		std::vector<Float_t>& GetRegressionValues();	
+      std::vector<Float_t>& GetRegressionValues();
 
       void Init( void );
 
@@ -115,7 +113,7 @@ namespace TMVA {
       void GetHelpMessage() const;
 
    private:
-		
+
       // create and interpret formula expression and compute estimator
       void     CreateFormula   ();
       Double_t InterpretFormula( const Event*, std::vector<Double_t>& pars );
@@ -148,7 +146,7 @@ namespace TMVA {
       // sum of weights (this should become centrally available through the dataset)
       Double_t               fSumOfWeightsSig;    // sum of weights (signal)
       Double_t               fSumOfWeightsBkg;    // sum of weights (background)
-      Double_t               fSumOfWeights;		  // sum of weights 
+      Double_t               fSumOfWeights;       // sum of weights 
 
       ClassDef(MethodFDA,0)  // Function Discriminant Analysis
    };

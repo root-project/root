@@ -96,10 +96,8 @@ namespace TMVA {
       // training method
       void Train( void );
 
-      using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
-      void WriteWeightsToStream ( std::ostream & o ) const;
       void AddWeightsXMLTo      ( void* parent ) const;
 
       void ReadWeightsFromStream( std::istream & i );
@@ -179,8 +177,7 @@ namespace TMVA {
       enum EFitParameters { kNotEnforced = 0,
                             kForceMin,
                             kForceMax,
-                            kForceSmart,
-                            kForceVerySmart };
+                            kForceSmart };
 
       // general
       TString                 fFitMethodS;         // chosen fit method (string)

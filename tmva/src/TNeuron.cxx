@@ -296,7 +296,7 @@ void TMVA::TNeuron::InitSynapseDeltas()
 }
 
 //______________________________________________________________________________
-void TMVA::TNeuron::PrintLinks(TObjArray* links)
+void TMVA::TNeuron::PrintLinks(TObjArray* links) const 
 {
    // print an array of TSynapses, for debugging
 

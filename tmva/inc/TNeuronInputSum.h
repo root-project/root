@@ -60,7 +60,7 @@ namespace TMVA {
       Double_t GetInput( const TNeuron* neuron ) const {
          if (neuron->IsInputNeuron()) return 0;
          Double_t result = 0;
-	 Int_t npl = neuron->NumPreLinks();
+         Int_t npl = neuron->NumPreLinks();
          for (Int_t i=0; i < npl; i++) {
             result += neuron->PreLinkAt(i)->GetWeightedValue();
          }

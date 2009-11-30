@@ -105,8 +105,8 @@ namespace TMVA {
 
    private: 
       // Read the data block
-      virtual void ReadAttributes(void* node);
-      virtual Bool_t ReadDataRecord( std::istream& is );
+      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+      virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void ReadContent(std::stringstream& s);
       std::vector<Float_t> fEventV;
       std::vector<Float_t> fTargets;

@@ -439,9 +439,10 @@ void TMVA::MethodBoost::TestClassification()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBoost::WriteEvaluationHistosToFile()
+void TMVA::MethodBoost::WriteEvaluationHistosToFile(Types::ETreeType treetype)
 {
-   MethodBase::WriteEvaluationHistosToFile();
+   MethodBase::WriteEvaluationHistosToFile(treetype);
+   if(treetype==Types::kTraining) return;
    UInt_t nloop = fTestSigMVAHist.size();
    if (fMethods.size()<nloop) nloop = fMethods.size(); 
    if (fMonitorBoostedMethod) {

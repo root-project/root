@@ -15,6 +15,7 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *      Doug Schouten   <dschoute@sfu.ca>        - Simon Fraser U., Canada        *
+ *      Jan Therhaag    <jan.therhaag@cern.ch>   - U. of Bonn, Germany            *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         *
@@ -127,6 +128,9 @@ REGISTER_METHOD(BDT)
 
 ClassImp(TMVA::MethodBDT)
 
+const Int_t TMVA::MethodBDT::fgDebugLevel = 0;
+
+
 //_______________________________________________________________________
 TMVA::MethodBDT::MethodBDT( const TString& jobName,
                             const TString& methodTitle,
@@ -196,7 +200,7 @@ void TMVA::MethodBDT::DeclareOptions()
    // PruneStrength    a parameter to adjust the amount of pruning. Should be large enough such that overtraining is avoided.
    // PruneBeforeBoost flag to prune the tree before applying boosting algorithm
    // PruningValFraction   number of events to use for optimizing pruning (only if PruneStrength < 0, i.e. automatic pruning)
-   // NoNegWeightsInTraining  Ignore negative weight events in the training.
+   // IgnoreNegWeightsInTraining  Ignore negative weight events in the training.
    // NNodesMax        maximum number of nodes allwed in the tree splitting, then it stops.
    // MaxDepth         maximum depth of the decision tree allowed before further splitting is stopped
 
@@ -207,7 +211,12 @@ void TMVA::MethodBDT::DeclareOptions()
    AddPreDefVal(TString("RegBoost"));
    AddPreDefVal(TString("AdaBoostR2"));
    AddPreDefVal(TString("Grad"));
-   DeclareOptionRef(fAdaBoostR2Loss, "AdaBoostR2Loss", "Type of Loss function in AdaBoostR2t (Linear,Quadratic or Exponential)");
+   if (DoRegression()) {
+      fBoostType = "AdaBoostR2";
+   }else{
+      fBoostType = "AdaBoost";
+   }
+   DeclareOptionRef(fAdaBoostR2Loss="Quadratic", "AdaBoostR2Loss", "Type of Loss function in AdaBoostR2t (Linear,Quadratic or Exponential)");
    AddPreDefVal(TString("Linear"));
    AddPreDefVal(TString("Quadratic"));
    AddPreDefVal(TString("Exponential"));
@@ -224,14 +233,24 @@ void TMVA::MethodBDT::DeclareOptions()
                     "Use weighted trees or simple average in classification from the forest");
    DeclareOptionRef(fUseYesNoLeaf=kTRUE, "UseYesNoLeaf",
                     "Use Sig or Bkg categories, or the purity=S/(S+B) as classification of the leaf node");
+   if (DoRegression()) {
+      fUseYesNoLeaf = kFALSE;
+   }
+
+
    DeclareOptionRef(fNodePurityLimit=0.5, "NodePurityLimit", "In boosting/pruning, nodes with purity > NodePurityLimit are signal; background otherwise.");
-   DeclareOptionRef(fSepTypeS="GiniIndex", "SeparationType", "Separation criterion for node splitting");
+   DeclareOptionRef(fSepTypeS, "SeparationType", "Separation criterion for node splitting");
    AddPreDefVal(TString("CrossEntropy"));
    AddPreDefVal(TString("GiniIndex"));
    AddPreDefVal(TString("GiniIndexWithLaplace"));
    AddPreDefVal(TString("MisClassificationError"));
    AddPreDefVal(TString("SDivSqrtSPlusB"));
    AddPreDefVal(TString("RegressionVariance"));
+   if (DoRegression()) {
+      fSepTypeS = "RegressionVariance";
+   }else{
+      fSepTypeS = "GiniIndex";
+   }
    DeclareOptionRef(fNodeMinEvents, "nEventsMin", "Minimum number of events required in a leaf node (default: max(20, N_train/(Nvar^2)/10) ) ");
    DeclareOptionRef(fNCuts, "nCuts", "Number of steps during node cut optimisation");
    DeclareOptionRef(fPruneStrength, "PruneStrength", "Pruning strength");
@@ -242,8 +261,22 @@ void TMVA::MethodBDT::DeclareOptions()
    DeclareOptionRef(fPruneBeforeBoost=kFALSE, "PruneBeforeBoost", "Flag to prune the tree before applying boosting algorithm");
    DeclareOptionRef(fFValidationEvents=0.5, "PruningValFraction", "Fraction of events to use for optimizing automatic pruning.");
    DeclareOptionRef(fNNodesMax=100000,"NNodesMax","Max number of nodes in tree");
-   DeclareOptionRef(fMaxDepth=3,"MaxDepth","Max depth of the decision tree allowed");
+   if (DoRegression()) {
+      DeclareOptionRef(fMaxDepth=50,"MaxDepth","Max depth of the decision tree allowed");
+   }else{
+      DeclareOptionRef(fMaxDepth=3,"MaxDepth","Max depth of the decision tree allowed");
+   }
 }
+
+void TMVA::MethodBDT::DeclareCompatibilityOptions() {
+   MethodBase::DeclareCompatibilityOptions();
+   DeclareOptionRef(fSampleSizeFraction=1.0,"SampleSizeFraction","Relative size of bagged event sample to original size of the data sample" );
+   DeclareOptionRef(fNoNegWeightsInTraining,"NoNegWeightsInTraining","Ignore negative event weights in the training process" );
+}
+
+
+
+
 //_______________________________________________________________________
 void TMVA::MethodBDT::ProcessOptions()
 {
@@ -295,7 +328,7 @@ void TMVA::MethodBDT::ProcessOptions()
             << "of (un-weighted) events demanded for a tree node (currently you use: nEventsMin="
             <<fNodeMinEvents<<", you can set this via the BDT option string when booking the "
             << "classifier) is large enough to allow for reasonable averaging!!! "
-            << " If this does not help.. maybe you want to try the option: NoNegWeightsInTraining  "
+            << " If this does not help.. maybe you want to try the option: IgnoreNegWeightsInTraining  "
             << "which ignores events with negative weight in the training. " << Endl
             << Endl << "Note: You'll get a WARNING message during the training if that should ever happen" << Endl;
    }
@@ -330,8 +363,15 @@ void TMVA::MethodBDT::Init( void )
 {
    // common initialisation with defaults for the BDT-Method
    fNTrees         = 400;
-   fBoostType      = "AdaBoost";
-   fAdaBoostR2Loss = "Quadratic";
+   if (fAnalysisType == Types::kClassification || fAnalysisType == Types::kMulticlass ) {
+      fMaxDepth        = 3;
+      fBoostType      = "AdaBoost";
+   }else {
+      fMaxDepth = 100;
+      fBoostType      = "AdaBoostR2";
+      fAdaBoostR2Loss = "Quadratic";
+   }
+
    fNodeMinEvents  = TMath::Max( Int_t(40), Int_t( Data()->GetNTrainingEvents() / (10*GetNvar()*GetNvar())) );
    fNCuts          = 20;
    fPruneMethodS   = "CostComplexity";
@@ -342,7 +382,6 @@ void TMVA::MethodBDT::Init( void )
    fUseNvars        =  (GetNvar()>12) ? UInt_t(GetNvar()/8) : TMath::Max(UInt_t(2),UInt_t(GetNvar()/3));
    fUseNTrainEvents = Data()->GetNTrainingEvents();
    fNNodesMax       = 1000000;
-   fMaxDepth        = 3;
    fShrinkage       = 1.0;
 
    // reference cut value to distinguish signal-like from background-like events
@@ -378,8 +417,9 @@ void TMVA::MethodBDT::InitEventSample( void )
          if (first && event->GetWeight() < 0) {
             first = kFALSE;
             Log() << kINFO << "Events with negative event weights are ignored during "
-                  << "the BDT training (option NoNegWeightsInTraining=" 
-                  << IgnoreEventsWithNegWeightsInTraining() <<  ")" << Endl;
+                  << "the BDT training (option IgnoreNegWeightsInTraining is now enabled)" 
+                  << Endl;
+            continue;
          }
          // if fAutomatic == true you need a validation sample to optimize pruning
          if (fAutomatic) {
@@ -599,6 +639,53 @@ void TMVA::MethodBDT::UpdateTargets(vector<TMVA::Event*> eventSample)
 }
 
 //_______________________________________________________________________
+void TMVA::MethodBDT::UpdateTargetsRegression(vector<TMVA::Event*> eventSample, Bool_t first)
+{
+   //Calculate current residuals for all events and update targets for next iteration
+   vector<Double_t> absResiduals;
+   vector< vector<Double_t> > temp;
+   UInt_t i=0;
+   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      if(first){
+         fRegResiduals.push_back((*e)->GetTarget(0)-fBoostWeights[i]);
+      }
+      else{
+         fRegResiduals[i]-=fForest.back()->CheckEvent(*(*e),kFALSE);
+      }
+      absResiduals.push_back(fabs(fRegResiduals[i]));
+      i++;
+   }
+   temp.push_back(absResiduals);
+   temp.push_back(fInitialWeights);
+   fTransitionPoint = GetWeightedQuantile(temp,0.9);
+   i=0;
+   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      if(absResiduals[i]<=fTransitionPoint)
+         (*e)->SetTarget(0,fRegResiduals[i]);
+      else
+         (*e)->SetTarget(0,fTransitionPoint*(fRegResiduals[i]<0?-1.0:1.0));
+      i++;
+   }
+}
+
+//_______________________________________________________________________
+Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  vector<Double_t> > &vec, const Double_t quantile, const Double_t SumOfWeights){
+   //calculates the quantile of the distribution in vec[0] weighted with the values in vec[1]
+   gTools().UsefulSortAscending( vec );
+   Double_t norm = fSumOfWeights;
+   if(SumOfWeights!=0.0) norm = SumOfWeights;
+   Double_t temp = 0.0;
+   
+   Int_t i = 0;
+   while(temp <= norm*quantile){
+      temp += vec[1][i];
+      i++;
+   }
+      
+   return vec[0][i];
+}
+
+//_______________________________________________________________________
 Double_t TMVA::MethodBDT::GradBoost( vector<TMVA::Event*> eventSample, DecisionTree *dt )
 {
    //Calculate the desired response value for each region (line search)
@@ -628,14 +715,69 @@ Double_t TMVA::MethodBDT::GradBoost( vector<TMVA::Event*> eventSample, DecisionT
 }
 
 //_______________________________________________________________________
+Double_t TMVA::MethodBDT::GradBoostRegression( vector<TMVA::Event*> eventSample, DecisionTree *dt )
+{
+   // Implementation of M_TreeBoost using a Huber loss function as desribed by Friedman 1999
+   std::map<TMVA::DecisionTreeNode*,vector< vector<Double_t> > > leaves;
+   UInt_t i =0;
+   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));
+      if(leaves[node].size()==0){
+         (leaves[node]).push_back(vector<Double_t>());
+         (leaves[node]).push_back(vector<Double_t>());
+      }
+      (leaves[node])[0].push_back(fRegResiduals[i]);
+      (leaves[node])[1].push_back((*e)->GetWeight());
+      i++;
+   }
+
+   for (std::map<TMVA::DecisionTreeNode*,vector<vector<Double_t> > >::iterator iLeave=leaves.begin();
+        iLeave!=leaves.end();++iLeave){
+      Double_t LeaveWeight = 0;
+      for(UInt_t j=0;j<((iLeave->second)[0].size());j++){
+         LeaveWeight+=((iLeave->second)[1][j]);
+      }
+      Double_t shift=0,diff= 0;
+      Double_t ResidualMedian = GetWeightedQuantile(iLeave->second,0.5,LeaveWeight);
+      for(UInt_t j=0;j<((iLeave->second)[0].size());j++){
+         diff = (iLeave->second)[0][j]-ResidualMedian;
+         shift+=1.0/((iLeave->second)[0].size())*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
+      }
+      (iLeave->first)->SetResponse(fShrinkage*(ResidualMedian+shift));
+   }
+   UpdateTargetsRegression(eventSample);
+   return 1;
+}
+
+//_______________________________________________________________________
 void TMVA::MethodBDT::InitGradBoost( vector<TMVA::Event*> eventSample)
 {
    // initialize targets for first tree
-   fSepType=NULL; //set fSepType to NULL (regression)
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      Double_t r = ((*e)->IsSignal()?1:0)-0.5; //Calculate initial residua
-      (*e)->SetTarget(0,r);
-      fBoostWeights.push_back(0);
+   fSepType=NULL; //set fSepType to NULL (regression trees are used for both classification an regression)
+   if(DoRegression()){
+
+      vector< vector<Double_t> > weightedTargetValues;
+      vector<Double_t> targets;
+       for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+         targets.push_back((*e)->GetTarget(0));
+         fInitialWeights.push_back((*e)->GetWeight());
+         fSumOfWeights+=(*e)->GetWeight();
+      }
+      weightedTargetValues.push_back(targets);
+      weightedTargetValues.push_back(fInitialWeights);
+      Double_t weightedMedian = GetWeightedQuantile(weightedTargetValues,0.5);
+ 
+      for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+         fBoostWeights.push_back(weightedMedian);  
+      }
+      UpdateTargetsRegression(eventSample,kTRUE);
+   }
+   else{
+      for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+         Double_t r = ((*e)->IsSignal()?1:0)-0.5; //Calculate initial residua
+         (*e)->SetTarget(0,r);
+         fBoostWeights.push_back(0);
+      }
    }
    if (fBaggedGradBoost) GetRandomSubSample(); 
 }
@@ -669,7 +811,12 @@ Double_t TMVA::MethodBDT::Boost( vector<TMVA::Event*> eventSample, DecisionTree 
    else if (fBoostType=="Bagging")     return this->Bagging   (eventSample, iTree);
    else if (fBoostType=="RegBoost")    return this->RegBoost  (eventSample, dt);
    else if (fBoostType=="AdaBoostR2")  return this->AdaBoostR2(eventSample, dt);
-   else if (fBoostType=="Grad")        return this->GradBoost (eventSample, dt);
+   else if (fBoostType=="Grad"){
+      if(DoRegression())
+         return this->GradBoostRegression(eventSample, dt);
+      else
+         return this->GradBoost (eventSample, dt);
+   }
    else {
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<Boost> unknown boost option called" << Endl;
@@ -921,18 +1068,6 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBDT::WriteWeightsToStream( ostream& out) const
-{
-   // and save the weights
-   out << "NTrees= " << fForest.size() 
-       << " of" << " type " << fForest.back()->GetAnalysisType() << endl;
-   for (UInt_t i=0; i< fForest.size(); i++) {
-      out << "Tree " << i << "  boostWeight " << fBoostWeights[i] << endl;
-      (fForest[i])->Print(out);
-   }
-}
-
-//_______________________________________________________________________
 void TMVA::MethodBDT::AddWeightsXMLTo( void* parent ) const
 {
    // write weights to XML 
@@ -966,7 +1101,7 @@ void TMVA::MethodBDT::ReadWeightsFromXML(void* parent) {
    void* ch = gTools().xmlengine().GetChild(parent);
    i=0;
    while(ch) {
-      fForest.push_back( dynamic_cast<DecisionTree*>( BinaryTree::CreateFromXML(ch) ) );
+      fForest.push_back( dynamic_cast<DecisionTree*>( BinaryTree::CreateFromXML(ch, GetTrainingTMVAVersionCode()) ) );
       fForest.back()->SetAnalysisType(Types::EAnalysisType(analysisType));
       fForest.back()->SetTreeID(i++);
       gTools().ReadAttr(ch,"boostWeight",boostWeight);
@@ -981,9 +1116,9 @@ void  TMVA::MethodBDT::ReadWeightsFromStream( istream& istr )
    // read the weights (BDT coefficients)
    TString var, dummy;
    //   Types::EAnalysisType analysisType;
-   Int_t analysisType;
+   Int_t analysisType(0);
 
-   istr >> dummy >> fNTrees >> dummy >> dummy >> analysisType;
+   istr >> dummy >> fNTrees;
    Log() << kINFO << "Read " << fNTrees << " Decision trees" << Endl;
 
    for (UInt_t i=0;i<fForest.size();i++) delete fForest[i];
@@ -1004,7 +1139,7 @@ void  TMVA::MethodBDT::ReadWeightsFromStream( istream& istr )
       fForest.push_back( new DecisionTree() );
       fForest.back()->SetAnalysisType(Types::EAnalysisType(analysisType));
       fForest.back()->SetTreeID(i);
-      fForest.back()->Read(istr);
+      fForest.back()->Read(istr, GetTrainingTMVAVersionCode());
       fBoostWeights.push_back(boostWeight);
    }
 }
@@ -1098,7 +1233,13 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
       }
       fRegressionReturnVal->push_back( rVal/Double_t(count));
    }
-   else {
+   else if(fBoostType=="Grad"){
+      for (UInt_t itree=0; itree<fForest.size(); itree++) {
+         myMVA += fForest[itree]->CheckEvent(*GetEvent(),kFALSE);
+      }
+      fRegressionReturnVal->push_back( myMVA+fBoostWeights[0]);
+   }
+   else{
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
          //
          if (fUseWeightedTrees) {
@@ -1122,8 +1263,8 @@ void  TMVA::MethodBDT::WriteMonitoringHistosToFile( void ) const
    // to the output file.
    Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
 
-   Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, Types::kMaxAnalysisType);
-   results->GetStorage()->Write();
+   //Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, Types::kMaxAnalysisType);
+   //results->GetStorage()->Write();
    fMonitorNtuple->Write();
 }
 

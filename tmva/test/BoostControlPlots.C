@@ -59,7 +59,7 @@ void boostcontrolplots( TDirectory *boostdir ) {
       h->SetMarkerColor(color);
       h->SetMarkerSize( 0.7 );
       h->SetMarkerStyle( 24 );
-      h->SetLineWidth(1);
+      h->SetLineWidth(2);
       h->SetLineColor(color);
       h->Draw();
       c->Update();

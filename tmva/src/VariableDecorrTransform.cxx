@@ -151,6 +151,7 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
       whichMatrix = GetNClasses();
       if (GetNClasses() == 1 ) whichMatrix = (fDecorrMatrices.size()==1?0:2);
    }
+
    TMatrixD* m = fDecorrMatrices.at(whichMatrix);
    if (m == 0) {
       if (whichMatrix == GetNClasses() )
@@ -164,7 +165,7 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
    // transformation to decorrelate the variables
    const Int_t nvar = GetNVariables();
    TVectorD vec( nvar );
-   for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = ev->GetVal(ivar);
+   for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = ev->GetValue(ivar);
    // diagonalise variable vectors
    vec *= *m;
 
@@ -172,8 +173,10 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
       if (fTransformedEvent!=0) { delete fTransformedEvent; fTransformedEvent = 0; }
       fTransformedEvent = new Event();
    }
+
    for (UInt_t itgt=0; itgt<ev->GetNTargets(); itgt++) fTransformedEvent->SetTarget( itgt, ev->GetTarget(itgt) );
    for (Int_t  ivar=0; ivar<nvar;              ivar++) fTransformedEvent->SetVal   ( ivar,vec(ivar) );
+
    fTransformedEvent->SetWeight     ( ev->GetWeight() );
    fTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
    fTransformedEvent->SetClass      ( ev->GetClass() );
@@ -211,7 +214,7 @@ const TMVA::Event* TMVA::VariableDecorrTransform::InverseTransform( const TMVA::
    // transformation to decorrelate the variables
    const Int_t nvar = GetNVariables();
    TVectorD vec( nvar );
-   for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = ev->GetVal(ivar);
+   for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = ev->GetValue(ivar);
 
    // diagonalise variable vectors
    vec *= *m;
@@ -307,12 +310,12 @@ TMVA::VariableDecorrTransform::CalcCovarianceMatrices( const std::vector<Event*>
          count.at(matNum-1)+=weight; // count used events
          for (ivar=0; ivar<nvar; ivar++) {
 
-            Double_t xi = ev->GetVal(ivar);
+            Double_t xi = ev->GetValue(ivar);
             (*v)(ivar) += xi*weight;
             (*m)(ivar, ivar) += (xi*xi*weight);
 
             for (jvar=ivar+1; jvar<nvar; jvar++) {
-               Double_t xj = ev->GetVal(jvar);
+               Double_t xj = ev->GetValue(jvar);
                (*m)(ivar, jvar) += (xi*xj*weight);
                (*m)(jvar, ivar) = (*m)(ivar, jvar); // symmetric matrix
             }
@@ -323,12 +326,12 @@ TMVA::VariableDecorrTransform::CalcCovarianceMatrices( const std::vector<Event*>
       v = vec->at(cls);
       m = mat2->at(cls);
       for (ivar=0; ivar<nvar; ivar++) {
-         Double_t xi = ev->GetVal(ivar);
+         Double_t xi = ev->GetValue(ivar);
          (*v)(ivar) += xi*weight;
          (*m)(ivar, ivar) += (xi*xi*weight);
 
          for (jvar=ivar+1; jvar<nvar; jvar++) {
-            Double_t xj = ev->GetVal(jvar);
+            Double_t xj = ev->GetValue(jvar);
             (*m)(ivar, jvar) += (xi*xj*weight);
             (*m)(jvar, ivar) = (*m)(ivar, jvar); // symmetric matrix
          }
@@ -434,15 +437,15 @@ void TMVA::VariableDecorrTransform::ReadFromXML( void* trfnode )
 
 
 //_______________________________________________________________________
-void TMVA::VariableDecorrTransform::ReadTransformationFromStream( std::istream& istr )
+void TMVA::VariableDecorrTransform::ReadTransformationFromStream( std::istream& istr, const TString& classname )
 {
    // Read the decorellation matrix from an input stream
 
    char buf[512];
    istr.getline(buf,512);
    TString strvar, dummy;
-   UInt_t cls;
    Int_t nrows(0), ncols(0);
+   UInt_t classIdx=0;
    while (!(buf[0]=='#'&& buf[1]=='#')) { // if line starts with ## return
       char* p = buf;
       while (*p==' ' || *p=='\t') p++; // 'remove' leading whitespace
@@ -451,21 +454,28 @@ void TMVA::VariableDecorrTransform::ReadTransformationFromStream( std::istream& 
          continue; // if comment or empty line, read the next line
       }
       std::stringstream sstr(buf);
-      sstr >> cls;
-      
-      sstr >> nrows >> dummy >> ncols;
-      if (fDecorrMatrices.size() <= cls ) fDecorrMatrices.resize(cls+1);
-      if (fDecorrMatrices.at(cls) != 0) delete fDecorrMatrices.at(cls);
-      TMatrixD* mat = fDecorrMatrices.at(cls) = new TMatrixD(nrows,ncols);
-      // now read all matrix parameters
-      for (Int_t row = 0; row<mat->GetNrows(); row++) {
-         for (Int_t col = 0; col<mat->GetNcols(); col++) {
-            istr >> (*mat)[row][col];
+
+      sstr >> strvar;
+      if (strvar=="signal" || strvar=="background") {
+         UInt_t cls=0;
+         if(strvar=="background") cls=1;
+         if(strvar==classname) classIdx = cls;
+         sstr >> nrows >> dummy >> ncols;
+         if (fDecorrMatrices.size() <= cls ) fDecorrMatrices.resize(cls+1);
+         if (fDecorrMatrices.at(cls) != 0) delete fDecorrMatrices.at(cls);
+         TMatrixD* mat = fDecorrMatrices.at(cls) = new TMatrixD(nrows,ncols);
+         // now read all matrix parameters
+         for (Int_t row = 0; row<mat->GetNrows(); row++) {
+            for (Int_t col = 0; col<mat->GetNcols(); col++) {
+               istr >> (*mat)[row][col];
+            }
          }
-      }
-      // done reading a matrix
+      } // done reading a matrix
       istr.getline(buf,512); // reading the next line
    }
+
+   fDecorrMatrices.push_back( new TMatrixD(*fDecorrMatrices[classIdx]) );
+
    SetCreated();
 }
 

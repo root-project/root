@@ -39,6 +39,7 @@
 #pragma link C++ class TMVA::MethodBoost+; 
 #pragma link C++ class TMVA::MethodPDEFoam+; 
 #pragma link C++ class TMVA::MethodLD+; 
+#pragma link C++ class TMVA::MethodCategory+; 
 // other classes
 #pragma link C++ class TMVA::TSpline2+; 
 #pragma link C++ class TMVA::TSpline1+; 
@@ -108,11 +109,9 @@
 #pragma link C++ class TMVA::MetricManhattan+;
 #pragma link C++ class TMVA::SeedDistance+;
 #pragma link C++ class TMVA::PDEFoam+;
-#pragma link C++ class TMVA::PDEFoamIntegrand+;
+#pragma link C++ class TMVA::PDEFoamDistr+;
 #pragma link C++ class TMVA::PDEFoamVect+;
 #pragma link C++ class TMVA::PDEFoamCell+;
-#pragma link C++ class TMVA::PDEFoamMaxwt+;
-#pragma link C++ class TMVA::TFDISTR+;
 #pragma link C++ class TMVA::BDTEventWrapper+;
 #pragma link C++ class TMVA::CCTreeWrapper+;
 #pragma link C++ class TMVA::CCPruner+;

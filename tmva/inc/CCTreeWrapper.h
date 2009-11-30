@@ -36,6 +36,9 @@
 #ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
 #endif
+#ifndef ROOT_TMVA_Version
+#include "TMVA/Version.h"
+#endif
 
 
 namespace TMVA {
@@ -124,8 +127,8 @@ namespace TMVA {
       private:
 
          // initialize a node from a data record
-         virtual void ReadAttributes(void* node);
-         virtual Bool_t ReadDataRecord( std::istream& in );
+         virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
+         virtual Bool_t ReadDataRecord( std::istream& in, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
          virtual void ReadContent(std::stringstream& s);
          
          Int_t fNLeafDaughters; //! number of terminal descendants

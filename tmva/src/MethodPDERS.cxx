@@ -384,14 +384,14 @@ void TMVA::MethodPDERS::CalcAverages()
       fBinaryTree->CalcStatistics();
 
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) { 
-	 if (!DoRegression()){ //why there are separate rms for signal and background?
-	    Float_t rmsS = fBinaryTree->RMS(Types::kSignal, ivar);
-	    Float_t rmsB = fBinaryTree->RMS(Types::kBackground, ivar);
-	    fAverageRMS.push_back( (rmsS + rmsB)*0.5 );
-	 }else{
-	    Float_t rms = fBinaryTree->RMS( ivar );
-	    fAverageRMS.push_back( rms );
-	 }
+         if (!DoRegression()){ //why there are separate rms for signal and background?
+            Float_t rmsS = fBinaryTree->RMS(Types::kSignal, ivar);
+            Float_t rmsB = fBinaryTree->RMS(Types::kBackground, ivar);
+            fAverageRMS.push_back( (rmsS + rmsB)*0.5 );
+         } else {
+            Float_t rms = fBinaryTree->RMS( ivar );
+            fAverageRMS.push_back( rms );
+         }
       }
    }
 }   
@@ -491,9 +491,8 @@ Double_t TMVA::MethodPDERS::GetVolumeContentForRoot( Double_t scale )
 }
 
 void TMVA::MethodPDERS::GetSample( const Event& e,
-	                           std::vector<const BinarySearchTreeNode*>& events,
-                                   Volume *volume
-	                         )
+                                   std::vector<const BinarySearchTreeNode*>& events,
+                                   Volume *volume )
 {
    Float_t count = 0;
 
@@ -514,7 +513,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
       const Event * ev = GetTrainingEvent(ievt_);
       Bool_t inV;
       for (Int_t ivar=0; ivar<nvar; ivar++) {
-         Float_t x = ev->GetVal(ivar);
+         Float_t x = ev->GetValue(ivar);
          inV = (x > (*volume->Lower)[ivar] && x <= (*volume->Upper)[ivar]);
          if (!inV) break;
       }
@@ -532,7 +531,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
    if (fVRangeMode == kRMS || fVRangeMode == kMinMax || fVRangeMode == kUnscaled) { // Constant volume
 
       std::vector<Double_t> *lb = new std::vector<Double_t>( GetNvar() );
-      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
+      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetValue(ivar);
       std::vector<Double_t> *ub = new std::vector<Double_t>( *lb );
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          (*lb)[ivar] -= (*fDelta)[ivar]*(1.0 - (*fShift)[ivar]);
@@ -581,16 +580,16 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
             i_++;
          }
          if (i_ > 50) Log() << kWARNING << "warning in event: " << e
-                              << ": adaptive volume pre-adjustment reached "
-                              << ">50 iterations in while loop (" << i_ << ")" << Endl;
+                            << ": adaptive volume pre-adjustment reached "
+                            << ">50 iterations in while loop (" << i_ << ")" << Endl;
 
          Float_t nEventsN    = nEventsO;
          Float_t nEventsE    = 0.5*(fNEventsMin + fNEventsMax);
          Float_t scaleO      = 1.0;
          Float_t scaleN      = fInitialScale;
          Float_t scale       = scaleN;
-	 Float_t scaleBest   = scaleN;
-	 Float_t nEventsBest = nEventsN;
+         Float_t scaleBest   = scaleN;
+         Float_t nEventsBest = nEventsN;
 
          for (Int_t ic=1; ic<fMaxVIterations; ic++) {
             if (nEventsN < fNEventsMin || nEventsN > fNEventsMax) {
@@ -616,7 +615,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
                if (TMath::Abs(nEventsN - nEventsE) < TMath::Abs(nEventsBest - nEventsE) &&
                    (nEventsN >= fNEventsMin || nEventsBest < nEventsN)) {
                   nEventsBest = nEventsN;
-		            scaleBest   = scale;
+                  scaleBest   = scale;
                }
 
                v->Delete();
@@ -630,13 +629,13 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          // include "1" to cover float precision
          if (nEventsN < fNEventsMin-1 || nEventsN > fNEventsMax+1)
             Log() << kWARNING << "warning in event " << e
-                    << ": adaptive volume adjustment reached "
-                    << "max. #iterations (" << fMaxVIterations << ")"
-                    << "[ nEvents: " << nEventsN << "  " << fNEventsMin << "  " << fNEventsMax << "]"
-                    << Endl;
+                  << ": adaptive volume adjustment reached "
+                  << "max. #iterations (" << fMaxVIterations << ")"
+                  << "[ nEvents: " << nEventsN << "  " << fNEventsMin << "  " << fNEventsMax << "]"
+                  << Endl;
 
-	 volume->ScaleInterval( scaleBest );
-	 fBinaryTree->SearchVolume( volume, &events );
+         volume->ScaleInterval( scaleBest );
+         fBinaryTree->SearchVolume( volume, &events );
       }
         
    } // end of adaptive method
@@ -644,11 +643,11 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
       {
          Volume v(*volume);
          
-	 events.clear();
+         events.clear();
          // check number of signals in begining volume
          Int_t kNNcount = fBinaryTree->SearchVolumeWithMaxLimit( &v, &events, fkNNMax+1 );   
          //if this number is too large return fkNNMax+1
-			
+
          Int_t t_times = 0;  // number of iterations
       
          while ( !(kNNcount >= fkNNMin && kNNcount <= fkNNMax) ) {
@@ -670,9 +669,9 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
          
             if (t_times == fMaxVIterations) {
                Log() << kWARNING << "warining in event" << e
-                       << ": kNN volume adjustment reached "
-                       << "max. #iterations (" << fMaxVIterations << ")"
-                       << "[ kNN: " << fkNNMin << " " << fkNNMax << Endl;
+                     << ": kNN volume adjustment reached "
+                     << "max. #iterations (" << fMaxVIterations << ")"
+                     << "[ kNN: " << fkNNMin << " " << fkNNMax << Endl;
                break;
             }
          }
@@ -708,7 +707,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
             fMax_distance = (*distances)[fkNNMin-1];
             delete distances;
          }      
-			events = tempVector;
+         events = tempVector;
       }
    else {
 
@@ -727,7 +726,7 @@ Double_t TMVA::MethodPDERS::CRScalc( const Event& e )
    // events (of reference sample) that are found within given volume
    // defined by the event
    std::vector<Double_t> *lb = new std::vector<Double_t>( GetNvar() );
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetValue(ivar);
 
    std::vector<Double_t> *ub = new std::vector<Double_t>( *lb );
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -755,7 +754,7 @@ void TMVA::MethodPDERS::RRScalc( const Event& e, std::vector<Float_t>* count )
    // events (of reference sample) that are found within given volume
    // defined by the event
    std::vector<Double_t> *lb = new std::vector<Double_t>( GetNvar() );
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetValue(ivar);
 
    std::vector<Double_t> *ub = new std::vector<Double_t>( *lb );
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -811,8 +810,8 @@ Double_t TMVA::MethodPDERS::CKernelEstimate( const Event & event,
 
 //_______________________________________________________________________
 void TMVA::MethodPDERS::RKernelEstimate( const Event & event,
-					 std::vector<const BinarySearchTreeNode*>& events, Volume& v,
-					 std::vector<Float_t>* pdfSum )
+                                         std::vector<const BinarySearchTreeNode*>& events, Volume& v,
+                                         std::vector<Float_t>* pdfSum )
 {
    // normalization factors so we can work with radius 1 hyperspheres
    Double_t *dim_normalization = new Double_t[GetNvar()];
@@ -960,7 +959,7 @@ Double_t TMVA::MethodPDERS::GetNormalizedDistance ( const Event &base_event,
    // We use Euclidian metric here. Might not be best or most efficient.
    Double_t ret=0;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      Double_t dist = dim_normalization[ivar] * (sample_event.GetEventV()[ivar] - base_event.GetVal(ivar));
+      Double_t dist = dim_normalization[ivar] * (sample_event.GetEventV()[ivar] - base_event.GetValue(ivar));
       ret += dist*dist;
    }
    // DD 26.11.2008: bugfix: division by (GetNvar()) was missing for correct normalisation
@@ -1027,22 +1026,6 @@ Float_t TMVA::MethodPDERS::GetError( Float_t countS, Float_t countB,
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDERS::WriteWeightsToStream( ostream& o ) const
-{
-   // write only a short comment to file
-   if (TxtWeightsOnly()) {
-      if (fBinaryTree)
-         o << *fBinaryTree;
-      else
-         Log() << kFATAL << "Signal and background binary search tree not available" << Endl; 
-   } 
-   else {
-      TString rfname( GetWeightFileName() ); rfname.ReplaceAll( ".txt", ".root" );
-      o << "# weights stored in root i/o file: " << rfname << std::endl;  
-   }
-}
-
-//_______________________________________________________________________
 void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const 
 {
    // write weights to xml file
@@ -1075,31 +1058,31 @@ void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr)
 {
    // read weight info from file
-   if (TxtWeightsOnly()) {
-      if (NULL != fBinaryTree) delete fBinaryTree;
+   if (NULL != fBinaryTree) delete fBinaryTree;
 
-      fBinaryTree = new BinarySearchTree();
+   fBinaryTree = new BinarySearchTree();
 
-      istr >> *fBinaryTree;
+   istr >> *fBinaryTree;
 
-      fBinaryTree->SetPeriode( GetNvar() );
+   std::cout << *fBinaryTree;
 
-      fBinaryTree->CalcStatistics();
+   fBinaryTree->SetPeriode( GetNvar() );
 
-      fBinaryTree->CountNodes();
+   fBinaryTree->CalcStatistics();
 
-      // these are the signal and background scales for the weights
-      fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
-      fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
+   fBinaryTree->CountNodes();
 
-      Log() << kINFO << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
+   // these are the signal and background scales for the weights
+   fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
+   fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
 
-      CalcAverages();
+   Log() << kINFO << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
 
-      SetVolumeElement();
+   CalcAverages();
 
-      fInitializedVolumeEle = kTRUE;
-   }
+   SetVolumeElement();
+
+   fInitializedVolumeEle = kTRUE;
 }
 
 //_______________________________________________________________________

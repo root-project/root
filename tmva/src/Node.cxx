@@ -145,10 +145,10 @@ void* TMVA::Node::AddXMLTo( void* parent ) const
 }
 
 //_______________________________________________________________________
-void TMVA::Node::ReadXML( void* node )
+void TMVA::Node::ReadXML( void* node,  UInt_t tmva_Version_Code )
 {
    // read attributes from XML
-   ReadAttributes(node);
+   ReadAttributes(node, tmva_Version_Code);
    const char* content = gTools().xmlengine().GetNodeContent(node);
    if (content) {
       std::stringstream s(content);
@@ -160,7 +160,7 @@ void TMVA::Node::ReadXML( void* node )
    void* ch = gTools().xmlengine().GetChild(node);
    while (ch) {
       Node* n = CreateNode();
-      n->ReadXML(ch);
+      n->ReadXML(ch, tmva_Version_Code);
       if (n->GetPos()=='l') { fLeft  = n; }
       else if(n->GetPos()=='r') { fRight = n; }
       else { 

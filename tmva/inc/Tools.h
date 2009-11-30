@@ -211,7 +211,10 @@ namespace TMVA {
       Bool_t      HistoHasEquidistantBins(const TH1& h);
 
       template<typename T>
-      void        ReadAttr    ( void* node, const char* , T& value );
+      inline void ReadAttr( void* node, const char* , T& value );
+
+      inline void ReadAttr( void* node, const char* attrname, TString& value );
+
       template<typename T>
       void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
       void*       AddChild    ( void* parent, const char* childname, const char* content = 0 );
@@ -241,6 +244,14 @@ void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
    const char* val = xmlengine().GetAttr(node, attrname);
    std::stringstream s(val);
    s >> value;
+}
+
+//_______________________________________________________________________
+void TMVA::Tools::ReadAttr( void* node, const char* attrname, TString& value ) 
+{
+   // add attribute from xml
+   const char* val = xmlengine().GetAttr(node, attrname);
+   value = TString(val);
 }
 
 //_______________________________________________________________________

@@ -36,6 +36,7 @@
 #include "TMVA/Ranking.h"
 #include "TMVA/Config.h"
 #include "TMVA/Tools.h"
+#include "TMVA/Version.h"
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
@@ -56,10 +57,10 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
      fCreated( kFALSE ),
      fNormalise( kFALSE ),
      fTransformName(trfName),
+     fTMVAVersion(TMVA_VERSION_CODE),
      fLogger( 0 )
 {
    // standard constructor
-
    fLogger = new MsgLogger(this, kINFO);
    for (UInt_t ivar = 0; ivar < fDsi.GetNVariables(); ivar++) {
       fVariables.push_back( VariableInfo( fDsi.GetVariableInfo(ivar) ) );
@@ -178,52 +179,3 @@ void TMVA::VariableTransformBase::UpdateNorm ( Int_t ivar,  Double_t x )
    }
 }
 
-// TODO
-
-// //_______________________________________________________________________
-// void TMVA::VariableTransformBase::WriteVarsToStream( std::ostream& o, const TString& prefix ) const 
-// {
-//    // write the list of variables (name, min, max) for a given data
-//    // transformation method to the stream
-//    o << prefix << "NVar " << GetNVariables() << endl;
-//    std::vector<VariableInfo>::const_iterator varIt = Variables().begin();
-//    for (; varIt!=Variables().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
-// }
-
-// //_______________________________________________________________________
-// void TMVA::VariableTransformBase::ReadVarsFromStream( std::istream& istr ) 
-// {
-//    // Read the variables (name, min, max) for a given data
-//    // transformation method from the stream. In the stream we only
-//    // expect the limits which will be set
-
-//    TString dummy;
-//    UInt_t readNVar;
-//    istr >> dummy >> readNVar;
-
-//    if (readNVar!=Variables().size()) {
-//       Log() << kFATAL << "You declared "<< Variables().size() << " variables in the Reader"
-//               << " while there are " << readNVar << " variables declared in the file"
-//               << Endl;
-//    }
-
-//    // we want to make sure all variables are read in the order they are defined
-//    VariableInfo varInfo;
-//    std::vector<VariableInfo>::iterator varIt = Variables().begin();
-//    int varIdx = 0;
-//    for (; varIt!=Variables().end(); varIt++, varIdx++) {
-//       varInfo.ReadFromStream(istr);
-//       if (varIt->GetExpression() == varInfo.GetExpression()) {
-//          varInfo.SetExternalLink((*varIt).GetExternalLink());
-//          (*varIt) = varInfo;
-//       } 
-//       else {
-//          Log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
-//          Log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
-//          Log() << kINFO << "the correct working of the classifier):" << Endl;
-//          Log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << varIt->GetExpression() << Endl;
-//          Log() << kINFO << "   var #" << varIdx <<" declared in file  : " << varInfo.GetExpression() << Endl;
-//          Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
-//       }
-//    }
-// }

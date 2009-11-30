@@ -100,20 +100,18 @@ namespace TMVA {
       void TrainSeparatedClassification( void ); // Classification: one foam for Sig, one for Bg
       void TrainUnifiedClassification( void );   // Classification: one foam for Signal and Bg
 
-      using MethodBase::WriteWeightsToStream;
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to stream
-      void WriteWeightsToStream( std::ostream & o) const;
       void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from stream
       void ReadWeightsFromStream( std::istream & i );
       void ReadWeightsFromXML   ( void* wghtnode );
 
-      // write/read pure foams to/from xml file
-      void WriteFoamsToXMLFile() const;
-      void ReadFoamsFromXMLFile();
+      // write/read pure foams to/from file
+      void WriteFoamsToFile() const;
+      void ReadFoamsFromFile();
 
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0 );
@@ -210,13 +208,10 @@ namespace TMVA {
       Int_t         fnActiveCells;    // Number of active cells
       Int_t         fnSampl;          // Number of MC events per cell in build-up (1000)
       Int_t         fnBin;            // Number of bins in build-up (100)
-      Int_t         fOptRej;          // Wted events for OptRej=0; wt=1 for OptRej=1 (default)
-      Int_t         fOptDrive;        // (D=2) Option, type of Drive =1,2 for Variance,WtMax driven reduction
       Int_t         fEvPerBin;        // Maximum events (equiv.) per bin in buid-up (1000) 
-      Int_t         fChat;            // Chat level
       Float_t       fNSigBgRatio;     // ratio of number of signal events / bg events (training)
 
-      Bool_t        fCompress;        // compress XML file
+      Bool_t        fCompress;        // compress foam output file
       Bool_t        fMultiTargetRegression; // do regression on multible targets
       UInt_t        fNmin;            // minimal number of events in cell necessary to split cell"
       Bool_t        fCutNmin;         // Grabbing cell with maximal RMS to split next (TFoam default)
@@ -233,7 +228,6 @@ namespace TMVA {
       // foams and densities
       PDEFoam* foam[FOAM_NUMBER]; // foam[0]=signal, if Sig and BG are Seperated; else foam[0]=signal/bg
                                   // foam[1]=background, if Sig and BG are Seperated; else it is not used
-      TRandom3 *PseRan; // random generator for PDEFoams
 
       // default initialisation called by all constructors
       void Init( void );

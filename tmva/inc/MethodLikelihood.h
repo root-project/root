@@ -79,7 +79,6 @@ namespace TMVA {
       void Train();
 
       // write weights to file
-      void WriteWeightsToStream( ostream& o ) const;
       void WriteWeightsToStream( TFile& rf ) const;
       void AddWeightsXMLTo( void* parent ) const;
 
@@ -100,6 +99,8 @@ namespace TMVA {
       virtual void WriteOptionsToStream ( ostream& o, const TString& prefix ) const;
 
    protected:
+
+      void DeclareCompatibilityOptions();
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
       void MakeClassSpecific( std::ostream&, const TString& ) const;
@@ -136,6 +137,19 @@ namespace TMVA {
       std::vector<PDF*>*   fPDFBgd;                    // list of PDFs (background)
 
       // default initialisation called by all constructors
+
+      // obsolete variables kept for backward combatibility
+      Int_t                fNsmooth;                   // number of smooth passes
+      Int_t*               fNsmoothVarS;               // number of smooth passes
+      Int_t*               fNsmoothVarB;               // number of smooth passes
+      Int_t                fAverageEvtPerBin;          // average events per bin; used to calculate fNbins
+      Int_t*               fAverageEvtPerBinVarS;      // average events per bin; used to calculate fNbins
+      Int_t*               fAverageEvtPerBinVarB;      // average events per bin; used to calculate fNbins
+      TString              fBorderMethodString;        // the method to take care about "border" effects (string)
+      Float_t              fKDEfineFactor;             // fine tuning factor for Adaptive KDE
+      TString              fKDEiterString;             // Number of iterations (string)
+      TString              fKDEtypeString;             // Kernel type to use for KDE (string)
+      TString*             fInterpolateString;         // which interpolation method used for reference histograms (individual for each variable)
    
       ClassDef(MethodLikelihood,0) // Likelihood analysis ("non-parametric approach") 
    };

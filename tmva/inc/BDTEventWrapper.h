@@ -62,7 +62,7 @@ namespace TMVA {
       /**
        * @return value of variable fVarIndex for this event
        */
-      inline Double_t GetVal() const { return fEvent->GetVal(fVarIndex); }
+      inline Double_t GetVal() const { return fEvent->GetValue(fVarIndex); }
       const Event* operator*() const { return fEvent; }
     
    private:

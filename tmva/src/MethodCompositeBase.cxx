@@ -98,25 +98,6 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const Int_t index ) const
    else                          return 0;
 }
 
-//_______________________________________________________________________
-void TMVA::MethodCompositeBase::WriteWeightsToStream( ostream& o ) const
-{
-   o << "NClassifier= " << fMethods.size() <<endl;
-   for (UInt_t i=0; i< fMethods.size(); i++) 
-   {
-      MethodBase* method = dynamic_cast<MethodBase*>(fMethods[i]);
-      o << "Classifier : " << method->GetMethodTypeName() << "::" << method->GetMethodName()
-        << "; Index= " << i << " ; Weight= " << fMethodWeight[i] << endl;
-      if (GetMethodType() != Types::kBoost || i==0) 
-      {
-         // for the booster - writing the values only for the first method
-         o << "Job Name= " << method->GetJobName()  << endl;
-         o << "Title= " << method->GetMethodName()  << endl;
-         o << "Option= " << method->GetOptions()  << endl;
-      }
-      method->WriteWeightsToStream(o);
-   }
-}
 
 //_______________________________________________________________________
 void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const 

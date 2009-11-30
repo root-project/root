@@ -216,7 +216,7 @@ Double_t TMVA::MethodTMlpANN::GetMvaValue( Double_t* err )
    const Event* ev = GetEvent();
    static Double_t* d = new Double_t[Data()->GetNVariables()];
    for (UInt_t ivar = 0; ivar<Data()->GetNVariables(); ivar++) {
-      d[ivar] = (Double_t)ev->GetVal(ivar);
+      d[ivar] = (Double_t)ev->GetValue(ivar);
    }
    Double_t mvaVal = fMLP->Evaluate(0,d);
 
@@ -259,7 +259,7 @@ void TMVA::MethodTMlpANN::Train( void )
    for (UInt_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
       const Event *ev = GetEvent(ievt);
       for (UInt_t i=0; i<GetNvar(); i++) {
-         vArr[i] = ev->GetVal( i );
+         vArr[i] = ev->GetValue( i );
       }
       type   = DataInfo().IsSignal( ev ) ? 1 : 0;
       weight = ev->GetWeight();
@@ -323,23 +323,6 @@ void TMVA::MethodTMlpANN::Train( void )
 
 }
 
-//_______________________________________________________________________
-void  TMVA::MethodTMlpANN::WriteWeightsToStream( ostream & o ) const
-{
-   // write weights to stream
-
-   // since the MLP can not write to stream and provides no access to its content
-   // except through DumpWeights(filename), we 
-   // 1st: dump the weights
-   fMLP->DumpWeights( "weights/TMlp.nn.weights.temp" );
-   // 2nd: read them back
-   std::ifstream inf( "weights/TMlp.nn.weights.temp" );
-   // 3rd: write them to the stream
-   o << inf.rdbuf();
-   inf.close();
-   // here we can delete the temporary file
-   // how?
-}
  
 //_______________________________________________________________________
 void TMVA::MethodTMlpANN::AddWeightsXMLTo( void* parent ) const 
@@ -440,13 +423,27 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream& istr )
    // read weights from stream
    // since the MLP can not read from the stream, we
    // 1st: write the weights to temporary file
-   std::ofstream fout( "weights/TMlp.nn.weights.temp" );
+   std::ofstream fout( "./TMlp.nn.weights.temp" );
    fout << istr.rdbuf();
    fout.close();
    // 2nd: load the weights from the temporary file into the MLP
    // the MLP is already build
-   Log() << kINFO << "Load TMLP weights" << Endl;
-   fMLP->LoadWeights( "weights/TMlp.nn.weights.temp" );
+   Log() << kINFO << "Load TMLP weights into " << fMLP << Endl;
+
+   Double_t* d = new Double_t[Data()->GetNVariables()] ;
+   static Int_t type;
+   gROOT->cd();
+   TTree * dummyTree = new TTree("dummy","Empty dummy tree", 1);
+   for (UInt_t ivar = 0; ivar<Data()->GetNVariables(); ivar++) {
+      TString vn = DataInfo().GetVariableInfo(ivar).GetLabel();
+      dummyTree->Branch(Form("%s",vn.Data()), d+ivar, Form("%s/D",vn.Data()));
+   }
+   dummyTree->Branch("type", &type, "type/I");
+
+   if (fMLP != 0) { delete fMLP; fMLP = 0; }
+   fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
+
+   fMLP->LoadWeights( "./TMlp.nn.weights.temp" );
    // here we can delete the temporary file
    // how?
 }

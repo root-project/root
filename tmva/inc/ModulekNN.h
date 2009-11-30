@@ -94,7 +94,7 @@ namespace TMVA {
          VarVec fTgt; // targets for regression analysis
 
          Double_t fWeight; // event weight
-         Short_t fType; // event type ==0 or == 1, expand it to arbitrary class types?	 
+         Short_t fType; // event type ==0 or == 1, expand it to arbitrary class types? 
       };
 
       typedef std::vector<TMVA::kNN::Event> EventVec;

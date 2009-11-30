@@ -87,7 +87,6 @@ namespace TMVA {
       void Train( void );
 
       // write weights to file
-      void WriteWeightsToStream( ostream& o ) const;
       void WriteWeightsToStream( TFile& rf ) const;
       void AddWeightsXMLTo( void* parent ) const;
 

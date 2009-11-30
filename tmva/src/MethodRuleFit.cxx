@@ -277,8 +277,6 @@ void TMVA::MethodRuleFit::ProcessOptions()
 
    if (HasTrainingTree()) InitEventSample();
 
-   InitMonitorNtuple();
-
 }
 
 //_______________________________________________________________________
@@ -352,6 +350,8 @@ void TMVA::MethodRuleFit::InitEventSample( void )
 void TMVA::MethodRuleFit::Train( void )
 {
    // training of rules
+
+   InitMonitorNtuple();
 
    // fill the STL Vector with the event sample
    this->InitEventSample();
@@ -479,13 +479,6 @@ const TMVA::Ranking* TMVA::MethodRuleFit::CreateRanking()
    }
 
    return fRanking;
-}
-
-//_______________________________________________________________________
-void TMVA::MethodRuleFit::WriteWeightsToStream( ostream & o ) const
-{  
-   // write the rules to an ostream
-   fRuleFit.GetRuleEnsemble().PrintRaw( o );
 }
 
 //_______________________________________________________________________

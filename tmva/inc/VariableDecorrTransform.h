@@ -61,7 +61,7 @@ namespace TMVA {
       virtual const Event* InverseTransform(const Event* const, Int_t cls ) const;
 
       void WriteTransformationToStream ( std::ostream& ) const;
-      void ReadTransformationFromStream( std::istream& );
+      void ReadTransformationFromStream( std::istream&, const TString& );
 
       virtual void AttachXMLTo(void* parent);
       virtual void ReadFromXML( void* trfnode );

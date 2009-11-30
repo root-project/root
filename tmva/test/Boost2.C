@@ -64,7 +64,7 @@ void Boost2(){
 
 
   // Train MVAs using the set of training events
-   factory->TrainAllMethodsForClassification();
+   factory->TrainAllMethods();
 
    // ---- Evaluate all MVAs using the set of test events
    factory->TestAllMethods();

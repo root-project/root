@@ -111,9 +111,6 @@
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodCuts.h"
 
-#define TMVA_Reader_TestIO__
-#undef  TMVA_Reader_TestIO__
-
 ClassImp(TMVA::Reader)
 
 //_______________________________________________________________________
@@ -129,6 +126,7 @@ TMVA::Reader::Reader( const TString& theOption, Bool_t verbose )
    // constructor
 
    fLogger = new MsgLogger(this);
+
    DataSetManager::CreateInstance(fDataInputHandler);
    DataSetManager::Instance().AddDataSetInfo(fDataSetInfo);
 
@@ -272,34 +270,42 @@ void TMVA::Reader::AddVariable( const TString& expression, Float_t* datalink )
 //_______________________________________________________________________
 void TMVA::Reader::AddVariable( const TString& expression, Int_t* datalink )
 {
-   // Add a integer variable or expression to the reader
+   // Add an integer variable or expression to the reader
    DataInfo().AddVariable(expression, "", "", 0, 0, 'I', kFALSE, (void*)datalink ); // <= should this be F or rather T?
 }
 
 //_______________________________________________________________________
-TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& weightfile )
+void TMVA::Reader::AddSpectator( const TString& expression, Float_t* datalink )
 {
-   // read method name from weight file
-   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
-   if (it != fMethodMap.end()) {
-      Log() << kFATAL << "<BookMVA> method tag \"" << methodTag << "\" already exists!" << Endl;
+   // Add a float spectator or expression to the reader
+   DataInfo().AddSpectator( expression, "", "", 0, 0, 'F', kFALSE ,(void*)datalink ); 
+}
+
+//_______________________________________________________________________
+void TMVA::Reader::AddSpectator( const TString& expression, Int_t* datalink )
+{
+   // Add an integer spectator or expression to the reader
+   DataInfo().AddSpectator(expression, "", "", 0, 0, 'I', kFALSE, (void*)datalink );
+}
+
+//_______________________________________________________________________
+TString
+TMVA::Reader::GetMethodTypeFromFile( const TString& filename ) {
+   // read the method type from the file
+
+   ifstream fin( filename );
+   if (!fin.good()) { // file not found --> Error
+      Log() << kFATAL << "<BookMVA> fatal error: "
+            << "unable to open input weight file: " << filename << Endl;
    }
 
-   Log() << kINFO << "Booking \"" << methodTag << "\" [" << weightfile << "]" << Endl;
-
-   // read the method type
    TString fullMethodName("");
-   if (weightfile.EndsWith(".xml")) {
-      void* doc      = gTools().xmlengine().ParseFile(weightfile); 
+   if (filename.EndsWith(".xml")) {
+      fin.close();
+      void* doc      = gTools().xmlengine().ParseFile(filename); 
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       gTools().ReadAttr(rootnode, "Method", fullMethodName);
-   } 
-   else {
-      ifstream fin( weightfile );
-      if (!fin.good()) { // file not found --> Error
-         Log() << kFATAL << "<BookMVA> fatal error: "
-                 << "unable to open input weight file: " << weightfile << Endl;
-      }
+   } else {
       char buf[512];
       fin.getline(buf,512);
       while (!TString(buf).BeginsWith("Method")) fin.getline(buf,512);
@@ -308,6 +314,23 @@ TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& w
    }
    TString methodType = fullMethodName(0,fullMethodName.Index("::"));
    if (methodType.Contains(" ")) methodType = methodType(methodType.Last(' ')+1,methodType.Length());
+   return methodType;
+}
+
+
+
+//_______________________________________________________________________
+TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& weightfile )
+{
+   // read method name from weight file
+
+   // assert non-existence
+   if (fMethodMap.find( methodTag ) != fMethodMap.end())
+      Log() << kFATAL << "<BookMVA> method tag \"" << methodTag << "\" already exists!" << Endl;
+
+   TString methodType(GetMethodTypeFromFile(weightfile));
+
+   Log() << kINFO << "Booking \"" << methodTag << "\" of type \"" << methodType << "\" from " << weightfile << "." << Endl;
 
    MethodBase* method = dynamic_cast<MethodBase*>(this->BookMVA( Types::Instance().GetMethodType(methodType),
                                                                  weightfile ) );
@@ -326,19 +349,19 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
 
    method->SetupMethod();
 
+   // when reading older weight files, they could include options
+   // that are not supported any longer
+   method->DeclareCompatibilityOptions();
+
    // read weight file
    method->ReadStateFromFile();
 
+   // check for unused options
+   method->CheckSetup();
+   
    Log() << kINFO << "Booked classifier \"" << method->GetMethodName()
-           << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
-
-#ifdef TMVA_Reader_TestIO__
-   // testing the read/write procedure
-   std::ofstream tfile( weightfile+".control" );
-   method->WriteStateToStream(tfile);
-   tfile.close();
-#endif
-
+         << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
+   
    return method;
 }
 

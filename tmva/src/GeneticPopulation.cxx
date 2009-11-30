@@ -188,7 +188,7 @@ void TMVA::GeneticPopulation::Mutate( Double_t probability , Int_t startIndex,
 
 
 //_______________________________________________________________________
-TMVA::GeneticGenes* TMVA::GeneticPopulation::GetGenes( Int_t index ) 
+TMVA::GeneticGenes* TMVA::GeneticPopulation::GetGenes( Int_t index )
 {
    // gives back the "Genes" of the population with the given index.
    //

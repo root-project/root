@@ -40,6 +40,10 @@
 #include "TMVA/Node.h"
 #endif
 
+#ifndef ROOT_TMVA_Version
+#include "TMVA/Version.h"
+#endif
+
 #include <vector>
 #include <map>
 namespace TMVA {
@@ -252,8 +256,8 @@ namespace TMVA {
 
    private:
 
-      virtual void ReadAttributes(void* node);
-      virtual Bool_t ReadDataRecord( istream& is );
+      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+      virtual Bool_t ReadDataRecord( istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void ReadContent(std::stringstream& s);
 
       Double_t fNodeR;           // node resubstitution estimate, R(t)

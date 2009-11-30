@@ -75,7 +75,7 @@ namespace TMVA {
       TString   GetElapsedTime ( Bool_t Scientific = kTRUE  );
       Double_t  ElapsedSeconds ( void );
       TString   GetLeftTime     ( Int_t icounts );
-      void      DrawProgressBar( Int_t );
+      void      DrawProgressBar( Int_t, const TString& comment = "" );
       void      DrawProgressBar( TString );
       void      DrawProgressBar( void );
                           

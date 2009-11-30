@@ -310,7 +310,7 @@ void TMVAClassification( TString myMethodList = "" )
    // Likelihood
    if (Use["Likelihood"])
       factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood", 
-                           "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
+                           "H:!V:!TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
 
    // test the decorrelated likelihood
    if (Use["LikelihoodD"])
@@ -407,10 +407,10 @@ void TMVAClassification( TString myMethodList = "" )
 
    // TMVA ANN: MLP (recommended ANN) -- all ANNs in TMVA are Multilayer Perceptrons
    if (Use["MLP"])
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5" );
+      factory->BookMethod( TMVA::Types::kMLP, "MLP", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=500:HiddenLayers=N+5:TestRate=10:EpochMonitoring" );
 
    if (Use["MLPBFGS"])
-      factory->BookMethod( TMVA::Types::kMLP, "MLPBFGS", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS" );
+      factory->BookMethod( TMVA::Types::kMLP, "MLPBFGS", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=500:HiddenLayers=N+5:TestRate=10:TrainingMethod=BFGS:!EpochMonitoring" );
 
 
    // CF(Clermont-Ferrand)ANN
@@ -446,6 +446,8 @@ void TMVAClassification( TString myMethodList = "" )
    if (Use["RuleFit"])
       factory->BookMethod( TMVA::Types::kRuleFit, "RuleFit",
                            "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" );
+   
+   // For an example of the category classifier, see: TMVAClassificationCategory
 
    // --------------------------------------------------------------------------------------------------
 
@@ -469,7 +471,7 @@ void TMVAClassification( TString myMethodList = "" )
    // ---- Now you can tell the factory to train, test, and evaluate the MVAs
 
    // Train MVAs using the set of training events
-   factory->TrainAllMethodsForClassification();
+   factory->TrainAllMethods();
 
    // ---- Evaluate all MVAs using the set of test events
    factory->TestAllMethods();

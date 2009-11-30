@@ -93,7 +93,7 @@ namespace TMVA {
       }
 
       // Temporaly disables all the loggers (Caution! Use with care !)
-      static void  InhibitOutput();	 
+      static void  InhibitOutput();
       static void  EnableOutput();
 
    private:

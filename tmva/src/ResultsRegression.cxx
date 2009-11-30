@@ -162,7 +162,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
    h->SetDirectory(0);
 
    h->GetXaxis()->SetTitle( (takeTargets ? dsi->GetTargetInfo(varNum).GetTitle() : dsi->GetVariableInfo(varNum).GetTitle() ) );
-   TString varName( dsi->GetTargetInfo(tgtNum).GetLabel() );
+   TString varName( dsi->GetTargetInfo(tgtNum).GetTitle() );
    TString yName( varName+TString("_{regression} - ") + varName+TString("_{true}") );
    h->GetYaxis()->SetTitle( yName );
 
@@ -212,7 +212,7 @@ void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
      h->SetName( name );
      h->SetTitle( name );
      Double_t yq[1], xq[]={0.9};
-     h->GetQuantiles(1,yq,xq);	
+     h->GetQuantiles(1,yq,xq);
      Store( h );
 
      TH1F* htrunc = QuadraticDeviation(itgt, true, yq[0]);

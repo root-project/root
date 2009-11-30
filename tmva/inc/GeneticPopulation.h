@@ -70,6 +70,10 @@ namespace TMVA {
 
       GeneticGenes* GetGenes( Int_t index );
       Int_t         GetPopulationSize() const { return fGenePool.size(); }
+      Double_t      GetFitness() const { return fGenePool.size()>0? fGenePool[0].GetFitness() : 0; }
+
+      const std::vector<TMVA::GeneticGenes>& GetGenePool() const { return fGenePool; }
+      const std::vector<TMVA::GeneticRange*>& GetRanges() const { return fRanges; }
 
       std::vector<TMVA::GeneticGenes>&  GetGenePool() { return fGenePool; }
       std::vector<TMVA::GeneticRange*>& GetRanges()   { return fRanges; }

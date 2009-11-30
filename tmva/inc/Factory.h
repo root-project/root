@@ -184,9 +184,9 @@ namespace TMVA {
                               TString /*committeeOption = ""*/ ) { return 0; } 
 
       // training for all booked methods
-      void TrainAllMethods                 ( TString what = "Classification" );
-      void TrainAllMethodsForClassification( void ) { TrainAllMethods( "Classification" ); }
-      void TrainAllMethodsForRegression    ( void ) { TrainAllMethods( "Regression"     ); }
+      void TrainAllMethods                 ();
+      void TrainAllMethodsForClassification( void ) { TrainAllMethods(); }
+      void TrainAllMethodsForRegression    ( void ) { TrainAllMethods(); }
 
       // testing
       void TestAllMethods();
@@ -259,6 +259,8 @@ namespace TMVA {
       Int_t                                     fATreeType;          // type of event (=classIndex)
       Float_t                                   fATreeWeight;        // weight of the event
       Float_t*                                  fATreeEvent;         // event variables
+
+      Types::EAnalysisType                      fAnalysisType;    //! the training type
 
    protected:
 

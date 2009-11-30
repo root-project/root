@@ -32,6 +32,8 @@
 #include "TMVA/VariableInfo.h"
 #include "TMVA/Tools.h"
 
+#include "TMath.h"
+
 //_______________________________________________________________________
 TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& title, const TString& unit, 
                                   Int_t varCounter, 
@@ -46,9 +48,10 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
      fVarCounter  ( varCounter )
 {
    // constructor
-   if (min == max) {
-      fXminNorm =  1e30;
-      fXmaxNorm = -1e30;
+
+   if ( TMath::Abs(max - min) <= FLT_MIN ) {
+      fXminNorm =  FLT_MAX;
+      fXmaxNorm = -FLT_MAX;
    } 
    else {
       fXminNorm =  min;
@@ -118,7 +121,7 @@ TMVA::VariableInfo& TMVA::VariableInfo::operator=(const VariableInfo& rhs)
 //_______________________________________________________________________
 void TMVA::VariableInfo::WriteToStream( std::ostream& o ) const
 {
-   // write VariableInfo to stream   
+   // write VariableInfo to stream 
    UInt_t nc = TMath::Max( 30, TMath::Max( GetExpression().Length()+1, GetInternalName().Length()+1 ) );
    TString expBr(Form("\'%s\'",GetExpression().Data()));
    o << std::setw(nc) << GetExpression();
@@ -134,8 +137,11 @@ void TMVA::VariableInfo::WriteToStream( std::ostream& o ) const
 void TMVA::VariableInfo::ReadFromStream( std::istream& istr )
 {
    // read VariableInfo from stream
-   TString exp, varname, vartype, minmax, minstr, maxstr, varlabel, vartitle, varunit;
-   istr >> exp >> varname >> varlabel >> vartitle >> varunit >> vartype >> minmax;
+
+   // PLEASE do not modify this, it does not have to correspond to WriteToStream
+   // this is needed to stay like this in 397 for backward compatibility
+   TString exp, varname, vartype, minmax, minstr, maxstr;
+   istr >> exp >> varname >> vartype >> minmax;
    exp.Strip(TString::kBoth, '\'');
    minmax = minmax.Strip(TString::kLeading, '[');
    minmax = minmax.Strip(TString::kTrailing, ']');
@@ -148,9 +154,9 @@ void TMVA::VariableInfo::ReadFromStream( std::istream& istr )
    strmax >> max;
    SetExpression     ( exp );
    SetInternalVarName( varname );
-   SetLabel          ( varlabel );
-   SetTitle          ( vartitle );
-   SetUnit           ( varunit );
+   SetLabel          ( varname );
+   SetTitle          ( varname );
+   SetUnit           ( "" );
    SetVarType        ( vartype[1] );
    SetMin            ( min );
    SetMax            ( max );

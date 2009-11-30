@@ -261,7 +261,6 @@ void TMVA::Configurable::ParseOptions()
    // print options summary
    PrintOptions();
    if (gConfig().WriteOptionsReference()) WriteOptionsReferenceToFile();
-
 }
 
 //______________________________________________________________________

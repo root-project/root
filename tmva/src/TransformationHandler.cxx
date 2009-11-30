@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Eckhard von Toerne
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -14,11 +14,13 @@
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
+ *      Eckhard v. Toerne  <evt@uni-bonn.de>     - U of Bonn, Germany          *  
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2008:                                                            *
  *      CERN, Switzerland                                                         *
  *      MPI-K Heidelberg, Germany                                                 *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -101,12 +103,13 @@ void TMVA::TransformationHandler::SetCallerName( const TString& name )
 }
 
 //_______________________________________________________________________
-void TMVA::TransformationHandler::AddTransformation( VariableTransformBase *trf, Int_t cls ) 
+TMVA::VariableTransformBase* TMVA::TransformationHandler::AddTransformation( VariableTransformBase *trf, Int_t cls ) 
 {
    TString tfname = trf->Log().GetName();
    trf->Log().SetSource(TString(fCallerName+"_"+tfname+"_TF").Data());
    fTransformations.Add(trf);
    fTransformationsReferenceClasses.push_back( cls );
+   return trf;
 }
 
 //_______________________________________________________________________
@@ -137,12 +140,12 @@ void TMVA::TransformationHandler::SetTransformationReferenceClass( Int_t cls )
 const TMVA::Event* TMVA::TransformationHandler::Transform( const Event* ev ) const 
 {
    // the transformation
+
    TListIter trIt(&fTransformations);
    std::vector<Int_t>::const_iterator rClsIt = fTransformationsReferenceClasses.begin();
    const Event* trEv = ev;
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) {
-      if (trf->IsCreated()) trEv = trf->Transform(trEv, (*rClsIt) );
-      else break;
+      trEv = trf->Transform(trEv, (*rClsIt) );
       rClsIt++;
    }
    return trEv;
@@ -270,7 +273,7 @@ void TMVA::TransformationHandler::CalcStats( const std::vector<Event*>& events )
       for (UInt_t var_tgt = 0; var_tgt < 2; var_tgt++ ){ // first for variables, then for targets
          UInt_t nloop = ( var_tgt==0?nvar:ntgt );
          for (UInt_t ivar=0; ivar<nloop; ivar++) {
-            Double_t x = ( var_tgt==0?ev->GetVal(ivar):ev->GetTarget(ivar) );
+            Double_t x = ( var_tgt==0?ev->GetValue(ivar):ev->GetTarget(ivar) );
 
             if (x < varMin[cls][(var_tgt*nvar)+ivar]) varMin[cls][(var_tgt*nvar)+ivar]= x;
             if (x > varMax[cls][(var_tgt*nvar)+ivar]) varMax[cls][(var_tgt*nvar)+ivar]= x;
@@ -308,9 +311,9 @@ void TMVA::TransformationHandler::CalcStats( const std::vector<Event*>& events )
    std::vector<UInt_t> vLengths;
    for (UInt_t ivar=0; ivar<nvar+ntgt; ivar++) {
       if( ivar < nvar )
-	 maxL = TMath::Max( (UInt_t)Variable(ivar).GetLabel().Length(), maxL );
+         maxL = TMath::Max( (UInt_t)Variable(ivar).GetLabel().Length(), maxL );
       else
-	 maxL = TMath::Max( (UInt_t)Target(ivar-nvar).GetLabel().Length(), maxL );
+         maxL = TMath::Max( (UInt_t)Target(ivar-nvar).GetLabel().Length(), maxL );
    }
    maxV = maxL + 2;
    // full column length
@@ -330,9 +333,9 @@ void TMVA::TransformationHandler::CalcStats( const std::vector<Event*>& events )
    TString format = "%#11.5g";
    for (UInt_t ivar=0; ivar<nvar+ntgt; ivar++) {
       if( ivar < nvar )
-	 Log() << std::setw(maxL) << Variable(ivar).GetLabel() << ":";
+         Log() << std::setw(maxL) << Variable(ivar).GetLabel() << ":";
       else
-	 Log() << std::setw(maxL) << Target(ivar-nvar).GetLabel() << ":";
+         Log() << std::setw(maxL) << Target(ivar-nvar).GetLabel() << ":";
       Log() << std::setw(maxV) << Form( format.Data(), GetMean(ivar) );
       Log() << std::setw(maxV) << Form( format.Data(), GetRMS(ivar) );
       Log() << "   [" << std::setw(maxV) << Form( format.Data(), GetMin(ivar) );
@@ -525,6 +528,8 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
                // protection
                if (xmin >= xmax) xmax = xmin*1.1; // try first...
                if (xmin >= xmax) xmax = xmin + 1; // this if xmin == xmax == 0
+               // safety margin for values equal to the maximum within the histogram
+               xmax += (xmax - xmin)/nbins1D;
 
                h = new TH1F( Form("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()), 
                              info.GetTitle(), nbins1D, xmin, xmax );
@@ -545,13 +550,18 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
                      const VariableInfo& infoj = ( v_t == 0 ? Variable( j ) : Target(j) ); 
                      TString myVarj = infoj.GetInternalName();  
 
+                     Double_t rxmin = fVariableStats.at(fNumC-1).at( ( v_t*nvar )+ivar).fMin;
+                     Double_t rxmax = fVariableStats.at(fNumC-1).at( ( v_t*nvar )+ivar).fMax;
+                     Double_t rymin = fVariableStats.at(fNumC-1).at( ( v_t*nvar )+j).fMin;
+                     Double_t rymax = fVariableStats.at(fNumC-1).at( ( v_t*nvar )+j).fMax;
+                     
                      // scatter plot
                      TH2F* h2 = new TH2F( Form( "scat_%s_vs_%s_%s%s" , myVarj.Data(), myVari.Data(), 
-                                               className.Data(), transfType.Data() ), 
+                                                className.Data(), transfType.Data() ), 
                                           Form( "%s versus %s (%s)%s", infoj.GetTitle().Data(), info.GetTitle().Data(), 
                                                 className.Data(), transfType.Data() ), 
-                                          nbins2D, info.GetMin() , info.GetMax(), 
-                                          nbins2D, infoj.GetMin(), infoj.GetMax() );
+                                          nbins2D, rxmin , rxmax, 
+                                          nbins2D, rymin , rymax );
 
                      h2->GetXaxis()->SetTitle( gTools().GetXTitleWithUnit( GetVariableAxisTitle( info  ), info .GetUnit() ) );
                      h2->GetYaxis()->SetTitle( gTools().GetXTitleWithUnit( GetVariableAxisTitle( infoj ), infoj.GetUnit() ) );
@@ -564,7 +574,8 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
                                                  Form( "profile %s versus %s (%s)%s", 
                                                        infoj.GetTitle().Data(), info.GetTitle().Data(), 
                                                        className.Data(), transfType.Data() ), nbins1D, 
-                                                 info.GetMin(), info.GetMax() );
+                                                 rxmin, rxmax );
+                     //                                                 info.GetMin(), info.GetMax() );
 
                      p->GetXaxis()->SetTitle( gTools().GetXTitleWithUnit( GetVariableAxisTitle( info  ), info .GetUnit() ) );
                      p->GetYaxis()->SetTitle( gTools().GetXTitleWithUnit( GetVariableAxisTitle( infoj ), infoj.GetUnit() ) );
@@ -597,7 +608,7 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
          xregmean[nvar]  += valr;
          x2regmean[nvar] += valr*valr;
          for (UInt_t ivar=0; ivar<nvar; ivar++) {
-            Float_t vali = ev->GetVal(ivar);
+            Float_t vali = ev->GetValue(ivar);
             xregmean[ivar]  += vali;
             x2regmean[ivar] += vali*vali;
             xCregmean[ivar] += vali*valr;
@@ -608,7 +619,7 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
       for (UInt_t var_tgt = 0; var_tgt < 2; var_tgt++) { // create the histos first for the variables, then for the targets
          UInt_t nloops = ( var_tgt == 0? nvar:ntgt );    // number of variables or number of targets
          for (UInt_t ivar=0; ivar<nloops; ivar++) {
-            Float_t vali = ( var_tgt == 0 ? ev->GetVal(ivar) : ev->GetTarget(ivar) );
+            Float_t vali = ( var_tgt == 0 ? ev->GetValue(ivar) : ev->GetTarget(ivar) );
 
             // variable histos
             hVars.at(cls).at( ( var_tgt*nvar )+ivar)->Fill( vali, weight );
@@ -620,7 +631,7 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
                   UInt_t nl    = ( v_t==0 ? nvar : ntgt );
                   UInt_t start = ( v_t==0 ? (var_tgt==0?ivar+1:0) : (var_tgt==0?nl:ivar+1) );
                   for (UInt_t j=start; j<nl; j++) {
-                     Float_t valj = ( v_t == 0 ? ev->GetVal(j) : ev->GetTarget(j) );
+                     Float_t valj = ( v_t == 0 ? ev->GetValue(j) : ev->GetTarget(j) );
                      mycorr.at(cls).at( ( var_tgt*nvar )+ivar).at( ( v_t*nvar )+j)->Fill( vali, valj, weight );
                      myprof.at(cls).at( ( var_tgt*nvar )+ivar).at( ( v_t*nvar )+j)->Fill( vali, valj, weight );
                   }
@@ -634,7 +645,7 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
    if (ntgt == 1) {
       for (UInt_t ivar=0; ivar<=nvar; ivar++) {
          xregmean[ivar] /= nevts;
-         x2regmean[ivar] = x2regmean[ivar]/nevts - xregmean[ivar];
+         x2regmean[ivar] = x2regmean[ivar]/nevts - xregmean[ivar]*xregmean[ivar];
       }
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
          xCregmean[ivar] = xCregmean[ivar]/nevts - xregmean[ivar]*xregmean[nvar];
@@ -644,38 +655,43 @@ void TMVA::TransformationHandler::PlotVariables( const std::vector<Event*>& even
       fRanking.push_back( new Ranking( GetName() + "Transformation", "|Correlation with target|" ) );
       for (UInt_t ivar=0; ivar<nvar; ivar++) {   
          Double_t abscor = TMath::Abs( xCregmean[ivar] );
-         fRanking.back()->AddRank( Rank( fDataSetInfo.GetVariableInfo(ivar).GetTitle(), abscor ) );
+         fRanking.back()->AddRank( Rank( fDataSetInfo.GetVariableInfo(ivar).GetLabel(), abscor ) );
       }
 
-      // compute also mutual information (non-linear correlation measure)
-      fRanking.push_back( new Ranking( GetName() + "Transformation", "Mutual information" ) );
-      for (UInt_t ivar=0; ivar<nvar; ivar++) {   
-         TH2F* h1 = mycorr.at(0).at( nvar ).at( ivar );
-         Double_t mi = gTools().GetMutualInformation( *h1 );
-         fRanking.back()->AddRank( Rank( fDataSetInfo.GetVariableInfo(ivar).GetTitle(), mi ) );
-      }     
+      if (nvar+ntgt <= (UInt_t)gConfig().GetVariablePlotting().fMaxNumOfAllowedVariablesForScatterPlots) {
       
-      // compute correlation ratio (functional correlations measure)
-      fRanking.push_back( new Ranking( GetName() + "Transformation", "Correlation Ratio" ) );
-      for (UInt_t ivar=0; ivar<nvar; ivar++) {   
-         TH2F*    h2 = mycorr.at(0).at( nvar ).at( ivar );
-         Double_t cr = gTools().GetCorrelationRatio( *h2 );
-         fRanking.back()->AddRank( Rank( fDataSetInfo.GetVariableInfo(ivar).GetTitle(), cr ) );
-      } 
-      
-      // additionally compute correlation ratio from transposed histograms since correlation ratio is asymmetric
-      fRanking.push_back( new Ranking( GetName() + "Transformation", "Correlation Ratio (T)" ) );
-      for (UInt_t ivar=0; ivar<nvar; ivar++) {   
-         TH2F*    h2T = gTools().TransposeHist( *mycorr.at(0).at( nvar ).at( ivar ) );
-         Double_t cr  = gTools().GetCorrelationRatio( *h2T  );
-         fRanking.back()->AddRank( Rank( fDataSetInfo.GetVariableInfo(ivar).GetTitle(), cr ) );	
-         delete h2T;
-      }      
- 
+         // compute also mutual information (non-linear correlation measure)
+         fRanking.push_back( new Ranking( GetName() + "Transformation", "Mutual information" ) );
+         for (UInt_t ivar=0; ivar<nvar; ivar++) {   
+            TH2F* h1 = mycorr.at(0).at( nvar ).at( ivar );
+            Double_t mi = gTools().GetMutualInformation( *h1 );
+            fRanking.back()->AddRank( Rank( fDataSetInfo.GetVariableInfo(ivar).GetLabel(), mi ) );
+         }     
+         
+         // compute correlation ratio (functional correlations measure)
+         fRanking.push_back( new Ranking( GetName() + "Transformation", "Correlation Ratio" ) );
+         for (UInt_t ivar=0; ivar<nvar; ivar++) {   
+            TH2F*    h2 = mycorr.at(0).at( nvar ).at( ivar );
+            Double_t cr = gTools().GetCorrelationRatio( *h2 );
+            fRanking.back()->AddRank( Rank( fDataSetInfo.GetVariableInfo(ivar).GetLabel(), cr ) );
+         } 
+         
+         // additionally compute correlation ratio from transposed histograms since correlation ratio is asymmetric
+         fRanking.push_back( new Ranking( GetName() + "Transformation", "Correlation Ratio (T)" ) );
+         for (UInt_t ivar=0; ivar<nvar; ivar++) {   
+            TH2F*    h2T = gTools().TransposeHist( *mycorr.at(0).at( nvar ).at( ivar ) );
+            Double_t cr  = gTools().GetCorrelationRatio( *h2T  );
+            fRanking.back()->AddRank( Rank( fDataSetInfo.GetVariableInfo(ivar).GetLabel(), cr ) );
+            delete h2T;
+         }      
+      }
    }
    // computes ranking of input variables
    // separation for 2-class classification
-   else if (fDataSetInfo.GetNClasses() == 2) { // TODO: ugly hack.. adapt to new framework
+   else if (fDataSetInfo.GetNClasses() == 2 
+	    && fDataSetInfo.GetClassInfo("Signal") != NULL 
+	    && fDataSetInfo.GetClassInfo("Background") != NULL 
+      ) { // TODO: ugly hack.. adapt to new framework
       fRanking.push_back( new Ranking( GetName() + "Transformation", "Separation" ) );
       for (UInt_t i=0; i<nvar; i++) {   
          Double_t sep = gTools().GetSeparation( hVars.at(fDataSetInfo.GetClassInfo("Signal")    ->GetNumber()).at(i), 

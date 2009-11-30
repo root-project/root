@@ -48,6 +48,8 @@
 
 namespace TMVA {
 
+   typedef UInt_t TMVAVersion_t;
+
    class MsgLogger;
 
    // message types for MsgLogger
@@ -65,6 +67,7 @@ namespace TMVA {
    class Types {
       
    public:
+
          
       // available MVA methods
       enum EMVA {
@@ -90,6 +93,7 @@ namespace TMVA {
          kPDEFoam        ,
          kLD             ,
          kPlugins        ,
+         kCategory       ,
          kMaxMethod      
       };
 
@@ -107,6 +111,7 @@ namespace TMVA {
       enum EAnalysisType { 
          kClassification = 0, 
          kRegression,
+         kMulticlass,
          kNoAnalysisType,
          kMaxAnalysisType         
       };

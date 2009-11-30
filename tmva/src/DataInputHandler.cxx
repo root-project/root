@@ -76,6 +76,7 @@ void TMVA::DataInputHandler::AddTree( TTree* tree,
                                       Types::ETreeType tt ) 
 {
    if (!tree) Log() << kFATAL << "Zero pointer for tree of class " << className.Data() << Endl;
+   if (tree->GetEntries()==0) Log() << kFATAL << "Encountered empty TTree or TChain of class " << className.Data() << Endl;
    if (fInputTrees[className.Data()].size() == 0) {
       // on the first tree (of the class) check if explicit treetype is given
       fExplicitTrainTest[className.Data()] = ( tt != Types::kMaxTreeType);
@@ -87,7 +88,7 @@ void TMVA::DataInputHandler::AddTree( TTree* tree,
             Log() << kFATAL << "For the tree " << tree->GetName() << " of class " << className.Data()
                   << " you did "<< (tt==Types::kMaxTreeType?"not ":"") << "specify a type,"
                   << " while you did "<< (tt==Types::kMaxTreeType?"":"not ") << "for the first tree " 
-                  << fInputTrees[className.Data()][0].GetTree()->GetName() << "of class " << className.Data()
+                  << fInputTrees[className.Data()][0].GetTree()->GetName() << " of class " << className.Data()
                   << Endl;
       }
    }

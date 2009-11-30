@@ -36,7 +36,7 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
       cout << "ERROR: no such directory: \"InputVariables\"" << endl;
       return;
    }
-   Int_t noVars = TMVAGlob::GetNumberOfInputVariables( vardir ) - 1; // subtract target
+   Int_t noVars = TMVAGlob::GetNumberOfInputVariables( vardir ); // subtraction of target(s) no longer necessary
 
    TDirectory* dir = (TDirectory*)gDirectory->Get( dirName );
    if (dir==0) {
@@ -101,8 +101,10 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
 
          // check for all signal histograms
          if (! (hname.EndsWith( thename[itype] + extension ) && 
-                hname.Contains( TString("_") + var + "_" ) && hname.BeginsWith("scat_")) ) continue; 
-
+                hname.Contains( TString("_") + var + "_" ) && hname.BeginsWith("scat_")) ) {
+            scat->Delete();
+            continue; 
+         }
 
          // found a new signal plot
             
@@ -142,7 +144,7 @@ void correlationscatters( TString fin = "TMVA.root", TString var= "var3",
          Float_t sc = 1.1;
          if (countPad==2) sc = 1.3;
          scat->SetMarkerColor(  4);
-         scat->Draw();      
+         scat->Draw("col");      
          prof->SetMarkerColor( TMVAGlob::UsePaperStyle ? 1 : 2  );
          prof->SetMarkerSize( 0.2 );
          prof->SetLineColor( TMVAGlob::UsePaperStyle ? 1 : 2 );

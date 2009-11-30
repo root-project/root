@@ -93,10 +93,15 @@ namespace TMVA {
       VariableInfo&     AddVariable( const TString& expression, const TString& title = "", const TString& unit = "", 
                                      Double_t min = 0, Double_t max = 0, char varType='F', 
                                      Bool_t normalized = kTRUE, void* external = 0 );
+      VariableInfo&     AddVariable( const VariableInfo& varInfo );
+
       VariableInfo&     AddTarget  ( const TString& expression, const TString& title, const TString& unit, 
                                      Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = 0 );
+      VariableInfo&     AddTarget  ( const VariableInfo& varInfo );
+
       VariableInfo&     AddSpectator ( const TString& expression, const TString& title, const TString& unit, 
-                                     Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = 0 );
+                                       Double_t min, Double_t max, char type = 'F', Bool_t normalized = kTRUE, void* external = 0 );
+      VariableInfo&     AddSpectator ( const VariableInfo& varInfo );
 
       ClassInfo*        AddClass   ( const TString& className );
 
@@ -121,10 +126,10 @@ namespace TMVA {
 
       UInt_t                           GetNVariables()    const { return fVariables.size(); }
       UInt_t                           GetNTargets()      const { return fTargets.size(); }
-      UInt_t                           GetNSpectators()     const { return fSpectators.size(); }
+      UInt_t                           GetNSpectators(bool all=kTRUE)   const;
 
       const TString&                   GetNormalization() const { return fNormalization; }
-      void                             SetNormalization( TString& norm )   { fNormalization = norm; }
+      void                             SetNormalization( const TString& norm )   { fNormalization = norm; }
 
       // classification information
       Int_t              GetClassNameMaxLength() const;
