@@ -1865,7 +1865,8 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
          itTarget = trainingEventVector->begin() - 1; // start one before begin
          // loop over source 
          for( itEvent = tmpEventVector[Types::kTraining].at(cls).begin(), itEventEnd = tmpEventVector[Types::kTraining].at(cls).end(); itEvent != itEventEnd; ++itEvent ){
-            if( std::distance( itTarget, trainingEventVector->end()) < Int_t(cls+1) ) {
+//            if( std::distance( itTarget, trainingEventVector->end()) < Int_t(cls+1) ) {
+            if( (trainingEventVector->end() - itTarget) < Int_t(cls+1) ) {
                itTarget = trainingEventVector->end();
                trainingEventVector->insert( itTarget, itEvent, itEventEnd ); // fill in the rest without mixing
                break;
@@ -1878,7 +1879,8 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
          itTarget = testingEventVector->begin() - 1;
          // loop over source 
          for( itEvent = tmpEventVector[Types::kTesting].at(cls).begin(), itEventEnd = tmpEventVector[Types::kTesting].at(cls).end(); itEvent != itEventEnd; ++itEvent ){
-            if( std::distance( itTarget, testingEventVector->end()) < Int_t(cls+1) ) {
+//             if( std::distance( itTarget, testingEventVector->end()) < Int_t(cls+1) ) {
+            if( ( testingEventVector->end() - itTarget ) < Int_t(cls+1) ) {
                itTarget = testingEventVector->end();
                testingEventVector->insert( itTarget, itEvent, itEventEnd ); // fill in the rest without mixing
                break;
