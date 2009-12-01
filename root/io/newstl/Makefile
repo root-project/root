@@ -9,14 +9,16 @@ ifeq ($(ARCH),)
 endif
 PLATFORM      = $(ARCH)
 ifeq ($(PLATFORM),win32)
-LPWD := $(shell echo `cygpath -m $$PWD | sed -e 's/[a-zA-Z]://' -e 's?/cygdrive/[a-zA-Z]??' ` )
+RAW_PWD := $(shell echo `cygpath -w $$PWD`)
+NOLINK_PWD := $(shell echo `cygpath -m $$PWD | sed -e 's/[a-zA-Z]://' -e 's?/cygdrive/[a-zA-Z]??' ` )
 else
-LPWD := $(shell echo `pwd -P`)
+RAW_PWD := $(shell pwd)
+NOLINK_PWD := $(shell echo `pwd -P`)
 endif
 LIBDIRTOP := $(VERSION).libs
-LIBDIR := $(LIBDIRTOP)$(LPWD)/
+LIBDIR := $(LIBDIRTOP)$(NOLINK_PWD)/
 FILEDIR := $(VERSION)
-#debug := $(shell echo $(PLATFORM) $(LPWD) 1>&2 )
+#debug := $(shell echo $(PLATFORM) $(NOLINK_PWD) 1>&2 )
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
 #Set the list of files to be delete by clean:
@@ -113,7 +115,8 @@ $(LIBDIR)ntest_C.$(DllSuf) : $(LIBDIR)multimapHolder_C.$(DllSuf)
 endif
 
 LIBDIR_SED=$(subst /,\\/,$(LIBDIR))
-LIBDIR_SED2=$(subst /,\\/,$(LPWD)/./)
+LIBDIR_SED_REM=$(subst /,\\/,$(NOLINK_PWD)/./)
+PWD_SED=$(subst /,\\/,$(subst \,\\\\,$(RAW_PWD)))
 ROOTSYS_SED=$(subst /,\\/,$(subst \,\\\\,$(ROOTSYS)))
 #ROOTSYS_SED=$(subst \\,\\\\,$(subst /,\\/,$(ROOTSYS)))
 #ROOTLOC_SED=$(subst /,\\/,$(ROOT_LOC))
@@ -121,7 +124,10 @@ ROOTSYS_SED=$(subst /,\\/,$(subst \,\\\\,$(ROOTSYS)))
 
 ifneq ($(MAKECMDGOALS),clean)
 $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
-	@cat $< | sed -e s/$(LIBDIR_SED2)// -e s/$*.o/$(LIBDIR_SED)$*_C.$(DllSuf)/ -e s/$*_C.$(DllSuf)/$(LIBDIR_SED)$*_C.$(DllSuf)/ \
+	cat $< | sed -e s/$(LIBDIR_SED_REM)// \
+	   -e s,$(PWD_SED),, \
+	   -e s,^$*_C.$(DllSuf),$(LIBDIR_SED)$*_C.$(DllSuf), \
+	   -e s,^$*.o,$(LIBDIR_SED)$*_C.$(DllSuf), \
 	   -e s,$(ROOTSYS_SED)\\\\include\\\\cintdictversion.h,$(ROOT_LOC)/include/cintdictversion.h, \
 	   -e s,$(ROOTSYS_SED)\\\\include\\\\RVersion.h,$(ROOT_LOC)/include/RVersion.h, > $@
 endif
