@@ -1,5 +1,5 @@
 
-Processing Read.C("NuEvent_60_cxx.so", "rootfiles/DST_60.root", 0)...
+Processing Read.C("NuEvent_60_cxx", "rootfiles/DST_60.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
@@ -9,7 +9,7 @@ Reading event 10
 All events read.
 (int)0
 
-Processing Read.C("NuEvent_60_cxx.so", "rootfiles/DST_61.root", 0)...
+Processing Read.C("NuEvent_60_cxx", "rootfiles/DST_61.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
@@ -19,7 +19,7 @@ Reading event 10
 All events read.
 (int)0
 
-Processing Read.C("NuEvent_60_cxx.so", "rootfiles/DST_62.root", 0)...
+Processing Read.C("NuEvent_60_cxx", "rootfiles/DST_62.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
@@ -29,7 +29,7 @@ Reading event 10
 All events read.
 (int)0
 
-Processing Read.C("NuEvent_61_cxx.so", "rootfiles/DST_60.root", 0)...
+Processing Read.C("NuEvent_61_cxx", "rootfiles/DST_60.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
@@ -39,7 +39,7 @@ Reading event 10
 All events read.
 (int)0
 
-Processing Read.C("NuEvent_61_cxx.so", "rootfiles/DST_61.root", 0)...
+Processing Read.C("NuEvent_61_cxx", "rootfiles/DST_61.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
@@ -49,7 +49,7 @@ Reading event 10
 All events read.
 (int)0
 
-Processing Read.C("NuEvent_61_cxx.so", "rootfiles/DST_62.root", 0)...
+Processing Read.C("NuEvent_61_cxx", "rootfiles/DST_62.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
@@ -59,7 +59,7 @@ Reading event 10
 All events read.
 (int)0
 
-Processing Read.C("NuEvent_62_cxx.so", "rootfiles/DST_60.root", 0)...
+Processing Read.C("NuEvent_62_cxx", "rootfiles/DST_60.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
@@ -69,7 +69,7 @@ Reading event 10
 All events read.
 (int)0
 
-Processing Read.C("NuEvent_62_cxx.so", "rootfiles/DST_61.root", 0)...
+Processing Read.C("NuEvent_62_cxx", "rootfiles/DST_61.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
@@ -79,7 +79,7 @@ Reading event 10
 All events read.
 (int)0
 
-Processing Read.C("NuEvent_62_cxx.so", "rootfiles/DST_62.root", 0)...
+Processing Read.C("NuEvent_62_cxx", "rootfiles/DST_62.root", 0)...
 
 ************************************************
 ***      Starting main loop                  ***
