@@ -170,10 +170,6 @@ STRESSHISTOFIT     = stressHistoFit$(ExeSuf)
 endif
 endif
 
-STRESSTMVAO    = stressTMVA.$(ObjSuf)
-STRESSTMVAS    = stressTMVA.$(SrcSuf)
-STRESSTMVA     = stressTMVA$(ExeSuf)
-
 STRESSENTRYLISTO = stressEntryList.$(ObjSuf)
 STRESSENTRYLISTS = stressEntryList.$(SrcSuf)
 STRESSENTRYLIST  = stressEntryList$(ExeSuf)
@@ -223,7 +219,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
                 $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
-                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) $(STRESSTMVAO) \
+                $(STRESSGO) $(STRESSSPO) $(TESTBITSO)  \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
                 $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
                 $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
@@ -235,7 +231,7 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) $(STRESSENTRYLIST) \
-                $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) $(STRESSTMVA) \
+                $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH)  \
                 $(STRESSMATHMORE) $(STRESSITER) $(STRESSHIST)
 
 
@@ -489,15 +485,6 @@ ifeq ($(PLATFORM),win32)
 		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lUnuran $(OutPutOpt)$@
-endif
-		@echo "$@ done"
-
-$(STRESSTMVA): $(STRESSTMVAO)
-ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) '$(ROOTSYS)/lib/libTMVA.lib' '$(ROOTSYS)/lib/libMinuit.lib' '$(ROOTSYS)/lib/libMLP.lib' '$(ROOTSYS)/lib/libTreePlayer.lib' '$(ROOTSYS)/lib/libXMLIO.lib' $(OutPutOpt)$@
-		$(MT_EXE)
-else
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lTMVA -lMinuit -lMLP -lTreePlayer -lXMLIO $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 

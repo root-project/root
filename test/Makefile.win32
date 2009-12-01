@@ -234,10 +234,6 @@ STRESSHISTOFIT     = stressHistoFit$(ExeSuf)
 !endif
 !endif
 
-STRESSTMVAO    = stressTMVA.$(ObjSuf)
-STRESSTMVAS    = stressTMVA.$(SrcSuf)
-STRESSTMVA     = stressTMVA$(ExeSuf)
-
 STRESSENTRYLISTO = stressEntryList.$(ObjSuf)
 STRESSENTRYLISTS = stressEntryList.$(SrcSuf)
 STRESSENTRYLIST  = stressEntryList$(ExeSuf)
@@ -287,7 +283,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
                 $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
-                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) $(STRESSTMVAO) \
+                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
                 $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
                 $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
@@ -300,7 +296,7 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) $(STRESSENTRYLIST) \
-                $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) $(STRESSTMVA) \
+                $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) \
                 $(STRESSMATHMORE) $(STRESSITER) $(STRESSHIST) \
                 $(GUITEST) $(GUIVIEWER) $(TETRISSO)
 
@@ -467,11 +463,6 @@ $(STRESSHISTOFIT): $(STRESSHISTOFITO)
                    @echo "$@ done"
 !endif
 !endif
-
-$(STRESSTMVA): $(STRESSTMVAO)
-               $(LD) $(LDFLAGS) $(STRESSTMVAO) $(LIBS) $(ROOTSYS)\lib\libTMVA.lib $(ROOTSYS)\lib\libMinuit.lib $(ROOTSYS)\lib\libMLP.lib $(ROOTSYS)\lib\libTreePlayer.lib $(OutPutOpt)$@
-               $(MT_EXE)
-               @echo "$@ done"
 
 $(STRESSENTRYLIST): $(STRESSENTRYLISTO)
                     $(LD) $(LDFLAGS) $(STRESSENTRYLISTO) $(LIBS) $(OutPutOpt)$@
