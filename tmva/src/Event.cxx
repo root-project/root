@@ -125,8 +125,8 @@ TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
      fDynamic(true),
      fSignalClass( 100 ) // TODO: remove this.. see "IsSignal" ... !!!!!! NOT CLEAR TO ME WHAT VALUE TO SET HERE...
 {
-   fgValuesDynamic = (std::vector<Float_t*>*) evdyn;
    // constructor for single events
+   fgValuesDynamic = (std::vector<Float_t*>*) evdyn;
    fgCount++;
 }
 
@@ -167,6 +167,11 @@ void TMVA::Event::ClearDynamicVariables()
 
 //____________________________________________________________
 void TMVA::Event::SetVariableArrangement( std::vector<UInt_t>* const m ) const {
+   // set the variable arrangement
+
+   // mapping from global variable index (the position in the vector)
+   // to the new index in the subset of variables used by the
+   // composite classifier
    fVariableArrangement = m;
 }
 
@@ -236,6 +241,11 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
 //____________________________________________________________
 UInt_t TMVA::Event::GetNVariables() const 
 {
+   // accessor to the number of variables 
+
+   // if variables have to arranged (as it is the case for the
+   // composite classifier) the number of the variables changes
+
    if (fVariableArrangement==0) return fValues.size();
    else                         return fVariableArrangement->size();
 }
@@ -243,12 +253,18 @@ UInt_t TMVA::Event::GetNVariables() const
 //____________________________________________________________
 UInt_t TMVA::Event::GetNTargets() const 
 {
+   // accessor to the number of targets
    return fTargets.size();
 }
 
 //____________________________________________________________
 UInt_t TMVA::Event::GetNSpectators() const 
 {
+   // accessor to the number of spectators 
+
+   // if variables have to arranged (as it is the case for the
+   // composite classifier) the number of the variables changes
+
    if (fVariableArrangement==0) return fSpectators.size();
    else                         return fValues.size()-fVariableArrangement->size();
 }
@@ -274,6 +290,8 @@ void TMVA::Event::Print( std::ostream& o ) const
 //_____________________________________________________________
 void TMVA::Event::SetTarget( UInt_t itgt, Float_t value ) 
 { 
+   // set the target value (dimension itgt) to value
+
    if (fTargets.size() <= itgt) fTargets.resize( itgt+1 );
    fTargets.at(itgt) = value;
 }
@@ -281,6 +299,8 @@ void TMVA::Event::SetTarget( UInt_t itgt, Float_t value )
 //_____________________________________________________________
 void TMVA::Event::SetSpectator( UInt_t ivar, Float_t value ) 
 { 
+   // set spectator value (dimension ivar) to value
+
    if (fSpectators.size() <= ivar) fSpectators.resize( ivar+1 );
    fSpectators.at(ivar) = value;
 }
