@@ -1064,7 +1064,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
          }
       }
    }
-   if (claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
+   if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
       Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
             "Please generate the dictionary for this class (%s)",
             claim->GetName(), branchname, claim->GetName());
