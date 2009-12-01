@@ -283,7 +283,9 @@ void TVirtualFitter::SetFCN(void *fcn)
 //______________________________________________________________________________
 void TVirtualFitter::SetMaxIterations(Int_t niter)
 {
-   // static: Set the maximum number of iterations measured as function calls
+   // static: Set the maximum number of function calls for the minimization algorithm
+   // For example for MIGRAD this is the maxcalls value passed as first argument
+   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html ) 
 
    ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(niter);
 }
@@ -292,6 +294,8 @@ void TVirtualFitter::SetMaxIterations(Int_t niter)
 void TVirtualFitter::SetErrorDef(Double_t errdef)
 {
    // static: Set the Error Definition (default=1)
+   // For Minuit this is the value passed with the "SET ERR" command
+   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html)
 
 //    fgErrorDef = errdef;
    ROOT::Math::MinimizerOptions::SetDefaultErrorDef(errdef);
@@ -304,8 +308,10 @@ void TVirtualFitter::SetErrorDef(Double_t errdef)
 //______________________________________________________________________________
 void TVirtualFitter::SetPrecision(Double_t prec)
 {
-   // static: Set the fit relative precision
-
+   // static: Set the tolerance used in the minimization algorithm
+   // For example for MIGRAD this is tolerance value passed as second argument
+   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html ) 
+  
    //fgPrecision = prec;
    ROOT::Math::MinimizerOptions::SetDefaultTolerance(prec);
 }
