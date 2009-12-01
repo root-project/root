@@ -212,6 +212,9 @@ TGFileBrowser::~TGFileBrowser()
 {
    // Destructor.
 
+   TQObject::Disconnect("TGHtmlBrowser", "Clicked(char*)");
+   TQObject::Disconnect("TPad", "Modified()");
+
    delete fContextMenu;
    delete fListTree;
    if (fRootIcon) fClient->FreePicture(fRootIcon);
