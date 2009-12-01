@@ -652,6 +652,10 @@ void TRootBrowser::HandleMenu(Int_t id)
                gROOT->ProcessLine(Form("new TFile(\"%s\");",
                                   gSystem->UnixPathName(fi.fFilename)));
             }
+            if (fActBrowser) {
+               TGFileBrowser *fb = dynamic_cast<TGFileBrowser *>(fActBrowser);
+               if (fb) fb->Selected(0);
+            }
          }
          break;
                   // Handle Help menu items...
