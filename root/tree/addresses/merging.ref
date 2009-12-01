@@ -13,9 +13,7 @@ Processing runmerging.C...
 *Entries :        0 : Total  Size=        466 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-======> EVENT:-1
- x               = 0
- y               = 0
+Error in <TTree::Show()>: Cannot read entry 19 (entry does not exist)
 ******************************************************************************
 *Tree    :yyy       : Argument                                               *
 *Entries :      100 : Total =            3110 bytes  File  Size =          0 *
@@ -51,9 +49,7 @@ result entries = 100
 *Entries :        0 : Total  Size=        466 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-======> EVENT:-1
- x               = 0
- y               = 0
+Error in <TTree::Show()>: Cannot read entry 19 (entry does not exist)
 ******************************************************************************
 *Tree    :yyy       : Argument                                               *
 *Entries :      100 : Total =            3110 bytes  File  Size =          0 *
