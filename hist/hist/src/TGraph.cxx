@@ -903,7 +903,7 @@ TObject *TGraph::FindObject(const TObject *obj) const
 
 
 //______________________________________________________________________________
-Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
+TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
    // Fit this graph with function with name fname.
    //
@@ -929,7 +929,7 @@ Int_t TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, 
 
 
 //______________________________________________________________________________
-Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
+TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
 {
    // Fit this graph with function f1.
    //

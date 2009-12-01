@@ -85,7 +85,7 @@ namespace ROOT {
           deleting the data after the fit. User calling this function MUST NOT delete UnBinData after 
           calling it.
       */
-      int UnBinFit(ROOT::Fit::UnBinData * data, TF1 * f1 , Foption_t & option , const ROOT::Math::MinimizerOptions & moption); 
+      TFitResultPtr UnBinFit(ROOT::Fit::UnBinData * data, TF1 * f1 , Foption_t & option , const ROOT::Math::MinimizerOptions & moption); 
 
       /** 
           fill the data vector from a TH1. Pass also the TF1 function which is 

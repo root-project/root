@@ -240,7 +240,7 @@ void TMultiGraph::Draw(Option_t *option)
 
 
 //______________________________________________________________________________
-Int_t TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
+TFitResultPtr TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
    // Fit this graph with function with name fname.
    //
@@ -261,7 +261,7 @@ Int_t TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t x
 
 
 //______________________________________________________________________________
-Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
+TFitResultPtr TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
 {
    // Fit this multigraph with function f1.
    //

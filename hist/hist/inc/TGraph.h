@@ -48,6 +48,8 @@ class TCollection;
 class TF1;
 class TSpline;
 
+#include "TFitResultPtr.h"
+
 class TGraph : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
@@ -114,8 +116,8 @@ public:
    virtual void          Expand(Int_t newsize, Int_t step);
    virtual TObject      *FindObject(const char *name) const;
    virtual TObject      *FindObject(const TObject *obj) const;
-   virtual Int_t         Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
-   virtual Int_t         Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
+   virtual TFitResultPtr Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
+   virtual TFitResultPtr Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
    virtual void          FitPanel(); // *MENU*
    Bool_t                GetEditable() const;
    TF1                  *GetFunction(const char *name) const;

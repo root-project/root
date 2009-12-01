@@ -610,7 +610,7 @@ TObject *TGraph2D::FindObject(const TObject *obj) const
 
 
 //______________________________________________________________________________
-Int_t TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
+TFitResultPtr TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 {
    // Fits this graph with function with name fname
    // Predefined functions such as gaus, expo and poln are automatically
@@ -634,7 +634,7 @@ Int_t TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 
 
 //______________________________________________________________________________
-Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
+TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 {
    // Fits this 2D graph with function f2
    //

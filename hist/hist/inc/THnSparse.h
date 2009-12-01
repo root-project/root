@@ -59,6 +59,8 @@ class TH2D;
 class TH3D;
 class TF1;
 
+#include "TFitResultPtr.h"
+
 class THnSparseArrayChunk: public TObject {
  private:
 

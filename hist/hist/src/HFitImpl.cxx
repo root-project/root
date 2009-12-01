@@ -594,7 +594,7 @@ void HFit::CheckGraphFitOptions(Foption_t & foption) {
 
 // implementation of unbin fit function (defined in HFitInterface)
 
-int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t & fitOption , const ROOT::Math::MinimizerOptions & minOption) { 
+TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t & fitOption , const ROOT::Math::MinimizerOptions & minOption) { 
    // do unbin fit, ownership of fitdata is passed later to the TBackFitter class
 
 #ifdef DEBUG
@@ -710,7 +710,19 @@ int ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc, Foption_t
    if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
    else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
 
-   return iret; 
+   if (fitOption.StoreResult) 
+   {
+      TFitResult* fr = new TFitResult(fitResult);
+      TString name = "TFitResult-";
+      name = name + "UnBinData-" + fitfunc->GetName();
+      TString title = "TFitResult-";
+      title += name;
+      fr->SetName(name);
+      fr->SetTitle(title);
+      return TFitResultPtr(fr);
+   }
+   else 
+      return TFitResultPtr(iret);
 }
 
 

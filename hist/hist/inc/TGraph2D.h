@@ -45,6 +45,8 @@ class TH2D;
 class TView;
 class TDirectory;
 
+#include "TFitResultPtr.h"
+
 class TGraph2D : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
@@ -97,8 +99,8 @@ public:
    void             ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject *FindObject(const char *name) const;
    virtual TObject *FindObject(const TObject *obj) const;
-   virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption=""); // *MENU*
-   virtual Int_t    Fit(TF2 *f2 ,Option_t *option="" ,Option_t *goption=""); // *MENU*
+   virtual TFitResultPtr Fit(const char *formula ,Option_t *option="" ,Option_t *goption=""); // *MENU*
+   virtual TFitResultPtr Fit(TF2 *f2 ,Option_t *option="" ,Option_t *goption=""); // *MENU*
    virtual void     FitPanel(); // *MENU*
    TList           *GetContourList(Double_t contour);
    TDirectory      *GetDirectory() const {return fDirectory;}
