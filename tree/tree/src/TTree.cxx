@@ -3870,7 +3870,7 @@ TLeaf* TTree::FindLeaf(const char* searchname)
 }
 
 //______________________________________________________________________________
-Int_t TTree::Fit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Option_t* goption, Long64_t nentries, Long64_t firstentry)
+TFitResultPtr TTree::Fit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Option_t* goption, Long64_t nentries, Long64_t firstentry)
 {
    // Fit  a projected item(s) from a tree.
    //
@@ -6773,7 +6773,7 @@ void TTree::Streamer(TBuffer& b)
 }
 
 //______________________________________________________________________________
-Int_t TTree::UnbinnedFit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
+TFitResultPtr TTree::UnbinnedFit(const char* funcname, const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
    // Unbinned fit of one or more variable(s) from a tree.
    //

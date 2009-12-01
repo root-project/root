@@ -87,6 +87,8 @@ class TBranchRef;
 class TBasket;
 class TStreamerInfo;
 
+#include "TFitResultPtr.h"
+
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
@@ -263,7 +265,7 @@ public:
    virtual Int_t           Fill();
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
-   virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
+   virtual TFitResultPtr   Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
    virtual Int_t           FlushBaskets() const;
    virtual const char     *GetAlias(const char* aliasName) const;
    virtual Long64_t        GetAutoFlush() const {return fAutoFlush;}
@@ -430,7 +432,7 @@ public:
    virtual void            Show(Long64_t entry = -1, Int_t lenmax = 20);
    virtual void            StartViewer(); // *MENU*
    virtual void            StopCacheLearningPhase();
-   virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
+   virtual TFitResultPtr   UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    void                    UseCurrentStyle();
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;

@@ -37,7 +37,6 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
-
 class TVirtualIndex;
 
 class TTreePlayer : public TVirtualTreePlayer {
@@ -77,7 +76,7 @@ public:
                                 Option_t *option, Long64_t nentries, Long64_t firstentry);
    virtual Long64_t  DrawSelect(const char *varexp, const char *selection, Option_t *option
                                 ,Long64_t nentries, Long64_t firstentry);
-   virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,
+   virtual TFitResultPtr Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,
                          Option_t *goption ,Long64_t nentries, Long64_t firstentry);
    virtual Int_t     GetDimension() const {return fDimension;}
    TH1              *GetHistogram() const {return fHistogram;}
@@ -120,7 +119,7 @@ public:
    void              SetScanFileName(const char *name) {fScanFileName=name;}
    virtual void      SetTree(TTree *t) {fTree = t;}
    virtual void      StartViewer(Int_t ww, Int_t wh);
-   virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
+   virtual TFitResultPtr UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
                                  ,Long64_t nentries, Long64_t firstentry);
    virtual void      UpdateFormulaLeaves();
 
