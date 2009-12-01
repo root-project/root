@@ -181,6 +181,7 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    min->SetMaxFunctionCalls( fMinimizerOpts.MaxFunctionCalls() ); 
    min->SetMaxIterations( fMinimizerOpts.MaxIterations() ); 
    min->SetTolerance( fMinimizerOpts.Tolerance() ); 
+   min->SetPrecision( fMinimizerOpts.Precision() ); 
    min->SetValidError( fParabErrors );
    min->SetStrategy( fMinimizerOpts.Strategy() );
    min->SetErrorDef( fMinimizerOpts.ErrorDef() );
@@ -195,17 +196,8 @@ void FitConfig::SetDefaultMinimizer(const char * type, const char *algo ) {
 } 
 
 void FitConfig::SetMinimizerOptions(const ROOT::Math::MinimizerOptions & minopt) {  
-   // set minimizer options
+   // set all the minimizer options
    fMinimizerOpts = minopt; 
-//    fMinimizerType = minopt.MinimizerType(); 
-//    fMinimAlgoType = minopt.MinimizerAlgorithm(); 
-//    fMinimizerOpts.SetTolerance(minopt.Tolerance() ); 
-//    fMinimizerOpts.SetMaxFunctionCalls(minopt.MaxFunctionCalls() ); 
-//    fMinimizerOpts.SetMaxIterations(minopt.MaxIterations() ); 
-//    fMinimizerOpts.SetStrategy(minopt.Strategy() ); 
-//    fMinimizerOpts.SetPrintLevel(minopt.PrintLevel() ); 
-//    fMinimizerOpts.SetErrorDef(minopt.ErrorDef() ); 
-
 }
 
 

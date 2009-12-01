@@ -33,6 +33,7 @@ public:
    static void SetDefaultMinimizer(const char * type, const char * algo = 0);
    static void SetDefaultErrorDef( double up); 
    static void SetDefaultTolerance(double tol); 
+   static void SetDefaultPrecision(double prec); 
    static void SetDefaultMaxFunctionCalls(int maxcall);
    static void SetDefaultMaxIterations(int maxiter);
    static void SetDefaultStrategy(int strat);
@@ -42,6 +43,7 @@ public:
    static const std::string & DefaultMinimizerAlgo(); 
    static double DefaultErrorDef();
    static double DefaultTolerance(); 
+   static double DefaultPrecision(); 
    static int DefaultMaxFunctionCalls(); 
    static int DefaultMaxIterations(); 
    static int DefaultStrategy(); 
@@ -56,6 +58,7 @@ public:
       fStrategy(  MinimizerOptions::DefaultStrategy() ), 
       fErrorDef(  MinimizerOptions::DefaultErrorDef() ), 
       fTolerance( MinimizerOptions::DefaultTolerance() ),
+      fPrecision( MinimizerOptions::DefaultPrecision() ),
       fMinimType( MinimizerOptions::DefaultMinimizerType() ), 
       fAlgoType(  MinimizerOptions::DefaultMinimizerAlgo() )
    {}
@@ -76,6 +79,9 @@ public:
 
    /// absolute tolerance 
    double Tolerance() const { return  fTolerance; }
+
+   /// precision in the objective funciton calculation (value <=0 means left to default)
+   double Precision() const { return  fPrecision; }
 
    /// error definition 
    double ErrorDef() const { return  fErrorDef; }
@@ -100,6 +106,9 @@ public:
    /// set the tolerance
    void SetTolerance(double tol) { fTolerance = tol; }
 
+   /// set the precision
+   void SetPrecision(double prec) { fPrecision = prec; }
+
    /// set the strategy
    void SetStrategy(int stra) { fStrategy = stra; }
 
@@ -120,6 +129,7 @@ private:
    int fStrategy;            // minimizer strategy (used by Minuit)
    double fErrorDef;         // error definition (=1. for getting 1 sigma error for chi2 fits)
    double fTolerance;        // minimize tolerance to reach solution
+   double fPrecision;        // precision of the objective funciton evaluation (value <=0 means left to default)
    std::string fMinimType;   // Minimizer type (Minuit, Minuit2, etc..
    std::string fAlgoType;    // Minimizer algorithmic specification (Migrad, Minimize, ...)
      

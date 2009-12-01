@@ -26,6 +26,7 @@ namespace Math {
    static std::string gDefaultMinimAlgo = "Migrad";
    static double gDefaultErrorDef = 1.;
    static double gDefaultTolerance = 1.E-4; 
+   static double gDefaultPrecision = -1; // value <= 0 means left to minimizer
    static int  gDefaultMaxCalls = 0; // 0 means leave default values Deaf
    static int  gDefaultMaxIter  = 0; 
    static int  gDefaultStrategy  = 1; 
@@ -45,6 +46,10 @@ void MinimizerOptions::SetDefaultErrorDef(double up) {
 void MinimizerOptions::SetDefaultTolerance(double tol) {
    // set the defult tolerance
    gDefaultTolerance = tol; 
+}
+void MinimizerOptions::SetDefaultPrecision(double prec) {
+   // set the defult precision
+   gDefaultPrecision = prec; 
 }
 void MinimizerOptions::SetDefaultMaxFunctionCalls(int maxcall) {
    // set the default maximum number of function calls
@@ -66,6 +71,7 @@ const std::string & MinimizerOptions::DefaultMinimizerType() { return gDefaultMi
 const std::string & MinimizerOptions::DefaultMinimizerAlgo() { return gDefaultMinimAlgo; }
 double MinimizerOptions::DefaultErrorDef()         { return gDefaultErrorDef; }
 double MinimizerOptions::DefaultTolerance()        { return gDefaultTolerance; }
+double MinimizerOptions::DefaultPrecision()        { return gDefaultPrecision; }
 int    MinimizerOptions::DefaultMaxFunctionCalls() { return gDefaultMaxCalls; }
 int    MinimizerOptions::DefaultMaxIterations()    { return gDefaultMaxIter; }
 int    MinimizerOptions::DefaultStrategy()         { return gDefaultStrategy; }
