@@ -646,9 +646,9 @@ void TFile::Init(Bool_t create)
          buffer_keyloc += 2*sizeof(Int_t)+2*sizeof(Short_t)+2*sizeof(Int_t);
       }
       TString cname;
-      cname.ReadBuffer(buffer);
-      cname.ReadBuffer(buffer); // fName.ReadBuffer(buffer); file may have been renamed
-      fTitle.ReadBuffer(buffer);
+      cname.ReadBuffer(buffer_keyloc);
+      cname.ReadBuffer(buffer_keyloc); // fName.ReadBuffer(buffer); file may have been renamed
+      fTitle.ReadBuffer(buffer_keyloc);
       delete [] header;
       if (fNbytesName < 10 || fNbytesName > 10000) {
          Error("Init","cannot read directory info of file %s", GetName());
