@@ -6627,7 +6627,12 @@ void TTree::Show(Long64_t entry, Int_t lenmax)
    // if a leaf is an array, a maximum of lenmax elements is printed.
    //
    if (entry != -1) {
-      GetEntry(entry);
+      Int_t ret = GetEntry(entry);
+      if (ret == -1 || ret == 0) {
+         Error("Show()", "Cannot read entry %d (%s)",
+               entry, ret == -1 ? "I/O error" : "entry does not exist");
+         return;
+      }
    }
    printf("======> EVENT:%lld\n", fReadEntry);
    TObjArray* leaves  = GetListOfLeaves();
