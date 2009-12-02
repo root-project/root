@@ -244,7 +244,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       if (!useMinuit) { 
       
          // draw directly the TH2 from the profile LL
-         TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparamY,RooFit::YVar(*myparam),RooFit::Binning(fNPoints),RooFit::Scaling(kFALSE));
+         TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparam,RooFit::YVar(*myparamY),RooFit::Binning(fNPoints),RooFit::Scaling(kFALSE));
 
 
          hist2D->SetTitle(GetTitle());
@@ -295,8 +295,8 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          opt.Append("LF");
          // draw first a dummy 2d histogram gfor the axis 
          if (!opt.Contains("same")) { 
-            TString title = TString("Contour of ") + TString(myparam->GetName() ) + TString(" vs ") + TString(myparamY->GetName() ); 
-            TH2F* hist2D = new TH2F("_hist2D",title, fNPoints, myparamY->getMin(), myparamY->getMax(), fNPoints, myparam->getMin(), myparam->getMax() );
+            TString title = TString("Contour of ") + TString(myparamY->GetName() ) + TString(" vs ") + TString(myparam->GetName() ); 
+            TH2F* hist2D = new TH2F("_hist2D",title, fNPoints, myparam->getMin(), myparam->getMax(), fNPoints, myparamY->getMin(), myparamY->getMax() );
             hist2D->GetXaxis()->SetTitle(myparamY->GetName());
             hist2D->GetYaxis()->SetTitle(myparam->GetName());
             hist2D->SetBit(TH1::kNoStats); // do not draw statistics
