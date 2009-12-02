@@ -28,6 +28,10 @@
 #undef _FILE_OFFSET_BITS
 #endif
 
+#ifdef _XOPEN_SOURCE
+#undef _XOPEN_SOURCE
+#endif
+
 #endif
 
 #include "Python.h"
