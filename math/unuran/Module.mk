@@ -12,7 +12,7 @@ UNURANDIR    := $(MODDIR)
 UNURANDIRS   := $(UNURANDIR)/src
 UNURANDIRI   := $(UNURANDIR)/inc
 
-UNRVERS      := unuran-1.5.0-root
+UNRVERS      := unuran-1.5.1-root
 
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
@@ -85,10 +85,6 @@ $(UNURANETAG):	$(UNRSRCS)
 		   gunzip -c $(UNRVERS).tar.gz | tar xf -; \
 		   etag=`basename $(UNURANETAG)` ; \
 		   touch $$etag ; \
-                   echo "patching unuran file besselK.c"; \
-                   cat $(UNRVERS)/src/specfunct/besselK.c | \
-                   sed -e 's#0./0.#sqrt(-1)#g' > tmp.c; \
-                   mv tmp.c $(UNRVERS)/src/specfunct/besselK.c;\
 		fi); 
 
 #configure unuran (required for creating the config.h used by unuran source files)
