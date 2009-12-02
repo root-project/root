@@ -3629,8 +3629,6 @@ if test ! "x$enable_globus" = "xno"; then
          result "$GLOBUS_LOCATION"
       else
          result "no"
-         # Do not build libGlobusAuth
-         enable_globus="no"
       fi
    else
       result "$globusdir"
@@ -3643,28 +3641,43 @@ if test "x$enable_globus" = "xyes"; then
     #determine flavour tag of the building
     flavour=""
     if test "x$globusincdir" = "x" ; then
-       globusincdir=$globusdir/include
+       if test ! "x$globusdir" = "x" ; then
+          globusincdir=$globusdir/include
+       else
+          globusincdir=/usr/include
+       fi
     fi
     searchincdir="$globusincdir/gcc32 $globusincdir/gcc32dbg \
                   $globusincdir/gcc32pthr $globusincdir/gcc32dbgpthr \
                   $globusincdir/gcc64 $globusincdir/gcc64dbg \
-                  $globusincdir/gcc64pthr $globusincdir/gcc64dbgpthr"
+                  $globusincdir/gcc64pthr $globusincdir/gcc64dbgpthr \
+                  $globusincdir/globus $globusincdir"
 
     # Found the reference dir first
-    check_header "openssl/x509.h" "" "$searchincdir"
+    # Used to check for openssl/x509.h, but since we might be using
+    # the system default, we have replaced this with globus_gss_assist.h
+    check_header "globus_gss_assist.h" "" "$searchincdir"
     if test "x$found_hdr" = "x" ; then
        globusinc=""
        globusincdir=""
        enable_globus="no"
     else
-       globusinc="$globusinc $found_hdr"
-       globusincdir=$found_dir
-       if test ! "x$globusincdir" = "x" ; then
-          flavour=`basename $globusincdir`
+       flavour=`basename $found_dir`
+       if test "x$flavour" = "xglobus" ; then
+          flavour=
+          flavour_suf=
+       else
+          flavour_suf=_${flavour}
        fi
 
+       globusinc="$globusinc $found_hdr"
+       globusincdir=$found_dir
+
        # The other headers now
-       inclist="openssl/pem.h globus_gss_assist.h globus_common.h"
+       # Used to search for openssl/pem.h and globus_gss_assist.h here,
+       # but those are removed, because we might be using the openssl of the
+       # system, and we already checked for globus_gss_assist.h
+       inclist="globus_common.h"
        for i in $inclist ; do
           check_header $i "" "$globusincdir"
           if test "x$found_hdr" = "x" ; then
@@ -3703,29 +3716,40 @@ fi
 
 if test "x$enable_globus" = "xyes"; then
 
-   globuslib=""
    if test "x$globuslibdir" = "x" ; then
-       globuslibdir=$globusdir/lib
-   fi
-   if test "x$globusdir" = "x" ; then
-       globusdir=`dirname $globuslibdir`
-       echo "Globus main path set to $globusdir"
-   fi
+       if test ! "x$globusdir" = "x" ; then
+          globuslibdir=$globusdir/lib
+       else
+          globuslibdir=/usr/lib
+       fi
+    fi
+
+   globuslib=""
    searchlibdir=$globuslibdir
    globuslibdir=""
+   extra_inc=
 
-   globuslibs="libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour
-              libglobus_gsi_credential_$flavour libglobus_common_$flavour
-              libglobus_gsi_callback_$flavour libglobus_proxy_ssl_$flavour
-              libglobus_gsi_sysconfig_$flavour libglobus_openssl_error_$flavour
-              libglobus_gssapi_gsi_$flavour libglobus_gsi_callback_$flavour
-              libglobus_oldgaa_$flavour libglobus_gsi_cert_utils_$flavour
-              libglobus_openssl_$flavour  libglobus_gsi_proxy_core_$flavour
-              libglobus_callout_$flavour  libltdl_$flavour
-              libssl_$flavour libcrypto_$flavour"
+   globuslibs="libglobus_gss_assist${flavour_suf} 
+              libglobus_gssapi_gsi${flavour_suf}
+              libglobus_gsi_credential${flavour_suf} 
+              libglobus_common${flavour_suf}
+              libglobus_gsi_callback${flavour_suf} 
+              libglobus_proxy_ssl${flavour_suf}
+              libglobus_gsi_sysconfig${flavour_suf} 
+              libglobus_openssl_error${flavour_suf}
+              libglobus_gssapi_gsi${flavour_suf} 
+              libglobus_gsi_callback${flavour_suf}
+              libglobus_oldgaa${flavour_suf} 
+              libglobus_gsi_cert_utils${flavour_suf}
+              libglobus_openssl${flavour_suf}  
+              libglobus_gsi_proxy_core${flavour_suf}
+              libglobus_callout${flavour_suf}  
+              libltdl${flavour_suf}
+              libssl${flavour_suf} 
+              libcrypto${flavour_suf}"
 
    for i in $globuslibs ; do
-      check_library $i "no" "$searchlibdir" /opt/globus /usr/lib \
+      check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
       /usr/local/lib
       if test "x$found_lib" = "x" ; then
          globuslib=""
@@ -3737,18 +3761,31 @@ if test "x$enable_globus" = "xyes"; then
       if test "x$globuslibdir" = "x" && test ! "x$found_dir" = "x" ; then
          globuslibdir="$found_dir"
       fi
+      if test "x$extra_inc" = "x" && test ! "x$found_raw_dir" = "x" ; then
+         extra_inc=$found_raw_dir/globus/include
+      fi
    done
+
+   if test ! "x$extra_inc" = "x" ; then
+      message "Checking whether $extra_inc should be added to header path"
+      if test -d $extra_inc ; then 
+         globusincdir="$globusincdir $extra_inc"
+         result "yes"
+      else
+         result "no"
+      fi
+   fi
 fi
 
 if test "x$enable_globus" = "xyes"; then
 
-   # Need to source this before init proxies
+   # Need to source this before init proxies (when not in default path)
    sourcepath=""
    if test -s $globusdir/etc/globus-user-env.sh ; then
       sourcepath="$globusdir/etc"
    fi
    if test "x$sourcepath" = "x" ; then
-      result "Checking for globus-user-env.sh ... no (cannot run as client)"
+      result "Checking for globus-user-env.sh ... no"
    else
       result "Checking for globus-user-env.sh ... $sourcepath"
    fi
@@ -3757,8 +3794,11 @@ if test "x$enable_globus" = "xyes"; then
    initpath=""
    if test -s $globusdir/bin/grid-proxy-init ; then
       initpath="$globusdir/bin"
+   elif which grid-proxy-init > /dev/null 2>&1 ; then 
+      initpath=`which grid-proxy-init`
+      initpath=`dirname $initpath`
    fi
-   if test "x$sourcepath" = "x" ; then
+   if test "x$initpath" = "x" ; then
       result "Checking for grid-proxy-init ... no (cannot run as client)"
    else
       result "Checking for grid-proxy-init ... $initpath"
@@ -3787,6 +3827,18 @@ if test "x$enable_globus" = "xyes"; then
    package="globus_gsi_credential"
    version=""
 
+   message "Checking for globus-gsi-credential version"
+
+   # check if we have pkg-config
+   if `$cwhich pkg-config > /dev/null 2>&1` ; then
+      if pkg-config --exists globus-gsi-credential ; then
+         version=`pkg-config --modversion globus-gsi-credential`
+         result "$version"
+      fi
+   fi
+
+   if test "x$version" = "x" ; then
+
    # No explicit version given: try to find version out from gpt files ...
    packdir="$globusdir/etc/globus_packages/$package"
    if test -d $packdir ; then
@@ -3796,31 +3848,27 @@ if test "x$enable_globus" = "xyes"; then
             break
          fi
       done
-      version=""
-      checkminor=""
       if test ! "x$packfileinfo" = "x" ; then
          packfiletmp=`basename $packfileinfo`
          echo "Checking for $packfiletmp ... $packdir"
-         versionstring=`grep Minor $packfileinfo`
-         for i in $versionstring ; do
-            # Check for Major: only versions 0.x may need the patch
-            if test "x$checkminor" = "x" ; then
-               if test "Major=\"0\"" = "$i" ; then
-                  checkminor="yes"
-               fi
-            else
-               if test "x$checkminor" = "xyes" ; then
-                  for k in 5 7 8 9 ; do
-                     if test "Minor=\"$k\"" = "$i" ; then
-                        version="0.$k"
-                        break 2
-                     fi
-                  done
-               fi
-            fi
-         done
+         versionstr=`grep Aging_Version $packfileinfo`
+         majorversion=`echo $versionstr | sed 's!.*Major="\([0-9]*\)".*!\1!'`
+         minorversion=`echo $versionstr | sed 's!.*Minor="\([0-9]*\)".*!\1!'`
+         version=$majorversion.$minorversion
+         result "$version"
       fi
-      if test "x$version" = "x" ; then
+   fi
+
+   fi
+
+   if test ! "x$version" = "x" ; then
+      versionmajor=`echo $version | cut -d. -f1`
+      versionminor=`echo $version | cut -d. -f2`
+      if test ! "x$versionmajor" = "x0" || (
+         test ! "x$versionminor" = "x5" &&
+         test ! "x$versionminor" = "x7" &&
+         test ! "x$versionminor" = "x8" &&
+         test ! "x$versionminor" = "x9" ) ; then 
          patchneeded="no"
          result "Checking for need of globus patch ... no"
       else
@@ -3875,7 +3923,7 @@ if test "x$enable_globus" = "xyes"; then
       fi
 
    else
-      result "Checking for need of globus patch ... information directory not available"
+      result "information directory not available"
    fi
 
    # Now find includes needed for patch, if the case
@@ -5218,6 +5266,9 @@ if test -d core/pcre/src/pcre-7.4 ; then
 fi
 if test -d math/unuran/src/unuran-1.3.0-root ; then
    rm -rf math/unuran/src/unuran-1.3.0-root
+fi
+if test -d math/unuran/src/unuran-1.5.0-root ; then
+   rm -rf math/unuran/src/unuran-1.5.0-root
 fi
 if test ! "x$enable_editline" = "xno" ; then
    rm -f core/clib/src/Getline.o core/clib/src/Getline.d

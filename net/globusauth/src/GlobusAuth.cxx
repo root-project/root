@@ -56,7 +56,7 @@ Int_t GlobusCheckSecCtx(const char *, TRootSecContext *);
 Int_t GlobusCleanupContext(gss_ctx_id_t);
 void  GlobusCleanupShm();
 Int_t GlobusIssuerName(TString &);
-void  GlobusError(char *, OM_uint32, OM_uint32, Int_t);
+void  GlobusError(const char *, OM_uint32, OM_uint32, Int_t);
 Int_t GlobusGetCredHandle(Int_t, gss_cred_id_t *);
 Int_t GlobusGetDelCred();
 void  GlobusGetDetails(Int_t, Int_t, TString &);
@@ -413,8 +413,7 @@ int GlobusGetDelCred()
         gss_import_cred(&minStat, &gGlbDelCredHandle, 0, 0, credential, 0,
                         0)) != GSS_S_COMPLETE) {
       if (gDebug > 0)
-         GlobusError("GlobusGetDelCred: gss_import_cred", majStat, minStat,
-                  0);
+         GlobusError("GlobusGetDelCred: gss_import_cred", majStat, minStat, 0);
       return 1;
    } else if (gDebug > 3)
       Info("GlobusGetDelCred:",
@@ -451,14 +450,14 @@ int GlobusGetDelCred()
 }
 
 //______________________________________________________________________________
-void GlobusError(char *mess, OM_uint32 majs, OM_uint32 mins, int toks)
+void GlobusError(const char *mess, OM_uint32 majs, OM_uint32 mins, int toks)
 {
    // Handle error ...
 
    char *glbErr = 0;
 
    if (!globus_gss_assist_display_status_str
-       (&glbErr, mess, majs, mins, toks)) {
+       (&glbErr, (char *)mess, majs, mins, toks)) {
         Error("GlobusError:","%s (majst=%d,minst=%d,tokst:%d)",
                              glbErr, majs, mins, toks);
    } else {
@@ -809,13 +808,6 @@ int GlobusGetCredHandle(Int_t localEnv, gss_cred_id_t * credHandle)
             }
 
             // Try to get credentials with usual command line ...
-            if (!gSystem->Getenv("GLOBUS_LOCATION")) {
-               if (gDebug > 0)
-                  Error("GlobusGetCredHandle",
-                     "Please define a valid GLOBUS_LOCATION");
-               retval = 2;
-               goto exit;
-            }
             // First check if there are special requests for proxy duration ...
             TString initDur(gEnv->GetValue("Globus.ProxyDuration", "default"));
             if (!initDur.Contains("default")) {
@@ -856,7 +848,9 @@ int GlobusGetCredHandle(Int_t localEnv, gss_cred_id_t * credHandle)
 
             // to execute command to initiate the proxies one needs
             // to source the globus shell environment
-            TString proxyInit("source $GLOBUS_LOCATION/etc/globus-user-env.sh; ");
+            TString proxyInit;
+            if (gSystem->Getenv("GLOBUS_LOCATION"))
+               proxyInit = TString("source $GLOBUS_LOCATION/etc/globus-user-env.sh; ");
             proxyInit += initEnv;
             proxyInit += Form("; grid-proxy-init %s %s %s",
                                initDur.Data(), initBit.Data(), initPxy.Data());
