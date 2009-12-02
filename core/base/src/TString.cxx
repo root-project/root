@@ -472,6 +472,8 @@ int TString::CompareTo(const char *cs2, ECaseCompare cmp) const
 {
    // Compare a string to char *cs2.
 
+   if (!cs2) return 1;
+
    const char *cs1 = Data();
    Ssiz_t len = Length();
    Ssiz_t i = 0;
@@ -1146,6 +1148,8 @@ TBuffer &operator<<(TBuffer &buf, const TString *s)
 Bool_t operator==(const TString& s1, const char *s2)
 {
    // Compare TString with a char *.
+
+   if (!s2) return kFALSE;
 
    const char *data = s1.Data();
    Ssiz_t len = s1.Length();
