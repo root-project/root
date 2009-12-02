@@ -108,6 +108,8 @@ protected:
    virtual Int_t DrawCanvas(TObject *obj); // Canvas drawing via libProofDraw
 
    virtual void SetupFeedback();  // specialized setup
+   
+   virtual void  MergeOutput();
 
 public:   // fix for broken compilers so TCleanup can call StopFeedback()
    virtual void StopFeedback();   // specialized teardown
@@ -293,7 +295,7 @@ public:
    TObject       *HandleHistogram(TObject *obj);
    Int_t          AddOutputObject(TObject *obj);
    void           AddOutput(TList *out);   // Incorporate a list
-   void           MergeOutput();
+   virtual void   MergeOutput();
    void           Progress(Long64_t total, Long64_t processed); // *SIGNAL*
    void           Progress(TSlave*, Long64_t total, Long64_t processed)
                      { Progress(total, processed); }

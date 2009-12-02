@@ -59,6 +59,8 @@ class TMutex;
 class TFileCollection;
 class TDataSetManager;
 class TFileHandler;
+class TMonitor;
+class TServerSocket;
 
 // Hook to external function setting up authentication related stuff
 // for old versions.
@@ -149,6 +151,10 @@ private:
    Bool_t        fLogToSysLog;     //true if logs should be sent to syslog too
    Bool_t        fSendLogToMaster; // On workers, controls logs sending to master
 
+   TServerSocket *fMergingSocket;  // Socket used for merging outputs if submerger
+   TMonitor      *fMergingMonitor; // Monitor for merging sockets
+   Int_t          fMergedWorkers;  // Number of workers merged
+
    // Quotas (-1 to disable)
    Int_t         fMaxQueries;       //Max number of queries fully kept
    Long64_t      fMaxBoxSize;       //Max size of the sandbox
@@ -178,7 +184,9 @@ private:
    void          SetQueryRunning(TProofQueryResult *pq);
 
    // Results handling
-   void          SendResults(TSocket *sock, TList *outlist = 0, TQueryResult *pq = 0);
+   Int_t         SendResults(TSocket *sock, TList *outlist = 0, TQueryResult *pq = 0);
+   Bool_t        AcceptResults(Int_t connections, TVirtualProofPlayer *mergerPlayer);
+   
    Int_t         RegisterDataSets(TList *in, TList *out);
 
    // Waiting queries handlers
@@ -194,6 +202,7 @@ protected:
    virtual Int_t HandleCache(TMessage *mess);
    virtual void  HandleCheckFile(TMessage *mess);
    virtual Int_t HandleDataSets(TMessage *mess);
+   virtual void  HandleSubmerger(TMessage *mess);
    virtual void  HandleFork(TMessage *mess);
    virtual void  HandleLibIncPath(TMessage *mess);
    virtual void  HandleProcess(TMessage *mess);

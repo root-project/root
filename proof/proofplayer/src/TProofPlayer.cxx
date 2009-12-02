@@ -1013,7 +1013,14 @@ Long64_t TProofPlayer::Finalize(TQueryResult *)
    MayNotUse("Finalize");
    return -1;
 }
+//______________________________________________________________________________
+void TProofPlayer::MergeOutput()
+{
+   // Merge output (may not be used in this class).
 
+   MayNotUse("MergeOutput");
+   return;
+}
 //______________________________________________________________________________
 void TProofPlayer::UpdateAutoBin(const char *name,
                                  Double_t& xmin, Double_t& xmax,
@@ -1753,6 +1760,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
 //______________________________________________________________________________
 Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
 {
+
    // Finalize a query.
    // Returns -1 in case of an error, 0 otherwise.
 
@@ -1768,7 +1776,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          MergeOutput();
       }
    }
-
+   
    Long64_t rv = 0;
    if (fProof->IsMaster()) {
       TPerfStats::Stop();
@@ -1859,6 +1867,12 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
       }
    }
    PDB(kGlobal,1) Info("Process","exit");
+   
+   if (!IsClient()) {
+      Info("Finalize", "finalization on %s finished", gProofServ->GetPrefix());
+   }
+   fProof->FinalizationDone();
+   
    return rv;
 }
 
@@ -2394,7 +2408,8 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
    }
 
    // Special treatment for histograms in autobin mode
-   Bool_t specialH = !fProof->TestBit(TProof::kIsClient) || fProof->IsLite();
+   Bool_t specialH =
+      (!fProof || !fProof->TestBit(TProof::kIsClient) || fProof->IsLite()) ? kTRUE : kFALSE;
    if (specialH && newobj->InheritsFrom("TH1")) {
       if (!HandleHistogram(newobj)) {
          PDB(kOutput,1) Info("Incorporate", "histogram object '%s' added to the"

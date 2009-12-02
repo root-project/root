@@ -49,6 +49,7 @@
 #include "TInterpreter.h"
 #include "TKey.h"
 #include "TMap.h"
+#include "TMath.h"
 #include "TMessage.h"
 #include "TMonitor.h"
 #include "TMutex.h"
@@ -268,7 +269,64 @@ ClassImp(TProof)
 
 TSemaphore    *TProof::fgSemaphore = 0;
 
+//------------------------------------------------------------------------------
+
 //______________________________________________________________________________
+TMergerInfo::~TMergerInfo()
+{
+   // Destructor
+
+   // Just delete the list, the objects are owned by other list
+   if (fWorkers) {
+      fWorkers->SetOwner(kFALSE);
+      SafeDelete(fWorkers);
+   }
+}
+//______________________________________________________________________________
+void TMergerInfo::SetMergedWorker()
+{
+   // Increase number of already merged workers by 1
+
+   if (AreAllWorkersMerged())
+      Error("SetMergedWorker", "all workers have been already merged before!"); 	
+   else
+      fMergedWorkers++;
+}
+
+//______________________________________________________________________________
+void TMergerInfo::AddWorker(TSlave *sl)
+{
+   // Add new worker to the list of workers to be merged by this merger
+
+   if (!fWorkers)
+      fWorkers = new TList();
+   if (fWorkersToMerge == fWorkers->GetSize()) {
+      Error("AddWorker", "all workers have been already assigned to this merger");
+      return;
+   }
+   fWorkers->Add(sl);
+}
+
+//______________________________________________________________________________
+Bool_t TMergerInfo::AreAllWorkersMerged()
+{
+   // Return if merger has already merged all workers, i.e. if it has finished its merging job
+
+   return (fWorkersToMerge == fMergedWorkers); 
+}
+
+//______________________________________________________________________________
+Bool_t TMergerInfo::AreAllWorkersAssigned()
+{
+      // Return if the determined number of workers has been already assigned to this merger
+
+      if (!fWorkers)
+         return kFALSE;
+
+      return (fWorkers->GetSize() == fWorkersToMerge);
+}
+
+//------------------------------------------------------------------------------
 TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
                Int_t loglevel, const char *alias, TProofMgr *mgr)
        : fUrl(masterurl)
@@ -459,6 +517,13 @@ TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
    fDynamicStartup = kFALSE;
 
    fCloseMutex = 0;
+
+   fMergersSet = kFALSE;
+   fMergers = 0;
+   fMergersCount = -1;
+   fLastAssignedMerger = 0;
+   fWorkersToMerge = 0;
+   fFinalizationRunning = kFALSE;
 
    if (!gROOT->GetListOfProofs()->FindObject(this))
       gROOT->GetListOfProofs()->Add(this);
@@ -2684,7 +2749,12 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             PDB(kGlobal,2)
                Info("HandleInputMessage","kPROOF_OUTPUTOBJECT: enter");
             Int_t type = 0;
-
+            
+           if (!TestBit(TProof::kIsClient) && !fMergersSet && !fFinalizationRunning) {
+               Info("HandleInputMessage","finalization on %s started ...", gProofServ->GetPrefix());
+               fFinalizationRunning = kTRUE;
+            }
+            
             while ((mess->BufferSize() > mess->Length())) {
                (*mess) >> type;
                // If a query result header, add it to the player list
@@ -2927,7 +2997,6 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                Int_t dsz = -1;
                Long64_t first = -1, nent = -1;
                (*mess) >> selec >> dsz >> first >> nent;
-
                // Start or reset the progress dialog
                if (!gROOT->IsBatch()) {
                   if (fProgressDialog && !TestBit(kUsingSessionGui)) {
@@ -3124,16 +3193,23 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
             break;
          }
 
+      case kPROOF_SUBMERGER:
+         {
+            PDB(kGlobal,2) Info("HandleInputMessage", "kPROOF_SUBMERGER: enter");
+            HandleSubmerger(mess, sl);
+         }
+         break;
+
       case kPROOF_GETSLAVEINFO:
          {
-            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_GETSLAVEINFO: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage", "kPROOF_GETSLAVEINFO: enter");
 
             Bool_t active = (GetListOfActiveSlaves()->FindObject(sl) != 0);
             Bool_t bad = (GetListOfBadSlaves()->FindObject(sl) != 0);
             TList* tmpinfo = 0;
             (*mess) >> tmpinfo;
             if (tmpinfo == 0) {
-               Error("HandleInputMessage","kPROOF_GETSLAVEINFO: no list received!");
+               Error("HandleInputMessage", "kPROOF_GETSLAVEINFO: no list received!");
             } else {
                tmpinfo->SetOwner(kFALSE);
                Int_t nentries = tmpinfo->GetSize();
@@ -3172,11 +3248,11 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
       case kPROOF_VALIDATE_DSET:
          {
             PDB(kGlobal,2)
-               Info("HandleInputMessage","kPROOF_VALIDATE_DSET: enter");
+               Info("HandleInputMessage", "kPROOF_VALIDATE_DSET: enter");
             TDSet* dset = 0;
             (*mess) >> dset;
             if (!fDSet)
-               Error("HandleInputMessage","kPROOF_VALIDATE_DSET: fDSet not set");
+               Error("HandleInputMessage", "kPROOF_VALIDATE_DSET: fDSet not set");
             else
                fDSet->Validate(dset);
             delete dset;
@@ -3185,7 +3261,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
 
       case kPROOF_DATA_READY:
          {
-            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_DATA_READY: enter");
+            PDB(kGlobal,2) Info("HandleInputMessage", "kPROOF_DATA_READY: enter");
             Bool_t dataready = kFALSE;
             Long64_t totalbytes, bytesready;
             (*mess) >> dataready >> totalbytes >> bytesready;
@@ -3266,6 +3342,267 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
 }
 
 //______________________________________________________________________________
+void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
+{
+   // Process a message of type kPROOF_SUBMERGER
+
+   // Message sub-type
+   Int_t type = 0;
+   (*mess) >> type;
+   TSocket *s = sl->GetSocket();
+
+   switch (type) {
+      case kOutputSent:
+         {
+            if (IsEndMaster()) {
+               Int_t  merger_id = -1;
+               (*mess) >> merger_id;
+
+               PDB(kSubmerger, 2)
+                  Info("HandleSubmerger", "kOutputSent: Worker %s:%d:%s had sent its output to merger #%d", 
+                                          sl->GetName(), sl->GetPort(), sl->GetOrdinal(), merger_id);
+
+               if (!fMergers || fMergers->GetSize() <= merger_id) {
+                  Error("HandleSubmerger", "kOutputSize: #%d not in list ", merger_id);
+                  break;
+               }
+               TMergerInfo * mi = (TMergerInfo *) fMergers->At(merger_id);
+               mi->SetMergedWorker();
+               if (mi->AreAllWorkersMerged()) {
+                  mi->Deactivate();
+                  if (GetActiveMergersCount() == 0) {
+                     fMergers->Clear();
+                     delete fMergers;
+                     fMergersSet = kFALSE;
+                     fMergersCount = -1;
+                     fLastAssignedMerger = 0;
+                     PDB(kSubmerger, 2) Info("HandleSubmerger", "all mergers removed ... ");
+                  }
+               }
+            } else {
+               PDB(kSubmerger, 2) Error("HandleSubmerger","kOutputSent: received not on endmaster!");
+            }
+         }
+         break;
+
+      case kMergerDown:
+         {
+            Int_t  merger_id = -1;
+            (*mess) >> merger_id;
+
+            PDB(kSubmerger, 2) Info("HandleSubmerger", "kMergerDown: #%d ", merger_id);
+
+            if (!fMergers || fMergers->GetSize() <= merger_id) {
+               Error("HandleSubmerger", "kOutputSize: #%d not in list ", merger_id);
+               break;
+            }
+
+            TMergerInfo * mi = (TMergerInfo *) fMergers->At(merger_id);
+            if (!mi->IsActive()) {
+               break;
+            } else {
+               mi->Deactivate();
+            }
+
+            // Stop the invalid merger in the case it is still listening
+            TMessage stop(kPROOF_SUBMERGER);
+            stop << Int_t(kStopMerging);
+            stop <<  0;
+            s->Send(stop);
+
+            // Ask for results from merger (only original results from this node as worker are returned)
+            AskForOutput(mi->GetMerger());
+
+            // Ask for results from all workers assigned to this merger
+            TIter nxo(mi->GetWorkers());
+            TObject * o = 0;
+            while ((o = nxo())) {
+               AskForOutput((TSlave *)o);
+            }
+            PDB(kSubmerger, 2) Info("HandleSubmerger", "kMergerDown: exit", merger_id);
+         }
+         break;
+
+      case kOutputSize:
+         {
+            if (IsEndMaster()) {
+               PDB(kSubmerger, 2)
+                  Info("HandleSubmerger", "worker %s reported as finished ", sl->GetOrdinal());
+
+               if (!fFinalizationRunning) {
+                  Info("HandleSubmerger", "finalization on %s started ...", gProofServ->GetPrefix());
+                  fFinalizationRunning = kTRUE;
+               }
+
+               Int_t  output_size = 0;
+               Int_t  merging_port = 0;
+               (*mess) >> output_size >> merging_port;
+
+               PDB(kSubmerger, 2) Info("HandleSubmerger",
+                                       "kOutputSize: Worker %s:%d:%s reports %d output objects (+ available port %d)",
+                                       sl->GetName(), sl->GetPort(), sl->GetOrdinal(), output_size, merging_port);
+               TString msg;
+               if (!fMergersSet) {
+
+                  // First pass - setting number of mergers according to user or dynamically
+                  fMergersCount = -1; // No mergers used if not set by user
+                  TParameter<Int_t> *mc = dynamic_cast<TParameter<Int_t> *>(GetParameter("PROOF_UseMergers"));
+                  if (mc) fMergersCount = mc->GetVal(); // Value set by user
+
+                  // Mergers count specified by user but not valid
+                  if (fMergersCount < 0 || (fMergersCount > (GetNumberOfSlaves()/2) )) {
+                     msg.Form("%s: Invalid request: cannot start %d mergers for %d workers",
+                              gProofServ->GetPrefix(), fMergersCount, GetNumberOfSlaves());
+                     gProofServ->SendAsynMessage(msg);
+                     fMergersCount = 0;
+                  }
+                  // Mergers count will be set dynamically
+                  if (fMergersCount == 0) {
+                     if (GetNumberOfSlaves() > 1)
+                        fMergersCount = TMath::Nint(TMath::Sqrt(GetNumberOfSlaves()));
+                     if (fMergersCount > 1)
+                        msg.Form("%s: Number of mergers set dynamically to %d (for %d workers)",
+                                 gProofServ->GetPrefix(), fMergersCount, GetNumberOfSlaves());
+                     else {
+                        msg.Form("%s: No mergers will be used for %d workers",
+                                 gProofServ->GetPrefix(), GetNumberOfSlaves()); 
+                        fMergersCount = -1;
+                     }
+                     gProofServ->SendAsynMessage(msg);
+                  } else {
+                     msg.Form("%s: Number of mergers set by user to %d (for %d workers)",
+                              gProofServ->GetPrefix(), fMergersCount, GetNumberOfSlaves());
+                     gProofServ->SendAsynMessage(msg);
+                  }
+                  if (fMergersCount > 0) {
+
+                     fMergers = new TList();
+                     fLastAssignedMerger = 0;
+                     // Total number of workers, which will not act as mergers ('pure workers')
+                     fWorkersToMerge = (GetNumberOfSlaves() - fMergersCount);
+                     // Establish the first merger
+                     if (!CreateMerger(sl, merging_port)) {
+                        // Cannot establish first merger
+                        AskForOutput(sl);
+                        fWorkersToMerge--;
+                        fMergersCount--;
+                     }
+                  } else {
+                     AskForOutput(sl);
+                  }
+                  fMergersSet = kTRUE;
+               } else {
+                  // Multiple pass
+                  if (fMergersCount == -1) {
+                     // No mergers. Workers send their outputs directly to master
+                     AskForOutput(sl);
+                  } else {
+                     if (fRedirectNext > 0 ) {
+                        RedirectWorker(s, sl, output_size);
+                        fRedirectNext--;
+                     } else {
+                        if (fMergersCount > fMergers->GetSize()) {
+                           // Still not enough mergers established
+                           if (!CreateMerger(sl, merging_port)) {
+                              // Cannot establish a merger
+                              AskForOutput(sl);
+                              fWorkersToMerge--;
+                              fMergersCount--;
+                           }
+                        } else
+                           RedirectWorker(s, sl, output_size);
+                     }
+                  }
+               }
+            } else {
+               Error("HandleSubMerger","kOutputSize received not on endmaster!");
+            }
+         }
+      break;
+   }
+}
+
+//______________________________________________________________________________
+void TProof::RedirectWorker(TSocket *s, TSlave * sl, Int_t output_size)
+{
+   // Redirect output of worker sl to some merger
+
+   Int_t merger_id = FindNextFreeMerger();
+   if (merger_id == -1) {
+      // No free merger (probably it had crashed before)
+      AskForOutput(sl);
+   } else {
+      TMessage sendoutput(kPROOF_SUBMERGER);
+      sendoutput << Int_t(kSendOutput);
+      PDB(kSubmerger, 2)
+         Info("RedirectWorker", "redirecting worker %s to merger %d", sl->GetOrdinal(), merger_id);
+
+       PDB(kSubmerger, 2) Info("RedirectWorker", "redirecting output to merger #%d",  merger_id);
+       if (!fMergers || fMergers->GetSize() <= merger_id) {
+          Error("RedirectWorker", "#%d not in list ", merger_id);
+          return;
+       }
+       TMergerInfo * mi = (TMergerInfo *) fMergers->At(merger_id);
+
+       sendoutput <<  merger_id;
+       sendoutput << TString(mi->GetMerger()->GetName());
+       sendoutput << mi->GetPort();
+       s->Send(sendoutput);
+       mi->AddMergedObjects(output_size);
+       mi->AddWorker(sl);
+   }
+}
+
+//______________________________________________________________________________
+Int_t TProof::FindNextFreeMerger()
+{
+   // Return a merger, which is both active and still accepts some workers to be
+   // assigned to it. It works on the 'round-robin' basis.
+
+   while (fLastAssignedMerger < fMergers->GetSize() &&
+         (!((TMergerInfo*)fMergers->At(fLastAssignedMerger))->IsActive() ||
+           ((TMergerInfo*)fMergers->At(fLastAssignedMerger))->AreAllWorkersAssigned())) {
+      fLastAssignedMerger++;
+   }
+
+   if (fLastAssignedMerger == fMergers->GetSize()) {
+      fLastAssignedMerger = 0;
+   } else {
+      return fLastAssignedMerger++;
+   }
+
+   while (fLastAssignedMerger < fMergers->GetSize() &&
+         (!((TMergerInfo*)fMergers->At(fLastAssignedMerger))->IsActive() ||
+           ((TMergerInfo*)fMergers->At(fLastAssignedMerger))->AreAllWorkersAssigned())) {
+      fLastAssignedMerger++;
+   }
+
+   if (fLastAssignedMerger == fMergers->GetSize()) {
+      return -1;
+   } else {
+      return fLastAssignedMerger++;
+   }
+}
+
+//______________________________________________________________________________
+void TProof::AskForOutput(TSlave *sl)
+{
+   // Master asks for output from worker sl
+
+   TMessage sendoutput(kPROOF_SUBMERGER);
+   sendoutput << Int_t(kSendOutput);
+
+   PDB(kSubmerger, 2) Info("AskForOutput",
+                           "worker %s was asked for sending its output to master",
+                            sl->GetOrdinal());
+
+   sendoutput << 0;
+   sendoutput << TString("master");
+   sendoutput << 0;
+   sl->GetSocket()->Send(sendoutput);
+}
+
+//______________________________________________________________________________
 void TProof::UpdateDialog()
 {
    // Final update of the progress dialog
@@ -3338,7 +3675,7 @@ void TProof::ActivateAsyncInput()
 //______________________________________________________________________________
 void TProof::DeActivateAsyncInput()
 {
-   // De-actiate a-sync input handler.
+   // De-activate a-sync input handler.
 
    TIter next(fSlaves);
    TSlave *sl;
@@ -3346,6 +3683,74 @@ void TProof::DeActivateAsyncInput()
    while ((sl = (TSlave*) next()))
       if (sl->GetInputHandler())
          sl->GetInputHandler()->Remove();
+}
+
+//______________________________________________________________________________
+Int_t TProof::GetActiveMergersCount()
+{
+   // Get the active mergers count
+
+   if (!fMergers) return 0;
+
+   Int_t active_mergers = 0;
+
+   TIter mergers(fMergers);
+   TMergerInfo *mi = 0;
+   while ((mi = (TMergerInfo *)mergers())) {
+      if (mi->IsActive()) active_mergers++;
+   }
+
+   return active_mergers;
+}
+
+//______________________________________________________________________________
+Bool_t TProof::CreateMerger(TSlave *sl, Int_t port)
+{
+   // Create a new merger
+
+   PDB(kSubmerger, 2)
+      Info("CreateMerger", "worker %s will be merger ", sl->GetOrdinal());
+
+   PDB(kSubmerger, 2) Info("CreateMerger","Begin");
+
+   if (port <= 0) {
+      PDB(kSubmerger,2)
+         Info("CreateMerger", "cannot create merger on port %d - exit", port);
+      return kFALSE;
+   }
+   Int_t mergersToCreate = fMergersCount - fMergers->GetSize();
+
+   // Number of pure workers, which are not simply divisible by mergers
+   Int_t rest = fWorkersToMerge % mergersToCreate;
+
+   // We add one more worker for each of the first 'rest' mergers being established
+   if (rest > 0 && fMergers->GetSize() < rest) {
+      rest = 1;
+   } else {
+      rest = 0;
+   }
+
+   Int_t workers = (fWorkersToMerge / mergersToCreate) + rest;
+
+   TMergerInfo * merger = new TMergerInfo(sl, port, workers);
+
+   TMessage bemerger(kPROOF_SUBMERGER);
+   bemerger << Int_t(kBeMerger);
+   bemerger <<  fMergers->GetSize();
+   bemerger <<  workers;
+   sl->GetSocket()->Send(bemerger);
+
+   PDB(kSubmerger,2) Info("CreateMerger",
+                          "merger #%d (port: %d) for %d workers started",
+                          fMergers->GetSize(), port, workers);
+
+   fMergers->Add(merger);	
+   fWorkersToMerge = fWorkersToMerge - workers;
+
+   fRedirectNext = workers / 2;
+
+   PDB(kSubmerger, 2) Info("CreateMerger", "exit");
+   return kTRUE;
 }
 
 //______________________________________________________________________________

@@ -242,6 +242,51 @@ public:
    ClassDef(TSlaveInfo,3) //basic info on slave
 };
 
+// Merger info class
+class TMergerInfo : public TObject {
+private:
+
+   TSlave      *fMerger;         // Slave that acts as merger
+   Int_t        fPort;           // Port number, on which it accepts outputs from other workers
+   Int_t        fMergedObjects;  // Total number of objects it must accept from other workers 
+                                 // (-1 == not set yet)
+   Int_t        fWorkersToMerge; // Number of workers that are merged on this merger 
+                                 // (does not change during time)
+   Int_t        fMergedWorkers;  // Current number of already merged workers
+                                 // (does change during time as workers are being merged)
+
+   TList       *fWorkers;        // List of already assigned workers
+   Bool_t       fIsActive;       // Merger state
+
+public:
+
+   TMergerInfo(TSlave *t, Int_t port, Int_t forHowManyWorkers) :
+               fMerger(t), fPort(port), fMergedObjects(0), fWorkersToMerge(forHowManyWorkers),
+               fMergedWorkers(0), fWorkers(0), fIsActive(kTRUE) { }
+   virtual ~TMergerInfo();
+
+   void        AddWorker(TSlave *sl);
+   TList      *GetWorkers() { return fWorkers; }
+
+   TSlave     *GetMerger() { return fMerger; }
+   Int_t       GetPort() { return fPort; }
+
+   Int_t       GetWorkersToMerge() { return fWorkersToMerge; }
+   Int_t       GetMergedWorkers() { return fMergedWorkers; }
+   Int_t       GetMergedObjects() { return fMergedObjects; }
+
+   void        SetMergedWorker();
+   void        AddMergedObjects(Int_t objects) { fMergedObjects += objects; }
+
+   Bool_t      AreAllWorkersAssigned();
+   Bool_t      AreAllWorkersMerged();	
+
+   void Deactivate() { fIsActive = kFALSE; }
+   Bool_t      IsActive() { return fIsActive; }
+
+   ClassDef(TMergerInfo,0)          // Basic info on merger, i.e. worker serving as merger
+};
+
 // Small auxilliary class for merging progress notification
 class TProofMergePrg {
 private:
@@ -259,7 +304,6 @@ public:
    void         Reset(Int_t n = -1) { fIdx = -1; SetNWrks(n); }
    void         SetNWrks(Int_t n) { fNWrks = n; }
 };
-
 
 class TProof : public TNamed, public TQObject {
 
@@ -313,7 +357,7 @@ public:
    enum EUploadDataSetAnswer {
       kError               = -1,
       kDataSetExists       = -2,
-      kFail		   = -3
+      kFail                = -3
    };
    enum EUploadPackageOpt {
       kUntar               = 0x0,  //Untar over existing dir [default]
@@ -324,6 +368,15 @@ public:
       kStopped             = 1,    // After the stop button has been pressed
       kAborted             = 2     // After the abort button has been pressed
    };
+
+   enum ESubMerger {
+      kOutputSize     = 1,         //Number of objects in worker's output list
+      kSendOutput     = 2,         //Naster asks worker for its output list
+      kBeMerger       = 3,         //Master tells worker to be a merger
+      kMergerDown     = 4,         //Merger cannot serve
+      kStopMerging    = 5,         //Master tells worker to stop merging (and return output)
+      kOutputSent     = 6,         //Worker reports sending its output to given worker
+  };
 
 private:
    enum EUrgent {
@@ -474,6 +527,15 @@ private:
    TList          *fLoadedMacros;    // List of loaded macros (just file names)
    static TList   *fgProofEnvList;   // List of TNameds defining environment
                                      // variables to pass to proofserv
+
+   Bool_t          fMergersSet;      // Indicates, if the following variables have been initialized properly                               
+   Int_t           fMergersCount;
+   Int_t           fWorkersToMerge;  // Current total number of workers, which have not been yet assigned to any merger
+   Int_t           fLastAssignedMerger;
+   TList          *fMergers;
+   Bool_t          fFinalizationRunning;
+   Int_t           fRedirectNext;
+
    static TPluginHandler *fgLogViewer;  // Log dialog box plugin
 
 protected:
@@ -560,6 +622,7 @@ private:
    Int_t    Collect(TMonitor *mon, Long_t timeout = -1, Int_t endtype = -1);
    Int_t    CollectInputFrom(TSocket *s, Int_t endtype = -1);
    Int_t    HandleInputMessage(TSlave *wrk, TMessage *m);
+   void     HandleSubmerger(TMessage *mess, TSlave *sl);
    void     SetMonitor(TMonitor *mon = 0, Bool_t on = kTRUE);
 
    void     ReleaseMonitor(TMonitor *mon);
@@ -593,11 +656,19 @@ private:
    void     DeActivateAsyncInput();
 
    Int_t    GetQueryReference(Int_t qry, TString &ref);
-
    void     PrintProgress(Long64_t total, Long64_t processed, Float_t procTime = -1.);
 
-   void     ResetMergePrg();
+   // Managing mergers
+   Bool_t   CreateMerger(TSlave *sl, Int_t port);
+   void     RedirectWorker(TSocket *s, TSlave * sl, Int_t output_size);
+   Int_t    GetActiveMergersCount();
+   Int_t    FindNextFreeMerger();
+   void     ResetMergers() { fMergersSet = kFALSE; }
+   void     AskForOutput(TSlave *sl);
 
+   void     FinalizationDone() { fFinalizationRunning = kFALSE; }
+
+   void     ResetMergePrg();
    void     ParseConfigField(const char *config);
 
    Bool_t   Prompt(const char *p);
