@@ -122,8 +122,6 @@ extern XrdOucTrace     XrdTrace;
 #define XRDLINK_FREE 0x00
 #define XRDLINK_USED 0x01
 #define XRDLINK_IDLE 0x02
-
-pthread_t theThread;
   
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
@@ -654,7 +652,6 @@ int XrdLink::RecvAll(char *Buff, int Blen, int timeout)
 //
    if (LockReads) rdMutex.Lock();
    isIdle = 0;
-   theThread = pthread_self();
    do {rlen = recv(FD,Buff,Blen,MSG_WAITALL);} while(rlen < 0 && errno == EINTR);
    if (LockReads) rdMutex.UnLock();
 

@@ -763,7 +763,11 @@ int XrdSslgsiX509CreateProxy(const char *fnc, const char *fnk,
    // Cleanup
    EVP_PKEY_free(ekEEC);
    X509_REQ_free(preq);
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   sk_X509_EXTENSION_free(esk);
+#else /* OPENSSL */
    sk_free(esk);
+#endif /* OPENSSL */
 
    // We are done
    return rc;
@@ -834,7 +838,11 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    X509_NAME *psubj = X509_NAME_dup(X509_get_subject_name(xpi)); 
    if (xcro && *xcro && *((int *)(*xcro)) <= 10100) {
       // Delete existing proxy CN addition; for backward compatibility
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+      int ne = sk_X509_NAME_ENTRY_num(psubj->entries);
+#else /* OPENSSL */
       int ne = psubj->entries->num;
+#endif /* OPENSSL */
       if (ne >= 0) {
          X509_NAME_ENTRY *cne = X509_NAME_delete_entry(psubj, ne-1);
          if (cne) {
@@ -968,7 +976,11 @@ int XrdSslgsiX509CreateProxyReq(XrdCryptoX509 *xcpi,
    *kcro = new XrdCryptosslRSA(ekro);
 
    // Cleanup
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   sk_X509_EXTENSION_free(esk);
+#else /* OPENSSL */
    sk_free(esk);
+#endif /* OPENSSL */
 
    // We are done
    return 0;
@@ -1136,13 +1148,21 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    STACK_OF(X509_EXTENSION) *xrisk = X509_REQ_get_extensions(xri);
    //
    // There must be at most one extension
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   int nriext = sk_X509_EXTENSION_num(xrisk);
+#else /* OPENSSL */
    int nriext = sk_num(xrisk);
+#endif /* OPENSSL */
    if (nriext != 1) {
       PRINT("missing or too many extensions in request"); 
       return -kErrPX_BadExtension;
    }
    // Get it
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   X509_EXTENSION *xriext = sk_X509_EXTENSION_value(xrisk, 0);
+#else /* OPENSSL */
    X509_EXTENSION *xriext = (X509_EXTENSION *)sk_value(xrisk, 0);
+#endif /* OPENSSL */
    if (!xriext) {
       PRINT("could not get extensions from request"); 
       return -kErrPX_BadExtension;
@@ -1244,7 +1264,11 @@ int XrdSslgsiX509SignProxyReq(XrdCryptoX509 *xcpi, XrdCryptoRSA *kcpi,
    *xcpo = new XrdCryptosslX509(xpo);
 
    // Cleanup
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   sk_X509_EXTENSION_free(xrisk);
+#else /* OPENSSL */
    sk_free(xrisk);
+#endif /* OPENSSL */
 
    // We are done
    return 0;

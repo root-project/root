@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.34 2009/07/28 20:01:44 ganis Exp $
+#              $Id: GNUmakefile.in,v 1.36 2009/11/04 09:54:47 furano Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -16,7 +16,7 @@ XRDCOMMON  = XrdSys XrdOuc XrdNet XrdSec
 XRDSEC  = @xrdsec@
 
 SERVER  = XrdSfs XrdAcc XrdOdc Xrd \
-          XrdCms XrdOlb XrdOss XrdOfs XrdBwm XrdRootd XrdXrootd XrdFrm
+          XrdOlb XrdOss XrdBwm XrdCms XrdOfs XrdRootd XrdXrootd XrdFrm
 
 XRDCLIENT = XrdClient
 

@@ -2171,7 +2171,11 @@ int XrdSecProtocolpwd::ExportCreds(XrdSutBucket *creds)
 
    // Expand templated keywords, if needed
    String filecreds = FileExpCreds;
-   filecreds.replace("<user>", hs->User.c_str());
+   // Resolve place-holders, if any
+   if (XrdSutResolve(filecreds, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0) {
+      DEBUG("Problems resolving templates in "<<filecreds);
+      return -1;
+   }
    DEBUG("Exporting client creds to: "<<filecreds);
 
    // Attach or create the file
@@ -2787,13 +2791,15 @@ int XrdSecProtocolpwd::GetUserHost(String &user, String &host)
    EPNAME("GetUserHost");
 
    // Host
-   host = getenv("XrdSecHOST");
+   host = Entity.host;
+   if (host.length() <= 0) host = getenv("XrdSecHOST");
 
    // User
-   user = getenv("XrdSecUSER");
+   user = Entity.name;
+   if (user.length() <= 0) user = getenv("XrdSecUSER");
 
    // If user not given, prompt for it
-   if (!(user.length())) {
+   if (user.length() <= 0) {
       //
       // Make sure somebody can be prompted
       if (!(hs->Tty)) {
@@ -3607,6 +3613,11 @@ int XrdSecProtocolpwd::QueryNetRc(String host, String &passwd, int &status)
    String fnrc = getenv("XrdSecNETRC");
    if (fnrc.length() <= 0) {
       DEBUG("File name undefined");
+      return -1;
+   }
+   // Resolve place-holders, if any
+   if (XrdSutResolve(fnrc, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0) {
+      DEBUG("Problems resolving templates in "<<fnrc);
       return -1;
    }
    DEBUG("checking file "<<fnrc<<" for user "<<hs->User);

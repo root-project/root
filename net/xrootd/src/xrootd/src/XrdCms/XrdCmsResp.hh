@@ -68,13 +68,10 @@ static void        setDelay(int repdly) {RepDelay = repdly;}
        XrdCmsResp() : XrdOucErrInfo(UserID) {next = 0; myBuff = 0;}
       ~XrdCmsResp() {}
 
-void   operator delete(void *p)
-                      {if (XrdCmsResp::numFree >= XrdCmsResp::maxFree) free(p);
-                          else ((XrdCmsResp *)p)->Recycle();
-                      }
+void   operator delete(void *p) {((XrdCmsResp *)p)->Recycle();}
 
 private:
-       void Recycle();
+       void Recycle(void *p=0);
        void ReplyXeq();
 
 static XrdSysSemaphore        isReady;

@@ -25,6 +25,7 @@ class XrdInet;
 class XrdScheduler;
 class XrdNetSecurity;
 class XrdNetSocket;
+class XrdOss;
 class XrdSysError;
 class XrdOucName2Name;
 class XrdOucProg;
@@ -94,6 +95,8 @@ int         doWait;       // 1 -> Wait for a data end-point
 XrdOucName2Name *xeq_N2N; // Server or Manager (non-null if library loaded)
 XrdOucName2Name *lcl_N2N; // Server Only
 
+char        *ossLib;      // -> oss library
+char        *ossParms;    // -> oss library parameters
 char        *N2N_Lib;     // Server Only
 char        *N2N_Parms;   // Server Only
 char        *LocalRoot;   // Server Only
@@ -108,6 +111,7 @@ const char  *mySID;
 XrdOucTList *ManList;     // From manager directive
 XrdOucTList *NanList;     // From manager directive (managers only)
 
+XrdOss      *ossFS;       // The filsesystem interface
 XrdOucProg  *ProgCH;      // Server only chmod
 XrdOucProg  *ProgMD;      // Server only mkdir
 XrdOucProg  *ProgMP;      // Server only mkpath
@@ -132,6 +136,7 @@ private:
 
 void ConfigDefaults(void);
 int  ConfigN2N(void);
+int  ConfigOSS(void);
 int  ConfigProc(int getrole=0);
 int  isExec(XrdSysError *eDest, const char *ptype, char *prog);
 int  MergeP(void);
@@ -143,7 +148,6 @@ int  setupXmi(void);
 void Usage(int rc);
 int  xapath(XrdSysError *edest, XrdOucStream &CFile);
 int  xallow(XrdSysError *edest, XrdOucStream &CFile);
-int  xcache(XrdSysError *edest, XrdOucStream &CFile);
 int  Fsysadd(XrdSysError *edest, int chk, char *fn);
 int  xdelay(XrdSysError *edest, XrdOucStream &CFile);
 int  xdefs(XrdSysError *edest, XrdOucStream &CFile);
@@ -153,6 +157,7 @@ int  xfxhld(XrdSysError *edest, XrdOucStream &CFile);
 int  xlclrt(XrdSysError *edest, XrdOucStream &CFile);
 int  xmang(XrdSysError *edest, XrdOucStream &CFile);
 int  xnml(XrdSysError *edest, XrdOucStream &CFile);
+int  xolib(XrdSysError *edest, XrdOucStream &CFile);
 int  xperf(XrdSysError *edest, XrdOucStream &CFile);
 int  xpidf(XrdSysError *edest, XrdOucStream &CFile);
 int  xping(XrdSysError *edest, XrdOucStream &CFile);
@@ -167,8 +172,6 @@ int  xtrace(XrdSysError *edest, XrdOucStream &CFile);
 int  xxmi(XrdSysError *edest, XrdOucStream &CFile);
 
 XrdInet          *NetTCPr;     // Network for supervisors
-XrdOucTList      *monPath;     // cache directive paths
-XrdOucTList      *monPathP;    // path  directive paths (w or s only)
 char             *AdminPath;
 int               AdminMode;
 char             *pidPath;

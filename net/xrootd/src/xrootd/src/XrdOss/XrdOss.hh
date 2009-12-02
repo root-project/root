@@ -93,14 +93,15 @@ class XrdOssVSInfo
 public:
 long long Total;   // Total bytes
 long long Free;    // Total bytes free
-long long Contig;  // Max   bytes free in contiguous chunk
+long long Large;   // Total bytes in largest partition
+long long LFree;   // Max   bytes free in contiguous chunk
 long long Usage;   // Used  bytes (if usage enabled)
 long long Quota;   // Quota bytes (if quota enabled)
 int       Extents; // Number of partitions/extents
 int       Reserved;
 
-          XrdOssVSInfo() : Total(0),Free(0),Contig(0),Usage(0),Quota(-1),
-                           Extents(0),Reserved(0) {}
+          XrdOssVSInfo() : Total(0),Free(0),Large(0),LFree(0),Usage(-1),
+                           Quota(-1),Extents(0),Reserved(0) {}
          ~XrdOssVSInfo() {}
 };
   

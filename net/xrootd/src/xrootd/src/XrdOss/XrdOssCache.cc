@@ -44,6 +44,7 @@ long long           XrdOssCache_Group::PubQuota = -1;
 
 XrdSysMutex         XrdOssCache::Mutex;
 long long           XrdOssCache::fsTotal = 0;
+long long           XrdOssCache::fsLarge = 0;
 long long           XrdOssCache::fsTotFr = 0;
 long long           XrdOssCache::fsFree  = 0;
 long long           XrdOssCache::fsSize  = 0;
@@ -74,7 +75,8 @@ XrdOssCache_FSData::XrdOssCache_FSData(const char *fsp,
      XrdOssCache::fsTotal += size;
      XrdOssCache::fsTotFr += frsz;
      XrdOssCache::fsCount++;
-     if (frsz > XrdOssCache::fsFree) XrdOssCache::fsFree = frsz;
+     if (size > XrdOssCache::fsLarge) XrdOssCache::fsLarge= size;
+     if (frsz > XrdOssCache::fsFree)  XrdOssCache::fsFree = frsz;
      fsid = fsID;
      updt = time(0);
      next = 0;
@@ -241,6 +243,57 @@ long long XrdOssCache_FS::freeSpace(XrdOssCache_Space &Space, const char *path)
    Space.Inleft= static_cast<long long>(fsbuff.FS_FFREE);
 
    return Space.Free;
+}
+
+/******************************************************************************/
+/*                              g e t S p a c e                               */
+/******************************************************************************/
+  
+int XrdOssCache_FS::getSpace(XrdOssCache_Space &Space, const char *sname)
+{
+   XrdOssCache_Group  *fsg = XrdOssCache_Group::fsgroups;
+
+// Try to find the space group name
+//
+   while(fsg && strcmp(sname, fsg->group)) fsg = fsg->next;
+   if (!fsg) return 0;
+
+// Return the space
+//
+   return getSpace(Space, fsg);
+}
+
+/******************************************************************************/
+  
+int XrdOssCache_FS::getSpace(XrdOssCache_Space &Space, XrdOssCache_Group *fsg)
+{
+   XrdOssCache_FS     *fsp;
+   XrdOssCache_FSData *fsd;
+   int pnum = 0;
+
+// Initialize some fields
+//
+   Space.Total = 0;
+   Space.Free  = 0;
+
+// Prepare to accumulate the stats
+//
+   XrdOssCache::Mutex.Lock();
+   Space.Usage = fsg->Usage; Space.Quota = fsg->Quota;
+   if ((fsp = XrdOssCache::fsfirst)) do
+      {if (fsp->fsgroup == fsg)
+          {fsd = fsp->fsdata; pnum++;
+           Space.Total += fsd->size;      Space.Free   += fsd->frsz;
+           if (fsd->frsz > Space.Maxfree) Space.Maxfree = fsd->frsz;
+           if (fsd->size > Space.Largest) Space.Largest = fsd->size;
+          }
+       fsp = fsp->next;
+      } while(fsp != XrdOssCache::fsfirst);
+   XrdOssCache::Mutex.UnLock();
+
+// All done
+//
+   return pnum;
 }
 
 /******************************************************************************/

@@ -124,6 +124,7 @@ bool XrdClientReadCache::SubmitRawData(const void *buffer, long long begin_offs,
 	if (pos < 0) pos = 0;
 
 	for (; pos < fItems.GetSize(); pos++) {
+           // Don't add this block if it is contained in a bigger one
 	    if (!fItems[pos]->IsPlaceholder() && fItems[pos]->ContainsInterval(begin_offs, end_offs)) {
 		pos = -1;
 		break;
@@ -475,7 +476,7 @@ void XrdClientReadCache::PrintCache() {
     XrdSysMutexHelper mtx(fMutex);
     int it;
 
-    Info(XrdClientDebug::kHIDEBUG, "Cache",
+    Info(XrdClientDebug::kUSERDEBUG, "Cache",
 	 "Cache Status --------------------------");
 
     for (it = 0; it < fItems.GetSize(); it++) {
@@ -484,13 +485,13 @@ void XrdClientReadCache::PrintCache() {
 
 	    if (fItems[it]->IsPlaceholder()) {
 		
-		Info(XrdClientDebug::kHIDEBUG,
+		Info(XrdClientDebug::kUSERDEBUG,
 		     "Cache blk", it << "Placeholder " <<
 		     fItems[it]->BeginOffset() << "->" << fItems[it]->EndOffset() );
 
 	    }
 	    else
-		Info(XrdClientDebug::kHIDEBUG,
+		Info(XrdClientDebug::kUSERDEBUG,
 		     "Cache blk", it << "Data block  " <<
 		     fItems[it]->BeginOffset() << "->" << fItems[it]->EndOffset() <<
 		     (fItems[it]->Pinned ? " (pinned) " : "" ) );
@@ -498,7 +499,7 @@ void XrdClientReadCache::PrintCache() {
 	}
     }
     
-    Info(XrdClientDebug::kHIDEBUG, "Cache",
+    Info(XrdClientDebug::kUSERDEBUG, "Cache",
 	 "-------------------------------------- fTotalByteCount = " << fTotalByteCount );
 
 }

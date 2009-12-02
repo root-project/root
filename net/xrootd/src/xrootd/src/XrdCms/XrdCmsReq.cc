@@ -247,9 +247,13 @@ void XrdCmsReq::Reply_Redirect(const char *sname, int Port,
                }
            }
 
+// Make sure that last iov element and hlen includes the terminating null byte
+//
+   iov[iovnum-1].iov_len++; hlen++;
+
 // Send off the reply
 //
-   Reply(kYR_redirect, (unsigned int)Port, 0, hlen+1, iov, iovnum);
+   Reply(kYR_redirect, (unsigned int)Port, 0, hlen, iov, iovnum);
 }
 
 /******************************************************************************/
@@ -298,8 +302,8 @@ XrdCmsReq *XrdCmsReq::Reply_WaitResp(int sec)
 // Reply to the requestor mapping our ID to their ID
 //
    if (rnum)
-      {unsigned int asyncid = htonl(rnum);
-       Reply(kYR_waitresp, asyncid);
+      {
+       Reply(kYR_waitresp, rnum);
       }
 
 // Return an object to affect an asynchronous reply
@@ -381,9 +385,8 @@ void XrdCmsReq::Reply(       int    respCode, unsigned int respVal,
 //
    RTable.Lock();
    if ((nP = RTable.Find(ReqNnum, ReqNins)))
-      {Resp.Hdr.streamid = htonl(ReqID);
-       Resp.Hdr.modifier |= CmsResponse::kYR_async;
-       nP->Send(iov, iovnum);
+      {Resp.Hdr.modifier |= CmsResponse::kYR_async;
+       nP->Send(iovP, iovnum);
       }
       else {DEBUG("Async resp " <<ReqID <<" discarded; server gone");}
    RTable.UnLock();

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.6 2009/10/15 11:12:02 ganis Exp $
+#              $Id: GNUmakefile,v 1.7 2009/11/10 21:44:09 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -147,7 +147,7 @@ $(OBJDIR)/XrdCnsLogClient.o: XrdCnsLogClient.hh  XrdCnsLogClient.cc  \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCnsLogClient.o XrdCnsLogClient.cc
 
 $(OBJDIR)/XrdCnsLogFile.o: XrdCnsLogFile.hh  XrdCnsLogFile.cc  \
-                           XrdCnsLogRec.hh \
+                           XrdCnsLogRec.hh   XrdSysPlatform.hh \
                            XrdSysError.hh  XrdSysPthread.hh
 	@echo Compiling XrdCnsLogFile.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCnsLogFile.o XrdCnsLogFile.cc

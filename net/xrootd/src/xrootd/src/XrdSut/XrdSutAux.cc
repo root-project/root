@@ -378,7 +378,7 @@ int XrdSutExpand(XrdOucString &path)
          }
          home = pw->pw_dir;
       } else
- 	 home = XrdSutHome();
+         home = XrdSutHome();
       if (home.length() > 0) {
          sdir.insert(home.c_str(),0);
          path = sdir;
@@ -395,6 +395,39 @@ int XrdSutExpand(XrdOucString &path)
          return -ENOENT;
       }
    }
+   return 0;
+}
+
+/******************************************************************************/
+/*  X r d S u t R e s o l v e                                                 */
+/******************************************************************************/
+int XrdSutResolve(XrdOucString &path,
+                  const char *ho, const char *vo, const char *gr, const char *us)
+{
+   // Resolve templates <host>, <vo>, <group>, <user> (if any)
+   // Returns 0 in case of success, -EINVAL if path is not defined.
+
+   // Path must be defined
+   if (!path.length())
+      return -EINVAL;
+
+   // No templates, nothing to do
+   if (path.find("<") == STR_NPOS)
+      return 0;
+
+   // Replace <host>, if defined
+   if (ho && strlen(ho) > 0) path.replace("<host>", ho);
+
+   // Replace <vo>, if defined
+   if (vo && strlen(vo) > 0) path.replace("<vo>", vo);
+
+   // Replace <group>, if defined
+   if (gr && strlen(gr) > 0) path.replace("<group>", gr);
+
+   // Replace <user>, if defined
+   if (us && strlen(us) > 0) path.replace("<user>", us);
+
+   // Done
    return 0;
 }
 

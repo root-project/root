@@ -110,7 +110,7 @@ int XrdCnsConfig::Configure(int argc, char **argv, char *argt)
 
    const char *TraceID = "Config";
    XrdOucArgs Spec(&MLog,(argt ? "Cns_Config: ":"XrdCnsd: "),
-                          "a:b:dD:e:E:i:I:l:L:N:p:q:R:", 0);
+                          "a:b:dD:e:E:i:I:l:L:N:p:q:R:");
    char buff[2048], *dP, *tP, *dnsEtxt = 0, *n2n = 0, *lroot = 0, *xpl = 0;
    char theOpt, *theArg;
    long long llval;
@@ -129,6 +129,7 @@ int XrdCnsConfig::Configure(int argc, char **argv, char *argt)
        case 'a': if (*aPath == '/') aPath = Spec.argval;
                     else NoGo = NAPath("'-a'", Spec.argval);
                  break;
+       case 'B': Opts |= optNoCns;
        case 'b': bPath = Spec.argval;
                  break;
        case 'D': NoGo |= XrdOuca2x::a2i(MLog,"-D value",Spec.argval,&n,0,4);
@@ -239,7 +240,10 @@ int XrdCnsConfig::Configure(int argc, char **argv, char *argt)
                }
       }
 
-// Get the destination for the name space and log files
+// Get the destination for the name space and log files. In the process if we
+// create a client who will not be archiving but archive-only mode is in
+// effect; then delete that newly created client. Yes, Amelia, this is an odd
+// way of doing this but is much less complicated given the logic choices.
 //
    while((theArg = Spec.getarg()))
         {strcpy(buff, theArg);
@@ -259,13 +263,15 @@ int XrdCnsConfig::Configure(int argc, char **argv, char *argt)
              MLog.Emsg("Config", "'", dP, buff);
              NoGo = 1; delete tP; continue;
             }
-         sprintf(buff, "%s:%d", tP, n);
+         sprintf(buff, "%s:%d", tP, n); delete tP;
               if (!bDest)  Dest = new XrdOucTList(buff, (bPath ? -n : n), Dest);
          else if (haveArk) Dest = new XrdOucTList(buff, n, Dest);
          else if (strcmp(buff, bDest->text))
                            Dest = new XrdOucTList(buff, n, Dest);
          else {bDest->next = Dest; Dest = bDest; haveArk = 1;}
-         delete tP;
+
+         if (Opts & optNoCns && Dest->val >= 0)
+            {XrdOucTList *xP = Dest; Dest = xP->next; delete xP;}
         }
 
 // Chain in backup host if we have not done so

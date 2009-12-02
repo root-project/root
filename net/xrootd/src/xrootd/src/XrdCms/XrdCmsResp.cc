@@ -89,20 +89,24 @@ XrdCmsResp *XrdCmsResp::Alloc(XrdOucErrInfo *erp, int msgid)
 /*                               R e c y c l e                                */
 /******************************************************************************/
   
-void XrdCmsResp::Recycle()
+void XrdCmsResp::Recycle(void *p)
 {
 
 // Recycle appendages
 //
    if (myBuff) {myBuff->Recycle(); myBuff = 0;}
 
-// Put this object on the free queue
+// If a free area pointer has been passed then this is from delete() and we
+// need to check if we have too many message objects at this point. Otherwise,
+// it's from a synchrnous recycle and it's always OK to requeue these.
 //
-   myMutex.Lock();
-   next = nextFree;
-   nextFree = this;
-   numFree++;
-   myMutex.UnLock();
+   if (p && XrdCmsResp::numFree >= XrdCmsResp::maxFree) free(p);
+      else {myMutex.Lock();
+            next = nextFree;
+            nextFree = this;
+            numFree++;
+            myMutex.UnLock();
+           }
 }
 
 /******************************************************************************/
@@ -150,7 +154,6 @@ void XrdCmsResp::Reply()
             {if (!(First = rp->next)) Last = 0;
              rdyMutex.UnLock();
              rp->ReplyXeq();
-             rp->Recycle();
             } else rdyMutex.UnLock();
         }
 }

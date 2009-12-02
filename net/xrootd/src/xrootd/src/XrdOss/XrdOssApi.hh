@@ -255,7 +255,6 @@ int                CalcTime(XrdOssStage_Req *req);
 void               doScrub();
 int                Find(XrdOssStage_Req *req, void *carg);
 int                getCname(const char *path, struct stat *sbuff, char *cgbuff);
-int                getSpace(XrdOssCache_Group *fsg, XrdOssCache_Space &CSpace);
 int                getStats(char *buff, int blen);
 int                GetFile(XrdOssStage_Req *req);
 int                getID(const char *, XrdOucEnv &, char *, int);

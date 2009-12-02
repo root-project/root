@@ -63,6 +63,8 @@ const char *XrdCmsConfigCVSID = "$Id$";
 #include "XrdNet/XrdNetSecurity.hh"
 #include "XrdNet/XrdNetSocket.hh"
 
+#include "XrdOss/XrdOss.hh"
+
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
@@ -353,6 +355,10 @@ int XrdCmsConfig::Configure2()
 //
    if ((LocalRoot || RemotRoot) && ConfigN2N()) NoGo = 1;
 
+// Configure the OSS
+//
+   if (!NoGo) NoGo = ConfigOSS();
+
 // Setup manager or server, as needed
 //
   if (!NoGo && isManager)              NoGo = setupManager();
@@ -426,13 +432,13 @@ int XrdCmsConfig::ConfigXeq(char *var, XrdOucStream &CFile, XrdSysError *eDest)
    {
    TS_Xeq("adminpath",     xapath);  // Any,     non-dynamic
    TS_Xeq("allow",         xallow);  // Manager, non-dynamic
-   TS_Xeq("cache",         xcache);  // Server,  non-dynamic
    TS_Xeq("defaults",      xdefs);   // Server,  non-dynamic
    TS_Xeq("export",        xexpo);   // Any,     non-dynamic
    TS_Xeq("fsxeq",         xfsxq);   // Server,  non-dynamic
    TS_Xeq("localroot",     xlclrt);  // Any,     non-dynamic
    TS_Xeq("manager",       xmang);   // Server,  non-dynamic
    TS_Xeq("namelib",       xnml);    // Server,  non-dynamic
+   TS_Xeq("osslib",        xolib);   // Any,     non-dynamic
    TS_Xeq("perf",          xperf);   // Server,  non-dynamic
    TS_Xeq("pidpath",       xpidf);   // Any,     non-dynamic
    TS_Xeq("prep",          xprep);   // Any,     non-dynamic
@@ -644,8 +650,6 @@ void XrdCmsConfig::ConfigDefaults(void)
    RedirSock= 0;
    pidPath  = strdup("/tmp");
    Police   = 0;
-   monPath  = 0;
-   monPathP = 0;
    cachelife= 8*60*60;
    pendplife=   60*60*24*7;
    DiskLinger=0;
@@ -661,6 +665,8 @@ void XrdCmsConfig::ConfigDefaults(void)
    XmiParms    = 0;
    DirFlags    = 0;
    SecLib      = 0;
+   ossLib      = 0;
+   ossFS       = 0;
 }
   
 /******************************************************************************/
@@ -700,6 +706,25 @@ int XrdCmsConfig::ConfigN2N()
    PrepQ.setParms(lcl_N2N);
    return lcl_N2N == 0;
 }
+  
+/******************************************************************************/
+/*                             C o n f i g O S S                              */
+/******************************************************************************/
+
+int XrdCmsConfig::ConfigOSS()
+{
+   extern XrdOss *XrdOssGetSS(XrdSysLogger *, const char *, const char *);
+
+// Set up environment for the OSS to keep it relevant for cmsd
+//
+   XrdOucEnv::Export("XRDREDIRECT", "Q");
+   XrdOucEnv::Export("XRDOSSTYPE",  "cms");
+   XrdOucEnv::Export("XRDOSSCSCAN", "off");
+
+// Load and return result
+//
+   return !(ossFS=XrdOssGetSS(Say.logger(),ConfigFN,ossLib));
+}
 
 /******************************************************************************/
 /*                            C o n f i g P r o c                             */
@@ -736,7 +761,7 @@ int XrdCmsConfig::ConfigProc(int getrole)
            }
            else if (!strncmp(var, "cms.", 4)
                 ||  !strncmp(var, "olb.", 4)      // Backward compatability
-                ||  !strcmp(var, "oss.cache")
+                ||  !strcmp(var, "ofs.osslib")
                 ||  !strcmp(var, "oss.defaults")
                 ||  !strcmp(var, "oss.localroot")
                 ||  !strcmp(var, "oss.remoteroot")
@@ -832,8 +857,6 @@ int XrdCmsConfig::MergeP()
             else if (!(Opts & XRDEXP_LOCAL))
                     {PathList.Insert(plp->Path(), &npinfo);
                      if (npinfo.ssvec) DiskSS = 1;
-                     if (npinfo.rwvec || npinfo.ssvec)
-                        monPathP = new XrdOucTList(plp->Path(), 0, monPathP);
                     }
           plp = plp->Next();
          }
@@ -989,7 +1012,7 @@ int XrdCmsConfig::setupManager()
 int XrdCmsConfig::setupServer()
 {
    XrdOucTList *tp;
-   int n = 0, rc;
+   int n = 0;
 
 // Make sure we have enough info to be a server
 //
@@ -1030,35 +1053,11 @@ int XrdCmsConfig::setupServer()
        Sched->Schedule((XrdJob *)&PrepQ,pendplife+time(0));
       }
 
-// If no cache has been specified but paths exist get the pfn for each path
-// in the list for monitoring purposes
-//
-   if (!monPath && monPathP && lcl_N2N)
-      {XrdOucTList *tlp = monPathP;
-       char pbuff[2048];
-       while(tlp)
-            {if ((rc = lcl_N2N->lfn2pfn(tlp->text, pbuff, sizeof(pbuff))))
-                Say.Emsg("Config",rc,"determine pfn for lfn",tlp->text);
-                else {free(tlp->text);
-                      tlp->text = strdup(pbuff);
-                     }
-             tlp = tlp->next;
-            }
-       }
-
 // Setup file system metering (skip it for peers)
 //
-   Meter.setParms(monPath ? monPath : monPathP, monPath != 0);
+   Meter.Init();
    if (perfpgm && Meter.Monitor(perfpgm, perfint))
       Say.Say("Config warning: load based scheduling disabled.");
-
-// If this is a staging server then we better have a disk cache. We ignore this
-// restriction if an XMI plugin will be used and we are a peer.
-//
-   if (!(isPeer || XmiPath) && DiskSS && !(monPath || monPathP))
-      {Say.Emsg("Config","Staging paths present but no disk cache specified.");
-       return 1;
-      }
 
 // All done
 //
@@ -1304,84 +1303,6 @@ int XrdCmsConfig::xapath(XrdSysError *eDest, XrdOucStream &CFile)
    AdminPath = pval;
    AdminMode = mode;
    return 0;
-}
-
-/******************************************************************************/
-/*                                x c a c h e                                 */
-/******************************************************************************/
-
-/* Function: xcache
-
-   Purpose:  To parse the directive: cache <group> <path>[*]
-
-             <group>   the cache group (ignored for cmsd)
-             <path>    the full path of the filesystem the server will handle.
-
-   Type: Server only, non-dynamic.
-
-   Output: 0 upon success or !0 upon failure.
-*/
-
-int XrdCmsConfig::xcache(XrdSysError *eDest, XrdOucStream &CFile)
-{
-    char *val, *pfxdir, *sfxdir, fn[XrdCmsMAX_PATH_LEN+1];
-    int i, k, rc, pfxln, cnum = 0;
-    struct dirent *dir;
-    DIR *DFD;
-
-    if (!isServer) return CFile.noEcho();
-
-    if (!(val = CFile.GetWord()))
-       {eDest->Emsg("Config", "cache group not specified"); return 1;}
-
-    if (!(val = CFile.GetWord()))
-       {eDest->Emsg("Config", "cache path not specified"); return 1;}
-
-    k = strlen(val);
-    if (k >= (int)(sizeof(fn)-1) || val[0] != '/' || k < 2)
-       {eDest->Emsg("Config", "invalid cache path - ", val); return 1;}
-
-    if (val[k-1] != '*') return !Fsysadd(eDest, 0, val);
-
-    for (i = k-1; i; i--) if (val[i] == '/') break;
-    i++; strncpy(fn, val, i); fn[i] = '\0';
-    sfxdir = &fn[i]; pfxdir = &val[i]; pfxln = strlen(pfxdir)-1;
-    if (!(DFD = opendir(fn)))
-       {eDest->Emsg("Config", errno, "open cache directory", fn); return 1;}
-
-    errno = 0; rc = 0;
-    while((dir = readdir(DFD)))
-         {if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, "..")
-          || (pfxln && strncmp(dir->d_name, pfxdir, pfxln)))
-             continue;
-          strcpy(sfxdir, dir->d_name);
-          if ((rc = Fsysadd(eDest, 1, fn))  < 0) break;
-          cnum += rc;
-         }
-
-    if (errno)
-       {if (rc >= 0) 
-           {rc = -1; eDest->Emsg("Config", errno, "process cache directory", fn);}
-       }
-       else if (!cnum) eDest->Say("Config warning: no cache directories found in ",val);
-
-    closedir(DFD);
-    return rc < 0;
-}
-
-int XrdCmsConfig::Fsysadd(XrdSysError *eDest, int chk, char *fn)
-{
-    struct stat buff;
-
-    if (stat(fn, &buff))
-       {if (!chk) eDest->Emsg("Config", errno, "process r/w path", fn);
-        return -1;
-       }
-
-    if ((chk > 0) && !(buff.st_mode & S_IFDIR)) return 0;
-
-    monPath = new XrdOucTList(fn, 0, monPath);
-    return 1;
 }
 
 /******************************************************************************/
@@ -1884,6 +1805,39 @@ int XrdCmsConfig::xnml(XrdSysError *eDest, XrdOucStream &CFile)
    return 0;
 }
   
+/******************************************************************************/
+/*                                 x o l i b                                  */
+/******************************************************************************/
+
+/* Function: xolib
+
+   Purpose:  To parse the directive: osslib <path>
+
+             <path>    the path of the filesystem library to be used.
+
+  Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdCmsConfig::xolib(XrdSysError *eDest, XrdOucStream &CFile)
+{
+    char *val, parms[1024];
+
+// Get the path
+//
+   if (!(val = CFile.GetWord()) || !val[0])
+      {eDest->Emsg("Config", "osslib not specified"); return 1;}
+   if (ossLib) free(ossLib);
+   ossLib = strdup(val);
+
+// Record any parms
+//
+   if (!CFile.GetRest(parms, sizeof(parms)))
+      {eDest->Emsg("Config", "namelib parameters too long"); return 1;}
+   if (ossParms) free(ossParms);
+   ossParms = (*parms ? strdup(parms) : 0);
+   return 0;
+}
+
 /******************************************************************************/
 /*                                 x p e r f                                  */
 /******************************************************************************/

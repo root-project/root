@@ -66,8 +66,8 @@ int        num_Limited; // Number of times max was reached
              ~XrdScheduler();
 
 private:
-int        idl_Workers;    // Disp: Number of idle workers
 XrdSysMutex DispatchMutex; // Disp: Protects above area
+int        idl_Workers;    // Disp: Number of idle workers
 
 int        min_Workers;   // Sched: Min threads we need to have
 int        max_Workers;   // Sched: Max threads we can start
@@ -75,6 +75,7 @@ int        max_Workidl;   // Sched: Max idle time for threads above min_Workers
 int        num_Workers;   // Sched: Number of threads we have
 int        stk_Workers;   // Sched: Number of sticky workers we can have
 int        num_JobsinQ;   // Sched: Number of outstanding jobs in the queue
+int        num_Layoffs;   // Sched: Number of threads to terminate
 
 XrdJob                *WorkFirst;  // Pending work
 XrdJob                *WorkLast;

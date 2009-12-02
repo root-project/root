@@ -24,14 +24,6 @@ const char *XrdCmsMeterCVSID = "$Id$";
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#ifdef __linux__
-#include <sys/vfs.h>
-#elif defined( __macos__) || defined(__FreeBSD__)
-#include <sys/param.h>
-#include <sys/mount.h>
-#else
-#include <sys/statvfs.h>
-#endif
 
 #include "XrdCms/XrdCmsCluster.hh"
 #include "XrdCms/XrdCmsConfig.hh"
@@ -39,6 +31,7 @@ const char *XrdCmsMeterCVSID = "$Id$";
 #include "XrdCms/XrdCmsNode.hh"
 #include "XrdCms/XrdCmsState.hh"
 #include "XrdCms/XrdCmsTrace.hh"
+#include "XrdOss/XrdOss.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
 using namespace XrdCms;
@@ -64,29 +57,12 @@ void *XrdCmsMeterRunFS(void *carg)
       }
 
 /******************************************************************************/
-/*                         L o c a l   C l a s s e s                          */
-/******************************************************************************/
-  
-class XrdCmsMeterFS
-{
-public:
-
-XrdCmsMeterFS *Next;
-dev_t          Dnum;
-
-               XrdCmsMeterFS(XrdCmsMeterFS *curP, dev_t dn)
-                            {Next = curP; Dnum = dn;}
-              ~XrdCmsMeterFS() {}
-};
-
-/******************************************************************************/
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
 
 XrdCmsMeter::XrdCmsMeter() : myMeter(&Say)
 {
     Running  = 0;
-    fs_list  = 0;
     dsk_calc = 0;
     fs_nums  = 0;
     noSpace  = 0;
@@ -102,7 +78,6 @@ XrdCmsMeter::XrdCmsMeter() : myMeter(&Say)
     monint   = 0;
     montid   = 0;
     rep_tod  = time(0);
-    rep_todfs= 0;
     xeq_load = 0;
     cpu_load = 0;
     mem_load = 0;
@@ -173,6 +148,72 @@ int XrdCmsMeter::FreeSpace(int &tot_util)
 // Return amount available
 //
    return static_cast<int>(fsavail);
+}
+
+/******************************************************************************/
+/*                                  I n i t                                   */
+/******************************************************************************/
+  
+void  XrdCmsMeter::Init()
+{
+    XrdOssVSInfo vsInfo;
+    pthread_t monFStid;
+    char buff[1024], sfx1, sfx2, sfx3;
+    long maxfree, totfree, totDisk;
+    int rc;
+
+// Get initial free space
+//
+        if ((rc = Config.ossFS->StatVS(&vsInfo, 0, 1)))
+           {Say.Emsg("Meter", rc, "calculate file system space");
+            noSpace = 1;
+           }
+   else if (!(fs_nums = vsInfo.Extents))
+           {Say.Emsg("Meter", "Warning! No writable filesystems found.");
+            noSpace = 1;
+           }
+   else    {dsk_tot = vsInfo.Total >> 20LL; // in MB
+            dsk_lpn = vsInfo.Large >> 20LL;
+           }
+
+// Check if we should bother to continue
+//
+   if (noSpace)
+      {if (!Config.asSolo()) CmsState.Update(XrdCmsState::Space, 0);
+       Say.Emsg("Meter", "Write access and staging prohibited.");
+       return;
+      }
+
+// Set values (disk space values are in megabytes)
+// 
+    if (Config.DiskMinP) MinFree = dsk_lpn * Config.DiskMinP / 100;
+    if (Config.DiskMin > MinFree) MinFree  = Config.DiskMin;
+    MinStype= Scale(MinFree, MinShow);
+    if (Config.DiskHWMP) HWMFree = dsk_lpn * Config.DiskHWMP / 100;
+    if (Config.DiskHWM > HWMFree) HWMFree  = Config.DiskHWM;
+    HWMStype= Scale(HWMFree, HWMShow);
+    dsk_calc = (Config.DiskAsk < 5 ? 5 : Config.DiskAsk);
+
+// Calculate the initial free space and start the FS monitor thread
+//
+   calcSpace();
+   if ((noSpace = (dsk_maxf < MinFree)) && !Config.asSolo())
+      CmsState.Update(XrdCmsState::Space, 0);
+   XrdSysThread::Run(&monFStid,XrdCmsMeterRunFS,(void *)this,0,"FS meter");
+
+// Document what we have
+//
+   sfx1 = Scale(dsk_maxf, maxfree);
+   sfx2 = Scale(dsk_tot,  totDisk);
+   sfx3 = Scale(dsk_free, totfree);
+   sprintf(buff,"Found %d filesystem(s); %ld%cB total (%d%% util);"
+                " %ld%cB free (%ld%cB max)", fs_nums, totDisk, sfx2,
+                dsk_util, totfree, sfx3, maxfree, sfx1);
+   Say.Emsg("Meter", buff);
+   if (noSpace)
+      {sprintf(buff, "%ld%cB minimum", MinShow, MinStype);
+       Say.Emsg("Meter", "Warning! Available space <", buff);
+      }
 }
 
 /******************************************************************************/
@@ -317,100 +358,6 @@ void *XrdCmsMeter::RunFS()
         }
    return (void *)0;
 }
-
-/******************************************************************************/
-/*                              s e t P a r m s                               */
-/******************************************************************************/
-  
-void  XrdCmsMeter::setParms(XrdOucTList *tlp, int warnDups)
-{
-    pthread_t monFStid;
-    XrdCmsMeterFS *fsP, baseFS(0,0);
-    XrdOucTList *plp, *nlp;
-    char buff[1024], sfx1, sfx2, sfx3;
-    long long fsbsize, fsval;
-    long maxfree, totfree, totDisk;
-    struct stat buf;
-    STATFS_BUFF fsdata;
-    int rc;
-
-// Calculate number of filesystems without duplication
-//
-    fs_list = tlp; 
-    fs_nums = 0; plp = 0;
-    if ((nlp = tlp))
-       do {if ((rc = stat(nlp->text, &buf)) || isDup(buf, &baseFS))
-              {XrdOucTList *xlp = nlp->next;
-               const char *fault = (rc ? "Missing filesystem"
-                                       : "Duplicate filesystem");
-               if (rc || warnDups)
-                  Say.Emsg("Meter",fault,nlp->text,"skipped for free space.");
-               if (plp) plp->next = xlp;
-                  else  fs_list   = xlp;
-               delete nlp;
-               nlp = xlp;
-              } else {
-               fs_nums++;
-               if (!STATFS(nlp->text, &fsdata))
-#if defined(__solaris__) || defined(_STATFS_F_FRSIZE)
-                  {fsbsize = (fsdata.f_frsize ? fsdata.f_frsize : fsdata.f_bsize);
-#else
-                  {fsbsize = fsdata.f_bsize;
-#endif
-                   fsval = fsdata.f_blocks*(fsbsize ? fsbsize : FS_BLKFACT);
-                   if (fsval > dsk_lpn) dsk_lpn = fsval;
-                   dsk_tot += fsval;
-                  }
-               plp = nlp; nlp = nlp->next;
-              }
-          } while(nlp);
-   dsk_tot = dsk_tot >> 20LL; // in MB
-   dsk_lpn = dsk_lpn >> 20LL;
-
-// Set values (disk space values are in megabytes)
-// 
-    if (Config.DiskMinP) MinFree = dsk_lpn * Config.DiskMinP / 100;
-    if (Config.DiskMin > MinFree) MinFree  = Config.DiskMin;
-    MinStype= Scale(MinFree, MinShow);
-    if (Config.DiskHWMP) HWMFree = dsk_lpn * Config.DiskHWMP / 100;
-    if (Config.DiskHWM > HWMFree) HWMFree  = Config.DiskHWM;
-    HWMStype= Scale(HWMFree, HWMShow);
-    dsk_calc = (Config.DiskAsk < 5 ? 5 : Config.DiskAsk);
-
-// Calculate the initial free space and start the FS monitor thread
-//
-   if (!fs_nums) 
-      {noSpace = 1;
-       if (!Config.asSolo()) CmsState.Update(XrdCmsState::Space, 0);
-       Say.Emsg("Meter", "Warning! No writable filesystems found; "
-                            "write access and staging prohibited.");
-      } else {
-       calcSpace();
-       if ((noSpace = (dsk_maxf < MinFree)) && !Config.asSolo())
-          CmsState.Update(XrdCmsState::Space, 0);
-       XrdSysThread::Run(&monFStid,XrdCmsMeterRunFS,(void *)this,0,"FS meter");
-      }
-
-// Delete any additional MeterFS objects we allocated
-//
-   while((fsP = baseFS.Next)) {baseFS.Next = fsP->Next; delete fsP;}
-
-// Document what we have
-//
-   if (fs_nums)
-      {sfx1 = Scale(dsk_maxf, maxfree);
-       sfx2 = Scale(dsk_tot,  totDisk);
-       sfx3 = Scale(dsk_free, totfree);
-       sprintf(buff,"Found %d filesystem(s); %ld%cB total (%d%% util);"
-                    " %ld%cB free (%ld%cB max)", fs_nums, totDisk, sfx2,
-                    dsk_util, totfree, sfx3, maxfree, sfx1);
-       Say.Emsg("Meter", buff);
-       if (noSpace)
-          {sprintf(buff, "%ld%cB minimum", MinShow, MinStype);
-           Say.Emsg("Meter", "Warning! Available space <", buff);
-          }
-      }
-}
   
 /******************************************************************************/
 /*                            T o t a l S p a c e                             */
@@ -451,60 +398,25 @@ unsigned int XrdCmsMeter::TotalSpace(unsigned int &minfree)
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
 /******************************************************************************/
-/*                                 i s D u p                                  */
-/******************************************************************************/
-  
-int XrdCmsMeter::isDup(struct stat &buf, XrdCmsMeterFS *baseFS)
-{
-  XrdCmsMeterFS *fsp = baseFS->Next;
-
-// Search for matching filesystem
-//
-   while(fsp) if (fsp->Dnum == buf.st_dev) return 1;
-                 else fsp = fsp->Next;
-
-// New filesystem
-//
-   baseFS->Next = new XrdCmsMeterFS(baseFS->Next, buf.st_dev);
-   return 0;
-}
-
-/******************************************************************************/
 /*                             c a l c S p a c e                              */
 /******************************************************************************/
   
 void XrdCmsMeter::calcSpace()
 {
    EPNAME("calcSpace")
-   int       old_util;
-   long long fsbsize;
-   long long bytes, fsutil, fsavail = 0, fstotav = 0;
-   XrdOucTList *tlp = fs_list;
-   STATFS_BUFF fsdata;
+   XrdOssVSInfo vsInfo;
+   int       old_util, rc;
+   long long fsutil;
 
-// For each file system, do a statvfs() or equivalent. We define free space
-// as the largest amount available in one filesystem since we can't allocate
-// across filesystems. The correct filesystem blocksize is very OS specific
+// Get free space statistics. On error, all fields will be zero, which is
+// what we really want to kill space allocation.
 //
-   while(tlp)
-        {if (!STATFS(tlp->text, &fsdata))
-#if defined(__solaris__) || defined(_STATFS_F_FRSIZE)
-            {fsbsize = (fsdata.f_frsize ? fsdata.f_frsize : fsdata.f_bsize);
-#else
-            {fsbsize = fsdata.f_bsize;
-#endif
-             bytes = fsdata.f_bavail * ( fsbsize ?  fsbsize : FS_BLKFACT);
-             if (bytes >= MinFree)
-                {fstotav += bytes;
-                 if (bytes > fsavail) fsavail = bytes;
-                }
-            }
-         tlp = tlp->next;
-        }
+   if ((rc = Config.ossFS->StatVS(&vsInfo, 0, 1)))
+      Say.Emsg("Meter", rc, "calculate file system space");
 
-// Calculate the disk utilization
+// Calculate the disk utilization (note that dsk_tot is in MB)
 //
-   fsutil = (dsk_tot ? 100-((fstotav/1024*100)/dsk_tot) : 100);
+   fsutil = (dsk_tot ? 100-(((vsInfo.Free >> 20LL)*100)/dsk_tot) : 100);
    if (fsutil < 0) fsutil = 0;
       else if (fsutil > 100) fsutil = 100;
 
@@ -512,12 +424,12 @@ void XrdCmsMeter::calcSpace()
 //
    cfsMutex.Lock();
    old_util = dsk_util;
-   dsk_maxf = fsavail >> 20LL; // In MB
-   dsk_free = fstotav >> 20LL; // In MB
+   dsk_maxf = vsInfo.LFree >> 20LL; // In MB
+   dsk_free = vsInfo.Free  >> 20LL; // In MB
    dsk_util = static_cast<int>(fsutil);
    cfsMutex.UnLock();
    if (old_util != dsk_util)
-      DEBUG("New fs info; maxfree=" <<dsk_maxf <<"K utilized=" <<dsk_util <<"%");
+      DEBUG("New fs info; maxfree=" <<dsk_maxf <<"MB utilized=" <<dsk_util <<"%");
 }
 
 /******************************************************************************/

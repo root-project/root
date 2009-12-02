@@ -23,6 +23,7 @@ const char *XrdCnsLogFileCVSID = "$Id$";
 
 #include "XrdCns/XrdCnsLogFile.hh"
 #include "XrdSys/XrdSysError.hh"
+#include "XrdSys/XrdSysPlatform.hh"
 
 /******************************************************************************/
 /*                               G l o b a l s                                */

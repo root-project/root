@@ -42,6 +42,8 @@ extern "C" {
 #include "XrdOuc/XrdOucTokenizer.hh"
 #include "XrdSec/XrdSecInterface.hh"
 #include "XrdSys/XrdSysPriv.hh"
+#include "XrdOuc/XrdOucString.hh"
+#include "XrdSut/XrdSutAux.hh"
   
 /******************************************************************************/
 /*                               D e f i n e s                                */
@@ -686,43 +688,20 @@ int XrdSecProtocolkrb5::exp_krbTkn(XrdSecCredentials *cred, XrdOucErrInfo *erp)
 
 // Create the cache filename, expanding the keywords, if needed
 //
-    char ccfile[XrdSecMAXPATHLEN];
-    strcpy(ccfile, XrdSecProtocolkrb5::ExpFile);
-    int nlen = strlen(ccfile);
-    char *pusr = (char *) strstr(&ccfile[0], "<user>");
-    if (pusr)
-       {int ln = strlen(CName);
-        if (ln != 6) {
-           // Adjust the space
-           int lm = strlen(ccfile) - (int)(pusr + 6 - &ccfile[0]); 
-           memmove(pusr+ln, pusr+6, lm);
-        }
-        // Copy the name
-        memcpy(pusr, CName, ln);
-        // Adjust the length
-        nlen += (ln - 6);
-        }
-    char *puid = (char *) strstr(&ccfile[0], "<uid>");
-    struct passwd *pw = getpwnam(CName);
-    if (puid)
-       {char cuid[20] = {0};
-        if (pw)
-           sprintf(cuid, "%d", pw->pw_uid);
-        int ln = strlen(cuid);
-        if (ln != 5) {
-           // Adjust the space
-           int lm = strlen(ccfile) - (int)(puid + 5 - &ccfile[0]); 
-           memmove(puid+ln, pusr+5, lm);
-        }
-        // Copy the name
-        memcpy(puid, cuid, ln);
-        // Adjust the length
-        nlen += (ln - 5);
-        }
+    XrdOucString ccfn(XrdSecProtocolkrb5::ExpFile);
 
-// Terminate to the new length
+// Resolve place-holders, if any
 //
-    ccfile[nlen] = 0;
+    if (XrdSutResolve(ccfn, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0)
+       return rc;
+    struct passwd *pw = getpwnam(CName);
+    if (!pw)
+       return rc;
+    if (ccfn.find("<uid>") != STR_NPOS)
+       {XrdOucString suid; if (pw) suid += (int) pw->pw_uid;
+        ccfn.replace("<uid>", suid.c_str());
+       }
+    char *ccfile = (char *) ccfn.c_str();
 
 // Point the received creds
 //

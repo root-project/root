@@ -55,7 +55,7 @@ int XrdFrmAdmin::Audit()
                                 "migratable",  1, "m",
                                 "purgeable",   1, "p",
                                 "recursive",   1, "r",
-                                0);
+                                (const char *)0);
 
    static const char *Reqs[] = {"type", 0};
 
@@ -88,7 +88,7 @@ const char *XrdFrmAdmin::FindHelp = "find [-r[ecursive]] what ldir [ldir [...]]\
 int XrdFrmAdmin::Find()
 {
    static XrdOucArgs Spec(&Say, "frm_admin: ",    "",
-                                "recursive",   1, "r", 0);
+                                "recursive",   1, "r", (const char *)0);
 
    static const char *Reqs[] = {"type", "target", 0};
 
@@ -173,7 +173,7 @@ int XrdFrmAdmin::MakeLF()
                                 "owner",       1, "o:",
                                 "purgeable",   1, "p",
                                 "recursive",   1, "r",
-                                0);
+                                (const char *)0);
 
    static const char *Reqs[] = {"lfn", 0};
 
@@ -219,7 +219,7 @@ int XrdFrmAdmin::Pin()
                                 "keep",        1, "k:",
                                 "owner",       1, "o:",
                                 "recursive",   1, "r",
-                                0);
+                                (const char *)0);
 
    static const char *Reqs[] = {"lfn", 0};
 
@@ -270,7 +270,7 @@ const char *XrdFrmAdmin::QueryHelp = "\n"
 
 int XrdFrmAdmin::Query()
 {
-   static XrdOucArgs Spec(&Say, "frm_admin: ", "", 0);
+   static XrdOucArgs Spec(&Say, "frm_admin: ", "", (const char *)0);
 
    static const char *Reqs[] = {"type", 0};
    static struct CmdInfo {const char *Name;
@@ -314,7 +314,7 @@ const char *XrdFrmAdmin::RelocHelp = "reloc lfn {cgroup[:path]}";
 
 int XrdFrmAdmin::Reloc()
 {
-   static XrdOucArgs Spec(&Say, "frm_admin: ", "", 0);
+   static XrdOucArgs Spec(&Say, "frm_admin: ", "", (const char *)0);
 
    static const char *Reqs[] = {"lfn", "target", 0};
 
@@ -349,7 +349,7 @@ int XrdFrmAdmin::Remove()
                                 "force",       1, "F",
                                 "notify",      1, "n",
                                 "recursive",   1, "r",
-                          0);
+                          (const char *)0);
 
    static const char *Reqs[] = {"lfn", 0};
 

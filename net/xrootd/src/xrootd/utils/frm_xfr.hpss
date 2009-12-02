@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# $Id: frm_xfr.hpss,v 1.5 2009/10/14 07:52:16 abh Exp $
+# $Id: frm_xfr.hpss,v 1.7 2009/11/20 04:12:42 abh Exp $
 
 # (C) 2009 by the Board of Trustees of the Leland Stanford, Jr., University
 #                          All Rights Reserved
@@ -50,6 +50,10 @@
 # -m exit with non-zero status if the file exists and has a non-zero length.
 
 # -n do not redirect standard error when invoking the copy function
+
+# -o the onwership information in the form of <usr>:<grp> where either one
+#    or both may be specified. The default comes from the data source.
+#    Ownership can only be maintained by root proceses or pftp logins.
 
 # -P The MSS port number to use (default is 2021).
 
@@ -106,7 +110,7 @@ use IPC::Open2;
 # Global variables:
 #
 ($CMD)     = "/$0" =~ m|^.*/([^.]*).*$|g;
-$isCPY     = $CMD eq 'hpsscp';
+$isCPY     = $CMD =~ m/^hpsscp/;
 $MsgPfx    = "$CMD: ";
 $ER_SFX    = '.fail';        # Suffix for fail file when error occurrs
 $OKFile    = 1;              # If file already present, all is good.
@@ -144,9 +148,11 @@ $XfrPswd = '';     # MSS user password
 $XfrKey  = '/var/adm/xrootd/pftp/keyfile';
 $XfrGet  = 'open %xfrhost %xfrport;user %xfruser %xfrpswd;binary;' .
            'setpblocksize 2097152;pget %xfrsfn %xfrtfn;quit;';
-$XfrPut1 = 'open %xfrhost %xfrport;user %xfruser %xfrpswd;binary';
-$XfrPut2 = ';setpblocksize 2097152;pput %xfrsfn %xfrtfn;quit;';
+$XfrPut1 = 'open %xfrhost %xfrport;user %xfruser %xfrpswd;delete %xfrtfn';
+$XfrPut2 = ';binary;setpblocksize 2097152;pput %xfrsfn %xfrtfn';
 
+$XfrGID  = '';     # The group ID (usually from source file)
+$XfrUID  = '';     # The user  ID (usually from source file)
 $XfrCOS  = -1;     # Class of Service
 $XfrApnd = '';     # Value of '-a'
 $XfrBase = '';     # Target prior to appending with XfrApnd
@@ -173,6 +179,7 @@ $XfrRC   = 0;      # The final return code
                          }
      elsif ($op eq '-m') {$OKFile  =  0;}
      elsif ($op eq '-n') {$XfrOut = ''}
+     elsif ($op eq '-o') {&GetOwners(&GetVal('ownership'));}
      elsif ($op eq '-P') {$XfrPort =  &GetVal('port', 'N', 1);}
      elsif ($op eq '-p') {$Mode =  &GetVal('mode');
                              if ($Mode eq 'r') {$Mode = oct('0440');}
@@ -275,7 +282,9 @@ $XfrRC   = 0;      # The final return code
   if (!$doGet)
      {@Svec = stat($XfrSrcFN);
       &CleanUp(&Emsg(ET("Unable to put $XfrSrcFN"), 0)) if $Svec[7] eq '';
-      &MakePath($nsMkd) if !($rc = TransPace(0)) && $nsMkd ne '';
+      $XfrUID = $Svec[4] if $XfrUID eq '';
+      $XfrGID = $Svec[5] if $XfrGID eq '';
+      &MakePath($nsMkd) if !($rc = TransPace(0,$Svec[7])) && $nsMkd ne '';
       &CleanUp($rc);
      }
 
@@ -293,7 +302,7 @@ $XfrRC   = 0;      # The final return code
 # At this point we need to bring the file into this cache. Issue the
 # appropriate command to do this and set the access mode if it succeeded.
 #
-  &CleanUp($rc) if ($rc = TransPace(1));
+  &CleanUp($rc) if ($rc = TransPace(1,-1));
   &Emsg(ET("Unable to set mode for '$XfrTrgFN'"), 1)
        if (defined($Mode) && !chmod($Mode, $XfrTrgFN));
 
@@ -366,7 +375,7 @@ sub Get_File {my($cmd, $resp, $GetTries);
     # Execute the command to get the file (as many times as wanted/needed)
     #
     $GetTries = 0;
-    do {return if &Transfer($cmd);
+    do {return 0 if &Transfer($cmd);
         $GetTries += &TransErr($GetTries+1);
        } while($GetTries < $XfrMaxTR);
     return $XfrRC;
@@ -376,7 +385,7 @@ sub Get_File {my($cmd, $resp, $GetTries);
 #*                              P u t _ F i l e                               *
 #******************************************************************************
  
-sub Put_File {my($cmd, $dir, $resp, $sfx, $PutTries);
+sub Put_File {my($Fsz) = @_; my($cmd, $dir, $resp, $sfx, $PutTries);
 
     # Establish command stream preamble
     #
@@ -399,14 +408,22 @@ sub Put_File {my($cmd, $dir, $resp, $sfx, $PutTries);
     #
     $cmd .= ";site setcos $XfrCos" if $XfrCOS >= 0;
 
-    # Construct the final command stream
+    # Construct the penultimate command stream
     #
     $cmd .= TransCmd($XfrPut2);
+
+    # Now add the uid/gid settings, as needed, followed by a quit.
+    #
+    if ($XfrUser eq 'root')
+       {$cmd .= ";site chuid $XfrUID $XfrTrgFN" if $XfrUID ne '';
+        $cmd .= ";site chgid $XfrGID $XfrTrgFN" if $XfrGID ne '';
+       }
+    $cmd .= ';quit';
 
     # Execute the command to get the file (as many times as wanted/needed)
     #
     $PutTries = 0;
-    do {return 0 if &Transfer($cmd, 1);
+    do {return 0 if &Transfer($cmd, 1, $Fsz);
         $PutTries += &TransErr($PutTries+1, 1);
        } while($PutTries < $XfrMaxTR);
     return $XfrRC;
@@ -523,8 +540,8 @@ return $XfrMaxTR+2;
 #*                              T r a n s f e r                               *
 #******************************************************************************
  
-sub Transfer {my($Cmds, $isWrite) = @_;
-              my($i, $n, $pid, @Resp, $aOK, $fsz, $xfr);
+sub Transfer {my($Cmds, $isWrite, $Fsz) = @_;
+              my($i, $n, $pid, @Resp);
               my($xdir) = ' bytes '.($isWrite ? 'sent ' : 'received ');
               local(*Reader, *Writer);
 
@@ -568,41 +585,48 @@ sub Transfer {my($Cmds, $isWrite) = @_;
   $XfrResp = join('',@Resp);
   $XfrSess .= $XfrResp.'==================================='."\n";
 
-# Verify that the transfer completed
+# If we ended with an error, bail out
 #
-  while($XfrRC == 0)
-     {$fsz = 0; $aOK = 0;
-      for $i (0 .. $#Resp)
-          {if (($xfr)=$Resp[$i] =~ m/226 Transfer Complete.\(moved = (\d+)\)/)
-              {$fsz += $xfr; $aOK = 1;
-               if (($n  = index( $Resp[$i+1], $xdir)) > 0)
-                  {$xfr = substr($Resp[$i+1], 0, $n); last;}
-              }
-          }
+  if ($XfrRC != 0)
+     {Logit("!!! Transfer ended with non-zero status ($XfrRC)."); return 0;}
 
-      # Make sure all the bytes were sent/received
-      #
-      if (!$aOK)
-         {Logit("!!! '226 Transfer Complete' msg not found.\n");
-          $XfrRC = 8;
-         }
-         elsif ($fsz != $xfr)
-               {Logit("!!! Transfer bytes do not match ($fsz != $xfr).");
-                $XfrRC = 8;
-               }
-      last;
-     }
+# Verify that the transfer fully completed. Note that the "transfer complete"
+# message comes in two flavors and may be repeated. We want the last instance
+# which cannot be neither on the last nor first lines of the response.
+#
+  $i = $#Resp; $XfrRC = 8;
+  while($i--)
+       {last if ($Resp[$i] =~ m/226 Transfer Complete\./)
+             || ($Resp[$i] =~ m/226 Transfer complete\./);
+       }
+
+# Make sure we found the transfer complete message
+#
+  if ($i < 0)
+     {Logit("!!! '226 Transfer complete' msg not found."); return 0;}
+
+# Make sure we have the number of bytes sent/received
+#
+  if (($n  = index( $Resp[$i+1], $xdir)) < 0)
+     {Logit("!!! '226 Transfer bytes' msg not found."); return 0;}
+  $XfrBytes = substr($Resp[$i+1], 0, $n);
+
+# For writes, make sure all the bytes were transferred
+#
+  if ($isWrite && $XfrBytes != $Fsz)
+     {Logit("Transfer bytes ($XfrBytes) != file bytes ($Fsz)."); return 0;}
 
 # All done
 #
-  return $XfrRC == 0;
+  $XfrRC = 0;
+  return 1;
 }
 
 #******************************************************************************
 #*                             T r a n s P a c e                              *
 #******************************************************************************
  
-sub TransPace {my($doGet) = @_; my($resp, $pid);
+sub TransPace {my($doGet, $Fsz) = @_; my($resp, $pid);
               local(*xfrRDR, *xfrWRT);
 
 
@@ -623,7 +647,7 @@ sub TransPace {my($doGet) = @_; my($resp, $pid);
               SayDebug("Xfer slot obtained in $xsT seconds.");}
          }
      }
-   $rc = ($doGet ? Get_File() : Put_File());
+   $rc = ($doGet ? Get_File($Fsz) : Put_File($Fsz));
 
    if ($okPace)
       {close(xfrRDR); close(xfrWRT); waitpid($pid,0);}
@@ -683,6 +707,22 @@ sub GetDir {my($item) = @_; my($v);
     &Emsg(ucfirst($item).' not specified.') if $v eq '';
     &Emsg(ET("Invalid $item, '$v'")) if !-d $v;
     return $v;
+}
+
+sub GetOwners {my($ug) = @_;
+     my($usr, $grp) = split(/:/, $ug, 2);
+     if ($usr ne '')
+        {if (IsNum($usr)) {$XfrUID = $usr;}
+            else {$XfrUID = getpwnam($usr);
+                  &Emsg("User '$usr' is not valid.") if !defined($XfrUID);
+                 }
+        }
+     if ($grp ne '')
+        {if (IsNum($grp)) {$XfrGID = $grp;}
+            else {$XfrGID = getgrnam($grp);
+                  &Emsg("Group '$grp' is not valid.") if !defined($XfrGID);
+                 }
+        }
 }
 
 sub GetPswd {my($fn) = @_;

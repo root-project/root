@@ -6,9 +6,10 @@
   
 include ../GNUmake.env
 
-MORELIBS = -L$(LIBDIR) -lXrdOuc  -lXrdSys -lXrdNet $(LIBKRB5)
+MORELIBS = -L$(LIBDIR) -lXrdSut -lXrdOuc  -lXrdSys -lXrdNet $(LIBKRB5)
 
-LIBDEPS = $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a
+LIBDEPS = $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a \
+          $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -29,6 +30,7 @@ TARGETS = $(LIBDIR)/libXrdSeckrb5.$(TYPESHLIB)
 vpath XrdOuc% ../XrdOuc
 vpath XrdSec% ../XrdSec
 vpath XrdSys% ../XrdSys
+vpath XrdSut% ../XrdSut
 
 #------------------------------------------------------------------------------#
 #                          I n i t i a l   R u l e s                           #

@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.32 2009/04/15 08:42:14 furano Exp $
-## Checked in by $Author: furano $
+## Version info: $Id: Makefile.am,v 1.33 2009/11/19 03:25:11 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 
 
@@ -73,6 +73,7 @@ libXrdClient_la_SOURCES = \
         XrdClientPSock.cc XrdClientPSock.hh \
 	XrdClientMStream.cc XrdClientMStream.hh \
         XrdClientReadV.cc XrdClientReadV.hh \
+        XrdClientReadAhead.cc XrdClientReadAhead.hh \
         XrdcpXtremeRead.cc XrdcpXtremeRead.hh
 
 libXrdClient_la_LIBADD = $(LIBSUNMATH) \

@@ -116,7 +116,7 @@ int XrdCmsClientMan::delayResp(XrdOucErrInfo &Resp)
 
 // Obtain the message ID
 //
-   if (!(msgid = Resp.getErrArg()))
+   if (!(msgid = Resp.getErrInfo()))
       {Say.Emsg("Manager", Host, "supplied invalid waitr msgid");
        Resp.setErrInfo(0, "redirector protocol error");
        syncResp.Post();

@@ -57,6 +57,7 @@ XrdClientEnv::XrdClientEnv() {
    PutInt(NAME_READAHEADSTRATEGY, DFLT_READAHEADSTRATEGY);
    PutInt(NAME_READTRIMBLKSZ, DFLT_READTRIMBLKSZ);
    PutInt(NAME_TRANSACTIONTIMEOUT, DFLT_TRANSACTIONTIMEOUT);
+   PutInt(NAME_REMUSEDCACHEBLKS, DFLT_REMUSEDCACHEBLKS);
 }
 
 //_____________________________________________________________________________

@@ -143,7 +143,11 @@ bool XrdCryptosslX509VerifyChain(XrdCryptoX509Chain *chain, int &errcode)
    }
 
    // Make sure all the certificates have been inserted
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   if (sk_X509_num(stk) != chain->Size() - 1)
+#else /* OPENSSL */
    if (sk_num(stk) != chain->Size() - 1)
+#endif /* OPENSSL */
       return 0;
 
    // Create a store ctx ...
@@ -412,7 +416,12 @@ int XrdCryptosslX509ParseFile(const char *fname,
                   // Get the public key
                   EVP_PKEY *evpp = X509_get_pubkey((X509 *)(cert->Opaque()));
                   if (evpp) {
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+                     // evpp gets reset by the other call on >=1.0.0; to be investigated
+                     if (PEM_read_bio_RSAPrivateKey(bkey,&(evpp->pkey.rsa),0,0)) {
+#else
                      if (PEM_read_bio_PrivateKey(bkey,&evpp,0,0)) {
+#endif
                         DEBUG("RSA key completed ");
                         // Test consistency
                         int rc = RSA_check_key(evpp->pkey.rsa);
@@ -566,14 +575,11 @@ int XrdCryptosslASN1toUTC(ASN1_TIME *tsn1)
    // Function to convert from ASN1 time format into UTC
    // since Epoch (Jan 1, 1970) 
    // Return -1 if something went wrong
-   static bool havetzcor = 0;
-   static int tzcor = 0;
    int etime = -1;
 
    //
    // Make sure there is something to convert
-   if (!tsn1)
-      return etime;
+   if (!tsn1) return etime;
 
    //
    // Parse the input string: here we basically cut&paste from GRIDSITE
@@ -605,23 +611,13 @@ int XrdCryptosslASN1toUTC(ASN1_TIME *tsn1)
    etime = mktime(&ltm);
    //
    // If GMT we need a correction because mktime use local time zone
-   if (!havetzcor) {
-      //
-      // We calculate it in pragmatic way only once
-      time_t now = time(0);
-      struct tm ltn, gtn;
-      if (!localtime_r(&now, &ltn))
-         return etime;
-      if (!gmtime_r(&now, &gtn))
-         return etime;
-      //
-      // Calculate correction
-      tzcor = ((ltn.tm_hour - gtn.tm_hour) +
-               (ltn.tm_mday - gtn.tm_mday) * 24) * 3600;
-      //
-      // We did it
-      havetzcor = 1;
-   }
+   time_t now = time(0);
+   struct tm ltn, gtn;
+   if (!localtime_r(&now, &ltn)) return etime;
+   if (!gmtime_r(&now, &gtn)) return etime;
+   //
+   // Calculate correction
+   int tzcor = difftime(mktime(&ltn), mktime(&gtn));
    //
    // Apply correction
    etime += tzcor;

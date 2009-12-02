@@ -384,7 +384,11 @@ const char *XrdCryptosslX509::IssuerHash()
       // Make sure we have a certificate
       if (cert) {
          char chash[15];
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+         sprintf(chash,"%08lx.0",X509_NAME_hash_old(cert->cert_info->issuer));
+#else
          sprintf(chash,"%08lx.0",X509_NAME_hash(cert->cert_info->issuer));
+#endif
          issuerhash = chash;
       } else {
          DEBUG("WARNING: no certificate available - cannot extract issuer hash");
@@ -407,7 +411,11 @@ const char *XrdCryptosslX509::SubjectHash()
       // Make sure we have a certificate
       if (cert) {
          char chash[15];
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+         sprintf(chash,"%08lx.0",X509_NAME_hash_old(cert->cert_info->subject));
+#else
          sprintf(chash,"%08lx.0",X509_NAME_hash(cert->cert_info->subject));
+#endif
          subjecthash = chash;
       } else {
          DEBUG("WARNING: no certificate available - cannot extract subject hash");

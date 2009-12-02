@@ -16,9 +16,9 @@ const char *XrdCnsMainCVSID = "$Id$";
 
    XrdCnsd [options] [[xroot://]<host[:port]>[/[/prefix]] . . .]
 
-   options: [-a <apath>] [-b <bpath>] [-c] [-d] [-e <epath>] [-i <tspec>]
+   options: [-a <apath>] [-b <bpath>] [-B <bpath>] [-c] [-d] [-e <epath>]
 
-            [-I <tspec>] [-l <lfile>] [-p <port>] [-q <lim>] [-R]
+            [-i <tspec>] [-I <tspec>] [-l <lfile>] [-p <port>] [-q <lim>] [-R]
 Where:
    -a     The admin path where the event log is placed and where named
           sockets are created. If not specified, the admin path comes from
@@ -31,6 +31,9 @@ Where:
           <host[:port]:> then backups are written to the specified host:port.
           If <port> is omitted the the specified or default -p value is used.
           Note that this backup can be used to create an inventory file.
+
+   -B     Same as -b *except* that only the inventory is maintained (i.e., no
+          composite name space is created).
 
    -c     Specified the config file name. By defaults this comes from the envar
           XRDCONFIGFN set by the underlying xrootd. Note that if -R is specified

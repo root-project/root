@@ -167,6 +167,14 @@ int XrdSutTimeString(int t, char *st, int opt = 0);
 int XrdSutExpand(XrdOucString &path);
 
 /******************************************************************************/
+/*  X r d S u t R e s o l v e                                                 */
+/*                                                                            */
+/*  Resolve templates <host>, <vo>, <group>, <user> (if any)                  */
+/******************************************************************************/
+int XrdSutResolve(XrdOucString &path,
+                  const char *ho, const char *vo, const char *gr, const char *us);
+
+/******************************************************************************/
 /*  X r d S u t H o m e                                                       */
 /*                                                                            */
 /*  Return the home directory                                                 */

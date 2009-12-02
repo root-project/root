@@ -97,11 +97,12 @@ XrdCnsLogClient::XrdCnsLogClient(XrdOucTList     *rP,
 
 // Establish the backup operation processing
 //
-   if (rP->val >= 0) {*arkURL = '\0'; arkFN = 0; arkOnly = 0;}
+   arkOnly = Config.Opts & XrdCnsConfig::optNoCns;
+   if (rP->val >= 0) {*arkURL = '\0'; arkFN = 0;}
       else {strcpy(arkURL, crtURL); arkPath = arkURL + strlen(crtURL);
             strcpy(arkPath,Config.bPath); strcat(arkPath, myName);
             arkFN  = arkPath + strlen(arkPath); *arkFN++ = '/';
-            arkOnly= (rP == Config.bDest);
+            if (!arkOnly) arkOnly= (rP == Config.bDest);
             MLog.Emsg("LogClient", "Server inventory at", arkURL);
            }
 }

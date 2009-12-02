@@ -64,6 +64,37 @@ struct XrdClientStatInfo {
     long modtime;
 };
 
+struct XrdClientCounters {
+   int CacheSize;
+
+   //  This does not take into account the 'suggestions'
+   // like async read or async readV
+   //  We count only for functions which return data, eventually
+   // taken from the cache
+   long long ReadBytes;
+   long long WrittenBytes;
+   long long WriteRequests;
+
+   long long ReadRequests;
+   long long ReadMisses;
+   long long ReadHits;
+   float     ReadMissRate;
+
+   long long ReadVRequests;     // How many readVs (sync) were requested
+   long long ReadVSubRequests;  // In how many sub-readVs they were split
+   long long ReadVSubChunks;    // How many subchunks in total
+   long long ReadVBytes;        // How many bytes were requested (sync)
+       
+   long long ReadVAsyncRequests;     // How many readVs (async) were requested
+   long long ReadVAsyncSubRequests;  // In how many sub-readVs they were split
+   long long ReadVAsyncSubChunks;    // How many subchunks in total
+   long long ReadVAsyncBytes;        // How many bytes were requested (async)
+
+   long long ReadAsyncRequests;
+   long long ReadAsyncBytes;
+};
+
+
 class XrdClient : public XrdClientAbs {
     friend void *FileOpenerThread(void*, XrdClientThread*);
     
@@ -123,8 +154,12 @@ private:
        return true;
     }
 
-   XrdClientReadAheadMgr       *fReadAheadMgr;
+    XrdClientReadAheadMgr       *fReadAheadMgr;
+
+    void                         PrintCounters();
 protected:
+
+    XrdClientCounters           fCounters;
 
     virtual bool                OpenFileWhenRedirected(char *newfhandle,
 						       bool &wasopen);
@@ -156,8 +191,8 @@ public:
     // Copy the whole file to the local filesystem. Not very efficient.
     bool                        Copy(const char *localpath);
 
-
-    bool                       GetCacheInfo(
+    // Returns low level information about the cache
+    bool                        GetCacheInfo(
 					    // The actual cache size
 					    int &size,
 					    
@@ -179,21 +214,12 @@ public:
 					    
 					    // ratio between bytes found / bytes submitted
 					    float &bytesusefulness
-					    ) {
-      if (!fConnModule) return false;
-      
-      if (!fConnModule->GetCacheInfo(size,
-				     bytessubmitted,
-				     byteshit,
-				     misscount,
-				     missrate,
-				     readreqcnt,
-				     bytesusefulness))
-	  return false;
+       );
 
-      return true;
-    }
 
+
+    // Returns client-level information about the activity performed up to now
+    bool                        GetCounters( XrdClientCounters *cnt );
 
     // Quickly tells if the file is open
     inline bool                 IsOpen() { return fOpenPars.opened; }
@@ -223,7 +249,7 @@ public:
 
     // Submit an asynchronous read request. Its result will only populate the cache
     //  (if any!!)
-    XReqErrorType               Read_Async(long long offset, int len);
+    XReqErrorType               Read_Async(long long offset, int len, bool updatecounters=true);
 
     // Get stat info about the file. Normally it tries to guess the file size variations
     // unless force==true

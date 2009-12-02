@@ -111,7 +111,7 @@
 #define DFLT_MAXCONCURRENTOPENS    100
 
 #define READV_MAXCHUNKS            512
-#define READV_MAXCHUNKSIZE         32767
+#define READV_MAXCHUNKSIZE         (1024*192)
 
 // SOCKS4 support
 #define NAME_SOCKS4HOST            (char *)"Socks4Server"

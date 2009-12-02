@@ -222,11 +222,13 @@ public:
     inline void     PrintPerfCounters() {
 	XrdSysMutexHelper m(fMutex);
 
-	cout << "Caching info: MissRate=" << fMissRate << " MissCount=" << 
-	    fMissCount << " ReadsCounter=" << fReadsCounter << endl;
-	cout << "Caching info: BytesUsefulness=" << fBytesUsefulness <<
-	    " BytesSubmitted=" << fBytesSubmitted << " BytesHit=" << 
-	    fBytesHit << endl;
+	cout << "Low level caching info:" << endl;
+        cout << " StallsRate=" << fMissRate << endl;
+        cout << " StallsCount=" << fMissCount << endl;
+        cout << " ReadsCounter=" << fReadsCounter << endl;
+	cout << " BytesUsefulness=" << fBytesUsefulness << endl;
+        cout << " BytesSubmitted=" << fBytesSubmitted << " BytesHit=" << 
+           fBytesHit << endl << endl;
     }
 
 

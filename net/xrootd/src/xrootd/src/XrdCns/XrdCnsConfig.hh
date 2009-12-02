@@ -41,6 +41,7 @@ int               qLim;        // Close count    for logfiles
 int               Opts;
 
 static const int  optRecr = 0x0001;
+static const int  optNoCns= 0x0002;
 
 int               Configure(int argc, char **argv, char *argt=0);
 

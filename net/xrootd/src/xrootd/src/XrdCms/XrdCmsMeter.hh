@@ -12,13 +12,10 @@
 
 //         $Id$
 
-#include "XrdOuc/XrdOucTList.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdOuc/XrdOucStream.hh"
 
-class XrdCmsMeterFS;
-  
 class XrdCmsMeter
 {
 public:
@@ -28,6 +25,8 @@ int   calcLoad(int pcpu, int pio, int pload, int pmem, int ppag);
 int   calcLoad(int xload,int pdsk);
 
 int   FreeSpace(int &tutil);
+
+void  Init();
 
 int   isOn() {return Running;}
 
@@ -45,8 +44,6 @@ void *RunFS();
 
 int   numFS() {return fs_nums;}
 
-void  setParms(XrdOucTList *tlp, int warnDups);
-
 unsigned int TotalSpace(unsigned int &minfree);
 
 enum  vType {manFS = 1, peerFS = 2};
@@ -60,7 +57,6 @@ void  setVirtUpdt() {cfsMutex.Lock(); VirtUpdt = 1; cfsMutex.UnLock();}
 
 private:
       void calcSpace();
-      int  isDup(struct stat &buf, XrdCmsMeterFS *baseFS);
 const char Scale(long long inval, long &outval);
       void SpaceMsg(int why);
       void UpdtSpace();
@@ -68,7 +64,6 @@ const char Scale(long long inval, long &outval);
 XrdOucStream  myMeter;
 XrdSysMutex   cfsMutex;
 XrdSysMutex   repMutex;
-XrdOucTList  *fs_list;
 long long     MinFree;  // Calculated only once
 long long     HWMFree;  // Calculated only once
 long long     dsk_lpn;  // Calculated only once
@@ -89,9 +84,7 @@ char          HWMStype; // Calculated only once
 char          Virtual;  // This is a virtual filesystem
 char          VirtUpdt; // Data changed for the virtul FS
 
-char          ubuff[64];
 time_t        rep_tod;
-time_t        rep_todfs;
 char         *monpgm;
 int           monint;
 pthread_t     montid;

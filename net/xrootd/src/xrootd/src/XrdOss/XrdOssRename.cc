@@ -189,6 +189,7 @@ int XrdOssSys::RenameLink(char *old_path, char *new_path)
            XrdOssPath::Trim2Base(oldlnk+lnklen-1);
            XrdOssCache::Adjust(oldlnk, statbuff.st_size);
           }
+       return 0;
       }
 
 // Convert old name to the new name
@@ -268,12 +269,6 @@ int XrdOssSys::RenameLink2(int Llen, char *oLnk, char *old_path,
 //
    if (unlink(old_path))
       OssEroute.Emsg("XrdOssRenameLink", errno, "unlink", old_path);
-
-// Replace old pfn link with new pfn link
-//
-   strcpy(oLnk+Llen, ".pfn");
-   if (rename(nLnk, oLnk))
-      OssEroute.Emsg("XrdOssRenameLink", errno , "replace", oLnk);
 
 // All done (well, as well as it needs to be at this point)
 //

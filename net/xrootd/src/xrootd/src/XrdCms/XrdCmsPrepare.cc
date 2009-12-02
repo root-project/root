@@ -17,7 +17,6 @@ const char *XrdCmsPrepareCVSID = "$Id$";
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <utime.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -25,6 +24,7 @@ const char *XrdCmsPrepareCVSID = "$Id$";
 #include "XrdCms/XrdCmsPrepare.hh"
 #include "XrdCms/XrdCmsTrace.hh"
 #include "XrdNet/XrdNetMsg.hh"
+#include "XrdOss/XrdOss.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
 #include "XrdOuc/XrdOucTList.hh"
@@ -42,11 +42,17 @@ XrdCmsPrepare   XrdCms::PrepQ;
 /*          G l o b a l s   &   E x t e r n a l   F u n c t i o n s           */
 /******************************************************************************/
 
+// This function is applied to all prepare queue entries. It checks if the file
+// in online and if so, returns a -1 to delete the entry from the queue. O/W
+// it returns a zero which keeps the entry in the queue. The key is the LFN.
+//
 int XrdCmsScrubScan(const char *key, char *cip, void *xargp)
 {
    struct stat buf;
-   if (stat(key, &buf)) return 0;
-   return -1;
+
+// Use oss interface to determine whether the file exists or not
+//
+   return (Config.ossFS->Stat(key, &buf, XRDOSS_resonly) ? 0 : -1);
 }
 
 /******************************************************************************/
@@ -339,37 +345,17 @@ int XrdCmsPrepare::getID(const char *Tid, char *buff, int bsz)
   
 int XrdCmsPrepare::isOnline(char *path)
 {
+   static const int Sopts = XRDOSS_resonly | XRDOSS_updtatm;
    struct stat buf;
-   struct utimbuf times;
-   char *lclpath, lclbuff[XrdCmsMAX_PATH_LEN+1];
 
-// Generate the true local path
+// Issue the stat() via oss plugin. If it indicates the file is not there is
+// still might be logically here because it's in a staging queue.
 //
-   lclpath = path;
-   if (Config.lcl_N2N)
-      {if (Config.lcl_N2N->lfn2pfn(lclpath,lclbuff,sizeof(lclbuff))) return 0;
-          else lclpath = lclbuff;
-      }
-
-// Do a stat
-//
-   if (stat(lclpath, &buf))
+   if (Config.ossFS->Stat(path, &buf, Sopts))
       {if (Config.DiskSS && Exists(path)) return -1;
           else return 0;
       }
-
-// Make sure we are doing a stat on a file
-//
-   if ((buf.st_mode & S_IFMT) == S_IFREG)
-      {times.actime = time(0);
-       times.modtime = buf.st_mtime;
-       utime(lclpath, &times);
-       return 1;
-      }
-
-// Determine what to return
-//
-   return 0;
+   return 1;
 }
 
 /******************************************************************************/

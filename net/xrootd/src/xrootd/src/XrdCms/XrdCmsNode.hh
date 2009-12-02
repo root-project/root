@@ -25,6 +25,7 @@ class XrdCmsDrop;
 class XrdCmsPrepArgs;
 class XrdCmsRRData;
 class XrdCmsSelected;
+class XrdOucProg;
 
 class XrdCmsNode
 {
@@ -128,6 +129,11 @@ inline short getSlot() {return RSlot;}
             ~XrdCmsNode();
 
 private:
+static const int fsL2PFail1 = 999991;
+static const int fsL2PFail2 = 999992;
+
+       int   fsExec(XrdOucProg *Prog, char *Arg1, char *Arg2=0);
+const  char *fsFail(const char *Who, const char *What, const char *Path, int rc);
        int   getMode(const char *theMode, mode_t &Mode);
        int   getSize(const char *theSize, long long &Size);
 static int   isOnline(char *path, int upt=1);
