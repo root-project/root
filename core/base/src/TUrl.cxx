@@ -83,6 +83,8 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
    // Port #1093 has been assigned by IANA (www.iana.org) to proofd.
    // Port #1094 has been assigned by IANA (www.iana.org) to rootd.
 
+   fOptionsMap = 0;
+
    if (!url || !strlen(url)) {
       fPort = -1;
       return;
@@ -98,7 +100,6 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
    fFile       = "";
    fAnchor     = "";
    fOptions    = "";
-   fOptionsMap = 0;
 
    // if url starts with a / consider it as a file url
    if (url[0] == '/')
@@ -313,17 +314,18 @@ TUrl::TUrl(const TUrl &url) : TObject(url)
 {
    // TUrl copt ctor.
 
-   fUrl      = url.fUrl;
-   fProtocol = url.fProtocol;
-   fUser     = url.fUser;
-   fPasswd   = url.fPasswd;
-   fHost     = url.fHost;
-   fFile     = url.fFile;
-   fAnchor   = url.fAnchor;
-   fOptions  = url.fOptions;
-   fPort     = url.fPort;
-   fFileOA   = url.fFileOA;
-   fHostFQ   = url.fHostFQ;
+   fUrl        = url.fUrl;
+   fProtocol   = url.fProtocol;
+   fUser       = url.fUser;
+   fPasswd     = url.fPasswd;
+   fHost       = url.fHost;
+   fFile       = url.fFile;
+   fAnchor     = url.fAnchor;
+   fOptions    = url.fOptions;
+   fPort       = url.fPort;
+   fFileOA     = url.fFileOA;
+   fHostFQ     = url.fHostFQ;
+   fOptionsMap = 0;
 }
 
 //______________________________________________________________________________
@@ -333,17 +335,18 @@ TUrl &TUrl::operator=(const TUrl &rhs)
 
    if (this != &rhs) {
       TObject::operator=(rhs);
-      fUrl      = rhs.fUrl;
-      fProtocol = rhs.fProtocol;
-      fUser     = rhs.fUser;
-      fPasswd   = rhs.fPasswd;
-      fHost     = rhs.fHost;
-      fFile     = rhs.fFile;
-      fAnchor   = rhs.fAnchor;
-      fOptions  = rhs.fOptions;
-      fPort     = rhs.fPort;
-      fFileOA   = rhs.fFileOA;
-      fHostFQ   = rhs.fHostFQ;
+      fUrl        = rhs.fUrl;
+      fProtocol   = rhs.fProtocol;
+      fUser       = rhs.fUser;
+      fPasswd     = rhs.fPasswd;
+      fHost       = rhs.fHost;
+      fFile       = rhs.fFile;
+      fAnchor     = rhs.fAnchor;
+      fOptions    = rhs.fOptions;
+      fPort       = rhs.fPort;
+      fFileOA     = rhs.fFileOA;
+      fHostFQ     = rhs.fHostFQ;
+      fOptionsMap = 0;
    }
    return *this;
 }
