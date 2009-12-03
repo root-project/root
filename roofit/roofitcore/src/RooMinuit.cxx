@@ -571,7 +571,12 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
   // information in RooAbsReal function parameters
   
   Int_t oldPrint = setPrintLevel(-1) ;
-  Int_t oldWarn = setWarnLevel(-1) ;
+  Bool_t warnChanged(kFALSE) ;
+  Int_t oldWarn ;
+  if (_warnLevel>=0) {
+    oldWarn = setWarnLevel(-1) ;
+    warnChanged=kTRUE ;
+  }
   Bool_t constValChange(kFALSE) ;
   Bool_t constStatChange(kFALSE) ;
 
@@ -758,7 +763,9 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
 
 
-  oldWarn = setWarnLevel(oldWarn) ;
+  if (warnChanged) {
+    oldWarn = setWarnLevel(oldWarn) ;
+  }
   oldPrint = setPrintLevel(oldPrint) ;
 
   if (_optConst) {
