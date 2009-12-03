@@ -14,8 +14,27 @@
 // THDFSFile                                                            //
 //                                                                      //
 // A THDFSFile is like a normal TFile except that it reads and writes   //
-// its data via the HDFS protocols.  For more information, see          //
+// its data via the HDFS protocols.  For more information on HDFS, see  //
 // http://hadoop.apache.org/hdfs/.                                      //
+// This implementation interfaces with libhdfs, which is a JNI-based    //
+// library (i.e., it will start a Java JVM internally the first time    //
+// it is called).  At a minimum, you will need your environment's       //
+// $CLASSPATH variable set up properly to use.  Here's an example of    //
+// one way to properly set your classpath, assuming you use the OSG     //
+// distribution of Hadoop:                                              //
+//    $ source $HADOOP_CONF_DIR/hadoop-env.sh                           //
+//    $ export CLASSPATH=$HADOOP_CLASSPATH                              //
+// Additionally, you will need a valid libjvm in your $LD_LIBRARY_PATH  //
+// This is usually found in either:                                     //
+//    $JAVA_HOME/jre/lib/i386/server                                    //
+// or                                                                   //
+//    $JAVA_HOME/jre/lib/amd64/server                                   //
+// This file can only be used if hdfs support is compiled into ROOT.    //
+//                                                                      //
+// The HDFS URLs should be of the form:                                 //
+//    hdfs:///path/to/file/in/HDFS.root                                 //
+// Any host or port information will be ignored; this is taken from the //
+// node's HDFS configuration files.                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -30,8 +49,8 @@
 #include "hdfs.h"
 //#include "hdfsJniHelper.h"
 
-static const char* const R__HDFS_PREFIX = "hdfs://";
-static const size_t R__HDFS_PREFIX_LEN = 7;
+// For now, we don't allow any write/fs modification operations.
+static const Bool_t R__HDFS_ALLOW_CHANGES = kFALSE;
 
 // The following snippet is used for developer-level debugging
 // Contributed by Pete Wyckoff of the HDFS project
@@ -48,7 +67,7 @@ ClassImp(THDFSFile)
 //______________________________________________________________________________
 THDFSFile::THDFSFile(const char *path, Option_t *option,
                      const char *ftitle, Int_t compress):
-   TFile(path, "NET", ftitle, compress)
+   TFile(path, "WEB", ftitle, compress)
 {
    // Usual Constructor.  See the TFile constructor for details.
 
@@ -134,35 +153,10 @@ THDFSFile::~THDFSFile()
       free(fPath);
 
    // We assume that the file is closed in SysClose
-/*
-   if (0 != fHdfsFH && 0 != fFS) {
-      if (hdfsCloseFile(fFS, (hdfsFile)fHdfsFH) != 0) {
-          SysError("THDFSFile", "Error closing file %s", fPath);
-      }
-   }
-*/
    // Explicitly release reference to HDFS filesystem object.
    // Turned off now due to compilation issues.
-/*
-   if (0 != fFS) {
-      JNIEnv* env = getJNIEnv();
-      if (env == 0) {
-          SysError("THDFSFile", "Internal error; cannot get JNI env");
-      } else {
-         env->DeleteGlobalRef((jobject)fFS);
-      }
-   }
-*/
-}
-
-//______________________________________________________________________________
-Bool_t THDFSFile::WriteBuffer(const char *, Int_t)
-{
-   // Write specified byte range to remote file via HDFS
-   // We do not support writes, so an error is always returned.
-
-   SysError("THDFSFile", "Writes are not supported by THDFSFile");
-   return kTRUE;
+   // The very awkward way of releasing HDFS FS objects (by accessing JNI
+   // internals) is going away in the next libhdfs version.
 }
 
 //______________________________________________________________________________
@@ -183,7 +177,7 @@ Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
 //______________________________________________________________________________
 Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
 {
-   // Seek to a specified position in the file.  See TFile::SysSeek.
+   // Seek to a specified position in the file.  See TFile::SysSeek().
    // Note that THDFSFile does not support seeks when the file is open for write.
 
    TRACE("SEEK")
@@ -219,11 +213,18 @@ Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
 {
    // Open a file in HDFS.
 
-   Long64_t path_len = strlen(pathname + R__HDFS_PREFIX_LEN);
-   fPath = (char*)malloc((path_len+1)*sizeof(char));
-   strcpy(fPath, pathname + R__HDFS_PREFIX_LEN);
-   if ((fHdfsFH = hdfsOpenFile(fFS, pathname + R__HDFS_PREFIX_LEN, flags, 0, 0, 0)) == 0) {
-      SysError("THDFSFile", "Unable to open file %s in HDFS", pathname + R__HDFS_PREFIX_LEN);
+   // This is given to us as a URL (hdfs://hadoop-name:9000//foo or
+   // hdfs:///foo); convert this to a file name.
+   TUrl url(pathname);
+   const char * file = url.GetFile();
+   size_t path_size = strlen(file);
+   fPath = (char *)malloc(path_size*sizeof(char));
+   if (fPath == 0) {
+      SysError("THDFSFile", "Unable to allocate memory for path.");
+   }
+   strcpy(fPath, file);
+   if ((fHdfsFH = hdfsOpenFile(fFS, fPath, flags, 0, 0, 0)) == 0) {
+      SysError("THDFSFile", "Unable to open file %s in HDFS", pathname);
       return -1;
    }
    return 1;
@@ -270,7 +271,6 @@ Int_t THDFSFile::SysStat(Int_t, Long_t* id, Long64_t* size, Long_t* flags, Long_
       return 1;
    }
 
-
    return 0;
 }
 
@@ -289,4 +289,217 @@ void THDFSFile::ResetErrno() const
    // ResetErrno; simply calls TSystem::ResetErrno().
 
    TSystem::ResetErrno();
+}
+
+
+ClassImp(THDFSSystem)
+
+//______________________________________________________________________________
+THDFSSystem::THDFSSystem() : TSystem("-hdfs", "HDFS Helper System")
+{
+
+   SetName("hdfs");
+
+   Bool_t has_authn = kTRUE;
+
+   if (has_authn) {
+      UserGroup_t *ugi = gSystem->GetUserInfo(0);
+      const char *user = (ugi->fUser).Data();
+      const char * groups[1] = {(ugi->fGroup.Data())};
+      fFH = hdfsConnectAsUser("default", 0, user, groups, 1);
+      delete ugi;
+   } else {
+      fFH = hdfsConnect("default", 0);
+   }
+
+   if (fFH == 0) {
+      SysError("THDFSSystem", "HDFS client cannot open the filesystem");
+      goto zombie;
+   }
+
+   fDirp = 0;
+
+   return;
+
+zombie:
+   // Error in opening file; make this a zombie
+   MakeZombie();
+   gDirectory = gROOT;
+
+}
+
+//______________________________________________________________________________
+Int_t THDFSSystem::MakeDirectory(const char * path)
+{
+   // Make a directory.
+   if (fFH != 0) {
+      Error("MakeDirectory", "No filesystem handle (should never happen)");
+      return -1;
+   }
+
+   if (R__HDFS_ALLOW_CHANGES == kTRUE) {
+      return hdfsCreateDirectory(fFH, path);
+   } else {
+      return -1;
+   }
+
+}
+
+//______________________________________________________________________________
+void *THDFSSystem::OpenDirectory(const char * path)
+{
+   // Open a directory via hdfs. Returns an opaque pointer to a dir
+   // structure. Returns 0 in case of error.
+
+   if (fFH == 0) {
+       Error("OpenDirectory", "No filesystem handle (should never happen)");
+       return 0;
+   }
+
+   fDirp = 0;
+/*
+   if (fDirp) {
+      Error("OpenDirectory", "invalid directory pointer (should never happen)");
+      fDirp = 0;
+   }
+*/
+
+   hdfsFileInfo * dir = 0;
+   if ((dir = hdfsGetPathInfo(fFH, path)) == 0) {
+      return 0;
+   }
+   if (dir->mKind != kObjectKindDirectory) {
+      return 0;
+   }
+
+   fDirp = (void *)hdfsListDirectory(fFH, path, &fDirEntries);
+   fDirCtr = 0;
+
+   fUrlp = new TUrl[fDirEntries];
+
+   return fDirp;
+}
+
+//______________________________________________________________________________
+void THDFSSystem::FreeDirectory(void *dirp)
+{
+   // Free directory via httpd.
+
+   if (fFH == 0) {
+      Error("FreeDirectory", "No filesystem handle (should never happen)");
+      return;
+   }
+   if (dirp != fDirp) {
+      Error("FreeDirectory", "invalid directory pointer (should never happen)");
+      return;
+   }
+   if (fUrlp != 0) {
+      delete fUrlp;
+   }
+
+   hdfsFreeFileInfo((hdfsFileInfo *)fDirp, fDirEntries);
+   fDirp=0;
+}
+
+//______________________________________________________________________________
+const char *THDFSSystem::GetDirEntry(void *dirp)
+{
+   // Get directory entry via httpd. Returns 0 in case no more entries.
+
+   if (fFH == 0) {
+      Error("GetDirEntry", "No filesystem handle (should never happen)");
+      return 0;
+   }
+   if (dirp != fDirp) {
+      Error("GetDirEntry", "invalid directory pointer (should never happen)");
+      return 0;
+   }
+   if (dirp == 0) {
+      Error("GetDirEntry", "Passed an invalid directory pointer.");
+      return 0;
+   }
+
+   if (fDirCtr == fDirEntries-1) {
+      return 0;
+   }
+
+   hdfsFileInfo *fileInfo = ((hdfsFileInfo *)dirp) + fDirCtr;
+   fUrlp[fDirCtr].SetUrl(fileInfo->mName);
+   const char * result = fUrlp[fDirCtr].GetFile();
+   TUrl tempUrl;
+   tempUrl.SetUrl("hdfs:///");
+   tempUrl.SetFile(result);
+   fUrlp[fDirCtr].SetUrl(tempUrl.GetUrl());
+   result = fUrlp[fDirCtr].GetUrl();
+   fDirCtr++;
+
+   return result;
+}
+
+//______________________________________________________________________________
+Int_t THDFSSystem::GetPathInfo(const char *path, FileStat_t &buf)
+{
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
+
+   if (fFH == 0) {
+      Error("GetPathInfo", "No filesystem handle (should never happen)");
+      return 1;
+   }
+   hdfsFileInfo *fileInfo = hdfsGetPathInfo(fFH, path);
+
+   if (fileInfo == 0)
+      return 1;
+
+   buf.fDev    = 0;
+   buf.fIno    = 0;
+   buf.fMode   = fileInfo->mPermissions;
+   buf.fUid    = gSystem->GetUid(fileInfo->mOwner);
+   buf.fGid    = gSystem->GetGid(fileInfo->mGroup);
+   buf.fSize   = fileInfo->mSize;
+   buf.fMtime  = fileInfo->mLastAccess;
+   buf.fIsLink = kFALSE;
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t THDFSSystem::AccessPathName(const char *path, EAccessMode mode)
+{
+   // Returns FALSE if one can access a file using the specified access mode.
+   // Mode is the same as for the Unix access(2) function.
+   // Attention, bizarre convention of return value!!
+
+   if (mode & kExecutePermission || mode & kWritePermission)
+       return kTRUE;
+
+   if (fFH == 0) {
+      Error("AccessPathName", "No filesystem handle (should never happen)");
+      return kTRUE;
+   }
+
+   if (hdfsExists(fFH, path) == 0)
+      return kFALSE;
+   else
+      return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t THDFSSystem::Unlink(const char * path)
+{
+   // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
+   // -1 in case of failure.
+
+   if (fFH == 0) {
+      Error("Unlink", "No filesystem handle (should never happen)");
+      return kTRUE;
+   }
+
+   if (R__HDFS_ALLOW_CHANGES == kTRUE) {
+      return hdfsDelete(fFH, path);
+   } else {
+      return -1;
+   }
 }

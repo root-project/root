@@ -3020,7 +3020,7 @@ if test ! "x$enable_hdfs" = "xno" ; then
            linux)
                 hdfslib="$hdfslib"
                 for i in "" -ladns ; do
-                    echo 'extern hdfsConnect(const char *, uint16_t); int main() { hdfsConnect("default", 0); return 0; }' > conftest.c
+                    echo 'extern hdfsConnect(const char *, unsigned short); int main() { hdfsConnect("default", 0); return 0; }' > conftest.c
                     logmsg " Checking if we can link against $hdfslib"
                     logmsg " gcc conftest.c $hdfslibdir $hdfslib $i -o conftest"
                     gcc conftest.c $hdfslibdir $hdfslib $i -o conftest >> $logfile 2>&1
@@ -3037,10 +3037,11 @@ if test ! "x$enable_hdfs" = "xno" ; then
 
                 jvmlib="$jvmlib"
                 for i in "" -ladns ; do
-                    echo '#include "jni.h"; extern JNI_CreateJavaVM(JavaVM*, JNIEnv*, JavaVMInitArgs*); int main() { JNI_CreateJavaVM(NULL, NULL, NULL); return 0; }' > conftest.c
+                    echo '#include "jni.h"' > conftest.c
+                    echo 'int main() { JNI_CreateJavaVM(NULL, NULL, NULL); return 0; }' >> conftest.c
                     logmsg " Checking if we can link against $jvmlib"
-                    logmsg " gcc conftest.c $jniincdir $jvmlibdir $jvmlib $i -o conftest"
-                    gcc conftest.c $jvmlibdir $jvmlib $i -o conftest >> $logfile 2>&1
+                    logmsg " gcc conftest.c -I$jniincdir -I$jniincdir/linux $jvmlibdir $jvmlib $i -o conftest"
+                    gcc conftest.c -I$jniincdir -I$jniincdir/linux $jvmlibdir $jvmlib $i -o conftest >> $logfile 2>&1
                     if test $? -eq 0 ; then
                         jvmlib="$jvmlib $i" ;
                         break ;
@@ -3053,6 +3054,7 @@ if test ! "x$enable_hdfs" = "xno" ; then
                 rm -f conftest.c conftest
                 ;;
         esac
+        echo "HDFS disabled due to failed compile and link test!"
     fi
 fi
 check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
@@ -3729,23 +3731,23 @@ if test "x$enable_globus" = "xyes"; then
    globuslibdir=""
    extra_inc=
 
-   globuslibs="libglobus_gss_assist${flavour_suf} 
+   globuslibs="libglobus_gss_assist${flavour_suf}
               libglobus_gssapi_gsi${flavour_suf}
-              libglobus_gsi_credential${flavour_suf} 
+              libglobus_gsi_credential${flavour_suf}
               libglobus_common${flavour_suf}
-              libglobus_gsi_callback${flavour_suf} 
-              libglobus_proxy_ssl${flavour_suf}
-              libglobus_gsi_sysconfig${flavour_suf} 
-              libglobus_openssl_error${flavour_suf}
-              libglobus_gssapi_gsi${flavour_suf} 
               libglobus_gsi_callback${flavour_suf}
-              libglobus_oldgaa${flavour_suf} 
+              libglobus_proxy_ssl${flavour_suf}
+              libglobus_gsi_sysconfig${flavour_suf}
+              libglobus_openssl_error${flavour_suf}
+              libglobus_gssapi_gsi${flavour_suf}
+              libglobus_gsi_callback${flavour_suf}
+              libglobus_oldgaa${flavour_suf}
               libglobus_gsi_cert_utils${flavour_suf}
-              libglobus_openssl${flavour_suf}  
+              libglobus_openssl${flavour_suf}
               libglobus_gsi_proxy_core${flavour_suf}
-              libglobus_callout${flavour_suf}  
+              libglobus_callout${flavour_suf}
               libltdl${flavour_suf}
-              libssl${flavour_suf} 
+              libssl${flavour_suf}
               libcrypto${flavour_suf}"
 
    for i in $globuslibs ; do
@@ -3768,7 +3770,7 @@ if test "x$enable_globus" = "xyes"; then
 
    if test ! "x$extra_inc" = "x" ; then
       message "Checking whether $extra_inc should be added to header path"
-      if test -d $extra_inc ; then 
+      if test -d $extra_inc ; then
          globusincdir="$globusincdir $extra_inc"
          result "yes"
       else
@@ -3794,7 +3796,7 @@ if test "x$enable_globus" = "xyes"; then
    initpath=""
    if test -s $globusdir/bin/grid-proxy-init ; then
       initpath="$globusdir/bin"
-   elif which grid-proxy-init > /dev/null 2>&1 ; then 
+   elif which grid-proxy-init > /dev/null 2>&1 ; then
       initpath=`which grid-proxy-init`
       initpath=`dirname $initpath`
    fi
@@ -3868,7 +3870,7 @@ if test "x$enable_globus" = "xyes"; then
          test ! "x$versionminor" = "x5" &&
          test ! "x$versionminor" = "x7" &&
          test ! "x$versionminor" = "x8" &&
-         test ! "x$versionminor" = "x9" ) ; then 
+         test ! "x$versionminor" = "x9" ) ; then
          patchneeded="no"
          result "Checking for need of globus patch ... no"
       else

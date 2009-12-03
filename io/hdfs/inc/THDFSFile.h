@@ -26,6 +26,10 @@
 #include "TFile.h"
 #endif
 
+#ifndef ROOT_TSystem
+#include "TSystem.h"
+#endif
+
 class THDFSFile : public TFile {
 
 private:
@@ -47,11 +51,35 @@ public:
              const char *ftitle="", Int_t compress=1);
    virtual ~THDFSFile();
 
-   Bool_t  WriteBuffer(const char *buf, Int_t len);
-
    void ResetErrno() const;
 
    ClassDef(THDFSFile, 0) //A ROOT file that reads/writes via HDFS
+};
+
+
+
+class THDFSSystem : public TSystem {
+
+private:
+   void* fFH;           // HDFS filesystem handle.
+   void* fDirp;         // Pointer to the array of file information.
+   TUrl* fUrlp;         // Pointer to the array of directory content URLs.
+   int   fDirEntries;   // The number of entries in the fDirp array.
+   int   fDirCtr;       // The current position in the fDirp array.
+
+public:
+    THDFSSystem();
+    virtual ~THDFSSystem() { }
+
+    Int_t       MakeDirectory(const char *name);
+    void       *OpenDirectory(const char *name);
+    void        FreeDirectory(void *dirp);
+    const char *GetDirEntry(void *dirp);
+    Int_t       GetPathInfo(const char *path, FileStat_t &buf);
+    Bool_t      AccessPathName(const char *path, EAccessMode mode);
+    Int_t       Unlink(const char *path);
+
+    ClassDef(THDFSSystem,0)   // Directory handler for HDFS (THDFSFile)
 };
 
 #endif
