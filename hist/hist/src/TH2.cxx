@@ -2641,7 +2641,7 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -2915,7 +2915,7 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -3189,7 +3189,7 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -3429,7 +3429,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -3712,7 +3712,7 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
