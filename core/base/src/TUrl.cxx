@@ -27,6 +27,7 @@
 #include "TObjString.h"
 #include "TEnv.h"
 #include "TSystem.h"
+#include "TMap.h"
 
 TObjArray *TUrl::fgSpecialProtocols = 0;
 THashList *TUrl::fgHostFQDNs = 0;
@@ -56,6 +57,14 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
 }
 
 //______________________________________________________________________________
+TUrl::~TUrl()
+{
+   // Cleanup.
+
+   delete fOptionsMap;
+}
+
+//______________________________________________________________________________
 void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
 {
    // Parse url character string and split in its different subcomponents.
@@ -80,15 +89,16 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
    }
 
    // Set defaults
-   fUrl       = "";
-   fProtocol  = "http";
-   fUser      = "";
-   fPasswd    = "";
-   fHost      = "";
-   fPort      = 80;
-   fFile      = "";
-   fAnchor    = "";
-   fOptions   = "";
+   fUrl        = "";
+   fProtocol   = "http";
+   fUser       = "";
+   fPasswd     = "";
+   fHost       = "";
+   fPort       = 80;
+   fFile       = "";
+   fAnchor     = "";
+   fOptions    = "";
+   fOptionsMap = 0;
 
    // if url starts with a / consider it as a file url
    if (url[0] == '/')
@@ -547,4 +557,78 @@ TObjArray *TUrl::GetSpecialProtocols()
       delete [] p;
    }
    return fgSpecialProtocols;
+}
+
+
+//______________________________________________________________________________
+void TUrl::ParseOptions() const
+{
+   // Parse URL options into a key/value map.
+
+   if (fOptionsMap) return;
+
+   TString urloptions = GetOptions();
+   TObjArray *objOptions = urloptions.Tokenize("&");
+   for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
+      TString loption = ((TObjString *) objOptions->At(n))->GetName();
+      TObjArray *objTags = loption.Tokenize("=");
+         if (objTags->GetEntries() == 2) {
+         TString key = ((TObjString *) objTags->At(0))->GetName();
+         TString value = ((TObjString *) objTags->At(1))->GetName();
+         if (!fOptionsMap) {
+            fOptionsMap = new TMap;
+            fOptionsMap->SetOwnerKeyValue();
+         }
+         fOptionsMap->Add(new TObjString(key), new TObjString(value));
+      }
+      delete objTags;
+   }
+   delete objOptions;
+}
+
+
+//______________________________________________________________________________
+const char *TUrl::GetValueFromOptions(const char *key) const
+{
+   // Return a value for a given key from the URL options.
+   // Returns 0 in case key is not found.
+
+   if (!key) return 0;
+   ParseOptions();
+   TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : 0;
+   return (option ? ((TObjString*)fOptionsMap->GetValue(key))->GetName(): 0);
+}
+
+//______________________________________________________________________________
+Int_t TUrl::GetIntValueFromOptions(const char *key) const
+{
+   // Return a value for a given key from the URL options as an Int_t,
+   // a missing key returns -1.
+
+   if (!key) return -1;
+   ParseOptions();
+   TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : 0;
+   return (option ? (atoi(((TObjString*)fOptionsMap->GetValue(key))->GetName())) : -1);
+}
+
+//______________________________________________________________________________
+void TUrl::CleanRelativePath()
+{
+   // Recompute the path removing all relative directory jumps via '..'.
+
+   Ssiz_t slash = 0;
+   while ( (slash = fFile.Index("/..") ) != kNPOS) {
+      // find backwards the next '/'
+      Bool_t found = kFALSE;
+      for (int l = slash-1; l >=0; l--) {
+         if (fFile[l] == '/') {
+            // found previous '/'
+            fFile.Remove(l, slash+3-l);
+            found = kTRUE;
+            break;
+         }
+      }
+      if (!found)
+        break;
+   }
 }

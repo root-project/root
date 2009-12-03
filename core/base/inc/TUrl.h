@@ -30,8 +30,13 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TMap
+#include "TMap.h"
+#endif
+
 
 class THashList;
+class TMap;
 
 class TUrl : public TObject {
 
@@ -47,6 +52,7 @@ private:
    mutable TString fFileOA; //!file with option and anchor
    mutable TString fHostFQ; //!fully qualified host name
    Int_t   fPort;           // port through which to contact remote server
+   mutable TMap *fOptionsMap; //!map containing options key/value pairs
 
    static TObjArray  *fgSpecialProtocols;  // list of special protocols
    static THashList  *fgHostFQDNs;         // list of resolved host FQDNs
@@ -59,7 +65,7 @@ public:
    TUrl(const char *url, Bool_t defaultIsFile = kFALSE);
    TUrl(const TUrl &url);
    TUrl &operator=(const TUrl &rhs);
-   virtual ~TUrl() { }
+   virtual ~TUrl();
 
    const char *GetUrl(Bool_t withDeflt = kFALSE);
    const char *GetProtocol() const { return fProtocol; }
@@ -70,6 +76,10 @@ public:
    const char *GetFile() const { return fFile; }
    const char *GetAnchor() const { return fAnchor; }
    const char *GetOptions() const { return fOptions; }
+   const char *GetValueFromOptions(const char *key) const;
+   Int_t       GetIntValueFromOptions(const char *key) const;
+   void        ParseOptions() const;
+   void        CleanRelativePath();
    const char *GetFileAndOptions() const;
    Int_t       GetPort() const { return fPort; }
    Bool_t      IsValid() const { return fPort == -1 ? kFALSE : kTRUE; }
