@@ -3308,6 +3308,7 @@ if test ! "x$enable_python" = "xno" ; then
        $PYTHONDIR/include/python $pythonsysincdir
     pythoninc=$found_hdr
     pythonincdir=$found_dir
+    pysuffix=""
     if test "x$platform" = "xwin32"; then
        if test ! "x$mypython" = "x" && test -x "$mypython" ; then
           pythonvers=`python -c 'import sys; print sys.version[:3].replace(".","")' | tr -d '\r'`
@@ -3315,10 +3316,13 @@ if test ! "x$enable_python" = "xno" ; then
              pythonincdir=`cygpath -m $pythonincdir`
           fi
        fi
+       if test "x$enable_winrtdebug" = "xyes"; then
+          pysuffix="_d"
+       fi
     fi
 
-    check_library "python${pythonvers} libpython${pythonvers} \
-                   libpython python Python" \
+    check_library "python${pythonvers}${pysuffix} libpython${pythonvers}${pysuffix} \
+                   libpython${pysuffix} python${pysuffix} Python${pysuffix}" \
         "$enable_shared" "$pythonlibdir" $PYTHONDIR/libs $PYTHONDIR/lib \
         $PYTHONDIR $pythonsyslibdir $pythonsyslibdir/config \
         $pythonsyslibdir2
@@ -3327,6 +3331,12 @@ if test ! "x$enable_python" = "xno" ; then
 
     if test "x$pythonincdir" = "x" || test "x$pythonlib" = "x"; then
         enable_python="no"
+        if test "x$platform" = "xwin32" && test "x$enable_winrtdebug" = "xyes" && \
+           test "x$pythonlib" = "x" && test ! "x$pythonincdir" = "x"; then
+               echo "INFO: Debug version of Python (python${pythonvers}${pysuffix}.lib) " \
+                    "not found! Disabling Python support. If you need it, install the " \
+                    "debug version or use --disable-winrtdebug"
+        fi
     else
         pythonlibflags=
         case $platform in
