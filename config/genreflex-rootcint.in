@@ -1,2 +1,3 @@
 #!/bin/sh
-python @libdir@/python/genreflex/genreflex-rootcint.py "$@"
+dir=@libdir@
+python ${dir}/python/genreflex/genreflex-rootcint.py "$@"
