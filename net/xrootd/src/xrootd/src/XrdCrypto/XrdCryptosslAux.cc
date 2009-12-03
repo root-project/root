@@ -617,7 +617,7 @@ int XrdCryptosslASN1toUTC(ASN1_TIME *tsn1)
    if (!gmtime_r(&now, &gtn)) return etime;
    //
    // Calculate correction
-   int tzcor = difftime(mktime(&ltn), mktime(&gtn));
+   int tzcor = (int)difftime(mktime(&ltn), mktime(&gtn));
    //
    // Apply correction
    etime += tzcor;
