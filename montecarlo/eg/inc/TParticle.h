@@ -130,6 +130,11 @@ public:
       if (pmom != TMath::Abs(fPz)) return 0.5*TMath::Log((pmom+fPz)/(pmom-fPz));
       else                         return 1.e30;
    }
+   Double_t       Y               ()            const
+   {
+      if (fE != TMath::Abs(fPz))   return 0.5*TMath::Log((fE+fPz)/(fE-fPz));
+      else                         return 1.e30;
+   }
 
    Double_t         Phi   () const { return TMath::Pi()+TMath::ATan2(-fPy,-fPx); }  // note that Phi() returns an angle between 0 and 2pi
    Double_t         Theta () const { return (fPz==0)?TMath::PiOver2():TMath::ACos(fPz/P()); }
