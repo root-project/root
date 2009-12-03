@@ -136,8 +136,11 @@ namespace RooStats {
 	   // store original values, since minimization will change them.
 	   RooArgSet* origParamVals = (RooArgSet*) paramsOfInterest.snapshot();
 
-	   // find minimum
+	   // find minimum - add these extra lines to avoid calling first SET WARN in RooMinuit constructor
+           Bool_t smode = RooMsgService::instance().silentMode() ;
+           RooMsgService::instance().setSilentMode(kTRUE) ;
 	   RooMinuit minuit(*nll);
+           if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
 	   minuit.setPrintLevel(-999);
 	   minuit.setNoWarn();
 	   minuit.migrad();

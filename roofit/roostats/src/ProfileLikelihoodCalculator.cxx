@@ -133,7 +133,7 @@ void  ProfileLikelihoodCalculator::DoGlobalFit() const {
    RemoveConstantParameters(constrainedParams);
 
    // calculate MLE 
-   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(1),Hesse(kTRUE),Save(kTRUE),PrintLevel(-1));
+   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(1),Hesse(kTRUE),Save(kTRUE),PrintLevel(-1),Warnings(kFALSE));
   
    // for debug 
    fit->Print();
@@ -281,7 +281,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    Double_t NLLatCondMLE = NLLatMLE; 
    if (existVarParams) {
 
-      RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
+      RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1),Warnings(kFALSE));
      
       NLLatCondMLE = fit2->minNll();
       fit2->Print();
