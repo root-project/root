@@ -3405,7 +3405,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
       Bool_t IsInMergingMode = kFALSE;
       Int_t nm = 0;
-      if (TProof::GetParameter(fPlayer->GetInputList(),"PROOF_UseMergers", nm) == 0) {
+      if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
          IsInMergingMode = kTRUE;
       }
       PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", IsInMergingMode);

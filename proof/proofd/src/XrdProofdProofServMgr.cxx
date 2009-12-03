@@ -1627,7 +1627,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       XPDFORM(in.fLogFile, "%s.log", in.fWrkDir.c_str());
       TRACE(FORK, "log file: "<<in.fLogFile);
 
-      XpdMsg msg;
+      XpdMsg xmsg;
       XrdOucString path, sockpath, emsg;
 
       // Receive the admin path from the parent
@@ -1635,35 +1635,35 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          TRACE(XERR, "error while polling to receive the admin path from parent - EXIT" );
          exit(1);
       }
-      if (fpc.Recv(msg) != 0) {
+      if (fpc.Recv(xmsg) != 0) {
          TRACE(XERR, "error reading message while waiting for the admin path from parent - EXIT" );
          exit(1);
       }
-      if (msg.Type() < 0) {
+      if (xmsg.Type() < 0) {
          TRACE(XERR, "the parent failed to setup the admin path - EXIT" );
          exit(1);
       }
       // Set the path w/o asserting the related files
-      path = msg.Buf();
+      path = xmsg.Buf();
       xps->SetAdminPath(path.c_str(), 0);
       TRACE(FORK, "child: admin path: "<<path);
 
-      msg.Reset();
+      xmsg.Reset();
       // Receive the sock path from the parent
       if (fpc.Poll() < 0) {
          TRACE(XERR, "error while polling to receive the sock path from parent - EXIT" );
          exit(1);
       }
-      if (fpc.Recv(msg) != 0) {
+      if (fpc.Recv(xmsg) != 0) {
          TRACE(XERR, "error reading message while waiting for the sock path from parent - EXIT" );
          exit(1);
       }
-      if (msg.Type() < 0) {
+      if (xmsg.Type() < 0) {
          TRACE(XERR, "the parent failed to setup the sock path - EXIT" );
          exit(1);
       }
       // Set the UNIX sock path
-      sockpath = msg.Buf();
+      sockpath = xmsg.Buf();
       xps->SetUNIXSockPath(sockpath.c_str());
       TRACE(FORK, "child: UNIX sock path: "<<sockpath);
 
@@ -1846,26 +1846,26 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       // Poll for 2 secs
       if ((prc = fcp.Poll(2)) > 0) {
          // Got something: read the message out
-         XpdMsg msg;
-         if (fcp.Recv(msg) != 0) {
+         XpdMsg xmsg;
+         if (fcp.Recv(xmsg) != 0) {
             emsg += ": error receiving message from pipe";
             prc = -1;
             break;
          }
          // Status is the message type
-         rst = msg.Type();
+         rst = xmsg.Type();
          // Read string, if any
-         XrdOucString buf = msg.Buf();
-         if (buf.length() <= 0) {
+         XrdOucString xbuf = xmsg.Buf();
+         if (xbuf.length() <= 0) {
             emsg = "error reading buffer {logfile, error message} from message received on the pipe";
             prc = -1;
             break;
          }
          if (rst > 0) {
             // Set the log file
-            xps->SetFileout(buf.c_str());
+            xps->SetFileout(xbuf.c_str());
             // Set also the session tag
-            XrdOucString stag(buf);
+            XrdOucString stag(xbuf);
             stag.erase(stag.rfind('/'));
             stag.erase(0, stag.find("session-") + strlen("session-"));
             xps->SetTag(stag.c_str());
@@ -1874,7 +1874,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
             // Setup failed: save the error
             prc = -1;
             emsg += ": failed: ";
-            emsg += buf;
+            emsg += xbuf;
             break;
          }
 

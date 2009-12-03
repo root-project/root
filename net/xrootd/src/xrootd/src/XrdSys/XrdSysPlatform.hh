@@ -25,6 +25,7 @@
 #ifdef __macos__
 #include <AvailabilityMacros.h>
 #include <sys/types.h>
+#define fdatasync(x) fsync(x)
 #ifndef dirent64
 #  define dirent64 dirent
 #endif
