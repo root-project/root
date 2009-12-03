@@ -444,12 +444,12 @@ Bool_t TClassDocOutput::ClassDotCharts(std::ostream& out)
       RunDot(filenameLib, &out);
 
    out << "<div class=\"tabs\">" << endl
-       << "<a id=\"img" << title << "_Inh\" class=\"tabsel\" href=\"inh/" << title << "_Inh.gif\" onclick=\"javascript:return SetImg('Charts','inh/" << title << "_Inh.gif');\">Inheritance</a>" << endl
-       << "<a id=\"img" << title << "_InhMem\" class=\"tab\" href=\"inhmem/" << title << "_InhMem.gif\" onclick=\"javascript:return SetImg('Charts','inhmem/" << title << "_InhMem.gif');\">Inherited Members</a>" << endl
-       << "<a id=\"img" << title << "_Incl\" class=\"tab\" href=\"incl/" << title << "_Incl.gif\" onclick=\"javascript:return SetImg('Charts','incl/" << title << "_Incl.gif');\">Includes</a>" << endl
-       << "<a id=\"img" << title << "_Lib\" class=\"tab\" href=\"lib/" << title << "_Lib.gif\" onclick=\"javascript:return SetImg('Charts','lib/" << title << "_Lib.gif');\">Libraries</a><br/>" << endl
+       << "<a id=\"img" << title << "_Inh\" class=\"tabsel\" href=\"inh/" << title << "_Inh.png\" onclick=\"javascript:return SetImg('Charts','inh/" << title << "_Inh.png');\">Inheritance</a>" << endl
+       << "<a id=\"img" << title << "_InhMem\" class=\"tab\" href=\"inhmem/" << title << "_InhMem.png\" onclick=\"javascript:return SetImg('Charts','inhmem/" << title << "_InhMem.png');\">Inherited Members</a>" << endl
+       << "<a id=\"img" << title << "_Incl\" class=\"tab\" href=\"incl/" << title << "_Incl.png\" onclick=\"javascript:return SetImg('Charts','incl/" << title << "_Incl.png');\">Includes</a>" << endl
+       << "<a id=\"img" << title << "_Lib\" class=\"tab\" href=\"lib/" << title << "_Lib.png\" onclick=\"javascript:return SetImg('Charts','lib/" << title << "_Lib.png');\">Libraries</a><br/>" << endl
        << "</div><div class=\"classcharts\"><div class=\"classchartswidth\"></div>" << endl
-       << "<img id=\"Charts\" alt=\"Class Charts\" class=\"classcharts\" usemap=\"#Map" << title << "_Inh\" src=\"inh/" << title << "_Inh.gif\"/></div>" << endl;
+       << "<img id=\"Charts\" alt=\"Class Charts\" class=\"classcharts\" usemap=\"#Map" << title << "_Inh\" src=\"inh/" << title << "_Inh.png\"/></div>" << endl;
 
    return kTRUE;
 }
@@ -1162,7 +1162,7 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
 
    RunDot(filename, &out);
 
-   out << "<img usemap=\"#Map" << title << "\" src=\"" << title << ".gif\"/>" << endl;
+   out << "<img usemap=\"#Map" << title << "\" src=\"" << title << ".png\"/>" << endl;
    // write out footer
    WriteHtmlFooter(out);
    return kTRUE;

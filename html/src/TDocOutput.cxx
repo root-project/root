@@ -1098,7 +1098,7 @@ void TDocOutput::CreateModuleIndex()
 
    RunDot(dotfilename, &out, kFdp);
 
-   out << "<img alt=\"Library Dependencies\" class=\"classcharts\" usemap=\"#Map" << title << "\" src=\"" << title << ".gif\"/>" << endl;
+   out << "<img alt=\"Library Dependencies\" class=\"classcharts\" usemap=\"#Map" << title << "\" src=\"" << title << ".png\"/>" << endl;
 
    // write out footer
    WriteHtmlFooter(out);
@@ -1980,7 +1980,7 @@ void TDocOutput::ReplaceSpecialChars(std::ostream& out, const char *string)
 //______________________________________________________________________________
 Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */,
                           EGraphvizTool gvwhat /*= kDot*/) {
-// Run filename".dot", creating filename".gif", and - if outMap is !=0,
+// Run filename".dot", creating filename".png", and - if outMap is !=0,
 // filename".map", which gets then included literally into outMap.
 
    if (!fHtml->HaveDot())
@@ -1995,9 +1995,9 @@ Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */,
    };
    if (fHtml->GetDotDir() && *fHtml->GetDotDir())
       gSystem->PrependPathName(fHtml->GetDotDir(), runDot);
-   runDot += " -q1 -Tgif -o";
+   runDot += " -q1 -Tpng -o";
    runDot += filename;
-   runDot += ".gif ";
+   runDot += ".png ";
    if (outMap) {
       runDot += "-Tcmap -o";
       runDot += filename;
