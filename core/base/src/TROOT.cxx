@@ -205,6 +205,9 @@ namespace {
          libMetaTCint += ".so";
          hLibMetaTCint = (void*) dlopen((libMetaTCintDir + libMetaTCint).Data(), R__DLOPEN_NOW);
          if (!hLibMetaTCint) {
+            hLibMetaTCint = (void*) dlopen(libMetaTCint.Data(), R__DLOPEN_NOW);
+         }
+         if (!hLibMetaTCint) {
             const char* err = dlerror();
             if (err)
                printf("Fatal in <TROOT::TROOT>: %s\n", err);
