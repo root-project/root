@@ -104,6 +104,17 @@ TGLClip::~TGLClip()
 }
 
 //______________________________________________________________________________
+void TGLClip::Setup(const TGLVector3&, const TGLVector3&)
+{
+   // Setup the clipping object with two vectors.
+   // The interpretation of the two is different for plane and box
+   // clipping objects.
+
+   Warning("TGLClip::Setup", "Called on base-class -- should be re-implemented in derived class.");
+   
+}
+
+//______________________________________________________________________________
 void TGLClip::Draw(TGLRnrCtx & rnrCtx) const
 {
    // Draw out clipping object with blending and back + front filling.
@@ -183,6 +194,37 @@ void TGLClipPlane::Setup(const TGLBoundingBox & bbox)
 }
 
 //______________________________________________________________________________
+void TGLClipPlane::Setup(const TGLVector3& point, const TGLVector3& normal)
+{
+   // Setup the clipping plane by point and normal.
+   // Length of the normal determines the size of the plane drawn in
+   // GL viewer. The normal points into the direction of visible half-plane.
+   //
+   // This only makes sense if you disable auto-update of the
+   // clip-object:
+   //   gl_viewer->SetClipAutoUpdate(kFALSE).
+   // After calling this also call gl_viewer->RefreshPadEditor(gl_viewer)
+   // and gl_viewer->RequestDraw().
+
+   TGLVector3 n(normal);
+   Double_t extents = n.Mag();
+   if (extents > 0)
+   {
+      n /= extents;
+      TGLClipPlaneLogical* cpl = (TGLClipPlaneLogical*) GetLogical();
+      cpl->Resize(extents);
+      SetTransform(TGLMatrix(point, n));
+
+      IncTimeStamp();
+      fValid = kTRUE;
+   }
+   else
+   {
+      Warning("TGLClipPlane::Setup", "Normal with zero length passed.");
+   }
+}
+
+//______________________________________________________________________________
 void TGLClipPlane::Set(const TGLPlane& plane)
 {
    // Update clip plane object to follow passed 'plane' equation. Center pivot
@@ -246,6 +288,24 @@ void TGLClipBox::Setup(const TGLBoundingBox& bbox)
 
    IncTimeStamp();
    fValid = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLClipBox::Setup(const TGLVector3& min_point, const TGLVector3& max_point)
+{
+   // Setup the clip box with min/max points directly.
+   //
+   // This only makes sense if you disable auto-update of the
+   // clip-object:
+   //   gl_viewer->SetClipAutoUpdate(kFALSE).
+   // After calling this also call gl_viewer->RefreshPadEditor(gl_viewer)
+   // and gl_viewer->RequestDraw().
+
+   TGLClipBoxLogical* cbl = (TGLClipBoxLogical*) GetLogical();
+   cbl->Resize(min_point, max_point);
+
+   IncTimeStamp();
+   fValid = kTRUE; 
 }
 
 //______________________________________________________________________________

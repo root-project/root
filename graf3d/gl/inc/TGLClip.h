@@ -47,6 +47,7 @@ public:
    virtual void Modified() { TGLPhysicalShape::Modified(); IncTimeStamp(); }
 
    virtual void Setup(const TGLBoundingBox & bbox) = 0;
+   virtual void Setup(const TGLVector3&, const TGLVector3&);
 
    EMode GetMode() const      { return fMode; }
    void  SetMode(EMode mode)  { if (mode != fMode) { fMode = mode; ++fTimeStamp; } }
@@ -83,6 +84,7 @@ public:
    virtual ~TGLClipPlane();
 
    virtual void Setup(const TGLBoundingBox & bbox);
+   virtual void Setup(const TGLVector3& point, const TGLVector3& normal);
 
    void Set(const TGLPlane & plane);
 
@@ -110,6 +112,7 @@ public:
    virtual ~TGLClipBox();
 
    virtual void Setup(const TGLBoundingBox & bbox);
+   virtual void Setup(const TGLVector3& min_point, const TGLVector3& max_point);
 
    virtual void PlaneSet(TGLPlaneSet_t & set) const;
 
