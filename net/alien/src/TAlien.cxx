@@ -91,8 +91,6 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
 {
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
 
-   SetAliEnSettings();
-
    // Connect to the AliEn grid.
    TUrl *gurl = new TUrl(gridurl);
 
@@ -778,38 +776,3 @@ TGridResult* TAlien::ListPackages(const char* alienpackagedir)
    return gr;
 }
 
-//______________________________________________________________________________
-void TAlien::SetAliEnSettings()
-{
-   // Set AliEn settings.
-
-   ifstream fileIn;
-   fileIn.open(Form("/tmp/gclient_env_%d",gSystem->GetUid()));
-
-   TString lineS,tmp;
-   char line[512];
-
-   while (fileIn.good()) {
-      fileIn.getline(line,512,'\n');
-      lineS = line;
-      if (lineS.IsNull()) continue;
-      if (lineS.Contains("export ")) {
-         lineS.ReplaceAll("export ","");
-
-         TObjArray* array = lineS.Tokenize("=");
-
-         TObjString *strVar = (TObjString *) array->At(0);
-         TObjString *strVal = (TObjString *) array->At(1);
-         if ((strVar)&&(strVal)) {
-            tmp = strVal->GetString();
-            tmp.ReplaceAll("\"","");
-            gSystem->Unsetenv(strVar->GetString().Data());
-            gSystem->Setenv(strVar->GetString().Data(),tmp.Data());
-            if (!strVar->GetString().CompareTo("GCLIENT_SERVER_LIST")) {
-               gSystem->Unsetenv("alien_API_SERVER_LIST");
-               gSystem->Setenv("alien_API_SERVER_LIST",strVal->GetString().Data());
-            }
-         }
-      }
-   }
-}

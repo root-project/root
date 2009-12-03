@@ -58,8 +58,6 @@ private:
    virtual TGridResult *LocateSites();
    virtual TGridResult *OpenDataset(const char *lfn, const char *options = "");
 
-   void                 SetAliEnSettings();
-
 public:
    TAlien(const char *gridurl, const char *uid=0, const char *passwd=0,
           const char *options=0);

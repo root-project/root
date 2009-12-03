@@ -64,6 +64,7 @@ int TAlienSystem::MakeDirectory(const char* dirname)
   }
 
   TUrl url(dirname);
+  url.CleanRelativePath();
   if (strcmp(url.GetProtocol(),"alien")) {
     Info("OpenDirectory","Assuming an AliEn URL alien://%s",dirname);
     url.SetProtocol("alien",kTRUE);
@@ -76,6 +77,7 @@ void *TAlienSystem::OpenDirectory(const char* name)
 {
    // Open a directory. Returns 0 if directory does not exist.
    TUrl url(name);
+   url.CleanRelativePath();
    if (strcmp(url.GetProtocol(),"alien")) {
      Info("OpenDirectory","Assuming an AliEn URL alien://%s",name);
      url.SetProtocol("alien",kTRUE);
@@ -115,6 +117,7 @@ Bool_t TAlienSystem::ChangeDirectory(const char* dirname)
    //   return kFALSE;
 
   TUrl url(dirname);
+  url.CleanRelativePath();
   if (strcmp(url.GetProtocol(),"alien")) {
     Info("OpenDirectory","Assuming an AliEn URL alien://%s",dirname);
     url.SetProtocol("alien",kTRUE);
@@ -309,6 +312,7 @@ int TAlienSystem::AlienFilestat(const char *fpath, FileStat_t &buf)
    // not be stat'ed.
 
    TUrl url(fpath);
+   url.CleanRelativePath();
    if (strcmp(url.GetProtocol(),"alien")) {
      Info("AlienFilestat","Assuming an AliEn URL alien://%s",fpath);
      url.SetProtocol("alien",kTRUE);
@@ -349,6 +353,7 @@ int TAlienSystem::Chmod(const char *file, UInt_t mode)
 {
    // Set the file permission bits. Returns -1 in case or error, 0 otherwise.
    TUrl url(file);
+   url.CleanRelativePath();
    if (strcmp(url.GetProtocol(),"alien")) {
      Info("AlienFilestat","Assuming an AliEn URL alien://%s",file);
      url.SetProtocol("alien",kTRUE);
@@ -401,9 +406,14 @@ Bool_t TAlienSystem::AccessPathName(const char *path, EAccessMode mode)
       return -1;
    }
 
-   TUrl url(path);
+   TString strippath = path ;
+   // remove trailing '/' 
+   while (strippath.EndsWith("/")) {strippath.Remove(strippath.Length()-1);}
+   TUrl url(strippath);
+   url.CleanRelativePath();
+
    if (strcmp(url.GetProtocol(),"alien")) {
-      Info("AccessPathname","Assuming an AliEn URL alien://%s",path);
+      Info("AccessPathName","Assuming an AliEn URL alien://%s",path);
       url.SetProtocol("alien",kTRUE);
    }
    if(!gapi_access(url.GetUrl(),mode)) {
