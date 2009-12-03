@@ -139,9 +139,14 @@ Double_t RooProfileLL::evaluate() const
   // Instantiate minuit if we haven't done that already
   if (!_minuit) {
     coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
+    
+    Bool_t smode = RooMsgService::instance().silentMode() ;
+    RooMsgService::instance().setSilentMode(kTRUE) ;
     _minuit = new RooMinuit(const_cast<RooAbsReal&>(_nll.arg())) ;
+    if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
+
     _minuit->setPrintLevel(-999) ;
-    _minuit->setNoWarn() ;
+    //_minuit->setNoWarn() ;
     //_minuit->setVerbose(1) ;
   }
 
