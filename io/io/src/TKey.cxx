@@ -124,6 +124,9 @@ TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, 
       : TNamed(name,title)
 {
    // Create a TKey object with the specified name, title for the given class.
+   //
+   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  by the regular expression parser (see TRegexp).
 
    Build(motherDir, cl->GetName(), -1);
 
@@ -137,6 +140,9 @@ TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nb
       : TNamed(name,title)
 {
    // Create a TKey object with the specified name, title for the given class.
+   //
+   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  by the regular expression parser (see TRegexp).
 
    Build(motherDir, cl->GetName(), -1);
 
@@ -150,6 +156,9 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
      : TNamed(name, obj->GetTitle())
 {
    // Create a TKey object for a TObject* and fill output buffer
+   //
+   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  by the regular expression parser (see TRegexp).
 
    R__ASSERT(obj);
 
@@ -220,6 +229,9 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
 {
    // Create a TKey object for any object obj of class cl d and fill
    // output buffer.
+   //
+   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  by the regular expression parser (see TRegexp).
 
    R__ASSERT(obj && cl);
 
