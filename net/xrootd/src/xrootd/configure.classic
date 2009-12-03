@@ -1328,14 +1328,44 @@ if test "x$hasreadline" = "x"; then
    if test "x$found_prototype" = "xyes" ; then
       echo "yes"
       hasreadline=" -DHAVE_READLINE"
-      libreadline="-lreadline -lcurses"
    else
       echo "no"
    fi
 else
    hasreadline=" -DHAVE_READLINE"
-   libreadline="-lreadline -lcurses"
 fi
+
+if test ! "x$hasreadline" = "x"; then
+
+   if test "x$syslibs" = "x" ; then
+      what2look4="/usr/lib /usr/local/lib /opt/lib $finkdir/lib"
+   else
+      what2look4="$syslibs"
+   fi
+
+   check_library "libreadline" "$enable_shared" "" $what2look4
+   if test "x$found_lib" = "x" ; then
+        hasreadline=""
+        libreadline=""
+   else
+      libreadline="$found_dir $found_lib"
+   fi
+
+   check_library "libncurses" "$enable_shared" "" $what2look4
+   if test "x$found_lib" = "x" ; then
+       check_library "libcurses" "$enable_shared" "" $what2look4
+       if test "x$found_lib" = "x" ; then
+          hasreadline=""
+          libreadline=""
+       else
+          libreadline="$libreadline $found_dir $found_lib"
+       fi
+   else
+      libreadline="$libreadline $found_dir $found_lib"
+   fi
+fi
+
+
 
 ######################################################################
 #

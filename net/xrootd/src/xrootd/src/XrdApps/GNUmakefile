@@ -58,7 +58,7 @@ $(XRDADLER32_OBJ): Xrdadler32.cc \
                    XrdClientAdmin.hh \
                    XrdOucString.hh
 	@echo Compiling Xrdadler32.cc 
-	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(XRDADLER32_OBJ) Xrdadler32.cc
+	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(XRDADLER32_OBJ) Xrdadler32.cc
 
 $(XRDMPXBIN): $(XRDMPXOBJ)
 	@echo Creating executable $(XRDMPXBIN)

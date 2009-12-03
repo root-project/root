@@ -375,7 +375,7 @@ public:
       kBeMerger       = 3,         //Master tells worker to be a merger
       kMergerDown     = 4,         //Merger cannot serve
       kStopMerging    = 5,         //Master tells worker to stop merging (and return output)
-      kOutputSent     = 6,         //Worker reports sending its output to given worker
+      kOutputSent     = 6          //Worker reports sending its output to given worker
   };
 
 private:
