@@ -1035,21 +1035,19 @@ int G__shl_load(char *shlfile)
   G__setdebugcond();
   G__globalcomp=store_globalcomp;
 
-  if(G__ispermanentsl) {
-    G__DLLINIT initsl = 0;
-    //if(!G__initpermanentsl)
-      initsl = 
-        (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,"G__cpp_setup"
-                                   ,TYPE_PROCEDURE); 
-    if(!initsl) {
-       dllid.Format("G__cpp_setup%s",dllidheader());
-      initsl =
-         (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE); 
-    }
-    if (initsl) G__initpermanentsl->push_back(initsl);
-    G__sl_handle[allsl].ispermanent = true;
-  }
-
+   if(G__ispermanentsl) {
+      G__DLLINIT initsl = 0;
+      //if(!G__initpermanentsl)
+      initsl = (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,"G__cpp_setup"
+                                          ,TYPE_PROCEDURE); 
+      if(!initsl) {
+         dllid.Format("G__cpp_setup%s",dllidheader());
+         initsl = (void (*)())G__shl_findsym(&G__sl_handle[allsl].handle,dllid,TYPE_PROCEDURE); 
+      }
+      if (initsl) G__initpermanentsl->push_back(initsl);
+      G__sl_handle[allsl].ispermanent = true;
+   }
+   
   strcpy(G__ifile.name,"");
   return(allsl);
 }

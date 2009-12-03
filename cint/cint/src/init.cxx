@@ -57,7 +57,6 @@ typedef struct {
 //______________________________________________________________________________
 static G__setup_func_struct** G__setup_func_list;
 static int G__max_libs;
-static int G__nlibs;
 static char G__memsetup_init;
 typedef void G__parse_hook_t();
 static G__parse_hook_t* G__afterparse_hook;
@@ -157,9 +156,13 @@ int G__call_setup_funcs()
       }
    }
 
-   for (i = 0; i < G__nlibs; ++i)
+   for (i = G__nlibs_highwatermark; i < G__nlibs; ++i)
       if (G__setup_func_list[i] && !G__setup_func_list[i]->inited) {
          (G__setup_func_list[i]->func)();
+         // We setup inited to one only __after__ the execution because the execution
+         // can trigger (in particular via ROOT's TCint::UpdateClassInfo)) code that
+         // requires the dictionary to be fully initiliazed .. which is done by coming
+         // back and expecting the setup function to be run.
          G__setup_func_list[i]->inited = 1;
 #ifdef G__SHAREDLIB
          G__initpermanentsl->push_back(G__setup_func_list[i]->func);

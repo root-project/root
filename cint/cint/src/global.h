@@ -666,7 +666,9 @@ extern int G__dynconst;
 
 /*extern std::list<G__DLLINIT>* G__initpermanentsl;*/
 extern int G__ispermanentsl;
-
+extern int G__nlibs;
+extern int G__nlibs_highwatermark;
+   
 /**************************************************************************
 * Incremented every time the cint dictionary is rewound in scrupto.
 * Can be used to see if cached information derived from the dictionary

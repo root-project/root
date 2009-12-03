@@ -297,6 +297,8 @@ int G__do_setmemfuncenv = 0;
 int G__scopelevel = 0;
 int G__cintv6 = 0;
 struct G__input_file G__lasterrorpos;
+int G__nlibs_highwatermark = 0;  // Use to indicates which of the members of G__setup_func_list pertain to the current (set of) library being loaded
+int G__nlibs = 0; // Number of values in G__setup_func_list
 
 /**************************************************************************
 * Incremented every time the cint dictionary is rewound in scrupto.

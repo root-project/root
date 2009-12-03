@@ -58,9 +58,6 @@ extern "C" {
 ******************************************************************/
 /* #define G__EDU_VERSION */
 
-
-extern int G__ispermanentsl;
-
 static G__IgnoreInclude G__ignoreinclude = (G__IgnoreInclude)NULL;
 
 /******************************************************************
@@ -1397,8 +1394,7 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
    }
    return -1;
 }
-   
-   
+
 /******************************************************************
 * G__loadfile(filename)
 *
@@ -2237,6 +2233,13 @@ int G__loadfile(const char *filenamein)
       G__ifile.fp=(FILE*)NULL;
     }
     G__srcfile[fentry].fp=(FILE*)NULL;
+    std::list<G__DLLINIT>* store_initpermanentsl = 0;
+    if (G__initpermanentsl && !G__initpermanentsl->empty()) {
+       store_initpermanentsl = G__initpermanentsl;
+       G__initpermanentsl = new std::list<G__DLLINIT>;
+    }
+    int store_nlibs_highwatermark = G__nlibs_highwatermark;
+    G__nlibs_highwatermark = G__nlibs;
     {
 #if !defined(ROOTBUILD) && !defined(G__BUILDING_CINTTMP)
       int allsl = G__shl_load(G__ifile.name);
@@ -2247,6 +2250,7 @@ int G__loadfile(const char *filenamein)
         G__srcfile[fentry].slindex = allsl;
       }
     }
+    G__nlibs_highwatermark = store_nlibs_highwatermark;
     if (G__initpermanentsl) {
        if(G__ispermanentsl) {
           if (!G__srcfile[fentry].initsl)
@@ -2256,6 +2260,10 @@ int G__loadfile(const char *filenamein)
                                            G__initpermanentsl->end());
        }
        G__initpermanentsl->clear();
+    }
+    if (store_initpermanentsl) {
+       delete G__initpermanentsl;
+       G__initpermanentsl = store_initpermanentsl;
     }
   }
   else {
@@ -3123,7 +3131,9 @@ int G__unregister_sharedlib(const char *libname)
          free((void*) G__srcfile[ifn].filename);
          G__srcfile[ifn].filename = 0;
       }
-      G__srcfile[ifn].hash = 0;      
+      G__srcfile[ifn].hash = 0;
+      G__srcfile[ifn].ispermanentsl = 0;
+      G__srcfile[ifn].included_from = -1;
       
       if(G__debug) {
          G__fprinterr(G__serr,"File=%s unregistered\n",libname);
