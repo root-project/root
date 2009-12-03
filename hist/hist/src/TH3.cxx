@@ -2901,7 +2901,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -3184,7 +3184,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TH3S::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -3438,7 +3438,7 @@ TH3I::TH3I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TH3I::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -3660,7 +3660,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
@@ -3893,7 +3893,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
    TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
-   //if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
+   if (xlow >= xup || ylow >= yup || zlow >= zup) SetBuffer(fgBufferSize);
 }
 
 //______________________________________________________________________________
