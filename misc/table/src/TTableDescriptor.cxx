@@ -277,7 +277,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 #ifdef NORESTRICTIONS
                                               elementDescriptor.fIndexArray = new UInt_t(dim);
 #else
-            UInt_t maxDim = sizeof(elementDescriptor.fIndexArray)/sizeof(UInt_t *);
+            UInt_t maxDim = sizeof(elementDescriptor.fIndexArray)/sizeof(UInt_t);
             if (UInt_t(dim) > maxDim) {
                Error("LearnTable","Too many dimenstions - %d", dim);
                dim =  maxDim;
