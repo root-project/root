@@ -1651,6 +1651,40 @@ void TSystem::SetDynamicPath(const char *)
    AbstractMethod("SetDynamicPath");
 }
 
+
+//______________________________________________________________________________
+bool R__MatchFilename(const char *left, const char *right)
+{
+   // Figure out if left and right points to the same
+   // object in the file system.
+   
+   if (left == right) return kTRUE;
+   
+   if (left==0 || right==0) return kFALSE;
+   
+   if ( (strcmp(right,left)==0) ) {
+      return kTRUE;
+   }
+   
+#ifdef G__WIN32
+   G__FastAllocString leftname(_MAX_PATH);
+   G__FastAllocString rightname(_MAX_PATH);
+   _fullpath( leftname, left, _MAX_PATH );
+   _fullpath( rightname, right, _MAX_PATH );
+   return ((stricmp(leftname, rightname)==0));
+#else
+   struct stat rightBuf;
+   struct stat leftBuf;
+   return (   ( 0 == stat( left, & leftBuf ) )
+       && ( 0 == stat( right, & rightBuf ) )
+       && ( leftBuf.st_dev == rightBuf.st_dev )     // Files on same device
+       && ( leftBuf.st_ino == rightBuf.st_ino )     // Files on same inode (but this is not unique on AFS so we need the next 2 test
+       && ( leftBuf.st_size == rightBuf.st_size )   // Files of same size
+       && ( leftBuf.st_mtime == rightBuf.st_mtime ) // Files modified at the same time
+           );
+#endif
+}
+
 //______________________________________________________________________________
 int TSystem::Load(const char *module, const char *entry, Bool_t system)
 {
@@ -1767,9 +1801,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       TString rootlibdir = libdirname;
       delete [] libdirname;
 #endif
-      if (rootlibdir == dirname) {
-         system = kTRUE;
-      }
+      system = R__MatchFilename(rootlibdir,dirname);
 
       gLibraryVersionIdx++;
       if (gLibraryVersionIdx == gLibraryVersionMax) {
