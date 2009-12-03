@@ -6629,7 +6629,7 @@ void TTree::Show(Long64_t entry, Int_t lenmax)
    if (entry != -1) {
       Int_t ret = GetEntry(entry);
       if (ret == -1 || ret == 0) {
-         Error("Show()", "Cannot read entry %d (%s)",
+         Error("Show()", "Cannot read entry %lld (%s)",
                entry, ret == -1 ? "I/O error" : "entry does not exist");
          return;
       }
