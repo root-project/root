@@ -174,6 +174,9 @@ Float_t             TEveTrackPropagator::fgDefMagField = 0.5;
 const Float_t       TEveTrackPropagator::fgkB2C        = 0.299792458e-2;
 TEveTrackPropagator TEveTrackPropagator::fgDefault;
 
+Float_t             TEveTrackPropagator::fgEditorMaxR  = 2000;
+Float_t             TEveTrackPropagator::fgEditorMaxZ  = 4000;
+
 //______________________________________________________________________________
 TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
                                          TEveMagField *field) :

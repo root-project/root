@@ -284,6 +284,9 @@ public:
    static const Float_t       fgkB2C;        // Constant for conversion of momentum to curvature.
    static TEveTrackPropagator fgDefault;     // Default track propagator.
 
+   static Float_t             fgEditorMaxR;  // Max R that can be set in GUI editor.
+   static Float_t             fgEditorMaxZ;  // Max Z that can be set in GUI editor.
+
    ClassDef(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };
 

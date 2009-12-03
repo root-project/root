@@ -71,7 +71,7 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    fMaxR->SetLabelWidth(labelW);
    fMaxR->SetNELength(6);
    fMaxR->Build();
-   fMaxR->SetLimits(0.1, 1000, 101, TGNumberFormat::kNESRealOne);
+   fMaxR->SetLimits(0.1, TEveTrackPropagator::fgEditorMaxR, 101, TGNumberFormat::kNESRealOne);
    fMaxR->SetToolTip("Maximum radius to which the tracks will be drawn.");
    fMaxR->Connect("ValueSet(Double_t)", "TEveTrackPropagatorSubEditor", this, "DoMaxR()");
    AddFrame(fMaxR, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
@@ -80,7 +80,7 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    fMaxZ->SetLabelWidth(labelW);
    fMaxZ->SetNELength(6);
    fMaxZ->Build();
-   fMaxZ->SetLimits(0.1, 2000, 101, TGNumberFormat::kNESRealOne);
+   fMaxZ->SetLimits(0.1, TEveTrackPropagator::fgEditorMaxZ, 101, TGNumberFormat::kNESRealOne);
    fMaxZ->SetToolTip("Maximum z-coordinate to which the tracks will be drawn.");
    fMaxZ->Connect("ValueSet(Double_t)", "TEveTrackPropagatorSubEditor", this, "DoMaxZ()");
    AddFrame(fMaxZ, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
