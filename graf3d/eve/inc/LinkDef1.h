@@ -33,9 +33,6 @@
 
 // TEveVSD
 #pragma link C++ class TEveVSD+;
-#pragma link C++ class TEveVector+;
-#pragma link C++ class TEveVector4+;
-#pragma link C++ class TEvePathMark+;
 #pragma link C++ class TEveMCTrack+;
 #pragma link C++ class TEveHit+;
 #pragma link C++ class TEveCluster+;
@@ -44,6 +41,11 @@
 #pragma link C++ class TEveRecV0+;
 #pragma link C++ class TEveRecCascade+;
 #pragma link C++ class TEveMCRecCrossRef+;
+
+// TEveVector
+#pragma link C++ class TEveVector+;
+#pragma link C++ class TEveVector4+;
+#pragma link C++ class TEvePathMark+;
 
 // TEveTrans
 #pragma link C++ class TEveTrans-;

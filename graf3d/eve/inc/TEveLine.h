@@ -12,8 +12,8 @@
 #ifndef ROOT_TEveLine
 #define ROOT_TEveLine
 
-#include "TEveUtil.h"
 #include "TEvePointSet.h"
+#include "TEveVector.h"
 
 #include "TAttLine.h"
 

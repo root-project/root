@@ -15,7 +15,6 @@
 #include "TEveElement.h"
 #include "TAttBBox.h"
 #include "TEveProjections.h"
-#include "TEveVSDStructs.h"
 
 
 class TEveProjectionManager : public TEveElementList,

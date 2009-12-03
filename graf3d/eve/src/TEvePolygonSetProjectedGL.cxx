@@ -11,7 +11,7 @@
 
 #include "TEvePolygonSetProjectedGL.h"
 #include "TEvePolygonSetProjected.h"
-#include "TEveVSDStructs.h"
+#include "TEveVector.h"
 
 #include "TGLRnrCtx.h"
 #include "TGLCamera.h"

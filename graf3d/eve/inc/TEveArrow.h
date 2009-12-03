@@ -13,10 +13,10 @@
 #define ROOT_TEveArrow
 
 #include "TEveElement.h"
+#include "TEveVector.h"
 #include "TNamed.h"
 #include "TAtt3D.h"
 #include "TAttBBox.h"
-#include "TEveVSDStructs.h"
 
 class TEveArrow : public TEveElement,
                   public TNamed,

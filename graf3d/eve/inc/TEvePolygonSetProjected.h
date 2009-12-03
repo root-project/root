@@ -19,7 +19,6 @@
 #include "TAtt3D.h"
 #include "TAttBBox.h"
 #include "TColor.h"
-#include "TEveVSDStructs.h"
 
 class TBuffer3D;
 

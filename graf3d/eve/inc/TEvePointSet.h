@@ -12,7 +12,6 @@
 #ifndef ROOT_TEvePointSet
 #define ROOT_TEvePointSet
 
-#include "TEveVSDStructs.h"
 #include "TEveElement.h"
 #include "TEveProjectionBases.h"
 #include "TEveTreeTools.h"

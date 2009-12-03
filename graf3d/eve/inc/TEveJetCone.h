@@ -13,7 +13,7 @@
 #define ROOT_TEveJetCone
 
 #include "TEveElement.h"
-#include "TEveVSDStructs.h"
+#include "TEveVector.h"
 #include "TAttBBox.h"
 
 class TEveJetCone : public TEveElementList,

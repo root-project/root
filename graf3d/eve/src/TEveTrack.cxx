@@ -12,6 +12,7 @@
 #include "TEveTrack.h"
 #include "TEveTrackPropagator.h"
 #include "TEvePointSet.h"
+#include "TEveVSDStructs.h"
 
 #include "TPolyLine3D.h"
 #include "TMarker.h"

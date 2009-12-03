@@ -12,7 +12,8 @@
 #ifndef ROOT_TEveProjections
 #define ROOT_TEveProjections
 
-#include "TEveVSDStructs.h"
+#include "TEveVector.h"
+#include "TString.h"
 
 #include <vector>
 

@@ -12,7 +12,6 @@
 #include "TEveTrackProjected.h"
 #include "TEveTrackPropagator.h"
 #include "TEveProjectionManager.h"
-#include "TEveVSDStructs.h"
 
 //==============================================================================
 //==============================================================================

@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "TEvePolygonSetProjected.h"
-#include "TEveVSDStructs.h"
 #include "TEveGeoShape.h"
 #include "TEveProjectionManager.h"
 

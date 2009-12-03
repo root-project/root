@@ -16,7 +16,7 @@
 #include "TGLAxisPainter.h"
 
 #include "TEveCaloData.h"
-#include "TEveVSDStructs.h"
+#include "TEveVector.h"
 #include "TEveCalo.h"
 
 #include <map>

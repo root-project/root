@@ -11,7 +11,7 @@
 
 #include "TEveTrans.h"
 #include "TEveUtil.h"
-#include "TEveVSDStructs.h"
+#include "TEveVector.h"
 #include "TMath.h"
 #include "TClass.h"
 

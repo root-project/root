@@ -14,7 +14,7 @@
 
 #include <vector>
 
-#include "TEveVSDStructs.h"
+#include "TEveVector.h"
 #include "TEveElement.h"
 #include "TEveLine.h"
 
@@ -23,6 +23,10 @@
 
 class TEveTrackPropagator;
 class TEveTrackList;
+
+class TEveRecTrack;
+class TEveMCTrack;
+class TParticle;
 
 class TEveTrack : public TEveLine
 {
