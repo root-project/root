@@ -572,7 +572,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
   
   Int_t oldPrint = setPrintLevel(-1) ;
   Bool_t warnChanged(kFALSE) ;
-  Int_t oldWarn ;
+  Int_t oldWarn(kFALSE) ;
   if (_warnLevel>=0) {
     oldWarn = setWarnLevel(-1) ;
     warnChanged=kTRUE ;
