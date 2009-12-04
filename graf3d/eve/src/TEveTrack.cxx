@@ -1141,12 +1141,13 @@ void TEveTrackList::WriteVizParams(ostream& out, const TString& var)
    out << t << "SetRecurse("   << ToString(fRecurse)   << ");\n";
    out << t << "SetRnrLine("   << ToString(fRnrLine)   << ");\n";
    out << t << "SetRnrPoints(" << ToString(fRnrPoints) << ");\n";
-   out << t << "SetMinPt(" << fMinPt << ");\n";
-   out << t << "SetMaxPt(" << fMaxPt << ");\n";
-   out << t << "SetLimPt(" << fLimPt << ");\n";
-   out << t << "SetMinP("  << fMinP  << ");\n";
-   out << t << "SetMaxP("  << fMaxP  << ");\n";
-   out << t << "SetLimP("  << fLimP  << ");\n";
+   // These setters are not available -- need proper AND/OR mode.
+   // out << t << "SetMinPt(" << fMinPt << ");\n";
+   // out << t << "SetMaxPt(" << fMaxPt << ");\n";
+   // out << t << "SetLimPt(" << fLimPt << ");\n";
+   // out << t << "SetMinP("  << fMinP  << ");\n";
+   // out << t << "SetMaxP("  << fMaxP  << ");\n";
+   // out << t << "SetLimP("  << fLimP  << ");\n";
 }
 
 //______________________________________________________________________________
