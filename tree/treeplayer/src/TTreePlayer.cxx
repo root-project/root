@@ -1164,7 +1164,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 }
 
 //______________________________________________________________________________
-TFitResultPtr TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Long64_t nentries, Long64_t firstentry)
+Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption,Long64_t nentries, Long64_t firstentry)
 {
 // Fit  a projected item(s) from a Tree.
 // Returns -1 in case of error or number of selected events in case of success.
@@ -1195,11 +1195,12 @@ TFitResultPtr TTreePlayer::Fit(const char *formula ,const char *varexp, const ch
    Long64_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
 
    delete [] opt;
+   Int_t fitResult = -1;
 
    if (fHistogram && nsel > 0) {
-      return fHistogram->Fit(formula,option,goption);
+      fitResult = fHistogram->Fit(formula,option,goption);
    }
-   return -1;
+   return fitResult;
 }
 
 //______________________________________________________________________________
@@ -3424,7 +3425,7 @@ void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
 
 
 //______________________________________________________________________________
-TFitResultPtr TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Long64_t nentries, Long64_t firstentry)
+Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*Unbinned fit of one or more variable(s) from a Tree*-*-*-*-*-*
 //*-*        ===================================================
@@ -3512,7 +3513,6 @@ TFitResultPtr TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp,
    if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
    if (opt.Contains("E")) fitOption.Errors  = 1;
    if (opt.Contains("M")) fitOption.More    = 1;
-   if (opt.Contains("S")) fitOption.StoreResult = 1;
    if (!opt.Contains("D")) fitOption.Nograph    = 1;  // what about 0
    // could add range and automatic normalization of functions and gradient
 
@@ -3550,7 +3550,7 @@ TFitResultPtr TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp,
    
 
    ROOT::Math::MinimizerOptions minOption;
-   TFitResultPtr iret = ROOT::Fit::UnBinFit(fitdata,fitfunc, fitOption, minOption); 
+   TFitResultPtr ret = ROOT::Fit::UnBinFit(fitdata,fitfunc, fitOption, minOption); 
 
    //reset estimate
    fTree->SetEstimate(oldEstimate);
@@ -3574,7 +3574,9 @@ TFitResultPtr TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp,
       fHistogram->Draw();
    }
 
-   return iret;
+
+   return int(ret);
+
 }
 
 //______________________________________________________________________________

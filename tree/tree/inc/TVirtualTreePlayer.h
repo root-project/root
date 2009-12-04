@@ -34,7 +34,6 @@ class TSelector;
 class TPrincipal;
 class TVirtualIndex;
 
-#include "TFitResultPtr.h"
 
 class TVirtualTreePlayer : public TObject {
 
@@ -53,7 +52,7 @@ public:
                                      Option_t *option, Long64_t nentries, Long64_t firstentry) = 0;
    virtual Long64_t       DrawSelect(const char *varexp, const char *selection, Option_t *option
                                      ,Long64_t nentries, Long64_t firstentry) = 0;
-   virtual TFitResultPtr  Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
+   virtual Int_t          Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                               ,Long64_t nentries, Long64_t firstentry) = 0;
    virtual Int_t          GetDimension() const = 0;
    virtual TH1           *GetHistogram() const = 0;
@@ -88,7 +87,7 @@ public:
    virtual void           SetEstimate(Long64_t n) = 0;
    virtual void           SetTree(TTree *t) = 0;
    virtual void           StartViewer(Int_t ww, Int_t wh) = 0;
-   virtual TFitResultPtr  UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
+   virtual Int_t          UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
                                       ,Long64_t nentries, Long64_t firstentry) = 0;
    virtual void           UpdateFormulaLeaves() = 0;
 
