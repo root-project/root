@@ -56,7 +56,9 @@ TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int
 //         example:  "x:y:z:energy"
 //       For each variable in the list a separate branch is created.
 //
-//       Use TTree to create branches with variables of different data types.
+//      NOTE:
+//       -Use TTree to create branches with variables of different data types.
+//       -Use TTree when the number of branches is large (> 100). 
 //*-*
 
    Int_t i;
