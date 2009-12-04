@@ -1858,40 +1858,39 @@ Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerP
          PDB(kSubmerger, 2)
             Info("AcceptResults", "connection from a worker accepted on merger %s ",
                                   fOrdinal.Data()); 
-
          // All assigned workers are connected
          if (++numworkers >= connections)
             fMergingMonitor->Remove(fMergingSocket);
-         } else {
-            s->Recv(mess);
-            PDB(kSubmerger, 2)
-               Info("AcceptResults", "message received: %d ", (mess ? mess->What() : 0));
-            if (!mess) {
-               Error("AcceptResults", "message received: %p ", mess);
-               continue;
+      } else {
+         s->Recv(mess);
+         PDB(kSubmerger, 2)
+            Info("AcceptResults", "message received: %d ", (mess ? mess->What() : 0));
+         if (!mess) {
+            Error("AcceptResults", "message received: %p ", mess);
+            continue;
+         }
+         Int_t type = 0;
+
+         // Read output objec(s) from the received message
+         while ((mess->BufferSize() > mess->Length())) {
+            (*mess) >> type;
+
+            PDB(kSubmerger, 2) Info("AcceptResults", " type %d ", type); 
+            if (type == 2) {
+               mergedWorkers++;
+               PDB(kSubmerger, 2)
+                  Info("AcceptResults",
+                       "a new worker has been mergerd. Total merged workers: %d",
+                       mergedWorkers);
             }
-            Int_t type = 0;
-
-            // Read output objec(s) from the received message
-            while ((mess->BufferSize() > mess->Length())) {
-               (*mess) >> type;
-
-               PDB(kSubmerger, 2) Info("AcceptResults", " type %d ", type); 
-               if (type == 2) {
-                  mergedWorkers++;
-                  PDB(kSubmerger, 2)
-                     Info("AcceptResults",
-                          "a new worker has been mergerd. Total merged workers: %d",
-                          mergedWorkers);
-               }
-               TObject *o = mess->ReadObject(TObject::Class());
-               if (mergerPlayer->AddOutputObject(o) == 1) {
-                  // Remove the object if it has been merged
-                  PDB(kSubmerger, 2)  Info("AcceptResults", "removing %p (has been merged)", o);
-                  SafeDelete(o);
-               } else
-                  PDB(kSubmerger, 2) Info("AcceptResults", "%p not merged yet", o);
-             }
+            TObject *o = mess->ReadObject(TObject::Class());
+            if (mergerPlayer->AddOutputObject(o) == 1) {
+               // Remove the object if it has been merged
+               PDB(kSubmerger, 2)  Info("AcceptResults", "removing %p (has been merged)", o);
+               SafeDelete(o);
+            } else
+               PDB(kSubmerger, 2) Info("AcceptResults", "%p not merged yet", o);
+         }
       }
    }
    fMergingMonitor->DeActivateAll();
@@ -3403,14 +3402,14 @@ void TProofServ::HandleProcess(TMessage *mess)
       SafeDelete(evl);
 
       // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
-      Bool_t IsInMergingMode = kFALSE;
+      Bool_t isInMergingMode = kFALSE;
       Int_t nm = 0;
       if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
-         IsInMergingMode = kTRUE;
+         isInMergingMode = kTRUE;
       }
-      PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", IsInMergingMode);
+      PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isInMergingMode);
 
-      if (!IsMaster() && IsInMergingMode) {
+      if (!IsMaster() && isInMergingMode) {
          // Worker in merging mode.
          //----------------------------
          // First, it reports only the size of its output to the master 
