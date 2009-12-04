@@ -90,9 +90,9 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
          for (UInt_t i = 0; i < v1->size(); i++) prod += (*v1)[i] * (*v2)[i];
 
          Float_t result = 1.;
-         Int_t i = fOrder;
-         for (; i > 0; i /= 2) {
-            if (i%2) result = prod; 
+         Int_t j = fOrder;
+         for (; j > 0; j /= 2) {
+            if (j%2) result = prod; 
             prod *= prod; 
          } 
          return result;
