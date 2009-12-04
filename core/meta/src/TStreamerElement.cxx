@@ -1648,8 +1648,18 @@ Int_t TStreamerSTL::GetSize() const
    // Since the STL collection might or might not be emulated and that the
    // sizeof the object depends on this, let's just always retrieve the
    // current size!
-   UInt_t size = GetClassPointer()->Size();
-
+   TClass *cl = GetClassPointer();
+   UInt_t size = 0;
+   if (cl==0) {
+      if (!TestBit(kWarned)) {
+         Error("GetSize","Could not find the TClass for %s.\n"
+               "This is likely to have been a typedef, if possible please declare it in CINT to work around the issue\n",fTypeName.Data());
+         const_cast<TStreamerSTL*>(this)->SetBit(kWarned);
+      }
+   } else {
+      size = cl->Size();
+   }
+   
    if (fArrayLength) return fArrayLength*size;
    return size;
 }

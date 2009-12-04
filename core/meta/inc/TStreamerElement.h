@@ -345,6 +345,10 @@ public:
 //________________________________________________________________________
 class TStreamerSTL : public TStreamerElement {
 
+   enum {
+      kWarned       = BIT(21)
+   };
+   
 private:
    TStreamerSTL(const TStreamerSTL&);          // Not implemented
    TStreamerSTL&operator=(const TStreamerSTL&); // Not implemented
