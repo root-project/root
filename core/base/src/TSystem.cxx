@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <algorithm>
+#include <sys/stat.h>
 
 #include "Riostream.h"
 #include "TSystem.h"
@@ -51,6 +52,7 @@
 #include "TVirtualMutex.h"
 #include "compiledata.h"
 #include "RConfigure.h"
+#include "FastAllocString.h"
 
 const char *gRootDir;
 const char *gProgName;
