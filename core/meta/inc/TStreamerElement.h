@@ -336,6 +336,7 @@ public:
    TStreamerString();
    TStreamerString(const char *name, const char *title, Int_t offset);
    virtual       ~TStreamerString();
+   const char    *GetInclude() const;
    Int_t          GetSize() const;
 
    ClassDef(TStreamerString,2)  //Streamer element of type TString

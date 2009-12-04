@@ -1434,6 +1434,15 @@ TStreamerString::~TStreamerString()
 }
 
 //______________________________________________________________________________
+const char *TStreamerString::GetInclude() const
+{
+   // Return the proper include for this element.
+   
+   sprintf(gIncludeName,"<%s>","TString.h");
+   return gIncludeName;
+}
+
+//______________________________________________________________________________
 Int_t TStreamerString::GetSize() const
 {
    // Returns size of anyclass in bytes.
