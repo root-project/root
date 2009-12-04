@@ -848,7 +848,9 @@ TObject *TCanvas::DrawClonePad()
    TPad *pad = padsav;
    if (pad == this) pad = selpad;
    if (padsav == 0 || pad == 0 || pad == this) {
-      return DrawClone();
+      TCanvas *newCanvas = (TCanvas*)DrawClone();
+      newCanvas->SetWindowSize(GetWindowWidth(),GetWindowHeight());
+      return newCanvas;
    }
    if (fCanvasID == -1) {
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
