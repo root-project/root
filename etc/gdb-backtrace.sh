@@ -120,6 +120,7 @@ if ! test "x$OUTFILE" = "x/dev/stdout"; then
          *'<signal handler called>'* )
             # this frame doesn't exist
             skip="yes"
+            frames=""
             continue
             ;;
          Thread* )
