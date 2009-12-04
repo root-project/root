@@ -1653,7 +1653,7 @@ void TSystem::SetDynamicPath(const char *)
 
 
 //______________________________________________________________________________
-bool R__MatchFilename(const char *left, const char *right)
+static bool R__MatchFilename(const char *left, const char *right)
 {
    // Figure out if left and right points to the same
    // object in the file system.
