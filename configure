@@ -6046,7 +6046,7 @@ fi
 if test "x$enable_reflex" = "xyes"; then
     libdirreflex=$libdir
     if test "x$haveconfig" = "x" ; then
-        libdirreflex='`dirname $0`; if readlink $dir > /dev/null 2>\&1; then dir=`readlink $dir`; fi; dir=${dir}/../lib'
+        libdirreflex='$0; if readlink $dir > /dev/null 2>\&1; then dir=`readlink $dir`; fi; dir=`dirname ${dir}`/../lib'
     fi
 
     if test "x$platform" != "xwin32"; then
