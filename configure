@@ -2670,14 +2670,15 @@ if test ! "x$enable_g4root" = "xno"; then
         G4SYSLIBDIR=$G4LIB/$G4SYSTEM
     fi
     check_library "libG4navigation" "$enable_shared" "$g4libdir" \
-        $G4SYSLIBDIR /opt/geant4/lib /opt/g4/lib /usr/local/lib /usr/lib
+        $G4SYSLIBDIR /opt/geant4/lib /opt/g4/lib /usr/local/lib /usr/lib \
+        /usr/lib/geant4
 
     g4rootlib=$found_lib
     g4libdir=$found_dir
 
     # Check for CLHEP include
     check_header "CLHEP/Vector/Rotation.h" "$clhepincdir" "$clhepincdir" \
-        $CLHEP_INCLUDE_DIR
+        $CLHEP_INCLUDE_DIR /usr/include
     clhepinc=$found_hdr
     clhepincdir=$found_dir
 
