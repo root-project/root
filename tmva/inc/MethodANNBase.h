@@ -68,6 +68,7 @@
 #endif
 
 class TH1;
+class TH1F;
 
 namespace TMVA {
 

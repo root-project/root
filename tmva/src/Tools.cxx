@@ -39,6 +39,7 @@
 #include "TSpline.h"
 #include "TVector.h"
 #include "TMatrixD.h"
+#include "TMatrixDSymEigen.h"
 #include "TVectorD.h"
 #include "TTreeFormula.h"
 #include "TXMLEngine.h"

@@ -55,7 +55,7 @@ namespace TMVA {
 
    public:
 
-      SimulatedAnnealing( IFitterTarget& target, const std::vector<Interval*>& ranges );
+      SimulatedAnnealing( IFitterTarget& target, const std::vector<TMVA::Interval*>& ranges );
       virtual ~SimulatedAnnealing();
 
       // returns FCN value at minimum
@@ -97,7 +97,7 @@ namespace TMVA {
 
       IFitterTarget&                fFitterTarget;           // the fitter target
       TRandom*                      fRandom;                 // random generator
-      const std::vector<Interval*>& fRanges;                 // parameter ranges
+      const std::vector<TMVA::Interval*>& fRanges;                 // parameter ranges
 
       // fitter setup 
       Int_t                         fMaxCalls;               // maximum number of minimisation calls

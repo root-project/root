@@ -135,7 +135,7 @@ namespace TMVA {
       Bool_t                 fPow2Estimator;
 
       Int_t                  fNPars;              // number of parameters
-      std::vector<Interval*> fParRange;           // ranges of parameters
+      std::vector<TMVA::Interval*> fParRange;           // ranges of parameters
       TString                fFitMethod;          // estimator optimisation method
       TString                fConverger;          // fitmethod uses fConverger as intermediate step to converge into local minimas
       FitterBase*            fFitter;             // the fitter used in the training

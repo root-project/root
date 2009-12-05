@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -41,16 +41,22 @@
 #include <iostream>
 #include <iomanip>
 
-#ifndef ROOT_TMVA_TXMLEngine
 #ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
 #endif
+
+#ifndef ROOT_TMatrixDSymfwd
+#include "TMatrixDSymfwd.h"
 #endif
-#ifndef ROOT_TMVA_TMatrixDSymEigen
-#ifndef ROOT_TMatrixDSymEigen
-#include "TMatrixDSymEigen.h"
+
+#ifndef ROOT_TMatrixDfwd
+#include "TMatrixDfwd.h"
 #endif
+
+#ifndef ROOT_TVectorDfwd
+#include "TVectorDfwd.h"
 #endif
+
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
@@ -68,7 +74,7 @@ namespace TMVA {
    class Event;
    class PDF;
    class MsgLogger;
-   
+
    class Tools {
 
    private:
@@ -86,7 +92,7 @@ namespace TMVA {
 
       // simple statistics operations on tree entries
       void  ComputeStat( const std::vector<TMVA::Event*>&, std::vector<Float_t>*,
-                         Double_t&, Double_t&, Double_t&, 
+                         Double_t&, Double_t&, Double_t&,
                          Double_t&, Double_t&, Double_t&, Int_t signalClass, Bool_t norm = kFALSE );
 
       // compute variance from sums
@@ -94,7 +100,7 @@ namespace TMVA {
 
       // creates histograms normalized to one
       TH1* projNormTH1F( TTree* theTree, const TString& theVarName,
-                         const TString& name, Int_t nbins, 
+                         const TString& name, Int_t nbins,
                          Double_t xmin, Double_t xmax, const TString& cut );
 
       // normalize histogram by its integral
@@ -106,7 +112,7 @@ namespace TMVA {
       // parse option string for ANN methods
       std::vector<Int_t>* ParseANNOptionString( TString theOptions, Int_t nvar,
                                                 std::vector<Int_t>* nodes );
-      
+
       // returns the square-root of a symmetric matrix: symMat = sqrtMat*sqrtMat
       TMatrixD* GetSQRootMatrix( TMatrixDSym* symMat );
 
@@ -127,12 +133,12 @@ namespace TMVA {
       std::vector<Double_t> MVADiff( std::vector<Double_t>&, std::vector<Double_t>& );
       void Scale( std::vector<Double_t>&, Double_t );
       void Scale( std::vector<Float_t>&,  Float_t  );
-  
+
       // re-arrange a vector of arrays (vectors) in a way such that the first array
       // is ordered, and the other arrays reshuffeld accordingly
       void UsefulSortDescending( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
       void UsefulSortAscending ( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
-    
+
       void UsefulSortDescending( std::vector<Double_t>& );
       void UsefulSortAscending ( std::vector<Double_t>& );
 
@@ -197,7 +203,7 @@ namespace TMVA {
       // variables
       const TString fRegexp;
       mutable MsgLogger*    fLogger;
-      MsgLogger& Log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }
       static Tools* fgTools;
 
       // xml tools

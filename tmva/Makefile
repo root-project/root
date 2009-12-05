@@ -18,17 +18,55 @@ LIBDIR    = lib
 VPATH     = $(OBJDIR)
 INCLUDES += -I./
 
-DICTHEAD  = src/$(PACKAGE)_Dict.h
-DICTFILE  = src/$(PACKAGE)_Dict.C
-DICTOBJ   = $(OBJDIR)/$(PACKAGE)_Dict.o
-DICTLDEF  = inc/LinkDef.h
-SKIPCPPLIST = 
-SKIPHLIST =  $(DICTHEAD) $(DICTLDEF)
-LIBFILE   = lib/lib$(PACKAGE).a
-SHLIBFILE = lib$(PACKAGE).$(DllSuf)
-DLLIBFILE = lib/lib$(PACKAGE).dll
-ROOTMAP   = lib/lib$(PACKAGE).rootmap
-TESTDIR   = test
+DICTL1       := inc/LinkDef1.h
+DICTL2       := inc/LinkDef2.h
+DICTL3       := inc/LinkDef3.h
+DICTL4       := inc/LinkDef4.h
+DICTL        := $(DICTL1) $(DICTL2) $(DICTL3) $(DICTL4)
+DICTS1       := src/$(PACKAGE)_Dict1.C
+DICTS2       := src/$(PACKAGE)_Dict2.C
+DICTS3       := src/$(PACKAGE)_Dict3.C
+DICTS4       := src/$(PACKAGE)_Dict4.C
+DICTS        := $(DICTS1) $(DICTS2) $(DICTS3) $(DICTS4)
+DICTO1       := $(OBJDIR)/$(PACKAGE)_Dict1.o
+DICTO2       := $(OBJDIR)/$(PACKAGE)_Dict2.o
+DICTO3       := $(OBJDIR)/$(PACKAGE)_Dict3.o
+DICTO4       := $(OBJDIR)/$(PACKAGE)_Dict4.o
+DICTO        := $(DICTO1) $(DICTO2) $(DICTO3) $(DICTO4)
+DICTH1       := Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h \
+		MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h \
+		MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h \
+		MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h \
+		MethodFDA.h MethodMLP.h MethodCommittee.h MethodSeedDistance.h MethodBoost.h \
+		MethodPDEFoam.h MethodLD.h MethodCategory.h
+DICTH2       := TSpline2.h TSpline1.h PDF.h BinaryTree.h BinarySearchTreeNode.h BinarySearchTree.h \
+		Timer.h RootFinder.h CrossEntropy.h DecisionTree.h DecisionTreeNode.h MisClassificationError.h \
+		Node.h SdivSqrtSplusB.h SeparationBase.h RegressionVariance.h Tools.h Reader.h \
+		GeneticAlgorithm.h GeneticGenes.h GeneticPopulation.h GeneticRange.h GiniIndex.h \
+		GiniIndexWithLaplace.h SimulatedAnnealing.h
+DICTH3       := Config.h KDEKernel.h Interval.h FitterBase.h MCFitter.h GeneticFitter.h SimulatedAnnealingFitter.h \
+		MinuitFitter.h MinuitWrapper.h IFitterTarget.h IMetric.h MetricEuler.h MetricManhattan.h \
+		SeedDistance.h PDEFoam.h PDEFoamDistr.h PDEFoamVect.h PDEFoamCell.h BDTEventWrapper.h CCTreeWrapper.h \
+		CCPruner.h CostComplexityPruneTool.h SVEvent.h
+DICTH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivationSigmoid.h TActivationIdentity.h \
+		TActivationTanh.h TActivationRadial.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h \
+		TNeuronInputSqSum.h TNeuronInputAbs.h Types.h Ranking.h RuleFit.h RuleFitAPI.h IMethod.h MsgLogger.h \
+		VariableTransformBase.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h \
+		VariableGaussTransform.h VariableNormalizeTransform.h
+DICTH1       := $(patsubst %,inc/%,$(DICTH1))
+DICTH2       := $(patsubst %,inc/%,$(DICTH2))
+DICTH3       := $(patsubst %,inc/%,$(DICTH3))
+DICTH4       := $(patsubst %,inc/%,$(DICTH4))
+DICTH        := $(DICTH1) $(DICTH2) $(DICTH3) $(DICTH4)
+
+
+SKIPCPPLIST  := 
+SKIPHLIST    := $(DICTHEAD) $(DICTL)
+LIBFILE      := lib/lib$(PACKAGE).a
+SHLIBFILE    := lib$(PACKAGE).$(DllSuf)
+DLLIBFILE    := lib/lib$(PACKAGE).dll
+ROOTMAP      := lib/lib$(PACKAGE).rootmap
+TESTDIR      := test
 UNAME = $(shell uname)
 
 default: shlib linklib
@@ -36,13 +74,17 @@ default: shlib linklib
 # List of all source files to build
 HLIST   = $(filter-out $(SKIPHLIST),$(wildcard inc/*.h))
 CPPLIST = $(filter-out $(SKIPCPPLIST),$(patsubst src/%,%,$(wildcard src/*.$(SrcSuf))))
-DICTHLIST = $(HLIST)
 
 # List of all object files to build
 OLIST=$(patsubst %.cxx,%.o,$(CPPLIST))
 DEPLIST=$(foreach var,$(CPPLIST:.$(SrcSuf)=.d),$(DEPDIR)/$(var))
 
 # Implicit rule to compile all classes
+sl:
+	if [[ ( ! -e TMVA ) ]]; then \
+		ln -sf inc TMVA; \
+	fi
+
 %.o : src/%.cxx 
 	if [[ ( ! -e TMVA ) ]]; then \
 		ln -sf inc TMVA; \
@@ -53,16 +95,45 @@ DEPLIST=$(foreach var,$(CPPLIST:.$(SrcSuf)=.d),$(DEPDIR)/$(var))
 	@echo "Done"
 
 # Rule to make the dictionary
-dict: $(DICTOBJ)
+dict: sl $(DICTO1) $(DICTO2) $(DICTO3) $(DICTO4)
 
-$(DICTFILE):  $(DICTHLIST) $(DICTLDEF)
+$(DICTS1):  $(DICTH1) $(DICTL1)
 	@echo "Generating dictionary $@" 
 	$(shell root-config --exec-prefix)/bin/rootcint -f $@ -c -p $(INCLUDES) $^
 
-$(DICTOBJ): $(DICTFILE)
+$(DICTS2):  $(DICTH2) $(DICTL2)
+	@echo "Generating dictionary $@" 
+	$(shell root-config --exec-prefix)/bin/rootcint -f $@ -c -p $(INCLUDES) $^
+
+$(DICTS3):  $(DICTH3) $(DICTL3)
+	@echo "Generating dictionary $@" 
+	$(shell root-config --exec-prefix)/bin/rootcint -f $@ -c -p $(INCLUDES) $^
+
+$(DICTS4):  $(DICTH4) $(DICTL4)
+	@echo "Generating dictionary $@" 
+	$(shell root-config --exec-prefix)/bin/rootcint -f $@ -c -p $(INCLUDES) $^
+
+$(DICTO1): $(DICTS1)
 	@echo "Compiling dictionary $<"
 	@mkdir -p $(OBJDIR)
 	@$(CXX) $(INCLUDES) $(CXXFLAGS) -g -c  -o $@ $<
+
+$(DICTO2): $(DICTS2)
+	@echo "Compiling dictionary $<"
+	@mkdir -p $(OBJDIR)
+	@$(CXX) $(INCLUDES) $(CXXFLAGS) -g -c  -o $@ $<
+
+$(DICTO3): $(DICTS3)
+	@echo "Compiling dictionary $<"
+	@mkdir -p $(OBJDIR)
+	@$(CXX) $(INCLUDES) $(CXXFLAGS) -g -c  -o $@ $<
+
+$(DICTO4): $(DICTS4)
+	@echo "Compiling dictionary $<"
+	@mkdir -p $(OBJDIR)
+	@$(CXX) $(INCLUDES) $(CXXFLAGS) -g -c  -o $@ $<
+
+
 
 # Rule to set up a symbolic links to the created shared library
 linklib:
@@ -98,19 +169,19 @@ $(DEPDIR)/%.d: src/%.$(SrcSuf)
 	fi
 
 # Rule to combine objects into a library
-$(LIBFILE): $(DICTOBJ) $(OLIST)
+$(LIBFILE): $(DICTO) $(OLIST)
 	@printf "Making static library $(LIBFILE) ... "
 	@rm -f $(LIBFILE)
-	@ar q $(LIBFILE) $(addprefix $(OBJDIR)/,$(OLIST) $(DICTOBJ)
+	@ar q $(LIBFILE) $(addprefix $(OBJDIR)/,$(OLIST) $(DICTO)
 	@ranlib $(LIBFILE)
 	@echo "Done"
 
 # Rule to combine objects into a unix shared library
-$(LIBDIR)/$(SHLIBFILE): $(OLIST) $(DICTOBJ)
+$(LIBDIR)/$(SHLIBFILE): $(OLIST) $(DICTO)
 	@printf "Building shared library $(LIBDIR)/$(SHLIBFILE) ... "
 	@mkdir -p $(LIBDIR)
 	@rm -f $(LIBDIR)/$(SHLIBFILE)
-	@$(LD) -L$(shell root-config --libdir) $(SOFLAGS) $(addprefix $(OBJDIR)/,$(OLIST)) $(DICTOBJ) -o $(LIBDIR)/$(SHLIBFILE) -lMinuit -lXMLIO
+	@$(LD) -L$(shell root-config --libdir) $(SOFLAGS) $(addprefix $(OBJDIR)/,$(OLIST)) $(DICTO) -o $(LIBDIR)/$(SHLIBFILE) -lMinuit -lXMLIO
 #	ln -fs $(SHLIBFILE) lib/lib$(PACKAGE).1.so
 	@echo "Done"
 
@@ -122,7 +193,7 @@ $(ROOTMAP): $(DICTLDEF)
 	@echo "Done"
 
 # Rule to combine objects into a windows shared library
-$(DLLIBFILE): $(OLIST) $(DICTOBJ)
+$(DLLIBFILE): $(OLIST) $(DICTO)
 	@printf "Making dll file $(DLLIBFILE) ... "
 	@rm -f $(DLLIBFILE)
 	$(LD) -Wl,--export-all-symbols -Wl,--export-dynamic -Wl,--enable-auto-import -Wl,-Bdynamic -shared --enable-auto-image-base -Wl,-soname -o $(DLLIBFILE) -Wl,--whole-archive $(addprefix $(OBJDIR)/,$(OLIST) $(patsubst %.$(SrcSuf),%.o,$(DICTFILE))) -Wl,--no-whole-archive -L$(ROOTSYS)/lib -lCore -lCint -lHist -lGraf -lGraf3d -lTree -lRint -lPostscript -lMatrix -lMinuit -lPhysics -lHtml -lXMLIO -lm
@@ -137,13 +208,13 @@ winlib: $(DLLIBFILE)
 
 vars:
 	#echo $(patsubst src/%,%,$(wildcard src/*.$(SrcSuf)))
-	echo $(LIBDIR)/$(SHLIBFILE)
+	echo $(DICTS)
 
 clean:
 	rm -rf obj
 	rm -rf lib
 	rm -f TMVA 
-	rm -f $(DICTFILE) $(DICTHEAD)
+	rm -f $(DICTS) $(DICTS:.C=.h)
 	rm -f $(OBJDIR)/*.o
 	rm -f $(DEPDIR)/*.d
 	rm -f $(LIBFILE)

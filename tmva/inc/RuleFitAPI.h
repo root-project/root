@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Interface to Friedman's RuleFit method                                    * 
+ *      Interface to Friedman's RuleFit method                                    *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker    <Andreas.Hocker@cern.ch>     - CERN, Switzerland       *
@@ -17,9 +17,9 @@
  *      Kai Voss           <Kai.Voss@cern.ch>           - U. of Victoria, Canada  *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-KP Heidelberg, Germany                                                *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -40,9 +40,10 @@
 
 #include <fstream>
 
+#include "TMVA/MsgLogger.h"
+
 namespace TMVA {
 
-   class MsgLogger;
    class MethodRuleFit;
 
    class RuleFitAPI {
@@ -81,7 +82,7 @@ namespace TMVA {
       enum ERFMode    { kRfRegress=1, kRfClass=2 };          // RuleFit modes, default=Class
       enum EModel     { kRfLinear=0, kRfRules=1, kRfBoth=2 }; // models, default=Both (rules+linear)
       enum ERFProgram { kRfTrain=0, kRfPredict, kRfVarimp };    // rf_go.exe running mode
-  
+
       // integer parameters
       typedef struct {
          Int_t mode;
@@ -136,7 +137,7 @@ namespace TMVA {
       inline Bool_t WriteFloat(ofstream & f, const Float_t *v, Int_t n=1);
       inline Int_t  ReadInt(ifstream & f,   Int_t *v, Int_t n=1) const;
       inline Int_t  ReadFloat(ifstream & f, Float_t *v, Int_t n=1) const;
-  
+
       // write rf_go.exe i/o files
       Bool_t WriteAll();
       Bool_t WriteIntParms();
@@ -187,7 +188,7 @@ namespace TMVA {
       ERFProgram           fRFProgram;   // what to run
       TString              fModelType;   // model type string
 
-      mutable MsgLogger    fLogger;          // message logger
+      mutable MsgLogger    fLogger;      // message logger
 
       ClassDef(RuleFitAPI,0)        // Friedman's RuleFit method
 

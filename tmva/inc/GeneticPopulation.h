@@ -59,7 +59,7 @@ namespace TMVA {
 
    public:
 
-      GeneticPopulation(const std::vector<Interval*>& ranges, Int_t size, UInt_t seed = 0);
+      GeneticPopulation(const std::vector<TMVA::Interval*>& ranges, Int_t size, UInt_t seed = 0);
       virtual ~GeneticPopulation();
 
       void SetRandomSeed( UInt_t seed = 0);
