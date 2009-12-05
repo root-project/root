@@ -2386,7 +2386,7 @@ if test ! "x$enable_qt" = "xno" || \
             check_library "libQtCore QtCore QtCore$qt4suffix QtCore4" \
                 "$enable_shared" \
                 "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib \
-                /usr/local/qt/lib /usr/lib /usr/qt/lib
+                /usr/local/qt/lib /usr/lib /usr/qt/lib /usr/lib/qt4
             qtlib=$found_lib
             qtlibdir=$found_dir
             check_library "libQtGui QtGui QtGui$qt4suffix QtGui4" \
@@ -2895,7 +2895,7 @@ check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
 if test ! "x$enable_pythia8" = "xno" ; then
     # Check for PYTHIA8 include and library
     check_header "Pythia.h" "$pythia8incdir" $PYTHIA8 $PYTHIA8/include \
-        /opt/pythia8/include /usr/local/include /usr/include
+        /opt/pythia8/include /usr/local/include /usr/include /usr/include/pythia
     pythia8incdir=$found_dir
 
     check_library "libpythia8" "$enable_shared" "$pythia8libdir" \
@@ -3325,7 +3325,7 @@ if test ! "x$enable_python" = "xno" ; then
                    libpython${pysuffix} python${pysuffix} Python${pysuffix}" \
         "$enable_shared" "$pythonlibdir" $PYTHONDIR/libs $PYTHONDIR/lib \
         $PYTHONDIR $pythonsyslibdir $pythonsyslibdir/config \
-        $pythonsyslibdir2
+        $pythonsyslibdir2 /usr/lib
     pythonlib=$found_lib
     pythonlibdir=$found_dir
 
