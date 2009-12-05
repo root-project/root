@@ -329,12 +329,12 @@ void TMVA::MethodLikelihood::Train( void )
       if (DataInfo().GetVariableInfo(ivar).GetVarType() == 'I') {
          // special treatment for integer variables
          Int_t ixmin = TMath::Nint( xmin[ivar] );
-         Int_t ixmax = TMath::Nint( xmax[ivar] + 1 );
+         xmax[ivar]=xmax[ivar]+1; // make sure that all entries are included in histogram
+         Int_t ixmax = TMath::Nint( xmax[ivar] );
          Int_t nbins = ixmax - ixmin;
 
          (*fHistSig)[ivar] = new TH1F( var + "_sig", var + " signal training",     nbins, ixmin, ixmax );
          (*fHistBgd)[ivar] = new TH1F( var + "_bgd", var + " background training", nbins, ixmin, ixmax );
-
       } else {
 
          UInt_t minNEvt = TMath::Min(Data()->GetNEvtSigTrain(),Data()->GetNEvtBkgdTrain());

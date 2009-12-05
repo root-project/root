@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Andrzej Zemla
 
 /**********************************************************************************
@@ -13,11 +13,11 @@
  * Authors (alphabetical):                                                        *
  *      Marcin Wolter  <Marcin.Wolter@cern.ch> - IFJ PAN, Krakow, Poland          *
  *      Andrzej Zemla  <azemla@cern.ch>        - IFJ PAN, Krakow, Poland          *
- *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *   
+ *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      PAN, Krakow, Poland                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -76,10 +76,10 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
       {
          std::vector<Float_t> *v1 = ev1->GetDataVector();
          std::vector<Float_t> *v2 = ev2->GetDataVector();
-         
+
          Float_t norm = 0;
          for (UInt_t i = 0; i < v1->size(); i++) norm += ((*v1)[i] -(*v2)[i]) *((*v1)[i] -(*v2)[i]) ;
-         
+
          return TMath::Exp(-norm*fGamma);
       }
    case kPolynomial:
@@ -87,14 +87,14 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
          std::vector<Float_t> *v1 = ev1->GetDataVector();
          std::vector<Float_t> *v2 = ev2->GetDataVector();
          Float_t prod = fTheta;
-         for (UInt_t i = 0; i < v1->size(); i++) prod += (*v1)[i] * (*v2)[i];
+         for (UInt_t idx = 0; idx < v1->size(); idx++) prod += (*v1)[idx] * (*v2)[idx];
 
          Float_t result = 1.;
-         Int_t j = fOrder;
-         for (; j > 0; j /= 2) {
-            if (j%2) result = prod; 
-            prod *= prod; 
-         } 
+         Int_t i = fOrder;
+         for (; i > 0; i /= 2) {
+            if (i%2) result = prod;
+            prod *= prod;
+         }
          return result;
       }
    case kLinear:

@@ -28,6 +28,7 @@ LIBFILE   = lib/lib$(PACKAGE).a
 SHLIBFILE = lib$(PACKAGE).$(DllSuf)
 DLLIBFILE = lib/lib$(PACKAGE).dll
 ROOTMAP   = lib/lib$(PACKAGE).rootmap
+TESTDIR   = test
 UNAME = $(shell uname)
 
 default: shlib linklib
