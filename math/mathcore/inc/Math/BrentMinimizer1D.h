@@ -27,7 +27,7 @@
 // 
 //
 
-#include "IMinimizer1D.h"
+#include "Math/IMinimizer1D.h"
 #include "Math/IFunction.h"
 
 #ifndef ROOT_Math_BrentMinimizer1D
