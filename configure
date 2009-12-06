@@ -5298,6 +5298,7 @@ rm -f lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld*
 rm -f lib/libSQL.* bin/libSQL.*
 rm -f lib/libASPluginGS.* bin/g2rootold*
 rm -f math/mathcore/src/G__MathCore32.*
+rm -f tmva/src/G__TMVA.*
 rm -f xrootd/src/headers.d
 rm -f asimage/src/headers.d asimage/src/G__ASImageGS.*
 
