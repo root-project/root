@@ -15,6 +15,7 @@
 
 // Standard
 #include <string>
+#include <typeinfo>
 
 
 //- private helpers ----------------------------------------------------------
