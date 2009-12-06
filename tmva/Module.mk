@@ -1,7 +1,7 @@
 # Module.mk for tmva module
 # Copyright (c) 2006 Rene Brun and Fons Rademakers
 #
-# Author: Fons Rademakers, 20/6/2005
+# Author: Fons Rademakers, 20/6/2009
 
 MODNAME      := tmva
 MODDIR       := $(MODNAME)
@@ -55,6 +55,10 @@ TMVAH1       := $(patsubst %,$(MODDIRI)/%,$(TMVAH1))
 TMVAH2       := $(patsubst %,$(MODDIRI)/%,$(TMVAH2))
 TMVAH3       := $(patsubst %,$(MODDIRI)/%,$(TMVAH3))
 TMVAH4       := $(patsubst %,$(MODDIRI)/%,$(TMVAH4))
+TMVAH1C      := $(subst tmva/inc,include/TMVA,$(TMVAH1))
+TMVAH2C      := $(subst tmva/inc,include/TMVA,$(TMVAH2))
+TMVAH3C      := $(subst tmva/inc,include/TMVA,$(TMVAH3))
+TMVAH4C      := $(subst tmva/inc,include/TMVA,$(TMVAH4))
 TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TMVAO        := $(TMVAS:.cxx=.o)
@@ -86,18 +90,18 @@ $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 		   "$(SOFLAGS)" libTMVA.$(SOEXT) $@ "$(TMVAO) $(TMVADO)" \
 		   "$(TMVALIBEXTRA)"
 
-$(TMVADS1):     $(TMVAH1) $(TMVAL1) $(ROOTCINTTMPDEP)
+$(TMVADS1):     $(TMVAH1C) $(TMVAL1) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVADIRI:%=-I%) $(TMVAH1) $(TMVAL1)
-$(TMVADS2):     $(TMVAH2) $(TMVAL2) $(ROOTCINTTMPDEP)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH1C) $(TMVAL1)
+$(TMVADS2):     $(TMVAH2C) $(TMVAL2) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVADIRI:%=-I%) $(TMVAH2) $(TMVAL2)
-$(TMVADS3):     $(TMVAH3) $(TMVAL3) $(ROOTCINTTMPDEP)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH2C) $(TMVAL2)
+$(TMVADS3):     $(TMVAH3C) $(TMVAL3) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVADIRI:%=-I%) $(TMVAH3) $(TMVAL3)
-$(TMVADS4):     $(TMVAH4) $(TMVAL4) $(ROOTCINTTMPDEP)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH3C) $(TMVAL3)
+$(TMVADS4):     $(TMVAH4C) $(TMVAL4) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVADIRI:%=-I%) $(TMVAH4) $(TMVAL4)
+		$(ROOTCINTTMP) -f $@ -c $(TMVAH4C) $(TMVAL4)
 
 $(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVAL)
 		$(RLIBMAP) -o $(TMVAMAP) -l $(TMVALIB) \
@@ -115,6 +119,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf include/TMVA
 
 distclean::     distclean-$(MODNAME)
-
-##### extra rules ######
-$(TMVADO):   CXXFLAGS += $(TMVADIRI:%=-I%)
