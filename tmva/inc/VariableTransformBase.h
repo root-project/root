@@ -66,7 +66,7 @@ namespace TMVA {
    class VariableTransformBase : public TObject {
 
    public:
-  
+
       VariableTransformBase( DataSetInfo& dsi, Types::EVariableTransform tf, const TString& trfName );
       virtual ~VariableTransformBase( void );
 
@@ -89,7 +89,7 @@ namespace TMVA {
       TString GetShortName() const { TString a(fTransformName); a.ReplaceAll("Transform",""); return a; }
 
       virtual void WriteTransformationToStream ( std::ostream& o ) const = 0;
-      virtual void ReadTransformationFromStream( std::istream& istr, const TString& classname ) = 0;
+      virtual void ReadTransformationFromStream( std::istream& istr, const TString& classname="" ) = 0;
 
       virtual void AttachXMLTo(void* parent) = 0;
       virtual void ReadFromXML( void* trfnode ) = 0;
@@ -97,7 +97,7 @@ namespace TMVA {
       Types::EVariableTransform GetVariableTransform() const { return fVariableTransform; }
 
       // writer of function code
-      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, 
+      virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part,
                                  UInt_t trCounter, Int_t cls ) = 0;
 
       // provides string vector giving explicit transformation
@@ -107,7 +107,7 @@ namespace TMVA {
       const std::vector<TMVA::VariableInfo>& Variables() const { return fVariables; }
       const std::vector<TMVA::VariableInfo>& Targets()   const { return fTargets;   }
 
-      MsgLogger& Log() const { return *fLogger; }                       
+      MsgLogger& Log() const { return *fLogger; }
 
       void SetTMVAVersion(TMVAVersion_t v) { fTMVAVersion = v; }
 
@@ -151,11 +151,11 @@ namespace TMVA {
 
       TMVAVersion_t                    fTMVAVersion;
 
-      mutable MsgLogger* fLogger;                     //! message logger      
+      mutable MsgLogger* fLogger;                     //! message logger
 
       ClassDef(VariableTransformBase,0)   //  Base class for variable transformations
    };
 
 } // namespace TMVA
 
-#endif 
+#endif

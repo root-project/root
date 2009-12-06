@@ -33,7 +33,7 @@
  **********************************************************************************/
 
 #include <cstdlib>
-#include <iostream> 
+#include <iostream>
 #include <map>
 #include <string>
 
@@ -52,7 +52,7 @@
 // read input data file with ascii format (otherwise ROOT) ?
 Bool_t ReadDataFromAsciiIFormat = kFALSE;
 
-int main( int argc, char** argv ) 
+int main( int argc, char** argv )
 {
    //---------------------------------------------------------------
    // default MVA methods to be trained + tested
@@ -419,7 +419,7 @@ int main( int argc, char** argv )
          //
          // # plugin handler          plugin name(regexp) class to be instanciated library        constructor format
          // Plugin.TMVA@@MethodBase:  ^BDT                TMVA::MethodBDT          TMVA.1         "MethodBDT(TString,TString,DataSet&,TString)"
-         // 
+         //
          // or by telling the global plugin manager directly
       gPluginMgr->AddHandler("TMVA@@MethodBase", "BDT", "TMVA::MethodBDT", "TMVA.1", "MethodBDT(TString,TString,DataSet&,TString)");
       factory->BookMethod( TMVA::Types::kPlugins, "BDT",
@@ -437,7 +437,7 @@ int main( int argc, char** argv )
    factory->TestAllMethods();
 
    // ----- Evaluate and compare performance of all configured MVAs
-   factory->EvaluateAllMethods();    
+   factory->EvaluateAllMethods();
 
    // --------------------------------------------------------------
    

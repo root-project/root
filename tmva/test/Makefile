@@ -5,8 +5,8 @@
 
 MAKEFLAGS = --no-print-directory -r -s
 
-INCLUDE = -I../include $(shell root-config --cflags)
-LIBS    = -L../lib/ $(shell root-config --libs) -lTMVA.1 -lMLP -lTreePlayer -lMinuit
+INCLUDE = -I../ $(shell root-config --cflags)
+LIBS    = -L../lib -lTMVA.1 $(shell root-config --libs) -lMLP -lTreePlayer -lMinuit
 
 BINS = TMVAClassification TMVAClassificationCategory TMVAClassificationApplication TMVAClassificationCategoryApplication TMVARegression TMVARegressionApplication
 
@@ -45,7 +45,7 @@ clean:
 	rm -f $(BINS)
 
 $(TMVALIB): ../src/*.cxx ../inc/*.h
-	$(MAKE) -C ../src/
+	$(MAKE) -C ..
 
 install:
 	@mkdir -p $(PUBLISH)
@@ -79,7 +79,7 @@ $(PUBLISH)/uptodate: install TMVApp.root ../test/CompareHistsTrainAndApplied.C
 
 
 
-$(BINS): % : %.cxx ../inc/*.h
+$(BINS): % : %.cxx $(TMVALIB)
 	@echo -n "Building $@ ... "
 	$(CXX) $(CCFLAGS) $< $(INCLUDE) $(LIBS) -g -o $@
 	@echo "Done"

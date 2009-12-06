@@ -56,14 +56,14 @@ namespace TMVA {
       // constructors
       Event();
       Event( const Event& );
-      explicit Event( const std::vector<Float_t>& values, 
-                      const std::vector<Float_t>& targetValues, 
-                      const std::vector<Float_t>& spectatorValues, 
+      explicit Event( const std::vector<Float_t>& values,
+                      const std::vector<Float_t>& targetValues,
+                      const std::vector<Float_t>& spectatorValues,
                       UInt_t theClass = 0, Float_t weight = 1.0, Float_t boostweight = 1.0 );
-      explicit Event( const std::vector<Float_t>& values, 
-                      const std::vector<Float_t>& targetValues, 
+      explicit Event( const std::vector<Float_t>& values,
+                      const std::vector<Float_t>& targetValues,
                       UInt_t theClass = 0, Float_t weight = 1.0, Float_t boostweight = 1.0 );
-      explicit Event( const std::vector<Float_t>&, 
+      explicit Event( const std::vector<Float_t>&,
                       UInt_t theClass, Float_t weight = 1.0, Float_t boostweight = 1.0 );
       explicit Event( const std::vector<Float_t*>*&, UInt_t nvar );
 
@@ -76,17 +76,20 @@ namespace TMVA {
       Float_t GetWeight()         const { return fWeight*fBoostWeight; }
       Float_t GetOriginalWeight() const { return fWeight; }
       Float_t GetBoostWeight()    const { return TMath::Max(Float_t(0.0001),fBoostWeight); }
-      UInt_t  GetClass()          const { return fClass; }  
+      UInt_t  GetClass()          const { return fClass; }
       Int_t   GetSignalClass()    const { return fSignalClass; } // intermediate solution to keep IsSignal() of Event working
 
       UInt_t  GetNVariables()        const;
       UInt_t  GetNTargets()          const;
       UInt_t  GetNSpectators()       const;
+      UInt_t  GetNVars()             const { return GetNVariables(); }  // backward compatible -> to be removed
 
       const std::vector<UInt_t>* GetVariableArrangement() const { return fVariableArrangement; }
 
       Float_t GetValue( UInt_t ivar) const;
       const std::vector<Float_t>& GetValues() const;
+      Float_t GetVal(UInt_t ivar) const { return GetValue(ivar); }   // backward compatible -> to be removed
+
 
       Float_t GetTarget( UInt_t itgt ) const { return fTargets.at(itgt); }
       std::vector<Float_t>& GetTargets() const { return fTargets; }

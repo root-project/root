@@ -77,6 +77,7 @@ CPPLIST = $(filter-out $(SKIPCPPLIST),$(patsubst src/%,%,$(wildcard src/*.$(SrcS
 
 # List of all object files to build
 OLIST=$(patsubst %.cxx,%.o,$(CPPLIST))
+OLIST=$(CPPLIST:.$(SrcSuf)=.o)
 DEPLIST=$(foreach var,$(CPPLIST:.$(SrcSuf)=.d),$(DEPDIR)/$(var))
 
 # Implicit rule to compile all classes
@@ -85,13 +86,13 @@ sl:
 		ln -sf inc TMVA; \
 	fi
 
-%.o : src/%.cxx 
+$(OBJDIR)/%.o : src/%.cxx 
 	if [[ ( ! -e TMVA ) ]]; then \
 		ln -sf inc TMVA; \
 	fi
 	@printf "Compiling $< ... "
 	@mkdir -p $(OBJDIR)
-	@$(CXX) $(INCLUDES) $(CXXFLAGS) -ggdb -c $< -o $(OBJDIR)/$(notdir $@)
+	@$(CXX) $(INCLUDES) $(CXXFLAGS) -ggdb -c $< -o $@
 	@echo "Done"
 
 # Rule to make the dictionary
@@ -161,9 +162,12 @@ endif
 
 $(DEPDIR)/%.d: src/%.$(SrcSuf)
 	@mkdir -p $(DEPDIR)
+	if [[ ( ! -e TMVA ) ]]; then \
+		ln -sf inc TMVA; \
+	fi
 	if test -f $< ; then \
 		printf "Building $(@F) ... "; \
-		$(SHELL) -ec '`root-config --exec-prefix`/bin/rmkdepend -f- -Y -w 3000 -- -I../include -- $< 2> /dev/null 1| sed -e "s-\(.*\).o: .*-$(DEPDIR)\/\1.d &-" > $@'; \
+		$(SHELL) -ec '`root-config --exec-prefix`/bin/rmkdepend -f- -Y -w 3000 -- -I./ -- $< 2> /dev/null 1| sed -e "s-src/\(.*\).o\(: .*\)-$(DEPDIR)\/\1.d $(OBJDIR)/\1.o\2-" > $@'; \
 		rm -f $@.bak; \
 		echo "Done"; \
 	fi
@@ -186,10 +190,10 @@ $(LIBDIR)/$(SHLIBFILE): $(OLIST) $(DICTO)
 	@echo "Done"
 
 # Rule to combine objects into a unix shared library
-$(ROOTMAP): $(DICTLDEF)
+$(ROOTMAP): $(DICTL)
 	@printf "Building $(ROOTMAP) ... "
 	@mkdir -p $(LIBDIR)
-	rlibmap -f -o $@ -l lib$(PACKAGE).1.$(DllSuf) -d libMinuit.so libMLP.so libMatrix.so libTree.so libGraf.so libTreePlayer.so libXMLIO.so -c $<
+	rlibmap -f -o $@ -l lib$(PACKAGE).1.$(DllSuf) -d libMinuit.so libMLP.so libMatrix.so libTree.so libGraf.so libTreePlayer.so libXMLIO.so -c $^
 	@echo "Done"
 
 # Rule to combine objects into a windows shared library
@@ -208,7 +212,7 @@ winlib: $(DLLIBFILE)
 
 vars:
 	#echo $(patsubst src/%,%,$(wildcard src/*.$(SrcSuf)))
-	echo $(DICTS)
+	echo $(OLIST) $(DICTO)
 
 clean:
 	rm -rf obj
@@ -237,3 +241,4 @@ distclean:
 
 .PHONY : winlib shlib lib default clean
 
+# DO NOT DELETE
