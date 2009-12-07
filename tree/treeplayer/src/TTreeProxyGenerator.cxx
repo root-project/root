@@ -1119,28 +1119,28 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
          // Create a holder
          TString type = "unknown";
-         TBranchProxyClassDescriptor *cldesc = new TBranchProxyClassDescriptor(branch->GetName());
-         TBranchProxyClassDescriptor *added = AddClass(cldesc);
-         if (added) type = added->GetName();
+         TBranchProxyClassDescriptor *cldesc = AddClass( new TBranchProxyClassDescriptor(branch->GetName()) );
+         if (cldesc) {
+            type = cldesc->GetName();
 
-         for(int l=0;l<nleaves;l++) {
-            TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-            extraLookedAt += AnalyzeOldLeaf(leaf,level+1,cldesc);
+            for(int l=0;l<nleaves;l++) {
+               TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
+               extraLookedAt += AnalyzeOldLeaf(leaf,level+1,cldesc);
+            }
          }
 
          TString dataMemberName = branchName;
 
-         TBranchProxyDescriptor *desc;
          if (topdesc) {
-            topdesc->AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
-                                                                       type,
-                                                                       branchName.Data() ),
+            topdesc->AddDescriptor(  new TBranchProxyDescriptor( dataMemberName.Data(),
+                                                                 type,
+                                                                 branchName.Data() ),
                                     0 );
          } else {
             // leafname.Prepend(prefix);
-            AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
-                                                              type,
-                                                              branchName.Data() ) );
+            AddDescriptor( new TBranchProxyDescriptor( dataMemberName.Data(),
+                                                       type,
+                                                       branchName.Data() ) );
          }
 
       } else {
