@@ -3107,6 +3107,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
             case  1:
             case  2:
                hasArray = kTRUE;
+               forceDim = kTRUE;
+               break;
             case -1:
                forceDim = kTRUE;
                break;

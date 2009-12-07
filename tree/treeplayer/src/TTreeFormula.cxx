@@ -4574,6 +4574,7 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
                   return kTRUE;
                }
             }
+            return kFALSE;
          } else if (leaf->InheritsFrom("TLeafElement")) {
             TBranchElement * br = (TBranchElement*)leaf->GetBranch();
             Int_t bid = br->GetID();
