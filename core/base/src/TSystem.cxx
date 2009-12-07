@@ -52,7 +52,6 @@
 #include "TVirtualMutex.h"
 #include "compiledata.h"
 #include "RConfigure.h"
-#include "FastAllocString.h"
 
 const char *gRootDir;
 const char *gProgName;
@@ -1669,8 +1668,9 @@ static bool R__MatchFilename(const char *left, const char *right)
    }
    
 #ifdef G__WIN32
-   G__FastAllocString leftname(_MAX_PATH);
-   G__FastAllocString rightname(_MAX_PATH);
+
+   char leftname[_MAX_PATH];
+   char rightname[_MAX_PATH];
    _fullpath( leftname, left, _MAX_PATH );
    _fullpath( rightname, right, _MAX_PATH );
    return ((stricmp(leftname, rightname)==0));
@@ -1794,16 +1794,29 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 
    ret = -1;
    if (path) {
-      // Mark the library in $ROOTSYS/lib as system.
-      const char *dirname = DirName(path);
+      if (!system) {
+         // Mark the library in $ROOTSYS/lib as system.
+         const char *dirname = DirName(path);
 #ifdef ROOTLIBDIR
-      TString rootlibdir = ROOTLIBDIR;
+         TString rootlibdir = ROOTLIBDIR;
 #else
-      const char *libdirname = ConcatFileName(gRootDir,"lib");
-      TString rootlibdir = libdirname;
-      delete [] libdirname;
+         const char *libdirname = ConcatFileName(gRootDir,"lib");
+         TString rootlibdir = libdirname;
+         delete [] libdirname;
 #endif
-      system = R__MatchFilename(rootlibdir,dirname);
+         system = R__MatchFilename(rootlibdir,dirname);
+
+         if (!system) {
+#ifdef ROOTBINDIR
+            TString rootbindir = ROOTBINDIR;
+#else
+            const char *libbinname = ConcatFileName(gRootDir,"bin");
+            TString rootbindir = libbinname;
+            delete [] libbinname;
+#endif
+            system = R__MatchFilename(rootbindir,dirname);
+         }
+      }
 
       gLibraryVersionIdx++;
       if (gLibraryVersionIdx == gLibraryVersionMax) {
