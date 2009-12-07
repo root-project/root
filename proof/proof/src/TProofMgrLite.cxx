@@ -47,12 +47,13 @@ TProofMgrLite::TProofMgrLite(const char *url, Int_t dbg, const char *alias)
 }
 
 //______________________________________________________________________________
-TProof *TProofMgrLite::CreateSession(const char *,
+TProof *TProofMgrLite::CreateSession(const char *cfg,
                                      const char *, Int_t loglevel)
 {
    // Create a new session
 
    Int_t nwrk = TProofLite::GetNumberOfWorkers(fUrl.GetOptions());
+   if (nwrk == 0) return (TProof *)0;
 
    // Check if we have already a running session
    if (gProof && gProof->IsValid() && gProof->IsLite()) {
@@ -68,7 +69,7 @@ TProof *TProofMgrLite::CreateSession(const char *,
    // Create the instance
    TString u = (strlen(fUrl.GetOptions()) > 0) ? Form("lite/?%s", fUrl.GetOptions())
                                                : "lite";
-   TProof *p = new TProofLite(u, 0, 0, loglevel, 0, this);
+   TProof *p = new TProofLite(u, cfg, 0, loglevel, 0, this);
 
    if (p && p->IsValid()) {
 
@@ -208,7 +209,7 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
       const char *e = 0;
       while ((e = gSystem->GetDirEntry(dirp))) {
          TString fn(e);
-         if (fn.EndsWith(".log") && fn.CountChar('-') > 2) {
+         if (fn.EndsWith(".log") && fn.CountChar('-') > 0) {
             TString ord, url;
             if (fn.BeginsWith("session-")) {
                ord = "-1";
@@ -216,8 +217,16 @@ TProofLog *TProofMgrLite::GetSessionLogs(Int_t isess,
                ord = fn;
                ord.ReplaceAll("worker-", "");
                Int_t id = ord.First('-');
-               if (id != kNPOS) ord.Remove(id);
-               ord.ReplaceAll("0.", "");
+               if (id != kNPOS) {
+                  ord.Remove(id);
+               } else if (ord.Contains(".valgrind")) {
+                  // Add to the list (special tag for valgrind outputs)
+                  ord.ReplaceAll(".valgrind.log","-valgrind");
+               } else {
+                  // Not a good path
+                  ord = "";
+               }
+               if (!ord.IsNull()) ord.ReplaceAll("0.", "");
             }
             if (!ord.IsNull()) {
                url = Form("%s/%s", sessiondir.Data(), e);

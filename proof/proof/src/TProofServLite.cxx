@@ -358,12 +358,13 @@ Int_t TProofServLite::Setup()
    // Work dir and ...
    fWorkDir = gEnv->GetValue("ProofServ.Sandbox", Form("~/%s", kPROOF_WorkDir));
 
-   // Get Session tag
-   if ((fSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1")) == "-1")
-      fSessionTag = Form("%s-%s-%d-%d", fOrdinal.Data(), gSystem->HostName(),
-                                        TTimeStamp().GetSec(), gSystem->GetPid());
+   // Get Session tags
+   fTopSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1");
+   fSessionTag = Form("%s-%s-%d-%d", fOrdinal.Data(), gSystem->HostName(),
+                                     TTimeStamp().GetSec(), gSystem->GetPid());
    if (gProofDebugLevel > 0)
       Info("Setup", "session tag is %s", fSessionTag.Data());
+   if (fTopSessionTag.IsNull()) fTopSessionTag = fSessionTag;
 
    // Send session tag to client
    TMessage m(kPROOF_SESSIONTAG);

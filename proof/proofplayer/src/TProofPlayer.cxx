@@ -847,6 +847,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    volatile Long64_t memlogfreq = (par) ? par->GetVal() : 100;
    volatile Long_t memlim = (gProofServ) ? gProofServ->GetVirtMemHWM() : -1;
 
+   TPair *currentElem = 0;
    TRY {
 
       // The event loop on the worker
@@ -855,6 +856,18 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          // This is needed by the inflate infrastructure to calculate
          // sleeping times
          SetProcessing(kTRUE);
+
+         // Give the possibility to the selector to access additional info in the
+         // incoming packet
+         if (dset->Current()) {
+            if (!currentElem) {
+               currentElem = new TPair(new TObjString("PROOF_CurrentElement"), dset->Current());
+               fInput->Add(currentElem);
+            } else {
+               if (currentElem->Value() != dset->Current())
+                  currentElem->SetValue(dset->Current());
+            }
+         }
 
          if (version == 0) {
             PDB(kLoop,3)
@@ -935,6 +948,12 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
       SetProcessing(kFALSE);
    } ENDTRY;
+
+   // Clean-up the envelop for the current element
+   if (currentElem) {
+      delete currentElem->Key();
+      delete currentElem;
+   }
 
    PDB(kGlobal,2)
       Info("Process","%lld events processed", fProgressStatus->GetEntries());

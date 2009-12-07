@@ -73,6 +73,7 @@ public:
    virtual void Ready(TSocket *sock); // *SIGNAL*
 
    void     Interrupt() { fInterrupt = kTRUE; }
+   void     ResetInterrupt() { fInterrupt = kFALSE; }
 
    TSocket *Select();
    TSocket *Select(Long_t timeout);

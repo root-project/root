@@ -3409,7 +3409,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       }
       PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isInMergingMode);
 
-      if (!IsMaster() && isInMergingMode) {
+      if (!IsMaster() && isInMergingMode && fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted) {
          // Worker in merging mode.
          //----------------------------
          // First, it reports only the size of its output to the master 
@@ -3437,12 +3437,17 @@ void TProofServ::HandleProcess(TMessage *mess)
       } else {
          // Sub-master OR worker not in merging mode
          // ---------------------------------------------
-         // Sends the output directly to the master
-         PDB(kGlobal, 2)  Info("HandleProcess", "Sending result directly to master");
-         if (SendResults(fSocket, fPlayer->GetOutputList()) != 0)
-            Warning("HandleProcess","problems sending output list");
+         if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
+            PDB(kGlobal, 2)  Info("HandleProcess", "sending result directly to master");
+            if (SendResults(fSocket, fPlayer->GetOutputList()) != 0)
+               Warning("HandleProcess","problems sending output list");
+         } else {
+            if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
+               Warning("HandleProcess","the output list is empty!");
+            if (SendResults(fSocket) != 0)
+               Warning("HandleProcess", "problems sending output list");
+         }
          SendLogFile();
-
          // Signal the master that we are idle
          fSocket->Send(kPROOF_SETIDLE);
          SetIdle(kTRUE);

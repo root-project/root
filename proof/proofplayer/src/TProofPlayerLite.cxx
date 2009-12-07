@@ -337,7 +337,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    if (dset->TestBit(TDSet::kEmpty))
       set->SetBit(TDSet::kEmpty);
    fProof->SetParameter("PROOF_MaxSlavesPerNode", (Long_t) ((TProofLite *)fProof)->fNWorkers);
-   if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizer") != 0) {
+   if (InitPacketizer(dset, nentries, first, "TPacketizerUnit", "TPacketizerAdaptive") != 0) {
       Error("Process", "cannot init the packetizer");
       fExitStatus = kAborted;
       return -1;
@@ -350,6 +350,12 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
       memlogfreq = (memlogfreq > 0) ? memlogfreq : 1;
       fProof->SetParameter("PROOF_MemLogFreq", memlogfreq);
    }
+
+   // Add the unique query tag as TNamed object to the input list
+   // so that it is available in TSelectors for monitoring
+   fProof->SetParameter("PROOF_QueryTag", fProof->GetName());
+   //  ... and the sequential number
+   fProof->SetParameter("PROOF_QuerySeqNum", fProof->fSeqNum);
 
    if (!sync)
       gSystem->RedirectOutput(0);

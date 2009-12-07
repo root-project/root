@@ -273,6 +273,9 @@ ACLiC.Linkdef:          _linkdef
 #
 # Proof.GdbHook: 0
 #
+# To control the number of processes in PROOF-Lite (0 disables PROOF-Lite).
+# This setting cannot be overwritten in the user rootrc files.
+# ProofLite.MaxWorkers: -1
 #
 # On the master enable parallel startup of workers using threads
 # Proof.ParallelStartup: no

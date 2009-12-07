@@ -51,6 +51,8 @@
 
 ClassImp(TProofLite)
 
+Int_t TProofLite::fgWrksMax = -2; // Unitialized max number of workers
+
 //______________________________________________________________________________
 TProofLite::TProofLite(const char *url, const char *conffile, const char *confdir,
                        Int_t loglevel, const char *alias, TProofMgr *mgr)
@@ -101,11 +103,12 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    // Determine the number of workers giving priority to users request.
    // Otherwise use the system information, if available, or just start
    // the minimal number, i.e. 2 .
-   fNWorkers = GetNumberOfWorkers(url);
-   Printf(" +++ Starting PROOF-Lite with %d workers +++", fNWorkers);
+   if ((fNWorkers = GetNumberOfWorkers(url)) > 0) {
 
-   // Init the session now
-   Init(url, conffile, confdir, loglevel, alias);
+      Printf(" +++ Starting PROOF-Lite with %d workers +++", fNWorkers);
+      // Init the session now
+      Init(url, conffile, confdir, loglevel, alias);
+   }
 
    // For final cleanup
    if (!gROOT->GetListOfProofs()->FindObject(this))
@@ -140,6 +143,9 @@ Int_t TProofLite::Init(const char *, const char *conffile,
       fConfDir     = confdir;
       fConfFile    = conffile;
    }
+
+   // Analysise the conffile field
+   ParseConfigField(conffile);
 
    // The sandbox for this session
    if (CreateSandbox() != 0) {
@@ -352,6 +358,33 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
    // Otherwise use the system information, if available, or just start
    // the minimal number, i.e. 2 .
 
+   Bool_t notify = kFALSE;
+   if (fgWrksMax == -2) {
+      // Find the max number of workers, if any
+      TString sysname = "system.rootrc";
+#ifdef ROOTETCDIR
+      char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
+#else
+      TString etc = gRootDir;
+#ifdef WIN32
+      etc += "\\etc";
+#else
+      etc += "/etc";
+#endif
+      char *s = gSystem->ConcatFileName(etc, sysname);
+#endif
+      TEnv sysenv(0);
+      sysenv.ReadFile(s, kEnvGlobal);
+      fgWrksMax = sysenv.GetValue("ProofLite.MaxWorkers", -1);
+      // Notify once the user if its will is changed
+      notify = kTRUE;
+   }
+   if (fgWrksMax == 0) {
+      ::Error("TProofLite::GetNumberOfWorkers",
+              "PROOF-Lite disabled by the system administrator: sorry!");
+      return 0;
+   }
+
    Int_t nWorkers = -1;
    if (url && strlen(url)) {
       TString o(url);
@@ -373,7 +406,15 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
             // Two workers by default
             nWorkers = 2;
          }
+         if (notify) notify = kFALSE;
       }
+   }
+   // Apply the max, if any
+   if (fgWrksMax > 0 && fgWrksMax < nWorkers) {
+      if (notify)
+         ::Warning("TProofLite::GetNumberOfWorkers", "number of PROOF-Lite workers limited by"
+                                                     " the system administrator to %d", fgWrksMax);
+      nWorkers = fgWrksMax;
    }
 
    // Done
@@ -585,6 +626,10 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
    fprintf(frc,"# The session working dir\n");
    fprintf(frc,"ProofServ.SessionDir: %s/worker-%s\n", fWorkDir.Data(), ord);
 
+   // The session unique tag
+   fprintf(frc,"# Session tag\n");
+   fprintf(frc,"ProofServ.SessionTag: %s\n", GetName());
+
    // Log / Debug level
    fprintf(frc,"# Proof Log/Debug level\n");
    fprintf(frc,"Proof.DebugLevel: %d\n", gDebug);
@@ -634,30 +679,32 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
       return -1;
    }
    // ROOTSYS
-   fprintf(fenv, "ROOTSYS=%s\n", gSystem->Getenv("ROOTSYS"));
+   fprintf(fenv, "export ROOTSYS=%s\n", gSystem->Getenv("ROOTSYS"));
    // Conf dir
-   fprintf(fenv, "ROOTCONFDIR=%s\n", gSystem->Getenv("ROOTSYS"));
+   fprintf(fenv, "export ROOTCONFDIR=%s\n", gSystem->Getenv("ROOTSYS"));
    // TMPDIR
-   fprintf(fenv, "TMPDIR=%s\n", gSystem->TempDirectory());
+   fprintf(fenv, "export TMPDIR=%s\n", gSystem->TempDirectory());
    // Log file in the log dir
    TString logfile(Form("%s/worker-%s.log", fWorkDir.Data(), ord));
-   fprintf(fenv, "ROOTPROOFLOGFILE=%s\n", logfile.Data());
+   fprintf(fenv, "export ROOTPROOFLOGFILE=%s\n", logfile.Data());
    // RC file
-   fprintf(fenv, "ROOTRCFILE=%s\n", rcfile.Data());
+   fprintf(fenv, "export ROOTRCFILE=%s\n", rcfile.Data());
    // ROOT version tag (needed in building packages)
-   fprintf(fenv, "ROOTVERSIONTAG=%s\n", gROOT->GetVersion());
+   fprintf(fenv, "export ROOTVERSIONTAG=%s\n", gROOT->GetVersion());
    // Set the user envs
    if (fgProofEnvList) {
       TString namelist;
       TIter nxenv(fgProofEnvList);
       TNamed *env = 0;
       while ((env = (TNamed *)nxenv())) {
-         fprintf(fenv, "%s=%s\n", env->GetName(), env->GetTitle());
+         TString senv(env->GetTitle());
+         ResolveKeywords(senv, logfile.Data());
+         fprintf(fenv, "export %s=%s\n", env->GetName(), senv.Data());
          if (namelist.Length() > 0)
             namelist += ',';
          namelist += env->GetName();
       }
-      fprintf(fenv, "PROOF_ALLVARS=%s\n", namelist.Data());
+      fprintf(fenv, "export PROOF_ALLVARS=%s\n", namelist.Data());
    }
 
    // System env file created
@@ -665,6 +712,32 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
 
    // Done
    return 0;
+}
+
+//__________________________________________________________________________
+void TProofLite::ResolveKeywords(TString &s, const char *logfile)
+{
+   // Resolve some keywords in 's'
+   //    <logfileroot>, <user>, <rootsys>
+
+   if (!logfile) return;
+
+   // Log file
+   if (s.Contains("<logfilewrk>") && logfile) {
+      TString lfr(logfile);
+      if (lfr.EndsWith(".log")) lfr.Remove(lfr.Last('.'));
+      s.ReplaceAll("<logfilewrk>", lfr.Data());
+   }
+
+   // user
+   if (gSystem->Getenv("USER") && s.Contains("<user>")) {
+      s.ReplaceAll("<user>", gSystem->Getenv("USER"));
+   }
+
+   // rootsys
+   if (gSystem->Getenv("ROOTSYS") && s.Contains("<rootsys>")) {
+      s.ReplaceAll("<rootsys>", gSystem->Getenv("ROOTSYS"));
+   }
 }
 
 //______________________________________________________________________________

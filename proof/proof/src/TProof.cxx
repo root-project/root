@@ -536,10 +536,12 @@ TProof::~TProof()
 {
    // Clean up PROOF environment.
 
-   while (TChain *chain = dynamic_cast<TChain*> (fChains->First()) ) {
-      // remove "chain" from list
-      chain->SetProof(0);
-      RemoveChain(chain);
+   if (fChains) {
+      while (TChain *chain = dynamic_cast<TChain*> (fChains->First()) ) {
+         // remove "chain" from list
+         chain->SetProof(0);
+         RemoveChain(chain);
+      }
    }
 
    // remove links to packages enabled on the client
@@ -892,6 +894,7 @@ void TProof::ParseConfigField(const char *config)
    TString sconf(config);
 
    // Analysise the field
+   const char *cq = (IsLite()) ? "\"" : "";
    Int_t ivg = kNPOS;
    if ((ivg = sconf.Index("valgrind")) != kNPOS) {
       Int_t jvg = sconf.Index(',', ivg);
@@ -920,7 +923,8 @@ void TProof::ParseConfigField(const char *config)
                                  " must be set again for next run , if any");
          TProof::DelEnvVar("PROOF_WRAPPERCMD");
       }
-      TString var, cmd("valgrind -v --suppressions=<rootsys>/etc/valgrind-root.supp");
+      TString var, cmd;
+      cmd.Form("%svalgrind -v --suppressions=<rootsys>/etc/valgrind-root.supp", cq);
       TString mstlab("NO"), wrklab("NO");
       if (vgconf == "valgrind" || vgconf.Contains("master")) {
          // Check if we have to add a var
@@ -937,7 +941,7 @@ void TProof::ParseConfigField(const char *config)
          // Check if we have to add a var
          if (wrk == "" || wrk.BeginsWith("valgrind_opts:")) {
             wrk.ReplaceAll("valgrind_opts:","");
-            var.Form("%s --log-file=<logfilewrk>.valgrind.log %s", cmd.Data(), wrk.Data());
+            var.Form("%s --log-file=<logfilewrk>.valgrind.log %s%s", cmd.Data(), wrk.Data(), cq);
             TProof::AddEnvVar("PROOF_SLAVE_WRAPPERCMD", var);
             TString nwrks("2");
             Int_t inw = vgconf.Index('#');
@@ -955,11 +959,19 @@ void TProof::ParseConfigField(const char *config)
          }
       }
       // Increase the relevant timeouts
-      TProof::AddEnvVar("PROOF_INTWAIT", "5000");
-      gEnv->SetValue("Proof.SocketActivityTimeout", 6000);
+      if (!IsLite()) {
+         TProof::AddEnvVar("PROOF_INTWAIT", "5000");
+         gEnv->SetValue("Proof.SocketActivityTimeout", 6000);
+      } else {
+         gEnv->SetValue("ProofLite.StartupTimeOut", 5000);
+      }
       // Warn for slowness
       Printf(" ");
-      Printf(" ---> Starting a debug run with valgrind (master:%s, workers:%s)", mstlab.Data(), wrklab.Data());
+      if (!IsLite()) {
+         Printf(" ---> Starting a debug run with valgrind (master:%s, workers:%s)", mstlab.Data(), wrklab.Data());
+      } else {
+         Printf(" ---> Starting a debug run with valgrind (workers:%s)", wrklab.Data());
+      }
       Printf(" ---> Please be patient: startup may be VERY slow ...");
       Printf(" ---> Logs will be available as special tags in the log window (from the progress dialog or TProof::LogViewer()) ");
       Printf(" ---> (Reminder: this debug run makes sense only if you are running a debug version of ROOT)");
@@ -2357,6 +2369,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype)
    Int_t nact = 0;
    Long_t sto = -1;
    Int_t nsto = 60;
+   mon->ResetInterrupt();
    while ((nact = mon->GetActive(sto)) && (nto < 0 || nto > 0)) {
 
       // Dump last waiting sockets, if in debug mode
@@ -6801,12 +6814,6 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
-
-   if (IsLite()) {
-      Warning("Load", "functionality not yet implemented; please use Exec(...)"
-                      " or a dedicated PAR package");
-      return -1;
-   }
 
    if (!macro || !strlen(macro)) {
       Error("Load", "need to specify a macro name");

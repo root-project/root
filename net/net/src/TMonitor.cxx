@@ -274,6 +274,7 @@ void TMonitor::ActivateAll()
       s->Add();
    }
    fDeActive->Clear();
+   fInterrupt = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -307,15 +308,18 @@ void TMonitor::DeActivateAll()
       s->Remove();
    }
    fActive->Clear();
+   fInterrupt = kFALSE;
 }
 
 //______________________________________________________________________________
 TSocket *TMonitor::Select()
 {
    // Return pointer to socket for which an event is waiting.
+   // Select can be interrupt by a call to Interrupt() (e.g. connected with a
+   // Ctrl-C handler); a call to ResetInterrupt() before Select() is advisable
+   // in such a case.
    // Return 0 in case of error.
 
-   fInterrupt = kFALSE;
    fReady = 0;
 
    while (!fReady && !fInterrupt)
@@ -323,6 +327,7 @@ TSocket *TMonitor::Select()
 
    // Notify interrupts
    if (fInterrupt) {
+      fInterrupt = kFALSE;
       fReady = 0;
       Info("Select","*** interrupt occured ***");
    }
@@ -336,12 +341,14 @@ TSocket *TMonitor::Select(Long_t timeout)
    // Return pointer to socket for which an event is waiting.
    // Wait a maximum of timeout milliseconds.
    // If return is due to timeout it returns (TSocket *)-1.
+   // Select() can be interrupt by a call to Interrupt() (e.g. connected with a
+   // Ctrl-C handler); a call to ResetInterrupt() before Select() is advisable
+   // in such a case.
    // Return 0 in case of any other error situation.
 
    if (timeout < 0)
       return TMonitor::Select();
 
-   fInterrupt = kFALSE;
    fReady = 0;
 
    TTimeOutTimer t(this, timeout);
@@ -351,6 +358,7 @@ TSocket *TMonitor::Select(Long_t timeout)
 
    // Notify interrupts
    if (fInterrupt) {
+      fInterrupt = kFALSE;
       fReady = 0;
       Info("Select","*** interrupt occured ***");
    }

@@ -79,17 +79,16 @@ void TSlaveLite::Init()
    // Command to be executed
    TString cmd;
 #ifdef R__HAVE_CONFIG
-   cmd.Form("export ROOTBINDIR=\"%s\"; %s/proofserv proofslave lite %d %d %s/worker-%s.env &",
-            ROOTBINDIR, ROOTBINDIR,
+   cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s\"; %s/proofserv proofslave lite %d %d &",
+            fWorkDir.Data(), fOrdinal.Data(), ROOTBINDIR, ROOTBINDIR,
 #else
-   cmd.Form("export ROOTBINDIR=\"%s/bin\"; %s/bin/proofserv proofslave lite %d %d %s/worker-%s.env &",
-            gSystem->Getenv("ROOTSYS"), gSystem->Getenv("ROOTSYS"),
+   cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s/bin\"; %s/bin/proofserv proofslave lite %d %d &",
+            fWorkDir.Data(), fOrdinal.Data(), gSystem->Getenv("ROOTSYS"), gSystem->Getenv("ROOTSYS"),
 #endif
-            gSystem->GetPid(), gDebug, fWorkDir.Data(), fOrdinal.Data());
-
+            gSystem->GetPid(), gDebug);
    // Execute
    if (gSystem->Exec(cmd) != 0) {
-      Info("Init", "an error occured while executing 'proofserv'");
+      Error("Init", "an error occured while executing 'proofserv'");
       SetBit(kInvalidObject);
       return;
    }
