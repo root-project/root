@@ -84,7 +84,9 @@ TEveTrans::TEveTrans(const TEveTrans& t) :
    TObject(),
    fA1(t.fA1), fA2(t.fA2), fA3(t.fA3), fAsOK(t.fAsOK),
    fUseTrans (t.fUseTrans),
-   fEditTrans(t.fEditTrans)
+   fEditTrans(t.fEditTrans),
+   fEditRotation(kTRUE),
+   fEditScale(kTRUE)
 {
    // Constructor.
 
@@ -96,7 +98,9 @@ TEveTrans::TEveTrans(const Double_t arr[16]) :
    TObject(),
    fA1(0), fA2(0), fA3(0), fAsOK(kFALSE),
    fUseTrans (kTRUE),
-   fEditTrans(kFALSE)
+   fEditTrans(kFALSE),
+   fEditRotation(kTRUE),
+   fEditScale(kTRUE)
 {
    // Constructor.
 
@@ -108,7 +112,9 @@ TEveTrans::TEveTrans(const Float_t arr[16]) :
    TObject(),
    fA1(0), fA2(0), fA3(0), fAsOK(kFALSE),
    fUseTrans (kTRUE),
-   fEditTrans(kFALSE)
+   fEditTrans(kFALSE),
+   fEditRotation(kTRUE),
+   fEditScale(kTRUE)
 {
    // Constructor.
 
