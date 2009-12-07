@@ -132,13 +132,14 @@ TTreeFormula::TTreeFormula(): TFormula(), fQuickLoad(kFALSE), fNeedLoading(kTRUE
 {
    // Tree Formula default constructor
 
-   fTree       = 0;
-   fLookupType = 0;
-   fNindex     = 0;
-   fNcodes     = 0;
-   fAxis       = 0;
-   fHasCast    = 0;
-   fManager    = 0;
+   fTree         = 0;
+   fLookupType   = 0;
+   fNindex       = 0;
+   fNcodes       = 0;
+   fAxis         = 0;
+   fHasCast      = 0;
+   fManager      = 0;
+   fMultiplicity = 0;
 
    Int_t j,k;
    for (j=0; j<kMAXCODES; j++) {

@@ -29,6 +29,9 @@ TLeafS::TLeafS(): TLeaf()
 
    fValue = 0;
    fPointer = 0;
+   fMinimum = 0;
+   fMaximum = 0;
+   fLenType = 2;
 }
 
 //______________________________________________________________________________

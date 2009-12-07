@@ -26,6 +26,8 @@ TLeafElement::TLeafElement(): TLeaf()
    // Default constructor for LeafObject.
 
    fAbsAddress = 0;
+   fID   = -1;
+   fType = -1;
 }
 
 //______________________________________________________________________________

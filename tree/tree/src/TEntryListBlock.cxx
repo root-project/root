@@ -77,6 +77,8 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
       fIndices = new UShort_t[fN];
       for (i=0; i<fN; i++)
          fIndices[i] = eblock.fIndices[i];
+   } else {
+      fIndices = 0;
    }
    fNPassed = eblock.fNPassed;
    fType = eblock.fType;

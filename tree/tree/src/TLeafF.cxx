@@ -27,7 +27,10 @@ TLeafF::TLeafF(): TLeaf()
 //*-*-*-*-*-*Default constructor for LeafF*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ============================
 
-   fValue = 0;
+   fLenType = 4;
+   fMinimum = 0;
+   fMaximum = 0;
+   fValue   = 0;
    fPointer = 0;
 }
 

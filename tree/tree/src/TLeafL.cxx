@@ -27,7 +27,10 @@ TLeafL::TLeafL(): TLeaf()
 //*-*-*-*-*-*Default constructor for LeafI*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ============================
 
-   fValue = 0;
+   fLenType = sizeof(Long64_t);
+   fMinimum = 0;
+   fMaximum = 0;
+   fValue   = 0;
    fPointer = 0;
 }
 

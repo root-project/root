@@ -113,7 +113,7 @@ End_Html */
 ClassImp(TEntryList)
 
 //______________________________________________________________________________
-TEntryList::TEntryList()
+TEntryList::TEntryList() : fEntriesToProcess(0)
 {
    //default c-tor
 
@@ -134,7 +134,9 @@ TEntryList::TEntryList()
 }
 
 //______________________________________________________________________________
-TEntryList::TEntryList(const char *name, const char *title):TNamed(name, title)
+TEntryList::TEntryList(const char *name, const char *title) : 
+   TNamed(name, title),
+   fEntriesToProcess(0)
 {
    //c-tor with name and title
 
@@ -180,7 +182,7 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):T
 }
 
 //______________________________________________________________________________
-TEntryList::TEntryList(const char *name, const char *title, const char *treename, const char *filename):TNamed(name, title)
+TEntryList::TEntryList(const char *name, const char *title, const char *treename, const char *filename) : TNamed(name, title),fEntriesToProcess(0)
 {
    //c-tor with name and title, which also sets the treename and the filename
 
@@ -202,7 +204,7 @@ TEntryList::TEntryList(const char *name, const char *title, const char *treename
 }
 
 //______________________________________________________________________________
-TEntryList::TEntryList(const TTree *tree)
+TEntryList::TEntryList(const TTree *tree) : fEntriesToProcess(0)
 {
    //c-tor, which sets the tree
 
@@ -241,6 +243,8 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
    fLists = 0;
    fBlocks = 0;
    fReapply = elist.fReapply;
+   fCurrent = 0;
+   fEntriesToProcess = elist.fEntriesToProcess;
    if (elist.fLists){
       fLists = new TList();
       TEntryList *el1 = 0;

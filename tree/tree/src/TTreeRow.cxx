@@ -57,6 +57,7 @@ TTreeRow::TTreeRow(Int_t nfields, const Int_t *fields, const char *row)
    fColumnCount = nfields;
    fFields      = 0;
    fOriginal    = 0;
+   fRow         = 0;
    SetRow(fields,row);
 }
 

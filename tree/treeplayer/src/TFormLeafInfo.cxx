@@ -1872,7 +1872,7 @@ Double_t  TFormLeafInfoPointer::GetValue(TLeaf *leaf, Int_t instance)
 TFormLeafInfoMethod::TFormLeafInfoMethod( TClass* classptr,
                                           TMethodCall *method) :
    TFormLeafInfo(classptr,0,0),fMethod(method),
-   fCopyFormat(),fDeleteFormat(),fValuePointer(0),fIsByValue(kFALSE)
+   fResult(0), fCopyFormat(),fDeleteFormat(),fValuePointer(0),fIsByValue(kFALSE)
 {
    // Constructor.
 

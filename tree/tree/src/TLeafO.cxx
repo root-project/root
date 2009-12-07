@@ -28,13 +28,16 @@ TLeafO::TLeafO(): TLeaf()
 //*-*-*-*-*-*Default constructor for LeafB*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*        ============================
 
-   fValue = 0;
+   fValue   = 0;
    fPointer = 0;
+   fMinimum = 0;
+   fMaximum = 0;
+   fLenType = sizeof(bool);
 }
 
 //______________________________________________________________________________
 TLeafO::TLeafO(TBranch *parent, const char *name, const char *type)
-   :TLeaf(parent,name,type)
+   : TLeaf(parent,name,type)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafB*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==============

@@ -418,10 +418,12 @@ TTree::TFriendLock::TFriendLock(TTree* tree, UInt_t methodbit)
 
    // We could also add some code to acquire an actual
    // lock to prevent multi-thread issues
+   fMethodBit = methodbit;
    if (fTree) {
-      fMethodBit = methodbit;
       fPrevious = fTree->fFriendLockStatus & fMethodBit;
       fTree->fFriendLockStatus |= fMethodBit;
+   } else {
+      fPrevious = 0;
    }
 }
 
@@ -6906,17 +6908,19 @@ TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree* tree, Bool_t dir)
 //______________________________________________________________________________
 TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter& iter)
 : TIterator(iter)
+, fTree(iter.fTree)
+, fLeafIter(0)
+, fTreeIter(0)
+, fDirection(iter.fDirection)
 {
-   // Copy constructor
+   // Copy constructor.  Does NOT copy the 'cursor' location!
 
-   fTree = iter.fTree;
-   fDirection = iter.fDirection;
 }
 
 //______________________________________________________________________________
 TIterator& TTreeFriendLeafIter::operator=(const TIterator& rhs)
 {
-   // Overridden assignment operator.
+   // Overridden assignment operator. Does NOT copy the 'cursor' location!
 
    if (this != &rhs && rhs.IsA() == TTreeFriendLeafIter::Class()) {
       const TTreeFriendLeafIter &rhs1 = (const TTreeFriendLeafIter &)rhs;
@@ -6928,7 +6932,7 @@ TIterator& TTreeFriendLeafIter::operator=(const TIterator& rhs)
 //______________________________________________________________________________
 TTreeFriendLeafIter& TTreeFriendLeafIter::operator=(const TTreeFriendLeafIter& rhs)
 {
-   // Overridden assignment operator.
+   // Overridden assignment operator.  Does NOT copy the 'cursor' location!
 
    if (this != &rhs) {
       fDirection = rhs.fDirection;

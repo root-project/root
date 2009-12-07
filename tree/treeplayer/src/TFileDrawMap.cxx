@@ -90,6 +90,8 @@ TFileDrawMap::TFileDrawMap() :TNamed()
 
    fFile   = 0;
    fFrame  = 0;
+   fXsize  = 1000;
+   fYsize  = 1000;
 }
 
 //______________________________________________________________________________
