@@ -397,7 +397,11 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentrie
                              // UpdateFormulaLeaves ourselves.
    if (strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
-      if (!select || !select->GetNdim()) { delete select; }
+      if (!select || !select->GetNdim()) { 
+         delete select; 
+         delete tree;
+         return 0;
+      }
       fFormulaList->Add(select);
    }
 
