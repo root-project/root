@@ -48,15 +48,18 @@ void G__cpp_setuplongif();
 //
 //  For C++ dictionary setup
 //
-typedef struct {
-   char* libname;
+struct G__setup_func_struct {
+   std::string libname;
    G__incsetup func;
    int inited;
-} G__setup_func_struct;
+
+   G__setup_func_struct() : libname(), func(), inited(false) {}
+   G__setup_func_struct(const char *name, G__incsetup functions) : libname(name), func(functions), inited(false) {}
+   
+};
 
 //______________________________________________________________________________
-static G__setup_func_struct** G__setup_func_list;
-static int G__max_libs;
+static std::list<G__setup_func_struct> *G__setup_func_list;
 static char G__memsetup_init;
 typedef void G__parse_hook_t();
 static G__parse_hook_t* G__afterparse_hook;
@@ -66,8 +69,6 @@ void G__platformMacro();
 //______________________________________________________________________________
 void G__add_setup_func(const char* libname, G__incsetup func)
 {
-   int i, islot = -1;
-
    if (!G__memsetup_init) {
       for (int i = 0; i < G__MAXSTRUCT; ++i) {
          G__struct.incsetup_memvar[i] = 0;
@@ -75,37 +76,22 @@ void G__add_setup_func(const char* libname, G__incsetup func)
          G__memsetup_init = 1;
       }
    }
-
-   if (!G__setup_func_list) {
-      G__max_libs = 10;
-      G__setup_func_list = (G__setup_func_struct**)calloc(G__max_libs, sizeof(G__setup_func_struct*));
-   }
-   if (G__nlibs >= G__max_libs) {
-      G__max_libs += 10;
-      G__setup_func_list = (G__setup_func_struct**)realloc(G__setup_func_list,
-                           G__max_libs * sizeof(G__setup_func_struct*));
-      for (i = G__nlibs; i < G__max_libs; i++)
-         G__setup_func_list[i] = 0;
+   if ( !G__setup_func_list ) {
+      G__setup_func_list = new std::list<G__setup_func_struct>;
    }
 
    /* if already in table: ignore (could also print warning) */
-   for (i = 0; i < G__nlibs; i++)
-      if (G__setup_func_list[i] &&
-            !strcmp(G__setup_func_list[i]->libname, libname)) return;
-
-   /* find empty slot */
-   for (i = 0; i < G__nlibs; i++)
-      if (!G__setup_func_list[i]) {
-         islot = i;
-         break;
+   std::list<G__setup_func_struct>::iterator begin = G__setup_func_list->begin();
+   std::list<G__setup_func_struct>::iterator end = G__setup_func_list->end();
+   std::list<G__setup_func_struct>::iterator j;
+   for (j = begin ; j != end; ++j) {
+      if ( j->libname == libname ) {
+         return;
       }
-   if (islot == -1) islot = G__nlibs++;
-
-   G__setup_func_list[islot] = (G__setup_func_struct*)malloc(sizeof(G__setup_func_struct));
-   G__setup_func_list[islot]->libname = (char*) malloc(strlen(libname) + 1);
-   G__setup_func_list[islot]->func    = func;
-   G__setup_func_list[islot]->inited  = 0;
-   strcpy(G__setup_func_list[islot]->libname, libname);
+   }   
+   G__setup_func_list->push_back( G__setup_func_struct( libname, func ) );
+   
+   ++G__nlibs;
 
    G__RegisterLibrary(func);
 }
@@ -113,24 +99,24 @@ void G__add_setup_func(const char* libname, G__incsetup func)
 //______________________________________________________________________________
 void G__remove_setup_func(const char* libname)
 {
-   int i;
+   std::list<G__setup_func_struct>::iterator begin = G__setup_func_list->begin();
+   std::list<G__setup_func_struct>::iterator end = G__setup_func_list->end();
+   std::list<G__setup_func_struct>::iterator i;
 
-   for (i = 0; i < G__nlibs; i++)
-      if (G__setup_func_list[i] &&
-            !strcmp(G__setup_func_list[i]->libname, libname)) {
-         G__UnregisterLibrary( G__setup_func_list[i]->func );
-         free(G__setup_func_list[i]->libname);
-         free(G__setup_func_list[i]);
-         G__setup_func_list[i] = 0;
-         if (i == G__nlibs - 1) G__nlibs--;
+   for (i = begin ; i != end; ++i) {
+       if ( i->libname == libname ) {
+          G__UnregisterLibrary( i->func );
+          G__setup_func_list->erase(i);
+         --G__nlibs;
          return;
       }
+   }
 }
 
 //______________________________________________________________________________
 int G__call_setup_funcs()
 {
-   int i, k = 0;
+   int k = 0;
    G__var_array* store_p_local = G__p_local; // changed by setupfuncs
    G__LockCriticalSection();
 #ifdef G__SHAREDLIB
@@ -150,28 +136,36 @@ int G__call_setup_funcs()
    // Do a separate loop so we don't re-load because of A->B->A
    // dependencies introduced by autoloading during dictionary
    // initialization
-   for (i = 0; i < G__nlibs; ++i) {
-      if (G__setup_func_list[i] && !G__setup_func_list[i]->inited) {
-         G__RegisterLibrary(G__setup_func_list[i]->func);
+   if (G__setup_func_list) {
+      std::list<G__setup_func_struct>::iterator begin = G__setup_func_list->begin();
+      std::list<G__setup_func_struct>::iterator end = G__setup_func_list->end();
+      std::list<G__setup_func_struct>::iterator i;
+      for (i = begin ; i != end; ++i) {
+         if (i->inited) {
+            G__RegisterLibrary(i->func);
+         }
+      }
+      
+      int count = 0;
+      for (i = begin ; i != end; ++i, ++count) {
+         if (count < G__nlibs_highwatermark) continue;
+         if (!i->inited) {
+            (i->func)();
+            // We setup inited to one only __after__ the execution because the execution
+            // can trigger (in particular via ROOT's TCint::UpdateClassInfo)) code that
+            // requires the dictionary to be fully initiliazed .. which is done by coming
+            // back and expecting the setup function to be run.
+            i->inited = 1;
+#ifdef G__SHAREDLIB
+            G__initpermanentsl->push_back(i->func);
+#endif //G__SHAREDLIB
+            k++;
+#ifdef G__DEBUG
+            fprintf(G__sout, "Dictionary for %s initialized\n", i->libname.c_str()); /* only for debug */
+#endif
+         }
       }
    }
-
-   for (i = G__nlibs_highwatermark; i < G__nlibs; ++i)
-      if (G__setup_func_list[i] && !G__setup_func_list[i]->inited) {
-         (G__setup_func_list[i]->func)();
-         // We setup inited to one only __after__ the execution because the execution
-         // can trigger (in particular via ROOT's TCint::UpdateClassInfo)) code that
-         // requires the dictionary to be fully initiliazed .. which is done by coming
-         // back and expecting the setup function to be run.
-         G__setup_func_list[i]->inited = 1;
-#ifdef G__SHAREDLIB
-         G__initpermanentsl->push_back(G__setup_func_list[i]->func);
-#endif //G__SHAREDLIB
-         k++;
-#ifdef G__DEBUG
-         fprintf(G__sout, "Dictionary for %s initialized\n", G__setup_func_list[i]->libname); /* only for debug */
-#endif
-      }
    G__UnlockCriticalSection();
    G__p_local = store_p_local;
    return k;
@@ -180,9 +174,14 @@ int G__call_setup_funcs()
 //______________________________________________________________________________
 void G__reset_setup_funcs()
 {
-   for (int i = 0; i < G__nlibs; i++) {
-      if (G__setup_func_list[i]) {
-         G__setup_func_list[i]->inited = 0;
+   if (G__setup_func_list) {
+
+      std::list<G__setup_func_struct>::iterator begin = G__setup_func_list->begin();
+      std::list<G__setup_func_struct>::iterator end = G__setup_func_list->end();
+      std::list<G__setup_func_struct>::iterator i;
+      
+      for (i = begin ; i != end; ++i) {
+         i->inited = 0;
       }
    }
 }

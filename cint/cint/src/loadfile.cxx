@@ -3153,12 +3153,12 @@ int G__unregister_sharedlib(const char *libname)
 /*
  * Local Variables:
  * c-tab-always-indent:nil
- * c-indent-level:2
- * c-continued-statement-offset:2
- * c-brace-offset:-2
+ * c-indent-level:3
+ * c-continued-statement-offset:3
+ * c-brace-offset:-3
  * c-brace-imaginary-offset:0
  * c-argdecl-indent:0
- * c-label-offset:-2
+ * c-label-offset:-3
  * compile-command:"make -k"
  * End:
  */
