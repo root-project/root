@@ -1626,7 +1626,7 @@ void TRecorderRecording::CopyEvent(Event_t *e, Window_t wid)
 {
    // Copies all items of given event to fGuiEvent
 
-#ifndef R__WIN32
+#if !defined(R__WIN32) && !defined(R__MACOSX)
    if (gDecorWidth == 0 && gDecorHeight == 0) {
       TGWindow *main = gClient->GetWindowById(e->fWindow);
       if (main && main->InheritsFrom("TGMainFrame") &&
@@ -2117,7 +2117,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
 
    } // kConfigureNotify
 
-#ifndef R__WIN32
+#if !defined(R__WIN32) && !defined(R__MACOSX)
    if (gDecorWidth == 0 && gDecorHeight == 0) {
       TGWindow *main = gClient->GetWindowById(e->fWindow);
       if (main && main->InheritsFrom("TGMainFrame") &&
@@ -2136,6 +2136,9 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
             gCursorWin->MapRaised();
          }
          if (gVirtualX->GetDrawMode() == TVirtualX::kCopy) {
+#ifdef R__MACOSX
+            gCursorWin->RaiseWindow();
+#endif
             gCursorWin->Move(e->fXRoot + gDecorWidth, e->fYRoot + gDecorHeight);
          }
       }
