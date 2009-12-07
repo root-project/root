@@ -191,11 +191,6 @@ public:
    */ 
    virtual double CovMatrix(unsigned int , unsigned int ) const { return 0; }
 
-   /// minos error for variable i, return false if Minos failed
-   virtual bool GetMinosError(unsigned int , double & /* errLow */ , double & /* errUp */ ) { return false; }
-
-   /// return reference to the objective function
-   ///virtual const ROOT::Math::IGenFunction & Function() const; 
 
    // method of only GSL  minimizer (not inherited from interface)
  

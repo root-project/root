@@ -120,6 +120,11 @@ public:
 
    /// minimizer status code 
    int Status() const { return fStatus; } 
+
+   ///covariance matrix status code
+   /// using Minuit convention : =0 not calculated, =1 approximated, =2 made pos def , =3 accurate
+
+   int CovMatrixStatus() const { return fCovStatus; }
  
    /** fitting quantities **/
 
@@ -192,7 +197,7 @@ public:
    template<class Matrix> 
    void GetCovarianceMatrix(Matrix & mat) const { 
       unsigned int npar = fErrors.size();
-      assert(fCovMatrix.size() == npar*(npar+1)/2);
+      if (fCovMatrix.size() != npar*(npar+1)/2 ) return; // do nothing 
       for (unsigned int i = 0; i< npar; ++i) { 
          for (unsigned int j = 0; j<=i; ++j) { 
             mat(i,j) = fCovMatrix[j + i*(i+1)/2 ];
@@ -206,7 +211,7 @@ public:
    template<class Matrix> 
    void GetCorrelationMatrix(Matrix & mat) const { 
       unsigned int npar = fErrors.size(); 
-      assert(fCovMatrix.size() == npar*(npar+1)/2);
+      if (fCovMatrix.size() != npar*(npar+1)/2) return; // do nothing
       for (unsigned int i = 0; i< npar; ++i) { 
          for (unsigned int j = 0; j<=i; ++j) { 
             double tmp = fCovMatrix[i * (i +3)/2 ] * fCovMatrix[ j * (j+3)/2 ]; 
@@ -283,6 +288,7 @@ protected:
    unsigned int fNdf;       // number of degree of freedom
    unsigned int fNCalls;    // number of function calls
    int fStatus;             // minimizer status code
+   int fCovStatus;          // covariance matrix status code
    double fVal;             // minimum function value
    double fEdm;             // expected distance from mimimum
    double fChi2;            // fit chi2 value (different than fval in case of chi2 fits)

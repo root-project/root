@@ -150,7 +150,8 @@ public:
       unsigned int npar = fSolver->fdf->p; 
       fCov = gsl_matrix_alloc( npar, npar ); 
       static double kEpsrel = 0.0001;
-      gsl_multifit_covar(fSolver->J, kEpsrel, fCov);
+      int ret = gsl_multifit_covar(fSolver->J, kEpsrel, fCov);
+      if (ret != GSL_SUCCESS) return 0; 
       return fCov->data; 
    }
 

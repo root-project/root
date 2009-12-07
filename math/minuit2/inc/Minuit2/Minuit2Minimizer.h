@@ -215,7 +215,7 @@ public:
        status = 5    : any other failure 
 
    */
-   virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp); 
+   virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0); 
 
    /**
       scan a parameter i around the minimum. A minimization must have been done before, 

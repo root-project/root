@@ -138,6 +138,15 @@ public:
    virtual double CovMatrix(unsigned int i, unsigned int j) const { 
       return fCovar[i + fDim* j]; 
    }
+   
+   /*
+     return covariance matrix status 
+   */
+   virtual int CovMatrixStatus() const { 
+      if (fCovar.size() == 0) return 0;
+      return (fStatus ==0) ? 3 : 1; 
+   }
+   
 
 
    

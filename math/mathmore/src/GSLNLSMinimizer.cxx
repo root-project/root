@@ -381,7 +381,7 @@ bool GSLNLSMinimizer::Minimize() {
    fErrors.resize(fDim);
 
    // get errors from cov matrix 
-   fCovMatrix.resize(fDim*fDim);
+   if (fGSLMultiFit->CovarMatrix() ) fCovMatrix.resize(fDim*fDim);
       
    if (minFound) { 
 
@@ -429,10 +429,21 @@ const double * GSLNLSMinimizer::MinGradient() const {
 
 
 double GSLNLSMinimizer::CovMatrix(unsigned int i , unsigned int j ) const { 
+   // return covariance matrix element
    if ( fCovMatrix.size() == 0) return 0;  
    if (i > fDim || j > fDim) return 0; 
    return fCovMatrix[i*fDim + j];
 }
+
+int GSLNLSMinimizer::CovMatrixStatus( ) const { 
+   // return covariance  matrix status = 0 not computed,
+   // 1 computed but is approximate because minimum is not valid, 3 is fine
+   if ( fCovMatrix.size() == 0) return 0;  
+   // case minimization did not finished correctly
+   if (fStatus != GSL_SUCCESS) return 1;
+   return 3;
+}
+
 
    } // end namespace Math
 

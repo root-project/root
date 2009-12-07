@@ -468,10 +468,14 @@ double Minuit2Minimizer::GlobalCC(unsigned int i) const {
 }
 
 
-bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & errUp) { 
+bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & errUp, int runopt) { 
    // return the minos error for parameter i
    // if a minimum does not exist an error is returned
+   // runopt is a flag which specifies if only lower or upper error needs to be run
+   // if runopt = 0 both, = 1 only lower, + 2 only upper errors
    errLow = 0; errUp = 0; 
+   bool runLower = runopt != 2;
+   bool runUpper = runopt != 1;
 
    assert( fMinuitFCN );
 
@@ -508,10 +512,16 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
 
-   ROOT::Minuit2::MnMinos minos( *fMinuitFCN, *fMinimum);
-   // check if variable is not fixed 
 
-   ROOT::Minuit2::MinosError me = minos.Minos(i);
+   ROOT::Minuit2::MnMinos minos( *fMinuitFCN, *fMinimum);
+
+   // run MnCross 
+   MnCross low;
+   MnCross up;
+   if (runLower) low = minos.Loval(i);
+   if (runUpper) up  = minos.Upval(i);
+ 
+   ROOT::Minuit2::MinosError me(i, fMinimum->UserState().Value(i),low, up);
 
    if (prev_level >= 0) RestoreGlobalPrintLevel(prev_level);
 
@@ -519,31 +529,38 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // print error message in Minos
 
    if (debugLevel >= 1) {
-      if (!me.LowerValid() )  
-         std::cout << "Minos:  Invalid lower error for parameter " << i << std::endl; 
-      if(me.AtLowerLimit()) 
-         std::cout << "Minos:  Parameter  is at Lower limit."<<std::endl;
-      if(me.AtLowerMaxFcn())
-         std::cout << "Minos:  Maximum number of function calls exceeded when running for lower error" <<std::endl;   
-      if(me.LowerNewMin() )
-         std::cout << "Minos:  New Minimum found while running Minos for lower error" <<std::endl;     
-         
-      if (!me.UpperValid() )  
-         std::cout << "Minos:  Invalid upper error for parameter " << i << std::endl; 
-      if(me.AtUpperLimit()) 
-         std::cout << "Minos:  Parameter  is at Upper limit."<<std::endl;
-      if(me.AtUpperMaxFcn())
-         std::cout << "Minos:  Maximum number of function calls exceeded when running for upper error" <<std::endl;   
-      if(me.UpperNewMin() )
-         std::cout << "Minos:  New Minimum found while running Minos for upper error" <<std::endl;              
-   }
-   if (debugLevel > 1) { 
-      std::cout << "Minos: Lower error for parameter " << i << "  :  " << me.Lower() << std::endl; 
-      std::cout << "Minos: Upper error for parameter " << i << "  :  " << me.Upper() << std::endl;
+      if (runLower) { 
+         if (!me.LowerValid() )  
+            std::cout << "Minos:  Invalid lower error for parameter " << i << std::endl; 
+         if(me.AtLowerLimit()) 
+            std::cout << "Minos:  Parameter  is at Lower limit."<<std::endl;
+         if(me.AtLowerMaxFcn())
+            std::cout << "Minos:  Maximum number of function calls exceeded when running for lower error" <<std::endl;   
+         if(me.LowerNewMin() )
+            std::cout << "Minos:  New Minimum found while running Minos for lower error" <<std::endl;     
+
+         if (debugLevel > 1)  std::cout << "Minos: Lower error for parameter " << i << "  :  " << me.Lower() << std::endl; 
+
+      }
+      if (runUpper) {          
+         if (!me.UpperValid() )  
+            std::cout << "Minos:  Invalid upper error for parameter " << i << std::endl; 
+         if(me.AtUpperLimit()) 
+            std::cout << "Minos:  Parameter  is at Upper limit."<<std::endl;
+         if(me.AtUpperMaxFcn())
+            std::cout << "Minos:  Maximum number of function calls exceeded when running for upper error" <<std::endl;   
+         if(me.UpperNewMin() )
+            std::cout << "Minos:  New Minimum found while running Minos for upper error" <<std::endl;              
+
+         if (debugLevel > 1)  std::cout << "Minos: Upper error for parameter " << i << "  :  " << me.Upper() << std::endl;
+      }
+      
    }
 
-
-   if (!me.IsValid() ) { 
+   bool isValid = true; 
+   if (runLower && !me.LowerValid() ) isValid = false; 
+   if (runUpper && !me.UpperValid() ) isValid = false; 
+   if ( !isValid ) { 
       //std::cout << "Error running Minos for parameter " << i << std::endl; 
       int mstatus = 5; 
       if (me.AtLowerMaxFcn() ) mstatus = 1; 

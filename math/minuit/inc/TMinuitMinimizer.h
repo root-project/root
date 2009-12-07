@@ -154,7 +154,7 @@ public:
    virtual double GlobalCC(unsigned int ) const; 
 
    /// minos error for variable i, return false if Minos failed
-   virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp); 
+   virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0); 
 
    /**
       perform a full calculation of the Hessian matrix for error calculation

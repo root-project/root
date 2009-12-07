@@ -240,7 +240,8 @@ public:
 
    ///return status of covariance matrix 
    /// using Minuit convention {0 not calculated 1 approximated 2 made pos def , 3 accurate}
-   virtual int CovMatrixStatus() const {  return ( (fValidError) ? 3 : 1); }
+   /// Minimizer who implements covariance matrix calculation will re-implement the method
+   virtual int CovMatrixStatus() const {  return 0; }
 
    /**
       return correlation coefficient between variable i and j.
@@ -262,8 +263,11 @@ public:
 
    /**
       minos error for variable i, return false if Minos failed or not supported 
+      and the lower and upper errors are returned in errLow and errUp
+      An extra flag  specifies if only the lower (runopt=-1) or the upper (runopt=+1) error calculation is run
+      (This feature isnot yet implemented)
    */
-   virtual bool GetMinosError(unsigned int /* i */, double & errLow, double & errUp) { 
+   virtual bool GetMinosError(unsigned int /* i */, double & errLow, double & errUp, int  = 0) { 
       errLow = 0; errUp = 0; 
       return false; 
    }  

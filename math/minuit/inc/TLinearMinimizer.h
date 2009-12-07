@@ -117,6 +117,12 @@ public:
       return fCovar[i + fDim* j]; 
    }
 
+   /// return covariance matrix status
+   virtual int CovMatrixStatus() const { 
+      if (fCovar.size() == 0) return 0; 
+      return (fStatus ==0) ? 3 : 1; 
+   }
+
    /// return reference to the objective function
    ///virtual const ROOT::Math::IGenFunction & Function() const; 
 

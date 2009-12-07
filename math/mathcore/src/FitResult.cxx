@@ -51,6 +51,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
    fNdf(0),
    fNCalls(min.NCalls()),
    fStatus(min.Status() ),
+   fCovStatus(min.CovMatrixStatus() ),
    fVal (min.MinValue()),  
    fEdm (min.Edm()), 
    fChi2(-1),
@@ -102,8 +103,6 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
       }
    }
 
-   if (min.Errors() != 0) 
-      fErrors = std::vector<double>(min.Errors(), min.Errors() + npar ) ; 
 
    // check for fixed or limited parameters
    for (unsigned int ipar = 0; ipar < npar; ++ipar) { 
@@ -121,20 +120,22 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
       }
    }
       
-   // fill error matrix
-   // cov matrix rank 
-   if (fValid) { 
+   // fill error matrix 
+   // if minimizer provides error provides also error matrix
+   if (min.Errors() != 0) {
 
-      unsigned int r = npar * (  npar + 1 )/2;  
-      fCovMatrix.reserve(r);
-      for (unsigned int i = 0; i < npar; ++i) 
-         for (unsigned int j = 0; j <= i; ++j)
-            fCovMatrix.push_back(min.CovMatrix(i,j) );
-      
-      assert (fCovMatrix.size() == r ); 
+      fErrors = std::vector<double>(min.Errors(), min.Errors() + npar ) ; 
+
+      if (fCovStatus != 0) { 
+         unsigned int r = npar * (  npar + 1 )/2;  
+         fCovMatrix.reserve(r);
+         for (unsigned int i = 0; i < npar; ++i) 
+            for (unsigned int j = 0; j <= i; ++j)
+               fCovMatrix.push_back(min.CovMatrix(i,j) );
+      }
 
       // minos errors 
-      if (fconfig.MinosErrors()) { 
+      if (fValid && fconfig.MinosErrors()) { 
          const std::vector<unsigned int> & ipars = fconfig.MinosParams(); 
          unsigned int n = (ipars.size() > 0) ? ipars.size() : npar; 
          for (unsigned int i = 0; i < n; ++i) {
@@ -187,6 +188,7 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
    fNFree = rhs.fNFree; 
    fNdf = rhs.fNdf; 
    fNCalls = rhs.fNCalls; 
+   fCovStatus = rhs.fCovStatus;
    fStatus = rhs.fStatus; 
    fVal = rhs.fVal;  
    fEdm = rhs.fEdm; 
@@ -231,6 +233,7 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
    fVal = min.MinValue(); 
    fEdm = min.Edm(); 
    fStatus = min.Status(); 
+   fCovStatus = min.CovMatrixStatus();
 
    // update number of function calls
    if ( min.NCalls() > 0)   fNCalls += min.NCalls();
@@ -239,20 +242,24 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
    // copy parameter value and errors 
    std::copy(min.X(), min.X() + npar, fParams.begin());
 
-   if (min.Errors() != 0)  std::copy(min.Errors(), min.Errors() + npar, fErrors.begin() ) ; 
 
    // set parameters  in fit model function 
    if (fFitFunc) fFitFunc->SetParameters(&fParams.front());
    
-   if (fValid) { 
+   if (min.Errors() != 0)  { 
+   
+      std::copy(min.Errors(), min.Errors() + npar, fErrors.begin() ) ; 
 
-      // update error matrix
-      unsigned int r = npar * (  npar + 1 )/2;  
-      if (fCovMatrix.size() != r) fCovMatrix.resize(r);
-      unsigned int l = 0; 
-      for (unsigned int i = 0; i < npar; ++i) {
-         for (unsigned int j = 0; j <= i; ++j)  
-            fCovMatrix[l++] = min.CovMatrix(i,j);
+      if (fCovStatus != 0) { 
+
+         // update error matrix
+         unsigned int r = npar * (  npar + 1 )/2;  
+         if (fCovMatrix.size() != r) fCovMatrix.resize(r);
+         unsigned int l = 0; 
+         for (unsigned int i = 0; i < npar; ++i) {
+            for (unsigned int j = 0; j <= i; ++j)  
+               fCovMatrix[l++] = min.CovMatrix(i,j);
+         }
       }
                
       // update global CC       
@@ -260,8 +267,8 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
       for (unsigned int i = 0; i < npar; ++i) { 
          double globcc = min.GlobalCC(i); 
          if (globcc < 0) { 
-            break; // it is not supported by that minimizer
             fGlobalCC.clear(); 
+            break; // it is not supported by that minimizer
          }
          fGlobalCC[i] = globcc; 
       }

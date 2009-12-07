@@ -15,13 +15,12 @@
 #include "RConfigure.h"
 
 #include "Math/Minimizer.h"
+#include "Math/MinimizerOptions.h"
 
 #ifndef MATH_NO_PLUGIN_MANAGER
-
-// use PM 
+// use ROOT Plug-in manager
 #include "TPluginManager.h"
 #include "TROOT.h"
-
 #else 
 // all the minimizer implementation classes 
 //#define HAS_MINUIT2
@@ -49,7 +48,7 @@
 #ifndef MATH_NO_PLUGIN_MANAGER 
 // use ROOT Plugin Manager to create Minimizer concrete classes 
 
-ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string & minimizerType, const std::string & algoType)  
+ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string & minimizerType,const std::string & algoType)  
 {
    // create Minimizer using the plug-in manager given the type of Minimizer (MINUIT, MINUIT2, FUMILI, etc..) and 
    // algorithm (MIGRAD, SIMPLEX, etc..)
@@ -57,8 +56,8 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
    const char * minim = minimizerType.c_str();
    const char * algo = algoType.c_str();  
 
-   std::string s1,s2;
    //case of fumili2
+   std::string s1,s2;
    if (minimizerType == "Fumili2" ) {
       s1 = "Minuit2";
       s2 = "fumili";
@@ -69,6 +68,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       s1 = "Minuit"; 
       minim = s1.c_str();
    }
+
 
    // create Minimizer using the PM
    TPluginHandler *h; 

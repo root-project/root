@@ -238,7 +238,7 @@ public:
    virtual bool ProvidesError() const { return true; } 
 
    /// return errors at the minimum 
-   virtual const double * Errors() const { return &fErrors.front(); }
+   virtual const double * Errors() const { return (fErrors.size() > 0) ? &fErrors.front() : 0; }
 //  { 
 //       static std::vector<double> err; 
 //       err.resize(fDim);
@@ -251,12 +251,8 @@ public:
    */ 
    virtual double CovMatrix(unsigned int , unsigned int ) const;
 
-   /// minos error for variable i, return false if Minos failed
-   virtual bool GetMinosError(unsigned int , double & /* errLow */ , double & /* errUp */ ) { return false; }
-
-   /// return reference to the objective function
-   ///virtual const ROOT::Math::IGenFunction & Function() const; 
-
+   /// return covariance matrix status
+   virtual int CovMatrixStatus() const;
 
 protected: 
 

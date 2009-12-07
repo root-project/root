@@ -27,8 +27,8 @@
 
 //#define DEBUG
 #ifdef DEBUG
-#include <iostream>
 #endif
+#include <iostream>
 
 namespace ROOT { 
 
@@ -145,11 +145,16 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    const std::string & minimType = fMinimizerOpts.MinimizerType(); 
    const std::string & algoType  = fMinimizerOpts.MinimizerAlgorithm(); 
 
+   std::string  defaultMinim = ROOT::Math::MinimizerOptions::DefaultMinimizerType(); 
    ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer(minimType, algoType); 
-
+   // check if a different minimizer is used (in case a default value is passed, then set correctly in FitConfig)
+   const std::string & minim_newDefault = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+   if (defaultMinim != minim_newDefault )  fMinimizerOpts.SetMinimizerType(minim_newDefault.c_str());
+      
    if (min == 0) { 
-      std::string minim2 = "Minuit2";
-      if ( minimType != "Minuit" )  minim2 = "Minuit";
+      // if creation of minimizer failed force the use by default of Minuit
+      std::string minim2 = "Minuit"; 
+      if (minimType == "Minuit") minim2 = "Minuit2";
       if (minimType != minim2 ) {
          std::string msg = "Could not create the " + minimType + " minimizer. Try using the minimizer " + minim2; 
          MATH_WARN_MSG("FitConfig::CreateMinimizer",msg.c_str());

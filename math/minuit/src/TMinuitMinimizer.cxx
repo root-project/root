@@ -555,7 +555,7 @@ double TMinuitMinimizer::GlobalCC(unsigned int i) const {
    return fMinuit->fGlobcc[iin-1];   
 }
 
-bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & errUp) { 
+bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & errUp, int ) { 
    // Perform Minos analysis for the given parameter  i 
 
    if (fMinuit == 0) { 

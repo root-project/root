@@ -9,20 +9,18 @@
  **********************************************************************/
 
 #include "Math/MinimizerOptions.h"
-#include "RConfigure.h"
+
+// case of using ROOT plug-in manager
+#ifndef MATH_NO_PLUGIN_MANAGER
+#include "TEnv.h"
+#endif 
 
 namespace ROOT { 
    
 
 namespace Math { 
 
-// default minimizer options (static variable) 
-
-#ifdef R__HAS_MINUIT2
-   static std::string gDefaultMinimizer = "Minuit2";
-#else 
-   static std::string gDefaultMinimizer = "Minuit";
-#endif
+   static std::string gDefaultMinimizer = ""; // take from /etc/system.rootrc in ROOT Fitter
    static std::string gDefaultMinimAlgo = "Migrad";
    static double gDefaultErrorDef = 1.;
    static double gDefaultTolerance = 1.E-4; 
@@ -77,7 +75,42 @@ int    MinimizerOptions::DefaultMaxIterations()    { return gDefaultMaxIter; }
 int    MinimizerOptions::DefaultStrategy()         { return gDefaultStrategy; }
 int    MinimizerOptions::DefaultPrintLevel()       { return gDefaultPrintLevel; }
 
-     
+MinimizerOptions::MinimizerOptions(): 
+   fLevel( gDefaultPrintLevel),
+   fMaxCalls( gDefaultMaxCalls ), 
+   fMaxIter( gDefaultMaxIter ), 
+   fStrategy( gDefaultStrategy ), 
+   fErrorDef(  gDefaultErrorDef ), 
+   fTolerance( gDefaultTolerance ),
+   fPrecision( gDefaultPrecision )
+{
+   // constructor using  the default options
+
+   if (gDefaultMinimizer.size() == 0) { 
+#ifndef MATH_NO_PLUGIN_MANAGER
+   // use value defined in etc/system.rootrc  (if not found Minuit is used) 
+      if (gEnv) 
+         gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");   
+#else
+      gDefaultMinimizer = "Minuit2";  // in case no PM exists 
+#endif
+   }
+
+   fMinimType = gDefaultMinimizer;
+   fAlgoType =  gDefaultMinimAlgo;
+
+   // case of Fumili2 and TMinuit
+   if (fMinimType == "TMinuit") fMinimType = "Minuit";
+   else if (fMinimType == "Fumili2") { 
+      fMinimType = "Minuit2";
+      fAlgoType = "Fumili";
+   }   
+   else if (fMinimType == "GSLMultiMin" && fAlgoType == "Migrad") 
+      fAlgoType = "BFGS2";
+}
+
+
+
 } // end namespace Math
 
 } // end namespace ROOT

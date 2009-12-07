@@ -38,6 +38,11 @@ TMatrixDSym TFitResult::GetCovarianceMatrix()  const
    // The matrix is a symmetric matrix with a size N equal to 
    // the total number of parameters considered in the fit including the fixed ones
    // The matrix row and columns corresponding to the fixed parameters will contain only zero's
+
+   if (CovMatrixStatus() == 0) {
+      Warning("GetCovarianceMatrix","covariance matrix is not available"); 
+      return TMatrixDSym();
+   }
    TMatrixDSym mat(NPar());
    ROOT::Fit::FitResult::GetCovarianceMatrix<TMatrixDSym>(mat);
    return mat; 
@@ -49,6 +54,10 @@ TMatrixDSym TFitResult::GetCorrelationMatrix()  const
    // The matrix is a symmetric matrix with a size N equal to 
    // the total number of parameters considered in the fit including the fixed ones
    // The matrix row and columns corresponding to the fixed parameters will contain only zero's
+   if (CovMatrixStatus() == 0) {
+      Warning("GetCorrelationMatrix","correlation matrix is not available"); 
+      return TMatrixDSym();
+   }
    TMatrixDSym mat(NPar());
    ROOT::Fit::FitResult::GetCorrelationMatrix<TMatrixDSym>(mat);
    return mat; 

@@ -50,18 +50,8 @@ public:
    static int DefaultPrintLevel(); 
 
 
-   // default options 
-   MinimizerOptions() : 
-      fLevel( MinimizerOptions::DefaultPrintLevel()),
-      fMaxCalls( MinimizerOptions::DefaultMaxFunctionCalls() ), 
-      fMaxIter( MinimizerOptions::DefaultMaxIterations() ), 
-      fStrategy(  MinimizerOptions::DefaultStrategy() ), 
-      fErrorDef(  MinimizerOptions::DefaultErrorDef() ), 
-      fTolerance( MinimizerOptions::DefaultTolerance() ),
-      fPrecision( MinimizerOptions::DefaultPrecision() ),
-      fMinimType( MinimizerOptions::DefaultMinimizerType() ), 
-      fAlgoType(  MinimizerOptions::DefaultMinimizerAlgo() )
-   {}
+   // constructor using the default options 
+   MinimizerOptions();
 
    /** non-static methods for  retrivieng options */
 
