@@ -505,8 +505,10 @@ void TBasket::Streamer(TBuffer &b)
    } else {
       TKey::Streamer(b);   //this must be first
       b.WriteVersion(TBasket::IsA());
-      Int_t curLast = fBufferRef->Length();
-      if (fBufferRef && !fHeaderOnly && !fSeekKey && curLast > fLast) fLast = curLast;
+      if (fBufferRef) {
+         Int_t curLast = fBufferRef->Length();
+         if (!fHeaderOnly && !fSeekKey && curLast > fLast) fLast = curLast;
+      }
       if (fLast > fBufferSize) fBufferSize = fLast;
 
 //   static TStopwatch timer;

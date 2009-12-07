@@ -165,7 +165,7 @@ Bool_t TSelectorEntries::Process(Long64_t /* entry */)
       } else {
          ++fSelectedRows;
       }
-   } else {
+   } else if (fSelect) {
       // Grab the array size of the formulas for this entry
       Int_t ndata = fSelect->GetNdata();
 
@@ -173,17 +173,15 @@ Bool_t TSelectorEntries::Process(Long64_t /* entry */)
       if (!ndata) return kTRUE;
 
       // Calculate the first values
-      if (fSelect) {
-         // Always call EvalInstance(0) to insure the loading
-         // of the branches.
-         if (fSelect->EvalInstance(0)) {
-            ++fSelectedRows;
-         } else {
-            for (Int_t i=1;i<ndata;i++) {
-               if (fSelect->EvalInstance(i)) {
-                  ++fSelectedRows;
-                  break;
-               }
+      // Always call EvalInstance(0) to insure the loading
+      // of the branches.
+      if (fSelect->EvalInstance(0)) {
+         ++fSelectedRows;
+      } else {
+         for (Int_t i=1;i<ndata;i++) {
+            if (fSelect->EvalInstance(i)) {
+               ++fSelectedRows;
+               break;
             }
          }
       }

@@ -328,6 +328,9 @@ UInt_t TTreeCloner::CollectBranches()
 
    // Since this is called from the constructor, this can not be a virtual function
 
+   if (!fFromTree || !fToTree) {
+      return 0;
+   }
    UInt_t numBasket = CollectBranches(fFromTree->GetListOfBranches(),
                                       fToTree->GetListOfBranches());
 

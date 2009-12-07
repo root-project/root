@@ -235,6 +235,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    // Set our TBranch attributes.
    fSplitLevel = splitlevel;
    fTree   = tree;
+   if (fTree == 0) return;
    fMother = parent ? parent->GetMother() : this;
    fParent = parent;
    fDirectory = fTree->GetDirectory();
@@ -279,7 +280,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
 
    fEntryOffsetLen = 0;
    if (btype || (fStreamerType <= TVirtualStreamerInfo::kBase) || (fStreamerType == TVirtualStreamerInfo::kCharStar) || (fStreamerType == TVirtualStreamerInfo::kBits) || (fStreamerType > TVirtualStreamerInfo::kFloat16)) {
-      fEntryOffsetLen = fTree ? fTree->GetDefaultEntryOffsetLen() : 1000;
+      fEntryOffsetLen = fTree->GetDefaultEntryOffsetLen();
    }
 
    //
@@ -4046,6 +4047,9 @@ void TBranchElement::SetupAddresses()
    // Any other case
    //--------------------------------------------------------------------------
    TBranchElement* mother = (TBranchElement*) GetMother();
+   if (!mother) {
+      return;
+   }
    TClass* cl = TClass::GetClass(mother->GetClassName());
 
    // FIXME: Should this go after the mother and cl test?
@@ -4056,7 +4060,7 @@ void TBranchElement::SetupAddresses()
       GetInfo()->BuildOld();
    }
 
-   if (!mother || !cl) {
+   if (!cl) {
       return;
    }
 

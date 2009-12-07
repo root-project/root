@@ -195,6 +195,8 @@ Int_t TChain::Add(TChain* chain)
    // -- Add all files referenced by the passed chain to this chain.
    // The function returns the total number of files connected.
 
+   if (!chain) return 0;
+
    // Check for enough space in fTreeOffset.
    if ((fNtrees + chain->GetNtrees()) >= fTreeOffsetLen) {
       fTreeOffsetLen += 2 * chain->GetNtrees();
@@ -205,7 +207,6 @@ Int_t TChain::Add(TChain* chain)
       delete[] fTreeOffset;
       fTreeOffset = trees;
    }
-   if (!chain) return 0;
    chain->GetEntries(); //to force the computation of nentries
    TIter next(chain->GetListOfFiles());
    Int_t nf = 0;

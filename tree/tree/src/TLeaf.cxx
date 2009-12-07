@@ -198,7 +198,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    TLeaf* leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
    //if not found, make one more trial in case the leaf name has a "."
    if (!leaf && strchr(GetName(), '.')) {
-      char* withdot = new char[1000];
+      char* withdot = new char[strlen(GetName()+1)];
       strcpy(withdot, GetName());
       char* lastdot = strrchr(withdot, '.');
       strcpy(lastdot, countname);

@@ -3624,7 +3624,7 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
    // Search in the array for a branch matching the branch name,
    // with the branch possibly expressed as a 'full' path name (with dots).
 
-   if (list==0) return 0;
+   if (list==0 || branchname == 0 || branchname[0] == '\0') return 0;
 
    Int_t nbranches = list->GetEntries();
 
@@ -3645,7 +3645,7 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
          return where;
       }
       TBranch *next = 0;
-      if (branchname && (brlen >= len) && (branchname[len] == '.')
+      if ((brlen >= len) && (branchname[len] == '.')
           && strncmp(name, branchname, len) == 0) {
          // The prefix subbranch name match the branch name.
 
@@ -5502,21 +5502,13 @@ Long64_t TTree::Project(const char* hname, const char* varexp, const char* selec
    // Note that the dimension of hname must match with the dimension of varexp.
    //
 
-   Int_t nch = strlen(hname) + strlen(varexp);
-   char* var = new char[nch+5];
-   sprintf(var, "%s>>%s", varexp, hname);
-   nch = strlen(option) + 10;
-   char* opt = new char[nch];
+   TString var;
+   var.Form("%s>>%s", varexp, hname);
+   TString opt("goff");   
    if (option) {
-      sprintf(opt, "%sgoff", option);
-   } else {
-      strcpy(opt, "goff");
+      opt.Form("%sgoff", option);
    }
    Long64_t nsel = Draw(var, selection, opt, nentries, firstentry);
-   delete[] var;
-   var = 0;
-   delete[] opt;
-   opt = 0;
    return nsel;
 }
 

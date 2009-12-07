@@ -100,7 +100,7 @@ TBranchSTL::TBranchSTL( TBranch* parent, const char* name,
    fClCheckSum   = info->GetClass()->GetCheckSum();
    fInfo         = info;
    fID           = id;
-   fMother = parent ? parent->GetMother() : this;
+   fMother = parent->GetMother();
    fParent = parent;
    fDirectory = fTree->GetDirectory();
    fFileName = "";

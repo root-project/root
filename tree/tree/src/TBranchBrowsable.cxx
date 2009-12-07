@@ -210,10 +210,13 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
       // branch...
       if (branch->GetReadEntry()==-1) branchNonCost->GetEntry(0);
       // now get element
-      TLeafObject* lo=(TLeafObject*)branchNonCost->GetListOfLeaves()->First();
-      TObject* objContainer=lo->GetObject();
-      if (lo && objContainer && objContainer->IsA()==TClonesArray::Class())
-         contained=((TClonesArray*)objContainer)->GetClass();
+      TLeafObject* lo = (TLeafObject*)branchNonCost->GetListOfLeaves()->First();
+      if (lo) {
+         TObject* objContainer = lo->GetObject();
+         if (objContainer && objContainer->IsA()==TClonesArray::Class()) {
+            contained = ((TClonesArray*)objContainer)->GetClass();
+         }
+      }
       return type;
    } else    if (type->InheritsFrom(TClonesArray::Class()) 
       && branch->IsA()==TBranchElement::Class()

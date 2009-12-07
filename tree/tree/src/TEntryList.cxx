@@ -855,6 +855,7 @@ Long64_t TEntryList::Next()
    } else {
       if (!fCurrent) {
          fCurrent = (TEntryList*)fLists->First();
+         if (!fCurrent) return 0;
          if (fShift) {
             while (fCurrent->GetTreeNumber()<0)
                fCurrent = (TEntryList*)fLists->After(fCurrent);
