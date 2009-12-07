@@ -59,6 +59,10 @@ else
 XRDLIBS     := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a \
                $(XROOTDDIRL)/libXrdSys.a \
                $(LPATH)/libXrdClient.$(XRDSOEXT) $(LPATH)/libXrdSut.$(XRDSOEXT)
+XRDSECLIBS  := $(LPATH)/libXrdSec.$(XRDSOEXT) $(LPATH)/libXrdSecunix.$(XRDSOEXT) \
+               $(LPATH)/libXrdSecpwd.$(XRDSOEXT) $(LPATH)/libXrdSecsss.$(XRDSOEXT) \
+               $(LPATH)/libXrdSecgsi.$(XRDSOEXT) $(LPATH)/libXrdSecgsiGMAPLDAP.$(XRDSOEXT) \
+               $(LPATH)/libXrdSeckrb5.$(XRDSOEXT)
 XRDNETXD    := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdSys.a \
                $(LPATH)/libXrdClient.$(XRDSOEXT)
 XRDPROOFXD  := $(XRDLIBS) $(XROOTDDIRL)/libXrd.a
@@ -79,7 +83,7 @@ XROOTDCFGD := $(wildcard $(XROOTDDIRD)/config/*) $(wildcard $(XROOTDDIRD)/config
               $(XROOTDDIRD)/configure.classic
 
 # used in the main Makefile
-ALLLIBS    += $(XRDLIBS)
+ALLLIBS    += $(XRDLIBS) $(XRDSECLIBS)
 ifeq ($(PLATFORM),win32)
 ALLEXECS   += $(XRDEXECS)
 endif
@@ -276,12 +280,12 @@ else
 		nmake -f Makefile.msc CFG=$(XRDDBG))
 endif
 
+### Rules for xrootd plugins
+$(LPATH)/libXrd%.$(XRDSOEXT):    $(XROOTDDIRL)/libXrd%.$(XRDSOEXT)
+		cp -rp $< $@
+
 ### Rules for single components
-#
-$(LPATH)/libXrdClient.$(XRDSOEXT): $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT)
 $(XROOTDDIRL)/libXrdClient.$(XRDSOEXT): $(XROOTDBUILD)
-#
-$(LPATH)/libXrdSut.$(XRDSOEXT): $(XROOTDDIRL)/libXrdSut.$(XRDSOEXT)
 $(XROOTDDIRL)/libXrdSut.$(XRDSOEXT): $(XROOTDBUILD)
 #
 $(XROOTDDIRL)/libXrdOuc.a: $(XROOTDBUILD)
@@ -297,8 +301,8 @@ all-$(MODNAME): $(TARGETS)
 
 clean-$(MODNAME):
 ifneq ($(PLATFORM),win32)
-		@(if [ -f $(XROOTDMAKE) ]; then \
-		   $(MAKE) clean-netx;  \
+	 @(if [ -f $(XROOTDMAKE) ]; then \
+                   $(MAKE) clean-netx;  \
 		   $(MAKE) clean-proofx;  \
 		   cd $(XROOTDDIRD); \
 		   $(MAKE) clean; \
