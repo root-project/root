@@ -94,7 +94,7 @@ Int_t file_size(char *filename)
 void graph_edit_playback()
 {
    r = new TRecorder();
-   r->Replay("http://root.cern.ch/files/graphedit_playback.root",kFALSE);
+   r->Replay("http://root.cern.ch/files/graphedit_playback.root");
 
    // wait for the recorder to finish the replay
    while (r->GetState() == TRecorder::kReplaying) {
