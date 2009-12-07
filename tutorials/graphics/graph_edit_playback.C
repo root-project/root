@@ -102,10 +102,10 @@ void graph_edit_playback()
       gSystem->Sleep(1);
    }
 
-   Int_t c1_ps_Ref  = 11592 , c1_ps_Err  = 500;
-   Int_t c1_C_Ref   =  4729 , c1_C_Err   = 100;
-   Int_t c2_gif_Ref = 21184 , c2_gif_Err = 100;
-   Int_t c2_C_Ref   = 35471 , c2_C_Err   = 100;
+   Int_t c1_ps_Ref  = 11592 , c1_ps_Err  = 600;
+   Int_t c1_C_Ref   =  4729 , c1_C_Err   = 200;
+   Int_t c2_gif_Ref = 21184 , c2_gif_Err = 500;
+   Int_t c2_C_Ref   = 35471 , c2_C_Err   = 1500;
 
    Int_t c1_ps  = file_size("c1.ps");
    Int_t c1_C   = file_size("c1.C");
