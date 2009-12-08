@@ -314,6 +314,13 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
 {
    // Creates palette in the same way as TStyle::SetPalette
 
+   fNumPoints  = 0;
+   fPoints     = 0;
+   fColorRed   = 0;
+   fColorGreen = 0;
+   fColorBlue  = 0;
+   fColorAlpha = 0;
+
    Int_t i;
    static Int_t palette[50] = {19,18,17,16,15,14,13,12,11,20,
                         21,22,23,24,25,26,27,28,29,30, 8,
