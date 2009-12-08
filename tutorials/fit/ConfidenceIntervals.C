@@ -21,6 +21,7 @@ void ConfidenceIntervals()
    //Create and fill a graph
    Int_t ngr = 100;
    TGraph *gr = new TGraph(ngr);
+   gr->SetName("GraphNoError");
    Double_t x, y;
    Int_t i;
    for (i=0; i<ngr; i++){
@@ -77,6 +78,7 @@ void ConfidenceIntervals()
    Int_t ngr2 = 100;
    Double_t z, rnd, e=0.3;
    TGraph2D *gr2 = new TGraph2D(ngr2);
+   gr2->SetName("Graph2DNoError");
    TF2  *f2 = new TF2("f2",
       "1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+250",-6,6,-6,6);
    f2->SetParameters(1,1);
