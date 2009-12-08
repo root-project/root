@@ -23,15 +23,12 @@
 #include <sys/utsname.h>
 #include <sys/types.h>
 
-/* char *dir="include/"; */
-char *dir="../../include/";
+const char *header="../../include/systypes.h";
 
 /*******************************************************************
 * testdup()
 *******************************************************************/
-int testdup(fp,iden)
-FILE *fp;
-char *iden;
+int testdup(FILE *fp,char *iden)
 {
   fprintf(fp,"#ifndef %s\n",iden);
   fprintf(fp,"#define %s\n",iden);
@@ -150,11 +147,7 @@ char *iden;
 int gen_systypes()
 {
   FILE *fp;
-  char filename[200];
-  char *header="systypes.h";
-
-  sprintf(filename,"%s%s",dir,header);
-  fp=fopen(filename,"w");
+  fp=fopen(header,"w");
   testdup(fp,"G__SYSTYPES_H");
 
 /* see v6_init.cxx, G__platformMacro
