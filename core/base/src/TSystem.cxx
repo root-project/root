@@ -2923,6 +2923,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             // The library is being used. We can not unload it.
             return kFALSE;
          }
+         if (libinfo) {
+            fCompiled->Remove(libinfo);
+         }
          TNamed *k = new TNamed(library,library);
          Long_t lib_time;
          gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
@@ -2943,6 +2946,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if ( gInterpreter->UnloadFile( library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
+         }
+         if (libinfo) {
+            fCompiled->Remove(libinfo);
          }
          Unlink(library);
       }
