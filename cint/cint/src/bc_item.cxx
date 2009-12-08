@@ -217,7 +217,7 @@ G__value G__blockscope_expr::pointer_operator(const string& item, int& i)
 
       struct G__param para;
       para.paran = 0;
-      G__value obj = m_blockscope->call_func(m_localscope, "operator->", &para, 0, 0
+      obj = m_blockscope->call_func(m_localscope, "operator->", &para, 0, 0
                                              , G__ClassInfo::ExactMatch);
       m_localscope.Init(obj.tagnum);
       m_isobject = 1;
@@ -336,7 +336,7 @@ G__value G__blockscope_expr::index_operator(const string& item, int& i)
       m_pinst->POPSTROS();
    }
    /////////////////////////////////////////////////////////////////
-   G__value result;
+   G__value result = G__null;
    switch (c) {
       case 0:   // ary[1][2]
          break;
