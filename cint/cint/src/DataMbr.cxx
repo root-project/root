@@ -17,6 +17,7 @@
 
 #include "Api.h"
 #include "common.h"
+#include "FastAllocString.h"
 
 /*********************************************************************
 * class G__DataMemberInfo
@@ -498,8 +499,9 @@ const char* Cint::G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr)
   if ((strncmp(title, "[", 1)!=0) ||
       (strstr(title,"]")     ==0)  ) return 0;
 
-  static char working[G__INFO_TITLELEN], indexvar[G__INFO_TITLELEN];
-  strcpy(indexvar,title+1);
+  G__FastAllocString working(G__INFO_TITLELEN);
+  static char indexvar[G__INFO_TITLELEN];
+  strncpy(indexvar, title + 1, sizeof(indexvar) - 1);
   strstr(indexvar,"]")[0] = '\0';
   
   // now we should have indexvar=dimension
@@ -508,9 +510,10 @@ const char* Cint::G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr)
 
   // First we remove white spaces.
   unsigned int i,j;
-  for ( i=0,j=0; i<=strlen(indexvar); i++) {
+  unsigned int indexvarlen = strlen(indexvar);
+  for ( i=0,j=0; i<=indexvarlen; i++) {
     if (!isspace(indexvar[i])) {
-      working[j++] = indexvar[i];
+       working.Set(j++, indexvar[i]);
     }
   };
  
