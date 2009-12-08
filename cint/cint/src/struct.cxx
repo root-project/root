@@ -1345,7 +1345,6 @@ int G__calldtor(void* p, int tagnum, int isheap)
    int stat;
    G__value result;
    struct G__ifunc_table_internal* ifunc;
-   struct G__param para;
    int ifn = 0;
    long store_gvp;
    if (tagnum == -1) {
@@ -1364,10 +1363,12 @@ int G__calldtor(void* p, int tagnum, int isheap)
       G__setgvp((long) p);
    }
    // Call destructor.
-   para.paran = 0;
-   para.parameter[0][0] = 0;
-   para.para[0] = G__null;
-   stat = G__callfunc0(&result, G__get_ifunc_ref(ifunc), ifn, &para, p, G__TRYDESTRUCTOR);
+   struct G__param* para = new G__param();
+   para->paran = 0;
+   para->parameter[0][0] = 0;
+   para->para[0] = G__null;
+   stat = G__callfunc0(&result, G__get_ifunc_ref(ifunc), ifn, para, p, G__TRYDESTRUCTOR);
+   delete para;
    G__setgvp(store_gvp);
    if (isheap && (ifunc->pentry[ifn]->size != -1)) {
       // -- Interpreted class.
