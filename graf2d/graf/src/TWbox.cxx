@@ -37,6 +37,9 @@ ClassImp(TWbox)
 TWbox::TWbox(): TBox()
 {
    // wbox default constructor.
+
+   fBorderSize  = 0;
+   fBorderMode  = 0;
 }
 
 
