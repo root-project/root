@@ -265,7 +265,9 @@ TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline) : TObject(polyline), TAttL
 {
    // 3-D polyline copy ctor.
 
-   fP = 0;
+   fP         = 0;
+   fLastPoint = 0;
+   fN         = 0;
    ((TPolyLine3D&)polyline).TPolyLine3D::Copy(*this);
 }
 
