@@ -35,6 +35,10 @@ ClassImp(TBRIK)
 TBRIK::TBRIK()
 {
    // BRIK shape default constructor
+
+   fDx = 0.;
+   fDy = 0.;
+   fDz = 0.;
 }
 
 

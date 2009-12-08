@@ -44,6 +44,9 @@ ClassImp(TCONS)
 TCONS::TCONS()
 {
    // CONS shape default constructor
+
+   fRmin2 = 0.;
+   fRmax2 = 0.;
 }
 
 

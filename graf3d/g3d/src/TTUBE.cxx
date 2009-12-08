@@ -38,9 +38,13 @@ TTUBE::TTUBE()
 {
    // TUBE shape default constructor
 
-   fCoTab = 0;
-   fSiTab = 0;
-   fAspectRatio =1;
+   fCoTab       = 0;
+   fSiTab       = 0;
+   fAspectRatio = 1;
+   fDz          = 0.;
+   fNdiv        = 0;
+   fRmin        = 0.;
+   fRmax        = 0.;
 }
 
 

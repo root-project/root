@@ -66,10 +66,17 @@ ClassImp(TGTRA)
 //______________________________________________________________________________
 TGTRA::TGTRA ()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*GTRA shape default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==============================
+   // GTRA shape default constructor.
 
-
+   fTwist  = 0.;
+   fH1     = 0.;
+   fBl1    = 0.;
+   fTl1    = 0.;
+   fAlpha1 = 0.;
+   fH2     = 0.;
+   fBl2    = 0.;
+   fTl2    = 0.;
+   fAlpha2 = 0.;
 }
 
 

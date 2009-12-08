@@ -42,6 +42,9 @@ ClassImp(TTUBS)
 TTUBS::TTUBS()
 {
    // TUBS shape default constructor
+
+   fPhi1 = 0.;
+   fPhi2 = 0.;
 }
 
 

@@ -43,6 +43,13 @@ ClassImp(TCTUB)
 TCTUB::TCTUB()
 {
    // CTUB shape default constructor
+
+   fCosLow[0]  = 0.;
+   fCosLow[1]  = 0.;
+   fCosLow[2]  = 0.;
+   fCosHigh[0] = 0.;
+   fCosHigh[1] = 0.;
+   fCosHigh[2] = 0.;
 }
 
 
