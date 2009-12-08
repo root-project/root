@@ -137,6 +137,8 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
 {
    //Creates a quantile-quantile plot of dataset x against function f
 
+   fNy0 = 0;
+
    Int_t *index = new Int_t[n];
    TMath::Sort(n, x, index, kFALSE);
    for (Int_t i=0; i<fNpoints; i++)
@@ -153,6 +155,12 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
 {
    //Creates a quantile-quantile plot of dataset x against dataset y
    //Parameters nx and ny are respective array sizes
+
+   fNy0 = 0;
+   fXq1 = 0.;
+   fXq2 = 0.;
+   fYq1 = 0.;
+   fYq2 = 0.;
 
    nx<=ny ? fNpoints=nx : fNpoints=ny;
 
