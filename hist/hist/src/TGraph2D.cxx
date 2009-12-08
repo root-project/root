@@ -351,7 +351,7 @@ TGraph2D::TGraph2D(const char *name,const char *title,
    // name   : name of 2D graph (avoid blanks)
    // title  : 2D graph title
    //          if title is of the form "stringt;stringx;stringy;stringz"
-   //          the 2D graph title is set to stringt, the x axis title to stringy,
+   //          the 2D graph title is set to stringt, the x axis title to stringx,
    //          the y axis title to stringy,etc
 
    Build(n);
