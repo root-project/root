@@ -317,7 +317,7 @@ char *G__charaddquote(char *string,char c)
 ******************************************************************/
 G__value G__strip_singlequotation(char *string)
 {
-  G__value result;
+  G__value result = G__null;
   int i;
   result.type='c';
   result.tagnum = -1;
