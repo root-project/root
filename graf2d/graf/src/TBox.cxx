@@ -77,6 +77,11 @@ TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box)
 {
    // Box copy constructor.
 
+   fX1       = 0.;
+   fY1       = 0.;
+   fX2       = 0.;
+   fY2       = 0.;
+   fResizing = kTRUE;
    ((TBox&)box).TBox::Copy(*this);
 }
 
