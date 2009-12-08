@@ -608,8 +608,8 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
    // Define the marker size
    Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
-   if (ms == 6) msize *= 0.2;
-   if (ms == 7) msize *= 0.3;
+   if (abs(fMarkerStyle) == 6) msize *= 0.2;
+   if (abs(fMarkerStyle) == 7) msize *= 0.3;
    Double_t m  = CMtoSVG(msize);
    Double_t m2 = m/2;
    Double_t m3 = m/3;
@@ -834,8 +834,8 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    // Define the marker size
    Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
-   if (ms == 6) msize *= 0.2;
-   if (ms == 7) msize *= 0.3;
+   if (abs(fMarkerStyle) == 6) msize *= 0.2;
+   if (abs(fMarkerStyle) == 7) msize *= 0.3;
    Double_t m  = CMtoSVG(msize);
    Double_t m2 = m/2;
    Double_t m3 = m/3;
