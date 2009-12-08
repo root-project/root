@@ -235,7 +235,7 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
    for ( int i = 1; i < argc; ++i ) argv2[ i ] = argv[ i-1 ];
    argv2[ 0 ] = Py_GetProgramName();
    PySys_SetArgv( argc, const_cast< char** >( argv2 ) );
-   delete argv2;
+   delete [] argv2;
 
 // actual script execution
    PyObject* gbl = PyDict_Copy( gMainDict );
