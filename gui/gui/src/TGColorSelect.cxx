@@ -69,7 +69,7 @@ TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
 
    SetBackgroundColor(color);
 
-   fColor = color;
+   fPixel = fColor = color;
 
    AddInput(kButtonPressMask | kButtonReleaseMask);
    fMsgWindow  = p;

@@ -1038,7 +1038,7 @@ const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
       }
    }
    if (pic == 0) {
-      if (obj->IsFolder()) {
+      if (obj && obj->IsFolder()) {
          pic = fClient->GetPicture("folder_s.xpm");
       } else {
          pic = fClient->GetPicture("doc_s.xpm");
@@ -1457,8 +1457,8 @@ void TGContainer::Search(Bool_t close)
       if (ret) {
          FindFrameByName(srch->fBuffer);
       }
-      delete srch;
    }
+   delete srch;
 }
 
 //______________________________________________________________________________
