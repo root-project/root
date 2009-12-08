@@ -16,6 +16,7 @@
 
 #include "Api.h"
 #include "common.h"
+#include "FastAllocString.h"
 
 extern "C" void G__exec_alloc_lock();
 extern "C" void G__exec_alloc_unlock();
@@ -39,10 +40,9 @@ void Cint::G__ClassInfo::Init(const char *classname)
 {
    if (strchr(classname,'<')) {
       // G__defined_tagnum might modify classname.
-      char *tmp = new char[1+strlen(classname)*2];
-      strcpy(tmp,classname);
+      G__FastAllocString tmp(1+strlen(classname)*2);
+      tmp = classname;
       tagnum = G__defined_tagname(tmp,1);
-      delete [] tmp;
    } else {
       tagnum = G__defined_tagname(classname,1);
    }
@@ -84,7 +84,7 @@ const char* Cint::G__ClassInfo::Fullname()
 {
   if(IsValid()) {
 #ifndef G__OLDIMPLEMENTATION1586
-    strcpy(G__buf,G__fulltagname((int)tagnum,1));
+   strncpy(G__buf,G__fulltagname((int)tagnum,1), sizeof(G__buf) - 1);
 #if defined(_MSC_VER) && (_MSC_VER < 1300) /*vc6*/
    char *ptr = strstr(G__buf, "long long");
    if (ptr) {
@@ -392,7 +392,7 @@ const char* Cint::G__ClassInfo::TmpltName()
   static char buf[G__ONELINE];
   if(IsValid()) {
     char *p;
-    strcpy(buf,Name());
+    strncpy(buf, Name(), sizeof(buf) - 1);
     p = strchr(buf,'<');
     if(p) *p = 0;
     return(buf);
@@ -408,7 +408,7 @@ const char* Cint::G__ClassInfo::TmpltArg()
   if(IsValid()) {
     char *p = strchr((char*)Name(),'<');
     if(p) {
-      strcpy(buf,p+1);
+      strncpy(buf,p+1, sizeof(buf) - 1);
       p=strrchr(buf,'>');
       if(p) { 
 	*p=0;
@@ -679,10 +679,8 @@ G__MethodInfo Cint::G__ClassInfo::GetDefaultConstructor() {
   // TODO, reserve location for default ctor for tune up
   long dmy;
   G__MethodInfo method;
-  char *fname= (char*)malloc(strlen(Name())+1);
-  sprintf(fname,"%s",Name());
+  G__FastAllocString fname(Name());
   method = GetMethod(fname,"",&dmy,ExactMatch,InThisScope);
-  free((void*)fname);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -690,13 +688,10 @@ G__MethodInfo Cint::G__ClassInfo::GetCopyConstructor() {
   // TODO, reserve location for copy ctor for tune up
   long dmy;
   G__MethodInfo method;
-  char *fname= (char*)malloc(strlen(Name())+1);
-  sprintf(fname,"%s",Name());
-  char *arg= (char*)malloc(strlen(Name())+10);
-  sprintf(arg,"const %s&",Name());
+  G__FastAllocString fname(Name());
+  G__FastAllocString arg(strlen(Name())+10);
+  arg.Format("const %s&", Name());
   method = GetMethod(fname,arg,&dmy,ExactMatch,InThisScope);
-  free((void*)arg);
-  free((void*)fname);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -704,10 +699,9 @@ G__MethodInfo Cint::G__ClassInfo::GetDestructor() {
   // TODO, dtor location is already reserved, ready for tune up
   long dmy;
   G__MethodInfo method;
-  char *fname= (char*)malloc(strlen(Name())+2);
-  sprintf(fname,"~%s",Name());
+  G__FastAllocString fname(strlen(Name())+2);
+  fname.Format("~%s",Name());
   method = GetMethod(fname,"",&dmy,ExactMatch,InThisScope);
-  free((void*)fname);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -715,10 +709,9 @@ G__MethodInfo Cint::G__ClassInfo::GetAssignOperator() {
   // TODO, reserve operator= location for tune up
   long dmy;
   G__MethodInfo method;
-  char *arg= (char*)malloc(strlen(Name())+10);
-  sprintf(arg,"const %s&",Name());
+  G__FastAllocString arg(strlen(Name()) + 10);
+  arg.Format("const %s&", Name());
   method = GetMethod("operator=",arg,&dmy,ExactMatch,InThisScope);
-  free((void*)arg);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -811,9 +804,9 @@ void* Cint::G__ClassInfo::New()
     if (!class_property) Property();
     if(class_property&G__BIT_ISCPPCOMPILED) {
       // C++ precompiled class,struct
-      struct G__param para;
+      struct G__param *para = new G__param();
       G__InterfaceMethod defaultconstructor;
-      para.paran=0;
+      para->paran=0;
       if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
 
       /* If we have a stub for the default constructor */
@@ -821,7 +814,7 @@ void* Cint::G__ClassInfo::New()
           =(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
        if(defaultconstructor) {
           G__CurrentCall(G__DELETEFREE, this, &tagnum);
-          (*defaultconstructor)(&buf,(char*)NULL,&para,0);
+          (*defaultconstructor)(&buf,(char*)NULL,para,0);
           G__CurrentCall(G__NOP, 0, 0);
           p = (void*)G__int(buf);
        }
@@ -832,12 +825,13 @@ void* Cint::G__ClassInfo::New()
              = G__get_ifunc_internal(G__struct.rootspecial[tagnum]->defaultconstructorifunc);
           if(internalifuncconst && internalifuncconst->funcptr[0]){
              G__CurrentCall(G__DELETEFREE, this, &tagnum);
-             G__stub_method_calling(&buf, &para, internalifuncconst, 0);
+             G__stub_method_calling(&buf, para, internalifuncconst, 0);
              G__CurrentCall(G__NOP, 0, 0);
              p = (void*)G__int(buf);
           }
        }
 #endif
+       delete para;
     }
     else if(class_property&G__BIT_ISCCOMPILED) {
       // C precompiled class,struct
@@ -874,9 +868,9 @@ void* Cint::G__ClassInfo::New(int n)
     if (!class_property) Property();
     if(class_property&G__BIT_ISCPPCOMPILED) {
       // C++ precompiled class,struct
-      struct G__param para;
+      struct G__param* para = new G__param();
       G__InterfaceMethod defaultconstructor;
-      para.paran=0;
+      para->paran=0;
       if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
       
       // DMS 13-II-2007
@@ -886,7 +880,7 @@ void* Cint::G__ClassInfo::New(int n)
           =(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
        if(defaultconstructor) {
           G__CurrentCall(G__DELETEFREE, this, &tagnum);
-          (*defaultconstructor)(&buf,(char*)NULL,&para,0);
+          (*defaultconstructor)(&buf,(char*)NULL,para,0);
           G__CurrentCall(G__NOP, 0, 0);
           p = (void*)G__int(buf);
        }
@@ -897,7 +891,7 @@ void* Cint::G__ClassInfo::New(int n)
              = G__get_ifunc_internal(G__struct.rootspecial[tagnum]->defaultconstructorifunc);
           if(internalifuncconst->funcptr[0]){
              G__CurrentCall(G__DELETEFREE, this, &tagnum);
-             G__stub_method_calling(&buf, &para, internalifuncconst, 0);
+             G__stub_method_calling(&buf, para, internalifuncconst, 0);
              G__CurrentCall(G__NOP, 0, 0);
              p = (void*)G__int(buf);
           }
@@ -907,7 +901,7 @@ void* Cint::G__ClassInfo::New(int n)
       // Record that we have allocated an array, and how many
       // elements that array has, for use by the G__calldtor function.
       G__alloc_newarraylist((long) p, n);
-
+      delete para;
     }
     else if(class_property&G__BIT_ISCCOMPILED) {
        // C precompiled class,struct
@@ -960,9 +954,9 @@ void* Cint::G__ClassInfo::New(void *arena)
     if (!class_property) Property();
     if(class_property&G__BIT_ISCPPCOMPILED) {
       // C++ precompiled class,struct
-      struct G__param para;
+      struct G__param* para = new G__param();
       G__InterfaceMethod defaultconstructor;
-      para.paran=0;
+      para->paran=0;
       if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
     
       // DMS 13-II-2007
@@ -975,7 +969,7 @@ void* Cint::G__ClassInfo::New(void *arena)
 #ifdef G__ROOT
          G__exec_alloc_lock();
 #endif
-          (*defaultconstructor)(&buf,(char*)NULL,&para,0);
+          (*defaultconstructor)(&buf,(char*)NULL,para,0);
           G__CurrentCall(G__NOP, 0, 0);
           p = (void*)G__int(buf);
        }
@@ -990,12 +984,13 @@ void* Cint::G__ClassInfo::New(void *arena)
 #ifdef G__ROOT
          G__exec_alloc_lock();
 #endif
-             G__stub_method_calling(&buf, &para, internalifuncconst, 0);
+             G__stub_method_calling(&buf, para, internalifuncconst, 0);
              G__CurrentCall(G__NOP, 0, 0);
              p = (void*)G__int(buf);
           }
        }
 #endif
+       delete para;
     }
     else if(class_property&G__BIT_ISCCOMPILED) {
       // C precompiled class,struct
@@ -1032,9 +1027,9 @@ void* Cint::G__ClassInfo::New(int n, void *arena)
     if (!class_property) Property();
     if(class_property&G__BIT_ISCPPCOMPILED) {
       // C++ precompiled class,struct
-      struct G__param para;
+      struct G__param* para = new G__param();
       G__InterfaceMethod defaultconstructor;
-      para.paran=0;
+      para->paran=0;
       if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
 
         // DMS 13-II-2007
@@ -1047,7 +1042,7 @@ void* Cint::G__ClassInfo::New(int n, void *arena)
           G__cpp_aryconstruct = n;
           G__setgvp((long)arena);
           G__CurrentCall(G__DELETEFREE, this, &tagnum);
-          (*defaultconstructor)(&buf,(char*)NULL,&para,0);
+          (*defaultconstructor)(&buf,(char*)NULL,para,0);
           G__CurrentCall(G__NOP, 0, 0);
           G__setgvp((long)G__PVOID);
           G__cpp_aryconstruct = 0;
@@ -1066,7 +1061,7 @@ void* Cint::G__ClassInfo::New(int n, void *arena)
              G__cpp_aryconstruct = n;
              G__setgvp((long)arena);
              G__CurrentCall(G__DELETEFREE, this, &tagnum);
-             G__stub_method_calling(&buf, &para, internalifuncconst, 0);
+             G__stub_method_calling(&buf, para, internalifuncconst, 0);
              G__CurrentCall(G__NOP, 0, 0);
              G__setgvp((long)G__PVOID);
              G__cpp_aryconstruct = 0;
@@ -1077,6 +1072,7 @@ void* Cint::G__ClassInfo::New(int n, void *arena)
           }
        }
 #endif
+       delete para;
     }
     else if(class_property&G__BIT_ISCCOMPILED) {
       // C precompiled class,struct
@@ -1379,23 +1375,24 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
      ifunc->ansi[index] = 0;
   } else {
      char *argtype = (char*)arg;
-     struct G__param para;
-     G__argtype2param(argtype,&para,0,0);
+     struct G__param* para = new G__param();
+     G__argtype2param(argtype,para,0,0);
 
-     ifunc->para_nu[index] = para.paran;
-     for(int i=0;i<para.paran;i++) {
-        ifunc->param[index][i]->type = para.para[i].type;
-        if(para.para[i].type!='d' && para.para[i].type!='f') 
-           ifunc->param[index][i]->reftype = para.para[i].obj.reftype.reftype;
+     ifunc->para_nu[index] = para->paran;
+     for(int i=0;i<para->paran;i++) {
+        ifunc->param[index][i]->type = para->para[i].type;
+        if(para->para[i].type!='d' && para->para[i].type!='f') 
+           ifunc->param[index][i]->reftype = para->para[i].obj.reftype.reftype;
         else 
            ifunc->param[index][i]->reftype = G__PARANORMAL;
-        ifunc->param[index][i]->p_tagtable = para.para[i].tagnum;
-        ifunc->param[index][i]->p_typetable = para.para[i].typenum;
+        ifunc->param[index][i]->p_tagtable = para->para[i].tagnum;
+        ifunc->param[index][i]->p_typetable = para->para[i].typenum;
         ifunc->param[index][i]->name = (char*)malloc(10);
         sprintf(ifunc->param[index][i]->name,"G__p%d",i);
         ifunc->param[index][i]->pdefault = (G__value*)NULL;
         ifunc->param[index][i]->def = (char*)NULL;
      }
+     delete para;
   }
 
   //////////////////////////////////////////////////
