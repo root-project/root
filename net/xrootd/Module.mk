@@ -59,10 +59,6 @@ else
 XRDLIBS     := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdNet.a \
                $(XROOTDDIRL)/libXrdSys.a \
                $(LPATH)/libXrdClient.$(XRDSOEXT) $(LPATH)/libXrdSut.$(XRDSOEXT)
-XRDSECLIBS  := $(LPATH)/libXrdSec.$(XRDSOEXT) $(LPATH)/libXrdSecunix.$(XRDSOEXT) \
-               $(LPATH)/libXrdSecpwd.$(XRDSOEXT) $(LPATH)/libXrdSecsss.$(XRDSOEXT) \
-               $(LPATH)/libXrdSecgsi.$(XRDSOEXT) $(LPATH)/libXrdSecgsiGMAPLDAP.$(XRDSOEXT) \
-               $(LPATH)/libXrdSeckrb5.$(XRDSOEXT)
 XRDNETXD    := $(XROOTDDIRL)/libXrdOuc.a $(XROOTDDIRL)/libXrdSys.a \
                $(LPATH)/libXrdClient.$(XRDSOEXT)
 XRDPROOFXD  := $(XRDLIBS) $(XROOTDDIRL)/libXrd.a
@@ -83,7 +79,7 @@ XROOTDCFGD := $(wildcard $(XROOTDDIRD)/config/*) $(wildcard $(XROOTDDIRD)/config
               $(XROOTDDIRD)/configure.classic
 
 # used in the main Makefile
-ALLLIBS    += $(XRDLIBS) $(XRDSECLIBS)
+ALLLIBS    += $(XRDLIBS)
 ifeq ($(PLATFORM),win32)
 ALLEXECS   += $(XRDEXECS)
 endif
