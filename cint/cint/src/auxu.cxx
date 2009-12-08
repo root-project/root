@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include "FastAllocString.h"
 
 //______________________________________________________________________________
 int G__readline_FastAlloc(FILE* fp, G__FastAllocString& line, G__FastAllocString& argbuf,
@@ -413,68 +414,68 @@ long G__what_type(char* name, char* type, char* tagname, char* type_name)
 {
    // -- FIXME: Describe this function!
    G__value buf = G__calc_internal(name);
-   char ispointer[3] = "";
+   const char* ispointer = "";
    if (isupper(buf.type)) {
-      sprintf(ispointer, " *");
+      ispointer = " *";
    }
-   static char vtype[80];
+   G__FastAllocString vtype(80);
    switch (tolower(buf.type)) {
       case 'u':
-         sprintf(vtype, "struct %s %s", G__struct.name[buf.tagnum], ispointer);
+         vtype.Format("struct %s %s", G__struct.name[buf.tagnum], ispointer);
          break;
       case 'b':
-         sprintf(vtype, "unsigned char %s", ispointer);
+         vtype.Format("unsigned char %s", ispointer);
          break;
       case 'c':
-         sprintf(vtype, "char %s", ispointer);
+         vtype.Format("char %s", ispointer);
          break;
       case 'r':
-         sprintf(vtype, "unsigned short %s", ispointer);
+         vtype.Format("unsigned short %s", ispointer);
          break;
       case 's':
-         sprintf(vtype, "short %s", ispointer);
+         vtype.Format("short %s", ispointer);
          break;
       case 'h':
-         sprintf(vtype, "unsigned int %s", ispointer);
+         vtype.Format("unsigned int %s", ispointer);
          break;
       case 'i':
-         sprintf(vtype, "int %s", ispointer);
+         vtype.Format("int %s", ispointer);
          break;
       case 'k':
-         sprintf(vtype, "unsigned long %s", ispointer);
+         vtype.Format("unsigned long %s", ispointer);
          break;
       case 'l':
-         sprintf(vtype, "long %s", ispointer);
+         vtype.Format("long %s", ispointer);
          break;
       case 'f':
-         sprintf(vtype, "float %s", ispointer);
+         vtype.Format("float %s", ispointer);
          break;
       case 'd':
-         sprintf(vtype, "double %s", ispointer);
+         vtype.Format("double %s", ispointer);
          break;
       case 'e':
-         sprintf(vtype, "FILE %s", ispointer);
+         vtype.Format("FILE %s", ispointer);
          break;
       case 'y':
-         sprintf(vtype, "void %s", ispointer);
+         vtype.Format("void %s", ispointer);
          break;
       case 'w':
-         sprintf(vtype, "logic %s", ispointer);
+         vtype.Format("logic %s", ispointer);
          break;
       case 0:
-         sprintf(vtype, "NULL %s", ispointer);
+         vtype.Format("NULL %s", ispointer);
          break;
       case 'p':
-         sprintf(vtype, "macro");
+         vtype = "macro";
          break;
       case 'o':
-         sprintf(vtype, "automatic");
+         vtype = "automatic";
          break;
       case 'g':
-         sprintf(vtype, "bool");
+         vtype = "bool";
          break;
       default:
-         sprintf(vtype, "unknown %s", ispointer);
+         vtype.Format("unknown %s", ispointer);
          break;
    }
    if (type) {
@@ -486,7 +487,7 @@ long G__what_type(char* name, char* type, char* tagname, char* type_name)
    if (type_name && (buf.typenum > -1)) {
       strcpy(type_name, G__newtype.name[buf.typenum]);
    }
-   sprintf(vtype, "&%s", name);
+   vtype.Format("&%s", name);
    buf = G__calc_internal(vtype);
    return buf.obj.i;
 }
