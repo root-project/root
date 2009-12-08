@@ -378,7 +378,7 @@ void TProfile3D::Copy(TObject &obj) const
    fBinSumw2.Copy(((TProfile3D&)obj).fBinSumw2);
    for (int bin=0;bin<fNcells;bin++) {
       ((TProfile3D&)obj).fArray[bin]        = fArray[bin];
-      ((TProfile3D&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
+      if (fSumw2.fArray) ((TProfile3D&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
    }
    ((TProfile3D&)obj).fTmin = fTmin;
    ((TProfile3D&)obj).fTmax = fTmax;
@@ -720,7 +720,7 @@ Double_t TProfile3D::GetBinContent(Int_t bin) const
 
    if (fBuffer) ((TProfile3D*)this)->BufferEmpty();
 
-   if (bin < 0 || bin >= fNcells) return 0;
+   if (bin < 0 || bin >= fNcells || fBinEntries.fArray == 0) return 0;
    if (fBinEntries.fArray[bin] == 0) return 0;
    if (!fArray) return 0;
    return fArray[bin]/fBinEntries.fArray[bin];
@@ -734,7 +734,7 @@ Double_t TProfile3D::GetBinEntries(Int_t bin) const
 
    if (fBuffer) ((TProfile3D*)this)->BufferEmpty();
 
-   if (bin < 0 || bin >= fNcells) return 0;
+   if (bin < 0 || bin >= fNcells || fBinEntries.fArray == 0) return 0;
    return fBinEntries.fArray[bin];
 }
 
