@@ -44,7 +44,9 @@ TPaveText::TPaveText(): TPave(), TAttText()
 {
    // pavetext default constructor.
 
-   fLines = 0;
+   fLines   = 0;
+   fMargin  = 0.05;
+   fLongest = 0;
 }
 
 
