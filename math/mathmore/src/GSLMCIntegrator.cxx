@@ -38,6 +38,7 @@ GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double
    fDim(0),
    //fr(r),
    fCalls(calls),
+   fResult(0),fError(0),fStatus(-1),
    fWorkspace(0),
    fFunction(0)
 {
@@ -57,6 +58,7 @@ GSLMCIntegrator::GSLMCIntegrator(const char * type, double absTol, double relTol
    fDim(0),
    //fr(r),
    fCalls(calls),
+   fResult(0),fError(0),fStatus(-1),
    fWorkspace(0),
    fFunction(0)
 {

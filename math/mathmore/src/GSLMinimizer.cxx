@@ -48,7 +48,8 @@ namespace ROOT {
 
 GSLMinimizer::GSLMinimizer( ROOT::Math::EGSLMinimizerType type) : 
    fDim(0), 
-   fObjFunc(0)
+   fObjFunc(0),
+   fMinVal(0)
 {
    // Constructor implementation : create GSLMultiMin wrapper object
    //std::cout << "create GSL Minimizer of type " << type << std::endl;
@@ -65,7 +66,8 @@ GSLMinimizer::GSLMinimizer( ROOT::Math::EGSLMinimizerType type) :
 
 GSLMinimizer::GSLMinimizer( const char *  type) : 
    fDim(0), 
-   fObjFunc(0)
+   fObjFunc(0),
+   fMinVal(0)
 {
    // Constructor implementation from a string 
    std::string algoname(type);

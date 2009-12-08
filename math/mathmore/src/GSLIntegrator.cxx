@@ -54,6 +54,7 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , const Integration::G
    fRelTol(relTol),
    fSize(size),
    fMaxIntervals(size),
+   fResult(0),fError(0),fStatus(-1),
    fFunction(0),
    fWorkspace(0)
 {
@@ -74,6 +75,7 @@ GSLIntegrator::GSLIntegrator(double absTol, double relTol, size_t size) :
    fRelTol(relTol),
    fSize(size),
    fMaxIntervals(size),
+   fResult(0),fError(0),fStatus(-1),
    fFunction(0),
    fWorkspace(0)
 {
@@ -91,6 +93,7 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    fRelTol(relTol),
    fSize(size),
    fMaxIntervals(size),
+   fResult(0),fError(0),fStatus(-1),
    fFunction(0),
    fWorkspace(0)
 {
@@ -108,6 +111,7 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    fRelTol(relTol),
    fSize(size),
    fMaxIntervals(size),
+   fResult(0),fError(0),fStatus(-1),
    fFunction(0),
    fWorkspace(0)
 {

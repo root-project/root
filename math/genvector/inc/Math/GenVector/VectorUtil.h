@@ -221,8 +221,8 @@ namespace ROOT {
 	double zz = (v1.Z() + v2.Z() );
 	double mm2 = ee*ee - xx*xx - yy*yy - zz*zz; 
 	return mm2 < 0.0 ? -std::sqrt(-mm2) : std::sqrt(mm2);
-	PxPyPzE4D<double> q(xx,yy,zz,ee); 
-	return q.M();
+// 	PxPyPzE4D<double> q(xx,yy,zz,ee); 
+// 	return q.M();
 	//return ( v1 + v2).mag(); 
       }
 
