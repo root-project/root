@@ -16,11 +16,7 @@
 
 #include "Api.h"
 #include "common.h"
-
-#ifndef G__OLDIMPLEMENTATION1586
-// This length should match or exceed the length in G__type2string
-static char G__buf[G__LONGLINE];
-#endif
+#include "FastAllocString.h"
 
 /*********************************************************************
 * class G__TypeInfo
@@ -121,29 +117,17 @@ int Cint::G__TypeInfo::operator!=(const G__TypeInfo& a)
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__TypeInfo::TrueName() 
 {
-#if !defined(G__OLDIMPLEMENTATION1586)
-  strcpy(G__buf,
-	 G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
-  return(G__buf);
-#elif  !defined(G__OLDIMPLEMENTATION401)
-  return(G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
-#else
-  return(G__type2string((int)type,(int)tagnum,-1,(int)reftype));
-#endif
+  static G__FastAllocString buf(G__LONGLINE);
+  buf = G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst);
+  return(buf);
 }
 ///////////////////////////////////////////////////////////////////////////
 const char* Cint::G__TypeInfo::Name() 
 {
-#if !defined(G__OLDIMPLEMENTATION1586)
-  strcpy(G__buf,G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
-			       ,(int)isconst));
-  return(G__buf);
-#elif  !defined(G__OLDIMPLEMENTATION401)
-  return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
-	,(int)isconst));
-#else
-  return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype));
-#endif
+  static G__FastAllocString buf(G__LONGLINE);
+  buf = G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
+                       ,(int)isconst);
+  return(buf);
 }
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__TypeInfo::Size() const
