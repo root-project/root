@@ -65,7 +65,7 @@ void MinimizerOptions::SetDefaultPrintLevel(int level) {
    // set the default printing level 
    gDefaultPrintLevel = level; 
 }
-const std::string & MinimizerOptions::DefaultMinimizerType() { return gDefaultMinimizer; }
+
 const std::string & MinimizerOptions::DefaultMinimizerAlgo() { return gDefaultMinimAlgo; }
 double MinimizerOptions::DefaultErrorDef()         { return gDefaultErrorDef; }
 double MinimizerOptions::DefaultTolerance()        { return gDefaultTolerance; }
@@ -74,6 +74,25 @@ int    MinimizerOptions::DefaultMaxFunctionCalls() { return gDefaultMaxCalls; }
 int    MinimizerOptions::DefaultMaxIterations()    { return gDefaultMaxIter; }
 int    MinimizerOptions::DefaultStrategy()         { return gDefaultStrategy; }
 int    MinimizerOptions::DefaultPrintLevel()       { return gDefaultPrintLevel; }
+
+const std::string & MinimizerOptions::DefaultMinimizerType() 
+{ 
+   // return default minimizer
+   // if is "" (no default is set) read from etc/system.rootrc
+
+   if (gDefaultMinimizer.size() == 0) { 
+#ifndef MATH_NO_PLUGIN_MANAGER
+   // use value defined in etc/system.rootrc  (if not found Minuit is used) 
+      if (gEnv) 
+         gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");   
+#else
+      gDefaultMinimizer = "Minuit2";  // in case no PM exists 
+#endif
+   }
+
+   return gDefaultMinimizer; 
+}
+
 
 MinimizerOptions::MinimizerOptions(): 
    fLevel( gDefaultPrintLevel),
@@ -86,17 +105,8 @@ MinimizerOptions::MinimizerOptions():
 {
    // constructor using  the default options
 
-   if (gDefaultMinimizer.size() == 0) { 
-#ifndef MATH_NO_PLUGIN_MANAGER
-   // use value defined in etc/system.rootrc  (if not found Minuit is used) 
-      if (gEnv) 
-         gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");   
-#else
-      gDefaultMinimizer = "Minuit2";  // in case no PM exists 
-#endif
-   }
+   fMinimType = MinimizerOptions::DefaultMinimizerType();
 
-   fMinimType = gDefaultMinimizer;
    fAlgoType =  gDefaultMinimAlgo;
 
    // case of Fumili2 and TMinuit
