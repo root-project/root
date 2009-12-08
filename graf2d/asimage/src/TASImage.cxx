@@ -6061,7 +6061,7 @@ void TASImage::Streamer(TBuffer &b)
          buffer = new char[size];
          b.ReadFastArray(buffer, size);
          SetImageBuffer(&buffer, TImage::kPng);
-         delete buffer;
+         delete [] buffer;
       } else {                   // read vector with palette
          TAttImage::Streamer(b);
          b >> w;
