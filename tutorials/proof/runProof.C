@@ -100,12 +100,12 @@
 //   1. nevt=N
 //
 //      Set the number of entries to N
-//      E.g. runProof("simple(nevt=1000000000)") runs simple with 1000000000
+//      e.g. runProof("simple(nevt=1000000000)") runs simple with 1000000000
 //
 //   2. asyn
 //
 //      Run in non blocking mode
-//      E.g. root[] runProof("h1(asyn)")
+//      e.g. root[] runProof("h1(asyn)")
 //
 //   3. nwrk=N
 //
@@ -116,13 +116,18 @@
 //   4. punzip
 //
 //      Use parallel unzipping in reading files where relevant
-//      E.g. root[] runProof("eventproc(punzip)")
+//      e.g. root[] runProof("eventproc(punzip)")
 //
 //   5. cache=<bytes> (or <kbytes>K or <mbytes>M) 
 //
 //      Change the size of the tree cache; 0 or <0 disables the cache; value cane be in
 //      bytes (no suffix), kilobytes (suffix 'K') or megabytes (suffix 'M')
-//      E.g. root[] runProof("eventproc(cache=0)") 
+//      e.g. root[] runProof("eventproc(cache=0)") 
+//
+//   6. submergers[=S]
+//
+//      Enabling merging via S submergers or the optimal number if S is not specified,
+//      e.g. root[] runProof("simple(hist=1000,submergers)") 
 //
 //
 //
@@ -316,6 +321,7 @@ void runProof(const char *what = "simple",
    // Parse out number of events and  'asyn' option, used almost by every test
    TString aNevt, aNwrk, opt, sel, punzip("off"), aCache;
    Long64_t suf = 1;
+   Int_t aSubMg = -1;
    while (args.Tokenize(tok, from, " ")) {
       // Number of events
       if (tok.BeginsWith("nevt=")) {
@@ -351,6 +357,15 @@ void runProof(const char *what = "simple",
          if (!aCache.IsDigit()) {
             Printf("runProof: %s: error parsing the 'cache=' option (%s) - ignoring", act.Data(), tok.Data());
             aCache = "";
+         }
+      }
+      // Use submergers?
+      if (tok.BeginsWith("submergers")) {
+         tok.ReplaceAll("submergers","");
+         aSubMg = 0;
+         if (tok.BeginsWith("=")) {
+            tok.ReplaceAll("=","");
+            if (tok.IsDigit()) aSubMg = tok.Atoi();
          }
       }
    }
@@ -390,6 +405,18 @@ void runProof(const char *what = "simple",
       // Use defaults
       proof->DeleteParameters("PROOF_UseTreeCache");
       proof->DeleteParameters("PROOF_CacheSize");
+   }
+
+   // Enable submergers, if required
+   if (aSubMg >= 0) {
+      gProof->SetParameter("PROOF_UseMergers", aSubMg);
+      if (aSubMg > 0) {
+         Printf("runProof: %s: enabling merging via %d sub-mergers", act.Data(), aSubMg);
+      } else {
+         Printf("runProof: %s: enabling merging via sub-mergers (optimal number)", act.Data());
+      }
+   } else {
+      gProof->DeleteParameters("PROOF_UseMergers");
    }
 
    // Action
