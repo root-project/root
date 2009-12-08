@@ -4534,12 +4534,14 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
 #ifndef G__OLDIMPLEMENTATION2191
          //case '1':
          // function, ???Questionable???
+         // var->p[ig15] = G__malloc(num_elements ? num_elements : 1, sizeof(long), item);
+         // break;
 #else // G__OLDIMPLEMENTATION2191
       case 'q':
          // function, ???Questionable???
-#endif // G__OLDIMPLEMENTATION2191
          var->p[ig15] = G__malloc(num_elements ? num_elements : 1, sizeof(long), item);
          break;
+#endif // G__OLDIMPLEMENTATION2191
       default:
          //
          // Automatic variable and macro
