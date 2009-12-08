@@ -11,6 +11,7 @@ TEST_TARGETS += $(TUTORIALSTESTS) $(TUTORIALSTESTS_CC)
 # don't run these, they will fail and need to be fixed.
 
 TUTORIALSTESTS_NONBATCH := \
+  fit/fitpanel_playback \
   geom/% \
   gl/% \
   gui/% \
