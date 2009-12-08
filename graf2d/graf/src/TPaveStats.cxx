@@ -208,7 +208,9 @@ TPaveStats::TPaveStats(): TPaveText()
    TPaveStats default constructor.
    End_Html */
 
-   fParent = 0;
+   fParent  = 0;
+   fOptFit  = gStyle->GetOptFit();
+   fOptStat = gStyle->GetOptStat();
 }
 
 
