@@ -77,9 +77,14 @@ TSVG::TSVG() : TVirtualPS()
 {
    // Default SVG constructor
 
-   fStream = 0;
-   fType   = 0;
-   gVirtualPS = this;
+   fStream      = 0;
+   fType        = 0;
+   gVirtualPS   = this;
+   fBoundingBox = kFALSE;
+   fRange       = kFALSE;
+   fXsize       = 0.;
+   fYsize       = 0.;
+   fYsizeSVG    = 0;
 }
 
 
