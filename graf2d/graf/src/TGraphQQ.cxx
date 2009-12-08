@@ -98,8 +98,14 @@ TGraphQQ::TGraphQQ()
 {
    //default constructor
    
-   fF=0;
-   fY0=0;
+   fF   = 0;
+   fY0  = 0;
+   fNy0 = 0;
+   fXq1 = 0.;
+   fXq2 = 0.;
+   fYq1 = 0.;
+   fYq2 = 0.;
+
 }
 
 
@@ -109,6 +115,12 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x)
 {
    //Creates a quantile-quantile plot of dataset x. 
    //Theoretical distribution function can be defined later by SetFunction method
+
+   fNy0 = 0;
+   fXq1 = 0.;
+   fXq2 = 0.;
+   fYq1 = 0.;
+   fYq2 = 0.;
 
    Int_t *index = new Int_t[n];
    TMath::Sort(n, x, index, kFALSE);
