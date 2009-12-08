@@ -1657,7 +1657,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
                               branchname,blen,dimensions,leafcountName);
             else      fprintf(fp,"   %-14s %s%s[%d]%s;   //[%s]\n",leaf->GetTypeName(), stars,
                               branchname,len,dimensions,leafcountName);
-            delete dimensions;
+            delete [] dimensions;
          } else {
             if (kmax) fprintf(fp,"   %-14s %s%s[kMax%s];   //[%s]\n",leaf->GetTypeName(), stars, branchname,blen,leafcountName);
             else      fprintf(fp,"   %-14s %s%s[%d];   //[%s]\n",leaf->GetTypeName(), stars, branchname,len,leafcountName);
@@ -2274,7 +2274,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
          }
          if (dimensions) {
             fprintf(fp,"   %-15s %s[%d]%s;\n",leaf->GetTypeName(), branchname,len,dimensions);
-            delete dimensions;
+            delete [] dimensions;
          } else {
             fprintf(fp,"   %-15s %s[%d];\n",leaf->GetTypeName(), branchname,len);
          }
