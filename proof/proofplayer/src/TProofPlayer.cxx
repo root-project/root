@@ -736,8 +736,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    Int_t version = -1;
    TRY {
       // Get selector files from cache
-      if (gProofServ)
+      if (gProofServ) {
+         gProofServ->GetCacheLock()->Lock();
          gProofServ->CopyFromCache(selector_file, 1);
+      }
 
       if (!(fSelector = TSelector::GetSelector(selector_file))) {
          Error("Process", "cannot load: %s", selector_file );
@@ -745,8 +747,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       }
 
       // Save binaries to cache, if any
-      if (gProofServ)
+      if (gProofServ) {
          gProofServ->CopyToCache(selector_file, 1);
+         gProofServ->GetCacheLock()->Unlock();
+      }
 
       fSelectorClass = fSelector->IsA();
       version = fSelector->Version();
@@ -847,9 +851,9 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    volatile Long64_t memlogfreq = (par) ? par->GetVal() : 100;
    volatile Long_t memlim = (gProofServ) ? gProofServ->GetVirtMemHWM() : -1;
 
-   TPair *currentElem = 0;
    TRY {
 
+      TPair *currentElem = 0;
       // The event loop on the worker
       while ((entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
 
@@ -950,7 +954,9 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    } ENDTRY;
 
    // Clean-up the envelop for the current element
-   if (currentElem) {
+   TPair *currentElem = 0;
+   if ((currentElem = (TPair *) fInput->FindObject("PROOF_CurrentElement"))) {
+      fInput->Remove(currentElem);
       delete currentElem->Key();
       delete currentElem;
    }
@@ -2032,7 +2038,7 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
    }
 
    // Send files now
-   if (fProof->SendFile(selec, (TProof::kBinary | TProof::kForward | TProof::kCp)) == -1) {
+   if (fProof->SendFile(selec, (TProof::kBinary | TProof::kForward | TProof::kCp | TProof::kCpBin)) == -1) {
       Info("SendSelector", "problems sending implementation file %s", selec.Data());
       return kFALSE;
    }

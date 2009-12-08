@@ -266,6 +266,7 @@ public:
 
    void           FlushLogFile();
 
+   TProofLockPath *GetCacheLock() { return fCacheLock; }      //cache dir locker; used by TProofPlayer
    Int_t          CopyFromCache(const char *name, Bool_t cpbin);
    Int_t          CopyToCache(const char *name, Int_t opt = 0);
 

@@ -1368,13 +1368,9 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS","enter");
             HandleProcess(mess);
-            // Notify
-            // Only masters send the log file immediately to indicate they have finished
-            // Workers send the log file after they send the output to master or some merger
-            if (IsMaster()) {
-               fProof->ResetMergers();
-               SendLogFile();
-            }
+            // The log file is send either in HandleProcess or HandleSubmergers.
+            // The reason is that the order of various messages depend on the
+            // processing mode (sync/async) and/or merging mode
          }
          break;
 
@@ -3327,6 +3323,14 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Set idle
       SetIdle(kTRUE);
 
+      // Reset mergers
+      fProof->ResetMergers();
+
+      // kPROOF_SETIDLE sets the client to idle; in asynchronous mode clients monitor
+      // TProof::IsIdle for to check the readiness of a query, so we need to send this
+      // before to be sure thatn everything about a query is received by the client
+      if (!sync) SendLogFile();
+
       // Signal the client that we are idle
       if (doprocess) {
          m.Reset(kPROOF_SETIDLE);
@@ -3334,6 +3338,14 @@ void TProofServ::HandleProcess(TMessage *mess)
          m << waiting;
          fSocket->Send(m);
       }
+
+      // In synchronous mode TProof::Collect is terminated by the reception of the
+      // log file and subsequent submissions are controlled by TProof::IsIdle(), so
+      // this must be last one to be sent
+      if (sync) SendLogFile();
+
+      // Set idle
+      SetIdle(kTRUE);
 
    } else {
 
@@ -3409,7 +3421,8 @@ void TProofServ::HandleProcess(TMessage *mess)
       }
       PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isInMergingMode);
 
-      if (!IsMaster() && isInMergingMode && fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted) {
+      if (!IsMaster() && isInMergingMode &&
+          fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
          // Worker in merging mode.
          //----------------------------
          // First, it reports only the size of its output to the master 
@@ -3432,6 +3445,9 @@ void TProofServ::HandleProcess(TMessage *mess)
          msg_osize << merge_port;
          fSocket->Send(msg_osize);
 
+         // Set idle
+         SetIdle(kTRUE);
+
          PDB(kSubmerger, 2) Info("HandleProcess", "worker %s has finished", fOrdinal.Data());
 
       } else {
@@ -3447,19 +3463,24 @@ void TProofServ::HandleProcess(TMessage *mess)
             if (SendResults(fSocket) != 0)
                Warning("HandleProcess", "problems sending output list");
          }
-         SendLogFile();
+
+         // Masters reset the mergers, if any
+         if (IsMaster()) fProof->ResetMergers();
+
          // Signal the master that we are idle
          fSocket->Send(kPROOF_SETIDLE);
+
+         // Set idle
          SetIdle(kTRUE);
+
+         // Notify the user
+         SendLogFile();
       }
       // Make also sure the input list objects are deleted
       fPlayer->GetInputList()->SetOwner(0);
       input->SetOwner();
       SafeDelete(input);
    }
-
-   // Set idle
-   SetIdle(kTRUE);
 
    PDB(kGlobal, 1) Info("HandleProcess", "done");
 
@@ -5261,6 +5282,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    // Check binary version
    TString v;
    Int_t rev = -1;
+   Bool_t okfil = kFALSE;
    FILE *f = fopen(TString::Format("%s/%s", fCacheDir.Data(), vername.Data()), "r");
    if (f) {
       TString r;
@@ -5268,15 +5290,16 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
       r.Gets(f);
       rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
       fclose(f);
+      okfil = kTRUE;
    }
 
    Bool_t okver = (v != gROOT->GetVersion()) ? kFALSE : kTRUE;
    Bool_t okrev = (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()) ? kFALSE : kTRUE;
-   if (!f || !okver || !okrev) {
+   if (!okfil || !okver || !okrev) {
    PDB(kCache,1)
       Info("CopyFromCache",
-           "removing binaries: 'f': %p, 'ROOT version': %s, 'ROOT revision': %s",
-           f, (okver ? "OK" : "not OK"), (okrev ? "OK" : "not OK") );
+           "removing binaries: 'file': %s, 'ROOT version': %s, 'ROOT revision': %s",
+           (okfil ? "OK" : "not OK"), (okver ? "OK" : "not OK"), (okrev ? "OK" : "not OK") );
       // Remove all existing binaries
       binname += "*";
       gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
@@ -5301,6 +5324,14 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
                Int_t rc = gSystem->GetPathInfo(e, stlocal);
                if (rc == 0 && (stlocal.fMtime >= stcache.fMtime))
                   docp = kFALSE;
+               // If a copy candidate, check also the MD5
+               if (docp) {
+                  TMD5 *md5local = TMD5::FileChecksum(e);
+                  TMD5 *md5cache = TMD5::FileChecksum(fncache);
+                  if (md5local && md5cache && md5local == md5cache) docp = kFALSE;
+                  SafeDelete(md5local);
+                  SafeDelete(md5cache);
+               }
                // Copy the file, if needed
                if (docp) {
                   gSystem->Exec(TString::Format("%s %s", kRM, e));
@@ -5396,13 +5427,24 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
                      TString fncache;
                      fncache.Form("%s/%s", fCacheDir.Data(), e);
                      Int_t rc = gSystem->GetPathInfo(fncache, stcache);
-                     if (rc == 0 && (stlocal.fMtime <= stcache.fMtime))
+                     if (rc == 0 && (stlocal.fMtime <= stcache.fMtime)) {
                         docp = kFALSE;
+                        if (rc == 0) rc = -1;
+                     }
+                     // If a copy candidate, check also the MD5
+                     if (docp) {
+                        TMD5 *md5local = TMD5::FileChecksum(e);
+                        TMD5 *md5cache = TMD5::FileChecksum(fncache);
+                        if (md5local && md5cache && md5local == md5cache) docp = kFALSE;
+                        SafeDelete(md5local);
+                        SafeDelete(md5cache);
+                        if (!docp) rc = -2;
+                     }
                      // Copy the file, if needed
                      if (docp) {
                         gSystem->Exec(TString::Format("%s %s", kRM, fncache.Data()));
                         PDB(kCache,1)
-                           Info("CopyToCache","caching %s ...", e);
+                           Info("CopyToCache","caching %s ... (reason: %d)", e, rc);
                         gSystem->Exec(TString::Format("%s %s %s", kCP, e, fncache.Data()));
                         savever = kTRUE;
                      }
@@ -5808,7 +5850,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      PDB(kSubmerger, 2) Info("HandleSubmerger",
                                              "kSendOutput: worker sent its output", name.Data(), port);
                      fSocket->Send(kPROOF_SETIDLE);
-                     fIdle = kTRUE;
+                     SetIdle(kTRUE);
                      SendLogFile();
                   }
                } else {
@@ -5881,7 +5923,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: results sent to master");
                   // Signal the master that we are idle
                   fSocket->Send(kPROOF_SETIDLE);
-                  fIdle = kTRUE;
+                  SetIdle(kTRUE);
                   SendLogFile();
                } else {
                   // Results from all assigned workers not accepted
