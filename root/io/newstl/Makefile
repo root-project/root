@@ -124,7 +124,7 @@ ROOTSYS_SED=$(subst /,\\/,$(subst \,\\\\,$(ROOTSYS)))
 
 ifneq ($(MAKECMDGOALS),clean)
 $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
-	cat $< | sed -e s/$(LIBDIR_SED_REM)// \
+	@cat $< | sed -e s/$(LIBDIR_SED_REM)// \
 	   -e s,$(PWD_SED),, \
 	   -e s,^$*_C.$(DllSuf),$(LIBDIR_SED)$*_C.$(DllSuf), \
 	   -e s,^$*.o,$(LIBDIR_SED)$*_C.$(DllSuf), \
