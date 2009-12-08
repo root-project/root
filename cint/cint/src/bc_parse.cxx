@@ -82,7 +82,19 @@ G__blockscope::G__blockscope():
 /***********************************************************************
  * G__blockscope::G__blockscope()
  ***********************************************************************/
-G__blockscope::G__blockscope(G__blockscope* enclosing) {
+G__blockscope::G__blockscope(G__blockscope* enclosing):
+   m_ifunc(0),
+   m_iexist(-1),
+   m_var(0),
+   store_p_local(0),
+   m_preader(0),
+   isvirtual(0),
+   isstatic(0),
+   m_pcasetable(0),
+   m_pbreaktable(0),
+   m_pcontinuetable(0),
+   m_pgototable(0)
+{
   Init(enclosing);
 }
 
