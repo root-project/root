@@ -694,6 +694,7 @@ void TGFileBrowser::CheckRemote(TGListTreeItem *item)
 {
    // Check if the current list tree item points to a remote object.
 
+   if (!item) return;
    TObject *obj = (TObject *) item->GetUserData();
    if (obj) {
       if (obj->InheritsFrom("TApplicationRemote")) {
@@ -763,6 +764,7 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    Long64_t size = 0;
    Long_t id = 0, flags = 0, modtime = 0;
    fListLevel = item;
+   if (!item) return;
    CheckRemote(item);
    if (item && btn == kButton3) {
       TString fullpath = FullPathName(item);

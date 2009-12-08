@@ -1092,7 +1092,7 @@ Int_t TGTextLayout::CharBbox(Int_t index, Int_t *x, Int_t *y, Int_t *w, Int_t *h
    //           character specified by index, if non-NULL.
 
    LayoutChunk_t *chunk;
-   Int_t i, xx, ww;
+   Int_t i, xx = 0, ww = 0;
 
    if (index < 0) {
       return 0;

@@ -221,6 +221,7 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t *typelist)
    fPic = fMask = kNone;
    fDraggerTypes = 0;
    fDropType = kNone;
+   fHotx = fHoty = 0;
 
    fGrabEventMask = kButtonPressMask | kButtonReleaseMask | kButtonMotionMask;
 
@@ -775,7 +776,7 @@ Bool_t TGDNDManager::HandleDNDDrop(Window_t source, Time_t timestamp)
    }
 
    fSource = source;
-   SendDNDFinished(source);
+   if (fMain) SendDNDFinished(source);
 
    return kTRUE;
 }
