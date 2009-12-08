@@ -103,6 +103,15 @@ TPave::TPave(const TPave &pave) : TBox(pave)
 {
    // Pave copy constructor.
 
+   fX1NDC        = 0.;
+   fY1NDC        = 0.;
+   fX2NDC        = 0.;
+   fY2NDC        = 0.;
+   fCornerRadius = 0.;
+   fBorderSize   = 0;
+   fInit         = 0;
+   fShadowColor  = 0;
+
    ((TPave&)pave).TPave::Copy(*this);
 }
 
