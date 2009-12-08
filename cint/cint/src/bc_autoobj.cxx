@@ -158,12 +158,13 @@ extern "C" void G__copyheapobjectstack(void* p,G__value *result
     funcmatch = G__TRYCONSTRUCTOR;
     if(m.IsValid()) {
       G__value dmyresult;
-      struct G__ifunc_table *ifunc=(struct G__ifunc_table*)m.Handle();
-      int ifn=m.Index();
-      struct G__param para;
-      para.paran = 0;
-      para.para[0] = G__null;
-      G__callfunc0(&dmyresult,ifunc,ifn,&para,p,funcmatch);
+      struct G__ifunc_table *ifunc2=(struct G__ifunc_table*)m.Handle();
+      int ifn2=m.Index();
+      struct G__param* para = new G__param();
+      para->paran = 0;
+      para->para[0] = G__null;
+      G__callfunc0(&dmyresult,ifunc2,ifn2,para,p,funcmatch);
+      delete para;
     }
 
     // search assignment operator
@@ -173,21 +174,22 @@ extern "C" void G__copyheapobjectstack(void* p,G__value *result
 
   if(m.IsValid()) {
     // in case,  copy ctor or operator=  is found
-    struct G__ifunc_table *ifunc=(struct G__ifunc_table*)m.Handle();
-    int ifn=m.Index();
+    struct G__ifunc_table *ifunc2=(struct G__ifunc_table*)m.Handle();
+    int ifn2=m.Index();
     G__value dmyresult;
-    struct G__param para;
-    para.paran = 1;
-    para.para[0] = *result;
+    struct G__param* para = new G__param();
+    para->paran = 1;
+    para->para[0] = *result;
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"temp object copy ctor %lx <= %lx %s for %s\n"
-		   ,p,result->obj.i,cls.Name(),G__get_ifunc_internal(ifunc)->funcname[ifn]);
+		   ,p,result->obj.i,cls.Name(),G__get_ifunc_internal(ifunc2)->funcname[ifn2]);
     }
 #endif
-    G__callfunc0(&dmyresult,ifunc,ifn,&para,p,funcmatch);
+    G__callfunc0(&dmyresult,ifunc2,ifn,para,p,funcmatch);
     result->obj.i = (long)p;
     result->ref = result->obj.i;
+    delete para;
   }
   else {
     // if there is no copy ctor nor operator=
