@@ -24,11 +24,12 @@
 * G__bc_compile_function()
 ***********************************************************************/
 extern "C" int G__bc_compile_function(struct G__ifunc_table_internal *ifunc,int iexist){
-  G__functionscope compiler;
+   G__functionscope* compiler = new G__functionscope();
   int store_dispsource = G__dispsource;
   if(G__step||G__stepover) G__dispsource=0;
-  int result = compiler.compile_normalfunction(ifunc,iexist);
+  int result = compiler->compile_normalfunction(ifunc,iexist);
   G__dispsource = store_dispsource;
+  delete compiler;
   return(result);
 }
 
