@@ -368,6 +368,23 @@ TRecorderReplaying::TRecorderReplaying(const char *filename)
    // Allocates all necessary data structures used for replaying
    // What is allocated here is deleted in destructor
 
+   fCanv = 0;
+   fCmdTree = 0;
+   fCmdTreeCounter = 0;
+   fEventReplayed = kTRUE;
+   fExtraTree = 0;
+   fExtraTreeCounter = 0;
+   fFilterStatusBar = kFALSE;
+   fGuiTree = 0;
+   fGuiTreeCounter = 0;
+   fNextEvent = 0;
+   fRecorder = 0;
+   fRegWinCounter = 0;
+   fShowMouseCursor = kTRUE;
+   fWaitingForWindow = kFALSE;
+   fWin = 0;
+   fWinTree = 0;
+   fWinTreeEntries = 0;
    fFile       = TFile::Open(filename);
    fCmdEvent   = new TRecCmdEvent();
    fGuiEvent   = new TRecGuiEvent();
@@ -547,7 +564,7 @@ void TRecorderReplaying::RegisterWindow(Window_t w)
 
    if ((gDebug > 0) && (fWaitingForWindow)) {
       cout << " Window registered: new ID: " << hex << w <<
-              "  previous ID: " << fWin << endl;
+              "  previous ID: " << fWin << dec << endl;
    }
 
    // Lock mutex for guarding access to fWindowList
@@ -567,7 +584,7 @@ void TRecorderReplaying::RegisterWindow(Window_t w)
 
       if (gDebug > 0)
          cout << " Window " << hex << fGuiEvent->fWindow <<
-                 " registered." << endl;
+                 " registered." << dec << endl;
 
       fNextEvent = fGuiEvent;
       // Sets that we do not wait for this window anymore
@@ -713,7 +730,7 @@ Bool_t TRecorderReplaying::PrepareNextEvent()
    // Skips GUI events that should not be replayed (FilterEvent call)
    while (fGuiTree->GetEntries() > fGuiTreeCounter) {
       fGuiTree->GetEntry(fGuiTreeCounter);
-      if (!FilterEvent(fGuiEvent))
+      if (!fGuiEvent || !FilterEvent(fGuiEvent))
          break;
       fGuiTreeCounter++;
    }
@@ -2066,8 +2083,10 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
    // don't try to replay any copy/paste event, as event->fUser[x]
    // parameters are invalid on different OSes
    if (e->fType == kSelectionClear || e->fType == kSelectionRequest ||
-       e->fType == kSelectionNotify)
+       e->fType == kSelectionNotify) {
+      delete e;
       return;
+   }
 
    // Replays movement/resize event
    if (e->fType == kConfigureNotify) {
@@ -2113,6 +2132,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
             Error("TRecGuiEvent::ReplayEvent",
                   "kConfigureNotify: Window %x does not exist anymore ");
       }
+      delete e;
       return;
 
    } // kConfigureNotify
@@ -2152,6 +2172,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
       e->fType = (EGEventType)e->fFormat;
       if (gDragManager)
          gDragManager->HandleTimerEvent(e, 0);
+      delete e;
       return;
    }
    else { // then the normal cases
@@ -2160,6 +2181,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
       else
          gClient->HandleMaskEvent(e, fMasked);
    }
+   delete e;
 }
 
 //______________________________________________________________________________
