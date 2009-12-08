@@ -120,6 +120,7 @@ TGuiBuilder::TGuiBuilder()
 {
    // constructor
 
+   fAction = 0;
    // load plugin
    if (!gGuiBuilder) {
       gHandler = gROOT->GetPluginManager()->FindHandler("TGuiBuilder");
@@ -129,7 +130,6 @@ TGuiBuilder::TGuiBuilder()
       gGuiBuilder = this;
       gHandler->ExecPlugin(0);
    } else {
-      fAction      = 0;
       gGuiBuilder->Show();
    }
 }

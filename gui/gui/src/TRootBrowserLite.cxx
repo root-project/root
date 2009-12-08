@@ -743,7 +743,7 @@ void TRootIconList::Browse(TBrowser *)
 
       name = obj->GetName();
 
-      if (obj->IsA() == TKey::Class()) {
+      if (key && obj->IsA() == TKey::Class()) {
          name += ";";
          name +=  key->GetCycle();
       }
@@ -1418,7 +1418,7 @@ void TRootBrowserLite::AddToTree(TObject *obj, const char *name, Int_t check)
 {
    // Add items to the current TGListTree of the browser.
 
-   if (obj->InheritsFrom("TApplication"))
+   if (obj && obj->InheritsFrom("TApplication"))
       fListLevel = 0;
    if (obj && !fTreeLock) {
       if (!name) name = obj->GetName();
@@ -2534,7 +2534,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
 
       if (obj->InheritsFrom("TKey")) {
          TKey *key = dynamic_cast<TKey*>(obj);
-         if (key->GetClassName() && (!strcmp(key->GetClassName(), "TFormula")))
+         if (key && key->GetClassName() && (!strcmp(key->GetClassName(), "TFormula")))
             browsable = kFALSE;
       }
 

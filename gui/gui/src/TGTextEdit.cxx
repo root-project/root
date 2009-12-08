@@ -152,7 +152,7 @@ private:
 public:
    char            fChar;
 
-   TInsTextCom(TGTextEdit *te) : TGTextEditCommand(te)  {
+   TInsTextCom(TGTextEdit *te) : TGTextEditCommand(te), fChar(0)  {
    }
 
    void SetEndPos(TGLongPosition end) {
@@ -476,6 +476,7 @@ void TGTextEdit::Print(Option_t *) const
       pos.fX = pos.fY = 0;
       while (pos.fY < fText->RowCount()) {
          len = fText->GetLineLength(pos.fY);
+         if (len < 0) len = 0;
          buf1 = fText->GetLine(pos, len);
          buf2 = new char[len + 2];
          strncpy(buf2, buf1, (UInt_t)len);
@@ -1562,8 +1563,8 @@ void TGTextEdit::Search(Bool_t close)
       if (ret) {
          Search(srch->fBuffer);
       }
-      delete srch;
    }
+   delete srch;
 }
 
 //______________________________________________________________________________
@@ -1718,13 +1719,13 @@ void TGTextEdit::InsChar(char character)
       }
       fText->ReTab(pos.fY);
       UpdateRegion(0, (Int_t)ToScrYCoord(pos.fY), fCanvas->GetWidth(),
-                 UInt_t(ToScrYCoord(pos.fY+1) - ToScrYCoord(pos.fY)));
+                   UInt_t(ToScrYCoord(pos.fY+1) - ToScrYCoord(pos.fY)));
       SetSBRange(kHorizontal);
       if (ToScrXCoord(pos.fX, pos.fY) >= (Int_t)fCanvas->GetWidth()) {
          if (pos.fX != fText->GetLineLength(fCurrent.fY)) {
             SetHsbPosition((fVisible.fX+fCanvas->GetWidth()/2)/fScrollVal.fX);
          } else {
-            SetHsbPosition(fVisible.fX/fScrollVal.fX+strlen(charstring));
+            SetHsbPosition(fVisible.fX/fScrollVal.fX);
          }
       }
       SetCurrent(pos);

@@ -920,7 +920,7 @@ void TRootBrowser::RemoveTab(Int_t pos, Int_t subpos)
          edit = fTabBottom;
          break;
    }
-   if (!edit->GetTabTab(subpos))
+   if (!edit || !edit->GetTabTab(subpos))
       return;
    const char *tabName = edit->GetTabTab(subpos)->GetString();
    TObject *obj = 0;

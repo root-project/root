@@ -167,6 +167,7 @@ TGXYLayout::TGXYLayout(TGCompositeFrame *main)
    fMain = main;
    fList = main->GetList();
    fFirst = kTRUE;
+   fFirstWidth = fFirstHeight = 0;
 
    FontStruct_t fs = TGLabel::GetDefaultFontStruct();
 

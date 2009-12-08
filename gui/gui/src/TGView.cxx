@@ -359,7 +359,7 @@ void TGView::Layout()
    if ((Int_t)fVirtualSize.fWidth > cw) {
       if (fHsb) {
          need_hsb = kTRUE;
-         ch -= fVsb->GetDefaultWidth();
+         if (fVsb) ch -= fVsb->GetDefaultWidth();
          if (ch < 0) ch = 0;
          fCanvas->SetHeight(ch);
          ItemLayout();
@@ -369,7 +369,7 @@ void TGView::Layout()
    if ((Int_t)fVirtualSize.fHeight > ch) {
       if (fVsb) {
          need_vsb = kTRUE;
-         cw -= fHsb->GetDefaultHeight();
+         if (fHsb) cw -= fHsb->GetDefaultHeight();
          if (cw < 0) cw = 0;
          fCanvas->SetWidth(cw);
          ItemLayout();
@@ -381,30 +381,33 @@ void TGView::Layout()
    if ((Int_t)fVirtualSize.fWidth > cw) {
       if (!need_hsb) {
          need_hsb = kTRUE;
-         ch -= fVsb->GetDefaultWidth();
+         if (fVsb) ch -= fVsb->GetDefaultWidth();
          if (ch < 0) ch = 0;
          fCanvas->SetHeight(ch);
          ItemLayout();
       }
    }
 
-   if (need_hsb) {
-      fHsb->MoveResize(fBorderWidth + fXMargin, ch + fBorderWidth + fYMargin,
-                       cw, fHsb->GetDefaultHeight());
-      fHsb->MapRaised();
-   } else {
-      fHsb->UnmapWindow();
-      fHsb->SetPosition(0);
+   if (fHsb) {
+      if (need_hsb) {
+         fHsb->MoveResize(fBorderWidth + fXMargin, ch + fBorderWidth + fYMargin,
+                          cw, fHsb->GetDefaultHeight());
+         fHsb->MapRaised();
+      } else {
+         fHsb->UnmapWindow();
+         fHsb->SetPosition(0);
+      }
    }
 
-
-   if (need_vsb) {
-      fVsb->MoveResize(cw + fBorderWidth + fXMargin,  fBorderWidth + fYMargin,
-                        fVsb->GetDefaultWidth(), ch);
-      fVsb->MapWindow();
-   } else {
-      fVsb->UnmapWindow();
-      fVsb->SetPosition(0);
+   if (fVsb) {
+      if (need_vsb) {
+         fVsb->MoveResize(cw + fBorderWidth + fXMargin,  fBorderWidth + fYMargin,
+                          fVsb->GetDefaultWidth(), ch);
+         fVsb->MapWindow();
+      } else {
+         fVsb->UnmapWindow();
+         fVsb->SetPosition(0);
+      }
    }
    fCanvas->MoveResize(fBorderWidth + fXMargin, fBorderWidth + fYMargin, cw, ch);
 

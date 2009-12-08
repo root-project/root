@@ -220,7 +220,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
 {
    // Create the context menu depending on the selected object.
 
-   if (fClient->IsEditable()) return;
+   if (!object || fClient->IsEditable()) return;
 
    int entry = 0, toggle = kToggleStart, togglelist = kToggleListStart;
    int userfunction = kUserFunctionStart;
