@@ -192,26 +192,8 @@ Int_t TPave::DistancetoPrimitive(Int_t px, Int_t py)
    else           {pyl = py2; pyt = py1;}
 
    // Are we inside the box?
-   //if (GetFillStyle()) {
-      if ( (px >= pxl && px <= pxt) && (py >= pyl && py <= pyt) ) return 0;
-      else return 9999;
-   //}
-
-   // Are we on the edges?
-   Int_t dxl = TMath::Abs(px - pxl);
-   if (py < pyl) dxl += pyl - py; if (py > pyt) dxl += py - pyt;
-   Int_t dxt = TMath::Abs(px - pxt);
-   if (py < pyl) dxt += pyl - py; if (py > pyt) dxt += py - pyt;
-   Int_t dyl = TMath::Abs(py - pyl);
-   if (px < pxl) dyl += pxl - px; if (px > pxt) dyl += px - pxt;
-   Int_t dyt = TMath::Abs(py - pyt);
-   if (px < pxl) dyt += pxl - px; if (px > pxt) dyt += px - pxt;
-
-   Int_t distance = dxl;
-   if (dxt < distance) distance = dxt;
-   if (dyl < distance) distance = dyl;
-   if (dyt < distance) distance = dyt;
-   return distance - Int_t(0.5*fLineWidth);
+   if ( (px >= pxl && px <= pxt) && (py >= pyl && py <= pyt) ) return 0;
+   else return 9999;
 }
 
 
