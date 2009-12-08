@@ -48,6 +48,8 @@ TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
 {
    // Constructor.
 
+   fFrustum[0] = fFrustum[1] = fFrustum[2] = fFrustum[3] = 0;
+
    fAxis = new TAxis();
    fAxis->SetNdivisions(710);
    fAxis->SetLabelSize(0.018);

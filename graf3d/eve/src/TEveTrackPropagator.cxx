@@ -200,6 +200,7 @@ TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
    fRnrDaughters  (kFALSE),
    fRnrReferences (kFALSE),
    fRnrDecay      (kFALSE),
+   fRnrCluster2Ds (kFALSE),
    fRnrFV         (kFALSE),
 
    fPMAtt(),

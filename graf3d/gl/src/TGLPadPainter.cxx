@@ -26,6 +26,7 @@ TGLPadPainter::TGLPadPainter()
                   : fIsHollowArea(kFALSE),
                     fLocked(kTRUE)
 {
+   fVp[0] = fVp[1] = fVp[2] = fVp[3] = 0;
 }
 
 

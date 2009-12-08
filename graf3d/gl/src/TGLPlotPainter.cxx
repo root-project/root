@@ -581,7 +581,8 @@ TGLPlotCoordinates::TGLPlotCoordinates()
                           fXLog(kFALSE),
                           fYLog(kFALSE),
                           fZLog(kFALSE),
-                          fModified(kFALSE)
+                          fModified(kFALSE),
+                          fFactor(1.)
 {
    //Constructor.
 }

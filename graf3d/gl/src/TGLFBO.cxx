@@ -37,7 +37,10 @@ TGLFBO::TGLFBO() :
    fColorTexture (0),
    fDepthBuffer  (0),
    fW (-1),
-   fH (-1)
+   fH (-1),
+   fIsRescaled (kFALSE),
+   fWScale     (1),
+   fHScale     (1)
 {
    // Constructor.
 }

@@ -41,7 +41,7 @@ private:
    Int_t fExp;
    Int_t fMaxDigits;
    Int_t fDecimals;
-   char  fFormat[8];
+   TString fFormat;
 
    // Font derived from axis attributes.
    TGLFont fLabelFont;

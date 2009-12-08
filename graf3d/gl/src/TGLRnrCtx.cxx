@@ -89,6 +89,8 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fColorSetStack(0),
    fRenderScale  (1),
 
+   fEventKeySym  (0),
+
    fDLCaptureOpen (kFALSE),
    fGLCtxIdentity (0),
    fQuadric       (0),

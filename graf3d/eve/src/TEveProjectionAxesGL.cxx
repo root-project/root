@@ -231,8 +231,8 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
    Int_t n1a = TMath::FloorNint(fM->GetNdivisions() / 100);
    Int_t n2a = fM->GetNdivisions() - n1a * 100;
    Int_t bn1, bn2;
-   Double_t bw1, bw2; // bin with first second order
-   Double_t bl1, bh1, bl2, bh2; // bin low, high first second order
+   Double_t bw1, bw2;           // bin width first / second order
+   Double_t bl1, bh1, bl2, bh2; // bin low, high first / second order
    THLimitsFinder::Optimize(v1, v2, n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1+bw1, n2a, bl2, bh2, bn2, bw2);
 
