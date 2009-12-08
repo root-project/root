@@ -117,7 +117,39 @@ class G__functionscope : public G__blockscope {
 
   ////////////////////////////////////////////////////////////////////
  public:
-  G__functionscope() { m_preader=0; }
+   G__functionscope():
+      store_exec_memberfunc(-1),
+      store_memberfunc_tagnum(-1),
+      store_memberfunc_struct_offset(-1),
+      store_struct_offset(-1),
+      store_tagnum(-1),
+      store_def_tagnum(-1),
+      store_typenum(-1),
+      store_def_struct_member(-1),
+      store_prerun(-1),
+      store_asm_index(-1),
+      store_no_exec(-1),
+      store_asm_exec(-1),
+      store_tagdefining(-1),
+      store_asm_noverflow(-1),
+      store_asm_wholefunction(-1),
+      store_globalvarpointer(-1),
+      store_no_exec_compile(-1),
+#ifndef __CINT__
+      asm_name(0),
+#endif
+      store_asm_inst(0),
+      store_asm_instsize(-1),
+      store_asm_stack(0),
+      store_asm_name(0),
+      store_asm_name_p(-1),
+      store_asm_param(0),
+      store_asm_cp(-1),
+      store_asm_dt(-1),
+      store_func_now(-1),
+      store_func_page(-1)
+      
+   { m_preader=0; }
   ~G__functionscope();
 
   int compile_normalfunction(struct G__ifunc_table_internal *ifunc,int iexist);
