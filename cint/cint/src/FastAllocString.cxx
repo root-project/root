@@ -130,14 +130,16 @@ namespace Cint {
             const size_t b = (size - 1) / fgChunkSize;
             if (b > (1L << (fgNumBuckets + 1)))
                return -1;
-            int buck = b ? logtwo((unsigned char)b) + 1 : 0;
-            if (buck >= (int)fgNumBuckets)
-               return -1;
-            // 16 bits is enough, and this expression can be optimized
-            // away at compile time.
-            if (fgNumBuckets > 8 && buck == -1) {
+            int buck = 0;
+            if (b && b < 256) {
+               buck = logtwo((unsigned char)b) + 1;
+            } else if (fgNumBuckets > 8 && buck == 0) {
+               // 16 bits is enough, and this expression can be optimized
+               // away at compile time.
                buck = 8 + logtwo((unsigned char)(b / 256));
             }
+            if (buck >= (int)fgNumBuckets)
+               return -1;
             return buck;
          }
 
