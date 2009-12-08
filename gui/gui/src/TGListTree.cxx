@@ -1538,7 +1538,8 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
          gVirtualX->DrawLine(id, fLineGC, xbranch, ybranchp, xbranch, 
                              yp+height);
       }
-      pic1->Draw(id, fDrawGC, xpic1, ypicp);
+      if (pic1)
+         pic1->Draw(id, fDrawGC, xpic1, ypicp);
       if (pic2)
          pic2->Draw(id, fDrawGC, xpic2, ypicp);
       DrawItemName(id, item);
@@ -2290,7 +2291,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
    if (!path || !*path) return 0;
 
    const char *p = path, *s;
-   char dirname[256];
+   char dirname[1024];
    TGListTreeItem *item = 0;
    item = FindChildByName(item, "/");
    TGListTreeItem *diritem = 0;

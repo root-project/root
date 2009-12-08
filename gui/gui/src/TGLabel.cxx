@@ -225,7 +225,9 @@ void TGLabel::DoRedraw()
 
       if (!gc) {
          fNormGC = fgDefaultGC->GetGC();
+         gc = pool->FindGC(fNormGC);
       }
+      if (!gc) return;
 
       switch (f3DStyle) {
          case kRaisedFrame:

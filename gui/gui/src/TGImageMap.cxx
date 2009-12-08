@@ -48,7 +48,7 @@ private:
    Bool_t     fIsNull;  // true if null region
 
 public:
-   TGRegionData() { AddReference(); }
+   TGRegionData() { fRgn = 0; fIsNull = kTRUE; AddReference(); }
    ~TGRegionData() { }
    TGRegionData &operator=(const TGRegionData &r);
 };

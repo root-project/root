@@ -35,6 +35,7 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
 {
    // Create a graphics context (only called via TGGCPool::GetGC()).
 
+   fContext = 0;
    if (values) {
       fValues = *values;
       fContext = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), values);

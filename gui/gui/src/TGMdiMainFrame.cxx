@@ -230,7 +230,9 @@ Bool_t TGMdiMainFrame::RemoveMdiFrame(TGMdiFrame *frame)
 
    TGMdiFrameList *travel = fChildren;
 
-   if (frame && frame->IsEditable()) frame->SetEditable(kFALSE);
+   if (!frame) return kFALSE;
+   
+   if (frame->IsEditable()) frame->SetEditable(kFALSE);
 
    while (travel && (travel->GetFrameId() != frame->GetId()))
       travel = travel->GetNext();
@@ -364,12 +366,12 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
 
    fCurrent = newcurrent;
 
-   if (fCurrent) {
-      if (!fCurrent->GetDecorFrame()->IsMaximized())
-         fCurrent->GetDecorFrame()->GetTitleBar()->SetTitleBarColors(fForeCurrent,
-                                                        fBackCurrent,
-                                                        fFontCurrent);
-   }
+   if (!fCurrent) return kFALSE;
+
+   if (!fCurrent->GetDecorFrame()->IsMaximized())
+      fCurrent->GetDecorFrame()->GetTitleBar()->SetTitleBarColors(fForeCurrent,
+                                                                  fBackCurrent,
+                                                                  fFontCurrent);
 
    fCurrent->GetDecorFrame()->RaiseWindow();
    Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
@@ -937,7 +939,7 @@ Int_t TGMdiMainFrame::Close(TGMdiFrame *mdiframe)
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
    Restore(mdiframe);
    mdiframe->Emit("CloseWindow()");
-   if (mdiframe->TestBit(kNotDeleted) && !mdiframe->TestBit(TGMdiFrame::kDontCallClose))
+   if (frame && mdiframe->TestBit(kNotDeleted) && !mdiframe->TestBit(TGMdiFrame::kDontCallClose))
       return frame->CloseWindow();
    return kTRUE;
 }

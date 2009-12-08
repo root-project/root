@@ -73,6 +73,7 @@ TGFrameElement::TGFrameElement(TGFrame *f, TGLayoutHints *l)
 {
    // Constructor.
 
+   fLayout = 0;
    fFrame  = f;
    if (f) f->SetFrameElement(this);
 

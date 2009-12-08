@@ -379,7 +379,7 @@ TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
    gVirtualX->GetFontProperties(GetDefaultFontStruct(),
                                 max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
-   if (fPicture->GetHeight() > fTHeight)
+   if (fPicture && fPicture->GetHeight() > fTHeight)
       fTHeight = fPicture->GetHeight();
 
    Resize(fTWidth, fTHeight + 1);
