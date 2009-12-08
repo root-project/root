@@ -56,9 +56,10 @@ TImageDump::TImageDump() : TVirtualPS()
 {
    // Default SVG constructor
 
-   fStream = 0;
-   fImage  = 0;
+   fStream    = 0;
+   fImage     = 0;
    gVirtualPS = this;
+   fType      = 0;
 }
 
 //______________________________________________________________________________
@@ -505,6 +506,12 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
       px2 = XtoPixel(x[1]);   py2 = YtoPixel(y[1]);
 
+      // SetLineColor
+      col = gROOT->GetColor(fLineColor);
+      if (!col) { // no color, make it black
+         fLineColor = 1;
+         col = gROOT->GetColor(fLineColor);
+      }
       if (fLineStyle < 2) {
          fImage->DrawLine(px1, py1, px2, py2, col->AsHexString(), fLineWidth);
       } else {
