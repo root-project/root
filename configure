@@ -5644,18 +5644,16 @@ if test "x$enable_reflex" = "xyes"; then
     if test "x$haveconfig" = "x" ; then
         libdirreflex='$0; if readlink $dir > /dev/null 2>\&1; then lndir=`readlink $dir`; dir=`dirname $dir`; lndir=`dirname $lndir`; dir=`cd $dir \&\& cd $lndir \&\& pwd \|\| echo $lndir`; else dir=`dirname ${dir}`; fi; dir=${dir}/../lib'
     fi
+    modpath=""
+    if test "x$platform" = "xwin32"; then
+        modpath=';dir=`cygpath -m $dir`'
+    fi
 
-    if test "x$platform" != "xwin32"; then
-        message "Writing $GENREFLEXSHOUT"
-        cat $GENREFLEXSHIN | sed -e "s|@libdir@|$libdirreflex|g" > $GENREFLEXSHOUT
-        chmod a+x $GENREFLEXSHOUT
-        result "done"
-    else
-        message "Writing $GENREFLEXSHOUT"
-        cat $GENREFLEXSHIN | sed -e "s|@libdir@|\$(cygpath -m $libdirreflex)|g" > $GENREFLEXSHOUT
-        chmod a+x $GENREFLEXSHOUT
-        result "done"
-
+    message "Writing $GENREFLEXSHOUT"
+    cat $GENREFLEXSHIN | sed -e "s|@libdir@|$libdirreflex$modpath|g" > $GENREFLEXSHOUT
+    chmod a+x $GENREFLEXSHOUT
+    result "done"
+    if test "x$platform" = "xwin32"; then
         message "Writing $GENREFLEXBATOUT"
         if test "x$haveconfig" = "x" ; then
             libdirreflex='%~d0%~p0\\..\\lib'
