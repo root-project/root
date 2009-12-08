@@ -237,10 +237,6 @@ int G__graph(double* xdata, double* ydata, int ndata, char* title, int mode)
          fp = fopen("G__graph", "w");
          fprintf(fp, "TitleText: %s\n", title);
          break;
-      case 2:
-         fp = fopen("G__graph", "w");
-         fprintf(fp, "TitleText: %s\n", title);
-         break;
       case 3:
          fp = fopen("G__graph", "a");
          fprintf(fp, "\n");
@@ -370,9 +366,8 @@ int G__scanobject(G__value* buf)
          if (var->p_typetable[i] > -1) {
             type_name = G__newtype.name[var->p_typetable[i]];
          }
-         G__FastAllocString ifunc_sb(G__ONELINE);
-         char* ifunc = ifunc_sb;
-         sprintf(ifunc, "G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)", tagname, pointer, (long) name, type, (long) tagname, (long) type_name);
+         G__FastAllocString ifunc(G__ONELINE);
+         ifunc.Format("G__do_scanobject((%s *)%ld,%ld,%d,%ld,%ld)", tagname, pointer, (long) name, type, (long) tagname, (long) type_name);
          G__getexpr(ifunc);
       }
       var = var->next;
