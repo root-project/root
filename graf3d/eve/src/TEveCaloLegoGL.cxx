@@ -796,18 +796,21 @@ void TEveCaloLegoGL::PrepareCell2DData(TEveCaloData::vCellId_t& cellList, vCell2
    TEveCaloData::vCellId_t::iterator nextCell    = currentCell;
    ++nextCell;
 
-   while (currentCell != cellList.end()) {
+   while (true)
+   {
       TEveCaloData::CellData_t currentCellData;
       TEveCaloData::CellData_t nextCellData;
 
       fM->fData->GetCellData(*currentCell, currentCellData);
       sum = max_energy = currentCellData.Value(fM->fPlotEt);
       max_energy_slice = currentCell->fSlice;
-      while (nextCell != cellList.end() && currentCell->fTower == nextCell->fTower) {
+      while (nextCell != cellList.end() && currentCell->fTower == nextCell->fTower)
+      {
          fM->fData->GetCellData(*nextCell, nextCellData);
          Float_t energy = nextCellData.Value(fM->fPlotEt);
          sum += energy;
-         if (energy > max_energy) {
+         if (energy > max_energy)
+         {
             max_energy       = energy;
             max_energy_slice = nextCell->fSlice;
          }
@@ -819,6 +822,10 @@ void TEveCaloLegoGL::PrepareCell2DData(TEveCaloData::vCellId_t& cellList, vCell2
       cells2D.push_back(Cell2D_t(cellID, sum, max_energy_slice));
       cells2D.back().SetGeom(currentCellData.fEtaMin, currentCellData.fEtaMax,
                              currentCellData.fPhiMin, currentCellData.fPhiMax);
+
+      if (nextCell == cellList.end())
+         break;
+
       currentCell = nextCell;
       ++nextCell;
       ++cellID;
@@ -882,12 +889,13 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
    Float_t bws    = -1; //smallest bin
    Float_t logMax = -1;
 
-   if (fM->f2DMode == TEveCaloLego::kValColor ) {
+   if (fM->f2DMode == TEveCaloLego::kValColor)
+   {
       fM->AssertPalette();
       UChar_t col[4];
 
-
-      for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+      for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
+      {
          if (rnrCtx.SecSelection()) glLoadName(i->fId);
          glBegin(GL_POLYGON);
          Float_t val = i->fSumVal;
@@ -900,16 +908,19 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          glEnd();
       }
    }
-   else {
+   else
+   {
       Float_t x, y;
-      if (!rnrCtx.HighlightOutline()) {
+      if (!rnrCtx.HighlightOutline())
+      {
          Float_t maxv = 0;
          bws = 1e5;
-         for ( vCell2D_i i = fCells2D.begin(); i != fCells2D.end(); ++i) {
-            if ( i->MinSize() < bws)   bws = i->MinSize();
-            if ( i->fSumVal > maxv)   maxv = i->fSumVal;
+         for (vCell2D_i i = fCells2D.begin(); i != fCells2D.end(); ++i)
+         {
+            if (i->MinSize() < bws)   bws  = i->MinSize();
+            if (i->fSumVal   > maxv)  maxv = i->fSumVal;
          }
-         bws   *= 0.5;
+         bws   *= 0.5f;
          logMax = TMath::Log10(maxv + 1);
          fValToPixel =  bws/logMax;
       }
@@ -917,7 +928,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
       // special draw for name stack
       if (rnrCtx.SecSelection())
       {
-         for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+         for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
+         {
             // point
             glLoadName(i->fMaxSlice);
             glPushName(i->fId);
@@ -947,7 +959,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          if (!rnrCtx.HighlightOutline())
          {
             glBegin(GL_POINTS);
-            for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+            for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
+            {
                TGLUtil::Color(fM->fData->GetSliceColor(i->fMaxSlice));
                glVertex3f(i->X(), i->Y() , i->fSumVal);
             }
@@ -955,7 +968,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          }
 
          glBegin(GL_QUADS);
-         for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
+         for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
+         {
             TGLUtil::Color(fM->fData->GetSliceColor(i->fMaxSlice));
             Float_t bw = fValToPixel*TMath::Log10(i->fSumVal+1);
             x = i->X();
@@ -1000,8 +1014,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
    }
 
    // text
-   if ( fCurrentPixelsPerBin >  fM->fDrawNumberCellPixels && 
-        (rnrCtx.Selection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline()) == kFALSE) 
+   if (fCurrentPixelsPerBin > fM->fDrawNumberCellPixels &&
+       (rnrCtx.Selection() || rnrCtx.Highlight() || rnrCtx.HighlightOutline()) == kFALSE)
    {
       TGLUtil::Color(rnrCtx.ColorSet().Markup().GetColorIndex());
       TGLFont font;

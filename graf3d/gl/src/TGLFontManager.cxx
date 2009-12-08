@@ -396,7 +396,7 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
       ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
 # endif
       TObjString* name = (TObjString*)fgFontFileArray[fileID];
-      const char *file = gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data()));
+      TString file = gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data()));
 
       FTFont* ftfont = 0;
       switch (mode)
@@ -422,9 +422,9 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
             break;
          default:
             Error("TGLFontManager::GetFont", "invalid FTGL type");
+            return;
             break;
       }
-      delete [] file;
       ftfont->FaceSize(size);
       const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, 0), 1)).first->first;
       out.CopyAttributes(mf);

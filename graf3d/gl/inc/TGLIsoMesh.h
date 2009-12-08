@@ -90,7 +90,10 @@ public:
 
    TGridGeometry() : fMinX(0),  fStepX(0),
                      fMinY(0),  fStepY(0),
-                     fMinZ(0),  fStepZ(0)
+                     fMinZ(0),  fStepZ(0),
+                     fXScaleInverted(1.),
+                     fYScaleInverted(1.),
+                     fZScaleInverted(1.)
    {
       //Default constructor.
    }

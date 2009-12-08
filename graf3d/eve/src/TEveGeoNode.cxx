@@ -395,16 +395,20 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
 
    // transformation
    TEveTrans trans;
-   if (parent) if (parent) trans.SetFromArray(parent->GetTrans());
-   TGeoMatrix* gm =  tnode->GetMatrix();
-   const Double_t* rm = gm->GetRotationMatrix();
-   const Double_t* tv = gm->GetTranslation();
-   TEveTrans t;
-   t(1,1) = rm[0]; t(1,2) = rm[1]; t(1,3) = rm[2];
-   t(2,1) = rm[3]; t(2,2) = rm[4]; t(2,3) = rm[5];
-   t(3,1) = rm[6]; t(3,2) = rm[7]; t(3,3) = rm[8];
-   t(1,4) = tv[0]; t(2,4) = tv[1]; t(3,4) = tv[2];
-   trans *= t;
+   if (parent)
+      trans.SetFromArray(parent->GetTrans());
+   if (tnode)
+   {
+      TGeoMatrix     *gm = tnode->GetMatrix();
+      const Double_t *rm = gm->GetRotationMatrix();
+      const Double_t *tv = gm->GetTranslation();
+      TEveTrans t;
+      t(1,1) = rm[0]; t(1,2) = rm[1]; t(1,3) = rm[2];
+      t(2,1) = rm[3]; t(2,2) = rm[4]; t(2,3) = rm[5];
+      t(3,1) = rm[6]; t(3,2) = rm[7]; t(3,3) = rm[8];
+      t(1,4) = tv[0]; t(2,4) = tv[1]; t(3,4) = tv[2];
+      trans *= t;
+   }
 
    TEveGeoShapeExtract* gse = new TEveGeoShapeExtract(geon->GetName(), geon->GetTitle());
    gse->SetTrans(trans.Array());
@@ -418,8 +422,8 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
       rgba[2] = c->GetBlue();
    }
    gse->SetRGBA(rgba);
-   Bool_t rnr     = tnode->IsVisible();
-   Bool_t rnr_els = tnode->IsVisDaughters();
+   Bool_t rnr     = tnode ? tnode->IsVisible()      : geon->GetRnrSelf();
+   Bool_t rnr_els = tnode ? tnode->IsVisDaughters() : geon->GetRnrChildren();
    if (tvolume) {
       rnr     = rnr     && tvolume->IsVisible();
       rnr_els = rnr_els && tvolume->IsVisDaughters();

@@ -16,6 +16,7 @@
 #include "TMath.h"
 #include "TAxis.h"
 #include "TH1.h"
+#include "TRandom.h"
 
 #include "TGLSurfacePainter.h"
 #include "TGLPlotCamera.h"
@@ -26,6 +27,8 @@
 // Implements painting of TH2 with "SURF" option.
 
 ClassImp(TGLSurfacePainter)
+
+TRandom *TGLSurfacePainter::fgRandom = new TRandom(0);
 
 //______________________________________________________________________________
 void TGLSurfacePainter::Projection_t::Swap(Projection_t &rhs)
@@ -875,9 +878,9 @@ void TGLSurfacePainter::DrawSectionXOZ()const
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[i][binY], fMesh[i][binY + 1]), kFALSE).second);
          }
          if (fProj.fVertices.size()) {
-            fProj.fRGBA[0] = rand() % 200 + 56;
-            fProj.fRGBA[1] = rand() % 100;
-            fProj.fRGBA[2] = rand() % 100;
+            fProj.fRGBA[0] = (UChar_t) (50 + fgRandom->Integer(206));
+            fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
+            fProj.fRGBA[2] = (UChar_t) fgRandom->Integer(150);
             fProj.fRGBA[3] = 150;
             static Projection_t dummy;
             fXOZProj.push_back(dummy);
@@ -925,9 +928,9 @@ void TGLSurfacePainter::DrawSectionYOZ()const
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[binX][j], fMesh[binX + 1][j]), kFALSE).second);
          }
          if (fProj.fVertices.size()) {
-            fProj.fRGBA[0] = rand() % 200 + 56;
-            fProj.fRGBA[1] = rand() % 100;
-            fProj.fRGBA[2] = rand() % 100;
+            fProj.fRGBA[0] = (UChar_t) (50 + fgRandom->Integer(206));
+            fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
+            fProj.fRGBA[2] = (UChar_t) fgRandom->Integer(150);
             fProj.fRGBA[3] = 150;
             static Projection_t dummy;
             fYOZProj.push_back(dummy);
@@ -1022,9 +1025,9 @@ void TGLSurfacePainter::DrawSectionXOY()const
    }
 
    if (fSectionPass && fProj.fVertices.size()) {
-      fProj.fRGBA[0] = rand() % 150;
-      fProj.fRGBA[1] = rand() % 150;
-      fProj.fRGBA[2] = rand() % 206 + 50;
+      fProj.fRGBA[0] = (UChar_t) fgRandom->Integer(150);
+      fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
+      fProj.fRGBA[2] = (UChar_t) (50 + fgRandom->Integer(206));
       fProj.fRGBA[3] = 150;
       static Projection_t dummy;
       fXOYProj.push_back(dummy);

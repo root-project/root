@@ -167,8 +167,10 @@ void TEvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
 
    delete [] fP; fP = 0;
    fN = n_points;
-   if (fN) fP = new Float_t [3*fN];
-   memset(fP, 0, 3*fN*sizeof(Float_t));
+   if (fN) {
+      fP = new Float_t [3*fN];
+      memset(fP, 0, 3*fN*sizeof(Float_t));
+   }
    fLastPoint = -1;
    ClearIds();
    delete fIntIds; fIntIds = 0;

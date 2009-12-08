@@ -40,7 +40,7 @@ public:
    //Iso surface.
    struct Surf_t {
       Surf_t() 
-         : f4D(0.), fShowCloud(kFALSE), fHide(kFALSE), 
+         : f4D(0.), fRange(0.), fShowCloud(kFALSE), fHide(kFALSE), 
            fColor(0), fHighlight(kFALSE), fAlpha(100)
       {
       }

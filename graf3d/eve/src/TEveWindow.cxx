@@ -510,11 +510,12 @@ void TEveCompositeFrameInMainFrame::MainFrameClosed()
          TEveWindow::SwapWindows(fEveWindow, swapCandidate);
          gEve->GetWindowManager()->WindowDocked(fEveWindow );
       }
-
    }
 
    fMainFrame->DontCallClose();
-   fEveWindow->DestroyWindowAndSlot();
+
+   if (fEveWindow != 0)
+      fEveWindow->DestroyWindowAndSlot();
 
    if (gDebug > 0)
       Info("TEveCompositeFrameInMainFrame::MainFrameClosed()",

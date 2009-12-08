@@ -184,11 +184,11 @@ void TGLAxisPainter::SetTextFormat(Double_t min, Double_t max, Double_t bw1)
    else     fFormat.Form("%%%d.%df", if1 + 1, 1);
 
    // get decimal number
-   char chtemp[8];
-   sprintf(chtemp, "%g", dwlabel);
+   TString chtemp;
+   chtemp.Form("%g", dwlabel);
    fDecimals = 0;
-   char *dot = strchr(chtemp, '.');
-   if (dot) fDecimals = chtemp + strlen(chtemp) - dot;
+   if (chtemp.First('.') != kNPOS)
+      fDecimals = chtemp.Length() - chtemp.First('.') - 1;
 }
 
 /**************************************************************************/
