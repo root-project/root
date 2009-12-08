@@ -48,11 +48,12 @@ int G__bc_stvar(G__TypeReader& /*ltype*/,G__TypeReader& /*rtype*/
 ////////////////////////////////////////////////////////////////
 void G__bc_indexoperator(G__TypeReader& ltype,G__value *ppara,int paran) {
   long dmy;
-  struct G__param para;
-  para.paran = paran;
-  for(int i=0;i<paran;i++) para.para[i] = ppara[i];
-  G__MethodInfo m = ltype.GetMethod("operator[]",&para,&dmy
+  struct G__param* para = new G__param();
+  para->paran = paran;
+  for(int i=0;i<paran;i++) para->para[i] = ppara[i];
+  G__MethodInfo m = ltype.GetMethod("operator[]",para,&dmy
 				    ,G__ClassInfo::ExactMatch);
+  delete para;
   if(!m.IsValid()) {
     G__fprinterr(G__serr ,"Error: %s::operator[] not defined " ,ltype.Name());
     G__genericerror((char*)NULL);
@@ -98,11 +99,11 @@ int G__bc_assignmentopr(G__TypeReader& ltype,G__TypeReader& /*rtype*/
 		    ,long struct_offset,long store_struct_offset) {
 
   // look for ltype.operator=(rtype)
-  struct G__param para;
-  para.paran=1;
-  para.para[0] = *prresult;
+  struct G__param* para = new G__param();
+  para->paran=1;
+  para->para[0] = *prresult;
   long dmy=0;
-  G__MethodInfo m = ltype.GetMethod("operator=",&para,&dmy
+  G__MethodInfo m = ltype.GetMethod("operator=",para,&dmy
 				    ,G__ClassInfo::ExactMatch);
 
   if(m.IsValid()) {
@@ -130,21 +131,24 @@ int G__bc_assignmentopr(G__TypeReader& ltype,G__TypeReader& /*rtype*/
     struct G__ifunc_table *ifunc = (struct G__ifunc_table*)m.Handle();
     int ifn = m.Index();
     if(m.Property()&G__BIT_ISCOMPILED) {
-      inst.LD_FUNC_BC(ifunc,ifn,para.paran,(void*)m.InterfaceMethod());
+      inst.LD_FUNC_BC(ifunc,ifn,para->paran,(void*)m.InterfaceMethod());
     }
     else if(m.Property()&G__BIT_ISVIRTUAL) {
-      inst.LD_FUNC_VIRTUAL(ifunc,ifn,para.paran
+      inst.LD_FUNC_VIRTUAL(ifunc,ifn,para->paran
 			   ,(void*)G__bc_exec_virtual_bytecode);
     }
     else {
-      inst.LD_FUNC_BC(ifunc,ifn,para.paran
+      inst.LD_FUNC_BC(ifunc,ifn,para->paran
 		      ,(void*)G__bc_exec_normal_bytecode);
     }
 
     inst.POPSTROS();
+    delete para;
 
     return(1); 
   }
+
+  delete para;
 
   return(0); 
 }
@@ -156,11 +160,11 @@ int G__bc_conversionctor(G__TypeReader& ltype,G__TypeReader& rtype
 		    ,long /*struct_offset*/,long /*store_struct_offset*/) {
 
   // look for ltype::ltype(rtype)
-  struct G__param para;
-  para.paran=1;
-  para.para[0] = *prresult;
+  struct G__param* para = new G__param();
+  para->paran=1;
+  para->para[0] = *prresult;
   long dmy=0;
-  G__MethodInfo m = ltype.GetMethod(ltype.TrueName(),&para,&dmy
+  G__MethodInfo m = ltype.GetMethod(ltype.TrueName(),para,&dmy
 				    ,G__ClassInfo::ExactMatch);
 
   if(m.IsValid()) {
@@ -175,11 +179,11 @@ int G__bc_conversionctor(G__TypeReader& ltype,G__TypeReader& rtype
 
     if(m.Property()&G__BIT_ISCOMPILED) {
       inst.SETGVP(1); // G__globalvarpointer = G__store_struct_offset
-      inst.LD_FUNC_BC(ifunc,ifn,para.paran,(void*)m.InterfaceMethod());
+      inst.LD_FUNC_BC(ifunc,ifn,para->paran,(void*)m.InterfaceMethod());
       inst.SETGVP(-1);
     }
     else {
-      inst.LD_FUNC_BC(ifunc,ifn,para.paran
+      inst.LD_FUNC_BC(ifunc,ifn,para->paran
 			   ,(void*)G__bc_exec_ctor_bytecode);
     }
 
@@ -190,9 +194,12 @@ int G__bc_conversionctor(G__TypeReader& ltype,G__TypeReader& rtype
     rtype = ltype;
     rtype.append_const();
     *prresult = rtype.Value();
+    delete para;
 
     return(1); 
   }
+
+  delete para;
 
   return(0); 
 }
@@ -234,12 +241,12 @@ int G__bc_conversionopr(G__TypeReader& ltype,G__TypeReader& rtype
 			    ,long /*struct_offset*/,long /*store_struct_offset*/) {
 
   // look for rtype::operator ltype()
-  struct G__param para;
-  para.paran=0;
+  struct G__param* para = new G__param();
+  para->paran=0;
   long dmy=0;
   string fname ="operator ";
   fname.append(ltype.TrueName());
-  G__MethodInfo m = rtype.GetMethod(fname.c_str(),&para,&dmy
+  G__MethodInfo m = rtype.GetMethod(fname.c_str(),para,&dmy
 				    ,G__ClassInfo::ExactMatch);
 
   if(m.IsValid()) {
@@ -253,14 +260,14 @@ int G__bc_conversionopr(G__TypeReader& ltype,G__TypeReader& rtype
     int ifn = m.Index();
 
     if(m.Property()&G__BIT_ISCOMPILED) {
-      inst.LD_FUNC_BC(ifunc,ifn,para.paran,(void*)m.InterfaceMethod());
+      inst.LD_FUNC_BC(ifunc,ifn,para->paran,(void*)m.InterfaceMethod());
     }
     else if(m.Property()&G__BIT_ISVIRTUAL) {
-      inst.LD_FUNC_VIRTUAL(ifunc,ifn,para.paran
+      inst.LD_FUNC_VIRTUAL(ifunc,ifn,para->paran
 			   ,(void*)G__bc_exec_virtual_bytecode);
     }
     else {
-      inst.LD_FUNC_BC(ifunc,ifn,para.paran
+      inst.LD_FUNC_BC(ifunc,ifn,para->paran
 			   ,(void*)G__bc_exec_normal_bytecode);
     }
 
@@ -269,10 +276,13 @@ int G__bc_conversionopr(G__TypeReader& ltype,G__TypeReader& rtype
     if(lparan) inst.REWINDSTACK(-lparan);
 
     rtype = ltype;
+    delete para;
   
     return(1); 
   }
   
+  delete para;
+
   return(0); 
 }
 
