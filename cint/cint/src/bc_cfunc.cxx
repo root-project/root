@@ -954,13 +954,12 @@ void G__functionscope::Setstatus() {
 int G__functionscope::compile_normalfunction(struct G__ifunc_table_internal *ifunc
 					,int iexist) {
   int store_cintv6 = G__cintv6;
+  int result = 0;
   G__cintv6 |= G__BC_COMPILEERROR;
 #if ENABLE_CPP_EXCEPTIONS
   try {
 #endif //ENABLE_CPP_EXCEPTIONS
-    int result=compile_function(ifunc,iexist);
-    G__cintv6 = store_cintv6;
-    return(result);
+    result = compile_function(ifunc,iexist);
 #if ENABLE_CPP_EXCEPTIONS
   }
   catch(G__bc_compile_error& /*x*/) {
@@ -973,9 +972,9 @@ int G__functionscope::compile_normalfunction(struct G__ifunc_table_internal *ifu
     return(G__BYTECODE_FAILURE);
   }
  
-  G__cintv6 = store_cintv6;
-  return(G__BYTECODE_FAILURE);
 #endif //ENABLE_CPP_EXCEPTIONS
+  G__cintv6 = store_cintv6;
+  return(result);
 }
 
 //////////////////////////////////////////////////////////////////////////
