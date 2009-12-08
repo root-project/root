@@ -469,10 +469,10 @@ void TTreeTableInterface::SetFormula(TTreeFormula *formula, UInt_t position)
       return;
    }
    TTreeFormula *form = (TTreeFormula *)fFormulas->RemoveAt(position);
-   if (form) delete form;
    if (fSelect) {
       fManager->Remove(form);
    }
+   if (form) delete form;
    fFormulas->AddAt(formula, position);
    if (fManager) {
       fManager->Add(formula);
