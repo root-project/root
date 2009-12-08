@@ -2094,7 +2094,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-The following example shows a 3D histogram plotted with the option <tt>"BOX"</tt>.
+The following example shows a 3D histogram plotted with the option <tt>"ISO"</tt>.
 
 End_Html
 Begin_Macro(source)
