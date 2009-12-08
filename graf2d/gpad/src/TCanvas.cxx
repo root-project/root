@@ -591,15 +591,6 @@ void TCanvas::Build()
 
 
 //______________________________________________________________________________
-TCanvas::TCanvas(const TCanvas &) : TPad(), fDoubleBuffer(0)
-{
-   // Intentionally not implemented
-
-   fPainter = 0;
-}
-
-
-//______________________________________________________________________________
 TCanvas::~TCanvas()
 {
    // Canvas destructor
