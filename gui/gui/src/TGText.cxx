@@ -157,7 +157,7 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
    if (fString != 0)
       strncpy(newstring, fString, (UInt_t)pos);
    strcpy(newstring+pos, text);
-   if (fLength - pos  > 0)
+   if (fString != 0 && fLength - pos  > 0)
       strncpy(newstring+pos+strlen(text), fString+pos, UInt_t(fLength-pos));
    fLength = fLength + strlen(text);
    delete [] fString;
@@ -745,6 +745,7 @@ Bool_t TGText::DelText(TGLongPosition start, TGLongPosition end)
    SetCurrentRow(start.fY);
    if (tempbuffer) {
       fCurrent->InsText(fCurrent->GetLineLength(), tempbuffer);
+      delete [] tempbuffer;
    } else {
       if (fCurrent->fNext) {
          fCurrent->InsText(fCurrent->fLength, fCurrent->fNext->fString);
@@ -816,7 +817,8 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
    pos.fY = start_src.fY+1;
    pos.fX = 0;
    for ( ; pos.fY < end_src.fY; pos.fY++) {
-      lineString = src->GetLine(pos, src->GetLineLength(pos.fY));
+      Int_t llen = src->GetLineLength(pos.fY);
+      lineString = src->GetLine(pos, llen > 0 ? llen : 0);
       fCurrent->fNext = new TGTextLine(lineString);
       fCurrent->fNext->fPrev = fCurrent;
       fCurrent = fCurrent->fNext;

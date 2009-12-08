@@ -1813,7 +1813,8 @@ public:
    TGRepeatFireButton(const TGWindow *p, const TGPicture *pic,
                       Int_t id, Bool_t logstep)
     : TGPictureButton(p, pic, id), fTimer(0), fIgnoreNextFire(0),
-       fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep) { fEditDisabled = kEditDisable | kEditDisableGrab; }
+       fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep), fDoLogStep(logstep) 
+       { fEditDisabled = kEditDisable | kEditDisableGrab; }
    virtual ~TGRepeatFireButton() { delete fTimer; }
 
    virtual  Bool_t HandleButton(Event_t *event);

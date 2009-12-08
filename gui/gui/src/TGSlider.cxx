@@ -69,6 +69,8 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fType     = type;
    fScale    = 10;
    fDragging = kFALSE;
+   fPos = fRelPos = 0;
+   fVmax = fVmin = 0;
 }
 
 //______________________________________________________________________________
@@ -92,7 +94,7 @@ TGVSlider::TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
 
    AddInput(kStructureNotifyMask);
    // set initial values
-   fPos = h/2; fVmin = 0; fVmax = h;
+   fPos = h/2; fVmin = 0; fVmax = h; fYp = 0;
    fEditDisabled = kEditDisableWidth;
 
    if (!p && fClient->IsEditable()) {
@@ -257,7 +259,7 @@ TGHSlider::TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
 
    AddInput(kStructureNotifyMask);
    // set initial values
-   fPos = w/2; fVmin = 0; fVmax = w;
+   fPos = w/2; fVmin = 0; fVmax = w; fXp = 0;
    fEditDisabled = kEditDisableHeight;
 
    if (!p && fClient->IsEditable()) {

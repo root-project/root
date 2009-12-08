@@ -47,7 +47,9 @@ TGPack::TGPack(TGClient *c, Window_t id, const TGWindow *parent) :
    fVertical     (kTRUE),
    fUseSplitters (kTRUE),
    fSplitterLen  (4),
-   fDragOverflow (0)
+   fDragOverflow (0),
+   fWeightSum    (0.0),
+   fNVisible     (0)
 {
    // Constructor.
 

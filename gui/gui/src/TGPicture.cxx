@@ -321,6 +321,10 @@ TGPicture::TGPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask)
    fAttributes.fCloseness = 40000; // Allow for "similar" colors
    fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
    fAttributes.fPixels    = 0;
+   fAttributes.fDepth     = 0;
+   fAttributes.fNpixels   = 0;
+   fAttributes.fXHotspot  = 0;
+   fAttributes.fYHotspot  = 0;
 
    gVirtualX->GetWindowSize(fPic, xy, xy, fAttributes.fWidth, fAttributes.fHeight);
    SetRefCount(1);

@@ -134,8 +134,8 @@ void TGSpeedo::Build()
       fBase = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(fPicName.Data()),
               fImage->GetPixmap(), fImage->GetMask());
       // center of the image
-      Float_t xc = (Float_t)(fBase->GetWidth() + 1) / 2.0;
-      Float_t yc = (Float_t)(fBase->GetHeight() + 1) / 2.0;
+      Float_t xc = (Float_t)(fBase ? (fBase->GetWidth() + 1) / 2 : 50.0);
+      Float_t yc = (Float_t)(fBase ? (fBase->GetHeight() + 1) / 2 : 50.0);
 
       // compute scale ticks steps
       step = (fScaleMax - fScaleMin) / 4.0;

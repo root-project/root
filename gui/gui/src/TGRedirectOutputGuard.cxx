@@ -63,6 +63,7 @@ TGRedirectOutputGuard::TGRedirectOutputGuard(TGTextView *tv,
    fTextView = tv;
    fLogFile = flog;
    fTmpFile = kFALSE;
+   fLogFileRead = 0;
    if (!flog) {
       // Create temporary file
       fLogFile = "RedirOutputGuard_";

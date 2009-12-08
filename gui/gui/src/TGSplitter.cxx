@@ -40,6 +40,7 @@ TGSplitter::TGSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 {
    // Create a splitter.
 
+   fSplitCursor = kNone;
    fEditDisabled = kTRUE;
 }
 
@@ -67,6 +68,11 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 
    fSplitCursor = kNone;
    fSplitterPic = fClient->GetPicture("splitterv.xpm");
+   fFrameHeight = h;
+   fFrameWidth = w;
+   fLeft = kTRUE;
+   fMax = fMin = 0;
+   fStartX = 0;
 
    if (!fSplitterPic)
       Error("TGVSplitter", "splitterv.xpm not found");
@@ -106,6 +112,11 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external)
 
    fSplitCursor = gVirtualX->CreateCursor(kArrowHor);
    fFrame = 0;
+   fFrameHeight = h;
+   fFrameWidth = w;
+   fLeft = kTRUE;
+   fMax = fMin = 0;
+   fStartX = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -268,6 +279,11 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
 
    fSplitCursor = gVirtualX->CreateCursor(kArrowVer);
    fFrame = 0;
+   fFrameHeight = h;
+   fFrameWidth = w;
+   fAbove = kTRUE;
+   fMax = fMin = 0;
+   fStartY = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -293,6 +309,11 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external)
 
    fSplitCursor = gVirtualX->CreateCursor(kArrowVer);
    fFrame = 0;
+   fFrameHeight = h;
+   fFrameWidth = w;
+   fAbove = kTRUE;
+   fMax = fMin = 0;
+   fStartY = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
