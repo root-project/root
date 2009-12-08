@@ -144,17 +144,34 @@ TGX11::TGX11()
 {
    // Default constructor.
 
-   fDisplay      = 0;
-   fScreenNumber = 0;
-   fVisual       = 0;
-   fRootWin      = 0;
-   fVisRootWin   = 0;
-   fColormap     = 0;
-   fBlackPixel   = 0;
-   fWhitePixel   = 0;
-   fWindows      = 0;
-   fColors       = 0;
-   fXEvent       = new XEvent;
+   int i;
+   fDisplay            = 0;
+   fScreenNumber       = 0;
+   fVisual             = 0;
+   fRootWin            = 0;
+   fVisRootWin         = 0;
+   fColormap           = 0;
+   fBlackPixel         = 0;
+   fWhitePixel         = 0;
+   fWindows            = 0;
+   fColors             = 0;
+   fXEvent             = new XEvent;
+   fRedDiv             = -1;
+   fGreenDiv           = -1;
+   fBlueDiv            = -1;
+   fRedShift           = -1;
+   fGreenShift         = -1;
+   fBlueShift          = -1;
+   fCharacterUpX       = 1;
+   fCharacterUpY       = 1;
+   fDepth              = 0;
+   fHasTTFonts         = kFALSE;
+   fMaxNumberOfWindows = 10;
+   fTextAlignH         = 1;
+   fTextAlignV         = 1;
+   fTextAlign          = 7;
+   fTextMagnitude      = 1;
+   for (i = 0; i < kNumCursors; i++) fCursors[i] = 0;
 }
 
 //______________________________________________________________________________
@@ -162,28 +179,37 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 {
    // Normal Constructor.
 
-   fDisplay         = 0;
-   fScreenNumber    = 0;
-   fVisual          = 0;
-   fRootWin         = 0;
-   fVisRootWin      = 0;
-   fColormap        = 0;
-   fBlackPixel      = 0;
-   fWhitePixel      = 0;
-   fHasTTFonts      = kFALSE;
-   fTextAlignH      = 1;
-   fTextAlignV      = 1;
-   fTextAlign       = 7;
-   fTextMagnitude   = 1;
-   fCharacterUpX    = 1;
-   fCharacterUpY    = 1;
-   fDrawMode        = kCopy;
-   fXEvent          = new XEvent;
-
+   int i;
+   fDisplay            = 0;
+   fScreenNumber       = 0;
+   fVisual             = 0;
+   fRootWin            = 0;
+   fVisRootWin         = 0;
+   fColormap           = 0;
+   fBlackPixel         = 0;
+   fWhitePixel         = 0;
+   fDrawMode           = kCopy;
+   fXEvent             = new XEvent;
+   fRedDiv             = -1;
+   fGreenDiv           = -1;
+   fBlueDiv            = -1;
+   fRedShift           = -1;
+   fGreenShift         = -1;
+   fBlueShift          = -1;
+   fCharacterUpX       = 1;
+   fCharacterUpY       = 1;
+   fDepth              = 0;
+   fHasTTFonts         = kFALSE;
    fMaxNumberOfWindows = 10;
+   fTextAlignH         = 1;
+   fTextAlignV         = 1;
+   fTextAlign          = 7;
+   fTextMagnitude      = 1;
+   for (i = 0; i < kNumCursors; i++) fCursors[i] = 0;
+
    //fWindows = new XWindow_t[fMaxNumberOfWindows];
    fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
-   for (int i = 0; i < fMaxNumberOfWindows; i++)
+   for (i = 0; i < fMaxNumberOfWindows; i++)
       fWindows[i].fOpen = 0;
 
    fColors = new TExMap;
