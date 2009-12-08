@@ -60,7 +60,6 @@ private:
    Bool_t             fNoLog;          //Do not process logon and logoff macros
    Bool_t             fNoLogo;         //Do not show splash screen and welcome message
    Bool_t             fQuit;           //Exit after having processed input files
-   Bool_t             fGraphInit;      //True if graphics has been initialized
    TObjArray         *fFiles;          //Array of input files (TObjString's) specified via argv
    TString            fWorkDir;        //Working directory specified via argv
    TString            fIdleCommand;    //Command to execute while application is idle

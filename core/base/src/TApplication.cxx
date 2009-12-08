@@ -521,7 +521,8 @@ void TApplication::LoadGraphicsLibs()
 
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPad")))
-      h->LoadPlugin();
+      if (h->LoadPlugin() == -1)
+         return;
 
    TString name;
    TString title1 = "ROOT interface to ";
