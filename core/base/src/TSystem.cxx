@@ -2925,6 +2925,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          }
          if (libinfo) {
             fCompiled->Remove(libinfo);
+            delete libinfo;
+            libinfo = 0;
          }
          TNamed *k = new TNamed(library,library);
          Long_t lib_time;
@@ -2949,6 +2951,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          }
          if (libinfo) {
             fCompiled->Remove(libinfo);
+            delete libinfo;
+            libinfo = 0;
          }
          Unlink(library);
       }
