@@ -1756,7 +1756,7 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
    printf("---Daughters of %s made invisible.\n", fGeoManager->GetTopVolume()->GetName());
    printf("---Make them visible with : gGeoManager->GetTopVolume()->VisibleDaughters();\n");
    delete pm;
-   delete xyz;
+   delete [] xyz;
 }   
 
 //______________________________________________________________________________
@@ -2111,7 +2111,7 @@ void TGeoChecker::Test(Int_t npoints, Option_t *option)
    }
    timer->Stop();
    timer->Print();
-   delete xyz;
+   delete [] xyz;
    delete timer;
 }
 
@@ -2167,7 +2167,7 @@ void TGeoChecker::TestOverlaps(const char* path)
       zmax = TMath::Max(zmax, xyz[3*i+2]);
       i++;
    }
-   delete point;
+   delete [] point;
    ntpl->Fill(xmin,ymin,zmin);
    ntpl->Fill(xmax,ymin,zmin);
    ntpl->Fill(xmin,ymax,zmin);
@@ -2228,7 +2228,7 @@ void TGeoChecker::TestOverlaps(const char* path)
    } else printf("No overlaps\n");
    delete ntpl;
    delete pm;
-   delete xyz;
+   delete [] xyz;
    delete overlaps;
 }
 
