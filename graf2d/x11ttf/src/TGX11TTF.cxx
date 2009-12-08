@@ -138,6 +138,8 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
    if (!TTF::fgInit) TTF::Init();
 
    fHasTTFonts = kTRUE;
+   fAlign.x = 0;
+   fAlign.y = 0;
 
 #ifdef R__HAS_XFT
    fXftFontHash = 0;
