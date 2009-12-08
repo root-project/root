@@ -3282,29 +3282,24 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //       h.GetFunction("myFunction")->ResetBit(kNotDraw);
 //       h.Draw();  // function is visible again
 //
-//      Access to the Fitter information during fitting
+//      Access to the Minimizer information during fitting
 //      ===============================================
-//     This function calls only the abstract fitter TVirtualFitter.
-//     The default fitter is TFitter (calls TMinuit).
-//     The default fitter can be set in the resource file in etc/system.rootrc
-//     Root.Fitter:      Fumili
-//     A different fitter can also be set via TVirtualFitter::SetDefaultFitter.
-//     For example, to call the "Fumili" fitter instead of "Minuit", do
-//          TVirtualFitter::SetDefaultFitter("Fumili");
-//     During the fitting process, the objective function:
-//       chisquare, likelihood or any user defined algorithm
-//     is called (see eg in the TFitter class, the static functions
-//       H1FitChisquare, H1FitLikelihood).
-//     This objective function, in turn, calls the user theoretical function.
-//     This user function is a static function called from the TF1 *f1 function.
-//     Inside this user defined theoretical function , one can access:
-//       TVirtualFitter *fitter = TVirtualFitter::GetFitter();  //the current fitter
-//       TH1 *hist = (TH1*)fitter->GetObjectFit(); //the histogram being fitted
-//       TF1 +f1 = (TF1*)fitter->GetUserFunction(); //the user theoretical function
+//     This function calls, the ROOT::Fit::FitObject function implemented in HFitImpl.cxx
+//     which uses the ROOT::Fit::Fitter class. The Fitter class creates the objective fuction
+//     (e.g. chi2 or likelihood) and uses an implementation of the  Minimizer interface for minimizing 
+//     the function. 
+//     The default minimizer is Minuit (class TMinuitMinimizer which calls TMinuit).
+//     The default  can be set in the resource file in etc/system.rootrc. For example
+//     Root.Fitter:      Minuit2
+//     A different fitter can also be set via ROOT::Math::MinimizerOptions::SetDefaultMinimizer
+//     (or TVirtualFitter::SetDefaultFitter). 
+//     For example ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS"); 
+//     will set the usdage of the BFGS algorithm of the GSL multi-dimensional minimization (implemented in libMathMore).
+//     ROOT::Math::MinimizerOptions can be used also to set other default options, like maximum number of function calls, 
+//     minimization tolerance or  print level. See the documentation of this class.  
 //
-//     By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
 //     For fitting linear functions (containing the "++" sign" and polN functions,
-//     the linear fitter is initialized.
+//     the linear fitter is automatically initialized.
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
