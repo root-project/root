@@ -164,3 +164,34 @@ void TGraphTime::Paint(Option_t *option)
       }
    }
 }
+
+//______________________________________________________________________________
+void TGraphTime::SaveAnimatedGif(const char *filename) const
+{
+   // Save this object to filename as an animated gif file
+   // if filename is specified it must be of the form xxx.gif
+   // otherwise a file yyy.gif is produced where yyy is the object name
+   
+   TObject *frame = gPad->GetPrimitive("frame");
+   TList *list = 0;
+   TObjLink *lnk;
+
+   for (Int_t s=0;s<fNsteps;s++) {
+      list = (TList*)fSteps->UncheckedAt(s);
+      if (list) {
+         gPad->GetListOfPrimitives()->Remove(frame);
+         gPad->GetListOfPrimitives()->Clear();
+         if (frame) gPad->GetListOfPrimitives()->Add(frame);
+         lnk = list->FirstLink();
+         while(lnk) {
+            TObject *obj = lnk->GetObject();
+            obj->Draw(lnk->GetAddOption());
+            lnk = lnk->Next();
+         }
+         gPad->Update();
+         if (strlen(filename) > 0) gPad->Print(Form("%s+",filename));
+         else                      gPad->Print(Form("%s+",GetName()));
+         if (fSleepTime > 0) gSystem->Sleep(fSleepTime);
+      }
+   }
+}

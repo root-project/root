@@ -48,11 +48,12 @@ public:
    TGraphTime(const TGraphTime &gr);
    virtual ~TGraphTime();
 
-   virtual Int_t         Add(const TObject *obj, Int_t slot, Option_t *option="");
-   virtual void          Draw(Option_t *chopt="");
-   TObjArray            *GetSteps() const {return fSteps;}
-   virtual void          Paint(Option_t *chopt="");
-   virtual void          SetSleepTime(Int_t stime=0) {fSleepTime = stime;}
+   virtual Int_t   Add(const TObject *obj, Int_t slot, Option_t *option="");
+   virtual void    Draw(Option_t *chopt="");
+   TObjArray      *GetSteps() const {return fSteps;}
+   virtual void    Paint(Option_t *chopt="");
+   virtual void    SaveAnimatedGif(const char *filename="") const;
+   virtual void    SetSleepTime(Int_t stime=0) {fSleepTime = stime;}
 
    ClassDef(TGraphTime,1)  //An array of objects evolving with time
 };
