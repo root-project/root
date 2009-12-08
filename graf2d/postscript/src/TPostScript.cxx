@@ -229,9 +229,63 @@ TPostScript::TPostScript() : TVirtualPS()
 {
    // Default PostScript constructor
 
-   fStream = 0;
-   fType   = 0;
-   gVirtualPS = this;
+   fStream          = 0;
+   fType            = 0;
+   gVirtualPS       = this;
+   fBlue            = 0.;
+   fBoundingBox     = kFALSE;
+   fClear           = kFALSE;
+   fClip            = 0;
+   fClipStatus      = kFALSE;
+   fCurrentColor    = 0;
+   fDXC             = 0.;
+   fDYC             = 0.;
+   fFX              = 0.;
+   fFY              = 0.;
+   fGreen           = 0.;
+   fIXzone          = 0;
+   fIYzone          = 0;
+   fLastCellBlue    = 0;
+   fLastCellGreen   = 0;
+   fLastCellRed     = 0;
+   fLineJoin        = 0;
+   fLineScale       = 0.;
+   fMarkerSizeCur   = 0.;
+   fMaxLines        = 0;
+   fMaxsize         = 0;
+   fMode            = 0;
+   fNBSameColorCell = 0;
+   fNXzone          = 0;
+   fNYzone          = 0;
+   fNbCellLine      = 0;
+   fNbCellW         = 0;
+   fNbinCT          = 0;
+   fNpages          = 0;
+   fRange           = kFALSE;
+   fRed             = 0.;
+   fSave            = 0;
+   fX1v             = 0.;
+   fX1w             = 0.;
+   fX2v             = 0.;
+   fX2w             = 0.;
+   fXC              = 0.;
+   fXVP1            = 0.;
+   fXVP2            = 0.;
+   fXVS1            = 0.;
+   fXVS2            = 0.;
+   fXsize           = 0.;
+   fY1v             = 0.;
+   fY1w             = 0.;
+   fY2v             = 0.;
+   fY2w             = 0.;
+   fYC              = 0.;
+   fYVP1            = 0.;
+   fYVP2            = 0.;
+   fYVS1            = 0.;
+   fYVS2            = 0.;
+   fYsize           = 0.;
+   fZone            = kFALSE;
+   for (Int_t i=0; i<32; i++) fPatterns[i]=0;
 }
 
 
