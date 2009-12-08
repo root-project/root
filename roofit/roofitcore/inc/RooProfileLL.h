@@ -34,6 +34,7 @@ public:
   RooMinuit* minuit() { return _minuit ; }
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
   const RooArgSet& bestFitParams() const ;
+  const RooArgSet& bestFitObs() const ;
 
   virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
   
@@ -59,6 +60,7 @@ protected:
   mutable Bool_t _absMinValid ; // flag if absmin is up-to-date
   mutable Double_t _absMin ; // absolute minimum of -log(L)
   mutable RooArgSet _paramAbsMin ; // Parameter values at absolute minimum
+  mutable RooArgSet _obsAbsMin ; // Observable values at absolute minimum
   mutable std::map<std::string,bool> _paramFixed ; // Parameter constant status at last time of use
   
   Double_t evaluate() const ;

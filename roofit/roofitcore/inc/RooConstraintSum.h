@@ -18,6 +18,7 @@
 
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
+#include "RooSetProxy.h"
 
 class RooRealVar;
 class RooArgList ;
@@ -26,7 +27,7 @@ class RooConstraintSum : public RooAbsReal {
 public:
 
   RooConstraintSum() ;
-  RooConstraintSum(const char *name, const char *title, const RooArgSet& constraintSet) ;
+  RooConstraintSum(const char *name, const char *title, const RooArgSet& constraintSet, const RooArgSet& paramSet) ;
   virtual ~RooConstraintSum() ;
 
   RooConstraintSum(const RooConstraintSum& other, const char* name = 0);
@@ -35,11 +36,12 @@ public:
 protected:
 
   RooListProxy _set1 ;    // Set of constraint terms
+  RooSetProxy _paramSet ; // Set of parameters to which constraints apply
   TIterator* _setIter1 ;  //! do not persist
 
   Double_t evaluate() const;
 
-  ClassDef(RooConstraintSum,1) // sum of -log of set of RooAbsPdf representing parameter constraints
+  ClassDef(RooConstraintSum,2) // sum of -log of set of RooAbsPdf representing parameter constraints
 };
 
 #endif

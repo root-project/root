@@ -54,6 +54,8 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
   // Prints a warning if the initial interval does not bracket a single
   // root or if the root is not found after a fixed number of iterations.
 
+  _function->saveXVec() ;
+
   Double_t a(xlo),b(xhi);
   Double_t fa= (*_function)(&a) - value;
   Double_t fb= (*_function)(&b) - value;
@@ -94,6 +96,7 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
     if (fb == 0 || fabs(m) <= tol) {
       //cout << "RooBrentRootFinder: iter = " << iter << " m = " << m << " tol = " << tol << endl ;
       result= b;
+      _function->restoreXVec() ;      
       return kTRUE;
     }
   
@@ -154,5 +157,8 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
   // Return our best guess if we run out of iterations
   oocoutE((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): maximum iterations exceeded." << endl;
   result= b;
+
+  _function->restoreXVec() ;
+
   return kFALSE;
 }

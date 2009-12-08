@@ -810,7 +810,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
     coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
 
-    nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints) ;
+    nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints,*cPars) ;
     RooAbsReal* orignll = nll ;
     nll = new RooAddition(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*nll,*nllCons)) ;
     nll->addOwnedComponents(RooArgSet(*orignll,*nllCons)) ;

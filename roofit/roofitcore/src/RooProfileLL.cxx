@@ -85,6 +85,10 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
 
   _piter = _par.createIterator() ;
   _oiter = _obs.createIterator() ;
+
+  _paramAbsMin.addClone(other._paramAbsMin) ;
+  _obsAbsMin.addClone(other._obsAbsMin) ;
+    
 } 
 
 
@@ -111,6 +115,14 @@ const RooArgSet& RooProfileLL::bestFitParams() const
 {
   validateAbsMin() ;
   return _paramAbsMin ;
+}
+
+
+//_____________________________________________________________________________
+const RooArgSet& RooProfileLL::bestFitObs() const 
+{
+  validateAbsMin() ;
+  return _obsAbsMin ;
 }
 
 
@@ -210,8 +222,18 @@ void RooProfileLL::validateAbsMin() const
   if (!_absMinValid) {
     
     cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
+
+
     // Save current values of non-marginalized parameters
     RooArgSet* obsStart = (RooArgSet*) _obs.snapshot(kFALSE) ;
+
+    // Start from previous global minimum 
+    if (_paramAbsMin.getSize()>0) {
+      const_cast<RooSetProxy&>(_par).assignValueOnly(_paramAbsMin) ;
+    }
+    if (_obsAbsMin.getSize()>0) {
+      const_cast<RooSetProxy&>(_obs).assignValueOnly(_obsAbsMin) ;
+    }
 
     // Find minimum with all observables floating
     const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kFALSE) ;  
@@ -224,6 +246,7 @@ void RooProfileLL::validateAbsMin() const
     // Save parameter values at abs minimum as well
     _paramAbsMin.removeAll() ;
     _paramAbsMin.addClone(_par) ;
+    _obsAbsMin.addClone(_obs) ;
 
     // Save constant status of all parameters
     _piter->Reset() ;

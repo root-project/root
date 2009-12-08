@@ -497,8 +497,14 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 
       if (_binGenData) {
 
+	// Calculate the number of (extended) events for this run
+	if (_extendedGen) {
+	  _nExpGen = _genModel->expectedEvents(&_dependents) ;
+	  nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample==0?_nExpGen:nEvtPerSample) ;
+	}	
+
 	// Binned generation
-	_genSample = _genModel->generateBinned(_dependents,nEvtPerSample) ;
+	_genSample = _genModel->generateBinned(_dependents,nEvt) ;
 
       } else {
 

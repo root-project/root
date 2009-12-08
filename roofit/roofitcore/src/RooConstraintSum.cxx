@@ -55,9 +55,10 @@ RooConstraintSum::RooConstraintSum()
 
 
 //_____________________________________________________________________________
-RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet) :
+RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& paramSet) :
   RooAbsReal(name, title),
-  _set1("set1","First set of components",this)
+  _set1("set1","First set of components",this),
+  _paramSet("paramSet","Set of parameters",this)
 {
   // Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf
 
@@ -74,6 +75,8 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
     _set1.add(*comp) ;
   }
 
+  _paramSet.add(paramSet) ;
+
   delete inputIter ;
 }
 
@@ -84,7 +87,8 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
 //_____________________________________________________________________________
 RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* name) :
   RooAbsReal(other, name), 
-  _set1("set1",this,other._set1)
+  _set1("set1",this,other._set1),
+  _paramSet("paramSet",this,other._paramSet)
 {
   // Copy constructor
 
@@ -110,12 +114,10 @@ Double_t RooConstraintSum::evaluate() const
 
   Double_t sum(0);
   RooAbsReal* comp ;
-  const RooArgSet* nset = _set1.nset() ;
-
   _setIter1->Reset() ;
 
   while((comp=(RooAbsReal*)_setIter1->Next())) {
-    sum -= ((RooAbsPdf*)comp)->getLogVal(nset) ;
+    sum -= ((RooAbsPdf*)comp)->getLogVal(&_paramSet) ;
   }
   
   return sum ;

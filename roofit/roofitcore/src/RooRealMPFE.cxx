@@ -189,7 +189,7 @@ void RooRealMPFE::initialize()
     // Kill server at end of service
     cout << "RooRealMPFE::initialize(" << GetName() 
 	 << ") server process terminating" << endl ;
-    exit(0) ;
+    _exit(0) ;
 
   } else if (_pid>0) {
  
