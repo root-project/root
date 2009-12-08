@@ -22,6 +22,7 @@ Cint::G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix,
       fOut(out), fNSPrefix(nsprefix), fNeedTypedefShadow(needTypedefShadow)
 {
 
+   memset(fCacheNeedShadow, 0, sizeof(fCacheNeedShadow));
    G__ClassInfo cl;
    // loop over all classes, deciding whether they need a shadow by themselves
    cl.Init();
@@ -522,18 +523,18 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
 
                size_t posTemplArg = typenameOriginal.find('<');
                while (posTemplArg != std::string::npos) {
-                  int level = 0;
+                  int tlevel = 0;
                   size_t posArgEnd = posTemplArg;
                   do {
                      posArgEnd = typenameOriginal.find_first_of("<,>", posArgEnd + 1);
                      if (posArgEnd !=  std::string::npos) {
                         if (typenameOriginal[posArgEnd] == '<')
-                           ++level;
+                           ++tlevel;
                         if (typenameOriginal[posArgEnd] == '>') {
-                           --level;
-                           if (level == -1) break;
+                           --tlevel;
+                           if (tlevel == -1) break;
                         }
-                        if (typenameOriginal[posArgEnd] == ',' && level == 0)
+                        if (typenameOriginal[posArgEnd] == ',' && tlevel == 0)
                            break;
                      }
                   } while (posArgEnd != std::string::npos);
