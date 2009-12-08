@@ -66,6 +66,8 @@ public:
 #include <limits>
 // Work around interaction between a struct named exception in math.h,
 // std::exception and the use of using namespace std;
+#if (__SUNPRO_CC < 0x5050)
 #define exception std::exception
+#endif
 #endif
 #endif
