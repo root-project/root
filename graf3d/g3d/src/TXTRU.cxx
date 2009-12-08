@@ -102,6 +102,7 @@ TXTRU::TXTRU(const char *name, const char *title, const char *material,
 
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
+   fSplitConcave  = kFALSE;
 
    if ( nxy < 3 ) {
       Error(name,"number of x-y points for %s must be at least three!",name);
