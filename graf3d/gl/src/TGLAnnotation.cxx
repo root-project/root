@@ -133,8 +133,9 @@ Bool_t TGLAnnotation::Handle(TGLRnrCtx&          rnrCtx,
 
          if (recID == 2)
          {
+            TGLViewer *v = fParent;
             delete this;
-            fParent->RequestDraw(rnrCtx.ViewerLOD());
+            v->RequestDraw(rnrCtx.ViewerLOD());
          }
          else if (recID == 3)
          {

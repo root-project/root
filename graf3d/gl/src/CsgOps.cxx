@@ -107,7 +107,7 @@ namespace RootCsg {
       Double_t fCo[2];
 
    public:
-      Tuple2(){}
+      Tuple2(){SetValue(0, 0);}
       Tuple2(const Double_t *vv){SetValue(vv);}
       Tuple2(Double_t xx, Double_t yy){SetValue(xx, yy);}
 
@@ -448,7 +448,7 @@ namespace RootCsg {
    protected:
       Double_t fCo[3];
    public:
-      Tuple3(){}
+      Tuple3(){SetValue(0, 0, 0);}
       Tuple3(const Double_t *v){SetValue(v);}
       Tuple3(Double_t xx, Double_t yy, Double_t zz){SetValue(xx, yy, zz);}
 
@@ -852,7 +852,7 @@ namespace RootCsg {
       Double_t fCo[4];
 
    public:
-      Tuple4(){}
+      Tuple4(){SetValue(0, 0, 0, 0);}
       Tuple4(const Double_t *v){SetValue(v);}
       Tuple4(Double_t xx, Double_t yy, Double_t zz, Double_t ww)
       {
@@ -1383,7 +1383,7 @@ namespace RootCsg {
    public:
       Int_t fPolyIndex;
 
-      TBBoxLeaf() {}
+      TBBoxLeaf() : fPolyIndex(0) {}
       TBBoxLeaf(Int_t polyIndex, const TBBox &bbox) : fPolyIndex(polyIndex)
       {
          fBBox = bbox;
@@ -1398,7 +1398,7 @@ namespace RootCsg {
    public:
       NodePtr_t fLeftSon;
       NodePtr_t fRightSon;
-      TBBoxInternal() {}
+      TBBoxInternal() : fLeftSon(0) ,fRightSon(0) {}
       TBBoxInternal(Int_t n, LeafPtr_t leafIt);
    };
 
@@ -1412,7 +1412,7 @@ namespace RootCsg {
       Int_t         fNumLeaves;
 
    public :
-      TBBoxTree(){}
+      TBBoxTree() : fBranch(0), fLeaves(0), fInternals(0), fNumLeaves(0) {}
       NodePtr_t RootNode()const{return fInternals;}
       ~TBBoxTree()
       {
@@ -1426,7 +1426,8 @@ namespace RootCsg {
    };
 
    //______________________________________________________________________________
-   TBBoxInternal::TBBoxInternal(Int_t n, LeafPtr_t leafIt)
+   TBBoxInternal::TBBoxInternal(Int_t n, LeafPtr_t leafIt) :
+      fLeftSon(0) ,fRightSon(0)
    {
       //
       fTag = kInternal;
@@ -1494,7 +1495,7 @@ namespace RootCsg {
       {
          fVertexIndex = vIndex;
       }
-      TBlenderVProp(){}
+      TBlenderVProp() : fVertexIndex(-1){}
       operator Int_t()const
       {
          return fVertexIndex;

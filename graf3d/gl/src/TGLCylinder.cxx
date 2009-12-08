@@ -525,12 +525,20 @@ TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer) :
    fLowPlaneNorm = gLowNormalDefault;
    fHighPlaneNorm = gHighNormalDefault;
 
-   switch (buffer.Type()) {
+   switch (buffer.Type())
+   {
+      default:
       case TBuffer3DTypes::kTube:
+      {
          fSegMesh = kFALSE;
+         fPhi1 = 0;
+         fPhi2 = 360;
          break;
+      }
+
       case TBuffer3DTypes::kTubeSeg:
       case TBuffer3DTypes::kCutTube:
+      {
          fSegMesh = kTRUE;
 
          const TBuffer3DTubeSeg * segBuffer = dynamic_cast<const TBuffer3DTubeSeg *>(&buffer);
@@ -557,6 +565,8 @@ TGLCylinder::TGLCylinder(const TBuffer3DTube &buffer) :
                fHighPlaneNorm[i] = cutBuffer->fHighPlaneNorm[i];
             }
          }
+         break;
+      }
    }
 }
 
