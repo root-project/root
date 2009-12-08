@@ -31,6 +31,8 @@ ClassImp(THYPE)
 THYPE::THYPE()
 {
    // HYPE shape default constructor
+
+   fPhi = 0.;
 }
 
 
@@ -40,6 +42,7 @@ THYPE::THYPE(const char *name, const char *title, const char *material, Float_t 
       : TTUBE(name,title,material,rmin,rmax,dz)
 {
    // HYPE shape normal constructor
+
    fPhi = phi;
 }
 

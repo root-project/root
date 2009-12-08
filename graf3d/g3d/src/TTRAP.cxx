@@ -52,6 +52,15 @@ ClassImp(TTRAP)
 TTRAP::TTRAP()
 {
    // TRAP shape default constructor
+
+   fH1     = 0.;
+   fBl1    = 0.;
+   fTl1    = 0.;
+   fAlpha1 = 0.;
+   fH2     = 0.;
+   fBl2    = 0.;
+   fTl2    = 0.;
+   fAlpha2 = 0.;
 }
 
 

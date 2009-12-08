@@ -38,6 +38,10 @@ ClassImp(TPARA)
 TPARA::TPARA()
 {
    // PARA shape default constructor
+
+   fAlpha = 0.;
+   fTheta = 0.;
+   fPhi   = 0.;
 }
 
 

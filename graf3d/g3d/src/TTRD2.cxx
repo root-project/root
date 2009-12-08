@@ -33,6 +33,9 @@ ClassImp(TTRD2)
 TTRD2::TTRD2()
 {
   // TRD2 shape default constructor
+
+   fDx2 = 0.;
+   fDy2 = 0.;
 }
 
 

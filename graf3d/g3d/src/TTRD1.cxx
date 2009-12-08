@@ -32,6 +32,8 @@ ClassImp(TTRD1)
 TTRD1::TTRD1()
 {
    // TRD1 shape default constructor
+
+   fDx2 = 0.;
 }
 
 

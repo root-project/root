@@ -55,6 +55,7 @@ TSPHE::TSPHE()
    fNdiv       = 0;
    fAspectRatio=1.0;
    faX = faY = faZ = 1.0;      // Coeff along Ox
+   fNz = 0;
 }
 
 

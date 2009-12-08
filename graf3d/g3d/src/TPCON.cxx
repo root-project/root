@@ -50,6 +50,10 @@ TPCON::TPCON()
    fDz    = 0;
    fCoTab = 0;
    fSiTab = 0;
+   fPhi1  = 0.;
+   fDphi1 = 0.;
+   fNz    = 0;
+   fNdiv  = 0;
 }
 
 

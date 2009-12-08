@@ -74,6 +74,7 @@ TXTRU::TXTRU()
 
    fPolygonShape  = kUncheckedXY;
    fZOrdering     = kUncheckedZ;
+   fSplitConcave  = kFALSE;
 }
 
 
