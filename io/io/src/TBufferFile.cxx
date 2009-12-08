@@ -3284,11 +3284,11 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    //   count    is the number of bytes for this object in the buffer
    //
 
-   // The StreamerInfo should exist at this point.
    TObjArray *infos = cl->GetStreamerInfos();
    Int_t ninfos = infos->GetSize();
    if (version < -1 || version >= ninfos) {
-      Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d",cl->GetName(),version);
+      Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+            cl->GetName(), version, Length() );
       CheckByteCount(start, count, cl);
       return 0;
    }
@@ -3299,7 +3299,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    if( onFileClass ) {
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
-         Error( "ReadClassBuffer", "Could not find the right streamer info" );
+         Error("ReadClassBuffer",
+               "Could not find the right streamer info to convert %s version %d into a %d, object skipped at offset %d", 
+               onFileClass->GetName(), version, cl->GetName(), Length() );
          CheckByteCount(start, count, onFileClass);
          return 0;
       }
@@ -3308,14 +3310,26 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    // Get local streamer info
    //---------------------------------------------------------------------------
    else {
+      // The StreamerInfo should exist at this point.
       sinfo = (TStreamerInfo*)infos->At(version);
       if (sinfo == 0) {
-         const_cast<TClass*>(cl)->BuildRealData(pointer);
-         sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-         infos->AddAtAndExpand(sinfo, version);
-         if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-         sinfo->Build();
-         //} else if (!fRealData) {
+         // Unless the data is coming via a socket connection from with schema evolution
+         // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
+         // one for the current version, otherwise let's complain ...
+         // We could also get here if there old class version was '1' and the new class version is higher than 1
+         // AND the checksum is the same.
+         if ( version == cl->GetClassVersion() || version == 1 ) {
+            const_cast<TClass*>(cl)->BuildRealData(pointer);
+            sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
+            infos->AddAtAndExpand(sinfo, version);
+            if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+            sinfo->Build();
+         } else {
+            Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                  version, cl->GetName(), Length() );
+            CheckByteCount(start, count, cl);
+            return 0;            
+         }
       } else if (!sinfo->GetOffsets()) {
          const_cast<TClass*>(cl)->BuildRealData(pointer);
          sinfo->BuildOld();
@@ -3358,8 +3372,6 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
       v2file = kTRUE;
    }
 
-   // The StreamerInfo should exist at this point.
-
    //---------------------------------------------------------------------------
    // The ondisk class has been specified so get foreign streamer info
    //---------------------------------------------------------------------------
@@ -3367,7 +3379,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    if( onFileClass ) {
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
-         Error( "ReadClassBuffer", "Could not find the right streamer info" );
+         Error("ReadClassBuffer",
+               "Could not find the right streamer info to convert %s version %d into a %d, object skipped at offset %d",
+               onFileClass->GetName(), version, cl->GetName(), Length() );
          CheckByteCount(R__s, R__c, onFileClass);
          return 0;
       }
@@ -3376,26 +3390,39 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    // Get local streamer info
    //---------------------------------------------------------------------------
    else {
+      // The StreamerInfo should exist at this point.
       TObjArray *infos = cl->GetStreamerInfos();
       Int_t infocapacity = infos->Capacity();
       if (infocapacity) {
          if (version < -1 || version >= infocapacity) {
             Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-                  cl->GetName(), version,Length());
+                  cl->GetName(), version, Length());
             CheckByteCount(R__s, R__c, cl);
             return 0;
          }
          sinfo = (TStreamerInfo*) infos->UncheckedAt(version);
       }
       if (sinfo == 0) {
-         const_cast<TClass*>(cl)->BuildRealData(pointer);
-         sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-         infos->AddAtAndExpand(sinfo,version);
-         if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-         sinfo->Build();
+         // Unless the data is coming via a socket connection from with schema evolution
+         // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
+         // one for the current version, otherwise let's complain ...
+         // We could also get here when reading a file prior to the introduction of StreamerInfo.
+         // We could also get here if there old class version was '1' and the new class version is higher than 1
+         // AND the checksum is the same.
+         if (v2file || version == cl->GetClassVersion() || version == 1 ) {
+            const_cast<TClass*>(cl)->BuildRealData(pointer);
+            sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
+            infos->AddAtAndExpand(sinfo,version);
+            if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+            sinfo->Build();
 
-         if (v2file) sinfo->BuildEmulated(file);
-
+            if (v2file) sinfo->BuildEmulated(file);
+         } else {
+            Error( "ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                  version, cl->GetName(), Length() );
+            CheckByteCount(R__s, R__c, cl);
+            return 0;            
+         }
       } 
       else if (!sinfo->TStreamerInfo::GetOffsets())  // 'TStreamerInfo::' avoids going via a virtual function.
       { 
