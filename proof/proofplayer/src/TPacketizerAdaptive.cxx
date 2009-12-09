@@ -253,7 +253,7 @@ public:
 TPacketizerAdaptive::TFileNode::TFileNode(const char *name)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),
      fActFiles(new TList), fActFileNext(0), fMySlaveCnt(0),
-     fExtSlaveCnt(0), fProcessed(0), fEvents(0)
+     fExtSlaveCnt(0), fRunSlaveCnt(0), fProcessed(0), fEvents(0)
 {
    // Constructor
 
@@ -1034,11 +1034,12 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves)
       TMessage *reply;
 
       if (sock->Recv(reply) <= 0) {
-         // Help! lost a slave?
+         // Notify
+         Error("ValidateFiles", "Recv failed! for worker-%s (%s)",
+                                slave->GetOrdinal(), slave->GetName());
+         // Help! lost a slave? ('slave' is deleted inside here ...)
          ((TProof*)gProof)->MarkBad(slave, "receive failed during validation");
          fValid = kFALSE;
-         Error("ValidateFiles", "Recv failed! for worker-%s (%s)",
-               slave->GetOrdinal(), slave->GetName());
          continue;
       }
 
