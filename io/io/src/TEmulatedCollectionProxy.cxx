@@ -237,6 +237,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   //fKey->fType->Destructor(ptr);
                   h->set(0);
                }
+               break;
             case G__BIT_ISPOINTER|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
@@ -282,6 +283,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   }
                   h->set(0);
                }
+               break;
             case G__BIT_ISPOINTER|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
