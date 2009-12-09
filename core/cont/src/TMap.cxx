@@ -452,7 +452,8 @@ TMapIter::TMapIter(const TMapIter &iter) : TIterator(iter)
 
    fMap       = iter.fMap;
    fDirection = iter.fDirection;
-   if (fCursor) {
+   fCursor    = 0;
+   if (iter.fCursor) {
       fCursor = (THashTableIter *)iter.fCursor->GetCollection()->MakeIterator();
       fCursor->operator=(*iter.fCursor);
    }

@@ -363,6 +363,7 @@ THashTableIter::THashTableIter(const THashTableIter &iter) : TIterator(iter)
    fTable      = iter.fTable;
    fDirection  = iter.fDirection;
    fCursor     = iter.fCursor;
+   fListCursor = 0;
    if (iter.fListCursor) {
       fListCursor = (TListIter *)iter.fListCursor->GetCollection()->MakeIterator();
       fListCursor->operator=(*iter.fListCursor);
