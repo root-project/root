@@ -56,9 +56,12 @@ namespace ROOT {
     */
 #ifndef __CINT__
    struct EnvironBase {
+   private:
+      EnvironBase(const EnvironBase&); // Intentionally not implement, copy is not supported
+      EnvironBase &operator=(const EnvironBase&); // Intentionally not implement, copy is not supported
+   public:
       EnvironBase() : fIdx(0), fSize(0), fObject(0), fStart(0), fTemp(0), fUseTemp(kFALSE), fRefCount(1), fSpace(0)
       {
-      //   fprintf("Running default constructor on %p\n",this);
       }
       virtual ~EnvironBase() {}
       size_t              fIdx;
