@@ -115,6 +115,10 @@ void BayesianCalculator::SetModel(const ModelConfig & model) {
    ClearAll(); 
 }
 
+RooArgSet* BayesianCalculator::GetMode(RooArgSet* parameters) const
+{
+  return 0;
+}
 
 RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
 {
@@ -161,13 +165,13 @@ RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
 
 RooPlot* BayesianCalculator::GetPosteriorPlot() const
 {
+  /// return a RooPlot with the posterior PDF and the credibility region
 
   if (!fPosteriorPdf) GetPosteriorPdf();
   if (!fInterval) GetInterval();
 
-
-   RooAbsRealLValue * poi = dynamic_cast<RooAbsRealLValue *>(fPOI.first() );
-   assert(poi );
+  RooAbsRealLValue* poi = dynamic_cast<RooAbsRealLValue*>( fPOI.first() );
+  assert(poi);
 
    RooPlot* plot = poi->frame();
 
@@ -182,37 +186,42 @@ RooPlot* BayesianCalculator::GetPosteriorPlot() const
 
 SimpleInterval* BayesianCalculator::GetInterval() const
 {
-   // returns a SimpleInterval with the lower/upper limit on the scanned variable
-   if (fInterval) return fInterval; 
+  /// returns a SimpleInterval with the lower/upper limit on the scanned variable
 
-   if (!fPosteriorPdf) fPosteriorPdf = (RooAbsPdf*) GetPosteriorPdf();
+  if (fInterval) return fInterval; 
 
-   RooAbsReal* cdf = fPosteriorPdf->createCdf(fPOI);
-   
+  RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
+  assert(poi);
 
-   RooAbsFunc* cdf_bind = cdf->bindVars(fPOI,&fPOI);
-   RooBrentRootFinder brf(*cdf_bind);
-   brf.setTol(0.00005);
-   
-   RooRealVar * poi = dynamic_cast<RooRealVar *>( fPOI.first()); 
-   assert(poi);
-   
-   double y = fSize/2;
-   double lowerLimit = 0; 
-   double upperLimit = 0; 
-   brf.findRoot(lowerLimit,poi->getMin(),poi->getMax(),y);
-   
-   y=1-fSize/2;
-   brf.findRoot(upperLimit,poi->getMin(),poi->getMax(),y);
-   
-   delete cdf_bind;
-   delete cdf;
+  if (!fPosteriorPdf) fPosteriorPdf = (RooAbsPdf*) GetPosteriorPdf();
 
-   TString interval_name = TString("BayesianInterval_a") + TString(this->GetName());
-   fInterval = new SimpleInterval(interval_name,*poi,lowerLimit,upperLimit,ConfidenceLevel());
-   fInterval->SetTitle("SimpleInterval from BayesianCalculator");
-  
-   return fInterval;
+  RooAbsReal* cdf = fPosteriorPdf->createCdf(fPOI);
+
+  RooAbsFunc* cdf_bind = cdf->bindVars(fPOI,&fPOI);
+  RooBrentRootFinder brf(*cdf_bind);
+  brf.setTol(0.00005); // precision
+
+  double lowerLimit = 0; 
+  double upperLimit = 0; 
+
+  double tmpVal = poi->getVal(); // patch because findRoot changes the value of poi
+
+  double y = fSize/2;
+  brf.findRoot(lowerLimit,poi->getMin(),poi->getMax(),y);
+
+  y=1-fSize/2;
+  brf.findRoot(upperLimit,poi->getMin(),poi->getMax(),y);
+
+  poi->setVal(tmpVal); // patch: restore the original value of poi
+
+  delete cdf_bind;
+  delete cdf;
+
+  TString interval_name = TString("BayesianInterval_a") + TString(this->GetName());
+  fInterval = new SimpleInterval(interval_name,*poi,lowerLimit,upperLimit,ConfidenceLevel());
+  fInterval->SetTitle("SimpleInterval from BayesianCalculator");
+
+  return fInterval;
 }
 
 } // end namespace RooStats

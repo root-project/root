@@ -146,7 +146,6 @@ namespace RooStats {
 
       unsigned int fTestStatisticsIdx; // Index of the test statistics to use
       unsigned int fNToys;            // number of Toys MC
-      bool  fUsePriorPdf;               // use a prior for nuisance parameters  
       RooAbsPdf* fSbModel; // The pdf of the signal+background model
       RooAbsPdf* fBModel; // The pdf of the background model
       mutable RooArgList* fObservables; // Collection of the observables of the model
@@ -154,6 +153,7 @@ namespace RooStats {
       RooAbsPdf* fPriorPdf;   // Prior PDF of the nuisance parameters
       RooAbsData * fData;     // pointer to the data sets 
       bool fGenerateBinned;   //Flag to control binned generation
+      bool  fUsePriorPdf;               // use a prior for nuisance parameters  
 
 //       TString fSbModelName;   // name of pdf of the signal+background model
 //       TString fBModelName;   // name of pdf of the background model

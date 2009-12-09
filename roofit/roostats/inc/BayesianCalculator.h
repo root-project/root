@@ -44,44 +44,52 @@ namespace RooStats {
 
       BayesianCalculator( RooAbsData& data,
                           RooAbsPdf& pdf,
-                          const RooArgSet & POI,
+                          const RooArgSet& POI,
                           RooAbsPdf& priorPOI,
                           const RooArgSet* nuisanceParameters = 0 );
 
       BayesianCalculator( RooAbsData& data,
-                          ModelConfig & model);
+                          ModelConfig& model );
 
       // destructor
-      virtual ~BayesianCalculator() ;
+      virtual ~BayesianCalculator();
 
       RooPlot* GetPosteriorPlot() const; 
 
       // return posterior pdf (object is managed by the BayesianCalculator class)
-      RooAbsPdf * GetPosteriorPdf() const; 
+      RooAbsPdf* GetPosteriorPdf() const; 
 
       virtual SimpleInterval* GetInterval() const ; 
 
-      virtual void  SetData(RooAbsData & data) { fData = &data; }
+      virtual void SetData( RooAbsData & data ) { fData = &data; }
 
-      virtual void SetModel(const ModelConfig & model); 
+      virtual void SetModel( const ModelConfig& model ); 
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) {
+      virtual void SetTestSize( Double_t size ) {
          fSize = size;
-         if (fInterval) delete fInterval; fInterval = 0;  
+         if (fInterval) delete fInterval;
+	 fInterval = 0;  
       }
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) { SetTestSize( 1. - cl); }
+      virtual void SetConfidenceLevel( Double_t cl ) { SetTestSize(1.-cl); }
       // Get the size of the test (eg. rate of Type I error)
-      virtual Double_t Size() const {return fSize;}
+      virtual Double_t Size() const { return fSize; }
       // Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+      virtual Double_t ConfidenceLevel() const { return 1.-fSize; }
 
    protected:
 
       void ClearAll() const; 
    
    private:
+
+      // compute the most probable value: move to public once implemented
+      // returns a RooArgSet
+      RooArgSet* GetMode( RooArgSet* parameters ) const;
+      // plan to replace the above: return a SimpleInterval integrating 
+      // over all other parameters except the one specified as argument
+      virtual SimpleInterval* GetInterval( RooRealVar* parameter ) const { return 0; }
     
       RooAbsData* fData;
       RooAbsPdf* fPdf;
@@ -94,10 +102,9 @@ namespace RooStats {
       mutable RooAbsReal* fLikelihood; 
       mutable RooAbsReal* fIntegratedLikelihood; 
       mutable RooAbsPdf* fPosteriorPdf; 
-      mutable SimpleInterval* fInterval;     // cached pointer to resulting interval
+      mutable SimpleInterval* fInterval;  // cached pointer to resulting interval
 
-      double fSize;   // size used for getting the interval
-
+      double fSize;  // size used for getting the interval
 
    protected:
 

@@ -67,6 +67,9 @@ namespace RooStats {
 
   private:
 
+    // merge with the content of another HypoTestInverterResult object
+    bool Add( HypoTestInverterResult otherResult );
+
     double CalculateEstimatedError(double target);
     int FindClosestPointIndex(double target);
     double FindInterpolatedLimit(double target);

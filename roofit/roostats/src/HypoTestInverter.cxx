@@ -19,6 +19,7 @@
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 #include "RooRealVar.h"
+#include "TMath.h"
 
 #include "RooStats/HybridCalculator.h"
 #include "RooStats/HybridResult.h"
@@ -81,51 +82,142 @@ void  HypoTestInverter::CreateResults() {
 }
 
 
-bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double target, double epsilon, int numAlgorithm  )
+bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double target, double epsilon, unsigned int numAlgorithm  )
 {
+  /// Search for the value of the parameter of interest (vary the
+  /// hypothesis being tested) in the specified range [xMin,xMax]
+  /// until the confidence level is compatible with the target value
+  /// within one time the estimated error (and the estimated error
+  /// should also become smaller than the specified parameter epsilon)
+
+  // various sanity checks on the input parameters
+  if ( xMin>=xMax || xMin< fScannedVariable->getMin() || xMax>fScannedVariable->getMax() ) {
+    std::cout << "Error: problem with the specified range\n";
+    return false;
+  }
+  if ( target<=0 || target>=1 ) {
+    std::cout << "Error: problem with target value\n";
+    return false;
+  }
+  if ( epsilon>0.5-fabs(0.5-target) ) {
+    std::cout << "Error: problem with error value\n";
+    return false;
+  }
+  if ( numAlgorithm!=0 && numAlgorithm!=1 ) {
+    std::cout << "Error: invalid interpolation algorithm\n";
+    return false;
+  }
 
   CreateResults();
-  if ( target==Size()/2 ) fResults->fInterpolateLowerLimit = false;
-  if ( target==(1-Size()/2) ) fResults->fInterpolateUpperLimit = false;
 
-  if (numAlgorithm==0) {
+  // if ( TMath::AreEqualRel(target,1-Size()/2,DBL_EPSILON) ) {  // to uncomment for ROOT 5.26
+  if ( fabs(1-target/(1-Size()/2))<DBL_EPSILON ) {
+    fResults->fInterpolateLowerLimit = false;
+    std::cout << "Target matches lower limit: de-activate interpolation in HypoTestInverterResult\n";
+  }
+  // if ( TMath::AreEqualRel(target,Size()/2,DBL_EPSILON) ) {  // to uncomment for ROOT 5.26
+  if ( fabs(1-target/((Size()/2)))<DBL_EPSILON ) {
+    fResults->fInterpolateUpperLimit = false;
+    std::cout << "Target matches upper limit: de-activate interpolation in HypoTestInverterResult\n";
+  }
 
-    // Search for the value of the searched variable where the CL is within
-    // 1 sigma of the desired level and sigma smaller than epsilon.  This is done by consecutively replacing
-    // the worst value of the interval with one that has been interpolated
-    // exponentially.
+  // parameters of the algorithm that are hard-coded
+  const double nSigma = 1; // number of times the estimated error the final p-value should be from the target
 
-    double nSigma = 1;
+  // backup some values to be restored at the end 
+  const unsigned int nToys_backup = ((HybridCalculator*)fCalculator0)->GetNumberOfToys();
 
-    double leftX = xMin;
-    double rightX = xMax;
-    if (!RunOnePoint(leftX)) return false;
-    double leftCL = fResults->GetYValue(fResults->ArraySize()-1);
-    double leftCLError = fResults->GetYError(fResults->ArraySize()-1);
-    if (!RunOnePoint(rightX)) return false;
-    double rightCL = fResults->GetYValue(fResults->ArraySize()-1);
-    double rightCLError = fResults->GetYError(fResults->ArraySize()-1);
-    double centerCL;
-    double centerCLError;
+  // check the 2 hypothesis tests specified as extrema in the constructor
+  double leftX = xMin;
+  if (!RunOnePoint(leftX)) return false;
+  double leftCL = fResults->GetYValue(fResults->ArraySize()-1);
+  double leftCLError = fResults->GetYError(fResults->ArraySize()-1);
+ 
+  double rightX = xMax;
+  if (!RunOnePoint(rightX)) return false;
+  double rightCL = fResults->GetYValue(fResults->ArraySize()-1);
+  double rightCLError = fResults->GetYError(fResults->ArraySize()-1);
+  
+  if ( rightCL>target && leftCL>target ) {
+    std::cout << "The confidence level at both boundaries are both too large ( " << leftCL << " and " <<  rightCL << std::endl << "Run again with other boundaries or larger toy-MC statistics\n";
+    return false;
+  }
+  if ( rightCL<target && leftCL<target ) {
+    std::cout << "The confidence level at both boundaries are both too small ( " << leftCL << " and " <<  rightCL << std::endl << "Run again with other boundaries or larger toy-MC statistics\n";
+    return false;
+  }
 
-    do {
-      if (!leftCL) leftCL = DBL_EPSILON;
-      if (!rightCL) rightCL = DBL_EPSILON;
+  unsigned int nIteration = 2;  // number of iteration performed by the algorithm
+  bool quitThisLoop = false;  // flag to interrupt the search and quit cleanly
 
-      double a = (log(leftCL) - log(rightCL)) / (leftX - rightX);
-      double b = leftCL / exp(a * leftX);
-      double x = (log(target) - log(b)) / a;
-      if (isnan(x)) {
-	std::cout << "ERROR: Failed the auto run for finding target\n";
-	return false;
-      }
+  double centerCL;
+  double centerCLError;
 
-      if (!RunOnePoint(x)) return false;
+  // search for the value of the searched variable where the CL is
+  // within 1 sigma of the desired level and sigma smaller than
+  // epsilon.
+  do {
+    double x;
+
+    // safety checks
+    if (leftCL==rightCL) {
+      std::cout << "This cannot (and should not) happen... quit\n";
+      quitThisLoop = true;
+    } else if (leftX==rightX) {
+      std::cout << "This cannot (and should not) happen... quit\n";
+      quitThisLoop = true;
+    } else {
+
+      // apply chosen type of interpolation algorithm
+      if (numAlgorithm==0) {
+	// exponential interpolation
+
+	// add safety checks
+	if (!leftCL) leftCL = DBL_EPSILON;
+	if (!rightCL) rightCL = DBL_EPSILON;
+
+	double a = (log(leftCL) - log(rightCL)) / (leftX - rightX);
+	double b = leftCL / exp(a * leftX);
+	x = (log(target) - log(b)) / a;
+
+	// to do: do not allow next iteration outside the xMin,xMax interval
+	if (x<xMin || x>xMax || isnan(x)) {
+	  std::cout << "Extrapolated value out of range or nan: exits\n";
+	  quitThisLoop = true;
+	}
+      } else if (numAlgorithm==1) {
+	// linear interpolation
+	
+	double a = (leftCL-rightCL)/(leftX-rightX);
+	double b = leftCL-a*leftX;
+	x = (target-b)/a;
+
+	if (x<xMin || x>xMax || isnan(x)) {
+	  std::cout << "Extrapolated value out of range or nan: exits\n";
+	  quitThisLoop = true;
+	}
+      }  // end of interpolation algorithms
+    }
+
+    if ( x==leftX || x==rightX ) {
+      std::cout << "Error: exit because interpolated value equals to a previous iteration\n";
+      quitThisLoop = true;
+    }
+
+    // perform another hypothesis-test for value x
+    bool success = false;
+    if (!quitThisLoop) success = RunOnePoint(x);
+
+    if (success) {
+
+      nIteration++;  // succeeded, increase the iteration counter
       centerCL = fResults->GetYValue(fResults->ArraySize()-1);
       centerCLError = fResults->GetYError(fResults->ArraySize()-1);
 
-      // Test if the interval points are on different sides, then replace the
-      // one on the "right" side with the center
+      // replace either the left or right point by this new point
+    
+      // test if the interval points are on different sides, then
+      // replace the one on the correct side with the center
       if ( (leftCL > target) == (rightCL < target) ) {
 	if ( (centerCL > target) == (leftCL > target) ) {
 	  leftX = x;
@@ -148,60 +240,51 @@ bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double target, dou
 	rightCL = centerCL;
 	rightCLError = centerCLError;
       }
+
+      // if a point is found compatible with the target CL but with too
+      // large error, increase the number of toyMC
       if ( fabs(centerCL-target) < nSigma*centerCLError && centerCLError > epsilon  ) {
-// 	do {
-	// add statistics to the number of toys to gain precision
+	do {
 
-	  int nToys = ((HybridCalculator*)fCalculator0)->GetNumberOfToys(); // current number of toys
-	  int nToysTarget = (int) TMath::Max(nToys*1.5, 1.2*nToys*pow(centerCLError/epsilon,2)); // estimated number of toys until the target precision is reached
+	  int nToys = ((HybridCalculator*)fCalculator0)->GetNumberOfToys();  // current number of toys
+	  int nToysTarget = (int) TMath::Max(nToys*1.5, 1.2*nToys*pow(centerCLError/epsilon,2));  // estimated number of toys until the target precision is reached
+	  
+	  std::cout << "Increasing the number of toys to: " << nToysTarget << std::endl;
+	  
+	  // run again the same point with more toyMC (run the complement number of toys)
+	  ((HybridCalculator*)fCalculator0)->SetNumberOfToys(nToysTarget-nToys);
+	  
+	  if (!RunOnePoint(x)) quitThisLoop=true;
+	  nIteration++;  // succeeded, increase the iteration counter
+	  centerCL = fResults->GetYValue(fResults->ArraySize()-1);
+	  centerCLError = fResults->GetYError(fResults->ArraySize()-1);
+	  
+	  // set the number of toys to reach the target 
 	  ((HybridCalculator*)fCalculator0)->SetNumberOfToys(nToysTarget);
+	} while ( fabs(centerCL-target) < nSigma*centerCLError && centerCLError > epsilon && quitThisLoop==false );  // run this block again if it's still compatible with the target and the error still too large
+      }
       
-	  std::cout << "Increasing the number of toys to: " << nToysTarget << " (CL error was: " << centerCLError << ")\n";
+      if (leftCL==rightCL) {
+	std::cout << "Algorithm failed: left and right CL are equal (no intrapolation possible or more toy-MC statistics needed)\n";
+	  quitThisLoop = true;
+      }
+    } // end running one more iteration
 
-// 	  centerCL = fResults->GetYValue(fResults->ArraySize()-1);
-// 	  centerCLError = fResults->GetYValue(fResults->ArraySize()-1);
+  } while ( ( fabs(centerCL-target) > nSigma*centerCLError || centerCLError > epsilon ) && quitThisLoop==false );  // end of the main 'do' loop 
 
-//  	} while ( fabs(centerCL-target) < nSigma*centerCLError && centerCLError > epsilon )
-       }
-
-    } while ( fabs(centerCL-target) > nSigma*centerCLError || centerCLError > epsilon );
-    std::cout << "Converged in " << fResults->ArraySize() << " iterations\n";
-    return true;
-  } else if ( numAlgorithm==1 ) {
-    // Newton search
-
-    double xLow = xMin;
-    bool status = RunOnePoint(xMin);
-    if ( !status ) return false;
-    double yLow = fResults->GetYValue(fResults->ArraySize()-1);
-
-    double xHigh = xMax;
-    status = RunOnePoint(xMax);
-    if ( !status ) return false;
-    double yHigh = fResults->GetYValue(fResults->ArraySize()-1);
-
-    // after the initial points, check the point in the middle of the last two 
-    // closest points, until the value is in the range target+/-epsilon
-    // the final value becomes the inverted upper limit value
-
-    bool stopNow = false;
-    while ( !stopNow || fResults->ArraySize()==30 ) {
-      double xMiddle = xLow+0.5*(xHigh-xLow);
-      status = RunOnePoint(xMiddle);
-      if ( !status ) return false;
-      double yMiddle = fResults->GetYValue(fResults->ArraySize()-1);
-      if (fabs(yMiddle-target)<epsilon) stopNow = true;
-      else if ( yMiddle>target && yHigh<target ) { xLow = xMiddle; yLow = yMiddle; }
-      else if ( yMiddle<target && yHigh<target ) { xHigh = xMiddle; yHigh = yMiddle; }
-      else if ( yMiddle<target && yHigh>target ) { xLow = xMiddle; yLow = yMiddle; }
-      else if ( yMiddle>target && yHigh>target ) { xHigh = xMiddle; yHigh = yMiddle; }
-    }
-    std::cout << "Converged in " << fResults->ArraySize() << " iterations\n";
-    return true;
-  } else {
-    std::cout << "not valid algorithm option specified\n";
+  // restore some parameters that might have been changed by the algorithm
+  ((HybridCalculator*)fCalculator0)->SetNumberOfToys(nToys_backup);
+  
+  if ( quitThisLoop==true ) {
+    // abort and return 'false' to indicate fail status
+    std::cout << "Aborted the search because something happened\n";
     return false;
   }
+
+  std::cout << "Converged in " << fResults->ArraySize() << " iterations\n";
+
+  // finished: return 'true' for success status
+  return true;
 }
 
 
@@ -244,31 +327,43 @@ bool HypoTestInverter::RunOnePoint( double thisX )
 {
    CreateResults();
 
-  // check if thisX is in the range specified for fScannedVariable
-  if ( thisX<fScannedVariable->getMin() ) {
-    std::cout << "Out of range: using the lower bound on the scanned variable rather than " << thisX<< "\n";
-    thisX = fScannedVariable->getMin();
-  }
-  if ( thisX>fScannedVariable->getMax() ) {
-    std::cout << "Out of range: using the upper bound on the scanned variable rather than " << thisX<< "\n";
-    thisX = fScannedVariable->getMax();
-  }
+   // check if thisX is in the range specified for fScannedVariable
+   if ( thisX<fScannedVariable->getMin() ) {
+     std::cout << "Out of range: using the lower bound on the scanned variable rather than " << thisX<< "\n";
+     thisX = fScannedVariable->getMin();
+   }
+   if ( thisX>fScannedVariable->getMax() ) {
+     std::cout << "Out of range: using the upper bound on the scanned variable rather than " << thisX<< "\n";
+     thisX = fScannedVariable->getMax();
+   }
 
-  double oldValue = fScannedVariable->getVal();
+   double oldValue = fScannedVariable->getVal();
 
-  fScannedVariable->setVal(thisX);
-  std::cout << "Running for " << fScannedVariable->GetName() << " = " << thisX << endl;
+   fScannedVariable->setVal(thisX);
+   std::cout << "Running for " << fScannedVariable->GetName() << " = " << thisX << endl;
+   
+   // compute the results
+   HypoTestResult* myHybridResult = fCalculator0->GetHypoTest(); 
+   
+   double lastXtested;
+   if ( fResults->ArraySize()!=0 ) lastXtested = fResults->GetXValue(fResults->ArraySize()-1);
+   else lastXtested = -999;
 
-  // compute the results
-  HypoTestResult* myHybridResult = fCalculator0->GetHypoTest(); 
+   if ( lastXtested==thisX ) {
+     
+     std::cout << "Merge with previous result\n";
+     HybridResult* latestResult = (HybridResult*) fResults->GetResult(fResults->ArraySize()-1);
+     latestResult->Add((HybridResult*)myHybridResult);
+     delete myHybridResult;
 
-  // fill the results in the HypoTestInverterResult
-  fResults->fXValues.push_back(thisX);
-  fResults->fYObjects.Add(myHybridResult);
-
-  //delete calculator;
-
-  fScannedVariable->setVal(oldValue);
-
-  return true;
+   } else {
+     
+     // fill the results in the HypoTestInverterResult array
+     fResults->fXValues.push_back(thisX);
+     fResults->fYObjects.Add(myHybridResult);
+   }
+   
+   fScannedVariable->setVal(oldValue);
+   
+   return true;
 }

@@ -77,13 +77,13 @@ HybridCalculator::HybridCalculator(const char *name) :
    fObservables(0),
    fNuisanceParameters(0),
    fPriorPdf(0),
-   fData(0)
+   fData(0),
+   fUsePriorPdf(false)
 {
    // constructor with name and title
    // set default parameters
    SetTestStatistic(1); 
    SetNumberOfToys(1000); 
-   UseNuisance(false); 
 }
 
 
@@ -102,7 +102,8 @@ HybridCalculator::HybridCalculator( RooAbsPdf& sbModel,
    fPriorPdf(priorPdf),
    fData(0),
    //fWS(0),
-   fGenerateBinned(GenerateBinned)
+   fGenerateBinned(GenerateBinned),
+   fUsePriorPdf(false)
 {
    /// specific HybridCalculator constructor:
    /// the user need to specify the models in the S+B case and B-only case,
@@ -119,6 +120,7 @@ HybridCalculator::HybridCalculator( RooAbsPdf& sbModel,
 
   SetTestStatistic(testStatistics); 
   SetNumberOfToys(numToys); 
+
   if (priorPdf) UseNuisance(true); 
   
    // this->Print();
@@ -140,7 +142,8 @@ HybridCalculator::HybridCalculator( RooAbsData & data,
    fNuisanceParameters(nuisance_parameters),
    fPriorPdf(priorPdf),
    fData(&data),
-   fGenerateBinned(GenerateBinned)
+   fGenerateBinned(GenerateBinned),
+   fUsePriorPdf(false)
 {
    /// HybridCalculator constructor for performing hypotesis test 
    /// the user need to specify the data set, the models in the S+B case and B-only case. 
@@ -150,6 +153,7 @@ HybridCalculator::HybridCalculator( RooAbsData & data,
 
    SetTestStatistic(testStatistics);
    SetNumberOfToys(numToys); 
+
    if (priorPdf) UseNuisance(true); 
 }
 
@@ -167,15 +171,15 @@ HybridCalculator::HybridCalculator( RooAbsData& data,
    fNuisanceParameters((sbModel.GetNuisanceParameters()) ? sbModel.GetNuisanceParameters()  :  bModel.GetNuisanceParameters()),
    fPriorPdf((sbModel.GetPriorPdf()) ? sbModel.GetPriorPdf()  :  bModel.GetPriorPdf()),
    fData(&data),
-   fGenerateBinned(GenerateBinned)
+   fGenerateBinned(GenerateBinned),
+   fUsePriorPdf(false)
 {
   /// Constructor with a ModelConfig object representing the signal + background model and 
   /// another model config representig the background only model
   /// a Prior pdf for the nuiscane parameter of the signal and background can be specified in 
   /// the s+b model or the b model. If it is specified in the s+b model, the one of the s+b model will be used 
 
-   if (fPriorPdf) 
-      UseNuisance(true);
+  if (fPriorPdf) UseNuisance(true);
 
   SetTestStatistic(testStatistics);
   SetNumberOfToys(numToys); 
@@ -323,10 +327,10 @@ void HybridCalculator::RunToys(std::vector<double>& bVals, std::vector<double>& 
    for (unsigned int iToy=0; iToy<nToys; iToy++) {
 
       /// prints a progress report every 500 iterations
-      /// TO DO: add a verbose flag inherited from HypoTestCalculator
-      if ( /* _verbose && */ iToy>0 && iToy%500==0) {
-         std::cout << "Running toy number " << iToy << " / " << nToys << std::endl;
-      }
+      /// TO DO: add a global verbose flag
+     if ( /*verbose && */ iToy%500==0 ) {
+       std::cout << "....... toy number " << iToy << " / " << nToys << std::endl;
+     }
 
       /// vary the value of the integrated parameters according to the prior pdf
       if (usePriors && nParameters>0) {
