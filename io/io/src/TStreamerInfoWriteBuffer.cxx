@@ -435,6 +435,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
             isPreAlloc = kTRUE;
 
+            // Intentional fallthrough now that isPreAlloc is set.
          case TStreamerInfo::kAnyP:         // Class*   Class not derived from TObject and no comment
          case TStreamerInfo::kAnyP    + TStreamerInfo::kOffsetL:
 

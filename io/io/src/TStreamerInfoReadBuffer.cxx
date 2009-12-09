@@ -102,12 +102,14 @@
    {                                             \
       name dummy;                                \
       DOLOOP { b.ReadFloat16(&dummy,aElement); } \
+      break;                                     \
    }
 
 #define SkipCDouble32(name)                      \
    {                                             \
       name dummy;                                \
       DOLOOP { b.ReadDouble32(&dummy,aElement); }\
+      break;                                     \
    }
 
 #define SkipCBasicArray(name,ReadArrayFunc)              \
@@ -990,7 +992,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kObjectp: // Class*      derived from TObject with    comment field  //->
          case TStreamerInfo::kObjectp+TStreamerInfo::kOffsetL:
             isPreAlloc = 1;
-
+            // Intentional fallthrough now that isPreAlloc is set.
          case TStreamerInfo::kObjectP: // Class* derived from TObject with no comment field NOTE: Re-added by Phil
          case TStreamerInfo::kObjectP+TStreamerInfo::kOffsetL:
          case TStreamerInfo::kAnyP:    // Class*  not derived from TObject with no comment field NOTE:: Re-added by Phil

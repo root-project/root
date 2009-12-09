@@ -865,6 +865,7 @@ void* TGenCollectionProxy::At(UInt_t idx)
          if ( fEnv->fUseTemp ) {
             return (((char*)fEnv->fTemp)+idx*fValDiff);
          }
+         // Intentional fall through.
       default:
          switch( idx ) {
          case 0:
