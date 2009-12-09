@@ -146,7 +146,7 @@ TCollectionStreamer::TCollectionStreamer() : fStreamer(0)
    // Initializing constructor.
 }
 
-TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer& c)
+TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer& c) : fStreamer(0)
 {
    // Copy constructor.
    if ( c.fStreamer )  {
