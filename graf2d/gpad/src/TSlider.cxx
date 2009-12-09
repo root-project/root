@@ -103,8 +103,10 @@ TSlider::TSlider(): TPad()
 {
    // slider default constructor.
 
-   fObject = 0;
-   fMethod = "";
+   fObject  = 0;
+   fMethod  = "";
+   fMinimum = 0;
+   fMaximum = 1;
 }
 
 
