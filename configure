@@ -274,7 +274,7 @@ check_libpic() {
     # 0 otherwise, which should be immediately copied, since the variable
     # will be overwritten at next invocation of this function.
 
-    is_libpic=0
+    is_libpic=1
 
     # Assert that we got enough arguments
     if test $# -ne 1 ; then
@@ -284,8 +284,7 @@ check_libpic() {
 
     case $platform in
     linux) ;;
-    *)     is_libpic=1
-           return 0;
+    *)     return 0;
            ;;
     esac
 
@@ -298,14 +297,14 @@ check_libpic() {
         objpic=`ar t $chklibpic | awk '{ if (NR==1) {print $1 } }'`
         logmsg " ar x $chklibpic $objpic"
         ar x $chklibpic $objpic
-        logmsg " objdump -h $objpic | grep -e 'R_386_32' -e 'R_386_PC32' -e 'R_X86_64_64' -e 'R_X86_64_PC32'"
-        objdump -r $objpic | grep -e 'R_386_32' -e 'R_386_PC32' -e 'R_X86_64_64' -e 'R_X86_64_PC32' > /dev/null 2>& 1
+        logmsg " objdump -h $objpic | grep 'R_X86_64_32'"
+        objdump -r $objpic | grep 'R_X86_64_32' > /dev/null 2>& 1
         ret=$?
         rm -f $objpic
         logmsg " result: $ret"
         if test $ret -eq 0 ; then
-            is_libpic=1
-            logmsg " is a relocatable library"
+            is_libpic=0
+            logmsg " is not a relocatable library"
         fi
     fi
 }
