@@ -27,11 +27,14 @@ ClassImp(TVirtualPS)
 //______________________________________________________________________________
 TVirtualPS::TVirtualPS()
 {
-   // VirtualPS default constructor
+   // VirtualPS default constructor.
+
    fStream    = 0;
    fNByte     = 0;
    fSizBuffer = kMaxBuffer;
    fBuffer    = new char[fSizBuffer+1];
+   fLenBuffer = 0;
+   fPrinted   = kFALSE;
 }
 
 
@@ -39,11 +42,14 @@ TVirtualPS::TVirtualPS()
 TVirtualPS::TVirtualPS(const char *name, Int_t)
           : TNamed(name,"Postscript interface")
 {
-   // VirtualPS constructor
+   // VirtualPS constructor.
+
    fStream    = 0;
    fNByte     = 0;
    fSizBuffer = kMaxBuffer;
    fBuffer    = new char[fSizBuffer+1];
+   fLenBuffer = 0;
+   fPrinted   = kFALSE;
 }
 
 
