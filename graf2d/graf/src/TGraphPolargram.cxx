@@ -76,11 +76,13 @@ TGraphPolargram::TGraphPolargram(const char* name):
    // Short constructor used in the case of a spider plot.
 
    Init();
-   fNdivRad          = 0;
-   fNdivPol          = 0;
-   fPolarLabels      = NULL;
-   fRwrmax           = 1;
-   fRwrmin           = 0;
+   fNdivRad     = 0;
+   fNdivPol     = 0;
+   fPolarLabels = NULL;
+   fRwrmax      = 1;
+   fRwrmin      = 0;
+   fRwtmax      = 0;
+   fRwtmin      = 0;
 }
 
 
@@ -637,8 +639,8 @@ void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
    Int_t ndiv      = TMath::Abs(fNdivRad);
    Int_t ndivMajor = ndiv%100;
    Int_t ndivMinor = ndiv/100;
-   Int_t ndivmajor;
-   Double_t frwrmin, frwrmax, binWidth = 0;
+   Int_t ndivmajor = 0;
+   Double_t frwrmin = 0., frwrmax = 0., binWidth = 0;
 
    THLimitsFinder::Optimize(fRwrmin,fRwrmax,ndivMajor,frwrmin,
                                frwrmax, ndivmajor,binWidth,"");
@@ -652,7 +654,7 @@ void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
       Double_t rmajmin  = (frwrmin-fRwrmin)/(fRwrmax-fRwrmin);
       Double_t rmajmax  = (frwrmax-fRwrmin)/(fRwrmax-fRwrmin);
       Double_t dist  = (rmajmax-rmajmin)/ndivmajor;
-      Int_t ndivminor;
+      Int_t ndivminor = 0;
 
       chopt[0] = 0;
       strcat(chopt, "SDH");
@@ -673,7 +675,7 @@ void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
       PaintCircle(0.,0.,1,0.,360,0);
       // Optimised case.
       if (fNdivRad>0 ) {
-         Double_t frwrmini, frwrmaxi, binWidth2 =0;
+         Double_t frwrmini = 0., frwrmaxi = 0., binWidth2 =0;
          THLimitsFinder::Optimize(frwrmin,frwrmin+binWidth,ndivMinor,frwrmini,
                                     frwrmaxi, ndivminor,binWidth2,"");
          Double_t dist2 = dist/(ndivminor);
