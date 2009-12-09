@@ -61,7 +61,7 @@ HypoTestInverterResult::~HypoTestInverterResult()
 }
 
 
-bool HypoTestInverterResult::Add( HypoTestInverterResult otherResult )
+bool HypoTestInverterResult::Add( HypoTestInverterResult /* otherResult */  )
 {
   /// Merge this HypoTestInverterResult with another
   /// HypoTestInverterResult passed as argument
@@ -106,6 +106,16 @@ double HypoTestInverterResult::GetYError( int index ) const
     return ((HybridResult*)fYObjects.At(index))->CLsError();
   else 
     return ((HybridResult*)fYObjects.At(index))->CLsplusbError();
+}
+
+HypoTestResult* HypoTestInverterResult::GetResult( int index ) const
+{
+  if ( index >= ArraySize() || index<0 ) {
+    std::cout << "Problem: You are asking for an impossible array index value\n";
+    return 0;
+  }
+
+  return ((HypoTestResult*) fYObjects.At(index));
 }
 
 double HypoTestInverterResult::FindInterpolatedLimit(double target)

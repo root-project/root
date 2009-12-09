@@ -150,14 +150,14 @@ bool HypoTestInverter::RunAutoScan( double xMin, double xMax, double target, dou
   unsigned int nIteration = 2;  // number of iteration performed by the algorithm
   bool quitThisLoop = false;  // flag to interrupt the search and quit cleanly
 
-  double centerCL;
-  double centerCLError;
+  double centerCL = 0;
+  double centerCLError = 0;
 
   // search for the value of the searched variable where the CL is
   // within 1 sigma of the desired level and sigma smaller than
   // epsilon.
   do {
-    double x;
+    double x = 0;
 
     // safety checks
     if (leftCL==rightCL) {

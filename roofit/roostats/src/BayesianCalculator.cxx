@@ -115,7 +115,7 @@ void BayesianCalculator::SetModel(const ModelConfig & model) {
    ClearAll(); 
 }
 
-RooArgSet* BayesianCalculator::GetMode(RooArgSet* parameters) const
+   RooArgSet* BayesianCalculator::GetMode(RooArgSet* /* parameters */) const
 {
   return 0;
 }

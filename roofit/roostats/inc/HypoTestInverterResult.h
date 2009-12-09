@@ -17,6 +17,8 @@
 #include "RooStats/SimpleInterval.h"
 #endif
 
+#include "RooStats/HypoTestResult.h"
+
 class RooRealVar;
 
 namespace RooStats {
@@ -44,6 +46,9 @@ namespace RooStats {
 
     // function to return the estimated error on the value of the confidence level for the i^th entry in the results
     double GetYError( int index ) const ;
+    
+    // return a pointer to the i^th result object
+    HypoTestResult* GetResult( int index ) const ;   
 
     // number of entries in the results array
     int ArraySize() const { return fXValues.size(); };

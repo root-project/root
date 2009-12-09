@@ -89,7 +89,7 @@ namespace RooStats {
       RooArgSet* GetMode( RooArgSet* parameters ) const;
       // plan to replace the above: return a SimpleInterval integrating 
       // over all other parameters except the one specified as argument
-      virtual SimpleInterval* GetInterval( RooRealVar* parameter ) const { return 0; }
+      //virtual SimpleInterval* GetInterval( RooRealVar* parameter  ) const { return 0; }
     
       RooAbsData* fData;
       RooAbsPdf* fPdf;
