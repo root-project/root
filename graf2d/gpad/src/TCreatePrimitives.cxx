@@ -111,7 +111,7 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
       gPad->GetCanvas()->FeedbackMode(kFALSE);
       gPad->Modified(kTRUE);
-      el->Draw();
+      if (el) el->Draw();
       gPad->GetCanvas()->Selected((TPad*)gPad, el, event);
       gROOT->SetEditorMode();
       break;
@@ -374,7 +374,7 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
       gPad->GetCanvas()->FeedbackMode(kFALSE);
       gPad->Modified(kTRUE);
-      pave->Draw();
+      if (pave) pave->Draw();
       gPad->GetCanvas()->Selected((TPad*)gPad, pave, event);
       gROOT->SetEditorMode();
       gPad->Update();
