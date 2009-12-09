@@ -946,7 +946,7 @@ Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
             if (!Add(fi, meta)) return kFALSE;
             // Duplications count as bad files
             if (fElements->GetSize() <= nf) badlist->Add(fi);
-         } else if (badlist && fi) {
+         } else if (badlist) {
             // Return list of non-usable files
             badlist->Add(fi);
          }
@@ -1460,11 +1460,13 @@ void TDSet::Validate(TDSet* dset)
       TPair *p = dynamic_cast<TPair*>(bestElements.FindObject(dir_file_obj));
       if (p) {
          TDSetElement *prevelem = dynamic_cast<TDSetElement*>(p->Value());
-         Long64_t entries = prevelem->GetFirst()+prevelem->GetNum();
-         if (entries<elem->GetFirst()+elem->GetNum()) {
-            bestElements.Remove(p);
-            bestElements.Add(new TPair(p->Key(), elem));
-            delete p;
+         if (prevelem) {
+            Long64_t entries = prevelem->GetFirst()+prevelem->GetNum();
+            if (entries<elem->GetFirst()+elem->GetNum()) {
+               bestElements.Remove(p);
+               bestElements.Add(new TPair(p->Key(), elem));
+               delete p;
+            }
          }
       } else {
          TNamed* named = new TNamed(dir_file_obj, dir_file_obj);
