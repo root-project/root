@@ -1162,7 +1162,7 @@ void TProofServ::HandleSocketInput()
          fQueuedMsg->Add(mess);
          PDB(kGlobal, 1)
             Info("HandleSocketInput", "message of type %d enqueued; sz: %d",
-                                       mess->What(), fQueuedMsg->GetSize());
+                                       what, fQueuedMsg->GetSize());
          mess = 0;
       }
 
@@ -1172,7 +1172,7 @@ void TProofServ::HandleSocketInput()
          // Add to the queue
          PDB(kCollect, 1)
             Info("HandleSocketInput", "processing enqueued message of type %d; left: %d",
-                                      (mess ? mess->What() : -1), fQueuedMsg->GetSize());
+                                       what, fQueuedMsg->GetSize());
          all = 1;
          SafeDelete(mess);
          mess = (TMessage *) fQueuedMsg->First();
