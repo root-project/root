@@ -1608,8 +1608,6 @@ void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitives in this canvas in C++ macro file with GUI.
 
-   Bool_t invalid = kFALSE;
-
    // Write canvas options (in $TROOT or $TStyle)
    if (gStyle->GetOptFit()) {
       out<<"   gStyle->SetOptFit(1);"<<endl;
@@ -1642,9 +1640,7 @@ void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    // Now recursively scan all pads of this canvas
    cd();
-   if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
-   if (invalid) SetName(" ");
 }
 
 
