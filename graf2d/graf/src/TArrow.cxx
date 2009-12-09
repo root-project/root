@@ -42,7 +42,8 @@ TArrow::TArrow(): TLine(),TAttFill()
 {
    // Arrow default constructor.
 
-   fAngle = fgDefaultAngle;
+   fAngle     = fgDefaultAngle;
+   fArrowSize = 0.;
 }
 
 //______________________________________________________________________________
