@@ -346,15 +346,14 @@ TProofProgressStatus *TPacketizerAdaptive::TSlaveStat::AddProcessed(TProofProgre
    // and if the status arg is given, then change the size of the packet.
    // return the difference (*st - *fStatus)
 
-   if (fDSubSet && fCurElem) {
-      if (st)
-         if (fCurElem->GetNum() != st->GetEntries() - GetEntriesProcessed())
-            fCurElem->SetNum(st->GetEntries() - GetEntriesProcessed());
+   if (st && fDSubSet && fCurElem) {
+      if (fCurElem->GetNum() != st->GetEntries() - GetEntriesProcessed())
+         fCurElem->SetNum(st->GetEntries() - GetEntriesProcessed());
       fDSubSet->Add(fCurElem);
       TProofProgressStatus *diff = new TProofProgressStatus(*st - *fStatus);
       return diff;
    } else {
-      Error("AddProcessed", "Processed subset of current elem undefined");
+      Error("AddProcessed", "processed subset of current elem undefined");
       return 0;
    }
 }
@@ -1248,7 +1247,7 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
          numev = 0;
 
       // Calculate the progress made in the last packet
-      TProofProgressStatus *progress;
+      TProofProgressStatus *progress = 0;
       if (numev > 0) {
          // This also moves the pointer in the corrsponding TFileInfo
          progress = slstat->AddProcessed(status);
@@ -1260,20 +1259,22 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
       } else {
           progress = new TProofProgressStatus();
       }
-      PDB(kPacketizer,2)
-         Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
-              sl->GetOrdinal(), sl->GetName(), progress->GetEntries(), latency,
-              progress->GetProcTime(), progress->GetCPUTime(), progress->GetBytesRead());
+      if (progress) {
+         PDB(kPacketizer,2)
+            Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
+               sl->GetOrdinal(), sl->GetName(), progress->GetEntries(), latency,
+               progress->GetProcTime(), progress->GetCPUTime(), progress->GetBytesRead());
 
-      if (gPerfStats)
-         gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(),
-                                 slstat->fCurElem->GetFileName(),
-                                 progress->GetEntries(),
-                                 latency,
-                                 progress->GetProcTime(),
-                                 progress->GetCPUTime(),
-                                 progress->GetBytesRead());
-      delete progress;
+         if (gPerfStats)
+            gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(),
+                                    slstat->fCurElem->GetFileName(),
+                                    progress->GetEntries(),
+                                    latency,
+                                    progress->GetProcTime(),
+                                    progress->GetCPUTime(),
+                                    progress->GetBytesRead());
+         delete progress;
+      }
       if (numev != expectedNumEv) {
          // The last packet was not fully processed
          // and will be split in two:
@@ -1658,16 +1659,19 @@ void TPacketizerAdaptive::MarkBad(TSlave *s, TProofProgressStatus *status,
    if (!status) {
       // Get the subset processed by the bad worker.
       TList *subSet = slaveStat->GetProcessedSubSet();
-      // Take care of the current packet
-      if (slaveStat->fCurElem) {
-         subSet->Add(slaveStat->fCurElem);
-      }
-      // reassign the packets assigned to the bad slave and save the size;
-      if (subSet)
+      if (subSet) {
+         // Take care of the current packet
+         if (slaveStat->fCurElem) {
+            subSet->Add(slaveStat->fCurElem);
+         }
+         // reassign the packets assigned to the bad slave and save the size;
          SplitPerHost(subSet, listOfMissingFiles);
+         // the elements were reassigned so should not be deleted
+         subSet->SetOwner(0);
+      } else {
+         Warning("MarkBad", "subset processed by bad worker not found!");
+      }
       (*fProgressStatus) -= *(slaveStat->GetProgressStatus());
-      // the elements were reassigned so should not be deleted
-      subSet->SetOwner(0);
    }
    // remove slavestat from the map
    fSlaveStats->Remove(s);
