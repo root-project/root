@@ -298,8 +298,8 @@ check_libpic() {
         objpic=`ar t $chklibpic | awk '{ if (NR==1) {print $1 } }'`
         logmsg " ar x $chklibpic $objpic"
         ar x $chklibpic $objpic
-        logmsg " objdump -h $objpic | grep '.data.DW.ref.'"
-        objdump -h $objpic | grep '.data.DW.ref.' > /dev/null 2>& 1
+        logmsg " objdump -h $objpic | grep -e 'R_386_32' -e 'R_386_PC32' -e 'R_X86_64_64' -e 'R_X86_64_PC32'"
+        objdump -r $objpic | grep -e 'R_386_32' -e 'R_386_PC32' -e 'R_X86_64_64' -e 'R_X86_64_PC32' > /dev/null 2>& 1
         ret=$?
         rm -f $objpic
         logmsg " result: $ret"
