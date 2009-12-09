@@ -431,7 +431,7 @@ Bool_t TReaperTimer::Notify()
    }
 
    // Stop the timer if no children
-   if (fChildren->GetSize() <= 0) {
+   if (!fChildren || fChildren->GetSize() <= 0) {
       Stop();
    } else {
       // Needed for the next shot
@@ -893,7 +893,7 @@ Int_t TProofServ::CatMotd()
    if (lasttime)
       gSystem->Unlink(last);
    Int_t fd = creat(last, 0600);
-   close(fd);
+   if (fd >= 0) close(fd);
    delete [] last;
 
    return 0;
@@ -1172,11 +1172,11 @@ void TProofServ::HandleSocketInput()
          // Add to the queue
          PDB(kCollect, 1)
             Info("HandleSocketInput", "processing enqueued message of type %d; left: %d",
-                                      mess->What(), fQueuedMsg->GetSize());
+                                      (mess ? mess->What() : -1), fQueuedMsg->GetSize());
          all = 1;
          SafeDelete(mess);
          mess = (TMessage *) fQueuedMsg->First();
-         fQueuedMsg->Remove(mess);
+         if (mess) fQueuedMsg->Remove(mess);
          doit = 1;
       }
    }
@@ -1510,7 +1510,9 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                   opt |= TProof::kBinary;
                PDB(kGlobal, 1)
                   Info("HandleSocketInput","forwarding file: %s", fnam.Data());
-               fProof->SendFile(fnam, opt, (copytocache ? "cache" : ""));
+               if (fProof->SendFile(fnam, opt, (copytocache ? "cache" : "")) < 0) {
+                  Error("HandleSocketInput", "forwarding file: %s", fnam.Data());
+               }
             }
             if (fProtocol > 19) fSocket->Send(kPROOF_SENDFILE);
          }
@@ -2100,9 +2102,9 @@ void TProofServ::RedirectOutput(const char *dir, const char *mode)
 
    TString sdir = (dir && strlen(dir) > 0) ? dir : fSessionDir.Data();
    if (IsMaster()) {
-      sprintf(logfile, "%s/master-%s.log", sdir.Data(), fOrdinal.Data());
+      snprintf(logfile, 512, "%s/master-%s.log", sdir.Data(), fOrdinal.Data());
    } else {
-      sprintf(logfile, "%s/worker-%s.log", sdir.Data(), fOrdinal.Data());
+      snprintf(logfile, 512, "%s/worker-%s.log", sdir.Data(), fOrdinal.Data());
    }
 
    if ((freopen(logfile, mode, stdout)) == 0)
@@ -2257,16 +2259,18 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
       ltot = lseek(fileno(stdout),   (off_t) 0, SEEK_END);
       lnow = lseek(fLogFileDes, (off_t) 0, SEEK_CUR);
 
-      if (start > -1) {
-         lseek(fLogFileDes, (off_t) start, SEEK_SET);
-         if (end <= start || end > ltot)
-            end = ltot;
-         left = (Int_t)(end - start);
-         if (end < ltot)
-            left++;
-         adhoc = kTRUE;
-      } else {
-         left = (Int_t)(ltot - lnow);
+      if (ltot >= 0 && lnow >= 0) {
+         if (start > -1) {
+            lseek(fLogFileDes, (off_t) start, SEEK_SET);
+            if (end <= start || end > ltot)
+               end = ltot;
+            left = (Int_t)(end - start);
+            if (end < ltot)
+               left++;
+            adhoc = kTRUE;
+         } else {
+            left = (Int_t)(ltot - lnow);
+         }
       }
    }
 
@@ -2303,7 +2307,7 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    }
 
    // Restore initial position if partial send
-   if (adhoc)
+   if (adhoc && lnow >=0 )
       lseek(fLogFileDes, lnow, SEEK_SET);
 
    TMessage mess(kPROOF_LOGDONE);
@@ -2420,9 +2424,9 @@ Int_t TProofServ::Setup()
    char str[512];
 
    if (IsMaster()) {
-      sprintf(str, "**** Welcome to the PROOF server @ %s ****", gSystem->HostName());
+      snprintf(str, 512, "**** Welcome to the PROOF server @ %s ****", gSystem->HostName());
    } else {
-      sprintf(str, "**** PROOF slave server @ %s started ****", gSystem->HostName());
+      snprintf(str, 512, "**** PROOF slave server @ %s started ****", gSystem->HostName());
    }
 
    if (fSocket->Send(str) != 1+static_cast<Int_t>(strlen(str))) {
@@ -2990,14 +2994,8 @@ Int_t TProofServ::OldAuthSetup(TString &conf)
    }
    //
    // Setup
-   if (oldAuthSetupHook) {
-      return (*oldAuthSetupHook)(fSocket, IsMaster(), fProtocol,
-                                 fUser, fOrdinal, conf);
-   } else {
-      Error("OldAuthSetup",
-            "hook to method OldProofServAuthSetup is undefined");
-      return -1;
-   }
+   return (*oldAuthSetupHook)(fSocket, IsMaster(), fProtocol,
+                              fUser, fOrdinal, conf);
 }
 
 //______________________________________________________________________________
@@ -3010,7 +3008,11 @@ TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
    // Create a TProofQueryResult instance for this query.
 
    // Increment sequential number
-   if (fQMgr) fQMgr->IncrementSeqNum();
+   Int_t seqnum = -1;
+   if (fQMgr) {
+      fQMgr->IncrementSeqNum();
+      seqnum = fQMgr->SeqNum();
+   }
 
    // Locally we always use the current streamer
    Bool_t olds = (dset && dset->TestBit(TDSet::kWriteV3)) ? kTRUE : kFALSE;
@@ -3018,7 +3020,7 @@ TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
       dset->SetWriteV3(kFALSE);
 
    // Create the instance and add it to the list
-   TProofQueryResult *pqr = new TProofQueryResult(fQMgr->SeqNum(), opt, inlist, nent,
+   TProofQueryResult *pqr = new TProofQueryResult(seqnum, opt, inlist, nent,
                                                   fst, dset, selec, elist);
    // Title is the session identifier
    pqr->SetTitle(gSystem->BaseName(fQueryDir));
@@ -3194,7 +3196,7 @@ void TProofServ::HandleProcess(TMessage *mess)
    // Get entry list information, if any (support started with fProtocol == 15)
    if ((mess->BufferSize() > mess->Length()) && fProtocol > 14)
       (*mess) >> enl;
-   Bool_t hasNoData = (dset->TestBit(TDSet::kEmpty)) ? kTRUE : kFALSE;
+   Bool_t hasNoData = (!dset || dset->TestBit(TDSet::kEmpty)) ? kTRUE : kFALSE;
 
    // Priority to the entry list
    TObject *elist = (enl) ? (TObject *)enl : (TObject *)evl;
@@ -3729,8 +3731,8 @@ void TProofServ::ProcessNext()
          fQMgr->SaveQuery(pq);
       else
          fQMgr->IncrementDrawQueries();
+      fQMgr->ResetTime();
    }
-   fQMgr->ResetTime();
 
    // Signal the client that we are starting a new query
    TMessage m(kPROOF_STARTPROCESS);
@@ -4636,6 +4638,8 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                            TMD5::WriteChecksum(md5f, md5local);
                            // Go down to the package directory
                            gSystem->ChangeDirectory(pdir);
+                           // Cleanup
+                           SafeDelete(md5local);
                         }
                         delete [] gunzip;
                      } else
@@ -5122,7 +5126,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    }
    if (level >= kInfo) {
       loglevel = kLogInfo;
-      char *ps = (char *) strrchr(location, '|');
+      char *ps = location ? (char *) strrchr(location, '|') : (char *)0;
       if (ps) {
          ipos = (int)(ps - (char *)location);
          type = "SvcMsg";
@@ -5596,7 +5600,8 @@ void TProofServ::FlushLogFile()
    // This allows to "hide" useful debug messages during normal operations
    // while preserving the possibility to have them in case of problems.
 
-   lseek(fLogFileDes, lseek(fileno(stdout), (off_t)0, SEEK_END), SEEK_SET);
+   off_t lend = lseek(fileno(stdout), (off_t)0, SEEK_END);
+   if (lend >= 0) lseek(fLogFileDes, lend, SEEK_SET);
 }
 
 //______________________________________________________________________________
