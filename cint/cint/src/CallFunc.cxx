@@ -463,7 +463,13 @@ int Cint::G__CallFunc::ExecInterpretedFunc(G__value* presult)
     G__ClassInfo *pcls=method.MemberOf();
     if(pcls && pcls->Name() && method.Name() && 
        strcmp(pcls->Name(),method.Name())==0) {
-       G__store_struct_offset = (long)(new char[pcls->Size()]);
+       int clssize = pcls->Size();
+       if (clssize > 0) {
+          G__store_struct_offset = (long)(new char[clssize]);
+       } else {
+          G__store_struct_offset = 0;
+          G__fprinterr(G__serr,"Error: Cint::G__CallFunc::ExecInterpretedFunc() cannot allocate %d bytes for constructor of type %s (wrong size information?)\n", clssize, pcls->Name());
+       }
     }
     int store_asm_exec=G__asm_exec;
     int store_asm_index=G__asm_index;
