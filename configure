@@ -267,6 +267,50 @@ checking_msg() {
 }
 
 #_____________________________________________________________________
+check_libpic() {
+    # This function will try to find out if an archive library [$1]
+    # contains relocatable code. Currently works only for linux.
+    # The result of the check is stored in is_libpic, 1 if true,
+    # 0 otherwise, which should be immediately copied, since the variable
+    # will be overwritten at next invocation of this function.
+
+    is_libpic=0
+
+    # Assert that we got enough arguments
+    if test $# -ne 1 ; then
+        echo "check_libpic: not 1 argument"
+        return 1
+    fi
+
+    case $platform in
+    linux) ;;
+    *)     is_libpic=1
+           return 0;
+           ;;
+    esac
+
+    # Save arguments in logical names
+    chklibpic=$1
+    if [ "x`basename $chklibpic .a`" != "x`basename $chklibpic`" ]; then
+        # we have an archive .a file
+        logmsg "Checking if $chklibpic contains relocatable code"
+        logmsg " ar t $chklibpic | awk '{ if (NR==1) {print \$1 } }'"
+        objpic=`ar t $chklibpic | awk '{ if (NR==1) {print $1 } }'`
+        logmsg " ar x $chklibpic $objpic"
+        ar x $chklibpic $objpic
+        logmsg " objdump -h $objpic | grep '.data.DW.ref.'"
+        objdump -h $objpic | grep '.data.DW.ref.' > /dev/null 2>& 1
+        ret=$?
+        rm -f $objpic
+        logmsg " result: $ret"
+        if test $ret -eq 0 ; then
+            is_libpic=1
+            logmsg " is a relocatable library"
+        fi
+    fi
+}
+
+#_____________________________________________________________________
 check_lib64() {
     # This function will try to find out if a library [$1] contains 64 bit
     # or 32 bit code. Currently works only for linux.
@@ -4737,6 +4781,20 @@ if test ! "x$enable_mathmore" = "xno"; then
             enable_mathmore="no"
             result "not found"
         fi
+    fi
+    if test "x$enable_mathmore" = "xyes"; then
+        for gslalib in $gsllibs; do
+           if [ "x`basename $gslalib .a`" != "x`basename $gslalib`" ]; then
+               message "Checking whether $gslalib is compiled with -fPIC"
+               check_libpic $gslalib
+               if test $is_libpic -eq 0 ; then
+                   result "no"
+                   enable_mathmore="no"
+               else
+                   result "yes"
+               fi
+           fi
+        done
     fi
 fi
 message "Checking whether to build libMathMore"
