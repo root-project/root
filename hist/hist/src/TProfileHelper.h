@@ -128,7 +128,11 @@ Double_t TProfileHelper::GetBinEffectiveEntries(T* p, Int_t bin)
 
    if (bin < 0 || bin >= p->fNcells) return 0;
    double sumOfWeights = p->fBinEntries.fArray[bin];
-   if ( p->fBinSumw2.fN == 0) return sumOfWeights;  
+   if ( p->fBinSumw2.fN == 0 || p->fBinSumw2.fN != p->fNcells) { 
+      // this can happen  when reading an old file 
+      p->fBinSumw2.Set(0);
+      return sumOfWeights;
+   }
    double sumOfWeightsSquare = p->fBinSumw2.fArray[bin]; 
    return ( sumOfWeightsSquare > 0 ?  sumOfWeights * sumOfWeights /   sumOfWeightsSquare : 0 ); 
 }

@@ -71,6 +71,7 @@ TProfile2D::TProfile2D() : TH2D()
 //*-*        ============================================
    fTsumwz = fTsumwz2 = 0;
    fScaling = kFALSE;
+   BuildOptions(0,0,"");
 }
 
 //______________________________________________________________________________
@@ -404,7 +405,7 @@ void TProfile2D::Copy(TObject &obj) const
    fBinSumw2.Copy(((TProfile2D&)obj).fBinSumw2);
    for (int bin=0;bin<fNcells;bin++) {
       ((TProfile2D&)obj).fArray[bin]        = fArray[bin];
-      if (fSumw2.fArray) ((TProfile2D&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
+      ((TProfile2D&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
    }
    ((TProfile2D&)obj).fZmin = fZmin;
    ((TProfile2D&)obj).fZmax = fZmax;
@@ -811,7 +812,7 @@ Double_t TProfile2D::GetBinContent(Int_t bin) const
 
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
 
-   if (bin < 0 || bin >= fNcells || fBinEntries.fArray == 0) return 0;
+   if (bin < 0 || bin >= fNcells) return 0;
    if (fBinEntries.fArray[bin] == 0) return 0;
    if (!fArray) return 0;
    return fArray[bin]/fBinEntries.fArray[bin];
@@ -825,7 +826,7 @@ Double_t TProfile2D::GetBinEntries(Int_t bin) const
 
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
 
-   if (bin < 0 || bin >= fNcells || fBinEntries.fArray == 0) return 0;
+   if (bin < 0 || bin >= fNcells) return 0;
    return fBinEntries.fArray[bin];
 }
 
