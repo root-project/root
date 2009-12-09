@@ -52,6 +52,10 @@ ifeq (,$(wildcard $(ROOTSYS)/lib/libUnuran.*))
 TUTORIALSTESTS_VETO += math/testrandom unuran/unuranDemo unuran/unuranFoamTest
 endif
 
+ifeq ($(findstring roofit,$(shell root-config --features)),)
+TUTORIALSTESTS_VETO += roofit/% roostats/%
+endif
+
 # I believe these fail due to CINT bugs:
 TUTORIALSTESTS_VETOCINT := hist/hbars unuran/unuranDemo unuran/unuranFoamTest
 TUTORIALSTESTS_VETOCINT := $(shell echo Failing because of CINT: $(TUTORIALSTESTS_VETOCINT))
