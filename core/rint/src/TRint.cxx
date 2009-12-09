@@ -262,6 +262,9 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    gTabCom      = new TTabCom;
    Gl_in_key    = &Key_Pressed;
    Gl_beep_hook = &BeepHook;
+
+   // tell CINT to use our getline
+   gCint->SetGetline(Getline, Gl_histadd);
 }
 
 //______________________________________________________________________________
@@ -472,8 +475,6 @@ void TRint::PrintLogo(Bool_t lite)
 
    if (!lite)
       gCint->PrintIntro();
-
-   gCint->SetGetline(Getline, Gl_histadd);
 
 #ifdef R__UNIX
    // Popdown X logo, only if started with -splash option
