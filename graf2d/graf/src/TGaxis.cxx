@@ -123,6 +123,9 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
    fFunctionName= "";
    fFunction    = 0;
    fAxis        = 0;
+   fNdiv        = 0;
+   fWmin        = 0.;
+   fWmax        = 0.;
 }
 
 
@@ -554,9 +557,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t tick_side;
    Double_t charheight;
    Double_t phil, phi, sinphi, cosphi, asinphi, acosphi;
-   Double_t binLow,  binLow2,  binLow3;
-   Double_t binHigh, binHigh2, binHigh3;
-   Double_t binWidth, binWidth2, binWidth3;
+   Double_t binLow = 0.,  binLow2 = 0.,  binLow3 = 0.;
+   Double_t binHigh = 0., binHigh2 = 0., binHigh3 = 0.;
+   Double_t binWidth = 0., binWidth2 = 0., binWidth3 = 0.;
    Double_t xpl1, xpl2, ypl1, ypl2;
    Double_t xtick = 0;
    Double_t xtick0, xtick1, dxtick=0;
