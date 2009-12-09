@@ -58,14 +58,6 @@ void TGLAxis::Init()
    fLabelsOffset    = 0.09; // % of fAxisLength
    fLabelsSize      = 0.06; // % of fAxisLength
    fGridLength      = 0.;   // 0 means no grid
-   fNDiv            = 0;
-   fNDiv1           = 0;
-   fNDiv2           = 0;
-   fNDiv3           = 0;
-   fNTicks1         = 0;
-   fNTicks2         = 0;
-   fWmax            = 0.;
-   fWmin            = 0.;
 }
 
 
