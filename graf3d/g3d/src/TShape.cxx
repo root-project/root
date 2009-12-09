@@ -56,6 +56,7 @@ TShape::TShape()
 
    fVisibility = 1;
    fMaterial   = 0;
+   fNumber     = 0;
 }
 
 
