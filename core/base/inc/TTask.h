@@ -44,6 +44,7 @@ protected:
    static TTask *fgBeginTask;    //pointer to task initiator
    static TTask *fgBreakPoint;   //pointer to current break point
 
+private:
    TTask(const TTask &task);           // not implemented
    TTask& operator=(const TTask& tt);  // not implemented
 
