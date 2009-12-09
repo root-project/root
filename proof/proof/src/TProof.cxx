@@ -2560,7 +2560,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
    Int_t what = mess->What();
 
    PDB(kCollect,3)
-      Info("HandleInputMessage", "got type %d from '%s'", what, (sl ? sl->GetOrdinal() : "undef"));
+      Info("HandleInputMessage", "got type %d from '%s'", what, sl->GetOrdinal());
 
    switch (what) {
 
@@ -2628,7 +2628,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                   s = (TSocket*) p->Key();
                   TMessage *m = (TMessage*) p->Value();
 
-                  elem = fPlayer->GetNextPacket(sl, m);
+                  elem = fPlayer ? fPlayer->GetNextPacket(sl, m) : 0;
                   if (elem != (TDSetElement*) -1) {
                      TMessage a(kPROOF_GETPACKET);
                      a << elem;
@@ -2926,10 +2926,10 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                   Int_t frac = (Int_t) (done*100.)/tot;
                   char msg[512] = {0};
                   if (frac >= 100) {
-                     sprintf(msg,"%s: OK (%d %s)                 \n",
+                     snprintf(msg, 512, "%s: OK (%d %s)                 \n",
                              action.Data(),tot, type.Data());
                   } else {
-                     sprintf(msg,"%s: %d out of %d (%d %%)\r",
+                     snprintf(msg, 512, "%s: %d out of %d (%d %%)\r",
                              action.Data(), done, tot, frac);
                   }
                   if (fSync)
@@ -4642,18 +4642,14 @@ Long64_t TProof::DrawSelect(const char *dsetname, const char *varexp,
    Int_t idxc = name.Index("#");
    if (idxc != kNPOS) {
       Int_t idxs = name.Index("/", 1, idxc, TString::kExact);
-      if (idxs != kNPOS && idxc != kNPOS) {
+      if (idxs != kNPOS) {
          obj = name(idxs+1, name.Length());
          dir = name(idxc+1, name.Length());
          dir.Remove(dir.Index("/") + 1);
          name.Remove(idxc);
-      } else if (idxc != kNPOS && idxs == kNPOS) {
+      } else {
          obj = name(idxc+1, name.Length());
          name.Remove(idxc);
-      } else if (idxs != kNPOS && idxc == kNPOS) {
-         Error("DrawSelect", "bad name syntax (%s): specification of additional"
-                          " attributes needs a '#' after the dataset name", dsetname);
-         return -1;
       }
    } else if (name.Index(":") != kNPOS && name.Index("://") == kNPOS) {
       // protection against using ':' instead of '#'
@@ -4915,7 +4911,7 @@ Int_t TProof::SendGroupView()
    char str[32];
 
    while ((sl = (TSlave *)next())) {
-      sprintf(str, "%d %d", cnt, size);
+      snprintf(str, 32, "%d %d", cnt, size);
       if (sl->GetSocket()->Send(str, kPROOF_GROUPVIEW) == -1) {
          MarkBad(sl, "could not send kPROOF_GROUPVIEW message");
          bad++;
@@ -5241,7 +5237,6 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
       fnam = gSystem->BaseName(file);
    }
    // List on which we will collect the results
-   TList wsent;
    while ((sl = (TSlave *)next())) {
       if (!sl->IsValid())
          continue;
@@ -5260,13 +5255,11 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
       // The value of 'size' is used as flag remotely, so we need to
       // reset it to 0 if we are not going to send the file
       Long64_t siz = sendto ? size : 0;
-      sprintf(buf, "%s %d %lld %d", fnam.Data(), bin, siz, fw);
+      snprintf(buf, kMAXBUF, "%s %d %lld %d", fnam.Data(), bin, siz, fw);
       if (sl->GetSocket()->Send(buf, kPROOF_SENDFILE) == -1) {
          MarkBad(sl, "could not send kPROOF_SENDFILE request");
          continue;
       }
-      // Record
-      wsent.Add(sl);
 
       if (sendto) {
 
@@ -5288,6 +5281,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
                SysError("SendFile", "error writing to slave %s:%s (now offline)",
                         sl->GetName(), sl->GetOrdinal());
                MarkBad(sl, "sendraw failure");
+               sl = 0;
                break;
             }
 
@@ -5296,7 +5290,8 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
          nsl++;
       }
       // Wait for the operation to be done
-      Collect(sl, fCollectTimeout, kPROOF_SENDFILE);
+      if (sl)
+         Collect(sl, fCollectTimeout, kPROOF_SENDFILE);
    }
 
    close(fd);
@@ -5343,7 +5338,7 @@ void TProof::SetLogLevel(Int_t level, UInt_t mask)
    fLogLevel        = level;
    gProofDebugLevel = level;
    gProofDebugMask  = (TProofDebug::EProofDebugMask) mask;
-   sprintf(str, "%d %u", level, mask);
+   snprintf(str, 32, "%d %u", level, mask);
    Broadcast(str, kPROOF_LOGLEVEL, kAll);
 }
 
@@ -5464,6 +5459,9 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
          Error("GoParallel", "attaching to candidate!");
          break;
       }
+      // Remove from the list
+      wlst->Remove(sl);
+
       Int_t slavenodes = 0;
       if (sl->GetSlaveType() == TSlave::kSlave) {
          sl->SetStatus(TSlave::kActive);
@@ -5502,10 +5500,8 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
             }
          }
       }
-      // Remove from the list
-      wlst->Remove(sl);
-//      cnt += slavenodes;
-      cnt += 1;
+      // 'slavenodes' may be different than 1 in multimaster setups
+      cnt += slavenodes;
    }
 
    // Cleanup list
@@ -6696,7 +6692,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
       ma->GetSocket()->Send(mess3);
 
       fCheckFileStatus = 0;
-      Collect(sl, fCollectTimeout, kPROOF_CHECKFILE);
+      Collect(ma, fCollectTimeout, kPROOF_CHECKFILE);
       if (fCheckFileStatus == 0) {
          // error -> package should have been found
          Error("UploadPackage", "package %s did not exist on submaster %s",
@@ -7418,10 +7414,10 @@ void TProof::SendDataSetStatus(const char *action, UInt_t done,
          Int_t frac = (Int_t) (done*100.)/tot;
          char msg[512] = {0};
          if (frac >= 100) {
-            sprintf(msg,"%s: OK (%d %s)                 \n",
+            snprintf(msg, 512, "%s: OK (%d %s)                 \n",
                      action,tot, type.Data());
          } else {
-            sprintf(msg,"%s: %d out of %d (%d %%)\r",
+            snprintf(msg, 512, "%s: %d out of %d (%d %%)\r",
                      action, done, tot, frac);
          }
          if (fSync)
@@ -7481,7 +7477,7 @@ void TProof::ValidateDSet(TDSet *dset)
       } else {
          sllist = dynamic_cast<TList*>(p->Key());
       }
-      sllist->Add(sl);
+      if (sllist) sllist->Add(sl);
    }
 
    // add local elements to nodes
@@ -7496,34 +7492,42 @@ void TProof::ValidateDSet(TDSet *dset)
          if (p) {
             TList *eli = dynamic_cast<TList*>(p->Value());
             TList *sli = dynamic_cast<TList*>(p->Key());
-            eli->Add(elem);
+            if (eli && sli) {
+               eli->Add(elem);
 
-            // order list by elements/slave
-            TPair *p2 = p;
-            Bool_t stop = kFALSE;
-            while (!stop) {
-               TPair *p3 = dynamic_cast<TPair*>(nodes.After(p2->Key()));
-               if (p3) {
-                  Int_t nelem = dynamic_cast<TList*>(p3->Value())->GetSize();
-                  Int_t nsl = dynamic_cast<TList*>(p3->Key())->GetSize();
-                  if (nelem*sli->GetSize() < eli->GetSize()*nsl) p2 = p3;
-                  else stop = kTRUE;
-               } else {
-                  stop = kTRUE;
+               // order list by elements/slave
+               TPair *p2 = p;
+               Bool_t stop = kFALSE;
+               while (!stop) {
+                  TPair *p3 = dynamic_cast<TPair*>(nodes.After(p2->Key()));
+                  if (p3) {
+                     TList *p3v = dynamic_cast<TList*>(p3->Value());
+                     TList *p3k = dynamic_cast<TList*>(p3->Key());
+                     if (p3v && p3k) {
+                        Int_t nelem = p3v->GetSize();
+                        Int_t nsl = p3k->GetSize();
+                        if (nelem*sli->GetSize() < eli->GetSize()*nsl) p2 = p3;
+                        else stop = kTRUE;
+                     }
+                  } else {
+                     stop = kTRUE;
+                  }
                }
-            }
 
-            if (p2!=p) {
-               nodes.Remove(p->Key());
-               nodes.AddAfter(p2->Key(), p);
+               if (p2!=p) {
+                  nodes.Remove(p->Key());
+                  nodes.AddAfter(p2->Key(), p);
+               }
+            } else {
+               Warning("ValidateDSet", "invalid values from TPair! Protocol error?");
+               continue;
             }
 
          } else {
             if (local) {
                nonLocal.Add(elem);
             } else {
-               Error("ValidateDSet", "No Node to allocate TDSetElement to");
-               R__ASSERT(0);
+               Warning("ValidateDSet", "no node to allocate TDSetElement to - ignoring");
             }
          }
       }
@@ -7536,7 +7540,7 @@ void TProof::ValidateDSet(TDSet *dset)
    while (TPair *node = dynamic_cast<TPair*>(nextNode())) {
       TList *slaves = dynamic_cast<TList*>(node->Key());
       TList *setelements = dynamic_cast<TList*>(node->Value());
-
+      if (!slaves || !setelements) continue;
       // distribute elements over the slaves
       Int_t nslaves = slaves->GetSize();
       Int_t nelements = setelements->GetSize();
@@ -7549,9 +7553,11 @@ void TProof::ValidateDSet(TDSet *dset)
                     j++) {
             TDSetElement *elem =
                dynamic_cast<TDSetElement*>(setelements->At(j));
-            copyset.Add(elem->GetFileName(), elem->GetObjName(),
-                        elem->GetDirectory(), elem->GetFirst(),
-                        elem->GetNum(), elem->GetMsd());
+            if (elem) {
+               copyset.Add(elem->GetFileName(), elem->GetObjName(),
+                           elem->GetDirectory(), elem->GetFirst(),
+                           elem->GetNum(), elem->GetMsd());
+            }
          }
 
          if (copyset.GetListOfElements()->GetSize()>0) {
@@ -7559,13 +7565,15 @@ void TProof::ValidateDSet(TDSet *dset)
             mesg << &copyset;
 
             TSlave *sl = dynamic_cast<TSlave*>(slaves->At(i));
-            PDB(kGlobal,1) Info("ValidateDSet",
-                                "Sending TDSet with %d elements to slave %s"
-                                " to be validated",
-                                copyset.GetListOfElements()->GetSize(),
-                                sl->GetOrdinal());
-            sl->GetSocket()->Send(mesg);
-            usedslaves.Add(sl);
+            if (sl) {
+               PDB(kGlobal,1) Info("ValidateDSet",
+                                 "Sending TDSet with %d elements to slave %s"
+                                 " to be validated",
+                                 copyset.GetListOfElements()->GetSize(),
+                                 sl->GetOrdinal());
+               sl->GetSocket()->Send(mesg);
+               usedslaves.Add(sl);
+            }
          }
       }
    }
@@ -8324,13 +8332,21 @@ void TProof::ShowLog(Int_t qry)
    // For qry != -1 the original file offset is restored at the end
 
    // Save present offset
-   Int_t nowlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_CUR);
+   off_t nowlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_CUR);
+   if (nowlog < 0) {
+      SysError("ShowLogFile", "problem lseeking log file (errno: %d)", TSystem::GetErrno());
+      return;
+   }
 
    // Get extremes
-   Int_t startlog = nowlog;
-   Int_t endlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_END);
+   off_t startlog = nowlog;
+   off_t endlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_END);
+   if (endlog < 0) {
+      SysError("ShowLogFile", "problem lseeking log file (errno: %d)", TSystem::GetErrno());
+      return;
+   }
 
-   lseek(fileno(fLogFileR), (off_t) nowlog, SEEK_SET);
+   lseek(fileno(fLogFileR), nowlog, SEEK_SET);
    if (qry == 0) {
       startlog = 0;
       lseek(fileno(fLogFileR), (off_t) 0, SEEK_SET);
@@ -8378,7 +8394,7 @@ void TProof::ShowLog(Int_t qry)
    if (tolog <= 0)
 
    // Set starting point
-   lseek(fileno(fLogFileR), (off_t) startlog, SEEK_SET);
+   lseek(fileno(fLogFileR), startlog, SEEK_SET);
 
    // Now we go
    Int_t np = 0;
@@ -8431,7 +8447,7 @@ void TProof::ShowLog(Int_t qry)
 
    // Restore original pointer
    if (qry > -1)
-      lseek(fileno(fLogFileR), (off_t) nowlog, SEEK_SET);
+      lseek(fileno(fLogFileR), nowlog, SEEK_SET);
 }
 
 //______________________________________________________________________________
@@ -9073,8 +9089,8 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char* optStr)
    }
    TMessage nameMess(kPROOF_DATASETS);
    nameMess << Int_t(kGetDataSet);
-   nameMess << TString(uri?uri:"");
-   nameMess << TString(optStr?optStr:"");
+   nameMess << TString(uri);
+   nameMess << TString(optStr ? optStr: "");
    if (Broadcast(nameMess) < 0)
       Error("GetDataSet", "sending request failed");
 
