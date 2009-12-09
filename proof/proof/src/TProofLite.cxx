@@ -594,10 +594,10 @@ void TProofLite::NotifyStartUp(const char *action, Int_t done, Int_t tot)
    Int_t frac = (Int_t) (done*100.)/tot;
    char msg[512] = {0};
    if (frac >= 100) {
-      sprintf(msg, "%s: OK (%d workers)                 \n",
+      snprintf(msg, 512, "%s: OK (%d workers)                 \n",
                    action, tot);
    } else {
-      sprintf(msg, "%s: %d out of %d (%d %%)\r",
+      snprintf(msg, 512, "%s: %d out of %d (%d %%)\r",
                    action, done, tot, frac);
    }
    fprintf(stderr,"%s", msg);
@@ -856,10 +856,14 @@ TProofQueryResult *TProofLite::MakeQueryResult(Long64_t nent, const char *opt,
    // Create a TProofQueryResult instance for this query.
 
    // Increment sequential number
-   if (fQMgr) fQMgr->IncrementSeqNum();
+   Int_t seqnum = -1;
+   if (fQMgr) {
+      fQMgr->IncrementSeqNum();
+      seqnum = fQMgr->SeqNum();
+   }
 
    // Create the instance and add it to the list
-   TProofQueryResult *pqr = new TProofQueryResult(fQMgr->SeqNum(), opt,
+   TProofQueryResult *pqr = new TProofQueryResult(seqnum, opt,
                                                   fPlayer->GetInputList(), nent,
                                                   fst, dset, selec,
                                                   (dset ? dset->GetEntryList() : 0));
@@ -898,39 +902,6 @@ void TProofLite::SetQueryRunning(TProofQueryResult *pq)
 
    // Bytes and CPU at start (we will calculate the differential at end)
    pq->SetProcessInfo(pq->GetEntries(), GetCpuTime(), GetBytesRead());
-}
-
-//______________________________________________________________________________
-TList *TProofLite::GetDataSet(const char *name)
-{
-   // Utility function used in various methods for user dataset upload.
-
-   TString fileListPath;
-   if (strchr(name, '~') == name) {
-      char *nameCopy = new char[strlen(name)];
-      strcpy(nameCopy, name + 1);
-      char *userName = strtok(nameCopy, "/");
-      if (strcmp(strtok(0, "/"), "public"))
-         return 0;
-      fileListPath = fWorkDir + "/../" + userName + "/"
-                     + kPROOF_DataSetDir + "/public/";
-      delete[] nameCopy;
-   } else if (strchr(name, '/') && strstr(name, "public") != name) {
-      Printf("Dataset name should be of form [[~user/]public/]dataset");
-      return 0;
-   } else
-      fileListPath = fDataSetDir + "/" + name + ".root";
-   TList *fileList = 0;
-   if (gSystem->AccessPathName(fileListPath.Data(), kFileExists) == kFALSE) {
-      TFile *f = TFile::Open(fileListPath);
-      f->cd();
-      fileList = (TList *) f->Get("fileList");
-      f->Close();
-      delete f;
-      if (strchr(name, '~') == name)  // not when allocated with Form
-         delete[] fileListPath;
-   }
-   return fileList;
 }
 
 //______________________________________________________________________________
@@ -994,7 +965,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       fRunningDSets->Delete();
    }
 
-   if (!IsValid() || !fQMgr) {
+   if (!IsValid() || !fQMgr || !fPlayer) {
       Error("Process", "invalid sesion or query-result manager undefined!");
       return -1;
    }
@@ -1004,7 +975,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    if (!fPlayer->GetInputList()->FindObject("PROOF_MaxSlavesPerNode"))
       SetParameter("PROOF_MaxSlavesPerNode", (Long_t)fNWorkers);
 
-   Bool_t hasNoData = (dset->TestBit(TDSet::kEmpty)) ? kTRUE : kFALSE;
+   Bool_t hasNoData = (!dset || dset->TestBit(TDSet::kEmpty)) ? kTRUE : kFALSE;
 
    // If just a name was given to identify the dataset, retrieve it from the
    // local files
@@ -1091,7 +1062,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    TNamed *qtag = (TNamed *) fPlayer->GetInputList()->FindObject("PROOF_QueryTag");
    if (qtag) {
       qtag->SetTitle(Form("%s:%s",pq->GetTitle(),pq->GetName()));
-   } else if (fPlayer) {
+   } else {
       TObject *o = fPlayer->GetInputList()->FindObject("PROOF_QueryTag");
       if (o) fPlayer->GetInputList()->Remove(o);
       fPlayer->AddInput(new TNamed("PROOF_QueryTag",
