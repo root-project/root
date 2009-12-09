@@ -61,7 +61,12 @@ TEventIter::TEventIter()
    fStop  = kFALSE;
    fOldBytesRead = 0;
    fEventList = 0;
+   fEventListPos = 0;
    fEntryList = 0;
+   fEntryListPos = 0;
+   fElemFirst = 0;
+   fElemNum = 0;
+   fElemCur = -1;
 }
 
 //______________________________________________________________________________
@@ -80,7 +85,11 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fEventList = 0;
    fEventListPos = 0;
    fEntryList = 0;
+   fEntryListPos = 0;
    fOldBytesRead = 0;
+   fElemFirst = 0;
+   fElemNum = 0;
+   fElemCur = -1;
 }
 
 //______________________________________________________________________________
@@ -296,7 +305,7 @@ Long64_t TEventIterObj::GetNextEvent()
       }
 
       fElem = fDSet->Next(fKeys->GetSize());
-      if (fElem->GetEntryList()) {
+      if (fElem && fElem->GetEntryList()) {
          Error("GetNextEvent", "Entry- or event-list not available");
          return -1;
       }
@@ -404,6 +413,8 @@ TEventIterTree::TEventIterTree()
 
    fTree = 0;
    fTreeCache = 0;
+   fUseTreeCache = 1;
+   fCacheSize = -1;
 }
 
 //______________________________________________________________________________
@@ -528,7 +539,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
    // Load a tree from s TDSetElement
 
    if (!e) {
-      Error("Load","undefined element", e->GetFileName());
+      Error("Load", "undefined element");
       return (TTree *)0;
    }
 
@@ -575,7 +586,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
       fFileTrees->Add(ft);
    } else {
       // Fill locality boolean
-      localfile = (ft) ? ft->fIsLocal : localfile;
+      localfile = ft->fIsLocal;
    }
 
    // Check if the tree is already loaded
