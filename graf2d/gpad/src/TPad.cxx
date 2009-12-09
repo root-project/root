@@ -143,6 +143,31 @@ TPad::TPad()
    fPadView3D  = 0;
    fMother     = (TPad*)gPad;
 
+   fAbsHNDC      = 0.;
+   fAbsPixeltoXk = 0.;
+   fAbsPixeltoYk = 0.;
+   fAbsWNDC      = 0.;
+   fAbsXlowNDC   = 0.;
+   fAbsYlowNDC   = 0.;
+   fBorderMode   = 0;
+   fBorderSize   = 0;
+   fPixeltoX     = 0;
+   fPixeltoXk    = 0.;
+   fPixeltoY     = 0.;
+   fPixeltoYk    = 0.;
+   fUtoAbsPixelk = 0.;
+   fUtoPixel     = 0.;
+   fUtoPixelk    = 0.;
+   fVtoAbsPixelk = 0.;
+   fVtoPixel     = 0.;
+   fVtoPixelk    = 0.;
+   fXtoAbsPixelk = 0.;
+   fXtoPixel     = 0.;
+   fXtoPixelk    = 0.;
+   fYtoAbsPixelk = 0.;
+   fYtoPixel     = 0.;
+   fYtoPixelk   = 0.;
+
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
 
@@ -2915,12 +2940,12 @@ void TPad::PaintDate()
    if (fCanvas == this && gStyle->GetOptDate()) {
       TDatime dt;
       const char *dates;
+      char iso[16];
       if (gStyle->GetOptDate() < 10) {
          //by default use format like "Wed Sep 25 17:10:35 2002"
          dates = dt.AsString();
       } else if (gStyle->GetOptDate() < 20) {
          //use ISO format like 2002-09-25
-         char iso[16];
          strncpy(iso,dt.AsSQLString(),10); iso[10] = 0;
          dates = iso;
       } else {
