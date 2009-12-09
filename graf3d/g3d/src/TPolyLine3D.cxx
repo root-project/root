@@ -122,17 +122,10 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *p, Option_t *option)
 
    fN = n;
    fP = new Float_t[3*fN];
-   if (n > 0) {
-      for (Int_t i=0; i<3*n; i++) {
-         fP[i] = p[i];
-      }
-      fLastPoint = fN-1;
-   } else {
-      for (Int_t i=0; i<3*fN; i++) {
-         fP[i] = 0;
-      }
-      fLastPoint = -1;
+   for (Int_t i=0; i<3*n; i++) {
+      fP[i] = p[i];
    }
+   fLastPoint = fN-1;
 }
 
 
@@ -153,17 +146,10 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *p, Option_t *option)
 
    fN = n;
    fP = new Float_t[3*fN];
-   if (n > 0) {
-      for (Int_t i=0; i<3*n; i++) {
-         fP[i] = (Float_t) p[i];
-      }
-      fLastPoint = fN-1;
-   } else {
-      for (Int_t i=0; i<3*fN; i++) {
-         fP[i] = 0;
-      }
-      fLastPoint = -1;
+   for (Int_t i=0; i<3*n; i++) {
+      fP[i] = (Float_t) p[i];
    }
+   fLastPoint = fN-1;
 }
 
 
@@ -185,19 +171,13 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *
    fN = n;
    fP = new Float_t[3*fN];
    Int_t j = 0;
-   if (n > 0) {
-      for (Int_t i=0; i<n;i++) {
-         fP[j]   = x[i];
-         fP[j+1] = y[i];
-         fP[j+2] = z[i];
-         j += 3;
-      }
-      fLastPoint = fN-1;
-   } else {
-      for (Int_t i=0; i<3*fN; i++) {
-         fP[i] = 0;
-      }
+   for (Int_t i=0; i<n;i++) {
+      fP[j]   = x[i];
+      fP[j+1] = y[i];
+      fP[j+2] = z[i];
+      j += 3;
    }
+   fLastPoint = fN-1;
 }
 
 
@@ -220,19 +200,13 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_
    fN = n;
    fP = new Float_t[3*fN];
    Int_t j = 0;
-   if (n > 0) {
-      for (Int_t i=0; i<n;i++) {
-         fP[j]   = (Float_t) x[i];
-         fP[j+1] = (Float_t) y[i];
-         fP[j+2] = (Float_t) z[i];
-         j += 3;
-      }
-      fLastPoint = fN-1;
-   } else {
-      for (Int_t i=0; i<3*fN; i++) {
-         fP[i] = 0;
-      }
+   for (Int_t i=0; i<n;i++) {
+      fP[j]   = (Float_t) x[i];
+      fP[j+1] = (Float_t) y[i];
+      fP[j+2] = (Float_t) z[i];
+      j += 3;
    }
+   fLastPoint = fN-1;
 }
 
 //______________________________________________________________________________
