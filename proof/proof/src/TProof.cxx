@@ -27,6 +27,7 @@
 #   include <io.h>
 #   include <sys/stat.h>
 #   include <sys/types.h>
+#   include "snprintf.h"
 #else
 #   include <unistd.h>
 #endif

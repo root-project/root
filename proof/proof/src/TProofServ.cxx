@@ -27,6 +27,7 @@
 #ifdef WIN32
    #include <process.h>
    #include <io.h>
+   #include "snprintf.h"
    typedef long off_t;
 #endif
 #include <errno.h>

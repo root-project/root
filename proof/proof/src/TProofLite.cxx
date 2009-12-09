@@ -24,6 +24,7 @@
 
 #ifdef WIN32
 #   include <io.h>
+#   include "snprintf.h"
 #endif
 #include "TDSet.h"
 #include "TEnv.h"
