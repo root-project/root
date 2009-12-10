@@ -169,6 +169,13 @@ Ssiz_t TStringRef::First(const char *cs) const
 }
 
 //______________________________________________________________________________
+static UInt_t SwapInt(UInt_t x)
+{
+   return (((x & 0x000000ffU) << 24) | ((x & 0x0000ff00U) <<  8) |
+           ((x & 0x00ff0000U) >>  8) | ((x & 0xff000000U) >> 24));
+}
+
+//______________________________________________________________________________
 inline static void Mash(UInt_t& hash, UInt_t chars)
 {
    // Utility used by Hash().
@@ -181,7 +188,7 @@ inline static void Mash(UInt_t& hash, UInt_t chars)
 //______________________________________________________________________________
 UInt_t Hash(const char *str)
 {
-   // Return a case-sensitive hash value.
+   // Return a case-sensitive hash value (endian independent).
 
    UInt_t len = str ? strlen(str) : 0;
    UInt_t hv  = len; // Mix in the string length.
@@ -191,8 +198,14 @@ UInt_t Hash(const char *str)
       // str is word aligned
       const UInt_t *p = (const UInt_t*)str;
 
-      while (i--)
+      while (i--) {
+#ifndef R__BYTESWAP
+         UInt_t h = *p++;
+         Mash(hv, SwapInt(h));
+#else
          Mash(hv, *p++);                   // XOR in the characters.
+#endif
+      }
 
       // XOR in any remaining characters:
       if ((i = len*sizeof(char)%sizeof(UInt_t)) != 0) {
@@ -209,7 +222,11 @@ UInt_t Hash(const char *str)
 
       while (i--) {
          memcpy(&h, p, sizeof(UInt_t));
+#ifndef R__BYTESWAP
+         Mash(hv, SwapInt(h));
+#else
          Mash(hv, h);
+#endif
          p += sizeof(UInt_t);
       }
 
@@ -228,14 +245,20 @@ UInt_t Hash(const char *str)
 //______________________________________________________________________________
 UInt_t TStringRef::Hash() const
 {
-   // Return a case-sensitive hash value.
+   // Return a case-sensitive hash value (endian independent).
 
    UInt_t hv       = (UInt_t)Length(); // Mix in the string length.
    UInt_t i        = hv*sizeof(char)/sizeof(UInt_t);
    const UInt_t *p = (const UInt_t*)Data();
    {
-      while (i--)
+      while (i--) {
+#ifndef R__BYTESWAP
+         UInt_t h = *p++;
+         Mash(hv, SwapInt(h));             // XOR in the characters.
+#else
          Mash(hv, *p++);                   // XOR in the characters.
+#endif
+      }
    }
    // XOR in any remaining characters:
    if ((i = Length()*sizeof(char)%sizeof(UInt_t)) != 0) {
@@ -251,7 +274,7 @@ UInt_t TStringRef::Hash() const
 //______________________________________________________________________________
 UInt_t TStringRef::HashFoldCase() const
 {
-   // Return a case-insensitive hash value.
+   // Return a case-insensitive hash value (endian independent).
 
    UInt_t hv = (UInt_t)Length();    // Mix in the string length.
    UInt_t i  = hv;
