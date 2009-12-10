@@ -57,6 +57,9 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot()
   fLineColor = 0;
   fMaximum = 2.;
   fNPoints = 40;
+  fXmin = 0;
+  fXmax = -1;
+  fPrecision = -1; // use default 
 }
 
 //_______________________________________________________
@@ -71,6 +74,9 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
   fFillStyle = 4050; // half transparent
   fMaximum = 2.;
   fNPoints = 40;
+  fXmin = 0;
+  fXmax = -1;
+  fPrecision = -1; // use default 
 }
 
 //_______________________________________________________
@@ -98,6 +104,7 @@ void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params)
   return;
 }
 
+
 //_____________________________________________________________________________
 void LikelihoodIntervalPlot::Draw(const Option_t *options) 
 {
@@ -116,17 +123,23 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
    // analyze options 
    TString opt = options; 
    opt.ToLower(); 
-   // use ROoPLot for drawing the 1D PL
-   bool useRooPlot = opt.Contains("rooplot");
+   // use RooPLot for drawing the 1D PL
+   // if option is TF1 use TF1 for drawing
+   bool useRooPlot = opt.Contains("rooplot") ||  ! (opt.Contains("tf1"));
    opt.ReplaceAll("rooplot","");
+   opt.ReplaceAll("tf1","");
    // use Minuit for drawing the contours of the PL 
    bool useMinuit = !opt.Contains("nominuit");
    opt.ReplaceAll("nominuit","");
 
    RooPlot * frame = 0; 
+
+   TString title = GetTitle(); 
    
    if(fNdimPlot == 1){
 
+      if (title.Length() == 0) 
+         title = "- log profile likelihood ratio";
       
 
       const Double_t xcont_min = fInterval->LowerLimit(*myparam);
@@ -143,9 +156,9 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          // set a first estimate of range including 2 times upper and lower limit
          double xmin = std::max( x1, 2*xcont_min - xcont_max); 
          double xmax = std::min( x2, 2*xcont_max - xcont_min); 
+         if (fXmin < fXmax) { xmin = fXmin; xmax = fXmax; }
          
          TF1 * tmp = newProfile->asTF(*myarg); 
-         //std::cout << "setting range to " << xmin << " , " << xmax << std::endl;
          tmp->SetRange(xmin, xmax);      
          tmp->SetNpx(fNPoints);
 
@@ -153,14 +166,15 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          TF1 * f1 = (TF1*) tmp->Clone(); 
          delete tmp;
          
-         f1->SetTitle("- log profile likelihood ratio");
+         f1->SetTitle(title);
          TString name = TString(GetName()) + TString("_PLL_") + TString(myarg->GetName());
          f1->SetName(name);
          
          // set range for displaying x values where function <=  fMaximum
+         // if no range is set amd 
          // if no reasanable value found mantain first estimate
          x1 = xmin; x2 = xmax;  
-         if (fMaximum > 0) { 
+         if (fMaximum > 0 && fXmin >= fXmax ) { 
             double x0 = f1->GetX(0, xmin, xmax);
             // check that minimum is between xmin and xmax
             if ( x0 > x1 && x0 < x2) { 
@@ -181,13 +195,20 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       } 
       else { 
-         // use a RooPlot for drawing the PL function
-         frame = myarg->frame();
-         frame->SetTitle(GetTitle());
+         // use a RooPlot for drawing the PL function        
+         double xmin = myparam->getMin(); double xmax =  myparam->getMax();
+         if (fXmin < fXmax) { xmin = fXmin; xmax = fXmax; }  
+
+         // want to set range on frame not function
+         frame = myarg->frame(xmin,xmax);
+         frame->SetTitle(title);
          frame->GetYaxis()->SetTitle("- log #lambda");
          //    frame->GetYaxis()->SetTitle("- log profile likelihood ratio");
          
-         newProfile->plotOn(frame); 
+         // plot 
+         RooCmdArg cmd; 
+         if (fPrecision > 0) cmd = RooFit::Precision(fPrecision); 
+         newProfile->plotOn(frame,cmd); 
          
          frame->SetMaximum(fMaximum);
          frame->SetMinimum(0.);
@@ -216,7 +237,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          frame->addObject(Yline_min);
          frame->addObject(Yline_max);
          frame->addObject(Yline_cutoff);
-         frame->Draw();
+         frame->Draw(opt);
       }
       
 
@@ -241,13 +262,17 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       // do a profile evaluation to start from the best fit values of parameters 
       newProfile->getVal(); 
 
+      if (title.Length() == 0)
+         title = TString("Contour of ") + TString(myparamY->GetName() ) + TString(" vs ") + TString(myparam->GetName() ); 
+
+
       if (!useMinuit) { 
       
          // draw directly the TH2 from the profile LL
          TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparam,RooFit::YVar(*myparamY),RooFit::Binning(fNPoints),RooFit::Scaling(kFALSE));
 
 
-         hist2D->SetTitle(GetTitle());
+         hist2D->SetTitle(title);
          hist2D->SetStats(kFALSE);
 
          hist2D->SetContour(1,&cont_level);
@@ -295,8 +320,13 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          opt.Append("LF");
          // draw first a dummy 2d histogram gfor the axis 
          if (!opt.Contains("same")) { 
-            TString title = TString("Contour of ") + TString(myparamY->GetName() ) + TString(" vs ") + TString(myparam->GetName() ); 
-            TH2F* hist2D = new TH2F("_hist2D",title, fNPoints, myparam->getMin(), myparam->getMax(), fNPoints, myparamY->getMin(), myparamY->getMax() );
+
+            double xmin = myparam->getMin(); double xmax =  myparam->getMax();
+            double ymin = myparamY->getMin(); double ymax =  myparamY->getMax();
+            if (fXmin < fXmax) { xmin = fXmin; xmax = fXmax; }  
+            if (fYmin < fYmax) { ymin = fYmin; ymax = fYmax; }  
+
+            TH2F* hist2D = new TH2F("_hist2D",title, fNPoints, xmin, xmax, fNPoints, ymin, ymax );
             hist2D->GetXaxis()->SetTitle(myparamY->GetName());
             hist2D->GetYaxis()->SetTitle(myparam->GetName());
             hist2D->SetBit(TH1::kNoStats); // do not draw statistics
