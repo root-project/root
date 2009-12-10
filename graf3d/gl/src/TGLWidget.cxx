@@ -406,6 +406,9 @@ namespace {
          format.push_back(1);
       }
 
+      if (request.IsStereo())
+        format.push_back(GLX_STEREO);
+
       format.push_back(None);
    }
 }

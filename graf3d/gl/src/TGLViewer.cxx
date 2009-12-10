@@ -112,6 +112,11 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
 
+   fStereo               (kFALSE),
+   fStereoZeroParallax   (0.03f),
+   fStereoEyeOffsetFac   (1.0f),
+   fStereoFrustumAsymFac (1.0f),
+
    fLightSet          (0),
    fClipSet           (0),
    fClipAutoUpdate    (kTRUE),
@@ -169,6 +174,11 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
    fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
+
+   fStereo               (kFALSE),
+   fStereoZeroParallax   (0.03f),
+   fStereoEyeOffsetFac   (1.0f),
+   fStereoFrustumAsymFac (1.0f),
 
    fLightSet          (0),
    fClipSet           (0),
@@ -506,7 +516,7 @@ void TGLViewer::PostRender()
 //______________________________________________________________________________
 void TGLViewer::DoDraw()
 {
-   // Draw out the the current viewer/scene
+   // Draw out the viewer.
 
    // Locking mainly for Win32 multi thread safety - but no harm in all using it
    // During normal draws a draw lock is taken in other thread (Win32) in RequestDraw()
@@ -545,38 +555,16 @@ void TGLViewer::DoDraw()
    fRnrCtx->SetRenderTimeOut(fLOD == TGLRnrCtx::kLODHigh ?
                              fMaxSceneDrawTimeHQ :
                              fMaxSceneDrawTimeLQ);
-   fRnrCtx->StartStopwatch();
 
-   // GL pre draw setup
-   if (!fIsPrinting) PreDraw();
-
-   PreRender();
-
-   if (fFader < 1)
+   if (fStereo && fCurrentCamera->IsPerspective() && !fRnrCtx->GetGrabImage() &&
+       !fIsPrinting)
    {
-      RenderNonSelected();
-      RenderSelected();
-      DrawGuides();
-      RenderOverlay();
-
-      glClear(GL_DEPTH_BUFFER_BIT);
-      fRnrCtx->SetHighlight(kTRUE);
-      RenderSelected();
-      fRnrCtx->SetHighlight(kFALSE);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      DrawDebugInfo();
+      DoDrawStereo();
    }
-
-   PostRender();
-
-   if (fFader > 0)
+   else
    {
-      FadeView(fFader);
+      DoDrawMono();
    }
-
-   PostDraw();
-
-   fRnrCtx->StopStopwatch();
 
    ReleaseLock(kDrawLock);
 
@@ -598,6 +586,153 @@ void TGLViewer::DoDraw()
       // Request final draw pass.
       fRedrawTimer->RequestDraw(100, TGLRnrCtx::kLODHigh);
    }
+}
+
+//______________________________________________________________________________
+void TGLViewer::DoDrawMono()
+{
+   // Draw out in monoscopic mode.
+
+   MakeCurrent();
+
+   glDrawBuffer(GL_BACK);
+   if (!fIsPrinting) PreDraw();
+   PreRender();
+
+   fRnrCtx->StartStopwatch();
+   if (fFader < 1)
+   {
+      RenderNonSelected();
+      RenderSelected();
+      DrawGuides();
+      RenderOverlay();
+
+      glClear(GL_DEPTH_BUFFER_BIT);
+      fRnrCtx->SetHighlight(kTRUE);
+      RenderSelected();
+      fRnrCtx->SetHighlight(kFALSE);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      DrawDebugInfo();
+   }
+   fRnrCtx->StopStopwatch();
+
+   PostRender();
+
+   if (fFader > 0)
+   {
+      FadeView(fFader);
+   }
+
+   PostDraw();
+
+   SwapBuffers();
+}
+
+//______________________________________________________________________________
+void TGLViewer::DoDrawStereo()
+{
+   // Draw out in stereoscopic mode.
+
+   TGLPerspectiveCamera &c = *dynamic_cast<TGLPerspectiveCamera*>(fCurrentCamera);
+
+   Float_t near, far, zero_p_dist;
+   Float_t h_half, w_half;
+   Float_t x_len_at_zero_parallax;
+   Float_t stereo_offset;
+   Float_t frustum_asym;
+
+   MakeCurrent();
+
+   // Draw left
+   glDrawBuffer(GL_BACK_LEFT);
+   PreDraw();
+   PreRender();
+
+   near = c.GetNearClip();
+   far  = c.GetFarClip();
+   zero_p_dist = near + fStereoZeroParallax*(far-near);
+
+   h_half = TMath::Tan(0.5*TMath::DegToRad()*c.GetFOV()) * near;
+   w_half = h_half * fViewport.Aspect();
+
+   x_len_at_zero_parallax = 2.0f * w_half * zero_p_dist / near;
+   stereo_offset = 0.035f * x_len_at_zero_parallax * fStereoEyeOffsetFac;
+
+   frustum_asym = stereo_offset * near / zero_p_dist * fStereoFrustumAsymFac;
+
+   glTranslatef(-stereo_offset, 0, 0);
+
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glFrustum(-w_half + frustum_asym, w_half + frustum_asym,
+             -h_half, h_half, near, far);
+   glMatrixMode(GL_MODELVIEW);
+
+   fRnrCtx->StartStopwatch();
+   if (fFader < 1)
+   {
+      RenderNonSelected();
+      RenderSelected();
+      DrawGuides();
+      RenderOverlay();
+
+      glClear(GL_DEPTH_BUFFER_BIT);
+      fRnrCtx->SetHighlight(kTRUE);
+      RenderSelected();
+      fRnrCtx->SetHighlight(kFALSE);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      DrawDebugInfo();
+   }
+   fRnrCtx->StopStopwatch();
+
+   PostRender();
+
+   if (fFader > 0)
+   {
+      FadeView(fFader);
+   }
+   PostDraw();
+
+   // Draw right
+   glDrawBuffer(GL_BACK_RIGHT);
+   PreDraw();
+   PreRender();
+
+   glTranslatef(stereo_offset, 0, 0);
+
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glFrustum(-w_half - frustum_asym, w_half - frustum_asym,
+             -h_half, h_half, near, far);
+   glMatrixMode(GL_MODELVIEW);
+
+   fRnrCtx->StartStopwatch();
+   if (fFader < 1)
+   {
+      RenderNonSelected();
+      RenderSelected();
+      DrawGuides();
+      RenderOverlay();
+
+      glClear(GL_DEPTH_BUFFER_BIT);
+      fRnrCtx->SetHighlight(kTRUE);
+      RenderSelected();
+      fRnrCtx->SetHighlight(kFALSE);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      DrawDebugInfo();
+   }
+   fRnrCtx->StopStopwatch();
+
+   PostRender();
+
+   if (fFader > 0)
+   {
+      FadeView(fFader);
+   }
+   PostDraw();
+
+   // End
+   SwapBuffers();
 }
 
 //______________________________________________________________________________
@@ -882,8 +1017,8 @@ void TGLViewer::DrawDebugInfo()
 //______________________________________________________________________________
 void TGLViewer::PreDraw()
 {
-   // Perform GL work which must be done before each draw of scene
-   MakeCurrent();
+   // Perform GL work which must be done before each draw.
+
    // Initialise GL if not done
    if (!fInitGL) {
       InitGL();
@@ -910,7 +1045,8 @@ void TGLViewer::PreDraw()
 //______________________________________________________________________________
 void TGLViewer::PostDraw()
 {
-   // Perform GL work which must be done after each draw of scene
+   // Perform GL work which must be done after each draw.
+
    glFlush();
    if (fRnrCtx->GetGrabImage())
    {
@@ -925,7 +1061,6 @@ void TGLViewer::PostDraw()
 
       fRnrCtx->SetGrabbedImage(xx);
    }
-   SwapBuffers();
 
    TGLUtil::CheckError("TGLViewer::PostDraw");
 }

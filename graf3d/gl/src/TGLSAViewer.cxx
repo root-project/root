@@ -34,6 +34,7 @@
 #include "TGFileDialog.h"
 
 #include "TGLOutput.h"
+#include "TGLFormat.h"
 
 #include "TGLLogicalShape.h"
 #include "TGLPhysicalShape.h"
@@ -197,9 +198,10 @@ const char *gGLSaveAsTypes[] = {"Encapsulated PostScript", "*.eps",
                                 0, 0};
 
 //______________________________________________________________________________
-TGLSAViewer::TGLSAViewer(TVirtualPad *pad) :
+TGLSAViewer::TGLSAViewer(TVirtualPad *pad, TGLFormat* format) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
+   fFormat(format),
    fFileMenu(0),
    fFileSaveMenu(0),
    fCameraMenu(0),
@@ -242,9 +244,11 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad) :
 }
 
 //______________________________________________________________________________
-TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged) :
+TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged,
+                         TGLFormat* format) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
+   fFormat(format),
    fFileMenu(0),
    fCameraMenu(0),
    fHelpMenu(0),
@@ -257,6 +261,8 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
    fDeleteMenuBar(kFALSE)
 {
    // Construct an embedded standalone viewer, bound to supplied 'pad'.
+   // If format is passed, it gets adopted by the viewer as it might
+   // need to be reused several times when recreating the GL-widget.
    //
    // Modified version of the previous constructor for embedding the
    // viewer into another frame (parent).
@@ -299,6 +305,7 @@ TGLSAViewer::~TGLSAViewer()
    if(fDeleteMenuBar) {
       delete fMenuBar;
    }
+   delete fFormat;
    delete fFrame;
    fGLWidget = 0;
 }
@@ -322,9 +329,12 @@ void TGLSAViewer::CreateGLWidget()
       return;
    }
 
+   if (fFormat == 0)
+      fFormat = new TGLFormat;
+
    ResetInitGL();
 
-   fGLWidget = TGLWidget::Create(fRightVerticalFrame, kTRUE, kTRUE, 0, 10, 10);
+   fGLWidget = TGLWidget::Create(*fFormat, fRightVerticalFrame, kTRUE, kTRUE, 0, 10, 10);
    fGLWidget->SetEventHandler(fEventHandler);
 
    fRightVerticalFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));

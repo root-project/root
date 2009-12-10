@@ -83,10 +83,16 @@ protected:
    TGLOrthoCamera       fOrthoXOYCamera;       //!
    TGLOrthoCamera       fOrthoXOZCamera;       //!
    TGLOrthoCamera       fOrthoZOYCamera;       //!
-   TGLOrthoCamera       fOrthoXnOYCamera;       //!
-   TGLOrthoCamera       fOrthoXnOZCamera;       //!
-   TGLOrthoCamera       fOrthoZnOYCamera;       //!
+   TGLOrthoCamera       fOrthoXnOYCamera;      //!
+   TGLOrthoCamera       fOrthoXnOZCamera;      //!
+   TGLOrthoCamera       fOrthoZnOYCamera;      //!
    TGLCamera           *fCurrentCamera;        //!
+
+   // Stereo
+   Bool_t               fStereo;               //! use stereo rendering
+   Float_t              fStereoZeroParallax;   //! position of zero-parallax plane: 0 - near clipping plane, 1 - far clipping plane
+   Float_t              fStereoEyeOffsetFac;   //!
+   Float_t              fStereoFrustumAsymFac; //!
 
    // Lights
    TGLLightSet         *fLightSet;             //!
@@ -263,6 +269,18 @@ public:
    TGLCameraOverlay* GetCameraOverlay() const { return fCameraOverlay; }
    void SetCameraOverlay(TGLCameraOverlay* m) { fCameraOverlay = m; }
 
+   // Stereo
+   Bool_t  GetStereo()               const { return fStereo; }
+   Float_t GetStereoZeroParallax()   const { return fStereoZeroParallax;   }
+   Float_t GetStereoEyeOffsetFac()   const { return fStereoEyeOffsetFac;   }
+   Float_t GetStereoFrustumAsymFac() const { return fStereoFrustumAsymFac; }
+
+   void SetStereo(Bool_t s)                { fStereo = s; }
+   void SetStereoZeroParallax(Float_t f)   { fStereoZeroParallax   = f; }
+   void SetStereoEyeOffsetFac(Float_t f)   { fStereoEyeOffsetFac   = f; }
+   void SetStereoFrustumAsymFac(Float_t f) { fStereoFrustumAsymFac = f; }
+
+   // Push / drag action
    EPushAction GetPushAction() const { return fPushAction; }
    EDragAction GetDragAction() const { return fDragAction; }
 
@@ -282,6 +300,8 @@ public:
    virtual void PreRender();
    virtual void PostRender();
    void DoDraw();
+   void DoDrawMono();
+   void DoDrawStereo();
 
    void DrawGuides();
    void DrawDebugInfo();

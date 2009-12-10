@@ -37,14 +37,17 @@ public:
       kDoubleBuffer = 1,
       kDepth        = 2,
       kAccum        = 4,
-      kStencil      = 8
+      kStencil      = 8,
+      kStereo       = 16
    };
 
 private:
    Bool_t fDoubleBuffered;
+   Bool_t fStereo;
    UInt_t fDepthSize;
    UInt_t fAccumSize;
    UInt_t fStencilSize;
+   
 
 public:
    TGLFormat();
@@ -71,6 +74,9 @@ public:
 
    Bool_t IsDoubleBuffered()const;
    void   SetDoubleBuffered(Bool_t db);
+
+   Bool_t IsStereo()const;
+   void   SetStereo(Bool_t db);
 
    ClassDef(TGLFormat, 0) // Describes GL buffer format.
 };

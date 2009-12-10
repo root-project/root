@@ -16,6 +16,7 @@
 #include "TString.h"
 
 class TGLSAFrame;
+class TGLFormat;
 class TGWindow;
 class TGFrame;
 class TGCompositeFrame;
@@ -49,6 +50,7 @@ public:
 private:
    // GUI components
    TGLSAFrame        *fFrame;
+   TGLFormat         *fFormat;
    TGPopupMenu       *fFileMenu;
    TGPopupMenu       *fFileSaveMenu;
    TGPopupMenu       *fCameraMenu;
@@ -84,8 +86,9 @@ private:
    TGLSAViewer & operator = (const TGLSAViewer &);
 
 public:
-   TGLSAViewer(TVirtualPad *pad);
-   TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged=0);
+   TGLSAViewer(TVirtualPad* pad, TGLFormat* format=0);
+   TGLSAViewer(const TGWindow* parent, TVirtualPad *pad, TGedEditor *ged=0,
+               TGLFormat* format=0);
    ~TGLSAViewer();
 
    virtual void CreateGLWidget();
@@ -108,6 +111,8 @@ public:
 
    TGCompositeFrame* GetFrame() const;
    TGCompositeFrame* GetLeftVerticalFrame() const { return fLeftVerticalFrame; }
+
+   TGLFormat*        GetFormat() const { return fFormat; }
 
    void ToggleEditObject();
    void ToggleOrthoRotate();

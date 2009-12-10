@@ -150,3 +150,17 @@ void TGLFormat::SetDoubleBuffered(Bool_t db)
    //Set the surface as double/single buffered.
    fDoubleBuffered = db;
 }
+
+//______________________________________________________________________________
+Bool_t TGLFormat::IsStereo()const
+{
+   //Check, if the surface is stereo buffered.
+   return fStereo;
+}
+
+//______________________________________________________________________________
+void TGLFormat::SetStereo(Bool_t db)
+{
+   //Set the surface as stereo/non-stereo buffered.
+   fStereo = db;
+}

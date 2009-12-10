@@ -42,6 +42,8 @@ public:
 
    virtual Bool_t IsPerspective() const { return kTRUE; }
 
+   Double_t GetFOV() const { return fFOV; }
+
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE);
    virtual void   Reset();
    virtual Bool_t Zoom (Int_t delta, Bool_t mod1, Bool_t mod2);
