@@ -2040,7 +2040,6 @@ TestFileList::~TestFileList()
    // Cleanup.
 
    delete fContents;
-   delete fMenu;
    fMain->DeleteWindow();  // deletes fMain
 }
 
