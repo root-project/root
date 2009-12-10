@@ -4509,7 +4509,7 @@ extern "C" {
 G__value G__alloc_exceptionbuffer(int tagnum)
 {
    // -- FIXME: Describe this function!
-   G__value buf;
+   G__value buf = G__null;
    /* create class object */
    buf.obj.i = (long)malloc((size_t)G__struct.size[tagnum]);
    buf.obj.reftype.reftype = G__PARANORMAL;
