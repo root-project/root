@@ -948,7 +948,8 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //                    Use this option when you want to fix one or more parameters for these functions.
    //             = "M"  More. Improve fit results. 
    //                    It uses the IMPROVE command of TMinuit (see TMinuit::mnimpr) 
-   //                    This algorithm attempts to improve the found local minimum by searching for a better one.
+   //                    This algorithm attempts to improve the found local minimum by 
+   //                    searching for a better one.
    //             = "R" Use the Range specified in the function range
    //             = "N" Do not store the graphics function, do not draw
    //             = "0" Do not plot the result of the fit. By default the fitted function
@@ -1039,9 +1040,9 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //      Access to the fit result 
    //      ========================  
    //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-   //  By default the TFitResultPtr contains only the status of the fit and it converts automatically to an
-   //  integer. If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart 
-   //  pointer to it. For example one can do: 
+   //  By default the TFitResultPtr contains only the status of the fit and it converts
+   //  automatically to an integer. If the option "S" is instead used, TFitResultPtr contains
+   //  the TFitResult and behaves as a smart pointer to it. For example one can do: 
    //     TFitResult r    = graph->Fit("myFunc","S");
    //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
    //     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0 
@@ -1134,12 +1135,13 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //      Access to the fit result 
    //   ========================
    //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-   //  By default the TFitResultPtr contains only the status of the fit which is return by an automatic conversion of 
-   //  the TFitResultPtr to an integer. One can write in this case directly: 
+   //  By default the TFitResultPtr contains only the status of the fit which is return by an
+   //  automatic conversion of the TFitResultPtr to an integer. One can write in this case
+   //  directly: 
    //  Int_t fitStatus =  h->Fit(myFunc)  
    //
-   //  If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart 
-   //  pointer to it. For example one can do: 
+   //  If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves 
+   //  as a smart pointer to it. For example one can do: 
    //  TFitResultPtr r = h->Fit(myFunc,"S");
    //  TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
    //  Double_t chi2   = r->Chi2(); // to retrieve the fit chi2 
@@ -1166,20 +1168,21 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //  TFitResultPtr r = h=>Fit(myFunc,opt);
    //  Int_t fitStatus = r; 
    //
-   //  The fitStatus is 0 if the fit is OK (i.e no error occurred). 
-   //  The value of the fit status code is negative in case of an error not connected with the minimization 
-   //  procedure, for example  when a wrong function is used. 
+   //  The fitStatus is 0 if the fit is OK (i.e. no error occurred). 
+   //  The value of the fit status code is negative in case of an error not connected with the
+   //  minimization procedure, for example when a wrong function is used. 
    //  Otherwise the return value is the one returned from the minimization procedure.
    //  When TMinuit (default case) or Minuit2 are used as minimizer the status returned is :
    //  fitStatus =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult.
-   //  TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in case of error
-   //  (see the documentation of TMinuit::mnexcm). So for example, for an error only in Minos but not in Migrad a fitStatus of 40 
-   //  will be returned. 
-   //  Minuit2 will return also 0 in case of success and different values in migrad minos or hesse depending on the error. 
-   //  See in this case the documentation of Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the 
+   //  TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in
+   //  case of error (see the documentation of TMinuit::mnexcm). So for example, for an error
+   //  only in Minos but not in Migrad a fitStatus of 40 will be returned. 
+   //  Minuit2 will return also 0 in case of success and different values in migrad, minos or
+   //  hesse depending on the error.   See in this case the documentation of 
+   //  Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the 
    //  minosResult and Minuit2Minimizer::Hesse for the hesseResult.
-   //  If other minimizers are used see their specific documentation for the status code returned. For example in the case of Fumili, 
-   //  for the status returned see TFumili::Minimize.   
+   //  If other minimizers are used see their specific documentation for the status code
+   //  returned. For example in the case of Fumili, for the status returned see TFumili::Minimize.
    //
 
    Foption_t fitOption;
@@ -1598,7 +1601,7 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
    // you have to deal with. The most evident solution would be to divide the polygon in triangles and
    // calculate the surface of them. But this can quickly become complicated as you will have to test
    // every segments of every triangles and check if they are intersecting with a current polygon's
-   // segment or if it goes outside the polygon. Many calculations that would lead to many problems…
+   // segment or if it goes outside the polygon. Many calculations that would lead to many problems...
    //      The solution (implemented by R.Brun)
    // Fortunately for us, there is a simple way to solve this problem, as long as the polygon's
    // segments don't intersect.
