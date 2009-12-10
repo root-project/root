@@ -1795,8 +1795,10 @@ G__value G__getfunction_libp(const char* item, char* funcname, G__param* libp, i
       result7.Format("*%s", funcname);
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
-      p2ffpara = libp;
-      result3 = G__pointer2func((G__value*)NULL, result7, pfparam, known3);
+      if (pfparam) {
+         p2ffpara = libp;
+         result3 = G__pointer2func((G__value*)NULL, result7, pfparam, known3);
+      }
       p2ffpara = (struct G__param*)NULL;
       if (*known3) {
          G__exec_memberfunc = store_exec_memberfunc;
@@ -3084,8 +3086,8 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
       if (pfparam) {
          p2ffpara = &fpara;
          result3 = G__pointer2func((G__value*)NULL, result7, pfparam, known3);
-         p2ffpara = (struct G__param*)NULL;
       }
+      p2ffpara = (struct G__param*)NULL;
       if (*known3) {
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
