@@ -557,7 +557,7 @@ void G__TypeReader::Init(G__TypeInfo& x) {
 
 /////////////////////////////////////////////////////////////////////////
 G__value G__TypeReader::GetValue() const {
-  G__value x;
+  G__value x = G__null;
   x.type = type;
   x.typenum = typenum;
   x.tagnum = tagnum;
