@@ -839,9 +839,9 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
 {
    // Create a Upload DataSet dialog box. Used to create and upload a dataset
 
+   fUploading = kFALSE;
    if (!gui) return;
    fViewer = gui;
-   fUploading = kFALSE;
 
    SetCleanup(kDeepCleanup);
    TGHorizontalFrame *hFrame1 = new TGHorizontalFrame(this);

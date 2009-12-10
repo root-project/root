@@ -2333,6 +2333,14 @@ TSessionQueryFrame::TSessionQueryFrame(TGWindow* p, Int_t w, Int_t h) :
    TGCompositeFrame(p, w, h)
 {
    // Constructor
+
+   fEntries = 0;
+   fFiles = 0;
+   fFirst = 0;
+   fModified = 0;
+   fPrevProcessed = 0;
+   fPrevTotal = 0;
+   fStatus = kStopped;
 }
 
 //______________________________________________________________________________
@@ -3857,7 +3865,7 @@ void TSessionViewer::UpdateListOfProofs()
       TObject *o = proofs->First();
       if (o && dynamic_cast<TProofMgr *>(o)) {
          TProofMgr *mgr = dynamic_cast<TProofMgr *>(o);
-         if (mgr->QuerySessions("L")) {
+         if (mgr && mgr->QuerySessions("L")) {
             TIter nxd(mgr->QuerySessions("L"));
             TProofDesc *d = 0;
             TProof *p = 0;
@@ -4245,6 +4253,9 @@ void TSessionViewer::Build()
    fLogWindow = 0;
    fBusy = kFALSE;
    fAutoSave = kTRUE;
+   fChangePic = kFALSE;
+   fStart = fElapsed = 0;
+
    SetCleanup(kDeepCleanup);
    // set minimun size
    SetWMSizeHints(400 + 200, 370+50, 2000, 1000, 1, 1);
@@ -5192,6 +5203,7 @@ void TSessionViewer::StartViewer()
       (obj = query->fResult->GetInputObject("TDSet"))) {
       query->fChain = (TDSet *) obj;
    }
+   if (!query->fChain) return;
    if (query->fChain->IsA() == TChain::Class())
       ((TChain *)query->fChain)->StartViewer();
    else if (query->fChain->IsA() == TDSet::Class())

@@ -462,7 +462,7 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    fStop->SetState(kButtonUp);
    fAbort->SetState(kButtonUp);
    fClose->SetState(kButtonDisabled);
-   if (fProof->IsSync() && fProof->GetRemoteProtocol() >= 22) {
+   if (fProof && fProof->IsSync() && fProof->GetRemoteProtocol() >= 22) {
       fAsyn->SetState(kButtonUp);
    } else {
       fAsyn->SetState(kButtonDisabled);
