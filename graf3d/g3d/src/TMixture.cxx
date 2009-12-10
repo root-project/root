@@ -19,40 +19,38 @@ ClassImp(TMixture)
 // Manages a detector mixture. See class TGeometry.
 //
 
+
 //______________________________________________________________________________
 TMixture::TMixture()
 {
-//*-*-*-*-*-*-*-*-*-*-*Mixture default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Mixture default constructor.
 
    fAmixt = 0;
    fZmixt = 0;
    fWmixt = 0;
-
+   fNmixt = 0;
 }
+
 
 //______________________________________________________________________________
 TMixture::TMixture(const char *name, const char *title, Int_t nmixt)
            :TMaterial(name,title,0,0,0)
 {
-//*-*-*-*-*-*-*-*-*-*-*Mixture normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
-//*-*
-//*-*       Defines mixture OR COMPOUND as composed by
-//*-*       the basic nmixt materials defined later by DefineElement.
-//*-*
-//*-*       If nmixt > 0 then Wmixt contains the PROPORTION BY WEIGHTS
-//*-*       of each basic material in the mixture.
-//*-*
-//*-*       If nmixt < 0 then Wmixt contains the number of atoms
-//*-*       of a given kind into the molecule of the COMPOUND
-//*-*       In this case, Wmixt is changed to relative weights.                                                 *
-//*-*
-//*-*       nb : the radiation length is computed according
-//*-*            the EGS manual slac-210 uc-32 June-78
-//*-*                          formula  2-6-8 (37)
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Mixture normal constructor
+   //
+   //       Defines mixture OR COMPOUND as composed by
+   //       the basic nmixt materials defined later by DefineElement.
+   //
+   //       If nmixt > 0 then Wmixt contains the PROPORTION BY WEIGHTS
+   //       of each basic material in the mixture.
+   //
+   //       If nmixt < 0 then Wmixt contains the number of atoms
+   //       of a given kind into the molecule of the COMPOUND
+   //       In this case, Wmixt is changed to relative weights.
+   //
+   //       nb : the radiation length is computed according
+   //            the EGS manual slac-210 uc-32 June-78
+   //                          formula  2-6-8 (37)
 
    if (nmixt == 0) {
       fAmixt = 0;
@@ -73,8 +71,7 @@ TMixture::TMixture(const char *name, const char *title, Int_t nmixt)
 //______________________________________________________________________________
 TMixture::~TMixture()
 {
-//*-*-*-*-*-*-*-*-*-*-*Mixture default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Mixture default destructor.
 
    delete [] fAmixt;
    delete [] fZmixt;
@@ -84,11 +81,11 @@ TMixture::~TMixture()
    fWmixt = 0;
 }
 
+
 //______________________________________________________________________________
 void TMixture::DefineElement(Int_t n, Float_t a, Float_t z, Float_t w)
 {
-//*-*-*-*-*-*-*-*-*-*-*Define one mixture element*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==========================
+   // Define one mixture element.
 
    if (n < 0 || n >= TMath::Abs(fNmixt)) return;
    fAmixt[n] = a;
@@ -96,11 +93,12 @@ void TMixture::DefineElement(Int_t n, Float_t a, Float_t z, Float_t w)
    fWmixt[n] = w;
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 void TMixture::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+   // Stream a class object.
+
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       b.ReadVersion(&R__s, &R__c);
@@ -125,4 +123,3 @@ void TMixture::Streamer(TBuffer &b)
       b.SetByteCount(R__c, kTRUE);
    }
 }
-

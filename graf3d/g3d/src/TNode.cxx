@@ -65,6 +65,7 @@ TNode::TNode()
    fShape  = 0;
    fNodes  = 0;
    fVisibility = 1;
+   fX = fY = fZ = 0;
 }
 
 

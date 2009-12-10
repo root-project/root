@@ -22,20 +22,22 @@ ClassImp(TMaterial)
 //______________________________________________________________________________
 TMaterial::TMaterial()
 {
-//*-*-*-*-*-*-*-*-*-*-*Material default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Material default constructor.
 
-   //do nothing
+   fA = 0;
+   fDensity = 0;
+   fInterLength = 0;
+   fNumber = 0;
+   fRadLength = 0;
+   fZ = 0;
 }
-
 
 
 //______________________________________________________________________________
 TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density)
            :TNamed(name,title), TAttFill(0,1)
 {
-//*-*-*-*-*-*-*-*-*-*-*Material normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Material normal constructor.
 
    if (!gGeometry) gGeometry = new TGeometry("Geometry","Default Geometry");
    fA       = a;
@@ -48,13 +50,11 @@ TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, 
 }
 
 
-
 //______________________________________________________________________________
 TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density, Float_t radl, Float_t inter)
            :TNamed(name,title), TAttFill(0,1)
 {
-//*-*-*-*-*-*-*-*-*-*-*Material normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Material normal constructor.
 
    if (!gGeometry) gGeometry = new TGeometry("Geometry","Default Geometry");
    fA       = a;
@@ -70,12 +70,12 @@ TMaterial::TMaterial(const char *name, const char *title, Float_t a, Float_t z, 
 //______________________________________________________________________________
 TMaterial::~TMaterial()
 {
-//*-*-*-*-*-*-*-*-*-*-*Material default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+   // Material default destructor.
 
    if (gGeometry) gGeometry->GetListOfMaterials()->Remove(this);
 
 }
+
 
 //______________________________________________________________________________
 void TMaterial::Streamer(TBuffer &R__b)
