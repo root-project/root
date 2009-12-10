@@ -16,8 +16,8 @@ typedef unsigned long long  ULong64_t;
 
 
 int main() {
-  printf("%d\n",sizeof(Long64_t));
-  printf("%d\n",sizeof(ULong64_t));
+   printf("%d\n",(int)sizeof(Long64_t));
+   printf("%d\n",(int)sizeof(ULong64_t));
   return 0;
 }
 

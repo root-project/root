@@ -5,6 +5,7 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
+#include <stdio.h>
 #include <iostream>
 typedef long long Long64_t;
 int main()
@@ -18,6 +19,7 @@ int main()
    printf("printf ll:   %lld\n", w[0]);
    printf("one less ll: %lld\n", 2146929056215846578LL);
    printf("again ll:    %lld\n", w[0]);
+   // warnings are intentional
    printf("printf l:    %ld\n", w[0]);
    printf("one less l:  %ld\n", 2146929056215846578LL);
    printf("again l:     %ld\n", w[0]);

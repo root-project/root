@@ -131,7 +131,7 @@ const size_t sz=5;
 void test5()
 {
   ary<sz,B<int> > a;
-  printf("a.size=%d\n",a.size);
+  printf("a.size=%d\n",(int)a.size);
 }
 
 ///////////////////////////////////////////////////////////////////////

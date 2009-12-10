@@ -18,7 +18,7 @@ int main() {
 
   for(int i=0;i<3;i++) {
     c = a*b*i;
-    printf("%d %d %d\n",sizeof(long double),sizeof(a),sizeof(double));
+    printf("%d %d %d\n",(int)sizeof(long double),(int)sizeof(a),(int)sizeof(double));
     cout << a << " " << b << " " << c << endl;
   }
   return 0;
