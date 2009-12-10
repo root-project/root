@@ -130,7 +130,6 @@ private:
    std::vector<MinimizerVariable> fVariables;    // vector of variable settings and tranformation function
    std::vector<unsigned int>      fIndex;        // vector with external indices for internal variables    
    const IMultiGradFunction * fFunc;             // user function 
-   bool fHasTransform;                      // a function transformation is applied
 
 }; 
 

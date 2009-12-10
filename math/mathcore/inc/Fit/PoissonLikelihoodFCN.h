@@ -145,10 +145,7 @@ private:
    const BinData & fData; 
    const IModelFunction & fFunc; 
 
-   unsigned int fNDim; 
-   unsigned int fNPoints;   // size of the data
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit 
-   mutable unsigned int fNCalls;
 
    mutable std::vector<double> fGrad; // for derivatives
 

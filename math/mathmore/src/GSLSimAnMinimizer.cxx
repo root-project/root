@@ -31,7 +31,8 @@ namespace ROOT {
 GSLSimAnMinimizer::GSLSimAnMinimizer( int /* ROOT::Math::EGSLSimAnMinimizerType type */ ) : 
    fDim(0), 
    fOwnFunc(false),
-   fObjFunc(0)
+   fObjFunc(0), 
+   fMinVal(0)
 {
    // Constructor implementation : create GSLMultiFit wrapper object
 

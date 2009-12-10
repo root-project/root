@@ -186,23 +186,24 @@ ClassImp(TLinearFitter)
 
 
 //______________________________________________________________________________
-TLinearFitter::TLinearFitter()
-   :TVirtualFitter(),
-    fParams(),
-    fParCovar(),
-    fTValues(),
-    fDesign(),
-    fDesignTemp(),
-    fDesignTemp2(),
-    fDesignTemp3(),
-    fAtb(),
-    fAtbTemp(),
-    fAtbTemp2(),
-    fAtbTemp3(),
-    fFunctions(),
-    fY(),
-    fX(),
-    fE()
+TLinearFitter::TLinearFitter() :
+TVirtualFitter(),
+   fParams(),
+   fParCovar(),
+   fTValues(),
+   fDesign(),
+   fDesignTemp(),
+   fDesignTemp2(),
+   fDesignTemp3(),
+   fAtb(),
+   fAtbTemp(),
+   fAtbTemp2(),
+   fAtbTemp3(),
+   fFunctions(),
+   fY(),
+   fX(),
+   fE(),
+   fVal()
 {
    //default c-tor, input data is stored
    //If you don't want to store the input data,
@@ -222,10 +223,13 @@ TLinearFitter::TLinearFitter()
    fStoreData =kTRUE;
    fRobust    =kFALSE;
    fNfunctions = 0;
+   fFormulaSize = 0;
+   fH = 0; 
 }
 
 //______________________________________________________________________________
-TLinearFitter::TLinearFitter(Int_t ndim)
+TLinearFitter::TLinearFitter(Int_t ndim) : 
+   fVal() 
 {
    //The parameter stands for number of dimensions in the fitting formula
    //The input data is stored. If you don't want to store the input data,
@@ -245,6 +249,8 @@ TLinearFitter::TLinearFitter(Int_t ndim)
    fStoreData=kTRUE;
    fRobust = kFALSE;
    fNfunctions = 0;
+   fFormulaSize = 0;
+   fH = 0; 
 }
 
 //______________________________________________________________________________

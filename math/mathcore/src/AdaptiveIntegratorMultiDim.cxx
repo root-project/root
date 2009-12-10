@@ -16,11 +16,13 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double rel
    fDim(0), 
    fAbsTol(absTol),
    fRelTol(relTol),
-   fSize(size)
-
+   fSize(size), 
+   fResult(0), fError(0), 
+   fNEval(0),
+   fStatus(-1),
+   fFun(0)
 {
    // constructor - without passing a function
-   fFun = 0; 
 }
 
 AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction &f, double absTol, double relTol, unsigned int size):
@@ -28,6 +30,9 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction 
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size),
+   fResult(0), fError(0), 
+   fNEval(0),
+   fStatus(-1),
    fFun(&f)
 {
    // constructur passing a multi-dimensional function interface

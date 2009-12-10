@@ -97,9 +97,9 @@ namespace Math {
       void Terminate(); 
 
       /**
-         no operation, rng is delete in Terminate()
+         call Terminate()
       */
-      virtual ~GSLRandomEngine() {}
+      virtual ~GSLRandomEngine();
 
       /**
          Generate a  random number between ]0,1]

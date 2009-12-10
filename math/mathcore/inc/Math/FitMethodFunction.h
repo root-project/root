@@ -102,9 +102,9 @@ protected:
 
 private: 
 
-   unsigned int fNDim; 
+   unsigned int fNDim;      // function dimension 
    unsigned int fNPoints;   // size of the data
-   mutable unsigned int fNCalls;
+   mutable unsigned int fNCalls; // number of function calls
 
 
 }; 

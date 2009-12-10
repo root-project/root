@@ -189,16 +189,21 @@ void UnBinData::Resize(unsigned int npoints) {
       MATH_ERROR_MSGVAL("BinData::Resize"," Invalid data size  ", npoints );
       return; 
    }
-
-   int nextraPoints = npoints - DataSize()/fDim;  
-   if (nextraPoints == 0) return; 
-   else if (nextraPoints < 0) {
-      // delete extra points
-      if (!fDataVector) return; 
-      (fDataVector->Data()).resize( npoints * fDim);
-   } 
-   else 
-      Initialize(nextraPoints, fDim ); 
+   if (fDataVector != 0)  { 
+      int nextraPoints = npoints -  fDataVector->Size()/fDim; 
+      if  (nextraPoints < 0) {
+         // delete extra points
+         (fDataVector->Data()).resize( npoints * fDim);
+      }
+      else if (nextraPoints > 0) { 
+         // add extra points 
+         Initialize(nextraPoints, fDim ); 
+      }
+      else // nextraPoints == 0
+         return; 
+   }
+   else // no DataVector create
+      fDataVector = new DataVector( npoints*fDim);      
 }
 
 

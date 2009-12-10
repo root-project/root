@@ -399,6 +399,7 @@ bool TFumiliMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
    // set a free variable.
    if (fFumili == 0) { 
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
+      return false; 
    }
 #ifdef DEBUG
    std::cout << "set variable " << ivar << " " << name << " value " << val << " step " << step << std::endl; 
@@ -416,6 +417,7 @@ bool TFumiliMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
    // set a limited variable.
    if (fFumili == 0) { 
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
+      return false; 
    }
 #ifdef DEBUG
    std::cout << "set limited variable " << ivar << " " << name << " value " << val << " step " << step << std::endl; 
@@ -442,6 +444,7 @@ bool TFumiliMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
    // set a fixed variable.
    if (fFumili == 0) { 
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
+      return false; 
    }
 
    
@@ -463,10 +466,9 @@ bool TFumiliMinimizer::SetVariableValue(unsigned int ivar, double val) {
    // set the variable value
    if (fFumili == 0) { 
       Error("SetVariableValue","invalid TFumili pointer. Set function first ");
+      return false; 
    }
-   TString name = fFumili->GetParName(ivar
-
-);
+   TString name = fFumili->GetParName(ivar);
    double  oldval, verr, vlow, vhigh = 0; 
    int ierr = fFumili->GetParameter( ivar, &name[0], oldval, verr, vlow, vhigh); 
    if (ierr) {
@@ -492,7 +494,11 @@ bool TFumiliMinimizer::Minimize() {
    // Return true if the found minimum is valid and update internal chached values of 
    // minimum values, errors and covariance matrix. 
 
-   assert(fFumili != 0 );
+   if (fFumili == 0) { 
+      Error("SetVariableValue","invalid TFumili pointer. Set function first ");
+      return false; 
+   }
+
    // need to set static instance to be used when calling FCN 
    fgFumili = fFumili; 
 

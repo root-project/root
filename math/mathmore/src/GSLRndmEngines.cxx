@@ -62,6 +62,11 @@ namespace Math {
   } 
 
 
+   GSLRandomEngine::~GSLRandomEngine() {
+      // destructor : call terminate
+      if (fRng) Terminate();
+   }
+
    void GSLRandomEngine::Initialize() { 
       //----------------------------------------------------
       assert(fRng != 0);

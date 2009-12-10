@@ -68,6 +68,8 @@ ClassImp(TLinearMinimizer)
 TLinearMinimizer::TLinearMinimizer(int ) : 
    fRobust(false), 
    fDim(0),
+   fNFree(0),
+   fMinVal(0),
    fObjFunc(0),
    fFitter(0)
 {
@@ -78,6 +80,8 @@ TLinearMinimizer::TLinearMinimizer(int ) :
 TLinearMinimizer::TLinearMinimizer ( const char * type ) : 
    fRobust(false),
    fDim(0),
+   fNFree(0),
+   fMinVal(0),
    fObjFunc(0),
    fFitter(0)
 {

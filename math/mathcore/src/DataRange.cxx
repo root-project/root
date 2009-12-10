@@ -154,7 +154,7 @@ void DataRange::CleanRangeSet(unsigned int icoord, double xmin, double xmax) {
    for (RangeSet::iterator itr = ranges.begin(); itr != ranges.end(); ++itr) { 
       // delete included ranges
       if ( itr->first >= xmin && itr->second <= xmax) { 
-         ranges.erase(itr);
+         itr = ranges.erase(itr);
          // itr goes to next element, so go back before adding
          --itr;
       }

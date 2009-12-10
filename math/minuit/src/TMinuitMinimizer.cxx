@@ -47,6 +47,7 @@ ClassImp(TMinuitMinimizer)
 
 TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type ) : 
    fUsed(false),
+   fMinosRun(false),
    fDim(0),
    fStrategy(1),
    fType(type), 
@@ -60,6 +61,7 @@ TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type ) :
 
 TMinuitMinimizer::TMinuitMinimizer(const char *  type ) : 
    fUsed(false),
+   fMinosRun(false),
    fDim(0),
    fStrategy(1),
    fMinuit(fgMinuit)

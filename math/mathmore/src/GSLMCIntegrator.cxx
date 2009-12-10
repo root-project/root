@@ -315,6 +315,7 @@ double GSLMCIntegrator::Sigma()
    if(fType == MCIntegration::kVEGAS)
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace);
+      assert (ws != 0);
       return ws->GetWS()->sigma;
    }
    else 
@@ -334,6 +335,7 @@ double GSLMCIntegrator::ChiSqr()
    if(fType == MCIntegration::kVEGAS)
    {
       GSLVegasIntegrationWorkspace * ws = dynamic_cast<GSLVegasIntegrationWorkspace *>(fWorkspace);
+      assert(ws != 0);
       return ws->GetWS()->chisq;
    }
    else 

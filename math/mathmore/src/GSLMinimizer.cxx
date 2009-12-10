@@ -186,7 +186,8 @@ void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
 
 void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func) { 
    // set the function to minimizer 
-   fObjFunc = dynamic_cast< const ROOT::Math::IMultiGradFunction *>(func.Clone() ); 
+   fObjFunc = dynamic_cast<const ROOT::Math::IMultiGradFunction *>( func.Clone()); 
+   assert(fObjFunc != 0);
    fDim = fObjFunc->NDim(); 
 }
 
