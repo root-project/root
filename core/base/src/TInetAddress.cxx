@@ -175,11 +175,14 @@ void TInetAddress::Streamer(TBuffer &R__b)
          return;
       }
       // process old versions before automatic schema evolution
+      UInt_t address;
       TObject::Streamer(R__b);
       fHostname.Streamer(R__b);
-      R__b >> fAddress;
+      R__b >> address;
       R__b >> fFamily;
       R__b >> fPort;
+      if (R__v == 1)
+         fAddresses.push_back(address);
       if (R__v > 1) {
          TInetAddress::AddressList_t &R__stl1 =  fAddresses;
          R__stl1.clear();

@@ -53,7 +53,6 @@ public:
 
 private:
    TString       fHostname;    // fully qualified hostname
-   UInt_t        fAddress;     // IP address in host byte order
    Int_t         fFamily;      // address family
    Int_t         fPort;        // port through which we are connected
    AddressList_t fAddresses;   // list of all IP addresses in host byte order
@@ -82,7 +81,7 @@ public:
 
    static const char *GetHostAddress(UInt_t addr);
 
-   ClassDef(TInetAddress,3)  //Represents an Internet Protocol (IP) address
+   ClassDef(TInetAddress,4)  //Represents an Internet Protocol (IP) address
 };
 
 #endif
