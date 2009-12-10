@@ -56,9 +56,12 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot()
   fFillStyle = 4050; // half transparent
   fLineColor = 0;
   fMaximum = 2.;
-  fNPoints = 40;
+  fNPoints = 0;  // default depends if 1D or 2D 
+  // default is variable range
   fXmin = 0;
   fXmax = -1;
+  fYmin = 0;
+  fYmax = -1;
   fPrecision = -1; // use default 
 }
 
@@ -73,9 +76,12 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
   fLineColor = kGreen;
   fFillStyle = 4050; // half transparent
   fMaximum = 2.;
-  fNPoints = 40;
+  fNPoints = 0;  // default depends if 1D or 2D 
+  // default is variable range
   fXmin = 0;
   fXmax = -1;
+  fYmin = 0;
+  fYmax = -1;
   fPrecision = -1; // use default 
 }
 
@@ -135,12 +141,14 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
    RooPlot * frame = 0; 
 
    TString title = GetTitle(); 
+   int nPoints = fNPoints; 
    
    if(fNdimPlot == 1){
 
       if (title.Length() == 0) 
          title = "- log profile likelihood ratio";
-      
+
+      if (nPoints <=0) nPoints = 100; // default in 1D
 
       const Double_t xcont_min = fInterval->LowerLimit(*myparam);
       const Double_t xcont_max = fInterval->UpperLimit(*myparam);
@@ -160,7 +168,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          
          TF1 * tmp = newProfile->asTF(*myarg); 
          tmp->SetRange(xmin, xmax);      
-         tmp->SetNpx(fNPoints);
+         tmp->SetNpx(nPoints);
 
          // clone the function to avoid later to sample it
          TF1 * f1 = (TF1*) tmp->Clone(); 
@@ -200,7 +208,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          if (fXmin < fXmax) { xmin = fXmin; xmax = fXmax; }  
 
          // want to set range on frame not function
-         frame = myarg->frame(xmin,xmax);
+         frame = myarg->frame(xmin,xmax,nPoints);
          frame->SetTitle(title);
          frame->GetYaxis()->SetTitle("- log #lambda");
          //    frame->GetYaxis()->SetTitle("- log profile likelihood ratio");
@@ -265,11 +273,12 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       if (title.Length() == 0)
          title = TString("Contour of ") + TString(myparamY->GetName() ) + TString(" vs ") + TString(myparam->GetName() ); 
 
+      if (nPoints <=0) nPoints = 40; // default in 2D
 
       if (!useMinuit) { 
       
          // draw directly the TH2 from the profile LL
-         TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparam,RooFit::YVar(*myparamY),RooFit::Binning(fNPoints),RooFit::Scaling(kFALSE));
+         TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparam,RooFit::YVar(*myparamY),RooFit::Binning(nPoints),RooFit::Scaling(kFALSE));
 
 
          hist2D->SetTitle(title);
@@ -307,13 +316,13 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       else { 
 
          // find contours  using Minuit       
-         TGraph * gr = new TGraph(fNPoints+1); 
+         TGraph * gr = new TGraph(nPoints+1); 
          
-         int ncp = fInterval->GetContourPoints(*myparam, *myparamY, gr->GetX(), gr->GetY(),fNPoints); 
+         int ncp = fInterval->GetContourPoints(*myparam, *myparamY, gr->GetX(), gr->GetY(),nPoints); 
 
-         if (int(ncp) < fNPoints) {
-            std::cout << "Warning - Less points calculated in contours np = " << ncp << " / " << fNPoints << std::endl;
-            for (int i = ncp; i < fNPoints; ++i) gr->RemovePoint(i);
+         if (int(ncp) < nPoints) {
+            std::cout << "Warning - Less points calculated in contours np = " << ncp << " / " << nPoints << std::endl;
+            for (int i = ncp; i < nPoints; ++i) gr->RemovePoint(i);
          }
          // add last point to same as first one to close the contour
          gr->SetPoint(ncp, gr->GetX()[0], gr->GetY()[0] );
@@ -326,7 +335,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
             if (fXmin < fXmax) { xmin = fXmin; xmax = fXmax; }  
             if (fYmin < fYmax) { ymin = fYmin; ymax = fYmax; }  
 
-            TH2F* hist2D = new TH2F("_hist2D",title, fNPoints, xmin, xmax, fNPoints, ymin, ymax );
+            TH2F* hist2D = new TH2F("_hist2D",title, nPoints, xmin, xmax, nPoints, ymin, ymax );
             hist2D->GetXaxis()->SetTitle(myparamY->GetName());
             hist2D->GetYaxis()->SetTitle(myparam->GetName());
             hist2D->SetBit(TH1::kNoStats); // do not draw statistics
