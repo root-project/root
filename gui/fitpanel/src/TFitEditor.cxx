@@ -480,7 +480,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    UInt_t cw = 0;
    UInt_t cx = 0;
    UInt_t cy = 0;
-   if ( pad->GetCanvas() ) {
+   if (pad && pad->GetCanvas() ) {
       cw = pad->GetCanvas()->GetWindowWidth();
       cx = (UInt_t)pad->GetCanvas()->GetWindowTopX();
       cy = (UInt_t)pad->GetCanvas()->GetWindowTopY();
@@ -1482,7 +1482,7 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
       // Add the text to fEnteredFunc
       if (te && fNone->GetState() == kButtonDown)
          fEnteredFunc->SetText(te->GetTitle());
-      else if (fAdd->GetState() == kButtonDown) {
+      else if (te && fAdd->GetState() == kButtonDown) {
          TString tmpStr = fEnteredFunc->GetText();
          tmpStr += '+';
          tmpStr +=te->GetTitle();
@@ -1991,27 +1991,31 @@ void TFitEditor::DoFit()
       case kObjectHisto: {
          
          TH1 *hist = dynamic_cast<TH1*>(fFitObject);
-         ROOT::Fit::FitObject(hist, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+         if (hist)
+            ROOT::Fit::FitObject(hist, fitFunc, fitOpts, mopts, strDrawOpts, drange);
 
          break;
       }
       case kObjectGraph: {
 
          TGraph *gr = dynamic_cast<TGraph*>(fFitObject);
-         FitObject(gr, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+         if (gr)
+            FitObject(gr, fitFunc, fitOpts, mopts, strDrawOpts, drange);
          break;
       }
       case kObjectMultiGraph: {
 
          TMultiGraph *mg = dynamic_cast<TMultiGraph*>(fFitObject);
-         FitObject(mg, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+         if (mg)
+            FitObject(mg, fitFunc, fitOpts, mopts, strDrawOpts, drange);
 
          break;
       }
       case kObjectGraph2D: {
 
          TGraph2D *g2d = dynamic_cast<TGraph2D*>(fFitObject);
-         FitObject(g2d, fitFunc, fitOpts, mopts, strDrawOpts, drange);
+         if (g2d)
+            FitObject(g2d, fitFunc, fitOpts, mopts, strDrawOpts, drange);
 
          break;
       }
