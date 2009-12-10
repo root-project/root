@@ -548,7 +548,7 @@ void TGuiBldEditor::SwitchLayout()
       }
    }
    fClient->NeedRedraw(frame, kTRUE);
-   fClient->NeedRedraw(fTablay, kTRUE);
+   if (fTablay) fClient->NeedRedraw(fTablay, kTRUE);
 }
 
 

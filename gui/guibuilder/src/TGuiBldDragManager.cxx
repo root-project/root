@@ -695,6 +695,8 @@ TGGrabRect::TGGrabRect(Int_t type) :
 {
    // ctor.
 
+   fType = kTopLeft;
+
    switch (type) {
       case 0:
          fType = kTopLeft;
@@ -2300,7 +2302,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
 
    TGWindow *w = fClient->GetWindowById(GetWindowFromPoint(event->fXRoot, event->fYRoot));
 
-   if (!w) {
+   if (!w || !fPimpl) {
       return kFALSE;
    }
 
@@ -2461,7 +2463,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
             break;
          case kKey_Space:
             //UnmapAllPopups();
-            if (fPimpl && fPimpl->fGrab) {
+            if (fPimpl->fGrab) {
                SwitchEditable(fPimpl->fGrab);
 
                TGFrame *p = (TGFrame*)GetEditableParent(fPimpl->fGrab);
@@ -3199,15 +3201,17 @@ void TGuiBldDragManager::DoReplace(TGFrame *frame)
 
    TGFrameElement *fe = fPimpl->fGrab->GetFrameElement();
 
-   if (fe) fe->fFrame = 0;
-   fPimpl->fGrab->DestroyWindow();
-   delete fPimpl->fGrab;
-   fPimpl->fGrab = 0;
+   if (fe) {
+      fe->fFrame = 0;
+      fPimpl->fGrab->DestroyWindow();
+      delete fPimpl->fGrab;
+      fPimpl->fGrab = 0;
 
-   fe->fFrame = frame;
-   frame->MoveResize(x, y, w, h);
-   frame->MapRaised();
-   frame->SetFrameElement(fe);
+      fe->fFrame = frame;
+      frame->MoveResize(x, y, w, h);
+      frame->MapRaised();
+      frame->SetFrameElement(fe);
+   }
 
    SelectFrame(frame);
    fPimpl->fReplaceOn = kFALSE;
@@ -4402,8 +4406,8 @@ Bool_t TGuiBldDragManager::Drop()
    }
 
    //reject move if layout is on
-   if ( !parent->IsLayoutBroken() && (parent == fPimpl->fGrabParent) ) {
-            fDropStatus = 0;
+   if (parent && !parent->IsLayoutBroken() && (parent == fPimpl->fGrabParent) ) {
+      fDropStatus = 0;
    } else if (parent && frame && (parent != fClient->GetDefaultRoot()) ) {
       ToGrid(x, y);
       fDropStatus = parent->HandleDragDrop(frame, x, y, fPimpl->fGrabLayout);
@@ -4427,7 +4431,7 @@ Bool_t TGuiBldDragManager::Drop()
 
    if (fDropStatus) {
       //do not break layout of the new parent if layout there is enabled
-      if (!parent->IsLayoutBroken()) {
+      if (parent && !parent->IsLayoutBroken()) {
          parent->Layout();
       }
 
@@ -5006,11 +5010,12 @@ void TGuiBldDragManager::HandleUpdateSelected(TGFrame *f)
    }
 
    TGCompositeFrame *parent = 0;
-   if (f->GetParent()->InheritsFrom(TGCompositeFrame::Class())) {
+   if (f->GetParent() && 
+       f->GetParent()->InheritsFrom(TGCompositeFrame::Class())) {
       parent = (TGCompositeFrame*)f->GetParent();
    }
 
-   if (!CanChangeLayout(parent)) {
+   if (!parent || !CanChangeLayout(parent)) {
       return;
    }
 
@@ -5425,20 +5430,16 @@ void TGuiBldDragManager::AddClassMenuMethods(TGPopupMenu *menu, TObject *object)
          case TClassMenuItem::kPopupUserFunction:
             {
                if (menuItem->IsToggle()) {
-                  if (object) {
-                     TMethod* method2 =
-                           object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),
-                                                                 menuItem->GetArgs());
-                     TToggle *t = new TToggle;
-                     t->SetToggledObject(object, method2);
-                     t->SetOnValue(1);
-                     fPimpl->fFrameMenuTrash->Add(t);
+                  TMethod* method2 =
+                        object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),
+                                                              menuItem->GetArgs());
+                  TToggle *t = new TToggle;
+                  t->SetToggledObject(object, method2);
+                  t->SetOnValue(1);
+                  fPimpl->fFrameMenuTrash->Add(t);
 
-                     menu->AddEntry(method2->GetName(), kToggleMenuAct, t);
-                     if (t->GetState()) menu->CheckEntryByData(t);
-                  } else {
-                     Warning("Dialog","Cannot use toggle for a global function");
-                  }
+                  menu->AddEntry(method2->GetName(), kToggleMenuAct, t);
+                  if (t->GetState()) menu->CheckEntryByData(t);
                } else {
                   const char* menuItemTitle = menuItem->GetTitle();
                   if (strlen(menuItemTitle)==0) menuItemTitle = menuItem->GetFunctionName();
