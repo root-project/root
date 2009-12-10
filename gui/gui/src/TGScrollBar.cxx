@@ -255,6 +255,7 @@ Bool_t TGScrollBar::HandleTimer(TTimer *t)
    Window_t  dum1, dum2;
    Event_t   ev;
 
+   ev.fCode    = kButton1;
    ev.fType    = kButtonPress;
    ev.fUser[0] = fSubw;
 

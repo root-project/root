@@ -1000,7 +1000,7 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    prev_len = temp_len = 0;
    for (pos.fY = 0; pos.fY < fClipText->RowCount(); pos.fY++) {
       temp_len = fClipText->GetLineLength(pos.fY);
-      if (temp_len <= 0) break;
+      if (temp_len < 0) break;
       temp_buffer = fClipText->GetLine(pos, temp_len);
       strncpy(buffer+prev_len, temp_buffer, (UInt_t)temp_len);
       if (pos.fY < fClipText->RowCount()-1) {
