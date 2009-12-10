@@ -59,6 +59,7 @@ TGGC::TGGC(GCValues_t *values)
 {
    // Create a graphics context, registers GC in GCPool.
 
+   fContext = 0;
    // case of default ctor at program startup before gClient exists
    if (!values) {
       memset(&fValues, 0, sizeof(GCValues_t));
