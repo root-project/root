@@ -3081,9 +3081,11 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
       sprintf(result7, "*%s", funcname());
       *known3 = 0;
       pfparam = (char*)strchr(item, '(');
-      p2ffpara = &fpara;
-      result3 = G__pointer2func((G__value*)NULL, result7, pfparam, known3);
-      p2ffpara = (struct G__param*)NULL;
+      if (pfparam) {
+         p2ffpara = &fpara;
+         result3 = G__pointer2func((G__value*)NULL, result7, pfparam, known3);
+         p2ffpara = (struct G__param*)NULL;
+      }
       if (*known3) {
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
