@@ -10910,7 +10910,7 @@ int G__memfunc_setup_imp(const char *funcname,int hash
           // Method's stub pointer
           basefuncp = found->entry[base].p;
 
-          G__value ptr;
+          G__value ptr = G__null;
 
           ptr.tagnum = G__p_ifunc->tagnum;
           ptr.type = 'C';
