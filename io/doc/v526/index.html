@@ -13,6 +13,7 @@
    <li>Prevent a process abort (due to a call to Fatal) when we are missing the dictionary for (one of) the 
        content of an STL collection when this collection is 'only' use has a transient member.</li>
    <li>Fix the case where the source and target of a rule have the same name.</li>
+   <li>Avoid using the 'current' StreamerInfo to read an older streamerInfo that is missing (in case of corrupted files).</li>
 </ul>
 
 <!-- Misnamed 
