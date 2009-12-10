@@ -170,7 +170,7 @@ int HypoTestInverterResult::FindClosestPointIndex(double target)
 
 Double_t HypoTestInverterResult::LowerLimit()
 {
-  std::cout << "finding point with cl = " << 1-(1-ConfidenceLevel())/2 << endl;
+   //std::cout << "finding point with cl = " << 1-(1-ConfidenceLevel())/2 << endl;
   if ( fInterpolateLowerLimit ){
     fLowerLimit = FindInterpolatedLimit(1-(1-ConfidenceLevel())/2);
   } else {
@@ -181,11 +181,11 @@ Double_t HypoTestInverterResult::LowerLimit()
 
 Double_t HypoTestInverterResult::UpperLimit()
 {
-  std::cout << "finding point with cl = " << ConfidenceLevel()/2 << endl;
+   //std::cout << "finding point with cl = " << (1-ConfidenceLevel())/2 << endl;
   if ( fInterpolateUpperLimit ) {
-    fUpperLimit = FindInterpolatedLimit(ConfidenceLevel()/2);
+     fUpperLimit = FindInterpolatedLimit((1-ConfidenceLevel())/2);
   } else {
-    fUpperLimit = GetXValue( FindClosestPointIndex(ConfidenceLevel()/2) );
+     fUpperLimit = GetXValue( FindClosestPointIndex((1-ConfidenceLevel())/2) );
   }
   return fUpperLimit;
 }
@@ -222,7 +222,7 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target)
 
 Double_t HypoTestInverterResult::LowerLimitEstimatedError()
 {
-  std::cout << "The HypoTestInverterResult::LowerLimitEstimatedError() function evaluates only a rought error on the upper limit. Be careful when using this estimation\n";
+   //std::cout << "The HypoTestInverterResult::LowerLimitEstimatedError() function evaluates only a rought error on the upper limit. Be careful when using this estimation\n";
   if (fInterpolateLowerLimit) std::cout << "The lower limit was an interpolated results... in this case the error is even less reliable (the Y-error bars are currently not used in the interpolation)\n";
 
   return CalculateEstimatedError(ConfidenceLevel()/2);
@@ -231,7 +231,7 @@ Double_t HypoTestInverterResult::LowerLimitEstimatedError()
 
 Double_t HypoTestInverterResult::UpperLimitEstimatedError()
 {
-  std::cout << "The HypoTestInverterResult::UpperLimitEstimatedError() function evaluates only a rought error on the upper limit. Be careful when using this estimation\n";
+   //std::cout << "The HypoTestInverterResult::UpperLimitEstimatedError() function evaluates only a rought error on the upper limit. Be careful when using this estimation\n";
   if (fInterpolateUpperLimit) std::cout << "The upper limit was an interpolated results... in this case the error is even less reliable (the Y-error bars are currently not used in the interpolation)\n";
 
   return CalculateEstimatedError(1-ConfidenceLevel()/2);

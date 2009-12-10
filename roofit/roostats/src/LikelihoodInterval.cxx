@@ -247,7 +247,7 @@ bool LikelihoodInterval::CreateMinimizer() {
    std::string minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
 
    if (minimType != "Minuit" && minimType != "Minuit2") { 
-      ccoutE(InputArguments) << minimType << "is wrong type of minimizer for getting interval limits ir contours - must use Minuit or Minuit2" << std::endl;
+      ccoutE(InputArguments) << minimType << "is wrong type of minimizer for getting interval limits or contours - must use Minuit or Minuit2" << std::endl;
       return false; 
    }
    // create minimizer class 

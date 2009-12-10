@@ -44,20 +44,23 @@ HypoTestInverter::HypoTestInverter( ) :
 }
 
 
-HypoTestInverter::HypoTestInverter( const char* name,
-				    HypoTestCalculator* myhc0,
-				    RooRealVar* scannedVariable, double size ) :
-  TNamed( name, name ),
-  fCalculator0(myhc0),
-  fScannedVariable(scannedVariable), 
-  fResults(0),
-  fUseCLs(false),
-  fSize(size)
+HypoTestInverter::HypoTestInverter( HypoTestCalculator& myhc0,
+				    RooRealVar& scannedVariable, double size ) :
+   TNamed( ),
+   fCalculator0(&myhc0),
+   fScannedVariable(&scannedVariable), 
+   fResults(0),
+   fUseCLs(false),
+   fSize(size)
 {
-  // constructor
-  if (name==0) SetName("HypoTestInverter");
+   // constructor
+   SetName("HypoTestInverter");
 
-  //if (myhc0->ClassName()!="HybridCalculator") std::cout << "NOT SUPPORTED\n";
+
+   HybridCalculator * hc = dynamic_cast<HybridCalculator *> (fCalculator0);
+   if (hc == 0) { 
+      Fatal("HypoTestInverter","Using non HybridCalculator class IS NOT SUPPORTED");
+   }
 
 }
 

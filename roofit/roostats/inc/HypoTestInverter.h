@@ -39,10 +39,11 @@ namespace RooStats {
 
 
     // constructor
-    HypoTestInverter( const char* name, 
-		      HypoTestCalculator* myhc0,
-		      RooRealVar* scannedVariable, 
+    HypoTestInverter( HypoTestCalculator& myhc0,
+		      RooRealVar& scannedVariable, 
                       double size = 0.05) ;
+
+     
 
     virtual HypoTestInverterResult* GetInterval() const { return fResults; } ;
 

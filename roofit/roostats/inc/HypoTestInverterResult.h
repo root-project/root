@@ -67,7 +67,12 @@ namespace RooStats {
     Double_t UpperLimit();
 
     // rough estimation of the error on the computed bound of the confidence interval 
+    // Estimate of lower limit error
+    //function evaluates only a rought error on the lower limit. Be careful when using this estimation
     Double_t LowerLimitEstimatedError();
+
+    // Estimate of lower limit error
+    //function evaluates only a rought error on the lower limit. Be careful when using this estimation
     Double_t UpperLimitEstimatedError();
 
   private:
