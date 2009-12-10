@@ -27,6 +27,13 @@ ClassImp(TRotMatrix)
 TRotMatrix::TRotMatrix()
 {
    // RotMatrix default constructor.
+
+   for (int i=0;i<9;i++) fMatrix[i] = 0;
+   fNumber = 0;
+   fPhi    = 0;
+   fPsi    = 0;
+   fTheta  = 0;
+   fType   = 0;
 }
 
 
