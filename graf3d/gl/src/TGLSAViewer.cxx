@@ -462,11 +462,8 @@ void TGLSAViewer::CreateFrames()
    fRightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10);
    compositeFrame->AddFrame(fRightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY));
 
-   fGLWidget = TGLWidget::Create(fRightVerticalFrame, kTRUE, kTRUE, 0, 10, 10);
-
-   SetEventHandler(new TGLEventHandler(0, this));
-
-   fRightVerticalFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   fEventHandler = new TGLEventHandler(0, this);
+   CreateGLWidget();
 }
 
 //______________________________________________________________________________
