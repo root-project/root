@@ -113,6 +113,29 @@ TTask::TTask(const char* name, const char *title)
    fBreakout    = 0;
    fTasks       = new TList();
 }
+//______________________________________________________________________________
+
+TTask& TTask::operator=(const TTask& tt)	 
+{	 
+   //assignment operator (PLEASE DO NOT USE THIS IS WRONG)	 
+   if(this!=&tt) {	 
+      TNamed::operator=(tt);	 
+      fTasks= 0; //<===tobe fixed	 
+      fOption=tt.fOption;	 
+      fBreakin=tt.fBreakin;	 
+      fBreakout=tt.fBreakout;	 
+      fHasExecuted=tt.fHasExecuted;	 
+      fActive=tt.fActive;	 
+   }	 
+   return *this;	 
+}	 
+
+//______________________________________________________________________________	 //______________________________________________________________________________
+TTask::TTask(const TTask &task) : TNamed(task)	 
+{	 
+   // Copy constructors.	 (PLEASE DO NOT USE THIS IS WRONG) 
+   fTasks = new TList();	 
+}	 
 
 //______________________________________________________________________________
 TTask::~TTask()
