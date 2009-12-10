@@ -106,7 +106,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
 {
    // Constructor
 
-   fSrvType  = kXPD_AnyServer;
+   fSrvType = kXPD_AnyServer;
    fEffectiveUser = "";
    fHost = "";
    fPort = XPD_DEF_PORT;
@@ -1177,6 +1177,8 @@ int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
       fSrvType = kXPD_Master;
    } else if (tval == "worker") {
       fSrvType = kXPD_Worker;
+   } else if (tval == "any") {
+      fSrvType = kXPD_AnyServer;
    }
 
    return 0;
