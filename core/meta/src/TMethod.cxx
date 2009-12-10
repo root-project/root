@@ -43,6 +43,7 @@ TMethod::TMethod(MethodInfo_t *info, TClass *cl) : TFunction(info)
    fClass        = cl;
    fGetterMethod = 0;
    fSetterMethod = 0;
+   fMenuItem     = kMenuNoMenu;
 
    if (fInfo) {
       const char *t = gCint->MethodInfo_Title(fInfo);
