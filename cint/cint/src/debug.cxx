@@ -24,7 +24,7 @@ static int G__findfuncposition(const char* func, int* pline, int* pfnum);
 static G__value G__exec_tempfile_core(const char* file, FILE* fp);
 
 // Externally visible functions.
-int G__findposition(const char* string, G__input_file view, int* pline, int* pfnum);
+int G__findposition(const char* string, G__input_file* view, int* pline, int* pfnum);
 int G__display_proto(FILE* fp, const char* func);
 int G__display_proto_pretty(FILE* fp, const char* func, const char friendlyStyle);
 int G__beforelargestep(char* statement, int* piout, int* plargestep);
@@ -315,7 +315,7 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
 //
 
 //______________________________________________________________________________
-int G__findposition(const char* string, G__input_file view, int* pline, int* pfnum)
+int G__findposition(const char* string, G__input_file* view, int* pline, int* pfnum)
 {
    // -- FIXME: Describe this function!
    //
@@ -325,22 +325,22 @@ int G__findposition(const char* string, G__input_file view, int* pline, int* pfn
    int i = 0;
 
    /* preset current position */
-   *pline = view.line_number;
-   *pfnum = view.filenum;
+   *pline = view->line_number;
+   *pfnum = view->filenum;
 
    /* skip space */
    while (isspace(string[i])) i++;
 
    if ('\0' == string[i]) {
-      if ('\0' == view.name[0]) return(0);
-      *pline = view.line_number;
-      if (view.line_number < 1 || G__srcfile[view.filenum].maxline <= view.line_number)
+      if ('\0' == view->name[0]) return(0);
+      *pline = view->line_number;
+      if (view->line_number < 1 || G__srcfile[view->filenum].maxline <= view->line_number)
          return(1);
       else
          return(2);
    }
    else if (isdigit(string[i])) {
-      if ('\0' == view.name[0]) return(0);
+      if ('\0' == view->name[0]) return(0);
       *pline = atoi(string + i);
    }
    else {
@@ -348,8 +348,8 @@ int G__findposition(const char* string, G__input_file view, int* pline, int* pfn
    }
 
    if (*pfnum < 0 || G__nfile <= *pfnum) {
-      *pfnum = view.filenum;
-      *pline = view.line_number;
+      *pfnum = view->filenum;
+      *pline = view->line_number;
       return(0);
    }
    else if (*pline < 1) {

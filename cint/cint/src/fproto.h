@@ -65,7 +65,7 @@ G__value G__castvalue_bc(char *casttype,G__value result3, int i);
   void G__this_adjustment(struct G__ifunc_table_internal *ifunc, int ifn);
 void G__asm_cast(int type,G__value *buf,int tagnum,int reftype);
   /* void G__setdebugcond(void); */
-int G__findposition(const char *string,struct G__input_file view,int *pline,int *pfnum);
+int G__findposition(const char *string,struct G__input_file* view,int *pline,int *pfnum);
 int G__beforelargestep(char *statement,int *piout,int *plargestep);
 void G__afterlargestep(int *plargestep);
 void G__EOFfgetc(void);

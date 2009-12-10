@@ -2729,7 +2729,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       /*******************************************************
        * Delete break point
        *******************************************************/
-      if (1 < G__findposition(string, view.file, &line_number, &filenum)
+      if (1 < G__findposition(string, &view.file, &line_number, &filenum)
             && filenum >= 0 && line_number >= 0
          ) {
          G__srcfile[filenum].breakpoint[line_number] &= G__NOBREAK;
@@ -2747,7 +2747,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       /*******************************************************
        * Set break point
        *******************************************************/
-      if (1 < G__findposition(string, view.file, &line_number, &filenum) &&
+      if (1 < G__findposition(string, &view.file, &line_number, &filenum) &&
             filenum >= 0 && line_number >= 0 &&
             G__srcfile[filenum].breakpoint && G__srcfile[filenum].maxline
          ) {
@@ -2797,7 +2797,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
          G__UnlockCriticalSection();
          return(ignore);
       }
-      else if (1 < G__findposition(string, view.file, &line_number, &filenum) && filenum >= 0 && line_number >= 0) {
+      else if (1 < G__findposition(string, &view.file, &line_number, &filenum) && filenum >= 0 && line_number >= 0) {
          G__srcfile[filenum].breakpoint[line_number] |= G__CONTUNTIL;
          G__pause_return = 1;
          G__unredirectoutput(&store_stdout, &store_stderr, &store_stdin, keyword, pipefile);
@@ -2847,7 +2847,7 @@ vcommand:
       /*******************************************************
        * Display source code
        *******************************************************/
-      if (0 < G__findposition(command, view.file, &line_number, &filenum) && filenum >= 0
+      if (0 < G__findposition(command, &view.file, &line_number, &filenum) && filenum >= 0
             && line_number >= 0
          ) {
          view.file.filenum = filenum;
