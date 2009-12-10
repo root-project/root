@@ -598,7 +598,7 @@ void TMultiLayerPerceptron::SetTestDataSet(const char * test)
    // Sets the Test dataset.
    // Those events will not be used for the minimization but for control.
    // Note that the tree must be already defined.
-   if(fTest && fTestOwner) delete fTest;
+   if(fTest && fTestOwner) {delete fTest; fTest=0;}
    if(fTest) if(strncmp(fTest->GetName(),Form("fTestList_%i",this),10)) delete fTest;
    fTest = new TEventList(Form("fTestList_%i",this));
    fTestOwner = true;
