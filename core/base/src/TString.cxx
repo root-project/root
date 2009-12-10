@@ -168,12 +168,14 @@ Ssiz_t TStringRef::First(const char *cs) const
    return f ? f - Data() : kNPOS;
 }
 
+#ifndef R__BYTESWAP
 //______________________________________________________________________________
-static UInt_t SwapInt(UInt_t x)
+inline static UInt_t SwapInt(UInt_t x)
 {
    return (((x & 0x000000ffU) << 24) | ((x & 0x0000ff00U) <<  8) |
            ((x & 0x00ff0000U) >>  8) | ((x & 0xff000000U) >> 24));
 }
+#endif
 
 //______________________________________________________________________________
 inline static void Mash(UInt_t& hash, UInt_t chars)
