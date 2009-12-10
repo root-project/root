@@ -5604,6 +5604,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
                break;
             case 'T':
                result.type = 'C';
+               break;
             default:
                result.obj.i = 1;
                break;
