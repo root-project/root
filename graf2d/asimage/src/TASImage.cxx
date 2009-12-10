@@ -429,6 +429,7 @@ const char *TASImage::TypeFromMagicNumber(const char *file)
          break;
       case 0x89:
          ret = "png";
+         break;
       case 0xff:
          ret = "jpg";
          break;
