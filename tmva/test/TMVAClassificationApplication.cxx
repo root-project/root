@@ -227,9 +227,9 @@ int main( int argc, char** argv )
       std::cout << "--- Accessing data file: " << fname << std::endl;
       input = TFile::Open( fname );
    } 
-   else if (!gSystem->AccessPathName("../macros/tmva_example.root")){
-      std::cout << "--- TMVAClassificationApp    : Accessing tmva_example.root file from macros directory!" << std::endl;
-      input = TFile::Open("../macros/tmva_example.root" );
+   else if (!gSystem->AccessPathName("./tmva_example.root")){
+      std::cout << "--- TMVAClassificationApp    : Accessing tmva_example.root file from the test directory!" << std::endl;
+      input = TFile::Open("./tmva_example.root" );
    }
    
    if (!input) {

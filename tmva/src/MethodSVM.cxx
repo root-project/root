@@ -370,7 +370,8 @@ Double_t TMVA::MethodSVM::GetMvaValue( Double_t* err )
    // cannot determine error
    if (err != 0) *err = -1;
 
-   return 1.0/(1.0 + TMath::Exp(-myMVA));
+   // 08/12/09: changed sign here to make results agree with convention signal=1
+   return 1.0/(1.0 + TMath::Exp(myMVA));
 }
 //_______________________________________________________________________
 const std::vector<Float_t>& TMVA::MethodSVM::GetRegressionValues()

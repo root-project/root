@@ -7,7 +7,7 @@
 #cd ..
 
 # set symbolic links to data file and to rootmaps
-cd test;
+#cd test;
 if [ ! -h tmva_example.root ]; then ln -s data/toy_sigbkg.root tmva_example.root; fi
 if [ ! -h tmva_reg_example.root ]; then ln -s data/regression_parabola_noweights.root tmva_reg_example.root; fi
 if [ ! -h libTMVA.rootmap ]; then ln -s ../lib/libTMVA.rootmap; fi

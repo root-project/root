@@ -109,6 +109,10 @@ $(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVAL)
 
 all-$(MODNAME): $(TMVALIB) $(TMVAMAP)
 
+test-tmva:
+	@echo $(TMVALIB) $(TMVAMAP)
+
+
 clean-$(MODNAME):
 		@rm -f $(TMVADIRS)/*.o
 

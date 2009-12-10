@@ -226,7 +226,11 @@ TString* get_var_names( Int_t nVars )
       if (key->GetCycle() != 1) continue;
 
       if (!TString(key->GetName()).Contains("__S") &&
-          !TString(key->GetName()).Contains("__r")) continue;
+          !TString(key->GetName()).Contains("__r") &&
+          !TString(key->GetName()).Contains("Regression"))
+         continue;
+      if (TString(key->GetName()).Contains("target"))
+         continue;
 
       // make sure, that we only look at histograms
       TClass *cl = gROOT->GetClass(key->GetClassName());
@@ -239,7 +243,7 @@ TString* get_var_names( Int_t nVars )
       if (ivar > nVars-1) break;
    }      
    
-   if (ivar != nVars-1) { // bias layer is also in nVars counts
+   if (ivar != nVars-1) { // bias layer and targets are also in nVars counts
       cout << "*** Troubles in \"network.C\": did not reproduce correct number of "
            << "input variables: " << ivar << " != " << nVars << endl;
    }

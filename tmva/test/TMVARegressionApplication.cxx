@@ -142,7 +142,7 @@ int main( int argc, char** argv )
    // we'll later on use only the "signal" events for the test in this example.
    //   
    TFile *input(0);
-   TString fname = "../macros/tmva_reg_example.root";
+   TString fname = "./tmva_reg_example.root";
    if (!gSystem->AccessPathName( fname )) {
       // first we try to find tmva_example.root in the local directory
       std::cout << "--- TMVARegressionApp        : Accessing data file \"" << fname << "\"" << std::endl;

@@ -1743,6 +1743,7 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       Log() << kDEBUG << "determined event sample size to select training sample from="<<useForTraining<<Endl;
       Log() << kDEBUG << "determined event sample size to select test sample from="<<useForTesting<<Endl;
       
+
       // associate undefined events 
       if( splitMode == "ALTERNATE" ){
          Log() << kDEBUG << "split 'ALTERNATE'" << Endl;
@@ -1756,6 +1757,21 @@ TMVA::DataSet*  TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
          }
       }else{
          Log() << kDEBUG << "split 'RANDOM'" << Endl;
+
+	 // test if enough events are available
+	 Log() << kDEBUG << "availableundefined : " << availableUndefined << Endl;
+	 Log() << kDEBUG << "useForTraining     : " << useForTraining << Endl;
+	 Log() << kDEBUG << "useForTesting      : " << useForTesting  << Endl;
+	 Log() << kDEBUG << "alreadyAvailableTraining      : " << alreadyAvailableTraining  << Endl;
+	 Log() << kDEBUG << "alreadyAvailableTesting       : " << alreadyAvailableTesting  << Endl;
+
+	 if( availableUndefined<(useForTraining-alreadyAvailableTraining) ||
+	     availableUndefined<(useForTesting -alreadyAvailableTesting ) || 
+	     availableUndefined<(useForTraining+useForTesting-alreadyAvailableTraining-alreadyAvailableTesting ) ){
+	    Log() << kFATAL << "More events requested than available!" << Endl;
+	 }
+
+	 // select the events
          if (useForTraining>alreadyAvailableTraining){
             eventVectorTraining.insert(  eventVectorTraining.end() , eventVectorUndefined.begin(), eventVectorUndefined.begin()+ useForTraining- alreadyAvailableTraining );
             eventVectorUndefined.erase( eventVectorUndefined.begin(), eventVectorUndefined.begin() + useForTraining- alreadyAvailableTraining);

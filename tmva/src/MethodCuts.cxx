@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
+// Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Eckhard von Toerne, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -14,6 +14,7 @@
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Matt Jachowski  <jachowski@stanford.edu> - Stanford University, USA       *
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
+ *      Eckhard von Toerne <evt@physik.uni-bonn.de> - U. of Bonn, Germany         *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -879,6 +880,9 @@ Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
    // if the average of the bin right and left is larger than this one, add the difference to 
    // the current value of the estimator (because you can do at least so much better)
    eta = ( -TMath::Abs(effBH-average) + (1.0 - (effBH - effB))) / (1.0 + effS); 
+   // alternative idea
+   //if (effBH<0) eta = (1.e-6+effB)/(1.0 + effS);
+   //else eta =  (effB - effBH) * (1.0 + 10.* effS);
 
    // if a point is found which is better than an existing one, ... replace it. 
    // preliminary best event -> backup
@@ -894,6 +898,22 @@ Double_t TMVA::MethodCuts::ComputeEstimator( std::vector<Double_t>& pars )
    // but .. it doesn't matter, as MC samplings are independent from the former ones
    // and the replacement of the best variables by better ones is done about 10 lines above. 
    // ( if (effBH < 0 || effBH > effB) { .... )
+
+   if (ibinS<=1) {
+      // add penalty for effS=0 bin 
+      // to avoid that the minimizer gets stuck in the zero-bin
+      // force it towards higher efficiency
+      Double_t penalty=0.,diff=0.;
+      for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
+         diff=(fCutRange[ivar]->GetMax()-fTmpCutMax[ivar])/(fCutRange[ivar]->GetMax()-fCutRange[ivar]->GetMin());
+         penalty+=diff*diff;
+         diff=(fCutRange[ivar]->GetMin()-fTmpCutMin[ivar])/(fCutRange[ivar]->GetMax()-fCutRange[ivar]->GetMin());
+         penalty+=4.*diff*diff;
+      }
+      //Log() << kINFO<<"special treatment of "<<ibinS<<" bin penalty="<< penalty<<" effS="<<effS<<Endl;
+      if (effS<1.e-4) return 10.0+penalty;
+      else return 10.*(1.-10.*effS);
+   }
    return eta;
 }
 

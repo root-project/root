@@ -287,6 +287,8 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector<Event*>&
          Float_t sum=0;
          Float_t ev_value=listsForBinning[icl][ivar].begin()->GetValue();
          Float_t lastev_value=ev_value;
+         const Float_t eps = 1.e-4;
+         vsForBinning[icl][ivar].push_back(ev_value-eps);
          vsForBinning[icl][ivar].push_back(ev_value);
 
          for (it=listsForBinning[icl][ivar].begin(); it != listsForBinning[icl][ivar].end(); it++){
@@ -375,7 +377,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector<Event*>&
             (fCumulativeDist[ivar][icls])->SetBinContent(ibin,sum/total);
          }
          // create PDf
-         fCumulativePDF[ivar].push_back(new PDF( Form("GaussTransform var%d cls%d",ivar,icls),  fCumulativeDist[ivar][icls], PDF::kSpline2, fPdfMinSmooth, fPdfMaxSmooth,kFALSE,kFALSE));
+         fCumulativePDF[ivar].push_back(new PDF( Form("GaussTransform var%d cls%d",ivar,icls),  fCumulativeDist[ivar][icls], PDF::kSpline1, fPdfMinSmooth, fPdfMaxSmooth,kFALSE,kFALSE));
       }
    }
 }

@@ -144,7 +144,7 @@ int main( int argc, char** argv )
    // read training and test data (see TMVAClassification for reading ASCII files)
    // load the signal and background event samples from ROOT trees
    TFile *input(0);
-   TString fname = "../macros/tmva_reg_example.root";
+   TString fname = "./tmva_reg_example.root";
    if (!gSystem->AccessPathName( fname )) {
       // first we try to find tmva_example.root in the local directory
       std::cout << "--- TMVARegression    : Accessing " << fname << std::endl;
@@ -279,7 +279,7 @@ int main( int argc, char** argv )
    delete factory;
 
    std::cout << std::endl;
-   std::cout << "==> Too view the results, launch the GUI: \"root -l ../macros/TMVARegGui.C\"" << std::endl;
+   std::cout << "==> Too view the results, launch the GUI: \"root -l TMVARegGui.C\"" << std::endl;
    std::cout << std::endl;
 }
 
