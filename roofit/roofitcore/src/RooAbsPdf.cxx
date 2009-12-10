@@ -1998,7 +1998,12 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
       delete hist ;
       return 0 ;
     } else {
-      nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
+      // Don't round in expectedData mode
+      if (expectedData) {
+	nEvents = expectedEvents(&whatVars) ;
+      } else {
+	nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
+      }
     }
   } 
   
