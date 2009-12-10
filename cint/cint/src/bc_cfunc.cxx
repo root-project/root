@@ -218,7 +218,7 @@ void G__functionscope::Setfpos() {
   G__ifile.fp = (FILE*)ifunc->pentry[m_iexist]->p ;
   G__ifile.line_number = ifunc->pentry[m_iexist]->line_number;
   G__ifile.filenum=ifunc->pentry[m_iexist]->filenum;
-  strcpy(G__ifile.name,G__srcfile[ifunc->pentry[m_iexist]->filenum].filename);
+  strncpy(G__ifile.name,G__srcfile[ifunc->pentry[m_iexist]->filenum].filename, sizeof(G__ifile.name) - 1);
   fsetpos(G__ifile.fp,&ifunc->pentry[m_iexist]->pos);
 
   // m_reader also has m_fpos. This implementation is not so clean.
@@ -355,7 +355,7 @@ int G__functionscope::Readinitlist(map<string,string>& initlist,int c) {
 void G__functionscope::Baseclassctor_base(G__ClassInfo& cls
 				     	,map<string,string>& initlist) {
   G__BaseClassInfo bas(cls);
-  struct G__param para;
+  struct G__param* para = new G__param();
   string args;
   G__value ctorfound;
   int pc_skip=0;
@@ -370,11 +370,11 @@ void G__functionscope::Baseclassctor_base(G__ClassInfo& cls
 
     // compile initialization list for base class ctor
     args = initlist[bas.Name()];
-    para.paran = 0;
-    para.para[0] = G__null;
+    para->paran = 0;
+    para->para[0] = G__null;
     if(args!="") {
       // evaluate initialization list if exist
-      compile_arglist(args,&para); 
+      compile_arglist(args,para); 
       initlist[bas.Name()] = "";
     }
 
@@ -385,7 +385,7 @@ void G__functionscope::Baseclassctor_base(G__ClassInfo& cls
     else  
       if(bas.Offset()) m_bc_inst.ADDSTROS(bas.Offset());
     if(bas.Property()&G__BIT_ISCOMPILED) m_bc_inst.SETGVP(1);
-    ctorfound=call_func(bas,bas.Name(),&para,G__TRYMEMFUNC);
+    ctorfound=call_func(bas,bas.Name(),para,G__TRYMEMFUNC);
     if(bas.Property()&G__BIT_ISCOMPILED) m_bc_inst.SETGVP(-1);
     if(bas.Property()&G__BIT_ISVIRTUALBASE) 
       m_bc_inst.ADDSTROS(-bas.Offset()-G__DOUBLEALLOC);
@@ -406,12 +406,13 @@ void G__functionscope::Baseclassctor_base(G__ClassInfo& cls
       G__genericerror((char*)NULL);
     }
   }
+  delete para;
 }
 //////////////////////////////////////////////////////////////////////////
 void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
 				       	   ,map<string,string>& initlist) {
   G__DataMemberInfo dat(cls);
-  struct G__param para;
+  struct G__param* para = new G__param();
   string args;
   G__value ctorfound;
   while(dat.Next()) {
@@ -419,11 +420,11 @@ void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
 
     // compile initlization list for data member
     args = initlist[dat.Name()];
-    para.paran = 0;
-    para.para[0] = G__null;
+    para->paran = 0;
+    para->para[0] = G__null;
     if(args!="") {
       // evaluate initialization list if exist
-      compile_arglist(args,&para); 
+      compile_arglist(args,para); 
       initlist[dat.Name()] = "";
     }
 
@@ -436,7 +437,7 @@ void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
       if(dat.Type()->Property()&G__BIT_ISCOMPILED) {
 	// TODO, compiled class object array as member
         m_bc_inst.CTOR_SETGVP(var,ig15,1); // init local block scope object
-	ctorfound=call_func(*dat.Type(),dat.Type()->TrueName(),&para,G__TRYMEMFUNC);
+	ctorfound=call_func(*dat.Type(),dat.Type()->TrueName(),para,G__TRYMEMFUNC);
         m_bc_inst.SETGVP(-1); // restoration from store_globalvarpointer stack
       }
       else {
@@ -447,12 +448,12 @@ void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
 	  m_bc_inst.LD(var->varlabel[ig15][1]);
 	  m_bc_inst.SETARYINDEX(1); // this is illegular, but (1) does --sp
 	  ctorfound
-	    =call_func(*dat.Type(),dat.Type()->TrueName(),&para,G__TRYMEMFUNC,1);
+	    =call_func(*dat.Type(),dat.Type()->TrueName(),para,G__TRYMEMFUNC,1);
 	  m_bc_inst.RESETARYINDEX(0);
 	}
 	else {
 	  ctorfound
-	    =call_func(*dat.Type(),dat.Type()->TrueName(),&para,G__TRYMEMFUNC,0);
+	    =call_func(*dat.Type(),dat.Type()->TrueName(),para,G__TRYMEMFUNC,0);
 	}
         m_bc_inst.POPSTROS();
       }
@@ -466,13 +467,14 @@ void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
 	G__genericerror((char*)NULL);
       }
     }
-    if(!ctorfound.type && para.paran) {
+    if(!ctorfound.type && para->paran) {
       // fundamental type initialization. 
       // Since implicit default and copy ctors are always generated, class object
       // member should not come here.
       m_bc_inst.ST_MSTR(var,ig15,0,'p');
     }    
   }
+  delete para;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -528,17 +530,17 @@ void G__functionscope::Baseclasscopyctor(int c) {
      strcmp(ifunc->funcname[m_iexist],G__struct.name[ifunc->tagnum])==0) {
 
     G__ClassInfo cls(ifunc->tagnum);
-    struct G__param para;
+    struct G__param* para = new G__param();
     for(int i=0;i<ifunc->para_nu[m_iexist];++i) {
-      para.para[i].type=ifunc->param[m_iexist][i]->type;
-      para.para[i].tagnum=ifunc->param[m_iexist][i]->p_tagtable;
-      para.para[i].typenum=ifunc->param[m_iexist][i]->p_typetable;
-      para.para[i].obj.i=1;   // dummy value
-      para.para[i].ref=1; // dummy value
-      para.para[i].obj.reftype.reftype=ifunc->param[m_iexist][i]->reftype;
-      para.para[i].isconst = 0;
+      para->para[i].type=ifunc->param[m_iexist][i]->type;
+      para->para[i].tagnum=ifunc->param[m_iexist][i]->p_tagtable;
+      para->para[i].typenum=ifunc->param[m_iexist][i]->p_typetable;
+      para->para[i].obj.i=1;   // dummy value
+      para->para[i].ref=1; // dummy value
+      para->para[i].obj.reftype.reftype=ifunc->param[m_iexist][i]->reftype;
+      para->para[i].isconst = 0;
     }
-    para.paran = ifunc->para_nu[m_iexist];
+    para->paran = ifunc->para_nu[m_iexist];
 
     if(cls.Property()&G__BIT_ISCOMPILED) {
       // error if compiled class;,  should never happen
@@ -546,16 +548,18 @@ void G__functionscope::Baseclasscopyctor(int c) {
     }
 
     // iterate on direct base classes
-    Baseclasscopyctor_base(cls,&para);
+    Baseclasscopyctor_base(cls,para);
   
     // set virtual base offset, this must be done after ctor_base
     //Baseclassctor_vbase(cls); // not here. do this before ctor call
 
     // iterate on members
-    Baseclasscopyctor_member(cls,&para);
+    Baseclasscopyctor_member(cls,para);
 
     // initialize G__virtualtag
     InitVirtualoffset(cls,cls.Tagnum(),0);
+
+    delete para;
   }
 
 }
@@ -672,17 +676,17 @@ void G__functionscope::Baseclassassign(int c) {
   if(-1!=ifunc->tagnum&&strcmp(ifunc->funcname[m_iexist],"operator=")==0){
 
     G__ClassInfo cls(ifunc->tagnum);
-    struct G__param para;
+    struct G__param* para = new G__param();
     for(int i=0;i<ifunc->para_nu[m_iexist];++i) {
-      para.para[i].type=ifunc->param[m_iexist][i]->type;
-      para.para[i].tagnum=ifunc->param[m_iexist][i]->p_tagtable;
-      para.para[i].typenum=ifunc->param[m_iexist][i]->p_typetable;
-      para.para[i].obj.i=1;   // dummy value
-      para.para[i].ref=1; // dummy value
-      para.para[i].obj.reftype.reftype=ifunc->param[m_iexist][i]->reftype;
-      para.para[i].isconst = 0;
+      para->para[i].type=ifunc->param[m_iexist][i]->type;
+      para->para[i].tagnum=ifunc->param[m_iexist][i]->p_tagtable;
+      para->para[i].typenum=ifunc->param[m_iexist][i]->p_typetable;
+      para->para[i].obj.i=1;   // dummy value
+      para->para[i].ref=1; // dummy value
+      para->para[i].obj.reftype.reftype=ifunc->param[m_iexist][i]->reftype;
+      para->para[i].isconst = 0;
     }
-    para.paran = ifunc->para_nu[m_iexist];
+    para->paran = ifunc->para_nu[m_iexist];
 
     if(cls.Property()&G__BIT_ISCOMPILED) {
       // error if compiled class;,  should never happen
@@ -690,10 +694,12 @@ void G__functionscope::Baseclassassign(int c) {
     }
 
     // iterate on direct base classes
-    Baseclassassign_base(cls,&para);
+    Baseclassassign_base(cls,para);
   
     // iterate on members
-    Baseclassassign_member(cls,&para);
+    Baseclassassign_member(cls,para);
+
+    delete para;
   }
 
   m_bc_inst.LD_THIS('v');
@@ -809,11 +815,11 @@ void G__functionscope::Baseclassdtor() {
 //////////////////////////////////////////////////////////////////////////
 void G__functionscope::Baseclassdtor_base(G__ClassInfo& cls) {
   G__BaseClassInfo bas(cls);
-  struct G__param para;
+  struct G__param* para = new G__param();
   string args;
   G__value dtorfound;
-  para.paran = 0;
-  para.para[0] = G__null;
+  para->paran = 0;
+  para->para[0] = G__null;
   string fname;
   while(bas.Prev()) {
     dtorfound=G__null;
@@ -821,19 +827,20 @@ void G__functionscope::Baseclassdtor_base(G__ClassInfo& cls) {
     if(bas.Offset()) m_bc_inst.ADDSTROS(bas.Offset());
     fname = "~";
     fname.append(G__struct.name[bas.Tagnum()]);
-    dtorfound=call_func(bas,fname,&para,G__TRYMEMFUNC);
+    dtorfound=call_func(bas,fname,para,G__TRYMEMFUNC);
     if(bas.Offset()) m_bc_inst.ADDSTROS(-bas.Offset());
     if(!dtorfound.type) m_bc_inst.rewind(store_pc);
   }
+  delete para;
 }
 //////////////////////////////////////////////////////////////////////////
 void G__functionscope::Baseclassdtor_member(G__ClassInfo& cls) {
   G__DataMemberInfo dat(cls);
-  struct G__param para;
+  struct G__param* para = new G__param();
   G__value dtorfound;
   string fname;
-  para.paran = 0;
-  para.para[0] = G__null;
+  para->paran = 0;
+  para->para[0] = G__null;
   while(dat.Prev()) {
     dtorfound=G__null;
     if((dat.Property()&(G__BIT_ISCLASS|G__BIT_ISSTRUCT)) &&
@@ -849,16 +856,17 @@ void G__functionscope::Baseclassdtor_member(G__ClassInfo& cls) {
 	int ig15 = dat.Index();
 	m_bc_inst.LD(var->varlabel[ig15][1]);
 	m_bc_inst.SETARYINDEX(1); // this is illegular, but (1) does --sp
-	dtorfound=call_func(*dat.Type(),fname,&para,G__TRYMEMFUNC,1);
+	dtorfound=call_func(*dat.Type(),fname,para,G__TRYMEMFUNC,1);
 	m_bc_inst.RESETARYINDEX(0);
       }
       else {
-	dtorfound=call_func(*dat.Type(),fname,&para,G__TRYMEMFUNC,0);
+	dtorfound=call_func(*dat.Type(),fname,para,G__TRYMEMFUNC,0);
       }
       if(dat.Offset()) m_bc_inst.ADDSTROS(-dat.Offset());
       if(!dtorfound.type) m_bc_inst.rewind(store_pc);
     }
   }
+  delete para;
 }
 
 //////////////////////////////////////////////////////////////////////////
