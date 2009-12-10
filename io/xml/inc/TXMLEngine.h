@@ -41,9 +41,14 @@ protected:
    XMLNodePointer_t  ReadNode(XMLNodePointer_t xmlparent, TXMLInputStream* inp, Int_t& resvalue);
    void              DisplayError(Int_t error, Int_t linenumber);
 
+   Bool_t            fSkipComments;    //! if true, do not create comments nodes in document during parsing
+
 public:
    TXMLEngine();
    virtual ~TXMLEngine();
+
+   void              SetSkipComments(bool on = kTRUE) { fSkipComments = on; }
+   Bool_t            GetSkipComments() const { return fSkipComments; }
 
    Bool_t            HasAttr(XMLNodePointer_t xmlnode, const char* name);
    const char*       GetAttr(XMLNodePointer_t xmlnode, const char* name);

@@ -122,6 +122,7 @@ TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename)
 
    // First create engine
    TXMLEngine* gdml = new TXMLEngine;
+   gdml->SetSkipComments(kTRUE);
    
    // Now try to parse xml file
    XMLDocPointer_t gdmldoc = gdml->ParseFile(filename);
@@ -1014,7 +1015,9 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
                fCurrentFile = gdml->GetAttr(subchild, "name");
                filevol = gdml->GetAttr(subchild, "volname");
                  
-               TXMLEngine* gdml2 = new TXMLEngine;         
+               TXMLEngine* gdml2 = new TXMLEngine;
+               gdml2->SetSkipComments(kTRUE);
+
                XMLDocPointer_t filedoc1 = gdml2->ParseFile(fCurrentFile);
                if (filedoc1==0) {
                   std::cout << "Error: Bad filename given :" << fCurrentFile << std::endl;
@@ -1025,7 +1028,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
                //increase depth counter + add DOM pointer
                fFILENO = fFILENO + 1;
                fFileEngine[fFILENO] = gdml2;
-          
+
                if(ffilemap.find(fCurrentFile) != ffilemap.end()){ 
                   volref = ffilemap[fCurrentFile];
                } 

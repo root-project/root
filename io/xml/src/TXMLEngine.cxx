@@ -393,7 +393,7 @@ public:
 TXMLEngine::TXMLEngine()
 {
    // default (normal) constructor of TXMLEngine class
-
+   fSkipComments = kFALSE;
 }
 
 
@@ -1414,6 +1414,10 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
       Int_t commentlen = inp->SearchFor("-->");
       if (commentlen<=0) { resvalue = -10; return 0; }
 
+      if (fSkipComments) {
+         if (!inp->ShiftCurrent(commentlen+3)) { resvalue = -1; return 0; }
+         continue;
+      }
       
       node = (SXmlNode_t*) AllocateNode(0, xmlparent);
       node->fName.Resize(commentlen);
