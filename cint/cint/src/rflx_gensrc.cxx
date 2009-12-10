@@ -1084,12 +1084,12 @@ void rflx_gensrc::gen_classdictdecls(std::ostringstream & s,
          int myAccess=ciBase.Property() & 
             (G__BIT_ISVIRTUALBASE | G__BIT_ISPRIVATE | G__BIT_ISPROTECTED | G__BIT_ISPUBLIC);
          if ((myAccess & G__BIT_ISPROTECTED) && (accessBase & G__BIT_ISPRIVATE))
-            myAccess=(myAccess & !G__BIT_ISPROTECTED) | G__BIT_ISPRIVATE;
+            myAccess=(myAccess & ~G__BIT_ISPROTECTED) | G__BIT_ISPRIVATE;
          else if (myAccess & G__BIT_ISPUBLIC) {
             if (accessBase & G__BIT_ISPRIVATE) 
-               myAccess=(myAccess & !G__BIT_ISPUBLIC) | G__BIT_ISPRIVATE;
+               myAccess=(myAccess & ~G__BIT_ISPUBLIC) | G__BIT_ISPRIVATE;
             else if (accessBase & G__BIT_ISPROTECTED) 
-               myAccess=(myAccess & !G__BIT_ISPUBLIC) | G__BIT_ISPROTECTED;
+               myAccess=(myAccess & ~G__BIT_ISPUBLIC) | G__BIT_ISPROTECTED;
          }
 
          baseClassesToSearch.push_back(std::make_pair(ciBaseClass, std::make_pair(myAccess,inhlevel+1)));
