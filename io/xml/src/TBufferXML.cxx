@@ -61,7 +61,17 @@ const char* TBufferXML::fgFloatFmt = "%e";
 TBufferXML::TBufferXML() :
    TBufferFile(),
    TXMLSetup(),
-   fXML(0)
+   fXML(0),
+   fStack(),
+   fVersionBuf(-111),
+   fObjMap(0),
+   fIdArray(0),
+   fErrorFlag(0),
+   fCanUseCompact(kFALSE),
+   fExpectedChain(kFALSE),
+   fExpectedBaseClass(0),
+   fCompressLevel(0)
+
 {
    // Default constructor
 }
