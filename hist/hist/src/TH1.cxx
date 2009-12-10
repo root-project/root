@@ -1748,7 +1748,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          }
       }
       if (sumw1 <= 0 || sumw2 <= 0) {
-         Error("Chi2TestX","Cannot use option NORM when one histogram has all errors zero");
+         Error("Chi2TestX","Cannot use option NORM when one histogram has all zero errors");
          return 0;
       }
 
@@ -1777,7 +1777,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    }
 
    if ( comparisonWW  && ( sumw1 <= 0 && sumw2 <=0 ) ){
-      Error("Chi2TestX","Hist1 and Hist2 have both all errors zero\n");
+      Error("Chi2TestX","Hist1 and Hist2 have both all zero errors\n");
       return 0;
    }
 
@@ -1854,11 +1854,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       // flag error only when of the two histogram is zero
       if (m) {
          igood += 1;
-         Info("Chi2TestX","There is bin in Hist1 with less than 1 number of events.\n");
+         Info("Chi2TestX","There is a bin in h1 with less than 1 event.\n");
       }
       if (n) {
          igood += 2;
-         Info("Chi2TestX","There is bin in Hist2 with less than 1 number of events.\n");
+         Info("Chi2TestX","There is a bin in h2 with less than 1 event.\n");
       }
 
       Double_t prob = TMath::Prob(chi2,ndf);
@@ -1895,7 +1895,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   else { 
                      // return error because infinite discrepancy here: 
                      // bin1 != 0 and bin2 =0 in a histogram with all errors zero 
-                     Error("Chi2TestX","Hist2 has in bin %d,%d,%d zero content and all errors e zero\n", i,j,k);
+                     Error("Chi2TestX","Hist2 has in bin %d,%d,%d zero content and all zero errors\n", i,j,k);
                      chi2 = 0; return 0;
                   }
                }
@@ -1970,11 +1970,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
       if (m) {
          igood += 1;
-         Info("Chi2TestX","There is bin in Hist1 with less than 1 number of events.\n");
+         Info("Chi2TestX","There is a bin in h1 with less than 1 event.\n");
       }
       if (n) {
          igood += 2;
-         Info("Chi2TestX","There is bin in Hist2 with less than 10 effective number of events.\n");
+         Info("Chi2TestX","There is a bin in h2 with less than 10 effective events.\n");
       }
 
       Double_t prob = TMath::Prob(chi2,ndf);
@@ -2001,7 +2001,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                } 
                if ( (err1 == 0) && (err2 == 0) ) { 
                   // case of zero errors but non zero bin content
-                  Error("Chi2TestX","Hist1 and Hist2 have both in bin %d,%d,%d errors zero\n", i,j,k);
+                  Error("Chi2TestX","h1 and h2 both have bin %d,%d,%d with all zero errors\n", i,j,k);
                   chi2 = 0; return 0; 
                }
                
@@ -2036,11 +2036,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       }
       if (m) {
          igood += 1;
-         Info("Chi2TestX","There is bin in Hist1 with less than 10 effective number of events.\n");
+         Info("Chi2TestX","There is a bin in h1 with less than 10 effective events.\n");
       }
       if (n) {
          igood += 2;
-         Info("Chi2TestX","There is bin in Hist2 with less than 10 effective number of events.\n");
+         Info("Chi2TestX","There is a bin in h2 with less than 10 effective events.\n");
       }
       Double_t prob = TMath::Prob(chi2,ndf);
       return prob;
@@ -2549,7 +2549,7 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
 
    Double_t sum = GetSumOfWeights();
    if (sum == 0) {
-      Error("DrawNormalized","Sum of weights is null. Cannot normalized histogram: %s",GetName());
+      Error("DrawNormalized","Sum of weights is null. Cannot normalize histogram: %s",GetName());
       return 0;
    }
    Bool_t addStatus = TH1::AddDirectoryStatus();
@@ -3110,7 +3110,8 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //                       Use this option when you want to fix one or more parameters for these functions.
 //                = "M"  More. Improve fit results. 
 //                       It uses the IMPROVE command of TMinuit (see TMinuit::mnimpr). 
-//                       This algorithm attempts to improve the found local minimum by searching for a better one.
+//                       This algorithm attempts to improve the found local minimum by searching for a
+//                       better one.
 //                = "R"  Use the Range specified in the function range
 //                = "N"  Do not store the graphics function, do not draw
 //                = "0"  Do not plot the result of the fit. By default the fitted function
@@ -3166,8 +3167,9 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //      =============================
 //     By default a chi square function is used for fitting. When option "L" (or "LL") is used 
 //     a Poisson likelihood function (see note below) is used. 
-//     The functions are defined in the header Fit/Chi2Func.h or Fit/PoissonLikelihoodFCN and they are implemented 
-//     using the routines FitUtil::EvaluateChi2 or FitUtil::EvaluatePoissonLogL in the file math/mathcore/src/FitUtil.cxx.
+//     The functions are defined in the header Fit/Chi2Func.h or Fit/PoissonLikelihoodFCN and they
+//     are implemented using the routines FitUtil::EvaluateChi2 or FitUtil::EvaluatePoissonLogL in
+//     the file math/mathcore/src/FitUtil.cxx.
 //     To specify a User defined fitting function, specify option "U" and
 //     call the following functions:
 //       TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
@@ -3178,11 +3180,12 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //     =================
 //     When using option "L" a likelihood fit is used instead of the default chi2 square fit.
 //     The likelihood is built assuming a Poisson probability density function for each bin.
-//     This method can then be used only when the bin content represents counts (i.e. errors are  = sqrt(N) ).
-//     The likelihood method has the advantage of treating correctly the empty bins and use them in the fit procedure.
+//     This method can then be used only when the bin content represents counts (i.e. errors are sqrt(N) ).
+//     The likelihood method has the advantage of treating correctly the empty bins and use them in the
+//     fit procedure.
 //     In the chi2 method the empty bins are skipped and not considered in the fit.
-//     The likelihood method, although a bit slower, it is the recommended method in case of low bin statistics, where 
-//     the chi2 method may give incorrect results. 
+//     The likelihood method, although a bit slower, it is the recommended method in case of low
+//     bin statistics, where the chi2 method may give incorrect results. 
 //     
 //      Fitting a histogram of dimension N with a function of dimension N-1
 //      ===================================================================
@@ -3201,8 +3204,8 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //      Access to the fit result 
 //      ========================
 //     The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-//     By default the TFitResultPtr contains only the status of the fit which is return by an automatic conversion of 
-//     the TFitResultPtr to an integer. One can write in this case directly: 
+//     By default the TFitResultPtr contains only the status of the fit which is return by an 
+//     automatic conversion of the TFitResultPtr to an integer. One can write in this case directly: 
 //     Int_t fitStatus =  h->Fit(myFunc)  
 //
 //     If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart 
@@ -3234,19 +3237,20 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //     Int_t fitStatus = r; 
 //
 //     The fitStatus is 0 if the fit is OK (i.e no error occurred). 
-//     The value of the fit status code is negative in case of an error not connected with the minimization 
-//     procedure, for example  when a wrong function is used. 
+//     The value of the fit status code is negative in case of an error not connected with the
+//     minimization procedure, for example  when a wrong function is used. 
 //     Otherwise the return value is the one returned from the minimization procedure.
 //     When TMinuit (default case) or Minuit2 are used as minimizer the status returned is :
 //     fitStatus =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult.
-//     TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in case of error
-//     (see the documentation of TMinuit::mnexcm). So for example, for an error only in Minos but not in Migrad a fitStatus of 40 
-//     will be returned. 
-//     Minuit2 will return also 0 in case of success and different values in migrad minos or hesse depending on the error. 
-//     See in this case the documentation of Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the 
+//     TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in
+//     case of error (see the documentation of TMinuit::mnexcm). So for example, for an error
+//     only in Minos but not in Migrad a fitStatus of 40 will be returned. 
+//     Minuit2 will return also 0 in case of success and different values in migrad minos or
+//     hesse depending on the error. See in this case the documentation of
+//     Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the 
 //     minosResult and Minuit2Minimizer::Hesse for the hesseResult.
-//     If other minimizers are used see their specific documentation for the status code returned. For example in the case of Fumili, 
-//     for the status returned see TFumili::Minimize.   
+//     If other minimizers are used see their specific documentation for the status code returned. 
+//     For example in the case of Fumili, for the status returned see TFumili::Minimize.   
 //
 //      Excluding points
 //      ================
@@ -3294,9 +3298,10 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //     A different fitter can also be set via ROOT::Math::MinimizerOptions::SetDefaultMinimizer
 //     (or TVirtualFitter::SetDefaultFitter). 
 //     For example ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS"); 
-//     will set the usdage of the BFGS algorithm of the GSL multi-dimensional minimization (implemented in libMathMore).
-//     ROOT::Math::MinimizerOptions can be used also to set other default options, like maximum number of function calls, 
-//     minimization tolerance or  print level. See the documentation of this class.  
+//     will set the usdage of the BFGS algorithm of the GSL multi-dimensional minimization
+//     (implemented in libMathMore). ROOT::Math::MinimizerOptions can be used also to set other
+//     default options, like maximum number of function calls, minimization tolerance or print
+//     level. See the documentation of this class.  
 //
 //     For fitting linear functions (containing the "++" sign" and polN functions,
 //     the linear fitter is automatically initialized.
@@ -3335,7 +3340,7 @@ void TH1::FitPanel()
    TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TFitEditor");
    if (handler && handler->LoadPlugin() != -1) {
       if (handler->ExecPlugin(2, gPad, this) == 0)
-         Error("FitPanel", "Unable to crate the FitPanel");
+         Error("FitPanel", "Unable to create the FitPanel");
    }
    else 
          Error("FitPanel", "Unable to find the FitPanel plug-in");
@@ -6609,8 +6614,8 @@ Double_t TH1::IntegralAndError(Int_t binx1, Int_t binx2, Double_t & error, Optio
 Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Double_t & error , 
                           Option_t *option, Bool_t doError) const
 {
-   // internal function compute integral and optionally the error  between the limits specified by the bin number values 
-   // working for all histograms (1D, 2D and 3D)
+   // internal function compute integral and optionally the error  between the limits
+   // specified by the bin number values working for all histograms (1D, 2D and 3D)
 
    Int_t nbinsx = GetNbinsX();
    if (binx1 < 0) binx1 = 0;
@@ -7317,9 +7322,12 @@ void TH1::SetMaximum(Double_t maximum)
    // Set the maximum value for the Y axis, in case of 1-D histograms, 
    // or the Z axis in case of 2-D histograms
    //
-   // By default the maximum value used in drawing is the maximum value of the histogram plus a margin of 10 per cent. If this function has been called, the value of 'maximum' is used, with no extra margin.
+   // By default the maximum value used in drawing is the maximum value of the histogram plus
+   // a margin of 10 per cent. If this function has been called, the value of 'maximum' is
+   // used, with no extra margin.
    //
-   // TH1::GetMaximum returns the maximum value of the bins in the histogram, unless the maximum has been set manually by this function or by altering the y/z axis limits
+   // TH1::GetMaximum returns the maximum value of the bins in the histogram, unless the
+   // maximum has been set manually by this function or by altering the y/z axis limits.
    // Use TH1::GetMaximumBin to find the bin with the maximum value of an histogram
    //
    fMaximum = maximum;
@@ -7332,9 +7340,12 @@ void TH1::SetMinimum(Double_t minimum)
    // Set the minimum value for the Y axis, in case of 1-D histograms, 
    // or the Z axis in case of 2-D histograms
    //
-   // By default the minimum value used in drawing is the minimum value of the histogram plus a margin of 10 per cent. If this function has been called, the value of 'minimum' is used, with no extra margin.
+   // By default the minimum value used in drawing is the minimum value of the histogram plus
+   // a margin of 10 per cent. If this function has been called, the value of 'minimum' is
+   // used, with no extra margin.
    //
-   // TH1::GetMinimum returns the minimum value of the bins in the histogram, unless the minimum has been set manually by this function or by altering the y/z axis limits
+   // TH1::GetMinimum returns the minimum value of the bins in the histogram, unless the
+   // minimum has been set manually by this function or by altering the y/z axis limits.
    // Use TH1::GetMinimumBin to find the bin with the minimum value of an histogram
    //
    fMinimum = minimum;
