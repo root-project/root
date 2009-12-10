@@ -1878,7 +1878,6 @@ TestFileList::~TestFileList()
 {
    // dtor.
 
-   delete fMenu;
    delete fContents;
 }
 
