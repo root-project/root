@@ -1437,7 +1437,7 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    // if parent is editing/embedable add this frame to the parent
    if (fClient->IsEditable() && (p == fClient->GetRoot())) {
       TGCompositeFrame *frame;
-      if (p->InheritsFrom(TGCompositeFrame::Class())) {
+      if (p && p->InheritsFrom(TGCompositeFrame::Class())) {
          frame = (TGCompositeFrame*)p;
          frame->AddFrame(this, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
