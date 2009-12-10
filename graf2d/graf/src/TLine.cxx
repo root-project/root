@@ -33,6 +33,8 @@ ClassImp(TLine)
 TLine::TLine(): TObject(), TAttLine()
 {
    // Line default constructor.
+
+   fX1=0; fY1=0; fX2=0; fY2=0;
 }
 
 
