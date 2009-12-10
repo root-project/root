@@ -3451,7 +3451,7 @@ int G__get_linked_tagnum_with_param(G__linked_taginfo *p,void* param)
 **************************************************************************/
 void* G__get_linked_user_param(int tag_num)
 {
-  if ( tag_num<0 || tag_num>G__MAXSTRUCT ) return 0;
+  if ( tag_num<0 || tag_num>=G__MAXSTRUCT ) return 0;
   return G__struct.userparam[tag_num];
 }
 
