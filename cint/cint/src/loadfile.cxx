@@ -1582,10 +1582,10 @@ int G__loadfile(const char *filenamein)
                   excludelen[i] = strlen(excludelist[i]);
             }
             bool cintdlls = false;
-            int len = strlen(filename);
+            int filelen = strlen(filename);
             for (unsigned int i = 0; !cintdlls && i < excludelistsize; ++i) {
-               if (len>=excludelen[i]) {
-                  cintdlls = (!strncmp(filename+len-excludelen[i], excludelist[i], excludelen[i]));
+               if (filelen>=excludelen[i]) {
+                  cintdlls = (!strncmp(filename+filelen-excludelen[i], excludelist[i], excludelen[i]));
                }
             }
             if (!cintdlls) G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename());
