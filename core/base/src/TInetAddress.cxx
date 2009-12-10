@@ -171,7 +171,7 @@ void TInetAddress::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       if (R__v > 2) {
-         R__b.ReadClassBuffer(TInetAddress::Class(), this);
+         R__b.ReadClassBuffer(TInetAddress::Class(), this, R__v, R__s, R__c);
          return;
       }
       // process old versions before automatic schema evolution
