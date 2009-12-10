@@ -454,7 +454,7 @@ void TSelectorDraw::Begin(TTree *tree)
    // Decode varexp and selection
    if (!CompileVariables(varexp, realSelection.GetTitle())) {SetStatus(-1); return;}
    if (fDimension > 4 && !(optpara || optcandle || opt5d)) {
-      Error("Begin","Too many variables. Use the option \"para\" or \"candle\" to display more than 4 variables.");
+      Error("Begin","Too many variables. Use the option \"para\", \"gl5d\" or \"candle\" to display more than 4 variables.");
       SetStatus(-1);
       return;
    }
