@@ -2604,7 +2604,7 @@ int G__asm_putint(int i)
 **************************************************************************/
 G__value G__getreserved(const char *item ,void ** /* ptr */,void ** /* ppdict */)
 {
-  G__value buf;
+  G__value buf = G__null;
   int i;
 
   G__abortbytecode();
