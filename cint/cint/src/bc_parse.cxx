@@ -2667,7 +2667,7 @@ int G__blockscope::conversionopr(G__value& result,struct G__var_array* var
 				 ,int ig15,int vartype,int paran) {
   if('u'==result.type) {
     // look for result_type::operator[target_type]();
-    G__value target;
+    G__value target = G__null;
     target.type = var->type[ig15];
     target.tagnum = var->p_tagtable[ig15];
     target.typenum = -1;
