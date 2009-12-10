@@ -6665,7 +6665,7 @@ Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
       }
    }
 
-   if (i == 20) { // jpeg maker was not found
+   if (i == 20 || dpi+4 >= 20) { // jpeg maker was not found
       fclose(fp);
       printf("file %s : wrong JPEG format\n", name);
       return kFALSE;
