@@ -338,7 +338,7 @@ G__value G__blockscope::compile_expression(string& expr) {
   G__currentscope = store_scope;
   G__var_type = store_var_type;
   stdclear(expr);
-  delete buf;
+  delete [] buf;
   return(x);
 }
 
@@ -381,7 +381,7 @@ int G__blockscope::getstaticvalue(string& expr) {
   G__asm_noverflow = 0;
   G__no_exec_compile = 0;
   int result = G__int(G__getexpr(buf)); // legacy
-  delete buf;
+  delete [] buf;
   G__no_exec_compile = store_no_exec_compile;
   G__asm_noverflow = store_asm_noverflow;
   return(result);
@@ -2581,7 +2581,7 @@ int G__blockscope::Istypename(const string& name) {
     G__genericerror((char*)NULL);
   }
   int result=G__istypename(buf); // legacy
-  delete buf;
+  delete [] buf;
  return(result);
 }
 
