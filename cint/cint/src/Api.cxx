@@ -457,9 +457,8 @@ int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
       throw std::runtime_error("CINT: Exception caught in compiled code");
     }
     //G__genericerror("Error: C++ exception caught");
-    char buf[G__LONGLINE];
     G__getexpr("#include <exception>");
-    sprintf(buf,"new G__exception(\"G__exception\",\"CINT forwarded exception in compiled code\")");
+    G__FastAllocString buf("new G__exception(\"G__exception\",\"CINT forwarded exception in compiled code\")");
     G__exceptionbuffer = G__getexpr(buf);
     G__exceptionbuffer.ref = G__exceptionbuffer.obj.i;
     G__return = G__RETURN_TRY;
