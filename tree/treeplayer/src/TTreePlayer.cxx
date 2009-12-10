@@ -1154,8 +1154,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    } else if (optpara || optcandle) {
       if (draw) {
          TObject* para = fSelector->GetObject();
+         TObject *enlist = gDirectory->FindObject("enlist");
          fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
-         gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)0x%lx,enlist)",para));
+         gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)0x%lx,(TEntryList*)0x%lx)",para,enlist));
       }
    //*-*- 5d with gl
    } else if (optgl5d) {
