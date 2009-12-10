@@ -171,6 +171,7 @@ void G__asm_cast(int type, G__value* buf, int tagnum, int reftype)
       case 'U': {
          int offset = G__ispublicbase(buf->tagnum, tagnum, buf->obj.i);
          if (-1 != offset) buf->obj.i += offset;
+         break;
       }
       case 'u':
          if (G__PARAREFERENCE == reftype) {
@@ -180,6 +181,7 @@ void G__asm_cast(int type, G__value* buf, int tagnum, int reftype)
                buf->ref += offset;
             }
          }
+         break;
       default:
          G__letint(buf, (char)type , G__int(*buf));
          buf->ref = buf->obj.i;

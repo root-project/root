@@ -3983,6 +3983,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                      param->type = formal_type;
                      param->ref = 0;
                   }
+                  break;
                case 'l':
                case 'i':
                case 's':
@@ -4209,6 +4210,7 @@ int G__convert_param(G__param* libp, G__ifunc_table_internal* p_ifunc, int ifn, 
                   }
                   break;
             }
+            break;
 #ifndef G__OLDIMPLEMENTATION2191
          case '1':
 #else

@@ -787,6 +787,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                case '\0': /* no op */
                   defined->ref = expressionin.ref;
                   defined->obj.reftype.reftype = expressionin.obj.reftype.reftype;
+                  break;
                case '+': /* add */
                   defined->obj.i = defined->obj.i + expressionin.obj.i * G__sizeof(defined);
                   defined->ref = 0;
@@ -3251,6 +3252,7 @@ long G__op2_operator_detail(int opr, G__value* lval, G__value* rval)
                      case G__OPR_DIVASSIGN:
                         return(G__OPR_DIVASSIGN_DD);
                   }
+                  break;
                case 'f':
                   switch (opr) {
                      case G__OPR_ADDASSIGN:
