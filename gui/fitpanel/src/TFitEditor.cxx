@@ -371,6 +371,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    // Constructor of fit editor. 'obj' is the object to be fitted and
    // 'pad' where it is drawn.
 
+   fType = kObjectHisto;
    SetCleanup(kDeepCleanup);
 
    TGCompositeFrame *tf = new TGCompositeFrame(this, 350, 26,

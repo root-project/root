@@ -82,7 +82,10 @@ void TAttTextEditor::SetModel(TObject* obj)
 {
    // Pick up the values of used text attributes.
 
-   fAttText = dynamic_cast<TAttText *>(obj);
+   TAttText *atttext = dynamic_cast<TAttText *>(obj);
+   if (!atttext) return;
+
+   fAttText = atttext;
    fAvoidSignal = kTRUE;
 
    fTypeCombo->Select(fAttText->GetTextFont() / 10);

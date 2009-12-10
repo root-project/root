@@ -855,6 +855,7 @@ void TH1Editor::SetModel(TObject* obj)
       }
       fBinNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax , 2, n);
       fBinNumberEntry->SetIntNumber(nx);
+      delete [] div;
    }
    else if (fHist==player->GetHistogram()) {
       fBin->HideFrame(fBinCont);
@@ -1673,7 +1674,10 @@ void TH1Editor::DoBinReleased()
       Int_t numx = fBinSlider->GetPosition();
       Int_t* divx = Dividers(nx);   
       if (divx[0]==2) fBinSlider->SetPosition(2);
-      if (divx[0]==2) return;
+      if (divx[0]==2) {
+         delete [] divx;
+         return;
+      }
       // delete the histogram which is on the screen
       fGedEditor->GetPad()->cd();
       fHist->Reset();
@@ -1700,6 +1704,7 @@ void TH1Editor::DoBinReleased()
       if (fApply->GetState()==kButtonDisabled) 
          fApply->SetState(kButtonUp);
       Update();
+      delete [] divx;
    }
 //   fGedEditor->GetPad()->GetCanvas()->Selected(fGedEditor->GetPad(), fHist,  0);      
    //  fModel = fHist;
@@ -1717,8 +1722,12 @@ void TH1Editor::DoBinMoved(Int_t numx)
    if (fAvoidSignal) return;
    if (!fBinHist /*&& fDelaydraw->GetState()!=kButtonDown*/) {
       Int_t* divx = Dividers(fHist->GetXaxis()->GetNbins());
-      if (divx[0]==2) return;
+      if (divx[0]==2) {
+         delete [] divx;
+         return;
+      }
       fBinHist = (TH1*)fHist->Clone("BinHist");
+      delete [] divx;
    } 
    // if the slider already has been moved and the clone is saved
    Int_t nx = fBinHist->GetXaxis()->GetNbins();
@@ -1726,6 +1735,7 @@ void TH1Editor::DoBinMoved(Int_t numx)
    if (divx[0]==2) {
       fBinSlider->SetPosition(2);
       numx=1;
+      delete [] divx;
       return;
    }
    Int_t maxx = (Int_t)nx/divx[numx];
@@ -1758,6 +1768,7 @@ void TH1Editor::DoBinMoved(Int_t numx)
       fApply->SetState(kButtonUp);
    if (fBinNumberEntry->GetNumber()!=maxx) 
       fBinNumberEntry->SetNumber(maxx);
+   delete [] divx;
 }
 
 //______________________________________________________________________________
@@ -1773,6 +1784,7 @@ void TH1Editor::DoBinPressed()
                    kMBIconExclamation, kMBOk, 0, kVerticalFrame);
       gVirtualX->GrabPointer(fBinSlider->GetId(),0,0,0); 
    }
+   delete [] d;
    // calling the MessageBox again does NOT work!*/
 }
 
@@ -1888,6 +1900,7 @@ void TH1Editor::DoBinLabel()
 //   fGedEditor->GetPad()->GetCanvas()->Selected(fGedEditor->GetPad(), fHist,  0);
    // fModel = fHist;
    Refresh(fHist);
+   delete [] div;
 }
 
 //______________________________________________________________________________
@@ -2115,6 +2128,7 @@ void TH1Editor::DoApply()
       fCancel->SetState(kButtonDisabled);
       fApply->SetState(kButtonDisabled);
       Update();
+      delete [] div;
    } else if (ret==2) DoCancel();
 }
 
@@ -2141,6 +2155,7 @@ void TH1Editor::DoCancel()
       Update();    
       //fModel = fHist;
       Refresh(fHist);
+      delete [] divx;
    }
 }
 

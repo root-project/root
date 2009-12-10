@@ -92,7 +92,10 @@ void TAttLineEditor::SetModel(TObject* obj)
 {
    // Pick up the used line attributes.
 
-   fAttLine = dynamic_cast<TAttLine*>(obj);
+   TAttLine *attline = dynamic_cast<TAttLine*>(obj);
+   if (!attline) return;
+   
+   fAttLine = attline;
    fAvoidSignal = kTRUE;
 
    fStyleCombo->Select(fAttLine->GetLineStyle());

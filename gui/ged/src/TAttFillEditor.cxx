@@ -80,7 +80,10 @@ void TAttFillEditor::SetModel(TObject* obj)
 {
    // Pick up the used fill attributes.
 
-   fAttFill = dynamic_cast<TAttFill *>(obj);
+   TAttFill *attfill = dynamic_cast<TAttFill *>(obj);
+   if (!attfill) return;
+   
+   fAttFill = attfill;
    fAvoidSignal = kTRUE;
    
    Color_t c = fAttFill->GetFillColor();
