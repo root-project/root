@@ -147,6 +147,9 @@ $(XROOTDMAKE): $(XROOTDCFGD)
                    xinc=`echo $(KRB5INCDIR)`; \
                    xopt="$$xopt --with-krb5-incdir=$$xinc"; \
                 fi; \
+                if [ "x$(BUILDKRB5)" = "xno" ] ; then \
+                   xopt="$$xopt --disable-krb5"; \
+                fi; \
 		if [ "x$(BUILDXRDGSI)" = "x" ] ; then \
 		   xopt="$$xopt --disable-gsi"; \
 		fi; \
