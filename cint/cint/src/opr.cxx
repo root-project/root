@@ -2696,7 +2696,7 @@ int G__parenthesisovldobj(G__value* result3, G__value* result, const char* realn
 #endif
 )
 {
-   int known;
+   int known = 0;
    long store_struct_offset;
    int store_tagnum;
    int funcmatch;
