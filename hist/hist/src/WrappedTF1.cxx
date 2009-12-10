@@ -29,6 +29,7 @@ WrappedTF1::WrappedTF1 ( TF1 & f  )  :
    fLinear(false), 
    fPolynomial(false),
    fFunc(&f), 
+   fX (), 
    fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
 {
    // constructor from a TF1 function pointer.
@@ -58,6 +59,7 @@ WrappedTF1::WrappedTF1(const WrappedTF1 & rhs) :
    fLinear(rhs.fLinear), 
    fPolynomial(rhs.fPolynomial),
    fFunc(rhs.fFunc), 
+   fX(),
    fParams(rhs.fParams)
 {
    // copy constructor
