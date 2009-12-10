@@ -73,6 +73,12 @@ TMD5::TMD5(const UChar_t *digest)
       memset(fDigest, 0, 16);
       Error("TMD5::TMD5", "digest is 0");
    }
+
+   // Zero out sensitive information
+   memset(fBuf,  0, 4*sizeof(UInt_t));
+   memset(fBits, 0, 2*sizeof(UInt_t));
+   memset(fIn,   0, 64);
+
    fFinalized = kTRUE;
 }
 
@@ -82,11 +88,9 @@ TMD5::TMD5(const TMD5 &md5)
    // MD5 copy ctor. Special copy ctor avoids copying unnecessary
    // temp arrays when finalized.
 
-   if (!md5.fFinalized) {
-      memcpy(fBuf,  md5.fBuf,  4*sizeof(UInt_t));
-      memcpy(fBits, md5.fBits, 2*sizeof(UInt_t));
-      memcpy(fIn,   md5.fIn,   64);
-   }
+   memcpy(fBuf,  md5.fBuf,  4*sizeof(UInt_t));
+   memcpy(fBits, md5.fBits, 2*sizeof(UInt_t));
+   memcpy(fIn,   md5.fIn,   64);
 
    memcpy(fDigest, md5.fDigest, 16);
    fFinalized = md5.fFinalized;
@@ -99,11 +103,10 @@ TMD5 &TMD5::operator=(const TMD5 &rhs)
    // copying unnecessary temp arrays when finalized.
 
    if (this != &rhs) {
-      if (!rhs.fFinalized) {
-         memcpy(fBuf,  rhs.fBuf,  4*sizeof(UInt_t));
-         memcpy(fBits, rhs.fBits, 2*sizeof(UInt_t));
-         memcpy(fIn,   rhs.fIn,   64);
-      }
+      memcpy(fBuf,  rhs.fBuf,  4*sizeof(UInt_t));
+      memcpy(fBits, rhs.fBits, 2*sizeof(UInt_t));
+      memcpy(fIn,   rhs.fIn,   64);
+
       memcpy(fDigest, rhs.fDigest, 16);
       fFinalized = rhs.fFinalized;
    }
@@ -538,13 +541,12 @@ Int_t TMD5::FileChecksum(const char *file, UChar_t digest[16])
 }
 
 //______________________________________________________________________________
-TBuffer &operator<<(TBuffer &buf, const TMD5 &uuid) 
+TBuffer &operator<<(TBuffer &buf, const TMD5 &uuid)
 {
    // Input operator.  Delegate to Streamer.
 
    R__ASSERT( buf.IsWriting() );
 
-   const_cast<TMD5&>(uuid).Streamer(buf); 
-   return buf; 
+   const_cast<TMD5&>(uuid).Streamer(buf);
+   return buf;
 }
-
