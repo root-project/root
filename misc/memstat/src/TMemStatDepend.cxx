@@ -24,12 +24,15 @@
 // ROOT
 #include "TString.h"
 // API
+#if defined(R__MACOSX)
 #if defined(MAC_OS_X_VERSION_10_5)
 #include <malloc/malloc.h>
+#include <execinfo.h>
+#endif
 #else
 #include <malloc.h>
-#endif
 #include <execinfo.h>
+#endif
 #include <cxxabi.h>
 // MemStat
 #include "TMemStatDepend.h"
