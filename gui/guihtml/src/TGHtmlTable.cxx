@@ -1322,7 +1322,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 
          TRACE(HtmlTrace_Table3, ("Skipping token %s\n", fHtml->GetTokenName(p)));
 
-         p = p->fPNext;
+         if (p) p = p->fPNext;
       }
       if (p == 0) break;
 

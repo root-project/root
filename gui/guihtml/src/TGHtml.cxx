@@ -1811,7 +1811,7 @@ int TGHtml::ElementCoords(TGHtmlElement *p, int /*i*/, int pct, int *coords)
       TGHtmlBlock *pb2;
       while (pEnd && pEnd->fType != Html_Block) pEnd = pEnd->fPPrev;
       pb2 = (TGHtmlBlock *) pEnd;
-#define HGCo(dir) pb2->dir ? pBlock->dir * 100 / pb2->dir : 0
+#define HGCo(dir) (pb2 && pb2->dir) ? pBlock->dir * 100 / pb2->dir : 0
       coords[0] = HGCo(fLeft);
       coords[1] = HGCo(fTop);
       coords[3] = HGCo(fRight);

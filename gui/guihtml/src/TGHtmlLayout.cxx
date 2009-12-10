@@ -41,6 +41,12 @@ TGHtmlLayoutContext::TGHtmlLayoutContext()
    fPEnd = 0;
    fLeftMargin = 0;
    fRightMargin = 0;
+   fHtml = 0;
+   fLeft = 0;
+   fRight = 0;
+   fMaxX = 0;
+   fMaxY = 0;
+   fPageWidth = 0;
    Reset();
 }
 

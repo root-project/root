@@ -224,6 +224,9 @@ TGHtmlTable::TGHtmlTable(int type2, int argc, int arglen[], char *argv2[]) :
    fPEnd = 0;
    fBgImage = 0;
    fHasbg = 0;
+   for (int i=0;i<=HTML_MAX_COLUMNS;++i) {
+      fMinW[i] = fMaxW[i] = 0;
+   }
 }
 
 //______________________________________________________________________________
