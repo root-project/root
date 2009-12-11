@@ -45,10 +45,13 @@ They are all backward compatible with the v5.24/00 release.</p>
   <ul>
     <li>Improve the lookup time for type names. Improves start-up time (dictionary initialization) and parsing speed.</li>
     <li>New link pragma to simply the generation of the dictionary for 'operators' in a rootcint dictionary.
-<pre lang=cpp>#pragma link [C++|off] operators classname;</pre>
+<pre>#pragma link [C++|off] operators classname;</pre>
 will turn on/off symbol table registration of the operators that are
 declared in the declaring scopes of 'classname' (and any of its enclosing
 scope) and take at least one argument that is a reference, pointer, or value argument of type <i>classname</i>.</li>
+    <li>Replace most of CINT's static buffers by a custom string class with very fast allocation. This costs &lt;0.5% in runtime, &lt;300kB in heap, and significantly increases CINT's robustness with large type names, source lines etc. It also reduces the stack use of CINT, a problem encountered mostly on Windows.</li>
+    <li>CINT now doesn't <tt>exit()</tt> anymore when encounetring fatal errors but throws a <tt>runtime_exception</tt>.</li>
+    <li>Improve handling of <tt>nan</tt> (not a number).</li>
   </ul>
   </li>
   <li>Reflex
