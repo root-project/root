@@ -76,11 +76,12 @@ public:
 			  const char *indexCatName=0) ;
   Bool_t write(const char* filename) ;
 
-/*   void setWeightVar(const char* name=0) ; */
-/*   void setWeightVar(const RooAbsArg& arg) {  */
-/*     // Interpret given argument as event weight */
-/*     setWeightVar(arg.GetName()) ;  */
-/*   } */
+  void setWeightVar(const char* name=0) ;
+  void setWeightVar(const RooAbsArg& arg) { 
+    // Interpret given argument as event weight
+    setWeightVar(arg.GetName()) ; 
+  }
+
   virtual Bool_t isWeighted() const ;
   virtual Bool_t isNonPoissonWeighted() const ;
 
