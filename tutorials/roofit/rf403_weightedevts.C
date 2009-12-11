@@ -59,11 +59,11 @@ void rf403_weightedevts()
   // Dataset d is now a dataset with two observable (x,w) with 1000 entries
   data->Print() ;
 
-  // Instruct dataset d in interpret w as event weight rather than as observable
-  data->setWeightVar(*w) ;
+  // Instruct dataset wdata in interpret w as event weight rather than as observable
+  RooDataSet wdata(data->GetName(),data->GetTitle(),data,*data->get(),0,w->GetName()) ;
 
   // Dataset d is now a dataset with one observable (x) with 1000 entries and a sum of weights of ~430K
-  data->Print() ;
+  wdata.Print() ;
 
 
 
@@ -83,7 +83,7 @@ void rf403_weightedevts()
   //       event weights represent Poisson statistics themselves.
   //       
   // Fit with 'wrong' errors
-  RooFitResult* r_ml_wgt = p2.fitTo(*data,Save()) ;
+  RooFitResult* r_ml_wgt = p2.fitTo(wdata,Save()) ;
   
   // A first order correction to estimated parameter errors in an 
   // (unbinned) ML fit can be obtained by calculating the
@@ -98,7 +98,7 @@ void rf403_weightedevts()
   //
   // A fit in this mode can be performed as follows:
 
-  RooFitResult* r_ml_wgt_corr = p2.fitTo(*data,Save(),SumW2Error(kTRUE)) ;
+  RooFitResult* r_ml_wgt_corr = p2.fitTo(wdata,Save(),SumW2Error(kTRUE)) ;
 
 
 
@@ -109,7 +109,7 @@ void rf403_weightedevts()
   RooPlot* frame = x.frame(Title("Unbinned ML fit, binned chi^2 fit to weighted data")) ;
 
   // Plot data using sum-of-weights-squared error rather than Poisson errors
-  data->plotOn(frame,DataError(RooAbsData::SumW2)) ;
+  wdata.plotOn(frame,DataError(RooAbsData::SumW2)) ;
 
   // Overlay result of 2nd order polynomial fit to weighted data
   p2.plotOn(frame) ;
@@ -137,7 +137,7 @@ void rf403_weightedevts()
   // ------------------------------------------------------------------------------------
 
   // Construct binned clone of unbinned weighted dataset
-  RooDataHist* binnedData = data->binnedClone() ;
+  RooDataHist* binnedData = wdata.binnedClone() ;
   binnedData->Print("v") ;
 
   // Perform chi2 fit to binned weighted dataset using sum-of-weights errors
