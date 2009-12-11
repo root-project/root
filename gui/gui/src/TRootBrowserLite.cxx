@@ -2823,6 +2823,7 @@ void TRootBrowserLite::SetViewMode(Int_t new_mode, Bool_t force)
                return;
             else
                new_mode = kViewLargeIcons;
+            // intentionally no break
          case kViewLargeIcons:
             bnum = 2;
             lv = kLVLargeIcons;
@@ -2875,6 +2876,7 @@ void TRootBrowserLite::SetSortMode(Int_t new_mode)
    switch (new_mode) {
       default:
          new_mode = kViewArrangeByName;
+         // intentionally no break
       case kViewArrangeByName:
          smode = kSortByName;
          break;
