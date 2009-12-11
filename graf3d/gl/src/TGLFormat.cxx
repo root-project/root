@@ -22,6 +22,7 @@ ClassImp(TGLFormat)
 //______________________________________________________________________________
 TGLFormat::TGLFormat() :
    fDoubleBuffered(kTRUE),
+   fStereo(kFALSE),
 #ifdef WIN32
    fDepthSize(32),
 #else
@@ -39,6 +40,7 @@ TGLFormat::TGLFormat() :
 //______________________________________________________________________________
 TGLFormat::TGLFormat(EFormatOptions opt) :
    fDoubleBuffered(opt & kDoubleBuffer),
+   fStereo(kFALSE),
 #ifdef WIN32
    fDepthSize(opt & kDepth ? 32 : 0),
 #else

@@ -15,6 +15,9 @@ elements and are supposed to follow their movements / rotations.
 
 <li> Several significant improvements in TEveCaloLego classes.
 <ul>
+<li> <tt>Calo</tt> classes now support individal tower selection. The
+  selection is properly maintained across all views (3D / RPhi / RhoZ
+  / Lego). See screenshot below.
 <li> In top view draw cell values, if their screen size is above given limit.
 <li> New energy-scales drawn as overlay (in color and size mode). The
 legend can be moved around the screen with the mouse.
@@ -103,6 +106,31 @@ how to read Visualization Summary Data files (VSD).
 
 </ul>
 
+<p>
+
+<div class="image">
+<a href="http://mtadel.home.cern.ch/mtadel/root/graf3d_eve_calorimeters.png">
+<img alt="Eve window showing CMS calorimeters with 3D / RPhi /
+ and Lego views. Selectrion across several views isdemonstrated."
+src="http://mtadel.home.cern.ch/mtadel/root/graf3d_eve_calorimeters_800.png">
+</a>
+<div>Screenshot of <tt>calorimeters.C</tt> tutorial. Note the
+  individual tower selection propagated accross all the views.</div>
+</div>
+
+<p>
+
+<div class="image">
+<a href="http://mtadel.home.cern.ch/mtadel/root/graf3d_eve_alice_vsd.png">
+<img alt="Eve window showing ALICE VSD example with 3D / RPhi and
+	     RhoZ views of clusters and reconstructed tracks." 
+src="http://mtadel.home.cern.ch/mtadel/root/graf3d_eve_alice_vsd_800.png">
+</a>
+<div>Screenshot of <tt>alice_vsd.C</tt> tutorial also showing the
+  functionality of  the <tt>MultiView</tt> class. New title is also
+  visible in the GUI editor.</div>
+</div>
+
 <h4>Minor changes</h4>
 
 <ul>
@@ -182,9 +210,9 @@ previous implementation caused problems with 2D and 1D objects.
 
 <li> Several improvements in camera configuration and handling.
 
-<li> Improve mouse-button handling - now, after a button goes down,
-other buttons do not interfere with user interaction until the first
-button is released.
+<li> Improve mouse-button handling. After a button goes down, other
+buttons do not interfere with user interaction until the first button
+is released.
 
 <li> When initializing TGLClipPlane for the first time, place it in
 the center of the scene's bounding-box. Before that, plane was always

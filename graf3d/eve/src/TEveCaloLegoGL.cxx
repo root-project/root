@@ -1316,8 +1316,9 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glPopAttrib();
 
    // draw histogram base
-   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
-   if (rnrCtx.Selection() == kFALSE) {
+   if (rnrCtx.Selection() == kFALSE && rnrCtx.IsDrawPassFilled())
+   {
+      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
       glDisable(GL_LIGHTING);
       DrawHistBase(rnrCtx);
       if (fM->fDrawHPlane) {
@@ -1333,10 +1334,10 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          glVertex3f(fM->fEtaMin, fM->GetPhiMax(), zhp);
          glEnd();
       }
+      glPopAttrib();
    }
-   glPopAttrib();
-   glPopMatrix();
 
+   glPopMatrix();
 }
 
 //______________________________________________________________________________
