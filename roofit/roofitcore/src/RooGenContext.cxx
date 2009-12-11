@@ -199,6 +199,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   
 
   RooArgSet* protoDeps = model.getObservables(_protoVars) ;
+
   
 
   if (_protoVars.getSize()==0) {
@@ -263,6 +264,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			      << "of accept/reject observables plus prototype observables: " << otherAndProto << endl ;
 
 	// Calculate maximum in other+proto space if there are any accept/reject generated observables
+
+	
 	RooAbsNumGenerator* maxFinder = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,otherAndProto,RooArgSet(_protoVars),
 										   *model.getGeneratorConfig(),_verbose) ;
 // 	RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,RooNumGenConfig::defaultConfig(),_verbose) ;
@@ -285,13 +288,24 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   }
 
   if (_acceptRejectFunc && _otherVars.getSize()>0) {
-    _generator = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,_otherVars,RooArgSet(*protoDeps),*model.getGeneratorConfig(),_verbose,_maxVar) ;    
+
+    Bool_t paramBinning(kFALSE) ;
+    TIterator* iter = _otherVars.createIterator() ;	
+    RooAbsArg* arg ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+      if (arg->dependsOn(_protoVars)) {
+	paramBinning = kTRUE ;
+	break ;
+      }
+    }
+    delete iter ;
+    
+    _generator = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,_otherVars,(paramBinning?_protoVars:RooArgSet(*protoDeps)),*model.getGeneratorConfig(),_verbose,_maxVar) ;    
     cxcoutD(Generation) << "RooGenContext::ctor() creating MC sampling generator " << _generator->IsA()->GetName() << "  from function for observables " << _otherVars << endl ;
     //_generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,RooNumGenConfig::defaultConfig(),_verbose,_maxVar);
   } else {
     _generator = 0 ;
   }
-
   delete protoDeps ;
   delete depList;
   _otherVars.add(_uniformVars);
