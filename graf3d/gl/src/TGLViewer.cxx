@@ -635,7 +635,7 @@ void TGLViewer::DoDrawStereo()
 
    TGLPerspectiveCamera &c = *dynamic_cast<TGLPerspectiveCamera*>(fCurrentCamera);
 
-   Float_t near, far, zero_p_dist;
+   Float_t gl_near, gl_far, zero_p_dist;
    Float_t h_half, w_half;
    Float_t x_len_at_zero_parallax;
    Float_t stereo_offset;
@@ -648,24 +648,24 @@ void TGLViewer::DoDrawStereo()
    PreDraw();
    PreRender();
 
-   near = c.GetNearClip();
-   far  = c.GetFarClip();
-   zero_p_dist = near + fStereoZeroParallax*(far-near);
+   gl_near = c.GetNearClip();
+   gl_far  = c.GetFarClip();
+   zero_p_dist = gl_near + fStereoZeroParallax*(gl_far-gl_near);
 
-   h_half = TMath::Tan(0.5*TMath::DegToRad()*c.GetFOV()) * near;
+   h_half = TMath::Tan(0.5*TMath::DegToRad()*c.GetFOV()) * gl_near;
    w_half = h_half * fViewport.Aspect();
 
-   x_len_at_zero_parallax = 2.0f * w_half * zero_p_dist / near;
+   x_len_at_zero_parallax = 2.0f * w_half * zero_p_dist / gl_near;
    stereo_offset = 0.035f * x_len_at_zero_parallax * fStereoEyeOffsetFac;
 
-   frustum_asym = stereo_offset * near / zero_p_dist * fStereoFrustumAsymFac;
+   frustum_asym = stereo_offset * gl_near / zero_p_dist * fStereoFrustumAsymFac;
 
    glTranslatef(-stereo_offset, 0, 0);
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    glFrustum(-w_half + frustum_asym, w_half + frustum_asym,
-             -h_half, h_half, near, far);
+             -h_half, h_half, gl_near, gl_far);
    glMatrixMode(GL_MODELVIEW);
 
    fRnrCtx->StartStopwatch();
@@ -703,7 +703,7 @@ void TGLViewer::DoDrawStereo()
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    glFrustum(-w_half - frustum_asym, w_half - frustum_asym,
-             -h_half, h_half, near, far);
+             -h_half, h_half, gl_near, gl_far);
    glMatrixMode(GL_MODELVIEW);
 
    fRnrCtx->StartStopwatch();
