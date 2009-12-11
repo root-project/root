@@ -64,6 +64,14 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
    // before running getProof. Note that 'getProof' is also called by 'stressProof', so this holds
    // for 'stressProof' runs too.
 
+#ifdef __CINT__
+   Printf("getProof: this script can only be executed via ACliC:");
+   Printf("getProof:      root [] .x <path>/getProof.C+");
+   Printf("getProof: or   root [] .L <path>/getProof.C+");
+   Printf("getProof:      root [] getProof(...)");
+   return;
+#endif
+
    TProof *p = 0;
 
    // If an URL has specified get a session there
