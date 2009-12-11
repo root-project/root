@@ -1,5 +1,5 @@
-<br> 
-<hr> 
+<br/> 
+<hr/> 
 <a name="core"></a> 
 <h3>Core</h3>
 <ul>
@@ -7,8 +7,8 @@
 linuxia64sgi, linuxdeb2ppc, solariskcc, sgikcc and linuxpgcc.</li>
 <li>All of ROOT (not just Core) has been checked by a very nice static code analyzer <b>coverity</b>, see: <a href="http://www.coverity.com/">http://www.coverity.com/</a>. 
 Many of the reports have been fixed. We expect that this further increases the stability of ROOT.</li>
-<li>Add support for 'Dump' and 'Browse' of 'emulated' object.<li>
-TBits equality operator nows return true if the 2 operands have different
+<li>Add support for 'Dump' and 'Browse' of 'emulated' object.</li>
+<li>TBits equality operator nows return true if the 2 operands have different
 length and all the bits in the longer TBits that are passed the length
 of the shorter TBits are zero (i.e. the default value of each
 bits is zero).</li>
@@ -21,10 +21,12 @@ bits is zero).</li>
     <li>Prevent the unadvertent replacement of an arrow with a dot when the left side is actually a pointer</li>
     </ul>
 </li>
+<li>More user friendly trace-back in case of a crash, with hints where
+the problem might be.</li>
+<li>Numerous minor bug fixes...</li>
 </ul>
-<p>
 <h4>New module  <tt>editline</tt> </h4>
-The new module <tt>editline</tt> enhances the prompt, giving type and syntax feedback using e.g. colors.
+<p>The new module <tt>editline</tt> enhances the prompt, giving type and syntax feedback using e.g. colors.
 Class names are highlighted blue when typed, indicating that it is known to ROOT.  
 Matching parenthesis pairs are highlighted green when typed, or when the cursor is moved to a bracket. This works for () {} and [] brackets.
 Any mismatched brackets (those without a matching partner) will be highlighted red when typed or when the cursor is moved to the bracket.
@@ -45,27 +47,24 @@ Rint.ReverseColor:        no
 </pre>
 <p>The enhanced prompt is available on all platforms with [n]curses, including Linux, Solaris and MacOS; the bold and underline options are available also for black and white terminals. You can <tt>export</tt> (or <tt>setenv</tt>) <tt>TERM=xterm-256color</tt> for nicer colors.</p>
 <p>With editline comes also an improved terminal input handler.
-It supports e.g. ^O (Ctrl-o) to replay the history: suppose you have entered
+It supports e.g. ^O (Ctrl-o) to replay the history: suppose you have entered</p>
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
 ...
 <span style="color:gray">root [3] </span>i = func()
 <span style="color:gray">root [4] </span>i += 12
 <span style="color:gray">root [5] </span>printf("i is %d\n", i)
 </pre>
-You now want to re-run these three lines.
-As always, you press the up cursor three times to see
+<p>You now want to re-run these three lines.
+As always, you press the up cursor three times to see</p>
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
 <span style="color:gray">root [6] </span>i = func()
 </pre>
-and now press ^O (Ctrl-o) to run the line, and prepare the next line:
+<p>and now press ^O (Ctrl-o) to run the line, and prepare the next line:</p>
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
 <span style="color:gray">root [6] </span>i = func()^O
 <span style="color:gray">root [7] </span>i += 12^O
 <span style="color:gray">root [8] </span>printf("i is %d\n", i)^O
 <span style="color:gray">root [9] </span>
 </pre>
-allowing you to re-run that part of the history without having to press the up-arrow again and again.</p>
+<p>allowing you to re-run that part of the history without having to press the up-arrow again and again.</p>
 <p>Currently, <tt>editline</tt> is disabled on Windows.</p>
-<li>More user friendly trace-back in case of a crash, with hints where
-the problem might be.</li>
-<li>Numerous minor bug fixes...</li>

@@ -1,5 +1,5 @@
-<br> 
-<hr> 
+<br/> 
+<hr/> 
 <a name="io"></a> 
 <h3>I/O</h3>
 <h4>Schema Evolution.</h4>
@@ -28,7 +28,7 @@ and the following corresponding getter and setter:
    
 Following IO tests with Alice, Atlas and CMS files, the readahead size has been
 set by default to 256 Kbytes.
-<br>
+<br/>
 Because the readahead algorithm reads more data than it is required when
 reading the Tree, a new TFile data member has been added with the corresponding
 getter:
@@ -46,7 +46,7 @@ getter:
    <li>DCache:
    <ul><li>Increase readahead size from 8k to 128k and make it settable via DCACHE_RA_BUFFER env var.</li>
        <li>dCap client does not ignore ?filetpye=raw and other options, so remove it.</li>
-   </ul>
+   </ul></li>
    <li>The function TFile::GetRelOffset is now public instead of protected.</li>
    <li>Corrected the reading of the TFile record of large files.</li>
    <li>MakeProject: several updates to improve support for CMS and Atlas data files (add support for auto_ptr, bitset, class name longer than 255 characters, etc.)</li>

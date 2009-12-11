@@ -1,5 +1,5 @@
-<br> 
-<hr> 
+<br/> 
+<hr/> 
 <a name="tree"></a> 
 <h3>Tree</h3>
 <ul>
@@ -25,8 +25,8 @@
      with the function <tt>TSelectorDraw::SplitNames.</tt>  </li>
 <li>Add a return value to SetBranchAddress, a return value greater or equal to zero indicate success, a negative
 value indicates failure (in both case, the address is still updated).  Example:
-<pre lang="cxx">if (tree->SetBranchAddress(mybranch,&myvar) < 0) {
-   cerr << "Something went wrong\n";
+<pre lang="cxx">if (tree->SetBranchAddress(mybranch,&amp;myvar) &lt; 0) {
+   cerr &lt;&lt; "Something went wrong\n";
    return;
 }</pre>
 The possible return values are:<ul>
@@ -41,7 +41,7 @@ The possible return values are:<ul>
 <li>kMakeClass (3) : MakeClass mode so we can not check.</li>
 <li>kVoidPtr (4) : void* passed so no check was made.</li>
 <li>kNoCheck (5) : Underlying TBranch not yet available so no check was made.</li>
-</ul>
+</ul></li>
 <li>Insure that the TTreeCloner (fast merging) is able to also copy 'uninitialized' TStreamerInfo describing abstract classes.</li>
 <li>Repair several use case of splitting collection of pointers (especially when their split level is 1).</li>
 <li>Several run-time performance improvements.</li>
@@ -58,36 +58,34 @@ order) or 'random' (the 'broken' sort order prior to this release).</li>
 improvements described below</b> are available at 
  <a href="http://root.cern.ch/files/brun_lcgapp09.pptx ">http://root.cern.ch/files/brun_lcgapp09.pptx </a>
 or 
- <a href="http://root.cern.ch/files/brun_lcgapp09.pdf ">http://root.cern.ch/files/brun_lcgapp09.pdf </a>.
+ <a href="http://root.cern.ch/files/brun_lcgapp09.pdf ">http://root.cern.ch/files/brun_lcgapp09.pdf </a>.</p>
+<p>The baskets are flushed and the Tree header saved at regular intervals (See AutoFlush and OptimizeBaskets)</p>
 
-<p>
-The baskets are flushed and the Tree header saved at regular intervals (See AutoFlush and OptimizeBaskets)<p>
-
-When the amount of data written so far (fTotBytes) is greater than fAutoFlush (see SetAutoFlush) all the baskets are flushed to disk.
-This makes future reading faster as it guarantees that baskets belonging to nearby entries will be on the same disk region.<p>
-When the first call to flush the baskets happens, we also take this opportunity to optimize the baskets buffers. 
+<p>When the amount of data written so far (fTotBytes) is greater than fAutoFlush (see SetAutoFlush) all the baskets are flushed to disk.
+This makes future reading faster as it guarantees that baskets belonging to nearby entries will be on the same disk region.</p>
+<p>When the first call to flush the baskets happens, we also take this opportunity to optimize the baskets buffers. 
 We also check if the number of bytes written is greater than fAutoSave (see SetAutoSave).
-In this case we also write the Tree header. This makes the Tree recoverable up to this point in case the program writing the Tree crashes.<p>
-Note that the user can also decide to call FlushBaskets and AutoSave in her event loop on the base of the number of events written instead of the number of bytes written.
+In this case we also write the Tree header. This makes the Tree recoverable up to this point in case the program writing the Tree crashes.</p>
+<p>Note that the user can also decide to call FlushBaskets and AutoSave in her event loop on the base of the number of events written instead of the number of bytes written.</p>
 
 <h4>New function TTree::OptimizeBaskets</h4>
+<pre>
 void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option) 
-<p>
-This function may be called after having filled some entries in a Tree
+</pre>
+<p>This function may be called after having filled some entries in a Tree
 using the information in the existing branch buffers, it will reassign
-new branch buffer sizes to optimize time and memory.
+new branch buffer sizes to optimize time and memory.</p>
 
-The function computes the best values for branch buffer sizes such that
+<p>The function computes the best values for branch buffer sizes such that
 the total buffer sizes is less than maxMemory and nearby entries written 
 at the same time.
 In case the branch compression factor for the data written so far is less 
 than compMin, the compression is disabled.
  
-if option ="d" an analysis report is printed.
+if option ="d" an analysis report is printed.</p>
 
-<p>
-This function may also be called on an existing Tree to figure out the best values
-given the information in the Tree header
+<p>This function may also be called on an existing Tree to figure out the best values
+given the information in the Tree header</p>
 <pre>
    TFile f("myfile.root");
    TTree *T = (TTree*)f.Get("mytreename");
@@ -97,7 +95,7 @@ given the information in the Tree header
 </pre>
 
 <h4>New interface functions to customize the TreeCache</h4>
-<pre lang="cxx">   virtual void  AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
+<pre>   virtual void  AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
    virtual void  AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
    virtual void  PrintCacheStats(Option_t* option = "") const;
    virtual void  SetParallelUnzip(Bool_t opt=kTRUE);
@@ -114,16 +112,16 @@ Implement a new member fAutoFlush in TTree with its getter and setter:
 The logic of the AutoFlush mechanism is optimized such that the TreeCache
 will read always up to the point where FlushBaskets has been called.
 This minimizes the number of cases where one has to seek backward when reading.
-<br>
+<br/>
 This function may be called at the start of a program to change
 the default value for fAutoFlush.
 
-<ul><li>CASE 1 : autof &gt; 0<br>
+<ul><li>CASE 1 : autof &gt; 0<br/>
 
  autof is the number of consecutive entries after which TTree::Fill will
  flush all branch buffers to disk.
 
-</li><li>     CASE 2 : autof &lt; 0<br>
+</li><li>     CASE 2 : autof &lt; 0<br/>
 
  When filling the Tree the branch buffers will be flushed to disk when
  more than autof bytes have been written to the file. At the first FlushBaskets
@@ -136,16 +134,16 @@ the default value for fAutoFlush.
  default value is -30000000, ie that the first AutoFlush will be done when
  30 MBytes of data are written to the file.
 
-</li><li>      CASE 3 : autof = 0<br>
+</li><li>      CASE 3 : autof = 0<br/>
  The AutoFlush mechanism is disabled.
 
 </li></ul>
  Flushing the buffers at regular intervals optimize the location of
  consecutive entries on the disk.
 
-<br>
+<br/>
 Changed the default value of AutoSave from 10 to 30 MBytes.
-<br>
+<br/>
 
 
 
@@ -162,28 +160,27 @@ to see the performance of the Tree Cache. The results can be:
        Example of use                                                 
  {
    TFile *f = TFile::Open("RelValMinBias-GEN-SIM-RECO.root");
-   T = (TTree*)f->Get("Events");
-   Long64_t nentries = T->GetEntries();
-   T->SetCacheSize(10000000);
-   T->AddBranchToCache("*");
+   T = (TTree*)f-&gt;Get("Events");
+   Long64_t nentries = T-&gt;GetEntries();
+   T-&gt;SetCacheSize(10000000);
+   T-&gt;AddBranchToCache("*");
 
    TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
 
-   for (Int_t i=0;i<nentries;i++) {
-      T->GetEntry(i);
+   for (Int_t i=0;i&lt;nentries;i++) {
+      T-&gt;GetEntry(i);
    }
    ps->SaveAs("atlas_perf.root");
  }
 </pre>
-<p>
- then, in a root interactive session, one can do:
+<p>then, in a root interactive session, one can do:</p>
 <pre>
-    root > TFile f("atlas_perf.root");
-    root > ioperf->Draw();
-    root > ioperf->Print();
+    root &gt; TFile f("atlas_perf.root");
+    root &gt; ioperf-&gt;Draw();
+    root &gt; ioperf-&gt;Print();
 </pre>
 
-<p> The Draw or Print functions print the following information:
+<p> The Draw or Print functions print the following information:</p>
 <pre>
    TreeCache = TTree cache size in MBytes
    N leaves  = Number of leaves in the TTree
@@ -204,11 +201,11 @@ to see the performance of the Tree Cache. The results can be:
 </pre>
 <p>
 The Figure below shows the result for an original non optimized file when
-the Tree Cache is not used.
-<p><img src="perfstats_atlas_original.gif"></img></p>
-The Figure below shows the result for the above data file written with the
-new version of ROOT and when the Tree cache is activated.
-<p><img src="perfstats_atlas_flushed.gif"></img></p>
+the Tree Cache is not used.</p>
+<p><img src="perfstats_atlas_original.gif" alt="no optimization, no tree cache"></img></p>
+<p>The Figure below shows the result for the above data file written with the
+new version of ROOT and when the Tree cache is activated.</p>
+<p><img src="perfstats_atlas_flushed.gif" alt="optimization, tree cache"></img></p>
 
 
 
