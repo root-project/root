@@ -1643,18 +1643,6 @@ void TRecorderRecording::CopyEvent(Event_t *e, Window_t wid)
 {
    // Copies all items of given event to fGuiEvent
 
-#if !defined(R__WIN32) && !defined(R__MACOSX)
-   if (gDecorWidth == 0 && gDecorHeight == 0) {
-      TGWindow *main = gClient->GetWindowById(e->fWindow);
-      if (main && main->InheritsFrom("TGMainFrame") &&
-          main->GetParent() == gClient->GetDefaultRoot()) {
-         WindowAttributes_t attr;
-         gVirtualX->GetWindowAttributes(e->fWindow, attr);
-         gDecorWidth  = attr.fX;
-         gDecorHeight = attr.fY;
-      }
-   }
-#endif
    fGuiEvent->fType     = e->fType;
    fGuiEvent->fWindow   = e->fWindow;
    fGuiEvent->fTime     = e->fTime;
@@ -2078,6 +2066,8 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
 {
    // Replays stored GUI event
 
+   Int_t    px, py, dx, dy;
+   Window_t wtarget;
    Event_t *e = CreateEvent(this);
 
    // don't try to replay any copy/paste event, as event->fUser[x]
@@ -2137,18 +2127,14 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
 
    } // kConfigureNotify
 
-#if !defined(R__WIN32) && !defined(R__MACOSX)
-   if (gDecorWidth == 0 && gDecorHeight == 0) {
-      TGWindow *main = gClient->GetWindowById(e->fWindow);
-      if (main && main->InheritsFrom("TGMainFrame") &&
-          main->GetParent() == gClient->GetDefaultRoot()) {
-         WindowAttributes_t attr;
-         gVirtualX->GetWindowAttributes(e->fWindow, attr);
-         gDecorWidth  = attr.fX;
-         gDecorHeight = attr.fY;
-      }
+   if (showMouseCursor && e->fType == kButtonPress) {
+      gVirtualX->TranslateCoordinates(e->fWindow, gVirtualX->GetDefaultRootWindow(),
+                                      e->fX, e->fY, px, py, wtarget);
+      dx = px - gCursorWin->GetX();
+      dy = py - gCursorWin->GetY();
+      if (TMath::Abs(dx) > 5) gDecorWidth += dx;
+      if (TMath::Abs(dy) > 5) gDecorHeight += dy;
    }
-#endif
    // Displays fake mouse cursor for MotionNotify event
    if (showMouseCursor && e->fType == kMotionNotify) {
       if (gCursorWin && e->fWindow == gVirtualX->GetDefaultRootWindow()) {
@@ -2156,9 +2142,10 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
             gCursorWin->MapRaised();
          }
          if (gVirtualX->GetDrawMode() == TVirtualX::kCopy) {
-#ifdef R__MACOSX
+//#ifdef R__MACOSX
+            // this may have side effects (e.g. stealing focus)
             gCursorWin->RaiseWindow();
-#endif
+//#endif
             gCursorWin->Move(e->fXRoot + gDecorWidth, e->fYRoot + gDecorHeight);
          }
       }
