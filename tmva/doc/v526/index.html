@@ -34,7 +34,17 @@
         
     </ul>
 
-    <h5>Comments</h5>
+    <h4>Comments</h4>
+
+    <p>
+      <em>On Input Data:</em><br> 
+
+      New TMVA event vector building. The code for splitting the input
+      data into training and test samples for all classes and the
+      mixing of those samples to one training and one test sample has
+      been rewritten completely. The new code is more performant and
+      has a clearer structure. This fixes several bugs which have been
+      reported by the TMVA users.
 
     <p>
       <em>On Minimization:</em><br> 
@@ -109,4 +119,9 @@
       <li>Consistent use of variable labels (for the log output) and variable titles (in histograms).
 
       <li>Drawing of variable labels in network architecture display for regression mode has been added.
+
+      <li>Bug fixes to Cuts which improves performance on datasets with many variables.
+
+      <li>Bug fix in GaussTransformation which improves handling of gaussian tails.
+
     </ul>
