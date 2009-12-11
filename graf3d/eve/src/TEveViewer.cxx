@@ -25,6 +25,7 @@
 #include "TGLLogicalShape.h"  // For handling OnMouseIdle signal
 #include "TGLEventHandler.h"
 
+#include "TApplication.h"
 #include "TSystem.h"
 
 //==============================================================================
@@ -172,7 +173,16 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
    }
 
    cf->SetEditable(kTRUE);
-   TGLSAViewer* v = new TGLSAViewer(cf, 0, ged, form);
+   TGLSAViewer* v = 0;
+   try
+   {
+      v = new TGLSAViewer(cf, 0, ged, form);
+   }
+   catch (std::exception& exc)
+   {
+      Error("SpawnGLViewer", "Insufficient support from the graphics hardware. Aborting.");
+      gApplication->Terminate(1);
+   }
    cf->SetEditable(kFALSE);
    v->ToggleEditObject();
    v->DisableCloseMenuEntries();
@@ -235,9 +245,18 @@ void TEveViewer::SwitchStereo()
 
    v->DestroyGLWidget();
    TGLFormat *f = v->GetFormat();
+switch_stereo:
    f->SetStereo(!f->IsStereo());
    v->SetStereo(f->IsStereo());
-   v->CreateGLWidget();
+   try
+   {
+      v->CreateGLWidget();
+   }
+   catch (std::exception& exc)
+   {
+      Error("SwitchStereo", "Insufficient support from the graphics hardware. Reverting.");
+      goto switch_stereo;
+   }
 }
 
 /******************************************************************************/

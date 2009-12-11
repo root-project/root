@@ -1,7 +1,9 @@
 // @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
-// Shows CMS geometry.
+// Shows CMS geometry in stereo mode.
+// This requires quad-buffer support in the OpenGL hardware / driver,
+// otheriwse a fatal error occurs.
 
 void geom_cms_stereo()
 {
