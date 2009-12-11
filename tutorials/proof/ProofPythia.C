@@ -154,8 +154,6 @@ void ProofPythia::Terminate()
    // a query. It always runs on the client, it can be used to present
    // the results graphically or save the results to file.
 
-   fOutput->ls();
-
    //
    // Create canvas
    //
