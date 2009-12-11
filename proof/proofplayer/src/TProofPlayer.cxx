@@ -1716,6 +1716,11 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                   Error("MergeOutputFiles", "cannot open the output file");
                   continue;
                }
+               // If only one instance the list in the merger is not yet created: do it now
+               if (!pf->IsMerged()) {
+                  TString fileLoc = TString::Format("%s/%s", pf->GetDir(), pf->GetFileName());
+                  filemerger->AddFile(fileLoc);
+               }
                // Merge
                if (!filemerger->Merge()) {
                   Error("MergeOutputFiles", "cannot merge the output files");
@@ -2195,7 +2200,7 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
    // otherwise.
 
    PDB(kOutput,1)
-      Info("AddOutputObject","Enter: %p", obj);
+      Info("AddOutputObject","Enter: %p (%s)", obj, obj ? obj->ClassName() : "undef");
 
    // We must something to process
    if (!obj) {
@@ -2424,7 +2429,9 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
 
    merged = kTRUE;
 
-   PDB(kOutput,1) Info("Incorporate", "enter: obj: %p, list: %p", newobj, outlist);
+   PDB(kOutput,1)
+      Info("Incorporate", "enter: obj: %p (%s), list: %p",
+                          newobj, newobj ? newobj->ClassName() : "undef", outlist);
 
    // The object and list must exist
    if (!newobj || !outlist) {

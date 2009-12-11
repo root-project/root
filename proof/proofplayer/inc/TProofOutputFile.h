@@ -98,6 +98,7 @@ public:
    ERunType    GetRunType() const { return fRunType; }
    UInt_t      GetTypeOpt() const { return fTypeOpt; }
    Bool_t      IsMerge() const { return (fRunType == kMerge) ? kTRUE : kFALSE; }
+   Bool_t      IsMerged() const { return fMerged; }
    Bool_t      IsRegister() const { return ((fTypeOpt & kRegister) || (fTypeOpt & kVerify)) ? kTRUE : kFALSE; }
 
    Int_t AdoptFile(TFile *f);                    // Adopt a TFile already open
