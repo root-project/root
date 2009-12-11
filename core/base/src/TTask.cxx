@@ -120,7 +120,12 @@ TTask& TTask::operator=(const TTask& tt)
    //assignment operator (PLEASE DO NOT USE THIS IS WRONG)	 
    if(this!=&tt) {	 
       TNamed::operator=(tt);	 
-      fTasks= 0; //<===tobe fixed	 
+      fTasks->Delete();
+      TIter next(tt.fTasks);
+      TTask *task;
+      while ((task = (TTask*)next())) {
+         fTasks->Add(new TTask(*task));
+      }      
       fOption=tt.fOption;	 
       fBreakin=tt.fBreakin;	 
       fBreakout=tt.fBreakout;	 
@@ -131,17 +136,26 @@ TTask& TTask::operator=(const TTask& tt)
 }	 
 
 //______________________________________________________________________________	 //______________________________________________________________________________
-TTask::TTask(const TTask &task) : TNamed(task)	 
+TTask::TTask(const TTask &other) : TNamed(other)	 
 {	 
-   // Copy constructors.	 (PLEASE DO NOT USE THIS IS WRONG) 
+   // Copy constructor. 
    fTasks = new TList();	 
+   TIter next(other.fTasks);
+   TTask *task;
+   while ((task = (TTask*)next())) {
+      fTasks->Add(new TTask(*task));
+   }
+   fOption = other.fOption;
+   fBreakin = other.fBreakin;
+   fBreakout = other.fBreakout;
+   fHasExecuted = kFALSE;
+   fActive = other.fActive;   
 }	 
 
 //______________________________________________________________________________
 TTask::~TTask()
 {
    // Delete a task and its subtasks.
-
    if (!fTasks) return;
    fTasks->Delete();
    delete fTasks;
