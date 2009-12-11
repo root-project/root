@@ -1560,7 +1560,8 @@ Bool_t TUnixSystem::ExpandPathName(TString &path)
    // Expand a pathname getting rid of special shell characters like ~.$, etc.
    // For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
    // environment variables in a pathname. If compatibility is not an issue
-   // you can use on Unix directly $XXX.
+   // you can use on Unix directly $XXX. Returns kFALSE in case of success
+   // or kTRUE in case of error.
 
    const char *p, *patbuf = (const char *)path;
 
@@ -1580,8 +1581,11 @@ expand:
    path.ReplaceAll("$(","$");
    path.ReplaceAll(")","");
 
-   path = ExpandFileName(path.Data());
-   return kFALSE;
+   if ((p = ExpandFileName(path))) {
+      path = p;
+      return kFALSE;
+   }
+   return kTRUE;
 }
 #endif
 
@@ -1592,7 +1596,8 @@ Bool_t TUnixSystem::ExpandPathName(TString &patbuf0)
    // Expand a pathname getting rid of special shell characters like ~.$, etc.
    // For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
    // environment variables in a pathname. If compatibility is not an issue
-   // you can use on Unix directly $XXX.
+   // you can use on Unix directly $XXX. Returns kFALSE in case of success
+   // or kTRUE in case of error.
 
    const char *patbuf = (const char *)patbuf0;
    const char *hd, *p;
@@ -1696,6 +1701,7 @@ char *TUnixSystem::ExpandPathName(const char *path)
    // For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
    // environment variables in a pathname. If compatibility is not an issue
    // you can use on Unix directly $XXX. The user must delete returned string.
+   // Returns the expanded pathname or 0 in case of error.
 
    TString patbuf = path;
    if (ExpandPathName(patbuf))

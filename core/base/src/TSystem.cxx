@@ -1015,6 +1015,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    // environment variables in a pathname. If compatibility is not an issue
    // you can use on Unix directly $XXX. This is a protected function called
    // from the OS specific system classes, like TUnixSystem and TWinNTSystem.
+   // Returns the expanded filename or 0 in case of error.
 
    const int   kBufSize = kMAXPATHLEN;
    int         n, ier, iter, lx, ncopy;
@@ -1049,7 +1050,7 @@ again:
       p = 0;
       if (c[0] == '~' && c[1] != '/') { // ~user case
          n = strcspn(c+1, "/ "); buff[0] = 0; strncat(buff, c+1, n);
-         p = HomeDirectory(buff); e = c+1+n;
+         p = HomeDirectory(buff); e = c+1+n; if (!p) ier++;
       }
       if (p) {                          // we have smth to copy
          strcpy(x,p); x += strlen(p); c = e-1; continue;
@@ -1120,8 +1121,10 @@ again:
    ncopy = (lx >= kBufSize) ? kBufSize-1 : lx;
    xname[0] = 0; strncat(xname, out, ncopy);
 
-   if (ier || ncopy != lx)
+   if (ier || ncopy != lx) {
       ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
+      return 0;
+   }
 
    return xname;
 }
@@ -1658,15 +1661,15 @@ static bool R__MatchFilename(const char *left, const char *right)
 {
    // Figure out if left and right points to the same
    // object in the file system.
-   
+
    if (left == right) return kTRUE;
-   
+
    if (left==0 || right==0) return kFALSE;
-   
+
    if ( (strcmp(right,left)==0) ) {
       return kTRUE;
    }
-   
+
 #ifdef G__WIN32
 
    char leftname[_MAX_PATH];
@@ -1970,15 +1973,15 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    Bool_t so2dylib = (opt.First('L') != kNPOS);
    if (so2dylib)
       opt.ReplaceAll("L", "");
-   
+
    if (opt.IsNull() || opt.First('D') != kNPOS)
       libs += gInterpreter->GetSharedLibs();
 
    // Cint currently register all libraries that
    // are loaded and have a dictionary in them, this
-   // includes all the libraries that are included 
+   // includes all the libraries that are included
    // in the list of (hard) linked libraries.
-   
+
    TString slinked;
    const char *linked;
    if ((linked = GetLinkedLibraries())) {
@@ -2009,7 +2012,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
          TRegexp separator("[^ \\t\\s]+");
          Ssiz_t start, index, end;
          start = index = end = 0;
-         
+
          while ((start < slinked.Length()) && (index != kNPOS)) {
             index = slinked.Index(separator,&end,start);
             if (index >= 0) {
@@ -2021,19 +2024,19 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
                   if (libs.Index(sub) == kNPOS) {
                      libs.Prepend(" ");
                      libs.Prepend(sub);
-                  }                     
+                  }
                }
             }
             start += end+1;
          }
       }
    } else if (libs.Length() != 0) {
-      // Let remove the statically linked library 
+      // Let remove the statically linked library
       // from the list.
       TRegexp separator("[^ \\t\\s]+");
       Ssiz_t start, index, end;
       start = index = end = 0;
-      
+
       while ((start < slinked.Length()) && (index != kNPOS)) {
          index = slinked.Index(separator,&end,start);
          if (index >= 0) {
@@ -2044,7 +2047,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
          }
          start += end+1;
       }
-      libs = libs.Strip(TString::kBoth);         
+      libs = libs.Strip(TString::kBoth);
    }
 
    // Select according to regexp
@@ -2364,10 +2367,10 @@ static void R__FixLink(TString &cmd)
 #endif
 
 #ifndef WIN32
-static void R__WriteDependencyFile(const TString & /* build_loc */, const TString &depfilename, const TString &filename, const TString &library, const TString &libname, 
+static void R__WriteDependencyFile(const TString & /* build_loc */, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
 #else
-static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname, 
+static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
 #endif
    // Generate the dependency via standard output, not searching the
@@ -2378,9 +2381,9 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 #else
    TString stderrfile;
    AssignAndDelete( stderrfile, gSystem->ConcatFileName(build_loc,"stderr.tmp") );
-#endif   
+#endif
    TString bakdepfilename = depfilename + ".bak";
-   
+
 #ifdef WIN32
    TString touch = "echo # > "; touch += "\"" + depfilename + "\"";
 #else
@@ -2403,7 +2406,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    builddep += "\" > ";
    builddep += stderrfile;
    builddep += " 2>&1 ";
-   
+
    TString adddictdep = "echo ";
    adddictdep += library;
    adddictdep += ": ";
@@ -2421,28 +2424,28 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
       char *rootVersion = gSystem->Which(incPath,"RVersion.h");
       if (rootVersion) {
          adddictdep += rootVersion;
-         adddictdep += " ";                  
+         adddictdep += " ";
          delete [] rootVersion;
       } else {
          adddictdep += rootsys+"/include/RVersion.h ";
       }
    }
    adddictdep += " >> \""+depfilename+"\"";
-   
+
    TString addversiondep( "echo ");
    addversiondep += libname + version_var_prefix + " \"" + ROOT_RELEASE + "\" >> \""+depfilename+"\"";
-   
+
    if (gDebug > 4)  {
       ::Info("ACLiC",touch.Data());
       ::Info("ACLiC",builddep.Data());
       ::Info("ACLiC",adddictdep.Data());
    }
-   
+
    Int_t depbuilt = !gSystem->Exec(touch);
    if (depbuilt) depbuilt = !gSystem->Exec(builddep);
    if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
-   if (depbuilt) depbuilt = !gSystem->Exec(addversiondep);   
-   
+   if (depbuilt) depbuilt = !gSystem->Exec(addversiondep);
+
    if (!depbuilt) {
       ::Warning("ACLiC","Failed to generate the dependency file for %s",
                 library.Data());
@@ -2452,7 +2455,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 #endif
       gSystem->Unlink(bakdepfilename);
    }
-}   
+}
 
 //______________________________________________________________________________
 int TSystem::CompileMacro(const char *filename, Option_t *opt,
@@ -2789,17 +2792,17 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
 
    Bool_t modified = kFALSE;
-   
+
    // Generate the dependency filename
    TString depdir = build_loc;
    TString depfilename;
    AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
    depfilename += "_" + extension + ".d";
-   
+
    if ( !recompile ) {
 
       Long_t lib_time, file_time;
-      
+
       if ((gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0) ||
           (gSystem->GetPathInfo( filename, 0, (Long_t*)0, 0, &file_time ) == 0 &&
           (lib_time < file_time))) {
@@ -2819,9 +2822,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             R__WriteDependencyFile(build_loc, depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
          }
       }
-      
+
       if (!modified) {
-         
+
          // We need to check the dependencies
          FILE * depfile = fopen(depfilename.Data(),"r");
          if (depfile==0) {
@@ -2833,7 +2836,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          } else {
 
             TString version_var = libname + version_var_prefix;
-            
+
             Int_t sz = 256;
             char *line = new char[sz];
             line[0] = 0;
@@ -2854,7 +2857,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                   continue;
                }
                if (current && line[current-1]=='=' && strncmp(version_var.Data(),line,current)==0) {
-                  
+
                   // The next word will be the version number.
                   hasversion = kTRUE;
                   line[0] = 0;
