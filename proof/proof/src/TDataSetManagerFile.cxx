@@ -91,10 +91,10 @@ TDataSetManagerFile::TDataSetManagerFile(const char *group,
       fDataSetLockFile.ReplaceAll("/","%");
       fDataSetLockFile.ReplaceAll(":","%");
       fDataSetLockFile.Insert(0, Form("%s/", gSystem->TempDirectory()));
-
-      // Limit in seconds after a lock automatically expires
-      fLockFileTimeLimit = 120;
    }
+
+   // Limit in seconds after a lock automatically expires
+   fLockFileTimeLimit = 120;
 
    // If the MSS url was not given, check if one is defined via env
    if (fMSSUrl.IsNull())

@@ -498,9 +498,10 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
          md5icur = TMD5::FileChecksum(selc);
          md5iold = qr->GetSelecImp()->Checksum();
          // Header files
-         char *selh = StrDup(selc);
-         char *p = (char *) strrchr(selh,'.');
-         if (p) strcpy(p+1,"h");
+         TString selh(selc);
+         Int_t dot = selh.Last('.');
+         if (dot != kNPOS) selh.Remove(dot);
+         selh += ".h";
          if (!gSystem->AccessPathName(selh, kReadPermission))
             md5hcur = TMD5::FileChecksum(selh);
          md5hold = qr->GetSelecHdr()->Checksum();
@@ -514,7 +515,6 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
          SafeDelete(md5iold);
          SafeDelete(md5hold);
          if (selc) delete [] selc;
-         if (selh) delete [] selh;
       }
 
       Bool_t ok = kTRUE;

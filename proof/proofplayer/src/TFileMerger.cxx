@@ -227,8 +227,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
          if (allNames.FindObject(key->GetName())) continue;
          TClass *cl = TClass::GetClass(key->GetClassName());
          if (!cl || !cl->InheritsFrom(TObject::Class())) {
-            cout << "Cannot merge object type, name: " 
-                 << key->GetName() << " title: " << key->GetTitle() << endl;
+            Info("MergeRecursive", "cannot merge object type, name: %s title: %s",
+                                   key->GetName(), key->GetTitle());
             continue;
          }
          allNames.Add(new TObjString(key->GetName()));
@@ -236,6 +236,11 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
          // read object from first source file
          current_sourcedir->cd();
          TObject *obj = key->ReadObj();
+         if (!obj) {
+            Info("MergeRecursive", "could not read object for key {%s, %s}",
+                                   key->GetName(), key->GetTitle());
+            continue;
+         }
 
          if (obj->IsA()->InheritsFrom("TH1")) {
             // descendant of TH1 -> merge it
@@ -384,27 +389,27 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
          // note that this will just store obj in the current directory level,
          // which is not persistent until the complete directory itself is stored
          // by "target->Write()" below
-         if ( obj ) {
-            target->cd();
+         target->cd();
 
-            //!!if the object is a tree, it is stored in globChain...
-            if(obj->IsA()->InheritsFrom( "TDirectory" )) {
-               //printf("cas d'une directory\n");
-            } else if(obj->IsA()->InheritsFrom( "TTree" )) {
-               if (!fNoTrees) {
+         //!!if the object is a tree, it is stored in globChain...
+         if(obj->IsA()->InheritsFrom( "TDirectory" )) {
+            //printf("cas d'une directory\n");
+         } else if(obj->IsA()->InheritsFrom( "TTree" )) {
+            if (!fNoTrees) {
+               if (globChain) {
                   globChain->ls();
                   if (fFastMethod) globChain->Merge(target->GetFile(),0,"keep fast");
                   else             globChain->Merge(target->GetFile(),0,"keep");
                   delete globChain;
                }
-            } else if (obj->IsA()->InheritsFrom( "TCollection" )) {
-               obj->Write( key->GetName(), TObject::kSingleKey );
-               ((TCollection*)obj)->SetOwner();
-            } else {
-               obj->Write( key->GetName() );
             }
-            if (obj->IsA()->InheritsFrom("TCollection")) ((TCollection*)obj)->Delete();
+         } else if (obj->IsA()->InheritsFrom( "TCollection" )) {
+            obj->Write( key->GetName(), TObject::kSingleKey );
+            ((TCollection*)obj)->SetOwner();
+         } else {
+            obj->Write( key->GetName() );
          }
+         if (obj->IsA()->InheritsFrom("TCollection")) ((TCollection*)obj)->Delete();
          oldkey = key;
          delete obj;
       } // while ( ( TKey *key = (TKey*)nextkey() ) )

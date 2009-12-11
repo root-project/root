@@ -1034,7 +1034,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    // update stats & free old element
 
    if ( slstat->fCurElem != 0 ) {
-      Double_t latency, proctime, proccpu;
+      Double_t latency = 0., proctime = 0., proccpu = 0.;
       Long64_t bytesRead = -1;
       Long64_t totalEntries = -1;
       Long64_t totev = 0;

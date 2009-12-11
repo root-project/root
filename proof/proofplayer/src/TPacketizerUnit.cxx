@@ -265,7 +265,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       Info("GetNextPacket","worker-%s: fAssigned %lld\t", sl->GetOrdinal(), fAssigned);
 
    // Update stats & free old element
-   Double_t latency, proctime, proccpu;
+   Double_t latency = 0., proctime = 0., proccpu = 0.;
    Long64_t bytesRead = -1;
    Long64_t totalEntries = -1; // used only to read an old message type
    Long64_t totev = 0;
