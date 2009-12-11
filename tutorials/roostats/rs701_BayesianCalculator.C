@@ -49,6 +49,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
 
   RooArgSet * nuisPar = 0;
   if (useBkg) nuisPar = &nuisanceParameters;
+  //if (!useBkg) ((RooRealVar *)w->var("b"))->setVal(0);
 
   double size = 1.-confLevel;
   std::cout << "\nBayesian Result using a Flat prior " << std::endl;
@@ -65,9 +66,9 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   c1->cd(1);
   plot->Draw();
 
-
-  std::cout << "\nBayesian Result using a 1/s prior " << std::endl;
-  BayesianCalculator bcalc2(data,*model,RooArgSet(*POI),*priorPOI2, nuisPar);
+  // don;t run with background events - will take too long
+  std::cout << "\nBayesian Result using a 1/s prior (no background) " << std::endl;
+  BayesianCalculator bcalc2(data,*model,RooArgSet(*POI),*priorPOI2);
   bcalc2.SetTestSize(size);
   SimpleInterval* interval2 = bcalc2.GetInterval();
   cl = bcalc2.ConfidenceLevel();
