@@ -291,9 +291,9 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
     Bool_t paramBinning(kFALSE) ;
     TIterator* iter = _otherVars.createIterator() ;	
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
-      if (arg->dependsOn(_protoVars)) {
+    RooAbsArg* arg6 ;
+    while((arg6=(RooAbsArg*)iter->Next())) {
+      if (arg6->dependsOn(_protoVars)) {
 	paramBinning = kTRUE ;
 	break ;
       }
