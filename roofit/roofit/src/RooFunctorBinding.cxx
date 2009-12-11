@@ -94,6 +94,7 @@ RooFunctorPdfBinding::RooFunctorPdfBinding(const char *name, const char *title, 
 			  << ") does not match dimensionality of function (" << ftor.NDim() << ")" << endl ;
     throw string("RooFunctor::ctor ERROR") ;
   }
+  x = new Double_t[func->NDim()] ;
   vars.add(v) ;
 } 
 
@@ -104,6 +105,7 @@ RooFunctorPdfBinding::RooFunctorPdfBinding(const RooFunctorPdfBinding& other, co
   vars("vars",this,other.vars)
 { 
   // Copy constructor
+  x = new Double_t[func->NDim()] ;
 } 
 
 
