@@ -660,7 +660,11 @@ void TGLViewer::DoDrawStereo()
 
    frustum_asym = stereo_offset * gl_near / zero_p_dist * fStereoFrustumAsymFac;
 
-   glTranslatef(-stereo_offset, 0, 0);
+   TGLMatrix  abs_trans(c.RefCamBase());
+   abs_trans *= c.RefCamTrans();
+   TGLVector3 left_vec = abs_trans.GetBaseVec(2);
+
+   glTranslatef(stereo_offset*left_vec[0], stereo_offset*left_vec[1], stereo_offset*left_vec[2]);
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -698,7 +702,7 @@ void TGLViewer::DoDrawStereo()
    PreDraw();
    PreRender();
 
-   glTranslatef(stereo_offset, 0, 0);
+   glTranslatef(-stereo_offset*left_vec[0], -stereo_offset*left_vec[1], -stereo_offset*left_vec[2]);
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
