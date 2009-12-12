@@ -2425,7 +2425,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       while ((element = (TStreamerElement*)next())) {
          if (element->GetType() == kObjectp || element->GetType() == kObjectP ||
              element->GetType() == kAnyp || element->GetType() == kAnyP || 
-             element->GetType() == kCharStar) {
+             element->GetType() == kCharStar || element->GetType() == kSTLp) {
             if(element->GetArrayLength() <= 1) {
                fprintf(sfp,"   %s = 0;\n",element->GetName());
             } else {
