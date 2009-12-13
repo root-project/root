@@ -178,7 +178,7 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
    {
       v = new TGLSAViewer(cf, 0, ged, form);
    }
-   catch (std::exception& exc)
+   catch (std::exception&)
    {
       Error("SpawnGLViewer", "Insufficient support from the graphics hardware. Aborting.");
       gApplication->Terminate(1);
@@ -252,7 +252,7 @@ switch_stereo:
    {
       v->CreateGLWidget();
    }
-   catch (std::exception& exc)
+   catch (std::exception&)
    {
       Error("SwitchStereo", "Insufficient support from the graphics hardware. Reverting.");
       goto switch_stereo;
