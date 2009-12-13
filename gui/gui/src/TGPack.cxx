@@ -210,6 +210,9 @@ void TGPack::FindFrames(TGFrame* splitter, TGFrameElementPack*& f0, TGFrameEleme
 
    while ((el = (TGFrameElementPack *) next()))
    {
+      if ( ! el->fState & kIsVisible)
+         continue;
+
       if (el->fFrame == splitter)
          break;
       f0 = el;
@@ -291,9 +294,9 @@ void TGPack::RemoveFrameInternal(TGFrame* f)
 
    TGFrameElementPack *el = (TGFrameElementPack*)FindFrameElement(f);
 
-   if (!el || el->fState == 0 ) return;
+   if (!el) return;
 
-   if (fUseSplitters )
+   if (fUseSplitters)
    {
       TGFrame* splitter = el->fSplitFE->fFrame;
       splitter->UnmapWindow();
@@ -302,10 +305,12 @@ void TGPack::RemoveFrameInternal(TGFrame* f)
       splitter->ReparentWindow(fClient->GetDefaultRoot());
       delete splitter;
    }
-   f->UnmapWindow();
-
-   fWeightSum -= el->fWeight;
-   fNVisible --;
+   if (el->fState & kIsVisible)
+   {
+      f->UnmapWindow();
+      fWeightSum -= el->fWeight;
+      --fNVisible;
+   }
    TGCompositeFrame::RemoveFrame(f);
 
    CheckSplitterVisibility();
@@ -596,7 +601,10 @@ void TGPack::SetVertical(Bool_t x)
    TList list;
    while ( ! fList->IsEmpty())
    {
-      TGFrame* f = ((TGFrameElement*) fList->First())->fFrame;
+      TGFrameElement *el = (TGFrameElement*) fList->At(1);
+      TGFrame        *f  = el->fFrame;
+      if ( ! el->fState & kIsVisible)
+         f->SetBit(kTempFrame);
       RemoveFrameInternal(f);
       list.Add(f);
    }
@@ -605,6 +613,10 @@ void TGPack::SetVertical(Bool_t x)
    {
       TGFrame* f = (TGFrame*) list.First();
       AddFrameInternal(f);
+      if (f->TestBit(kTempFrame)) {
+         f->ResetBit(kTempFrame);
+         HideFrame(f);
+      }
       list.RemoveFirst();
    }
    Layout();
