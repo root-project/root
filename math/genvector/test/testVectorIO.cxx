@@ -482,7 +482,7 @@ int testVectorIO(bool readOnly = false) {
   return iret; 
 }
 
-int main(int argc, const char * ) { 
+int main(int argc, char ** ) { 
 
    bool readOnly = false;
    if (argc > 1) readOnly = true; 
