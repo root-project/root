@@ -4781,7 +4781,8 @@ if test ! "x$enable_mathmore" = "xno"; then
             result "not found"
         fi
     fi
-    if test "x$enable_mathmore" = "xyes"; then
+    if test "x$enable_mathmore" = "xyes" && \
+       test ! "x$enable_gsl_shared" = "xyes" ; then
         for gslalib in $gsllibs; do
            if [ "x`basename $gslalib .a`" != "x`basename $gslalib`" ]; then
                message "Checking whether $gslalib is compiled with -fPIC"
