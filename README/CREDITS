@@ -695,6 +695,10 @@ N: Tomasz Sosnicki
 E: tom.sosnicki@gmail.com
 D: contribution to gviz3d/TStructViewer
 
+N: Peter Speckmayer
+E: speckmay@mail.cern.ch
+D: author to the TMVA package
+
 N: Abdelhalim Ssadik
 E: abdelhalim.ssadik@cern.ch
 D: contribution to GUI classes (TGDockableFrame)
@@ -714,6 +718,14 @@ D: development of class TGraphSmooth + many suggestions
 N: Matevz Tadel
 E: Matevz.Tadel@cern.ch
 D: Several contributions to the 3-d graphics and GL interface
+
+N: Jan Therhaag
+E: therhaag@physik.uni-bonn.de
+D: author to the TMVA package
+
+N: Eckhard von Thoerne
+E: evtoerne@users.sourceforge.net
+D: author to the TMVA package
 
 N: Tim Tran
 E: timtran@jlab.org
@@ -749,11 +761,7 @@ D: class TPie
 
 N: Helge Voss
 E: Helge.Voss@cern.ch
-D: contribution to the TMVA package
-
-N: Kai Voss
-E: Kai.Voss@cern.ch
-D: contribution to the TMVA package
+D: author to the TMVA package
 
 N: Shaowen Wang
 E: shaowen-wang@uiowa.edu
