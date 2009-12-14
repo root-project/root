@@ -34,7 +34,19 @@
 
 //______________________________________________________________________________
 /**
-   Backward comparible implementation of TVirtualFitter using the the class ROOT::Fit::Fitter
+   Backward compatible implementation of TVirtualFitter using the the class ROOT::Fit::Fitter.
+   This class is created after fitting an histogram (TH1), TGraph or TTree and provides in addition to the 
+   methods of the TVirtualFitter hooks to access the fit result class (ROOT::Fit::FitResult), the fit configuration
+   (ROOT::Fit::FitConfig) or the fit data (ROOT::Fit::FitData) using
+   <pre>
+   TBackCompFitter * fitter = (TBackCompFitter *) TVirtualFitter::GetFitter();
+   ROOT::Fit::FitResult & result = fitter->GetFitResult();
+   result.Print(std::cout);
+   </pre>
+   
+   Methods for getting the confidence level or contours are also provided. 
+   Note that after a new calls to TH1::Fit (or similar) the class will be deleted and all reference to the FitResult, FitConfig 
+   or minimizer will be invalid. One could eventually copying  the class before issuing a new fit to avoid deleting this information
 */
 
 
@@ -642,6 +654,7 @@ Int_t TBackCompFitter::SetParameter(Int_t ipar,const char *parname,Double_t valu
 // }
 
 void TBackCompFitter::ReCreateMinimizer() { 
+   // Recreate a minimizer instance using the function and data 
    // set objective function in minimizers function to re-create FCN from stored data object and fit options
    assert(fFitData.get());
 
@@ -666,7 +679,7 @@ void TBackCompFitter::ReCreateMinimizer() {
          fObjFunc = new ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IMultiGenFunction>(*unbindata, *fModelFunc);
       }
    }
-
+   
 
    // recreate the minimizer
    fMinimizer = fFitter->Config().CreateMinimizer(); 
@@ -750,20 +763,42 @@ void TBackCompFitter::SetFCN(void *fcn)
 }
 
 void TBackCompFitter::SetObjFunction(ROOT::Math::IMultiGenFunction   * fcn) { 
-   // class clone a copy of the function
+   // set the objective function for fitting
+   // Needed if fitting directly using TBackCompFitter class
+   // The class clones a copy of the function and manages it
    if (fObjFunc) delete fObjFunc;
    fObjFunc = fcn->Clone(); 
 }
 
 
 void TBackCompFitter::DoSetDimension() { 
-   // set dimension in objective function
+   // Private method to set dimension in objective function
    if (!fObjFunc) return; 
    ROOT::Fit::FcnAdapter * fobj = dynamic_cast<ROOT::Fit::FcnAdapter*>(fObjFunc); 
    assert(fobj != 0); 
    int ndim = fFitter->Config().ParamsSettings().size(); 
    if (ndim != 0) fobj->SetDimension(ndim); 
 }
+
+ROOT::Math::IMultiGenFunction * TBackCompFitter::GetObjFunction( ) { 
+   // return a pointer to the objective function (FCN) 
+   // If fitting directly using TBackCompFitter the pointer is managed by the class,
+   // which has been set previously when calling SetObjFunction or SetFCN
+   // Otherwise if the class is used in the backward compatible mode (e.g. after having fitted a TH1) 
+   // the return pointer will be valid after fitting and as long a new fit will not be done. 
+   if (fObjFunc) return fObjFunc;
+   return fFitter->GetFCN(); 
+}
+
+ROOT::Math::Minimizer * TBackCompFitter::GetMinimizer( ) { 
+   // return a pointer to the minimizer.  
+   // the return pointer will be valid after fitting and as long a new fit will not be done. 
+   // For keeping a minimizer pointer the method ReCreateMinimizer() could eventually be used  
+   if (fMinimizer) return fMinimizer;
+   return fFitter->GetMinimizer();
+}
+
+
 
 //________________________________________________________________________________
 bool TBackCompFitter::Scan(unsigned int ipar, TGraph * gr, double xmin, double xmax )

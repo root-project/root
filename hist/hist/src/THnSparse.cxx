@@ -30,7 +30,7 @@
 
 #include "HFitInterface.h"
 #include "Fit/SparseData.h"
-#include "Fit/Fitter.h"
+#include "Math/MinimizerOptions.h"
 #include "Math/WrappedMultiTF1.h"
 
 //______________________________________________________________________________

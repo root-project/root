@@ -259,7 +259,9 @@ public:
       This pointer will be valid as far as the data, the objective function
       and the fitter class  have not been deleted.  
       To be used only after fitting.
-      
+      The pointer should not be stored and will be invalided after performing a new fitting.  
+      In this case a new instance of ROOT::Math::Minimizer will be re-created and can be 
+      obtained calling again GetMinimizer()
     */
    ROOT::Math::Minimizer * GetMinimizer() { return fMinimizer.get(); } 
 
@@ -267,7 +269,10 @@ public:
       return pointer to last used objective function 
       (is NULL in case fit is not yet done)
       This pointer will be valid as far as the data and the fitter class
-      have not been deleted. To be used after the fitting
+      have not been deleted. To be used after the fitting.
+      The pointer should not be stored and will be invalided after performing a new fitting.
+      In this case a new instance of the function pointer will be re-created and can be 
+      obtained calling again GetFCN()  
     */
    ROOT::Math::IMultiGenFunction * GetFCN() { return fObjFunction.get(); } 
 
