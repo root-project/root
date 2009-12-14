@@ -2036,6 +2036,27 @@ void TUnixSystem::StackTrace()
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
 
+   TString gdbscript = gEnv->GetValue("Root.StacktraceScript", "");
+   gdbscript = gdbscript.Strip();
+   if (gdbscript != "") {
+      if (AccessPathName(gdbscript, kReadPermission)) {
+         fprintf(stderr, "Root.StacktraceScript %s does not exist\n", gdbscript.Data());
+         gdbscript = "";
+      } else {
+         gdbscript += " ";
+      }
+   }
+   if (gdbscript == "") {
+#ifdef ROOTETCDIR
+      gdbscript.Form("%s/gdb-backtrace.sh ", ROOTETCDIR);
+#else
+      gdbscript.Form("%s/etc/gdb-backtrace.sh ", gSystem->Getenv("ROOTSYS"));
+#endif
+   }
+
+   TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
+   gdbmess = gdbmess.Strip();
+
    cout.flush();
    fflush(stdout);
 
@@ -2058,16 +2079,22 @@ void TUnixSystem::StackTrace()
       return;
    }
 
+   // write custom message file
+   TString gdbmessf = "gdb-message";
+   if (gdbmess != "") {
+      FILE *f = TempFileName(gdbmessf);
+      fprintf(f, "%s\n", gdbmess.Data());
+      fclose(f);
+   }
+
    // use gdb to get stack trace
-   TString gdbscript;
-# ifdef ROOTETCDIR
-   gdbscript.Form("%s/gdb-backtrace.sh ", ROOTETCDIR);
-# else
-   gdbscript.Form("%s/etc/gdb-backtrace.sh ", gSystem->Getenv("ROOTSYS"));
-# endif
    gdbscript += GetExePath();
    gdbscript += " ";
    gdbscript += GetPid();
+   if (gdbmess != "") {
+      gdbscript += " ";
+      gdbscript += gdbmessf;
+   }
    gdbscript += " 1>&2";
    Exec(gdbscript);
    delete [] gdb;
@@ -2143,14 +2170,20 @@ void TUnixSystem::StackTrace()
    // If it is, use it. If not proceed as before.
    char *gdb = Which(Getenv("PATH"), "gdb", kExecutePermission);
    if (gdb) {
+      // write custom message file
+      TString gdbmessf = "gdb-message";
+      if (gdbmess != "") {
+         FILE *f = TempFileName(gdbmessf);
+         fprintf(f, "%s\n", gdbmess.Data());
+         fclose(f);
+      }
+
       // use gdb to get stack trace
-      TString gdbscript;
-# ifdef ROOTETCDIR
-      gdbscript.Form("%s/gdb-backtrace.sh ", ROOTETCDIR);
-# else
-      gdbscript.Form("%s/etc/gdb-backtrace.sh ", gSystem->Getenv("ROOTSYS"));
-# endif
       gdbscript += GetPid();
+      if (gdbmess != "") {
+         gdbscript += " ";
+         gdbscript += gdbmessf;
+      }
       gdbscript += " 1>&2";
       Exec(gdbscript);
       delete [] gdb;

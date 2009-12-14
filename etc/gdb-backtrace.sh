@@ -4,6 +4,7 @@
 # It is used by TUnixSystem::StackTrace() on Linux and MacOS X.
 
 tempname=`basename $0 .sh`
+messfile=`dirname $0`/gdb-message.sh
 
 OUTFILE=`mktemp -q /tmp/${tempname}.XXXXXX`
 if test $? -ne 0; then
@@ -12,9 +13,12 @@ fi
 
 if [ `uname -s` = "Darwin" ]; then
 
-   if test $# -ne 2; then
-      echo "Usage: ${tempname} <executable> <process-id>" 1>&2
+   if test $# -lt 2; then
+      echo "Usage: ${tempname} <executable> <process-id> [gdb-mess-file]" 1>&2
       exit 1
+   fi
+   if test $# -eq 3; then
+      messfile=$3
    fi
 
    if test ! -x $1; then
@@ -45,9 +49,12 @@ if [ `uname -s` = "Darwin" ]; then
 
 else
 
-   if test $# -ne 1; then
-      echo "Usage: ${tempname} <process-id>" 1>&2
+   if test $# -lt 1; then
+      echo "Usage: ${tempname} <process-id> [gdb-mess-file]" 1>&2
       exit 1
+   fi
+   if test $# -eq 2; then
+      messfile=$2
    fi
 
    if test ! -r /proc/$1; then
@@ -210,20 +217,28 @@ $line"
       if test "x$ininterp" = "xyes"; then
          echo ""
          echo ""
-         echo 'The crash is most likely caused by a problem in your script.'
-         echo 'Try to compile it (.L myscript.C+g) and fix any errors.'
-         echo 'If that does not help then please submit a bug report at'
-         echo 'http://root.cern.ch/bugs. Please post the ENTIRE stack trace'
-         echo 'from above as an attachment in addition to anything else'
-         echo 'that might help us fixing this issue.'
+         if test -f $messfile; then
+            cat $messfile | tr '%' '\n'
+         else
+            echo 'The crash is most likely caused by a problem in your script.'
+            echo 'Try to compile it (.L myscript.C+g) and fix any errors.'
+            echo 'If that does not help then please submit a bug report at'
+            echo 'http://root.cern.ch/bugs. Please post the ENTIRE stack trace'
+            echo 'from above as an attachment in addition to anything else'
+            echo 'that might help us fixing this issue.'
+         fi
       elif ! test "x$frames" = "x"; then
          echo ""
          echo ""
-         echo 'The lines below might hint at the cause of the crash.'
-         echo 'If they do not help you then please submit a bug report at'
-         echo 'http://root.cern.ch/bugs. Please post the ENTIRE stack trace'
-         echo 'from above as an attachment in addition to anything else'
-         echo 'that might help us fixing this issue.'
+         if test -f $messfile; then
+            cat $messfile | tr '%' '\n'
+         else
+            echo 'The lines below might hint at the cause of the crash.'
+            echo 'If they do not help you then please submit a bug report at'
+            echo 'http://root.cern.ch/bugs. Please post the ENTIRE stack trace'
+            echo 'from above as an attachment in addition to anything else'
+            echo 'that might help us fixing this issue.'
+         fi
          echo "==========================================================="
          echo "$frames"
          echo "==========================================================="
@@ -232,5 +247,5 @@ $line"
       echo ""
    fi
 
-   rm -f $OUTFILE
+   rm -f $OUTFILE $messfile
 fi

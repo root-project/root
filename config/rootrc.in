@@ -56,6 +56,12 @@ Root.MemCheckFile:       memcheck.out
 # Global debug mode. When >0 turns on progressively more details debugging.
 Root.Debug:              0
 Root.Stacktrace:         yes
+# Allow for a customized backtrace script.
+#Root.StacktraceScript:   $(ROOTSYS)/etc/gdb-backtrace.sh
+# Allow for a customized backtrace messages (e.g. referencing your own project
+# bug tracking system). Change this message rather then the entire script.
+# The % characters will be replaced by newlines.
+#Root.StacktraceMessage:  The lines below might hint at the cause of the crash.%If they do not help you then please submit a bug report at%http://myproject/bugs. Please post the ENTIRE stack trace%from above as an attachment in addition to anything else%that might help us fixing this issue.
 
 # Ignore errors lower than the ignore level. Possible values:
 # Print, Info, Warning, Error, Break, SysError and Fatal.
