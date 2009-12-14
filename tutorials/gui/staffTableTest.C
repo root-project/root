@@ -69,10 +69,10 @@ TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
    DontCallClose() ;
    
    // Open root file for the tree
-   fFile = new TFile("$ROOTSYS/tutorials/tree/staff.root");
+   fFile = new TFile("$ROOTSYS/tutorials/tree/cernstaff.root");
 
    if (!fFile || fFile->IsZombie()) {
-      printf("Please run <ROOT location>/tutorials/tree/staff.C first.");
+      printf("Please run <ROOT location>/tutorials/tree/cernbuild.C first.");
       return;
    }
 
