@@ -21,8 +21,11 @@ bits is zero).</li>
     <li>Prevent the unadvertent replacement of an arrow with a dot when the left side is actually a pointer</li>
     </ul>
 </li>
-<li>More user friendly trace-back in case of a crash, with hints where
-the problem might be.</li>
+<li>More user friendly stacktrace in case of a crash, with hints where
+the problem might be. On Linux and MacOS X these stacktraces are generated
+by the script $ROOTSYS/etc/gdb-backtrace.sh. Using the Root.StackTraceMessage
+resource one can customize the message printed by the script. The entire
+script can be replaced using the Root.StacktraceScript resource.</li>
 <li>Numerous minor bug fixes...</li>
 </ul>
 <h4>New module  <tt>editline</tt> </h4>
