@@ -27,10 +27,11 @@ The basic idea is the following:
 - Perform toy MC experiments to know the distributions of -2lnQ 
 - Calculate the CLsb and CLs values as "integrals" of these distributions.
 
-The class allows the user to input models as RooAbsPdf or TH1 object 
-pointers (the pdfs must be "extended": for more information please refer to 
+The class allows the user to input models as RooAbsPdf ( TH1 object could be used 
+by using the RooHistPdf class)
+The pdfs must be "extended": for more information please refer to 
 http://roofit.sourceforge.net). The dataset can be entered as a 
-RooAbsData or TH1 object pointer.  
+RooAbsData objects.  
 
 Unlike the TLimit Class a complete MC generation is performed at each step 
 and not a simple Poisson fluctuation of the contents of the bins.
@@ -39,10 +40,18 @@ can input in the constructor nuisance parameters.
 To include the information that we have about the nuisance parameters a prior
 PDF (RooAbsPdf) should be specified
 
+Different test statistic can be used (likelihood ratio, number of events or 
+profile likelihood ratio. The default is the likelihood ratio. 
+See the method SetTestStatistic.
+
+The number of toys to be generated is controlled by SetNumberOfToys(n).
+
 The result of the calculations is returned as a HybridResult object pointer.
 
 see also the following interesting references:
-- Alex Read, "Presentation of search results: the CLs technique" Journal of Physics G: Nucl. // Part. Phys. 28 2693-2704 (2002). http://www.iop.org/EJ/abstract/0954-3899/28/10/313/
+- Alex Read, "Presentation of search results: the CLs technique",
+  Journal of Physics G: Nucl. Part. Phys. 28 2693-2704 (2002).
+  see http://www.iop.org/EJ/abstract/0954-3899/28/10/313/
 
 - Alex Read, "Modified Frequentist Analysis of Search Results (The CLs Method)" CERN 2000-005 (30 May 2000)
 
@@ -101,11 +110,10 @@ HybridCalculator::HybridCalculator( RooAbsPdf& sbModel,
    fNuisanceParameters(nuisance_parameters),
    fPriorPdf(priorPdf),
    fData(0),
-   //fWS(0),
    fGenerateBinned(GenerateBinned),
    fUsePriorPdf(false)
 {
-   /// specific HybridCalculator constructor:
+   /// HybridCalculator constructor without specifying a data set
    /// the user need to specify the models in the S+B case and B-only case,
    /// the list of observables of the model(s) (for MC-generation), the list of parameters 
    /// that are marginalised and the prior distribution of those parameters
@@ -197,6 +205,7 @@ HybridCalculator::~HybridCalculator()
 
 void HybridCalculator::SetNullModel(const ModelConfig& model)
 {
+   // Set the model describing the null hypothesis
    fBModel = model.GetPdf();
    // only if it has not been set before
    if (!fPriorPdf) fPriorPdf = model.GetPriorPdf(); 
@@ -205,6 +214,7 @@ void HybridCalculator::SetNullModel(const ModelConfig& model)
 
 void HybridCalculator::SetAlternateModel(const ModelConfig& model)
 {
+   // Set the model describing the alternate hypothesis
    fSbModel = model.GetPdf();
    fPriorPdf = model.GetPriorPdf(); 
    fNuisanceParameters = model.GetNuisanceParameters(); 
@@ -213,7 +223,7 @@ void HybridCalculator::SetAlternateModel(const ModelConfig& model)
 void HybridCalculator::SetTestStatistic(int index)
 {
    /// set the desired test statistics:
-   /// index=1 : 2 * log( L_sb / L_b )  (DEFAULT)
+   /// index=1 : likelihood ratio: 2 * log( L_sb / L_b )  (DEFAULT)
    /// index=2 : number of generated events
    /// index=3 : profiled likelihood ratio
    /// if the index is different to any of those values, the default is used

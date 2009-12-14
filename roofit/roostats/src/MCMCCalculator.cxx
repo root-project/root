@@ -20,8 +20,8 @@ per user specification.
 </p>
 
 <p>
-The interface allows one to pass the model, data, and parameters via a workspace and
-then specify them with names.
+The interface allows one to pass the model, data, and parameters  or eventually 
+specify them with names via the ModelConfig class.
 </p>
 
 <p>
@@ -98,10 +98,6 @@ MCMCCalculator::MCMCCalculator() :
    fUseSparseHist = kFALSE;
 }
 
-// Constructor for automatic configuration with basic settings.  Uses a
-// UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
-// RooRealVar, determines interval by keys, and turns on sparse histogram
-// mode in the MCMCInterval.  Finds a 95% confidence interval.
 MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
                                const RooArgSet& paramsOfInterest,
                                RooAbsPdf & prior) : 
@@ -112,10 +108,13 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
    fData(&data),
    fAxes(0)
 {
+// Constructor for automatic configuration with basic settings.  Uses a
+// UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
+// RooRealVar, determines interval by keys, and turns on sparse histogram
+// mode in the MCMCInterval.  Finds a 95% confidence interval.
    SetupBasicUsage();
 }
 
-// same as above but not passing a prior pdf
 MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
                                const RooArgSet& paramsOfInterest) :
    fPOI(paramsOfInterest),
@@ -125,24 +124,24 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
    fData(&data),
    fAxes(0)
 {
+// same constructor as before but not passing a prior pdf
    SetupBasicUsage();
 }
 
-// Constructor for automatic configuration with basic settings.  Uses a
-// UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
-// RooRealVar, determines interval by keys, and turns on sparse histogram
-// mode in the MCMCInterval.  Finds a 95% confidence interval.
 MCMCCalculator::MCMCCalculator(RooAbsData& data, const ModelConfig & model) :
    fPropFunc(0), 
    fPdf(model.GetPdf()), 
    fPriorPdf(0),
    fData(&data)
 {
+// Constructor for automatic configuration with basic settings.  Uses a
+// UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
+// RooRealVar, determines interval by keys, and turns on sparse histogram
+// mode in the MCMCInterval.  Finds a 95% confidence interval.
    SetModel(model);
    SetupBasicUsage();
 }
 
-// alternate constructor, specifying many arguments
 MCMCCalculator::MCMCCalculator(RooAbsData& data, const ModelConfig & model,
                                ProposalFunction& proposalFunction, Int_t numIters,
                                RooArgList* axes, Double_t size) : 
@@ -152,6 +151,7 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, const ModelConfig & model,
    fData(&data), 
    fAxes(axes)
 {
+// alternate constructor, specifying many arguments
    SetModel(model);
    SetTestSize(size);
    fNumIters = numIters;
@@ -191,12 +191,12 @@ MCMCCalculator::MCMCCalculator(RooAbsData& data, RooAbsPdf& pdf,
    fUseSparseHist = kFALSE;
 }
 
-// Constructor for automatic configuration with basic settings.  Uses a
+void MCMCCalculator::SetupBasicUsage()
+{
+// Setting automatic configuration with basic settings.  Uses a
 // UniformProposal,10,000 iterations, 40 burn in steps, 50 bins for each
 // RooRealVar, determines interval by keys, and turns on sparse histogram
 // mode in the MCMCInterval.  Finds a 95% confidence interval.
-void MCMCCalculator::SetupBasicUsage()
-{
    fPropFunc = 0;
    fNumIters = 10000;
    fNumBurnInSteps = 40;

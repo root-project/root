@@ -74,7 +74,7 @@ using namespace RooStats;
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() : 
    CombinedCalculator(), fFitResult(0)
 {
-   // default constructor
+   // default dummy constructor 
 }
 
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest, 
@@ -82,16 +82,24 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAb
    CombinedCalculator(data,pdf, paramsOfInterest, size, nullParams ), 
    fFitResult(0)
 {
-   // constructor from pdf and parameters
-   // the pdf must contain eventually the nuisance parameters
+   // constructor from the data, a model pdf and the parameter of Interest. 
+   // If nuisance parameters are present they should be specified as part of the model
+   // i.e. the model pdf is a combined pdf for the poi and the nuisance 
+   // The default test size used is 0.05 ( for a 95%  interval) 
+   // A set for the null parameters (it must be a copied set) can be specified which will be used for 
+   // performing the hypothesis test
 }
 
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data,  ModelConfig& model, Double_t size) :
    CombinedCalculator(data, model, size), 
    fFitResult(0)
 {
+   // construct from the data and a model configuration (ModelConfig class) 
+   // If the model configuration contains a Prior pdf it will be included in the full model
+   // used by the profile likelihood calculator.
+   // The default test size used is 0.05 ( for a 95%  interval) 
+
    assert(model.GetPdf() );
-   // construct from model config (pdf from the model config does not include the nuisance)
    if (model.GetPriorPdf() ) { 
       std::string name = std::string("Costrained_") + (model.GetPdf())->GetName() + std::string("_with_") + (model.GetPriorPdf())->GetName();
       fPdf = new RooProdPdf(name.c_str(),name.c_str(), *(model.GetPdf()), *(model.GetPriorPdf()) );
@@ -103,22 +111,20 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data,  Mode
 
 //_______________________________________________________
 ProfileLikelihoodCalculator::~ProfileLikelihoodCalculator(){
-   // destructor
-   // cannot delete prod pdf because it will delete all the composing pdf's
-//    if (fOwnPdf) delete fPdf; 
-//    fPdf = 0; 
+   // destructor (delete the contained result of the fit)
+
    if (fFitResult) delete fFitResult; 
 }
 
 void ProfileLikelihoodCalculator::DoReset() const { 
-   // reset and clear fit result 
+   // private method to reset and clear fit results 
    // to be called when a new model or data are set in the calculator 
    if (fFitResult) delete fFitResult; 
    fFitResult = 0; 
 }
 
 void  ProfileLikelihoodCalculator::DoGlobalFit() const { 
-   // perform a global fit of the likelihood letting with all parameter of interest and 
+   // private method to perform a global fit of the likelihood letting with all parameter of interest and 
    // nuisance parameters 
    // keep the list of fitted parameters 
 
@@ -220,7 +226,11 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    // the first lets the null parameters float, so it's a maximum likelihood estimate
    // the second is to the null (fixing null parameters to their specified values): eg. a conditional maximum likelihood
    // the ratio of the likelihood at the conditional MLE to the MLE is the profile likelihood ratio.
-   // Wilks' theorem is used to get p-values 
+   // Wilks' theorem is used to get p-values. 
+   //
+   // A RooArgSet contained a copied of the null parameters must be previously specified 
+   // (either in the constructor or by using SetNullParameters )
+
 
 //    RooAbsPdf* pdf   = fWS->pdf(fPdfName);
 //    RooAbsData* data = fWS->data(fDataName);

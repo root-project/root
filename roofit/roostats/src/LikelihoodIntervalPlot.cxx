@@ -49,6 +49,7 @@ using namespace RooStats;
 LikelihoodIntervalPlot::LikelihoodIntervalPlot()
 {
   // LikelihoodIntervalPlot default constructor
+  // with default parameters
   fInterval = 0;
   fNdimPlot = 0;
   fParamsPlot = 0;
@@ -68,7 +69,7 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot()
 //_______________________________________________________
 LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
 {
-  // LikelihoodIntervalPlot constructor
+  // LikelihoodIntervalPlot copy constructor
   fInterval = theInterval;
   fParamsPlot = fInterval->GetParameters();
   fNdimPlot = fParamsPlot->getSize();
@@ -114,6 +115,18 @@ void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params)
 //_____________________________________________________________________________
 void LikelihoodIntervalPlot::Draw(const Option_t *options) 
 {
+   // draw the Likelihood interval or contour plot
+   // For 1D problem draw the log profile likelihood function ratio and its interval 
+   // The curve is draws in a RooPLot by default (i.e as a RooCurve) 
+   // The plotting range (default is the full parameter range) and the precision of the RooCurve
+   // can be specified by using SetRange(x1,x2) and SetPrecision(eps). 
+   // SetNPoints(npoints) can also be used  (default is npoints=100) 
+   // Optionally the function can be drawn as a TF1 (option="tf1") obtained by sampling the npoints
+   // For 2D case, a contour is drawn. The number of contour points is controlled by 
+   // SetNPoints(npoints) (default is npoints=40)
+   // In case of problems finding the contour with Minuit, the option "nominuit" can be used. 
+   // In this case the profile likelihood function is sampled in the npoints x npoints values and then 
+   // an approximate contour is obtained. 
 
    if(fNdimPlot > 2){
       std::cout << "LikelihoodIntervalPlot::Draw(" << GetName() 

@@ -6,10 +6,22 @@
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+*************************************************************************/
 
+//_________________________________________________
 /**
-   BayesianCalculator class
+   BayesianCalculator is a concrete implementation of IntervalCalculator. 
+   It computes the posterior probability density functions using the  
+   numerical (or analytical integration) for integrating the product of the 
+   likelihood and prior functions (Bayes theorem). 
+   The class works only for problems with only one parameter of interest,  
+   the posterior is a one-dimensional function
+   The class computes via  GetInterval() the central Bayesian credible intervals
+
+   Note: when nuisance parameters are present a multi-dimensional integration is 
+   needed. In some cases, when the integration must be performed numerically, evaluating the posterior or 
+   getting the interval (calling GetInterval) can result in long execution time. 
+   In these case using the MCMCCalculator could be more convenient
 **/
 
 // include other header files
@@ -43,7 +55,7 @@ BayesianCalculator::BayesianCalculator() :
   fInterval(0),
   fSize(0.05)
 {
-   // default constructor
+   // default constructor. Need to call the Setter methods afterwards
 }
 
 BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title, */						   
@@ -61,7 +73,11 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
   fInterval(0),
   fSize(0.05)
 {
-   // constructor
+   // constructor from data set, model pdf, set with the parameter of interest 
+   // (must contain only one parameter for the moment) and prior pdf
+   // Optionally an additional set of parameters can be specified (nuisance parameters) 
+   // which will be integrated (marginalized) when creating the posterior pdf.
+   // A default size of 0.05 is used (for 95% CL interval)
    if (nuisanceParameters) fNuisanceParameters.add(*nuisanceParameters); 
 }
 
@@ -74,19 +90,20 @@ BayesianCalculator::BayesianCalculator( RooAbsData& data,
    fInterval(0),
    fSize(0.05)
 {
-   // constructor from Model Config
+   // Same constructor but from data and a ModelConfig describing the model pdf and the prior, the parameter
+   // of interest and the nuisance parameters
    SetModel(model);
 }
 
 
 BayesianCalculator::~BayesianCalculator()
 {
-   // destructor
+   // destructor cleaning all managed objects
    ClearAll(); 
 }
 
 void BayesianCalculator::ClearAll() const { 
-   // clear cached pdf objects
+   // clear cached pdf objects (posterior pdf, Likelihood, NLL, etc.) 
    if (fProductPdf) delete fProductPdf; 
    if (fLogLike) delete fLogLike; 
    if (fLikelihood) delete fLikelihood; 
@@ -102,7 +119,7 @@ void BayesianCalculator::ClearAll() const {
 }
 
 void BayesianCalculator::SetModel(const ModelConfig & model) {
-   // set the model
+   // set the model configuration 
    fPdf = model.GetPdf();
    fPriorPOI =  model.GetPriorPdf(); 
    // assignment operator = does not do a real copy the sets (must use add method) 
@@ -117,12 +134,19 @@ void BayesianCalculator::SetModel(const ModelConfig & model) {
 
    RooArgSet* BayesianCalculator::GetMode(RooArgSet* /* parameters */) const
 {
-  return 0;
+   // return the mode (not yet implemented) but can be easly obtained from 
+   //  GetPosteriorPdf()->asTF(poi)->GetMaximumX();
+   return 0;
 }
 
 RooAbsPdf* BayesianCalculator::GetPosteriorPdf() const
 {
-   // get posterior pdf  
+   // get the posterior pdf as a RooAbsPdf 
+   // the posterior is obtained from the product of the likelihood function and the 
+   // prior pdf which is then intergated in the nuisance parameters (if existing). 
+   // A prior function for the nuisance can be specified either in the prior pdf object 
+   // or in the model itself. If no prior nuisance is specified, but prior parameters are then 
+   // the integration is performed assuming a flat prior for the nuisance parameters.
 
    // run some checks
    if (!fPdf ) return 0; 
@@ -186,7 +210,14 @@ RooPlot* BayesianCalculator::GetPosteriorPlot() const
 
 SimpleInterval* BayesianCalculator::GetInterval() const
 {
-  /// returns a SimpleInterval with the lower/upper limit on the scanned variable
+  /// returns a SimpleInterval with the lower/upper limit on 
+  /// the scanned variable (the parameter of interest specified in the constructor).
+  /// The returned interval is a central interval with the confidence level specified  
+  /// previously in SetConfidenceLevel (default is 0.95).
+  /// NOTE1: for finding only an upper/lower limit of 95 % the CL must be set to 0.90
+  /// NOTE2: The method can result very slow when nuisance parameters are present due to 
+  ///        the time needed for performing multi-dimensional numerical integration. 
+  ///        In these case using the MCMCCalculator could be more convenient.
 
   if (fInterval) return fInterval; 
 

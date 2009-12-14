@@ -182,9 +182,11 @@ Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) cons
 //____________________________________________________________________
 Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param) 
 {  
-   // compute upper limit, check first if limit has been computed 
+   // compute the interval lower limit for the specified confidence level 
+   // or size using  MINOS 
+   // Note that both lower and upper limit are computed and cached internally so 
+   // any subsequent calls (for the same CL will be fast to execute)
 
-   // otherwise compute limit using MINOS
    double lower = param.getMin(); 
    double upper = param.getMax(); 
    FindLimits(param, lower, upper); 
@@ -194,9 +196,11 @@ Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param)
 //____________________________________________________________________
 Double_t LikelihoodInterval::UpperLimit(const RooRealVar& param) 
 {  
-   // compute upper limit, check first if limit has been computed 
+   // compute the interval upper limit for the specified confidence level 
+   // or size using  MINOS. 
+   // Note that both lower and upper limit are computed and cached internally so 
+   // any subsequent calls (for the same CL will be fast to execute)
 
-   // otherwise compute limit using MINOS
    double lower = param.getMin(); 
    double upper = param.getMax(); 
    FindLimits(param, lower, upper); 
@@ -206,18 +210,17 @@ Double_t LikelihoodInterval::UpperLimit(const RooRealVar& param)
 
 
 void LikelihoodInterval::ResetLimits() { 
-   // reset map with cached limits
+   // reset map with cached limits - called every time the test size or CL has been changed
    fLowerLimits.clear(); 
    fUpperLimits.clear(); 
 }
 
 
 bool LikelihoodInterval::CreateMinimizer() { 
+   // internal function to create minimizer object needed to find contours or interval limits
+   // (running MINOS). 
+   // Minimizer must be Minuit or Minuit2
 
-   //std::cout << "creating minimizer..........." << std::endl;
-
-   // create minimizer object needed to find contours or interval limits
-   // minimizer must be Minuit or Minuit2
    RooProfileLL * profilell = dynamic_cast<RooProfileLL*>(fLikelihoodRatio);
    if (!profilell) return false; 
 
@@ -280,9 +283,9 @@ bool LikelihoodInterval::CreateMinimizer() {
 
 bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, double & upper) 
 {
-   // find both lower and upper limits using MINOS
+   // Method to find both lower and upper limits using MINOS
+   // If cached values exist (limits have been already found) return them in that case
 
-   // check first if cached values exist (limits have been already found) and return them in that case
    std::map<std::string, double>::const_iterator itrl = fLowerLimits.find(param.GetName());
    std::map<std::string, double>::const_iterator itru = fUpperLimits.find(param.GetName());
    if ( itrl != fLowerLimits.end() && itru != fUpperLimits.end() ) { 
@@ -350,9 +353,7 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
 
 
 Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooRealVar & paramY, Double_t * x, Double_t *y, Int_t npoints ) { 
-   // use Minuit to find the contour of the likelihood 
-   // take first the nll function 
-   // find contours 
+   // use Minuit to find the contour of the likelihood function at the desired CL 
 
    // check the parameters 
    // variable index in minimizer
