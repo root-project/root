@@ -125,7 +125,7 @@ int main()
    Ok(21, !s.IsNull());
 
    // test IsAscii
-   s10 = "¹";
+   s10 = "\xb9";
 
    Ok(22, !s10.IsAscii());
    Ok(23, s.IsAscii());
