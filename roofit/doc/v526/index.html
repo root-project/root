@@ -207,6 +207,15 @@ RooAddPdf::genmodel[ Nsig * sig + Nbkg * bkg ] = 0.502276
    w-&gt;factory("SUM::model(fsig[0,1]*g,u)")
    w::model.fitTo(d12a)
 </pre></li>
+  For virtual composite dataset it is also possible to join a mix of binned and unbinned datasets
+  (representation as a <tt>RooDataSet</tt> with weights)
+
+<li><b>The setWeightVar() method has been deprecated as it is very difficult to support on-the-fly redefinition
+       of the event weight variable in the new data store scheme</b>. To declare a data set weighed,
+       use the WeightVar() modifier of the constructor instead,e.g.:
+<pre>
+    RooDataSet wdata("wdata","wdata",RooArgSet(x,y,wgt),WeightVar(wgt)) ;
+</pre> 
 
 <li>
   The <tt>RooHist</tt> class that represents data as a histogram in a <tt>RooPlot</tt> has been modified
