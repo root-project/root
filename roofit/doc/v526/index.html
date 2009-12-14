@@ -235,6 +235,9 @@ RooAddPdf::genmodel[ Nsig * sig + Nbkg * bkg ] = 0.502276
 <a name="roostats"></a> 
 <h3>RooStats</h3>
 
+This release contains significant bug fixes and it is strongly
+reccomended to update to this version if using older ones. 
+
 <h4>Major Changes in LimitCalculator and HypoTestCalculator classes: usage of ModelConfig class</h4>
 
 <ul>
@@ -246,8 +249,11 @@ function is introduced.
 <br/>
   </li>
   <li>
-Users are supposed to pass all the model information using the <tt>ModelConfig</tt> class and not anymore via the <tt>RooWorkspace</tt>. 
-Setter methods using pdf instances and parameter lists have been mantained in the derived classes, like the <tt>ProfileLikelihoodCalculator</tt> or the <tt>HybridCalculator</tt>, but those passing a string for the name of the pdf have been removed.
+Users are supposed to pass all the model information using the
+  <tt>ModelConfig</tt> class rather than  via the
+  <tt>RooWorkspace</tt> or specifying directly the pdf and parameter
+  objects in the constructors. 
+Setter methods using pdf instances and parameter lists are maintained in the derived classes, like the <tt>ProfileLikelihoodCalculator</tt> or the <tt>HybridCalculator</tt>, but those passing a string for the name of the pdf have been removed.
 <br/>
   </li>
 <li>  
@@ -255,6 +261,44 @@ All the calculator classes do not keep anymore a pointer to the workspace, but t
 needed information. 
 </li>
 </ul>
+
+
+<h4>ProfileLikelihoodCalculator, LikelihoodInterval</h4>
+<ul>
+  <li>The Minos algorithm of Minuit is used now to find the limit of the likelihood intervals instead of searching directly the roots of the RooProfileLL class. Minos is used via the <tt>ROOT::Math::Minimizer</tt> interface. By default TMinuit is used, one can also use Minuit2 by doing <tt>ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2")</tt>.</li>
+  <li>The <tt>LikelihoodInterval</tt> class now provides now two new methods, <tt>FindLimits</tt> which finds both the upper and lower interval bounds, and <tt>GetContourPoints</tt> to find the 2D contour points defining the likelihood interval. GetContourPoints is now used by the LikelihoodIntervalPlot class to draw the 2D contour.
+  </li>
+  <li>New tutorials  have been added: <tt>rs501_ProfileLikelihoodCalculator_limit.C</tt> and <tt>rs502_ProfileLikelihoodCalculator_significance.C</tt> for getting the interval limits and significance using the ProfileLikelihoodCalculator. The tutorials can be run on a set of Poisson data or Gaussian over flat with model considering optionally the nuisance parameters. The data can be generated with the <tt>rs500</tt> tutorials.</li>
+</ul>
+
+  <h4>HybridCalculator</h4>
+<ul>
+ <li>In the constructor the signature passing a name and a title string has been removed, for being consistent with all the other calculator classes. Name and title can be set optionally using the SetName and SetTitle methods. Please note that this change is not backward compatible.</li>
+ <li>Add the option to use binned generation (via <tt>SetGenerateBinned</tt>).</li>
+  <li>An estimated of the error in the obtained p values is  now computed in the <tt>HybridResult</tt> class thanks to Matthias Wolf. The errors can be obtained with <tt>HybridResult::CLbError()</tt>, <tt>HybridResult::CLsplusbError()</tt> or <tt>HybridResult::CLsError()</tt>.</li>
+  <li>A new tutorial has been added for showing the usage of the hybrid calculator: <tt>rs505_HybridCalculator_significance.C</tt></li>
+  </ul>
+
+  
+<h4>new class HypoTestInverter</h4>
+<ul>
+<li>
+  New class for performing an hypothesis test inversion by scanning
+  the hypothesis test results of the <tt>HybridCalculator</tt> for
+  various values of the parameter of interest. An upper (or lower) limit  can be derived by looking at the
+  confidence level curve of the result as function of the parameter of
+  interest,  where it intersects the desired confidence level.</li>
+  <li>
+The class implements the <tt>IntervalCalculator</tt> interface and returns an <tt>HypoTestInverterResult</tt> class. The result is a SimpleInterval, which via the method <tt>UpperLimit</tt> returns to the user the upper limit value.
+</li>
+<li>The <tt>HypoTestInverter</tt> implements various option for performing the scan. <tt>HypoTestInverter::RunFixedScan</tt> will scan using a fixed grid the parameter of interest. <tt>HypoTestInverter::RunAutoScan</tt> will perform an automatic scan to find optimally the curve and it will stop when the desired precision is obtained.
+The confidence level value at a given point can also be done via  <tt>HypoTestInverter::RunOnePoint</tt>.</li>
+<li>The class can scan the CLs+b values (default) or alternatively CLs (if the
+method <tt>HypoTestInverter::UseCLs</tt> has been called).</li>
+<li>The estimated error due to the MC toys statistics from the <tt>HybridCalculator</tt> is propagated into the limits obtained from the <tt>HypoTestResult</tt>
+<li>A new tutorial <tt>rs801_HypoTestInverter.C</tt> has been added in the <tt>tutorials/roostats</tt> directory to show the usage of this class.</li>
+</ul>
+
 
 
 <h4>New class BayesianCalculator</h4>
@@ -269,37 +313,6 @@ New class for calculating Bayesian interval using numerical integration. It impl
 <li>A new tutorial <tt>rs701_BayesianCalculator.C</tt> has been added in the <tt>tutorials/roostats</tt> directory to show the usage of this class.</li>
 </ul>
 
-
-<h4>new class HypoTestInverter</h4>
-<ul>
-<li>
-  New class for performing an hypothesis test inversion by scanning the hypothesis test results of the <tt>HybridCalculator</tt> for various values of the parameter of interest. By looking at the confidence level curve of the result  an upper limit,
- where it intersects the desired confidence level,
-an upper limit  can be derived.</li>
-  <li>
-The class implements the <tt>IntervalCalculator</tt> interface and returns an <tt>HypoTestInverterResult</tt> class. The result is a SimpleInterval, which via the method <tt>UpperLimit</tt> returns to the user the upper limit value.
-</li>
-<li>The <tt>HypoTestInverter</tt> implements various option for performing the scan. <tt>HypoTestInverter::RunFixedScan</tt> will scan using a fixed grid the parameter of interest. <tt>HypoTestInverter::RunAutoScan</tt> will perform an automatic scan to find optimally the curve and it will stop until the desired precision is obtained.
-The confidence level value at a given point can be done via  <tt>HypoTestInverter::RunOnePoint</tt>.</li>
-<li>The class can scan the CLs+b values or alternativly CLs (if the method <tt>HypoTestInverter::UseCLs</tt> has been called).</li>
-<li>A new tutorial <tt>rs801_HypoTestInverter.C</tt> has been added in the <tt>tutorials/roostats</tt> directory to show the usage of this class.</li>
-</ul>
-
-<h4>ProfileLikelihoodCalculator, LikelihoodInterval</h4>
-<ul>
-  <li>The Minos algorithm of Minuit is used now to find the limit of the likelihood intervals instead of searching directly the roots of the RooProfileLL class. Minos is used via the <tt>ROOT::Math::Minimizer</tt> interface. By default TMinuit is used, one can also use Minuit2 by doing <tt>ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2")</tt>.</li>
-  <li>The <tt>LikelihoodInterval</tt> class now provides now two new methods, <tt>FindLimits</tt> which finds both the upper and lower interval bounds, and <tt>GetContourPoints</tt> to find the 2D contour points defining the likelihood interval. GetContourPoints is now used by the LikelihoodIntervalPlot class to draw the 2D contour.
-  </li>
-  <li>New tutorials  have been added: <tt>rs501_ProfileLikelihoodCalculator_limit.C</tt> and <tt>rs502_ProfileLikelihoodCalculator_significance.C</tt> for getting the interval limits and significance using the ProfileLikelihoodCalculator. The tutorials can be run on a set of Poison data or Gaussian over flat with model considering optionally the nuisance parameters. The data can be generated with the <tt>rs500</tt> tutorials.</li>
-</ul>
- 
-  <h4>HybridCalculator</h4>
-<ul>
- <li>In the constructor the signature passing a name and a title string has been removed, for being consistent with all the other calculator classes. Name and titile can be set optionally using the SetName and SetTitle methods. Please note that this change is not backward compatible.</li>
- <li>Add the option to use binned generation (via <tt>SetGenerateBinned</tt>).</li>
-  <li>An estimated of the error in the obtained p values is  now computed in the <tt>HybridResult</tt> class thanks to Matthias Wolf. The errors can be obtained with <tt>HybridResult::CLbError()</tt>, <tt>HybridResult::CLsplusbError()</tt> or <tt>HybridResult::CLsError()</tt>.</li>
-  <li>A new tutorial has been added for showing the usage of the hybrid calculator: <tt>rs505_HybridCalculator_significance.C</tt></li>
-  </ul>
 
 
   <h4>MCMCCalculator</h4>
