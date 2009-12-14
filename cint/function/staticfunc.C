@@ -6,7 +6,7 @@
 #endif
 
 struct SelLambda {
-   int Stopmin;
+   int Stopmin = 0;
    void SelLambda::Loop(Long64_t inEntries)
    {
       
