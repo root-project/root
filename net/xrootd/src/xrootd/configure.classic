@@ -53,6 +53,12 @@ type=`uname -s`
 compile_log=config.log
 rm -f $compile.log
 
+# The temporary dir
+xrdtmpdir="$TMPDIR"
+if test "x$xrdtmpdir" = "x" ; then
+   xrdtmpdir="/tmp"
+fi
+
 options="                 \
    enable_afs             \
    enable_echo            \
@@ -461,7 +467,7 @@ check_prototype() {
     # If the compliation is successful the variable 'found_prototype' is
     # set to 'yes'. The variable 'compile_log' can be used to control the
     # location of the compilation output: if set to a path, the log is
-    # added to the file, otherwise the log is set to /tmp/[$1]-test.log .
+    # added to the file, otherwise the log is set to $xrdtmpdir/[$1]-test.log .
     # The compilation output is deleted in case of success.
 
     # Reset the result
@@ -480,7 +486,7 @@ check_prototype() {
         return 1
     fi
     testtmp="test-comp"
-    testcc="/tmp/$testtmp.cc"
+    testcc="$xrdtmpdir/$testtmp.cc"
     rm -f "$testcc"
     cp -rp $testfile "$testcc"
 
@@ -492,7 +498,7 @@ check_prototype() {
     fi
 
     # The outfiles
-    outfile="/tmp/test-$1.log"
+    outfile="$xrdtmpdir/test-$1.log"
     outfiletmp="$outfile.tmp"
 
     # Compilation test
@@ -1551,13 +1557,13 @@ if test "x$enable_javaint" = "xyes" ; then
    # Check version
    message "Checking for java version"
    # Get major number
-   $javacbin -version 2> /tmp/java_msg.tmp
+   $javacbin -version 2> $xrdtmpdir/java_msg.tmp
 
-   java_major=`cat /tmp/java_msg.tmp | grep "javac 1" \
+   java_major=`cat $xrdtmpdir/java_msg.tmp | grep "javac 1" \
                | sed -n "s/javac //p" | cut -d . -f 2`
 
 
-   rm -f /tmp/java_msg.tmp
+   rm -f $xrdtmpdir/java_msg.tmp
    if test "x$java_major" = "x" ; then
       java_major="5"
       echo "Unable to determine the version of the local Java JDK. (needs >= 1.5: re-run with --with-java=<java_1.5_location>). Continuing anyway. Good luck."
