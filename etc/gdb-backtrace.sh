@@ -4,7 +4,6 @@
 # It is used by TUnixSystem::StackTrace() on Linux and MacOS X.
 
 tempname=`basename $0 .sh`
-messfile=`dirname $0`/gdb-message.sh
 
 OUTFILE=`mktemp -q /tmp/${tempname}.XXXXXX`
 if test $? -ne 0; then
