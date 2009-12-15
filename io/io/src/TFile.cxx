@@ -1886,7 +1886,11 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    WriteHeader();                     // Now write file header
    fMustFlush = kTRUE;
 
-   cursav->cd();
+   if (cursav) {
+      cursav->cd();
+   } else {
+      gDirectory = 0;
+   }
    return nbytes;
 }
 
