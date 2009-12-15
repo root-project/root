@@ -1081,6 +1081,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle)
 void TDirectory::RegisterContext(TContext *ctxt) {
    // Register a TContext pointing to this TDirectory object
 
+   R__LOCKGUARD2(gROOTMutex);
    if (fContext) {
       TContext *current = fContext;
       while(current->fNext) {
@@ -1109,6 +1110,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * 
 void TDirectory::UnregisterContext(TContext *ctxt) {
    // UnRegister a TContext pointing to this TDirectory object
 
+   R__LOCKGUARD2(gROOTMutex);
    if (ctxt==fContext) {
       fContext = ctxt->fNext;
       if (fContext) fContext->fPrevious = 0;
