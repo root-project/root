@@ -4577,6 +4577,7 @@ void TClass::Streamer(void *object, TBuffer &b, const TClass *onfile_class) cons
 
       case kInstrumented: // Instrumented class with a library
       {
+         R__LOCKGUARD2(gCINTMutex);
          CallFunc_t *func = (CallFunc_t*)fInterStreamer;
 
          if (!func)  {
