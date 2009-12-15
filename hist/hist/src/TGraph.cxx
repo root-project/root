@@ -793,10 +793,12 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
             if  (low == -1 || fX[i] > fX[low] )  {  low2 = low;   low = i; }
             else if ( low2 == -1  ) low2 = i;
          }
-         if ( fX[i] > x) {
+         else if ( fX[i] > x) {
             if (up  == -1 || fX[i] < fX[up]  )  {  up2 = up;     up = i;  }
             else if (up2 == -1) up2 = i;
          }
+         else // case x == fX[i]
+            return fY[i]; // no interpolation needed
       }
 
       // treat cases when x is outside graph min max abscissa
