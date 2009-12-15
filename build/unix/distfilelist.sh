@@ -66,7 +66,7 @@ fi
 
 FILES=`echo ${FILES} | tr ' ' '\n'`
 
-ARCH=`grep -e '^ARCH' config/Makefile.config | sed 's,^ARCH.*:= ,,'`
+ARCH=`grep '^ARCH' config/Makefile.config | sed 's,^ARCH.*:= ,,'`
 if [ "x$ARCH" = "xwin32" ]; then
     FILES=`echo ${FILES} | tr ' ' '\n' | sed -e 's,^lib/.*\.dll$,,'`
 fi
