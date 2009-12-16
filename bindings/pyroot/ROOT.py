@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 05/11/09
+# Last: 12/14/09
 
 """PyROOT user module.
 
@@ -15,7 +15,7 @@ from __future__ import generators
 
 """
 
-__version__ = '6.0.1'
+__version__ = '6.0.2'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -325,6 +325,7 @@ class ModuleFacade( types.ModuleType ):
 
       self.__dict__[ '__doc__'  ] = self.module.__doc__
       self.__dict__[ '__name__' ] = self.module.__name__
+      self.__dict__[ '__file__' ] = self.module.__file__
 
       self.__dict__[ 'keeppolling' ] = 0
       self.__dict__[ 'PyConfig' ]    = self.module.PyConfig

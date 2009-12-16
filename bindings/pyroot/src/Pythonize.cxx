@@ -74,29 +74,41 @@ namespace {
 // to prevent compiler warnings about const char* -> char*
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth )
    {
-      return PyObject_CallMethod( obj, const_cast< char* >( meth ), const_cast< char* >( "" ) );
+      Py_INCREF( obj );
+      PyObject* result = PyObject_CallMethod( obj, const_cast< char* >( meth ), const_cast< char* >( "" ) );
+      Py_DECREF( obj );
+      return result;
    }
 
 //____________________________________________________________________________
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1 )
    {
-      return PyObject_CallMethod(
+      Py_INCREF( obj );
+      PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "O" ), arg1 );
+      Py_DECREF( obj );
+      return result;
    }
 
 //____________________________________________________________________________
    inline PyObject* CallPyObjMethod(
       PyObject* obj, const char* meth, PyObject* arg1, PyObject* arg2 )
    {
-      return PyObject_CallMethod(
+      Py_INCREF( obj );
+      PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "OO" ), arg1, arg2 );
+      Py_DECREF( obj );
+      return result;
    }
 
 //____________________________________________________________________________
    inline PyObject* CallPyObjMethod( PyObject* obj, const char* meth, PyObject* arg1, int arg2 )
    {
-      return PyObject_CallMethod(
+      Py_INCREF( obj );
+      PyObject* result = PyObject_CallMethod(
          obj, const_cast< char* >( meth ), const_cast< char* >( "Oi" ), arg1, arg2 );
+      Py_DECREF( obj );
+      return result;
    }
 
 
@@ -845,10 +857,20 @@ namespace {
       return PyInt_FromLong( result );                                        \
    }                                                                          \
                                                                               \
-   PyObject* name##StringIsequal( PyObject* self, PyObject* obj )             \
+   PyObject* name##StringIsEqual( PyObject* self, PyObject* obj )             \
    {                                                                          \
       PyObject* data = CallPyObjMethod( self, #func );                        \
       PyObject* result = PyObject_RichCompare( data, obj, Py_EQ );            \
+      Py_DECREF( data );                                                      \
+      if ( ! result )                                                         \
+         return 0;                                                            \
+      return result;                                                          \
+   }                                                                          \
+                                                                              \
+   PyObject* name##StringIsNotEqual( PyObject* self, PyObject* obj )          \
+   {                                                                          \
+      PyObject* data = CallPyObjMethod( self, #func );                        \
+      PyObject* result = PyObject_RichCompare( data, obj, Py_NE );            \
       Py_DECREF( data );                                                      \
       if ( ! result )                                                         \
          return 0;                                                            \
@@ -1557,8 +1579,11 @@ namespace {
       }
    };
 
-//- TMinuit behavior -----------------------------------------------------------
 
+//- TVector behavior -----------------------------------------------------------
+   PyObject* ReturnThree( ObjectProxy*, PyObject* ) {
+      return PyInt_FromLong( 3 );
+   }
 
 } // unnamed namespace
 
@@ -1727,7 +1752,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__repr__", (PyCFunction) StlStringRepr, METH_NOARGS );
       Utility::AddToClass( pyclass, "__str__", "c_str" );
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) StlStringCompare, METH_O );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlStringIsequal, METH_O );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlStringIsEqual, METH_O );
+      Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) StlStringIsNotEqual, METH_O );
 
       return kTRUE;
    }
@@ -1738,7 +1764,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__len__", "Length" );
 
       Utility::AddToClass( pyclass, "__cmp__", "CompareTo" );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TStringIsequal, METH_O );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TStringIsEqual, METH_O );
+      Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) TStringIsNotEqual, METH_O );
 
       return kTRUE;
    }
@@ -1749,7 +1776,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__len__",  (PyCFunction) TObjStringLength, METH_NOARGS );
 
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjStringCompare, METH_O );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjStringIsequal, METH_O );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjStringIsEqual, METH_O );
+      Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) TObjStringIsNotEqual, METH_O );
 
       return kTRUE;
    }
@@ -1814,10 +1842,20 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "TFile" )     // allow member-style access to entries in file
       return Utility::AddToClass( pyclass, "__getattr__", "Get" );
 
+   if ( name.substr(0,8) == "TVector3" ) {
+      Utility::AddToClass( pyclass, "__len__", (PyCFunction) ReturnThree, METH_NOARGS );
+      Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
+
+      return kTRUE;
+   }
+
    if ( name.substr(0,8) == "TVectorT" ) {  // allow proper iteration
       Utility::AddToClass( pyclass, "__len__", "GetNoElements" );
       Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
+
+      return kTRUE;
    }
 
 // default (no pythonization) is by definition ok

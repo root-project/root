@@ -342,6 +342,7 @@ namespace {
       // originated from there
          ((ObjectProxy*)result)->HoldOn();
       }
+
       return result;
    }
 
