@@ -18,29 +18,29 @@ ClassImp(TGraphDelaunay)
 
 //______________________________________________________________________________
 //
-// TGraphDelaunay generates a Delaunay triangulation of a TGraph2D. This 
-// triangulation code derives from an implementation done by Luke Jones 
+// TGraphDelaunay generates a Delaunay triangulation of a TGraph2D. This
+// triangulation code derives from an implementation done by Luke Jones
 // (Royal Holloway, University of London) in April 2002 in the PAW context.
 //
-// This software cannot be guaranteed to work under all circumstances. They 
-// were originally written to work with a few hundred points in an XY space 
+// This software cannot be guaranteed to work under all circumstances. They
+// were originally written to work with a few hundred points in an XY space
 // with similar X and Y ranges.
 //
-// Definition of Delaunay triangulation (After B. Delaunay): 
+// Definition of Delaunay triangulation (After B. Delaunay):
 // For a set S of points in the Euclidean plane, the unique triangulation DT(S)
-// of S such that no point in S is inside the circumcircle of any triangle in 
+// of S such that no point in S is inside the circumcircle of any triangle in
 // DT(S). DT(S) is the dual of the Voronoi diagram of S. If n is the number of
-// points in S, the Voronoi diagram of S is the partitioning of the plane 
+// points in S, the Voronoi diagram of S is the partitioning of the plane
 // containing S points into n convex polygons such that each polygon contains
 // exactly one point and every point in a given polygon is closer to its
-// central point than to any other. A Voronoi diagram is sometimes also known 
-// as a Dirichlet tessellation. 
+// central point than to any other. A Voronoi diagram is sometimes also known
+// as a Dirichlet tessellation.
 //Begin_Html
 /*
 <img src="gif/dtvd.gif">
 <br>
 <a href="http://www.cs.cornell.edu/Info/People/chew/Delaunay.html">This applet</a>
-gives a nice practical view of Delaunay triangulation and Voronoi diagram. 
+gives a nice practical view of Delaunay triangulation and Voronoi diagram.
 */
 //End_Html
 
@@ -165,8 +165,8 @@ void TGraphDelaunay::CreateTrianglesDataStructure()
    // Function used internally only. It creates the data structures needed to
    // compute the Delaunay triangles.
 
-   // Offset fX and fY so they average zero, and scale so the average 
-   // of the X and Y ranges is one. The normalized version of fX and fY used 
+   // Offset fX and fY so they average zero, and scale so the average
+   // of the X and Y ranges is one. The normalized version of fX and fY used
    // in Interpolate.
    Double_t xmax = fGraph2D->GetXmax();
    Double_t ymax = fGraph2D->GetYmax();
@@ -201,63 +201,25 @@ Bool_t TGraphDelaunay::Enclose(Int_t t1, Int_t t2, Int_t t3, Int_t e) const
 {
    // Is point e inside the triangle t1-t2-t3 ?
 
-   Int_t a = 0, b = 0;
-   Double_t dx1,dx2,dx3,dy1,dy2,dy3,u,v;
-
-   // First ask if point e is colinear with any pair of the triangle points
-   if (((fXN[t1]-fXN[e])*(fYN[t1]-fYN[t2])) == ((fYN[t1]-fYN[e])*(fXN[t1]-fXN[t2]))) {
-      // e is colinear with t1 and t2
-      a = t1;
-      b = t2;
-   } else if (((fXN[t1]-fXN[e])*(fYN[t1]-fYN[t3])) == ((fYN[t1]-fYN[e])*(fXN[t1]-fXN[t3]))) {
-      // e is colinear with t1 and t3
-      a = t1;
-      b = t3;
-   } else if (((fXN[t2]-fXN[e])*(fYN[t2]-fYN[t3])) == ((fYN[t2]-fYN[e])*(fXN[t2]-fXN[t3]))) {
-      // e is colinear with t2 and t3
-      a = t2;
-      b = t3;
-   }
-   if (a != 0) {
-      // point e is colinear with 2 of the triangle points, if it lies 
-      // between them it's in the circle otherwise it's outside
-      if (fXN[a] != fXN[b]) {
-         if (((fXN[e]-fXN[a])*(fXN[e]-fXN[b])) <= 0) return kTRUE;
-      } else {
-         if (((fYN[e]-fYN[a])*(fYN[e]-fYN[b])) <= 0) return kTRUE;
-      }
-      // point is outside the triangle
-      return kFALSE;
-   }
-
-   // e is not colinear with any pair of triangle points, if it is inside
-   // the triangle then the vector from e to one of the corners must be 
-   // expressible as a sum with positive coefficients of the vectors from 
-   // the two other corners to e. Say vector3=u*vector1+v*vector2
-
-   // vector1==t1->e
-   dx1 = fXN[e]-fXN[t1];
-   dy1 = fYN[e]-fYN[t1];
-   // vector2==t2->e
-   dx2 = fXN[e]-fXN[t2];
-   dy2 = fYN[e]-fYN[t2];
-   // vector3==e->t3
-   dx3 = fXN[t3]-fXN[e];
-   dy3 = fYN[t3]-fYN[e];
-
-   u = (dx2*dy3-dx3*dy2)/(dx2*dy1-dx1*dy2);
-   v = (dx1*dy3-dx3*dy1)/(dx1*dy2-dx2*dy1);
-
-   if ((u>=0) && (v>=0)) return kTRUE;
-
-   return kFALSE;
+   Double_t x[4],y[4],xp, yp;
+   x[0] = fXN[t1];
+   x[1] = fXN[t2];
+   x[2] = fXN[t3];
+   x[3] = x[0];
+   y[0] = fYN[t1];
+   y[1] = fYN[t2];
+   y[2] = fYN[t3];
+   y[3] = y[0];
+   xp   = fXN[e];
+   yp   = fYN[e];
+   return TMath::IsInside(xp, yp, 4, x, y);
 }
 
 
 //______________________________________________________________________________
 void TGraphDelaunay::FileIt(Int_t p, Int_t n, Int_t m)
 {
-   // Files the triangle defined by the 3 vertices p, n and m into the 
+   // Files the triangle defined by the 3 vertices p, n and m into the
    // fxTried arrays. If these arrays are to small they are automatically
    // expanded.
 
@@ -307,7 +269,7 @@ void TGraphDelaunay::FindAllTriangles()
    // guaranteed that it will fully succeed, and no check is made that it has
    // fully succeeded (such a check would be possible by referencing the points
    // that make up the convex hull). The method is to check if each triangle
-   // shares all three of its sides with other triangles. If not, a point is 
+   // shares all three of its sides with other triangles. If not, a point is
    // generated just outside the triangle on the side(s) not shared, and a new
    // triangle is found for that point. If this method is not working properly
    // (many triangles are not being found) it's probably because the new points
@@ -322,8 +284,8 @@ void TGraphDelaunay::FindAllTriangles()
    Bool_t s[3];
    Double_t alittlebit = 0.0001;
 
-   // start with a point that is guaranteed to be inside the hull (the 
-   // centre of the hull). The starting point is shifted "a little bit" 
+   // start with a point that is guaranteed to be inside the hull (the
+   // centre of the hull). The starting point is shifted "a little bit"
    // otherwise, in case of triangles aligned on a regular grid, we may
    // found none of them.
    xcntr = 0;
@@ -337,9 +299,9 @@ void TGraphDelaunay::FindAllTriangles()
    // and calculate it's triangle
    Interpolate(xcntr,ycntr);
 
-   // loop over all Delaunay triangles (including those constantly being 
-   // produced within the loop) and check to see if their 3 sides also 
-   // correspond to the sides of other Delaunay triangles, i.e. that they 
+   // loop over all Delaunay triangles (including those constantly being
+   // produced within the loop) and check to see if their 3 sides also
+   // correspond to the sides of other Delaunay triangles, i.e. that they
    // have all their neighbours.
    t1 = 1;
    while (t1 <= fNdt) {
@@ -371,13 +333,13 @@ void TGraphDelaunay::FindAllTriangles()
                s[2] = kTRUE;
             }
          }
-         // if t1 shares all its sides with other Delaunay triangles then 
+         // if t1 shares all its sides with other Delaunay triangles then
          // forget about it
          if (s[0] && s[1] && s[2]) continue;
       }
       // Looks like t1 is missing a neighbour on at least one side.
-      // For each side, take a point a little bit beyond it and calculate 
-      // the Delaunay triangle for that point, this should be the triangle 
+      // For each side, take a point a little bit beyond it and calculate
+      // the Delaunay triangle for that point, this should be the triangle
       // which shares the side.
       for (m=1; m<=3; m++) {
          if (!s[m-1]) {
@@ -399,11 +361,11 @@ void TGraphDelaunay::FindAllTriangles()
             xm = (fXN[p1]+fXN[p2])/2.;
             ym = (fYN[p1]+fYN[p2])/2.;
             // we want to add a little to these coordinates to get a point just
-            // outside the triangle; (sx,sy) will be the vector that represents 
+            // outside the triangle; (sx,sy) will be the vector that represents
             // the side
             sx = fXN[p1]-fXN[p2];
             sy = fYN[p1]-fYN[p2];
-            // (nx,ny) will be the normal to the side, but don't know if it's 
+            // (nx,ny) will be the normal to the side, but don't know if it's
             // pointing in or out yet
             nx    = sy;
             ny    = -sx;
@@ -418,8 +380,8 @@ void TGraphDelaunay::FindAllTriangles()
                nx = -nx;
                ny = -ny;
             }
-            // increase/decrease xm and ym a little to produce a point 
-            // just outside the triangle (ensuring that the amount added will 
+            // increase/decrease xm and ym a little to produce a point
+            // just outside the triangle (ensuring that the amount added will
             // be large enough such that it won't be lost in rounding errors)
             a  = TMath::Abs(TMath::Max(alittlebit*xm,alittlebit*ym));
             xx = xm+nx*a;
@@ -427,13 +389,13 @@ void TGraphDelaunay::FindAllTriangles()
             // try and find a new Delaunay triangle for this point
             Interpolate(xx,yy);
 
-            // this side of t1 should now, hopefully, if it's not part of the 
+            // this side of t1 should now, hopefully, if it's not part of the
             // hull, be shared with a new Delaunay triangle just calculated by Interpolate
          }
       }
       t1++;
    }
-}      
+}
 
 
 //______________________________________________________________________________
@@ -452,12 +414,12 @@ void TGraphDelaunay::FindHull()
 
    nhull_tmp = 0;
    for(n=1; n<=fNpoints; n++) {
-      // if the point is not inside the hull of the set of all points 
-      // bar it, then it is part of the hull of the set of all points 
+      // if the point is not inside the hull of the set of all points
+      // bar it, then it is part of the hull of the set of all points
       // including it
       in = InHull(n,n);
       if (!in) {
-         // cannot increment fNhull directly - InHull needs to know that 
+         // cannot increment fNhull directly - InHull needs to know that
          // the hull has not yet been completely found
          nhull_tmp++;
          fHullPoints[nhull_tmp-1] = n;
@@ -482,7 +444,7 @@ Bool_t TGraphDelaunay::InHull(Int_t e, Int_t x) const
    yy = fYN[e];
 
    if (fNhull > 0) {
-      //  The hull has been found - no need to use any points other than 
+      //  The hull has been found - no need to use any points other than
       //  those that make up the hull
       ntry = fNhull;
    } else {
@@ -492,8 +454,8 @@ Bool_t TGraphDelaunay::InHull(Int_t e, Int_t x) const
 
    //  n1 and n2 will represent the two points most separated by angle
    //  from point e. Initially the angle between them will be <180 degs.
-   //  But subsequent points will increase the n1-e-n2 angle. If it 
-   //  increases above 180 degrees then point e must be surrounded by 
+   //  But subsequent points will increase the n1-e-n2 angle. If it
+   //  increases above 180 degrees then point e must be surrounded by
    //  points - it is not part of the hull.
    n1 = 1;
    n2 = 2;
@@ -522,7 +484,7 @@ Bool_t TGraphDelaunay::InHull(Int_t e, Int_t x) const
          m = n;
       }
       if ((m!=n1) && (m!=n2) && (m!=x)) {
-         // Can the vector e->m be represented as a sum with positive 
+         // Can the vector e->m be represented as a sum with positive
          // coefficients of vectors e->n1 and e->n2?
          dx1 = xx-fXN[n1];
          dy1 = yy-fYN[n1];
@@ -538,8 +500,8 @@ Bool_t TGraphDelaunay::InHull(Int_t e, Int_t x) const
             u = (dx2*dy3-dx3*dy2)/dd1;
             v = (dx1*dy3-dx3*dy1)/dd2;
             if ((u<0) || (v<0)) {
-               // No, it cannot - point m does not lie inbetween n1 and n2 as 
-               // viewed from e. Replace either n1 or n2 to increase the 
+               // No, it cannot - point m does not lie inbetween n1 and n2 as
+               // viewed from e. Replace either n1 or n2 to increase the
                // n1-e-n2 angle. The one to replace is the one which makes the
                // smallest angle with e->m
                vNv1 = (dx1*dx3+dy1*dy3)/TMath::Sqrt(dx1*dx1+dy1*dy1);
@@ -556,7 +518,7 @@ Bool_t TGraphDelaunay::InHull(Int_t e, Int_t x) const
                dphi = (phi1-phi2)-((Int_t)((phi1-phi2)/TMath::TwoPi())*TMath::TwoPi());
                if (dphi < 0) dphi = dphi+TMath::TwoPi();
                if (((dphi-TMath::Pi())*(lastdphi-TMath::Pi())) < 0) {
-                  // The addition of point m means the angle n1-e-n2 has risen 
+                  // The addition of point m means the angle n1-e-n2 has risen
                   // above 180 degs, the point is in the hull.
                   goto L10;
                }
@@ -577,7 +539,7 @@ L999:
 //______________________________________________________________________________
 Double_t TGraphDelaunay::InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t e) const
 {
-   // Finds the z-value at point e given that it lies 
+   // Finds the z-value at point e given that it lies
    // on the plane defined by t1,t2,t3
 
    Int_t tmp;
@@ -615,8 +577,8 @@ L1:
 //______________________________________________________________________________
 Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
 {
-   // Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and 
-   // calculate a z-value for it by linearly interpolating the z-values that 
+   // Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
+   // calculate a z-value for it by linearly interpolating the z-values that
    // make up that triangle.
 
    Double_t thevalue;
@@ -662,7 +624,7 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
       p = fPTried[it-1];
       n = fNTried[it-1];
       m = fMTried[it-1];
-      // p, n and m form a previously found Delaunay triangle, does it 
+      // p, n and m form a previously found Delaunay triangle, does it
       // enclose the point?
       if (Enclose(p,n,m,0)) {
          // yes, we have the triangle
@@ -688,7 +650,7 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
    TMath::Sort(fNpoints, fDist, fOrder, kFALSE);
    for (it=0; it<fNpoints; it++) fOrder[it]++;
 
-   // loop over triplets of close points to try to find a triangle that 
+   // loop over triplets of close points to try to find a triangle that
    // encloses the point.
    for (k=3; k<=fNpoints; k++) {
       m = fOrder[k-1];
@@ -698,7 +660,7 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
             p = fOrder[i-1];
             if (ntris_tried > fMaxIter) {
                // perhaps this point isn't in the hull after all
-///            Warning("Interpolate", 
+///            Warning("Interpolate",
 ///                    "Abandoning the effort to find a Delaunay triangle (and thus interpolated z-value) for point %g %g"
 ///                    ,xx,yy);
                return thevalue;
@@ -713,31 +675,31 @@ Double_t TGraphDelaunay::Interpolate(Double_t xx, Double_t yy)
             // does the triangle enclose the point?
             if (!Enclose(p,n,m,0)) goto L90;
 
-            // is it a Delaunay triangle? (ie. are there any other points 
+            // is it a Delaunay triangle? (ie. are there any other points
             // inside the circle that is defined by its vertices?)
 
             // test the triangle for Delaunay'ness
 
-            // loop over all other points testing each to see if it's 
+            // loop over all other points testing each to see if it's
             // inside the triangle's circle
             ndegen = 0;
             for ( z=1; z<=fNpoints; z++) {
                if ((z==p) || (z==n) || (z==m)) goto L50;
-               // An easy first check is to see if point z is inside the triangle 
+               // An easy first check is to see if point z is inside the triangle
                // (if it's in the triangle it's also in the circle)
 
-               // point z cannot be inside the triangle if it's further from (xx,yy) 
+               // point z cannot be inside the triangle if it's further from (xx,yy)
                // than the furthest pointing making up the triangle - test this
                for (l=1; l<=fNpoints; l++) {
                   if (fOrder[l-1] == z) {
                      if ((l<i) || (l<j) || (l<k)) {
-                        // point z is nearer to (xx,yy) than m, n or p - it could be in the 
+                        // point z is nearer to (xx,yy) than m, n or p - it could be in the
                         // triangle so call enclose to find out
 
                         // if it is inside the triangle this can't be a Delaunay triangle
                         if (Enclose(p,n,m,z)) goto L90;
                      } else {
-                        // there's no way it could be in the triangle so there's no point 
+                        // there's no way it could be in the triangle so there's no point
                         // calling enclose
                         goto L1;
                      }
@@ -762,7 +724,7 @@ L1:
                   b = 0;
                }
                if (a != 0) {
-                  // point z is colinear with 2 of the triangle points, if it lies 
+                  // point z is colinear with 2 of the triangle points, if it lies
                   // between them it's in the circle otherwise it's outside
                   if (fXN[a] != fXN[b]) {
                      if (((fXN[z]-fXN[a])*(fXN[z]-fXN[b])) < 0) {
@@ -787,8 +749,8 @@ L1:
                   goto L50;
                }
 
-               // if point z were to look at the triangle, which point would it see 
-               // lying between the other two? (we're going to form a quadrilateral 
+               // if point z were to look at the triangle, which point would it see
+               // lying between the other two? (we're going to form a quadrilateral
                // from the points, and then demand certain properties of that
                // quadrilateral)
                dxz[0] = fXN[p]-fXN[z];
@@ -809,7 +771,7 @@ L1:
                   v = (dy3*dx1-dx3*dy1)/(dy2*dx1-dx2*dy1);
 
                   if ((u>=0) && (v>=0)) {
-                     // vector (dx3,dy3) is expressible as a sum of the other two vectors 
+                     // vector (dx3,dy3) is expressible as a sum of the other two vectors
                      // with positive coefficents -> i.e. it lies between the other two vectors
                      if (l == 1) {
                         f  = m;
@@ -833,7 +795,7 @@ L1:
                o1 = p;
                o2 = n;
 L2:
-               // this is not a valid quadrilateral if the diagonals don't cross, 
+               // this is not a valid quadrilateral if the diagonals don't cross,
                // check that points f and z lie on opposite side of the line o1-o2,
                // this is true if the angle f-o1-z is greater than o2-o1-z and o2-o1-f
                cfo1k  = ((fXN[f]-fXN[o1])*(fXN[z]-fXN[o1])+(fYN[f]-fYN[o1])*(fYN[z]-fYN[o1]))/
@@ -865,8 +827,8 @@ L2:
                   // z is inside the circle, this is not a Delaunay triangle
                   goto L90;
                } else if (TMath::Abs(sin_sum) <= 1.E-6) {
-                  // point z lies on the circumference of the circle (within rounding errors) 
-                  // defined by the triangle, so there is potential for degeneracy in the 
+                  // point z lies on the circumference of the circle (within rounding errors)
+                  // defined by the triangle, so there is potential for degeneracy in the
                   // triangle set (Delaunay triangulation does not give a unique way to split
                   // a polygon whose points lie on a circle into constituent triangles). Make
                   // a note of the additional point number.
@@ -884,7 +846,7 @@ L50:
                // but is degenerate with at least one other,
                // haven't figured out what to do if more than 4 points are involved
 ///            if (ndegen > 1) {
-///               Error("Interpolate", 
+///               Error("Interpolate",
 ///                     "More than 4 points lying on a circle. No decision making process formulated for triangulating this region in a non-arbitrary way %d %d %d %d",
 ///                     p,n,m,degen);
 ///               return thevalue;
@@ -899,7 +861,7 @@ L50:
                o1 = o1degen;
                o2 = o2degen;
                if ((fZ[o1-1]+fZ[o2-1]) > (fZ[d-1]+fZ[f-1])) {
-                  // best diagonalisation of quadrilateral is current one, we have 
+                  // best diagonalisation of quadrilateral is current one, we have
                   // the triangle
                   t1 = p;
                   t2 = n;
@@ -908,8 +870,8 @@ L50:
                   FileIt(p, n, m);
                   FileIt(d, o1, o2);
                } else {
-                  // use other diagonal to split quadrilateral, use triangle formed by 
-                  // point f, the degnerate point d and whichever of o1 and o2 create 
+                  // use other diagonal to split quadrilateral, use triangle formed by
+                  // point f, the degnerate point d and whichever of o1 and o2 create
                   // an enclosing triangle
                   t1 = f;
                   t2 = d;
@@ -938,7 +900,7 @@ L90:
       }
    }
    if (shouldbein) {
-      Error("Interpolate", 
+      Error("Interpolate",
             "Point outside hull when expected inside: this point could be dodgy %g %g %d",
              xx, yy, ntris_tried);
    }
@@ -949,7 +911,7 @@ L90:
 //______________________________________________________________________________
 void TGraphDelaunay::SetMaxIter(Int_t n)
 {
-   // Defines the number of triangles tested for a Delaunay triangle 
+   // Defines the number of triangles tested for a Delaunay triangle
    // (number of iterations) before abandoning the search
 
    fAllTri  = kFALSE;
