@@ -5303,6 +5303,9 @@ fi
 if test -d math/unuran/src/unuran-1.5.0-root ; then
    rm -rf math/unuran/src/unuran-1.5.0-root
 fi
+if test -d cint/cint7 ; then
+   rm -rf cint/cint7
+fi
 if test ! "x$enable_editline" = "xno" ; then
    rm -f core/clib/src/Getline.o core/clib/src/Getline.d
 fi
