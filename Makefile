@@ -204,21 +204,8 @@ endif
 ifeq ($(BUILDUNURAN),yes)
 MODULES      += math/unuran
 endif
-ifeq ($(BUILDCINT7),yes)
-ifeq ($(BUILDCINT5),yes)
-MODULES      := $(subst cint/cint,cint/cint cint/cint7,$(MODULES))
-else
-MODULES      := $(subst cint/cint,cint/cint7,$(MODULES))
-endif
-endif
 ifeq ($(BUILDCINTEX),yes)
-   ifeq ($(BUILDCINT5),yes)
    MODULES      += cint/cintex
-   else
-     ifneq ($(BUILDBOTH),yes)
-     MODULES      += cint/cintexcompat
-     endif
-   endif
 endif
 ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofit/roofitcore roofit/roofit roofit/roostats
@@ -292,8 +279,8 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                cint/cintexcompat tmva io/hdfs \
-                cint/cint7 roofit/roofitcore roofit/roofit roofit/roostats \
+                tmva io/hdfs \
+                roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz
@@ -309,7 +296,6 @@ LPATH         = lib
 ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
-CINT7LIBS    := -lCint7 -lReflex
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
                 -lTree -lMatrix -lMathCore -lThread
@@ -321,7 +307,6 @@ endif
 RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
-CINT7LIBS    := $(LPATH)/libCint7.lib $(LPATH)/libReflex.lib
 NEWLIBS      := $(LPATH)/libNew.lib
 ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libRIO.lib $(LPATH)/libNet.lib \
@@ -563,14 +548,6 @@ cint/cint/%.o: cint/cint/%.cxx
 cint/cint/%.o: cint/cint/%.c
 	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -I. -- $<
 	$(CC) $(OPT) $(CINTCFLAGS) -I. $(CXXOUT)$@ -c $<
-
-cint/cint7/%.o: cint/cint7/%.cxx
-	$(MAKEDEP) -R -fcint/cint7/$*.d -Y -w 1000 -- $(CINT7CXXFLAGS) -I. -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CINT7CXXFLAGS) -I. $(CXXOUT)$@ -c $<
-
-cint/cint7/%.o: cint/cint7/%.c
-	$(MAKEDEP) -R -fcint/cint7/$*.d -Y -w 1000 -- $(CINT7CFLAGS) -I. -- $<
-	$(CC) $(OPT) $(CINT7CFLAGS) -I. $(CXXOUT)$@ -c $<
 
 build/%.o: build/%.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
@@ -985,11 +962,6 @@ install: all
 	   $(INSTALLDATA) cint/cint/include     $(DESTDIR)$(CINTINCDIR)/cint; \
 	   $(INSTALLDATA) cint/cint/lib         $(DESTDIR)$(CINTINCDIR)/cint; \
 	   $(INSTALLDATA) cint/cint/stl         $(DESTDIR)$(CINTINCDIR)/cint; \
-	   echo "Installing cint/cint7/include cint/cint7/lib and cint/cint7/stl in $(DESTDIR)$(CINTINCDIR)"; \
-	   $(INSTALLDIR)                        $(DESTDIR)$(CINTINCDIR)/cint7; \
-	   $(INSTALLDATA) cint/cint7/include    $(DESTDIR)$(CINTINCDIR)/cint7; \
-	   $(INSTALLDATA) cint/cint7/lib        $(DESTDIR)$(CINTINCDIR)/cint7; \
-	   $(INSTALLDATA) cint/cint7/stl        $(DESTDIR)$(CINTINCDIR)/cint7; \
 	   find $(DESTDIR)$(CINTINCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   find $(DESTDIR)$(CINTINCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \

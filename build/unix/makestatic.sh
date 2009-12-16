@@ -29,17 +29,9 @@ excl="main proof/proofd net/rootd net/xrootd rootx montecarlo/pythia6 \
       io/xmlparser graf3d/gl graf3d/ftgl roofit/roofit roofit/roofitcore \
       roofit/roostats sql/oracle net/netx net/auth net/rpdutils math/mathmore \
       math/minuit2 io/gfal net/monalisa proof/proofx math/fftw gui/qtgsi \
-      sql/odbc io/castor math/unuran geom/gdml cint/cint7 montecarlo/g4root \
+      sql/odbc io/castor math/unuran geom/gdml montecarlo/g4root \
       graf2d/gviz graf3d/gviz3d graf3d/eve net/glite misc/minicern \
       misc/memstat net/bonjour"
-
-if test -f core/meta/src/TCint_7.o ; then
-   mv core/meta/src/TCint_7.o core/meta/src/TCint_7.o-
-   mv core/meta/src/G__TCint_7.o core/meta/src/G__TCint_7.o-
-   mv core/utils/src/RStl7.o core/utils/src/RStl7.o-
-   mv core/metautils/src/RConversionRuleParser7.o core/metautils/src/RConversionRuleParser7.o-
-   mv core/metautils/src/TClassEdit7.o core/metautils/src/TClassEdit7.o-
-fi
 
 objs=""
 gobjs=""
@@ -69,14 +61,6 @@ done
 echo "Making $ROOTALIB..."
 echo ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs
 ar rv $ROOTALIB cint/cint/main/G__setup.o cint/cint/src/dict/*.o $objs > /dev/null 2>&1
-
-if test -f core/meta/src/TCint_7.o- ; then
-   mv core/meta/src/TCint_7.o- core/meta/src/TCint_7.o
-   mv core/meta/src/G__TCint_7.o- core/meta/src/G__TCint_7.o
-   mv core/utils/src/RStl7.o- core/utils/src/RStl7.o
-   mv core/metautils/src/RConversionRuleParser7.o- core/metautils/src/RConversionRuleParser7.o
-   mv core/metautils/src/TClassEdit7.o- core/metautils/src/TClassEdit7.o
-fi
 
 arstat=$?
 if [ $arstat -ne 0 ]; then

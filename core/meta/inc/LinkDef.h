@@ -17,6 +17,7 @@
 
 #pragma link C++ enum EProperty;
 
+#pragma link C++ class TCint;
 #pragma link C++ class TBaseClass;
 #pragma link C++ class TClass;
 #pragma link C++ class TClassStreamer+;

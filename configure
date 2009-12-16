@@ -46,8 +46,6 @@ options="                    \
    enable_builtin_zlib       \
    enable_castor             \
    enable_chirp              \
-   enable_cint5              \
-   enable_cint7              \
    enable_cintex             \
    enable_clarens            \
    enable_editline           \
@@ -111,7 +109,6 @@ for c in $deprecated_options ; do eval ${c}="yes" ; done
 for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_afs=no
-enable_cint7=no
 enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
@@ -1086,8 +1083,6 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-zlib       Built included libz, or use system libz
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
-  cint5              Build the legacy CINT library
-  cint7              Build the *experimental* new CINT library
   cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
   editline           Color-enabled prompt, requires (n)curses library
@@ -4826,38 +4821,6 @@ check_explicit "$enable_genvector" "$enable_genvector_explicit" \
 
 ######################################################################
 #
-### echo %%% Legacy CINT Library
-#
-message "Checking whether to build CINT5"
-if test ! "x$enable_cint5" = "xno"; then
-    enable_cint5="yes"
-    result "yes"
-else
-    enable_cint5=""
-    result "no"
-fi
-
-######################################################################
-#
-### echo %%% Experimental CINT7 Library
-#
-message "Checking whether to build CINT7"
-if test ! "x$enable_cint7" = "xno"; then
-    enable_cint7="yes"
-    enable_reflex="yes"
-    result "yes"
-else
-    enable_cint7=""
-    result "no"
-fi
-
-if test "x${enable_cint5}${enable_cint7}" = "x"; then
-   result "`basename $0`: Need to enable at least one of cint5 and cint7"
-   exit 1
-fi
-
-######################################################################
-#
 ### echo %%% Cintex Library - Contributed library
 #
 message "Checking whether to build libCintex"
@@ -5156,7 +5119,6 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_ldap"     = "xyes" && pl="$pl libroot-net-ldap"
     test "x$enable_clarens"  = "xyes" && pl="$pl libroot-proof-clarens"
     test "x$enable_roofit"   = "xyes" && pl="$pl libroot-roofit"
-    test "x$enable_cint7"    = "xyes" && pl="$pl root-plugin-cint7"
     test "x$enable_asimage"  = "xyes" && pl="$pl root-plugin-graf2d-asimage"
     test "x$enable_gdml"     = "xyes" && pl="$pl root-plugin-geom-gdml"
     test "x$enable_qt"       = "xyes" && pl="$pl root-plugin-gui-qt root-plugin-graf2d-qt"
@@ -5359,6 +5321,7 @@ rm -f math/mathcore/src/G__MathCore32.*
 rm -f tmva/src/G__TMVA.*
 rm -f xrootd/src/headers.d
 rm -f asimage/src/headers.d asimage/src/G__ASImageGS.*
+rm -f core/utils/src/rootcint7.cxx core/utils/src/RStl7.cxx
 
 ######################################################################
 #
@@ -5540,8 +5503,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@chirpincdir@|$chirpincdir|"          \
     -e "s|@chirplib@|$chirplib|"                \
     -e "s|@chirplibdir@|$chirplibdir|"          \
-    -e "s|@buildcint5@|$enable_cint5|"          \
-    -e "s|@buildcint7@|$enable_cint7|"          \
     -e "s|@clarensincdir@|$clarensincdir|"      \
     -e "s|@clarenslibs@|$clarenslibs|"          \
     -e "s|@cintincdir@|$cintincdir|"            \
@@ -5922,7 +5883,6 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@altld@|$altld2|"                \
     -e "s|@no_stubs@|$no_stubs|"           \
     -e "s|@no_stubs_test@|$no_stubs_test|" \
-    -e "s|@cint5enabled|$enable_cint5|"    \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT

@@ -11,11 +11,7 @@
 #include <set>
 
 // CINT's API.
-#ifndef R__BUILDING_CINT7
 #include "Api.h"
-#else
-#include "cint7/Api.h"
-#endif
 
 namespace std {} using namespace std;
 

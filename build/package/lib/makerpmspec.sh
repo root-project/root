@@ -50,7 +50,6 @@ confargs="--enable-cintex			\
     --disable-oracle				\
     --disable-pythia6				\
     --disable-rfio				\
-    --disable-cint7				\
     --fail-on-missing				\
     --enable-unuran				\
     --enable-xrootd				\

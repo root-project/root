@@ -29,13 +29,8 @@
 #endif
 
 #ifndef __CINT__
-# ifdef R__BUILDING_CINT7
-#  include "cint7/G__ci.h"
-#  include "cint7/Api.h"
-# else
-#  include "G__ci.h"
-#  include "Api.h"
-# endif
+# include "G__ci.h"
+# include "Api.h"
 #else
 struct G__dictposition;
 #endif

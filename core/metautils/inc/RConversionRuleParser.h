@@ -11,13 +11,8 @@
 #include <utility>
 
 #ifndef __MAKECINT__
-#ifndef R__BUILDING_CINT7
 #include "Api.h"
 #include "Shadow.h"
-#else
-#include "cint7/Api.h"
-#include "cint7/Shadow.h"
-#endif
 #else
 class G__ClassInfo;
 #endif

@@ -165,25 +165,9 @@
 #include "RConfig.h"
 #include <iostream>
 #include <memory>
-#ifndef R__BUILDING_CINT7
 #include "Shadow.h"
 #include "cintdictversion.h"
-#if G__CINTVERSION == 70030000
-#include <string>
-typedef std::string G__FastAllocString;
-int strlen(const std::string &s) { return s.length(); }
-const char *strcpy(std::string &s,const char *right) { s = right; return s.c_str(); }
-#else
 #include "FastAllocString.h"
-#endif
-#else
-#include "cint7/Shadow.h"
-#include "cint7/cintdictversion.h"
-#include <string>
-typedef std::string G__FastAllocString;
-int strlen(const std::string &s) { return s.length(); }
-const char *strcpy(std::string &s,const char *right) { s = right; return s.c_str(); }
-#endif
 
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename

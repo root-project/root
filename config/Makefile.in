@@ -286,14 +286,6 @@ GSLLIBDIR      := @gsllibdir@
 GSLLIBS        := @gsllibs@
 GSLVERSION     := @gslversion@
 
-BUILDCINT5     := @buildcint5@
-BUILDCINT7     := @buildcint7@
-ifeq ($(BUILDCINT5)_$(BUILDCINT7),yes_yes)
-BUILDBOTHCINT  := yes
-else
-BUILDBOTHCINT  :=
-endif
-
 BUILDCINTEX    := @buildcintex@
 
 BUILDREFLEX    := @buildreflex@

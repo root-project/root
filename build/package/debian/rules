@@ -88,7 +88,6 @@ CONFOPTIONS	:=--enable-cintex				\
 		  --disable-pythia6				\
 		  --disable-rfio				\
 		  --disable-sapdb				\
-		  --disable-cint7				\
 		  --fail-on-missing				\
 		  $(UNUR)					\
 		  $(XRD)					\

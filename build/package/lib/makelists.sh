@@ -85,7 +85,6 @@ for d in $l ; do
 	cint/cint)	set_lib_names    core  "" root-system-bin
 	    	        extra="ALLLIBS=${prefix}/lib/root/libCint.so" ;;   
 	    	        # extra="NOMAP=1 ALLLIBS=${prefix}/lib/root/libCint.so" 
-	cint/cint7)	continue ;;
 	cint/reflex)	set_lib_names    core  "" libroot-core-dev
 	    	        extra="REFLEXLIB=${prefix}/lib/root/libReflex.so" ;;   
 	cint/*)	        set_lib_names    core  "" root-system-bin	;;

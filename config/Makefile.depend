@@ -80,11 +80,6 @@ ROOFITLIBDEPM          = $(ROOFITCORELIB) $(TREELIB) $(IOLIB) $(MATRIXLIB) \
 ROOSTATSLIBDEPM        = $(ROOFITLIB) $(ROOFITCORELIB) $(TREELIB) $(IOLIB) \
                          $(MATRIXLIB) $(HISTLIB) $(MATHCORELIB) $(GRAFLIB) \
                          $(GPADLIB)
-ifneq ($(BUILDBOTHCINT),)
-PYTHONLIBDEPM          = $(METATCINTLIB)
-endif
-CINT7LIBDEPM           = $(REFLEXLIB)
-METATCINT7LIBDEPM      = $(REFLEXLIB)
 CINTEXLIBDEPM          = $(REFLEXLIB)
 REFLEXDICTLIBDEPM      = $(REFLEXLIB)
 RAUTHLIBDEPM           = $(NETLIB) $(IOLIB)
@@ -182,11 +177,6 @@ ALIENLIBDEP            = $(ALIENLIBDEPM)
 ROOFITCORELIBDEP       = $(ROOFITCORELIBDEPM)
 ROOFITLIBDEP           = $(ROOFITLIBDEPM)
 ROOSTATSLIBDEP         = $(ROOSTATSLIBDEPM)
-ifneq ($(BUILDBOTHCINT),)
-PYTHONLIBDEP           = $(PYTHONLIBDEPM)
-endif
-CINT7LIBDEP            = $(CINT7LIBDEPM)
-METATCINT7LIBDEP       = $(METATCINT7LIBDEPM)
 CINTEXLIBDEP           = $(CINTEXLIBDEPM)
 REFEXDICTLIBDEP        = $(REFLEXDICTLIBDEPM)
 RAUTHLIBDEP            = $(RAUTHLIBDEPM)
@@ -326,11 +316,6 @@ ROOSTATSLIBEXTRA        = lib/libRooFit.lib lib/libRooFitCore.lib \
                           lib/libTree.lib lib/libRIO.lib lib/libHist.lib \
                           lib/libMatrix.lib lib/libMathCore.lib \
                           lib/libGraf.lib lib/libGpad.lib
-ifneq ($(BUILDBOTHCINT),)
-PYTHONLIBEXTRA          = lib/libMetaTCint.lib
-endif
-CINT7LIBEXTRA           = lib/libReflex.lib
-METATCINT7LIBEXTRA      = lib/libReflex.lib
 CINTEXLIBEXTRA          = lib/libReflex.lib
 REFLEXDICTLIBEXTRA      = lib/libReflex.lib
 RAUTHLIBEXTRA           = lib/libNet.lib lib/libRIO.lib
@@ -447,11 +432,6 @@ ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO \
 ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
 ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
                           -lHist -lMathCore -lGraf -lGpad
-ifneq ($(BUILDBOTHCINT),)
-PYTHONLIBEXTRA          = -Llib -lMetaTCint
-endif
-CINT7LIBEXTRA           = -Llib -lReflex
-METATCINT7LIBEXTRA      = -Llib -lReflex
 CINTEXLIBEXTRA          = -Llib -lReflex
 REFLEXDICTLIBEXTRA      = -Llib -lReflex
 RAUTHLIBEXTRA           = -Llib -lNet -lRIO

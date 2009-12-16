@@ -47,16 +47,9 @@
 #include <set>
 #include <string>
 
-#if G__CINTVERSION == 70030000
-// Ignore SetGetLineFunc in Cint7
-void G__SetGetlineFunc(char*(*)(const char* prompt),
-                       void (*)(char* line)) {}
-#endif
-
 using namespace std;
 
 R__EXTERN int optind;
-R__EXTERN TInterpreter* (*gInterpreterFactory)(const char* name, const char* title);
 
 extern "C" int ScriptCompiler(const char *filename, const char *opt) {
    return gSystem->CompileMacro(filename, opt);
@@ -82,12 +75,6 @@ extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
 extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
    return TCint::FindSpecialObject(c, ci, p1, p2);
 }
-
-TInterpreter* TCint_Factory(const char* name, const char* title) {
-   return new TCint(name, title);
-}
-
-
 
 int TCint_GenerateDictionary(const std::string &className,
                              const std::vector<std::string> &headers )
@@ -157,16 +144,6 @@ int TCint_GenerateDictionary(const std::string &className,
    //end(3)
    return 0;
 }
-
-namespace {
-   static class TInitCintFactory {
-   public:
-      TInitCintFactory() {
-         gInterpreterFactory = TCint_Factory;
-      }
-   } gInitCintFactory;
-}
-
 
 // It is a "fantom" method to synchronize user keyboard input
 // and ROOT prompt line (for WIN32)
@@ -804,12 +781,6 @@ Bool_t TCint::CheckClassInfo(const char *name, Bool_t autoload /*= kTRUE*/)
    // specifically check that each level of nesting is already loaded.
    // In case of templates the idea is that everything between the outer
    // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
-
-#if defined(R__BUILDING_CINT7) || defined(R__BUILDING_ONLYCINT7)
-   if (Reflex::Instance::HasShutdown()) {
-      return kFALSE;
-   }
-#endif
 
    R__LOCKGUARD(gCINTMutex);
 
@@ -1888,8 +1859,7 @@ const char* TCint::GetSharedLibs()
             "exception.dll","stdexcept.dll","complex.dll","climits.dll",
             "libvectorDict.","libvectorboolDict.","liblistDict.","libdequeDict.",
             "libmapDict.", "libmap2Dict.","libsetDict.","libmultimapDict.","libmultimap2Dict.",
-            "libmultisetDict.","libstackDict.","libqueueDict.","libvalarrayDict.",
-            "libMetaTCint.","libMetaTCint7."
+            "libmultisetDict.","libstackDict.","libqueueDict.","libvalarrayDict."
          };
          static const unsigned int excludelistsize = sizeof(excludelist)/sizeof(excludelist[0]);
          static int excludelen[excludelistsize] = {-1};
@@ -2028,14 +1998,6 @@ const char *TCint::GetIncludePath()
       const char *pathname = path.Name();
       fIncludePath.Append(" -I\"").Append(pathname).Append("\" ");
    }
-#ifdef R__BUILDING_CINT7
-# ifdef ROOTINCDIR
-   fIncludePath.Append(" -I\"").Append(ROOTINCDIR);
-# else
-   fIncludePath.Append(" -I\"").Append(gRootDir).Append("/include");
-# endif
-   fIncludePath.Append("/cint7\" ");
-#endif
 
    return fIncludePath;
 }
@@ -2053,12 +2015,7 @@ const char *TCint::GetSTLIncludePath() const
 #endif
       if (!stldir.EndsWith("/"))
          stldir += '/';
-#if defined(R__BUILDING_CINT7) || (R__BUILDING_ONLYCINT7)
-      stldir += "cint7/stl";
-#else
-      // Default to Cint5's directory
       stldir += "cint/stl";
-#endif
    }
    return stldir;
 }
