@@ -2704,6 +2704,17 @@ const char *TUnixSystem::GetLinkedLibraries()
 #if defined(R__WINGCC )
    const char *cLDD="cygcheck";
    const char *cSOEXT=".dll";
+   size_t lenexe = strlen(exe);
+   if (strcmp(exe + lenexe - 4, ".exe")
+       && strcmp(exe + lenexe - 4, ".dll")) {
+      // it's not a dll and exe doesn't end on ".exe";
+      // need to add it for cygcheck to find it:
+      char* longerexe = new char[lenexe + 5];
+      strcpy(longerexe, exe);
+      strcat(longerexe, ".exe");
+      delete [] exe;
+      exe = longerexe;
+   }
 #else
    const char *cLDD="ldd";
    const char *cSOEXT=".so";
