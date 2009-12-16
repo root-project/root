@@ -2,3 +2,33 @@
 <hr/>
 <a name="hist"></a> 
 <h3>Histogram package</h3>
+
+<h4>TGraphDelaunay</h4>
+<ul>
+<li> New version of the method <tt>TGraphDelaunay::Enclose()</tt>. This method
+     decides if a point is inside a triangle or not. The way it was implemented
+     produced infinite numbers and generated wrong peaks. It was visible on some
+     machines only (for instance MacOsX). Now this method uses 
+     <tt>TMath::IsInside()</tt>. It is much safer, it runs faster, and the
+     code is simpler. The problem could be seen with a simple macro like the
+     following one:
+     <pre>
+     {
+        TCanvas *c1 = new TCanvas("c1", "c1",0,0,600,600);
+        c1->SetTheta(90.);
+        c1->SetPhi(0.0001);
+        gStyle->SetPalette(1);
+        TGraph2D *graph2d = new TGraph2D();
+        graph2d->SetPoint(0, 110, 110, 0.0);
+        graph2d->SetPoint(1, -80,  50, 1.0);
+        graph2d->SetPoint(2, -70,  40, 2.0);
+        graph2d->SetPoint(3,-110, -50, 3.0);
+        graph2d->SetNpx(9);
+        graph2d->SetNpy(9);
+        graph2d->Draw("surf1");
+        graph2d->SetLineWidth(2);
+        graph2d->Draw(" triw p0 same");
+     }
+     </pre>
+</ul>
+
