@@ -52,9 +52,19 @@
 TGClient *gClient = 0;
 
 // Initialize gClient in case libGui is loaded in batch mode
+extern "C" void G__cpp_setup_tagtableG__Gui1();
 class TGClientInit {
 public:
-   TGClientInit() { if (gROOT && gROOT->IsBatch()) new TGClient(); TApplication::NeedGraphicsLibs(); }
+   TGClientInit() {
+      if (gROOT && gROOT->IsBatch()) {
+         // Insure that the CINT dictionary is initialized __before__ the TGClient creation which
+         // will induce the creation of a TClass object which will need the dictionary for TGClient!
+         // Seems to be only needed for MacOS X 10.4
+         G__cpp_setup_tagtableG__Gui1(); 
+         new TGClient();
+      }
+      TApplication::NeedGraphicsLibs();
+   }
 };
 static TGClientInit gClientInit;
 
