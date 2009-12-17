@@ -129,7 +129,6 @@ $(BASEDO3):     CXXFLAGS += -wd191
 endif
 $(BASEDO4): OPT = $(NOOPT)
 $(BASEDO4): CXXFLAGS += -I.
-$(BASEDO4): PCHCXXFLAGS =
 
 # reconfigure might change enable/dicable cint7:
 $(BASEDIRS)/TROOT.o: config/Makefile.config

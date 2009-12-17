@@ -53,4 +53,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(METAUTILSO):  PCHCXXFLAGS =

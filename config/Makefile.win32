@@ -113,13 +113,4 @@ F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
 F77LIBS       =
 endif
 
-# Precompiled headers:
-PCHSUPPORTED  := $(ENABLEPCH)
-ifeq ($(PCHSUPPORTED),yes)
-  PCHFILE      = include/precompile.pch
-  PCHCXXFLAGS  = -DUSEPCH -Yuw32pragma.h -Fp$(PCHFILE) 
-  PCHEXTRAOBJBUILD = $(CXX) -DUSEPCH $(CXXFLAGS) $(OPT) \
-        -Ycw32pragma.h -Fp$(PCHFILE) -c $(PCHEXTRASRC) -Fo$(PCHEXTRAOBJ)
-endif
-
 # Extras

@@ -50,4 +50,3 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(ROOTDO):  CXXFLAGS += $(AUTHFLAGS)
-$(ROOTDO):  PCHCXXFLAGS =

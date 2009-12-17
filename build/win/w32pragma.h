@@ -78,8 +78,4 @@
 
 #endif // _WIN32
 
-#if defined(__cplusplus) && defined(USEPCH)
-#  include "precompile.h"
-#endif
-
 #endif // defined ROOT_w32pragma

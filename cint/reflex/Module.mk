@@ -209,5 +209,3 @@ $(RFLX_TESTD)/test_Reflex_generate.testout: $(RFLX_TESTD)/test_Reflex_generate $
 
 check-reflex-diff-generate: $(RFLX_TESTD)/test_Reflex_generate.testout $(RFLX_TESTD)/test_Reflex_generate.testref
 	@diff -u $(RFLX_TESTD)/test_Reflex_generate.testref $(RFLX_TESTD)/test_Reflex_generate.testout
-$(REFLEXO):      PCHCXXFLAGS =
-$(RFLX_GENMAPO): PCHCXXFLAGS =

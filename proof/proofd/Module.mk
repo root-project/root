@@ -174,8 +174,6 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
-$(PROOFDEXEO): PCHCXXFLAGS =
-$(XPDO):       PCHCXXFLAGS =
 
 $(XPDO): $(XRDHDRS)
 ifneq ($(ICC_GE_9),)

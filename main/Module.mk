@@ -184,5 +184,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(SSH2RPDO): PCHCXXFLAGS =
 $(PROOFSERVO): CXXFLAGS += $(AFSEXTRACFLAGS)

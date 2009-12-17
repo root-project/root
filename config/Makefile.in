@@ -11,7 +11,6 @@ EXTRA_CFLAGS   := -Iinclude @cflags@
 EXTRA_CXXFLAGS := -Iinclude @cflags@
 EXTRA_LDFLAGS  := @ldflags@
 WINRTDEBUG     := @winrtdebug@
-ENABLEPCH      := @enable_pch@
 
 GLBPATCHFLAGS  := @glbpatchcflags@
 EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@

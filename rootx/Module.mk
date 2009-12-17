@@ -48,4 +48,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(ROOTXO):      PCHCXXFLAGS =

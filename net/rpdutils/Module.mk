@@ -101,4 +101,3 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(RPDUTILO): CXXFLAGS += $(AUTHFLAGS)
-$(RPDUTILO): PCHCXXFLAGS =

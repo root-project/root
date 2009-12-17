@@ -59,4 +59,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(CLIBO):       PCHCXXFLAGS =

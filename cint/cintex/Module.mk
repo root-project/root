@@ -126,8 +126,6 @@ $(CINTEXTESTDICT): $(CINTEXTESTDICTO)
 		@mkdir -p $(CINTEXTESTDICTL)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $< "$(REFLEXLL)"
 
-$(CINTEXTESTDICTO): CXXFLAGSPCH =
-
 $(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTDICTD)/selection.xml
 		cd $(CINTEXTESTDICTD); $(GENREFLEX_CMD2) CintexTest.h -s selection.xml --rootmap=$(PWD)/$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --comments
 

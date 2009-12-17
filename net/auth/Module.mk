@@ -141,6 +141,4 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS)
-$(RAUTHO):      PCHCXXFLAGS =
 $(AFSAUTHO):    CXXFLAGS += $(AFSINCDIR) $(AFSEXTRACFLAGS)
-$(AFSAUTHO):    PCHCXXFLAGS =

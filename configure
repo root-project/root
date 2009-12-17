@@ -72,7 +72,6 @@ options="                    \
    enable_odbc               \
    enable_opengl             \
    enable_oracle             \
-   enable_pch                \
    enable_peac               \
    enable_pgsql              \
    enable_pythia6            \
@@ -114,7 +113,6 @@ enable_globus=no
 enable_explicitlink=no
 enable_gsl_shared=no
 enable_krb5=no
-enable_pch=no
 enable_qt=no
 enable_qtgsi=no
 enable_roofit=no
@@ -1103,7 +1101,6 @@ enable/disable options, prefix with either --enable- or --disable-
   odbc               ODBC support, requires libiodbc or libodbc
   opengl             OpenGL support, requires libGL and libGLU
   oracle             Oracle support, requires libocci
-  pch                Precompiled headers (if supported by the compiler)
   peac               PEAC, PROOF Enabled Analysis Center, requires Clarens
   pgsql              PostgreSQL support, requires libpq
   pythia6            Pythia6 EG support, requires libPythia6
@@ -5507,7 +5504,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildunuran@|$enable_unuran|"        \
     -e "s|@buildgdml@|$enable_gdml|"            \
     -e "s|@buildmonalisa@|$enable_monalisa|"    \
-    -e "s|@enable_pch@|$enable_pch|"            \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@buildtmva@|$enable_tmva|"            \
     -e "s|@buildmemstat@|$enable_memstat|"      \
