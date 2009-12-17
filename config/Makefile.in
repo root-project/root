@@ -12,8 +12,6 @@ EXTRA_CXXFLAGS := -Iinclude @cflags@
 EXTRA_LDFLAGS  := @ldflags@
 WINRTDEBUG     := @winrtdebug@
 ENABLEPCH      := @enable_pch@
-NOSTUBS        := @no_stubs@
-NOSTUBSTEST    := @no_stubs_test@
 
 GLBPATCHFLAGS  := @glbpatchcflags@
 EXTRA_AUTHFLAGS:= @srpextracflags@ @krb5extracflags@ @glbextracflags@ @sslextracflags@

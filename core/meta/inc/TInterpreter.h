@@ -60,7 +60,6 @@ public:
    virtual void     ClearStack() = 0; // Delete existing temporary values
    virtual void     EnableAutoLoading() = 0;
    virtual void     EndOfLineAction() = 0;
-   virtual void     EnableWrappers(bool value) = 0;
    virtual Int_t    GetExitCode() const = 0;
    virtual TEnv    *GetMapfile() const { return 0; }
    virtual Int_t    GetMore() const = 0;

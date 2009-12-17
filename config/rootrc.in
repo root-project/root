@@ -244,10 +244,6 @@ Rint.History:            $(HOME)/.root_hist
 # your scripts multiple times.
 Rint.Includes:      1
 
-# CINT: use wrappers for calls (larger dictionaries).
-# Only checked if configured with --no-stubs-test; defaults to "use wrappers":
-# Cint.EnableWrappers: 1
-
 # ACLiC customization.
 # ACLiC.Linkdef specifies the suffix that will be added to the script name to
 # try to locate a custom linkdef file when generating the dictionary.

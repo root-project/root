@@ -194,9 +194,6 @@ extern "C" {
    int   G__main(int argc, char **argv);
    void  G__exit(int rtn);
    struct G__includepath *G__getipathentry();
-#ifdef G__NOSTUBS
-   void  G__setisfilebundled(int isfilebundled);
-#endif
 }
 const char *ShortTypeName(const char *typeDesc);
 
@@ -4310,9 +4307,6 @@ int main(int argc, char **argv)
    string libfilename;
    const char *env_dict_type=getenv("ROOTDICTTYPE");
    int dicttype = 0; // 09-07-07 -- 0 for dict, 1 for ShowMembers
-#ifdef G__NOSTUBS
-   G__setisfilebundled(0);
-#endif
 
    if (env_dict_type) {
       if (!strcmp(env_dict_type, "cint"))
@@ -4738,30 +4732,6 @@ int main(int argc, char **argv)
                argv[0], bundlename.c_str());
          use_preprocessor = 0;
       } else {
-#if defined (G__NOSTUBS) && !defined(ROOTBUILD)
-         char *header_c = (char*) header.c_str(); // basename shouldnt change the content (it looks safe)
-         const char *basen = basename(header_c);
-         string headerb(basen);
-         string::size_type idx = headerb.rfind("Tmp");
-
-         int l;
-         if(idx != string::npos) {
-            l = idx;
-            headerb[l] = '\0';
-         }
-         else{
-            idx = headerb.rfind(".");
-            if(idx != string::npos) {
-               l = idx;
-               headerb[l] = '\0';
-            }
-         }
-
-         // 12-11-07
-         // put protection against multiple includes of dictionaries' .h
-         fprintf(bundle,"#ifndef G__includes_dict_%s\n", headerb.c_str());
-         fprintf(bundle,"#define G__includes_dict_%s\n", headerb.c_str());
-#endif
          fprintf(bundle,"#include \"TObject.h\"\n");
          fprintf(bundle,"#include \"TMemberInspector.h\"\n");
       }
@@ -4805,9 +4775,6 @@ int main(int argc, char **argv)
       }
    }
    if (use_preprocessor) {
-#if defined (G__NOSTUBS) && !defined(ROOTBUILD)
-      fprintf(bundle,"#endif\n");
-#endif
       fclose(bundle);
    }
 
@@ -4837,10 +4804,6 @@ int main(int argc, char **argv)
 
       argvv[argcc++] = autold;
    }
-
-#ifdef G__NOSTUBS
-   if(insertedBundle) G__setisfilebundled(1);
-#endif
 
    G__ShadowMaker::VetoShadow(); // we create them ourselves
    G__setothermain(2);

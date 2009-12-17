@@ -3163,11 +3163,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcint += "\\";
 #endif
 #endif
-#ifdef G__NOSTUBS
-   rcint += "rootcint_nostubs.sh --lib-list-prefix=";
-#else
    rcint += "rootcint \"--lib-list-prefix=";
-#endif
    rcint += mapfile;
    rcint += "\" -f \"";
    rcint.Append(dict).Append("\" -c -p ").Append(GetIncludePath()).Append(" ");

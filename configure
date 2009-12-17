@@ -125,8 +125,6 @@ enable_shadowpw=
 enable_soversion=no
 enable_table=no
 enable_thread=yes        # cannot be disabled (not in above options list)
-no_stubs=no              # complete Dictionaries by default (All stubs)
-no_stubs_test=no         # complete Dictionaries by default (All stubs)
 enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
@@ -1002,8 +1000,6 @@ GENREFLEXROOTCINTSHIN=config/genreflex-rootcint.in
 GENREFLEXROOTCINTSHOUT=bin/genreflex-rootcint
 GENREFLEXROOTCINTBATIN=config/genreflex-rootcint.bat.in
 GENREFLEXROOTCINTBATOUT=bin/genreflex-rootcint.bat
-ROOTCINTSTUBSHIN=utils/src/rootcint_nostubs.sh
-ROOTCINTSTUBSHOUT=bin/rootcint_nostubs.sh
 
 # unset global command options that can cause havoc
 unset GREP_OPTIONS
@@ -1056,8 +1052,6 @@ FIRST argument one of the architecures given at the end of this message.
    --macrodir      Macro installation dir    (<datadir>/macros)
    --mandir        Manpages installation dir (<prefix>/share/man/man1)
    --no-create     Do not create output files, dry run
-   --no-stubs      Remove Stubs from dictionaries (Direct call mechanism)
-   --no-stubs-test Remove Stubs from dictionaries (Direct call mechanism, can be switched off in rootrc)
    --prefix        Installation prefix       (/usr/local)
    --srcdir        Sources installation dir  (<datadir>/src)
    --testdir       Tests                     (<docdir>/test)
@@ -1362,8 +1356,6 @@ if test $# -gt 0 ; then
       --no-create)             noact="yes"           ;;
       --nohowto)               nohowto="yes"         ;;
       --fail-on-missing)       fail_on_missing="yes" ;;
-      --no-stubs)              no_stubs="yes";;
-      --no-stubs-test)         no_stubs="yes"; no_stubs_test="yes";;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-afs-incdir=*)     afsincdir=$optarg     ; enable_afs="yes"     ;;
       --with-afs-libdir=*)     afslibdir=$optarg     ; enable_afs="yes"     ;;
@@ -5031,35 +5023,6 @@ check_explicit "$enable_peac" "$enable_peac_explicit" \
 
 ######################################################################
 #
-### echo %%% Check for Stub removal support
-#
-if test "x$no_stubs" = "xyes" || test "x$no_stubs_test" = "xyes"; then
-    message "Checking for CINT support of function calls via symbols"
-    no_stubs="yes"
-
-    # Now check whether the platform is supported at all:
-    if test "x${arch}" = "xlinux"; then
-        gccmajor="`gcc -dumpversion 2>&1 | cut -d'.' -f1`"
-        gccminor="`gcc -dumpversion 2>&1 | cut -d'.' -f2`"
-        gccminorOK="`echo 234 | grep ${gccminor}`"
-        if test ! "x$gccmajor" = "x3" || test ! "x$gccminorOK" = "x234"; then
-            no_stubs="no"
-            no_stubs_test="no"
-            result "$no_stubs"
-            echo "WARNING: symbol-based calls are not supported with your compiler version"'!'
-        else
-            result "$no_stubs"
-        fi
-    else
-        no_stubs="no"
-        no_stubs_test="no"
-        result "$no_stubs"
-        echo "WARNING: symbol-based calls are not supported on ${arch}"'!'
-    fi
-fi
-
-######################################################################
-#
 ### echo %%% What dictionaries to build
 #
 # Can be either CINT (default), reflex, or gccxml.
@@ -5545,8 +5508,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildgdml@|$enable_gdml|"            \
     -e "s|@buildmonalisa@|$enable_monalisa|"    \
     -e "s|@enable_pch@|$enable_pch|"            \
-    -e "s|@no_stubs@|$no_stubs|"                \
-    -e "s|@no_stubs_test@|$no_stubs_test|"      \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@buildtmva@|$enable_tmva|"            \
     -e "s|@buildmemstat@|$enable_memstat|"      \
@@ -5884,8 +5845,6 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@altcxx@|$altcxx|"               \
     -e "s|@altf77@|$altf772|"              \
     -e "s|@altld@|$altld2|"                \
-    -e "s|@no_stubs@|$no_stubs|"           \
-    -e "s|@no_stubs_test@|$no_stubs_test|" \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT
@@ -6115,16 +6074,6 @@ if test "x$enable_reflex" = "xyes"; then
     fi
 else
     rm -f bin/genreflex*
-fi
-
-#---------------------------------------------------------------------
-# bin/rootcint_nostubs
-#
-if test "x$no_stubs" = "xyes"; then
-    message "Writing $ROOTCINTSTUBSHOUT"
-    cp -f  $ROOTCINTSTUBSHIN $ROOTCINTSTUBSHOUT
-    # force rootcint recompilation and thus regenerate dictionaries
-    touch utils/src/rootcint.cxx
 fi
 
 #---------------------------------------------------------------------

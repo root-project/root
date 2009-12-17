@@ -80,7 +80,6 @@ public:
    Int_t   AutoLoad(const char *classname);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
-   void    EnableWrappers(bool value=true);
    void    EnableAutoLoading();
    void    EndOfLineAction();
    Int_t   GetExitCode() const { return fExitCode; }

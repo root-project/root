@@ -452,9 +452,6 @@ win32)
 esac
 
 ### end of machine and compiler dependent settings ###
-nostubs=@no_stubs@
-nostubstest=@no_stubs_test@
-
 
 prefix=@prefix@
 if test "$platform" = "win32" && test "$prefix" != ""; then
@@ -474,7 +471,7 @@ Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--glibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--noauxcflags]\
  [--noauxlibs] [--noldflags] [--has-<feature>] [--arch] [--platform]\
  [--dicttype] [--config] [--features] [--svn-revision] [--python-version]\
- [--cc] [--cxx] [--f77] [--ld ] [--nostubs] [--nostubstest] [--help]"
+ [--cc] [--cxx] [--f77] [--ld ] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -732,14 +729,6 @@ while test $# -gt 0; do
       ### output used Linker
       out="$out $altld"
       ;;
-    --nostubs)
-      ### Output the prefix
-      out="$out $nostubs"
-      ;;
-    --nostubstest)
-      ### Output the prefix
-      out="$out $nostubstest"
-      ;;
     --help)
       ### Print a help message
       echo "Usage: `basename $0` [options]"
@@ -773,8 +762,6 @@ while test $# -gt 0; do
       echo "  --cxx                 Print alternative C++ compiler specified when ROOT was built"
       echo "  --f77                 Print alternative Fortran compiler specified when ROOT was built"
       echo "  --ld                  Print alternative Linker specified when ROOT was built"
-      echo "  --nostubs             Print yes if we are using the stubless calls"
-      echo "  --nostubstest         Print yes if we are using the stubless calls (in test mode)"
       echo "  --help                Print this message"
       exit 0
       ;;

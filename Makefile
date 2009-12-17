@@ -385,17 +385,6 @@ GCC_PATCH     := $(shell $(CXX) -dumpversion 2>&1 | cut -d'.' -f3)
 GCC_VERS      := gcc-$(GCC_MAJOR).$(GCC_MINOR)
 GCC_VERS_FULL := gcc-$(GCC_MAJOR).$(GCC_MINOR).$(GCC_PATCH)
 
-##### CINT Stub Functions Generation #####
-ifeq ($(NOSTUBS),yes)
-ROOTCINTTMP   = export CXXFLAGS="$(CXXFLAGS)"; core/utils/src/rootcint_nostubs_tmp.sh -$(ROOTDICTTYPE)
-CXXFLAGS     += -DG__NOSTUBS
-CINTCXXFLAGS += -DG__NOSTUBS
-ifeq ($(NOSTUBSTEST),yes)
-CXXFLAGS     += -DG__NOSTUBSTEST
-CINTCXXFLAGS += -DG__NOSTUBSTEST
-endif
-endif
-
 
 # Precompiled headers for gcc
 ifeq ($(GCC_MAJOR),4)
