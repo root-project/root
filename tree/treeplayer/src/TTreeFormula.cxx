@@ -4427,7 +4427,7 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
 {
    // return TRUE if the formula corresponds to one single Tree leaf
    // and this leaf is short, int or unsigned short, int
-   // When a leaf is of type integer, the generated histogram is forced
+   // When a leaf is of type integer or string, the generated histogram is forced
    // to have an integer bin width
 
    if (fast) {
@@ -4473,7 +4473,8 @@ Bool_t TTreeFormula::IsInteger(Bool_t fast) const
 
    if (EvalClass()==TBits::Class()) return kTRUE;
 
-   return IsLeafInteger(0);
+   if (IsLeafInteger(0) || IsLeafString(0)) return kTRUE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -4519,6 +4520,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
    if (!strcmp(leaf->GetTypeName(),"Bool_t"))   return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"Char_t"))   return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UChar_t"))  return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"string"))   return kTRUE;
    return kFALSE;
 }
 
