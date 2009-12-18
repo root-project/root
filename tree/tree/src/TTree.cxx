@@ -5218,10 +5218,12 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
             continue;
          }
          Double_t bsize = oldBsize*idealFactor*memFactor; //bsize can be very large !
+         if (bsize < 0) bsize = bmax;
          if (bsize > bmax) bsize = bmax;
          Int_t newBsize = Int_t(bsize);
          newBsize = newBsize - newBsize%512;
          if (newBsize < bmin) newBsize = bmin;
+         if (newBsize > 1000000000) newBsize = bmax;
          if (pass) {
             if (pDebug) printf("Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
             branch->SetBasketSize(newBsize);
