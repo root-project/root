@@ -729,7 +729,7 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
 
    // Get a buffer
    XrdBuffer *argp = XrdProofdProtocol::GetBuff(quantum);
-   if (!argp) return 0;
+   if (!argp) return -1;
 
    // Now send over all of the data as unsolicited messages
    XrdOucString msg;
@@ -739,7 +739,7 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
 
       if ((rc = GetData("data", argp->buff, quantum))) {
          { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
-         return 0;
+         return -1;
       }
       if (buf && !(*buf) && savebuf)
          *buf = new XrdSrvBuffer(argp->buff, quantum, 1);
@@ -753,7 +753,7 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
             XPDFORM(msg, "EXT: server ID: %d, problems sending: %d bytes to server",
                          sid, quantum);
             TRACEP(this, XERR, msg);
-            return 0;
+            return -1;
          }
       } else {
 
@@ -766,7 +766,7 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
             XPDFORM(msg, "INT: client ID: %d, problems sending: %d bytes to client",
                          cid, quantum);
             TRACEP(this, XERR, msg);
-            return 0;
+            return -1;
          }
       }
       TRACEP(this, HDBG, msg);
@@ -804,13 +804,13 @@ int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
 
    // Get a buffer
    XrdBuffer *argp = XrdProofdProtocol::GetBuff(quantum);
-   if (!argp) return 0;
+   if (!argp) return -1;
 
    // Now send over all of the data as unsolicited messages
    while (len > 0) {
       if ((rc = GetData("data", argp->buff, quantum))) {
          XrdProofdProtocol::ReleaseBuff(argp);
-         return 0;
+         return -1;
       }
       if (buf && !(*buf) && savebuf)
          *buf = new XrdSrvBuffer(argp->buff, quantum, 1);
@@ -818,7 +818,7 @@ int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
       // Send to connected clients
       if (xps->SendDataN(argp->buff, quantum) != 0) {
          XrdProofdProtocol::ReleaseBuff(argp);
-         return 0;
+         return -1;
       }
 
       // Next segment
