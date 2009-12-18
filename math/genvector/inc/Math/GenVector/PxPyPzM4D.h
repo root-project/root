@@ -387,8 +387,12 @@ private:
 
 // move implementations here to avoid circle dependencies
 
+#ifndef ROOT_Math_GenVector_PxPyPzE4D 
 #include "Math/GenVector/PxPyPzE4D.h"
+#endif
+#ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
 #include "Math/GenVector/PtEtaPhiM4D.h"
+#endif
 
 namespace ROOT { 
 

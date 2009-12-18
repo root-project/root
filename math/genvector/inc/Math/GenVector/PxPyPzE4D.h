@@ -358,8 +358,12 @@ private:
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
 // move implementations here to avoid circle dependencies
 
+#ifndef ROOT_Math_GenVector_PtEtaPhiE4D 
 #include "Math/GenVector/PtEtaPhiE4D.h"
+#endif
+#ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
 #include "Math/GenVector/PtEtaPhiM4D.h"
+#endif
 
 namespace ROOT { 
 

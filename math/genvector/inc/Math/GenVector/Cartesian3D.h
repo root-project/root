@@ -252,10 +252,15 @@ private:
 // need to put here setter methods to resolve nasty cyclical dependencies 
 // I need to include other coordinate systems only when Cartesian is already defined 
 // since they depend on it
-
+#ifndef ROOT_Math_GenVector_GenVector_exception 
 #include "Math/GenVector/GenVector_exception.h"
+#endif
+#ifndef ROOT_Math_GenVector_CylindricalEta3D 
 #include "Math/GenVector/CylindricalEta3D.h"
+#endif
+#ifndef ROOT_Math_GenVector_Polar3D 
 #include "Math/GenVector/Polar3D.h"
+#endif
 
   // ====== Set member functions for coordinates in other systems =======
 

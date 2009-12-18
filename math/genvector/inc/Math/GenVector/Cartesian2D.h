@@ -218,8 +218,12 @@ private:
 // I need to include other coordinate systems only when Cartesian is already defined 
 // since they depend on it
 
+#ifndef ROOT_Math_GenVector_GenVector_exception 
 #include "Math/GenVector/GenVector_exception.h"
+#endif
+#ifndef ROOT_Math_GenVector_Polar2D 
 #include "Math/GenVector/Polar2D.h"
+#endif
 
 // ====== Set member functions for coordinates in other systems =======
 

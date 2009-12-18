@@ -226,13 +226,14 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_Cartesian2D
+#ifndef ROOT_Math_GenVector_Cartesian2D
 #include "Math/GenVector/Cartesian2D.h"
 #endif
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+#ifndef ROOT_Math_GenVector_GenVector_exception 
 #include "Math/GenVector/GenVector_exception.h"
-#include "Math/GenVector/Cartesian2D.h"
+#endif
 #endif
 
 namespace ROOT { 
@@ -245,8 +246,8 @@ void Polar2D<T>::SetXY(Scalar a, Scalar b) {
 }
 
 
-
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+
 
 // ====== Set member functions for coordinates in other systems =======
 

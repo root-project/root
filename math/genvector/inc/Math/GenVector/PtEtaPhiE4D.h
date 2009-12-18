@@ -371,9 +371,14 @@ private:
 
 
 // move implementations here to avoid circle dependencies
-
+#ifndef ROOT_Math_GenVector_PxPyPzE4D 
 #include "Math/GenVector/PxPyPzE4D.h"
+#endif
+#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+#ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
 #include "Math/GenVector/PtEtaPhiM4D.h"
+#endif
+#endif
 
 namespace ROOT { 
 

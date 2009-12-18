@@ -250,14 +250,19 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_Cartesian3D
+#ifndef ROOT_Math_GenVector_Cartesian3D
 #include "Math/GenVector/Cartesian3D.h"
 #endif
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+#ifndef ROOT_Math_GenVector_GenVector_exception 
 #include "Math/GenVector/GenVector_exception.h"
+#endif
+#ifndef ROOT_Math_GenVector_CylindricalEta3D 
 #include "Math/GenVector/CylindricalEta3D.h"
 #endif
+#endif
+
 
 namespace ROOT { 
 
@@ -271,7 +276,6 @@ void Polar3D<T>::SetXYZ(Scalar xx, Scalar yy, Scalar zz) {
 #if defined(__MAKECINT__) || defined(G__DICTIONARY) 
 
   // ====== Set member functions for coordinates in other systems =======
-
 
 
 template <class T>  
