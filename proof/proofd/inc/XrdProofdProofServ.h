@@ -124,6 +124,8 @@ public:
    void                Broadcast(const char *msg, int type = kXPD_srvmsg);
    int                 BroadcastPriority(int priority);
    inline const char  *Client() const { XrdSysMutexHelper mhp(fMutex); return fClient.c_str(); }
+   int                 CheckSession(bool oldvers, bool isrec,
+                                    int shutopt, int shutdel, bool changeown, int &nc);
    XrdProofQuery      *CurrentQuery() { XrdSysMutexHelper mhp(fMutex); return (fQueries.empty()? 0 : fQueries.front()); }
    void                DeleteStartMsg()
                        { XrdSysMutexHelper mhp(fMutex); if (fStartMsg) delete fStartMsg; fStartMsg = 0;}
@@ -144,7 +146,6 @@ public:
    inline bool         IsShutdown() const { XrdSysMutexHelper mhp(fMutex); return fIsShutdown; }
    inline bool         IsValid() const { XrdSysMutexHelper mhp(fMutex); return fIsValid; }
    inline bool         Match(short int id) const { XrdSysMutexHelper mhp(fMutex); return (id == fID); }
-   inline XrdSysRecMutex *Mutex() const { return fMutex; }
    inline const char  *Ordinal() const { XrdSysMutexHelper mhp(fMutex); return fOrdinal.c_str(); }
    inline XrdClientID *Parent() const { XrdSysMutexHelper mhp(fMutex); return fParent; }
    inline void         PingSem() const { XrdSysMutexHelper mhp(fMutex); if (fPingSem) fPingSem->Post(); }
