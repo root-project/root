@@ -31,6 +31,7 @@
 // *               location; by default the files are read directly from   * //
 // *               the ROOT http server; however this may give failures if * //
 // *               the connection is slow                                  * //
+// *   -punzip     use parallel unzipping for data-driven processing       * //
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
@@ -137,6 +138,7 @@ static TStopwatch gTimer;
 static Bool_t gTimedOut = kFALSE;
 static Bool_t gDynamicStartup = kFALSE;
 static Bool_t gSkipDataSetTest = kTRUE;
+static Bool_t gUseParallelUnzip = kFALSE;
 static TString gh1src("http://root.cern.ch/files/h1");
 static Bool_t gh1ok = kTRUE;
 static const char *gh1file[] = { "dstarmb.root", "dstarp1a.root", "dstarp1b.root", "dstarp2.root" };
@@ -178,6 +180,7 @@ int main(int argc,const char *argv[])
       printf("   -h1 h1src     specify a location for the H1 files; use h1src=\"download\" to download\n");
       printf("                 to a temporary location; by default the files are read directly from the\n");
       printf("                 ROOT http server; however this may give failures if the connection is slow\n");
+      printf("   -punzip       use parallel unzipping for data-driven processing.\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -220,6 +223,9 @@ int main(int argc,const char *argv[])
          i++;
       } else if (!strncmp(argv[i],"-ds",3)) {
          gSkipDataSetTest = kFALSE;
+         i++;
+      } else if (!strncmp(argv[i],"-punzip",7)) {
+         gUseParallelUnzip = kTRUE;
          i++;
       } else if (!strcmp(argv[i],"-t")) {
          if (i+1 == argc || argv[i+1][0] == '-') {
@@ -301,6 +307,18 @@ void CleanupSelector(const char *selpath)
          fn.Form("%s/%s", dirpath.Data(), e);
          gSystem->Unlink(fn);
       }
+   }
+}
+
+//_____________________________________________________________________________
+void AssertParallelUnzip()
+{
+   // Set the parallel unzip option
+
+   if (gUseParallelUnzip) {
+      gProof->SetParameter("PROOF_UseParallelUnzip", (Int_t)1);
+   } else {
+      gProof->SetParameter("PROOF_UseParallelUnzip", (Int_t)0);
    }
 }
 
@@ -515,6 +533,10 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
 
    if (gSkipDataSetTest) {
       printf("*  Test for dataset handling (#4, #8) skipped                   **\n");
+      printf("******************************************************************\n");
+   }
+   if (gUseParallelUnzip) {
+      printf("*  Using parallel unzip where relevant                          **\n");
       printf("******************************************************************\n");
    }
    if (!strcmp(url,"lite")) {
@@ -1022,6 +1044,9 @@ Int_t PT_H1Http(void *)
       return -1;
    }
 
+   // Set/unset the parallel unzip flag
+   AssertParallelUnzip();
+
    // Create the chain
    PutPoint();
    TChain *chain = new TChain("h42");
@@ -1073,6 +1098,9 @@ Int_t PT_H1FileCollection(void *arg)
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
    }
+
+   // Set/unset the parallel unzip flag
+   AssertParallelUnzip();
 
    // Are we asked to change the packetizer strategy?
    if (arg) {
@@ -1140,6 +1168,9 @@ Int_t PT_H1DataSet(void *)
       return 1;
    }
    PutPoint();
+
+   // Set/unset the parallel unzip flag
+   AssertParallelUnzip();
 
    // Name for the target dataset
    const char *dsname = "h1http";
@@ -1558,6 +1589,9 @@ Int_t PT_H1SimpleAsync(void *arg)
       return 1;
    }
    PutPoint();
+
+   // Set/unset the parallel unzip flag
+   AssertParallelUnzip();
 
    // Are we asked to change the packetizer strategy?
    if (arg) {
