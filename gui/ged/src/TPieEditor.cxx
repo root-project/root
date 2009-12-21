@@ -1,3 +1,4 @@
+// @(#)root/ged:$Id$
 // Author: Guido Volpi 12/10/2007
 
 /*************************************************************************
@@ -118,7 +119,7 @@ TPieEditor::TPieEditor(const TGWindow *p, Int_t width,
    f3DHeight->Resize(50, 20);
    f3->AddFrame(f3DHeight, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
    f3DHeight->Associate(f3);
-   
+
    MakeTitle("Text");
    TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fColorSelect = new TGColorSelect(f4, 0, kFONT_COLOR);
@@ -236,7 +237,7 @@ void TPieEditor::SetModel(TObject* obj)
 
    switch(lblor) {
    case 0:
-      fLblDirH->SetState(kButtonDown,kTRUE);      
+      fLblDirH->SetState(kButtonDown,kTRUE);
       break;
    case 1:
       fLblDirR->SetState(kButtonDown,kTRUE);
@@ -248,7 +249,7 @@ void TPieEditor::SetModel(TObject* obj)
 
    // set text attributes
    fTypeCombo->Select(fPie->GetTextFont() / 10);
-   
+
    Color_t c = fPie->GetTextColor();
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p, kFALSE);
@@ -292,20 +293,20 @@ void TPieEditor::DoShape()
    if (fAvoidSignal) return;
 
    TString opt = GetDrawOption();
-   
+
    if (fLblDirH->GetState()==kButtonDown) {
       if (opt.Contains("t")) opt.Remove(opt.First("t"),1);
-      if (opt.Contains("r")) opt.Remove(opt.First("r"),1);      
+      if (opt.Contains("r")) opt.Remove(opt.First("r"),1);
    }
    else if (fLblDirR->GetState()==kButtonDown) {
       if (opt.Contains("t")) opt.Remove(opt.First("t"),1);
-      if (!opt.Contains("r")) opt += "r";      
+      if (!opt.Contains("r")) opt += "r";
    }
    else if (fLblDirT->GetState()==kButtonDown) {
       if (!opt.Contains("t")) opt += "t";
-      if (opt.Contains("r")) opt.Remove(opt.First("r"),1);      
+      if (opt.Contains("r")) opt.Remove(opt.First("r"),1);
    }
-      
+
    SetDrawOption(opt);
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
@@ -326,7 +327,7 @@ void TPieEditor::DoMarkerOnOff(Bool_t)
    else if (!t.Contains("nol") && fOutlineOnOff->GetState() == kButtonUp) {
       t += "nol";
    }
-   
+
    SetDrawOption(t);
 }
 
@@ -351,15 +352,15 @@ void TPieEditor::DoGraphLineWidth()
    // Slot connected to the graph line width.
 
    if (fAvoidSignal) return;
-   
+
    TString opt = GetDrawOption();
    if (!opt.Contains("3d") && fIs3D->IsDown())
       opt += "3d";
    else if (opt.Contains("3d") && !fIs3D->IsDown())
       opt.Remove(opt.First("3d"),2);
-      
+
    SetDrawOption(opt);
-   
+
    Update();
 }
 
@@ -371,7 +372,7 @@ void TPieEditor::DoTextChange()
    // Change text.
 
    if (fAvoidSignal) return;
-   
+
    // font color
    fPie->SetTextColor(TColor::GetColor(fColorSelect->GetColor()));
 
@@ -382,9 +383,9 @@ void TPieEditor::DoTextChange()
 
    // font size
    TVirtualPad* pad = fGedEditor->GetPad();
-   
+
    Float_t val = TString(fSizeCombo->GetSelectedEntry()->GetTitle()).Atoi();
-   
+
    Float_t dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY((Int_t)val);
    Float_t textSize;
 

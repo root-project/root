@@ -1,3 +1,4 @@
+// @(#)root/ged:$Id$
 // Author: Guido Volpi 04/10/2007
 
 /*************************************************************************
@@ -31,7 +32,7 @@ class TGRadioButton;
 class TGNumberEntry;
 class TGColorSelect;
 class TGFontTypeComboBox;
-class TGCombox;
+class TGComboBox;
 
 class TPieEditor : public TGedFrame {
 

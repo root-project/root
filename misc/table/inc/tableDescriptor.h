@@ -50,9 +50,9 @@
  */
 //______________________________________________________________________________
 //
-// Table descriptor tableDescriptor_st is internal descriptor of TTableDescriptor class 
+// Table descriptor tableDescriptor_st is internal descriptor of TTableDescriptor class
 //
-// One should not use it directly. 
+// One should not use it directly.
 // To access the TTable descriptor information use TTableDescriptor object instead
 //______________________________________________________________________________
 
@@ -68,7 +68,7 @@ typedef struct tableDescriptor_st {
     unsigned int fSize;        /* The full size of the selected column in bytes                         */
     unsigned int fTypeSize;    /* The type size of the selected column in bytes                         */
     unsigned int fDimensions;  /* The number of the dimensions for array                                */
-    Int_t        fType;        /* The data type of the selected column                                  */
+    int          fType;        /* The data type of the selected column                                  */
 } TABLEDESCRIPTOR_ST;
 // $Log: tableDescriptor.h,v $
 // Revision 1.2  2003/01/27 20:41:36  brun

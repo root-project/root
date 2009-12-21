@@ -21,6 +21,8 @@ class TTreeFormula;
 class TTreeFormulaManager;
 class TSelectorDraw;
 class TEntryList;
+class TList;
+
 
 class TTreeTableInterface : public TVirtualTableInterface {
 
@@ -46,16 +48,16 @@ private:
 protected:
 
 public:
-   TTreeTableInterface(TTree *tree = 0, const char *varexp = 0, 
-                       const char *selection = 0, Option_t *option = 0,  
+   TTreeTableInterface(TTree *tree = 0, const char *varexp = 0,
+                       const char *selection = 0, Option_t *option = 0,
                        Long64_t nentries = 0, Long64_t firstentry = 0);
    virtual ~TTreeTableInterface();
 
    virtual Double_t    GetValue(UInt_t row, UInt_t column);
    virtual const char *GetValueAsString(UInt_t row, UInt_t column);
    virtual const char *GetRowHeader(UInt_t row);
-   virtual const char *GetColumnHeader(UInt_t column); 
-   virtual UInt_t      GetNRows(); 
+   virtual const char *GetColumnHeader(UInt_t column);
+   virtual UInt_t      GetNRows();
    virtual UInt_t      GetNColumns();
    virtual TEntryList *GetEntryList() { return fEntries; }
 
