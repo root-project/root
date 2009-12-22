@@ -444,7 +444,9 @@ TEventIterTree::~TEventIterTree()
 {
    // Destructor
 
-   // The cache is deleted in here
+   // Delete the tree cache ...
+   SafeDelete(fTreeCache);
+   // ... and the remaining open files
    SafeDelete(fFileTrees);
 }
 
