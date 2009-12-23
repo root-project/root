@@ -905,20 +905,9 @@ int XrdProofdProofServMgr::CheckActiveSessions(bool verify)
       // If somebody is interested in this session, we give her/him some
       // more time by skipping the connected clients check this time
       int nc = -1;
-      if (!rmsession && (!xps->SkipCheck() || oldvers)) {
-         // Check if we need to shutdown it
-         if (!rmsession) {
-            XrdSysMutexHelper mh(xps->Mutex());
-            if ((nc = xps->GetNClients(1)) <= 0 && (!IsReconnecting() || oldvers)) {
-               if ((xps->SrvType() != kXPD_TopMaster) || 
-                   (fShutdownOpt == 1 && (xps->IdleTime() >= fShutdownDelay)) ||
-                   (fShutdownOpt == 2 && (xps->DisconnectTime() >= fShutdownDelay))) {
-                  xps->TerminateProofServ(fMgr->ChangeOwn());
-                  rmsession = 1;
-               }
-            }
-         }
-      }
+      if (!rmsession)
+         rmsession = xps->CheckSession(oldvers, IsReconnecting(),
+                                       fShutdownOpt, fShutdownDelay, fMgr->ChangeOwn(), nc);
 
       // Verify the session: this just sends a request to the session
       // to touch the session file; all this will be done asynchronously;

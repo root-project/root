@@ -978,3 +978,61 @@ void XrdProofdProofServ::SendClusterInfo(int nsess, int nacti)
    }
 
 }
+
+//__________________________________________________________________________
+int XrdProofdProofServ::CheckSession(bool oldvers, bool isrec,
+                                      int shutopt, int shutdel, bool changeown, int &nc)
+{
+   // Calculate the effective number of users on this session nodes
+   // and communicate it to the master together with the total number
+   // of sessions and the number of active sessions. for monitoring issues.
+   XPDLOC(PMGR, "SendClusterInfo")
+
+   XrdOucString emsg;
+   bool rmsession = 0;
+   nc = -1;
+   {  XrdSysMutexHelper mhp(fMutex);
+
+      bool skipcheck = fSkipCheck;
+      fSkipCheck = false;
+
+      if (!skipcheck || oldvers) {
+         nc = 0;
+         // Remove this from the list of clients
+         std::vector<XrdClientID *>::iterator i;
+         for (i = fClients.begin(); i != fClients.end(); ++i) {
+            if ((*i) && (*i)->P() && (*i)->P()->Link()) nc++;
+         }
+         // Check if we need to shutdown it
+         if (nc <= 0 && (!isrec || oldvers)) {
+            int idlet = -1, disct = -1, now = time(0);
+            if (fStatus == kXPD_idle)
+               idlet = now - fSetIdleTime;
+            if (idlet <= 0) idlet = -1;
+            if (fDisconnectTime > 0)
+               disct = now - fDisconnectTime;
+            if (disct <= 0) disct = -1;
+            if ((fSrvType != kXPD_TopMaster) ||
+                (shutopt == 1 && (idlet >= shutdel)) ||
+                (shutopt == 2 && (disct >= shutdel))) {
+               // Send a terminate signal to the proofserv
+               if (fSrvPID > -1) {
+                  XrdProofUI ui;
+                  XrdProofdAux::GetUserInfo(fClient.c_str(), ui);
+                  if (XrdProofdAux::KillProcess(fSrvPID, 0, ui, changeown) != 0) {
+                     XPDFORM(emsg, "ord: problems signalling process: %d", fSrvPID);
+                  }
+                  fIsShutdown = true;
+               }
+               rmsession = 1;
+            }
+         }
+      }
+   }
+   // Notify error, if any
+   if (emsg.length() > 0) {
+      TRACE(XERR,emsg.c_str());
+   }
+   // Done
+   return rmsession;
+}

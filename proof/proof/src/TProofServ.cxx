@@ -3355,6 +3355,8 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Set not idle
       SetIdle(kFALSE);
 
+      // Cleanup the player
+      Bool_t deleteplayer = kTRUE;
       MakePlayer();
 
       // Setup data set
@@ -3451,6 +3453,9 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Set idle
          SetIdle(kTRUE);
 
+         // Do not leanup the player yet: it will be used in sub-merging activities
+         deleteplayer = kFALSE;
+
          PDB(kSubmerger, 2) Info("HandleProcess", "worker %s has finished", fOrdinal.Data());
 
       } else {
@@ -3483,6 +3488,9 @@ void TProofServ::HandleProcess(TMessage *mess)
       fPlayer->GetInputList()->SetOwner(0);
       input->SetOwner();
       SafeDelete(input);
+
+      // Cleanup if required
+      if (deleteplayer) DeletePlayer();
    }
 
    PDB(kGlobal, 1) Info("HandleProcess", "done");
@@ -5486,6 +5494,9 @@ void TProofServ::MakePlayer()
 
    TVirtualProofPlayer *p = 0;
 
+   // Cleanup first
+   DeletePlayer();
+
    if (IsParallel()) {
       // remote mode
       p = fProof->MakePlayer();
@@ -5508,7 +5519,7 @@ void TProofServ::DeletePlayer()
    if (IsMaster()) {
       if (fProof) fProof->SetPlayer(0);
    } else {
-      delete fPlayer;
+      SafeDelete(fPlayer);
    }
    fPlayer = 0;
 }
@@ -5873,6 +5884,8 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                Error("HandleSubmerger", "kSendOutput: received not on worker");	
             }
 
+            // Cleanup
+            DeletePlayer();
          }
          break;
       case TProof::kBeMerger:
@@ -5942,6 +5955,8 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                Error("HandleSubmerger","kSendOutput: received not on worker");	
             }
 
+            // Cleanup
+            DeletePlayer();
          }
          break;
 

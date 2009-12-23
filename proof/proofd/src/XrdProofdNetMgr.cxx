@@ -173,6 +173,11 @@ int XrdProofdNetMgr::Config(bool rcf)
       FindUniqueNodes();
    }
 
+   // For connection to the other xproofds we try only once
+   XrdProofConn::SetRetryParam(1, 1);
+   // Request Timeout
+   EnvPutInt(NAME_REQUESTTIMEOUT, fRequestTO);
+
    // Notification
    XPDFORM(msg, "%d worker nodes defined at start-up", fWorkers.size() - 1);
    TRACE(ALL, msg);
@@ -356,16 +361,9 @@ int XrdProofdNetMgr::BroadcastCtrlC(const char *usr)
             if (w->fPort != -1) {
                u += ':'; u += w->fPort;
             }
-            // Atomic
-            XrdSysMutexHelper mhp(fMutex);
             // Get a connection to the server
             XrdProofConn *conn = GetProofConn(u.c_str());
             if (conn && conn->IsValid()) {
-               // For requests we try 1 times
-               int maxtry_save = -1;
-               int timewait_save = -1;
-               XrdProofConn::GetRetryParam(maxtry_save, timewait_save);
-               XrdProofConn::SetRetryParam(1, timewait_save);
                // Prepare request
                XPClientRequest reqhdr;
                memset(&reqhdr, 0, sizeof(reqhdr) );
@@ -381,8 +379,9 @@ int XrdProofdNetMgr::BroadcastCtrlC(const char *usr)
                if (conn->LowWrite(&reqhdr, 0, 0) != kOK) {
                    TRACE(XERR, "problems sending ctrl-c request to server " << u);
                }
-               // Reset to initial settings
-               XrdProofConn::SetRetryParam(maxtry_save, timewait_save);
+               // Clean it up, to avoid leaving open tcp connection possibly going forever
+               // into CLOSE_WAIT
+               SafeDelete(conn);
             }
          } else {
             TRACE(DBG, "broadcast request for ourselves: ignore");
@@ -454,21 +453,8 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
 XrdProofConn *XrdProofdNetMgr::GetProofConn(const char *url)
 {
    // Get a XrdProofConn for url; create a new one if not available
-   XPDLOC(NMGR, "NetMgr::GetProofConn")
-
-   XrdSysMutexHelper mhp(fMutex);
 
    XrdProofConn *p = 0;
-   if (fProofConnHash.Num() > 0) {
-      if ((p = fProofConnHash.Find(url)) && (p->IsValid())) {
-         // Valid connection exists
-         TRACE(DBG, "found valid connection for "<<url);
-         return p;
-      }
-      // If the connection is invalid connection clean it up
-      SafeDelete(p);
-      fProofConnHash.Del(url);
-   }
 
    // If not found create a new one
    XrdOucString buf = " Manager connection from ";
@@ -476,26 +462,10 @@ XrdProofConn *XrdProofdNetMgr::GetProofConn(const char *url)
    buf += "|ord:000";
    char m = 'A'; // log as admin
 
-   // We try only once
-   int maxtry_save = -1;
-   int timewait_save = -1;
-   XrdProofConn::GetRetryParam(maxtry_save, timewait_save);
-   XrdProofConn::SetRetryParam(1, 1);
-
-   // Request Timeout
-   EnvPutInt(NAME_REQUESTTIMEOUT, fRequestTO);
-
-   if ((p = new XrdProofConn(url, m, -1, -1, 0, buf.c_str()))) {
-      if (p->IsValid()) {
-         // Cache it
-         fProofConnHash.Rep(url, p, 0, Hash_keepdata);
-      } else {
-         SafeDelete(p);
-      }
+   {  XrdSysMutexHelper mhp(fMutex);
+      p = new XrdProofConn(url, m, -1, -1, 0, buf.c_str());
    }
-
-   // Restore original retry parameters
-   XrdProofConn::SetRetryParam(maxtry_save, timewait_save);
+   if (p && !(p->IsValid())) SafeDelete(p);
 
    // Done
    return p;
@@ -517,17 +487,8 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
    if (!url || strlen(url) <= 0)
       return xrsp;
 
-   // Atomic
-   XrdSysMutexHelper mhp(fMutex);
-
    // Get a connection to the server
    XrdProofConn *conn = GetProofConn(url);
-
-   // For requests we try 4 times
-   int maxtry_save = -1;
-   int timewait_save = -1;
-   XrdProofConn::GetRetryParam(maxtry_save, timewait_save);
-   XrdProofConn::SetRetryParam(4, timewait_save);
 
    bool ok = 1;
    if (conn && conn->IsValid()) {
@@ -596,6 +557,9 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
          cmsg += conn->GetLastErr();
          r->Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
       }
+      // Clean it up, to avoid leaving open tcp connection possibly going forever
+      // into CLOSE_WAIT
+      SafeDelete(conn);
 
    } else {
       TRACE(XERR, "could not open connection to "<<url);
@@ -605,9 +569,6 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
          r->Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
       }
    }
-
-   // Restore original retry parameters
-   XrdProofConn::SetRetryParam(maxtry_save, timewait_save);
 
    // Done
    return xrsp;
@@ -1091,6 +1052,9 @@ char *XrdProofdNetMgr::ReadBufferRemote(const char *url, const char *file,
 
       // Clean the message
       SafeDelete(xrsp);
+      // Clean it up, to avoid leaving open tcp connection possibly going forever
+      // into CLOSE_WAIT
+      SafeDelete(conn);
    }
 
    // Done
@@ -1145,6 +1109,9 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
 
       // Clean the message
       SafeDelete(xrsp);
+      // Clean it up, to avoid leaving open tcp connection possibly going forever
+      // into CLOSE_WAIT
+      SafeDelete(conn);
    }
 
    // Done
