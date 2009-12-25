@@ -1807,6 +1807,7 @@ void TGraph::RecursiveRemove(TObject *obj)
    if (fFunctions) {
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
    }
+   if (fHistogram == obj) fHistogram = 0;
 }
 
 
