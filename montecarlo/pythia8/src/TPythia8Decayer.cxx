@@ -44,6 +44,8 @@ void TPythia8Decayer::Decay(Int_t pdg, TLorentzVector* p)
    // Decay a single particle
    ClearEvent();
    AppendParticle(pdg, p);
+   Int_t idPart = fPythia8->Pythia8()->event[0].id();
+   fPythia8->Pythia8()->particleData.mayDecay(idPart,kTRUE);
    fPythia8->Pythia8()->moreDecays();
    if (fDebug > 0) fPythia8->EventListing();
 }
