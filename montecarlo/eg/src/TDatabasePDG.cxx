@@ -561,7 +561,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
    Double_t  mass, width, branching_ratio;
    Int_t     dau[20];
 
-   Int_t     idecay, decay_type, flavor, ndau;
+   Int_t     idecay, decay_type, flavor, ndau, stable;
 
    while ( (c[0]=getc(file)) != EOF) {
 
@@ -591,14 +591,15 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
             fscanf(file,"%i",&nch);
             // nothing more on this line
             fgets(c,200,file);
-
+            if (width > 1e-10) stable = 0;
+            else               stable = 1;
 
             // create particle
 
             TParticlePDG* part = AddParticle(name,
                                              name,
                                              mass,
-                                             1,
+                                             stable,
                                              width,
                                              charge,
                                              class_name,
