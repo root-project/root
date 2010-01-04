@@ -49,7 +49,7 @@ selection expression when drawing TTrees expressions of 1-d, 2-d or
 3-dimensions. The expressions used in TTree::Draw can reference the variables in
 the fVarX, fVarY of the graphical cut plus other variables.
 <p>
-When the TCutG object is created, it is added to the list of special objects in
+When the TCutG object is created by TTree::Draw, it is added to the list of special objects in
 the main TROOT object pointed by gROOT. To retrieve a pointer to this object
 from the code or command line, do:
 <pre>
@@ -57,6 +57,21 @@ from the code or command line, do:
     mycutg = (TCutG*)gROOT->GetListOfSpecials()->FindObject("CUTG")
     mycutg->SetName("mycutg");
 </pre>
+<p>
+When the TCutG is not created via TTree::Draw, one must set the variable names
+corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
+<pre>
+   TCutG *cutg = new TCutG("mycut",5);
+   cutg->SetVarX("y");
+   cutg->SetVarY("x");
+   cutg->SetPoint(0,-0.3586207,1.509534);
+   cutg->SetPoint(1,-1.894181,-0.529661);
+   cutg->SetPoint(2,0.07780173,-1.21822);
+   cutg->SetPoint(3,-1.0375,-0.07944915);
+   cutg->SetPoint(4,0.756681,0.1853814);
+   cutg->SetPoint(5,-0.3586207,1.509534);
+</pre>
+   
 Example of use of a TCutG in TTree::Draw:
 <pre>
        tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
