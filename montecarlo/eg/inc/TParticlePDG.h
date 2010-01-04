@@ -29,7 +29,7 @@ protected:
   Int_t            fPdgCode;                    // PDG code of the particle
   Double_t         fMass;                       // particle mass in GeV
   Double_t         fCharge;                     // charge in units of |e|/3
-  Double_t         fLifetime;                   // proper lifetime in nanoseconds
+  Double_t         fLifetime;                   // proper lifetime in seconds
   Double_t         fWidth;                      // total width in GeV
   Int_t            fParity;
   Double_t         fSpin;
