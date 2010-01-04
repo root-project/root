@@ -241,6 +241,43 @@ TCutG::~TCutG()
    gROOT->GetListOfSpecials()->Remove(this);
 }
 
+//______________________________________________________________________________
+Double_t TCutG::Area() const
+{
+   // Compute the area inside this TCutG
+   // The algorithm uses Stoke's theorem over the border of the closed polygon.
+   // Just as a reminder: Stoke's theorem reduces a surface integral
+   // to a line integral over the border of the surface integral.
+   Double_t a = 0;
+   Int_t n = GetN();
+   for (Int_t i=0;i<n-1;i++) {
+      a += (fX[i]-fX[i+1])*(fY[i]+fY[i+1]);
+   }
+   a *= 0.5;
+   return a;   
+}
+
+//______________________________________________________________________________
+void TCutG::Center(Double_t &cx, Double_t &cy) const
+{
+   // Compute the center x,y of this TCutG
+   // The algorithm uses Stoke's theorem over the border of the closed polygon.
+   // Just as a reminder: Stoke's theorem reduces a surface integral
+   // to a line integral over the border of the surface integral.
+   Int_t n = GetN();
+   Double_t a  = 0;
+   cx = cy = 0;
+   Double_t t;
+   for (Int_t i=0;i<n-1;i++) {
+      t   = 2*fX[i]*fY[i] + fY[i]*fX[i+1] + fX[i]*fY[i+1] + 2*fX[i+1]*fY[i+1];
+      cx += (fX[i]-fX[i+1])*t;
+      cy += (-fY[i]+fY[i+1])*t;
+      a  += (fX[i]-fX[i+1])*(fY[i]+fY[i+1]);
+   }
+   a  *= 0.5;
+   cx *= 1./(6*a);
+   cy *= 1./(6*a);
+}
 
 //______________________________________________________________________________
 Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const

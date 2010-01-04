@@ -41,17 +41,19 @@ public:
    TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y);
    TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y);
    virtual ~TCutG();
-   TObject       *GetObjectX() const {return fObjectX;}
-   TObject       *GetObjectY() const {return fObjectY;}
-   const char    *GetVarX() const {return fVarX.Data();}
-   const char    *GetVarY() const {return fVarY.Data();}
-   Double_t       IntegralHist(TH2 *h, Option_t *option="") const;
-   virtual Int_t  IsInside(Double_t x, Double_t y) const;
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void   SetObjectX(TObject *obj) {fObjectX = obj;}
-   virtual void   SetObjectY(TObject *obj) {fObjectY = obj;}
-   virtual void   SetVarX(const char *varx); // *MENU*
-   virtual void   SetVarY(const char *vary); // *MENU*
+   virtual Double_t Area() const;
+   virtual void     Center(Double_t &cx, Double_t &cy) const;
+   TObject         *GetObjectX() const {return fObjectX;}
+   TObject         *GetObjectY() const {return fObjectY;}
+   const char      *GetVarX() const {return fVarX.Data();}
+   const char      *GetVarY() const {return fVarY.Data();}
+   virtual Double_t IntegralHist(TH2 *h, Option_t *option="") const;
+   virtual Int_t    IsInside(Double_t x, Double_t y) const;
+   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SetObjectX(TObject *obj) {fObjectX = obj;}
+   virtual void     SetObjectY(TObject *obj) {fObjectY = obj;}
+   virtual void     SetVarX(const char *varx); // *MENU*
+   virtual void     SetVarY(const char *vary); // *MENU*
 
    ClassDef(TCutG,2)  // A Graphical cut.
 };
