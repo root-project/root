@@ -2961,14 +2961,14 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
 //______________________________________________________________________________
 Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
 {
-//   -*-*-*-*Return Global bin number corresponding to x,y,z*-*-*-*-*-*-*
-//           ===============================================
+//   Return Global bin number corresponding to x,y,z
+//   ===============================================
 //
 //      2-D and 3-D histograms are represented with a one dimensional
 //      structure.
 //      This has the advantage that all existing functions, such as
 //        GetBinContent, GetBinError, GetBinFunction work for all dimensions.
-//     See also TH1::GetBin
+//     See also TH1::GetBin, TAxis::FindBin and TAXis::FindFixBin
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (GetDimension() < 2) {
