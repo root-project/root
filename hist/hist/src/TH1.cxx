@@ -2968,7 +2968,7 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
 //      structure.
 //      This has the advantage that all existing functions, such as
 //        GetBinContent, GetBinError, GetBinFunction work for all dimensions.
-//     See also TH1::GetBin, TAxis::FindBin and TAXis::FindFixBin
+//     See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (GetDimension() < 2) {
