@@ -928,14 +928,24 @@ void TProof::ParseConfigField(const char *config)
       cmd.Form("%svalgrind -v --suppressions=<rootsys>/etc/valgrind-root.supp", cq);
       TString mstlab("NO"), wrklab("NO");
       if (vgconf == "valgrind" || vgconf.Contains("master")) {
-         // Check if we have to add a var
-         if (mst == "" || mst.BeginsWith("valgrind_opts:")) {
-            mst.ReplaceAll("valgrind_opts:","");
-            var.Form("%s --log-file=<logfilemst>.valgrind.log %s", cmd.Data(), mst.Data());
-            TProof::AddEnvVar("PROOF_MASTER_WRAPPERCMD", var);
-            mstlab = "YES";
-         } else if (mst != "") {
-            mstlab = "YES";
+         if (!IsLite()) {
+            // Check if we have to add a var
+            if (mst == "" || mst.BeginsWith("valgrind_opts:")) {
+               mst.ReplaceAll("valgrind_opts:","");
+               var.Form("%s --log-file=<logfilemst>.valgrind.log %s", cmd.Data(), mst.Data());
+               TProof::AddEnvVar("PROOF_MASTER_WRAPPERCMD", var);
+               mstlab = "YES";
+            } else if (mst != "") {
+               mstlab = "YES";
+            }
+         } else {
+            if (vgconf.Contains("master")) {
+               Warning("ParseConfigField",
+                       "master valgrinding does not make sense for PROOF-Lite: ignoring");
+               vgconf.ReplaceAll("master", "");
+               if (!vgconf.Contains("workers")) return;
+            }
+            if (vgconf == "valgrind" || vgconf == "valgrind=") vgconf = "valgrind=workers";
          }
       }
       if (vgconf.Contains("=workers") || vgconf.Contains("+workers")) {
@@ -950,7 +960,12 @@ void TProof::ParseConfigField(const char *config)
                nwrks = vgconf(inw+1, vgconf.Length());
                if (!nwrks.IsDigit()) nwrks = "2";
             }
-            TProof::AddEnvVar("PROOF_NWORKERS", nwrks);
+            // Set the relevant variables
+            if (!IsLite()) {
+               TProof::AddEnvVar("PROOF_NWORKERS", nwrks);
+            } else {
+               gEnv->SetValue("ProofLite.Workers", nwrks.Atoi());
+            }
             wrklab = nwrks;
             // Register the additional worker log in the session file
             // (for the master is done automatically)

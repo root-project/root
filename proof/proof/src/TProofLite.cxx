@@ -101,6 +101,9 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    }
    fMaster = gSystem->HostName();
 
+   // Analysise the conffile field
+   ParseConfigField(conffile);
+
    // Determine the number of workers giving priority to users request.
    // Otherwise use the system information, if available, or just start
    // the minimal number, i.e. 2 .
@@ -144,9 +147,6 @@ Int_t TProofLite::Init(const char *, const char *conffile,
       fConfDir     = confdir;
       fConfFile    = conffile;
    }
-
-   // Analysise the conffile field
-   ParseConfigField(conffile);
 
    // The sandbox for this session
    if (CreateSandbox() != 0) {
