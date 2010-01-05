@@ -3574,7 +3574,7 @@ Int_t TTree::Fill()
       if ((fZipBytes - fFlushedBytes) > -fAutoFlush) {
          if (fFlushedBytes <= 0) {
             //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
-            OptimizeBaskets(fTotBytes,1,"");
+            OptimizeBaskets(-fAutoFlush,1,"");
             if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          }
          fFlushedBytes = fZipBytes;
@@ -5187,6 +5187,7 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
    TObjArray *leaves = this->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntries();
    Double_t treeSize = (Double_t)this->GetTotBytes();
+   
    if (nleaves == 0 || treeSize == 0) {
       // We're being called too early, we really have nothing to do ...
       return;
@@ -5218,10 +5219,12 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
             continue;
          }
          Double_t bsize = oldBsize*idealFactor*memFactor; //bsize can be very large !
+         if (bsize < 0) bsize = bmax;
          if (bsize > bmax) bsize = bmax;
          Int_t newBsize = Int_t(bsize);
          newBsize = newBsize - newBsize%512;
          if (newBsize < bmin) newBsize = bmin;
+         if (newBsize > 10000000) newBsize = bmax;
          if (pass) {
             if (pDebug) printf("Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
             branch->SetBasketSize(newBsize);
@@ -5238,6 +5241,7 @@ void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
          }
       }
       memFactor = Double_t(maxMemory)/Double_t(newMemsize);
+      if (memFactor > 100) memFactor = 100;
       bmin = Int_t(bmin*memFactor);
       bmax = Int_t(bmax*memFactor);
    }
