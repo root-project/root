@@ -32,3 +32,22 @@
      </pre>
 </ul>
 
+<h4>THistPainter</h4>
+<ul>
+<li> After executing the following macro, zooming the X axis interactively
+     generated the error message:
+     <br>
+     <tt>Error in <TGraphPainter::PaintGraphHist>: X must have N+1 values with option N </tt>
+     <pre>
+     {
+        int n = 70;
+        TH1F h("h","test",n,0.,30.);
+        TRandom3 rndm_engine;
+        for (int i=0; i<10000; ++i) h->Fill(rndm_engine->Gaus(15.,4.));
+        TF1 f("f","gaus");
+        h->Fit("f");
+        gPad->SetLogx();
+     }
+     </pre>
+</ul>
+
