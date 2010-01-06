@@ -5221,7 +5221,8 @@ void THistPainter::PaintHist(Option_t *)
 
    if (fixbin) { keepx[0] = Hparam.xmin; keepx[1] = Hparam.xmax; }
    else {
-      for (i=0; i<=nbins; i++) keepx[i] = fXaxis->GetBinLowEdge(i+first);
+      for (i=0; i<nbins; i++) keepx[i] = fXaxis->GetBinLowEdge(i+first);
+      keepx[nbins] = fXaxis->GetBinUpEdge(nbins-1+first);
    }
 
    //         Prepare Fill area (systematic with option "Bar").
