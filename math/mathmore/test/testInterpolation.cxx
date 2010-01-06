@@ -58,10 +58,10 @@ void testInterpolation() {
 
    // Create data
    int n = 10; 
-   Float_t xorig[10], yorig[10];
-   std::vector<double> x(n); 
-   std::vector<double> y(n); 
-   for (int i = 0; i < n; ++i) {  
+   Float_t xorig[11], yorig[11];
+   std::vector<double> x(n+1); 
+   std::vector<double> y(n+1); 
+   for (int i = 0; i < n+1; ++i) {  
       x[i] = i + 0.5 * std::sin(i+0.0); 
       y[i] = i + std::cos(i * i+0.0); 
       xorig[i] = x[i];
@@ -72,7 +72,7 @@ void testInterpolation() {
    c1->Divide(2,3);
    c1->cd(1);
 
-   grorig = new TGraph(n,xorig,yorig);
+   grorig = new TGraph(n+1,xorig,yorig);
    grorig->SetMarkerColor(kRed);
    grorig->SetMarkerStyle(20);
    grorig->GetYaxis()->SetRange(0,40);

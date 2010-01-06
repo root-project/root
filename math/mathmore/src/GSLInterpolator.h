@@ -40,6 +40,8 @@
 #include "gsl/gsl_interp.h"
 #include "gsl/gsl_spline.h"
 
+#include "gsl/gsl_errno.h"
+#include "Math/Error.h"
 
 namespace ROOT {
 namespace Math {
@@ -71,23 +73,36 @@ namespace Math {
       double Eval( double x ) const
       {
          assert(fAccel);
-         return gsl_spline_eval(fSpline, x, fAccel ); 
+         double y = 0; 
+         int ierr = gsl_spline_eval_e(fSpline, x, fAccel, &y );  
+         if (ierr) MATH_WARN_MSG("GSLInterpolator::Eval",gsl_strerror(ierr) )
+         return y;
       }
       
       double Deriv( double x ) const 
       {
          assert(fAccel);
-         return gsl_spline_eval_deriv(fSpline, x, fAccel );  
+         double deriv = 0; 
+         int ierr = gsl_spline_eval_deriv_e(fSpline, x, fAccel, &deriv );  
+         if (ierr) MATH_WARN_MSG("GSLInterpolator::Deriv",gsl_strerror(ierr) )
+         return deriv;
       }
       
       double Deriv2( double x ) const {  
          assert(fAccel);
-         return gsl_spline_eval_deriv2(fSpline, x, fAccel );  
+         double deriv2 = 0; 
+         int ierr = gsl_spline_eval_deriv2_e(fSpline, x, fAccel, &deriv2 );  
+         if (ierr) MATH_WARN_MSG("GSLInterpolator::Deriv2",gsl_strerror(ierr) )
+         return deriv2;
       }
       
       double Integ( double a, double b) const { 
+         if ( a > b) return -Integ(b,a);  // gsl will report an error in this case
          assert(fAccel);
-         return gsl_spline_eval_integ(fSpline, a, b, fAccel );  
+         double result = 0; 
+         int ierr = gsl_spline_eval_integ_e(fSpline, a, b, fAccel, &result );  
+         if (ierr) MATH_WARN_MSG("GSLInterpolator::Integ",gsl_strerror(ierr) )
+         return result;
       }
       
       std::string Name() { 
