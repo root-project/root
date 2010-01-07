@@ -53,10 +53,12 @@ type=`uname -s`
 compile_log=config.log
 rm -f $compile.log
 
-# The temporary dir
+# The temporary dir ... unique, to avoid problems with shared temp directories
 xrdtmpdir="$TMPDIR"
-if test "x$xrdtmpdir" = "x" ; then
-   xrdtmpdir="/tmp"
+if test "x$TMPDIR" = "x" || test ! -d $TMPDIR; then
+   xrdtmpdir=`mktemp -d /tmp/xrootd-configure-classic-XXXXXX`
+else
+   xrdtmpdir=`mktemp -d $TMPDIR/xrootd-configure-classic-XXXXXX`
 fi
 
 options="                 \
@@ -485,8 +487,10 @@ check_prototype() {
         echo "check_prototype: no test program for $1"
         return 1
     fi
+
+    # Copy a version of the test program
     testtmp="test-comp"
-    testcc="$xrdtmpdir/$testtmp.cc"
+    testcc=$xrdtmpdir/$testtmp.cc
     rm -f "$testcc"
     cp -rp $testfile "$testcc"
 
@@ -517,7 +521,9 @@ check_prototype() {
        else
           cat $outfiletmp >> $compile_log
        fi
-    else
+    fi
+    # Cleanup
+    if test -f $outfiletmp ; then
        rm -fr $outfiletmp
     fi
 }
@@ -2756,5 +2762,20 @@ sed -e "s|@dbgsfx@|$dbgsfx|g"   \
 rm -f GNUmake.options.tmp
 
 echo "done"
+
+#---------------------------------------------------------------------
+# Cleanup the temp directory
+#
+if test -d $xrdtmpdir ; then
+   message "Cleaning $xrdtmpdir "
+   rm -fr $xrdtmpdir
+   echo "done"
+else
+   if test "x$xrdtmpdir" = "x" ; then
+      echo "No temp directory to be cleaned"
+   else
+      echo "Temp directory $xrdtmpdir does not exist any longer!"
+   fi
+fi
 
 exit 0
