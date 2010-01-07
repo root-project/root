@@ -324,10 +324,10 @@ public:
    XrdOucString &operator=(const XrdOucString s);
 
    // Add operators
-   XrdOucString &operator+(const int i);
-   XrdOucString &operator+(const char c);
-   XrdOucString &operator+(const char *s);
-   XrdOucString &operator+(const XrdOucString s);
+   friend XrdOucString operator+(const XrdOucString &s1, const int i);
+   friend XrdOucString operator+(const XrdOucString &s1, const char c);
+   friend XrdOucString operator+(const XrdOucString &s1, const char *s);
+   friend XrdOucString operator+(const XrdOucString &s1, const XrdOucString &s);
    XrdOucString &operator+=(const int i);
    XrdOucString &operator+=(const char c);
    XrdOucString &operator+=(const char *s);

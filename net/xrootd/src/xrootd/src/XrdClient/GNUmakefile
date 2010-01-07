@@ -583,7 +583,7 @@ $(OBJDIR)/XrdCommandLine.o: XrdCommandLine.cc ../XrdClient/XrdClientUrlInfo.hh \
   ../XrdClient/XrdClientSock.hh ../XrdClient/XrdClientConn.hh \
   ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientReadCache.hh \
   ../XrdClient/XrdClientInputBuffer.hh ../XrdSys/XrdSysSemWait.hh \
-  ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
+  ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc  ../XrdOuc/XrdOucString.hh \
   ../XrdClient/XrdClientVector.hh ../XrdClient/XrdClientPSock.hh \
   ../XrdClient/XrdClientDebug.hh ../XrdClient/XrdClientEnv.hh \
   ../XrdOuc/XrdOucEnv.hh ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysLogger.hh \
@@ -607,7 +607,7 @@ $(OBJDIR)/XrdCpWorkLst.o: XrdCpWorkLst.cc ../XrdClient/XrdCpWorkLst.hh \
   ../XrdClient/XrdClientConn.hh ../XrdClient/XrdClientConst.hh \
   ../XrdClient/XrdClientReadCache.hh ../XrdClient/XrdClientInputBuffer.hh \
   ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh \
-  ../XrdSys/XrdSysSemWait.hh ../XrdOuc/XrdOucHash.hh \
+  ../XrdSys/XrdSysSemWait.hh ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucString.hh \
   ../XrdOuc/XrdOucHash.icc ../XrdClient/XrdClientVector.hh \
   ../XrdSys/XrdSysHeaders.hh \
   ../XrdClient/XrdClient.hh

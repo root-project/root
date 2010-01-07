@@ -2010,7 +2010,7 @@ bool XrdSecProtocolpwd::CheckCredsAFS(XrdSutBucket *creds, int ctype)
       memcpy(pwd, creds->buffer, creds->size);
       pwd[creds->size] = 0;
       rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
-                                      usr, "", "", pwd,
+                                      usr, (char *)"", (char *)"", pwd,
                                       life, 0, 0, &errmsg);
       if (rc) {
          if (notify)
