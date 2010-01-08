@@ -1,5 +1,6 @@
 #include "Math/Random.h"
 #include "Math/GSLRndmEngines.h"
+#include "Math/DistFunc.h"
 #include "TStopwatch.h"
 #include "TRandom3.h"
 #include "TRandom2.h"
@@ -51,9 +52,11 @@ void testDiff(TH1D & h1, TH1D & h2, const std::string & name="") {
   double chi2; 
   int ndf; 
   if (h1.GetEntries() == 0 && h2.GetEntries() == 0) return; 
-  int igood; 
+  int igood = 0; 
   double prob = h1.Chi2TestX(&h2,chi2,ndf,igood,"UU"); 
-  std::cout << " Test " << name << " chi2 = " << chi2 << " ndf " << ndf << " prob = " << prob << std::endl << " igood = " << igood << std::endl << std::endl; 
+  std::cout << "\nTest " << name << " chi2 = " << chi2 << " ndf " << ndf << " prob = " << prob;
+  if (igood) std::cout << " \t\t" << " igood = " << igood;
+  std::cout << std::endl; 
 
   std::string cname="c1_" + name; 
   std::string ctitle="Test of " + name; 
@@ -471,6 +474,64 @@ void testBinomialCLHEP( R & r,int ntot,double p,TH1D & h) {
 
 
 template <class R> 
+void testMultinomial( R & r,int ntot, TH1D & h1, TH1D & h2) { 
+
+   // generates the p distribution
+   const int nbins = h1.GetNbinsX();
+   std::vector<double> p(nbins);
+   double psum = 0;
+   for (int i = 0; i < nbins; ++i) { 
+      double x1 = h1.GetBinLowEdge(i+1);
+      double x2 = x1 + h1.GetBinWidth(i+1);
+      p[i] = ROOT::Math::normal_cdf(x2) -  ROOT::Math::normal_cdf(x1);
+      psum += p[i];
+   }
+   //std::cout << " psum  = " << psum << std::endl;
+   // generate the multinomial 
+   TStopwatch w; 
+   int n = NEVT/10;
+   if (fillHist) n = 1;
+
+   for (int i = 0; i < n; ++i) { 
+      std::vector<unsigned int> multDist = r.Multinomial(ntot,p);
+      if (fillHist) { 
+         for (int j = 0; j < nbins; ++j) h1.SetBinContent(j+1,multDist[j]); 
+      }
+   }
+   w.Stop();
+
+   if (!fillHist) {
+      std::cout << "Multinomial - nb, ntot = " << nbins << " , " << ntot  << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/n << " \t" 
+                << w.CpuTime()*1.0E9/n 
+                << "\t(ns/call)" << std::endl;   
+   }
+
+   // check now time using poisson distribution
+
+   w.Start();
+   for (int i = 0; i < n; ++i) { 
+      for (int j = 0; j < nbins; ++j) { 
+         double y  = r.Poisson(ntot*p[j]);
+         if (fillHist) h2.SetBinContent(j+1,y);
+      }
+   }
+   w.Stop();
+   if (!fillHist) {
+      std::cout << "Multi-Poisson - nb, ntot = " << nbins << " , " << ntot  << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/n << " \t" 
+                << w.CpuTime()*1.0E9/n 
+                << "\t(ns/call)" << std::endl;   
+   }
+
+   if (fillHist) { fillHist=false; return; }  
+
+   // fill histogram the second pass
+   fillHist = true; 
+   testMultinomial(r,ntot,h1,h2);
+
+}
+
+
+template <class R> 
 void testExp( R & r,TH1D & h) { 
 
   TStopwatch w; 
@@ -588,8 +649,6 @@ void testSphere( R & r,TH1D & h1, TH1D & h2 ) {
 }
 
 
-
-
 int testRandomDist() {
 
   std::cout << "***************************************************\n"; 
@@ -628,6 +687,7 @@ int testRandomDist() {
 
 
   // Poisson 
+  std::cout << std::endl; 
 
   double mu = 25; 
   xmin = std::floor(std::max(0.0,mu-5*std::sqrt(mu) ) );
@@ -654,6 +714,7 @@ int testRandomDist() {
 #endif
 
   // Gaussian
+  std::cout << std::endl; 
 
   TH1D hg1("hg1","Gaussian ROOT",nch,xmin,xmax);
   TH1D hg2("hg2","Gaussian GSL",nch,xmin,xmax);
@@ -675,6 +736,7 @@ int testRandomDist() {
   testDiff(hg1,hg3,"Gaussian ROOT_UNR");
 
   // Landau
+  std::cout << std::endl; 
 
   TH1D hl1("hl1","Landau ROOT",300,0,50);
   TH1D hl2("hl2","Landau  GSL",300,0,50);
@@ -684,6 +746,7 @@ int testRandomDist() {
   testDiff(hl1,hl2,"Landau");
 
   // Breit Wigner
+  std::cout << std::endl; 
 
   TH1D hbw1("hbw1","BreitWigner ROOT",nch,xmin,xmax);
   TH1D hbw2("hbw2","BreitWigner GSL",nch,xmin,xmax);
@@ -694,6 +757,7 @@ int testRandomDist() {
   testDiff(hbw1,hbw2,"Breit-Wigner");
 
   // binomial
+  std::cout << std::endl; 
 
   int ntot = 100;
   double p =0.1;
@@ -718,8 +782,21 @@ int testRandomDist() {
   testDiff(hb1,hb2,"Binomial ROOT-GSL");
   testDiff(hb1,hb3,"Binomial ROOT-UNR");
 
+  // multinomial
+  std::cout << std::endl; 
+
+  TH1D hmt1("hmt1","Multinomial GSL",30,-3,3);
+  TH1D hmt2("hmt2","Multi-Poisson GSL",30,-3,3);
+  TH1D hmt3("hmt3","Gaus",30,-3,3);
+  ntot = 10000; 
+  testMultinomial(r,ntot,hmt1,hmt2);
+  hmt3.FillRandom("gaus",ntot);
+  testDiff(hmt1,hmt2,"Multinomial-Poisson");
+  testDiff(hmt1,hmt3,"Multinomial-gaus");
+  
 
   // exponential
+  std::cout << std::endl; 
 
   TH1D he1("he1","Exp  ROOT",300,0,20);
   TH1D he2("he2","Exp  GSL",300,0,20);
@@ -729,6 +806,8 @@ int testRandomDist() {
   testDiff(he1,he2,"Exponential");
 
   // circle
+  std::cout << std::endl; 
+
   TH1D hc1("hc1","Circle  ROOT",300,-PI,PI);
   TH1D hc2("hc2","Circle  GSL",300,-PI,PI);
 
@@ -738,6 +817,7 @@ int testRandomDist() {
 
 
   // sphere
+  std::cout << std::endl; 
 
   TH1D hs1("hs1","Sphere-Phi ROOT",300,-PI,PI);
   TH1D hs2("hs2","Sphere-Phi  GSL ",300,-PI,PI);
@@ -748,7 +828,6 @@ int testRandomDist() {
   testSphere(tr,hs2,hs4);
   testDiff(hs1,hs2,"Sphere-phi");
   testDiff(hs3,hs4,"Sphere-theta");
-
 
 
   return 0;
