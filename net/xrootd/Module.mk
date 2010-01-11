@@ -208,8 +208,8 @@ $(XROOTDMAKE): $(XROOTDCFGD)
 		GNUMAKE=$(MAKE) ./configure.classic $$xarch $$xopt $(XRDDBG); \
 		rc=$$? ; \
 		if [ $$rc != "0" ] ; then \
-		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):" \
-		   rm -f $(XROOTDMAKE) \
+		   echo "*** Error condition reported by Xrootd-configure (rc = $$rc):"; \
+		   rm -f $(XROOTDMAKE); \
 	 	   exit 1; \
 		fi)
 else
