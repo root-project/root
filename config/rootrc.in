@@ -186,11 +186,12 @@ Gui.IconPath:                $(HOME)/icons:@iconpath@:.
 Gui.MimeTypeFile:            $(HOME)/.root.mimes
 # If above does not exists defaults to this:
 #Gui.MimeTypeFile:            @etcdir@/root.mimes
-Browser.Name:                TRootBrowserLite
+# Type of Browser: TRootBrowser or TRootBrowserLite
+Browser.Name:                TRootBrowser
 # Browser Options (plugins)
 # F: File browser E: Text Editor H: HTML browser 
 # C: Canvas I: I/O redirection P: Proof G: GL viewer
-Browser.Options:             FECI
+Browser.Options:             FCEI
 # Can be either small, big, list, details
 Browser.IconStyle:           small
 # Can be either name, type, size, date
