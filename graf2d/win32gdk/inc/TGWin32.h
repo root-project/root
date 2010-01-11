@@ -407,6 +407,7 @@ public:
 
    Bool_t       GUIThreadMessageFunc(MSG* msg);
    Bool_t       IsCmdThread() const;
+   void         SetUserThreadId(ULong_t id);
 
    static void Lock();
    static void Unlock();

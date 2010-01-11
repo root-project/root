@@ -128,6 +128,7 @@ TGWin32ProxyBasePrivate::~TGWin32ProxyBasePrivate()
 ULong_t TGWin32ProxyBase::fgPostMessageId = 0;
 ULong_t TGWin32ProxyBase::fgPingMessageId = 0;
 ULong_t TGWin32ProxyBase::fgMainThreadId = 0;
+ULong_t TGWin32ProxyBase::fgUserThreadId = 0;
 Long_t  TGWin32ProxyBase::fgLock = 0;
 UInt_t  TGWin32ProxyBase::fMaxResponseTime = 0;
 
@@ -279,7 +280,8 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
 
    // if it is a call to gVirtualX and comes from a secondary thread, 
    // delay it and process it via the main thread (to avoid deadlocks).
-   if ((fIsVirtualX) && (GetCurrentThreadId() != fgMainThreadId) &&
+   if (!fgUserThreadId && fIsVirtualX && 
+       (GetCurrentThreadId() != fgMainThreadId) &&
        (fListOfCallBacks->GetSize() < fBatchLimit))
       batch = kTRUE;
 

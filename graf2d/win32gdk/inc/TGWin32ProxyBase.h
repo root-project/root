@@ -42,6 +42,7 @@ public: // private:
    static ULong_t    fgPostMessageId;     // post message ID
    static ULong_t    fgPingMessageId;     // ping message ID
    static ULong_t    fgMainThreadId;      // main thread ID
+   static ULong_t    fgUserThreadId;      // user (e.g. python) thread ID
 
    static void    Lock();
    static void    Unlock();
