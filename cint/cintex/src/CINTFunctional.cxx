@@ -14,6 +14,7 @@
 #include "CINTdefs.h"
 #include "Api.h"
 #include "CINTFunctional.h"
+#include "RConfig.h"
 
 #ifdef __linux
 #include <sys/mman.h>
@@ -397,7 +398,7 @@ namespace ROOT { namespace Cintex {
    }
 
    //------ Function models-------------------------------------------------------------------
-#if INT_MAX < LONG_MAX
+#ifdef R__B64
 #define FUNCPATTERN 0xFAFAFAFAFAFAFAFAL
 #define DATAPATTERN 0xDADADADADADADADAL
 #else
@@ -428,7 +429,7 @@ namespace ROOT { namespace Cintex {
             if ( *(size_t*)b == DATAPATTERN ) fa_offset = o;
             if ( *(size_t*)b == FUNCPATTERN ) f_offset = o;
             if ( f_offset && fa_offset ) {
-               fSize = (o + 32) & ~0xF;
+               fSize = (o + 256) & ~0xF;
                break;
             }
          }
