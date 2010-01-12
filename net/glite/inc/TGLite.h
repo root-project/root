@@ -58,7 +58,7 @@ public:
    virtual TGridResult* Ls(const char *_ldn = "", Option_t* /*options*/ = "", Bool_t /*verbose*/ = kFALSE);
    virtual const char* Pwd(Bool_t /*verbose*/ = kFALSE);
    virtual Bool_t Cd(const char *_ldn = "", Bool_t /*verbose*/ = kFALSE);
-   virtual Bool_t Mkdir(const char *_ldn = "", Option_t* /*options*/ = "", Bool_t /*verbose*/ = kFALSE);
+   virtual Int_t  Mkdir(const char *_ldn = "", Option_t* /*options*/ = "", Bool_t /*verbose*/ = kFALSE);
    virtual Bool_t Rmdir(const char *_ldn = "", Option_t* /*options*/ = "", Bool_t /*verbose*/ = kFALSE);
    virtual Bool_t Register(const char *_lfn, const char *_turl , Long_t /*size*/ = -1, const char *_se = 0, const char *_guid = 0, Bool_t /*verbose*/ = kFALSE);
    virtual Bool_t Rm(const char *_lfn, Option_t* /*option*/ = "", Bool_t /*verbose*/ = kFALSE);

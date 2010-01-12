@@ -96,7 +96,7 @@ public:
       { MayNotUse("GetHomeDirectory"); return 0; }
    virtual Bool_t Cd(const char* /*ldn*/ ="",Bool_t /*verbose*/ =kFALSE)
       { MayNotUse("Cd"); return kFALSE; }
-   virtual Bool_t Mkdir(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
+   virtual Int_t  Mkdir(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
       { MayNotUse("Mkdir"); return kFALSE; }
    virtual Bool_t Rmdir(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
       { MayNotUse("Mkdir"); return kFALSE; }

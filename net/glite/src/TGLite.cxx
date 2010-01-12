@@ -435,7 +435,7 @@ Bool_t TGLite::Cd(const char *_ldn, Bool_t /*verbose*/)
 
 
 //______________________________________________________________________________
-Bool_t TGLite::Mkdir(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/)
+Int_t TGLite::Mkdir(const char *_ldn, Option_t* /*options*/, Bool_t /*verbose*/)
 {
    // A File Catalog method. Create a new directory on the name server.
    // INPUT:
