@@ -4,6 +4,7 @@
 # It is used by TUnixSystem::StackTrace() on Linux and MacOS X.
 
 tempname=`basename $0 .sh`
+messfile=""
 
 OUTFILE=`mktemp -q /tmp/${tempname}.XXXXXX`
 if test $? -ne 0; then
@@ -216,7 +217,7 @@ $line"
       if test "x$ininterp" = "xyes"; then
          echo ""
          echo ""
-         if test -f $messfile; then
+         if test -f "$messfile"; then
             cat $messfile | tr '%' '\n'
          else
             echo 'The crash is most likely caused by a problem in your script.'
@@ -229,7 +230,7 @@ $line"
       elif ! test "x$frames" = "x"; then
          echo ""
          echo ""
-         if test -f $messfile; then
+         if test -f "$messfile"; then
             cat $messfile | tr '%' '\n'
          else
             echo 'The lines below might hint at the cause of the crash.'
