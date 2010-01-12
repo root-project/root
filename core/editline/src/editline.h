@@ -64,6 +64,14 @@
 */
 #endif
 
+// Generic helper definitions for shared library support hiding readline symbols
+// See http://gcc.gnu.org/wiki/Visibility
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+# define R_EL__LOCAL  __attribute__ ((visibility("hidden")))
+#else
+# define R_EL__LOCAL
+#endif
+
 /* list of readline stuff supported by SEditLine_t library's readline wrapper */
 
 /* typedefs */
@@ -74,77 +82,77 @@ typedef char** CPPFunction (const char*, int, int);
 typedef int (*El_tab_hook_t)(char* buf, int prompt_width, int* cursor_loc);
 typedef int (*El_in_key_hook_t)(int ch);
 
-typedef struct _hist_entry {
+typedef struct R_EL__LOCAL _hist_entry {
    const char* line;
    const char* data;
 } HIST_ENTRY;
 
 /* global variables used by readline enabled applications */
-extern const char* rl_library_version;
-extern const char* rl_readline_name;
-extern FILE* rl_instream;
-extern FILE* rl_outstream;
-extern char* rl_line_buffer;
-extern int rl_point, rl_end;
-extern int history_base, history_length;
-extern int max_input_history;
-extern const char* rl_basic_word_break_characters;
-extern char* rl_completer_word_break_characters;
-extern char* rl_completer_quote_characters;
-extern CPFunction* rl_completion_entry_function;
-extern CPPFunction* rl_attempted_completion_function;
-extern int rl_completion_type;
-extern int rl_completion_query_items;
-extern char* rl_special_prefixes;
-extern int rl_completion_append_character;
-extern El_tab_hook_t rl_tab_hook;
-extern El_tab_hook_t rl_tab_hook;
-extern El_in_key_hook_t rl_in_key_hook;
+extern R_EL__LOCAL const char* rl_library_version;
+extern R_EL__LOCAL const char* rl_readline_name;
+extern R_EL__LOCAL FILE* rl_instream;
+extern R_EL__LOCAL FILE* rl_outstream;
+extern R_EL__LOCAL char* rl_line_buffer;
+extern R_EL__LOCAL int rl_point, rl_end;
+extern R_EL__LOCAL int history_base, history_length;
+extern R_EL__LOCAL int max_input_history;
+extern R_EL__LOCAL const char* rl_basic_word_break_characters;
+extern R_EL__LOCAL char* rl_completer_word_break_characters;
+extern R_EL__LOCAL char* rl_completer_quote_characters;
+extern R_EL__LOCAL CPFunction* rl_completion_entry_function;
+extern R_EL__LOCAL CPPFunction* rl_attempted_completion_function;
+extern R_EL__LOCAL int rl_completion_type;
+extern R_EL__LOCAL int rl_completion_query_items;
+extern R_EL__LOCAL char* rl_special_prefixes;
+extern R_EL__LOCAL int rl_completion_append_character;
+extern R_EL__LOCAL El_tab_hook_t rl_tab_hook;
+extern R_EL__LOCAL El_tab_hook_t rl_tab_hook;
+extern R_EL__LOCAL El_in_key_hook_t rl_in_key_hook;
 
 /* supported functions */
-char* readline(const char*, bool newline);
-int rl_initialize(void);
-bool rl_isinitialized();
+R_EL__LOCAL char* readline(const char*, bool newline);
+R_EL__LOCAL int rl_initialize(void);
+R_EL__LOCAL bool rl_isinitialized();
 
-void setEcho(bool echo);
-void termResize(void);
-void setColors(const char* colorTab, const char* colorTabComp, const char* colorBracket,
+R_EL__LOCAL void setEcho(bool echo);
+R_EL__LOCAL void termResize(void);
+R_EL__LOCAL void setColors(const char* colorTab, const char* colorTabComp, const char* colorBracket,
                const char* colorBadBracket, const char* colorPrompt);
 
-void using_history(void);
-int add_history(char*);
-void clear_history(void);
-void stifle_history(int);
-int unstifle_history(void);
-int history_is_stifled(void);
-int where_history(void);
-HIST_ENTRY* current_history(void);
-HIST_ENTRY* history_get(int);
-int history_total_bytes(void);
-int history_set_pos(int);
-HIST_ENTRY* previous_history(void);
-HIST_ENTRY* next_history(void);
-int history_search(const char*, int);
-int history_search_prefix(const char*, int);
-int history_search_pos(const char*, int, int);
-int read_history(const char*);
-int write_history(const char*);
-int history_expand(char*, char**);
-char** history_tokenize(const char*);
+R_EL__LOCAL void using_history(void);
+R_EL__LOCAL int add_history(char*);
+R_EL__LOCAL void clear_history(void);
+R_EL__LOCAL void stifle_history(int);
+R_EL__LOCAL int unstifle_history(void);
+R_EL__LOCAL int history_is_stifled(void);
+R_EL__LOCAL int where_history(void);
+R_EL__LOCAL HIST_ENTRY* current_history(void);
+R_EL__LOCAL HIST_ENTRY* history_get(int);
+R_EL__LOCAL int history_total_bytes(void);
+R_EL__LOCAL int history_set_pos(int);
+R_EL__LOCAL HIST_ENTRY* previous_history(void);
+R_EL__LOCAL HIST_ENTRY* next_history(void);
+R_EL__LOCAL int history_search(const char*, int);
+R_EL__LOCAL int history_search_prefix(const char*, int);
+R_EL__LOCAL int history_search_pos(const char*, int, int);
+R_EL__LOCAL int read_history(const char*);
+R_EL__LOCAL int write_history(const char*);
+R_EL__LOCAL int history_expand(char*, char**);
+R_EL__LOCAL char** history_tokenize(const char*);
 
-char* tilde_expand(char*);
-char* filename_completion_function(const char*, int);
-char* username_completion_function(const char*, int);
-int rl_complete(int, int);
-int rl_read_key(void);
-char** completion_matches(const char*, CPFunction*);
-void rl_display_match_list(char**, int, int);
+R_EL__LOCAL char* tilde_expand(char*);
+R_EL__LOCAL char* filename_completion_function(const char*, int);
+R_EL__LOCAL char* username_completion_function(const char*, int);
+R_EL__LOCAL int rl_complete(int, int);
+R_EL__LOCAL int rl_read_key(void);
+R_EL__LOCAL char** completion_matches(const char*, CPFunction*);
+R_EL__LOCAL void rl_display_match_list(char**, int, int);
 
-int rl_insert(int, int);
-void rl_reset_terminal(void);
-int rl_bind_key(int, int(*) (int, int));
-int rl_eof(void);
+R_EL__LOCAL int rl_insert(int, int);
+R_EL__LOCAL void rl_reset_terminal(void);
+R_EL__LOCAL int rl_bind_key(int, int(*) (int, int));
+R_EL__LOCAL int rl_eof(void);
 
-void rl_cleanup_after_signal();
+R_EL__LOCAL void rl_cleanup_after_signal();
 
 #endif /* _READLINE_H_ */
