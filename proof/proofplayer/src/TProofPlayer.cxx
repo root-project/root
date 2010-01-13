@@ -223,6 +223,7 @@ TProofPlayer::~TProofPlayer()
 
    fInput->Clear("nodelete");
    SafeDelete(fInput);
+   // The output list is owned by fSelector and destroyed in there
    SafeDelete(fSelector);
    SafeDelete(fFeedbackTimer);
    SafeDelete(fEvIter);

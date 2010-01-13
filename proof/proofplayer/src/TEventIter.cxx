@@ -231,6 +231,7 @@ Long64_t TEventIterUnit::GetNextEvent()
 
    while (fElem == 0 || fCurrent == 0) {
 
+      SafeDelete(fElem);
       if (!(fElem = fDSet->Next()))
          return -1;
 
@@ -304,6 +305,7 @@ Long64_t TEventIterObj::GetNextEvent()
          fOldBytesRead = bytesRead;
       }
 
+      SafeDelete(fElem);
       fElem = fDSet->Next(fKeys->GetSize());
       if (fElem && fElem->GetEntryList()) {
          Error("GetNextEvent", "Entry- or event-list not available");
