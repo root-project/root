@@ -103,6 +103,10 @@ public:
 
 class TEveGedNameTextButton : public TGTextButton
 {
+private:
+   TEveGedNameTextButton(const TEveGedNameTextButton&);            // Not implemented
+   TEveGedNameTextButton& operator=(const TEveGedNameTextButton&); // Not implemented
+
    TEveGedNameFrame *fFrame;
 
 public:
