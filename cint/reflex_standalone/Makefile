@@ -40,10 +40,21 @@ endif
 endif
 ReflexCMakeTest_Run?=no
 
+# for coverage determination
+ifneq ($(CXXFLAGS),)
+ DEFCXXFLAGS:=export CXXFLAGS="$(CXXFLAGS)";
+endif
+ifneq ($(subst -ftest-coverage,,$(CXXFLAGS)),$(CXXFLAGS))
+ COVLDFLAGS:=-lgcov
+endif
+ifneq ($(LDFLAGS),)
+ DEFLDFLAGS:=export LDFLAGS="$(LDFLAGS) $(COVLDFLAGS)";
+endif
+
 ReflexCMakeConfig:
 	$(CMDECHO)echo Configuring Reflex...
 	$(CMDECHO)mkdir -p cmake-build && cd cmake-build && \
-	cmake -DREFLEX_BUILD_TESTS=ON -DREFLEX_ENABLE_TESTS=ON -DCMAKE_COLOR_MAKEFILE=OFF $(ROOTSYS)/cint/reflex > /dev/null || (echo 'Tests skipped.'; touch ../SKIP-CONFIG-ERROR)
+	$(DEFCXXFLAGS) $(DEFLDFLAGS) cmake -DREFLEX_BUILD_TESTS=ON -DREFLEX_ENABLE_TESTS=ON -DCMAKE_COLOR_MAKEFILE=OFF $(ROOTSYS)/cint/reflex > /dev/null || (echo 'Tests skipped.'; touch ../SKIP-CONFIG-ERROR)
 	$(CMDECHO)echo Done.
 
 ReflexCMakeBuild: ReflexCMakeConfig
