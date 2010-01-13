@@ -5916,17 +5916,19 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      Info("","adding own output to the list on %s", fOrdinal.Data());
 
                   // Add own results to the output list
+                  // On workers the player does not own the output list, which is owned
+                  // by the selector and deleted in there
                   TIter nxo(fPlayer->GetOutputList());
                   TObject * o = 0;
                   while ((o = nxo())) {
-                     if ((mergerPlayer->AddOutputObject(o) == 1)) {
-                        // Remove the object if it has been merged
-                        PDB(kSubmerger, 2) Info("HandleSocketInput", "removing sent object (%p)", o);
-                        SafeDelete(o);
-                     }
+                     if ((mergerPlayer->AddOutputObject(o) != 1)) {
+                        // Remove the object if it has not been merged: it is owned
+                        // now by the merger player (in its output list)
+                        PDB(kSubmerger, 2) Info("HandleSocketInput", "removing merged object (%p)", o);
+                        fPlayer->GetOutputList()->Remove(o);
+                     } 
                   }
                   PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: own outputs added");
-
                   PDB(kSubmerger, 2) Info("HandleSubmerger","starting delayed merging on %s", fOrdinal.Data());
 
                   // Delayed merging if neccessary
