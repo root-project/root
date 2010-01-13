@@ -109,8 +109,8 @@ bool  GSLInterpolator::Init(unsigned int size, const double *x, const double * y
 GSLInterpolator::~GSLInterpolator() 
 {
    // free gsl objects
-   gsl_spline_free(fSpline); 
-   gsl_interp_accel_free( fAccel);
+   if (fSpline != 0) gsl_spline_free(fSpline); 
+   if (fAccel != 0) gsl_interp_accel_free( fAccel);
 }
 
 GSLInterpolator::GSLInterpolator(const GSLInterpolator &) 
