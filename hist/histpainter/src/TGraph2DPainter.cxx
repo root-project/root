@@ -100,7 +100,7 @@ void TGraph2DPainter::FindTriangles()
 //______________________________________________________________________________
 TList *TGraph2DPainter::GetContourList(Double_t contour)
 {
-   // Returns the X and Y graphs building a contour. A contour level may 
+   // Returns the X and Y graphs building a contour. A contour level may
    // consist in several parts not connected to each other. This function
    // finds them and returns them in a graphs' list.
 
@@ -128,7 +128,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
    TList *list   = new TList(); // list holding all the graphs
 
    // Find all the segments making the contour
- 
+
    Double_t r21, r20, r10;
    Int_t p0, p1, p2;
    Double_t x0, y0, z0;
@@ -163,7 +163,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
       x0   = fX[p0]; x2 = fX[p0];
       y0   = fY[p0]; y2 = fY[p0];
       z0   = fZ[p0]; z2 = fZ[p0];
-   
+
       // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
       // After this z0 < z1 < z2
       i0=0, i1=0, i2=0;
@@ -272,14 +272,14 @@ L01:
             js = 0;
             goto L01;
          }
-         js++; 
+         js++;
          if (js<nbSeg) goto L01;
          list->Add(graph); npg = 0;
       }
    }
 
    // Find the closed graphs. At this point all the remaining graphs
-   // are closed. Any segment can be used to start the search. 
+   // are closed. Any segment can be used to start the search.
    for (is=0; is<nbSeg; is++) {
       if (segUsed[is]) continue;
 
@@ -310,13 +310,13 @@ L02:
          js = 0;
          goto L02;
       }
-      js++; 
+      js++;
       if (js<nbSeg) goto L02;
       // Close the contour
       graph->SetPoint(npg,xs0[is],ys0[is]); npg++;
       list->Add(graph); npg = 0;
    }
-   
+
    delete [] xs0;
    delete [] ys0;
    delete [] xs1;
@@ -332,7 +332,7 @@ void TGraph2DPainter::Paint(Option_t *option)
    // Paint a TGraphDelaunay according to the value of "option":
    //
    //   "TRI"  : The Delaunay triangles are drawn using filled area.
-   //            An hidden surface drawing technique is used. The surface is  
+   //            An hidden surface drawing technique is used. The surface is
    //            painted with the current fill area color. The edges of each
    //            triangles are painted with the current line color.
    //   "TRIW" : The Delaunay triangles are drawn as wire frame
@@ -341,8 +341,8 @@ void TGraph2DPainter::Paint(Option_t *option)
    //   "TRI2" : the Delaunay triangles are painted with color levels.
    //   "P"    : Draw a marker at each vertex
    //   "P0"   : Draw a circle at each vertex. Each circle background is white.
-   //   "PCOL" : Draw a marker at each vertex. The color of each marker is 
-   //            defined according to its Z position. 
+   //   "PCOL" : Draw a marker at each vertex. The color of each marker is
+   //            defined according to its Z position.
    //   "CONT" : Draw contours
    //   "LINE" : Draw a 3D polyline
 
@@ -350,7 +350,7 @@ void TGraph2DPainter::Paint(Option_t *option)
    opt.ToLower();
    Bool_t triangles = opt.Contains("tri")  ||
                       opt.Contains("tri1") ||
-                      opt.Contains("tri2"); 
+                      opt.Contains("tri2");
    if (opt.Contains("tri0")) triangles = kFALSE;
 
    Bool_t markers   = opt.Contains("p") && !triangles;
@@ -372,9 +372,9 @@ void TGraph2DPainter::Paint(Option_t *option)
    fYmin = yaxis->GetBinLowEdge(first);
    if (Hoption.Logy && fYmin <= 0) fYmin = yaxis->GetBinUpEdge(yaxis->FindFixBin(0.01*yaxis->GetBinWidth(first)));
    fYmax = yaxis->GetBinUpEdge(yaxis->GetLast());
-   fZmax = gCurrentHist->GetMaximum();
-   fZmin = gCurrentHist->GetMinimum();
-   if (Hoption.Logz && fZmin <= 0) fZmin = TMath::Min((Double_t)1, (Double_t)0.001*gCurrentHist->GetMaximum());
+   fZmax = fGraph2D->GetZmax();
+   fZmin = fGraph2D->GetZmin();
+   if (Hoption.Logz && fZmin <= 0) fZmin = TMath::Min((Double_t)1, (Double_t)0.001*fGraph2D->GetZmax());
 
    if (triangles) PaintTriangles(option);
    if (markers)   PaintPolyMarker(option);
@@ -410,7 +410,7 @@ void TGraph2DPainter::PaintContour(Option_t * /*option*/)
    for (Int_t k=0; k<ndiv; k++) {
       c = gCurrentHist->GetContourLevelPad(k);
       l = GetContourList(c);
-      TIter next(l);   
+      TIter next(l);
       while ((obj = next())) {
          if(obj->InheritsFrom(TGraph::Class()) ) {
             g=(TGraph*)obj;
@@ -432,7 +432,7 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    // nblev != 0 : paint the grid
 
    Int_t i, fillColor, ncolors, theColor0, theColor2;
-   
+
    Int_t p0=t[0]-1;
    Int_t p1=t[1]-1;
    Int_t p2=t[2]-1;
@@ -441,6 +441,8 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    Double_t x0 = x[0]  , x2 = x[0];
    Double_t y0 = y[0]  , y2 = y[0];
    Double_t z0 = fZ[p0], z2 = fZ[p0];
+   Double_t zmin = fZmin;
+   Double_t zmax = fZmax;
 
    // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
    // After this z0 < z1 < z2
@@ -453,13 +455,24 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    Double_t x1 = x[i1];
    Double_t y1 = y[i1];
    Double_t z1 = fZ[t[i1]-1];
-   if (z0>fZmax) z0 = fZmax;
-   if (z2>fZmax) z2 = fZmax;
-   if (z0<fZmin) z0 = fZmin;
-   if (z2<fZmin) z2 = fZmin;
+
+   if (z0>zmax) z0 = zmax;
+   if (z2>zmax) z2 = zmax;
+   if (z0<zmin) z0 = zmin;
+   if (z2<zmin) z2 = zmin;
+   if (z1>zmax) z1 = zmax;
+   if (z1<zmin) z1 = zmin;
+
+   if (Hoption.Logz) {
+      z0   = TMath::Log10(z0);
+      z1   = TMath::Log10(z1);
+      z2   = TMath::Log10(z2);
+      zmin = TMath::Log10(zmin);
+      zmax = TMath::Log10(zmax);
+   }
 
    // zi  = Z values of the stripe number i
-   // zip = Previous zi 
+   // zip = Previous zi
    Double_t zi=0, zip=0;
 
    if (nblev <= 0) {
@@ -467,14 +480,14 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
 
       // Compute the color associated to z0 (theColor0) and z2 (theColor2)
       ncolors   = gStyle->GetNumberOfColors();
-      theColor0 = (Int_t)( ((z0-fZmin)/(fZmax-fZmin))*(ncolors-1) );
-      theColor2 = (Int_t)( ((z2-fZmin)/(fZmax-fZmin))*(ncolors-1) );
+      theColor0 = (Int_t)( ((z0-zmin)/(zmax-zmin))*(ncolors-1) );
+      theColor2 = (Int_t)( ((z2-zmin)/(zmax-zmin))*(ncolors-1) );
 
       // The stripes drawn to fill the triangles may have up to 5 points
       Double_t xp[5], yp[5];
 
-      // rl = Ratio between z0 and z2 (long) 
-      // rs = Ratio between z0 and z1 or z1 and z2 (short) 
+      // rl = Ratio between z0 and z2 (long)
+      // rs = Ratio between z0 and z1 or z1 and z2 (short)
       Double_t rl,rs;
 
       // ci = Color of the stripe number i
@@ -496,7 +509,7 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
             fGraph2D->SetFillColor(gStyle->GetColorPalette(ci));
             fGraph2D->TAttFill::Modify();
             if (ci==theColor0) {
-               zi    = (((ci+1)*(fZmax-fZmin))/(ncolors-1))+fZmin;
+               zi    = (((ci+1)*(zmax-zmin))/(ncolors-1))+zmin;
                xp[0] = x0;
                yp[0] = y0;
                rl    = (zi-z0)/(z2-z0);
@@ -530,7 +543,7 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
                   npf   = 3;
                }
             } else {
-               zi    = (((ci+1)*(fZmax-fZmin))/(ncolors-1))+fZmin;
+               zi    = (((ci+1)*(zmax-zmin))/(ncolors-1))+zmin;
                xp[0] = xp[1];
                yp[0] = yp[1];
                rl    = (zi-z0)/(z2-z0);
@@ -613,7 +626,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
    Int_t  ncolors  = gStyle->GetNumberOfColors();
    Int_t  it, theColor;
 
-   Double_t *xm = new Double_t[fNpoints]; 
+   Double_t *xm = new Double_t[fNpoints];
    Double_t *ym = new Double_t[fNpoints];
    Int_t    npd = 0;
    for (it=0; it<fNpoints; it++) {
@@ -671,7 +684,7 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
 
    Int_t  it;
 
-   Double_t *xm = new Double_t[fNpoints]; 
+   Double_t *xm = new Double_t[fNpoints];
    Double_t *ym = new Double_t[fNpoints];
    Int_t    npd = 0;
    for (it=0; it<fNpoints; it++) {
@@ -704,7 +717,7 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
 //______________________________________________________________________________
 void TGraph2DPainter::PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y)
 {
-   // Paints a circle at each vertex. Each circle background is white. 
+   // Paints a circle at each vertex. Each circle background is white.
 
    fGraph2D->SetMarkerSize(fGraph2D->GetMarkerSize());
    Int_t mc = fGraph2D->GetMarkerColor();
@@ -739,8 +752,8 @@ void TGraph2DPainter::PaintTriangles(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   Bool_t tri1      = opt.Contains("tri1"); 
-   Bool_t tri2      = opt.Contains("tri2"); 
+   Bool_t tri1      = opt.Contains("tri1");
+   Bool_t tri2      = opt.Contains("tri2");
    Bool_t markers   = opt.Contains("p");
    Bool_t markers0  = opt.Contains("p0");
    Bool_t wire      = opt.Contains("w");
@@ -772,7 +785,7 @@ void TGraph2DPainter::PaintTriangles(Option_t *option)
       glev = new Double_t[nblev];
       for (Int_t i = 0; i < nblev; ++i) glev[i] = binLow+i*binWidth;
    }
-   
+
    // Initialize the levels on the Z axis
    if (tri1 || tri2) {
       Int_t ndiv   = gCurrentHist->GetContour();
@@ -785,7 +798,7 @@ void TGraph2DPainter::PaintTriangles(Option_t *option)
 
    // For each triangle, compute the distance between the triangle centre
    // and the back planes. Then these distances are sorted in order to draw
-   // the triangles from back to front. 
+   // the triangles from back to front.
    if (!fNdt) FindTriangles();
    Double_t cp = TMath::Cos(view->GetLongitude()*TMath::Pi()/180.);
    Double_t sp = TMath::Sin(view->GetLongitude()*TMath::Pi()/180.);
@@ -813,7 +826,7 @@ void TGraph2DPainter::PaintTriangles(Option_t *option)
       }
    }
    TMath::Sort(fNdt, dist, order, o);
-   
+
    // Draw the triangles and markers if requested
    fGraph2D->SetFillColor(fGraph2D->GetFillColor());
    Int_t fs = fGraph2D->GetFillStyle();
