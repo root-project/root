@@ -20,8 +20,8 @@
 #include "Math/Math.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_etaMax
-#include "Math/GenVector/etaMax.h"
+#ifndef ROOT_Math_GenVector_eta
+#include "Math/GenVector/eta.h"
 #endif
 
 #include <limits>
