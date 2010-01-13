@@ -878,7 +878,8 @@ Bool_t TGWin32::IsCmdThread() const
 {
    // returns kTRUE if we are inside cmd/server thread
 
-   return (::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId);
+   return ((::GetCurrentThreadId() == TGWin32ProxyBase::fgMainThreadId) ||
+           (::GetCurrentThreadId() == TGWin32ProxyBase::fgUserThreadId));
 }
 
 //______________________________________________________________________________
@@ -7521,6 +7522,17 @@ void TGWin32::SetDNDAware(Window_t id, Atom_t *typelist)
 
 }
 
+//______________________________________________________________________________
+void TGWin32::SetUserThreadId(ULong_t id)
+{
+   // Set user thread id. This is used when an extra thread is created
+   // to process events.
 
-
+   if (id == 0) {
+      TGWin32ProxyBase::fgMainThreadId = ((TWinNTSystem*)gSystem)->GetGUIThreadId();
+   }
+   else {
+      TGWin32ProxyBase::fgUserThreadId = id;
+   }
+}
 
