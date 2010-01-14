@@ -2339,9 +2339,10 @@ void TTreeViewer::MapOptions(Long_t parm1)
 void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
 {
    // Map current tree and expand its content (including friends) in the lists.
-
+   
    if (!tree) return;
    TObjArray *branches = tree->GetListOfBranches();
+   if (!branches) return; // A Chain with no underlying trees.
    TBranch   *branch;
    // loop on branches
    Int_t id;
@@ -2355,7 +2356,9 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
       fStopMapping = kFALSE;
    }
    //Map branches of friend Trees (if any)
-   TIter nextf(tree->GetListOfFriends());
+   //Look at tree->GetTree() to insure we see both the friendss of a chain
+   //and the friends of the chain members
+   TIter nextf( tree->GetTree()->GetListOfFriends() ); 
    TFriendElement *fr;
    while ((fr = (TFriendElement*)nextf())) {
       TTree * t = fr->GetTree();
@@ -2370,7 +2373,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
          fStopMapping = kFALSE;
       }
    }
-
+   
    // tell who was last mapped
    if (listIt) {
       fMappedTree    = tree;
