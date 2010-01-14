@@ -79,9 +79,11 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
    //      gROOT->LoadClass("THtml",       "Html");
    }
 
-// switch win32 proxy main thread id
-   if (gVirtualX && !gVirtualX->InheritsFrom("TGX11"))
+#ifdef WIN32
+   // switch win32 proxy main thread id
+   if (gVirtualX)
       ProcessLine("((TGWin32 *)gVirtualX)->SetUserThreadId(0);", kTRUE);
+#endif
 
 // save current interpreter context
    gInterpreter->SaveContext();
