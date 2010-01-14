@@ -161,9 +161,11 @@ TServerSocket::~TServerSocket()
    // Destructor: cleanup authentication stuff (if any) and close
 
    R__LOCKGUARD2(gSrvAuthenticateMutex);
-   if (fSecContexts && fgSrvAuthClupHook) {
-      // Cleanup the security contexts
-      (*fgSrvAuthClupHook)(fSecContexts);
+   if (fSecContexts) {
+      if (fgSrvAuthClupHook) {
+         // Cleanup the security contexts
+         (*fgSrvAuthClupHook)(fSecContexts);
+      }
       // Remove the list
       fSecContexts->Delete();
       SafeDelete(fSecContexts);
