@@ -298,6 +298,10 @@ $(CINTDIRS)/loadfile_tmp.cxx: $(CINTDIRS)/loadfile.cxx
 
 $(CINTDIRS)/loadfile_tmp.o $(CINTO): OPT:=$(filter-out -Wshadow,$(OPT))
 $(CINTDIRS)/loadfile_tmp.o $(CINTO): CXXFLAGS:=$(filter-out -Wshadow,$(CXXFLAGS))
+ifneq ($(subst -ftest-coverage,,$(OPT)),$(OPT))
+# we have coverage on - not interesting for dictionaries
+$(subst .cxx,.o,$(wildcard $(CINTDIRSD)/*.cxx)): override OPT:= $(subst -fprofile-arcs,,$(subst -ftest-coverage,,$(OPT)))
+endif
 
 ##### configcint.h
 ifeq ($(CPPPREP),)
