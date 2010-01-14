@@ -33,8 +33,7 @@
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
-
-#include "Xpm.h"
+#include <X11/xpm.h>
 
 #else
 
