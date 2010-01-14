@@ -5607,6 +5607,10 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
          } else {
             desc = Form("%s/%s",bdname,olddesc.Data());
          }
+         char *bracket = strchr(bdname,'[');
+         if (bracket) {
+            *bracket = 0;
+         }
          branch = new TBranch(this,bdname,address,desc.Data(),32000);
          if (branch->IsZombie()) {
             delete branch;
