@@ -37,10 +37,11 @@ INCLUDEFILES += $(ROOSTATSDEP)
 
 #needed since include are in inc and not inc/RooStats
 ROOSTATSH_DIC   := $(subst $(MODDIRI),include/RooStats,$(ROOSTATSH))
+
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/RooStats/%.h:    $(ROOSTATSDIRI)/%.h
+include/RooStats/%.h: $(ROOSTATSDIRI)/%.h
 		@(if [ ! -d "include/RooStats" ]; then    \
 		   mkdir -p include/RooStats;             \
 		fi)
@@ -69,7 +70,8 @@ clean-$(MODNAME):
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -rf $(ROOSTATSDEP) $(ROOSTATSLIB) $(ROOSTATSMAP) \
+		@rm -f $(ROOSTATSDEP) $(ROOSTATSLIB) $(ROOSTATSMAP) \
 		   $(ROOSTATSDS) $(ROOSTATSDH)
+		@rm -rf include/RooStats
 
 distclean::     distclean-$(MODNAME)
