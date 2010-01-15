@@ -827,7 +827,7 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
    while ((fileInfo = dynamic_cast<TFileInfo*> (iter2.Next()))) {
 
       // For real time monitoring
-      gSystem->DispatchOneEvent();
+      gSystem->DispatchOneEvent(kTRUE);
 
       fileInfo->ResetUrl();
       if (!fileInfo->GetCurrentUrl()) {
@@ -936,7 +936,7 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
       count++;
 
       // For real time monitoring
-      gSystem->DispatchOneEvent();
+      gSystem->DispatchOneEvent(kTRUE);
 
       TUrl *url = fileInfo->GetCurrentUrl();
 
@@ -1041,7 +1041,7 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
                           GetNOpenedFiles(), GetNTouchedFiles(), GetNDisapparedFiles());
 
    // For real time monitoring
-   gSystem->DispatchOneEvent();
+   gSystem->DispatchOneEvent(kTRUE);
 
    return result;
 }
