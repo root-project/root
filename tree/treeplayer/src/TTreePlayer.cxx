@@ -1010,6 +1010,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
        && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
        && possibleFilename.Index("MinIf$")<0 && possibleFilename.Index("MaxIf$")<0
        && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
+       && possibleFilename.Index(">")<0 && possibleFilename.Index("<")<0
        && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
       if (selection && strlen(selection) && !gSystem->IsFileInIncludePath(selection)) {
@@ -1028,6 +1029,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
           && possibleFilename.Index("Min$")<0 && possibleFilename.Index("Max$")<0
           && possibleFilename.Index("MinIf$")<0 && possibleFilename.Index("MaxIf$")<0
           && possibleFilename.Index("Iteration$")<0 && possibleFilename.Index("Sum$")<0
+          && possibleFilename.Index(">")<0 && possibleFilename.Index("<")<0
           && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
          Error("DrawSelect",
