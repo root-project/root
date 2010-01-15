@@ -60,6 +60,7 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GLEWDEP) $(GLEWLIB)
+		@rm -rf include/GL
 
 distclean::     distclean-$(MODNAME)
 
