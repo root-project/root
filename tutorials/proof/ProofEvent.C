@@ -1,20 +1,13 @@
 #define ProofEvent_cxx
 
+//////////////////////////////////////////////////////////
+//
 // Example of TSelector implementation to do generic
 // processing with the test 'Event' structure.
-
-// The following methods are defined in this file:
-//    Begin():        called everytime a loop on the tree starts,
-//                    a convenient place to create your histograms.
-//    SlaveBegin():   called after Begin(), when on PROOF called only on the
-//                    slave servers.
-//    Process():      called for each event, in this function you decide what
-//                    to read and fill your histograms.
-//    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
-//                    called only on the slave servers.
-//    Terminate():    called at the end of the loop on the tree,
-//                    a convenient place to draw/fit your histograms.
+// See tutorials/proof/runProof.C, option "event", for an
+// example of how to run this selector.
 //
+//////////////////////////////////////////////////////////
 
 #include "ProofEvent.h"
 #include "Event.h"

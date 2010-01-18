@@ -2,6 +2,8 @@
 //
 // Example of TSelector implementation to do generic
 // processing with the test 'Event' structure.
+// See tutorials/proof/runProof.C, option "event", for an
+// example of how to run this selector.
 //
 //////////////////////////////////////////////////////////
 

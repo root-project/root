@@ -1,27 +1,12 @@
 #define ProofSimple_cxx
-// The class definition in ProofSimple.h has been generated automatically
-// by the ROOT utility TTree::MakeSelector(). This class is derived
-// from the ROOT class TSelector. For more information on the TSelector
-// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.
-
-// The following methods are defined in this file:
-//    Begin():        called everytime a loop on the tree starts,
-//                    a convenient place to create your histograms.
-//    SlaveBegin():   called after Begin(), when on PROOF called only on the
-//                    slave servers.
-//    Process():      called for each event, in this function you decide what
-//                    to read and fill your histograms.
-//    SlaveTerminate: called at the end of the loop on the tree, when on PROOF
-//                    called only on the slave servers.
-//    Terminate():    called at the end of the loop on the tree,
-//                    a convenient place to draw/fit your histograms.
+//////////////////////////////////////////////////////////
 //
-// To use this file, try the following session on your Tree T:
+// Example of TSelector implementation to do generic
+// processing (filling a set of histograms in this case).
+// See tutorials/proof/runProof.C, option "simple", for an
+// example of how to run this selector.
 //
-// Root > T->Process("ProofSimple.C")
-// Root > T->Process("ProofSimple.C","some options")
-// Root > T->Process("ProofSimple.C+")
-//
+//////////////////////////////////////////////////////////
 
 #include "ProofSimple.h"
 #include <TCanvas.h>

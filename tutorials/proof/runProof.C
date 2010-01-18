@@ -1,5 +1,6 @@
 //
-// Macro to run examples of analysis on PROOF.
+// Macro to run examples of analysis on PROOF, corresponding to the TSelector
+// implementations found under <ROOTSYS>/tutorials/proof .
 // This macro uses an existing PROOF session or starts one at the indicated URL.
 // In the case non existing PROOF session is found and no URL is given, the macro
 // tries to start a local PROOF session.
@@ -9,9 +10,12 @@
 //   root[] .L proof/runProof.C+
 //   root[] runProof("<analysis>")
 //
-//   Currently available analysis are:
+//   Currently available analysis are (to see how all this really works check the
+//   scope for the specified option inside the macro):
 //
 //   1. "simple"
+//
+//      Selector: ProofSimple.h,.C
 //
 //      root[] runProof("simple")
 //
@@ -25,12 +29,16 @@
 //
 //   2. "h1"
 //
+//      Selector: tutorials/tree/h1analysis.h,.C
+//
 //      root[] runProof("h1")
 //
 //      This runs the 'famous' H1 analysis from $ROOTSYS/tree/h1analysis.C,.h .
 //      The data are read from the HTTP server at root.cern.ch .
 //
 //  3. "event"
+//
+//      Selector: ProofEvent.h,.C
 //
 //      This is an example of using PROOF par files.
 //      It runs event generation and simple analysis based on the 'Event' class found
@@ -39,6 +47,8 @@
 //   root[] runProof("event")
 //
 //  4. "eventproc"
+//
+//      Selector: ProofEventProc.h,.C
 //
 //      This is an example of using PROOF par files and process 'event' data from the root HTTP
 //      server. It runs the ProofEventProc selector which is derived from the EventTree_Proc
@@ -55,6 +65,8 @@
 //
 //  5. "pythia8"
 //
+//      Selector: ProofPythia.h,.C
+//
 //      This runs Pythia8 generation based on main03.cc example in Pythia 8.1 
 //
 //      To run this analysis ROOT must be configured with pythia8.
@@ -68,6 +80,8 @@
 //
 //  6. "ntuple"
 //
+//      Selector: ProofNtuple.h,.C
+//
 //      This is an example of final merging via files created on the workers, using
 //      TProofOutputFile. The final file is called ProofNtuple.root and it is created
 //      in the directory where the tutorial is run. If the PROOF cluster is remote, the
@@ -77,6 +91,8 @@
 //   root[] runProof("ntuple")
 //
 //  7. "dataset"
+//
+//      Selector: ProofNtuple.h,.C
 //
 //      This is an example of automatic creation of a dataset from files created on the
 //      workers, using TProofOutputFile. The dataset is called testNtuple and it is

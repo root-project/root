@@ -1,7 +1,10 @@
+
 //////////////////////////////////////////////////////////
 //
-// Example of TSelector implementation to do generic
-// processing (filling a set of histograms in this case)
+// Example of TSelector implementation to do a Monte Carlo
+// generation using Pythia8.
+// See tutorials/proof/runProof.C, option "pythia8", for an
+// example of how to run this selector.
 //
 //////////////////////////////////////////////////////////
 

@@ -1,7 +1,9 @@
 //////////////////////////////////////////////////////////
 //
 // Example of TSelector implementation to do generic
-// processing (filling a set of histograms in this case)
+// processing (filling a set of histograms in this case).
+// See tutorials/proof/runProof.C, option "simple", for an
+// example of how to run this selector.
 //
 //////////////////////////////////////////////////////////
 
