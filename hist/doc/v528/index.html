@@ -57,9 +57,44 @@
      </pre>
 </ul>
 
+<h4>TGraphPainter</h4>
+<ul>
+<li> When painted with option "2" (errors represented with boxes) the graph
+     with error bars were not clipped if the boxes were outside the frame
+     limits. This problem was visible with TGraphErrors, TGraphAsymmErrors and 
+     TGraphBentErrors. The following macro showed the problem:
+     <pre>
+     {
+        TCanvas *c1 = new TCanvas("c1","c1",200,10,700,500);
+
+        const Int_t n    = 10;
+        Double_t x[n]    = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
+        Double_t y[n]    = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+        Double_t ex[n]   = {.05,.1,.07,.07,10.04,.05,.06,.07,.08,.05};
+        Double_t ey[n]   = {3.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+        Double_t exd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0}; 
+        Double_t eyd[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0}; 
+
+        TGraphErrors *gr1 = new TGraphErrors(n,x,y,ex,ey);
+        gr1->SetFillStyle(3004);
+
+        TGraphAsymmErrors *gr2 = new TGraphAsymmErrors(n, x, y, ex, ex, ey, ey);
+        gr2->SetFillStyle(3005);
+
+        TGraphBentErrors *gr3 = new TGraphBentErrors(n,x,y,ex,ex,ey,ey,exd,exd,eyd,eyd);        
+        gr3->SetFillStyle(3006);
+
+        c1->DrawFrame(-1,0,1,10);
+
+        gr1->Draw("2");
+        gr2->Draw("2");
+        gr3->Draw("2");  
+     }
+     </pre>
+<li> In PaintGraphBentErrors the fill style was not set for the boxes.
+</ul>
 
 <h4>TGraph</h4>
 <ul>
-<li>Fix a bug in TGraph::Eval when evaluating at the graph point
-  values. </li>
+<li>Fix a bug in TGraph::Eval when evaluating at the graph point values. </li>
 </ul>  
