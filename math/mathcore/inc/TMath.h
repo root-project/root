@@ -237,7 +237,7 @@ namespace TMath {
    template <typename T> T *Normal2Plane(const T v1[3],const T v2[3],const T v3[3], T normal[3]);
 
    /* ************************ */
-   /* * Polinomial Functions * */
+   /* * Polynomial Functions * */
    /* ************************ */
    
    Bool_t    RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
@@ -276,7 +276,7 @@ namespace TMath {
    /* * Statistics over arrays * */
    /* ************************** */
 
-   //Mean, Geometric Mean, Median, RMS
+   //Mean, Geometric Mean, Median, RMS(sigma)
 
    template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=0);
    template <typename Iterator> Double_t Mean(Iterator first, Iterator last);
@@ -668,7 +668,9 @@ Double_t TMath::GeomMean(Long64_t n, const T *a)
 template <typename Iterator> 
 Double_t TMath::RMS(Iterator first, Iterator last)
 {
-   // Return the RMS of an array defined by the iterators.
+   // Return the Standard Deviation of an array defined by the iterators.
+   // Note that this function returns the sigma(standard deviation) and
+   // not the root mean square of the array.
 
    Double_t n = 0;
 
@@ -688,7 +690,9 @@ Double_t TMath::RMS(Iterator first, Iterator last)
 template <typename T> 
 Double_t TMath::RMS(Long64_t n, const T *a)
 {
-   // Return the RMS of an array a with length n.
+   // Return the Standard Deviation of an array a with length n.
+   // Note that this function returns the sigma(standard deviation) and
+   // not the root mean square of the array.
 
    return TMath::RMS(a, a+n);
 }
