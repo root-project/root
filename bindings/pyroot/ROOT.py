@@ -304,7 +304,7 @@ def _processRootEvents( controller ):
    import time
    gSystemProcessEvents = _root.gSystem.ProcessEvents
 
-   if not _root.gVirtualX.InheritsFrom('TGX11'):
+   if sys.platform == 'win32':
       import thread
       _root.gROOT.ProcessLineSync('((TGWin32 *)gVirtualX)->SetUserThreadId(%ld)' % (thread.get_ident()))
 
