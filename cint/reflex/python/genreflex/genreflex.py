@@ -6,7 +6,7 @@
 #
 # This software is provided "as is" without express or implied warranty.
 
-import sys, os, gendict, selclass, gencapa, genrootmap, string, getopt
+import sys, os, gendict, selclass, gencapa, genrootmap, string, getopt, subprocess
 
 class genreflex:
 #----------------------------------------------------------------------------------
@@ -244,7 +244,12 @@ class genreflex:
 #----------------------------------------------------------------------------------
   def genGccxmlInfo(self):
     s = ''
-    (inp,out,err) = os.popen3('"' + self.gccxml + '" --print')
+    p = subprocess.Popen('"' + self.gccxml + '" --print', shell=True,
+                         bufsize=-1, stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         close_fds = (sys.platform != 'win32'))
+    (inp, out, err) = (p.stdin, p.stdout, p.stderr)
     sout = out.read()
     serr = err.read()
     if serr :
@@ -275,7 +280,10 @@ class genreflex:
     else :
       print '--->> genreflex: WARNING: While trying to retrieve compiler version, found unknown compiler %s' % compiler
       return s
-    (inp,out,err) = os.popen3('"%s" %s'%(compiler,vopt))
+    p = subprocess.Popen('"%s" %s'%(compiler,vopt), shell=True, bufsize=-1,
+                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, close_fds=True)
+    (inp,out,err) = (p.stdin, p.stdout, p.stderr)
     serr = err.read()
     # cl puts its version into cerr!
     if serr:
