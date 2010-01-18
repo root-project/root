@@ -4193,10 +4193,10 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    // make dict.h
    char dictnameh[kMaxLen];
    strcpy(dictnameh, dictname);
-   char *s = strrchr(dictnameh, '.');
-   if (s) {
-      *(s+1) = 'h';
-      *(s+2) = 0;
+   char *dh = strrchr(dictnameh, '.');
+   if (dh) {
+      *(dh+1) = 'h';
+      *(dh+2) = 0;
    } else {
       Error(0, "rootcint: failed create dict.h in ReplaceBundleInDict()\n");
       return;
