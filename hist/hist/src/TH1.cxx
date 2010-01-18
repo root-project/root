@@ -2557,6 +2557,8 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
    TH1 *h = (TH1*)Clone();
    h->SetBit(kCanDelete);
    h->Scale(norm/sum);
+   if (TMath::Abs(fMaximum+1111) > 1e-3) h->SetMaximum(fMaximum*norm/sum);
+   if (TMath::Abs(fMinimum+1111) > 1e-3) h->SetMinimum(fMinimum*norm/sum);
    h->Draw(option);
    TH1::AddDirectory(addStatus);
    return h;
