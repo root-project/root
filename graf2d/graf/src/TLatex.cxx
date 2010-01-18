@@ -709,135 +709,6 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       }
       result = fs1+fs2;
    }
-   else if (opBox) {
-      Double_t square = GetHeight()*spec.fSize/2;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+4,length-4);
-      } else {
-         fs1 = Analyse(x+square,y,spec,text+4,length-4);
-         Double_t adjust = GetHeight()*spec.fSize/20;
-         Double_t x1 = x+adjust ;
-         Double_t x2 = x-adjust+square ;
-         Double_t y1 = y;
-         Double_t y2 = y-square+adjust;
-         DrawLine(x1,y1,x2,y1,spec);
-         DrawLine(x2,y1,x2,y2,spec);
-         DrawLine(x2,y2,x1,y2,spec);
-         DrawLine(x1,y2,x1,y1,spec);
-      }
-      result = fs1 + TLatexFormSize(square,square,0);
-   }
-   else if (opOdot) {
-      Double_t square = GetHeight()*spec.fSize/2;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
-      } else {
-         fs1 = Analyse(x+1.3*square,y,spec,text+5,length-5);
-         Double_t adjust = GetHeight()*spec.fSize/20;
-         Double_t r1 = 0.62*square;
-         Double_t y1 = y-0.3*square-adjust;
-         DrawCircle(x+0.6*square,y1,r1,spec) ;
-         DrawCircle(x+0.6*square,y1,r1/100,spec) ;
-      }
-      result = fs1 + TLatexFormSize(square,square,0);
-   }
-   else if (opHbar) {
-      Double_t square = GetHeight()*spec.fSize/2;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
-      } else {
-         fs1 = Analyse(x+square,y,spec,text+5,length-5);
-         TText hbar;
-         hbar.SetTextFont(12);
-         hbar.SetTextColor(fTextColor);
-         hbar.SetTextSize(spec.fSize);
-         hbar.SetTextAngle(fTextAngle);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-         Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
-         hbar.PaintText(xx,yy,"h");
-         DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
-      }
-      result = fs1 + TLatexFormSize(square,square,0);
-   }
-   else if (opPerp) {
-      Double_t square = GetHeight()*spec.fSize/1.4;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
-      } else {
-         fs1 = Analyse(x+0.5*square,y,spec,text+5,length-5);
-         Double_t x0 = x  + 0.50*square;
-         Double_t x1 = x0 - 0.48*square;
-         Double_t x2 = x0 + 0.48*square;
-         Double_t y1 = y  + 0.6*square;
-         Double_t y2 = y1 - 1.3*square;
-         DrawLine(x1,y1,x2,y1,spec);
-         DrawLine(x0,y1,x0,y2,spec);
-      }
-      result = fs1;
-   }
-   else if (opParallel) {
-      Double_t square = GetHeight()*spec.fSize/1.4;
-      if (!fShow) {
-         fs1 = Anal1(spec,text+9,length-9);
-      } else {
-         fs1 = Analyse(x+0.5*square,y,spec,text+9,length-9);
-         Double_t x1 = x + 0.15*square;
-         Double_t x2 = x + 0.45*square;
-         Double_t y1 = y + 0.3*square;
-         Double_t y2 = y1- 1.3*square;
-         DrawLine(x1,y1,x1,y2,spec);
-         DrawLine(x2,y1,x2,y2,spec);
-      }
-      result = fs1 + TLatexFormSize(square,square,0);
-   }
-   else if (opGreek>-1) {
-      TextSpec_t newSpec = spec;
-      newSpec.fFont = 122;
-      char letter = 97 + opGreek;
-      Double_t yoffset = 0.; // Greek letter too low
-      if (opGreek>25) letter -= 58;
-      if (opGreek == 52) letter = '\241'; //varUpsilon
-      if (opGreek == 53) letter = '\316'; //epsilon
-      if (!fShow) {
-         fs1 = Anal1(newSpec,&letter,1);
-         fs2 = Anal1(spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
-         Savefs(&fs1);
-         Savefs(&fs2);
-      } else {
-         fs2 = Readfs();
-         fs1 = Readfs();
-         Analyse(x+fs1.Width(),y,spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
-         Analyse(x,y-yoffset,newSpec,&letter,1);
-      }
-      fs1.AddOver(TLatexFormSize(0,yoffset,0)) ;
-      result = fs1+fs2;
-   }
-
-   else if ((opSpec>-1) && (opSpec != 66) && (opSpec != 79)) { // special character found, but not #sum nor #int
-      TextSpec_t newSpec = spec;
-      newSpec.fFont = 122;
-      char letter = '\243' + opSpec;
-      if(opSpec == 75 || opSpec == 76) {
-         newSpec.fFont = GetTextFont();
-         if (opSpec == 75) letter = '\305'; // AA Angstroem
-         if (opSpec == 76) letter = '\345'; // aa Angstroem
-      }
-      if (!fShow) {
-         fs1 = Anal1(newSpec,&letter,1);
-         fs2 = Anal1(spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
-         Savefs(&fs1);
-         Savefs(&fs2);
-      } else {
-         fs2 = Readfs();
-         fs1 = Readfs();
-         Analyse(x+fs1.Width(),y,spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
-         Analyse(x,y,newSpec,&letter,1);
-      }
-      result = fs1+fs2;
-   }
 
    else if (opPower>-1 && opUnder>-1) { // ^ and _ found
       min = TMath::Min(opPower,opUnder);
@@ -1033,23 +904,144 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       else
          result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Over(),fs1.Under()*prop+fs2.Height());
    }
-   else if ((opSpec>-1) && ((opSpec == 66) || (opSpec == 79))) { // special character found, either #sum or #int
+   else if (opBox) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+4,length-4);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+4,length-4);
+         Double_t adjust = GetHeight()*spec.fSize/20;
+         Double_t x1 = x+adjust ;
+         Double_t x2 = x-adjust+square ;
+         Double_t y1 = y;
+         Double_t y2 = y-square+adjust;
+         DrawLine(x1,y1,x2,y1,spec);
+         DrawLine(x2,y1,x2,y2,spec);
+         DrawLine(x2,y2,x1,y2,spec);
+         DrawLine(x1,y2,x1,y1,spec);
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opOdot) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+5,length-5);
+      } else {
+         fs1 = Analyse(x+1.3*square,y,spec,text+5,length-5);
+         Double_t adjust = GetHeight()*spec.fSize/20;
+         Double_t r1 = 0.62*square;
+         Double_t y1 = y-0.3*square-adjust;
+         DrawCircle(x+0.6*square,y1,r1,spec) ;
+         DrawCircle(x+0.6*square,y1,r1/100,spec) ;
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opHbar) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+5,length-5);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+5,length-5);
+         TText hbar;
+         hbar.SetTextFont(12);
+         hbar.SetTextColor(fTextColor);
+         hbar.SetTextSize(spec.fSize);
+         hbar.SetTextAngle(fTextAngle);
+         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t angle   = kPI*spec.fAngle/180.;
+         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         hbar.PaintText(xx,yy,"h");
+         DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opPerp) {
+      Double_t square = GetHeight()*spec.fSize/1.4;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+5,length-5);
+      } else {
+         fs1 = Analyse(x+0.5*square,y,spec,text+5,length-5);
+         Double_t x0 = x  + 0.50*square;
+         Double_t x1 = x0 - 0.48*square;
+         Double_t x2 = x0 + 0.48*square;
+         Double_t y1 = y  + 0.6*square;
+         Double_t y2 = y1 - 1.3*square;
+         DrawLine(x1,y1,x2,y1,spec);
+         DrawLine(x0,y1,x0,y2,spec);
+      }
+      result = fs1;
+   }
+   else if (opParallel) {
+      Double_t square = GetHeight()*spec.fSize/1.4;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+9,length-9);
+      } else {
+         fs1 = Analyse(x+0.5*square,y,spec,text+9,length-9);
+         Double_t x1 = x + 0.15*square;
+         Double_t x2 = x + 0.45*square;
+         Double_t y1 = y + 0.3*square;
+         Double_t y2 = y1- 1.3*square;
+         DrawLine(x1,y1,x1,y2,spec);
+         DrawLine(x2,y1,x2,y2,spec);
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opGreek>-1) {
+      TextSpec_t newSpec = spec;
+      newSpec.fFont = 122;
+      char letter = 97 + opGreek;
+      Double_t yoffset = 0.; // Greek letter too low
+      if (opGreek>25) letter -= 58;
+      if (opGreek == 52) letter = '\241'; //varUpsilon
+      if (opGreek == 53) letter = '\316'; //epsilon
+      if (!fShow) {
+         fs1 = Anal1(newSpec,&letter,1);
+         fs2 = Anal1(spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
+         Savefs(&fs1);
+      } else {
+         fs1 = Readfs();
+         Analyse(x+fs1.Width(),y,spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
+         Analyse(x,y-yoffset,newSpec,&letter,1);
+      }
+      fs1.AddOver(TLatexFormSize(0,yoffset,0)) ;
+      result = fs1+fs2;
+   }
+
+   else if (opSpec>-1) {
       TextSpec_t newSpec = spec;
       newSpec.fFont = 122;
       char letter = '\243' + opSpec;
-      if (opSpec==66) newSpec.fSize = spec.fSize*1.8; // scaling for #sum
-      if (opSpec==79) newSpec.fSize = spec.fSize*2.3; // scaling for #int
+      if(opSpec == 75 || opSpec == 76) {
+         newSpec.fFont = GetTextFont();
+         if (opSpec == 75) letter = '\305'; // AA Angstroem
+         if (opSpec == 76) letter = '\345'; // aa Angstroem
+      }
+      Double_t props, propi;
+      props = 1.8 ; // scale factor for #sum(66)
+      propi = 2.3 ; // scale factor for  #int(79)
+
+      if (opSpec==66 ) {
+         newSpec.fSize = spec.fSize*props;
+      } else if (opSpec==79) {
+         newSpec.fSize = spec.fSize*propi;
+      }
       if (!fShow) {
          fs1 = Anal1(newSpec,&letter,1);
-         fs1.Set(fs1.Width(),fs1.Over()*0.45,fs1.Over()*0.45);
+         if (opSpec == 79 || opSpec == 66)
+            fs1.Set(fs1.Width(),fs1.Over()*0.45,fs1.Over()*0.45);
+
          fs2 = Anal1(spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
          Savefs(&fs1);
-         Savefs(&fs2);
       } else {
-         fs2 = Readfs();
          fs1 = Readfs();
          Analyse(x+fs1.Width(),y,spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
-         Analyse(x,y+fs1.Under()/2.,newSpec,&letter,1);
+         if (opSpec!=66 && opSpec!=79)
+            Analyse(x,y,newSpec,&letter,1);
+         else {
+               Analyse(x,y+fs1.Under()/2.,newSpec,&letter,1);
+         }
       }
       result = fs1+fs2;
    }
