@@ -18,7 +18,7 @@
 // Simple locking interface used by viewer and scene.
 
 
-ClassImp(TGLLockable)
+ClassImp(TGLLockable);
 
 TGLLockable::TGLLockable() :
    fLock      (kUnlocked)

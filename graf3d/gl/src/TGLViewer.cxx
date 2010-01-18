@@ -532,8 +532,9 @@ void TGLViewer::DoDraw()
       }
    }
 
+   TUnlocker ulck(this);
+
    if (fGLDevice == -1 && (fViewport.Width() <= 1 || fViewport.Height() <= 1)) {
-      ReleaseLock(kDrawLock);
       if (gDebug > 2) {
 	 Info("TGLViewer::DoDraw()", "zero surface area, draw skipped.");
       }
@@ -1154,6 +1155,8 @@ Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
       return kFALSE;
    }
 
+   TUnlocker ulck(this);
+
    MakeCurrent();
 
    fRnrCtx->BeginSelection(x, y, 3);
@@ -1193,7 +1196,12 @@ Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
 //______________________________________________________________________________
 Bool_t TGLViewer::RequestSecondarySelect(Int_t x, Int_t y)
 {
-   // 
+   // Request secondary select.
+
+   if ( ! TakeLock(kSelectLock)) {
+      return kFALSE;
+   }
+
    if (!gVirtualX->IsCmdThread())
       return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSecondarySelect(%d, %d, %s)", this, x, y)));
    else
@@ -1205,20 +1213,25 @@ Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
 {
    // Secondary selection.
 
-   GLint nHits = 1;
-   //glGetIntegerv(GL_RENDER, &nHits);
-   if ( nHits < 1 || ! fSelRec.GetSceneInfo() || ! fSelRec.GetPhysShape() ||
-         ! fSelRec.GetPhysShape()->GetLogical()->SupportsSecondarySelect())
+   if (CurrentLock() != kSelectLock) {
+      Error("TGLViewer::DoSecondarySelect", "expected kSelectLock, found %s", LockName(CurrentLock()));
+      return kFALSE;
+   }
+
+   TUnlocker ulck(this);
+
+   if (! fSelRec.GetSceneInfo() || ! fSelRec.GetPhysShape() ||
+       ! fSelRec.GetPhysShape()->GetLogical()->SupportsSecondarySelect())
    {
       if (gDebug > 0)
          Info("TGLViewer::SecondarySelect", "Skipping secondary selection "
-              "(nPrimHits=%d, sinfo=0x%lx, pshape=0x%lx).\n",
-              nHits, fSelRec.GetSceneInfo(), fSelRec.GetPhysShape());
+              "(sinfo=0x%lx, pshape=0x%lx).\n",
+              fSelRec.GetSceneInfo(), fSelRec.GetPhysShape());
       fSecSelRec.Reset();
       return kFALSE;
    }
 
-   TakeLock(kSelectLock);
+   MakeCurrent();
 
    TGLSceneInfo*    sinfo = fSelRec.GetSceneInfo();
    TGLSceneBase*    scene = sinfo->GetScene();
@@ -1311,6 +1324,8 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
       Error("TGLViewer::DoOverlaySelect", "expected kSelectLock, found %s", LockName(CurrentLock()));
       return kFALSE;
    }
+
+   TUnlocker ulck(this);
 
    MakeCurrent();
 

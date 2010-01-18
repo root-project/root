@@ -31,6 +31,20 @@ protected:
    // Locking - can take/release via const handle
    mutable ELock     fLock;        // Lock state.
 
+   // Ensures unlocking in view of exceptions.
+   class TUnlocker
+   {
+      const TGLLockable *fLockable;
+
+   public:
+      TUnlocker(const TGLLockable* l) : fLockable(l) {}
+      ~TUnlocker()
+      {
+         if (fLockable->IsLocked())
+            fLockable->ReleaseLock(fLockable->CurrentLock());
+      }
+   };
+
 public:
    TGLLockable();
    virtual ~TGLLockable() {}
@@ -47,7 +61,7 @@ public:
    static const char * LockName(ELock lock);
    static Bool_t       LockValid(ELock lock);
 
-   ClassDef(TGLLockable, 0) // Lock for viewers and scenes.
+   ClassDef(TGLLockable, 0); // Lock for viewers and scenes.
 }; // endclass TGLLockable
 
 #endif
