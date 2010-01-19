@@ -79,9 +79,9 @@ void Test(Int_t range) {
    }
 
    // Project3D wants them in inverse order :-(
-   TH2* xy = (TH2*)h3->Project3D("yx_h3");
-   TH2* yz = (TH2*)h3->Project3D("zy_h3");
-   TH2* xz = (TH2*)h3->Project3D("zx_h3");
+   TH2* xy = (TH2*)h3->Project3D("yx");
+   TH2* yz = (TH2*)h3->Project3D("zy");
+   TH2* xz = (TH2*)h3->Project3D("zx");
 
    TH1 *xyx, *xyy, *yzy, *yzz, *xzx, *xzz;
    if (range > 1) {
@@ -100,9 +100,9 @@ void Test(Int_t range) {
       xzz = xz->ProjectionY("xzz");
    }
 
-   TH1* x3 = h3->Project3D("x_h3");
-   TH1* y3 = h3->Project3D("y_h3");
-   TH1* z3 = h3->Project3D("z_h3");
+   TH1* x3 = h3->Project3D("x");
+   TH1* y3 = h3->Project3D("y");
+   TH1* z3 = h3->Project3D("z");
 
    TH1* x = 0; 
    TH1* y = 0; 
