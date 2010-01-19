@@ -52,7 +52,7 @@ ReflexCMakeBuild: ReflexCMakeConfig
 	$(CMDECHO)if ! [ -e SKIP-CONFIG-ERROR ]; then \
 	echo Building Reflex... && \
 	cd cmake-build && $(MAKE) > /dev/null && \
-	rm src/libReflex.${DllSuf} && \
+	rm src/libReflex.* && \
 	echo Done.; \
 	fi
 
