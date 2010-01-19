@@ -407,14 +407,12 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
    TAxis *zaxis = h->GetZaxis();
-   Int_t entry = 0;
+   Double_t entry = 0;
    for (binz=zaxis->GetFirst();binz<=zaxis->GetLast();binz++) {
       for (biny=yaxis->GetFirst();biny<=yaxis->GetLast();biny++) {
          for (binx=xaxis->GetFirst();binx<=xaxis->GetLast();binx++) {
             bin = h->GetBin(binx,biny,binz);
-            for (in=0;in<h->GetBinContent(bin);in++) {
-               entry++;
-            }
+            entry += h->GetBinContent(bin);
          }
       }
    }
@@ -441,7 +439,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
    view->PadRange(gPad->GetFrameFillColor());
 
    if (entry == 0) return;
-   Int_t nmk = TMath::Min(kMaxEntry,entry);
+   Int_t nmk = Int_t(TMath::Min(Double_t(kMaxEntry),entry));
    TPolyMarker3D *pm3d    = new TPolyMarker3D(nmk);
    pm3d->SetMarkerStyle(h->GetMarkerStyle());
    pm3d->SetMarkerColor(h->GetMarkerColor());
@@ -466,7 +464,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
                xp = x + xw*gRandom->Rndm(in);
                yp = y + yw*gRandom->Rndm(in);
                zp = z + zw*gRandom->Rndm(in);
-               pm3d->SetPoint(entry,xp,yp,zp);
+               pm3d->SetPoint(Int_t(entry),xp,yp,zp);
                entry++;
             }
          }
