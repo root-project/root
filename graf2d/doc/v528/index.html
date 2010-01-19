@@ -1,4 +1,20 @@
 <br> 
 <hr> 
 <a name="graf2d"></a> 
-<h3>xxx</h3>
+
+<h3>Graphics Primitives</h3>
+
+<h4>TLatex</h4>
+<ul>
+<li> The <tt>#int</tt> and <tt>#sum</tt> symbols had wrong limits placement
+     if the character just before started with "#". There was an atempt to fix
+     this problem in the previous release but it produced very bad side effects
+     therefore the fix was reverted. This new fix does not have this sidecw
+     effect. It causes, in the case of the "^" or "_" preceded by "sum" or
+     "int", to break off and process everything before "sum" or "int" first.
+     After that, when processing the rest, the "^" kicks in first according to
+     the order of precedence, and takes the "int" (only!) as its base.
+     <br>
+     Fix done by: Oleksandr Grebenyuk <tt>&lt;ogrebenyuk@lbl.gov&gt;</tt>.
+</ul>
+
