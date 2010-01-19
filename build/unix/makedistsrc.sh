@@ -12,8 +12,8 @@ rm -rf $EXPDIR
 mkdir $EXPDIR
 cd $EXPDIR
 
-#svn co http://root.cern.ch/svn/root/tags/$CURVERS root
-svn co http://root.cern.ch/svn/root/trunk root
+svn co http://root.cern.ch/svn/root/tags/$CURVERS root
+#svn co http://root.cern.ch/svn/root/trunk root
 
 # generate etc/svninfo.txt
 cd root
