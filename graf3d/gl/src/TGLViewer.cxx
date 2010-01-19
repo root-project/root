@@ -596,7 +596,6 @@ void TGLViewer::DoDrawMono()
 
    MakeCurrent();
 
-   glDrawBuffer(GL_BACK);
    if (!fIsPrinting) PreDraw();
    PreRender();
 
@@ -738,6 +737,7 @@ void TGLViewer::DoDrawStereo()
 
    // End
    SwapBuffers();
+   glDrawBuffer(GL_BACK);
 }
 
 //______________________________________________________________________________
@@ -805,6 +805,8 @@ Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
       return kFALSE;
    }
 
+   TUnlocker ulck(this);
+
    std::auto_ptr<TImage> image(TImage::Create());
 
    fRnrCtx->SetGrabImage(kTRUE, GL_BACK);
@@ -856,6 +858,8 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
       Error(eh, "viewer locked - try later.");
       return kFALSE;
    }
+
+   TUnlocker ulck(this);
 
    std::auto_ptr<TImage> image(TImage::Create());
 
