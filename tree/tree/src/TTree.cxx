@@ -3544,7 +3544,7 @@ Int_t TTree::Fill()
       Int_t nwrite = branch->Fill();
       if (nwrite < 0)  {
          if (nerror < 2) {
-            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d\n"
+            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
                   " This error is symptomatic of a Tree created as a memory-resident Tree\n"
                   " Instead of doing:\n"
                   "    TTree *T = new TTree(...)\n"
@@ -3552,9 +3552,9 @@ Int_t TTree::Fill()
                   " you should do:\n"
                   "    TFile *f = new TFile(...)\n"
                   "    TTree *T = new TTree(...)",
-                  GetName(), branch->GetName(), nwrite);
+                  GetName(), branch->GetName(), nwrite,fEntries+1);
          } else {
-            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d", GetName(), branch->GetName(), nwrite);
+            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld", GetName(), branch->GetName(), nwrite,fEntries+1);
          }
          ++nerror;
       } else {
