@@ -67,7 +67,14 @@ private:
    TGMenuBar         *fMenuBar;
    TGButton          *fMenuBut;
    Bool_t             fHideMenuBar;
+   TTimer            *fMenuHidingTimer;
+   Bool_t             fMenuHidingShowMenu;
+
    Bool_t             fDeleteMenuBar;
+
+   static Long_t      fgMenuHidingTimeout;
+
+   void ResetMenuHidingTimer(Bool_t show_menu);
 
    // Initial window positioning
    static const Int_t fgInitX;
@@ -103,6 +110,7 @@ public:
    void   DeleteMenuBar();
    void   DisableCloseMenuEntries();
    void   EnableMenuBarHiding();
+   void   MenuHidingTimeout();
 
    void   HandleMenuBarHiding(Event_t* ev);
 
@@ -117,6 +125,8 @@ public:
    void ToggleEditObject();
    void ToggleOrthoRotate();
    void ToggleOrthoDolly();
+
+   static void SetMenuHidingTimeout(Long_t timeout);
 
    ClassDef(TGLSAViewer, 0); // Standalone GL viewer.
 };
