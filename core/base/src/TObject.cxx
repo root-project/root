@@ -195,7 +195,7 @@ TObject *TObject::Clone(const char *) const
    // a new name to the newly created object.
    //
    // If the object class has a DirectoryAutoAdd function, it will be
-   // called at the end of the function with the parameter gDirector.
+   // called at the end of the function with the parameter gDirectory.
    // This usually means that the object will be appended to the current
    // ROOT directory.
 
