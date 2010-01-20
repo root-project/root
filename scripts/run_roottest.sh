@@ -64,7 +64,7 @@ ulimit -t 3600
 MAKE=gmake
 ROOT_MAKEFLAGS=
 ROOTTEST_MAKEFLAGS=
-CONFIGURE_OPTION=
+CONFIGURE_OPTION="--enable-roofit --enable-tmva "
 
 ROOTMARKS=n/a
 FITROOTMARKS=n/a
@@ -72,7 +72,8 @@ FITROOTMARKS=n/a
 SHOW_TOP=yes
 UPLOAD_LOCATION=flxi02:/afs/.fnal.gov/files/expwww/root/html/roottest/
 SVN_HOST=http://root.cern.ch
-export CVSROOT=:pserver:cvs@root.cern.ch:/user/cvs 
+SVN_BRANCH=trunk
+unset ROOTSYS
 
 # The config is expected to set ROOTLOC,
 # ROOTTESTLOC and any of the customization
@@ -188,7 +189,7 @@ rootteststatus=$na
 mkdir -p $ROOTSYS
 cd $ROOTSYS/..
 locname=`basename $ROOTSYS`
-svn co $SVN_HOST/svn/root/trunk $locname > $locname/cvsupdate.log  2>&1
+svn co $SVN_HOST/svn/root/$SVN_BRANCH $locname > $locname/cvsupdate.log  2>&1
 result=$?
 if test $result != 0; then 
     cvsstatus=$failure
@@ -260,7 +261,7 @@ echo Going to roottest at: $ROOTTESTLOC
 mkdir -p $ROOTTESTLOC
 cd $ROOTTESTLOC/..
 locname=`basename $ROOTTESTLOC`
-svn co $SVN_HOST/svn/roottest/trunk $locname > $locname/gmake.log 2>&1
+svn co $SVN_HOST/svn/roottest/$SVN_BRANCH $locname > $locname/gmake.log 2>&1
 
 cd $ROOTTESTLOC
 $MAKE clean >> gmake.log 2>&1 
