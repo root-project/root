@@ -65,6 +65,13 @@ if [ "x$EXPLICIT" = "xyes" ]; then
          EXPLLNKCORE="-Llib -lCint"
       fi
    fi
+   if [ $PLATFORM = "linux" ]; then
+      if [ -z "$EXPLLNKCORE" ]; then
+         EXPLLNKCORE=" -ldl"
+      else
+         EXPLLNKCORE=${EXPLLNKCORE}" -ldl"
+      fi
+   fi
 fi
 
 if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
@@ -159,10 +166,6 @@ elif [ $PLATFORM = "macosx" ]; then
        echo $cmd
        $cmd
    fi
-elif [ $LD = "KCC" ]; then
-   cmd="$LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE"
-   echo $cmd
-   $cmd
 elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
    EXPLLNKCORE=
    if [ $SONAME != "libCint.dll" ] \
