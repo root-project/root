@@ -9,7 +9,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
@@ -105,13 +105,13 @@ static void gdk_synthesize_click(GdkEvent * event, gint nclicks);
 /* Private variable declarations
  */
 
-static GdkWindow *p_grab_window = NULL;	/* Window that currently
-	 * holds the pointer grab
-	 */
+static GdkWindow *p_grab_window = NULL; /* Window that currently
+                                         * holds the pointer grab
+                                         */
 
-static GdkWindow *k_grab_window = NULL;	/* Window the holds the
-	 * keyboard grab
-	 */
+static GdkWindow *k_grab_window = NULL; /* Window the holds the
+                                         * keyboard grab
+                                         */
 
 static GList *client_filters;   /* Filters for client messages */
 
@@ -148,7 +148,7 @@ static PFN_TrackMouseEvent p_TrackMouseEvent = NULL;
 
 static gboolean use_IME_COMPOSITION = FALSE;
 
-static gboolean first_move = FALSE;	// bb add
+static gboolean first_move = FALSE; // bb add
 
 static LRESULT
 inner_window_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -756,26 +756,57 @@ find_window_for_pointer_event (GdkWindow*  reported_window,
    pt.y = points.y;
    ClientToScreen (msg->hwnd, &pt);
 
-  	GDK_NOTE (EVENTS, g_print ("Finding window for grabbed pointer event at (%ld, %ld)\n",
+   GDK_NOTE (EVENTS, g_print ("Finding window for grabbed pointer event at (%ld, %ld)\n",
                              pt.x, pt.y));
 
-  	hwnd = WindowFromPoint (pt);
-  	if (hwnd == NULL) {
+   hwnd = WindowFromPoint (pt);
+   if (hwnd == NULL) {
       return reported_window;
    }
-	other_window = gdk_window_lookup(hwnd);
+   other_window = gdk_window_lookup(hwnd);
 
-  	if (other_window == NULL) {
-    	return reported_window;
+   if (other_window == NULL) {
+      return reported_window;
    }
-  	GDK_NOTE (EVENTS, g_print ("Found window %p for point (%ld, %ld)\n",
-			     hwnd, pt.x, pt.y));
+   GDK_NOTE (EVENTS, g_print ("Found window %p for point (%ld, %ld)\n",
+                              hwnd, pt.x, pt.y));
 
-  	gdk_window_unref (reported_window);
-  	gdk_window_ref (other_window);
+   gdk_window_unref (reported_window);
+   gdk_window_ref (other_window);
 
-  	return other_window;
+   return other_window;
 }
+
+static void
+track_mouse_event(HWND  hwnd)
+{
+   typedef BOOL (WINAPI *PFN_TrackMouseEvent) (LPTRACKMOUSEEVENT);
+   static PFN_TrackMouseEvent pTrackMouseEvent = NULL;
+   static gboolean once = FALSE;
+
+   if (!once) {
+      HMODULE user32;
+      HINSTANCE commctrl32;
+
+      user32 = GetModuleHandle ("user32.dll");
+      if ((pTrackMouseEvent = (PFN_TrackMouseEvent)GetProcAddress (user32, "TrackMouseEvent")) == NULL) {
+         if ((commctrl32 = LoadLibrary ("commctrl32.dll")) != NULL)
+            pTrackMouseEvent = (PFN_TrackMouseEvent) GetProcAddress (commctrl32, "_TrackMouseEvent");
+      }
+      once = TRUE;
+   }
+
+   if (pTrackMouseEvent) {
+      TRACKMOUSEEVENT tme = {0};
+      tme.cbSize = sizeof(TRACKMOUSEEVENT);
+      tme.dwFlags = TME_LEAVE;
+      tme.hwndTrack = hwnd;
+
+      if (!pTrackMouseEvent (&tme))
+         WIN32_API_FAILED ("TrackMouseEvent");
+   }
+}
+
 
 /*
  *--------------------------------------------------------------
@@ -4462,8 +4493,8 @@ static void synthesize_crossing_events(GdkWindow * window, MSG * xevent)
       else
          event->crossing.detail = GDK_NOTIFY_NONLINEAR;
 
-      event->crossing.focus = TRUE;	/* ??? */
-//      event->crossing.state = 0; /* ??? */
+      event->crossing.focus = TRUE; /* ??? */
+//      event->crossing.state = 0;    /* ??? */
       event->crossing.state = build_pointer_event_state(xevent);
       gdk_event_queue_append(event);
       GDK_NOTE(EVENTS, print_event(event));
@@ -4494,8 +4525,8 @@ static void synthesize_crossing_events(GdkWindow * window, MSG * xevent)
       else
          event->crossing.detail = GDK_NOTIFY_NONLINEAR;
 
-      event->crossing.focus = TRUE;	/* ??? */
-//      event->crossing.state = 0; /* ??? */
+      event->crossing.focus = TRUE; /* ??? */
+//      event->crossing.state = 0;    /* ??? */
       event->crossing.state = build_pointer_event_state(xevent);
 
       gdk_event_queue_append(event);
@@ -4654,7 +4685,7 @@ propagate(GdkWindow ** window,
             GDK_NOTE(EVENTS, g_print("...propagating to %#x\n",
                                      GDK_DRAWABLE_XID(*window)));
             /* The only branch where we actually continue the loop */
-	        in_propagation = TRUE;
+            in_propagation = TRUE;
          }
       } else {
          return TRUE;
@@ -5326,7 +5357,7 @@ gdk_event_translate(GdkEvent * event,
          event->key.string = g_strdup ("\033");
       }
       else if (event->key.keyval == GDK_Return ||
-	            event->key.keyval == GDK_KP_Enter) {
+               event->key.keyval == GDK_KP_Enter) {
          event->key.length = 1;
          event->key.string = g_strdup ("\r");
       }
@@ -5459,7 +5490,7 @@ gdk_event_translate(GdkEvent * event,
          break;
       }
 
-	   window = find_window_for_pointer_event (window, xevent);
+      window = find_window_for_pointer_event (window, xevent);
 
       if (window != curWnd)
          synthesize_crossing_events(window, xevent);
@@ -5479,7 +5510,7 @@ gdk_event_translate(GdkEvent * event,
                      doesnt_want_button_press)) {
          break;
       }
-		event->button.window = window;
+      event->button.window = window;
 
      /* Emulate X11's automatic active grab */
       if (!p_grab_window) {
@@ -5525,14 +5556,14 @@ gdk_event_translate(GdkEvent * event,
    case WM_RBUTTONUP:
       button = 3;
 
-    buttonup0:
+   buttonup0:
       GDK_NOTE(EVENTS,
                g_print("WM_%cBUTTONUP: %#x  (%d,%d)\n",
                        " LMR"[button],
                        xevent->hwnd,
                        LOWORD(xevent->lParam), HIWORD(xevent->lParam)));
 
-	  window = find_window_for_pointer_event (window, xevent);
+      window = find_window_for_pointer_event (window, xevent);
 
       if (((GdkWindowPrivate *) window)->extension_events != 0
           && gdk_input_ignore_core) {
@@ -5550,25 +5581,25 @@ gdk_event_translate(GdkEvent * event,
                      doesnt_want_button_release)) {
       } else {
          if (window != orig_window) {
-         translate_mouse_coords(orig_window, window, xevent);
-	  }
+            translate_mouse_coords(orig_window, window, xevent);
+         }
 
-      	event->button.window = window;
-      	event->button.time = xevent->time;
-      	event->button.x = (gint16) LOWORD(xevent->lParam);
-      	event->button.y = (gint16) HIWORD(xevent->lParam);
-      	event->button.x_root = xevent->pt.x;
-      	event->button.y_root = xevent->pt.y;
-      	event->button.pressure = 0.5;
-      	event->button.xtilt = 0;
-      	event->button.ytilt = 0;
-      	event->button.state = build_pointer_event_state(xevent);
-      	event->button.button = button;
-      	event->button.source = GDK_SOURCE_MOUSE;
-      	event->button.deviceid = GDK_CORE_POINTER;
+         event->button.window = window;
+         event->button.time = xevent->time;
+         event->button.x = (gint16) LOWORD(xevent->lParam);
+         event->button.y = (gint16) HIWORD(xevent->lParam);
+         event->button.x_root = xevent->pt.x;
+         event->button.y_root = xevent->pt.y;
+         event->button.pressure = 0.5;
+         event->button.xtilt = 0;
+         event->button.ytilt = 0;
+         event->button.state = build_pointer_event_state(xevent);
+         event->button.button = button;
+         event->button.source = GDK_SOURCE_MOUSE;
+         event->button.deviceid = GDK_CORE_POINTER;
 
-      	return_val = !GDK_DRAWABLE_DESTROYED(window);
-	  }
+         return_val = !GDK_DRAWABLE_DESTROYED(window);
+      }
 
       if (p_grab_window != NULL
           && p_grab_automatic
@@ -5577,13 +5608,51 @@ gdk_event_translate(GdkEvent * event,
       }
       break;
 
+   case WM_MOUSELEAVE:
+      GDK_NOTE(EVENTS, g_print("WM_MOUSELEAVE: %#x\n", xevent->hwnd));
+
+      if (!(GDK_WINDOW_WIN32DATA(window)->
+           event_mask & GDK_LEAVE_NOTIFY_MASK))
+         break;
+
+      event->type = GDK_LEAVE_NOTIFY;
+      event->crossing.type = GDK_LEAVE_NOTIFY;
+      event->crossing.window = window;
+      event->crossing.subwindow = NULL;
+      event->crossing.time = xevent->time;
+      event->crossing.x = curX;
+      event->crossing.y = curY;
+      event->crossing.x_root = curXroot;
+      event->crossing.y_root = curYroot;
+      event->crossing.mode = GDK_CROSSING_NORMAL;
+      if (curWnd && IsChild(GDK_DRAWABLE_XID(curWnd), 
+                            GDK_DRAWABLE_XID(window)))
+         event->crossing.detail = GDK_NOTIFY_INFERIOR;
+      else if (curWnd && IsChild(GDK_DRAWABLE_XID(window),
+                                 GDK_DRAWABLE_XID(curWnd)))
+         event->crossing.detail = GDK_NOTIFY_ANCESTOR;
+      else
+         event->crossing.detail = GDK_NOTIFY_NONLINEAR;
+      event->crossing.focus = TRUE;
+      event->crossing.state = build_pointer_event_state(xevent);
+
+      if (curWnd) {
+         gdk_window_unref(curWnd);
+         curWnd = NULL;
+      }
+
+      return_val = !GDK_DRAWABLE_DESTROYED(window);
+      break;
+
    case WM_MOUSEMOVE:
       GDK_NOTE(EVENTS,
                g_print("WM_MOUSEMOVE: %#x  %#x (%d,%d)\n",
                        xevent->hwnd, xevent->wParam,
                        LOWORD(xevent->lParam), HIWORD(xevent->lParam)));
 
- 		window = find_window_for_pointer_event (window, xevent);
+      track_mouse_event(xevent->hwnd);
+
+      window = find_window_for_pointer_event (window, xevent);
 
       if (window != curWnd)
          synthesize_crossing_events(window, xevent);
@@ -5606,9 +5675,9 @@ gdk_event_translate(GdkEvent * event,
       if (window != orig_window)
          translate_mouse_coords(orig_window, window, xevent);
 
- 		if (window == curWnd
-	  		&& (gint16) LOWORD(xevent->lParam) == curX
-	  		&& (gint16) HIWORD(xevent->lParam) == curY) break;
+      if (window == curWnd
+         && (gint16) LOWORD(xevent->lParam) == curX
+         && (gint16) HIWORD(xevent->lParam) == curY) break;
 
       event->motion.x = curX = (gint16) LOWORD(xevent->lParam);
       event->motion.y = curY = (gint16) HIWORD(xevent->lParam);
@@ -5656,8 +5725,8 @@ gdk_event_translate(GdkEvent * event,
          event->crossing.mode = GDK_CROSSING_NORMAL;
          event->crossing.detail = GDK_NOTIFY_NONLINEAR;
 
-         event->crossing.focus = TRUE;	/* ??? */
-         event->crossing.state = 0;	/* ??? */
+         event->crossing.focus = TRUE; /* ??? */
+         event->crossing.state = 0;    /* ??? */
          return_val = TRUE;
       }
 
@@ -5767,8 +5836,8 @@ gdk_event_translate(GdkEvent * event,
       else
          event->crossing.detail = GDK_NOTIFY_NONLINEAR;
 
-      event->crossing.focus = TRUE;	/* ??? */
-      event->crossing.state = 0;	/* ??? */
+      event->crossing.focus = TRUE; /* ??? */
+      event->crossing.state = 0;    /* ??? */
 
       if (curWnd) {
          gdk_window_unref(curWnd);
