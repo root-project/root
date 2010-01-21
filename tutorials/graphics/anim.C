@@ -12,8 +12,9 @@ Float_t t = 0;
 Float_t phi = 30;
 void anim()
 {
+   gStyle->SetCanvasPreferGL(true);
    gStyle->SetFrameFillColor(42);
-   TCanvas *c1 = new TCanvas("glc1");
+   TCanvas *c1 = new TCanvas("c1");
    c1->SetFillColor(17);
    pi = TMath::Pi();
    f2 = new TF2("f2","sin(2*x)*sin(2*y)*[0]",0,pi,0,pi);
@@ -30,7 +31,7 @@ void anim()
 void Animate()
 {
    //just in case the canvas has been deleted
-   if (!gROOT->GetListOfCanvases()->FindObject("glc1")) return;
+   if (!gROOT->GetListOfCanvases()->FindObject("c1")) return;
    t += 0.05*pi;
    f2->SetParameter(0,TMath::Cos(t));
    phi += 2;
