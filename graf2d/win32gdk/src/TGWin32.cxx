@@ -656,7 +656,7 @@ void TGWin32MainThread::UnlockMSG()
 class TGWin32RefreshTimer : public TTimer {
 
 public:
-   TGWin32RefreshTimer() : TTimer(100, kTRUE) { if (gSystem) gSystem->AddTimer(this); }
+   TGWin32RefreshTimer() : TTimer(10, kTRUE) { if (gSystem) gSystem->AddTimer(this); }
    ~TGWin32RefreshTimer() { if (gSystem) gSystem->RemoveTimer(this); }
    Bool_t Notify()
    {
