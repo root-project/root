@@ -60,7 +60,7 @@ TEST_DLL = $(LIBDIR)TestHelpers_C.$(DllSuf) $(FTEST_DLL) $(HOLDER_DLL)
 
 HELPER_DLL = $(LIBDIR)TestHelpers_C.$(DllSuf)
 
-DEPENDENCY_FILES = $(TEST_DLL:.$(DllSuf)=.df)
+DEPENDENCY_FILES = $(TEST_DLL:.$(DllSuf)=.d)
 #debug := $(shell echo $(DEPENDENCY_FILES) 1>&2 )
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -122,16 +122,6 @@ ROOTSYS_SED=$(subst /,\\/,$(subst \,\\\\,$(ROOTSYS)))
 #ROOTLOC_SED=$(subst /,\\/,$(ROOT_LOC))
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
-ifneq ($(MAKECMDGOALS),clean)
-$(LIBDIR)%_C.df: $(LIBDIR)%_C.d
-	@cat $< | sed -e s/$(LIBDIR_SED_REM)// \
-	   -e s,$(PWD_SED),, \
-	   -e s,^$*_C.$(DllSuf),$(LIBDIR_SED)$*_C.$(DllSuf), \
-	   -e s,^$*.o,$(LIBDIR_SED)$*_C.$(DllSuf), \
-	   -e s,$(ROOTSYS_SED)\\\\include\\\\cintdictversion.h,$(ROOT_LOC)/include/cintdictversion.h, \
-	   -e s,$(ROOTSYS_SED)\\\\include\\\\RVersion.h,$(ROOT_LOC)/include/RVersion.h, > $@
-endif
-
 $(HELPER_DLL) : TestHelpers.C 
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
 
@@ -149,7 +139,7 @@ $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
 $(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C directories
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1
 
-$(LIBDIR)runbase_C.$(DllSuf) : runbase.C directories
+$(LIBDIR)runbase_C.$(DllSuf): runbase.C directories
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"runbase.C\",\"\",\"\")" > runbase_C.build.log 2>&1
 
 #	$(CMDECHO)touch $@
