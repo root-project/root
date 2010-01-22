@@ -463,13 +463,13 @@ Double_t* TBackCompFitter::GetCovarianceMatrix() const {
    unsigned int nfreepar =   GetNumberFreeParameters();
    unsigned int ntotpar =   GetNumberTotalParameters();
    
+   if (fCovar.size() !=  nfreepar*nfreepar ) 
+      fCovar.resize(nfreepar*nfreepar);
+
    if (!fFitter->Result().IsValid() ) { 
       Warning("GetCovarianceMatrix","Invalid fit result");
       return 0; 
    }
-
-   if (fCovar.size() !=  nfreepar*nfreepar ) 
-      fCovar.resize(nfreepar*nfreepar);
 
    unsigned int l = 0; 
    for (unsigned int i = 0; i < ntotpar; ++i) { 
@@ -488,11 +488,14 @@ Double_t* TBackCompFitter::GetCovarianceMatrix() const {
 }
 
 Double_t TBackCompFitter::GetCovarianceMatrixElement(Int_t i, Int_t j) const {
-   // get error matrix element
+   // get error matrix element (return all zero if matrix is not available)
 
    unsigned int np2 = fCovar.size();
    unsigned int npar = GetNumberFreeParameters(); 
-   if ( np2 == 0 || np2 != npar *npar )   GetCovarianceMatrix(); 
+   if ( np2 == 0 || np2 != npar *npar ) { 
+      double * c = GetCovarianceMatrix();
+      if (c == 0) return 0;  
+   }
    return fCovar[i*npar + j];  
 }
 
