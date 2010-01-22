@@ -19,11 +19,13 @@ else
    HAVEPYTHON := $(shell root-config --has-python)
 endif
 
+ifneq ($(PLATFORM),win32)
 ifeq ($(HAVECINTEX),cintex)
  TEST_TARGETS += test_Cintex test_Persistency
  ifeq ($(HAVEPYTHON),yes)
   TEST_TARGETS += test_PyCintex_basics
  endif
+endif
 endif
 
 # Search for Rules.mk in roottest/scripts
