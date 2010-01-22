@@ -40,7 +40,14 @@ namespace ROOT {
      
       struct StubContext_t {
          struct ParCnvInfo_t {
-            ParCnvInfo_t(): fValCINT(G__null), fTreat(0) {}
+            ParCnvInfo_t(): fTreat(0) {
+               fValCINT.obj.i = 0;
+               fValCINT.ref = 0;
+               fValCINT.type = 0;
+               fValCINT.tagnum = -1;
+               fValCINT.typenum = -1;
+               fValCINT.isconst = 0;
+            }
             G__value fValCINT; ///< CINT parameter value
             char     fTreat;   ///< Coded treatment of parameters
          };
