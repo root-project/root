@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -26,6 +26,25 @@
 
 namespace Reflex {
 
+   template<typename FUNC>
+   RFLX_API void* FuncToVoidPtr(FUNC f) {
+      union Cnv_t {
+         Cnv_t(FUNC ff): fFunc(ff) {}
+         FUNC fFunc;
+         void* fPtr;
+      } u(f);
+      return u.fPtr;
+   }
+   template <typename FUNC>
+   RFLX_API FUNC VoidPtrToFunc(void* p) {
+      union Cnv_t {
+         Cnv_t(void* pp): fPtr(pp) {}
+         FUNC fFunc;
+         void* fPtr;
+      } u(p);
+      return u.fFunc;
+   }
+   
    RFLX_API Type TypeBuilder( const char * n,
       unsigned int modifiers = 0 );
 
