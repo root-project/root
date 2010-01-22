@@ -46,7 +46,8 @@ public:
    void WriteShadowClass(G__ClassInfo &cl, int level = 0);
    int WriteNamespaceHeader(G__ClassInfo &cl);
 
-   int NeedShadowCached(int tagnum) { return fCacheNeedShadow[tagnum]; }
+   char NeedShadowCached(int tagnum);
+   
    static bool IsSTLCont(const char *type);
    static bool IsStdPair(G__ClassInfo &cl);
 
@@ -62,13 +63,18 @@ private:
    G__ShadowMaker(const G__ShadowMaker&); // intentionally not implemented
    G__ShadowMaker& operator =(const G__ShadowMaker&); // intentionally not implemented
    void GetFullShadowNameRecurse(G__ClassInfo &cl, std::string &fullname);
+   
+   void UpdateCachedNeedShadow();  
 #ifndef __CINT__
    std::ostream& fOut; // where to write to
 #endif
    std::string fNSPrefix; // shadow classes are in this namespace's namespace "Shadow"
    char fCacheNeedShadow[G__MAXSTRUCT]; // whether we need a shadow for a tagnum
-   static bool fgVetoShadow; // whether WritaAllShadowClasses should write the shadow
+   int fMaxCachedNeedShadow; // Up to where in G__struct did we calculate the value.
+   bool (*fNeedShadowClass)(G__ClassInfo &cl); // func deciding whether the shadow is a tyepdef
    bool (*fNeedTypedefShadow)(G__ClassInfo &cl); // func deciding whether the shadow is a tyepdef
+
+   static bool fgVetoShadow; // whether WritaAllShadowClasses should write the shadow
 };
 
 } // end namespace Cint

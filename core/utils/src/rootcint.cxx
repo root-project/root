@@ -1053,6 +1053,8 @@ bool NeedShadowClass(G__ClassInfo& cl)
    if (G__ShadowMaker::IsStdPair(cl)) return true;
    if (G__ShadowMaker::IsSTLCont(cl.Name())) return false;
    if (strcmp(cl.Name(),"string") == 0 ) return false;
+   
+   if (strcmp(cl.Name(),"complex<float>") == 0 || strcmp(cl.Name(),"complex<double>") == 0) return true;
 
    if (cl.FileName() && !strncmp(cl.FileName(),"prec_stl",8))
       return false;

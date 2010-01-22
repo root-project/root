@@ -93,6 +93,9 @@ template<class T> class complex {
 #ifdef __CINT__
   //friend T abs(const complex& a);
 #endif
+  private:
+    T _real;
+    T _imag;
 };
 
 template<class T> complex<T> operator+(const complex<T>&, const complex<T>&);

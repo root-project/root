@@ -19,22 +19,30 @@ bool Cint::G__ShadowMaker::fgVetoShadow = false;
 Cint::G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix,
                                      bool(*needShadowClass)(G__ClassInfo &cl) /*=Cint::G__ShadowMaker::NeedShadowClass*/,
                                      bool(*needTypedefShadow)(G__ClassInfo &cl) /*=0*/):
-      fOut(out), fNSPrefix(nsprefix), fNeedTypedefShadow(needTypedefShadow)
+      fOut(out), fNSPrefix(nsprefix), fMaxCachedNeedShadow(-1), fNeedShadowClass(needShadowClass), fNeedTypedefShadow(needTypedefShadow)
 {
-
+   // Typical constructor.
+   
    memset(fCacheNeedShadow, 0, sizeof(fCacheNeedShadow));
+};
+
+//______________________________________________________________________________
+void Cint::G__ShadowMaker::UpdateCachedNeedShadow() 
+{
+   // Set or extend the cache of the value of 'need shadow'.
+   
    G__ClassInfo cl;
    // loop over all classes, deciding whether they need a shadow by themselves
-   cl.Init();
+   cl.Init(fMaxCachedNeedShadow);
+   
    while (cl.Next()) {
       fCacheNeedShadow[cl.Tagnum()] = cl.IsValid()
-                                      && (cl.Property() & (G__BIT_ISCLASS | G__BIT_ISSTRUCT)
-                                          && cl.Linkage() == G__CPPLINK)
-                                      && needShadowClass(cl);
+                                      && (cl.Property() & (G__BIT_ISCLASS | G__BIT_ISSTRUCT))
+                                      && fNeedShadowClass(cl);
    }
 
    // loop over all classes again, and for nested classes also generate shadow if parent needs shadow
-   cl.Init();
+   cl.Init(fMaxCachedNeedShadow);
    while (cl.Next()) {
       if (fCacheNeedShadow[cl.Tagnum()]) continue;
       G__ClassInfo encClass = cl.EnclosingClass();
@@ -45,7 +53,7 @@ Cint::G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix,
    // loop over all classes again, and for nested classes needing shadow set
    // parent to "dummy shadow" (i.e. only providing the enclosing scope)
    // if parent doesn't need shadow
-   cl.Init();
+   cl.Init(fMaxCachedNeedShadow);
    while (cl.Next()) {
       if (!fCacheNeedShadow[cl.Tagnum()]) continue;
       G__ClassInfo encClass = cl.EnclosingClass();
@@ -55,11 +63,26 @@ Cint::G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix,
       if (!fCacheNeedShadow[tagnum])
          fCacheNeedShadow[tagnum] = 2;
    }
+   
+   fMaxCachedNeedShadow = G__struct.alltag - 1;
+}
+
+//______________________________________________________________________________
+char Cint::G__ShadowMaker::NeedShadowCached(int tagnum) 
+{ 
+   if (tagnum >= G__struct.alltag) return 0;
+   
+   if (tagnum > fMaxCachedNeedShadow) {
+      UpdateCachedNeedShadow();
+   }
+   return fCacheNeedShadow[tagnum]; 
 }
 
 //______________________________________________________________________________
 void Cint::G__ShadowMaker::VetoShadow(bool veto /*=true*/)
 {
+   // Set whether the shadow should be written or not.
+   
    fgVetoShadow = veto;
 }
 
@@ -73,6 +96,7 @@ bool Cint::G__ShadowMaker::NeedShadowClass(G__ClassInfo& cl)
    if (IsStdPair(cl)) return true;
    if (IsSTLCont(cl.Name())) return false;
    if (strcmp(cl.Name(), "string") == 0) return false;
+   if (strcmp(cl.Name(),"complex<float>") == 0 || strcmp(cl.Name(),"complex<double>") == 0) return true;
 
    return (cl.FileName() == 0 || strncmp(cl.FileName(), "prec_stl", 8) != 0);
 }
@@ -339,7 +363,7 @@ void Cint::G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::strin
       }
    }
 
-   if (fCacheNeedShadow[cl.Tagnum()]) {
+   if (NeedShadowCached(cl.Tagnum())) {
       fullname += G__map_cpp_name((char*)cl.Name());
       fullname += "::";
    } else {
@@ -410,11 +434,11 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
    // for which all data member are the same as the one in the class but are
    // all public.
 
-   if (!fCacheNeedShadow[cl.Tagnum()]) return;
+   if (!NeedShadowCached(cl.Tagnum())) return;
 
    // if nested class let the enclosing class generate the shadow
    G__ClassInfo encClass = cl.EnclosingClass();
-   if (!level && encClass.IsValid() && fCacheNeedShadow[encClass.Tagnum()])
+   if (!level && encClass.IsValid() && NeedShadowCached(encClass.Tagnum()))
       return;
 
    // Here we copy the shadow only if !TypedefShadow(cl) class does not have a ClassDef
@@ -430,7 +454,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
    std::string fullname;
    GetFullyQualifiedName(cl, fullname);
 
-   if (fCacheNeedShadow[cl.Tagnum()] != 2
+   if (NeedShadowCached(cl.Tagnum()) != 2
          && fNeedTypedefShadow  && fNeedTypedefShadow(cl)) {
       fOut << indent << "      typedef " << fullname << " " << classname << ";" << std::endl;
    } else {
@@ -587,7 +611,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                      // templates or function without shadow
                      // need to have explicit namespace
                      if (arg.find('<') != std::string::npos ||
-                           (fCacheNeedShadow[tagname] != 1
+                           (NeedShadowCached(tagname) != 1
                             && ((ciArg.Property() & G__BIT_ISCLASS)
                                 || (ciArg.Property() & G__BIT_ISSTRUCT)))) {
                         // replace "pair" by "std::pair"
@@ -685,7 +709,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
          }
       }
 
-      if (fCacheNeedShadow[cl.Tagnum()] == 1) {
+      if (NeedShadowCached(cl.Tagnum()) == 1) {
          // Write data members
          G__DataMemberInfo d(cl);
          while (d.Next()) {
@@ -759,7 +783,7 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
             }
             fOut << "; //" << d.Title() << std::endl;
          }
-      } // if fCacheNeedShadow[cl.Tagnum()]==1 (i.e. real shadow class, not just enclosing scope)
+      } // if NeedShadowCached(cl.Tagnum())==1 (i.e. real shadow class, not just enclosing scope)
       fOut << indent << "      };" << std::endl;
 
       fOut << indent << "      #endif" << std::endl;
