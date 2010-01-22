@@ -1,7 +1,7 @@
 // @(#)root/cintex:$Id$
 // Author: Pere Mato 2005
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -51,7 +51,8 @@ namespace ROOT { namespace Cintex {
    };
 
    StubContext_t::StubContext_t(const Member& mem, const Type& cl )
-      :  fMethodCode(0), fClass(cl), fNewdelfuncs(0), fInitialized(false)
+      :  fMethodCode(0), fParam(mem.FunctionParameterSize(), 0),
+         fParCnvLast(0), fClass(cl), fNewdelfuncs(0), fInitialized(false)
    {
       // Push back a context.
       StubContexts::Instance().push_back(this);
@@ -77,28 +78,38 @@ namespace ROOT { namespace Cintex {
    StubContext_t::~StubContext_t() {
       // Destructor.
       if ( fMethodCode ) Free_function( (void*)fMethodCode );
+      if (fParCnvLast) delete fParCnvLast;
    }
 
    void StubContext_t::Initialize() {
-      // Initialise a context.
-      fParam.resize(fNpar);
-      fParcnv.resize(fNpar);
-      fTreat.resize(fNpar);
+      // Initialize a context.
+      if (fNpar > kNumParCnvFirst) {
+         if (!fParCnvLast) {
+            fParCnvLast = new std::vector<ParCnvInfo_t>(fNpar - kNumParCnvFirst);
+         } else {
+            fParCnvLast->resize(fNpar - kNumParCnvFirst);
+         }
+      } else {
+         delete fParCnvLast;
+         fParCnvLast = 0;
+      }
+
       // pre-process paramters and remember the treatment that is needed to be done
       for (int i = 0; i < fNpar; i++ ) {
+         ParCnvInfo_t* parInfo =  i < kNumParCnvFirst ? &fParCnvFirst[i] : &((*fParCnvLast)[i - kNumParCnvFirst]);
          Type pt = fFunction.FunctionParameterAt(i);
          while ( pt.IsTypedef() ) pt = pt.ToType();
          if ( pt.IsReference() && ! pt.IsConst() )
-            if( pt.IsPointer() ) fTreat[i] = '*';
-            else                 fTreat[i] = '&';
+            if( pt.IsPointer() ) parInfo->fTreat = '*';
+            else                 parInfo->fTreat = '&';
          else if ( pt.IsFundamental() || pt.IsEnum() )
-            if      ( pt.TypeInfo() == typeid(float) )       fTreat[i] = 'f';
-            else if ( pt.TypeInfo() == typeid(double) )      fTreat[i] = 'd';
-            else if ( pt.TypeInfo() == typeid(long double) ) fTreat[i] = 'q';
-            else if ( pt.TypeInfo() == typeid(long long) )   fTreat[i] = 'n';
-            else if ( pt.TypeInfo() == typeid(unsigned long long) ) fTreat[i] = 'm';
-            else                                             fTreat[i] = 'i';
-         else fTreat[i] = 'u';
+            if      ( pt.TypeInfo() == typeid(float) )       parInfo->fTreat = 'f';
+            else if ( pt.TypeInfo() == typeid(double) )      parInfo->fTreat = 'd';
+            else if ( pt.TypeInfo() == typeid(long double) ) parInfo->fTreat = 'q';
+            else if ( pt.TypeInfo() == typeid(long long) )   parInfo->fTreat = 'n';
+            else if ( pt.TypeInfo() == typeid(unsigned long long) ) parInfo->fTreat = 'm';
+            else                                             parInfo->fTreat = 'i';
+         else parInfo->fTreat = 'u';
       }
 
       // pre-process result block
@@ -138,16 +149,41 @@ namespace ROOT { namespace Cintex {
       // Process param type.
       fParam.resize(libp->paran);
       for (int i = 0; i < libp->paran; i++ ) {
-         switch(fTreat[i]) {
-         case 'd': fParcnv[i].obj.d  = G__double(libp->para[i]);fParam[i] = &fParcnv[i].obj.d; break;
-         case 'f': fParcnv[i].obj.fl = (float)G__double(libp->para[i]);fParam[i] = &fParcnv[i].obj.fl; break;
-         case 'n': fParcnv[i].obj.ll = G__Longlong(libp->para[i]);fParam[i] = &fParcnv[i].obj.ll; break;
-         case 'm': fParcnv[i].obj.ull= G__ULonglong(libp->para[i]);fParam[i] = &fParcnv[i].obj.ull; break;
-         case 'q': fParcnv[i].obj.ld = G__Longdouble(libp->para[i]);fParam[i] = &fParcnv[i].obj.ld; break;
-         case 'i': fParcnv[i].obj.i  = G__int(libp->para[i]);   fParam[i] = &fParcnv[i].obj.i; break;
-         case '*': fParam[i] = libp->para[i].ref ? (void*)libp->para[i].ref : &libp->para[i].obj.i; break;
-         case '&': fParam[i] = (void*)libp->para[i].ref; break;
-         case 'u': fParam[i] = (void*)libp->para[i].obj.i; break;
+         ParCnvInfo_t* parInfo =  i < kNumParCnvFirst ? &fParCnvFirst[i] : &((*fParCnvLast)[i - kNumParCnvFirst]);
+         switch(parInfo->fTreat) {
+         case 'd':
+            parInfo->fValCINT.obj.d  = G__double(libp->para[i]);
+            fParam[i] = &parInfo->fValCINT.obj.d;
+            break;
+         case 'f':
+            parInfo->fValCINT.obj.fl = (float)G__double(libp->para[i]);
+            fParam[i] = &parInfo->fValCINT.obj.fl;
+            break;
+         case 'n':
+            parInfo->fValCINT.obj.ll = G__Longlong(libp->para[i]);
+            fParam[i] = &parInfo->fValCINT.obj.ll;
+            break;
+         case 'm':
+            parInfo->fValCINT.obj.ull= G__ULonglong(libp->para[i]);
+            fParam[i] = &parInfo->fValCINT.obj.ull;
+            break;
+         case 'q':
+            parInfo->fValCINT.obj.ld = G__Longdouble(libp->para[i]);
+            fParam[i] = &parInfo->fValCINT.obj.ld;
+            break;
+         case 'i':
+            parInfo->fValCINT.obj.i  = G__int(libp->para[i]);
+            fParam[i] = &parInfo->fValCINT.obj.i;
+            break;
+         case '*':
+            fParam[i] = libp->para[i].ref ? (void*)libp->para[i].ref : &libp->para[i].obj.i;
+            break;
+         case '&':
+            fParam[i] = (void*)libp->para[i].ref;
+            break;
+         case 'u':
+            fParam[i] = (void*)libp->para[i].obj.i;
+            break;
          }
       }
    }

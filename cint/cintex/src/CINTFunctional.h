@@ -1,7 +1,7 @@
 // @(#)root/cintex:$Id$
 // Author: Pere Mato 2005
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -39,6 +39,12 @@ namespace ROOT {
 
      
       struct StubContext_t {
+         struct ParCnvInfo_t {
+            ParCnvInfo_t(): fValCINT(G__null), fTreat(0) {}
+            G__value fValCINT; ///< CINT parameter value
+            char     fTreat;   ///< Coded treatment of parameters
+         };
+
          /// Constructor. It prepares the necessary information such that the run-time processing is optimal
          StubContext_t(const ROOT::Reflex::Member& mem, const ROOT::Reflex::Type& cl );
          /// Destructor
@@ -54,9 +60,10 @@ namespace ROOT {
          void* GetReturnAddress(G__value* result) const;
       
          G__InterfaceMethod fMethodCode;   ///< method allocated code
-         std::vector<void*> fParam;        ///< Reflex ParameterNth vector
-         std::vector<G__value> fParcnv;    ///< CINT ParameterNth conversions vector
-         std::vector<char> fTreat;         ///< Coded treatment of parameters
+         std::vector<void*> fParam;        ///< Reflex parameter vector
+         static const int kNumParCnvFirst = 5; ///< Entries in fParInfFirst
+         ParCnvInfo_t fParCnvFirst[kNumParCnvFirst]; ///< Conversion info for first five parameters
+         std::vector<ParCnvInfo_t>* fParCnvLast; ///< Conversion info for parameters beyond fParInfFirst
          CintTypeDesc   fRet_desc;         ///< Coded treatment of parameters
          int            fRet_tag;          ///< Return TypeNth tag number
          bool           fRet_byvalue;      ///< Return by value flag
