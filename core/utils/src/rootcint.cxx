@@ -589,7 +589,8 @@ namespace {
 }
 
 #ifndef R__USE_MKSTEMP
-# if defined(R__GLIBC) || defined(__FreeBSD__)
+# if defined(R__GLIBC) || defined(__FreeBSD__) || \
+    (defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_5))
 #  define R__USE_MKSTEMP 1
 # endif
 #endif
@@ -4125,9 +4126,8 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
                s++;
                char *s1 = strrchr(s, '"');
                if (((strstr(s,"LinkDef") || strstr(s,"Linkdef") ||
-                     strstr(s,"linkdef")) && strstr(s,".h"))) {
-                  s1 = 0;
-               }
+                     strstr(s,"linkdef")) && strstr(s,".h")))
+                  continue;
                if (s1) {
                   *s1 = 0;
                   fprintf(tmpdict, "  G__add_compiledheader(\"%s\");\n", s);
@@ -4152,10 +4152,10 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
    // make dict.h
    char dictnameh[kMaxLen];
    strcpy(dictnameh, dictname);
-   char *s = strrchr(dictnameh, '.');
-   if (s) {
-      *(s+1) = 'h';
-      *(s+2) = 0;
+   char *dh = strrchr(dictnameh, '.');
+   if (dh) {
+      *(dh+1) = 'h';
+      *(dh+2) = 0;
    } else {
       Error(0, "rootcint: failed create dict.h in ReplaceBundleInDict()\n");
       return;
@@ -4189,10 +4189,19 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
                fclose(fpd);
                return;
             }
-            while (fgets(line, BUFSIZ, fb))
-               if (!((strstr(line,"LinkDef") || strstr(line,"Linkdef") || strstr(line,"linkdef")) &&
-                     strstr(line,".h")))
-                  fprintf(tmpdict, "%s", line);
+            while (fgets(line, BUFSIZ, fb)) {
+               char *s = strchr(line, '<');
+               if (!s) continue;
+               s++;
+               char *s1 = strrchr(s, '>');
+               if (((strstr(s,"LinkDef") || strstr(s,"Linkdef") ||
+                     strstr(s,"linkdef")) && strstr(s,".h")))
+                  continue;
+               if (s1) {
+                  *s1 = 0;
+                  fprintf(tmpdict, "#include \"%s\"\n", s);
+               }
+            }
             fclose(fb);
          } else
             fprintf(tmpdict, "%s", line);
@@ -4721,8 +4730,12 @@ int main(int argc, char **argv)
          fprintf(bundle,"#ifndef G__includes_dict_%s\n", headerb.c_str());
          fprintf(bundle,"#define G__includes_dict_%s\n", headerb.c_str());
 #endif
-         fprintf(bundle,"#include \"TObject.h\"\n");
-         fprintf(bundle,"#include \"TMemberInspector.h\"\n");
+         // use <> instead of "" otherwise the CPP will search first
+         // for these files in /tmp (location of the bundle.h) where
+         // it might not find the files (if starting with ./ or ../)
+         // or, even worse, pick up a wrong version placed in /tmp.
+         fprintf(bundle,"#include <TObject.h>\n");
+         fprintf(bundle,"#include <TMemberInspector.h>\n");
       }
    }
    for (i = ic; i < argc; i++) {
@@ -4749,7 +4762,8 @@ int main(int argc, char **argv)
       }
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
          StrcpyArgWithEsc(esc_arg, argv[i]);
-         fprintf(bundle,"#include \"%s\"\n", esc_arg);
+         // see comment about <> and "" above
+         fprintf(bundle,"#include <%s>\n", esc_arg);
          includedFilesForBundle.push_back(argv[i]);
          if (!insertedBundle) {
             argvv[argcc++] = (char*)bundlename.c_str();
