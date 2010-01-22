@@ -72,9 +72,6 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    // see the TFile ctor. The preferred interface to this constructor is
    // via TFile::Open().
 
-   // dCap client does not ignore ?filetpye=raw and other options, remove it
-   path = fUrl.GetFile();
-
    TString pathString = GetDcapPath(path);
    path = pathString.Data();
 
@@ -581,20 +578,19 @@ TString TDCacheFile::GetDcapPath(const char *path)
    // i.e either dcap://nodename.org/where/filename.root or
    // /pnfs/where/filename.root
 
-   if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN)) {
+   // eat all 'dcache:' prefixes
+   while (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN)) {
       path += DCACHE_PREFIX_LEN;
    }
-   if (!strncmp(path, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
-      path += DCAP_PREFIX_LEN;
+ 
+   TUrl url(path);
+   TString pathString(url.GetUrl());
+
+   // convert file://path url and dcap:///path to /path 
+   if(!strncmp(url.GetProtocol(), "file", 4) || !strcmp(url.GetHost(),"")){
+       pathString = url.GetFile();
    }
-   TString pathString(path);
-   if (!strncmp(path, "///", 3)) {
-      path += 2;
-      pathString = path;
-   }
-   if (!strncmp(path, "//", 2)) {
-      pathString = DCAP_PREFIX + pathString;
-   }
+
    return pathString;
 }
 
