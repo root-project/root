@@ -26,7 +26,7 @@
 
 namespace Reflex {
 template<typename FUNC>
-RFLX_API void* FuncToVoidPtr(FUNC f) {
+void* FuncToVoidPtr(FUNC f) {
    union Cnv_t {
       Cnv_t(FUNC ff): fFunc(ff) {}
       FUNC fFunc;
@@ -35,7 +35,7 @@ RFLX_API void* FuncToVoidPtr(FUNC f) {
    return u.fPtr;
 }
 template <typename FUNC>
-RFLX_API FUNC VoidPtrToFunc(void* p) {
+FUNC VoidPtrToFunc(void* p) {
    union Cnv_t {
       Cnv_t(void* pp): fPtr(pp) {}
       FUNC fFunc;
