@@ -342,7 +342,7 @@ bool Cint::G__ShadowMaker::IsStdPair(G__ClassInfo &cl)
    // Is this an std pair
 
    return (strncmp(cl.Name(), "pair<", strlen("pair<")) == 0
-           && strncmp(cl.FileName(), "prec_stl", 8) == 0);
+           && cl.FileName() != 0 && strncmp(cl.FileName(), "prec_stl", 8) == 0);
 }
 
 //______________________________________________________________________________
