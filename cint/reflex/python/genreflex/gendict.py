@@ -1,4 +1,4 @@
-# Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+# Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose is hereby granted without fee, provided that this copyright and
@@ -1964,17 +1964,17 @@ class genDictionary(object) :
         else               :  body += '  else if ( arg.size() == %d ) { \n' % n
       if returns != 'void' :
         if returns[-1] in ('*',')') and returns.find('::*') == -1 :
-          body += iden + '  if (retaddr) *(void**)retaddr = (void*)(((%s*)o)->%s)(' % ( cl, name )
+          body += iden + '  if (retaddr) *(void**)retaddr = Reflex::FuncToVoidPtr((((%s*)o)->%s)(' % ( cl, name )
           head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
-          body += ');\n' + iden + 'else '
+          body += '));\n' + iden + '  else '
         elif returns[-1] == '&' :
           body += iden + '  if (retaddr) *(void**)retaddr = (void*)&(((%s*)o)->%s)(' % ( cl, name )
           head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
-          body += ');\n' + iden + 'else '
+          body += ');\n' + iden + '  else '
         else :
           body += iden + '  if (retaddr) new (retaddr) (%s)((((%s*)o)->%s)(' % ( returns, cl, name )
           head, body = self.genMCOArgs(args, n, len(iden)+2, head, body)
-          body += '));\n' + iden + 'else '
+          body += '));\n' + iden + '  else '
       if returns[-1] == '&' :
         # The seemingly useless '&' below is to work around Microsoft's
         # compiler 7.1-9 odd complaint C2027 if the reference has only
@@ -2033,9 +2033,9 @@ class genDictionary(object) :
         if arg.find('::*') != -1 :  # Pointer to function member
           s += '*(%s)arg[%d]' %(arg.replace('::*','::**'), i)
         elif (len(arg) > 7  and arg[-7:] == ') const') :
-          s += '(%s)arg[%d]' % (arg[:-6].replace('(*)','(* const)'), i) # 2nd part of the hack
+          s += 'Reflex::VoidPtrToFunc<%s>(arg[%d])' % (arg[:-6].replace('(*)','(* const)'), i) # 2nd part of the hack
         else :
-          s += '(%s)arg[%d]' % (arg, i )
+          s += 'Reflex::VoidPtrToFunc<%s>(arg[%d])' % (arg, i )
       elif arg[-1] == '&' :
         s += '*(%s*)arg[%d]' % (arg[:-1], i )
       else :
