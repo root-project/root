@@ -192,6 +192,8 @@ Emulvector.log: emulvector.root
 Emulvector: Emulvector.log
 	$(TestDiff)
 
+ComplexTest.log: ComplexTest_h.$(DllSuf)
+
 ComplexTest: ComplexTest.log
 	$(TestDiff)
 
