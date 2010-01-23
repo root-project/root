@@ -81,7 +81,7 @@ test_Persistency.log: $(CINTEXTESTDIR)/test_Persistency.C $(CINTEXTESTDICT)
 	$(CMDECHO)$(CALLROOTEXE) -b -q -l $(CINTEXTESTDIR)/test_Persistency.C 2>&1 | grep -v 'Processing ' > $@ || ( cat $@ && false )
 
 test_PyCintex_basics.log: $(CINTEXTESTDIR)/test_PyCintex_basics.py $(CINTEXTESTDICT)
-	$(CMDECHO)unset DISPLAY; $(PYTHON) $(CINTEXTESTDIR)/test_PyCintex_basics.py - -b 2>&1 | grep -v ' tests in ' > $@|| ( cat $@ && false )
+	$(CMDECHO)unset DISPLAY; $(PYTHON) $(CINTEXTESTDIR)/test_PyCintex_basics.py - -b 2> /dev/null | grep -v ' tests in ' > $@|| ( cat $@ && false )
 
 # ifneq ($(PLATFORM),win32):
 endif

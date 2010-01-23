@@ -1,8 +1,7 @@
 test01DoSomething (__main__.BasicsTestCase) ... ok
 test02PrimitiveArgTypes (__main__.BasicsTestCase) ... ok
 test03ReturnModes (__main__.BasicsTestCase) ... ok
-test04UnknownTypes (__main__.BasicsTestCase) ... Warning in <TClass::TClass>: no dictionary for class A::B::C::UnknownType is available
-ok
+test04UnknownTypes (__main__.BasicsTestCase) ... ok
 test05ReturnDynamicType (__main__.BasicsTestCase) ... ok
 test06CallingModes (__main__.BasicsTestCase) ... ok
 test07CallingChecks (__main__.BasicsTestCase) ... ok
