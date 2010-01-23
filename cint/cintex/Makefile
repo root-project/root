@@ -57,7 +57,7 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
 
-CINTEXTESTDIR:=$(patsubst C:%,%,$(patsubst c:%,%,$(ROOTSYS)/cint/cintex/test))
+CINTEXTESTDIR:=$(patsubst C:%,%,$(patsubst c:%,%,$(ROOTLOC)/cint/cintex/test))
 CINTEXTESTDICTH:=$(CINTEXTESTDIR)/dict/CintexTest.h
 CINTEXTESTSEL:=$(CINTEXTESTDIR)/dict/selection.xml
 CINTEXTESTDICTS:=$(subst $(CINTEXTESTDIR)/dict/,,$(subst .h,_rflx.cpp,$(CINTEXTESTDICTH)))
