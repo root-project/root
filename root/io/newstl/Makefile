@@ -28,7 +28,7 @@ CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog  result.root $(LIBDIRTOP) 
 # we can keep the historic versions.
 
 #Set the list of target to make while testing
-TEST_TARGETS += base emptyCollection stlIoTest emulatedWrite Emulvector
+TEST_TARGETS += ComplexTest base emptyCollection stlIoTest emulatedWrite Emulvector
 #stlNoLibTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -190,5 +190,8 @@ emulvector.root: emulvector.root.log emulvector.root.ref
 Emulvector.log: emulvector.root
 
 Emulvector: Emulvector.log
+	$(TestDiff)
+
+ComplexTest: ComplexTest.log
 	$(TestDiff)
 
