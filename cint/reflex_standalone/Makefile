@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog clean-cmake-build
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -48,11 +48,17 @@ ReflexCMakeConfig:
 
 # We want to test ROOT's libReflex, so remove the one
 # built by CMake. LD_LIBRARY_PATH will then pick up ROOT's.
+
+MACOSDYLIB:=
+ifeq ($(PLATFORM),macosx)
+MACOSDYLIB:= (cd src; cp $(ROOTSYS)/lib/libReflex.so .; ln -s libReflex.so libReflex.dylib) &&
+endif
+
 ReflexCMakeBuild: ReflexCMakeConfig
 	$(CMDECHO)if ! [ -e SKIP-CONFIG-ERROR ]; then \
 	echo Building Reflex... && \
 	cd cmake-build && $(MAKE) > /dev/null && \
-	for f in src/libReflex.*; do rm $$f; if [ -f $(ROOTSYS)/lib/$$f ]; then ln -s $(ROOTSYS)/lib/$$f; fi; done && \
+	rm -f src/libReflex.* && $(MACOSDYLIB) \
 	echo Done.; \
 	fi
 
@@ -69,3 +75,6 @@ else
 ReflexCMakeTest:
 	$(CMDECHO)echo 'No CMake / GCCXML found; tests skipped.'
 endif
+
+clean-cmake-build:
+	$(CMDECHO)rm -rf cmake-build
