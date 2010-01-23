@@ -44,6 +44,8 @@ endif
 #  roottest folder, as in executing 'gmake -f ~/roottest/Makefile' from 
 #  the home directory.
 
+ifneq ($(PLATFORM),win32)
+
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
@@ -81,6 +83,8 @@ test_Persistency.log: $(CINTEXTESTDIR)/test_Persistency.C $(CINTEXTESTDICT)
 test_PyCintex_basics.log: $(CINTEXTESTDIR)/test_PyCintex_basics.py $(CINTEXTESTDICT)
 	$(CMDECHO)unset DISPLAY; $(PYTHON) $(CINTEXTESTDIR)/test_PyCintex_basics.py - -b 2>&1 | grep -v ' tests in ' > $@|| ( cat $@ && false )
 
+# ifneq ($(PLATFORM),win32):
+endif
 
 # Outputs a message if the FAIL variable is null
 
