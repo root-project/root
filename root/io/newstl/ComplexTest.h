@@ -13,8 +13,7 @@ class Test: public TObject
    //std::vector<std::complex<double> > fMyComplexVector;
 
    void Set(int seed) {
-      fMyComplexVector.real(seed);
-      fMyComplexVector.imag(seed*2);
+      fMyComplexVector = std::complex<double>(seed,seed*2);
    }
    
    bool TestValue(int seed) {
