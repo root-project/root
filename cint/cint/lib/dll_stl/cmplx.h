@@ -45,7 +45,6 @@ double abs(const complex<double>& a);
 long double abs(const complex<long double>& a);
 //long long abs(const complex<long long>& a);
 #endif
-#endif
+#endif // __CINT__
 
-
-#endif
+#endif // __MAKECINT__
