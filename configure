@@ -5275,16 +5275,18 @@ fi
 if test ! "x$macosx106" = "x"; then
    rm -f bin/python64 bin/ruby64
 fi
-rm -f lib/libRXML* bin/libRXML* etc/system.rootmap
-rm -f lib/libProofGui* bin/libProofGui*
-rm -f lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld*
-rm -f lib/libSQL.* bin/libSQL.*
-rm -f lib/libASPluginGS.* bin/g2rootold*
-rm -f math/mathcore/src/G__MathCore32.*
-rm -f tmva/src/G__TMVA.*
-rm -f xrootd/src/headers.d
-rm -f asimage/src/headers.d asimage/src/G__ASImageGS.*
-rm -f core/utils/src/rootcint7.cxx core/utils/src/RStl7.cxx
+rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
+ lib/libProofGui* bin/libProofGui* \
+ lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld* \
+ lib/libSQL.* bin/libSQL.* \
+ lib/libASPluginGS.* bin/g2rootold* \
+ math/mathcore/src/G__MathCore32.* \
+ tmva/src/G__TMVA.* \
+ xrootd/src/headers.d \
+ asimage/src/headers.d asimage/src/G__ASImageGS.* \
+ core/utils/src/rootcint7.cxx core/utils/src/RStl7.cxx \
+ core/metautils/src/TClassEdit7.cxx \
+ core/metautils/src/RConversionRuleParser7.cxx
 
 ######################################################################
 #
