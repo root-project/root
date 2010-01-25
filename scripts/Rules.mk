@@ -221,6 +221,8 @@ ifeq ($(PLATFORM),win32)
 ifeq ($(ROOT_LOC),)
    export ROOT_LOC := $(shell cygpath -u '$(ROOTSYS)')
 endif
+# Avoid common typo
+ROOTLOC=$(ROOT_LOC)
 
 # Windows with the VC++ compiler
 ObjSuf        = obj
