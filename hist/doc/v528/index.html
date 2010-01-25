@@ -32,10 +32,32 @@
      </pre>
 </ul>
 
+<h4>TGraph2D</h4>
+<ul>
+<li> In case all the points are in the same Z-plane Z0 (zmin = zmax), the graph
+     minimum is set to Z0-0.01*Z0 and the maximum to Z0+0.01*Z0. This
+     allow to make <tt>TGraph2D</tt> like:
+     <pre>
+     {
+        double *x = new double[2];
+        double *y = new double[2];
+        double *z = new double[2];
+        x[0] = 6215.;
+        x[1] = 5542.;
+        y[0] = 3853.;
+        y[1] = 5270.;
+        z[0] = 2723.;
+        z[1] = 2723.;
+        TGraph2D * g = new TGraph2D(2, x, y, z);
+        g->Draw("LINE");   
+     }
+     </pre>
+</ul>
+
 <h4>TGraph2DPainter</h4>
 <ul>
-<li> When a TGraph2D was painted with the option TRI1 the color distribution
-     in case of log scale along the Z axis was wrong.
+<li> When a <tt>TGraph2D</tt> was painted with the option <tt>TRI1</tt> the 
+     color distribution in case of log scale along the Z axis was wrong.
 </ul>
 
 <h4>THistPainter</h4>
