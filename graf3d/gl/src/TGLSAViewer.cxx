@@ -605,13 +605,10 @@ void TGLSAViewer::MenuHidingTimeout()
    // Action for menu-hiding timeout.
 
    fMenuHidingTimer->TurnOff();
-   if (fMenuHidingShowMenu)
-   {
+   if (fMenuHidingShowMenu) {
       fFrame->HideFrame(fMenuBut);
       fFrame->ShowFrame(fMenuBar);
-    }
-   else
-   {
+   } else {
       fFrame->HideFrame(fMenuBar);
       fFrame->ShowFrame(fMenuBut);
    }
