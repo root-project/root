@@ -2033,9 +2033,9 @@ class genDictionary(object) :
         if arg.find('::*') != -1 :  # Pointer to function member
           s += '*(%s)arg[%d]' %(arg.replace('::*','::**'), i)
         elif (len(arg) > 7  and arg[-7:] == ') const') :
-          s += 'Reflex::VoidPtrToFunc<%s>(arg[%d])' % (arg[:-6].replace('(*)','(* const)'), i) # 2nd part of the hack
+          s += 'Reflex::VoidPtrToFunc< %s >(arg[%d])' % (arg[:-6].replace('(*)','(* const)'), i) # 2nd part of the hack
         else :
-          s += 'Reflex::VoidPtrToFunc<%s>(arg[%d])' % (arg, i )
+          s += 'Reflex::VoidPtrToFunc< %s >(arg[%d])' % (arg, i )
       elif arg[-1] == '&' :
         s += '*(%s*)arg[%d]' % (arg[:-1], i )
       else :
