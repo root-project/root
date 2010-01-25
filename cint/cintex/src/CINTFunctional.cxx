@@ -83,11 +83,11 @@ namespace ROOT { namespace Cintex {
 
    void StubContext_t::Initialize() {
       // Initialize a context.
-      if (fNpar > kNumParCnvFirst) {
+      if (fNpar > fgNumParCnvFirst) {
          if (!fParCnvLast) {
-            fParCnvLast = new std::vector<ParCnvInfo_t>(fNpar - kNumParCnvFirst);
+            fParCnvLast = new std::vector<ParCnvInfo_t>(fNpar - fgNumParCnvFirst);
          } else {
-            fParCnvLast->resize(fNpar - kNumParCnvFirst);
+            fParCnvLast->resize(fNpar - fgNumParCnvFirst);
          }
       } else {
          delete fParCnvLast;
@@ -96,7 +96,7 @@ namespace ROOT { namespace Cintex {
 
       // pre-process paramters and remember the treatment that is needed to be done
       for (int i = 0; i < fNpar; i++ ) {
-         ParCnvInfo_t* parInfo =  i < kNumParCnvFirst ? &fParCnvFirst[i] : &((*fParCnvLast)[i - kNumParCnvFirst]);
+         ParCnvInfo_t* parInfo =  i < fgNumParCnvFirst ? &fParCnvFirst[i] : &((*fParCnvLast)[i - fgNumParCnvFirst]);
          Type pt = fFunction.FunctionParameterAt(i);
          while ( pt.IsTypedef() ) pt = pt.ToType();
          if ( pt.IsReference() && ! pt.IsConst() )
@@ -149,7 +149,7 @@ namespace ROOT { namespace Cintex {
       // Process param type.
       fParam.resize(libp->paran);
       for (int i = 0; i < libp->paran; i++ ) {
-         ParCnvInfo_t* parInfo =  i < kNumParCnvFirst ? &fParCnvFirst[i] : &((*fParCnvLast)[i - kNumParCnvFirst]);
+         ParCnvInfo_t* parInfo =  i < fgNumParCnvFirst ? &fParCnvFirst[i] : &((*fParCnvLast)[i - fgNumParCnvFirst]);
          switch(parInfo->fTreat) {
          case 'd':
             parInfo->fValCINT.obj.d  = G__double(libp->para[i]);

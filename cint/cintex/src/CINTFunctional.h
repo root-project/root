@@ -68,8 +68,8 @@ namespace ROOT {
       
          G__InterfaceMethod fMethodCode;   ///< method allocated code
          std::vector<void*> fParam;        ///< Reflex parameter vector
-         static const int kNumParCnvFirst = 5; ///< Entries in fParInfFirst
-         ParCnvInfo_t fParCnvFirst[kNumParCnvFirst]; ///< Conversion info for first five parameters
+         static const int fgNumParCnvFirst = 5; ///< Entries in fParInfFirst
+         ParCnvInfo_t fParCnvFirst[fgNumParCnvFirst]; ///< Conversion info for first five parameters
          std::vector<ParCnvInfo_t>* fParCnvLast; ///< Conversion info for parameters beyond fParInfFirst
          CintTypeDesc   fRet_desc;         ///< Coded treatment of parameters
          int            fRet_tag;          ///< Return TypeNth tag number
