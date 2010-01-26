@@ -729,14 +729,6 @@ struct G__ConstStringList {
   struct G__ConstStringList *prev;
 };
 
-#ifdef G__SECURITY
-#ifdef G__64BIT
-typedef unsigned int G__UINT32 ;
-#else
-typedef unsigned long G__UINT32 ;
-#endif
-#endif
-
 typedef void (*G__DLLINIT)();
 #define G__NONCINTHDR   0x01
 #define G__CINTHDR      0x10
