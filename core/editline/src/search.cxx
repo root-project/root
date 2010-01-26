@@ -359,8 +359,6 @@ ce_inc_search(EditLine_t* el, int dir) {
          default:                       /* Terminate and execute cmd */
             endcmd[0] = ch;
             el_push(el, endcmd);
-         /* FALLTHROUGH */
-         case 0033:                     /* ESC: Terminate */
             ret = CC_REFRESH;
             done++;
             break;
