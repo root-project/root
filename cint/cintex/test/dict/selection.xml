@@ -66,7 +66,8 @@
   <variable name="A::B::C::s_public_instances"/>
   <variable name="A::B::C::ValidityKeyMin"/>
 
-  <class pattern="*MyA*"/>
+  <class pattern="MyA*"/>
+  <class name="std::vector<MyA>"/>
   <class pattern="SpecialET<*>"/>
 
   <function pattern="*theFunction*" />
