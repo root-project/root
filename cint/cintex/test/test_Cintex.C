@@ -219,6 +219,7 @@ bool test_MethodOverloading() {
   failUnlessEqual(calling.overloaded(10.0F, 10), 4);
   return true;
 }
+namespace A{namespace B {namespace C{}}}
 
 using namespace A::B::C;
 
