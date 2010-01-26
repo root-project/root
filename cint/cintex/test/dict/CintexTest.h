@@ -294,6 +294,7 @@ public:
 class IntermediateA : public virtual MyClass, public virtual Virtual {
 public:
   IntermediateA() : m_intA(0x1111) {}
+  virtual ~IntermediateA() {}
   virtual double vf()  { return 999.999; }
 private:
   int m_intA;
@@ -301,6 +302,7 @@ private:
 class IntermediateB : public virtual MyClass  {
 public:
   IntermediateB() : m_intB(0x2222) {}
+  virtual ~IntermediateB() {}
 private:
   int m_intB;
 };
@@ -308,7 +310,7 @@ private:
 class Diamond : public virtual IntermediateA, public virtual IntermediateB {
 public:
   Diamond() {strcpy( m_name, "Diamond"); }
-  ~Diamond() { }
+  virtual ~Diamond() { }
 private:
   char m_name[8];
 };
