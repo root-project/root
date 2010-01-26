@@ -26,6 +26,10 @@ ifeq ($(HAVECINTEX),cintex)
   TEST_TARGETS += test_PyCintex_basics
  endif
 endif
+else
+  TEST_TARGETS += skip
+skip:
+	@echo Temporarily disabled.
 endif
 
 # Search for Rules.mk in roottest/scripts
