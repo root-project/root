@@ -29,12 +29,22 @@
 //
 // Base-class for displaying a digit collection.
 // Provdies common services for:
-// - specifying signal / color per digit
-// - specifying object reference per digit
-// - controlling palette and thresholds (external object TEveRGBAPalette)
-// - showing a frame around the digits (external object TEveFrameBox)
-// - specifying transformation matrix for the whole collection
+// - specifying signal / color per digit;
+// - specifying object reference per digit;
+// - controlling palette and thresholds (external object TEveRGBAPalette);
+// - showing a frame around the digits (external object TEveFrameBox);
+// - specifying transformation matrix for the whole collection;
 //   by data-member of class TEveTrans.
+//
+// Use method DigitId(TObject* id) to assign additional identification
+// to the last created digit. By calling SetOwnIds(kTRUE) tje
+// digit-set becomes the owner of the assigned objects and deletes
+// them on destruction.
+// Note that TRef is used for referencing the objects and if you
+// instantiate the objects just to pass them to digit-set you should
+// also call  TProcessID::Get/SetObjectCount() at the beginning / end
+// of processing of an event. See documentation for class TRef, in
+// particular section 'ObjectNumber'.
 //
 // If you use value-is-color mode and want to use transparency, set
 // the transparency to non-zero value so that GL-renderer will be
