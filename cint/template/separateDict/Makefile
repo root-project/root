@@ -17,7 +17,7 @@ sepDictLibs: sepDictLibs.log
 
 
 sepDictLibs.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) sepDictLibs.ref
-	$(CMDECHO)$(CALLROOTEXE) -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | sed -e 's?FILE:[A-Za-z]:.*[/\]?FILE:?' | $(RemoveSizes) > sepDictLibs.log
+	$(CMDECHO)$(CALLROOTEXE) -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | sed -e 's?FILE:[A-Za-z]:.*[/\]?FILE:?' -e 's?FILE:/.*/?FILE:?' | $(RemoveSizes) > sepDictLibs.log
 
 all: sepDictLibs
 
