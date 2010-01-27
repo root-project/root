@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.o *_rflx.cpp test_*.rootmap data.root tree.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *.o *.obj *_rflx.cpp test_*.rootmap data.root tree.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -19,17 +19,11 @@ else
    HAVEPYTHON := $(shell root-config --has-python)
 endif
 
-ifneq ($(PLATFORM),win32)
 ifeq ($(HAVECINTEX),cintex)
  TEST_TARGETS += test_Cintex test_Persistency
  ifeq ($(HAVEPYTHON),yes)
   TEST_TARGETS += test_PyCintex_basics
  endif
-endif
-else
-  TEST_TARGETS += skip
-skip:
-	@echo Temporarily disabled.
 endif
 
 # Search for Rules.mk in roottest/scripts
@@ -48,8 +42,6 @@ endif
 #  roottest folder, as in executing 'gmake -f ~/roottest/Makefile' from 
 #  the home directory.
 
-ifneq ($(PLATFORM),win32)
-
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
@@ -61,34 +53,36 @@ include $(ROOTTEST_HOME)/scripts/Reflex.mk
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
 
-CINTEXTESTDIR:=$(patsubst C:%,%,$(patsubst c:%,%,$(ROOT_LOC)/cint/cintex/test))
+CINTEXTESTDIR:=$(ROOTSYS)/cint/cintex/test
+CINTEXCYGDEP=$(1)
+ifeq ($(PLATFORM),win32)
+CINTEXTESTDIR:=$(subst \,/,$(CINTEXTESTDIR))
+CINTEXCYGDEP=$(shell echo $(subst \,/,$(1)) | sed 's,\([A-Za-z]\):/,/cygdrive/\1/,g')
+endif
 CINTEXTESTDICTH:=$(CINTEXTESTDIR)/dict/CintexTest.h
 CINTEXTESTSEL:=$(CINTEXTESTDIR)/dict/selection.xml
 CINTEXTESTDICTS:=$(subst $(CINTEXTESTDIR)/dict/,,$(subst .h,_rflx.cpp,$(CINTEXTESTDICTH)))
-CINTEXTESTDICTO = $(subst .cpp,.o,$(CINTEXTESTDICTS))
-CINTEXTESTDICT  = test_$(subst _rflx.o,Rflx.$(DllSuf),$(CINTEXTESTDICTO))
+CINTEXTESTDICTO = $(subst .cpp,.$(ObjSuf),$(CINTEXTESTDICTS))
+CINTEXTESTDICT  = test_$(subst _rflx.$(ObjSuf),Rflx.$(DllSuf),$(CINTEXTESTDICTO))
 
-$(CINTEXTESTDICTS): $(CINTEXTESTDICTH) $(CINTEXTESTSEL)
+$(CINTEXTESTDICTS): $(call CINTEXCYGDEP,$(CINTEXTESTDICTH) $(CINTEXTESTSEL))
 	$(CMDECHO) $(GENREFLEX) $(CINTEXTESTDICTH) -s $(CINTEXTESTSEL) --rootmap=$(CINTEXTESTDICT).rootmap --rootmap-lib=$(CINTEXTESTDICT) --comments $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log 2>&1
 
 ifeq ($(PLATFORM),win32)
 $(CINTEXTESTDICT): $(CINTEXTESTDICTO) $(ROOT_LOC)/bin/libReflex.$(DllSuf)
 else
-$(CINTEXTESTDICT): $(CINTEXTESTDICTO)
+$(CINTEXTESTDICT): $(call CINTEXCYGDEP,$(CINTEXTESTDICTO))
 endif
 	$(BuildFromObj)
 
-test_Cintex.log: $(CINTEXTESTDIR)/test_Cintex.C $(CINTEXTESTDICT)
+test_Cintex.log: $(call CINTEXCYGDEP,$(CINTEXTESTDIR)/test_Cintex.C $(CINTEXTESTDICT))
 	$(CMDECHO)$(CALLROOTEXE) -b -q -l $(CINTEXTESTDIR)/test_Cintex.C 2>&1 | grep -v 'Processing ' > $@ || ( cat $@ && false )
 
-test_Persistency.log: $(CINTEXTESTDIR)/test_Persistency.C $(CINTEXTESTDICT)
+test_Persistency.log: $(call CINTEXCYGDEP,$(CINTEXTESTDIR)/test_Persistency.C $(CINTEXTESTDICT))
 	$(CMDECHO)$(CALLROOTEXE) -b -q -l $(CINTEXTESTDIR)/test_Persistency.C 2>&1 | grep -v 'Processing ' > $@ || ( cat $@ && false )
 
-test_PyCintex_basics.log: $(CINTEXTESTDIR)/test_PyCintex_basics.py $(CINTEXTESTDICT)
+test_PyCintex_basics.log: $(call CINTEXCYGDEP,$(CINTEXTESTDIR)/test_PyCintex_basics.py $(CINTEXTESTDICT))
 	$(CMDECHO)unset DISPLAY; $(PYTHON) $(CINTEXTESTDIR)/test_PyCintex_basics.py - -b 2> /dev/null | grep -v ' tests in ' > $@|| ( cat $@ && false )
-
-# ifneq ($(PLATFORM),win32):
-endif
 
 # Outputs a message if the FAIL variable is null
 
