@@ -127,7 +127,7 @@ updated with the current histogram parameters.
 
 <p>Once a histogram is painted, the statistics box can be accessed using
 <tt>h->FindObject("stats")</tt>. In the command line it is enough to do:
-<pre> 
+<pre>
       Root > h->Draw()
       Root > TPaveStats *st = (TPaveStats*)h->FindObject("stats")
 </pre>
@@ -336,8 +336,11 @@ void TPaveStats::Paint(Option_t *option)
    TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
 
    if (!fLines) return;
-   Double_t dx = fX2 - fX1;
-   Double_t dy = fY2 - fY1;
+   Double_t Y2ref = TMath::Max(fY1,fY2);
+   Double_t X1ref = TMath::Min(fX1,fX2);
+   Double_t X2ref = TMath::Max(fX1,fX2);
+   Double_t dx    = TMath::Abs(fX2 - fX1);
+   Double_t dy    = TMath::Abs(fY2 - fY1);
    Double_t titlesize=0;
    Double_t textsize = GetTextSize();
    Int_t nlines = GetSize();
@@ -347,8 +350,8 @@ void TPaveStats::Paint(Option_t *option)
    // Evaluate text size as a function of the number of lines
    Double_t y1       = gPad->GetY1();
    Double_t y2       = gPad->GetY2();
-   Float_t margin    = fMargin*(fX2-fX1);
-   Double_t yspace   = (fY2 - fY1)/Double_t(nlines);
+   Float_t margin    = fMargin*dx;
+   Double_t yspace   = dy/Double_t(nlines);
    Double_t textsave = textsize;
    TObject *line;
    TLatex *latex, *latex_tok;
@@ -357,7 +360,6 @@ void TPaveStats::Paint(Option_t *option)
    Double_t w, wtok[2];
    char *st, *sl=0;
    if (textsize == 0)  {
-      //textsize = 0.85*yspace/(y2 - y1);
       textsize = 0.92*yspace/(y2 - y1);
       titlesize = textsize;
       wtok[0] = 0; wtok[1] = 0;
@@ -400,7 +402,7 @@ void TPaveStats::Paint(Option_t *option)
    } else {
       titlesize = textsize;
    }
-   Double_t ytext = fY2 + 0.5*yspace;
+   Double_t ytext = Y2ref + 0.5*yspace;
    Double_t xtext = 0;
    print_name = fOptStat%10;
 
@@ -429,9 +431,9 @@ void TPaveStats::Paint(Option_t *option)
             Int_t halign = 12;
             while ( st !=0 ) {
                latex->SetTextAlign(halign);
-               if (halign == 12) xtext = fX1 + margin;
+               if (halign == 12) xtext = X1ref + margin;
                if (halign == 32) {
-                  xtext = fX2 - margin;
+                  xtext = X2ref - margin;
                   // Clean trailing blanks in case of right alignment.
                   char *stc;
                   stc=st+strlen(st)-1;
@@ -450,18 +452,18 @@ void TPaveStats::Paint(Option_t *option)
          } else if (strpbrk(sl, "|") !=0) {
             Double_t yline1 = ytext+yspace/2.;
             Double_t yline2 = ytext-yspace/2.;
-            Double_t xline1 = (fX2-fX1)/3+fX1;
-            Double_t xline2 = 2*(fX2-fX1)/3+fX1;
-            gPad->PaintLine(fX1,yline1,fX2,yline1);
+            Double_t xline1 = dx/3+X1ref;
+            Double_t xline2 = 2*dx/3+X1ref;
+            gPad->PaintLine(X1ref,yline1,X2ref,yline1);
             gPad->PaintLine(xline1,yline1,xline1,yline2);
             gPad->PaintLine(xline2,yline1,xline2,yline2);
             st = strtok(sl, "|");
             Int_t theIndex = 0;
             while ( st !=0 ) {
                latex->SetTextAlign(22);
-               if (theIndex == 0) xtext = 0.5*(fX1+xline1);
-               if (theIndex == 1) xtext = 0.5*(fX1+fX2);
-               if (theIndex == 2) xtext = 0.5*(xline2+fX2);
+               if (theIndex == 0) xtext = 0.5*(X1ref+xline1);
+               if (theIndex == 1) xtext = 0.5*(X1ref+X2ref);
+               if (theIndex == 2) xtext = 0.5*(xline2+X2ref);
                latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                              latex->GetTextSize(),
                                              st);
@@ -472,11 +474,11 @@ void TPaveStats::Paint(Option_t *option)
          } else {
             print_name = 0;
             latex->SetTextAlign(22);
-            xtext = 0.5*(fX1+fX2);
+            xtext = 0.5*(X1ref+X2ref);
             latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                           titlesize,
                                           sl);
-            gPad->PaintLine(fX1,fY2-yspace,fX2,fY2-yspace);
+            gPad->PaintLine(X1ref,Y2ref-yspace,X2ref,Y2ref-yspace);
          }
          delete [] sl;
 
@@ -494,10 +496,10 @@ void TPaveStats::Paint(Option_t *option)
    if (fLabel.Length() > 0) {
       Double_t x1,x2;
       dy = gPad->GetY2() - gPad->GetY1();
-      x1 = fX1 + 0.25*dx;
-      x2 = fX2 - 0.25*dx;
-      y1 = fY2 - 0.02*dy;
-      y2 = fY2 + 0.02*dy;
+      x1 = X1ref + 0.25*dx;
+      x2 = X2ref - 0.25*dx;
+      y1 = Y2ref - 0.02*dy;
+      y2 = Y2ref + 0.02*dy;
       TPaveLabel *title = new TPaveLabel(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
       title->SetFillColor(GetFillColor());
       title->SetTextColor(GetTextColor());
