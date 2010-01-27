@@ -1991,14 +1991,22 @@ result "$enable_builtin_zlib"
 # Check for libcurses / libncurses
 #
 if test ! "x$enable_editline" = "xno" ; then
-    check_header "ncurses.h curses.h" "$cursesincdir" \
+    lookforcurseslib="libncurses"
+    check_header "ncurses.h" "$cursesincdir" \
         /usr/include/ncurses /usr/local/include/ncurses \
-        /usr/include/curses /usr/local/include/curses \
         /usr/include /usr/local/include
     cursesincdir=$found_dir
     curseshdr=$found_hdr
+    if test "x$cursesincdir" = "x"; then
+        lookforcurseslib="libcurses"
+        check_header "curses.h" "$cursesincdir" \
+            /usr/include/curses /usr/local/include/curses \
+            /usr/include /usr/local/include
+        cursesincdir=$found_dir
+        curseshdr=$found_hdr
+    fi
 
-    check_library "libncurses libcurses" "$enable_shared" "$curseslibdir" \
+    check_library "$lookforcurseslib" "$enable_shared" "$curseslibdir" \
         /usr/lib /usr/local/lib
     curseslib=$found_lib
     curseslibdir=$found_dir
