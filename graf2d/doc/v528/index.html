@@ -18,6 +18,15 @@
      Fix done by: Oleksandr Grebenyuk <tt>&lt;ogrebenyuk@lbl.gov&gt;</tt>.
 </ul>
 
+<h4>TPaveStats</h4>
+<ul>
+<li> The stats painting assumed that the stats position was always defined with
+     Y2>Y1 and X2>X1. This is true when the stats is created automatically but 
+     might not true if the stats position is given by user. This is now 
+     protected. The stats are correctly drawn whatever the orders of X and Y
+     coordinates are. 
+</ul>
+
 <h4>TCanvas</h4>
 <ul> 
 <li> In case of <tt>Canvas.MoveOpaque = true</tt> in <tt>$ROOTSYS/etc/system.rootrc</tt>
