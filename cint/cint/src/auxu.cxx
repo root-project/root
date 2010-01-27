@@ -399,11 +399,11 @@ int G__loadobject(char* file, void* buf, int size)
    // -- Load object from a file.
    FILE* fp = fopen(file, "rb");
    size_t read = fread(buf, size, 1, fp);
-   if ( read != size) {
+   if ( read != (size_t)size) {
       G__fprinterr(G__serr, "G__loadobject: cannot read full object (%d instead of %d bytes)", read, size);
    }
    fclose(fp);
-   return (read == size);
+   return (read == (size_t)size);
 }
 #endif // G__NSTOREOBJECT
 
