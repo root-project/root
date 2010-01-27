@@ -1623,7 +1623,9 @@ static G__value G__exec_if()
          // -- Hit end of file, nothing more to do.
          G__genericerror("Error: unexpected if() { } EOF");
          if (G__key) {
-            system("key .cint_key -l execute");
+            if (system("key .cint_key -l execute")) {
+               G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+            }
          }
          G__eof = 2;
 #ifdef G__ASM
@@ -1903,7 +1905,11 @@ static G__value G__exec_else_if()
       }
       if (c == EOF) {
          G__genericerror("Error: unexpected if() { } EOF");
-         if (G__key != 0) system("key .cint_key -l execute");
+         if (G__key != 0) {
+            if (system("key .cint_key -l execute")) {
+               G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+            }
+         }
          G__eof = 2;
          G__ifswitch = store_ifswitch;
          return(G__null);
@@ -5045,7 +5051,9 @@ int G__skip_comment()
    if (c0 == EOF) {
       G__genericerror("Error: File ended unexpectedly while reading a C-style comment.");
       if (G__key) {
-         system("key .cint_key -l execute");
+         if (system("key .cint_key -l execute")) {
+            G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+         }
       }
       G__eof = 2;
       return EOF;
@@ -5054,7 +5062,9 @@ int G__skip_comment()
    if (c1 == EOF) {
       G__genericerror("Error: File ended unexpectedly while reading a C-style comment.");
       if (G__key) {
-         system("key .cint_key -l execute");
+         if (system("key .cint_key -l execute")) {
+            G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+         }
       }
       G__eof = 2;
       return EOF;
@@ -5076,7 +5086,9 @@ int G__skip_comment()
       if (c1 == EOF) {
          G__genericerror("Error: File ended unexpectedly while reading a C-style comment.");
          if (G__key) {
-            system("key .cint_key -l execute");
+            if (system("key .cint_key -l execute")) {
+               G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+            }
          }
          G__eof = 2;
          return EOF;
@@ -5096,7 +5108,9 @@ int G__skip_comment_peek()
    if (c0 == EOF) {
       G__genericerror("Error: File ended unexpectedly while reading a C-style comment.");
       if (G__key) {
-         system("key .cint_key -l execute");
+         if (system("key .cint_key -l execute")) {
+            G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+         }
       }
       G__eof = 2;
       return EOF;
@@ -5105,7 +5119,9 @@ int G__skip_comment_peek()
    if (c1 == EOF) {
       G__genericerror("Error: File ended unexpectedly while reading a C-style comment.");
       if (G__key) {
-         system("key .cint_key -l execute");
+         if (system("key .cint_key -l execute")) {
+            G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+         }
       }
       G__eof = 2;
       return EOF;
@@ -5126,7 +5142,9 @@ int G__skip_comment_peek()
       if (c1 == EOF) {
          G__genericerror("Error: File ended unexpectedly while reading a C-style comment.");
          if (G__key) {
-            system("key .cint_key -l execute");
+            if (system("key .cint_key -l execute")) {
+               G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+            }
          }
          G__eof = 2;
          return EOF;

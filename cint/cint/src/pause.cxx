@@ -1828,13 +1828,17 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
             strncmp("bash", com, 4) == 0 ||
             strncmp("man", com, 3) == 0 ||
             strncmp("type", com, 4) == 0) {
-      system(com);
+      int ret = system(com);
+      if (rslt) G__letint(rslt, 'i', ret);
    }
    else if (strncmp("rm", com, 2) == 0 ||
             strncmp("del", com, 4) == 0 ||
             strncmp("rmdir", com, 5) == 0) {
       G__FastAllocString localbuf(G__input("Are you sure(y/n)? "));
-      if (tolower(localbuf[0]) == 'y') system(com);
+      if (tolower(localbuf[0]) == 'y') {
+         int ret = system(com);
+         if (rslt) G__letint(rslt, 'i', ret);
+      }
       else fprintf(G__sout, "aborted\n");
    }
    else if (strncmp("set", com, 3) == 0 ||
@@ -1851,7 +1855,8 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
 #endif
       }
       else {
-         system(com);
+         int ret = system(com);
+         if (rslt) G__letint(rslt, 'i', ret);
       }
    }
    else if (strncmp("cd", com, 2) == 0) {
@@ -2625,13 +2630,15 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
        *******************************************************/
       G__FastAllocString combuf(strlen(string) + 30);
       combuf.Format("sh -I -c %s", string);
-      system(combuf);
+      int ret = system(combuf);
+      if (rslt) G__letint(rslt, 'i', ret);
    }
    else if (strncmp("!", com, 1) == 0) {
       /*******************************************************
        * Execute shell command
        *******************************************************/
-      system(string);
+      int ret = system(string);
+      if (rslt) G__letint(rslt, 'i', ret);
    }
    else if (strncmp("a", com, 1) == 0) {
       /*******************************************************
@@ -3091,12 +3098,14 @@ vcommand:
          if (command[temp] == '\0') {
             if ('\0' == G__tempc[0]) G__tmpnam(G__tempc); /* E command, rare case */
             syscom.Format("%s %s", editor(), G__tempc);
-            system(syscom);
+            int ret = system(syscom);
+            if (rslt) G__letint(rslt, 'i', ret);
             syscom = G__tempc;
          }
          else {
             syscom.Format("%s %s", editor(), command + temp);
-            system(syscom);
+            int ret = system(syscom);
+            if (rslt) G__letint(rslt, 'i', ret);
             syscom = command + temp;
          }
       }

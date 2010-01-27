@@ -4137,13 +4137,13 @@ int G__library_func(G__value *result7, char *funcname, G__param *libp, int hash)
          G__printerror("bsearch", 1, libp->paran);
 #endif
       G__CHECKNONULL(3, 'Y');
-      bsearch((void *)G__int(libp->para[0])
+      void* ret = bsearch((void *)G__int(libp->para[0])
             , (void *)G__int(libp->para[1])
             , (size_t)G__int(libp->para[2])
             , (size_t)G__int(libp->para[3])
             , (int(*)(const void*, const void*))G__int(libp->para[4])
             );
-      *result7 = G__null;
+      G__letint(result7, 'Y', (long)ret);
       return(1);
    }
 

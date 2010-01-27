@@ -705,7 +705,8 @@ void G__getcomment(char *buf,G__comment_info *pcomment,int tagnum)
         fgetpos(fp,&store_pos);
       }
       fsetpos(fp,&pos);
-      fgets(buf,G__ONELINE-1,fp);
+      // dummy check; buffer length management needs new function signature.
+      if (!fgets(buf,G__ONELINE-1,fp)) {}
       p = strchr(buf,'\n');
       if(p) *p = '\0';
       p = strchr(buf,'\r');
@@ -768,7 +769,8 @@ void G__getcommenttypedef(char *buf,G__comment_info *pcomment,int typenum)
         fgetpos(fp,&store_pos);
       }
       fsetpos(fp,&pos);
-      fgets(buf,G__ONELINE-1,fp);
+      // dummy check; buffer length management needs new function signature.
+      if (!fgets(buf,G__ONELINE-1,fp)) {}
       p = strchr(buf,'\n');
       if(p) *p = '\0';
       p = strchr(buf,'\r');

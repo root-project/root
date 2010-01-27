@@ -1012,7 +1012,9 @@ int G__scratch_upto_work(G__dictposition* dictpos, int doall)
 #endif // G__DUMPFILE
       // Set function key.
       if (G__key) {
-         system("key .cint_key -l execute");
+         if (system("key .cint_key -l execute")) {
+            G__fprinterr(G__serr, "Error running \"key .cint_key -l execute\"\n");
+         }
       }
       while (G__dumpreadline[0]) {
          fclose(G__dumpreadline[0]);

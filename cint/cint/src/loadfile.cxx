@@ -648,7 +648,10 @@ const char* G__stripfilename(const char *filename)
       buf.Swap(buf2);
     }
 #elif defined(G__POSIX) || defined(G__ROOT)
-    getcwd(buf,G__ONELINE);
+    if (!getcwd(buf,G__ONELINE)) {
+       G__fprinterr(G__serr, "Error retrieving CWD\n");
+       buf[0] = 0;
+    }
 #else
     buf[0] = 0;
 #endif

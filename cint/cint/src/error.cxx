@@ -411,7 +411,8 @@ int G__pounderror()
    // -- #error xxx
    G__FastAllocString buf(G__ONELINE);
    char *p;
-   fgets(buf, G__ONELINE, G__ifile.fp);
+   // dummy assign
+   p = fgets(buf, G__ONELINE, G__ifile.fp);
    p = strchr(buf, '\n');
    if (p) *p = '\0';
    p = strchr(buf, '\r');

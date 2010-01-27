@@ -648,7 +648,9 @@ int G__autocc()
               ,ansi,cpp,G__allincludepath,G__macros,G__autocc_sl,G__autocc_c);
     }
     if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
-    system(temp);
+    if (system(temp)) {
+       G__fprinterr(G__serr, "Error running \"%s\"\n", temp());
+    }
 
 #if defined(G__SYMANTEC) && !defined(G__HAVE_CONFIG)
     temp.Format("smake -f %s",G__autocc_mak);
@@ -676,7 +678,9 @@ int G__autocc()
 #else
     temp.Format("make -f %s",G__autocc_mak);
     if(G__asm_dbg) G__fprinterr(G__serr,"%s\n",temp());
-    system(temp);
+    if (system(temp)) {
+       G__fprinterr(G__serr, "Error running \"%s\"\n", temp());
+    }
 #endif
 
     G__fprinterr(G__serr,"Finish compiling #pragma compile ...\n");

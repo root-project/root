@@ -253,7 +253,8 @@ char *G__input(const char *prompt)
       } else {
 	 fprintf(G__stdout,"%s",prompt);
 	 /* scanf("%s",line); */
-	 fgets(line,G__LONGLINE-5,G__stdin);
+         // dummy return check
+	 if (fgets(line,G__LONGLINE-5,G__stdin)) {}
       }
     }
     

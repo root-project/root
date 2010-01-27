@@ -228,7 +228,8 @@ int G__graph(double* xdata, double* ydata, int ndata, char* title, int mode)
    //                      2:kill xgraph window
    FILE* fp = 0;
    if (mode == 2) {
-      system("killproc xgraph");
+      if (system("killproc xgraph"))
+         return 0;
       return 1;
    }
    switch (mode) {
@@ -257,10 +258,10 @@ int G__graph(double* xdata, double* ydata, int ndata, char* title, int mode)
    switch (mode) {
       case 1:
       case 4:
-         system("xgraph G__graph&");
+         if (system("xgraph G__graph&")) return 1;
          break;
       case 0:
-         system("xgraph G__graph");
+         if (system("xgraph G__graph")) return 1;
          break;
    }
    return 0;
@@ -397,9 +398,12 @@ int G__loadobject(char* file, void* buf, int size)
 {
    // -- Load object from a file.
    FILE* fp = fopen(file, "rb");
-   fread(buf, size, 1, fp);
+   size_t read = fread(buf, size, 1, fp);
+   if ( read != size) {
+      G__fprinterr(G__serr, "G__loadobject: cannot read full object (%d instead of %d bytes)", read, size);
+   }
    fclose(fp);
-   return 1;
+   return (read == size);
 }
 #endif // G__NSTOREOBJECT
 
