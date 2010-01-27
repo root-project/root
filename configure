@@ -1682,6 +1682,16 @@ if test ! "x$platform" = "xwin32"; then
         exit 1
     fi
 
+    check_header "X11/xpm.h" "" \
+        /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
+        /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
+        /usr/X11/include /usr/include/X11R5
+
+    if test "x$found_dir" = "x" ; then
+        result "`basename $0`: xpm headers (libXpm-devel) MUST be installed"
+        exit 1
+    fi
+
     check_header "X11/Xft/Xft.h" "" \
         /usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
         /usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
@@ -5290,7 +5300,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  lib/libASPluginGS.* bin/g2rootold* \
  math/mathcore/src/G__MathCore32.* \
  tmva/src/G__TMVA.* \
- xrootd/src/headers.d \
+ xrootd/src/headers.d include/Xpm.h \
  asimage/src/headers.d asimage/src/G__ASImageGS.* \
  core/utils/src/rootcint7.cxx core/utils/src/RStl7.cxx \
  core/metautils/src/TClassEdit7.cxx \
