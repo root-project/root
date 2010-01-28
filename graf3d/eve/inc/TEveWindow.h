@@ -241,7 +241,7 @@ public:
    virtual Bool_t          CanMakeNewSlots() const { return kFALSE; }
    virtual TEveWindowSlot* NewSlot() { return 0; }
 
-   void PopulateEmptyFrame(TEveCompositeFrame* ef); 
+   void PopulateEmptyFrame(TEveCompositeFrame* ef);
 
    void SwapWindow(TEveWindow* w);
    void SwapWindowWithCurrent();        // *MENU*
@@ -280,15 +280,15 @@ public:
 
    // Access to static data-members.
 
-   static UInt_t  GetMainFrameDefWidth()  { return fgMainFrameDefWidth;  }
-   static UInt_t  GetMainFrameDefHeight() { return fgMainFrameDefHeight; }
-   static void SetMainFrameDefWidth (UInt_t x) { fgMainFrameDefWidth  = x; }
-   static void SetMainFrameDefHeight(UInt_t x) { fgMainFrameDefHeight = x; }
+   static UInt_t  GetMainFrameDefWidth();
+   static UInt_t  GetMainFrameDefHeight();
+   static void    SetMainFrameDefWidth (UInt_t x);
+   static void    SetMainFrameDefHeight(UInt_t x);
 
-   static Pixel_t GetCurrentBackgroundColor() { return fgCurrentBackgroundColor; }
-   static Pixel_t GetMiniBarBackgroundColor() { return fgMiniBarBackgroundColor; }
-   static void SetCurrentBackgroundColor(Pixel_t p) { fgCurrentBackgroundColor = p; }
-   static void SetMiniBarBackgroundColor(Pixel_t p) { fgMiniBarBackgroundColor = p; }
+   static Pixel_t GetCurrentBackgroundColor();
+   static Pixel_t GetMiniBarBackgroundColor();
+   static void    SetCurrentBackgroundColor(Pixel_t p);
+   static void    SetMiniBarBackgroundColor(Pixel_t p);
 
    ClassDef(TEveWindow, 0); // Abstract base-class for eve-windows.
 };

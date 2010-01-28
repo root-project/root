@@ -272,6 +272,28 @@ TClass* TEveLine::ProjectedClass(const TEveProjection*) const
    return TEveLineProjected::Class();
 }
 
+//------------------------------------------------------------------------------
+
+//______________________________________________________________________________
+Bool_t TEveLine::GetDefaultSmooth()
+{
+   // Get default value for smooth-line drawing flag.
+   // Static function.
+
+   return fgDefaultSmooth;
+}
+
+//______________________________________________________________________________
+void TEveLine::SetDefaultSmooth(Bool_t r)
+{
+   // Set default value for smooth-line drawing flag (default kFALSE).
+   // Static function.
+
+   fgDefaultSmooth = r;
+}
+
+
+
 //==============================================================================
 //==============================================================================
 // TEveLineProjected

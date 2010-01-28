@@ -123,8 +123,8 @@ public:
    UChar_t GetBreakProjectedTracks() const     { return fBreakProjectedTracks; }
    void    SetBreakProjectedTracks(UChar_t bt) { fBreakProjectedTracks = bt;   }
 
-   static Bool_t GetDefaultBreakProjectedTracks()          { return fgDefaultBreakProjectedTracks; }
-   static void   SetDefaultBreakProjectedTracks(Bool_t bt) { fgDefaultBreakProjectedTracks = bt;   }
+   static Bool_t GetDefaultBreakProjectedTracks();
+   static void   SetDefaultBreakProjectedTracks(Bool_t bt);
 
    ClassDef(TEveTrack, 1); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
 };

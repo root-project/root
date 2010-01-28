@@ -37,7 +37,7 @@
 //==============================================================================
 
 //______________________________________________________________________________
-// 
+//
 // Abstract base-class for frame-slots that encompass EVE-windows
 // (sub-classes of TEveWindow).
 //
@@ -683,7 +683,7 @@ void TEveCompositeFrameInTab::SetCurrent(Bool_t curr)
 // Abstract base-class for representing eve-windows.
 // Sub-classes define a particular GUI frame that gets show
 // in the window.
-// 
+//
 
 ClassImp(TEveWindow);
 
@@ -1109,6 +1109,72 @@ void TEveWindow::SwapWindows(TEveWindow* w1, TEveWindow* w2)
    }
 
    f1->Layout(); f2->Layout();
+}
+
+//==============================================================================
+
+//______________________________________________________________________________
+UInt_t TEveWindow::GetMainFrameDefWidth()
+{
+   // Get default width for new main-frame windows. Static.
+
+   return fgMainFrameDefWidth;
+}
+
+//______________________________________________________________________________
+UInt_t TEveWindow::GetMainFrameDefHeight()
+{
+   // Get default heigth for new main-frame windows. Static.
+
+   return fgMainFrameDefHeight;
+}
+
+//______________________________________________________________________________
+void TEveWindow::SetMainFrameDefWidth (UInt_t x)
+{
+   // Set default width for new main-frame windows. Static.
+
+   fgMainFrameDefWidth  = x;
+}
+
+//______________________________________________________________________________
+void TEveWindow::SetMainFrameDefHeight(UInt_t x)
+{
+   // Set default height for new main-frame windows. Static.
+
+   fgMainFrameDefHeight = x;
+}
+
+//______________________________________________________________________________
+Pixel_t TEveWindow::GetCurrentBackgroundColor()
+{
+   // Get background-color for marking the title-bar of current window. Static.
+
+   return fgCurrentBackgroundColor;
+}
+
+//______________________________________________________________________________
+Pixel_t TEveWindow::GetMiniBarBackgroundColor()
+{
+   // Get background-color for mini-bar (collapsed title-bar). Static.
+
+   return fgMiniBarBackgroundColor;
+}
+
+//______________________________________________________________________________
+void TEveWindow::SetCurrentBackgroundColor(Pixel_t p)
+{
+   // Set background-color for marking the title-bar of current window. Static.
+
+   fgCurrentBackgroundColor = p;
+}
+
+//______________________________________________________________________________
+void TEveWindow::SetMiniBarBackgroundColor(Pixel_t p)
+{
+   // Set background-color for mini-bar (collapsed title-bar). Static.
+
+   fgMiniBarBackgroundColor = p;
 }
 
 

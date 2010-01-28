@@ -66,8 +66,8 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   static Bool_t GetDefaultSmooth()       { return fgDefaultSmooth; }
-   static void SetDefaultSmooth(Bool_t r) { fgDefaultSmooth = r;    }
+   static Bool_t GetDefaultSmooth();
+   static void   SetDefaultSmooth(Bool_t r);
 
    ClassDef(TEveLine, 0); // An arbitrary polyline with fixed line and marker attributes.
 };
