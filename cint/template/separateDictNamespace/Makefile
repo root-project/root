@@ -18,7 +18,7 @@ sepDictLibs: run.log
                 fi
 
 run.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) run.good.output 
-	$(CMDECHO)$(CALLROOTEXE) -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | $(RemoveSizes) | sed -e 's?FILE:[A-Za-z]:.*[/\]?FILE:?' > run.log
+	$(CMDECHO)$(CALLROOTEXE) -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | $(RemoveSizes) | sed -e 's?FILE:[A-Za-z]:.*[/\]?FILE:?' | sed -e 's?FILE:/.*/?FILE:?' > run.log
 
 all: sepDictLibs
 
