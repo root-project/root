@@ -115,8 +115,6 @@ private:
    double arr[i];
 };
 
-namespace {
-classVec<5> tttt;
-}
+template class classVec<5>;
 
 #endif // DICT2_CLASSA_H
