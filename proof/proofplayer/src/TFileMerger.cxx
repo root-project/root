@@ -42,9 +42,9 @@
 ClassImp(TFileMerger)
 
 //______________________________________________________________________________
-TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoonego)
+TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
             : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE),
-              fLocal(isLocal), fHistoOneGo(histoonego)
+              fLocal(isLocal), fHistoOneGo(histoOneGo)
 {
    // Create file merger object.
 
@@ -75,7 +75,7 @@ void TFileMerger::Reset()
 }
 
 //______________________________________________________________________________
-Bool_t TFileMerger::AddFile(const char *url)
+Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
 {
    // Add file to file merger.
 
@@ -85,7 +85,7 @@ Bool_t TFileMerger::AddFile(const char *url)
    if (fLocal) {
       TUUID uuid;
       localcopy.Form("file:%s/ROOTMERGE-%s.root", gSystem->TempDirectory(), uuid.AsString());
-      if (!TFile::Cp(url, localcopy)) {
+      if (!TFile::Cp(url, localcopy, cpProgress)) {
          Error("AddFile", "cannot get a local copy of file %s", url);
          return kFALSE;
       }
@@ -143,8 +143,6 @@ Bool_t TFileMerger::Merge(Bool_t)
    // Merge the files. If no output file was specified it will write into
    // the file "FileMerger.root" in the working directory. Returns true
    // on success, false in case of error.
-   // "cp_progressbar" is pass to TFile::Cp to control whether there is 
-   // visual feedback on the progress of the copy.
 
    if (!fOutputFile) {
       TString outf(fOutputFilename);
@@ -167,7 +165,7 @@ Bool_t TFileMerger::Merge(Bool_t)
       fOutputFile->Close();
    }
 
-   // Cleanup 
+   // Cleanup
    SafeDelete(fOutputFile);
 
    // Remove local copies if there are any
@@ -342,8 +340,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                      TObject *hobj = key2->ReadObj();
                      // Set ownership for collections
                      if (hobj->InheritsFrom(TCollection::Class())) {
-                        ((TCollection*)hobj)->SetOwner(); 
-                     }   
+                        ((TCollection*)hobj)->SetOwner();
+                     }
                      hobj->ResetBit(kMustCleanup);
                      listH.Add(hobj);
                      Int_t error = 0;
@@ -358,7 +356,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                nextsource = (TFile*)sourcelist->After( nextsource );
             }
          } else {
-            // Object is of no type that we can merge 
+            // Object is of no type that we can merge
             Warning("MergeRecursive", "cannot merge object type (n:'%s', t:'%s') - "
                                       "Merge(TCollection *) not implemented",
                                       obj->GetName(), obj->GetTitle());

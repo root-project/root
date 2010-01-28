@@ -56,12 +56,12 @@ protected:
    Bool_t         fFastMethod;      // True if using Fast merging algorithm (default)
    Bool_t         fNoTrees;         // True if Trees should not be merged (default is kFALSE)
 
-   Bool_t	  fLocal;           // Makes local copies of merging files if True (default is kFALSE)
-   Bool_t	  fHistoOneGo;      // Merger histos in one go
-   TList	 *fMergeList;       // list of the files need to be merged 
+   Bool_t	      fLocal;           // Makes local copies of merging files if True (default is kTRUE)
+   Bool_t	      fHistoOneGo;      // Merger histos in one go (default is kTRUE)
+   TList	        *fMergeList;       // list of the files need to be merged
 
 public:
-   TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoonego = kTRUE);
+   TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
    virtual ~TFileMerger();
 
    const char *GetOutputFileName() const { return fOutputFilename; }
@@ -73,7 +73,7 @@ public:
 
    //--- file merging interface
    virtual void   Reset();
-   virtual Bool_t AddFile(const char *url);
+   virtual Bool_t AddFile(const char *url, Bool_t cpProgress = kTRUE);
    virtual Bool_t OutputFile(const char *url);
    virtual void   PrintFiles(Option_t *options);
    virtual Bool_t Merge(Bool_t = kTRUE);
