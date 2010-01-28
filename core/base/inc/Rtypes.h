@@ -144,7 +144,7 @@ const ULong_t   kMaxULong    = ULong_t(~0);
 const Long_t    kMaxLong     = Long_t(kMaxULong >> 1);
 const Long_t    kMinLong     = -kMaxLong - 1;
 
-const ULong64_t kMaxULong64  = ULong64_t(~R__LL(0));
+const ULong64_t kMaxULong64  = ULong64_t(~0LL);
 const Long64_t  kMaxLong64   = Long64_t(kMaxULong64 >> 1);
 const Long64_t  kMinLong64   = -kMaxLong64 - 1;
 
@@ -154,7 +154,7 @@ const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
 
 //--- bit manipulation ---------------------------------------------------------
 
-#define BIT(n)       (R__ULL(1) << (n))
+#define BIT(n)       (1ULL << (n))
 #define SETBIT(n,i)  ((n) |= BIT(i))
 #define CLRBIT(n,i)  ((n) &= ~BIT(i))
 #define TESTBIT(n,i) ((Bool_t)(((n) & BIT(i)) != 0))

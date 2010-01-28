@@ -389,7 +389,7 @@ void TUUID::GetSystemTime(uuid_time_t *timestamp)
    // UUID UTC base time is October 15, 1582.
    // Unix base time is January 1, 1970.
    ULong64_t uuid_time = ((ULong64_t)tp.tv_sec * 10000000) + (tp.tv_usec * 10) +
-                         R__LL(0x01B21DD213814000);
+                         0x01B21DD213814000LL;
    timestamp->high = (UInt_t) (uuid_time >> 32);
    timestamp->low  = (UInt_t) (uuid_time & 0xFFFFFFFF);
 #endif
@@ -630,8 +630,8 @@ TDatime TUUID::GetTime() const
    // Unix base time is January 1, 1970.
    ULong64_t high = ts.high;
    ULong64_t uuid_time = (high << 32) + ts.low;
-   uuid_time -= R__LL(0x01B21DD213814000);
-   uuid_time /= R__LL(10000000);
+   uuid_time -= 0x01B21DD213814000LL;
+   uuid_time /= 10000000LL;
    UInt_t tt = (UInt_t) uuid_time;
    dt.Set(tt);
 
