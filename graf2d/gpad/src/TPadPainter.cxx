@@ -2,6 +2,7 @@
 #include "TPoint.h"
 #include "TPadPainter.h"
 #include "TVirtualX.h"
+#include "TImage.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY = 1002;
@@ -483,4 +484,21 @@ void TPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMod
    Double_t angle = GetTextAngle();
    Double_t mgn = GetTextMagnitude();
    gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
+}
+
+
+//______________________________________________________________________________
+void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
+{
+   // Save the image displayed in the canvas pointed by "pad" into a 
+   // binary file.
+
+   if (type == TImage::kGif) {
+      gVirtualX->WriteGIF((char*)fileName);
+   } else {
+      TImage *img = TImage::Create();
+      img->FromPad(pad);
+      img->WriteImage(fileName, (TImage::EImageFileTypes)type);
+      delete img;
+   }
 }

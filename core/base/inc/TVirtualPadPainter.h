@@ -87,6 +87,10 @@ public:
    virtual void     DrawText(Double_t x, Double_t y, const char *text, ETextMode mode) = 0;
    virtual void     DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) = 0;
    
+   //gif, jpg, png, bmp output.
+   virtual void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const = 0;
+
+   
    static TVirtualPadPainter *PadPainter(Option_t *opt = "");
 
    ClassDef(TVirtualPadPainter, 0)//Painter interface for pad.

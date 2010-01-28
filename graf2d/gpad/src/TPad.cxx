@@ -4249,10 +4249,9 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->Modified();
          gPad->Update();
          GetPainter()->SelectDrawable(wid);
-         if (gVirtualX->WriteGIF((char*)psname.Data())) {
-            if (!gSystem->AccessPathName(psname.Data())) {
-               Info("Print", "GIF file %s has been created", psname.Data());
-            }
+         GetPainter()->SaveImage(this, psname.Data(), gtype);
+         if (!gSystem->AccessPathName(psname.Data())) {
+            Info("Print", "GIF file %s has been created", psname.Data());
          }
          gPad->GetCanvas()->SetHighLightColor(hc);
          return;
@@ -4270,11 +4269,8 @@ void TPad::Print(const char *filenam, Option_t *option)
             gErrorIgnoreLevel = kFatal;
             gVirtualX->Update(1);
             gSystem->Sleep(30); // syncronize
-            TImage *img = TImage::Create();
-            img->FromPad(this);
-            img->WriteImage(psname, gtype);
+            GetPainter()->SaveImage(this, psname, gtype);
             gErrorIgnoreLevel = saver;
-            delete img;
          }
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());

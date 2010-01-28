@@ -1,9 +1,13 @@
 #include <stdexcept>
-#include <iostream>
+#include <memory>
+#include <vector>
 
 #include "TAttMarker.h"
 #include "TVirtualX.h"
+#include "TError.h"
+#include "TImage.h"
 #include "TPad.h"
+#include "TCanvas.h"
 
 #include "TGLPadPainter.h"
 #include "TGLIncludes.h"
@@ -771,6 +775,57 @@ void TGLPadPainter::RestoreViewport()
    //Restore the saved viewport.
    glViewport(fVp[0], fVp[1], fVp[2], fVp[3]);
 }
+
+//______________________________________________________________________________
+void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
+{
+   // Using TImage save frame-buffer contents as a picture.
+
+   TCanvas *canvas = ((TPad *)pad)->GetCanvas();
+   if (!canvas) return;
+   canvas->Flush();
+
+   std::vector<unsigned> buff(canvas->GetWw() * canvas->GetWh());
+   glPixelStorei(GL_PACK_ALIGNMENT, 1);
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   //In case GL_BGRA is not in gl.h (old windows' gl) - comment/uncomment lines.
+   //glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_BGRA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
+   glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_RGBA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
+
+   std::auto_ptr<TImage> image(TImage::Create());
+   if (!image.get()) {
+      Error("TGLPadPainter::SaveImage", "TImage creation failed");
+      return;
+   }
+
+   image->DrawRectangle(0, 0, canvas->GetWw(), canvas->GetWh());
+   UInt_t *argb = image->GetArgbArray();
+
+   if (!argb) {
+      Error("TGLPadPainter::SaveImage", "null argb array in TImage object");
+      return;
+   }
+
+   const Int_t nLines  = canvas->GetWh();
+   const Int_t nPixels = canvas->GetWw(); 
+
+   for (Int_t i = 0; i < nLines; ++i) {
+     Int_t base = (nLines - 1 - i) * nPixels;
+     for (Int_t j = 0; j < nPixels; ++j, ++base) {
+        //Uncomment/comment if you don't have GL_BGRA.
+        
+        const UInt_t pix  = buff[base];
+        const UInt_t bgra = ((pix & 0xff) << 16) | (pix & 0xff00) |
+                            ((pix & 0xff0000) >> 16) | (pix & 0xff000000);
+        
+        //argb[i * nPixels + j] = buff[base];
+        argb[i * nPixels + j] = bgra;
+     }
+   }
+
+   image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+}
+
 
 //Aux. functions.
 namespace {
