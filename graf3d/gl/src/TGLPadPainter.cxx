@@ -6,8 +6,8 @@
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TImage.h"
+#include "TROOT.h"
 #include "TPad.h"
-#include "TCanvas.h"
 
 #include "TGLPadPainter.h"
 #include "TGLIncludes.h"
@@ -781,9 +781,9 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
 {
    // Using TImage save frame-buffer contents as a picture.
 
-   TCanvas *canvas = ((TPad *)pad)->GetCanvas();
+   TVirtualPad *canvas = (TVirtualPad *)pad->GetCanvas();
    if (!canvas) return;
-   canvas->Flush();
+   gROOT->ProcessLine(Form("((TCanvas *)0x%lx)->Flush();", canvas));
 
    std::vector<unsigned> buff(canvas->GetWw() * canvas->GetWh());
    glPixelStorei(GL_PACK_ALIGNMENT, 1);
