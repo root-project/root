@@ -319,9 +319,18 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
 }
 
 //______________________________________________________________________________
+Bool_t TGWin32ProxyBase::IsGloballyLocked()
+{
+   // Check the status of the lock. 
+
+   return fgLock;
+}
+
+//______________________________________________________________________________
 void TGWin32ProxyBase::SendExitMessage()
 {
    // send exit message to server thread
 
    ::PostThreadMessage(fgMainThreadId, WM_QUIT, 0, 0L);
 }
+

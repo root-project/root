@@ -278,12 +278,12 @@ public:
    Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
    Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
-   Int_t        EventsPending() {  return fgRealObject->EventsPending(); }
-   void         NextEvent(Event_t & event) { fgRealObject->NextEvent(event); }
-   Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev) { return fgRealObject->CheckEvent(id,type,ev); }
-   void         SendEvent(Window_t id, Event_t *ev) { fgRealObject->SendEvent(id,ev); }
-   Bool_t       IsCmdThread() const { return fgRealObject->IsCmdThread(); }
-   Window_t     GetCurrentWindow() const { return fgRealObject->GetCurrentWindow(); }
+   Int_t        EventsPending();
+   void         NextEvent(Event_t & event);
+   Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev);
+   void         SendEvent(Window_t id, Event_t *ev);
+   Bool_t       IsCmdThread() const;
+   Window_t     GetCurrentWindow() const;
 
    static TVirtualX *RealObject();
    static TVirtualX *ProxyObject();

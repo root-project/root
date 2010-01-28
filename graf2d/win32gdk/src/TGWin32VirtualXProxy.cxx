@@ -288,3 +288,52 @@ void TGWin32VirtualXProxy::LookupString(Event_t * event, char *buf, Int_t buflen
    fgRealObject->LookupString(event,buf,buflen,keysym);
    DEBUG_PROFILE_PROXY_STOP(LookupString)
 }
+
+//______________________________________________________________________________
+Int_t TGWin32VirtualXProxy::EventsPending()
+{  
+   // Return number of pending events.
+
+   return fgRealObject->EventsPending();
+}
+
+//______________________________________________________________________________
+void TGWin32VirtualXProxy::NextEvent(Event_t & event)
+{
+   // Process next event in the queue - if any.
+
+   fgRealObject->NextEvent(event);
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32VirtualXProxy::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
+{
+   // Check if there is for window "id" an event of type "type".
+
+   return fgRealObject->CheckEvent(id,type,ev);
+}
+
+//______________________________________________________________________________
+void TGWin32VirtualXProxy::SendEvent(Window_t id, Event_t *ev)
+{
+   // Send event ev to window id.
+
+   fgRealObject->SendEvent(id,ev);
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32VirtualXProxy::IsCmdThread() const 
+{
+   // Return kTRUE if we are inside cmd/server thread.
+
+   return fgRealObject->IsCmdThread();
+}
+
+//______________________________________________________________________________
+Window_t TGWin32VirtualXProxy::GetCurrentWindow() const 
+{
+   // Return a pointer to the current window.
+
+   return fgRealObject->GetCurrentWindow(); 
+}
+

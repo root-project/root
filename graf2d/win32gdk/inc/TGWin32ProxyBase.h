@@ -48,7 +48,7 @@ public: // private:
    static void    Unlock();
    static void    GlobalLock();
    static void    GlobalUnlock();
-   static Bool_t  IsGloballyLocked() { return fgLock; }
+   static Bool_t  IsGloballyLocked();
    static Bool_t  Ping();
 
 public:
