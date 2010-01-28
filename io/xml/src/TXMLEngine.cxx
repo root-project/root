@@ -1414,23 +1414,20 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
       Int_t commentlen = inp->SearchFor("-->");
       if (commentlen<=0) { resvalue = -10; return 0; }
 
-      if (fSkipComments) {
-         if (!inp->ShiftCurrent(commentlen+3)) { resvalue = -1; return 0; }
-         continue;
+      if (!fSkipComments) {
+         node = (SXmlNode_t*) AllocateNode(0, xmlparent);
+         node->fName.Resize(commentlen);
+         char* nameptr = (char*)node->fName.Data();
+         node->fType = kXML_COMMENT;
+         strncpy(nameptr, inp->fCurrent, commentlen);
+         nameptr += commentlen;
+         *nameptr = 0;
       }
-      
-      node = (SXmlNode_t*) AllocateNode(0, xmlparent);
-      node->fName.Resize(commentlen);
-      char* nameptr = (char*)node->fName.Data();
-      node->fType = kXML_COMMENT;
-      strncpy(nameptr, inp->fCurrent, commentlen);
-      nameptr += commentlen;
-      *nameptr = 0;
       
       if (!inp->ShiftCurrent(commentlen+3)) { resvalue = -1; return node; }
       if (!inp->SkipSpaces()) { resvalue = -1; return node; }
+
       resvalue = 2;
-      
       return node;
    }
 
