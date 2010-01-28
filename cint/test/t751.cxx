@@ -64,7 +64,7 @@ int main() {
   char line_in [200];
   char pattern_name [200];
   int j, pattern_number;
-  char pattern_name_array [4000] [40];
+  char pattern_name_array [1024] [40];
   
   FILE *fp;
   
@@ -75,7 +75,7 @@ int main() {
   
   printf("Problem #1: array index increment issue\n\n");
   
-  while (fgets(line_in, 120, fp) && pattern_number < 5000) {
+  while (fgets(line_in, 120, fp) && pattern_number < 1024) {
     if (line_in [0] != '/' && line_in [1] != '*') {	
       j=0;
       while (line_in [j + 8] != '\t') {
