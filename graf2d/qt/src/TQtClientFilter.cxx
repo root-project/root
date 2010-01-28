@@ -727,6 +727,38 @@ void TQtClientFilter::GrabPointer(TQtClientWidget *grabber, UInt_t evmask, Windo
 }
 
 //______________________________________________________________________________
+TQtPointerGrabber *TQtClientFilter::PointerGrabber()
+{   return fgGrabber; }
+
+//______________________________________________________________________________
+TQtClientWidget *TQtClientFilter::GetPointerGrabber()
+{   return fgPointerGrabber; }
+
+//______________________________________________________________________________
+TQtClientWidget *TQtClientFilter::GetButtonGrabber() 
+{   return fgButtonGrabber; }
+
+//______________________________________________________________________________
+void TQtClientFilter::SetButtonGrabber(TQtClientWidget *grabber)
+{   fgButtonGrabber = grabber; }
+   
+//______________________________________________________________________________
+void TQtClientFilter::AppendButtonGrab(TQtClientWidget *widget)
+{   fButtonGrabList.append(widget); }
+
+//______________________________________________________________________________
+void TQtClientFilter::RemoveButtonGrab(QObject *widget)
+{ 
+   TQtClientWidget *wid = (TQtClientWidget *)widget;
+   if ((fgButtonGrabber == wid) && fgGrabber) fgGrabber->DisactivateGrabbing();
+#if (QT_VERSION >= 0x040000)
+   fButtonGrabList.removeAll(wid);
+#else
+   fButtonGrabList.remove(wid);
+#endif
+}
+
+//______________________________________________________________________________
 //
 //   class TQtPointerGrabber  to implement X11 style mouse grabbing under Qt
 //______________________________________________________________________________
@@ -925,6 +957,8 @@ bool TQtPointerGrabber::SelectGrab(Event_t &evt, UInt_t selectEventMask, QMouseE
 
    return pass2Root;
  }
+
 //______________________________________________________________________________
 Bool_t TQtPointerGrabber::IsGrabSelected(UInt_t selectEventMask) const
 {  return  fGrabPointerEventMask & selectEventMask; }
+

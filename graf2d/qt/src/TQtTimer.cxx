@@ -40,3 +40,11 @@ TQtTimer * TQtTimer::Create(QObject *parent)
    }
    return fgQTimer;
 }
+
+//______________________________________________________________________________
+TQtTimer *TQtTimer::QtTimer()
+{
+   // Return the singelton TQtTimer object
+   return fgQTimer;
+}
+

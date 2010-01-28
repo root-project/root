@@ -48,7 +48,6 @@ public:
   static TQtTimer *QtTimer();
   ClassDef(TQtTimer,0) // QTimer to awake the ROOT event loop from Qt event loop
 };
-inline TQtTimer *TQtTimer::QtTimer(){ return fgQTimer; }
 
 
 #endif

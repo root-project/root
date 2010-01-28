@@ -98,7 +98,7 @@ public:
    static void GrabPointer(TQtClientWidget *grabber, UInt_t evmask, Window_t confine,
                                     QCursor *cursor, Bool_t grab = kTRUE,
                                     Bool_t owner_events = kTRUE);
-   static TQtPointerGrabber *PointerGrabber() { return fgGrabber; }
+   static TQtPointerGrabber *PointerGrabber();
 public slots:
    void AppendButtonGrab (TQtClientWidget *);
    void RemoveButtonGrab (QObject *);
@@ -138,34 +138,6 @@ public:
                        , Bool_t owner_events = kTRUE, QWidget *confine=0);
    bool   SelectGrab(Event_t &event, UInt_t selectEventMask,QMouseEvent &mouse);
 };
-
-//______________________________________________________________________________
-inline TQtClientWidget *TQtClientFilter::GetPointerGrabber()
-{  return fgPointerGrabber;                                       }
-
-//______________________________________________________________________________
-inline TQtClientWidget *TQtClientFilter::GetButtonGrabber() 
-{  return fgButtonGrabber;                                              }
-
-//______________________________________________________________________________
-inline void TQtClientFilter::SetButtonGrabber(TQtClientWidget *grabber)
-{  fgButtonGrabber = grabber;                                           }
-   
-//______________________________________________________________________________
-inline   void TQtClientFilter::AppendButtonGrab(TQtClientWidget *widget)
-{  fButtonGrabList.append(widget);}
-//______________________________________________________________________________
-inline   void TQtClientFilter::RemoveButtonGrab(QObject *widget)
-{ 
-   TQtClientWidget *wid = (TQtClientWidget *)widget;
-   if ((fgButtonGrabber == wid) && fgGrabber) fgGrabber->DisactivateGrabbing();
-#if (QT_VERSION >= 0x040000)
-   fButtonGrabList.removeAll(wid);
-#else
-   fButtonGrabList.remove(wid);
-#endif
-
-}
 
 //______________________________________________________________________________
 inline   TQtEventQueue *TQtClientFilter::Queue() {
