@@ -2676,7 +2676,7 @@ Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
 
    Double_t *ac = new Double_t[14];
    Double_t *hc = new Double_t[9];
-   Double_t *wcm = new Double_t[200];
+   Double_t *wcm = new Double_t[201];
    Int_t itype;
    Int_t npt;
    Int_t k;
