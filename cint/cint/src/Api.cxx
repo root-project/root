@@ -302,12 +302,12 @@ using namespace std;
 /*********************************************************************
 * G__DemangleClassname
 *********************************************************************/
-static int G__DemangleClassname(char *buf,const char *orig)
+static int G__DemangleClassname(G__FastAllocString& buf,const char *orig)
 {
   int tagnum;
 
   /* try typeid.name() as is */
-  strcpy(buf,orig);
+  buf = orig;
   tagnum = G__defined_tagname(buf,2);
   if(-1!=tagnum) return(1);
   
@@ -315,7 +315,7 @@ static int G__DemangleClassname(char *buf,const char *orig)
    * this works for classes in global scope in g++ */
   int ox=0;
   while(isdigit(orig[ox])) ++ox; 
-  strcpy(buf,orig+ox);
+  buf = orig+ox;
   tagnum = G__defined_tagname(buf,2);
   if(-1!=tagnum) return(1);
 
@@ -335,13 +335,13 @@ static int G__DemangleClassname(char *buf,const char *orig)
       ++ox; 
     }
     if(buf[0]) {
-      strcat(buf,"::");
+      buf += "::";
       totallen += (2+len);
     }
     else {
       totallen=len;
     }
-    strcat(buf,orig+ox);
+    buf += orig+ox;
     buf[totallen] = 0;
     ox += len;
   }
@@ -350,7 +350,7 @@ static int G__DemangleClassname(char *buf,const char *orig)
 #else
   int status = 0;
   char* cxaname=::abi::__cxa_demangle(orig, 0, 0, &status);
-  strcpy(buf, cxaname);
+  buf = cxaname;
   free(cxaname);    
   tagnum = G__defined_tagname(buf,2);
   if(-1!=tagnum) return(1);
