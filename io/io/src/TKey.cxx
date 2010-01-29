@@ -462,8 +462,6 @@ void TKey::Delete(Option_t *option)
    fMotherDir->GetListOfKeys()->Remove(this);
 }
 
-#include "TThread.h"
-
 //______________________________________________________________________________
 void TKey::DeleteBuffer()
 {
@@ -474,7 +472,6 @@ void TKey::DeleteBuffer()
       fBufferRef = 0;
    } else {
       if (fBuffer) {
-         fprintf(stderr,"Key %p is deleting %p in Thread %ld\n",this,fBuffer,TThread::SelfId());
          delete [] fBuffer;
       }
    }
