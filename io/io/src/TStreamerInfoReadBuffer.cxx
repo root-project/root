@@ -1060,6 +1060,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   vers &= ~( TBufferFile::kStreamedMemberWise );
                   TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
                   TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
+                  if (subinfo->IsOptimized()) {
+                     subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+                     subinfo->Compile();
+                  }
                   DOLOOP {
                      void* env;
                      void **contp = (void**)(arr[k]+ioffset);
@@ -1139,6 +1143,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   } else {
                      subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( vClVersion );
                      newProxy = oldProxy;
+                  }
+                  if (subinfo->IsOptimized()) {
+                     subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+                     subinfo->Compile();
                   }
 
                   DOLOOP {

@@ -3210,12 +3210,12 @@ void TBufferFile::ForceWriteInfoClones(TClonesArray *a)
    // In case the StreamerInfo has already been computed and optimized,
    // one must disable the option BypassStreamer.
 
-   Bool_t optim = TStreamerInfo::CanOptimize();
-   if (optim) TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *sinfo = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
+   if (sinfo->IsOptimized()) {
+      sinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+      sinfo->Compile();
+   }
    ForceWriteInfo(sinfo,kFALSE);
-   if (optim) TStreamerInfo::Optimize(kTRUE);
-   if (sinfo->IsOptimized()) a->BypassStreamer(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -3330,7 +3330,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
             CheckByteCount(start, count, cl);
             return 0;            
          }
-      } else if (!sinfo->GetOffsets()) {
+      } else if (!sinfo->IsCompiled()) {
+         // Streamer info has not been compiled, but exists.
+         // Therefore it was read in from a file and we have to do schema evolution.
          const_cast<TClass*>(cl)->BuildRealData(pointer);
          sinfo->BuildOld();
       }
@@ -3424,8 +3426,10 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             return 0;            
          }
       } 
-      else if (!sinfo->TStreamerInfo::GetOffsets())  // 'TStreamerInfo::' avoids going via a virtual function.
+      else if (!sinfo->IsCompiled())
       { 
+         // Streamer info has not been compiled, but exists.
+         // Therefore it was read in from a file and we have to do schema evolution?
          const_cast<TClass*>(cl)->BuildRealData(pointer);
          sinfo->BuildOld();
       }
@@ -3462,14 +3466,10 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
       cl->GetStreamerInfos()->AddAtAndExpand(sinfo,cl->GetClassVersion());
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
       sinfo->Build();
-   } else if (!sinfo->GetOffsets()) {
+   } else if (!sinfo->IsCompiled()) {
       const_cast<TClass*>(cl)->BuildRealData(pointer);
       sinfo->BuildOld();
    }
-   // This is necessary because it might be induced later anyway if an object
-   // of the same type is either a base class or a pointer data member of this
-   // class of any contained objects.
-   if (sinfo->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) sinfo->Compile();
 
    //write the class version number and reserve space for the byte count
    UInt_t R__c = WriteVersion(cl, kTRUE);

@@ -19,6 +19,8 @@
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"
 #include "TError.h"
+#include "TVirtualMutex.h"
+#include "TInterpreter.h"
 
 namespace ROOT {
 
@@ -204,6 +206,7 @@ namespace ROOT {
    TClass *TGenericClassInfo::GetClass()
    {
       // Generate and return the TClass object.
+      R__LOCKGUARD2(gCINTMutex);
       if (!fClass && fAction) {
          fClass = GetAction().CreateClass(GetClassName(),
                                           GetVersion(),

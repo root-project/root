@@ -712,12 +712,6 @@ void TClonesArray::Streamer(TBuffer &b)
       //possible to support schema evolution in read mode.
       //In case the StreamerInfo has already been computed and optimized,
       //one must disable the option BypassStreamer
-      //Bool_t optim = TStreamerInfo::CanOptimize();
-      //if (optim) TStreamerInfo::Optimize(kFALSE);
-      //TStreamerInfo *sinfo = fClass->GetStreamerInfo();
-      //sinfo->ForceWriteInfo((TFile *)b.GetParent());
-      //if (optim) TStreamerInfo::Optimize(kTRUE);
-      //if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
       b.ForceWriteInfoClones(this);
 
       // make sure the status of bypass streamer is part of the buffer

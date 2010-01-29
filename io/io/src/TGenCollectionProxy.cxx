@@ -769,14 +769,6 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
             break;
          }
 
-         // Optimizing does not work with member wise streaming
-         if (TVirtualStreamerInfo::GetStreamMemberWise() && fValue->fType.GetClass()) {
-            Bool_t optim = TVirtualStreamerInfo::CanOptimize();
-            TVirtualStreamerInfo::Optimize(kFALSE);
-            fValue->fType.GetClass()->GetStreamerInfo()->Compile();
-            TVirtualStreamerInfo::Optimize(optim);
-         }
-
          fPointers = fPointers || (0 != (fVal->fCase&G__BIT_ISPOINTER));
          fClass = cl;
          return this;

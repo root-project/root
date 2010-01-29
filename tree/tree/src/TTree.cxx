@@ -1916,12 +1916,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    // is built unoptimized (data members are not combined).
    //
 
-   Bool_t optim = TStreamerInfo::CanOptimize();
-   if (splitlevel > 0) {
-      TStreamerInfo::Optimize(kFALSE);
-   }
-   TStreamerInfo* sinfo = BuildStreamerInfo(cl, objptr);
-   TStreamerInfo::Optimize(optim);
+   TStreamerInfo* sinfo = BuildStreamerInfo(cl, objptr, splitlevel==0);
 
    //
    // Do we have a final dot in our name?
@@ -2090,7 +2085,7 @@ Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */
 }
 
 //______________________________________________________________________________
-TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
+TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Bool_t canOptimize /* = kTRUE */ )
 {
    // Build StreamerInfo for class cl.
    // pointer is an optional argument that may contain a pointer to an object of cl.
@@ -2100,6 +2095,15 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
    }
    cl->BuildRealData(pointer);
    TStreamerInfo* sinfo = (TStreamerInfo*)cl->GetStreamerInfo(cl->GetClassVersion());
+
+   if (!canOptimize && (!sinfo->IsCompiled() || sinfo->IsOptimized()) ) {
+      // Streamer info has not yet been compiled.
+      //
+      // Optimizing does not work with splitting.
+      sinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+      sinfo->Compile();
+   }
+   
    // Create StreamerInfo for all base classes.
    TBaseClass* base = 0;
    TIter nextb(cl->GetListOfBases());
@@ -2108,7 +2112,7 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
          continue;
       }
       TClass* clm = TClass::GetClass(base->GetName());
-      BuildStreamerInfo(clm, pointer);
+      BuildStreamerInfo(clm, pointer, canOptimize);
    }
    if (fDirectory) {
       sinfo->ForceWriteInfo(fDirectory->GetFile());

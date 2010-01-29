@@ -97,11 +97,9 @@ private:
    ULong_t          *fElem;              //![fNdata]
    ULong_t          *fMethod;            //![fNdata]
    TCompInfo        *fComp;              //![fNdata] additional info
-   Bool_t            fOptimized;         //! true if has been optimized
    TClass           *fClass;             //!pointer to class
    TObjArray        *fElements;          //Array of TStreamerElements
    Version_t         fOldVersion;        //! Version of the TStreamerInfo object read from the file
-   Bool_t            fIsBuilt;           //! true if the TStreamerInfo has been 'built'
 
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
@@ -122,7 +120,8 @@ public:
    enum { kCannotOptimize        = BIT(12),
           kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
           kRecovered             = BIT(14),
-          kNeedCheck             = BIT(15)
+          kNeedCheck             = BIT(15),
+          kIsCompiled            = BIT(16)
    };
 
    enum EReadWrite {
@@ -206,9 +205,6 @@ public:
    Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
    Double_t            GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
    Double_t            GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
-   Bool_t              IsBuilt() const { return fIsBuilt; }
-   Bool_t              IsOptimized() const {return fOptimized;}
-   Int_t               IsRecovered() const {return TestBit(kRecovered);}
    void                ls(Option_t *option="") const;
    TVirtualStreamerInfo *NewInfo(TClass *cl) {return new TStreamerInfo(cl);}
    void               *New(void *obj = 0);

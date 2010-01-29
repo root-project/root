@@ -67,6 +67,8 @@
 #include "TSchemaRuleSet.h"
 #include "TSchemaRule.h"
 
+#include "TVirtualMutex.h"
+
 TStreamerElement *TStreamerInfo::fgElement = 0;
 Int_t   TStreamerInfo::fgCount = 0;
 
@@ -134,9 +136,7 @@ TStreamerInfo::TStreamerInfo()
    fSize     = 0;
    fClassVersion = 0;
    fOnFileClassVersion = 0;
-   fOptimized = kFALSE;
    fOldVersion = Class()->GetClassVersion();
-   fIsBuilt  = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -159,8 +159,6 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fCheckSum = 0;
    fNdata    = 0;
    fSize     = 0;
-   fOptimized = kFALSE;
-   fIsBuilt  = kFALSE;
    fClassVersion = fClass->GetClassVersion();
    fOnFileClassVersion = 0;
    fOldVersion = Class()->GetClassVersion();
@@ -191,6 +189,8 @@ void TStreamerInfo::Build()
    // Build the I/O data structure for the current class version.
    // A list of TStreamerElement derived classes is built by scanning
    // one by one the list of data members of the analyzed class.
+
+   R__LOCKGUARD(gCINTMutex);
 
    // This is used to avoid unwanted recursive call to Build
    fIsBuilt = kTRUE;
@@ -495,6 +495,8 @@ void TStreamerInfo::BuildCheck()
 {
    // Check if built and consistent with the class dictionary.
    // This method is called by TFile::ReadStreamerInfo.
+
+   R__LOCKGUARD(gCINTMutex);
 
    TObjArray* array = 0;
    fClass = TClass::GetClass(GetName());
@@ -813,6 +815,9 @@ void TStreamerInfo::BuildCheck()
 void TStreamerInfo::BuildEmulated(TFile *file)
 {
    // Create an Emulation TStreamerInfo object.
+
+   R__LOCKGUARD(gCINTMutex);
+
    TString duName;
    R__ASSERT(file);
    Int_t fv = file->GetVersion()%100000;
@@ -853,6 +858,8 @@ Bool_t TStreamerInfo::BuildFor( const TClass *in_memory_cl )
    // Check if we can build this for foreign class - do we have some rules
    // to do that
    //---------------------------------------------------------------------------
+   R__LOCKGUARD(gCINTMutex);
+
    if( !in_memory_cl || !in_memory_cl->GetSchemaRules() )
       return kFALSE;
 
@@ -1045,11 +1052,13 @@ void TStreamerInfo::BuildOld()
 {
    // rebuild the TStreamerInfo structure
 
+   R__LOCKGUARD(gCINTMutex);
+
    if (gDebug > 0) {
       printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
    }
 
-   Bool_t wasCompiled = fOffset != 0;
+   Bool_t wasCompiled = IsCompiled();
 
    // This is used to avoid unwanted recursive call to Build
    fIsBuilt = kTRUE;
@@ -1586,6 +1595,7 @@ void TStreamerInfo::Clear(Option_t *option)
       delete [] fComp;     fComp    = 0;
       fNdata = 0;
       fSize = 0;
+      ResetBit(kIsCompiled);
    }
 }
 
@@ -1891,6 +1901,15 @@ void TStreamerInfo::Compile()
    // Store predigested information into local arrays. This saves a huge amount
    // of time compared to an explicit iteration on all elements.
 
+   R__LOCKGUARD(gCINTMutex);
+
+   // fprintf(stderr,"Running Compile for %s %d %d req=%d,%d\n",GetName(),fClassVersion,fOptimized,CanOptimize(),TestBit(kCannotOptimize));
+   
+   // if (IsCompiled() && (!fOptimized || (CanOptimize() && !TestBit(kCannotOptimize)))) return;
+   
+   fOptimized = kFALSE;
+   fNdata = 0;
+
    TObjArray* infos = (TObjArray*) gROOT->GetListOfStreamerInfo();
    if (fNumber >= infos->GetSize()) {
       infos->AddAtAndExpand(this, fNumber);
@@ -1915,13 +1934,13 @@ void TStreamerInfo::Compile()
    delete[] fComp;
    fComp = 0;
 
-   fOptimized = kFALSE;
-   fNdata = 0;
 
    Int_t ndata = fElements->GetEntries();
 
    fOffset = new Int_t[ndata+1];
    fType   = new Int_t[ndata+1];
+   
+   SetBit(kIsCompiled);
 
    if (!ndata) {
       // This may be the case for empty classes (e.g., TAtt3D).
@@ -1942,7 +1961,9 @@ void TStreamerInfo::Compile()
    if (!CanOptimize()) {
       SetBit(kCannotOptimize);
    }
-
+   
+   Bool_t isOptimized = kFALSE;
+   
    for (i = 0; i < ndata; ++i) {
       element = (TStreamerElement*) fElements->At(i);
       if (!element) {
@@ -1994,7 +2015,7 @@ void TStreamerInfo::Compile()
          }
          fLength[keep]++;
          fType[keep] = element->GetType() + kRegrouped;
-         fOptimized = kTRUE;
+         isOptimized = kTRUE;
       } else {
          if (fNewType[fNdata] != fType[fNdata]) {
             if (fNewType[fNdata] > 0) {
@@ -2029,6 +2050,8 @@ void TStreamerInfo::Compile()
    }
    ComputeSize();
 
+   fOptimized = isOptimized;
+   
    if (gDebug > 0) {
       ls();
    }
@@ -3575,6 +3598,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b >> fElements;
          R__b.ClassEnd(TStreamerInfo::Class());
          R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+         ResetBit(kIsCompiled);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -3604,6 +3628,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       } else 
 #endif
       { 
+         R__LOCKGUARD(gCINTMutex);
          Int_t nobjects = fElements->GetEntriesFast();
          TObjArray shorten( *fElements );
          TStreamerElement *el;

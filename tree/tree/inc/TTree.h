@@ -246,7 +246,7 @@ public:
    virtual TBranch        *BranchRef();
    virtual void            Browse(TBrowser*);
    virtual Int_t           BuildIndex(const char* majorname, const char* minorname = "0");
-   TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = 0);
+   TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = 0, Bool_t canOptimize = kTRUE);
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);

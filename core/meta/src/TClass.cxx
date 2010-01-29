@@ -73,7 +73,7 @@
 
 using namespace std;
 
-// Mutex to protect CINT operations
+// Mutex to protect CINT and META operations
 // (exported to be used for similar cases in related classes)
 
 TVirtualMutex* gCINTMutex = 0;
@@ -709,6 +709,7 @@ TClass::TClass() :
 {
    // Default ctor.
 
+   R__LOCKGUARD2(gCINTMutex);
    fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
 }
 
@@ -736,6 +737,8 @@ TClass::TClass(const char *name, Bool_t silent) :
    // to get a TClass interface to an interpreted class. Used by TTabCom.
    // Normally you would use TClass::GetClass("class") to get access to a
    // TClass object for a certain class.
+
+   R__LOCKGUARD2(gCINTMutex);
 
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
@@ -780,6 +783,7 @@ TClass::TClass(const char *name, Version_t cversion,
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
+   R__LOCKGUARD2(gCINTMutex);
    Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il,silent);
    SetBit(kUnloaded);
 }
@@ -809,6 +813,7 @@ TClass::TClass(const char *name, Version_t cversion,
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
 
+   R__LOCKGUARD2(gCINTMutex);
    // use info
    Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il, silent);
 }
@@ -1083,6 +1088,8 @@ TClass::~TClass()
 {
    // TClass dtor. Deletes all list that might have been created.
 
+   R__LOCKGUARD(gCINTMutex);
+   
    // Remove from the typedef hashtables.
    if (fgClassTypedefHash && TestBit (kHasNameMapNode)) {
       TString resolvedThis = TClassEdit::ResolveTypedef (GetName(), kTRUE);
@@ -1176,6 +1183,8 @@ void TClass::AdoptSchemaRules( ROOT::TSchemaRuleSet *rules )
 {
    // Adopt a new set of Data Model Evolution rules.
 
+   R__LOCKGUARD(gCINTMutex);
+
    delete fSchemaRules;
    fSchemaRules = rules;
    fSchemaRules->SetClass( this );
@@ -1217,6 +1226,7 @@ void TClass::AddRef(TClassRef *ref)
    // Register a TClassRef object which points to this TClass object.
    // When this TClass object is deleted, 'ref' will be 'Reset'.
 
+   R__LOCKGUARD(gCINTMutex);
    if (fRefStart==0) {
       fRefStart = ref;
    } else {
@@ -1303,6 +1313,8 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    //
    // If pointer is not 0, uses the object at pointer
    // otherwise creates a temporary object of this class.
+
+   R__LOCKGUARD(gCINTMutex);
 
    // Only do this once.
    if (fRealData) {
@@ -1407,6 +1419,8 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
 {
    // Build the list of real data for an emulated class
 
+   R__LOCKGUARD(gCINTMutex);
+
    TIter next(GetStreamerInfo()->GetElements());
    TStreamerElement *element;
    while ((element = (TStreamerElement*)next())) {
@@ -1449,6 +1463,7 @@ void TClass::CalculateStreamerOffset() const
    // its base class TObject. The pointer can be adjusted by
    // that offset to access any virtual method of TObject like
    // Streamer() and ShowMembers().
+   R__LOCKGUARD(gCINTMutex);
    if (!fInterStreamer && fClassInfo) {
       CallFunc_t *f  = gCint->CallFunc_Factory();
       gCint->CallFunc_SetFuncProto(f,fClassInfo,"Streamer","TBuffer&",&fOffsetStreamer);
@@ -1946,6 +1961,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
    if (offset == -2) {
       // Can we get the offset from CINT?
       if (cl->GetClassInfo()) {
+         R__LOCKGUARD(gCINTMutex);
          Long_t base_tagnum = gCint->ClassInfo_Tagnum(cl->GetClassInfo());
          BaseClassInfo_t *t = gCint->BaseClassInfo_Factory(GetClassInfo());
          while (gCint->BaseClassInfo_Next(t,0)) {
@@ -2535,6 +2551,7 @@ TList *TClass::GetListOfDataMembers()
 {
    // Return list containing the TDataMembers of a class.
 
+   R__LOCKGUARD(gCINTMutex);
    if (!fClassInfo) {
       if (!fData) fData = new TList;
       return fData;
@@ -2554,6 +2571,7 @@ TList *TClass::GetListOfMethods()
 {
    // Return list containing the TMethods of a class.
 
+   R__LOCKGUARD(gCINTMutex);
    if (!fClassInfo) {
       if (!fMethod) fMethod = new THashList;
       return fMethod;
@@ -2584,6 +2602,7 @@ TList *TClass::GetListOfAllPublicMethods()
    // - once finished, loop over resulting list and remove all private and
    //   protected methods.
 
+   R__LOCKGUARD(gCINTMutex);
    if (!fAllPubMethod) {
       fAllPubMethod = new TList;
 
@@ -2620,6 +2639,7 @@ TList *TClass::GetListOfAllPublicDataMembers()
    // classes. Refers to a subset of the data members in GetListOfDatamembers()
    // so don't do GetListOfAllPublicDataMembers()->Delete().
 
+   R__LOCKGUARD(gCINTMutex);
    if (!fAllPubData) {
       fAllPubData = new TList;
       TIter next(GetListOfDataMembers());
@@ -2681,6 +2701,7 @@ void TClass::RemoveRef(TClassRef *ref)
 {
    // Unregister the TClassRef object.
 
+   R__LOCKGUARD(gCINTMutex);
    if (ref==fRefStart) {
       fRefStart = ref->fNext;
       if (fRefStart) fRefStart->fPrevious = 0;
@@ -2698,6 +2719,7 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
 {
    // Inform the other objects to replace this object by the new TClass (newcl)
 
+   R__LOCKGUARD(gCINTMutex);
    //we must update the class pointers pointing to 'this' in all TStreamerElements
    TIter nextClass(gROOT->GetListOfClasses());
    TClass *acl;
@@ -2803,6 +2825,7 @@ void TClass::MakeCustomMenuList()
    // in this list, corresponding to the whole standard list.
    // Once the customizable version is done, one can remove or add elements.
 
+   R__LOCKGUARD(gCINTMutex);
    TClassMenuItem *menuItem;
 
    // Make sure fClassMenuList is initialized and empty.
@@ -3092,6 +3115,8 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
    //           with TStreamer::Optimize()!
    //
 
+   R__LOCKGUARD(gCINTMutex);
+
    // Handle special version, 0 means currently loaded version.
    // Warning:  This may be -1 for an emulated class.
    if (version == 0) {
@@ -3135,13 +3160,12 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
          sinfo->Build();
       }
    } else {
-      if (!sinfo->GetOffsets()) {
+      if (!sinfo->IsCompiled()) {
          // Streamer info has not been compiled, but exists.
          // Therefore it was read in from a file and we have to do schema evolution?
          // Or it didn't have a dictionary before, but does now?
          sinfo->BuildOld();
-      }
-      if (sinfo->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
+      } else if (sinfo->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
          // Undo optimization if the global flag tells us to.
          sinfo->Compile();
       }
@@ -3172,7 +3196,7 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
    if (!ignore && !TestBit(kIgnoreTObjectStreamer)) return;
    TVirtualStreamerInfo *sinfo = GetCurrentStreamerInfo();
    if (sinfo) {
-      if (sinfo->GetOffsets()) {
+      if (sinfo->IsCompiled()) {
          // -- Warn the user that what he is doing cannot work.
          // Note: The reason is that TVirtualStreamerInfo::Build() examines
          // the kIgnoreTObjectStreamer bit and sets the TStreamerElement
@@ -4101,6 +4125,8 @@ Long_t TClass::Property() const
    //    kExternal: the class has a free standing way of streaming itself
    //    kEmulated: the class is missing its shared library.
 
+   R__LOCKGUARD(gCINTMutex);
+
    if (fProperty!=(-1)) return fProperty;
 
    Long_t dummy;
@@ -4155,6 +4181,8 @@ void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
 {
    // Create the collection proxy object (and the streamer object) from
    // using the information in the TCollectionProxyInfo.
+
+   R__LOCKGUARD(gCINTMutex);
 
    delete fCollectionProxy;
 
@@ -4376,6 +4404,8 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
    // TStreamerInfo uses the information in TStreamerElement while TClass uses the information
    // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
 
+   R__LOCKGUARD(gCINTMutex);
+   
    if (fCheckSum && code == 0) return fCheckSum;
 
    UInt_t id = 0;
@@ -4453,6 +4483,8 @@ void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)
    // represents a reference.
    // When a new proxy is adopted, the old one is deleted.
 
+   R__LOCKGUARD(gCINTMutex);
+
    if ( fRefProxy )  {
       fRefProxy->Release();
    }
@@ -4469,6 +4501,9 @@ void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
    // member name.
 
    if (!fRealData) return;
+
+   R__LOCKGUARD(gCINTMutex);
+
    TIter next(fRealData);
    TRealData *rd;
    while ((rd = (TRealData*)next())) {
@@ -4634,6 +4669,8 @@ void TClass::AdoptStreamer(TClassStreamer *str)
 //    Int_t k = TClassEdit::IsSTLCont(GetName());
 //    if (k==1||k==-1) { delete str; return; }
 
+   R__LOCKGUARD(gCINTMutex);
+
    if (fStreamer) delete fStreamer;
    if (str) {
       fStreamerType = kExternal | ( fStreamerType&kEmulated );
@@ -4778,6 +4815,8 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
          return (TVirtualStreamerInfo*) arr->At( version );
    }
 
+   R__LOCKGUARD(gCINTMutex);
+
    //----------------------------------------------------------------------------
    // We don't have the streamer info so find it in other class
    //----------------------------------------------------------------------------
@@ -4800,13 +4839,12 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
       return 0;
    }
 
-   if (!info->GetOffsets()) {
+   if (!info->IsCompiled()) {
       // Streamer info has not been compiled, but exists.
       // Therefore it was read in from a file and we have to do schema evolution?
       // Or it didn't have a dictionary before, but does now?
       info->BuildOld();
-   }
-   if (info->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
+   } else if (info->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
       // Undo optimization if the global flag tells us to.
       info->Compile();
    }
@@ -4869,6 +4907,8 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    if( info )
       return info;
 
+   R__LOCKGUARD(gCINTMutex);
+
    //----------------------------------------------------------------------------
    // Get it from the foreign class
    //----------------------------------------------------------------------------
@@ -4887,13 +4927,12 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
       return 0;
    }
 
-   if (!info->GetOffsets()) {
+   if (!info->IsCompiled()) {
       // Streamer info has not been compiled, but exists.
       // Therefore it was read in from a file and we have to do schema evolution?
       // Or it didn't have a dictionary before, but does now?
       info->BuildOld();
-   }
-   if (info->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
+   } else if (info->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
       // Undo optimization if the global flag tells us to.
       info->Compile();
    }
@@ -4918,9 +4957,11 @@ Bool_t TClass::HasDefaultConstructor() const
 {
    // Return true if we have access to a default constructor.
 
+   
    if (fNew) return kTRUE;
 
    if (GetClassInfo()) {
+      R__LOCKGUARD(gCINTMutex);
       return gCint->ClassInfo_HasDefaultConstructor(GetClassInfo());
    }
    if (fCollectionProxy) {

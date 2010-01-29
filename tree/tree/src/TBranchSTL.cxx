@@ -508,8 +508,6 @@ TStreamerInfo* TBranchSTL::GetInfo() const
       //------------------------------------------------------------------------
       // Get unoptimized streamer info
       //------------------------------------------------------------------------
-      Bool_t optim = TVirtualStreamerInfo::CanOptimize();
-      TVirtualStreamerInfo::Optimize( kFALSE );
       fInfo = (TStreamerInfo*)cl->GetStreamerInfo( fClassVersion );
       
       //------------------------------------------------------------------------
@@ -534,7 +532,7 @@ TStreamerInfo* TBranchSTL::GetInfo() const
             }
          }
       }
-      TVirtualStreamerInfo::Optimize( optim );
+      fInfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
       fInfo->BuildOld();
    }
    return fInfo;

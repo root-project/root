@@ -37,6 +37,10 @@ namespace ROOT { class TCollectionProxyInfo; }
 class TVirtualStreamerInfo : public TNamed {
 
 protected:
+   Bool_t            fOptimized;         //! true if the Streamer has been optimized
+   Bool_t            fIsBuilt;           //! true if the StreamerInfo has been 'built'
+
+protected:
    static  Bool_t    fgCanDelete;        //True if ReadBuffer can delete object
    static  Bool_t    fgOptimize;         //True if optimization on
    static  Bool_t    fgStreamMemberWise; //True if the collections are to be stream "member-wise" (when possible).
@@ -51,7 +55,8 @@ public:
    enum { kCannotOptimize        = BIT(12),
           kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
           kRecovered             = BIT(14),
-          kNeedCheck             = BIT(15)
+          kNeedCheck             = BIT(15),
+          kIsCompiled            = BIT(16)
    };
 
    enum EReadWrite {
@@ -121,9 +126,10 @@ public:
    virtual Int_t       GetNumber()  const = 0;
    virtual Int_t       GetSize()    const = 0;
    virtual TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;
-   virtual Bool_t      IsBuilt() const = 0;
-   virtual Bool_t      IsOptimized() const = 0;
-   virtual Int_t       IsRecovered() const {return TestBit(kRecovered);}
+           Bool_t      IsBuilt() const { return fIsBuilt; }
+           Bool_t      IsCompiled() const { return TestBit(kIsCompiled); }
+           Bool_t      IsOptimized() const { return fOptimized; }
+           Int_t       IsRecovered() const { return TestBit(kRecovered); }
    virtual void        ls(Option_t *option="") const = 0;
    virtual TVirtualStreamerInfo *NewInfo(TClass *cl) = 0;
    virtual void       *New(void *obj = 0) = 0;
