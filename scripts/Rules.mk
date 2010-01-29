@@ -580,7 +580,7 @@ endef
 endif
 
 define WarnFailTest
-	$(CMDECHO)echo Warning $@ has some known skipped failures "(in ./$(CURRENTDIR))"
+	$(CMDECHO)echo Known failures: $@ skipped tests in ./$(CURRENTDIR)
 endef
 
 define TestDiffCintSpecific
