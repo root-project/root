@@ -31,7 +31,11 @@ extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,int if
 
   if((m.Property()&(G__BIT_ISCOMPILED|G__BIT_ISBYTECODE))==0) {
     // if this is bare interpreted function, compile as bytecode
-    G__bc_compile_function(ifunc,ifn);
+     if (G__bc_compile_function(ifunc,ifn) == G__BYTECODE_FAILURE) {
+#ifdef G__ASM_DBG
+        if(G__asm_dbg) G__fprinterr(G__serr,"failed to byte compile function %s\n", m.Name());
+#endif	
+     }
   }
 
   if(m.Property()&G__BIT_ISCOMPILED) {
@@ -291,9 +295,10 @@ void G__bc_inst::LD_FUNC(const char* funcname,int hash,int paran,void* pfunc, G_
   // the stub through the ifunc instead of the pfunc (but that shouldn't happen)
   G__asm_inst[G__asm_cp+6]=(long)0;
 
-  if(G__asm_name_p+strlen(funcname)+1<G__ASM_FUNCNAMEBUF) {
-    strcpy(G__asm_name+G__asm_name_p,funcname);
-    G__asm_name_p += strlen(funcname)+1;
+  size_t lenfuncname = strlen(funcname);
+  if(G__asm_name_p+lenfuncname+1<G__ASM_FUNCNAMEBUF) {
+    strncpy(G__asm_name+G__asm_name_p,funcname,lenfuncname + 1);
+    G__asm_name_p += lenfuncname+1;
     inc_cp_asm(7,0);
   }
   else {
@@ -349,7 +354,7 @@ void G__bc_inst::LD_FUNC_VIRTUAL(struct G__ifunc_table* iref,int ifn,int paran,v
 
   G__asm_inst[G__asm_cp+4]=(long)pfunc;
   G__asm_inst[G__asm_cp+5] = 0;
-  if (ifunc && ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
+  if (ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
 
   // 30-05-07 (stub-less calls)
   G__asm_inst[G__asm_cp+6]=(long)ifunc;
