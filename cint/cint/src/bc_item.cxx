@@ -215,10 +215,11 @@ G__value G__blockscope_expr::pointer_operator(const string& item, int& i)
       m_pinst->PUSHSTROS();
       m_pinst->SETSTROS();
 
-      struct G__param para;
-      para.paran = 0;
-      obj = m_blockscope->call_func(m_localscope, "operator->", &para, 0, 0
+      struct G__param* para = new G__param();
+      para->paran = 0;
+      obj = m_blockscope->call_func(m_localscope, "operator->", para, 0, 0
                                              , G__ClassInfo::ExactMatch);
+      delete para;
       m_localscope.Init(obj.tagnum);
       m_isobject = 1;
       m_isfixed = 0;
@@ -308,32 +309,36 @@ G__value G__blockscope_expr::index_operator(const string& item, int& i)
    }
    /////////////////////////////////////////////////////////////////
    // class object + operator[] overloading
-   while (sindex.size() && !objid.Ispointer() && (objid.Tagnum() != -1)) {
-      //object[expr]
-      //   object is already fetched by LD_VAR
-      //   SETMEMFUNCENV
-      //   G__getexpr(expr)
-      //   RECMEMFUNCENV
-      //   SWAP
-      //   PUSHSTROS
-      //   SETSTROS
-      //   LD_FUNC operator[] paran=1
-      //   POPSTROS
-      struct G__param para;
-      para.paran = 1;
-      m_pinst->SETMEMFUNCENV();
-      para.para[0] = m_blockscope->compile_expression(sindex.front());
-      sindex.pop_front();
-      m_pinst->RECMEMFUNCENV();
-      m_pinst->SWAP();
-      m_pinst->PUSHSTROS();
-      m_pinst->SETSTROS();
-      m_localscope.Init(objid.Tagnum());
-      G__value obj = m_blockscope->call_func(m_localscope, "operator[]", &para, 0, 0, G__ClassInfo::ExactMatch);
-      objid.SetVar(0, -1, G__object_id::VAR_NON);
-      objid.SetIfunc(0, -1);
-      objid.SetObj(obj);
-      m_pinst->POPSTROS();
+   
+   if (sindex.size() && !objid.Ispointer() && (objid.Tagnum() != -1)) {
+      struct G__param* para = new G__param();
+      while (sindex.size() && !objid.Ispointer() && (objid.Tagnum() != -1)) {
+         //object[expr]
+         //   object is already fetched by LD_VAR
+         //   SETMEMFUNCENV
+         //   G__getexpr(expr)
+         //   RECMEMFUNCENV
+         //   SWAP
+         //   PUSHSTROS
+         //   SETSTROS
+         //   LD_FUNC operator[] paran=1
+         //   POPSTROS
+         para->paran = 1;
+         m_pinst->SETMEMFUNCENV();
+         para->para[0] = m_blockscope->compile_expression(sindex.front());
+         sindex.pop_front();
+         m_pinst->RECMEMFUNCENV();
+         m_pinst->SWAP();
+         m_pinst->PUSHSTROS();
+         m_pinst->SETSTROS();
+         m_localscope.Init(objid.Tagnum());
+         G__value obj = m_blockscope->call_func(m_localscope, "operator[]", para, 0, 0, G__ClassInfo::ExactMatch);
+         objid.SetVar(0, -1, G__object_id::VAR_NON);
+         objid.SetIfunc(0, -1);
+         objid.SetObj(obj);
+         m_pinst->POPSTROS();
+      }
+      delete para;
    }
    /////////////////////////////////////////////////////////////////
    G__value result = G__null;
