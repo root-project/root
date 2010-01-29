@@ -38,7 +38,9 @@ public:
 static string
 currpath(string lib) {
    char buff[PATH_MAX];
-   ::getcwd(buff, sizeof(buff));
+   if (!::getcwd(buff, sizeof(buff))) {
+      strcpy(buff, ".");
+   }
    string tmp = buff;
    tmp += "/" + lib;
    return tmp;
