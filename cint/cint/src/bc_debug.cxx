@@ -22,7 +22,7 @@
 struct G__input_file G__bc_funccall::getifile() const {
   struct G__input_file ifile;
   ifile.str = 0;
-  // ifile.pos = 0;
+  ifile.pos = 0;
   ifile.vindex = 0;
 
   if(!m_bytecode) {
@@ -34,7 +34,7 @@ struct G__input_file G__bc_funccall::getifile() const {
     ifile.filenum = ifunc->pentry[ifn]->filenum;
     ifile.fp = G__srcfile[ifile.filenum].fp;
     ifile.line_number = m_line_number;
-    strcpy(ifile.name,G__srcfile[ifile.filenum].filename);
+    strncpy(ifile.name,G__srcfile[ifile.filenum].filename, sizeof(ifile.name) - 1);
   }
 
   return(ifile);
