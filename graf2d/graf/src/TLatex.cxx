@@ -55,14 +55,32 @@ painted as a normal TText, the control characters are not interpreted.
 <a name="L1"></a><h3>Subscripts and Superscripts</h3>
 Subscripts and superscripts are made with the <tt>_</tt> and <tt>^</tt>
 commands. These commands can be combined to make complicated subscript and
-superscript expressions. You may choose how to display subscripts and
-superscripts using the 2 functions <tt>SetIndiceSize(Double_t)</tt> and
-<tt>SetLimitIndiceSize(Int_t)</tt>.
+superscript expressions. You may adjust the display of subscripts and
+superscripts by using the two functions <tt>SetIndiceSize(Double_t)</tt>,
+which set relative size of subscripts and superscripts, and
+<tt>SetLimitIndiceSize(Int_t)</tt>, which set limit for text resizing of 
+subscipts and superscripts.
 <p>Examples:
 End_Html
    x^{2y} :    Begin_Latex x^{2y}    End_Latex x_{2y} :    Begin_Latex x^{2y}    End_Latex
    x^{y^{2}} : Begin_Latex x^{y^{2}} End_Latex x^{y_{1}} : Begin_Latex x^{y_{1}} End_Latex
    x^{y}_{1} : Begin_Latex x^{y}_{1} End_Latex x_{1}^{y} : Begin_Latex x_{1}^{y} End_Latex
+
+Begin_Html
+The subscripts and superscripts operators apply not only on one character but
+on all the "normal text" preceding them. In the following example the second
+<tt>E</tt> is lower than the first one because the operator <tt>_</tt> is
+applied on <tt>/f</tt> which has a descending part, and not only on <tt>f</tt>
+which as no descending part. 
+End_Html
+   f_{E}/f_{E} : Begin_Latex f_{E}/f_{E} End_Latex
+
+Begin_Html
+   To make sure the second operator <tt>_</tt> applies only on <tt>f</tt>
+   a dummy operator <tt>^{}</tt> should be introduced to separate the <tt>f</tt>
+   from the <tt>/</tt>.
+End_Html
+   f_{E}/^{}f_{E} : Begin_Latex f_{E}/^{}f_{E} End_Latex
 
 Begin_Html
 <a name="L2"></a><h3>Fractions</h3>
