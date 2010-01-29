@@ -167,17 +167,24 @@ main(int argc,
       map_gen.genHeader();
       set<string> used_names;
 
-      for (Member_Iterator it = factories.FunctionMember_Begin();
-           it != factories.FunctionMember_End(); ++it) {
-         //string cname = it->Properties().PropertyAsString("name");
-         string cname = it->Name();
+      try {
+         for (Member_Iterator it = factories.FunctionMember_Begin();
+              it != factories.FunctionMember_End(); ++it) {
+            //string cname = it->Properties().PropertyAsString("name");
+            string cname = it->Name();
 
-         if (used_names.insert(cname).second) {
-            map_gen.genFactory(cname, "");
+            if (used_names.insert(cname).second) {
+               map_gen.genFactory(cname, "");
+            }
          }
+         map_gen.genTrailer();
+         return 0;
       }
-      map_gen.genTrailer();
-      return 0;
+      catch (std::exception& e) {
+         cerr << "GENMAP: error creating map " << rootmap << ": "
+              << e.what() << endl;
+      }
+      return 1;
    }
    cout << "library does not contain plugin factories" << endl;
    return 0;
