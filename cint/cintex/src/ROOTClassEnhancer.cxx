@@ -123,7 +123,9 @@ namespace ROOT { namespace Cintex {
       return s_cont;
    }
 
-   ROOTClassEnhancer::ROOTClassEnhancer(const ROOT::Reflex::Type& cl)  {
+   ROOTClassEnhancer::ROOTClassEnhancer(const ROOT::Reflex::Type& cl):
+      fEnhancerinfo(0)
+   {
       // Constructor.
       fClass = CleanType(cl);
       fName  = CintName(fClass);
