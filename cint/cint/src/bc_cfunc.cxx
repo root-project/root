@@ -210,7 +210,7 @@ void G__functionscope::Storefpos() {
   store_ifile.fp = G__ifile.fp;
   store_ifile.line_number = G__ifile.line_number;
   store_ifile.filenum = G__ifile.filenum;
-  strcpy(store_ifile.name,G__ifile.name);
+  strncpy(store_ifile.name,G__ifile.name, sizeof(store_ifile.name) - 1);
 }
 //////////////////////////////////////////////////////////////////////////
 void G__functionscope::Setfpos() {
@@ -247,7 +247,7 @@ void G__functionscope::Restorefpos() {
   G__ifile.fp = store_ifile.fp;
   G__ifile.line_number = store_ifile.line_number;
   G__ifile.filenum = store_ifile.filenum;
-  strcpy(G__ifile.name,store_ifile.name);
+  strncpy(G__ifile.name,store_ifile.name, sizeof(G__ifile.name) - 1);
 
   store_fpos.rewindpos();
 
