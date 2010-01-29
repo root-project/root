@@ -607,10 +607,17 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
-   if (abs(fMarkerStyle) == 6) msize *= 0.2;
-   if (abs(fMarkerStyle) == 7) msize *= 0.3;
-   Double_t m  = CMtoSVG(msize);
+   Float_t msize  = fMarkerSize;
+   if (fMarkerStyle == 1) msize = 0.01;
+   if (fMarkerStyle == 6) msize = 0.02;
+   if (fMarkerStyle == 7) msize = 0.04;
+
+   const Int_t kBASEMARKER = 8;
+   Float_t sbase = msize*kBASEMARKER;
+   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
+   msize = CMtoSVG(s2x * fXsize);
+
+   Double_t m  = msize;
    Double_t m2 = m/2;
    Double_t m3 = m/3;
    Double_t m6 = m/6;
@@ -833,10 +840,17 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Double_t msize = 0.23*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
-   if (abs(fMarkerStyle) == 6) msize *= 0.2;
-   if (abs(fMarkerStyle) == 7) msize *= 0.3;
-   Double_t m  = CMtoSVG(msize);
+   Float_t msize  = fMarkerSize;
+   if (fMarkerStyle == 1) msize = 0.01;
+   if (fMarkerStyle == 6) msize = 0.02;
+   if (fMarkerStyle == 7) msize = 0.04;
+
+   const Int_t kBASEMARKER = 8;
+   Float_t sbase = msize*kBASEMARKER;
+   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
+   msize = CMtoSVG(s2x * fXsize);
+
+   Double_t m  = msize;
    Double_t m2 = m/2;
    Double_t m3 = m/3;
    Double_t m6 = m/6;

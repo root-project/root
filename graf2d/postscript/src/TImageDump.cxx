@@ -291,13 +291,13 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Double_t msize = 0.23*fMarkerSize*TMath::Max(fImage->GetWidth(), fImage->GetHeight())/20;
+   const Int_t kBASEMARKER = 8;
+   Double_t msize = fMarkerSize * kBASEMARKER;
    if (ms == 6) msize *= 0.2;
    if (ms == 7) msize *= 0.3;
    Double_t m  = msize;
    Double_t m2 = m/2;
    Double_t m3 = m/3;
-//   Double_t m4 = m2*1.333333333333;
    Double_t m6 = m/6;
 
    TColor *col = gROOT->GetColor(fMarkerColor);
