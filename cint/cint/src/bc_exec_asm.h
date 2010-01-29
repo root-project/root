@@ -373,7 +373,8 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                      G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] &= G__NOCONTUNTIL;
                   struct G__input_file store_ifile = G__ifile;
                   if (G__ifile.filenum >= 0) {
-                     strcpy(G__ifile.name, G__srcfile[G__ifile.filenum].filename);
+                     strncpy(G__ifile.name, G__srcfile[G__ifile.filenum].filename,
+                             sizeof(G__ifile.name) - 1);
                      G__bc_setlinenum(G__ifile.line_number);
                   }
                   if (1 || G__istrace) {
