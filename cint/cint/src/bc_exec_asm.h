@@ -360,7 +360,10 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             // --
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: CL %s:%d  %s:%d\n", pc, sp, G__srcfile[G__asm_inst[pc+1] / G__CL_FILESHIFT].filename, G__asm_inst[pc+1] & G__CL_LINEMASK, __FILE__, __LINE__);
+               short filenum = (short)(G__asm_inst[pc+1] / G__CL_FILESHIFT);
+               if (filenum >= 0) {
+                  G__fprinterr(G__serr, "%3x,%3x: CL %s:%d  %s:%d\n", pc, sp, G__srcfile[filenum].filename, G__asm_inst[pc+1] & G__CL_LINEMASK, __FILE__, __LINE__);
+               }
             }
 #endif // G__ASM_DBG
             {
