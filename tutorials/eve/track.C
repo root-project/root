@@ -27,6 +27,7 @@
 
 #include "TEveTrackPropagator.h"
 #include "TEveTrack.h"
+#include "TEveVSDStructs.h"
 #include "TEveManager.h"
 #include "TEveViewer.h"
 #include "TSystem.h"
