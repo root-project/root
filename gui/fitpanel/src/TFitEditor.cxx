@@ -1977,8 +1977,11 @@ void TFitEditor::DoFit()
       delete fitFunc;
    fitFunc = GetFitFunction();
    // This assert
-   assert(fitFunc && "This should have never happend, the fitfunc pointer is NULL!"
-          " Please report");
+   if (!fitFunc) { 
+      Error("DoFit","This should have never happend, the fitfunc pointer is NULL! - Please Report" );
+      return;
+   }
+   
    // set parameters from panel in function
    SetParameters(fFuncPars, fitFunc);
    // Get the options stored in the GUI elements.
