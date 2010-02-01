@@ -287,10 +287,6 @@ rl_initialize(void) {
    rl_line_buffer = (char*) li->fBuffer;
    rl_point = rl_end = 0;
 
-
-   // AXEL:
-   // switch to RAW mode so ROOT can handle events:
-   tty_rawmode(gEditLine);
    return 0;
 } // rl_initialize
 
