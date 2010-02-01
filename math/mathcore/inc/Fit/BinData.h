@@ -216,6 +216,11 @@ public :
    void Add(const double *x, double val, const double * ex, double  eval); 
 
    /**
+      add multi-dim coordinate data with both error in coordinates and value 
+   */
+   void Add(const double *x, double val, const double * ex, double  elval, double  ehval); 
+
+   /**
       return a pointer to the coordinates data for the given fit point 
     */
    const double * Coords(unsigned int ipoint) const { 

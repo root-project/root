@@ -381,6 +381,32 @@ void BinData::Add(const double *x, double val, const double * ex, double  eval) 
    fNPoints++;
 }
 
+   /**
+   */
+void BinData::Add(const double *x, double val, const double * ex, double  elval, double  ehval) { 
+   //      add multi dim data with error in coordinates and asymmetric error in value
+   int index = fNPoints*PointSize(); 
+   assert (fDataVector != 0);
+   assert (PointSize() == 2*fDim + 3 ); 
+   
+   if (index + PointSize() > DataSize()) 
+      MATH_ERROR_MSGVAL("BinData::Add","add a point beyond the data size", DataSize() );
+
+   assert (index + PointSize() <= DataSize() ); 
+   
+   double * itr = &((fDataVector->Data())[ index ]);
+   
+   for (unsigned int i = 0; i < fDim; ++i) 
+      *itr++ = x[i]; 
+   *itr++ = val; 
+   for (unsigned int i = 0; i < fDim; ++i) 
+      *itr++ = ex[i]; 
+   *itr++ = elval; 
+   *itr++ = ehval; 
+   
+   fNPoints++;
+}
+
 void BinData::AddBinUpEdge(const double *xup ) { 
 //      add multi dim bin upper edge data (coord2)
 

@@ -647,7 +647,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
    //
    // case of chi2 effective (errors on coordinate) is not supported
 
-   if ( data.GetErrorType() == BinData::kCoordError && data.Opt().fCoordErrors ) {
+   if ( data.HaveCoordErrors() ) {
       MATH_ERROR_MSG("FitUtil::EvaluateChi2Residual","Error on the coordinates are not used in calculating Chi2 gradient");            return; // it will assert otherwise later in GetPoint
    }
 
