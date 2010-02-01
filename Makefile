@@ -140,9 +140,6 @@ endif
 ifeq ($(BUILDGFAL),yes)
 MODULES      += io/gfal
 endif
-ifeq ($(BUILDG4ROOT),yes)
-MODULES      += montecarlo/g4root
-endif
 ifeq ($(BUILDGLITE),yes)
 MODULES      += net/glite
 endif
@@ -282,7 +279,7 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 tmva io/hdfs \
                 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
-                geom/gdml graf3d/eve montecarlo/g4root net/glite misc/memstat \
+                geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
@@ -1137,8 +1134,6 @@ showbuild:
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
 	@echo "DCAPLIB            = $(DCAPLIB)"
 	@echo "GFALLIB            = $(GFALLIB)"
-	@echo "G4INCDIR           = $(G4INCDIR)"
-	@echo "G4LIBDIR           = $(G4LIBDIR)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "ORACLEINCDIR       = $(ORACLEINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"

@@ -136,11 +136,6 @@ GFALLIBDIR     := @gfallibdir@
 GFALCLILIB     := @gfallib@
 GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
 
-BUILDG4ROOT    := @buildg4root@
-G4LIBDIR       := @g4libdir@
-G4INCDIR       := $(filter-out /usr/include, @g4incdir@)
-CLHEPINCDIR    := $(filter-out /usr/include, @clhepincdir@)
-
 BUILDGLITE     := @buildglite@
 GLITELIBDIR    := @glitelibdir@
 GAWLIB         := @glitelib@
