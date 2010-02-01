@@ -150,7 +150,7 @@ void G__asm_storebytecodefunc(G__ifunc_table_internal* ifunc, int ifn, G__var_ar
    bytecode->ifn = ifn;
    /* copy local variable table */
    bytecode->var = var;
-   bytecode->varsize = G__struct.size[G__tagdefining];
+   bytecode->varsize = G__struct.size[G__MAXSTRUCT-1];
    /* copy instruction */
    bytecode->pinst = (long*)malloc(sizeof(long) * instsize + 8);
    memcpy(bytecode->pinst, pinst, sizeof(long)*instsize + 1);
