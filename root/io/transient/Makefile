@@ -20,8 +20,8 @@ transientTest.log: TBigDSWriteEvent_cxx.$(DllSuf)  TBigDSWriteParticle_cxx.$(Dll
 
 ifeq ($(FAIL),)
 transientTest: 
+# Having a data member whose ClassDef version is zero leads to a questionable warning message
 	$(WarnFailTest)
-	$(CMDECHO)echo "Having a data member whose ClassDef version is zero leads to a questionable warning message"
 else
 transientTest: transientTest.log
 	$(CMDECHO) diff -b  transientTest.ref  transientTest.log
