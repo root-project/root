@@ -416,7 +416,7 @@
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
-#   if __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR > 1)
+#   if __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ > 1)
 #      define R__PRAGMA_DIAGNOSTIC
 #   endif
 #endif
