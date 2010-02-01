@@ -71,8 +71,8 @@ $(EXEDIR)/$(TARGET):
 
 make_includes:
 	@echo "Making includes ..."
-	@[ -d $(TOPDIR)/include ] || mkdir -p $(TOPDIR)/include
-	@cp -p $(HEADERS) $(TOPDIR)/include
+	@[ -d $(INCDIR) ] || mkdir -p $(INCDIR)
+	@cp -p $(HEADERS) $(INCDIR)
 
 clean:
 	@rm -rf $(TOCLEAN)
@@ -81,7 +81,7 @@ cleanall:
 	@rm -rf $(TOCLEANALL)
 	
 clean_includes:
-	@rm -rf $(TOPDIR)/include
+	@rm -rf $(INCDIR)
 
 depend:
 		-@$(ROOT_BINDIR)/rmkdepend -f$(BINDIR)/Make-depend -p$(BINDIR)/ -- $(CXXFLAGS) $(DEPINC) -- $^ 2>/dev/null
