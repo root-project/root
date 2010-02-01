@@ -1,3 +1,0 @@
-# Extra include files and library path
-INCFLAGS += -I$(ROOTSYS)/include
-LDLIBS   += $(shell root-config --libs) -lGeom -lVMC -lEG -lG4root
