@@ -350,19 +350,15 @@ void TRootContextMenu::CreateMenu(TObject *object)
          case TClassMenuItem::kPopupUserFunction:
             {
                if (menuItem->IsToggle()) {
-                  if (object) {
-                     TMethod* method =
-                           object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),menuItem->GetArgs());
-                     TToggle *t = new TToggle;
-                     t->SetToggledObject(object, method);
-                     t->SetOnValue(1);
-                     fTrash->Add(t);
+                  TMethod* method =
+                        object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),menuItem->GetArgs());
+                  TToggle *t = new TToggle;
+                  t->SetToggledObject(object, method);
+                  t->SetOnValue(1);
+                  fTrash->Add(t);
 
-                     AddEntry(method->GetName(), toggle++, t);
-                     if (t->GetState()) CheckEntry(toggle-1);
-                  } else {
-                     Warning("Dialog","Cannot use toggle for a global function");
-                  }
+                  AddEntry(method->GetName(), toggle++, t);
+                  if (t->GetState()) CheckEntry(toggle-1);
                } else {
                   const char* menuItemTitle = menuItem->GetTitle();
                   if (strlen(menuItemTitle)==0) menuItemTitle = menuItem->GetFunctionName();

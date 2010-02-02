@@ -960,13 +960,13 @@ void TGLVContainer::LineLeft(Bool_t select)
       fe = FindFrame(x, y);
    }
    if (fViewMode == kLVList) {
-      if (fe->fFrame->GetY() <= fLastActiveEl->fFrame->GetY() - (2 * dy)) {
+      if (fe && fe->fFrame->GetY() <= fLastActiveEl->fFrame->GetY() - (2 * dy)) {
          // avoid jumping more than one line up
          x = fe->fFrame->GetX() - dx;
          fe = FindFrame(x, y);
       }
       // cannot go down and/or right with the left key
-      if (fe->fFrame->GetY() >= fLastActiveEl->fFrame->GetY() &&
+      if (fe && fe->fFrame->GetY() >= fLastActiveEl->fFrame->GetY() &&
           fe->fFrame->GetX() >= fLastActiveEl->fFrame->GetX())
          fe = fLastActiveEl;
    }
@@ -1023,7 +1023,7 @@ void TGLVContainer::LineRight(Bool_t select)
    }
    if (fViewMode == kLVList) {
       // cannot go up and/or left with the right key
-      if (fe->fFrame->GetY() <= fLastActiveEl->fFrame->GetY() &&
+      if (fe && fe->fFrame->GetY() <= fLastActiveEl->fFrame->GetY() &&
           fe->fFrame->GetX() <= fLastActiveEl->fFrame->GetX())
          fe = fLastActiveEl;
    }

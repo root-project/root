@@ -547,8 +547,9 @@ void TGFileBrowser::Update()
          fListTree->GetPathnameFromItem(curr->GetParent(), path);
          if (strlen(path) > 1) {
             TString dirpath = FullPathName(curr->GetParent());
-            gSystem->GetPathInfo(dirpath.Data(), &id, &size, &flags, &modtime);
-            if (flags & 2) {
+            Int_t res = gSystem->GetPathInfo(dirpath.Data(), &id, &size, 
+                                             &flags, &modtime);
+            if ((res == 0) && (flags & 2)) {
                TString fullpath = FullPathName(curr);
                if (gSystem->AccessPathName(fullpath.Data()))
                   fListTree->DeleteItem(curr);
