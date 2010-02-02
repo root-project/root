@@ -170,7 +170,7 @@ Bool_t RunWood4()
 //   minimum    : F(1,1,1,1)  =   0.
 //
 // This is a fourth-degree polynomial which is reasonably well-behaved near the minimum,
-// but in order to get there one must cross a rather flat, four-dimensional "plateau√"
+// but in order to get there one must cross a rather flat, four-dimensional "plateau"
 // which often causes minimization algorithm to get "stuck" far from the minimum. As
 // such it is a particularly good test of convergence criteria and simulates quite well a
 // feature of many physical problems in many variables where no good starting
