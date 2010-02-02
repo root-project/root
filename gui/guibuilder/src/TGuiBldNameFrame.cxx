@@ -144,20 +144,22 @@ void TGuiBldNameFrame::ChangeSelected(TGFrame *frame)
 
    TGCompositeFrame *main = GetMdi(frame);
 
-   if ((!fListTree) || (!fListTree->GetFirstItem()))
-      MapItems(main);
-   else if ((fListTree->GetFirstItem()->GetUserData()) != main) {
-      //different MDI
-      if (fListTree) {
-         //clear the list tree displayed
-         while (fListTree->GetFirstItem()) {
-            fListTree->DeleteItem(fListTree->GetFirstItem());
-         }
+   if (main) {
+      if ((!fListTree) || (!fListTree->GetFirstItem()))
          MapItems(main);
+      else if ((fListTree->GetFirstItem()->GetUserData()) != main) {
+         //different MDI
+         if (fListTree) {
+            //clear the list tree displayed
+            while (fListTree->GetFirstItem()) {
+               fListTree->DeleteItem(fListTree->GetFirstItem());
+            }
+            MapItems(main);
+         }
       }
+      else // check if new items added or old ones reparented -> update tree
+         CheckItems(main);
    }
-   else // check if new items added or old ones reparented -> update tree
-      CheckItems(main);
 
    //highlight and open
    TGListTreeItem *item = 0;
