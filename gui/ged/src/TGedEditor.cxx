@@ -621,13 +621,15 @@ void TGedEditor::ConfigureGedFrames(Bool_t objChanged)
    while ((ti = (TGedTabInfo *) vistabs())) {
       TIter fr(ti->fContainer->GetList());
       el = (TGFrameElement*) fr();
-      ((TGedFrame*) el->fFrame)->SetModel(fModel);
-      if(objChanged) {
-         do {
-            el->fFrame->MapSubwindows();
-            el->fFrame->Layout();
-            el->fFrame->MapWindow();
-         } while((el = (TGFrameElement *) fr()));
+      if (el) {
+         ((TGedFrame*) el->fFrame)->SetModel(fModel);
+         if (objChanged) {
+            do {
+               el->fFrame->MapSubwindows();
+               el->fFrame->Layout();
+               el->fFrame->MapWindow();
+            } while((el = (TGFrameElement *) fr()));
+         }
       }
       ti->fContainer->Layout();
    }
