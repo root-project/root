@@ -265,7 +265,7 @@ void HtmlSummary::MakeFooter()
    fFooter  = "<br><p><br><center><strong><font size=2 color=#2222ee>";
    fFooter += "Example of using Html widget to display tabular data";
    fFooter += "<br>";
-   fFooter += "© 2007-2008 Bertrand Bellenot";
+   fFooter += "(c) 2007-2010 Bertrand Bellenot";
    fFooter += "</font></strong></center></body></html>";  
    fHtml   += fFooter;
 }
