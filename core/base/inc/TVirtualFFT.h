@@ -28,7 +28,7 @@
 // - "C2R"        - inverse transforms to "R2C", taking complex input 
 //                  (storing the non-redundant half of a logically Hermitian array) 
 //                  to real output
-// - "R2HC"       - a real-input DFT with output in ¡Èhalfcomplex¡É format, 
+// - "R2HC"       - a real-input DFT with output in "halfcomplex" format, 
 //                  i.e. real and imaginary parts for a transform of size n stored as
 //                  r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
 // - "HC2R"       - computes the reverse of FFTW_R2HC, above
