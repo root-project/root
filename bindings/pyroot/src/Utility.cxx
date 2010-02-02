@@ -79,6 +79,11 @@ namespace {
          gC2POperatorMapping[ ">=" ]  = "__ge__";
          gC2POperatorMapping[ "<=" ]  = "__le__";
 
+         gC2POperatorMapping[ "int" ]    = "__int__";
+         gC2POperatorMapping[ "long" ]   = "__long__";
+         gC2POperatorMapping[ "float" ]  = "__float__";
+         gC2POperatorMapping[ "double" ] = "__float__";     // python float is double
+
          gC2POperatorMapping[ "->" ]  = "__follow__";       // not an actual python operator
          gC2POperatorMapping[ "=" ]   = "__assign__";       // id.
 
