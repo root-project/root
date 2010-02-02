@@ -29,7 +29,7 @@ BEGIN
             VALUE "FileDescription", "Root Shower Monte-Carlo / Event Display\0"
             VALUE "FileVersion", "4.00/00\0"
             VALUE "InternalName", "RootShower\0"
-            VALUE "LegalCopyright", "Copyright © Bertrand Bellenot 2000-2008\0"
+            VALUE "LegalCopyright", "Copyright (c) Bertrand Bellenot 2000-2010\0"
             VALUE "OriginalFilename", "RootShower.exe\0"
             VALUE "ProductName", "ROOT - Event MC / Viewer\0"
             VALUE "ProductVersion", "4.00/00\0"
