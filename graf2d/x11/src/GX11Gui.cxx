@@ -2733,7 +2733,7 @@ void TGX11::SetDNDAware(Window_t win, Atom_t *typelist)
    // Window win.
 
    unsigned char version = 4;
-   Atom dndaware = XInternAtom(fDisplay, "XdndAware", kFALSE);
+   Atom_t dndaware = InternAtom("XdndAware", kFALSE);
    XChangeProperty(fDisplay, (Window) win, (Atom) dndaware, (Atom) XA_ATOM,
                    32, PropModeReplace, (unsigned char *) &version, 1);
 
@@ -2772,11 +2772,14 @@ Window_t TGX11::FindRWindow(Window_t win, Window_t dragwin, Window_t input,
    // Possibility to exclude dragwin and input.
 
    WindowAttributes_t wattr;
+   static Atom_t *dndTypeList = 0;
 
-   Atom_t *dndTypeList = new Atom_t[3];
-   dndTypeList[0] = InternAtom("application/root", kFALSE);
-   dndTypeList[1] = InternAtom("text/uri-list", kFALSE);
-   dndTypeList[2] = 0;
+   if (dndTypeList == 0) {
+      dndTypeList = new Atom_t[3];
+      dndTypeList[0] = InternAtom("application/root", kFALSE);
+      dndTypeList[1] = InternAtom("text/uri-list", kFALSE);
+      dndTypeList[2] = 0;
+   }
 
    if (maxd <= 0) return kNone;
 
@@ -2784,8 +2787,8 @@ Window_t TGX11::FindRWindow(Window_t win, Window_t dragwin, Window_t input,
 
    GetWindowAttributes(win, wattr);
    if (wattr.fMapState != kIsUnmapped &&
-      x >= wattr.fX && x < wattr.fX + wattr.fWidth &&
-      y >= wattr.fY && y < wattr.fY + wattr.fHeight) {
+       x >= wattr.fX && x < wattr.fX + wattr.fWidth &&
+       y >= wattr.fY && y < wattr.fY + wattr.fHeight) {
 
       if (IsDNDAware(win, dndTypeList)) return win;
 
@@ -2796,18 +2799,14 @@ Window_t TGX11::FindRWindow(Window_t win, Window_t dragwin, Window_t input,
       if (XQueryTree(fDisplay, win, &r, &p, &children, &numch)) {
          if (children && numch > 0) {
             r = kNone;
-
             // upon return from XQueryTree, children are listed in the current
             // stacking order, from bottom-most (first) to top-most (last)
-
             for (i = numch-1; i >= 0; --i) {
                r = FindRWindow((Window_t)children[i], dragwin, input,
                                x - wattr.fX, y - wattr.fY, maxd-1);
                if (r != kNone) break;
             }
-
             XFree(children);
-
             if (r != kNone) return r;
          }
          return kNone; //win;   // ?!?
@@ -2828,10 +2827,12 @@ Bool_t TGX11::IsDNDAware(Window_t win, Atom_t *typelist)
    unsigned char *data = 0;
    Atom_t *types, *t;
    Int_t   result = kTRUE;
+   static Atom_t dndaware = kNone;
 
    if (win == kNone) return kFALSE;
 
-   Atom dndaware = XInternAtom(fDisplay, "XdndAware", kFALSE);
+   if (dndaware == kNone)
+      dndaware = InternAtom("XdndAware", kFALSE);
 
    XGetWindowProperty(fDisplay, win, dndaware, 0, 0x8000000L, kFALSE,
                       XA_ATOM, &actual, &format, &count, &remaining, &data);
