@@ -320,6 +320,7 @@ namespace {
       PyObject* meth = PyObject_GetAttr( (PyObject*)self, PyStrings::gTClassDynCast );
       PyObject* ptr = meth ? PyObject_Call(
          meth, PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) ), 0 ) : 0;
+      Py_XDECREF( meth );
 
    // simply forward in case of call failure
       if ( ! ptr )
@@ -1553,8 +1554,10 @@ namespace {
       // use callable name (if available) as identifier
          PyObject* pyname = PyObject_GetAttr( pyfunc, PyStrings::gName );
          const char* name = "dummy";
-         if ( pyname != 0 )
+         if ( pyname != 0 ) {
             name = PyString_AsString( pyname );
+            Py_DECREF( pyname );
+         }
 
       // registration with CINT (note: CINT style signature for free functions)
          Long_t fid = Utility::InstallMethod( 0, pyfunc, name,
@@ -1822,6 +1825,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Py_DECREF( method ); method = 0;
 
       return kTRUE;
+   }
+
+   if ( name == "TStyle" ) {
+       MethodProxy* ctor = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gInit );
+       ctor->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
+       Py_DECREF( ctor );
    }
 
    if ( name == "TF1" )       // allow instantiation with python callable
