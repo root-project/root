@@ -200,8 +200,9 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
    if ( address != 0 ) {
       Py_INCREF( self );
 
-   // note "kIsOwner" for ROOT object deletion from the python side
-      self->Set( (void*)address, ObjectProxy::kIsOwner );
+   // note: constructors are no longer set to take ownership by default; instead that is
+   // decided by the method proxy (which carries a creator flag) upon return
+      self->Set( (void*)address );
 
    // allow lookup upon destruction on the ROOT/CINT side for TObjects
       TObject* object = (TObject*) klass->DynamicCast( TObject::Class(), (void*)address );

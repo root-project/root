@@ -79,9 +79,18 @@ namespace {
          return 0;              // exception info was already set
 
    // if this method creates new objects, always take ownership
-      if ( ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) &&
-           ObjectProxy_Check( result ) )
-         ((ObjectProxy*)result)->HoldOn();
+      if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) {
+
+      // either be a constructor with a fresh object proxy self ... 
+         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsConstructor ) {
+            if ( pymeth->fSelf )
+               pymeth->fSelf->HoldOn();
+         }
+
+      // ... or be a method with an object proxy return value
+         else if ( ObjectProxy_Check( result ) )
+            ((ObjectProxy*)result)->HoldOn();
+      }
 
       return result;
    }
@@ -444,7 +453,7 @@ namespace {
 
       std::vector< PyError_t > errors;
       for ( Int_t i = 0; i < nMethods; ++i ) {
-         PyObject* result = (*methods[i])( pymeth->fSelf, args, kwds );
+         PyObject* result = (*methods[i])( pymeth->fSelf, args, kwds, user );
 
          if ( result == (PyObject*)TPyExceptionMagic ) {
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
@@ -687,6 +696,10 @@ void PyROOT::MethodProxy::Set( const std::string& name, std::vector< PyCallable*
    fMethodInfo->fName = name;
    fMethodInfo->fMethods.swap( methods );
    fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
+
+// special case: all constructors are considered creators by default
+   if ( name == "__init__" )
+      fMethodInfo->fFlags |= (MethodInfo_t::kIsCreator | MethodInfo_t::kIsConstructor);
 
 // special case, in heuristics mode also tag *Clone* methods as creators
    if ( Utility::gMemoryPolicy == Utility::kHeuristics && name.find( "Clone" ) != std::string::npos )
