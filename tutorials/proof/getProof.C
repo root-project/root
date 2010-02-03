@@ -61,8 +61,11 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
    //
    //     $ export GETPROOF_VALGRIND="valgrind=master"
    //
-   // before running getProof. Note that 'getProof' is also called by 'stressProof', so this holds
-   // for 'stressProof' runs too.
+   // (or
+   //     $ export GETPROOF_VALGRIND="valgrind=master valgrind_opts:--leak-check=full"
+   //
+   // to set some options) before running getProof. Note that 'getProof' is also called by 'stressProof',
+   // so this holds for 'stressProof' runs too.
 
 #ifdef __CINT__
    Printf("getProof: this script can only be executed via ACliC:");
@@ -74,6 +77,24 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
 
    TProof *p = 0;
 
+   // Valgrind options, if any
+   TString vopt, vopts;
+#ifndef WIN32
+   if (gSystem->Getenv("GETPROOF_VALGRIND")) {
+      TString s(gSystem->Getenv("GETPROOF_VALGRIND")), t;
+      Int_t from = 0;
+      while (s.Tokenize(t, from , " ")) {
+         if (t.BeginsWith("valgrind_opts:"))
+            vopts = t;
+         else
+            vopt = t;
+      }
+      if (vopts.IsNull()) vopts = "valgrind_opts:--leak-check=full --track-origins=yes";
+      TProof::AddEnvVar("PROOF_WRAPPERCMD", vopts.Data());
+      Printf("getProof: valgrind run: '%s' (opts: '%s')", vopt.Data(), vopts.Data());
+   }
+#endif
+
    // If an URL has specified get a session there
    TUrl uu(url), uref(refloc);
    Bool_t ext = (strcmp(uu.GetHost(), uref.GetHost()) ||
@@ -83,7 +104,7 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
          if (dir && strlen(dir) > 0) gEnv->SetValue("Proof.Sandbox", dir);
          if (nwrks > 0) uu.SetOptions(Form("workers=%d", nwrks));
       }
-      p = TProof::Open(uu.GetUrl());
+      p = TProof::Open(uu.GetUrl(), vopt);
       if (p && p->IsValid()) {
          // Check consistency
          if (ext && nwrks > 0) {
@@ -292,22 +313,7 @@ TProof *getProof(const char *url = "proof://localhost:11093", Int_t nwrks = -1, 
    Printf("getProof: start / attach the PROOF session ...");
 
    // Start / attach the session now
-   if (gSystem->Getenv("GETPROOF_VALGRIND")) {
-      TString s(gSystem->Getenv("GETPROOF_VALGRIND")), t;
-      Int_t from = 0;
-      TString vopt, vopts;
-      while (s.Tokenize(t, from , " ")) {
-         if (t.BeginsWith("valgrind_opts:"))
-            vopts = t;
-         else
-            vopt = t;
-      }
-      if (vopts.IsNull()) vopts = "valgrind_opts:--leak-check=full --track-origins=yes";
-      TProof::AddEnvVar("PROOF_WRAPPERCMD", vopts.Data());
-      p = TProof::Open(lurl, vopt.Data());
-   } else {
-      p = TProof::Open(lurl);
-   }
+   p = TProof::Open(lurl, vopt.Data());
    if (!p || !(p->IsValid())) {
       Printf("getProof: starting local session failed");
       if (p) delete p;
