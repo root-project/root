@@ -88,6 +88,9 @@ private:
 
    XrdSysRecMutex     *fMutex;         // Lock SendRecv actions
 
+   XrdSysRecMutex     *fConnectInterruptMtx;  // Protect access to fConnectInterrupt
+   bool                fConnectInterrupt;
+
    XrdClientPhyConnection *fPhyConn;   // underlying physical connection
 
    int                 fOpenSockFD;    // Underlying socket descriptor
@@ -124,6 +127,9 @@ private:
                                 const void *reqData, char **answData);
 
    void                SetInterrupt();
+
+   void                SetConnectInterrupt();
+   bool                ConnectInterrupt();
 
 public:
    XrdProofConn(const char *url, char mode = 'M', int psid = -1, char ver = -1,

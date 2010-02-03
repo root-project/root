@@ -100,6 +100,7 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
    : fMode(m), fConnected(0), fLogConnID(-1), fStreamid(0), fRemoteProtocol(-1),
      fServerProto(-1), fServerType(kSTNone), fSessionID(psid),
      fLastErr(kXR_Unsupported), fCapVer(capver), fLoginBuffer(logbuf), fMutex(0),
+     fConnectInterruptMtx(0), fConnectInterrupt(0),
      fPhyConn(0), fUnsolMsgHandler(uh), fSender(0), fSenderArg(0)
 {
    // Constructor. Open the connection to a remote XrdProofd instance.
@@ -117,6 +118,7 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
 
    // Mutex
    fMutex = new XrdSysRecMutex();
+   fConnectInterruptMtx = new XrdSysRecMutex();
 
    // Initialization
    if (url && !Init(url)) {
@@ -207,6 +209,12 @@ void XrdProofConn::Connect()
       // Try connection
       logid = TryConnect();
 
+      // Check if interrupted
+      if (ConnectInterrupt()) {
+         TRACE(ALL, "got an interrupt while connecting - aborting attempts");
+         break;
+      }
+
       // We are connected to a host. Let's handshake with it.
       if (fConnected) {
 
@@ -271,10 +279,20 @@ XrdProofConn::~XrdProofConn()
    // Disconnect from remote server (the connection manager is
    // responsible of the underlying physical connection, so we do not
    // force its closing)
-   Close();
+   if (fRemoteProtocol > 1004) {
+      // We may be into a reconnection attempt: interrupt it ...
+      SetConnectInterrupt();
+      // ... and wait for the OK
+      XrdClientPhyConnLocker pcl(fPhyConn);
+      // Can close now
+      Close();
+   } else {
+      Close();
+   }
 
    // Cleanup mutex
    SafeDelete(fMutex);
+   SafeDelete(fConnectInterruptMtx);
 }
 
 //_____________________________________________________________________________
@@ -1356,6 +1374,30 @@ void XrdProofConn::SetInterrupt()
 
    if (fPhyConn)
       fPhyConn->SetInterrupt();
+}
+
+//_____________________________________________________________________________
+void XrdProofConn::SetConnectInterrupt()
+{
+   // Interrupt connection attempts
+
+   XrdSysMutexHelper mhp(fConnectInterruptMtx);
+   fConnectInterrupt = 1;
+}
+
+//_____________________________________________________________________________
+bool XrdProofConn::ConnectInterrupt()
+{
+   // Check if interrupted during connect
+
+   bool rc = 0;
+   {  XrdSysMutexHelper mhp(fConnectInterruptMtx);
+      rc = fConnectInterrupt;
+      // Reset the interrupt
+      fConnectInterrupt = 0;
+   }
+   // Done
+   return rc;
 }
 
 //_____________________________________________________________________________
