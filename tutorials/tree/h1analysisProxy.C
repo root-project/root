@@ -271,7 +271,7 @@ void h1analysisProxy_Terminate()
    // in the current directory.
    TF1 *f2 = new TF1("f2",fdm2,0.139,0.17,2);
    f2->SetParameters(10000, 10);
-   h2->FitSlicesX(f2,0,0,1,"qln");
+   h2->FitSlicesX(f2,0,-1,1,"qln");
    TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
    h2_1->GetXaxis()->SetTitle("#tau[ps]");
    h2_1->SetMarkerStyle(21);
