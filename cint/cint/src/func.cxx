@@ -2543,9 +2543,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                   }
                   if ('~' == funcname[0]) {
                      *known3 = 1;
-                     G__tagnum = store_tagnum;
-                     G__def_tagnum = store_def_tagnum;
-                     G__tagdefining = store_tagdefining;
                      return(G__null);
                   }
                case G__CALLCONSTRUCTOR:
@@ -2570,9 +2567,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                      G__exec_memberfunc = store_exec_memberfunc;
                      G__memberfunc_tagnum = store_memberfunc_tagnum;
                      G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-                     G__tagnum = store_tagnum;
-                     G__def_tagnum = store_def_tagnum;
-                     G__tagdefining = store_tagdefining;
                      /* don't know why if(oprp) is needed, copied from line 2111 */
                      if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
                      else *known3 = 1;
@@ -2658,9 +2652,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             G__memberfunc_tagnum = store_memberfunc_tagnum;
             G__memberfunc_struct_offset = store_memberfunc_struct_offset;
             G__setclassdebugcond(G__memberfunc_tagnum, 0);
-            G__tagnum = store_tagnum;
-            G__def_tagnum = store_def_tagnum;
-            G__tagdefining = store_tagdefining;
             if (nindex && (isupper(result3.type) || 'u' == result3.type)) {
                G__getindexedvalue(&result3, fpara.parameter[nindex]);
             }
@@ -2734,9 +2725,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         G__tagnum = store_tagnum;
-         G__def_tagnum = store_def_tagnum;
-         G__tagdefining = store_tagdefining;
          if (nindex &&
                (isupper(result3.type) || 'u' == result3.type)
             ) {
@@ -2800,9 +2788,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         G__tagnum = store_tagnum;
-         G__def_tagnum = store_def_tagnum;
-         G__tagdefining = store_tagdefining;
          if (nindex &&
                (isupper(result3.type) || 'u' == result3.type)
             ) {
@@ -2830,9 +2815,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         G__tagnum = store_tagnum;
-         G__def_tagnum = store_def_tagnum;
-         G__tagdefining = store_tagdefining;
          if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
          else *known3 = 1; /* don't know why this was missing */
          return(result3);
@@ -2865,9 +2847,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                      , i , G__newtype.reftype[i], 0
                      , &result3, 0)) {
                *known3 = 1;
-               G__tagnum = store_tagnum;
-               G__def_tagnum = store_def_tagnum;
-               G__tagdefining = store_tagdefining;
                if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
                return(result3);
             }
@@ -2887,9 +2866,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
             if ('e' == G__struct.type[i] &&
                   -1 != fpara.para[0].tagnum &&
                   'e' == G__struct.type[fpara.para[0].tagnum]) {
-               G__tagnum = store_tagnum;
-               G__def_tagnum = store_def_tagnum;
-               G__tagdefining = store_tagdefining;
                return(fpara.para[0]);
             }
             store_struct_offset = G__store_struct_offset;
@@ -3055,17 +3031,11 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                }
                /* omitted constructor, return uninitialized object */
                *known3 = 1;
-               G__tagnum = store_tagnum;
-               G__def_tagnum = store_def_tagnum;
-               G__tagdefining = store_tagdefining;
                if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
                return(result3);
             }
             else {
                /* Return '*this' as result */
-               G__tagnum = store_tagnum;
-               G__def_tagnum = store_def_tagnum;
-               G__tagdefining = store_tagdefining;
                if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
                return(result3);
             }
@@ -3079,9 +3049,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         G__tagnum = store_tagnum;
-         G__def_tagnum = store_def_tagnum;
-         G__tagdefining = store_tagdefining;
          if (oprp) *known3 = G__additional_parenthesis(&result3, &fpara);
          return(result3);
       }
@@ -3089,9 +3056,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
    } /* if(G__TRYNORMAL==memfunc_flag) */
    if (G__parenthesisovld(&result3, funcname, &fpara, G__TRYNORMAL)) {
       *known3 = 1;
-      G__tagnum = store_tagnum;
-      G__def_tagnum = store_def_tagnum;
-      G__tagdefining = store_tagdefining;
       if (nindex &&
             (isupper(result3.type) || 'u' == result3.type)
          ) {
@@ -3128,9 +3092,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
          G__exec_memberfunc = store_exec_memberfunc;
          G__memberfunc_tagnum = store_memberfunc_tagnum;
          G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-         G__tagnum = store_tagnum;
-         G__def_tagnum = store_def_tagnum;
-         G__tagdefining = store_tagdefining;
          if (nindex &&
                (isupper(result3.type) || 'u' == result3.type)
             ) {
@@ -3148,9 +3109,6 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
    G__exec_memberfunc = store_exec_memberfunc;
    G__memberfunc_tagnum = store_memberfunc_tagnum;
    G__memberfunc_struct_offset = store_memberfunc_struct_offset;
-   G__tagnum = store_tagnum;
-   G__def_tagnum = store_def_tagnum;
-   G__tagdefining = store_tagdefining;
    if (!G__oprovld) {
       if (G__asm_noverflow && fpara.paran) {
          G__asm_cp = store_cp_asm;
