@@ -375,6 +375,9 @@ namespace ROOT {
 
       TString directive;
 
+      if (cl->GetCollectionProxy() && cl->GetCollectionProxy()->GetValueClass()) {
+         AddHeader( cl->GetCollectionProxy()->GetValueClass() );
+      }
       Int_t stlType;
       if (cl->GetCollectionProxy() && (stlType=TClassEdit::IsSTLCont(cl->GetName()))) {
          const char *what = "";
@@ -1214,7 +1217,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                } else {
                   type = Form("TStlSimpleProxy<%s >", cl->GetName());
                   AddHeader(cl);
-                  AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
+                  if (!cl->IsLoaded()) AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
                   AddDescriptor( new TBranchProxyDescriptor( branchname, type, branchname ) );
                   continue;
                }
@@ -1571,14 +1574,14 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       if (cl->GetCollectionProxy()) {
          TClass *valcl = cl->GetCollectionProxy()->GetValueClass();
          if (!valcl) {
-            gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
+            if (!cl->IsLoaded()) gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
             return kTRUE;
          } else if (R__AddPragmaForClass(gen, valcl)) {
-            gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
+            if (!cl->IsLoaded()) gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
             return kTRUE;
          }
       } 
-      if (cl->IsLoaded()) return kFALSE;
+      if (cl->IsLoaded()) return kTRUE;
       return kFALSE;
    }
 
