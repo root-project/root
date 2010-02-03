@@ -224,9 +224,11 @@ void h1analysis::SlaveBegin(TTree *tree)
    // Entry list stuff (re-parse option because on PROOF only SlaveBegin is called)
    if (option.Contains("fillList")) {
       fillList = kTRUE;
+      // Get the list
       if (fInput) {
-         elist = (TEntryList *) fInput->FindObject("elist");
-         fInput->Remove(elist);
+         if ((elist = (TEntryList *) fInput->FindObject("elist")))
+            // Need to clone to avoid problems when destroying the selector
+            elist = (TEntryList *) elist->Clone();
       }
       if (elist)
          fOutput->Add(elist);
