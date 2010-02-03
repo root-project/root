@@ -488,7 +488,6 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fActive = new TList;
    fActive->SetOwner(kFALSE);
 
-
    fValid = kTRUE;
 
    // Resolve end-point urls to optmize distribution
@@ -498,7 +497,12 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    dset->Reset();
    TDSetElement *e;
    while ((e = (TDSetElement*)dset->Next())) {
+
       if (e->GetValid()) continue;
+
+      // The dataset name, if any
+      if (fDataSet.IsNull() && e->GetDataSet() && strlen(e->GetDataSet()))
+         fDataSet = e->GetDataSet();
 
       TUrl url = e->GetFileName();
 
@@ -607,15 +611,14 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
 
          cur += eNum;
       } else {
-         Long64_t n = 0;
          TEntryList *enl = dynamic_cast<TEntryList *>(e->GetEntryList());
          if (enl) {
-            n = enl->GetN();
+            eNum = enl->GetN();
          } else {
             TEventList *evl = dynamic_cast<TEventList *>(e->GetEntryList());
-            n = evl ? evl->GetN() : n;
+            eNum = evl ? evl->GetN() : eNum;
          }
-         if (!n)
+         if (!eNum)
             continue;
       }
       PDB(kPacketizer,2)
@@ -640,18 +643,10 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       }
 
       ++files;
-      fTotalEntries += e->GetNum();
-      node->Add( e );
-      node->IncEvents(e->GetNum());
+      fTotalEntries += eNum;
+      node->Add(e);
+      node->IncEvents(eNum);
       PDB(kPacketizer,2) e->Print("a");
-   }
-   // it overwrites previous value!!
-   TEntryList *enl = dynamic_cast<TEntryList *>(dset->GetEntryList());
-   if (enl) {
-      fTotalEntries = enl->GetN();
-   } else {
-      TEventList *evl = dynamic_cast<TEventList *>(dset->GetEntryList());
-      fTotalEntries = evl ? evl->GetN() : fTotalEntries;
    }
    PDB(kGlobal,1)
       Info("TPacketizerAdaptive", "processing %lld entries in %d files on %d hosts",
@@ -707,20 +702,20 @@ void TPacketizerAdaptive::InitStats()
    }
 
    if (totalNumberOfFiles == 0) {
-      Info("TPacketizerAdaptive", "no valid or non-empty file found: setting invalid");
+      Info("InitStats", "no valid or non-empty file found: setting invalid");
       // No valid files: set invalid and return
       fValid = kFALSE;
       return;
    }
 
    fFractionOfRemoteFiles = (1.0 * noRemoteFiles) / totalNumberOfFiles;
-   Info("TPacketizerAdaptive",
+   Info("InitStats",
         "fraction of remote files %f", fFractionOfRemoteFiles);
 
    if (!fValid)
       SafeDelete(fProgress);
 
-   PDB(kPacketizer,1) Info("TPacketizerAdaptive", "return");
+   PDB(kPacketizer,1) Info("InitStats", "return");
 }
 
 //______________________________________________________________________________
@@ -1289,7 +1284,7 @@ Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
             else
                Error("AddProcessed", "No list for missing files!");
          } else
-            Error("AddProcessed", "Processed too much?");
+            Error("AddProcessed", "Processed too much? (%lld, %lld)", numev, expectedNumEv);
 
          // TODO: a signal handler which will send info from the worker
          // after a packet fails.
@@ -1335,6 +1330,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    }
    // update stats & free old element
 
+   Bool_t firstPacket = kFALSE;
    Long64_t cachesz = -1;
    Int_t learnent = -1;
    if ( slstat->fCurElem != 0 ) {
@@ -1366,12 +1362,14 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 
       if (AddProcessed(sl, status, latency))
          Error("GetNextPacket", "the worker processed a different # of entries");
-      if ( fProgressStatus->GetEntries() >= fTotalEntries ) {
+      if (fProgressStatus->GetEntries() >= fTotalEntries) {
          if (fProgressStatus->GetEntries() > fTotalEntries)
-            Error("GetNextPacket", "Processed too many entries!");
+            Error("GetNextPacket", "Processed too many entries! (%lld, %lld)", fProgressStatus->GetEntries(), fTotalEntries);
          HandleTimer(0);   // Send last timer message
-         delete fProgress; fProgress = 0;
+         SafeDelete(fProgress);
       }
+   } else {
+      firstPacket = kTRUE;
    }
 
    if ( fStop ) {
@@ -1518,6 +1516,16 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    if (base->GetEntryList())
       slstat->fCurElem->SetEntryList(base->GetEntryList(), first, num);
 
+   // Flag the first packet of a new run (dataset)
+//   if (slstat->GetProcessedSubSet()->GetSize() <= 0)
+   if (firstPacket)
+      slstat->fCurElem->SetBit(TDSetElement::kNewRun);
+   else
+      slstat->fCurElem->ResetBit(TDSetElement::kNewRun);
+
+   PDB(kPacketizer,2)
+      Info("GetNextPacket","%s: %s %lld %lld", sl->GetOrdinal(), base->GetFileName(), first, num);
+
    return slstat->fCurElem;
 }
 
@@ -1569,7 +1577,7 @@ Int_t TPacketizerAdaptive::GetEstEntriesProcessed(Float_t t, Long64_t &ent,
 {
    // Get estimation for the number of processed entries and bytes read at time t,
    // based on the numbers already processed and the latests worker measured speeds.
-   // If t <= 0 the cutrent time is used.
+   // If t <= 0 the current time is used.
    // Only the estimation for the entries is currently implemented.
    // This is needed to smooth the instantaneous rate plot.
 

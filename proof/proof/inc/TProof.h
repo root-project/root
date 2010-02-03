@@ -120,9 +120,10 @@ class TDataSetManager;
 // 24 -> 25: Handling of 'data' dir; group information
 // 25 -> 26: Use new TProofProgressInfo class
 // 26 -> 27: Use new file for updating the session status
+// 27 -> 28: Support for multi-datasets
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 27;            // protocol version number
+const Int_t       kPROOF_Protocol        = 28;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -300,6 +301,7 @@ public:
    const char  *Export() { fExp.Form("%c (%d workers still sending)   ", fgCr[fIdx], fNWrks);
                            return fExp.Data(); }
    void         DecreaseNWrks() { fNWrks--; }
+   void         IncreaseNWrks() { fNWrks++; }
    void         IncreaseIdx() { fIdx++; if (fIdx == 4) fIdx = 0; }
    void         Reset(Int_t n = -1) { fIdx = -1; SetNWrks(n); }
    void         SetNWrks(Int_t n) { fNWrks = n; }
@@ -676,9 +678,10 @@ private:
 
 protected:
    TProof(); // For derived classes to use
-   Int_t           Init(const char *masterurl, const char *conffile,
-                        const char *confdir, Int_t loglevel,
-                        const char *alias = 0);
+   void  InitMembers();
+   Int_t Init(const char *masterurl, const char *conffile,
+              const char *confdir, Int_t loglevel,
+              const char *alias = 0);
    virtual Bool_t  StartSlaves(Bool_t attach = kFALSE);
    Int_t AddWorkers(TList *wrks);
    Int_t RemoveWorkers(TList *wrks);

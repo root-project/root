@@ -18,7 +18,7 @@
 // *               default 'localhost:11093'                               * //
 // *   -n wrks     number of workers to be started when running on the     * //
 // *               local host; default is the nuber of local cores         * //
-// *   -v[v[v]]    verbosity level (not implemented)                       * //
+// *   -d level    verbosity level [1]                                     * //
 // *   -l logfile  file where to redirect the processing logs; default is  * //
 // *               a temporary file deleted at the end of the test; in     * //
 // *               case of success                                         * //
@@ -35,7 +35,7 @@
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
-// * root[] .L stressProof.cxx                                             * //
+// * root[] .L stressProof.cxx+                                            * //
 // * root[] stressProof(master, wrks, verbose, logfile, dyn, \             * //
 // *                                         skipds, testnum, h1src)       * //
 // *                                                                       * //
@@ -60,12 +60,13 @@
 // *   Test  6 : H1: file collection processing ................... OK *   * //
 // *   Test  7 : H1: file collection, TPacketizer ................. OK *   * //
 // *   Test  8 : H1: by-name processing ........................... OK *   * //
-// *   Test  9 : Package management with 'event' .................. OK *   * //
-// *   Test 10 : Simple 'event' generation ........................ OK *   * //
-// *   Test 11 : Input data propagation ........................... OK *   * //
-// *   Test 12 : H1, Simple: async mode :.......................... OK *   * //
-// *   Test 13 : Admin functionality .............................. OK *   * //
-// *   Test 14 : Dynamic sub-mergers functionality ................ OK *   * //
+// *   Test  9 : H1: multi dataset and entry list ................. OK *   * //
+// *   Test 10 : Package management with 'event' .................. OK *   * //
+// *   Test 11 : Simple 'event' generation ........................ OK *   * //
+// *   Test 12 : Input data propagation ........................... OK *   * //
+// *   Test 13 : H1, Simple: async mode :.......................... OK *   * //
+// *   Test 14 : Admin functionality .............................. OK *   * //
+// *   Test 15 : Dynamic sub-mergers functionality ................ OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -124,7 +125,7 @@
 static const char *urldef = "proof://localhost:11093";
 static TString gtutdir;
 static TString gsandbox;
-static Int_t gverbose = 0;
+static Int_t gverbose = 1;
 static TString glogfile;
 static Int_t gpoints = 0;
 static Int_t totpoints = 53;
@@ -145,7 +146,7 @@ static const char *gh1file[] = { "dstarmb.root", "dstarp1a.root", "dstarp1b.root
 static TList gSelectors;
 
 void stressProof(const char *url = "proof://localhost:11093",
-                 Int_t nwrks = -1, Int_t verbose = 0,
+                 Int_t nwrks = -1, Int_t verbose = 1,
                  const char *logfile = 0, Bool_t dyn = kFALSE,
                  Bool_t skipds = kTRUE, Int_t test = -1,
                  const char *h1pfx = 0);
@@ -170,7 +171,7 @@ int main(int argc,const char *argv[])
       printf("                 in the form '[user@]host.domain[:port]'; default 'localhost:11093'\n");
       printf("   -n wrks       number of workers to be started when running on the local host;\n");
       printf("                 default is the nuber of local cores\n");
-      printf("   -v[v[v]]      verbosity level (not implemented)\n");
+      printf("   -d level      verbosity level [1]\n");
       printf("   -l logfile    file where to redirect the processing logs; must be writable;\n");
       printf("                 default is a temporary file deleted at the end of the test\n");
       printf("                 in case of success\n");
@@ -188,7 +189,7 @@ int main(int argc,const char *argv[])
    // Parse options
    const char *url = 0;
    Int_t nWrks = -1;
-   Int_t verbose = 0;
+   Int_t verbose = 1;
    Int_t test = -1;
    const char *logfile = 0;
    const char *h1src = 0;
@@ -205,6 +206,14 @@ int main(int argc,const char *argv[])
             nWrks = atoi(argv[i+1]);
             i += 2;
          }
+      } else if (!strcmp(argv[i],"-d")) {
+         if (i+1 == argc || argv[i+1][0] == '-') {
+            printf(" -d should be followed by the debug level: ignoring \n");
+            i++;
+         } else  {
+            verbose = atoi(argv[i+1]);
+            i += 2;
+         }
       } else if (!strcmp(argv[i],"-l")) {
          if (i+1 == argc || argv[i+1][0] == '-') {
             printf(" -l should be followed by a path: ignoring \n");
@@ -214,9 +223,9 @@ int main(int argc,const char *argv[])
             i += 2;
          }
       } else if (!strncmp(argv[i],"-v",2)) {
-         verbose++;
-         if (!strncmp(argv[i],"-vv",3)) verbose++;
-         if (!strncmp(argv[i],"-vvv",4)) verbose++;
+         // For backward compatibility
+         if (!strcmp(argv[i],"-v")) verbose = 1;
+         if (!strncmp(argv[i],"-vv",3)) verbose = 2;
          i++;
       } else if (!strncmp(argv[i],"-dyn",4)) {
          gDynamicStartup = kTRUE;
@@ -443,6 +452,7 @@ Int_t PT_Simple(void *smg = 0);
 Int_t PT_H1Http(void *);
 Int_t PT_H1FileCollection(void *);
 Int_t PT_H1DataSet(void *);
+Int_t PT_H1MultiDSetEntryList(void *);
 Int_t PT_DataSets(void *);
 Int_t PT_Packages(void *);
 Int_t PT_Event(void *);
@@ -480,7 +490,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
 
    // Notify/warn about the dynamic startup option, if any
    TUrl uu(url), udef(urldef);
-   if (gDynamicStartup) {
+   if (gDynamicStartup && gverbose > 0) {
       // Check url
       if (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort())) {
          printf("*   WARNING: request to run a test with per-job scheduling on    *\n");
@@ -527,23 +537,25 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
          return;
       }
       fclose(flog);
-      printf("*  Log file: %s\n", glogfile.Data());
-      printf("******************************************************************\n");
+      if (gverbose > 0) {
+         printf("*  Log file: %s\n", glogfile.Data());
+         printf("******************************************************************\n");
+      }
    }
 
-   if (gSkipDataSetTest) {
-      printf("*  Test for dataset handling (#4, #8) skipped                   **\n");
+   if (gSkipDataSetTest && gverbose > 0) {
+      printf("*  Test for dataset handling (#4, #8, #9) skipped               **\n");
       printf("******************************************************************\n");
    }
-   if (gUseParallelUnzip) {
+   if (gUseParallelUnzip && gverbose > 0) {
       printf("*  Using parallel unzip where relevant                          **\n");
       printf("******************************************************************\n");
    }
-   if (!strcmp(url,"lite")) {
+   if (!strcmp(url,"lite") && gverbose > 0) {
       printf("*  PROOF-Lite session (tests #12 and #13 skipped)               **\n");
       printf("******************************************************************\n");
    }
-   if (test > 0) {
+   if (test > 0 && gverbose > 0) {
       if (test < 15) {
          printf("*  Running only test %2d (and related tests)                     **\n", test);
          printf("******************************************************************\n");
@@ -553,7 +565,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
          test = -1;
       }
    }
-   if (h1src && strlen(h1src)) {
+   if (h1src && strlen(h1src) && gverbose > 0) {
       if (!strcmp(h1src, "download") &&
           (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort()))) {
          printf("*  External clusters: ignoring download request of H1 files\n");
@@ -590,26 +602,28 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    testList->Add(new ProofTest("H1: file collection, TPacketizer", 7, &PT_H1FileCollection, (void *)&gStd_Old, "1", "h1analysis"));
    // H1 analysis over HTTP by dataset name
    testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, 0, "1,4", "h1analysis"));
+   // H1 analysis over HTTP by dataset name
+   testList->Add(new ProofTest("H1: multi dataset and entry list", 9, &PT_H1MultiDSetEntryList, 0, "1,4", "h1analysis"));
    // Test of data set handling with the H1 http files
-   testList->Add(new ProofTest("Package management with 'event'", 9, &PT_Packages, 0, "1"));
+   testList->Add(new ProofTest("Package management with 'event'", 10, &PT_Packages, 0, "1"));
    // Simple event analysis
-   testList->Add(new ProofTest("Simple 'event' generation", 10, &PT_Event, 0, "1", "ProofEvent"));
+   testList->Add(new ProofTest("Simple 'event' generation", 11, &PT_Event, 0, "1", "ProofEvent"));
    // Test input data propagation (it only works in the static startup mode)
-   testList->Add(new ProofTest("Input data propagation", 11, &PT_InputData, 0, "1", "ProofTests"));
+   testList->Add(new ProofTest("Input data propagation", 12, &PT_InputData, 0, "1", "ProofTests"));
    // Test asynchronous running
-   testList->Add(new ProofTest("H1, Simple: async mode", 12, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple"));
+   testList->Add(new ProofTest("H1, Simple: async mode", 13, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple"));
    // Test admin functionality
-   testList->Add(new ProofTest("Admin functionality", 13, &PT_AdminFunc, 0, "1"));
+   testList->Add(new ProofTest("Admin functionality", 14, &PT_AdminFunc, 0, "1"));
    // Test merging via submergers
    Bool_t useMergers = kTRUE;
-   testList->Add(new ProofTest("Dynamic sub-mergers functionality", 14, &PT_Simple, (void *)&useMergers, "1", "ProofSimple"));
+   testList->Add(new ProofTest("Dynamic sub-mergers functionality", 15, &PT_Simple, (void *)&useMergers, "1", "ProofSimple"));
 
    // The selectors
    gSelectors.Add(new TNamed("h1analysis", "../tutorials/tree/h1analysis.C"));
    gSelectors.Add(new TNamed("ProofEvent", "../tutorials/proof/ProofEvent.C"));
    gSelectors.Add(new TNamed("ProofSimple", "../tutorials/proof/ProofSimple.C"));
    gSelectors.Add(new TNamed("ProofTests", "../tutorials/proof/ProofTests.C"));
-   printf("*  Cleaning all non-source files associated to:\n");
+   if (gverbose > 0) printf("*  Cleaning all non-source files associated to:\n");
 
    // Check what to run
    ProofTest *t = 0, *treq = 0;
@@ -642,7 +656,8 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
          TNamed *nm = (TNamed *) gSelectors.FindObject(sel.Data());
          if (nm) {
             CleanupSelector(nm->GetTitle());
-            printf("*     %s   \t in %s\n", nm->GetName(), gSystem->DirName(nm->GetTitle()));
+            if (gverbose > 0)
+               printf("*     %s   \t in %s\n", nm->GetName(), gSystem->DirName(nm->GetTitle()));
          }
       }
       // Enable the required test
@@ -653,10 +668,12 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       TNamed *nm = 0;
       while ((nm = (TNamed *)nxs())) {
          CleanupSelector(nm->GetTitle());
-         printf("*     %s   \t in %s\n", nm->GetName(), gSystem->DirName(nm->GetTitle()));
+         if (gverbose > 0)
+            printf("*     %s   \t in %s\n", nm->GetName(), gSystem->DirName(nm->GetTitle()));
       }
    }
-   printf("******************************************************************\n");
+   if (gverbose > 0)
+      printf("******************************************************************\n");
 
    //
    // Run the tests
@@ -805,7 +822,7 @@ Int_t PT_CheckSimple(TQueryResult *qr, Long64_t nevt, Int_t nhist)
 }
 
 //_____________________________________________________________________________
-Int_t PT_CheckH1(TQueryResult *qr)
+Int_t PT_CheckH1(TQueryResult *qr, Int_t irun = 0)
 {
    // Check the result of the H1 analysis
 
@@ -816,7 +833,8 @@ Int_t PT_CheckH1(TQueryResult *qr)
 
    // Make sure the number of processed entries is the one expected
    PutPoint();
-   if (qr->GetEntries() != 283813) {
+   Long64_t runEntries[2] = {283813, 7525};
+   if (qr->GetEntries() != runEntries[irun]) {
       printf("\n >>> Test failure: wrong number of entries processed: %lld (expected 283813)\n", qr->GetEntries());
       return -1;
    }
@@ -1173,7 +1191,7 @@ Int_t PT_H1DataSet(void *)
    AssertParallelUnzip();
 
    // Name for the target dataset
-   const char *dsname = "h1http";
+   const char *dsname = "h1dset";
 
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
@@ -1193,6 +1211,78 @@ Int_t PT_H1DataSet(void *)
    // Check the results
    PutPoint();
    return PT_CheckH1(gProof->GetQueryResult());
+}
+
+//_____________________________________________________________________________
+Int_t PT_H1MultiDSetEntryList(void *)
+{
+   // Test run using the H1 analysis for the multi-dataset functionality and
+   // entry-lists
+
+   // Checking arguments
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+   // Not yet supported for PROOF-Lite
+   if (gSkipDataSetTest) {
+      return 1;
+   }
+   PutPoint();
+
+   // Set/unset the parallel unzip flag
+   AssertParallelUnzip();
+
+   // Multiple dataset used to create the entry list
+   TString dsname("h1dseta|h1dsetb");
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Entry-list creation run
+   PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
+   gTimer.Start();
+   gProof->Process(dsname, "../tutorials/tree/h1analysis.C+", "fillList=elist.root");
+   gTimer.Stop();
+   gProof->SetPrintProgress(0);
+   // Cleanup entry-list from the input list
+   TIter nxi(gProof->GetInputList());
+   TObject *o = 0;
+   while ((o = nxi())) {
+      if (!strncmp(o->GetName(), "elist", 6) || !strcmp(o->GetName(), "fillList")) {
+         gProof->GetInputList()->Remove(o);
+         delete o;
+      }
+   }
+
+   // Count
+   gH1Cnt++;
+   gH1Time += gTimer.RealTime();
+
+   // Run using the entrylist
+   dsname = "h1dseta<<elist.root h1dsetb?enl=elist.root";
+   PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
+   gTimer.Start();
+   gProof->Process(dsname, "../tutorials/tree/h1analysis.C+");
+   gTimer.Stop();
+   gProof->SetPrintProgress(0);
+
+   // Unlink the entry list file
+   gSystem->Unlink("elist.root");
+   // Cleanup entry-list from the input list
+   nxi.Reset();
+   while ((o = nxi())) {
+      if (!strncmp(o->GetName(), "elist", 6)) {
+         gProof->GetInputList()->Remove(o);
+         delete o;
+      }
+   }
+
+   // Check the results
+   PutPoint();
+   return PT_CheckH1(gProof->GetQueryResult(), 1);
 }
 
 //_____________________________________________________________________________
@@ -1240,6 +1330,8 @@ Int_t PT_DataSets(void *)
    // Create the file collection
    PutPoint();
    TFileCollection *fc = new TFileCollection();
+   TFileCollection *fca = new TFileCollection();
+   TFileCollection *fcb = new TFileCollection();
 
    // Assert the files, if needed
    if (!gh1ok) {
@@ -1251,19 +1343,31 @@ Int_t PT_DataSets(void *)
    Int_t i = 0;
    for (i = 0; i < 4; i++) {
       fc->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+      if (i < 2) {
+         fca->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+      } else {
+         fcb->Add(new TFileInfo(TString::Format("%s/%s", gh1src.Data(), gh1file[i])));
+      }
    }
    fc->Update();
+   fca->Update();
+   fcb->Update();
 
    // Name for this dataset
-   const char *dsname = "h1http";
+   const char *dsname = "h1dset";
+   const char *dsnamea = "h1dseta";
+   const char *dsnameb = "h1dsetb";
 
    // Register the dataset
    PutPoint();
    gProof->RegisterDataSet(dsname, fc);
+   gProof->RegisterDataSet(dsnamea, fca);
+   gProof->RegisterDataSet(dsnameb, fcb);
    // Check the result
    dsm = gProof->GetDataSets();
-   if (!dsm || dsm->GetSize() != 1) {
-      printf("\n >>> Test failure: could not register '%s' (%p)\n", dsname, dsm);
+   if (!dsm || dsm->GetSize() != 3) {
+      printf("\n >>> Test failure: could not register '%s,%s,%s' (%p)\n",
+             dsname, dsnamea, dsnameb, dsm);
       delete dsm;
       return -1;
    }
@@ -1272,10 +1376,13 @@ Int_t PT_DataSets(void *)
    // Test removal
    PutPoint();
    gProof->RemoveDataSet(dsname);
+   gProof->RemoveDataSet(dsnamea);
+   gProof->RemoveDataSet(dsnameb);
    // Check the result
    dsm = gProof->GetDataSets();
    if (!dsm || dsm->GetSize() != 0) {
-      printf("\n >>> Test failure: could not cleanup '%s' (%p)\n", dsname, dsm);
+      printf("\n >>> Test failure: could not cleanup '%s,%s,%s' (%p)\n",
+             dsname, dsnamea, dsnameb, dsm);
       delete dsm;
       return -1;
    }
@@ -1284,10 +1391,13 @@ Int_t PT_DataSets(void *)
    // Re-register the dataset
    PutPoint();
    gProof->RegisterDataSet(dsname, fc);
+   gProof->RegisterDataSet(dsnamea, fca);
+   gProof->RegisterDataSet(dsnameb, fcb);
    // Check the result
    dsm = gProof->GetDataSets();
-   if (dsm->GetSize() != 1) {
-      printf("\n >>> Test failure: could not re-register '%s' (%p)\n", dsname, dsm);
+   if (!dsm || dsm->GetSize() != 3) {
+      printf("\n >>> Test failure: could not re-register '%s,%s,%s' (%p)\n",
+             dsname, dsnamea, dsnameb, dsm);
       delete dsm;
       return -1;
    }
@@ -1299,10 +1409,20 @@ Int_t PT_DataSets(void *)
       printf("\n >>> Test failure: could not verify '%s'!\n", dsname);
       return -1;
    }
+   if (gProof->VerifyDataSet(dsnamea) != 0) {
+      printf("\n >>> Test failure: could not verify '%s'!\n", dsnamea);
+      return -1;
+   }
+   if (gProof->VerifyDataSet(dsnameb) != 0) {
+      printf("\n >>> Test failure: could not verify '%s'!\n", dsnameb);
+      return -1;
+   }
    gProof->ShowDataSets();
 
    // Remove the file collection
    delete fc;
+   delete fca;
+   delete fcb;
 
    // Done
    PutPoint();

@@ -395,6 +395,10 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       // from the dset to the 'MissingFiles' list in the player.
       if (!e->GetValid()) continue;
 
+      // The dataset name, if any
+      if (fDataSet.IsNull() && e->GetDataSet() && strlen(e->GetDataSet()))
+         fDataSet = e->GetDataSet();
+
       TUrl url = e->GetFileName();
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
@@ -438,15 +442,14 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
          cur += eNum;
       } else {
-         Long64_t n = 0;
          TEntryList *enl = dynamic_cast<TEntryList *>(e->GetEntryList());
          if (enl) {
-            n = enl->GetN();
+            eNum = enl->GetN();
          } else {
             TEventList *evl = dynamic_cast<TEventList *>(e->GetEntryList());
-            n = evl ? evl->GetN() : n;
+            eNum = evl ? evl->GetN() : eNum;
          }
-         if (!n)
+         if (!eNum)
             continue;
       }
       PDB(kPacketizer,2)
@@ -470,16 +473,9 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       }
 
       ++files;
-      fTotalEntries += e->GetNum();
-      node->Add( e );
+      fTotalEntries += eNum;
+      node->Add(e);
       PDB(kPacketizer,2) e->Print("a");
-   }
-   TEntryList *enl = dynamic_cast<TEntryList *>(dset->GetEntryList());
-   if (enl) {
-      fTotalEntries = enl->GetN();
-   } else {
-      TEventList *evl = dynamic_cast<TEventList *>(dset->GetEntryList());
-      fTotalEntries = evl ? evl->GetN() : fTotalEntries;
    }
 
    PDB(kGlobal,1)
@@ -1033,6 +1029,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 
    // update stats & free old element
 
+   Bool_t firstPacket = kFALSE;
    if ( slstat->fCurElem != 0 ) {
       Double_t latency = 0., proctime = 0., proccpu = 0.;
       Long64_t bytesRead = -1;
@@ -1096,6 +1093,8 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
          HandleTimer(0);   // Send last timer message
          delete fProgress; fProgress = 0;
       }
+   } else {
+      firstPacket = kTRUE;
    }
 
    if ( fStop ) {
@@ -1171,6 +1170,15 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    slstat->fCurElem = CreateNewPacket(base, first, num);
    if (base->GetEntryList())
       slstat->fCurElem->SetEntryList(base->GetEntryList(), first, num);
+
+   // Flag the first packet of a new run (dataset)
+   if (firstPacket)
+      slstat->fCurElem->SetBit(TDSetElement::kNewRun);
+   else
+      slstat->fCurElem->ResetBit(TDSetElement::kNewRun);
+
+   PDB(kPacketizer,2)
+      Info("GetNextPacket","%s: %s %lld %lld", sl->GetOrdinal(), base->GetFileName(), first, num);
 
    return slstat->fCurElem;
 }

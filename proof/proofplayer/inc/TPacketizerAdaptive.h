@@ -59,8 +59,6 @@ private:
    TList         *fFileNodes;    // nodes with files
    TList         *fUnAllocated;  // nodes with unallocated files
    TList         *fActive;       // nodes with unfinished files
-   TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave
-
    Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
 
    Float_t        fFractionOfRemoteFiles; // fraction of TDSetElements
@@ -90,8 +88,6 @@ private:
    void           ValidateFiles(TDSet *dset, TList *slaves);
    Int_t          ReassignPacket(TDSetElement *e, TList **listOfMissingFiles);
    void           SplitPerHost(TList *elements, TList **listOfMissingFiles);
-   Int_t          AddProcessed(TSlave *sl, TProofProgressStatus *st,
-                               Double_t latency, TList **listOfMissingFiles = 0);
 
 public:
    static Long_t   fgMaxSlaveCnt;  // maximum number of workers per filenode (Long_t to avoid
@@ -110,6 +106,8 @@ public:
                        TList *input, TProofProgressStatus *st);
    virtual ~TPacketizerAdaptive();
 
+   Int_t         AddProcessed(TSlave *sl, TProofProgressStatus *st,
+                               Double_t latency, TList **listOfMissingFiles = 0);
    Int_t         GetEstEntriesProcessed(Float_t, Long64_t &ent, Long64_t &bytes, Long64_t &calls);
    Float_t       GetCurrentRate(Bool_t &all);
    Int_t         CalculatePacketSize(TObject *slstat, Long64_t cachesz, Int_t learnent);

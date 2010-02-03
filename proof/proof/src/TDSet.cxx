@@ -78,27 +78,24 @@ ClassImp(TDSet)
 
 //______________________________________________________________________________
 TDSetElement::TDSetElement() : TNamed("",""),
-                               fDirectory(),
-                               fFirst(0),
-                               fNum(0),
-                               fMsd(),
-                               fTDSetOffset(0),
-                               fEntryList(0),
-                               fValid(kFALSE),
-                               fEntries(0),
-                               fFriends(0)
+                               fDirectory(), fFirst(0), fNum(0), fMsd(),
+                               fTDSetOffset(0), fEntryList(0), fValid(kFALSE),
+                               fEntries(0), fFriends(0), fDataSet(), fAssocFileList(0)
 {
    // Default constructor
    ResetBit(kWriteV3);
    ResetBit(kHasBeenLookedUp);
    ResetBit(kEmpty);
    ResetBit(kCorrupted);
+   ResetBit(kNewRun);
+   ResetBit(kNewPacket);
 }
 
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const char *file, const char *objname, const char *dir,
                            Long64_t first, Long64_t num,
-                           const char *msd) : TNamed(file, objname)
+                           const char *msd, const char *dataset)
+             : TNamed(file, objname)
 {
    // Create a TDSet element.
 
@@ -120,7 +117,8 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    fFriends     = 0;
    fValid       = kFALSE;
    fEntries     = -1;
-
+   fDataSet     = dataset;
+   fAssocFileList = 0;
    if (dir)
       fDirectory = dir;
 
@@ -128,6 +126,8 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    ResetBit(kHasBeenLookedUp);
    ResetBit(kEmpty);
    ResetBit(kCorrupted);
+   ResetBit(kNewRun);
+   ResetBit(kNewPacket);
 }
 
 //______________________________________________________________________________
@@ -144,10 +144,14 @@ TDSetElement::TDSetElement(const TDSetElement& elem)
    fValid = elem.fValid;
    fEntries = elem.fEntries;
    fFriends = 0;
+   fDataSet = elem.fDataSet;
+   fAssocFileList = 0;
    ResetBit(kWriteV3);
    ResetBit(kHasBeenLookedUp);
    ResetBit(kEmpty);
    ResetBit(kCorrupted);
+   ResetBit(kNewRun);
+   ResetBit(kNewPacket);
 }
 
 //______________________________________________________________________________
@@ -155,6 +159,10 @@ TDSetElement::~TDSetElement()
 {
    // Clean up the element.
    DeleteFriends();
+   if (fAssocFileList) {
+      fAssocFileList->SetOwner(kTRUE);
+      SafeDelete(fAssocFileList);
+   }
 }
 
 //______________________________________________________________________________
@@ -551,6 +559,14 @@ void TDSetElement::SetEntryList(TObject *aList, Long64_t first, Long64_t num)
 }
 
 //______________________________________________________________________________
+void TDSetElement::AddAssocFile(const char *assocfile)
+{
+   // Add an associated file to the list
+   if (!fAssocFileList) fAssocFileList = new TList;
+   if (fAssocFileList) fAssocFileList->Add(new TObjString(assocfile));
+}
+
+//______________________________________________________________________________
 TDSet::TDSet()
 {
    // Default ctor.
@@ -566,6 +582,7 @@ TDSet::TDSet()
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
    ResetBit(kSomeInvalid);
+   ResetBit(kMultiDSet);
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
@@ -600,6 +617,7 @@ TDSet::TDSet(const char *name,
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
    ResetBit(kSomeInvalid);
+   ResetBit(kMultiDSet);
 
    fType = "TTree";
    TClass *c = 0;
@@ -664,6 +682,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
    ResetBit(kSomeInvalid);
+   ResetBit(kMultiDSet);
 
    fType = "TTree";
    fIsTree = kTRUE;
@@ -900,6 +919,11 @@ Bool_t TDSet::Add(TDSet *dset)
    if (!dset)
       return kFALSE;
 
+   if (TestBit(TDSet::kMultiDSet)) {
+      fElements->Add(dset);
+      return kTRUE;
+   }
+
    if (fType != dset->GetType()) {
       Error("Add", "cannot add a set with a different type");
       return kFALSE;
@@ -1032,7 +1056,9 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
       first = m->GetFirst();
       num = m->GetEntries();
    }
-   el = new TDSetElement(file, objname, dir, first, -1);
+   const char *dataset = 0;
+   if (strcmp(fi->GetTitle(), "TFileInfo")) dataset = fi->GetTitle();
+   el = new TDSetElement(file, objname, dir, first, -1, 0, dataset);
    el->SetEntries(num);
 
    // Set looked-up bit
@@ -1673,20 +1699,30 @@ void TDSet::SetEntryList(TObject *aList)
    if (!aList)
       return;
 
-   // Link the proper object
-   TEventList *evl = 0;
-   TEntryList *enl = dynamic_cast<TEntryList*>(aList);
-   if (!enl)
-      evl = dynamic_cast<TEventList*>(aList);
-   if (!enl && !evl) {
-      Error("SetEntryList", "type of input object must be either TEntryList "
-                            "or TEventList (found: '%s' - do nothing", aList->ClassName());
-      return;
+   if (TestBit(TDSet::kMultiDSet)) {
+
+      // Global entry list for all the datasets
+      TIter nxds(fElements);
+      TDSet *ds = 0;
+      while ((ds = (TDSet *) nxds()))
+         ds->SetEntryList(aList);
+
+   } else {
+
+      // Link the proper object
+      TEventList *evl = 0;
+      TEntryList *enl = dynamic_cast<TEntryList*>(aList);
+      if (!enl)
+         evl = dynamic_cast<TEventList*>(aList);
+      if (!enl && !evl) {
+         Error("SetEntryList", "type of input object must be either TEntryList "
+                              "or TEventList (found: '%s' - do nothing", aList->ClassName());
+         return;
+      }
+
+      // Action depends on the type
+      fEntryList = (enl) ? enl : (TEntryList *)evl;
    }
-
-   // Action depends on the type
-   fEntryList = (enl) ? enl : (TEntryList *)evl;
-
    // Done
    return;
 }
@@ -1696,6 +1732,16 @@ void TDSet::SplitEntryList()
 {
    // Splits the main entry (or event) list into sub-lists for the elements of
    // thet data set
+
+   if (TestBit(TDSet::kMultiDSet)) {
+      // Global entry list for all the datasets
+      TIter nxds(fElements);
+      TDSet *ds = 0;
+      while ((ds = (TDSet *) nxds()))
+         ds->SplitEntryList();
+      // Done
+      return;
+   }
 
    if (!fEntryList) {
       if (gDebug > 0)
@@ -1757,4 +1803,25 @@ void TDSet::SplitEntryList()
          } while (el);
       }
    }
+}
+
+//______________________________________________________________________________
+Int_t TDSet::GetNumOfFiles()
+{
+   // Return the number of files in the dataset
+
+   Int_t nf = -1;
+   if (fElements) {
+      nf = 0;
+      if (TestBit(TDSet::kMultiDSet)) {
+         TIter nxds(fElements);
+         TDSet *ds = 0;
+         while ((ds = (TDSet *) nxds()))
+            if (ds->GetListOfElements()) nf += ds->GetListOfElements()->GetSize();
+      } else {
+         nf = fElements->GetSize();
+      }
+   }
+   // Done
+   return nf;
 }

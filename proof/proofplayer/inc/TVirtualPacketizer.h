@@ -50,24 +50,22 @@ class TSlave;
 class TMessage;
 class TNtupleD;
 class TProofProgressInfo;
+class TMap;
 
 
 class TVirtualPacketizer : public TObject {
 
-friend class TPacketizer;
-friend class TPacketizerAdaptive;
-friend class TPacketizerProgressive;
-friend class TPacketizerUnit;
-
 public:              // public because of Sun CC bug
    class TVirtualSlaveStat;
 
-private:
+protected:
    enum EUseEstOpt {        // Option for usage of estimated values
       kEstOff     = 0,
       kEstCurrent = 1,
       kEstAverage = 2
    };
+
+   TMap     *fSlaveStats;   // slave status, keyed by correspondig TSlave
 
    TProofProgressStatus *fProgressStatus; // pointer to status in the player.
    TTimer   *fProgress;     // progress updates timer
@@ -87,19 +85,18 @@ private:
 
    EUseEstOpt fUseEstOpt;   // Control usage of estimated values for the progress info
 
-   TVirtualPacketizer(const TVirtualPacketizer &);  // no implementation, will generate
-   void operator=(const TVirtualPacketizer &);      // error on accidental usage
-
-   virtual Bool_t HandleTimer(TTimer *timer);
-
-   TDSetElement  *CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num);
-
-protected:
    Bool_t   fValid;           // Constructed properly?
    Bool_t   fStop;            // Termination of Process() requested?
 
+   TString  fDataSet;         // Name of the dataset being processed (for dataset-driven runs)
+
    TVirtualPacketizer(TList *input, TProofProgressStatus *st = 0);
-   Long64_t GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
+   TVirtualPacketizer(const TVirtualPacketizer &);  // no implementation, will generate
+   void operator=(const TVirtualPacketizer &);      // error on accidental usage
+
+   TDSetElement  *CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num);
+   Long64_t       GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
+   virtual Bool_t HandleTimer(TTimer *timer);
 
 public:
    enum EStatusBits { kIsInitializing = BIT(16), kIsDone = BIT(17) };
@@ -127,6 +124,9 @@ public:
                     Double_t /*lat*/, TList ** /*missingFiles*/) { return 0; }
    TProofProgressStatus *GetStatus() { return fProgressStatus; }
    void          SetProgressStatus(TProofProgressStatus *st) { fProgressStatus = st; }
+   void          SetTotalEntries(Long64_t ent) { fTotalEntries = ent; }
+
+   TMap         *GetSlaveStats() const { return fSlaveStats; }
 
    virtual Int_t GetActiveWorkers() { return -1; }
 

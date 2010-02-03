@@ -73,6 +73,8 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fValid = kTRUE;
    fStop = kFALSE;
    fFailedPackets = 0;
+   fDataSet = "";
+   fSlaveStats = 0;
 
    // Performance monitoring
    TTime tnow = gSystem->Now();
@@ -89,12 +91,20 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
    fCircProg->SetCircular(fCircN);
 
-   // Init progress timer
-   Long_t period = 500;
-   TProof::GetParameter(input, "PROOF_ProgressPeriod", period);
-   fProgress = new TTimer;
-   fProgress->SetObject(this);
-   fProgress->Start(period, kFALSE);
+   // Check if we need to start the progress timer (multi-packetizers do not want
+   // timers from the packetizers they control ...)
+   TString startProgress("yes");
+   TProof::GetParameter(input, "PROOF_StartProgressTimer", startProgress);
+
+   // Init progress timer, if requested
+   fProgress = 0;
+   if (startProgress == "yes") {
+      Long_t period = 500;
+      TProof::GetParameter(input, "PROOF_ProgressPeriod", period);
+      fProgress = new TTimer;
+      fProgress->SetObject(this);
+      fProgress->Start(period, kFALSE);
+   }
 
    // Whether to send estimated values for the progress info
    TString estopt;
@@ -197,7 +207,8 @@ TDSetElement* TVirtualPacketizer::CreateNewPacket(TDSetElement* base,
    // The function returns a new created objects which have to be deleted.
 
    TDSetElement* elem = new TDSetElement(base->GetFileName(), base->GetObjName(),
-                                         base->GetDirectory(), first, num);
+                                         base->GetDirectory(), first, num,
+                                         0, fDataSet.Data());
 
    // create TDSetElements for all the friends of elem.
    TList *friends = base->GetListOfFriends();
@@ -219,6 +230,10 @@ TDSetElement* TVirtualPacketizer::CreateNewPacket(TDSetElement* base,
 Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
 {
    // Send progress message to client.
+
+   PDB(kPacketizer,2)
+      Info("HandleTimer", "fProgress: %p, isDone: %d",
+                          fProgress, TestBit(TVirtualPacketizer::kIsDone));
 
    if (fProgress == 0 || TestBit(TVirtualPacketizer::kIsDone))
       return kFALSE; // timer stopped already or reports completed

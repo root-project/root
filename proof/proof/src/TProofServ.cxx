@@ -3216,6 +3216,8 @@ void TProofServ::HandleProcess(TMessage *mess)
             SendAsynMessage(TString::Format("AssertDataSet on %s: %s",
                                  fPrefix.Data(), emsg.Data()));
             Error("HandleProcess", "AssertDataSet: %s", emsg.Data());
+            // To terminate collection
+            if (sync) SendLogFile();
             return;
          }
       }
@@ -3266,6 +3268,8 @@ void TProofServ::HandleProcess(TMessage *mess)
          EQueryAction retVal = GetWorkers(workerList, pc);
          if (retVal == TProofServ::kQueryStop) {
             Error("HandleProcess", "error getting list of worker nodes");
+            // To terminate collection
+            if (sync) SendLogFile();
             return;
          } else if (retVal == TProofServ::kQueryEnqueued) {
             // change to an asynchronous query
@@ -3274,12 +3278,16 @@ void TProofServ::HandleProcess(TMessage *mess)
          } else if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
             Error("HandleProcess", "Adding a list of worker nodes returned: %d",
                   ret);
+            // To terminate collection
+            if (sync) SendLogFile();
             return;
          }
       } else {
          EQueryAction retVal = GetWorkers(0, pc);
          if (retVal == TProofServ::kQueryStop) {
             Error("HandleProcess", "error getting list of worker nodes");
+            // To terminate collection
+            if (sync) SendLogFile();
             return;
          } else if (retVal == TProofServ::kQueryEnqueued) {
             // change to an asynchronous query
@@ -3287,6 +3295,8 @@ void TProofServ::HandleProcess(TMessage *mess)
             Info("HandleProcess", "query %d enqueued", pq->GetSeqNum());
          } else if (retVal != TProofServ::kQueryOK) {
             Error("HandleProcess", "unknown return value: %d", retVal);
+            // To terminate collection
+            if (sync) SendLogFile();
             return;
          }
       }
@@ -3317,7 +3327,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          doprocess = kTRUE;
          //
          ProcessNext();
-         // avoid processing async queries send during processing in dyn mode
+         // avoid processing async queries sent during processing in dyn mode
          if (fProof->UseDynamicStartup())
             enqueued = kTRUE;
 
@@ -3746,7 +3756,7 @@ void TProofServ::ProcessNext()
    // Signal the client that we are starting a new query
    TMessage m(kPROOF_STARTPROCESS);
    m << TString(pq->GetSelecImp()->GetName())
-     << dset->GetListOfElements()->GetSize()
+     << dset->GetNumOfFiles()
      << pq->GetFirst() << pq->GetEntries();
    fSocket->Send(m);
 
@@ -5915,7 +5925,9 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   PDB(kSubmerger, 2)
                      Info("","adding own output to the list on %s", fOrdinal.Data());
 
-                  // Add own results to the output list
+                  // Add own results to the output list.
+                  // On workers the player does not own the output list, which is owned
+                  // by the selector and deleted in there
                   // On workers the player does not own the output list, which is owned
                   // by the selector and deleted in there
                   TIter nxo(fPlayer->GetOutputList());
@@ -5939,6 +5951,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   // Send merged results to master
                   if (SendResults(fSocket, mergerPlayer->GetOutputList()) != 0)
                      Warning("HandleSubmerger","kBeMerger: problems sending output list");
+                  mergerPlayer->GetOutputList()->SetOwner(kTRUE);
                   delete mergerPlayer;
 
                   PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: results sent to master");

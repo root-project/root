@@ -869,8 +869,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                currentElem = new TPair(new TObjString("PROOF_CurrentElement"), dset->Current());
                fInput->Add(currentElem);
             } else {
-               if (currentElem->Value() != dset->Current())
+               if (currentElem->Value() != dset->Current()) {
                   currentElem->SetValue(dset->Current());
+               } else if (dset->Current()->TestBit(TDSetElement::kNewRun)) {
+                  dset->Current()->ResetBit(TDSetElement::kNewRun);
+               }
             }
          }
 
@@ -1330,6 +1333,46 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
       callEnv.SetParam((Long_t) fInput);
       callEnv.SetParam((Long_t) fProgressStatus);
 
+   } else if (dset->TestBit(TDSet::kMultiDSet)) {
+
+      // We have to process many datasets in one go, keeping them separate
+      if (fProof->GetRunStatus() != TProof::kRunning) {
+         // We have been asked to stop
+         Error("InitPacketizer", "received stop/abort request");
+         fExitStatus = kAborted;
+         return -1;
+      }
+
+      // The multi packetizer
+      packetizer = "TPacketizerMulti";
+
+      // Get linked to the related class
+      cl = TClass::GetClass(packetizer);
+      if (cl == 0) {
+         Error("InitPacketizer", "class '%s' not found", packetizer.Data());
+         fExitStatus = kAborted;
+         return -1;
+      }
+
+      // Init the constructor
+      callEnv.InitWithPrototype(cl, cl->GetName(),"TDSet*,TList*,Long64_t,Long64_t,TList*,TProofProgressStatus*");
+      if (!callEnv.IsValid()) {
+         Error("InitPacketizer", "cannot find correct constructor for '%s'", cl->GetName());
+         fExitStatus = kAborted;
+         return -1;
+      }
+      callEnv.ResetParam();
+      callEnv.SetParam((Long_t) dset);
+      callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+      callEnv.SetParam((Long64_t) first);
+      callEnv.SetParam((Long64_t) nentries);
+      callEnv.SetParam((Long_t) fInput);
+      callEnv.SetParam((Long_t) fProgressStatus);
+
+      // We are going to test validity during the packetizer initialization
+      dset->SetBit(TDSet::kValidityChecked);
+      dset->ResetBit(TDSet::kSomeInvalid);
+
    } else {
 
       // Lookup - resolve the end-point urls to optmize the distribution.
@@ -1414,6 +1457,14 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
       fExitStatus = kAborted;
       SafeDelete(fPacketizer);
       return -1;
+   }
+
+   // In multi mode retrieve the list of missing files
+   if (!noData && dset->TestBit(TDSet::kMultiDSet)) {
+      if ((listOfMissingFiles = (TList *) fInput->FindObject("MissingFiles"))) {
+         // Remove it; it will be added to the output list
+         fInput->Remove(listOfMissingFiles);
+      }
    }
 
    if (!noData) {
