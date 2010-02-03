@@ -4060,10 +4060,10 @@ void THistPainter::PaintBoxes(Option_t *)
             else continue;
          }
 
-         if (xlow < gPad->GetUxmin()) continue;
-         if (ylow < gPad->GetUymin()) continue;
-         if (xup  > gPad->GetUxmax()) continue;
-         if (yup  > gPad->GetUymax()) continue;
+         xlow = TMath::Max(xlow, gPad->GetUxmin());
+         ylow = TMath::Max(ylow, gPad->GetUymin());
+         xup  = TMath::Min(xup , gPad->GetUxmax());
+         yup  = TMath::Min(yup , gPad->GetUymax());
 
          if (Hoption.Box == 1) {
             fH->SetFillColor(color);
