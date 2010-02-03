@@ -18,21 +18,21 @@
 // To install this client software do:                                  //
 // 1) Download Instant Client Packages (4 files) from:                  //
 //     http://www.oracle.com/technology/software/tech/oci/instantclient/index.html
-// 2) Unzip the files into instantclient10_1 (Mac OS X example here):   //
-//     unzip instantclient-basic-macosx-10.1.0.3.zip                    //
-//     unzip instantclient-sqlplus-macosx-10.1.0.3.zip                  //
-//     unzip instantclient-sdk-macosx-10.1.0.3.zip                      //
-//     unzip instantclient-jdbc-macosx-10.1.0.3.zip                     //
+// 2) Unzip the files into instantclient10_2 (Mac OS X example here):   //
+//     unzip instantclient-basic-macosx-10.2.0.4.zip                    //
+//     unzip instantclient-sqlplus-macosx-10.2.0.4.zip                  //
+//     unzip instantclient-sdk-macosx-10.2.0.4.zip                      //
+//     unzip instantclient-jdbc-macosx-10.2.0.4.zip                     //
 // 3) Create two symbolic links for the files that have the version     //
 //    appended:                                                         //
 //      ln -s libclntsh.dylib.10.1 libclntsh.dylib                      //
 //      ln -s libocci.dylib.10.1 libocci.dylib                          //
 // 4) Add instantclient10_1 directory to your (DY)LD_LIBRARY_PATH       //
 //    in your .profile:                                                 //
-//      export DYLD_LIBRARY_PATH="<pathto>/instantclient10_1"           //
+//      export (DY)LD_LIBRARY_PATH="<pathto>/instantclient10_2"         //
 //    Use DY only on Mac OS X.                                          //
 // 5) If you also want to use the sqlplus command line app add also     //
-//      export SQLPATH="<pathto>/instantclient10_1"                     //
+//      export SQLPATH="<pathto>/instantclient10_2"                     //
 // 6) If you want to connect to a remote db server you will also need   //
 //    to create a tnsname.ora file which describes the local_name for   //
 //    the remote db servers (at CERN most public machines have this     //
@@ -42,10 +42,6 @@
 //      sqlplus [username][/password]@<local_name>                      //
 //    or                                                                //
 //      sqlplus [username][/password]@//[hostname][:port][/database]    //
-//                                                                      //
-// ATTENTION: This plugin will not work on Mac OS X / Intel as Oracle   //
-// has no intention to release a universal binary of the instantclient  //
-// libraries.                                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -440,9 +436,9 @@ TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table
    TString sql;
    TString table(tablename);
    table.ToUpper();
-   if (wild && wild[0]) 
+   if (wild && wild[0])
       sql.Form("SELECT COLUMN_NAME FROM user_tab_columns WHERE table_name like '%s' ORDER BY COLUMN_ID", wild);
-   else 
+   else
       sql.Form("SELECT COLUMN_NAME FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", table.Data());
    return Query(sql);
 }
@@ -592,14 +588,14 @@ void TOracleServer::SetDatimeFormat(const char* fmt)
    // set format for converting timestamps or date field into string
    // default value is "MM/DD/YYYY, HH24:MI:SS"
 
-   if (fmt==0) fmt = "MM/DD/YYYY, HH24:MI:SS";    
+   if (fmt==0) fmt = "MM/DD/YYYY, HH24:MI:SS";
    fgDatimeFormat = fmt;
 }
 
 //______________________________________________________________________________
 const char* TOracleServer::GetDatimeFormat()
 {
-   // return value of actul convertion format from timestamps or date to string    
-   
-   return fgDatimeFormat;   
+   // return value of actul convertion format from timestamps or date to string
+
+   return fgDatimeFormat;
 }
