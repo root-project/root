@@ -77,6 +77,17 @@
         gPad->SetLogx();
      }
      </pre>
+<li> The following macro didn't draw any box. Because of a precision
+     problem the filled bin was not drawn.
+     <pre>
+     {
+        double yarr[] = { 1.0, 2.0, 3.0, 4.0 };
+        double xarr[] = { 0.01, 0.02, 0.03, 0.04 };
+        TH2D *h = new TH2D("h","h",3,xarr,3,yarr);
+        h->Fill(0.011,2.5);
+        h->Draw("box");           
+     }
+     </pre>
 </ul>
 
 <h4>TGraphPainter</h4>
