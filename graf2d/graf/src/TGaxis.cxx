@@ -1168,7 +1168,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       }
    } else if (y0 == y1) {
       if (optionMinus && !optionPlus) {
-         ylabel = fLabelOffset+0.5*fLabelSize;
+         if ((GetLabelFont() % 10) == 3 ) {
+            ylabel = fLabelOffset+0.5*
+            ((gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY((Int_t)fLabelSize))/
+            (gPad->GetY2() - gPad->GetY1()));
+         } else {
+            ylabel = fLabelOffset+0.5*fLabelSize;
+         }
          ylabel += TMath::Abs(atick[0]);
       } else {
          ylabel = -fLabelOffset;
