@@ -72,11 +72,11 @@ private:
    Bool_t                fFullText;    // 0 - when grep was called
    Int_t                 fTextType;   // Type of retrieval
 
-   void  Init(Int_t w = 700, Int_t h = 300);
+   void  Init(Int_t w = 700, Int_t h = 600);
 
 public:
-   TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 300);
-   TProofProgressLog(const char *url = 0, Int_t sessionidx = 0, Int_t w = 700, Int_t h = 300);
+   TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 600);
+   TProofProgressLog(const char *url = 0, Int_t sessionidx = 0, Int_t w = 700, Int_t h = 600);
    virtual ~TProofProgressLog();
 
    void   BuildLogList(Bool_t create = kFALSE);
