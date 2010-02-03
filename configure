@@ -1210,6 +1210,7 @@ with options, prefix with --with-, enables corresponding support
   xrootd             XROOTD support, path to external XROOTD distribution
   xrootd-incdir      XROOTD support, path to external XROOTD header files (XrdVersion.hh, ...)
   xrootd-libdir      XROOTD support, path to external XROOTD libraries
+  xrootd-opts        XROOTD support, additional options to be passed to XROOTD-configure
 
 with compiler options, prefix with --with-, overrides default value
 
