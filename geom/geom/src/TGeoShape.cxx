@@ -629,14 +629,14 @@ const TBuffer3D &TGeoShape::GetBuffer3D(Int_t /*reqSections*/, Bool_t /*localFra
 }
 
 //_____________________________________________________________________________
-char *TGeoShape::GetPointerName() const
+const char *TGeoShape::GetPointerName() const
 {
 // Provide a pointer name containing uid.
-   static char name[20];
+   static TString name;
    Int_t uid = GetUniqueID();
-   if (uid) sprintf(name,"p%s_%i", GetName(),uid);
-   else     sprintf(name,"p%s", GetName());
-   return name;
+   if (uid) name = Form("p%s_%d", GetName(),uid);
+   else     name = Form("p%s", GetName());
+   return name.Data();
 }
 
 //_____________________________________________________________________________

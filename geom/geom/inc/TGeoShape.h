@@ -127,7 +127,7 @@ public:
    virtual void          GetMeshNumbers(Int_t &/*nvert*/, Int_t &/*nsegs*/, Int_t &/*npols*/) const {;}
    virtual const char   *GetName() const;
    virtual Int_t         GetNmeshVertices() const {return 0;}
-   char                 *GetPointerName() const;   
+   const char           *GetPointerName() const;
    virtual Bool_t        IsComposite() const {return kFALSE;}
    virtual Bool_t        IsCylType() const = 0;
    static  Bool_t        IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
