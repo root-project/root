@@ -34,7 +34,23 @@
 //      root[] runProof("h1")
 //
 //      This runs the 'famous' H1 analysis from $ROOTSYS/tree/h1analysis.C,.h .
-//      The data are read from the HTTP server at root.cern.ch .
+//      By default the data are read from the HTTP server at root.cern.ch; the data
+//      source can be changed via the argument 'h1src', e.g.
+//
+//      root[] runProof("h1,h1src=/data/h1")
+//
+//      (the directory specified must contain the 4 H1 files).
+//
+//      The 'h1' example is also used to show how to use entry-lists in PROOF.
+//      To fill the list for the events used for the final plots add the option
+//      'fillList':
+//
+//      root[] runProof("h1,fillList")
+//
+//      To use the list previously created for the events used for the final plots
+//      add the option 'useList':
+//
+//      root[] runProof("h1,useList")
 //
 //  3. "event"
 //
@@ -183,16 +199,18 @@
 
 #include "TCanvas.h"
 #include "TChain.h"
+#include "TDrawFeedback.h"
 #include "TEnv.h"
+#include "TEntryList.h"
+#include "TFile.h"
 #include "TFileCollection.h"
 #include "TFrame.h"
-#include "TProof.h"
-#include "TString.h"
-#include "TDrawFeedback.h"
 #include "THashList.h"
 #include "TList.h"
 #include "TPad.h"
 #include "TPaveText.h"
+#include "TProof.h"
+#include "TString.h"
 
 #include "getProof.C"
 void plotNtuple(TProof *p, const char *ds, const char *ntptitle);
@@ -358,9 +376,10 @@ void runProof(const char *what = "simple",
    Printf("runProof: %s: ACLiC mode: '%s'", act.Data(), aMode.Data());
 
    // Parse out number of events and  'asyn' option, used almost by every test
-   TString aNevt, aNwrk, opt, sel, punzip("off"), aCache;
+   TString aNevt, aNwrk, opt, sel, punzip("off"), aCache, aH1Src("http://root.cern.ch/files/h1");
    Long64_t suf = 1;
    Int_t aSubMg = -1;
+   Bool_t fillList = kFALSE, useList = kFALSE;
    while (args.Tokenize(tok, from, " ")) {
       // Number of events
       if (tok.BeginsWith("nevt=")) {
@@ -406,6 +425,20 @@ void runProof(const char *what = "simple",
             tok.ReplaceAll("=","");
             if (tok.IsDigit()) aSubMg = tok.Atoi();
          }
+      }
+      // H1: use entry-lists ?
+      if (tok.BeginsWith("useList")) {
+         useList = kTRUE;
+      }
+      if (tok.BeginsWith("fillList")) {
+         fillList = kTRUE;
+         opt += "fillList";
+      }
+      // H1: change location of files?
+      if (tok.BeginsWith("h1src=")) {
+         tok.ReplaceAll("h1src=","");
+         if (!(tok.IsNull())) aH1Src = tok;
+         Printf("runProof: %s: reading data files from '%s'", act.Data(), aH1Src.Data());
       }
    }
    Long64_t nevt = (aNevt.IsNull()) ? -1 : aNevt.Atoi();
@@ -495,17 +528,52 @@ void runProof(const char *what = "simple",
 
       // Create the chain
       TChain *chain = new TChain("h42");
-      chain->Add("http://root.cern.ch/files/h1/dstarmb.root");
-      chain->Add("http://root.cern.ch/files/h1/dstarp1a.root");
-      chain->Add("http://root.cern.ch/files/h1/dstarp1b.root");
-      chain->Add("http://root.cern.ch/files/h1/dstarp2.root");
+      chain->Add(TString::Format("%s/dstarmb.root", aH1Src.Data()));
+      chain->Add(TString::Format("%s/dstarp1a.root", aH1Src.Data()));
+      chain->Add(TString::Format("%s/dstarp1b.root", aH1Src.Data()));
+      chain->Add(TString::Format("%s/dstarp2.root", aH1Src.Data()));
+      chain->ls();
       // We run on Proof
       chain->SetProof();
+      // Set entrylist, if required
+      if (useList) {
+         TString eln("elist"), elfn("elist.root");
+         if (gSystem->AccessPathName(elfn)) {
+            Printf("\nrunProof: asked to use an entry list but '%s' not found or not readable", elfn.Data());
+            Printf("\nrunProof: did you forget to run with 'fillList=%s'?\n", elfn.Data());
+         } else {
+            TFile f(elfn);
+            if (!(f.IsZombie())) {
+               TEntryList *elist = (TEntryList *)f.Get(eln);
+               if (elist) {
+                  elist->SetDirectory(0); //otherwise the file destructor will delete elist
+                  chain->SetEntryList(elist);
+               } else {
+                  Printf("\nrunProof: could not find entry-list '%s' in file '%s': ignoring",
+                         eln.Data(), elfn.Data());
+               }
+            } else {
+               Printf("\nrunProof: requested entry-list file '%s' not existing (or not readable):"
+                      " ignoring", elfn.Data());
+            }
+         }
+      }
       // The selector
       sel.Form("%s/tree/h1analysis.C%s", tutorials.Data(), aMode.Data());
       // Run it 
       Printf("\nrunProof: running \"h1\"\n");
       chain->Process(sel.Data(),opt);
+      // Cleanup the input list
+      gProof->ClearInputData("elist");
+      gProof->ClearInputData("elist.root");
+      TIter nxi(gProof->GetInputList());
+      TObject *o = 0;
+      while ((o = nxi())) {
+         if (!strncmp(o->GetName(), "elist", 5)) {
+            gProof->GetInputList()->Remove(o);
+            delete o;
+         }
+      }
 
    } else if (act == "pythia8") {
 
