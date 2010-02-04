@@ -1,6 +1,5 @@
 
 Processing runvaldim3.C...
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
 ntracks = 2
 trs[0].a = 0
 trs[0].bb[0] = 0.000000
@@ -61,3 +60,4 @@ a[1][2][0] = 120
 a[1][2][1] = 121
 a[1][2][2] = 122
 a[1][2][3] = 123
+<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
