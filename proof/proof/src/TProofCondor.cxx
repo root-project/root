@@ -45,6 +45,9 @@ TProofCondor::TProofCondor(const char *masterurl, const char *conffile,
 {
    // Start proof using condor
 
+   // Default initializations
+   InitMembers();
+
    // This may be needed during init
    fManager = mgr;
 

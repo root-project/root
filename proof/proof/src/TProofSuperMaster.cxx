@@ -50,6 +50,9 @@ TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile
 {
    // Start super master PROOF session.
 
+   // Default initializations
+   InitMembers();
+
    // This may be needed during init
    fManager = mgr;
 
