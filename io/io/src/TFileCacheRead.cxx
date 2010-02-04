@@ -196,18 +196,18 @@ void TFileCacheRead::Print(Option_t *option) const
    printf("Reading %lld bytes in %d transactions\n",fFile->GetBytesRead(),  fFile->GetReadCalls());
    printf("Readahead = %d bytes with overhead = %lld bytes\n",TFile::GetReadaheadSize(),fFile->GetBytesReadExtra());
    printf("Average transaction = %f Kbytes\n",0.001*Double_t(fFile->GetBytesRead())/Double_t(fFile->GetReadCalls()));
-   printf("Number of blocks in current cache: %d, total size : %d\n",fNseek,fNtot);
+   printf("Number of blocks in current cache: %d, total size: %d\n",fNseek,fNtot);
    if (!opt.Contains("a")) return;
    for (Int_t i=0;i<fNseek;i++) {
       if (fIsSorted && !opt.Contains("s")) {
-         printf("block: %5d, from: %lld to %lld, len=%d bytes\n",i,fSeekSort[i],fSeekSort[i]+fSeekSortLen[i],fSeekSortLen[i]);
+         printf("block: %5d, from: %lld to %lld, len = %d bytes\n",i,fSeekSort[i],fSeekSort[i]+fSeekSortLen[i],fSeekSortLen[i]);
       } else {
-         printf("block: %5d, from: %lld to %lld, len=%d bytes\n",i,fSeek[i],fSeek[i]+fSeekLen[i],fSeekLen[i]);
+         printf("block: %5d, from: %lld to %lld, len = %d bytes\n",i,fSeek[i],fSeek[i]+fSeekLen[i],fSeekLen[i]);
       }
    }
    printf ("Number of long buffers = %d\n",fNb);
    for (Int_t j=0;j<fNb;j++) {
-      printf("fPos[%d]=%lld, fLen=%d\n",j,fPos[j],fLen[j]);
+      printf("fPos[%d] = %lld, fLen = %d\n",j,fPos[j],fLen[j]);
    }
 }
 
@@ -246,14 +246,12 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
          // This implementation simply reads all the chunks in advance
          // in the async way.
 
-
          // Use the async readv instead of single reads
          fFile->ReadBuffers(0, 0, 0, 0); //Clear the XrdClient cache
          if (fFile->ReadBuffers(0,fPos,fLen,fNb)) {
             return -1;
          }
          fIsTransferred = kTRUE;
-
       }
    }
 
@@ -282,11 +280,14 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
          // Block found, the caller will get it
          
          if (buf) {
-            fFile->Seek(pos);               
+            fFile->Seek(pos);
+            // disable cache to avoid infinite recursion
+            fFile->SetCacheRead(0);
             if (fFile->ReadBuffer(buf, len)) {
                return -1;
             }
             fFile->Seek(pos+len);
+            fFile->SetCacheRead(this);
          }
          
          retval = 1;
@@ -294,12 +295,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
          // Block not found in the list, we report it as a miss
          retval = 0;
       }
-      
-      
-      
-      
-      
-      
+
       if (gDebug > 0)
          Info("ReadBuffer","pos=%lld, len=%d, retval=%d, loc=%d, fseekSort[loc]=%d, fSeekLen[loc]=%d", pos, len, retval, loc, fSeekSort[loc], fSeekLen[loc]);
       
@@ -333,8 +329,7 @@ void TFileCacheRead::SetFile(TFile *file)
       // we use sync primitives, hence we need the local buffer
       if (file && file->ReadBufferAsync(0, 0)) {
          fAsyncReading = kFALSE;
-         fBuffer    = new char[fBufferSize];
-
+         fBuffer       = new char[fBufferSize];
       }
    }
 

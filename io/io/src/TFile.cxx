@@ -59,6 +59,10 @@
 
 #include "RConfig.h"
 
+#ifdef R__LINUX
+// for posix_fadvise
+#define _XOPEN_SOURCE 600
+#endif
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -1357,6 +1361,16 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
    // This function is overloaded by TNetFile, TWebFile, etc.
    // Returns kTRUE in case of failure.
+
+   // called with buf=0, from TFileCacheRead to pass list of readahead buffers
+   if (!buf) {
+      for (Int_t j = 0; j < nbuf; j++) {
+         if (ReadBufferAsync(pos[j], len[j])) {
+             return kTRUE;
+         }
+      }
+      return kFALSE;
+   }
    
    Int_t k = 0;
    Bool_t result = kTRUE;
@@ -3722,12 +3736,32 @@ copyout:
 }
 
 //______________________________________________________________________________
-Bool_t TFile::ReadBufferAsync(Long64_t, Int_t)
+Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
 {
-   // Not supported for regular (local) files.
-   // See TFile specializations for real implementations.
+   // Read specified byte range asynchronously. Actually we tell the kernel
+   // which blocks we are going to read so it can start loading these blocks
+   // in the buffer cache.
 
+#ifndef R__LINUX
    return kTRUE;
+#else
+   // Shortcut to avoid having to implement dummy ReadBufferAsync() in all 
+   // I/O plugins. Override ReadBufferAsync() in plugins if async is supported.
+   if (IsA() != TFile::Class())
+      return kTRUE;
+
+   int advice = POSIX_FADV_WILLNEED;
+   if (len == 0) {
+      // according POSIX spec if len is zero, all data following offset
+      // is specified. Nevertheless ROOT uses zero to probe readahead
+      // capadilites.
+      advice = POSIX_FADV_NORMAL;
+   }
+   if (posix_fadvise(fD, offset, len, advice)) {
+      return kTRUE;
+   }
+   return kFALSE;
+#endif
 }
 
 //______________________________________________________________________________
