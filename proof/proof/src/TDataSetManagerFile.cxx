@@ -593,17 +593,18 @@ Bool_t TDataSetManagerFile::ExistsDataSet(const char *group, const char *user,
 
 //______________________________________________________________________________
 Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
-                                           TFileCollection *dataSet,
+                                           TFileCollection *newDataSet,
                                            const char *opts)
 {
    // Register a dataset, perfoming quota checkings and verification, if required.
-   // Fails if a dataset with the same name already exists, unless 'opts'
-   // contains 'O', in which case the old dataset is overwritten.
+   // If a dataset with the same name already exists the action fails unless 'opts'
+   // contains 'O', in which case the old dataset is overwritten, or contains 'U',
+   // in which case 'newDataSet' is added to the existing dataset (duplications are
+   // ignored, if any).
    // If 'opts' contains 'V' the dataset files are also verified (if the dataset manager
-   // is configured to allow so).
+   // is configured to allow so). By default the dataset is not verified.
    // If 'opts' contains 'T' the in the dataset object (status bits, meta,...)
    // is trusted, i.e. not reset (if the dataset manager is configured to allow so).
-   // By default the dataset is not verified.
    // Returns 0 on success, -1 on failure
 
    if (!TestBit(TDataSetManager::kAllowRegister))
@@ -616,9 +617,26 @@ Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
       return -1;
    }
 
+   // The dataset
+   TFileCollection *dataSet = newDataSet;
    // Check option
    TString opt(opts);
-   if (!opt.Contains("O", TString::kIgnoreCase)) {
+   // If in update mode, retrieve the existing dataset, if any
+   if (opt.Contains("U", TString::kIgnoreCase)) {
+      // Fail if it exists already
+      if (ExistsDataSet(fGroup, fUser, dsName)) {
+         // Retrieve the dataset
+         if (!(dataSet = GetDataSet(fGroup, fUser, dsName))) {
+            // Dataset name does exist
+            Warning("RegisterDataSet",
+                    "dataset '%s' claimed to exists but retrieval failed - ignoring", uri);
+            dataSet = newDataSet;
+         } else {
+            // Add new dataset to existing one
+            dataSet->Add(newDataSet);
+         }
+      }
+   } else if (!opt.Contains("O", TString::kIgnoreCase)) {
       // Fail if it exists already
       if (ExistsDataSet(fGroup, fUser, dsName)) {
          //Dataset name does exist

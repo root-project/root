@@ -9038,10 +9038,14 @@ Bool_t TProof::RegisterDataSet(const char *dataSetName,
 {
    // Register the 'dataSet' on the cluster under the current
    // user, group and the given 'dataSetName'.
-   // Fails if a dataset named 'dataSetName' already exists, unless 'optStr'
-   // contains 'O', in which case the old dataset is overwritten.
-   // If 'optStr' contains 'V' the dataset files are verified (default no
-   // verification).
+   // If a dataset with the same name already exists the action fails unless 'opts'
+   // contains 'O', in which case the old dataset is overwritten, or contains 'U',
+   // in which case 'newDataSet' is added to the existing dataset (duplications are
+   // ignored, if any).
+   // If 'opts' contains 'V' the dataset files are also verified (if the dataset manager
+   // is configured to allow so). By default the dataset is not verified.
+   // If 'opts' contains 'T' the in the dataset object (status bits, meta,...)
+   // is trusted, i.e. not reset (if the dataset manager is configured to allow so).
    // Returns kTRUE on success.
 
    // Check TFileInfo compatibility
