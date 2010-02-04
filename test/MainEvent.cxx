@@ -160,10 +160,10 @@ int main(int argc, char **argv)
       if (read == 1) {  //read sequential
          //by setting the read cache to -1 we set it to the AutoFlush value when writing
          Int_t cachesize = -1; 
+         if (punzip) tree->SetParallelUnzip();
          tree->SetCacheSize(cachesize);
          tree->SetCacheLearnEntries(1); //one entry is sufficient to learn
          tree->SetCacheEntryRange(0,nevent);
-         if(punzip) tree->SetParallelUnzip();
          for (ev = 0; ev < nevent; ev++) {
             tree->LoadTree(ev);  //this call is required when using the cache
             if (ev%printev == 0) {
