@@ -465,7 +465,7 @@ check_library() {
                             fi
                         fi
                     else
-                        logmsg "  $j not found in $j"
+                        logmsg "  $j not found in $l"
                     fi
                 done
             done
