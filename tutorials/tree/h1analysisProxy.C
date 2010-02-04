@@ -94,13 +94,13 @@
 //
 //Author; Philippe Canal from original h1analysis.C by Rene Brun
 
-TEventList *elist;
+TEntryList *elist;
 Bool_t useList, fillList;
 TH1F *hdmd;
 TH2F *h2;
 
 //_____________________________________________________________________
-void h1analysisProxy_Begin(TTree * /* tree */ )
+void h1analysisProxy_Begin(TTree *tree)
 {
 // function called before starting the event loop
 //  -it performs some cleanup
@@ -111,12 +111,37 @@ void h1analysisProxy_Begin(TTree * /* tree */ )
    TString option = GetOption();
    printf("Starting (begin) h1analysis with process option: %s\n",option.Data());
 
-   //some cleanup in case this function had already been executed
-   //delete any previously generated histograms or functions
-   gDirectory->Delete("hdmd");
-   gDirectory->Delete("h2*");
-   delete gROOT->GetFunction("f5");
-   delete gROOT->GetFunction("f2");
+   //process cases with event list
+   fillList = kFALSE;
+   useList  = kFALSE;
+   if (fChain) fChain->SetEntryList(0);
+   delete gDirectory->GetList()->FindObject("elist");
+  
+   // case when one creates/fills the event list
+   if (option.Contains("fillList")) {
+      fillList = kTRUE;
+      elist = new TEntryList("elist","H1 selection from Cut");
+      // Add to the input list for processing in PROOF, if needed
+      if (fInput) {
+         fInput->Add(new TNamed("fillList",""));
+         fInput->Add(elist);
+      }
+   } else elist = 0;
+   
+   // case when one uses the event list generated in a previous call
+   if (option.Contains("useList")) {
+      useList  = kTRUE;
+      if (fInput) {
+         tree->SetEntryList(elist);
+         TFile f("elist.root");
+         elist = (TEntryList*)f.Get("elist");
+         if (elist) elist->SetDirectory(0); //otherwise the file destructor will delete elist         
+      } else {
+         // Option "useList" not supported in PROOF directly
+         Warning("Begin", "option 'useList' not supported in PROOF - ignoring");
+         Warning("Begin", "the entry list must be set on the chain *before* calling Process");         
+      }
+   }   
 }
 
 //_____________________________________________________________________
@@ -125,7 +150,7 @@ void h1analysisProxy_SlaveBegin(TTree *tree)
 // function called before starting the event loop
 //  -it performs some cleanup
 //  -it creates histograms
-//  -it sets some initialisation for the event list
+//  -it sets some initialisation for the entry list
 
    //initialize the Tree branch addresses
    Init(tree);
@@ -134,13 +159,6 @@ void h1analysisProxy_SlaveBegin(TTree *tree)
    TString option = GetOption();
    printf("Starting (slave) h1analysis with process option: %s\n",option.Data());
 
-   //some cleanup in case this function had already been executed
-   //delete any previously generated histograms or functions
-   gDirectory->Delete("hdmd");
-   gDirectory->Delete("h2*");
-   delete gROOT->GetFunction("f5");
-   delete gROOT->GetFunction("f2");
-
    //create histograms
    hdmd = new TH1F("hdmd","dm_d",40,0.13,0.17);
    h2   = new TH2F("h2","ptD0 vs dm_d",30,0.135,0.165,30,-3,6);
@@ -148,25 +166,37 @@ void h1analysisProxy_SlaveBegin(TTree *tree)
    fOutput->Add(hdmd);
    fOutput->Add(h2);
 
-   //process cases with event list
+   //process cases with entry list
    fillList = kFALSE;
    useList  = kFALSE;
-   tree->SetEventList(0);
-   delete gDirectory->GetList()->FindObject("elist");
 
-   // case when one creates/fills the event list
+   // case when one creates/fills the entry list
    if (option.Contains("fillList")) {
       fillList = kTRUE;
-      elist = new TEventList("elist","selection from Cut",5000);
+      // Get the list
+      if (fInput) {
+         if ((elist = (TEntryList *) fInput->FindObject("elist")))
+            // Need to clone to avoid problems when destroying the selector
+            elist = (TEntryList *) elist->Clone();
+      }
+      if (elist)
+         fOutput->Add(elist);
+      else
+         fillList = kFALSE;
    } else elist = 0;
 
-   // case when one uses the event list generated in a previous call
+   // case when one uses the entry list generated in a previous call
    if (option.Contains("useList")) {
       useList  = kTRUE;
       TFile f("elist.root");
-      elist = (TEventList*)f.Get("elist");
+      elist = (TEntryList*)f.Get("elist");
       if (elist) elist->SetDirectory(0); //otherwise the file destructor will delete elist
-      tree->SetEventList(elist);
+      if (tree) tree->SetEntryList(elist);
+      else {
+         // Option "useList" not supported in PROOF directly
+         Warning("Begin", "option 'useList' not supported in PROOF - ignoring");
+         Warning("Begin", "the entry list must be set on the chain *before* calling Process");         
+      }
    }
 
 }
@@ -181,7 +211,7 @@ Bool_t h1analysisProxy_Process(Long64_t entry)
 // entry is the entry number in the current Tree
 // Selection function to select D* and D0.
 
-   //in case one event list is given in input, the selection has already been done.
+   //in case one entry list is given in input, the selection has already been done.
    if (!useList) {
 
       float f1 = md0_d;
@@ -214,7 +244,7 @@ Bool_t h1analysisProxy_Process(Long64_t entry)
       
    }
    // if option fillList, fill the event list
-   if (fillList) elist->Enter(fChain->GetChainEntryNumber(entry));
+   if (fillList) elist->Enter(entry);
 
    //fill some histograms
    hdmd->Fill(dm_d);
@@ -280,9 +310,20 @@ void h1analysisProxy_Terminate()
    TLine *line = new TLine(0,0,0,c2->GetUymax());
    line->Draw();
 
-   //save the event list to a Root file if one was produced
+   // Have the number of entries on the first histogram (to cross check when running
+   // with entry lists)
+   TPaveStats *psdmd = (TPaveStats *)hdmd->GetListOfFunctions()->FindObject("stats");
+   psdmd->SetOptStat(1110);
+   c1->Modified();
+   
+   //save the entry list to a Root file if one was produced
    if (fillList) {
-      TFile efile("elist.root","recreate");
-      elist->Write();
+      elist = dynamic_cast<TEntryList*>(fOutput->FindObject("elist"));
+      if (elist) {
+         TFile efile("elist.root","recreate");
+         elist->Write();
+      } else {
+         Error("Terminate", "entry list requested but not found in output");
+      }
    }
 }

@@ -3,7 +3,8 @@
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TLine.h"
-#include "TEventList.h"
+#include "TEntryList.h"
+#include "TPaveStats.h"
 #include "TMath.h"
 
 const Double_t dxbin = (0.17-0.13)/40;   // Bin-width
