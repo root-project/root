@@ -1741,9 +1741,9 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"#include <TROOT.h>\n");
       fprintf(hf,"#include <TChain.h>\n");
       fprintf(hf,"#include <TFile.h>\n");
-      fprintf(hf,"#include <TSelectorDraw.h>\n");
       fprintf(hf,"#include <TPad.h>\n");
       fprintf(hf,"#include <TH1.h>\n");
+      fprintf(hf,"#include <TSelector.h>\n");
       fprintf(hf,"#include <TBranchProxy.h>\n");
       fprintf(hf,"#include <TBranchProxyDirector.h>\n");
       fprintf(hf,"#include <TBranchProxyTemplate.h>\n");
@@ -1787,11 +1787,9 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
       fprintf(hf, "class %s : public TSelector, public %s_Interface {\n", classname.Data(), scriptfunc.Data());
       fprintf(hf, "public :\n");
-      fprintf(hf, "   TTree          *fChain;    //!pointer to the analyzed TTree or TChain\n");
-      fprintf(hf, "   TSelectorDraw  *fHelper;   //!helper class to create the default histogram\n");
-      fprintf(hf, "   TList          *fInput;    //!input list of the helper\n");
-      fprintf(hf, "   TH1            *htemp;     //!pointer to the histogram\n");
-      fprintf(hf, "   TBranchProxyDirector  fDirector; //!Manages the proxys\n\n");
+      fprintf(hf, "   TTree          *fChain;         //!pointer to the analyzed TTree or TChain\n");
+      fprintf(hf, "   TH1            *htemp;          //!pointer to the histogram\n");
+      fprintf(hf, "   TBranchProxyDirector fDirector; //!Manages the proxys\n\n");
 
       fprintf(hf, "   // Optional User methods\n");
       fprintf(hf, "   TClass         *fClass;    // Pointer to this class's description\n");
@@ -1832,8 +1830,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       // Constructor
       fprintf(hf,      "   %s(TTree *tree=0) : \n",classname.Data());
       fprintf(hf,      "      fChain(0)");
-      fprintf(hf,   ",\n      fHelper(0)");
-      fprintf(hf,   ",\n      fInput(0)");
       fprintf(hf,   ",\n      htemp(0)");
       fprintf(hf,   ",\n      fDirector(tree,-1)");
       fprintf(hf,   ",\n      fClass                (TClass::GetClass(\"%s\"))",classname.Data());
@@ -1859,10 +1855,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"   void    Init(::TTree *tree);\n");
       fprintf(hf,"   Bool_t  Notify();\n");
       fprintf(hf,"   Bool_t  Process(Long64_t entry);\n");
-      fprintf(hf,"   void    SetOption(const char *option) { fOption = option; }\n");
-      fprintf(hf,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
-      fprintf(hf,"   void    SetInputList(TList *input) {fInput = input;}\n");
-      fprintf(hf,"   TList  *GetOutputList() const { return fOutput; }\n");
       fprintf(hf,"   void    SlaveTerminate();\n");
       fprintf(hf,"   void    Terminate();\n");
       fprintf(hf,"\n");
@@ -1906,8 +1898,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"inline %s::~%s() {\n",classname.Data(),classname.Data());
       fprintf(hf,"   // destructor. Clean up helpers.\n");
       fprintf(hf,"\n");
-      fprintf(hf,"   delete fHelper;\n");
-      fprintf(hf,"   delete fInput;\n");
       fprintf(hf,"}\n");
       fprintf(hf,"\n");
       fprintf(hf,"inline void %s::Init(TTree *tree)\n",classname.Data());
@@ -1916,14 +1906,15 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"   if (tree == 0) return;\n");
       fprintf(hf,"   fChain = tree;\n");
       fprintf(hf,"   fDirector.SetTree(fChain);\n");
-      fprintf(hf,"   delete fHelper;\n");
-      fprintf(hf,"   fHelper = new TSelectorDraw();\n");
-      fprintf(hf,"   delete fInput;\n");
-      fprintf(hf,"   fInput  = new TList();\n");
-      fprintf(hf,"   fInput->SetOwner();\n");
-      fprintf(hf,"   fInput->Add(new TNamed(\"varexp\",\"0.0\")); // Fake a double size histogram\n");
-      fprintf(hf,"   fInput->Add(new TNamed(\"selection\",\"\"));\n");
-      fprintf(hf,"   fHelper->SetInputList(fInput);\n");
+      fprintf(hf,"   if (htemp == 0) {\n");
+      fprintf(hf,"      htemp = fDirector.CreateHistogram(GetOption());\n");
+      if (cutfilename) {
+         fprintf(hf,"      htemp->SetTitle(\"%s {%s}\");\n",fScript.Data(),fCutScript.Data());
+      } else {
+         fprintf(hf,"      htemp->SetTitle(\"%s\");\n",fScript.Data());
+      }
+      fprintf(hf,"      fObject = htemp;\n");
+      fprintf(hf,"   }\n");
       fprintf(hf,"}\n");
       fprintf(hf,"\n");
       fprintf(hf,"Bool_t %s::Notify()\n",classname.Data());
@@ -1960,16 +1951,6 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"\n");
       fprintf(hf,"   Init(tree);\n");
       fprintf(hf,"\n");
-      fprintf(hf,"   TString option = GetOption();\n");
-      fprintf(hf,"   fHelper->SetOption(option);\n");
-      fprintf(hf,"   fHelper->Begin(tree);\n");
-      fprintf(hf,"   htemp = (TH1*)fHelper->GetObject();\n");
-      if (cutfilename) {
-         fprintf(hf,"   htemp->SetTitle(\"%s {%s}\");\n",fScript.Data(),fCutScript.Data());
-      } else {
-         fprintf(hf,"   htemp->SetTitle(\"%s\");\n",fScript.Data());
-      }
-      fprintf(hf,"   fObject = htemp;\n");
       fprintf(hf,"   %s_SlaveBegin(tree);\n",scriptfunc.Data());
       fprintf(hf,"\n");
       fprintf(hf,"}\n");
@@ -2030,16 +2011,16 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       fprintf(hf,"inline void %s::Terminate()\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // Function called at the end of the event loop.\n");
+      fprintf(hf,"   htemp = (TH1*)fObject;\n");
       fprintf(hf,"   Int_t drawflag = (htemp && htemp->GetEntries()>0);\n");
       fprintf(hf,"   \n");
-      fprintf(hf,"   if (!drawflag && !fOption.Contains(\"goff\") && !fOption.Contains(\"same\")) {\n");
+      fprintf(hf,"   if (gPad && !drawflag && !fOption.Contains(\"goff\") && !fOption.Contains(\"same\")) {\n");
       fprintf(hf,"      gPad->Clear();\n");
       fprintf(hf,"   } else {\n");
       fprintf(hf,"      if (fOption.Contains(\"goff\")) drawflag = false;\n");
       fprintf(hf,"      if (drawflag) htemp->Draw(fOption);\n");
       fprintf(hf,"   }\n");
       fprintf(hf,"   %s_Terminate();\n",scriptfunc.Data());
-      fprintf(hf,"   delete fHelper; fHelper = 0;\n");
       fprintf(hf,"}\n");
 
       fclose(hf);

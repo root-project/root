@@ -12,15 +12,20 @@
 #ifndef ROOT_TBranchProxyDirector
 #define ROOT_TBranchProxyDirector
 
-#ifndef ROOT_TTree
-#include "TTree.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
+
 #include <list>
+
 #ifdef R__OLDHPACC
 namespace std {
    using ::list;
 }
 #endif
+
+class TH1F;
+class TTree;
 
 namespace ROOT {
    class TBranchProxy;
@@ -44,6 +49,7 @@ namespace ROOT {
 
       void     Attach(TBranchProxy* p);
       void     Attach(TFriendProxy* f);
+      TH1F*    CreateHistogram(const char *options);
       Long64_t GetReadEntry() const { return fEntry; }
       TTree*   GetTree() const { return fTree; };
       // void   Print();

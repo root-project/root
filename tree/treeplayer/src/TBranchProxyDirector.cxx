@@ -24,6 +24,10 @@
 #include "TBranchProxy.h"
 #include "TFriendProxy.h"
 #include "TTree.h"
+#include "TEnv.h"
+#include "TH1F.h"
+#include "TPad.h"
+#include "TList.h"
 
 #include <algorithm>
 
@@ -76,6 +80,54 @@ namespace ROOT {
       // 'remembers' this BranchProxy and does not own it.  It will be use
       // to apply Tree wide operation (like reseting).
       fFriends.push_back(p);
+   }
+
+   TH1F* TBranchProxyDirector::CreateHistogram(const char *options) {
+      // Create a temporary 1D histogram.
+      
+      Int_t nbins = gEnv->GetValue("Hist.Binning.1D.x",100);
+      Double_t vmin=0, vmax=0;
+      Double_t xmin=0, xmax=0;
+      Bool_t canRebin = kFALSE;
+      TString opt( options ); 
+      Bool_t optSame = opt.Contains("same");
+      
+      if (gPad && optSame) {
+         TListIter np(gPad->GetListOfPrimitives());
+         TObject *op;
+         TH1 *oldhtemp = 0;
+         while ((op = np()) && !oldhtemp) {
+            if (op->InheritsFrom("TH1")) oldhtemp = (TH1 *)op;
+         }
+         if (oldhtemp) {
+            nbins = oldhtemp->GetXaxis()->GetNbins();
+            vmin = oldhtemp->GetXaxis()->GetXmin();
+            vmax = oldhtemp->GetXaxis()->GetXmax();
+         } else {
+            vmin = gPad->GetUxmin();
+            vmax = gPad->GetUxmax();
+         }
+      } else {
+         vmin = xmin;
+         vmax = xmax;
+         if (xmin < xmax) canRebin = kFALSE;
+      }
+      TH1F *hist = new TH1F("htemp","htemp",nbins,vmin,vmax);
+      hist->SetLineColor(fTree->GetLineColor());
+      hist->SetLineWidth(fTree->GetLineWidth());
+      hist->SetLineStyle(fTree->GetLineStyle());
+      hist->SetFillColor(fTree->GetFillColor());
+      hist->SetFillStyle(fTree->GetFillStyle());
+      hist->SetMarkerStyle(fTree->GetMarkerStyle());
+      hist->SetMarkerColor(fTree->GetMarkerColor());
+      hist->SetMarkerSize(fTree->GetMarkerSize());
+      if (canRebin) hist->SetBit(TH1::kCanRebin);
+      hist->GetXaxis()->SetTitle("var");
+      hist->SetBit(kCanDelete);
+      hist->SetDirectory(0);
+      
+      if (opt.Length() && opt.Contains("e")) hist->Sumw2();
+      return hist;
    }
 
    void TBranchProxyDirector::SetReadEntry(Long64_t entry) {
