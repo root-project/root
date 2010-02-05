@@ -3736,15 +3736,13 @@ copyout:
 }
 
 //______________________________________________________________________________
+#ifdef R__LINUX
 Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
 {
    // Read specified byte range asynchronously. Actually we tell the kernel
    // which blocks we are going to read so it can start loading these blocks
    // in the buffer cache.
 
-#ifndef R__LINUX
-   return kTRUE;
-#else
    // Shortcut to avoid having to implement dummy ReadBufferAsync() in all 
    // I/O plugins. Override ReadBufferAsync() in plugins if async is supported.
    if (IsA() != TFile::Class())
@@ -3761,8 +3759,14 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
       return kTRUE;
    }
    return kFALSE;
-#endif
 }
+#else
+Bool_t TFile::ReadBufferAsync(Long64_t , Int_t )
+{
+   //not applicable for non Linux systems
+   return kTRUE;
+}
+#endif
 
 //______________________________________________________________________________
 Int_t TFile::GetBytesToPrefetch() const
