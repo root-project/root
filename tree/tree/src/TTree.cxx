@@ -5892,9 +5892,8 @@ void TTree::SetAutoFlush(Long64_t autof)
    // Calling this function with autof<0 is interesting when it is hard to estimate
    // the size of one entry. This value is also independent of the Tree.
    //
-   // When calling SetAutoFlush with no arguments, the
-   // default value is -30000000, ie that the first AutoFlush will be done when
-   // 30 MBytes of data are written to the file.
+   // The Tree is initialized with fAutoFlush=-30000000, ie that, by default,
+   // the first AutoFlush will be done when 30 MBytes of data are written to the file.
    //
    //     CASE 3 : autof = 0
    //     ------------------
