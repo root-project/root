@@ -2328,11 +2328,11 @@ fi
 ### echo %%% Support for SSL authentication
 #
 #
-if test "x$enable_secssl" = "xyes" ; then
-   if test "x$nccflv" = "xicc" || test "x$nccflv" = "xiccx8664" ; then
+if test "x$nccflv" = "xicc" || test "x$nccflv" = "xiccx8664" ; then
+   if test "x$enable_secssl" = "xyes" ; then
       echo "SSL authentication not supported under ICC - disabling"
-      enable_secssl="no"
    fi
+   enable_secssl="no"
 fi
 if test "x$enable_secssl" = "x" ; then
    if test "x$platform" = "xlinux" || test "x$platform" = "xmacosx" ; then
