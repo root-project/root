@@ -61,7 +61,9 @@
 
 #ifdef R__LINUX
 // for posix_fadvise
+#ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600
+#endif
 #endif
 #include <fcntl.h>
 #include <errno.h>
@@ -1371,7 +1373,7 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
       }
       return kFALSE;
    }
-   
+
    Int_t k = 0;
    Bool_t result = kTRUE;
    TFileCacheRead *old = fCacheRead;
@@ -1416,7 +1418,7 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
          }
          curbegin = pos[i];
       }
-   } 
+   }
    if (buf2) delete [] buf2;
    fCacheRead = old;
    return result;
@@ -2244,7 +2246,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
             // it subinfo is likely to be a nested class.
             const Int_t sublen = strlen(subinfo->GetName());
             if ( (sublen > len) && subinfo->GetName()[len+1]==':'
-               && !subClasses.FindObject(subinfo->GetName()) /* We need to insure uniqueness */) 
+               && !subClasses.FindObject(subinfo->GetName()) /* We need to insure uniqueness */)
             {
                subClasses.Add(subinfo);
             }
@@ -3190,7 +3192,7 @@ Int_t TFile::GetFileReadCalls()
 Int_t TFile::GetReadaheadSize()
 {
    // Static function returning the readahead buffer size.
-   
+
    return fgReadaheadSize;
 }
 
@@ -3743,7 +3745,7 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
    // which blocks we are going to read so it can start loading these blocks
    // in the buffer cache.
 
-   // Shortcut to avoid having to implement dummy ReadBufferAsync() in all 
+   // Shortcut to avoid having to implement dummy ReadBufferAsync() in all
    // I/O plugins. Override ReadBufferAsync() in plugins if async is supported.
    if (IsA() != TFile::Class())
       return kTRUE;
@@ -3761,9 +3763,10 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
    return kFALSE;
 }
 #else
-Bool_t TFile::ReadBufferAsync(Long64_t , Int_t )
+Bool_t TFile::ReadBufferAsync(Long64_t , Int_t)
 {
-   //not applicable for non Linux systems
+   // Not supported yet on non Linux systems.
+
    return kTRUE;
 }
 #endif
