@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -90,6 +90,21 @@ public:
 
 };
 
+template <> class hash_compare<const char**> {
+   typedef const char** Key;
+
+public:
+   static const size_t bucket_size = 4;
+   static const size_t min_buckets = 8;
+   size_t
+   operator ()(const Key& k) const { return __gnu_cxx_hash_string(*k); }
+
+   bool
+   operator ()(const Key& k1,
+               const Key& k2) const { return strcmp(*k1, *k2) < 0; }
+
+};
+
 template <> class hash_compare<const std::string*> {
    typedef const std::string* Key;
 
@@ -117,6 +132,18 @@ public:
 
 #if defined(__GNUC__)
 namespace __gnu_cxx {
+template <> struct hash<const char**> {
+   size_t
+   operator ()(const char** __s) const {
+# if defined(__INTEL_COMPILER) && (__INTEL_COMPILER <= 800)
+      return hash_value(* __s);
+# else
+      return __stl_hash_string(* __s);
+# endif
+   }
+};
+
+
 template <> struct hash<const std::string*> {
    size_t
    operator ()(const std::string* __s) const {
@@ -138,6 +165,17 @@ template <> struct equal_to<const char*> :
    operator ()(const char* const& _Left,
                const char* const& _Right) const {
       return strcmp(_Left, _Right) == 0;
+   }
+
+
+};
+
+template <> struct equal_to<const char**> :
+   public binary_function<const char**, const char**, bool> {
+   bool
+   operator ()(const char** const& _Left,
+               const char** const& _Right) const {
+      return strcmp(*_Left, *_Right) == 0;
    }
 
 
@@ -173,6 +211,21 @@ public:
    bool
    operator ()(const Key& k1,
                const Key& k2) const { return strcmp(k1, k2) < 0; }
+
+};
+
+template <> class hash_compare<const char**> {
+   typedef const char** Key;
+
+public:
+   static const size_t bucket_size = 4;
+   static const size_t min_buckets = 8;
+   size_t
+   operator ()(const Key& k) const { return hash_value(*k); }
+
+   bool
+   operator ()(const Key& k1,
+               const Key& k2) const { return strcmp(*k1, *k2) < 0; }
 
 };
 
@@ -215,6 +268,14 @@ template <> struct less<const char*> {
 
 };
 
+template <> struct less<const char**> {
+   typedef const char** Key;
+   bool
+   operator ()(Key& k1,
+               Key& k2) const { return strcmp(*k1, *k2) < 0; }
+
+};
+
 template <> struct less<const std::string*> {
    typedef const std::string* Key;
    bool
@@ -236,6 +297,14 @@ template <> struct less<const char*> {
    bool
    operator ()(Key k1,
                Key k2) const { return strcmp(k1, k2) < 0; }
+
+};
+
+template <> struct less<const char**> {
+   typedef const char** Key;
+   bool
+   operator ()(Key k1,
+               Key k2) const { return strcmp(*k1, *k2) < 0; }
 
 };
 

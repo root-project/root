@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -21,6 +21,7 @@
 #include "Reflex/TypeTemplate.h"
 #include "Reflex/MemberTemplate.h"
 #include "Reflex/Base.h"
+#include "Reflex/Builder/TypeBuilder.h"
 
 #include "Reflex/Tools.h"
 #include "Class.h"
@@ -30,7 +31,7 @@ Reflex::Scope&
 Reflex::Scope::__NIRVANA__() {
 //-------------------------------------------------------------------------------
 // static wraper around NIRVANA, the base of the top scope.
-   static Scope s = Scope(new ScopeName("@N@I@R@V@A@N@A@", 0));
+   static Scope s = Scope(new ScopeName(Literal("@N@I@R@V@A@N@A@"), 0));
    return s;
 }
 
@@ -736,9 +737,8 @@ void
 Reflex::Scope::Unload() const {
 //-------------------------------------------------------------------------------
 // Unload a scope, i.e. delete the ScopeName's ScopeBase object.
-   if (!Reflex::Instance::HasShutdown() && *this) {
-      delete fScopeName->fScopeBase;
-   }
+   if (fScopeName)
+      const_cast<Reflex::ScopeName*>(fScopeName)->Unload();
 }
 
 

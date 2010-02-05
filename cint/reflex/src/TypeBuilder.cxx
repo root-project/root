@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -25,7 +25,23 @@
 #include "Typedef.h"
 #include "PointerToMember.h"
 #include "Reflex/Tools.h"
+#include "Reflex/internal/LiteralString.h"
 
+//-------------------------------------------------------------------------------
+Reflex::Literal::Literal(const char* s): fPtr(s) {
+//-------------------------------------------------------------------------------
+// Construct a temporary Literal, adding s to LiteralStringSet's list of string
+// literals.
+   LiteralStringSet::Instance().Add(s);
+}
+
+//-------------------------------------------------------------------------------
+Reflex::Literal::~Literal() {
+//-------------------------------------------------------------------------------
+// Destruct a temporary Literal, removing s from LiteralStringSet's list of string
+// literals.
+   LiteralStringSet::Instance().Remove(fPtr);
+}
 
 //-------------------------------------------------------------------------------
 Reflex::Type
@@ -43,7 +59,17 @@ Reflex::TypeBuilder(const char* n,
       std::string sname = Tools::GetScopeName(n);
 
       if (!Scope::ByName(sname).Id()) {
-         new ScopeName(sname.c_str(), 0);
+         Type scopeType = Type::ByName(sname);
+         if (scopeType.Id()) {
+            TypeName* scopeTypeName = (TypeName*) scopeType.Id();
+            if (scopeTypeName->LiteralName().IsLiteral()) {
+               new ScopeName(Literal(scopeTypeName->Name()), 0);
+            } else {
+               new ScopeName(sname.c_str(), 0);
+            }
+         } else {
+            new ScopeName(sname.c_str(), 0);
+         }
       }
       return Type(tname, modifiers);
    }
@@ -156,10 +182,11 @@ Reflex::EnumTypeBuilder(const char* nam,
    if (ret) {
       if (ret.IsTypedef()) {
          nam2 += " @HIDDEN@";
+         nam = nam2.c_str();
       } else { return ret; }
    }
 
-   Enum* e = new Enum(nam2.c_str(), ti, modifiers);
+   Enum* e = new Enum(nam, ti, modifiers);
 
    std::vector<std::string> valVec;
    Tools::StringSplit(valVec, values, ";");

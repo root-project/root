@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -14,7 +14,7 @@
 
 // Include files
 #include "Reflex/Kernel.h"
-#include <string>
+#include "Reflex/internal/LiteralString.h"
 
 namespace Reflex {
 // forward declarations
@@ -72,14 +72,21 @@ public:
     * Name will return a string representation of Name of the Scope
     * @return string representation of the Scope
     */
-   const std::string& Name() const;
+   const char* Name() const;
 
 
    /**
-    * Name_c_str returns a char* pointer to the qualified Scope Name
-    * @return c string to unqualified Scope Name
+    * Name will return a string representation of Name of the Scope
+    * @return string representation of the Scope
     */
-   const char* Name_c_str() const;
+   const LiteralString& LiteralName() const { return fName; }
+
+
+   /**
+    * Name will return a string representation of Name of the Scope
+    * @return string representation of the Scope
+    */
+   LiteralString& LiteralName() { return fName; }
 
 
    /**
@@ -88,6 +95,11 @@ public:
     */
    Scope ThisScope() const;
 
+
+   /**
+    * Unload reflection information for this scope.
+    */
+   void Unload();
 
    /**
     * ScopeAt will return the nth defined scope
@@ -116,7 +128,7 @@ private:
 
 private:
    /** pointer to the Name of the At in the static map */
-   std::string fName;
+   LiteralString fName;
 
    /**
     * pointer to the resolved Scope
@@ -138,16 +150,8 @@ private:
 
 
 //-------------------------------------------------------------------------------
-inline const std::string&
-Reflex::ScopeName::Name() const {
-//-------------------------------------------------------------------------------
-   return fName;
-}
-
-
-//-------------------------------------------------------------------------------
 inline const char*
-Reflex::ScopeName::Name_c_str() const {
+Reflex::ScopeName::Name() const {
 //-------------------------------------------------------------------------------
    return fName.c_str();
 }

@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -27,7 +27,7 @@
 
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_map<const std::string*, Reflex::Scope> Name2Scope_t;
+typedef __gnu_cxx::hash_map<const char**, Reflex::Scope> Name2Scope_t;
 typedef std::vector<Reflex::Scope> ScopeVec_t;
 
 //-------------------------------------------------------------------------------
@@ -66,12 +66,12 @@ Reflex::ScopeName::ScopeName(const char* name,
 //-------------------------------------------------------------------------------
 // Create the scope name dictionary info.
    fThisScope = new Scope(this);
-   sScopes()[&fName] = *fThisScope;
+   sScopes()[fName.key()] = *fThisScope;
    sScopeVec().push_back(*fThisScope);
 
    //---Build recursively the declaring scopeNames
    if (fName != "@N@I@R@V@A@N@A@") {
-      std::string decl_name = Tools::GetScopeName(fName);
+      std::string decl_name = Tools::GetScopeName(std::string(fName.c_str()));
 
       if (!Scope::ByName(decl_name).Id()) {
          new ScopeName(decl_name.c_str(), 0);
@@ -96,9 +96,11 @@ Reflex::ScopeName::ByName(const std::string& name) {
 
    if (name.size() > 2 && name[0] == ':' && name[1] == ':') {
       const std::string& k = name.substr(2);
-      it = sScopes().find(&k);
+      const char* kcstr = k.c_str();
+      it = sScopes().find(&kcstr);
    } else {
-      it = sScopes().find(&name);
+      const char* ncstr = name.c_str();
+      it = sScopes().find(&ncstr);
    }
 
    if (it != sScopes().end()) {
@@ -160,9 +162,9 @@ Reflex::ScopeName::HideName() {
 //-------------------------------------------------------------------------------
 // Append the string " @HIDDEN@" to a scope name.
    if (fName.length() == 0 || fName[fName.length() - 1] != '@') {
-      sScopes().erase(&fName);
+      sScopes().erase(fName.key());
       fName += " @HIDDEN@";
-      sScopes()[&fName] = this;
+      sScopes()[fName.key()] = this;
    }
 }
 
@@ -175,9 +177,9 @@ Reflex::ScopeName::UnhideName() {
    static const unsigned int len = strlen(" @HIDDEN@");
 
    if (fName.length() > len && fName[fName.length() - 1] == '@' && 0 == strcmp(" @HIDDEN@", fName.c_str() + fName.length() - len)) {
-      sScopes().erase(&fName);
+      sScopes().erase(fName.key());
       fName.erase(fName.length() - len);
-      sScopes()[&fName] = this;
+      sScopes()[fName.key()] = this;
    }
 }
 
@@ -246,3 +248,18 @@ Reflex::ScopeName::Scope_REnd() {
 // Return the rend iterator of the scope collection.
    return ((const std::vector<Scope> &)sScopeVec()).rend();
 }
+
+//-------------------------------------------------------------------------------
+void
+Reflex::ScopeName::Unload() {
+//-------------------------------------------------------------------------------
+// Unload reflection information for this type.
+   if (Reflex::Instance::State() != Reflex::Instance::kHasShutDown) {
+      delete fScopeBase;
+      fScopeBase = 0;
+      if (Reflex::Instance::State() != Reflex::Instance::kTearingDown) {
+         fName.ToHeap();
+      }
+   }
+}
+

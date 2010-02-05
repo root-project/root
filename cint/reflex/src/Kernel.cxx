@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -25,6 +25,7 @@
 #include "Reflex/PropertyList.h"
 #include "Reflex/MemberTemplate.h"
 #include "Reflex/Any.h"
+#include "Reflex/Builder/TypeBuilder.h"
 
 #include "Fundamental.h"
 #include "Namespace.h"
@@ -47,7 +48,7 @@ public:
 
    TFundamentalDeclarator&
    Typedef(const char* name) {
-      new Reflex::Typedef(name, fType, Reflex::FUNDAMENTAL, fType);
+      new Reflex::Typedef(Reflex::Literal(name), fType, Reflex::FUNDAMENTAL, fType);
       return *this;
    }
 
@@ -76,7 +77,8 @@ template <typename T>
 TFundamentalDeclarator
 DeclFundamental(const char* name,
                 Reflex::REPRESTYPE repres) {
-   return TFundamentalDeclarator(name, GetSizeOf<T>() (), typeid(T), repres);
+   return TFundamentalDeclarator(Reflex::Literal(name),
+                                 GetSizeOf<T>() (), typeid(T), repres);
 }
 
 
@@ -86,7 +88,7 @@ Reflex::Instance instantiate;
 
 //-------------------------------------------------------------------------------
 Reflex::Instance* Reflex::Instance::fgSingleton = 0;
-bool Reflex::Instance::fgHasShutdown = false;
+Reflex::Instance::EState Reflex::Instance::fgState = Reflex::Instance::kUninitialized;
 //-------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------
@@ -113,7 +115,7 @@ bool
 Reflex::Instance::HasShutdown() {
 //-------------------------------------------------------------------------------
 // Return true, if we shutdown Reflex (i.e. delete all the containers)
-   return fgHasShutdown;
+   return fgState == kHasShutDown;
 }
 
 
@@ -123,6 +125,7 @@ Reflex::Instance::Instance(Instance*) {
 // Initialisation of Reflex.Setup of global scope, fundamental types.
 
    fgSingleton = this;
+   fgState = kInitializing;
 
    /** initialisation of the global namespace */
    Namespace::GlobalScope();
@@ -200,6 +203,7 @@ Reflex::Instance::Instance(Instance*) {
    .Typedef("unsigned long long int")
    .Typedef("long long unsigned int");
 
+   fgState = kActive;
 }
 
 
@@ -209,12 +213,14 @@ Reflex::Instance::Shutdown() {
 //-------------------------------------------------------------------------------
 // Function to be called at tear down of Reflex, removes all memory allocations.
 
+   fgState = kTearingDown;
+
    MemberTemplateName::CleanUp();
    TypeTemplateName::CleanUp();
    TypeName::CleanUp();
    ScopeName::CleanUp();
 
-   fgHasShutdown = true;
+   fgState = kHasShutDown;
 }
 
 
@@ -228,6 +234,15 @@ Reflex::Instance::~Instance() {
    if (fgSingleton == this) {
       Shutdown();
    }
+}
+
+
+//-------------------------------------------------------------------------------
+Reflex::Instance::EState
+Reflex::Instance::State() {
+//-------------------------------------------------------------------------------
+// return Reflex instance state.
+   return fgState;
 }
 
 

@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -25,6 +25,7 @@
 #include "Reflex/internal/InternalTools.h"
 #include "Reflex/Tools.h"
 #include "Reflex/DictionaryGenerator.h"
+#include "Reflex/Builder/TypeBuilder.h"
 
 #include "Class.h"
 #include "Namespace.h"
@@ -68,7 +69,21 @@ Reflex::ScopeBase::ScopeBase(const char* scope,
    if (!declScopePtr) {
       if (scopeType == NAMESPACE) {
          declScopePtr = (new Namespace(declScope.c_str()))->ThisScope();
-      } else { declScopePtr = (new ScopeName(declScope.c_str(), 0))->ThisScope(); }
+      } else {
+         ScopeName* sn = 0;
+         Type scopeType = Type::ByName(declScope);
+         if (scopeType.Id()) {
+            TypeName* scopeTypeName = (TypeName*) scopeType.Id();
+            if (scopeTypeName->LiteralName().IsLiteral()) {
+               sn = new ScopeName(Literal(scopeTypeName->Name()), 0);
+            } else {
+               sn = new ScopeName(declScope.c_str(), 0);
+            }
+         } else {
+            sn = new ScopeName(declScope.c_str(), 0);
+         }
+         declScopePtr = sn->ThisScope();
+      }
    }
 
    // Set declaring Scope and sub-scopes
@@ -88,7 +103,7 @@ Reflex::ScopeBase::ScopeBase():
    fBasePosition(0) {
 //-------------------------------------------------------------------------------
 // Default constructor for the ScopeBase (used at init time for the global scope)
-   fScopeName = new ScopeName("", this);
+   fScopeName = new ScopeName(Literal(""), this);
    PropertyList().AddProperty("Description", "global namespace");
 }
 
@@ -521,12 +536,12 @@ Reflex::ScopeBase::Name(unsigned int mod) const {
    if (0 != (mod & (SCOPED | S))) {
       return fScopeName->Name();
    }
-   return std::string(fScopeName->Name(), fBasePosition);
+   return fScopeName->Name() + fBasePosition;
 }
 
 
 //-------------------------------------------------------------------------------
-const std::string&
+const char*
 Reflex::ScopeBase::SimpleName(size_t& pos,
                               unsigned int mod) const {
 //-------------------------------------------------------------------------------

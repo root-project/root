@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -14,13 +14,13 @@
 
 // Include files
 #include "Reflex/Kernel.h"
-#include <string>
+#include "LiteralString.h"
 #include <typeinfo>
 
 namespace Reflex {
 // forward declarations
-class TypeBase;
 class Type;
+class TypeBase;
 
 /**
  * class TypeName TypeName.h Reflex/TypeName.h
@@ -80,18 +80,13 @@ public:
 
 
    /**
-    * Name will return the string representation of the At (unique)
-    * @return At Name as a string
-    */
-   const std::string& Name() const;
-
-
-   /**
-    * Name_c_str returns a char* pointer to the unqualified At Name
+    * Name returns a char* pointer to the unqualified At Name
     * @ return c string to unqualified At Name
     */
-   const char* Name_c_str() const;
+   const char* Name() const;
 
+
+   const LiteralString& LiteralName() const { return fName; }
 
    /**
     * At returns the At object of this TypeName
@@ -99,6 +94,10 @@ public:
     */
    Type ThisType() const;
 
+   /**
+    * Unload reflection information for this type.
+    */
+   void Unload();
 
    /**
     * At will return a pointer to the nth Type in the system
@@ -130,7 +129,7 @@ private:
 
 private:
    /** the Name of the At */
-   std::string fName;
+   LiteralString fName;
 
 
    /**
@@ -157,16 +156,8 @@ private:
 } // namespace Reflex
 
 //-------------------------------------------------------------------------------
-inline const std::string&
-Reflex::TypeName::Name() const {
-//-------------------------------------------------------------------------------
-   return fName;
-}
-
-
-//-------------------------------------------------------------------------------
 inline const char*
-Reflex::TypeName::Name_c_str() const {
+Reflex::TypeName::Name() const {
 //-------------------------------------------------------------------------------
    return fName.c_str();
 }

@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -36,10 +36,11 @@ splitScopedName(const std::string& nam,
    // Split a scoped name. If returnScope is true return the scope part otherwise
    // the base part. If startFromLeft is true, parse from left otherwise from the end.
    size_t pos = 0;
+   size_t start = 0;
 
-   if (startFromLeft) {
-      pos = Tools::GetFirstScopePosition(nam);
-   } else {
+   pos = Tools::GetFirstScopePosition(nam, start);
+   if (!startFromLeft) {
+      // but we keep start!
       pos = Tools::GetBasePosition(nam);
    }
 
@@ -51,7 +52,7 @@ splitScopedName(const std::string& nam,
    }
 
    if (returnScope) {
-      return nam.substr(0, pos - 2);
+      return nam.substr(start, pos - 2 - start);
    }
    return nam.substr(pos);
 } // splitScopedName
@@ -585,7 +586,7 @@ Tools::GetBasePosition(const std::string& name) {
 
 //-------------------------------------------------------------------------------
 size_t
-Tools::GetFirstScopePosition(const std::string& name) {
+Tools::GetFirstScopePosition(const std::string& name, size_t& start) {
    // Get the position of the first scope of a scoped name.
    //
    // Note:  We must be careful of:
@@ -600,6 +601,8 @@ Tools::GetFirstScopePosition(const std::string& name) {
    int bracket_depth = 0;
    int paren_depth = 0;
    long len = name.size();
+   size_t scopePos = std::string::npos;
+   start = 0;
 
    for (long i = 0; i < len; ++i) {
       char c = name[i];
@@ -698,11 +701,20 @@ Tools::GetFirstScopePosition(const std::string& name) {
             }
          }
          --bracket_depth;
-      } else if (!paren_depth && !bracket_depth && (c == ':') && ((i + 1) < len) && (name[i + 1] == ':')) {
-         return i + 2;
+      } else if (!paren_depth && !bracket_depth){
+         if (isspace(c)) {
+            start = i + 1;
+            scopePos = std::string::npos;
+         } else if (scopePos == std::string::npos
+                    && (c == ':') && ((i + 1) < len) && (name[i + 1] == ':')) {
+            scopePos = i + 2;
+         }
       }
    }
-   return 0;
+   if (scopePos == std::string::npos)
+      scopePos = 0;
+
+   return scopePos;
 } // GetFirstScopePosition
 
 

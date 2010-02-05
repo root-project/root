@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -1829,7 +1829,7 @@ inline const char*
 Reflex::Type::Name_c_str() const {
 //-------------------------------------------------------------------------------
    if (fTypeName) {
-      return fTypeName->Name_c_str();
+      return fTypeName->Name();
    }
    return "";
 }

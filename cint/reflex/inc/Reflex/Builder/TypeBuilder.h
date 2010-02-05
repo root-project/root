@@ -44,6 +44,15 @@ FUNC VoidPtrToFunc(void* p) {
    return u.fFunc;
 }
 
+class RFLX_API Literal {
+public:
+   Literal(const char*);
+   ~Literal();
+   operator const char*() const { return fPtr; }
+ private:
+   const char* fPtr;
+};
+
 RFLX_API Type TypeBuilder(const char* n,
                           unsigned int modifiers = 0);
 

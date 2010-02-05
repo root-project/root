@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -83,7 +83,19 @@ Reflex::TypeBase::TypeBase(const char* nam,
       fScope = Scope::ByName(sname);
 
       if (fScope.Id() == 0) {
-         fScope = (new ScopeName(sname.c_str(), 0))->ThisScope();
+         ScopeName* sn = 0;
+         Type scopeType = Type::ByName(sname);
+         if (scopeType.Id()) {
+            TypeName* scopeTypeName = (TypeName*) scopeType.Id();
+            if (scopeTypeName->LiteralName().IsLiteral()) {
+               sn = new ScopeName(Literal(scopeTypeName->Name()), 0);
+            } else {
+               sn = new ScopeName(sname.c_str(), 0);
+            }
+         } else {
+            sn = new ScopeName(sname.c_str(), 0);
+         }
+         fScope = sn->ThisScope();
       }
 
       // Set declaring At
@@ -327,21 +339,21 @@ Reflex::TypeBase::Name(unsigned int mod) const {
    if (0 != (mod & (SCOPED | S))) {
       return fTypeName->Name();
    }
-   return std::string(fTypeName->Name(), fBasePosition);
+   return fTypeName->Name() + fBasePosition;
 }
 
 
 //-------------------------------------------------------------------------------
-const std::string&
+const char*
 Reflex::TypeBase::SimpleName(size_t& pos,
                              unsigned int mod) const {
 //-------------------------------------------------------------------------------
 // Return the name of the type.
    if (0 != (mod & (SCOPED | S))) {
       pos = 0;
-      return fTypeName->Name();
+   } else {
+      pos = fBasePosition;
    }
-   pos = fBasePosition;
    return fTypeName->Name();
 }
 

@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -118,13 +118,13 @@ RFLX_API void GetTemplateComponents(const std::string& Name,
                                     std::vector<std::string>& args);
 
 /**
- * getUnscopedPosition will return the position in a
+ * GetBasePosition will return the position in a
  * string where the unscoped At begins
  */
 RFLX_API size_t GetBasePosition(const std::string& name);
 
 
-RFLX_API size_t GetFirstScopePosition(const std::string& name);
+RFLX_API size_t GetFirstScopePosition(const std::string& name, size_t& start);
 
 
 /**

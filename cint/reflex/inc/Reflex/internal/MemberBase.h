@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -17,6 +17,7 @@
 #include "Reflex/PropertyList.h"
 #include "Reflex/Type.h"
 #include "Reflex/Scope.h"
+#include "Reflex/internal/LiteralString.h"
 
 namespace Reflex {
 // forward declarations
@@ -328,7 +329,7 @@ protected:
 
 private:
    /** name of member */
-   std::string fName;
+   LiteralString fName;
 
 
    /**
@@ -631,10 +632,10 @@ Reflex::MemberBase::Name(unsigned int mod) const {
       if (!DeclaringScope().IsTopScope()) {
          s += "::";
       }
-      s += fName;
+      s += fName.c_str();
       return s;
    }
-   return fName;
+   return fName.c_str();
 }
 
 

@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -558,9 +558,11 @@ void
 Reflex::Type::Unload() const {
 //-------------------------------------------------------------------------------
 //  Unload a type, i.e. delete the TypeName's TypeBase object.
-   if (!Reflex::Instance::HasShutdown() && *this) {
-      delete fTypeName->fTypeBase;
-   }
+   if (fTypeName)
+      const_cast<Reflex::TypeName*>(fTypeName)->Unload();
+   // The scope might have our name, better move it to the heap.
+   ScopeName* sn = (ScopeName*)(operator Scope().Id());
+   if (sn) sn->LiteralName().ToHeap();
 }
 
 

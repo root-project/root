@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Axel Naumann, 2009
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -100,8 +100,8 @@ public:
     * @param mod The only 'mod' support is SCOPED
     * @return name of type
     */
-   virtual const std::string& SimpleName(size_t& pos,
-                                         unsigned int mod = 0) const;
+   virtual const char* SimpleName(size_t& pos,
+                                  unsigned int mod = 0) const;
 
    /**
     * Properties will return a pointer to the PropertyNth list attached
@@ -211,7 +211,7 @@ Reflex::ScopedType::Name(unsigned int mod) const {
 
 
 //-------------------------------------------------------------------------------
-inline const std::string&
+inline const char*
 Reflex::ScopedType::SimpleName(size_t& pos,
                                unsigned int mod) const {
 //-------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -50,6 +50,7 @@ Reflex::ClassBuilderImpl::ClassBuilderImpl(const char* nam, const std::type_info
       // We found a typedef to a class with the same name
       if (c.IsTypedef()) {
          nam2 += " @HIDDEN@";
+         nam = nam2.c_str();
          c = Dummy::Type();
       }
       // Class already exists. Check if it was a class.
@@ -60,9 +61,9 @@ Reflex::ClassBuilderImpl::ClassBuilderImpl(const char* nam, const std::type_info
 
    if (!c) {
       if (Tools::IsTemplated(nam)) {
-         fClass = new ClassTemplateInstance(nam2.c_str(), size, ti, modifiers);
+         fClass = new ClassTemplateInstance(nam, size, ti, modifiers);
       } else {
-         fClass = new Class(nam2.c_str(), size, ti, modifiers, typ);
+         fClass = new Class(nam, size, ti, modifiers, typ);
       }
    } else {
       fNewClass = false;

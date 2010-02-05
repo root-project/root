@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -23,7 +23,7 @@
 
 
 //-------------------------------------------------------------------------------
-typedef __gnu_cxx::hash_map<const std::string*, Reflex::TypeName*> Name2Type_t;
+typedef __gnu_cxx::hash_map<const char**, Reflex::TypeName*> Name2Type_t;
 typedef __gnu_cxx::hash_map<const char*, Reflex::TypeName*> TypeId2Type_t;
 typedef std::vector<Reflex::Type> TypeVec_t;
 
@@ -79,7 +79,7 @@ Reflex::TypeName::TypeName(const char* nam,
 //-------------------------------------------------------------------------------
 // Construct a type name.
    fThisType = new Type(this);
-   sTypes()[&fName] = this;
+   sTypes()[fName.key()] = this;
    sTypeVec().push_back(*fThisType);
 
    if (ti) {
@@ -142,9 +142,11 @@ Reflex::TypeName::ByName(const std::string& key) {
 
    if (key.size() > 2 && key[0] == ':' && key[1] == ':') {
       const std::string& k = key.substr(2);
-      it = n2t.find(&k);
+      const char* kcstr = k.c_str();
+      it = n2t.find(&kcstr);
    } else {
-      it = n2t.find(&key);
+      const char* kcstr = key.c_str();
+      it = n2t.find(&kcstr);
    }
 
    if (it != n2t.end()) {
@@ -173,9 +175,9 @@ Reflex::TypeName::HideName() {
 //-------------------------------------------------------------------------------
 // Append the string " @HIDDEN@" to a type name.
    if (fName.length() == 0 || fName[fName.length() - 1] != '@') {
-      sTypes().erase(&fName);
+      sTypes().erase(fName.key());
       fName += " @HIDDEN@";
-      sTypes()[&fName] = this;
+      sTypes()[fName.key()] = this;
    }
 }
 
@@ -188,9 +190,9 @@ Reflex::TypeName::UnhideName() {
    static const unsigned int len = strlen(" @HIDDEN@");
 
    if (fName.length() > len && fName[fName.length() - 1] == '@' && 0 == strcmp(" @HIDDEN@", fName.c_str() + fName.length() - len)) {
-      sTypes().erase(&fName);
+      sTypes().erase(fName.key());
       fName.erase(fName.length() - len);
-      sTypes()[&fName] = this;
+      sTypes()[fName.key()] = this;
    }
 }
 
@@ -259,3 +261,19 @@ Reflex::TypeName::Type_REnd() {
 // Return rend iterator of the type container.
    return ((const std::vector<Type> &)sTypeVec()).rend();
 }
+
+
+//-------------------------------------------------------------------------------
+void
+Reflex::TypeName::Unload() {
+//-------------------------------------------------------------------------------
+// Unload reflection information for this type.
+   if (Reflex::Instance::State() != Reflex::Instance::kHasShutDown) {
+      delete fTypeBase;
+      fTypeBase = 0;
+      if (Reflex::Instance::State() != Reflex::Instance::kTearingDown) {
+         fName.ToHeap();
+      }
+   }
+}
+

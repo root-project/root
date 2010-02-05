@@ -1,7 +1,7 @@
 // @(#)root/reflex:$Id$
 // Author: Stefan Roiser 2004
 
-// Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
+// Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
 //
 // Permission to use, copy, modify, and distribute this software for any
 // purpose is hereby granted without fee, provided that this copyright and
@@ -222,15 +222,27 @@ public:
    /** destructor */
    ~Instance();
 
+   enum EState {
+      kUninitialized, // before instance construction
+      kInitializing, // the instance is being constructed
+      kActive, // the instance is running
+      kTearingDown, // the instance is being destructed
+      kHasShutDown, // the instance has been destructed
+      kNumStates
+   };
+
    /** return true if Reflex has shutdown (end of process) */
    static bool HasShutdown();
+
+   /** return Reflex instance state */
+   static EState State();
 
 private:
    Instance(Instance * createSingleton);
    static Instance& CreateReflexInstance();
 
-   static Instance* fgSingleton;
-   static bool fgHasShutdown;
+   static Instance* fgSingleton; // class singleton
+   static EState fgState; // singleton's state
    void Shutdown();
    /** default constructor */
 };    // struct Reflex
