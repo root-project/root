@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
    XrdSysLogger MLogger;
    XrdOucStream stdinEvents;    // STDIN fed events
    sigset_t myset;
+   char *xrdLogD = 0;
 
 // Establish message routing
 //
@@ -168,14 +169,15 @@ int main(int argc, char *argv[])
 //
    if (!Config.Configure(argc, argv)) exit(1);
 
-// Construct the logfile path and bind it (command line only)
+// Construct the logfile path and bind it
 //
-   if (!Config.logfn && (Config.logfn = getenv("XRDLOGDIR")))
+   if (Config.logfn || (xrdLogD = getenv("XRDLOGDIR")))
       {pthread_t tid;
        char buff[2048];
        int retc;
+       if (Config.logfn) strcpy(buff, Config.logfn);
+          else {strcpy(buff, xrdLogD); strcat(buff, "cnsdlog");}
        if (Config.logKeep) MLogger.setKeep(Config.logKeep);
-       strcpy(buff, Config.logfn); strcat(buff, "cnsdlog");
        MLogger.Bind(buff, 24*60*60);
        MLog.logger(&MLogger);
        if ((retc = XrdSysThread::Run(&tid, MLogWorker, (void *)0,

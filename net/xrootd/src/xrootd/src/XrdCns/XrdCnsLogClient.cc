@@ -227,8 +227,9 @@ int XrdCnsLogClient::Run(int Always)
 
 do{if (arkFN && time(0) >= mCheck)
       {if (!Manifest())
-          if (!Always) return 0;
-       MLog.Emsg("LogClient","Unable to create inventory at",arkURL);
+          {if (!Always) return 0;
+           MLog.Emsg("LogClient","Unable to create inventory at",arkURL);
+          }
        mCheck = time(0) + Config.mInt;
       }
 

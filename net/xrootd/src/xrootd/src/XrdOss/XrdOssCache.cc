@@ -429,8 +429,8 @@ int XrdOssCache::Alloc(XrdOssCache::allocInfo &aInfo)
        else  if (!fuzAlloc) {if (curfree > maxfree)
                                 {fsp_sel = fsp; maxfree = curfree;}}
        else {diffree = (!(curfree + maxfree) ? 0.0
-                     : static_cast<double>(::llabs(maxfree - curfree)) /
-                       static_cast<double>(        maxfree + curfree));
+                     : static_cast<double>(XRDABS(maxfree - curfree)) /
+                       static_cast<double>(       maxfree + curfree));
              if (diffree > fuzAlloc) {fsp_sel = fsp; maxfree = curfree;}
             }
       } while((fsp = fsp->next) != fspend);

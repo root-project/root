@@ -38,6 +38,7 @@ kXR_int64 XrdClientReadV::ReqReadV(XrdClientConn *xrdc, char *handle, char *dest
 
 	    memcpy( &(buflis[i].fhandle), handle, 4 ); 
 
+
 	    if (!destbuf)
 		xrdc->SubmitPlaceholderToCache(reqvect[firstreq+i].offset,
 					       reqvect[firstreq+i].offset +

@@ -364,7 +364,7 @@ ostream &operator<< (ostream &, const XrdOucString s);
 
 XrdOucString const operator+(const char *s1, const XrdOucString s2);
 XrdOucString const operator+(const char c, const XrdOucString s);
-XrdOucString const operator+(const int i, const XrdOucString s);     
+XrdOucString const operator+(const int i, const XrdOucString s);
 
 #endif
 

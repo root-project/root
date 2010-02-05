@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.65 2009/09/18 14:46:48 furano Exp $
+#              $Id: GNUmakefile,v 1.67 2010/01/07 14:27:38 ganis Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -204,7 +204,7 @@ $(XRDSTAGETOOL): $(OBJECTS) $(OBJECT_STAGETOOL) $(LIBDEPS)
 
 $(XRDCLI): $(OBJECTS) $(OBJECT_CLI) $(LIBDEPS)
 	@echo Creating executable $(XRDCLI) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECT_CLI) $(BINLIBS) $(LIBM) $(LIBS) -o $(XRDCLI)
+	$(ECHO)$(LD) $(LDOP) $(OBJECT_CLI) $(BINLIBS) $(LIBM) $(LIBS) $(LIBREADLINE) -o $(XRDCLI)
 
 $(XRDADMIN): $(PERLMOD)
 	$(ECHO)if [ "$(PERLBIN)" != "" ]; then \
@@ -583,13 +583,13 @@ $(OBJDIR)/XrdCommandLine.o: XrdCommandLine.cc ../XrdClient/XrdClientUrlInfo.hh \
   ../XrdClient/XrdClientSock.hh ../XrdClient/XrdClientConn.hh \
   ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientReadCache.hh \
   ../XrdClient/XrdClientInputBuffer.hh ../XrdSys/XrdSysSemWait.hh \
-  ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc  ../XrdOuc/XrdOucString.hh \
+  ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc ../XrdOuc/XrdOucString.hh \
   ../XrdClient/XrdClientVector.hh ../XrdClient/XrdClientPSock.hh \
   ../XrdClient/XrdClientDebug.hh ../XrdClient/XrdClientEnv.hh \
   ../XrdOuc/XrdOucEnv.hh ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysLogger.hh \
   ../XrdClient/XrdClientAdmin.hh
 	@echo Compiling XrdCommandLine.cc
-	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCommandLine.o XrdCommandLine.cc
+	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFREADLINE) $(INCLUDE) -o $(OBJDIR)/XrdCommandLine.o XrdCommandLine.cc
 
 $(OBJDIR)/XrdClientEnv.o: XrdClientEnv.cc ../XrdClient/XrdClientConst.hh \
   ../XrdClient/XrdClientEnv.hh ../XrdOuc/XrdOucEnv.hh \

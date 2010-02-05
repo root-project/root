@@ -45,7 +45,7 @@ struct XrdClientLocate_Info {
 class XrdClientAdmin : public XrdClientAbs {
 
    XrdOucString                    fInitialUrl;
-
+   bool                            DirList_low(const char *dir, vecString &entries);
    int                             LocalLocate(kXR_char *path,
 					       XrdClientVector<XrdClientLocate_Info> &res,
 					       bool writable, bool nowait, bool all = false);
@@ -85,7 +85,19 @@ class XrdClientAdmin : public XrdClientAbs {
 					    int &stagingutil);
 
    bool                            DirList(const char *dir,
-                                           vecString &);
+                                           vecString &entries, bool askallservers=false);
+
+   struct DirListInfo {
+      XrdOucString fullpath;
+      XrdOucString host;
+      long long size;
+      long id;
+      long flags;
+      long modtime;
+   };
+   bool                            DirList(const char *dir,
+                                           XrdClientVector<DirListInfo> &dirlistinfo,
+                                           bool askallservers=false);
 
    bool                            ExistFiles(vecString&,
                                               vecBool&);
@@ -93,6 +105,14 @@ class XrdClientAdmin : public XrdClientAbs {
    bool                            ExistDirs(vecString&,
                                              vecBool&);
 
+   // Compute an estimation of the available free space in the given cachefs partition
+   // The estimation can be fooled if multiple servers mount the same network storage
+   bool                            GetSpaceInfo(const char *logicalname,
+                                                long long &totspace,
+                                                long long &totfree,
+                                                long long &totused,
+                                                long long &largestchunk);
+   
    long                            GetChecksum(kXR_char *path,
                                                kXR_char **chksum);
 

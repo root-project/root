@@ -26,7 +26,6 @@ const char *XrdFrmAdminFilesCVSID = "$Id$";
 #include "XrdFrm/XrdFrmConfig.hh"
 #include "XrdFrm/XrdFrmFiles.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
-#include "XrdOss/XrdOssPath.hh"
 
 using namespace XrdFrm;
 
@@ -58,8 +57,7 @@ int XrdFrmAdmin::mkLock(const char *Lfn)
 //
    fP = new XrdFrmFiles(Pfn, opts);
    while((sP = fP->Get(ec,1)))
-        {if (sP->File[XrdOssPath::isBase]
-         && mkFile(mkLF|isPFN, sP->File[XrdOssPath::isBase]->Path)) numFiles++;}
+        {if (sP->baseFile() && mkFile(mkLF|isPFN, sP->basePath())) numFiles++;}
 
 // All done
 //
@@ -96,8 +94,7 @@ int XrdFrmAdmin::mkPin(const char *Lfn, const char *Pdata, int Pdlen)
 //
    fP = new XrdFrmFiles(Pfn, opts);
    while((sP = fP->Get(ec,1)))
-        {if (sP->File[XrdOssPath::isBase]
-         &&  mkFile(mkPF|isPFN,sP->File[XrdOssPath::isBase]->Path,Pdata,Pdlen))
+        {if (sP->baseFile() && mkFile(mkPF|isPFN,sP->basePath(),Pdata,Pdlen))
              numFiles++;
         }
 

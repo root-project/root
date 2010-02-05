@@ -363,9 +363,12 @@ int XrdLink::Close(int defer)
 
 // At this point we can have no lock conflicts, so if someone is waiting for
 // us to terminate let them know about it. Note that we will get the condvar
-// mutex while we hold the opMutex. This is the required order!
+// mutex while we hold the opMutex. This is the required order! We will also
+// zero out the pointer to the condvar while holding the opmutex.
 //
-   if (KillcvP) {KillcvP->Lock(); KillcvP->Signal(); KillcvP->UnLock();}
+   if (KillcvP) {KillcvP->  Lock(); KillcvP->Signal();
+                 KillcvP->UnLock(); KillcvP = 0;
+                }
 
 // Remove ourselves from the poll table and then from the Link table. We may
 // not hold on to the opMutex when we acquire the LTMutex. However, the link
@@ -1203,6 +1206,16 @@ int XrdLink::Terminate(const XrdLink *owner, int fdnum, unsigned int inst)
    if (killDone.Wait(int(killWait))) {wTime += killWait; KillCnt |= KillXwt;}
       else wTime = -EPIPE;
    killDone.UnLock();
+
+// Reobtain the opmutex so that we can zero out the pointer the condvar pntr
+// This is really stupid code but because we don't have a way of associating
+// an arbitrary mutex with a condvar. But since this code is rarely executed
+// the ugliness is sort of tolerable.
+//
+   lp->opMutex.Lock(); KillcvP = 0; lp->opMutex.UnLock();
+
+// Do some tracing
+//
    TRACEI(DEBUG,"Terminate " << (wTime <= 0 ? "complete ":"timeout ") <<wTime);
    return wTime;
 }

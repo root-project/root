@@ -25,17 +25,21 @@ const char *XrdFrmConfigCVSID = "$Id$";
 #include "Xrd/XrdInfo.hh"
 #include "XrdCms/XrdCmsNotify.hh"
 #include "XrdFrm/XrdFrmConfig.hh"
-#include "XrdFrm/XrdFrmTrace.hh"
+#include "XrdFrm/XrdFrmTrace.hh"  // Add to GNUmake
+#include "XrdFrm/XrdFrmUtils.hh"
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssSpace.hh"
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
+#include "XrdOuc/XrdOucExport.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
 #include "XrdOuc/XrdOucName2Name.hh"
 #include "XrdOuc/XrdOucProg.hh"
 #include "XrdOuc/XrdOucStream.hh"
+#include "XrdOuc/XrdOucPList.hh"
 #include "XrdOuc/XrdOucTList.hh"
+#include "XrdOuc/XrdOucTokenizer.hh" // Add to GNUmake
 #include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysHeaders.hh"
@@ -100,7 +104,7 @@ void *XrdFrmConfigMum(void *parg)
 // All done
 //
    theSE->mySem.Post();
-   pthread_exit((void *)0);
+// pthread_exit((void *)0);
    return (void *)0;
 }
 
@@ -123,6 +127,7 @@ void *XrdLogWorker(void *parg)
 /******************************************************************************/
   
 XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
+             : dfltPolicy("*", -2, -3, 72000, 0)
 {
    char *sP, buff[128];
 
@@ -144,8 +149,18 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
    cmsPath  = 0;
    monStage = 0;
    sSpec    = 0;
-   Solitary = 0;
+   isOTO    = 0;
+   Test     = 0;
+   Verbose  = 0;
+   pathList = 0;
+   spacList = 0;
    lockFN   = "DIR_LOCK";  // May be ".DIR_LOCK" if hidden
+   cmdHold  = -1;
+   cmdFree  = 0;
+   pVecNum  = 0;
+   pProg    = 0;
+   Fix      = 0;
+   dirHold  = 40*60*60;
 
    myUid    = geteuid();
    myGid    = getegid();
@@ -170,7 +185,7 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
         if (ss == ssAdmin) {myFrmid = "admin"; myFrmID = "ADMIN";}
    else if (ss == ssMigr)  {myFrmid = "migr";  myFrmID = "MIGR";}
    else if (ss == ssPstg)  {myFrmid = "pstg";  myFrmID = "PSTG";}
-   else if (ss == ssPurg)  {myFrmid = "purg";  myFrmID = "PURG";}
+   else if (ss == ssPurg)  {myFrmid = "purge"; myFrmID = "PURG";}
    else                    {myFrmid = "frm";   myFrmID = "FRM";}
 
 // Set correct error prefix
@@ -181,8 +196,7 @@ XrdFrmConfig::XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo)
 
 // Set correct oss type
 //
-   sprintf(buff, "XRDOSSTYPE=%s", myFrmid);
-   putenv(strdup(buff));
+   XrdOucEnv::Export("XRDOSSTYPE", myFrmid);
 
 // Set correct option prefix
 //
@@ -200,7 +214,7 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
 {
    extern XrdOss *XrdOssGetSS(XrdSysLogger *, const char *, const char *);
    XrdFrmConfigSE theSE;
-   int n, retc, isMum = 0, myXfrMax = -1, NoGo = 0, Verbose = 0;
+   int n, retc, isMum = 0, myXfrMax = -1, NoGo = 0;
    const char *temp;
    char c, buff[1024], *logfn = 0;
    long long logkeep = 0;
@@ -212,6 +226,7 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
     retc = strlen(argv[0]);
     while(retc--) if (argv[0][retc] == '/') break;
     myProg = &argv[0][retc+1];
+    vectArg = argv; numcArg = argc;
 
 // Process the options
 //
@@ -224,7 +239,9 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
                  ConfigFN = strdup(optarg);
                  break;
        case 'd': Trace.What |= TRACE_ALL;
-                 putenv((char *)"XRDDEBUG=1");
+                 XrdOucEnv::Export("XRDDEBUG","1");
+                 break;
+       case 'f': Fix = 1;
                  break;
        case 'h': Usage(0);
        case 'k': n = strlen(optarg)-1;
@@ -242,7 +259,12 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
                  break;
        case 'n': myInsName = optarg;
                  break;
+       case 'O': isOTO = 1;
+                 if (!ConfigOTO(optarg)) Usage(1);
+                 break;
        case 's': sSpec = 1;
+                 break;
+       case 'T': Test  = 1;
                  break;
        case 'v': Verbose = 1;
                  break;
@@ -289,14 +311,14 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
    sprintf(buff,"XRDINSTANCE=%s %s@%s",myProg,(myInst ? myInst:"anon"),myName);
    putenv(strdup(buff)); // XRDINSTANCE
    myInstance = strdup(index(buff,'=')+1);
-   sprintf(buff,"XRDHOST=%s", myName); putenv(strdup(buff));
-   sprintf(buff,"XRDPROG=%s", myProg); putenv(strdup(buff));
-   if (myInsName)
-      {sprintf(buff, "XRDNAME=%s", myInsName); putenv(strdup(buff));}
+   XrdOucEnv::Export("XRDHOST", myName);
+   XrdOucEnv::Export("XRDPROG", myProg);
+   if (myInsName) XrdOucEnv::Export("XRDNAME", myInsName);
 
 // We need to divert the output if we are in admin mode with no logfile
 //
-   if (!logfn && ssID == ssAdmin && !Verbose) isMum = ConfigMum(theSE);
+   if (!logfn && (ssID == ssAdmin || isOTO) && !Trace.What)
+      isMum = ConfigMum(theSE);
 
 // Put out the herald
 //
@@ -318,21 +340,27 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
 // Obtain and configure the oss (lightweight option only)
 //
    if (!isAgent)
-      {putenv(strdup("XRDREDIRECT=Q"));
-       Solitary = 1;
+      {XrdOucEnv::Export("XRDREDIRECT", "Q");
+       XrdOucEnv::Export("XRDOSSTYPE",  myFrmID);
+       if (ssID == ssMigr || ssID == ssPurg)
+          XrdOucEnv::Export("XRDOSSCSCAN", "off");
        if (!NoGo && !(ossFS=XrdOssGetSS(Say.logger(),ConfigFN,ossLib))) NoGo=1;
       }
 
-// Configure the admin component
+// Configure each specific component
 //
-   if (!NoGo && ssID == ssAdmin
-   && (ConfigN2N() || ConfigMss())) NoGo = 1;
-
-// Configure the pstg  component
-//
-   if (!NoGo && ssID == ssPstg && !isAgent
-   && (ConfigN2N() || !XrdXrootdMonitor::Init(0,&Say)
-      || !(xfrVec = ConfigCmd("xfrcmd", xfrCmd)))) NoGo = 1;
+   if (!NoGo) switch(ssID)
+      {case ssAdmin: NoGo = (ConfigN2N() || ConfigMss());
+                     break;
+       case ssMigr:  NoGo = (ConfigN2N() || ConfigMP("migratable"));
+                     break;
+       case ssPstg:  if (!isAgent && (ConfigN2N() || ConfigMss()
+                     || !(xfrVec = ConfigCmd("xfrcmd", xfrCmd)))) NoGo = 1;
+                     break;
+       case ssPurg:  NoGo = (ConfigN2N() || ConfigMP("purgeable"));
+                     break;
+       default:      break;
+      }
 
 // If we have a post-processing routine, invoke it
 //
@@ -364,7 +392,7 @@ int XrdFrmConfig::Configure(int argc, char **argv, int (*ppf)())
 //
    return !NoGo;
 }
-
+  
 /******************************************************************************/
 /* Public:                     L o c a l P a t h                              */
 /******************************************************************************/
@@ -465,6 +493,92 @@ XrdOucMsubs *XrdFrmConfig::ConfigCmd(const char *cname, char *cdata)
 }
 
 /******************************************************************************/
+/* Private:                     C o n f i g M P                               */
+/******************************************************************************/
+
+int XrdFrmConfig::ConfigMP(const char *pType)
+{
+   EPNAME("ConfigMP");
+   extern XrdOucPListAnchor *XrdOssRPList;
+   XrdOucTList *nP, *tP, *mypList = 0, *expList = 0;
+   char pDir[MAXPATHLEN+1];
+   long long pOpts, xOpt = (*pType == 'm' ? XRDEXP_MIG : XRDEXP_PURGE);
+   int i, NoGo = 0;
+
+// Verify that we have an RPList
+//
+   if (!XrdOssRPList)
+      {Say.Emsg("Config", "Cannot determine", pType, "paths."); return 1;}
+
+// Parse the arguments which consist of space names and paths
+//
+   for (i = nextArg; i < numcArg; i++)
+       {char *psVal = vectArg[i];
+        int   psLen = strlen(psVal);
+        if (*psVal == '/')
+           {pOpts = XrdOssRPList->Find(psVal);
+            if (pOpts & xOpt) mypList = InsertPL(mypList, psVal, psLen,
+                                                (pOpts & XRDEXP_NOTRW ? 0 : 1));
+               else {Say.Say("Config", psVal, "not marked", pType); NoGo = 1;}
+           } else {
+            VPInfo *vP = VPList;
+            while(vP && strcmp(psVal, vP->Name)) vP = vP->Next;
+            if (vP) spacList = new XrdOucTList(psVal, psLen, spacList);
+               else {Say.Emsg("Config", "Space", psVal, "not defined.");
+                     NoGo = 1;
+                    }
+           }
+       }
+
+// Check if we should continue
+//
+   if (NoGo) return 1;
+
+// Get correct path list
+//
+   if (!mypList)
+      {XrdOucPList *fP = XrdOssRPList->First();
+       short sval[2];
+       while(fP)
+            {sval[0] = (fP->Flag() & XRDEXP_NOTRW ? 0 : 1);
+             sval[1] = fP->Plen();
+             if (fP->Flag() & xOpt)
+                 mypList = new XrdOucTList(fP->Path(), sval, mypList);
+                 else
+                 expList = new XrdOucTList(fP->Path(), sval, expList);
+             fP = fP->Next();
+            }
+       if (!mypList)
+          {Say.Emsg("Config", "No", pType, "paths found."); return 1;}
+      }
+
+// Now we need to construct a search list which may include excludes which
+// hapen when we get nested subtrees with different options
+//
+   while((tP = mypList))
+        {if (!LocalPath(tP->text, pDir, sizeof(pDir))) NoGo = 1;
+            else {pathList = new VPInfo(pDir, int(tP->sval[0]), pathList);
+                  DEBUG("Will scan " <<(tP->sval[0]?"r/w: ":"r/o: ") <<pDir);
+                  nP = expList;
+                  while(nP)
+                       {if (!strncmp(tP->text, nP->text, tP->sval[1]))
+                           InsertXD(nP->text);
+                        nP = nP->next;
+                       }
+                  mypList = tP->next; delete tP;
+                 }
+        }
+
+// Delete the explist
+//
+   while((tP = expList)) {expList = tP->next; delete tP;}
+
+// All done now
+//
+   return NoGo;
+}
+
+/******************************************************************************/
 /* Private:                    C o n f i g M s s                              */
 /******************************************************************************/
   
@@ -478,45 +592,7 @@ int XrdFrmConfig::ConfigMss()
 }
 
 /******************************************************************************/
-/* Private:                    C o n f i g N 2 N                              */
-/******************************************************************************/
-
-int XrdFrmConfig::ConfigN2N()
-{
-   XrdSysPlugin    *myLib;
-   XrdOucName2Name *(*ep)(XrdOucgetName2NameArgs);
-
-// If we have no library path then use the default method (this will always
-// succeed).
-//
-   if (!N2N_Lib)
-      {the_N2N = XrdOucgetName2Name(&Say, ConfigFN, "", LocalRoot, RemoteRoot);
-       if (LocalRoot)  lcl_N2N = the_N2N;
-       if (RemoteRoot) rmt_N2N = the_N2N;
-       return 0;
-      }
-
-// Create a pluin object (we will throw this away without deletion because
-// the library must stay open but we never want to reference it again).
-//
-   if (!(myLib = new XrdSysPlugin(&Say, N2N_Lib))) return 1;
-
-// Now get the entry point of the object creator
-//
-   ep = (XrdOucName2Name *(*)(XrdOucgetName2NameArgs))(myLib->getPlugin("XrdOucgetName2Name"));
-   if (!ep) return 1;
-
-
-// Get the Object now
-//
-   lcl_N2N = rmt_N2N = the_N2N = ep(&Say, ConfigFN, 
-                                   (N2N_Parms ? N2N_Parms : ""),
-                                   LocalRoot, RemoteRoot);
-   return lcl_N2N == 0;
-}
-
-/******************************************************************************/
-/*                             C o n f i g M u m                              */
+/* Private:                    C o n f i g M u m                              */
 /******************************************************************************/
 
 int XrdFrmConfig::ConfigMum(XrdFrmConfigSE &theSE)
@@ -568,25 +644,101 @@ int XrdFrmConfig::ConfigMum(XrdFrmConfigSE &theSE)
    FD.stdErr = -1;
    return 1;
 }
+
+/******************************************************************************/
+/* Private:                    C o n f i g N 2 N                              */
+/******************************************************************************/
+
+int XrdFrmConfig::ConfigN2N()
+{
+   XrdSysPlugin    *myLib;
+   XrdOucName2Name *(*ep)(XrdOucgetName2NameArgs);
+
+// If we have no library path then use the default method (this will always
+// succeed).
+//
+   if (!N2N_Lib)
+      {the_N2N = XrdOucgetName2Name(&Say, ConfigFN, "", LocalRoot, RemoteRoot);
+       if (LocalRoot)  lcl_N2N = the_N2N;
+       if (RemoteRoot) rmt_N2N = the_N2N;
+       return 0;
+      }
+
+// Create a pluin object (we will throw this away without deletion because
+// the library must stay open but we never want to reference it again).
+//
+   if (!(myLib = new XrdSysPlugin(&Say, N2N_Lib))) return 1;
+
+// Now get the entry point of the object creator
+//
+   ep = (XrdOucName2Name *(*)(XrdOucgetName2NameArgs))(myLib->getPlugin("XrdOucgetName2Name"));
+   if (!ep) return 1;
+
+
+// Get the Object now
+//
+   lcl_N2N = rmt_N2N = the_N2N = ep(&Say, ConfigFN, 
+                                   (N2N_Parms ? N2N_Parms : ""),
+                                   LocalRoot, RemoteRoot);
+   return lcl_N2N == 0;
+}
   
+/******************************************************************************/
+/*                             C o n f i g O T O                              */
+/******************************************************************************/
+  
+int XrdFrmConfig::ConfigOTO(char *Parms)
+{
+   char *Comma;
+
+// Pick up free argument
+//
+   if ((Comma = index(Parms, ','))) *Comma = '\0';
+   if (XrdOuca2x::a2sp(Say, "free value", Parms, &cmdFree, 1)) return 0;
+
+// Pick up hold argument
+//
+   if (!Comma || !(*(Comma+1))) return 1;
+   if (*(Comma+1) == ',') Comma++;
+      else {Parms = Comma+1;
+            if ((Comma = index(Parms, ','))) *Comma = '\0';
+            if (XrdOuca2x::a2i(Say,"hold value",Parms,&cmdHold,0)) return 0;
+           }
+
+// All done
+//
+   return 1;
+}
+
 /******************************************************************************/
 /*                           C o n f i g P a t h s                            */
 /******************************************************************************/
   
 int XrdFrmConfig::ConfigPaths()
 {
-   char *xPath, *yPath, buff[MAXPATHLEN];
+   char *xPath, *yPath, buff[MAXPATHLEN]; 
+   const char *insName;
    int retc;
 
 // Establish the cmsd notification path
 //
-   if (!(xPath = AdminPath) && !(xPath = getenv("XRDADMINPATH")))
-      xPath = (char *)"/tmp/";
-   cmsPath = new XrdCmsNotify(&Say, xPath, myInsName, XrdCmsNotify::isServ);
+   
 
 // Set the directory where the meta information is to go
-//
-   yPath = XrdOucUtils::genPath(xPath, myInsName, "frm");
+//  XRDADMINPATH already contains the instance name
+
+   if ( (!AdminPath) && (xPath = getenv("XRDADMINPATH"))) {
+       insName = 0;
+   }
+   else {
+       if (!(xPath = AdminPath))
+           xPath = (char *)"/tmp/";
+       insName = myInsName;
+   }
+   
+   cmsPath = new XrdCmsNotify(&Say, xPath, insName, XrdCmsNotify::isServ);
+
+   yPath = XrdOucUtils::genPath(xPath, insName, "frm");
    if (AdminPath) free(AdminPath); AdminPath = yPath;
 
 // Create the admin directory if it does not exists
@@ -668,27 +820,48 @@ int XrdFrmConfig::ConfigXeq(char *var, int mbok)
 
 // Process directives specific to each subsystem
 //
-// if (ssID == ssAdmin)
-//    {if (!strcmp(var, "oss.mssgwcmd"  )) return Grab(var, &MSSCmd,    0);
-//     if (!strcmp(var, "oss.msscmd"    )) return Grab(var, &MSSCmd,    0);
-//    }
-
-   if (ssID == ssPstg || ssID == ssAdmin)
-      {if (!strcmp(var, "ofs.osslib"    )) return Grab(var, &ossLib,    0);
+   if (ssID == ssAdmin)
+      {
+       if (!strcmp(var, "ofs.osslib"    )) return Grab(var, &ossLib,    0);
        if (!strcmp(var, "oss.cache"     )) return xcache();
        if (!strcmp(var, "oss.localroot" )) return Grab(var, &LocalRoot, 0);
        if (!strcmp(var, "oss.namelib"   )) return xnml();
        if (!strcmp(var, "oss.remoteroot")) return Grab(var, &LocalRoot, 0);
+//     if (!strcmp(var, "oss.mssgwcmd"  )) return Grab(var, &MSSCmd,    0);
+//     if (!strcmp(var, "oss.msscmd"    )) return Grab(var, &MSSCmd,    0);
+      }
+
+   if (ssID == ssMigr)
+      {
+       if (!strcmp(var, "stopfile"      )) return Grab(var, &StopFile,  0);
+       if (!strcmp(var, "waittime"      )) return xwtm();
       }
 
    if (ssID == ssPstg)
       {
-       if (!strcmp(var, "xrootd.monitor")) return xmon();
+       if (!strcmp(var, "ofs.osslib"    )) return Grab(var, &ossLib,    0);
+       if (!strcmp(var, "oss.cache"     )) return xcache();
+       if (!strcmp(var, "oss.localroot" )) return Grab(var, &LocalRoot, 0);
+       if (!strcmp(var, "oss.namelib"   )) return xnml();
+       if (!strcmp(var, "oss.remoteroot")) return Grab(var, &LocalRoot, 0);
+       if (!strcmp(var, "stopfile"      )) return Grab(var, &StopFile,  0);
        if (!strcmp(var, "waittime"      )) return xwtm();
+       if (!strcmp(var, "xrootd.monitor")) return xmon();
        if (!strcmp(var, "xfrmax"        )) return xmaxx();
        if (!strcmp(var, "xfrcmd"        )) return Grab(var, &xfrCmd,    1);
-       if (!strcmp(var, "stopfile"      )) return Grab(var, &StopFile,  0);
        if (!strcmp(var, "queuepath"     )) return Grab(var, &qPath,     0);
+      }
+
+   if (ssID == ssPurg)
+      {
+       if (!strcmp(var, "dirhold"       )) return xdpol();
+       if (!strcmp(var, "oss.cache"     )) return xcache(1);
+       if (!strcmp(var, "ofs.osslib"    )) return Grab(var, &ossLib,    0);
+       if (!strcmp(var, "policy"        )) return xpol();
+       if (!strcmp(var, "polprog"       )) return xpolprog();
+       if (!strcmp(var, "queuepath"     )) return Grab(var, &qPath,     0);
+       if (!strcmp(var, "stopfile"      )) return Grab(var, &StopFile,  0);
+       if (!strcmp(var, "waittime"      )) return xwtm();
       }
 
    // No match found, complain.
@@ -700,6 +873,19 @@ int XrdFrmConfig::ConfigXeq(char *var, int mbok)
    return 0;
 }
 
+/******************************************************************************/
+/* Private:                      g e t T i m e                                */
+/******************************************************************************/
+
+int XrdFrmConfig::getTime(const char *emsg, const char *item, int *val,
+                          int minv, int maxv)
+{
+    if (strcmp(item, "forever"))
+       return  XrdOuca2x::a2tm(Say, emsg, item, val, minv, maxv);
+    *val = -1;
+    return 0;
+}
+  
 /******************************************************************************/
 /* Private:                         G r a b                                   */
 /******************************************************************************/
@@ -744,6 +930,52 @@ int XrdFrmConfig::Grab(const char *var, char **Dest, int nosubs)
 }
 
 /******************************************************************************/
+/* Private:                     I n s e r t P L                               */
+/******************************************************************************/
+  
+XrdOucTList *XrdFrmConfig::InsertPL(XrdOucTList *pL, const char *Path,
+                                    int Plen, int isRW)
+{
+   short sval[2] = {isRW, Plen};
+   XrdOucTList *pP = 0, *tP = pL;
+
+// Find insertion point
+//
+   while(tP && tP->sval[1] < Plen) {pP = tP; tP = tP->next;}
+
+// Insert new element
+//
+   if (pP) pP->next = new XrdOucTList(Path, sval, tP);
+      else       pL = new XrdOucTList(Path, sval, tP);
+
+// Return the new list
+//
+   return pL;
+}
+
+/******************************************************************************/
+/* Private:                     I n s e r t X D                               */
+/******************************************************************************/
+
+void XrdFrmConfig::InsertXD(const char *Path)
+{
+   EPNAME("InsertXD");
+   char pBuff[MAXPATHLEN], *pP;
+   int n = strlen(Path);
+
+// Make sure this does not end with a slash
+//
+   strcpy(pBuff, Path);
+   pP = pBuff + n - 1;
+   while(*pP == '/' && pP != pBuff) {*pP-- = '\0'; n--;}
+
+// Insert this directory into the exclude list for the current path
+//
+   pathList->Dir = new XrdOucTList(pBuff, n, pathList->Dir);
+   DEBUG("Excluding '" <<pBuff <<"'");
+}
+  
+/******************************************************************************/
 /* Private:                        U s a g e                                  */
 /******************************************************************************/
   
@@ -753,6 +985,53 @@ void XrdFrmConfig::Usage(int rc)
      _exit(rc);
 }
 
+/******************************************************************************/
+/* Private:                       x a p a t h                                 */
+/******************************************************************************/
+
+/* Function: xapath
+
+   Purpose:  To parse the directive: adminpath <path> [group]
+
+             <path>    the path of the FIFO to use for admin requests.
+
+             group     allows group access to the admin path
+
+   Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdFrmConfig::xapath()
+{
+    char *pval, *val;
+    mode_t mode = S_IRWXU;
+
+// Get the path
+//
+   pval = cFile->GetWord();
+   if (!pval || !pval[0])
+      {Say.Emsg("Config", "adminpath not specified"); return 1;}
+
+// Make sure it's an absolute path
+//
+   if (*pval != '/')
+      {Say.Emsg("Config", "adminpath not absolute"); return 1;}
+
+// Record the path
+//
+   if (AdminPath) free(AdminPath);
+   AdminPath = strdup(pval);
+
+// Get the optional access rights
+//
+   if ((val = cFile->GetWord()) && val[0])
+      {if (!strcmp("group", val)) mode |= S_IRWXG;
+          else {Say.Emsg("Config", "invalid admin path modifier -", val);
+                return 1;
+               }
+      }
+   AdminMode = mode;
+   return 0;
+}
 
 /******************************************************************************/
 /*                                x c a c h e                                 */
@@ -769,7 +1048,7 @@ void XrdFrmConfig::Usage(int rc)
    Output: 0 upon success or !0 upon failure.
 */
 
-int XrdFrmConfig::xcache()
+int XrdFrmConfig::xcache(int isPrg)
 {
    char *val, *pfxdir, *sfxdir;
    char grp[XrdOssSpace::minSNbsz], fn[MAXPATHLEN], dn[MAXNAMLEN];
@@ -842,61 +1121,38 @@ void XrdFrmConfig::xcacheBuild(char *grp, char *fn, int isxa)
 
    while(nP && strcmp(nP->Name, grp)) nP = nP->Next;
 
-   if (!nP) VPList = nP = new VPInfo(grp, VPList);
+   if (!nP) VPList = nP = new VPInfo(grp, 0, VPList);
 
    tP = nP->Dir;
    while(tP && strcmp(tP->text, fn)) tP = tP->next;
    if (!tP) nP->Dir = new XrdOucTList(fn, isxa, nP->Dir);
 }
-
+  
 /******************************************************************************/
-/* Private:                       x a p a t h                                 */
+/* Private:                        x d p o l                                  */
 /******************************************************************************/
+  
 
-/* Function: xapath
+/* Function: xdpol
 
-   Purpose:  To parse the directive: adminpath <path> [group]
+   Purpose:  To parse the directive: dirpolicy <sec>
 
-             <path>    the path of the FIFO to use for admin requests.
-
-             group     allows group access to the admin path
+             <sec>     number of seconds to hold an empty directory or the
+                       word 'forever'.
 
    Output: 0 upon success or !0 upon failure.
 */
+int XrdFrmConfig::xdpol()
+{   int htm;
+    char *val;
 
-int XrdFrmConfig::xapath()
-{
-    char *pval, *val;
-    mode_t mode = S_IRWXU;
-
-// Get the path
-//
-   pval = cFile->GetWord();
-   if (!pval || !pval[0])
-      {Say.Emsg("Config", "adminpath not specified"); return 1;}
-
-// Make sure it's an absolute path
-//
-   if (*pval != '/')
-      {Say.Emsg("Config", "adminpath not absolute"); return 1;}
-
-// Record the path
-//
-   if (AdminPath) free(AdminPath);
-   AdminPath = strdup(pval);
-
-// Get the optional access rights
-//
-   if ((val = cFile->GetWord()) && val[0])
-      {if (!strcmp("group", val)) mode |= S_IRWXG;
-          else {Say.Emsg("Config", "invalid admin path modifier -", val);
-                return 1;
-               }
-      }
-   AdminMode = mode;
-   return 0;
+    if (!(val = cFile->GetWord()))
+       {Say.Emsg("Config",  "dirpolicy hold time not specified"); return 1;}
+    if (XrdOuca2x::a2tm(Say,"dirpolicy hold time", val, &htm, 0)) return 1;
+    dirHold = htm;
+    return 0;
 }
-  
+
 /******************************************************************************/
 /* Private:                        x m a x x                                  */
 /******************************************************************************/
@@ -915,7 +1171,7 @@ int XrdFrmConfig::xmaxx()
 
     if (!(val = cFile->GetWord()))
        {Say.Emsg("Config", "xfrmax value not specified"); return 1;}
-    if (XrdOuca2x::a2tm(Say, "xfrmax", val, &xmax, 1)) return 1;
+    if (XrdOuca2x::a2i(Say, "xfrmax", val, &xmax, 1)) return 1;
     xfrMax = xmax;
     return 0;
 }
@@ -1072,6 +1328,226 @@ int XrdFrmConfig::xnml()
 }
 
 /******************************************************************************/
+/* Private:                         x p o l                                   */
+/******************************************************************************/
+
+/* Function: xpol
+
+   Purpose:  To parse the directive: policy {*|sname} {nopurge|min [max]] [opts]
+
+             *         The default policy for all spaces.
+
+             sname     The policy to apply for this space. Defaults apply for
+                       unspecified values. To make sure the specified default
+                       is used, the '*' entry must appear first.
+
+             nopurge   Turns off purging.
+
+             min%      Minimum free space; purge starts when less available.
+                       Can be specified as a percentage (i.e., n%) or an
+                       absolute size value (with k, m, g, t suffix).
+                       Default: 5%
+
+             max%      Maximum free space; purge stops  when more available.
+                       Must be specified in the same units as min and must be
+                       greater than min.
+                       Default: min% + 2 or min * 1.2
+
+       opts: hold <tm> Time to hold a file before it can be purged. The <tm>
+                       can be a suffixed number or 'forever'.
+                       Default: 20h (20*3600)s
+
+             polprog   Invoke the policy program to do final determination.
+
+
+   Output: 0 upon success or !0 upon failure.
+*/
+int XrdFrmConfig::xpol()
+{
+   Policy *pP = &dfltPolicy;
+   char *val, sname[XrdOssSpace::minSNbsz];
+   long long minP = dfltPolicy.minFree, maxP = dfltPolicy.maxFree;
+   int       Hold = dfltPolicy.Hold, Ext = 0;
+   struct purgeopts {const char *opname; int isTime; int *oploc;} pgopts[] =
+      {
+       {"polprog", -1, &Ext},
+       {"hold",     1, &Hold}
+      };
+   int i, rc, numopts = sizeof(pgopts)/sizeof(struct purgeopts);
+
+// Get the space name
+//
+   if (!(val = cFile->GetWord()))
+      {Say.Emsg("Config", "space name not specified"); return 1;}
+   if (strlen(val) >= sizeof(sname))
+      {Say.Emsg("Config", "space name '", val, "' too long"); return 1;}
+
+// If we have an equal sign then an external policy is being defined
+//
+   if (!strcmp("=", val)) return xpolprog();
+   strcpy(sname, val);
+
+// The next item may be minimum percentage followed by a maximum percentage
+// Otherwise, it may be 'nopurge'.
+//
+   if (    (val = cFile->GetWord()) && isdigit(*val))
+      {if (    XrdOuca2x::a2sp(Say, "min free", val, &minP, 1)) return 1;
+       if ((val = cFile->GetWord()) && isdigit(*val))
+          {if (XrdOuca2x::a2sp(Say, "max free", val, &maxP, 1)) return 1;
+           if ((minP < 0 && maxP >= 0) || (minP >= 0 && maxP < 0))
+              {Say.Emsg("Config", "purge min/max may not differ in type.");
+               return 1;
+              }
+           if (XRDABS(minP) >= XRDABS(maxP))
+              {Say.Emsg("Config", "purge min must be < max value."); return 1;}
+           val = cFile->GetWord();
+          } else {
+           if (minP < 0) maxP = (minP < -99 ? -100 : minP - 1);
+              else       maxP = (minP * 120LL)/100LL;
+          }
+      } else if (val && !strcmp(val, "nopurge"))
+                {minP = maxP = 0;
+                 if ((val = cFile->GetWord()))
+                    {Say.Say("Config warning: ignoring extraneous policy option '",val,"'.");
+                     val = 0;
+                    }
+                }
+
+// Pick up the remining options
+//
+   while(val)
+        {for (i = 0; i < numopts; i++) if (!strcmp(val,pgopts[i].opname)) break;
+         if (i >= numopts)
+            {Say.Say("Config warning: ignoring invalid policy option '",val,"'.");
+             val = cFile->GetWord();
+             continue;
+            }
+         if (pgopts[i].isTime < 0) *(pgopts[i].oploc) = 1;
+            else {if (!(val = cFile->GetWord()))
+                     {Say.Emsg("Config", "policy", pgopts[i].opname,
+                                         "argument not specified.");
+                      return 1;
+                     }
+                  rc = (pgopts[i].isTime
+                     ?         getTime(    "purge value",val,pgopts[i].oploc,0)
+                     : XrdOuca2x::a2i (Say,"purge value",val,pgopts[i].oploc,0));
+                  if (rc) return 1;
+                 }
+         val = cFile->GetWord();
+        }
+
+// If an external policy applies, it must be present
+//
+   if (Ext && !pProg)
+      {Say.Emsg("Config", "External policy has not been pre-defined.");
+       return 1;
+      }
+
+// Add this policy definition
+//
+   while(pP && strcmp(pP->Sname, sname)) pP = pP->Next;
+   if (pP) {pP->minFree=minP; pP->maxFree=maxP; pP->Hold=Hold; pP->Ext=Ext;}
+      else {pP = new Policy(sname, minP, maxP, Hold, Ext);
+            pP->Next = dfltPolicy.Next; dfltPolicy.Next = pP;
+           }
+    return 0;
+}
+
+/******************************************************************************/
+/* Private:                     x p o l p r o g                               */
+/******************************************************************************/
+  
+/* Function: xpolprog
+
+   Purpose:  To parse the directive: policy = [vars] |<prog> [args]
+
+   Where:
+             =         Defines an external policy via a program, as follows:
+
+             vars      The information to ship to the program via stdin:
+                       atime   - access time
+                       ctime   - create time
+                       fname   - the filename itself
+                       fsize   - file size
+                       fspace  - free  space
+                       mtime   - modify time
+                       pfn     - physical file name
+                       sname   - space name
+                       tspace  - total space
+
+             |<prog>   The name of the policy program to receive the info.
+
+             args      Optional program arguments (substituted), up to 8.
+
+   Output: 0 upon success or !0 upon failure.
+*/
+int XrdFrmConfig::xpolprog()
+{
+   char *val, pBuff[4096], *pbP = pBuff;
+   struct polopts {const char *opname; int opval;} plopts[] =
+      {
+       {"atime",  PP_atime },
+       {"ctime",  PP_ctime },
+       {"fname",  PP_fname },
+       {"fsize",  PP_fsize },
+       {"fspace", PP_fspace},
+       {"mtime",  PP_mtime },
+       {"pfn",    PP_pfn   },
+       {"sname",  PP_sname },
+       {"tspace", PP_tspace},
+       {"usage",  PP_usage}
+      };
+   int i, n, numopts = sizeof(plopts)/sizeof(struct polopts);
+
+// Get the first token
+//
+   if (!(val = cFile->GetWord()))
+      {Say.Emsg("Config", "policy program not specified"); return 1;}
+   pVecNum = 0;
+
+// Pick up the remining options
+//
+   while(val && *val != '|')
+        {for (i = 0; i < numopts; i++) if (!strcmp(val,plopts[i].opname)) break;
+         if (i >= numopts)
+            {Say.Say("Config warning: ignoring invalid policy option '",val,"'.");
+             val = cFile->GetWord();
+             continue;
+            }
+         if (pVecNum >= pVecMax)
+            {Say.Emsg("Config", "To many policy program variables specified.");
+             return 1;
+            }
+         pVec[pVecNum++] = static_cast<char>(plopts[i].opval);
+         val = cFile->GetWord();
+        }
+
+// Pick up the program
+//
+   if (val) val++;
+   if (val && !(*val)) val = cFile->GetWord();
+   if (!val)
+      {Say.Emsg("Config", "policy program not specified."); return 1;}
+   i = strlen(val);
+   if (i >= (int)sizeof(pBuff)-8)
+      {Say.Emsg("Config", "policy program name is too long."); return 1;}
+   strcpy(pBuff, val); pbP = pBuff+i; *(pbP+1) = '\0';
+
+// Now get any optional arguments
+//
+   n = sizeof(pBuff) - i - 1;
+   if (!cFile->GetRest(pbP+1, n))
+      {Say.Emsg("Config", "policy program args are too long."); return 1;}
+   if (*(pbP+1)) *pbP = ' ';
+
+// Record the program
+//
+   if (pProg) free(pProg);
+   pProg = strdup(pBuff);
+   return 0;
+}
+
+/******************************************************************************/
 /* Private:                         x w t m                                   */
 /******************************************************************************/
 
@@ -1084,12 +1560,12 @@ int XrdFrmConfig::xnml()
    Output: 0 upon success or !0 upon failure.
 */
 int XrdFrmConfig::xwtm()
-{   int wscan = 0;
+{   int wscan = 0, wtime = (Test ? 1 : 30);
     char *val;
 
     if (!(val = cFile->GetWord()))
        {Say.Emsg("Config", "wait time not specified"); return 1;}
-    if (XrdOuca2x::a2tm(Say, "wait time", val, &wscan, 30)) return 1;
+    if (XrdOuca2x::a2tm(Say, "wait time", val, &wscan, wtime)) return 1;
     WaitTime = wscan;
     return 0;
 }

@@ -39,37 +39,40 @@ extern XrdSysError BwmEroute;
 /*                         L o c a l   C l a s s e s                          */
 /******************************************************************************/
   
-class XrdBwmHandleCB : public XrdOucErrInfo
+class XrdBwmHandleCB : public XrdOucEICB, public XrdOucErrInfo
 {
 public:
 
-void *operator new(size_t size)
-                  {void *mP;
+static
+XrdBwmHandleCB *Alloc()
+                  {XrdBwmHandleCB *mP;
                    xMutex.Lock();
-                   if (!(mP = Free)) mP = malloc(size);
-                      else memcpy(&Free, mP, sizeof(mP));
+                   if (!(mP = Free)) mP = new XrdBwmHandleCB;
+                      else Free = mP->Next;
                    xMutex.UnLock();
                    return mP;
                   }
 
-void  operator delete(void *p)
+void  Done(int &Results, XrdOucErrInfo *eInfo)
                   {xMutex.Lock();
-                   memcpy(p, &Free, sizeof(p));
-                   Free = p;
+                   Next = Free;
+                   Free = this;
                    xMutex.UnLock();
                   }
 
-      XrdBwmHandleCB() {}
+int   Same(unsigned long long arg1, unsigned long long arg2) {return 0;}
+
+      XrdBwmHandleCB() : Next(0) {}
      ~XrdBwmHandleCB() {}
 
 private:
-
-static XrdSysMutex xMutex;
-static void       *Free;
+       XrdBwmHandleCB *Next;
+static XrdSysMutex     xMutex;
+static XrdBwmHandleCB *Free;
 };
 
-XrdSysMutex XrdBwmHandleCB::xMutex;
-void       *XrdBwmHandleCB::Free = 0;
+XrdSysMutex     XrdBwmHandleCB::xMutex;
+XrdBwmHandleCB *XrdBwmHandleCB::Free = 0;
   
 /******************************************************************************/
 /*                     E x t e r n a l   L i n k a g e s                      */
@@ -206,7 +209,7 @@ XrdBwmHandle *XrdBwmHandle::Alloc(XrdBwmHandle *old_hP)
 void *XrdBwmHandle::Dispatch()
 {
    EPNAME("Dispatch");
-   XrdBwmHandleCB *erP = new XrdBwmHandleCB;
+   XrdBwmHandleCB *erP = XrdBwmHandleCB::Alloc();
    XrdBwmHandle   *hP;
    char *RespBuff;
    int   RespSize, readyH, Result, Err;
@@ -244,7 +247,7 @@ void *XrdBwmHandle::Dispatch()
        if (!Err) Policy->Done(readyH);
       } else {
        hP->myEICB.Wait(); hP->rTime = time(0);
-       erP->setErrCB(hP->ErrCB, hP->ErrCBarg);
+       erP->setErrCB((XrdOucEICB *)erP, hP->ErrCBarg);
        if (Err) {hP->Status = Idle; Result = SFS_ERROR;}
           else  {hP->Status = Dispatched;
                  erP->setErrCode(strlen(RespBuff));
@@ -254,7 +257,7 @@ void *XrdBwmHandle::Dispatch()
              <<(hP->Parms.Direction == XrdBwmPolicy::Incomming ? " <- ":" -> ")
              <<hP->Parms.RmtNode);
        hP->ErrCB->Done(Result, (XrdOucErrInfo *)erP);
-       erP = new XrdBwmHandleCB;
+       erP = XrdBwmHandleCB::Alloc();
       }
     hP->hMutex.UnLock();
    } while(1);

@@ -111,7 +111,7 @@ XrdCmsNode *XrdCmsCluster::Add(XrdLink *lp, int port, int Status,
    const char *act = "";
    unsigned int ipaddr;
    XrdCmsNode *nP = 0;
-   int Slot, Free = -1, Bump1 = -1, Bump2 = -1, Bump3 = -1;
+   int Slot, Free = -1, Bump1 = -1, Bump2 = -1, Bump3 = -1, aSet = 0;
    int tmp, Special = (Status & (CMS_isMan|CMS_isPeer));
    XrdSysMutexHelper STMHelper(STMutex);
 
@@ -124,15 +124,16 @@ XrdCmsNode *XrdCmsCluster::Add(XrdLink *lp, int port, int Status,
 // Slot  = Reconnecting node
 // Free  = Available slot           ( 1st in table)
 // Bump1 = Disconnected server      (last in table)
-// Bump2 = Connected    server      (last in table)
+// Bump2 = Connected    server      (last in table) if new one is managr/peer
 // Bump3 = Disconnected managr/peer ( 1st in table) if new one is managr/peer
 //
    for (Slot = 0; Slot < STMax; Slot++)
        if (NodeTab[Slot])
           {if (NodeTab[Slot]->isNode(ipaddr, theNID)) break;
-//Conn//   if (NodeTab[Slot]->isConn)
-              {if (!NodeTab[Slot]->isPerm)   Bump2 = Slot; // Last conn Server
-//Disc//      } else {
+/*Conn*/   if (NodeTab[Slot]->isConn)
+              {if (!NodeTab[Slot]->isPerm && Special)
+                                             Bump2 = Slot; // Last conn Server
+/*Disc*/      } else {
                if ( NodeTab[Slot]->isPerm)
                   {if (Bump3 < 0 && Special) Bump3 = Slot;}//  1st disc Man/Pr
                   else                       Bump1 = Slot; // Last disc Server
@@ -171,7 +172,9 @@ XrdCmsNode *XrdCmsCluster::Add(XrdLink *lp, int port, int Status,
                     return 0;
                    }
 
-                if (NodeTab[Slot] && !(Status & CMS_isPeer)) sendAList(lp);
+                if (Status & CMS_isMan) {setAltMan(Slot,ipaddr,sport); aSet=1;}
+                if (NodeTab[Slot] && !(Status & CMS_isPeer))
+                   sendAList(NodeTab[Slot]->Link);
 
                 DEBUG(lp->ID << " bumps " << NodeTab[Slot]->Ident <<" #" <<Slot);
                 NodeTab[Slot]->Lock();
@@ -187,7 +190,7 @@ XrdCmsNode *XrdCmsCluster::Add(XrdLink *lp, int port, int Status,
 
 // Assign new server
 //
-   if (Status & CMS_isMan) setAltMan(Slot, ipaddr, sport);
+   if (!aSet && (Status & CMS_isMan)) setAltMan(Slot, ipaddr, sport);
    if (Slot > STHi) STHi = Slot;
    nP->isBound   = 1;
    nP->isConn    = 1;
@@ -237,7 +240,7 @@ SMask_t XrdCmsCluster::Broadcast(SMask_t smask, const struct iovec *iod,
    EPNAME("Broadcast")
    int i;
    XrdCmsNode *nP;
-   SMask_t bmask, unQueried = 0;
+   SMask_t bmask, unQueried(0);
 
 // Obtain a lock on the table and screen out peer nodes
 //
@@ -304,7 +307,7 @@ SMask_t XrdCmsCluster::getMask(unsigned int IPv4adr)
 {
    int i;
    XrdCmsNode *nP;
-   SMask_t smask = 0;
+   SMask_t smask(0);
 
 // Obtain a lock on the table
 //
@@ -327,7 +330,7 @@ SMask_t XrdCmsCluster::getMask(unsigned int IPv4adr)
 SMask_t XrdCmsCluster::getMask(const char *Cid)
 {
    XrdCmsNode *nP;
-   SMask_t smask = 0;
+   SMask_t smask(0);
    XrdOucTList *cP;
    int i = 1, Cnum = -1;
 
@@ -424,15 +427,34 @@ int XrdCmsCluster::Locate(XrdCmsSelect &Sel)
 {
    EPNAME("Locate");
    XrdCmsPInfo   pinfo;
-   SMask_t       qfVec = 0;
+   SMask_t       qfVec(0);
+   char         *Path;
    int           retc = 0;
+
+// Check if this is a locate for all current servers
+//
+   if (*Sel.Path.Val != '*') Path = Sel.Path.Val;
+      else {if (*(Sel.Path.Val+1) == '\0')
+               {Sel.Vec.hf = ~0LL; Sel.Vec.pf = Sel.Vec.wf = 0;
+                return 0;
+               }
+            Path = Sel.Path.Val+1;
+           }
 
 // Find out who serves this path
 //
-   if (!Cache.Paths.Find(Sel.Path.Val, pinfo) || !pinfo.rovec)
+   if (!Cache.Paths.Find(Path, pinfo) || !pinfo.rovec)
       {Sel.Vec.hf = Sel.Vec.pf = Sel.Vec.wf = 0;
        return -1;
       } else Sel.Vec.wf = pinfo.rwvec;
+
+// Check if this was a non-lookup request
+//
+   if (*Sel.Path.Val == '*')
+      {Sel.Vec.hf = pinfo.rovec; Sel.Vec.pf = 0;
+       Sel.Vec.wf = pinfo.rwvec;
+       return 0;
+      }
 
 // Complete the request info object if we have one
 //
@@ -481,7 +503,7 @@ void *XrdCmsCluster::MonPerf()
    struct iovec ioV[] = {{(char *)&Usage, sizeof(Usage)}};
    int ioVnum = sizeof(ioV)/sizeof(struct iovec);
    int ioVtot = sizeof(Usage);
-   SMask_t allNodes = ~static_cast<SMask_t>(0);
+   SMask_t allNodes(~0);
    int uInterval = Config.AskPing*Config.AskPerf;
 
 // Sleep for the indicated amount of time, then ask for load on each server
@@ -596,10 +618,6 @@ void XrdCmsCluster::Remove(const char *reason, XrdCmsNode *theNode, int immed)
 //
    theNode->isOffline = 1;
 
-// If the node is part of the cluster, do not count it anymore
-//
-   if (theNode->isBound) {theNode->isBound = 0; NodeCnt--;}
-
 // If the node is connected the simply close the connection. This will cause
 // the connection handler to re-initiate the node removal. The LockHandler
 // destructor will release the node table and node object locks as needed.
@@ -611,11 +629,16 @@ void XrdCmsCluster::Remove(const char *reason, XrdCmsNode *theNode, int immed)
        return;
       }
 
-// Indicate new state of this nodes if we are a reporting manager
+
+// If the node is part of the cluster, do not count it anymore and
+// indicate new state of this nodes if we are a reporting manager
 //
-   if (Config.asManager()) 
-      CmsState.Update(XrdCmsState::Counts, theNode->isSuspend ? 0 : -1,
-                                           theNode->isNoStage ? 0 : -1);
+   if (theNode->isBound)
+      {theNode->isBound = 0; NodeCnt--;
+       if (Config.asManager())
+          CmsState.Update(XrdCmsState::Counts, theNode->isSuspend ? 0 : -1,
+                                               theNode->isNoStage ? 0 : -1);
+      }
 
 // If this is an immediate drop request, do so now. Drop() will delete
 // the node object and remove the node lock. So, tell LockHandler that.
@@ -697,7 +720,8 @@ int XrdCmsCluster::Select(XrdCmsSelect &Sel)
 // which will force the client to wait. Otherwise, compute the primary and
 // secondary selections. If there are none, the client may have to wait if we
 // have servers that we can query regarding the file. Note that for files being
-// opened in write mode, only one writable copy may exist.
+// opened in write mode, only one writable copy may exist unless this is a
+// meta-operation (e.g., remove) in which case the file itself remain unmodified
 //
    if (!(Sel.Opts & XrdCmsSelect::Refresh)
    &&   (retc = Cache.GetFile(Sel, pinfo.rovec)))
@@ -705,7 +729,8 @@ int XrdCmsCluster::Select(XrdCmsSelect &Sel)
           {     if (Sel.Vec.bf) pmask = smask = 0;
            else if (Sel.Vec.hf)
                    {if (Sel.Opts & XrdCmsSelect::NewFile) return SelFail(Sel,eExists);
-                    if (Multiple(Sel.Vec.hf))             return SelFail(Sel,eDups);
+                    if (!(Sel.Opts & XrdCmsSelect::isMeta)
+                    &&  Multiple(Sel.Vec.hf))             return SelFail(Sel,eDups);
                     if (!(pmask = Sel.Vec.hf & amask))    return SelFail(Sel,eROfs);
                     smask = 0;
                    }
@@ -775,7 +800,7 @@ int XrdCmsCluster::Select(XrdCmsSelect &Sel)
 int XrdCmsCluster::Select(int isrw, SMask_t pmask,
                           int &port, char *hbuff, int &hlen)
 {
-   static const SMask_t smLow = 255;
+   static const SMask_t smLow(255);
    XrdCmsNode *nP = 0;
    SMask_t tmask;
    int Snum = 0;
@@ -1356,8 +1381,9 @@ XrdCmsNode *XrdCmsCluster::SelbyRef(SMask_t mask, int &nump, int &delay,
 void XrdCmsCluster::sendAList(XrdLink *lp)
 {
    static CmsTryRequest Req = {{0, kYR_try, 0, 0}, 0};
+   static int HdrSize = sizeof(Req.Hdr) + sizeof(Req.sLen);
    static char *AltNext = AltMans;
-   static struct iovec iov[4] = {{(caddr_t)&Req, sizeof(Req)},
+   static struct iovec iov[4] = {{(caddr_t)&Req, HdrSize},
                                  {0, 0},
                                  {AltMans, 0},
                                  {(caddr_t)"\0", 1}};
@@ -1377,14 +1403,15 @@ void XrdCmsCluster::sendAList(XrdLink *lp)
         dlen = iov[1].iov_len + iov[2].iov_len;
       }
 
-// Complete the request
+// Complete the request (account for trailing null character)
 //
+   dlen++;
    Req.Hdr.datalen = htons(static_cast<unsigned short>(dlen+sizeof(Req.sLen)));
    Req.sLen = htons(static_cast<unsigned short>(dlen));
 
 // Send the list of alternates (rotated once)
 //
-   lp->Send(iov, 4, dlen+sizeof(Req));
+   lp->Send(iov, 4, dlen+HdrSize);
 }
 
 /******************************************************************************/

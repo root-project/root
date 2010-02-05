@@ -59,6 +59,23 @@ Etype         Type;   // One of the above. If isLink then Link is invalid!
 //
 NSEnt        *Index(int &rc, const char **dPath=0);
 
+// The CallBack class is used to intercept empty directories. When set by a
+// call to setCallBack(); should an empty directory (i.e., one with no entries
+// or only with a lock file) in encountered a call is made to to the isEmpty()
+// method. If lkFn is zero, the directory is empty; otherwise, lkFn is the name
+// of the singleton lock file. To unset the callback use setCallBack(0);
+//
+class CallBack
+{public:
+virtual
+void     isEmpty(struct stat *dStat, const char *dPath, const char *lkFn)=0;
+
+         CallBack() {}
+virtual ~CallBack() {}
+};
+
+void         setCallBack(CallBack *cbP=0) {edCB = cbP;}
+
 // The following are processing options passed to the constructor
 //
 static const int retDir =  0x0001; // Return directories (implies retStat)
@@ -76,13 +93,15 @@ static const int skpErrs=  0x8000; // Skip any entry causing an error
              XrdOucNSWalk(XrdSysError *erp,  // Error msg object. If 0->silent
                          const char *dname,  // Initial directory path
                          const char *LKfn=0, // Lock file name (see note below)
-                         int opts=retAll);   // Options        (see above)
+                         int opts=retAll,    // Options        (see above)
+                         XrdOucTList *xP=0); // 1st Level dir exclude list
             ~XrdOucNSWalk();
 
 // Note: When Lkfn is supplied and it exists in a directory about to be indexed
 //       then the file is opened in r/w mode and an exclusive lock is obtained.
 //       If either fails, the the directory is not indexed and Index() will
-//       return null pointer with rc != 0.
+//       return null pointer with rc != 0. Note that the lkfn is not returned
+//       as a directory entry if an empty directory call back has been set.
 
 private:
 void          addEnt(XrdOucNSWalk::NSEnt *eP);
@@ -90,13 +109,17 @@ int           Build();
 int           getLink(XrdOucNSWalk::NSEnt *eP);
 int           getStat(XrdOucNSWalk::NSEnt *eP, int doLstat=0);
 int           getStat();
+int           inXList(const char *dName);
 int           isSymlink();
 int           LockFile();
 void          setPath(char *newpath);
 
 XrdSysError  *eDest;
 XrdOucTList  *DList;
+XrdOucTList  *XList;
 struct NSEnt *DEnts;
+struct stat   dStat;
+CallBack     *edCB;
 char          DPath[1032];
 char         *File;
 char         *LKFn;
@@ -104,5 +127,6 @@ int           LKfd;
 int           DPfd;
 int           Opts;
 int           errOK;
+int           isEmpty;
 };
 #endif

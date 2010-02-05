@@ -137,16 +137,17 @@ int XrdCnsSsiApplyM(const char *Mount, char *xP, void *Arg)
    static int doInit = 1;
    int n, iFD = *(int *)Arg;
 
-// Initialize the header (needs to be done once
+// Initialize the header (needs to be done once)
 //
    if (doInit)
       {memset(Hdr, ' ', sizeof(Hdr));
        aP->Type = XrdCnsLogRec::lrMount;
        doInit = 0;
-      } else aP->Mount = *xP;
+      }
 
 // Write out a directory record. Terminate processing upon error
 //
+   aP->Mount = *xP;
    iov[1].iov_base = (char *)Mount; n = strlen(Mount);
    iov[1].iov_len  = n;
 
@@ -167,10 +168,11 @@ int XrdCnsSsiApplyS(const char *Space, char *xP, void *Arg)
       {memset(Hdr, ' ', sizeof(Hdr));
        aP->Type = XrdCnsLogRec::lrSpace;
        doInit = 0;
-      } else aP->Mount = *xP;
+      }
 
 // Write out a directory record. Terminate processing upon error
 //
+   aP->Space = *xP;
    iov[1].iov_base = (char *)Space; n = strlen(Space);
    iov[1].iov_len  = n;
 
@@ -610,9 +612,9 @@ XrdCnsSsiFRec *XrdCnsSsi::AddFile(char *lfn, char *lP)
 
 // Extract out the directory, file name, space name and mount point, if any
 //
-   if ((sP = index(lfn, '?'))) *sP = '\0';
+   if ((sP = index(lfn, ' '))) *sP++ = '\0';
    if (!(fP = rindex(lfn+1, '/')) || !(*(fP+1)))
-      {if (sP) *sP = '?';
+      {if (sP) *(sP-1) = ' ';
        Say.V("Invalid log record ", lP); nErrs++;
        return 0;
       }
@@ -620,7 +622,7 @@ XrdCnsSsiFRec *XrdCnsSsi::AddFile(char *lfn, char *lP)
    if (sP)
       {if (!(mP = index(sP, ' '))) aP->Mount = mountP->Default();
           else {*mP++ = '\0';      aP->Mount = mountP->Add(mP);}
-       if (*(sP+1))                aP->Space = spaceP->Add(sP+1);
+       if (*sP)                    aP->Space = spaceP->Add(sP);
           else                     aP->Space = spaceP->Default();
       } else {                     aP->Mount = mountP->Default();
                                    aP->Space = spaceP->Default();

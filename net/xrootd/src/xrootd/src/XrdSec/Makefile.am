@@ -4,12 +4,12 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.7 2008/12/11 02:48:46 abh Exp $
-## Checked in by $Author: abh $
+## Version info: $Id: Makefile.am,v 1.8 2010/01/12 15:04:06 ganis Exp $
+## Checked in by $Author: ganis $
 #######################################################################
 xrootdsecincdir = $(includedir)/xrootd/XrdSec
 
-xrootdsecinc_HEADERS = XrdSecInterface.hh XrdSecEntity.hh
+xrootdsecinc_HEADERS = XrdSecInterface.hh XrdSecEntity.hh XrdSecTLayer.hh
 
 lib_LTLIBRARIES = libXrdSec.la
 

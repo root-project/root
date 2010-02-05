@@ -314,7 +314,7 @@ int XrdCmsConfig::Configure2()
   Output:   0 upon success or !0 otherwise.
 */
    EPNAME("Configure2");
-   int NoGo = 0;
+   int Who, NoGo = 0;
    char *p, buff[512];
 
 // Print herald
@@ -377,7 +377,9 @@ int XrdCmsConfig::Configure2()
                if (isMeta) {SUPCount = 1; SUPLevel = 0;}
                if (!ManList) CmsState.Update(XrdCmsState::FrontEnd, 1);
               }
-    CmsState.Set(SUPCount, isManager && !isServer, AdminPath);
+    if (isManager) Who = (isServer ? -1 : 1);
+       else        Who = 0;
+    CmsState.Set(SUPCount, Who, AdminPath);
 
 // Create the pid file
 //

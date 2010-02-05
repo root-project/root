@@ -229,4 +229,8 @@ extern "C"
 #define net_errno errno
 #endif
 
+// The following gets arround a relative new gcc compiler bug
+//
+#define XRDABS(x) (x < 0 ? -x : x)
+
 #endif  // __XRDSYS_PLATFORM_H__

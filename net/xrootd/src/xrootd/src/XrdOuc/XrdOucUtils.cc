@@ -14,6 +14,7 @@ const char *XrdOucUtilsCVSID = "$Id$";
 
 #include <ctype.h>
 #include <errno.h>
+#include <stdio.h>
 
 #ifdef WIN32
 #include <direct.h>
@@ -141,6 +142,33 @@ int XrdOucUtils::doIf(XrdSysError *eDest, XrdOucStream &Config,
 // All done
 //
    return (val != 0);
+}
+
+/******************************************************************************/
+/*                              f m t B y t e s                               */
+/******************************************************************************/
+  
+int XrdOucUtils::fmtBytes(long long val, char *buff, int bsz)
+{
+   static const long long Kval = 1024LL;
+   static const long long Mval = 1024LL*1024LL;
+   static const long long Gval = 1024LL*1024LL*1024LL;
+   static const long long Tval = 1024LL*1024LL*1024LL*1024LL;
+   char sName = ' ';
+   int resid;
+
+// Get correct scaling
+//
+        if (val < 1024)  return snprintf(buff, bsz, "%lld", val);
+        if (val < Mval) {val = val*10/Kval; sName = 'K';}
+   else if (val < Gval) {val = val*10/Mval; sName = 'M';}
+   else if (val < Tval) {val = val*10/Gval; sName = 'G';}
+   else                 {val = val*10/Tval; sName = 'T';}
+   resid = val%10LL; val = val/10LL;
+
+// Format it
+//
+   return snprintf(buff, bsz, "%lld.%d%c", val, resid, sName);
 }
 
 /******************************************************************************/

@@ -19,7 +19,6 @@
 #include "XrdFrm/XrdFrmConfig.hh"
 #include "XrdFrm/XrdFrmFiles.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
-#include "XrdOss/XrdOssPath.hh"
 #include "XrdOuc/XrdOucArgs.hh"
 #include "XrdOuc/XrdOucNSWalk.hh"
 
@@ -78,8 +77,7 @@ int XrdFrmAdmin::FindNolk(XrdOucArgs &Spec)
    do {if (!Config.LocalPath(lDir, pDir, sizeof(pDir))) continue;
        fP = new XrdFrmFiles(pDir, opts);
        while((sP = fP->Get(ec)))
-            {if (!(sP->File[XrdOssPath::isLock]))
-                {Msg(sP->File[XrdOssPath::isBase]->Path); num++;}
+            {if (!(sP->lockFile())) {Msg(sP->basePath()); num++;}
             }
        if (ec) rc = 4;
        delete fP;
@@ -110,13 +108,13 @@ int XrdFrmAdmin::FindUnmi(XrdOucArgs &Spec)
    do {if (!Config.LocalPath(lDir, pDir, sizeof(pDir))) continue;
        fP = new XrdFrmFiles(pDir, opts);
        while((sP = fP->Get(ec)))
-            {     if (!(sP->File[XrdOssPath::isLock]))
+            {     if (!(sP->lockFile()))
                      Why = "Unmigrated; no lock file: ";
-             else if (sP->File[XrdOssPath::isBase]->Stat.st_mtime < 
-                      sP->File[XrdOssPath::isLock]->Stat.st_mtime)
+             else if (sP->baseFile()->Stat.st_mtime <
+                      sP->lockFile()->Stat.st_mtime)
                      Why="Unmigrated; modified: ";
              else continue;
-             Msg(Why, sP->File[XrdOssPath::isBase]->Path); num++;
+             Msg(Why, sP->basePath()); num++;
             }
        if (ec) rc = 4;
        delete fP;

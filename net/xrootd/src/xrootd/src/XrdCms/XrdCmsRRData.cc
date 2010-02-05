@@ -31,8 +31,10 @@ int XrdCmsRRData::getBuff(size_t bsz)
           size_t Alignment = PageSize;
 
    if (bsz < Alignment)
-      {do {Alignment = Alignment >> 1;} while(bsz < Alignment);
-       Alignment = Alignment << 1; bsz = Alignment;
+      {if (bsz <= 8) Alignment = bsz = 8;
+          else {do {Alignment = Alignment >> 1;} while(bsz < Alignment);
+                Alignment = Alignment << 1; bsz = Alignment;
+               }
       }
 
    if (Buff) free(Buff);

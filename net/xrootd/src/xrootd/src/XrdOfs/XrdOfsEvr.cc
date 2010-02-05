@@ -25,7 +25,8 @@ const char *XrdOfsEvrCVSID = "$Id$";
 #include "XrdOuc/XrdOucTrace.hh"
 #include "XrdNet/XrdNetOpts.hh"
 #include "XrdNet/XrdNetSocket.hh"
-  
+#include "XrdSys/XrdSysHeaders.hh"
+
 /******************************************************************************/
 /*                     E x t e r n a l   L i n k a g e s                      */
 /******************************************************************************/
@@ -171,7 +172,7 @@ int XrdOfsEvr::Init(XrdSysError *eobj, XrdCmsClient *trgp)
   
 void XrdOfsEvr::recvEvents()
 {
-   static const char *epname = "recvEvent";
+   EPNAME("recvEvent");
    const char *tident = 0;
    char *lp,*tp;
 
@@ -321,7 +322,7 @@ void XrdOfsEvr::sendEvent(theEvent *ep)
 // to it just in case a client is in-transit
 //
    while((cp = ep->aClient))
-        {einfo = new XrdOucErrInfo(cp->User, cp->evtCB, cp->evtCBarg);
+        {einfo = new XrdOucErrInfo(cp->User, 0, cp->evtCBarg);
          einfo->setErrInfo(ep->finalRC, (ep->finalMsg ? ep->finalMsg : ""));
          cp->evtCB->Done(Result, einfo);
          ep->aClient = cp->Next;

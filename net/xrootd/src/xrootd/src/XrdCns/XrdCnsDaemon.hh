@@ -26,5 +26,7 @@ void  getEvents(XrdOucStream &, const char *Who);
      ~XrdCnsDaemon() {}
 
 private:
+
+char *getLFN(XrdOucStream &Events);
 };
 #endif

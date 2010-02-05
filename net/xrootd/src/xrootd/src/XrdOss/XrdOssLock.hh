@@ -17,6 +17,7 @@ class XrdOssLock
 public:
 
 int Serialize(const char *, int);
+int Serialize(int lkFD, int Opt) {return XLock(lkFD, Opt);}
 int NoSerialize(const char *, int);
 int ReSerialize(const char *, const char *);
 int UnSerialize(int opts=0);
@@ -28,7 +29,7 @@ private:
 
 int lkfd;      // Lock file handle
 
-int XLock(int);
+int XLock(int, int);
 int Build_LKFN(char *, int, const char *, int);
 };
 

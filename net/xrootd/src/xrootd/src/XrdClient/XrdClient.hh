@@ -177,7 +177,7 @@ protected:
 
 public:
 
-    XrdClient(const char *url);
+    XrdClient(const char *url, XrdClientCallback *XrdCcb = 0, void *XrdCcbArg = 0);
     virtual ~XrdClient();
 
     UnsolRespProcResult         ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *sender,

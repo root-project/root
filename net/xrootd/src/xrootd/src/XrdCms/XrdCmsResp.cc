@@ -89,18 +89,17 @@ XrdCmsResp *XrdCmsResp::Alloc(XrdOucErrInfo *erp, int msgid)
 /*                               R e c y c l e                                */
 /******************************************************************************/
   
-void XrdCmsResp::Recycle(void *p)
+void XrdCmsResp::Recycle()
 {
 
 // Recycle appendages
 //
    if (myBuff) {myBuff->Recycle(); myBuff = 0;}
 
-// If a free area pointer has been passed then this is from delete() and we
-// need to check if we have too many message objects at this point. Otherwise,
-// it's from a synchrnous recycle and it's always OK to requeue these.
+// We keep a stash of allocated response objects. If there are too many we
+// simply delete this object.
 //
-   if (p && XrdCmsResp::numFree >= XrdCmsResp::maxFree) free(p);
+   if (XrdCmsResp::numFree >= XrdCmsResp::maxFree) delete this;
       else {myMutex.Lock();
             next = nextFree;
             nextFree = this;
@@ -165,6 +164,7 @@ void XrdCmsResp::Reply()
 void XrdCmsResp::ReplyXeq()
 {
    EPNAME("Reply")
+   XrdOucEICB *theCB;
    int Result;
 
 // If there is no callback object, ignore this call. Eventually, we may wish
@@ -202,9 +202,15 @@ void XrdCmsResp::ReplyXeq()
 //
    SyncCB.Wait();
 
-// Invoke the callback; it must explicitly invoke delete on our upcast object.
+// We now must request a callback to recycle this object once the callback
+// response is actually sent by setting the callback object pointer to us.
 //
-   ErrCB->Done(Result, (XrdOucErrInfo *)this);
+   theCB = ErrCB;
+   ErrCB = (XrdOucEICB *)this;
+
+// Invoke the callback
+//
+   theCB->Done(Result, (XrdOucErrInfo *)this);
 }
 
 /******************************************************************************/

@@ -112,7 +112,7 @@ int XrdCnsLogServer::Init(XrdOucTList *rList)
 //
    if (Stat.st_size != 0)
       {XrdCnsLogFile myLogFile(logDir);
-       if (!myLogFile.Open(0) || !myLogFile.Eol()) return 0;
+       if (!myLogFile.Open(0, Stat.st_size) || !myLogFile.Eol()) return 0;
       }
    unlink(logDir);
 
@@ -206,7 +206,7 @@ do{nRecs = Config.qLim; lfP = logFile;
 
    while(nRecs && (lrP = XrdCnsLogRec::Get(lrT)))
         {if (lrP->Type() == XrdCnsLogRec::lrCreate) Massage(lrP);
-         lfP->Add(lrP);
+         lfP->Add(lrP); lrP->Recycle();
          nRecs--;
         }
 
@@ -219,4 +219,8 @@ do{nRecs = Config.qLim; lfP = logFile;
        delete lfP;
       }
   } while(1);
+
+// At the moment we don't really have a recovery strategy
+//
+   MLog.Emsg("Run", "Fatal error occurred; terminating. . .");
 }

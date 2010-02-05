@@ -15,11 +15,16 @@ const char *Xrdadler32CVSID = "$Id$";
 #define _FILE_OFFSET_BITS 64
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
+#ifdef __linux__
+  #include <sys/xattr.h>
+#endif
 #include <zlib.h>
 
 #include "XrdPosix/XrdPosixExtern.hh"
@@ -30,6 +35,77 @@ const char *Xrdadler32CVSID = "$Id$";
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdOuc/XrdOucString.hh"
+
+void fSetXattrAdler32(int fd, const char* attr, const char *value)
+{
+    struct stat st;
+    char mtime[12], attr_val[25];
+    int rc;
+    
+    rc = fstat(fd, &st);
+    if (rc < 0 || strlen(value) != 8) 
+        return; 
+    else
+        sprintf(mtime, "%ld", st.st_mtime);
+
+    strcpy(attr_val, value);
+    strcat(attr_val, ":"); 
+    strcat(attr_val, mtime);
+
+#if defined(__linux__)
+    rc = fsetxattr(fd, attr, attr_val, strlen(attr_val), 0x0);
+#elif defined(__solaris__)
+    int attrfd;
+    attrfd = openat(fd, attr, O_XATTR|O_CREAT|O_TRUNC|O_WRONLY); 
+    if (attrfd < 0) return;
+
+    rc = write(attrfd, attr_val, strlen(attr_val));
+/*
+   Solaris extended attributes are files in orthogonal namespace.
+   Their permission wont' change according to real files.
+ */
+    fchmod(attrfd, S_IRWXU|S_IRGRP|S_IROTH);
+    close(attrfd);
+#endif
+    return;
+}
+
+int fGetXattrAdler32(int fd, const char* attr, char *value)
+{
+    struct stat st;
+    char mtime[12], attr_val[25], *p;
+    int rc;
+
+    rc = fstat(fd, &st);
+    if (rc < 0)
+        return(0);
+    else
+        sprintf(mtime, "%ld", st.st_mtime);
+
+
+#if defined(__linux__)
+    rc = fgetxattr(fd, attr, attr_val, 25);
+#elif defined(__solaris__)
+    int attrfd;
+    attrfd = openat(fd, attr, O_XATTR|O_RDONLY);
+    if (attrfd < 0) return(0);
+
+    rc = read(attrfd, attr_val, 25);
+    close(attrfd);
+#else
+    return(0);
+#endif
+
+    if (rc == -1 || attr_val[8] != ':') return(0);
+    attr_val[8] = '\0';
+    attr_val[rc] = '\0';
+    p = attr_val + 9;
+     
+    if (strcmp(p, mtime)) return(0);
+
+    strcpy(value, attr_val);
+    return(strlen(value));
+}
 
 /* get the actual root url pointing to the data server */
 char get_current_url(const char *oldurl, char *newurl)
@@ -90,7 +166,8 @@ char getchksum(const char *rooturl, char *chksum)
 
 int main(int argc, char *argv[])
 {
-    char path[2048], chksum[128], buf[N];
+    char path[2048], chksum[128], buf[N], adler_str[9];
+    const char attr[] = "user.checksum.adler32";
     struct stat stbuf;
     int fd, len, rc;
     uLong adler;
@@ -111,7 +188,6 @@ int main(int argc, char *argv[])
         else  
             XrdPosix_URL(argv[1], path, sizeof(path));
     }
-
     if (argc == 1 || path[0] == '\0')
     {                        /* this is a local file */
         if (argc > 1) 
@@ -124,6 +200,12 @@ int main(int argc, char *argv[])
                 printf("Error_accessing %s\n", path);
                 return 1;
             }
+            else  /* see if the adler32 is saved in attribute already */
+                if (fGetXattrAdler32(fd, attr, adler_str) == 8)
+                {
+                    printf("%s %s\n", adler_str, path);
+                    return 0;
+                }
         }
         else 
         {
@@ -133,7 +215,12 @@ int main(int argc, char *argv[])
         while ( (len = read(fd, buf, N)) > 0 )
             adler = adler32(adler, (const Bytef*)buf, len);
 
-        if (fd != STDIN_FILENO) close(fd);
+        if (fd != STDIN_FILENO) 
+        {   /* try saving adler32 to attribute before close() */
+            sprintf(adler_str, "%08lx", adler);
+            fSetXattrAdler32(fd, attr, adler_str);
+            close(fd);
+        }
         printf("%08lx %s\n", adler, path);
         return 0;
     }

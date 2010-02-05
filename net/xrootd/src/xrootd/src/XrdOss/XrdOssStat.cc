@@ -83,8 +83,8 @@ int XrdOssSys::Stat(const char *path, struct stat *buff, int opts)
 
 // The file may be offline in a mass storage system, check if this is possible
 //
-   if (!IsRemote(path)) return -errno;
-   if (opts & XRDOSS_resonly || !MSSgwCmd) return -ENOMSG;
+   if (!IsRemote(path) || opts & XRDOSS_resonly) return -errno;
+   if (!MSSgwCmd) return -ENOMSG;
 
 // Generate remote path
 //

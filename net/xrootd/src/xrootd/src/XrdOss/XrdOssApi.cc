@@ -53,7 +53,6 @@ const char *XrdOssApiCVSID = "$Id$";
 #ifdef XRDOSSCX
 #include "oocx_CXFile.h"
 #endif
-// IOS_USING_DECLARATION_MARKER - BaBar iostreams migration, do not touch this line!
 
 /******************************************************************************/
 /*                  E r r o r   R o u t i n g   O b j e c t                   */
@@ -151,6 +150,18 @@ int XrdOssSys::Init(XrdSysLogger *lp, const char *configfn)
 // All done.
 //
    return XrdOssOK;
+}
+
+/******************************************************************************/
+/*                               L f n 2 P f n                                */
+/******************************************************************************/
+  
+int XrdOssSys::Lfn2Pfn(const char *oldp, char *newp, int blen)
+{
+    if (lcl_N2N) return -(lcl_N2N->lfn2pfn(oldp, newp, blen));
+    if ((int)strlen(oldp) >= blen) return -ENAMETOOLONG;
+    strcpy(newp, oldp);
+    return 0;
 }
 
 /******************************************************************************/
@@ -406,9 +417,7 @@ int XrdOssSys::Truncate(const char *path, unsigned long long size)
 */
 int XrdOssDir::Opendir(const char *dir_path) 
 {
-#ifndef NODEBUG
-   const char *epname = "Opendir";
-#endif
+   EPNAME("Opendir");
    char actual_path[MAXPATHLEN+1], *local_path, *remote_path;
    unsigned long long isremote;
    int retc;
@@ -432,11 +441,10 @@ int XrdOssDir::Opendir(const char *dir_path)
 
 // If this is a local filesystem request, open locally.
 //
-   if (!isremote)
+   if (!isremote || (pflags & XRDEXP_NODREAD))
       {TRACE(Opendir, "lcl path " <<local_path <<" (" <<dir_path <<")");
-       if (!(lclfd = opendir((char *)local_path))) return -errno;
-       isopen = 1;
-       return XrdOssOK;
+       if ((lclfd = opendir((char *)local_path))) {isopen = 1; return XrdOssOK;}
+          else if (!isremote) return -errno;
       }
 
 // Generate remote path
@@ -447,27 +455,19 @@ int XrdOssDir::Opendir(const char *dir_path)
          else remote_path = actual_path;
       else remote_path = (char *)dir_path;
 
-// Trace this remote request
-//
-   TRACE(Opendir, "rmt path " <<remote_path <<" (" <<dir_path <<")");
+   TRACE(Opendir, "rmt path " << remote_path <<" (" << dir_path <<")");
 
-// If we need not read the actual directory, just check if it exists
+// If NOCHECK is in effect and we have an mss meta-cmd, just do a stat
 //
-   if (pflags & XRDEXP_NODREAD)
+   if (!(pflags & XRDEXP_NOCHECK) && XrdOssSS->MSSgwCmd)
       {struct stat fstat;
-       if (stat(local_path, &fstat))
-          {if (pflags & XRDEXP_NOCHECK) fstat.st_mode = S_IFDIR;
-              else {if (!XrdOssSS->MSSgwCmd) return -errno;
-                    if ((retc = XrdOssSS->MSS_Stat(remote_path, &fstat)))
-                       return retc;
-                   }
-          }
+       if ((retc = XrdOssSS->MSS_Stat(remote_path,&fstat))) return retc;
        if (!(S_ISDIR(fstat.st_mode))) return -ENOTDIR;
-       isopen = -1;
+       isopen = 1;
        return XrdOssOK;
       }
 
-// This is a remote directory and we must read it. Perform remote open
+// Open the directory at the remote location.
 //
    if (!(mssfd = XrdOssSS->MSS_Opendir(remote_path, retc))) return retc;
    isopen = 1;
@@ -936,6 +936,7 @@ int XrdOssFile::Open_ufs(const char *path, int Oflag, int Mode,
                          unsigned long long popts)
 {
     EPNAME("Open_ufs")
+    static const int isWritable = O_WRONLY|O_RDWR;
     int myfd, newfd, retc;
 #ifndef NODEBUG
     char *ftype = (char *)" path=";
@@ -954,6 +955,13 @@ int XrdOssFile::Open_ufs(const char *path, int Oflag, int Mode,
 //
     do { myfd = open(path, Oflag|O_LARGEFILE, Mode);}
        while( myfd < 0 && errno == EINTR);
+
+// If the file is marked purgeable or migratable and we may modify this file,
+// then get a shared lock on the file to keep it from being migrated or purged
+// while it is open.
+//
+   if (popts & XRDEXP_PURGE || (popts & XRDEXP_MIG && Oflag & isWritable))
+      ufs_file.Serialize(myfd, XrdOssSHR);
 
 // Chck if file is compressed
 //

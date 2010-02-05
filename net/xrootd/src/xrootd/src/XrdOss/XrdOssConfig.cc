@@ -63,6 +63,8 @@ extern XrdOssSys   *XrdOssSS;
 
 extern XrdOucTrace  OssTrace;
 
+XrdOucPListAnchor  *XrdOssRPList;
+
 /******************************************************************************/
 /*                            E r r o r   T e x t                             */
 /******************************************************************************/
@@ -281,6 +283,10 @@ int XrdOssSys::Configure(const char *configfn, XrdSysError &Eroute)
 // Display the final config if we can continue
 //
    if (!NoGo) Config_Display(Eroute);
+
+// Export the real path list (for frm et. al.)
+//
+   XrdOssRPList = &RPList;
 
 // All done, close the stream and return the return code.
 //

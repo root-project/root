@@ -51,7 +51,7 @@ int XrdOuca2x::a2i(XrdSysError &Eroute, const char *emsg, const char *item,
 /*                                  a 2 l l                                   */
 /******************************************************************************/
 
-long long XrdOuca2x::a2ll(XrdSysError &Eroute, const char *emsg, const char *item,
+int XrdOuca2x::a2ll(XrdSysError &Eroute, const char *emsg, const char *item,
                                 long long *val, long long minv, long long maxv)
 {
     char *eP;
@@ -118,10 +118,54 @@ int XrdOuca2x::a2fm(XrdSysError &Eroute, const char *emsg, const char *item,
 }
  
 /******************************************************************************/
+/*                                  a 2 s p                                   */
+/******************************************************************************/
+
+int XrdOuca2x::a2sp(XrdSysError &Eroute, const char *emsg, const char *item,
+                                long long *val, long long minv, long long maxv)
+{
+    char *pp, buff[120];
+    int i;
+
+    if (!item || !*item)
+       {Eroute.Emsg("a2x", emsg, "value not specified"); return -1;}
+
+    i = strlen(item);
+    if (item[i-1] != '%') return a2sz(Eroute, emsg, item, val, minv, maxv);
+
+    errno = 0;
+    *val  = strtoll(item, &pp, 10);
+
+    if (errno || *pp != '%')
+       {Eroute.Emsg("a2x", emsg, item, "is not a number");
+        return -1;
+       }
+
+    if (maxv < 0) maxv = 100;
+
+    if (*val > maxv)
+       {sprintf(buff, "may not be greater than %lld%%", maxv);
+        Eroute.Emsg("a2x", emsg, item, buff);
+        return -1;
+       }
+
+    if (minv < 0) minv = 0;
+
+    if (*val > maxv)
+       {sprintf(buff, "may not be less than %lld%%", minv);
+        Eroute.Emsg("a2x", emsg, item, buff);
+        return -1;
+       }
+
+    *val = -*val;
+    return 0;
+}
+
+/******************************************************************************/
 /*                                  a 2 s z                                   */
 /******************************************************************************/
 
-long long XrdOuca2x::a2sz(XrdSysError &Eroute, const char *emsg, const char *item,
+int XrdOuca2x::a2sz(XrdSysError &Eroute, const char *emsg, const char *item,
                                 long long *val, long long minv, long long maxv)
 {   long long qmult;
     char *eP, *fP = (char *)item + strlen(item) - 1;
@@ -224,8 +268,8 @@ int XrdOuca2x::Emsg(XrdSysError &Eroute, const char *etxt1, const char *item,
  return -1;
 }
 
-long long XrdOuca2x::Emsg(XrdSysError &Eroute, const char *etxt1, const char *item,
-                                               const char *etxt2, long long val)
+int XrdOuca2x::Emsg(XrdSysError &Eroute, const char *etxt1, const char *item,
+                                         const char *etxt2, long long val)
 {char buff[256];
  sprintf(buff, etxt2, val);
  Eroute.Emsg("a2x", etxt1, item, buff);

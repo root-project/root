@@ -88,7 +88,7 @@ struct XrdCpInfo {
 
 #define XRDCP_BLOCKSIZE          (4*1024*1024)
 #define XRDCP_XRDRASIZE          (20*XRDCP_BLOCKSIZE)
-#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.99 $ - Xrootd version: "XrdVSTRING
+#define XRDCP_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.100 $ - Xrootd version: "XrdVSTRING
 
 ///////////////////////////////////////////////////////////////////////
 // Coming from parameters on the cmd line
@@ -662,12 +662,13 @@ int doCp_xrd2xrd(XrdClient **xrddest, const char *src, const char *dst) {
                cpnfo.mon->PutProgressInfo(bytesread, cpnfo.len, (float)bytesread / cpnfo.len * 100.0);
 
             free(buf);
-         }
 
-         if (!xrdxtrdfile && ((buf == 0) || (len == 0)) && (bytesread >= size)) {
-            if (buf) free(buf);
-            break;
          }
+         else
+            if (!xrdxtrdfile && ( ((buf == 0) && (len == 0)) || (bytesread >= size))) {
+               if (buf) free(buf);
+               break;
+            }
 
       }
       else {
@@ -933,12 +934,13 @@ int doCp_xrd2loc(const char *src, const char *dst) {
 	      cpnfo.mon->PutProgressInfo(bytesread, cpnfo.len, (float)bytesread / cpnfo.len * 100.0);
 
 	    free(buf);
-	 }
 
-         if (!xrdxtrdfile && ((buf == 0) || (len == 0)) && (bytesread >= size)) {
-            if (buf) free(buf);
-            break;
-         }
+	 }
+         else
+            if (!xrdxtrdfile && ( ((buf == 0) && (len == 0)) || (bytesread >= size)) ) {
+               if (buf) free(buf);
+               break;
+            }
 
 
       }

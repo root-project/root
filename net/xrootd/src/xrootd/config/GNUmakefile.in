@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.36 2009/11/04 09:54:47 furano Exp $
+#              $Id: GNUmakefile.in,v 1.37 2010/01/13 11:41:22 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -228,6 +228,11 @@ XrdSeckrb5: FORCE
 XrdSecpwd: FORCE
 	@echo $(XMSG) secpwd $(XDBG) component...
 	$(ECHO)cd src/XrdSecpwd;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
+XrdSecssl: FORCE
+	@echo $(XMSG) secssl $(XDBG) component...
+	$(ECHO)cd src/XrdSecssl;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdSecsss: FORCE

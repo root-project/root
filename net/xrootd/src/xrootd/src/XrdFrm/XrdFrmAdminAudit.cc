@@ -39,16 +39,16 @@ int XrdFrmAdmin::AuditNameNB(XrdFrmFileset *sP)
 
 // Report what is orphaned
 //
-   if (sP->File[XrdOssPath::isFail])
-      {num++; Msg("Orphaned fail file: ", sP->File[XrdOssPath::isFail]->Path);}
-   if (sP->File[XrdOssPath::isLock])
-      {num++; Msg("Orphaned lock file: ", sP->File[XrdOssPath::isLock]->Path);}
-   if (sP->File[XrdOssPath::isPfn ] )
-      {num++; Msg("Orphaned pfn  file: ", sP->File[XrdOssPath::isPfn ] ->Path);
-              Msg("PFN file refers to: ", sP->File[XrdOssPath::isPfn ] ->Link);
+   if (sP->failFile())
+      {num++; Msg("Orphaned fail file: ", sP->failPath());}
+   if (sP->lockFile())
+      {num++; Msg("Orphaned lock file: ", sP->lockPath());}
+   if (sP->pfnFile() )
+      {num++; Msg("Orphaned pfn  file: ", sP->pfnPath());
+              Msg("PFN file refers to: ", sP->pfnFile()->Link);
                  }
-   if (sP->File[XrdOssPath::isPin ] )
-      {num++; Msg("Orphaned pin  file: ", sP->File[XrdOssPath::isPin ] ->Path);}
+   if (sP->pinFile() )
+      {num++; Msg("Orphaned pin  file: ", sP->pinPath());}
 
 // Return if no fix is needed, otherwise check if we should ask before removal
 //
@@ -81,8 +81,8 @@ int XrdFrmAdmin::AuditNameNF(XrdFrmFileset *sP)
 
 // Indicate what is wrong
 //
-   Msg("Dangling link:  ", sP->File[XrdOssPath::isBase]->Path);
-   Msg("Missing target: ", sP->File[XrdOssPath::isBase]->Link);
+   Msg("Dangling link:  ", sP->basePath());
+   Msg("Missing target: ", sP->baseFile()->Link);
    numProb++;
 
 // Return if no fix is needed, otherwise check if we should ask before removal
@@ -95,8 +95,8 @@ int XrdFrmAdmin::AuditNameNF(XrdFrmFileset *sP)
 
 // Remove the symlink and associated files
 //
-   if (unlink(sP->File[XrdOssPath::isBase]->Path))
-      Emsg(errno,"remove symlink", sP->File[XrdOssPath::isBase]->Path);
+   if (unlink(sP->basePath()))
+      Emsg(errno,"remove symlink", sP->basePath());
       else if (AuditRemove(sP))
               {Msg("Symlink removed.");
                numFix++;
@@ -115,7 +115,7 @@ int XrdFrmAdmin::AuditNameNL(XrdFrmFileset *sP)
 
 // Indicate what is wrong
 //
-   Msg("Missing lock file: ", sP->File[XrdOssPath::isBase]->Path);
+   Msg("Missing lock file: ", sP->basePath());
    numProb++;
 
 // Return if no fix is needed, otherwise check if we should ask before removal
@@ -128,7 +128,7 @@ int XrdFrmAdmin::AuditNameNL(XrdFrmFileset *sP)
 
 // Create the lock file
 //
-   if (!mkFile(mkLF|isPFN, sP->File[XrdOssPath::isBase]->Path)) return 1;
+   if (!mkFile(mkLF|isPFN, sP->basePath())) return 1;
    Msg("Lock file created.");
    numFix++;
    return 1;
@@ -156,12 +156,12 @@ int XrdFrmAdmin::AuditNames()
    if (!Config.LocalPath(lDir, pDir, sizeof(pDir))) {finalRC = 4; return 1;}
    fP = new XrdFrmFiles(pDir, opts);
    while(Act && (sP = fP->Get(ec,1)))
-        {if (!(sP->File[XrdOssPath::isBase])) Act = AuditNameNB(sP);
-             else {if (sP->File[XrdOssPath::isBase]->Type == XrdOucNSWalk::NSEnt::isLink)
+        {if (!(sP->baseFile())) Act = AuditNameNB(sP);
+             else {if (sP->baseFile()->Type == XrdOucNSWalk::NSEnt::isLink)
                       Act = AuditNameNF(sP);
-                   if (Act && Opt.MPType && !(sP->File[XrdOssPath::isLock]))
+                   if (Act && Opt.MPType && !(sP->lockFile()))
                       Act = AuditNameNL(sP);
-                   if (Act && sP->File[XrdOssPath::isBase]->Link && isXA(sP->File[XrdOssPath::isBase]))
+                   if (Act && sP->baseFile()->Link && isXA(sP->baseFile()))
                       Act = AuditNameXA(sP);
                   }
          }
@@ -189,18 +189,18 @@ int XrdFrmAdmin::AuditNameXA(XrdFrmFileset *sP)
 
 // Make sure there is a PFN file here
 //
-   strcpy(Path, sP->File[XrdOssPath::isBase]->Link); strcat(Path, ".pfn");
+   strcpy(Path, sP->baseFile()->Link); strcat(Path, ".pfn");
    if (lstat(Path,&buf))
       {if (errno != ENOENT)
           {Emsg(errno, "stat ", Path); return AuditNameXL(sP,-1);}
-       Msg("Missing pfn link to ", sP->File[XrdOssPath::isBase]->Path);
+       Msg("Missing pfn link to ", sP->basePath());
        return AuditNameXL(sP,0);
       }
 
 // Make sure the PFN file is a link
 //
    if ((buf.st_mode & S_IFMT) != S_IFLNK)
-      {Msg("Invalid pfn file for ", sP->File[XrdOssPath::isBase]->Path);
+      {Msg("Invalid pfn file for ", sP->basePath());
        return AuditNameXL(sP,1);
       }
 
@@ -209,8 +209,8 @@ int XrdFrmAdmin::AuditNameXA(XrdFrmFileset *sP)
    if ((n = readlink(Path, lkbuff, sizeof(lkbuff)-1)) < 0)
       {Emsg(errno, "read link from ", Path); return AuditNameXL(sP,-1);}
    lkbuff[n] = '\0';
-   if (strcmp(sP->File[XrdOssPath::isBase]->Path, lkbuff))
-      {Msg("Incorrect pfn link to ", sP->File[XrdOssPath::isBase]->Path);
+   if (strcmp(sP->basePath(), lkbuff))
+      {Msg("Incorrect pfn link to ", sP->basePath());
        return AuditNameXL(sP,1);
       }
 
@@ -241,9 +241,9 @@ int XrdFrmAdmin::AuditNameXL(XrdFrmFileset *sP, int dorm)
 
 // Create the pfn symlink
 //
-   strcpy(Path, sP->File[XrdOssPath::isBase]->Link); strcat(Path, ".pfn");
+   strcpy(Path, sP->baseFile()->Link); strcat(Path, ".pfn");
    if (dorm) unlink(Path);
-   if (symlink(sP->File[XrdOssPath::isBase]->Path, Path)) 
+   if (symlink(sP->basePath(), Path))
       {Emsg(errno, "create symlink ", Path); return 1;}
    Msg("pfn symlink created.");
    numFix++;
@@ -260,20 +260,20 @@ int XrdFrmAdmin::AuditRemove(XrdFrmFileset *sP)
 
 // Remove the orphaned files
 //
-   if (sP->File[XrdOssPath::isFail])
-      {if (unlink(sP->File[XrdOssPath::isFail]->Path)) Emsg(errno,"remove fail file.");
+   if (sP->failFile())
+      {if (unlink(sP->failPath())) Emsg(errno,"remove fail file.");
           else rem++;
       }
-   if (sP->File[XrdOssPath::isLock])
-      {if (unlink(sP->File[XrdOssPath::isLock]->Path)) Emsg(errno,"remove lock file.");
+   if (sP->lockFile())
+      {if (unlink(sP->lockPath())) Emsg(errno,"remove lock file.");
           else rem++;
       }
-   if (sP->File[XrdOssPath::isPin ])
-      {if (unlink(sP->File[XrdOssPath::isPin ] ->Path)) Emsg(errno,"remove pin  file.");
+   if (sP-> pinFile())
+      {if (unlink(sP-> pinPath())) Emsg(errno,"remove pin  file.");
           else rem++;
       }
-   if (sP->File[XrdOssPath::isPfn ])
-      {if (unlink(sP->File[XrdOssPath::isPfn ] ->Path)) Emsg(errno,"remove pfn  file.");
+   if (sP-> pfnFile())
+      {if (unlink(sP-> pinPath())) Emsg(errno,"remove pfn  file.");
           else rem++;
       }
 
@@ -471,9 +471,9 @@ int XrdFrmAdmin::AuditSpaceXA(const char *Space, const char *Path)
 // Go and check out the files
 //
    while(Act && (sP = fP->Get(ec,1)))
-        {     if (!(sP->File[XrdOssPath::isBase])) Act = AuditNameNB(sP);
-         else if (!(sP->File[XrdOssPath::isPfn ] )) Act = AuditSpaceXANB(sP);
-         else {numFiles++; numBytes += sP->File[XrdOssPath::isBase]->Stat.st_size; continue;}
+        {     if (!(sP->baseFile())) Act = AuditNameNB(sP);
+         else if (!(sP-> pfnFile())) Act = AuditSpaceXANB(sP);
+         else {numFiles++; numBytes += sP->baseFile()->Stat.st_size; continue;}
         }
 
 // All done
@@ -494,11 +494,11 @@ int XrdFrmAdmin::AuditSpaceXANB(XrdFrmFileset *sP)
 
 // Update statistics which we may have to correct later
 //
-   numProb++; numFiles++; numBytes += sP->File[XrdOssPath::isBase]->Stat.st_size;
+   numProb++; numFiles++; numBytes += sP->baseFile()->Stat.st_size;
 
 // Report what is orphaned
 //
-   Msg("Missing pfn file for data file ", sP->File[XrdOssPath::isBase]->Path);
+   Msg("Missing pfn file for data file ", sP->basePath());
 
 // Return if no fix is needed, otherwise check if we should ask before removal
 //
@@ -510,8 +510,8 @@ int XrdFrmAdmin::AuditSpaceXANB(XrdFrmFileset *sP)
 
 // Remove the file
 //
-   if (unlink(sP->File[XrdOssPath::isBase]->Path)) Emsg(errno,"remove data file ", sP->File[XrdOssPath::isBase]->Path);
-      else {numFix++; numFiles--; numBytes -= sP->File[XrdOssPath::isBase]->Stat.st_size;}
+   if (unlink(sP->basePath())) Emsg(errno,"remove data file ", sP->basePath());
+      else {numFix++; numFiles--; numBytes -= sP->baseFile()->Stat.st_size;}
    return 1;
 }
   
@@ -674,8 +674,8 @@ int XrdFrmAdmin::AuditUsageXA(const char *Path, const char *Space)
 // Go and check out the files
 //
    while((sP = fP->Get(ec)))
-        {if ((sP->File[XrdOssPath::isBase]))
-            {numFiles++; numBytes += sP->File[XrdOssPath::isBase]->Stat.st_size;}
+        {if ((sP->baseFile()))
+            {numFiles++; numBytes += sP->baseFile()->Stat.st_size;}
         }
 
 // All done

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.22 2009/03/17 20:54:29 abh Exp $
+#              $Id: GNUmakefile,v 1.25 2010/01/06 09:33:41 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -122,7 +122,7 @@ $(OBJDIR)/XrdPosixPreload32.o:  XrdPosixPreload32.cc   XrdPosixLinkage.hh \
 
 $(OBJDIR)/XrdPosixXrootd.o:  XrdPosixXrootd.cc   XrdPosixXrootd.hh \
                              XrdClient.hh        XrdPosixExtern.hh \
-                             XrdSysHeaders.hh \
+                             XrdSysHeaders.hh    XrdPosixCallBack.hh \
                              XrdPosixOsDep.hh
 	@echo Compiling XrdPosixXrootd.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdPosixXrootd.o XrdPosixXrootd.cc

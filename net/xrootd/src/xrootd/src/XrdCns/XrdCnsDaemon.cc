@@ -71,7 +71,7 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events, const char *Who)
                ||  !evP->setType(eP))                  Miss = "eventid";
          else {switch(evP->Type())
                      {case XrdCnsLogRec::lrClosew:
-                           if (!(tp=Events.GetToken())) {Miss = "lfn";   break;}
+                           if (!(tp=getLFN(Events)))    {Miss = "lfn";   break;}
                            evP->setLfn1(tp);
                            if (!(tp=Events.GetToken())) {Miss = "size";  break;}
                            Size = strtoll(tp, &etp, 10);
@@ -85,17 +85,17 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events, const char *Who)
                            Mode = strtol(tp, &etp, 8);
                            if (*etp)                    {Miss = "mode";  break;}
                            evP->setMode(Mode);
-                           if (!(tp=Events.GetToken())) {Miss = "lfn";   break;}
+                           if (!(tp=getLFN(Events)))    {Miss = "lfn";   break;}
                            evP->setLfn1(tp);
                            break;
                       case XrdCnsLogRec::lrMv:
-                           if (!(tp=Events.GetToken())) {Miss = "lfn1";  break;}
+                           if (!(tp=getLFN(Events)))    {Miss = "lfn1";  break;}
                            evP->setLfn1(tp);
-                           if (!(tp=Events.GetToken())) {Miss = "lfn2";  break;}
+                           if (!(tp=getLFN(Events)))    {Miss = "lfn2";  break;}
                            evP->setLfn2(tp);
                            break;
                       default:     // rm | rmdir
-                           if (!(tp=Events.GetToken())) {Miss = "lfn";   break;}
+                           if (!(tp=getLFN(Events)))    {Miss = "lfn";   break;}
                            evP->setLfn1(tp);
                            break;
                      }
@@ -113,4 +113,19 @@ void XrdCnsDaemon::getEvents(XrdOucStream &Events, const char *Who)
 // If we exit then we lost the connection
 //
    MLog.Emsg("doEvents", "Lost event connection to", Who, "!");
+}
+
+/******************************************************************************/
+/*                                g e t L F N                                 */
+/******************************************************************************/
+
+char *XrdCnsDaemon::getLFN(XrdOucStream &Events)
+{
+   char *tP, *cgiP;
+
+// Obtain the lfn but discard any CGI information that has been mistakenly
+// passed. Some people recall the old documentation, sigh.
+//
+   if ((tP=Events.GetToken()) && (cgiP = index(tP, '?'))) *cgiP = '\0';
+   return tP;
 }

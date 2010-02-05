@@ -41,7 +41,7 @@ static XrdXrootdCBJob *Alloc(XrdXrootdCallBack *cbF, XrdOucErrInfo *erp, int rva
 
        void            DoIt();
 
-inline void            Recycle(){myMutex.Lock();  // eInfo is deleted elsewhere
+inline void            Recycle(){myMutex.Lock();
                                  Next = FreeJob;
                                  FreeJob = this;
                                  myMutex.UnLock();
@@ -125,9 +125,10 @@ void XrdXrootdCBJob::DoIt()
                }
       } else cbFunc->sendError(Result, eInfo);
 
-// Recycle ourselves before returning
+// Tell the requestor that the callback has completed
 //
-   delete eInfo;
+   if (eInfo->getErrCB()) eInfo->getErrCB()->Done(Result, eInfo);
+      else delete eInfo;
    eInfo = 0;
    Recycle();
 }
@@ -182,7 +183,8 @@ void XrdXrootdCallBack::Done(int           &Result,   //I/O: Function result
 //
    if (!(cbj = XrdXrootdCBJob::Alloc(this, eInfo, Result)))
       {eDest->Emsg("Done",ENOMEM,"get call back job; user",eInfo->getErrUser());
-       delete eInfo;
+       if (eInfo->getErrCB()) eInfo->getErrCB()->Done(Result, eInfo);
+          else delete eInfo;
       } else Sched->Schedule((XrdJob *)cbj);
 }
 
@@ -277,7 +279,6 @@ void XrdXrootdCallBack::sendResp(XrdOucErrInfo  *eInfo,
                                  int             ovhd)
 {
    const char *TraceID = "sendResp";
-   unsigned long long Dest;
    struct iovec       rspVec[4];
    XrdXrootdReqID     ReqID;
    int                dlen = 0, n = 1;
@@ -292,10 +293,10 @@ void XrdXrootdCallBack::sendResp(XrdOucErrInfo  *eInfo,
        {        rspVec[n].iov_base = (caddr_t)Msg;
         dlen += rspVec[n].iov_len  = strlen(Msg)+ovhd; n++;      // 2
        }
-// Decode the destination
+
+// Set the destination
 //
-   eInfo->getErrCB(Dest);
-   ReqID.setID(Dest);
+   ReqID.setID(eInfo->getErrArg());
 
 // Send the async response
 //
