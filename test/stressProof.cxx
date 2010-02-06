@@ -552,11 +552,11 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       printf("******************************************************************\n");
    }
    if (!strcmp(url,"lite") && gverbose > 0) {
-      printf("*  PROOF-Lite session (tests #12 and #13 skipped)               **\n");
+      printf("*  PROOF-Lite session (tests #13 and #14 skipped)               **\n");
       printf("******************************************************************\n");
    }
    if (test > 0 && gverbose > 0) {
-      if (test < 15) {
+      if (test < 16) {
          printf("*  Running only test %2d (and related tests)                     **\n", test);
          printf("******************************************************************\n");
       } else {

@@ -2792,8 +2792,9 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                Info("HandleInputMessage","kPROOF_OUTPUTOBJECT: enter");
             Int_t type = 0;
 
-           if (!TestBit(TProof::kIsClient) && !fMergersSet && !fFinalizationRunning) {
-               Info("HandleInputMessage","finalization on %s started ...", gProofServ->GetPrefix());
+            const char *prefix = gProofServ ? gProofServ->GetPrefix() : "Lite-0";
+            if (!TestBit(TProof::kIsClient) && !fMergersSet && !fFinalizationRunning) {
+               Info("HandleInputMessage", "finalization on %s started ...", prefix);
                fFinalizationRunning = kTRUE;
             }
 
@@ -2823,12 +2824,13 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                      // Read object
                      TObject *o = mess->ReadObject(TObject::Class());
                      // Increment counter on the client side
-                     if (gProofServ) {
-                        fMergePrg.IncreaseIdx();
-                        TString msg;
-                        msg.Form("%s: merging output objects ... %s", gProofServ->GetPrefix(), fMergePrg.Export());
+                     fMergePrg.IncreaseIdx();
+                     TString msg;
+                     msg.Form("%s: merging output objects ... %s", prefix, fMergePrg.Export());
+                     if (gProofServ)
                         gProofServ->SendAsynMessage(msg.Data(), kFALSE);
-                     }
+                     else
+                        fprintf(stderr, "%s\r", msg.Data());
                      // Add or merge it
                      if ((fPlayer->AddOutputObject(o) == 1)) {
                         // Remove the object if it has been merged
@@ -3435,7 +3437,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
             PDB(kSubmerger, 2) Info("HandleSubmerger", "kMergerDown: #%d ", merger_id);
 
             if (!fMergers || fMergers->GetSize() <= merger_id) {
-               Error("HandleSubmerger", "kOutputSize: #%d not in list ", merger_id);
+               Error("HandleSubmerger", "kMergerDown: #%d not in list ", merger_id);
                break;
             }
 
@@ -3471,8 +3473,9 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                PDB(kSubmerger, 2)
                   Info("HandleSubmerger", "worker %s reported as finished ", sl->GetOrdinal());
 
+               const char *prefix = gProofServ ? gProofServ->GetPrefix() : "Lite-0";
                if (!fFinalizationRunning) {
-                  Info("HandleSubmerger", "finalization on %s started ...", gProofServ->GetPrefix());
+                  Info("HandleSubmerger", "finalization on %s started ...", prefix);
                   fFinalizationRunning = kTRUE;
                }
 
@@ -3494,8 +3497,11 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                   // Mergers count specified by user but not valid
                   if (fMergersCount < 0 || (fMergersCount > (GetNumberOfSlaves()/2) )) {
                      msg.Form("%s: Invalid request: cannot start %d mergers for %d workers",
-                              gProofServ->GetPrefix(), fMergersCount, GetNumberOfSlaves());
-                     gProofServ->SendAsynMessage(msg);
+                              prefix, fMergersCount, GetNumberOfSlaves());
+                     if (gProofServ)
+                        gProofServ->SendAsynMessage(msg);
+                     else
+                        Printf("%s",msg.Data());
                      fMergersCount = 0;
                   }
                   // Mergers count will be set dynamically
@@ -3504,17 +3510,23 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                         fMergersCount = TMath::Nint(TMath::Sqrt(GetNumberOfSlaves()));
                      if (fMergersCount > 1)
                         msg.Form("%s: Number of mergers set dynamically to %d (for %d workers)",
-                                 gProofServ->GetPrefix(), fMergersCount, GetNumberOfSlaves());
+                                 prefix, fMergersCount, GetNumberOfSlaves());
                      else {
                         msg.Form("%s: No mergers will be used for %d workers",
-                                 gProofServ->GetPrefix(), GetNumberOfSlaves()); 
+                                 prefix, GetNumberOfSlaves()); 
                         fMergersCount = -1;
                      }
-                     gProofServ->SendAsynMessage(msg);
+                     if (gProofServ)
+                        gProofServ->SendAsynMessage(msg);
+                     else
+                        Printf("%s",msg.Data());
                   } else {
                      msg.Form("%s: Number of mergers set by user to %d (for %d workers)",
-                              gProofServ->GetPrefix(), fMergersCount, GetNumberOfSlaves());
-                     gProofServ->SendAsynMessage(msg);
+                              prefix, fMergersCount, GetNumberOfSlaves());
+                     if (gProofServ)
+                        gProofServ->SendAsynMessage(msg);
+                     else
+                        Printf("%s",msg.Data());
                   }
                   if (fMergersCount > 0) {
 
@@ -3529,6 +3541,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                         fWorkersToMerge--;
                         fMergersCount--;
                      }
+                     if (IsLite()) fMergePrg.SetNWrks(fMergersCount);
                   } else {
                      AskForOutput(sl);
                   }
@@ -3586,8 +3599,9 @@ void TProof::RedirectWorker(TSocket *s, TSlave * sl, Int_t output_size)
        }
        TMergerInfo * mi = (TMergerInfo *) fMergers->At(merger_id);
 
+       TString hname = (IsLite()) ? "localhost" : mi->GetMerger()->GetName();
        sendoutput <<  merger_id;
-       sendoutput << TString(mi->GetMerger()->GetName());
+       sendoutput << hname;
        sendoutput << mi->GetPort();
        s->Send(sendoutput);
        mi->AddMergedObjects(output_size);
@@ -3635,13 +3649,14 @@ void TProof::AskForOutput(TSlave *sl)
    sendoutput << Int_t(kSendOutput);
 
    PDB(kSubmerger, 2) Info("AskForOutput",
-                           "worker %s was asked for sending its output to master",
+                           "worker %s was asked to send its output to master",
                             sl->GetOrdinal());
 
-   sendoutput << 0;
+   sendoutput << -1;
    sendoutput << TString("master");
-   sendoutput << 0;
+   sendoutput << -1;
    sl->GetSocket()->Send(sendoutput);
+   if (IsLite()) fMergePrg.IncreaseNWrks();
 }
 
 //______________________________________________________________________________

@@ -333,7 +333,7 @@ void TProofPlayer::AddQueryResult(TQueryResult *q)
                break;
             }
             // Record position according to end time
-            if (qr->GetEndTime().Convert() < q->GetEndTime().Convert())
+            if (qr->GetStartTime().Convert() < q->GetStartTime().Convert())
                qp = qr;
          }
 
