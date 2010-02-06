@@ -71,9 +71,9 @@ Reflex::ScopeBase::ScopeBase(const char* scope,
          declScopePtr = (new Namespace(declScope.c_str()))->ThisScope();
       } else {
          ScopeName* sn = 0;
-         Type scopeType = Type::ByName(declScope);
-         if (scopeType.Id()) {
-            TypeName* scopeTypeName = (TypeName*) scopeType.Id();
+         Type tScope = Type::ByName(declScope);
+         if (tScope.Id()) {
+            TypeName* scopeTypeName = (TypeName*) tScope.Id();
             if (scopeTypeName->LiteralName().IsLiteral()) {
                sn = new ScopeName(Literal(scopeTypeName->Name()), 0);
             } else {
