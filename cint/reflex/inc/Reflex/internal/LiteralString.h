@@ -15,6 +15,7 @@
 #include <set>
 #include <cstring>
 #include <string>
+#include "Reflex/Kernel.h"
 
 namespace Reflex {
    class LiteralStringSet {
@@ -29,7 +30,7 @@ namespace Reflex {
       std::set<const void*> fLiterals;
    };
 
-   class LiteralString {
+   class RFLX_API LiteralString {
    public:
       LiteralString(): fLiteral(0), fAllocSize(0) {}
       LiteralString(const char* s);
