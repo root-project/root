@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -18,9 +18,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -75,26 +75,26 @@ namespace TMVA {
    class MethodCuts;
    class MethodBoost;
    class DataSetInfo;
-   
+
    class MethodBase : virtual public IMethod, public Configurable {
-      
+
    public:
 
       enum EWeightFileType { kROOT=0, kTEXT };
-      
+
       // default constructur
       MethodBase( const TString& jobName,
                   Types::EMVA methodType,
-                  const TString& methodTitle, 
+                  const TString& methodTitle,
                   DataSetInfo& dsi,
-                  const TString& theOption = "", 
+                  const TString& theOption = "",
                   TDirectory* theBaseDir = 0 );
-      
-      // constructor used for Testing + Application of the MVA, only (no training), 
+
+      // constructor used for Testing + Application of the MVA, only (no training),
       // using given weight file
       MethodBase( Types::EMVA methodType,
                   DataSetInfo& dsi,
-                  const TString& weightFile, 
+                  const TString& weightFile,
                   TDirectory* theBaseDir = 0 );
 
       // default destructur
@@ -156,7 +156,7 @@ namespace TMVA {
 
       // Rarity of classifier response (signal or background (default) is uniform in [0,1])
       virtual Double_t GetRarity( Double_t mvaVal, Types::ESBType reftype = Types::kBackground ) const;
- 
+
       // create ranking
       virtual const Ranking* CreateRanking() = 0;
 
@@ -176,7 +176,7 @@ namespace TMVA {
       void WriteStateToFile     () const;
       void ReadStateFromFile    ();
 
-   protected:      
+   protected:
       // the actual "weights"
       virtual void AddWeightsXMLTo      ( void* parent ) const = 0;
       virtual void ReadWeightsFromXML   ( void* wghtnode ) = 0;
@@ -191,9 +191,12 @@ namespace TMVA {
       void ReadStateFromXML     ( void* parent );
       void WriteStateToStream   ( std::ostream& tf ) const;   // needed for MakeClass
       void WriteVarsToStream    ( std::ostream& tf, const TString& prefix = "" ) const;  // needed for MakeClass
+
+   public: // these two need to be public, they are used to read in-memory weight-files
       void ReadStateFromStream  ( std::istream& tf );         // backward compatibility
       void ReadStateFromStream  ( TFile&        rf );         // backward compatibility
 
+   private:
       // the variable information
       void AddVarsXMLTo         ( void* parent  ) const;
       void AddSpectatorsXMLTo   ( void* parent  ) const;
@@ -215,9 +218,9 @@ namespace TMVA {
       // ---------- public evaluation methods --------------------------------------
 
       // individual initialistion for testing of each method
-      // overload this one for individual initialisation of the testing, 
-      // it is then called automatically within the global "TestInit" 
-      
+      // overload this one for individual initialisation of the testing,
+      // it is then called automatically within the global "TestInit"
+
       // variables (and private menber functions) for the Evaluation:
       // get the effiency. It fills a histogram for efficiency/vs/bkg
       // and returns the one value fo the efficiency demanded for 
