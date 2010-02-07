@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.19 2009/11/03 02:52:19 abh Exp $
+#              $Id: GNUmakefile,v 1.20 2010/01/05 01:16:38 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -446,7 +446,7 @@ $(OBJDIR)/XrdCmsRRQ.o:       XrdCmsRRQ.cc        XrdCmsRRQ.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsRRQ.o XrdCmsRRQ.cc
 
 $(OBJDIR)/XrdCmsRTable.o:    XrdCmsRTable.cc     XrdCmsRTable.hh \
-                             XrdCmsNode.hh       XrdCmsTrace.hh \
+                             XrdCmsNode.hh       XrdCmsTrace.hh  XrdCmsTypes.hh\
                              XrdSysPthread.hh
 	@echo Compiling XrdCmsRTable.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsRTable.o XrdCmsRTable.cc

@@ -27,9 +27,9 @@ const char *XrdOucNSWalkCVSID = "$Id$";
 /******************************************************************************/
   
 XrdOucNSWalk::XrdOucNSWalk(XrdSysError *erp, const char *dpath,
-                                             const char *lkfn, int opts)
+                                             const char *lkfn, int opts,
+                                             XrdOucTList *xlist)
 {
-
 // Set the required fields
 //
    eDest = erp;
@@ -40,6 +40,15 @@ XrdOucNSWalk::XrdOucNSWalk(XrdSysError *erp, const char *dpath,
    DPfd = LKfd = -1;
    errOK= opts & skpErrs;
    DEnts= 0;
+   edCB = 0;
+
+// Copy the exclude list if one exists
+//
+   if (!xlist) XList = 0;
+      else while(xlist)
+                {XList = new XrdOucTList(xlist->text,xlist->ival,XList);
+                 xlist = xlist->next;
+                }
 }
 
 /******************************************************************************/
@@ -53,6 +62,8 @@ XrdOucNSWalk::~XrdOucNSWalk()
    if (LKFn) free(LKFn);
 
    while((tP = DList)) {DList = tP->next; delete tP;}
+
+   while((tP = XList)) {XList = tP->next; delete tP;}
 }
 
 /******************************************************************************/
@@ -74,6 +85,7 @@ XrdOucNSWalk::NSEnt *XrdOucNSWalk::Index(int &rc, const char **dPath)
          rc = Build();
          if (LKfd >= 0) close(LKfd);
          if (DEnts || (rc && !errOK)) break;
+         if (edCB && isEmpty) edCB->isEmpty(&dStat, DPath, LKFn);
         }
 
 // Return the result
@@ -128,6 +140,11 @@ int XrdOucNSWalk::Build()
                  } theEnt;
    struct dirent  *dp;
    int             rc = 0, getLI = Opts & retLink;
+   int             nEnt = 0, xLKF = 0, chkED = (edCB != 0) && (LKFn != 0);
+
+// Initialize the empty flag prior to doing anything else
+//
+   isEmpty = 0;
 
 // If we can optimize with a directory file descriptor, get one
 //
@@ -149,17 +166,19 @@ int XrdOucNSWalk::Build()
    errno = 0;
    while((dp = readdir(theEnt.D)))
         {if (!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..")) continue;
-         strcpy(File, dp->d_name);
+         strcpy(File, dp->d_name); nEnt++;
          if (!theEnt.P) theEnt.P = new NSEnt();
          rc = getStat(theEnt.P, getLI);
          switch(theEnt.P->Type)
                {case NSEnt::isDir:
-                     if (Opts & Recurse && (!getLI || !isSymlink()))
+                     if (Opts & Recurse && (!getLI || !isSymlink())
+                     &&  (!XList || !inXList(File)))
                         DList = new XrdOucTList(DPath, 0, DList);
                      if (!(Opts & retDir)) continue;
                      break;
                 case NSEnt::isFile:
-                     if (!(Opts & retFile)) continue;
+                     if ((chkED && !xLKF && (xLKF = !strcmp(File, LKFn)))
+                     ||  !(Opts & retFile)) continue;
                      break;
                 case NSEnt::isLink:
                      if ((rc = getLink(theEnt.P)))
@@ -184,6 +203,13 @@ int XrdOucNSWalk::Build()
    *File = '\0';
    if ((rc = errno) && !errOK)
       {eDest->Emsg("Build", rc, "reading directory", DPath); return rc;}
+
+// Check if we need to do a callback for an empty directory
+//
+   if (edCB && xLKF == nEnt && !DEnts)
+      {if (!fstat(DPfd, &dStat)) isEmpty = 1;
+          else eDest->Emsg("Build", errno, "stating directory", DPath);
+      }
    return 0;
 }
 
@@ -245,6 +271,27 @@ do{rc = doLstat ? lstat(DPath, &(eP->Stat)) : stat(DPath, &(eP->Stat));
    else                                             eP->Type = NSEnt::isMisc;
 
    return 0;
+}
+  
+/******************************************************************************/
+/*                               i n X L i s t                                */
+/******************************************************************************/
+  
+int XrdOucNSWalk::inXList(const char *dName)
+{
+    XrdOucTList *xTP = XList, *pTP = 0;
+
+// Search for the directory entry
+//
+    while(xTP && strcmp(DPath, xTP->text)) {pTP = xTP; xTP = xTP->next;}
+
+// If not found return false. Otherwise, delete the entry and return true.
+//
+   if (!xTP) return 0;
+   if (pTP) pTP->next = xTP->next;
+      else      XList = xTP->next;
+   delete xTP;
+   return 1;
 }
   
 /******************************************************************************/

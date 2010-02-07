@@ -135,6 +135,7 @@ int       GenRemotePath(const char *, char *);
 int       Init(XrdSysLogger *, const char *);
 int       IsRemote(const char *path) 
                   {return (RPList.Find(path) & XRDEXP_REMOTE) != 0;}
+int       Lfn2Pfn(const char *Path, char *buff, int blen);
 int       Mkdir(const char *, mode_t mode, int mkpath=0);
 int       Mkpath(const char *, mode_t mode);
 unsigned long long PathOpts(const char *path) {return RPList.Find(path);}

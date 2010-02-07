@@ -512,7 +512,7 @@ int XrdXrootdProtocol::do_Locate()
    static XrdXrootdCallBack locCB("locate");
    int rc, opts, fsctl_cmd = SFS_FSCTL_LOCATE;
    const char *opaque;
-   char *fn = argp->buff, opt[8], *op=opt;
+   char *Path, *fn = argp->buff, opt[8], *op=opt;
    XrdOucErrInfo myError(Link->ID, &locCB, ReqID.getID());
 
 // Unmarshall the data
@@ -532,10 +532,21 @@ int XrdXrootdProtocol::do_Locate()
       return Response.Send(kXR_redirect, Route[RD_locate].Port,
                                          Route[RD_locate].Host);
 
+// Check if this is a non-specific locate
+//
+        if (*fn != '*') Path = fn;
+   else if (*(fn+1))    Path = fn+1;
+   else                {Path = 0; 
+                        fn = XPList.Next()->Path();
+                        fsctl_cmd |= SFS_O_TRUNC;
+                       }
+
 // Prescreen the path
 //
-   if (rpCheck(fn, &opaque)) return rpEmsg("Locating", fn);
-   if (!Squash(fn))          return vpEmsg("Locating", fn);
+   if (Path)
+      {if (rpCheck(Path, &opaque)) return rpEmsg("Locating", Path);
+       if (!Squash(Path))          return vpEmsg("Locating", Path);
+      }
 
 // Preform the actual function
 //
@@ -2226,14 +2237,16 @@ int XrdXrootdProtocol::fsError(int rc, XrdOucErrInfo &myError)
       }
 
 // Process the deferal. We also synchronize sending the deferal response with
-// sending the actual defered response as these can violate time causality.
+// sending the actual defered response by calling Done() in the callback object.
+// This allows the requestor of he callback know that we actually send the
+// kXR_waitresp to the end client and avoid violating time causality.
 //
    if (rc == SFS_STARTED)
       {SI->stallCnt++;
        if (ecode <= 0) ecode = 1800;
        TRACEI(STALL, Response.ID() <<"delaying client up to " <<ecode <<" sec");
        rc = Response.Send(kXR_waitresp, ecode, eMsg);
-       myError.getErrCB()->Done(ecode, &myError);
+       if (myError.getErrCB()) myError.getErrCB()->Done(ecode, &myError);
        return (rc ? rc : 1);
       }
 

@@ -1,4 +1,4 @@
-#              $Id: GNUmake.rules.sunCCamd510,v 1.1 2009/09/16 14:22:42 ganis Exp $
+#              $Id: GNUmake.rules.sunCCamd510,v 1.2 2009/12/11 01:57:01 abh Exp $
 
 #------------------------------------------------------------------------------#
 #              R u l e s   f o r   g e n e r i c   s u n C C                   #
@@ -16,7 +16,7 @@ TYPEDBG    = $(TYPEMISC) $(SUNMT) -g -xs -xtarget=opteron -xarch=amd64
 TYPELDSO   = -G -xtarget=opteron -xarch=amd64
 TYPESHLIB  = so
 
-TYPELIBS   = -L/usr/lib/amd64 -L/lib/amd64 \
+TYPELIBS   = -R/usr/lib/amd64 -L/usr/lib/amd64 -L/lib/amd64 \
              -lposix4 -lsocket -lnsl $(PTHREAD) -ldl
 TYPELIBMT  = -lmtmalloc
 TYPELIBSF  = -lsendfile

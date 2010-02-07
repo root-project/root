@@ -438,7 +438,8 @@ FILE *XrdPosix_Fopen(const char *path, const char *mode)
 
 // Now open the file
 //
-   if ((fd = Xroot.Open(myPath, omode, 0, 1)) < 0) return 0;
+   if ((fd = Xroot.Open(myPath, omode | XrdPosixXrootd::isStream , 0)) < 0)
+      return 0;
 
 // First obtain a free stream
 //

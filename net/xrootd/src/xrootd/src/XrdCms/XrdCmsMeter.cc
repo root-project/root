@@ -483,7 +483,7 @@ void XrdCmsMeter::SpaceMsg(int why)
   
 void XrdCmsMeter::UpdtSpace()
 {
-   static const SMask_t allNodes = ~0ULL;
+   static const SMask_t allNodes(~0);
    SpaceData mySpace;
 
 // Get new space values for the cluser

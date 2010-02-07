@@ -110,7 +110,7 @@ int XrdCnsConfig::Configure(int argc, char **argv, char *argt)
 
    const char *TraceID = "Config";
    XrdOucArgs Spec(&MLog,(argt ? "Cns_Config: ":"XrdCnsd: "),
-                          "a:b:dD:e:E:i:I:l:L:N:p:q:R:");
+                          "a:b:B:c:dD:e:E:i:I:l:L:N:p:q:R:");
    char buff[2048], *dP, *tP, *dnsEtxt = 0, *n2n = 0, *lroot = 0, *xpl = 0;
    char theOpt, *theArg;
    long long llval;
@@ -131,6 +131,8 @@ int XrdCnsConfig::Configure(int argc, char **argv, char *argt)
                  break;
        case 'B': Opts |= optNoCns;
        case 'b': bPath = Spec.argval;
+                 break;
+       case 'c': cPath = Spec.argval;
                  break;
        case 'D': NoGo |= XrdOuca2x::a2i(MLog,"-D value",Spec.argval,&n,0,4);
                  if (!NoGo) EnvPutInt("DebugLevel", n);

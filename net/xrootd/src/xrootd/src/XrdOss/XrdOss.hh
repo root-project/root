@@ -14,8 +14,10 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <string.h>
 
 class XrdOucEnv;
 class XrdSysLogger;
@@ -136,6 +138,11 @@ virtual int     Stats(char *bp, int bl) {return 0;}
 
 virtual int     StatVS(XrdOssVSInfo *sP, const char *sname=0, int updt=0)
                       {return -ENOTSUP;}
+
+virtual int     Lfn2Pfn(const char *Path, char *buff, int blen)
+                       {if ((int)strlen(Path) >= blen) return -ENAMETOOLONG;
+                        strcpy(buff, Path); return 0;
+                       }
 
                 XrdOss() {}
 virtual        ~XrdOss() {}

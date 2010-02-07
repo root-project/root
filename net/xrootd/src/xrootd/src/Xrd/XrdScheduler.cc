@@ -279,7 +279,7 @@ void XrdScheduler::Run()
               } else {
                num_JobsinQ = 0;
                if (num_Layoffs > 0)
-                  {num_Layoffs--; num_TDestroy--; num_Workers--;
+                  {num_Layoffs--; num_TDestroy++; num_Workers--; idl_Workers--;
                    TRACE(SCHED, "terminating thread; workers=" <<num_Workers);
                    SchedMutex.UnLock();
                    return;

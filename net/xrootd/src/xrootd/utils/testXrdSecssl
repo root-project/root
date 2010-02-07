@@ -1,0 +1,41 @@
+#
+# Test script for the secssl built with the classic build.
+# Run it like this in a bash shell:
+#
+#        source utils/testXrdSecssl
+#
+# NB: 1) If not bash, start a bash shell first: $ bash
+#     2) You need to include <xrddir>/bin in PATH and <xrddir>/lib
+#        in LD_LIBRARY_PATH first
+#
+# For the autotools build, the test can be run in the following way:
+#
+#        cd src/XrdSecssl
+#        make test
+#
+
+BINEXE="xrdsecssltest"
+
+if test -d "/etc/grid-security/certificates" ; then
+   if test -e "/etc/grid-security/hostcert.pem" && test -e "/etc/grid-security/hostkey.pem" ; then
+      if test -e "/tmp/x509up_u$UID" ; then
+         # Start the test
+         echo "Starting Server ..."
+         $BINEXE server >& /tmp/xrdsecssltest-server.log &
+         echo "Starting Client ..."
+         sleep 1
+         $BINEXE client 2>  /tmp/xrdsecssltest-client.log
+         # Cleanup processes
+         /usr/bin/killall -9 `basename $BINEXE` >& /dev/null
+         sleep 1
+         echo "Client and Server stopped!"
+      else
+         echo "Error: you need /tmp/x509up_u$UID";\
+      fi
+   else
+      echo "Error: you need /etc/grid-security/hostcert.pem and /etc/grid-security/hostkey.pem";\
+   fi
+else
+   echo "Error: you need /etc/grid-security/certificates"
+fi
+

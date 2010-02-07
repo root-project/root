@@ -26,6 +26,7 @@ const char *XrdClientCVSID = "$Id$";
 #include "XrdClient/XrdClientReadV.hh"
 #include "XrdOuc/XrdOucCRC.hh"
 #include "XrdClient/XrdClientReadAhead.hh"
+#include "XrdClient/XrdClientCallback.hh"
 
 #include <stdio.h>
 #ifndef WIN32
@@ -50,14 +51,19 @@ void *FileOpenerThread(void *arg, XrdClientThread *thr) {
    thr->SetCancelDeferred();
    thr->SetCancelOn();
 
-   thisObj->TryOpen(thisObj->fOpenPars.mode, thisObj->fOpenPars.options, false);
+
+   bool res = thisObj->TryOpen(thisObj->fOpenPars.mode, thisObj->fOpenPars.options, false);
+   if (thisObj->fXrdCcb) thisObj->fXrdCcb->OpenComplete(thisObj, thisObj->fXrdCcbArg, res);
 
    return 0;
 }
 
 
 //_____________________________________________________________________________
-XrdClient::XrdClient(const char *url) {
+XrdClient::XrdClient(const char *url,
+                     XrdClientCallback *XrdCcb,
+                     void *XrdCcbArg) : XrdClientAbs(XrdCcb, XrdCcbArg)  {
+
    fReadAheadMgr = 0;
    fReadTrimBlockSize = 0;
    fOpenerTh = 0;
@@ -74,7 +80,7 @@ XrdClient::XrdClient(const char *url) {
    if (!ConnectionManager)
       Info(XrdClientDebug::kUSERDEBUG,
            "Create",
-           "(C) 2004-2010 by the Xrootd group. XrdClient $Revision: 1.152 $ - Xrootd version: " << XrdVSTRING);
+           "(C) 2004-2010 by the Xrootd group. XrdClient $Revision: 1.154 $ - Xrootd version: " << XrdVSTRING);
    
 #ifndef WIN32
    signal(SIGPIPE, SIG_IGN);
@@ -361,6 +367,9 @@ bool XrdClient::Open(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 		  fUrl.File << " on host " << fUrl.Host << ":" <<
 		  fUrl.Port);
 
+            if (fXrdCcb && !doitparallel) 
+               fXrdCcb->OpenComplete(this, fXrdCcbArg, false);
+
 	    return FALSE;
 
 	} else {
@@ -368,8 +377,11 @@ bool XrdClient::Open(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 	    if (doitparallel) {
 		Info(XrdClientDebug::kUSERDEBUG, "Open", "File open in progress.");
 	    }
-	    else
+	    else {
 		Info(XrdClientDebug::kUSERDEBUG, "Open", "File opened succesfully.");
+                if (fXrdCcb) 
+                   fXrdCcb->OpenComplete(this, fXrdCcbArg, true);
+            }
 
 	}
 
@@ -986,6 +998,7 @@ bool XrdClient::TryOpen(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
     // otherwise return FALSE
     if (fConnModule->LastServerResp.status != kXR_NotFound) {
 	TerminateOpenAttempt();
+
 	return FALSE;
     }
 
@@ -1018,12 +1031,14 @@ bool XrdClient::TryOpen(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 	    XrdClientMStream::EstablishParallelStreams(fConnModule);
 
 	    TerminateOpenAttempt();
+
 	    return TRUE;
 	}
 	else {
 
 	    Error("Open", "Error opening the file.");
 	    TerminateOpenAttempt();
+
 	    return FALSE;
 	}
 
@@ -1180,7 +1195,10 @@ bool XrdClient::Close() {
     }
 
     ClientRequest closeFileRequest;
-  
+
+    // Set the max transaction duration
+    fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
     memset(&closeFileRequest, 0, sizeof(closeFileRequest) );
 
     fConnModule->SetSID(closeFileRequest.header.streamid);

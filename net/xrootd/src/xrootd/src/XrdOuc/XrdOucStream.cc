@@ -231,7 +231,7 @@ void XrdOucStream::Echo()
 /*                               E   x   e   c                                */
 /******************************************************************************/
   
-int XrdOucStream::Exec(const char *theCmd, int inrd)
+int XrdOucStream::Exec(const char *theCmd, int inrd, int efd)
 {
     int j;
     char *cmd, *origcmd, *parm[MaxARGC];
@@ -254,15 +254,14 @@ int XrdOucStream::Exec(const char *theCmd, int inrd)
 
     // Continue with normal processing
     //
-    j = Exec(parm, inrd);
+    j = Exec(parm, inrd, efd);
     free(origcmd);
     return j;
 }
 
-int XrdOucStream::Exec(char **parm, int inrd)
+int XrdOucStream::Exec(char **parm, int inrd, int efd)
 {
-    int fildes[2], Child_in = -1, Child_out = -1;
-    int Child_log = (Eroute ? Eroute->logger()->xlogFD() : -1);
+    int fildes[2], Child_in = -1, Child_out = -1, Child_log = -1;
 
     // Create a pipe. Minimize file descriptor leaks.
     //
@@ -284,12 +283,18 @@ int XrdOucStream::Exec(char **parm, int inrd)
            }
        } else {Child_out = FD; Child_in = FE;}
 
+    // Handle the standard error file descriptor
+    //
+    if (!efd) Child_log = (Eroute ? dup(Eroute->logger()->originalFD()) : -1);
+       else if (efd > 0) Child_log = efd;
+
     // Fork a process first so we can pick up the next request. We also
     // set the process group in case the chi;d hasn't been able to do so.
     //
     if ((child = fork()))
        {          close(Child_out);
         if (inrd) close(Child_in );
+        if (!efd && Child_log >= 0) close(Child_log);
         if (child < 0)
            return Err(Exec, errno, "fork request process for", parm[0]);
         setpgid(child, child);
@@ -580,7 +585,7 @@ int XrdOucStream::GetRest(char *theBuff, int Blen, int lowcase)
    while ((tp = GetWord(lowcase)))
          {tlen = strlen(tp);
           if (tlen+1 >= Blen) return 0;
-          if (myBuff != theBuff) *myBuff++ = ' ';
+          if (myBuff != theBuff) {*myBuff++ = ' '; Blen--;}
           strcpy(myBuff, tp);
           Blen -= tlen; myBuff += tlen;
          }

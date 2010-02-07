@@ -49,12 +49,14 @@ XrdSysSemaphore     respSync;
 
 class XrdNetBuffer;
   
-class XrdCmsResp : public XrdOucErrInfo
+class XrdCmsResp : public XrdOucEICB, public XrdOucErrInfo
 {
 public:
 friend class XrdCmsRespQ;
 
 static XrdCmsResp *Alloc(XrdOucErrInfo *erp, int msgid);
+
+       void        Done(int &Result, XrdOucErrInfo *eInfo) {Recycle();}
 
 inline int         ID() {return myID;}
 
@@ -63,12 +65,13 @@ inline int         ID() {return myID;}
 
 static void        Reply();
 
+       int         Same(unsigned long long arg1, unsigned long long arg2)
+                       {return 0;}
+
 static void        setDelay(int repdly) {RepDelay = repdly;}
 
        XrdCmsResp() : XrdOucErrInfo(UserID) {next = 0; myBuff = 0;}
       ~XrdCmsResp() {}
-
-void   operator delete(void *p) {((XrdCmsResp *)p)->Recycle();}
 
 private:
        void Recycle(void *p=0);

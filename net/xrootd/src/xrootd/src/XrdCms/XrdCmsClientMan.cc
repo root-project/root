@@ -222,11 +222,10 @@ void *XrdCmsClientMan::Start()
        // must receive the respwait before the subsequent response.
        //
        while(Receive())
-            if (Response.modifier & CmsResponse::kYR_async) relayResp();
-               else if (Response.rrCode == kYR_status) setStatus();
-                       else {XrdCmsClientMsg::Reply(HPfx, Response, NetBuff);
-                             if (Response.rrCode == kYR_waitresp) syncResp.Wait();
-                            }
+                 if (Response.modifier & CmsResponse::kYR_async) relayResp();
+            else if (Response.rrCode == kYR_status) setStatus();
+            else if (XrdCmsClientMsg::Reply(HPfx, Response, NetBuff))
+                    {if (Response.rrCode == kYR_waitresp) syncResp.Wait();}
 
        // Tear down the connection
        //

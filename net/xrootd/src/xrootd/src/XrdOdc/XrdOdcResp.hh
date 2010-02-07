@@ -43,26 +43,26 @@ XrdSysSemaphore     respSync;
 /*                            X r d O d c R e s p                             */
 /******************************************************************************/
   
-class XrdOdcResp : public XrdOucErrInfo
+class XrdOdcResp : public XrdOucErrInfo, public XrdOucEICB
 {
 public:
 friend class XrdOdcRespQ;
 
 static XrdOdcResp *Alloc(XrdOucErrInfo *erp, int msgid);
 
+       void        Done(int &Result, XrdOucErrInfo *eInfo) {Recycle();}
+
 inline int         ID() {return myID;}
 
        void        Reply(const char *Man, char *reply);
+
+       int         Same(unsigned long long arg1, unsigned long long arg2)
+                       {return 0;}
 
 static void        setDelay(int repdly) {RepDelay = repdly;}
 
        XrdOdcResp() : XrdOucErrInfo(UserID) {next = 0;}
       ~XrdOdcResp() {}
-
-void   operator delete(void *p)
-                      {if (XrdOdcResp::numFree >= XrdOdcResp::maxFree) free(p);
-                          else ((XrdOdcResp *)p)->Recycle();
-                      }
 
 private:
        void Recycle();

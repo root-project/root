@@ -159,6 +159,32 @@ int XrdSysLogger::xlogFD() {return -1;}
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
 /******************************************************************************/
+/*                               p u t E m s g                                */
+/******************************************************************************/
+  
+// This internal logging method is used when the caller already has the mutex!
+
+void XrdSysLogger::putEmsg(char *msg, int msz)
+{
+    struct iovec eVec[2];
+    int retc;
+    char tbuff[24];
+
+// Prefix message with time
+//
+   eVec[0].iov_base = tbuff;
+   eVec[0].iov_len  = (int)Time(tbuff);
+   eVec[1].iov_base = msg;
+   eVec[1].iov_len  = msz;
+
+// In theory, writev may write out a partial list. This rarely happens in
+// practice and so we ignore that possibility (recovery is pretty tough).
+//
+   do { retc = writev(eFD, (const struct iovec *)eVec, 2);}
+               while (retc < 0 && errno == EINTR);
+}
+
+/******************************************************************************/
 /*                                R e B i n d                                 */
 /******************************************************************************/
   
@@ -219,9 +245,6 @@ int XrdSysLogger::ReBind(int dorename)
 /*                                  T r i m                                   */
 /******************************************************************************/
 
-#define putEmsg(msg,msz) eVec[1].iov_base = msg; eVec[1].iov_len = msz; \
-                         eVec[0].iov_base = 0; Put(2, eVec)
-  
 #ifndef WIN32
 void XrdSysLogger::Trim()
 {
@@ -240,7 +263,6 @@ void XrdSysLogger::Trim()
           } logList(0,0,0);
 
    struct LogFile *logEnt, *logPrev, *logNow;
-   struct iovec eVec[2];
    char eBuff[2048], logFN[256], logDir[1024], *logSfx;
    struct dirent *dp;
    struct stat buff;

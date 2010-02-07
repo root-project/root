@@ -155,7 +155,7 @@ int XrdOssLock::Serialize(const char *fn, int lkwant)
 
 // Now lock the file and return the file descriptor.
 //
-    if ((rc = XLock(lkwant)))
+    if ((rc = XLock(lkfd, lkwant)))
        {char *mp;
         close(lkfd); lkfd = -1;
         if (rc == EWOULDBLOCK) return -EWOULDBLOCK;
@@ -270,7 +270,7 @@ int XrdOssLock::UnSerialize(int opts)
 
 // Release the lock if we need to.
 //
-   if (!(opts & XrdOssREGRADE)) XLock(0);
+   if (!(opts & XrdOssREGRADE)) XLock(lkfd, 0);
       else dosleep = 0;
 
 // Based on execution option, perform the required action.
@@ -279,7 +279,7 @@ int XrdOssLock::UnSerialize(int opts)
     switch(xopts)
          {case XrdOssLEAVE: break;
           case XrdOssRETRY: do {if (dosleep) nanosleep(&naptime, 0);
-                               if (! (rc = XLock(opts)) ) break;
+                               if (! (rc = XLock(lkfd, opts)) ) break;
                                dosleep = 1;
                               } while( rc == EWOULDBLOCK && 
                                       !(opts & XrdOssNOWAIT) && maxtry--);
@@ -324,13 +324,13 @@ int XrdOssLock::Build_LKFN(char *buff, int blen, const char *fn, int ftype)
 /*                                X L o c k                                   */
 /******************************************************************************/
 
-int XrdOssLock::XLock(int opts)
+int XrdOssLock::XLock(int lkFD, int opts)
 {
     FLOCK_t lock_args;
 
 // Make sure we have a lock outstanding
 //
-    if (lkfd < 0) return XrdOssOK;
+    if (lkFD < 0) return XrdOssOK;
 
 // Establish locking options
 //
@@ -341,7 +341,7 @@ int XrdOssLock::XLock(int opts)
 
 // Perform action.
 //
-    if (fcntl(lkfd, (opts & XrdOssNOWAIT ? F_SETLK : F_SETLKW), 
+    if (fcntl(lkFD, (opts & XrdOssNOWAIT ? F_SETLK : F_SETLKW),
                     &lock_args)) return errno;
     return XrdOssOK;
 }

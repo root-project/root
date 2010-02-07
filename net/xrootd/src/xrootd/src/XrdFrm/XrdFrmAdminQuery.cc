@@ -128,10 +128,10 @@ int XrdFrmAdmin::QuerySpace(XrdOucArgs &Spec)
                }
        else{fP = new XrdFrmFiles(pfn, opts);
             while((sP = fP->Get(ec,1)))
-                 {if (sP->File[XrdOssPath::isBase])
-                     QuerySpace(sP->File[XrdOssPath::isBase]->Path,
-                                sP->File[XrdOssPath::isBase]->Link,
-                                sP->File[XrdOssPath::isBase]->Lksz);
+                 {if (sP->baseFile())
+                     QuerySpace(sP->basePath(),
+                                sP->baseFile()->Link,
+                                sP->baseFile()->Lksz);
                  }
             if (ec) finalRC = 4;
             delete fP;

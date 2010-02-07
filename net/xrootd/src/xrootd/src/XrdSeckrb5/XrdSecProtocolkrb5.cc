@@ -60,7 +60,7 @@ extern "C" {
 
 #define XrdSecMAXPATHLEN      4096
 
-#define CLDBG(x) if (options & XrdSecDEBUG) cerr <<"Seckrb5: " <<x <<endl;
+#define CLDBG(x) if (client_options & XrdSecDEBUG) cerr <<"Seckrb5: " <<x <<endl;
 #define CLPRT(x) cerr <<"Seckrb5: " <<x <<endl;
 
 typedef  krb5_error_code krb_rc;
@@ -86,6 +86,7 @@ static  char              *getPrincipal() {return Principal;}
 static  int                Init(XrdOucErrInfo *einfo, char *KP=0, char *kfn=0);
 
 static  void               setOpts(int opts) {options = opts;}
+static  void               setClientOpts(int opts) {client_options = opts;}
 static  void               setParms(char *param) {Parms = param;}
 static  void               setExpFile(char *expfile)
                                      {if (expfile)
@@ -107,6 +108,7 @@ static  void               setExpFile(char *expfile)
                            Entity.name = CName;
                            Step = 0;
                            AuthContext = 0;
+                           AuthClientContext = 0;
                            Ticket = 0;
                            Creds = 0;
                           }
@@ -120,10 +122,14 @@ private:
 static int Fatal(XrdOucErrInfo *erp,int rc,const char *msg1,char *KP=0,int krc=0);
 static int get_krbCreds(char *KP, krb5_creds **krb_creds);
 
-static XrdSysMutex        krbContext;    // Client or server
-static int                options;       // Client or server
-static krb5_context       krb_context;   // Client or server
-static krb5_ccache        krb_ccache;    // Client or server
+static XrdSysMutex        krbContext;    // Server
+static XrdSysMutex        krbClientContext;// Client
+static int                options;       // Server
+static int                client_options;// Client
+static krb5_context       krb_context;   // Server
+static krb5_context       krb_client_context;   // Client 
+static krb5_ccache        krb_client_ccache;    // Client 
+static krb5_ccache        krb_ccache;    // Server
 static krb5_keytab        krb_keytab;    // Server
 static uid_t              krb_kt_uid;// Server
 static gid_t              krb_kt_gid;// Server
@@ -142,6 +148,7 @@ char                      CName[256];    // Kerberos limit
 char                     *Service;       // Target principal for client
 char                      Step;          // Indicates at which step we are
 krb5_auth_context         AuthContext;   // Authetication context
+krb5_auth_context         AuthClientContext;   // Authetication context
 krb5_ticket              *Ticket;        // Ticket associated to client authentication
 krb5_creds               *Creds;         // Client: credentials
 };
@@ -150,11 +157,15 @@ krb5_creds               *Creds;         // Client: credentials
 /*                           S t a t i c   D a t a                            */
 /******************************************************************************/
   
-XrdSysMutex         XrdSecProtocolkrb5::krbContext;        // Client or server
+XrdSysMutex         XrdSecProtocolkrb5::krbContext;        // Server
+XrdSysMutex         XrdSecProtocolkrb5::krbClientContext;  // Client
 
-int                 XrdSecProtocolkrb5::options = 0;       // Client or Server
-krb5_context        XrdSecProtocolkrb5::krb_context;       // Client or server
-krb5_ccache         XrdSecProtocolkrb5::krb_ccache;        // Client or server
+int                 XrdSecProtocolkrb5::client_options = 0;// Client
+int                 XrdSecProtocolkrb5::options = 0;       // Server
+krb5_context        XrdSecProtocolkrb5::krb_context;       // Server
+krb5_context        XrdSecProtocolkrb5::krb_client_context;       // Client 
+krb5_ccache         XrdSecProtocolkrb5::krb_client_ccache; // Client
+krb5_ccache         XrdSecProtocolkrb5::krb_ccache;        // Server
 krb5_keytab         XrdSecProtocolkrb5::krb_keytab = NULL; // Server
 uid_t               XrdSecProtocolkrb5::krb_kt_uid = 0;    // Server
 gid_t               XrdSecProtocolkrb5::krb_kt_gid = 0;    // Server
@@ -175,6 +186,7 @@ void XrdSecProtocolkrb5::Delete()
      if (Creds)       krb5_free_creds(krb_context, Creds);
      if (Ticket)      krb5_free_ticket(krb_context, Ticket);
      if (AuthContext) krb5_auth_con_free(krb_context, AuthContext);
+     if (AuthClientContext) krb5_auth_con_free(krb_client_context, AuthClientContext);
      if (Entity.host) free(Entity.host);
      if (Service)     free(Service);
      delete this;
@@ -191,7 +203,7 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
    int bsz;
    krb_rc rc;
    krb5_data         outbuf;
-
+   CLDBG("getCredentials");
 // Supply null credentials if so needed for this protocol
 //
    if (!Service)
@@ -206,48 +218,55 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
       sprintf(ccname, "KRB5CCNAME=FILE:/tmp/krb5cc_%d", geteuid());
       putenv(strdup(ccname));
    }
-
+   CLDBG(getenv("KRB5CCNAME"));
+	 
 // Initialize the context and get the cache default.
 //
-   if ((rc = krb5_init_context(&krb_context)))
+   if ((rc = krb5_init_context(&krb_client_context)))
       {Fatal(error, ENOPROTOOPT, "Kerberos initialization failed", Service, rc);
        return (XrdSecCredentials *)0;
       }
 
+   CLDBG("init context");
 // Obtain the default cache location
 //
-   if ((rc = krb5_cc_default(krb_context, &krb_ccache)))
+   if ((rc = krb5_cc_default(krb_client_context, &krb_client_ccache)))
       {Fatal(error, ENOPROTOOPT, "Unable to locate cred cache", Service, rc);
        return (XrdSecCredentials *)0;
       }
 
+   CLDBG("cc cache default");
 // Check if the server asked for a forwardable ticket
 //
    char *pfwd = 0;
    if ((pfwd = (char *) strstr(Service,",fwd")))
       {
-         options |= XrdSecEXPTKN;
+         client_options |= XrdSecEXPTKN;
          *pfwd = 0;
       }
 
 // Clear outgoing ticket and lock the kerberos context
 //
    outbuf.length = 0; outbuf.data = 0;
-   krbContext.Lock();
+
+   CLDBG("context lock");
+   krbClientContext.Lock();
+   CLDBG("context locked");
 
 // If this is not the first call, we are asked to send over a delegated ticket:
 // we must create it first
 // we save it into a file and return signalling the end of the hand-shake
 //
+
    if (Step > 0)
       {if ((rc = get_krbFwdCreds(Service, &outbuf)))
-          {krbContext.UnLock();
+          {krbClientContext.UnLock();
            Fatal(error, ESRCH, "Unable to get forwarded credentials", Service, rc);
            return (XrdSecCredentials *)0;
           } else
             {bsz = XrdSecPROTOIDLEN+outbuf.length;
              if (!(buff = (char *)malloc(bsz)))
-                {krbContext.UnLock();
+                {krbClientContext.UnLock();
                  Fatal(error, ENOMEM, "Insufficient memory for credentials.", Service);
                  return (XrdSecCredentials *)0;
                 }
@@ -256,7 +275,7 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
                             (const void *)outbuf.data, (size_t)outbuf.length);
              CLDBG("Returned " <<bsz <<" bytes of creds; p=" <<Service);
              if (outbuf.data)  free(outbuf.data);
-             krbContext.UnLock();
+             krbClientContext.UnLock();
              return new XrdSecCredentials(buff, bsz);
             }
       }
@@ -267,14 +286,14 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
 
 // Get a service ticket for this principal
 //
-   const char *reinitcmd = (options & XrdSecEXPTKN) ? "kinit -f" : "kinit";
+   const char *reinitcmd = (client_options & XrdSecEXPTKN) ? "kinit -f" : "kinit";
    bool notdone = 1;
    bool reinitdone = 0;
    while (notdone)
       {if ((rc = (krb_rc)get_krbCreds(Service, &Creds)))
-          { if (!(options & XrdSecINITTKN) || reinitdone)
-               {krbContext.UnLock();
-                const char *m = (!(options & XrdSecINITTKN)) ?
+          { if (!(client_options & XrdSecINITTKN) || reinitdone)
+               {krbClientContext.UnLock();
+                const char *m = (!(client_options & XrdSecINITTKN)) ?
                                 "No or invalid credentials" : "Unable to get credentials";
                 Fatal(error, ESRCH, m, Service, rc);
                 return (XrdSecCredentials *)0;
@@ -287,10 +306,10 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
                        continue;
                       }
           }
-       if (options & XrdSecEXPTKN)
+       if (client_options & XrdSecEXPTKN)
           {// Make sure the ticket is forwardable
            if (!(Creds->ticket_flags & TKT_FLG_FORWARDABLE))
-              { if (options & XrdSecINITTKN)
+              { if (client_options & XrdSecINITTKN)
                    { // Need to re-init
                     CLPRT("Existing ticket is not forwardable: re-init ");
                     rc = system(reinitcmd);
@@ -299,7 +318,7 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
                     reinitdone = 1;
                     continue;
                    } else {
-                    krbContext.UnLock();
+                    krbClientContext.UnLock();
                     Fatal(error, ESRCH, "Existing ticket is not forwardable: cannot continue",
                                         Service, rc);
                     return (XrdSecCredentials *)0;
@@ -312,15 +331,15 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
 
 // Set the RET_TIME flag in the authentication context 
 //
-   if ((rc = krb5_auth_con_init(krb_context, &AuthContext)))
-      {krbContext.UnLock();
+   if ((rc = krb5_auth_con_init(krb_client_context, &AuthClientContext)))
+      {krbClientContext.UnLock();
        Fatal(error, ESRCH, "Unable to init a new auth context", Service, rc);
        return (XrdSecCredentials *)0;
       }
 
 // Generate a kerberos-style authentication message
 //
-   rc = krb5_mk_req_extended(krb_context, &AuthContext,
+   rc = krb5_mk_req_extended(krb_client_context, &AuthClientContext,
              AP_OPTS_USE_SESSION_KEY,(krb5_data *)0, Creds,&outbuf);
 
 // Check if all succeeded. If so, copy the ticket into the buffer. We wish
@@ -330,7 +349,7 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
    if (!rc)
       {bsz = XrdSecPROTOIDLEN+outbuf.length;
        if (!(buff = (char *)malloc(bsz)))
-          {krbContext.UnLock();
+          {krbClientContext.UnLock();
            Fatal(error, ENOMEM, "Insufficient memory for credentials.", Service);
            return (XrdSecCredentials *)0;
           }
@@ -339,14 +358,14 @@ XrdSecCredentials *XrdSecProtocolkrb5::getCredentials(XrdSecParameters *noparm,
               (const void *)outbuf.data, (size_t)outbuf.length);
        CLDBG("Returned " <<bsz <<" bytes of creds; p=" <<Service);
        if (outbuf.data)  free(outbuf.data);
-       krbContext.UnLock();
+       krbClientContext.UnLock();
        return new XrdSecCredentials(buff, bsz);
       }
 
 // Diagnose the failure
 //
    if (outbuf.data)  free(outbuf.data);
-   krbContext.UnLock();
+   krbClientContext.UnLock();
    Fatal(error, EACCES, "Unable to get credentials", Service, rc);
    return (XrdSecCredentials *)0;
 }
@@ -386,16 +405,28 @@ int XrdSecProtocolkrb5::Authenticate(XrdSecCredentials *cred,
        return -1;
       }
 
+   CLDBG("protocol check");
+
+   char printit[4096];
+   sprintf(printit,"Step is %d",Step);
+   CLDBG(printit);
 // If this is not the first call the buffer contains a forwarded token:
 // we save it into a file and return signalling the end of the hand-shake
 //
    if (Step > 0)
       {if ((rc = exp_krbTkn(cred, error)))
           iferror = (char *)"Unable to export the token to file";
-       if (rc && iferror)
+       if (rc && iferror) {
+          krbContext.UnLock();
           return Fatal(error, EINVAL, iferror, Principal, rc);
+       }
+       krbContext.UnLock();
+
        return 0;
       }
+   
+   krbContext.UnLock();
+   CLDBG("protocol check");
 
 // Increment the step
 //
@@ -407,13 +438,18 @@ int XrdSecProtocolkrb5::Authenticate(XrdSecCredentials *cred,
 
 // Create a kerberos style ticket and obtain the kerberos mutex
 //
+
+   CLDBG("Context Lock");
+
    inbuf.length = cred->size -XrdSecPROTOIDLEN;
    inbuf.data   = &cred->buffer[XrdSecPROTOIDLEN];
+
    krbContext.Lock();
 
 // Check if whether the IP address in the credentials must match that of
 // the incomming host.
 //
+   CLDBG("Context Locked");
    if (!(XrdSecProtocolkrb5::options & XrdSecNOIPCHK))
       {struct sockaddr_in *ip = (struct sockaddr_in *)&hostaddr;
       // The above is a hack but K5 does it this way
@@ -487,17 +523,27 @@ int XrdSecProtocolkrb5::Init(XrdOucErrInfo *erp, char *KP, char *kfn)
 
 // Create a kerberos context. There is one such context per protocol object.
 //
+
+// If we have no principal then this is a client-side call
+//
+   if (!KP) {
+     if ((rc = krb5_init_context(&krb_client_context)))
+       return Fatal(erp, ENOPROTOOPT, "Kerberos initialization failed", KP, rc);
+
+     // Obtain the default cache location
+     //
+     if ((rc = krb5_cc_default(krb_context, &krb_client_ccache)))
+        return Fatal(erp, ENOPROTOOPT, "Unable to locate cred cache", KP, rc);
+     return 0;
+   }
+
    if ((rc = krb5_init_context(&krb_context)))
       return Fatal(erp, ENOPROTOOPT, "Kerberos initialization failed", KP, rc);
 
 // Obtain the default cache location
 //
-   if ((rc = krb5_cc_default(krb_context, &krb_ccache)))
+   if ((rc = krb5_cc_default(krb_client_context, &krb_client_ccache)))
       return Fatal(erp, ENOPROTOOPT, "Unable to locate cred cache", KP, rc);
-
-// If we have no principal then this is a client-side call
-//
-   if (!KP) return 0;
 
 // Try to resolve the keyfile name
 //
@@ -587,7 +633,7 @@ int XrdSecProtocolkrb5::Fatal(XrdOucErrInfo *erp, int rc, const char *msg,
 /*                          g e t _ k r b C r e d s                           */
 /******************************************************************************/
 
-// Warning! The krbContext lock must be held prior to calling this routine
+// Warning! The krbClientContext lock must be held prior to calling this routine
 
 int XrdSecProtocolkrb5::get_krbCreds(char *KP, krb5_creds **krb_creds)
 {
@@ -601,30 +647,30 @@ int XrdSecProtocolkrb5::get_krbCreds(char *KP, krb5_creds **krb_creds)
 
 // Setup the "principal/instance@realm"
 //
-   if ((rc = krb5_parse_name(krb_context,KP,&the_principal)))
+   if ((rc = krb5_parse_name(krb_client_context,KP,&the_principal)))
       {CLDBG("get_krbCreds: Cannot parse service name;" <<krb_etxt(rc));
        return rc;
       }
 
 // Copy the current target principal into the credentials
 //
-   if ((rc = krb5_copy_principal(krb_context, the_principal, &mycreds.server)))
+   if ((rc = krb5_copy_principal(krb_client_context, the_principal, &mycreds.server)))
       {CLDBG("get_krbCreds: err copying principal to creds; " <<krb_etxt(rc));
        return rc;
       }
 
 // Get our principal name
 //
-   if ((rc = krb5_cc_get_principal(krb_context, krb_ccache, &mycreds.client)))
-      {krb5_free_cred_contents(krb_context, &mycreds);
+   if ((rc = krb5_cc_get_principal(krb_client_context, krb_client_ccache, &mycreds.client)))
+      {krb5_free_cred_contents(krb_client_context, &mycreds);
        CLDBG("get_krbCreds: err copying client name to creds; " <<krb_etxt(rc));
        return rc;
       }
 
 // Now get the credentials (free our local info)
 //
-   rc = krb5_get_credentials(krb_context, 0, krb_ccache, &mycreds,  krb_creds);
-   krb5_free_cred_contents(krb_context, &mycreds);
+   rc = krb5_get_credentials(krb_client_context, 0, krb_client_ccache, &mycreds,  krb_creds);
+   krb5_free_cred_contents(krb_client_context, &mycreds);
 
 // Check if all went well
 //
@@ -643,21 +689,21 @@ int XrdSecProtocolkrb5::get_krbFwdCreds(char *KP, krb5_data *outdata)
 
 // Fill-in our principal
 //
-   if ((rc = krb5_cc_get_principal(krb_context, krb_ccache, &client)))
+   if ((rc = krb5_cc_get_principal(krb_client_context, krb_client_ccache, &client)))
       {CLDBG("get_krbFwdCreds: err filling client principal; " <<krb_etxt(rc));
        return rc;
       }
 
 // Fill-in target (service) principal
 //
-   if ((rc = krb5_parse_name(krb_context, KP, &server)))
+   if ((rc = krb5_parse_name(krb_client_context, KP, &server)))
       {CLDBG("get_krbFwdCreds: Cannot parse service principal;" <<krb_etxt(rc));
        return rc;
       }
 
 // Set the timestamp in the authentication context
 //
-   if ((rc = krb5_auth_con_setflags(krb_context, AuthContext,
+   if ((rc = krb5_auth_con_setflags(krb_client_context, AuthClientContext,
                                    KRB5_AUTH_CONTEXT_RET_TIME)))
       {CLDBG("Unable to set KRB5_AUTH_CONTEXT_RET_TIME"
                            " in the authentication context" << krb_etxt(rc));
@@ -666,8 +712,8 @@ int XrdSecProtocolkrb5::get_krbFwdCreds(char *KP, krb5_data *outdata)
 
 // Acquire a TGT for use at a remote host system
 //
-   if ((rc = krb5_fwd_tgt_creds(krb_context, AuthContext, 0 /*host*/,
-                                     client, server, krb_ccache, true,
+   if ((rc = krb5_fwd_tgt_creds(krb_client_context, AuthClientContext, 0 /*host*/,
+                                     client, server, krb_client_ccache, true,
                                      outdata)))
       {CLDBG("get_krbFwdCreds: err getting forwarded ticket;" <<krb_etxt(rc));
        return rc;
@@ -784,18 +830,26 @@ char  *XrdSecProtocolkrb5Init(const char     mode,
    char parmbuff[1024];
    XrdOucTokenizer inParms(parmbuff);
    int options = XrdSecNOIPCHK;
+   static bool serverinitialized = false;
 
 // For client-side one-time initialization, we only need to set debug flag and
 // initialize the kerberos context and cache location.
 //
-   if (mode == 'c')
-      {int opts = 0;
+   if ((mode == 'c') || (serverinitialized))
+      {
+       CLPRT("Initializing the client");
+       int opts = 0;
        if (getenv("XrdSecDEBUG")) opts |= XrdSecDEBUG;
        if (getenv("XrdSecKRB5INITTKN")) opts |= XrdSecINITTKN;
-       XrdSecProtocolkrb5::setOpts(opts);
+       XrdSecProtocolkrb5::setClientOpts(opts);
        return (XrdSecProtocolkrb5::Init(erp) ? (char *)0 : (char *)"");
       }
 
+   if (!serverinitialized) {
+     serverinitialized = true;
+   }
+
+   CLPRT("Initializing the server");
 // Duplicate the parms
 //
    if (parms) strlcpy(parmbuff, parms, sizeof(parmbuff));
@@ -866,6 +920,7 @@ char  *XrdSecProtocolkrb5Init(const char     mode,
 
 // Now initialize the server
 //
+   options |= XrdSecDEBUG;
    XrdSecProtocolkrb5::setExpFile(ExpFile);
    XrdSecProtocolkrb5::setOpts(options);
    if (!XrdSecProtocolkrb5::Init(erp, KPrincipal, Keytab))

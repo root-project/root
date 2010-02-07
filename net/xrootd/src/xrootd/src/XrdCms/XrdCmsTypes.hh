@@ -20,6 +20,11 @@ typedef unsigned long long SMask_t;
 //
 #define STMax 64
 
+// The following defines the maximum number of redirectors. It is one greater
+// than the actual maximum as the zeroth is never used.
+//
+#define maxRD 65
+
 #define XrdCmsMAX_PATH_LEN 1024
 
 #define XrdCmsVERSION "1.0.0"

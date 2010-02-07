@@ -26,7 +26,7 @@
                                     cerr <<y; sutTrace->End();}}
 #define TRACE(act,x) if (QTRACE(act)) PRINT(x)
 #define DEBUG(y)     TRACE(Debug,y)
-#define EPNAME(x)    const char *epname = x;
+#define EPNAME(x)    static const char *epname = x;
 
 #else
 

@@ -2,7 +2,7 @@
 /*                                                                            */
 /*                     X r d P o s i x X r o o t d . c c                      */
 /*                                                                            */
-/* (c) 2005 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
@@ -20,13 +20,15 @@ const char *XrdPosixXrootdCVSID = "$Id$";
 #include <sys/uio.h>
 
 #include "XrdClient/XrdClient.hh"
-#include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientAdmin.hh"
+#include "XrdClient/XrdClientCallback.hh"
+#include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdClient/XrdClientVector.hh"
 #include "XrdSys/XrdSysHeaders.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdOuc/XrdOucString.hh"
+#include "XrdPosix/XrdPosixCallBack.hh"
 #include "XrdPosix/XrdPosixLinkage.hh"
 #include "XrdPosix/XrdPosixXrootd.hh"
 
@@ -99,7 +101,7 @@ private:
 /*                    X r d P o s i x F i l e   C l a s s                     */
 /******************************************************************************/
   
-class XrdPosixFile
+class XrdPosixFile : public XrdClientCallback
 {
 public:
 
@@ -123,11 +125,20 @@ long long  setOffset(long long offs)
 void         Lock() {myMutex.Lock();}
 void       UnLock() {myMutex.UnLock();}
 
-int               FD;
+void       OpenComplete(XrdClientAbs *clientP, void *cbArg, bool res)
+                       {if (cbDone) return;
+                        if (XrdPosixXrootd::OpenCB(res, this, cbArg)) cbDone=1;
+                           else delete this;
+                       }
 
 XrdClientStatInfo stat;
+XrdPosixCallBack *theCB;
+XrdPosixFile     *Next;
+int               FD;
+int               cbResult;
 
-           XrdPosixFile(int fd, const char *path);
+           XrdPosixFile(int fd, const char *path,
+                        XrdPosixCallBack *cbP=0, int cbsync=0);
           ~XrdPosixFile();
 
 private:
@@ -135,6 +146,7 @@ private:
 XrdSysMutex myMutex;
 long long   currOffset;
 int         doClose;
+int         cbDone;
 };
 
 
@@ -161,9 +173,17 @@ int            XrdPosixXrootd::highDir  = -1;
 int            XrdPosixXrootd::lastDir  = -1;
 int            XrdPosixXrootd::devNull  = -1;
 int            XrdPosixXrootd::pllOpen  =  0;
+int            XrdPosixXrootd::maxThreads= 0;
 int            XrdPosixXrootd::Debug    = -2;
 
 XrdPosixXrootd XrdPosixXrootd;
+  
+/******************************************************************************/
+/*                     T h r e a d   I n t e r f a c e s                      */
+/******************************************************************************/
+
+void *XrdPosixXrootdCB(void *carg)
+     {XrdPosixXrootd::OpenCB(); return (void *)0;}
   
 /******************************************************************************/
 /*                X r d P o s i x A d m i n N e w   C l a s s                 */
@@ -294,15 +314,23 @@ dirent64 *XrdPosixDir::nextEntry(dirent64 *dp)
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
 
-XrdPosixFile::XrdPosixFile(int fd, const char *path)
-             : FD(fd),
+XrdPosixFile::XrdPosixFile(int fd, const char *path, XrdPosixCallBack *cbP,
+                           int isSync)
+             : theCB(cbP),
+               Next(0),
+               FD(fd),
+               cbResult(0),
                currOffset(0),
-               doClose(0)
+               doClose(0),
+               cbDone(0)
 {
+   static int OneVal = 1;
+   XrdClientCallback *myCB = (cbP ? (XrdClientCallback *)this : 0);
+   void *cbArg = (isSync ? (void *)&OneVal : 0);
 
 // Allocate a new client object
 //
-   if (!(XClient = new XrdClient(path))) stat.size = 0;
+   if (!(XClient = new XrdClient(path, myCB, cbArg))) stat.size = 0;
 }
   
 /******************************************************************************/
@@ -327,7 +355,7 @@ XrdPosixFile::~XrdPosixFile()
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
 
-XrdPosixXrootd::XrdPosixXrootd(int fdnum, int dirnum)
+XrdPosixXrootd::XrdPosixXrootd(int fdnum, int dirnum, int thrnum)
 {
    extern XrdPosixLinkage Xunix;
    static int initDone = 0;
@@ -348,6 +376,7 @@ XrdPosixXrootd::XrdPosixXrootd(int fdnum, int dirnum)
 // before any XrdClient library routines are called.
 //
    initEnv();
+   maxThreads = thrnum;
 
 // Compute size of table
 //
@@ -475,6 +504,38 @@ int XrdPosixXrootd::Closedir(DIR *dirp)
    myMutex.UnLock();
    if (XrdDirp) delete XrdDirp;
    return 0;
+}
+
+/******************************************************************************/
+/*                              e n d P o i n t                               */
+/******************************************************************************/
+  
+int XrdPosixXrootd::endPoint(int FD, char *Buff, int Blen)
+{
+   XrdPosixFile    *fp;
+   XrdClientUrlInfo fURL;
+
+// Find the file object
+//
+   if (!(fp = findFP(FD))) return 0;
+
+// Obtain the current url from the file
+//
+   fURL = fp->XClient->GetCurrentUrl();
+   fp->UnLock();
+
+// Make sure url is valid
+//
+   if (!fURL.IsValid()) return -ENOTCONN;
+
+// Format host and port number, check if result is too long
+//
+   if (snprintf(Buff, Blen, "%s:%d", fURL.Host.c_str(), fURL.Port) >= Blen)
+      return -ENAMETOOLONG;
+
+// All done
+//
+   return fURL.Port;
 }
 
 /******************************************************************************/
@@ -639,10 +700,11 @@ int XrdPosixXrootd::Mkdir(const char *path, mode_t mode)
 /*                                  O p e n                                   */
 /******************************************************************************/
   
-int XrdPosixXrootd::Open(const char *path, int oflags, mode_t mode, int Stream)
+int XrdPosixXrootd::Open(const char *path, int oflags, mode_t mode,
+                         XrdPosixCallBack *cbP)
 {
    XrdPosixFile *fp;
-   int retc = 0, fd, XOflags, XMode;
+   int isSync, retc = 0, fd, XOflags, XMode;
 
 // Translate option bits to the appropraite values. Always 
 // make directory path for new file.
@@ -658,12 +720,13 @@ int XrdPosixXrootd::Open(const char *path, int oflags, mode_t mode, int Stream)
 // Obtain a new filedscriptor from the system. Use the fd to track the file.
 //
    if ((fd = dup(devNull)) < 0) return -1;
-   if (Stream && fd > 255) {close(fd); errno = EMFILE; return -1;}
+   if (oflags & isStream && fd > 255) {close(fd); errno = EMFILE; return -1;}
+   isSync = (maxThreads == 0) || (oflags & O_SYNC);
 
 // Allocate the new file object
 //
    myMutex.Lock();
-   if (fd > lastFD || !(fp = new XrdPosixFile(fd, path)))
+   if (fd > lastFD || !(fp = new XrdPosixFile(fd, path, cbP, isSync)))
       {errno = EMFILE; myMutex.UnLock(); return -1;}
    myFiles[fd] = fp;
    if (fd > highFD) highFD = fd;
@@ -675,14 +738,21 @@ int XrdPosixXrootd::Open(const char *path, int oflags, mode_t mode, int Stream)
 
 // Open the file
 //
-   if (!fp->XClient->Open(XMode, XOflags, pllOpen)
-   || (fp->XClient->LastServerResp()->status) != kXR_ok)
+   if (!fp->XClient->Open(XMode, XOflags, (cbP ? 1 : pllOpen))
+   || (!cbP && fp->XClient->LastServerResp()->status) != kXR_ok)
       {retc = Fault(fp, 0);
        myMutex.Lock();
        myFiles[fd] = 0;
        delete fp;
        myMutex.UnLock();
        errno = retc;
+       return -1;
+      }
+
+// If this is a callback open then just return EINPROGRESS
+//
+   if (cbP)
+      {errno = EINPROGRESS;
        return -1;
       }
 
@@ -694,6 +764,95 @@ int XrdPosixXrootd::Open(const char *path, int oflags, mode_t mode, int Stream)
 // Return the fd number
 //
    return fd;
+}
+
+/******************************************************************************/
+/*                                O p e n C B                                 */
+/******************************************************************************/
+  
+int XrdPosixXrootd::OpenCB(int res, XrdPosixFile *fp, void *cbArg)
+{
+   int retc, ec;
+
+// Diagnose any error
+//
+   if (!res || (fp->XClient->LastServerResp()->status) != kXR_ok)
+      {ec = Fault(fp, 0); retc = -1;
+       myMutex.Lock();
+       myFiles[fp->FD] = 0;
+       myMutex.UnLock();
+      } else {
+       fp->isOpen();
+       fp->XClient->Stat(&fp->stat);
+       retc = fp->FD;
+       ec = 0;
+      }
+
+// Check if this is a sync callback and, if so, do it now. Otherwise, try
+// via the callback manager.
+//
+   if (retc < 0 || cbArg)
+      {errno = ec;
+       fp->theCB->Complete(retc < 0 ? -ec : retc);
+      } else OpenCB(fp, retc, ec);
+   return retc != -1;
+}
+
+/******************************************************************************/
+
+int XrdPosixXrootd::OpenCB(XrdPosixFile *fp, int rCode, int eCode)
+{
+   static XrdSysMutex     cbMutex;
+   static XrdSysSemaphore cbReady(0);
+   static XrdPosixFile   *First = 0, *Last = 0;
+   static int Waiting = 0, numThreads = 0;
+          XrdPosixFile *cbFP;
+          int rc = 0;
+
+// If this is a feeder thread, look for some work
+//
+   if (!fp)
+   do {cbMutex.Lock();
+       if (!First && numThreads > 1)
+          {numThreads--; cbMutex.UnLock(); return 0;}
+       while(!(cbFP = First))
+            {Waiting = 1;
+             cbMutex.UnLock(); cbReady.Wait(); cbMutex.Lock();
+             Waiting = 0;
+            }
+       if (!(First = cbFP->Next)) Last = 0;
+       cbMutex.UnLock();
+       if (cbFP->cbResult < 0) errno = cbFP->cbResult;
+       cbFP->theCB->Complete(cbFP->cbResult);
+      } while(1);
+
+// Establish the final result
+//
+   fp->cbResult = (rCode < 0 ? -eCode : rCode);
+
+// Lock our data structure and queue this element
+//
+   cbMutex.Lock();
+   if (Last) fp->Next = Last;
+      else   First    = fp;
+   Last = fp;
+
+// See if we should start a thread
+//
+   if (!Waiting && numThreads < maxThreads)
+      {pthread_t tid;
+       if ((rc = XrdSysThread::Run(&tid, XrdPosixXrootdCB, (void *)0,
+                                  0, "Callback thread")))
+          cerr <<"XrdPosix: Unable to create callback thread; "
+               <<strerror(rc) <<endl;
+          else numThreads++;
+      }
+
+// All done
+//
+   cbReady.Post();
+   cbMutex.UnLock();
+   return rc;
 }
 
 /******************************************************************************/
@@ -1249,6 +1408,7 @@ void XrdPosixXrootd::initEnv()
           {"XRDPOSIX_RCUP",        NAME_REMUSEDCACHEBLKS,     0},
           {"XRDPOSIX_RDTTL",       NAME_LBSERVERCONN_TTL,     0},
           {"XRDPOSIX_RTO",         NAME_REQUESTTIMEOUT,       0},
+          {"XRDPOSIX_TTO",         NAME_TRANSACTIONTIMEOUT,   0},
           {"XRDPSOIX_PSPC",        NAME_MULTISTREAMCNT,       0},
           {"XRDPSOIX_CTO",         NAME_CONNECTTIMEOUT,       0},
           {"XRDPSOIX_CRDELAY",     NAME_RECONNECTWAIT,        0},
@@ -1387,7 +1547,7 @@ int XrdPosixXrootd::Fault(XrdPosixFile *fp, int complete)
           cerr <<"XrdPosix: " <<etext <<endl;
       }
 
-   if (!complete) return rc;
+   if (!complete) return ecode;
    fp->UnLock();
    errno = ecode;
    return rc;

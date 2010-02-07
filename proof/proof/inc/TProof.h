@@ -300,6 +300,7 @@ public:
    const char  *Export() { fExp.Form("%c (%d workers still sending)   ", fgCr[fIdx], fNWrks);
                            return fExp.Data(); }
    void         DecreaseNWrks() { fNWrks--; }
+   void         IncreaseNWrks() { fNWrks++; }
    void         IncreaseIdx() { fIdx++; if (fIdx == 4) fIdx = 0; }
    void         Reset(Int_t n = -1) { fIdx = -1; SetNWrks(n); }
    void         SetNWrks(Int_t n) { fNWrks = n; }

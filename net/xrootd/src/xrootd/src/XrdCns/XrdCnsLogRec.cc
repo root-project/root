@@ -83,7 +83,7 @@ XrdCnsLogRec *XrdCnsLogRec::Get(char &lrType)
          qSem.Wait();
          qMutex.Lock();
         }
-   frstRec = lrP->Next;
+   if (!(frstRec = lrP->Next)) lastRec = 0;
    qMutex.UnLock();
 
 // Get the type and if its an eol marker recycle now
@@ -137,14 +137,14 @@ int XrdCnsLogRec::setData(const char *dP1, const char *dP2)
   int n1 = strlen(dP1), n2 = strlen(dP2);
   char *dP;
 
-// Make sure we have room
+// Make sure we have room "'lfn' + 'data1' + ' ' + data2"
 //
    if (n1+n2+2 > MAXPATHLEN) return 0;
 
 // Add the data in the fields
 //
    setSize(static_cast<long long>(Rec.Hdr.lfn1Len));
-   dP = Rec.Data.lfn + Rec.Hdr.lfn1Len + 1;
+   dP = Rec.Data.lfn + Rec.Hdr.lfn1Len+1;
    strcpy(dP, dP1);
    dP += n1; *dP++ = ' ';
    strcpy(dP, dP2);

@@ -57,7 +57,9 @@ char XrdCnsXref::Add(const char *kval, char idx)
 
 // If a character was specified, try to use it.
 //
-   if ((i = (idx ? c2i(idx) : availI())) < 0) return 0;
+        if (idx) i = c2i(idx);
+   else if ((oldx = xTable.Find(xKey))) return *oldx;
+   else if ((i = availI()) < 0)         return 0;
 
 // Try to add the new entry
 //
@@ -67,7 +69,7 @@ char XrdCnsXref::Add(const char *kval, char idx)
                   {if (yTable[j])
                       {xTable.Del(yTable[j]); free(yTable[j]); yTable[j] = 0;}
                    xTable.Rep(xKey, xIndex+i, 0, Hash_keep);
-                   yTable[static_cast<int>(idx)] = xKey;
+                   yTable[j] = xKey;
                   }
               } else free(xKey);
 

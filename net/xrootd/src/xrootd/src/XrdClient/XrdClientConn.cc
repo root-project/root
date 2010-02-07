@@ -904,7 +904,8 @@ bool XrdClientConn::CheckErrorStatus(XrdClientMessage *mex, short &Retry, char *
 
 	    fOpenError = (XErrorCode)ntohl(body_err->errnum);
  
-	    Info(XrdClientDebug::kNODEBUG, "CheckErrorStatus", "Server declared: " <<
+	    Info(XrdClientDebug::kNODEBUG, "CheckErrorStatus", "Server [" << GetCurrentUrl().HostWPort <<
+                 "] declared: " <<
 		 (const char*)body_err->errmsg << "(error code: " << fOpenError << ")");
 
 	    // Save the last error received
@@ -2050,6 +2051,10 @@ XReqErrorType XrdClientConn::GoToAnotherServer(XrdClientUrlInfo &newdest)
     // Re-directs to another server
    
     fGettingAccessToSrv = false; 
+
+    if (!newdest.Port) newdest.Port = 1094;
+    if (newdest.HostAddr == "") newdest.HostAddr = newdest.Host;
+
     if ( (fLogConnID = Connect( newdest, fUnsolMsgHandler)) == -1) {
 	  
 	// Note: if Connect is unable to work then we are in trouble.

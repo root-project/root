@@ -55,7 +55,8 @@ struct LogRec
 
 static const int  OffDone  = offsetof(LogRec, Hdr.Done);
 static const int  FixDLen  = offsetof(Arg, lfn);
-static const int  MinSize  = sizeof(Ctl);
+static const int  MinSize  = sizeof(Ctl);  // Header
+static const int  MaxSize  = sizeof(Arg);  // Data
 static const long tBase    = 1248126834L;
 
 static const char lrClosew = 't';

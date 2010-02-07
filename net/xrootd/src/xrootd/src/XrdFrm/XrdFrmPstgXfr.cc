@@ -316,8 +316,7 @@ const char *XrdFrmPstgXfr::Stage(XrdFrmPstgXrq *xP, int &retcode)
       {rc = 0;
        while(!stat(Config.StopFile, &buf))
             {if (!rc--)
-                {DEBUG("Stop file " <<Config.StopFile
-                       <<" exists; staging suspended.");
+                {Say.Emsg("stage",Config.StopFile,"exists; staging suspended.");
                  rc = 12;
                 }
              XrdSysTimer::Snooze(5);

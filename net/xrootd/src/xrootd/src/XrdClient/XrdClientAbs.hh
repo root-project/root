@@ -19,6 +19,8 @@
 #include "XrdClient/XrdClientUnsolMsg.hh"
 #include "XrdClient/XrdClientConn.hh"
 
+class XrdClientCallback;
+
 class XrdClientAbs: public XrdClientAbsUnsolMsgHandler {
 
    // Do NOT abuse of this
@@ -30,6 +32,11 @@ protected:
 
    char                        fHandle[4];  // The file handle returned by the server,
                                             // to be used for successive requests
+
+
+   XrdClientCallback*          fXrdCcb;
+   void *                      fXrdCcbArg;
+   
    // After a redirection the file must be reopened.
    virtual bool OpenFileWhenRedirected(char *newfhandle, 
 				       bool &wasopen) = 0;
@@ -40,8 +47,12 @@ protected:
 
 public:
 
-   XrdClientAbs() {
+   XrdClientAbs(XrdClientCallback *XrdCcb = 0, void *XrdCcbArg = 0) {
       memset( fHandle, 0, sizeof(fHandle) );
+
+      // Set the callback object, if any
+      fXrdCcb = XrdCcb;
+      fXrdCcbArg = XrdCcbArg;
    }
 
    virtual bool IsOpen_wait() {

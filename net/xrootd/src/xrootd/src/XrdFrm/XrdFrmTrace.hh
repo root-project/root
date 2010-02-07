@@ -35,8 +35,7 @@
                        {Trace.Beg(epname, Req.User); cerr <<y; Trace.End();}
 
 #define TRACEX(y) {Trace.Beg(0,epname); cerr <<y; Trace.End();}
-
-#define EPNAME(x) const char *epname = x;
+#define EPNAME(x) static const char *epname = x;
 
 #else
 
@@ -45,6 +44,10 @@
 #define EPNAME(x)
 
 #endif
+
+#define VMSG(a,...) if (Config.Verbose) Say.Emsg(a,__VA_ARGS__);
+
+#define VSAY(a,...) if (Config.Verbose) Say.Say(a,__VA_ARGS__);
 
 namespace XrdFrm
 {

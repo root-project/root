@@ -4,11 +4,27 @@
 #include "XrdClient/XrdClient.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdSys/XrdSysHeaders.hh"
+#include "XrdClient/XrdClientCallback.hh"
 #include <fstream>
 #include <vector>
 #include <string>
 #include <sys/time.h>
 #include <math.h>
+
+
+
+
+class MyXrdClientCallback: public XrdClientCallback {
+
+   virtual void OpenComplete(XrdClientAbs *clientP, void *cbArg, bool res) {
+      cout << "OpenComplete! res:" << res << endl;
+   }
+
+};
+
+
+
+
 
 kXR_unt16 open_mode = (kXR_ur | kXR_uw);
 kXR_unt16 open_opts = (0);
@@ -199,7 +215,8 @@ int main(int argc, char **argv) {
     kXR_int32 v_lens[20480];
 
     if (isrooturl) {
-	XrdClient *cli = new XrdClient(argv[1]);
+        MyXrdClientCallback mycb;
+	XrdClient *cli = new XrdClient(argv[1], &mycb, (void *)1234);
 
 	cli->Open(open_mode, open_opts | ( (vectored_style > 4) ? kXR_delete : 0 ) );
 	filezcount = 1;

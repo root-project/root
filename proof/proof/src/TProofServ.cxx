@@ -1167,7 +1167,7 @@ void TProofServ::HandleSocketInput()
          mess = 0;
       }
 
-      // Still somethign to do?
+      // Still something to do?
       doit = 0;
       if (fgRecursive == 1 && fQueuedMsg->GetSize() > 0) {
          // Add to the queue
@@ -1845,6 +1845,7 @@ Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerP
 
       TSocket *s = fMergingMonitor->Select();
       if (!s) {
+         Info("AcceptResults", "interrupt!");
          result = kFALSE;
          break;
       }
@@ -1903,7 +1904,7 @@ Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerP
    }
 
    fMergingMonitor->RemoveAll();
-   delete fMergingMonitor;
+   SafeDelete(fMergingMonitor);
 
    PDB(kSubmerger, 2) Info("AcceptResults", "exit: %d", result);
    return result;
@@ -3453,7 +3454,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Set idle
          SetIdle(kTRUE);
 
-         // Do not leanup the player yet: it will be used in sub-merging activities
+         // Do not cleanup the player yet: it will be used in sub-merging activities
          deleteplayer = kFALSE;
 
          PDB(kSubmerger, 2) Info("HandleProcess", "worker %s has finished", fOrdinal.Data());
@@ -5825,16 +5826,21 @@ void TProofServ::HandleSubmerger(TMessage *mess)
    Int_t type = 0;
    (*mess) >> type;
 
+   TString msg;
    switch (type) {
       case TProof::kOutputSize:
          break;
 
       case TProof::kSendOutput:
          {
+            Bool_t deleteplayer = kTRUE;
             if (!IsMaster()) {
-               PDB(kSubmerger, 1)
-                  Info("HandleSubmerger","worker %s redirected to merger", fOrdinal.Data()); 
+               if (fMergingMonitor) {
+                  Info("HandleSubmerger", "kSendOutput: interrupting ...");
+                  fMergingMonitor->Interrupt();
+               }
                if (fMergingSocket) {
+                  if (fMergingMonitor) fMergingMonitor->Remove(fMergingSocket);
                   fMergingSocket->Close();
                   SafeDelete(fMergingSocket);
                }
@@ -5843,6 +5849,8 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                Int_t port = 0;
                Int_t merger_id = -1;
                (*mess) >> merger_id >> name >> port;
+               PDB(kSubmerger, 1)
+                  Info("HandleSubmerger","worker %s redirected to merger #%d %s:%d", fOrdinal.Data(), merger_id, name.Data(), port); 
 
                TSocket *t = 0;
                if (name.Length() > 0 && port > 0 && (t = new TSocket(name, port)) && t->IsValid()) {
@@ -5852,7 +5860,11 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                                           merger_id, name.Data(), port);
 
                   if (SendResults(t, fPlayer->GetOutputList()) != 0) {
-                     // Results not send	
+                     msg.Form("worker %s cannot send results to merger #%d at %s:%d", GetPrefix(), merger_id, name.Data(), port);
+                     PDB(kSubmerger, 2) Info("HandleSubmerger",
+                                             "kSendOutput: %s - inform the master", msg.Data());
+                     SendAsynMessage(msg);
+                     // Results not send
                      TMessage answ(kPROOF_SUBMERGER);
                      answ << Int_t(TProof::kMergerDown);
                      answ << merger_id;
@@ -5872,12 +5884,31 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   }
                } else {
 
+                  if (name == "master") {
+                     PDB(kSubmerger, 2) Info("HandleSubmerger",
+                                             "kSendOutput: worker was asked for sending output to master");
+                     SendResults(fSocket, fPlayer->GetOutputList());
+                     // Signal the master that we are idle
+                     fSocket->Send(kPROOF_SETIDLE);
+                     SetIdle(kTRUE);
+                     SendLogFile();
+
+                  } else if (!t || !(t->IsValid())) {
+                     msg.Form("worker %s could not open a valid socket to merger #%d at %s:%d",
+                              GetPrefix(), merger_id, name.Data(), port);
+                     PDB(kSubmerger, 2) Info("HandleSubmerger",
+                                             "kSendOutput: %s - inform the master", msg.Data());
+                     SendAsynMessage(msg);
+                     // Results not send
+                     TMessage answ(kPROOF_SUBMERGER);
+                     answ << Int_t(TProof::kMergerDown);
+                     answ << merger_id;
+                     fSocket->Send(answ);
+                     deleteplayer = kFALSE;
+                  }
+
                   if (t) SafeDelete(t);
 
-                  PDB(kSubmerger, 2) Info("HandleSubmerger",
-                                          "kSendOutput: worker was asked for sending output to master");
-                  SendResults(fSocket, fPlayer->GetOutputList());
-                  SendLogFile();
                }
 
             } else {
@@ -5885,11 +5916,12 @@ void TProofServ::HandleSubmerger(TMessage *mess)
             }
 
             // Cleanup
-            DeletePlayer();
+            if (deleteplayer) DeletePlayer();
          }
          break;
       case TProof::kBeMerger:
          {
+            Bool_t deleteplayer = kTRUE;
             if (!IsMaster()) {
                Int_t merger_id = -1;
                //Int_t merger_port = 0;
@@ -5952,13 +5984,14 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   answ << Int_t(TProof::kMergerDown);
                   answ << merger_id;
                   fSocket->Send(answ);
+                  deleteplayer = kFALSE;
                }
             } else {
                Error("HandleSubmerger","kSendOutput: received not on worker");	
             }
 
             // Cleanup
-            DeletePlayer();
+            if (deleteplayer) DeletePlayer();
          }
          break;
 
@@ -5969,8 +6002,10 @@ void TProofServ::HandleSubmerger(TMessage *mess)
          {
             // Received only in case of forced termination of merger by master
             PDB(kSubmerger, 2)  Info("HandleSubmerger", "kStopMerging");
-            if (fMergingMonitor)
-               fMergingMonitor->DeActivateAll();
+            if (fMergingMonitor) {
+               Info("HandleSubmerger", "kStopMerging: interrupting ...");
+               fMergingMonitor->Interrupt();
+            }
          }
          break;
 

@@ -27,7 +27,7 @@ public:
 //
             XrdOucProg(XrdSysError *errobj=0)
                       {eDest = errobj; myStream = 0;
-                       ArgBuff = Arg[0] = 0; numArgs = 0;
+                       ArgBuff = Arg[0] = 0; numArgs = 0; theEFD = -1;
                       }
 
            ~XrdOucProg();
@@ -86,5 +86,6 @@ private:
   char         *Arg[64];
   int           numArgs;
   int           lenArgs;
+  int           theEFD;
 };
 #endif

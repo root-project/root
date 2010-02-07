@@ -203,7 +203,8 @@ int XrdCmsProtocol::Execute(XrdCmsRRData &Arg)
               if (*etxt == '!')
                  {DEBUGR(etxt+1 <<" delayed " <<Arg.waitVal <<" seconds");
                   return -EINPROGRESS;
-                 } else Reply_Error(Arg, kYR_EINVAL, etxt);
+                 } else if (*etxt == '.') return -ECONNABORTED;
+                           else Reply_Error(Arg, kYR_EINVAL, etxt);
               else if (Arg.Routing & XrdCmsRouting::Forward && Cluster.NodeCnt
                    &&  !(Arg.Request.modifier & kYR_dnf)) Reissue(Arg);
    return 0;
@@ -354,7 +355,7 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
        // Remove manager from the config
        //
        Manager.Remove(myNode, (rc == kYR_redirect ? "redirected"
-                                  : (rc ? "lost connection" : Reason)));
+                                  : (Reason ? Reason : "lost connection")));
        ManTree.Disc(myNID);
        Link->Close();
        delete myNode; myNode = 0;
@@ -469,7 +470,7 @@ XrdCmsRouting *XrdCmsProtocol::Admit()
    XrdCmsLogin  Source(myBuff, sizeof(myBuff));
    CmsLoginData Data;
    const char  *Reason;
-   SMask_t      newmask, servset = 0;
+   SMask_t      newmask, servset(0);
    int addedp = 0, Status = 0, isMan = 0, isPeer = 0, isProxy = 0, isServ = 0;
    int wasSuspended = 0;
 
@@ -814,9 +815,11 @@ do{if ((rc = Link->RecvAll((char *)&Data->Request, ReqSize, maxWait)) < 0)
 //
    if (!(Data->Ident) || !(*Data->Ident)) Data->Ident = myNode->Ident;
 
-// Schedule this request
+// Schedule this request if async. Otherwise, do this inline. Note that
+// synchrnous requests are allowed to return status changes (e.g., redirect)
 //
-   if (Data->Routing & XrdCmsRouting::isSync) Execute(*Data);
+   if (Data->Routing & XrdCmsRouting::isSync)
+      {if ((rc = Execute(*Data)) && rc == -ECONNABORTED) return "redirected";}
       else if ((jp = XrdCmsJob::Alloc(this, Data)))
               {Sched->Schedule((XrdJob *)jp);
                Data = XrdCmsRRData::Objectify();

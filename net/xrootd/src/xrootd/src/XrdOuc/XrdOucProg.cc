@@ -115,7 +115,7 @@ int XrdOucProg::Run(XrdOucStream *Sp, const char *arg1, const char *arg2,
 
 // Execute the command
 //
-   if (Sp->Exec(myArgs, 1))
+   if (Sp->Exec(myArgs, 1, theEFD))
       {rc = Sp->LastError();
        if (eDest) eDest->Emsg("Run", rc, "execute", Arg[0]);
        return -rc;
@@ -228,10 +228,11 @@ int XrdOucProg::Start()
 // Create a stream for this command (it is an eror if we are already started)
 //
    if (myStream) return EBUSY;
-   if (!(myStream = new XrdOucStream())) return ENOMEM;
+   if (!(myStream = new XrdOucStream(eDest))) return ENOMEM;
 
 // Execute the command and let it linger
 //
+   theEFD = 0;
    return Run(myStream);
 }
  

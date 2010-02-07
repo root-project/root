@@ -59,7 +59,7 @@ int XrdCnsSsiCfg::Configure(int argc, char **argv)
            Say.M("The diff function is not yet implemented.");
            return 0;
           }
-   else if (!strcmp("list", argv[1])) {Xeq = 'l'; Opts = "fhmnpsS";}
+   else if (!strcmp("list", argv[1])) {Xeq = 'l'; Opts = "fhlmnpsS";}
    else if (!strcmp("updt", argv[1])) {Xeq = 'u'; Opts = "v";}
    else Usage("Invalid function - ", argv[1]);
 
@@ -138,7 +138,7 @@ int XrdCnsSsiCfg::Configure(int argc, char **argv, const char *Opts)
 // Make sure we have some host entries
 //
    if (!(dirList = XrdCnsLog::Dirs(bPath, n)))
-      {Say.M("No server inventories found in'",bPath,"'."); return 0;}
+      {Say.M("No server inventories found in '",bPath,"'."); return 0;}
 
 // Issue warning if errors occurred
 //

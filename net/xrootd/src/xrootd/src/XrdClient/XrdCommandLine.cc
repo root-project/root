@@ -25,6 +25,7 @@ const char *XrdCommandLineCVSID = "$Id$";
 #include <unistd.h>
 #include <stdarg.h>
 #include <sstream>
+#include <signal.h>
 
 #ifdef HAVE_READLINE
 #include <readline/readline.h>
@@ -71,7 +72,7 @@ extern "C" {
 
 
 
-#define XRDCLI_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.24 $ - Xrootd version: "XrdVSTRING
+#define XRDCLI_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.33 $ - Xrootd version: "XrdVSTRING
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -91,11 +92,20 @@ char *initialhost;
 
 XrdClient *genclient = 0;
 XrdClientAdmin *genadmin = 0;
-XrdOucString currentpath;
+XrdOucString currentpath = "/";
 
 XrdOucString  cmdline_cmd;
 
 ///////////////////////
+
+
+void
+CtrlCHandler(int sig) {
+   cerr << endl << "Please use 'exit' to terminate this program." << endl;
+   return;
+}
+
+
 
 void PrintUsage() {
    cerr << "usage: xrd [host]"
@@ -144,6 +154,8 @@ void PrintHelp() {
 
    cout << endl <<
       XRDCLI_VERSION << endl << endl <<
+      "Usage: xrd [-O<opaque_info>] [-DS<var_name> stringvalue] [-DI<var_name> integervalue] [host[:port]] [batchcommand]" << endl << endl <<
+
       "List of available commands:" << endl <<
       " cat <filename> [xrdcp parameters]" << endl <<
       "  outputs a file on standard output using xrdcp. <filename> can be a root:// URL." << endl <<
@@ -159,6 +171,8 @@ void PrintHelp() {
       "  current remote path. Also, they can be root:// URLs specifying any other host." << endl <<
       " dirlist [dirname]" << endl <<
       "  gets the requested directory listing." << endl <<
+      " dirlistrec [dirname]" << endl <<
+      "  gets the requested recursive directory listing." << endl <<
       " envputint <varname> <intval>" << endl <<
       "  puts an integer in the internal environment." << endl <<
       " envputstring <varname> <stringval>" << endl <<
@@ -198,6 +212,8 @@ void PrintHelp() {
       "  stages a file in." << endl <<
       " query <reqcode> <parms>" << endl <<
       "  obtain server information" << endl <<
+      " queryspace <logicalname>" << endl <<
+      "  obtain space information" << endl <<
       endl <<
       "For further information, please read the xrootd protocol documentation." << endl <<
       endl;
@@ -263,6 +279,7 @@ void PrintLocateInfo(XrdClientLocate_Info &loc) {
 int main(int argc, char**argv) {
 
    int retval = 0;
+   //signal(SIGINT, CtrlCHandler);
 
    DebugSetLevel(0);
 
@@ -285,7 +302,8 @@ int main(int argc, char**argv) {
 	 continue;
       }
 
-      if ( (strstr(argv[i], "-h") == argv[i])) {
+      if ( (strstr(argv[i], "-h") == argv[i]) || 
+           (strstr(argv[i], "--help") == argv[i]) ) {
 	 PrintUsage();
 	 exit(0);
 	 continue;
@@ -381,19 +399,33 @@ int main(int argc, char**argv) {
 
 	 // Quite trivial directory processing
 	 if (!strcmp(parmname, "..")) {
+            if (currentpath == "/") continue;
+
 	    int pos = currentpath.rfind('/');
 
 	    if (pos != STR_NPOS)
 	       currentpath.erase(pos);
 
-	    retval = 1;
-	 }
+            if (!currentpath.length()) {
+               currentpath = "/";
+            }
 
-	 if (!strcmp(parmname, "."))
 	    retval = 1;
+            continue;
+	 }
+         else
+            if (!strcmp(parmname, ".")) {
+               retval = 1;
+               continue;
+            }
 	    
-	 currentpath += "/";
-	 currentpath += parmname;
+         if (!currentpath.length() || (currentpath[currentpath.length()-1] != '/')) {
+            currentpath += "/";
+         }
+
+         if (parmname[0] == '/') currentpath = parmname;
+         else
+            currentpath += parmname;
 
       }
       else
@@ -471,6 +503,122 @@ int main(int argc, char**argv) {
 
       }
       else
+      // -------------------------- dirlistrec ---------------------------
+      if (!strcmp(cmd, "dirlistrec")) {
+         XrdClientVector<XrdOucString> pathq;
+
+	 if (!genadmin) {
+	    cout << "Not connected to any server." << endl;
+	    retval = 1;
+	 }
+
+	 char *dirname = tkzer.GetToken(0, 0);
+	 XrdOucString path;
+
+	 if (dirname) {
+	    if (dirname[0] == '/')
+	       path = dirname;
+	    else {
+               if ((currentpath.length() > 0) && (currentpath[currentpath.length()-1] != '/'))
+                  path = currentpath + "/" + dirname;
+               else
+                  path = currentpath + dirname;
+
+            }
+	 }
+	 else path = currentpath;
+
+	 if (!path.length()) {
+	    cout << "The current path is an empty string. Assuming '/'." << endl;
+	    path = '/';
+	 }
+
+
+         // Initialize the queue with this path
+         pathq.Push_back(path);
+
+
+         while (pathq.GetSize() > 0) {
+            XrdOucString pathtodo = pathq.Pop_back();
+
+            // Now try to issue the request
+            XrdClientVector<XrdClientAdmin::DirListInfo> nfo;
+            if (!genadmin->DirList(pathtodo.c_str(), nfo, true)) {
+               retval = 1;  
+               cout << "Error listing path '" << pathtodo << "' in server " <<
+                  genadmin->GetCurrentUrl().HostWPort <<
+                  " The path does not exist in some servers or there are malformed filenames." << endl;
+            }
+
+            // Now check the answer
+            if (!CheckAnswer(genadmin)) {
+               retval = 1;
+               cout << "Error '" << genadmin->LastServerError()->errmsg <<
+                  "' listing path '" << pathtodo <<
+                  "' in server" << genadmin->GetCurrentUrl().HostWPort <<
+                  " or in some of its child nodes." << endl;
+            }
+      
+            for (int i = 0; i < nfo.GetSize(); i++) {
+
+               if ((nfo[i].flags & kXR_isDir) &&
+                   (nfo[i].flags & kXR_readable) &&
+                   (nfo[i].flags & kXR_xset)) {
+                  
+
+                  // The path has not to be pushed if it's already present
+                  // This may happen if several servers have the same path
+                  bool foundpath = false;
+                  for (int ii = 0; ii < pathq.GetSize(); ii++) {
+                     if (nfo[i].fullpath == pathq[ii]) {
+                        foundpath = true;
+                        break;
+                     }
+                  }
+                  
+                  if (!foundpath)
+                     pathq.Push_back(nfo[i].fullpath);
+                  else 
+                     // If the path is already present in the queue then it was already printed as well.
+                     continue;
+
+               }
+
+               char ts[256];
+               strcpy(ts, "n/a");
+
+               struct tm *t = gmtime(&nfo[i].modtime);
+               strftime(ts, 255, "%F %T", t);
+
+               char cflgs[16];
+               memset(cflgs, 0, 16);
+
+               if (nfo[i].flags & kXR_isDir)
+                  strcat(cflgs, "d");
+               else strcat(cflgs, "-");
+
+               if (nfo[i].flags & kXR_readable)
+                  strcat(cflgs, "r");
+               else strcat(cflgs, "-");
+
+               if (nfo[i].flags & kXR_writable)
+                  strcat(cflgs, "w");
+               else strcat(cflgs, "-");
+
+               if (nfo[i].flags & kXR_xset)
+                  strcat(cflgs, "x");
+               else strcat(cflgs, "-");
+
+               printf("%s(%03ld) %12lld %s %s\n", cflgs, nfo[i].flags, nfo[i].size, ts, nfo[i].fullpath.c_str());
+
+            }
+            
+            if (nfo.GetSize()) cout << endl;
+         }
+
+         if (retval) cout << "Errors during processing. Please check them." << endl;
+      }
+      else
       // -------------------------- dirlist ---------------------------
       if (!strcmp(cmd, "dirlist")) {
 
@@ -485,28 +633,68 @@ int main(int argc, char**argv) {
 	 if (dirname) {
 	    if (dirname[0] == '/')
 	       path = dirname;
-	    else
-	       path = currentpath + "/" + dirname;
+	    else {
+               if ((currentpath.length() > 0) && (currentpath[currentpath.length()-1] != '/'))
+                  path = currentpath + "/" + dirname;
+               else
+                  path = currentpath + dirname;
+
+            }
 	 }
 	 else path = currentpath;
 
 	 if (!path.length()) {
-	    cout << "The current path is empty." << endl;
-	    retval = 1;
+	    cout << "The current path is an empty string. Assuming '/'." << endl;
+	    path = '/';
 	 }
 
 	 // Now try to issue the request
-	 vecString vs;
-	 genadmin->DirList(path.c_str(), vs);
+         XrdClientVector<XrdClientAdmin::DirListInfo> nfo;
+	 if (!genadmin->DirList(path.c_str(), nfo, true)) {
+            //nfo.Clear();
+            retval = 1;
+            
+         }
 
 	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
+	 if (!CheckAnswer(genadmin)) {
 	    retval = 1;
+            //nfo.Clear();
+         }
       
-	 for (int i = 0; i < vs.GetSize(); i++)
-	    cout << vs[i] << endl;
 
-	 cout << endl;
+            for (int i = 0; i < nfo.GetSize(); i++) {
+               char ts[256];
+               strcpy(ts, "n/a");
+
+               struct tm *t = gmtime(&nfo[i].modtime);
+               strftime(ts, 255, "%F %T", t);
+
+               char cflgs[16];
+               memset(cflgs, 0, 16);
+
+               if (nfo[i].flags & kXR_isDir)
+                  strcat(cflgs, "d");
+               else strcat(cflgs, "-");
+
+               if (nfo[i].flags & kXR_readable)
+                  strcat(cflgs, "r");
+               else strcat(cflgs, "-");
+
+               if (nfo[i].flags & kXR_writable)
+                  strcat(cflgs, "w");
+               else strcat(cflgs, "-");
+
+               if (nfo[i].flags & kXR_xset)
+                  strcat(cflgs, "x");
+               else strcat(cflgs, "-");
+
+               printf("%s(%03ld) %12lld %s %s\n", cflgs, nfo[i].flags, nfo[i].size, ts, nfo[i].fullpath.c_str());
+
+            }
+
+            if (retval) cout << "Errors during processing. Please check." << endl;
+            cout << endl;
 
       }
       else
@@ -1277,6 +1465,36 @@ int main(int argc, char**argv) {
 	 cout << endl;
 	
       }
+      else
+      // -------------------------- queryspace ---------------------------
+      if (!strcmp(cmd, "queryspace")) {
+
+	 if (!genadmin) {
+	    cout << "Not connected to any server." << endl;
+	    retval = 1;
+	 }
+
+	 char *ns = tkzer.GetToken(0, 0);
+         long long totspace;
+         long long totfree;
+         long long totused;
+         long long largestchunk;
+
+	 genadmin->GetSpaceInfo(ns, totspace, totfree, totused, largestchunk);
+
+	 // Now check the answer
+	 if (!CheckAnswer(genadmin))
+	   retval = 1;
+      
+	 cout << "Disk space approximations (MB):" << endl <<
+            "Total         : " << totspace/(1024*1024) << endl <<
+            "Free          : " << totfree/(1024*1024) << endl <<
+            "Used          : " << totused/(1024*1024) << endl <<
+            "Largest chunk : " << largestchunk/(1024*1024) << endl;
+
+	 cout << endl;
+
+      }
       else {
 
 	// ---------------------------------------------------------------------
@@ -1286,7 +1504,7 @@ int main(int argc, char**argv) {
       }
 
       
-      free(linebuf);
+      delete[] linebuf;
 
       // if it was a cmd from the commandline...
       if (cmdline_cmd.length() > 0) break;

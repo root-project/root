@@ -73,7 +73,7 @@ XrdCmsNode::XrdCmsNode(XrdLink *lnkp, int port,
                        const char *nid,  int lvl, int id)
 {
     static XrdSysMutex   iMutex;
-    static const SMask_t smask_1 = 1;
+    static const SMask_t smask_1(1);
     static int           iNum = 1;
 
     Link     =  lnkp;
@@ -654,7 +654,7 @@ const char *XrdCmsNode::do_Mkpath(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Mv(XrdCmsRRData &Arg)
 {
    EPNAME("do_Mv")
-   static const SMask_t allNodes = ~static_cast<SMask_t>(0);
+   static const SMask_t allNodes(~0);
    int rc;
 
 // Do some debugging
@@ -803,7 +803,7 @@ const char *XrdCmsNode::do_PrepDel(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Rm(XrdCmsRRData &Arg)
 {
    EPNAME("do_Rm")
-   static const SMask_t allNodes = ~static_cast<SMask_t>(0);
+   static const SMask_t allNodes(~0);
    int rc;
 
 // Do some debugging
@@ -845,7 +845,7 @@ const char *XrdCmsNode::do_Rm(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Rmdir(XrdCmsRRData &Arg)
 {
    EPNAME("do_Rmdir")
-   static const SMask_t allNodes = ~static_cast<SMask_t>(0);
+   static const SMask_t allNodes(~0);
    int rc;
 
 // Do some debugging
@@ -1405,13 +1405,14 @@ const char *XrdCmsNode::do_Try(XrdCmsRRData &Arg)
 
 // Add all the alternates to our alternate list
 //
+   tp = theList.GetLine();
    while((tp = theList.GetToken()))
          myMans.Add(IPAddr, tp, Config.PortTCP, myLevel);
 
 // Close the link and return an error
 //
-   Disc("redirected.");
-   return 0;
+// Disc("redirected.");
+   return ".redirected";
 }
   
 /******************************************************************************/

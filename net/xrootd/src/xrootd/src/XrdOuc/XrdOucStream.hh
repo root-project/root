@@ -71,10 +71,14 @@ void         Echo();
 // will return the standard output of the executed command. If inrd=1 then
 // standardin is redirected so that subqseuent Put() calls write to the
 // process via standard in. When inrd=-1 then the current attached FD's are
-// used to redirect STDIN and STDOUT of the child process.
+// used to redirect STDIN and STDOUT of the child process. Standard error
+// is handled as determined by the efd argument:
+// efd < 0 -> The current stderr file decriptor is unchanged.
+// efd = 0 -> The stderr file descriptor is set to the original logging FD
+// efd > 0 -> The stderr file descriptor is set to the value of efd.
 //
-int          Exec(const char *,  int inrd=0);
-int          Exec(      char **, int inrd=0);
+int          Exec(const char *,  int inrd=0, int efd=0);
+int          Exec(      char **, int inrd=0, int efd=0);
 
 // Get the file descriptor number associated with a stream
 //

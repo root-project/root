@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "XrdCms/XrdCmsNode.hh"
+#include "XrdCms/XrdCmsTypes.hh"
 #include "XrdSys/XrdSysPthread.hh"
   
 class XrdCmsRTable
@@ -38,8 +39,6 @@ void          UnLock() {myMutex.UnLock();}
              ~XrdCmsRTable() {}
 
 private:
-
-static const int   maxRD = 65;  // slot 0 is never used.
 
 XrdSysMutex   myMutex;
 XrdCmsNode   *Rtable[maxRD];

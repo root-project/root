@@ -178,10 +178,11 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
 //
    for ( ; optind < pi->argc; optind++) xexpdo(pi->argv[optind]);
 
-// Pre-initialize some i/o values
+// Pre-initialize some i/o values. Note that we now set maximum readv element
+// transfer size to the buffer size (before it was a reasonable 256K).
 //
    if (!(as_miniosz = as_segsize/2)) as_miniosz = as_segsize;
-   maxBuffsz = BPool->MaxSize();
+   maxTransz = maxBuffsz = BPool->MaxSize();
 
 // Now process and configuration parameters
 //

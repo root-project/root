@@ -83,11 +83,13 @@ void XrdOdcResp::Recycle()
 
 // Put this object on the free queue
 //
-   myMutex.Lock();
-   next = nextFree;
-   nextFree = this;
-   numFree++;
-   myMutex.UnLock();
+   if (numFree >= maxFree) delete this;
+      else {myMutex.Lock();
+            next = nextFree;
+            nextFree = this;
+            numFree++;
+            myMutex.UnLock();
+           }
 }
 
 /******************************************************************************/
@@ -97,6 +99,7 @@ void XrdOdcResp::Recycle()
 void XrdOdcResp::Reply(const char *Man, char *msg)
 {
    EPNAME("Reply")
+   XrdOucEICB *theCB;
    int Result, msgval;
    char *colon, *opaque;
 
@@ -174,9 +177,11 @@ void XrdOdcResp::Reply(const char *Man, char *msg)
 //
    SyncCB.Wait();
 
-// Invoke the callback; it must explicitly invoke delete on our upcast object.
+// Invoke the callback; telling it to call us back for recycling
 //
-   ErrCB->Done(Result, (XrdOucErrInfo *)this);
+   theCB = ErrCB;
+   ErrCB = (XrdOucEICB *)this;
+   theCB->Done(Result, (XrdOucErrInfo *)this);
 }
 
 /******************************************************************************/
