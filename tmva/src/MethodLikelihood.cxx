@@ -620,7 +620,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
 {
    // read weights from XML
    TString pname = "PDF_";
-
+   Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
    UInt_t nvars=0;
    gTools().ReadAttr(wghtnode, "NVariables",nvars);
@@ -640,6 +640,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
       (*(*fPDFBgd)[ivar]).ReadXML(pdfnode);
       descnode = gTools().xmlengine().GetNext(descnode);
    }
+   TH1::AddDirectory(addDirStatus);
 }  
 //_______________________________________________________________________
 void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream & istr )
