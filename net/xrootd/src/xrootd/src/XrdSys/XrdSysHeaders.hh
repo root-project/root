@@ -17,7 +17,7 @@
 // headers in the form <header_name>.h
 //
 
-#if !defined(HAS_OLD_HDRS) || defined(WIN32)
+#if !defined(HAVE_OLD_HDRS) || defined(WIN32)
 
 // gcc >= 4.3, cl require this
 #  include <iostream>

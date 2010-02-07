@@ -10,6 +10,8 @@
 
 //         $Id$
 
+const char *XrdLinkMatchCVSID = "$Id$";
+
 #include <string.h>
 
 #include "Xrd/XrdLinkMatch.hh"

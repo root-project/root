@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.4 2008/03/24 06:30:12 abh Exp $
+## Version info: $Id: Makefile.am,v 1.5 2009/05/22 01:04:24 abh Exp $
 ## Checked in by $Author: abh $
 #######################################################################
 
@@ -20,7 +20,7 @@ xrootdossinc_HEADERS = \
     XrdOss.hh        XrdOssError.hh    XrdOssOpaque.hh \
     XrdOssApi.hh     XrdOssLock.hh     XrdOssTrace.hh \
     XrdOssCache.hh   XrdOssMio.hh      XrdOssPath.hh \
-    XrdOssSpace.hh   XrdOssStage.hh \
+    XrdOssCopy.hh    XrdOssSpace.hh    XrdOssStage.hh \
     XrdOssConfig.hh  XrdOssMioFile.hh
 
 
@@ -29,11 +29,13 @@ libXrdOss_la_SOURCES = \
         XrdOssApi.cc XrdOssApi.hh XrdOssError.hh \
         XrdOssCache.cc XrdOssCache.hh \
         XrdOssConfig.cc XrdOssConfig.hh \
+        XrdOssCopy.cc XrdOssCopy.hh \
         XrdOssCreate.cc XrdOssOpaque.hh \
         XrdOssLock.cc XrdOssLock.hh   \
         XrdOssMio.cc XrdOssMio.hh XrdOssMioFile.hh   \
         XrdOssMSS.cc    \
         XrdOssPath.cc XrdOssPath.hh \
+        XrdOssReloc.cc \
         XrdOssRename.cc \
         XrdOssStage.cc  \
         XrdOssSpace.cc XrdOssSpace.hh \

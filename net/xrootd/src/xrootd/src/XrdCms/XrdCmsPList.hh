@@ -54,25 +54,24 @@ class XrdCmsPList
 public:
 friend class XrdCmsPList_Anchor;
 
-inline XrdCmsPList    *Next() {return next;}
+inline XrdCmsPList   *Next() {return next;}
 inline char          *Path() {return pathname;}
 const  char          *PType();
 
        XrdCmsPList(const char *pname="", XrdCmsPInfo *pi=0)
-                 {next     = 0;
-                  pathlen  = strlen(pname);
-                  pathname = strdup(pname);
-                  if (pi) pathmask.Set(pi);
-                 }
+                  : next(0), pathname(strdup(pname)), pathlen(strlen(pname)),
+                    pathtype(0) {if (pi) pathmask.Set(pi);}
 
       ~XrdCmsPList() {if (pathname) free(pathname);}
 
 private:
 
-XrdCmsPList    *next;
-int             pathlen;
-char           *pathname;
 XrdCmsPInfo     pathmask;
+XrdCmsPList    *next;
+char           *pathname;
+int             pathlen;
+char            pathtype;
+char            reserved[3];
 };
 
 class XrdCmsPList_Anchor

@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptosslX509CrlCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                X r d C r y p t o s s l X 5 0 9 C r l. c c                  */
@@ -224,7 +226,10 @@ int XrdCryptosslX509Crl::InitFromURI(const char *uri, const char *hash)
 
    // Execute 'wget'
    DEBUG("executing ... "<<cmd);
-   system(cmd.c_str());
+   if (system(cmd.c_str()) == -1) {
+      DEBUG("'system' could not fork to execute command '"<<cmd<<"'");
+      return -1;
+   }
    struct stat st;
    if (stat(outder.c_str(), &st) != 0) {
       DEBUG("did not manage to get the CRL file from "<<uri);
@@ -243,10 +248,15 @@ int XrdCryptosslX509Crl::InitFromURI(const char *uri, const char *hash)
 
       // Execute 'openssl crl'
       DEBUG("executing ... "<<cmd);
-      system(cmd.c_str());
+      if (system(cmd.c_str()) == -1) {
+	DEBUG("system: problem executing: "<<cmd);
+	return -1;
+      }
 
       // Cleanup the temporary files
-      unlink(outder.c_str());
+      if (unlink(outder.c_str()) != 0) {
+	DEBUG("problems removing "<<outder);
+      }
    }
 
    // Make sure the file is there
@@ -283,14 +293,22 @@ int XrdCryptosslX509Crl::LoadCache()
    }
 
    // Parse CRL
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   STACK_OF(X509_REVOKED *) rsk = X509_CRL_get_REVOKED(crl);
+#else /* OPENSSL */
    STACK_OF(X509_REVOKED *) *rsk = X509_CRL_get_REVOKED(crl);
+#endif /* OPENSSL */
    if (!rsk) {
       DEBUG("could not get stack of revoked instances");
       return -1;
    }
 
    // Number of revocations
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   nrevoked = sk_X509_REVOKED_num(rsk);
+#else /* OPENSSL */
    nrevoked = sk_num(rsk);
+#endif /* OPENSSL */
    DEBUG(nrevoked << "certificates have been revoked");
    if (nrevoked <= 0) {
       DEBUG("no valid certificate has been revoked - nothing to do");
@@ -307,7 +325,11 @@ int XrdCryptosslX509Crl::LoadCache()
    char *tagser = 0;
    int i = 0;
    for (; i < nrevoked; i++ ){
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+      X509_REVOKED *rev = sk_X509_REVOKED_value(rsk,i);
+#else /* OPENSSL */
       X509_REVOKED *rev = (X509_REVOKED *)sk_value(rsk,i);
+#endif /* OPENSSL */
       if (rev) {
          BIGNUM *bn = BN_new();
          ASN1_INTEGER_to_BN(rev->serialNumber, bn);
@@ -401,7 +423,11 @@ const char *XrdCryptosslX509Crl::IssuerHash()
       // Make sure we have a CRL
       if (crl) {
          char chash[15];
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+         sprintf(chash,"%08lx.0",X509_NAME_hash_old(crl->crl->issuer));
+#else
          sprintf(chash,"%08lx.0",X509_NAME_hash(crl->crl->issuer));
+#endif
          issuerhash = chash;
       } else {
          DEBUG("WARNING: no CRL available - cannot extract issuer hash");

@@ -112,9 +112,9 @@ public:
     }
 
     void                       RemoveDataFromCache(long long begin_offs,
-                                                   long long end_offs) {
+                                                   long long end_offs, bool remove_overlapped = false) {
         if (fMainReadCache)
-            fMainReadCache->RemoveItems(begin_offs, end_offs);
+	  fMainReadCache->RemoveItems(begin_offs, end_offs, remove_overlapped);
     }
 
     void                       RemovePlaceholdersFromCache() {
@@ -203,10 +203,15 @@ public:
     bool                       IsPhyConnConnected();
 
     struct ServerResponseHeader
-    LastServerResp;
+                               LastServerResp;
 
     struct ServerResponseBody_Error
-    LastServerError;
+                               LastServerError;
+
+    void                       ClearLastServerError() {
+                                   memset(&LastServerError, 0, sizeof(LastServerError));
+                                   LastServerError.errnum = kXR_noErrorYet;
+                               }
 
     UnsolRespProcResult        ProcessAsynResp(XrdClientMessage *unsolmsg);
 
@@ -309,9 +314,19 @@ public:
     bool                       DoWriteSoftCheckPoint();
     bool                       DoWriteHardCheckPoint();
     void                       UnPinCacheBlk();
+
+
+    // To give a max number of seconds for an operation to complete, no matter what happens inside
+    // e.g. redirections, sleeps, failed connection attempts etc.
+    void                       SetOpTimeLimit(int delta_secs);
+    bool                       IsOpTimeLimitElapsed(time_t timenow);
+
+
 protected:
     void                       SetLogConnID(int cid) { fLogConnID = cid; }
     void                       SetStreamID(kXR_unt16 sid) { fPrimaryStreamid = sid; }
+
+
 
     // The handler which first tried to connect somewhere
     XrdClientAbsUnsolMsgHandler *fUnsolMsgHandler;
@@ -336,6 +351,9 @@ private:
 
     short                      fMaxGlobalRedirCnt;
     XrdClientReadCache         *fMainReadCache;
+
+    // The time limit for a transaction
+    time_t                     fOpTimeLimit;
 
     XrdClientAbs               *fRedirHandler;      // Pointer to a class inheriting from
     // XrdClientAbs providing methods

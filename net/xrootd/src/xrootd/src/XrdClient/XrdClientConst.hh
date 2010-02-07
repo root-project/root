@@ -21,36 +21,31 @@
 #define DFLT_CONNECTTIMEOUT     120
 #define NAME_CONNECTTIMEOUT     (char *)"ConnectTimeout"
 
-#define DFLT_CONNECTTIMEOUTWAN  120
-#define NAME_CONNECTTIMEOUTWAN  (char *)"ConnectTimeoutWan"
-
 #define DFLT_REQUESTTIMEOUT     300
 #define NAME_REQUESTTIMEOUT     (char *)"RequestTimeout"
 
-
-#define DFLT_MAXREDIRECTCOUNT   255
+#define DFLT_MAXREDIRECTCOUNT   16
 #define NAME_MAXREDIRECTCOUNT   (char *)"MaxRedirectcount"
 
 #define DFLT_DEBUG              0
 #define NAME_DEBUG              (char *)"DebugLevel"
 
-#define DFLT_RECONNECTTIMEOUT   20
-#define NAME_RECONNECTTIMEOUT   (char *)"ReconnectTimeout"
+#define DFLT_RECONNECTWAIT      5
+#define NAME_RECONNECTWAIT      (char *)"ReconnectWait"
 
-#define DFLT_REDIRCNTTIMEOUT	3600
+#define DFLT_REDIRCNTTIMEOUT	36000
 #define NAME_REDIRCNTTIMEOUT    (char *)"RedirCntTimeout"
 
-#define DFLT_FIRSTCONNECTMAXCNT 150
+#define DFLT_FIRSTCONNECTMAXCNT 8
 #define NAME_FIRSTCONNECTMAXCNT (char *)"FirstConnectMaxCnt"
+
+#define DFLT_TRANSACTIONTIMEOUT 300
+#define NAME_TRANSACTIONTIMEOUT (char *)"TransactionTimeout"
+
 
 #define TXSOCK_ERR_TIMEOUT	-1
 #define TXSOCK_ERR		-2
 #define TXSOCK_ERR_INTERRUPT	-3
-
-// Maybe we don't want to start the garbage collector
-// But the default must be to start it
-#define DFLT_STARTGARBAGECOLLECTORTHREAD  1
-#define NAME_STARTGARBAGECOLLECTORTHREAD  (char *)"StartGarbageCollectorThread"
 
 // the default number of parallel streams PER physical connection
 // 0 means that the multistream support is disabled
@@ -76,21 +71,31 @@
 #define DFLT_READCACHESIZE      0
 #define NAME_READCACHESIZE      (char *)"ReadCacheSize"
 
-#define DFLT_READCACHESIZE      0
-#define NAME_READCACHESIZE      (char *)"ReadCacheSize"
-
 // 0 = LRU
 // 1 = Remove least offest
 #define DFLT_READCACHEBLKREMPOLICY       0
-#define NAME_READCACHEBLKREMPOLICY       (char *)"ReadCacheBlk"
+#define NAME_READCACHEBLKREMPOLICY       (char *)"ReadCacheBlkRemPolicy"
 
 #define DFLT_READAHEADSIZE      (0)
 #define NAME_READAHEADSIZE      (char *)"ReadAheadSize"
+
+// Align all the read requests to multiples of a number
+#define DFLT_READTRIMBLKSZ      (0)
+#define NAME_READTRIMBLKSZ      (char *)"ReadTrimBlockSize"
+
+// The default read ahead strategy to use
+#define DFLT_READAHEADSTRATEGY  (1) // This is the sequential readahead
+#define NAME_READAHEADSTRATEGY  (char *)"ReadAheadStrategy"
+
 
 // To be used in copy-like apps when the data is to be accessed only once
 // ... to reduce additional cache overhead
 #define DFLT_REMUSEDCACHEBLKS   0
 #define NAME_REMUSEDCACHEBLKS   (char *)"RemoveUsedCacheBlocks"
+
+// When writing async, purge immediately the written blocks from the cache
+#define DFLT_PURGEWRITTENBLOCKS   0
+#define NAME_PURGEWRITTENBLOCKS    (char *)"PurgeWrittenBlocks"
 
 #define NAME_REDIRDOMAINALLOW_RE   (char *)"RedirDomainAllowRE"
 #define NAME_REDIRDOMAINDENY_RE    (char *)"RedirDomainDenyRE"
@@ -104,13 +109,22 @@
 #define DFLT_MAXCONCURRENTOPENS    100
 
 #define READV_MAXCHUNKS            512
-#define READV_MAXCHUNKSIZE         32767
+#define READV_MAXCHUNKSIZE         (1024*192)
 
 // SOCKS4 support
 #define NAME_SOCKS4HOST            (char *)"Socks4Server"
 #define NAME_SOCKS4PORT            (char *)"Socks4Port"
 
-#define DFLT_DFLTTCPWINDOWSIZE     (256*1024)
+// Default TCP windows size
+// A value of '0' implies "use the default OS settings"
+// which enables window scaling on some platforms (linux, MacOsX)
+// but may be to small on others (solaris); the preprocessor macro
+// is set based on the platform information found in configure
+#if defined(__linux__) || defined(__macos__)
+#define DFLT_DFLTTCPWINDOWSIZE     (0)
+#else
+#define DFLT_DFLTTCPWINDOWSIZE     (262144)
+#endif
 #define NAME_DFLTTCPWINDOWSIZE     (char *)"DfltTcpWindowSize"
 
 // A connection towards a data server timeouts quickly

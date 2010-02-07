@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-## $Id: XrdOlbMonPerf,v 1.12 2008/10/14 09:30:43 furano Exp $
+## $Id: XrdOlbMonPerf,v 1.13 2009/05/20 13:09:14 furano Exp $
 ## this script collects the informations on the server activity like:
 ## CPU, network I/O, memory usage ...
 ## modified to get rid of rperf.
@@ -8,7 +8,13 @@
 ## modified to accept additional options and drop multi-home uf's.
 #  Andy Hanushevsky - SLAC - 15/07/04
 #
-# Usage: XrdOlbMonPerf [-I netintf] [-n netspeed] [-m <shmkey>] [<interval>]
+## rewrite the network part
+## get rid of the netstat daemon, causing zombies proliferation
+## fix the netstat parameters positions for both linux and sunos
+## added debug mode -d
+# Fabrizio Furano - CERN - 20/05/09
+#
+# Usage: XrdOlbMonPerf [-I netintf] [-n netspeed] [-m <shmkey>] [-d] [<interval>]
 # WARNING: if you are running this script on a Linux RH7.x server, 
 #          the network metric is disabled as the netstat output is screwed, 
 #          this info is useless. no problem for RH9 and RHEL3.
@@ -23,22 +29,35 @@ $repval = 0;
 $netif  = '';
 $netmax = 0; # bits / s
 $monint = 60;
+$debug = 0;
+$precsumio = -1;
 $| = 1;                      # unbuffer STDOUT
 
 # Get options
 #
-  while(($argval = shift) && (substr($argval,0,1) eq '-'))
-       {   if ($argval eq '-I')
-              {Log("Network interface not specified.") if !($netif=shift);}
-        elsif ($argval eq '-n')
-              {Log("Network spedd not specified.") if !($netmax=shift);}
-        elsif ($argval eq '-m')
-              {Log("Shared segment not specified.") if !($shmkey=shift);
-               $shmid = shmget($shmkey, 4096, 0744) if (shmkey ne '.');
-               Log("Unable to attach shared memory; $!") if !defined($shmid);
-              }
-       else   {Log("Unknown option, $argval, ignored", 1);}
-      }
+while(($argval = shift) && (substr($argval,0,1) eq '-')) {
+    if ($argval eq '-I') {
+	Log("Network interface not specified.") if !($netif=shift);
+    }
+    elsif ($argval eq '-n') {
+	Log("Network speed not specified.") if !($netmax=shift);
+    }
+    elsif ($argval eq '-m') {
+	Log("Shared segment not specified.") if !($shmkey=shift);
+	$shmid = shmget($shmkey, 4096, 0744) if (shmkey ne '.');
+	Log("Unable to attach shared memory; $!") if !defined($shmid);  
+    }
+    elsif ($argval eq '-d') {
+	Debug("Debug mode enabled.");
+	$debug = 1;
+    }
+    else {
+	Log("Unknown option, $argval, ignored", 1);
+    }
+}
+
+
+Debug("Output is <load%> <cpu%> <mem%> <pgio%> <net_io%>") if ($debug == 1);
 
 # Get the interval
 #
@@ -46,6 +65,8 @@ if ($argval)
    {$monint = $argval;
     Log("Invalid interval, '$monint'") if !($monint =~ /^\d+$/);
    }
+
+Debug("Monitoring interval: '$monint'") if ($debug == 1);
 
 # get the number of CPUs on this server
 if ( $systype eq 'Linux' ) {
@@ -58,6 +79,8 @@ if ( $systype eq 'SunOS' ) {
   @answer = split('= ', $resp);
   $numCPU = $answer[1];
 }
+
+Debug("Number of CPUs: '$numCPU'") if ($debug == 1);
 
 # get the total memory of the server
 if ($systype eq 'Linux') {
@@ -72,6 +95,8 @@ if ($systype eq 'SunOS') {
   $TotMem *= 1024*1024;
 }
 
+Debug("Total memory: '$TotMem'") if ($debug == 1);
+
 # if it is a Linux, retrieve the distrib version.
 # necessary for netstat which does not give the same output on RH 7.x, RH 9, 
 # RHEL...
@@ -80,13 +105,20 @@ if ($systype eq 'Linux') {
   $distrib = "RH_OK";
 
   if ( -r '/etc/redhat-release' ) {
-     $resp = `cat /etc/redhat-release`;
+      $resp = `cat /etc/redhat-release`;
   } else {
-     $resp = "";
+      if ( -r '/etc/debian-version' ) {
+	  $resp = "debian".`cat /etc/debian-version`;
+      }
+      else {
+	  $resp = "";
+      }
   }
 
   if ( $resp =~ /release 7./ ) { $distrib = "RH_WRONG"; }
 }
+
+Debug("Distro: '$distrib'") if ($debug == 1);
 
 # determine the column where the idle time and the free mem
 # can be found in the 'vmstat' output.
@@ -105,43 +137,49 @@ foreach $type(@answer) {
   $ind_free++;
 }
 
+Debug("vmstat output. Idle is col: '$ind_idle'. Free mem is col: '$ind_free'") if ($debug == 1);
+
 # in the netstat output, the number of input and output packets is not in the 
 # same columns whether it is a Linux or SunOS platform
 if ( $systype eq 'SunOS' ) {
-  $ind_net1 = 5;
-  $ind_net2 = 7;
+    $ind_mtu = 1;
+    $ind_net1 = 4;
+    $ind_net2 = 6;
 } else {
-  $ind_net1 = 3;
-  $ind_net2 = 7;
+    $ind_mtu = 1;
+    $ind_net1 = 3;
+    $ind_net2 = 7;
 }
 $indx_net = 0;
+
+Debug("netstat output. Input pkt is col: '$ind_net1'. Output pkt is col: '$ind_net2'") if ($debug == 1);
 
 # check the number of network interface on the server and their 
 # capability (ethernet or gigabit)
 $mtu = 1500;
 if (!$netmax)
-   {@com = `netstat -i`;
+   {@com = `netstat -i$netif`;
     foreach $line(@com) {
        if ( $line !~ /Kernel Interface/ && $line !~ /MTU/ ) {
-          ( $line =~ /eth/ ) && ( $netmax = 1e8 );
-          ( $line =~ /ge/ || $line =~ /ce/ ) && ( $netmax = 1e9 );
+          ( $line =~ /eth/ ) && ( $netmax = 1e7 );
+          ( $line =~ /ge/ || $line =~ /ce/ ) && ( $netmax = 1e8 );
           }
       }
     if (!$netmax) {$netmax = 1e8;}
+
+    # 10/100 cards are rare nowadays. And there is always the possibility of declaring the right value
+    # with the -n switch
+    $netmax = 1e8 if ($systype eq 'Linux');
    }
 
-# Start up the netstat command which will give the pace for the monitoring
-#
-Log("Unable to start netstat; $!")
-  if !defined(open(CMDFD, "netstat -i $monint |"));
+Debug("netmax is $netmax") if ($debug == 1);
 
 # Discard the first three lines of output
 #
 for ($i = 0; $i < 3; $i++) {$resp = <CMDFD>;}
 
 $ipio_old = 0;
-while($resp = <CMDFD>) {
-  if ( $distrib eq 'RH_WRONG' ) { sleep $monint; }
+while(1) {
 
   # what's the CPU utilization ?
   @respCPU = `vmstat 1 2`;
@@ -156,31 +194,55 @@ while($resp = <CMDFD>) {
   # what's the runq load ?
   chomp($respLoad = `uptime`);
   @respSplit = split(',',$respLoad);
-  $load = int($respSplit[4]*25/$numCPU);
+  Debug("uptime reports load5:$respSplit[5]") if ($debug == 1);
+
+  $load = int($respSplit[5]*100/$numCPU);
   $load = 100 if $load > 100;
 
   # what's the network I/O activity?
-  if ( ( $resp !~ /lo/ && $resp !~ /Iface/ && $systype eq 'Linux' && $distrib ne 'RH_WRONG' )
-       || ( $systype eq 'SunOS' ) ) {
-       	@respSplit = split('\s+',$resp);
-	if ( $systype eq 'SunOS' ) {
-	  $net_activity = ($respSplit[$ind_net1] + $respSplit[$ind_net2]) * $mtu * 8 / $monint;
-	  $ipio = int ( $net_activity / $netmax * 100 );
-	}
-	else {
-	  $net[$indx_net] = $respSplit[$ind_net1] + $respSplit[$ind_net2];
-	  if ( $indx_net ) {
-	    $net_activity = ($measure[1] - $measure[0]) * $mtu * 8 / $monint;
-	    $ipio = int ( $net_activity / $netmax * 100 );
+  @resp = `netstat -i`;
+
+  if ($distrib ne 'RH_WRONG') {
+      $sumio = 0;
+      foreach $line (@resp) {
+	  Debug("$line") if ($debug == 1);
+
+	  if ( $line !~ /Iface/ && $line !~ /Kernel/ && $line !~ /Name/) {
+	      @respSplit = split(' ',$line);
+
+	      $mtu = $respSplit[$ind_mtu];
+	      $mtu = 1500 if $mtu == 0;
+	      if ($respSplit[$0] !~ /lo/) {
+		  Debug("$respSplit[$0] - Input pkts: $respSplit[$ind_net1] Output pkts: $respSplit[$ind_net2] Mtu: $mtu") if ($debug == 1);
+		  $sumio += ($respSplit[$ind_net1] + $respSplit[$ind_net2]) * $mtu;
+	      }
 	  }
-	  $indx_net = $indx_net ^ 1;
-	}
-	$ipio_old = $ipio;
-  } else {
-	$ipio = $ipio_old;
+      }
+
+      Debug("Summed network traffic: $sumio") if ($debug == 1);
+
+      $precsumio = $sumio if ($precsumio < 0);
+      $net_activity = ($sumio - $precsumio) / $monint;
+      Debug("net_activity: $net_activity") if ($debug == 1);
+
+      $precsumio = $sumio;
   }
-  $ipio = 100 if $ipio > 100;
-  $ipio_old = $ipio;
+
+  
+  # This is to support 1G, 10G cards adaptively, or a number of cards together
+  # In practice, we guess the max throughput of the network system
+  # in order to calculate a decent percent utilization estimation
+  # in the case the initial guess is completely wrong
+  $netmax = $netmax * 2 if ( $net_activity > ($netmax * 2.5) );
+
+  # We have to divide by two, but I really do not understand why
+  # ... this was also in the previous implementation and it works
+  $ipio = int ( $net_activity / $netmax * 100 / 2 );
+
+
+  Debug("Calculated ipio: $ipio") if ($debug == 1);
+  $ipio = 100 if ($ipio > 100);
+
 
   # what's the memory load ?
   $used = $TotMem - $resp_vmstat[$ind_free]*1024;
@@ -202,6 +264,8 @@ while($resp = <CMDFD>) {
     Log("Unable to write into shared memory; $!")
       if !shmwrite($shmid, $resp, 0, length($resp));
   }
+
+  sleep($monint-1);
 }
 
 
@@ -211,4 +275,9 @@ sub Log {
   system('/bin/logger', '-p', 'daemon.notice', "XrdOlbMonPerf: $msg");
   return 0 if $ret;
   exit(1);
+}
+
+sub Debug {
+    my($msg) = @_;
+    print STDERR "XrdOlbMonPerf: $msg\n";
 }

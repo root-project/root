@@ -40,6 +40,7 @@ const char *XrdOssConfigCVSID = "$Id$";
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssMio.hh"
 #include "XrdOss/XrdOssOpaque.hh"
+#include "XrdOss/XrdOssSpace.hh"
 #include "XrdOss/XrdOssTrace.hh"
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
@@ -61,6 +62,8 @@ const char *XrdOssConfigCVSID = "$Id$";
 extern XrdOssSys   *XrdOssSS;
 
 extern XrdOucTrace  OssTrace;
+
+XrdOucPListAnchor  *XrdOssRPList;
 
 /******************************************************************************/
 /*                            E r r o r   T e x t                             */
@@ -117,13 +120,19 @@ const char *XrdOssErrorText[] =
 
 #define xrdmax(a,b)       (a < b ? b : a)
 
+// Set the following value to establish the ulimit for FD numbers. Zero
+// sets it to whatever the current hard limit is. Negative leaves it alone.
+//
+#define XrdOssFDLIMIT     -1
+#define XrdOssFDMINLIM    64
+
 /******************************************************************************/
 /*            E x t e r n a l   T h r e a d   I n t e r f a c e s             */
 /******************************************************************************/
   
 void *XrdOssxfr(void *carg)       {return XrdOssSS->Stage_In(carg);}
 
-void *XrdOssCacheScan(void *carg) {return XrdOssSS->CacheScan(carg);}
+void *XrdOssCacheScan(void *carg) {return XrdOssCache::Scan(*((int *)carg));}
 
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
@@ -131,14 +140,7 @@ void *XrdOssCacheScan(void *carg) {return XrdOssSS->CacheScan(carg);}
 
 XrdOssSys::XrdOssSys()
 {
-   static char *syssfx[] = {XRDOSS_SFX_LIST, 0};
-
-   sfx           = syssfx;
    xfrtcount     = 0;
-   fsdata        = 0;
-   fsfirst       = 0;
-   fslast        = 0;
-   fscurr        = 0;
    pndbytes      = 0;
    stgbytes      = 0;
    totbytes      = 0;
@@ -167,26 +169,26 @@ XrdOssSys::XrdOssSys()
    OptFlags      = 0;
    LocalRoot     = 0;
    RemoteRoot    = 0;
-   cscanint      = XrdOssCSCANINT;
+   cscanint      = 600;
    FDFence       = -1;
    FDLimit       = XrdOssFDLIMIT;
-   MaxDBsize     = XrdOssMAXDBSIZE;
-   minalloc      = XrdOssMINALLOC;
-   ovhalloc      = XrdOssOVRALLOC;
-   fuzalloc      = XrdOssFUZALLOC;
-   xfrspeed      = XrdOssXFRSPEED;
-   xfrovhd       = XrdOssXFROVHD;
-   xfrhold       = XrdOssXFRHOLD;
+   MaxDBsize     = 0;
+   minalloc      = 0;
+   ovhalloc      = 0;
+   fuzalloc      = 0;
+   xfrspeed      = 9*1024*1024;
+   xfrovhd       = 30;
+   xfrhold       =  3*60*60;
    xfrkeep       = 20*60;
-   xfrthreads    = XrdOssXFRTHREADS;
+   xfrthreads    = 1;
    ConfigFN      = 0;
    DeprLine      = 0;
-   fsFree        = 0;
-   fsSize        = 0;
-   Space         = 0;
    UDir          = 0;
-   Quotas        = 0;
    QFile         = 0;
+   Solitary      = 0;
+   DPList        = 0;
+   lenDP         = 0;
+   numCG = numDP = 0;
 }
   
 /******************************************************************************/
@@ -237,9 +239,13 @@ int XrdOssSys::Configure(const char *configfn, XrdSysError &Eroute)
     if (FDFence < 0 || FDFence >= FDLimit) FDFence = FDLimit >> 1;
    }
 
-// Establish cached filesystems
+// Establish usage tracking and quotas, if need be. Note that if we are not
+// a true data server, those services will be initialized but then disabled.
 //
-   NoGo |= ReCache(UDir, QFile);
+   Solitary = ((val = getenv("XRDREDIRECT")) && !strcmp(val, "Q"));
+   if (Solitary) Eroute.Say("++++++ Configuring standalone mode . . .");
+   NoGo |= XrdOssCache::Init(UDir, QFile, Solitary)
+          |XrdOssCache::Init(minalloc, ovhalloc, fuzalloc);
 
 // Configure the MSS interface including staging
 //
@@ -257,15 +263,30 @@ int XrdOssSys::Configure(const char *configfn, XrdSysError &Eroute)
 //
    RPList.Set(DirFlags);
 
-// Start up the cache scan thread
+// Configure space (final pass)
 //
-   if ((retc = XrdSysThread::Run(&tid, XrdOssCacheScan, (void *)0,
-                                 0, "cache scan")))
-      Eroute.Emsg("Config", retc, "create cache scan thread");
+   ConfigSpace();
+
+// Configure statiscal reporting
+//
+   if (!NoGo) ConfigStats(Eroute);
+
+// Start up the cache scan thread unless specifically told not to. Some programs
+// like the cmsd manually handle space updates.
+//
+   if (!(val = getenv("XRDOSSCSCAN")) || strcmp(val, "off"))
+      {if ((retc = XrdSysThread::Run(&tid, XrdOssCacheScan,
+                                    (void *)&cscanint, 0, "cache scan")))
+          Eroute.Emsg("Config", retc, "create cache scan thread");
+      }
 
 // Display the final config if we can continue
 //
    if (!NoGo) Config_Display(Eroute);
+
+// Export the real path list (for frm et. al.)
+//
+   XrdOssRPList = &RPList;
 
 // All done, close the stream and return the return code.
 //
@@ -340,7 +361,7 @@ void XrdOssSys::Config_Display(XrdSysError &Eroute)
 
      XrdOssMio::Display(Eroute);
 
-     List_Cache("       oss.cache", Eroute);
+     XrdOssCache::List("       oss.cache", Eroute);
      if (!(OptFlags & XrdOss_ROOTDIR)) 
            List_Path("       oss.defaults ", "", DirFlags, Eroute);
      fp = RPList.First();
@@ -432,10 +453,19 @@ int XrdOssSys::ConfigN2N(XrdSysError &Eroute)
 //
    if (!N2N_Lib)
       {the_N2N = XrdOucgetName2Name(&Eroute, ConfigFN, "", LocalRoot, RemoteRoot);
-       if (LocalRoot)  lcl_N2N = the_N2N;
-       if (RemoteRoot) rmt_N2N = the_N2N;
+       if (LocalRoot) {lcl_N2N = the_N2N;
+                       XrdOucEnv::Export("XRDLCLROOT", LocalRoot);
+                      }
+       if (RemoteRoot){rmt_N2N = the_N2N;
+                       XrdOucEnv::Export("XRDRMTROOT",RemoteRoot);
+                      }
        return 0;
       }
+
+// Export name lib information
+//
+   XrdOucEnv::Export("XRDN2NLIB", N2N_Lib);
+   if (N2N_Parms) XrdOucEnv::Export("XRDN2NPARMS", N2N_Parms);
 
 // Create a pluin object (we will throw this away without deletion because
 // the library must stay open but we never want to reference it again).
@@ -517,26 +547,71 @@ int XrdOssSys::ConfigProc(XrdSysError &Eroute)
 }
 
 /******************************************************************************/
+/*                           C o n f i g S p a c e                            */
+/******************************************************************************/
+
+void XrdOssSys::ConfigSpace()
+{
+   XrdOucPList *fp = RPList.First();
+   int noCacheFS = !(OptFlags & XrdOss_CacheFS);
+
+// Configure space for each non-cached exported path. We only keep track of
+// space that can actually be modified in some way.
+//
+   while(fp)
+        {if ((noCacheFS || (fp->Flag() & XRDEXP_INPLACE))
+         &&  ((fp->Flag() & (XRDEXP_REMOTE | XRDEXP_PURGE))
+         ||  !(fp->Flag() & XRDEXP_READONLY)))
+            ConfigSpace(fp->Path());
+         fp = fp->Next();
+        }
+}
+
+/******************************************************************************/
+
+void XrdOssSys::ConfigSpace(const char *Lfn)
+{
+   struct stat statbuff;
+   char Pfn[MAXPATHLEN+1+8], *Slash;
+
+// Get local path for this lfn
+//
+   if (GenLocalPath(Lfn, Pfn)) return;
+
+// Now try to find the actual existing base path
+//
+   while(stat(Pfn, &statbuff))
+        {if (!(Slash = rindex(Pfn, '/')) || Slash == Pfn) return;
+         *Slash = '\0';
+        }
+
+// Add this path to the file system data. We need to do this to track space
+//
+   XrdOssCache_FS::Add(Pfn);
+}
+  
+/******************************************************************************/
 /*                           C o n f i g S t a g e                            */
 /******************************************************************************/
 
 int XrdOssSys::ConfigStage(XrdSysError &Eroute)
 {
-   char *tp, *gwp = 0, *stgp = 0;
+   char *sp, *tp, *gwp = 0, *stgp = 0;
    unsigned long long dflags, flags;
-   int isMan, retc, numt, NoGo = 0;
+   int noMSS, retc, numt, NoGo = 0;
    pthread_t tid;
    XrdOucPList *fp;
 
 // Determine if we are a manager/supervisor. These never stage files so we
 // really don't need (nor want) a stagecmd or an msscmd.
 //
-   isMan = ((tp = getenv("XRDREDIRECT")) && !strcmp(tp, "R"));
+   noMSS = ((tp = getenv("XRDREDIRECT")) && !strcmp(tp, "R")) | Solitary;
 
 // A mssgwcmd implies mig and a stagecmd implies stage as defaults
 //
    dflags = (MSSgwCmd ? XRDEXP_MIG : XRDEXP_NOCHECK|XRDEXP_NODREAD);
    if (!StageCmd) dflags |= XRDEXP_NOSTAGE;
+      else        dflags |= XRDEXP_PURGE;
    DirFlags = DirFlags | (dflags & (~(DirFlags >> XRDEXP_MASKSHIFT)));
    if ((MSSgwCmd &&  (DirFlags & XRDEXP_MIG))
    ||  (StageCmd && !(DirFlags & XRDEXP_NOSTAGE))) DirFlags |= XRDEXP_REMOTE;
@@ -554,6 +629,7 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
          if ((MSSgwCmd  && (flags & XRDEXP_MIG))
          ||  (StageCmd && !(flags & XRDEXP_NOSTAGE))) flags |= XRDEXP_REMOTE;
             else flags &= ~XRDEXP_REMOTE;
+         if (noMSS) flags=(flags & ~XRDEXP_RCREATE)|XRDEXP_NOCHECK|XRDEXP_NODREAD;
          fp->Set(flags);
          fp = fp->Next();
         }
@@ -568,10 +644,10 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
 
 // If we are a manager/supervisor, short circuit MSS initialization
 //
-   if (isMan)
+   if (noMSS)
       {if (MSSgwCmd) {free(MSSgwCmd); MSSgwCmd = 0;}
        if (StageCmd) {free(StageCmd); StageCmd = 0;}
-       MSSgwProg = 0;
+       MSSgwProg = 0; StageCreate = 0;
        return NoGo;
       }
 
@@ -623,6 +699,15 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
           while(*tp && *tp == ' ') tp++;
           if (*tp == '|') {StageRealTime = 0; StageCmd = tp+1;}
 
+       // This is a bit of hackery to get the traceid sent over to the
+       // new file residency manager (frm). Keeps the config simple.
+       //
+          if ((sp = index(StageCmd, ' '))) *sp = '\0';
+          if (!(tp = rindex (StageCmd, '/'))) tp = StageCmd;
+             else tp++;
+          if (!strcmp("frm_pstga", tp)) StageFormat = 1;
+          if (sp) *sp = ' ';
+
       // Set up a program object for the command
       //
          StageProg = new XrdOucProg(&Eroute);
@@ -644,7 +729,7 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
       //
          StageAction = (char *)"wfn "; StageActLen = 4;
          if ((tp = getenv("XRDOFSEVENTS")))
-            {char sebuff[1024];
+            {char sebuff[MAXPATHLEN+8];
              StageEvSize = sprintf(sebuff, "file:///%s", tp);
              StageEvents = strdup(sebuff);
             } else {StageEvents = (char *)"-"; StageEvSize = 1;}
@@ -667,12 +752,86 @@ int XrdOssSys::ConfigStage(XrdSysError &Eroute)
 }
   
 /******************************************************************************/
+/*                           C o n f i g S t a t s                            */
+/******************************************************************************/
+
+void XrdOssSys::ConfigStats(XrdSysError &Eroute)
+{
+   struct StatsDev
+         {StatsDev *Next;
+          dev_t     st_dev;
+          StatsDev(StatsDev *dP, dev_t dn) : Next(dP), st_dev(dn) {}
+         };
+
+   XrdOssCache_Group  *fsg = XrdOssCache_Group::fsgroups;
+   XrdOucPList        *fP = RPList.First();
+   StatsDev           *dP1st = 0, *dP, *dPp;
+   struct stat         Stat;
+   char LPath[MAXPATHLEN+1], PPath[MAXPATHLEN+1], *cP;
+
+// Count actual cache groups
+//
+   while(fsg) {numCG++; fsg = fsg->next;}
+
+// Develop the list of paths that we will report on
+//
+   if (fP) do
+      {strcpy(LPath, fP->Path());
+       if (GenLocalPath(LPath, PPath)) continue;
+       if (stat(PPath, &Stat) && (cP = rindex(LPath, '/')))
+          {*cP = '\0';
+           if (GenLocalPath(LPath, PPath) || stat(PPath, &Stat)) continue;
+          }
+       dP = dP1st;
+       while(dP && dP->st_dev != Stat.st_dev) dP = dP->Next;
+       if (dP) continue;
+       ConfigStats(Stat.st_dev, LPath);
+       if (GenLocalPath(LPath, PPath)) continue;
+       DPList = new OssDPath(DPList, strdup(LPath), strdup(PPath));
+       lenDP += strlen(LPath) + strlen(PPath); numDP++;
+       dP1st  = new StatsDev(dP1st, Stat.st_dev);
+      } while ((fP = fP->Next()));
+
+// If we have no exported paths then create a simple /tmp object
+//
+   if (!numDP)
+      {DPList = new OssDPath(0, strdup("/tmp"), strdup("/tmp"));
+       lenDP = 4; numDP = 1;
+      }
+
+// Now delete all of the device objects
+//
+   dP = dP1st;
+   while(dP) {dPp = dP; dP = dP->Next; delete dPp;}
+}
+  
+/******************************************************************************/
+
+void XrdOssSys::ConfigStats(dev_t Devnum, char *lP)
+{
+   struct stat Stat;
+   char *Slash, pP[MAXPATHLEN+1];
+
+// Minimize the path
+//
+   while((Slash = rindex(lP+1, '/')))
+        {*Slash = '\0';
+         if (GenLocalPath(lP, pP) || stat(pP, &Stat) || Stat.st_dev != Devnum)
+            break;
+        }
+
+// Extend path if need be and return
+//
+   if (Slash) *Slash = '/';
+}
+  
+/******************************************************************************/
 /*                             C o n f i g X e q                              */
 /******************************************************************************/
 
 int XrdOssSys::ConfigXeq(char *var, XrdOucStream &Config, XrdSysError &Eroute)
 {
-    char  myVar[64], buff[2048], *val;
+    char  myVar[80], buff[2048], *val;
     int nosubs;
     XrdOucEnv *myEnv = 0;
 
@@ -829,9 +988,9 @@ int XrdOssSys::chkDep(const char *var)
 int XrdOssSys::xalloc(XrdOucStream &Config, XrdSysError &Eroute)
 {
     char *val;
-    long long mina = XrdOssMINALLOC;
-    int       fuzz = XrdOssFUZALLOC;
-    int       hdrm = XrdOssOVRALLOC;
+    long long mina = 0;
+    int       fuzz = 0;
+    int       hdrm = 0;
 
     if (!(val = Config.GetWord()))
        {Eroute.Emsg("Config", "alloc minfree not specified"); return 1;}
@@ -872,7 +1031,8 @@ int XrdOssSys::xalloc(XrdOucStream &Config, XrdSysError &Eroute)
 int XrdOssSys::xcache(XrdOucStream &Config, XrdSysError &Eroute)
 {
     char *val, *pfxdir, *sfxdir;
-    char grp[XrdOssMAXGNAME+1], fn[XrdOssMAX_PATH_LEN+1], dn[XrdOssMAXGNAME+1];
+    char grp[XrdOssSpace::minSNbsz], dn[XrdOssSpace::minSNbsz];
+    char fn[MAXPATHLEN+1];
     int i, k, rc, pfxln, isxa = 0, cnum = 0;
     struct dirent *dp;
     struct stat buff;
@@ -880,7 +1040,7 @@ int XrdOssSys::xcache(XrdOucStream &Config, XrdSysError &Eroute)
 
     if (!(val = Config.GetWord()))
        {Eroute.Emsg("Config", "cache group not specified"); return 1;}
-    if (strlen(val) > XrdOssMAXGNAME)
+    if ((int)strlen(val) > XrdOssSpace::maxSNlen)
        {Eroute.Emsg("Config","excessively long cache name - ",val); return 1;}
     strcpy(grp, val);
 
@@ -917,7 +1077,7 @@ int XrdOssSys::xcache(XrdOucStream &Config, XrdSysError &Eroute)
              continue;
           strcpy(sfxdir, dp->d_name);
           if (stat(fn, &buff)) break;
-          if (buff.st_mode & S_IFDIR)
+          if ((buff.st_mode & S_IFMT) == S_IFDIR)
              {val = sfxdir + strlen(sfxdir) - 1;
              if (*val++ != '/') {*val++ = '/'; *val = '\0';}
              if (xcacheBuild(grp, fn, isxa, Eroute)) cnum++;
@@ -946,6 +1106,7 @@ int XrdOssSys::xcacheBuild(char *grp, char *fn, int isxa, XrdSysError &Eroute)
         if (fsp) delete fsp;
         return 0;
        }
+    OptFlags |= XrdOss_CacheFS;
     return 1;
 }
 
@@ -1187,7 +1348,7 @@ int XrdOssSys::xmemf(XrdOucStream &Config, XrdSysError &Eroute)
 
 int XrdOssSys::xnml(XrdOucStream &Config, XrdSysError &Eroute)
 {
-    char *val, parms[1024];
+    char *val, parms[1040];
 
 // Get the path
 //
@@ -1359,7 +1520,7 @@ int XrdOssSys::xtrace(XrdOucStream &Config, XrdSysError &Eroute)
 
    Purpose:  To parse the directive: usage <parms>
 
-             <parms>: [nolog | log <path>] [quotafile <qfile>]
+             <parms>: [nolog | log <path>] [noquotafile | quotafile <qfile>]
 
              nolog    does not save usage info across restarts
              log      saves usages information in the <path> directory
@@ -1390,6 +1551,8 @@ int XrdOssSys::xusage(XrdOucStream &Config, XrdSysError &Eroute)
                       }
                    UDir = strdup(val);
                   }
+          else if (!strcmp("noquotafile",val))
+                  {if (QFile) {free(QFile); QFile= 0;}}
           else if (!strcmp("quotafile",val))
                   {if (QFile) {free(QFile); QFile= 0;}
                    if (!(val = Config.GetWord()))
@@ -1426,10 +1589,10 @@ int XrdOssSys::xusage(XrdOucStream &Config, XrdSysError &Eroute)
 int XrdOssSys::xxfr(XrdOucStream &Config, XrdSysError &Eroute)
 {
     char *val;
-    int       thrds = XrdOssXFRTHREADS;
-    long long speed = XrdOssXFRSPEED;
-    int       ovhd  = XrdOssXFROVHD;
-    int       htime = XrdOssXFRHOLD;
+    int       thrds = 1;
+    long long speed = 9*1024*1024;
+    int       ovhd  = 30;
+    int       htime = 3*60*60;
     int       ktime;
     int       haveparm = 0;
 
@@ -1485,8 +1648,8 @@ void XrdOssSys::List_Path(const char *pfx, const char *pname,
      if (flags & XRDEXP_FORCERO) rwmode = (char *)" forcero";
         else if (flags & XRDEXP_READONLY) rwmode = (char *)" r/o ";
                 else rwmode = (char *)" r/w ";
-                                 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3
-     snprintf(buff, sizeof(buff), "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+                                 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+     snprintf(buff, sizeof(buff), "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
               pfx, pname,                                           // 0
               (flags & XRDEXP_COMPCHK  ?  " compchk" : ""),         // 1
               rwmode,                                               // 2
@@ -1502,7 +1665,8 @@ void XrdOssSys::List_Path(const char *pfx, const char *pname,
               (flags & XRDEXP_MLOK     ? " mlock"   : " nomlock")),
               (flags & XRDEXP_MMAP     ? " mmap"    : ""),          // 11
               (flags & XRDEXP_RCREATE  ? " rcreate" : " norcreate"),// 12
-              (flags & XRDEXP_NOSTAGE  ? " nostage" : " stage")     // 13
+              (flags & XRDEXP_PURGE    ? " purge"   : " nopurge"),  // 13
+              (flags & XRDEXP_NOSTAGE  ? " nostage" : " stage")     // 14
               );
      Eroute.Say(buff); 
 }

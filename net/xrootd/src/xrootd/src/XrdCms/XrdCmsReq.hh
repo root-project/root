@@ -20,6 +20,10 @@ class XrdCmsReq
 {
 public:
 
+// Use this to determine if the call is advisory in nature
+//
+inline int Advisory() {return ReqAdv;}
+
 // Reply with an eror message to the request. An optional length may be given.
 //
 void       Reply_Error(const char *emsg, int emsglen = 0);
@@ -71,7 +75,7 @@ void       Reply_Wait(int sec);
 //
 XrdCmsReq *Reply_WaitResp(int sec=0);
 
-           XrdCmsReq(XrdCmsNode *nP, unsigned int id);
+           XrdCmsReq(XrdCmsNode *nP, unsigned int id, char adv=0);
            XrdCmsReq(XrdCmsReq  *rP, unsigned int rn);
           ~XrdCmsReq() {}
 
@@ -86,5 +90,6 @@ XrdCmsNode    *NodeP;
 unsigned int   ReqID;
 int            ReqNins;  // Node instance
 short          ReqNnum;  // Node number
+char           ReqAdv;
 };
 #endif

@@ -39,6 +39,10 @@ virtual void  Disable(XrdLink *lp, const char *etxt=0) = 0;
 //
 virtual int   Enable(XrdLink *lp)  = 0;
 
+// Finish() is called to allow a link to gracefully terminate when scheduled
+//
+static  int   Finish(XrdLink *lp, const char *etxt=0); //Implementation supplied
+
 // Poll2Text() converts bits in an revents item to text
 //
 static  char *Poll2Text(short events); // Implementation supplied
@@ -49,7 +53,7 @@ static  int   Setup(int numfd);        // Implementation supplied
 
 // Start() is called via a thread for each poller that was created
 //
-virtual    void        Start(XrdSysSemaphore *syncp, int &rc) = 0;
+virtual void  Start(XrdSysSemaphore *syncp, int &rc) = 0;
 
 // Stats() is called to provide statistics on polling
 //

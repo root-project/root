@@ -17,7 +17,6 @@ const char *XrdCmsPrepareCVSID = "$Id$";
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <utime.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -25,6 +24,7 @@ const char *XrdCmsPrepareCVSID = "$Id$";
 #include "XrdCms/XrdCmsPrepare.hh"
 #include "XrdCms/XrdCmsTrace.hh"
 #include "XrdNet/XrdNetMsg.hh"
+#include "XrdOss/XrdOss.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucMsubs.hh"
 #include "XrdOuc/XrdOucTList.hh"
@@ -42,11 +42,17 @@ XrdCmsPrepare   XrdCms::PrepQ;
 /*          G l o b a l s   &   E x t e r n a l   F u n c t i o n s           */
 /******************************************************************************/
 
+// This function is applied to all prepare queue entries. It checks if the file
+// in online and if so, returns a -1 to delete the entry from the queue. O/W
+// it returns a zero which keeps the entry in the queue. The key is the LFN.
+//
 int XrdCmsScrubScan(const char *key, char *cip, void *xargp)
 {
    struct stat buf;
-   if (stat(key, &buf)) return 0;
-   return -1;
+
+// Use oss interface to determine whether the file exists or not
+//
+   return (Config.ossFS->Stat(key, &buf, XRDOSS_resonly) ? 0 : -1);
 }
 
 /******************************************************************************/
@@ -62,6 +68,7 @@ XrdCmsPrepare::XrdCmsPrepare() : XrdJob("File cache scrubber"),
  NumFiles = 0;
  lastemsg = time(0);
  Relay    = new XrdNetMsg(&Say);
+ isFrm = 0;
 }
 
 /******************************************************************************/
@@ -70,7 +77,7 @@ XrdCmsPrepare::XrdCmsPrepare() : XrdJob("File cache scrubber"),
   
 int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
 {
-   char *pdata[XrdOucMsubs::maxElem + 2], prtybuff[8], *pP = prtybuff;
+   char ubuff[256], *pdata[XrdOucMsubs::maxElem+2], prtybuff[8], *pP=prtybuff;
    int rc, pdlen[XrdOucMsubs::maxElem + 2];
 
 // Restart the scheduler if need be
@@ -89,7 +96,9 @@ int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
 // Write out the header line
 //
    if (!prepMsg)
-      {pdata[0] = (char *)"+ ";               pdlen[0] = 2;
+      {if (isFrm)
+      {pdlen[0] = getID(pargs.Ident,ubuff,sizeof(ubuff)); pdata[0] = ubuff;}
+else  {pdata[0] = (char *)"+ ";               pdlen[0] = 2;}
        pdata[1] = pargs.reqid;                pdlen[1] = strlen(pargs.reqid);
        pdata[2] = (char *)" ";                pdlen[2] = 1;
        pdata[3] = pargs.notify;               pdlen[3] = strlen(pargs.notify);
@@ -107,8 +116,8 @@ int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
        int Oflag = (index(pargs.mode, (int)'w') ? O_RDWR : 0);
        mode_t Prty = atoi(pargs.prty);
        XrdOucEnv Env(pargs.opaque);
-       XrdOucMsubsInfo Info(pargs.reqid, &Env,  N2N,   pargs.path,
-                            pargs.notify, Prty, Oflag, pargs.mode);
+       XrdOucMsubsInfo Info(pargs.Ident, &Env,  N2N,   pargs.path,
+                            pargs.notify, Prty, Oflag, pargs.mode, pargs.reqid);
        int k = prepMsg->Subs(Info, pdata, pdlen);
        pdata[k]   = (char *)"\n"; pdlen[k++] = 1;
        pdata[k]   = 0;            pdlen[k]   = 0;
@@ -293,6 +302,7 @@ int XrdCmsPrepare::setParms(char *ifpgm, char *ifmsg)
 {if (ifpgm)
     {if (prepif) free(prepif);
      prepif = strdup(ifpgm);
+     isFrm = !strcmp(ifpgm, "frm_pstga");
     }
  if (ifmsg)
     {if (prepMsg) delete prepMsg;
@@ -307,42 +317,45 @@ int XrdCmsPrepare::setParms(char *ifpgm, char *ifmsg)
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
 /******************************************************************************/
+/*                                 g e t I D                                  */
+/******************************************************************************/
+  
+int XrdCmsPrepare::getID(const char *Tid, char *buff, int bsz)
+{
+   char *bP;
+   int n;
+
+// The buffer always starts with a '+'
+//
+   *buff = '+'; bP = buff+1; bsz -= 3;
+
+// Get the trace id
+//
+   if (Tid && (n = strlen(Tid)) <= bsz) {strcpy(bP, Tid); bP += n;}
+
+// Insert space
+//
+   *bP++ = ' '; *bP = '\0';
+   return bP - buff;
+}
+
+/******************************************************************************/
 /*                              i s O n l i n e                               */
 /******************************************************************************/
   
 int XrdCmsPrepare::isOnline(char *path)
 {
+   static const int Sopts = XRDOSS_resonly | XRDOSS_updtatm;
    struct stat buf;
-   struct utimbuf times;
-   char *lclpath, lclbuff[XrdCmsMAX_PATH_LEN+1];
 
-// Generate the true local path
+// Issue the stat() via oss plugin. If it indicates the file is not there is
+// still might be logically here because it's in a staging queue.
 //
-   lclpath = path;
-   if (Config.lcl_N2N)
-      {if (Config.lcl_N2N->lfn2pfn(lclpath,lclbuff,sizeof(lclbuff))) return 0;
-          else lclpath = lclbuff;
-      }
-
-// Do a stat
-//
-   if (stat(lclpath, &buf))
+   if (Config.ossFS->Stat(path, &buf, Sopts))
       {if (Config.DiskSS && Exists(path)) return -1;
           else return 0;
       }
-
-// Make sure we are doing a stat on a file
-//
-   if ((buf.st_mode & S_IFMT) == S_IFREG)
-      {times.actime = time(0);
-       times.modtime = buf.st_mtime;
-       utime(lclpath, &times);
-       return 1;
-      }
-
-// Determine what to return
-//
-   return 0;
+   return 1;
 }
 
 /******************************************************************************/

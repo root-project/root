@@ -116,7 +116,7 @@ int XrdCmsClientMan::delayResp(XrdOucErrInfo &Resp)
 
 // Obtain the message ID
 //
-   if (!(msgid = Resp.getErrArg()))
+   if (!(msgid = Resp.getErrInfo()))
       {Say.Emsg("Manager", Host, "supplied invalid waitr msgid");
        Resp.setErrInfo(0, "redirector protocol error");
        syncResp.Post();
@@ -222,11 +222,10 @@ void *XrdCmsClientMan::Start()
        // must receive the respwait before the subsequent response.
        //
        while(Receive())
-            if (Response.modifier & CmsResponse::kYR_async) relayResp();
-               else if (Response.rrCode == kYR_status) setStatus();
-                       else {XrdCmsClientMsg::Reply(HPfx, Response, NetBuff);
-                             if (Response.rrCode == kYR_waitresp) syncResp.Wait();
-                            }
+                 if (Response.modifier & CmsResponse::kYR_async) relayResp();
+            else if (Response.rrCode == kYR_status) setStatus();
+            else if (XrdCmsClientMsg::Reply(HPfx, Response, NetBuff))
+                    {if (Response.rrCode == kYR_waitresp) syncResp.Wait();}
 
        // Tear down the connection
        //

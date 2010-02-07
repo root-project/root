@@ -182,4 +182,6 @@ extern long long  XrdPosix_Writev(int fildes, const struct iovec *iov, int iovcn
 //
 extern int        XrdPosix_isMyPath(const char *path);
 
+extern char      *XrdPosix_URL(const char *path, char *buff, int blen);
+
 #endif

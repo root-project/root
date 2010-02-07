@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptoMsgDigestCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                 X r d C r y p t o M s g D i g e s t . c c                  */
@@ -11,7 +13,7 @@
 
 /* ************************************************************************** */
 /*                                                                            */
-/* Abstract interface for Message Digest crypto fucntionality.                */
+/* Abstract interface for Message Digest crypto functionality.                */
 /* Allows to plug-in modules based on different crypto implementation         */
 /* (OpenSSL, Botan, ...)                                                      */
 /*                                                                            */

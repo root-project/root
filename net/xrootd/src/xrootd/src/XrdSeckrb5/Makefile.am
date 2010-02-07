@@ -4,13 +4,21 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.9 2008/11/19 17:10:59 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.10 2009/01/15 10:39:33 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
+
+#############################################################################
+## deliverables
+
 lib_LTLIBRARIES = libXrdSeckrb5.la
 
-INCLUDES = -I$(top_srcdir)/src $(KRB5_INCDIR)
+#############################################################################
+## Build rules
+
+AM_CPPFLAGS = -I$(top_srcdir)/src $(KRB5_INCDIR)
+
 
 libXrdSeckrb5_la_SOURCES = XrdSecProtocolkrb5.cc
 libXrdSeckrb5_la_LIBADD = \

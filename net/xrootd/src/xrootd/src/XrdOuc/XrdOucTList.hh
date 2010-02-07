@@ -22,10 +22,32 @@ public:
 
 XrdOucTList *next;
 char        *text;
+union
+{
+long long    dval;
+int          ival[2];
+short        sval[4];
+char         cval[8];
 int          val;
+};
+
+             XrdOucTList(const char *tval, long long *dv,XrdOucTList *np=0)
+                        {next=np; text = (tval ? strdup(tval) : 0); dval=*dv;}
 
              XrdOucTList(const char *tval=0, int num=0, XrdOucTList *np=0)
-                        {text = (tval ? strdup(tval) : 0); val=num; next=np;}
+                        {next=np; text = (tval ? strdup(tval) : 0); val=num;}
+
+             XrdOucTList(const char *tval, int   iv[2], XrdOucTList *np=0)
+                        {next=np; text = (tval ? strdup(tval) : 0);
+                         memcpy(sval, iv, sizeof(ival));}
+
+             XrdOucTList(const char *tval, short sv[4], XrdOucTList *np=0)
+                        {next=np; text = (tval ? strdup(tval) : 0);
+                         memcpy(sval, sv, sizeof(sval));}
+
+             XrdOucTList(const char *tval, char  cv[8], XrdOucTList *np=0)
+                        {text = (tval ? strdup(tval) : 0); next=np;
+                         memcpy(cval, cv, sizeof(cval));}
 
             ~XrdOucTList() {if (text) free(text);}
 };

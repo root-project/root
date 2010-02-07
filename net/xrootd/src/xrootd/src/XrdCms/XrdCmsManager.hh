@@ -46,8 +46,6 @@ void        Inform(const char *What, struct iovec *vP, int vN, int vT=0);
 void        Inform(XrdCms::CmsReqCode rCode, int rMod, const char *Arg=0, int Alen=0);
 void        Inform(XrdCms::CmsRRHdr &Hdr, const char *Arg=0, int Alen=0);
 
-void       *MonPing();
-
 int         Present() {return MTHi >= 0;};
 
 void        Remove(XrdCmsNode *nP, const char *reason=0);

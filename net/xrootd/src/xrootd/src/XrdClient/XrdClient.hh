@@ -46,6 +46,9 @@
 #include "XrdSys/XrdSysSemWait.hh"
 #include "XrdVersion.hh"
 
+
+class XrdClientReadAheadMgr;
+
 struct XrdClientOpenInfo {
     bool      inprogress;
     bool      opened;
@@ -60,6 +63,37 @@ struct XrdClientStatInfo {
     long flags;
     long modtime;
 };
+
+struct XrdClientCounters {
+   int CacheSize;
+
+   //  This does not take into account the 'suggestions'
+   // like async read or async readV
+   //  We count only for functions which return data, eventually
+   // taken from the cache
+   long long ReadBytes;
+   long long WrittenBytes;
+   long long WriteRequests;
+
+   long long ReadRequests;
+   long long ReadMisses;
+   long long ReadHits;
+   float     ReadMissRate;
+
+   long long ReadVRequests;     // How many readVs (sync) were requested
+   long long ReadVSubRequests;  // In how many sub-readVs they were split
+   long long ReadVSubChunks;    // How many subchunks in total
+   long long ReadVBytes;        // How many bytes were requested (sync)
+       
+   long long ReadVAsyncRequests;     // How many readVs (async) were requested
+   long long ReadVAsyncSubRequests;  // In how many sub-readVs they were split
+   long long ReadVAsyncSubChunks;    // How many subchunks in total
+   long long ReadVAsyncBytes;        // How many bytes were requested (async)
+
+   long long ReadAsyncRequests;
+   long long ReadAsyncBytes;
+};
+
 
 class XrdClient : public XrdClientAbs {
     friend void *FileOpenerThread(void*, XrdClientThread*);
@@ -82,11 +116,11 @@ private:
 
     bool                        fOpenWithRefresh;
 
-    int                         fReadAheadSize;
-
     XrdSysCondVar              *fReadWaitData;  // Used to wait for outstanding data   
 
     struct XrdClientStatInfo    fStatInfo;
+
+    long                        fReadTrimBlockSize;
 
     bool                        fUseCache;
 
@@ -102,12 +136,7 @@ private:
 					kXR_unt16 options,
 					char *additionalquery = 0);
 
-    // The first position not read by the last read ahead
-    long long                   fReadAheadLast;
-
     void                        TerminateOpenAttempt();
-
-    bool                        TrimReadRequest(kXR_int64 &offs, kXR_int32 &len, kXR_int32 rasize);
 
     void                        WaitForNewAsyncData();
 
@@ -116,16 +145,21 @@ private:
     // interface should be ReadV()
     kXR_int64                   ReadVEach(char *buf, kXR_int64 *offsets, int *lens, int &nbuf);
 
-    bool IsOpenedForWrite() {
-      // This supposes that no options means read only
-      if (!fOpenPars.options) return false;
-      
-      if (fOpenPars.options & kXR_open_read) return false;
-      
-      return true;
+    bool                        IsOpenedForWrite() {
+       // This supposes that no options means read only
+       if (!fOpenPars.options) return false;
+       
+       if (fOpenPars.options & kXR_open_read) return false;
+       
+       return true;
     }
 
+    XrdClientReadAheadMgr       *fReadAheadMgr;
+
+    void                         PrintCounters();
 protected:
+
+    XrdClientCounters           fCounters;
 
     virtual bool                OpenFileWhenRedirected(char *newfhandle,
 						       bool &wasopen);
@@ -143,7 +177,7 @@ protected:
 
 public:
 
-    XrdClient(const char *url);
+    XrdClient(const char *url, XrdClientCallback *XrdCcb = 0, void *XrdCcbArg = 0);
     virtual ~XrdClient();
 
     UnsolRespProcResult         ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *sender,
@@ -157,8 +191,8 @@ public:
     // Copy the whole file to the local filesystem. Not very efficient.
     bool                        Copy(const char *localpath);
 
-
-    bool                       GetCacheInfo(
+    // Returns low level information about the cache
+    bool                        GetCacheInfo(
 					    // The actual cache size
 					    int &size,
 					    
@@ -180,21 +214,12 @@ public:
 					    
 					    // ratio between bytes found / bytes submitted
 					    float &bytesusefulness
-					    ) {
-      if (!fConnModule) return false;
-      
-      if (!fConnModule->GetCacheInfo(size,
-				     bytessubmitted,
-				     byteshit,
-				     misscount,
-				     missrate,
-				     readreqcnt,
-				     bytesusefulness))
-	  return false;
+       );
 
-      return true;
-    }
 
+
+    // Returns client-level information about the activity performed up to now
+    bool                        GetCounters( XrdClientCounters *cnt );
 
     // Quickly tells if the file is open
     inline bool                 IsOpen() { return fOpenPars.opened; }
@@ -224,7 +249,7 @@ public:
 
     // Submit an asynchronous read request. Its result will only populate the cache
     //  (if any!!)
-    XReqErrorType               Read_Async(long long offset, int len);
+    XReqErrorType               Read_Async(long long offset, int len, bool updatecounters=true);
 
     // Get stat info about the file. Normally it tries to guess the file size variations
     // unless force==true
@@ -239,17 +264,26 @@ public:
             fConnModule->RemoveAllDataFromCache();
     }
 
+    // To remove pieces of data from the cache
+    void                        RemoveDataFromCache(long long begin_offs,
+                                                    long long end_offs, bool remove_overlapped = false) {
+       if (fConnModule)
+          fConnModule->RemoveDataFromCache(begin_offs, end_offs, remove_overlapped);
+    }
+
     // To set at run time the cache/readahead parameters for this instance only
     // If a parameter is < 0 then it's left untouched.
     // To simply enable/disable the caching, just use UseCache(), not this function
-    void                        SetCacheParameters(int CacheSize, int ReadAheadSize, int RmPolicy) {
-        if (fConnModule) {
-	  if (CacheSize >= 0) fConnModule->SetCacheSize(CacheSize);
-	  if (RmPolicy >= 0) fConnModule->SetCacheRmPolicy(RmPolicy);
-	}
+    void                        SetCacheParameters(int CacheSize, int ReadAheadSize, int RmPolicy);
 
-	if (ReadAheadSize >= 0) fReadAheadSize = ReadAheadSize;
-    }
+    // To enable/disable different read ahead strategies. Defined in XrdClientReadAhead.hh
+    void                        SetReadAheadStrategy(int strategy);
+    
+    // To enable the trimming of the blocks to read. Blocksize will be rounded to a multiple of 512.
+    // Each read request will have the offset and length aligned with a multiple of blocksize
+    // This strategy is similar to a read ahead, but not quite. Here we see it as a transformation
+    // of the stream of the read accesses to request
+    void                        SetBlockReadTrimming(int blocksize);
     
     // Truncates the open file at a specified length
     bool                        Truncate(long long len);

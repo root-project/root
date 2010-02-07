@@ -69,12 +69,16 @@ void         Echo();
 // Execute a command on a stream. Returns 0 upon success or -1 otherwise.
 // Use LastError() to get the actual error code. Subsequent Get() calls
 // will return the standard output of the executed command. If inrd=1 then
-// standrdin is redirected so that subqseuent Put() calls write to the 
+// standardin is redirected so that subqseuent Put() calls write to the
 // process via standard in. When inrd=-1 then the current attached FD's are
-// used to redirect STDIN and STDOUT of the child process.
+// used to redirect STDIN and STDOUT of the child process. Standard error
+// is handled as determined by the efd argument:
+// efd < 0 -> The current stderr file decriptor is unchanged.
+// efd = 0 -> The stderr file descriptor is set to the original logging FD
+// efd > 0 -> The stderr file descriptor is set to the value of efd.
 //
-int          Exec(char *,  int inrd=0);
-int          Exec(char **, int inrd=0);
+int          Exec(const char *,  int inrd=0, int efd=0);
+int          Exec(      char **, int inrd=0, int efd=0);
 
 // Get the file descriptor number associated with a stream
 //
@@ -178,7 +182,8 @@ int          Wait4Data(int msMax=-1);
   
 private:
         char *add2llB(char *tok, int reset=0);
-        int   doif();
+        char *doelse();
+        char *doif();
         int   isSet(char *var);
         char *vSubs(char *Var);
         int   xMsg(const char *txt1, const char *txt2=0, const char *txt3=0);

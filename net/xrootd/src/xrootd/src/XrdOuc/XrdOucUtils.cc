@@ -10,7 +10,11 @@
 
 //         $Id$
 
+const char *XrdOucUtilsCVSID = "$Id$";
+
+#include <ctype.h>
 #include <errno.h>
+#include <stdio.h>
 
 #ifdef WIN32
 #include <direct.h>
@@ -22,6 +26,31 @@
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XrdOuc/XrdOucUtils.hh"
   
+/******************************************************************************/
+/*                                 e T e x t                                  */
+/******************************************************************************/
+  
+// eText() returns the text associated with the error, making the first
+// character in the text lower case. The text buffer pointer is returned.
+
+char *XrdOucUtils::eText(int rc, char *eBuff, int eBlen, int AsIs)
+{
+   const char *etP;
+
+// Get error text
+//
+   if (!(etP = strerror(rc)) || !(*etP)) etP = "reason unknown";
+
+// Copy the text and lower case the first letter
+//
+   strlcpy(eBuff, etP, eBlen);
+   if (!AsIs) *eBuff = tolower(*eBuff);
+
+// All done
+//
+   return eBuff;
+}
+
 /******************************************************************************/
 /*                                  d o I f                                   */
 /******************************************************************************/
@@ -116,6 +145,33 @@ int XrdOucUtils::doIf(XrdSysError *eDest, XrdOucStream &Config,
 }
 
 /******************************************************************************/
+/*                              f m t B y t e s                               */
+/******************************************************************************/
+  
+int XrdOucUtils::fmtBytes(long long val, char *buff, int bsz)
+{
+   static const long long Kval = 1024LL;
+   static const long long Mval = 1024LL*1024LL;
+   static const long long Gval = 1024LL*1024LL*1024LL;
+   static const long long Tval = 1024LL*1024LL*1024LL*1024LL;
+   char sName = ' ';
+   int resid;
+
+// Get correct scaling
+//
+        if (val < 1024)  return snprintf(buff, bsz, "%lld", val);
+        if (val < Mval) {val = val*10/Kval; sName = 'K';}
+   else if (val < Gval) {val = val*10/Mval; sName = 'M';}
+   else if (val < Tval) {val = val*10/Gval; sName = 'G';}
+   else                 {val = val*10/Tval; sName = 'T';}
+   resid = val%10LL; val = val/10LL;
+
+// Format it
+//
+   return snprintf(buff, bsz, "%lld.%d%c", val, resid, sName);
+}
+
+/******************************************************************************/
 /*                               g e n P a t h                                */
 /******************************************************************************/
 
@@ -182,7 +238,8 @@ void XrdOucUtils::makeHome(XrdSysError &eDest, const char *inst)
        return;
       }
 
-   chdir(buff);
+   if (chdir(buff) < 0)
+      eDest.Emsg("Config", errno, "chdir to home directory", buff);
 }
 
 /******************************************************************************/
@@ -223,19 +280,20 @@ char *XrdOucUtils::subLogfn(XrdSysError &eDest, const char *inst, char *logfn)
    char buff[2048], *sp;
    int rc;
 
-   if (!inst || !(sp = rindex(logfn, '/')) || (sp == logfn)) return logfn;
+   if (!inst || !*inst) return logfn;
+   if (!(sp = rindex(logfn, '/'))) strcpy(buff, "./");
+      else {*sp = '\0'; strcpy(buff, logfn); strcat(buff, "/");}
 
-   *sp = '\0';
-   strcpy(buff, logfn); 
-   strcat(buff, "/");
-   if (inst && *inst) {strcat(buff, inst); strcat(buff, "/");}
+   strcat(buff, inst); strcat(buff, "/");
 
    if ((rc = XrdOucUtils::makePath(buff, lfm)))
       {eDest.Emsg("Config", rc, "create log file path", buff);
        return 0;
       }
 
-   *sp = '/'; strcat(buff, sp+1);
+   if (sp) {*sp = '/'; strcat(buff, sp+1);}
+      else strcat(buff, logfn);
+
    free(logfn);
    return strdup(buff);
 }

@@ -8,9 +8,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//        $Id: XrdPollPoll.icc,v 1.18 2008/09/26 07:26:46 ganis Exp $
+//        $Id: XrdPollPoll.icc,v 1.19 2009/06/04 01:24:55 abh Exp $
 
-const char *XrdPollPollCVSID = "cvsid: $Id: XrdPollPoll.icc,v 1.18 2008/09/26 07:26:46 ganis Exp $";
+const char *XrdPollPollCVSID = "cvsid: $Id: XrdPollPoll.icc,v 1.19 2009/06/04 01:24:55 abh Exp $";
 
 #if !defined(__macos__) && !defined(__FreeBSD__)
 #include <malloc.h>
@@ -22,7 +22,6 @@ const char *XrdPollPollCVSID = "cvsid: $Id: XrdPollPoll.icc,v 1.18 2008/09/26 07
 #include "XrdSys/XrdSysError.hh"
 #include "Xrd/XrdLink.hh"
 #include "Xrd/XrdPollPoll.hh"
-#include "Xrd/XrdProtocol.hh"
 #include "Xrd/XrdScheduler.hh"
 
 /******************************************************************************/
@@ -34,27 +33,6 @@ extern XrdSysError    XrdLog;
 extern XrdScheduler   XrdSched;
 
 extern XrdOucTrace    XrdTrace;
-
-/******************************************************************************/
-/*                         L o c a l   C l a s s e s                          */
-/******************************************************************************/
-  
-class XrdPoll_End : public XrdProtocol
-{
-public:
-void          DoIt() {}
-
-XrdProtocol  *Match(XrdLink *lp) {return (XrdProtocol *)0;}
-
-int           Process(XrdLink *lp) {return -1;}
-
-void          Recycle(XrdLink *lp, int x, const char *y) {}
-
-int           Stats(char *buff, int blen, int do_sync=0) {return 0;}
-
-      XrdPoll_End() : XrdProtocol("link termination") {}
-     ~XrdPoll_End() {}
-};
 
 /******************************************************************************/
 /*                             n e w P o l l e r                              */
@@ -154,7 +132,6 @@ int XrdPollPoll::Include(XrdLink *lp)
 
 void XrdPollPoll::Disable(XrdLink *lp, const char *etxt)
 {
-   static XrdPoll_End linkend;
    XrdSysSemaphore mySem(0);
    PipeData cmdbuff[2];
    int myerrno = 0;
@@ -188,14 +165,7 @@ void XrdPollPoll::Disable(XrdLink *lp, const char *etxt)
 //
    if (myerrno) XrdLog.Emsg("Poll", myerrno, "disable link", lp->ID);
       else {mySem.Wait();
-            if (etxt)
-               {lp->ProtoAlt = lp->Protocol;
-                lp->Protocol = (XrdProtocol *)&linkend;
-                if (lp->Etext) free(lp->Etext);
-                lp->Etext = strdup(etxt);
-                XrdSched.Schedule((XrdJob *)lp);
-                TRACEI(POLL, "Link " <<lp->FD <<" terminating: " <<etxt);
-               }
+            if (etxt && Finish(lp, etxt)) XrdSched.Schedule((XrdJob *)lp);
            }
 }
   
@@ -285,7 +255,6 @@ void XrdPollPoll::Start(XrdSysSemaphore *syncsem, int &retcode)
    int numpolled, num2sched;
    XrdJob *jfirst, *jlast;
    XrdLink *plp, *lp, *nlp;
-   XrdPoll_End pollend;
    short pollevents;
    const short pollOK = POLLIN | POLLRDNORM;
 
@@ -333,11 +302,7 @@ void XrdPollPoll::Start(XrdSysSemaphore *syncsem, int &retcode)
                      else  nlp =     PollQ = lp->Next;
                   numpolled--; lp->inQ = 0;
                   if (!(pollevents & pollOK))
-                     {lp->ProtoAlt = lp->Protocol;
-                      lp->Protocol = (XrdProtocol *)&pollend;
-                      if (!(lp->Etext))
-                         lp->Etext = Poll2Text(pollevents);
-                     }
+                     Finish(lp, Poll2Text(pollevents));
                   if (!(lp->isEnabled))
                      XrdLog.Emsg("Poll", "Disabled event occured for", lp->ID);
                      else {lp->isEnabled = 0;
@@ -520,7 +485,6 @@ void XrdPollPoll::Recover(int numleft)
 void XrdPollPoll::Restart(int ecode)
 {
    XrdLink *lp;
-   static XrdPoll_End pollend;
 
 // Issue error message
 //
@@ -533,9 +497,7 @@ void XrdPollPoll::Restart(int ecode)
    while((lp = PollQ))
         {PollQ = lp->Next;
          lp->PollEnt->fd = -1;
-         lp->Protocol->Recycle();
-         lp->Protocol = (XrdProtocol *)&pollend;
-         lp->Etext = strdup("Unexpected polling error");
+         Finish(lp, "Unexpected polling error");
          XrdSched.Schedule((XrdJob *)lp);
         }
    PollMutex.UnLock();

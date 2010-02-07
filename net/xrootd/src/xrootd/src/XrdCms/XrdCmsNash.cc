@@ -10,6 +10,8 @@
 
 //         $Id$
 
+const char *XrdCmsNashCVSID = "$Id$";
+
 #include <stdlib.h>
 
 #include "XrdCms/XrdCmsNash.hh"

@@ -113,6 +113,14 @@ static int getWindow(int fd, int &Windowsz, XrdSysError *eDest=0);
 //
 inline int  SockNum() {return SockFD;}
 
+// Create an appropriate sockaddr structure for the supplied path which is
+// either a hostname:port or a unix path. If successful, 0 is returned
+// otherwise a const error message is returned. The address of the sockaddr
+// is returned in sockAP and it's size is returned in sockAL upon success.
+//
+static const char *socketAddr(XrdSysError *Say, const char *dest,
+                              struct sockaddr **sockAP, int &sockAL);
+
 // Create a path to a named socket returning the actual name of the socket.
 // This method does not actually create the socket, only the path to the
 // socket. If the full path exists then it must be a named socket. Upon

@@ -40,12 +40,13 @@ using namespace XrdCms;
 /*                        C o n s t r u c t o r   # 1                         */
 /******************************************************************************/
   
-XrdCmsReq::XrdCmsReq(XrdCmsNode *nP, unsigned int reqid)
+XrdCmsReq::XrdCmsReq(XrdCmsNode *nP, unsigned int reqid, char adv)
 {
    NodeP   = nP;
    ReqID   = reqid;
    ReqNnum = nP->getSlot();
    ReqNins = nP->Inst();
+   ReqAdv  = adv;
 }
 
 /******************************************************************************/
@@ -190,7 +191,7 @@ void XrdCmsReq::Reply_Redirect(const char *sname,
 
 // Find the port number in the host name
 //
-   if (!(colon = (char*)index(sname, ':'))) 
+   if (!(colon = (char *) index(sname, ':'))) 
       {Port = 0;
        hP = sname;
       } else {
@@ -246,9 +247,13 @@ void XrdCmsReq::Reply_Redirect(const char *sname, int Port,
                }
            }
 
+// Make sure that last iov element and hlen includes the terminating null byte
+//
+   iov[iovnum-1].iov_len++; hlen++;
+
 // Send off the reply
 //
-   Reply(kYR_redirect, (unsigned int)Port, 0, hlen+1, iov, iovnum);
+   Reply(kYR_redirect, (unsigned int)Port, 0, hlen, iov, iovnum);
 }
 
 /******************************************************************************/
@@ -297,8 +302,8 @@ XrdCmsReq *XrdCmsReq::Reply_WaitResp(int sec)
 // Reply to the requestor mapping our ID to their ID
 //
    if (rnum)
-      {unsigned int asyncid = htonl(rnum);
-       Reply(kYR_waitresp, asyncid);
+      {
+       Reply(kYR_waitresp, rnum);
       }
 
 // Return an object to affect an asynchronous reply
@@ -380,9 +385,8 @@ void XrdCmsReq::Reply(       int    respCode, unsigned int respVal,
 //
    RTable.Lock();
    if ((nP = RTable.Find(ReqNnum, ReqNins)))
-      {Resp.Hdr.streamid = htonl(ReqID);
-       Resp.Hdr.modifier |= CmsResponse::kYR_async;
-       nP->Send(iov, iovnum);
+      {Resp.Hdr.modifier |= CmsResponse::kYR_async;
+       nP->Send(iovP, iovnum);
       }
       else {DEBUG("Async resp " <<ReqID <<" discarded; server gone");}
    RTable.UnLock();

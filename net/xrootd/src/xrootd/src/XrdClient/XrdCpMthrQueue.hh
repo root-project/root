@@ -19,6 +19,7 @@ using namespace std;
 
 struct XrdCpMessage {
    void *buf;
+   long long offs;
    int len;
 };
 
@@ -43,8 +44,9 @@ class XrdCpMthrQueue {
    XrdCpMthrQueue();
    ~XrdCpMthrQueue();
 
-   int PutBuffer(void *buf, int len);
-   int GetBuffer(void **buf, int &len);
+   int PutBuffer(void *buf, long long offs, int len);
+   int GetBuffer(void **buf, long long &offs, int &len);
+   int GetLength() { return fMsgQue.GetSize(); }
    void Clear();
 };
    

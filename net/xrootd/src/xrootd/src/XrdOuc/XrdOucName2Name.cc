@@ -8,6 +8,10 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
+//         $Id$
+
+const char *XrdOucName2NameCVSID = "$Id$";
+  
 // This file implements an instance of the XrdOucName2Name abstract class.
 
 #include <errno.h>
@@ -59,11 +63,12 @@ XrdOucN2N::XrdOucN2N(XrdSysError *erp, const char *lpfx, const char *rpfx)
                          {LocalRootLen--; LocalRoot[LocalRootLen] = '\0';}
                    }
 
-// Remote root must not have any trailing slahes
+// Remote root must not have any trailing slases unless it a URL
 //
    if (!rpfx) {RemotRoot = 0; RemotRootLen = 0;}
       else if (!(RemotRootLen = strlen(rpfx))) RemotRoot = 0;
               else {RemotRoot = strdup(rpfx);
+                    if (*RemotRoot == '/')
                     while(RemotRootLen && RemotRoot[RemotRootLen-1] == '/')
                           {RemotRootLen--; RemotRoot[RemotRootLen] = '\0';}
                    }

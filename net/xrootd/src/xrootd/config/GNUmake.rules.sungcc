@@ -1,4 +1,4 @@
-#              $Id: GNUmake.rules.sungcc,v 1.4 2006/10/19 14:49:30 ganis Exp $
+#              $Id: GNUmake.rules.sungcc,v 1.5 2009/07/15 01:54:03 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                 R u l e s   f o r   g e n e r i c   g c c                    #
@@ -10,10 +10,12 @@ TYPELD     = g++
 TYPEMISC   = -D_ALL_SOURCE -D_REENTRANT -D__solaris__ -D_GNU_SOURCE -fPIC \
              -Wall -Wno-deprecated -DSUNGCC $(CFTRACE)
 TYPECF32   =
-TYPECF64   =
+TYPECF64   = -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 TYPEOPT    = $(TYPEMISC) -O2
 TYPEDBG    = $(TYPEMISC) -g
 TYPELDSO   = -shared
 TYPESHLIB  = so
 
 TYPELIBS   =  -lnsl -lsocket $(PTHREAD) -lrt -ldl -lc
+TYPELIBSF  = -lsendfile
+TYPELIBSM  = -lsunmath

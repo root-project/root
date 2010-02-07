@@ -14,6 +14,7 @@
 
 const char *XrdCmsAdminCVSID = "$Id$";
 
+#include <stdio.h>
 #include <limits.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -244,7 +245,8 @@ void XrdCmsAdmin::Relay(int setSock, int newSock)
       {SMutex.Lock();
        if (curSock >= 0) close(curSock);
           else if (newSock >= 0) SReady.Post();
-       curSock = (newSock >= 0 ? dup(newSock) : -1);
+       if (newSock < 0) curSock = -1;
+          else {curSock = dup(newSock); XrdNetSocket::setOpts(curSock, 0);}
        SMutex.UnLock();
        return;
       }
@@ -304,14 +306,15 @@ void *XrdCmsAdmin::Start(XrdNetSocket *AdminSock)
 
 // If we are in independent mode then let the caller continue
 //
-   if ((Config.doWait && Config.asServer()) || Config.asSolo())
+   if (Config.doWait)
       {Say.Emsg(epname, "Waiting for primary server to login.");}
        else if (SyncUp) {SyncUp->Post(); SyncUp = 0;}
 
 // Accept connections in an endless loop
 //
    while(1) if ((InSock = AdminSock->Accept()) >= 0)
-               {if (XrdSysThread::Run(&tid,XrdCmsAdminLogin,(void *)&InSock))
+               {XrdNetSocket::setOpts(InSock, 0);
+                if (XrdSysThread::Run(&tid,XrdCmsAdminLogin,(void *)&InSock))
                    {Say.Emsg(epname, errno, "start admin");
                     close(InSock);
                    }
@@ -463,13 +466,16 @@ void XrdCmsAdmin::do_RmDid(int isPfn)
 void XrdCmsAdmin::do_RmDud(int isPfn)
 {
    const char *epname = "do_RmDud";
-   char *tp, apath[XrdCmsMAX_PATH_LEN];
-   int   rc;
+   char *tp, *pp, apath[XrdCmsMAX_PATH_LEN];
+   int   rc, Mods = kYR_raw;
 
    if (!(tp = Stream.GetToken()))
       {Say.Emsg(epname,"added path not specified by",Stype,Sname);
        return;
       }
+
+   if ((pp = Stream.GetToken()) && *pp == 'p') Mods |= CmsHaveRequest::Pending;
+      else Mods |= CmsHaveRequest::Online;
 
    if (isPfn && Config.lcl_N2N)
       {if ((rc = Config.lcl_N2N->pfn2lfn(tp, apath, sizeof(apath))))
@@ -479,5 +485,5 @@ void XrdCmsAdmin::do_RmDud(int isPfn)
       }
 
    DEBUG("sending managers have online " <<tp);
-   Manager.Inform(kYR_have, CmsHaveRequest::Online|kYR_raw, tp, strlen(tp)+1);
+   Manager.Inform(kYR_have, Mods, tp, strlen(tp)+1);
 }

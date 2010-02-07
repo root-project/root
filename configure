@@ -109,6 +109,7 @@ enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
 enable_gsl_shared=no
+enable_krb5=no
 enable_pch=no
 enable_qt=no
 enable_qtgsi=no
@@ -596,7 +597,7 @@ check_symbol() {
     # Check if we got a specific argument as to where the library
     # is to be found
     symbolfile=$symbollib
-    exts=".so .lib"
+    exts=".so .lib .dylib"
     if test ! "x$shared" = "xno" ; then
 	exts="$exts .a"
     else
@@ -3917,16 +3918,45 @@ if test ! "x$enable_krb5" = "xno" ; then
     if test "x$krb5incdir" = "x" && test ! "x$krb5dir" = "x" ; then
 	krb5incdir=$krb5dir/include
     fi
+    krb5heff=
     check_header "krb5.h" "$krb5incdir" /usr/kerberos/include \
 	    /usr/krb5/include /usr/local/kerberos/include \
 	    /usr/include /usr/include/kerberosV /usr/local/include
     if test "x$found_dir" = "x" ; then
 	enable_krb5=no
     else
+        krb5heff=$found_dir/$found_hdr
         krb5inc=$found_hdr
         krb5incdir=$found_dir
     fi
+    #
+    # Check if 'krb5heff' is the real one or if it re-directs
+    # to <krb5/krb5.h>
+    redir=`grep "krb5\/krb5\.h" $krb5heff 2> /dev/null`
+    if test ! "x$redir" = "x" ; then
+       krb5heff=`dirname $krb5heff`/krb5/krb5.h
+    fi
+    echo "Effective krb5.h: $krb5heff"
 
+    #
+    # Check for prototypes in krb5.h
+    hask5vcstproto=`grep krb5_c_valid_cksumtype $krb5heff 2> /dev/null`
+    if test ! "x$hask5vcstproto" = "x" ; then
+       echo "Checking for krb5_c_valid_cksumtype in krb5.h ... yes"
+       hask5vcstproto="yes"
+    else
+       echo "Checking for krb5_c_valid_cksumtype in krb5.h ... no"
+       hask5vcstproto="no"
+    fi
+    hasvcstproto=`grep valid_cksumtype $krb5heff | grep -v krb5_c_valid_cksumtype 2> /dev/null`
+    if test ! "x$hasvcstproto" = "x" ; then
+       echo "Checking for valid_cksumtype in krb5.h ... yes"
+       hasvcstproto="yes"
+    else
+       echo "Checking for valid_cksumtype in krb5.h ... no"
+       hasvcstproto="no"
+    fi
+    
     krb5libdirorg=""
     if test ! "x$krb5libdir" = "x" ; then
 	krb5libdirorg=$krb5libdir
@@ -3953,49 +3983,76 @@ if test ! "x$enable_krb5" = "xno" ; then
     # Only MIT kerberos is currently supported
     if test "x$krb5mit" = "xyes" ; then
 
-      check_library libkrb5 "$enable_shared" "$krb5libdirorg" $krb5libdirs
-      if test "x$found_lib" = "x" ; then
-	 enable_krb5=no
-      else
-	 # The order is important here
-	 krb5lib="$found_lib $krb5lib"
-	 krb5libdir="$found_dir $krb5libdir"
-	 if test "x$cryptolib" = "x" ; then
-            check_library "libcrypto" "$enable_shared" "$krb5libdirorg" \
-                          $krb5libdirs
-            cryptolib=$found_lib
-            cryptolibdir=$found_dir
-            if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
-               case $platform in
-                   linux) cryptolib="$cryptolib -ldl"
-               esac
+      # Check for 'valid_cksumtype' symbols
+      check_symbol krb5_c_valid_cksumtype $krb5lib "$krb5libdir"
+      if test $found_symbol -eq 1 ; then
+         hask5vcstsymbol="yes"
+      fi
+      check_symbol valid_cksumtype $krb5lib "$krb5libdir"
+      if test $found_symbol -eq 1 ; then
+         hasvcstsymbol="yes"
+      fi
+
+      if test "x$hask5vcstsymbol" = "xyes" && test "x$hask5vcstproto" = "xno" ; then 
+         needsvcstproto="-DR__KRB5_NEED_VCST_PROTO"
+      elif test ! "x$hask5vcstsymbol" = "xyes" ; then
+         if test "x$hasvcstsymbol" = "xyes" ; then
+            needsvcstdefine="-DR__KRB5_NEED_VCST_DEFINE"
+            if test "x$hasvcstproto" = "xno" ; then
+               needsvcstproto="-DR__KRB5_NEED_VCST_PROTO"
             fi
-	    if test "x$cryptolib" = "x" ; then
-                enable_krb5=no
-	    fi
+         else
+            echo "Either 'krb5_c_valid_cksumtype' or 'valid_cksumtype' are available; disabling krb5"
+   	    enable_krb5=no
 	 fi
       fi
+      
+      if test ! "x$enable_krb5" = "xno" ; then
 
-      krb5init=""
-      krb5bindir=""
-      if test ! "x$krb5dir" = "x" ; then
-	 krb5bindir=$krb5dir/bin
-      fi
-      for i in "$krb5bindir" /usr/kerberos/bin \
-             /usr/krb5/bin /usr/local/kerberos/bin \
-             /usr/bin /usr/local/bin ; do
-         if test -x $i/kinit ; then
-            krb5init=$i/kinit
-            break
+         check_library libkrb5 "$enable_shared" "$krb5libdirorg" $krb5libdirs
+         if test "x$found_lib" = "x" ; then
+   	 enable_krb5=no
+         else
+   	 # The order is important here
+   	 krb5lib="$found_lib $krb5lib"
+   	 krb5libdir="$found_dir $krb5libdir"
+   	 if test "x$cryptolib" = "x" ; then
+               check_library "libcrypto" "$enable_shared" "$krb5libdirorg" \
+                             $krb5libdirs
+               cryptolib=$found_lib
+               cryptolibdir=$found_dir
+               if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
+                  case $platform in
+                      linux) cryptolib="$cryptolib -ldl"
+                  esac
+               fi
+   	    if test "x$cryptolib" = "x" ; then
+                   enable_krb5=no
+   	    fi
+   	 fi
          fi
-      done
-
-      if test "x$krb5init" = "x" ; then
-         result "Checking for kinit ... no"
-      else
-         echo "Checking for kinit ... $krb5init"
-      fi
-
+   
+         krb5init=""
+         krb5bindir=""
+         if test ! "x$krb5dir" = "x" ; then
+   	 krb5bindir=$krb5dir/bin
+         fi
+         for i in "$krb5bindir" /usr/kerberos/bin \
+                /usr/krb5/bin /usr/local/kerberos/bin \
+                /usr/bin /usr/local/bin ; do
+            if test -x $i/kinit ; then
+               krb5init=$i/kinit
+               break
+            fi
+         done
+   
+         if test "x$krb5init" = "x" ; then
+            result "Checking for kinit ... no"
+         else
+            echo "Checking for kinit ... $krb5init"
+         fi
+   
+       fi
     fi
 
     if test ! "x$enable_krb5" = "xyes" ; then
@@ -4003,7 +4060,7 @@ if test ! "x$enable_krb5" = "xno" ; then
         krb5lib=""
         krb5libdir=""
     else
-        krb5extracflags="-DR__KRB5"
+        krb5extracflags="-DR__KRB5 $needsvcstproto $needsvcstdefine"
         havekrb5="krb5"
     fi
 fi

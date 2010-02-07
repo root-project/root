@@ -7,7 +7,7 @@
 ##              DE-AC03-76-SFO0515 with the Department of Energy
 ##
 ##
-## Version info: $Id: Makefile.am,v 1.13 2008/10/12 10:25:32 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.18 2009/04/15 09:16:30 dfeich Exp $
 ## Checked in by $Author: dfeich $
 ################################################################################
 
@@ -47,18 +47,15 @@ if ENABLE_MON
 XRDMON = XrdMon
 endif
 
-if ENABLE_TOKENAUTHZ
-TOKENAUTHZ = XrdTokenAuthzOfs
-endif
-
-if ENABLE_CASTOR
-CASTOR = XrdCS2
-endif
 
 if ENABLE_POSIX
 XRDPOSIX = XrdPosix
 XRDPSS = XrdPss
 XRDCNS = XrdCns
+endif
+
+if ENABLE_APPS
+XRDAPPS=XrdApps
 endif
 
 
@@ -87,13 +84,13 @@ SUBDIRS = XrdSys \
           XrdOlb \
           XrdRootd \
           XrdXrootd \
+          XrdFrm \
           XrdClient \
           $(XRDPOSIX) \
+          $(XRDAPPS) \
           $(XRDPSS) \
           $(XRDCNS) \
-          $(XRDMON) \
-          $(CASTOR) \
-          $(TOKENAUTHZ)
+          $(XRDMON)
 
 
 

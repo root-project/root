@@ -19,6 +19,8 @@
 
 //       $Id$
 
+const char *XrdClientConnMgrCVSID = "$Id$";
+
 #include "XrdClient/XrdClientConnMgr.hh"
 #include "XrdClient/XrdClientDebug.hh"
 #include "XrdClient/XrdClientMessage.hh"
@@ -159,20 +161,14 @@ XrdClientConnectionMgr::XrdClientConnectionMgr() : fSidManager(0),
 
    fLastLogIdUsed = 0;
 
-   // Garbage collector thread creation
-   if (EnvGetLong(NAME_STARTGARBAGECOLLECTORTHREAD)) {
-      fGarbageColl = new XrdClientThread(GarbageCollectorThread);
+   fGarbageColl = new XrdClientThread(GarbageCollectorThread);
+   
+   if (!fGarbageColl)
+      Error("ConnectionMgr",
+            "Can't create garbage collector thread: out of system resources");
+   
+   fGarbageColl->Run(this);
 
-      if (!fGarbageColl)
-	 Error("ConnectionMgr",
-	       "Can't create garbage collector thread: out of system resources");
-
-      fGarbageColl->Run(this);
-   }
-   else
-      Info(XrdClientDebug::kHIDEBUG, "ConnectionMgr",
-           "Explicitly requested not to start the garbage collector"
-           " thread. Are you sure?");
 
    fSidManager = new XrdClientSid();
    if (!fSidManager) {

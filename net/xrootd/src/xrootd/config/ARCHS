@@ -8,7 +8,7 @@ FreeBSD44       gcc       no     for FreeBSD 4.4
 FreeBSD4        gcc       no     for FreeBSD 4.x
 FreeBSD         gcc       no     for FreeBSD
 hpuxia64acc     aCC       no     for HP-UX 11i v1.5 (IA-64) aCC
-arm_linux	gcc	  all	 for ARM Linux kernel 2.x.y gcc and glibc
+arm_linux       gcc       all    for ARM Linux kernel 2.x.y gcc and glibc
 ia64_linux22    gccia64   all    for Itanium Linux kernel 2.2.x gcc and glibc
 ia64_linux24    gccia64   all    for Itanium Linux kernel 2.4.x gcc and glibc
 ia64_linux26    gccia64   all    for Itanium Linux kernel 2.6.x gcc and glibc
@@ -50,6 +50,8 @@ macosx          macos     all    for MacOSX gcc
 x86_macosx      macos     all    for MacOSX gcc
 x86_64_macosx   macos64   all    for MacOSX gcc
 x86_64_macosx   macos     all    for MacOSX gcc
+x86_macosx      macosicc  all    for MacOSX icc (Intel only)
+x86_64_macosx   macosicc  all    for MacOSX icc (Intel only)
 sgi             sgiCC     no     for SGI IRIX 6.x with CC (opt -n32)
 sgi             gcc       no     for SGI IRIX 6.x with gcc and glibc
 sgi             KCC       no     for SGI IRIX 6.x with KCC
@@ -69,5 +71,7 @@ sun4x_59        sungcc    all    for Solaris 5.9 with gcc and glibc
 sun4x_510       sungcc    all    for Solaris 5.9 with gcc and glibc
 sun4x_5         sungcc    all    for Solaris 5.x with gcc and glibc
 sun4x_4         sungcc    all    for Solaris 4.x with gcc and glibc
-sunx86_510      sunCCi86pc all   for Solaris 5.x on i86 platform
-sunx86_510      sunCCamd  all    for Solaris 5.x on AMD i86 platform
+sunx86_510      sunCCi86pc  all  for Solaris 5.x on i86 platform
+sunx86_510      sunCCamd510 all  for Solaris 5.10 on x86-64 platform
+sunx86_510      sunCCamd    all  for Solaris 5.10 on x86-64 platform
+sunx86_511      sunCCi86pc  all  for Solaris 5.x > 5.10 on x86 platform

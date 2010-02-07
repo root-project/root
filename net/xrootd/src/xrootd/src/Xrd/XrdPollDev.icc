@@ -8,9 +8,9 @@
 /*              DE-AC03-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
-//         $Id: XrdPollDev.icc,v 1.14 2008/10/12 03:29:03 abh Exp $
+//         $Id: XrdPollDev.icc,v 1.16 2009/07/15 01:55:07 abh Exp $
 
-const char *XrdPollDevCVSID = "cvsid: $Id: XrdPollDev.icc,v 1.14 2008/10/12 03:29:03 abh Exp $";
+const char *XrdPollDevCVSID = "cvsid: $Id: XrdPollDev.icc,v 1.16 2009/07/15 01:55:07 abh Exp $";
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -22,7 +22,6 @@ const char *XrdPollDevCVSID = "cvsid: $Id: XrdPollDev.icc,v 1.14 2008/10/12 03:2
 #include "XrdSys/XrdSysError.hh"
 #include "Xrd/XrdLink.hh"
 #include "Xrd/XrdPollPoll.hh"
-#include "Xrd/XrdProtocol.hh"
 #include "Xrd/XrdScheduler.hh"
 
 /******************************************************************************/
@@ -34,28 +33,6 @@ extern XrdSysError    XrdLog;
 extern XrdScheduler   XrdSched;
 
 extern XrdOucTrace    XrdTrace;
-
-/******************************************************************************/
-/*                         L o c a l   C l a s s e s                          */
-/******************************************************************************/
-
-class XrdPoll_End : public XrdProtocol
-{
-public:
-
-void          DoIt() {}
-
-XrdProtocol  *Match(XrdLink *lp) {return (XrdProtocol *)0;}
-
-int           Process(XrdLink *lp) {return -1;}
-
-void          Recycle(XrdLink *lp, int x, const char *y) {}
-
-int           Stats(char *buff, int blen, int do_sync=0) {return 0;}
-
-      XrdPoll_End() : XrdProtocol("link termination") {}
-     ~XrdPoll_End() {}
-};
   
 /******************************************************************************/
 /*                             n e w P o l l e r                              */
@@ -104,10 +81,9 @@ XrdPollDev::~XrdPollDev()
 
 void XrdPollDev::Disable(XrdLink *lp, const char *etxt)
 {
-   static XrdPoll_End linkend;
    XrdSysSemaphore mySem(0);
    PipeData cmdbuff[2];
-   int wlen, myerrno = 0;
+   int myerrno = 0;
 
 // Simply return if the link is already disabled
 //
@@ -127,17 +103,11 @@ void XrdPollDev::Disable(XrdLink *lp, const char *etxt)
    myerrno = sendCmd((char *)&cmdbuff, sizeof(cmdbuff));
 
 // Verify that all went well and if termination wanted, terminate the link
+// Warning! The link's opMutex must be held if termination is requested!
 //
    if (myerrno) XrdLog.Emsg("Poll", myerrno, "disable link", lp->ID);
       else {mySem.Wait();
-            if (etxt)
-               {lp->ProtoAlt = lp->Protocol;
-                lp->Protocol = (XrdProtocol *)&linkend;
-                if (lp->Etext) free(lp->Etext);
-                lp->Etext = strdup(etxt);
-                XrdSched.Schedule((XrdJob *)lp);
-                TRACEI(POLL, "Link " <<lp->FD <<" terminating: " <<etxt);
-               }
+            if (etxt && Finish(lp, etxt)) XrdSched.Schedule((XrdJob *)lp);
            }
 }
 
@@ -211,7 +181,6 @@ void XrdPollDev::Start(XrdSysSemaphore *syncsem, int &retcode)
    const short pollOK = POLLIN | POLLRDNORM;
    struct dvpoll dopoll = {PollTab, PollMax, -1};
    XrdLink *lp;
-   static XrdPoll_End ProtoEnd;
 
 // If we have a com pipe, add it to our set
 //
@@ -249,10 +218,7 @@ void XrdPollDev::Start(XrdSysSemaphore *syncsem, int &retcode)
                   XrdLog.Emsg("Poll", "Disabled event occured for", lp->ID);
                   else {lp->isEnabled = 0;
                         if (!(PollTab[i].revents & pollOK))
-                           {lp->ProtoAlt = lp->Protocol;
-                            lp->Protocol = (XrdProtocol *)&ProtoEnd;
-                            lp->Etext    = Poll2Text(PollTab[i].revents);
-                           }
+                           Finish(lp, Poll2Text(PollTab[i].revents));
                         lp->NextJob = jfirst; jfirst = (XrdJob *)lp;
                         if (!jlast) jlast=(XrdJob *)lp;
                         num2sched++;
@@ -264,7 +230,7 @@ void XrdPollDev::Start(XrdSysSemaphore *syncsem, int &retcode)
        // Disable all of the polled fd's
        //
        if (write(PollDfd, PollTab, numpolled*sizeof(struct pollfd))
-                != numpolled*sizeof(struct pollfd))
+                != static_cast<ssize_t>(numpolled*sizeof(struct pollfd)))
           XrdLog.Emsg("Poll", errno, "remove an fd from /dev/poll");
 
        // Schedule the polled links
@@ -291,7 +257,7 @@ void XrdPollDev::doRequests(int maxreq)
    XrdLink *lp;
    const char *act;
    char buff[16], edval;
-   int rc, num2do;
+   int num2do;
 
 // To keep ourselves from being swamped, base request read-aheads on the number
 // of pending poll events.

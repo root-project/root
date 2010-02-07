@@ -14,8 +14,10 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <string.h>
 
 class XrdOucEnv;
 class XrdSysLogger;
@@ -42,6 +44,7 @@ virtual int     Opendir(const char *)                        {return -ENOTDIR;}
 virtual int     Readdir(char *buff, int blen)                {return -ENOTDIR;}
 
                 // File oriented methods
+virtual int     Fchmod(mode_t mode)                          {return -EISDIR;}
 virtual int     Fstat(struct stat *)                         {return -EISDIR;}
 virtual int     Fsync()                                      {return -EISDIR;}
 virtual int     Fsync(XrdSfsAio *aiop)                       {return -EISDIR;}
@@ -75,8 +78,34 @@ int     fd;      // The associated file descriptor.
 
 // Options that can be passed to Create()
 //
-#define XRDOSS_mkpath 01
-#define XRDOSS_new    02
+#define XRDOSS_mkpath 0x01
+#define XRDOSS_new    0x02
+#define XRDOSS_Online 0x04
+#define XRDOSS_isPFN  0x08
+
+// Options that can be passed to Stat()
+//
+#define XRDOSS_resonly 0x01
+#define XRDOSS_updtatm 0x02
+
+// Class passed to StatVS()
+//
+class XrdOssVSInfo
+{
+public:
+long long Total;   // Total bytes
+long long Free;    // Total bytes free
+long long Large;   // Total bytes in largest partition
+long long LFree;   // Max   bytes free in contiguous chunk
+long long Usage;   // Used  bytes (if usage enabled)
+long long Quota;   // Quota bytes (if quota enabled)
+int       Extents; // Number of partitions/extents
+int       Reserved;
+
+          XrdOssVSInfo() : Total(0),Free(0),Large(0),LFree(0),Usage(-1),
+                           Quota(-1),Extents(0),Reserved(0) {}
+         ~XrdOssVSInfo() {}
+};
   
 class XrdOss
 {
@@ -89,17 +118,31 @@ virtual int     Create(const char *, const char *, mode_t, XrdOucEnv &,
                        int opts=0)=0;
 virtual int     Init(XrdSysLogger *, const char *)=0;
 virtual int     Mkdir(const char *, mode_t mode, int mkpath=0)=0;
-virtual int     Remdir(const char *)=0;
+virtual int     Reloc(const char *, const char *, const char *, const char *x=0)
+                      {return -ENOTSUP;}
+virtual int     Remdir(const char *, int Opts=0)=0;
 virtual int     Rename(const char *, const char *)=0;
-virtual int     Stat(const char *, struct stat *, int resonly=0)=0;
+virtual int     Stat(const char *, struct stat *, int opts=0)=0;
 virtual int     StatFS(const char *path, char *buff, int &blen) 
                       {return -ENOTSUP;}
 virtual int     StatLS(XrdOucEnv &env, const char *cgrp, char *buff, int &blen)
                       {return -ENOTSUP;}
 virtual int     StatXA(const char *path, char *buff, int &blen)
                       {return -ENOTSUP;}
+virtual int     StatXP(const char *path, unsigned long long &attr)
+                      {return -ENOTSUP;}
 virtual int     Truncate(const char *, unsigned long long)=0;
-virtual int     Unlink(const char *)=0;
+virtual int     Unlink(const char *, int Opts=0)=0;
+
+virtual int     Stats(char *bp, int bl) {return 0;}
+
+virtual int     StatVS(XrdOssVSInfo *sP, const char *sname=0, int updt=0)
+                      {return -ENOTSUP;}
+
+virtual int     Lfn2Pfn(const char *Path, char *buff, int blen)
+                       {if ((int)strlen(Path) >= blen) return -ENAMETOOLONG;
+                        strcpy(buff, Path); return 0;
+                       }
 
                 XrdOss() {}
 virtual        ~XrdOss() {}

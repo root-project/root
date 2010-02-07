@@ -169,38 +169,6 @@ void XrdCmsManager::Inform(CmsRRHdr &Hdr, const char *Arg, int Alen)
 
     Inform(Router.getName(Hdr.rrCode), ioV, (Arg ? 2 : 1), Alen+sizeof(Hdr));
 }
-  
-/******************************************************************************/
-/*                               M o n P i n g                                */
-/******************************************************************************/
-  
-void *XrdCmsManager::MonPing()
-{
-   XrdCmsNode *nP;
-   int i;
-
-// Make sure the manager sends at least one request within twice the ping 
-// interval plus a little. If we don't get one, then declare the manager dead 
-// and re-initialize the manager connection.
-//
-   do {XrdSysTimer::Snooze(Config.AskPing*2+13);
-       MTMutex.Lock();
-       for (i = 0; i <= MTHi; i++)
-           if ((nP = MastTab[i]))
-              {nP->Lock();
-               if (nP->PingPong) nP->PingPong = 0;
-                  else {Say.Emsg("Manager", nP->Ident, "appears to be dead.");
-                        nP->Disc("not active", 0);
-                       }
-               nP->UnLock();
-              }
-       MTMutex.UnLock();
-      } while(1);
-
-// Keep the compiler happy
-//
-   return (void *)0;
-}
 
 /******************************************************************************/
 /*                                R e m o v e                                 */

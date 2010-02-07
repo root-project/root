@@ -23,11 +23,6 @@
 #else
 #include <semaphore.h>
 #endif
-#if defined(__solaris__)
-#define SEM_IS_BLOCKED EBUSY
-#else
-#define SEM_IS_BLOCKED EAGAIN
-#endif
 
 #include "XrdSys/XrdSysError.hh"
 
@@ -237,10 +232,10 @@ class XrdSysSemaphore
 public:
 
 inline int  CondWait()
-       {if (sem_trywait( &h_semaphore ))
-           {if (errno == SEM_IS_BLOCKED) return 0;
-                else { throw "sem_CondWait() failed";}
-           }
+       {while(sem_trywait( &h_semaphore ))
+             {if (errno == EAGAIN) return 0;
+              if (errno != EINTR) { throw "sem_CondWait() failed";}
+             }
         return 1;
        }
 

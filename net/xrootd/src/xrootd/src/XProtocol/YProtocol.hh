@@ -75,7 +75,8 @@ enum CmsFwdModifier
 };
 
 enum CmsReqModifier
-{    kYR_raw = 0x20      // Modifier: Unmarshalled data
+{    kYR_raw = 0x20,     // Modifier: Unmarshalled data
+     kYR_dnf = 0x10      // Modifier: mv, rm, rmdir (do not forward)
 };
 
 /******************************************************************************/
@@ -293,7 +294,7 @@ struct CmsMkpathRequest
 // Respond: n/a
 //
 struct CmsMvRequest {
-       CmsRRHdr      Hdr;
+       CmsRRHdr      Hdr;      // Subject to kYR_dnf modifier!
 //     kXR_string    Ident;
 //     kXR_string    Old_Path;
 //     kXR_string    New_Path;
@@ -366,7 +367,7 @@ struct CmsPrepDelRequest
 // Respond: n/a
 //
 struct CmsRmRequest
-{      CmsRRHdr      Hdr;
+{      CmsRRHdr      Hdr;    // Subject to kYR_dnf modifier!
 //     kXR_string    Ident;
 //     kXR_string    Path;
 };
@@ -379,7 +380,7 @@ struct CmsRmRequest
 // Respond: n/a
 //
 struct CmsRmdirRequest
-{      CmsRRHdr      Hdr;
+{      CmsRRHdr      Hdr;    // Subject to kYR_dnf modifier!
 //     kXR_string    Ident;
 //     kXR_string    Path;
 };

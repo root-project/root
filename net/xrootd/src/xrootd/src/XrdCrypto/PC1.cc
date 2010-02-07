@@ -1,4 +1,6 @@
 // $Id$
+
+const char *PC1CVSID = "$Id$";
 /* ----------------------------------------------------------------------- *
  *                                                                         *
  * PC1.cc                                                                  *
@@ -36,7 +38,7 @@ static unsigned char cleref[kPC1LENGTH] =
 namespace PC1 {
 
 /* ------------------------------------------------------------------- *
- *         Local static auxilliary fucntions                           *
+ *         Local static auxilliary functions                           *
  * ------------------------------------------------------------------- */
 //____________________________________________________________________
 static ushort code(ushort &ind, ushort &si, ushort &x1a2, ushort *x1a0)

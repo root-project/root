@@ -12,6 +12,8 @@
 
 //       $Id$
 
+const char *XrdClientPhyConnectionCVSID = "$Id$";
+
 #include <time.h>
 #include <stdlib.h>
 #include "XrdClient/XrdClientPhyConnection.hh"
@@ -27,7 +29,7 @@
 #endif
 
 
-#define READERCOUNT (xrdmin(50, EnvGetLong(NAME_MULTISTREAMCNT)*3+1))
+#define READERCOUNT (xrdmin(50, EnvGetLong(NAME_MULTISTREAMCNT)+1))
 
 //____________________________________________________________________________
 void *SocketReaderThread(void * arg, XrdClientThread *thr)

@@ -38,7 +38,7 @@ struct XrdSecBuffer
        int   size;
        char *buffer;
 
-       XrdSecBuffer(char *bp=0, int sz=0) {buffer = membuf = bp; size=sz;}
+       XrdSecBuffer(char *bp=0, int sz=0) : size(sz), buffer(bp), membuf(bp) {}
       ~XrdSecBuffer() {if (membuf) free(membuf);}
 
 private:
@@ -78,6 +78,11 @@ typedef XrdSecBuffer XrdSecParameters;
 
 // 1) Call XrdSecGetProtocol() to get an appropriate XrdSecProtocol
 //    (i.e., one specific to the authentication protocol that needs to be used).
+//    Note that successive calls to XrdSecGetProtocol() using the same
+//    XrdSecParameters will use the subsequent protocol named in the list of
+//    protocols that the server returned. Failure is indicated when the list
+//    is exhausted or none of the protocols apply (which exhausts the list).
+
 
 // 2) Call getCredentials() without supplying any parameters so as to
 //    generate identification information and send them to the server.
@@ -277,7 +282,7 @@ extern "C"
 {
 extern XrdSecProtocol *XrdSecGetProtocol(const char             *hostname,
                                          const struct sockaddr  &netaddr,
-                                         const XrdSecParameters &parms,
+                                               XrdSecParameters &parms,
                                                XrdOucErrInfo    *einfo=0);
 }
 

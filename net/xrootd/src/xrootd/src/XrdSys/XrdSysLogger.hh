@@ -88,6 +88,7 @@ int        eInt;
 time_t     eNow;
 int        doLFR;
 
+void   putEmsg(char *msg, int msz);
 int    ReBind(int dorename=1);
 void   Trim();
 };

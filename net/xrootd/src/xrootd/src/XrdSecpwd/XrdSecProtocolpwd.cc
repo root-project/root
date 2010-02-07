@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSecProtocolpwdCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                 X r d S e c P r o t o c o l p w d . c c                    */
@@ -286,8 +288,6 @@ XrdSecProtocolpwd::XrdSecProtocolpwd(int opts, const char *hname,
    memcpy(&hostaddr, ipadd, sizeof(hostaddr));
    // Init client name
    CName[0] = '?'; CName[1] = '\0';
-   // And set link to entity
-   Entity.name = CName;
 
    //
    // Notify, if required
@@ -1100,7 +1100,7 @@ XrdSecCredentials *XrdSecProtocolpwd::getCredentials(XrdSecParameters *parm,
    }
    //
    // Add / Update status
-   int *pst = new int;
+   int *pst = (int *) new char[sizeof(pwdStatus_t)];
    memcpy(pst,&SessionSt,sizeof(pwdStatus_t));
    *pst = htonl(*pst);
    if (bmai->AddBucket((char *)pst,sizeof(pwdStatus_t), kXRS_status) != 0) {
@@ -1195,7 +1195,7 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
    XrdSutBuffer    *bmai = 0;  // Main buffer
    XrdSutBucket    *bck  = 0;  // Generic bucket
    // The local status info
-   pwdStatus_t      SessionSt;
+   pwdStatus_t      SessionSt = { 0, 0, 0};
 
    //
    // Unlocks automatically returning
@@ -1240,11 +1240,13 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
    }   
    hs->Tty = SessionSt.options & kOptsClntTty;
    //
-   // Indicate who we are
+   // Client name
    unsigned int ulen = hs->User.length();
    ulen = (ulen > sizeof(CName)-1) ? sizeof(CName)-1 : ulen; 
    if (ulen)
       strcpy(CName, hs->User.c_str());
+   // And set link to entity
+   Entity.name = strdup(CName);
 
    //
    // Version
@@ -1353,6 +1355,8 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
             SessionSt.options |= kOptsAFSPwd;
          } else
             SessionSt.options |= kOptsCrypPwd;
+         // Reset the message
+         ClntMsg = "";
       }
       // Creds, if any, should be checked, unles we allow auto-registration
       savecreds = (entst != kPFE_allowed) ? 0 : 1;
@@ -1488,7 +1492,7 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
             }
          }
          // Export creds to a file, if required
-         if (FileExpCreds.length() >= 0) {
+         if (FileExpCreds.length() > 0) {
             if (ExportCreds(bck) != 0)
                DEBUG("WARNING: some problem exporting creds to file;"
                      " template is :"<<FileExpCreds);
@@ -1532,13 +1536,13 @@ int XrdSecProtocolpwd::Authenticate(XrdSecCredentials *cred,
          }
       //
       // We set some options in the option field of a pwdStatus_t structure
-      int *pst = new int;
+      int *pst = (int *) new char[sizeof(pwdStatus_t)];
       memcpy(pst,&SessionSt,sizeof(pwdStatus_t));
       *pst = htonl(*pst);
       if (bmai->AddBucket((char *)pst,sizeof(pwdStatus_t), kXRS_status) != 0) {
          DEBUG("problems adding bucket kXRS_status");
       }
-      // 
+      //
       // Serialize, encrypt and add to the global list
       if (AddSerialized('s', nextstep, hs->ID,
                         bpar, bmai, kXRS_main, hs->Hcip) != 0)
@@ -1988,7 +1992,7 @@ bool XrdSecProtocolpwd::CheckCredsAFS(XrdSutBucket *creds, int ctype)
 {
    // Check AFS credentials, either in plain (ctype==kpCT_afs) or
    // encrypted (ctype==kpCT_afsenc) form
-   EPNAME("CheckAFS");
+   EPNAME("CheckCredsAFS");
    bool match = 0;
    int rc = 0;
 
@@ -2002,9 +2006,11 @@ bool XrdSecProtocolpwd::CheckCredsAFS(XrdSutBucket *creds, int ctype)
    struct ktc_encryptionKey key;
    if (ctype == kpCT_afs) {
       char *errmsg;
-      String pwd(creds->buffer,creds->size);
+      char *pwd = new char[creds->size + 1];
+      memcpy(pwd, creds->buffer, creds->size);
+      pwd[creds->size] = 0;
       rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
-                                      usr, "", "", (char *) pwd.c_str(),
+                                      usr, (char *)"", (char *)"", pwd,
                                       life, 0, 0, &errmsg);
       if (rc) {
          if (notify)
@@ -2014,10 +2020,11 @@ bool XrdSecProtocolpwd::CheckCredsAFS(XrdSutBucket *creds, int ctype)
          match = 1;
          if (KeepCreds)
             // We need to encrypt te plain passwd
-            ka_StringToKey((char *) pwd.c_str(), 0, &key);
+            ka_StringToKey(pwd, 0, &key);
          if (QTRACE(ALL))
             PRINT("CheckAFS: success!");
       }
+      if (pwd) delete [] pwd;
 
    } else if (ctype == kpCT_afsenc) {
 
@@ -2164,7 +2171,11 @@ int XrdSecProtocolpwd::ExportCreds(XrdSutBucket *creds)
 
    // Expand templated keywords, if needed
    String filecreds = FileExpCreds;
-   filecreds.replace("<user>", hs->User.c_str());
+   // Resolve place-holders, if any
+   if (XrdSutResolve(filecreds, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0) {
+      DEBUG("Problems resolving templates in "<<filecreds);
+      return -1;
+   }
    DEBUG("Exporting client creds to: "<<filecreds);
 
    // Attach or create the file
@@ -2780,13 +2791,15 @@ int XrdSecProtocolpwd::GetUserHost(String &user, String &host)
    EPNAME("GetUserHost");
 
    // Host
-   host = getenv("XrdSecHOST");
+   host = Entity.host;
+   if (host.length() <= 0) host = getenv("XrdSecHOST");
 
    // User
-   user = getenv("XrdSecUSER");
+   user = Entity.name;
+   if (user.length() <= 0) user = getenv("XrdSecUSER");
 
    // If user not given, prompt for it
-   if (!(user.length())) {
+   if (user.length() <= 0) {
       //
       // Make sure somebody can be prompted
       if (!(hs->Tty)) {
@@ -3126,7 +3139,7 @@ int XrdSecProtocolpwd::ParseClientInput(XrdSutBuffer *br, XrdSutBuffer **bm,
         } else {
             // Autoreg is the only alternative at this point ...
             DEBUG("could not create entry in cache - tag: "<<ptag);
-         }            
+         }
       }
       // Get next
       bp = bcklst->Next();
@@ -3600,6 +3613,11 @@ int XrdSecProtocolpwd::QueryNetRc(String host, String &passwd, int &status)
    String fnrc = getenv("XrdSecNETRC");
    if (fnrc.length() <= 0) {
       DEBUG("File name undefined");
+      return -1;
+   }
+   // Resolve place-holders, if any
+   if (XrdSutResolve(fnrc, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0) {
+      DEBUG("Problems resolving templates in "<<fnrc);
       return -1;
    }
    DEBUG("checking file "<<fnrc<<" for user "<<hs->User);

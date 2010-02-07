@@ -8,6 +8,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
 const char *XrdClientPSockCVSID = "$Id$";
 
 #include <memory>
@@ -206,9 +208,10 @@ int XrdClientPSock::RecvRaw(void* buffer, int length, int substreamid,
 	 struct timeval tv = { 0, 100000 }; // .1 second as timeout step
 
 	 // Wait for some events from the socket pool
-	 selRet = select(locfdinfo.maxfd+1, &locfdinfo.fdset, NULL, NULL, &tv);
+	 errno = 0;
+         selRet = select(locfdinfo.maxfd+1, &locfdinfo.fdset, NULL, NULL, &tv);
 
-	 if ((selRet < 0) && (errno != EINTR)) {
+	 if ( (selRet < 0) && (errno != EINTR) && (errno != EAGAIN) ) {
 	     Error("XrdClientPSock::RecvRaw", "Error in select() : " <<
 		   ::strerror(errno));
 
@@ -243,9 +246,10 @@ int XrdClientPSock::RecvRaw(void* buffer, int length, int substreamid,
 	      int n = 0;
 
 	      do {
+                 errno = 0;
                  n = ::recv(ii, static_cast<char *>(buffer) + bytesread,
                             length - bytesread, 0);
-              } while(n < 0 && errno == EINTR);
+              } while (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR));
 
 	      // If we read nothing, the connection has been closed by the other side
 	      if ((n <= 0)  && (errno != EINTR)) {

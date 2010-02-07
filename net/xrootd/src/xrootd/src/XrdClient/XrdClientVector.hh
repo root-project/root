@@ -20,11 +20,12 @@
 #define XRD_CLIIDXVEC_H
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "XrdSys/XrdSysHeaders.hh"
 
 
-#define IDXVEC_MINCAPACITY       8
+#define IDXVEC_MINCAPACITY       128
 
 template<class T>
 class XrdClientVector {
@@ -46,7 +47,7 @@ private:
     // each hole is sizeof_t bytes
     int holecount;
 
-    long size;
+    long size, mincap;
     long capacity, maxsize;
 
     // Completely packs rawdata
@@ -57,8 +58,6 @@ private:
     inline void Init(int cap = -1) {
 	if (rawdata) free(rawdata);
 	if (index) free(index);
-
-	long mincap;
 
         mincap = (cap > 0) ? cap : IDXVEC_MINCAPACITY;
 
@@ -129,7 +128,7 @@ public:
 	for (long i = 0; i < size; i++)
 	    if (index[i].notempty) DestroyElem(&index[i]);
 
-	Init();
+	Init(mincap);
     }
 
     XrdClientVector(int cap = -1):
@@ -161,7 +160,20 @@ public:
     }
 
     void Resize(int newsize) {
-	BufRealloc(newsize);
+        long oldsize = size;
+
+        if (newsize > oldsize) {
+           BufRealloc(newsize);
+           T *item = new T;
+           // Add new elements if needed
+           for (long i = oldsize; i < newsize; i++) {
+              put(*item, size++);
+           }
+        }
+        else {
+           for (long i = oldsize; i > newsize; i--)
+              Erase(i-1, false);
+        }
     }
 
     void Push_back(T& item) {
@@ -171,36 +183,81 @@ public:
 
     }
 
+//     // Inserts an item in the given position
+//     void Insert(T& item, int pos) {
+      
+// 	if (pos >= size) {
+// 	    Push_back(item);
+// 	    return;
+// 	}
+
+// 	if ( BufRealloc(size+1) ) {
+
+// 	    memmove(&index[pos+1], &index[pos], (size+holecount-pos) * sizeof(myindex));
+// 	    index[pos].notempty = false;
+// 	    size++;
+// 	    put(item, pos);
+// 	}
+
+//     }
+
+
     // Inserts an item in the given position
     void Insert(T& item, int pos) {
       
-	if (pos >= size) {
-	    Push_back(item);
-	    return;
-	}
+        if (pos >= size) {
+            Push_back(item);
+            return;
+        }
 
-	if ( BufRealloc(size+1) ) {
+        if ( BufRealloc(size+1) ) {
 
-	    memmove(&index[pos+1], &index[pos], (size+holecount-pos) * sizeof(myindex));
-	    index[pos].notempty = false;
-	    size++;
-	    put(item, pos);
+           if (holecount > 0) {
+              struct myindex tmpi = index[size];
+              memmove(&index[pos+1], &index[pos], (size-pos) * sizeof(myindex));
+              index[pos] = tmpi;
+           } else {
+              memmove(&index[pos+1], &index[pos], (size-pos) * sizeof(myindex));
+              index[pos].notempty = false;
+           }
+
+           size++;
+           put(item, pos);
 	}
 
     }
 
+//     // Removes a single element in position pos
+//    void Erase(unsigned int pos, bool dontrealloc=true) {
+// 	// We make the position empty, then move the free index to the end
+// 	DestroyElem(index + pos);
+
+// 	index[size+holecount] = index[pos];
+// 	holecount++;
+
+// 	memmove(&index[pos], &index[pos+1], (size+holecount-pos) * sizeof(myindex));
+
+// 	size--;
+
+//         if (!dontrealloc)
+//            BufRealloc(size);
+
+//     }
+
     // Removes a single element in position pos
-    void Erase(unsigned int pos) {
-	// We make the position empty, then move the free index to the end
+   void Erase(unsigned int pos, bool dontrealloc=true) {
+	// We make the position empty, then move the free index to the end of the full items
 	DestroyElem(index + pos);
 
-	index[size+holecount] = index[pos];
+	struct myindex tmpi = index[pos];
 	holecount++;
 
-	memmove(&index[pos], &index[pos+1], (size+holecount-pos) * sizeof(myindex));
+	memmove(&index[pos], &index[pos+1], (size-pos-1) * sizeof(myindex));
 
 	size--;
-	BufRealloc(size);
+        index[size] = tmpi;
+        if (!dontrealloc)
+           BufRealloc(size);
 
     }
 
@@ -211,7 +268,7 @@ public:
 
 	holecount++;
 	size--;
-	BufRealloc(size);
+	//BufRealloc(size);
 
 	return (r);
     }
@@ -247,13 +304,12 @@ int XrdClientVector<T>::BufRealloc(int newsize) {
 
     // If for some reason we have too many holes, we repack everything
     // this is very heavy!!
-    if (holecount > 2*maxsize) 
-	while (holecount > maxsize/2) {
+    if ((size+holecount >= capacity-2) && (holecount > 4*size))
+	while (size+holecount >= capacity-2) {
 	    long lastempty = size+holecount-1;  // The first hole to fill
 
 	    // Pack everything in rawdata
 	    // Keep the pointers updated
-
 
 	    // Do the trick
 
@@ -291,7 +347,7 @@ int XrdClientVector<T>::BufRealloc(int newsize) {
 
     }
 
-    while ((newsize+holecount < capacity/3) && (capacity > IDXVEC_MINCAPACITY)) {
+    while ((newsize+holecount < capacity/3) && (capacity > 2*mincap)) {
 	// Too near to the beginning?
 	// half the capacity
 

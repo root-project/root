@@ -11,6 +11,8 @@
 
 //       $Id$
 
+const char *XrdCryptoLite_bf32CVSID = "$Id$";
+
 #include "XrdCrypto/XrdCryptoLite.hh"
 
 #ifdef R__SSL

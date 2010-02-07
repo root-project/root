@@ -28,11 +28,13 @@ const char *XrdOssStageCVSID = "$Id$";
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
-#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/stat.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 
 #include "XrdSys/XrdSysHeaders.hh"
+#include "XrdSys/XrdSysPlatform.hh"
 #include "XrdOss/XrdOssApi.hh"
 #include "XrdOss/XrdOssError.hh"
 #include "XrdOss/XrdOssLock.hh"
@@ -90,11 +92,11 @@ int XrdOssFind_Req(XrdOssStage_Req *req, void *carg)
 /******************************************************************************/
   
 int XrdOssSys::Stage(const char *Tid, const char *fn, XrdOucEnv &env, 
-                     int Oflag, mode_t Mode)
+                     int Oflag, mode_t Mode, unsigned long long Popts)
 {
 // Use the appropriate method here: queued staging or real-time staging
 //
-   return (StageRealTime ? Stage_RT(Tid, fn, env)
+   return (StageRealTime ? Stage_RT(Tid, fn, env, Popts)
                          : Stage_QT(Tid, fn, env, Oflag, Mode));
 }
 
@@ -142,9 +144,11 @@ int XrdOssSys::Stage_QT(const char *Tid, const char *fn, XrdOucEnv &env,
 // If a stagemsg template was not defined; use our default template
 //
    if (!StageSnd)
-      {char idbuff[64];
+      {char idbuff[64], usrbuff[512];
        ReqID.ID(idbuff, sizeof(idbuff));
-       pdata[0] = (char *)"+ ";  pdlen[0] = 2;
+       if (!StageFormat)
+      {pdata[0] = (char *)"+ ";  pdlen[0] = 2;}
+else  {pdlen[0] = getID(Tid,env,usrbuff,sizeof(usrbuff)); pdata[0] = usrbuff;}
        pdata[1] = idbuff;        pdlen[1] = strlen(idbuff);  // Request ID
        pdata[2] = (char *)" ";   pdlen[2] = 1;
        pdata[3] = StageEvents;   pdlen[3] = StageEvSize;     // notification
@@ -156,7 +160,8 @@ int XrdOssSys::Stage_QT(const char *Tid, const char *fn, XrdOucEnv &env,
        pdata[9] = 0;             pdlen[9] = 0;
        if (StageProg->Feed((const char **)pdata, pdlen)) return -XRDOSS_E8025;
       } else {
-       XrdOucMsubsInfo Info(Tid, &env, lcl_N2N, fn, 0, Mode, Oflag);
+       XrdOucMsubsInfo Info(Tid, &env, lcl_N2N, fn, 0, 
+                            Mode, Oflag, StageAction, "n/a");
        int k = StageSnd->Subs(Info, pdata, pdlen);
        pdata[k]   = (char *)"\n"; pdlen[k++] = 1;
        pdata[k]   = 0;            pdlen[k]   = 0;
@@ -172,14 +177,15 @@ int XrdOssSys::Stage_QT(const char *Tid, const char *fn, XrdOucEnv &env,
 /*                              S t a g e _ R T                               */
 /******************************************************************************/
   
-int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
+int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env,
+                        unsigned long long Popts)
 {
     extern int XrdOssFind_Prty(XrdOssStage_Req *req, void *carg);
     XrdSysMutexHelper StageAccess(XrdOssStage_Req::StageMutex);
     XrdOssStage_Req req, *newreq, *oldreq;
     struct stat statbuff;
     extern int XrdOssFind_Req(XrdOssStage_Req *req, void *carg);
-    char actual_path[XrdOssMAX_PATH_LEN+1], *remote_path;
+    char actual_path[MAXPATHLEN+1], *remote_path;
     char *val;
     int rc, prty;
 
@@ -217,9 +223,11 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env)
 // that a request for the file may come in again before we have the size. This
 // is ok, it just means that we'll be off in our time estimate
 //
-   StageAccess.UnLock();
-   if ((rc = MSS_Stat(remote_path, &statbuff))) return rc;
-   StageAccess.Lock(&XrdOssStage_Req::StageMutex);
+   if (Popts & XRDEXP_NOCHECK) statbuff.st_size = 1024*1024*1024;
+      else {StageAccess.UnLock();
+            if ((rc = MSS_Stat(remote_path, &statbuff))) return rc;
+            StageAccess.Lock(&XrdOssStage_Req::StageMutex);
+           }
 
 // Create a new request
 //
@@ -398,8 +406,8 @@ int XrdOssSys::CalcTime(XrdOssStage_Req *req) // StageMutex lock held!
 
 int XrdOssSys::GetFile(XrdOssStage_Req *req)
 {
-   char rfs_fn[XrdOssMAX_PATH_LEN+1];
-   char lfs_fn[XrdOssMAX_PATH_LEN+1];
+   char rfs_fn[MAXPATHLEN+1];
+   char lfs_fn[MAXPATHLEN+1];
    int retc;
 
 // Convert the local filename and generate the corresponding remote name.
@@ -420,6 +428,29 @@ int XrdOssSys::GetFile(XrdOssStage_Req *req)
 }
 
 /******************************************************************************/
+/*                                 g e t I D                                  */
+/******************************************************************************/
+  
+int XrdOssSys::getID(const char *Tid, XrdOucEnv &Env, char *buff, int bsz)
+{
+   char *bP;
+   int n;
+
+// The buffer always starts with a '+'
+//
+   *buff = '+'; bP = buff+1; bsz -= 3;
+
+// Get the trace id
+//
+   if (Tid && (n = strlen(Tid)) <= bsz) {strcpy(bP, Tid); bP += n;}
+
+// Insert space
+//
+   *bP++ = ' '; *bP = '\0';
+   return bP - buff;
+}
+
+/******************************************************************************/
 /*                               H a s F i l e                                */
 /******************************************************************************/
   
@@ -427,7 +458,7 @@ time_t XrdOssSys::HasFile(const char *fn, const char *fsfx)
 {
     struct stat statbuff;
     int fnlen;
-    char path[XrdOssMAX_PATH_LEN+1];
+    char path[MAXPATHLEN+1];
     char *pp = path;
 
 // Copy the path with possible conversion

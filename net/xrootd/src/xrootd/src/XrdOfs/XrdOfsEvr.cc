@@ -10,22 +10,28 @@
   
 //         $Id$
 
+const char *XrdOfsEvrCVSID = "$Id$";
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "XrdCms/XrdCmsClient.hh"
 #include "XrdOfs/XrdOfsEvr.hh"
+#include "XrdOfs/XrdOfsStats.hh"
 #include "XrdOfs/XrdOfsTrace.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysTimer.hh"
 #include "XrdOuc/XrdOucTrace.hh"
 #include "XrdNet/XrdNetOpts.hh"
 #include "XrdNet/XrdNetSocket.hh"
-  
+#include "XrdSys/XrdSysHeaders.hh"
+
 /******************************************************************************/
 /*                     E x t e r n a l   L i n k a g e s                      */
 /******************************************************************************/
+
+extern XrdOfsStats OfsStats;
 
 extern XrdOucTrace OfsTrace;
   
@@ -130,7 +136,7 @@ int XrdOfsEvr::Init(XrdSysError *eobj, XrdCmsClient *trgp)
    strcpy(path, p); n = strlen(p);
    if (path[n-1] != '/') {path[n] = '/'; n++;}
    strcpy(&path[n], "ofsEvents");
-   putenv(strdup(pbuff));
+   putenv(strdup(pbuff));    // XrdOucEnv::Export("XRDOFSEVENTS")
 
 // Now create a socket to a path
 //
@@ -166,7 +172,7 @@ int XrdOfsEvr::Init(XrdSysError *eobj, XrdCmsClient *trgp)
   
 void XrdOfsEvr::recvEvents()
 {
-   static const char *epname = "recvEvent";
+   EPNAME("recvEvent");
    const char *tident = 0;
    char *lp,*tp;
 
@@ -253,16 +259,20 @@ void XrdOfsEvr::eventStage()
    if (!(tp = eventFIFO.GetToken()))
       {eDest->Emsg("Evr", "Missing stage event status"); return;}
 
-        if (!strcmp(tp, "OK"))      rc = 0;
+        if (!strcmp(tp, "OK"))     {rc = 0;
+                                    OfsStats.Add(OfsStats.Data.numSeventOK);
+                                   }
    else if (!strcmp(tp, "ENOENT")) {rc = ENOENT;
                                     altMsg = (char *)"file does not exist.";
                                    }
    else if (!strcmp(tp, "BAD"))    {rc = -1;
+                                    OfsStats.Add(OfsStats.Data.numSeventOK);
                                     altMsg = (char *)"Dynamic staging failed.";
                                    }
    else {rc = -1;
          eDest->Emsg("Evr", "Invalid stage event status -", tp);
          altMsg = (char *)"Dynamic staging malfunctioned.";
+         OfsStats.Add(OfsStats.Data.numSeventOK);
         }
 
 // Get the path and optional message
@@ -275,9 +285,12 @@ void XrdOfsEvr::eventStage()
                 } else eMsg = altMsg;
       else eMsg = 0;
 
-// At this point if the file was successfully staged, notify the balancer
+// At this point if we have a balancer, tell it what happened
 //
-   if (rc == 0 && Balancer) Balancer->Added(tp);
+   if (Balancer)
+      {if (rc == 0) Balancer->Added(tp);
+          else      Balancer->Removed(tp);
+      }
 
 // Either people are waiting for this event or it is preposted event.
 //
@@ -309,7 +322,7 @@ void XrdOfsEvr::sendEvent(theEvent *ep)
 // to it just in case a client is in-transit
 //
    while((cp = ep->aClient))
-        {einfo = new XrdOucErrInfo(cp->User, cp->evtCB, cp->evtCBarg);
+        {einfo = new XrdOucErrInfo(cp->User, 0, cp->evtCBarg);
          einfo->setErrInfo(ep->finalRC, (ep->finalMsg ? ep->finalMsg : ""));
          cp->evtCB->Done(Result, einfo);
          ep->aClient = cp->Next;

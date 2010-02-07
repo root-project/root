@@ -25,6 +25,8 @@ public:
 inline XrdXrootdXPath *Next()  {return next;}
 inline int             Opts()  {return pathopt;}
 inline char           *Path()  {return path;}
+inline char           *Path(int &PLen)
+                               {PLen = pathlen; return path;}
 
        void            Insert(const char *pd, int popt=0, int flags=XROOTDXP_OK)
                              {XrdXrootdXPath *pp = 0, *p = next;

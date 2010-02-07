@@ -231,10 +231,15 @@ void XrdOucStream::Echo()
 /*                               E   x   e   c                                */
 /******************************************************************************/
   
-int XrdOucStream::Exec(char *cmd, int inrd)
+int XrdOucStream::Exec(const char *theCmd, int inrd, int efd)
 {
     int j;
-    char *parm[MaxARGC];
+    char *cmd, *origcmd, *parm[MaxARGC];
+
+    // Allocate a buffer for the command as we will be modifying it
+    //
+    origcmd = cmd = (char *)malloc(strlen(theCmd)+1);
+    strcpy(cmd, theCmd);
   
     // Construct the argv array based on passed command line.
     //
@@ -249,13 +254,14 @@ int XrdOucStream::Exec(char *cmd, int inrd)
 
     // Continue with normal processing
     //
-    return Exec(parm, inrd);
+    j = Exec(parm, inrd, efd);
+    free(origcmd);
+    return j;
 }
 
-int XrdOucStream::Exec(char **parm, int inrd)
+int XrdOucStream::Exec(char **parm, int inrd, int efd)
 {
-    int fildes[2], Child_in = -1, Child_out = -1;
-    int Child_log = (Eroute ? Eroute->logger()->xlogFD() : -1);
+    int fildes[2], Child_in = -1, Child_out = -1, Child_log = -1;
 
     // Create a pipe. Minimize file descriptor leaks.
     //
@@ -277,12 +283,18 @@ int XrdOucStream::Exec(char **parm, int inrd)
            }
        } else {Child_out = FD; Child_in = FE;}
 
+    // Handle the standard error file descriptor
+    //
+    if (!efd) Child_log = (Eroute ? dup(Eroute->logger()->originalFD()) : -1);
+       else if (efd > 0) Child_log = efd;
+
     // Fork a process first so we can pick up the next request. We also
     // set the process group in case the chi;d hasn't been able to do so.
     //
     if ((child = fork()))
        {          close(Child_out);
         if (inrd) close(Child_in );
+        if (!efd && Child_log >= 0) close(Child_log);
         if (child < 0)
            return Err(Exec, errno, "fork request process for", parm[0]);
         setpgid(child, child);
@@ -502,25 +514,16 @@ char *XrdOucStream::GetMyFirstWord(int lowcase)
            return add2llB(var, 1);
           }
 
-             if (!strcmp("if",   var)) skpel = doif();
-        else if (!strcmp("else", var))
-                {if (!sawif || sawif == 2)
-                    {if (Eroute)
-                        Eroute->Emsg("Stream", "No preceeding 'if' for 'else'.");
-                        ecode = EINVAL;
-                    } else {
-                     sawif = 2;
-                     if (skpel) skip2fi = 1;
+        if (       !strcmp("if",   var)) var = doif();
+        if (var && !strcmp("else", var)) var = doelse();
+        if (var && !strcmp("fi",   var))
+           {if (sawif) sawif = skpel = skip2fi = 0;
+               else {if (Eroute)
+                        Eroute->Emsg("Stream", "No preceeding 'if' for 'fi'.");
+                     ecode = EINVAL;
                     }
-                }
-        else if (!strcmp("fi",   var))
-                {if (sawif) sawif = skpel = skip2fi = 0;
-                    else {if (Eroute)
-                             Eroute->Emsg("Stream", "No preceeding 'if' for 'fi'.");
-                          ecode = EINVAL;
-                         }
-                }
-        else if (!skip2fi && (!myEnv || !isSet(var))) return add2llB(var, 1);
+           }
+        if (var && (!myEnv || !isSet(var))) return add2llB(var, 1);
        } while (1);
 
    return 0;
@@ -582,7 +585,7 @@ int XrdOucStream::GetRest(char *theBuff, int Blen, int lowcase)
    while ((tp = GetWord(lowcase)))
          {tlen = strlen(tp);
           if (tlen+1 >= Blen) return 0;
-          if (myBuff != theBuff) *myBuff++ = ' ';
+          if (myBuff != theBuff) {*myBuff++ = ' '; Blen--;}
           strcpy(myBuff, tp);
           Blen -= tlen; myBuff += tlen;
          }
@@ -719,6 +722,48 @@ char *XrdOucStream::add2llB(char *tok, int reset)
       }
    return tok;
 }
+/******************************************************************************/
+/*                                d o e l s e                                 */
+/******************************************************************************/
+
+char *XrdOucStream::doelse()
+{
+   char *var;
+
+// An else must be preceeded by an if and not by a naked else
+//
+   if (!sawif || sawif == 2)
+      {if (Eroute) Eroute->Emsg("Stream", "No preceeding 'if' for 'else'.");
+       ecode = EINVAL;
+       return 0;
+      }
+
+// If skipping all else caluses, skip all lines until we reach a fi
+//
+   if (skpel)
+      {while((var = GetFirstWord()))
+            {if (!strcmp("fi", var)) return var;}
+       if (Eroute) Eroute->Emsg("Stream", "Missing 'fi' for last 'if'.");
+       ecode = EINVAL;
+       return 0;
+      }
+
+// Elses are still possible then process one of them
+//
+   do {if (!(var = GetWord())) // A naked else will always succeed
+          {sawif = 2;
+           return 0;
+          }
+       if (strcmp("if", var))  // An else may only be followed by an if
+          {Eroute->Emsg("Stream","'else",var,"' is invalid.");
+           ecode = EINVAL;
+           return 0;
+          }
+       sawif = 0;
+       var = doif();
+      } while(var && !strcmp("else", var));
+   return var;
+}
   
 /******************************************************************************/
 /*                                  d o i f                                   */
@@ -745,7 +790,7 @@ char *XrdOucStream::add2llB(char *tok, int reset)
    Output: 0 upon success or !0 upon failure.
 */
 
-int XrdOucStream::doif()
+char *XrdOucStream::doif()
 {
     char *var;
     int rc;
@@ -762,14 +807,15 @@ int XrdOucStream::doif()
    sawif = 1; skpel = 0;
    if ((rc = XrdOucUtils::doIf(Eroute,*this,"if directive",myHost,myName,myExec)))
       {if (rc < 0) ecode = EINVAL;
-       return 1;
+          else skpel = 1;
+       return 0;
       }
 
 // Skip all lines until we reach a fi or else
 //
    while((var = GetFirstWord()))
-        {if (!strcmp("fi",   var)) {sawif = 0; break;}
-         if (!strcmp("else", var)) {sawif = 2; break;}
+        {if (!strcmp("fi",   var)) return var;
+         if (!strcmp("else", var)) return var;
         }
 
 // Make sure we have a fi

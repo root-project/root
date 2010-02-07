@@ -16,6 +16,8 @@
 
 //       $Id$
 
+const char *XrdClientInputBufferCVSID = "$Id$";
+
 #include "XrdClient/XrdClientInputBuffer.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdClient/XrdClientDebug.hh"

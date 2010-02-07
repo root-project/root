@@ -8,6 +8,8 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
 
+//           $Id$
+
 const char *XrdPosixCVSID = "$Id$";
 
 #include <stdarg.h>
@@ -436,7 +438,8 @@ FILE *XrdPosix_Fopen(const char *path, const char *mode)
 
 // Now open the file
 //
-   if ((fd = Xroot.Open(myPath, omode, 0, 1)) < 0) return 0;
+   if ((fd = Xroot.Open(myPath, omode | XrdPosixXrootd::isStream , 0)) < 0)
+      return 0;
 
 // First obtain a free stream
 //
@@ -457,7 +460,8 @@ extern "C"
 {
 size_t XrdPosix_Fread(void *ptr, size_t size, size_t nitems, FILE *stream)
 {
-   size_t bytes, rc = 0;
+   ssize_t bytes;
+   size_t rc = 0;
    int fd = fileno(stream);
 
    if (!Xroot.myFD(fd)) return Xunix.Fread(ptr, size, nitems, stream);
@@ -1203,4 +1207,13 @@ long long XrdPosix_Writev(int fildes, const struct iovec *iov, int iovcnt)
 int XrdPosix_isMyPath(const char *path)
 {
     return (0 != XrootPath.URL(path, 0, 0));
+}
+
+/******************************************************************************/
+/*                          X r d P o s i x _ U R L                           */
+/******************************************************************************/
+  
+char *XrdPosix_URL(const char *path, char *buff, int blen)
+{
+   return XrootPath.URL(path, buff, blen);
 }

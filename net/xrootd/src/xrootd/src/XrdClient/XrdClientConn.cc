@@ -11,6 +11,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
 const char *XrdClientConnCVSID = "$Id$";
 
 #include "XrdClient/XrdClientDebug.hh"
@@ -29,6 +31,8 @@ const char *XrdClientConnCVSID = "$Id$";
 #include "XrdClient/XrdClientAbs.hh"
 
 #include "XrdClient/XrdClientSid.hh"
+
+#include "XrdSys/XrdSysPriv.hh"
 
 // Dynamic libs
 // Bypass Solaris ELF madness
@@ -133,12 +137,10 @@ XrdClientConn::XrdClientConn(): fOpenError((XErrorCode)0), fUrl(""),
 				fREQWaitTimeLimit(0),
 				fREQConnectWaitTimeLimit(0) {
     // Constructor
-
+    ClearLastServerError();
     memset(&LastServerResp, 0, sizeof(LastServerResp));
-    memset(&LastServerError, 0, sizeof(LastServerError));
     LastServerResp.status = kXR_noResponsesYet;
-    LastServerError.errnum = kXR_noErrorYet;
-
+ 
     fREQUrl.Clear();
     fREQWait = new XrdSysCondVar(0);
     fREQConnectWait = new XrdSysCondVar(0);
@@ -389,6 +391,7 @@ XrdClientMessage *XrdClientConn::ClientServerCmd(ClientRequest *req, const void 
 	} while (xmsg && (xmsg->HeaderStatus() == kXR_oksofar));
 
     } while ((fGlobalRedirCnt < fMaxGlobalRedirCnt) &&
+             !IsOpTimeLimitElapsed(time(0)) &&
 	     xmsg && (xmsg->HeaderStatus() == kXR_redirect)); 
 
     // We collected all the partial responses into a single memory block.
@@ -478,18 +481,27 @@ bool XrdClientConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
 	if (cmdrespMex)
 	    memcpy(&LastServerResp, &cmdrespMex->fHdr,sizeof(struct ServerResponseHeader));
 
-	// Check for the redir count limit
-	if (fGlobalRedirCnt >= fMaxGlobalRedirCnt) {
-	    Error("SendGenCommand",
-		  "Too many redirections for request  " <<
-		  convertRequestIdToChar(req->header.requestid) <<
-		  ". Aborting command.");
-
-	    abortcmd = TRUE;
-	}
-	else {
-
-	    // On serious communication error we retry for a number of times,
+        // Check for the max time allowed for this request
+        if (IsOpTimeLimitElapsed(time(0))) {
+           Error("SendGenCommand",
+                 "Max time limit elapsed for request  " <<
+                 convertRequestIdToChar(req->header.requestid) <<
+                 ". Aborting command.");
+           abortcmd = TRUE;
+           
+        } else
+           // Check for the redir count limit
+           if (fGlobalRedirCnt >= fMaxGlobalRedirCnt) {
+              Error("SendGenCommand",
+                    "Too many redirections for request  " <<
+                    convertRequestIdToChar(req->header.requestid) <<
+                    ". Aborting command.");
+              
+              abortcmd = TRUE;
+           }
+           else {
+              
+            // On serious communication error we retry for a number of times,
 	    // waiting for the server to come back
 	    if (!cmdrespMex || cmdrespMex->IsError()) {
 
@@ -743,7 +755,7 @@ bool XrdClientConn::CheckResp(struct ServerResponseHeader *resp, const char *met
 	// ok the response belongs to me
 	if (resp->status == kXR_redirect) {
 	    // too many redirections. Exit!
-	    Error(method, "Too many redirections. System error.");
+	    Error(method, "Error in handling a redirection.");
 	    return FALSE;
 	}
 
@@ -875,7 +887,7 @@ bool XrdClientConn::CheckErrorStatus(XrdClientMessage *mex, short &Retry, char *
     if (mex->HeaderStatus() == kXR_redirect) {
 	// Too many redirections
 	Error("CheckErrorStatus",
-	      "Max redirection count reached for request" << CmdName );
+	      "Error while being redirected for request " << CmdName );
 	return TRUE;
     }
  
@@ -892,7 +904,8 @@ bool XrdClientConn::CheckErrorStatus(XrdClientMessage *mex, short &Retry, char *
 
 	    fOpenError = (XErrorCode)ntohl(body_err->errnum);
  
-	    Info(XrdClientDebug::kNODEBUG, "CheckErrorStatus", "Server declared: " <<
+	    Info(XrdClientDebug::kNODEBUG, "CheckErrorStatus", "Server [" << GetCurrentUrl().HostWPort <<
+                 "] declared: " <<
 		 (const char*)body_err->errmsg << "(error code: " << fOpenError << ")");
 
 	    // Save the last error received
@@ -1408,9 +1421,29 @@ bool XrdClientConn::DoLogin()
 #endif
     }
     if (User.length() > 0)
-	strcpy( (char *)reqhdr.login.username, User.c_str() );
+      strncpy( (char *)reqhdr.login.username, User.c_str(), 8 );
     else
 	strcpy( (char *)reqhdr.login.username, "????" );
+
+    // If we run with root as effective user we need to temporary change
+    // effective ID to User
+    XrdOucString effUser = User;
+#ifndef WIN32
+    if (!getuid()) {
+      if (getenv("XrdClientEUSER")) effUser = getenv("XrdClientEUSER");
+    }
+    XrdSysPrivGuard guard(effUser.c_str());
+    if (!guard.Valid() && !getuid()) {
+      // Set error, in case of need
+      fOpenError = kXR_NotAuthorized;
+      LastServerError.errnum = fOpenError;
+      XrdOucString emsg("Cannot set effective uid for user: ");
+      emsg += effUser;
+      strcpy(LastServerError.errmsg, emsg.c_str());
+      Error("DoLogin", emsg << ". Exiting.");
+      return false;
+    }
+#endif
 
     // set the token with the value provided by a previous 
     // redirection (if any)
@@ -1456,9 +1489,9 @@ bool XrdClientConn::DoLogin()
 	int lenauth = 0; 
 	if ((fServerProto >= 0x240) && (LastServerResp.dlen >= 16)) {
 
-           if (prevsessid && XrdClientDebug::kHIDEBUG <= DebugLevel()) {
+           if (XrdClientDebug::kHIDEBUG <= DebugLevel()) {
 	      char b[20];
-	      for (unsigned int i = 0; i < sizeof(prevsessid->id); i++) {
+	      for (unsigned int i = 0; i < 16; i++) {
 		  snprintf(b, 20, "%.2x", plist[i]);
 		  sessdump += b;
 	      }
@@ -1553,7 +1586,7 @@ bool XrdClientConn::DoLogin()
 			   FALSE, (char *)"XrdClientConn::Endsess");
 
 	    // Now overwrite the previous session info with the new one
-	    for (unsigned int i=0; i < sizeof(prevsessid->id); i++)
+	    for (unsigned int i=0; i < 16; i++)
 		prevsessid->id[i] = plist[i];
 
 
@@ -1565,7 +1598,7 @@ bool XrdClientConn::DoLogin()
 	    // No session info? Let's create one.
 	    SessionIDInfo *newsessid = new SessionIDInfo;
 
-	    for (int i=0; i < int(sizeof(prevsessid->id)); i++)
+	    for (int i=0; i < int(sizeof(newsessid->id)); i++)
 		newsessid->id[i] = plist[i];
 
 	    fSessionIDRepo.Rep(sessname.c_str(), newsessid);
@@ -1667,96 +1700,96 @@ XrdSecProtocol *XrdClientConn::DoAuthentication(char *plist, int plsiz)
    // Get a instance of XrdSecProtocol; the order of preference is the one
    // specified by the server; the env XRDSECPROTOCOL can be used to force
    // the choice.
-   if (!(protocol = (*getp)((char *)fUrl.Host.c_str(),
-                     (const struct sockaddr &)netaddr, Parms, 0))) {
+   while ((protocol = (*getp)((char *)fUrl.Host.c_str(),
+                      (const struct sockaddr &)netaddr, Parms, 0))) {
+      //
+      // Protocol name
+      XrdOucString protname = protocol->Entity.prot;
+      //
+      // Once we have the protocol, get the credentials
+      XrdOucErrInfo ei;
+      credentials = protocol->getCredentials(0, &ei);
+      if (!credentials) {
+         Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
+                                        "cannot obtain credentials (protocol: "<<
+                                        protname<<")");
+         // Set error, in case of need
+         fOpenError = kXR_NotAuthorized;
+         LastServerError.errnum = fOpenError;
+         strcpy(LastServerError.errmsg, "cannot obtain credentials for protocol: ");
+         strcat(LastServerError.errmsg, ei.getErrText());
+         protocol->Delete();
+         protocol = 0;
+         continue;
+      } else {
+         Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
+                                        "credentials size: "<< credentials->size);
+      }
+      //
+      // We fill the header struct containing the request for login
+      ClientRequest reqhdr;
+      memset(reqhdr.auth.reserved, 0, 12);
+      memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
+
+      LastServerResp.status = kXR_authmore;
+      char *srvans = 0;
+      while (LastServerResp.status == kXR_authmore) {
+         //
+         // Length of the credentials buffer
+         reqhdr.header.dlen = credentials->size;
+         SetSID(reqhdr.header.streamid);
+         reqhdr.header.requestid = kXR_auth;
+         SendGenCommand(&reqhdr, credentials->buffer, (void **)&srvans, 0, TRUE,
+                                (char *)"XrdClientConn::DoAuthentication");
+         SafeDelete(credentials);
+         Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
+                                        "server reply: status: "<<
+                                         LastServerResp.status <<
+                                        " dlen: "<< LastServerResp.dlen);
+         if (LastServerResp.status == kXR_authmore) {
+            //
+            // We are required to send additional information
+            // First assign the security token that we have received
+            // at the login request
+            secToken = new XrdSecParameters(srvans,LastServerResp.dlen);
+            //
+            // then get next part of the credentials
+            credentials = protocol->getCredentials(secToken, &ei);
+            SafeDelete(secToken); // nb: srvans is released here
+            srvans = 0;
+            if (!credentials) {
+               Info(XrdClientDebug::kUSERDEBUG, "DoAuthentication",
+                                                "cannot obtain credentials");
+               // Set error, in case of need
+               fOpenError = kXR_NotAuthorized;
+               LastServerError.errnum = fOpenError;
+               strcpy(LastServerError.errmsg, "cannot obtain credentials: ");
+               strcat(LastServerError.errmsg, ei.getErrText());
+               protocol->Delete();
+               protocol = 0;
+               break;
+            } else {
+               Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
+                                             "credentials size " << credentials->size);
+            }
+         } else if (LastServerResp.status != kXR_ok) {
+            // Unexpected reply: stop handshake and print error msg, if any
+            if (LastServerError.errmsg)
+               Error("DoAuthentication", LastServerError.errmsg);
+            protocol->Delete();
+            protocol = 0;
+         }
+      }
+      // If we are done
+      if (protocol) break;
+   }
+   if (!protocol) {
       Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
                                     "unable to get protocol object.");
       // Set error, in case of need
       fOpenError = kXR_NotAuthorized;
       LastServerError.errnum = fOpenError;
       strcpy(LastServerError.errmsg, "unable to get protocol object.");
-      return protocol;
-   }
-
-   //
-   // Protocol name
-   XrdOucString protname = protocol->Entity.prot;
-   //
-   // Once we have the protocol, get the credentials
-   XrdOucErrInfo ei;
-   credentials = protocol->getCredentials(0, &ei);
-   if (!credentials) {
-      Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
-                                    "cannot obtain credentials (protocol: "<<
-                                    protname<<")");
-      // Set error, in case of need
-      fOpenError = kXR_NotAuthorized;
-      LastServerError.errnum = fOpenError;
-      strcpy(LastServerError.errmsg, "cannot obtain credentials for protocol: ");
-      strcat(LastServerError.errmsg, ei.getErrText());
-      protocol->Delete();
-      protocol = 0;
-      return protocol;
-   } else {
-      Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
-                                    "credentials size: "<< credentials->size);
-   }
-   //
-   // We fill the header struct containing the request for login
-   ClientRequest reqhdr;
-   memset(reqhdr.auth.reserved, 0, 12);
-   memcpy(reqhdr.auth.credtype, protname.c_str(), protname.length());
-
-   LastServerResp.status = kXR_authmore;
-   char *srvans = 0;
-
-   while (LastServerResp.status == kXR_authmore) {
-      //
-      // Length of the credentials buffer
-      reqhdr.header.dlen = credentials->size;
-      SetSID(reqhdr.header.streamid);
-      reqhdr.header.requestid = kXR_auth;
-      SendGenCommand(&reqhdr, credentials->buffer, (void **)&srvans, 0, TRUE,
-                    (char *)"XrdClientConn::DoAuthentication");
-      SafeDelete(credentials);
-      Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
-                                    "server reply: status: "<<
-                                       LastServerResp.status <<
-                                    " dlen: "<< LastServerResp.dlen);
-
-      if (LastServerResp.status == kXR_authmore) {
-         //
-         // We are required to send additional information
-         // First assign the security token that we have received
-         // at the login request
-         secToken = new XrdSecParameters(srvans,LastServerResp.dlen);
-         //
-         // then get next part of the credentials
-         credentials = protocol->getCredentials(secToken, &ei);
-         SafeDelete(secToken); // nb: srvans is released here
-         srvans = 0;
-         if (!credentials) {
-            Info(XrdClientDebug::kUSERDEBUG, "DoAuthentication",
-                                             "cannot obtain credentials");
-            // Set error, in case of need
-            fOpenError = kXR_NotAuthorized;
-            LastServerError.errnum = fOpenError;
-            strcpy(LastServerError.errmsg, "cannot obtain credentials: ");
-            strcat(LastServerError.errmsg, ei.getErrText());
-            protocol->Delete();
-            protocol = 0;
-            return protocol;
-         } else {
-            Info(XrdClientDebug::kHIDEBUG, "DoAuthentication",
-                                          "credentials size " << credentials->size);
-         }
-      } else if (LastServerResp.status != kXR_ok) {
-         // Unexpected reply: stop handshake and print error msg, if any
-         if (LastServerError.errmsg)
-            Error("DoAuthentication", LastServerError.errmsg);
-         protocol->Delete();
-         protocol = 0;
-      }
    }
 
    // Return the result of the negotiation
@@ -1794,13 +1827,6 @@ XrdClientConn::HandleServerError(XReqErrorType &errorType, XrdClientMessage *xms
     // We cycle repeatedly trying to ask the dlb for a working redir destination
     do {
     
-	// Consider the timeout for the count of the redirections
-	// this instance got in the last period of time
-	if ( (time(0) - fGlobalRedirLastUpdateTimestamp) > EnvGetLong(NAME_REDIRCNTTIMEOUT)) {
-	    fGlobalRedirCnt = 0;
-	    fGlobalRedirLastUpdateTimestamp = time(0);
-	}
-
 	// Anyway, let's update the counter, we have just been redirected
 	fGlobalRedirCnt++;
 
@@ -1830,9 +1856,8 @@ XrdClientConn::HandleServerError(XReqErrorType &errorType, XrdClientMessage *xms
            }
         }
 
-// 	// An error in kxr_bind must not be repeated
-// 	if (req->header.requestid == kXR_bind)
-// 	    return kSEHRReturnNoMsgToCaller;
+        // If the time limit has expired... exit
+        if (IsOpTimeLimitElapsed(time(0))) return kSEHRContinue;
 
 	newhost = "";
 	newport = 0;
@@ -1943,14 +1968,19 @@ XrdClientConn::HandleServerError(XReqErrorType &errorType, XrdClientMessage *xms
 	}
     
 	// We don't want to flood servers...
-	if (errorType == kREDIRCONNECT)
-	    sleep(EnvGetLong(NAME_RECONNECTTIMEOUT));
+	if (errorType == kREDIRCONNECT) {
+           if (LastServerError.errnum == kXR_NotAuthorized)
+              return kSEHRReturnMsgToCaller;
+
+           sleep(EnvGetLong(NAME_RECONNECTWAIT));
+        }
 
 	// We keep trying the connection to the same host (we have only one)
 	//  until we are connected, or the max count for
 	//  redirections is reached
 
-    } while (errorType == kREDIRCONNECT);
+        // The attempts must be stopped if we are not authorized
+    } while ((errorType == kREDIRCONNECT) && (LastServerError.errnum != kXR_NotAuthorized));
 
 
     // We are here if correctly connected and handshaked and logged
@@ -2020,7 +2050,11 @@ XReqErrorType XrdClientConn::GoToAnotherServer(XrdClientUrlInfo &newdest)
 {
     // Re-directs to another server
    
-   
+    fGettingAccessToSrv = false; 
+
+    if (!newdest.Port) newdest.Port = 1094;
+    if (newdest.HostAddr == "") newdest.HostAddr = newdest.Host;
+
     if ( (fLogConnID = Connect( newdest, fUnsolMsgHandler)) == -1) {
 	  
 	// Note: if Connect is unable to work then we are in trouble.
@@ -2283,9 +2317,12 @@ void XrdClientConn::CheckREQPauseState() {
     while (1) {
 	timenow = time(0);
       
-	if (timenow < fREQWaitTimeLimit)
-	    // If still to wait... wait
-	    fREQWait->Wait(fREQWaitTimeLimit - timenow);
+	if ((timenow < fREQWaitTimeLimit) && !IsOpTimeLimitElapsed(timenow)) {
+           // If still to wait... wait in relatively small steps
+           time_t tt = xrdmin(fREQWaitTimeLimit - timenow, 10);
+           
+           fREQWait->Wait(tt);
+        }
 	else break;
     }
    
@@ -2309,9 +2346,12 @@ void XrdClientConn::CheckREQConnectWaitState() {
     while (1) {
 	timenow = time(0);
       
-	if (timenow < fREQConnectWaitTimeLimit)
-	    // If still to wait... wait
-	    fREQConnectWait->Wait(fREQConnectWaitTimeLimit - timenow);
+	if ((timenow < fREQConnectWaitTimeLimit) && !IsOpTimeLimitElapsed(timenow)) {
+           // If still to wait... wait in relatively small steps
+           time_t tt = xrdmin(fREQWaitTimeLimit - timenow, 10);
+           // If still to wait... wait
+           fREQConnectWait->Wait(tt);
+        }
 	else break;
     }
    
@@ -2325,13 +2365,9 @@ bool XrdClientConn::WaitResp(int secsmax) {
     // In this case the calling thread
     // is put to sleep into a condvar until the timeout or the response arrives.
 
-    // Returns true on timeout.
+    // Returns true on timeout, false if a signal was caught
 
-    int rc = false;
-
-
-   
-
+    int rc = true;
 
     // Lock mutex
     fREQWaitResp->Lock();
@@ -2339,19 +2375,35 @@ bool XrdClientConn::WaitResp(int secsmax) {
     // We don't have to wait if the info already arrived
     if (!fREQWaitRespData) {
 
-	Info(XrdClientDebug::kHIDEBUG,
-	     "WaitResp", "Waiting response for " << secsmax << " secs." );
+       Info(XrdClientDebug::kHIDEBUG,
+            "WaitResp", "Waiting response for " << secsmax << " secs." );
 
-	// If still to wait... wait
-	rc = fREQWaitResp->Wait(secsmax);
+       time_t timelimit = time(0)+secsmax;
 
-	Info(XrdClientDebug::kHIDEBUG,
-	     "WaitResp", "Signal or timeout elapsed. Data=" << fREQWaitRespData );
+       while (rc) {
+          time_t timenow = time(0);
+          
+          if ((timenow < timelimit) && !IsOpTimeLimitElapsed(timenow)) {
+             // If still to wait... wait in relatively small steps
+             time_t tt = xrdmin(timelimit - timenow, 10);
+             // If still to wait... wait
+             rc = fREQWaitResp->Wait(tt);           
+          }
+          else {
+             rc = true;
+             break;
+          }
+
+       }
+       
+       
+       Info(XrdClientDebug::kHIDEBUG,
+            "WaitResp", "Signal or timeout elapsed. Data=" << fREQWaitRespData );
     }
-   
+    
     // Unlock mutex
     fREQWaitResp->UnLock();
-
+    
     return rc;
 }
 
@@ -2634,4 +2686,15 @@ bool XrdClientConn::DoWriteHardCheckPoint() {
     fWriteWaitAck->Wait(1);
   }
 
+}
+
+
+//_____________________________________________________________________________
+
+void XrdClientConn::SetOpTimeLimit(int delta_secs) {
+   fOpTimeLimit = time(0)+delta_secs;
+}
+
+bool XrdClientConn::IsOpTimeLimitElapsed(time_t timenow) {
+   return (timenow > fOpTimeLimit);
 }

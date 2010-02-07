@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptosslCipherCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                  X r d C r y p t o S s l C i p h e r . c c                 */
@@ -334,8 +336,6 @@ XrdCryptosslCipher::XrdCryptosslCipher(int bits, char *pub,
    cipher = 0;
    deflength = 1;
 
-   char *ktmp = 0;
-   int ltmp = 0;
    if (!pub) {
       DEBUG("generate DH full key");
       //
@@ -360,6 +360,8 @@ XrdCryptosslCipher::XrdCryptosslCipher(int bits, char *pub,
    } else {
       DEBUG("initialize cipher from key-agreement buffer");
       //
+      char *ktmp = 0;
+      int ltmp = 0;
       // Extract string with bignumber
       BIGNUM *bnpub = 0;
       char *pb = strstr(pub,"---BPUB---");
@@ -393,6 +395,7 @@ XrdCryptosslCipher::XrdCryptosslCipher(int bits, char *pub,
                   if (DH_generate_key(fDH)) {
                      // Now we can compute the cipher
                      ktmp = new char[DH_size(fDH)];
+                     memset(ktmp, 0, DH_size(fDH));
                      if (ktmp) {
                         if ((ltmp = DH_compute_key((unsigned char *)ktmp,
                                                     bnpub,fDH)) > 0)
@@ -546,6 +549,7 @@ bool XrdCryptosslCipher::Finalize(char *pub, int lpub, const char *t)
       if (bnpub) {
          // Now we can compute the cipher
          ktmp = new char[DH_size(fDH)];
+         memset(ktmp, 0, DH_size(fDH));
          if (ktmp) {
             if ((ltmp =
                  DH_compute_key((unsigned char *)ktmp,bnpub,fDH)) > 0)

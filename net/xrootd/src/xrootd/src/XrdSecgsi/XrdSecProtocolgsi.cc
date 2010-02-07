@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSecProtocolgsiCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                 X r d S e c P r o t o c o l g s i . c c                    */
@@ -676,6 +678,7 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
             PRINT("Could not expand: "<<opt.gridmap<<": use default");
          }
       }
+      bool hasgmap = 0;
       if (GMAPOpt > 0) {
          if (access(GMAPFile.c_str(),R_OK) != 0) {
             if (GMAPOpt > 1) {
@@ -689,23 +692,23 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
                return Parms;
             } else {
                DEBUG("Grid map file: "<<GMAPFile<<" cannot be 'access'ed: do not use");
-               GMAPOpt = 0;
             }
+         } else {
+            DEBUG("using grid map file: "<<GMAPFile);
+            //
+            // Init cache for gridmap entries
+            if (LoadGMAP(timestamp) != 0) {
+               ErrF(erp,kGSErrError,"problems initializing cache for gridmap entries");
+               PRINT(erp->getErrText());
+               return Parms;
+            }
+            if (QTRACE(Authen)) { cacheGMAP.Dump(); }
+            hasgmap = 1;
          }
-      }
-      if (GMAPOpt > 0) {
-         DEBUG("using grid map file: "<<GMAPFile);
-         //
-         // Init cache for gridmap entries
-         if (LoadGMAP(timestamp) != 0) {
-            ErrF(erp,kGSErrError,"problems initializing cache for gridmap entries");
-            PRINT(erp->getErrText());
-            return Parms;
-         }
-         if (QTRACE(Authen)) { cacheGMAP.Dump(); }
       }
       //
       // Load function be used to map DN to usernames, if specified
+      bool hasgmapfun = 0;
       if (opt.gmapfun && GMAPOpt > 0) {
          if (!(GMAPFun = LoadGMAPFun((const char *) opt.gmapfun,
                                      (const char *) opt.gmapfunparms))) {
@@ -723,7 +726,19 @@ char *XrdSecProtocolgsi::Init(gsiOptions opt, XrdOucErrInfo *erp)
                   return Parms;
                }
             }
+            hasgmapfun = 1;
          }
+      }
+      //
+      // Disable GMAP if neither a grid mapfile nor a GMAP function are available
+      if (!hasgmap && !hasgmapfun) {
+         if (GMAPOpt > 1) {
+            ErrF(erp,kGSErrError,"Grid mapping required, but neither a grid mapfile"
+                                 " nor a mapping function are available");
+            PRINT(erp->getErrText());
+            return Parms;
+         }
+         GMAPOpt = 0;
       }
       //
       // Expiration of GRIDMAP related cache entries
@@ -1304,6 +1319,10 @@ XrdSecCredentials *XrdSecProtocolgsi::getCredentials(XrdSecParameters *parm,
    if (!CheckRtag(bmai, Emsg))
       return ErrC(ei,bpar,bmai,0,kGSErrBadRndmTag,Emsg.c_str(),stepstr);
    //
+   // Login name if any
+   String user(Entity.name);
+   if (user.length() <= 0) user = getenv("XrdSecUSER");
+   //
    // Now action depens on the step
    nextstep = kXGC_none;
    switch (step) {
@@ -1360,9 +1379,8 @@ XrdSecCredentials *XrdSecProtocolgsi::getCredentials(XrdSecParameters *parm,
       bmai->AddBucket(hs->Cbck);
       //
       // Add login name if any, needed while chosing where to export the proxies
-      if (getenv("XrdSecUSER")) {
-         String u(getenv("XrdSecUSER"));
-         if (bmai->AddBucket(u, kXRS_user) != 0)
+      if (user.length() > 0) {
+         if (bmai->AddBucket(user, kXRS_user) != 0)
             return ErrC(ei,bpar,bmai,0, kGSErrCreateBucket,
                         XrdSutBuckStr(kXRS_user),stepstr);
       }
@@ -1380,9 +1398,8 @@ XrdSecCredentials *XrdSecProtocolgsi::getCredentials(XrdSecParameters *parm,
       }
       //
       // Add login name if any, needed while chosing where to export the proxies
-      if (getenv("XrdSecUSER")) {
-         String u(getenv("XrdSecUSER"));
-         if (bmai->AddBucket(u, kXRS_user) != 0)
+      if (user.length() > 0) {
+         if (bmai->AddBucket(user, kXRS_user) != 0)
             return ErrC(ei,bpar,bmai,0, kGSErrCreateBucket,
                         XrdSutBuckStr(kXRS_user),stepstr);
       }
@@ -1801,7 +1818,7 @@ char *XrdSecProtocolgsiInit(const char mode,
       cenv = (getenv("XrdSecGSIUSERCERT") ? getenv("XrdSecGSIUSERCERT")
                                           : getenv("X509_USER_CERT"));
       if (cenv)
-         opts.cert = strdup(cenv);  
+         opts.cert = strdup(cenv);
 
       // file with user key
       cenv = (getenv("XrdSecGSIUSERKEY") ? getenv("XrdSecGSIUSERKEY")
@@ -2264,6 +2281,20 @@ int XrdSecProtocolgsi::ClientDoInit(XrdSutBuffer *br, XrdSutBuffer **bm,
    if (ParseCAlist(srvca) != 0) {
       emsg = "unknown CA: cannot verify server certificate";
       hs->Chain = 0;
+      return -1;
+   }
+   //
+   // Resolve place-holders in cert, key and proxy file paths, if any
+   if (XrdSutResolve(UsrCert, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0) {
+      DEBUG("Problems resolving templates in "<<UsrCert);
+      return -1;
+   }
+   if (XrdSutResolve(UsrKey, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0) {
+      DEBUG("Problems resolving templates in "<<UsrKey);
+      return -1;
+   }
+   if (XrdSutResolve(UsrProxy, Entity.host, Entity.vorg, Entity.grps, Entity.name) != 0) {
+      DEBUG("Problems resolving templates in "<<UsrProxy);
       return -1;
    }
    //
@@ -3060,26 +3091,29 @@ int XrdSecProtocolgsi::ServerDoSigpxy(XrdSutBuffer *br,  XrdSutBuffer **bm,
    // Dump to file if required
    if ((PxyReqOpts & kOptsPxFile)) {
       if (user.length() > 0) {
-         String pxfile = UsrProxy;
+         String pxfile = UsrProxy, name;
          struct passwd *pw = getpwnam(user.c_str());
-         // Replace <user> and <uid> containers
          if (pw) {
-            if (pxfile.find("<user>") != STR_NPOS)
-               pxfile.replace("<user>", pw->pw_name);
-            if (pxfile.find("<uid>") != STR_NPOS) {
-               String suid; suid += (int) pw->pw_uid;
-               pxfile.replace("<uid>", suid.c_str());
-            }
+            name = pw->pw_name;
          } else {
             // Get Hash of the subject
-            XrdCryptoX509 *c =
-               proxyChain->SearchBySubject(proxyChain->EECname());
+            XrdCryptoX509 *c = proxyChain->SearchBySubject(proxyChain->EECname());
             if (c) {
-               pxfile.replace("<user>", c->SubjectHash());
+               name = c->SubjectHash();
             } else {
                cmsg = "proxy chain not dumped to file: could not find subject hash";
                return 0;
             }
+         }
+         if (XrdSutResolve(pxfile, Entity.host,
+                           Entity.vorg, Entity.grps, name.c_str()) != 0) {
+            DEBUG("Problems resolving templates in "<<pxfile);
+            return 0;
+         }
+         // Replace <uid> placeholder
+         if (pw && pxfile.find("<uid>") != STR_NPOS) {
+            String suid; suid += (int) pw->pw_uid;
+            pxfile.replace("<uid>", suid.c_str());
          }
 
          // Get the function

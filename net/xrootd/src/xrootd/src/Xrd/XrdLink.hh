@@ -113,7 +113,7 @@ int           Peek(char *buff, int blen, int timeout=-1);
 int           Recv(char *buff, int blen);
 int           Recv(char *buff, int blen, int timeout);
 
-int           RecvAll(char *buff, int blen);
+int           RecvAll(char *buff, int blen, int timeout=-1);
 
 int           Send(const char *buff, int blen);
 int           Send(const struct iovec *iov, int iocnt, int bytes=0);
@@ -130,11 +130,15 @@ static int    sfOK;                   // True if Send(sfVec) enabled
 
 int           Send(const struct sfVec *sdP, int sdn); // Iff sfOK > 0
 
+void          Serialize();                              // ASYNC Mode
+
 int           setEtext(const char *text);
 
 void          setID(const char *userid, int procid);
 
-void          Serialize();                              // ASYNC Mode
+static void   setKWT(int wkSec, int kwSec);
+
+XrdProtocol  *setProtocol(XrdProtocol *pp);
 
 void          setRef(int cnt);                          // ASYNC Mode
 
@@ -143,8 +147,6 @@ static int    Setup(int maxfd, int idlewait);
 static int    Stats(char *buff, int blen, int do_sync=0);
 
        void   syncStats(int *ctime=0);
-
-XrdProtocol  *setProtocol(XrdProtocol *pp);
 
        int    Terminate(const XrdLink *owner, int fdnum, unsigned int inst);
 
@@ -167,6 +169,8 @@ static unsigned int  LinkAlloc;
 static int           LTLast;
 static const char   *TraceID;
 static int           devNull;
+static short         killWait;
+static short         waitKill;
 
 // Statistical area (global and local)
 //
@@ -178,6 +182,7 @@ static int          LinkCount;
 static int          LinkCountMax;
 static int          LinkTimeOuts;
 static int          LinkStalls;
+static int          LinkSfIntr;
        long long        BytesIn;
        long long        BytesInTot;
        long long        BytesOut;
@@ -186,6 +191,7 @@ static int          LinkStalls;
        int              stallCntTot;
        int              tardyCnt;
        int              tardyCntTot;
+       int              SfIntr;
 static XrdSysMutex  statsMutex;
 
 // Identification section
@@ -201,6 +207,7 @@ XrdSysMutex         opMutex;
 XrdSysMutex         rdMutex;
 XrdSysMutex         wrMutex;
 XrdSysSemaphore     IOSemaphore;
+XrdSysCondVar      *KillcvP;        // Protected by opMutex!
 XrdLink            *Next;
 XrdNetBuffer       *udpbuff;
 XrdProtocol        *Protocol;
@@ -219,5 +226,9 @@ char                isEnabled;
 char                isIdle;
 char                inQ;
 char                tBound;
+char                KillCnt;        // Protected by opMutex!
+static const char   KillMax =   60;
+static const char   KillMsk = 0x7f;
+static const char   KillXwt = 0x80;
 };
 #endif

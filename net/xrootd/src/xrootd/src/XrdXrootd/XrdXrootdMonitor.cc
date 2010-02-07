@@ -59,6 +59,7 @@ kXR_int32          XrdXrootdMonitor::sizeWindow = 60;
 char               XrdXrootdMonitor::monINFO    = 0;
 char               XrdXrootdMonitor::monIO      = 0;
 char               XrdXrootdMonitor::monFILE    = 0;
+char               XrdXrootdMonitor::monSTAGE   = 0;
 char               XrdXrootdMonitor::monUSER    = 0;
 
 /******************************************************************************/
@@ -289,6 +290,7 @@ void XrdXrootdMonitor::Defaults(char *dest1, int mode1, char *dest2, int mode2)
    monIO     = (mmode & XROOTD_MON_IO   ? 1 : 0);
    monINFO   = (mmode & XROOTD_MON_INFO ? 1 : 0);
    monFILE   = (mmode & XROOTD_MON_FILE ? 1 : 0) | monIO;
+   monSTAGE  = (mmode & XROOTD_MON_STAGE? 1 : 0);
    monUSER   = (mmode & XROOTD_MON_USER ? 1 : 0);
 
 // Check where user information should go
@@ -436,9 +438,10 @@ kXR_unt32 XrdXrootdMonitor::Map(const char code,
 
 // Route the packet to all destinations that need them
 //
-   if (code == XROOTD_MON_MAPUSER) montype = XROOTD_MON_USER;
-      else if (code == XROOTD_MON_MAPPATH) montype = XROOTD_MON_PATH;
-              else montype = XROOTD_MON_INFO;
+        if (code == XROOTD_MON_MAPUSER) montype = XROOTD_MON_USER;
+   else if (code == XROOTD_MON_MAPPATH) montype = XROOTD_MON_PATH;
+   else if (code == XROOTD_MON_MAPSTAG) montype = XROOTD_MON_STAGE;
+   else                                 montype = XROOTD_MON_INFO;
    Send(montype, (void *)&map, size);
 
 // Return the dictionary id
@@ -684,5 +687,5 @@ void XrdXrootdMonitor::startClock()
    currWindow = static_cast<kXR_int32>(Now);
    MonTick.Set(Sched, sizeWindow);
    FlushTime = autoFlush + currWindow;
-   Sched->Schedule((XrdJob *)&MonTick, Now+sizeWindow);
+   if (Sched) Sched->Schedule((XrdJob *)&MonTick, Now+sizeWindow);
 }

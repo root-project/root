@@ -1140,10 +1140,15 @@ void TXNetFile::SetEnv()
                                   DFLT_CONNECTTIMEOUT);
    EnvPutInt(NAME_CONNECTTIMEOUT, connTO);
 
-   // Reconnect Timeout
-   Int_t recoTO = gEnv->GetValue("XNet.ReconnectTimeout",
-                                  DFLT_RECONNECTTIMEOUT);
-   EnvPutInt(NAME_RECONNECTTIMEOUT, recoTO);
+   // Reconnect Wait
+   Int_t recoTO = gEnv->GetValue("XNet.ReconnectWait",
+                                  DFLT_RECONNECTWAIT);
+   if (recoTO == DFLT_RECONNECTWAIT) {
+      // Check also the old variable name
+      recoTO = gEnv->GetValue("XNet.ReconnectTimeout",
+                                  DFLT_RECONNECTWAIT);
+   }
+   EnvPutInt(NAME_RECONNECTWAIT, recoTO);
 
    // Request Timeout
    Int_t requTO = gEnv->GetValue("XNet.RequestTimeout",
@@ -1154,11 +1159,6 @@ void TXNetFile::SetEnv()
    Int_t maxRedir = gEnv->GetValue("XNet.MaxRedirectCount",
                                     DFLT_MAXREDIRECTCOUNT);
    EnvPutInt(NAME_MAXREDIRECTCOUNT, maxRedir);
-
-   // Whether to use a separate thread for garbage collection
-   Int_t garbCollTh = gEnv->GetValue("XNet.StartGarbageCollectorThread",
-                                      DFLT_STARTGARBAGECOLLECTORTHREAD);
-   EnvPutInt(NAME_STARTGARBAGECOLLECTORTHREAD, garbCollTh);
 
    // Read ahead size
    Int_t rAheadsiz = gEnv->GetValue("XNet.ReadAheadSize",

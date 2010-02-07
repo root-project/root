@@ -134,8 +134,13 @@ void help(int);
 // Write out the credentials
 //
    if (putbin)
-      {if (putlen) fwrite(&cred->size, sizeof(cred->size), 1, stdout);
-          fwrite((char *) cred->buffer, cred->size, 1, stdout);
+      {if (putlen)
+          {if (fwrite(&cred->size, sizeof(cred->size), 1, stdout) != sizeof(cred->size))
+	      {cerr << "Unable to write credentials length" <<endl; 
+	       exit(1);}}
+       if (fwrite((char *) cred->buffer, cred->size, 1, stdout) != (size_t) cred->size)
+          {cerr << "Unable to write credentials" <<endl; 
+           exit(1);}
       } else {
        if (putlen) printf("%s",
                 tohex((char *)&cred->size, sizeof(cred->size), kbuff));

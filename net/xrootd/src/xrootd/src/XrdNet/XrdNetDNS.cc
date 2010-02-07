@@ -40,7 +40,7 @@ int XrdNetDNS::getHostAddr(const  char     *InetName,
                                   int       maxipa,
                                   char    **errtxt)
 {
-#ifdef HAS_NAMEINFO
+#ifdef HAVE_NAMEINFO
    struct addrinfo   *rp, *np, *pnp=0;
    struct addrinfo    myhints = {AI_CANONNAME};
 #else
@@ -65,7 +65,7 @@ int XrdNetDNS::getHostAddr(const  char     *InetName,
 // Determine how we will resolve the name
 //
    rc = 0;
-#ifndef HAS_NAMEINFO
+#ifndef HAVE_NAMEINFO
     if (!isdigit((int)*InetName))
 #ifdef __solaris__
        gethostbyname_r(InetName, &hent, hbuff, sizeof(hbuff), &rc);
@@ -98,11 +98,13 @@ int XrdNetDNS::getHostAddr(const  char     *InetName,
 // Disable IPv6 for 'localhost...' (potential confusion in the
 // default /etc/hosts on some platforms, e.g. MacOsX)
 //
-   if (!strncmp(InetName,"localhost",9)) myhints.ai_family = AF_INET;
-#ifdef __macos__
+// if (!strncmp(InetName,"localhost",9)) myhints.ai_family = AF_INET;
+// pcal: force ipv4  (was only for MacOS: ifdef __macos____)
+//#ifdef __macos__
 // Disable IPv6 for MacOS X altogether for the time being
+//
    myhints.ai_family = AF_INET;
-#endif
+//#endif
 
 // Translate the name to an address list
 //
@@ -259,10 +261,10 @@ int XrdNetDNS::getHostName(struct sockaddr &InetAddr,
 // Some platforms have nameinfo but getnameinfo() is broken. If so, we revert
 // to using the gethostbyaddr().
 //
-#if defined(HAS_NAMEINFO) && !defined(__macos__)
+#if defined(HAVE_NAMEINFO) && !defined(__macos__)
     struct addrinfo   *rp, *np;
     struct addrinfo    myhints = {AI_CANONNAME};
-#elif defined(HAS_GETHBYXR)
+#elif defined(HAVE_GETHBYXR)
    struct sockaddr_in *ip = (sockaddr_in *)&InetAddr;
    struct hostent hent, *hp;
    char *hname, hbuff[1024];
@@ -284,12 +286,12 @@ int XrdNetDNS::getHostName(struct sockaddr &InetAddr,
   if (InetAddr.sa_family == AF_UNIX) 
      {InetName[0] = strdup("localhost"); return 1;}
 
-#if !defined(HAS_NAMEINFO) || defined(__macos__)
+#if !defined(HAVE_NAMEINFO) || defined(__macos__)
 
 // Convert it to a host name
 //
    rc = 0;
-#ifdef HAS_GETHBYXR
+#ifdef HAVE_GETHBYXR
 #ifdef __solaris__
    gethostbyaddr_r(&(ip->sin_addr), sizeof(struct in_addr),
                    AF_INET, &hent, hbuff, sizeof(hbuff),      &rc);
@@ -342,7 +344,10 @@ int XrdNetDNS::getHostName(struct sockaddr &InetAddr,
 // Disable IPv6 for 'localhost...' (potential confusion in the
 // default /etc/hosts on some platforms, e.g. MacOsX)
 //
-   if (!strncmp(mybuff,"localhost",9)) myhints.ai_family = AF_INET;
+// if (!strncmp(mybuff,"localhost",9)) myhints.ai_family = AF_INET;
+// pcal: force ipv4
+//
+   myhints.ai_family = AF_INET;
 
 // Get the aliases for this name
 //
@@ -374,7 +379,7 @@ int XrdNetDNS::getPort(const char  *servname,
 {
    int rc;
 
-#ifdef HAS_NAMEINFO
+#ifdef HAVE_NAMEINFO
     struct addrinfo   *rp, *np;
     struct addrinfo   myhints = {0};
     int portnum = 0;
@@ -385,7 +390,7 @@ int XrdNetDNS::getPort(const char  *servname,
 
 // Try to find minimum port number
 //
-#ifndef HAS_NAMEINFO
+#ifndef HAVE_NAMEINFO
 #ifdef __solaris__
    if (   !getservbyname_r(servname,servtype,&sent,sbuff,sizeof(sbuff)))
       return (errtxt ? setET(errtxt, errno) : 0);
@@ -434,7 +439,7 @@ int XrdNetDNS::getPort(int fd, char **errtxt)
 
 int XrdNetDNS::getProtoID(const char *pname)
 {
-#ifdef HAS_PROTOR
+#ifdef HAVE_PROTOR
     struct protoent pp;
     char buff[1024];
 #else
@@ -450,7 +455,7 @@ int XrdNetDNS::getProtoID(const char *pname)
     if (!getprotobyname_r(pname, &pp, buff, sizeof(buff))) 
        return NET_IPPROTO_TCP;
     return pp.p_proto;
-#elif !defined(HAS_PROTOR)
+#elif !defined(HAVE_PROTOR)
     protomutex.Lock();
     if (!(pp = getprotobyname(pname))) protoid = NET_IPPROTO_TCP;
        else protoid = pp->p_proto;
@@ -478,7 +483,7 @@ int XrdNetDNS::Host2Dest(const char      *hostname,
 
 // Find the colon in the host name
 //
-   if (!(cp = index(hostname, (int)':')))
+  if (!(cp = (char *) index(hostname, (int)':')))
        {if (errtxt) *errtxt = (char *)"port not specified";
         return 0;
        }
@@ -680,7 +685,7 @@ int XrdNetDNS::setET(char **errtxt, int rc)
   
 int XrdNetDNS::setETni(char **errtxt, int rc)
 {
-#ifndef HAS_NAMEINFO
+#ifndef HAVE_NAMEINFO
     return setET(errtxt, rc);
 #else
     if (rc) *errtxt = (char *)gai_strerror(rc);

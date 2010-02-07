@@ -15,6 +15,7 @@ const char *XrdXrootdStatsCVSID = "$Id$";
 #include <stdio.h>
   
 #include "Xrd/XrdStats.hh"
+#include "XrdSfs/XrdSfsInterface.hh"
 #include "XrdXrootd/XrdXrootdResponse.hh"
 #include "XrdXrootd/XrdXrootdStats.hh"
  
@@ -60,15 +61,19 @@ int XrdXrootdStats::Stats(char *buff, int blen, int do_sync)
 
 // If no buffer, caller wants the maximum size we will generate
 //
-   if (!buff) return sizeof(statfmt) + (16*13);
+   if (!buff) return sizeof(statfmt) + (16*13) + (fsP ? fsP->getStats(0,0) : 0);
 
-// Format and return
+// Format our statistics
 //
    statsMutex.Lock();
    len = snprintf(buff, blen, statfmt, Count, openCnt, Refresh, readCnt,
                   prerCnt, writeCnt, syncCnt, getfCnt, putfCnt, miscCnt,
                   AsyncNum, AsyncMax, AsyncRej);
    statsMutex.UnLock();
+
+// Now include filesystem statistics and return
+//
+   if (fsP) len += fsP->getStats(buff+len, blen-len);
    return len;
 }
  

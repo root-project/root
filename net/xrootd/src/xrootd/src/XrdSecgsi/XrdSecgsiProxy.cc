@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSecgsiProxyCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                   X r d S e c g s i P r o x y . c c                        */
@@ -40,8 +42,6 @@
 #include <XrdCrypto/XrdCryptosslgsiAux.hh>
 
 #include <XrdSecgsi/XrdSecgsiTrace.hh>
-
-#include <openssl/x509v3.h>
 
 #define PRT(x) {cerr <<x <<endl;}
 

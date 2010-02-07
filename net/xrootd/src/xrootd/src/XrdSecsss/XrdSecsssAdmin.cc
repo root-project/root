@@ -255,7 +255,7 @@ exit(rc);
 int  XrdSecsssAdmin_addKey(XrdsecsssAdmin_Opts &Opt)
 {
    XrdOucErrInfo eInfo;
-   XrdSecsssKT::ktEnt ktEnt;
+   XrdSecsssKT::ktEnt *ktEnt;
    int retc, numKeys, numTot, numExp;
 
 // Allocate the initial keytab
@@ -268,15 +268,16 @@ int  XrdSecsssAdmin_addKey(XrdsecsssAdmin_Opts &Opt)
 
 // Construct a new KeyTab entry
 //
-   strcpy(ktEnt.Data.Name, (Opt.KeyName ? Opt.KeyName : "nowhere"));
-   strcpy(ktEnt.Data.User, (Opt.KeyUser ? Opt.KeyUser : "nobody"));
-   strcpy(ktEnt.Data.Grup, (Opt.KeyGrup ? Opt.KeyGrup : "nogroup"));
+   ktEnt = new XrdSecsssKT::ktEnt;
+   strcpy(ktEnt->Data.Name, (Opt.KeyName ? Opt.KeyName : "nowhere"));
+   strcpy(ktEnt->Data.User, (Opt.KeyUser ? Opt.KeyUser : "nobody"));
+   strcpy(ktEnt->Data.Grup, (Opt.KeyGrup ? Opt.KeyGrup : "nogroup"));
         if (Opt.KeyLen > XrdSecsssKT::ktEnt::maxKLen)
-           ktEnt.Data.Len = XrdSecsssKT::ktEnt::maxKLen;
-   else if (Opt.KeyLen < 4) ktEnt.Data.Len = 4;
-   else ktEnt.Data.Len = Opt.KeyLen/4*4;
-   ktEnt.Data.Exp = Opt.Expdt;
-   Opt.kTab->addKey(ktEnt);
+           ktEnt->Data.Len = XrdSecsssKT::ktEnt::maxKLen;
+   else if (Opt.KeyLen < 4) ktEnt->Data.Len = 4;
+   else ktEnt->Data.Len = Opt.KeyLen/4*4;
+   ktEnt->Data.Exp = Opt.Expdt;
+   Opt.kTab->addKey(*ktEnt);
 
 // Now rewrite the file
 //

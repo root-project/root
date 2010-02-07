@@ -10,6 +10,8 @@
 
 //         $Id$
 
+const char *XrdNetMsgCVSID = "$Id$";
+
 #include <sys/poll.h>
 
 #include "XrdNet/XrdNet.hh"
@@ -17,6 +19,7 @@
 #include "XrdNet/XrdNetMsg.hh"
 #include "XrdNet/XrdNetOpts.hh"
 #include "XrdNet/XrdNetPeer.hh"
+#include "XrdNet/XrdNetSocket.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
@@ -29,14 +32,14 @@ XrdNetMsg::XrdNetMsg(XrdSysError *erp, const char *dest)
    XrdNet     myNet(erp);
    XrdNetPeer Peer;
 
-   eDest = erp; DestHN = 0; FD = -1;
+   eDest = erp; DestHN = 0; DestIP = 0; DestSZ = 0; FD = -1;
    if (dest)
-      {if (!XrdNetDNS::Host2Dest(dest, DestIP))
+      {if (XrdNetSocket::socketAddr(erp, dest, &DestIP, DestSZ))
           eDest->Emsg("Msg", "Default", dest, "is unreachable");
           else DestHN = strdup(dest);
       }
 
-    if (!myNet.Relay(Peer, 0, XRDNET_SENDONLY))
+    if (!myNet.Relay(Peer, dest, XRDNET_SENDONLY))
        eDest->Emsg("Msg", "Unable top create UDP msg socket.");
        else FD = Peer.fd;
 }
@@ -47,25 +50,27 @@ XrdNetMsg::XrdNetMsg(XrdSysError *erp, const char *dest)
   
 int XrdNetMsg::Send(const char *Buff, int Blen, const char *dest, int tmo)
 {
-   int retc;
-   struct sockaddr destip, *dP;
+   int retc, eCode, dL, doFree = 0;
+   struct sockaddr *dP;
 
    if (!Blen && !(Blen = strlen(Buff))) return  0;
 
    if (!dest)
        {if (!DestHN)
            {eDest->Emsg("Msg", "Destination not specified."); return -1;}
-        dP = &DestIP; dest = DestHN;
+        dP = DestIP; dL = DestSZ; dest = DestHN;
        }
-      else if (!XrdNetDNS::Host2Dest(dest, destip))
+      else if (XrdNetSocket::socketAddr(eDest, dest, &dP, dL))
               {eDest->Emsg("Msg", dest, "is unreachable");    return -1;}
-              else dP = &destip;
+              else doFree = 1;
 
    if (tmo >= 0 && !OK2Send(tmo, dest)) return 1;
 
-   do {retc = sendto(FD, (Sokdata_t)Buff, Blen, 0, dP, destSZ);}
+   do {retc = sendto(FD, (Sokdata_t)Buff, Blen, 0, dP, dL);}
        while (retc < 0 && errno == EINTR);
 
+   if (retc < 0) eCode = errno;
+   if (doFree) free(dP);
    if (retc < 0) return retErr(errno, dest);
    return 0;
 }
@@ -76,17 +81,7 @@ int XrdNetMsg::Send(const struct iovec iov[], int iovcnt,
                     const char  *dest,        int tmo)
 {
    char buff[4096], *bp = buff;
-   int i, retc, dsz = sizeof(buff);
-   struct sockaddr destip, *dP;
-
-   if (!dest)
-       {if (!DestHN)
-           {eDest->Emsg("Msg", "Destination not specified."); return -1;}
-        dP = &DestIP; dest = DestHN;
-       }
-      else if (!XrdNetDNS::Host2Dest(dest, destip))
-              {eDest->Emsg("Msg", dest, "is unreachable");    return -1;}
-              else dP = &destip;
+   int i, dsz = sizeof(buff);
 
    if (tmo >= 0 && !OK2Send(tmo, dest)) return 1;
 
@@ -97,11 +92,7 @@ int XrdNetMsg::Send(const struct iovec iov[], int iovcnt,
         bp += iov[i].iov_len;
        }
 
-   do {retc = sendto(FD, (Sokdata_t)buff, (int)(bp-buff), 0, dP, destSZ);}
-       while (retc < 0 && errno == EINTR);
-
-   if (retc < 0) return retErr(errno, dest);
-   return 0;
+   return Send(buff, (int)(bp-buff), dest, -1);
 }
   
 /******************************************************************************/

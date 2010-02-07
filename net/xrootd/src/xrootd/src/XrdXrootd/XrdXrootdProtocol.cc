@@ -51,6 +51,7 @@ XrdXrootdJob         *XrdXrootdProtocol::JobCKS   = 0;
 char                 *XrdXrootdProtocol::JobCKT   = 0;
 
 char                 *XrdXrootdProtocol::Notify = 0;
+int                   XrdXrootdProtocol::hailWait;
 int                   XrdXrootdProtocol::readWait;
 int                   XrdXrootdProtocol::Port;
 int                   XrdXrootdProtocol::Window;
@@ -218,7 +219,7 @@ int dlen;
 
 // Peek at the first 20 bytes of data
 //
-   if ((dlen = lp->Peek(hsbuff,sizeof(hsdata), readWait)) != sizeof(hsdata))
+   if ((dlen = lp->Peek(hsbuff,sizeof(hsdata), hailWait)) != sizeof(hsdata))
       {if (dlen <= 0) lp->setEtext("handshake not received");
        return (XrdProtocol *)0;
       }
@@ -438,12 +439,15 @@ int XrdXrootdProtocol::Process2()
 /******************************************************************************/
 /*                               R e c y c l e                                */
 /******************************************************************************/
+
+#undef  TRACELINK
+#define TRACELINK Link
   
 void XrdXrootdProtocol::Recycle(XrdLink *lp, int csec, const char *reason)
 {
    char *sfxp, ctbuff[24], buff[128];
 
-// Document the disconnect
+// Document the disconnect or undind
 //
    if (lp)
       {XrdSysTimer::s2hms(csec, ctbuff, sizeof(ctbuff));
@@ -456,15 +460,19 @@ void XrdXrootdProtocol::Recycle(XrdLink *lp, int csec, const char *reason)
       }
 
 // If this is a bound stream then we cannot release the resources until
-// the main stream closes this stream otherwise we risk memory corruption
+// the main stream closes this stream (i.e., lp == 0). On the other hand, the
+// main stream will not be trying to do this if we are still tagged as active.
+// So, we need to redrive the main stream to complete the full shutdown.
 //
    if (Status == XRD_BOUNDPATH && Stream[0])
-      {if (isActive)
-          {Stream[0]->Link->setRef(-1);
-           isActive = 0;
-          }
+      {Stream[0]->streamMutex.Lock();
        isDead = 1;
-       if (isBound) return;  // Async close
+       if (isActive)
+          {isActive = 0;
+           Stream[0]->Link->setRef(-1);
+          }
+       Stream[0]->streamMutex.UnLock();
+       if (lp) return;  // Async close
       }
 
 // Check if we should monitor disconnects
@@ -531,16 +539,19 @@ void XrdXrootdProtocol::Cleanup()
 // Handle parallel stream cleanup. The session stream cannot be closed if
 // there is any queued activity on subordinate streams. A subordinate
 // can either be closed from the session stream or asynchronously only if
-// it is active. Hence, we don't need interlocks here.
+// it is active. Which means they could be running while we are running.
 //
    if (isBound && Status != XRD_BOUNDPATH)
+      {streamMutex.Lock();
        for (i = 1; i < maxStreams; i++)
            if (Stream[i])
-              {Stream[i]->isBound = 0;
+              {Stream[i]->isBound = 0; Stream[i]->Stream[0] = 0;
                if (Stream[i]->isDead) Stream[i]->Recycle(0, 0, 0);
                   else Stream[i]->Link->Close();
                Stream[i] = 0;
               }
+       streamMutex.UnLock();
+      }
 
 // Handle statistics
 //

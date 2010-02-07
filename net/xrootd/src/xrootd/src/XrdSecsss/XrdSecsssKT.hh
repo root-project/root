@@ -44,9 +44,9 @@ struct ktData
         char      Grup[GrupSZ];// Grp names are null terminated
        }          Data;
 
-static const int useLID = 1;
 static const int anyUSR = 2;
 static const int anyGRP = 4;
+static const int usrGRP = 8;
 
        void      NUG(ktEnt *ktP) {strcpy(Data.Name, ktP->Data.Name);
                                   strcpy(Data.User, ktP->Data.User);

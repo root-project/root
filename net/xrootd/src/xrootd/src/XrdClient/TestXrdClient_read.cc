@@ -1,14 +1,33 @@
+//         $Id$
+
+// const char *TestXrdClient_readCVSID = "$Id$";
 #include "XrdClient/XrdClient.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdSys/XrdSysHeaders.hh"
+#include "XrdClient/XrdClientCallback.hh"
 #include <fstream>
 #include <vector>
 #include <string>
 #include <sys/time.h>
 #include <math.h>
 
+
+
+
+class MyXrdClientCallback: public XrdClientCallback {
+
+   virtual void OpenComplete(XrdClientAbs *clientP, void *cbArg, bool res) {
+      cout << "OpenComplete! res:" << res << endl;
+   }
+
+};
+
+
+
+
+
 kXR_unt16 open_mode = (kXR_ur | kXR_uw);
-kXR_unt16 open_opts = (kXR_open_updt);
+kXR_unt16 open_opts = (0);
  
 int ReadSome(kXR_int64 *offs, kXR_int32 *lens, int maxnread, long long &totalbytes) {
 
@@ -125,6 +144,33 @@ int main(int argc, char **argv) {
     if (argc > 4)
 	vectored_style = atol(argv[4]);
 
+    cout << "Read style: ";
+    switch (vectored_style) {
+    case 0:
+       cout << "Synchronous reads, ev. with read ahead." << endl;
+       break;
+    case 1:
+       cout << "Synchronous readv" << endl;
+       break;
+    case 2:
+       cout << "Asynchronous readv, data is not processed." << endl;
+       break;
+    case 3:
+       cout << "Asynchronous readv." << endl;
+       break;
+    case 4:
+       cout << "Asynchronous reads." << endl;
+       break;
+    case 5:
+       cout << "Write test file." << endl;
+       open_opts |= kXR_open_updt;
+       break;
+    default:
+       cout << "Unknown." << endl;
+       break;
+    }
+
+
     if (argc > 5)
 	read_delay = atol(argv[5]);
 
@@ -169,7 +215,8 @@ int main(int argc, char **argv) {
     kXR_int32 v_lens[20480];
 
     if (isrooturl) {
-	XrdClient *cli = new XrdClient(argv[1]);
+        MyXrdClientCallback mycb;
+	XrdClient *cli = new XrdClient(argv[1], &mycb, (void *)1234);
 
 	cli->Open(open_mode, open_opts | ( (vectored_style > 4) ? kXR_delete : 0 ) );
 	filezcount = 1;
@@ -207,7 +254,7 @@ int main(int argc, char **argv) {
 			    break;
 			  }
 		      }
-		      Think(read_delay);
+		      if (!((iii+1) % 100)) Think(read_delay);
 		    }
 
 		}		
@@ -216,7 +263,12 @@ int main(int argc, char **argv) {
 		retval = cli->ReadV((char *)buf, v_offsets, v_lens, ntoread);
 		cout << endl << "---ReadV returned " << retval << endl;
 
-		if (retval > 0) Think(read_delay * ntoread);
+		if (retval > 0)
+                   for (int iii = 0; iii < ntoread; iii++){
+                      if (!((iii+1) % 100)) Think(read_delay);
+                      
+                   }
+
 		else {
 		  iserror = true;
 		  break;
@@ -230,7 +282,7 @@ int main(int argc, char **argv) {
 		break;
 		
 	    case 3: // async and immediate read, optimized!
-		
+                cli->RemoveAllDataFromCache();
 		for (int ii = 0; ii < ntoread+512; ii+=512) {
 
                     if (ii < ntoread) {
@@ -264,7 +316,7 @@ int main(int argc, char **argv) {
 			    }
 			  }
 			
-			Think(read_delay);
+			if (!((iii+1) % 100)) Think(read_delay);
 		    }
 		    
 		}
@@ -275,6 +327,7 @@ int main(int argc, char **argv) {
 		
 	    
     	    case 4: // read async and then read
+                cli->RemoveAllDataFromCache();
 		for (int iii = -512; iii < ntoread; iii++) {
 		    if (iii + 512 < ntoread)
 		      retval = cli->Read_Async(v_offsets[iii+512], v_lens[iii+512]);
@@ -299,7 +352,7 @@ int main(int argc, char **argv) {
 			break;
 		      }
 
-		      Think(read_delay);
+		      if (!((iii+1) % 100)) Think(read_delay);
 		    }
 
 		}
@@ -323,7 +376,7 @@ int main(int argc, char **argv) {
 		  }
 
 		  if (retval > 0) {
-		    Think(read_delay);
+		    if (!((iii+1) % 100)) Think(read_delay);
 		  }
 	      }
 		
@@ -470,7 +523,7 @@ int main(int argc, char **argv) {
 
 	    break;
 		
-	  case 3: // async and immediate read, optimized!
+	  case 3: // async readv and immediate read, optimized!
 		
 	    for (int ii = 0; ii < ntoread; ii+=4096) {
 
@@ -531,46 +584,56 @@ int main(int argc, char **argv) {
 
 	  case 4: // read async and then read
 
-	    for (int ii = 0; ii < ntoread; ii+=512) {
+	    // Start being in advance of 512 reads per file
+	    for(int i = 0; i < (int) xrdcvec.size(); i++) {
 
-	      // Read a chunk of data
-	      for(int i = 0; i < (int) xrdcvec.size(); i++) {
-
-		for (int jj = 0; jj < xrdmin(512, ntoread-ii); jj++) {
-		  retval =  xrdcvec[i]->Read_Async(v_offsets[ii+jj], v_lens[ii+jj]);
-
-		  // cout << "read_async "  <<
-		  //    v_lens[ii+jj] << "@" << v_offsets[ii+jj]<< endl;
+	      for (int jj = 0; jj < xrdmin(512, ntoread); jj++) {
+		  retval =  xrdcvec[i]->Read_Async(v_offsets[jj], v_lens[jj]);
 
 		  if (retval != kOK) {
 		    cout << endl << "---Read_Async "  << xrdcvec[i]->GetCurrentUrl().GetUrl() <<
-		      "(" << ii+jj << " of " << ntoread << ") " <<
-		      v_lens[ii+jj] << "@" << v_offsets[ii+jj] <<
-		      " returned " << retval << endl;
-		    
-		    //		    iserror = true;
+		      "(" << jj << " of " << ntoread << ") " <<
+		      v_lens[jj] << "@" << v_offsets[jj] <<
+		      " returned " << retval << endl;    
 		    break;
 		  }
+
+		}
+
+	    }
+
+	    // Then read everything
+	    for (int ii = 0; ii < ntoread; ii++) {
+
+	      // Read_async a chunk of data per file
+	      for(int i = 0; i < (int) xrdcvec.size(); i++) {
+
+		if (ii + 512 < ntoread)
+		  retval =  xrdcvec[i]->Read_Async(v_offsets[ii+512], v_lens[ii+512]);
+
+		  if (retval != kOK) {
+		    cout << endl << "---Read_Async "  << xrdcvec[i]->GetCurrentUrl().GetUrl() <<
+		      "(" << ii+512 << " of " << ntoread << ") " <<
+		      v_lens[ii+512] << "@" << v_offsets[ii+512] <<
+		      " returned " << retval << endl;	    
 		}
 
 	      }
 
-	      // Process the preceeding chunk while the last is coming
-	      for (int iii = ii-512; (iii >= 0) && (iii < ii); iii++) {
+	      // Now process one chunk per file
+	      for(int i = 0; i < (int) xrdcvec.size(); i++) {
 
-		for(int i = 0; i < (int) xrdcvec.size(); i++) {
-
-		  retval = xrdcvec[i]->Read(buf, v_offsets[iii], v_lens[iii]);
+		  retval = xrdcvec[i]->Read(buf, v_offsets[ii], v_lens[ii]);
 
 
 		  if (retval > 0) {
 
 		    if (dobytecheck)
-		      for ( unsigned int jj = 0; jj < (unsigned)v_lens[iii]; jj++) {
+		      for ( unsigned int jj = 0; jj < (unsigned)v_lens[ii]; jj++) {
 			
-			if ( ((jj+v_offsets[iii]) % 256) != ((unsigned char *)buf)[jj] ) {
-			  cout << "errore nel file all'offset= " << jj+v_offsets[iii] <<
-			    " letto: " << (int)((unsigned char *)buf)[jj] << " atteso: " << (jj+v_offsets[iii]) % 256 << endl;
+			if ( ((jj+v_offsets[ii]) % 256) != ((unsigned char *)buf)[jj] ) {
+			  cout << "errore nel file all'offset= " << jj+v_offsets[ii] <<
+			    " letto: " << (int)((unsigned char *)buf)[jj] << " atteso: " << (jj+v_offsets[ii]) % 256 << endl;
 			  iserror = true;
 			  break;
 			}
@@ -579,8 +642,8 @@ int main(int argc, char **argv) {
 		    Think(read_delay);
 		  }
 		  else {
-		    cout << endl << "---Read (" << iii << " of " << ntoread << ") " <<
-		      v_lens[iii] << "@" << v_offsets[iii] <<
+		    cout << endl << "---Read (" << ii << " of " << ntoread << ") " <<
+		      v_lens[ii] << "@" << v_offsets[ii] <<
 		      " returned " << retval << endl;		 
 		    iserror = true;
 		    break;
@@ -590,9 +653,6 @@ int main(int argc, char **argv) {
 		  if (iserror) break;
 
 		} // for i
-
-		if (iserror) break;
-	      } // for iii
 		    
 	      if (iserror) break;
 	    } // for ii

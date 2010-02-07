@@ -13,6 +13,8 @@
 
 //       $Id$
 
+const char *XrdClientAdminCVSID = "$Id$";
+
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientDebug.hh"
 #include "XrdClient/XrdClientUrlSet.hh"
@@ -62,9 +64,9 @@ XrdClientAdmin::XrdClientAdmin(const char *url) {
   DebugSetLevel(EnvGetLong(NAME_DEBUG));
 
   if (!ConnectionManager)
-    Info(XrdClientDebug::kNODEBUG,
+    Info(XrdClientDebug::kUSERDEBUG,
 	 "",
-	 "(C) 2004 SLAC XrdClientAdmin " << XRD_CLIENT_VERSION);
+	 "(C) 2004-2010 by the Xrootd group. XrdClientAdmin " << XRD_CLIENT_VERSION);
 
    fInitialUrl = url;
 
@@ -114,6 +116,9 @@ bool XrdClientAdmin::Connect()
       return FALSE;
    }
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    //
    // Now start the connection phase, picking randomly from UrlArray
    //
@@ -126,6 +131,13 @@ bool XrdClientAdmin::Connect()
 
       XrdClientUrlInfo *thisUrl = 0;
       urlstried = (urlstried == urlArray.Size()) ? 0 : urlstried;
+
+      if ( fConnModule->IsOpTimeLimitElapsed(time(0)) ) {
+         // We have been so unlucky and wasted too much time in connecting and being redirected
+         fConnModule->Disconnect(TRUE);
+         Error("Connect", "Access to server failed: Too much time elapsed without success.");
+         break;
+      }
 
       bool nogoodurl = TRUE;
       while (urlArray.Size() > 0) {
@@ -208,9 +220,9 @@ bool XrdClientAdmin::Connect()
 	 if (DebugLevel() >= XrdClientDebug::kUSERDEBUG)
 	    Info(XrdClientDebug::kUSERDEBUG, "Connect",
 	         "Connection attempt failed. Sleeping " <<
-	         EnvGetLong(NAME_RECONNECTTIMEOUT) << " seconds.");
+	         EnvGetLong(NAME_RECONNECTWAIT) << " seconds.");
      
-         sleep(EnvGetLong(NAME_RECONNECTTIMEOUT));
+         sleep(EnvGetLong(NAME_RECONNECTWAIT));
 
       }
 
@@ -256,6 +268,9 @@ bool XrdClientAdmin::Stat(const char *fname, long &id, long long &size, long &fl
    // identical to TSystem::GetPathInfo().
 
    bool ok;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
 
    // asks the server for stat file informations
    ClientRequest statFileRequest;
@@ -312,6 +327,9 @@ bool XrdClientAdmin::Stat_vfs(const char *fname,
    // asks the server for stat file informations
    ClientRequest statFileRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &statFileRequest, 0, sizeof(ClientRequest) );
 
    fConnModule->SetSID(statFileRequest.header.streamid);
@@ -363,6 +381,9 @@ bool XrdClientAdmin::SysStatX(const char *paths_list, kXR_char *binInfo)
    // asks the server for stat file informations
    ClientRequest statXFileRequest;
   
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &statXFileRequest, 0, sizeof(ClientRequest) );
    fConnModule->SetSID(statXFileRequest.header.streamid);
    statXFileRequest.header.requestid = kXR_statx;
@@ -481,6 +502,9 @@ bool XrdClientAdmin::Rmdir(const char *path)
    // Remove an empty remote directory
    ClientRequest rmdirFileRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &rmdirFileRequest, 0, sizeof(rmdirFileRequest) );
    fConnModule->SetSID(rmdirFileRequest.header.streamid);
    rmdirFileRequest.header.requestid = kXR_rmdir;
@@ -497,6 +521,9 @@ bool XrdClientAdmin::Rm(const char *file)
    // Remove a remote file
    ClientRequest rmFileRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &rmFileRequest, 0, sizeof(rmFileRequest) );
    fConnModule->SetSID(rmFileRequest.header.streamid);
    rmFileRequest.header.requestid = kXR_rm;
@@ -511,6 +538,9 @@ bool XrdClientAdmin::Chmod(const char *file, int user, int group, int other)
 {
    // Change the permission of a remote file
    ClientRequest chmodFileRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
 
    memset( &chmodFileRequest, 0, sizeof(chmodFileRequest) );
 
@@ -551,6 +581,9 @@ bool XrdClientAdmin::Mkdir(const char *dir, int user, int group, int other)
 {
    // Create a remote directory
    ClientRequest mkdirRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
 
    memset( &mkdirRequest, 0, sizeof(mkdirRequest) );
 
@@ -598,6 +631,10 @@ bool XrdClientAdmin::Mv(const char *fileSrc, const char *fileDest)
 
    // Rename a remote file
    ClientRequest mvFileRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
 
    memset( &mvFileRequest, 0, sizeof(mvFileRequest) );
 
@@ -758,6 +795,9 @@ bool XrdClientAdmin::Protocol(kXR_int32 &proto, kXR_int32 &kind)
 {
    ClientRequest protoRequest;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &protoRequest, 0, sizeof(protoRequest) );
 
    fConnModule->SetSID(protoRequest.header.streamid);
@@ -785,16 +825,20 @@ bool XrdClientAdmin::Prepare(vecString vs, kXR_char option, kXR_char prty)
 
    XrdOucString buf;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    if (vs.GetSize() < 75) {
      joinStrings(buf, vs);
      return Prepare(buf.c_str(), option, prty);
    }
 
 
-   for (int i = 0; i < vs.GetSize()+50; i++) {
+   for (int i = 0; i < vs.GetSize()+50; i+=50) {
      joinStrings(buf, vs, i, i+49);
 
      if (!Prepare(buf.c_str(), option, prty)) return false;
+     buf = "";
    }
 
    return true;
@@ -806,6 +850,9 @@ bool XrdClientAdmin::Prepare(const char *buf, kXR_char option, kXR_char prty)
    // Send a bulk prepare request for a '\n' separated list in buf
 
    ClientRequest prepareRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
 
    memset( &prepareRequest, 0, sizeof(prepareRequest) );
 
@@ -824,12 +871,174 @@ bool XrdClientAdmin::Prepare(const char *buf, kXR_char option, kXR_char prty)
 }
 
 //_____________________________________________________________________________
-bool  XrdClientAdmin::DirList(const char *dir, vecString &entries) {
+bool  XrdClientAdmin::DirList(const char *dir, vecString &entries, bool askallservers) {
+   // Get an ls-like output with respect to the specified dir
+
+   // If this is a redirector, we will be given the list of the servers
+   //  which host this directory
+   // If askallservers is true then we will just ask for the whole list of servers.
+   //  the query will always be the same, and this will likely skip the 5s delay after the first shot
+   //  The danger is to be forced to contact a huge number of servers in very big clusters
+   //
+   bool ret = true;
+   XrdClientVector<XrdClientLocate_Info> hosts;
+   if (askallservers && (fConnModule->GetServerProtocol() >= 0x291)) {
+      char str[1024];
+      strcpy(str, "*");
+      strncat(str, dir, 1023);
+      if (!Locate((kXR_char *)str, hosts)) return false;
+   }
+   else {
+      XrdClientLocate_Info nfo;
+      memset(&nfo, 0, sizeof(nfo));
+      strcpy((char *)nfo.Location, GetCurrentUrl().HostWPort.c_str());
+      hosts.Push_back(nfo);
+   }
+
+
+   // Then we cycle among them asking everyone
+   bool foundsomething = false;
+   for (int i = 0; i < hosts.GetSize(); i++) {
+
+      fConnModule->Disconnect(false);
+      XrdClientUrlInfo url((const char *)hosts[i].Location);
+
+      url.Proto = "root";
+
+      if (fConnModule->GoToAnotherServer(url) != kOK) {
+         ret = false;
+         break;
+      }
+
+      fConnModule->ClearLastServerError();
+      if (!DirList_low(dir, entries))  {
+         if (fConnModule->LastServerError.errnum != kXR_NotFound) {
+            ret = false;
+            break;
+         }
+      }
+      else foundsomething = true;
+
+
+   }
+
+   // At the end we want to rewind to the main redirector in any case
+   GoBackToRedirector();
+
+   if (!foundsomething) ret = false;
+   return ret;
+}
+
+//_____________________________________________________________________________
+bool  XrdClientAdmin::DirList(const char *dir,
+                              XrdClientVector<XrdClientAdmin::DirListInfo> &dirlistinfo,
+                              bool askallservers) {
+   // Get an ls-like output with respect to the specified dir
+   // Here we are also interested in the stat information for each file
+
+   // If this is a redirector, we will be given the list of the servers
+   //  which host this directory
+   // If askallservers is true then we will just ask for the whole list of servers.
+   //  the query will always be the same, and this will likely skip the 5s delay after the first shot
+   //  The danger is to be forced to contact a huge number of servers in very big clusters
+   //  If this is a concern, one should set askallservers to false
+   //
+   bool ret = true;
+   vecString entries;
+   XrdClientVector<XrdClientLocate_Info> hosts;
+   XrdOucString fullpath;
+
+   if (askallservers && (fConnModule->GetServerProtocol() >= 0x291)) {
+      char str[1024];
+      strcpy(str, "*");
+      strncat(str, dir, 1023);
+      if (!Locate((kXR_char *)str, hosts)) return false;
+   }
+   else {
+      XrdClientLocate_Info nfo;
+      memset(&nfo, 0, sizeof(nfo));
+      strcpy((char *)nfo.Location, GetCurrentUrl().HostWPort.c_str());
+      hosts.Push_back(nfo);
+   }
+
+
+   // Then we cycle among them asking everyone
+   bool foundsomething = false;
+   for (int i = 0; i < hosts.GetSize(); i++) {
+
+      fConnModule->Disconnect(false);
+      XrdClientUrlInfo url((const char *)hosts[i].Location);
+      url.Proto = "root";
+
+      if (fConnModule->GoToAnotherServer(url) != kOK) {
+         ret = false;
+         break;
+      }
+
+      fConnModule->ClearLastServerError();
+
+      int precentries = entries.GetSize();
+      if (!DirList_low(dir, entries)) {
+         if ((fConnModule->LastServerError.errnum != kXR_NotFound) && (fConnModule->LastServerError.errnum != kXR_noErrorYet)) {
+            ret = false;
+            break;
+         }
+      }
+      else foundsomething = true;
+
+      int newentries = entries.GetSize();
+
+      DirListInfo info;
+      dirlistinfo.Resize(newentries);
+
+      // Here we have the entries. We want to accumulate the stat information for each of them
+      // We are still connected to the same server which gave the last dirlist response
+      info.host = GetCurrentUrl().HostWPort;
+      for (int k = precentries; k < newentries; k++) {
+         info.fullpath = dir;
+         if (info.fullpath[info.fullpath.length()-1] != '/') info.fullpath += "/";
+         info.fullpath += entries[k];
+         info.size = 0;
+         info.id = 0;
+         info.flags = 0;
+         info.modtime = 0;
+
+         if (!Stat(info.fullpath.c_str(),
+                   info.id,
+                   info.size,
+                   info.flags,
+                   info.modtime)) {
+            ret = false;
+            //break;
+         }
+
+         dirlistinfo[k] = info;
+
+      }
+
+   }
+
+   // At the end we want to rewind to the main redirector in any case
+   GoBackToRedirector();
+
+   if (!foundsomething) ret = false;
+   return ret;
+ }
+
+
+
+
+
+//_____________________________________________________________________________
+bool  XrdClientAdmin::DirList_low(const char *dir, vecString &entries) {
    bool ret;
    // asks the server for the content of a directory
    ClientRequest DirListFileRequest;
    kXR_char *dl;
   
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
    memset( &DirListFileRequest, 0, sizeof(ClientRequest) );
    fConnModule->SetSID(DirListFileRequest.header.streamid);
    DirListFileRequest.header.requestid = kXR_dirlist;
@@ -843,25 +1052,26 @@ bool  XrdClientAdmin::DirList(const char *dir, vecString &entries) {
    // Now parse the answer building the entries vector
    if (ret) {
 
-      kXR_char *entry, *startp = dl, *endp = dl;
+      kXR_char *startp = dl, *endp = dl;
+      char entry[1024];
+      XrdOucString e;
 
-      while (endp) {
+      while (startp) {
 
 	 if ( (endp = (kXR_char *)strchr((const char*)startp, '\n')) ) {
-            entry = (kXR_char *)malloc(endp-startp+1);
-            memset((char *)entry, 0, endp-startp+1);
-	    strncpy((char *)entry, (char *)startp, endp-startp);
+	    strncpy(entry, (char *)startp, endp-startp);
+            entry[endp-startp] = 0;
 	    endp++;
 	 }
 	 else
-	    entry = (kXR_char *)strdup((char *)startp);
+	    strcpy(entry, (char *)startp);
       
-	 if (entry && strlen((char *)entry)) {
-	    XrdOucString e((const char *)entry);
 
+         if (strlen(entry) && strcmp((char *)entry, ".") && strcmp((char *)entry, "..")) {
+	    e = entry;
 	    entries.Push_back(e);
-	    free(entry);
-	 }
+         }
+
 
 	 startp = endp;
       }
@@ -875,11 +1085,14 @@ bool  XrdClientAdmin::DirList(const char *dir, vecString &entries) {
 
 }
 
-
 //_____________________________________________________________________________
 long XrdClientAdmin::GetChecksum(kXR_char *path, kXR_char **chksum)
 {
    ClientRequest chksumRequest;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
 
    memset( &chksumRequest, 0, sizeof(chksumRequest) );
 
@@ -906,6 +1119,7 @@ int XrdClientAdmin::LocalLocate(kXR_char *path, XrdClientVector<XrdClientLocate_
   // not found); else returns the number of non-data servers.
 
    ClientRequest locateRequest;
+
    char *resp = 0;
    int retval = (all) ? 0 : -1;
 
@@ -1007,6 +1221,10 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool wri
    if (!fConnModule) return 0;
    if (!fConnModule->IsConnected()) return 0;
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
+
 
    // Old servers will use what's there
    if (fConnModule->GetServerProtocol() < 0x290) {
@@ -1019,7 +1237,7 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool wri
        resp.CanWrite = 1;
        strcpy((char *)resp.Location, fConnModule->GetCurrentUrl().HostWPort.c_str());
      }
-     fConnModule->GoBackToRedirector();
+     GoBackToRedirector();
      return ok;
    }
 
@@ -1105,7 +1323,7 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientLocate_Info &resp, bool wri
    }
 
    // At the end we want to rewind to the main redirector in any case
-   fConnModule->GoBackToRedirector();
+   GoBackToRedirector();
 
    return found;
 }
@@ -1124,6 +1342,11 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info
    if (!fConnModule->IsConnected()) return 0;
 
 
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
+
+
    // Old servers will use what's there
    if (fConnModule->GetServerProtocol() < 0x290) {
      long id, flags, modtime;
@@ -1137,7 +1360,8 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info
        strcpy((char *)resp.Location, fConnModule->GetCurrentUrl().HostWPort.c_str());
        hosts.Push_back(resp);
      }
-     fConnModule->GoBackToRedirector();
+     GoBackToRedirector();
+
      return ok;
    }
 
@@ -1194,7 +1418,7 @@ bool XrdClientAdmin::Locate(kXR_char *path, XrdClientVector<XrdClientLocate_Info
    }
    
    // At the end we want to rewind to the main redirector in any case
-   fConnModule->GoBackToRedirector();
+   GoBackToRedirector();
 
    return (hosts.GetSize() > 0);
 }
@@ -1204,6 +1428,10 @@ bool XrdClientAdmin::Truncate(const char *path, long long newsize) {
    ClientRequest truncateRequest;
    int l = strlen(path);
    if (!l) return false;
+
+   // Set the max transaction duration
+   fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
 
    memset( &truncateRequest, 0, sizeof(truncateRequest) );
 
@@ -1227,9 +1455,137 @@ bool XrdClientAdmin::Truncate(const char *path, long long newsize) {
 // Quickly jump to the former redirector. Useful after having been redirected.
 void XrdClientAdmin::GoBackToRedirector() {
 
-  if (fConnModule)
-    fConnModule->GoBackToRedirector();
+   if (fConnModule) {
+      fConnModule->GoBackToRedirector();
 
+      if (!fConnModule->IsConnected()) {
+         XrdClientUrlInfo u(fInitialUrl);
+         fConnModule->GoToAnotherServer(u);
+      }
+
+   }
+
+
+
+}
+
+
+
+// Compute an estimation of the available free space in the given cachefs partition
+// The estimation can be fooled if multiple servers mount the same network storage
+bool XrdClientAdmin::GetSpaceInfo(const char *logicalname,
+                                  long long &totspace,
+                                  long long &totfree,
+                                  long long &totused,
+                                  long long &largestchunk) {
+
+   bool ret = true;
+   XrdClientVector<XrdClientLocate_Info> hosts;
+
+   totspace = 0;
+   totfree = 0;
+   totused = 0;
+   largestchunk = 0;
+
+   if (fConnModule->GetServerProtocol() >= 0x291) {
+      if (!Locate((kXR_char *)"*", hosts)) return false;
+   }
+   else {
+      XrdClientLocate_Info nfo;
+      memset(&nfo, 0, sizeof(nfo));
+      strcpy((char *)nfo.Location, GetCurrentUrl().HostWPort.c_str());
+      hosts.Push_back(nfo);
+   }
+
+
+   // Then we cycle among them asking everyone
+   for (int i = 0; i < hosts.GetSize(); i++) {
+
+      fConnModule->Disconnect(false);
+      XrdClientUrlInfo url((const char *)hosts[i].Location);
+
+      url.Proto = "root";
+
+      if (fConnModule->GoToAnotherServer(url) != kOK) {
+         ret = false;
+         break;
+      }
+
+
+
+      // Fire the query request and update the results
+      ClientRequest qspacereq;
+
+      // Set the max transaction duration
+      fConnModule->SetOpTimeLimit(EnvGetLong(NAME_TRANSACTIONTIMEOUT));
+
+
+      memset( &qspacereq, 0, sizeof(qspacereq) );
+
+      fConnModule->SetSID(qspacereq.header.streamid);
+
+      qspacereq.query.requestid = kXR_query;
+      qspacereq.query.infotype = kXR_Qspace;
+      qspacereq.query.dlen = ( logicalname ? strlen(logicalname) : 0);
+
+      char *resp = 0;
+      if (fConnModule->SendGenCommand(&qspacereq, logicalname,
+                                      (void **)&resp, 0, TRUE,
+                                      (char *)"GetSpaceInfo")) {
+
+         XrdOucString rs(resp), s;
+         free(resp);
+
+         // Here we have the response relative to a server
+         // Now we are going to have fun in parsing it
+
+         int from = 0;
+         while ((from = rs.tokenize(s,from,'&')) != -1) {
+            if (s.length() < 4) continue;
+
+            int pos = s.find("=");
+            XrdOucString tk, val;
+            if (pos != STR_NPOS) {
+               tk.assign(s, 0, pos-1);
+               val.assign(s, pos+1);
+#ifndef WIN32
+               if ( (tk == "oss.space") && (val.length() > 1) ) {
+                  totspace += atoll(val.c_str());
+               } else
+                  if ( (tk == "oss.free") && (val.length() > 1) ) {
+                     totfree += atoll(val.c_str());
+                  } else
+                     if ( (tk == "oss.maxf") && (val.length() > 1) ) {
+                        largestchunk = xrdmax(largestchunk, atoll(val.c_str()));
+                     } else
+                        if ( (tk == "oss.used") && (val.length() > 1) ) {
+                           totused += atoll(val.c_str());
+                        }
+#else
+               if ( (tk == "oss.space") && (val.length() > 1) ) {
+                  totspace += _atoi64(val.c_str());
+               } else
+                  if ( (tk == "oss.free") && (val.length() > 1) ) {
+                     totfree += _atoi64(val.c_str());
+                  } else
+                     if ( (tk == "oss.maxf") && (val.length() > 1) ) {
+                        largestchunk = xrdmax(largestchunk, _atoi64(val.c_str()));
+                     } else
+                        if ( (tk == "oss.used") && (val.length() > 1) ) {
+                           totused += _atoi64(val.c_str());
+                        }
+#endif
+            }
+         }
+
+
+      }
+
+   }
+
+   // At the end we want to rewind to the main redirector in any case
+   GoBackToRedirector();
+   return ret;
 
 
 }

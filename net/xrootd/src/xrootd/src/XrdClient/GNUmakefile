@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.59 2008/09/07 04:30:44 abh Exp $
+#              $Id: GNUmakefile,v 1.67 2010/01/07 14:27:38 ganis Exp $
 
 #-----------------------------------------------------------------------------#
 #                            E n v i r o n m e n t                            #
@@ -7,9 +7,14 @@ include ../GNUmake.env
 
 LIBLIBS = -L$(LIBDIR) -lXrdNet -lXrdOuc -lXrdSys $(LIBM)
 
-BINLIBS = $(LIBDIR)/libXrdClient.a $(LIBDIR)/libXrdCrypto.a \
-          $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdNet.a \
-          $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
+ifneq ($(CFHASXRDCRYPTO),)
+BINLIBS = $(LIBDIR)/libXrdClient.a \
+          $(LIBDIR)/libXrdCrypto.a $(LIBDIR)/libXrdSut.a \
+          $(LIBDIR)/libXrdNet.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
+else
+BINLIBS = $(LIBDIR)/libXrdClient.a \
+          $(LIBDIR)/libXrdNet.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a
+endif
 
 LIBDEPS = $(BINLIBS)
 
@@ -41,7 +46,9 @@ SOURCES = \
 	XrdClientSid.cc                 \
 	XrdClientPSock.cc               \
 	XrdClientMStream.cc             \
-	XrdClientReadV.cc
+	XrdClientReadV.cc               \
+	XrdcpXtremeRead.cc              \
+	XrdClientReadAhead.cc
 
   
 OBJECTS = \
@@ -67,10 +74,15 @@ OBJECTS = \
 	$(OBJDIR)/XrdClientSid.o                \
 	$(OBJDIR)/XrdClientPSock.o              \
 	$(OBJDIR)/XrdClientMStream.o            \
-	$(OBJDIR)/XrdClientReadV.o              
+	$(OBJDIR)/XrdClientReadV.o              \
+	$(OBJDIR)/XrdClientReadAhead.o
 
 OBJECTB = $(OBJDIR)/TestXrdClient.o $(OBJDIR)/XrdClientAdmin_c.o
-OBJECTC = $(OBJDIR)/Xrdcp.o
+
+OBJECTC = \
+	$(OBJDIR)/Xrdcp.o                     \
+	$(OBJDIR)/XrdcpXtremeRead.o
+
 OBJECTD = $(OBJDIR)/TestXrdClient_read.o
 OBJECT_JNI = $(OBJDIR)/XrdClientAdminJNI.o
 
@@ -180,7 +192,7 @@ $(BINDIR)/TestXrdClient: $(OBJECTS) $(OBJECTB) $(LIBDEPS)
 
 $(XRDCP): $(OBJECTS) $(OBJECTC) $(LIBDEPS)
 	@echo Creating executable $(XRDCP) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECTC) $(BINLIBS) $(LIBM) $(LIBS) -o $(XRDCP)
+	$(ECHO)$(LD) $(LDOP) $(OBJECTC) $(BINLIBS) $(LIBM) $(LIBS) $(LIBZ) -o $(XRDCP)
 
 $(XRDPREPTOOL): $(OBJECTS) $(OBJECT_PREPTOOL) $(LIBDEPS)
 	@echo Creating executable $(XRDPREPTOOL)
@@ -192,7 +204,7 @@ $(XRDSTAGETOOL): $(OBJECTS) $(OBJECT_STAGETOOL) $(LIBDEPS)
 
 $(XRDCLI): $(OBJECTS) $(OBJECT_CLI) $(LIBDEPS)
 	@echo Creating executable $(XRDCLI) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECT_CLI) $(BINLIBS) $(LIBM) $(LIBS) -o $(XRDCLI)
+	$(ECHO)$(LD) $(LDOP) $(OBJECT_CLI) $(BINLIBS) $(LIBM) $(LIBS) $(LIBREADLINE) -o $(XRDCLI)
 
 $(XRDADMIN): $(PERLMOD)
 	$(ECHO)if [ "$(PERLBIN)" != "" ]; then \
@@ -261,7 +273,8 @@ $(OBJDIR)/XrdClient.o: XrdClient.cc ../XrdClient/XrdClient.hh \
   ../XrdClient/XrdClientConnMgr.hh ../XrdClient/XrdClientLogConnection.hh \
   ../XrdClient/XrdClientPhyConnection.hh ../XrdClient/XrdClientThread.hh \
   ../XrdClient/XrdClientSid.hh ../XrdOuc/XrdOucRash.hh \
-  ../XrdOuc/XrdOucRash.icc ../XrdSys/XrdSysPlatform.hh
+  ../XrdOuc/XrdOucRash.icc ../XrdSys/XrdSysPlatform.hh \
+  ../XrdClient/XrdClientReadAhead.hh
 	@echo Compiling XrdClient.cc
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClient.o XrdClient.cc
 
@@ -510,22 +523,30 @@ $(OBJDIR)/XrdCpMthrQueue.o: XrdCpMthrQueue.cc ../XrdClient/XrdCpMthrQueue.hh \
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCpMthrQueue.o XrdCpMthrQueue.cc
 
 $(OBJDIR)/Xrdcp.o: Xrdcp.cc ../XrdClient/XrdClientUrlInfo.hh \
-   ../XrdSys/XrdSysPthread.hh \
-  ../XrdSys/XrdSysError.hh ../XrdClient/XrdClient.hh \
-  ../XrdClient/XrdClientAbs.hh ../XrdClient/XrdClientUnsolMsg.hh \
-  ../XrdClient/XrdClientMessage.hh ../XrdClient/XrdClientProtocol.hh \
-  ../XProtocol/XProtocol.hh ../XProtocol/XPtypes.hh \
-  ../XrdClient/XrdClientSock.hh ../XrdClient/XrdClientConn.hh ../XrdClient/XrdClientPSock.hh \
-  ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientReadCache.hh \
-  ../XrdClient/XrdClientInputBuffer.hh ../XrdSys/XrdSysSemWait.hh \
+  ../XrdOuc/XrdOucString.hh ../XrdSys/XrdSysHeaders.hh \
+  ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh \
+  ../XrdClient/XrdClient.hh ../XrdClient/XrdClientAbs.hh \
+  ../XrdClient/XrdClientUnsolMsg.hh ../XrdClient/XrdClientConn.hh \
+  ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientConnMgr.hh \
   ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
-  ../XrdClient/XrdClientVector.hh ../XrdClient/XrdCpMthrQueue.hh \
-  ../XrdClient/XrdClientDebug.hh ../XrdClient/XrdClientEnv.hh \
-  ../XrdOuc/XrdOucEnv.hh ../XrdSys/XrdSysLogger.hh \
-  ../XrdClient/XrdCpWorkLst.hh ../XrdClient/XrdClientAdmin.hh \
-  ../XrdClient/XrdClientAbsMonIntf.hh
+  ../XrdClient/XrdClientPhyConnection.hh ../XrdClient/XrdClientPSock.hh \
+  ../XrdClient/XrdClientSock.hh ../XrdClient/XrdClientVector.hh \
+  ../XrdOuc/XrdOucRash.hh ../XrdOuc/XrdOucRash.icc \
+  ../XrdSys/XrdSysPlatform.hh ../XrdClient/XrdClientMessage.hh \
+  ../XrdClient/XrdClientProtocol.hh ../XProtocol/XProtocol.hh \
+  ../XProtocol/XPtypes.hh ../XrdClient/XrdClientInputBuffer.hh \
+  ../XrdSys/XrdSysSemWait.hh ../XrdClient/XrdClientThread.hh \
+  ../XrdClient/XrdClientReadCache.hh ../XrdVersion.hh \
+  ../XrdClient/XrdCpMthrQueue.hh ../XrdClient/XrdClientDebug.hh \
+  ../XrdClient/XrdClientEnv.hh ../XrdOuc/XrdOucEnv.hh \
+  ../XrdSys/XrdSysLogger.hh ../XrdClient/XrdCpWorkLst.hh \
+  ../XrdClient/XrdClientAdmin.hh ../XrdCrypto/XrdCryptoFactory.hh \
+  ../XrdCrypto/XrdCryptoAux.hh ../XrdCrypto/XrdCryptoMsgDigest.hh \
+  ../XrdCrypto/XrdCryptoBasic.hh ../XrdSut/XrdSutBucket.hh \
+  ../XrdSut/XrdSutAux.hh ../XrdClient/XrdClientAbsMonIntf.hh \
+  ../XrdClient/XrdcpXtremeRead.hh ../XrdClient/XrdClientReadAhead.hh
 	@echo Compiling Xrdcp.cc
-	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/Xrdcp.o Xrdcp.cc
+	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFHASXRDCRYPTO) $(INCLUDE) -o $(OBJDIR)/Xrdcp.o Xrdcp.cc
 
 $(OBJDIR)/XrdClientPrep.o: XrdClientPrep.cc ../XProtocol/XProtocol.hh \
                            ../XrdClient/XrdClientAdmin.hh \
@@ -562,13 +583,13 @@ $(OBJDIR)/XrdCommandLine.o: XrdCommandLine.cc ../XrdClient/XrdClientUrlInfo.hh \
   ../XrdClient/XrdClientSock.hh ../XrdClient/XrdClientConn.hh \
   ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientReadCache.hh \
   ../XrdClient/XrdClientInputBuffer.hh ../XrdSys/XrdSysSemWait.hh \
-  ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
+  ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc ../XrdOuc/XrdOucString.hh \
   ../XrdClient/XrdClientVector.hh ../XrdClient/XrdClientPSock.hh \
   ../XrdClient/XrdClientDebug.hh ../XrdClient/XrdClientEnv.hh \
   ../XrdOuc/XrdOucEnv.hh ../XrdSys/XrdSysHeaders.hh ../XrdSys/XrdSysLogger.hh \
   ../XrdClient/XrdClientAdmin.hh
 	@echo Compiling XrdCommandLine.cc
-	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCommandLine.o XrdCommandLine.cc
+	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFREADLINE) $(INCLUDE) -o $(OBJDIR)/XrdCommandLine.o XrdCommandLine.cc
 
 $(OBJDIR)/XrdClientEnv.o: XrdClientEnv.cc ../XrdClient/XrdClientConst.hh \
   ../XrdClient/XrdClientEnv.hh ../XrdOuc/XrdOucEnv.hh \
@@ -586,7 +607,7 @@ $(OBJDIR)/XrdCpWorkLst.o: XrdCpWorkLst.cc ../XrdClient/XrdCpWorkLst.hh \
   ../XrdClient/XrdClientConn.hh ../XrdClient/XrdClientConst.hh \
   ../XrdClient/XrdClientReadCache.hh ../XrdClient/XrdClientInputBuffer.hh \
   ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh \
-  ../XrdSys/XrdSysSemWait.hh ../XrdOuc/XrdOucHash.hh \
+  ../XrdSys/XrdSysSemWait.hh ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucString.hh \
   ../XrdOuc/XrdOucHash.icc ../XrdClient/XrdClientVector.hh \
   ../XrdSys/XrdSysHeaders.hh \
   ../XrdClient/XrdClient.hh
@@ -628,3 +649,25 @@ $(OBJDIR)/XrdClientMStream.o: XrdClientMStream.cc ../XrdClient/XrdClientDebug.hh
 	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdClientMStream.o XrdClientMStream.cc
 
 
+$(OBJDIR)/XrdcpXtremeRead.o: XrdcpXtremeRead.cc  ../XrdClient/XrdcpXtremeRead.hh \
+  ../XrdSys/XrdSysPthread.hh ../XrdSys/XrdSysError.hh \
+  ../XrdClient/XrdClient.hh ../XrdClient/XrdClientAbs.hh \
+  ../XrdClient/XrdClientUnsolMsg.hh ../XrdClient/XrdClientConn.hh \
+  ../XrdClient/XrdClientConst.hh ../XrdClient/XrdClientConnMgr.hh \
+  ../XrdOuc/XrdOucHash.hh ../XrdOuc/XrdOucHash.icc \
+  ../XrdClient/XrdClientPhyConnection.hh ../XrdClient/XrdClientPSock.hh \
+  ../XrdClient/XrdClientSock.hh ../XrdClient/XrdClientUrlInfo.hh \
+  ../XrdOuc/XrdOucString.hh ../XrdSys/XrdSysHeaders.hh \
+  ../XrdClient/XrdClientVector.hh ../XrdOuc/XrdOucRash.hh \
+  ../XrdOuc/XrdOucRash.icc ../XrdSys/XrdSysPlatform.hh \
+  ../XrdClient/XrdClientMessage.hh ../XrdClient/XrdClientProtocol.hh \
+  ../XProtocol/XProtocol.hh ../XProtocol/XPtypes.hh \
+  ../XrdClient/XrdClientInputBuffer.hh ../XrdSys/XrdSysSemWait.hh \
+  ../XrdClient/XrdClientThread.hh ../XrdClient/XrdClientReadCache.hh \
+  ../XrdVersion.hh ../XrdClient/XrdClientAdmin.hh
+	@echo Compiling XrdcpXtremeRead.cc
+	$(ECHO)$(CC) -g -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdcpXtremeRead.o XrdcpXtremeRead.cc
+
+$(OBJDIR)/XrdClientReadAhead.o: XrdClientReadAhead.cc ../XrdClient/XrdClientReadAhead.hh
+	@echo Compiling XrdClientReadAhead.cc
+	$(ECHO)$(CC) -g -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdClientReadAhead.o XrdClientReadAhead.cc

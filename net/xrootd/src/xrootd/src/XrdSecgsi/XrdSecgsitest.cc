@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSecgsitestCVSID = "$Id$";
 //
 //  Test program for XrdSecgsi
 //

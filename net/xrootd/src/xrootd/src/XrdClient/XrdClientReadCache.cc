@@ -10,6 +10,8 @@
 
 //       $Id$
 
+const char *XrdClientReadCacheCVSID = "$Id$";
+
 #include "XrdClient/XrdClientReadCache.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdClient/XrdClientDebug.hh"
@@ -57,7 +59,7 @@ long long XrdClientReadCache::GetTimestampTick()
 }
   
 //________________________________________________________________________
-XrdClientReadCache::XrdClientReadCache() : fItems(16384)
+XrdClientReadCache::XrdClientReadCache() : fItems(4096)
 {
     // Constructor
 
@@ -80,7 +82,6 @@ XrdClientReadCache::XrdClientReadCache() : fItems(16384)
 XrdClientReadCache::~XrdClientReadCache()
 {
   // Destructor
-
   RemoveItems(false);
 
 }
@@ -115,12 +116,15 @@ bool XrdClientReadCache::SubmitRawData(const void *buffer, long long begin_offs,
 	// BeginOffset
 	// A data block will always be inserted BEFORE a true block with
 	// equal beginoffset
-	int pos = FindInsertionApprox(begin_offs) - 1;
-        for (; pos >= 0; pos--)
-            if (!fItems[pos] || fItems[pos]->EndOffset() < begin_offs) break;
+	int pos = FindInsertionApprox(begin_offs);
+        if (fItems.GetSize())
+           for (; pos >= 0; pos--)
+              if ((pos < fItems.GetSize()) &&
+                  fItems[pos] && (fItems[pos]->EndOffset() < begin_offs)) break;
 	if (pos < 0) pos = 0;
 
 	for (; pos < fItems.GetSize(); pos++) {
+           // Don't add this block if it is contained in a bigger one
 	    if (!fItems[pos]->IsPlaceholder() && fItems[pos]->ContainsInterval(begin_offs, end_offs)) {
 		pos = -1;
 		break;
@@ -251,10 +255,12 @@ void XrdClientReadCache::PutPlaceholder(long long begin_offs,
 	int pos = FindInsertionApprox(begin_offs);
 	int p = pos - 1;
 
-        for (; p >= 0; p--)            
-            if (fItems[p]->EndOffset() < begin_offs) break;
+        if (fItems.GetSize())
+           for (; p >= 0; p--)            
+              if ((p < fItems.GetSize()) &&
+                  fItems[p] && (fItems[p]->EndOffset() < begin_offs)) break;
         if (p < 0) p = 0;
-
+        
 	for (; p < fItems.GetSize(); p++) {
 	    if (fItems[p]->ContainsInterval(begin_offs, end_offs)) {
 		return;
@@ -322,11 +328,14 @@ long XrdClientReadCache::GetDataIfPresent(const void *buffer,
     int it;
     long bytesgot = 0;
 
-    long long lasttakenbyte = begin_offs-1;
+    long long lastseenbyte = begin_offs-1;
+
     outstandingblks = 0;
     missingblks.Clear();
 
     XrdSysMutexHelper mtx(fMutex);
+
+    //PrintCache();
 
     if (PerfCalc)
 	fReadsCounter++;
@@ -343,10 +352,12 @@ long XrdClientReadCache::GetDataIfPresent(const void *buffer,
 
     // First scan: we get the useful data
     // and remember where we arrived
-    it = FindInsertionApprox(lasttakenbyte) - 1;
+    it = FindInsertionApprox(begin_offs);
 
-    for (; it >= 0; it--)
-        if (fItems[it]->EndOffset() < begin_offs) break;
+    if (fItems.GetSize())
+       for (; it >= 0; it--)
+          if ((it < fItems.GetSize()) &&
+              fItems[it] && (fItems[it]->EndOffset() < begin_offs)) break;
     if (it < 0) it = 0;
 
     for (; it < fItems.GetSize(); it++) {
@@ -354,16 +365,30 @@ long XrdClientReadCache::GetDataIfPresent(const void *buffer,
 
 	if (!fItems[it]) continue;
 
-	if (fItems[it]->BeginOffset() > lasttakenbyte+1) break;
-
+	if (fItems[it]->BeginOffset() > lastseenbyte+1) break;
+        
 	if (!fItems[it]->IsPlaceholder())
-	    l = fItems[it]->GetPartialInterval(((char *)buffer)+bytesgot,
-					       begin_offs+bytesgot, end_offs);
-	else break;
+           // If it's not a placeholder then we take useful bytes from it
+           l = fItems[it]->GetPartialInterval(((char *)buffer)+bytesgot,
+                                              begin_offs+bytesgot, end_offs);
+	else {
+           // If it's a placeholder and it has useful bytes,
+           //  we increment the outstanding blks counter
+           if (fItems[it]->GetPartialInterval(0, begin_offs+bytesgot, end_offs) > 0) {
+
+              if (fBlkRemPolicy != kRmBlk_FIFO)
+                 fItems[it]->Touch(GetTimestampTick());
+
+              outstandingblks++;
+
+           }
+
+        }
+
+        lastseenbyte = xrdmax(lastseenbyte, fItems[it]->EndOffset());
 
 	if (l > 0) {
 	    bytesgot += l;
-	    lasttakenbyte = begin_offs+bytesgot-1;
 
 	    if (fBlkRemPolicy != kRmBlk_FIFO)
 	      fItems[it]->Touch(GetTimestampTick());
@@ -385,7 +410,7 @@ long XrdClientReadCache::GetDataIfPresent(const void *buffer,
     // We are here if something is missing to get all the data we need
     // Hence we build a list of what is missing
     // right now what is missing is the interval
-    // [lasttakenbyte+1, end_offs]
+    // [lastseenbyte+1, end_offs]
 
     XrdClientCacheInterval intv;
 
@@ -395,22 +420,22 @@ long XrdClientReadCache::GetDataIfPresent(const void *buffer,
 
 	if (fItems[it]->BeginOffset() > end_offs) break;
 
-	if (fItems[it]->BeginOffset() > lasttakenbyte+1) {
+	if (fItems[it]->BeginOffset() > lastseenbyte+1) {
 	    // We found that the interval
 	    // [lastbyteseen+1, fItems[it]->BeginOffset-1]
 	    // is a hole, which should be requested explicitly
 
-	    intv.beginoffs = lasttakenbyte+1;
+	    intv.beginoffs = lastseenbyte+1;
 	    intv.endoffs = fItems[it]->BeginOffset()-1;
 	    missingblks.Push_back( intv );
 
-	    lasttakenbyte = fItems[it]->EndOffset();
-	    if (lasttakenbyte >= end_offs) break;
+	    lastseenbyte = fItems[it]->EndOffset();
+	    if (lastseenbyte >= end_offs) break;
 	    continue;
 	}
 
 	// Let's see if we can get something from this blk, even if it's a placeholder
-	l = fItems[it]->GetPartialInterval(0, lasttakenbyte+1, end_offs);
+	l = fItems[it]->GetPartialInterval(0, lastseenbyte+1, end_offs);
 
 	if (l > 0) {
 	    // We found a placeholder to wait for
@@ -423,17 +448,17 @@ long XrdClientReadCache::GetDataIfPresent(const void *buffer,
 	    }
 
 
-	    lasttakenbyte += l;
+	    lastseenbyte += l;
 	}
 
 
     }
 
-     if (lasttakenbyte+1 < end_offs) {
- 	    intv.beginoffs = lasttakenbyte+1;
- 	    intv.endoffs = end_offs;
- 	    missingblks.Push_back( intv );
-     }
+    if (lastseenbyte+1 <= end_offs) {
+       intv.beginoffs = lastseenbyte+1;
+       intv.endoffs = end_offs;
+       missingblks.Push_back( intv );
+    }
 
 
     if (PerfCalc) {
@@ -451,7 +476,7 @@ void XrdClientReadCache::PrintCache() {
     XrdSysMutexHelper mtx(fMutex);
     int it;
 
-    Info(XrdClientDebug::kHIDEBUG, "Cache",
+    Info(XrdClientDebug::kUSERDEBUG, "Cache",
 	 "Cache Status --------------------------");
 
     for (it = 0; it < fItems.GetSize(); it++) {
@@ -460,13 +485,13 @@ void XrdClientReadCache::PrintCache() {
 
 	    if (fItems[it]->IsPlaceholder()) {
 		
-		Info(XrdClientDebug::kHIDEBUG,
+		Info(XrdClientDebug::kUSERDEBUG,
 		     "Cache blk", it << "Placeholder " <<
 		     fItems[it]->BeginOffset() << "->" << fItems[it]->EndOffset() );
 
 	    }
 	    else
-		Info(XrdClientDebug::kHIDEBUG,
+		Info(XrdClientDebug::kUSERDEBUG,
 		     "Cache blk", it << "Data block  " <<
 		     fItems[it]->BeginOffset() << "->" << fItems[it]->EndOffset() <<
 		     (fItems[it]->Pinned ? " (pinned) " : "" ) );
@@ -474,7 +499,7 @@ void XrdClientReadCache::PrintCache() {
 	}
     }
     
-    Info(XrdClientDebug::kHIDEBUG, "Cache",
+    Info(XrdClientDebug::kUSERDEBUG, "Cache",
 	 "-------------------------------------- fTotalByteCount = " << fTotalByteCount );
 
 }
@@ -484,9 +509,12 @@ void *XrdClientReadCache::FindBlk(long long begin_offs, long long end_offs) {
     int it;
     XrdSysMutexHelper mtx(fMutex);
 
-    it = FindInsertionApprox(begin_offs) - 1;
-    for (; it >= 0; it--)
-        if (fItems[it]->EndOffset() < begin_offs) break;
+    it = FindInsertionApprox(begin_offs);
+
+    if (fItems.GetSize())
+       for (; it >= 0; it--)
+          if ((it < fItems.GetSize()) &&
+              fItems[it] && (fItems[it]->EndOffset() < begin_offs)) break;
     if (it < 0) it = 0;
 
     while (it < fItems.GetSize()) {
@@ -516,9 +544,12 @@ void XrdClientReadCache::UnPinCacheBlk(long long begin_offs, long long end_offs)
     int it;
     XrdSysMutexHelper mtx(fMutex);
 
-    it = FindInsertionApprox(begin_offs) - 1;
-    for (; it >= 0; it--)
-        if (fItems[it]->EndOffset() < begin_offs) break;
+    it = FindInsertionApprox(begin_offs);
+
+    if (fItems.GetSize())
+       for (; it >= 0; it--)
+          if ((it < fItems.GetSize()) &&
+              fItems[it] && (fItems[it]->EndOffset() < begin_offs)) break;
     if (it < 0) it = 0;
 
     // We make sure that exactly tat block gets unpinned
@@ -543,34 +574,54 @@ void XrdClientReadCache::UnPinCacheBlk(long long begin_offs, long long end_offs)
 
 
 //________________________________________________________________________
-void XrdClientReadCache::RemoveItems(long long begin_offs, long long end_offs)
+void XrdClientReadCache::RemoveItems(long long begin_offs, long long end_offs, bool remove_overlapped)
 {
     // To remove all the items contained in the given interval
+    // if remove_overlapping, then remove also the ones just overlapping the given interval
 
     int it;
     XrdSysMutexHelper mtx(fMutex);
 
-    it = FindInsertionApprox(begin_offs) - 1;
-    for (; it >= 0; it--)
-        if (fItems[it]->EndOffset() < begin_offs) break;
-    if (it < 0) it = 0;
+    it = FindInsertionApprox(begin_offs);
 
+    // To spot the overlapped this is potentially not perfect
+    if (it < fItems.GetSize())
+       for (; it >= 0; it--)
+          if ((it < fItems.GetSize()) &&
+              fItems[it] && (fItems[it]->EndOffset() < begin_offs)) break;
+    if (it < 0) it = 0;
 
     // We remove all the blocks contained in the given interval
     while (it < fItems.GetSize()) {
 	if (fItems[it]) {
 
+	  if (!remove_overlapped) {
 	    if (fItems[it]->BeginOffset() > end_offs) break;
 
 	    if (!fItems[it]->Pinned && fItems[it]->ContainedInInterval(begin_offs, end_offs)) {
 
-		if (!fItems[it]->IsPlaceholder())
-		    fTotalByteCount -= fItems[it]->Size();
+	      if (!fItems[it]->IsPlaceholder())
+		fTotalByteCount -= fItems[it]->Size();
 	    
-		delete fItems[it];
-		fItems.Erase(it);
+	      delete fItems[it];
+	      fItems.Erase(it);
 	    }
 	    else it++;
+	  }
+	  else {
+	    // Remove a data chunk just if it overlaps
+	    if (fItems[it]->BeginOffset() > end_offs) break;
+	    if (!fItems[it]->Pinned && !fItems[it]->IsPlaceholder() &&
+		fItems[it]->IntersectInterval(begin_offs, end_offs)) {
+
+		fTotalByteCount -= fItems[it]->Size();
+	    
+	      delete fItems[it];
+	      fItems.Erase(it);
+	    }
+	    else it++;
+
+	  }
 
 	}
 	else it++;
@@ -578,9 +629,11 @@ void XrdClientReadCache::RemoveItems(long long begin_offs, long long end_offs)
     }
     // Then we resize or split the placeholders overlapping the given interval
     bool changed;
-    it = FindInsertionApprox(begin_offs) - 1;
-    for (; it >= 0; it--)
-        if (fItems[it]->EndOffset() < begin_offs) break;
+    it = FindInsertionApprox(begin_offs);
+    if (fItems.GetSize())
+       for (; it >= 0; it--)
+          if ((it < fItems.GetSize()) &&
+              fItems[it] && (fItems[it]->EndOffset() < begin_offs)) break;
     if (it < 0) it = 0;
 
 
@@ -659,13 +712,13 @@ void XrdClientReadCache::RemoveItems(bool leavepinned)
       if (!fItems[it]->Pinned) {
 	fTotalByteCount -= fItems[it]->Size();
 	delete fItems[it];
-	fItems.Erase(it);
+	fItems.Erase(it, true);
 	continue;
       }
 
       if (fItems[it]->Pinned && !leavepinned) {
 	delete fItems[it];
-	fItems.Erase(it);
+	fItems.Erase(it, true);
 	continue;
       }
     }

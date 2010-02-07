@@ -203,9 +203,10 @@ int XrdCmsProtocol::Execute(XrdCmsRRData &Arg)
               if (*etxt == '!')
                  {DEBUGR(etxt+1 <<" delayed " <<Arg.waitVal <<" seconds");
                   return -EINPROGRESS;
-                 } else Reply_Error(Arg, kYR_EINVAL, etxt);
-              else if (Arg.Routing & XrdCmsRouting::Forward
-                   &&  Cluster.NodeCnt) Reissue(Arg);
+                 } else if (*etxt == '.') return -ECONNABORTED;
+                           else Reply_Error(Arg, kYR_EINVAL, etxt);
+              else if (Arg.Routing & XrdCmsRouting::Forward && Cluster.NodeCnt
+                   &&  !(Arg.Request.modifier & kYR_dnf)) Reissue(Arg);
    return 0;
 }
 
@@ -252,9 +253,9 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
    unsigned int Mode, Role = 0;
    int Lvl=0, Netopts=0, waits=6, tries=6, fails=0, xport=mport;
    int rc, fsUtil, KickedOut, myNID = ManTree.Register();
-   int chk4Suspend = 0;
+   int chk4Suspend = XrdCmsState::All_Suspend, TimeOut = Config.AskPing*1000;
    char manbuff[256];
-   const char *manp = manager;
+   const char *Reason = 0, *manp = manager;
    const int manblen = sizeof(manbuff);
 
 // Do some debugging
@@ -289,14 +290,13 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
 // not able to stage any files.
 //
    if (Role == CmsLoginData::kYR_server)
-      {chk4Suspend = 1;
-       if (!Config.DiskSS) Role |=  CmsLoginData::kYR_nostage;
-      }
+      {if (!Config.DiskSS) Role |=  CmsLoginData::kYR_nostage;}
+      else chk4Suspend = XrdCmsState::FES_Suspend;
 
 // Keep connecting to our manager. If suspended, wait for a resumption first
 //
    do {if (Config.doWait && chk4Suspend)
-          while(CmsState.Suspended)
+          while(CmsState.Suspended & chk4Suspend)
                {if (!waits--)
                    {Say.Emsg("Pander", "Suspend state still active."); waits=6;}
                 XrdSysTimer::Snooze(12);
@@ -342,10 +342,10 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
        loginData.fsUtil= static_cast<kXR_unt16>(fsUtil);
        KickedOut = 0; loginData.dPort = CmsState.Port();
        Data = loginData; Data.Mode = Mode;
-       if (!(rc = XrdCmsLogin::Login(Link, Data)))
+       if (!(rc = XrdCmsLogin::Login(Link, Data, TimeOut)))
           {if(!ManTree.Connect(myNID, myNode)) KickedOut = 1;
              else {Say.Emsg("Protocol", "Logged into", Link->Name());
-                   Dispatch();
+                   Reason = Dispatch(isUp, TimeOut, 2);
                    rc = 0;
                    loginData.fSpace= Meter.FreeSpace(fsUtil);
                    loginData.fsUtil= static_cast<kXR_unt16>(fsUtil);
@@ -355,8 +355,9 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
        // Remove manager from the config
        //
        Manager.Remove(myNode, (rc == kYR_redirect ? "redirected"
-                                  : (rc ? "lost connection" : 0)));
+                                  : (Reason ? Reason : "lost connection")));
        ManTree.Disc(myNID);
+       Link->Close();
        delete myNode; myNode = 0;
 
        // Check if we should process the redirection
@@ -393,14 +394,19 @@ void XrdCmsProtocol::Pander(const char *manager, int mport)
 //
 int XrdCmsProtocol::Process(XrdLink *lp)
 {
+   const char *Reason;
+   Bearing     myWay;
+   int         tOut;
 
 // Now admit the login
 //
    Link = lp;
    if ((Routing=Admit()))
       {loggedIn = 1;
+       if (RSlot) {myWay = isLateral; tOut = -1;}
+          else    {myWay = isDown;    tOut = Config.AskPing*1000;}
        myNode->UnLock();
-       Dispatch();
+       if ((Reason = Dispatch(myWay, tOut, 2))) lp->setEtext(Reason);
        myNode->Lock();
       }
 
@@ -464,7 +470,7 @@ XrdCmsRouting *XrdCmsProtocol::Admit()
    XrdCmsLogin  Source(myBuff, sizeof(myBuff));
    CmsLoginData Data;
    const char  *Reason;
-   SMask_t      newmask, servset = 0;
+   SMask_t      newmask, servset(0);
    int addedp = 0, Status = 0, isMan = 0, isPeer = 0, isProxy = 0, isServ = 0;
    int wasSuspended = 0;
 
@@ -729,14 +735,25 @@ void XrdCmsProtocol::ConfigCheck(unsigned char *theConfig)
 /******************************************************************************/
 /*                              D i s p a t c h                               */
 /******************************************************************************/
+
+// Dispatch is provided with three key pieces of information:
+// 1) The connection bearing (isUp, isDown, isLateral) the determines how
+//    timeouts are to be handled.
+// 2) The maximum amount to wait for data to arrive.
+// 3) The number of successive timeouts we can have before we give up.
   
-void XrdCmsProtocol::Dispatch()
+const char *XrdCmsProtocol::Dispatch(Bearing cDir, int maxWait, int maxTries)
 {
    EPNAME("Dispatch");
+   static const int ReqSize = sizeof(CmsRRHdr);
+   static CmsPingRequest Ping = {{0, kYR_ping,  0, 0}};
    XrdCmsRRData *Data = XrdCmsRRData::Objectify();
    XrdCmsJob  *jp;
+   const char *toRC = (cDir == isUp ? "manager not active"
+                                    : "server not responding");
    const char *myArgs, *myArgt;
    char        buff[8];
+   int         rc, toLeft = maxTries;
 
 // Dispatch runs with the current thread bound to the link.
 //
@@ -744,10 +761,17 @@ void XrdCmsProtocol::Dispatch()
 
 // Read in the request header
 //
-do{if (Link->RecvAll((char *)&Data->Request, sizeof(Data->Request)) < 0) return;
+do{if ((rc = Link->RecvAll((char *)&Data->Request, ReqSize, maxWait)) < 0)
+      {if (rc != -ETIMEDOUT) return "request read failed";
+       if (!toLeft--) return toRC;
+       if (cDir == isDown && Link->Send((char *)&Ping, sizeof(Ping)) < 0)
+          return "server unreachable";
+       continue;
+      }
 
 // Decode the length and get the rest of the data
 //
+   toLeft = maxTries;
    Data->Dlen = static_cast<int>(ntohs(Data->Request.datalen));
    if ((QTRACE(Debug))
    && Data->Request.rrCode != kYR_ping && Data->Request.rrCode != kYR_pong)
@@ -756,14 +780,15 @@ do{if (Link->RecvAll((char *)&Data->Request, sizeof(Data->Request)) < 0) return;
    if (!(Data->Dlen)) {myArgs = myArgt = 0;}
       else {if (Data->Dlen > maxReqSize)
                {Say.Emsg("Protocol","Request args too long from",Link->Name());
-                break;
+                return "protocol error";
                }
             if ((!Data->Buff || Data->Blen < Data->Dlen)
             &&  !Data->getBuff(Data->Dlen))
                {Say.Emsg("Protocol", "No buffers to serve", Link->Name());
-                break;
+                return "insufficient buffers";
                }
-            if (Link->RecvAll(Data->Buff, Data->Dlen) < 0) break;
+            if ((rc = Link->RecvAll(Data->Buff, Data->Dlen, maxWait)) < 0)
+               return (rc == -ETIMEDOUT ? "read timed out" : "read failed");
             myArgs = Data->Buff; myArgt = Data->Buff + Data->Dlen;
            }
 
@@ -790,9 +815,11 @@ do{if (Link->RecvAll((char *)&Data->Request, sizeof(Data->Request)) < 0) return;
 //
    if (!(Data->Ident) || !(*Data->Ident)) Data->Ident = myNode->Ident;
 
-// Schedule this request
+// Schedule this request if async. Otherwise, do this inline. Note that
+// synchrnous requests are allowed to return status changes (e.g., redirect)
 //
-   if (Data->Routing & XrdCmsRouting::isSync) Execute(*Data);
+   if (Data->Routing & XrdCmsRouting::isSync)
+      {if ((rc = Execute(*Data)) && rc == -ECONNABORTED) return "redirected";}
       else if ((jp = XrdCmsJob::Alloc(this, Data)))
               {Sched->Schedule((XrdJob *)jp);
                Data = XrdCmsRRData::Objectify();
@@ -800,12 +827,9 @@ do{if (Link->RecvAll((char *)&Data->Request, sizeof(Data->Request)) < 0) return;
               else Say.Emsg("Protocol", "No jobs to serve", Link->Name());
   } while(1);
 
-// We encountered an error while processing a live link. The only way to
-// resynchonize is to close the link and pretend the recv() failed.
+// We should never get here
 //
-   Link->Serialize();
-   Link->Close();
-   myNode->isConn = 0;
+   return "logic error";
 }
 
 /******************************************************************************/

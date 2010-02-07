@@ -4,12 +4,12 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.29 2008/05/27 12:50:16 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.33 2009/11/19 03:25:11 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 
 
-AM_CPPFLAGS = -I$(top_srcdir)/src $(JAVA_INCDIR) 
+AM_CPPFLAGS = -I$(top_srcdir)/src $(READLINE_INCDIR) $(JAVA_INCDIR) 
 
 #############################################################################
 ## extra directory definitions
@@ -40,7 +40,8 @@ xrootdclientinc_HEADERS = XrdClient.hh XrdClientAdmin.hh \
                XrdClientInputBuffer.hh XrdClientEnv.hh XrdClientThread.hh \
                XrdClientPhyConnection.hh XrdClientLogConnection.hh \
                XrdClientDebug.hh XrdClientReadV.hh XrdClientPSock.hh \
-               XrdCpMthrQueue.hh XrdCpWorkLst.hh XrdClientAbsMonIntf.hh
+               XrdCpMthrQueue.hh XrdCpWorkLst.hh XrdClientAbsMonIntf.hh \
+               XrdcpXtremeRead.hh
 
 #############################################################################
 # Build rules
@@ -71,7 +72,9 @@ libXrdClient_la_SOURCES = \
         XrdClientSid.cc XrdClientSid.hh \
         XrdClientPSock.cc XrdClientPSock.hh \
 	XrdClientMStream.cc XrdClientMStream.hh \
-        XrdClientReadV.cc XrdClientReadV.hh
+        XrdClientReadV.cc XrdClientReadV.hh \
+        XrdClientReadAhead.cc XrdClientReadAhead.hh \
+        XrdcpXtremeRead.cc XrdcpXtremeRead.hh
 
 libXrdClient_la_LIBADD = $(LIBSUNMATH) \
               ../XrdSys/libXrdSys.la \
@@ -82,7 +85,7 @@ libXrdClient_la_LIBADD = $(LIBSUNMATH) \
               ../XrdSys/libXrdSys.la
 
 clientlibs =  libXrdClient.la \
-              -ldl
+              -ldl $(LIBZ)
 
 xrdcp_SOURCES = Xrdcp.cc
 # Note: static is required for Darwin. Linux and Solaris nicely manage to integrate
@@ -93,7 +96,7 @@ xrdcp_LDADD = $(clientlibs)
 
 
 xrd_SOURCES = XrdCommandLine.cc
-xrd_LDADD = $(clientlibs) $(READLINE_LIBS)
+xrd_LDADD = $(clientlibs) $(READLINE_LIBDIR) $(READLINE_LIBS)
 
 
 

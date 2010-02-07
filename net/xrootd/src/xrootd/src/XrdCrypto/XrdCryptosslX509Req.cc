@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptosslX509ReqCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                 X r d C r y p t o s s l X 5 0 9 R e q. c c                 */
@@ -166,7 +168,11 @@ const char *XrdCryptosslX509Req::SubjectHash()
       // Make sure we have a certificate
       if (creq) {
          char chash[15];
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+         sprintf(chash,"%08lx.0",X509_NAME_hash_old(creq->req_info->subject));
+#else
          sprintf(chash,"%08lx.0",X509_NAME_hash(creq->req_info->subject));
+#endif
          subjecthash = chash;
       } else {
          DEBUG("WARNING: no certificate available - cannot extract subject hash");
@@ -199,7 +205,11 @@ XrdCryptoX509Reqdata XrdCryptosslX509Req::GetExtension(const char *oid)
    // Are there any extension?
    STACK_OF(X509_EXTENSION) *esk = X509_REQ_get_extensions(creq);
    //
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+   int numext = sk_X509_EXTENSION_num(esk);
+#else /* OPENSSL */
    int numext = sk_num(esk);
+#endif /* OPENSSL */
    if (numext <= 0) {
       DEBUG("certificate has got no extensions");
       return ext;
@@ -215,7 +225,11 @@ XrdCryptoX509Reqdata XrdCryptosslX509Req::GetExtension(const char *oid)
    int i = 0;
    X509_EXTENSION *wext = 0;
    for (i = 0; i< numext; i++) {
+#if OPENSSL_VERSION_NUMBER >= 0x10000000L
+      wext = sk_X509_EXTENSION_value(esk, i);
+#else /* OPENSSL */
       wext = (X509_EXTENSION *)sk_value(esk, i);
+#endif /* OPENSSL */
       if (usenid) {
          int enid = OBJ_obj2nid(X509_EXTENSION_get_object(wext));
          if (enid == nid)
@@ -301,11 +315,25 @@ XrdSutBucket *XrdCryptosslX509Req::Export()
 bool XrdCryptosslX509Req::Verify()
 {
    // Verify signature of the request 
+   EPNAME("X509Req::Verify");
 
    // We must have been initialized
    if (!creq)
       return 0;
 
    // Ok: we can verify
-   return X509_REQ_verify(creq,X509_REQ_get_pubkey(creq));
+   int rc = X509_REQ_verify(creq,X509_REQ_get_pubkey(creq));
+   if (rc <= 0) {
+     // Failure
+     if (rc == 0) {
+       // Signatures are not OK
+       DEBUG("signature not OK");
+     } else {
+       // General failure
+       DEBUG("could not verify signature");
+     }
+     return 0;
+   }
+   // OK
+   return 1;
 }

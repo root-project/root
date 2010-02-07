@@ -8,6 +8,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
+const char *XrdClientReadVCVSID = "$Id$";
+
 #include "XrdClient/XrdClientReadV.hh"
 #include "XrdClient/XrdClientConn.hh"
 #include "XrdClient/XrdClientDebug.hh"
@@ -33,6 +37,7 @@ kXR_int64 XrdClientReadV::ReqReadV(XrdClientConn *xrdc, char *handle, char *dest
     for (int i = 0; i < nreq; i++) {
 
 	    memcpy( &(buflis[i].fhandle), handle, 4 ); 
+
 
 	    if (!destbuf)
 		xrdc->SubmitPlaceholderToCache(reqvect[firstreq+i].offset,
@@ -79,6 +84,7 @@ kXR_int64 XrdClientReadV::ReqReadV(XrdClientConn *xrdc, char *handle, char *dest
 	  if (xrdc->WriteToServer_Async(&readvFileRequest,
 					buflis) != kOK )
 	    total_len = 0;
+
 	}
 
     }
@@ -97,10 +103,10 @@ kXR_int32 XrdClientReadV::UnpackReadVResp(char *destbuf, char *respdata, kXR_int
 
     // I just rebuild the readahead_list element
     struct readahead_list header;
-    kXR_int64 pos_from = 0, pos_to = 0;
+    kXR_int32 pos_from = 0, pos_to = 0;
     int i = 0;
-
-    int cur_buf_len = 0, cur_buf_offset = -1, cur_buf = 0;
+    kXR_int64 cur_buf_offset = -1;
+    int cur_buf_len = 0, cur_buf = 0;
     
     while ( (pos_from < respdatalen) && (i < nbuf) ) {
 	memcpy(&header, respdata + pos_from, sizeof(struct readahead_list));
@@ -202,7 +208,7 @@ int XrdClientReadV::SubmitToCacheReadVResp(XrdClientConn *xrdc, char *respdata,
 	}
 	res = pos_from;
 
-	delete respdata;
+	free( respdata );
 
     return res;
 

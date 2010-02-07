@@ -14,6 +14,17 @@
 /*     globus_l_gfs_posix_stat()                                        */
 /*                                                                      */
 /************************************************************************/
+
+/* ChangeLog:
+
+   2009-03-16: Wei Yang  yangw@slac.stanford.edu
+      *  add Adler32 checksum. (need -lz when linking the .so)
+
+ */
+
+/* $Id$ */
+
+/************************************************************************/
 /* How to compile:                                                      */
 /*                                                                      */
 /* This file should be compiled along with the globus 4.0.x source code.*/
@@ -65,6 +76,7 @@
    while (pathname[0] == '/' && pathname[1] == '/') { pathname++; }
 */
 
+#include <zlib.h>
 #include "globus_gridftp_server.h"
 
 static
@@ -120,6 +132,8 @@ globus_l_gfs_posix_start(
 {
     globus_l_gfs_posix_handle_t *       posix_handle;
     globus_gfs_finished_info_t          finished_info;
+    struct passwd *                     pw;
+
     GlobusGFSName(globus_l_gfs_posix_start);
 
     posix_handle = (globus_l_gfs_posix_handle_t *)
@@ -132,7 +146,8 @@ globus_l_gfs_posix_start(
     finished_info.result = GLOBUS_SUCCESS;
     finished_info.info.session.session_arg = posix_handle;
     finished_info.info.session.username = session_info->username;
-    finished_info.info.session.home_dir = "/";
+    pw = getpwuid(getuid());
+    finished_info.info.session.home_dir = pw->pw_dir;
 
     globus_gridftp_server_operation_finished(
         op, GLOBUS_SUCCESS, &finished_info);
@@ -511,6 +526,50 @@ error_stat1:
 /*    GlobusGFSFileDebugExitWithError();  */
 }
 /*************************************************************************
+ * Adler23 checksum
+ ************************************************************************/
+globus_result_t 
+globus_l_gfs_posix_cksm_adler32(
+    char *                             filename,
+    char *                             cksm)
+{
+    int rc, fd, len;
+    char *ext_adler32, buf[65536], ext_cmd[1024], *pt;
+    FILE *F;
+    struct stat stbuf;
+    uLong adler;
+
+    ext_adler32 = NULL;
+    if ((ext_adler32 = getenv("GRIDFTP_CKSUM_EXT_ADLER32")) != NULL)
+    {
+        strcpy(ext_cmd, ext_adler32);
+        strcat(ext_cmd, " ");
+        strcat(ext_cmd, filename);
+        F = popen(ext_cmd, "r");
+        if (F == NULL) return GLOBUS_FAILURE;
+        fscanf(F, "%s", cksm);
+        pclose(F);
+
+        pt = strchr(cksm, ' ');
+        if (pt != NULL) pt[0] = '\0'; /* take the first string */ 
+    }
+    else /* calculate adler32 */
+    {
+        rc = stat(filename, &stbuf);
+        if (rc != 0 || ! S_ISREG(stbuf.st_mode) || (fd = open(filename,O_RDONLY)) < 0)
+            return GLOBUS_FAILURE;
+        adler = adler32(0L, Z_NULL, 0);
+        while ((len = read(fd, buf, 65536)) > 0)
+            adler = adler32(adler, buf, len);
+
+        close(fd);
+        sprintf(cksm, "%08x", adler);
+        cksm[8] = '\0';
+    }
+    return GLOBUS_SUCCESS;
+}
+
+/*************************************************************************
  *  command
  *  -------
  *  This interface function is called when the client sends a 'command'.
@@ -539,6 +598,7 @@ globus_l_gfs_posix_command(
     char *                              PathName;
     globus_l_gfs_posix_handle_t *      posix_handle;
     globus_result_t                     rc;
+    char                                cmd_data[128];
     GlobusGFSName(globus_l_gfs_posix_command);
 
     posix_handle = (globus_l_gfs_posix_handle_t *) user_arg;
@@ -580,7 +640,11 @@ globus_l_gfs_posix_command(
             (rc = GlobusGFSErrorGeneric("chmod() fail"));
         break;
       case GLOBUS_GFS_CMD_CKSM:
-        rc = GLOBUS_FAILURE;
+        if (!strcmp(cmd_info->cksm_alg, "adler32") || 
+            !strcmp(cmd_info->cksm_alg, "ADLER32"))
+            rc = globus_l_gfs_posix_cksm_adler32(PathName, cmd_data);
+        else
+            rc = GLOBUS_FAILURE;
         break;
 
       default:
@@ -588,7 +652,7 @@ globus_l_gfs_posix_command(
         break;
     }
 
-    globus_gridftp_server_finished_command(op, rc, NULL);
+    globus_gridftp_server_finished_command(op, rc, cmd_data);
 }
 
 /* receive file from client */
@@ -777,6 +841,59 @@ globus_l_gfs_posix_recv(
                                           &posix_handle->block_length);
 
     globus_gridftp_server_begin_transfer(posix_handle->op, 0, posix_handle);
+
+/* 
+   Calculate space usage of a xrootd space token. This is xrootd specific.
+   None xrootd storage can still use it if XROOTD_CNSURL is not defined 
+*/
+    char *cns, *token, *tokenbuf[128], *key, *value, xattrs[1024], *xattrbuf[1024];
+    long long spaceusage, spacequota;
+
+    cns = getenv("XROOTD_CNSURL");
+    if (cns != NULL)
+    {
+        strcpy(xattrs, posix_handle->pathname);
+        token = strtok_r(xattrs, "?", xattrbuf);
+        token = strtok_r(NULL, "=", xattrbuf);
+        token = strtok_r(NULL, "=", xattrbuf);
+        sprintf(err_msg, "open() fail: quota exceeded for space token %s\n", token);
+
+        strcat(cns, "/?oss.cgroup=");
+        if (token == NULL)
+            strcat(cns, "public");
+        else
+            strcat(cns, token);
+
+        if (getxattr(cns, "xroot.space", xattrs, 128) > 0)
+        {
+            spaceusage = 0;
+            spacequota = 0;
+            token = strtok_r(xattrs, "&", xattrbuf);
+            while (token != NULL)
+            {
+                 token = strtok_r(NULL, "&", xattrbuf);
+                 if (token == NULL) break;
+                 key = strtok_r(token, "=", tokenbuf);
+                 value = strtok_r(NULL, "=", tokenbuf);
+                 if (!strcmp(key,"oss.used"))
+                 {
+                     sscanf((const char*)value, "%lld", &spaceusage);
+                 }
+                 else if (!strcmp(key,"oss.quota"))
+                 {
+                     sscanf((const char*)value, "%lld", &spacequota);
+                 }
+            }
+            if (spaceusage > spacequota) 
+            {
+                rc = GlobusGFSErrorGeneric(err_msg);
+                globus_gridftp_server_finished_transfer(op, rc);
+                return;
+            }
+        }
+    }
+/* end of XROOTD specfic code */
+
     if (stat(posix_handle->pathname, &stat_buffer) == 0)
     {
         posix_handle->fd = open(posix_handle->pathname, O_WRONLY); /* |O_TRUNC);  */
@@ -870,7 +987,7 @@ globus_l_gfs_posix_read_from_storage(
             lseek(posix_handle->fd, posix_handle->offset, SEEK_SET);
         }
  */ 
-        /* block_length == -1 indicates transferring data to eof */
+        /* block_length == -1 indicates transferring data to until eof */
         if (posix_handle->block_length < 0 ||   
             posix_handle->block_length > posix_handle->block_size)
         {

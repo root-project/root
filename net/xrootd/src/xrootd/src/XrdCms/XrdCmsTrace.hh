@@ -26,7 +26,6 @@
 #ifndef NODEBUG
 
 #include "XrdSys/XrdSysHeaders.hh"
-#include "XrdOuc/XrdOucTrace.hh"
 
 #define QTRACE(act) Trace.What & TRACE_ ## act
 
@@ -42,7 +41,7 @@
 
 #define TRACEX(y) {Trace.Beg(0,epname); cerr <<y; Trace.End();}
 
-#define EPNAME(x) const char *epname = x;
+#define EPNAME(x) static const char *epname = x;
 
 #else
 

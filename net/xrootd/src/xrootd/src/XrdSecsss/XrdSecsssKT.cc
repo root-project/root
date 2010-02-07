@@ -233,9 +233,16 @@ void XrdSecsssKT::genKey(char *kBP, int kLen)
 // because some /dev/random devices start out really cold.
 //
    if (randFD >= 0) 
-      {if (read(randFD, kBP, kLen) == kLen)
-          {int i, zcnt = 0, maxZ = kLen*25/100;
-           for (i = 0; i < kLen; i++) if (!kBP[i]) zcnt++;
+      {char *buffP = kBP;
+       int i, Got, Want = kLen, zcnt = 0, maxZ = kLen*25/100;
+       while(Want)
+       do { {do {Got = read(randFD, buffP, Want);}
+                while(Got < 0 && errno == EINTR);
+             if (Got > 0) {buffP += Got; Want -= Got;}
+            }
+          } while(Got > 0 && Want);
+       if (!Want)
+          {for (i = 0; i < kLen; i++) if (!kBP[i]) zcnt++;
            if (zcnt <= maxZ) return;
           }
       }
@@ -243,8 +250,9 @@ void XrdSecsssKT::genKey(char *kBP, int kLen)
 // Generate a seed
 //
    gettimeofday(&tval, 0);
-   if (tval.tv_usec == 0) {tval.tv_usec = tval.tv_sec ^ getpid();}
-   srand48(tval.tv_usec);
+   if (tval.tv_usec == 0) tval.tv_usec = tval.tv_sec;
+   tval.tv_usec = tval.tv_usec ^ getpid();
+   srand48(static_cast<long>(tval.tv_usec));
 
 // Now generate the key (we ignore he fact that longs may be 4 or 8 bytes)
 //
@@ -304,7 +312,7 @@ int XrdSecsssKT::Rewrite(int Keep, int &numKeys, int &numTot, int &numExp)
 
 // Construct temporary filename
 //
-   sprintf(buff, ".%d", getpid());
+   sprintf(buff, ".%d", static_cast<int>(getpid()));
    strcat(tmpFN, buff);
 
 // Open the file for output
@@ -417,7 +425,7 @@ do{while((lp = myKT.GetLine()))
             {What = "keytable format missing or unsupported";      break;}
          if (!(ktNew = ktDecode0(myKT, eInfo)))
             {What = (eInfo ? eInfo->getErrText(): "invalid data"); break;}
-         if (ktMode != isAdmin && ktNew->Data.Exp <= time(0))
+         if (ktMode!=isAdmin && ktNew->Data.Exp && ktNew->Data.Exp <= time(0))
             {delete ktNew; continue;}
          tmpID = static_cast<int>(ktNew->Data.ID & 0x7fffffff);
          if (tmpID > kthiID) kthiID = tmpID;
@@ -536,11 +544,11 @@ void XrdSecsssKT::keyX2B(ktEnt *theKT, char *xKey)
 // Now convert (we need this to be just consistent not necessarily correct)
 //
    while(*xKey)
-        {if (*xKey <= '9') kByte = (*xKey & 0x0f) << 4;
+        {if (*xKey <= '9') kByte  = (*xKey & 0x0f) << 4;
             else kByte = xtab[*xKey & 0x07] << 4;
          xKey++;
-         if (*xKey <= '9') kByte = (*xKey & 0x0f) << 4;
-            else kByte = xtab[*xKey & 0x07] << 4;
+         if (*xKey <= '9') kByte |= (*xKey & 0x0f);
+            else kByte |= xtab[*xKey & 0x07];
          *kp++ = kByte; xKey++;
         }
 
@@ -621,8 +629,8 @@ while((tp = kTab.GetToken()) && !Prob)
 // Check if we have a problem
 //
    if (Prob)
-      {const char *eVec[] = {ktDesc[i].Name, What, Prob};
-       if (eInfo) eInfo->setErrInfo(-1, eVec, 3);
+      {const char *eVec[] = {What, Prob};
+       if (eInfo) eInfo->setErrInfo(-1, eVec, 2);
        delete ktNew;
        return 0;
       }
@@ -631,10 +639,10 @@ while((tp = kTab.GetToken()) && !Prob)
 //
    if (!strcmp(ktNew->Data.Grup, "anygroup"))       
       ktNew->Data.Opts|=ktEnt::anyGRP;
-   if (!strcmp(ktNew->Data.User, "anyuser"))
-      ktNew->Data.Opts =ktEnt::anyUSR;
-      else if (!strcmp(ktNew->Data.User,"loginid"))
-              ktNew->Data.Opts =ktEnt::useLID;
+      else if (!strcmp(ktNew->Data.Grup, "usrgroup"))
+              ktNew->Data.Opts|=ktEnt::usrGRP;
+   if (!strcmp(ktNew->Data.User, "anybody"))
+      ktNew->Data.Opts|=ktEnt::anyUSR;
 
 // All done
 //

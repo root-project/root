@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.27 2008/09/07 04:38:38 abh Exp $
+#              $Id: GNUmakefile,v 1.29 2009/08/19 13:51:46 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -12,6 +12,7 @@ include ../GNUmake.env
   
 SOURCES = \
         XrdOuca2x.cc         \
+        XrdOucArgs.cc        \
         XrdOucCRC.cc         \
         XrdOucEnv.cc         \
         XrdSysError.cc       \
@@ -21,17 +22,20 @@ SOURCES = \
         XrdOucMsubs.cc       \
         XrdOucName2Name.cc   \
         XrdOucNList.cc       \
+        XrdOucNSWalk.cc      \
         XrdOucProg.cc        \
         XrdOucPup.cc         \
         XrdOucReqID.cc       \
         XrdOucStream.cc      \
         XrdOucString.cc      \
+        XrdOucSxeq.cc        \
         XrdOucTokenizer.cc   \
         XrdOucTrace.cc       \
         XrdOucUtils.cc
 
 OBJECTS = \
         $(OBJDIR)/XrdOuca2x.o          \
+        $(OBJDIR)/XrdOucArgs.o         \
         $(OBJDIR)/XrdOucEnv.o          \
         $(OBJDIR)/XrdSysError.o        \
         $(OBJDIR)/XrdOucExport.o       \
@@ -40,11 +44,13 @@ OBJECTS = \
         $(OBJDIR)/XrdOucMsubs.o        \
         $(OBJDIR)/XrdOucName2Name.o    \
         $(OBJDIR)/XrdOucNList.o        \
+        $(OBJDIR)/XrdOucNSWalk.o       \
         $(OBJDIR)/XrdOucProg.o         \
         $(OBJDIR)/XrdOucPup.o          \
         $(OBJDIR)/XrdOucReqID.o        \
         $(OBJDIR)/XrdOucStream.o       \
         $(OBJDIR)/XrdOucString.o       \
+        $(OBJDIR)/XrdOucSxeq.o         \
         $(OBJDIR)/XrdOucTokenizer.o    \
         $(OBJDIR)/XrdOucTrace.o        \
         $(OBJDIR)/XrdOucUtils.o        \
@@ -93,6 +99,11 @@ $(OBJDIR)/XrdOuca2x.o: XrdOuca2x.cc XrdOuca2x.hh XrdSysError.hh
 	@echo Compiling XrdOuca2x.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOuca2x.cc -o $(OBJDIR)/XrdOuca2x.o
 
+$(OBJDIR)/XrdOucArgs.o: XrdOucArgs.cc  XrdOucArgs.hh XrdOucTokenizer.hh \
+                        XrdSysError.hh
+	@echo Compiling XrdOucArgs.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucArgs.cc -o $(OBJDIR)/XrdOucArgs.o
+
 $(OBJDIR)/XrdOucCRC.o: XrdOucCRC.cc XrdOucCRC.hh
 	@echo Compiling XrdOucCRC.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucCRC.cc -o $(OBJDIR)/XrdOucCRC.o
@@ -125,6 +136,11 @@ $(OBJDIR)/XrdOucNList.o: XrdOucNList.cc XrdOucNList.hh XrdSysPthread.hh
 	@echo Compiling XrdOucNList.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucNList.cc -o $(OBJDIR)/XrdOucNList.o
 
+$(OBJDIR)/XrdOucNSWalk.o: XrdOucNSWalk.cc XrdOucNSWalk.hh XrdOucTList.hh \
+                          XrdSysError.hh  XrdSysPlatform.hh
+	@echo Compiling XrdOucNSWalk.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucNSWalk.cc -o $(OBJDIR)/XrdOucNSWalk.o
+
 $(OBJDIR)/XrdOucProg.o: XrdOucProg.cc  XrdOucProg.hh \
                         XrdSysError.hh XrdOucStream.hh XrdSysPthread.hh
 	@echo Compiling XrdOucProg.cc
@@ -149,6 +165,10 @@ $(OBJDIR)/XrdOucStream.o: XrdOucStream.cc XrdOucStream.hh XrdSysError.hh \
 $(OBJDIR)/XrdOucString.o: XrdOucString.cc XrdOucString.hh XrdSysHeaders.hh
 	@echo Compiling XrdOucString.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucString.cc -o $(OBJDIR)/XrdOucString.o
+
+$(OBJDIR)/XrdOucSxeq.o: XrdOucSxeq.cc XrdOucSxeq.hh XrdSysPlatform.hh
+	@echo Compiling XrdOucSxeq.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucSxeq.cc -o $(OBJDIR)/XrdOucSxeq.o
 
 $(OBJDIR)/XrdOucTokenizer.o: XrdOucTokenizer.cc XrdOucTokenizer.hh  
 	@echo Compiling XrdOucTokenizer.cc

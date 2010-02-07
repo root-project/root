@@ -32,12 +32,15 @@
   
 struct XrdOucMsubsInfo
 {
-const char      *Tid;       // $TID   or $RID
+const char      *Tid;       // $TID   or $RID  unless Rid is defined.
 XrdOucEnv       *Env;
 XrdOucName2Name *N2N;
 const char      *lfn;       // $LFN
 const char      *lfn2;      // $LFN2  or $NOTIFY
+const char      *pfn;       // $PFN
+const char      *pfn2;      // $PFN2
 const char      *misc;      // $OPTS
+const char      *Rid;       // $RID for real
 char            *pfnbuff;
 char            *rfnbuff;
 char            *pfn2buff;
@@ -51,10 +54,11 @@ char             obuff[4];
                              XrdOucName2Name *n2np,
                              const char *lfnP, const char *lfn2P,
                              mode_t mode=0,    int ofl=0,
-                             const char *Opts=0)
-                            : Tid(tid), Env(envP), N2N(n2np), 
-                              lfn(lfnP), lfn2(lfn2P), misc(Opts), Mode(mode), 
-                              Oflag(ofl)
+                             const char *Opts=0, const char *ridP=0,
+                             const char *pfnP=0, const char *pfn2P=0)
+                            : Tid(tid), Env(envP), N2N(n2np),
+                              lfn(lfnP), lfn2(lfn2P), pfn(pfnP), pfn2(pfn2P),
+                              misc(Opts), Rid(ridP), Mode(mode), Oflag(ofl)
                               {pfnbuff = rfnbuff = pfn2buff = rfn2buff = 0;}
             ~XrdOucMsubsInfo(){if (pfnbuff ) free(pfnbuff);
                                if (rfnbuff ) free(rfnbuff);

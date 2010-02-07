@@ -25,6 +25,7 @@ class XrdCmsDrop;
 class XrdCmsPrepArgs;
 class XrdCmsRRData;
 class XrdCmsSelected;
+class XrdOucProg;
 
 class XrdCmsNode
 {
@@ -44,8 +45,7 @@ public:
        char   isConn;       //2 Set when node is network connected
        char   isGone;       //3 Set when node must be deleted
        char   isPerm;       //4 Set when node is permanently bound
-       char   PingPong;     //5 Keep alive field
-       char   isReserved[2];
+       char   isReserved[3];
 
 static const char allowsRW = 0x01; // in isRW -> Server allows r/w access
 static const char allowsSS = 0x02; // in isRW -> Server can stage data
@@ -129,6 +129,11 @@ inline short getSlot() {return RSlot;}
             ~XrdCmsNode();
 
 private:
+static const int fsL2PFail1 = 999991;
+static const int fsL2PFail2 = 999992;
+
+       int   fsExec(XrdOucProg *Prog, char *Arg1, char *Arg2=0);
+const  char *fsFail(const char *Who, const char *What, const char *Path, int rc);
        int   getMode(const char *theMode, mode_t &Mode);
        int   getSize(const char *theSize, long long &Size);
 static int   isOnline(char *path, int upt=1);

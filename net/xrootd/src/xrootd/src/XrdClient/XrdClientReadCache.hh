@@ -61,6 +61,14 @@ public:
 		 (fBeginOffset <= begin_offs) && (fEndOffset >= end_offs) );
     }
 
+    // Are the two intervals intersecting in some way?
+    inline bool  IntersectInterval(long long begin_offs, long long end_offs) {
+      if ( ContainsOffset( begin_offs ) || ContainsOffset( end_offs ) ) return true;
+      if ( (fBeginOffset >= begin_offs) && (fBeginOffset <= end_offs) ) return true;
+      return false;
+    }
+
+
     inline bool ContainsOffset(long long offs) {
 	return (fBeginOffset <= offs) && (fEndOffset >= offs);
     }
@@ -214,11 +222,13 @@ public:
     inline void     PrintPerfCounters() {
 	XrdSysMutexHelper m(fMutex);
 
-	cout << "Caching info: MissRate=" << fMissRate << " MissCount=" << 
-	    fMissCount << " ReadsCounter=" << fReadsCounter << endl;
-	cout << "Caching info: BytesUsefulness=" << fBytesUsefulness <<
-	    " BytesSubmitted=" << fBytesSubmitted << " BytesHit=" << 
-	    fBytesHit << endl;
+	cout << "Low level caching info:" << endl;
+        cout << " StallsRate=" << fMissRate << endl;
+        cout << " StallsCount=" << fMissCount << endl;
+        cout << " ReadsCounter=" << fReadsCounter << endl;
+	cout << " BytesUsefulness=" << fBytesUsefulness << endl;
+        cout << " BytesSubmitted=" << fBytesSubmitted << " BytesHit=" << 
+           fBytesHit << endl << endl;
     }
 
 
@@ -231,7 +241,7 @@ public:
 				  long long end_offs, bool pinned=false);
 
     void            RemoveItems(bool leavepinned=true);
-    void            RemoveItems(long long begin_offs, long long end_offs);
+    void            RemoveItems(long long begin_offs, long long end_offs, bool remove_overlapped = false);
     void            RemovePlaceholders();
 
 

@@ -59,6 +59,7 @@ int        setParms(XrdOucName2Name *n2n) {N2N = n2n; return 0;}
 
 private:
 
+int        getID(const char *Tid, char *buff, int bsz);
 int        isOnline(char *path);
 void       Scrub();
 int        startIF();
@@ -76,6 +77,7 @@ int                   doEcho;
 int                   resetcnt;
 int                   scrub2rst;
 int                   scrubtime;
+int                   isFrm;
 char                 *prepif;
 };
 

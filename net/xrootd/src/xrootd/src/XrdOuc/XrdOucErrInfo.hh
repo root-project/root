@@ -120,14 +120,19 @@ public:
 
 // Done() is invoked when the requested operation completes. Arguments are:
 //        Result - the original function's result (may be changed).
-//        eInfo  - Associated error information. The callback function must
-//                 manually delete this object when it is through! While icky
-//                 this allows callback functions to be asynchronous.
+//        eInfo  - Associated error information. The eInfo object may not be
+//                 modified until it's own callback Done() method is called, if
+//                 supplied. If the callback function in eInfo is zero, then the
+//                 eInfo object is deleted by the invoked callback. Otherwise,
+//                 that method must be invoked by this callback function after
+//                 the actual callback message is sent. This allows the callback
+//                 requestor to do post-processing and be asynchronous.
+//
 //
 virtual void        Done(int           &Result,   //I/O: Function result
                          XrdOucErrInfo *eInfo)=0; // In: Error Info
 
-// Same() is invoked to determine if two argtuments refer to the same user.
+// Same() is invoked to determine if two arguments refer to the same user.
 //        True is returned if so, false, otherwise.
 //
 virtual int         Same(unsigned long long arg1, unsigned long long arg2)=0;

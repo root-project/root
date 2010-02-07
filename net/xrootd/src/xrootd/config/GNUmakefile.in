@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.30 2008/10/12 01:59:35 abh Exp $
+#              $Id: GNUmakefile.in,v 1.37 2010/01/13 11:41:22 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -11,16 +11,18 @@
 
 # Order in which components must be made
 #
-XRDSEC  = XrdSys XrdOuc XrdNet @xrdsec@
+XRDCOMMON  = XrdSys XrdOuc XrdNet XrdSec
+
+XRDSEC  = @xrdsec@
 
 SERVER  = XrdSfs XrdAcc XrdOdc Xrd \
-          XrdCms XrdOlb XrdOss XrdOfs XrdBwm XrdRootd XrdXrootd
+          XrdOlb XrdOss XrdBwm XrdCms XrdOfs XrdRootd XrdXrootd XrdFrm
 
 XRDCLIENT = XrdClient
 
 XRDMON    = XrdMon
 
-XRDPOSIX  = XrdPosix XrdPss XrdCns
+XRDPOSIX  = XrdPosix XrdPss XrdCns XrdApps
 
 TARGETS = @targets@
 
@@ -35,6 +37,15 @@ RM      = @rmpath@
 LN      = @lnpath@
 
 SUNCACHE= @suncache@
+
+#
+# Envvars influencing what 'make install' does
+export INSTPFX = @inst_prefix@
+export LIBPATH = @inst_libdir@
+export ETCPATH = @inst_etcdir@
+export BINPATH = @inst_bindir@
+export UTILSPATH = @inst_utilsdir@
+export INCPATH = @inst_incdir@
 
 #------------------------------------------------------------------------------#
 #                                  R u l e s                                   #
@@ -85,9 +96,18 @@ distclean: FORCE
 	$(ECHO)$(RM) -f config.log
 	$(ECHO)$(RM) -f test-comp.*
 
+install: FORCE
+	@echo Installing...
+	$(ECHO) ./makeinstall.sh ./ @inst_prefix@
+
 XrdAcc: FORCE
 	@echo $(XMSG) acc $(XDBG) component...
 	$(ECHO)cd src/XrdAcc;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
+XrdApps: FORCE
+	@echo $(XMSG) apps $(XDBG) component...
+	$(ECHO)cd src/XrdApps;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdBwm: FORCE
@@ -121,8 +141,13 @@ XrdCrypto: FORCE
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdNet: FORCE
-	@echo $(XMSG) ouc $(XDBG) component...
+	@echo $(XMSG) net $(XDBG) component...
 	@cd src/XrdNet;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
+XrdFrm: FORCE
+	@echo $(XMSG) frm $(XDBG) component...
+	@cd src/XrdFrm;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdOdc: FORCE
@@ -148,6 +173,11 @@ XrdOss: FORCE
 XrdOuc: FORCE
 	@echo $(XMSG) ouc $(XDBG) component...
 	$(ECHO)cd src/XrdOuc;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
+XrdMon:	FORCE
+	@echo $(XMSG) mon $(XDBG) component...
+	$(ECHO)cd src/XrdMon;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 XrdPosix: FORCE
@@ -200,6 +230,11 @@ XrdSecpwd: FORCE
 	$(ECHO)cd src/XrdSecpwd;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
+XrdSecssl: FORCE
+	@echo $(XMSG) secssl $(XDBG) component...
+	$(ECHO)cd src/XrdSecssl;\
+	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
+
 XrdSecsss: FORCE
 	@echo $(XMSG) secsss $(XDBG) component...
 	$(ECHO)cd src/XrdSecsss;\
@@ -223,11 +258,6 @@ Xrd: FORCE
 XrdXrootd: FORCE
 	@echo $(XMSG) xrootd $(XDBG) component...
 	$(ECHO)cd src/XrdXrootd;\
-	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
-
-XrdMon:	FORCE
-	@echo $(XMSG) mon $(XDBG) component...
-	$(ECHO)cd src/XrdMon;\
 	$(MAKE) $(MAKEXEQ) ARCH=$(ARCH) --no-print-directory
 
 FORCE: ;

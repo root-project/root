@@ -1,3 +1,6 @@
+//         $Id$
+
+//const char *XrdClientAdminJNICVSID = "$Id$";
 #include "XrdClientAdminJNI.h"
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientEnv.hh"

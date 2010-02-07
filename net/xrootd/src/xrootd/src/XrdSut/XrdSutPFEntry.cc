@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSutPFEntryCVSID = "$Id$";
 #include <stdio.h>
 #include <string.h>
 #include <time.h>

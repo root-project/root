@@ -21,7 +21,9 @@ const char *XrdOucEnvCVSID = "$Id$";
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
   
-XrdOucEnv::XrdOucEnv(const char *vardata, int varlen) : env_Hash(8,13)
+XrdOucEnv::XrdOucEnv(const char *vardata, int varlen, 
+                     const XrdSecEntity *secent)
+                    : env_Hash(8,13), secEntity(secent)
 {
    char *vdp, varsave, *varname, *varvalu;
 
@@ -68,6 +70,36 @@ char *XrdOucEnv::Delimit(char *value)
      while(*value) if (*value == ',') {*value = '\0'; return ++value;}
                       else value++;
      return (char *)0;
+}
+ 
+/******************************************************************************/
+/*                                E x p o r t                                 */
+/******************************************************************************/
+
+int XrdOucEnv::Export(const char *Var, const char *Val)
+{
+   int vLen = strlen(Var);
+   char *eBuff;
+
+// Allocate memory. Note that this memory will appear to be lost.
+//
+   eBuff = (char *)malloc(vLen+strlen(Val)+2); // +2 for '=' and '\0'
+
+// Set up envar
+//
+   strcpy(eBuff, Var);
+   *(eBuff+vLen) = '=';
+   strcpy(eBuff+vLen+1, Val);
+   return putenv(eBuff);
+}
+
+/******************************************************************************/
+
+int XrdOucEnv::Export(const char *Var, int Val)
+{
+   char buff[32];
+   sprintf(buff, "%d", Val);
+   return Export(Var, buff);
 }
 
 /******************************************************************************/

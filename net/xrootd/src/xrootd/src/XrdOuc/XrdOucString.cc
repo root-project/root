@@ -6,6 +6,8 @@
 /*     All Rights Reserved. See XrdInfo.cc for complete License Terms         */
 /******************************************************************************/
 
+//         $Id$
+
 const char *XrdOucStringCVSID = "$Id$";
 
 #include <stdio.h>
@@ -991,8 +993,9 @@ XrdOucString& XrdOucString::operator=(const char *s)
 XrdOucString& XrdOucString::operator=(const XrdOucString s)
 {
    // Assign string s to local string.
+   assign(s.c_str(), 0, -1);
 
-   return (*this = s.c_str());
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -1011,49 +1014,47 @@ char &XrdOucString::operator[](int i)
 }
 
 //______________________________________________________________________________
-XrdOucString& XrdOucString::operator+(const char *s)
+XrdOucString operator+(const XrdOucString &s1, const char *s)
 {
-   // Return string resulting from concatenation of local string
-   // and string at s
+   // Return string resulting from concatenation
 
-   XrdOucString *ns = new XrdOucString(*this);
+   XrdOucString ns(s1);
    if (s && strlen(s))
-      ns->append(s);
-   return *ns;
+      ns.append(s);
+   return ns;
 }
 
 //______________________________________________________________________________
-XrdOucString& XrdOucString::operator+(const XrdOucString s)
+XrdOucString operator+(const XrdOucString &s1, const XrdOucString &s)
 {
-   // Return string resulting from concatenation of local string
-   // and string s
+   // Return string resulting from concatenation
 
-   XrdOucString *ns = new XrdOucString(*this);
+   XrdOucString ns(s1);
    if (s.length())
-      ns->append(s);
-   return *ns;
+      ns.append(s);
+   return ns;
 }
 
 //______________________________________________________________________________
-XrdOucString& XrdOucString::operator+(const char c)
+XrdOucString operator+(const XrdOucString &s1, const char c)
 {
    // Return string resulting from concatenation of local string
    // and char c
 
-   XrdOucString *ns = new XrdOucString(*this);
-   ns->append(c);
-   return *ns;
+   XrdOucString ns(s1);
+   ns.append(c);
+   return ns;
 }
 
 //______________________________________________________________________________
-XrdOucString& XrdOucString::operator+(const int i)
+XrdOucString operator+(const XrdOucString &s1, const int i)
 {
    // Return string resulting from concatenation of local string
    // and string representing integer i.
 
-   XrdOucString *ns = new XrdOucString(*this);
-   ns->append(i);
-   return *ns;
+   XrdOucString ns(s1);
+   ns.append(i);
+   return ns;
 }
 
 //______________________________________________________________________________
@@ -1171,7 +1172,7 @@ XrdOucString const operator+(const char c, const XrdOucString s)
 }
 
 //______________________________________________________________________________
-XrdOucString const operator+(int i, const XrdOucString s)
+XrdOucString const operator+(const int i, const XrdOucString s)
 {
    // Binary operator+
    XrdOucString res(s.length()+kMAXINT64LEN);

@@ -47,7 +47,9 @@ int           Send(const struct  iovec iov[], // Remaining parms as above
                          int     tmo=-1);     // Timeout in ms (-1 = none)
 
                 XrdNetMsg(XrdSysError *erp, const char *dest=0);
-               ~XrdNetMsg() {if (DestHN) free(DestHN);}
+               ~XrdNetMsg() {if (DestHN) free(DestHN);
+                             if (DestIP) free(DestIP);
+                            }
 
 protected:
 int OK2Send(int timeout, const char *dest);
@@ -55,8 +57,8 @@ int retErr(int ecode, const char *dest);
 
 XrdSysError       *eDest;
 char              *DestHN;
-struct sockaddr    DestIP;
-static const int   destSZ = sizeof(struct sockaddr);
+struct sockaddr   *DestIP;
+int                DestSZ;
 int                FD;
 };
 #endif

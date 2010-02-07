@@ -18,6 +18,8 @@
 #endif
 #include "XrdOuc/XrdOucHash.hh"
 
+class XrdSecEntity;
+
 class XrdOucEnv
 {
 public:
@@ -26,6 +28,12 @@ public:
 //       constructor.
 //
 inline char *Env(int &envlen) {envlen = global_len; return global_env;}
+
+// Export() sets an external environmental variable to the desired value
+//          using dynamically allocated fixed storage.
+//
+static int   Export(const char *Var, const char *Val);
+static int   Export(const char *Var, int         Val);
 
 // Get() returns the address of the string associated with the variable
 //       name. If no association exists, zero is returned.
@@ -55,16 +63,22 @@ inline char *Env(int &envlen) {envlen = global_len; return global_env;}
 //
        char *Delimit(char *value);
 
+// secEnv() returns the security environment; which may be a null pointer.
+//
+inline const XrdSecEntity *secEnv() {return secEntity;}
+
 // Use the constructor to define the initial variable settings. The passed
 // string is duplicated and the copy can be retrieved using Env().
 //
-       XrdOucEnv(const char *vardata=0, int vardlen=0);
+       XrdOucEnv(const char *vardata=0, int vardlen=0, 
+                 const XrdSecEntity *secent=0);
 
       ~XrdOucEnv() {if (global_env) free((void *)global_env);}
 
 private:
 
 XrdOucHash<char> env_Hash;
+const XrdSecEntity *secEntity;
 char *global_env;
 int   global_len;
 };

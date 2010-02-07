@@ -34,6 +34,11 @@
    be sent if the function returns FALSE; as a reply will be sent by the driver.
    Refer to XrdCmsReq.hh on the description of how replies are effected.
 
+   The mv, rm, and rmdir methods may be called in an advisory way. This occurs
+   during cross-cache synchronization when more than one redirector is deployed.
+   Use the XrdCmsReq::Advisory() method in determine if this is an action call
+   or an advisory call.
+
    The Prep() method is a background function and the client never expects a
    reply. Therefore, no request object is passed since no reply is possible.
    Instead, the first parameter is a request ID that is used to tag the
@@ -211,7 +216,7 @@ virtual    ~XrdCmsXmi() {}
    library. This library is identified by the "cms.xmilib" directive. When
    the library is loaded the following extern "C" function is called to obtain
    an instance of the XrdCmsXmi object that will be used for request processing.
-   The fucntion is passed the command line arguments (xrd options stripped) and
+   The function is passed the command line arguments (xrd options stripped) and
    a pointer to the XrdCmsXmiEnv structure. If the function returns a null
    pointer, the cmsd exits with an error.
 

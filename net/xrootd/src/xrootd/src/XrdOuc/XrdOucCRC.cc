@@ -6,6 +6,10 @@
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
 /******************************************************************************/
   
+//         $Id$
+
+const char *XrdOucCRC32CVSID = "$Id$";
+
 /*
    C++ implementation of CRC-32 checksums.  Code is based
    upon and utilizes algorithm published by Ross Williams

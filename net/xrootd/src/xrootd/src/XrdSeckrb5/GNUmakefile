@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.14 2008/09/24 17:01:15 ganis Exp $
+#              $Id: GNUmakefile,v 1.15 2009/12/02 13:04:28 ganis Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,9 +6,10 @@
   
 include ../GNUmake.env
 
-MORELIBS = -L$(LIBDIR) -lXrdOuc  -lXrdSys -lXrdNet $(LIBKRB5)
+MORELIBS = -L$(LIBDIR) -lXrdSut -lXrdOuc  -lXrdSys -lXrdNet $(LIBKRB5)
 
-LIBDEPS = $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a
+LIBDEPS = $(LIBDIR)/libXrdSut.a $(LIBDIR)/libXrdOuc.a \
+          $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -29,6 +30,7 @@ TARGETS = $(LIBDIR)/libXrdSeckrb5.$(TYPESHLIB)
 vpath XrdOuc% ../XrdOuc
 vpath XrdSec% ../XrdSec
 vpath XrdSys% ../XrdSys
+vpath XrdSut% ../XrdSut
 
 #------------------------------------------------------------------------------#
 #                          I n i t i a l   R u l e s                           #

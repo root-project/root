@@ -394,7 +394,7 @@ int XrdXrootdAdmin::do_Lsd()
                  if (pp->Client->host && (mlen[i] = strlen(pp->Client->host)))
                     mdat[i++] = pp->Client->host;
                  mdat[i] = "</h><o>"; mlen[i++] = 7;
-                 if (pp->Client->host && (mlen[i] = strlen(pp->Client->vorg)))
+                 if (pp->Client->vorg && (mlen[i] = strlen(pp->Client->vorg)))
                     mdat[i++] = pp->Client->vorg;
                  mdat[i] = "</o><r>"; mlen[i++] = 7;
                  if (pp->Client->role && (mlen[i] = strlen(pp->Client->role)))

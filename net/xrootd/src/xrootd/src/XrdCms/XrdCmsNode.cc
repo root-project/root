@@ -17,7 +17,6 @@ const char *XrdCmsNodeCVSID = "$Id$";
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
-#include <utime.h>
 #include <time.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -28,7 +27,6 @@ const char *XrdCmsNodeCVSID = "$Id$";
 
 #include "XProtocol/YProtocol.hh"
 
-#include "XrdCms/XrdCmsAdmin.hh"
 #include "XrdCms/XrdCmsCache.hh"
 #include "XrdCms/XrdCmsCluster.hh"
 #include "XrdCms/XrdCmsConfig.hh"
@@ -46,6 +44,8 @@ const char *XrdCmsNodeCVSID = "$Id$";
 #include "XrdCms/XrdCmsXmi.hh"
 
 #include "XrdNet/XrdNetDNS.hh"
+
+#include "XrdOss/XrdOss.hh"
 
 #include "XrdOuc/XrdOucName2Name.hh"
 #include "XrdOuc/XrdOucProg.hh"
@@ -73,7 +73,7 @@ XrdCmsNode::XrdCmsNode(XrdLink *lnkp, int port,
                        const char *nid,  int lvl, int id)
 {
     static XrdSysMutex   iMutex;
-    static const SMask_t smask_1 = 1;
+    static const SMask_t smask_1(1);
     static int           iNum = 1;
 
     Link     =  lnkp;
@@ -92,7 +92,6 @@ XrdCmsNode::XrdCmsNode(XrdLink *lnkp, int port,
     isKnown  =  0;
     isPeer   =  0;
     isProxy  =  0;
-    PingPong =  2;
     myCost   =  0;
     myLoad   =  0;
     myMass   =  0;
@@ -114,9 +113,9 @@ XrdCmsNode::XrdCmsNode(XrdLink *lnkp, int port,
     myNlen   =  0;
     Ident    =  0;
     Port     =  0;
-    myCID    = strdup(nid ? nid : "?");
-    if (!(myNID = index(myCID, ' '))) myNID = myCID;
-       else {*myNID = '\0'; myNID++;}
+    myNID    = strdup(nid ? nid : "?");
+    if ((myCID = index(myNID, ' '))) myCID++;
+       else myCID = myNID;
     myLevel  = lvl;
     ConfigID =  0;
 
@@ -141,7 +140,7 @@ XrdCmsNode::~XrdCmsNode()
 // Delete other appendages
 //
    if (Ident) free(Ident);
-   if (myCID) free(myCID);
+   if (myNID) free(myNID);
 }
 
 /******************************************************************************/
@@ -243,7 +242,6 @@ const char *XrdCmsNode::do_Avail(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Chmod(XrdCmsRRData &Arg)
 {
    EPNAME("do_Chmod")
-   char *myPath, lclpath[XrdCmsMAX_PATH_LEN+1];
    mode_t mode = 0;
    int rc;
 
@@ -265,24 +263,14 @@ const char *XrdCmsNode::do_Chmod(XrdCmsRRData &Arg)
    if (!Config.DiskOK) return 0;
    if (!mode && !getMode(Arg.Mode, mode)) return "invalid mode";
 
-// Generate the true local path
+// Attempt to change the mode either via call-out or the oss plug-in
 //
-   if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(Arg.Path,lclpath,sizeof(lclpath))) 
-         return "lfn2pfn failed";
-         else myPath = lclpath;
-      else myPath = Arg.Path;
+   if (Config.ProgCH) rc = fsExec(Config.ProgCH, Arg.Mode, Arg.Path);
+      else rc = Config.ossFS->Chmod(Arg.Path, mode);
 
-// Attempt to change the mode
+// Return appropriate result
 //
-   if (Config.ProgCH) rc = Config.ProgCH->Run(Arg.Mode, myPath);
-      else if (chmod(myPath, mode)) rc = errno;
-              else rc = 0;
-   if (rc && rc != ENOENT)
-      Say.Emsg("Job", rc, "change mode for", myPath);
-      else DEBUGR("rc=" <<rc <<" chmod " <<Arg.Mode <<' ' <<myPath);
-
-   return rc ? strerror(rc) : 0;
+   return (rc ? fsFail(Arg.Ident, "chmod", Arg.Path, rc) : 0);
 }
 
 /******************************************************************************/
@@ -489,8 +477,8 @@ const char *XrdCmsNode::do_Locate(XrdCmsRRData &Arg)
 
 // Grab the refresh option (the only one we support)
 //
-   if (Arg.Opts & CmsLocateRequest::kYR_refresh)
-       Sel.Opts  = XrdCmsSelect::Refresh; *toP++='s';
+   if (Arg.Opts & CmsLocateRequest::kYR_refresh) 
+      {Sel.Opts  = XrdCmsSelect::Refresh; *toP++='s';}
    if (Arg.Opts & CmsLocateRequest::kYR_asap)
       {Sel.Opts |= XrdCmsSelect::Asap;    *toP++='i'; Sel.InfoP = &reqInfo;}
       else                                            Sel.InfoP = 0;
@@ -561,14 +549,14 @@ int XrdCmsNode::do_LocFmt(char *buff, XrdCmsSelected *sP,
 // xy[::123.123.123.123]:123456
 //
    while(sP)
-        {if (sP->Status & Skip) continue;
-         *oP     = (sP->Status & XrdCmsSelected::isMangr ? 'M' : 'S');
-         if (sP->Mask & pfVec) *oP = tolower(*oP);
-         *(oP+1) = (sP->Mask   & wfVec                   ? 'w' : 'r');
-         strcpy(oP+2, sP->IPV6); oP += sP->IPV6Len + 2;
-         pP = sP; 
-         if ((sP = sP->next)) *oP++ = ' ';
-         delete pP;
+        {if (!(sP->Status & Skip))
+            {*oP     = (sP->Status & XrdCmsSelected::isMangr ? 'M' : 'S');
+             if (sP->Mask & pfVec) *oP = tolower(*oP);
+             *(oP+1) = (sP->Mask   & wfVec                   ? 'w' : 'r');
+             strcpy(oP+2, sP->IPV6); oP += sP->IPV6Len + 2;
+             if (sP->next) *oP++ = ' ';
+            }
+         pP = sP; sP = sP->next; delete pP;
         }
 
 // Send of the result
@@ -586,7 +574,6 @@ int XrdCmsNode::do_LocFmt(char *buff, XrdCmsSelected *sP,
 const char *XrdCmsNode::do_Mkdir(XrdCmsRRData &Arg)
 {
    EPNAME("do_Mkdir")
-   char *myPath, lclpath[XrdCmsMAX_PATH_LEN+1];
    mode_t mode = 0;
    int rc;
 
@@ -607,24 +594,15 @@ const char *XrdCmsNode::do_Mkdir(XrdCmsRRData &Arg)
 //
    if (!Config.DiskOK) return 0;
    if (!mode && !getMode(Arg.Mode, mode)) return "invalid mode";
-  
-// Generate the true local path
-//
-   if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(Arg.Path,lclpath,sizeof(lclpath))) 
-         return "lfn2pfn failed";
-         else myPath = lclpath;
-      else myPath = Arg.Path;
 
-// Attempt to create the directory
+// Attempt to create the directory either via call-out of oss plug-in
 //
-   if (Config.ProgMD) rc = Config.ProgMD->Run(Arg.Mode, myPath);
-      else if (mkdir(myPath, mode)) rc = errno;
-              else rc = 0;
-   if (rc) Say.Emsg("Node", rc, "create directory", myPath);
-      else DEBUGR("rc=" <<rc <<" mkdir " <<Arg.Mode <<' ' <<myPath);
+   if (Config.ProgMD) rc = fsExec(Config.ProgMD, Arg.Mode, Arg.Path);
+      else rc = Config.ossFS->Mkdir(Arg.Path, mode);
 
-   return rc ? strerror(rc) : 0;
+// Return appropriate result
+//
+   return (rc ? fsFail(Arg.Ident, "mkdir", Arg.Path, rc) : 0);
 }
 
 /******************************************************************************/
@@ -636,7 +614,6 @@ const char *XrdCmsNode::do_Mkdir(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Mkpath(XrdCmsRRData &Arg)
 {
    EPNAME("do_Mkpath")
-   char *myPath, lclpath[XrdCmsMAX_PATH_LEN+1];
    mode_t mode = 0;
    int rc;
 
@@ -657,24 +634,15 @@ const char *XrdCmsNode::do_Mkpath(XrdCmsRRData &Arg)
 //
    if (!Config.DiskOK) return 0;
    if (!mode && !getMode(Arg.Mode, mode)) return "invalid mode";
-  
-// Generate the true local path
+
+// Attempt to create the directory path via call-out or oss plugin
 //
-   if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(Arg.Path,lclpath,sizeof(lclpath))) 
-         return "lfn2pfn failed";
-         else myPath = lclpath;
-      else myPath = Arg.Path;
+   if (Config.ProgMP) rc = fsExec(Config.ProgMP, Arg.Mode, Arg.Path);
+      else rc = Config.ossFS->Mkdir(Arg.Path, mode, 1);
 
-
-// Attempt to create the directory path
+// Return appropriate result
 //
-   if (Config.ProgMP) rc = Config.ProgMP->Run(Arg.Mode, myPath);
-      else            rc = XrdOucUtils::makePath(myPath, mode);
-   if (rc) Say.Emsg("Node", rc, "create path", myPath);
-      else DEBUGR("rc=" <<rc <<" mkpath " <<Arg.Mode <<' ' <<myPath);
-
-   return rc ? strerror(rc) : 0;
+   return (rc ? fsFail(Arg.Ident, "mkpath", Arg.Path, rc) : 0);
 }
 
 /******************************************************************************/
@@ -686,7 +654,7 @@ const char *XrdCmsNode::do_Mkpath(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Mv(XrdCmsRRData &Arg)
 {
    EPNAME("do_Mv")
-   static const SMask_t allNodes = ~static_cast<SMask_t>(0);
+   static const SMask_t allNodes(~0);
    int rc;
 
 // Do some debugging
@@ -696,7 +664,7 @@ const char *XrdCmsNode::do_Mv(XrdCmsRRData &Arg)
 // If we have an Xmi then call it
 //
    if (Xmi_Rename)
-      {XrdCmsReq Req(this, Arg.Request.streamid);
+      {XrdCmsReq Req(this, Arg.Request.streamid, Arg.Request.modifier & kYR_dnf);
        if (Xmi_Rename->Rename(&Req,Arg.Path,Arg.Opaque,Arg.Path2,Arg.Opaque2))
           return 0;
       }
@@ -730,34 +698,15 @@ const char *XrdCmsNode::do_Mv(XrdCmsRRData &Arg)
        return 0;
       }
   
-// If we need to call an external program then we need to pass it pfn's.
-// So, generate the true local path for old name and new name. Otherwise,
-// simply send the request to the local xrootd and let it handle it.
+// Rename the file via call-out or oss plug-in (we used to do this via a requeue
+// to the local xrootd but it's no longer necessary).
 //
-   if (Config.ProgMV)
-      {char *oldPath, *newPath;
-       char old_lclpath[XrdCmsMAX_PATH_LEN+1];
-       char new_lclpath[XrdCmsMAX_PATH_LEN+1];
+   if (Config.ProgMV) rc = fsExec(Config.ProgMV, Arg.Path, Arg.Path2);
+      else rc = Config.ossFS->Rename(Arg.Path, Arg.Path2);
 
-       if (Config.lcl_N2N)
-          {if (Config.lcl_N2N->lfn2pfn(Arg.Path,old_lclpath,sizeof(old_lclpath)))
-              return "lfn2pfn failed on old path";
-           if (Config.lcl_N2N->lfn2pfn(Arg.Path,new_lclpath,sizeof(new_lclpath)))
-              return "lfn2pfn failed on new path";
-                  oldPath = old_lclpath; newPath = new_lclpath;
-          } else {oldPath = Arg.Path;    newPath = Arg.Path2;}
-       rc = Config.ProgMV->Run(oldPath, newPath);
-      } else {
-       Admin.Send("mv", Arg);
-       rc = 0;
-      }
-
-// Diagnore any errors
+// Return appropriate result
 //
-   if (rc) Say.Emsg("Node", rc, "rename", Arg.Path);
-      else DEBUGR("rc=" <<rc <<" mv " <<Arg.Path <<' ' <<Arg.Path2);
-
-   return rc ? strerror(rc) : 0;
+   return (rc ? fsFail(Arg.Ident, "mv", Arg.Path, rc) : 0);
 }
 
 /******************************************************************************/
@@ -774,12 +723,6 @@ const char *XrdCmsNode::do_Ping(XrdCmsRRData &Arg)
 // Respond: pong
 //
    Link->Send((char *)&pongIt, sizeof(pongIt));
-
-// Record the fact that we got a ping
-//
-   Lock();
-   PingPong = 2;
-   UnLock();
    return 0;
 }
   
@@ -794,11 +737,6 @@ const char *XrdCmsNode::do_Pong(XrdCmsRRData &Arg)
 // Process: pong
 // Reponds: n/a
 
-// Simply indicate a pong has arrived.
-//
-   Lock();
-   PingPong = 2;
-   UnLock();
    return 0;
 }
   
@@ -865,7 +803,7 @@ const char *XrdCmsNode::do_PrepDel(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Rm(XrdCmsRRData &Arg)
 {
    EPNAME("do_Rm")
-   static const SMask_t allNodes = ~static_cast<SMask_t>(0);
+   static const SMask_t allNodes(~0);
    int rc;
 
 // Do some debugging
@@ -875,7 +813,7 @@ const char *XrdCmsNode::do_Rm(XrdCmsRRData &Arg)
 // If we have an Xmi then call it
 //
    if (Xmi_Remove)
-      {XrdCmsReq Req(this, Arg.Request.streamid);
+      {XrdCmsReq Req(this, Arg.Request.streamid, Arg.Request.modifier & kYR_dnf);
        if (Xmi_Remove->Remove(&Req, Arg.Path, Arg.Opaque)) return 0;
       }
 
@@ -887,29 +825,15 @@ const char *XrdCmsNode::do_Rm(XrdCmsRRData &Arg)
        return 0;
       }
   
-// If we need to call an external program we need to pass it the pfn.
-// So, generate the true local path. Otherwise, send the request to the
-// local xrootd and let it figure it out.
+// Remove the file either via call-out or the oss plugin. We used to requeue
+// the request to the local xrootd but this is no longer needed.
 //
-   if (Config.ProgRM) 
-      {char *myPath, lclpath[XrdCmsMAX_PATH_LEN+1];
-       if (Config.lcl_N2N)
-          if (Config.lcl_N2N->lfn2pfn(Arg.Path,lclpath,sizeof(lclpath)))
-             return "lfn2pfn failed";
-             else myPath = lclpath;
-          else myPath = Arg.Path;
-       rc = Config.ProgRM->Run(myPath);
-      } else {
-       Admin.Send("rm", Arg);
-       rc = 0;
-      }
+   if (Config.ProgRM) rc = fsExec(Config.ProgRM, Arg.Path);
+      else rc = Config.ossFS->Unlink(Arg.Path);
 
-// Diagnose any errors
+// Return appropriate result
 //
-   if (rc && rc != ENOENT) Say.Emsg("Node", rc, "remove", Arg.Path);
-      else {DEBUGR("rc=" <<rc <<" rm " <<Arg.Path);}
-
-   return rc ? strerror(rc) : 0;
+   return (rc ? fsFail(Arg.Ident, "rm", Arg.Path, rc) : 0);
 }
   
 /******************************************************************************/
@@ -921,7 +845,7 @@ const char *XrdCmsNode::do_Rm(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Rmdir(XrdCmsRRData &Arg)
 {
    EPNAME("do_Rmdir")
-   static const SMask_t allNodes = ~static_cast<SMask_t>(0);
+   static const SMask_t allNodes(~0);
    int rc;
 
 // Do some debugging
@@ -931,7 +855,7 @@ const char *XrdCmsNode::do_Rmdir(XrdCmsRRData &Arg)
 // If we have an Xmi then call it
 //
    if (Xmi_Remdir)
-      {XrdCmsReq Req(this, Arg.Request.streamid);
+      {XrdCmsReq Req(this, Arg.Request.streamid, Arg.Request.modifier & kYR_dnf);
        if (Xmi_Remdir->Remdir(&Req, Arg.Path, Arg.Opaque)) return 0;
       }
 
@@ -943,29 +867,15 @@ const char *XrdCmsNode::do_Rmdir(XrdCmsRRData &Arg)
        return 0;
       }
   
-// If we need to call an external program we need to pass it the pfn.
-// So, generate the true local path. Otherwise, send the request to the
-// local xrootd and let it figure it out.
+// Remove the directory either via call-out or the oss plug-in (we used to
+// do this by requeing the request to the local xrootd; no longer needed).
 //
-   if (Config.ProgRD)
-      {char *myPath, lclpath[XrdCmsMAX_PATH_LEN+1];
-       if (Config.lcl_N2N)
-          if (Config.lcl_N2N->lfn2pfn(Arg.Path,lclpath,sizeof(lclpath)))
-             return "lfn2pfn failed";
-             else myPath = lclpath;
-          else myPath = Arg.Path;
-       rc = Config.ProgRD->Run(myPath);
-      } else {
-       Admin.Send("rmdir", Arg);
-       rc = 0;
-      }
+   if (Config.ProgRD) rc = fsExec(Config.ProgRD, Arg.Path);
+      else rc = Config.ossFS->Remdir(Arg.Path);
 
-// Diagnose any errors
+// Return appropriate result
 //
-   if (rc && rc != ENOENT) Say.Emsg("Node", rc, "rmdir", Arg.Path);
-      else {DEBUGR("rc=" <<rc <<" rm " <<Arg.Path);}
-
-   return rc ? strerror(rc) : 0;
+   return (rc ? fsFail(Arg.Ident, "rmdir", Arg.Path, rc) : 0);
 }
   
 /******************************************************************************/
@@ -1019,11 +929,7 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
          if (Arg.Opts & CmsSelectRequest::kYR_create)  
            {Sel.Opts |= XrdCmsSelect::Write|XrdCmsSelect::NewFile; *toP++='c';}
         }
-
-// Do some debugging
-//
    *toP = '\0';
-   DEBUGR(theopts <<' ' <<Arg.Path);
 
 // Check if an avoid node present. If so, this is ineligible for fast redirect.
 //
@@ -1031,6 +937,7 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
    if ((Avoid = Arg.Avoid))
       {unsigned int IPaddr;
        char *Comma;
+       DEBUGR(theopts <<' ' <<Arg.Path <<" avoiding " <<Avoid);
        Sel.InfoP = 0;
        do {if ((Comma = index(Avoid,','))) *Comma = '\0';
            if (*Avoid == '+') Sel.nmask |= Cluster.getMask(Avoid+1);
@@ -1038,7 +945,7 @@ const char *XrdCmsNode::do_Select(XrdCmsRRData &Arg)
                               Sel.nmask |= Cluster.getMask(IPaddr);
            Avoid = Comma+1;
           } while(Comma && *Avoid);
-      }
+      } else DEBUGR(theopts <<' ' <<Arg.Path);
 
 // Perform selection
 //
@@ -1444,7 +1351,6 @@ const char *XrdCmsNode::do_Status(XrdCmsRRData &Arg)
 const char *XrdCmsNode::do_Trunc(XrdCmsRRData &Arg)
 {
    EPNAME("do_Trunc")
-   char *myPath, lclpath[XrdCmsMAX_PATH_LEN+1];
    long long Size = -1;
    int rc;
 
@@ -1466,24 +1372,14 @@ const char *XrdCmsNode::do_Trunc(XrdCmsRRData &Arg)
    if (!Config.DiskOK) return 0;
    if (Size < 0 && !getSize(Arg.Mode, Size)) return "invalid size";
 
-// Generate the true local path
+// Attempt to change the size either via call-out or the oss plug-in
 //
-   if (Config.lcl_N2N)
-      if (Config.lcl_N2N->lfn2pfn(Arg.Path,lclpath,sizeof(lclpath))) 
-         return "lfn2pfn failed";
-         else myPath = lclpath;
-      else myPath = Arg.Path;
+   if (Config.ProgTR) rc = fsExec(Config.ProgTR, Arg.Mode, Arg.Path);
+      else rc = Config.ossFS->Truncate(Arg.Path, Size);
 
-// Attempt to change the size
+// Return appropriate result
 //
-   if (Config.ProgTR) rc = Config.ProgTR->Run(Arg.Mode, myPath);
-      else if (truncate(myPath, Size)) rc = errno;
-              else rc = 0;
-   if (rc && rc != ENOENT)
-      Say.Emsg("Job", rc, "change size for", myPath);
-      else DEBUGR("rc=" <<rc <<" trunc " <<Arg.Mode <<' ' <<myPath);
-
-   return rc ? strerror(rc) : 0;
+   return (rc ? fsFail(Arg.Ident, "trunc", Arg.Path, rc) : 0);
 }
 
 /******************************************************************************/
@@ -1509,13 +1405,14 @@ const char *XrdCmsNode::do_Try(XrdCmsRRData &Arg)
 
 // Add all the alternates to our alternate list
 //
+   tp = theList.GetLine();
    while((tp = theList.GetToken()))
          myMans.Add(IPAddr, tp, Config.PortTCP, myLevel);
 
 // Close the link and return an error
 //
-   Disc("redirected.");
-   return 0;
+// Disc("redirected.");
+   return ".redirected";
 }
   
 /******************************************************************************/
@@ -1620,6 +1517,55 @@ void XrdCmsNode::SyncSpace()
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
 /******************************************************************************/
+/*                                f s E x e c                                 */
+/******************************************************************************/
+
+int XrdCmsNode::fsExec(XrdOucProg *Prog, char *Arg1, char *Arg2)
+{
+   static const int PfnSZ = XrdCmsMAX_PATH_LEN+1;
+   char Pfn1[PfnSZ], Pfn2[PfnSZ];
+
+// The first argument may or may not be a path. The second, if present is always
+// a path. If we have a name mapper then we need to substitute remapped paths.
+//
+   if (Config.lcl_N2N)
+      {if (*Arg1 == '/')
+          {if (Config.lcl_N2N->lfn2pfn(Arg1,Pfn1,PfnSZ-1)) return fsL2PFail1;
+           Arg1 = Pfn1;
+          }
+       if ( Arg2)
+          {if (Config.lcl_N2N->lfn2pfn(Arg2,Pfn2,PfnSZ-1)) return fsL2PFail2;
+           Arg2 = Pfn2;
+          }
+      }
+
+// Return results of the call-out
+//
+   return Prog->Run(Arg1, Arg2);
+}
+  
+/******************************************************************************/
+/*                                f s F a i l                                 */
+/******************************************************************************/
+  
+const char *XrdCmsNode::fsFail(const char *Who,  const char *What,
+                               const char *Path, int rc)
+{
+   EPNAME("fsFail")
+
+// Immediately return on the two most unlikely failures; o/w issue message
+//
+   rc = abs(rc);
+   if (rc == fsL2PFail1) return "lfn2pfn path1 failed";
+   if (rc == fsL2PFail2) return "lfn2pfn path2 failed";
+   if (rc != ENOENT) Say.Emsg("Node", rc, What, Path);
+      else {struct {const char *Ident;} Arg = {Who};
+            DEBUGR("rc=" <<rc <<' ' <<What <<' ' <<Path);
+           }
+   return rc ? strerror(rc) : 0;
+}
+
+/******************************************************************************/
 /*                               g e t M o d e                                */
 /******************************************************************************/
 
@@ -1653,37 +1599,23 @@ int XrdCmsNode::getSize(const char *theSize, long long &Size)
   
 int XrdCmsNode::isOnline(char *path, int upt) // Static!!!
 {
+   static const int Sopts = XRDOSS_resonly | XRDOSS_updtatm;
    struct stat buf;
-   struct utimbuf times;
-   char *lclpath, lclbuff[XrdCmsMAX_PATH_LEN+1];
 
-// Generate the true local path
+// Issue stat() via oss plugin. If it fails. the file may still exist in the
+// prepare queue (i.e., logically present).
 //
-   lclpath = path;
-   if (Config.lcl_N2N)
-      {if (Config.lcl_N2N->lfn2pfn(lclpath,lclbuff,sizeof(lclbuff))) return 0;
-          else lclpath = lclbuff;
-      }
-
-// Do a stat
-//
-   if (stat(lclpath, &buf))
+   if (Config.ossFS->Stat(path, &buf, Sopts))
       {if (Config.DiskSS && PrepQ.Exists(path)) return CmsHaveRequest::Pending;
           else return 0;
       }
 
-// Update access time, if need be, if we are doing a state on a file
+// Determine what to return
+// the update if an oss plugin exists as we don't have a way of doing this then.
 //
    if ((buf.st_mode & S_IFMT) == S_IFREG)
-      {if (upt)
-          {times.actime = time(0);
-           times.modtime = buf.st_mtime;
-           utime(lclpath, &times);
-          }
-       return CmsHaveRequest::Online;
-      }
+       return (buf.st_mode & S_ISUID ? CmsHaveRequest::Pending
+                                     : CmsHaveRequest::Online);
 
-// Determine what to return
-//
    return (buf.st_mode & S_IFMT) == S_IFDIR ? CmsHaveRequest::Online : 0;
 }

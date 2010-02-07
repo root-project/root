@@ -11,6 +11,8 @@
 
 //       $Id$
 
+const char *XrdCmsSupervisorCVSID = "$Id$";
+
 #include "Xrd/XrdInet.hh"
 #include "Xrd/XrdLink.hh"
 
@@ -64,6 +66,7 @@ int XrdCmsSupervisor::Init(const char *AdminPath, int AdminMode)
 
 // All done
 //
+   superOK = 1;
    return 1;
 }
   

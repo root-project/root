@@ -72,9 +72,10 @@ int XrdCmsClientConfig::Configure(char *cfn, configWhat What, configHow How)
 
   Output:   0 upon success or !0 otherwise.
 */
+   XrdOucTList *tpe, *tpl;
    int i, NoGo = 0;
    const char *eText = 0;
-   char buff[256], *slash, *temp;
+   char buff[256], *slash, *temp, *bP;
 
 // Preset tracing options
 //
@@ -99,15 +100,29 @@ int XrdCmsClientConfig::Configure(char *cfn, configWhat What, configHow How)
 //
    temp=XrdOucUtils::genPath(CMSPath,(strcmp("anon",myName)?myName:0), ".olb");
    free(CMSPath); CMSPath = temp;
-   sprintf(buff, "XRDOLBPATH=%s", temp); putenv(strdup(buff)); // Compatability
-   sprintf(buff, "XRDCMSPATH=%s", temp); putenv(strdup(buff));
-   i = strlen(CMSPath);
+   XrdOucEnv::Export("XRDCMSPATH", temp);
+   XrdOucEnv::Export("XRDOLBPATH", temp); //Compatability
+
+// Export the manager list
+//
+   tpl = (How & configProxy ? PanList : ManList);
+   if (tpl)
+      {i = 0; tpe = tpl;
+       while(tpe) {i += strlen(tpe->text) + 9; tpe = tpe->next;}
+       bP = temp = (char *)malloc(i);
+       while(tpl)
+            {bP += sprintf(bP, "%s:%d ", tpl->text, tpl->val);
+             tpl = tpl->next;
+            }
+       *(bP-1) = '\0';
+       XrdOucEnv::Export("XRDCMSMAN", temp); free(temp);
+      }
 
 // Construct proper communications path for a supervisor node
 //
+   i = strlen(CMSPath);
    if (What & configSuper)
-      {XrdOucTList *tpl;
-       while((tpl = ManList)) {ManList = tpl->next; delete tpl;}
+      {while((tpl = ManList)) {ManList = tpl->next; delete tpl;}
        slash = (CMSPath[i-1] == '/' ? (char *)"" : (char *)"/");
        sprintf(buff, "%s%solbd.super", CMSPath, slash);
        ManList = new XrdOucTList(buff, -1, 0);
@@ -318,9 +333,9 @@ int XrdCmsClientConfig::xconw(XrdOucStream &Config)
 int XrdCmsClientConfig::xmang(XrdOucStream &Config)
 {
     struct sockaddr InetAddr[8];
-    XrdOucTList *tp = 0;
+    XrdOucTList *tp = 0, *tpp = 0, *tpnew;
     char *val, *bval = 0, *mval = 0;
-    int rc, i, port, xMeta = 0, isProxy = 0, smode = FailOver;
+    int rc, i, j, port, xMeta = 0, isProxy = 0, smode = FailOver;
 
 //  Process the optional "peer" or "proxy"
 //
@@ -392,20 +407,23 @@ int XrdCmsClientConfig::xmang(XrdOucStream &Config)
             mval = XrdNetDNS::getHostName(InetAddr[i]);
             Say.Emsg("Config", bval, "-> all.manager", mval);
            }
-        tp = (isProxy ? PanList : ManList);
+        tp = (isProxy ? PanList : ManList); tpp = 0; j = 1;
         while(tp) 
-             if (strcmp(tp->text, mval) || tp->val != port) tp = tp->next;
-                else {Say.Emsg("Config","Duplicate manager",mval);
+             if ((j = strcmp(tp->text, mval)) < 0 || tp->val != port)
+                {tpp = tp; tp = tp->next;}
+                else {if (!j) Say.Emsg("Config","Duplicate manager",mval);
                       break;
                      }
-        if (tp) break;
-        if (isProxy) PanList = new XrdOucTList(mval, port, PanList);
-           else      ManList = new XrdOucTList(mval, port, ManList);
+        if (j) {tpnew = new XrdOucTList(mval, port, tp);
+                if (tpp) tpp->next = tpnew;
+                   else if (isProxy) PanList = tpnew;
+                           else      ManList = tpnew;
+               }
        } while(i);
 
     if (bval) free(bval);
     free(mval);
-    return tp != 0;
+    return 0;
 }
   
 /******************************************************************************/

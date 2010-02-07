@@ -35,7 +35,7 @@ struct XrdSfsPrep;
 class XrdCmsClient
 {
 public:
-virtual void   Added(const char *path) = 0;
+virtual void   Added(const char *path, int Pend=0) = 0;
 
 virtual int    Configure(char *cfn) = 0;
 

@@ -38,7 +38,7 @@
 #define DEBUG(y) if (QTRACE(Debug)) \
                     {OssTrace.Beg(epname); cerr <<y; OssTrace.End();}
 
-#define EPNAME(x) const char *epname = x;
+#define EPNAME(x) static const char *epname = x;
 
 #else
 

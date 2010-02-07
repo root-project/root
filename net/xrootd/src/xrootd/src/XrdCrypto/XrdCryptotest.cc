@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdCryptotestCVSID = "$Id$";
 //
 //  Test program for XrdCrypto
 //

@@ -12,7 +12,7 @@
 ## Author: Derek Feichtinger <derek.feichtinger@cern.ch>
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: configure.ac,v 1.41 2008/11/19 17:10:58 dfeich Exp $
+## Version info: $Id: configure.ac,v 1.56 2009/09/30 11:00:34 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
@@ -21,7 +21,7 @@
 
 
 AC_PREREQ(2.57)
-AC_INIT(xrootd,CVS20081118,xrootd-l@slac.stanford.edu)
+AC_INIT(xrootd,v20090930-1117,xrootd-l@slac.stanford.edu)
 AC_CONFIG_SRCDIR([src/XrdVersion.hh])
 
 # use C++ for the compilation of tests
@@ -66,19 +66,26 @@ case "$target_os" in
      AC_DEFINE(__macos__)
      need_macos_dt=no
      if test x"$MACOSX_DEPLOYMENT_TARGET" = x; then
-        AC_MSG_WARN([MACOSX_DEPLOYMENT_TARGET environment variable not set. Setting it to 10.3])
+        macosversion=`sw_vers -productVersion`
+        AC_MSG_NOTICE([Detected MacOS Version $macosversion])
+        vermajor=`expr x"$macosversion" : 'x\([[0-9]][[0-9]]*\).[[0-9]][[0-9]]*'`
+        verminor=`expr x"$macosversion" : 'x[[0-9]][[0-9]]*.\([[0-9]][[0-9]]*\)'`
+        AC_MSG_WARN([MACOSX_DEPLOYMENT_TARGET environment variable not set. Setting it to ${vermajor}.$verminor])
+        AC_SUBST([MACOSX_DEPLOYMENT_TARGET],${vermajor}.$verminor)
         need_macos_dt=yes
      else
+        # if the user has set the variable himself, we trust him
         vermajor=`expr x"$MACOSX_DEPLOYMENT_TARGET" : 'x\([[0-9]][[0-9]]*\).[[0-9]][[0-9]]*'`
         verminor=`expr x"$MACOSX_DEPLOYMENT_TARGET" : 'x[[0-9]][[0-9]]*.\([[0-9]][[0-9]]*\)'`
         if test 0"$vermajor" -lt 10 ; then need_macos_dt=ok;
         else if test 0"$vermajor" -eq 10 -a 0"$verminor" -lt 3; then need_macos_dt=failed;
               fi
         fi
+        AC_SUBST([MACOSX_DEPLOYMENT_TARGET],${MACOSX_DEPLOYMENT_TARGET})
 
-        if test x"$need_macos_dt" = xfailed; then
-           AC_MSG_ERROR([MACOSX_DEPLOYMENT_TARGET must be >= 10.3 (current value: $MACOSX_DEPLOYMENT_TARGET)])
-        fi
+     fi
+     if test x"$need_macos_dt" = xfailed; then
+        AC_MSG_ERROR([MACOSX_DEPLOYMENT_TARGET must be >= 10.3 (current value: $MACOSX_DEPLOYMENT_TARGET)])
      fi
      ;;
    apple*)
@@ -134,7 +141,7 @@ if test "x$domain" = "x" ; then
 fi
 
 # look whether there is a site specific defaults file for this domain
-domain=`expr $domain : '.*\.\(.*\..*\)$'`
+### TODO: does this line still make sense?    domain=`expr x"$domain" : 'x.*\.\(.*\..*\)$'`
 if test x"$domain" != x -a  x"$domain" != "x(none)"; then
    ACX_LOAD_DEFAULTS(config/ac_default_$domain)
 fi
@@ -389,19 +396,6 @@ if test x"$activate_openssl" = xyes -o x"$activate_openssl" = xdefault_yes ; the
   fi
   #AC_MSG_NOTICE([Openssl version: $vermajor  $verminor  $verrelease == $vernum])
 
-  # note: -DPERL5 is needed for resolving a clash between unistd.h and
-  # openssl/des.h regarding the crypt function on some older systems (e.g. RH7.3)
-  if test 0"$vernum" -lt 907 ; then
-    AC_DEFINE(R__SSL_096)
-    AC_SUBST(SSLCXXFLAGS,[-DPERL5])
-  fi
-
-  # note: -DR__SSL_GE_098 allows to deal with some differences in ANS1 macros
-  # introduced in version 0.9.8
-  if test 0"$vernum" -ge 908 ; then
-    AC_DEFINE(R__SSL_GE_098)
-  fi
-
   # note: openssl may require kerberos5 include files
   CPPFLAGS="$OPENSSL_INCDIR $KRB5_INCDIR $CPPFLAGS"
   AC_CHECK_HEADER([openssl/ssl.h],
@@ -421,6 +415,20 @@ if test x"$activate_openssl" = xyes -o x"$activate_openssl" = xdefault_yes ; the
     AC_MSG_WARN([disabling openssl support])
     activate_openssl=disabled
     activate_gsi=disabled
+  else
+    AC_DEFINE(R__SSL)
+    # note: -DPERL5 is needed for resolving a clash between unistd.h and
+    # openssl/des.h regarding the crypt function on some older systems (e.g. RH7.3)
+    if test 0"$vernum" -lt 907 ; then
+      AC_DEFINE(R__SSL_096)
+      AC_SUBST(SSLCXXFLAGS,[-DPERL5])
+    fi
+
+    # note: -DR__SSL_GE_098 allows to deal with some differences in ANS1 macros
+    # introduced in version 0.9.8
+    if test 0"$vernum" -ge 908 ; then
+      AC_DEFINE(R__SSL_GE_098)
+    fi
   fi
 
   CPPFLAGS="$CPPFLAGS_BUP"
@@ -430,6 +438,20 @@ fi
 AM_CONDITIONAL(ENABLE_OPENSSL,test x"$activate_openssl" = xyes -o x"$activate_openssl" = xdefault_yes)
 AM_CONDITIONAL(ENABLE_GSI,test x"$activate_gsi" = xyes -o x"$activate_gsi" = xdefault_yes)
 
+
+#################################################################
+# optional building of APPS
+if test x"$activate_apps" = x; then
+   activate_apps=default_yes
+fi
+AC_ARG_ENABLE(apps,
+              [  --enable-apps        build XrdApps directory (xrdadler32) ],
+              [],[enable_apps=$activate_apps]
+             )
+ACX_COLLECT_OPTION(apps,$enable_apps)
+AM_CONDITIONAL(ENABLE_APPS, test x"$activate_apps" = xyes -o x"$activate_apps" = xdefault_yes)
+
+
 ####################################################################
 # Posix I/O compatibility libraries
 # There are some problems with compiling XrdPosix/XrdPss under MacOs
@@ -438,8 +460,13 @@ AM_CONDITIONAL(ENABLE_GSI,test x"$activate_gsi" = xyes -o x"$activate_gsi" = xde
 if test x"$activate_posix" = x; then
    activate_posix=default_yes
 fi
+if test x"$activate_apps" = xyes -o x"$activate_apps" = default_yes; then
+   AC_MSG_NOTICE([Building of XrdApps (xrdadler32) requires also building of the posix library])
+   activate_posix=yes
+fi
+
 AC_ARG_ENABLE(posix,
-              [  --enable-posix          Enable/disable building of the posix preload library [[default=yes]] ],
+              [  --enable-posix          Enable/disable building of the posix compatibility library [[default=yes]] ],
               [],[enable_posix=$activate_posix]
              )
 ACX_COLLECT_OPTION(posix,$enable_posix)
@@ -567,6 +594,10 @@ if test x"$activate_perlint" = xyes -o x"$activate_perlint" = xdefault_yes ; the
         activate_swig=yes
      fi
      AC_SUBST(SWIG)
+     # if a swig rebuild is desired, we must enforce that the dependency of
+     # the swig files (XrdClientAdmin_c.hh) is newer than the targets!
+     chmod u+x ${srcdir}/src/XrdClient/XrdClientAdmin_c.hh
+     touch ${srcdir}/src/XrdClient/XrdClientAdmin_c.hh
   fi
   ACX_COLLECT_OPTION(swig,$activate_swig)
 fi
@@ -622,17 +653,20 @@ AC_SUBST(JAVA_INCDIR)
 AC_SUBST(JAVAC)
 AC_SUBST(JAVA_CLASSPATH)
 #################################################################
-# Castor interface options
+# OBSOLETE
+# Castor interface options (src/XrdCS2)
 # Currently disabled since building seems to require arcane knowledge
 # ACX_LIBOPTION(castor,[enable building of castor interface module],no)
-activate_castor=no
-AM_CONDITIONAL(ENABLE_CASTOR, test x"$activate_castor" = xyes -o x"$activate_castor" = xdefault_yes)
+# activate_castor=no
+# AM_CONDITIONAL(ENABLE_CASTOR, test x"$activate_castor" = xyes -o x"$activate_castor" = xdefault_yes)
 
 #################################################################
+# OBSOLETE - now built as an external plugin
 # Catalog token authorization mechanism
-ACX_LIBOPTION(tkauthz,[enable building of catalog token authorization Ofs module],no)
+#ACX_LIBOPTION(tkauthz,[enable building of catalog token authorization Ofs module],no)
+#
+#AM_CONDITIONAL(ENABLE_TOKENAUTHZ, test x"$activate_tkauthz" = xyes -o x"$activate_tkauthz" = xdefault_yes)
 
-AM_CONDITIONAL(ENABLE_TOKENAUTHZ, test x"$activate_tkauthz" = xyes -o x"$activate_tkauthz" = xdefault_yes)
 
 
 #################################################################
@@ -685,7 +719,7 @@ AM_CONDITIONAL(ENABLE_DOC, test x"$activate_doc" = xyes -o x"$activate_doc" = xd
 # show up at compile time (well... We do not need to catch everything....)
 AC_CHECK_HEADER([iostream],
                 [],[AC_MSG_WARN([header <iostream> not found. Using old STL header style <iostream.h>])
-                    AC_DEFINE(HAS_OLD_HDRS)]
+                    AC_DEFINE(HAVE_OLD_HDRS)]
                )
 
 #  commented out the following code which implements the header based on a configure switch:
@@ -697,7 +731,7 @@ AC_CHECK_HEADER([iostream],
 #             )
 #ACX_COLLECT_OPTION(oldhdrs,$enable_oldhdrs)
 #if test x"$enable_oldhdrs" = xyes; then
-#   AC_DEFINE(HAS_OLD_HDRS)
+#   AC_DEFINE(HAVE_OLD_HDRS)
 #fi
 
 #################################################################
@@ -740,6 +774,10 @@ AC_SUBST(LIBPTHREAD)
 AC_CHECK_LIB([rt],[aio_fsync],
              [AC_SUBST(LIBRT,[-lrt])])
 
+AC_CHECK_LIB([z], [gzdopen],
+             [AC_DEFINE(HAVE_LIBZ)
+              AC_SUBST(LIBZ,[-lz])])
+
 ##  ---- DISABLED FOR NOW ----
 ## check for the MonALISA client cpp library
 ##AC_CHECK_LIB([apmoncpp],[main],
@@ -754,7 +792,7 @@ AC_CHECK_LIB([rt],[aio_fsync],
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h inttypes.h limits.h malloc.h memory.h netdb.h netinet/in.h shadow.h stdlib.h string.h strings.h sys/file.h sys/mount.h sys/param.h sys/socket.h sys/statfs.h sys/statvfs.h sys/time.h sys/vfs.h unistd.h utime.h])
+AC_CHECK_HEADERS([et/com_err.h arpa/inet.h fcntl.h inttypes.h limits.h malloc.h memory.h netdb.h netinet/in.h shadow.h stdlib.h string.h strings.h sys/file.h sys/mount.h sys/param.h sys/socket.h sys/statfs.h sys/statvfs.h sys/time.h sys/vfs.h unistd.h utime.h])
 
 #################################################################
 # Checks for typedefs, structures, and compiler characteristics.
@@ -793,26 +831,28 @@ AM_PROG_CC_C_O
 #AC_FUNC_VPRINTF
 #AC_CHECK_FUNCS([bzero dup2 endgrent ftruncate getcwd gethostbyaddr gethostbyname gethostname getpagesize getpass getspnam gettimeofday inet_ntoa localtime_r memchr memmove memset mkdir munmap pathconf putenv rmdir socket strcasecmp strchr strcspn strdup strerror strncasecmp strspn strstr strtol utime])
 
-AC_CHECK_FUNC([getnameinfo],[AC_DEFINE(HAS_NAMEINFO)],
+AC_CHECK_FUNC([getnameinfo],[AC_DEFINE(HAVE_NAMEINFO)],
               [AC_CHECK_LIB([socket],[getnameinfo],
                  [
-                 AC_DEFINE(HAS_NAMEINFO)
+                 AC_DEFINE(HAVE_NAMEINFO)
                  AC_SUBST(LIBSOCKET,[-lsocket])
                  ])
               ])
 
-AC_CHECK_FUNC([getprotobyname_r],[AC_DEFINE(HAS_PROTOR)],
+AC_CHECK_FUNC([getprotobyname_r],[AC_DEFINE(HAVE_PROTOR)],
               [AC_CHECK_LIB([socket],[getprotobyname_r],
                   [
-                  AC_DEFINE(HAS_PROTOR)
+                  AC_DEFINE(HAVE_PROTOR)
                   AC_SUBST(LIBSOCKET,[-lsocket])
                   ])
               ])
 
-AC_CHECK_FUNC([strlcpy],[AC_DEFINE(HAS_STRLCPY)])
-AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAS_SENDFILE)])
+AC_CHECK_FUNC([strlcpy],[AC_DEFINE(HAVE_STRLCPY)])
+AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAVE_SENDFILE)])
 
-AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAS_SENDFILE)])
+AC_CHECK_FUNC([sendfile],[AC_DEFINE(HAVE_SENDFILE)])
+
+AC_CHECK_FUNCS([fstatat])
 
 #   note: needed for solaris
 AC_CHECK_LIB([rt],[sem_post],
@@ -825,10 +865,10 @@ AC_CHECK_LIB([nsl],[gethostbyname],
              [AC_SUBST(LIBNSL,[-lnsl])]
             )
 
-AC_CHECK_FUNC(sigwaitinfo,[AC_DEFINE(HAS_SIGWTI)],
+AC_CHECK_FUNC(sigwaitinfo,[AC_DEFINE(HAVE_SIGWTI)],
                 [AC_CHECK_LIB([rt],[sigwaitinfo],
                    [
-                   AC_DEFINE(HAS_SIGWTI)
+                   AC_DEFINE(HAVE_SIGWTI)
                    AC_SUBST(LIBRT,[-lrt])
                    ])
                 ])
@@ -837,7 +877,7 @@ AC_CHECK_FUNC(sigwaitinfo,[AC_DEFINE(HAS_SIGWTI)],
 case "$target_os" in
    linux*)
       AC_CHECK_FUNCS(setresuid,
-                     AC_DEFINE(HAS_SETRESUID)
+                     AC_DEFINE(HAVE_SETRESUID)
                     )
       ;;
 esac
@@ -847,21 +887,38 @@ AC_SYS_DEV_POLL(AC_DEFINE(_DEVPOLL),[])
 
 ###########################################
 # GNU Readline checks
-enable_readline=yes
-AC_CHECK_HEADERS([readline/readline.h readline/history.h curses.h term.h],
-                  [],[enable_readline="no"]
+ACX_LIBOPTION(readline,[use GNU Readline support],yes)
+
+# extend the preprocessor and link PATHs to the Vars provided by ACX_LIBOPTION
+CPPFLAGS="$READLINE_INCDIR $CPPFLAGS"
+LDFLAGS="$READLINE_LIBDIR $LDFLAGS"
+
+if test x"$activate_readline" = xyes -o x"$activate_readline" = xdefault_yes ; then
+   AC_CHECK_HEADERS([readline/readline.h readline/history.h curses.h term.h],
+                  [],[activate_readline="no"]
 		 )
-if test x"$enable_readline" = xyes; then
+fi
+
+if test x"$activate_readline" = xyes -o x"$activate_readline" = xdefault_yes ; then
+   # Note: some systems like Mac offer all readline symbols within libreadline and
+   # have no additional libhisory installed on the system
+   AC_CHECK_LIB([history],[clear_history],
+               [HISTORY_LIB="-lhistory"]
+               ,,[-lcurses])
    AC_CHECK_LIB([readline],[readline],
                [AC_DEFINE(HAVE_READLINE)
-               READLINE_LIBS="-lreadline -lcurses"]
-               ,[enable_readline="no"],[-lcurses])
+               READLINE_LIBS="-lreadline $HISTORY_LIB -lcurses"]
+               ,[activate_readline="no"],[-lcurses])
 fi
 AC_SUBST(READLINE_LIBS)
 
-if test x"$enable_readline" != xyes; then
+if test x"$activate_readline" != xyes -a  x"$activate_readline" != xdefault_yes ; then
    AC_MSG_WARN([xrd application will be built without GNU readline support])
 fi
+
+CPPFLAGS="$CPPFLAGS_BUP"
+LDFLAGS="$LDFLAGS_BUP"
+
 ###########################################
 # Kerberos 4 checks
 krb4tests=ok
@@ -949,6 +1006,7 @@ CXXFLAGS="$CXXFLAGS -D_REENTRANT"
 
 AC_OUTPUT(Makefile
           src/Makefile
+          src/Makefile_include
           src/XrdSys/Makefile
           src/XrdOuc/Makefile
           src/XrdNet/Makefile
@@ -972,13 +1030,13 @@ AC_OUTPUT(Makefile
           src/XrdCms/Makefile
           src/XrdRootd/Makefile
           src/XrdXrootd/Makefile
+          src/XrdFrm/Makefile
           src/XrdClient/Makefile
           src/XrdPosix/Makefile
           src/XrdPss/Makefile
           src/XrdMon/Makefile
           src/XrdCns/Makefile
-          src/XrdCS2/Makefile
-          src/XrdTokenAuthzOfs/Makefile
+          src/XrdApps/Makefile
           test/testconfig.sh
           xrootd.spec)
 

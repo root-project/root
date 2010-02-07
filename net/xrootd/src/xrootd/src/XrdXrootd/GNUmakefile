@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.31 2008/09/07 04:40:55 abh Exp $
+#              $Id: GNUmakefile,v 1.34 2009/07/31 03:47:49 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -85,7 +85,7 @@ anything: $(TARGETS)
 
 $(TARGETS): $(OBJECTS) $(OBJDEPS)
 	@echo Creating executable $(TARGETS) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECTS) $(LIBS) $(BINLIBS) -o $(TARGETS)
+	$(ECHO)$(LD) $(LDOP) $(OBJECTS) $(LIBS) $(BINLIBS) $(TYPELIBMT) -o $(TARGETS)
 
 $(OBJDIR)/XrdXrootdAdmin.o: XrdXrootdAdmin.hh      XrdXrootdAdmin.cc \
                             XrdXrootdTrace.hh      XrdXrootdProtocol.hh \
@@ -164,7 +164,7 @@ $(OBJDIR)/XrdXrootdJob.o:    XrdXrootdJob.hh        XrdXrootdJob.cc \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdJob.o XrdXrootdJob.cc
 
 $(OBJDIR)/XrdXrootdLoadLib.o: XrdSfsInterface.hh XrdSecInterface.hh XrdSysError.hh \
-                              XrdXrootdLoadLib.cc
+                              XrdXrootdLoadLib.cc  XrdOucEnv.hh
 	@echo Compiling XrdXrootdLoadLib.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdLoadLib.o XrdXrootdLoadLib.cc
 
@@ -215,7 +215,8 @@ $(OBJDIR)/XrdXrootdResponse.o: XrdLink.hh           XrdXrootdResponse.hh  \
 	@echo Compiling XrdXrootdResponse.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdResponse.o XrdXrootdResponse.cc
 
-$(OBJDIR)/XrdXrootdStats.o: XrdXrootdResponse.hh XrdStats.hh XrdSysPthread.hh \
+$(OBJDIR)/XrdXrootdStats.o: XrdXrootdResponse.hh XrdStats.hh \
+                            XrdSfsInterface.hh   XrdSysPthread.hh \
                             XrdXrootdStats.cc
 	@echo Compiling XrdXrootdStats.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdXrootdStats.o XrdXrootdStats.cc

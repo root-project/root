@@ -115,8 +115,8 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    extern int optind, opterr;
 
    XrdXrootdXPath *xp;
-   char *adminp, *fsver, *rdf, c, buff[1024];
-   int deper = 0;
+   char *adminp, *fsver, *rdf, *bP, *tmp, c, buff[1024];
+   int i, n, deper = 0;
 
 // Copy out the special info we want to use at top level
 //
@@ -125,6 +125,7 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    SI           = new XrdXrootdStats(pi->Stats);
    Sched        = pi->Sched;
    BPool        = pi->BPool;
+   hailWait     = pi->hailWait;
    readWait     = pi->readWait;
    Port         = pi->Port;
    myInst       = pi->myInst;
@@ -158,12 +159,12 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
      { switch(c)
        {
        case 'r': deper = 1;
-       case 'm': putenv((char *)"XRDREDIRECT=R");
+       case 'm': putenv((char *)"XRDREDIRECT=R"); // XrdOucEnv::Export()
                  break;
        case 't': deper = 1;
-       case 's': putenv((char *)"XRDRETARGET=1");
+       case 's': putenv((char *)"XRDRETARGET=1"); // XrdOucEnv::Export()
                  break;
-       case 'y': putenv((char *)"XRDREDPROXY=1");
+       case 'y': putenv((char *)"XRDREDPROXY=1"); // XrdOucEnv::Export()
                  break;
        default:  eDest.Say("Config warning: ignoring invalid option '",pi->argv[optind-1],"'.");
        }
@@ -177,16 +178,37 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
 //
    for ( ; optind < pi->argc; optind++) xexpdo(pi->argv[optind]);
 
-// Pre-initialize some i/o values
+// Pre-initialize some i/o values. Note that we now set maximum readv element
+// transfer size to the buffer size (before it was a reasonable 256K).
 //
    if (!(as_miniosz = as_segsize/2)) as_miniosz = as_segsize;
-   maxBuffsz = BPool->MaxSize();
+   maxTransz = maxBuffsz = BPool->MaxSize();
 
 // Now process and configuration parameters
 //
    rdf = (parms && *parms ? parms : pi->ConfigFN);
    if (rdf && Config(rdf)) return 0;
    if (pi->DebugON) XrdXrootdTrace->What = TRACE_ALL;
+
+// Check if we are exporting anything
+//
+   if (!(xp = XPList.Next()))
+      {XPList.Insert("/tmp"); n = 8;
+       eDest.Say("Config warning: only '/tmp' will be exported.");
+      } else {
+       n = 0;
+       while(xp) {eDest.Say("Config exporting ", xp->Path(i));
+                  n += i+2; xp = xp->Next();
+                 }
+      }
+
+// Export the exports
+//
+   bP = tmp = (char *)malloc(n);
+   xp = XPList.Next();
+   while(xp) {strcpy(bP, xp->Path(i)); bP += i; *bP++ = ' '; xp = xp->Next();}
+   *(bP-1) = '\0';
+   XrdOucEnv::Export("XRDEXPORTS", tmp); free(tmp);
 
 // Initialiaze for AIO
 //
@@ -216,7 +238,7 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    if (!osFS)
       {eDest.Emsg("Config", "Unable to load file system.");
        return 0;
-      }
+      } else SI->setFS(osFS);
 
 // Check if the file system version matches our version
 //
@@ -260,16 +282,6 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
            xp = xp->Next();
           } while(xp);
       }
-
-// Check if we are exporting anything
-//
-   if (!(xp = XPList.Next()))
-      {XPList.Insert("/tmp");
-       eDest.Say("Config warning: only '/tmp' will be exported.");
-      } else while(xp)
-                  {eDest.Say("Config exporting ", xp->Path());
-                   xp = xp->Next();
-                  }
 
 // Set the redirect flag if we are a pure redirector
 //
@@ -660,7 +672,9 @@ int XrdXrootdProtocol::xlog(XrdOucStream &Config)
 
    Purpose:  Parse directive: monitor [all] [mbuff <sz>] 
                                       [flush <sec>] [window <sec>]
-                                      dest [files] [info] [io] <host:port>
+                                      dest [Events] <host:port>
+
+   Events: [files] [info] [io] [stage] [user] <host:port>
 
          all                enables monitoring for all connections.
          mbuff  <sz>        size of message buffer.
@@ -671,6 +685,7 @@ int XrdXrootdProtocol::xlog(XrdOucStream &Config)
          files              only monitors file open/close events.
          info               monitors client appid and info requests.
          io                 monitors I/O requests, and files open/close events.
+         stage              monitors file stage operations
          user               monitors user login and disconnect events.
          <host:port>        where monitor records are to be sentvia UDP.
 
@@ -720,6 +735,7 @@ int XrdXrootdProtocol::xmon(XrdOucStream &Config)
                    if (!strcmp("files",val)) monMode[i] |=  XROOTD_MON_FILE;
               else if (!strcmp("info", val)) monMode[i] |=  XROOTD_MON_INFO;
               else if (!strcmp("io",   val)) monMode[i] |=  XROOTD_MON_IO;
+              else if (!strcmp("stage",val)) monMode[i] |=  XROOTD_MON_STAGE;
               else if (!strcmp("user", val)) monMode[i] |=  XROOTD_MON_USER;
               else break;
           if (!val) {eDest.Emsg("Config","monitor dest value not specified");

@@ -327,6 +327,7 @@ int XrdXrootdProtocol::do_Close()
 {
    XrdXrootdFile *fp;
    XrdXrootdFHandle fh(Request.close.fhandle);
+   int rc;
 
 // Keep statistics
 //
@@ -347,14 +348,17 @@ int XrdXrootdProtocol::do_Close()
 //
    if (monFILE && Monitor) Monitor->Close(fp->FileID,fp->readCnt,fp->writeCnt);
 
+// Do an explicit close of the file here; reflecting any errors
+//
+   rc = fp->XrdSfsp->close();
+   TRACEP(FS, "close rc=" <<rc <<" fh=" <<fh.handle);
+   if (SFS_OK != rc)
+      return Response.Send(kXR_FSError, fp->XrdSfsp->error.getErrText());
+
 // Delete the file from the file table; this will unlock/close the file
 //
    FTab->Del(fh.handle);
    numFiles--;
-
-// Respond that all went well
-//
-   TRACEP(FS, "close fh=" <<fh.handle);
    return Response.Send();
 }
 
@@ -465,13 +469,17 @@ int XrdXrootdProtocol::do_Endsess()
 // Trace this request
 //
    TRACEP(LOGIN, "endsess " <<sessID.Pid <<':' <<sessID.FD <<'.' <<sessID.Inst
-          <<" rc=" <<rc <<" (" <<strerror(rc) <<")");
+          <<" rc=" <<rc <<" (" <<strerror(rc < 0 ? -rc : EAGAIN) <<")");
 
 // Return result
 //
-   if (rc == EACCES) return Response.Send(kXR_NotAuthorized, "not session owner");
-   if (rc == ESRCH)  return Response.Send(kXR_NotFound, "session not found");
-   if (rc == EBUSY)  return Response.Send(kXR_InvalidRequest, "session is active");
+   if (rc >  0)
+      return (rc = Response.Send(kXR_wait, rc, "session still active")) ? rc:1;
+
+   if (rc == -EACCES)return Response.Send(kXR_NotAuthorized, "not session owner");
+   if (rc == -ESRCH) return Response.Send(kXR_NotFound, "session not found");
+   if (rc == -ETIME) return Response.Send(kXR_Cancelled,"session not ended");
+
    return Response.Send();
 }
 
@@ -504,7 +512,7 @@ int XrdXrootdProtocol::do_Locate()
    static XrdXrootdCallBack locCB("locate");
    int rc, opts, fsctl_cmd = SFS_FSCTL_LOCATE;
    const char *opaque;
-   char *fn = argp->buff, opt[8], *op=opt;
+   char *Path, *fn = argp->buff, opt[8], *op=opt;
    XrdOucErrInfo myError(Link->ID, &locCB, ReqID.getID());
 
 // Unmarshall the data
@@ -524,10 +532,21 @@ int XrdXrootdProtocol::do_Locate()
       return Response.Send(kXR_redirect, Route[RD_locate].Port,
                                          Route[RD_locate].Host);
 
+// Check if this is a non-specific locate
+//
+        if (*fn != '*') Path = fn;
+   else if (*(fn+1))    Path = fn+1;
+   else                {Path = 0; 
+                        fn = XPList.Next()->Path();
+                        fsctl_cmd |= SFS_O_TRUNC;
+                       }
+
 // Prescreen the path
 //
-   if (rpCheck(fn, &opaque)) return rpEmsg("Locating", fn);
-   if (!Squash(fn))          return vpEmsg("Locating", fn);
+   if (Path)
+      {if (rpCheck(Path, &opaque)) return rpEmsg("Locating", Path);
+       if (!Squash(Path))          return vpEmsg("Locating", Path);
+      }
 
 // Preform the actual function
 //
@@ -901,6 +920,7 @@ int XrdXrootdProtocol::do_Open()
                                        UPSTATS(Refresh);
                                       }
    if (opts & kXR_retstat)            {*op++ = 't'; retStat = 1;}
+   if (opts & kXR_posc)               {*op++ = 'p'; openopts |= SFS_O_POSC;}
    *op = '\0';
    TRACEP(FS, "open " <<opt <<' ' <<fn);
 
@@ -2217,15 +2237,17 @@ int XrdXrootdProtocol::fsError(int rc, XrdOucErrInfo &myError)
       }
 
 // Process the deferal. We also synchronize sending the deferal response with
-// sending the actual defered response as these can violate time causality.
+// sending the actual defered response by calling Done() in the callback object.
+// This allows the requestor of he callback know that we actually send the
+// kXR_waitresp to the end client and avoid violating time causality.
 //
    if (rc == SFS_STARTED)
       {SI->stallCnt++;
        if (ecode <= 0) ecode = 1800;
        TRACEI(STALL, Response.ID() <<"delaying client up to " <<ecode <<" sec");
        rc = Response.Send(kXR_waitresp, ecode, eMsg);
-       myError.getErrCB()->Done(ecode, &myError);
-       return rc;
+       if (myError.getErrCB()) myError.getErrCB()->Done(ecode, &myError);
+       return (rc ? rc : 1);
       }
 
 // Process the data response
@@ -2240,7 +2262,7 @@ int XrdXrootdProtocol::fsError(int rc, XrdOucErrInfo &myError)
    if (rc >= SFS_STALL)
       {SI->stallCnt++;
        TRACEI(STALL, Response.ID() <<"stalling client for " <<rc <<" sec");
-       return Response.Send(kXR_wait, rc, eMsg);
+       return (rc = Response.Send(kXR_wait, rc, eMsg)) ? rc : 1;
       }
 
 // Unknown conditions, report it
@@ -2304,6 +2326,7 @@ int XrdXrootdProtocol::mapError(int rc)
         case ENOTBLK:      return kXR_NotFile;
         case EISDIR:       return kXR_isDirectory;
         case EEXIST:       return kXR_InvalidRequest;
+        case ETXTBSY:      return kXR_inProgress;
         default:           return kXR_FSError;
        }
 }

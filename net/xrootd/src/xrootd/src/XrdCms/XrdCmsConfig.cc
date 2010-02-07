@@ -64,6 +64,8 @@ const char *XrdCmsConfigCVSID = "$Id$";
 #include "XrdNet/XrdNetSecurity.hh"
 #include "XrdNet/XrdNetSocket.hh"
 
+#include "XrdOss/XrdOss.hh"
+
 #include "XrdOuc/XrdOuca2x.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdSys/XrdSysError.hh"
@@ -143,8 +145,6 @@ Where:
 /******************************************************************************/
 /*            E x t e r n a l   T h r e a d   I n t e r f a c e s             */
 /******************************************************************************/
-  
-void *XrdCmsStartMonPing(void *carg) { return Manager.MonPing(); }
 
 void *XrdCmsStartMonPerf(void *carg) { return Cluster.MonPerf(); }
 
@@ -315,7 +315,7 @@ int XrdCmsConfig::Configure2()
   Output:   0 upon success or !0 otherwise.
 */
    EPNAME("Configure2");
-   int NoGo = 0;
+   int Who, NoGo = 0;
    char *p, buff[512];
 
 // Print herald
@@ -350,11 +350,15 @@ int XrdCmsConfig::Configure2()
    if (!NoGo && !(mySID = setupSid()))
       {Say.Emsg("cmsd", "Unable to generate system ID; too many managers.");
        NoGo = 1;
-      } else {DEBUG("Cluster/Node ID = " <<mySID);}
+      } else {DEBUG("Global System Identification: " <<mySID);}
 
 // If we need a name library, load it now
 //
    if ((LocalRoot || RemotRoot) && ConfigN2N()) NoGo = 1;
+
+// Configure the OSS
+//
+   if (!NoGo) NoGo = ConfigOSS();
 
 // Setup manager or server, as needed
 //
@@ -374,7 +378,9 @@ int XrdCmsConfig::Configure2()
                if (isMeta) {SUPCount = 1; SUPLevel = 0;}
                if (!ManList) CmsState.Update(XrdCmsState::FrontEnd, 1);
               }
-    CmsState.Set(SUPCount, isManager && !isServer, AdminPath);
+    if (isManager) Who = (isServer ? -1 : 1);
+       else        Who = 0;
+    CmsState.Set(SUPCount, Who, AdminPath);
 
 // Create the pid file
 //
@@ -429,13 +435,13 @@ int XrdCmsConfig::ConfigXeq(char *var, XrdOucStream &CFile, XrdSysError *eDest)
    {
    TS_Xeq("adminpath",     xapath);  // Any,     non-dynamic
    TS_Xeq("allow",         xallow);  // Manager, non-dynamic
-   TS_Xeq("cache",         xcache);  // Server,  non-dynamic
    TS_Xeq("defaults",      xdefs);   // Server,  non-dynamic
    TS_Xeq("export",        xexpo);   // Any,     non-dynamic
    TS_Xeq("fsxeq",         xfsxq);   // Server,  non-dynamic
    TS_Xeq("localroot",     xlclrt);  // Any,     non-dynamic
    TS_Xeq("manager",       xmang);   // Server,  non-dynamic
    TS_Xeq("namelib",       xnml);    // Server,  non-dynamic
+   TS_Xeq("osslib",        xolib);   // Any,     non-dynamic
    TS_Xeq("perf",          xperf);   // Server,  non-dynamic
    TS_Xeq("pidpath",       xpidf);   // Any,     non-dynamic
    TS_Xeq("prep",          xprep);   // Any,     non-dynamic
@@ -473,6 +479,12 @@ void XrdCmsConfig::DoIt()
    time_t          eTime = time(0);
    int             wTime;
 
+// Set doWait correctly. We only wait if we have to provide a data path. This
+// include server, supervisors, and managers who have a meta-manager, only.
+// Why? Because we never get a primary login if we are a mere manager.
+//
+   if (isManager && !isServer && !ManList) doWait = 0;
+
 // Start the notification thread if we need to
 //
    if (AnoteSock)
@@ -486,6 +498,16 @@ void XrdCmsConfig::DoIt()
                              (void *)0, 0, "Prep handler"))
       Say.Emsg("cmsd", errno, "start prep handler");
 
+// Start the supervisor subsystem
+//
+   if (XrdCmsSupervisor::superOK)
+      {if (XrdSysThread::Run(&tid,XrdCmsStartSupervising, 
+                             (void *)0, 0, "supervisor"))
+          {Say.Emsg("cmsd", errno, "start", myRole);
+          return;
+          }
+      }
+
 // Start the admin thread if we need to, we will not continue until told
 // to do so by the admin interface.
 //
@@ -497,23 +519,22 @@ void XrdCmsConfig::DoIt()
        SyncUp.Wait();
       }
 
-// Start the supervisor subsystem
-//
-   if (XrdCmsSupervisor::superOK)
-      {if (XrdSysThread::Run(&tid,XrdCmsStartSupervising, 
-                             (void *)0, 0, "supervisor"))
-          {Say.Emsg("cmsd", errno, "start", myRole);
-          return;
-          }
-      }
-
-// Start the server subsystem.
+// Start the server subsystem. We check here to make sure we will not be
+// tying to connect to ourselves. This is possible if the manager and meta-
+// manager were defined to be the same and we are a manager. We would have
+// liked to screen this out earlier but port discovery prevents it.
 //
    if (isManager || isServer || isPeer)
       {tp = ManList;
        while(tp)
-            {pP = XrdCmsProtocol::Alloc(myRole, tp->text, tp->val);
-             Sched->Schedule((XrdJob *)pP);
+            {if (strcmp(tp->text, myName) || tp->val != PortTCP)
+                {pP = XrdCmsProtocol::Alloc(myRole, tp->text, tp->val);
+                 Sched->Schedule((XrdJob *)pP);
+                } else {
+                 char buff[512];
+                 sprintf(buff, "%s:%d", tp->text, tp->val);
+                 Say.Emsg("Config", "Circular connection to", buff, "ignored.");
+                }
              tp = tp->next;
             }
       }
@@ -632,8 +653,6 @@ void XrdCmsConfig::ConfigDefaults(void)
    RedirSock= 0;
    pidPath  = strdup("/tmp");
    Police   = 0;
-   monPath  = 0;
-   monPathP = 0;
    cachelife= 8*60*60;
    pendplife=   60*60*24*7;
    DiskLinger=0;
@@ -649,6 +668,8 @@ void XrdCmsConfig::ConfigDefaults(void)
    XmiParms    = 0;
    DirFlags    = 0;
    SecLib      = 0;
+   ossLib      = 0;
+   ossFS       = 0;
 }
   
 /******************************************************************************/
@@ -688,6 +709,25 @@ int XrdCmsConfig::ConfigN2N()
    PrepQ.setParms(lcl_N2N);
    return lcl_N2N == 0;
 }
+  
+/******************************************************************************/
+/*                             C o n f i g O S S                              */
+/******************************************************************************/
+
+int XrdCmsConfig::ConfigOSS()
+{
+   extern XrdOss *XrdOssGetSS(XrdSysLogger *, const char *, const char *);
+
+// Set up environment for the OSS to keep it relevant for cmsd
+//
+   XrdOucEnv::Export("XRDREDIRECT", "Q");
+   XrdOucEnv::Export("XRDOSSTYPE",  "cms");
+   XrdOucEnv::Export("XRDOSSCSCAN", "off");
+
+// Load and return result
+//
+   return !(ossFS=XrdOssGetSS(Say.logger(),ConfigFN,ossLib));
+}
 
 /******************************************************************************/
 /*                            C o n f i g P r o c                             */
@@ -724,7 +764,7 @@ int XrdCmsConfig::ConfigProc(int getrole)
            }
            else if (!strncmp(var, "cms.", 4)
                 ||  !strncmp(var, "olb.", 4)      // Backward compatability
-                ||  !strcmp(var, "oss.cache")
+                ||  !strcmp(var, "ofs.osslib")
                 ||  !strcmp(var, "oss.defaults")
                 ||  !strcmp(var, "oss.localroot")
                 ||  !strcmp(var, "oss.remoteroot")
@@ -820,8 +860,6 @@ int XrdCmsConfig::MergeP()
             else if (!(Opts & XRDEXP_LOCAL))
                     {PathList.Insert(plp->Path(), &npinfo);
                      if (npinfo.ssvec) DiskSS = 1;
-                     if (npinfo.rwvec || npinfo.ssvec)
-                        monPathP = new XrdOucTList(plp->Path(), 0, monPathP);
                     }
           plp = plp->Next();
          }
@@ -872,8 +910,8 @@ int XrdCmsConfig::PidFile()
 {
     static const char *envPIDFN = "XRDCMSPIDFN=";
     int rc, xfd;
+    const char *clID;
     char buff[1024];
-    char *Space;
     char pidFN[1200], *ppath=XrdOucUtils::genPath(pidPath,
                               (strcmp("anon",myInsName)?myInsName:0));
     const char *xop = 0;
@@ -884,7 +922,8 @@ int XrdCmsConfig::PidFile()
         return 1;
        }
 
-    if ((Space = (char*)index(mySID, ' '))) *Space = '\0';
+    if ((clID = index(mySID, ' '))) clID++;
+       else clID = mySID;
 
          if (isManager && isServer)
             snprintf(pidFN, sizeof(pidFN), "%s/cmsd.super.pid", ppath);
@@ -893,7 +932,8 @@ int XrdCmsConfig::PidFile()
     else    snprintf(pidFN, sizeof(pidFN), "%s/cmsd.mangr.pid", ppath);
 
     if ((xfd = open(pidFN, O_WRONLY|O_CREAT|O_TRUNC,0644)) < 0) xop = "open";
-       else {if ((write(xfd,buff,snprintf(buff,sizeof(buff),"%d",getpid()))<0)
+       else {if ((write(xfd,buff,snprintf(buff,sizeof(buff),"%d",
+                            static_cast<int>(getpid()))) < 0)
              || (LocalRoot && 
                            (write(xfd,(void *)"\n&pfx=",6)  < 0 ||
                             write(xfd,(void *)LocalRoot,strlen(LocalRoot)) < 0
@@ -903,7 +943,7 @@ int XrdCmsConfig::PidFile()
                             write(xfd,(void *)AdminPath,strlen(AdminPath)) < 0
                 )          )
              ||             write(xfd,(void *)"\n&cn=", 5)  < 0
-             ||             write(xfd,(void *)mySID,    strlen(mySID))     < 0
+             ||             write(xfd,(void *)clID,     strlen(clID))      < 0
                 ) xop = "write";
              close(xfd);
             }
@@ -913,7 +953,6 @@ int XrdCmsConfig::PidFile()
               sprintf(benv,"%s=%s", envPIDFN, pidFN); putenv(benv);
              }
 
-     if (Space) *Space = ' ';
      return xop != 0;
 }
 
@@ -976,8 +1015,7 @@ int XrdCmsConfig::setupManager()
 int XrdCmsConfig::setupServer()
 {
    XrdOucTList *tp;
-   pthread_t tid;
-   int n = 0, rc;
+   int n = 0;
 
 // Make sure we have enough info to be a server
 //
@@ -999,14 +1037,6 @@ int XrdCmsConfig::setupServer()
    if (MaxDelay < 0) MaxDelay = AskPerf*AskPing+30;
    if (DiskWT   < 0) DiskWT   = AskPerf*AskPing+30;
 
-// Create manager monitoring thread
-//
-   if ((rc = XrdSysThread::Run(&tid, XrdCmsStartMonPing, (void *)0,
-                               0, "Ping monitor")))
-      {Say.Emsg("Config", rc, "create ping monitor thread");
-       return 1;
-      }
-
 // Setup notification path
 //
    if (!(AnoteSock = XrdNetSocket::Create(&Say, AdminPath,
@@ -1026,35 +1056,11 @@ int XrdCmsConfig::setupServer()
        Sched->Schedule((XrdJob *)&PrepQ,pendplife+time(0));
       }
 
-// If no cache has been specified but paths exist get the pfn for each path
-// in the list for monitoring purposes
-//
-   if (!monPath && monPathP && lcl_N2N)
-      {XrdOucTList *tlp = monPathP;
-       char pbuff[2048];
-       while(tlp)
-            {if ((rc = lcl_N2N->lfn2pfn(tlp->text, pbuff, sizeof(pbuff))))
-                Say.Emsg("Config",rc,"determine pfn for lfn",tlp->text);
-                else {free(tlp->text);
-                      tlp->text = strdup(pbuff);
-                     }
-             tlp = tlp->next;
-            }
-       }
-
 // Setup file system metering (skip it for peers)
 //
-   Meter.setParms(monPath ? monPath : monPathP, monPath != 0);
+   Meter.Init();
    if (perfpgm && Meter.Monitor(perfpgm, perfint))
       Say.Say("Config warning: load based scheduling disabled.");
-
-// If this is a staging server then we better have a disk cache. We ignore this
-// restriction if an XMI plugin will be used and we are a peer.
-//
-   if (!(isPeer || XmiPath) && DiskSS && !(monPath || monPathP))
-      {Say.Emsg("Config","Staging paths present but no disk cache specified.");
-       return 1;
-      }
 
 // All done
 //
@@ -1070,13 +1076,19 @@ char *XrdCmsConfig::setupSid()
    static const char *envCNAME = "XRDCMSCLUSTERID";
    XrdOucTList *tpF, *tp = (NanList ? NanList : ManList);
    const char *insName = (myInsName ? myInsName : "anon");
-   char sidbuff[8192], *sidend = sidbuff+sizeof(sidbuff)-32, *sp = sidbuff;
+   char sidbuff[8192], *sidend = sidbuff+sizeof(sidbuff)-32, *sp, *cP;
    char *fMan, *fp, *xp, sfx; 
    int n;
 
+// The system ID starts with the semi-unique name of this node
+//
+   if (isManager && isServer) sfx = 'u';
+      else sfx = (isManager ? 'm' : 's');
+   sp = sidbuff + sprintf(sidbuff, "%s-%c ", insName, sfx); cP = sp;
+
 // Develop a unique cluster name for this cluster
 //
-   if (!tp) {strcpy(sidbuff, myInstance); sp += strlen(myInstance);}
+   if (!tp) {strcpy(sp, myInstance); sp += strlen(myInstance);}
       else {tpF = tp;
             fMan = tp->text + strlen(tp->text) - 1;
             while((tp = tp->next))
@@ -1099,15 +1111,11 @@ char *XrdCmsConfig::setupSid()
 // Set envar to hold the cluster name
 //
    *sp = '\0';
-   char *benv = (char *) malloc(strlen(envCNAME) + strlen(sidbuff) + 2);
-   sprintf(benv,"%s=%s", envCNAME, sidbuff); putenv(benv);
+   char *benv = (char *) malloc(strlen(envCNAME) + strlen(cP) + 2);
+   sprintf(benv,"%s=%s", envCNAME, cP); putenv(benv);
 
-// Add semi-unique name for this node in the cluster
+// Return the system ID
 //
-   if (sp+strlen(myInstance) >= sidend) return (char *)0;
-   if (isManager && isServer) sfx = 'u';
-      else sfx = (isManager ? 'm' : 's');
-   sprintf(sp, " %s-%c", insName, sfx);
    return  strdup(sidbuff);
 }
 
@@ -1298,84 +1306,6 @@ int XrdCmsConfig::xapath(XrdSysError *eDest, XrdOucStream &CFile)
    AdminPath = pval;
    AdminMode = mode;
    return 0;
-}
-
-/******************************************************************************/
-/*                                x c a c h e                                 */
-/******************************************************************************/
-
-/* Function: xcache
-
-   Purpose:  To parse the directive: cache <group> <path>[*]
-
-             <group>   the cache group (ignored for cmsd)
-             <path>    the full path of the filesystem the server will handle.
-
-   Type: Server only, non-dynamic.
-
-   Output: 0 upon success or !0 upon failure.
-*/
-
-int XrdCmsConfig::xcache(XrdSysError *eDest, XrdOucStream &CFile)
-{
-    char *val, *pfxdir, *sfxdir, fn[XrdCmsMAX_PATH_LEN+1];
-    int i, k, rc, pfxln, cnum = 0;
-    struct dirent *dir;
-    DIR *DFD;
-
-    if (!isServer) return CFile.noEcho();
-
-    if (!(val = CFile.GetWord()))
-       {eDest->Emsg("Config", "cache group not specified"); return 1;}
-
-    if (!(val = CFile.GetWord()))
-       {eDest->Emsg("Config", "cache path not specified"); return 1;}
-
-    k = strlen(val);
-    if (k >= (int)(sizeof(fn)-1) || val[0] != '/' || k < 2)
-       {eDest->Emsg("Config", "invalid cache path - ", val); return 1;}
-
-    if (val[k-1] != '*') return !Fsysadd(eDest, 0, val);
-
-    for (i = k-1; i; i--) if (val[i] == '/') break;
-    i++; strncpy(fn, val, i); fn[i] = '\0';
-    sfxdir = &fn[i]; pfxdir = &val[i]; pfxln = strlen(pfxdir)-1;
-    if (!(DFD = opendir(fn)))
-       {eDest->Emsg("Config", errno, "open cache directory", fn); return 1;}
-
-    errno = 0; rc = 0;
-    while((dir = readdir(DFD)))
-         {if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, "..")
-          || (pfxln && strncmp(dir->d_name, pfxdir, pfxln)))
-             continue;
-          strcpy(sfxdir, dir->d_name);
-          if ((rc = Fsysadd(eDest, 1, fn))  < 0) break;
-          cnum += rc;
-         }
-
-    if (errno)
-       {if (rc >= 0) 
-           {rc = -1; eDest->Emsg("Config", errno, "process cache directory", fn);}
-       }
-       else if (!cnum) eDest->Say("Config warning: no cache directories found in ",val);
-
-    closedir(DFD);
-    return rc < 0;
-}
-
-int XrdCmsConfig::Fsysadd(XrdSysError *eDest, int chk, char *fn)
-{
-    struct stat buff;
-
-    if (stat(fn, &buff))
-       {if (!chk) eDest->Emsg("Config", errno, "process r/w path", fn);
-        return -1;
-       }
-
-    if ((chk > 0) && !(buff.st_mode & S_IFDIR)) return 0;
-
-    monPath = new XrdOucTList(fn, 0, monPath);
-    return 1;
 }
 
 /******************************************************************************/
@@ -1728,6 +1658,7 @@ int XrdCmsConfig::xmang(XrdSysError *eDest, XrdOucStream &CFile)
     char **val1, **val2;
     };
 
+    static const int sockALen = sizeof(struct sockaddr);
     struct sockaddr InetAddr[8];
     XrdOucTList *tp = 0, *tpp = 0, *tpnew;
     char *val, *bval = 0, *mval = 0;
@@ -1807,12 +1738,14 @@ int XrdCmsConfig::xmang(XrdSysError *eDest, XrdOucStream &CFile)
     if (isManager && !isServer)
        {if ((xMeta && isMeta) || (!xMeta && !isMeta))
            for (j = 0; j < i; j++)
-                if (!memcmp(&InetAddr[j], &myAddr, sizeof(struct sockaddr)))
+                if (!memcmp(&InetAddr[j], &myAddr, sockALen))
                    {PortTCP = port; break;}
         if (isMeta) return (xMeta ? 0: CFile.noEcho());
         if (!xMeta) Prt = 0;
        }
 
+// Now construct the list of [meta] managers
+//
     do {if (multi)
            {free(mval);
             char mvBuff[1024];
@@ -1875,6 +1808,39 @@ int XrdCmsConfig::xnml(XrdSysError *eDest, XrdOucStream &CFile)
    return 0;
 }
   
+/******************************************************************************/
+/*                                 x o l i b                                  */
+/******************************************************************************/
+
+/* Function: xolib
+
+   Purpose:  To parse the directive: osslib <path>
+
+             <path>    the path of the filesystem library to be used.
+
+  Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdCmsConfig::xolib(XrdSysError *eDest, XrdOucStream &CFile)
+{
+    char *val, parms[1024];
+
+// Get the path
+//
+   if (!(val = CFile.GetWord()) || !val[0])
+      {eDest->Emsg("Config", "osslib not specified"); return 1;}
+   if (ossLib) free(ossLib);
+   ossLib = strdup(val);
+
+// Record any parms
+//
+   if (!CFile.GetRest(parms, sizeof(parms)))
+      {eDest->Emsg("Config", "namelib parameters too long"); return 1;}
+   if (ossParms) free(ossParms);
+   ossParms = (*parms ? strdup(parms) : 0);
+   return 0;
+}
+
 /******************************************************************************/
 /*                                 x p e r f                                  */
 /******************************************************************************/

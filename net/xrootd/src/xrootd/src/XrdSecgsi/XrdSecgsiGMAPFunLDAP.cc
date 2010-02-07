@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSecgsiGMAPFunLDAPCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*             X r d S e c g s i G M A P F u n L D A P . c c                  */

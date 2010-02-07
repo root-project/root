@@ -9,6 +9,8 @@
 /******************************************************************************/
 
 //        $Id$
+
+const char *XrdXrootdPioCVSID = "$Id$";
   
 #include "XrdXrootd/XrdXrootdPio.hh"
 

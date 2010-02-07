@@ -48,6 +48,7 @@ myName    = rhs.myName   ? strdup(rhs.myName)   : 0;
 ConnMax   = rhs.ConnMax;
 readWait  = rhs.readWait;
 idleWait  = rhs.idleWait;
+hailWait  = rhs.hailWait;
 argc      = rhs.argc;
 argv      = rhs.argv;
 DebugON   = rhs.DebugON;

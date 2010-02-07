@@ -14,6 +14,7 @@
 
 const char *XrdCmsRespCVSID = "$Id$";
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -96,13 +97,16 @@ void XrdCmsResp::Recycle()
 //
    if (myBuff) {myBuff->Recycle(); myBuff = 0;}
 
-// Put this object on the free queue
+// We keep a stash of allocated response objects. If there are too many we
+// simply delete this object.
 //
-   myMutex.Lock();
-   next = nextFree;
-   nextFree = this;
-   numFree++;
-   myMutex.UnLock();
+   if (XrdCmsResp::numFree >= XrdCmsResp::maxFree) delete this;
+      else {myMutex.Lock();
+            next = nextFree;
+            nextFree = this;
+            numFree++;
+            myMutex.UnLock();
+           }
 }
 
 /******************************************************************************/
@@ -150,7 +154,6 @@ void XrdCmsResp::Reply()
             {if (!(First = rp->next)) Last = 0;
              rdyMutex.UnLock();
              rp->ReplyXeq();
-             rp->Recycle();
             } else rdyMutex.UnLock();
         }
 }
@@ -162,6 +165,7 @@ void XrdCmsResp::Reply()
 void XrdCmsResp::ReplyXeq()
 {
    EPNAME("Reply")
+   XrdOucEICB *theCB;
    int Result;
 
 // If there is no callback object, ignore this call. Eventually, we may wish
@@ -199,9 +203,15 @@ void XrdCmsResp::ReplyXeq()
 //
    SyncCB.Wait();
 
-// Invoke the callback; it must explicitly invoke delete on our upcast object.
+// We now must request a callback to recycle this object once the callback
+// response is actually sent by setting the callback object pointer to us.
 //
-   ErrCB->Done(Result, (XrdOucErrInfo *)this);
+   theCB = ErrCB;
+   ErrCB = (XrdOucEICB *)this;
+
+// Invoke the callback
+//
+   theCB->Done(Result, (XrdOucErrInfo *)this);
 }
 
 /******************************************************************************/

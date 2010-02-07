@@ -10,6 +10,8 @@
 
 //          $Id$
 
+const char *XrdOucExportCVSID = "$Id$";
+
 #include "XrdOuc/XrdOucExport.hh"
 #include "XrdSys/XrdSysPlatform.hh"
   
@@ -19,7 +21,9 @@
   
 /* Function: ParseDefs
 
-   Purpose:  Parse: defaults [[no]check] [[no]compchk] [[no]dread] [forcero]
+   Purpose:  Parse: defaults [[no]check] [[no]compchk] [[no]dread]
+
+                             [[no]filter] [forcero]
 
                              [inplace] [local] [global] [globalro]
                               
@@ -55,6 +59,8 @@ unsigned long long XrdOucExport::ParseDefs(XrdOucStream      &Config,
         {"r/w",           XRDEXP_NOTRW,   0,              XRDEXP_ROW_X},
         {"inplace",       0,              XRDEXP_INPLACE, XRDEXP_INPLACE_X},
         {"outplace",      XRDEXP_INPLACE, 0,              XRDEXP_INPLACE_X},
+        {"nofilter",      XRDEXP_FILTER,  0,              XRDEXP_MKEEP_X},
+        {"filter",        0,              XRDEXP_FILTER,  XRDEXP_FILTER_X},
         {"nomig",         XRDEXP_MIG,     0,              XRDEXP_MIG_X},
         {"mig",           0,              XRDEXP_MIG,     XRDEXP_MIG_X},
         {"notmigratable", XRDEXP_MIG,     0,              XRDEXP_MIG_X},
@@ -65,6 +71,8 @@ unsigned long long XrdOucExport::ParseDefs(XrdOucStream      &Config,
         {"mlock",         0,              XRDEXP_MLOK,    XRDEXP_MLOK_X},
         {"nommap",        XRDEXP_MMAP,    0,              XRDEXP_MMAP_X},
         {"mmap",          0,              XRDEXP_MMAP,    XRDEXP_MMAP_X},
+        {"nopurge",       XRDEXP_PURGE,   0,              XRDEXP_PURGE_X},
+        {"purge",         0,              XRDEXP_PURGE,   XRDEXP_PURGE_X},
         {"nostage",       0,              XRDEXP_NOSTAGE, XRDEXP_STAGE_X},
         {"stage",         XRDEXP_NOSTAGE, 0,              XRDEXP_STAGE_X},
         {"dread",         XRDEXP_NODREAD, 0,              XRDEXP_DREAD_X},

@@ -560,7 +560,8 @@ XrdOdcFinderTRG::XrdOdcFinderTRG(XrdSysLogger *lp, int whoami, int port)
    OLBp    = new XrdOucStream(&OdcEDest);
    Active  = 0;
    myPort  = port;
-   sprintf(buff, "login %c %d port %d\n",(isProxy ? 'P' : 'p'),getpid(),port);
+   sprintf(buff, "login %c %d port %d\n",(isProxy ? 'P' : 'p'),
+                 static_cast<int>(getpid()),port);
    Login = strdup(buff);
 }
  

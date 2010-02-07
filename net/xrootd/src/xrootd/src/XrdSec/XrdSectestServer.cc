@@ -280,7 +280,7 @@ return 1;
 */
 void getline(uchar *buff, int blen) {
   int i;
-  fgets((char *)buff, blen, opts.infid);
+  if (!fgets((char *)buff, blen, opts.infid)) return;
   for (i = 0; i < blen; i++)
       if (buff[i] == '\n') {buff[i] = '\000'; break;}
   return;

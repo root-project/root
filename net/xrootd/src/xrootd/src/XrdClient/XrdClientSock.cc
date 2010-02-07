@@ -11,6 +11,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
 const char *XrdClientSockCVSID = "$Id$";
 
 #include <memory>
@@ -128,7 +130,7 @@ int XrdClientSock::RecvRaw(void* buffer, int length, int substreamid,
                         1000 // 1 second as a step
                         );
 
-         if ((pollRet < 0) && (errno != EINTR))
+         if ((pollRet < 0) && (errno != EINTR) && (errno != EAGAIN) )
             return TXSOCK_ERR;
 
       } while (--timeleft && pollRet <= 0 && !fRDInterrupt);
@@ -385,9 +387,10 @@ int XrdClientSock::TryConnect_low(bool isUnix, int altport, int windowsz)
     
        // Connect to a remote host
        //
-       sock = s->Open(host.c_str(),
-		   port, EnvGetLong(NAME_CONNECTTIMEOUT),
-		   windowsz );
+       if (port)
+          sock = s->Open(host.c_str(),
+                         port, EnvGetLong(NAME_CONNECTTIMEOUT),
+                         windowsz );
     } else {
 	Info(XrdClientDebug::kHIDEBUG, "ClientSock::TryConnect_low",
 	     "Trying to UNIX connect to" << fHost.TcpHost.File <<

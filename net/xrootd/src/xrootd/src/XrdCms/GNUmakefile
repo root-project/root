@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.16 2008/11/01 21:34:05 abh Exp $
+#              $Id: GNUmakefile,v 1.20 2010/01/05 01:16:38 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,10 +6,10 @@
   
 include ../GNUmake.env
 
-BINLIBS = -L$(LIBDIR) -lXrdOuc -lXrdNet -lXrdOuc -lXrd -lXrdSys $(TYPELIBSF)
+BINLIBS = -L$(LIBDIR) -lXrdOss -lXrdOuc -lXrdNet -lXrdOuc -lXrd -lXrdSys $(TYPELIBSF)
 
-LIBDEPS = $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdNet.a $(LIBDIR)/libXrdSys.a \
-          $(LIBDIR)/libXrd.a
+LIBDEPS = $(LIBDIR)/libXrdOss.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdNet.a \
+          $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrd.a
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -20,6 +20,7 @@ SRCCLNT = \
         XrdCmsClientMan.cc   \
         XrdCmsClientMsg.cc   \
         XrdCmsFinder.cc      \
+        XrdCmsNotify.cc      \
         XrdCmsResp.cc        \
 
 SRCBOTH = \
@@ -61,6 +62,7 @@ OBJCLNT = \
         $(OBJDIR)/XrdCmsClientMan.o   \
         $(OBJDIR)/XrdCmsClientMsg.o   \
         $(OBJDIR)/XrdCmsFinder.o      \
+        $(OBJDIR)/XrdCmsNotify.o      \
         $(OBJDIR)/XrdCmsResp.o
 
 OBJBOTH = \
@@ -134,7 +136,7 @@ anything: $(TARGETS)
 
 $(BINARY): $(OBJSRVR) $(OBJBOTH) $(LIBDEPS)
 	@echo Creating executable $(BINARY) 
-	$(ECHO)$(LD) $(LDOP) $(OBJSRVR) $(OBJBOTH) $(BINLIBS) $(LIBS) -o $(BINARY)
+	$(ECHO)$(LD) $(LDOP) $(OBJSRVR) $(OBJBOTH) $(BINLIBS) $(LIBS) $(TYPELIBMT) -o $(BINARY)
 
 
 $(LIBRARY): $(OBJCLNT) $(OBJBOTH)
@@ -226,6 +228,7 @@ $(OBJDIR)/XrdCmsConfig.o:    XrdCmsConfig.cc     XrdCmsConfig.hh \
                              XrdCmsXmi.hh        XrdCmsXmiReq.hh \
                              XrdNetDNS.hh        XrdNetOpts.hh \
                              XrdNetSecurity.hh   XrdNetSocket.hh \
+                             XrdOss.hh \
                              XrdOuca2x.hh        XrdOucEnv.hh \
                              XrdOucExport.hh     XrdOucName2Name.hh \
                              XrdOucPList.hh      XrdOucProg.hh \
@@ -311,7 +314,8 @@ $(OBJDIR)/XrdCmsMeter.o:     XrdCmsMeter.cc      XrdCmsMeter.hh \
                              XrdCmsCluster.hh    XrdCmsConfig.hh \
                              XrdCmsNode.hh \
                              XrdCmsState.hh      XrdCmsTrace.hh \
-                             XrdOucStream.hh     XrdOucTList.hh \
+                             XrdOss.hh \
+                             XrdOucStream.hh \
                              XrdSysError.hh      XrdSysPlatform.hh \
                              XrdSysPthread.hh
 	@echo Compiling XrdCmsMeter.cc 
@@ -325,14 +329,14 @@ $(OBJDIR)/XrdCmsNash.o:      XrdCmsNash.cc       XrdCmsNash.hh \
 $(OBJDIR)/XrdCmsNode.o:      XrdCmsNode.cc       XrdCmsNode.hh \
                              XrdCmsCache.hh      XrdCmsCluster.hh \
                              XrdCmsConfig.hh     XrdCmsKey.hh \
-                             XrdCmsManager.hh    XrdCmsAdmin.hh \
+                             XrdCmsManager.hh \
                              XrdCmsManList.hh    XrdCmsManTree.hh \
                              XrdCmsMeter.hh      XrdCmsPList.hh \
                              XrdCmsPrepare.hh    XrdCmsRRData.hh \
                              XrdCmsRRQ.hh        XrdCmsSelect.hh \
                              XrdCmsState.hh      XrdCmsTrace.hh \
                              XrdCmsTypes.hh      XrdCmsXmi.hh \
-                             XrdNetDNS.hh \
+                             XrdOss.hh           XrdNetDNS.hh \
                              XrdOucName2Name.hh  XrdOucProg.hh \
                              XrdOucPup.hh        XrdOucTokenizer.hh \
                              XrdOucUtils.hh \
@@ -341,6 +345,14 @@ $(OBJDIR)/XrdCmsNode.o:      XrdCmsNode.cc       XrdCmsNode.hh \
                              YProtocol.hh
 	@echo Compiling XrdCmsNode.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsNode.o XrdCmsNode.cc
+
+$(OBJDIR)/XrdCmsNotify.o:    XrdCmsNotify.cc       XrdCmsNotify.hh \
+                             XrdNetMsg.hh \
+                             XrdOucUtils.hh \
+                             XrdSysError.hh        XrdSysPthread.hh \
+                             XrdSysTimer.hh
+	@echo Compiling XrdCmsNotify.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsNotify.o XrdCmsNotify.cc
 
 $(OBJDIR)/XrdCmsParser.o:    XrdCmsParser.cc     XrdCmsParser.hh \
                              XrdCmsRRData.hh \
@@ -368,6 +380,7 @@ $(OBJDIR)/XrdCmsPrepArgs.o:  XrdCmsPrepArgs.cc   XrdCmsPrepArgs.hh \
 $(OBJDIR)/XrdCmsPrepare.o:   XrdCmsPrepare.cc    XrdCmsPrepare.hh \
                              XrdCmsConfig.hh     XrdCmsPrepArgs.hh \
                              XrdCmsTrace.hh      XrdNetMsg.hh \
+                             XrdOss.hh \
                              XrdOucEnv.hh        XrdOucHash.hh \
                              XrdOucMsubs.hh      XrdOucStream.hh \
                              XrdOucTList.hh \
@@ -433,7 +446,7 @@ $(OBJDIR)/XrdCmsRRQ.o:       XrdCmsRRQ.cc        XrdCmsRRQ.hh \
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsRRQ.o XrdCmsRRQ.cc
 
 $(OBJDIR)/XrdCmsRTable.o:    XrdCmsRTable.cc     XrdCmsRTable.hh \
-                             XrdCmsNode.hh       XrdCmsTrace.hh \
+                             XrdCmsNode.hh       XrdCmsTrace.hh  XrdCmsTypes.hh\
                              XrdSysPthread.hh
 	@echo Compiling XrdCmsRTable.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsRTable.o XrdCmsRTable.cc

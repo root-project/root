@@ -11,6 +11,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
 const char *XrdClientUrlSetCVSID = "$Id$";
 
 #include <XrdClient/XrdClientUrlSet.hh>
@@ -242,11 +244,7 @@ XrdClientUrlInfo *XrdClientUrlSet::GetARandomUrl()
    if (!fTmpUrlArray.GetSize()) return 0;
    
    for (int i=0; i < 10; i++)
-#ifdef __solaris__
-      rnd = irint(GetRandom() * fTmpUrlArray.GetSize()) % fTmpUrlArray.GetSize();
-#else
-      rnd = lrint(GetRandom() * fTmpUrlArray.GetSize()) % fTmpUrlArray.GetSize();
-#endif
+      rnd = static_cast<int>(GetRandom() * fTmpUrlArray.GetSize()) % fTmpUrlArray.GetSize();
 
    // Returns a random url from the ones that have to be picked
    // When all the urls have been picked, we restart from the full url set

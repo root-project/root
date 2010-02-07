@@ -11,6 +11,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
+const char *XrdClientMStreamCVSID = "$Id$";
+
 
 #include "XrdClient/XrdClientMStream.hh"
 #include "XrdClient/XrdClientLogConnection.hh"

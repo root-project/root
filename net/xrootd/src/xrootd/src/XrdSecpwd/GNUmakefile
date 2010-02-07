@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.9 2008/09/26 07:26:36 ganis Exp $
+# $Id: GNUmakefile,v 1.10 2009/05/26 12:48:32 ganis Exp $
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
 #------------------------------------------------------------------------------#
@@ -69,7 +69,7 @@ $(LIBRARY): $(OBJECTS) $(LIBDEPS)
 
 $(SRVADMIN): $(OBJECTA) $(LIBDEPS)
 	@echo Creating executable $(SRVADMIN) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECTA) $(BINLIBS) $(LIBS) -o $(SRVADMIN)
+	$(ECHO)$(LD) $(LDOP) $(OBJECTA) $(BINLIBS) $(LIBS)  $(RESOLVLIB) -o $(SRVADMIN)
 
 $(OBJDIR)/XrdSecpwdSrvAdmin.o: XrdSecpwdSrvAdmin.cc \
 		XrdOucString.hh XrdSutAux.hh XProtocol.hh XPtypes.hh \

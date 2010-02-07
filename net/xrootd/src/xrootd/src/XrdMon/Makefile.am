@@ -4,18 +4,45 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.5 2007/11/01 09:38:19 dfeich Exp $
+## Version info: $Id: Makefile.am,v 1.6 2008/11/27 09:46:33 dfeich Exp $
 ## Checked in by $Author: dfeich $
 #######################################################################
 
+# global settings
+AM_CPPFLAGS = -I$(top_srcdir)/src
+AM_LDFLAGS=-static
+
+#############################################################################
+## extra directory definitions for install tree
 xrootdxrdmonincdir = $(includedir)/xrootd/XrdMon
 
+#############################################################################
+## deliverables
+
+bin_PROGRAMS = \
+	   xrdmonCollector \
+	   xrdmonAdmin
+
+noinst_LTLIBRARIES = libXrdMonCommon.la \
+                     libXrdMonDecoder.la \
+                     libXrdMonCollector.la \
+                     libXrdMonDummySender.la
+
+# these targets will only be built with "make check"
+check_PROGRAMS = xrdmonDecoder \
+	   xrdmonDummySender \
+	   xrdmonDumpPackets \
+	   xrdmonDebugPacket \
+	   xrdmonConvertTime \
+           xrdmonCout2file \
+	   testParser
+
 xrootdxrdmoninc_HEADERS = \
-XrdMonArgParser.hh         XrdMonDecDictInfo.hh       XrdMonSndCoder.hh \
-XrdMonArgParserConvert.hh  XrdMonDecOnePacket.hh      XrdMonSndDebug.hh \
-XrdMonBufferedOutput.hh    XrdMonDecPacketDecoder.hh  XrdMonSndDictEntry.hh \
-XrdMonCommon.hh            XrdMonDecPreProcess.hh     XrdMonSndDummyXrootd.hh \
-XrdMonCtrAdmin.hh          XrdMonDecSink.hh           XrdMonSndPacket.hh \
+XrdMonArgParser.hh         XrdMonDecOnePacket.hh      XrdMonSndDebug.hh \
+XrdMonArgParserConvert.hh  XrdMonDecPacketDecoder.hh  XrdMonSndDictEntry.hh \
+XrdMonBufferedOutput.hh    XrdMonDecPreProcess.hh     XrdMonSndDummyXrootd.hh \
+XrdMonCommon.hh            XrdMonDecSink.hh           XrdMonSndPacket.hh \
+XrdMonCtrAdmin.hh          XrdMonDecStageInfo.hh      XrdMonSndStageEntry.hh \
 XrdMonCtrArchiver.hh       XrdMonDecTraceInfo.hh      XrdMonSndTraceCache.hh \
 XrdMonCtrBuffer.hh         XrdMonDecUserInfo.hh       XrdMonSndTraceEntry.hh \
 XrdMonCtrCollector.hh      XrdMonErrors.hh            XrdMonSndTransmitter.hh \
@@ -23,29 +50,12 @@ XrdMonCtrDebug.hh          XrdMonException.hh         XrdMonTimer.hh \
 XrdMonCtrPacket.hh         XrdMonHeader.hh            XrdMonTypes.hh \
 XrdMonCtrWriter.hh         XrdMonSenderInfo.hh        XrdMonUtils.hh \
 XrdMonDecArgParser.hh      XrdMonSndAdminEntry.hh \
+XrdMonDecDictInfo.hh       XrdMonSndCoder.hh \
 XrdMonArgParser.icc  XrdMonTimer.icc
 
-noinst_LTLIBRARIES = libXrdMonCommon.la \
-                     libXrdMonDecoder.la \
-                     libXrdMonCollector.la \
-                     libXrdMonDummySender.la
 
-bin_PROGRAMS = \
-	   xrdmonCollector \
-	   xrdmonAdmin
-
-# note: these targets were disabled in the original Makefiles
-#       I add them as 'check' targets
-check_PROGRAMS = xrdmonDecoder \
-	   xrdmonDummySender \
-	   xrdmonDumpPackets \
-	   xrdmonDebugPacket \
-	   xrdmonConvertTime \
-	   testParser
-
-INCLUDES = -I$(top_srcdir)/src
-
-AM_LDFLAGS=-static
+#############################################################################
+# Build rules
 
 libXrdMonCommon_la_SOURCES = \
 	    XrdMonArgParser.cc XrdMonArgParser.hh XrdMonArgParser.icc         \
@@ -64,6 +74,7 @@ libXrdMonDecoder_la_SOURCES = \
 	    XrdMonDecPreProcess.cc XrdMonDecPreProcess.hh      \
 	    XrdMonBufferedOutput.cc XrdMonBufferedOutput.hh \
 	    XrdMonDecSink.cc XrdMonDecSink.hh            \
+            XrdMonDecStageInfo.cc XrdMonDecStageInfo.hh \
 	    XrdMonDecTraceInfo.cc XrdMonDecTraceInfo.hh       \
 	    XrdMonDecUserInfo.cc XrdMonDecUserInfo.hh
 libXrdMonDecoder_la_LIBADD = $(LIBSOCKET) $(LIBNSL)
@@ -81,6 +92,7 @@ libXrdMonDummySender_la_SOURCES = \
 	    XrdMonSndCoder.cc XrdMonSndCoder.hh           \
 	    XrdMonSndDebug.cc XrdMonSndDebug.hh           \
 	    XrdMonSndDictEntry.cc XrdMonSndDictEntry.hh       \
+            XrdMonSndStageEntry.cc XrdMonSndStageEntry.hh \
 	    XrdMonSndDummyXrootd.cc XrdMonSndDummyXrootd.hh     \
 	    XrdMonSndPacket.cc  XrdMonSndPacket.hh         \
 	    XrdMonSndTraceCache.cc XrdMonSndTraceCache.hh      \
@@ -125,3 +137,8 @@ xrdmonConvertTime_LDADD = libXrdMonCommon.la
 
 testParser_SOURCES = testArgParser.cc
 testParser_LDADD = libXrdMonCommon.la
+
+xrdmonCout2file_SOURCES = XrdMonCout2FileApp.cc 
+xrdmonCout2file_LDADD = libXrdMonDecoder.la \
+                        ../XrdOuc/libXrdOuc.la \
+                        libXrdMonCommon.la

@@ -7,6 +7,8 @@
 /******************************************************************************/
 // $Id$
 
+const char *XrdSysDirCVSID = "$Id$";
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // XrdSysDir                                                            //
@@ -46,6 +48,10 @@ XrdSysDir::XrdSysDir(const char *path)
       dhandle = (void *) ::FindFirstFile(path, &filedata);
       if ((HANDLE)dhandle == INVALID_HANDLE_VALUE) {
          lasterr = EINVAL;
+         dhandle = 0;
+      }
+      else if (!(filedata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+         lasterr = ENOTDIR;
          dhandle = 0;
       }
 #endif

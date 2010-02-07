@@ -11,6 +11,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+//         $Id$
+
 const char *XrdClientProtocolCVSID = "$Id$";
 
 #include "XProtocol/XProtocol.hh"

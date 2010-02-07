@@ -26,16 +26,13 @@ const char *XrdSysPlatformCVSID = "$Id$";
 #if !defined(__GNUC__) || defined(__macos__) || defined(__solaris__)
 extern "C"
 {
+extern "C"
+{
 unsigned long long Swap_n2hll(unsigned long long x)
 {
- unsigned long long ret_val;
-#ifdef _LP64
+    unsigned long long ret_val;
     *( (unsigned int  *)(&ret_val) + 1) = ntohl(*( (unsigned int  *)(&x)));
     *(((unsigned int  *)(&ret_val)))    = ntohl(*(((unsigned int  *)(&x))+1));
-#else
-    *( (unsigned long *)(&ret_val) + 1) = ntohl(*( (unsigned long *)(&x)));
-    *(((unsigned long *)(&ret_val)))    = ntohl(*(((unsigned long *)(&x))+1));
-#endif
     return ret_val;
 }
 }
@@ -43,7 +40,7 @@ unsigned long long Swap_n2hll(unsigned long long x)
 
 #endif
 
-#ifndef HAS_STRLCPY
+#ifndef HAVE_STRLCPY
 extern "C"
 {
 size_t strlcpy(char *dst, const char *src, size_t sz)

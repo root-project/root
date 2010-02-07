@@ -1,4 +1,6 @@
 // $Id$
+
+const char *XrdSutRndmCVSID = "$Id$";
 /******************************************************************************/
 /*                                                                            */
 /*                        X r d S u t R n d m . c c                           */
@@ -57,10 +59,10 @@ bool XrdSutRndm::Init(bool force)
    unsigned int seed;
    if ((fd = open(randdev, O_RDONLY)) != -1) {
       DEBUG("taking seed from " <<randdev);
-      read(fd, &seed, sizeof(seed));
+      if (read(fd, &seed, sizeof(seed)) == sizeof(seed)) rc = 1;
       close(fd);
-      rc = 1;
-   } else {
+   }
+   if (rc == 0) {
       DEBUG(randdev  <<" not available: using time()");
       seed = time(0);   //better use times() + win32 equivalent
       rc = 1;

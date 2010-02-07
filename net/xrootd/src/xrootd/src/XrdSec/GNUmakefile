@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.26 2008/09/07 04:39:00 abh Exp $
+#              $Id: GNUmakefile,v 1.29 2009/09/01 09:52:35 furano Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,9 +6,9 @@
   
 include ../GNUmake.env
 
-MORELIBS = -L$(LIBDIR) -lXrdOuc -lXrdNet
+MORELIBS = -L$(LIBDIR) -lXrdOuc -lXrdNet -lXrdSys
 
-BINLIBS  = -L$(LIBDIR) -lXrdSec -lXrdOuc -lXrdNet -lXrdSys
+BINLIBS  = -L$(LIBDIR) -lXrdSec -lXrdOuc -lXrdNet 
 
 LIBDEPS = $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdNet.a
 
@@ -21,6 +21,7 @@ SOURCES = \
         XrdSecPManager.cc      \
         XrdSecProtocolhost.cc  \
         XrdSecServer.cc        \
+        XrdSecTLayer.cc        \
         XrdSectestClient.cc    \
         XrdSectestServer.cc    \
   
@@ -28,7 +29,8 @@ OBJSLIB = \
         $(OBJDIR)/XrdSecClient.o        \
         $(OBJDIR)/XrdSecPManager.o      \
         $(OBJDIR)/XrdSecProtocolhost.o  \
-        $(OBJDIR)/XrdSecServer.o
+        $(OBJDIR)/XrdSecServer.o        \
+        $(OBJDIR)/XrdSecTLayer.o
 
 OBJECTA = \
         $(OBJDIR)/XrdSectestClient.o
@@ -118,6 +120,13 @@ $(OBJDIR)/XrdSecServer.o: XrdSecServer.cc       XrdSecServer.hh \
 	@echo Compiling XrdSecServer.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecServer.o XrdSecServer.cc
 
+$(OBJDIR)/XrdSecTLayer.o: XrdSecTLayer.cc       XrdSecTLayer.hh \
+                          XrdSysPthread.hh      XrdSysHeaders.hh \
+                          XrdOucErrInfo.hh \
+                          XrdSecInterface.hh
+	@echo Compiling XrdSecTLayer.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSecTLayer.o XrdSecTLayer.cc
+
 $(OBJDIR)/XrdSectestClient.o:   XrdSectestClient.cc XrdSecInterface.hh \
                                 XrdSysHeaders.hh    XrdSecEntity.hh
 	@echo Compiling XrdSectestClient.cc 
@@ -126,4 +135,4 @@ $(OBJDIR)/XrdSectestClient.o:   XrdSectestClient.cc XrdSecInterface.hh \
 $(OBJDIR)/XrdSectestServer.o: XrdSecInterface.hh XrdSecEntity.hh XrdSysLogger.hh \
                               XrdSysHeaders.hh   XrdSectestServer.cc
 	@echo Compiling XrdSectestServer.cc 
-	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdSectestServer.o XrdSectestServer.cc
+	$(ECHO)$(CC) -c $(CFLAGS) $(CFNOSTRICTALIAS) $(INCLUDE) -o $(OBJDIR)/XrdSectestServer.o XrdSectestServer.cc

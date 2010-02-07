@@ -39,18 +39,6 @@ extern XrdOucTrace   XrdTrace;
 /*                         L o c a l   C l a s s e s                          */
 /******************************************************************************/
 
-class XrdFireWorker : public XrdJob
-{
-public:
-
-void DoIt() {delete this;
-             pthread_exit((void *)0);
-            }
-
-     XrdFireWorker() : XrdJob("underused worker termination"){}
-    ~XrdFireWorker() {}
-};
-
 class XrdSchedulerPID
      {public:
       XrdSchedulerPID *next;
@@ -151,7 +139,6 @@ void XrdScheduler::Cancel(XrdJob *jp)
 
 void XrdScheduler::DoIt()
 {
-   XrdFireWorker *fwp;
    int num_kill, num_idle;
 
 // Now check if there are too many idle threads (kill them if there are)
@@ -163,11 +150,9 @@ void XrdScheduler::DoIt()
        if (num_kill > 0)
           {if (num_kill > 1) num_kill = num_kill/2;
            SchedMutex.Lock();
-           num_TDestroy += num_kill;
-           num_Workers  -= num_kill;
+           num_Layoffs = num_kill;
+           while(num_kill--) WorkAvail.Post();
            SchedMutex.UnLock();
-           while(num_kill--)
-                if ((fwp = new XrdFireWorker())) Schedule((XrdJob *)fwp);
           }
       }
 
@@ -279,9 +264,7 @@ void XrdScheduler::Run()
            if ((jp = WorkFirst))
               {if (!(WorkFirst = jp->NextJob)) WorkLast = 0;
                if (num_JobsinQ) num_JobsinQ--;
-                  else {XrdLog.Emsg("Scheduler","Job queue count underflow!");
-                        num_JobsinQ = 0;
-                       }
+                  else XrdLog.Emsg("Scheduler","Job queue count underflow!");
                DispatchMutex.Lock(); 
                waiting = --idl_Workers;
                DispatchMutex.UnLock();
@@ -293,10 +276,15 @@ void XrdScheduler::Run()
                                             "Thread limit has been reached!");
                            }
                   }
-              } else if (num_JobsinQ)
-                        {XrdLog.Emsg("Scheduler","More jobs scheduled than could be run");
-                         num_JobsinQ = 0;
-                        }
+              } else {
+               num_JobsinQ = 0;
+               if (num_Layoffs > 0)
+                  {num_Layoffs--; num_TDestroy++; num_Workers--; idl_Workers--;
+                   TRACE(SCHED, "terminating thread; workers=" <<num_Workers);
+                   SchedMutex.UnLock();
+                   return;
+                  }
+              }
            SchedMutex.UnLock();
           } while(!jp);
        TRACE(SCHED, "running " <<jp->Comment <<" inq=" <<num_JobsinQ);
