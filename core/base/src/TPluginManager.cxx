@@ -24,8 +24,12 @@
 // by the handler.                                                      //
 // Plugin handlers can be defined via macros in a list of plugin        //
 // directories. With $ROOTSYS/etc/plugins the default top plugin        //
-// directory specified in $ROOTSYS/etc/system.rootrc. The macros must   //
-// have names like <BaseClass>/PX0_<PluginClass>.C, e.g.:               //
+// directory specified in $ROOTSYS/etc/system.rootrc. Additional        //
+// directories can be specified by adding them to the end of the list.  //
+// Macros for identical plugin handlers in later directories will       //
+// override previous ones (the inverse of normal search path behavior). //
+// The macros must have names like <BaseClass>/PX0_<PluginClass>.C,     //
+// e.g.:                                                                //
 //    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
 // to allow easy sorting and grouping. If the BaseClass is in a         //
 // namespace the directory must have the name NameSpace@@BaseClass as   //
@@ -97,7 +101,7 @@
 #include "TObjString.h"
 
 
-TPluginManager *gPluginMgr;   // main plugin mamager created in TROOT
+TPluginManager *gPluginMgr;   // main plugin manager created in TROOT
 
 
 ClassImp(TPluginHandler)
@@ -210,7 +214,7 @@ void TPluginHandler::SetupCallEnv()
 }
 
 //______________________________________________________________________________
-Int_t TPluginHandler::CheckPlugin()
+Int_t TPluginHandler::CheckPlugin() const
 {
    // Check if the plugin library for this handler exits. Returns 0
    // when it exists and -1 in case the plugin does not exist.
@@ -312,6 +316,35 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
    fCallEnv->Execute(ret);
 
    return ret;
+}
+
+//______________________________________________________________________________
+void TPluginHandler::Print(Option_t *opt) const
+{
+   // Print info about the plugin handler. If option is "a" print
+   // also the ctor's that will be used.
+
+   Int_t cntmiss = 0;
+
+   const char *exist = "";
+   if (CheckPlugin() == -1) {
+      exist = " [*]";
+      cntmiss++;
+   }
+   Printf("%-20s %-13s %-18s %s%s", fBase.Data(), fRegexp.Data(),
+          fClass.Data(), fPlugin.Data(), exist);
+   if (strchr(opt, 'a')) {
+      if (strlen(exist) == 0) {
+         TString lib = fPlugin;
+         if (!lib.BeginsWith("lib"))
+            lib = "lib" + lib;
+         char *path = gSystem->DynamicPathName(lib, kTRUE);
+         if (path) Printf("  [Lib:  %s]", path);
+         delete [] path;
+      }
+      Printf("  [Ctor: %s]", fCtor.Data());
+      Printf("  [origin: %s]", fOrigin.Data());
+   }
 }
 
 
@@ -586,25 +619,7 @@ void TPluginManager::Print(Option_t *opt) const
 
    while ((h = (TPluginHandler*) next())) {
       cnt++;
-      const char *exist = "";
-      if (h->CheckPlugin() == -1) {
-         exist = " [*]";
-         cntmiss++;
-      }
-      Printf("%-20s %-13s %-18s %s%s", h->fBase.Data(), h->fRegexp.Data(),
-             h->fClass.Data(), h->fPlugin.Data(), exist);
-      if (strchr(opt, 'a')) {
-         if (strlen(exist) == 0) {
-            TString lib = h->fPlugin;
-            if (!lib.BeginsWith("lib"))
-               lib = "lib" + lib;
-            char *path = gSystem->DynamicPathName(lib, kTRUE);
-            if (path) Printf("  [Lib:  %s]", path);
-            delete [] path;
-         }
-         Printf("  [Ctor: %s]", h->fCtor.Data());
-         Printf("  [origin: %s]", h->fOrigin.Data());
-      }
+      h->Print(opt);
    }
    Printf("=====================================================================");
    Printf("%d plugin handlers registered", cnt);

@@ -28,8 +28,12 @@
 // by the handler.                                                      //
 // Plugin handlers can be defined via macros in a list of plugin        //
 // directories. With $ROOTSYS/etc/plugins the default top plugin        //
-// directory specified in $ROOTSYS/etc/system.rootrc. The macros must   //
-// have names like <BaseClass>/PX0_<PluginClass>.C, e.g.:               //
+// directory specified in $ROOTSYS/etc/system.rootrc. Additional        //
+// directories can be specified by adding them to the end of the list.  //
+// Macros for identical plugin handlers in later directories will       //
+// override previous ones (the inverse of normal search path behavior). //
+// The macros must have names like <BaseClass>/PX0_<PluginClass>.C,     //
+// e.g.:                                                                //
 //    TFile/P10_TRFIOFile.C, TSQLServer/P20_TMySQLServer.C, etc.        //
 // to allow easy sorting and grouping. If the BaseClass is in a         //
 // namespace the directory must have the name NameSpace@@BaseClass as   //
@@ -135,9 +139,11 @@ private:
 
 public:
    const char *GetClass() const { return fClass; }
-   Int_t       CheckPlugin();
+   Int_t       CheckPlugin() const;
    Int_t       LoadPlugin();
    Long_t      ExecPlugin(Int_t nargs, ...);
+
+   void        Print(Option_t *opt = "") const;
 
    ClassDef(TPluginHandler,3)  // Handler for plugin libraries
 };
