@@ -290,7 +290,7 @@ void TMergerInfo::SetMergedWorker()
    // Increase number of already merged workers by 1
 
    if (AreAllWorkersMerged())
-      Error("SetMergedWorker", "all workers have been already merged before!"); 	
+      Error("SetMergedWorker", "all workers have been already merged before!");
    else
       fMergedWorkers++;
 }
@@ -314,7 +314,7 @@ Bool_t TMergerInfo::AreAllWorkersMerged()
 {
    // Return if merger has already merged all workers, i.e. if it has finished its merging job
 
-   return (fWorkersToMerge == fMergedWorkers); 
+   return (fWorkersToMerge == fMergedWorkers);
 }
 
 //______________________________________________________________________________
@@ -3403,7 +3403,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                (*mess) >> merger_id;
 
                PDB(kSubmerger, 2)
-                  Info("HandleSubmerger", "kOutputSent: Worker %s:%d:%s had sent its output to merger #%d", 
+                  Info("HandleSubmerger", "kOutputSent: Worker %s:%d:%s had sent its output to merger #%d",
                                           sl->GetName(), sl->GetPort(), sl->GetOrdinal(), merger_id);
 
                if (!fMergers || fMergers->GetSize() <= merger_id) {
@@ -3513,7 +3513,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                                  prefix, fMergersCount, GetNumberOfSlaves());
                      else {
                         msg.Form("%s: No mergers will be used for %d workers",
-                                 prefix, GetNumberOfSlaves()); 
+                                 prefix, GetNumberOfSlaves());
                         fMergersCount = -1;
                      }
                      if (gProofServ)
@@ -3801,7 +3801,7 @@ Bool_t TProof::CreateMerger(TSlave *sl, Int_t port)
                           "merger #%d (port: %d) for %d workers started",
                           fMergers->GetSize(), port, workers);
 
-   fMergers->Add(merger);	
+   fMergers->Add(merger);
    fWorkersToMerge = fWorkersToMerge - workers;
 
    fRedirectNext = workers / 2;
@@ -5723,7 +5723,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
 {
    // Remove files for the data directory.
    // The option 'what' can take the values:
-   //     kPurge                 remove all files and directories under '~/data' 
+   //     kPurge                 remove all files and directories under '~/data'
    //     kUnregistered          remove only files not in registered datasets (default)
    //     kDataset               remove files belonging to dataset 'dsname'
    // User is prompt for confirmation, unless kForceClear is ORed with the option
@@ -5851,7 +5851,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
             Warning("ClearData", "found incomplete line: '%s'", line.Data());
          }
       }
-      // Close and remove the file 
+      // Close and remove the file
       in.close();
       gSystem->Unlink(outtmp);
 
@@ -6885,7 +6885,7 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
    // The 'opt' allows to specify whether the .PAR should be just unpacked
    // in the existing dir (opt = kUntar, default) or a remove of the existing
    // directory should be executed (opt = kRemoveOld), thereby triggering a full
-   // re-build. The option if effective only for PROOF protocol > 8 .
+   // re-build. This option if effective only for PROOF protocol > 8.
    // Returns 0 in case of success and -1 in case of error.
 
    // Strategy:
@@ -10344,4 +10344,3 @@ void TProof::LogViewer(const char *url, Int_t idx)
    // Done
    return;
 }
-

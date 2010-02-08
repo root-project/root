@@ -24,9 +24,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProof
-#include "TProof.h"
-#endif
 #ifndef ROOT_TProofMgr
 #include "TProofMgr.h"
 #endif
@@ -249,9 +246,9 @@ private:
 
    TSlave      *fMerger;         // Slave that acts as merger
    Int_t        fPort;           // Port number, on which it accepts outputs from other workers
-   Int_t        fMergedObjects;  // Total number of objects it must accept from other workers 
+   Int_t        fMergedObjects;  // Total number of objects it must accept from other workers
                                  // (-1 == not set yet)
-   Int_t        fWorkersToMerge; // Number of workers that are merged on this merger 
+   Int_t        fWorkersToMerge; // Number of workers that are merged on this merger
                                  // (does not change during time)
    Int_t        fMergedWorkers;  // Current number of already merged workers
                                  // (does change during time as workers are being merged)
@@ -280,7 +277,7 @@ public:
    void        AddMergedObjects(Int_t objects) { fMergedObjects += objects; }
 
    Bool_t      AreAllWorkersAssigned();
-   Bool_t      AreAllWorkersMerged();	
+   Bool_t      AreAllWorkersMerged();
 
    void Deactivate() { fIsActive = kFALSE; }
    Bool_t      IsActive() { return fIsActive; }
@@ -530,7 +527,7 @@ private:
    static TList   *fgProofEnvList;   // List of TNameds defining environment
                                      // variables to pass to proofserv
 
-   Bool_t          fMergersSet;      // Indicates, if the following variables have been initialized properly                               
+   Bool_t          fMergersSet;      // Indicates, if the following variables have been initialized properly
    Int_t           fMergersCount;
    Int_t           fWorkersToMerge;  // Current total number of workers, which have not been yet assigned to any merger
    Int_t           fLastAssignedMerger;
