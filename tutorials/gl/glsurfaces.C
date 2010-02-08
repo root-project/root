@@ -81,7 +81,7 @@ void glsurfaces()
    fun3->Draw("glsurfpol");
 
    c2->cd(4);
-   TF3 *fun4 = new TF3("TF3 sample","sin(x * x + y * y + z * z - 4)",
+   TF3 *fun4 = new TF3("fun4","sin(x * x + y * y + z * z - 4)",
                        -2.5, 2.5, -2.5, 2.5, -2.5, 2.5);
    Int_t colInd = TColor::GetColor(1.f, 0.5f, 0.f);
    fun4->SetFillColor(colInd);
