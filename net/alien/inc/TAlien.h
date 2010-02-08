@@ -88,7 +88,7 @@ public:
    virtual const char  *Pwd(Bool_t verbose=kFALSE);
    virtual const char  *GetHomeDirectory() { return fHome.Data(); }
    virtual Bool_t Cd(const char *ldn="", Bool_t verbose=kFALSE);
-   virtual Bool_t Mkdir(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
+   virtual Int_t Mkdir(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
    virtual Bool_t Rmdir(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
    virtual Bool_t Register(const char *lfn, const char *turl, Long_t size=-1,
                            const char *se=0, const char *guid=0, Bool_t verbose=kFALSE);
