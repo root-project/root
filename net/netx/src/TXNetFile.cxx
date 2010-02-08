@@ -677,7 +677,7 @@ Bool_t TXNetFile::ReadBufferAsync(Long64_t offs, Int_t bufferLength)
    // This doesnt return the number of bytes read...
    // and even if it did we dont want to update fBytesRead
    // because that would be updated in the real read
-   XReqErrorType nr = fClient->Read_Async(offs, bufferLength);
+   XReqErrorType nr = fClient->Read_Async(offs+fArchiveOffset, bufferLength);
 
    if (nr != kOK)
       return kTRUE;
@@ -727,6 +727,9 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       return kTRUE;
    }
 
+   if (fArchiveOffset)
+      for (Int_t i = 0; i < nbuf; i++)
+         pos[i] += fArchiveOffset;
 
    // A null buffer means that we want to use the async stuff
    //  hence we have to sync the cache size in XrdClient with the supposed

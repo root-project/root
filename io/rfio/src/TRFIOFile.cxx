@@ -252,7 +252,7 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    for (n = 0; n < nbuf; n++) {
       if (gDebug>1)
          Info("TFIOFile", "adding chunk %lld, %d %d", n, pos[n], len[n]);
-      iov[n].iov_base = pos[n];
+      iov[n].iov_base = pos[n] + fArchiveOffset;
       iov[n].iov_len  = len[n];
    }
 
