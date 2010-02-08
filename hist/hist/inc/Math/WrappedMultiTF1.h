@@ -129,7 +129,6 @@ private:
 
 
    bool fLinear;                 // flag for linear functions 
-   bool fPolynomial;             // flag for polynomial functions 
    TF1 * fFunc;                   // pointer to ROOT function
    unsigned int fDim;             // cached value of dimension
    std::vector<double> fParams;   // cached vector with parameter values
