@@ -2100,6 +2100,7 @@ Int_t TLinearFitter::EvalRobust(Double_t h)
       delete [] index;
       delete [] bestindex;
       delete [] residuals;
+      delete [] bestchi2;
       return 0;
    }
    //if n is large, the dataset should be partitioned
