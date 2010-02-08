@@ -369,21 +369,41 @@ public:
       return -1;
    }
 
-   Int_t LocateAttributeValue(char* start)
+   Int_t LocateAttributeValue(char* start, char* &attr_start, Int_t &attr_len)
    {
       char* curr = start;
-      if (curr>=fMaxAddr)
-         if (!ExpandStream()) return 0;
+
+      // skip spaces before = sign
+      while (1) {
+         if (curr>=fMaxAddr)
+            if (!ExpandStream()) return 0;
+         if (*curr!=' ') break;
+         curr++;
+      };
+
       if (*curr!='=') return 0;
       curr++;
-      if (curr>=fMaxAddr)
-         if (!ExpandStream()) return 0;
+
+      // skip spaces after = sign
+      while (1) {
+         if (curr>=fMaxAddr)
+            if (!ExpandStream()) return 0;
+         if (*curr!=' ') break;
+         curr++;
+      };
+
       if (*curr!='"') return 0;
+
+      attr_start = curr + 1;
+
       do {
          curr++;
          if (curr>=fMaxAddr)
             if (!ExpandStream()) return 0;
-         if (*curr=='"') return curr-start+1;
+         if (*curr=='"') {
+            attr_len = curr - attr_start;
+            return curr-start+1;
+         }
       } while (curr<fMaxAddr);
       return 0;
    }
@@ -1561,25 +1581,25 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
             return node;
          } else return 0;
       } else {
-         Int_t attrlen = inp->LocateIdentifier();
-         if (attrlen<=0) { resvalue = -6; return 0; }
+         Int_t attrnamelen = inp->LocateIdentifier();
+         if (attrnamelen<=0) { resvalue = -6; return 0; }
 
-         char* valuestart = inp->fCurrent+attrlen;
+         char* attrvalue(0);
+         Int_t attrvaluelen(0);
 
-         int valuelen = inp->LocateAttributeValue(valuestart);
-         if (valuelen<3) { resvalue = -7; return 0; }
+         int fullvaluelen = inp->LocateAttributeValue(inp->fCurrent + attrnamelen, attrvalue, attrvaluelen);
+         if (fullvaluelen<3) { resvalue = -7; return 0; }
 
-         SXmlAttr_t* attr = (SXmlAttr_t*) AllocateAttr(attrlen, valuelen-3, (XMLNodePointer_t) node);
+         SXmlAttr_t* attr = (SXmlAttr_t*) AllocateAttr(attrnamelen, attrvaluelen, (XMLNodePointer_t) node);
 
-         attr->fName.Resize(attrlen);
+         attr->fName.Resize(attrnamelen);
          char* attrname = (char*)attr->fName.Data();
-         strncpy(attrname, inp->fCurrent, attrlen);
-         attrname[attrlen] = '\0';
-         attr->fValue.Resize(valuelen-3);
-         char* attrvalue = (char*)attr->fValue.Data();
-         UnpackSpecialCharacters(attrvalue, valuestart+2, valuelen-3);
+         strncpy(attrname, inp->fCurrent, attrnamelen);
+         attrname[attrnamelen] = '\0';
+         attr->fValue.Resize(attrvaluelen);
+         UnpackSpecialCharacters((char*)attr->fValue.Data(), attrvalue, attrvaluelen);
 
-         if (!inp->ShiftCurrent(attrlen+valuelen)) return 0;
+         if (!inp->ShiftCurrent(attrnamelen+fullvaluelen)) return 0;
 
          if ((strlen(attrname)>6) && (strstr(attrname,"xmlns:")==attrname)) {
             if (strcmp(node->fName.Data(), attrname + 6)!=0) {
