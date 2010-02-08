@@ -237,14 +237,14 @@ public:
    /** return Reflex instance state */
    static EState State();
 
+   void Shutdown();
+
 private:
    Instance(Instance * createSingleton);
    static Instance& CreateReflexInstance();
 
    static Instance* fgSingleton; // class singleton
    static EState fgState; // singleton's state
-   void Shutdown();
-   /** default constructor */
 };    // struct Reflex
 
 /** the Name of the package - used for messages */
