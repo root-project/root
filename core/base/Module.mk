@@ -43,7 +43,8 @@ BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
                 TVirtualPerfStats.h TVirtualX.h TParameter.h \
                 TVirtualAuth.h TFileInfo.h TFileCollection.h \
                 TRedirectOutputGuard.h TVirtualMonitoring.h TObjectSpy.h \
-                TUri.h TUrl.h TInetAddress.h TVirtualTableInterface.h
+                TUri.h TUrl.h TInetAddress.h TVirtualTableInterface.h \
+                TBase64.h
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
