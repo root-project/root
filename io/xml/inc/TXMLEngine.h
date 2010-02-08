@@ -40,6 +40,7 @@ protected:
    void              SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t layout, Int_t level);
    XMLNodePointer_t  ReadNode(XMLNodePointer_t xmlparent, TXMLInputStream* inp, Int_t& resvalue);
    void              DisplayError(Int_t error, Int_t linenumber);
+   XMLDocPointer_t   ParseStream(TXMLInputStream* input);
 
    Bool_t            fSkipComments;    //! if true, do not create comments nodes in document during parsing
 
@@ -107,6 +108,7 @@ public:
    void              DocSetRootElement(XMLDocPointer_t xmldoc, XMLNodePointer_t xmlnode);
    XMLNodePointer_t  DocGetRootElement(XMLDocPointer_t xmldoc);
    XMLDocPointer_t   ParseFile(const char* filename);
+   XMLDocPointer_t   ParseString(const char* xmlstring);
    Bool_t            ValidateVersion(XMLDocPointer_t doc, const char* version = 0);
    Bool_t            ValidateDocument(XMLDocPointer_t, Bool_t = kFALSE) { return kFALSE; } // obsolete
    void              SaveSingleNode(XMLNodePointer_t xmlnode, TString* res, Int_t layout = 1);

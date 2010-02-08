@@ -1055,7 +1055,26 @@ XMLDocPointer_t TXMLEngine::ParseFile(const char* filename)
 
    if ((filename==0) || (strlen(filename)==0)) return 0;
    TXMLInputStream inp(true, filename, 100000);
+   return ParseStream(&inp);
+}
 
+//______________________________________________________________________________
+XMLDocPointer_t TXMLEngine::ParseString(const char* xmlstring)
+{
+   // parses content of string and tries to produce xml structures
+
+   if ((xmlstring==0) || (strlen(xmlstring)==0)) return 0;
+   TXMLInputStream inp(false, xmlstring, 2*strlen(xmlstring) );
+   return ParseStream(&inp);
+}
+
+//______________________________________________________________________________
+XMLDocPointer_t TXMLEngine::ParseStream(TXMLInputStream* inp)
+{
+   // parses content of the stream and tries to produce xml structures
+
+   if (inp == 0) return 0;
+   
    XMLDocPointer_t xmldoc = NewDoc(0);
    
    bool success = false;
@@ -1063,23 +1082,23 @@ XMLDocPointer_t TXMLEngine::ParseFile(const char* filename)
    Int_t resvalue = 0;
    
    do {
-      ReadNode(((SXmlDoc_t*) xmldoc)->fRootNode, &inp, resvalue);
+      ReadNode(((SXmlDoc_t*) xmldoc)->fRootNode, inp, resvalue);
       
       if (resvalue!=2) break;
 
-      if (!inp.EndOfStream()) {
-         if (!inp.SkipSpaces()) { 
+      if (!inp->EndOfStream()) {
+         if (!inp->SkipSpaces()) { 
             resvalue = -1; break; 
          }
       }
-      if (inp.EndOfStream()) {
+      if (inp->EndOfStream()) {
          success = true; 
          break;
       }
    } while (true);
    
    if (!success) {
-      DisplayError(resvalue, inp.CurrentLine());
+      DisplayError(resvalue, inp->CurrentLine());
       FreeDoc(xmldoc);
       return 0;
    }
@@ -1126,7 +1145,7 @@ void TXMLEngine::SaveSingleNode(XMLNodePointer_t xmlnode, TString* res, Int_t la
 //______________________________________________________________________________
 XMLNodePointer_t TXMLEngine::ReadSingleNode(const char* src)
 {
-   // read snigle xml node from provided string
+   // read single xml node from provided string
     
    if (src==0) return 0;
    
