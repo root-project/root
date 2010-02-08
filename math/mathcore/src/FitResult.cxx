@@ -39,7 +39,7 @@ namespace ROOT {
 
 FitResult::FitResult() : 
    fValid(false), fNormalized(false), fNFree(0), fNdf(0), fNCalls(0), 
-   fStatus(-1), fVal(0), fEdm(0), fChi2(-1), fFitFunc(0)
+   fStatus(-1), fCovStatus(-1), fVal(0), fEdm(0), fChi2(-1), fFitFunc(0)
 {
    // Default constructor implementation.
 }
