@@ -604,35 +604,36 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    resval = CorrectValue(resval);
    
    // estimate gradient 
-   if (g == 0) return resval; 
+   if (g != 0) {  
 
-   unsigned int npar = func.NPar(); 
-   const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func); 
+      unsigned int npar = func.NPar(); 
+      const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func); 
 
-   if (gfunc != 0) { 
-      //case function provides gradient
-      if (!useBinIntegral ) {
-         gfunc->ParameterGradient(  x , p, g );  
+      if (gfunc != 0) { 
+         //case function provides gradient
+         if (!useBinIntegral ) {
+            gfunc->ParameterGradient(  x , p, g );  
+         }
+         else { 
+            // needs to calculate the integral for each partial derivative
+            CalculateGradientIntegral( *gfunc, x1, x2, p, g); 
+         }
       }
       else { 
-         // needs to calculate the integral for each partial derivative
-         CalculateGradientIntegral( *gfunc, x1, x2, p, g); 
+         SimpleGradientCalculator  gc( npar, func); 
+         if (!useBinIntegral ) 
+            gc.ParameterGradient(x, p, fval, g); 
+         else { 
+            // needs to calculate the integral for each partial derivative
+            CalculateGradientIntegral( gc, x1, x2, p, g); 
+         }
       }
+      // mutiply by - 1 * weight
+      for (unsigned int k = 0; k < npar; ++k) {
+         g[k] *= - invError;
+         if (useBinVolume) g[k] *= binVolume;      
+      }       
    }
-   else { 
-      SimpleGradientCalculator  gc( npar, func); 
-      if (!useBinIntegral ) 
-         gc.ParameterGradient(x, p, fval, g); 
-      else { 
-         // needs to calculate the integral for each partial derivative
-         CalculateGradientIntegral( gc, x1, x2, p, g); 
-      }
-   }
-   // mutiply by - 1 * weight
-   for (unsigned int k = 0; k < npar; ++k) {
-      g[k] *= - invError;
-      if (useBinVolume) g[k] *= binVolume;      
-   }       
 
    if (useBinVolume) delete [] xc;
 
