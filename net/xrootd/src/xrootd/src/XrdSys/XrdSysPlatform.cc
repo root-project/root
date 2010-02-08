@@ -26,8 +26,6 @@ const char *XrdSysPlatformCVSID = "$Id$";
 #if !defined(__GNUC__) || defined(__macos__) || defined(__solaris__)
 extern "C"
 {
-extern "C"
-{
 unsigned long long Swap_n2hll(unsigned long long x)
 {
     unsigned long long ret_val;
