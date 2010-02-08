@@ -2887,7 +2887,8 @@ void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    Int_t i;
    char quote = '"';
    out<<"   "<<endl;
-   if (!fMethodCall) {
+   //if (!fMethodCall) {
+   if (!fType) {
       out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<endl;
       if (fNpx != 100) {
          out<<"   "<<GetName()<<"->SetNpx("<<fNpx<<");"<<endl;
