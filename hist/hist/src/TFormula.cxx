@@ -737,13 +737,13 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             t = chaine[i-3];
             isdecimal = isdecimal && (strchr("0123456789.",t)!=0);
             if (isdecimal) {
-               if ( chaine[i-2] == 'e' ) puiss10 = 1;
+               if ( chaine[i-2] == 'e' || chaine[i-2] == 'E' ) puiss10 = 1;
             } else if ( strchr("+-/[]()&|><=!*/%^\\",t) ) {
                isdecimal = 1; // reset after delimiter
             }
          }
          if (j>2) {
-            if (chaine[j-2] == 'e') {
+            if (chaine[j-2] == 'e' || chaine[j-2] == 'E') {
                Bool_t isrightdecimal = 1;
 
                for(k=j-3; k>=0 && isrightdecimal; --k) {
@@ -1254,7 +1254,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      for (j=0; j<chaine.Length() && err==0; j++) {
                         t=chaine[j];
                         if (!isHexa) {
-                           if (j>0 && (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-")) {
+                           if (j>0 && (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-" || chaine(j,1)=="E" || chaine(j,2)=="E+" || chaine(j,2)=="E-")) {
                               if (hasExpo) {
                                  err=26;
                                  chaine_error=chaine;
@@ -1264,7 +1264,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                               // That information was ignored (by sscanf), we now make it an error
                               // hasDot = kFALSE;
                               hasDot = kTRUE;  // forbid any additional '.'
-                              if (chaine(j,2)=="e+" || chaine(j,2)=="e-") j++;
+                              if (chaine(j,2)=="e+" || chaine(j,2)=="e-" || chaine(j,2)=="E+" || chaine(j,2)=="E-") j++;
                            }
                            else {
                               if (chaine(j,1) == "." && !hasDot) hasDot = kTRUE; // accept only one '.' in the number
