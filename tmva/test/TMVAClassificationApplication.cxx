@@ -106,10 +106,10 @@ int main( int argc, char** argv )
    // create a set of variables and declare them to the reader
    // - the variable names must corresponds in name and type to 
    // those given in the weight file(s) that you use
-   Float_t myvar1, myvar2;
+   Float_t var1, var2;
    Float_t var3, var4;
-   reader->AddVariable( "myvar1 := var1+var2", &myvar1 );
-   reader->AddVariable( "myvar2 := var1-var2", &myvar2 );
+   reader->AddVariable( "myvar1 := var1+var2", &var1 );
+   reader->AddVariable( "myvar2 := var1-var2", &var2 );
    reader->AddVariable( "var3",                &var3 );
    reader->AddVariable( "var4",                &var4 );
    Float_t spec1,spec2;
@@ -246,7 +246,6 @@ int main( int argc, char** argv )
    TTree* theTree = (TTree*)input->Get("TreeS");
    std::cout << "--- Select signal sample" << std::endl;
    Float_t userVar1, userVar2;
-   Float_t var1,var2;
    theTree->SetBranchAddress( "var1", &userVar1 );
    theTree->SetBranchAddress( "var2", &userVar2 );
    theTree->SetBranchAddress( "var3", &var3 );

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Eckhard von Toerne
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -271,6 +271,7 @@ void TMVA::Reader::AddVariable( const TString& expression, Float_t* datalink )
 void TMVA::Reader::AddVariable( const TString& expression, Int_t* datalink )
 {
    // Add an integer variable or expression to the reader
+   Log() << kFATAL << "Reader::AddVariable( const TString& expression, Int_t* datalink ), this function is deprecated, please provide all variables to the reader as floats" << Endl;
    DataInfo().AddVariable(expression, "", "", 0, 0, 'I', kFALSE, (void*)datalink ); // <= should this be F or rather T?
 }
 
@@ -365,22 +366,64 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
    return method;
 }
 
+#if ROOT_SVN_REVISION >= 32259
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& /*inputVec*/, const TString& methodTag, Double_t aux )
+TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr )
+{
+   // books MVA method from weightfile
+   IMethod* im = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( methodType )),
+                                                      DataInfo(), "" );
+   
+   MethodBase *method = (dynamic_cast<MethodBase*>(im));
+
+   method->SetupMethod();
+
+   // when reading older weight files, they could include options
+   // that are not supported any longer
+   method->DeclareCompatibilityOptions();
+
+   // read weight file
+   method->ReadStateFromXMLString( xmlstr );
+
+   // check for unused options
+   method->CheckSetup();
+   
+   Log() << kINFO << "Booked classifier \"" << method->GetMethodName()
+         << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
+   
+   return method;
+}
+#endif
+
+//_______________________________________________________________________
+Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const TString& methodTag, Double_t aux )
 {
    // Evaluate a vector<float> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
 
-   return EvaluateMVA( methodTag, aux );
+   // create a temporary event from the vector.
+   Event* tmpEvent=new Event(inputVec, 2); // ToDo resolve magic 2 issue
+   IMethod* imeth = FindMVA( methodTag );
+   MethodBase* meth = dynamic_cast<TMVA::MethodBase*>(imeth); 
+   if (meth->GetMethodType() == TMVA::Types::kCuts)
+      dynamic_cast<TMVA::MethodCuts*>(meth)->SetTestSignalEfficiency( aux );
+   Double_t val = meth->GetMvaValue( tmpEvent, &fMvaEventError);
+   delete tmpEvent;
+   return val;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& /*inputVec*/, const TString& methodTag, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, const TString& methodTag, Double_t aux )
 {
-   // Evaluate a vector<double> of input data for a given method
+   // obsolete method, use TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const TString& methodTag, Double_t aux )
+   Log() << kWARNING << "obsolete method, use TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const TString& methodTag, Double_t aux )" << Endl;
+      // Evaluate a vector<double> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
-
-   return EvaluateMVA( methodTag, aux );
+   std::vector<Float_t>* inputVecFloat = new std::vector<Float_t>();
+   for (std::vector<Double_t>::const_iterator it=inputVec.begin(); it != inputVec.end(); it++ ) inputVecFloat->push_back(*it);
+   Double_t val = EvaluateMVA( *inputVecFloat, methodTag, aux );
+   delete inputVecFloat;
+   return val;
 }
 
 //_______________________________________________________________________

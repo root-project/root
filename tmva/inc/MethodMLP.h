@@ -171,7 +171,7 @@ namespace TMVA {
 #ifdef MethodMLP_UseMinuit__
       // minuit functions -- commented out because they rely on a static pointer
       void MinuitMinimize();
-      static MethodMLP* GetThisPtr() { return fgThis; }
+      static MethodMLP* GetThisPtr();
       static void IFCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* fitPars, Int_t ifl );
       void FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* fitPars, Int_t ifl );
 #endif

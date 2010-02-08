@@ -100,6 +100,13 @@ TMVA::Node::~Node()
 }
 
 //_______________________________________________________________________
+int TMVA::Node::GetCount()
+{
+   // retuns the global number of instantiated nodes
+   return fgCount;
+}
+
+//_______________________________________________________________________
 Int_t TMVA::Node::CountMeAndAllDaughters() const 
 {
    //recursively go through the part of the tree below this node and count all daughters

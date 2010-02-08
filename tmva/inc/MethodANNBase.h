@@ -133,7 +133,7 @@ namespace TMVA {
       virtual void DeclareOptions();
       virtual void ProcessOptions();
       
-      Bool_t Debug() const { return fgDEBUG; }
+      Bool_t Debug() const;
       
    protected:
 

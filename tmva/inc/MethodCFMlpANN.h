@@ -136,7 +136,7 @@ namespace TMVA {
       Int_t    GetClass( Int_t ivar             ) const { return (*fClass)[ivar]; }
 
       // static pointer to this object (required for external functions
-      static MethodCFMlpANN* This( void ) { return fgThis; }  
+      static MethodCFMlpANN* This( void );
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }

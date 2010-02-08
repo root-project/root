@@ -112,6 +112,9 @@ void TMVA::MethodMLP::Init()
 
    // the minimum requirement to declare an event signal-like
    SetSignalReferenceCut( 0.5 );
+#ifdef MethodMLP_UseMinuit__
+   fgThis = this;
+#endif
 }
 
 //_______________________________________________________________________
@@ -1218,7 +1221,15 @@ void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* 
    Log() << kDEBUG << "***** New estimator: " << f << "  min: " << minf << " --> ncalls: " << nc << Endl;
 }
 
+//_______________________________________________________________________
+TMVA::MethodMLP* TMVA::MethodMLP::GetThisPtr() 
+{ 
+   // global "this" pointer to be used in minuit
+   return fgThis; 
+}
+
 #endif
+
 
 //_______________________________________________________________________
 void TMVA::MethodMLP::MakeClassSpecific( std::ostream& fout, const TString& className ) const

@@ -1098,6 +1098,19 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( TFile& /*rf*/ )
 }
 
 //_______________________________________________________________________
+TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS( void ) 
+{ 
+   // static pointer to this object
+   return fgThisPDERS; 
+}
+//_______________________________________________________________________
+void TMVA::MethodPDERS::UpdateThis( void ) 
+{
+   // update static this pointer
+   fgThisPDERS = this; 
+}
+
+//_______________________________________________________________________
 void TMVA::MethodPDERS::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write specific classifier response

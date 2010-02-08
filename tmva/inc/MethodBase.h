@@ -195,6 +195,10 @@ namespace TMVA {
    public: // these two need to be public, they are used to read in-memory weight-files
       void ReadStateFromStream  ( std::istream& tf );         // backward compatibility
       void ReadStateFromStream  ( TFile&        rf );         // backward compatibility
+#if ROOT_SVN_REVISION >= 32259
+      void ReadStateFromXMLString( const char* xmlstr );      // for reading from memory
+#endif
+
 
    private:
       // the variable information
@@ -371,7 +375,7 @@ namespace TMVA {
       virtual void     MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const {}
 
       // static pointer to this object - required for ROOT finder (to be solved differently)
-      static MethodBase* GetThisBase() { return fgThisBase; }
+      static MethodBase* GetThisBase();
 
       // some basic statistical analysis
       void Statistics( Types::ETreeType treeType, const TString& theVarName,
@@ -412,7 +416,7 @@ namespace TMVA {
       // ---------- private acccessors ---------------------------------------------
 
       // reset required for RootFinder
-      void             ResetThisBase() { fgThisBase = this; }
+      void             ResetThisBase();
 
       // ---------- private auxiliary methods --------------------------------------
 

@@ -143,8 +143,8 @@ namespace TMVA {
 
    public:
 
-      static Types& Instance() { return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types()); }
-      static void   DestroyInstance() { if (fgTypesPtr != 0) { delete fgTypesPtr; fgTypesPtr = 0; } }
+      static Types& Instance();
+      static void   DestroyInstance(); 
       ~Types();
 
       Types::EMVA   GetMethodType( const TString& method ) const;

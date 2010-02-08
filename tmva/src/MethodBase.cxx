@@ -1108,6 +1108,20 @@ void TMVA::MethodBase::ReadStateFromFile()
 
 }
 
+#if ROOT_SVN_REVISION >= 32259
+//_______________________________________________________________________
+void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
+   // for reading from memory
+   
+   void* doc = gTools().xmlengine().ParseString(xmlstr);
+
+   void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
+
+   return ReadStateFromXML(rootnode);
+
+}
+#endif
+
 //_______________________________________________________________________
 void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
 {
@@ -2727,4 +2741,18 @@ TString TMVA::MethodBase::GetTrainingROOTVersionString() const
    UInt_t c = GetTrainingROOTVersionCode() & 0x0000ff;
 
    return TString(Form("%i.%02i/%02i",a,b,c));
+}
+ 
+//_______________________________________________________________________
+TMVA::MethodBase* TMVA::MethodBase::GetThisBase()
+{
+   // return a pointer the base class of this method
+   return fgThisBase; 
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBase::ResetThisBase() 
+{ 
+   // reset required for RootFinder
+   fgThisBase = this; 
 }

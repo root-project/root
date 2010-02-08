@@ -927,3 +927,9 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "   // nothing to clear" << endl;
    fout << "}" << endl;
 }
+//_________________________________________________________________________
+Bool_t TMVA::MethodANNBase::Debug() const 
+{ 
+   // who the hell makes such strange Debug flags that even use "global pointers"..
+   return fgDEBUG; 
+}

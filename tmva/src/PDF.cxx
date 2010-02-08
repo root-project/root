@@ -627,11 +627,11 @@ Double_t TMVA::PDF::GetIntegral() const
 }
 
 //_______________________________________________________________________
-Double_t TMVA::PDF::IGetVal( Double_t* x, Double_t* ) 
-{
-   // static external auxiliary function (integrand)
-   return ThisPDF()->GetVal( x[0] );
-}
+// Double_t TMVA::PDF::IGetVal( Double_t* x, Double_t* ) 
+// {
+//    // static external auxiliary function (integrand)
+//    return ThisPDF()->GetVal( x[0] );
+// }
 
 //_______________________________________________________________________
 Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax ) 
@@ -1031,4 +1031,10 @@ istream& TMVA::operator>> ( istream& istr, PDF& pdf )
    }
 
    return istr;
+}
+
+TMVA::PDF*  TMVA::PDF::ThisPDF( void ) 
+{ 
+   // return global "this" pointer of PDF
+   return fgThisPDF; 
 }

@@ -657,8 +657,12 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
       o << "Del.temp in layer " << layer << " :  " << fDel_1.temp[layer] << endl;
    }      
 }
-
 //_______________________________________________________________________
+TMVA::MethodCFMlpANN* TMVA::MethodCFMlpANN::This( void ) 
+{ 
+// static pointer to this object (required for external functions
+   return fgThis; 
+}  
 void TMVA::MethodCFMlpANN::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write specific classifier response

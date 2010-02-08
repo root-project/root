@@ -47,6 +47,20 @@ TMVA::Types::~Types()
 }
 
 //_______________________________________________________________________
+TMVA::Types& TMVA::Types::Instance() 
+{ 
+   // the the single instance of "Types" if existin already, or create it  (Signleton) 
+   return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types()); 
+}
+//_______________________________________________________________________
+void   TMVA::Types::DestroyInstance() 
+{ 
+   // "destructor" of the single instance
+   if (fgTypesPtr != 0) { delete fgTypesPtr; fgTypesPtr = 0; } 
+}
+
+
+//_______________________________________________________________________
 Bool_t TMVA::Types::AddTypeMapping( Types::EMVA method, const TString& methodname ) 
 {
    std::map<TString, EMVA>::const_iterator it = fStr2type.find( methodname );
