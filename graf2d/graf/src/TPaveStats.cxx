@@ -336,9 +336,9 @@ void TPaveStats::Paint(Option_t *option)
    TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
 
    if (!fLines) return;
-   Double_t Y2ref = TMath::Max(fY1,fY2);
-   Double_t X1ref = TMath::Min(fX1,fX2);
-   Double_t X2ref = TMath::Max(fX1,fX2);
+   Double_t y2ref = TMath::Max(fY1,fY2);
+   Double_t x1ref = TMath::Min(fX1,fX2);
+   Double_t x2ref = TMath::Max(fX1,fX2);
    Double_t dx    = TMath::Abs(fX2 - fX1);
    Double_t dy    = TMath::Abs(fY2 - fY1);
    Double_t titlesize=0;
@@ -402,7 +402,7 @@ void TPaveStats::Paint(Option_t *option)
    } else {
       titlesize = textsize;
    }
-   Double_t ytext = Y2ref + 0.5*yspace;
+   Double_t ytext = y2ref + 0.5*yspace;
    Double_t xtext = 0;
    print_name = fOptStat%10;
 
@@ -431,9 +431,9 @@ void TPaveStats::Paint(Option_t *option)
             Int_t halign = 12;
             while ( st !=0 ) {
                latex->SetTextAlign(halign);
-               if (halign == 12) xtext = X1ref + margin;
+               if (halign == 12) xtext = x1ref + margin;
                if (halign == 32) {
-                  xtext = X2ref - margin;
+                  xtext = x2ref - margin;
                   // Clean trailing blanks in case of right alignment.
                   char *stc;
                   stc=st+strlen(st)-1;
@@ -452,18 +452,18 @@ void TPaveStats::Paint(Option_t *option)
          } else if (strpbrk(sl, "|") !=0) {
             Double_t yline1 = ytext+yspace/2.;
             Double_t yline2 = ytext-yspace/2.;
-            Double_t xline1 = dx/3+X1ref;
-            Double_t xline2 = 2*dx/3+X1ref;
-            gPad->PaintLine(X1ref,yline1,X2ref,yline1);
+            Double_t xline1 = dx/3+x1ref;
+            Double_t xline2 = 2*dx/3+x1ref;
+            gPad->PaintLine(x1ref,yline1,x2ref,yline1);
             gPad->PaintLine(xline1,yline1,xline1,yline2);
             gPad->PaintLine(xline2,yline1,xline2,yline2);
             st = strtok(sl, "|");
             Int_t theIndex = 0;
             while ( st !=0 ) {
                latex->SetTextAlign(22);
-               if (theIndex == 0) xtext = 0.5*(X1ref+xline1);
-               if (theIndex == 1) xtext = 0.5*(X1ref+X2ref);
-               if (theIndex == 2) xtext = 0.5*(xline2+X2ref);
+               if (theIndex == 0) xtext = 0.5*(x1ref+xline1);
+               if (theIndex == 1) xtext = 0.5*(x1ref+x2ref);
+               if (theIndex == 2) xtext = 0.5*(xline2+x2ref);
                latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                              latex->GetTextSize(),
                                              st);
@@ -474,11 +474,11 @@ void TPaveStats::Paint(Option_t *option)
          } else {
             print_name = 0;
             latex->SetTextAlign(22);
-            xtext = 0.5*(X1ref+X2ref);
+            xtext = 0.5*(x1ref+x2ref);
             latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                           titlesize,
                                           sl);
-            gPad->PaintLine(X1ref,Y2ref-yspace,X2ref,Y2ref-yspace);
+            gPad->PaintLine(x1ref,y2ref-yspace,x2ref,y2ref-yspace);
          }
          delete [] sl;
 
@@ -496,10 +496,10 @@ void TPaveStats::Paint(Option_t *option)
    if (fLabel.Length() > 0) {
       Double_t x1,x2;
       dy = gPad->GetY2() - gPad->GetY1();
-      x1 = X1ref + 0.25*dx;
-      x2 = X2ref - 0.25*dx;
-      y1 = Y2ref - 0.02*dy;
-      y2 = Y2ref + 0.02*dy;
+      x1 = x1ref + 0.25*dx;
+      x2 = x2ref - 0.25*dx;
+      y1 = y2ref - 0.02*dy;
+      y2 = y2ref + 0.02*dy;
       TPaveLabel *title = new TPaveLabel(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
       title->SetFillColor(GetFillColor());
       title->SetTextColor(GetTextColor());
