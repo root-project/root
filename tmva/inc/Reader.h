@@ -86,7 +86,7 @@ namespace TMVA {
   
       // book MVA method via weight file
       IMethod* BookMVA( const TString& methodTag, const TString& weightfile );
-#if ROOT_SVN_REVISIO >= 32259
+#if ROOT_SVN_REVISION >= 32259
       IMethod* BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr );
 #endif
       IMethod* FindMVA( const TString& methodTag );
