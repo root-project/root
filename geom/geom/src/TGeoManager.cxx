@@ -3042,9 +3042,16 @@ Int_t TGeoManager::GetNsegments() const
 //_____________________________________________________________________________
 void TGeoManager::BuildDefaultMaterials()
 {
-// Build the default materials. A list of those can be found in ...
-//   new TGeoMaterial("Air", 14.61, 7.3, 0.001205);
-   fElementTable = new TGeoElementTable(200);
+// Now just a shortcut for GetElementTable.
+   GetElementTable();
+}
+
+//_____________________________________________________________________________
+TGeoElementTable *TGeoManager::GetElementTable()
+{
+// Returns material table. Creates it if not existing.
+   if (!fElementTable) fElementTable = new TGeoElementTable(200);
+   return fElementTable;
 }
 
 //_____________________________________________________________________________

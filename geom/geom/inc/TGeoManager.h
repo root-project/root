@@ -436,7 +436,7 @@ public:
    TObjArray             *GetListOfUVolumes() const     {return fUniqueVolumes;}
    TObjArray             *GetListOfTracks() const       {return fTracks;}
    TObjArray             *GetListOfNavigators() const   {return fNavigators;}
-   TGeoElementTable      *GetElementTable() const       {return fElementTable;}
+   TGeoElementTable      *GetElementTable();
 
    //--- modeler state getters/setters
    void                   DoBackupState();
