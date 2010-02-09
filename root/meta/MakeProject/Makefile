@@ -72,7 +72,7 @@ atlasaod: atlasaod.log
 endif
 
 cms310.log: runcms310.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@ 
+	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@ 
 
 ifeq ($(ARCH)$(FAIL),win32)
 cms310:
