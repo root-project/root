@@ -180,7 +180,7 @@ Int_t TFileCollection::Add(const char *dir)
                   gSystem->DirName(dir));
          } else {
             const char *ent;
-            TString filesExp(gSystem->BaseName(dir));
+            TString filesExp(TString("^") + gSystem->BaseName(dir) + "$");
             filesExp.ReplaceAll("*",".*");
             TRegexp rg(filesExp);
             while ((ent = gSystem->GetDirEntry(dataSetDir))) {
