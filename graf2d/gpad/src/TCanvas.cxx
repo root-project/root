@@ -1181,7 +1181,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
 
    case kButton1Motion:
-   case 8://8 == kButton1Motion + shift modifier
+   case kButton1ShiftMotion: //8 == kButton1Motion + shift modifier
       if (fSelected) {
          gPad = fSelectedPad;
 
