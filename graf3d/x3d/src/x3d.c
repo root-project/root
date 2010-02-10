@@ -1592,12 +1592,12 @@ double X, Y, Z;
          case 'c' : same = 0; Z -= 0.05; break;
          case 'C' : same = 0; Z += 0.05; break;
          case '[' : same = 0;
-                    o->focus = o->focus += 0.1;
+                    o->focus += 0.1;
                     if((o->focus > 1.8))
                        o->focus = 1.8;
                     break;
          case ']' : same = 0;
-                    o->focus = o->focus -= 0.1;
+                    o->focus -= 0.1;
                     if((o->focus < -0.8))
                        o->focus = -0.8;
                     break;
@@ -3550,12 +3550,12 @@ double X, Y, Z;
          case 'c' : same = 0; Z -= 0.05; break;
          case 'C' : same = 0; Z += 0.05; break;
          case '[' : same = 0;
-                    o->focus = o->focus += 0.1;
+                    o->focus += 0.1;
                     if((o->focus > 1.8))
                        o->focus = 1.8;
                     break;
          case ']' : same = 0;
-                    o->focus = o->focus -= 0.1;
+                    o->focus -= 0.1;
                     if((o->focus < -0.8))
                        o->focus = -0.8;
                     break;
