@@ -53,7 +53,7 @@ void TGuiBldHintsButton::DoRedraw()
 
    TGButton::DoRedraw();
 
-   switch ((ELayoutHints)fWidgetId) {
+   switch (fWidgetId) {
       case kLHintsCenterX:
          DrawCenterX();
          break;
