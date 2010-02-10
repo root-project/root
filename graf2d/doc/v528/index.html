@@ -10,6 +10,23 @@
      was not consistant.
 </ul>
 
+<h4>TASImage</h4>
+<ul>
+<li> In the following macro the histogram the histogram drawing was done 
+     with wrong margins:
+     <pre>
+     {
+        TImage *img = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
+        img->Draw("x");
+        gPad->Update();
+        TH1F *h1f = new TH1F("h1f","Test random numbers",100,-5,5);
+        h1f->FillRandom("gaus",10000);
+        h1f->Draw();
+        gPad->Update();
+     }
+    </pre>
+</ul>
+
 <h3>Graphics Primitives</h3>
 
 <h4>TLatex</h4>
