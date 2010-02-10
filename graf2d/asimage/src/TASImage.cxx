@@ -1322,9 +1322,6 @@ void TASImage::Paint(Option_t *option)
    if (!expand) {
       to_h  = (Int_t)(to_h * (1.0 - gPad->GetBottomMargin() - gPad->GetTopMargin() ) + 0.5);
       to_w  = (Int_t)(to_w * (1.0 - gPad->GetLeftMargin() - gPad->GetRightMargin() ) + 0.5);
-   } else {
-      gPad->SetLeftMargin(0);
-      gPad->SetTopMargin(0);
    }
 
    // upper left corner and size of the palette in pixels
