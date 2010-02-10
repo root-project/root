@@ -1805,14 +1805,20 @@ Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
       TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
       buf.SetReadMode();
       TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
+      if (!obj) return kTRUE;
       gPad->Clear();
-      if (obj->InheritsFrom("TGraph"))
-         obj->Draw("ACP");
-      else if (obj->InheritsFrom("TKey")) {
+      if (obj->InheritsFrom("TKey")) {
          TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->ReadObj();", obj));
-         if (object && object->IsA()->GetMethodAllAny("Draw"))
+         if (!object) return kTRUE;
+         if (object->InheritsFrom("TGraph"))
+            object->Draw("ACP");
+         else if (object->InheritsFrom("TImage"))
+            object->Draw("x");
+         else if (object->IsA()->GetMethodAllAny("Draw"))
             object->Draw();
       }
+      else if (obj->InheritsFrom("TGraph"))
+         obj->Draw("ACP");
       else if (obj->IsA()->GetMethodAllAny("Draw"))
          obj->Draw();
       gPad->Modified();
@@ -1835,7 +1841,7 @@ Bool_t TRootCanvas::HandleDNDDrop(TDNDData *data)
             sfname.EndsWith(".xpm")) {
             TImage *img = TImage::Open(uri.GetFile());
             if (img) {
-               img->Draw("xxx");
+               img->Draw("x");
                img->SetEditable(kTRUE);
             }
          }
