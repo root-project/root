@@ -88,6 +88,19 @@
         h->Draw("box");           
      }
      </pre>
+<li> The following macro displayed the histogram out of the frame
+     (option "bar"):
+     <pre>
+     {
+        gStyle->SetHistMinimumZero();
+        TH1F* h = new TH1F("h","h", 44, -0.5, 43.5);
+        h->SetBarWidth(0.7);
+        h->SetBarOffset(0.2);
+        h->SetFillColor(kGreen);
+        for (int i=0;i<44; i++ ) h->Fill(i, -i-60);
+        h->DrawCopy("bar1");
+     } 
+     </pre>
 </ul>
 
 <h4>TGraphPainter</h4>
@@ -125,6 +138,19 @@
      }
      </pre>
 <li> In PaintGraphBentErrors the fill style was not set for the boxes.
+<li> The following macro displayed the histogram out of the frame
+     (option "b"):
+     <pre>
+     {
+        gStyle->SetHistMinimumZero();
+        TH1F* h = new TH1F("h","h", 44, -0.5, 43.5);
+        h->SetBarWidth(0.7);
+        h->SetBarOffset(0.2);
+        h->SetFillColor(kGreen);
+        for (int i=0;i<44; i++ ) h->Fill(i, -i-60);
+        h->DrawCopy("b");
+     } 
+     </pre>
 </ul>
 
 <h4>TGraph</h4>
