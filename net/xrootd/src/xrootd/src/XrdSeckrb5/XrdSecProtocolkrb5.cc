@@ -26,6 +26,7 @@ const char *XrdSecProtocolkrb5CVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/stat.h>
 
+
 extern "C" {
 #include "krb5.h"
 #ifdef HAVE_ET_COM_ERR_H
@@ -530,8 +531,9 @@ int XrdSecProtocolkrb5::Init(XrdOucErrInfo *erp, char *KP, char *kfn)
 
      // Obtain the default cache location
      //
-     if ((rc = krb5_cc_default(krb_context, &krb_client_ccache)))
-        return Fatal(erp, ENOPROTOOPT, "Unable to locate cred cache", KP, rc);
+     if ((rc = krb5_cc_default(krb_client_context, &krb_client_ccache)))
+       return Fatal(erp, ENOPROTOOPT, "Unable to locate cred cache", KP, rc);
+     
      return 0;
    }
 
@@ -540,7 +542,7 @@ int XrdSecProtocolkrb5::Init(XrdOucErrInfo *erp, char *KP, char *kfn)
 
 // Obtain the default cache location
 //
-   if ((rc = krb5_cc_default(krb_client_context, &krb_client_ccache)))
+   if ((rc = krb5_cc_default(krb_context, &krb_ccache)))
       return Fatal(erp, ENOPROTOOPT, "Unable to locate cred cache", KP, rc);
 
 // Try to resolve the keyfile name
