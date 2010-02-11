@@ -2138,7 +2138,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       if (!optionRot) {
          xlow  = wmin+offset;
          xhigh = wmin+offset+dbar;
-         if (!optionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());
+         if (!optionOne) ylow = TMath::Min(TMath::Max((Double_t)0,gPad->GetUymin())
+                                ,gPad->GetUymax());
          else            ylow = gPad->GetUymin();
 
          for (i=first; i<=last;i++) {

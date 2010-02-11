@@ -3829,7 +3829,8 @@ void THistPainter::PaintBar(Option_t *)
       if (ymax < gPad->GetUymin()) continue;
       if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
       if (ymin < gPad->GetUymin()) ymin = gPad->GetUymin();
-      if (gStyle->GetHistMinimumZero() && ymin < 0) ymin=0;
+      if (gStyle->GetHistMinimumZero() && ymin < 0)
+         ymin=TMath::Min(0.,gPad->GetUymax());
       w    = (xmax-xmin)*width;
       xmin += offset*(xmax-xmin);
       xmax = xmin + w;
