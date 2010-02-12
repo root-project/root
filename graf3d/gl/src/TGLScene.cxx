@@ -1125,7 +1125,7 @@ Int_t TGLScene::DestroyPhysicals()
 
    // Loop over logicals -- it is much more efficient that way.
    
-   Int_t count = 0;
+   UInt_t count = 0;
 
    LogicalShapeMapIt_t lit = fLogicalShapes.begin();
    while (lit != fLogicalShapes.end())

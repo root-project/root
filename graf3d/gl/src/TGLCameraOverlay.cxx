@@ -429,9 +429,6 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
 
    TGLCamera &cam = rnrCtx.RefCamera();
 
-   // !! Can be called with null camera !!
-   // printf("%p %p\n", &rnrCtx, &cam);
-
    if (rnrCtx.Selection() ||
        (cam.IsPerspective()  && ! fShowPerspective) ||
        (cam.IsOrthographic() && ! fShowOrthographic))

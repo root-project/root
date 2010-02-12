@@ -408,7 +408,6 @@ void TGLSceneBase::PreRender(TGLRnrCtx & rnrCtx)
    TGLSceneInfo& sInfo = * rnrCtx.GetSceneInfo();
 
    rnrCtx.SetClip         (sInfo.LastClip());
-   rnrCtx.SetCamera       (sInfo.LastCamera());
    rnrCtx.SetCombiLOD     (sInfo.LastLOD());
    rnrCtx.SetSceneStyle   (sInfo.LastStyle());
    rnrCtx.SetSceneWFLineW (sInfo.LastWFLineW());
