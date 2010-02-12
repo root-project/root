@@ -1324,14 +1324,6 @@ void TASImage::Paint(Option_t *option)
       to_w  = (Int_t)(to_w * (1.0 - gPad->GetLeftMargin() - gPad->GetRightMargin() ) + 0.5);
    }
 
-   // upper left corner and size of the palette in pixels
-   Int_t pal_Ax = gPad->XtoAbsPixel(1.0) + 5;
-   Int_t pal_Ay = gPad->YtoAbsPixel(1.0) + 20;
-   Int_t pal_x = gPad->XtoPixel(1.0) + 5;
-   Int_t pal_y = gPad->YtoPixel(1.0) + 20;
-   Int_t pal_w = gPad->UtoPixel(gPad->GetRightMargin()) / 3;
-   Int_t pal_h = to_h - 20;
-
    if ((to_w < 25 || to_h < 25) && !expand) {
       Error("Paint", "pad too small to display an image");
       return;
@@ -1344,6 +1336,15 @@ void TASImage::Paint(Option_t *option)
       else
          to_w = Int_t(Double_t(fZoomWidth) * to_h / fZoomHeight);
    }
+   // upper left corner and size of the palette in pixels
+   Int_t pal_Ax = to_w + gPad->UtoAbsPixel(gPad->GetLeftMargin()) +
+                 (gPad->UtoAbsPixel(gPad->GetRightMargin()) / 10);
+   Int_t pal_Ay = gPad->YtoAbsPixel(1.0);
+   Int_t pal_x = to_w + gPad->UtoPixel(gPad->GetLeftMargin()) +
+                 (gPad->UtoPixel(gPad->GetRightMargin()) / 10);
+   Int_t pal_y = gPad->YtoPixel(1.0);
+   Int_t pal_w = gPad->UtoPixel(gPad->GetRightMargin()) / 3;
+   Int_t pal_h = to_h;
 
    ASImage  *grad_im = 0;
 
