@@ -677,9 +677,10 @@ void TObjArray::SetLast(Int_t last)
    // recalculated, e.g. after a Remove() or Sort() it will be reset
    // to the last non-empty slot. If last is -2 this will force the
    // recalculation of the last used slot.
+   // If last is -1, this effectively truncate the array completely.
 
-   if (last == -2)
-      fLast = -2;
+   if (last == -2 || last == -1)
+      fLast = last;
    else if (BoundsOk("SetLast", last))
       fLast = last - fLowerBound;
 }
