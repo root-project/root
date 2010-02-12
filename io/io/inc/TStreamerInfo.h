@@ -106,7 +106,7 @@ private:
    static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
 
-   UInt_t            GenerateIncludes(FILE *fp, char *inclist);
+   UInt_t            GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos);
    void              GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top = kTRUE);
    void              InsertArtificialElements(const TObjArray *rules);
 
@@ -179,7 +179,7 @@ public:
    void                Compile();
    void                ComputeSize();
    void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE);
-   Int_t               GenerateHeaderFile(const char *dirname, const TList *subClasses = 0);
+   Int_t               GenerateHeaderFile(const char *dirname, const TList *subClasses = 0, const TList *extrainfos = 0);
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
    UInt_t              GetCheckSum(UInt_t code) const;

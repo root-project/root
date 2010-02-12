@@ -25,6 +25,9 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
+#ifndef ROOT_TClassRef
+#include "TClassRef.h"
+#endif
 
 class TBrowser;
 class TClass;
@@ -37,7 +40,7 @@ private:
    
 private:
    BaseClassInfo_t   *fInfo;      //pointer to CINT base class info
-   TClass            *fClassPtr;  //pointer to the base class TClass
+   TClassRef          fClassPtr;  //pointer to the base class TClass
    TClass            *fClass;     //pointer to parent class
 
 public:

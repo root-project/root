@@ -113,7 +113,7 @@ public:
    virtual Bool_t      CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete) = 0;
    virtual void        Compile() = 0;
    virtual void        ForceWriteInfo(TFile *file, Bool_t force=kFALSE) = 0;
-   virtual Int_t       GenerateHeaderFile(const char *dirname, const TList *subClasses = 0) = 0;
+   virtual Int_t       GenerateHeaderFile(const char *dirname, const TList *subClasses = 0, const TList *extrainfos = 0) = 0;
    virtual TClass     *GetClass() const  = 0;
    virtual UInt_t      GetCheckSum() const = 0;
    virtual Int_t       GetClassVersion() const = 0;

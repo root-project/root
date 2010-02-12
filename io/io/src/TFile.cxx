@@ -97,6 +97,7 @@
 #include "TRegexp.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 #include "TSystem.h"
 #include "TTimeStamp.h"
 #include "TVirtualPerfStats.h"
@@ -2108,6 +2109,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    //                   Existing classes with the same name are replaced by the
    //                   new definition. If the directory dirname doest not exist,
    //                   same effect as "new".
+   // If option = "genreflex", then use genreflex rather than rootcint to generate
+   //                   the dictionary.
    // If, in addition to one of the 3 above options, the option "+" is specified,
    // the function will generate:
    //   - a script called MAKEP to build the shared lib
@@ -2177,23 +2180,11 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       }
       gSystem->mkdir(dirname);
    }
+   Bool_t genreflex = opt.Contains("genreflex");
 
    // we are now ready to generate the classes
    // loop on all TStreamerInfo
-   TList *list = 0;
-   if (fSeekInfo) {
-      TKey *key = new TKey(this);
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      ReadBuffer(buf,fNbytesInfo);
-      key->ReadKeyBuffer(buf);
-      list = (TList*)key->ReadObj();
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
-   }
+   TList *list = (TList*)GetStreamerInfoCache()->Clone();
    if (list == 0) {
       Error("MakeProject","file %s has no StreamerInfo", GetName());
       delete [] path;
@@ -2204,7 +2195,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    TString spath; spath.Form("%s/%sProjectSource.cxx",dirname,dirname);
    FILE *sfp = fopen(spath.Data(),"w");
    fprintf(sfp, "#include \"%sProjectHeaders.h\"\n\n",dirname );
-   fprintf(sfp, "#include \"%sLinkDef.h\"\n\n",dirname );
+   if (!genreflex) fprintf(sfp, "#include \"%sLinkDef.h\"\n\n",dirname );
    fprintf(sfp, "#include \"%sProjectDict.cxx\"\n\n",dirname );
    fclose( sfp );
 
@@ -2252,8 +2243,18 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
             }
          }
       }
-      ngener += info->GenerateHeaderFile(dirname,&subClasses);
+      ngener += info->GenerateHeaderFile(dirname,&subClasses,&extrainfos);
+      subClasses.Clear("nodelete");
    }
+   sprintf(path,"%s/%sProjectHeaders.h",dirname,dirname);
+   FILE *allfp = fopen(path,"a");
+   if (!allfp) {
+      Error("MakeProject","Cannot open output file:%s\n",path);
+   } else {
+      fprintf(allfp,"#include \"%sProjectInstances.h\"\n", dirname);
+      fclose(allfp);
+   }
+   
    printf("MakeProject has generated %d classes in %s\n",ngener,dirname);
 
    // generate the shared lib
@@ -2284,12 +2285,31 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       return;
    }
 
-   // add rootcint statement generating ProjectDict.cxx
-   fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());
+   // Add rootcint/genreflex statement generating ProjectDict.cxx
+   FILE *ifp = 0;
+   sprintf(path,"%s/%sProjectInstances.h",dirname,dirname);
+#ifdef R__WINGCC
+   ifp = fopen(path,"wb");
+#else
+   ifp = fopen(path,"w");
+#endif
+   if (!ifp) {
+      Error("MakeProject", "cannot open path file %s", path);
+      list->Delete();
+      delete list;
+      delete [] path;
+      return;
+   }
 
-   // create the LinkDef.h file by looping on all *.h files
-   // delete LinkDef.h if it already exists
-   sprintf(path,"%s/%sLinkDef.h",dirname,dirname);
+   if (genreflex) {
+      fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",dirname,dirname,gSystem->GetIncludePath());
+      sprintf(path,"%s/%sSelection.xml",dirname,dirname);
+   } else {
+      fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());      
+      sprintf(path,"%s/%sLinkDef.h",dirname,dirname);
+   }
+   // Create the LinkDef.h or xml selection file by looping on all *.h files
+   // replace any existing file.
 #ifdef R__WINGCC
    FILE *fp = fopen(path,"wb");
 #else
@@ -2302,9 +2322,17 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       delete [] path;
       return;
    }
-   fprintf(fp,"#ifdef __CINT__\n");
-   fprintf(fp,"\n");
+   if (genreflex) {
+      fprintf(fp,"<lcgdict>\n");
+      fprintf(fp,"\n");
+   } else {
+      fprintf(fp,"#ifdef __CINT__\n");
+      fprintf(fp,"\n");
+   }
 
+   TString tmp;
+   TString instances;
+   TString selections;
    next.Reset();
    while ((info = (TStreamerInfo*)next())) {
       if (TClassEdit::IsSTLCont(info->GetName())) {
@@ -2319,12 +2347,27 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
             case TClassEdit::kMap:
             case TClassEdit::kMultiMap:
                {
-                  what = "pair<";
+                  what = "std::pair<";
                   what += TMakeProject::UpdateAssociativeToVector( inside[1].c_str() );
                   what += ",";
                   what += TMakeProject::UpdateAssociativeToVector( inside[2].c_str() );
-                  what += " >";
-                  fprintf(fp,"#pragma link C++ class %s+;\n",what.c_str());
+                  if (what[what.size()-1]=='>') {
+                     what += " >";
+                  } else {
+                     what += ">";
+                  }
+                  if (genreflex) {
+                     tmp.Form("<class name=\"%s\" />\n",what.c_str());
+                     if ( selections.Index(tmp) == kNPOS ) {
+                        selections.Append(tmp);
+                     }
+                     tmp.Form("template class %s;\n",what.c_str());
+                     if ( instances.Index(tmp) == kNPOS ) {
+                        instances.Append(tmp);
+                     }
+                  } else {
+                     fprintf(fp,"#pragma link C++ class %s+;\n",what.c_str());
+                  }
                   break;
                }
             }
@@ -2335,13 +2378,59 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (cl) {
          if (cl->GetClassInfo()) continue; // skip known classes
       }
-      fprintf(fp,"#pragma link C++ class %s+;\n",info->GetName());
+      if (genreflex) {
+         TString what(TMakeProject::UpdateAssociativeToVector(info->GetName()).Data());
+         tmp.Form("<class name=\"%s\" />\n",what.Data());
+         if ( selections.Index(tmp) == kNPOS ) {
+            selections.Append(tmp);
+         }
+         if (what[what.Length()-1] == '>') {
+            tmp.Form("template class %s;\n",what.Data());
+            if ( instances.Index(tmp) == kNPOS ) {
+               instances.Append(tmp);
+            }
+         }
+      } else {
+         fprintf(fp,"#pragma link C++ class %s+;\n",info->GetName());
+      }
+      if (genreflex) {
+         // Also request the dictionary for the STL container used as members ...
+         TIter eliter( info->GetElements() );
+         TStreamerElement *element;
+         while( (element = (TStreamerElement*)eliter() ) ) {
+            if (element->GetClass() && !element->GetClass()->IsLoaded() && element->GetClass()->GetCollectionProxy()) {
+               TString what( TMakeProject::UpdateAssociativeToVector(element->GetClass()->GetName()) );
+               tmp.Form("<class name=\"%s\" />\n",what.Data());
+               if ( selections.Index(tmp) == kNPOS ) {
+                  selections.Append(tmp);
+               }
+               tmp.Form("template class %s;\n",what.Data());
+               if ( instances.Index(tmp) == kNPOS ) {
+                  instances.Append(tmp);
+               }
+            }
+         }
+      }
    }
-   fprintf(fp,"#endif\n");
+   if (genreflex) {
+      fprintf(ifp,"#ifndef PROJECT_INSTANCES_H\n");
+      fprintf(ifp,"#define PROJECT_INSTANCES_H\n");
+      fprintf(ifp,"%s",instances.Data());
+      fprintf(ifp,"#endif\n");
+      fprintf(fp,"%s",selections.Data());
+      fprintf(fp,"</lcgdict>\n");
+   } else {
+      fprintf(fp,"#endif\n");
+   }
    fclose(fp);
-   fprintf(fpMAKE,"%sProjectHeaders.h ",dirname);
-   fprintf(fpMAKE,"%sLinkDef.h \n",dirname);
-
+   fclose(ifp);
+   if (genreflex) {
+      fprintf(fpMAKE,"-s %sSelection.xml \n",dirname);
+   } else {
+      fprintf(fpMAKE,"%sProjectHeaders.h ",dirname);
+      fprintf(fpMAKE,"%sLinkDef.h \n",dirname);
+   }
+   
    // add compilation line
    TString sdirname(dirname);
 
@@ -2393,7 +2482,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       }
    }
 
-   list->Delete();
+   extrainfos.Clear("nodelete");
    delete list;
    delete [] path;
 }

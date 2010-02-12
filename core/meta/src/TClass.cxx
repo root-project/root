@@ -842,6 +842,7 @@ void TClass::ForceReload (TClass* oldcl)
    oldcl->ReplaceWith(this);
    delete oldcl;
 }
+
 //______________________________________________________________________________
 void TClass::Init(const char *name, Version_t cversion,
                   const type_info *typeinfo, TVirtualIsAProxy *isa,
@@ -1428,8 +1429,8 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
       Long_t eoffset = element->GetOffset();
       TClass *cle    = element->GetClassPointer();
       if (element->IsBase() || etype == TVirtualStreamerInfo::kBase) {
-         //base class
-         if (cle) cle->BuildEmulatedRealData(name,offset+eoffset,cl);
+         //base class are skipped in this loop, they will be added at the end.
+         continue;
       } else if (etype == TVirtualStreamerInfo::kTObject ||
                  etype == TVirtualStreamerInfo::kTNamed ||
                  etype == TVirtualStreamerInfo::kObject || 
@@ -1453,6 +1454,17 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
       //   fBase->Add(new TBaseClass(this, cl, eoffset));
       //}
    }
+   // The base classes must added last on the list of real data (to help with ambiguous data member names)
+   next.Reset();
+   while ((element = (TStreamerElement*)next())) {
+      Int_t etype    = element->GetType();
+      if (element->IsBase() || etype == TVirtualStreamerInfo::kBase) {
+         //base class
+         Long_t eoffset = element->GetOffset();
+         TClass *cle    = element->GetClassPointer();
+         if (cle) cle->BuildEmulatedRealData(name,offset+eoffset,cl);
+      }
+   }   
 }
 
 
@@ -2120,8 +2132,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
             // since the name are different but we got a TClass, we assume
             // we need to replace and delete this class.
             assert(newcl!=cl);
-            cl->ReplaceWith(newcl);
-            delete cl;
+            newcl->ForceReload(cl);
             return newcl;
          }
       }

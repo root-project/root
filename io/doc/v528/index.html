@@ -2,3 +2,43 @@
 <hr/>
 <a name="io"></a> 
 <h3>I/O</h3>
+<h4>TFile::MakeProject</h4>
+Extend TFile::MakeProject to support genreflex, cases of user's data model where
+the 2 distincts pointers point to a single object and more cases where we are 
+missing the StreamerInfo and need to guess whether the symbol represent an enum,
+a class or a namespace.
+
+To use genreflex, call MakeProject with the "genreflex" option, for example:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   file->MakeProject(libdir,"*","NEW+genreflex");
+</pre>
+To make sure the library created by MakeProject does not double delete an object,
+tell the StreamerElement representing one of the pointers pointing to the object
+to never delete the object.  For example:
+
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)file->GetStreamerInfoCache()->FindObject("HepMC::GenVertex");
+   if (info) {
+      TObject *el = info->GetElements()->FindObject("m_event");
+      if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+   }
+</pre>
+Note that MakeProject only uses the list of StreamerInfo internal to the TFile (as opposed
+to the global list of StreamerInfo used by the regular I/O operations) and thus the change
+must be done on the StreamerInfo in file->GetStreamerInfoCache().
+<h4>Misc.</h4>
+<ul><li>To make sure that the class emulation layer of ROOT does not double delete an object,
+tell the StreamerElement representing one of the pointers pointing to the object
+to never delete the object.  For example:
+
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   TClass *clGenVertex = TClass::GetClass("HepMC::GenVertex");
+   if (clGenVertex) {
+      TObject *el = clGenVertex->GetStreamerInfo()->GetElements()->FindObject("m_event");
+      if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+   }
+</pre>
+</li>
+<ul>
+
+

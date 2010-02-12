@@ -2293,7 +2293,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    }
    
    if (needGenericTemplate && isTemplate) {
-      TString templateName(TMakeProject::GetHeaderName("template "+template_protoname));
+      TString templateName(TMakeProject::GetHeaderName("template "+template_protoname,0));
       fprintf(fp, "#ifndef %s_h\n", templateName.Data());
       fprintf(fp, "#define %s_h\n", templateName.Data());
    }
@@ -2440,7 +2440,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       fprintf(fp,"   virtual ~%s();\n\n",protoname.Data());
       
       // Add the implementations to the source.cxx file.
-      TString guard( TMakeProject::GetHeaderName( GetName(), kTRUE ) );
+      TString guard( TMakeProject::GetHeaderName( GetName(), 0, kTRUE ) );
       fprintf(sfp,"#ifndef %s_cxx\n",guard.Data());
       fprintf(sfp,"#define %s_cxx\n",guard.Data());
       fprintf(sfp,"%s::%s() {\n",GetName(),protoname.Data());
@@ -2465,29 +2465,44 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       next.Reset();
       while ((element = (TStreamerElement*)next())) {
          if (element->GetType() == kObjectp || element->GetType() == kObjectP||
-            element->GetType() == kAnyp || element->GetType() == kAnyP
-            || element->GetType() == kAnyPnoVT) {
-               const char *ename = element->GetName();
-               const char *colon2 = strstr(ename,"::");
-               if (colon2) ename = colon2+2;
+             element->GetType() == kAnyp || element->GetType() == kAnyP
+             || element->GetType() == kAnyPnoVT) 
+         {
+            const char *ename = element->GetName();
+            const char *colon2 = strstr(ename,"::");
+            if (colon2) ename = colon2+2;
+            if (element->TestBit(TStreamerElement::kDoNotDelete)) {
+               if(element->GetArrayLength() <= 1) {
+                  fprintf(sfp,"   %s = 0;\n",ename);
+               } else {
+                  fprintf(sfp,"   memset(%s,0,%d);\n",ename,element->GetSize());
+               }
+            } else {
                if(element->GetArrayLength() <= 1) {
                   fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
                } else {
                   fprintf(sfp,"   for (int i=0;i<%d;i++) delete %s[i];   memset(%s,0,%d);\n",element->GetArrayLength(),ename,ename,element->GetSize());
                }
+            }
          }
          if (element->GetType() == kCharStar) {
             const char *ename = element->GetName();
-            fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
+            if (element->TestBit(TStreamerElement::kDoNotDelete)) {
+               fprintf(sfp,"   %s = 0;\n",ename);
+            } else {
+               fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
+            }
          }
          if (kOffsetP <= element->GetType() && element->GetType() < kObject ) { 
             const char *ename = element->GetName();
-            if (element->HasCounter()) {
+            if (element->TestBit(TStreamerElement::kDoNotDelete)) {
+               fprintf(sfp,"   %s = 0;\n",ename);
+            } else if (element->HasCounter()) {
                fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
             } else {
                fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
             }
-         } 
+         }
       }
       fprintf(sfp,"}\n");
       fprintf(sfp,"#endif // %s_cxx\n\n",guard.Data());
@@ -2512,7 +2527,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
 }
 
 //______________________________________________________________________________
-UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist)
+UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos)
 {
    // Add to the header file, the #include need for this class
 
@@ -2521,7 +2536,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist)
    const char *clname = GetName();
    if (strchr(clname,'<')) {
       // This is a template, we need to check the template parameter.
-      ninc += TMakeProject::GenerateIncludeForTemplate(fp, clname, inclist, kFALSE);
+      ninc += TMakeProject::GenerateIncludeForTemplate(fp, clname, inclist, kFALSE, extrainfos);
    }
 
    char name[1024];
@@ -2573,13 +2588,13 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist)
          TMakeProject::AddInclude( fp, "memory", kTRUE, inclist);
       } else {
          TString incName( include, strlen(include)-1 );
-         incName = TMakeProject::GetHeaderName(incName);
+         incName = TMakeProject::GetHeaderName(incName,extrainfos);
          TMakeProject::AddInclude( fp, incName.Data(), greater, inclist);
       }
 
       if (strchr(element->GetTypeName(),'<')) {
          // This is a template, we need to check the template parameter.
-         ninc += TMakeProject::GenerateIncludeForTemplate(fp, element->GetTypeName(), inclist, kFALSE);
+         ninc += TMakeProject::GenerateIncludeForTemplate(fp, element->GetTypeName(), inclist, kFALSE, extrainfos);
       }
    }
    if (inclist[0]==0) {
@@ -2589,7 +2604,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist)
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subClasses)
+Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subClasses, const TList *extrainfos)
 {
    // Generate header file for the class described by this TStreamerInfo
    // the function is called by TFile::MakeProject for each class in the file
@@ -2620,6 +2635,12 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
                   if (cl && (cl->Size()!=0 || (cl->Size()==0 && cl->GetClassInfo()==0 /*empty 'base' class on file*/))) {
                      // This class is actually nested.
                      return 0;
+                  } else if (cl == 0 && extrainfos != 0) {
+                     TStreamerInfo *clinfo = (TStreamerInfo*)extrainfos->FindObject(nsname);
+                     if (clinfo && clinfo->GetClassVersion() == -5) {
+                        // This class is actually nested.
+                        return 0;
+                     }
                   }
                   ++scope;
                }
@@ -2633,7 +2654,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
 
    // Open the file
 
-   TString headername( TMakeProject::GetHeaderName( GetName() ) );
+   TString headername( TMakeProject::GetHeaderName( GetName(), extrainfos ) );
    TString filename;
    filename.Form("%s/%s.h",dirname,headername.Data());
 
@@ -2666,16 +2687,16 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    fprintf(fp,"\n");
    fprintf(fp,"#ifndef %s_h\n",headername.Data());
    fprintf(fp,"#define %s_h\n",headername.Data());
-   TMakeProject::GenerateForwardDeclaration(fp, GetName(), inclist, kFALSE, needGenericTemplate);
+   TMakeProject::GenerateForwardDeclaration(fp, GetName(), inclist, kFALSE, needGenericTemplate, extrainfos);
    fprintf(fp,"\n");
 
    UInt_t ninc = 0;
-   ninc += GenerateIncludes(fp, inclist);
+   ninc += GenerateIncludes(fp, inclist, extrainfos);
    if (subClasses) {
       TIter subnext(subClasses);
       TStreamerInfo *subinfo;
       while ((subinfo = (TStreamerInfo*)subnext())) {
-         ninc = subinfo->GenerateIncludes(fp, inclist);
+         ninc = subinfo->GenerateIncludes(fp, inclist, extrainfos);
       }
    }   
    fprintf(fp,"\n");
