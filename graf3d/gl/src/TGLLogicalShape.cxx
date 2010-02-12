@@ -138,7 +138,7 @@ TGLLogicalShape::~TGLLogicalShape()
    // Physicals should have been cleared elsewhere as they are managed
    // by the scene. But this could change.
    if (fRef > 0) {
-      Warning("TGLLogicalShape::Destroy", "some physicals still lurking around.");
+      Warning("TGLLogicalShape::~TGLLogicalShape", "some physicals still lurking around.");
       DestroyPhysicals();
    }
    DLCachePurge();
@@ -211,6 +211,7 @@ void TGLLogicalShape::DestroyPhysicals()
       curr = next;
    }
    assert (fRef == 0);
+   fFirstPhysical = 0;
 }
 
 //______________________________________________________________________________

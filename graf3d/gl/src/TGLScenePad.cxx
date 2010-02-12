@@ -237,9 +237,9 @@ void TGLScenePad::BeginScene()
    }
 
    // Rebuilds can potentially invalidate all logical and
-   // physical shapes - including any modified physicals.
+   // physical shapes.
    // Physicals must be removed first.
-   destroyedPhysicals = DestroyPhysicals(kTRUE); // include modified
+   destroyedPhysicals = DestroyPhysicals();
    if (fSmartRefresh) {
       destroyedLogicals = BeginSmartRefresh();
    } else {

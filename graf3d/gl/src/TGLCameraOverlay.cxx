@@ -428,10 +428,16 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
    // Display coodinates info of current frustum.
 
    TGLCamera &cam = rnrCtx.RefCamera();
-   if ( rnrCtx.Selection() || (cam.IsPerspective()  && ! fShowPerspective) ||
-        (cam.IsOrthographic() && ! fShowOrthographic))
-      return;
 
+   // !! Can be called with null camera !!
+   // printf("%p %p\n", &rnrCtx, &cam);
+
+   if (rnrCtx.Selection() ||
+       (cam.IsPerspective()  && ! fShowPerspective) ||
+       (cam.IsOrthographic() && ! fShowOrthographic))
+   {
+      return;
+   }
 
    // Frustum size.
    TGLCamera &camera = rnrCtx.RefCamera();

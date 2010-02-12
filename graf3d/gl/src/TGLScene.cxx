@@ -288,7 +288,7 @@ TGLScene::~TGLScene()
    // Destroy scene objects
    TakeLock(kModifyLock);
    ReleaseGLCtxIdentity();
-   DestroyPhysicals(kTRUE); // including modified
+   DestroyPhysicals();
    DestroyLogicals();
    if (fGLCtxIdentity)
       fGLCtxIdentity->ReleaseClient();
@@ -1114,45 +1114,33 @@ Bool_t TGLScene::DestroyPhysical(UInt_t phid)
 }
 
 //______________________________________________________________________________
-Int_t TGLScene::DestroyPhysicals(Bool_t incModified, const TGLCamera* camera)
+Int_t TGLScene::DestroyPhysicals()
 {
-   // Destroy physical shapes that are no longer of interest to camera.
-   // If 'incModified' is true also the modified ones are deleted.
-   // Return count of number destroyed.
-
-   // !!! MT this whole concept is strange. Why should i keep
-   // physicals that are modified? There is no working update
-   // mechanism so they'll be wiped on pad-update.
-   // Maybe should rename the method, or what?
+   // Destroy physical shapes.
 
    if (fLock != kModifyLock) {
       Error("TGLScene::DestroyPhysicals", "expected ModifyLock");
       return 0;
    }
 
+   // Loop over logicals -- it is much more efficient that way.
+   
    Int_t count = 0;
-   PhysicalShapeMapIt_t pit = fPhysicalShapes.begin();
-   while (pit != fPhysicalShapes.end())
+
+   LogicalShapeMapIt_t lit = fLogicalShapes.begin();
+   while (lit != fLogicalShapes.end())
    {
-      const TGLPhysicalShape * physical = pit->second;
-      if (physical) {
-         // If modified options allow this physical to be destoyed
-         if (incModified || (!incModified && !physical->IsModified())) {
-            // and no camera is passed, or it is no longer of interest
-            // to camera
-            Bool_t ignoreSize = physical->GetLogical()->IgnoreSizeForOfInterest();
-            if (!camera || (camera && !camera->OfInterest(physical->BoundingBox(), ignoreSize)))
-            {
-               DestroyPhysicalInternal(pit++);
-               ++count;
-               continue; // Incremented the iterator during erase()
-            }
-         }
-      } else {
-         assert(kFALSE);
+      TGLLogicalShape *lshp = lit->second;
+      if (lshp && lshp->Ref() != 0)
+      {
+         count += lshp->Ref();
+         lshp->DestroyPhysicals();
       }
-      ++pit;
+      ++lit;
    }
+
+   assert (count == fPhysicalShapes.size());
+   fPhysicalShapes.clear();
 
    if (count > 0) {
       InvalidateBoundingBox();

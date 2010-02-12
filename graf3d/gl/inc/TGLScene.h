@@ -189,7 +189,7 @@ public:
    // Basic physical shape management
    virtual void              AdoptPhysical(TGLPhysicalShape& shape);
    virtual Bool_t            DestroyPhysical(UInt_t phid);
-   virtual Int_t             DestroyPhysicals(Bool_t incModified, const TGLCamera* camera=0);
+   virtual Int_t             DestroyPhysicals();
    virtual TGLPhysicalShape* FindPhysical(UInt_t phid) const;
 
    virtual UInt_t            GetMaxPhysicalID();
