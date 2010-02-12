@@ -339,6 +339,7 @@ TGLClipSet::TGLClipSet() :
    fClipPlane   (new TGLClipPlane),
    fClipBox     (new TGLClipBox),
    fCurrentClip (0),
+   fAutoUpdate  (kTRUE),
    fShowClip    (kFALSE),
    fShowManip   (kFALSE),
    fManip       (new TGLManipSet)

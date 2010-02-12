@@ -15,7 +15,6 @@
 #include "TGLRnrCtx.h"
 #include "TGLSelectBuffer.h"
 #include "TGLLightSet.h"
-#include "TGLClip.h"
 #include "TGLManipSet.h"
 #include "TGLCameraOverlay.h"
 
@@ -119,7 +118,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
 
    fLightSet          (0),
    fClipSet           (0),
-   fClipAutoUpdate    (kTRUE),
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
@@ -182,7 +180,6 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
 
    fLightSet          (0),
    fClipSet           (0),
-   fClipAutoUpdate    (kTRUE),
    fSelectedPShapeRef (0),
    fCurrentOvlElm     (0),
 
@@ -471,6 +468,20 @@ void TGLViewer::RequestDraw(Short_t LODInput)
 }
 
 //______________________________________________________________________________
+void TGLViewer::SetupClipObject()
+{
+   // Setup clip-object. Protected virtual method.
+
+   if (GetClipAutoUpdate())
+   {
+      fClipSet->SetupCurrentClip(fOverallBoundingBox);
+   }
+   else
+   {
+      fClipSet->SetupCurrentClipIfInvalid(fOverallBoundingBox);
+   }
+}
+//______________________________________________________________________________
 void TGLViewer::PreRender()
 {
    // Initialize objects that influence rendering.
@@ -494,11 +505,6 @@ void TGLViewer::PreRender()
 
    // Setup lighting
    fLightSet->StdSetupLights(fOverallBoundingBox, *fCamera, fDebugMode);
-   // Setup clip object.
-   if (fClipAutoUpdate)
-      fClipSet->SetupCurrentClip(fOverallBoundingBox);
-   else
-      fClipSet->SetupCurrentClipIfInvalid(fOverallBoundingBox);
 }
 
 //______________________________________________________________________________

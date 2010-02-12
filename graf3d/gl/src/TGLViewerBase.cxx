@@ -16,6 +16,7 @@
 
 #include "TGLRnrCtx.h"
 #include "TGLCamera.h"
+#include "TGLClip.h"
 #include "TGLOverlay.h"
 #include "TGLSelectBuffer.h"
 #include "TGLSelectRecord.h"
@@ -270,6 +271,17 @@ void TGLViewerBase::MergeSceneBBoxes(TGLBoundingBox& bbox)
 // Rendering / selection virtuals
 /**************************************************************************/
 
+//______________________________________________________________________________
+void TGLViewerBase::SetupClipObject()
+{
+   // Setup clip-object. Protected virtual method.
+
+   if (fClip)
+   {
+      fClip->Setup(fOverallBoundingBox);
+   }
+}
+
 //______________________________________________________________________
 void TGLViewerBase::PreRender()
 {
@@ -331,6 +343,7 @@ void TGLViewerBase::PreRender()
    }
 
    fCamera->Apply(fOverallBoundingBox, fRnrCtx->GetPickRectangle());
+   SetupClipObject();
 
    // Make precursory selection of visible scenes.
    // Only scene bounding-box .vs. camera frustum check performed.

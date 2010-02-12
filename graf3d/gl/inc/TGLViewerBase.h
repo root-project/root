@@ -54,6 +54,8 @@ protected:
 
    void SubRenderScenes(SubRender_foo render_foo);
 
+   virtual void SetupClipObject();
+
    // Members
 
    TGLRnrCtx         *fRnrCtx;

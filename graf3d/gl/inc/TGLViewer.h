@@ -21,6 +21,7 @@
 
 #include "TGLPerspectiveCamera.h"
 #include "TGLOrthoCamera.h"
+#include "TGLClip.h"
 
 #include "TTimer.h"
 #include "TPoint.h"
@@ -98,7 +99,6 @@ protected:
    TGLLightSet         *fLightSet;             //!
    // Clipping
    TGLClipSet          *fClipSet;              //!
-   Bool_t               fClipAutoUpdate;       //!
    // Selected physical
    TGLSelectRecord      fCurrentSelRec;        //! select record in use as selected
    TGLSelectRecord      fSelRec;               //! select record from last select (should go to context)
@@ -158,6 +158,9 @@ protected:
    ///////////////////////////////////////////////////////////////////////
    // Methods
    ///////////////////////////////////////////////////////////////////////
+
+   virtual void SetupClipObject();
+
    // Drawing - can tidy up/remove lots when TGLManager added
    void InitGL();
    void PreDraw();
@@ -249,8 +252,8 @@ public:
 
    TGLLightSet* GetLightSet() const { return fLightSet; }
    TGLClipSet * GetClipSet()  const { return fClipSet; }
-   Bool_t GetClipAutoUpdate() const   { return fClipAutoUpdate; }
-   void   SetClipAutoUpdate(Bool_t x) { fClipAutoUpdate = x; }
+   Bool_t GetClipAutoUpdate() const   { return fClipSet->GetAutoUpdate(); }
+   void   SetClipAutoUpdate(Bool_t x) { fClipSet->SetAutoUpdate(x); }
 
    // External GUI component interface
    TGLCamera & CurrentCamera() const { return *fCurrentCamera; }

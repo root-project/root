@@ -38,6 +38,7 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    fBoxPropFrame(0),
    fBoxProp(),
    fClipInside(0),
+   fAutoUpdate(0),
    fClipEdit(0),
    fClipShow(0),
    fApplyButton(0),
@@ -45,15 +46,17 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
 {
    // Constructor.
 
-   fTypeButtons = new TGButtonGroup(this, "Clip Type");
-   new TGRadioButton(fTypeButtons, "None");
-   new TGRadioButton(fTypeButtons, "Plane");
+   fTypeButtons = new TGButtonGroup(this, "Clip Type", kChildFrame|kHorizontalFrame);
+   new TGRadioButton(fTypeButtons, "None    ");
+   new TGRadioButton(fTypeButtons, "Plane    ");
    new TGRadioButton(fTypeButtons, "Box");
-
+   fTypeButtons->SetLayoutHints(new TGLayoutHints(kLHintsLeft|kLHintsBottom, 0, 0, 2, -10));
    AddFrame(fTypeButtons, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
    // Clip inside / edit
    fClipInside = new TGCheckButton(this, "Clip away inside");
    AddFrame(fClipInside, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
+   fAutoUpdate = new TGCheckButton(this, "Auto update clip");
+   AddFrame(fAutoUpdate, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
    fClipEdit   = new TGCheckButton(this, "Edit In Viewer");
    AddFrame(fClipEdit, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 3, 2, 2));
    fClipShow   = new TGCheckButton(this, "Show In Viewer");
@@ -86,6 +89,7 @@ TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
 
    fTypeButtons->Connect("Clicked(Int_t)", "TGLClipSetSubEditor", this, "ClipTypeChanged(Int_t)");
    fClipInside->Connect("Clicked()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
+   fAutoUpdate->Connect("Clicked()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
    fClipEdit->Connect("Clicked()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
    fClipShow->Connect("Clicked()", "TGLClipSetSubEditor", this, "UpdateViewerClip()");
 
@@ -122,12 +126,14 @@ void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
    }
    Bool_t active = (fCurrentClip != kClipNone);
    fClipInside->SetEnabled(active);
+   fAutoUpdate->SetEnabled(active);
    fClipEdit  ->SetEnabled(active);
    fClipShow  ->SetEnabled(active);
    if (active) {
       fClipEdit->SetDown(fM->GetShowManip());
       fClipShow->SetDown(fM->GetShowClip());
       fClipInside->SetDown(fM->GetCurrentClip()->GetMode() == TGLClip::kInside);
+      fAutoUpdate->SetDown(fM->GetAutoUpdate());
 
       if (fCurrentClip == kClipPlane) {
          HideFrame(fBoxPropFrame);
@@ -208,6 +214,7 @@ void TGLClipSetSubEditor::UpdateViewerClip()
    fM->SetShowClip (fClipShow->IsDown());
    if (fCurrentClip != kClipNone)
       fM->GetCurrentClip()->SetMode(fClipInside->IsDown() ? TGLClip::kInside : TGLClip::kOutside);
+   fM->SetAutoUpdate(fAutoUpdate->IsDown());
 
    Changed();
 }

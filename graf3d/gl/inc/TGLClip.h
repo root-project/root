@@ -135,6 +135,7 @@ protected:
    TGLClipBox            *fClipBox;
    TGLClip               *fCurrentClip;  //! the current clipping shape
 
+   Bool_t                 fAutoUpdate;
    Bool_t                 fShowClip;
    Bool_t                 fShowManip;
    TGLManipSet           *fManip;
@@ -171,7 +172,9 @@ public:
    EClipType GetClipType() const;
    void      SetClipType(EClipType type);
 
-   // Editor only supports combined flag so far.
+   // Clip control flags
+   Bool_t GetAutoUpdate()     const { return fAutoUpdate; }
+   void   SetAutoUpdate(Bool_t aup) { fAutoUpdate = aup;  }
    Bool_t GetShowManip()      const { return fShowManip; }
    void   SetShowManip(Bool_t show) { fShowManip = show; }
    Bool_t GetShowClip()       const { return fShowClip; }

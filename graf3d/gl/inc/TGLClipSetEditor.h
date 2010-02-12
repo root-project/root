@@ -44,6 +44,7 @@ protected:
    TGCompositeFrame *fBoxPropFrame;
    TGNumberEntry    *fBoxProp[6];
    TGCheckButton    *fClipInside;
+   TGCheckButton    *fAutoUpdate;
    TGCheckButton    *fClipEdit;
    TGCheckButton    *fClipShow;
    TGButton         *fApplyButton;
