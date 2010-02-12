@@ -553,7 +553,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    pt[n].fX = pt[0].fX;
    pt[n].fY = pt[0].fY;
 
-   const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? gStipples[fasi] : 0;
+   const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? (const char*)gStipples[fasi] : 0;
 
    // filled polygon
    if (!line && fFillStyle && (fFillStyle != 4000)) {

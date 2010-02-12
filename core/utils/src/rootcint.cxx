@@ -2584,7 +2584,7 @@ void WriteClassInit(G__ClassInfo &cl)
       if (!cl.HasMethod("ShowMembers")) (*dictSrcOut) << "0, ";
    } else {
       if (!cl.HasMethod("ShowMembers"))
-         (*dictSrcOut) << "(void*)&" << mappedname.c_str() << "_ShowMembers, ";
+         (*dictSrcOut) << "&" << mappedname.c_str() << "_ShowMembers, ";
    }
 
    if (cl.HasMethod("Dictionary") && !cl.IsTmplt()) {

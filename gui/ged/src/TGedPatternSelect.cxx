@@ -178,7 +178,7 @@ void TGedPatternFrame::SetFillStyle(TGGC* gc, Style_t fstyle)
             fillPattern = 0;
          }
          fillPattern = gVirtualX->CreateBitmap(gClient->GetDefaultRoot()->GetId(),
-                                               gStipples[stn], 16, 16);
+                                               (const char*)gStipples[stn], 16, 16);
          gc->SetStipple(fillPattern);
          break;
       default:

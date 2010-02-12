@@ -325,6 +325,6 @@ namespace sqlio {
    extern const char* cfg_UseIndexes;
    extern const char* cfg_LockingMode;
    extern const char* cfg_ModifyCounter;
-};
+}
 
 #endif

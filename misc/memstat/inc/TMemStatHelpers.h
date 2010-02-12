@@ -72,5 +72,5 @@ struct ToLower_t
    }
 };
 
-};
+}
 #endif

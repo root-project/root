@@ -2177,7 +2177,7 @@ void TGX11::SetFillStyleIndex(Int_t style, Int_t fasi)
             int stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
 
             gFillPattern = XCreateBitmapFromData(fDisplay, fRootWin,
-                                                 gStipples[stn], 16, 16);
+                                                 (const char*)gStipples[stn], 16, 16);
 
             XSetStipple( fDisplay, *gGCfill, gFillPattern );
             current_fasi = fasi;
