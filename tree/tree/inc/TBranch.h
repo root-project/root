@@ -64,6 +64,7 @@ protected:
    Long64_t    fEntryNumber;     //  Current entry number (last one filled in this branch)
    Int_t       fOffset;          //  Offset of this branch
    Int_t       fMaxBaskets;      //  Maximum number of Baskets so far
+   Int_t       fNBaskets;        //! Number of baskets in memory
    Int_t       fSplitLevel;      //  Branch split level
    Int_t       fNleaves;         //! Number of leaves
    Int_t       fReadBasket;      //! Current basket number when reading
@@ -87,7 +88,7 @@ protected:
    TBuffer    *fEntryBuffer;     //! Buffer used to directly pass the content without streaming
    TList      *fBrowsables;      //! List of TVirtualBranchBrowsables used for Browse()
 
-   Bool_t      fSkipZip;         //!After being read, the buffer will not be unziped.
+   Bool_t      fSkipZip;         //! After being read, the buffer will not be unziped.
 
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);

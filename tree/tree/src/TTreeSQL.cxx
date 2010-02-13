@@ -184,6 +184,7 @@ void TTreeSQL::CheckBasket(TBranch *branch)
    if (basket==0) {
       basket = (TBasketSQL*)CreateBasket(branch);
       if (basket==0) return;
+      //++(branch->fNBaskets);
       branch->GetListOfBaskets()->AddAtAndExpand(basket,0);
    }
    TBuffer * buffer = basket->GetBufferRef();
@@ -409,6 +410,7 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
 
             br->SetEntries(fEntries);
 
+            //++(br->fNBaskets);
             br->GetListOfBaskets()->AddAtAndExpand(CreateBasket(br),0);
 
             prevBranch = branchName;
