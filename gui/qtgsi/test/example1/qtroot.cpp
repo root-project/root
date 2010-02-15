@@ -219,33 +219,31 @@ ApplicationWindow::ApplicationWindow()
    // put here some ROOT Specifics ...
    if (aCanvas->GetCanvas()) {
 
+      aCanvas->GetCanvas()->Resize();
       aCanvas->GetCanvas()->SetFillColor(40);
+      aCanvas->GetCanvas()->cd();
 
       pad1 = new TPad("pad1","The pad with the function",0.05,0.50,0.95,0.95,21);
-      aCanvas->GetCanvas()->cd();
-      pad2 = new TPad("pad2","The pad with the histogram",0.05,0.05,0.95,0.45,21);
-      pad1->SetCanvas(  aCanvas->GetCanvas() );
       pad1->Draw();
       pad1->cd();
-
+      pad1->SetGridx();
+      pad1->SetGridy();
+      pad1->GetFrame()->SetFillColor(42);
+      pad1->GetFrame()->SetBorderMode(-1);
+      pad1->GetFrame()->SetBorderSize(5);
 
       histo= new TH1F("hppx","Gaussian distribution",100,-4,4);
       histo->SetFillColor(0);
       histo->Draw();
 
       aCanvas->GetCanvas()->cd();
-      pad2->SetCanvas(  aCanvas->GetCanvas() );
+      pad2 = new TPad("pad2","The pad with the histogram",0.05,0.05,0.95,0.45,21);
       pad2->Draw();
       pad2->cd();
 
       form1 = new TFormula("form1","abs(sin(x)/x)");
       sqroot = new TF1("sqroot","x*gaus(0) + [3]*form1",0,10);
       sqroot->SetParameters(10,4,1,20);
-      pad1->SetGridx();
-      pad1->SetGridy();
-      pad1->GetFrame()->SetFillColor(42);
-      pad1->GetFrame()->SetBorderMode(-1);
-      pad1->GetFrame()->SetBorderSize(5);
       sqroot->SetLineColor(4);
       sqroot->SetLineWidth(6);
       sqroot->Draw();
@@ -253,9 +251,12 @@ ApplicationWindow::ApplicationWindow()
 
    if (aCanvas2) {
 
-      aCanvas2->GetCanvas()->SetFillColor(42);
-      aCanvas2->GetCanvas()->cd();
       TCanvas *c1 = aCanvas2->GetCanvas();
+      c1->Resize();
+      c1->SetFillColor(42);
+      c1->GetFrame()->SetFillColor(21);
+      c1->GetFrame()->SetBorderSize(12);
+      c1->cd();
 
       //graph example
       const Int_t n = 20;
@@ -273,12 +274,10 @@ ApplicationWindow::ApplicationWindow()
       gr->SetTitle("a simple graph");
       gr->Draw("ACP");
 
-      c1->Update();
-      c1->GetFrame()->SetFillColor(21);
-      c1->GetFrame()->SetBorderSize(12);
       gr->GetHistogram()->SetXTitle("X title");
       gr->GetHistogram()->SetYTitle("Y title");
       c1->Modified();
+      c1->Update();
     } //!aCanvas2
 }
 

@@ -49,7 +49,7 @@ protected:
 public:
    static Bool_t fgDebug, fgWarning;   // debug and warning flags
 
-   TQRootApplication(int argc, char **argv,int poll=0);
+   TQRootApplication(int &argc, char **argv,int poll=0);
    ~TQRootApplication();
    void SetDebugOn(){ fgDebug=kTRUE; }
    void SetWarningOn(){ fgWarning=kTRUE;}

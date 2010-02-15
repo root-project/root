@@ -43,7 +43,7 @@ void qMessageOutput( QtMsgType type, const char *msg )
 }
 
 //______________________________________________________________________________
-TQRootApplication::TQRootApplication(int argc, char **argv, int poll):QApplication(argc,argv)
+TQRootApplication::TQRootApplication(int &argc, char **argv, int poll):QApplication(argc,argv)
 {
    // Connect ROOT via Timer call back.
 

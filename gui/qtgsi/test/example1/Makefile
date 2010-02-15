@@ -45,7 +45,7 @@ ROOTCONF	= ../../../../bin/root-config
 QTCXXFLAGS=	-I. $(QTINCDIR:%=-I%) $(CXXFLAGS) -DQT3_SUPPORT -DQT_QT3SUPPORT_LIB -DDEBUG_LEVEL=$(QDL) $(shell $(ROOTCONF) --cflags)
 INCPATH =	-I../../../../include
 LFLAGS	=	$(LDFLAGS) $(QTLIBDIR) $(X11LIBDIR)
-LIBS	=	$(QTLIB) $(SYSCONF_LIBS_X11) $(shell $(ROOTCONF) --prefix=../../../ --glibs) -lQtGSI
+LIBS	=	$(QTLIB) $(SYSCONF_LIBS_X11) $(shell $(ROOTCONF) --glibs) -lQtGSI
 
 ####### Target
 

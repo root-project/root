@@ -13,11 +13,11 @@ LD            = link
 
 ifdef is_debug
 # Debugging:
-OPTIMIZE  := -Zi -MDd
-LINKDEBUG := -debug -nodefaultlib:msvcrt.lib
+OPTIMIZE  := -Zi
+LINKDEBUG := -debug
 else
 # Full optimization:
-OPTIMIZE  := -Ox -MD
+OPTIMIZE  := -Ox
 endif
 
 QTCXXFLAGS   := -GR $(OPTIMIZE) -W3 -nologo $(shell root-config --cflags) -FIw32pragma.h -D_CRT_SECURE_NO_DEPRECATE -DQT_DLL -DQT_THREAD_SUPPORT -DQT3_SUPPORT $(QTINCDIR:%=-I%)
