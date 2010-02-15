@@ -49,12 +49,6 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
          TObject *el = info->GetElements()->FindObject("m_event");
          if (el) el->SetBit(TStreamerElement::kDoNotDelete);
       }
-      // Fix CMS Ref class.
-      info = (TVirtualStreamerInfo*)file->GetStreamerInfoCache()->FindObject("edm::RefToBase<reco::Track>");
-      if (info) {
-         TObject *el = info->GetElements()->FindObject("holder_");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-      }
       
       if (genreflex) {
          file->MakeProject(libdir.Data(),"*","NEW+genreflex");
