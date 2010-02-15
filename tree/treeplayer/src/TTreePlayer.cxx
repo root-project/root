@@ -550,7 +550,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  arguments. For example:
 //      - "TMath::BreitWigner(fPx,3,2)"
 //      - "event.GetHistogram().GetXaxis().GetXmax()"
-//      - "event.GetTrack(fMax).GetPx()
+//  Note: You can only pass expression that depend on the TTree's data
+//  to static functions and you can only call non-static member function
+//  with 'fixed' parameters.
 //
 //  The selection is an expression with a combination of the columns.
 //  In a selection all the C++ operators are authorized.

@@ -2995,7 +2995,9 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  arguments. For example:
    //      - "TMath::BreitWigner(fPx,3,2)"
    //      - "event.GetHistogram().GetXaxis().GetXmax()"
-   //      - "event.GetTrack(fMax).GetPx()
+   //  Note: You can only pass expression that depend on the TTree's data
+   //  to static functions and you can only call non-static member function
+   //  with 'fixed' parameters.
    //
    //  selection is an expression with a combination of the columns.
    //  In a selection all the C++ operators are authorized.
