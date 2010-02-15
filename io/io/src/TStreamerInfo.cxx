@@ -2432,11 +2432,13 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    if (needGenericTemplate && isTemplate) {
       // Generate default functions, ClassDef and trailer.
       fprintf(fp,"\n   %s() {};\n",protoname.Data());
+      fprintf(fp,"   %s(const %s & );\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   virtual ~%s() {};\n\n",protoname.Data());
       
    } else {
       // Generate default functions, ClassDef and trailer.
       fprintf(fp,"\n   %s();\n",protoname.Data());
+      fprintf(fp,"   %s(const %s & );\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   virtual ~%s();\n\n",protoname.Data());
       
       // Add the implementations to the source.cxx file.
@@ -2457,6 +2459,57 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
          }
          if (kOffsetP <= element->GetType() && element->GetType() < kObject ) {
             fprintf(sfp,"   %s = 0;\n",element->GetName());
+         }
+      }
+      fprintf(sfp,"}\n");
+
+      fprintf(sfp,"%s::%s(const %s & rhs)\n",GetName(),protoname.Data(),protoname.Data());
+      next.Reset();
+      Bool_t atstart = kTRUE;
+      while ((element = (TStreamerElement*)next())) {
+         if (element->IsBase()) {
+            if (atstart) { fprintf(sfp,"   : "); atstart = kFALSE; }
+            else fprintf(sfp,"   , ");
+            fprintf(sfp, "%s(const_cast<%s &>( rhs ))\n", element->GetName(),protoname.Data());
+         } else {
+            if (element->GetArrayLength() <= 1) {
+               if (atstart) { fprintf(sfp,"   : "); atstart = kFALSE; }
+               else fprintf(sfp,"   , ");
+               fprintf(sfp, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
+            }
+         }
+      }
+      fprintf(sfp,"{\n");
+      fprintf(sfp,"   // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).\n");
+      fprintf(sfp,"   // Use at your own risk!\n");
+      fprintf(sfp,"   if (&rhs) {} // avoid warning about unused parameter\n");
+      next.Reset();
+      Bool_t defMod = kFALSE;
+      while ((element = (TStreamerElement*)next())) {
+         if (element->GetType() == kObjectp || element->GetType() == kObjectP||
+             element->GetType() == kAnyp || element->GetType() == kAnyP
+             || element->GetType() == kAnyPnoVT) 
+         {
+            if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
+            const char *ename = element->GetName();
+            const char *colon2 = strstr(ename,"::");
+            if (colon2) ename = colon2+2;
+            if(element->GetArrayLength() <= 1) {
+               fprintf(sfp,"   modrhs.%s = 0;\n",ename);
+            } else {
+               fprintf(sfp,"   modrhs.memset(%s,0,%d);\n",ename,element->GetSize());
+            }
+         } else if (element->GetType() == kCharStar) {
+            if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
+            const char *ename = element->GetName();
+            fprintf(sfp,"   modrhs.%s = 0;\n",ename);
+         } else if (kOffsetP <= element->GetType() && element->GetType() < kObject ) { 
+            if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
+            const char *ename = element->GetName();
+            fprintf(sfp,"   modrhs.%s = 0;\n",ename);
+         } else if (element->GetArrayLength() > 1) {
+            const char *ename = element->GetName();
+            fprintf(sfp,"   for (int i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);            
          }
       }
       fprintf(sfp,"}\n");

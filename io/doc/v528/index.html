@@ -26,6 +26,9 @@ to never delete the object.  For example:
 Note that MakeProject only uses the list of StreamerInfo internal to the TFile (as opposed
 to the global list of StreamerInfo used by the regular I/O operations) and thus the change
 must be done on the StreamerInfo in file->GetStreamerInfoCache().
+
+MakeProject now implements a move constructor for each classes.   For the implementation, we 'use' the 'copy constructor' until the C++ compilers properly support the official move constructor notation.   Implementing a move constructor avoid having to delete and reconstruct resource during a std::vector resize and avoid the double delete induced by using the default copy constructor.
+
 <h4>Misc.</h4>
 <ul><li>To make sure that the class emulation layer of ROOT does not double delete an object,
 tell the StreamerElement representing one of the pointers pointing to the object
