@@ -65,3 +65,15 @@
 <li> In case of <tt>Canvas.MoveOpaque = true</tt> in <tt>$ROOTSYS/etc/system.rootrc</tt>
 the rubberband was not visible during the zooming along axis.
 </ul>
+
+<h4>TPad</h4>
+<ul> 
+<li> Bug fixed in TF1 zooming on Y axis. To reproduce it do:
+     <pre>
+     root [0] TF1 f1( "f1", "-x", 1,3)
+     root [1] f1.Draw()
+     </pre>
+     now selecting some range on the y-axis with the mouse 
+     jumped to the range (0, 1) instead of chosen range.
+</ul>
+
