@@ -2783,7 +2783,7 @@ void TF1::Paint(Option_t *option)
             }
          }
       }
-      fHistogram->SetMinimum(minimum);
+      if (minimum != -1111) fHistogram->SetMinimum(minimum);
    }
    if (maximum == -1111) {
       if (fHistogram->TestBit(TH1::kIsZoomed)) {
