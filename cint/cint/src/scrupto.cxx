@@ -766,7 +766,7 @@ int G__free_ifunc_table(G__ifunc_table_internal* passed_ifunc)
          fprintf(G__memhist, "func %s\n", ifunc->funcname[i]);
 #endif // G__MEMTEST
          if (ifunc->funcname[i]) {
-            ifunc->param[i].~G__params();
+            ifunc->param[i].reset();
             free(ifunc->funcname[i]);
             ifunc->funcname[i] = 0;
 #ifdef G__ASM_WHOLEFUNC
