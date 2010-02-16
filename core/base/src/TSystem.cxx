@@ -2794,11 +2794,14 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 
    TString emergency_loc;
-   UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
-   if (ug) {
-      AssignAndDelete( emergency_loc, ConcatFileName( TempDirectory(), ug->fUser ) );
-   } else {
-      emergency_loc = TempDirectory();
+   {
+      UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
+      if (ug) {
+         AssignAndDelete( emergency_loc, ConcatFileName( TempDirectory(), ug->fUser ) );
+         delete ug;
+      } else {
+         emergency_loc = TempDirectory();
+      }
    }
 
    Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
