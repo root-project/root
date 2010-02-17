@@ -297,8 +297,8 @@ check_libpic() {
         objpic=`ar t $chklibpic | awk '{ if (NR==1) {print $1 } }'`
         logmsg " ar x $chklibpic $objpic"
         ar x $chklibpic $objpic
-        logmsg " objdump -r $objpic | grep 'R_X86_64_32'"
-        objdump -r $objpic | grep 'R_X86_64_32' > /dev/null 2>& 1
+        logmsg " objdump -r $objpic | grep -v ' .debug_' | grep 'R_X86_64_32'"
+        objdump -r $objpic | grep -v ' .debug_' | grep 'R_X86_64_32' > /dev/null 2>& 1
         ret=$?
         rm -f $objpic
         logmsg " result: $ret"
