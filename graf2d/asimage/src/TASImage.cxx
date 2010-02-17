@@ -2028,7 +2028,7 @@ UInt_t TASImage::GetWidth() const
    // Return width of original image not of the displayed image.
    // (Number of image pixels)
 
-   return fScaledImage ? fScaledImage->fImage->width : (fImage ? fImage->width : 0);
+   return fImage ? fImage->width : 0;
 }
 
 
@@ -2038,7 +2038,7 @@ UInt_t TASImage::GetHeight() const
    // Return height of original image not of the displayed image.
    // (Number of image pixels)
 
-   return fScaledImage ? fScaledImage->fImage->height : (fImage ? fImage->height : 0);
+   return fImage ? fImage->height : 0;
 }
 
 
