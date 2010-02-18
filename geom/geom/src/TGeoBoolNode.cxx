@@ -418,20 +418,40 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
 
-   Double_t local[3], master[3], ldir[3], rdir[3], pushed[3];
+   Double_t local[3], local1[3], master[3], ldir[3], rdir[3], pushed[3];
    memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
    TGeoBoolNode *node = (TGeoBoolNode*)this;
-   Double_t d1=0., d2=0., snxt=0.;
+   Double_t d1=0., d2=0., snxt=0., eps=0.;
    fLeftMat->MasterToLocalVect(dir, ldir);
    fRightMat->MasterToLocalVect(dir, rdir);
    fLeftMat->MasterToLocal(point, local);
    Bool_t inside1 = fLeft->Contains(local);
    if (inside1) d1 = fLeft->DistFromInside(local, ldir, 3);
+   else memcpy(local1, local, 3*sizeof(Double_t));
    fRightMat->MasterToLocal(point, local);
    Bool_t inside2 = fRight->Contains(local);
    if (inside2) d2 = fRight->DistFromInside(local, rdir, 3);
-
+   if (!(inside1 | inside2)) {
+   // May be a pathological case when the point is on the boundary
+      d1 = fLeft->DistFromOutside(local1, ldir, 3);
+      if (d1<2.*TGeoShape::Tolerance()) {
+         eps = d1+TGeoShape::Tolerance();
+         for (i=0; i<3; i++) local1[i] += eps*ldir[i];
+         inside1 = kTRUE;
+         d1 = fLeft->DistFromInside(local1, ldir, 3);
+         d1 += eps;
+      } else {      
+         d2 = fRight->DistFromOutside(local, rdir, 3);
+         if (d2<2.*TGeoShape::Tolerance()) {
+           eps = d2+TGeoShape::Tolerance();
+           for (i=0; i<3; i++) local[i] += eps*rdir[i];
+           inside2 = kTRUE;
+           d2 = fRight->DistFromInside(local, rdir, 3);
+           d2 += eps;
+        }
+     }      
+   }
    while (inside1 || inside2) {
       if (inside1 && inside2) {
          if (d1<d2) {      
