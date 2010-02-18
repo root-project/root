@@ -142,6 +142,8 @@ void TGLFaceSet::DirectDraw(TGLRnrCtx & rnrCtx) const
       Info("TGLFaceSet::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
+   if (fNbPols == 0) return;
+
    GLUtesselator  *tessObj = TGLUtil::GetDrawTesselator3dv();
    const Double_t *pnts = &fVertices[0];
    const Double_t *normals = &fNormals[0];
@@ -217,6 +219,8 @@ Bool_t TGLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
 void TGLFaceSet::CalculateNormals()
 {
    // CalculateNormals
+
+   if (fNbPols == 0) return;
    Double_t *pnts = &fVertices[0];
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t polEnd = fPolyDesc[j] + j + 1;
