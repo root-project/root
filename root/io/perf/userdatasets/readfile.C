@@ -61,9 +61,50 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
    } else {
       // Fix HepMC
       TClass *clGenVertex = TClass::GetClass("HepMC::GenVertex");
-      if (clGenVertex && clGenVertex->GetStreamerInfo()) {
+      if (clGenVertex && clGenVertex->GetStreamerInfo()) { 
          TObject *el = clGenVertex->GetStreamerInfo()->GetElements()->FindObject("m_event");
          if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }
+      TClass *clGenParticle = TClass::GetClass("HepMC::GenParticle");
+      if (clGenParticle && clGenParticle->GetStreamerInfo()) {
+         TObject *el = clGenParticle->GetStreamerInfo()->GetElements()->FindObject("m_production_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = clGenParticle->GetStreamerInfo()->GetElements()->FindObject("m_end_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }
+      TClass *cl = TClass::GetClass("HepMC::GenEvent");
+      if (cl && cl->GetStreamerInfo()) { 
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_signal_process_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_beam_particle_1");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_beam_particle_2");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+
+         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_vertex_barcodes");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_particle_barcodes");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      cl = TClass::GetClass("HepMC::Flow");
+      if (cl && cl->GetStreamerInfo()) { 
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_particle_owner");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }
+      cl = TClass::GetClass("KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >");
+      if (cl && cl->GetStreamerInfo()) {
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_sequential");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      cl = TClass::GetClass("KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >");
+      if (cl && cl->GetStreamerInfo()) {
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_sequential");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      cl = TClass::GetClass("ObjectVector<LHCb::MCRichDigitSummary>");
+      if (cl && cl->GetStreamerInfo()) {
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_vector");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
       }
    }
    
@@ -119,9 +160,9 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
 
    TFile::SetReadaheadSize(0);
    Long64_t nentries = T->GetEntries();
-   nentries=200;
-   int efirst= 0;
-   int elast = efirst+nentries;
+   nentries   = 200;
+   int efirst = 0;
+   int elast  = efirst+nentries;
    T->SetCacheSize(cachesize);
    if (cachesize != 0) {
       T->SetCacheEntryRange(efirst,elast);
@@ -134,7 +175,8 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
    TRandom r;
    for (Long64_t i=efirst;i<elast;i++) {
       if (i%10 == 0) printf("i = %lld\n",i);
-      //if (r.Rndm() > 0.01) continue;
+      //if (r.Rndm() > 0.01) continue; to check: 3
+      //for(int b= 50;b< 118;++b) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);
       T->GetEntry(i);
    }
    TString psfilename(filename);
