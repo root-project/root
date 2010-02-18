@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Id$
+0;242;0c// @(#)root/reflex:$Id$
 // Author: Axel Naumann, 2010
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
@@ -18,7 +18,7 @@
 #include "Reflex/Kernel.h"
 
 namespace Reflex {
-   class LiteralStringSet {
+   class RFLX_API LiteralStringSet {
    public:
       static LiteralStringSet& Instance();
       void Add(const char* s) { fLiterals.insert((void*)s); }
