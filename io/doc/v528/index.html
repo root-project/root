@@ -42,6 +42,23 @@ to never delete the object.  For example:
    }
 </pre>
 </li>
+<li>The handling of memory by the collection proxy has been improved in the case of a 
+collection of pointers which can now become owner of its content.<p/>
+
+The default, for backward compatibility reasons and to avoid double delete (at the expense
+of memory leaks), the container of pointers are <em>still</em> not owning their content
+<em>unless</em> they are a free standing container (i.e. itself not contained in another
+object).<p/>
+To make a container of pointers become owner of its content do something like:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+      cl = TClass::GetClass("ObjectVector<LHCb::MCRichDigitSummary>");
+      if (cl && cl->GetStreamerInfo()) {
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_vector");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+</pre>
+For MakeProject, use file->GetStreamerInfoCache() instead of the TClass GetStreamerInfo.
+</li>
 <ul>
 
 

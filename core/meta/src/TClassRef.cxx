@@ -81,6 +81,8 @@ TClassRef &TClassRef::operator=(TClass* rhs)
       if (fClassPtr) {
          fClassName = fClassPtr->GetName();
          fClassPtr->AddRef(this);
+      } else {
+         fClassName.clear();
       }
    }
    return *this;

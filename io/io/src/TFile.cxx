@@ -2197,6 +2197,12 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    fprintf(sfp, "#include \"%sProjectHeaders.h\"\n\n",dirname );
    if (!genreflex) fprintf(sfp, "#include \"%sLinkDef.h\"\n\n",dirname );
    fprintf(sfp, "#include \"%sProjectDict.cxx\"\n\n",dirname );
+   fprintf(sfp, "struct DeleteObjectFunctor {\n");
+   fprintf(sfp, "   template <typename T>\n");
+   fprintf(sfp, "   void operator()(const T *ptr) const {\n");
+   fprintf(sfp, "      delete ptr;\n");
+   fprintf(sfp, "   }\n");
+   fprintf(sfp, "};\n\n");
    fclose( sfp );
 
    // loop on all TStreamerInfo classes to check for empty classes

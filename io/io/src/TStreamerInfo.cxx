@@ -2510,6 +2510,10 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
          } else if (element->GetArrayLength() > 1) {
             const char *ename = element->GetName();
             fprintf(sfp,"   for (int i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);            
+         } else if (element->GetType() == kSTLp) {
+            const char *ename = element->GetName();
+            if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
+            fprintf(sfp,"   modrhs.%s = 0;\n",ename);            
          }
       }
       fprintf(sfp,"}\n");
@@ -2554,6 +2558,25 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
             } else {
                fprintf(sfp,"   delete [] %s;   %s = 0;\n",ename,ename);
+            }
+         }
+         if (element->GetType() == kSTL || element->GetType() == kSTLp) {
+            const char *ename = element->GetName();
+            const char *prefix = 0;
+            if ( element->GetType() == kSTLp ) {
+               prefix = "*";
+            }
+            if (!element->TestBit(TStreamerElement::kDoNotDelete) && element->GetClassPointer() && element->GetClassPointer()->GetCollectionProxy() && element->GetClassPointer()->GetCollectionProxy()->HasPointers()) {
+               fprintf(sfp,"   {\n");
+               fprintf(sfp,"      std::for_each( (%s %s).rbegin(), (%s %s).rend(), DeleteObjectFunctor() );\n",prefix,ename,prefix,ename);
+               //fprintf(sfp,"      %s::iterator iter;\n");
+               //fprintf(sfp,"      %s::iterator begin = (%s %s).begin();\n");
+               //fprintf(sfp,"      %s::iterator end (%s %s).end();\n");
+               //fprintf(sfp,"      for( iter = begin; iter != end; ++iter) { delete *iter; }\n");
+               fprintf(sfp,"   }\n");
+            }
+            if ( prefix ) {
+               fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
             }
          }
       }
@@ -3496,12 +3519,27 @@ void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
       }
 
       if (etype == kObject || etype == kAny || etype == kBase ||
-          etype == kTObject || etype == kTString || etype == kTNamed ||
-          etype == kSTL) {
+          etype == kTObject || etype == kTString || etype == kTNamed) {
          // A data member is destroyed, but not deleted.
          cle->Destructor(eaddr, kTRUE);
       }
-
+      
+      if (etype == kSTL) {
+         // A data member is destroyed, but not deleted.
+         TVirtualCollectionProxy *pr = cle->GetCollectionProxy();
+         if (!pr) {
+            cle->Destructor(eaddr, kTRUE);
+         } else {
+            if (ele->TestBit(TStreamerElement::kDoNotDelete)) {
+               TVirtualCollectionProxy::TPushPop env(cle->GetCollectionProxy(), eaddr); // used for both this 'clear' and the 'clear' inside destructor.
+               cle->GetCollectionProxy()->Clear(); // empty the collection without deleting the pointer
+               pr->Destructor(eaddr, kTRUE);
+            } else {
+               pr->Destructor(eaddr, kTRUE);
+            }
+         }
+      }
+      
       if (etype == kObject  + kOffsetL || etype == kAny     + kOffsetL ||
           etype == kTObject + kOffsetL || etype == kTString + kOffsetL ||
           etype == kTNamed  + kOffsetL || etype == kSTL     + kOffsetL) {

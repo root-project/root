@@ -79,9 +79,15 @@ void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly)
    // Virtual destructor
 
    if (!p) return;
-   TVirtualCollectionProxy::TPushPop env(this, p);
-   Clear();
-   if (!dtorOnly) {
+   if (!fEnv || fEnv->fObject != p) { // Envoid the cost of TPushPop if we don't need it
+      TVirtualCollectionProxy::TPushPop env(this, p);
+      Clear("force");
+   } else {
+      Clear("force");
+   }      
+   if (dtorOnly) {
+      ((Cont_t*)p)->~Cont_t();
+   } else {
       delete (Cont_t*) p;
    }
 }
@@ -200,7 +206,7 @@ void TEmulatedCollectionProxy::Clear(const char* opt)
    Resize(0, opt && *opt=='f');
 }
 
-void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force */ )
+void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
 {
    // Shrink the container
 
@@ -233,8 +239,8 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   StreamHelper* h = (StreamHelper*)addr;
                   //Eventually we'll need to delete this
                   //(but only when needed).
-                  //void* ptr = h->ptr();
-                  //fKey->fType->Destructor(ptr);
+                  void* ptr = h->ptr();
+                  if (force) fKey->fType->Destructor(ptr);
                   h->set(0);
                }
                break;
@@ -243,14 +249,14 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                   StreamHelper* h = (StreamHelper*)addr;
                   //Eventually we'll need to delete this
                   //(but only when needed).
-                  //delete (std::string*)h->ptr();
+                  if (force) delete (std::string*)h->ptr();
                   h->set(0);
                }
                break;
             case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
-                  //delete (TString*)h->ptr();
+                  if (force) delete (TString*)h->ptr();
                   h->set(0);
                }
                break;
@@ -278,8 +284,8 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
                for( i=left; i<nCurr; ++i, addr += fValDiff )  {
                   StreamHelper* h = (StreamHelper*)addr;
                   void* p = h->ptr();
-                  if ( p )  {
-                     //fVal->fType->Destructor(p);
+                  if ( p && force )  {
+                     fVal->fType->Destructor(p);
                   }
                   h->set(0);
                }
@@ -287,14 +293,14 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
             case G__BIT_ISPOINTER|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
-                  //delete (std::string*)h->ptr();
+                  if (force) delete (std::string*)h->ptr();
                   h->set(0);
                }
                break;
             case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
-                  //delete (TString*)h->ptr();
+                  if (force) delete (TString*)h->ptr();
                   h->set(0);
                }
                break;
