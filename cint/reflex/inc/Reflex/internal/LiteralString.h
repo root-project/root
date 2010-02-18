@@ -1,4 +1,4 @@
-0;242;0c// @(#)root/reflex:$Id$
+// @(#)root/reflex:$Id$
 // Author: Axel Naumann, 2010
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2010, All rights reserved.
