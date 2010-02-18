@@ -530,6 +530,7 @@ Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       dist = TGeoBBox::DistFromOutside(pt,dir,3);
       if (dist>stepmax) return TGeoShape::Big();
       if (dist>1E-6) dist-=1E-6; // decrease snext to make sure we do not cross the xtru
+      else dist = 0;
       for (i=0; i<3; i++) pt[i] += dist*dir[i]; // we are now closer
       iz = TMath::BinarySearch(fNz, fZ, pt[2]);      
       if (iz<0) iz=0;
