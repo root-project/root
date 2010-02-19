@@ -7,6 +7,152 @@
 #include "TStreamerElement.h"
 #include "TROOT.h"
 
+void SetOwner(TVirtualStreamerInfo *info, const char *dataname, Bool_t isowner)
+{
+   if (info) {
+      TObject *el = info->GetElements()->FindObject(dataname);
+      if (el) {
+         if (isowner) el->ResetBit(TStreamerElement::kDoNotDelete);
+         else el->SetBit(TStreamerElement::kDoNotDelete);
+      }
+   }
+}
+
+void SetOwner(TList *infolist, const char *classname, const char *dataname, Bool_t isowner)
+{
+   TVirtualStreamerInfo *info = 0;
+   if (infolist) {
+      info = (TVirtualStreamerInfo*)infolist->FindObject(classname);
+   } else {
+      TClass *cl = TClass::GetClass(classname);
+      if (cl) info = cl->GetStreamerInfo();
+   }
+   SetOwner(info, dataname, isowner);
+}
+
+void fixHepMC(TList *infolist = 0) 
+{
+   if (infolist) {
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)infolist->FindObject("HepMC::GenVertex");
+      if (info) {
+         TObject *el = info->GetElements()->FindObject("m_event");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }
+      info = (TVirtualStreamerInfo*)infolist->FindObject("HepMC::GenParticle");
+      if (info) {
+         TObject *el = info->GetElements()->FindObject("m_production_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = info->GetElements()->FindObject("m_end_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }      
+      info = (TVirtualStreamerInfo*)infolist->FindObject("HepMC::GenEvent");
+      if (info) {
+         TObject *el = info->GetElements()->FindObject("m_vertex_barcodes");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+         el = info->GetElements()->FindObject("m_particle_barcodes");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+         
+         el = info->GetElements()->FindObject("m_signal_process_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = info->GetElements()->FindObject("m_beam_particle_1");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = info->GetElements()->FindObject("m_beam_particle_2");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }
+      info = (TVirtualStreamerInfo*)infolist->FindObject("HepMC::Flow");
+      if (info) {
+         TObject *el = info->GetElements()->FindObject("m_particle_owner");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      } 
+   } else {
+      TClass *clGenVertex = TClass::GetClass("HepMC::GenVertex");
+      if (clGenVertex && clGenVertex->GetStreamerInfo()) { 
+         TObject *el = clGenVertex->GetStreamerInfo()->GetElements()->FindObject("m_event");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }
+      TClass *clGenParticle = TClass::GetClass("HepMC::GenParticle");
+      if (clGenParticle && clGenParticle->GetStreamerInfo()) {
+         TObject *el = clGenParticle->GetStreamerInfo()->GetElements()->FindObject("m_production_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = clGenParticle->GetStreamerInfo()->GetElements()->FindObject("m_end_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }
+      TClass *cl = TClass::GetClass("HepMC::GenEvent");
+      if (cl && cl->GetStreamerInfo()) { 
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_signal_process_vertex");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_beam_particle_1");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_beam_particle_2");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+         
+         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_vertex_barcodes");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_particle_barcodes");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      cl = TClass::GetClass("HepMC::Flow");
+      if (cl && cl->GetStreamerInfo()) { 
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_particle_owner");
+         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
+      }      
+   }
+}
+
+void fixLHCb(TList *infolist = 0)
+{
+   SetOwner(infolist,"KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >","m_sequential",kTRUE);
+   SetOwner(infolist,"KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >","m_sequential",kTRUE);
+   SetOwner(infolist,"ObjectVector<LHCb::MCRichDigitSummary>","m_vector",kTRUE);
+   return;
+   
+   if (infolist) {
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)infolist->FindObject("KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >");
+      if (info) {
+         TObject *el = info->GetElements()->FindObject("m_sequential");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      info = (TVirtualStreamerInfo*)infolist->FindObject("KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >");
+      if (info) {
+         TObject *el = info->GetElements()->FindObject("m_sequential");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      info = (TVirtualStreamerInfo*)infolist->FindObject("ObjectVector<LHCb::MCRichDigitSummary>");
+      if (info) {
+         TObject *el = info->GetElements()->FindObject("m_vector");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      
+   } else {
+      TClass *cl = TClass::GetClass("KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >");
+      if (cl && cl->GetStreamerInfo()) {
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_sequential");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      cl = TClass::GetClass("KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >");
+      if (cl && cl->GetStreamerInfo()) {
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_sequential");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }
+      cl = TClass::GetClass("ObjectVector<LHCb::MCRichDigitSummary>");
+      if (cl && cl->GetStreamerInfo()) {
+         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_vector");
+         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
+      }      
+   }
+}
+
+void fixCMS(TList *infolist = 0)
+{
+   SetOwner(infolist,"edm::OwnVector<reco::BaseTagInfo,edm::ClonePolicy<reco::BaseTagInfo> >","data_",kTRUE);
+   SetOwner(infolist,"edm::OwnVector<pat::UserData,edm::ClonePolicy<pat::UserData> >","data_",kTRUE);
+}
+
+void fixATLAS(TList *infolist = 0)
+{
+   SetOwner(infolist,"MuonSpShowerContainer_p1","m_showers",kTRUE);
+}
+
 TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
 {
    // Load library if any
@@ -44,12 +190,12 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
    // if library not load yet, generate the code, compile it and load it.
    if (loadlibrary && !haslibrary) {
       // Fix HepMC
-      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)file->GetStreamerInfoCache()->FindObject("HepMC::GenVertex");
-      if (info) {
-         TObject *el = info->GetElements()->FindObject("m_event");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-      }
-      
+      TList *infolist = (TList*)file->GetStreamerInfoCache();
+      fixHepMC( infolist );
+      fixLHCb( infolist );
+      fixCMS( infolist );
+      fixATLAS( infolist );      
+
       if (genreflex) {
          file->MakeProject(libdir.Data(),"*","NEW+genreflex");
       } else {
@@ -60,52 +206,11 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
       }
    } else {
       // Fix HepMC
-      TClass *clGenVertex = TClass::GetClass("HepMC::GenVertex");
-      if (clGenVertex && clGenVertex->GetStreamerInfo()) { 
-         TObject *el = clGenVertex->GetStreamerInfo()->GetElements()->FindObject("m_event");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-      }
-      TClass *clGenParticle = TClass::GetClass("HepMC::GenParticle");
-      if (clGenParticle && clGenParticle->GetStreamerInfo()) {
-         TObject *el = clGenParticle->GetStreamerInfo()->GetElements()->FindObject("m_production_vertex");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-         el = clGenParticle->GetStreamerInfo()->GetElements()->FindObject("m_end_vertex");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-      }
-      TClass *cl = TClass::GetClass("HepMC::GenEvent");
-      if (cl && cl->GetStreamerInfo()) { 
-         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_signal_process_vertex");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_beam_particle_1");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_beam_particle_2");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-
-         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_vertex_barcodes");
-         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
-         el = cl->GetStreamerInfo()->GetElements()->FindObject("m_particle_barcodes");
-         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
-      }
-      cl = TClass::GetClass("HepMC::Flow");
-      if (cl && cl->GetStreamerInfo()) { 
-         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_particle_owner");
-         if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-      }
-      cl = TClass::GetClass("KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >");
-      if (cl && cl->GetStreamerInfo()) {
-         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_sequential");
-         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
-      }
-      cl = TClass::GetClass("KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >");
-      if (cl && cl->GetStreamerInfo()) {
-         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_sequential");
-         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
-      }
-      cl = TClass::GetClass("ObjectVector<LHCb::MCRichDigitSummary>");
-      if (cl && cl->GetStreamerInfo()) {
-         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_vector");
-         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
-      }
+      fixHepMC();
+      fixLHCb();
+      fixCMS();
+      fixATLAS();
+      
    }
    
    return file;
@@ -168,15 +273,29 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
       T->SetCacheEntryRange(efirst,elast);
       T->AddBranchToCache("*");
       T->StopCacheLearningPhase();
-   } 
+   }
+   if (!loadlibrary && strcmp(T->GetName(),"Events")==0) {
+      // CMS file without library, disable the vector of polymorphic pointers
+      // which we don't know yet how to delete properly.
+      T->SetBranchStatus("patJets_selectedLayer1Jets__PAT.obj.tagInfos_.data_",kFALSE);
+      T->SetBranchStatus("patJets_patcrosscleaner_ccJets_PAT.obj.tagInfos_.data_",kFALSE);
+      T->SetBranchStatus("patJets_patcrosscleaner_droppedJets_PAT.obj.tagInfos_.data_",kFALSE);
+   }      
    
    TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
    
    TRandom r;
    for (Long64_t i=efirst;i<elast;i++) {
       if (i%10 == 0) printf("i = %lld\n",i);
-      //if (r.Rndm() > 0.01) continue; to check: 3
-      //for(int b= 50;b< 118;++b) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);
+      //if (r.Rndm() > 0.01) continue; to check: 12,14,15
+      TBranch * br = ((TBranch*)T->GetListOfBranches()->At(16));
+      br = (TBranch*)br->GetListOfBranches()->At(2);
+//      for(int b= 44;b< 47;++b) { 
+//         TBranch *readbr = ((TBranch*)br->GetListOfBranches()->At(b));
+//         fprintf(stdout,"%d %s %d : ",b, readbr->GetName(),readbr->TestBit(kDoNotProcess)); 
+//         fprintf(stdout,"%d\n",readbr->GetEntry(i)); 
+//      }
+      //for(int b= 17;b< 18;++b) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);
       T->GetEntry(i);
    }
    TString psfilename(filename);
