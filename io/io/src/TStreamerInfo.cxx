@@ -2509,7 +2509,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
                fprintf(sfp,"   modrhs.%s = 0;\n",ename);
             } else if (element->GetArrayLength() > 1) {
-               // FIXME: Need to add support for varibale length array.
+               // FIXME: Need to add support for variable length array.
                fprintf(sfp,"   for (int i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);            
             } else if (element->GetType() == kSTLp) {
                if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
