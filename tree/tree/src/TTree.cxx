@@ -5637,7 +5637,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    nbranches = fBranches.GetEntries();
    Int_t status = 1;
    Long64_t nlines = 0;
-   while(status > 0) {
+   while(1) {
 
       while (isspace(in.peek())) {
          in.get();
@@ -5648,13 +5648,19 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
             branch = (TBranch*)fBranches.At(i);
             TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
             leaf->ReadValue(in);
+            if (in.eof()) return nlines;
             status = in.good();
-            if (status <= 0) break;
+            if (status <= 0) {
+               Warning("ReadFile","Illegal value after line %d\n",nlines);
+               in.clear();
+               break;
+            }
          }
-         if (status <= 0) break;
          //we are now ready to fill the tree
-         Fill();
-         nlines++;
+         if (status) {
+            Fill();
+            nlines++;
+         }
       }
       in.ignore(8192,'\n');
    }
