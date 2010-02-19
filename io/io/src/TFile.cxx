@@ -2202,6 +2202,23 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    fprintf(sfp, "   void operator()(const T *ptr) const {\n");
    fprintf(sfp, "      delete ptr;\n");
    fprintf(sfp, "   }\n");
+   fprintf(sfp, "   template <typename T, typename Q>\n");
+   fprintf(sfp, "   void operator()(const std::pair<T,Q> &) const {\n");
+   fprintf(sfp, "      // Do nothing\n");
+   fprintf(sfp, "   }\n");
+   fprintf(sfp, "   template <typename T, typename Q>\n");
+   fprintf(sfp, "   void operator()(const std::pair<T,Q*> &ptr) const {\n");
+   fprintf(sfp, "      delete ptr.second;\n");
+   fprintf(sfp, "   }\n");
+   fprintf(sfp, "   template <typename T, typename Q>\n");
+   fprintf(sfp, "   void operator()(const std::pair<T*,Q> &ptr) const {\n");
+   fprintf(sfp, "      delete ptr.first;\n");
+   fprintf(sfp, "   }\n");
+   fprintf(sfp, "   template <typename T, typename Q>\n");
+   fprintf(sfp, "   void operator()(const std::pair<T*,Q*> &ptr) const {\n");
+   fprintf(sfp, "      delete ptr.first;\n");
+   fprintf(sfp, "      delete ptr.second;\n");
+   fprintf(sfp, "   }\n");
    fprintf(sfp, "};\n\n");
    fclose( sfp );
 

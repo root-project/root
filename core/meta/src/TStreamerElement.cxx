@@ -1725,13 +1725,15 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
       }
       if (IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
       else fType = TVirtualStreamerInfo::kSTL;
-      if (fCtype==TVirtualStreamerInfo::kObjectp || fCtype==TVirtualStreamerInfo::kAnyp || fCtype==TVirtualStreamerInfo::kObjectP || fCtype==TVirtualStreamerInfo::kAnyP) {
-         SetBit(kDoNotDelete); // For backward compatibility
-      } else if ( fSTLtype == kSTLmap || fSTLtype == kSTLmultimap) {
-         // Here we would like to set the bit only if one of the element of the pair is a pointer, 
-         // however we have no easy to determine this short of parsing the class name.
-         SetBit(kDoNotDelete); // For backward compatibility
-      }         
+      if (R__b.GetParent()) { // Avoid resetting during a cloning.
+         if (fCtype==TVirtualStreamerInfo::kObjectp || fCtype==TVirtualStreamerInfo::kAnyp || fCtype==TVirtualStreamerInfo::kObjectP || fCtype==TVirtualStreamerInfo::kAnyP) {
+            SetBit(kDoNotDelete); // For backward compatibility
+         } else if ( fSTLtype == kSTLmap || fSTLtype == kSTLmultimap) {
+            // Here we would like to set the bit only if one of the element of the pair is a pointer, 
+            // however we have no easy to determine this short of parsing the class name.
+            SetBit(kDoNotDelete); // For backward compatibility
+         }
+      }
       return;
    } else {
       // To enable forward compatibility we actually save with the old value
