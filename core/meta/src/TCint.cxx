@@ -91,7 +91,8 @@ int TCint_GenerateDictionary(const std::string &className,
    for( sIt = className.begin(); sIt != className.end(); sIt++ ) {
       if (*sIt == '<' || *sIt == '>' ||
           *sIt == ' ' || *sIt == '*' ||
-          *sIt == ',' || *sIt == '&')
+          *sIt == ',' || *sIt == '&' ||
+          *sIt == ':')
          fileName += '_';
       else
          fileName += *sIt;
