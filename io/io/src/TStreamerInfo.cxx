@@ -2516,7 +2516,11 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                fprintf(sfp,"   modrhs.%s = 0;\n",ename);
             } else if (element->GetType() == kSTL) {
                if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
-               fprintf(sfp,"   modrhs.%s.clear();\n",ename);
+               if (element->IsBase()) {
+                  fprintf(sfp,"   modrhs.clear();\n");
+               } else {
+                  fprintf(sfp,"   modrhs.%s.clear();\n",ename);
+               }
             }
          }
       }
@@ -2569,6 +2573,8 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
             const char *prefix = "";
             if ( element->GetType() == kSTLp ) {
                prefix = "*";
+            } else if ( element->IsBase() ) {
+               ename = "this";
             }
             TVirtualCollectionProxy *proxy = element->GetClassPointer()->GetCollectionProxy();
             if (!element->TestBit(TStreamerElement::kDoNotDelete) && element->GetClassPointer() && proxy) {
