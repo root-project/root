@@ -2408,7 +2408,10 @@ class genDictionary(object) :
 #---------------------------------------------------------------------------------------
 def getContainerId(c):
   if   c[-8:] == 'iterator' : return ('NOCONTAINER','')
-  if   c[:10] == 'std::deque'   :            return ('DEQUE','list')
+  # MSVC9 templated iterators:
+  elif c[-14:] == 'iterator<true>'  : return ('NOCONTAINER','')
+  elif c[-15:] == 'iterator<false>' : return ('NOCONTAINER','')
+  elif c[:10] == 'std::deque'   :            return ('DEQUE','list')
   elif c[:9]  == 'std::list'    :            return ('LIST','list')
   elif c[:8]  == 'std::map'     :            return ('MAP','map')
   elif c[:13] == 'std::multimap':            return ('MULTIMAP','map')
