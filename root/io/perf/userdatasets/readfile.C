@@ -299,7 +299,9 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
       T->GetEntry(i);
    }
    TString psfilename(filename);
-   psfilename.ReplaceAll(".root","_ioperf.root");
+   TString pssuffix("_ioperf.root");
+   if (options && options[0]) { pssuffix.Prepend(options); pssuffix.Prepend("_"); } 
+   psfilename.ReplaceAll(".root", pssuffix );
    ps->SaveAs(psfilename);
    //ps->Draw();
    ps->Print();
