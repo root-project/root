@@ -138,12 +138,16 @@ namespace {
 //____________________________________________________________________________
    inline PyObject* CallSelfIndex( ObjectProxy* self, PyObject* idx, const char* meth )
    {
+      Py_INCREF( (PyObject*)self );
       PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
-      if ( ! pyindex )
+      if ( ! pyindex ) {
+         Py_DECREF( (PyObject*)self );
          return 0;
+      }
 
       PyObject* result = CallPyObjMethod( (PyObject*)self, meth, pyindex );
       Py_DECREF( pyindex );
+      Py_DECREF( (PyObject*)self );
       return result;
    }
 
