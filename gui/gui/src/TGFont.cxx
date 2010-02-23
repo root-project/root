@@ -2610,7 +2610,8 @@ TGFont *TGFontPool::MakeFont(TGFont *font, FontStruct_t fontStruct,
    lastChar = 0xff; //fontStruct->max_char_or_byte2;
 
    for (i = 0; i < 256; i++) {
-      if ((i == 0177) || (i < firstChar) || (i > lastChar)) {
+      if ((i == 160) || (i == 173) || (i == 177) || 
+          (i < firstChar) || (i > lastChar)) {
          newFont->fTypes[i] = kCharReplace;
       } else {
          newFont->fTypes[i] = kCharNormal;
