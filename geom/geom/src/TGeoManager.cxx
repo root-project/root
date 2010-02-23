@@ -3333,7 +3333,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    // -Case 3: gdml file
    //  if filename end with ".gdml"
    //  NOTE that to use this option, the PYTHONPATH must be defined like
-   //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
+   //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/geom/gdml
    //
 
    TString sfile(filename);
