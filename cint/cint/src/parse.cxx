@@ -706,9 +706,7 @@ static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, 
       }
    }
    if (G__p_tempbuf->level >= G__templevel && G__p_tempbuf->prev) {
-      --G__templevel;
       G__free_tempobject();
-      ++G__templevel;
    }
    if (*plargestep) {
       G__afterlargestep(plargestep);
