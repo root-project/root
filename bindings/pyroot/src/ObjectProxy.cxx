@@ -244,7 +244,7 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_setattr
    0,                         // tp_compare
    (reprfunc)op_repr,         // tp_repr
-   &op_as_number,             // tp_as_number
+   0, //&op_as_number,             // tp_as_number
    0,                         // tp_as_sequence
    0,                         // tp_as_mapping
    0,                         // tp_hash
