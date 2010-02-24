@@ -49,8 +49,7 @@ namespace {
       std::string name = PyString_AS_STRING( pyname );
 
    // block search for privates
-      if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" )
-      {
+      if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
       // 1st attempt: look in myself
          PyObject* attr = PyObject_GetAttr( gRootModule, pyname );
          if ( attr != 0 )
