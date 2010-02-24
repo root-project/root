@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
-TEST_TARGETS += constRetrunTest
+TEST_TARGETS += constRetrunTest barna
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -20,3 +20,8 @@ else
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l run.C > run.log
 endif
 
+barna.log:
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l barna.C > barna.log 2>&1
+
+barna: barna.log
+	$(TestDiff)
