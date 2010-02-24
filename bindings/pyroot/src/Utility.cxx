@@ -220,6 +220,59 @@ Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyCall
 }
 
 //____________________________________________________________________________
+Bool_t PyROOT::Utility::AddUsingToClass( PyObject* pyclass, const char* method )
+{
+// helper to add base class methods to the derived class one (this covers the
+// 'using' cases, which the dictionary does not provide)
+
+   MethodProxy* derivedMethod =
+         (MethodProxy*)PyObject_GetAttrString( pyclass, const_cast< char* >( method ) );
+   if ( ! MethodProxy_Check( derivedMethod ) ) {
+      Py_XDECREF( derivedMethod );
+      return kFALSE;
+   }
+
+   PyObject* mro = PyObject_GetAttr( pyclass, PyStrings::gMRO );
+   if ( ! mro || ! PyTuple_Check( mro ) ) {
+      Py_XDECREF( mro );
+      Py_DECREF( derivedMethod );
+      return kFALSE;
+   }
+
+   MethodProxy* baseMethod = 0;
+   for ( int i = 1; i < PyTuple_GET_SIZE( mro ); ++i ) {
+      baseMethod = (MethodProxy*)PyObject_GetAttrString(
+         PyTuple_GET_ITEM( mro, i ), const_cast< char* >( method ) );
+
+      if ( ! baseMethod ) {
+         PyErr_Clear();
+         continue;
+      }
+
+      if ( MethodProxy_Check( baseMethod ) )
+         break;
+
+      Py_DECREF( baseMethod );
+      baseMethod = 0;
+   }
+
+   Py_DECREF( mro );
+
+   if ( ! MethodProxy_Check( baseMethod ) ) {
+      Py_XDECREF( baseMethod );
+      Py_DECREF( derivedMethod );
+      return kFALSE;
+   }
+
+   derivedMethod->AddMethod( baseMethod );
+
+   Py_DECREF( baseMethod );
+   Py_DECREF( derivedMethod );
+
+   return kTRUE;
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::Utility::BuildTemplateName( PyObject*& pyname, PyObject* args, int argoff )
 {
 // helper to construct the "< type, type, ... >" part of a templated name (either

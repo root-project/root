@@ -1871,6 +1871,13 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return kTRUE;
    }
 
+// Make RooFit 'using' member functions available (not supported by dictionary)
+   if ( name == "RooDataHist" )
+      return Utility::AddUsingToClass( pyclass, "plotOn" );
+
+   if ( name == "RooSimultaneous" )
+      return Utility::AddUsingToClass( pyclass, "plotOn" );
+
 // default (no pythonization) is by definition ok
    return kTRUE;
 }

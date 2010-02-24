@@ -54,10 +54,8 @@ namespace PyROOT {
       void Set( const std::string& name, std::vector< PyCallable* >& methods );
 
       const std::string& GetName() const { return fMethodInfo->fName; }
-      void AddMethod( PyCallable* pc ) {
-         fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
-         fMethodInfo->fMethods.push_back( pc );
-      }
+      void AddMethod( PyCallable* pc );
+      void AddMethod( MethodProxy* meth );
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD

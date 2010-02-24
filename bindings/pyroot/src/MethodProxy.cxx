@@ -707,6 +707,20 @@ void PyROOT::MethodProxy::Set( const std::string& name, std::vector< PyCallable*
 }
 
 //____________________________________________________________________________
+void PyROOT::MethodProxy::AddMethod( PyCallable* pc )
+{
+   fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
+   fMethodInfo->fMethods.push_back( pc );
+}
+      
+//____________________________________________________________________________
+void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
+{
+    fMethodInfo->fMethods.insert( fMethodInfo->fMethods.end(),
+       meth->fMethodInfo->fMethods.begin(), meth->fMethodInfo->fMethods.end() );
+}
+
+//____________________________________________________________________________
 PyROOT::MethodProxy::MethodInfo_t::~MethodInfo_t()
 {
    for ( Methods_t::iterator it = fMethods.begin(); it != fMethods.end(); ++it ) {

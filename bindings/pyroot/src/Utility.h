@@ -47,6 +47,8 @@ namespace PyROOT {
       Bool_t AddToClass( PyObject* pyclass, const char* label, const char* func );
       Bool_t AddToClass( PyObject* pyclass, const char* label, PyCallable* pyfunc );
 
+      Bool_t AddUsingToClass( PyObject* pyclass, const char* method );
+
    // helper for template classes and methods
       Bool_t BuildTemplateName( PyObject*& pyname, PyObject* args, int argoff );
 

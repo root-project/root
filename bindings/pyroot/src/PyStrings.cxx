@@ -7,6 +7,7 @@
 
 //- data _____________________________________________________________________
 PyObject* PyROOT::PyStrings::gBases = 0;
+PyObject* PyROOT::PyStrings::gBase = 0;
 PyObject* PyROOT::PyStrings::gClass = 0;
 PyObject* PyROOT::PyStrings::gDeref = 0;
 PyObject* PyROOT::PyStrings::gDict = 0;
@@ -19,6 +20,7 @@ PyObject* PyROOT::PyStrings::gIter = 0;
 PyObject* PyROOT::PyStrings::gLen = 0;
 PyObject* PyROOT::PyStrings::gLifeLine = 0;
 PyObject* PyROOT::PyStrings::gModule = 0;
+PyObject* PyROOT::PyStrings::gMRO = 0;
 PyObject* PyROOT::PyStrings::gName = 0;
 PyObject* PyROOT::PyStrings::gNe = 0;
 PyObject* PyROOT::PyStrings::gTypeCode = 0;
@@ -46,6 +48,7 @@ PyObject* PyROOT::PyStrings::gTClassDynCast = 0;
 
 Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gBases, __bases__ );
+   PYROOT_INITIALIZE_STRING( gBase, __base__ );
    PYROOT_INITIALIZE_STRING( gClass, __class__ );
    PYROOT_INITIALIZE_STRING( gDeref, __deref__ );
    PYROOT_INITIALIZE_STRING( gDict, __dict__ );
@@ -59,6 +62,7 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gLen, __len__ );
    PYROOT_INITIALIZE_STRING( gLifeLine, __lifeline );
    PYROOT_INITIALIZE_STRING( gModule, __module__ );
+   PYROOT_INITIALIZE_STRING( gMRO, __mro__ );
    PYROOT_INITIALIZE_STRING( gName, __name__ );
    PYROOT_INITIALIZE_STRING( gNe, __ne__ );
    PYROOT_INITIALIZE_STRING( gTypeCode, typecode );
@@ -84,6 +88,7 @@ Bool_t PyROOT::CreatePyStrings() {
 //____________________________________________________________________________
 PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gBases ); PyStrings::gBases = 0;
+   Py_DECREF( PyStrings::gBase ); PyStrings::gBase = 0;
    Py_DECREF( PyStrings::gClass ); PyStrings::gClass = 0;
    Py_DECREF( PyStrings::gDeref ); PyStrings::gDeref = 0;
    Py_DECREF( PyStrings::gDict ); PyStrings::gDict = 0;
@@ -96,6 +101,7 @@ PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gLen ); PyStrings::gLen = 0;
    Py_DECREF( PyStrings::gLifeLine ); PyStrings::gLifeLine = 0;
    Py_DECREF( PyStrings::gModule ); PyStrings::gModule = 0;
+   Py_DECREF( PyStrings::gMRO ); PyStrings::gMRO = 0;
    Py_DECREF( PyStrings::gName ); PyStrings::gName = 0;
    Py_DECREF( PyStrings::gNe ); PyStrings::gNe = 0;
    Py_DECREF( PyStrings::gTypeCode ); PyStrings::gTypeCode = 0;
