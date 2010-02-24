@@ -950,7 +950,7 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
    Double_t e = b-3.*a*a/8.;
    Double_t f = c+a*a*a/8.-0.5*a*b;
    Double_t g = d-3.*a*a*a*a/256. + a*a*b/16. - a*c/4.;
-   Double_t xx[3];
+   Double_t xx[4];
    Int_t    ind[4];
    Double_t delta;
    Double_t h=0;
