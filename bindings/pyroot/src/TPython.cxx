@@ -300,7 +300,7 @@ const TPyReturn TPython::Eval( const char* expr )
       return TPyReturn();
    }
 
-// results that require no converion
+// results that require no conversion
    if ( result == Py_None || PyROOT::ObjectProxy_Check( result ) )
       return TPyReturn( result );
 
@@ -321,7 +321,7 @@ const TPyReturn TPython::Eval( const char* expr )
    // locate ROOT style class with this name
       TClass* klass = TClass::GetClass( qname.c_str() );
 
-   // construct general ROOT python object that pretents to be of class 'klass'
+   // construct general ROOT python object that pretends to be of class 'klass'
       if ( klass != 0 )
          return TPyReturn( result );
    } else

@@ -70,8 +70,9 @@ TPyReturn::TPyReturn( const TPyReturn& other )
 TPyReturn& TPyReturn::operator=( const TPyReturn& other )
 {
 // Assignment operator. Applies python object reference counting.
-   if ( this != & other ) {
+   if ( this != &other ) {
       Py_INCREF( other.fPyObject );
+      Py_DECREF( fPyObject );
       fPyObject = other.fPyObject;
    }
    
