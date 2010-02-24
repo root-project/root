@@ -706,7 +706,9 @@ static int G__exec_function(G__FastAllocString& statement, int* pc, int* piout, 
       }
    }
    if (G__p_tempbuf->level >= G__templevel && G__p_tempbuf->prev) {
+      --G__templevel;
       G__free_tempobject();
+      ++G__templevel;
    }
    if (*plargestep) {
       G__afterlargestep(plargestep);
@@ -3265,7 +3267,9 @@ static G__value G__exec_loop(const char* forinit, char* condition,
             //fprintf(stderr, "G__exec_loop: Testing condition result: %d.\n", cond);
             // Free any generated temporaries.
             if ((G__p_tempbuf->level >= G__templevel) && G__p_tempbuf->prev) {
+               --G__templevel;
                G__free_tempobject();
+               ++G__templevel;
             }
          }
       }
@@ -6693,7 +6697,9 @@ G__value G__exec_statement(int* mparen)
 #endif // G__ASM
                      result = G__getexpr(statement);
                      if ((G__p_tempbuf->level >= G__templevel) && G__p_tempbuf->prev) {
+                        --G__templevel;
                         G__free_tempobject();
+                        ++G__templevel;
                      }
                   }
                }
@@ -7674,7 +7680,7 @@ void G__free_tempobject()
    /*****************************************************
     * free temp object buffer
     *****************************************************/
-   while (G__p_tempbuf->level >= G__templevel && G__p_tempbuf->prev) {
+   while (G__p_tempbuf->level > G__templevel && G__p_tempbuf->prev) {
       // --
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
