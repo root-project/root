@@ -7,12 +7,19 @@
 #include "Utility.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
+#include "FunctionHolder.h"
 #include "TCustomPyTypes.h"
 #include "RootWrapper.h"
 #include "PyCallable.h"
+#include "Adapters.h"
 
 // ROOT
+#include "TROOT.h"
+#include "TObject.h"
 #include "TClassEdit.h"
+#include "TCollection.h"
+#include "TFunction.h"
+#include "TMethodArg.h"
 #include "TError.h"
 
 // CINT
@@ -271,6 +278,72 @@ Bool_t PyROOT::Utility::AddUsingToClass( PyObject* pyclass, const char* method )
    Py_DECREF( derivedMethod );
 
    return kTRUE;
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::Utility::AddBinaryOperator(
+   PyObject* left, PyObject* right, const char* op, const char* label )
+{
+// install the named operator (op) into the left object's class if such a function
+// exists as a global overload; a label must be given if the operator is not in
+// gC2POperatorMapping (i.e. if it is ambiguous at the member level)
+
+// this should be a given, nevertheless ...
+   if ( ! ObjectProxy_Check( left ) )
+      return kFALSE;
+
+// retrieve the class names to match the signature of any found global functions
+   PyObject* pyclass = PyObject_GetAttr( right, PyStrings::gClass );
+   if ( ! pyclass ) {
+      PyErr_Clear();
+      return kFALSE;
+   }
+
+   PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
+   Py_DECREF( pyclass ); pyclass = 0;
+   std::string rcname = PyString_AS_STRING( pyname );
+   Py_DECREF( pyname ); pyname = 0;
+
+   pyclass = PyObject_GetAttr( right, PyStrings::gClass );
+   pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
+   std::string lcname = PyString_AS_STRING( pyname );
+   Py_DECREF( pyname ); pyname = 0;
+
+// note that pyclass has not been decref-ed: it will be used again to install
+// the operator, if found
+
+// find a global function with a matching signature
+   TCollection* funcs = gROOT->GetListOfGlobalFunctions( kFALSE );
+   TIter ifunc( funcs );
+
+   std::string opname = "operator";
+   opname += op;
+
+   TFunction* func = 0;
+   while ( (func = (TFunction*)ifunc.Next()) ) {
+      if ( func->GetListOfMethodArgs()->GetSize() != 2 )
+         continue;
+
+      if ( func->GetName() == opname ) {
+         if ( ( lcname == TClassEdit::ResolveTypedef(
+                            ((TMethodArg*)func->GetListOfMethodArgs()->At(0))->GetTypeName(), true ) ) &&
+              ( rcname == TClassEdit::ResolveTypedef(
+                            ((TMethodArg*)func->GetListOfMethodArgs()->At(1))->GetTypeName(), true ) ) ) {
+         // found a matching overload; add to class
+            PyCallable* pyfunc = new TFunctionHolder< TScopeAdapter, TMemberAdapter >( func );
+            Utility::AddToClass( pyclass, label ? label : gC2POperatorMapping[ op ].c_str(), pyfunc );
+
+         // done; break out loop
+            Py_DECREF( pyclass );
+            return kTRUE;
+         }
+
+      }
+   }
+
+   Py_DECREF( pyclass );
+
+   return kFALSE;
 }
 
 //____________________________________________________________________________

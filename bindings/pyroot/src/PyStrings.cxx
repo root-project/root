@@ -25,6 +25,11 @@ PyObject* PyROOT::PyStrings::gName = 0;
 PyObject* PyROOT::PyStrings::gNe = 0;
 PyObject* PyROOT::PyStrings::gTypeCode = 0;
 
+PyObject* PyROOT::PyStrings::gAdd = 0;
+PyObject* PyROOT::PyStrings::gSub = 0;
+PyObject* PyROOT::PyStrings::gMul = 0;
+PyObject* PyROOT::PyStrings::gDiv = 0;
+
 PyObject* PyROOT::PyStrings::gAt = 0;
 PyObject* PyROOT::PyStrings::gBegin = 0;
 PyObject* PyROOT::PyStrings::gEnd = 0;
@@ -67,6 +72,11 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gNe, __ne__ );
    PYROOT_INITIALIZE_STRING( gTypeCode, typecode );
 
+   PYROOT_INITIALIZE_STRING( gAdd, __add__ );
+   PYROOT_INITIALIZE_STRING( gSub, __sub__ );
+   PYROOT_INITIALIZE_STRING( gMul, __mul__ );
+   PYROOT_INITIALIZE_STRING( gDiv, __div__ );
+
    PYROOT_INITIALIZE_STRING( gAt, at );
    PYROOT_INITIALIZE_STRING( gBegin, begin );
    PYROOT_INITIALIZE_STRING( gEnd, end );
@@ -105,6 +115,11 @@ PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gName ); PyStrings::gName = 0;
    Py_DECREF( PyStrings::gNe ); PyStrings::gNe = 0;
    Py_DECREF( PyStrings::gTypeCode ); PyStrings::gTypeCode = 0;
+
+   Py_DECREF( PyStrings::gAdd ); PyStrings::gAdd = 0;
+   Py_DECREF( PyStrings::gSub ); PyStrings::gSub = 0;
+   Py_DECREF( PyStrings::gMul ); PyStrings::gMul = 0;
+   Py_DECREF( PyStrings::gDiv ); PyStrings::gDiv = 0;
 
    Py_DECREF( PyStrings::gAt ); PyStrings::gAt = 0;
    Py_DECREF( PyStrings::gBegin ); PyStrings::gBegin = 0;

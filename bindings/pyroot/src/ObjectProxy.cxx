@@ -5,6 +5,7 @@
 #include "PyROOT.h"
 #include "PyStrings.h"
 #include "ObjectProxy.h"
+#include "Utility.h"
 
 // ROOT
 #include "TObject.h"
@@ -164,6 +165,69 @@ namespace {
          clName.c_str(), pyobj->fObject );
    }
 
+
+//= PyROOT type number stubs to allow dynamic overrides ======================
+#define PYROOT_STUB( name, op, pystring )                                     \
+   PyObject* op_##name##_stub( PyObject* self, PyObject* other )              \
+   {                                                                          \
+   /* place holder to lazily install __name__ if a global overload is available */ \
+      if ( ! Utility::AddBinaryOperator( self, other, #op, "__"#name"__" ) ) {\
+         Py_INCREF( Py_NotImplemented );                                      \
+         return Py_NotImplemented;                                            \
+      }                                                                       \
+                                                                              \
+   /* redo the call, which will now go to the newly installed method */       \
+      return PyObject_CallMethodObjArgs( self, pystring, other, NULL );       \
+   }
+
+PYROOT_STUB( add, +, PyStrings::gAdd )
+PYROOT_STUB( sub, -, PyStrings::gSub )
+PYROOT_STUB( mul, *, PyStrings::gMul )
+PYROOT_STUB( div, /, PyStrings::gDiv )
+
+//____________________________________________________________________________
+   PyNumberMethods op_as_number = {
+      (binaryfunc)op_add_stub,        // nb_add
+      (binaryfunc)op_sub_stub,        // nb_subtract
+      (binaryfunc)op_mul_stub,        // nb_multiply
+      (binaryfunc)op_div_stub,        // nb_divide
+      0,                              // nb_remainder
+      0,                              // nb_divmod
+      0,                              // nb_power
+      0,                              // nb_negative
+      0,                              // tp_positive
+      0,                              // tp_absolute
+      0,                              // tp_nonzero
+      0,                              // nb_invert
+      0,                              // nb_lshift
+      0,                              // nb_rshift
+      0,                              // nb_and
+      0,                              // nb_xor
+      0,                              // nb_or
+      0,                              // nb_coerce
+      0,                              // nb_int
+      0,                              // nb_long
+      0,                              // nb_float
+      0,                              // nb_oct
+      0,                              // nb_hex
+      0,                              // nb_inplace_add
+      0,                              // nb_inplace_subtract
+      0,                              // nb_inplace_multiply
+      0,                              // nb_inplace_divide
+      0,                              // nb_inplace_remainder
+      0,                              // nb_inplace_power
+      0,                              // nb_inplace_lshift
+      0,                              // nb_inplace_rshift
+      0,                              // nb_inplace_and
+      0,                              // nb_inplace_xor
+      0,                              // nb_inplace_or
+      0,                              // nb_floor_divide
+      0,                              // nb_true_divide
+      0,                              // nb_inplace_floor_divide
+      0,                              // nb_inplace_true_divide
+      0                               // nb_index
+   };
+
 } // unnamed namespace
 
 
@@ -180,7 +244,7 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_setattr
    0,                         // tp_compare
    (reprfunc)op_repr,         // tp_repr
-   0,                         // tp_as_number
+   &op_as_number,             // tp_as_number
    0,                         // tp_as_sequence
    0,                         // tp_as_mapping
    0,                         // tp_hash
