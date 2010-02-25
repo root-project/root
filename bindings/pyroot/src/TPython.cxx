@@ -300,8 +300,12 @@ const TPyReturn TPython::Eval( const char* expr )
       return TPyReturn();
    }
 
-// results that require no conversion
-   if ( result == Py_None || PyROOT::ObjectProxy_Check( result ) )
+
+
+// results that require no convserion
+   if ( result == Py_None || PyROOT::ObjectProxy_Check( result ) ||
+         PyString_Check( result ) ||
+         PyFloat_Check( result ) || PyLong_Check( result ) || PyInt_Check( result ) )
       return TPyReturn( result );
 
 // explicit conversion for python type required
