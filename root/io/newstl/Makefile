@@ -8,15 +8,8 @@ ifeq ($(ARCH),)
    ARCH       := $(shell root-config --arch)
 endif
 PLATFORM      = $(ARCH)
-ifeq ($(PLATFORM),win32)
-RAW_PWD := $(shell echo `cygpath -w $$PWD`)
-NOLINK_PWD := $(shell echo `cygpath -m $$PWD | sed -e 's/[a-zA-Z]://' -e 's?/cygdrive/[a-zA-Z]??' ` )
-else
-RAW_PWD := $(shell pwd)
-NOLINK_PWD := $(shell echo `pwd -P`)
-endif
 LIBDIRTOP := $(VERSION).libs
-LIBDIR := $(LIBDIRTOP)$(NOLINK_PWD)/
+LIBDIR := $(LIBDIRTOP)/
 FILEDIR := $(VERSION)
 #debug := $(shell echo $(PLATFORM) $(NOLINK_PWD) 1>&2 )
 #debug := $(shell echo $(LIBDIR) 1>&2 )
@@ -113,14 +106,6 @@ $(LIBDIR)stest_C.$(DllSuf) : $(LIBDIR)setHolder_C.$(DllSuf)
 $(LIBDIR)ntest_C.$(DllSuf) : $(LIBDIR)multimapHolder_C.$(DllSuf)
 
 endif
-
-LIBDIR_SED=$(subst /,\\/,$(LIBDIR))
-LIBDIR_SED_REM=$(subst /,\\/,$(NOLINK_PWD)/./)
-PWD_SED=$(subst /,\\/,$(subst \,\\\\,$(RAW_PWD)))
-ROOTSYS_SED=$(subst /,\\/,$(subst \,\\\\,$(ROOTSYS)))
-#ROOTSYS_SED=$(subst \\,\\\\,$(subst /,\\/,$(ROOTSYS)))
-#ROOTLOC_SED=$(subst /,\\/,$(ROOT_LOC))
-#debug := $(shell echo $(LIBDIR) 1>&2 )
 
 $(HELPER_DLL) : TestHelpers.C 
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1

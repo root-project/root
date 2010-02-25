@@ -19,7 +19,7 @@ TString dirname = gROOT->GetVersion();
 dirname.ReplaceAll(".","-");
 dirname.ReplaceAll("/","-");
 dirname.Append(".libs");
-gSystem->SetBuildDir(dirname);
+gSystem->SetBuildDir(dirname,kTRUE);
 
 #ifdef __APPLE__
 gSystem->Load("libTree");
