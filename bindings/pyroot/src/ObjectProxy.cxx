@@ -220,12 +220,16 @@ PYROOT_STUB( div, /, PyStrings::gDiv )
       0,                              // nb_inplace_rshift
       0,                              // nb_inplace_and
       0,                              // nb_inplace_xor
-      0,                              // nb_inplace_or
-      0,                              // nb_floor_divide
-      0,                              // nb_true_divide
-      0,                              // nb_inplace_floor_divide
-      0,                              // nb_inplace_true_divide
-      0                               // nb_index
+      0                               // nb_inplace_or
+#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 2
+      , 0                             // nb_floor_divide
+      , 0                             // nb_true_divide
+      , 0                             // nb_inplace_floor_divide
+      , 0                             // nb_inplace_true_divide
+#endif
+#if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 5
+      , 0                             // nb_index
+#endif
    };
 
 } // unnamed namespace
