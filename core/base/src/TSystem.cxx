@@ -101,7 +101,7 @@ ClassImp(TSystem)
 TVirtualMutex* gSystemMutex = 0;
 
 //______________________________________________________________________________
-TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
+TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAclicProperties(0)
 {
    // Create a new OS interface.
 
@@ -2484,6 +2484,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    //     g : compile with debug symbol
    //     O : optimized the code (ignore if 'g' is specified)
    //     c : compile only, do not attempt to load the library.
+   //     - : if buildir is set, use a flat structure (see buildir below) 
    //
    // If library_specified is specified, CompileMacro generates the file
    // "library_specified".soext where soext is the shared library extension for
@@ -2491,8 +2492,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    //
    // If build_dir is specified, it is used as an alternative 'root' for the
    // generation of the shared library.  The library is stored in a sub-directories
-   // of 'build_dir' including the full pathname of the script.  See also
-   // TSystem::SetBuildDir.
+   // of 'build_dir' including the full pathname of the script unless a flat 
+   // directory structure is requested ('-' option).  With the '-' option the libraries
+   // are created directly in the directory 'build_dir'; in particular this means that
+   // 2 scripts with the same name in different source directory will over-write each
+   // other's library.
+   // See also TSystem::SetBuildDir.
    //
    // If dirmode is not zero and we need to create the target directory, the
    // file mode bit will be change to 'dirmode' using chmod.
@@ -2610,6 +2615,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          mode=kDebug;
       }
    }
+   Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt,'-')!=0);
 
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = ExpandFileName(GetBuildDir());
@@ -2655,9 +2661,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString libname ( BaseName( libname_noext ) );
    libname.Append("_").Append(extension);
 
-   TString libname_ext ( libname );
-   libname_ext +=  "." + fSoExt;
-
    if (library_specified && strlen(library_specified) ) {
       // Use the specified name instead of the default
       libname = BaseName( library_specified );
@@ -2669,6 +2672,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       library = TString(library) + "." + fSoExt;
    }
 
+   TString libname_ext ( libname );
+   libname_ext +=  "." + fSoExt;
+
    TString lib_dirname = DirName( library );
    // For some probably good reason, DirName on Windows returns the 'name' of
    // the directory, omitting the drive letter (even if there was one). In
@@ -2677,13 +2683,19 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    if (library.Length()>1 && isalpha(library[0]) && library[1]==':') {
       lib_dirname.Prepend(library(0,2));
    }
+   // Strip potential, somewhat redundant '/.' from the pathname ...
+   if ( strncmp( &(lib_dirname[lib_dirname.Length()-2]), "/.", 2) == 0 ) {
+      lib_dirname.Remove(lib_dirname.Length()-2);
+   }
+   if ( strncmp( &(lib_dirname[lib_dirname.Length()-2]), "\\.", 2) == 0 ) {
+      lib_dirname.Remove(lib_dirname.Length()-2);
+   }
    TString lib_location( lib_dirname );
    Bool_t mkdirFailed = kFALSE;
 
    if (build_loc.Length()==0) {
       build_loc = lib_location;
    } else {
-
       // Removes an existing disk specification from the names
       TRegexp disk_finder ("[A-z]:");
       Int_t pos = library.Index( disk_finder );
@@ -2691,12 +2703,18 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       pos = lib_location.Index( disk_finder );
       if (pos==0) lib_location.Remove(pos,3);
 
-      AssignAndDelete( library, ConcatFileName( build_loc, library) );
-
+      if (flatBuildDir) {
+         AssignAndDelete( library, ConcatFileName( build_loc, libname_ext) );
+      } else {
+         AssignAndDelete( library, ConcatFileName( build_loc, library) );
+      }
+      
       Bool_t canWriteBuild_loc = !gSystem->AccessPathName(build_loc,kWritePermission);
       TString build_loc_store( build_loc );
-      AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
-
+      if (!flatBuildDir) {
+         AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
+      }
+      
       if (gSystem->AccessPathName(build_loc,kFileExists)) {
          mkdirFailed = (0 != mkdir(build_loc, true));
          if (mkdirFailed && !canWriteBuild_loc) {
@@ -3492,6 +3510,15 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 }
 
 //______________________________________________________________________________
+Int_t TSystem::GetAclicProperties() const
+{
+   // Return the ACLiC properties field.   See EAclicProperties for details
+   // on the semantic of each bit.
+   
+   return fAclicProperties;
+}
+
+//______________________________________________________________________________
 const char *TSystem::GetBuildArch() const
 {
    // Return the build architecture.
@@ -3616,15 +3643,22 @@ const char *TSystem::GetObjExt() const
 }
 
 //______________________________________________________________________________
-void TSystem::SetBuildDir(const char* build_dir)
+void TSystem::SetBuildDir(const char* build_dir, Bool_t isflat)
 {
    // Set the location where ACLiC will create libraries and use as
-   // a scratch area.  Note that the libraries are actually stored in
+   // a scratch area.
+   // If isflast is flase, then the libraries are actually stored in
    // sub-directories of 'build_dir' including the full pathname of the
    // script.  If the script is location at /full/path/name/macro.C
    // the library will be located at 'build_dir+/full/path/name/macro_C.so'
+   // If 'isflat' is true, then no subdirectory is created and the library
+   // is created directly in the directory 'build_dir'.  Note that in this
+   // mode there is a risk than 2 script of the same in different source 
+   // directory will over-write each other.
 
    fBuildDir = build_dir;
+   if (isflat) fAclicProperties |= (kFlatBuildDir & kBitMask);
+   else fAclicProperties &= ~(kFlatBuildDir & kBitMask);
 }
 
 //______________________________________________________________________________

@@ -262,7 +262,10 @@ class TSystem : public TNamed {
 
 public:
    enum EAclicMode { kDefault, kDebug, kOpt };
-
+   enum EAclicProperties {
+      kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created subdirectories
+   };
+   
 protected:
    TFdSet          *fReadmask;         //!Files that should be checked for read events
    TFdSet          *fWritemask;        //!Files that should be checked for write events
@@ -307,7 +310,8 @@ protected:
    EAclicMode       fAclicMode;        //Whether the compilation should be done debug or opt
    TString          fMakeSharedLib;    //Directive used to build a shared library
    TString          fMakeExe;          //Directive used to build an executable
-   TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC
+   TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC (see EACLiCProperties)
+   Int_t            fAclicProperties;  //Various boolean flag for change ACLiC's behavior.
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
 
@@ -321,7 +325,7 @@ protected:
    static const char *StripOffProto(const char *path, const char *proto) {
       return !strncmp(path, proto, strlen(proto)) ? path + strlen(proto) : path;
    }
-
+   
 private:
    TSystem(const TSystem&);              // not implemented
    TSystem& operator=(const TSystem&);   // not implemented
@@ -502,6 +506,7 @@ public:
    virtual void            AddIncludePath(const char *includePath);
    virtual void            AddLinkedLibs(const char *linkedLib);
    virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "", const char* build_dir = "", UInt_t dirmode = 0);
+   virtual Int_t           GetAclicProperties() const;
    virtual const char     *GetBuildArch() const;
    virtual const char     *GetBuildCompiler() const;
    virtual const char     *GetBuildCompilerVersion() const;
@@ -517,7 +522,7 @@ public:
    virtual const char     *GetMakeSharedLib() const;
    virtual const char     *GetSoExt() const;
    virtual const char     *GetObjExt() const;
-   virtual void            SetBuildDir(const char*);
+   virtual void            SetBuildDir(const char* build_dir, Bool_t isflat = kFALSE);
    virtual void            SetFlagsDebug(const char *);
    virtual void            SetFlagsOpt(const char *);
    virtual void            SetIncludePath(const char *includePath);

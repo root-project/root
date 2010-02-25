@@ -2,3 +2,15 @@
 <hr/>
 <a name="core"></a> 
 <h3>Core</h3>
+<ul>
+<li>Allow ACLiC to use a flat directory structure when a build directory is specified.
+To use a flat structure do:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   gSystem->SetBuildDir(whereIwant, kTRUE); // the default for the 2nd parameter is kFALSE
+</pre>
+Or use '-' in the option of CompileMacro
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   gSystem->CompileMacro(myscript,"k-",...);
+</pre>
+</li>
+</ul>
