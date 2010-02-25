@@ -111,6 +111,7 @@ void ROOT::TBranchProxy::Reset()
    fInitialized = false;
    fLastTree = 0;
    delete fCollection;
+   fCollection = 0;
 }
 
 void ROOT::TBranchProxy::Print()
