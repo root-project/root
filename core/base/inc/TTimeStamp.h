@@ -117,11 +117,11 @@ public:
 
    // construction from timespec struct
    TTimeStamp(const timespec_t &ts) :
-      fSec(ts.tv_sec), fNanoSec(ts.tv_nsec) { NormalizeNanoSec(); }
+      fSec(Int_t(ts.tv_sec)), fNanoSec(ts.tv_nsec) { NormalizeNanoSec(); }
 
    // construction from time_t and separate nsec
    TTimeStamp(time_t t, Int_t nsec) :
-      fSec(t), fNanoSec(nsec) { NormalizeNanoSec(); }
+      fSec(Int_t(t)), fNanoSec(nsec) { NormalizeNanoSec(); }
 
    // construction from bits and pieces
    TTimeStamp(UInt_t year, UInt_t month,
