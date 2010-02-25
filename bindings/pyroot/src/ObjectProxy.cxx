@@ -248,7 +248,7 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_setattr
    0,                         // tp_compare
    (reprfunc)op_repr,         // tp_repr
-   0, //&op_as_number,             // tp_as_number
+   &op_as_number,             // tp_as_number
    0,                         // tp_as_sequence
    0,                         // tp_as_mapping
    0,                         // tp_hash
@@ -257,8 +257,10 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_getattro
    0,                         // tp_setattro
    0,                         // tp_as_buffer
-   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE |
-      Py_TPFLAGS_HAVE_GC,                        // tp_flags
+   Py_TPFLAGS_DEFAULT |
+      Py_TPFLAGS_BASETYPE |
+      Py_TPFLAGS_HAVE_GC |
+      Py_TPFLAGS_CHECKTYPES,  // tp_flags
    (char*)"PyROOT object proxy (internal)",      // tp_doc
    0,                         // tp_traverse
    0,                         // tp_clear
