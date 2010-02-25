@@ -10,6 +10,7 @@
 #include <TEveRGBAPalette.h>
 #include <TColor.h>
 #include <TRandom.h>
+#include <TMath.h>
 
 #endif
 
