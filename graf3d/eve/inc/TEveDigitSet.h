@@ -54,10 +54,12 @@ protected:
 
    Int_t             fDefaultValue;   //  Default signal value.
    Bool_t            fValueIsColor;   //  Interpret signal value as RGBA color.
-   Bool_t            fOwnIds;         //  Flag specifying if id-objects are owned by the TEveDigitSet
+   Bool_t            fSingleColor;    //  Use the same color for all digits.
+   Bool_t            fOwnIds;         //  Flag specifying if id-objects are owned by the TEveDigitSet.
    TEveChunkManager  fPlex;           //  Container of digit data.
    DigitBase_t*      fLastDigit;      //! The last digit added to collection.
 
+   Color_t           fColor;          //  Color used for frame
    TEveFrameBox*     fFrame;          //  Pointer to frame structure.
    TEveRGBAPalette*  fPalette;        //  Pointer to signal-color palette.
    ERenderMode_e     fRenderMode;     //  Render mode: as-is / line / filled.
@@ -73,6 +75,8 @@ protected:
 public:
    TEveDigitSet(const char* n="TEveDigitSet", const char* t="");
    virtual ~TEveDigitSet();
+
+   void UseSingleColor();
 
    virtual Bool_t CanEditMainColor() const { return kTRUE; }
    virtual void   SetMainColor(Color_t color);

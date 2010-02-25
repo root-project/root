@@ -50,6 +50,10 @@
 // the transparency to non-zero value so that GL-renderer will be
 // properly informed.
 //
+// If you want to use single color for all elements call:
+//   UseSingleColor()
+// Palette controls will not work in this case.
+//
 // See also:
 //   TEveQuadSet: rectangle, hexagon or line per digit
 //   TEveBoxSet   a 3D box per digit
@@ -58,7 +62,7 @@ ClassImp(TEveDigitSet);
 
 //______________________________________________________________________________
 TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
-   TEveElement     (),
+   TEveElement     (fColor),
    TNamed          (n, t),
 
    fDefaultValue   (kMinInt),
@@ -67,6 +71,7 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    fPlex           (),
    fLastDigit      (0),
 
+   fColor          (kWhite),
    fFrame          (0),
    fPalette        (0),
    fRenderMode     (kRM_AsIs),
@@ -124,11 +129,25 @@ void TEveDigitSet::ReleaseIds()
 /******************************************************************************/
 
 //______________________________________________________________________________
+void TEveDigitSet::UseSingleColor()
+{
+   // Instruct digit-set to use single color for its digits.
+   // Call SetMainColor/Transparency to initialize it.
+
+   fSingleColor = kTRUE;
+}
+
+//______________________________________________________________________________
 void TEveDigitSet::SetMainColor(Color_t color)
 {
    // Override from TEveElement, forward to Frame.
 
-   if (fFrame) {
+   if (fSingleColor)
+   {
+      TEveElement::SetMainColor(color);
+   }
+   else if (fFrame)
+   {
       fFrame->SetFrameColor(color);
       fFrame->StampBackPtrElements(kCBColorSelection);
    }
@@ -238,7 +257,7 @@ void TEveDigitSet::Paint(Option_t* /*option*/)
 
    // Section kCore
    buff.fID           = this;
-   buff.fColor        = fFrame ? fFrame->GetFrameColor() : 1;
+   buff.fColor        = GetMainColor();
    buff.fTransparency = GetMainTransparency();
    RefMainTrans().SetBuffer3D(buff);
    buff.SetSectionsValid(TBuffer3D::kCore);
@@ -295,9 +314,11 @@ void TEveDigitSet::SetFrame(TEveFrameBox* b)
    fFrame = b;
    if (fFrame) {
       fFrame->IncRefCount(this);
-      SetMainColorPtr(fFrame->PtrFrameColor());
+      if (!fSingleColor) {
+         SetMainColorPtr(fFrame->PtrFrameColor());
+      }
    } else {
-      SetMainColorPtr(0);
+      SetMainColorPtr(&fColor);
    }
 }
 

@@ -66,7 +66,11 @@ inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) cons
 {
    // Set color for rendering of the specified quad.
 
-   if (fM->fValueIsColor)
+   if (fM->fSingleColor)
+   {
+      return kTRUE;
+   }
+   else if (fM->fValueIsColor)
    {
       TGLUtil::Color4ubv((UChar_t*) & q.fValue);
       return kTRUE;
@@ -107,7 +111,7 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    if (mQ.fPlex.Size() > 0)
    {
-      if ( ! mQ.fValueIsColor && mQ.fPalette == 0)
+      if (! mQ.fSingleColor && ! mQ.fValueIsColor && mQ.fPalette == 0)
       {
          mQ.AssertPalette();
       }

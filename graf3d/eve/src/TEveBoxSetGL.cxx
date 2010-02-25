@@ -65,7 +65,11 @@ inline Bool_t TEveBoxSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
 {
    // Set GL color for given primitive.
 
-   if (fM->fValueIsColor)
+   if (fM->fSingleColor)
+   {
+      return kTRUE;
+   }
+   else if (fM->fValueIsColor)
    {
       TGLUtil::Color4ubv((UChar_t*) & q.fValue);
       return kTRUE;
@@ -169,7 +173,6 @@ void TEveBoxSetGL::MakeDisplayList() const
             glTranslatef(0, 0, 1);
             gluDisk(quad.Get(), 0, 1, nt, 1);
             glPopMatrix();
-
          }
       }
 
@@ -390,7 +393,7 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    if (mB.fPlex.Size() > 0)
    {
-      if ( ! mB.fValueIsColor && mB.fPalette == 0)
+      if (! mB.fSingleColor && ! mB.fValueIsColor && mB.fPalette == 0)
       {
          mB.AssertPalette();
       }
