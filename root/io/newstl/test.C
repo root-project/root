@@ -25,6 +25,9 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
    dirname.ReplaceAll("/","-");
 
    gSystem->mkdir(dirname);
+   gSystem->Unlink("latest");
+   gSystem->Symlink(dirname,"latest");
+
    TString filename = gSystem->ConcatFileName(dirname, testname );
    filename += ".root";
 

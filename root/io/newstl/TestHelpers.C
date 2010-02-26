@@ -20,6 +20,9 @@ void fillListOfDir(TList &l) {
 
       while ((file = gSystem->GetDirEntry(dir))) {
          if (!strcmp(file,".") || !strcmp(file,"..")) continue;
+         // Skip 'latest' as it is a symlink
+         if (strcmp(file,"latest")==0) continue;
+
          TString s = file;
 //          cout << "found the directory " << file << endl;
          if ( (basename!=file) && s.Index(re) == kNPOS) continue;
