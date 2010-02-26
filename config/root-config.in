@@ -224,7 +224,7 @@ linuxrh42 | linuxrh51)
    ;;
 linux)
    # Linux with gcc >= 3.x
-   auxcflags="-m32 -Wno-long-long"
+   auxcflags="-m32"
    auxldflags="-m32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
@@ -268,7 +268,7 @@ linuxia64ecc)
    ;;
 linuxx8664gcc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
-   auxcflags="-m64 -Wno-long-long"
+   auxcflags="-m64"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
@@ -309,7 +309,7 @@ freebsd5|freebsd7)
    ;;
 openbsd)
    # OpenBSD with libc
-   auxcflags="-Wno-long-long"
+   auxcflags=
    auxlibs="-lm -lstdc++"
    ;;
 macosx)
@@ -320,12 +320,12 @@ macosx)
    if [ $macosx_minor -le 3 ]; then
       finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
       auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-      auxcflags="-Wno-long-long -Wno-long-double $auxcflags"
+      auxcflags="-Wno-long-double $auxcflags"
       auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
    else
-      auxcflags="-m32 -Wno-long-long"
+      auxcflags="-m32"
       auxldflags="-m32"
       auxlibs="-lm -ldl"
    fi
@@ -343,7 +343,7 @@ macosx64)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # cannot find the one linked to libGraf if relocated after built
    rootlibs="$rootlibs -lfreetype"
-   auxcflags="-m64 -Wno-long-long"
+   auxcflags="-m64"
    auxldflags="-m64"
    auxlibs="-lm -ldl"
    ;;
