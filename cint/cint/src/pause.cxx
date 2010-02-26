@@ -18,6 +18,8 @@
 #include "DataMemberHandle.h"
 #include "floatutilities.h"
 
+FILE* G__sout_keeper;
+
 extern "C" {
 
 /* 1723 is not needed because freopen deals with both stdout and cout */
@@ -1194,9 +1196,16 @@ static void G__redirectoutput(char *com
             switch (mode) {
                case G__NUM_STDOUT:  /* stdout */
                case G__NUM_STDBOTH:  /* stdout and stderr */
+               {
                   *psout = G__sout;
 #ifndef G__WIN32
-                  if (!strlen(stdoutsav)) strcpy(stdoutsav, ttyname(STDOUT_FILENO));
+                  if (!strlen(stdoutsav)) {
+                     const char *stdout_ttyname = ttyname(STDOUT_FILENO);
+                     if (stdout_ttyname) strcpy(stdoutsav, stdout_ttyname );
+                     else {
+                        G__fprinterr(G__serr, "Error: stdout was already redirected to a file, it will be redirected but we will not be able to undo this redirection!\n");
+                     }
+                  }
 #endif
                   G__sout = freopen(filename, openmode, G__sout);
                   if (!G__sout) {
@@ -1210,10 +1219,18 @@ static void G__redirectoutput(char *com
                      G__redirect_on();
                   if (mode == G__NUM_STDOUT)
                      break;
+               }
                case G__NUM_STDERR: /* stderr */
+               {
                   *pserr = G__serr;
 #ifndef G__WIN32
-                  if (!strlen(stderrsav)) strcpy(stderrsav, ttyname(STDERR_FILENO));
+                  if (!strlen(stderrsav)) {
+                     const char *stderr_ttyname = ttyname(STDERR_FILENO);
+                     if (stderr_ttyname) strcpy(stderrsav, stderr_ttyname);
+                     else {
+                        G__fprinterr(G__serr, "Error: stderr was already redirected to a file, it will be redirected but we will not be able to undo this redirection!\n");
+                     }
+                  }
 #endif
                   G__serr = freopen(filename, openmode, G__serr);
                   if (!G__serr) {
@@ -1225,6 +1242,7 @@ static void G__redirectoutput(char *com
                   }
                   /*DEBUG G__dumpfile = G__serr; */
                   break;
+               }
             }
 #else
             switch (mode) {
@@ -1309,11 +1327,16 @@ static void G__unredirectoutput(FILE **sout, FILE **serr, FILE **sin, const char
 #ifdef G__REDIRECTIO
    G__redirect_off();
    if (*sout) {
+      if (G__sout_keeper) {
+         fclose(G__sout);
+         G__sout = G__sout_keeper;
+      } else {
 #ifdef G__WIN32
       G__sout = freopen("CONOUT$", "w", G__sout);
 #else
       G__sout = freopen(stdoutsav, "w", G__sout);
 #endif
+      }
       *sout = (FILE*)NULL;
    }
    if (*serr) {
