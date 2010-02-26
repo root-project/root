@@ -18,18 +18,6 @@
 #include "Reflex/Kernel.h"
 
 namespace Reflex {
-   class RFLX_API LiteralStringSet {
-   public:
-      static LiteralStringSet& Instance();
-      void Add(const char* s) { fLiterals.insert((void*)s); }
-      void Remove(const char* s) { fLiterals.erase((void*)s); }
-      bool IsLiteral(const char* s) { return fLiterals.find(s) != fLiterals.end();}
-   private:
-      LiteralStringSet() {}
-
-      std::set<const void*> fLiterals;
-   };
-
    class RFLX_API LiteralString {
    public:
       LiteralString(): fLiteral(0), fAllocSize(0) {}
@@ -37,6 +25,9 @@ namespace Reflex {
       LiteralString(const LiteralString& other);
 
       ~LiteralString();
+
+      static void Add(const char* s);
+      static void Remove(const char* s);
 
       LiteralString& operator=(const LiteralString& other);
 

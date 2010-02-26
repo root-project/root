@@ -17,13 +17,43 @@
 
 #include <cstdlib>
 
+namespace {
+   class LiteralStringSet {
+   public:
+      static LiteralStringSet& Instance();
+      void Add(const char* s) { fLiterals.insert((void*)s); }
+      void Remove(const char* s) { fLiterals.erase((void*)s); }
+      bool IsLiteral(const char* s) { return fLiterals.find(s) != fLiterals.end();}
+   private:
+      LiteralStringSet() {}
+
+      std::set<const void*> fLiterals;
+   };
+
+   //-------------------------------------------------------------------------------
+   LiteralStringSet&
+   LiteralStringSet::Instance() {
+      //-------------------------------------------------------------------------------
+      // Return static instance of LiteralStringSet
+      static LiteralStringSet s;
+      return s;
+   }
+}
+
 //-------------------------------------------------------------------------------
-Reflex::LiteralStringSet&
-Reflex::LiteralStringSet::Instance() {
+void
+Reflex::LiteralString::Add(const char* s) {
 //-------------------------------------------------------------------------------
-// Return static instance of LiteralStringSet
-   static LiteralStringSet s;
-   return s;
+// Add s to set of string literals
+   LiteralStringSet::Instance().Add(s);
+}
+
+//-------------------------------------------------------------------------------
+void
+Reflex::LiteralString::Remove(const char* s) {
+//-------------------------------------------------------------------------------
+// Add s to set of string literals
+   LiteralStringSet::Instance().Remove(s);
 }
 
 //-------------------------------------------------------------------------------

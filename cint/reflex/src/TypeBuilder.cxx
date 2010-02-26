@@ -30,17 +30,17 @@
 //-------------------------------------------------------------------------------
 Reflex::Literal::Literal(const char* s): fPtr(s) {
 //-------------------------------------------------------------------------------
-// Construct a temporary Literal, adding s to LiteralStringSet's list of string
+// Construct a temporary Literal, adding s to LiteralString's list of string
 // literals.
-   LiteralStringSet::Instance().Add(s);
+   LiteralString::Add(s);
 }
 
 //-------------------------------------------------------------------------------
 Reflex::Literal::~Literal() {
 //-------------------------------------------------------------------------------
-// Destruct a temporary Literal, removing s from LiteralStringSet's list of string
+// Destruct a temporary Literal, removing s from LiteralString's list of string
 // literals.
-   LiteralStringSet::Instance().Remove(fPtr);
+   LiteralString::Remove(fPtr);
 }
 
 //-------------------------------------------------------------------------------
