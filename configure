@@ -1207,6 +1207,8 @@ with options, prefix with --with-, enables corresponding support
   xml-libdir         XML support, location of libxml2
   x11-libdir         X11 support, path to libX11
   xpm-libdir         XPM support, path to libXpm
+  xft-libdir         Xft support, path to libXft
+  xext-libdir        Xext support, path to libXext
   xrootd             XROOTD support, path to external XROOTD distribution
   xrootd-incdir      XROOTD support, path to external XROOTD header files (XrdVersion.hh, ...)
   xrootd-libdir      XROOTD support, path to external XROOTD libraries
@@ -1436,6 +1438,8 @@ if test $# -gt 0 ; then
       --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
+      --with-xft-libdir=*)     xftlibdir=$optarg     ;;
+      --with-xext-libdir=*)    xextlibdir=$optarg    ;;
       --with-xrootd=*)         xrootddir=$optarg     ; enable_xrootd="yes"  ;;
       --with-xrootd-opts=*)    xrdaddopts=$optarg    ; enable_xrootd="yes"  ;;
       --with-xrootd-incdir=*)  xrdincdir=$optarg     ; enable_xrootd="yes"  ;;
@@ -1716,7 +1720,7 @@ if test ! "x$platform" = "xwin32"; then
         exit 1
     fi
 
-    check_library "libXft" "$enable_shared" "" \
+    check_library "libXft" "$enable_shared" "$xftlibdir" \
         /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
         /usr/X11/lib
@@ -1726,7 +1730,7 @@ if test ! "x$platform" = "xwin32"; then
         exit 1
     fi
 
-    check_library "libXext" "$enable_shared" "" \
+    check_library "libXext" "$enable_shared" "$xextlibdir" \
         /usr/local/lib /usr/lib /usr/lib/X11 \
         /usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
         /usr/X11/lib
