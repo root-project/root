@@ -91,14 +91,8 @@ void TEveViewer::InitInternal()
    // Initialize static data-members according to running conditions.
 
    // Determine if display is running on a mac.
-   // This is also works for ssh connection mac->linux.
-#ifndef WIN32
-   TString s = gSystem->GetFromPipe("xdpyinfo");
-   if (s.Index("Apple-WM") != kNPOS)
-   {
-      fgRecreateGlOnDockOps = kTRUE;
-   }
-#endif
+   // This also works for ssh connection mac->linux.
+   fgRecreateGlOnDockOps = (gVirtualX->SupportsExtension("Apple-WM") == 1);
 
    fgInitInternal = kTRUE;
 }
