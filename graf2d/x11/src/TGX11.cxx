@@ -3315,3 +3315,20 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 
    return wid;
 }
+
+//______________________________________________________________________________
+Int_t TGX11::SupportsExtension(const char *ext) const
+{
+   // Returns 1 if window system server supports extension given by the
+   // argument, returns 0 in case extension is not supported and returns -1
+   // in case of error (like server not initialized).
+   // Examples:
+   //   "Apple-WM" - does server run on MacOS X;
+   //   "XINERAMA" - does server support Xinerama.
+   // See also the output of xdpyinfo.
+
+   Int_t major_opcode, first_event, first_error;
+   if (!fDisplay)
+      return -1;
+   return XQueryExtension(fDisplay, ext, &major_opcode, &first_event, &first_error);
+}

@@ -374,7 +374,7 @@ void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char * /*mess*/)
 Int_t   TVirtualX::GetFontAscent() const
 {
    // Returns the ascent of the current font (in pixels).
-   // The ascent of a font is the distance from the baseline 
+   // The ascent of a font is the distance from the baseline
    // to the highest position characters extend to
    return 0;
 }
@@ -382,7 +382,7 @@ Int_t   TVirtualX::GetFontAscent() const
 Int_t   TVirtualX::GetFontDescent() const
 {
   // Returns the descent of the current font (in pixels.
-  // The descent is the distance from the base line 
+  // The descent is the distance from the base line
   // to the lowest point characters extend to.
    return 0;
 }
@@ -922,20 +922,20 @@ void TVirtualX::IconifyWindow(Window_t /*id*/)
 //______________________________________________________________________________
 Bool_t TVirtualX::NeedRedraw(ULong_t /*tgwindow*/, Bool_t /*force*/)
 {
-   // Notify the low level GUI layer ROOT requires "tgwindow" to be 
+   // Notify the low level GUI layer ROOT requires "tgwindow" to be
    // updated
    //
    // Returns kTRUE if the notification was desirable and it was sent
    //
    // At the moment only Qt4 layer needs that
    //
-   // One needs explicitly cast the first parameter to TGWindow to make 
+   // One needs explicitly cast the first parameter to TGWindow to make
    // it working in the implementation.
    //
    // One needs to process the notification to confine
    // all paint operations within "expose" / "paint" like low level event
    // or equivalent
-   
+
    return kFALSE;
 }
 
@@ -2063,10 +2063,10 @@ Window_t TVirtualX::GetCurrentWindow() const
 }
 
 //______________________________________________________________________________
-unsigned char *TVirtualX::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, 
+unsigned char *TVirtualX::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/,
                                        UInt_t /*w*/, UInt_t /*h*/)
 {
-   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h) 
+   // Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
    // in format:
    // b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
    //
@@ -2079,7 +2079,7 @@ unsigned char *TVirtualX::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*
 }
 
 //______________________________________________________________________________
-Pixmap_t TVirtualX::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/, 
+Pixmap_t TVirtualX::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/,
                                        UInt_t /*height*/)
 {
    // create pixmap from RGB data. RGB data is in format :
@@ -2111,8 +2111,8 @@ UInt_t TVirtualX::ScreenWidthMM() const
 //______________________________________________________________________________
 void TVirtualX::DeleteProperty(Window_t, Atom_t&)
 {
-   // Deletes the specified property only if the property was defined on the 
-   // specified window and causes the X server to generate a PropertyNotify 
+   // Deletes the specified property only if the property was defined on the
+   // specified window and causes the X server to generate a PropertyNotify
    // event on the window unless the property does not exist.
 
 }
@@ -2121,9 +2121,9 @@ void TVirtualX::DeleteProperty(Window_t, Atom_t&)
 Int_t TVirtualX::GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
                              Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**)
 {
-   // Returns the actual type of the property; the actual format of the property; 
-   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of 
-   // bytes remaining to be read in the property; and a pointer to the data 
+   // Returns the actual type of the property; the actual format of the property;
+   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of
+   // bytes remaining to be read in the property; and a pointer to the data
    // actually returned.
 
    return 0;
@@ -2132,8 +2132,8 @@ Int_t TVirtualX::GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
 //______________________________________________________________________________
 void TVirtualX::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
 {
-   // Changes the specified dynamic parameters if the pointer is actively 
-   // grabbed by the client and if the specified time is no earlier than the 
+   // Changes the specified dynamic parameters if the pointer is actively
+   // grabbed by the client and if the specified time is no earlier than the
    // last-pointer-grab time and no later than the current X server time.
 
 }
@@ -2141,7 +2141,7 @@ void TVirtualX::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
 //______________________________________________________________________________
 void TVirtualX::ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&)
 {
-   // Requests that the specified selection be converted to the specified 
+   // Requests that the specified selection be converted to the specified
    // target type.
 
 }
@@ -2157,7 +2157,7 @@ Bool_t TVirtualX::SetSelectionOwner(Window_t, Atom_t&)
 //______________________________________________________________________________
 void TVirtualX::ChangeProperties(Window_t, Atom_t, Atom_t, Int_t, UChar_t *, Int_t)
 {
-   // Alters the property for the specified window and causes the X server 
+   // Alters the property for the specified window and causes the X server
    // to generate a PropertyNotify event on that window.
 
 }
@@ -2165,7 +2165,7 @@ void TVirtualX::ChangeProperties(Window_t, Atom_t, Atom_t, Int_t, UChar_t *, Int
 //______________________________________________________________________________
 void TVirtualX::SetDNDAware(Window_t, Atom_t *)
 {
-   // Add XdndAware property and the list of drag and drop types to the 
+   // Add XdndAware property and the list of drag and drop types to the
    // Window win.
 
 }
@@ -2180,7 +2180,7 @@ void TVirtualX::SetTypeList(Window_t, Atom_t, Atom_t *)
 //______________________________________________________________________________
 Window_t TVirtualX::FindRWindow(Window_t, Window_t, Window_t, int, int, int)
 {
-   // Recursively search in the children of Window for a Window which is at 
+   // Recursively search in the children of Window for a Window which is at
    // location x, y and is DND aware, with a maximum depth of maxd.
 
    return kNone;
@@ -2195,4 +2195,12 @@ Bool_t TVirtualX::IsDNDAware(Window_t, Atom_t *)
    return kFALSE;
 }
 
+//______________________________________________________________________________
+Int_t TVirtualX::SupportsExtension(const char *) const
+{
+   // Returns 1 if window system server supports extension given by the
+   // argument, returns 0 in case extension is not supported and returns -1
+   // in case of error (like server not initialized).
 
+   return -1;
+}

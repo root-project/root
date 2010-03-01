@@ -157,6 +157,7 @@ public:
    virtual Int_t     WriteGIF(char *name);
    virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
    virtual Window_t  GetCurrentWindow() const;
+   virtual Int_t     SupportsExtension(const char *ext) const;
 
    //---- Methods used for GUI -----
    virtual void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr);
@@ -327,6 +328,7 @@ public:
    virtual Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
+
    static TVirtualX    *&Instance();
 
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
