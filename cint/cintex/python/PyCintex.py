@@ -56,7 +56,7 @@ def loadDictionary(name) :
   if sys.platform != 'win32' and name[:3] != 'lib' :
      name = 'lib' + name
   sc = libPyROOT.gSystem.Load(name)
-  if sc == -1 : raise "Error Loading dictionary" 
+  if sc == -1 : raise RuntimeError("Error Loading dictionary")
 loadDict = loadDictionary
 
 #--- Load Cintex module and enable conversions Reflex->CINT-----------
