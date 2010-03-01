@@ -57,7 +57,7 @@ ClassImp(TEveElement);
 
 //______________________________________________________________________________
 const TGPicture* TEveElement::fgRnrIcons[4]      = { 0 };
-const TGPicture* TEveElement::fgListTreeIcons[8] = { 0 };
+const TGPicture* TEveElement::fgListTreeIcons[9] = { 0 };
 
 //______________________________________________________________________________
 TEveElement::TEveElement() :
@@ -726,7 +726,8 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
                                              TGListTreeItem* parent_lti)
 {
    // Add this element into ltree to an already existing item
-   // parent_lti.
+   // parent_lti. Children, if any, are added as below the newly created item.
+   // Returns the newly created list-tree-item.
 
    static const TEveException eh("TEveElement::AddIntoListTree ");
 
@@ -736,6 +737,11 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
 
    if (parent_lti == 0)
       ++fTopItemCnt;
+
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      (*i)->AddIntoListTree(ltree, item);
+   }
 
    ltree->ClearViewPort();
 

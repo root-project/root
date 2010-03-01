@@ -52,6 +52,14 @@ TEveLine::TEveLine(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
 }
 
 //______________________________________________________________________________
+const TGPicture* TEveLine::GetListTreeIcon(Bool_t)
+{
+   // Returns list-tree icon for TEveLine.
+
+   return fgListTreeIcons[8];
+}
+
+//______________________________________________________________________________
 void TEveLine::SetMarkerColor(Color_t col)
 {
    // Set marker color. Propagate to projected lines.

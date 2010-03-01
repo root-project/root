@@ -60,7 +60,7 @@ public:
    };
 
    static const TGPicture*                      fgRnrIcons[4];
-   static const TGPicture*                      fgListTreeIcons[8];
+   static const TGPicture*                      fgListTreeIcons[9];
 
    typedef std::set<TEveListTreeInfo>           sLTI_t;
    typedef sLTI_t::iterator                     sLTI_i;

@@ -110,6 +110,7 @@ void TEveUtil::SetupGUI()
    TEveElement::fgListTreeIcons[5] = gClient->GetPicture("eve_text.gif");
    TEveElement::fgListTreeIcons[6] = gClient->GetPicture("eve_axes.xpm");
    TEveElement::fgListTreeIcons[7] = gClient->GetPicture("ofolder_t.xpm");
+   TEveElement::fgListTreeIcons[8] = gClient->GetPicture("eve_line.xpm");
 
    gClient->GetMimeTypeList()->AddType("root/tmacro", "TEveMacro",
                                        "tmacro_s.xpm", "tmacro_t.xpm", "");
