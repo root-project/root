@@ -436,7 +436,7 @@ endif
 
 ifeq ($(ARCH),win32)
 # Windows with the VC++ compiler
-VC_MAJOR     := $(shell unset VS_UNICODE_OUTPUT; cl.exe 2>&1 | awk '{ if (NR==1) print $$8 }' | \
+VC_MAJOR     := $(shell unset VS_UNICODE_OUTPUT; cl.exe 2>&1 | awk '{ if (NR==1) print $$(NF-2) }' | \
                 cut -d'.' -f1)
 ObjSuf        = obj
 SrcSuf        = cxx
