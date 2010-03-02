@@ -470,7 +470,7 @@ inline TString &TString::operator+=(UInt_t i)
 { return operator+=((ULong_t) i); }
 
 inline TString &TString::operator+=(Double_t f)
-{ char s[32]; sprintf(s, "%9.9g", f); return operator+=(s); }
+{ char s[32]; sprintf(s, "%.17g", f); return operator+=(s); }
 
 inline TString &TString::operator+=(Float_t f)
 { return operator+=((Double_t) f); }
