@@ -63,7 +63,7 @@ int G__CodingSystem(int c)
             G__lang = G__EUC;
             return(0);
          }
-         return(1); /* assuming S-JIS but not sure yet */
+         return(0); /* assuming S-JIS but not sure yet */
       case G__EUC:
          return(0);
       case G__SJIS:
