@@ -323,11 +323,12 @@ int G__blockscope::compile_core(int openBrace) {
  ***********************************************************************/
 ////////////////////////////////////////////////////////////////////////////
 G__value G__blockscope::compile_expression(string& expr) {
-  char *buf = new char[expr.size()+1];
-  strcpy(buf,expr.c_str());
+  size_t len = expr.size()+1;
+  char *buf = new char[len];
+  strncpy(buf,expr.c_str(), len);
   if(expr.size()>G__LONGLINE) {
     G__fprinterr(G__serr,"Limitation: Expression is too long %d>%d %s "
-	         ,expr.size(),G__LONGLINE,buf);
+	         ,len,G__LONGLINE,buf);
     G__genericerror((char*)NULL);
   }
   G__blockscope *store_scope = G__currentscope;
@@ -371,8 +372,9 @@ G__value G__blockscope::compile_arglist(string& args,G__param* libp) {
 int G__blockscope::getstaticvalue(string& expr) {
   int store_asm_noverflow = G__asm_noverflow;
   int store_no_exec_compile = G__no_exec_compile;
-  char *buf = new char[expr.size()+1];
-  strcpy(buf,expr.c_str());
+  size_t len = expr.size()+1;
+  char *buf = new char[len];
+  strncpy(buf,expr.c_str(), len);
   if(expr.size()>G__LONGLINE) {
     G__fprinterr(G__serr,"Limitation: Expression is too long %d>%d %s "
 	         ,expr.size(),G__LONGLINE,buf);
@@ -552,8 +554,9 @@ int G__blockscope::compile_operator_PARENTHESIS(string& token,int c) {
   }
   else {
     int iout=0;
-    char *str = (char*)malloc(token.size()+10);
-    strcpy(str,token.c_str());
+    size_t len = token.size()+10;
+    char *str = (char*)malloc(len);
+    strncpy(str,token.c_str(), len);
     m_preader->putback();
     G__execfuncmacro(str,&iout); // legacy
     free((void*)str);
@@ -1571,22 +1574,23 @@ int G__blockscope::init_w_ctor(G__TypeReader& type
   // type x  = type(arg);  -> ctor
   // type x        (arg);  -> ctor
   //                ^                  , token=="type"||"x"  c=='('
-  struct G__param para;
-  para.paran=0;
+  struct G__param* para = new G__param();
+  para->paran=0;
 
   do {
     stdclear(token);
     c = m_preader->fgetstream(token,",)" /* ,1 */ );
-    para.para[para.paran++] = compile_expression(token);
+    para->para[para->paran++] = compile_expression(token);
   } while(c==',');
-  para.para[para.paran] = G__null;
+  para->para[para->paran] = G__null;
 
   // type x  = type(arg);  -> ctor
   //                ^-> ^
 
-  call_ctor(type,&para,var,ig15,0);
+  call_ctor(type,para,var,ig15,0);
 
   c = m_preader->fignorestream(";,");
+  delete para;
   return(c); // c== ';' or ','
 }
 
@@ -1598,21 +1602,21 @@ int G__blockscope::init_w_defaultctor(G__TypeReader& type
 				      ,string& /*token*/,int c) {
   // type  name;   -> default ctor or nothing
   //            ^    token=="name"   c==';'
-  struct G__param para;
-  para.paran = 0;
-  para.para[0] = G__null;
+   struct G__param* para = new G__param();
+  para->paran = 0;
+  para->para[0] = G__null;
 
   int num = var->varlabel[ig15][1]; // get array size
   if (num > 0) {
     m_bc_inst.LD(num);
     m_bc_inst.SETARYINDEX(1);
-    call_ctor(type,&para,var,ig15,num);
+    call_ctor(type,para,var,ig15,num);
     m_bc_inst.RESETARYINDEX(1);
   }
   else {
-    call_ctor(type,&para,var,ig15,0);
+    call_ctor(type,para,var,ig15,0);
   }
-
+  delete para;
   return(c); // c== ';' ',' no change
 }
 
@@ -1626,13 +1630,14 @@ int G__blockscope::init_w_expr(G__TypeReader& type
   // type x  = func(arg);    -> ctor , assignment operator is not allowed
   //                     ^     token=="expr"   c==';'
 
-  struct G__param para;
-  para.paran = 1;
-  para.para[0] = compile_expression(token);
-  para.para[1] = G__null;
+  struct G__param* para = new G__param();
+  para->paran = 1;
+  para->para[0] = compile_expression(token);
+  para->para[1] = G__null;
 
-  call_ctor(type,&para,var,ig15,0);
+  call_ctor(type,para,var,ig15,0);
 
+  delete para;
   return(c); // c== ';' ','
 }
 
@@ -2121,7 +2126,7 @@ int G__blockscope::initscalarary(G__TypeReader& /*type*/, struct G__var_array* v
       m_bc_inst.OP1(G__OPR_PREFIXINC);
     }
   }
-  if (isauto) {
+  if (isauto && size > 0) {
     // -- Unspecified length array.
     // Allocate in order to increment memory pointer
     // now that we know the final size.
@@ -2190,8 +2195,9 @@ struct G__var_array* G__blockscope::allocatevariable(G__TypeReader& type
   }
 
   // set name
-  var->varnamebuf[ig15] = (char*)malloc(name.size()+1);
-  strcpy(var->varnamebuf[ig15],name.c_str());
+  size_t len = name.size()+1;
+  var->varnamebuf[ig15] = (char*)malloc(len);
+  strncpy(var->varnamebuf[ig15],name.c_str(), len);
   int hash,tmp;
   G__hash(name.c_str(),hash,tmp);
   var->hash[ig15] = hash;
@@ -2573,11 +2579,12 @@ int G__blockscope::compile_preprocessor(string& token,int c) {
  * G__blockscope::Istypename()
  ***********************************************************************/
 int G__blockscope::Istypename(const string& name) {
-  char *buf = new char[name.size()+1];
-  strcpy(buf,name.c_str());
-  if(name.size()>G__MAXNAME) {
+  size_t len = name.size();
+  char *buf = new char[len+1];
+  strncpy(buf,name.c_str(), len + 1);
+  if(len>G__MAXNAME) {
     G__fprinterr(G__serr,"Limitation: Symbol name is too long %d>%d %s "
-	         ,name.size(),G__MAXNAME,buf);
+	         ,len,G__MAXNAME,buf);
     G__genericerror((char*)NULL);
   }
   int result=G__istypename(buf); // legacy
@@ -2791,7 +2798,7 @@ G__value G__blockscope::compile_newopr(const string& expression) {
   //G__TypeInfo ty(type.c_str());
 
   m_bc_inst.SETMEMFUNCENV();
-  G__param para;
+  G__param* para = new G__param();
   long dmy=0;
   int isarena = arena.size();
   int isaryindex = aryindex.size();
@@ -2810,27 +2817,28 @@ G__value G__blockscope::compile_newopr(const string& expression) {
       m_bc_inst.SETARYINDEX(1);
     }
     if(isargs) {
-      compile_arglist(args,&para);
+      compile_arglist(args,para);
     }
     else {
-      para.paran=0;
-      para.para[0]=G__null;
+      para->paran=0;
+      para->para[0]=G__null;
     }
 
     // GetMethod finds a function with type conversion, however,
     // bytecode for type conversion is not generated. There must be similar
     // situation in other place in this source file.
-    G__MethodInfo m = ty.GetMethod(type.c_str(),&para,&dmy
+    G__MethodInfo m = ty.GetMethod(type.c_str(),para,&dmy
 				   ,G__ClassInfo::ConversionMatchBytecode
 				   );
     if(m.IsValid()) { // always true ???
       if(!access(m)) {
         G__genericerror("Error: can not call private or protected function");
+        delete para;
         return(G__null);
       }
       struct G__ifunc_table *ifunc = (struct G__ifunc_table*)m.Handle();
       int ifn = m.Index();
-      m_bc_inst.LD_FUNC_BC(ifunc,ifn,para.paran,(void*)m.InterfaceMethod());
+      m_bc_inst.LD_FUNC_BC(ifunc,ifn,para->paran,(void*)m.InterfaceMethod());
     }
     else {
       // in case ctor is not found, -> error
@@ -2867,22 +2875,23 @@ G__value G__blockscope::compile_newopr(const string& expression) {
     else        m_bc_inst.NEWALLOC(ty.Size(),isaryindex?1:0);
 
     if(args.size()) {
-      compile_arglist(args,&para);
+      compile_arglist(args,para);
     }
     else {
-      para.paran=0;
-      para.para[0]=G__null;
+      para->paran=0;
+      para->para[0]=G__null;
     }
 
     // GetMethod finds a function with type conversion, however,
     // bytecode for type conversion is not generated. There must be similar
     // situation in other place in this source file.
-    G__MethodInfo m = ty.GetMethod(ty.Name(),&para,&dmy
+    G__MethodInfo m = ty.GetMethod(ty.Name(),para,&dmy
 				   ,G__ClassInfo::ConversionMatchBytecode
 				   );
     if(m.IsValid()) {
       if(!access(m)) {
         G__genericerror("Error: can not call private or protected function");
+        delete para;
         return(G__null);
       }
       struct G__ifunc_table *ifunc = (struct G__ifunc_table*)m.Handle();
@@ -2891,12 +2900,12 @@ G__value G__blockscope::compile_newopr(const string& expression) {
       if(isaryindex)
         m_bc_inst.LD_FUNC_BC(ifunc,ifn,0,(void*)G__bc_exec_ctorary_bytecode);
       else 
-        m_bc_inst.LD_FUNC_BC(ifunc,ifn,para.paran ,(void*)G__bc_exec_ctor_bytecode);
-      //m_bc_inst.LD_FUNC_BC(ifunc,ifn,para.paran ,(void*)G__bc_exec_normal_bytecode);
+        m_bc_inst.LD_FUNC_BC(ifunc,ifn,para->paran ,(void*)G__bc_exec_ctor_bytecode);
+      //m_bc_inst.LD_FUNC_BC(ifunc,ifn,para->paran ,(void*)G__bc_exec_normal_bytecode);
     }
     else {
 #ifdef G__NEVER
-      if(para.paran==0 && (ty.ClassProperty()&G__CLS_HASDEFAULTCTOR)) {
+      if(para->paran==0 && (ty.ClassProperty()&G__CLS_HASDEFAULTCTOR)) {
 	// fine, default constructor
       } else 
 #endif
@@ -2932,14 +2941,14 @@ G__value G__blockscope::compile_newopr(const string& expression) {
     m_bc_inst.SET_NEWALLOC(ty);
 
     if(isargs) {
-      compile_arglist(args,&para);
-      if(para.paran!=1) {
+      compile_arglist(args,para);
+      if(para->paran!=1) {
         // error
       }
     }
     else {
-      para.paran=0;
-      para.para[0]=G__null;
+      para->paran=0;
+      para->para[0]=G__null;
       m_bc_inst.LD(0);
     }
 
@@ -2951,6 +2960,7 @@ G__value G__blockscope::compile_newopr(const string& expression) {
   //ty.incplevel(); // has to return pointer type
   G__value result = ty.Value();
   
+  delete para;
   return(result);
 }
 
@@ -3000,9 +3010,9 @@ void G__blockscope::compile_deleteopr(string& expression,int isarray) {
   G__TypeReader ty(ptr);
   ty.decplevel();
 
-  G__param para;
-  para.paran=0;
-  para.para[0]=G__null;
+  G__param* para = new G__param();
+  para->paran=0;
+  para->para[0]=G__null;
   long dmy=0;
 
   m_bc_inst.PUSHCPY();
@@ -3021,10 +3031,11 @@ void G__blockscope::compile_deleteopr(string& expression,int isarray) {
     string dtorname = "~";
     dtorname.append(ty.Name());
     // This is fine because dtor doesn't have parameter
-    G__MethodInfo m = ty.GetMethod(dtorname.c_str(),&para,&dmy);
+    G__MethodInfo m = ty.GetMethod(dtorname.c_str(),para,&dmy);
     if(m.IsValid()) { // always true ???
       if(!access(m)) {
         G__genericerror("Error: can not call private or protected function");
+        delete para;
         return;
       }
       struct G__ifunc_table *ifunc = (struct G__ifunc_table*)m.Handle();
@@ -3036,6 +3047,7 @@ void G__blockscope::compile_deleteopr(string& expression,int isarray) {
       // dtor not found for compiled class, means dtor is private
       // implicit dtor is always generaed in bc_vtbl.cxx.
       G__genericerror("Error: can not call private or protected function");
+      delete para;
       return;
     }
 
@@ -3052,10 +3064,11 @@ void G__blockscope::compile_deleteopr(string& expression,int isarray) {
     string dtorname = "~";
     dtorname.append(ty.Name());
     // This is fine because dtor doesn't have parameter
-    G__MethodInfo m = ty.GetMethod(dtorname.c_str(),&para,&dmy);
+    G__MethodInfo m = ty.GetMethod(dtorname.c_str(),para,&dmy);
     if(m.IsValid()) {
       if(!access(m)) {
         G__genericerror("Error: can not call private or protected function");
+        delete para;
         return;
       }
       struct G__ifunc_table *ifunc = (struct G__ifunc_table*)m.Handle();
@@ -3087,7 +3100,7 @@ void G__blockscope::compile_deleteopr(string& expression,int isarray) {
   m_bc_inst.POPSTROS();
 
   m_bc_inst.Assign(skip,m_bc_inst.GetPC());
-  
+  delete para;
 }
 
 
@@ -3132,6 +3145,8 @@ int G__blockscope::access(int tagnum,long property) const {
 
 ////////////////////////////////////////////////////////////////
 int G__blockscope::isfriend(int tagnum) const {
+  if (!m_ifunc) return 0;
+
   int m_tagnum=m_ifunc->tagnum;
 
   // exactly same class
@@ -3145,7 +3160,7 @@ int G__blockscope::isfriend(int tagnum) const {
       friendtag=friendtag->next;
     }
   }
-  if(-1!=m_iexist && m_ifunc) {
+  if(-1!=m_iexist) {
     G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
     friendtag = ifunc->friendtag[m_iexist];
     while(friendtag) {
