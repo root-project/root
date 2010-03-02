@@ -15,6 +15,7 @@
 #include "TEveManager.h"
 #include "TEveSelection.h"
 #include "TEveProjectionBases.h"
+#include "TEveProjectionManager.h"
 
 #include "TGeoMatrix.h"
 
@@ -1340,7 +1341,34 @@ void TEveElement::RemoveElementsLocal()
    // See comment to RemoveElementlocal(TEveElement*).
 }
 
-/******************************************************************************/
+//==============================================================================
+
+//______________________________________________________________________________
+void TEveElement::ProjectChild(TEveElement* el, Bool_t sameDepth)
+{
+   // If this is a projectable, loop over all projected replicas and
+   // add the projected image of child 'el' there.
+   // If 'sameDepth' flag is true, the same depth as for parent object
+   // is used in every projection. Otherwise current depth of each
+   // relevant projection-manager is used.
+
+   TEveProjectable* pable = dynamic_cast<TEveProjectable*>(this);
+   if (pable && HasChild(el))
+   {
+      for (TEveProjectable::ProjList_i i = pable->BeginProjecteds(); i != pable->EndProjecteds(); ++i)
+      {
+         TEveProjectionManager *pmgr = (*i)->GetManager();
+         Float_t cd = pmgr->GetCurrentDepth();
+         if (sameDepth) pmgr->SetCurrentDepth((*i)->GetDepth());
+
+         pmgr->SubImportElements(el, dynamic_cast<TEveElement*>(*i));
+
+         if (sameDepth) pmgr->SetCurrentDepth(cd);
+      }
+   }
+}
+
+//==============================================================================
 
 //______________________________________________________________________________
 Bool_t TEveElement::HasChild(TEveElement* el)

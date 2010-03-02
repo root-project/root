@@ -229,6 +229,8 @@ public:
    virtual void RemoveElements();
    virtual void RemoveElementsLocal();
 
+   virtual void ProjectChild(TEveElement* el, Bool_t  sameDepth=kTRUE);
+
    virtual void Destroy();                      // *MENU*
    virtual void DestroyOrWarn();
    virtual void DestroyElements();              // *MENU*

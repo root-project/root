@@ -66,6 +66,8 @@ public:
    virtual TEveElement* ImportElements(TEveElement* el,
                                        TEveElement* ext_list=0);
 
+   virtual TEveElement* SubImportElements(TEveElement* el, TEveElement* proj_parent);
+
    virtual void    ProjectChildren();
    virtual void    ProjectChildrenRecurse(TEveElement* el);
 

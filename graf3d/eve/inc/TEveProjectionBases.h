@@ -36,10 +36,11 @@ private:
    TEveProjectable(const TEveProjectable&);            // Not implemented
    TEveProjectable& operator=(const TEveProjectable&); // Not implemented
 
-protected:
+public:
    typedef std::list<TEveProjected*>            ProjList_t;
    typedef std::list<TEveProjected*>::iterator  ProjList_i;
 
+protected:
    ProjList_t       fProjectedList; // references to projected instances.
 
 public:
@@ -49,6 +50,9 @@ public:
    virtual TClass* ProjectedClass(const TEveProjection* p) const = 0;
 
    virtual Bool_t HasProjecteds() const { return ! fProjectedList.empty(); }
+
+   ProjList_i   BeginProjecteds()       { return  fProjectedList.begin(); }
+   ProjList_i   EndProjecteds()         { return  fProjectedList.end();   }
 
    virtual void AddProjected(TEveProjected* p)    { fProjectedList.push_back(p); }
    virtual void RemoveProjected(TEveProjected* p) { fProjectedList.remove(p);    }
@@ -89,7 +93,9 @@ public:
    TEveProjected();
    virtual ~TEveProjected();
 
-   TEveProjectable* GetProjectable() const { return fProjectable; }
+   TEveProjectionManager* GetManager()     const { return fManager; }
+   TEveProjectable*       GetProjectable() const { return fProjectable; }
+   Float_t                GetDepth()       const { return fDepth; }
 
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void UnRefProjectable(TEveProjectable* assumed_parent);
