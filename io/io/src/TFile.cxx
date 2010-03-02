@@ -2277,7 +2277,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       fprintf(allfp,"#include \"%sProjectInstances.h\"\n", dirname);
       fclose(allfp);
    }
-   
+
    printf("MakeProject has generated %d classes in %s\n",ngener,dirname);
 
    // generate the shared lib
@@ -2328,7 +2328,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",dirname,dirname,gSystem->GetIncludePath());
       sprintf(path,"%s/%sSelection.xml",dirname,dirname);
    } else {
-      fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());      
+      fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());
       sprintf(path,"%s/%sLinkDef.h",dirname,dirname);
    }
    // Create the LinkDef.h or xml selection file by looping on all *.h files
@@ -2453,7 +2453,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       fprintf(fpMAKE,"%sProjectHeaders.h ",dirname);
       fprintf(fpMAKE,"%sLinkDef.h \n",dirname);
    }
-   
+
    // add compilation line
    TString sdirname(dirname);
 
@@ -3850,7 +3850,7 @@ copyout:
 }
 
 //______________________________________________________________________________
-#ifdef R__LINUX
+#if defined(R__LINUX) && !defined(R__WINGCC)
 Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
 {
    // Read specified byte range asynchronously. Actually we tell the kernel
@@ -3875,7 +3875,7 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
    return kFALSE;
 }
 #else
-Bool_t TFile::ReadBufferAsync(Long64_t , Int_t)
+Bool_t TFile::ReadBufferAsync(Long64_t, Int_t)
 {
    // Not supported yet on non Linux systems.
 
