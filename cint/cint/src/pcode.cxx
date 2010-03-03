@@ -409,6 +409,7 @@ void G__LD_p0_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset;
   buf->obj.i = buf->ref;
+  buf->obj.reftype.reftype=G__PARANORMAL;
 }
 /*************************************************************************
 * G__nonintarrayindex
@@ -507,7 +508,7 @@ void G__LD_p1_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
   else
 #endif
     buf->obj.i = buf->ref;
-
+  buf->obj.reftype.reftype=G__PARANORMAL;
 }
 /****************************************************************
 * G__LD_p1_float()
@@ -611,6 +612,7 @@ void G__LD_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
   buf->type = 'u';
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+p_inc*G__struct.size[buf->tagnum];
+  buf->obj.reftype.reftype=G__PARANORMAL;
 #ifdef G__TUNEUP_W_SECURITY
   // We intentionally allow going one beyond the end.
   if (p_inc > var->varlabel[ig15][1] /* num of elements */)
@@ -685,6 +687,7 @@ void G__LD_P10_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *v
   buf->ref = *(long*)(var->p[ig15]+offset)
         +index*G__struct.size[buf->tagnum];
   buf->obj.i = buf->ref;
+  buf->obj.reftype.reftype=G__PARANORMAL;
 }
 /****************************************************************
 * G__LD_P10_float()
@@ -1056,6 +1059,7 @@ void G__LD_Rp0_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *v
   buf->typenum = var->p_typetable[ig15];
   buf->ref = *(long*)(var->p[ig15]+offset);
   buf->obj.i = buf->ref;
+  buf->obj.reftype.reftype=G__PARANORMAL;
 }
 /****************************************************************
 * G__LD_Rp0_float()
