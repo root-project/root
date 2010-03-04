@@ -57,6 +57,7 @@ void TEveCompound::AddElement(TEveElement* el)
    // Call base-class implementation.
    // If compund is open and compound of the new element is not set,
    // the el's compound is set to this.
+   // You might also want to call RecheckImpliedSelections().
 
    TEveElementList::AddElement(el);
    if (IsCompoundOpen() && el->GetCompound() == 0)

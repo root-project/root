@@ -37,6 +37,7 @@ TEveSelection::TEveSelection(const char* n, const char* t) :
    fDecImpSelElement = &TEveElement::DecImpliedSelected;
 }
 
+//______________________________________________________________________________
 void TEveSelection::SetHighlightMode()
 {
    // Set to 'highlight' mode.
@@ -186,6 +187,48 @@ void TEveSelection::RemoveImpliedSelected(TEveElement* el)
       Set_i j = i->second.find(el);
       if (j != i->second.end())
          i->second.erase(j);
+   }
+}
+
+//______________________________________________________________________________
+void TEveSelection::RecheckImpliedSet(SelMap_i& smi)
+{
+   // Recalculate implied-selected state for given selection entry.
+   // Add new elements to implied-selected set and increase their
+   // implied-selected count.
+
+   Set_t set;
+   smi->first->FillImpliedSelectedSet(set);
+   for (Set_i i = set.begin(); i != set.end(); ++i)
+   {
+      if (smi->second.find(*i) == smi->second.end())
+      {
+         smi->second.insert(*i);
+         ((*i)->*fIncImpSelElement)();
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TEveSelection::RecheckImpliedSetForElement(TEveElement* el)
+{
+   // If given element is selected or implied-selected with this
+   // selection and recheck implied-set for given selection entry.
+
+   // Top-level selected.
+   {
+      SelMap_i i = fImpliedSelected.find(el);
+      if (i != fImpliedSelected.end())
+         RecheckImpliedSet(i);
+   }
+
+   // Implied selected, need to loop over all.
+   {
+      for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++ i)
+      {
+         if (i->second.find(el) != i->second.end())
+            RecheckImpliedSet(i);
+      }
    }
 }
 

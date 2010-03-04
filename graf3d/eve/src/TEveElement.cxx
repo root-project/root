@@ -1344,11 +1344,16 @@ void TEveElement::RemoveElementsLocal()
 //==============================================================================
 
 //______________________________________________________________________________
-void TEveElement::ProjectChild(TEveElement* el, Bool_t sameDepth)
+void TEveElement::ProjectChild(TEveElement* el, Bool_t same_depth)
 {
    // If this is a projectable, loop over all projected replicas and
-   // add the projected image of child 'el' there.
-   // If 'sameDepth' flag is true, the same depth as for parent object
+   // add the projected image of child 'el' there. This is supposed to
+   // be called after you add a child to a projectable after it has
+   // already been projected.
+   // You might also want to call RecheckImpliedSelections() on this
+   // element or 'el'.
+   //
+   // If 'same_depth' flag is true, the same depth as for parent object
    // is used in every projection. Otherwise current depth of each
    // relevant projection-manager is used.
 
@@ -1359,12 +1364,14 @@ void TEveElement::ProjectChild(TEveElement* el, Bool_t sameDepth)
       {
          TEveProjectionManager *pmgr = (*i)->GetManager();
          Float_t cd = pmgr->GetCurrentDepth();
-         if (sameDepth) pmgr->SetCurrentDepth((*i)->GetDepth());
+         if (same_depth) pmgr->SetCurrentDepth((*i)->GetDepth());
 
          pmgr->SubImportElements(el, dynamic_cast<TEveElement*>(*i));
 
-         if (sameDepth) pmgr->SetCurrentDepth(cd);
+         if (same_depth) pmgr->SetCurrentDepth(cd);
       }
+
+      
    }
 }
 
@@ -1797,6 +1804,24 @@ UChar_t TEveElement::GetSelectedLevel() const
    if (fImpliedHighlighted > 0) return 4;
    return 0;
 }
+
+//______________________________________________________________________________
+void TEveElement::RecheckImpliedSelections()
+{
+   // Call this if it is possible that implied-selection or highlight
+   // has changed for this element or for implied-selection this
+   // element is member of and you want to maintain consistent
+   // selection state.
+   // This can happen if you add elements into compounds in response
+   // to user-interaction.
+
+   if (fSelected || fImpliedSelected)
+      gEve->GetSelection()->RecheckImpliedSetForElement(this);
+
+   if (fHighlighted || fImpliedHighlighted)
+      gEve->GetHighlight()->RecheckImpliedSetForElement(this);
+}
+
 
 /******************************************************************************/
 // Stamping

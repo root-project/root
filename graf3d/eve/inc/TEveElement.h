@@ -229,7 +229,7 @@ public:
    virtual void RemoveElements();
    virtual void RemoveElementsLocal();
 
-   virtual void ProjectChild(TEveElement* el, Bool_t  sameDepth=kTRUE);
+   virtual void ProjectChild(TEveElement* el, Bool_t same_depth=kTRUE);
 
    virtual void Destroy();                      // *MENU*
    virtual void DestroyOrWarn();
@@ -318,6 +318,8 @@ public:
    virtual void FillImpliedSelectedSet(Set_t& impSelSet);
 
    virtual UChar_t GetSelectedLevel() const;
+
+   void RecheckImpliedSelections();
 
    // Change-stamping and change bits
    //---------------------------------
