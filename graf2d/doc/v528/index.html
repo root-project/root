@@ -33,6 +33,32 @@
 
 <h3>Graphics Primitives</h3>
 
+<h4>New text font: Symbol italic</h4>
+<ul>
+<li> A new text font "Symbol Italic" has been implemented. It is working for all
+     possible outputs: screen, PS, PDF,SVG, gif etc ... It has the font number
+     15.
+     <br>
+     The following macro gives an example:
+     <pre>
+     {
+        TCanvas c("c","c",0,0,400,100);
+        TLatex t0(.05,.45,"Symbol: #font[122]{abc} - Symbol Italic #font[152]{abc}");                    
+        t0.SetTextSize(0.36);
+        t0.Draw();
+        c.Print("symbolitalic.ps");
+        c.Print("symbolitalic.pdf");
+        c.Print("symbolitalic.gif");
+        c.Print("symbolitalic.svg");
+     }
+     </pre>
+     <center>
+     <img alt="The new font Symbol Italic" src="symbolitalic.gif">
+     </center>
+     The PostScript implementation was done thanks to the help of
+     Pierre Juillot and Benoit Speckel (IPHC Strasbourg)
+</ul>
+
 <h4>TLatex</h4>
 <ul>
 <li> The <tt>#int</tt> and <tt>#sum</tt> symbols had wrong limits placement
