@@ -32,16 +32,17 @@ const Float_t kScale = 0.93376068;
 
 TTF gCleanupTTF; // Allows to call "Cleanup" at the end of the session
 
-Bool_t      TTF::fgInit       = kFALSE;
-Bool_t      TTF::fgSmoothing  = kTRUE;
-Bool_t      TTF::fgKerning    = kTRUE;
-Bool_t      TTF::fgHinting    = kFALSE;
-Int_t       TTF::fgTBlankW    = 0;
-Int_t       TTF::fgWidth      = 0;
-Int_t       TTF::fgAscent     = 0;
-Int_t       TTF::fgCurFontIdx = -1;
-Int_t       TTF::fgFontCount  = 0;
-Int_t       TTF::fgNumGlyphs  = 0;
+Bool_t      TTF::fgInit           = kFALSE;
+Bool_t      TTF::fgSmoothing      = kTRUE;
+Bool_t      TTF::fgKerning        = kTRUE;
+Bool_t      TTF::fgHinting        = kFALSE;
+Int_t       TTF::fgTBlankW        = 0;
+Int_t       TTF::fgWidth          = 0;
+Int_t       TTF::fgAscent         = 0;
+Int_t       TTF::fgCurFontIdx     = -1;
+Int_t       TTF::fgSymbItaFontIdx = -1;
+Int_t       TTF::fgFontCount      = 0;
+Int_t       TTF::fgNumGlyphs      = 0;
 char       *TTF::fgFontName[kTTMaxFonts];
 FT_Matrix  *TTF::fgRotMatrix;
 FT_Library  TTF::fgLibrary;
@@ -142,6 +143,19 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
    Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
    w = fgCBox.xMax + Xoff + fgTBlankW;
    h = fgCBox.yMax + Yoff;
+}
+
+//______________________________________________________________________________
+void TTF::GetTextAdvance(UInt_t &a, char *text)
+{
+   // Get advance (a) when text is horizontal.
+
+   if (!fgInit) Init();
+
+   SetRotationMatrix(0);
+   PrepareString(text);
+   LayoutGlyphs();
+   a = GetWidth()>>6;
 }
 
 //______________________________________________________________________________
@@ -300,10 +314,11 @@ void TTF::SetSmoothing(Bool_t state)
 }
 
 //______________________________________________________________________________
-Int_t TTF::SetTextFont(const char *fontname)
+Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 {
    // Set text font to specified name.
    // font       : font name
+   // italic     : the fonts should be slanted. Used for symbol font.
    //
    // Set text font to specified name. This function returns 0 if
    // the specified font is found, 1 if not.
@@ -322,8 +337,17 @@ Int_t TTF::SetTextFont(const char *fontname)
    int i;
    for (i = 0; i < fgFontCount; i++) {
       if (!strcmp(fgFontName[i], basename)) {
-         fgCurFontIdx = i;
-         return 0;
+         if (italic) {
+            if (i==fgSymbItaFontIdx) {
+               fgCurFontIdx = i;
+               return 0;
+            }
+         } else {
+            if (i!=fgSymbItaFontIdx) {
+               fgCurFontIdx = i;
+               return 0;
+            }
+         }
       }
    }
 
@@ -381,6 +405,16 @@ Int_t TTF::SetTextFont(const char *fontname)
    fgCharMap[fgCurFontIdx] = 0;
    fgFontCount++;
 
+   if (italic) {
+      fgSymbItaFontIdx = fgCurFontIdx;
+      FT_Matrix slantMat;
+      slantMat.xx = (1 << 16);
+      slantMat.xy = ((1 << 16) >> 2);
+      slantMat.yx = 0;
+      slantMat.yy = (1 << 16);
+      FT_Set_Transform( fgFace[fgSymbItaFontIdx], &slantMat, NULL );
+   }
+
    return 0;
 }
 
@@ -405,6 +439,7 @@ void TTF::SetTextFont(Font_t fontnumber)
    //       12 : symbol-medium-r-normal      symbol.ttf
    //       13 : times-medium-r-normal       times.ttf
    //       14 :                             wingding.ttf
+   //       15 : symbol oblique is emulated from symbol.ttf
 
    // Added by cholm for use of DFSG - fonts - based on Kevins fix.
    // Table of Microsoft and (for non-MSFT operating systems) backup
@@ -425,14 +460,15 @@ void TTF::SetTextFont(Font_t fontnumber)
       /*11 */ { "courbi.ttf",    "FreeMonoBoldOblique.ttf" },
       /*12 */ { "symbol.ttf",    "symbol.ttf"              },
       /*13 */ { "times.ttf",     "FreeSerif.ttf"           },
-      /*14 */ { "wingding.ttf",  "opens___.ttf"            }
+      /*14 */ { "wingding.ttf",  "opens___.ttf"            },
+      /*15 */ { "symbol.ttf",    "symbol.ttf"              }
    };
 
    static int fontset = -1;
    int        thisset = fontset;
 
    int fontid = fontnumber / 10;
-   if (fontid < 0 || fontid > 14) fontid = 0;
+   if (fontid < 0 || fontid > 15) fontid = 0;
 
    if (thisset == -1) {
       // try to load font (font must be in Root.TTFontPath resource)
@@ -453,7 +489,9 @@ void TTF::SetTextFont(Font_t fontnumber)
          thisset = 1;
       }
    }
-   int ret = SetTextFont(fonttable[fontid][thisset]);
+   Int_t italic = 0;
+   if (fontid==15) italic = 1;
+   int ret = SetTextFont(fonttable[fontid][thisset], italic);
    // Do not define font set is we're loading the symbol.ttf - it's
    // the same in both cases.
    if (ret == 0 && fontid != 12) fontset = thisset;

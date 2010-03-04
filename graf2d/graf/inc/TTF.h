@@ -68,6 +68,7 @@ private:
    static FT_BBox     fgCBox;                  // string control box
    static FT_CharMap  fgCharMap[kTTMaxFonts];  // font character map
    static Int_t       fgCurFontIdx;            // current font index
+   static Int_t       fgSymbItaFontIdx;        // Symbol italic font index
    static Int_t       fgFontCount;             // number of fonts loaded
    static char       *fgFontName[kTTMaxFonts]; // font name
    static FT_Face     fgFace[kTTMaxFonts];     // font face
@@ -107,8 +108,9 @@ public:
    static void           SetKerning(Bool_t state);
    static void           SetSmoothing(Bool_t state);
    static void           GetTextExtent(UInt_t &w, UInt_t &h, char *text);
+   static void           GetTextAdvance(UInt_t &a, char *text);
    static void           SetTextFont(Font_t fontnumber);
-   static Int_t          SetTextFont(const char *fontname);
+   static Int_t          SetTextFont(const char *fontname, Int_t italic=0);
    static void           SetTextSize(Float_t textsize);
    static Bool_t         IsInitialized();
    static void           Version(Int_t &major, Int_t &minor, Int_t &patch);
