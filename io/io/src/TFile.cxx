@@ -3869,10 +3869,13 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
       // capadilites.
       advice = POSIX_FADV_NORMAL;
    }
-   if (posix_fadvise(fD, offset, len, advice)) {
-      return kTRUE;
+   Double_t start = 0;
+   if (gPerfStats != 0) start = TTimeStamp();
+   Bool_t result = posix_fadvise(fD, offset, len, advice);
+   if (gPerfStats != 0) {
+      gPerfStats->FileReadEvent(this, len, start);
    }
-   return kFALSE;
+   return result;
 }
 #else
 Bool_t TFile::ReadBufferAsync(Long64_t, Int_t)
