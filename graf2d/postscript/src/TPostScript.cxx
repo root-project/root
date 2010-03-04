@@ -970,7 +970,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    Float_t markersize;
    static char chtemp[10];
 
-   if (!fMarkerSize) return; 
+   if (!fMarkerSize) return;
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
@@ -992,7 +992,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    if (markerstyle == 1) symbolsize = 0.01;
    if (markerstyle == 6) symbolsize = 0.02;
    if (markerstyle == 7) symbolsize = 0.04;
-  
+
    const Int_t kBASEMARKER = 8;
    Float_t sbase = symbolsize*kBASEMARKER;
    Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
@@ -1443,6 +1443,8 @@ void TPostScript::Initialize()
    // +------------+------------------+-----------------------------------+
    // |     R      |                  | repeat                            |
    // +------------+------------------+-----------------------------------+
+   // |     ita    |                  | Used to make the symbols italic   |
+   // +------------+------------------+-----------------------------------+
 
    Double_t rpxmin, rpymin, width, heigth;
    rpxmin = rpymin = width = heigth = 0;
@@ -1534,6 +1536,7 @@ void TPostScript::Initialize()
    PrintStr("/box {m dup 0 exch d exch 0 d 0 exch neg d cl} def@");
    PrintStr("/NC{systemdict begin initclip end}def/C{NC box clip newpath}def@");
    PrintStr("/bl {box s} def /bf {box f} def /Y { 0 exch d} def /X { 0 d} def @");
+   PrintStr("/ita {/ang 15 def gsave [1 0 ang dup sin exch cos div 1 0 0] concat} def @");
 
    DefineMarkers();
    FontEncode();
@@ -2306,7 +2309,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
     "/Helvetica"            , "/Helvetica-Oblique"  , "/Helvetica-Bold"  ,
     "/Helvetica-BoldOblique", "/Courier"            , "/Courier-Oblique" ,
     "/Courier-Bold"         , "/Courier-BoldOblique", "/Symbol"          ,
-    "/Times-Roman"          , "/ZapfDingbats"};
+    "/Times-Roman"          , "/ZapfDingbats"       , "/Symbol"};
 
    const Double_t kDEGRAD = TMath::Pi()/180.;
    Double_t x = xx;
@@ -2336,7 +2339,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    Float_t tsizey = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(Int_t(tsize));
 
    Int_t font = abs(fTextFont)/10;
-   if( font > 14 || font < 1) font = 1;
+   if( font > 15 || font < 1) font = 1;
 
    // Text color.
    SetColor(Int_t(fTextColor));
@@ -2387,7 +2390,11 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    if(txalh == 2) PrintStr(Form(" %d 0 t ", -psCharsLength/2));
    if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
    PrintStr(psfont[font-1]);
-   PrintStr(Form(" findfont %g sf 0 0 m (",fontsize));
+   if (font != 15) {
+     PrintStr(Form(" findfont %g sf 0 0 m (",fontsize));
+   } else {
+     PrintStr(Form(" findfont %g sf 0 0 m ita (",fontsize));
+   }
 
    // Output text.
    char str[8];
@@ -2406,7 +2413,11 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
       }
    }
 
-   PrintStr(") show NC");
+   if (font != 15) {
+      PrintStr(") show NC");
+   } else {
+      PrintStr(") show gr NC");
+   }
 
    SaveRestore(-1);
 }
