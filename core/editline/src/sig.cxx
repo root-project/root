@@ -65,16 +65,6 @@ el_private const int sighdl[] = {
 
 el_private extern "C" void sig_handler(int);
 
-/* R__CanOutput():
- *   Indicate whether we are connected or not to the tty.
- *   In particular returns false if the process is in the background.
- */
-static int
-R__CanOutput(void)
-{
-   return (getpgrp() == tcgetpgrp(STDOUT_FILENO));
-}
-
 /* sig_handler():
  *	This is the handler called for all signals
  *	XXX: we cannot pass any data so we just store the old SEditLine_t
@@ -93,7 +83,7 @@ sig_handler(int signo) {
 
    switch (signo) {
    case SIGCONT:
-      if (R__CanOutput()) {
+      if (tty_can_output()) {
          tty_rawmode(sel);
          //if (ed_redisplay(sel, 0) == CC_REFRESH) {
          re_clear_display(sel);

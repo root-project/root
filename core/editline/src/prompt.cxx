@@ -99,6 +99,12 @@ prompt_print(EditLine_t* el, int op) {
    }
    p = (elp->fFunc)(el);
 
+   if (*p && !tty_can_output()) {
+      // don't print the prompt to not block
+      return;
+   }
+
+
    ElColor_t col(prompt_color);
 
    while (*p) {
