@@ -158,20 +158,34 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
    Float_t tlY = 0.015*rl/(vp[2]-vp[0]);
    Float_t tlX = 0.015*rl/(vp[3]-vp[1]);
    // corner vectors
+   Float_t minX, maxX;
    TGLVector3 xdir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(2); xdir.Normalise(); // left
+   if (fFrustum[2] > fFrustum[0] )
+   {   
+      minX =  fFrustum[0];
+      maxX =  fFrustum[2];
+   }
+   else {
+      xdir = -xdir;
+      minX =  fFrustum[2];
+      maxX =  fFrustum[0];
+   }
+
    TGLVector3 ydir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(3); ydir.Normalise(); // up
    TGLVector3 vy1 = ydir * fFrustum[1];
    TGLVector3 vy2 = ydir * fFrustum[3];
-   TGLVector3 vx1 = xdir * fFrustum[0];
-   TGLVector3 vx2 = xdir * fFrustum[2];
+
+   TGLVector3 vx1 = xdir * minX;
+   TGLVector3 vx2 = xdir * maxX;
    // range
    Double_t rngY = fFrustum[3] - fFrustum[1];
-   Double_t rngX = fFrustum[2] - fFrustum[0];
-   Double_t off = TMath::Sqrt((rngX*rngY)+(rngX*rngY)) * 0.03;
-   Double_t minX = fFrustum[0] + off;
-   Double_t maxX = fFrustum[2] - off ;
+   Double_t rngX = maxX - minX;
+   Double_t off =  TMath::Sqrt((rngX*rngX)+(rngY*rngY)) * 0.03;
    Double_t minY = fFrustum[1] + off;
    Double_t maxY = fFrustum[3] - off;
+   minX += off;
+   maxX -= off;
+
    // grid lines
    Char_t alpha = 80; //primary
    Char_t alpha2 = 90; //seconndary
@@ -344,7 +358,7 @@ void TGLCameraOverlay::RenderBar(TGLRnrCtx&  rnrCtx)
    // Show frustum size with fixed screen line length and printed value.
 
    // factors 10, 5 and 2 are allowed
-   Double_t wfrust     = fFrustum[2]-fFrustum[0];
+   Double_t wfrust     = TMath::Abs(fFrustum[2]-fFrustum[0]);
    Float_t barsize= 0.14* wfrust;
    Int_t exp = (Int_t) TMath::Floor(TMath::Log10(barsize));
    Double_t fact = barsize/TMath::Power(10, exp);
@@ -438,8 +452,10 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
 
    // Frustum size.
    TGLCamera &camera = rnrCtx.RefCamera();
-   Float_t l = -camera.FrustumPlane(TGLCamera::kLeft).D();
-   Float_t r =  camera.FrustumPlane(TGLCamera::kRight).D();
+
+   TGLVector3 absRef(1., 1., 1.);
+   Float_t l = -camera.FrustumPlane(TGLCamera::kLeft).D()  * Dot(cam.GetCamBase().GetBaseVec(2), absRef);
+   Float_t r =  camera.FrustumPlane(TGLCamera::kRight).D() * Dot(cam.GetCamBase().GetBaseVec(2), absRef);
    Float_t t =  camera.FrustumPlane(TGLCamera::kTop).D();
    Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
 
