@@ -182,7 +182,9 @@ printout given by this command:
       12 :       symbol-medium-r-normal     "Symbol"
       13 :       times-medium-r-normal      "Times New Roman"
       14 :                                  "Wingdings"
+      15 :       Symbol italic (derived form Symbol)
 </pre>
+<br>
  The following picture shows how each font looks like. The number on the left
  is the "Text font code". In this picture precision 2 was selected.
 End_Html
