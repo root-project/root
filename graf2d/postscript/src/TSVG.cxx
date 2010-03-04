@@ -35,7 +35,7 @@ ClassImp(TSVG)
 //______________________________________________________________________________
 /*Begin_Html
 <center><h2>TSVG: Graphics interface to SVG</h2></center>
-<a href="http://www.w3.org/Graphics/SVG/Overview.htm8"><b>SVG</b></a> 
+<a href="http://www.w3.org/Graphics/SVG/Overview.htm8"><b>SVG</b></a>
 (Scalable Vector Graphics) is a language for describing two-dimensional
 graphics in XML. <b>SVG</b> allows high quality vector graphics in
 HTML pages.
@@ -1431,21 +1431,21 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
 
    static const char *fontFamily[] = {
    "Times"    , "Times"    , "Times",
-   "Helvetica", "Helvetica", "Helvetica", "Helvetica",
-   "Courier"  , "Courier"  , "Courier"  , "Courier",
-   "Times"    ,"Times"     , "ZapfDingbats"};
+   "Helvetica", "Helvetica", "Helvetica"   , "Helvetica",
+   "Courier"  , "Courier"  , "Courier"     , "Courier",
+   "Times"    ,"Times"     , "ZapfDingbats", "Times"};
 
    static const char *fontWeight[] = {
    "normal", "bold", "bold",
-   "normal", "normal", "bold", "bold",
-   "normal", "normal", "bold", "bold",
-   "normal", "normal", "normal"};
+   "normal", "normal", "bold"  , "bold",
+   "normal", "normal", "bold"  , "bold",
+   "normal", "normal", "normal", "normal"};
 
    static const char *fontStyle[] = {
    "italic", "normal" , "italic",
    "normal", "oblique", "normal", "oblique",
    "normal", "oblique", "normal", "oblique",
-   "normal", "normal" , "normal"};
+   "normal", "normal" , "normal", "italic"};
 
    Int_t ix    = XtoSVG(xx);
    Int_t iy    = YtoSVG(yy);
@@ -1512,7 +1512,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    }
    PrintFast(2,"\">");
    PrintStr("@");
-   if (font == 12) {
+   if (font == 12 || font == 15) {
       Int_t ichar = chars[0]+848;
       Int_t ic    = ichar;
 
