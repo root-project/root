@@ -191,7 +191,7 @@ void TEveSelection::RemoveImpliedSelected(TEveElement* el)
 }
 
 //______________________________________________________________________________
-void TEveSelection::RecheckImpliedSet(SelMap_i& smi)
+void TEveSelection::RecheckImpliedSet(SelMap_i smi)
 {
    // Recalculate implied-selected state for given selection entry.
    // Add new elements to implied-selected set and increase their

@@ -53,6 +53,8 @@ protected:
    void DoElementSelect  (SelMap_i entry);
    void DoElementUnselect(SelMap_i entry);
 
+   void RecheckImpliedSet(SelMap_i smi);
+
 public:
    TEveSelection(const char* n="TEveSelection", const char* t="");
    virtual ~TEveSelection() {}
@@ -75,7 +77,6 @@ public:
 
    virtual void RemoveImpliedSelected(TEveElement* el);
 
-   void RecheckImpliedSet(SelMap_i& smi);
    void RecheckImpliedSetForElement(TEveElement* el);
 
    void SelectionAdded(TEveElement* el);    // *SIGNAL*
