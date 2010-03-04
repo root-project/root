@@ -34,6 +34,10 @@ protected:
    // Ensures unlocking in view of exceptions.
    class TUnlocker
    {
+   private:
+      TUnlocker(const TUnlocker&);            // Not implemented
+      TUnlocker& operator=(const TUnlocker&); // Not implemented
+
       const TGLLockable *fLockable;
 
    public:

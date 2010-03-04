@@ -130,6 +130,10 @@ public:
 
 class TGLClipSet : public TGLOverlayElement
 {
+private:
+   TGLClipSet(const TGLClipSet&);            // Not implemented
+   TGLClipSet& operator=(const TGLClipSet&); // Not implemented
+
 protected:
    TGLClipPlane          *fClipPlane;
    TGLClipBox            *fClipBox;

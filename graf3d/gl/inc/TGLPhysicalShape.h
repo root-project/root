@@ -34,6 +34,10 @@ class TGLPhysicalShape
 {
    friend class TGLLogicalShape; // for replica-list management
 
+private:
+   TGLPhysicalShape(const TGLPhysicalShape&);            // Not implemented
+   TGLPhysicalShape& operator=(const TGLPhysicalShape&); // Not implemented
+
 public:
    // Flags for permitted manipulation of object
    enum EManip  { kTranslateX   = 1 << 0,
