@@ -13,13 +13,8 @@
 #include "TEveManager.h"
 #include "TEveTrans.h"
 
-
 #include "TColor.h"
 
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
 
 //______________________________________________________________________________
 //
@@ -247,24 +242,11 @@ void TEveDigitSet::DigitId(TObject* id)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEveDigitSet::Paint(Option_t* /*option*/)
+void TEveDigitSet::Paint(Option_t*)
 {
    // Paint this object. Only direct rendering is supported.
 
-   static const TEveException eH("TEveDigitSet::Paint ");
-
-   TBuffer3D buff(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buff.fID           = this;
-   buff.fColor        = GetMainColor();
-   buff.fTransparency = GetMainTransparency();
-   RefMainTrans().SetBuffer3D(buff);
-   buff.SetSectionsValid(TBuffer3D::kCore);
-
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
-   if (reqSections != TBuffer3D::kNone)
-      Error(eH, "only direct GL rendering supported.");
+   PaintStandard(this);
 }
 
 //______________________________________________________________________________

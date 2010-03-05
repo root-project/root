@@ -53,9 +53,7 @@ public:
    TEveProjectionAxes(TEveProjectionManager* m, Bool_t useColorSet = kTRUE);
    virtual ~TEveProjectionAxes();
 
-   TEveProjectionManager* GetManager(){
-      return fManager;
-   }
+   TEveProjectionManager* GetManager()      { return fManager; }
 
    void            SetLabMode(ELabMode x)   { fLabMode = x; }
    ELabMode        GetLabMode()   const     { return fLabMode;}
@@ -69,6 +67,7 @@ public:
 
    virtual void    Paint(Option_t* option="");
    virtual void    ComputeBBox();
+
    virtual const   TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
    ClassDef(TEveProjectionAxes, 1); // Class to draw scales in non-linear projections.

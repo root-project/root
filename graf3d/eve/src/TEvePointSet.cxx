@@ -20,9 +20,7 @@
 #include "TF3.h"
 
 #include "TColor.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
-#include "TVirtualViewer3D.h"
+
 
 //==============================================================================
 //==============================================================================
@@ -302,27 +300,11 @@ void TEvePointSet::SetMarkerSize(Size_t msize)
 /******************************************************************************/
 
 //______________________________________________________________________________
-void TEvePointSet::Paint(Option_t* /*option*/)
+void TEvePointSet::Paint(Option_t*)
 {
    // Paint point-set.
 
-   static const TEveException eh("TEvePointSet::Paint ");
-
-   if (fRnrSelf == kFALSE) return;
-
-   TBuffer3D buff(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buff.fID           = this;
-   buff.fColor        = GetMainColor();
-   buff.fTransparency = GetMainTransparency();
-   if (HasMainTrans())
-      RefMainTrans().SetBuffer3D(buff);
-   buff.SetSectionsValid(TBuffer3D::kCore);
-
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
-   if (reqSections != TBuffer3D::kNone)
-      Error(eh, "only direct GL rendering supported.");
+   PaintStandard(this);
 }
 
 /******************************************************************************/

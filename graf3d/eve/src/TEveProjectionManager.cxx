@@ -368,3 +368,11 @@ void TEveProjectionManager::ComputeBBox()
 
    BBoxInit();
 }
+
+//______________________________________________________________________________
+void TEveProjectionManager::Paint(Option_t*)
+{
+   // Paint this object. Only direct rendering is supported.
+
+   PaintStandard(this);
+}

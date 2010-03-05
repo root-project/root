@@ -20,10 +20,6 @@
 #include "TClass.h"
 #include "TMathBase.h"
 #include "TMath.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
 #include "TAxis.h"
 
 #include "TGLUtil.h"
@@ -359,24 +355,10 @@ void TEveCaloViz::Paint(Option_t* /*option*/)
 {
    // Paint this object. Only direct rendering is supported.
 
-   static const TEveException eH("TEvecaloViz::Paint ");
-
-   if (!fData)
-      return;
-
-   TBuffer3D buff(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buff.fID           = this;
-   buff.fColor        = GetMainColor();
-   buff.fTransparency = GetMainTransparency();
-   if (HasMainTrans())
-      RefMainTrans().SetBuffer3D(buff);
-   buff.SetSectionsValid(TBuffer3D::kCore);
-
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
-   if (reqSections != TBuffer3D::kNone)
-      Error(eH, "only direct GL rendering supported.");
+   if (fData)
+   {
+      PaintStandard(this);
+   }
 }
 
 //______________________________________________________________________________

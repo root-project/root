@@ -72,6 +72,7 @@ public:
    virtual void    ProjectChildrenRecurse(TEveElement* el);
 
    virtual void    ComputeBBox();
+   virtual void    Paint(Option_t* option="");
 
    ClassDef(TEveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
 };

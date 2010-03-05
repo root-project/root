@@ -15,7 +15,7 @@
 #include "TEveElement.h"
 #include "TAttBBox.h"
 
-class TEvePlot3D : public TEveElementList // , public TAttBBox
+class TEvePlot3D : public TEveElementList
 {
    friend class TEvePlot3DGL;
 
@@ -34,9 +34,6 @@ protected:
 public:
    TEvePlot3D(const char* n="TEvePlot3D", const char* t="");
    virtual ~TEvePlot3D() {}
-
-   // For TAttBBox:
-   // virtual void ComputeBBox();
 
    void SetPlot(TObject* obj, const TString& opt) { fPlot = obj; fPlotOption = opt; }
 

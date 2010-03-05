@@ -16,10 +16,7 @@
 #include "TMath.h"
 #include "TVector3.h"
 #include "TRandom3.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
+
 
 //______________________________________________________________________________
 //
@@ -35,11 +32,9 @@ ClassImp(TEveTriangleSet);
 
 //______________________________________________________________________________
 TEveTriangleSet::TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms, Bool_t cols) :
-   TEveElement(fColor),
-   TNamed("TEveTriangleSet", 0),
+   TEveElementList("TEveTriangleSet", "", kTRUE),
    fNVerts  (nv), fVerts(0),
-   fNTrings (nt), fTrings(0), fTringNorms(0), fTringCols(0),
-   fColor   (2),  fTransp(0)
+   fNTrings (nt), fTrings(0), fTringNorms(0), fTringCols(0)
 {
    // Constructor.
 
@@ -146,26 +141,11 @@ void TEveTriangleSet::ComputeBBox()
 }
 
 //______________________________________________________________________________
-void TEveTriangleSet::Paint(Option_t* )
+void TEveTriangleSet::Paint(Option_t*)
 {
-   // Paint the object.
+   // Paint this object. Only direct rendering is supported.
 
-   TBuffer3D buffer(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buffer.fID           = this;
-   buffer.fColor        = GetMainColor();
-   buffer.fTransparency = GetMainTransparency();
-   RefMainTrans().SetBuffer3D(buffer);
-   buffer.SetSectionsValid(TBuffer3D::kCore);
-
-   // We fill kCore on first pass and try with viewer
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);
-   if (reqSections == TBuffer3D::kNone) {
-      return;
-   }
-
-   Error("TEveTriangleSet::Paint", "only direct OpenGL rendering supported.");
+   PaintStandard(this);
 }
 
 /******************************************************************************/

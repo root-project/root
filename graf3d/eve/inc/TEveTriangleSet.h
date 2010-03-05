@@ -21,10 +21,9 @@
 
 class TGeoMatrix;
 
-class TEveTriangleSet : public TEveElement,
-                        public TNamed,
-                        public TAttBBox,
-                        public TAtt3D
+class TEveTriangleSet : public TEveElementList,
+                        public TAtt3D,
+                        public TAttBBox
 {
    friend class TEveTriangleSetEditor;
    friend class TEveTriangleSetGL;
@@ -43,16 +42,10 @@ protected:
    Float_t* fTringNorms;   //[3*fNTrings]
    UChar_t* fTringCols;    //[3*fNTrings]
 
-   // --------------------------------------------------------------
-
-   Color_t  fColor;
-   UShort_t fTransp;
-
 public:
    TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms=kFALSE, Bool_t cols=kFALSE);
    ~TEveTriangleSet();
 
-   virtual Bool_t CanEditMainColor()        const { return kTRUE; }
    virtual Bool_t CanEditMainTransparency() const { return kTRUE; }
 
    Int_t GetNVerts()  const { return fNVerts;  }
@@ -76,7 +69,7 @@ public:
                               Bool_t interp=kFALSE, Bool_t wrap=kFALSE);
 
    virtual void ComputeBBox();
-   virtual void Paint(Option_t* = "");
+   virtual void Paint(Option_t* option="");
 
    void SetTransparency(UChar_t tr) { SetMainTransparency(tr); } // *MENU*
 

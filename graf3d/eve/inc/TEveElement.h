@@ -185,6 +185,7 @@ public:
    void   DecParentIgnoreCnt();
 
    virtual void PadPaint(Option_t* option);
+   virtual void PaintStandard(TObject* id);
 
    virtual TObject* GetObject      (const TEveException& eh="TEveElement::GetObject ") const;
    virtual TObject* GetEditorObject(const TEveException& eh="TEveElement::GetEditorObject ") const { return GetObject(eh); }
@@ -440,9 +441,9 @@ public:
    virtual Bool_t CanEditMainColor() const { return fDoColor; }
 
    TClass* GetChildClass() const { return fChildClass; }
-   void SetChildClass(TClass* c) { fChildClass = c; }
+   void    SetChildClass(TClass* c) { fChildClass = c; }
 
-   virtual Bool_t AcceptElement(TEveElement* el);
+   virtual Bool_t  AcceptElement(TEveElement* el);
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 

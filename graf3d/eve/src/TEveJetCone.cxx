@@ -12,11 +12,6 @@
 #include "TEveJetCone.h"
 #include "TEveTrans.h"
 
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
-
 #include "TMath.h"
 
 //______________________________________________________________________________
@@ -76,23 +71,7 @@ void TEveJetCone::Paint(Option_t*)
    // Paint object.
    // This is for direct rendering (using TEveJetConeGL class).
 
-   static const TEveException eh("TEveJetCone::Paint ");
-
-   if (fRnrSelf == kFALSE) return;
-
-   TBuffer3D buff(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buff.fID           = this;
-   buff.fColor        = GetMainColor();
-   buff.fTransparency = GetMainTransparency();
-   if (HasMainTrans())
-      RefMainTrans().SetBuffer3D(buff);
-   buff.SetSectionsValid(TBuffer3D::kCore);
-
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
-   if (reqSections != TBuffer3D::kNone)
-      Error(eh, "only direct GL rendering supported.");
+   PaintStandard(this);
 }
 
 //______________________________________________________________________________

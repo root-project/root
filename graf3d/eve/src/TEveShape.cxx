@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel, 2009
+// Author: Matevz Tadel 2007
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -9,29 +9,50 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TEvePlot3D.h"
-#include "TEveTrans.h"
+#include "TEveShape.h"
 
 
 //______________________________________________________________________________
-// Description of TEvePlot3D
+// Description of TEveShape
 //
 
-ClassImp(TEvePlot3D);
+ClassImp(TEveShape);
 
 //______________________________________________________________________________
-TEvePlot3D::TEvePlot3D(const char* n, const char* t) :
+TEveShape::TEveShape(const char* n, const char* t) :
    TEveElementList(n, t),
-   fPlot(0),
-   fLogX(kFALSE), fLogY(kFALSE), fLogZ(kFALSE)
+   fFillColor(5),
+   fLineColor(3),
+   fLineWidth(1),
+   fHighlightFrame(kTRUE)
 {
    // Constructor.
 
-   InitMainTrans();
+   SetMainColorPtr(&fFillColor);
 }
 
 //______________________________________________________________________________
-void TEvePlot3D::Paint(Option_t* )
+TEveShape::~TEveShape()
+{
+   // Destructor.
+}
+
+//______________________________________________________________________________
+void TEveShape::SetMainColor(Color_t color)
+{
+   // Set main color.
+   // Override so that line-color can also be changed if it is equal
+   // to fill color (which is treated as main color).
+
+   if (fFillColor == fLineColor) {
+      fLineColor = color;
+      StampObjProps();
+   }
+   TEveElementList::SetMainColor(color);
+}
+
+//______________________________________________________________________________
+void TEveShape::Paint(Option_t*)
 {
    // Paint this object. Only direct rendering is supported.
 

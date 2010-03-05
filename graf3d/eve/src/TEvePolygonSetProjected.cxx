@@ -28,8 +28,10 @@ struct Seg_t
 
    Seg_t(Int_t i1=-1, Int_t i2=-1) : fV1(i1), fV2(i2) {}
 };
+
 typedef std::list<Seg_t>           LSeg_t;
 typedef std::list<Seg_t>::iterator LSegIt_t;
+
 }
 
 //==============================================================================
@@ -49,22 +51,12 @@ ClassImp(TEvePolygonSetProjected);
 
 //______________________________________________________________________________
 TEvePolygonSetProjected::TEvePolygonSetProjected(const char* n, const char* t) :
-   TEveElementList(n, t),
-
+   TEveShape(n, t),
    fBuff(0),
-
    fNPnts(0),
-   fPnts(0),
-
-   fFillColor(5),
-   fLineColor(3),
-   fLineWidth(1),
-
-   fHighlightFrame(kTRUE)
+   fPnts(0)
 {
    // Constructor.
-
-   SetMainColorPtr(&fFillColor);
 }
 
 //______________________________________________________________________________
@@ -76,6 +68,23 @@ TEvePolygonSetProjected::~TEvePolygonSetProjected()
    if (fPnts) delete [] fPnts;
    if (fBuff) delete fBuff;
 }
+
+//______________________________________________________________________________
+void TEvePolygonSetProjected::ComputeBBox()
+{
+   // Override of virtual method from TAttBBox.
+
+   if (fNPnts > 0) {
+      BBoxInit();
+      for (Int_t pi = 0; pi < fNPnts; ++pi)
+         BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
+   } else {
+      BBoxZero();
+   }
+}
+
+
+//==============================================================================
 
 //______________________________________________________________________________
 void TEvePolygonSetProjected::SetProjection(TEveProjectionManager* mng,
@@ -372,8 +381,6 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBS(Int_t* idxMap)
    return surf;
 }
 
-/******************************************************************************/
-
 //______________________________________________________________________________
 void  TEvePolygonSetProjected::ProjectBuffer3D()
 {
@@ -420,60 +427,6 @@ void  TEvePolygonSetProjected::ProjectBuffer3D()
    delete [] idxMap;
    ResetBBox();
 }
-
-//______________________________________________________________________________
-void TEvePolygonSetProjected::ComputeBBox()
-{
-   // Override of virtual method from TAttBBox.
-
-   if (fNPnts > 0) {
-      BBoxInit();
-      for (Int_t pi = 0; pi < fNPnts; ++pi)
-         BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
-   } else {
-      BBoxZero();
-   }
-}
-
-//______________________________________________________________________________
-void TEvePolygonSetProjected::SetMainColor(Color_t color)
-{
-   // Set main color.
-   // Override so that line-color can also be changed if it is equal
-   // to fill color (which is treated as main color).
-
-   if (fFillColor == fLineColor) {
-      fLineColor = color;
-      StampObjProps();
-   }
-   TEveElementList::SetMainColor(color);
-}
-
-//______________________________________________________________________________
-void TEvePolygonSetProjected::Paint(Option_t* )
-{
-   // Paint this object. Only direct rendering is supported.
-
-   static const TEveException eh("TEvePolygonSetProjected::Paint ");
-
-   if (fNPnts == 0) return;
-   TBuffer3D buffer(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buffer.fID           = this;
-   buffer.fColor        = GetMainColor();
-   buffer.fTransparency = GetMainTransparency();
-   buffer.fLocalFrame   = false;
-
-   buffer.SetSectionsValid(TBuffer3D::kCore);
-
-   // We fill kCore on first pass and try with viewer
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);
-   if (reqSections != TBuffer3D::kNone)
-      Warning(eh, "Viewer3D requires more (%d).", reqSections);
-}
-
-/******************************************************************************/
 
 //______________________________________________________________________________
 void TEvePolygonSetProjected::DumpPolys() const

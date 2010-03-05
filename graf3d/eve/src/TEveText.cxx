@@ -16,10 +16,6 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TString.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
-#include "TVirtualViewer3D.h"
 #include "TMath.h"
 
 //==============================================================================
@@ -118,25 +114,11 @@ void TEveText::SetPolygonOffset(Float_t factor, Float_t units)
 }
 
 //______________________________________________________________________________
-void TEveText::Paint(Option_t* )
+void TEveText::Paint(Option_t*)
 {
    // Paint this object. Only direct rendering is supported.
 
-   static const TEveException eH("TEveText::Paint ");
-
-   TBuffer3D buff(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buff.fID           = this;
-   buff.fColor        = GetMainColor();
-   buff.fTransparency = GetMainTransparency();
-   if (HasMainTrans())
-      RefMainTrans().SetBuffer3D(buff);
-   buff.SetSectionsValid(TBuffer3D::kCore);
-
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
-   if (reqSections != TBuffer3D::kNone)
-      Error(eH, "only direct GL rendering supported.");
+   PaintStandard(this);
 }
 
 //______________________________________________________________________________
