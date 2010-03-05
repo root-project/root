@@ -578,12 +578,14 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*   to obtain a standard normalized gaussian, use "gausn" instead of "gaus"
 //*-*   the expression "gausn" is a substitute for
 //*-*     [0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))
+//*-*   WARNING: gaus and gausn are mutually exclusive in the same expression.
 //*-*
 //*-*   In the same way the expression "landau" is a substitute for
 //*-*     [0]*TMath::Landau(x,[1],[2],kFALSE)
 //*-*   to obtain a standard normalized landau, use "landaun" instead of "landau"
 //*-*   the expression "landaun" is a substitute for
 //*-*     [0]*TMath::Landau(x,[1],[2],kTRUE)
+//*-*   WARNING: landau and landaun are mutually exclusive in the same expression.
 //*-*
 //*-*   boolean optimization (kBoolOptmize) :
 //*-*   =====================================
