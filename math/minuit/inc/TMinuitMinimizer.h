@@ -197,6 +197,9 @@ protected:
    /// reset 
    void DoClear(); 
 
+   ///release a parameter that is fixed  when it is redefined
+   void DoReleaseFixParameter( int ivar); 
+
    /// retrieve minimum parameters and errors from TMinuit
    void RetrieveParams(); 
 

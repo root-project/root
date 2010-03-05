@@ -11,6 +11,11 @@
 #include "Minuit2/MnCovarianceSqueeze.h"
 #include "Minuit2/MinimumState.h"
 
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -168,9 +173,17 @@ void MnUserParameterState::Add(const std::string & name, double val, double err)
       fValid = true;
    }
    else { 
+      // redefine an existing parameter
       int i = Index(name);
       SetValue(i,val);
+      if (Parameter(i).IsConst() ) { 
+         std::string msg = "Cannot modify status of constant parameter " + name; 
+         MN_INFO_MSG(msg.c_str());
+         return;
+      }
       SetError(i,err);
+      // release if it was fixed 
+      if (Parameter(i).IsFixed() ) Release(i);  
    }
    
 }
@@ -186,8 +199,15 @@ void MnUserParameterState::Add(const std::string & name, double val, double err,
    else { // Parameter already exist - just set values
       int i = Index(name);
       SetValue(i,val);
+      if (Parameter(i).IsConst() ) { 
+         std::string msg = "Cannot modify status of constant parameter " + name; 
+         MN_INFO_MSG(msg.c_str());
+         return;
+      }
       SetError(i,err);
       SetLimits(i,low,up);
+      // release if it was fixed 
+      if (Parameter(i).IsFixed() ) Release(i);  
    }
    
    

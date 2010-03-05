@@ -243,6 +243,20 @@ const MinuitParameter& MnUserTransformation::Parameter(unsigned int n) const {
    return fParameters[n];
 }
 
+// bool MnUserTransformation::Remove(const std::string & name) { 
+//    // remove parameter with name 
+//    // useful if want to re-define a parameter
+//    // return false if parameter does not exist
+//    std::vector<MinuitParameter>::iterator itr = std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name) );
+//    if (itr == fParameters.end() ) return false; 
+//    int n = itr - fParameters.begin(); 
+//    if (n < 0 || n >= fParameters.size() ) return false; 
+//    fParameters.erase(itr);
+//    fCache.erase( fExtOfInt.begin() + n); 
+//    std::vector<unsigned int>::iterator iind = std::find(fExtOfInt.begin(), fExtOfInt.end(), n);
+//    if (iind != fExtOfInt.end()) fExtOfInt.erase(iind);
+// }
+
 bool MnUserTransformation::Add(const std::string & name, double val, double err) {
    // add a new unlimited parameter giving name, value and err (step size)
    // return false if parameter already exists
@@ -266,7 +280,7 @@ bool MnUserTransformation::Add(const std::string & name, double val, double err,
 }
 
 bool MnUserTransformation::Add(const std::string & name, double val) {
-   // add a new unlimited parameter giving name and value
+   // add a new constant parameter giving name and value
    // return false if parameter already exists
    if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)) != fParameters.end() ) 
       return false; 

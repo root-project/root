@@ -233,9 +233,11 @@ bool TMinuitMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
 
+   // check if parameter was defined and in case it was fixed, release it 
+   DoReleaseFixParameter(ivar);
 
-   fMinuit->DefineParameter(ivar , name.c_str(), val, step, 0., 0. ); 
-   return true; 
+   int iret = fMinuit->DefineParameter(ivar , name.c_str(), val, step, 0., 0. ); 
+   return (iret == 0); 
 }
 
 bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double lower, double upper) { 
@@ -252,8 +254,11 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
 
-   fMinuit->DefineParameter(ivar, name.c_str(), val, step, lower, upper ); 
-   return true; 
+   // check if parameter was defined and in case it was fixed, release it 
+   DoReleaseFixParameter(ivar);
+
+   int iret = fMinuit->DefineParameter(ivar, name.c_str(), val, step, lower, upper ); 
+   return (iret == 0); 
 }
 #ifdef LATER
 bool Minuit2Minimizer::SetLowerLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double lower ) {
@@ -270,6 +275,9 @@ bool Minuit2Minimizer::SetLowerLimitedVariable(unsigned int ivar , const std::st
 
    // clear after minimization when setting params
    if (fUsed) DoClear(); 
+
+   // check if parameter was defined and in case it was fixed, release it 
+   DoReleaseFixParameter(ivar);
 
    double s = val-lower; 
    double upper = s*1.0E15; 
@@ -298,9 +306,9 @@ bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
    // constant parameters are treated differently (they are ignored inside TMinuit and not considered in the
    // total list of parameters) 
    double step = ( val != 0) ? 0.1 * std::abs(val) : 0.1;
-   fMinuit->DefineParameter(ivar, name.c_str(), val, step, 0., 0. ); 
-   fMinuit->FixParameter(ivar);
-   return true; 
+   int iret = fMinuit->DefineParameter(ivar, name.c_str(), val, step, 0., 0. ); 
+   if (iret == 0) iret = fMinuit->FixParameter(ivar);
+   return (iret == 0); 
 }
 
 bool TMinuitMinimizer::SetVariableValue(unsigned int ivar, double val) { 
@@ -626,6 +634,26 @@ void TMinuitMinimizer::DoClear() {
    fgUsed = false; 
 #endif
 
+}
+
+void TMinuitMinimizer::DoReleaseFixParameter(int ivar) { 
+   // check if a parameter is defined and in case it was fixed released
+   // TMinuit is not able to release free parameters by redefining them
+   // so we need to force the release
+    if (fMinuit == 0) return; 
+    if (fMinuit->GetNumFixedPars() == 0) return; 
+    // check if parameter has already been defined
+    if (int(ivar) >= fMinuit->GetNumPars() ) return;  
+    
+    // check if parameter is fixed
+    for (int i = 0; i < fMinuit->fNpfix; ++i) { 
+       if (fMinuit->fIpfix[i] == ivar+1 ) { 
+          // parameter is fixed
+          fMinuit->Release(ivar);
+          return; 
+       }
+    }
+    
 }
 
 
