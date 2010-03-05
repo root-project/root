@@ -681,9 +681,9 @@ void TGContainer::ActivateItem(TGFrameElement *el)
 
    TGFrame *fr = el->fFrame;
    fr->Activate(kTRUE);
-   fLastActiveEl = el;
 
    if (fLastActiveEl != el) {
+      fLastActiveEl = el;
       CurrentChanged(fLastActiveEl->fFrame->GetX(), fLastActiveEl->fFrame->GetY());
       CurrentChanged(fLastActiveEl->fFrame);
       fSelected++;
