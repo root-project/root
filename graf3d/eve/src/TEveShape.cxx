@@ -24,6 +24,7 @@ TEveShape::TEveShape(const char* n, const char* t) :
    fFillColor(5),
    fLineColor(3),
    fLineWidth(1),
+   fDrawFrame(kTRUE),
    fHighlightFrame(kTRUE)
 {
    // Constructor.
@@ -49,6 +50,37 @@ void TEveShape::SetMainColor(Color_t color)
       StampObjProps();
    }
    TEveElementList::SetMainColor(color);
+}
+
+//______________________________________________________________________________
+void TEveShape::CopyVizParams(const TEveElement* el)
+{
+   // Copy visualization parameters from element el.
+
+   const TEveShape* m = dynamic_cast<const TEveShape*>(el);
+   if (m)
+   {
+      fFillColor = m->fFillColor;
+      fLineColor = m->fLineColor;
+      fLineWidth = m->fLineWidth;
+      fHighlightFrame = m->fHighlightFrame;
+   }
+
+   TEveElementList::CopyVizParams(el);
+}
+
+//______________________________________________________________________________
+void TEveShape::WriteVizParams(ostream& out, const TString& var)
+{
+   // Write visualization parameters.
+
+   TEveElementList::WriteVizParams(out, var);
+
+   TString t = "   " + var + "->";
+   out << t << "SetFillColor(" << fFillColor << ");\n";
+   out << t << "SetLineColor(" << fLineColor << ");\n";
+   out << t << "SetLineWidth(" << fLineWidth << ");\n";
+   out << t << "SetHighlightFrame(" << ToString(fHighlightFrame) << ");\n";
 }
 
 //______________________________________________________________________________

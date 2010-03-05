@@ -87,6 +87,8 @@
 // Various shapes
 #pragma link C++ class TEveShape+;
 #pragma link C++ class TEveShapeEditor+;
+#pragma link C++ class TEveBox+;
+#pragma link C++ class TEveBoxGL+;
 
 // TEvePolygonSetProjected
 #pragma link C++ class TEvePolygonSetProjected+;

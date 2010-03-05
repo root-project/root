@@ -32,6 +32,8 @@ protected:
 
    TGNumberEntry    *fLineWidth;  // Line width widget.
    TGColorSelect    *fLineColor;  // Line color widget.
+   TGCheckButton    *fDrawFrame;       // Checkbox for frame rendering.
+   TGCheckButton    *fHighlightFrame;  // Checkbox for frame rendering.
 
 public:
    TEveShapeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
@@ -40,8 +42,10 @@ public:
 
    virtual void SetModel(TObject* obj);
 
-   virtual void DoLineWidth();
-   virtual void DoLineColor(Pixel_t color);
+   void DoLineWidth();
+   void DoLineColor(Pixel_t color);
+   void DoDrawFrame();
+   void DoHighlightFrame();
 
    ClassDef(TEveShapeEditor, 0); // GUI editor for TEveShape.
 };

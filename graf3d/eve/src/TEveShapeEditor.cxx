@@ -34,7 +34,9 @@ TEveShapeEditor::TEveShapeEditor(const TGWindow *p, Int_t width, Int_t height,
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
    fLineWidth(0),
-   fLineColor(0)
+   fLineColor(0),
+   fDrawFrame(0),
+   fHighlightFrame(0)
 {
    // Constructor.
 
@@ -58,6 +60,19 @@ TEveShapeEditor::TEveShapeEditor(const TGWindow *p, Int_t width, Int_t height,
 
       AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    }
+   {
+      TGHorizontalFrame* f = new TGHorizontalFrame(this);
+
+      fDrawFrame  = new TGCheckButton(f, "Draw Frame");
+      f->AddFrame(fDrawFrame, new TGLayoutHints(kLHintsLeft, 1,2,0,0));
+      fDrawFrame->Connect("Toggled(Bool_t)", "TEveShapeEditor", this, "DoDrawFrame()");
+
+      fHighlightFrame = new TGCheckButton(f, "Highlight Frame");
+      f->AddFrame(fHighlightFrame, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
+      fHighlightFrame->Connect("Toggled(Bool_t)"," TEveShapeEditor", this, "DoHighlightFrame()");
+
+      AddFrame(f, new TGLayoutHints(kLHintsTop, 0,0,2,1));
+   }
 }
 
 //==============================================================================
@@ -69,8 +84,10 @@ void TEveShapeEditor::SetModel(TObject* obj)
 
    fM = dynamic_cast<TEveShape*>(obj);
 
-   fLineWidth->SetNumber(fM->GetLineWidth());
-   fLineColor->SetColor(TColor::Number2Pixel(fM->GetLineColor()), kFALSE);
+   fLineWidth->SetNumber(fM->fLineWidth);
+   fLineColor->SetColor(TColor::Number2Pixel(fM->fLineColor), kFALSE);
+   fDrawFrame     ->SetState(fM->fDrawFrame      ? kButtonDown : kButtonUp);
+   fHighlightFrame->SetState(fM->fHighlightFrame ? kButtonDown : kButtonUp);
 }
 
 //==============================================================================
@@ -90,5 +107,23 @@ void TEveShapeEditor::DoLineColor(Pixel_t pixel)
    // Slot for setting line color of polygon outline.
 
    fM->SetLineColor(TColor::GetColor(pixel));
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveShapeEditor::DoDrawFrame()
+{
+   // Slot for DrawFrame.
+
+   fM->SetDrawFrame(fDrawFrame->IsOn());
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveShapeEditor::DoHighlightFrame()
+{
+   // Slot for HighlightFrame.
+
+   fM->SetHighlightFrame(fHighlightFrame->IsOn());
    Update();
 }

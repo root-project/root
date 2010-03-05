@@ -22,6 +22,8 @@ class TEveShape : public TEveElementList,
                   public TAtt3D,
                   public TAttBBox
 {
+   friend class TEveShapeEditor;
+
 private:
    TEveShape(const TEveShape&);            // Not implemented
    TEveShape& operator=(const TEveShape&); // Not implemented
@@ -31,7 +33,8 @@ protected:
    Color_t      fLineColor; // outline color of polygons
    Float_t      fLineWidth; // outline width of polygons
 
-   Bool_t       fHighlightFrame; // higlight mode
+   Bool_t       fDrawFrame;      // draw frame
+   Bool_t       fHighlightFrame; // highlight frame / all shape
 
 public:
    TEveShape(const char* n="TEveShape", const char* t="");
@@ -46,18 +49,31 @@ public:
    virtual Color_t GetFillColor() const { return fFillColor; }
    virtual Color_t GetLineColor() const { return fLineColor; }
    virtual Float_t GetLineWidth() const { return fLineWidth;}
+   virtual Bool_t  GetDrawFrame()      const { return fDrawFrame; }
    virtual Bool_t  GetHighlightFrame() const { return fHighlightFrame; }
 
    virtual void    SetFillColor(Color_t c)  { fFillColor = c; }
    virtual void    SetLineColor(Color_t c)  { fLineColor = c; }
    virtual void    SetLineWidth(Float_t lw) { fLineWidth = lw;}
+   virtual void    SetDrawFrame(Bool_t f)      { fDrawFrame = f; }
    virtual void    SetHighlightFrame(Bool_t f) { fHighlightFrame = f; }
+
+   // ----------------------------------------------------------------
+
+   virtual void CopyVizParams(const TEveElement* el);
+   virtual void WriteVizParams(ostream& out, const TString& var);
+
+   // ----------------------------------------------------------------
+
+   // Virtual from TObject
+   virtual void Paint(Option_t* option="");
 
    // Abstract function from TAttBBox:
    // virtual void ComputeBBox();
 
-   // Virtual from TObject
-   virtual void Paint(Option_t* option="");
+   // Abstract from TEveProjectable, overriden in TEveElementList:
+   // virtual TClass* ProjectedClass(const TEveProjection* p) const;
+
 
    ClassDef(TEveShape, 0); // Abstract base-class for 2D/3D shapes.
 };

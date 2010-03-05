@@ -108,11 +108,11 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glDisable(GL_CULL_FACE);
 
-   fMultiColor = (refPS.fFillColor != refPS.fLineColor);
+   fMultiColor = (refPS.fDrawFrame && refPS.fFillColor != refPS.fLineColor);
 
    // polygons
    glEnable(GL_POLYGON_OFFSET_FILL);
-   glPolygonOffset(1.,1.);
+   glPolygonOffset(1.0f,1.0f);
    GLUtesselator *tessObj = TGLUtil::GetDrawTesselator3fv();
 
    TEveVector* pnts = refPS.fPnts;
@@ -150,11 +150,14 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    }
    glDisable(GL_POLYGON_OFFSET_FILL);
 
-   // outline
-   TGLUtil::Color(refPS.fLineColor);
-   glEnable(GL_LINE_SMOOTH);
-   TGLUtil::LineWidth(refPS.fLineWidth);
-   DrawOutline();
+   // Outline
+   if (refPS.fDrawFrame)
+   {
+      TGLUtil::Color(refPS.fLineColor);
+      glEnable(GL_LINE_SMOOTH);
+      TGLUtil::LineWidth(refPS.fLineWidth);
+      DrawOutline();
+   }
 
    glPopAttrib();
 }
