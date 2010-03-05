@@ -56,5 +56,6 @@
 #pragma link C++ class TStreamerElement-;
 #pragma link C++ class TToggle;
 #pragma link C++ class TToggleGroup;
+#pragma link C++ class std::vector<std::pair<Int_t, Int_t> >+;
 
 #endif
