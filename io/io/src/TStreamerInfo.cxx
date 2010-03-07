@@ -2510,7 +2510,19 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                fprintf(sfp,"   modrhs.%s = 0;\n",ename);
             } else if (element->GetArrayLength() > 1) {
                // FIXME: Need to add support for variable length array.
-               fprintf(sfp,"   for (int i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);            
+               if (element->GetArrayDim() == 1) {
+                  fprintf(sfp,"   for (Int_t i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);            
+               } else if (element->GetArrayDim() >= 2) {
+                  fprintf(sfp,"   for (Int_t i=0;i<%d;i++) (&(%s",element->GetArrayLength(),ename);
+                  for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
+                     fprintf(sfp,"[0]");
+                  }
+                  fprintf(sfp,"))[i] = (&(rhs.%s",ename);
+                  for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
+                     fprintf(sfp,"[0]");
+                  }
+                  fprintf(sfp,"))[i];\n");
+               }
             } else if (element->GetType() == kSTLp) {
                if (!defMod) { fprintf(sfp,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
                fprintf(sfp,"   modrhs.%s = 0;\n",ename);
@@ -2546,7 +2558,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                if(element->GetArrayLength() <= 1) {
                   fprintf(sfp,"   delete %s;   %s = 0;\n",ename,ename);
                } else {
-                  fprintf(sfp,"   for (int i=0;i<%d;i++) delete %s[i];   memset(%s,0,%d);\n",element->GetArrayLength(),ename,ename,element->GetSize());
+                  fprintf(sfp,"   for (Int_t i=0;i<%d;i++) delete %s[i];   memset(%s,0,%d);\n",element->GetArrayLength(),ename,ename,element->GetSize());
                }
             }
          }
