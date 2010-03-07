@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += atlasaod cms310
+TEST_TARGETS += atlasaod cms310 aliceesd
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -81,3 +81,10 @@ else
 cms310: cms310.log
 	$(TestDiff)
 endif
+
+aliceesd.log: runaliceesd.C
+	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@
+
+aliceesd: aliceesd.log
+	$(TestDiff)
+
