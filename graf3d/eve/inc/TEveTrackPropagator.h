@@ -45,7 +45,6 @@ public:
 
    virtual TEveVector GetField(const TEveVector &v) const { return GetField(v.fX, v.fY, v.fZ);}
    virtual TEveVector GetField(Float_t x, Float_t y, Float_t z) const = 0;
-   virtual Float_t GetMaxFieldMag() const  { return 4; } // not abstract because of backward compatibility
 
    ClassDef(TEveMagField, 0); // Abstract interface to magnetic field
 };
@@ -67,7 +66,6 @@ public:
 
    using   TEveMagField::GetField;
    virtual TEveVector GetField(Float_t /*x*/, Float_t /*y*/, Float_t /*z*/) const { return fB; }
-   virtual Float_t GetMaxFieldMag() const { return fB.Mag(); };
 
    ClassDef(TEveMagFieldConst, 0); // Interface to constant magnetic field.
 };
@@ -96,10 +94,6 @@ public:
    virtual TEveVector GetField(Float_t x, Float_t y, Float_t /*z*/) const
    { return  ((x*x+y*y)<fR2) ? fBIn : fBOut; }
 
-   virtual Float_t GetMaxFieldMag() const { 
-      Float_t b1 = fBIn.Mag(); Float_t b2 = fBOut.Mag(); return b1 > b2 ? b1 : b2;
-   };
-
    ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending of radius.
 };
 
@@ -117,16 +111,23 @@ public:
    struct Helix_t
    {
       Int_t   fCharge;   // Charge of tracked particle.
-      Float_t fStepSize; // Max allowed step size.
+      Float_t fMinAng;   // Minimal angular step between two helix points.
+      Float_t fDelta;    // Maximal error at the mid-point of the line connecting two helix points.
+      Float_t fMaxStep;  // Maximum allowed step size.
+      Float_t fCurrentStep;
+
       Float_t fPhi;      // Accumulated angle to check fMaxOrbs by propagator.
       Bool_t  fValid;    // Corner case pT~0 or B~0, possible in variable mag field.
 
+      // ----------------------------------------------------------------
+
+      // helix parameters
       Float_t fLam;         // Momentum ratio pT/pZ.
       Float_t fR;           // Helix radius in cm.
       Float_t fPhiStep;     // Caluclated from fMinAng and fDelta.
       Float_t fSin, fCos;   // Current sin/cos(phistep).
 
-
+      // cached
       TEveVector fB;        // Current magnetic field, cached.
       TEveVector fE1, fE2, fE3; // Base vectors: E1 -> B dir, E2->pT dir, E3 = E1xE2.
       TEveVector fPt, fPl;  // Transverse and longitudinal momentum.
@@ -137,6 +138,15 @@ public:
       // ----------------------------------------------------------------
 
       Helix_t();
+
+      void UpdateCommon(const TEveVector & p, const TEveVector& b);
+      void UpdateHelix(const TEveVector & p, const TEveVector& b, Bool_t fullUpdate);
+      void UpdateRK   (const TEveVector & p, const TEveVector& b);
+
+      void Step(const TEveVector4& v, const TEveVector& p, TEveVector4& vOut, TEveVector& pOut);
+
+      Float_t GetStep()  { return fLStep * TMath::Sqrt(1 + fLam*fLam); }
+      Float_t GetStep2() { return fLStep * fLStep * (1 + fLam*fLam);   }
    };
 
    enum EStepper_e    { kHelix, kRungeKutta };
@@ -155,10 +165,6 @@ protected:
    Int_t                    fNMax;          // max steps
    // Helix limits
    Float_t                  fMaxOrbs;       // Maximal angular path of tracks' orbits (1 ~ 2Pi).
-
-   Float_t                  fMaxStepAng;    // Maximum step angle
-   Float_t                  fDelta;         // Step offset in Helix model
-   Float_t                  fMaxStep;       // Maximum allowd step size
 
    // Path-mark / first-vertex control
    Bool_t                   fEditPathMarks; // Show widgets for path-mark control in GUI editor.
@@ -182,7 +188,7 @@ protected:
    Helix_t                  fH;             // Helix.
 
    void    RebuildTracks();
-   void    SetupStepper(const TEveVector& v, const TEveVector& p);
+   void    Update(const TEveVector4& v, const TEveVector& p, Bool_t full_update=kFALSE);
    void    Step(const TEveVector4 &v, const TEveVector &p, TEveVector4 &vOut, TEveVector &pOut);
 
    Bool_t  LoopToVertex(TEveVector& v, TEveVector& p);
@@ -191,8 +197,7 @@ protected:
    Bool_t  LineToVertex (TEveVector& v);
    void    LineToBounds (TEveVector& p);
 
-   void    UpdateStepParameters();
-   void    StepRungeKutta(Double_t* vect, Double_t* vout);
+   void    OneStepRungeKutta(Double_t charge, Double_t step, Double_t* vect, Double_t* vout);
 
    Bool_t  HelixIntersectPlane(const TEveVector& p, const TEveVector& point, const TEveVector& normal,
                                TEveVector& itsect);
@@ -202,7 +207,8 @@ protected:
    Bool_t PointOverVertex(const TEveVector4& v0, const TEveVector4& v, Float_t* p=0);
 
 public:
-   TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="", TEveMagField* field=0);
+   TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
+                       TEveMagField* field=0);
    virtual ~TEveTrackPropagator();
 
    virtual void OnZeroRefCount();
@@ -254,11 +260,9 @@ public:
    Float_t GetMaxR()     const { return fMaxR;     }
    Float_t GetMaxZ()     const { return fMaxZ;     }
    Float_t GetMaxOrbs()  const { return fMaxOrbs;  }
-   Float_t GetMinAng()   const { return fMaxStepAng; }
-   Float_t GetDelta()    const { return fDelta;    }
-   Float_t GetMaxStep()  const { return fMaxStep;  }
-
-   TEveMagField* GetFieldObj() const { return fMagFieldObj; }
+   Float_t GetMinAng()   const { return fH.fMinAng;   }
+   Float_t GetDelta()    const { return fH.fDelta;    }
+   Float_t GetMaxStep()  const { return fH.fMaxStep;  }
 
    Bool_t  GetEditPathMarks() const { return fEditPathMarks; }
    Bool_t  GetRnrDaughters()  const { return fRnrDaughters;  }
