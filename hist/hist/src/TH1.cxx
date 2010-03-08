@@ -2942,6 +2942,10 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
 //        - Fill histogram channel
 //      ntimes random numbers are generated
 //
+//    SPECIAL CASE when the target histogram has the same binning as the source.
+//   in this case we simply use a poisson distribution where
+//   the mean value per bin = bincontent/integral.
+//
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*
 
    if (!h) { Error("FillRandom", "Null histogram"); return; }
@@ -2949,7 +2953,22 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
       Error("FillRandom", "Histograms with different dimensions"); return;
    }
 
-   if (h->ComputeIntegral() == 0) return;
+   Double_t integral = h->ComputeIntegral();
+   if (integral == 0) return;
+   //in case the target histogram has the same binning and ntimes much greater 
+   //than the number of bins we can use a fast method
+   Int_t nbins = GetNbinsX();;
+   if (h->GetNbinsX() == nbins && ntimes > 10*nbins &&
+      h->GetXaxis()->GetXmin() == this->GetXaxis()->GetXmin() &&
+      h->GetXaxis()->GetXmax() == this->GetXaxis()->GetXmax()) {
+      for (Int_t bin=1;bin<=nbins;bin++) {
+         Double_t mean = h->GetBinContent(bin)/integral;
+         Fill(GetBinCenter(bin),gRandom->Poisson(mean));
+      }
+      SetEntries(ntimes);
+      return;
+   }
+      
 
    Int_t loop;
    Double_t x;
