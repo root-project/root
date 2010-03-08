@@ -1377,7 +1377,7 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       oldBins[bin]   = cu1[bin];
       oldCount[bin]  = en1[bin];
       oldErrors[bin] = er1[bin];
-      if (fBinSumw2.fN) oldBinw2[bin]  = ew1[bin];
+      if (ew1 && fBinSumw2.fN) oldBinw2[bin]  = ew1[bin];
    }
 
    // create a clone of the old histogram if newname is specified
