@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
+#include "Riostream.h"
 #include <cctype>
 
 #ifdef WIN32
