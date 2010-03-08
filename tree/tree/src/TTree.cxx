@@ -485,7 +485,7 @@ TTree::TTree()
 , fMaxEntries(0)
 , fMaxEntryLoop(0)
 , fMaxVirtualSize(0)
-, fAutoSave(300000000)
+, fAutoSave( -300000000)
 , fAutoFlush(-30000000)
 , fEstimate(1000000)
 , fCacheSize(10000000)
@@ -547,7 +547,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fMaxEntries(0)
 , fMaxEntryLoop(0)
 , fMaxVirtualSize(0)
-, fAutoSave(300000000)
+, fAutoSave( -300000000)
 , fAutoFlush(-30000000)
 , fEstimate(1000000)
 , fCacheSize(10000000)
@@ -998,9 +998,12 @@ Long64_t TTree::AutoSave(Option_t* option)
    TString opt = option;
    opt.ToLower();
 
-   if (opt.Contains("flushbaskets")) FlushBaskets();
+   if (opt.Contains("flushbaskets")) {
+      if (gDebug > 0) printf("AutoSave:  calling FlushBaskets \n");
+      FlushBaskets();
+   }
 
-   fSavedBytes = fTotBytes;
+   fSavedBytes = fZipBytes;
 
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
    Long64_t nbytes;
@@ -3514,17 +3517,20 @@ Int_t TTree::Fill()
    //
    //        The baskets are flushed and the Tree header saved at regular intervals
    //         ---------------------------------------------------------------------
-   //   At regular intervals, when the amount of data written so far (fTotBytes) is
+   //   At regular intervals, when the amount of data written so far is
    //   greater than fAutoFlush (see SetAutoFlush) all the baskets are flushed to disk.
    //   This makes future reading faster as it guarantees that baskets belonging to nearby
    //   entries will be on the same disk region.
    //   When the first call to flush the baskets happen, we also take this opportunity
    //   to optimize the baskets buffers.
-   //   We also check if the number of bytes written is greater than fAutoSave (see SetAutoSave).
+   //   We also check if the amount of data written is greater than fAutoSave (see SetAutoSave).
    //   In this case we also write the Tree header. This makes the Tree recoverable up to this point
    //   in case the program writing the Tree crashes.
-   //   Note that the user can also decide to call FlushBaskets and AutoSave in her event loop
-   //   on the base of the number of events written instead of the number of bytes written.
+   //   The decisions to FlushBaskets and Auto Save can be made based either on the number
+   //   of bytes written (fAutoFlush and fAutoSave negative) or on the number of entries
+   //   written (fAutoFlush and fAutoSave positive).
+   //   Note that the user can decide to call FlushBaskets and AutoSave in her event loop
+   //   base on the number of events written instead of the number of bytes written.
    //
    //   Note that calling FlushBaskets too often increases the IO time.
    //   Note that calling AutoSave too often increases the IO time and also the file size.
@@ -3574,34 +3580,45 @@ Int_t TTree::Fill()
    if (fEntries > fMaxEntries) {
       KeepCircular();
    }
-   if (fAutoFlush < 0) {
-      // Is it time to flush, autosave or optimize baskets?
-      // case when -fAutoFlush is the number of bytes triggering the FlushBaskets
-      if ((fZipBytes - fFlushedBytes) > -fAutoFlush) {
-         if (fFlushedBytes <= 0) {
-            //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
-            OptimizeBaskets(-fAutoFlush,1,"");
+   if (gDebug > 0) printf("TTree::Fill - A:  %d %lld %lld %lld %lld %lld %lld \n",
+       nbytes, fEntries, fAutoFlush,fAutoSave,fZipBytes,fFlushedBytes,fSavedBytes);
+
+   if (fAutoFlush != 0 || fAutoSave != 0) {
+      // Is it time to flush or autosave baskets?
+      if (fFlushedBytes == 0) {
+         // Decision can be based initially either on the number of bytes
+         // or the number of entries written.
+         if ((fAutoFlush<0 && fZipBytes > -fAutoFlush)  ||
+             (fAutoSave <0 && fZipBytes > -fAutoSave )  ||
+             (fAutoFlush>0 && fEntries%TMath::Max((Long64_t)1,fAutoFlush) == 0) ||
+             (fAutoSave >0 && fEntries%TMath::Max((Long64_t)1,fAutoSave)  == 0) ) {
+
+      	    //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
+      	    OptimizeBaskets(fTotBytes,1,"");
             if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+            fFlushedBytes = fZipBytes;
+      	    fAutoFlush    = fEntries;  // Use test on entries rather than bytes
+                                       // subsequently in run
+            if (fAutoSave < 0) {
+      	       // Set fAutoSave to the largest integer multiple of
+      	       // fAutoFlush events such that fAutoSave*fFlushedBytes
+      	       // < (minus the input value of fAutoSave)
+      	       fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/fZipBytes)/fEntries));
+            } else if(fAutoSave > 0) {
+      	       fAutoSave = fEntries*(fAutoSave/fEntries);
+      	    }
+      	    if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
+      	    if (gDebug > 0) printf("TTree::Fill:  First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
-         fFlushedBytes = fZipBytes;
-         fAutoFlush    = fEntries;
-      }
-   } else if (fAutoFlush > 0) {
-      // Is it time to flush, autosave or optimize baskets?
-      // case when fAutoFlush is the number of entries triggering the FlushBaskets
-      if (fEntries > 1 && fEntries%fAutoFlush == 0) {
-         if (fFlushedBytes <= 0) {
-            //we take the opportunity to Optimizebaskets at this point (it calls FlushBaskets)
-            OptimizeBaskets(fTotBytes,1,"");
-            if (gDebug > 0) printf("OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
-         } else if ((fZipBytes - fSavedBytes) > fAutoSave) {
-            //we have read an AutoSave point. It flushes baskets and save the Tree header
-            AutoSave();
-            if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
+      } else if (fEntries > 1 && fEntries%fAutoFlush == 0) {
+         if (fEntries%fAutoSave == 0) {
+       	    //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
+      	    AutoSave("flushbaskets");
+      	    if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
          } else {
-            //we only FlushBaskets
+      	    //We only FlushBaskets
             FlushBaskets();
-            if (gDebug > 0) printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
+      	    if (gDebug > 0) printf("FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,fZipBytes,fFlushedBytes);
          }
          fFlushedBytes = fZipBytes;
       }
