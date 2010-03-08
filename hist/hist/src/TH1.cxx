@@ -1208,7 +1208,8 @@ bool CheckBinLimits(const TArrayD* h1Array, const TArrayD* h2Array)
 //___________________________________________________________________________
 bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 {
-   // Check histogram compatibility   Int_t nbinsx = h1->GetNbinsX();
+   // Check histogram compatibility 
+   // returns kTRUE if number of bins and bin limits are identical
    Int_t nbinsx = h1->GetNbinsX();
    Int_t nbinsy = h1->GetNbinsY();
    Int_t nbinsz = h1->GetNbinsZ();
@@ -2953,23 +2954,23 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
       Error("FillRandom", "Histograms with different dimensions"); return;
    }
 
-   Double_t integral = h->ComputeIntegral();
-   if (integral == 0) return;
    //in case the target histogram has the same binning and ntimes much greater 
    //than the number of bins we can use a fast method
-   Int_t nbins = GetNbinsX();;
-   if (h->GetNbinsX() == nbins && ntimes > 10*nbins &&
-      h->GetXaxis()->GetXmin() == this->GetXaxis()->GetXmin() &&
-      h->GetXaxis()->GetXmax() == this->GetXaxis()->GetXmax()) {
+   Int_t nbins = GetNbinsX();
+   if (CheckConsistency(this,h) && ntimes > 10*nbins) {
+      Double_t sumw = h->GetSumOfWeights();
+      if (sumw == 0) return;
       for (Int_t bin=1;bin<=nbins;bin++) {
-         Double_t mean = h->GetBinContent(bin)/integral;
-         Fill(GetBinCenter(bin),gRandom->Poisson(mean));
+         Double_t mean = h->GetBinContent(bin)*ntimes/sumw;
+         Double_t cont = (Double_t)gRandom->Poisson(mean);
+         AddBinContent(bin,cont);
+         if (fSumw2.fN) fSumw2.fArray[bin] += cont;
       }
       SetEntries(ntimes);
       return;
    }
       
-
+   if (h->ComputeIntegral() ==0) return;
    Int_t loop;
    Double_t x;
    for (loop=0;loop<ntimes;loop++) {
