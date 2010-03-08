@@ -75,9 +75,15 @@ cms310.log: runcms310.C
 	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@ 
 
 ifeq ($(ARCH)$(FAIL),win32)
+aliceesd:
+	$(WarnFailTest)
+
 cms310:
 	$(WarnFailTest)
 else
+aliceesd: aliceesd.log
+	$(TestDiff)
+
 cms310: cms310.log
 	$(TestDiff)
 endif
@@ -85,6 +91,4 @@ endif
 aliceesd.log: runaliceesd.C
 	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@
 
-aliceesd: aliceesd.log
-	$(TestDiff)
 
