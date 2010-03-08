@@ -640,19 +640,19 @@ void TMinuitMinimizer::DoReleaseFixParameter(int ivar) {
    // check if a parameter is defined and in case it was fixed released
    // TMinuit is not able to release free parameters by redefining them
    // so we need to force the release
-    if (fMinuit == 0) return; 
-    if (fMinuit->GetNumFixedPars() == 0) return; 
-    // check if parameter has already been defined
-    if (int(ivar) >= fMinuit->GetNumPars() ) return;  
+   if (fMinuit == 0) return; 
+   if (fMinuit->GetNumFixedPars() == 0) return; 
+   // check if parameter has already been defined
+   if (int(ivar) >= fMinuit->GetNumPars() ) return;  
     
-    // check if parameter is fixed
-    for (int i = 0; i < fMinuit->fNpfix; ++i) { 
-       if (fMinuit->fIpfix[i] == ivar+1 ) { 
-          // parameter is fixed
-          fMinuit->Release(ivar);
-          return; 
-       }
-    }
+   // check if parameter is fixed
+   for (int i = 0; i < fMinuit->fNpfix; ++i) { 
+      if (fMinuit->fIpfix[i] == ivar+1 ) { 
+         // parameter is fixed
+         fMinuit->Release(ivar);
+         return; 
+      }
+   }
     
 }
 
