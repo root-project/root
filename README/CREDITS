@@ -23,6 +23,10 @@ N: Eric Anciant
 E: eric.anciant@sodern.fr
 D: TQuaternion class
 
+N: Aberto Annovi
+E: alberto.annovi@lnf.infn.it
+D: speed-up of TH1::FillRandom when source & destination have identical parameters
+
 N: Ilka Antcheva
 E: Ilka.Antcheva@cern.ch
 D: editor of the User's Guide, quality assurance
@@ -335,6 +339,10 @@ D: class TTimeStamp
 N: Miroslav Helbich
 E: helbich@mail.desy.de
 D: apply method in the TGraph classes
+
+N: Bill Heintzelman
+E: billh@hep.upenn.edu
+D: TTree::AutoFlush,Autosave improvements
 
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
