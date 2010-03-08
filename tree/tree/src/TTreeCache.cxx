@@ -478,9 +478,7 @@ Bool_t TTreeCache::FillBuffer()
    //clear cache buffer
    TFileCacheRead::Prefetch(0,0);
    //store baskets
-   Bool_t mustBreak = kFALSE;
    for (Int_t i=0;i<fNbranches;i++) {
-      if (mustBreak) break;
       TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
       if (b->GetDirectory()==0) continue;
       if (b->GetDirectory()->GetFile() != fFile) continue;
@@ -509,19 +507,10 @@ Bool_t TTreeCache::FillBuffer()
          fNReadPref++;
 
          TFileCacheRead::Prefetch(pos,len);
-         //we allow up to twice the default buffer size. When using eventlist in particular
-         //it may happen that the evaluation of fEntryNext is bad, hence this protection
-         //if (fNtot > 2*fBufferSizeMin) {
-            //printf("entry=%lld, fEntryNext=%lld, fNtot=%lld, fBufferSizeMin=%d\n",entry,fEntryNext,fNtot,fBufferSizeMin);
-            //TFileCacheRead::Prefetch(0,0);
-            //mustBreak = kTRUE; 
-            //break;
-         //}
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
    }
    fIsLearning = kFALSE;
-   if (mustBreak) return kFALSE;
    return kTRUE;
 }
 
