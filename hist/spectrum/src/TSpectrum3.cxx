@@ -3321,6 +3321,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
          }
       }
       if(maxch == 0)
+         delete [] working_space;
          return 0;
          
       nom = 0;
