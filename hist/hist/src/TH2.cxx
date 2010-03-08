@@ -2766,11 +2766,11 @@ void TH2C::Reset(Option_t *option)
 void TH2C::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Char_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3040,11 +3040,11 @@ void TH2S::Reset(Option_t *option)
 void TH2S::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Short_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3314,11 +3314,11 @@ void TH2I::Reset(Option_t *option)
 void TH2I::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Int_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3551,11 +3551,11 @@ void TH2F::Reset(Option_t *option)
 void TH2F::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Float_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3835,11 +3835,11 @@ void TH2D::Reset(Option_t *option)
 void TH2D::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Double_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________

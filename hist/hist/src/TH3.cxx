@@ -3016,11 +3016,11 @@ void TH3C::SetBinsLength(Int_t n)
 void TH3C::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Char_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 
@@ -3288,11 +3288,11 @@ void TH3S::Reset(Option_t *option)
 void TH3S::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Short_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3542,11 +3542,11 @@ void TH3I::Reset(Option_t *option)
 void TH3I::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Int_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3743,11 +3743,11 @@ void TH3F::Reset(Option_t *option)
 void TH3F::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Float_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -3976,11 +3976,11 @@ void TH3D::Reset(Option_t *option)
 void TH3D::SetBinContent(Int_t bin, Double_t content)
 {
    // Set bin content
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells) return;
    fArray[bin] = Double_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 

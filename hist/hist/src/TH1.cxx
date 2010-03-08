@@ -7947,6 +7947,8 @@ void TH1C::SetBinContent(Int_t bin, Double_t content)
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
 
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
@@ -7960,8 +7962,6 @@ void TH1C::SetBinContent(Int_t bin, Double_t content)
       }
    }
    fArray[bin] = Char_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -8190,6 +8190,8 @@ void TH1S::SetBinContent(Int_t bin, Double_t content)
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
 
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
@@ -8203,8 +8205,6 @@ void TH1S::SetBinContent(Int_t bin, Double_t content)
       }
    }
    fArray[bin] = Short_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -8432,6 +8432,8 @@ void TH1I::SetBinContent(Int_t bin, Double_t content)
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
 
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
@@ -8445,8 +8447,6 @@ void TH1I::SetBinContent(Int_t bin, Double_t content)
       }
    }
    fArray[bin] = Int_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -8670,6 +8670,8 @@ void TH1F::SetBinContent(Int_t bin, Double_t content)
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
 
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
@@ -8683,8 +8685,6 @@ void TH1F::SetBinContent(Int_t bin, Double_t content)
       }
    }
    fArray[bin] = Float_t (content);
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
@@ -8909,6 +8909,8 @@ void TH1D::SetBinContent(Int_t bin, Double_t content)
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
 
+   fEntries++;
+   fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells-1) {
       if (fXaxis.GetTimeDisplay()) {
@@ -8922,8 +8924,6 @@ void TH1D::SetBinContent(Int_t bin, Double_t content)
       }
    }
    fArray[bin] = content;
-   fEntries++;
-   fTsumw = 0;
 }
 
 //______________________________________________________________________________
