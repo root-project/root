@@ -365,6 +365,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          }
          if (!leaf) {
             Error("TLeaf", "Illegal data type for %s/%s", name, leaflist);
+            delete [] leafname;
             MakeZombie();
             return;
          }
@@ -372,6 +373,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
             delete leaf;
             leaf = 0;
             Error("TBranch", "Illegal leaf: %s/%s", name, leaflist);
+            delete [] leafname;
             MakeZombie();
             return;
          }
