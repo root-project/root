@@ -77,6 +77,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pyedit pyedit_
 # define pyexec pyexec_
 # define pyhepc pyhepc_
+# define pygive pygive_
 # define pylist pylist_
 # define pymass pymass_
 # define pyname pyname_
@@ -110,6 +111,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pycomp PYCOMP
 # define pyedit PYEDIT
 # define pyexec PYEXEC
+# define pygive PYGIVE
 # define pyhepc PYHEPC
 # define pylist PYLIST
 # define pymass PYMASS
@@ -134,6 +136,7 @@ extern "C" void type_of_call pylist(int *key);
 extern "C" void type_of_call pyedit(int *medit);
 extern "C" void type_of_call pydiff();
 extern "C" void type_of_call pyexec();
+extern "C" void type_of_call pygive(const char *param, Long_t lparam);
 extern "C" void type_of_call pyhepc(int *mconv);
 extern "C" void type_of_call pylist(int *flag);
 extern "C" int  type_of_call pychge(int *kf);
@@ -549,6 +552,12 @@ void TPythia6::Pyevnt() {
 void TPythia6::Pyexec() {
    //interface with fortran routine pyexec
    pyexec();
+}
+
+void TPythia6::Pygive(const char *param) {
+   //interface with fortran routine pygive
+   Long_t lparam = strlen(param);
+   pygive(param,lparam);
 }
 
 void TPythia6::Pyhepc(int mconv) {

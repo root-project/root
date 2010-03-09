@@ -316,6 +316,7 @@ public:
    void             Py1ent(Int_t line, Int_t kf, Double_t pe, Double_t theta, Double_t phi);
    void             Pyexec();
    void             Pyhepc(int mconv);
+   void             Pygive(const char *param);
    void             Pyinit(char* frame, char* beam, char* target, double wint);
    void             Pylist(int flag);
    double           Pymass(int kf);
