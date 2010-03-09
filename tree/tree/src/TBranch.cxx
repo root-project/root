@@ -1174,7 +1174,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
       last = fBasketEntry[fReadBasket+1] - 1;
    }
    // Are we still in the same ReadBasket?
-   if ((entry < first) || (entry > last)) {
+   if ((entry < first) || (entry > last)) {      
       fReadBasket = TMath::BinarySearch(fWriteBasket + 1, fBasketEntry, entry);
       if (fReadBasket < 0) {
          Error("In the branch %s, no basket contains the entry %d\n", GetName(), entry);
@@ -1996,9 +1996,16 @@ void TBranch::Streamer(TBuffer& b)
                ++n;
             }
          }
+         if (fWriteBasket >= fMaxBaskets) {
+            //old versions may need this fix
+            ExpandBasketArrays();
+            fBasketBytes[fWriteBasket] = fBasketBytes[fWriteBasket-1];
+            fBasketEntry[fWriteBasket] = fEntries;
+            fBasketSeek [fWriteBasket] = fBasketSeek [fWriteBasket-1];
+            
+         }
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
-         // Check Byte Count is not needed since it was done in ReadBuffer
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2053,6 +2060,15 @@ void TBranch::Streamer(TBuffer& b)
                ++n;
             }
          }
+         if (fWriteBasket >= fMaxBaskets) {
+            //old versions may need this fix
+            ExpandBasketArrays();
+            fBasketBytes[fWriteBasket] = fBasketBytes[fWriteBasket-1];
+            fBasketEntry[fWriteBasket] = fEntries;
+            fBasketSeek [fWriteBasket] = fBasketSeek [fWriteBasket-1];
+            
+         }
+         // Check Byte Count is not needed since it was done in ReadBuffer
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
          b.CheckByteCount(R__s, R__c, TBranch::IsA());
