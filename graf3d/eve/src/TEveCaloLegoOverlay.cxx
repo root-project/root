@@ -678,7 +678,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
       }
 
       // draw camera overlay if projected lego bbox to large
-      if (res.X() > cam.RefViewport().Width()*0.8 || res.Y() > cam.RefViewport().Height()*0.8)
+      if ((res.X() > cam.RefViewport().Width()*0.8) && (res.Y() > cam.RefViewport().Height()*0.8))
          drawOverlayAxis = kTRUE;
    }
 
