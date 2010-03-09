@@ -85,14 +85,12 @@ private:
    /** 
       Dummy Copy constructor (private)
    */ 
-   LogLikelihoodFCN(const LogLikelihoodFCN &) {} 
+   LogLikelihoodFCN(const LogLikelihoodFCN &);
 
    /** 
       Dummy Assignment operator (private)
    */ 
-   LogLikelihoodFCN & operator = (const LogLikelihoodFCN & rhs) { 
-      return *this;
-   } 
+   LogLikelihoodFCN & operator = (const LogLikelihoodFCN &);
 
 public: 
 
