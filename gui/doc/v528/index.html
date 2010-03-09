@@ -2,3 +2,28 @@
 <hr> 
 <a name="gui"></a> 
 <h3>GUI</h3>
+
+<h4>TRootContextMenu</h4>
+<ul>
+<li> Close the context menu if the selected object is being deleted in the RecursiveRemove() operation.
+</ul>
+
+<h4>TRootCanvas/TRootEmbeddedCanvas</h4>
+<ul>
+<li> Drag and drop improvements for images (don't add margins between the canvas/pad border and the picture itself).
+</ul>
+
+<h4>TGListBox</h4>
+<ul>
+<li> Enabled <tt>CurrentChanged(TGFrame*)</tt> and <tt>CurrentChanged(Int_t,Int_t)</tt> signals, allowing to handle keyboard navigation/selection.
+<br> For example:
+<pre>   TGLBContainer *lbc = (TGLBContainer *)fListBox->GetContainer();
+   lbc->Connect("CurrentChanged(TGFrame*)", "MyGuiClass", this, "CurrentChanged(TGFrame*)"); 
+
+   void MyGuiClass::CurrentChanged(TGFrame *f)
+   {
+      TGTextLBEntry *lbe = (TGTextLBEntry *)f;
+      printf("\nMyGuiClass::CurrentChanged() : Id = %d, Text = %s\n", lbe->EntryId(), lbe->GetTitle());
+   }
+</pre>
+</ul>
