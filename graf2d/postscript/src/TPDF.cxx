@@ -57,7 +57,7 @@ const Int_t kObjPattern          = 24; // Pattern object
 const Int_t kObjFirstPage        = 49; // First page object
 
 // Number of fonts
-const Int_t kNumberOfFonts = 15; 
+const Int_t kNumberOfFonts = 15;
 
 ClassImp(TPDF)
 
@@ -479,14 +479,18 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
    // Define the marker size
    Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) msize = 0.01;
-   if (fMarkerStyle == 6) msize = 0.02;
-   if (fMarkerStyle == 7) msize = 0.04;
-
-   const Int_t kBASEMARKER = 8;
-   Float_t sbase = msize*kBASEMARKER;
-   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   msize = this->UtoPDF(s2x) - this->UtoPDF(0);
+   if (fMarkerStyle == 1) {
+     msize = 1.;
+   } else if (fMarkerStyle == 6) {
+     msize = 1.5;
+   } else if (fMarkerStyle == 7) {
+     msize = 3.;
+   } else {
+      const Int_t kBASEMARKER = 8;
+      Float_t sbase = msize*kBASEMARKER;
+      Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
+      msize = this->UtoPDF(s2x) - this->UtoPDF(0);
+   }
 
    Double_t m  = msize;
    Double_t m2 = m/2;
@@ -616,14 +620,18 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    // Define the marker size
    Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) msize = 0.01;
-   if (fMarkerStyle == 6) msize = 0.02;
-   if (fMarkerStyle == 7) msize = 0.04;
-
-   const Int_t kBASEMARKER = 8;
-   Float_t sbase = msize*kBASEMARKER;
-   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   msize = this->UtoPDF(s2x) - this->UtoPDF(0);
+   if (fMarkerStyle == 1) {
+     msize = 1.;
+   } else if (fMarkerStyle == 6) {
+     msize = 1.5;
+   } else if (fMarkerStyle == 7) {
+     msize = 3.;
+   } else {
+      const Int_t kBASEMARKER = 8;
+      Float_t sbase = msize*kBASEMARKER;
+      Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
+      msize = this->UtoPDF(s2x) - this->UtoPDF(0);
+   }
 
    Double_t m  = msize;
    Double_t m2 = m/2;
