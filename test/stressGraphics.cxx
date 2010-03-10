@@ -252,7 +252,7 @@ void stressGraphics(Int_t verbose = 0)
    }
    fclose(sg);
 
-   gRandom->SetSeed();
+   gRandom->SetSeed(65539);
 
    if (gOptionR) {
       cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<endl;
