@@ -401,7 +401,8 @@ private:
    using DataSourceBase_t::GetH;
    using DataSourceBase_t::GetD;
    using DataSourceBase_t::GetData;
-   
+   using SplitterBase_t::SplitEdge;
+
    typedef typename DataSourceBase_t::ElementType_t ElementType_t;
 
    typedef TCell<ElementType_t>  CellType_t;
