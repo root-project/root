@@ -110,7 +110,7 @@ Reflex::NameLookup::Lookup(bool isTemplateExpanded /* = false */) {
          case '>': --level;    // intentional fall through to the ',' case
          case ',':
 
-            if (level == (1 - (int) (fLookupName[i] == '>'))) {
+            if (level == (1 - (unsigned int) (fLookupName[i] == '>'))) {
                std::string arg(fLookupName.substr(sofar, i - sofar));
 
                size_t p = arg.size();
