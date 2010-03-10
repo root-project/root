@@ -21,6 +21,15 @@
 extern "C" void G__exec_alloc_lock();
 extern "C" void G__exec_alloc_unlock();
 
+//______________________________________________________________________________
+namespace {
+static std::map<int /*tagnum*/, std::set<G__ifunc_table> > & G__ifunc_refs()
+{
+   static std::map<int /*tagnum*/, std::set<G__ifunc_table> > ifunc_refs;
+   return ifunc_refs;
+}
+} // unnamed namespace
+
 extern "C" {
 
 static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now);
@@ -7254,15 +7263,6 @@ struct G__ifunc_table_internal *G__get_methodhandle4(char *funcname
   return ifunc;
 }
 
-
-//______________________________________________________________________________
-namespace {
-static std::map<int /*tagnum*/, std::set<G__ifunc_table> > & G__ifunc_refs()
-{
-   static std::map<int /*tagnum*/, std::set<G__ifunc_table> > ifunc_refs;
-   return ifunc_refs;
-}
-} // unnamed namespace
 
 //______________________________________________________________________________
 struct G__ifunc_table* G__get_ifunc_ref(struct G__ifunc_table_internal* ifunc)
