@@ -535,7 +535,8 @@ int TClassEdit::IsSTLCont(const char *type,int testAlloc)
    int nestedLoc=0;
    int numb = GetSplit(fullname.c_str(),arglist,nestedLoc);
 
-   if ( arglist[0].length()>0 && arglist[numb-1][0]=='*' ) numb--;
+   if (arglist[0].empty()) return 0;
+   if (!arglist[numb-1].empty() && arglist[numb-1][0]=='*') --numb;
 
    if ( nestedLoc ) {
       // The type has been defined inside another namespace and/or class
