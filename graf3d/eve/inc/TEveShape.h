@@ -29,6 +29,10 @@ private:
    TEveShape(const TEveShape&);            // Not implemented
    TEveShape& operator=(const TEveShape&); // Not implemented
 
+public:
+   typedef std::vector<TEvePoint>           vPoint_t;
+   typedef std::vector<TEvePoint>::iterator vPoint_i;
+
 protected:
    Color_t      fFillColor; // fill color of polygons
    Color_t      fLineColor; // outline color of polygons
@@ -36,9 +40,6 @@ protected:
 
    Bool_t       fDrawFrame;      // draw frame
    Bool_t       fHighlightFrame; // highlight frame / all shape
-
-   typedef std::vector<TEvePoint>           vPoint_t;
-   typedef std::vector<TEvePoint>::iterator vPoint_i;
 
 public:
    TEveShape(const char* n="TEveShape", const char* t="");
