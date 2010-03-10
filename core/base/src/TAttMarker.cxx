@@ -70,8 +70,8 @@ accessed via a global name (third column).
         3                    *                    kStar
         4                    o                    kCircle
         5                    x                    kMultiply
-        6                    small scalable dot   kFullDotSmall
-        7                    medium scalable dot  kFullDotMedium
+        6                    small dot            kFullDotSmall
+        7                    medium dot           kFullDotMedium
         8                    large scalable dot   kFullDotLarge
         9 -->19              dot
        20                    full circle          kFullCircle
