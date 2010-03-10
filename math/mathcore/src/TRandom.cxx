@@ -751,11 +751,15 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
 //______________________________________________________________________________
 void TRandom::SetSeed(UInt_t seed)
 {
-//  Set the random generator seed
-//  if seed is zero, the seed is set to the current  machine clock
+//  Set the random generator seed. Note that default value is zero, which is different than the 
+//  default value used when constructing the class.  
+//  If the seed is zero the seed is set to a random value 
+//  which in case of TRandom depends on the  machine clock. 
 //  Note that the machine clock is returned with a precision of 1 second.
 //  If one calls SetSeed(0) within a loop and the loop time is less than 1s,
 //  all generated numbers will be identical!
+//  Instead if a different generator implementation is used (TRandom1 , 2 or 3) the seed is generated using 
+//  a 128 bit UUID. This results in different seeds and then random sequence for every SetSeed(0) call. 
 
    if( seed==0 ) {
       time_t curtime;      // Set 'random' seed number  if seed=0
