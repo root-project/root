@@ -392,7 +392,7 @@ void TBufferFile::ReadFloat16(Float_t *f, TStreamerElement *ele)
       ix = theExp;
       ix <<= 23;
       ix |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
-      if(1<<(nbits+1) & theMan) xx=-xx;
+      if(1<<(nbits+1) & theMan) xx = -xx;
       f[0] = xx;
    }
 }
@@ -428,7 +428,7 @@ void TBufferFile::ReadDouble32(Double_t *d, TStreamerElement *ele)
          ix = theExp;
          ix <<= 23;
          ix |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
-         if(1<<(nbits+1) & theMan) xx=-xx;
+         if(1<<(nbits+1) & theMan) xx = -xx;
          d[0] = (Double_t)xx;
       }
    }
@@ -1374,7 +1374,7 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
          ix = theExp;
          ix <<= 23;
          ix |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
-         if(1<<(nbits+1) & theMan) xx=-xx;
+         if(1<<(nbits+1) & theMan) xx = -xx;
          f[i] = xx;
       }
    }
@@ -1421,7 +1421,7 @@ void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
             ix = theExp;
             ix <<= 23;
             ix |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
-            if (1<<(nbits+1) & theMan) xx=-xx;
+            if (1<<(nbits+1) & theMan) xx = -xx;
             d[i] = (Double_t)xx;
          }
       }
