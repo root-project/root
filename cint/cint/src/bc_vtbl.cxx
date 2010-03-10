@@ -204,6 +204,7 @@ void G__bc_make_vtbl(int tagnum) {
   }
   else {
     G__struct.vtable[tagnum]=(G__Vtabledata*)NULL;
+    delete pvtbl;
   }
 }
 
@@ -249,8 +250,9 @@ void G__bc_make_defaultctor(int tagnum) {
   int ifn = met.Index();
   if(cls.Property()&G__BIT_ISABSTRACT) ifunc->access[ifn]=G__PROTECTED;
 
-  G__functionscope compiler;
-  compiler.compile_implicitdefaultctor(ifunc,ifn);
+  G__functionscope* compiler = new G__functionscope;
+  compiler->compile_implicitdefaultctor(ifunc,ifn);
+  delete compiler;
 }
 
 /***********************************************************************
@@ -294,8 +296,9 @@ void G__bc_make_copyctor(int tagnum) {
   ifunc->param[ifn][0]->isconst = G__CONSTVAR; // workaround to set const flag
   if(cls.Property()&G__BIT_ISABSTRACT) ifunc->access[ifn]=G__PROTECTED;
 
-  G__functionscope compiler;
-  compiler.compile_implicitcopyctor(ifunc,ifn);
+  G__functionscope* compiler = new G__functionscope;
+  compiler->compile_implicitcopyctor(ifunc,ifn);
+  delete compiler;
 }
 
 /***********************************************************************
@@ -334,8 +337,9 @@ void G__bc_make_assignopr(int tagnum) {
   struct G__ifunc_table* ifunc = (struct G__ifunc_table*)met.Handle();
   int ifn = met.Index();
 
-  G__functionscope compiler;
-  compiler.compile_implicitassign(G__get_ifunc_internal(ifunc),ifn);
+  G__functionscope* compiler = new G__functionscope;
+  compiler->compile_implicitassign(G__get_ifunc_internal(ifunc),ifn);
+  delete compiler;
 }
 /***********************************************************************
 * G__bc_make_dtor() 
@@ -400,8 +404,9 @@ void G__bc_make_dtor(int tagnum) {
 
   if(cls.Property()&G__BIT_ISABSTRACT) ifunc->access[ifn]=G__PROTECTED;
 
-  G__functionscope compiler;
-  compiler.compile_implicitdtor(ifunc,ifn);
+  G__functionscope* compiler = new G__functionscope;
+  compiler->compile_implicitdtor(ifunc,ifn);
+  delete compiler;
 }
 
 /***********************************************************************

@@ -28,7 +28,7 @@ void G__fstream::Init(G__input_file& ifile) {
   G__ifile.fp=ifile.fp; 
   G__ifile.filenum=ifile.filenum; 
   G__ifile.line_number=ifile.line_number; 
-  strcpy(G__ifile.name,ifile.name); 
+  strcpy(G__ifile.name,ifile.name);
 }
 
 //////////////////////////////////////////////////////////////////////
