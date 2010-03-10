@@ -1214,6 +1214,7 @@ void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
    // Retrieve icons associated with class "name". Association is made
    // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
 
+   const char *clname = 0;
    TClass *objClass = 0;
    static TImage *im = 0;
    if (!im) {
@@ -1222,28 +1223,32 @@ void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
 
    if (obj->IsA() == TClass::Class()) {
       objClass = obj->IsA();
+      if (objClass) 
+         clname = objClass->GetName();
    }
    else if (obj->InheritsFrom("TKey")) {
-      const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", obj));
-      if (clname)
-         objClass = TClass::GetClass(clname);
+      clname = (char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", obj));
    }
    else if (obj->InheritsFrom("TKeyMapFile")) {
-      const char *title = (const char *)gROOT->ProcessLine(TString::Format("((TKeyMapFile *)0x%lx)->GetTitle();", obj));
-      if (title)
-         objClass = TClass::GetClass(title);
+      clname = (char *)gROOT->ProcessLine(TString::Format("((TKeyMapFile *)0x%lx)->GetTitle();", obj));
    }
    else if (obj->InheritsFrom("TRemoteObject")) {
       // special case for remote object: get real object class
       TRemoteObject *robj = (TRemoteObject *)obj;
       if (!strcmp(robj->GetClassName(), "TKey"))
-         objClass = TClass::GetClass(robj->GetKeyClassName());
+         clname = robj->GetKeyClassName();
       else
-         objClass = TClass::GetClass(robj->GetClassName());
+         clname = robj->GetClassName();
    }
-   else
+   else {
       objClass = obj->IsA();
-   const char *name = obj->GetIconName() ? obj->GetIconName() : objClass->GetName();
+      if (objClass) 
+         clname = objClass->GetName();
+   }
+   if (!clname) { 
+      clname = "Unknown";
+   }
+   const char *name = obj->GetIconName() ? obj->GetIconName() : clname;
    TString xpm_magic(name, 3);
    Bool_t xpm = xpm_magic == "/* ";
    const char *iconname = xpm ? obj->GetName() : name;
