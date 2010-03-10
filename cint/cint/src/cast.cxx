@@ -68,6 +68,10 @@ static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype
 {
    // -- FIXME: Describe this function!
    int offset = 0;
+   if (tagnum < 0) {
+      result3->obj.i = 0;
+      return;
+   }
    if (-1 != result3->tagnum) {
 #ifdef G__VIRTUALBASE
       if (-1 != (offset = G__isanybase(tagnum, result3->tagnum, result3->obj.i)))
@@ -529,22 +533,36 @@ G__value G__castvalue_bc(char* casttype, G__value result3, int bc)
       if (strncmp(casttype, "struct", 6) == 0) {
          if (isspace(casttype[6])) tagnum = G__defined_tagname(casttype + 7, 0);
          else tagnum = G__defined_tagname(casttype + 6, 0);
-         G__castclass(&result3, tagnum, castflag, &type, reftype);
+         if (tagnum >= 0) {
+            G__castclass(&result3, tagnum, castflag, &type, reftype);
+         } else {
+            G__fprinterr(G__serr, "unknown %s, cannot cast\n", casttype);
+         }
       }
       else if (strncmp(casttype, "class", 5) == 0) {
          if (isspace(casttype[5])) tagnum = G__defined_tagname(casttype + 6, 0);
          else tagnum = G__defined_tagname(casttype + 5, 0);
-         G__castclass(&result3, tagnum, castflag, &type, reftype);
+         if (tagnum >= 0) {
+            G__castclass(&result3, tagnum, castflag, &type, reftype);
+         } else {
+            G__fprinterr(G__serr, "unknown %s, cannot cast\n", casttype);
+         }
       }
       else if (strncmp(casttype, "union", 5) == 0) {
          if (isspace(casttype[5])) tagnum = G__defined_tagname(casttype + 6, 0);
          else tagnum = G__defined_tagname(casttype + 5, 0);
+         if (tagnum < 0) {
+            G__fprinterr(G__serr, "unknown %s, cannot cast\n", casttype);
+         }
          result3.typenum = -1;
          type = 'u' + castflag;
       }
       else if (strncmp(casttype, "enum", 4) == 0) {
          if (isspace(casttype[4])) tagnum = G__defined_tagname(casttype + 5, 0);
          else tagnum = G__defined_tagname(casttype + 4, 0);
+         if (tagnum < 0) {
+            G__fprinterr(G__serr, "unknown %s, cannot cast\n", casttype);
+         }
          result3.typenum = -1;
          type = 'i' + castflag;
       }
