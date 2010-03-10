@@ -231,10 +231,10 @@ void CheckMerge(TH3* h, THnSparse* sparse)
    delete hsMerge;
 }
 
-
-void runsparse() 
-{
-   Int_t nbins[] = {10, 80, 14};
+void doit(bool small) {
+   Int_t blowup = 1;
+   if (!small) blowup = 4;
+   Int_t nbins[] = {10 * blowup, 20 * blowup, 14 * blowup};
    Double_t xmin[] = {0., -1., 0.};
    Double_t xmax[] = {1., 1., 10.};
          
@@ -251,7 +251,7 @@ void runsparse()
       Double_t x[3];
       for (Int_t d = 0; d < 3; ++d)
          // 10% overshoot to tests overflows
-         x[d] = gRandom->Rndm()*(xmax[d]*1.1 - xmin[d]*1.1) + xmin[d]*1.1;
+         x[d] = gRandom->Rndm()*(xmax[d]*1.2 - xmin[d]*1.2) + xmin[d]*1.1;
       sparse->Fill(x);
       h->Fill(x[0], x[1], x[2]);
    }
@@ -269,4 +269,10 @@ void runsparse()
 
    delete h;
    delete sparse;
+}
+
+void runsparse() 
+{
+   doit(true);
+   doit(false);
 }
