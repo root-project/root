@@ -35,6 +35,7 @@
 #include <map>
 
 class TGeoElementTable;
+class TGeoIsotope;
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -51,29 +52,73 @@ protected:
       kElementChecked = BIT(19)
    };
 
-   Int_t                    fZ;          // Z of material
-   Double_t                 fA;          // A of material
+   Int_t                    fZ;          // Z of element
+   Int_t                    fN;          // Number of nucleons
+   Int_t                    fNisotopes;  // Number of isotopes for the element
+   Double_t                 fA;          // A of element
+   TObjArray               *fIsotopes;   // List of isotopes
+   Double_t                *fAbundances; //[fNisotopes] Array of relative isotope abundances
+
+private:
+  TGeoElement(const TGeoElement &other);
+  TGeoElement &operator=(const TGeoElement &other);
 
 public:
    // constructors
    TGeoElement();
    TGeoElement(const char *name, const char *title, Int_t z, Double_t a);
+   TGeoElement(const char *name, const char *title, Int_t nisotopes);
+   TGeoElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a);
    // destructor
    virtual ~TGeoElement()             {;}
    // methods
    virtual Int_t            ENDFCode()    const { return 0;}
    Int_t                    Z() const {return fZ;}
+   Int_t                    N() const {return fN;}
    Double_t                 A() const {return fA;}
+   void                     AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance);
+   Int_t                    GetNisotopes() const {return fNisotopes;}
+   TGeoIsotope             *GetIsotope(Int_t i) const;
+   Double_t                 GetRelativeAbundance(Int_t i) const;
+   Bool_t                   HasIsotopes() const {return (fNisotopes==0)?kFALSE:kTRUE;}
    Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}   
    virtual Bool_t           IsRadioNuclide() const {return kFALSE;}
    Bool_t                   IsUsed() const {return TObject::TestBit(kElemUsed);}
    void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}                    
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}                    
-   TGeoElementTable        *GetElementTable() const;
+   static TGeoElementTable *GetElementTable();
    
 
-   ClassDef(TGeoElement, 1)              // base element class
+   ClassDef(TGeoElement, 2)              // base element class
 };
+
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TGeoIsotope - a isotope defined by the atomic number, number of        //
+// nucleons and atomic weight (g/mole)                                    //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
+class TGeoIsotope : public TNamed
+{
+protected:
+   Int_t                    fZ;           // atomic number
+   Int_t                    fN;           // number of nucleons
+   Double_t                 fA;           // atomic mass (g/mole)
+
+public:
+   TGeoIsotope();
+   TGeoIsotope(const char *name, Int_t z, Int_t n, Double_t a);
+   virtual ~TGeoIsotope() {}
+   
+   Int_t                    GetZ() const {return fZ;}
+   Int_t                    GetN() const {return fN;}
+   Double_t                 GetA() const {return fA;}
+   static TGeoIsotope      *FindIsotope(const char *name);
+   virtual void             Print(Option_t *option = "") const;
+
+   ClassDef(TGeoIsotope, 1)              // Isotope class defined by Z,N,A
+};   
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -105,8 +150,10 @@ protected:
    
    void                     MakeName(Int_t a, Int_t z, Int_t iso);
 
+private:
    TGeoElementRN(const TGeoElementRN& elem); 
    TGeoElementRN& operator=(const TGeoElementRN& elem); 
+
 public:
    TGeoElementRN();
    TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level, 
@@ -318,8 +365,10 @@ private:
 // data members
    Int_t                    fNelements;    // number of elements
    Int_t                    fNelementsRN;  // number of RN elements
+   Int_t                    fNisotopes;    // number of isotopes
    TObjArray               *fList;         // list of elements
    TObjArray               *fListRN;       // list of RN elements
+   TObjArray               *fIsotopes;     // list of user-defined isotopes
    // Map of radionuclides
    typedef std::map<Int_t, TGeoElementRN *>   ElementRNMap_t;
    typedef ElementRNMap_t::iterator           ElementRNMapIt_t;
@@ -342,11 +391,14 @@ public:
       kETRNElements      = BIT(15)
    };      
    void                     AddElement(const char *name, const char *title, Int_t z, Double_t a);
+   void                     AddElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a);
    void                     AddElementRN(TGeoElementRN *elem);
+   void                     AddIsotope(TGeoIsotope *isotope);
    void                     BuildDefaultElements();
    void                     ImportElementsRN();
    Bool_t                   CheckTable() const;
-   TGeoElement             *FindElement(const char *name);
+   TGeoElement             *FindElement(const char *name) const;
+   TGeoIsotope             *FindIsotope(const char *name) const;
    TGeoElement             *GetElement(Int_t z) {return (TGeoElement*)fList->At(z);}
    TGeoElementRN           *GetElementRN(Int_t ENDFcode) const;
    TGeoElementRN           *GetElementRN(Int_t a, Int_t z, Int_t iso=0) const;
@@ -358,7 +410,7 @@ public:
    Int_t                    GetNelementsRN() const {return fNelementsRN;}
    void                     ExportElementsRN(const char *filename="");
 
-   ClassDef(TGeoElementTable,3)              // table of elements
+   ClassDef(TGeoElementTable,4)              // table of elements
 };
 
 #endif

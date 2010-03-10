@@ -25,6 +25,7 @@
 #pragma link C++ class TGeoMedium+;
 #pragma link C++ class TGeoElement+;
 #pragma link C++ class TGeoElementRN+;
+#pragma link C++ class TGeoIsotope+;
 #pragma link C++ class TGeoDecayChannel+;
 #pragma link C++ class TGeoElemIter+;
 #pragma link C++ class TGeoBatemanSol+;

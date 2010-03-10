@@ -72,19 +72,169 @@ TGeoElement::TGeoElement()
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = 0;
+   fN = 0;
+   fNisotopes = 0;
    fA = 0.0;
+   fIsotopes = NULL;
+   fAbundances = NULL;
 }
 
 //______________________________________________________________________________
 TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t a)
             :TNamed(name, title)
 {
+// Obsolete constructor
+   SetDefined(kFALSE);
+   SetUsed(kFALSE);
+   fZ = z;
+   fN = 0;
+   fNisotopes = 0;
+   fA = a;
+   fIsotopes = NULL;
+   fAbundances = NULL;
+}
+
+//______________________________________________________________________________
+TGeoElement::TGeoElement(const char *name, const char *title, Int_t nisotopes)
+            :TNamed(name, title)
+{
+// Element having isotopes.   
+   SetDefined(kFALSE);
+   SetUsed(kFALSE);
+   fZ = 0;
+   fN = 0;
+   fNisotopes = nisotopes;
+   fA = 0.0;
+   fIsotopes = new TObjArray(nisotopes);
+   fAbundances = new Double_t[nisotopes];
+}
+
+//______________________________________________________________________________
+TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a)
+            :TNamed(name, title)
+{
 // Constructor
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = z;
+   fN = n;
+   fNisotopes = 0;
    fA = a;
+   fIsotopes = NULL;
+   fAbundances = NULL;
 }
+
+//______________________________________________________________________________
+TGeoElementTable *TGeoElement::GetElementTable()
+{
+// Returns pointer to the table.
+   if (!gGeoManager) {
+      ::Error("TGeoElementTable::GetElementTable", "Create a geometry manager first");
+      return NULL;
+   }   
+   return gGeoManager->GetElementTable();
+}
+
+//______________________________________________________________________________
+void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
+{
+// Add an isotope for this element. All isotopes have to be isotopes of the same element.
+   if (!fIsotopes) {
+      Fatal("AddIsotope", "Cannot add isotopes to normal elements. Use constructor with number of isotopes.");
+      return;
+   }
+   Int_t ncurrent = 0;
+   TGeoIsotope *isocrt;
+   for (ncurrent=0; ncurrent<fNisotopes; ncurrent++)
+      if (!fIsotopes->At(ncurrent)) break;
+   if (ncurrent==fNisotopes) {
+      Error("AddIsotope", "All %d isotopes of element %s already defined", fNisotopes, GetName());
+      return;
+   }   
+   // Check Z of the new isotope
+   if ((fZ!=0) && (isotope->GetZ()!=fZ)) {
+      Fatal("AddIsotope", "Trying to add isotope %s with different Z to the same element %s",
+            isotope->GetName(), GetName());
+      return;
+   } else {
+      fZ = isotope->GetZ();
+   }   
+   fIsotopes->Add(isotope);
+   fAbundances[ncurrent] = relativeAbundance;
+   if (ncurrent==fNisotopes-1) {
+      Double_t weight = 0.0;
+      Double_t aeff = 0.0;
+      Double_t neff = 0.0;
+      for (Int_t i=0; i<fNisotopes; i++) {
+         isocrt = (TGeoIsotope*)fIsotopes->At(i);
+         aeff += fAbundances[i]*isocrt->GetA();
+         neff += fAbundances[i]*isocrt->GetN();
+         weight += fAbundances[i];
+      }
+      aeff /= weight;
+      neff /= weight;         
+      fN = (Int_t)neff;
+      fA = aeff;
+   }   
+}
+
+//______________________________________________________________________________
+TGeoIsotope *TGeoElement::GetIsotope(Int_t i) const
+{
+// Return i-th isotope in the element.
+   if (i>=0 && i<fNisotopes) {
+      return (TGeoIsotope*)fIsotopes->At(i);
+   }
+   return NULL;
+}
+
+//______________________________________________________________________________
+Double_t TGeoElement::GetRelativeAbundance(Int_t i) const
+{
+// Return relative abundance of i-th isotope in this element.   
+   if (i>=0 && i<fNisotopes) return fAbundances[i];
+   return 0.0;
+}
+
+ClassImp(TGeoIsotope)
+
+//______________________________________________________________________________
+TGeoIsotope::TGeoIsotope()
+            :TNamed(),
+             fZ(0),
+             fN(0),
+             fA(0)
+{
+// Dummy I/O constructor
+}
+
+//______________________________________________________________________________
+TGeoIsotope::TGeoIsotope(const char *name, Int_t z, Int_t n, Double_t a)
+            :TNamed(name,""),
+             fZ(z),
+             fN(n),
+             fA(a)
+{
+// Constructor
+   if (z<1) Fatal("ctor", "Not allowed Z=%d (<1) for isotope: %s", name, z);
+   if (n<z) Fatal("ctor", "Not allowed Z=%d < N=%d for isotope: %s", name, z,n);
+   TGeoElement::GetElementTable()->AddIsotope(this);
+}
+
+//______________________________________________________________________________
+TGeoIsotope *TGeoIsotope::FindIsotope(const char *name)
+{
+// Find existing isotope by name.
+   TGeoElementTable *elTable = TGeoElement::GetElementTable();
+   return elTable->FindIsotope(name);
+}   
+
+//______________________________________________________________________________
+void TGeoIsotope::Print(Option_t *) const
+{
+// Print this isotope
+   printf("Isotope: %s     Z=%d   N=%d   A=%f [g/mole]\n", GetName(), fZ,fN,fA);
+}   
 
 ClassImp(TGeoElementRN)
 
@@ -137,26 +287,6 @@ TGeoElementRN::TGeoElementRN(Int_t aa, Int_t zz, Int_t iso, Double_t level,
 }
 
 //______________________________________________________________________________
-TGeoElementRN::TGeoElementRN(const TGeoElementRN& elem) : TGeoElement(elem),
-               fENDFcode(elem.fENDFcode),
-               fIso(elem.fIso),
-               fLevel(elem.fLevel),
-               fDeltaM(elem.fDeltaM),
-               fHalfLife(elem.fHalfLife),
-               fNatAbun(elem.fNatAbun),
-               fTH_F(elem.fTH_F),
-               fTG_F(elem.fTG_F),
-               fTH_S(elem.fTH_S),
-               fTG_S(elem.fTG_S),
-               fStatus(elem.fStatus),
-               fRatio(NULL),
-               fDecays(NULL)
-{
-// Copy constructor
-   Error("cpy ctor", "Not to use !");
-}
-
-//______________________________________________________________________________
 TGeoElementRN::~TGeoElementRN()
 {
 // Destructor.
@@ -165,14 +295,6 @@ TGeoElementRN::~TGeoElementRN()
       delete fDecays;
    }
    if (fRatio) delete fRatio;
-}
-
-//______________________________________________________________________________
-TGeoElementRN &TGeoElementRN::operator=(const TGeoElementRN&)
-{
-// Assignment
-   Error("operator=", "Not to use !");
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -637,17 +759,6 @@ void TGeoElemIter::Print(Option_t * /*option*/) const
 ClassImp(TGeoElementTable)
 
 //______________________________________________________________________________
-TGeoElementTable *TGeoElement::GetElementTable() const
-{
-// Returns pointer to the table.
-   if (!gGeoManager) {
-      Error("GetElementTable", "Create a geometry manager first");
-      return NULL;
-   }   
-   return gGeoManager->GetElementTable();
-}
-
-//______________________________________________________________________________
 TGeoElementTable::TGeoElementTable()
 {
 // default constructor
@@ -655,6 +766,7 @@ TGeoElementTable::TGeoElementTable()
    fNelementsRN = 0;
    fList      = 0;
    fListRN    = 0;
+   fIsotopes = 0;
 }
 
 //______________________________________________________________________________
@@ -665,6 +777,7 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
    fNelementsRN = 0;
    fList = new TObjArray(128);
    fListRN    = 0;
+   fIsotopes = 0;
    BuildDefaultElements();
 //   BuildElementsRN();
 }
@@ -675,7 +788,8 @@ TGeoElementTable::TGeoElementTable(const TGeoElementTable& get) :
   fNelements(get.fNelements),
   fNelementsRN(get.fNelementsRN),
   fList(get.fList),
-  fListRN(get.fListRN)
+  fListRN(get.fListRN),
+  fIsotopes(0)
 {
    //copy constructor
 }
@@ -690,6 +804,7 @@ TGeoElementTable& TGeoElementTable::operator=(const TGeoElementTable& get)
       fNelementsRN=get.fNelementsRN;
       fList=get.fList;
       fListRN=get.fListRN;
+      fIsotopes = 0;
    }
    return *this;
 }
@@ -706,14 +821,26 @@ TGeoElementTable::~TGeoElementTable()
       fListRN->Delete();
       delete fListRN;
    }
+   if (fIsotopes) {
+      fIsotopes->Delete();
+      delete fIsotopes;
+   }
 }
 
 //______________________________________________________________________________
 void TGeoElementTable::AddElement(const char *name, const char *title, Int_t z, Double_t a)
 {
-// Add an element to the table.
+// Add an element to the table. Obsolete.
    if (!fList) fList = new TObjArray(128);
    fList->AddAtAndExpand(new TGeoElement(name,title,z,a), fNelements++);
+}
+
+//______________________________________________________________________________
+void TGeoElementTable::AddElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a)
+{
+// Add an element to the table.
+   if (!fList) fList = new TObjArray(128);
+   fList->AddAtAndExpand(new TGeoElement(name,title,z,n,a), fNelements++);
 }
 
 //______________________________________________________________________________
@@ -729,123 +856,135 @@ void TGeoElementTable::AddElementRN(TGeoElementRN *elem)
 }
 
 //______________________________________________________________________________
+void TGeoElementTable::AddIsotope(TGeoIsotope *isotope)
+{
+// Add isotope to the table.
+   if (FindIsotope(isotope->GetName())) {
+      Error("AddIsotope", "Isotope with the same name: %s already in table. Not adding.",isotope->GetName());
+      return;
+   }
+   if (!fIsotopes) fIsotopes = new TObjArray();
+   fIsotopes->Add(isotope);
+}
+
+//______________________________________________________________________________
 void TGeoElementTable::BuildDefaultElements()
 {
 // Creates the default element table
    if (HasDefaultElements()) return;
-   AddElement("VACUUM","VACUUM"   ,0, 0.0);
-   AddElement("H"   ,"HYDROGEN"   ,1, 1.00794);
-   AddElement("HE"  ,"HELIUM"     ,2, 4.002602);
-   AddElement("LI"  ,"LITHIUM"    ,3, 6.941);
-   AddElement("BE"  ,"BERYLLIUM"  ,4, 9.01218);
-   AddElement("B"   ,"BORON"      ,5, 10.811);
-   AddElement("C"   ,"CARBON"     ,6 ,12.0107);
-   AddElement("N"   ,"NITROGEN"   ,7 ,14.00674);
-   AddElement("O"   ,"OXYGEN"     ,8 ,15.9994);
-   AddElement("F"   ,"FLUORINE"   ,9 ,18.9984032);
-   AddElement("NE"  ,"NEON"       ,10 ,20.1797);
-   AddElement("NA"  ,"SODIUM"     ,11 ,22.989770);
-   AddElement("MG"  ,"MAGNESIUM"  ,12 ,24.3050);
-   AddElement("AL"  ,"ALUMINIUM"  ,13 ,26.981538);
-   AddElement("SI"  ,"SILICON"    ,14 ,28.0855);
-   AddElement("P"   ,"PHOSPHORUS" ,15 ,30.973761);
-   AddElement("S"   ,"SULFUR"     ,16 ,32.066);
-   AddElement("CL"  ,"CHLORINE"   ,17 ,35.4527);
-   AddElement("AR"  ,"ARGON"      ,18 ,39.948);
-   AddElement("K"   ,"POTASSIUM"  ,19 ,39.0983);
-   AddElement("CA"  ,"CALCIUM"    ,20 ,40.078);
-   AddElement("SC"  ,"SCANDIUM"   ,21 ,44.955910);
-   AddElement("TI"  ,"TITANIUM"   ,22 ,47.867);
-   AddElement("V"   ,"VANADIUM"   ,23 ,50.9415);
-   AddElement("CR"  ,"CHROMIUM"   ,24 ,51.9961);
-   AddElement("MN"  ,"MANGANESE"  ,25 ,54.938049);
-   AddElement("FE"  ,"IRON"       ,26 ,55.845);
-   AddElement("CO"  ,"COBALT"     ,27 ,58.933200);
-   AddElement("NI"  ,"NICKEL"     ,28 ,58.6934);
-   AddElement("CU"  ,"COPPER"     ,29 ,63.546);
-   AddElement("ZN"  ,"ZINC"       ,30 ,65.39);
-   AddElement("GA"  ,"GALLIUM"    ,31 ,69.723);
-   AddElement("GE"  ,"GERMANIUM"  ,32 ,72.61);
-   AddElement("AS"  ,"ARSENIC"    ,33 ,74.92160);
-   AddElement("SE"  ,"SELENIUM"   ,34 ,78.96);
-   AddElement("BR"  ,"BROMINE"    ,35 ,79.904);
-   AddElement("KR"  ,"KRYPTON"    ,36 ,83.80);
-   AddElement("RB"  ,"RUBIDIUM"   ,37 ,85.4678);
-   AddElement("SR"  ,"STRONTIUM"  ,38 ,87.62);
-   AddElement("Y"   ,"YTTRIUM"    ,39 ,88.90585);
-   AddElement("ZR"  ,"ZIRCONIUM"  ,40 ,91.224);
-   AddElement("NB"  ,"NIOBIUM"    ,41 ,92.90638);
-   AddElement("MO"  ,"MOLYBDENUM" ,42 ,95.94);
-   AddElement("TC"  ,"TECHNETIUM" ,43 ,98.0);
-   AddElement("RU"  ,"RUTHENIUM"  ,44 ,101.07);
-   AddElement("RH"  ,"RHODIUM"    ,45 ,102.90550);
-   AddElement("PD"  ,"PALLADIUM"  ,46 ,106.42);
-   AddElement("AG"  ,"SILVER"     ,47 ,107.8682);
-   AddElement("CD"  ,"CADMIUM"    ,48 ,112.411);
-   AddElement("IN"  ,"INDIUM"     ,49 ,114.818);
-   AddElement("SN"  ,"TIN"        ,50 ,118.710);
-   AddElement("SB"  ,"ANTIMONY"   ,51 ,121.760);
-   AddElement("TE"  ,"TELLURIUM"  ,52 ,127.60);
-   AddElement("I"   ,"IODINE"     ,53 ,126.90447);
-   AddElement("XE"  ,"XENON"      ,54 ,131.29);
-   AddElement("CS"  ,"CESIUM"     ,55 ,132.90545);
-   AddElement("BA"  ,"BARIUM"     ,56 ,137.327);
-   AddElement("LA"  ,"LANTHANUM"  ,57 ,138.9055);
-   AddElement("CE"  ,"CERIUM"     ,58 ,140.116);
-   AddElement("PR"  ,"PRASEODYMIUM" ,59 ,140.90765);
-   AddElement("ND"  ,"NEODYMIUM"  ,60 ,144.24);
-   AddElement("PM"  ,"PROMETHIUM" ,61 ,145.0);
-   AddElement("SM"  ,"SAMARIUM"   ,62 ,150.36);
-   AddElement("EU"  ,"EUROPIUM"   ,63 ,151.964);
-   AddElement("GD"  ,"GADOLINIUM" ,64 ,157.25);
-   AddElement("TB"  ,"TERBIUM"    ,65 ,158.92534);
-   AddElement("DY"  ,"DYSPROSIUM" ,66 ,162.50);
-   AddElement("HO"  ,"HOLMIUM"    ,67 ,164.93032);
-   AddElement("ER"  ,"ERBIUM"     ,68 ,167.26);
-   AddElement("TM"  ,"THULIUM"    ,69 ,168.93421);
-   AddElement("YB"  ,"YTTERBIUM"  ,70 ,173.04);
-   AddElement("LU"  ,"LUTETIUM"   ,71 ,174.967);
-   AddElement("HF"  ,"HAFNIUM"    ,72 ,178.49);
-   AddElement("TA"  ,"TANTALUM"   ,73 ,180.9479);
-   AddElement("W"   ,"TUNGSTEN"   ,74 ,183.84);
-   AddElement("RE"  ,"RHENIUM"    ,75 ,186.207);
-   AddElement("OS"  ,"OSMIUM"     ,76 ,190.23);
-   AddElement("IR"  ,"IRIDIUM"    ,77 ,192.217);
-   AddElement("PT"  ,"PLATINUM"   ,78 ,195.078);
-   AddElement("AU"  ,"GOLD"       ,79 ,196.96655);
-   AddElement("HG"  ,"MERCURY"    ,80 ,200.59);
-   AddElement("TL"  ,"THALLIUM"   ,81 ,204.3833);
-   AddElement("PB"  ,"LEAD"       ,82 ,207.2);
-   AddElement("BI"  ,"BISMUTH"    ,83 ,208.98038);
-   AddElement("PO"  ,"POLONIUM"   ,84 ,209.0);
-   AddElement("AT"  ,"ASTATINE"   ,85 ,210.0);
-   AddElement("RN"  ,"RADON"      ,86 ,222.0);
-   AddElement("FR"  ,"FRANCIUM"   ,87 ,223.0);
-   AddElement("RA"  ,"RADIUM"     ,88 ,226.0);
-   AddElement("AC"  ,"ACTINIUM"   ,89 ,227.0);
-   AddElement("TH"  ,"THORIUM"    ,90 ,232.0381);
-   AddElement("PA"  ,"PROTACTINIUM" ,91 ,231.03588);
-   AddElement("U"   ,"URANIUM"    ,92 ,238.0289);
-   AddElement("NP"  ,"NEPTUNIUM"  ,93 ,237.0);
-   AddElement("PU"  ,"PLUTONIUM"  ,94 ,244.0);
-   AddElement("AM"  ,"AMERICIUM"  ,95 ,243.0);
-   AddElement("CM"  ,"CURIUM"     ,96 ,247.0);
-   AddElement("BK"  ,"BERKELIUM"  ,97 ,247.0);
-   AddElement("CF"  ,"CALIFORNIUM",98 ,251.0);
-   AddElement("ES"  ,"EINSTEINIUM",99 ,252.0);
-   AddElement("FM"  ,"FERMIUM"    ,100 ,257.0);
-   AddElement("MD"  ,"MENDELEVIUM",101 ,258.0);
-   AddElement("NO"  ,"NOBELIUM"   ,102 ,259.0);
-   AddElement("LR"  ,"LAWRENCIUM" ,103 ,262.0);
-   AddElement("RF"  ,"RUTHERFORDIUM" ,104,261.0);
-   AddElement("DB"  ,"DUBNIUM" ,105 ,262.0);
-   AddElement("SG"  ,"SEABORGIUM" ,106 ,263.0);
-   AddElement("BH"  ,"BOHRIUM"    ,107 ,262.0);
-   AddElement("HS"  ,"HASSIUM"    ,108 ,265.0);
-   AddElement("MT"  ,"MEITNERIUM" ,109 ,266.0);
-   AddElement("UUN" ,"UNUNNILIUM" ,110 ,269.0);
-   AddElement("UUU" ,"UNUNUNIUM"  ,111 ,272.0);
-   AddElement("UUB" ,"UNUNBIUM"   ,112 ,277.0);
+   AddElement("VACUUM","VACUUM"   ,0,   0, 0.0);
+   AddElement("H"   ,"HYDROGEN"   ,1,   1, 1.00794);
+   AddElement("HE"  ,"HELIUM"     ,2,   4, 4.002602);
+   AddElement("LI"  ,"LITHIUM"    ,3,   7, 6.941);
+   AddElement("BE"  ,"BERYLLIUM"  ,4,   9, 9.01218);
+   AddElement("B"   ,"BORON"      ,5,  11, 10.811);
+   AddElement("C"   ,"CARBON"     ,6,  12, 12.0107);
+   AddElement("N"   ,"NITROGEN"   ,7,  14, 14.00674);
+   AddElement("O"   ,"OXYGEN"     ,8,  16, 15.9994);
+   AddElement("F"   ,"FLUORINE"   ,9,  19, 18.9984032);
+   AddElement("NE"  ,"NEON"       ,10, 20, 20.1797);
+   AddElement("NA"  ,"SODIUM"     ,11, 23, 22.989770);
+   AddElement("MG"  ,"MAGNESIUM"  ,12, 24, 24.3050);
+   AddElement("AL"  ,"ALUMINIUM"  ,13, 27, 26.981538);
+   AddElement("SI"  ,"SILICON"    ,14, 28, 28.0855);
+   AddElement("P"   ,"PHOSPHORUS" ,15, 31, 30.973761);
+   AddElement("S"   ,"SULFUR"     ,16, 32, 32.066);
+   AddElement("CL"  ,"CHLORINE"   ,17, 35, 35.4527);
+   AddElement("AR"  ,"ARGON"      ,18, 40, 39.948);
+   AddElement("K"   ,"POTASSIUM"  ,19, 39, 39.0983);
+   AddElement("CA"  ,"CALCIUM"    ,20, 40, 40.078);
+   AddElement("SC"  ,"SCANDIUM"   ,21, 45, 44.955910);
+   AddElement("TI"  ,"TITANIUM"   ,22, 48, 47.867);
+   AddElement("V"   ,"VANADIUM"   ,23, 51, 50.9415);
+   AddElement("CR"  ,"CHROMIUM"   ,24, 52, 51.9961);
+   AddElement("MN"  ,"MANGANESE"  ,25, 55, 54.938049);
+   AddElement("FE"  ,"IRON"       ,26, 56, 55.845);
+   AddElement("CO"  ,"COBALT"     ,27, 59, 58.933200);
+   AddElement("NI"  ,"NICKEL"     ,28, 59, 58.6934);
+   AddElement("CU"  ,"COPPER"     ,29, 64, 63.546);
+   AddElement("ZN"  ,"ZINC"       ,30, 65, 65.39);
+   AddElement("GA"  ,"GALLIUM"    ,31, 70, 69.723);
+   AddElement("GE"  ,"GERMANIUM"  ,32, 73, 72.61);
+   AddElement("AS"  ,"ARSENIC"    ,33, 75, 74.92160);
+   AddElement("SE"  ,"SELENIUM"   ,34, 79, 78.96);
+   AddElement("BR"  ,"BROMINE"    ,35, 80, 79.904);
+   AddElement("KR"  ,"KRYPTON"    ,36, 84, 83.80);
+   AddElement("RB"  ,"RUBIDIUM"   ,37, 85, 85.4678);
+   AddElement("SR"  ,"STRONTIUM"  ,38, 88, 87.62);
+   AddElement("Y"   ,"YTTRIUM"    ,39, 89, 88.90585);
+   AddElement("ZR"  ,"ZIRCONIUM"  ,40, 91, 91.224);
+   AddElement("NB"  ,"NIOBIUM"    ,41, 93, 92.90638);
+   AddElement("MO"  ,"MOLYBDENUM" ,42, 96, 95.94);
+   AddElement("TC"  ,"TECHNETIUM" ,43, 98, 98.0);
+   AddElement("RU"  ,"RUTHENIUM"  ,44, 101, 101.07);
+   AddElement("RH"  ,"RHODIUM"    ,45, 103, 102.90550);
+   AddElement("PD"  ,"PALLADIUM"  ,46, 106, 106.42);
+   AddElement("AG"  ,"SILVER"     ,47, 108, 107.8682);
+   AddElement("CD"  ,"CADMIUM"    ,48, 112, 112.411);
+   AddElement("IN"  ,"INDIUM"     ,49, 115, 114.818);
+   AddElement("SN"  ,"TIN"        ,50, 119, 118.710);
+   AddElement("SB"  ,"ANTIMONY"   ,51, 122, 121.760);
+   AddElement("TE"  ,"TELLURIUM"  ,52, 128, 127.60);
+   AddElement("I"   ,"IODINE"     ,53, 127, 126.90447);
+   AddElement("XE"  ,"XENON"      ,54, 131, 131.29);
+   AddElement("CS"  ,"CESIUM"     ,55, 133, 132.90545);
+   AddElement("BA"  ,"BARIUM"     ,56, 137, 137.327);
+   AddElement("LA"  ,"LANTHANUM"  ,57, 139, 138.9055);
+   AddElement("CE"  ,"CERIUM"     ,58, 140, 140.116);
+   AddElement("PR"  ,"PRASEODYMIUM" ,59, 141, 140.90765);
+   AddElement("ND"  ,"NEODYMIUM"  ,60, 144, 144.24);
+   AddElement("PM"  ,"PROMETHIUM" ,61, 145, 145.0);
+   AddElement("SM"  ,"SAMARIUM"   ,62, 150, 150.36);
+   AddElement("EU"  ,"EUROPIUM"   ,63, 152, 151.964);
+   AddElement("GD"  ,"GADOLINIUM" ,64, 157, 157.25);
+   AddElement("TB"  ,"TERBIUM"    ,65, 159, 158.92534);
+   AddElement("DY"  ,"DYSPROSIUM" ,66, 162, 162.50);
+   AddElement("HO"  ,"HOLMIUM"    ,67, 165, 164.93032);
+   AddElement("ER"  ,"ERBIUM"     ,68, 167, 167.26);
+   AddElement("TM"  ,"THULIUM"    ,69, 169, 168.93421);
+   AddElement("YB"  ,"YTTERBIUM"  ,70, 173, 173.04);
+   AddElement("LU"  ,"LUTETIUM"   ,71, 175, 174.967);
+   AddElement("HF"  ,"HAFNIUM"    ,72, 178, 178.49);
+   AddElement("TA"  ,"TANTALUM"   ,73, 181, 180.9479);
+   AddElement("W"   ,"TUNGSTEN"   ,74, 184, 183.84);
+   AddElement("RE"  ,"RHENIUM"    ,75, 186, 186.207);
+   AddElement("OS"  ,"OSMIUM"     ,76, 190, 190.23);
+   AddElement("IR"  ,"IRIDIUM"    ,77, 192, 192.217);
+   AddElement("PT"  ,"PLATINUM"   ,78, 195, 195.078);
+   AddElement("AU"  ,"GOLD"       ,79, 197, 196.96655);
+   AddElement("HG"  ,"MERCURY"    ,80, 200, 200.59);
+   AddElement("TL"  ,"THALLIUM"   ,81, 204, 204.3833);
+   AddElement("PB"  ,"LEAD"       ,82, 207, 207.2);
+   AddElement("BI"  ,"BISMUTH"    ,83, 209, 208.98038);
+   AddElement("PO"  ,"POLONIUM"   ,84, 209, 209.0);
+   AddElement("AT"  ,"ASTATINE"   ,85, 210, 210.0);
+   AddElement("RN"  ,"RADON"      ,86, 222, 222.0);
+   AddElement("FR"  ,"FRANCIUM"   ,87, 223, 223.0);
+   AddElement("RA"  ,"RADIUM"     ,88, 226, 226.0);
+   AddElement("AC"  ,"ACTINIUM"   ,89, 227, 227.0);
+   AddElement("TH"  ,"THORIUM"    ,90, 232, 232.0381);
+   AddElement("PA"  ,"PROTACTINIUM" ,91, 231, 231.03588);
+   AddElement("U"   ,"URANIUM"    ,92, 238, 238.0289);
+   AddElement("NP"  ,"NEPTUNIUM"  ,93, 237, 237.0);
+   AddElement("PU"  ,"PLUTONIUM"  ,94, 244, 244.0);
+   AddElement("AM"  ,"AMERICIUM"  ,95, 243, 243.0);
+   AddElement("CM"  ,"CURIUM"     ,96, 247, 247.0);
+   AddElement("BK"  ,"BERKELIUM"  ,97, 247, 247.0);
+   AddElement("CF"  ,"CALIFORNIUM",98, 251, 251.0);
+   AddElement("ES"  ,"EINSTEINIUM",99, 252, 252.0);
+   AddElement("FM"  ,"FERMIUM"    ,100, 257, 257.0);
+   AddElement("MD"  ,"MENDELEVIUM",101, 258, 258.0);
+   AddElement("NO"  ,"NOBELIUM"   ,102, 259, 259.0);
+   AddElement("LR"  ,"LAWRENCIUM" ,103, 262, 262.0);
+   AddElement("RF"  ,"RUTHERFORDIUM",104, 261, 261.0);
+   AddElement("DB"  ,"DUBNIUM" ,105, 262, 262.0);
+   AddElement("SG"  ,"SEABORGIUM" ,106, 263, 263.0);
+   AddElement("BH"  ,"BOHRIUM"    ,107, 262, 262.0);
+   AddElement("HS"  ,"HASSIUM"    ,108, 265, 265.0);
+   AddElement("MT"  ,"MEITNERIUM" ,109, 266, 266.0);
+   AddElement("UUN" ,"UNUNNILIUM" ,110, 269, 269.0);
+   AddElement("UUU" ,"UNUNUNIUM"  ,111, 272, 272.0);
+   AddElement("UUB" ,"UNUNBIUM"   ,112, 277, 277.0);
 
    TObject::SetBit(kETDefaultElements,kTRUE);
 }
@@ -928,7 +1067,7 @@ void TGeoElementTable::ExportElementsRN(const char *filename)
 }
 
 //______________________________________________________________________________
-TGeoElement *TGeoElementTable::FindElement(const char *name)
+TGeoElement *TGeoElementTable::FindElement(const char *name) const
 {
 // Search an element by symbol or full name
    TString s(name);
@@ -942,6 +1081,14 @@ TGeoElement *TGeoElementTable::FindElement(const char *name)
       if (s == elem->GetTitle()) return elem;
    }
    return 0;
+}
+
+//______________________________________________________________________________
+TGeoIsotope *TGeoElementTable::FindIsotope(const char *name) const
+{
+// Find existing isotope by name. Not optimized for a big number of isotopes.
+   if (!fIsotopes) return NULL;
+   return (TGeoIsotope*)fIsotopes->FindObject(name);
 }
 
 //______________________________________________________________________________
