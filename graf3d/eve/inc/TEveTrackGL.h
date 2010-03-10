@@ -28,6 +28,8 @@ private:
 protected:
    TEveTrack* fTrack; // Model object.
 
+   void RenderPathMarksAndFirstVertex(TGLRnrCtx& rnrCtx) const;
+
 public:
    TEveTrackGL();
    virtual ~TEveTrackGL() {}
@@ -36,7 +38,7 @@ public:
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+   virtual void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec);
 
    ClassDef(TEveTrackGL, 0); // GL-renderer for TEveTrack class.
 };

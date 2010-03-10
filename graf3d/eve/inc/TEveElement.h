@@ -270,7 +270,7 @@ public:
 
    virtual Bool_t     CanEditMainTrans() const { return fCanEditMainTrans; }
    virtual Bool_t     HasMainTrans()     const { return fMainTrans != 0;   }
-   virtual TEveTrans* PtrMainTrans();
+   virtual TEveTrans* PtrMainTrans(Bool_t create=kTRUE);
    virtual TEveTrans& RefMainTrans();
    virtual void       InitMainTrans(Bool_t can_edit=kTRUE);
    virtual void       DestroyMainTrans();

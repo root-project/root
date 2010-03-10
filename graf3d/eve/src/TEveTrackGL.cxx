@@ -77,41 +77,32 @@ void TEveTrackGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
    TEveLineGL::DirectDraw(rnrCtx);
 
-   // path-marks
-   const TEveTrack::vPathMark_t& pms = fTrack->RefPathMarks();
-   TEveTrackPropagator& rTP = *fTrack->GetPropagator();
-   if (pms.size())
+   RenderPathMarksAndFirstVertex(rnrCtx);
+}
+
+//______________________________________________________________________________
+void TEveTrackGL::RenderPathMarksAndFirstVertex(TGLRnrCtx& rnrCtx) const
+{
+   // Render path-marks and the first vertex, if required.
+
+   TEveTrackPropagator          &rTP = *fTrack->GetPropagator();
+   const TEveTrack::vPathMark_t &pms =  fTrack->RefPathMarks();
+   if ( ! pms.empty())
    {
-      Float_t* pnts = new Float_t[3*pms.size()]; // maximum
-      Int_t n = 0;
-      Bool_t accept;
-      for (TEveTrack::vPathMark_ci pm = pms.begin(); pm != pms.end(); ++pm)
+      Float_t *pnts = new Float_t[3*pms.size()]; // maximum
+      Int_t    n    = 0;
+      for (Int_t i = 0; i < fTrack->fLastPMIdx; ++i)
       {
-         accept = kFALSE;
-         switch (pm->fType)
+         const TEvePathMark &pm = pms[i];
+         if ((pm.fType == TEvePathMark::kDaughter  && rTP.GetRnrDaughters())  ||
+             (pm.fType == TEvePathMark::kReference && rTP.GetRnrReferences()) ||
+             (pm.fType == TEvePathMark::kDecay     && rTP.GetRnrDecay())      ||
+             (pm.fType == TEvePathMark::kCluster2D && rTP.GetRnrCluster2Ds()))
          {
-            case TEvePathMark::kDaughter:
-               if (rTP.GetRnrDaughters())  accept = kTRUE;
-               break;
-            case TEvePathMark::kReference:
-               if (rTP.GetRnrReferences()) accept = kTRUE;
-               break;
-            case TEvePathMark::kDecay:
-               if (rTP.GetRnrDecay())      accept = kTRUE;
-               break;
-            case TEvePathMark::kCluster2D:
-               if (rTP.GetRnrCluster2Ds()) accept = kTRUE;
-               break;
-         }
-         if (accept)
-         {
-            if ((TMath::Abs(pm->fV.fZ) < rTP.GetMaxZ()) && (pm->fV.Perp() < rTP.GetMaxR()))
-            {
-               pnts[3*n  ] = pm->fV.fX;
-               pnts[3*n+1] = pm->fV.fY;
-               pnts[3*n+2] = pm->fV.fZ;
-               ++n;
-            }
+            pnts[3*n  ] = pm.fV.fX;
+            pnts[3*n+1] = pm.fV.fY;
+            pnts[3*n+2] = pm.fV.fZ;
+            ++n;
          }
       }
       TGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, n,

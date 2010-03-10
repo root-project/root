@@ -18,6 +18,7 @@
 
 class TGeoShape;
 class TEveGeoShapeExtract;
+class TBuffer3D;
 
 class TEveGeoShape : public TEveElement,
                      public TNamed,

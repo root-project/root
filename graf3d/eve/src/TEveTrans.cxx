@@ -15,8 +15,9 @@
 #include "TMath.h"
 #include "TClass.h"
 
-#include <ctype.h>
-#include <iostream>
+#include "Riostream.h"
+
+#include <cctype>
 
 #define F00  0
 #define F01  4
@@ -831,15 +832,15 @@ void TEveTrans::RotateIP(Double_t* v) const
 }
 
 //______________________________________________________________________________
-void TEveTrans::RotateIP(TEveVector& v) const
+void TEveTrans::RotateIP(Float_t* v) const
 {
    // Rotate vector in-place. Translation is NOT applied.
 
-   Double_t t[3] = { v.fX, v.fY, v.fZ };
+   Double_t t[3] = { v[0], v[1], v[2] };
 
-   v.Set(fM[F00]*t[0] + fM[F01]*t[1] + fM[F02]*t[2],
-         fM[F10]*t[0] + fM[F11]*t[1] + fM[F12]*t[2],
-         fM[F20]*t[0] + fM[F21]*t[1] + fM[F22]*t[2]);
+   v[0] = fM[F00]*t[0] + fM[F01]*t[1] + fM[F02]*t[2];
+   v[1] = fM[F10]*t[0] + fM[F11]*t[1] + fM[F12]*t[2];
+   v[2] = fM[F20]*t[0] + fM[F21]*t[1] + fM[F22]*t[2];
 }
 
 //______________________________________________________________________________

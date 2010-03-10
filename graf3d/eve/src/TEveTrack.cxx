@@ -25,10 +25,11 @@
 #include "TEveBrowser.h"
 #include "TEveTrackProjected.h"
 
+#include "Riostream.h"
+
 #include <vector>
 #include <algorithm>
 #include <functional>
-#include <iostream>
 
 //==============================================================================
 //==============================================================================
@@ -59,6 +60,7 @@ TEveTrack::TEveTrack() :
    fStatus(0),
    fLockPoints(kFALSE),
    fPathMarks(),
+   fLastPMIdx(0),
    fPropagator(0),
    fBreakProjectedTracks(kBPTDefault)
 {
@@ -80,6 +82,7 @@ TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop):
    fStatus(t->GetStatusCode()),
    fLockPoints(kFALSE),
    fPathMarks(),
+   fLastPMIdx(0),
    fPropagator(0),
    fBreakProjectedTracks(kBPTDefault)
 {
@@ -112,6 +115,7 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* prop):
    fStatus(t->GetStatusCode()),
    fLockPoints(kFALSE),
    fPathMarks(),
+   fLastPMIdx(0),
    fPropagator(0),
    fBreakProjectedTracks(kBPTDefault)
 {
@@ -144,6 +148,7 @@ TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop) :
    fStatus(t->fStatus),
    fLockPoints(kFALSE),
    fPathMarks(),
+   fLastPMIdx(0),
    fPropagator(0),
    fBreakProjectedTracks(kBPTDefault)
 {
@@ -169,6 +174,7 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    fStatus(t.fStatus),
    fLockPoints(t.fLockPoints),
    fPathMarks(),
+   fLastPMIdx(t.fLastPMIdx),
    fPropagator(0),
    fBreakProjectedTracks(t.fBreakProjectedTracks)
 {
@@ -228,7 +234,7 @@ void TEveTrack::SetStdTitle()
 //______________________________________________________________________________
 void TEveTrack::SetTrackParams(const TEveTrack& t)
 {
-   // Copy track parameters from t.
+   // Copy track parameters from t. Track-propagator is set, too.
    // PathMarks are cleared - you can copy them via SetPathMarks(t).
    // If track 't' is locked, you should probably clone its points
    // over - use TEvePointSet::ClonePoints(t);
@@ -312,18 +318,19 @@ void TEveTrack::MakeTrack(Bool_t recurse)
    if (!fLockPoints)
    {
       Reset(0);
+      fLastPMIdx = 0;
 
       TEveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefault);
 
       const Float_t maxRsq = rTP.GetMaxR() * rTP.GetMaxR();
       const Float_t maxZ   = rTP.GetMaxZ();
 
-      if (TMath::Abs(fV.fZ) < maxZ && fV.fX*fV.fX + fV.fY*fV.fY < maxRsq)
+      if ( ! TEveTrackPropagator::IsOutsideBounds(fV, maxRsq, maxZ))
       {
          TEveVector currP = fP;
          Bool_t decay = kFALSE;
          fPropagator->InitTrack(fV, fCharge);
-         for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+         for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm, ++fLastPMIdx)
          {
             if (rTP.GetFitReferences() && pm->fType == TEvePathMark::kReference)
             {
@@ -357,12 +364,12 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                   break;
                // printf("%s fit decay \n", fName.Data());
                fPropagator->GoToVertex(pm->fV, currP);
-               decay = true;
+               decay = kTRUE;
+               ++fLastPMIdx;
                break;
             }
             else if (rTP.GetFitCluster2Ds() && pm->fType == TEvePathMark::kCluster2D)
             {
-               // This if should actually be done for corrected point.
                TEveVector itsect;
                if (fPropagator->IntersectPlane(currP, pm->fV, pm->fP, itsect))
                {
@@ -370,17 +377,22 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                   TEveVector vtopass = pm->fV + pm->fE*(pm->fE.Dot(delta));
                   if (TEveTrackPropagator::IsOutsideBounds(vtopass, maxRsq, maxZ))
                      break;
-                  fPropagator->GoToVertex(vtopass, currP);
+                  if ( ! fPropagator->GoToVertex(vtopass, currP))
+                     break;
                }
                else
                {
                   Warning("TEveTrack::MakeTrack", "Failed to intersect plane for Cluster2D. Ignoring path-mark.");
                }
-               break;
             }
+            else
+            {
+               if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
+                  break;
+            }            
          } // loop path-marks
 
-         if (!decay || rTP.GetFitDecay() == kFALSE)
+         if (!decay)
          {
             // printf("%s loop to bounds  \n",fName.Data() );
             fPropagator->GoToBounds(currP);

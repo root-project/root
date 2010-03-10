@@ -153,6 +153,14 @@ TEveProjected::~TEveProjected()
 }
 
 //______________________________________________________________________________
+TEveElement* TEveProjected::GetProjectableAsElement() const
+{
+   // Returns fProjectable dynamic-casted to TEveElement.
+
+   return dynamic_cast<TEveElement*>(fProjectable);
+}
+
+//______________________________________________________________________________
 void TEveProjected::SetProjection(TEveProjectionManager* mng, TEveProjectable* model)
 {
    // Sets projection manager and reference in the projectable object. Method called

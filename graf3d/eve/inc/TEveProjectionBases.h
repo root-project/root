@@ -12,15 +12,16 @@
 #ifndef ROOT_TEveProjectionBases
 #define ROOT_TEveProjectionBases
 
-#include "TEveUtil.h"
-
-class TBuffer3D;
+#include "Rtypes.h"
+#include <list>
+#include <set>
 
 class TEveElement;
-
 class TEveProjection;
 class TEveProjected;
 class TEveProjectionManager;
+
+class TClass;
 
 ////////////////////////////////////////////////////////////////
 //                                                            //
@@ -96,6 +97,8 @@ public:
    TEveProjectionManager* GetManager()     const { return fManager; }
    TEveProjectable*       GetProjectable() const { return fProjectable; }
    Float_t                GetDepth()       const { return fDepth; }
+
+   TEveElement*           GetProjectableAsElement() const;
 
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void UnRefProjectable(TEveProjectable* assumed_parent);

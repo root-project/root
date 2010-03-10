@@ -810,8 +810,9 @@ void TEvePointSetProjected::UpdateProjection()
    // Re-apply the projection.
    // Virtual from TEveProjected.
 
-   TEveProjection& proj = * fManager->GetProjection();
-   TEvePointSet  & ps   = * dynamic_cast<TEvePointSet*>(fProjectable);
+   TEveProjection &proj = * fManager->GetProjection();
+   TEvePointSet   &ps   = * dynamic_cast<TEvePointSet*>(fProjectable);
+   TEveTrans      *tr   =   ps.PtrMainTrans(kFALSE);
 
    Int_t n = ps.Size();
    Reset(n);
@@ -819,8 +820,7 @@ void TEvePointSetProjected::UpdateProjection()
    Float_t *o = ps.GetP(), *p = GetP();
    for (Int_t i = 0; i < n; ++i, o+=3, p+=3)
    {
-      p[0] = o[0]; p[1] = o[1]; p[2] = o[2];
-      proj.ProjectPoint(p[0], p[1], p[2], fDepth);
+      proj.ProjectPointfv(tr, o, p, fDepth);
    }
 }
 

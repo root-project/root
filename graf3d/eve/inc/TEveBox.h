@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Matevz Tadel, 2010
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -13,6 +13,10 @@
 #define ROOT_TEveBox
 
 #include "TEveShape.h"
+
+//------------------------------------------------------------------------------
+// TEveBox
+//------------------------------------------------------------------------------
 
 class TEveBox : public TEveShape
 {
@@ -33,10 +37,50 @@ public:
    void SetVertex(Int_t i, const Float_t* v);
    void SetVertices(const Float_t* vs);
 
+   const Float_t* GetVertex(Int_t i) const { return fVertices[i]; }
+
    // For TAttBBox:
    virtual void ComputeBBox();
 
-   ClassDef(TEveBox, 0); // Short description.
+   // Projectable:
+   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+
+   ClassDef(TEveBox, 0); // 3D box with arbitrary vertices.
+};
+
+
+//------------------------------------------------------------------------------
+// TEveBoxProjected
+//------------------------------------------------------------------------------
+
+class TEveBoxProjected : public TEveShape,
+                         public TEveProjected
+{
+   friend class TEveBoxProjectedGL;
+
+private:
+   TEveBoxProjected(const TEveBoxProjected&);            // Not implemented
+   TEveBoxProjected& operator=(const TEveBoxProjected&); // Not implemented
+
+protected:
+   vPoint_t     fPoints;
+   Int_t        fBreakIdx;
+   vPoint_t     fDebugPoints;
+
+   virtual void SetDepthLocal(Float_t d);
+
+public:
+   TEveBoxProjected(const char* n="TEveBoxProjected", const char* t="");
+   virtual ~TEveBoxProjected();
+
+   // For TAttBBox:
+   virtual void ComputeBBox();
+
+   // Projected:
+   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
+   virtual void UpdateProjection();
+
+   ClassDef(TEveBoxProjected, 0); // 3D box with arbitrary vertices.
 };
 
 #endif

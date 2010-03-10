@@ -166,7 +166,7 @@ Int_t* TEvePolygonSetProjected::ProjectAndReducePoints()
       idxMap[v] = -1;
       for (Int_t k = 0; k < fNPnts; ++k)
       {
-         if(pnts[v].SquareDistance(pnts[ra[k]]) < TEveProjection::fgEps*TEveProjection::fgEps)
+         if (pnts[v].SquareDistance(pnts[ra[k]]) < TEveProjection::fgEpsSqr)
          {
             idxMap[v] = k;
             break;
@@ -292,12 +292,12 @@ Float_t TEvePolygonSetProjected::MakePolygonsFromBP(Int_t* idxMap)
          Int_t mv2 = idxMap[(*it).fV2];
          accepted = projection->AcceptSegment(fPnts[mv1], fPnts[mv2], TEveProjection::fgEps);
 
-         if(accepted == kFALSE)
+         if (accepted == kFALSE)
          {
             pp.clear();
             break;
          }
-         if(tail != pp.back()) pp.push_back(tail);
+         if (tail != pp.back()) pp.push_back(tail);
          tail = (mv1 == tail) ? mv2 :mv1;
       }
       // DirectDraw() implementation: last and first vertices should not be equal

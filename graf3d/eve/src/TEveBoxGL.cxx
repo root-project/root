@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Matevz Tadel, 2010
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -17,6 +17,10 @@
 
 #include "TMath.h"
 
+//==============================================================================
+// TEveBoxGL
+//==============================================================================
+
 //______________________________________________________________________________
 // OpenGL renderer class for TEveBox.
 //
@@ -31,8 +35,6 @@ TEveBoxGL::TEveBoxGL() :
 
    // fDLCache = kFALSE; // Disable display list.
 }
-
-/******************************************************************************/
 
 //______________________________________________________________________________
 Bool_t TEveBoxGL::SetModel(TObject* obj, const Option_t* /*opt*/)
@@ -55,7 +57,7 @@ void TEveBoxGL::SetBBox()
    SetAxisAlignedBBox(((TEveBox*)fExternalObj)->AssertBBox());
 }
 
-/******************************************************************************/
+//==============================================================================
 
 namespace
 {
@@ -220,6 +222,142 @@ void TEveBoxGL::DirectDraw(TGLRnrCtx&) const
       TGLUtil::LineWidth(fM->fLineWidth);
       glEnable(GL_LINE_SMOOTH);
       RenderOutline(fM->fVertices);
+   }
+
+   glPopAttrib();
+}
+
+
+//==============================================================================
+// TEveBoxProjectedGL
+//==============================================================================
+
+//______________________________________________________________________________
+// OpenGL renderer class for TEveBoxProjected.
+//
+
+ClassImp(TEveBoxProjectedGL);
+
+//______________________________________________________________________________
+TEveBoxProjectedGL::TEveBoxProjectedGL() :
+   TGLObject(), fM(0)
+{
+   // Constructor.
+
+   // fDLCache = kFALSE; // Disable display list.
+}
+
+/******************************************************************************/
+
+//______________________________________________________________________________
+Bool_t TEveBoxProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
+{
+   // Set model object.
+
+   if (SetModelCheckClass(obj, TEveBoxProjected::Class())) {
+      fM = dynamic_cast<TEveBoxProjected*>(obj);
+      return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TEveBoxProjectedGL::SetBBox()
+{
+   // Set bounding box.
+
+   SetAxisAlignedBBox(((TEveBoxProjected*)fExternalObj)->AssertBBox());
+}
+
+//------------------------------------------------------------------------------
+
+
+//______________________________________________________________________________
+void TEveBoxProjectedGL::RenderPoints(Int_t mode) const
+{
+   // Render points with given GL mode.
+   // This is used for polygon and outline drawing.
+
+   Int_t B = fM->fBreakIdx;
+   Int_t N = fM->fPoints.size();
+   if (B != 0)
+   {
+      glBegin(mode);
+      for (Int_t i = 0; i < B; ++i)
+      {
+         glVertex2fv(fM->fPoints[i]);
+      }
+      glEnd();
+   }
+   glBegin(mode);
+   for (Int_t i = B; i < N; ++i)
+   {
+      glVertex2fv(fM->fPoints[i]);
+   }
+   glEnd();
+}
+
+//______________________________________________________________________________
+void TEveBoxProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
+{
+   // Render with OpenGL.
+
+   if (rnrCtx.IsDrawPassOutlineLine())
+      return;
+
+   glPushMatrix();
+   glTranslatef(0.0f, 0.0f, fM->fDepth);
+
+   if (fM->fHighlightFrame && rnrCtx.Highlight())
+   {
+      if (fM->fDrawFrame)
+      {
+         TGLUtil::LineWidth(fM->fLineWidth);
+         TGLUtil::Color(fM->fLineColor);
+      }
+      RenderPoints(GL_LINE_LOOP);
+   }
+   else
+   {
+      TGLObject::Draw(rnrCtx);
+   }
+
+   {
+      glColor3f(1,0,0);
+      Int_t N = fM->fDebugPoints.size();
+      glPointSize(4);
+      glBegin(GL_POINTS);
+      for (Int_t i = 0; i < N; ++i)
+      {
+         glVertex2fv(fM->fDebugPoints[i]);
+      }
+      glEnd();
+   }
+
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
+void TEveBoxProjectedGL::DirectDraw(TGLRnrCtx&) const
+{
+   // Render with OpenGL, create display-list.
+
+   fMultiColor = (fM->fDrawFrame && fM->fFillColor != fM->fLineColor);
+
+   glPushAttrib(GL_ENABLE_BIT);
+
+   glEnable(GL_POLYGON_OFFSET_FILL);
+   glPolygonOffset(1.0f, 1.0f);
+   RenderPoints(GL_POLYGON);
+   glDisable(GL_POLYGON_OFFSET_FILL);
+
+   // Frame
+   if (fM->fDrawFrame)
+   {
+      TGLUtil::Color(fM->fLineColor);
+      TGLUtil::LineWidth(fM->fLineWidth);
+      glEnable(GL_LINE_SMOOTH);
+      RenderPoints(GL_LINE_LOOP);
    }
 
    glPopAttrib();

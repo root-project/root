@@ -17,6 +17,7 @@
 
 #include <vector>
 
+class TEveTrans;
 
 //==============================================================================
 // TEveProjection
@@ -83,9 +84,14 @@ public:
    virtual Bool_t      Is3D() const = 0;
 
    virtual void        ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e p = kPP_Full) = 0;
-   virtual void        ProjectPointfv(Float_t* v, Float_t d);
-   virtual void        ProjectPointdv(Double_t* v, Float_t d);
-   virtual void        ProjectVector(TEveVector& v, Float_t d);
+
+   void                ProjectPointfv(Float_t* v, Float_t d);
+   void                ProjectPointdv(Double_t* v, Float_t d);
+   void                ProjectVector(TEveVector& v, Float_t d);
+
+   void                ProjectPointfv(const TEveTrans* t, const Float_t*  p, Float_t* v, Float_t d);
+   void                ProjectPointdv(const TEveTrans* t, const Double_t* p, Double_t* v, Float_t d);
+   void                ProjectVector(const TEveTrans* t, TEveVector& v, Float_t d);
 
    const   Char_t*     GetName() const            { return fName.Data(); }
    void                SetName(const Char_t* txt) { fName = txt; }
@@ -123,7 +129,8 @@ public:
    Float_t  GetMaxTrackStep() const    { return fMaxTrackStep; }
    void     SetMaxTrackStep(Float_t x) { fMaxTrackStep = TMath::Max(x, 1.0f); }
 
-   virtual   Bool_t    AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) { return kTRUE; }
+   virtual   Bool_t    AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) const { return kTRUE; }
+   virtual   Int_t     SubSpaceId(const TEveVector&) const { return 0; }
    virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    // utils to draw axis
@@ -131,7 +138,8 @@ public:
    virtual Float_t     GetScreenVal(Int_t ax, Float_t value);
    Float_t             GetLimit(Int_t i, Bool_t pos) { return pos ? fUpLimit[i] : fLowLimit[i]; }
 
-   static   Float_t    fgEps;  // resolution of projected points
+   static   Float_t    fgEps;    // resolution of projected points
+   static   Float_t    fgEpsSqr; // square of resolution of projected points
 
    ClassDef(TEveProjection, 0); // Base for specific classes that implement non-linear projections.
 };
@@ -153,14 +161,15 @@ public:
    virtual Bool_t      Is2D() const { return kTRUE;  }
    virtual Bool_t      Is3D() const { return kFALSE; }
 
-   virtual   void      ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+   virtual void        ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
 
-   virtual   void      SetCenter(TEveVector& center);
-   virtual   Float_t*  GetProjectedCenter() { return fProjectedCenter.Arr(); }
+   virtual void        SetCenter(TEveVector& center);
+   virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.Arr(); }
 
    virtual   void      UpdateLimit();
 
-   virtual   Bool_t    AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance);
+   virtual   Bool_t    AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance) const;
+   virtual   Int_t     SubSpaceId(const TEveVector& v) const;
    virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    ClassDef(TEveRhoZProjection, 0); // Rho/Z non-linear projection.

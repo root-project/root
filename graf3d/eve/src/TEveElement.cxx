@@ -1213,12 +1213,12 @@ void TEveElement::SetMainAlpha(Float_t alpha)
 /******************************************************************************/
 
 //______________________________________________________________________________
-TEveTrans* TEveElement::PtrMainTrans()
+TEveTrans* TEveElement::PtrMainTrans(Bool_t create)
 {
-   // Return pointer to main transformation. It is created if not yet
-   // existing.
+   // Return pointer to main transformation. If 'create' flag is set (default)
+   // it is created if not yet existing.
 
-   if (!fMainTrans)
+   if (!fMainTrans && create)
       InitMainTrans();
 
    return fMainTrans;

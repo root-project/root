@@ -135,6 +135,62 @@ void TEveVector4::Dump() const
 
 
 //==============================================================================
+// TEvePoint
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// Float two-vector.
+
+ClassImp(TEvePoint);
+
+//______________________________________________________________________________
+void TEvePoint::Normalize(Float_t length)
+{
+   // Normalize the vector to length if current length is non-zero.
+
+   Float_t m = Mag();
+   if (m != 0)
+   {
+      m = length / m;
+      fX *= m; fY *= m;
+   }
+}
+
+//______________________________________________________________________________
+TEvePoint TEvePoint::operator + (const TEvePoint & b) const
+{
+   // Vector addition.
+
+   return TEvePoint(fX + b.fX, fY + b.fY);
+}
+
+//______________________________________________________________________________
+TEvePoint TEvePoint::operator - (const TEvePoint & b) const
+{
+   // Vector subtraction.
+
+   return TEvePoint(fX - b.fX, fY - b.fY);
+}
+
+//______________________________________________________________________________
+TEvePoint TEvePoint::operator * (Float_t a) const
+{
+   // Multiplication with scalar.
+
+   return TEvePoint(a*fX, a*fY);
+}
+
+//______________________________________________________________________________
+void TEvePoint::Dump() const
+{
+   // Dump to stdout as "(x, y)\n".
+
+   printf("(%f, %f)\n", fX, fY);
+}
+
+
+//==============================================================================
 // TEvePathMark
 //==============================================================================
 

@@ -88,55 +88,5 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
                                  rnrCtx.Selection());
    }
 
-   // path-marks
-   const TEveTrack::vPathMark_t& pms = fTrack->RefPathMarks();
-   TEveTrackPropagator& rTP = *fM->GetPropagator();
-   if (pms.size())
-   {
-      Float_t* pnts = new Float_t[3*pms.size()]; // maximum
-      Float_t*  pnt = pnts;
-      Int_t   pntsN = 0;
-      Bool_t accept;
-      for (TEveTrack::vPathMark_ci pm = pms.begin(); pm != pms.end(); ++pm)
-      {
-         accept = kFALSE;
-         switch (pm->fType)
-         {
-            case TEvePathMark::kDaughter:
-               if (rTP.GetRnrDaughters())  accept = kTRUE;
-               break;
-            case TEvePathMark::kReference:
-               if (rTP.GetRnrReferences()) accept = kTRUE;
-               break;
-            case TEvePathMark::kDecay:
-               if (rTP.GetRnrDecay())      accept = kTRUE;
-               break;
-            case TEvePathMark::kCluster2D:
-               if (rTP.GetRnrCluster2Ds()) accept = kTRUE;
-               break;
-         }
-         if (accept)
-         {
-            if ((TMath::Abs(pm->fV.fZ) < rTP.GetMaxZ()) && (pm->fV.Perp() < rTP.GetMaxR()))
-            {
-               pnt[0] = pm->fV.fX;
-               pnt[1] = pm->fV.fY;
-               pnt[2] = pm->fV.fZ;
-               fM->fProjection->ProjectPointfv(pnt, fM->fDepth);
-               pnt += 3;
-               ++pntsN;
-            }
-         }
-      }
-      TGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, pntsN,
-                                 rnrCtx.GetPickRadius(),
-                                 rnrCtx.Selection());
-      delete [] pnts;
-   }
-
-   // fist vertex
-   if (rTP.GetRnrFV() && fTrack->GetLastPoint())
-      TGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), fTrack->GetP(), 1,
-                                 rnrCtx.GetPickRadius(),
-                                 rnrCtx.Selection());
+   RenderPathMarksAndFirstVertex(rnrCtx);
 }

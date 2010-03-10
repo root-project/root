@@ -12,6 +12,7 @@
 #include "TEveTrackProjected.h"
 #include "TEveTrackPropagator.h"
 #include "TEveProjectionManager.h"
+#include "TEveTrans.h"
 
 //==============================================================================
 //==============================================================================
@@ -26,9 +27,8 @@ ClassImp(TEveTrackProjected);
 
 //______________________________________________________________________________
 TEveTrackProjected::TEveTrackProjected() :
-   TEveTrack  (),
-   fOrigPnts  (0),
-   fProjection(0)
+   TEveTrack (),
+   fOrigPnts (0)
 {
    // Default constructor.
 }
@@ -41,12 +41,10 @@ void TEveTrackProjected::SetProjection(TEveProjectionManager* mng, TEveProjectab
    // This is virtual method from base-class TEveProjected.
 
    TEveProjected::SetProjection(mng, model);
-   TEveTrack* origTrack = dynamic_cast<TEveTrack*>(fProjectable);
 
-   SetTrackParams(*origTrack);
-   SetPathMarks  (*origTrack);
-
-   SetLockPoints(origTrack->GetLockPoints());
+   TEveTrack* otrack = dynamic_cast<TEveTrack*>(fProjectable);
+   SetTrackParams(*otrack);
+   SetLockPoints(otrack->GetLockPoints());
 }
 
 /******************************************************************************/
@@ -61,9 +59,14 @@ void TEveTrackProjected::SetDepthLocal(Float_t d)
    Int_t    n = Size();
    Float_t *p = GetP() + 2;
    for (Int_t i = 0; i < n; ++i, p+=3)
+   {
       *p = fDepth;
+   }
 
-   // !!!! Missing path-marks move. But they are not projected anyway
+   for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+   {
+      pm->fV.fZ = fDepth;
+   }
 }
 
 //______________________________________________________________________________
@@ -71,7 +74,6 @@ void TEveTrackProjected::UpdateProjection()
 {
    // Virtual method from base-class TEveProjected.
 
-   fProjection = fManager->GetProjection();
    MakeTrack(kFALSE); // TEveProjectionManager makes recursive calls
 }
 
@@ -81,15 +83,17 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
 {
    // With bisection calculate break-point vertex.
 
+   TEveProjection *projection = fManager->GetProjection();
+
    TEveVector vL = fOrigPnts[idx];
    TEveVector vR = fOrigPnts[idx+1];
    TEveVector vM, vLP, vMP;
    while ((vL-vR).Mag() > 0.01)
    {
       vM.Mult(vL+vR, 0.5f);
-      vLP.Set(vL); fProjection->ProjectPoint(vLP.fX, vLP.fY, vLP.fZ, 0);
-      vMP.Set(vM); fProjection->ProjectPoint(vMP.fX, vMP.fY, vMP.fZ, 0);
-      if (fProjection->AcceptSegment(vLP, vMP, 0.0f))
+      vLP.Set(vL); projection->ProjectPoint(vLP.fX, vLP.fY, vLP.fZ, 0);
+      vMP.Set(vM); projection->ProjectPoint(vMP.fX, vMP.fY, vMP.fZ, 0);
+      if (projection->AcceptSegment(vLP, vMP, 0.0f))
       {
          vL.Set(vM);
       }
@@ -104,7 +108,7 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
    } else {
       x = vR.fX; y = vR.fY; z = vR.fZ;
    }
-   fProjection->ProjectPoint(x, y, z, fDepth);
+   projection->ProjectPoint(x, y, z, fDepth);
 }
 
 //______________________________________________________________________________
@@ -114,6 +118,8 @@ Int_t TEveTrackProjected::GetBreakPointIdx(Int_t start)
    // segment of projected space.
    // For example, rho-z projection separates upper and lower hemisphere
    // and tracks break into two lines when crossing the y=0 plane.
+
+   TEveProjection *projection = fManager->GetProjection();
 
    Int_t val = fLastPoint;
 
@@ -125,7 +131,7 @@ Int_t TEveTrackProjected::GetBreakPointIdx(Int_t start)
       {
          GetPoint(i,   v1.fX, v1.fY, v1.fZ);
          GetPoint(i+1, v2.fX, v2.fY, v2.fZ);
-         if(fProjection->AcceptSegment(v1, v2, fPropagator->GetDelta()) == kFALSE)
+         if(projection->AcceptSegment(v1, v2, fPropagator->GetDelta()) == kFALSE)
          {
             val = i;
             break;
@@ -145,11 +151,18 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
    // Call base-class, project, find break-points and insert points
    // required for full representation.
 
+   TEveTrack      *otrack     = dynamic_cast<TEveTrack*>(fProjectable);
+   TEveTrans      *trans      = otrack->PtrMainTrans(kFALSE);
+   TEveProjection *projection = fManager->GetProjection();
+
    fBreakPoints.clear();
 
-   if (GetLockPoints())
+   fPathMarks.clear();
+   SetPathMarks(*otrack);
+   if (GetLockPoints() || otrack->Size() > 0)
    {
-      ClonePoints(*dynamic_cast<TEveTrack*>(fProjectable));
+      ClonePoints(*otrack);
+      fLastPMIdx = otrack->GetLastPMIdx();
    }
    else
    {
@@ -158,15 +171,16 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
    if (Size() == 0) return; // All points can be outside of MaxR / MaxZ limits.
 
    // Break segments additionally if required by the projection.
-   ReduceSegmentLengths(fProjection->GetMaxTrackStep());
+   ReduceSegmentLengths(projection->GetMaxTrackStep());
 
    // Project points, store originals (needed for break-points).
    Float_t *p = GetP();
    fOrigPnts  = new TEveVector[Size()];
    for (Int_t i = 0; i < Size(); ++i, p+=3)
    {
+      if (trans) trans->MultiplyIP(p);
       fOrigPnts[i].Set(p);
-      fProjection->ProjectPoint(p[0], p[1], p[2], fDepth);
+      projection->ProjectPointfv(p, fDepth);
    }
 
    Float_t x, y, z;
@@ -201,8 +215,16 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
 
    Reset((Int_t)vvec.size());
    for (std::vector<TEveVector>::iterator i=vvec.begin(); i!=vvec.end(); ++i)
+   {
       SetNextPoint((*i).fX, (*i).fY, (*i).fZ);
+   }
    delete [] fOrigPnts;
+
+   // Project path-marks
+   for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+   {
+      projection->ProjectVector(trans, pm->fV, fDepth);
+   }
 }
 
 /******************************************************************************/

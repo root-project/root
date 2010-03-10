@@ -56,6 +56,7 @@ protected:
    Int_t              fStatus;     // Status-word, user-defined.
    Bool_t             fLockPoints; // Lock points that are currently in - do nothing in MakeTrack().
    vPathMark_t        fPathMarks;  // TEveVector of known points along the track
+   Int_t              fLastPMIdx;  //!Last path-mark index tried in track-propagation.
 
    TEveTrackPropagator *fPropagator;   // Pointer to shared render-style
 
@@ -79,8 +80,9 @@ public:
    virtual void MakeTrack(Bool_t recurse=kTRUE);
 
    TEveTrackPropagator* GetPropagator() const  { return fPropagator; }
-   void SetPropagator(TEveTrackPropagator* prop);
-   void SetAttLineAttMarker(TEveTrackList* tl);
+   Int_t GetLastPMIdx() const { return fLastPMIdx; }
+   void  SetPropagator(TEveTrackPropagator* prop);
+   void  SetAttLineAttMarker(TEveTrackList* tl);
 
    const TEveVector& GetVertex()      const { return fV;    }
    const TEveVector& GetMomentum()    const { return fP;    }

@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2010
+// Author: Matevz Tadel, 2010
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -13,6 +13,7 @@
 #define ROOT_TEveShape
 
 #include "TEveElement.h"
+#include "TEveVector.h"
 
 #include "TAtt3D.h"
 #include "TAttBBox.h"
@@ -35,6 +36,9 @@ protected:
 
    Bool_t       fDrawFrame;      // draw frame
    Bool_t       fHighlightFrame; // highlight frame / all shape
+
+   typedef std::vector<TEvePoint>           vPoint_t;
+   typedef std::vector<TEvePoint>::iterator vPoint_i;
 
 public:
    TEveShape(const char* n="TEveShape", const char* t="");
@@ -74,6 +78,9 @@ public:
    // Abstract from TEveProjectable, overriden in TEveElementList:
    // virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
+   // ----------------------------------------------------------------
+
+   static Int_t FindConvexHull(const vPoint_t& pin, vPoint_t& pout, TEveElement* caller=0);
 
    ClassDef(TEveShape, 0); // Abstract base-class for 2D/3D shapes.
 };

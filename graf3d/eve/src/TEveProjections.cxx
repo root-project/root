@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TEveProjections.h"
+#include "TEveTrans.h"
 #include "TEveUtil.h"
 
 #include <limits>
@@ -28,7 +29,8 @@
 
 ClassImp(TEveProjection);
 
-Float_t TEveProjection::fgEps = 0.005f;
+Float_t TEveProjection::fgEps    = 0.005f;
+Float_t TEveProjection::fgEpsSqr = 0.000025f;
 
 //______________________________________________________________________________
 TEveProjection::TEveProjection() :
@@ -78,6 +80,54 @@ void TEveProjection::ProjectVector(TEveVector& v, Float_t d)
 {
    // Project TEveVector.
 
+   ProjectPoint(v.fX, v.fY, v.fZ, d);
+}
+
+//______________________________________________________________________________
+void TEveProjection::ProjectPointfv(const TEveTrans* t, const Float_t* p, Float_t* v, Float_t d)
+{
+   // Project float array, converting it to global coordinate system first if
+   // transformation matrix is set.
+
+   v[0] = p[0]; v[1] = p[1]; v[2] = p[2];
+   if (t)
+   {
+      t->MultiplyIP(v);
+   }
+   ProjectPoint(v[0], v[1], v[2], d);
+}
+
+//______________________________________________________________________________
+void TEveProjection::ProjectPointdv(const TEveTrans* t, const Double_t* p, Double_t* v, Float_t d)
+{
+   // Project double array, converting it to global coordinate system first if
+   // transformation matrix is set.
+   // This is a bit piggish as we convert the doubles to floats and back.
+
+   Float_t x, y, z;
+   if (t)
+   {
+      t->Multiply(p, v);
+      x = v[0]; y = v[1]; z = v[2];
+   }
+   else
+   {
+      x = p[0]; y = p[1]; z = p[2];
+   }
+   ProjectPoint(x, y, z, d);
+   v[0] = x; v[1] = y; v[2] = z;
+}
+
+//______________________________________________________________________________
+void TEveProjection::ProjectVector(const TEveTrans* t, TEveVector& v, Float_t d)
+{
+   // Project TEveVector, converting it to global coordinate system first if
+   // transformation matrix is set.
+
+   if (t)
+   {
+      t->MultiplyIP(v);
+   }
    ProjectPoint(v.fX, v.fY, v.fZ, d);
 }
 
@@ -468,9 +518,12 @@ void TEveRhoZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 }
 //______________________________________________________________________________
 Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2,
-                                         Float_t tolerance)
+                                         Float_t tolerance) const
 {
    // Check if segment of two projected points is valid.
+   //
+   // Move slightly one of the points if by shifting it by no more than
+   // tolearance the segment can become acceptable.
 
    Float_t a = fProjectedCenter.fY;
    Bool_t val = kTRUE;
@@ -491,6 +544,16 @@ Bool_t TEveRhoZProjection::AcceptSegment(TEveVector& v1, TEveVector& v2,
       }
    }
    return val;
+}
+
+//______________________________________________________________________________
+Int_t TEveRhoZProjection::SubSpaceId(const TEveVector& v) const
+{
+   // Return sub-space id for the point.
+   // 0 - upper half-space
+   // 1 - lowwer half-space
+
+   return v.fY > fProjectedCenter.fY ? 0 : 1;
 }
 
 

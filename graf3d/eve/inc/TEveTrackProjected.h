@@ -15,7 +15,6 @@
 #include "TEveTrack.h"
 #include "TEveProjectionBases.h"
 
-class TEveProjection;
 
 class TEveTrackProjected : public TEveTrack,
                            public TEveProjected
@@ -33,7 +32,6 @@ private:
 
 protected:
    std::vector<Int_t>   fBreakPoints; // indices of track break-points
-   TEveProjection      *fProjection;  // projection
 
    virtual void SetDepthLocal(Float_t d);
 

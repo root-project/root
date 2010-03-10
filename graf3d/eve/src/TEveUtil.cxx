@@ -28,9 +28,10 @@
 #include "TGClient.h"
 #include "TGMimeTypes.h"
 
+#include "Riostream.h"
+
 #include <list>
 #include <algorithm>
-#include <iostream>
 #include <string>
 
 //==============================================================================

@@ -45,6 +45,7 @@
 // TEveVector
 #pragma link C++ class TEveVector+;
 #pragma link C++ class TEveVector4+;
+#pragma link C++ class TEvePoint+;
 #pragma link C++ class TEvePathMark+;
 
 // TEveTrans

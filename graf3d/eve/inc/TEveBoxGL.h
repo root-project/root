@@ -1,5 +1,5 @@
 // @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// Author: Matevz Tadel, 2010
 
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,11 @@ class TGLViewer;
 class TGLScene;
 
 class TEveBox;
+class TEveBoxProjected;
+
+//------------------------------------------------------------------------------
+// TEveBoxGL
+//------------------------------------------------------------------------------
 
 class TEveBoxGL : public TGLObject
 {
@@ -47,6 +52,39 @@ public:
    // virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
    ClassDef(TEveBoxGL, 0); // GL renderer class for TEveBox.
+};
+
+
+//------------------------------------------------------------------------------
+// TEveBoxProjectedGL
+//------------------------------------------------------------------------------
+
+class TEveBoxProjectedGL : public TGLObject
+{
+private:
+   TEveBoxProjectedGL(const TEveBoxProjectedGL&);            // Not implemented
+   TEveBoxProjectedGL& operator=(const TEveBoxProjectedGL&); // Not implemented
+
+protected:
+   TEveBoxProjected             *fM;  // Model object.
+
+   void RenderPoints(Int_t mode) const;
+
+public:
+   TEveBoxProjectedGL();
+   virtual ~TEveBoxProjectedGL() {}
+
+   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual void   SetBBox();
+
+   virtual void Draw(TGLRnrCtx& rnrCtx) const;
+   virtual void DirectDraw(TGLRnrCtx& rnrCtx) const;
+
+   // To support two-level selection
+   // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
+   // virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+
+   ClassDef(TEveBoxProjectedGL, 0); // GL renderer class for TEveBoxProjected.
 };
 
 #endif
