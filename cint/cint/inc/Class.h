@@ -57,6 +57,7 @@ G__ClassInfo {
   int NMethods();
   long IsBase(const char *classname);
   long IsBase(G__ClassInfo& a);
+  void* DynamicCast(G__ClassInfo& to, void* obj);
   long Tagnum() const { return(tagnum); }
   G__ClassInfo EnclosingClass() ;
   G__ClassInfo EnclosingSpace() ;

@@ -49,6 +49,21 @@ static void G__SlideString(char* str, unsigned int slide)
 }
 
 //______________________________________________________________________________
+void* G__dynamiccast(int totagnum, int fromtagnum, void* addr)
+{
+   // Cast addr pointing to an object of class fromtagnum to the class
+   // tottagnum, returning the adjusted object pointer. Similar to
+   //    dynamic_cast<totagnum*>((fromtagnum*)add)
+
+   G__value val = G__null;
+   val.tagnum = fromtagnum;
+   val.obj.i = (long) addr;
+   int type = 'C';
+   G__castclass(&val, totagnum, 'A'-'a', &type, G__PARANORMAL);
+   return (void*) val.obj.i;
+}
+
+//______________________________________________________________________________
 static void G__castclass(G__value* result3, int tagnum, int castflag, int* ptype, int reftype)
 {
    // -- FIXME: Describe this function!

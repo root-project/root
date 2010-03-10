@@ -223,6 +223,14 @@ long Cint::G__ClassInfo::IsBase(G__ClassInfo& a)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
+void* Cint::G__ClassInfo::DynamicCast(G__ClassInfo& to, void* obj)
+{
+   // Cast an object (pointed to by obj) of this class to an object
+   // of class "to", return pointer to object. Sort of corresponds to
+   //    dynamic_cast<to*>((this)obj)
+   return G__dynamiccast(to.Tagnum(), Tagnum(), obj);
+}
+///////////////////////////////////////////////////////////////////////////
 G__ClassInfo Cint::G__ClassInfo::EnclosingClass()
 {
   if(IsValid()) {
