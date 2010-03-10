@@ -1377,15 +1377,6 @@ void TPostScript::FontEncode()
    PrintStr(" /NewCenturySchlbk-BoldItalic /NewCenturySchlbk-Italic");
    PrintStr(" /Palatino-Bold /Palatino-BoldItalic /Palatino-Italic /Palatino-Roman");
    PrintStr(" ] {ISOLatin1Encoding reEncode } forall");
-
-   // Initialization of text PostScript procedures
-   PrintStr("/oshow {gsave [] 0 sd true charpath stroke gr} def@");
-   PrintStr("/stwn { /fs exch def /fn exch def /text exch def fn findfont fs sf");
-   PrintStr(" text sw pop xs add /xs exch def} def@");
-   PrintStr("/stwb { /fs exch def /fn exch def /nbas exch def /textf exch def");
-   PrintStr("textf length /tlen exch def nbas tlen gt {/nbas tlendef} if");
-   PrintStr("fn findfont fs sf textf dup length nbas sub nbas getinterval sw");
-   PrintStr("pop neg xs add /xs exch def} def@");
 }
 
 
@@ -1408,8 +1399,6 @@ void TPostScript::Initialize()
    // |     bl     | dx dy x y        | Draw a line box                   |
    // +------------+------------------+-----------------------------------+
    // |     bf     | dx dy x y        | Draw a filled box                 |
-   // +------------+------------------+-----------------------------------+
-   // |     sw     | text             | Return string width of text       |
    // +------------+------------------+-----------------------------------+
    // |     t      | x y              | Translate                         |
    // +------------+------------------+-----------------------------------+
@@ -1533,7 +1522,7 @@ void TPostScript::Initialize()
 
    // Initialization of PostScript procedures
    PrintStr("/s {stroke} def /l {lineto} def /m {moveto} def /t {translate} def@");
-   PrintStr("/sw {stringwidth} def /r {rotate} def /rl {roll}  def /R {repeat} def@");
+   PrintStr("/r {rotate} def /rl {roll}  def /R {repeat} def@");
    PrintStr("/d {rlineto} def /rm {rmoveto} def /gr {grestore} def /f {eofill} def@");
    if (gStyle->GetColorModelPS()) {
       PrintStr("/c {setcmykcolor} def /black {0 0 0 1 setcmykcolor} def /sd {setdash} def@");
