@@ -141,7 +141,7 @@ Int_t TEveShape::FindConvexHull(const vPoint_t& pin, vPoint_t& pout, TEveElement
       b = a; ++b;
       while (b != idcs.end())
       {
-         if (fabsf(angles[*a] - angles[*b]) < 1e-5f)
+         if (TMath::Abs(angles[*a] - angles[*b]) < 1e-5f)
          {
             if (pin[idcs[0]].SquareDistance(pin[*a]) < pin[idcs[0]].SquareDistance(pin[*b]))
                a = b;
