@@ -574,7 +574,8 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                   std::string arg = typenameOriginal.substr(posTemplArg + 1, posArgEnd - posTemplArg - 1);
                   std::string::size_type posRef = 0;
                   int templateLevel = 0;
-                  for (; arg[posRef]; ++posRef) {
+                  size_t lenArg = arg.length();
+                  for (; posRef < lenArg; ++posRef) {
                      switch (arg[posRef]) {
                      case '<':
                         if (arg[posRef + 1] != '<') ++templateLevel;
