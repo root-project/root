@@ -45,6 +45,7 @@ public:
 
    virtual TEveVector GetField(const TEveVector &v) const { return GetField(v.fX, v.fY, v.fZ);}
    virtual TEveVector GetField(Float_t x, Float_t y, Float_t z) const = 0;
+   virtual Float_t GetMaxFieldMag() const { return 4; } // not abstract because of backward compatibility
 
    ClassDef(TEveMagField, 0); // Abstract interface to magnetic field
 };
@@ -66,6 +67,7 @@ public:
 
    using   TEveMagField::GetField;
    virtual TEveVector GetField(Float_t /*x*/, Float_t /*y*/, Float_t /*z*/) const { return fB; }
+   virtual Float_t GetMaxFieldMag() const { return fB.Mag(); };
 
    ClassDef(TEveMagFieldConst, 0); // Interface to constant magnetic field.
 };
@@ -93,6 +95,8 @@ public:
    using   TEveMagField::GetField;
    virtual TEveVector GetField(Float_t x, Float_t y, Float_t /*z*/) const
    { return  ((x*x+y*y)<fR2) ? fBIn : fBOut; }
+   virtual Float_t GetMaxFieldMag() const
+   { Float_t b1 = fBIn.Mag(), b2 = fBOut.Mag(); return b1 > b2 ? b1 : b2; }
 
    ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending of radius.
 };
@@ -111,10 +115,9 @@ public:
    struct Helix_t
    {
       Int_t   fCharge;   // Charge of tracked particle.
-      Float_t fMinAng;   // Minimal angular step between two helix points.
-      Float_t fDelta;    // Maximal error at the mid-point of the line connecting two helix points.
+      Float_t fMaxAng;   // Maximum step angle.
       Float_t fMaxStep;  // Maximum allowed step size.
-      Float_t fCurrentStep;
+      Float_t fDelta;    // Maximum error in the middle of the step.
 
       Float_t fPhi;      // Accumulated angle to check fMaxOrbs by propagator.
       Bool_t  fValid;    // Corner case pT~0 or B~0, possible in variable mag field.
@@ -126,6 +129,9 @@ public:
       Float_t fR;           // Helix radius in cm.
       Float_t fPhiStep;     // Caluclated from fMinAng and fDelta.
       Float_t fSin, fCos;   // Current sin/cos(phistep).
+
+      // Runge-Kutta parameters
+      Float_t fRKStep;      // Step for Runge-Kutta.
 
       // cached
       TEveVector fB;        // Current magnetic field, cached.
@@ -140,7 +146,7 @@ public:
       Helix_t();
 
       void UpdateCommon(const TEveVector & p, const TEveVector& b);
-      void UpdateHelix(const TEveVector & p, const TEveVector& b, Bool_t fullUpdate);
+      void UpdateHelix(const TEveVector & p, const TEveVector& b, Bool_t full_update, Bool_t enforce_max_step);
       void UpdateRK   (const TEveVector & p, const TEveVector& b);
 
       void Step(const TEveVector4& v, const TEveVector& p, TEveVector4& vOut, TEveVector& pOut);
@@ -162,7 +168,7 @@ protected:
    // Track extrapolation limits
    Float_t                  fMaxR;          // Max radius for track extrapolation
    Float_t                  fMaxZ;          // Max z-coordinate for track extrapolation.
-   Int_t                    fNMax;          // max steps
+   Int_t                    fNMax;          // Max steps
    // Helix limits
    Float_t                  fMaxOrbs;       // Maximal angular path of tracks' orbits (1 ~ 2Pi).
 
@@ -188,7 +194,7 @@ protected:
    Helix_t                  fH;             // Helix.
 
    void    RebuildTracks();
-   void    Update(const TEveVector4& v, const TEveVector& p, Bool_t full_update=kFALSE);
+   void    Update(const TEveVector4& v, const TEveVector& p, Bool_t full_update=kFALSE, Bool_t enforce_max_step=kFALSE);
    void    Step(const TEveVector4 &v, const TEveVector &p, TEveVector4 &vOut, TEveVector &pOut);
 
    Bool_t  LoopToVertex(TEveVector& v, TEveVector& p);
@@ -197,7 +203,7 @@ protected:
    Bool_t  LineToVertex (TEveVector& v);
    void    LineToBounds (TEveVector& p);
 
-   void    OneStepRungeKutta(Double_t charge, Double_t step, Double_t* vect, Double_t* vout);
+   void    StepRungeKutta(Double_t step, Double_t* vect, Double_t* vout);
 
    Bool_t  HelixIntersectPlane(const TEveVector& p, const TEveVector& point, const TEveVector& normal,
                                TEveVector& itsect);
@@ -238,8 +244,9 @@ public:
    void   SetMaxZ(Float_t x);
    void   SetMaxOrbs(Float_t x);
    void   SetMinAng(Float_t x);
-   void   SetDelta(Float_t x);
+   void   SetMaxAng(Float_t x);
    void   SetMaxStep(Float_t x);
+   void   SetDelta(Float_t x);
 
    void   SetEditPathMarks(Bool_t x) { fEditPathMarks = x; }
    void   SetRnrDaughters(Bool_t x);
@@ -260,9 +267,10 @@ public:
    Float_t GetMaxR()     const { return fMaxR;     }
    Float_t GetMaxZ()     const { return fMaxZ;     }
    Float_t GetMaxOrbs()  const { return fMaxOrbs;  }
-   Float_t GetMinAng()   const { return fH.fMinAng;   }
-   Float_t GetDelta()    const { return fH.fDelta;    }
+   Float_t GetMinAng()   const;
+   Float_t GetMaxAng()   const { return fH.fMaxAng;   }
    Float_t GetMaxStep()  const { return fH.fMaxStep;  }
+   Float_t GetDelta()    const { return fH.fDelta;    }
 
    Bool_t  GetEditPathMarks() const { return fEditPathMarks; }
    Bool_t  GetRnrDaughters()  const { return fRnrDaughters;  }

@@ -45,7 +45,7 @@ protected:
    TEveGValuator      *fMaxR;
    TEveGValuator      *fMaxZ;
    TEveGValuator      *fMaxOrbits;
-   TEveGValuator      *fMinAng;
+   TEveGValuator      *fMaxAng;
    TEveGValuator      *fDelta;
 
    TGCheckButton      *fRnrFV;
@@ -76,7 +76,7 @@ public:
    void DoMaxR();
    void DoMaxZ();
    void DoMaxOrbits();
-   void DoMinAng();
+   void DoMaxAng();
    void DoDelta();
 
    void DoFitPM();

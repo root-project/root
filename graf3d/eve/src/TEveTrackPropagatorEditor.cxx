@@ -43,7 +43,7 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    fMaxR(0),
    fMaxZ(0),
    fMaxOrbits(0),
-   fMinAng(0),
+   fMaxAng(0),
    fDelta(0),
 
    fRnrFV(0),
@@ -94,14 +94,14 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    fMaxOrbits->Connect("ValueSet(Double_t)", "TEveTrackPropagatorSubEditor", this, "DoMaxOrbits()");
    AddFrame(fMaxOrbits, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
-   fMinAng = new TEveGValuator(this, "Angle:", 90, 0);
-   fMinAng->SetLabelWidth(labelW);
-   fMinAng->SetNELength(6);
-   fMinAng->Build();
-   fMinAng->SetLimits(1, 160, 81, TGNumberFormat::kNESRealOne);
-   fMinAng->SetToolTip("Minimal angular step between two helix points.");
-   fMinAng->Connect("ValueSet(Double_t)", "TEveTrackPropagatorSubEditor", this, "DoMinAng()");
-   AddFrame(fMinAng, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fMaxAng = new TEveGValuator(this, "Angle:", 90, 0);
+   fMaxAng->SetLabelWidth(labelW);
+   fMaxAng->SetNELength(6);
+   fMaxAng->Build();
+   fMaxAng->SetLimits(1, 160, 81, TGNumberFormat::kNESRealOne);
+   fMaxAng->SetToolTip("Maximal angular step between two helix points.");
+   fMaxAng->Connect("ValueSet(Double_t)", "TEveTrackPropagatorSubEditor", this, "DoMaxAng()");
+   AddFrame(fMaxAng, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 
    fDelta = new TEveGValuator(this, "Delta:", 90, 0);
    fDelta->SetLabelWidth(labelW);
@@ -215,7 +215,7 @@ void TEveTrackPropagatorSubEditor::SetModel(TEveTrackPropagator* m)
    fMaxR->SetValue(fM->fMaxR);
    fMaxZ->SetValue(fM->fMaxZ);
    fMaxOrbits->SetValue(fM->fMaxOrbs);
-   fMinAng->SetValue(fM->GetMinAng());
+   fMaxAng->SetValue(fM->GetMaxAng());
    fDelta->SetValue(fM->GetDelta());
 
    if(fM->fEditPathMarks)
@@ -282,11 +282,11 @@ void TEveTrackPropagatorSubEditor::DoMaxOrbits()
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagatorSubEditor::DoMinAng()
+void TEveTrackPropagatorSubEditor::DoMaxAng()
 {
-   // Slot for MinAng.
+   // Slot for MaxAng.
 
-   fM->SetMinAng(fMinAng->GetValue());
+   fM->SetMaxAng(fMaxAng->GetValue());
    Changed();
 }
 
