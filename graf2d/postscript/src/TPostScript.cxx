@@ -988,15 +988,19 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    if (markerstyle >= 32) strcpy(chtemp, " m20");
 
    // Set the PostScript marker size
-   Float_t symbolsize  = fMarkerSize;
-   if (markerstyle == 1) symbolsize = 0.01;
-   if (markerstyle == 6) symbolsize = 0.02;
-   if (markerstyle == 7) symbolsize = 0.04;
-
-   const Int_t kBASEMARKER = 8;
-   Float_t sbase = symbolsize*kBASEMARKER;
-   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   markersize = this->UtoPS(s2x) - this->UtoPS(0);
+   if (markerstyle == 1) {
+      markersize = 2.;
+   } else if (markerstyle == 6) {
+      markersize = 4.;
+   } else if (markerstyle == 7) {
+      markersize = 8.;
+   } else {
+      Float_t symbolsize  = fMarkerSize;
+      const Int_t kBASEMARKER = 8;
+      Float_t sbase = symbolsize*kBASEMARKER;
+      Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
+      markersize = this->UtoPS(s2x) - this->UtoPS(0);
+   }
 
    if (fMarkerSizeCur != markersize) {
       fMarkerSizeCur = markersize;
@@ -1058,15 +1062,19 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    if (markerstyle >= 32) strcpy(chtemp, " m20");
 
    // Set the PostScript marker size
-   Float_t symbolsize  = fMarkerSize;
-   if (markerstyle == 1) symbolsize = 0.01;
-   if (markerstyle == 6) symbolsize = 0.02;
-   if (markerstyle == 7) symbolsize = 0.04;
-
-   const Int_t kBASEMARKER = 8;
-   Float_t sbase = symbolsize*kBASEMARKER;
-   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   markersize = this->UtoPS(s2x) - this->UtoPS(0);
+   if (markerstyle == 1) {
+      markersize = 2.;
+   } else if (markerstyle == 6) {
+      markersize = 4.;
+   } else if (markerstyle == 7) {
+      markersize = 8.;
+   } else {
+      Float_t symbolsize  = fMarkerSize;
+      const Int_t kBASEMARKER = 8;
+      Float_t sbase = symbolsize*kBASEMARKER;
+      Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
+      markersize = this->UtoPS(s2x) - this->UtoPS(0);
+   }
 
    if (fMarkerSizeCur != markersize) {
       fMarkerSizeCur = markersize;
