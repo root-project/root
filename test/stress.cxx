@@ -473,7 +473,7 @@ void stress5()
    FILE *fp = fopen("stress.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 675;
+   Int_t nlinesGood = 632;
    while (fgets(line,255,fp)) {
       nlines++;
    }
