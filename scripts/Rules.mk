@@ -188,10 +188,17 @@ endif
 
 ObjSuf   = o
 
-ifeq ($(ARCH),macosx64)
-PYTHON := python64
-else
-PYTHON := python
+ifeq ($(PYTHON),)
+   export PYTHON := python
+   ifeq ($(ARCH),macosx64)
+      MACOS_MAJOR = $(shell sw_vers | sed -n 's/ProductVersion:[ \t]*//p' | cut -d . -f 1)
+      MACOS_MINOR = $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+      ifeq ($(MACOS_MAJOR),10)
+         ifneq ($(subst $(MACOSX_MINOR),,12345),12345)
+            export PYTHON := python64
+         endif
+      endif
+   endif
 endif
 ifeq ($(HAS_PYTHON),)
    export HAS_PYTHON := $(shell root-config --has-python)
