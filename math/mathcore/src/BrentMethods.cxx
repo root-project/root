@@ -114,19 +114,23 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
          q = 2*(q-r);
          if (q>0) p=-p;
          else q=-q;
-         r=e;
-         e=d;
-
-         if (std::fabs(p) < std::fabs(0.5*q*r) || p < q*(a-x) || p < q*(b-x)) {
-            //a parabolic interpolation step
+         r=e;   // Deltax before last
+         e=d;   // last delta x
+         // current Deltax = p/q
+         // take a parabolic  step only if: 
+         // Deltax < 0.5* (DeltaX before last) && Deltax > a && Deltax < b
+         // (a BUG in testing this condition is fixed 11/3/2010 (with revision  32544)
+         if (std::fabs(p) >= std::fabs(0.5*q*r) || p <= q*(a-x) || p >= q*(b-x)) {
+            //  condition fails - do not take parabolic step 
+            e=(x>=m ? a-x : b-x);
+            d = c*e;
+         } else { 
+            // take a parabolic interpolation step
             d = p/q;
             u = x+d;
             if (u-a < t2 || b-u < t2)
                //d=TMath::Sign(tol, m-x);
                d=(m-x >= 0) ? std::fabs(tol) : -std::fabs(tol);
-         } else {
-            e=(x>=m ? a-x : b-x);
-            d = c*e;
          }
       } else {
          e=(x>=m ? a-x : b-x);
