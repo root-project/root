@@ -1734,40 +1734,29 @@ void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    // Save a text button widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
-   const char *text = fLabel->GetString();
-   Int_t hotpos = fLabel->GetHotPos();
-   Int_t lentext = fLabel->GetLength();
-   char *outext = new char[lentext+2];
-   Int_t i=0;
-   while (lentext) {
-      if (hotpos && (i == hotpos-1)) {
-         outext[i] = '&';
-         i++;
-      }
-      outext[i] = *text;
-      i++;
-      text++;
-      lentext--;
-   }
-   outext[i]=0;
+   TString outext(fLabel->GetString());
+   if (fLabel->GetHotPos() > 0)
+      outext.Insert(fLabel->GetHotPos()-1, "&");
+   if (outext.First('\n') >= 0)
+      outext.ReplaceAll("\n", "\\n");
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char parGC[50], parFont[50];
-   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   TString parGC, parFont;
+   parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
+   parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(parFont,"ufont->GetFontStruct()");
+         parFont.Form("ufont->GetFontStruct()");
       }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(parGC,"uGC->GetGC()");
+         parGC.Form("uGC->GetGC()");
       }
    }
 
@@ -1775,7 +1764,7 @@ void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    out << "   TGTextButton *";
    out << GetName() << " = new TGTextButton(" << fParent->GetName()
-       << "," << quote << outext << quote;
+       << "," << quote << outext.Data() << quote;
 
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fFontStruct == GetDefaultFontStruct()) {
@@ -1794,8 +1783,6 @@ void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << endl;
    }
-
-   delete [] outext;
 
    out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << endl;
    out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
@@ -1820,14 +1807,14 @@ void TGPictureButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    // GC
    option = GetName()+5;         // unique digit id of the name
-   char parGC[50];
-   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   TString parGC;
+   parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
 
    if (GetDefaultGC()() != fNormGC) {
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(parGC,"uGC->GetGC()");
+         parGC.Form("uGC->GetGC()");
       }
    }
 
@@ -1848,10 +1835,10 @@ void TGPictureButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << "," << fWidgetId << ");" << endl;
          }
       } else {
-         out << "," << fWidgetId << "," << parGC << ");" << endl;
+         out << "," << fWidgetId << "," << parGC.Data() << ");" << endl;
       }
    } else {
-      out << "," << fWidgetId << "," << parGC << "," << GetOptionString()
+      out << "," << fWidgetId << "," << parGC.Data() << "," << GetOptionString()
           << ");" << endl;
    }
 
@@ -1865,48 +1852,33 @@ void TGCheckButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
 
-   const char *text = fLabel->GetString();
-   char hotpos = fLabel->GetHotPos();
-   Int_t lentext = fLabel->GetLength();
-   char *outext = new char[lentext+2];       // should be +2 because of \0
-   Int_t i=0;
-
-
-   while (lentext) {
-      if (hotpos && (i == hotpos-1)) {
-         outext[i] = '&';
-         i++;
-      }
-      outext[i] = *text;
-      i++;
-      text++;
-      lentext--;
-   }
-   outext[i]=0;
+   TString outext(fLabel->GetString());
+   if (fLabel->GetHotPos() > 0)
+      outext.Insert(fLabel->GetHotPos()-1, "&");
+   if (outext.First('\n') >= 0)
+      outext.ReplaceAll("\n", "\\n");
 
    out <<"   TGCheckButton *";
    out << GetName() << " = new TGCheckButton(" << fParent->GetName()
-       << "," << quote << outext << quote;
-
-   delete [] outext;
+       << "," << quote << outext.Data() << quote;
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char parGC[50], parFont[50];
-   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   TString parGC, parFont;
+   parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
+   parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(parFont,"ufont->GetFontStruct()");
+         parFont.Form("ufont->GetFontStruct()");
       }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(parGC,"uGC->GetGC()");
+         parGC.Form("uGC->GetGC()");
       }
    }
 
@@ -1948,44 +1920,33 @@ void TGRadioButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
 
-   const char *text = fLabel->GetString();
-   char hotpos = fLabel->GetHotPos();
-   Int_t lentext = fLabel->GetLength();
-   char *outext = new char[lentext+2];
-   Int_t i=0;
-
-   while (lentext) {
-      if (hotpos && (i == hotpos-1)) {
-         outext[i] = '&';
-         i++;
-      }
-      outext[i] = *text;
-      i++; text++; lentext--;
-   }
-   outext[i]=0;
+   TString outext(fLabel->GetString());
+   if (fLabel->GetHotPos() > 0)
+      outext.Insert(fLabel->GetHotPos()-1, "&");
+   if (outext.First('\n') >= 0)
+      outext.ReplaceAll("\n", "\\n");
+   
    out << "   TGRadioButton *";
    out << GetName() << " = new TGRadioButton(" << fParent->GetName()
-       << "," << quote << outext << quote;
-
-   delete [] outext;
+       << "," << quote << outext.Data() << quote;
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char parGC[50], parFont[50];
-   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   TString parGC, parFont;
+   parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
+   parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(parFont,"ufont->GetFontStruct()");
+         parFont.Form("ufont->GetFontStruct()");
       }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(parGC,"uGC->GetGC()");
+         parGC.Form("uGC->GetGC()");
       }
    }
 
