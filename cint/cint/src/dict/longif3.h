@@ -619,7 +619,7 @@ inline ostream& operator<<(ostream& ost,const G__ulonglong& a) {
 }
 
 inline istream& operator>>(istream& ist,G__ulonglong& a) {
-  ist >> a.dat);
+  ist >> a.dat;
   return(ist);
 }
 #endif
