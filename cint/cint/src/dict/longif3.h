@@ -451,16 +451,12 @@ inline int operator==(const G__longlong& a,const G__longlong& b){
 
 #ifdef IOS
 inline ostream& operator<<(ostream& ost,const G__longlong& a) {
-  char buf[50];
-  sprintf(buf,"%lld",a.dat);
-  ost << buf;
+  ost << a.dat;
   return(ost);
 }
 
 inline istream& operator>>(istream& ist,G__longlong& a) {
-  char buf[50];
-  ist >> buf;
-  sscanf(buf,"%lld",&a.dat);
+  ist >> a.dat;
   return(ist);
 }
 #endif
@@ -618,16 +614,12 @@ inline G__longlong::G__longlong(const G__ulonglong& x) { dat=(G__int64)x.dat; }
 
 #ifdef IOS
 inline ostream& operator<<(ostream& ost,const G__ulonglong& a) {
-  char buf[50];
-  sprintf(buf,"%llu",a.dat);
-  ost << buf;
+  ost << a.dat;
   return(ost);
 }
 
 inline istream& operator>>(istream& ist,G__ulonglong& a) {
-  char buf[50];
-  ist >> buf;
-  sscanf(buf,"%llu",&a.dat);
+  ist >> a.dat);
   return(ist);
 }
 #endif
