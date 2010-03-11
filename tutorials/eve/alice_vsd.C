@@ -289,6 +289,7 @@ public:
       // !!!! Need to store field on file !!!!
       // Can store TEveMagField ?
       trkProp->SetMagField(0.5);
+      trkProp->SetStepper(TEveTrackPropagator::kRungeKutta);
 
       Int_t nTracks = fVSD->fTreeR->GetEntries();
       for (Int_t n = 0; n < nTracks; ++n)
