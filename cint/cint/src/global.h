@@ -407,7 +407,7 @@ extern long G__memberfunc_struct_offset;
 * buffer to store default parameter value
 **************************************************************************/
 //extern G__value G__default_parameter;
-extern char G__def_parameter[];
+extern char G__def_parameter[G__MAXNAME];
 
 
 /**************************************************************************

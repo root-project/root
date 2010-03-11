@@ -444,11 +444,11 @@ static int G__get_newname(G__FastAllocString& new_name)
       else if ((cin == '(') && !new_name[8]) {
          cin = G__fgetstream(new_name, 0, ")");
          cin = G__fgetstream(new_name, 0, "(");
-         sprintf(new_name, "operator()");
+         new_name = "operator()";
       }
       else if ((cin == ',') && !new_name[8]) {
          cin = G__fgetstream(new_name, 0, "(");
-         sprintf(new_name, "operator,");
+         new_name = "operator,";
       }
       return cin;
    }
@@ -1400,13 +1400,13 @@ static void G__initstructary(G__FastAllocString& new_name, int tagnum)
    long adr = G__int(G__letvariable(new_name, reg, &G__global, G__p_local, member));
    G__decl_obj = 0;
    // Read and initalize each element.
-   std::strcpy(buf, G__struct.name[tagnum]);
-   strcat(buf, "(");
+   buf = G__struct.name[tagnum];
+   buf += "(";
    long len = strlen(buf);
    int i = 0;
    do {
       cin = G__fgetstream(buf, len, ",}");
-      std::strcat(buf, ")");
+      buf += ")";
       if (G__struct.iscpplink[tagnum] != G__CPPLINK) {
          G__store_struct_offset = adr + (i * G__struct.size[tagnum]);
       }
@@ -1477,7 +1477,7 @@ static int G__readpointer2function(G__FastAllocString& new_name, char* pvar_type
          // (A::*p)(...)  => new_name="p" , tagname="A::"
          tagname = new_name;
          p = strstr(tagname, "::*");
-         strcpy(new_name, p + 3);
+         new_name = p + 3;
          *(p + 2) = '\0';
       }
    }
@@ -1783,7 +1783,8 @@ void G__define_var(int tagnum, int typenum)
             else {
                store_exec_memberfunc = 0;
             }
-            strcpy(G__def_parameter, temp);
+            strncpy(G__def_parameter, temp, sizeof(G__def_parameter) - 1);
+            G__def_parameter[sizeof(G__def_parameter) - 1] = 0; //ensure temrination
             G__default_parameter = G__getexpr(temp);
             if (G__default_parameter.type == G__DEFAULT_FUNCCALL) {
                // f(type a=f2()); experimental
