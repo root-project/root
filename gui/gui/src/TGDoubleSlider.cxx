@@ -602,14 +602,10 @@ void TGDoubleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << GetSString() << "," << WidgetId() << ",";
    out << GetOptionString() << ",ucolor";
    if (fMarkEnds) {
-      switch (fReversedScale) {
-         case kTRUE:
-            out << ",kTRUE,kTRUE);" << endl;
-            break;
-         case kFALSE:
-            out << ",kFALSE,kTRUE);" << endl;
-            break;
-      }
+      if (fReversedScale)
+         out << ",kTRUE,kTRUE);" << endl;
+      else
+         out << ",kFALSE,kTRUE);" << endl;
    } else if (fReversedScale) {
       out << ",kTRUE);" << endl;
    } else {
@@ -642,14 +638,10 @@ void TGDoubleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << GetSString() << "," << WidgetId() << ",";
    out << GetOptionString() << ",ucolor";
    if (fMarkEnds) {
-      switch (fReversedScale) {
-         case kTRUE:
-            out << ",kTRUE,kTRUE);" << endl;
-            break;
-         case kFALSE:
-            out << ",kFALSE,kTRUE);" << endl;
-            break;
-      }
+      if (fReversedScale)
+         out << ",kTRUE,kTRUE);" << endl;
+      else
+         out << ",kFALSE,kTRUE);" << endl;
    } else if (fReversedScale) {
       out << ",kTRUE);" << endl;
    } else {

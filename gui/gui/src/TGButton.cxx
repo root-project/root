@@ -2928,6 +2928,7 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
    } else {
       fKeyNavigate = kTRUE;
       if (event->fType == kGKeyPress) {
+         Event_t ev;
          UInt_t keysym;
          char tmp[2];
          
@@ -2944,7 +2945,6 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
             fPopMenu->Activate(ce);
             gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
             SetMenuState(kFALSE);
-            Event_t ev;
             ev.fType = kButtonRelease;
             ev.fWindow = fPopMenu->GetId();
             fKeyNavigate = kFALSE;
@@ -2976,7 +2976,6 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
          case kKey_Return:
             gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
             SetMenuState(kFALSE);
-            Event_t ev;
             ev.fType = kButtonRelease;
             ev.fWindow = fPopMenu->GetId();
             fKeyNavigate = kFALSE;

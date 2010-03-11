@@ -830,14 +830,10 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             break;
          case kGCGraphicsExposures:
             out << "   " << valname << ".fGraphicsExposures = ";
-            switch (GetGraphicsExposures()) {
-               case kTRUE:
-                  out << "kTRUE";
-                  break;
-               case kFALSE:
-                  out << "kFALSE";
-                  break;
-            }
+            if (GetGraphicsExposures())
+               out << "kTRUE";
+            else
+               out << "kFALSE";
             out << ";" << endl;
             break;
          case kGCClipXOrigin:

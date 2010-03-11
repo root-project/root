@@ -2219,16 +2219,14 @@ void TGPopupMenu::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             << ");" << endl;
       }
       if (mentry->GetStatus() & kMenuRadioEntryMask) {
-         switch (hasradio) {
-            case kFALSE:
-               r_first = mentry->GetEntryId();
-               hasradio = kTRUE;
-               if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
-               break;
-            case kTRUE:
-               r_last = mentry->GetEntryId();
-               if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
-            break;
+         if (hasradio) {
+            r_last = mentry->GetEntryId();
+            if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
+         }
+         else {
+            r_first = mentry->GetEntryId();
+            hasradio = kTRUE;
+            if (IsEntryRChecked(mentry->GetEntryId())) r_active = mentry->GetEntryId();
          }
       } else if (hasradio) {
          out << "   " << GetName() << "->RCheckEntry(" << r_active << "," << r_first

@@ -630,28 +630,20 @@ void TGTripleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << GetSString() << "," << WidgetId() << ",";
    out << GetOptionString() << ",ucolor";
    if (fMarkEnds) {
-      switch (fReversedScale) {
-         case kTRUE:
-            out << ",kTRUE,kTRUE";
-            break;
-         case kFALSE:
-            out << ",kFALSE,kTRUE";
-            break;
-      }
+      if (fReversedScale)
+         out << ",kTRUE,kTRUE";
+      else
+         out << ",kFALSE,kTRUE";
    } else if (fReversedScale) {
       out << ",kTRUE,kFALSE";
    } else {
       out << ",kFALSE,kFALSE";
    }
    if (!fConstrained) {
-      switch (fRelative) {
-         case kTRUE:
-            out << ",kFALSE,kTRUE);" << endl;
-            break;
-         case kFALSE:
-            out << ",kFALSE,kFALSE);" << endl;
-            break;
-      }
+      if (fRelative)
+         out << ",kFALSE,kTRUE);" << endl;
+      else
+         out << ",kFALSE,kFALSE);" << endl;
    }
    else if (fRelative) {
       out << ",kTRUE);" << endl;
@@ -687,28 +679,20 @@ void TGTripleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << GetSString() << "," << WidgetId() << ",";
    out << GetOptionString() << ",ucolor";
    if (fMarkEnds) {
-      switch (fReversedScale) {
-         case kTRUE:
-            out << ",kTRUE,kTRUE";
-            break;
-         case kFALSE:
-            out << ",kFALSE,kTRUE";
-            break;
-      }
+      if (fReversedScale)
+         out << ",kTRUE,kTRUE";
+      else
+         out << ",kFALSE,kTRUE";
    } else if (fReversedScale) {
       out << ",kTRUE,kFALSE";
    } else {
       out << ",kFALSE,kFALSE";
    }
    if (!fConstrained) {
-      switch (fRelative) {
-         case kTRUE:
-            out << ",kFALSE,kTRUE);" << endl;
-            break;
-         case kFALSE:
-            out << ",kFALSE,kFALSE);" << endl;
-            break;
-      }
+      if (fRelative)
+         out << ",kFALSE,kTRUE);" << endl;
+      else
+         out << ",kFALSE,kFALSE);" << endl;
    }
    else if (fRelative) {
       out << ",kTRUE);" << endl;
