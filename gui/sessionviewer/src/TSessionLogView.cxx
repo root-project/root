@@ -56,10 +56,9 @@ void TSessionLogView::SetTitle()
 {
    // Set title in editor window.
 
-   char title[256] = {0};
-   strcpy(title,Form("PROOF Processing Logs: %s",
-         (fViewer->GetActDesc()->fProof ?
-          fViewer->GetActDesc()->fProof->GetMaster() : "<dummy>")));
+   TString title;
+   title.Form("PROOF Processing Logs: %s", (fViewer->GetActDesc()->fProof ?
+              fViewer->GetActDesc()->fProof->GetMaster() : "<dummy>"));
    SetWindowName(title);
    SetIconName(title);
 }
