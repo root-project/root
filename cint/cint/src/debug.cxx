@@ -14,6 +14,7 @@
  ************************************************************************/
 
 #include "common.h"
+#include <memory>
 
 extern "C" {
 
@@ -114,6 +115,12 @@ static int G__findfuncposition(const char* func, int* pline, int* pfnum)
    return(0);
 }
 
+struct AsmData {
+   long asm_inst_g[G__MAXINST]; /* p-code instruction buffer */
+   G__value asm_stack_g[G__MAXSTACK]; /* data stack */
+   struct G__input_file ftemp, store_ifile;
+};
+
 //______________________________________________________________________________
 static G__value G__exec_tempfile_core(const char* file, FILE* fp)
 {
@@ -133,8 +140,13 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
 #endif
 #endif
 
-   long asm_inst_g[G__MAXINST]; /* p-code instruction buffer */
-   G__value asm_stack_g[G__MAXSTACK]; /* data stack */
+   std::auto_ptr<AsmData> pAsmData(new AsmData);
+
+   long* asm_inst_g = pAsmData->asm_inst_g; /* p-code instruction buffer */
+   G__value* asm_stack_g = pAsmData->asm_stack_g; /* data stack */
+   struct G__input_file* ftemp = &pAsmData->ftemp;
+   struct G__input_file* store_ifile = &pAsmData->store_ifile;
+
    char asm_name[G__ASM_FUNCNAMEBUF];
 
    long *store_asm_inst;
@@ -152,7 +164,6 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
 
    fpos_t pos;
    char store_var_type;
-   struct G__input_file ftemp, store_ifile;
    G__value buf = G__null;
 #ifdef G__ASM
    G__ALLOC_ASMENV;
@@ -173,26 +184,28 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
       }
 
 #ifndef G__WIN32
-      ftemp.fp = fopen(filename, "r");
+      ftemp->fp = fopen(filename, "r");
 #else
-      ftemp.fp = fopen(filename, "rb");
+      ftemp->fp = fopen(filename, "rb");
 #endif
    }
    else {
       fseek(fp, 0L, SEEK_SET);
-      ftemp.fp = fp;
+      ftemp->fp = fp;
    }
 
-   if (ftemp.fp) {
-      ftemp.line_number = 1;
+   if (ftemp->fp) {
+      ftemp->vindex = -1;
+      ftemp->line_number = 1;
       if (file) {
-         strcpy(ftemp.name, filename);
+         strncpy(ftemp->name, filename, sizeof(ftemp->name) - 1);
+         ftemp->name[sizeof(ftemp->name) - 1] = 0; // ensure termination
          delete [] filename;
       }
-      else     strcpy(ftemp.name, "(tmpfile)");
-      ftemp.filenum = G__tempfilenum;
-      G__srcfile[G__tempfilenum].fp = ftemp.fp;
-      G__srcfile[G__tempfilenum].filename = ftemp.name;
+      else     strcpy(ftemp->name, "(tmpfile)");
+      ftemp->filenum = G__tempfilenum;
+      G__srcfile[G__tempfilenum].fp = ftemp->fp;
+      G__srcfile[G__tempfilenum].filename = ftemp->name;
       G__srcfile[G__tempfilenum].hash = 0;
       G__srcfile[G__tempfilenum].maxline = 0;
       G__srcfile[G__tempfilenum].breakpoint = (char*)NULL;
@@ -200,8 +213,8 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
       if (G__ifile.fp && G__ifile.filenum >= 0) {
          fgetpos(G__ifile.fp, &pos);
       }
-      store_ifile = G__ifile;
-      G__ifile = ftemp;
+      *store_ifile = G__ifile;
+      G__ifile = *ftemp;
 
       /**********************************************
        * interrpret signal handling during inner loop asm exec
@@ -283,14 +296,14 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
       G__var_type = store_var_type;
 
       /* print out result */
-      G__ifile = store_ifile;
+      G__ifile = *store_ifile;
       if (G__ifile.fp && G__ifile.filenum >= 0) {
          fsetpos(G__ifile.fp, &pos);
       }
       /* Following is intentionally commented out. This has to be selectively
        * done for 'x' and 'E' command  but not for { } command */
       /* G__security = G__srcfile[G__ifile.filenum].security; */
-      if (file) fclose(ftemp.fp);
+      if (file) fclose(ftemp->fp);
       ++G__tempfilenum;
       G__srcfile[G__tempfilenum].fp = (FILE*)NULL;
       G__srcfile[G__tempfilenum].filename = (char*)NULL;
@@ -305,6 +318,7 @@ static G__value G__exec_tempfile_core(const char* file, FILE* fp)
    else {
       G__fprinterr(G__serr, "Error: can not open file '%s'\n", file);
       G__UnlockCriticalSection();
+      delete [] filename;
       return(G__null);
    }
 }
@@ -910,7 +924,8 @@ G__value G__exec_text(const char* unnamedmacro)
       fclose(fp);
    }
    else {
-      strcpy(sname, tname);
+      sname_sb = tname;
+      sname = sname_sb;
       G__storerewindposition();
       buf = G__exec_tempfile(sname);
       G__security_recover(G__serr);
@@ -951,7 +966,8 @@ const char* G__load_text(const char* namedmacro)
    fp = tmpfile();
    if (!fp) {
       G__tmpnam(tname);  /* not used anymore */
-      strcat(tname, G__NAMEDMACROEXT);
+      strncat(tname, G__NAMEDMACROEXT, sizeof(tname) - strlen(tname) - 1);
+      tname[sizeof(tname) - 1] = 0; // ensure termination
       fp = fopen(tname, "w");
       if (!fp) return((char*)NULL);
       istmpnam = 1;
@@ -970,7 +986,10 @@ const char* G__load_text(const char* namedmacro)
 
    switch (fentry) {
       case G__LOADFILE_SUCCESS:
-         if (!istmpnam) strcpy(tname,"(tmpfile)");
+         if (!istmpnam) {
+            strncpy(tname,"(tmpfile)", sizeof(tname) - 1);
+            tname[sizeof(tname) - 1] = 0; // ensure termination
+         }
          result = tname;
          break;
       case G__LOADFILE_DUPLICATE:
