@@ -46,7 +46,11 @@ LD            = g++
 LDFLAGS       = $(OPT) -m64
 FORCELINK     = yes
 NEEDFINK      = yes
+ifeq ($(MACOSX_DEPLOYMENT_TARGET),)
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
+else
+MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET)
+endif
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(USECONFIG),FALSE)
 SOFLAGS       = -dynamiclib -single_module \
