@@ -1220,6 +1220,8 @@ with compiler options, prefix with --with-, overrides default value
   cxx                alternative C++ compiler and options to be used
   f77                alternative Fortran compiler and options to be used
   ld                 alternative Linker and options to be used
+  clang              use clang compiler instead of gcc (mutual exclusive with
+                     the cc, cxx and ld options)
 
 Supported Architectures:
 
@@ -1448,6 +1450,7 @@ if test $# -gt 0 ; then
       --with-cxx=*)            altcxx=$optarg        ;;
       --with-f77=*)            altf77=$optarg        ;;
       --with-ld=*)             altld=$optarg         ;;
+      --with-clang) altcc=clang; altcxx=clang++; altld=clang++ ;;
       ################################################################
       #
       # Enable/disable to turn on/off third party software linkage and
