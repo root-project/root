@@ -256,8 +256,10 @@ private:
    TList       *fWorkers;        // List of already assigned workers
    Bool_t       fIsActive;       // Merger state
 
-public:
+   TMergerInfo(const TMergerInfo&); // Not implemented
+   TMergerInfo& operator=(const TMergerInfo&); // Not implemented
 
+public:
    TMergerInfo(TSlave *t, Int_t port, Int_t forHowManyWorkers) :
                fMerger(t), fPort(port), fMergedObjects(0), fWorkersToMerge(forHowManyWorkers),
                fMergedWorkers(0), fWorkers(0), fIsActive(kTRUE) { }
