@@ -365,8 +365,11 @@ void TFileCacheRead::Sort()
    fSeekPos[0] = 0;
    for (i=1;i<fNseek;i++) {
       fSeekPos[i] = fSeekPos[i-1] + fSeekSortLen[i-1];
+      //in the test below 16 MBytes is pure empirirical and may depend on the file system.
+      //increasing this number must be done with care, as it may increase
+      //the job real time (mismatch with OS buffers)
       if ((fSeekSort[i] != fSeekSort[i-1]+fSeekSortLen[i-1]) ||
-          (fLen[nb] > 2000000)) {
+          (fLen[nb] > 16000000)) {
          nb++;
          fPos[nb] = fSeekSort[i];
          fLen[nb] = fSeekSortLen[i];
