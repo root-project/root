@@ -420,7 +420,7 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
          prevBranch = branchName;
       }
 
-      if(type.CompareTo("varchar",TString::kIgnoreCase)==0 || type.CompareTo("char",TString::kIgnoreCase)==0 ){
+      if(type.CompareTo("varchar",TString::kIgnoreCase)==0 || type.CompareTo("varchar2",TString::kIgnoreCase)==0 || type.CompareTo("char",TString::kIgnoreCase)==0 ) { 
          char siz[6];
          sprintf(siz,"[%d]",prec);
          decl.Append( leafName+siz+"/C:" );

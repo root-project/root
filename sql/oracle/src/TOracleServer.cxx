@@ -437,9 +437,9 @@ TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table
    TString table(tablename);
    table.ToUpper();
    if (wild && wild[0])
-      sql.Form("SELECT COLUMN_NAME FROM user_tab_columns WHERE table_name like '%s' ORDER BY COLUMN_ID", wild);
+      sql.Form("select COLUMN_NAME, concat(concat(concat(data_type,'('),data_length),')') \"Type\" FROM user_tab_columns WHERE table_name like '%s' ORDER BY COLUMN_ID", wild);
    else
-      sql.Form("SELECT COLUMN_NAME FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", table.Data());
+      sql.Form("select COLUMN_NAME, concat(concat(concat(data_type,'('),data_length),')') \"Type\" FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", table.Data()); 
    return Query(sql);
 }
 
