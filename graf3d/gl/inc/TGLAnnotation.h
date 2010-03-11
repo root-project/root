@@ -25,17 +25,23 @@ class TGMainFrame;
 class TGLAnnotation : public TGLOverlayElement
 {
 private:
+   enum EDrag        { kMove, kResize, kNone };
+   enum ENameStack   { kMoveID, kEditID, kDeleteID, kResizeID };
+
+private:
    TGLAnnotation(const TGLAnnotation&);            // Not implemented
    TGLAnnotation& operator=(const TGLAnnotation&); // Not implemented
 
    void MakeEditor();
-
+   Char_t GetLineTransparency() const;
 
    Float_t           fPosX;           // x position [0, 1]
    Float_t           fPosY;           // y position [0, 1]
+   Float_t           fWidth;
+   Float_t           fHeight;
 
    Int_t             fMouseX, fMouseY; //! last mouse position
-   Bool_t            fInDrag;          //!
+   EDrag             fDrag;            //!
    Float_t           fDrawW, fDrawH;   //! width/height of drawn annotation
    Float_t           fDrawY;           //! y-position of annotation box
 
