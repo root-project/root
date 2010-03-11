@@ -385,7 +385,13 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
                *error = (EErrorCode)local_error;
          }
 
-         if (ret == 0) ret = G__int_cast(local_res);
+         if (ret == 0) {
+            // prevent overflow signal
+            double resd = G__double(local_res);
+            if (resd > LONG_MAX) ret = LONG_MAX;
+            else if (resd < LONG_MIN) ret = LONG_MIN;
+            else ret = G__int_cast(local_res);
+         }
 
          gROOT->SetLineHasBeenProcessed();
       } else {
@@ -417,7 +423,13 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
       if (error)
          *error = (EErrorCode)local_error;
 
-      if (ret == 0) ret = G__int_cast(local_res);
+      if (ret == 0) {
+         // prevent overflow signal
+         double resd = G__double(local_res);
+         if (resd > LONG_MAX) ret = LONG_MAX;
+         else if (resd < LONG_MIN) ret = LONG_MIN;
+         else ret = G__int_cast(local_res);
+      }
 
       gROOT->SetLineHasBeenProcessed();
    }
