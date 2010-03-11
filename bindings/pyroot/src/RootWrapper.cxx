@@ -762,11 +762,17 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
    if ( ! isRef ) {
       TClass* clActual = klass->GetActualClass( address );
       if ( clActual && klass != clActual ) {
-       // root/meta base class offset fails in the case of virtual inheritance
-       //   Long_t offset = clActual->GetBaseClassOffset( klass );
+      // root/meta base class offset fails in the case of virtual inheritance
          Long_t offset;
-         if (klass->GetClassInfo() &&  clActual->GetClassInfo()) {
-            offset = G__isanybase(((G__ClassInfo*)klass->GetClassInfo())->Tagnum(), ((G__ClassInfo*)clActual->GetClassInfo())->Tagnum(), (Long_t)address );
+         G__ClassInfo* klassCi = (G__ClassInfo*)klass->GetClassInfo();
+         G__ClassInfo* actualCi = (G__ClassInfo*)clActual->GetClassInfo();
+         if ( klassCi &&  actualCi ) {
+            void* adjaddr = klassCi->DynamicCast( *actualCi, address );
+            if ( adjaddr ) {
+               offset = (Long_t)address - (Long_t)adjaddr;
+            } else {
+               offset = 0;
+            }
          } else {
             offset = clActual->GetBaseClassOffset( klass ); 
          }
