@@ -2826,8 +2826,6 @@ Bool_t TGSplitButton::HandleCrossing(Event_t *event)
    } else {
       return TGButton::HandleCrossing(event);
    }
-   fKeyNavigate = kFALSE;
-
 }
    
 //______________________________________________________________________________
