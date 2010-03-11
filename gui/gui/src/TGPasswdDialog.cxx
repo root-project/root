@@ -82,11 +82,9 @@ TGPasswdDialog::TGPasswdDialog(const char *prompt, char *pwdbuf, Int_t pwdlenmax
    fOk = new TGTextButton(fDialog, "     &Ok     ");
    fOk->Connect("Clicked()", "TGPasswdDialog", this, "ReturnPressed()");
    fDialog->AddFrame(fOk, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5));
-   // title label
-   char title[256] = {0};
-   sprintf(title, "Password dialog");
-   fDialog->SetWindowName(title);
-   fDialog->SetIconName(title);
+   // set window title and icon name
+   fDialog->SetWindowName("Password dialog");
+   fDialog->SetIconName("Password dialog");
 
    fDialog->MapSubwindows();
 

@@ -73,7 +73,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
       if (!strlen(s)) continue;    // skip empty lines
 
       if (*s == '[') {
-         strcpy(mime, line);
+         strncpy(mime, line, 1024);
          cnt = 0;
          continue;
       }
@@ -84,7 +84,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
          } else {
             s++;
             s = Strip(s);
-            strcpy(pattern, s);
+            strncpy(pattern, s, 256);
             delete [] s;
          }
          cnt++;
@@ -98,14 +98,14 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
             char *s2;
             if ((s2 = strchr(s, ' '))) {
                *s2 = 0;
-               strcpy(icon, s);
+               strncpy(icon, s, 256);
                s2++;
                s2 = Strip(s2);
-               strcpy(sicon, s2);
+               strncpy(sicon, s2, 256);
                delete [] s2;
             } else {
-               strcpy(icon, s);
-               strcpy(sicon, s);
+               strncpy(icon, s, 256);
+               strncpy(sicon, s, 256);
             }
             delete [] s;
          }
@@ -117,7 +117,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
          } else {
             s++;
             s = Strip(s);
-            strcpy(action, s);
+            strncpy(action, s, 256);
             delete [] s;
          }
          cnt++;

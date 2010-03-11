@@ -387,7 +387,7 @@ void TGFileBrowser::BrowseObj(TObject *obj)
          if (named)
             curdrive = named->GetName();
          else
-            curdrive = StrDup("C:");
+            curdrive = "C:";
          TIter next(volumes);
          TNamed *drive;
          while ((drive = (TNamed *)next())) {
