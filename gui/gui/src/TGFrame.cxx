@@ -2817,7 +2817,10 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    TObjString *inc;
    ilist = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfIncludes");
 
-   if (!ilist) return;
+   if (!ilist) {
+      delete [] sname;
+      return;
+   }
 
    // write macro header, date/time stamp as string, and the used Root version
    TDatime t;
@@ -3302,7 +3305,10 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    TObjString *inc;
    ilist = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfIncludes");
 
-   if (!ilist) return;
+   if (!ilist) {
+      delete [] sname;
+      return;
+   }
 
    // write macro header, date/time stamp as string, and the used Root version
    TDatime t;
