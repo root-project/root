@@ -38,6 +38,14 @@ EXTRALIBS+=  -L$(CLHEPBASE)/lib -lCLHEP
 endif
 endif
 
+# add MathMore lib
+ifeq ($(shell $(ROOTCONFIG) --has-mathmore),yes)
+ifeq ($(PLATFORM),win32)
+EXTRALIBS+= '$(ROOTSYS)/lib/libMathMore.lib' 
+else
+EXTRALIBS+= -lMathMore
+endif
+endif
 
 TESTTMATHOBJ     = testTMath.$(ObjSuf)
 TESTTMATHSRC     = testTMath.$(SrcSuf)

@@ -29,6 +29,7 @@
 
 #include "Math/BrentMinimizer1D.h"
 #include "Math/BrentMethods.h"
+#include "Math/IFunction.h"
 
 #ifndef ROOT_Math_Error
 #include "Math/Error.h"
@@ -37,22 +38,30 @@
 namespace ROOT {
 namespace Math {
 
-BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D() 
+static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the minimum
+static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
+
+
+BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(), 
+                                      fFunction(0), fNIter(0), 
+                                      fNpx(0), fStatus(-1), 
+                                      fXMin(0), fXMax(0), fXMinimum(0) 
 {
 // Default Constructor.
-
-   fFunction = 0;
-   fXMin = 0;
-   fXMax = 0;
+   fNpx = gDefaultNpx;
 }
  
-BrentMinimizer1D::~BrentMinimizer1D() {}
+void BrentMinimizer1D::SetDefaultNpx(int n) { gDefaultNpx = n; }
 
-int BrentMinimizer1D::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
+void BrentMinimizer1D::SetDefaultNSearch(int n) { gDefaultNSearch = n; }
+
+
+void BrentMinimizer1D::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
 {
 // Sets function to be minimized. 
 
    fFunction = &f;
+   fStatus = -1;  // reset the status
 
    if (xlow >= xup) 
    {
@@ -62,18 +71,9 @@ int BrentMinimizer1D::SetFunction(const ROOT::Math::IGenFunction& f, double xlow
    }
    fXMin = xlow;
    fXMax = xup;
-
-   return 0;
 }
 
-double BrentMinimizer1D::XMinimum() const
-{   return fXMinimum;  }
 
-double BrentMinimizer1D::XLower() const
-{   return fXMin;  }
-
-double BrentMinimizer1D::XUpper() const
-{   return fXMax;  }
  
 double BrentMinimizer1D::FValMinimum() const
 {   return (*fFunction)(fXMinimum); }
@@ -84,39 +84,47 @@ double BrentMinimizer1D::FValLower() const
 double BrentMinimizer1D::FValUpper() const
 {   return (*fFunction)(fXMax);  }
 
-int BrentMinimizer1D::Minimize( int maxIter, double , double )
+bool BrentMinimizer1D::Minimize( int maxIter, double absTol , double relTol)
 {
 // Find minimum position iterating until convergence specified by the
 // absolute and relative tolerance or the maximum number of iteration
 // is reached.
+// repet search (Bracketing + Brent) until max number of search is reached (default is 10)
+// maxITer refers to the iterations inside the Brent algorithm
 
-   int niter=0;
-   double x;
-   double xmin = fXMin;
-   double xmax = fXMax;
-
-   //ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
-   x = MinimStep(fFunction, 0, xmin, xmax, 0);
-   bool ok = true;
-   x = MinimBrent(fFunction, 0, xmin, xmax, x, 0, ok);
-   while (!ok){
-      if (niter>maxIter){
-         MATH_ERROR_MSG("BrentMinimizer1D::Minimize", "Search didn't converge");
-         return -1;
-      }
-      x=MinimStep(fFunction, 0, xmin, xmax, 0);
-      x = MinimBrent(fFunction, 0, xmin, xmax, x, 0, ok);
-      niter++;
+   if (!fFunction) { 
+       MATH_ERROR_MSG("BrentRootFinder::Solve", "Function has not been set");
+       return false;
    }
 
-   fNIter = niter;
-   fXMinimum = x;
+   fNIter = 0; 
+   fStatus = -1;
 
-   return 1;
+   double xmin = fXMin;
+   double xmax = fXMax;
+   
+   int maxIter1 = gDefaultNSearch;  // external loop (number of search )
+   int maxIter2 = maxIter;          // internal loop inside the Brent algorithm 
+
+   int niter1 = 0;
+   int niter2 = 0;
+   bool ok = false;
+   while (!ok){
+      if (niter1 > maxIter1){
+         MATH_ERROR_MSG("BrentMinimizer1D::Minimize", "Search didn't converge");
+         fStatus = -2; 
+         return false;
+      }
+      double x = BrentMethods::MinimStep(fFunction, 0, xmin, xmax, 0, fNpx);
+      x = BrentMethods::MinimBrent(fFunction, 0, xmin, xmax, x, 0,  ok, niter2, absTol, relTol, maxIter2 );
+      fNIter += niter2;  // count the total number of iterations
+      niter1++;
+      fXMinimum = x;
+   }
+
+   fStatus = 0; 
+   return true;
 } 
-
-int BrentMinimizer1D::Iterations() const
-{   return fNIter;  }
 
 
 const char * BrentMinimizer1D::Name() const

@@ -73,7 +73,7 @@ namespace ROOT {
    It implements the ROOT::Minimizer interface and 
    a plug-in (name "GSLSimAn") exists to instantiate this class via the plug-in manager
 
-   @ingroup Min1D
+   @ingroup MultiMin
 */ 
 class GSLSimAnMinimizer : public  ROOT::Math::Minimizer {
 

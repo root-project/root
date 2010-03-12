@@ -20,7 +20,9 @@
 #include "Math/Error.h"
 #endif
 
-#include <Math/IFunction.h>
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
 
 namespace ROOT {
 namespace Math {
@@ -44,22 +46,25 @@ public:
    // Common functionality
 
    /** Sets the function for algorithms using derivatives.  */
-   virtual int SetFunction(const ROOT::Math::IGradFunction&, double)
+   virtual bool SetFunction(const ROOT::Math::IGradFunction&, double)
    {
       MATH_ERROR_MSG("SetFunction", "This method must be used with a Root Finder algorithm using derivatives");
-      return -1;
+      return false;
    }
 
    /** Sets the function for the rest of the algorithms.
        The parameters set the interval where the root has to be calculated. */
-   virtual int SetFunction(const ROOT::Math::IGenFunction& , double , double )
+   virtual bool SetFunction(const ROOT::Math::IGenFunction& , double , double )
    {
       MATH_ERROR_MSG("SetFunction", "Algorithm requires derivatives");
-      return -1;
+      return false;
    }
 
    /** Returns the previously calculated root. */
    virtual double Root() const = 0;
+
+   /** Returns the status of the previous estimate */
+   virtual int Status() const = 0; 
 
    // Methods to be Implemented in the derived classes
 
@@ -68,24 +73,22 @@ public:
        \@param absTol desired absolute error in the minimum position.
        \@param absTol desired relative error in the minimum position.
    */
-   virtual int Solve(int maxIter = 100, double absTol = 1E-3, double relTol = 1E-6) = 0;
+   virtual bool Solve(int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10) = 0;
 
    /** Return name of root finder algorithm */
    virtual const char* Name() const = 0;
    
-   /** This method is not implemented. They are here to accomplish with the GSLRootFinder 
+   /** This method is  implemented only by the GSLRootFinder 
        and GSLRootFinderDeriv classes and will return an error if it's not one of them. */
    virtual int Iterate() {
       MATH_ERROR_MSG("Iterate", "This method must be used with a Root Finder algorithm wrapping the GSL Library");
       return -1;
    }
 
-   /** This method is not implemented. They are here to accomplish with the GSLRootFinder 
-       and GSLRootFinderDeriv classes and will return an error if it's not one of them. */
-   virtual int Iterations() const {
-      MATH_ERROR_MSG("Iterations", "This method must be used with a Root Finder algorithm wrapping the GSL Library");
-      return -1;
-   }
+   /** Return number of iterations used to find the root 
+       Must be implemented by derived classes 
+   */
+   virtual int Iterations() const { return -1; } 
 
 };
 

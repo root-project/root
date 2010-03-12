@@ -9,6 +9,7 @@
  **********************************************************************/
 
 #include "Math/RootFinder.h"
+#include "Math/IRootFinderMethod.h"
 #include "Math/BrentRootFinder.h"
 
 #include "RConfigure.h"
@@ -35,20 +36,20 @@ namespace ROOT {
 namespace Math {
 
 
-RootFinder::RootFinder(RootFinder::EType type)
+RootFinder::RootFinder(RootFinder::EType type) : 
+   fSolver(0)
 {
    // constructor passing type (default is kBRENT)
-   fSolver = 0;
    SetMethod(type);
 }
 
-int RootFinder::SetMethod(RootFinder::EType type)
+bool RootFinder::SetMethod(RootFinder::EType type)
 {
    // set method - Use the plug-in manager if method is implemented in MathMore
    if ( type == RootFinder::kBRENT )
    {
       fSolver = new BrentRootFinder();
-      return 0;
+      return true;
    }
 
 #ifdef MATH_NO_PLUGIN_MANAGER    // no PM available
@@ -77,13 +78,13 @@ int RootFinder::SetMethod(RootFinder::EType type)
    default:
       MATH_ERROR_MSG("RootFinder::SetMethod","RootFinderMethod type is not available in MathCore");
       fSolver = 0;
-      return -1;
+      return false; 
       break;
    };
 
 #else
    MATH_ERROR_MSG("RootFinder::SetMethod","RootFinderMethod type is not available in MathCore");
-   return -1;
+   return false;
 #endif
 
 #else  // case of using Plugin Manager
@@ -113,14 +114,14 @@ int RootFinder::SetMethod(RootFinder::EType type)
    default:
       MATH_ERROR_MSG("RootFinder::SetMethod","RootFinderMethod type is not available in MathCore");
       fSolver = 0;
-      return -1;
+      return false;
       break;
    };
 
    if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::IRootFinderMethod", stype.c_str() ))) {
       if (h->LoadPlugin() == -1) {
          MATH_ERROR_MSG("RootFinder::SetMethod","Error loading RootFinderMethod");
-         return -1;
+         return false;
       }
 
       fSolver = reinterpret_cast<ROOT::Math::IRootFinderMethod *>( h->ExecPlugin(0) );
@@ -128,12 +129,12 @@ int RootFinder::SetMethod(RootFinder::EType type)
    }
    else {
       MATH_ERROR_MSG("RootFinder::SetMethod","Error loading RootFinderMethod");
-      return -1;
+      return false;
    }
 
 #endif
 
-   return 0;
+   return true;
 }
 
 

@@ -46,7 +46,11 @@ namespace ROOT {
 namespace Math {
 
 
-GSLRootFinderDeriv::GSLRootFinderDeriv() 
+GSLRootFinderDeriv::GSLRootFinderDeriv() : 
+   fFunction(0), fS(0), 
+   fRoot(0), fPrevRoot(0), 
+   fIter(0), fStatus(-1), 
+   fValidPoint(false)
 { 
    // create function wrapper
    fFunction = new GSLFunctionDerivWrapper(); 
@@ -73,7 +77,8 @@ GSLRootFinderDeriv & GSLRootFinderDeriv::operator = (const GSLRootFinderDeriv &r
 
 
 
-int GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double xstart) {
+bool GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double xstart) {
+   fStatus = -1; 
    // set Function with signature as GSL
    fRoot = xstart;
    fFunction->SetFuncPointer( f ); 
@@ -86,7 +91,7 @@ int GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFd
    else 
       fValidPoint = false; 
 
-   return status;
+   return fValidPoint;
 
 }
 
@@ -104,11 +109,11 @@ int GSLRootFinderDeriv::Iterate() {
    // iterate........
    
    if (!fFunction->IsValid() ) {
-      std::cerr << "GSLRootFinderDeriv - Error: Function is not valid" << std::endl;
+      MATH_ERROR_MSG("GSLRootFinderDeriv::Iterate"," Function is not valid");
       return -1; 
    }
    if (!fValidPoint ) {
-      std::cerr << "GSLRootFinderDeriv - Error: Starting point is not valid" << std::endl;
+      MATH_ERROR_MSG("GSLRootFinderDeriv::Iterate"," Estimated point is not valid");
       return -2; 
    }
 
@@ -130,20 +135,26 @@ const char * GSLRootFinderDeriv::Name() const {
    return gsl_root_fdfsolver_name(fS->Solver() ); 
 }
 
-int GSLRootFinderDeriv::Solve (int maxIter, double absTol, double relTol) 
+bool GSLRootFinderDeriv::Solve (int maxIter, double absTol, double relTol) 
 { 
    // solve for roots 
+   fStatus = -1;
    int iter = 0; 
    int status = 0; 
    do { 
       iter++; 
       
       status = Iterate();
-      if (status != GSL_SUCCESS) return status; 
+      if (status != GSL_SUCCESS) {
+         MATH_ERROR_MSG("GSLRootFinderDeriv::Solve","error returned when performing an iteration");
+         fStatus = status;
+         return false; 
+      } 
       status = GSLRootHelper::TestDelta(fRoot, fPrevRoot, absTol, relTol);
       if (status == GSL_SUCCESS) { 
          fIter = iter;
-         return status; 
+         fStatus = status;
+         return true; 
       }
       
       //     std::cout << "iteration " << iter << " Root " << fRoot << " prev Root " << 
@@ -156,7 +167,8 @@ int GSLRootFinderDeriv::Solve (int maxIter, double absTol, double relTol)
       MATH_INFO_MSGVAL("GSLRootFinderDeriv::Solve","exceeded max iterations, reached tolerance is not sufficient",tol);
    }
 
-   return status;
+   fStatus = status; 
+   return false;
 }
 
 

@@ -31,6 +31,7 @@
 #include <assert.h>
 
 #include "Math/GSLMinimizer1D.h"
+#include "Math/Error.h"
 
 #include "GSLFunctionWrapper.h"
 #include "GSL1DMinimizerWrapper.h"
@@ -47,7 +48,9 @@ namespace Math {
 
 
 GSLMinimizer1D::GSLMinimizer1D(Minim1D::Type type) : 
-   fIsSet(false)
+    fXmin(0), fXlow(0), fXup(0), fMin(0), fLow(0), fUp(0), 
+    fIter(0), fStatus(-1), fIsSet(false), 
+    fMinimizer(0), fFunction(0)
 {
    // construct a minimizer passing the algorithm type as an enumeration
 
@@ -111,6 +114,7 @@ void GSLMinimizer1D::SetFunction(  GSLFuncPointer f, void * p, double xmin, doub
 
 
    fIsSet = true; 
+   fStatus = -1;
    return;
 }
 
@@ -168,20 +172,19 @@ const char * GSLMinimizer1D::Name() const {
    return gsl_min_fminimizer_name(fMinimizer->Get() ); 
 }
 
-int GSLMinimizer1D::Minimize (int maxIter, double absTol, double relTol) 
+bool GSLMinimizer1D::Minimize (int maxIter, double absTol, double relTol) 
 { 
    // find the minimum via multiple iterations
+   fStatus = -1; 
    int iter = 0; 
    int status = 0; 
    do { 
       iter++;
-      try {
-         status = Iterate();
-      }
-      catch ( std::exception &e) { 
-         //std::cerr << "Minimization failed : " << e.what() << std::endl; 
-         //throw mathlib::MathlibException("Minimize: Cannot perform iterations");
-         return -1; 
+      status = Iterate();
+      if (status != GSL_SUCCESS) { 
+         MATH_ERROR_MSG("GSLMinimizer1D::Minimize","error returned when performing an iteration");
+         fStatus = status; 
+         return false; 
       }
 
 #ifdef DEBUG
@@ -193,11 +196,17 @@ int GSLMinimizer1D::Minimize (int maxIter, double absTol, double relTol)
       status =  TestInterval(fXlow, fXup, absTol, relTol); 
       if (status == GSL_SUCCESS) { 
          fIter = iter;
-         return status; 
+         fStatus = status;
+         return true; 
       }
    }
    while (status == GSL_CONTINUE && iter < maxIter); 
-   return status;
+   if (status == GSL_CONTINUE) { 
+      double tol = std::abs(fXup-fXlow);
+      MATH_INFO_MSGVAL("GSLMinimizer1D::Minimize","exceeded max iterations, reached tolerance is not sufficient",tol);
+   }
+   fStatus = status; 
+   return false;
 }
 
 

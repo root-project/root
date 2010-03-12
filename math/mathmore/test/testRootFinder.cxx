@@ -50,8 +50,8 @@ void myfunc_fdf( double x, void * /*params*/, double *y, double *dy) {
 template<class RF> 
 int findRoot( RF * r ) { 
   //int returnCode = r->Solve( 100, absTol, relTol); 
-  int returnCode;
-  returnCode = r->Solve(); 
+  bool ret = r->Solve(); 
+  int returnCode = !ret; //r->Status();
 
   return  returnCode; 
 }

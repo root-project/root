@@ -160,11 +160,12 @@ This class does not support copying
       /**
          Find minimum position iterating until convergence specified by the absolute and relative tolerance or 
          the maximum number of iteration is reached 
+         Return true is result is successfull
          \@param maxIter maximum number of iteration
          \@param absTol desired absolute error in the minimum position
          \@param absTol desired relative error in the minimum position
       */
-      int Minimize( int maxIter, double absTol, double relTol); 
+      bool Minimize( int maxIter, double absTol, double relTol); 
 
 
       /**
@@ -174,6 +175,10 @@ This class does not support copying
          return fIter; 
       }
 
+      /**
+         Return status of last minimization
+       */
+      int Status() const { return fStatus; }
 
       /**
          Return name of minimization algorithm
@@ -202,6 +207,7 @@ This class does not support copying
       double fLow;
       double fUp; 
       int fIter; 
+      int fStatus;    // status of last minimization (==0 ok =1 failed)
       bool fIsSet; 
 
 

@@ -27,11 +27,18 @@
 // 
 //
 
-#include "Math/IMinimizer1D.h"
-#include "Math/IFunction.h"
 
 #ifndef ROOT_Math_BrentMinimizer1D
 #define ROOT_Math_BrentMinimizer1D
+
+#ifndef ROOT_Math_IMinimizer1D
+#include "Math/IMinimizer1D.h"
+#endif
+
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
+
 
 namespace ROOT { 
 namespace Math { 
@@ -40,7 +47,20 @@ namespace Math {
 /**
    User class for performing function minimization 
 
-   It will use the Brent Method for function minimization in a given interval. 
+   It will use the Brent Method for function minimization in a given interval.
+   First, a grid search is used to bracket the minimum value
+   with the a step size = (xmax-xmin)/npx. The step size
+   can be controlled via the SetNpx() function. A default value of npx = 100 is used. 
+   The default value con be changed using the static method SetDefaultNpx.
+   If the function is unimodal or if its extrema are far apart, setting the fNpx to 
+   a small value speeds the algorithm up many times.  
+   Then, Brent's method is applied on the bracketed interval. 
+   If the Brent method fails to converge the bracketing is repeted on the latest best estimate of the 
+   interval. The procedure is repeted with a maximum value (default =10) which can be set for all
+   BrentRootFinder classes with the method SetDefaultNSearch
+
+
+ 
    This class is implemented from TF1::GetMinimum.
 
    To use the class, three steps have to be taken:
@@ -54,7 +74,7 @@ namespace Math {
   
  */
 
-   class BrentMinimizer1D: IMinimizer1D {
+   class BrentMinimizer1D: ROOT::Math::IMinimizer1D {
       
    public: 
 
@@ -62,18 +82,18 @@ namespace Math {
       BrentMinimizer1D(); 
 
       /** Default Destructor. */
-      virtual ~BrentMinimizer1D();
+      virtual ~BrentMinimizer1D() {}
       
    public: 
       
       /** Return current estimate of the position of the minimum. */
-      virtual double XMinimum() const; 
+      virtual double XMinimum() const {   return fXMinimum;  }
 
       /** Return current lower bound of the minimization interval. */
-      virtual double XLower() const; 
+      virtual double XLower() const {   return fXMin;  }
 
       /** Return current upper bound of the minimization interval. */
-      virtual double XUpper() const; 
+      virtual double XUpper() const {   return fXMax;  }
 
       /** Return function value at current estimate of the minimum. */
       virtual double FValMinimum() const; 
@@ -86,16 +106,15 @@ namespace Math {
 
       /** Find minimum position iterating until convergence specified by the absolute and relative tolerance or
           the maximum number of iteration is reached.
-
+          Return true if iterations converged successfully
           \@param maxIter maximum number of iterations.
-          \@param absTol desired absolute error in the minimum position.
-          \@param absTol desired relative error in the minimum position.
+          \@param absTol desired absolute error in the minimum position (default 1.E-8)
+          \@param absTol desired relative error in the minimum position (default = 1.E-10)
       */
-      virtual int Minimize( int maxIter, double absTol, double relTol); 
+      virtual bool Minimize( int maxIter, double absTol = 1.E-8, double relTol = 1.E-10); 
 
       /** Return number of iteration used to find minimum */
-      virtual int Iterations() const;
-
+      virtual int Iterations() const { return fNIter; }
 
       /** Return name of minimization algorithm ("BrentMinimizer1D") */
       virtual const char * Name() const;  
@@ -106,15 +125,36 @@ namespace Math {
           \@param xlow Lower bound of the search interval.
           \@param xup Upper bound of the search interval.
       */
-      int SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup);
+      void SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup);
 
-   protected:
+      /** Set the number of point used to bracket root using a grid */
+      void SetNpx(int npx) { fNpx = npx; }
+
+      /** Returns status of last estimate. If = 0 is OK */
+      int Status() const { return fStatus; }
+
+      // static function used to modify the default parameters 
+
+      /** set number of default Npx used at construction time (when SetNpx is not called) 
+          Default value is 100
+       */ 
+      static void SetDefaultNpx(int npx); 
+
+      /** set number of  times the bracketing search in combination with is done to find a good interval  
+          Default value is 10
+       */       
+      static void SetDefaultNSearch(int n);
+
+   private:
+
       const IGenFunction* fFunction; // Pointer to the function.
+      int fNIter;                    // Number of iterations needed for the last estimation.
+      int fNpx;                      // Number of points to bracket minimum with grid (def is 100)
+      int fStatus;                   // Status of code of the last estimate
       double fXMin;                  // Lower bound of the search interval.
       double fXMax;                  // Upper bound of the search interval
       double fXMinimum;              // Position of the stimated minimum.
-      int fNIter;                    // Number of iterations needed for the last stimation.
-
+ 
    };  // end class BrentMinimizer1D
    
 } // end namespace Math

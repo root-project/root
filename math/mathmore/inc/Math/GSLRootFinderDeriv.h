@@ -60,10 +60,18 @@ namespace Math {
 //_____________________________________________________________________________________
    /**
       Base class for GSL Root-Finding algorithms for one dimensional functions which use function derivatives. 
-      For finding the roots users should not use this class directly but instantiate the template 
-      ROOT::Math::RootFinder class with the corresponding algorithms. 
-      For example the ROOT::Math::RootFinder<ROOT::Math::Roots::Newton> for using the Newton algorithm.
-      See that class also for the documentation. 
+      For finding the roots users should not use this class directly but instantiate the derived classes, 
+      for example  ROOT::Math::Roots::Newton for using the Newton algorithm. 
+      All the classes defining the alhorithms are defined in the header Math/RootFinderAlgorithm.h
+      They possible types implementing root bracketing algorithms which use function 
+      derivatives are: 
+      <ul>
+         <li>ROOT::Math::Roots::Newton
+         <li>ROOT::Math::Roots::Secant
+         <li>ROOT::Math::Roots::Steffenson
+     </ul>
+
+      See also those classes  for the documentation. 
       See the GSL <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Finding-Algorithms-using-Derivatives.html"> online manual</A> for 
       information on the GSL Root-Finding algorithms
       
@@ -71,7 +79,7 @@ namespace Math {
    */
 
 
-   class GSLRootFinderDeriv: public IRootFinderMethod {
+class GSLRootFinderDeriv: public IRootFinderMethod {
 
 public: 
    GSLRootFinderDeriv(); 
@@ -87,13 +95,13 @@ public:
 
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)     
-   int SetFunction( const IGenFunction & , double , double ) { 
+   bool SetFunction( const IGenFunction & , double , double ) { 
       std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;  
-      return -1;
+      return false;
    }
 #endif    
      
-   int SetFunction( const IGradFunction & f, double xstart) { 
+   bool SetFunction( const IGradFunction & f, double xstart) { 
       const void * p = &f; 
       return SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), xstart ); 
    }
@@ -101,20 +109,25 @@ public:
      
    typedef double ( * GSLFuncPointer ) ( double, void *);
    typedef void ( * GSLFdFPointer ) ( double, void *, double *, double *);
-   int SetFunction( GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer fdf, void * p, double Root );   
+   bool SetFunction( GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer fdf, void * p, double Root );   
 
    using IRootFinderMethod::SetFunction;
 
+   /// iterate (return GSL_SUCCESS in case of succesfull iteration)
    int Iterate(); 
 
    double Root() const; 
 
-   // Solve for roots
-   int Solve( int maxIter = 100, double absTol = 1E-3, double relTol = 1E-6);
+   /// Find the root (return false if failed) 
+   bool Solve( int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
 
+   /// Return number of iterations
    int Iterations() const {
       return fIter; 
    }
+
+   /// Return the status of last root finding
+   int Status() const { return fStatus; }
 
    const char * Name() const;  
 
@@ -129,10 +142,10 @@ private:
    GSLFunctionDerivWrapper * fFunction;     
    GSLRootFdFSolver * fS; 
  
-
    mutable double fRoot; 
    mutable double fPrevRoot; 
    int fIter; 
+   int fStatus;    
    bool fValidPoint; 
      
 }; 

@@ -181,7 +181,7 @@ public:
    /**
       multidim-like interface
    */
-   double operator() (const double * x, const double *  p ) 
+   double operator() (const double * x, const double *  p ) const
    { 
       return DoEvalPar(*x, p); 
    }

@@ -141,7 +141,7 @@ public:
        The dimension of the function is in this case required 
    */
    template <class Function> 
-   void SetFunction(const Function & f, unsigned int dim) { 
+   void SetFunction( const Function  & f, unsigned int dim) { 
       ROOT::Math::WrappedMultiFunction<Function> wf(f, dim); 
       SetFunction(wf);
    }

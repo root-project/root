@@ -42,7 +42,7 @@ namespace Math {
 /**
    Interface class for numerical methods for one-dimensional minimization
 
-   @ingroup Minimization
+   @ingroup Min1D
   
  */
 
@@ -88,11 +88,12 @@ namespace Math {
       /**
        * Find minimum position iterating until convergence specified by the absolute and relative tolerance or
        * the maximum number of iteration is reached
+       * Return true if iterations converged successfully
        * \@param maxIter maximum number of iteration
        * \@param absTol desired absolute error in the minimum position
        * \@param absTol desired relative error in the minimum position
        */
-      virtual int Minimize( int maxIter, double absTol, double relTol) = 0; 
+      virtual bool Minimize( int maxIter, double absTol, double relTol) = 0; 
 
       /**
        * Return number of iteration used to find minimum
@@ -103,6 +104,10 @@ namespace Math {
        * Return name of minimization algorithm
        */
       virtual const char * Name() const = 0;  
+
+      /** Returns the status of the previous estimate */
+      virtual int Status() const = 0; 
+
 
    };  // end class IMinimizer1D
    

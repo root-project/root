@@ -20,15 +20,29 @@ namespace ROOT {
 namespace Math {
 
 
-BrentRootFinder::BrentRootFinder() : fFunction(0) {}
+static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the root
+static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
 
-BrentRootFinder::~BrentRootFinder() {}
+   BrentRootFinder::BrentRootFinder() : fFunction(0), fNIter(0), 
+                                        fNpx(0), fStatus(-1), 
+                                        fXMin(0), fXMax(0), fRoot(0) 
+{
+   // default constructor (number of points used to bracket value is set to 100)
+   fNpx = gDefaultNpx; 
+}
 
-int BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
+void BrentRootFinder::SetDefaultNpx(int n) { gDefaultNpx = n; }
+
+void BrentRootFinder::SetDefaultNSearch(int n) { gDefaultNSearch = n; }
+
+
+bool BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
 {
 // Set function to solve and the interval in where to look for the root. 
 
    fFunction = &f;
+   // invalid previous status
+   fStatus = -1; 
 
    if (xlow >= xup) 
    {
@@ -39,41 +53,50 @@ int BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow,
    fXMin = xlow;
    fXMax = xup;
 
-   return 0;
+   return true;
 }
 
 const char* BrentRootFinder::Name() const
 {   return "BrentRootFinder";  }
 
-double BrentRootFinder::Root() const
-{   return fRoot;  }
 
-int BrentRootFinder::Solve(int, double /*absTol*/, double /*relTol*/)
+bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
 {
-// Returns the X value corresponding to the function value fy for (xmin<x<xmax).
+  // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
 
-   double fy = 0; // To find the root
+   if (!fFunction) { 
+       MATH_ERROR_MSG("BrentRootFinder::Solve", "Function has not been set");
+       return false;
+   }
+
+   const double fy = 0; // To find the root
+   fNIter = 0; 
+   fStatus = -1; 
 
    double xmin = fXMin;
    double xmax = fXMax;
 
-   int niter=0;
-   double x;
-   x = MinimStep(fFunction, 4, xmin, xmax, fy);
-   bool ok = true;
-   x = MinimBrent(fFunction, 4, xmin, xmax, x, fy, ok);
+   int maxIter1 = gDefaultNSearch;  // external loop (number of search )
+   int maxIter2 = maxIter;          // internal loop inside the Brent algorithm 
+
+   int niter1 = 0;
+   int niter2 = 0;
+   bool ok = false; 
    while (!ok){
-      if (niter>10){
-         MATH_ERROR_MSG("Root", "Search didn't converge");
-         break;
+      if (niter1 > maxIter1){
+         MATH_ERROR_MSG("BrentRootFinder::Solve", "Search didn't converge");
+         fStatus = -2; 
+         return false;
       }
-      x=MinimStep(fFunction, 4, xmin, xmax, fy);
-      x = MinimBrent(fFunction, 4, xmin, xmax, x, fy, ok);
-      niter++;
+      double x = BrentMethods::MinimStep(fFunction, 4, xmin, xmax, fy, fNpx);
+      x = BrentMethods::MinimBrent(fFunction, 4, xmin, xmax, x, fy, ok, niter2, absTol, relTol, maxIter2);
+      fNIter += niter2;  // count the total number of iterations
+      niter1++;
+      fRoot = x; 
    }
 
-   fRoot = x;
-   return 1;
+   fStatus = 0;
+   return true;
 }
 
 } // namespace Math

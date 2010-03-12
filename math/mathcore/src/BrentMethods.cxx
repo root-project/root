@@ -9,6 +9,8 @@
  **********************************************************************/
 
 #include "Math/BrentMethods.h"
+#include "Math/IFunction.h"
+
 #include <cmath>
 #include <algorithm>
 
@@ -16,14 +18,18 @@
 #include "Math/Error.h"
 #endif
 
+#include <iostream>
+
 namespace ROOT {
 namespace Math {
 
-double MinimStep(const IGenFunction* function, int type, double &xmin, double &xmax, double fy, int fNpx)
+namespace BrentMethods { 
+
+double MinimStep(const IGenFunction* function, int type, double &xmin, double &xmax, double fy, int npx)
 {
    //   Grid search implementation, used to bracket the minimum and later
    //   use Brent's method with the bracketed interval
-   //   The step of the search is set to (xmax-xmin)/fNpx
+   //   The step of the search is set to (xmax-xmin)/npx
    //   type: 0-returns MinimumX
    //         1-returns Minimum
    //         2-returns MaximumX
@@ -31,7 +37,7 @@ double MinimStep(const IGenFunction* function, int type, double &xmin, double &x
    //         4-returns X corresponding to fy
 
    double x,y, dx;
-   dx = (xmax-xmin)/(fNpx-1);
+   dx = (xmax-xmin)/(npx-1);
    double xxmin = xmin;
    double yymin;
    if (type < 2)
@@ -41,7 +47,7 @@ double MinimStep(const IGenFunction* function, int type, double &xmin, double &x
    else
       yymin = std::fabs((*function)(xmin)-fy);
 
-   for (int i=1; i<=fNpx-1; i++) {
+   for (int i=1; i<=npx-1; i++) {
       x = xmin + i*dx;
       if (type < 2)
          y = (*function)(x);
@@ -58,13 +64,14 @@ double MinimStep(const IGenFunction* function, int type, double &xmin, double &x
    return std::min(xxmin, xmax);
 }
 
-double MinimBrent(const IGenFunction* function, int type, double &xmin, double &xmax, double xmiddle, double fy, bool &ok)
+   double MinimBrent(const IGenFunction* function, int type, double &xmin, double &xmax, double xmiddle, double fy,  bool &ok, int &niter, double epsabs, double epsrel, int itermax)
 {
    //Finds a minimum of a function, if the function is unimodal  between xmin and xmax
    //This method uses a combination of golden section search and parabolic interpolation
    //Details about convergence and properties of this algorithm can be
    //found in the book by R.P.Brent "Algorithms for Minimization Without Derivatives"
    //or in the "Numerical Recipes", chapter 10.2
+   // convergence is reached using  tolerance = 2 *( epsrel * abs(x) + epsabs)
    //
    //type: 0-returns MinimumX
    //      1-returns Minimum
@@ -73,11 +80,7 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
    //      4-returns X corresponding to fy
    //if ok=true the method has converged
 
-   double eps = 1e-10;
-   double t = 1e-8;
-   int itermax = 100;
-
-   double c = (3.-std::sqrt(5.))/2.; //comes from golden section
+   const double c = 3.81966011250105097e-01; //  (3.-std::sqrt(5.))/2.  (comes from golden section)
    double u, v, w, x, fv, fu, fw, fx, e, p, q, r, t2, d=0, m, tol;
    v = w = x = xmiddle;
    e=0;
@@ -93,11 +96,13 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
 
    for (int i=0; i<itermax; i++){
       m=0.5*(a + b);
-      tol = eps*(std::fabs(x))+t;
+      tol = epsrel*(std::fabs(x))+epsabs;
       t2 = 2*tol;
+
       if (std::fabs(x-m) <= (t2-0.5*(b-a))) {
          //converged, return x
          ok=true;
+         niter = i-1; 
          if (type==1)
             return fx;
          else if (type==3)
@@ -131,7 +136,7 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
             if (u-a < t2 || b-u < t2)
                //d=TMath::Sign(tol, m-x);
                d=(m-x >= 0) ? std::fabs(tol) : -std::fabs(tol);
-         }
+         } 
       } else {
          e=(x>=m ? a-x : b-x);
          d = c*e;
@@ -163,9 +168,11 @@ double MinimBrent(const IGenFunction* function, int type, double &xmin, double &
    ok = false;
    xmin = a;
    xmax = b;
+   niter = itermax;
    return x;
 
 }
 
-}
-}
+} // end namespace BrentMethods
+} // end namespace Math
+} // ned namespace ROOT

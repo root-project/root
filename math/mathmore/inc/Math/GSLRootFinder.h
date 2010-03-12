@@ -57,10 +57,18 @@ namespace Math {
 //________________________________________________________________________________________________________
   /**
      Base class for GSL Root-Finding algorithms for one dimensional functions which do not use function derivatives. 
-     For finding the roots users should not use this class directly but instantiate the template 
-     ROOT::Math::RootFinder class with the corresponding algorithms. 
-     For example the ROOT::Math::RootFinder<ROOT::Math::Roots::Brent> for using the Brent algorithm. See that class also 
-     for the documentation. 
+     For finding the roots users should not use this class directly but instantiate the derived classes, 
+     for example  ROOT::Math::Roots::Brent for using the Brent algorithm. 
+     All the classes defining the alhorithms are defined in the header Math/RootFinderAlgorithm.h
+     They possible types implementing root bracketing algorithms which they do not require function 
+     derivatives are: 
+     <ul>
+         <li>ROOT::Math::Roots::Bisection
+         <li>ROOT::Math::Roots::FalsePos
+         <li>ROOT::Math::Roots::Brent
+     </ul>
+
+     See also the specific  classes for the documentation. 
      See the GSL <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html"> online manual</A> for 
      information on the GSL Root-Finding algorithms
 
@@ -68,77 +76,77 @@ namespace Math {
   */
 
 
-   class GSLRootFinder: public IRootFinderMethod {
+ class GSLRootFinder: public IRootFinderMethod {
      
-   public: 
-     GSLRootFinder(); 
-     virtual ~GSLRootFinder(); 
+ public: 
+    GSLRootFinder(); 
+    virtual ~GSLRootFinder(); 
      
-   private:
-     // usually copying is non trivial, so we make this unaccessible
-     GSLRootFinder(const GSLRootFinder &); 
-     GSLRootFinder & operator = (const GSLRootFinder &); 
+ private:
+    // usually copying is non trivial, so we make this unaccessible
+    GSLRootFinder(const GSLRootFinder &); 
+    GSLRootFinder & operator = (const GSLRootFinder &); 
      
-   public: 
+ public: 
      
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)  
-      int SetFunction( const IGradFunction & , double ) { 
-         std::cerr <<"GSLRootFinder - Error : this method must be used with a Root Finder algorithm using derivatives" << std::endl;  
-         return -1;
-      }
+    bool SetFunction( const IGradFunction & , double ) { 
+       std::cerr <<"GSLRootFinder - Error : this method must be used with a Root Finder algorithm using derivatives" << std::endl;  
+       return false;
+    }
 #endif
    
-     int SetFunction( const IGenFunction & f, double xlow, double xup);
+    bool SetFunction( const IGenFunction & f, double xlow, double xup);
 
-     typedef double ( * GSLFuncPointer ) ( double, void *);
-     int SetFunction( GSLFuncPointer  f, void * params, double xlow, double xup); 
+    typedef double ( * GSLFuncPointer ) ( double, void *);
+    bool SetFunction( GSLFuncPointer  f, void * params, double xlow, double xup); 
 
-     using IRootFinderMethod::SetFunction;
+    using IRootFinderMethod::SetFunction;
 
-     int Iterate(); 
+    // iterate to find ROOTS return GSL_CONTINUE if iteration was succesfull or another error
+    int Iterate(); 
 
-     double Root() const; 
+    double Root() const; 
 
-     //double XLower() const; 
+    //double XLower() const; 
 
-     //double XUpper() const; 
+    //double XUpper() const; 
 
-     // Solve for roots
-     int Solve( int maxIter = 100, double absTol = 1E-3, double relTol = 1E-6); 
+    /// Find the root
+    bool Solve( int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10); 
 
-     int Iterations() const {
+    /// Return number of iterations
+    int Iterations() const {
        return fIter; 
-     }
+    }
 
-     const char * Name() const;  
+    /// Return the status of last root finding
+    int Status() const { return fStatus; }
+
+    const char * Name() const;  
 
      
-   protected:
+ protected:
      
 
-     void SetSolver (  GSLRootFSolver * s ); 
-
-     void FreeSolver(); 
+    void SetSolver (  GSLRootFSolver * s ); 
+      
+    void FreeSolver(); 
      
-   private: 
+ private: 
      
-     GSLFunctionWrapper * fFunction;     
-     GSLRootFSolver * fS; 
-  
-   protected: 
+    GSLFunctionWrapper * fFunction;     
+    GSLRootFSolver * fS; 
 
+    double fRoot; 
+    double fXlow;
+    double fXup; 
+    int fIter;
+    int fStatus;
+    bool fValidInterval;
 
-
-   private: 
-
-     double fRoot; 
-     double fXlow;
-     double fXup; 
-     int fIter; 
-     bool fValidInterval;
-
-   }; 
+ }; 
 
 } // namespace Math
 } // namespace ROOT
