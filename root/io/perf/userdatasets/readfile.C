@@ -184,13 +184,6 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
       T->AddBranchToCache("*");
       T->StopCacheLearningPhase();
    }
-   if (!loadlibrary && strcmp(T->GetName(),"Events")==0) {
-      // CMS file without library, disable the vector of polymorphic pointers
-      // which we don't know yet how to delete properly.
-      T->SetBranchStatus("patJets_selectedLayer1Jets__PAT.obj.tagInfos_.data_",kFALSE);
-      T->SetBranchStatus("patJets_patcrosscleaner_ccJets_PAT.obj.tagInfos_.data_",kFALSE);
-      T->SetBranchStatus("patJets_patcrosscleaner_droppedJets_PAT.obj.tagInfos_.data_",kFALSE);
-   }      
    
    TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
    
