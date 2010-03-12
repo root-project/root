@@ -252,10 +252,10 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fTypes->Associate(this);
    fTypes->Resize(230, fName->GetDefaultHeight());
 
-   char s[64];
+   TString s;
    for (i = 0; fFileInfo->fFileTypes[i] != 0; i += 2) {
-      sprintf(s, "%s (%s)", fFileInfo->fFileTypes[i], fFileInfo->fFileTypes[i+1]);
-      fTypes->AddEntry(s, i);
+      s.Form("%s (%s)", fFileInfo->fFileTypes[i], fFileInfo->fFileTypes[i+1]);
+      fTypes->AddEntry(s.Data(), i);
    }
    fTypes->Select(fFileInfo->fFileTypeIdx);
 
