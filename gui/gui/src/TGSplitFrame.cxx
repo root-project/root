@@ -619,7 +619,9 @@ void TGSplitFrame::SwallowBack()
       fUndocked = dynamic_cast<TGTransientFrame *>((TQObject*)gTQSender);
    }
    if (fUndocked) {
-      TGSplitFrame *frame = (TGSplitFrame *)dynamic_cast<TGFrameElement*>(fUndocked->GetList()->First())->fFrame;
+      TGFrameElement *el = dynamic_cast<TGFrameElement*>(fUndocked->GetList()->First());
+      if (!el || !el->fFrame) return;
+      TGSplitFrame *frame = (TGSplitFrame *)el->fFrame;
       frame->UnmapWindow();
       fUndocked->RemoveFrame(frame);
       frame->ReparentWindow(this);

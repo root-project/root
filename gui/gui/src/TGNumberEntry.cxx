@@ -1233,7 +1233,7 @@ Double_t TGNumberEntryField::GetNumber() const
       {
          char text[256];
          RealInfo_t ri;
-         strcpy(text, GetText());
+         strncpy(text, GetText(), 256);
          return StrToReal(text, ri);
       }
    case kNESDegree:
