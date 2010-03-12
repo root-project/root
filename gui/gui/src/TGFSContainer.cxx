@@ -687,11 +687,11 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
       if (sbuf.fIsLink) {
          Info("AddFile", "Broken symlink of %s.", name);
       } else {
-         char msg[256];
-         sprintf(msg, "Can't read file attributes of \"%s\": %s.",
-                 name, gSystem->GetError());
+         TString msg;
+         msg.Form("Can't read file attributes of \"%s\": %s.",
+                  name, gSystem->GetError());
          new TGMsgBox(fClient->GetDefaultRoot(), GetMainFrame(),
-                      "Error", msg, kMBIconStop, kMBOk);
+                      "Error", msg.Data(), kMBIconStop, kMBOk);
       }
       return item;
    }

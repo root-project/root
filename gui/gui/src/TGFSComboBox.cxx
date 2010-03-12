@@ -346,9 +346,10 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       if (strstr(gLbc[i].fPath, "$HOME") != 0) {
          if (homeDir) {
             int hlen = strlen(homeDir);
-            p = new char[hlen + strlen(gLbc[i].fPath) - 3];
-            strcpy(p, homeDir);
-            strcat(p, &gLbc[i].fPath[5]);
+            int blen = hlen + strlen(gLbc[i].fPath) - 3;
+            p = new char[blen];
+            strncpy(p, homeDir, blen);
+            strncat(p, &gLbc[i].fPath[5], blen-strlen(&gLbc[i].fPath[5]));
             gLbc[i].fPath = p;
          } else {
             gLbc[i].fFlags = 0;
@@ -372,8 +373,8 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
             // null.
             int blen = hlen + strlen(gLbc[i].fPath) - plen + 1;
             p = new char[blen];
-            strcpy(p, rootSys);
-            strcat(p, &(gLbc[i].fPath[plen]));
+            strncpy(p, rootSys, blen);
+            strncat(p, &(gLbc[i].fPath[plen]), blen-strlen(&gLbc[i].fPath[plen]));
             // Figure out where to put the terminating NULL
             int npos = hlen + strlen(&(gLbc[i].fPath[plen]));
             p[npos] = '\0';
@@ -426,7 +427,7 @@ void TGFSComboBox::Update(const char *path)
                sel = afterID = gLbc[i].fId;
                indent_lvl = gLbc[i].fIndent + 1;
                tailpath = path + slen;
-               strcpy(mpath, gLbc[i].fPath);
+               strncpy(mpath, gLbc[i].fPath, 1024);
                len = slen;
             }
          }
@@ -440,7 +441,7 @@ void TGFSComboBox::Update(const char *path)
             const char *picname;
             const char *semi = strchr(tailpath, '/');
             if (semi == 0) {
-               strcpy(dirname, tailpath);
+               strncpy(dirname, tailpath, 1024);
                picname = "ofolder_t.xpm";
             } else {
                strncpy(dirname, tailpath, semi-tailpath);
@@ -448,7 +449,7 @@ void TGFSComboBox::Update(const char *path)
                picname = "folder_t.xpm";
             }
             if (mpath[strlen(mpath)-1] != '/') strcat(mpath, "/");
-            strcat(mpath, dirname);
+            strncat(mpath, dirname, 1024-strlen(mpath));
             int indent = 4 + (indent_lvl * 10);
             const TGPicture *pic = fClient->GetPicture(picname);
             if (!pic) Error("Update", "pixmap not found: %s", picname);
