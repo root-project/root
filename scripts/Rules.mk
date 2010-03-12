@@ -327,9 +327,9 @@ ifeq ($(ARCH),macosx)
 export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
 CXX           = g++
 ifeq ($(ROOTBUILD),debug)
-CXXFLAGS      += -g -pipe -Wall -fPIC -Woverloaded-virtual
+CXXFLAGS      += -m32 -g -pipe -Wall -fPIC -Woverloaded-virtual
 else
-CXXFLAGS      += -O -pipe -Wall -fPIC -Woverloaded-virtual
+CXXFLAGS      += -m32 -O -pipe -Wall -fPIC -Woverloaded-virtual
 endif
 ifeq ($(MACOSX_MINOR),) 
   export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
@@ -348,6 +348,7 @@ LD            = c++
 CXXFLAGS     += -Wno-long-double
 endif
 endif
+LDFLAGS       = -m32
 SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
 LibSuf        = dylib
