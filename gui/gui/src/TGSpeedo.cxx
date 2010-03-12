@@ -134,8 +134,8 @@ void TGSpeedo::Build()
       fBase = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(fPicName.Data()),
               fImage->GetPixmap(), fImage->GetMask());
       // center of the image
-      Float_t xc = (Float_t)(fBase ? (fBase->GetWidth() + 1) / 2 : 50.0);
-      Float_t yc = (Float_t)(fBase ? (fBase->GetHeight() + 1) / 2 : 50.0);
+      Float_t xc = (Float_t)(fBase ? (fBase->GetWidth() + 1) / 2 : 96.0);
+      Float_t yc = (Float_t)(fBase ? (fBase->GetHeight() + 1) / 2 : 96.0);
 
       // compute scale ticks steps
       step = (fScaleMax - fScaleMin) / 4.0;
@@ -447,8 +447,8 @@ void TGSpeedo::Translate(Float_t val, Float_t angle, Int_t *x, Int_t *y)
 {
    // Translate distance from center and angle to xy coordinates.
 
-   Float_t xc = (Float_t)(fBase->GetWidth() + 1) / 2.0;
-   Float_t yc = (Float_t)(fBase->GetHeight() + 1) / 2.0;
+   Float_t xc = (Float_t)(fBase ? (fBase->GetWidth() + 1) / 2 : 96.0);
+   Float_t yc = (Float_t)(fBase ? (fBase->GetHeight() + 1) / 2 : 96.0);
    *x = (Int_t)(xc + val * sin(angle * TMath::Pi() / 180) + 0.5);
    *y = (Int_t)(yc - val * cos(angle * TMath::Pi() / 180) + 0.5);
 }
@@ -511,8 +511,8 @@ void TGSpeedo::DrawText()
    Int_t strSize;
 
    // center of the image
-   Float_t xc = fBase ? (fBase->GetWidth() + 1) / 2 : 50.0;
-   Float_t yc = fBase ? (fBase->GetHeight() + 1) / 2 : 50.0;
+   Float_t xc = fBase ? (fBase->GetWidth() + 1) / 2 : 96.0;
+   Float_t yc = fBase ? (fBase->GetHeight() + 1) / 2 : 96.0;
 
    if (fImage && fImage->IsValid()) {
       // First clone original image.
@@ -575,8 +575,8 @@ void TGSpeedo::DoRedraw()
             (fAngleMax - fAngleMin));
 
    // center of the image
-   Float_t xc = fBase ? (fBase->GetWidth() + 1) / 2 : 50.0;
-   Float_t yc = fBase ? (fBase->GetHeight() + 1) / 2 : 50.0;
+   Float_t xc = fBase ? (fBase->GetWidth() + 1) / 2 : 96.0;
+   Float_t yc = fBase ? (fBase->GetHeight() + 1) / 2 : 96.0;
 
    // compute x/y position of the needle
    Translate(9.0, fAngle, &xch0, &ych0);

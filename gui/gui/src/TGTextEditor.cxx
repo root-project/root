@@ -262,7 +262,7 @@ TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h)
 {
    // TGTextEditor constructor with pointer to a TMacro as first argument.
 
-   char tmp[1024];
+   TString tmp;
    Build();
    if (p && p != gClient->GetDefaultRoot()) {
       // special case for TRootBrowser
@@ -279,13 +279,13 @@ TGTextEditor::TGTextEditor(TMacro *macro, const TGWindow *p, UInt_t w, UInt_t h)
       while ((obj = (TObjString*) next())) {
          fTextEdit->AddLine(obj->GetName());
       }
-      sprintf(tmp, "TMacro : %s: %ld lines read.",
-              macro->GetName(), fTextEdit->ReturnLineCount());
-      fStatusBar->SetText(tmp, 0);
+      tmp.Form("TMacro : %s: %ld lines read.",
+               macro->GetName(), fTextEdit->ReturnLineCount());
+      fStatusBar->SetText(tmp.Data(), 0);
       fFilename = macro->GetName();
       fFilename += ".C";
-      sprintf(tmp, "TMacro : %s - TGTextEditor", macro->GetName());
-      SetWindowName(tmp);
+      tmp.Form("TMacro : %s - TGTextEditor", macro->GetName());
+      SetWindowName(tmp.Data());
    }
    MapWindow();
 }
@@ -469,12 +469,12 @@ void TGTextEditor::DataDropped(char *fname)
    // Update file informations when receiving the signal
    // DataDropped from TGTextEdit widget.
 
-   char tmp[1024];
+   TString tmp;
    fFilename = fname;
-   sprintf(tmp, "%s: %ld lines read.", fname, fTextEdit->ReturnLineCount());
+   tmp.Form("%s: %ld lines read.", fname, fTextEdit->ReturnLineCount());
    fStatusBar->SetText(tmp, 0);
-   sprintf(tmp, "%s - TGTextEditor", fname);
-   SetWindowName(tmp);
+   tmp.Form("%s - TGTextEditor", fname);
+   SetWindowName(tmp.Data());
 }
 
 //______________________________________________________________________________
@@ -482,7 +482,7 @@ void TGTextEditor::LoadFile(char *fname)
 {
    // Load a file into the editor. If fname is 0, a TGFileDialog will popup.
 
-   char tmp[1024];
+   TString tmp;
    TGFileInfo fi;
    fi.fFileTypes = ed_filetypes;
    if (fname == 0) {
@@ -493,15 +493,15 @@ void TGTextEditor::LoadFile(char *fname)
    }
    if (fname) {
       if (!fTextEdit->LoadFile(fname)) {
-         sprintf(tmp, "Error opening file \"%s\"", fname);
+         tmp.Form("Error opening file \"%s\"", fname);
          new TGMsgBox(fClient->GetRoot(), this, "TGTextEditor",
-                      tmp, kMBIconExclamation, kMBOk);
+                      tmp.Data(), kMBIconExclamation, kMBOk);
       } else {
          fFilename = fname;
-         sprintf(tmp, "%s: %ld lines read.", fname, fTextEdit->ReturnLineCount());
-         fStatusBar->SetText(tmp, 0);
-         sprintf(tmp, "%s - TGTextEditor", fname);
-         SetWindowName(tmp);
+         tmp.Form("%s: %ld lines read.", fname, fTextEdit->ReturnLineCount());
+         fStatusBar->SetText(tmp.Data(), 0);
+         tmp.Form("%s - TGTextEditor", fname);
+         SetWindowName(tmp.Data());
       }
    }
    fTextEdit->Layout();
@@ -513,12 +513,13 @@ void TGTextEditor::SaveFile(const char *fname)
 {
    // Save the edited text in the file "fname".
 
-   char *p, tmp[1024];
+   char *p;
+   TString tmp;
 
    if (!fTextEdit->SaveFile(fname)) {
-      sprintf(tmp, "Error saving file \"%s\"", fname);
+      tmp.Form("Error saving file \"%s\"", fname);
       new TGMsgBox(fClient->GetRoot(), this, "TGTextEditor",
-                   tmp, kMBIconExclamation, kMBOk);
+                   tmp.Data(), kMBIconExclamation, kMBOk);
       return;
    }
    if ((p = (char *)strrchr(fname, '/')) == 0) {
@@ -526,11 +527,11 @@ void TGTextEditor::SaveFile(const char *fname)
    } else {
       ++p;
    }
-   sprintf(tmp, "%s: %ld lines written.", p, fTextEdit->ReturnLineCount());
-   fStatusBar->SetText(tmp, 0);
+   tmp.Form("%s: %ld lines written.", p, fTextEdit->ReturnLineCount());
+   fStatusBar->SetText(tmp.Data(), 0);
 
-   sprintf(tmp, "%s - TGTextEditor", p);
-   SetWindowName(tmp);
+   tmp.Form("%s - TGTextEditor", p);
+   SetWindowName(tmp.Data());
    fTextChanged = kFALSE;
 }
 
@@ -562,10 +563,10 @@ Int_t TGTextEditor::IsSaved()
    // Check if file has to be saved in case of modifications.
 
    Int_t ret;
-   char tmp[1024];
+   TString tmp;
    Int_t opt = (kMBYes | kMBNo);
 
-   sprintf(tmp, "The text has been modified. Do you want to save the changes?");
+   tmp.Form("The text has been modified. Do you want to save the changes?");
 
    if (!fTextChanged) {
       return kMBNo;
@@ -573,7 +574,7 @@ Int_t TGTextEditor::IsSaved()
       if (fParent == gClient->GetDefaultRoot())
          opt |= kMBCancel;
       new TGMsgBox(fClient->GetRoot(), this, "TGTextEditor",
-                   tmp, kMBIconExclamation, opt, &ret);
+                   tmp.Data(), kMBIconExclamation, opt, &ret);
       return ret;
    }
 }
@@ -583,7 +584,7 @@ void TGTextEditor::PrintText()
 {
    // Open the print dialog and send current buffer to printer.
 
-   char tmp[1024];
+   TString tmp;
    Int_t ret = 0;
    if (!gEPrinter) {
       gEPrinter = StrDup("892_2_cor"); // use gEnv
@@ -593,8 +594,8 @@ void TGTextEditor::PrintText()
                      &gEPrinter, &gEPrintCommand, &ret);
    if (ret) {
       fTextEdit->Print();
-      sprintf(tmp, "Printed: %s", fFilename.Data());
-      fStatusBar->SetText(tmp, 0);
+      tmp.Form("Printed: %s", fFilename.Data());
+      fStatusBar->SetText(tmp.Data(), 0);
    }
 }
 
@@ -829,7 +830,7 @@ Bool_t TGTextEditor::HandleTimer(TTimer *t)
 {
    // Handle timer event.
 
-   char tmp[1024];
+   TString tmp;
    if (t != fTimer) return kTRUE;
    // check if some text is available in the clipboard
    if ((gVirtualX->InheritsFrom("TGX11")) &&
@@ -865,8 +866,8 @@ Bool_t TGTextEditor::HandleTimer(TTimer *t)
    }
    // get cursor position
    TGLongPosition pos = fTextEdit->GetCurrentPos();
-   sprintf(tmp, "Ln %ld, Ch %ld", pos.fY, pos.fX);
-   fStatusBar->SetText(tmp, 1);
+   tmp.Form("Ln %ld, Ch %ld", pos.fY, pos.fX);
+   fStatusBar->SetText(tmp.Data(), 1);
    fTimer->Reset();
    return kTRUE;
 }
@@ -949,19 +950,21 @@ Bool_t TGTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kM_EDIT_SELFONT:
                      {
                         Int_t count;
-                        char fontname[256];
+                        TString fontname;
                         TGFontDialog::FontProp_t prop;
                         new TGFontDialog(fClient->GetRoot(), this, &prop);
                         if (prop.fName != "") {
-                           sprintf(fontname,"-*-%s-%s-%c-*-*-%d-*-*-*-*-*-*-*",
-                                   prop.fName.Data(), prop.fBold ? "bold" : "medium",
-                                   prop.fItalic ? 'i' : 'r',
-                                   prop.fSize);
+                           fontname.Form("-*-%s-%s-%c-*-*-%d-*-*-*-*-*-*-*",
+                                         prop.fName.Data(), 
+                                         prop.fBold ? "bold" : "medium",
+                                         prop.fItalic ? 'i' : 'r',
+                                         prop.fSize);
                            if (!gVirtualX->ListFonts(fontname, 10, count)) {
-                              sprintf(fontname,"-*-%s-%s-%c-*-*-%d-*-*-*-*-*-*-*",
-                                      prop.fName.Data(), prop.fBold ? "bold" : "medium",
-                                      prop.fItalic ? 'o' : 'r',
-                                      prop.fSize);
+                              fontname.Form("-*-%s-%s-%c-*-*-%d-*-*-*-*-*-*-*",
+                                            prop.fName.Data(), 
+                                            prop.fBold ? "bold" : "medium",
+                                            prop.fItalic ? 'o' : 'r',
+                                            prop.fSize);
                            }
                            TGFont *font = fClient->GetFont(fontname);
                            if (font) {

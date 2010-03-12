@@ -432,7 +432,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
          char        basictype[32];
 
          if (datatype) {
-            strcpy(basictype, datatype->GetTypeName());
+            strncpy(basictype, datatype->GetTypeName(), 32);
          } else {
             TClass *cl = TClass::GetClass(type);
             if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
