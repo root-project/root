@@ -623,7 +623,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
                      }
                      // add decay channel
 
-                     part->AddDecayChannel(decay_type,branching_ratio,ndau,dau);
+                     if (part) part->AddDecayChannel(decay_type,branching_ratio,ndau,dau);
                      ich++;
                   }
                   // skip end of line
