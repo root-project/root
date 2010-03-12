@@ -1441,7 +1441,13 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf)
    // Return the current size of the the TClonesArray
 
    void *ptr = GetLocalValuePointer(leaf);
-   return ReadCounterValue((char*)ptr);
+
+   if (fCounter) { return (Int_t)fCounter->ReadValue((char*)ptr); }
+   
+   R__ASSERT(fCollProxy);
+   if (ptr==0) return 0;
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
+   return (Int_t)fCollProxy->Size();
 }
 
 //______________________________________________________________________________
@@ -1452,7 +1458,8 @@ Int_t TFormLeafInfoCollection::ReadCounterValue(char* where)
    if (fCounter) { return (Int_t)fCounter->ReadValue(where); }
    R__ASSERT(fCollProxy);
    if (where==0) return 0;
-   TVirtualCollectionProxy::TPushPop helper(fCollProxy, where);
+   void *ptr = GetLocalValuePointer(where,0);
+   TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
    return (Int_t)fCollProxy->Size();
 }
 

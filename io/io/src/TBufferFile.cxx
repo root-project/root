@@ -2076,7 +2076,7 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
 
 //______________________________________________________________________________
 void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Int_t n,
-                             TMemberStreamer *streamer)
+                                 TMemberStreamer *streamer)
 {
    // Write an array of object starting at the address 'start' and of length 'n'
    // the objects in the array are assumed to be of class 'cl'
@@ -2097,7 +2097,7 @@ void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Int_t n,
 
 //______________________________________________________________________________
 Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
-                             Bool_t isPreAlloc, TMemberStreamer *streamer)
+                                  Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    // Write an array of object starting at the address '*start' and of length 'n'
    // the objects in the array are of class 'cl'

@@ -1813,8 +1813,14 @@ TClass *TClass::GetActualClass(const void *object) const
    // have a virtual ptr table, the result will be 'this' and NOT the actual
    // class.
 
-   if (object==0 || !IsLoaded() ) return (TClass*)this;
-
+   if (object==0) return (TClass*)this;
+   if (!IsLoaded()) {
+      TVirtualStreamerInfo* sinfo = GetStreamerInfo();
+      if (sinfo) {
+         return sinfo->GetActualClass(object);
+      }
+      return (TClass*)this;
+   }
    if (fIsA) {
       return (*fIsA)(object); // ROOT::IsA((ThisClass*)object);
    } else if (fGlobalIsA) {
@@ -4617,7 +4623,11 @@ void TClass::Streamer(void *object, TBuffer &b, const TClass *onfile_class) cons
       return;
 
       case kTObject|kEmulated : {
-         b.ReadClassEmulated(this, object, onfile_class);
+         if (b.IsReading()) {
+            b.ReadClassEmulated(this, object, onfile_class);
+         } else {
+            b.WriteClassBuffer(this, object);
+         }            
       }
       return;
 

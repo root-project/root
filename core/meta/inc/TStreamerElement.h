@@ -112,7 +112,7 @@ public:
    virtual void     SetNewType(Int_t dtype) {fNewType = dtype;}
    virtual void     SetNewClass( TClass* cl ) { fNewClass= cl; }
    virtual void     SetType(Int_t dtype) {fType = dtype;}
-   virtual void     SetTypeName(const char *name) {fTypeName = name;}
+   virtual void     SetTypeName(const char *name) {fTypeName = name; fClassObject = (TClass*)-1; }
    virtual void     Update(const TClass *oldClass, TClass *newClass);
 
    ClassDef(TStreamerElement,4)  //Base class for one element (data member) to be Streamed

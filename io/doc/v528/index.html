@@ -17,15 +17,8 @@ tell the StreamerElement representing one of the pointers pointing to the object
 to never delete the object.  For example:
 
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-   TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)file->GetStreamerInfoCache()->FindObject("HepMC::GenVertex");
-   if (info) {
-      TObject *el = info->GetElements()->FindObject("m_event");
-      if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-   }
+   TClass::AddRule("HepMC::GenVertex m_event options=NotOwner");
 </pre>
-Note that MakeProject only uses the list of StreamerInfo internal to the TFile (as opposed
-to the global list of StreamerInfo used by the regular I/O operations) and thus the change
-must be done on the StreamerInfo in file->GetStreamerInfoCache().
 
 MakeProject now implements a move constructor for each classes.   For the implementation, we 'use' the 'copy constructor' until the C++ compilers properly support the official move constructor notation.   Implementing a move constructor avoid having to delete and reconstruct resource during a std::vector resize and avoid the double delete induced by using the default copy constructor.
 
@@ -35,11 +28,7 @@ tell the StreamerElement representing one of the pointers pointing to the object
 to never delete the object.  For example:
 
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-   TClass *clGenVertex = TClass::GetClass("HepMC::GenVertex");
-   if (clGenVertex) {
-      TObject *el = clGenVertex->GetStreamerInfo()->GetElements()->FindObject("m_event");
-      if (el) el->SetBit(TStreamerElement::kDoNotDelete);
-   }
+   TClass::AddRule("HepMC::GenVertex m_event options=NotOwner");
 </pre>
 </li>
 <li>The handling of memory by the collection proxy has been improved in the case of a 
@@ -51,11 +40,7 @@ of memory leaks), the container of pointers are <em>still</em> not owning their 
 object).<p/>
 To make a container of pointers become owner of its content do something like:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-      cl = TClass::GetClass("ObjectVector<LHCb::MCRichDigitSummary>");
-      if (cl && cl->GetStreamerInfo()) {
-         TObject *el = cl->GetStreamerInfo()->GetElements()->FindObject("m_vector");
-         if (el) el->ResetBit(TStreamerElement::kDoNotDelete);
-      }
+      TClass::AddRule("ObjectVector<LHCb::MCRichDigitSummary> m_vector options=Owner");
 </pre>
 For MakeProject, use file->GetStreamerInfoCache() instead of the TClass GetStreamerInfo.
 </li>

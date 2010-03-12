@@ -100,6 +100,9 @@ private:
    TClass           *fClass;             //!pointer to class
    TObjArray        *fElements;          //Array of TStreamerElements
    Version_t         fOldVersion;        //! Version of the TStreamerInfo object read from the file
+   Int_t             fNVirtualInfoLoc;   //! Number of virtual info location to update.
+   ULong_t          *fVirtualInfoLoc;    //![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
+   ULong_t           fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
 
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
@@ -109,6 +112,7 @@ private:
    UInt_t            GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos);
    void              GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subClasses, Bool_t top = kTRUE);
    void              InsertArtificialElements(const TObjArray *rules);
+   void              DestructorImpl(void* p, Bool_t dtorOnly);
 
 private:
    TStreamerInfo(const TStreamerInfo&);            // TStreamerInfo are copiable.  Not Implemented.
@@ -180,6 +184,7 @@ public:
    void                ComputeSize();
    void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE);
    Int_t               GenerateHeaderFile(const char *dirname, const TList *subClasses = 0, const TList *extrainfos = 0);
+   TClass             *GetActualClass(const void *obj) const;
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
    UInt_t              GetCheckSum(UInt_t code) const;

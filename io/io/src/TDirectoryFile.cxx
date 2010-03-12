@@ -1759,9 +1759,15 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
    //   see laso remarks in TDirectoryFile::WriteTObject
    
    TClass *cl = TClass::GetClass(classname);
-   if (!cl) {
-      Error("WriteObjectAny","Unknown class: %s",classname);
-      return 0;
+   if (cl == 0) {
+      TObject *info_obj = *(TObject**)obj;
+      TVirtualStreamerInfo *info = dynamic_cast<TVirtualStreamerInfo*>(info_obj);
+      if (info == 0) {
+         Error("WriteObjectAny","Unknown class: %s",classname);
+         return 0;
+      } else {
+         cl = info->GetClass();
+      }
    }
    return WriteObjectAny(obj,cl,name,option,bufsize);
 }

@@ -2,6 +2,7 @@
 <hr/>
 <a name="core"></a> 
 <h3>Core</h3>
+<h4>ACLiC</h4>
 <ul>
 <li>Allow ACLiC to use a flat directory structure when a build directory is specified.
 To use a flat structure do:
@@ -12,5 +13,25 @@ Or use '-' in the option of CompileMacro
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
    gSystem->CompileMacro(myscript,"k-",...);
 </pre>
+</li>
+</ul>
+<h4>Meta</h4>
+<ul>
+<li>Implement polymorphism for Emulated object (still not supporting polymorphism
+of Emulated Object inheriting from compiled class).</p>
+This avoids memory leaks when the user data model relies on polymorphism
+and does not the shared library defining the classes theand avoid splicing if the data is copied.
+
+</p>
+<tt>TStreamerInfo::New</tt> inserts the address of the creating <tt>TStreamerInfo</tt> into
+the object.  This address is inserted in each emulated that does not inherit
+from an emulated class and is positioned after all the base classes (which
+are compiled classes).   A derived class will set this value inside each
+of its emulated base class.
+</p>
+<tt>TStreamerInfo::Destruct</tt> and the new method <tt>TStreamerInfo::GetActualClass</tt>
+use this information to detect the TStreamerInfo actually used to create
+the object and hence run the proper emulated destructor.
+
 </li>
 </ul>
