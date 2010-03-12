@@ -259,7 +259,7 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
                                                       pic, pic, kTRUE);
             if ((pic != fFileIcon) && (pic != fCachedPic))
                fClient->FreePicture(pic);
-            fListTree->CheckItem(item, (Bool_t)check);
+            if (item) fListTree->CheckItem(item, (Bool_t)check);
             TString tip(obj->ClassName());
             if (obj->GetTitle()) {
                tip += " ";
@@ -304,7 +304,7 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
                TGListTreeItem *item = fListTree->AddItem(fListLevel, name, obj, pic, pic);
                if ((pic != fFileIcon) && (pic != fCachedPic))
                   fClient->FreePicture(pic);
-               item->SetDNDSource(kTRUE);
+               if (item) item->SetDNDSource(kTRUE);
             }
          }
       }
