@@ -238,7 +238,7 @@ const char *TGuiBldMenuDialog::GetParameters()
          if (!strncmp(type, "char*", 5))
             sprintf(param, "\"%s\"", data);
          else
-            strcpy(param, data);
+            strncpy(param, data, 256);
       } else
          strcpy(param, "0");
 
@@ -2934,12 +2934,16 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
       fromGrab = kTRUE;
    }
 
-   gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
-                                   comp->GetId(),
-                                   fPimpl->fX, fPimpl->fY, x, y, c);
-   gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
-                                   comp->GetId(),
-                                   fPimpl->fX0, fPimpl->fY0, x0, y0, c);
+   x0 = fPimpl->fX0; y0 = fPimpl->fY0;
+   x  = fPimpl->fX;  y  = fPimpl->fY;
+   if (comp) {
+      gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
+                                      comp->GetId(),
+                                      fPimpl->fX, fPimpl->fY, x, y, c);
+      gVirtualX->TranslateCoordinates(fClient->GetDefaultRoot()->GetId(),
+                                      comp->GetId(),
+                                      fPimpl->fX0, fPimpl->fY0, x0, y0, c);
+   }
 
    xx = x0; yy = y0;
    x0 = TMath::Min(xx, x); x = TMath::Max(xx, x);
