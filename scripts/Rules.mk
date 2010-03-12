@@ -199,6 +199,17 @@ ifeq ($(PYTHON),)
          endif
       endif
    endif
+   ifeq ($(ARCH),macosx)
+      MACOS_MAJOR = $(shell sw_vers | sed -n 's/ProductVersion:[ \t]*//p' | cut -d . -f 1)
+      MACOS_MINOR = $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+      ifeq ($(MACOS_MAJOR),10)
+         ifneq ($(subst $(MACOSX_MINOR),,12345),12345)
+            export PYTHON := python
+         else
+            export PYTHON := arch -i386 python2.6         
+         endif
+      endif
+   endif
 endif
 ifeq ($(HAS_PYTHON),)
    export HAS_PYTHON := $(shell root-config --has-python)
