@@ -190,7 +190,7 @@ public:
 
 
    // test integral with cdf function
-   int TestIntegral(); 
+   int TestIntegral(IntegrationOneDim::Type algotype); 
 
    // test derivative from cdf to pdf function
    int TestDerivative(); 
@@ -237,7 +237,7 @@ private:
 
 // test integral of function
 
-int StatFunction::TestIntegral() {
+int StatFunction::TestIntegral(IntegrationOneDim::Type algoType = IntegrationOneDim::kADAPTIVESINGULAR) {
 
    int iret = 0; 
 
@@ -245,7 +245,7 @@ int StatFunction::TestIntegral() {
    double dx = (xmax-xmin)/NFuncTest; 
 
    // create Integrator 
-   Integrator ig(IntegrationOneDim::kADAPTIVESINGULAR, 1.E-12,1.E-12,100000);
+   Integrator ig(algoType, 1.E-12,1.E-12,100000);
    ig.SetFunction(*this);
 
    for (int i = 0; i < NFuncTest; ++i) { 
@@ -264,6 +264,9 @@ int StatFunction::TestIntegral() {
       int r  = ig.Status(); 
       // use a larger scale (integral error is 10-9)
       double err = ig.Error(); 
+      //std::cout << "integral result is = " << q2 << " error is " << err << std::endl;
+      // Gauss integral sometimes returns an error of 0
+      err = std::max(err,  std::numeric_limits<double>::epsilon() );  
       double scale = std::max( fScaleIg * err / std::numeric_limits<double>::epsilon(), 1.);
       r |= compare("test integral", q1, q2, scale );
       if (r && debug)  { 
@@ -355,9 +358,9 @@ int StatFunction::TestInverse1(RootFinder::EType algoType) {
       Functor1D func(finv); 
       rf1.SetFunction(func, vmin, vmax); 
       //std::cout << "\nfun values for :" << v1 << " f:  " << func(0.0) << "  " << func(1.0) << std::endl;
-      int ret = rf1.Solve(maxitr,abstol,reltol); 
+      int ret = ! rf1.Solve(maxitr,abstol,reltol); 
       if (ret && debug) { 
-         std::cout << "\nError in solving for inverse" << std::endl;
+         std::cout << "\nError in solving for inverse, niter = " << rf1.Iterations() << std::endl;
       }
       double q1 = rf1.Root(); 
       // test that quantile value correspond: 
@@ -404,9 +407,9 @@ int StatFunction::TestInverse2(RootFinder::EType algoType) {
       // use as estimate the quantile at 0.5
       //std::cout << "\nvstart : " << vstart << " fun/der values" << func(vstart) << "  " << func.Derivative(vstart) << std::endl;
       rf1.SetFunction(func,vstart ); 
-      int ret = rf1.Solve(maxitr,abstol,reltol); 
+      int ret = !rf1.Solve(maxitr,abstol,reltol); 
       if (ret && debug) { 
-         std::cout << "\nError in solving for inverse using derivatives" << std::endl;
+         std::cout << "\nError in solving for inverse using derivatives,  niter = " << rf1.Iterations() << std::endl;
       }
       double q1 = rf1.Root(); 
       // test that quantile value correspond: 
@@ -451,8 +454,14 @@ int testGammaFunction(int n = 100) {
       std::cout << "\nTest " << name << " distribution\n";
       int ret = 0;
 
-      PrintTest("\t test integral");
-      ret = dist.TestIntegral();
+      PrintTest("\t test integral GSL adaptive");
+      ret = dist.TestIntegral(IntegrationOneDim::kADAPTIVESINGULAR);
+      PrintStatus(ret);
+      iret |= ret;
+
+      PrintTest("\t test integral Gauss");
+      dist.SetScaleIg(100); // relax for Gauss integral
+      ret = dist.TestIntegral(IntegrationOneDim::kGAUSS);
       PrintStatus(ret);
       iret |= ret;
 
@@ -461,7 +470,7 @@ int testGammaFunction(int n = 100) {
       PrintStatus(ret);
       iret |= ret;
 
-      PrintTest("\t test inverse with Brent method");
+      PrintTest("\t test inverse with GSL Brent method");
       ret = dist.TestInverse1(RootFinder::kGSL_BRENT);
       PrintStatus(ret);
       iret |= ret;
@@ -470,6 +479,13 @@ int testGammaFunction(int n = 100) {
       ret = dist.TestInverse2(RootFinder::kGSL_STEFFENSON);
       PrintStatus(ret);
       iret |= ret;
+
+      PrintTest("\t test inverse with Brent method");
+      dist.SetNTest(10);
+      ret = dist.TestInverse1(RootFinder::kBRENT);
+      PrintStatus(ret);
+      iret |= ret;
+
    }
 
    return iret;
@@ -499,8 +515,14 @@ int testBetaFunction(int n = 100) {
       std::cout << "\nTest " << name << " distribution\n";
       int ret = 0;
 
-      PrintTest("\t test integral");
-      ret = dist.TestIntegral();
+      PrintTest("\t test integral GSL adaptive");
+      ret = dist.TestIntegral(IntegrationOneDim::kADAPTIVESINGULAR);
+      PrintStatus(ret);
+      iret |= ret;
+
+      PrintTest("\t test integral Gauss");
+      dist.SetScaleIg(100); // relax for Gauss integral
+      ret = dist.TestIntegral(IntegrationOneDim::kGAUSS);
       PrintStatus(ret);
       iret |= ret;
 
@@ -510,6 +532,11 @@ int testBetaFunction(int n = 100) {
       iret |= ret;
 
       PrintTest("\t test inverse with Brent method");
+      ret = dist.TestInverse1(RootFinder::kBRENT);
+      PrintStatus(ret);
+      iret |= ret;
+
+      PrintTest("\t test inverse with GSL Brent method");
       ret = dist.TestInverse1(RootFinder::kGSL_BRENT);
       PrintStatus(ret);
       iret |= ret;
