@@ -638,7 +638,7 @@ $(STRESSHIST):  $(STRESSHISTO)
 
 
 clean:
-		@rm -f $(OBJS) $(TRACKMATHSRC) core
+		@rm -f $(OBJS) $(TRACKMATHSRC) core *Dict.*
 
 distclean:      clean
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
