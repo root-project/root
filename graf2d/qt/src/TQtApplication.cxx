@@ -113,14 +113,14 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
             .arg(QString::fromLatin1(ROOT_VALID_QT_VERSION))
             .arg(QString::fromLatin1(qVersion()) ); 
       QMessageBox::critical( 0, QApplication::tr("Incompatible Qt Library Error" ), s, QMessageBox::Abort,0 );
-      qFatal(s.toAscii().data());
+      qFatal("%s",s.toAscii().data());
    } else if (thisQtVersion < QtVersion()) {
        QString s = QApplication::tr("Executable '%1' was compiled with Qt %2, found Qt %3.")
             .arg(qAppName())
             .arg(QT_VERSION_STR)
             .arg(QString::fromLatin1(qVersion()) ); 
       QMessageBox::warning( 0, QApplication::tr("Upgrade Qt Library Warning" ), s, QMessageBox::Abort,0 );
-      qWarning(s.toAscii().data());
+      qWarning("%s",s.toAscii().data());
    }
   
    // Add Qt plugin path if  present (it is the case for Windows binary ROOT distribution)
