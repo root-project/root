@@ -349,7 +349,7 @@ CXXFLAGS     += -Wno-long-double
 endif
 endif
 LDFLAGS       = -m32
-SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+SOFLAGS       = -m32 -dynamiclib -single_module -undefined $(UNDEFOPT)
 DllSuf        = so
 LibSuf        = dylib
 ifeq ($(subst $(MACOSX_MINOR),,01234),01234)
@@ -380,7 +380,7 @@ UNDEFOPT      = dynamic_lookup
 LD            = MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR) c++
 else
 UNDEFOPT      = suppress
-LD            = c++
+LD            = g++
 endif
 endif
 LDFLAGS       = -m64
