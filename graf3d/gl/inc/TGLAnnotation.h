@@ -25,12 +25,12 @@ class TGMainFrame;
 class TGLAnnotation : public TGLOverlayElement
 {
 private:
-   enum EDrag        { kMove, kResize, kNone };
-   enum ENameStack   { kMoveID, kEditID, kDeleteID, kResizeID };
-
-private:
    TGLAnnotation(const TGLAnnotation&);            // Not implemented
    TGLAnnotation& operator=(const TGLAnnotation&); // Not implemented
+
+protected:
+   enum EDrag        { kMove, kResize, kNone };
+   enum ENameStack   { kMoveID, kEditID, kDeleteID, kResizeID };
 
    void MakeEditor();
    Char_t GetLineTransparency() const;
@@ -54,7 +54,6 @@ private:
    static Color_t    fgBackColor;
    static Color_t    fgTextColor;
 
-protected:
    TGLViewer        *fParent;
 
    TString           fText;           // annotation text
