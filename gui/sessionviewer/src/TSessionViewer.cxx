@@ -1173,19 +1173,19 @@ void TSessionFrame::ProofInfos()
 {
    // Display informations on current session.
 
-   char buf[256];
+   TString buf;
 
    // if local session
    if (fViewer->GetActDesc()->fLocal) {
-      sprintf(buf, "*** Local Session on %s ***", gSystem->HostName());
-      fInfoLine[0]->SetText(buf);
+      buf.Form("*** Local Session on %s ***", gSystem->HostName());
+      fInfoLine[0]->SetText(buf.Data());
       UserGroup_t *userGroup = gSystem->GetUserInfo();
       fInfoLine[1]->SetText("User :");
-      sprintf(buf, "%s", userGroup->fRealName.Data());
-      fInfoLine[2]->SetText(buf);
+      buf.Form("%s", userGroup->fRealName.Data());
+      fInfoLine[2]->SetText(buf.Data());
       fInfoLine[3]->SetText("Working directory :");
-      sprintf(buf, "%s", gSystem->WorkingDirectory());
-      fInfoLine[4]->SetText(buf);
+      buf.Form("%s", gSystem->WorkingDirectory());
+      fInfoLine[4]->SetText(buf.Data());
       fInfoLine[5]->SetText(" ");
       fInfoLine[6]->SetText(" ");
       fInfoLine[7]->SetText(" ");
@@ -1214,78 +1214,78 @@ void TSessionFrame::ProofInfos()
 
    if (!fViewer->GetActDesc()->fProof->IsMaster()) {
       if (fViewer->GetActDesc()->fProof->IsParallel())
-         sprintf(buf,"*** Connected to %s (parallel mode, %d workers) ***",
+         buf.Form("*** Connected to %s (parallel mode, %d workers) ***",
                fViewer->GetActDesc()->fProof->GetMaster(),
                fViewer->GetActDesc()->fProof->GetParallel());
       else
-         sprintf(buf, "*** Connected to %s (sequential mode) ***",
+         buf.Form("*** Connected to %s (sequential mode) ***",
                fViewer->GetActDesc()->fProof->GetMaster());
-      fInfoLine[0]->SetText(buf);
+      fInfoLine[0]->SetText(buf.Data());
       fInfoLine[1]->SetText("Port number : ");
-      sprintf(buf, "%d", fViewer->GetActDesc()->fProof->GetPort());
-      fInfoLine[2]->SetText(buf);
+      buf.Form("%d", fViewer->GetActDesc()->fProof->GetPort());
+      fInfoLine[2]->SetText(buf.Data());
       fInfoLine[3]->SetText("User : ");
-      sprintf(buf, "%s", fViewer->GetActDesc()->fProof->GetUser());
-      fInfoLine[4]->SetText(buf);
+      buf.Form("%s", fViewer->GetActDesc()->fProof->GetUser());
+      fInfoLine[4]->SetText(buf.Data());
       fInfoLine[5]->SetText("Client protocol version : ");
-      sprintf(buf, "%d", fViewer->GetActDesc()->fProof->GetClientProtocol());
-      fInfoLine[6]->SetText(buf);
+      buf.Form("%d", fViewer->GetActDesc()->fProof->GetClientProtocol());
+      fInfoLine[6]->SetText(buf.Data());
       fInfoLine[7]->SetText("Remote protocol version : ");
-      sprintf(buf, "%d", fViewer->GetActDesc()->fProof->GetRemoteProtocol());
-      fInfoLine[8]->SetText(buf);
+      buf.Form("%d", fViewer->GetActDesc()->fProof->GetRemoteProtocol());
+      fInfoLine[8]->SetText(buf.Data());
       fInfoLine[9]->SetText("Log level : ");
-      sprintf(buf, "%d", fViewer->GetActDesc()->fProof->GetLogLevel());
-      fInfoLine[10]->SetText(buf);
+      buf.Form("%d", fViewer->GetActDesc()->fProof->GetLogLevel());
+      fInfoLine[10]->SetText(buf.Data());
       fInfoLine[11]->SetText("Session unique tag : ");
-      sprintf(buf, "%s", fViewer->GetActDesc()->fProof->IsValid() ?
+      buf.Form("%s", fViewer->GetActDesc()->fProof->IsValid() ?
             fViewer->GetActDesc()->fProof->GetSessionTag() : " ");
-      fInfoLine[12]->SetText(buf);
+      fInfoLine[12]->SetText(buf.Data());
       fInfoLine[13]->SetText("Total MB's processed :");
-      sprintf(buf, "%.2f", float(fViewer->GetActDesc()->fProof->GetBytesRead())/(1024*1024));
-      fInfoLine[14]->SetText(buf);
+      buf.Form("%.2f", float(fViewer->GetActDesc()->fProof->GetBytesRead())/(1024*1024));
+      fInfoLine[14]->SetText(buf.Data());
       fInfoLine[15]->SetText("Total real time used (s) :");
-      sprintf(buf, "%.3f", fViewer->GetActDesc()->fProof->GetRealTime());
-      fInfoLine[16]->SetText(buf);
+      buf.Form("%.3f", fViewer->GetActDesc()->fProof->GetRealTime());
+      fInfoLine[16]->SetText(buf.Data());
       fInfoLine[17]->SetText("Total CPU time used (s) :");
-      sprintf(buf, "%.3f", fViewer->GetActDesc()->fProof->GetCpuTime());
-      fInfoLine[18]->SetText(buf);
+      buf.Form("%.3f", fViewer->GetActDesc()->fProof->GetCpuTime());
+      fInfoLine[18]->SetText(buf.Data());
    }
    else {
       if (fViewer->GetActDesc()->fProof->IsParallel())
-         sprintf(buf,"*** Master server %s (parallel mode, %d workers) ***",
+         buf.Form("*** Master server %s (parallel mode, %d workers) ***",
                fViewer->GetActDesc()->fProof->GetMaster(),
                fViewer->GetActDesc()->fProof->GetParallel());
       else
-         sprintf(buf, "*** Master server %s (sequential mode) ***",
+         buf.Form("*** Master server %s (sequential mode) ***",
                fViewer->GetActDesc()->fProof->GetMaster());
-      fInfoLine[0]->SetText(buf);
+      fInfoLine[0]->SetText(buf.Data());
       fInfoLine[1]->SetText("Port number : ");
-      sprintf(buf, "%d", fViewer->GetActDesc()->fProof->GetPort());
-      fInfoLine[2]->SetText(buf);
+      buf.Form("%d", fViewer->GetActDesc()->fProof->GetPort());
+      fInfoLine[2]->SetText(buf.Data());
       fInfoLine[3]->SetText("User : ");
-      sprintf(buf, "%s", fViewer->GetActDesc()->fProof->GetUser());
-      fInfoLine[4]->SetText(buf);
+      buf.Form("%s", fViewer->GetActDesc()->fProof->GetUser());
+      fInfoLine[4]->SetText(buf.Data());
       fInfoLine[5]->SetText("Protocol version : ");
-      sprintf(buf, "%d", fViewer->GetActDesc()->fProof->GetClientProtocol());
-      fInfoLine[6]->SetText(buf);
+      buf.Form("%d", fViewer->GetActDesc()->fProof->GetClientProtocol());
+      fInfoLine[6]->SetText(buf.Data());
       fInfoLine[7]->SetText("Image name : ");
-      sprintf(buf, "%s",fViewer->GetActDesc()->fProof->GetImage());
-      fInfoLine[8]->SetText(buf);
+      buf.Form("%s",fViewer->GetActDesc()->fProof->GetImage());
+      fInfoLine[8]->SetText(buf.Data());
       fInfoLine[9]->SetText("Config directory : ");
-      sprintf(buf, "%s", fViewer->GetActDesc()->fProof->GetConfDir());
-      fInfoLine[10]->SetText(buf);
+      buf.Form("%s", fViewer->GetActDesc()->fProof->GetConfDir());
+      fInfoLine[10]->SetText(buf.Data());
       fInfoLine[11]->SetText("Config file : ");
-      sprintf(buf, "%s", fViewer->GetActDesc()->fProof->GetConfFile());
-      fInfoLine[12]->SetText(buf);
+      buf.Form("%s", fViewer->GetActDesc()->fProof->GetConfFile());
+      fInfoLine[12]->SetText(buf.Data());
       fInfoLine[13]->SetText("Total MB's processed :");
-      sprintf(buf, "%.2f", float(fViewer->GetActDesc()->fProof->GetBytesRead())/(1024*1024));
-      fInfoLine[14]->SetText(buf);
+      buf.Form("%.2f", float(fViewer->GetActDesc()->fProof->GetBytesRead())/(1024*1024));
+      fInfoLine[14]->SetText(buf.Data());
       fInfoLine[15]->SetText("Total real time used (s) :");
-      sprintf(buf, "%.3f", fViewer->GetActDesc()->fProof->GetRealTime());
-      fInfoLine[16]->SetText(buf);
+      buf.Form("%.3f", fViewer->GetActDesc()->fProof->GetRealTime());
+      fInfoLine[16]->SetText(buf.Data());
       fInfoLine[17]->SetText("Total CPU time used (s) :");
-      sprintf(buf, "%.3f", fViewer->GetActDesc()->fProof->GetCpuTime());
-      fInfoLine[18]->SetText(buf);
+      buf.Form("%.3f", fViewer->GetActDesc()->fProof->GetCpuTime());
+      fInfoLine[18]->SetText(buf.Data());
    }
    Layout();
    Resize(GetDefaultSize());
@@ -2576,7 +2576,7 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
 
    Long_t tt;
    UInt_t hh=0, mm=0, ss=0;
-   char stm[256];
+   TString stm;
    // if no actual session, just return
    if (!fViewer->GetActDesc()->fProof)
       return;
@@ -2609,14 +2609,14 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
 
    // Update informations at first call
    if (fEntries != total) {
-      buf = TString::Format("PROOF cluster : \"%s\" - %d worker nodes",
-                            fViewer->GetActDesc()->fProof->GetMaster(),
-                            fViewer->GetActDesc()->fProof->GetParallel());
+      buf.Form("PROOF cluster : \"%s\" - %d worker nodes",
+               fViewer->GetActDesc()->fProof->GetMaster(),
+               fViewer->GetActDesc()->fProof->GetParallel());
       fLabInfos->SetText(buf);
 
       fEntries = total;
-      buf = TString::Format(" %d files, %lld events, starting event %lld",
-                            fFiles, fEntries, fFirst);
+      buf.Form(" %d files, %lld events, starting event %lld",
+               fFiles, fEntries, fFirst);
       fLabStatus->SetText(buf);
    }
 
@@ -2649,11 +2649,11 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
       ss = (UInt_t)((tt % 3600) % 60);
    }
    if (hh)
-      sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+      stm.Form("%d h %d min %d sec", hh, mm, ss);
    else if (mm)
-      sprintf(stm, "%d min %d sec", mm, ss);
+      stm.Form("%d min %d sec", mm, ss);
    else
-      sprintf(stm, "%d sec", ss);
+      stm.Form("%d sec", ss);
    if (processed == total) {
       // finished
       tt = (Long_t(tdiff)/1000);
@@ -2663,22 +2663,22 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
          ss = (UInt_t)((tt % 3600) % 60);
       }
       if (hh)
-         sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+         stm.Form("%d h %d min %d sec", hh, mm, ss);
       else if (mm)
-         sprintf(stm, "%d min %d sec", mm, ss);
+         stm.Form("%d min %d sec", mm, ss);
       else
-         sprintf(stm, "%d sec", ss);
-      buf = TString::Format(" Processed : %lld events in %s", total, stm);
-      fTotal->SetText(buf);
+         stm.Form("%d sec", ss);
+      buf.Form(" Processed : %lld events in %s", total, stm.Data());
+      fTotal->SetText(buf.Data());
    } else {
       // update status infos
-      buf = TString::Format(" Estimated time left : %s (%lld events of %lld processed)        ",
-                            stm, processed, total);
-      fTotal->SetText(buf);
+      buf.Form(" Estimated time left : %s (%lld events of %lld processed)        ",
+               stm.Data(), processed, total);
+      fTotal->SetText(buf.Data());
    }
    if (processed > 0 && (Long_t)tdiff > 0) {
-      buf = TString::Format(" Processing Rate : %.1f events/sec   ",
-                           (Float_t)processed/(Long_t)tdiff*1000.);
+      buf.Form(" Processing Rate : %.1f events/sec   ",
+               (Float_t)processed/(Long_t)tdiff*1000.);
       fRate->SetText(buf);
    }
    fPrevProcessed = processed;
@@ -2760,8 +2760,8 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
       fLabInfos->SetText("Local Session");
 
       fEntries = total;
-      buf = TString::Format(" %d files, %lld events, starting event %lld",
-                            fFiles, fEntries, fFirst);
+      buf.Form(" %d files, %lld events, starting event %lld",
+               fFiles, fEntries, fFirst);
       fLabStatus->SetText(buf.Data());
    }
 
@@ -2800,8 +2800,8 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
       stm = TString::Format("%d sec", ss);
    if ((processed != total) && (status == kRunning)) {
       // update status infos
-      buf = TString::Format(" Estimated time left : %s (%lld events of %lld processed)        ",
-                            stm.Data(), processed, total);
+      buf.Form(" Estimated time left : %s (%lld events of %lld processed)        ",
+               stm.Data(), processed, total);
       fTotal->SetText(buf);
    } else {
       tt = (Long_t(tdiff)/1000);
@@ -2816,13 +2816,14 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
          stm = TString::Format("%d min %d sec", mm, ss);
       else
          stm = TString::Format("%d sec", ss);
-      buf = TString::Format(" Processed : %ld events in %s", (Long_t)processed, stm.Data());
+      buf.Form(" Processed : %ld events in %s", 
+               (Long_t)processed, stm.Data());
       buf += cproc;
       fTotal->SetText(buf.Data());
    }
    if (processed > 0 && (Long_t)tdiff > 0) {
-      buf = TString::Format(" Processing Rate : %.1f events/sec   ",
-                            (Float_t)processed/(Long_t)tdiff*1000.);
+      buf.Form(" Processing Rate : %.1f events/sec   ",
+               (Float_t)processed/(Long_t)tdiff*1000.);
       fRate->SetText(buf.Data());
    }
    fPrevProcessed = processed;
@@ -2873,9 +2874,9 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
       frmProg->Reset();
    }
 
-   buf = TString::Format("%0d files, %0lld events, starting event %0lld",
-                         fFiles > 0 ? fFiles : 0, fEntries > 0 ? fEntries : 0,
-                         fFirst >= 0 ? fFirst : 0);
+   buf.Form("%0d files, %0lld events, starting event %0lld",
+            fFiles > 0 ? fFiles : 0, fEntries > 0 ? fEntries : 0,
+            fFirst >= 0 ? fFirst : 0);
    fLabStatus->SetText(buf.Data());
    // Reconnect the slots
    if (fViewer->GetActDesc()->fProof &&
@@ -2887,9 +2888,9 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
                "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fViewer->GetActDesc()->fProof->Connect("StopProcess(Bool_t)",
                "TSessionQueryFrame", this, "IndicateStop(Bool_t)");
-      buf = TString::Format("PROOF cluster : \"%s\" - %d worker nodes",
-               fViewer->GetActDesc()->fProof->GetMaster(),
-               fViewer->GetActDesc()->fProof->GetParallel());
+      buf.Form("PROOF cluster : \"%s\" - %d worker nodes",
+                fViewer->GetActDesc()->fProof->GetMaster(),
+                fViewer->GetActDesc()->fProof->GetParallel());
       fLabInfos->SetText(buf.Data());
    }
    else if (fViewer->GetActDesc()->fLocal) {
@@ -3872,6 +3873,7 @@ void TSessionViewer::UpdateListOfProofs()
             while ((d = (TProofDesc *)nxd())) {
                TIter nextfs(fSessions);
                // check if session exists in the list
+               exists = kFALSE;
                while ((desc = (TSessionDescription *)nextfs())) {
                   if ((desc->fTag == d->GetName()) ||
                       (desc->fName == d->GetTitle())) {
@@ -4247,7 +4249,7 @@ void TSessionViewer::Build()
 {
    // Build main session viewer frame and subframes.
 
-   char line[120];
+   TString buf;
    fActDesc = 0;
    fActFrame = 0;
    fLogWindow = 0;
@@ -4540,9 +4542,9 @@ void TSessionViewer::Build()
 
    // add user info
    fUserGroup = gSystem->GetUserInfo();
-   sprintf(line,"User : %s - %s", fUserGroup->fRealName.Data(),
-         fUserGroup->fGroup.Data());
-   fStatusBar->SetText(line, 1);
+   buf.Form("User : %s - %s", fUserGroup->fRealName.Data(),
+             fUserGroup->fGroup.Data());
+   fStatusBar->SetText(buf.Data(), 1);
 
    fTimer = 0;
 
@@ -4948,7 +4950,7 @@ Bool_t TSessionViewer::HandleTimer(TTimer *)
 {
    // Handle animation timer.
 
-   char line[120];
+   TString buf;
    struct tm *connected;
    Int_t count = gRandom->Integer(4);
    if (count > 3) {
@@ -4959,9 +4961,9 @@ Bool_t TSessionViewer::HandleTimer(TTimer *)
    time( &fElapsed );
    time_t elapsed_time = (time_t)difftime( fElapsed, fStart );
    connected = gmtime( &elapsed_time );
-   sprintf(line,"      %02d:%02d:%02d", connected->tm_hour,
-           connected->tm_min, connected->tm_sec);
-   fStatusBar->SetText(line, 2);
+   buf.Form("      %02d:%02d:%02d", connected->tm_hour,
+            connected->tm_min, connected->tm_sec);
+   fStatusBar->SetText(buf.Data(), 2);
 
    if (fActDesc->fLocal) {
       if ((fActDesc->fActQuery) &&
@@ -4999,10 +5001,10 @@ void TSessionViewer::QueryResultReady(char *query)
 {
    // Handle signal "query result ready" coming from Proof session.
 
-   char strtmp[256];
-   sprintf(strtmp,"Query Result Ready for %s", query);
+   TString strtmp;
+   strtmp.Form("Query Result Ready for %s", query);
    // show information on status bar
-   ShowInfo(strtmp);
+   ShowInfo(strtmp.Data());
    TGListTreeItem *item=0, *item2=0;
    TQueryDescription *lquery = 0;
    // loop over actual queries to find which one is ready

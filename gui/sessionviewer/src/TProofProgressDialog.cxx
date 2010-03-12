@@ -146,18 +146,18 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
 
    // Title label
    TString buf;
-   buf = TString::Format("Executing on PROOF cluster \"%s\" with %d parallel workers:",
-           fProof ? fProof->GetMaster() : "<dummy>",
-           fProof ? fProof->GetParallel() : 0);
+   buf.Form("Executing on PROOF cluster \"%s\" with %d parallel workers:",
+            fProof ? fProof->GetMaster() : "<dummy>",
+            fProof ? fProof->GetParallel() : 0);
    fTitleLab = new TGLabel(vf4, buf);
    fTitleLab->SetTextJustify(kTextTop | kTextLeft);
    vf4->AddFrame(fTitleLab, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
-   buf = TString::Format("Selector: %s", selector);
+   buf.Form("Selector: %s", selector);
    fSelector = new TGLabel(vf4, buf);
    fSelector->SetTextJustify(kTextTop | kTextLeft);
    vf4->AddFrame(fSelector, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
-   buf = TString::Format("%d files, number of events %lld, starting event %lld",
-           fFiles, fEntries, fFirst);
+   buf.Form("%d files, number of events %lld, starting event %lld",
+            fFiles, fEntries, fFirst);
    fFilesEvents = new TGLabel(vf4, buf);
    fFilesEvents->SetTextJustify(kTextTop | kTextLeft);
    vf4->AddFrame(fFilesEvents, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 10, 10, 5, 0));
@@ -423,9 +423,9 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    TString buf;
 
    // Update title
-   buf = TString::Format("Executing on PROOF cluster \"%s\" with %d parallel workers:",
-           fProof ? fProof->GetMaster() : "<dummy>",
-           fProof ? fProof->GetParallel() : 0);
+   buf.Form("Executing on PROOF cluster \"%s\" with %d parallel workers:",
+            fProof ? fProof->GetMaster() : "<dummy>",
+            fProof ? fProof->GetParallel() : 0);
    fTitleLab->SetText(buf);
 
    // Reset members
@@ -437,7 +437,7 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    fStatus        = kRunning;
 
    // Update selector name
-   buf = TString::Format("Selector: %s", selec);
+   buf.Form("Selector: %s", selec);
    fSelector->SetText(buf);
 
    // Reset 'estim' and 'processed' text
@@ -445,8 +445,8 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    fProcessed->SetText("Processing status:");
 
    // Update numbers
-   buf = TString::Format("%d files, number of events %lld, starting event %lld",
-           fFiles, fEntries, fFirst);
+   buf.Form("%d files, number of events %lld, starting event %lld",
+            fFiles, fEntries, fFirst);
    fFilesEvents->SetText(buf);
 
    // Reset progress bar
@@ -507,14 +507,14 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
    Long_t tt;
    UInt_t hh=0, mm=0, ss=0;
    TString buf;
-   char stm[256];
+   TString stm;
    static const char *cproc[] = { "running", "done",
                                   "STOPPED", "ABORTED", "***EVENTS SKIPPED***"};
 
    // Update title
-   buf = TString::Format("Executing on PROOF cluster \"%s\" with %d parallel workers:",
-           fProof ? fProof->GetMaster() : "<dummy>",
-           fProof ? fProof->GetParallel() : 0);
+   buf.Form("Executing on PROOF cluster \"%s\" with %d parallel workers:",
+            fProof ? fProof->GetMaster() : "<dummy>",
+            fProof ? fProof->GetParallel() : 0);
    fTitleLab->SetText(buf);
 
    if (total < 0)
@@ -531,8 +531,8 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 
    if (fEntries != total) {
       fEntries = total;
-      buf = TString::Format("%d files, number of events %lld, starting event %lld",
-              fFiles, fEntries, fFirst);
+      buf.Form("%d files, number of events %lld, starting event %lld",
+               fFiles, fEntries, fFirst);
       fFilesEvents->SetText(buf);
    }
 
@@ -555,13 +555,13 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
          ss = (UInt_t)((tt % 3600) % 60);
       }
       if (hh)
-         sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+         stm.Form("%d h %d min %d sec", hh, mm, ss);
       else if (mm)
-         sprintf(stm, "%d min %d sec", mm, ss);
+         stm.Form("%d min %d sec", mm, ss);
       else
-         sprintf(stm, "%d sec", ss);
+         stm.Form("%d sec", ss);
       fProcessed->SetText("Processed:");
-      buf = TString::Format("%lld events in %s\n", total, stm);
+      buf.Form("%lld events in %s\n", total, stm.Data());
       fTotal->SetText(buf);
 
       fEstim->SetText("0 sec");
@@ -602,20 +602,20 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
          ss = (UInt_t)((tt % 3600) % 60);
       }
       if (hh)
-         sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+         stm.Form("%d h %d min %d sec", hh, mm, ss);
       else if (mm)
-         sprintf(stm, "%d min %d sec", mm, ss);
+         stm.Form("%d min %d sec", mm, ss);
       else
-         sprintf(stm, "%d sec", ss);
+         stm.Form("%d sec", ss);
 
-      fEstim->SetText(stm);
-      buf = TString::Format("%lld / %lld events", evproc, total);
+      fEstim->SetText(stm.Data());
+      buf.Form("%lld / %lld events", evproc, total);
       if (fStatus > kDone) {
          buf += TString::Format(" - %s", cproc[fStatus]);
       }
       fTotal->SetText(buf);
       
-      buf = TString::Format("%.1f events/sec\n", Float_t(evproc)/Long_t(tdiff)*1000.);
+      buf.Form("%.1f events/sec\n", Float_t(evproc)/Long_t(tdiff)*1000.);
       fRate->SetText(buf);
 
       if (processed < 0) {
@@ -647,20 +647,20 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
    Long_t tt;
    UInt_t hh=0, mm=0, ss=0;
    TString buf;
-   char stm[256];
+   TString stm;
    static const char *cproc[] = { "running", "done",
                                   "STOPPED", "ABORTED", "***EVENTS SKIPPED***"};
 
    // Update title
-   buf = TString::Format("Executing on PROOF cluster \"%s\" with %d parallel workers:",
-           fProof ? fProof->GetMaster() : "<dummy>",
-           fProof ? fProof->GetParallel() : 0);
+   buf.Form("Executing on PROOF cluster \"%s\" with %d parallel workers:",
+            fProof ? fProof->GetMaster() : "<dummy>",
+            fProof ? fProof->GetParallel() : 0);
    fTitleLab->SetText(buf);
 
    if (initTime >= 0.) {
       // Set init time
       fInitTime = initTime;
-      buf = TString::Format("%.1f secs", initTime);
+      buf.Form("%.1f secs", initTime);
       fInit->SetText(buf);
       if (fRightInfo == 0)
          fSpeedo->SetOdoValue((Int_t)(fInitTime * 1000.0));
@@ -689,8 +689,8 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
 
    if (fEntries != total) {
       fEntries = total;
-      buf = TString::Format("%d files, number of events %lld, starting event %lld",
-              fFiles, fEntries, fFirst);
+      buf.Form("%d files, number of events %lld, starting event %lld",
+               fFiles, fEntries, fFirst);
       fFilesEvents->SetText(buf);
    }
 
@@ -736,22 +736,22 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          ss = (UInt_t)((tt % 3600) % 60);
       }
       if (hh)
-         sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+         stm.Form("%d h %d min %d sec", hh, mm, ss);
       else if (mm)
-         sprintf(stm, "%d min %d sec", mm, ss);
+         stm.Form("%d min %d sec", mm, ss);
       else
-         sprintf(stm, "%d sec", ss);
+         stm.Form("%d sec", ss);
       fProcessed->SetText("Processed:");
       TString sf("MB");
       Float_t xb = fAvgMBRate*fProcTime;
       xb = AdjustBytes(xb, sf);
-      buf = TString::Format("%lld events (%.2f %s)\n",
-                            std::max(fPrevProcessed, processed), xb, sf.Data());
+      buf.Form("%lld events (%.2f %s)\n",
+               std::max(fPrevProcessed, processed), xb, sf.Data());
       fTotal->SetText(buf);
-      buf = TString::Format("%s %s\n", stm, st.Data());
+      buf.Form("%s %s\n", stm.Data(), st.Data());
       fTimeLab->SetText("Processing time:");
       fEstim->SetText(buf);
-      buf = TString::Format("%.1f evts/sec (%.1f MB/sec)\n", fAvgRate, fAvgMBRate);
+      buf.Form("%.1f evts/sec (%.1f MB/sec)\n", fAvgRate, fAvgMBRate);
       fRate->SetText(buf);
       // Fill rate graph
       Bool_t useAvg = gEnv->GetValue("Proof.RatePlotUseAvg", 0);
@@ -815,16 +815,16 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
          ss = (UInt_t)((tt % 3600) % 60);
       }
       if (hh)
-         sprintf(stm, "%d h %d min %d sec", hh, mm, ss);
+         stm.Form("%d h %d min %d sec", hh, mm, ss);
       else if (mm)
-         sprintf(stm, "%d min %d sec", mm, ss);
+         stm.Form("%d min %d sec", mm, ss);
       else
-         sprintf(stm, "%d sec", ss);
+         stm.Form("%d sec", ss);
 
-      fEstim->SetText(stm);
+      fEstim->SetText(stm.Data());
       TString sf("MB");
       Float_t xb = AdjustBytes(mbsproc, sf);
-      buf = TString::Format("%lld / %lld events - %.2f %s", evproc, total, xb, sf.Data());
+      buf.Form("%lld / %lld events - %.2f %s", evproc, total, xb, sf.Data());
       if (fStatus > kDone) {
          buf += TString::Format(" - %s", cproc[fStatus]);
       }
@@ -832,8 +832,8 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
 
       // Post
       if (evtrti > 0.) {
-         buf = TString::Format("%.1f evts/sec \navg: %.1f evts/sec (%.1f MB/sec)",
-                      evtrti, fAvgRate, fAvgMBRate);
+         buf.Form("%.1f evts/sec \navg: %.1f evts/sec (%.1f MB/sec)",
+                  evtrti, fAvgRate, fAvgMBRate);
          fRatePoints->Fill(procTime, evtrti, mbrti, (Float_t)actw, (Float_t)tses, eses);
          fRatePlot->SetState(kButtonUp);
          if (evtrti > fSpeedo->GetScaleMax()) {
@@ -849,7 +849,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
             fSpeedo->SetScaleValue(evtrti);
          fSpeedo->SetMeanValue(fAvgRate);
       } else {
-         buf = TString::Format("avg: %.1f evts/sec (%.1f MB/sec)", fAvgRate, fAvgMBRate);
+         buf.Form("avg: %.1f evts/sec (%.1f MB/sec)", fAvgRate, fAvgMBRate);
       }
       fRate->SetText(buf);
 
