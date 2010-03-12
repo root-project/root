@@ -27,13 +27,14 @@
 #include "TF1Helper.h"
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedTF1.h"
-#include "Math/RootFinder.h"
+#include "Math/BrentRootFinder.h"
 #include "Math/BrentMinimizer1D.h"
 #include "Math/BrentMethods.h"
 #include "Math/GaussIntegrator.h"
 #include "Math/GaussLegendreIntegrator.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/RichardsonDerivator.h"
+#include "Math/Functor.h"
 
 //#include <iostream>
 
@@ -79,9 +80,12 @@ public:
    {
       fFunc->InitArgs(fX, fPar); 
    }
+
    ROOT::Math::IGenFunction * Clone()  const { 
       // use default copy constructor
-      return new TF1_EvalWrapper( *this);
+      TF1_EvalWrapper * f =  new TF1_EvalWrapper( *this);
+      f->fFunc->InitArgs(f->fX, f->fPar); 
+      return f;
    }
    // evaluate |f(x)|
    Double_t DoEval( Double_t x) const { 
@@ -1605,7 +1609,7 @@ TH1 *TF1::GetHistogram() const
 
 
 //______________________________________________________________________________
-Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
+Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
 {
    // Return the maximum value of the function
    // Method:
@@ -1615,6 +1619,7 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
    //  If the function is unimodal or if its extrema are far apart, setting
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
@@ -1622,7 +1627,8 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
    GInverseFunc g(this);
    ROOT::Math::WrappedFunction<GInverseFunc> wf1(g);
    bm.SetFunction( wf1, xmin, xmax );
-   bm.Minimize(10, 0, 0 );
+   bm.SetNpx(fNpx);
+   bm.Minimize(maxiter, epsilon, epsilon );
    Double_t x;
    x = - bm.FValMinimum();
 
@@ -1631,7 +1637,7 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
 
 
 //______________________________________________________________________________
-Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
+Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
 {
    // Return the X value corresponding to the maximum value of the function
    // Method:
@@ -1641,6 +1647,7 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
    //  If the function is unimodal or if its extrema are far apart, setting
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
@@ -1648,7 +1655,8 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
    GInverseFunc g(this);
    ROOT::Math::WrappedFunction<GInverseFunc> wf1(g);
    bm.SetFunction( wf1, xmin, xmax );
-   bm.Minimize(10, 0, 0 );
+   bm.SetNpx(fNpx);
+   bm.Minimize(maxiter, epsilon, epsilon );
    Double_t x;
    x = bm.XMinimum();
 
@@ -1657,7 +1665,7 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
 
 
 //______________________________________________________________________________
-Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
+Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
 {
    // Returns the minimum value of the function on the (xmin, xmax) interval
    // Method:
@@ -1667,13 +1675,15 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
    ROOT::Math::BrentMinimizer1D bm;
    ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
    bm.SetFunction( wf1, xmin, xmax );
-   bm.Minimize(10, 0, 0 );
+   bm.SetNpx(fNpx);
+   bm.Minimize(maxiter, epsilon, epsilon );
    Double_t x;
    x = bm.FValMinimum();
 
@@ -1682,7 +1692,7 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
 
 
 //______________________________________________________________________________
-Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
+Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
 {
    // Returns the X value corresponding to the minimum value of the function
    // on the (xmin, xmax) interval
@@ -1693,13 +1703,15 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
    ROOT::Math::BrentMinimizer1D bm;
    ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
    bm.SetFunction( wf1, xmin, xmax );
-   bm.Minimize(10, 0, 0 );
+   bm.SetNpx(fNpx);
+   bm.Minimize(maxiter, epsilon, epsilon );
    Double_t x;
    x = bm.XMinimum();
 
@@ -1708,7 +1720,7 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
 
 
 //______________________________________________________________________________
-Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
+Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
 {
    // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
    // Method:
@@ -1718,14 +1730,16 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
    
    GFunc g(this, fy);
    ROOT::Math::WrappedFunction<GFunc> wf1(g);
-   ROOT::Math::RootFinder brf(ROOT::Math::RootFinder::kBRENT);
+   ROOT::Math::BrentRootFinder brf;
    brf.SetFunction(wf1,xmin,xmax);
-   brf.Solve();
+   brf.SetNpx(fNpx);
+   brf.Solve(maxiter, epsilon, epsilon);
    return brf.Root();
 
 }

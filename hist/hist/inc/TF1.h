@@ -207,10 +207,10 @@ public:
    virtual void     FixParameter(Int_t ipar, Double_t value);
        Double_t     GetChisquare() const {return fChisquare;}
            TH1     *GetHistogram() const;
-   virtual Double_t GetMaximum(Double_t xmin=0, Double_t xmax=0) const;
-   virtual Double_t GetMinimum(Double_t xmin=0, Double_t xmax=0) const;
-   virtual Double_t GetMaximumX(Double_t xmin=0, Double_t xmax=0) const;
-   virtual Double_t GetMinimumX(Double_t xmin=0, Double_t xmax=0) const;
+   virtual Double_t GetMaximum(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100) const;
+   virtual Double_t GetMinimum(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100) const;
+   virtual Double_t GetMaximumX(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100) const;
+   virtual Double_t GetMinimumX(Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100) const;
    virtual Int_t    GetNDF() const;
    virtual Int_t    GetNpx() const {return fNpx;}
     TMethodCall    *GetMethodCall() const {return fMethodCall;}
@@ -229,7 +229,7 @@ public:
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
    virtual Double_t GetSave(const Double_t *x);
-   virtual Double_t GetX(Double_t y, Double_t xmin=0, Double_t xmax=0) const;
+   virtual Double_t GetX(Double_t y, Double_t xmin=0, Double_t xmax=0, Double_t epsilon = 1.E-10, Int_t maxiter = 100) const;
    virtual Double_t GetXmin() const {return fXmin;}
    virtual Double_t GetXmax() const {return fXmax;}
    TAxis           *GetXaxis() const ;
