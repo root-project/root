@@ -1,5 +1,5 @@
 #include "TObject.h"
-#include "Marker.h"
+#include "marker.h"
 #include <vector>
 
 class TopLevel 
@@ -144,10 +144,3 @@ public:
 #pragma link C++ class vector<TopLevel*>;
 #endif
 
-// Plan:
-// Write file
-// Open file
-// Create delete various object using their base class's TClass
-// 
-// read and delete holder object
-// read and delete collection of pointers ...

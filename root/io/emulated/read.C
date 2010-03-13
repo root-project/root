@@ -1,6 +1,6 @@
 #include "TFile.h"
 #include "TTree.h"
-#include "Marker.h+"
+#include "marker.h+"
 
 void read(const char *filename = "inherit.root")
 {
@@ -15,3 +15,4 @@ void read(const char *filename = "inherit.root")
    tree->GetEntry(0);
    delete tree;
 }
+
