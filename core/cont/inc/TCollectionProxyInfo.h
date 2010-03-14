@@ -214,7 +214,7 @@ namespace ROOT {
          PCont_t c = PCont_t(e->fObject);
          c->resize(e->fSize);
          e->fIdx = 0;
-         return e->fStart = e->fSize ? address(*c->begin()) : 0;
+         return e->fStart = e->fSize ? Type<T>::address(*c->begin()) : 0;
       }
       static void* feed(void* env)  {
          PEnv_t   e = PEnv_t(env);
