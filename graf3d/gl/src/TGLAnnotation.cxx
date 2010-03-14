@@ -245,17 +245,6 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
       bgCol = fBackColor;
    }
 
-   if (fDrawRefLine)
-   {
-      TGLUtil::ColorTransparency(bgCol, fTransparency);
-      TGLUtil::LineWidth(2);
-      glBegin(GL_LINES);
-      TGLVertex3 v = rnrCtx.RefCamera().ViewportToWorld(TGLVertex3(fPosX*vp.Width(), fPosY*vp.Height(), 0));
-      glVertex3dv(v.Arr());
-      glVertex3dv(fPointer.Arr());
-      glEnd();
-   }
-
    // reset matrix
    glMatrixMode(GL_PROJECTION);
    glPushMatrix();
@@ -269,8 +258,6 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    }
    glMatrixMode(GL_MODELVIEW);
    glPushMatrix();
-   glLoadIdentity();
-
    // set ortho camera to [0,1] [0.1]
    glLoadIdentity();
    glTranslatef(-1.0f, -1.0f, 0.0f);
@@ -278,6 +265,8 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
 
    glEnable(GL_POLYGON_OFFSET_FILL);
    glPolygonOffset(0.1f, 1.0f);
+
+   glPushMatrix();
 
    TGLUtil::LineWidth(1.0f);
 
@@ -460,6 +449,27 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    }
 
    glPopName();
+
+   glPopMatrix();
+
+   if (fDrawRefLine)
+   {
+      TGLVertex3 op = rnrCtx.RefCamera().WorldToViewport(fPointer);
+      op[0] /= vp.Width();  op[1] /= vp.Height();
+
+      Float_t fx = op[0] < fPosX ? 0.0f : (op[0] > fPosX + fDrawW ? 1.0f : 0.5f);
+      Float_t fy = op[1] < fPosY-fDrawH ? 1.0f : (op[1] > fPosY ? 0.0f : 0.5f);
+
+      if (fx != 0.5f || fy != 0.5f)
+      {
+         TGLUtil::ColorTransparency(bgCol, fTransparency);
+         TGLUtil::LineWidth(2);
+         glBegin(GL_LINES);
+         glVertex3f(fPosX + fx*fDrawW, fPosY - fy*fDrawH, z3);
+         glVertex3f(op[0], op[1], z3);
+         glEnd();
+      }
+   }
 
    glMatrixMode(GL_PROJECTION);
    glPopMatrix();
