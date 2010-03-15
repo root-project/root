@@ -48,7 +48,7 @@ protected:
    Int_t    Memcpy_m(Element *newp,const Element *oldp,Int_t copySize,
                       Int_t newSize,Int_t oldSize);
    void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                     Int_t nr_nonzeros = -1);
+                     Int_t /*nr_nonzeros*/ = -1);
 
 public:
 
@@ -132,8 +132,8 @@ public:
            TMatrixT    <Element>  GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
    virtual TMatrixTBase<Element> &SetSub  (Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source);
 
-   virtual TMatrixTBase<Element> &ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
-   virtual TMatrixTBase<Element> &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+   virtual TMatrixTBase<Element> &ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/ =-1);
+   virtual TMatrixTBase<Element> &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t /*nr_nonzeros*/ =-1);
    inline  TMatrixTBase<Element> &ResizeTo(const TMatrixT<Element> &m) {
                                             return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
                                  }

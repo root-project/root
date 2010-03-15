@@ -47,7 +47,7 @@ protected:
    Int_t    Memcpy_m(Element *newp,const Element *oldp,Int_t copySize,
                      Int_t newSize,Int_t oldSize);
    void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                     Int_t nr_nonzeros = -1);
+                     Int_t /*nr_nonzeros*/ = -1);
 
 public:
 
@@ -116,8 +116,8 @@ public:
    virtual TMatrixTBase<Element> &SetMatrixArray(const Element *data, Option_t *option="");
 
    virtual TMatrixTBase<Element> &Shift         (Int_t row_shift,Int_t col_shift);
-   virtual TMatrixTBase<Element> &ResizeTo      (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
-   virtual TMatrixTBase<Element> &ResizeTo      (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+   virtual TMatrixTBase<Element> &ResizeTo      (Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/ =-1);
+   virtual TMatrixTBase<Element> &ResizeTo      (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t /*nr_nonzeros*/ =-1);
    inline  TMatrixTBase<Element> &ResizeTo      (const TMatrixTSym<Element> &m) {
                                                 return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb()); }
 

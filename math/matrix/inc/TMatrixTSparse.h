@@ -105,7 +105,7 @@ public:
            TMatrixTSparse<Element> &SetSparseIndexAB(const TMatrixTSparse<Element> &a,const TMatrixT      <Element> &b)
                                               { return SetSparseIndexAB(b,a); }
 
-   virtual void                     GetMatrix2Array (Element *data,Option_t *option="") const;
+   virtual void                     GetMatrix2Array (Element *data,Option_t * /*option*/ ="") const;
    virtual TMatrixTBase<Element>   &SetMatrixArray  (const Element *data,Option_t * /*option*/="")
                                                     { memcpy(fElements,data,this->fNelems*sizeof(Element)); return *this; }
    virtual TMatrixTBase<Element>   &SetMatrixArray  (Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Element *data);

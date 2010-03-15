@@ -62,7 +62,7 @@ TMatrixT<Element>::TMatrixT(Int_t no_rows,Int_t no_cols,const Element *elements,
 // array elements are copied
 
    Allocate(no_rows,no_cols);
-   SetMatrixArray(elements,option);
+   TMatrixTBase<Element>::SetMatrixArray(elements,option);
 }
 
 //______________________________________________________________________________
@@ -73,7 +73,7 @@ TMatrixT<Element>::TMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
 // array elements are copied
 
    Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb);
-   SetMatrixArray(elements,option);
+   TMatrixTBase<Element>::SetMatrixArray(elements,option);
 }
 
 //______________________________________________________________________________
