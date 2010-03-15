@@ -2653,7 +2653,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
 
 out:
       if (obj->IsA() != TSystemFile::Class()) {
-         if (obj && obj->IsFolder()) {
+         if (obj->IsFolder()) {
             fIconBox->Refresh();
          }
 

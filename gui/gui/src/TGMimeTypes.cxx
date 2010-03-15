@@ -273,22 +273,22 @@ void TGMimeTypes::SaveMimes()
 {
    // Save mime types in user's mime type file.
 
-   char filename[1024];
+   TString filename;
 #ifdef WIN32
-   sprintf(filename, "%s\\.root.mimes", gSystem->HomeDirectory());
+   filename.Form("%s\\.root.mimes", gSystem->HomeDirectory());
 #else
-   sprintf(filename, "%s/.root.mimes", gSystem->HomeDirectory());
+   filename.Form("%s/.root.mimes", gSystem->HomeDirectory());
 #endif
 
-   FILE *fp = fopen(filename, "w");
+   FILE *fp = fopen(filename.Data(), "wt");
 
    if (!fp) {
-      Error("SaveMimes", "can not open %s to store mime types", filename);
+      Error("SaveMimes", "can not open %s to store mime types", filename.Data());
       return;
    }
 
    TDatime dt;
-   fprintf(fp, "# %s written on %s\n\n", filename, dt.AsString());
+   fprintf(fp, "# %s written on %s\n\n", filename.Data(), dt.AsString());
 
    TGMime *m;
    TIter next(fList);
