@@ -151,7 +151,7 @@ namespace ROOT {
          e->fSize  = c->size();
          if ( 0 == e->fSize ) return e->fStart = 0;
          TYPENAME T::const_reference ref = *(e->iter());
-         return e->fStart = address(ref);
+         return e->fStart = Type<T>::address(ref);
       }
       static void* next(void* env)  {
          PEnv_t  e = PEnv_t(env);
@@ -160,7 +160,7 @@ namespace ROOT {
          // TODO: Need to find something for going backwards....
          if ( e->iter() == c->end() ) return 0;
          TYPENAME T::const_reference ref = *(e->iter());
-         return address(ref);
+         return Type<T>::address(ref);
       }
       static void* construct(void* env)  {
          PEnv_t  e = PEnv_t(env);
