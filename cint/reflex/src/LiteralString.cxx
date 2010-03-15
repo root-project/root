@@ -100,6 +100,9 @@ Reflex::LiteralString::~LiteralString() {
 void
 Reflex::LiteralString::Reserve(size_t size) {
 //-------------------------------------------------------------------------------
+// Force the literal to be on the heap, capable of storing at least "size"
+// characters.
+
    if (fAllocSize < size) {
       // need to (re)allocate
 
@@ -118,6 +121,8 @@ Reflex::LiteralString::Reserve(size_t size) {
 void
 Reflex::LiteralString::StrDup(const char* s) {
 //-------------------------------------------------------------------------------
+// Create a heap representation of "s".
+
    size_t len = strlen(s);
    Reserve(len + 1);
    strncpy(fBuf, s, len + 1);
@@ -127,6 +132,7 @@ Reflex::LiteralString::StrDup(const char* s) {
 Reflex::LiteralString&
 Reflex::LiteralString::operator +=(const char* s) {
 //-------------------------------------------------------------------------------
+// Add a string, moving this to the heap.
    size_t len = strlen(s);
    Reserve(len +  (fLiteral ? strlen(fLiteral) : 0) + 1);
    strncat(fBuf, s, len);
@@ -137,6 +143,7 @@ Reflex::LiteralString::operator +=(const char* s) {
 Reflex::LiteralString&
 Reflex::LiteralString::operator +=(const std::string& s) {
 //-------------------------------------------------------------------------------
+// Add a string, moving this to the heap.
    size_t len = s.length();
    Reserve(len +  (fLiteral ? strlen(fLiteral) : 0) + 1);
    strncat(fBuf, s.c_str(), len);
@@ -147,6 +154,7 @@ Reflex::LiteralString::operator +=(const std::string& s) {
 Reflex::LiteralString&
 Reflex::LiteralString::operator +=(const LiteralString& s) {
 //-------------------------------------------------------------------------------
+// Add a string literal, moving this to the heap.
    size_t len = s.length();
    Reserve(len +  (fLiteral ? strlen(fLiteral) : 0) + 1);
    strncat(fBuf, s.c_str(), len);
