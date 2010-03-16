@@ -568,7 +568,7 @@ include $(patsubst %,%/Module.mk,$(MODULES))
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
       distsrc version showbuild \
-      changelog html debian redhat),)
+      changelog debian redhat),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
 -include $(INCLUDEFILES)
