@@ -127,7 +127,7 @@ int TCint_GenerateDictionary(const std::string &className,
       size_t posTemplate = n.find('<');
       std::set<std::string>::const_iterator iSTLType = sSTLTypes.end();
       if (posTemplate != std::string::npos) {
-         n.erase(posTemplate, -1);
+         n.erase(posTemplate, std::string::npos);
          if (n.compare(0, 5, "std::") == 0) {
             n.erase(0, 5);
          }
