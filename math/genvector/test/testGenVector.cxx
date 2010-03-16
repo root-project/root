@@ -571,7 +571,10 @@ int testTransform3D() {
   iret |= compare( trf11 == trf10, 1,"r3d * transf",1 );
 
   RotationZYX rrr2 = trf10.Rotation<RotationZYX>(); 
-  iret |= compare( rzyx == rrr2, 1,"gen Rotaton()",1 );
+  //iret |= compare( rzyx == rrr2, 1,"gen Rotation()",1 );
+  iret |= compare( rzyx.Phi() , rrr2.Phi(),"gen Rotation() Phi",1 );
+  iret |= compare( rzyx.Theta(), rrr2.Theta(),"gen Rotation() Theta",10 );
+  iret |= compare( rzyx.Psi(), rrr2.Psi(),"gen Rotation() Psi",1 );
   if (iret) std::cout << rzyx << "\n---\n" << rrr2 << std::endl;
 
 
@@ -631,7 +634,7 @@ int testTransform3D() {
 #endif
 
 
-  if (iret == 0) std::cout << "\tOK\n"; 
+  if (iret == 0) std::cout << "OK\n"; 
   else std::cout << "\t\t\tFAILED\n"; 
 
   return iret; 

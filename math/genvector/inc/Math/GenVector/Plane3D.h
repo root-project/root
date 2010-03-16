@@ -77,7 +77,10 @@ namespace Math {
 	 \param n normal expressed as a ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
 	 \param p point  expressed as a  ROOT::Math::PositionVector3D<Cartesian3D<double> >
       */
-      Plane3D(const Vector & n, const Point & p );  
+      Plane3D(const Vector & n, const Point & p ) 
+      {
+         BuildFromVecAndPoint( n, p );
+      }
        
 
       /**
@@ -87,9 +90,10 @@ namespace Math {
 	 \param p point  expressed as a generic ROOT::Math::PositionVector3D
       */
       template<class T1, class T2, class U>
-      Plane3D( const  DisplacementVector3D<T1,U> & n, const  PositionVector3D<T2,U> & p) : 
-         Plane3D( Vector(n.X(), n.Y(), n.Z()), Point(p.X(), p.Y(), p.Z()) ) 
-      {}
+      Plane3D( const  DisplacementVector3D<T1,U> & n, const  PositionVector3D<T2,U> & p)  
+      {
+         BuildFromVecAndPoint( Vector(n), Point(p) );
+      }
 
       /**
          constructor from three Cartesian point belonging to the plane
@@ -98,7 +102,9 @@ namespace Math {
 	 \param p3 point3  expressed as a generic ROOT::Math::PositionVector3D
 
       */
-      Plane3D(const Point & p1, const Point & p2, const Point & p3  );  
+      Plane3D(const Point & p1, const Point & p2, const Point & p3  ) { 
+         BuildFrom3Points(p1,p2,p3);
+      }
 
       /**
          constructor from three generic point belonging to the plane
@@ -107,11 +113,12 @@ namespace Math {
 	 \param p3 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
       */
       template <class T1, class T2, class T3, class U>
-      Plane3D(const  PositionVector3D<T1,U> & p1, const  PositionVector3D<T2,U> & p2, const  PositionVector3D<T3,U> & p3  ) : 
-         Plane3D (  Point(p1.X(), p1.Y(), p1.Z()),  
-                    Point(p2.X(), p2.Y(), p2.Z()),  
-                    Point(p3.X(), p3.Y(), p3.Z()) ) 
-      {} 
+      Plane3D(const  PositionVector3D<T1,U> & p1, const  PositionVector3D<T2,U> & p2, const  PositionVector3D<T3,U> & p3  )  
+      {
+         BuildFrom3Points( Point(p1.X(), p1.Y(), p1.Z()),  
+                           Point(p2.X(), p2.Y(), p2.Z()),  
+                           Point(p3.X(), p3.Y(), p3.Z()) ); 
+      } 
 
 
 
@@ -228,6 +235,11 @@ namespace Math {
 
 
    private:
+
+      // internal method to construct class from a vector and a point
+      void BuildFromVecAndPoint(const Vector & n, const Point & p); 
+      // internal method to construct class from 3 points
+      void BuildFrom3Points(const Point & p1, const Point & p2, const Point & p3);
 
       // plane data members the four scalar which  satisfies fA*x + fB*y + fC*z + fD = 0
       // for every point (x,y,z) belonging to the plane.

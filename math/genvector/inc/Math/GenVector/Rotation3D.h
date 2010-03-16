@@ -89,6 +89,13 @@ public:
    Rotation3D(IT begin, IT end) { SetComponents(begin,end); }
 
    /**
+      copy constructor  
+   */
+   Rotation3D ( Rotation3D const   & r ) {
+      *this = r; 
+   } 
+
+   /**
       Construct from an AxisAngle
    */
    explicit Rotation3D( AxisAngle const   & a ) { gv_detail::convert(a, *this); }
@@ -135,7 +142,7 @@ public:
               const ForeignVector& v2,
               const ForeignVector& v3 ) { SetComponents(v1, v2, v3); }
 
-   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
+   // compiler generated destruuctor is ok
 
    /**
       Raw constructor from nine Scalar components (without any checking)
@@ -145,6 +152,25 @@ public:
               Scalar  zx, Scalar  zy, Scalar  zz)
    {
       SetComponents (xx, xy, xz, yx, yy, yz, zx, zy, zz);
+   }
+
+   // need to implement assignment operator to avoid using the templated one
+
+   /**
+      Assignment operator 
+   */
+   Rotation3D &
+   operator=( Rotation3D const   & rhs ) { 
+      fM[0] = rhs.fM[0];
+      fM[1] = rhs.fM[1];
+      fM[2] = rhs.fM[2];
+      fM[3] = rhs.fM[3];
+      fM[4] = rhs.fM[4];
+      fM[5] = rhs.fM[5];
+      fM[6] = rhs.fM[6];
+      fM[7] = rhs.fM[7];
+      fM[8] = rhs.fM[8];
+      return *this;
    }
 
    /**
@@ -187,7 +213,12 @@ public:
    */
    template<class ForeignMatrix>
    Rotation3D &
-   operator=(const ForeignMatrix & m) { SetComponents(m); return *this; }
+   operator=(const ForeignMatrix & m) { 
+      SetComponents( m(0,0), m(0,1), m(0,2), 
+                     m(1,0), m(1,1), m(1,2),
+                     m(2,0), m(2,1), m(2,2) );
+      return *this; 
+   }
 
    /**
       Re-adjust components to eliminate small deviations from perfect

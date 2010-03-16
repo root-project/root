@@ -35,24 +35,25 @@ typedef Plane3D::Vector XYZVector;
 
 // constructor from 4 scalars numbers (a,b,c,d)
 Plane3D::Plane3D(const Scalar & a, const Scalar & b, const Scalar & c, const Scalar & d) : 
-   fA(a), fB(b), fC(c), fD(d) {
-      //renormalize a,b,c to unit 
-      Normalize();
-   }
-
-// construct from a normal vector and a point
-Plane3D::Plane3D(const XYZVector & n, const XYZPoint & p ) : 
-   fA( n.X() ), 
-   fB( n.Y() ), 
-   fC( n.Z() ) 
+   fA(a), fB(b), fC(c), fD(d) 
 {
-      fD = - n.Dot(p);
-      Normalize();
-      
+   //renormalize a,b,c to unit 
+   Normalize();
 }
 
-// constructor from three points
-Plane3D::Plane3D( const XYZPoint & p1, const XYZPoint & p2, const XYZPoint & p3 ) {
+// internal method to construct from a normal vector and a point
+void Plane3D::BuildFromVecAndPoint(const XYZVector & n, const XYZPoint & p ) 
+{
+   // build from a normal vector and a point 
+   fA =  n.X(); 
+   fB =  n.Y(); 
+   fC =  n.Z(); 
+   fD = - n.Dot(p);
+   Normalize();      
+}
+
+// internl method to construct from three points
+void Plane3D::BuildFrom3Points( const XYZPoint & p1, const XYZPoint & p2, const XYZPoint & p3 ) {
    
    // plane from thre points
    // normal is (x3-x1) cross (x2 -x1) 

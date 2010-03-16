@@ -90,6 +90,13 @@ public:
   template<class IT>
   Boost(IT begin, IT end) { SetComponents(begin,end); }
 
+   /**
+      copy constructor 
+   */
+   Boost(Boost const & b) { 
+      *this = b;
+   }
+
   /**
      Construct from an axial boost 
   */
@@ -99,6 +106,17 @@ public:
   explicit Boost( BoostZ const & bz ) {SetComponents(bz.BetaVector());} 
 
   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
+
+   /**
+      Assignment operator 
+    */
+   Boost & 
+   operator=(Boost const & rhs ) { 
+    for (unsigned int i=0; i < 10; ++i) {
+       fM[i] = rhs.fM[i]; 
+    }
+    return *this;
+   }
 
   /**
      Assign from an axial pure boost 
