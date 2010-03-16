@@ -140,6 +140,11 @@ private:
 
    double DoEvalPar ( double x, const double * p ) const ; 
 
+   // might need to re-implement this since inheritance is not virtual
+   double DoEval(double x) const { 
+      return DoEvalPar(x, Parameters() );
+   }
+
    double DoDerivative (double x) const ; 
 
    double DoParameterDerivative(double x, const double * p, unsigned int ipar) const; 
