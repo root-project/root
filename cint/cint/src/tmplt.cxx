@@ -2154,7 +2154,7 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
      std::string n(tagname);
      size_t posTemplate = n.find('<');
      if (posTemplate != std::string::npos) {
-        n.erase(posTemplate, -1);
+        n.erase(posTemplate, std::string::npos);
         if (n.compare(0, 5, "std::") == 0) {
            n.erase(0, 5);
         }
