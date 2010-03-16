@@ -564,6 +564,9 @@ endif
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1
 
+%.elog : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@
+
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
 	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b > $@ 2>&1
@@ -575,6 +578,9 @@ endif
 
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1
+
+%.celog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@
 
 %.neutral.clog: %.clog
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
