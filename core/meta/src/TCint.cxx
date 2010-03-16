@@ -146,7 +146,16 @@ int TCint_GenerateDictionary(const std::string &className,
       fileContent += "#pragma link C++ class ";
       fileContent +=    className + "+;\n" ;
       fileContent += "#pragma link C++ class ";
-      fileContent +=    className + "::*+;\n" ;
+      if (iSTLType != sSTLTypes.end()) {
+         // STL class; we cannot (and don't need to) store iterators;
+         // their shadow and the compiler's version don't agree. So
+         // don't ask for the '+'
+         fileContent +=    className + "::*;\n" ;
+      } else {
+         // Not an STL class; we need to allow the I/O of contained
+         // classes (now that we have a dictionary for them).
+         fileContent +=    className + "::*+;\n" ;
+      }
       std::string oprLink("#pragma link C++ operators ");
       oprLink += className;
       // Don't! Requests e.g. op<(const vector<T>&, const vector<T>&):
