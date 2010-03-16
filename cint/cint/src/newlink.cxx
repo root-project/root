@@ -11977,6 +11977,52 @@ void G__specify_link(int link_stub)
     }
     else p=(char*)NULL;
     if(p) {
+       if (p - buf > 2 && p[-1] == ':' && p[-2] == ':') {
+          // pragma link C++ class A::*
+          p[-2] = 0;
+          int scopetag = G__defined_tagname(buf,1);
+          if (scopetag >= 0) {
+             ++done;
+             // A exists. A::B must be after A in G__struct:
+             for (int t = scopetag + 1; t < G__struct.alltag; ++t) {
+                int parenttag = t;
+                while ((parenttag = G__struct.parent_tagnum[parenttag]) > scopetag)
+                   {;}
+                if (parenttag == scopetag) {
+                   if('e'==G__struct.type[scopetag]) {
+                      G__pragmalinkenum(scopetag,globalcomp);
+                   } else {
+                      // t is A::B::C, so set globalcomp
+                      G__struct.globalcomp[t] = globalcomp;
+
+                      G__struct.rootflag[t] = 0;
+                      if (rfNoStreamer == 1) G__struct.rootflag[t] = G__NOSTREAMER;
+                      if (rfNoInputOper == 1) G__struct.rootflag[t] |= G__NOINPUTOPERATOR;
+                      if (rfUseBytecount == 1) {
+                         G__struct.rootflag[t] |= G__USEBYTECOUNT;
+                         if(rfNoStreamer) {
+                            G__struct.rootflag[t] &= ~G__NOSTREAMER;
+                            G__fprinterr(G__serr, "option + mutual exclusive with -, + prevails\n");
+                         }
+                      }
+                      if( rfVersionNumber > -1 ) {
+                         AllocateRootSpecial( t );
+                         G__struct.rootflag[t] |= G__HASVERSION;
+                         G__struct.rootspecial[t]->version = rfVersionNumber;
+                      }
+                      if (G__NOLINK>G__nestedtypedef) {
+                         G__linknestedtypedef(t, globalcomp);
+                      }
+                   } // enum or not
+                   break;
+                } // is within linked parent
+             }
+          } else {
+             G__fprinterr(G__serr,"Error: unknown class %s in \"#pragma link C++ class %s::*\"! Egnoring it.\n", buf.data(), buf.data());
+             c=G__fignorestream(";\n");
+             return;
+          }
+       } else {
 #if defined(G__REGEXP)
 #ifndef G__OLDIKMPLEMENTATION1583
       if('.'!=buf[len-2]) {
@@ -12053,6 +12099,7 @@ void G__specify_link(int link_stub)
         }
       }
 #endif /* G__REGEXP */
+       } // if "A::*"
     } /* if(p) */
     else {
       i = G__defined_tagname(buf,1);

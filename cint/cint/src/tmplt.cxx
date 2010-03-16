@@ -2127,25 +2127,61 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
   // Function goes through all includes and collects only the ones headers 
   // which are needed for our template class.
 
-  //example: vector<MyClass>
-  if( G__def_tagnum != -1 ) return -1;
-
-  std::string className;
-  std::vector<std::string> headers;
-  std::vector<std::string>::iterator it;
-
-  //getting 'vector<MyClass>'
-  className = tagname;
+   static std::map<std::string, std::string> sSTLTypes;
+   if (sSTLTypes.empty()) {
+      sSTLTypes["vector"] = "vector";
+      sSTLTypes["list"] = "list";
+      sSTLTypes["deque"] = "deque";
+      sSTLTypes["map"] = "map";
+      sSTLTypes["multimap"] = "multimap";
+      sSTLTypes["set"] = "set";
+      sSTLTypes["multiset"] = "multiset";
+      sSTLTypes["queue"] = "queue";
+      sSTLTypes["priority_queue"] = "queue";
+      sSTLTypes["stack"] = "stack";
+      sSTLTypes["iterator"] = "iterator";
+   }
 
   //getting 'vector' header file
   int fileNum = deftmpclass->filenum;
-  if( fileNum < 0 ) return -1;
-  if (G__srcfile[fileNum].filename[0] == '{')
-     // ignore "{CINTEX dictionary translator}"
-     return -4;
-  fileNum = G__getIndex(fileNum,-1, headers);
-  if( fileNum < 0 ) return fileNum;
-  //headers.push_back( G__srcfile[ fileNum ].filename );
+
+  // We might have class A { template class B... } and we cannot do
+  // the lookup of contained types (through A's bases etc) ourselves,
+  // so give up if we are inside a class - unless the type is an STL type.
+
+  std::map<std::string, std::string>::const_iterator iSTLType = sSTLTypes.end();
+  if (G__def_tagnum != -1 || fileNum < 0) {
+     std::string n(tagname);
+     size_t posTemplate = n.find('<');
+     if (posTemplate != std::string::npos) {
+        n.erase(posTemplate, -1);
+        if (n.compare(0, 5, "std::") == 0) {
+           n.erase(0, 5);
+        }
+        iSTLType = sSTLTypes.find(n);
+        if (iSTLType == sSTLTypes.end())
+           return -1;
+     } else {
+        return -1;
+     }
+  }
+  // not contained in another class / namespace, or STL type.
+
+  std::string className(tagname);
+  std::vector<std::string> headers;
+  std::vector<std::string>::iterator it;
+
+  if (fileNum >= 0) {
+     if (G__srcfile[fileNum].filename[0] == '{')
+        // ignore "{CINTEX dictionary translator}"
+        return -4;
+     fileNum = G__getIndex(fileNum,-1, headers);
+     if( fileNum < 0 ) return fileNum;
+  } else if (iSTLType != sSTLTypes.end()) {
+     headers.push_back(iSTLType->second);
+  } else {
+     return -1;
+  }
   
   //getting 'MyClass' header file/s
   while(call_para->next != NULL) {
@@ -2166,7 +2202,10 @@ static int G__generate_template_dict(const char* tagname,G__Definedtemplateclass
   }
 
   Cint::G__pGenerateDictionary pGD = Cint::G__GetGenerateDictionary();
+  int storeDefTagum = G__def_tagnum;
+  G__def_tagnum = -1;
   int rtn = pGD( className, headers );
+  G__def_tagnum = storeDefTagum;
   if( rtn != 0 ) return (-rtn)-2;
   int tagnum = G__defined_tagname( className.c_str(), 3 );
 
