@@ -102,6 +102,38 @@ int TCint_GenerateDictionary(const std::string &className,
    if( gSystem->AccessPathName(fileName) != 0 ) {
       //file does not exist
       //(1) prepare file data
+
+      // If STL, also request iterators' operators.
+      // vector is special: we need to check whether
+      // vector::iterator is a typedef to pointer or a
+      // class.
+
+      static std::set<std::string> sSTLTypes;
+      if (sSTLTypes.empty()) {
+         sSTLTypes.insert("vector");
+         sSTLTypes.insert("list");
+         sSTLTypes.insert("deque");
+         sSTLTypes.insert("map");
+         sSTLTypes.insert("multimap");
+         sSTLTypes.insert("set");
+         sSTLTypes.insert("multiset");
+         sSTLTypes.insert("queue");
+         sSTLTypes.insert("priority_queue");
+         sSTLTypes.insert("stack");
+         sSTLTypes.insert("iterator");
+      }
+
+      std::string n(className);
+      size_t posTemplate = n.find('<');
+      std::set<std::string>::const_iterator iSTLType = sSTLTypes.end();
+      if (posTemplate != std::string::npos) {
+         n.erase(posTemplate, -1);
+         if (n.compare(0, 5, "std::") == 0) {
+            n.erase(0, 5);
+         }
+         iSTLType = sSTLTypes.find(n);
+      }
+
       std::vector<std::string>::const_iterator it;
       std::string fileContent ("");
 
@@ -109,13 +141,27 @@ int TCint_GenerateDictionary(const std::string &className,
          fileContent += "#include \"" + *it + "\"\n";
 
       fileContent += "#ifdef __CINT__ \n";
-      fileContent += "#pragma link off all class;\n";
-      fileContent += "#pragma link off all function;\n";
-      fileContent += "#pragma link off all global;\n";
-      fileContent += "#pragma link off all typedef;\n";
       fileContent += "#pragma link C++ nestedclasses;\n";
+      fileContent += "#pragma link C++ nestedtypedefs;\n";
       fileContent += "#pragma link C++ class ";
-      fileContent += className + "+;\n" ;
+      fileContent +=    className + "+;\n" ;
+      fileContent += "#pragma link C++ class ";
+      fileContent +=    className + "::*+;\n" ;
+      std::string oprLink("#pragma link C++ operators ");
+      oprLink += className;
+      // Don't! Requests e.g. op<(const vector<T>&, const vector<T>&):
+      // fileContent += oprLink + ";\n";
+      if (iSTLType != sSTLTypes.end()) {
+         if (n == "vector") {
+            fileContent += "#ifdef G__VECTOR_HAS_CLASS_ITERATOR\n";
+         }
+         fileContent += oprLink + "::iterator;\n";
+         fileContent += oprLink + "::const_iterator;\n";
+         fileContent += oprLink + "::reverse_iterator;\n";
+         if (n == "vector") {
+            fileContent += "#endif\n";
+         }
+      }
       fileContent += "#endif\n";
       //end(1)
 
