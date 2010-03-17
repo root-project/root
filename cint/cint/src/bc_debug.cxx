@@ -22,7 +22,7 @@
 struct G__input_file G__bc_funccall::getifile() const {
   struct G__input_file ifile;
   ifile.str = 0;
-  // ifile.pos = 0;
+  ifile.pos = 0;
   ifile.vindex = 0;
 
   if(!m_bytecode) {
