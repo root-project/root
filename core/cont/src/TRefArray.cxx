@@ -146,8 +146,7 @@ TRefArray& TRefArray::operator=(const TRefArray &a)
       fSize   = a.fSize;
       fSorted = a.fSorted;
 
-      fPID  = a.fPID;
-      fUIDs = 0;
+      fPID = a.fPID;
       Init(a.fSize, a.fLowerBound);
 
       for (Int_t i = 0; i < fSize; i++)
@@ -170,11 +169,12 @@ TRefArray::~TRefArray()
    fSize = 0;
 }
 
-
+//______________________________________________________________________________
 static Bool_t R__GetUID(Int_t &uid, TObject *obj, TProcessID *pid, const char *methodname)
 {
+   // Private/static function, check for validity of pid.
 
-   // Check if the object can belong here
+   // Check if the object can belong here.
    Bool_t valid = kTRUE;
    if (obj->TestBit(kHasUUID)) {
       valid = kFALSE;
@@ -479,7 +479,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       R__c = R__b.WriteVersion(TRefArray::IsA(), kTRUE);
       TObject::Streamer(R__b);
       fName.Streamer(R__b);
-      nobjects = GetLast()+1;
+      nobjects = GetAbsLast()+1;
       R__b << nobjects;
       R__b << fLowerBound;
       pidf = R__b.WriteProcessID(fPID);
