@@ -51,10 +51,8 @@
 #include "sys.h"
 #include "tty.h"
 #include "el.h"
-//AXEL
 #include "errno.h"
 #include "stdio.h"
-// END AXEL
 
 
 struct TTYModes_t {
@@ -468,6 +466,17 @@ el_private int tty_setup(EditLine_t*);
 
 #define t_qu t_ts
 
+/* tty_canoutput():
+ *   Indicate whether we are connected or not to the tty.
+ *   In particular returns false if the process is in the background.
+ */
+int
+tty_can_output(void)
+{
+   return (getpgrp() == tcgetpgrp(STDOUT_FILENO));
+}
+
+bool tty_need_to_run_setup = false;
 
 /* tty_setup():
  *	Get the tty parameters and initialize the editing state
@@ -475,10 +484,17 @@ el_private int tty_setup(EditLine_t*);
 el_private int
 tty_setup(EditLine_t* el) {
    int rst = 1;
+   if (!tty_can_output()) {
+      tty_need_to_run_setup = true;
+      return 0;
+   }
+   tty_need_to_run_setup = false;
 
+   /*
    if (el->fFlags & EDIT_DISABLED) {
       return 0;
    }
+   */
 
    if (tty_getty(el, &el->fTTY.t_ed) == -1) {
 #ifdef DEBUG_TTY
@@ -562,6 +578,8 @@ tty_setup(EditLine_t* el) {
 
    tty__setchar(&el->fTTY.t_ed, el->fTTY.t_c[ED_IO]);
    tty_bind_char(el, 1);
+
+   el_set(el, EL_EDITMODE, 1);
    return 0;
 } // tty_setup
 
@@ -813,6 +831,12 @@ tty_bind_char(EditLine_t* el, int force) {
  */
 el_protected int
 tty_rawmode(EditLine_t* el) {
+   if (tty_need_to_run_setup) {
+      tty_setup(el);
+      if (tty_need_to_run_setup)
+         return 0;
+   }
+
    if (el->fTTY.t_mode == ED_IO || el->fTTY.t_mode == QU_IO) {
       return 0;
    }
@@ -985,6 +1009,12 @@ tty_rawmode(EditLine_t* el) {
  */
 el_protected int
 tty_cookedmode(EditLine_t* el) {  /* set tty in normal setup */
+   if (tty_need_to_run_setup) {
+      tty_setup(el);
+      if (tty_need_to_run_setup)
+         return 0;
+   }
+
    if (el->fTTY.t_mode == EX_IO) {
       return 0;
    }
@@ -1011,6 +1041,12 @@ tty_cookedmode(EditLine_t* el) {  /* set tty in normal setup */
  */
 el_protected int
 tty_quotemode(EditLine_t* el) {
+   if (tty_need_to_run_setup) {
+      tty_setup(el);
+      if (tty_need_to_run_setup)
+         return 0;
+   }
+
    if (el->fTTY.t_mode == QU_IO) {
       return 0;
    }
@@ -1046,6 +1082,12 @@ tty_quotemode(EditLine_t* el) {
  */
 el_protected int
 tty_noquotemode(EditLine_t* el) {
+   if (tty_need_to_run_setup) {
+      tty_setup(el);
+      if (tty_need_to_run_setup)
+         return 0;
+   }
+
    if (el->fTTY.t_mode != QU_IO) {
       return 0;
    }

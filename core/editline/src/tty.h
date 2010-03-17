@@ -473,6 +473,7 @@ el_protected int tty_cookedmode(EditLine_t*);
 el_protected int tty_quotemode(EditLine_t*);
 el_protected int tty_noquotemode(EditLine_t*);
 el_protected void tty_bind_char(EditLine_t*, int);
+el_protected int tty_can_output(void);
 
 typedef struct {
    TTYPerm_t t_t;
