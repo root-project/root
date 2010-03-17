@@ -1911,7 +1911,9 @@ class genDictionary(object) :
     return mod
 #----------------------------------------------------------------------------------
   def genMCODecl( self, type, name, attrs, args ) :
-    return 'static void %s%s(void*, void*, const std::vector<void*>&, void*);' % (type, attrs['id'])
+    static = 'static '
+    if sys.platform == 'win32' and type in ('constructor', 'destructor'): static = ''
+    return static + 'void %s%s(void*, void*, const std::vector<void*>&, void*);' % (type, attrs['id'])
 #----------------------------------------------------------------------------------
   def genMCOBuild(self, type, name, attrs, args):
     id       = attrs['id']
@@ -1950,8 +1952,10 @@ class genDictionary(object) :
       returns = tdfname
 
     if returns != 'void': retaddrpar=' retaddr'
-                
-    head =  'static void %s%s( void*%s, void* o, const std::vector<void*>&%s, void*)\n{\n' %( type, id, retaddrpar, argspar )
+
+    static = 'static '
+    if sys.platform == 'win32' and type in ('constructor', 'destructor'): static = ''
+    head =  '%s void %s%s( void*%s, void* o, const std::vector<void*>&%s, void*)\n{\n' %( static, type, id, retaddrpar, argspar )
     head += tdfdecl
     ndarg = self.getDefaultArgs(args)
     if ndarg : iden = '  '
@@ -2066,7 +2070,9 @@ class genDictionary(object) :
     id  = attrs['id']
     paramargs = ''
     if len(args): paramargs = ' arg'
-    head = 'static void constructor%s( void* retaddr, void* mem, const std::vector<void*>&%s, void*) {\n' %( id, paramargs )
+    head = ''
+    if sys.platform != 'win32': head = 'static '
+    head += 'void constructor%s( void* retaddr, void* mem, const std::vector<void*>&%s, void*) {\n' %( id, paramargs )
     body = ''
     if 'pseudo' in attrs :
       head += '  if (retaddr) *(void**)retaddr =  ::new(mem) %s( *(__void__*)0 );\n' % ( cl )
@@ -2092,7 +2098,12 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def genDestructorDef(self, attrs, childs):
     cl = self.genTypeName(attrs['context'])
-    return 'static void destructor%s(void*, void * o, const std::vector<void*>&, void *) {\n  (((::%s*)o)->::%s::~%s)();\n}' % ( attrs['id'], cl, cl, attrs['name'] )
+    static = ''
+    dtorscope = ''
+    if sys.platform != 'win32':
+        static = 'static '
+        dtorscope = '::' + cl + '::'
+    return '%svoid destructor%s(void*, void * o, const std::vector<void*>&, void *) {\n  (((::%s*)o)->%s~%s)();\n}' % ( static, attrs['id'], cl, dtorscope, attrs['name'] )
 #----------------------------------------------------------------------------------
   def genDestructorBuild(self, attrs, childs):
     if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('demangled')) or \
