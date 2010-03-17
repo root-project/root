@@ -357,13 +357,13 @@ TObject *TRefArray::Before(const TObject *obj) const
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == 0) return 0;
 
-   return fPID->GetObjectWithID(fUIDs[idx+1]);
+   return fPID->GetObjectWithID(fUIDs[idx-1]);
 }
 
 //______________________________________________________________________________
 void TRefArray::Clear(Option_t *)
 {
-   // Remove all objects from the array. 
+   // Remove all objects from the array.
 
    fLast = - 1;
 
@@ -863,7 +863,7 @@ void TRefArrayIter::Reset()
       fCursor = 0;
    else
       fCursor = fArray->Capacity() - 1;
-   
+
    fCurCursor = fCursor;
 }
 
