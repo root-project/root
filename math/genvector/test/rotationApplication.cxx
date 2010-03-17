@@ -54,6 +54,8 @@ using std::cos;
 
 using namespace ROOT::Math;
 
+#ifndef __CINT__
+
 template <typename T1, typename T2 > 
 struct Precision { 
   enum { result = std::numeric_limits<T1>::digits <= std::numeric_limits<T2>::digits   }; 
@@ -429,11 +431,11 @@ int doTestL (TestRotation const & testRotation, XYZVector const & testVector,
 }
 
 struct ForeignVector {
-  typedef Cartesian3D<void> CoordinateType;
+  typedef Cartesian3D<> CoordinateType;
   XYZVector v;
   template <class V> 
   explicit ForeignVector (V const & v_) : v(v_) {}
-  ForeignVector (double x, double y, double z) : v(x,y,z) {}
+  ForeignVector (double xx, double yy, double zz) : v(xx,yy,zz) {}
   double x() const { return v.x(); }
   double y() const { return v.y(); }
   double z() const { return v.z(); }
@@ -674,7 +676,7 @@ int exerciseAxialTest (XYZVector const & testVector)
 }
 
 
-
+#endif // endif on __CINT__
 
 // ======================================
 
