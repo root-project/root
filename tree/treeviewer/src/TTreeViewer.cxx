@@ -299,8 +299,11 @@ enum EButtonIdentifiers {
 ClassImp(TTreeViewer)
 
 //______________________________________________________________________________
-TTreeViewer::TTreeViewer(const char* treeName)
-          :TGMainFrame(0,10,10,kVerticalFrame)
+TTreeViewer::TTreeViewer(const char* treeName) : 
+   TGMainFrame(0,10,10,kVerticalFrame),
+   fDimension(0), fVarDraw(0), fScanMode(0), 
+   fTreeIndex(0), fDefaultCursor(0), fWatchCursor(0), 
+   fCounting(0), fStopMapping(0), fEnableCut(0),fNexpressions(0)
 {
    // TTreeViewer default constructor
 
@@ -320,8 +323,12 @@ TTreeViewer::TTreeViewer(const char* treeName)
 }
 
 //______________________________________________________________________________
-TTreeViewer::TTreeViewer(const TTree *tree)
-          :TGMainFrame(0, 10, 10, kVerticalFrame)
+TTreeViewer::TTreeViewer(const TTree *tree) : 
+   TGMainFrame(0, 10, 10, kVerticalFrame),
+   fDimension(0), fVarDraw(0), fScanMode(0), 
+   fTreeIndex(0), fDefaultCursor(0), fWatchCursor(0), 
+   fCounting(0), fStopMapping(0), fEnableCut(0),fNexpressions(0)
+
 {
    // TTreeViewer constructor with a pointer to a Tree
 
