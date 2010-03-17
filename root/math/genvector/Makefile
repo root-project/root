@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += testGenVector coordinates4D coordinates3D mytest
+TEST_TARGETS += rotationApplication testGenVector coordinates4D coordinates3D mytest
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -68,4 +68,7 @@ coordinates4D: coordinates4D.log
 	$(TestDiff)
 
 testGenVector: testGenVector.log
+	$(TestDiff)
+
+rotationApplication: rotationApplication.log
 	$(TestDiff)

@@ -1,7 +1,8 @@
 {
 // compile and run the coordinates3D test in genvector directory
+   gErrorIgnoreLevel = kInfo+1;  // to suppress Info messages from AClic
    gROOT->ProcessLine(".L $ROOTSYS/math/genvector/test/coordinates3D.cxx+");
-   int ret = main(); 
+   int ret = coordinates3D(); 
    if (ret == 0)
       std::cout << "test coordinates3D OK" << std::endl;
    else

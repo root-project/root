@@ -1,6 +1,5 @@
 
 Processing runcoordinates4D.C...
-Info in <TUnixSystem::ACLiC>: creating shared library /Users/moneta/root/trunk/math/genvector/test/coordinates4D_cxx.so
 
 >>>>> Testing LorentzVector from (0,0,0,0) ticks = 1	: .......	 OK
 

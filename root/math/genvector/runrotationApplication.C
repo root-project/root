@@ -1,0 +1,11 @@
+{
+// compile and run the  test in genvector directory
+   gErrorIgnoreLevel = kInfo+1;  // to suppress Info messages from AClic
+   gROOT->ProcessLine(".L $ROOTSYS/math/genvector/test/rotationApplication.cxx+");
+   int ret = rotationApplication(); 
+   if (ret == 0)
+      std::cout << "test rotationApplication OK" << std::endl;
+   else
+      std::cerr << "test rotationApplication  FAILED !" << std::endl;
+   
+}
