@@ -1,0 +1,38 @@
+# This file contains a set of ROOT I/O customization rules. 
+# The short form of those rules is
+#    [type=Read] classname membername [attributes=... ] [version=[...] ] [checksum=[...] ] [oldtype=...] [code={...}]
+#
+# See the documentation for TClass::AddRule for more details.
+#
+# Each rule must be on one line (possibly split with a trailing \)
+
+# HepMC Rules
+
+HepMC::GenVertex   m_event             attributes=NotOwner
+
+HepMC::GenParticle m_production_vertex attributes=NotOwner
+HepMC::GenParticle m_end_vertex        attributes=NotOwner
+
+HepMC::Flow        m_particle_owner    attributes=NotOwner
+   
+HepMC::GenEvent    m_vertex_barcodes   attributes=Owner 
+HepMC::GenEvent    m_particle_barcodes attributes=Owner 
+   
+HepMC::GenEvent    m_signal_process_vertex attributes=NotOwner 
+HepMC::GenEvent    m_beam_particle_1       attributes=NotOwner 
+HepMC::GenEvent    m_beam_particle_2       attributes=NotOwner 
+
+# LHCb rules
+
+KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >     m_sequential   attributes=Owner 
+KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >    m_sequential   attributes=Owner 
+ObjectVector<LHCb::MCRichDigitSummary>    m_vector   attributes=Owner  
+
+# CMS rules
+edm::OwnVector<reco::BaseTagInfo,edm::ClonePolicy<reco::BaseTagInfo> >    data_   attributes=Owner 
+edm::OwnVector<pat::UserData,edm::ClonePolicy<pat::UserData> >            data_   attributes=Owner 
+
+# Atlas rules
+MuonSpShowerContainer_p1    m_showers   attributes=Owner 
+
+
