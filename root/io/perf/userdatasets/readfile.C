@@ -7,60 +7,22 @@
 #include "TStreamerElement.h"
 #include "TROOT.h"
 
-void SetOwner(TVirtualStreamerInfo *info, const char *dataname, Bool_t isowner)
-{
-   if (info) {
-      TObject *el = info->GetElements()->FindObject(dataname);
-      if (el) {
-         if (isowner) el->ResetBit(TStreamerElement::kDoNotDelete);
-         else el->SetBit(TStreamerElement::kDoNotDelete);
-      }
-   }
-}
-
-void SetOwner(TList *infolist, const char *classname, const char *dataname, Bool_t isowner)
-{
-   TVirtualStreamerInfo *info = 0;
-   if (infolist) {
-      info = (TVirtualStreamerInfo*)infolist->FindObject(classname);
-   } else {
-      TClass *cl = TClass::GetClass(classname);
-      if (cl) info = cl->GetStreamerInfo();
-   }
-   SetOwner(info, dataname, isowner);
-}
-
-void fixHepMC(TList *infolist = 0) 
-{
-   SetOwner(infolist,"HepMC::GenVertex","m_event", kFALSE);
-   SetOwner(infolist,"HepMC::GenParticle","m_production_vertex", kFALSE);
-   SetOwner(infolist,"HepMC::GenParticle","m_end_vertex", kFALSE);
-   SetOwner(infolist,"HepMC::Flow","m_particle_owner", kFALSE);
-   
-   SetOwner(infolist,"HepMC::GenEvent","m_vertex_barcodes", kTRUE);
-   SetOwner(infolist,"HepMC::GenEvent","m_particle_barcodes", kTRUE);
-   
-   SetOwner(infolist,"HepMC::GenEvent","m_signal_process_vertex", kFALSE);
-   SetOwner(infolist,"HepMC::GenEvent","m_beam_particle_1", kFALSE);
-   SetOwner(infolist,"HepMC::GenEvent","m_beam_particle_2", kFALSE);
-}
-
 void fixLHCb(TList *infolist = 0)
 {
-   SetOwner(infolist,"KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >","m_sequential",kTRUE);
-   SetOwner(infolist,"KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >","m_sequential",kTRUE);
-   SetOwner(infolist,"ObjectVector<LHCb::MCRichDigitSummary>","m_vector",kTRUE); 
+   TClass::AddRule("KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >     m_sequential   attributes=Owner");
+   TClass::AddRule("KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >    m_sequential   attributes=Owner"); 
+   TClass::AddRule("ObjectVector<LHCb::MCRichDigitSummary>    m_vector   attributes=Owner");
 }
 
 void fixCMS(TList *infolist = 0)
 {
-   SetOwner(infolist,"edm::OwnVector<reco::BaseTagInfo,edm::ClonePolicy<reco::BaseTagInfo> >","data_",kTRUE);
-   SetOwner(infolist,"edm::OwnVector<pat::UserData,edm::ClonePolicy<pat::UserData> >","data_",kTRUE);
+   TClass::AddRule("edm::OwnVector<reco::BaseTagInfo,edm::ClonePolicy<reco::BaseTagInfo> >    data_   attributes=Owner");
+   TClass::AddRule("edm::OwnVector<pat::UserData,edm::ClonePolicy<pat::UserData> >            data_   attributes=Owner");
 }
 
 void fixATLAS(TList *infolist = 0)
 {
-   SetOwner(infolist,"MuonSpShowerContainer_p1","m_showers",kTRUE);
+   TClass::AddRule("MuonSpShowerContainer_p1 m_showers attributes=Owner");
 }
 
 TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
@@ -73,7 +35,7 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
    }
    
    if (genreflex) {
-      gSystem->Load("libCintex");
+      gSystem->Load("libCintex");file://localhost/Users/pcanal/root_working/roottest/root/io/perf/userdatasets/readfile.C
       gROOT->ProcessLine("ROOT::Cintex::Cintex::Enable()");
       libdir.Prepend("gen");
    }
@@ -97,15 +59,13 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
    
    if (!file) return 0;
    
+   fixLHCb();
+   fixCMS();
+   fixATLAS();
+
    // if library not load yet, generate the code, compile it and load it.
    if (loadlibrary && !haslibrary) {
       // Fix HepMC
-      TList *infolist = (TList*)file->GetStreamerInfoCache();
-      fixHepMC( infolist );
-      fixLHCb( infolist );
-      fixCMS( infolist );
-      fixATLAS( infolist );      
-
       if (genreflex) {
          file->MakeProject(libdir.Data(),"*","NEW+genreflex");
       } else {
@@ -114,15 +74,7 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
       if ( gSystem->Load(TString::Format("%s/%s",libdir.Data(),libdir.Data())) < 0) {
          return 0;
       }
-   } else {
-      // Fix HepMC
-      fixHepMC();
-      fixLHCb();
-      fixCMS();
-      fixATLAS();
-      
    }
-   
    return file;
 }
 
