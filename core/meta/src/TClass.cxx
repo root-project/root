@@ -1187,17 +1187,76 @@ TClass::~TClass()
 }
 
 //------------------------------------------------------------------------------
+namespace {
+   Int_t ReadRulesContent(FILE *f) 
+   {
+      // Read a class.rules file which contains one rule per line with comment
+      // starting with a #
+      // Returns the number of rules loaded.
+      // Returns -1 in case of error.
+      
+      R__ASSERT(f!=0);
+      TString rule(1024);
+      int c, state = 0;
+      Int_t count = 0;
+      
+      while ((c = fgetc(f)) != EOF) {
+         if (c == 13)        // ignore CR
+            continue;
+         if (c == '\n') {
+            if (state != 3) {
+               state = 0;
+               if (rule.Length() > 0) {
+                  if (TClass::AddRule(rule)) {
+                     ++count;
+                  }
+                  rule.Clear();
+               }
+            }
+            continue;
+         }
+         switch (state) {
+            case 0:             // start of line
+               switch (c) {
+                  case ' ':
+                  case '\t':
+                     break;
+                  case '#':
+                     state = 1;
+                     break;
+                  default:
+                     state = 2;
+                     break;
+               }
+               break;
+               
+            case 1:             // comment
+               break;
+               
+            case 2:             // rule
+               switch (c) {
+                  case '\\':
+                     state = 3; // Continuation request
+                  default:
+                     break;
+               }
+               break;            
+         }
+         switch (state) {
+            case 2:
+               rule.Append(c);
+               break;
+         }
+      }
+      return count;
+   }
+}
+
+//------------------------------------------------------------------------------
 Int_t TClass::ReadRules()
 {
-   // Read the class.rules files from the default locations.
-   // The 3 files possibly read are:
+   // Read the class.rules files from the default location:.
    //     $ROOTSYS/etc/class.rules (or ROOTETCDIR/class.rules)
-   //     $HOME/class.rules
-   //     ./class.rules 
-   // By setting the shell variable ROOTENV_NO_HOME=1 the reading of
-   // the $HOME/class.rules resource file will be skipped. This might be useful in
-   // case the home directory resides on an automounted remote file system
-   // and one wants to avoid the file system from being mounted.
    
    static const char *suffix = "class.rules";
    TString sname = suffix;
@@ -1213,44 +1272,14 @@ Int_t TClass::ReadRules()
    gSystem->PrependPathName(etc, sname);
 #endif
    
-   Int_t count = 0;
-   Int_t res;
-   if (gSystem->AccessPathName(sname) == 0) {
-      res = ReadRules(sname);
-      if (res < 0) {
-         return res;
-      }
-      count += res;
+   Int_t res = -1;
+   
+   FILE * f = fopen(sname,"r");
+   if (f != 0) {
+      res = ReadRulesContent(f);
+      fclose(f);
    }
-   if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
-      sname = suffix;
-      gSystem->PrependPathName(gSystem->HomeDirectory(), sname);
-      if (gSystem->AccessPathName(sname) == 0) {
-         res = ReadRules(sname);
-         if (res < 0) {
-            return res;
-         }
-         count += res;
-      }
-      if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {
-         if (gSystem->AccessPathName(suffix) == 0) {
-            res = ReadRules(suffix);
-            if (res < 0) {
-               return res;
-            }
-            count += res;
-         }
-      }
-   } else {
-      if (gSystem->AccessPathName(suffix) == 0) {
-         res = ReadRules(suffix);
-         if (res < 0) {
-            return res;
-         }
-         count += res;
-      }
-   }
-   return count;
+   return res;
 }
 
 //------------------------------------------------------------------------------
@@ -1271,59 +1300,8 @@ Int_t TClass::ReadRules( const char *filename )
       ::Error("TClass::ReadRules","Failed to open %s\n",filename);
       return -1;
    }
+   Int_t count = ReadRulesContent(f);
    
-   TString rule(1024);
-   int c, state = 0;
-   Int_t count = 0;
-   
-   while ((c = fgetc(f)) != EOF) {
-      if (c == 13)        // ignore CR
-         continue;
-      if (c == '\n') {
-         if (state != 3) {
-            state = 0;
-            if (rule.Length() > 0) {
-               if (TClass::AddRule(rule)) {
-                  ++count;
-               }
-               rule.Clear();
-            }
-         }
-         continue;
-      }
-      switch (state) {
-         case 0:             // start of line
-            switch (c) {
-               case ' ':
-               case '\t':
-                  break;
-               case '#':
-                  state = 1;
-                  break;
-               default:
-                  state = 2;
-                  break;
-            }
-            break;
-            
-         case 1:             // comment
-            break;
-            
-         case 2:             // rule
-            switch (c) {
-               case '\\':
-                  state = 3; // Continuation request
-               default:
-                  break;
-            }
-            break;            
-      }
-      switch (state) {
-         case 2:
-            rule.Append(c);
-            break;
-      }
-   }
    fclose(f);
    return count;
    
