@@ -461,6 +461,11 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    // the first input parameter ("filename"), such string  is returned by
    // GetImageBuffer method.
 
+   if (!InitVisual()) {
+      Warning("Scale", "Visual not initiated");
+      return;
+   }
+
    Bool_t xpm = filename && (filename[0] == '/' &&
                 filename[1] == '*') && filename[2] == ' ';
 
