@@ -428,6 +428,7 @@ void TSelectorDraw::Begin(TTree *tree)
                      // Let's set it aside for now ...
                      Error("Begin", "Input and output lists are the same!\n");
                      SetStatus(-1);
+                     delete [] varexp;
                      return;
                   }
                   evlist->Reset();

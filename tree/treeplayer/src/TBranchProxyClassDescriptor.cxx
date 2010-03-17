@@ -345,6 +345,7 @@ namespace ROOT {
 
          TIter nextbase(&fListOfBaseProxies);
 
+         // This is guarantee to return a non zero value due to the if (fListOfBaseProxies.GetSize())
          desc = (TBranchProxyDescriptor*)nextbase();
          fprintf(hf,"\n%-*s%-*s(director, parent, membername)",  offset+6, " ", fMaxDatamemberType,desc->GetTypeName());
          wroteFirst = true;
