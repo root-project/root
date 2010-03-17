@@ -144,3 +144,6 @@ ifneq ($(subst -ftest-coverage,,$(OPT)),$(OPT))
 # we have coverage on - not good for Cintex's trampolines
 $(CINTEXDIRS)/CINTFunctional.o : override OPT:= $(subst -fprofile-arcs,,$(subst -ftest-coverage,,$(OPT)))
 endif
+ifeq ($(PLATFORM),win32)
+$(CINTEXDIRS)/CINTFunctional.o : override CXXFLAGS:=$(subst -RTC1,,$(CXXFLAGS))
+endif
