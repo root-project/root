@@ -146,8 +146,7 @@ TRefArray& TRefArray::operator=(const TRefArray &a)
       fSize   = a.fSize;
       fSorted = a.fSorted;
 
-      fPID  = a.fPID;
-      fUIDs = 0;
+      fPID = a.fPID;
       Init(a.fSize, a.fLowerBound);
 
       for (Int_t i = 0; i < fSize; i++)
@@ -170,11 +169,12 @@ TRefArray::~TRefArray()
    fSize = 0;
 }
 
-
+//______________________________________________________________________________
 static Bool_t R__GetUID(Int_t &uid, TObject *obj, TProcessID *pid, const char *methodname)
 {
+   // Private/static function, check for validity of pid.
 
-   // Check if the object can belong here
+   // Check if the object can belong here.
    Bool_t valid = kTRUE;
    if (obj->TestBit(kHasUUID)) {
       valid = kFALSE;
@@ -357,13 +357,13 @@ TObject *TRefArray::Before(const TObject *obj) const
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == 0) return 0;
 
-   return fPID->GetObjectWithID(fUIDs[idx+1]);
+   return fPID->GetObjectWithID(fUIDs[idx-1]);
 }
 
 //______________________________________________________________________________
 void TRefArray::Clear(Option_t *)
 {
-   // Remove all objects from the array. 
+   // Remove all objects from the array.
 
    fLast = - 1;
 
@@ -479,7 +479,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       R__c = R__b.WriteVersion(TRefArray::IsA(), kTRUE);
       TObject::Streamer(R__b);
       fName.Streamer(R__b);
-      nobjects = GetLast()+1;
+      nobjects = GetAbsLast()+1;
       R__b << nobjects;
       R__b << fLowerBound;
       pidf = R__b.WriteProcessID(fPID);
@@ -863,7 +863,7 @@ void TRefArrayIter::Reset()
       fCursor = 0;
    else
       fCursor = fArray->Capacity() - 1;
-   
+
    fCurCursor = fCursor;
 }
 
