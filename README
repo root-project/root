@@ -52,6 +52,29 @@ To see what the are the command actually issued do:
    cd roottest; gmake V=t (or gmake VERBOSE=t) (or export V=t; gmake )
 
 ==============================================================================
+Simple test addition:
+
+In any existing directory create a file starting with the letter 'assert'
+and with the extension .C or .cxx and fill out with the actual test, the
+script needs to return 0 in case of success and any other value otherwise.
+
+The files assert*.C will be interpreted while the files assert*.cxx will
+be compiled via ACLiC.   The assert*.C can be either a named or unamed macro.
+The assert*.cxx must be a named macro.
+
+The Makefile will test both for the return value and for the output of
+standard error.  The output of standard error will be compare to a
+reference file; if you do not provide a reference file, the output will
+be compared to an empty file.
+
+To check both the output streams, instead of using the assert file names,
+use the names:
+    execMytest.C or execMytest.cxx
+
+After running the test (successfully) once you will need to copy the log file over to
+the ref file as the standard output is never empty.
+
+==============================================================================
 Adding new test
 
 To add a new test
@@ -109,6 +132,18 @@ To compile the script runsometest.C before executing replace
 	sometest: sometest.log
 with
 	sometest: sometest.clog
+   
+To only compare the output of standard error to the reference file replace
+	sometest: sometest.log
+with
+	sometest: sometest.elog
+
+or replace
+
+	sometest: sometest.clog
+with
+	sometest: sometest.eclog
+
    
 ==============================================================================
 Disable a specific test:

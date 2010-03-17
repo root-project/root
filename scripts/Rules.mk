@@ -57,7 +57,9 @@ endif
 SUBDIRS := $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
 TEST_TARGETS_DIR = $(SUBDIRS:%=%.test)
-TEST_TARGETS += $(TEST_TARGETS_DIR)
+TEST_TARGETS += $(TEST_TARGETS_DIR) \
+     $(subst .C,,$(wildcard assert*.C))  $(subst .cxx,,$(wildcard assert*.cxx)) \
+     $(subst .C,,$(wildcard exec*.C))  $(subst .cxx,,$(wildcard exec*.cxx))
 
 # allow tests to be disabled by putting their names into a file called !DISABLE
 ifneq ($(MAKECMDGOALS),clean)
@@ -72,7 +74,7 @@ CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
 ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C \
-	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log \
+	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log *.elog *.celog *.eclog \
 	*_C.rootmap *_cc.rootmap *_cpp.rootmap *_cxx.rootmap *_h.rootmap
 
 .PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check logs.tar.gz
@@ -567,6 +569,30 @@ endif
 %.elog : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@
 
+assert%.elog : assert%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > assert$*.log 2>$@ ; tresult=$$? ; if [ $$tresult -ne 0 ] ; then echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi  
+
+assert%.eclog : assert%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > assert$*.log 2>$@ ; tresult=$$? ; if [ $$tresult -ne 0 ] ; then echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi
+
+$(subst .cxx,,$(wildcard assert*.cxx)) : assert%: assert%.eclog assert%.ref 
+	$(TestDiff)
+
+$(subst .C,,$(wildcard assert*.C)) : assert%: assert%.elog assert%.ref 
+	$(TestDiff)
+
+exec%.log : exec%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 ; tresult=$$? ; if [ $$tresult -ne 0 ] ; then echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi  
+
+exec%.clog : exec%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > $@ 2>&1 ; tresult=$$? ; if [ $$tresult -ne 0 ] ; then echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi
+
+$(subst .cxx,,$(wildcard exec*.cxx)) : %: %.clog %.ref 
+	$(TestDiff)
+
+$(subst .C,,$(wildcard exec*.C)) : %: %.log %.ref 
+	$(TestDiff)
+
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
 	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b > $@ 2>&1
@@ -582,11 +608,17 @@ endif
 %.celog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@
 
+%.eclog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@
+
 %.neutral.clog: %.clog
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
 
 %.neutral.log: %.log
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
+
+%.ref:
+	$(CMDECHO) touch $@
 
 .PRECIOUS: %.clog %.log 
 
