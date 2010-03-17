@@ -690,7 +690,7 @@ int testVectorUtil() {
 
 }
 
-int main() { 
+int testGenVector() { 
 
   int iret = 0; 
   iret |= testVector3D(); 
@@ -708,4 +708,9 @@ int main() {
 
   if (iret !=0) std::cout << "\nTest GenVector FAILED!!!!!!!!!\n";
   return iret; 
+
+}
+
+int main() { 
+   return testGenVector();
 }

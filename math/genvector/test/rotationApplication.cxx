@@ -681,7 +681,7 @@ int exerciseAxialTest (XYZVector const & testVector)
 // ======================================
 
 
-int main () {
+int rotationApplication () {
   int ret = 0;
   std::vector<TestRotation> testRotations = makeTestRotations();
   std::vector<XYZVector>    testVectors   = makeTestVectors();
@@ -697,4 +697,8 @@ int main () {
     ret |= exerciseAxialTest (*vp);
   }
   return ret;
+}
+
+int main() { 
+   return rotationApplication();
 }
