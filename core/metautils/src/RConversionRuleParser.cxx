@@ -89,9 +89,9 @@ namespace ROOT
 //            if ( space_pos < equal_pos ) {
             endsymbol = FindEndSymbol( command );
             if ( endsymbol == command.length() || command[endsymbol] == ' ' || command[endsymbol] == '\t' ) {
-               std::string value = TSchemaRuleProcessor::Trim( command.substr( 0, endsymbol ) );
-               result["source"] = value;
-               result["target"] = value;
+               std::string membervalue = TSchemaRuleProcessor::Trim( command.substr( 0, endsymbol ) );
+               result["source"] = membervalue;
+               result["target"] = membervalue;
                command = TSchemaRuleProcessor::Trim( command.substr( endsymbol+1 ) );
             }               
          }
