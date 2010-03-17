@@ -52,7 +52,10 @@ namespace ROOT { namespace Cintex {
 
    StubContext_t::StubContext_t(const Member& mem, const Type& cl )
       :  fMethodCode(0), fParam(mem.FunctionParameterSize(), 0),
-         fParCnvLast(0), fClass(cl), fNewdelfuncs(0), fInitialized(false)
+         fParCnvLast(0), fRet_tag(-1), fRet_byvalue(false),
+         fRet_byref(false), fRet_plevel(0), fClass_tag(-1), fRet_Sizeof(0),
+         fClass(cl), fNpar(0), fStub(0), fStubctx(0), fNewdelfuncs(0),
+         fInitialized(false)
    {
       // Push back a context.
       StubContexts::Instance().push_back(this);
