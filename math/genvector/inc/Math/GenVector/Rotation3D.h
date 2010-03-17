@@ -161,15 +161,9 @@ public:
    */
    Rotation3D &
    operator=( Rotation3D const   & rhs ) { 
-      fM[0] = rhs.fM[0];
-      fM[1] = rhs.fM[1];
-      fM[2] = rhs.fM[2];
-      fM[3] = rhs.fM[3];
-      fM[4] = rhs.fM[4];
-      fM[5] = rhs.fM[5];
-      fM[6] = rhs.fM[6];
-      fM[7] = rhs.fM[7];
-      fM[8] = rhs.fM[8];
+      SetComponents( rhs.fM[0], rhs.fM[1], rhs.fM[2], 
+                     rhs.fM[3], rhs.fM[4], rhs.fM[5], 
+                     rhs.fM[6], rhs.fM[7], rhs.fM[8] );
       return *this;
    }
 

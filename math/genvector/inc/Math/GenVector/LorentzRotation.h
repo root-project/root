@@ -78,15 +78,19 @@ public:
   template<class IT>
   LorentzRotation(IT begin, IT end) { SetComponents(begin,end); }
 
+  // The compiler-generated and dtor are OK but we have implementwd the copy-ctor and 
+  // assignment operators since we have a template assignment
+
+  /**
+     Copy constructor 
+   */
+   LorentzRotation( LorentzRotation const & r ) { 
+      *this = r; 
+   } 
+
   /**
      Construct from a pure boost 
   */
-
-//explicit LorentzRotation( Boost  const &  ) {} // TODO
-//explicit LorentzRotation( BoostX const &  ) {} // TODO
-//explicit LorentzRotation( BoostY const &  ) {} // TODO
-//explicit LorentzRotation( BoostZ const &  ) {} // TODO
-
   explicit LorentzRotation( Boost  const & b  ) {  b.GetLorentzRotation( fM+0 ); } 
   explicit LorentzRotation( BoostX const & bx ) { bx.GetLorentzRotation( fM+0 ); }
   explicit LorentzRotation( BoostY const & by ) { by.GetLorentzRotation( fM+0 ); }
@@ -125,8 +129,7 @@ public:
                   const Foreign4Vector& v2,
                   const Foreign4Vector& v3,
                   const Foreign4Vector& v4 ) { SetComponents(v1, v2, v3, v4); }
-
-  // The compiler-generated copy ctor, copy assignment, and dtor are OK.
+  
 
   /**
      Raw constructor from sixteen Scalar components (without any checking)
@@ -141,6 +144,18 @@ public:
                    zx, zy, zz, zt,
 		   tx, ty, tz, tt);
  }
+
+  /** 
+      Assign from another LorentzRotation
+  */
+   LorentzRotation & 
+  operator=( LorentzRotation  const & rhs ) { 
+      SetComponents( rhs.fM[0],  rhs.fM[1],  rhs.fM[2],  rhs.fM[3],  
+                     rhs.fM[4],  rhs.fM[5],  rhs.fM[6],  rhs.fM[7],
+                     rhs.fM[8],  rhs.fM[9],  rhs.fM[10], rhs.fM[11], 
+                     rhs.fM[12], rhs.fM[13], rhs.fM[14], rhs.fM[15] );
+      return *this; 
+   }
 
   /**
      Assign from a pure boost 
@@ -180,7 +195,13 @@ public:
   */
   template<class ForeignMatrix>
   LorentzRotation &
-  operator=(const ForeignMatrix & m) { SetComponents(m); return *this; }
+  operator=(const ForeignMatrix & m) { 
+     SetComponents( m(0,0), m(0,1), m(0,2), m(0,3),
+                    m(1,0), m(1,1), m(1,2), m(1,3),
+                    m(2,0), m(2,1), m(2,2), m(2,3), 
+                    m(3,0), m(3,1), m(3,2), m(3,3) );
+     return *this; 
+  }
 
   /**
      Re-adjust components to eliminate small deviations from a perfect

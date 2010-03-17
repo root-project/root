@@ -254,7 +254,7 @@ int test3D ( const DisplacementVector3D<C> & v, double ticks ) {
 
 
 
-int main () {
+int coordinates3D () {
   int ret = 0;
 
   ret |= test3D (XYZVector ( 0.0, 0.0, 0.0 )     ,2 );
@@ -302,4 +302,8 @@ int main () {
 
 
   return ret;
+}
+
+int main() { 
+   return coordinates3D();
 }

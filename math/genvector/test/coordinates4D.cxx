@@ -213,7 +213,7 @@ int test4D ( const LorentzVector<C> & v, double ticks ) {
 }
 
 
-int main () {
+int coordinates4D () {
   int ret = 0;
 
   ret |= test4D (XYZTVector ( 0.0, 0.0, 0.0, 0.0 )     , 1 );
@@ -238,3 +238,6 @@ int main () {
   return ret;
 }
 
+int main() { 
+   return coordinates4D();
+}
