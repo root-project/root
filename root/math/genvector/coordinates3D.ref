@@ -1,0 +1,123 @@
+
+Processing runcoordinates3D.C...
+
+>>>>> Testing 3D from (0,0,0) ticks = 2
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (1,2,3) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (-1,2,3) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (1,-2,3) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (1,2,-3) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (-1,-2,3) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (-1,2,-3) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (1,-2,-3) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (-1,-2,-3) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (8,0,0) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (-8,0,0) ticks = 12
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0,9,0) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0,-9,0) ticks = 6
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0,0,7) ticks = 8
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0,0,-7) ticks = 8
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (16,0.0200000000000000004,0.0100000000000000002) ticks = 10
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (-16,0.0200000000000000004,0.0100000000000000002) ticks = 10
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (-0.0100000000000000002,16,0.0100000000000000002) ticks = 2000
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (-0.0100000000000000002,-16,0.0100000000000000002) ticks = 2000
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (1,2,30) ticks = 10
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0,0,15) ticks = 30
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0,0,-15) ticks = 30
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0,0,35) ticks = 30
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0,0,-35) ticks = 30
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0.0100000000000000002,0.0200000000000000004,16) ticks = 10
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (0.0100000000000000002,0.0200000000000000004,-16) ticks = 40000
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (1.00000000000000002e-08,1.00000000000000002e-08,10) ticks = 20
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (1.00000000000000002e-08,1.00000000000000002e-08,-10) ticks = 2000000000
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (10,10,1.00000000000000002e-08) ticks = 1000000
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+
+>>>>> Testing 3D from (10,10,-1.00000000000000002e-08) ticks = 1000000
+           Testing DisplacementVector3D :  .............	 OK
+           Testing PositionVector3D     :   ..........		 OK
+test coordinates3D OK

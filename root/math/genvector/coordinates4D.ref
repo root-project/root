@@ -1,0 +1,22 @@
+
+Processing runcoordinates4D.C...
+Info in <TUnixSystem::ACLiC>: creating shared library /Users/moneta/root/trunk/math/genvector/test/coordinates4D_cxx.so
+
+>>>>> Testing LorentzVector from (0,0,0,0) ticks = 1	: .......	 OK
+
+>>>>> Testing LorentzVector from (1,2,3,4) ticks = 10	: .......	 OK
+
+>>>>> Testing LorentzVector from (-1,-2,3,4) ticks = 10	: .......	 OK
+
+>>>>> Testing LorentzVector from (1.00000000000000002e-08,1.00000000000000002e-08,10,100) ticks = 10	: .......	 OK
+
+>>>>> Testing LorentzVector from (1.00000000000000002e-08,1.00000000000000002e-08,-10,100) ticks = 1000000000	: .......	 OK
+
+>>>>> Testing LorentzVector from (1,2,3,3.74165738677394133) ticks = 268435456	: .......	 OK
+
+>>>>> Testing LorentzVector from (1,1,100,100.00999950005) ticks = 10066329600	: .......	 OK
+
+>>>>> Testing LorentzVector from (100000000,100000000,100000000,173205080.756887734) ticks = 67108864000000000	: .......	 OK
+
+>>>>> Testing LorentzVector from (1.00000000000000002e-08,1.00000000000000002e-08,1.00000000000000002e-08,1.73205080756887751e-08) ticks = 1.34217728000000003	: .......	 OK
+test coordinates4D OK
