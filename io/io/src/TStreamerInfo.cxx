@@ -425,7 +425,7 @@ void TStreamerInfo::Build()
          }
       }
 
-      if ( !wasCompiled && (rules && rules->HasRuleWithSource( element->GetName() )) ) {
+      if ( !wasCompiled && (rules && rules->HasRuleWithSource( element->GetName(), kTRUE )) ) {
          needAllocClass = kTRUE;
 
          // If this is optimized to re-use TStreamerElement(s) in case of variable renaming,
@@ -435,7 +435,7 @@ void TStreamerInfo::Build()
          TStreamerElement *cached = element;
          // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
          if (element->GetNewType()>0 /* intentionally not including base class for now */ 
-             && rules && !rules->HasRuleWithTarget( element->GetName() ) ) 
+             && rules && !rules->HasRuleWithTarget( element->GetName(), kTRUE ) ) 
          {
             TStreamerElement *copy = (TStreamerElement*)element->Clone();
             fElements->Add(copy);
@@ -517,6 +517,15 @@ void TStreamerInfo::BuildCheck()
       }
       array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
+
+      if (fClass->TestBit(TClass::kIsEmulation) && array->GetEntries()==0) {
+         // We have an emulated class that has no TStreamerInfo, this 
+         // means it was created to insert a (default) rule.  Consequently
+         // the error message about the missing dictionary was not printed.
+         // For consistency, let's print it now!
+         
+         ::Warning("TClass::TClass", "no dictionary for class %s is available", GetName());
+      }
 
       // If the user has not specified a class version (this _used to_
       // always be the case when the class is Foreign) or if the user
@@ -1544,7 +1553,8 @@ void TStreamerInfo::BuildOld()
          offset += asize;
       }
 
-      if ( !wasCompiled && rules && rules->HasRuleWithSource( element->GetName() ) ) {
+      if ( !wasCompiled && rules && rules->HasRuleWithSource( element->GetName(), kTRUE ) ) {
+         
          if (allocClass == 0) {
             infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()));
             infoalloc->BuildCheck();
@@ -1554,7 +1564,7 @@ void TStreamerInfo::BuildOld()
 
          // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
          if (element->GetNewType()>0 /* intentionally not including base class for now */ 
-             && !rules->HasRuleWithTarget( element->GetName() ) ) 
+             && !rules->HasRuleWithTarget( element->GetName(), kTRUE ) ) 
          {
             TStreamerElement *copy = (TStreamerElement*)element->Clone();
             R__TObjArray_InsertBefore( fElements, copy, element );
@@ -3271,13 +3281,24 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
       Bool_t match = kFALSE;
       TStreamerElement *element;
       while ((element = (TStreamerElement*) next())) {
-         if ( rule->HasTarget( element->GetName() ) ) {
+         if ( rule->HasTarget( element->GetName() ) ) {            
             // If the rule targets an existing member but it is also a source,
             // we still need to insert the rule.
-            match = ! ((ROOT::TSchemaMatch*)rules)->HasRuleWithSource( element->GetName() );
-            // If the rule targets an existing member but it is also a source,
-            // we still need to insert the rule.
-            match = ! ((ROOT::TSchemaMatch*)rules)->HasRuleWithSource( element->GetName() );
+            match = ! ((ROOT::TSchemaMatch*)rules)->HasRuleWithSource( element->GetName(), kTRUE );
+            
+            // Check whether this is an 'attribute' rule.
+            if ( rule->GetAttributes()[0] != 0 ) {
+               TString attr( rule->GetAttributes() );
+               attr.ToLower();
+               if (attr.Contains("owner")) {
+                  if (attr.Contains("notowner")) {
+                     element->SetBit(TStreamerElement::kDoNotDelete);
+                  } else {
+                     element->ResetBit(TStreamerElement::kDoNotDelete);
+                  }
+               }
+            
+            }
             break;
          }
       }
@@ -3873,7 +3894,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       { 
          R__LOCKGUARD(gCINTMutex);
          Int_t nobjects = fElements->GetEntriesFast();
-         TObjArray shorten( *fElements );
+         TObjArray store( *fElements );
          TStreamerElement *el;
          for (Int_t i = 0; i < nobjects; i++) {
             el = (TStreamerElement*)fElements->UncheckedAt(i);
@@ -3884,7 +3905,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          fElements->Compress();
          R__b << fElements;
          R__ASSERT(!fElements->IsOwner());
-         *fElements = shorten;
+         *fElements = store;
       }
       R__b.ClassEnd(TStreamerInfo::Class());
       R__b.SetByteCount(R__c, kTRUE);

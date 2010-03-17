@@ -247,8 +247,11 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
    if (!gClassTable)
       new TClassTable;
 
-  // check if already in table, if so return
-   TClassRec *r = FindElement(cname, kTRUE);
+   // Only register the name without the default STL template arguments ...
+   std::string shortName( TClassEdit::ShortType(cname, TClassEdit::kDropStlDefault) );
+
+   // check if already in table, if so return
+   TClassRec *r = FindElement(shortName.c_str(), kTRUE);
    if (r->fName) {
       if ( strcmp(r->fInfo->name(),typeid(ROOT::TForNamespace).name())==0
            && strcmp(info.name(),typeid(ROOT::TForNamespace).name())==0 ) {
@@ -263,7 +266,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       return;
    }
 
-   r->fName = StrDup(cname);
+   r->fName = StrDup(shortName.c_str());
    r->fId   = id;
    r->fBits = pragmabits;
    r->fDict = dict;

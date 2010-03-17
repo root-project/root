@@ -17,7 +17,7 @@ tell the StreamerElement representing one of the pointers pointing to the object
 to never delete the object.  For example:
 
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-   TClass::AddRule("HepMC::GenVertex m_event options=NotOwner");
+   TClass::AddRule("HepMC::GenVertex m_event attributes=NotOwner");
 </pre>
 
 MakeProject now implements a move constructor for each classes.   For the implementation, we 'use' the 'copy constructor' until the C++ compilers properly support the official move constructor notation.   Implementing a move constructor avoid having to delete and reconstruct resource during a std::vector resize and avoid the double delete induced by using the default copy constructor.
@@ -28,7 +28,7 @@ tell the StreamerElement representing one of the pointers pointing to the object
 to never delete the object.  For example:
 
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-   TClass::AddRule("HepMC::GenVertex m_event options=NotOwner");
+   TClass::AddRule("HepMC::GenVertex m_event attributes=NotOwner");
 </pre>
 </li>
 <li>The handling of memory by the collection proxy has been improved in the case of a 

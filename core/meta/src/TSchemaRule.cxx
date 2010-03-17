@@ -68,8 +68,38 @@ TSchemaRule& TSchemaRule::operator = ( const TSchemaRule& rhs )
       fReadFuncPtr    = rhs.fReadFuncPtr;
       fReadRawFuncPtr = rhs.fReadRawFuncPtr;
       fRuleType       = rhs.fRuleType;
+      fAttributes     = rhs.fAttributes;
    }
    return *this;
+}
+
+//------------------------------------------------------------------------------
+Bool_t TSchemaRule::operator == ( const TSchemaRule& rhs )
+{
+   // Return true if the rule have the same effects.
+   
+   if( this != &rhs ) {
+      Bool_t result = ( fVersion == rhs.fVersion 
+                       && fChecksum == rhs.fChecksum
+                       && fSourceClass == rhs.fSourceClass
+                       && fTargetClass == rhs.fTargetClass
+                       && fSource == rhs.fSource
+                       && fTarget == rhs.fTarget
+                       && fInclude == rhs.fInclude
+                       && fCode == rhs.fCode
+                       && fEmbed == rhs.fEmbed
+                       && fRuleType == rhs.fRuleType
+                       && fAttributes == rhs.fAttributes );
+      if (result && 
+          ( (fReadRawFuncPtr != rhs.fReadRawFuncPtr && fReadRawFuncPtr != 0 && rhs.fReadRawFuncPtr != 0)
+           ||  (fReadFuncPtr != rhs.fReadFuncPtr && fReadFuncPtr != 0 && rhs.fReadFuncPtr != 0) ) )
+      {
+         result = kFALSE;
+      }
+
+      return result;
+   }
+   return kTRUE;
 }
 
 //------------------------------------------------------------------------------
@@ -79,24 +109,202 @@ void TSchemaRule::ls(Option_t *targetname) const
    // is typically much less verbose then Dump().
    
    TROOT::IndentLevel();
-   cout <<"Schema Evolution Rule: \n";
+   cout << "Schema Evolution Rule: ";
+   if (fRuleType==kReadRule) cout <<  "read ";
+   else if (fRuleType==kReadRawRule) cout << "readraw ";
+   cout << "\n";
+   TROOT::IncreaseDirLevel();
    TROOT::IndentLevel();
-   cout << "sourceClass=\"" << fSourceClass << "\" "
-   << "version=\"" << fVersion << "\" "
-   << "checksum=\"" << fChecksum << "\" ";
+   cout << "sourceClass=\"" << fSourceClass << "\" ";
+   if (fVersion.Length())  cout << "version=\"" << fVersion << "\" ";
+   if (fChecksum.Length()) cout << "checksum=\"" << fChecksum << "\" ";
    if (targetname && targetname[0]) cout << "targetClass=\"" << targetname << "\" ";
+   else cout << "targetClass\"" << fTargetClass << "\" ";
    cout << "\n";
    TROOT::IndentLevel();
    cout << "source=\"" << fSource << "\" ";
    cout << "target=\"" << fTarget << "\" ";
    cout << "\n";
-   TROOT::IndentLevel();
-   cout << "include=\"" << fInclude << "\" "
-   << "\n";
-   TROOT::IndentLevel();
-   cout << "code=\"" << fCode << "\" "
-   << "\n";
+   if (fInclude.Length()) {
+      TROOT::IndentLevel();
+      cout << "include=\"" << fInclude << "\" " << "\n";
+   }
+   if (fAttributes.Length()) {
+      TROOT::IndentLevel();
+      cout << "attributes=\"" << fAttributes << "\"" << "\n";
+   }
+   if (fCode.Length()) {
+      TROOT::IndentLevel();
+      cout << "code=\"{" << fCode << "}\" "
+      << "\n";
+   }
+   TROOT::DecreaseDirLevel();
 }
+
+//------------------------------------------------------------------------------
+void TSchemaRule::AsString(TString &out, const char *options) const
+{
+   // Add to the string 'out' the string representation of the rule.
+   // if options contains:
+   //  's' : add the short form of the rule is possible
+   //  'x' : add the xml form of the rule
+   
+   TString opt(options);
+   opt.ToLower();
+   Bool_t shortform = opt.Contains('s');
+   Bool_t xmlform = opt.Contains('x');
+   
+   TString end;
+   if (xmlform) {  
+      /* 
+       <read sourceClass="ClassA" version="[2]" targetClass="ClassA" source="int m_unit;" target="m_unit" >
+       <![CDATA[ { m_unit = 10*onfile.m_unit; } ]]>
+       </read>
+       */
+      shortform = kFALSE;
+      out += "<";
+      if (fRuleType==kReadRule) { out += "read "; end = "</read>"; }
+      else if (fRuleType==kReadRawRule) { out += "readraw "; end = "</readraw>"; }
+      else { out += "-- "; end = "-->"; }
+      
+   } else {
+      if (!shortform || fRuleType!=kReadRule) {
+         out += "type=";
+         if (fRuleType==kReadRule) out += "read ";
+         else if (fRuleType==kReadRawRule) out += "readraw ";
+         else out += " ";
+      }
+   }
+   if (!shortform || (fSourceClass != fTargetClass) ) {
+      out += "sourceClass=\"" + fSourceClass + "\" ";
+      out += "targetClass=\"" + fTargetClass + "\" ";
+   } else {
+      out += fSourceClass + " ";
+   }
+   if (shortform && fTarget == fSource) {
+      out += fSource + " ";
+   }
+   if (!shortform || (fVersion != "[1-]")) {
+      if (fVersion.Length())  out += "version=\""     + fVersion + "\" ";
+   }
+   if (fChecksum.Length()) out += "checksum=\""    + fChecksum + "\" ";
+   if (!shortform || fTarget != fSource) {
+      out += "source=\""      + fSource + "\" ";
+      out += "target=\""      + fTarget + "\" ";
+   }
+   if (fInclude.Length())  out += "include=\""     + fInclude + "\" ";
+   if (fAttributes.Length()) out += "attributes=\"" + fAttributes + "\" ";
+   if (xmlform) {
+      out += "> ";
+   }
+   if (xmlform) {
+      if (fCode.Length()) {
+         out += "\n<![CDATA[ { " + fCode + " ]]>\n ";
+      } else if (fReadFuncPtr) {
+         // Can we guess?
+         // out += "code=\" + nameof(fReadFuncPtr) + "\" ";
+      } else if (fReadRawFuncPtr) {
+         // Can we guess?
+         // out += "code=\" + nameof(fReadRawFuncPtr) + "\" ";      
+      }
+   } else {
+      if (fCode.Length()) {
+         out += "code=\"{" + fCode + "}\" ";
+      } else if (fReadFuncPtr) {
+         // Can we guess?
+         // out += "code=\" + nameof(fReadFuncPtr) + "\" ";
+      } else if (fReadRawFuncPtr) {
+         // Can we guess?
+         // out += "code=\" + nameof(fReadRawFuncPtr) + "\" ";      
+      }
+   }
+   if (xmlform) {
+      out += end;
+   }
+}
+
+//------------------------------------------------------------------------------
+void TSchemaRule::Clear( const char * /* option */)
+{
+   // Zero out this rule object.
+   
+   fVersion.Clear();
+   fChecksum.Clear();
+   fSourceClass.Clear();
+   fTarget.Clear();
+   fSource.Clear();
+   fInclude.Clear();
+   fCode.Clear();
+   fAttributes.Clear();
+   fReadRawFuncPtr = 0;
+   fReadFuncPtr = 0;
+   fRuleType = kNone;
+   delete fVersionVect;   fVersionVect = 0;
+   delete fChecksumVect;  fChecksumVect = 0;
+   delete fTargetVect;    fTargetVect = 0;
+   delete fSourceVect;    fSourceVect = 0;
+   delete fIncludeVect;   fIncludeVect = 0;
+} 
+
+//------------------------------------------------------------------------------
+Bool_t TSchemaRule::SetFromRule( const char *rule )
+{
+   // Set the content fot this object from the rule
+   // See TClass::AddRule for details on the syntax.
+   
+   //-----------------------------------------------------------------------
+   // Parse the rule and check it's validity
+   //-----------------------------------------------------------------------
+   std::map<std::string, std::string> rule_values;
+   
+   std::string error_string;
+   if( !ParseRule( rule, rule_values, error_string) ) {
+      Error("SetFromRule","The rule (%s) is invalid: %s",rule,error_string.c_str());
+      return kFALSE;
+   }
+   std::map<std::string, std::string>::const_iterator it1;
+   
+   it1 = rule_values.find( "type" );
+   if( it1 != rule_values.end() ) {
+      if (it1->second == "read" || it1->second == "Read") {
+         SetRuleType( TSchemaRule::kReadRule );
+      } else if (it1->second == "readraw" || it1->second == "ReadRaw") {
+         SetRuleType( TSchemaRule::kReadRawRule );
+      } else {
+         SetRuleType( TSchemaRule::kNone );
+      }         
+   } else {
+      // Default to read.
+      SetRuleType( TSchemaRule::kReadRule );
+   }
+   it1 = rule_values.find( "targetClass" );
+   if( it1 != rule_values.end() ) SetTargetClass( it1->second );
+   it1 = rule_values.find( "sourceClass" );
+   if( it1 != rule_values.end() ) SetSourceClass( it1->second );
+   it1 = rule_values.find( "target" );
+   if( it1 != rule_values.end() ) SetTarget( it1->second );
+   it1 = rule_values.find( "source" );
+   if( it1 != rule_values.end() ) SetSource( it1->second );
+   it1 = rule_values.find( "version" );
+   if( it1 != rule_values.end() ) SetVersion( it1->second );
+   it1 = rule_values.find( "checksum" );
+   if( it1 != rule_values.end() ) SetChecksum( it1->second );
+   it1 = rule_values.find( "embed" );
+   if( it1 != rule_values.end() ) SetEmbed( it1->second == "false" ? false : true );
+   it1 = rule_values.find( "include" );
+   if( it1 != rule_values.end() ) SetInclude( it1->second );
+   it1 = rule_values.find( "attributes" );
+   if( it1 != rule_values.end() ) SetAttributes( it1->second );
+   it1 = rule_values.find( "code" );
+   if( it1 != rule_values.end() ) SetCode( it1->second );
+   // if (code is functioname) {
+   // switch (ruleobj->GetRuleType() ) {
+   // case kRead: SetReadFunctionPointer(  )
+   // case kReadRewa: SetReadRawFunctionPointer( )
+   // }
+
+   return kTRUE;
+} 
 
 //------------------------------------------------------------------------------
 Bool_t TSchemaRule::SetVersion( const TString& version )
@@ -109,6 +317,15 @@ Bool_t TSchemaRule::SetVersion( const TString& version )
       fVersion = version;
    return ret;
 }
+
+//------------------------------------------------------------------------------
+const char *TSchemaRule::GetVersion() const
+{
+   // Get the version string.
+   
+   return fVersion;
+}
+
 
 //------------------------------------------------------------------------------
 Bool_t TSchemaRule::TestVersion( Int_t version ) const
@@ -163,22 +380,38 @@ Bool_t TSchemaRule::TestChecksum( UInt_t checksum ) const
 void TSchemaRule::SetSourceClass( const TString& classname )
 {
    // Set the source class of this rule (i.e. the onfile class).
-
+   
    fSourceClass = classname;
 }
 
 //------------------------------------------------------------------------------
-TString TSchemaRule::GetSourceClass() const
+const char *TSchemaRule::GetSourceClass() const
 {
-   // Set the source class of this rule (i.e. the onfile class).
-
+   // Get the source class of this rule (i.e. the onfile class).
+   
    return fSourceClass;
+}
+
+//------------------------------------------------------------------------------
+void TSchemaRule::SetTargetClass( const TString& classname )
+{
+   // Set the target class of this rule (i.e. the in memory class).
+   
+   fTargetClass = classname;
+}
+
+//------------------------------------------------------------------------------
+const char *TSchemaRule::GetTargetClass() const
+{
+   // Get the targte class of this rule (i.e. the in memory class).
+   
+   return fTargetClass;
 }
 
 //------------------------------------------------------------------------------
 void TSchemaRule::SetTarget( const TString& target )
 {
-   // Set the target class of this rule (i.e. the in memory class).
+   // Set the target member of this rule (i.e. the in memory data member).
 
    fTarget = target;
 
@@ -188,22 +421,32 @@ void TSchemaRule::SetTarget( const TString& target )
       return;
    }
 
-   if( !fTargetVect )
+   if( !fTargetVect ) {
       fTargetVect = new TObjArray();
-
+      fTargetVect->SetOwner();
+   }
    ProcessList( fTargetVect, target );
+}
+
+//------------------------------------------------------------------------------
+const char *TSchemaRule::GetTargetString() const
+{
+   // Get the target data members of this rule as a simple string (i.e. the in memory data member).
+   
+   return fTarget;
 }
 
 //------------------------------------------------------------------------------
 const TObjArray*  TSchemaRule::GetTarget() const
 {
-   // Get the target class of this rule (i.e. the in memory class).
+   // Get the target data members of this rule (i.e. the in memory data member).
 
    if( fTarget == "" )
       return 0;
 
    if( !fTargetVect ) {
       fTargetVect = new TObjArray();
+      fTargetVect->SetOwner();
       ProcessList( fTargetVect, fTarget );
    }
 
@@ -224,8 +467,10 @@ void TSchemaRule::SetSource( const TString& source )
       return;
    }
 
-   if( !fSourceVect )
+   if( !fSourceVect ) {
       fSourceVect = new TObjArray();
+      fSourceVect->SetOwner();
+   }
 
    ProcessDeclaration( fSourceVect, source );
 }
@@ -241,6 +486,7 @@ const TObjArray* TSchemaRule::GetSource() const
 
    if( !fSourceVect ) {
       fSourceVect = new TObjArray();
+      fSourceVect->SetOwner();
       ProcessDeclaration( fSourceVect, fSource );
    }
    return fSourceVect;
@@ -260,8 +506,10 @@ void TSchemaRule::SetInclude( const TString& incl )
       return;
    }
 
-   if( !fIncludeVect )
+   if( !fIncludeVect ) {
       fIncludeVect = new TObjArray();
+      fIncludeVect->SetOwner();
+   }
 
    ProcessList( fIncludeVect, incl );
 }
@@ -277,6 +525,7 @@ const TObjArray* TSchemaRule::GetInclude() const
 
    if( !fIncludeVect ) {
       fIncludeVect = new TObjArray();
+      fIncludeVect->SetOwner();
       ProcessList( fIncludeVect, fInclude );
    }
 
@@ -316,11 +565,27 @@ void TSchemaRule::SetCode( const TString& code )
 }
 
 //------------------------------------------------------------------------------
-TString TSchemaRule::GetCode() const
+const char *TSchemaRule::GetCode() const
 {
    // Get the source code of this rule.
    
    return fCode;
+}
+
+//------------------------------------------------------------------------------
+void TSchemaRule::SetAttributes( const TString& attributes )
+{
+   // Set the attributes code of this rule.
+   
+   fAttributes = attributes;
+}
+
+//------------------------------------------------------------------------------
+const char *TSchemaRule::GetAttributes() const
+{
+   // Get the attributes code of this rule.
+   
+   return fAttributes;
 }
 
 //------------------------------------------------------------------------------
@@ -403,7 +668,7 @@ Bool_t TSchemaRule::IsAliasRule() const
 {
    // Return kTRUE if the rule is a strict renaming of one of the data member of the class.
 
-   return fSourceClass != "" && (fVersion != "" || fChecksum != "") && fTarget == "" && fSource == "" && fInclude == "" && fCode == "";
+   return fSourceClass != "" && (fVersion != "" || fChecksum != "") && fTarget == "" && fSource == "" && fInclude == "" && fCode == "" && fAttributes == "";
 }
 
 //------------------------------------------------------------------------------
@@ -411,7 +676,7 @@ Bool_t TSchemaRule::IsRenameRule() const
 {
    // Return kTRUE if the rule is a strict renaming of the class to a new name.
 
-   return fSourceClass != "" && (fVersion != "" || fChecksum != "") && fTarget != "" && fSource != "" && fInclude == "" && fCode == "";
+   return fSourceClass != "" && (fVersion != "" || fChecksum != "") && fTarget != "" && fSource != "" && fInclude == "" && fCode == "" && fAttributes == "";
 }
 
 //------------------------------------------------------------------------------
@@ -430,7 +695,7 @@ Bool_t TSchemaRule::Conflicts( const TSchemaRule* rule ) const
    //---------------------------------------------------------------------------
    // If the rules have different sources then the don't conflict
    //---------------------------------------------------------------------------
-   if( GetSourceClass() != rule->GetSourceClass() )
+   if( fSourceClass != rule->fSourceClass )
       return kFALSE;
 
    //---------------------------------------------------------------------------

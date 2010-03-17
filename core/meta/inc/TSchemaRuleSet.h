@@ -22,20 +22,26 @@ namespace ROOT {
          virtual ~TSchemaMatch() {};
          const TSchemaRule* GetRuleWithSource( const TString& name ) const;
          const TSchemaRule* GetRuleWithTarget( const TString& name ) const;
-               Bool_t       HasRuleWithSource( const TString& name ) const;
-               Bool_t       HasRuleWithTarget( const TString& name ) const;
+               Bool_t       HasRuleWithSource( const TString& name, Bool_t needingAlloc ) const;
+               Bool_t       HasRuleWithTarget( const TString& name, Bool_t willset ) const;
       ClassDef(TSchemaMatch,0);
    };
 
    class TSchemaRuleSet: public TObject
    {
       public:
+      
+         enum EConsistencyCheck {
+            kNoCheck       = 0,
+            kCheckAll      = 1, 
+            kCheckConflict = 2
+         };
 
          TSchemaRuleSet();
          virtual ~TSchemaRuleSet();
 
-         Bool_t              AddRule( TSchemaRule* rule, Bool_t checkConsistency = kTRUE );
-         Bool_t              AddRules( TSchemaRuleSet* rules, Bool_t checkConsistency = kTRUE );
+         Bool_t              AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency = kCheckAll );
+         Bool_t              AddRules( TSchemaRuleSet* rules, EConsistencyCheck checkConsistency = kCheckAll );
          Bool_t              HasRuleWithSourceClass( const TString &source) const;
          const TObjArray*    FindRules( const TString &source ) const;
          const TSchemaMatch* FindRules( const TString &source, Int_t version ) const;
@@ -52,6 +58,7 @@ namespace ROOT {
          void                SetClass( TClass* cls );
 
          void                ls(Option_t *option="") const;
+         void                AsString(TString &out) const;
 
          ClassDef( TSchemaRuleSet, 1 )
 

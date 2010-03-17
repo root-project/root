@@ -36,15 +36,24 @@ namespace ROOT {
 
          TSchemaRule( const TSchemaRule& rhs );
          TSchemaRule& operator = ( const TSchemaRule& rhs );
+         Bool_t operator == ( const TSchemaRule& rhs );
+      
+         
+         void             Clear(Option_t * /*option*/ ="");
+         Bool_t           SetFromRule( const char *rule );
 
+         const char      *GetVersion( ) const;
          Bool_t           SetVersion( const TString& version );
          Bool_t           TestVersion( Int_t version ) const;
          Bool_t           SetChecksum( const TString& checksum );
          Bool_t           TestChecksum( UInt_t checksum ) const;
          void             SetSourceClass( const TString& classname );
-         TString          GetSourceClass() const;
+         const char      *GetSourceClass() const;
+         void             SetTargetClass( const TString& classname );
+         const char      *GetTargetClass() const;
          void             SetTarget( const TString& target );
          const TObjArray* GetTarget() const;
+         const char      *GetTargetString() const;
          void             SetSource( const TString& source );
          const TObjArray* GetSource() const;
          void             SetEmbed( Bool_t embed );
@@ -53,8 +62,11 @@ namespace ROOT {
          Bool_t           IsRenameRule() const;
          Bool_t           IsValid() const;
          void             SetCode( const TString& code );
-         TString          GetCode() const;
+         const char      *GetCode() const;
+         void             SetAttributes( const TString& attributes );
+         const char      *GetAttributes() const;
          Bool_t           HasTarget( const TString& target ) const;
+
          Bool_t           HasSource( const TString& source ) const;
          void             SetReadFunctionPointer( ReadFuncPtr_t ptr );
          ReadFuncPtr_t    GetReadFunctionPointer() const;
@@ -66,8 +78,8 @@ namespace ROOT {
          RuleType_t       GetRuleType() const;
          Bool_t           Conflicts( const TSchemaRule* rule ) const;
 
+         void             AsString( TString &out, const char *options = "" ) const;
          void             ls(Option_t *option="") const;
-          // Bool_t           GenerateFor( const TStreamerInfo *info );
 
          ClassDef( TSchemaRule, 1 );
 
@@ -82,7 +94,8 @@ namespace ROOT {
          mutable std::vector<std::pair<Int_t, Int_t> >* fVersionVect;    //! Source version vector (for searching purposes)
          TString                      fChecksum;       //  Source checksum string
          mutable std::vector<UInt_t>* fChecksumVect;   //! Source checksum vector (for searching purposes)
-         TString                      fSourceClass;    //  Source clss
+         TString                      fSourceClass;    //  Source class
+         TString                      fTargetClass;    //  Target class, this is the owner of this rule object.
          TString                      fTarget;         //  Target data mamber string
          mutable TObjArray*           fTargetVect;     //! Target data member vector (for searching purposes)
          TString                      fSource;         //  Source data member string
@@ -94,6 +107,7 @@ namespace ROOT {
          ReadFuncPtr_t                fReadFuncPtr;    //! Conversion function pointer for read rule
          ReadRawFuncPtr_t             fReadRawFuncPtr; //! Conversion function pointer for readraw rule
          RuleType_t                   fRuleType;       //  Type of the rule
+         TString                      fAttributes;     //  Attributes to be applied to the member (like Owner/NotOwner)
    };
 } // End of namespace ROOT
 

@@ -266,6 +266,7 @@ namespace ROOT {
       for( it = vect.begin(); it != vect.end(); ++it ) {
          rule = new TSchemaRule();
          rule->SetTarget( it->fTarget );
+         rule->SetTargetClass( fClass->GetName() );
          rule->SetSourceClass( it->fSourceClass );
          rule->SetSource( it->fSource );
          rule->SetCode( it->fCode );
@@ -273,6 +274,7 @@ namespace ROOT {
          rule->SetChecksum( it->fChecksum );
          rule->SetEmbed( it->fEmbed );
          rule->SetInclude( it->fInclude );
+         rule->SetAttributes( it->fAttributes );
 
          if( ProcessReadRules ) {
             rule->SetRuleType( TSchemaRule::kReadRule );

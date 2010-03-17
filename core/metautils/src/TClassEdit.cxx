@@ -302,11 +302,13 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
          if (done) continue;
       }
 
-      kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$' && c[0]!='[' && c[0]!=']' && c[0]!='-');
-
+      kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$' && c[0]!='[' && c[0]!=']' && c[0]!='-' && c[0]!='@');
+      // '@' is special character used only the artifical class name used by ROOT to implement the
+      // I/O customization rules that requires caching of the input data.
+      
       if (*c == '<')   lev++;
       if (lev==0 && !isalnum(*c)) {
-         if (!strchr("*:_$ []-",*c)) break;
+         if (!strchr("*:_$ []-@",*c)) break;
       }
       if (c[0]=='>' && result.size() && result[result.size()-1]=='>') result+=" ";
 
