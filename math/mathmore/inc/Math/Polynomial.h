@@ -35,9 +35,9 @@
 
 #include "Math/ParamFunction.h"
 
-#ifdef _WIN32
-#pragma warning(disable : 4250)
-#endif
+// #ifdef _WIN32
+// #pragma warning(disable : 4250)
+// #endif
 
 namespace ROOT {
 namespace Math {
@@ -61,7 +61,7 @@ namespace Math {
   */
 
 class Polynomial : public ParamFunction<IParamGradFunction>,  
-                   public IGradientFunctionOneDim  
+                   public IGradientOneDim  
 {
 
    typedef  ParamFunction<IParamGradFunction> ParFunc; 
@@ -135,15 +135,20 @@ public:
 
    IGenFunction * Clone() const; 
 
+   /** 
+       Optimized method to evaluate at the same time the function value and derivative at a point x.
+       Implement the interface specified bby ROOT::Math::IGradientOneDim.
+       In the case of polynomial there is no advantage to compute both at the same time
+   */
+   void FdF (double x, double & f, double & df) const {
+      f = (*this)(x);
+      df = Derivative(x); 
+   } 
+
 
 private: 
 
    double DoEvalPar ( double x, const double * p ) const ; 
-
-   // might need to re-implement this since inheritance is not virtual
-   double DoEval(double x) const { 
-      return DoEvalPar(x, Parameters() );
-   }
 
    double DoDerivative (double x) const ; 
 
