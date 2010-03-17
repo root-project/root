@@ -29,6 +29,9 @@
      (cf $ROOTSYS/tutorials/image/galaxy_image.C) 
 <li> <tt>GetWidth()</tt> and <tt>GetHeight()</tt> returned the size of the
      scaled image (if it exist) instead of the real size of the image.
+<li> Initialize the <tt>Visual</tt> in <tt>TASImage::ReadImage</tt>. This fix
+     a long standing problem with THtml: Without this fix all the embeded
+     macros generating GUI output did not work in THtml.
 </ul>
 
 <h3>Graphics Primitives</h3>
