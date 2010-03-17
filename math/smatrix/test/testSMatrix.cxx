@@ -1394,7 +1394,7 @@ int test23() {
 
 
 
-int main() {
+int testSMatrix() {
 
   int itest;
   TEST(1);
@@ -1423,4 +1423,8 @@ int main() {
 
 
   return 0;
+}
+
+int main() { 
+   return  testSMatrix();
 }

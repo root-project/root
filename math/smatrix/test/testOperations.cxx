@@ -174,7 +174,7 @@ int test_smatrix_op() {
 
   //double totTime = t_veq + t_meq + t_vad + t_mad + t_dot + t_mv + t_gmv + t_mm + t_prd + t_inv + t_vsc + t_msc + t_ama + t_tra; 
   std::cout << "Total Time = " << totTime1 << "  (s) " << " cpu " <<  totTime2 << "  (s) " << std::endl; 
-  std::cout << " r1 = " << r1 << " r2 = " << r2 << std::endl; 
+  std::cerr << "SMatrix:     r1 = " << r1 << " r2 = " << r2 << std::endl; 
 
   return 0;
 }
@@ -276,7 +276,7 @@ int test_smatrix_sym_op() {
 
   //double totTime = t_meq + t_mv + t_gmv + t_mm + t_prd + t_inv + t_mad + t_msc + t_ama; 
   std::cout << "Total Time = " << totTime1 << "  (s)  -  cpu " <<  totTime2 << "  (s) " << std::endl; 
-  std::cout << " r1 = " << r1 << std::endl; 
+  std::cerr << "SMatrixSym:  r1 = " << r1 << std::endl; 
 
   return 0;
 }
@@ -390,7 +390,7 @@ int test_tmatrix_op() {
 
   //double totTime = t_veq + t_meq + t_vad + t_mad + t_dot + t_mv + t_gmv + t_mm + t_prd + t_inv + t_inv2 + t_vsc + t_msc + t_ama + t_tra; 
   std::cout << "Total Time = " << totTime1 << "  (s)  -  cpu " <<  totTime2 << "  (s) " << std::endl; 
-  std::cout << " r1 = " << r1 << " r2 = " << r2 << std::endl; 
+  std::cerr << "TMatrix:     r1 = " << r1 << " r2 = " << r2 << std::endl; 
 
   return 0;
 
@@ -485,7 +485,7 @@ int test_tmatrix_sym_op() {
 
   //double totTime = t_meq + t_mv + t_gmv + t_mm + t_prd + t_inv + t_mad + t_msc + t_ama; 
   std::cout << "Total Time = " << totTime1 << "  (s)  -  cpu " <<  totTime2 << "  (s) " << std::endl; 
-  std::cout << " r1 = " << r1 << std::endl; 
+  std::cerr << "TMatrixSym:  r1 = " << r1 << std::endl; 
 
   return 0;
 }
@@ -596,7 +596,7 @@ int test_hepmatrix_op() {
   //  tr.dump();
 
   std::cout << "Total Time = " << totTime1 << "  (s)  -  cpu " <<  totTime2 << "  (s) " << std::endl; 
-  std::cout << " r1 = " << r1 << " r2 = " << r2 << std::endl; 
+  std::cerr << "HepMatrix:   r1 = " << r1 << " r2 = " << r2 << std::endl; 
 
   return 0;
 }
@@ -685,7 +685,7 @@ int test_hepmatrix_sym_op() {
   //tr.dump();
 
   std::cout << "Total Time = " << totTime1 << "  (s)  -  cpu " <<  totTime2 << "  (s) " << std::endl; 
-  std::cout << " r1 = " << r1 << std::endl; 
+  std::cerr << "HepMatrixSym: r1 = " << r1 << std::endl; 
 
   return 0;
 }
@@ -759,7 +759,15 @@ void ROOT::Math::test::reportTime(std::string s, double time) {
 }
 #endif
 
+int testOperations() { 
 
+  NLOOP = 1000*NLOOP_MIN 
+  initValues();
+
+  TEST(5)
+
+   return 0;   
+}
 
 
 int main(int argc , char *argv[] ) { 
@@ -793,12 +801,15 @@ int main(int argc , char *argv[] ) {
 #endif
 
 #ifndef TEST_ALL_MATRIX_SIZES
-  NLOOP = 1000*NLOOP_MIN 
-  initValues();
+//   NLOOP = 1000*NLOOP_MIN 
+//   initValues();
 
-  TEST(5)
+//   TEST(5)
 //   NLOOP = 50*NLOOP_MIN;
 //   TEST(30);
+
+  return testOperations();
+
 #else
   NLOOP = 5000*NLOOP_MIN; 
   initValues();

@@ -159,7 +159,7 @@ int test_smatrix_kalman() {
   }
   //tr.dump();
 
-  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  std::cerr << "SMatrix:    x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
 
   return 0;
 }
@@ -310,7 +310,7 @@ int test_smatrix_sym_kalman() {
   }
   //tr.dump();
 
-  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  std::cerr << "SMatrixSym:  x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
 
   return 0;
 }
@@ -437,7 +437,7 @@ int test_tmatrix_kalman() {
       //   }
   }  
   //tr.dump();
-  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  std::cerr << "TMatrix:     x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
   
   return 0;
 }
@@ -538,7 +538,7 @@ int test_clhep_kalman() {
       //   }
   }  
   //tr.dump();
-  std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
+  std::cerr << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
   
   return 0;
 }
@@ -546,7 +546,7 @@ int test_clhep_kalman() {
 
 
 
-int main() { 
+int testKalman() { 
 
 #ifdef TEST_SYM
   test_smatrix_sym_kalman();
@@ -558,5 +558,11 @@ int main() {
   test_clhep_kalman();
 #endif
 
+  return 0; 
 
+
+}
+
+int main() { 
+   return testKalman(); 
 }
