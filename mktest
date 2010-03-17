@@ -3,6 +3,9 @@
 # Desc: Add test directories, copies Makefiles and update CVS repository
 # Args: $1 -> dest dir
 
+thisscript=$0
+scriptdir=`dirname $0`
+
 printUSAGE() { echo "Usage: mktest [path]"  ;
 	       echo "  Where path is the directory path for the test to be added"; 
 	       echo "";
@@ -24,7 +27,7 @@ r=`echo $1 | grep '/'`
 	if [ "$r" == "$1" ]; then 
 		
 		if [ ! -d "$PARENT_DIR" ] ; then
-			mktest $PARENT_DIR
+			$thisscript $PARENT_DIR
 		fi
 		
 	fi
@@ -34,9 +37,9 @@ mkdir $1
 svn add $1
 
 #Copy Makefile.template to the new test directory
-cp scripts/Makefile.template $1/Makefile
-svn propset svn:ignore -F scripts/cvsignore.template $1
-cp scripts/rootrc.template $1/.rootrc
+cp $scriptdir/scripts/Makefile.template $1/Makefile
+svn propset svn:ignore -F $scriptdir/scripts/cvsignore.template $1
+cp $scriptdir/scripts/rootrc.template $1/.rootrc
 
 svn add $1/Makefile $1/.rootrc
 

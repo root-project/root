@@ -3,7 +3,9 @@
 # Desc: Updates the Makefile
 # Args: $1 -> test directory
 #       $2 -> test Name
-#	    
+#
+
+scriptdir=`dirname $0`	    
 
 printUSAGE() { 
 		echo "" ;
@@ -32,17 +34,18 @@ printALREADY_EXIST() {
 		     }
 
 printERROR() { echo "ERROR: $@." >&2 ;  }
+printWarning() { echo "Warning: $@." >&2 ;  }
 
 # check whether sufficient args are given
 
-check_target=`grep -F " $testname " $dir/Makefile`
+check_target=`grep -F " $testname " $dir/Makefile  2>/dev/null`
 
 if [ "$check_target" != "" ]; then
 	printALREADY_EXIST $testname $dir;
 fi
 
 
-check_target2=`grep "^[[:space:]]*$testname[[:space:]]*:" $dir/Makefile`
+check_target2=`grep "^[[:space:]]*$testname[[:space:]]*:" $dir/Makefile 2>/dev/null`
 
 if [ "$check_target2" != "" ]; then
 	printALREADY_EXIST $testname $dir;
@@ -50,8 +53,8 @@ fi
 
 
 if [ ! -d "$dir" ] ; then
-	printERROR "The source $dir is not a directory, or does not exist"
-	echo "use 'mktest $dir' to add test directory"
+	printWarning "The source $dir is not a directory, or does not exist"
+	echo "use 'mktest $dir' to add test directory by selecting 1."
 	
 	#mktest $dir
 	selection=
@@ -63,7 +66,7 @@ if [ ! -d "$dir" ] ; then
 	    read selection
 	    echo ""
 	    case $selection in
-	        1 ) ./mktest $dir ; ./addtest $dir $testname; exit 1;;
+	        1 ) $scriptdir/mktest $dir ; exit 1; $scriptdir/addtest $dir $testname; exit 1;;
 	        0 ) exit ;;
 	        * ) echo "Please enter 1 or 0"
 	    esac
