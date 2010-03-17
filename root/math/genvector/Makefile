@@ -59,16 +59,23 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-
+#this suppress check in log file
+coordinates3D.log: $(ROOT_LOC)/math/genvector/test/coordinates3D_cxx.$(DllSuf)
 
 coordinates3D: coordinates3D.log
 	$(TestDiff)
 
+coordinates4D.log: $(ROOT_LOC)/math/genvector/test/coordinates4D_cxx.$(DllSuf)
+
 coordinates4D: coordinates4D.log
 	$(TestDiff)
 
+testGenVector.log: $(ROOT_LOC)/math/genvector/test/testGenVector_cxx.$(DllSuf)
+
 testGenVector: testGenVector.log
 	$(TestDiff)
+
+rotationApplication.log: $(ROOT_LOC)/math/genvector/test/rotationApplication_cxx.$(DllSuf)
 
 rotationApplication: rotationApplication.log
 	$(TestDiff)
