@@ -900,6 +900,9 @@ class genDictionary(object) :
       if attrs.has_key( 'include' ):
         sc += '  rule->fInclude     = "%s";\n' % (attrs['include'],)
 
+      if attrs.has_key( 'attributes' ):
+        sc += '  rule->fAttributes     = "%s";\n' % (attrs['attributes'],)
+
     return sc
 #---------------------------------------------------------------------------------
   def processIOAutoVariables( self, className, mappedName, source, target, memTypes ):
@@ -993,7 +996,7 @@ class genDictionary(object) :
     i = 0;
     sc = ''
     for rule in rules:
-      if rule.has_key( 'code' ) and rule['code'] != '':
+      if rule.has_key( 'code' ) and rule['code'].strip('\n').strip(' ') != '':
         funcname = 'read_%s_%d' % (clt, i)
 
         #--------------------------------------------------------------------------
@@ -1060,7 +1063,7 @@ class genDictionary(object) :
 #---------------------------------------------------------------------------------
   def removeBrokenIoRules( self, cl, rules, members ):
     for rule in rules:
-      if rule.has_key( 'target'):
+      if rule['attrs'].has_key( 'target' ):
         targets = [target.strip() for target in rule['attrs']['target'].split(';')]
         ok = True
         for t in targets:
@@ -1113,9 +1116,9 @@ class genDictionary(object) :
     # Fill the different streams sc: constructor, ss: stub functions
     sc = ''
 
-    #-----------------------------------------------------------------------------
-    # Get the data members infor and write down the schema evolution functions
-    #-----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    # Get the data members information and write down the schema evolution functions
+    #-------------------------------------------------------------------------------
     memberTypeMap = self.createTypeMap( members )
     if ioReadRules:
       self.removeBrokenIoRules( cls, ioReadRules, memberTypeMap );
