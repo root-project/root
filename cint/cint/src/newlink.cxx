@@ -12010,9 +12010,11 @@ void G__specify_link(int link_stub)
                          G__struct.rootflag[t] |= G__HASVERSION;
                          G__struct.rootspecial[t]->version = rfVersionNumber;
                       }
+#if !defined(G__OLDIMPLEMENTATION1955) && defined(G__ROOT)
                       if (G__NOLINK>G__nestedtypedef) {
                          G__linknestedtypedef(t, globalcomp);
                       }
+#endif
                    } // enum or not
                    break;
                 } // is within linked parent
