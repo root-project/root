@@ -486,7 +486,7 @@ int test12() {
   //int ifail2 = 0; 
   SMatrix<double,2,2,MatRepSym<double,2> > Sinv1 = S.Inverse (ifail1);  
   //SMatrix<double,2,2,MatRepSym<double,2> > Sinv2 = S.Sinverse(ifail2);
-  std::cout << "Inverse:  S-1 " <<  Sinv1 << "\nifail=" << ifail1 << std::endl;
+  //std::cout << "Inverse:  S-1 " <<  Sinv1 << "\nifail=" << ifail1 << std::endl;
   //std::cout << "Sinverse: S-1"  << Sinv2 << "\nifail=" << ifail2 << std::endl;
 
   SMatrix<double,2> IS1 = S*Sinv1;
@@ -506,21 +506,21 @@ int test12() {
   // S2 -= M1*Transpose(M2);  // this should fails to compile
   SMatrix<double,2 > mS2(S2);  
   mS2 -= M1*Transpose(M2);
-  std::cout << "S2=S-M1*M2T\n" << mS2 << std::endl;
+  //std::cout << "S2=S-M1*M2T\n" << mS2 << std::endl;
   iret |= compare( mS2(0,1), S(0,1)-1 ); 
   mS2 += M1*Transpose(M2); 
   iret |= compare( mS2(0,1), S(0,1) ); 
  
-  std::cout << "S2+=M1*M2T\n" << mS2 << std::endl;
+  //std::cout << "S2+=M1*M2T\n" << mS2 << std::endl;
 
 
   SMatrix<float,100,100,MatRepSym<float,100> >  mSym; 
   SMatrix<float,100 >  m; 
-  std::cout << " Symmetric matrix size: " << sizeof(mSym) << std::endl; 
-  std::cout << " Normal    matrix size: " << sizeof( m  ) << std::endl; 
+  //std::cout << " Symmetric matrix size: " << sizeof(mSym) << std::endl; 
+  //std::cout << " Normal    matrix size: " << sizeof( m  ) << std::endl; 
 
   SMatrix<float,100,100,MatRepSym<float,100> >  mSym2; 
-  std::cout << " Symmetric matrix size: " << sizeof(mSym2) << std::endl; 
+  //std::cout << " Symmetric matrix size: " << sizeof(mSym2) << std::endl; 
 
 
   return iret; 
