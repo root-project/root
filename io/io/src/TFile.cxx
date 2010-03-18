@@ -2194,6 +2194,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    TIter next(list);
    TList extrainfos;
    while ((info = (TStreamerInfo*)next())) {
+      if (info->IsA() != TStreamerInfo::Class()) {
+         continue;
+      }
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->GetClassInfo()) continue; // skip known classes
@@ -2215,12 +2218,18 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    next.Reset();
    Int_t ngener = 0;
    while ((info = (TStreamerInfo*)next())) {
+      if (info->IsA() != TStreamerInfo::Class()) {
+         continue;
+      }
       if (info->GetClassVersion()==-4) continue; // Skip outer level namespace
       TIter subnext(list);
       TStreamerInfo *subinfo;
       TList subClasses;
       Int_t len = strlen(info->GetName());
       while ((subinfo = (TStreamerInfo*)subnext())) {
+         if (subinfo->IsA() != TStreamerInfo::Class()) {
+            continue;
+         }
          if (strncmp(info->GetName(),subinfo->GetName(),len)==0) {
             // The 'sub' StreamerInfo start with the main StreamerInfo name,
             // it subinfo is likely to be a nested class.
@@ -2287,6 +2296,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    next.Reset();
    while ((info = (TStreamerInfo*)next())) {
+      if (info->IsA() != TStreamerInfo::Class()) {
+         continue;
+      }
       if (TClassEdit::IsSTLCont(info->GetName())) {
          std::vector<std::string> inside;
          int nestedLoc;
@@ -2407,7 +2419,8 @@ void TFile::ReadStreamerInfo()
          info = (TStreamerInfo*)lnk->GetObject();
 
          if (info->IsA() != TStreamerInfo::Class()) {
-            if (mode==1) {
+            TObject *obj = lnk->GetObject();
+            if (mode==1 && strcmp(obj->GetName(),"listOfRules")!=0) {
                Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
             }
             lnk = lnk->Next();
