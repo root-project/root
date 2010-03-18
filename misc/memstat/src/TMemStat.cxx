@@ -20,7 +20,7 @@ ClassImp(TMemStat)
 using namespace std;
 using namespace memstat;
 
-_INIT_TOP_STECK;
+_INIT_TOP_STACK;
 
 //______________________________________________________________________________
 TMemStat::TMemStat(Option_t* option): fIsActive(kFALSE)
@@ -35,7 +35,7 @@ TMemStat::TMemStat(Option_t* option): fIsActive(kFALSE)
    // Note: Currently YAMS uses a hard-coded output file name (for writing) = "memstat.root";
 
    // It marks the highest used stack address.
-   _GET_TO_STECK;
+   _GET_CALLER_FRAME_ADDR;
 
    //preserve context. When exiting will restore the current directory
    TDirectory::TContext context(gDirectory);

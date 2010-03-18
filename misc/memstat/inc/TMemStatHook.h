@@ -26,7 +26,8 @@ typedef void (*zoneFreeHookFunc_t)(void* ptr);
 
 class TMemStatHook {
 public:
-   //
+#if !defined(__APPLE__)
+  //
    // Memory management HOOK functions
    //
    typedef void*(*MallocHookFunc_t)(size_t size, const void *caller);
@@ -37,7 +38,7 @@ public:
    static FreeHookFunc_t   GetFreeHook();           // free function getter
    static void SetMallocHook(MallocHookFunc_t p);   // malloc function setter
    static void SetFreeHook(FreeHookFunc_t p);       // free function setter
-#if defined(__APPLE__)
+#else
    //
    // Public methods for Mac OS X
    //

@@ -69,8 +69,10 @@ namespace memstat {
       }
 
    protected:
+#if !defined(__APPLE__)      
       TMemStatHook::MallocHookFunc_t fPreviousMallocHook;    //!old malloc function
       TMemStatHook::FreeHookFunc_t fPreviousFreeHook;        //!old free function
+#endif      
       void Init();
       void AddPointer(void *ptr, Int_t size);    //add pointer to the table
       static void *AllocHook(size_t size, const void* /*caller*/);

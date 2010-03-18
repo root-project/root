@@ -37,8 +37,10 @@ TMemStatMng* TMemStatMng::fgInstance = NULL;
 
 TMemStatMng::TMemStatMng():
    TObject(),
+#if !defined(__APPLE__)   
    fPreviousMallocHook(TMemStatHook::GetMallocHook()),
    fPreviousFreeHook(TMemStatHook::GetFreeHook()),
+#endif
    fDumpTree(NULL),
    fUseGNUBuiltinBacktrace(kFALSE),
    fBeginTime(0),

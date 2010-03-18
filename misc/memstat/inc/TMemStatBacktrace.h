@@ -11,8 +11,8 @@
 #ifndef ROOT_TMemStatBacktrace
 #define ROOT_TMemStatBacktrace
 
-#define _INIT_TOP_STECK extern void *g_global_stack_end;
-#define _GET_TO_STECK g_global_stack_end = __builtin_frame_address(1);
+#define _INIT_TOP_STACK extern void *g_global_stack_end;
+#define _GET_CALLER_FRAME_ADDR g_global_stack_end = __builtin_frame_address(1);
 
 // ROOT
 #include "Rtypes.h"
