@@ -347,6 +347,9 @@ void TTreeCloner::CopyStreamerInfos()
    TIter next(l);
    TStreamerInfo *oldInfo;
    while ( (oldInfo = (TStreamerInfo*)next()) ) {
+      if (oldInfo->IsA() != TStreamerInfo::Class()) {
+         continue;
+      }
       TStreamerInfo *curInfo = 0;
       TClass *cl = TClass::GetClass(oldInfo->GetName());
 

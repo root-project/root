@@ -2138,6 +2138,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    TIter next(list);
    Int_t ngener = 0;
    while ((info = (TStreamerInfo*)next())) {
+      if (info->IsA() != TStreamerInfo::Class()) {
+         continue;
+      }
       fprintf(stdout,"RUNNING: %s\n",info->GetName());
       TIter subnext(list);
       TStreamerInfo *subinfo;
@@ -2206,6 +2209,9 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    next.Reset();
    while ((info = (TStreamerInfo*)next())) {
+      if (info->IsA() != TStreamerInfo::Class()) {
+         continue;
+      }
       if (TClassEdit::IsSTLCont(info->GetName())) {
          std::vector<std::string> inside;
          int nestedLoc;
@@ -2323,7 +2329,8 @@ void TFile::ReadStreamerInfo()
          info = (TStreamerInfo*)lnk->GetObject();
 
          if (info->IsA() != TStreamerInfo::Class()) {
-            if (mode==1) {
+            TObject *obj = lnk->GetObject();
+            if (mode==1 && strcmp(obj->GetName(),"listOfRules")!=0) {
                Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
             }
             lnk = lnk->Next();
