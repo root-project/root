@@ -712,5 +712,8 @@ int testGenVector() {
 }
 
 int main() { 
-   return testGenVector();
+   int ret = testGenVector();
+   if (ret)  std::cerr << "test FAILED !!! " << std::endl; 
+   else   std::cout << "test OK " << std::endl;
+   return ret;
 }

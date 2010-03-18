@@ -71,6 +71,7 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
                 << "   (Allowed discrepancy is " << ticks*epsilon
                 << ")\nDifference is " << diff/epsilon << " ticks\n";
     }
+    std::cout.precision (pr);
     return ret;
   }
   // infinity dicrepancy musy be checked with max precision
@@ -80,6 +81,7 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
     ret=5;
     std::cout << "\nInfinity discrepancy in " << coord << "(): "
 	      << sd1 << " != " << sd2 << "\n";
+    std::cout.precision (pr);
     return ret;
   }
   Scalar denom = ss1 > 0 ? ss1 : -ss1;
@@ -220,6 +222,11 @@ int test3D ( const DisplacementVector3D<C> & v, double ticks ) {
 
 #ifdef DEBUG
   if (ret == 0) std::cout << "\t OK\n";
+  else { 
+     std::cout << "\t FAIL\n";
+     std::cerr << "\n>>>>> Testing DisplacementVector3D from " << v << " ticks = " << ticks 
+               << "\t:\t FAILED\n";
+  }
   std::cout << "           Testing PositionVector3D     :   ";
 #endif
 
@@ -248,6 +255,11 @@ int test3D ( const DisplacementVector3D<C> & v, double ticks ) {
 
 #ifdef DEBUG
   if (ret == 0) std::cout << "\t\t OK\n";
+  else { 
+     std::cout << "\t FAIL\n";
+     std::cerr << "\n>>>>> Testing PositionVector3D from     " << v << " ticks = " << ticks 
+               << "\t:\t FAILED\n";
+  }
 #endif
   return ret;
 }
@@ -305,5 +317,8 @@ int coordinates3D () {
 }
 
 int main() { 
-   return coordinates3D();
+   int ret = coordinates3D();
+   if (ret)  std::cerr << "test FAILED !!! " << std::endl; 
+   else   std::cout << "test OK " << std::endl;
+   return ret;
 }

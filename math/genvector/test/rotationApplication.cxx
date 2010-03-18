@@ -531,9 +531,10 @@ int exerciseTestCase (TestRotation const & testRotation,
 
   if (ret == 0) 
     std::cout << "\t OK\n"; 
-  else 
+  else {
     std::cout << "\t Failed!\n "; 
-
+    std::cerr << "\n>>>>> Rotation Tests of " << testVector << "\t\t:\t FAILED \n";
+  }
 
   return ret;
 }
@@ -672,8 +673,10 @@ int exerciseAxialTest (XYZVector const & testVector)
 
   if (ret == 0) 
     std::cout << "\t OK\n"; 
-  else 
+  else {
     std::cout << "\t Failed!\n "; 
+    std::cerr << "\n>>>>> Axial Rotation Tests of " << testVector << "\t\t:\t FAILED \n";
+  }
 
   return ret;
 }

@@ -1388,14 +1388,16 @@ int test23() {
 
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
-  if (test##N() == 0) std::cout << " Test " << itest << "  OK " << std::endl;   \
-  else  {std::cout << " Test " << itest << "  Failed " << std::endl;             \
-  return -1;}  
+  if (test##N() == 0) std::cerr << " Test " << itest << "  OK " << std::endl; \
+  else { std::cerr << " Test " << itest << "  FAILED " << std::endl;    \
+     iret +=1; };
+
 
 
 
 int testSMatrix() {
 
+  int iret = 0; 
   int itest;
   TEST(1);
   TEST(2);
@@ -1421,10 +1423,12 @@ int testSMatrix() {
   TEST(22);
   TEST(23);
 
-
-  return 0;
+  return iret;
 }
 
 int main() { 
-   return  testSMatrix();
+   int ret = testSMatrix();
+   if (ret)  std::cerr << "test SMatrix:\t  FAILED !!! " << std::endl; 
+   else   std::cerr << "test SMatrix: \t OK " << std::endl;
+   return ret; 
 }
