@@ -777,43 +777,50 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 
       delete (G__ClassInfo*)cl->fClassInfo;
       cl->fClassInfo = 0;
-      if (CheckClassInfo(cl->GetName())) {
+      
+      std::string name( cl->GetName() );
+      if (!CheckClassInfo(name.c_str())) {
+         // Try resolving all the typedefs (even Float_t and Long64_t)
+         name =  TClassEdit::ResolveTypedef(name.c_str(),kTRUE);
+         if (name == cl->GetName() || !CheckClassInfo(name.c_str())) {
+          
+            // Nothing found, nothing to do.
+            return;
+         }
+      }
+      
+      G__ClassInfo *info = new G__ClassInfo(name.c_str());
+      cl->fClassInfo = info;
 
-         G__ClassInfo *info = new G__ClassInfo(cl->GetName());
-         cl->fClassInfo = info;
+      Bool_t zombieCandidate = kFALSE;
 
-
-         Bool_t zombieCandidate = kFALSE;
-
-         // In case a class contains an external enum, the enum will be seen as a
-         // class. We must detect this special case and make the class a Zombie.
-         // Here we assume that a class has at least one method.
-         // We can NOT call TClass::Property from here, because this method
-         // assumes that the TClass is well formed to do a lot of information
-         // caching. The method SetClassInfo (i.e. here) is usually called during
-         // the building phase of the TClass, hence it is NOT well formed yet.
-         if (info->IsValid() &&
-             !(info->Property() & (kIsClass|kIsStruct|kIsNamespace))) {
+      // In case a class contains an external enum, the enum will be seen as a
+      // class. We must detect this special case and make the class a Zombie.
+      // Here we assume that a class has at least one method.
+      // We can NOT call TClass::Property from here, because this method
+      // assumes that the TClass is well formed to do a lot of information
+      // caching. The method SetClassInfo (i.e. here) is usually called during
+      // the building phase of the TClass, hence it is NOT well formed yet.
+      if (info->IsValid() &&
+          !(info->Property() & (kIsClass|kIsStruct|kIsNamespace))) {
+         zombieCandidate = kTRUE; // cl->MakeZombie();
+      }
+      
+      if (!info->IsLoaded()) {
+         if (info->Property() & (kIsNamespace)) {
+            // Namespace can have a ClassInfo but no CINT dictionary per se
+            // because they are auto-created if one of their contained
+            // classes has a dictionary.
             zombieCandidate = kTRUE; // cl->MakeZombie();
          }
-
-         if (!info->IsLoaded()) {
-            if (info->Property() & (kIsNamespace)) {
-               // Namespace can have a ClassInfo but no CINT dictionary per se
-               // because they are auto-created if one of their contained
-               // classes has a dictionary.
-               zombieCandidate = kTRUE; // cl->MakeZombie();
-            }
-
-            // this happens when no CINT dictionary is available
-            delete info;
-            cl->fClassInfo = 0;
-         }
-
-         if (zombieCandidate && !TClassEdit::IsSTLCont(cl->GetName())) {
-            cl->MakeZombie();
-         }
-
+         
+         // this happens when no CINT dictionary is available
+         delete info;
+         cl->fClassInfo = 0;
+      }
+      
+      if (zombieCandidate && !TClassEdit::IsSTLCont(cl->GetName())) {
+         cl->MakeZombie();
       }
    }
 }
