@@ -175,18 +175,6 @@ S
 S
 [        3.699        6.99
           6.99       10.35 ]
-Inverse:  S-1 [     -2.93605     1.98289
-       1.98289    -1.04932 ]
-ifail=0
-S2=S-M1*M2T
-[        0.233        1.33
-          1.33        2.45 ]
-S2+=M1*M2T
-[        1.233        2.33
-          2.33        3.45 ]
- Symmetric matrix size: 20208
- Normal    matrix size: 40000
- Symmetric matrix size: 20208
  Test 12  OK 
  Test 13  OK 
  Test 14  OK 
