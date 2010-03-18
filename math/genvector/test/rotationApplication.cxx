@@ -157,6 +157,9 @@ correctedTicks< PositionVector3D < CylindricalEta3D<double> > > {
   
 template <class R, class V>
 int testApplication(const R& r,const V& v,const XYZVector &answer,double t) {
+
+  typedef typename V::CoordinateType CoordType;
+
   int ret = 0;
   correctedTicks<V> ct;
   double ticks = ct(t, v, answer);
@@ -173,11 +176,11 @@ int testApplication(const R& r,const V& v,const XYZVector &answer,double t) {
  	#ifdef TRACE2
    	std::cout << "ok ";
 	#endif
-  if ( rv != r*v ) {
-    std::cout << "Inconsistency between R(v) and R*v for R = " 
-    	      << RotationTraits<R>::name() << " " << r 
-              << "\nacting on "   << CoordinateTraits<V>::name() << v << "\n";
-    ret |= 9;
+  if ( compare3D(rv, r*v, 1 ) != 0) {
+     std::cout << "Inconsistency between R(v) and R*v for R = " 
+               << RotationTraits<R>::name() << " " << r 
+               << "\nacting on "  << CoordinateTraits<CoordType>::name() << v << "\n";
+     ret |= 9;
   }
  	#ifdef TRACE2
    	std::cout << "+ also did rv != r*v ";
@@ -186,7 +189,7 @@ int testApplication(const R& r,const V& v,const XYZVector &answer,double t) {
     std::cout << "Radius change  between R(v) and R*v for R = "
               << RotationTraits<R>::name() << " " << r 
               << "\nacting on "   
-	      << CoordinateTraits<typename V::CoordinateType>::name()
+	      << CoordinateTraits<CoordType>::name()
     	      << v << "\n";
     ret |= 17;
   }  
@@ -696,9 +699,13 @@ int rotationApplication () {
         vp !=  testVectors.end(); ++vp ) {
     ret |= exerciseAxialTest (*vp);
   }
+
   return ret;
 }
 
 int main() { 
-   return rotationApplication();
+   int ret =  rotationApplication();
+   if (ret)  std::cerr << "test FAILED !!! " << std::endl; 
+   else   std::cout << "test OK " << std::endl;
+   return ret; 
 }
