@@ -539,7 +539,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
       Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
       TClass *key = TClass::GetClass(inside[1].c_str());
       if (key) {
-         std::string what;
+         TString what;
          switch (stlkind)  {
             case TClassEdit::kMap:
             case TClassEdit::kMultiMap: {
@@ -548,7 +548,8 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                   what += ",";
                   what += UpdateAssociativeToVector( inside[2].c_str() );
                   what += " >";
-                  AddUniqueStatement(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", what.c_str()), inclist);
+                  what.ReplaceAll("std::","");
+                  AddUniqueStatement(fp, Form("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", what.Data()), inclist);
                   break;
                }
          }
@@ -602,6 +603,8 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
          TClass *key = TClass::GetClass(inside[1].c_str());
       
          if (key) {
+            // We only need to translate to a vector is the key is a class
+            // (for which we do not know the sorting).
             std::string what;
             switch ( stlkind )  {
                case TClassEdit::kMap:
