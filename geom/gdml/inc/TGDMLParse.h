@@ -146,7 +146,8 @@ private:
    XMLNodePointer_t  SclProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
     
    //'materials' section
-   XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
+   XMLNodePointer_t  IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
+   XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn, Bool_t hasIsotopes);
    XMLNodePointer_t  MatProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int z);
     
    //'solids' section
@@ -184,6 +185,7 @@ private:
    typedef TGDMMapHelper<TGeoRotation> RotMap;
    typedef TGDMMapHelper<TGeoScale> SclMap;
    typedef TGDMMapHelper<TGeoElement> EleMap;
+   typedef TGDMMapHelper<TGeoIsotope> IsoMap;
    typedef TGDMMapHelper<TGeoMaterial> MatMap;
    typedef TGDMMapHelper<TGeoMedium> MedMap;
    typedef TGDMMapHelper<TGeoMixture> MixMap;
@@ -200,6 +202,7 @@ private:
    PosMap fposmap;                //!Map containing position names and the TGeoTranslation for it
    RotMap frotmap;                //!Map containing rotation names and the TGeoRotation for it
    SclMap fsclmap;                //!Map containing scale names and the TGeoScale for it
+   IsoMap fisomap;                //!Map containing isotope names and the TGeoIsotope for it
    EleMap felemap;                //!Map containing element names and the TGeoElement for it
    MatMap fmatmap;                //!Map containing material names and the TGeoMaterial for it
    MedMap fmedmap;                //!Map containing medium names and the TGeoMedium for it

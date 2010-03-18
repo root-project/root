@@ -125,6 +125,20 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Int_t n, 
 }
 
 //______________________________________________________________________________
+void TGeoElement::Print(Option_t *option) const
+{
+// Print this isotope
+   printf("Element: %s      Z=%d   N=%d   A=%f [g/mole]\n", GetName(), fZ,fN,fA);
+   if (HasIsotopes()) {
+      for (Int_t i=0; i<fNisotopes; i++) {
+         TGeoIsotope *iso = GetIsotope(i);
+         printf("=>Isotope %s, abundance=%f :\n", iso->GetName(), fAbundances[i]);
+         iso->Print(option);
+      }
+   }
+}   
+
+//______________________________________________________________________________
 TGeoElementTable *TGeoElement::GetElementTable()
 {
 // Returns pointer to the table.

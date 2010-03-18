@@ -84,6 +84,7 @@ public:
    Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}   
    virtual Bool_t           IsRadioNuclide() const {return kFALSE;}
    Bool_t                   IsUsed() const {return TObject::TestBit(kElemUsed);}
+   virtual void             Print(Option_t *option = "") const;
    void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}                    
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}                    
    static TGeoElementTable *GetElementTable();

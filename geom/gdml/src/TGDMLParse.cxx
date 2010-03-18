@@ -170,6 +170,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* rotastr = "rotation";
    const char* scalstr = "scale";
    const char* elemstr = "element";
+   const char* istpstr = "isotope";
    const char* matestr = "material";
    const char* volustr = "volume";
    const char* assestr = "assembly";
@@ -196,6 +197,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* intestr = "intersection";
    const char* reflstr = "reflectedSolid";
    const char* ellistr = "ellipsoid";
+   Bool_t hasIsotopes;
    
    if ((strcmp(name, posistr)) == 0){ 
       node = PosProcess(gdml, node, attr);
@@ -209,8 +211,14 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = ConProcess(gdml, node, attr);
    } else if ((strcmp(name, varistr)) == 0){ 
       node = ConProcess(gdml, node, attr);
-   } else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, elemstr)) == 0)){ 
-      node = EleProcess(gdml, node, parentn);
+   } else if ((strcmp(name,elemstr)==0) && !gdml->HasAttr(node, "Z")) {
+      hasIsotopes = kTRUE;
+      node = EleProcess(gdml, node, parentn, hasIsotopes);   
+   } else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, elemstr)) == 0)){
+      hasIsotopes = kFALSE; 
+      node = EleProcess(gdml, node, parentn, hasIsotopes);
+   } else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, istpstr)) == 0)){ 
+      node = IsoProcess(gdml, node, parentn);
    } else if ((strcmp(name, matestr)) == 0){ 
       if(gdml->HasAttr(node, "Z")) {
          int z = 1;
@@ -278,7 +286,8 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       ((strcmp(name, "second")) != 0) &&  ((strcmp(name, "twoDimVertex")) != 0) &&
       ((strcmp(name, "firstposition")) != 0) &&  ((strcmp(name, "firstpositionref")) != 0) &&
       ((strcmp(name, "firstrotation")) != 0) &&  ((strcmp(name, "firstrotationref")) != 0) &&
-      ((strcmp(name, "section")) != 0) &&  ((strcmp(name, "world")) != 0)){
+      ((strcmp(name, "section")) != 0) &&  ((strcmp(name, "world")) != 0) &&
+      ((strcmp(name, "isotope")) != 0)){
       std::cout << "Error: Unsupported GDML Tag Used :" << name << ". Please Check Geometry/Schema." << std::endl;
    }
    
@@ -650,8 +659,73 @@ XMLNodePointer_t TGDMLParse::SclProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    return node;
 }
 
+//___________________________________________________________________
+XMLNodePointer_t TGDMLParse::IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t parentn)
+{   
+   //In the material section of the GDML file, an isotope may be declared. 
+   //when the isotope keyword is found, this function is called, and the 
+   //required parameters are taken and stored, these are then bound and
+   //converted to type TGeoIsotope and stored in fisomap map using the name 
+   //as its key.
+   const char* z = "0";
+   const char* name = "";
+   const char* n = "0";
+   const char* atom = "0";
+   const char* tempattr;
+   
+   //obtain attributes for the element
+   
+   XMLAttrPointer_t attr = gdml->GetFirstAttr(parentn);
+   
+   while (attr!=0){    
+      
+      tempattr = gdml->GetAttrName(attr);
+      
+      if((strcmp(tempattr, "name")) == 0) { 
+         name = gdml->GetAttrValue(attr);
+      }
+      else if((strcmp(tempattr, "Z")) == 0) { 
+         z = gdml->GetAttrValue(attr);
+      }
+      else if(strcmp(tempattr, "N") == 0) {
+         n = gdml->GetAttrValue(attr);
+      }
+      
+      attr = gdml->GetNextAttr(attr);   
+   }
+   
+   //get the atom value for the element
+   
+   attr = gdml->GetFirstAttr(node);
+   
+   while (attr!=0){      
+      
+      tempattr = gdml->GetAttrName(attr);
+      
+      if((strcmp(tempattr, "value")) == 0) { 
+         atom = gdml->GetAttrValue(attr);
+      }
+      
+      attr = gdml->GetNextAttr(attr);   
+   }
+   
+   if((strcmp(fCurrentFile,fStartFile)) != 0){
+      name = Form("%s_%s", name, fCurrentFile);
+   }
+
+   Int_t z2 = (Int_t)Evaluate(z);
+   Int_t n2 = (Int_t)Evaluate(n);
+   Double_t atom2 = Evaluate(atom);
+   
+   TGeoIsotope* iso = new TGeoIsotope(NameShort(name), z2 , n2, atom2);   
+   fisomap[name] = iso;
+   
+   return node;
+  
+}
+
 //___________________________________________________________
-XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLNodePointer_t parentn)
+XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLNodePointer_t parentn, Bool_t hasIsotopes)
 {   
    //In the materials section of the GDML file, elements can be declared.
    //when the element keyword is found, this function is called, and the
@@ -663,11 +737,67 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    const char* formula = "";
    const char* atom = "0";
    const char* tempattr;
+   Int_t   ncompo = 0;
+   typedef FracMap::iterator fractions;
+   FracMap fracmap;
+   
+   XMLNodePointer_t child = 0;
    
    //obtain attributes for the element
    
-   XMLAttrPointer_t attr = gdml->GetFirstAttr(parentn);
+   XMLAttrPointer_t attr = gdml->GetFirstAttr(node);
    
+   if (hasIsotopes) {
+      // Get the name of the element
+      while (attr!=0){   
+         tempattr = gdml->GetAttrName(attr);
+         if((strcmp(tempattr, "name")) == 0) { 
+            name = gdml->GetAttrValue(attr);
+            if((strcmp(fCurrentFile,fStartFile)) != 0){
+               name = Form("%s_%s", name, fCurrentFile);
+            }
+            break;
+         }
+         attr = gdml->GetNextAttr(attr);
+      }   
+      // Get component isotopes. Loop all children.
+      child = gdml->GetChild(node);
+      while (child!=0) {
+         // Check for fraction node name
+         if((strcmp(gdml->GetNodeName(child), "fraction")) == 0){
+            double n = 0;
+            const char* ref = ""; 
+            ncompo = ncompo + 1;
+            attr = gdml->GetFirstAttr(child);
+            while (attr!=0){   
+               tempattr = gdml->GetAttrName(attr);
+               if((strcmp(tempattr, "n")) == 0) { 
+                  n = Evaluate(gdml->GetAttrValue(attr));
+               }
+               else if((strcmp(tempattr, "ref")) == 0) { 
+                  ref = gdml->GetAttrValue(attr);
+                  if((strcmp(fCurrentFile,fStartFile)) != 0){
+                     ref = Form("%s_%s", ref, fCurrentFile);
+                  }
+               }
+               attr = gdml->GetNextAttr(attr);
+            } // loop on child attributes
+            fracmap[ref] = n; 
+         }
+         child = gdml->GetNext(child);
+      } // loop on childs
+      // Create TGeoElement
+      TGeoElement *ele = new TGeoElement(NameShort(name), "", ncompo);
+      for(fractions f = fracmap.begin(); f != fracmap.end(); f++){
+         if(fisomap.find(f->first) != fisomap.end()){
+            ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
+         }
+      }
+      felemap[name] = ele;
+      return child;
+   }
+   
+   attr = gdml->GetFirstAttr(parentn);
    while (attr!=0){    
       
       tempattr = gdml->GetAttrName(attr);
