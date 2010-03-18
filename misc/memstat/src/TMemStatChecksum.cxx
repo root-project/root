@@ -19,10 +19,10 @@ UInt32 CCRC::Table[256];
 //______________________________________________________________________________
 void CCRC::InitTable()
 {
-   for (UInt32 i = 0; i < 256; i++) {
+   for(UInt32 i = 0; i < 256; i++) {
       UInt32 r = i;
-      for (int j = 0; j < 8; j++)
-         if (r & 1)
+      for(int j = 0; j < 8; j++)
+         if(r & 1)
             r = (r >> 1) ^ kCRCPoly;
          else
             r >>= 1;
@@ -54,14 +54,14 @@ void CCRC::UpdateUInt16(UInt16 v)
 //______________________________________________________________________________
 void CCRC::UpdateUInt32(UInt32 v)
 {
-   for (int i = 0; i < 4; i++)
+   for(int i = 0; i < 4; i++)
       UpdateByte((Byte)(v >> (8 * i)));
 }
 
 //______________________________________________________________________________
 void CCRC::UpdateUInt64(UInt64 v)
 {
-   for (int i = 0; i < 8; i++)
+   for(int i = 0; i < 8; i++)
       UpdateByte((Byte)(v >> (8 * i)));
 }
 
@@ -70,7 +70,7 @@ void CCRC::Update(const void *data, size_t size)
 {
    UInt32 v = _value;
    const Byte *p = (const Byte *)data;
-   for (; size > 0 ; size--, p++)
+   for(; size > 0 ; size--, p++)
       v = Table[((Byte)(v)) ^ *p] ^(v >> 8);
    _value = v;
 }

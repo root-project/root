@@ -39,7 +39,7 @@ namespace memstat {
 
       Int_t find(pointer_t addr) {
          pos_type iter = fContainer.find(addr);
-         if (fContainer.end() == iter)
+         if(fContainer.end() == iter)
             return -1;
 
          return iter->second;

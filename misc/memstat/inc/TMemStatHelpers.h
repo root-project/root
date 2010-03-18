@@ -31,7 +31,7 @@ namespace memstat {
    struct SFind_t : std::binary_function<TObject*, TString, bool> {
       bool operator()(TObject *_Obj, const TString &_ToFind) const {
          TObjString *str(dynamic_cast<TObjString*>(_Obj));
-         if (!str)
+         if(!str)
             return false;
          return !str->String().CompareTo(_ToFind);
       }

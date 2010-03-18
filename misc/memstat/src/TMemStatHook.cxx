@@ -90,7 +90,7 @@ void TMemStatHook::SetFreeHook(FreeHookFunc_t p)
 void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t _pm, zoneFreeHookFunc_t _pf)
 {
    malloc_zone_t* zone = malloc_default_zone();
-   if (!zone) {
+   if(!zone) {
       cerr << "Error: Can't get malloc_default_zone" << endl;
       return;
    }
@@ -103,7 +103,7 @@ void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t _pm, zoneFreeHookFunc_t 
    zone->valloc = &profile_valloc;
    zone->free = &profile_free;
 #if defined(MAC_OS_X_VERSION_10_6)
-   if (zone->version >= 6 && zone->free_definite_size)
+   if(zone->version >= 6 && zone->free_definite_size)
       zone->free_definite_size = &profile_free_definite_size;
 #endif
 }
@@ -111,7 +111,7 @@ void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t _pm, zoneFreeHookFunc_t 
 void TMemStatHook::untrackZoneMalloc()
 {
    malloc_zone_t* zone = malloc_default_zone();
-   if (!zone) {
+   if(!zone) {
       cerr << "Error: Can't get malloc_default_zone" << endl;
       return;
    }

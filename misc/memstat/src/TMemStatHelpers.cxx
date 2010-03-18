@@ -28,7 +28,7 @@ string memstat::dig2bytes(Long64_t bytes)
    ostringstream ss;
    ss << fixed;
 
-   if (bytes < 0) {
+   if(bytes < 0) {
       ss << '-';
       bytes = -bytes;
    }
@@ -37,19 +37,19 @@ string memstat::dig2bytes(Long64_t bytes)
    static const long lMB = kB * kB;
    static const long lGB = lMB * kB;
 
-   if (bytes < kB)
+   if(bytes < kB)
       ss << bytes << " B";
-   else if (bytes < (10L * kB))
+   else if(bytes < (10L * kB))
       ss << setprecision(2) << ((double)bytes / (float)kB) << " kB";
-   else if (bytes < (100L * kB))
+   else if(bytes < (100L * kB))
       ss << setprecision(1) << ((double)bytes / (float)kB) << " kB";
-   else if (bytes < lMB)
+   else if(bytes < lMB)
       ss << setprecision(0) << ((double)bytes / (float)kB) << " kB";
-   else if (bytes < (10L * lMB))
+   else if(bytes < (10L * lMB))
       ss << setprecision(2) << ((double)bytes / (float)lMB) << " MB";
-   else if (bytes < (100L * lMB))
+   else if(bytes < (100L * lMB))
       ss << setprecision(1) << ((double)bytes / (float)lMB) << " MB";
-   else if (bytes < lGB)
+   else if(bytes < lGB)
       ss << setprecision(0) << ((double)bytes / (float)lMB) << " MB";
    else
       ss << setprecision(2) << ((double)bytes / (float)lGB) << " GB";

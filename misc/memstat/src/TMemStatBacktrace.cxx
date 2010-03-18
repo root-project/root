@@ -64,7 +64,7 @@ namespace memstat {
       // we have a limit on the depth = 35
 
 #if defined(SUPPORTS_MEMSTAT)
-      switch (_frame) {
+      switch(_frame) {
             _RET_ADDR(0);
             _RET_ADDR(1);
             _RET_ADDR(2);
@@ -114,9 +114,9 @@ namespace memstat {
    {
       size_t i(0);
       void *addr;
-      for (i = 0; (i < _limit) && (addr = return_address(i)); ++i)
+      for(i = 0; (i < _limit) && (addr = return_address(i)); ++i)
          _container[i] = addr;
-      
+
       return i;
    }
 //______________________________________________________________________________
@@ -129,7 +129,7 @@ namespace memstat {
       // The builtin version is much faster, but very sensitive and in some conditions could fail to return a proper result.
       // return value =  min(stack deepness, dsize)
 
-      if (_bUseGNUBuiltinBacktrace) {
+      if(_bUseGNUBuiltinBacktrace) {
 #if defined(SUPPORTS_MEMSTAT)
          // Initialize the stack end variable.
          return builtin_return_address(_trace, _size);
@@ -147,13 +147,13 @@ namespace memstat {
 
 #if defined(SUPPORTS_MEMSTAT)
       Dl_info info;
-      if (0 ==  dladdr(_pAddr, &info)) {
+      if(0 ==  dladdr(_pAddr, &info)) {
          return;
       }
-      if (NULL != info.dli_sname) {
+      if(NULL != info.dli_sname) {
          int status(0);
          char *ch = abi::__cxa_demangle(info.dli_sname, 0, 0, &status);
-         if (status < 0 || !ch)
+         if(status < 0 || !ch)
             return;
 
          _strSymbol = (!status) ? ch : info.dli_sname;
@@ -161,10 +161,10 @@ namespace memstat {
          // it's our responsibility to free that pointer
          free(ch);
       }
-      if (NULL != info.dli_fname)
+      if(NULL != info.dli_fname)
          _strLib = info.dli_fname;
 #else
-      if (!_pAddr) {
+      if(!_pAddr) {
          _strInfo = "";
          _strLib = "";
          _strSymbol = "";
@@ -176,7 +176,7 @@ namespace memstat {
    void getSymbolFullInfo(void *_pAddr, TString *_retInfo, const char *const _seporator)
    {
 
-      if (!_retInfo)
+      if(!_retInfo)
          return;
 
 #if defined(SUPPORTS_MEMSTAT)
@@ -202,14 +202,14 @@ namespace memstat {
 #if defined(SUPPORTS_MEMSTAT)
       int status = 0;
       char *ch = abi::__cxa_demangle(_codeInfo, 0, 0, &status);
-      if (ch) {
+      if(ch) {
          _str = ch;
          free(ch);
       } else {
          _str = "unknown";
       }
 #else
-      if (!_codeInfo) {
+      if(!_codeInfo) {
          _str = "";
       }
 #endif

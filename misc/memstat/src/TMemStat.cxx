@@ -60,7 +60,7 @@ TMemStat::TMemStat(Option_t* option): fIsActive(kFALSE)
 //______________________________________________________________________________
 TMemStat::~TMemStat()
 {
-   if (fIsActive) {
+   if(fIsActive) {
       TMemStatMng::GetInstance()->Disable();
       TMemStatMng::GetInstance()->Close();
    }
