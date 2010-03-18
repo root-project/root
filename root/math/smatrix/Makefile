@@ -60,10 +60,10 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 
-testSMatrix.log: $(ROOT_LOC)/math/smatrix/test/testSMatrix_cxx.$(DllSuf)
+testSMatrix.elog: $(ROOT_LOC)/math/smatrix/test/testSMatrix_cxx.$(DllSuf)
 
 
-testSMatrix: testSMatrix.log
+testSMatrix: testSMatrix.elog
 	$(TestDiff)
 
 testKalman.elog: $(ROOT_LOC)/math/smatrix/test/testKalman_cxx.$(DllSuf)

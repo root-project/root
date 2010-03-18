@@ -3,9 +3,9 @@
    gROOT->ProcessLine(".L $ROOTSYS/math/genvector/test/rotationApplication.cxx+");
    int ret = rotationApplication(); 
    if (ret == 0)
-      std::cout << "test rotationApplication OK" << std::endl;
+      std::cerr << "test rotationApplication: OK" << std::endl;
    else
-      std::cerr << "test rotationApplication  FAILED !" << std::endl;
+      std::cerr << "test rotationApplication: FAILED !" << std::endl;
  
    return 0;  // need to always return zero if checking log file  
 }

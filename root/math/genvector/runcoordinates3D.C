@@ -3,9 +3,9 @@
    gROOT->ProcessLine(".L $ROOTSYS/math/genvector/test/coordinates3D.cxx+");
    int ret = coordinates3D(); 
    if (ret == 0)
-      std::cout << "test coordinates3D OK" << std::endl;
+      std::cerr << "test coordinates3D:  OK" << std::endl;
    else
-      std::cerr << "test coordinates3D  FAILED !" << std::endl;
+      std::cerr << "test coordinates3D:  FAILED !" << std::endl;
    
    return 0;  // need to always return zero if checking log file 
 }
