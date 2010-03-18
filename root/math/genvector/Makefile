@@ -56,8 +56,12 @@ endif
 # By default the TestDiff variable is set to compare the .log and .ref files
 # To run a diff and ignore whitespacing use $(TestDiffW)
 
+
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
+
+#skip tests on Windows 
+ifneq ($(PLATFORM),win32)
 
 #this suppress check in log file
 coordinates3D.elog: $(ROOT_LOC)/math/genvector/test/coordinates3D_cxx.$(DllSuf)
@@ -79,3 +83,5 @@ testGenVector.log: $(ROOT_LOC)/math/genvector/test/testGenVector_cxx.$(DllSuf)
 
 testGenVector: testGenVector.log
 	$(TestDiff)
+
+endif
