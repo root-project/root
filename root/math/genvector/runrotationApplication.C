@@ -7,5 +7,5 @@
    else
       std::cerr << "test rotationApplication  FAILED !" << std::endl;
  
-   return ret; 
+   return 0;  // need to always return zero if checking log file  
 }
