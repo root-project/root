@@ -18,8 +18,8 @@ endif
 TYPECF32   =
 TYPECF64   = -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 TYPELINK   = -undefined dynamic_lookup -multiply_defined suppress 
-TYPEOPT    = $(TYPEMISC) $(TYPELINK) -O2
-TYPEDBG    = $(TYPEMISC) $(TYPELINK) -g
+TYPEOPT    = $(TYPEMISC) -O2
+TYPEDBG    = $(TYPEMISC) -g
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 TYPELDSO   = $(TYPELINK) -dynamiclib -single_module -m32
 TYPELDDY   = $(TYPELINK) -dynamiclib -single_module -m32
