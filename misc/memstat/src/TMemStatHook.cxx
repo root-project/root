@@ -40,13 +40,13 @@ static zoneFreeHookFunc_t m_pf;
 
 using namespace std;
 
-
+#if !defined(__APPLE__)
 //______________________________________________________________________________
 TMemStatHook::MallocHookFunc_t TMemStatHook::GetMallocHook()
 {
    //malloc function getter
 
-#if defined(SUPPORTS_MEMSTAT) && !defined(__APPLE__)
+#if defined(SUPPORTS_MEMSTAT)
    return __malloc_hook;
 #else
    return 0;
@@ -58,7 +58,7 @@ TMemStatHook::FreeHookFunc_t TMemStatHook::GetFreeHook()
 {
    //free function   getter
 
-#if defined(SUPPORTS_MEMSTAT) && !defined(__APPLE__)
+#if defined(SUPPORTS_MEMSTAT)
    return __free_hook;
 #else
    return 0;
@@ -69,7 +69,7 @@ TMemStatHook::FreeHookFunc_t TMemStatHook::GetFreeHook()
 void TMemStatHook::SetMallocHook(MallocHookFunc_t p)
 {
    // Set pointer to function replacing alloc function
-#if defined(SUPPORTS_MEMSTAT) && !defined(__APPLE__)
+#if defined(SUPPORTS_MEMSTAT)
    __malloc_hook = p;
 #endif
 }
@@ -79,10 +79,11 @@ void TMemStatHook::SetFreeHook(FreeHookFunc_t p)
 {
    // Set pointer to function replacing free function
 
-#if defined(SUPPORTS_MEMSTAT) && !defined(__APPLE__)
+#if defined(SUPPORTS_MEMSTAT)
    __free_hook = p;
 #endif
 }
+#endif // !defined(__APPLE__)
 
 //______________________________________________________________________________
 #if defined (__APPLE__)

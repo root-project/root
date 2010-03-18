@@ -8,6 +8,8 @@
 * For the licensing terms see $ROOTSYS/LICENSE.                         *
 * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 *************************************************************************/
+// STD
+#include <cstdlib>
 // ROOT
 #include "TSystem.h"
 #include "TEnv.h"

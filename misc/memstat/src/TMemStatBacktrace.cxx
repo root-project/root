@@ -10,6 +10,9 @@
 *************************************************************************/
 #include "TMemStatBacktrace.h"
 
+// STD
+#include <cstdlib>
+
 #ifndef __CINT__
 // TODO: We need MacOSX at least 10.5. Implement version check in Makefile of
 // ROOT when YAMS will be a pat of it.
