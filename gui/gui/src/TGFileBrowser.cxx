@@ -218,8 +218,9 @@ TGFileBrowser::~TGFileBrowser()
    delete fContextMenu;
    delete fListTree;
    if (fRootIcon) fClient->FreePicture(fRootIcon);
+   if (fCachedPic && (fCachedPic != fFileIcon))
+      fClient->FreePicture(fCachedPic);
    if (fFileIcon) fClient->FreePicture(fFileIcon);
-   if (fCachedPic) fClient->FreePicture(fCachedPic);
    Cleanup();
 }
 
