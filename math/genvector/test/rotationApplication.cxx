@@ -176,7 +176,9 @@ int testApplication(const R& r,const V& v,const XYZVector &answer,double t) {
  	#ifdef TRACE2
    	std::cout << "ok ";
 	#endif
-  if ( compare3D(rv, r*v, 1 ) != 0) {
+        // comparison here should be == but need to use 10 ticks to be sure for 32 bits machines
+        // when results are flushed in memory and approximated
+        if ( compare3D(rv, r*v, 10 ) != 0) { 
      std::cout << "Inconsistency between R(v) and R*v for R = " 
                << RotationTraits<R>::name() << " " << r 
                << "\nacting on "  << CoordinateTraits<CoordType>::name() << v << "\n";

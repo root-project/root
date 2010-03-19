@@ -26,6 +26,7 @@
 #include "Math/SMatrix.h"
 #endif
 
+#include <vector>
 
 using namespace ROOT::Math;
 using namespace ROOT::Math::VectorUtil;
@@ -81,6 +82,25 @@ int compare( double v1, double v2, const std::string & name = "", double scale =
     //nfail = nfail + 1;
   }
   return iret; 
+}
+
+template<class Transform>
+bool IsEqual(const Transform & t1, const Transform & t2, unsigned int size)  {
+// size should be an enum of the Transform class 
+   std::vector<double> x1(size); 
+   std::vector<double> x2(size); 
+   t1.GetComponents(x1.begin(), x1.end() );
+   t2.GetComponents(x2.begin(), x2.end() );
+   bool ret = true; 
+   unsigned int i = 0; 
+   while (ret && i < size) {
+      // from TMath::AreEqualRel(x1,x2,2*eps)
+      bool areEqual = std::abs(x1[i]-x2[i]) < std::numeric_limits<double>::epsilon() * 
+         ( std::abs(x1[i]) + std::abs(x2[i] ) ); 
+      ret &= areEqual; 
+      i++;
+   }
+   return ret; 
 }
 
 int testVector3D() { 
@@ -545,7 +565,9 @@ int testTransform3D() {
   Transform3D trf2 = tr1 * r; 
   iret |= compare( trf2 == t2b, 1,"trasl * e rot",1 );
   Transform3D trf3 = r * Translation3D(vr); 
-  iret |= compare( trf3 == t3, 1,"e rot * transl",1 );
+  //iret |= compare( trf3 == t3, 1,"e rot * transl",1 );
+  // this above fails on i686-slc5-gcc43-opt - use a comparison with tolerance
+  iret |= compare( IsEqual(trf3,t3,12), true,"e rot * transl",1 );
 
   Transform3D t5(rzyx, v);
   Transform3D trf5 = Translation3D(v) * rzyx; 
