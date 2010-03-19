@@ -71,7 +71,7 @@
 #define PEM_write_SSL_SESSION(fp,x) PEM_ASN1_write((int (*)(void*, unsigned char**))i2d_SSL_SESSION, PEM_STRING_SSL_SESSION,fp, (char *)x,  NULL,NULL,0,NULL,NULL)
 #endif
 
-#ifndef MAC_OS_X_VERSION_10_5
+#if defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_5)
 #undef PEM_read_SSL_SESSION
 #undef PEM_write_SSL_SESSION
 
