@@ -64,7 +64,6 @@
 	"..\..\..\src\base\ftcalc.c"\
 	"..\..\..\src\base\ftdbgmem.c"\
 	"..\..\..\src\base\ftgloadr.c"\
-	"..\..\..\src\base\ftnames.c"\
 	"..\..\..\src\base\ftobjs.c"\
 	"..\..\..\src\base\ftoutln.c"\
 	"..\..\..\src\base\ftrfork.c"\

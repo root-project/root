@@ -5223,8 +5223,8 @@ fi
 if test -d include/cint ; then
    rm -rf include/cint
 fi
-if test -d freetype/src/freetype-2.1.9 ; then
-   rm -rf freetype/src/freetype-2.1.9
+if test -d graf2d/freetype/src/freetype-2.3.5 ; then
+   rm -rf graf2d/freetype/src/freetype-2.3.5
 fi
 if test -d pcre/src/pcre-6.4 ; then
    rm -rf pcre/src/pcre-6.4
