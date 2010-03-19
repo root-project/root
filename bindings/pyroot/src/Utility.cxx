@@ -86,10 +86,23 @@ namespace {
          gC2POperatorMapping[ ">=" ]  = "__ge__";
          gC2POperatorMapping[ "<=" ]  = "__le__";
 
-         gC2POperatorMapping[ "int" ]    = "__int__";
-         gC2POperatorMapping[ "long" ]   = "__long__";
-         gC2POperatorMapping[ "float" ]  = "__float__";
-         gC2POperatorMapping[ "double" ] = "__float__";     // python float is double
+      // the following type mappings are "exact"
+         gC2POperatorMapping[ "const char*" ] = "__str__";
+         gC2POperatorMapping[ "char*" ]       = "__str__";
+         gC2POperatorMapping[ "int" ]         = "__int__";
+         gC2POperatorMapping[ "long" ]        = "__long__";
+         gC2POperatorMapping[ "double" ]      = "__float__";
+
+      // the following type mappings are "okay"; the assumption is that they
+      // are not mixed up with the ones above or between themselves (and if
+      // they are, that it is done consistently)
+         gC2POperatorMapping[ "short" ]              = "__int__";
+         gC2POperatorMapping[ "unsigned short" ]     = "__int__";
+         gC2POperatorMapping[ "unsigned int" ]       = "__long__";
+         gC2POperatorMapping[ "unsigned long" ]      = "__long__";
+         gC2POperatorMapping[ "long long" ]          = "__long__";
+         gC2POperatorMapping[ "unsigned long long" ] = "__long__";
+         gC2POperatorMapping[ "float" ]              = "__float__";
 
          gC2POperatorMapping[ "->" ]  = "__follow__";       // not an actual python operator
          gC2POperatorMapping[ "=" ]   = "__assign__";       // id.
