@@ -32,7 +32,17 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0)
       s.ReplaceAll(what,libstolink);
       gSystem->SetMakeSharedLib(s);
    }
+#if defined(_WIN32) && !defined(__CYGWIN__)
+   TString fname(filename);
+   if (filename[0]=='/') {
+     // full path name we need to turn it into a windows path
+     fname = gSystem->GetFromPipe(TString::Format("cygpath -w %s",filename));
+   }
+   fprintf(stderr,"from %s to %s\n",filename,fname.Data());
+   int result = gSystem->CompileMacro(fname,"kc");
+#else
    int result = gSystem->CompileMacro(filename,"kc");
+#endif
    if (!result) gApplication->Terminate(1);
 }
 
