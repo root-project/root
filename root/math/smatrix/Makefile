@@ -60,8 +60,6 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 #skip tests on Windows 
-ifneq ($(PLATFORM),win32)
-
 testSMatrix.elog: $(ROOT_LOC)/math/smatrix/test/testSMatrix_cxx.$(DllSuf)
 
 
@@ -78,4 +76,3 @@ testOperations.elog: $(ROOT_LOC)/math/smatrix/test/testOperations_cxx.$(DllSuf)
 testOperations: testOperations.elog
 	$(TestDiff)
 
-endif
