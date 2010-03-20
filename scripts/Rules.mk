@@ -521,6 +521,10 @@ ifeq ($(PLATFORM),win32)
 	$(CMDECHO) if [ -e $(EVENTDIR)/Event$(ExeSuf).manifest ] ; then cp $(EVENTDIR)/Event$(ExeSuf).manifest ./copiedEvent$(ExeSuf).manifest ; fi
 endif
 
+define handleError
+   tresult=$$? ;if [ $$tresult -ne 0 ] ; then cat $@; echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi  
+endef
+
 %.o: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1
 
@@ -564,16 +568,16 @@ endif
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || cat $*_h.build.log 
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 ; $(handleError)
 
 %.elog : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@ ; $(handleError)
 
 assert%.elog : assert%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > assert$*.log 2>$@ ; tresult=$$? ; if [ $$tresult -ne 0 ] ; then echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi  
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > assert$*.log 2>$@ ; $(handleError)
 
 assert%.eclog : assert%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > assert$*.log 2>$@ ; tresult=$$? ; if [ $$tresult -ne 0 ] ; then echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > assert$*.log 2>$@ ; $(handleError)
 
 $(subst .cxx,,$(wildcard assert*.cxx)) : assert%: assert%.eclog assert%.ref 
 	$(TestDiff)
@@ -582,10 +586,10 @@ $(subst .C,,$(wildcard assert*.C)) : assert%: assert%.elog assert%.ref
 	$(TestDiff)
 
 exec%.log : exec%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 ; tresult=$$? ; if [ $$tresult -ne 0 ] ; then echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi  
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 ; $(handleError)  
 
 exec%.clog : exec%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > $@ 2>&1 ; tresult=$$? ; if [ $$tresult -ne 0 ] ; then echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > $@ 2>&1 ; $(handleError)
 
 $(subst .cxx,,$(wildcard exec*.cxx)) : %: %.clog %.ref 
 	$(TestDiff)
@@ -595,21 +599,21 @@ $(subst .C,,$(wildcard exec*.C)) : %: %.log %.ref
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
-	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b > $@ 2>&1
+	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b > $@ 2>&1 || cat $@
 else 
-	$(CMDECHO) $(PYTHON) $< -b > $@ 2>&1
+	$(CMDECHO) $(PYTHON) $< -b > $@ 2>&1 || cat $@
 endif
 
 .PRECIOUS: %_C.$(DllSuf) 
 
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1 ; $(handleError)
 
 %.celog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ ; $(handleError)
 
 %.eclog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ ; $(handleError)
 
 %.neutral.clog: %.clog
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
