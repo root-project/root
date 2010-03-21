@@ -625,7 +625,7 @@ void TGeoMixture::AddElement(TGeoElement *elem, Double_t weight)
 // add an element to the mixture using fraction by weight
    TGeoElement *elemold;
    TGeoElementTable *table = gGeoManager->GetElementTable();
-   if (!fElements) fElements = new TObjArray(10);
+   if (!fElements) fElements = new TObjArray(128);
    Bool_t exist = kFALSE;
    // If previous elements were defined by A/Z, add corresponding TGeoElements
    for (Int_t i=0; i<fNelements; i++) {
@@ -645,7 +645,7 @@ void TGeoMixture::AddElement(TGeoElement *elem, Int_t natoms)
    Double_t amol;
    TGeoElement *elemold;
    TGeoElementTable *table = gGeoManager->GetElementTable();
-   if (!fElements) fElements = new TObjArray(10);
+   if (!fElements) fElements = new TObjArray(128);
    // Check if the element is already defined
    for (i=0; i<fNelements; i++) {
       elemold = (TGeoElement*)fElements->At(i);

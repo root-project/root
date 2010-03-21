@@ -967,13 +967,13 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    Double_t local[3], local1[3];
    Double_t point[3];
    Double_t safety = TGeoShape::Big();
+   Double_t tolerance = TGeoShape::Tolerance();
    if (vol1->IsAssembly() || vol2->IsAssembly()) return nodeovlp;
    TGeoShape *shape1 = vol1->GetShape();
    TGeoShape *shape2 = vol2->GetShape();
    OpProgress("refresh", 0,0,NULL,kFALSE,kTRUE);   
    shape1->GetMeshNumbers(numPoints1, numSegs1, numPols1);
-   if (!shape1->IsComposite() && 
-       fBuff1->fID != (TObject*)shape1) {
+   if (fBuff1->fID != (TObject*)shape1) {
       // Fill first buffer.
       fBuff1->SetRawSizes(TMath::Max(numPoints1,fNmeshPoints), 3*TMath::Max(numPoints1,fNmeshPoints), 0, 0, 0, 0);
       points1 = fBuff1->fPnts;
@@ -989,8 +989,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
       fBuff1->fID = shape1;
    }   
    shape2->GetMeshNumbers(numPoints2, numSegs2, numPols2);
-   if (!shape2->IsComposite() && 
-       fBuff2->fID != (TObject*)shape2) {
+   if (fBuff2->fID != (TObject*)shape2) {
       // Fill second buffer.
       fBuff2->SetRawSizes(TMath::Max(numPoints2,fNmeshPoints), 3*TMath::Max(numPoints2,fNmeshPoints), 0, 0, 0,0);
       points2 = fBuff2->fPnts;
@@ -1010,59 +1009,55 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    // Extrusion case. Test vol2 extrude vol1.
       isextrusion=kFALSE;
       // loop all points of the daughter
-      if (!shape2->IsComposite()) {
-         for (ip=0; ip<numPoints2; ip++) {
-            memcpy(local, &points2[3*ip], 3*sizeof(Double_t));
-            if (local[0]<1e-10 && local[1]<1e-10) continue;
-            mat2->LocalToMaster(local, point);
-            mat1->MasterToLocal(point, local);
-            extrude = !shape1->Contains(local);
-            if (extrude) {
-               safety = shape1->Safety(local, kFALSE);
-               if (safety<ovlp) extrude=kFALSE;
-            }    
-            if (extrude) {
-               if (!isextrusion) {
-                  isextrusion = kTRUE;
-                  nodeovlp = new TGeoOverlap(name, vol1, vol2, mat1,mat2,kFALSE,safety);
-                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-                  fGeoManager->AddOverlap(nodeovlp);
-               } else {
-                  if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
-                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-               }   
-            }
+      for (ip=0; ip<numPoints2; ip++) {
+         memcpy(local, &points2[3*ip], 3*sizeof(Double_t));
+         if (TMath::Abs(local[0])<tolerance && TMath::Abs(local[1])<tolerance) continue;
+         mat2->LocalToMaster(local, point);
+         mat1->MasterToLocal(point, local);
+         extrude = !shape1->Contains(local);
+         if (extrude) {
+            safety = shape1->Safety(local, kFALSE);
+            if (safety<ovlp) extrude=kFALSE;
+         }    
+         if (extrude) {
+            if (!isextrusion) {
+               isextrusion = kTRUE;
+               nodeovlp = new TGeoOverlap(name, vol1, vol2, mat1,mat2,kFALSE,safety);
+               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+               fGeoManager->AddOverlap(nodeovlp);
+            } else {
+               if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+           }   
          }
-      }                
+      }
       // loop all points of the mother
-      if (!shape1->IsComposite()) {
-         for (ip=0; ip<numPoints1; ip++) {
-            memcpy(local, &points1[3*ip], 3*sizeof(Double_t));
-            if (local[0]<1e-10 && local[1]<1e-10) continue;
-            mat1->LocalToMaster(local, point);
-            mat2->MasterToLocal(point, local1);
-            extrude = shape2->Contains(local1);
-            if (extrude) {
-               // skip points on mother mesh that have no neghbourhood ouside mother
-               safety = shape1->Safety(local,kTRUE);
-               if (safety>1E-6) {
-                  extrude = kFALSE;
-               } else {   
-                  safety = shape2->Safety(local1,kTRUE);
-                  if (safety<ovlp) extrude=kFALSE;
-               }   
+      for (ip=0; ip<numPoints1; ip++) {
+         memcpy(local, &points1[3*ip], 3*sizeof(Double_t));
+         if (local[0]<1e-10 && local[1]<1e-10) continue;
+         mat1->LocalToMaster(local, point);
+         mat2->MasterToLocal(point, local1);
+         extrude = shape2->Contains(local1);
+         if (extrude) {
+            // skip points on mother mesh that have no neghbourhood ouside mother
+            safety = shape1->Safety(local,kTRUE);
+            if (safety>1E-6) {
+               extrude = kFALSE;
+            } else {   
+               safety = shape2->Safety(local1,kTRUE);
+               if (safety<ovlp) extrude=kFALSE;
             }   
-            if (extrude) {
-               if (!isextrusion) {
-                  isextrusion = kTRUE;
-                  nodeovlp = new TGeoOverlap(name, vol1,vol2,mat1,mat2,kFALSE,safety);
-                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-                  fGeoManager->AddOverlap(nodeovlp);
-               } else {
-                  if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
-                  nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-               }   
-            }
+         }   
+         if (extrude) {
+            if (!isextrusion) {
+               isextrusion = kTRUE;
+               nodeovlp = new TGeoOverlap(name, vol1,vol2,mat1,mat2,kFALSE,safety);
+               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+               fGeoManager->AddOverlap(nodeovlp);
+            } else {
+               if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+            }   
          }
       }
       return nodeovlp;
@@ -1071,56 +1066,52 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    Bool_t overlap;
    overlap = kFALSE;
    isoverlapping = kFALSE;
-   if (!shape1->IsComposite()) {
-      // loop all points of first candidate
-      for (ip=0; ip<numPoints1; ip++) {
-         memcpy(local, &points1[3*ip], 3*sizeof(Double_t));
-         if (local[0]<1e-10 && local[1]<1e-10) continue;
-         mat1->LocalToMaster(local, point);
-         mat2->MasterToLocal(point, local); // now point in local reference of second
-         overlap = shape2->Contains(local);
-         if (overlap) {
-            safety = shape2->Safety(local, kTRUE);
-            if (safety<ovlp) overlap=kFALSE;
-         }    
-         if (overlap) {
-            if (!isoverlapping) {
-               isoverlapping = kTRUE;
-               nodeovlp = new TGeoOverlap(name,vol1,vol2,mat1,mat2,kTRUE,safety);
-               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-               fGeoManager->AddOverlap(nodeovlp);
-            } else {
-               if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
-               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-            }     
-         }
+   // loop all points of first candidate
+   for (ip=0; ip<numPoints1; ip++) {
+      memcpy(local, &points1[3*ip], 3*sizeof(Double_t));
+      if (local[0]<1e-10 && local[1]<1e-10) continue;
+      mat1->LocalToMaster(local, point);
+      mat2->MasterToLocal(point, local); // now point in local reference of second
+      overlap = shape2->Contains(local);
+      if (overlap) {
+         safety = shape2->Safety(local, kTRUE);
+         if (safety<ovlp) overlap=kFALSE;
+      }    
+      if (overlap) {
+         if (!isoverlapping) {
+            isoverlapping = kTRUE;
+            nodeovlp = new TGeoOverlap(name,vol1,vol2,mat1,mat2,kTRUE,safety);
+            nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+            fGeoManager->AddOverlap(nodeovlp);
+         } else {
+            if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+            nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+         }     
       }
-   }   
+   }
    // loop all points of second candidate
-   if (!shape2->IsComposite()) {
-      for (ip=0; ip<numPoints2; ip++) {
-         memcpy(local, &points2[3*ip], 3*sizeof(Double_t));
-         if (local[0]<1e-10 && local[1]<1e-10) continue;
-         mat2->LocalToMaster(local, point);
-         mat1->MasterToLocal(point, local); // now point in local reference of first
-         overlap = shape1->Contains(local);
-         if (overlap) {
-            safety = shape1->Safety(local, kTRUE);
-            if (safety<ovlp) overlap=kFALSE;
-         }    
-         if (overlap) {
-            if (!isoverlapping) {
-               isoverlapping = kTRUE;
-               nodeovlp = new TGeoOverlap(name,vol1,vol2,mat1,mat2,kTRUE,safety);
-               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-               fGeoManager->AddOverlap(nodeovlp);
-            } else {
-               if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
-               nodeovlp->SetNextPoint(point[0],point[1],point[2]);
-            }     
-         }
+   for (ip=0; ip<numPoints2; ip++) {
+      memcpy(local, &points2[3*ip], 3*sizeof(Double_t));
+      if (local[0]<1e-10 && local[1]<1e-10) continue;
+      mat2->LocalToMaster(local, point);
+      mat1->MasterToLocal(point, local); // now point in local reference of first
+      overlap = shape1->Contains(local);
+      if (overlap) {
+         safety = shape1->Safety(local, kTRUE);
+         if (safety<ovlp) overlap=kFALSE;
+      }    
+      if (overlap) {
+         if (!isoverlapping) {
+            isoverlapping = kTRUE;
+            nodeovlp = new TGeoOverlap(name,vol1,vol2,mat1,mat2,kTRUE,safety);
+            nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+            fGeoManager->AddOverlap(nodeovlp);
+         } else {
+            if (safety>nodeovlp->GetOverlap()) nodeovlp->SetOverlap(safety);
+            nodeovlp->SetNextPoint(point[0],point[1],point[2]);
+         }     
       }
-   } 
+   }
    return nodeovlp;  
 }
 

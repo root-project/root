@@ -265,6 +265,14 @@ Bool_t TGeoCompositeShape::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
+Int_t TGeoCompositeShape::DistancetoPrimitive(Int_t px, Int_t py)
+{
+// Compute closest distance from point px,py to each corner.
+   const Int_t numPoints = GetNmeshVertices();
+   return ShapeDistancetoPrimitive(numPoints, px, py);
+}
+
+//_____________________________________________________________________________
 Double_t TGeoCompositeShape::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
@@ -298,7 +306,7 @@ TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume  * /*voldiv*/, const char * /*
 void TGeoCompositeShape::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
 // Returns numbers of vertices, segments and polygons composing the shape mesh.
-   nvert = 0;
+   nvert = GetNmeshVertices();
    nsegs = 0;
    npols = 0;
 }
@@ -456,14 +464,14 @@ void TGeoCompositeShape::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 void TGeoCompositeShape::SetPoints(Double_t *points) const
 {
 // create points for a composite shape
-   TGeoBBox::SetPoints(points);
+   if (fNode) fNode->SetPoints(points);
 }
 
 //_____________________________________________________________________________
 void TGeoCompositeShape::SetPoints(Float_t *points) const
 {
 // create points for a composite shape
-   TGeoBBox::SetPoints(points);
+   if (fNode) fNode->SetPoints(points);
 }
 
 //_____________________________________________________________________________
@@ -478,6 +486,6 @@ Int_t TGeoCompositeShape::GetNmeshVertices() const
 {
 // Return number of vertices of the mesh representation
    if (!fNode) return 0;
-   return 8;
+   return fNode->GetNpoints();
 }      
 

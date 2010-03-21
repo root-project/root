@@ -51,6 +51,7 @@ public:
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
+   virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 

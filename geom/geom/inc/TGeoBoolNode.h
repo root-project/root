@@ -48,6 +48,8 @@ protected:
    TGeoShape        *fRight;          // shape on the right branch
    TGeoMatrix       *fLeftMat;        // transformation that applies to the left branch
    TGeoMatrix       *fRightMat;       // transformation that applies to the right branch
+   Int_t             fNpoints;        //! number of points on the mesh
+   Double_t         *fPoints;         //! array of mesh points
 // methods
    Bool_t            MakeBranch(const char *expr, Bool_t left);
 public:
@@ -68,7 +70,7 @@ public:
    virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const = 0;
    virtual EGeoBoolType GetBooleanOperator() const = 0;
-   virtual Int_t     GetNpoints() const = 0;
+   virtual Int_t     GetNpoints() = 0;
    TGeoMatrix       *GetLeftMatrix() const {return fLeftMat;}
    TGeoMatrix       *GetRightMatrix() const {return fRightMat;}
    TGeoShape        *GetLeftShape() const {return fLeft;}
@@ -77,8 +79,8 @@ public:
    void              RegisterMatrices();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void      SetPoints(Double_t *points) const = 0;
-   virtual void      SetPoints(Float_t *points)  const = 0;
+   virtual void      SetPoints(Double_t *points) const;
+   virtual void      SetPoints(Float_t *points)  const;
    void              SetSelected(Int_t sel) {fSelected = sel;}
    virtual void      Sizeof3D() const;
 
@@ -111,11 +113,9 @@ public:
    virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
-   virtual Int_t     GetNpoints() const;
+   virtual Int_t     GetNpoints();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void      SetPoints(Double_t *points) const;
-   virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
 
    //CS specific
@@ -151,11 +151,9 @@ public:
    virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
-   virtual Int_t     GetNpoints() const;
+   virtual Int_t     GetNpoints();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void      SetPoints(Double_t *points) const;
-   virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
 
    //CS specific
@@ -190,11 +188,9 @@ public:
    virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
-   virtual Int_t     GetNpoints() const;
+   virtual Int_t     GetNpoints();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
-   virtual void      SetPoints(Double_t *points) const;
-   virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
 
    //CS specific
