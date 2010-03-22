@@ -777,18 +777,18 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 
       delete (G__ClassInfo*)cl->fClassInfo;
       cl->fClassInfo = 0;
-      
+
       std::string name( cl->GetName() );
       if (!CheckClassInfo(name.c_str())) {
          // Try resolving all the typedefs (even Float_t and Long64_t)
          name =  TClassEdit::ResolveTypedef(name.c_str(),kTRUE);
          if (name == cl->GetName() || !CheckClassInfo(name.c_str())) {
-          
+
             // Nothing found, nothing to do.
             return;
          }
       }
-      
+
       G__ClassInfo *info = new G__ClassInfo(name.c_str());
       cl->fClassInfo = info;
 
@@ -805,7 +805,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
           !(info->Property() & (kIsClass|kIsStruct|kIsNamespace))) {
          zombieCandidate = kTRUE; // cl->MakeZombie();
       }
-      
+
       if (!info->IsLoaded()) {
          if (info->Property() & (kIsNamespace)) {
             // Namespace can have a ClassInfo but no CINT dictionary per se
@@ -813,12 +813,12 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
             // classes has a dictionary.
             zombieCandidate = kTRUE; // cl->MakeZombie();
          }
-         
+
          // this happens when no CINT dictionary is available
          delete info;
          cl->fClassInfo = 0;
       }
-      
+
       if (zombieCandidate && !TClassEdit::IsSTLCont(cl->GetName())) {
          cl->MakeZombie();
       }
@@ -1388,10 +1388,16 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
                      TString p;
                      p = d + "/" + f;
                      if (!gSystem->AccessPathName(p, kReadPermission)) {
-                        if (gDebug > 4)
-                           Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
-                        fMapfile->ReadFile(p, kEnvGlobal);
-                        fRootmapFiles->Add(new TObjString(p));
+                        if (!fRootmapFiles->FindObject(f) && f != ".rootmap") {
+                           if (gDebug > 4)
+                              Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
+                           fMapfile->ReadFile(p, kEnvGlobal);
+                           fRootmapFiles->Add(new TNamed(f,p));
+                        }
+//                        else {
+//                           fprintf(stderr,"Reject %s because %s is already there\n",p.Data(),f.Data());
+//                           fRootmapFiles->FindObject(f)->ls();
+//                        }
                      }
                   }
                   if (f.BeginsWith("rootmap")) {
@@ -1417,7 +1423,7 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
       // Add content of a specific rootmap file
       Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
       fMapfile->ReadFile(rootmapfile, kEnvGlobal);
-      fRootmapFiles->Add(new TObjString(rootmapfile));
+      fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile),rootmapfile));
       fMapfile->IgnoreDuplicates(ignore);
    }
 
