@@ -1,8 +1,8 @@
 
 SRC= \
-    index.xml
+    TMemStat_Technical_Overview.xml
 
-DOCBOOK=index.xml
+DOCBOOK=TMemStat_Technical_Overview.xml
 
 HTML_OUT_DIR=./
 
@@ -14,7 +14,7 @@ HTML_OUT_DIR=./
 #IMG_DIR = img
 
 HTML_OUT= \
-          index.html
+          TMemStat_Technical_Overview.html
 
 CSS_FILES=docbook.css
 
