@@ -4311,12 +4311,19 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
          break;
       case 'c':
          // char
-         G__alloc_var_ref<char>(G__CHARALLOC, G__int, item, var, ig15, result);
          // Check for initialization of a character variable with a string constant.
-         if ((G__var_type == 'c') && var->varlabel[ig15][1] /* number of elements */ && (result.type == 'C')) {
+         if (
+            G__funcheader || // function arg initialization, or
+            !var->varlabel[ig15][1] /* number of elements */ || // not array,
+            (result.type != 'C') // or not init by char array
+         ) {
+            // -- The simple case, just allocate a char and initialize it.
+            G__alloc_var_ref<char>(G__CHARALLOC, G__int, item, var, ig15, result);
+         }
+         else {
             // -- We are a char array being initialized with a string constant.
             if (G__asm_wholefunction != G__ASM_FUNC_COMPILE) {
-               // -- Note: In whole function compilation var->p[ig15] is an offset.
+               // -- Not whole func compilation, allocate mem and copy initializer in.
                if (
                   !G__funcheader && // Not in a function header (we share value with caller), and
                   !G__def_struct_member && // Not defining a member variable (var->p[ig15] is an offset), and
@@ -4333,11 +4340,13 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                      // -- We are an array of char being initialized with a string constant that is too big.
                      // FIXME: Can this happen?
                      // FIXME: We need to give an error message here!
+                     G__alloc_var_ref<char>(G__CHARALLOC, G__int, item, var, ig15, result);
                      strncpy((char*) var->p[ig15], (char*) result.obj.i, (size_t) var->varlabel[ig15][1] /* number of elements */);
                   }
                   else {
                      // -- We are an array of char being initialized with a string constant.
                      // FIXME: Can this happen?
+                     G__alloc_var_ref<char>(G__CHARALLOC, G__int, item, var, ig15, result);
                      strcpy((char*) var->p[ig15], (char*) result.obj.i);
                      int num_omitted = var->varlabel[ig15][1] /* number of elements */ - len;
                      memset(((char*) var->p[ig15]) + len, 0, num_omitted);
@@ -4345,6 +4354,32 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                }
             }
             else {
+               // In whole function compilation, we must reserve a memory block
+               // in the function local storage and generate instructions to
+               // copy the initializer in.
+               if (
+                  !G__funcheader && // Not in a function header (we share value with caller), and
+                  !G__def_struct_member && // Not defining a member variable (var->p[ig15] is an offset), and
+                  !(G__static_alloc && (G__func_now > -1) && !G__prerun) // Not a static variable in function scope at runtime (init was done in prerun).
+               ) {
+                  int len = strlen((char*) result.obj.i);
+                  if (var->varlabel[ig15][1] /* number of elements */ == INT_MAX /* unspecified length flag */) {
+                     // -- We are an unspecified length array of char being initialized with a string constant.
+                     // FIXME: Can this happen?
+                     var->p[ig15] = (long) G__malloc(1, len + 1, item);
+                  }
+                  else if (len > var->varlabel[ig15][1] /* number of elements */) {
+                     // -- We are an array of char being initialized with a string constant that is too big.
+                     // FIXME: Can this happen?
+                     // FIXME: We need to give an error message here!
+                     var->p[ig15] = (long) G__malloc(1, len + 1, item);
+                  }
+                  else {
+                     // -- We are an array of char being initialized with a string constant.
+                     // FIXME: Can this happen?
+                     var->p[ig15] = (long) G__malloc(1, var->varlabel[ig15][1], item);
+                  }
+               }
                // --
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
@@ -4373,10 +4408,10 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                G__asm_inst[G__asm_cp+1] = (long) "strcpy"; // name
                G__asm_inst[G__asm_cp+2] = 677; // hash
                G__asm_inst[G__asm_cp+3] = 2; // paran
-               G__asm_inst[G__asm_cp+4] = (long) G__compiled_func;
-               G__asm_inst[G__asm_cp+5] = 0;
-               G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc; //13-09-07 is this safe?
-               G__inc_cp_asm(7, 0); // add 1 for the ifunc (stub-less calls)
+               G__asm_inst[G__asm_cp+4] = (long) G__compiled_func; // pfunc
+               G__asm_inst[G__asm_cp+5] = 0; // this ptr adjustment
+               G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc; // ifunc, ignored because pfunc is set
+               G__inc_cp_asm(7, 0);
             }
          }
          break;
