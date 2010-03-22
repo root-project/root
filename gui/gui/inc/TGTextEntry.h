@@ -73,6 +73,8 @@ protected:
    EInsertMode       fInsertMode;        // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="Insert",kReplace="Replace")}*
    ETextJustification fAlignment;        // *OPTION={GetMethod="GetAlignment";SetMethod="SetAlignment";Items=(kTextLeft="Left",kTextCenterX="Center",kTextRight="Right")}*
    Bool_t            fHasOwnFont;        // kTRUE - font defined locally,  kFALSE - globally
+   UInt_t            fDefWidth;          // default width
+   UInt_t            fDefHeight;         // default height
 
             void        CopyText() const;
    virtual  void        DoRedraw();
@@ -111,6 +113,9 @@ public:
    TGTextEntry(const TString &contents, const TGWindow *parent, Int_t id = -1);
 
    virtual ~TGTextEntry();
+
+   virtual  TGDimension GetDefaultSize() const;
+   virtual  void        SetDefaultSize(UInt_t w, UInt_t h);
 
    virtual  void        AppendText(const char *text);
             void        Backspace();
