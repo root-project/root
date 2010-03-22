@@ -522,7 +522,7 @@ ifeq ($(PLATFORM),win32)
 endif
 
 define handleError
-   tresult=$$? ;if [ $$tresult -ne 0 ] ; then cat $@; echo "make: *** [assert$*] Error $$tresult" >> $@; exit $$tresult; fi  
+   tresult=$$? ;if [ $$tresult -ne 0 ] ; then cat $@; echo "make: *** [$@] Error $$tresult" >> $@; exit $$tresult; fi  
 endef
 
 %.o: %.C
