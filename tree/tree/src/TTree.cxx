@@ -3321,15 +3321,20 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  The option=prof is automatically selected in case of y:x>>pf
    //  where pf is an existing TProfile histogram.
    //
-   //     Making a parallel coordinates plot.
-   //     ===========================
+   //     Making a 5D plot using GL
+   //     =========================
+   //  If option GL5D is specified together with 5 variables, a 5D plot is drawn
+   //  using OpenGL. See $ROOTSYS/tutorials/tree/staff.C as example.
+   //
+   //     Making a parallel coordinates plot
+   //     ==================================
    //  In case of a 2-Dim or more expression with the option=para, one can generate
    //  a parallel coordinates plot. With that option, the number of dimensions is
    //  arbitrary. Giving more than 4 variables without the option=para or
    //  option=candle or option=goff will produce an error.
    //
-   //     Making a candle sticks chart.
-   //     ===========================
+   //     Making a candle sticks chart
+   //     ============================
    //  In case of a 2-Dim or more expression with the option=candle, one can generate
    //  a candle sticks chart. With that option, the number of dimensions is
    //  arbitrary. Giving more than 4 variables without the option=para or
