@@ -81,7 +81,7 @@ else
 		cd $(FREETYPEVERS); \
 		FREECC=$(CC); \
 		if [ "$(CC)" = "icc" ]; then \
-			FREECC="icc -wd188 -wd181"; \
+			FREECC="icc -wd188 -wd181 -w1"; \
 		fi; \
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			FREECC="cc"; \
@@ -95,11 +95,11 @@ else
 			FREE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "linuxicc" ]; then \
-			FREECC="$$FREECC -m32 -wd188 -wd181"; \
+			FREECC="$$FREECC -m32 -wd188 -wd181 -w1"; \
 			FREE_CFLAGS="-m32"; \
 		fi; \
 		if [ $(ARCH) = "linuxx8664icc" ]; then \
-			FREECC="$$FREECC -m64 -wd188 -wd181"; \
+			FREECC="$$FREECC -m64 -wd188 -wd181 -w1"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
