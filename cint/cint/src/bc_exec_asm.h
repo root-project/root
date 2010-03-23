@@ -1557,7 +1557,7 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
 #ifdef G__ROOT
                G__store_struct_offset = (long) G__new_interpreted_object(G__asm_inst[pc+1] * G__asm_stack[sp-1].obj.i);
 #else // G__ROOT
-               G__store_struct_offset = (long) malloc(G__asm_inst[pc+1] * G__asm_stack[sp-1].obj.i);
+               G__store_struct_offset = (long) new char[G__asm_inst[pc+1] * G__asm_stack[sp-1].obj.i];
 #endif // G__ROOT
             }
             else {
