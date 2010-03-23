@@ -528,9 +528,13 @@ int testTransform3D() {
 
 
   Transform3D t2b = tr1 * Rotation3D(r);
-  iret |= compare(t2 ==t2b, 1,"eq1 transf",1 );
-  Transform3D t2c( r, tr1);
-  iret |= compare(t2 ==t2c, 1,"eq2 transf",1 );
+  // this above fails on Windows - use a comparison with tolerance
+  // 12 is size of Transform3D internal vector
+  iret |= compare( IsEqual(t2,t2b,12), true,"eq1 transf",1 );
+  //iret |= compare(t2 ==t2b, 1,"eq1 transf",1 );
+  Transform3D t2c( r, tr1); 
+  iret |= compare( IsEqual(t2,t2c,12), true,"eq2 transf",1 );
+  //iret |= compare(t2 ==t2c, 1,"eq2 transf",1 );
 
 
   Transform3D t3 =  Rotation3D(r) * Translation3D(vr); 
@@ -551,7 +555,7 @@ int testTransform3D() {
   EulerAngles err2; 
   GlobalPolar3DVector vvv2;
   t2b.GetDecomposition(err2,vvv2);
-  iret |= compare( r.Phi(), err2.Phi(),"transf rot phi",1 );
+  iret |= compare( r.Phi(), err2.Phi(),"transf rot phi",4 );
   iret |= compare( r.Theta(), err2.Theta(),"transf rot theta",1 );
   iret |= compare( r.Psi(), err2.Psi(),"transf rot psi",1 );
 
@@ -571,7 +575,8 @@ int testTransform3D() {
 
   Transform3D t5(rzyx, v);
   Transform3D trf5 = Translation3D(v) * rzyx; 
-  iret |= compare( trf5 == t5, 1,"trasl * rzyx",1 );
+  //iret |= compare( trf5 == t5, 1,"trasl * rzyx",1 );
+  iret |= compare( IsEqual(trf5,t5,12), true,"trasl * rzyx",1 );
 
   Transform3D t6(rzyx, rzyx * Translation3D(v).Vect() );
   Transform3D trf6 = rzyx * Translation3D(v); 
@@ -581,7 +586,8 @@ int testTransform3D() {
 
 
   Transform3D trf7 = t4 * Translation3D(v);
-  iret |= compare( trf7 == trf6, 1,"tranf * transl",1 );
+  //iret |= compare( trf7 == trf6, 1,"tranf * transl",1 );
+  iret |= compare( IsEqual(trf7,trf6,12), true,"tranf * transl",1 );
   Transform3D trf8 = Translation3D(v) * t4;
   iret |= compare( trf8 == trf5, 1,"trans * transf",1 );
 
