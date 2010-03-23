@@ -53,50 +53,50 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
       
    // TextEntry for medium name
    MakeTitle("Name");
-   fMedName = new TGTextEntry(this, new TGTextBuffer(50), kMED_NAME);
-   fMedName->Resize(135, fMedName->GetDefaultHeight());
+   fMedName = new TGTextEntry(this, "", kMED_NAME);
+   fMedName->SetDefaultSize(135, fMedName->GetDefaultHeight());
    fMedName->SetToolTipText("Enter the medium name");
    fMedName->Associate(this);
-   AddFrame(fMedName, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 2));
+   AddFrame(fMedName, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 1, 2, 2));
 
    TGTextEntry *nef;
 
 // Composite frame for medium ID and sensitivity
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 120, 30, kHorizontalFrame | kRaisedFrame);
-   f1->AddFrame(new TGLabel(f1, "ID"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
+   f1->AddFrame(new TGLabel(f1, "ID"), new TGLayoutHints(kLHintsLeft, 4, 1, 6, 0));
    fMedId = new TGNumberEntry(f1, 0., 1, kMED_ID);
    nef = (TGTextEntry*)fMedId->GetNumberEntry();
    nef->SetToolTipText("Enter the medium ID");
    fMedId->Associate(this);
-   f1->AddFrame(fMedId, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fMedId, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
    fMedSensitive = new TGCheckButton(f1, "&Sens", kMED_SENS);
    fMedSensitive->Associate(this);
-   f1->AddFrame(fMedSensitive, new TGLayoutHints(kLHintsRight | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fMedSensitive, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 3, 3, 2, 2));
 
    // Current material
-   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
    f1->AddFrame(label = new TGLabel(f1, "Current material"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    gClient->GetColorByName("#ff0000", color);
    label->SetTextColor(color);
    AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
-   f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame | kFixedWidth);
+   f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame);
    fSelectedMaterial = 0;
    fLSelMaterial = new TGLabel(f1, "Select material");
    gClient->GetColorByName("#0000ff", color);
    fLSelMaterial->SetTextColor(color);
-   fLSelMaterial->ChangeOptions(kSunkenFrame | kDoubleBorder);
+   fLSelMaterial->ChangeOptions(kChildFrame | kSunkenFrame | kDoubleBorder);
    f1->AddFrame(fLSelMaterial, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 1, 1, 2, 2));
    fBSelMaterial = new TGPictureButton(f1, fClient->GetPicture("rootdb_t.xpm"), kMED_MATSEL);
    fBSelMaterial->SetToolTipText("Replace with one of the existing materials");
    fBSelMaterial->Associate(this);
    f1->AddFrame(fBSelMaterial, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditMaterial = new TGTextButton(f1, "Edit");
-   f1->AddFrame(fEditMaterial, new TGLayoutHints(kLHintsRight, 1, 1, 2, 2));
+   f1->AddFrame(fEditMaterial, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditMaterial->SetToolTipText("Edit selected material");
    fEditMaterial->Associate(this);   
-   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 0, 0));
    
 // Combo box for magnetic field option
    f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -111,7 +111,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
 
 
 // Number entries for other settings
-   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kFixedWidth | kOwnBackground);
    f1->AddFrame(label = new TGLabel(f1, "Medium cuts"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    gClient->GetColorByName("#ff0000", color);

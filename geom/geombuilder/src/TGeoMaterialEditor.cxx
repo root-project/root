@@ -64,27 +64,27 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    // TextEntry for material name
    MakeTitle("Name");
    fMaterialName = new TGTextEntry(this, new TGTextBuffer(50), kMATERIAL_NAME);
-   fMaterialName->Resize(135, fMaterialName->GetDefaultHeight());
+   fMaterialName->SetDefaultSize(135, fMaterialName->GetDefaultHeight());
    fMaterialName->SetToolTipText("Enter the material name");
    fMaterialName->Associate(this);
-   AddFrame(fMaterialName, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 5));
+   AddFrame(fMaterialName, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 1, 1, 2, 5));
 
    TGTextEntry *nef;
    MakeTitle("Material properties");
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 118, 10, kHorizontalFrame |
                                  kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "A"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
-   fMatA = new TGNumberEntry(f1, 0., 5, kMATERIAL_A, TGNumberFormat::kNESRealThree);
+   fMatA = new TGNumberEntry(f1, 0., 6, kMATERIAL_A, TGNumberFormat::kNESRealThree);
    nef = (TGTextEntry*)fMatA->GetNumberEntry();
    nef->SetToolTipText("Enter the atomic mass");
    fMatA->Associate(this);
-   f1->AddFrame(fMatA, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   f1->AddFrame(fMatA, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    f1->AddFrame(new TGLabel(f1, "Z"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
-   fMatZ = new TGNumberEntry(f1, 0., 5, kMATERIAL_Z, TGNumberFormat::kNESInteger);
+   fMatZ = new TGNumberEntry(f1, 0., 4, kMATERIAL_Z, TGNumberFormat::kNESInteger);
    nef = (TGTextEntry*)fMatZ->GetNumberEntry();
    nef->SetToolTipText("Enter the atomic charge");
    fMatZ->Associate(this);
-   f1->AddFrame(fMatZ, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
+   f1->AddFrame(fMatZ, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    f1->Resize(150,30);
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    
@@ -428,7 +428,7 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
                              kLHintsExpandX | kFixedWidth | kOwnBackground);
    fChkNatoms = new TGCheckButton(f1, "N. atoms");
    fChkNatoms->SetDown(kFALSE);
-   f1->AddFrame(fChkNatoms, new TGLayoutHints(kLHintsLeft , 2, 2, 6, 1));
+   f1->AddFrame(fChkNatoms, new TGLayoutHints(kLHintsLeft, 2, 2, 6, 1));
    fNENatoms = new TGNumberEntry(f1, 0., 5, kMIX_NATOMS);
    fNENatoms->SetFormat(TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative);
    fNENatoms->Resize(65, fMaterialName->GetDefaultHeight());
@@ -442,16 +442,14 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
    // Button for adding the element
    fBAddElem = new TGTextButton(compxyz, "Add component");
    fBAddElem->Associate(this);
-   compxyz->AddFrame(fBAddElem, new TGLayoutHints(kLHintsRight , 2, 2, 1, 1));
+   compxyz->AddFrame(fBAddElem, new TGLayoutHints(kLHintsRight , 2, 2, 2, 0));
 
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 0, 0, 1, 1));
    
    // List view with all components
-   fCan = new TGCanvas(this, 145, 100);
-   TGCompositeFrame *cont = new TGCompositeFrame(fCan->GetViewPort(), 100, 100, kVerticalFrame | kLHintsExpandX);
-   fCan->SetContainer(cont);
-   AddFrame(fCan, new TGLayoutHints(kLHintsLeft, 2, 2, 1, 1));
+   fComps = new TGCompositeFrame(this, 150, 100, kVerticalFrame | kSunkenFrame);
+   AddFrame(fComps, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 0, 2, 1, 2));
 
    TGeoTabManager::MoveFrame(f23, this);
 }   
@@ -561,13 +559,7 @@ void TGeoMixtureEditor::DoAddElem()
    if (!el) return;
    if (byfraction) fMixture->AddElement(el, frac);
    else            fMixture->AddElement(el, natoms);   
-   fMatA->SetNumber(fMaterial->GetA());
-   fMatZ->SetNumber(fMaterial->GetZ());
-   fMatRadLen->SetNumber(fMaterial->GetRadLen());
-   fMatAbsLen->SetNumber(fMaterial->GetIntLen());
-   TString nelem = Form("Number of elements: %d", fMixture->GetNelements());
-   fNelem->SetText(nelem.Data());
-   UpdateElements();
+   fTabMgr->GetMaterialEditor(fMixture);
 }
 
 //______________________________________________________________________________
@@ -612,31 +604,21 @@ void TGeoMixtureEditor::DoUndo1()
 void TGeoMixtureEditor::UpdateElements()
 {
 // Update the list of elements in the TGCanvas.
+   fComps->RemoveAll();
    Int_t nelem = fMixture->GetNelements();
-   if (!nelem) return;
-   TGCompositeFrame *cont = (TGCompositeFrame*)fCan->GetContainer();
-   TList *list = cont->GetList();
-   TGLabel *label;
-   TGFrameElement *el;
-   TString s;
    for (Int_t i=0; i<nelem; i++) {
+      TString s;
       Bool_t byfrac = (fMixture->GetNmixt())?kFALSE:kTRUE;
       if (byfrac) 
-         s = Form("%d-%s-%d: Wmass = %g %%", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
-                  (Int_t)fMixture->GetAmixt()[i],fMixture->GetWmixt()[i]);
+         s.Form("%d-%s-%d: Wmass = %g %%", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
+                (Int_t)fMixture->GetAmixt()[i],fMixture->GetWmixt()[i]);
       else
-         s = Form("%d-%s-%d: Natoms = %d", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
-                  (Int_t)fMixture->GetAmixt()[i],fMixture->GetNmixt()[i]);
+         s.Form("%d-%s-%d: Natoms = %d", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
+                (Int_t)fMixture->GetAmixt()[i],fMixture->GetNmixt()[i]);
                      
-      el = (TGFrameElement*)list->At(i);
-      if (el) {
-         label = (TGLabel*)el->fFrame;
-         label->SetText(s.Data());
-      } else {
-         label = new TGLabel(cont, s.Data());
-         cont->AddFrame(label, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-         fCan->MapSubwindows();
-      }   
+      TGLabel *label = new TGLabel(fComps, s);
+      label->SetTextJustify(kTextLeft | kTextCenterY);
+      fComps->AddFrame(label, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 1, 1, 0, 0));
    }   
-//   fCan->Layout();
+   fComps->MapSubwindows();
 }

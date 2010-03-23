@@ -139,6 +139,7 @@ void TGeoTabManager::GetMediumEditor(TGeoMedium *medium)
    else {
       fMediumPanel->SetModel(medium);
       fMediumPanel->Show();
+      fMediumPanel->RaiseWindow();
    }   
 }
 
@@ -153,6 +154,7 @@ void TGeoTabManager::GetMaterialEditor(TGeoMaterial *material)
    else {
       fMaterialPanel->SetModel(material);
       fMaterialPanel->Show();
+      fMaterialPanel->RaiseWindow();
    }   
 }
 

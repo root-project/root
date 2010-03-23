@@ -115,7 +115,7 @@ protected:
    TGCheckButton       *fChkNatoms;         // Check button for number of atoms
    TGNumberEntry       *fNENatoms;          // Number entry for number of atoms
    TGTextButton        *fBAddElem;          // Buttom for adding element as component
-   TGCanvas            *fCan;               // Canvas with components
+   TGCompositeFrame    *fComps;             // Frame with components
 
    virtual void ConnectSignals2Slots();     // Connect the signals to the slots
 

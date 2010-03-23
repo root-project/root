@@ -82,7 +82,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    fIsDivided = kFALSE;
    
    // TGShutter for categories
-   fCategories = new TGShutter(this, kSunkenFrame | kFixedHeight);
+   fCategories = new TGShutter(this, kSunkenFrame);
    TGCompositeFrame *container, *f1;
    Pixel_t color;
    TGLabel *label;
@@ -92,7 +92,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    container = (TGCompositeFrame*)si->GetContainer();
    container->SetBackgroundColor(GetDefaultFrameBackground());
    fCategories->AddItem(si);
-   
+
    // TextEntry for volume name
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(label = new TGLabel(f1, "Volume name"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
@@ -100,10 +100,10 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    gClient->GetColorByName("#ff0000", color);
    label->SetTextColor(color);
    container->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
-   fVolumeName = new TGTextEntry(container, new TGTextBuffer(50), kVOL_NAME);
-   fVolumeName->Resize(135, fVolumeName->GetDefaultHeight());
+   fVolumeName = new TGTextEntry(container, "", kVOL_NAME);
+   fVolumeName->SetDefaultSize(135, fVolumeName->GetDefaultHeight());
    fVolumeName->SetToolTipText("Enter the volume name");
-   container->AddFrame(fVolumeName, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
+   container->AddFrame(fVolumeName, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 1, 2, 5));
 
    // Current shape
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -112,7 +112,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    gClient->GetColorByName("#ff0000", color);
    label->SetTextColor(color);
    container->AddFrame(f1, new TGLayoutHints(kLHintsTop, 0, 0, 10, 0));
-   f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
+   f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame);
    fSelectedShape = 0;
    fLSelShape = new TGLabel(f1, "Select shape");
    gClient->GetColorByName("#0000ff", color);
@@ -124,13 +124,13 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    fBSelShape->Associate(this);
    f1->AddFrame(fBSelShape, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditShape = new TGTextButton(f1, "Edit");
-   f1->AddFrame(fEditShape, new TGLayoutHints(kLHintsRight, 1, 1, 2, 2));
+   f1->AddFrame(fEditShape, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditShape->SetToolTipText("Edit selected shape");
    fEditShape->Associate(this);   
-   container->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
+   container->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 0, 0));
    
    // Current medium
-   f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame | kFixedWidth);
+   f1 = new TGCompositeFrame(container, 155, 30, kHorizontalFrame);
    fSelectedMedium = 0;
    fLSelMedium = new TGLabel(f1, "Select medium");
    gClient->GetColorByName("#0000ff", color);
@@ -142,11 +142,11 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    fBSelMedium->Associate(this);
    f1->AddFrame(fBSelMedium, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditMedium = new TGTextButton(f1, "Edit");
-   f1->AddFrame(fEditMedium, new TGLayoutHints(kLHintsRight, 1, 1, 2, 2));
+   f1->AddFrame(fEditMedium, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditMedium->SetToolTipText("Edit selected medium");
    fEditMedium->Associate(this);
-   container->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
-   
+   container->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 0, 0));
+
    // List of daughters
    si = new TGShutterItem(fCategories, new TGHotString("Daughters"),kCAT_DAUGHTERS);
    container = (TGCompositeFrame*)si->GetContainer();
@@ -365,7 +365,10 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
 
 
    fCategories->Resize(163,340);
-   AddFrame(fCategories, new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
+   AddFrame(fCategories, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 0, 0, 4, 4));
+
+   fCategories->Layout();
+   fCategories->SetDefaultSize(GetDefaultWidth(), GetDefaultHeight());
 }
 
 //______________________________________________________________________________
