@@ -44,6 +44,8 @@ TGShutter::TGShutter(const TGWindow *p, UInt_t options) :
    fTimer               = 0;
    fTrash               = new TList;
 
+   fDefWidth = fDefHeight = 0;
+
    // layout manager is not used
    delete fLayoutManager;
    fLayoutManager = 0;
@@ -312,6 +314,25 @@ TGShutterItem *TGShutter::GetItem(const char *name)
    return item;
 }
 
+//______________________________________________________________________________
+TGDimension TGShutter::GetDefaultSize() const
+{
+   // Return the default / minimal size of the widget.
+
+   UInt_t w = (GetOptions() & kFixedWidth)  || (fDefWidth  == 0) ? fWidth  : fDefWidth;
+   UInt_t h = (GetOptions() & kFixedHeight) || (fDefHeight == 0) ? fHeight : fDefHeight;
+   return TGDimension(w, h);
+}
+
+//______________________________________________________________________________
+void TGShutter::SetDefaultSize(UInt_t w, UInt_t h)
+{
+   // Set the default / minimal size of the widget.
+
+   fDefWidth  = w;
+   fDefHeight = h;
+}
+
 
 //______________________________________________________________________________
 TGShutterItem::TGShutterItem(const TGWindow *p, TGHotString *s, Int_t id,
@@ -418,6 +439,11 @@ void TGShutter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << "   TGShutter *";
    out << GetName() << " = new TGShutter(" << fParent->GetName() << ","
        << GetOptionString() << ");" << endl;
+
+   if ((fDefWidth > 0) || (fDefHeight > 0)) {
+      out << "   " << GetName() << "->SetDefaultSize(";
+      out << fDefWidth << "," << fDefHeight << ");" << endl;
+   }
 
    if (!fList) return;
 

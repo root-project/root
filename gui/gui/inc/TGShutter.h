@@ -82,6 +82,8 @@ protected:
    Int_t           fHeightIncrement;        // Height delta
    Int_t           fClosingHeight;          // Closing items current height
    Int_t           fClosingHadScrollbar;    // Closing item had a scroll bar
+   UInt_t          fDefWidth;               // Default width
+   UInt_t          fDefHeight;              // Default height
 
 private:
    TGShutter(const TGShutter&);             // not implemented
@@ -104,6 +106,9 @@ public:
    virtual void   SetSelectedItem(TGShutterItem *item);
    virtual void   SetSelectedItem(const char *name);
    virtual void   EnableItem(const char *name, Bool_t on = kTRUE);
+
+   virtual TGDimension GetDefaultSize() const;
+   virtual void        SetDefaultSize(UInt_t w, UInt_t h);
 
    virtual void   SavePrimitive(ostream &out, Option_t *option = "");
 
