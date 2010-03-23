@@ -298,6 +298,11 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       fBufferRef->SetParent(file);
 
       Streamer(*fBufferRef);
+   
+      if (IsZombie()) {
+         badread = 1;
+         return badread;         
+      }
 
       Bool_t oldCase = fObjlen==fNbytes-fKeylen
          && GetBranch()->GetCompressionLevel()!=0
@@ -340,6 +345,11 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 
       Streamer(*fBufferRef);
 
+      if (IsZombie()) {
+         badread = 1;
+         return badread;         
+      }
+      
       Bool_t oldCase = fObjlen==fNbytes-fKeylen
          && GetBranch()->GetCompressionLevel()!=0
          && file->GetVersion()<=30401;
@@ -472,6 +482,11 @@ void TBasket::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion();
       b >> fBufferSize;
       b >> fNevBufSize;
+      if (fNevBufSize < 0) {
+         Error("Streamer","The value of fNevBufSize is incorrect (%d) ; trying to recover by setting it to zero",fNevBufSize);
+         MakeZombie();
+         fNevBufSize = 0;
+      }
       b >> fNevBuf;
       b >> fLast;
       b >> flag;
