@@ -88,6 +88,7 @@ class TVirtualMutex;
 class TFileCollection;
 class TMap;
 class TDataSetManager;
+class TMacro;
 
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
@@ -117,7 +118,7 @@ class TDataSetManager;
 // 24 -> 25: Handling of 'data' dir; group information
 // 25 -> 26: Use new TProofProgressInfo class
 // 26 -> 27: Use new file for updating the session status
-// 27 -> 28: Support for multi-datasets
+// 27 -> 28: Support for multi-datasets, fix global package directories, fix AskStatistics,
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 28;            // protocol version number
@@ -859,6 +860,7 @@ public:
 
    void        SetRealTimeLog(Bool_t on = kTRUE);
 
+   void        GetStatistics(Bool_t verbose = kFALSE);
    Long64_t    GetBytesRead() const { return fBytesRead; }
    Float_t     GetRealTime() const { return fRealTime; }
    Float_t     GetCpuTime() const { return fCpuTime; }
@@ -937,6 +939,7 @@ public:
    void        SendDataSetStatus(const char *msg, UInt_t n, UInt_t tot, Bool_t st);
 
    void        GetLog(Int_t start = -1, Int_t end = -1);
+   TMacro     *GetLastLog();
    void        PutLog(TQueryResult *qr);
    void        ShowLog(Int_t qry = -1);
    void        ShowLog(const char *queryref);

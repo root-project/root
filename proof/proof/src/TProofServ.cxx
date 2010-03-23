@@ -2328,15 +2328,17 @@ void TProofServ::SendStatistics()
 {
    // Send statistics of slave server to master or client.
 
-   Long64_t bytesread = 0;
-   if (IsMaster())
+   Long64_t bytesread = TFile::GetFileBytesRead();
+   Float_t cputime = fCpuTime, realtime = fRealTime;
+   if (IsMaster()) {
       bytesread = fProof->GetBytesRead();
-   else
-      bytesread = TFile::GetFileBytesRead();
+      cputime = fProof->GetCpuTime();
+      realtime = fProof->GetRealTime();
+   }
 
    TMessage mess(kPROOF_GETSTATS);
    TString workdir = gSystem->WorkingDirectory();  // expect TString on other side
-   mess << bytesread << fRealTime << fCpuTime << workdir;
+   mess << bytesread << realtime << cputime << workdir;
    if (fProtocol >= 4) mess << TString(gProofServ->GetWorkDir());
    mess << TString(gProofServ->GetImage());
    fSocket->Send(mess);

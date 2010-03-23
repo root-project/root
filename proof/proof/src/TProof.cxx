@@ -78,6 +78,7 @@
 #include "TUrl.h"
 #include "TFileCollection.h"
 #include "TDataSetManager.h"
+#include "TMacro.h"
 
 TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
@@ -1672,6 +1673,51 @@ void TProof::AskStatistics()
 
    Broadcast(kPROOF_GETSTATS, kActive);
    Collect(kActive, fCollectTimeout);
+}
+
+//______________________________________________________________________________
+void TProof::GetStatistics(Bool_t verbose)
+{
+   // Get statistics about CPU time, real time and bytes read.
+   // If verbose, print the resuls (always available via GetCpuTime(), GetRealTime()
+   // and GetBytesRead()
+
+   if (fProtocol > 27) {
+      // This returns the correct result
+      AskStatistics();
+   } else {
+      // AskStatistics is buggy: parse the output of Print()
+      RedirectHandle_t rh;
+      gSystem->RedirectOutput(fLogFileName, "a", &rh);
+      Print();
+      gSystem->RedirectOutput(0, 0, &rh);
+      TMacro *mp = GetLastLog();
+      if (mp) {
+         // Look for global directories
+         TIter nxl(mp->GetListOfLines());
+         TObjString *os = 0;
+         while ((os = (TObjString *) nxl())) {
+            TString s(os->GetName());
+            if (s.Contains("Total MB's processed:")) {
+               s.ReplaceAll("Total MB's processed:", "");
+               if (s.IsFloat()) fBytesRead = s.Atof() * (1024*1024);
+            } else if (s.Contains("Total real time used (s):")) {
+               s.ReplaceAll("Total real time used (s):", "");
+               if (s.IsFloat()) fRealTime = s.Atof();
+            } else if (s.Contains("Total CPU time used (s):")) {
+               s.ReplaceAll("Total CPU time used (s):", "");
+               if (s.IsFloat()) fCpuTime = s.Atof();
+            }
+         }
+         delete mp;
+      }
+   }
+
+   if (verbose) {
+      Printf("Total MB's processed:       %.2f", float(GetBytesRead())/(1024*1024));
+      Printf("Total real time used (s):   %.3f", GetRealTime());
+      Printf("Total CPU time used (s):    %.3f", GetCpuTime());
+   }
 }
 
 //______________________________________________________________________________
@@ -8450,6 +8496,72 @@ void TProof::GetLog(Int_t start, Int_t end)
 
    Broadcast(msg, kActive);
    Collect(kActive, fCollectTimeout);
+}
+
+//______________________________________________________________________________
+TMacro *TProof::GetLastLog()
+{
+   // Fill a TMacro with the log lines since the last reading (fLogFileR)
+   // Return (TMacro *)0 if no line was logged.
+   // The returned TMacro must be deleted by the caller.
+
+   TMacro *maclog = 0;
+
+   // Save present offset
+   off_t nowlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_CUR);
+   if (nowlog < 0) {
+      SysError("GetLastLog",
+               "problem lseeking log file to current position (errno: %d)", TSystem::GetErrno());
+      return maclog;
+   }
+
+   // Get extremes
+   off_t startlog = nowlog;
+   off_t endlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_END);
+   if (endlog < 0) {
+      SysError("GetLastLog",
+               "problem lseeking log file to end position (errno: %d)", TSystem::GetErrno());
+      return maclog;
+   }
+
+   // Perhaps nothing to log
+   UInt_t tolog = (UInt_t)(endlog - startlog);
+   if (tolog <= 0) return maclog;
+
+   // Set starting point
+   if (lseek(fileno(fLogFileR), startlog, SEEK_SET) < 0) {
+      SysError("GetLastLog",
+               "problem lseeking log file to start position (errno: %d)", TSystem::GetErrno());
+      return maclog;
+   }
+
+   // Create the output object
+   maclog = new TMacro;
+
+   // Now we go
+   char line[2048];
+   Int_t wanted = (tolog > sizeof(line)) ? sizeof(line) : tolog;
+   while (fgets(line, wanted, fLogFileR)) {
+      Int_t r = strlen(line);
+      if (r > 0) {
+         if (line[r-1] == '\n') line[r-1] = '\0';
+         maclog->AddLine(line);
+      } else {
+         // Done
+         break;
+      }
+      tolog -= r;
+      wanted = (tolog > sizeof(line)) ? sizeof(line) : tolog;
+   }
+
+   // Restore original pointer
+   if (lseek(fileno(fLogFileR), nowlog, SEEK_SET) < 0) {
+      Warning("GetLastLog",
+              "problem lseeking log file to original position (errno: %d)", TSystem::GetErrno());
+   }
+
+   // Done
+   return maclog;
 }
 
 //______________________________________________________________________________
