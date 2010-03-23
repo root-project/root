@@ -4766,6 +4766,15 @@ if test ! "x$enable_mathmore" = "xno"; then
                fi
            fi
         done
+        if `$cwhich gsl-config > /dev/null 2>&1` && \
+           test "x$enable_mathmore" = "xno" ; then
+            message "Checking for shared library versions using gsl-config"
+            gslflags=`gsl-config --cflags`
+            gsllibs=`gsl-config --libs`
+            gsllibdir=""
+            enable_mathmore="yes"
+            result "yes"
+        fi
     fi
 fi
 message "Checking whether to build libMathMore"
