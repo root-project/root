@@ -6,8 +6,8 @@
   
 include ../GNUmake.env
 
-MORELIBS = -L$(LIBDIR) -lXrdSec $(LIBSSL) $(LIBDIR)/libsslGridSite.a \
-           $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a $(LIBXML)
+MORELIBS = -L$(LIBDIR) -lXrdSec $(LIBDIR)/libsslGridSite.a \
+           $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a  $(LIBSSL) $(LIBXML)
 
 LIBDEPS = $(LIBDIR)/libsslGridSite.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrdNet.a
 
@@ -51,7 +51,7 @@ LIBRARY = $(LIBDIR)/libXrdSecssl.$(TYPESHLIB)
 
 SECSSLTEST = $(BINDIR)/xrdsecssltest
 
-TARGETS = $(LIBGRST) $(LIBRARY) $(SECSSLTEST)
+TARGETS = $(LIBGRST) $(LIBRARY)
 
 #------------------------------------------------------------------------------#
 #                           S e a r c h   P a t h s                            #
