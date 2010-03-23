@@ -1530,7 +1530,12 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                switch (defined->type) {
                   case 'b':
                   case 'r':
-                  case 'h':
+                  case 'h': {
+                     unsigned int uidefined = udefined;
+                     G__letint(defined, 'h', 0);
+                     defined->obj.uin = uidefined >> uexpression;
+                  }
+                  break;
                   case 'k': {
                      unsigned long uudefined = udefined;
                      G__letint(defined, 'k', 0);
@@ -1547,7 +1552,12 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
                switch (defined->type) {
                   case 'b':
                   case 'r':
-                  case 'h':
+                  case 'h':{
+                     unsigned int uidefined = udefined;
+                     G__letint(defined, 'h', 0);
+                     defined->obj.uin = uidefined << uexpression;
+                  }
+                  break;
                   case 'k': {
                      unsigned long uudefined = udefined;
                      G__letint(defined, 'k', 0);
