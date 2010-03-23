@@ -1,5 +1,6 @@
 # This is a template for all makefiles.
 
+
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 
@@ -60,8 +61,9 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-#skip tests on Windows 
-ifneq ($(PLATFORM),win32)
+##skip tests on Windows 
+##ifneq ($(PLATFORM),win32)
+##endif
 
 #this suppress check in log file
 coordinates3D.elog: $(ROOT_LOC)/math/genvector/test/coordinates3D_cxx.$(DllSuf)
@@ -84,4 +86,4 @@ testGenVector.log: $(ROOT_LOC)/math/genvector/test/testGenVector_cxx.$(DllSuf)
 testGenVector: testGenVector.log
 	$(TestDiff)
 
-endif
+
