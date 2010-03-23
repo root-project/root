@@ -1700,7 +1700,7 @@ void TProof::GetStatistics(Bool_t verbose)
             TString s(os->GetName());
             if (s.Contains("Total MB's processed:")) {
                s.ReplaceAll("Total MB's processed:", "");
-               if (s.IsFloat()) fBytesRead = s.Atof() * (1024*1024);
+               if (s.IsFloat()) fBytesRead = (Long64_t) s.Atof() * (1024*1024);
             } else if (s.Contains("Total real time used (s):")) {
                s.ReplaceAll("Total real time used (s):", "");
                if (s.IsFloat()) fRealTime = s.Atof();
