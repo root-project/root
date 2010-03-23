@@ -32,51 +32,60 @@ void test0() {
 }
 
 void test1() {
+  printf("test1\n");
   ULong64_t aa;
   aa = (ULong64_t)(-(1<<30 - 1));
-  printf("%llu ",aa);
+  printf("1: %llu ",aa);
   aa = aa<<1;
-  printf("%llu ",aa);
+  printf("2: %llu ",aa);
   aa = aa*2;
-  printf("%llu ",aa);
-  aa = aa/((Long64_t)(-(1u<<30 - 1)));
-  printf("%llu\n",aa);
+  printf("3: %llu ",aa);
+  ULong64_t bb = aa;
+  // printf("4-0: %x %x ",1u<<30 - 1,-(1u<<30 - 1));
+  // Long_t ii = -(1u<<28-1); // -(536870913u-1); // 1u<<30 - 1);
+  // printf("4-1: %lld %llu %llu ",ii,(ULong64_t)ii, aa);
+  // aa = bb / ii;
+  aa = bb/((Long64_t)(-(1u<<30 - 1)));
+  printf("4: %llu\n",aa);
 }
 
 void test2() {
+  printf("test2\n");
   ULong64_t aa;
   aa = 1ULL<<31;
-  printf("%llu ",aa);
+  printf("1: %llu ",aa);
   aa = aa<<1;
-  printf("%llu ",aa);
+  printf("2: %llu ",aa);
   aa = aa*2;
-  printf("%llu ",aa);
+  printf("3: %llu ",aa);
   aa = aa/((Long64_t)(1u<<31));
-  printf("%llu\n",aa);
+  printf("4: %llu\n",aa);
 }
 
-void test3() {
-  Long64_t aa;
+void test3() { 
+  printf("test3\n");
+ Long64_t aa;
   aa = (int)(1u<<31);
-  printf("%lld ",aa);
+  printf("1: %lld ",aa);
   aa = aa<<1;
-  printf("%lld ",aa);
+  printf("2: %lld ",aa);
   aa = aa*2;
-  printf("%lld ",aa);
+  printf("3: %lld ",aa);
   aa = aa/(1LL<<31);
-  printf("%lld\n",aa);
+  printf("4: %lld\n",aa);
 }
 
 void test4() {
+  printf("test4\n");
   Long64_t aa;
   aa = 1LL<<31;
-  printf("%lld ",aa);
+  printf("1: %lld ",aa);
   aa = aa<<1;
-  printf("%lld ",aa);
+  printf("2: %lld ",aa);
   aa = aa*2;
-  printf("%lld ",aa);
+  printf("3: %lld ",aa);
   aa = aa/(1LL<<31);
-  printf("%lld\n",aa);
+  printf("4: %lld\n",aa);
 }
 
 int main() {
