@@ -1,3 +1,12 @@
+
++------------------------------------------------------------------------------------+
+| NB: This legacy README file refers to a PROOF installation using the discontinued  |
+|     'proofd' daemon.                                                               |
+|     Reference documentation about the currently supported and developed daemon     |
+|     based on the SCALLA/XROOTD framework, can be found at                          |
+|                  http://root.cern.ch/drupal/content/proof                          |
++------------------------------------------------------------------------------------+
+
 Installing and using the Parallel ROOT Facility -- PROOF
 ========================================================
 
