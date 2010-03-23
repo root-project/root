@@ -15,7 +15,7 @@
 // *   -h          show help info                                          * //
 // *   master      entry point of the cluster where to run the test        * //
 // *               in the form '[user@]host.domain[:port]';                * //
-// *               default 'localhost:11093'                               * //
+// *               default 'localhost:80000'                               * //
 // *   -n wrks     number of workers to be started when running on the     * //
 // *               local host; default is the nuber of local cores         * //
 // *   -d level    verbosity level [1]                                     * //
@@ -122,7 +122,7 @@
 
 #include "../tutorials/proof/getProof.C"
 
-static const char *urldef = "proof://localhost:11093";
+static const char *urldef = "proof://localhost:80000";
 static TString gtutdir;
 static TString gsandbox;
 static Int_t gverbose = 1;
@@ -143,9 +143,15 @@ static Bool_t gUseParallelUnzip = kFALSE;
 static TString gh1src("http://root.cern.ch/files/h1");
 static Bool_t gh1ok = kTRUE;
 static const char *gh1file[] = { "dstarmb.root", "dstarp1a.root", "dstarp1b.root", "dstarp2.root" };
-static TList gSelectors;
 
-void stressProof(const char *url = "proof://localhost:11093",
+// The selectors
+static TList gSelectors;
+static TString gH1Sel("$ROOTSYS/tutorials/tree/h1analysis.C");
+static TString gEventSel("$ROOTSYS/tutorials/proof/ProofEvent.C");
+static TString gSimpleSel("$ROOTSYS/tutorials/proof/ProofSimple.C");
+static TString gTestsSel("$ROOTSYS/tutorials/proof/ProofTests.C");
+
+void stressProof(const char *url = "proof://localhost:80000",
                  Int_t nwrks = -1, Int_t verbose = 1,
                  const char *logfile = 0, Bool_t dyn = kFALSE,
                  Bool_t skipds = kTRUE, Int_t test = -1,
@@ -168,7 +174,7 @@ int main(int argc,const char *argv[])
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
       printf("   master        entry point of the cluster where to run the test\n");
-      printf("                 in the form '[user@]host.domain[:port]'; default 'localhost:11093'\n");
+      printf("                 in the form '[user@]host.domain[:port]'; default 'localhost:80000'\n");
       printf("   -n wrks       number of workers to be started when running on the local host;\n");
       printf("                 default is the nuber of local cores\n");
       printf("   -d level      verbosity level [1]\n");
@@ -517,6 +523,8 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    if (logfile && strlen(logfile) > 0) {
       usedeflog = kFALSE;
       glogfile = logfile;
+      if (glogfile.Contains("<tmpdir>"))
+         glogfile.ReplaceAll("<tmpdir>", gSystem->TempDirectory());
       if (!gSystem->AccessPathName(glogfile, kFileExists)) {
          if (!gSystem->AccessPathName(glogfile, kWritePermission)) {
             printf(" >>> Cannot write to log file %s - ignore file request\n", logfile);
@@ -619,10 +627,14 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    testList->Add(new ProofTest("Dynamic sub-mergers functionality", 15, &PT_Simple, (void *)&useMergers, "1", "ProofSimple"));
 
    // The selectors
-   gSelectors.Add(new TNamed("h1analysis", "../tutorials/tree/h1analysis.C"));
-   gSelectors.Add(new TNamed("ProofEvent", "../tutorials/proof/ProofEvent.C"));
-   gSelectors.Add(new TNamed("ProofSimple", "../tutorials/proof/ProofSimple.C"));
-   gSelectors.Add(new TNamed("ProofTests", "../tutorials/proof/ProofTests.C"));
+   gSystem->ExpandPathName(gH1Sel);
+   gSystem->ExpandPathName(gEventSel);
+   gSystem->ExpandPathName(gSimpleSel);
+   gSystem->ExpandPathName(gTestsSel);
+   gSelectors.Add(new TNamed("h1analysis", gH1Sel.Data()));
+   gSelectors.Add(new TNamed("ProofEvent", gEventSel.Data()));
+   gSelectors.Add(new TNamed("ProofSimple", gSimpleSel.Data()));
+   gSelectors.Add(new TNamed("ProofTests", gTestsSel.Data()));
    if (gverbose > 0) printf("*  Cleaning all non-source files associated to:\n");
 
    // Check what to run
@@ -675,6 +687,12 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    if (gverbose > 0)
       printf("******************************************************************\n");
 
+   // Add the ACLiC option to the selector strings
+   gH1Sel += "+";
+   gEventSel += "+";
+   gSimpleSel += "+";
+   gTestsSel += "+";
+
    //
    // Run the tests
    //
@@ -691,7 +709,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    // Done
    if (failed) {
       Bool_t kept = kTRUE;
-      if (usedeflog) {
+      if (usedeflog && !gROOT->IsBatch()) {
          char *answer = Getline(" Some tests failed: would you like to keep the log file (N,Y)? [Y] ");
          if (answer && (answer[0] == 'N' || answer[0] == 'n')) {
             // Remove log file
@@ -707,8 +725,26 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       if (usedeflog)
          gSystem->Unlink(glogfile);
    }
+
+   printf("******************************************************************\n");
+   if (gProof) gProof->GetStatistics((verbose > 0));
+   // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
+   // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
+   const double reftime = 21.060;
+   double rootmarks = (gProof->GetCpuTime() > 0) ? 1000 * reftime / gProof->GetCpuTime() : -1;
+   printf(" ROOTMARKS = %.2f ROOT version: %s\t%s@%d\n", rootmarks, gROOT->GetVersion(),
+          gROOT->GetSvnBranch(), gROOT->GetSvnRevision());
    printf("******************************************************************\n");
 
+   // If not PROOF-Lite, stop the daemon used for the test
+   if (gProof && !gProof->IsLite()) {
+      // Close the instance
+      delete gProof;
+      // The daemon runs on a port shifted by 1
+      if (killXrootdAt(uu.GetPort()+1, "xpd-tutorial") != 0) {
+         printf("+++ Warning: test daemon probably still running!\n");
+      }
+   }
 }
 
 //_____________________________________________________________________________
@@ -1034,7 +1070,7 @@ Int_t PT_Simple(void *submergers)
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
    gTimer.Start();
-   gProof->Process("../tutorials/proof/ProofSimple.C+", nevt);
+   gProof->Process(gSimpleSel.Data(), nevt);
    gTimer.Stop();
    gProof->SetPrintProgress(0);
 
@@ -1091,7 +1127,7 @@ Int_t PT_H1Http(void *)
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
    gTimer.Start();
-   chain->Process("../tutorials/tree/h1analysis.C+");
+   chain->Process(gH1Sel.Data());
    gTimer.Stop();
    gProof->SetPrintProgress(0);
    gProof->RemoveChain(chain);
@@ -1154,7 +1190,7 @@ Int_t PT_H1FileCollection(void *arg)
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
    gTimer.Start();
-   gProof->Process(fc, "../tutorials/tree/h1analysis.C+");
+   gProof->Process(fc, gH1Sel.Data());
    gTimer.Stop();
    gProof->SetPrintProgress(0);
 
@@ -1200,7 +1236,7 @@ Int_t PT_H1DataSet(void *)
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
    gTimer.Start();
-   gProof->Process(dsname, "../tutorials/tree/h1analysis.C+");
+   gProof->Process(dsname, gH1Sel.Data());
    gTimer.Stop();
    gProof->SetPrintProgress(0);
 
@@ -1243,7 +1279,7 @@ Int_t PT_H1MultiDSetEntryList(void *)
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
    gTimer.Start();
-   gProof->Process(dsname, "../tutorials/tree/h1analysis.C+", "fillList=elist.root");
+   gProof->Process(dsname, gH1Sel.Data(), "fillList=elist.root");
    gTimer.Stop();
    gProof->SetPrintProgress(0);
    // Cleanup entry-list from the input list
@@ -1265,7 +1301,7 @@ Int_t PT_H1MultiDSetEntryList(void *)
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
    gTimer.Start();
-   gProof->Process(dsname, "../tutorials/tree/h1analysis.C+");
+   gProof->Process(dsname, gH1Sel.Data());
    gTimer.Stop();
    gProof->SetPrintProgress(0);
 
@@ -1462,7 +1498,8 @@ Int_t PT_Packages(void *)
 
    // Name and location for this package
    const char *pack = "event";
-   const char *packpath = "../tutorials/proof/event.par";
+   TString packpath("$ROOTSYS/tutorials/proof/event.par");
+   gSystem->ExpandPathName(packpath);
 
    // Upload the package
    PutPoint();
@@ -1470,7 +1507,7 @@ Int_t PT_Packages(void *)
    // Check the result
    packs = gProof->GetListOfPackages();
    if (!packs || packs->GetSize() != 1) {
-      printf("\n >>> Test failure: could not upload '%s'!\n", packpath);
+      printf("\n >>> Test failure: could not upload '%s'!\n", packpath.Data());
       return -1;
    }
 
@@ -1490,7 +1527,7 @@ Int_t PT_Packages(void *)
    // Check the result
    packs = gProof->GetListOfPackages();
    if (!packs || packs->GetSize() != 1) {
-      printf("\n >>> Test failure: could not re-upload '%s'!\n", packpath);
+      printf("\n >>> Test failure: could not re-upload '%s'!\n", packpath.Data());
       return -1;
    }
 
@@ -1530,7 +1567,7 @@ Int_t PT_Event(void *)
    // Process
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process("../tutorials/proof/ProofEvent.C+", nevt);
+   gProof->Process(gEventSel.Data(), nevt);
    gProof->SetPrintProgress(0);
 
    // Make sure the query result is there
@@ -1636,7 +1673,7 @@ Int_t PT_InputData(void *)
    // Process
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process("../tutorials/proof/ProofTests.C+", nevt);
+   gProof->Process(gTestsSel.Data(), nevt);
    gProof->SetPrintProgress(0);
 
    // Cleanup
@@ -1750,14 +1787,14 @@ Int_t PT_H1SimpleAsync(void *arg)
    // Submit the processing requests
    PutPoint();
    gProof->SetPrintProgress(&PrintStressProgress);
-   gProof->Process(fc, "../tutorials/tree/h1analysis.C+", "ASYN");
+   gProof->Process(fc, gH1Sel.Data(), "ASYN");
 
    // Define the number of events and histos
    Long64_t nevt = 1000000;
    Int_t nhist = 16;
    // The number of histograms is added as parameter in the input list
    gProof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
-   gProof->Process("../tutorials/proof/ProofSimple.C+", nevt, "ASYN");
+   gProof->Process(gSimpleSel.Data(), nevt, "ASYN");
 
    // Wait a bit as a function of previous runnings
    Double_t dtw = 10;

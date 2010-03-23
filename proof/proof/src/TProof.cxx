@@ -1714,9 +1714,8 @@ void TProof::GetStatistics(Bool_t verbose)
    }
 
    if (verbose) {
-      Printf("Total MB's processed:       %.2f", float(GetBytesRead())/(1024*1024));
-      Printf("Total real time used (s):   %.3f", GetRealTime());
-      Printf("Total CPU time used (s):    %.3f", GetCpuTime());
+      Printf(" Real/CPU time (s): %.3f / %.3f; workers: %d; processed: %.2f MBs",
+             GetRealTime(), GetCpuTime(), GetParallel(), float(GetBytesRead())/(1024*1024));
    }
 }
 
