@@ -36,22 +36,16 @@ class FTGL_EXPORT FTGLBitmapFont : public FTFont
          */
         ~FTGLBitmapFont();
         
-        /**
-         * Renders a string of characters
-         * 
-         * @param string    'C' style string to be output.   
+	/**
+         * Prepare for rendering
          */
-        void Render( const char* string);
+        virtual void PreRender();
 
-        /**
-         * Renders a string of characters
-         * 
-         * @param string    'C' style wide string to be output.  
+	/**
+         * Cleanup after rendering
          */
-        void Render( const wchar_t* string);
+        virtual void PostRender();
 
-        // attributes
-        
     private:
         /**
          * Construct a FTBitmapGlyph.

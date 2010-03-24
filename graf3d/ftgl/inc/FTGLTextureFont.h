@@ -46,20 +46,15 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          */
         virtual bool FaceSize( const unsigned int size, const unsigned int res = 72);
 
-        /**
-         * Renders a string of characters
-         * 
-         * @param string    'C' style string to be output.   
+	/**
+         * Prepare for rendering
          */
-        virtual void Render( const char* string);
-        
-        /**
-         * Renders a string of characters
-         * 
-         * @param string    wchar_t string to be output.     
-         */
-        virtual void Render( const wchar_t* string);
+        virtual void PreRender();
 
+	/**
+         * Cleanup after rendering
+         */
+        virtual void PostRender();
         
     private:
         /**

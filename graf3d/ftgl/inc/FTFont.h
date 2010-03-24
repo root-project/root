@@ -195,12 +195,31 @@ class FTGL_EXPORT FTFont
          */
         float Advance( const char* string);
 
+	/**
+         * Prepare for rendering
+         */
+        virtual void PreRender() { preRenderCalled = true; }
+
+	/**
+         * Cleanup after rendering
+         */
+        virtual void PostRender() { preRenderCalled = false; }
+
         /**
          * Render a string of characters
          * 
          * @param string    'C' style string to be output.   
          */
         virtual void Render( const char* string );
+
+        /**
+         * Render a string of characters
+         * 
+         * @param string    'C' style string to be output.   
+	 * @param w_max     maximum width of text
+	 * @param w_fade    width at which text starts to fade
+         */
+        virtual void Render( const char* string, float w_max, float w_fade );
 
         /**
          * Render a string of characters
@@ -260,6 +279,13 @@ class FTGL_EXPORT FTFont
         inline bool CheckGlyph( const unsigned int chr);
 
         /**
+         * PreRender() was called from outside. Do not call it again
+         * from Render(), nor call PostRender().
+         * User has to call it himself.
+         */
+        bool preRenderCalled;
+
+        /**
          * An object that holds a list of glyphs
          */
         FTGlyphContainer* glyphList;
@@ -268,7 +294,6 @@ class FTGL_EXPORT FTFont
          * Current pen or cursor position;
          */
         FTPoint pen;
-        
 };
 
 

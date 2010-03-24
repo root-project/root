@@ -151,32 +151,22 @@ bool FTGLTextureFont::FaceSize( const unsigned int size, const unsigned int res)
 }
 
 
-void FTGLTextureFont::Render( const char* string)
-{   
+void FTGLTextureFont::PreRender()
+{
+    FTFont::PreRender();
     glPushAttrib( GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
     
     glEnable(GL_BLEND);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // GL_ONE
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // GL_ONE
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GEQUAL, 0.0625);
 
     FTTextureGlyph::ResetActiveTexture();
-    
-    FTFont::Render( string);
-
-    glPopAttrib();
 }
 
 
-void FTGLTextureFont::Render( const wchar_t* string)
-{   
-    glPushAttrib( GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
-    
-    glEnable(GL_BLEND);
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // GL_ONE
-    
-    FTTextureGlyph::ResetActiveTexture();
-    
-    FTFont::Render( string);
-    
+void FTGLTextureFont::PostRender()
+{
     glPopAttrib();
+    FTFont::PostRender();
 }
-

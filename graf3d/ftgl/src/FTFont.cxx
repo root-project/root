@@ -7,6 +7,7 @@
 FTFont::FTFont( const char* fontFilePath)
 :   face( fontFilePath),
     useDisplayLists(true),
+    preRenderCalled(false),
     glyphList(0)
 {
     err = face.Error();
@@ -244,6 +245,9 @@ float FTFont::Advance( const char* string)
 
 void FTFont::Render( const char* string )
 {
+    bool pre_post = ! preRenderCalled;
+    if (pre_post) PreRender();
+
     const unsigned char* c = (unsigned char*)string;
     pen.X(0); pen.Y(0);
 
@@ -255,11 +259,50 @@ void FTFont::Render( const char* string )
         }
         ++c;
     }
+
+    if (pre_post) PostRender();
+}
+
+
+void FTFont::Render( const char* string, float w_max, float w_fade )
+{
+    bool pre_post = ! preRenderCalled;
+    if (pre_post) PreRender();
+
+    float col[4];
+    glGetFloatv(GL_CURRENT_COLOR, col);
+    float alpha_fac = col[3] / (w_max - w_fade);
+    float w = 0;
+
+    const unsigned char* c = (unsigned char*)string;
+    pen.X(0); pen.Y(0);
+
+    while( *c)
+    {
+        if(CheckGlyph( *c))
+        {
+            pen = glyphList->Render( *c, *(c + 1), pen);
+            w += pen.X();
+	    if(w > w_max)
+	        break;
+	    if(w > w_fade)
+	    {
+	        col[3] = alpha_fac * (w_max - w);
+	        glColor4fv(col);
+	    }
+        }
+        ++c;
+    }
+
+    if (pre_post) PostRender();
 }
 
 
 void FTFont::Render( const wchar_t* string )
 {
+    bool pre_post = ! preRenderCalled;
+    if (pre_post) PreRender();
+
     const wchar_t* c = string;
     pen.X(0); pen.Y(0);
 
@@ -271,6 +314,8 @@ void FTFont::Render( const wchar_t* string )
         }
         ++c;
     }
+
+    if (pre_post) PostRender();
 }
 
 
