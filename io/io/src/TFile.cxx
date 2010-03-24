@@ -3978,11 +3978,15 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
    }
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
-   Bool_t result = posix_fadvise(fD, offset, len, advice);
+#if defined(R__SEEK64)
+   Int_t result = posix_fadvise64(fD, offset, len, advice);
+#else
+   Int_t result = posix_fadvise(fD, offset, len, advice);
+#endif   
    if (gPerfStats != 0) {
       gPerfStats->FileReadEvent(this, len, start);
    }
-   return result;
+   return (result != 0);
 }
 #else
 Bool_t TFile::ReadBufferAsync(Long64_t, Int_t)
