@@ -218,15 +218,6 @@ t1126.cxx
 t1127.cxx 
 t1127.cxx  -Dmakecint
 t1128.cxx 
-t1128.cxx interpreted:
-   7: operator+=(A&,int)
-   8: 9
-t1128.cxx compiled:
-   8: 4
-   9: operator+=(const A&,const A&)
-  10: 4
-t1128.cxx interpreted:
-  10: 9
 t1129.cxx 
 t1134.cxx 
 t1136.cxx 
