@@ -57,7 +57,7 @@ EOF
 
 upload_log() {    
     target_name=$2$1.$host
-    scp $1 flxi02:/afs/.fnal.gov/files/expwww/root/html/roottest/$target_name > scp.log 2>&1 
+    scp $1 flxi02:/afs/.fnal.gov/files/expwww/root/html/roottest/cint-today/$target_name > scp.log 2>&1 
 }
 
 na="N/A"
@@ -79,11 +79,11 @@ one_line() {
    rline="</td>"
 
    if test "x$status" = "x$success"; then
-      line="$sline <a href="$ref">$status</a>           $rline"
+      line="$sline <a href="cint-today/$ref">$status</a>           $rline"
    elif test "x$status" = "x$na"; then
-      line="$nline <a href="$ref">$status</a>           $rline"
+      line="$nline <a href="cint-today/$ref">$status</a>           $rline"
    else
-      line="$fline <a href="$ref">$status</a>           $rline"
+      line="$fline <a href="cint-today/$ref">$status</a>           $rline"
    fi
    echo $line
 }
@@ -110,6 +110,48 @@ write_summary() {
    echo $dateline     >> $CINTSYSDIR/summary.log
 }
 
+runtest() {
+  opt=$1
+  
+  #cd test
+  echo "Will run CINT test in $PWD with $opt"
+  time TESTFLAGS="$TESTFLAGS $opt" $MAKE test < /dev/null > test.log 2>&1
+  result=$?
+  echo The expected time were real=$REALTIME user=$USERTIME | tee -a test.log
+
+  # For now ignore the return code of gmake
+  result=0
+
+  echo "Will run CINT test in $PWD with $opt" >> testall.log
+  cat test.log >> testall.log
+  upload_log testall.log ${CORE}cint_
+  gmake_result=$result
+  if test $result != 0; then
+     teststatus=$failure
+     #error_handling $result "CINT's test failed the gmake!  See log file at $CINTSYSDIR/testall.log"
+  fi
+
+  eval export `grep G__CFG_ARCH Makefile.conf | sed -e 's/ := /=/'`
+  cd test
+  echo "diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt" >> testdiff.log
+  diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt >> testdiff.log
+  result=$?
+
+  upload_log testdiff.log ${CORE}cint_
+
+  if test $gmake_result != 0; then
+     error_handling $result "CINT's test failed the gmake!  See log file at $CINTSYSDIR/testall.log"
+  fi
+  if test $result != 0; then
+     teststatus=$failure
+     error_handling $result "CINT's test failed the diff!  See log file at $CINTSYSDIR/testall.log"
+  fi
+  teststatus=$success
+  echo "CINT test succeeded"
+
+  cd ..
+}
+
 runbuild() {
 
   export TOPDIR=$1
@@ -121,11 +163,11 @@ runbuild() {
 
   if [ "x$CORE" = "xnew" ] ; then
      CONFIG_CORE=--coreversion=new
-     export TESTFLAGS="--hide -k"
   else
      CONFIG_CORE=--coreversion=old
   fi
-
+  export TESTFLAGS="--hide -k"
+     
   cd ${TOPDIR}  
   echo "Will build ${CORE} CINT in $host:${CINTSYSDIR}"
 
@@ -176,41 +218,14 @@ runbuild() {
   #   exit $result
   #fi
   #echo "CINT's gmake succeeded"
-
-  #cd test
-  echo "Will run CINT test in $PWD"
-  time $MAKE test < /dev/null > testall.log 2>&1
-  result=$?
-  echo The expected time were real=$REALTIME user=$USERTIME | tee -a testall.log
-
-  # For now ignore the return code of gmake
-  result=0
-
-  upload_log testall.log ${CORE}cint_
-  gmake_result=$result
-  if test $result != 0; then
-     teststatus=$failure
-     #error_handling $result "CINT's test failed the gmake!  See log file at $CINTSYSDIR/testall.log"
-  fi
-
-  eval export `grep G__CFG_ARCH Makefile.conf | sed -e 's/ := /=/'`
-  cd test
-  echo "diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt" > testdiff.log
-diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt >> testdiff.log
-  result=$?
-
-  upload_log testdiff.log ${CORE}cint_
-
-  if test $gmake_result != 0; then
-     error_handling $result "CINT's test failed the gmake!  See log file at $CINTSYSDIR/testall.log"
-  fi
-  if test $result != 0; then
-     teststatus=$failure
-     error_handling $result "CINT's test failed the diff!  See log file at $CINTSYSDIR/testall.log"
-  fi
-  teststatus=$success
-  echo "CINT test succeeded"
-
+  
+  rm -f test/testdiff.log testall.log
+  runtest "-c -O0"
+  runtest "-c -O1"
+  runtest "-c -O2"
+  runtest "-c -O3"
+  runtest "-c -O4"
+ 
   cd $CINTSYSDIR
   write_summary
   upload_log summary.log ${CORE}cint_
