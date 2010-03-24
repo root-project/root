@@ -45,11 +45,13 @@ int main() {
   ac += ad;
   a.disp();
 
+#ifndef CINT_HIDE_FAILURE
   ac.disp();
   ac += 5;
   ac.disp();
   ac += ad;
   ac.disp();
+#endif
 
   return 0;
 }
