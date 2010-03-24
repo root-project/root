@@ -33,8 +33,10 @@ namespace Math {
 
 namespace gv_detail {
 
-// flag a compile time error when a wrong conversion is instantiated
-struct ERROR_This_Rotation_Conversion_is_NOT_Supported;
+// flag a link time error when a wrong conversion is instantiated
+   struct ERROR_This_Rotation_Conversion_is_NOT_Supported {
+      ERROR_This_Rotation_Conversion_is_NOT_Supported();
+   };
 template<class R1, class R2> 
 void convert( R1 const &, R2 const) {
    ERROR_This_Rotation_Conversion_is_NOT_Supported();
