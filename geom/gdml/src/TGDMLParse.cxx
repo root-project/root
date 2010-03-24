@@ -81,6 +81,7 @@ When most solids or volumes are added to the geometry they
 
 ****************************************************************************/
 
+#include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TXMLEngine.h"
 #include "TGeoVolume.h"
@@ -1619,6 +1620,8 @@ XMLNodePointer_t   TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t nod
    //declared. when the setup keyword is found, this function is called, 
    //and the top volume ref is taken and 'world' is set
 
+   const char* name = gdml->GetAttr(node, "name");
+   gGeoManager->SetName(name);
    XMLNodePointer_t child = gdml->GetChild(node);
  
    while(child != 0){

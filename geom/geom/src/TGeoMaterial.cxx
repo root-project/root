@@ -255,10 +255,25 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       //taken grom Geant3 routine GSMATE
       const Double_t alr2av=1.39621E-03, al183=5.20948;
       fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
-             (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
+             (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));             
    } else {
       if (radlen>0) Error("SetRadLen","Invalid material %s: a=%f z=%f -> user values taken: radlen=%f intlen=%f",fA,fZ,radlen,intlen);
-   }   
+   }
+   // Compute interaction length using the same formula as in GEANT4
+   if (fA > 0 && fZ > 0 && intlen>=0) {
+      const Double_t cm = 1.;
+      const Double_t g = 6.2415e21; // [gram = 1E-3*joule*s*s/(m*m)]
+      const Double_t amu = 1.03642688246781065e-02; // [MeV/c^2]
+      const Double_t lambda0 = 35.*g/(cm*cm);  // [g/cm^2]
+      Double_t nilinv = 0.0;
+      TGeoElement *elem = GetElement();
+      Double_t nbAtomsPerVolume = TMath::Na()*fDensity/elem->A();
+      nilinv += nbAtomsPerVolume*TMath::Power(elem->N(), 0.6666667);
+      nilinv *= amu/lambda0;
+      fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1./nilinv);
+   } else {
+      if (intlen>0) Error("SetRadLen","Invalid material %s: a=%f z=%f -> user values taken: radlen=%f intlen=%f",fA,fZ,radlen,intlen);
+   }
 }   
 
 //_____________________________________________________________________________
@@ -298,8 +313,8 @@ Bool_t TGeoMaterial::IsEq(const TGeoMaterial *other) const
 void TGeoMaterial::Print(const Option_t * /*option*/) const
 {
 // print characteristics of this material
-   printf("Material %s %s   A=%g Z=%g rho=%g radlen=%g index=%i\n", GetName(), GetTitle(),
-          fA,fZ,fDensity, fRadLen, fIndex);
+   printf("Material %s %s   A=%g Z=%g rho=%g radlen=%g intlen=%g index=%i\n", GetName(), GetTitle(),
+          fA,fZ,fDensity, fRadLen, fIntLen, fIndex);
 }
 
 //_____________________________________________________________________________
@@ -504,13 +519,21 @@ void TGeoMixture::AverageProperties()
 {
 // Compute effective A/Z and radiation length
    const Double_t alr2av = 1.39621E-03 , al183 =5.20948;
-   Double_t radinv = 0;
+   const Double_t cm = 1.;
+   const Double_t g = 6.2415e21; // [gram = 1E-3*joule*s*s/(m*m)]
+   const Double_t amu = 1.03642688246781065e-02; // [MeV/c^2]
+   const Double_t lambda0 = 35.*g/(cm*cm);  // [g/cm^2]
+   Double_t radinv = 0.0;
+   Double_t nilinv = 0.0;
+   Double_t nbAtomsPerVolume;
    fA = 0;
    fZ = 0;
    for (Int_t j=0;j<fNelements;j++) {
       if (fWeights[j] <= 0) continue;
       fA += fWeights[j]*fAmixture[j];
       fZ += fWeights[j]*fZmixture[j];
+      nbAtomsPerVolume = TMath::Na()*fDensity*fWeights[j]/GetElement(j)->A();
+      nilinv += nbAtomsPerVolume*TMath::Power(GetElement(j)->N(), 0.6666667);
       Double_t zc = fZmixture[j];
       Double_t alz = TMath::Log(zc)/3.;
       Double_t xinv = zc*(zc+TGeoMaterial::ScreenFactor(zc))*
@@ -519,6 +542,9 @@ void TGeoMixture::AverageProperties()
    }
    radinv *= alr2av*fDensity;
    if (radinv > 0) fRadLen = 1/radinv;
+   // Compute interaction length
+   nilinv *= amu/lambda0;
+   fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1./nilinv);
 }
 
 //_____________________________________________________________________________
@@ -761,8 +787,8 @@ Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
 void TGeoMixture::Print(const Option_t * /*option*/) const
 {
 // print characteristics of this material
-   printf("Mixture %s %s   Aeff=%g Zeff=%g rho=%g radlen=%g index=%i\n", GetName(), GetTitle(),
-          fA,fZ,fDensity, fRadLen, fIndex);
+   printf("Mixture %s %s   Aeff=%g Zeff=%g rho=%g radlen=%g intlen=%g index=%i\n", GetName(), GetTitle(),
+          fA,fZ,fDensity, fRadLen, fIntLen, fIndex);
    for (Int_t i=0; i<fNelements; i++) {
       if (fNatoms) printf("   Element #%i : %s  Z=%6.2f A=%6.2f w=%6.3f natoms=%d\n", i, GetElement(i)->GetName(),fZmixture[i],
              fAmixture[i], fWeights[i], fNatoms[i]);
