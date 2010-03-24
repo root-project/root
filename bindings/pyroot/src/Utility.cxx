@@ -221,7 +221,7 @@ Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, const 
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyROOT::PyCallable* pyfunc )
+Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyCallable* pyfunc )
 {
    MethodProxy* method =
       (MethodProxy*)PyObject_GetAttrString( pyclass, const_cast< char* >( label ) );
