@@ -3139,6 +3139,15 @@ static G__value G__exec_loop(const char* forinit, char* condition,
          //  finish off bytecode generation and run it, otherwise
          //  print an error message and continue interpreting.
          if (G__asm_noverflow) {
+            // Insure the free-ing of any generated temporaries.
+            store_no_exec_compile = G__no_exec_compile;
+            G__no_exec_compile = 1;
+            if ((G__p_tempbuf->level >= G__templevel) && G__p_tempbuf->prev) {
+               --G__templevel;
+               G__free_tempobject();
+               ++G__templevel;
+            }
+            G__no_exec_compile = store_no_exec_compile;
             //
             //  Generate a G__JMP <dst> bytecode instruction.
             //
