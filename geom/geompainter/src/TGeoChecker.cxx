@@ -1757,9 +1757,10 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 // with surfaces for current top node.
    TObjArray *pm = new TObjArray(128);
    TPolyLine3D *line = 0;
+   TPolyLine3D *normline = 0;
    gRandom = new TRandom3();
    TGeoVolume *vol=fGeoManager->GetTopVolume();
-   vol->VisibleDaughters(kTRUE);
+//   vol->VisibleDaughters(kTRUE);
 
    Double_t start[3];
    Double_t dir[3];
@@ -1773,7 +1774,14 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    Int_t ipoint;
    Int_t itot=0;
    Int_t n10=nrays/10;
-   Double_t theta,phi, step;
+   Double_t theta,phi, step, normlen;
+   const Double_t *normal;
+   Double_t dx = ((TGeoBBox*)vol->GetShape())->GetDX();
+   Double_t dy = ((TGeoBBox*)vol->GetShape())->GetDY();
+   Double_t dz = ((TGeoBBox*)vol->GetShape())->GetDZ();
+   normlen = TMath::Max(dx,dy);
+   normlen = TMath::Max(normlen,dz);
+   normlen *= 0.1;
    while (itot<nrays) {
       itot++;
       ipoint = 0;
@@ -1800,25 +1808,27 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          pm->Add(line);
       }
       // find where we end-up
-      fGeoManager->FindNextBoundary();
+      fGeoManager->FindNextBoundaryAndStep();
       step = fGeoManager->GetStep();
-      endnode = fGeoManager->Step();
+      endnode = fGeoManager->GetCurrentNode();
+      normal = fGeoManager->FindNormalFast();
       vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
-      while (step<1E10) {
+      while (endnode) {
          istep = 0;
-         while (!fGeoManager->IsEntering()) {
-            istep++;
-            if (istep>1E4) break;
-            fGeoManager->SetStep(1E-3);
-            endnode = fGeoManager->Step();
-            step += 1E-3;
-         }      
-         if (istep>1E4) break;
-//         if (istep) printf("ADDED : %f (%i steps)\n", istep*1E-3, istep);
          vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
          if (ipoint>0) {
          // old visible node had an entry point -> finish segment
             line->SetPoint(ipoint, point[0], point[1], point[2]);
+            if (!vis2) {
+               normline = new TPolyLine3D(2);
+               normline->SetLineColor(kBlue);
+               normline->SetLineWidth(2);
+               normline->SetPoint(0, point[0], point[1], point[2]);
+               normline->SetPoint(1, point[0]+normal[0]*normlen, 
+                                     point[1]+normal[1]*normlen, 
+                                     point[2]+normal[2]*normlen);
+               pm->Add(normline);
+            }   
             ipoint = 0;
             line   = 0;
          }
@@ -1828,7 +1838,15 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
             line->SetLineColor(endnode->GetVolume()->GetLineColor());
             line->SetPoint(ipoint++, point[0], point[1], point[2]);
             i++;
+            normline = new TPolyLine3D(2);
+            normline->SetLineColor(kBlue);
+            normline->SetLineWidth(2);
+            normline->SetPoint(0, point[0], point[1], point[2]);
+            normline->SetPoint(1, point[0]+normal[0]*normlen, 
+                                  point[1]+normal[1]*normlen, 
+                                  point[2]+normal[2]*normlen);
             pm->Add(line);
+            pm->Add(normline);
          } 
          // now see if we can make an other step
          if (endnode==0 && step>1E10) break;
@@ -1845,9 +1863,9 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       if (line) line->Draw("SAME");
    }
    printf("number of segments : %i\n", i);
-   fGeoManager->GetTopVolume()->VisibleDaughters(kFALSE);
-   printf("---Daughters of %s made invisible.\n", fGeoManager->GetTopVolume()->GetName());
-   printf("---Make them visible with : gGeoManager->GetTopVolume()->VisibleDaughters();\n");
+//   fGeoManager->GetTopVolume()->VisibleDaughters(kFALSE);
+//   printf("---Daughters of %s made invisible.\n", fGeoManager->GetTopVolume()->GetName());
+//   printf("---Make them visible with : gGeoManager->GetTopVolume()->VisibleDaughters();\n");
    delete pm;
 }
 

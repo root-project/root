@@ -111,7 +111,8 @@ void TGeoScaledShape::ComputeNormal(Double_t *point, Double_t *dir, Double_t *no
    fScale->MasterToLocalVect(dir,ldir);
    TGeoMatrix::Normalize(ldir);
    fShape->ComputeNormal(local,ldir,lnorm);
-   fScale->LocalToMasterVect(lnorm, norm);
+//   fScale->LocalToMasterVect(lnorm, norm);
+   fScale->MasterToLocalVect(lnorm, norm);
    TGeoMatrix::Normalize(norm);
 }
 
