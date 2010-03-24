@@ -933,8 +933,10 @@ int main(int argc, char** argv)
    ret += ci(kLangCXX, "t1126.cxx", difffile);
 #if !defined(G__APPLE)
    // This not work on macos and on 64bit linux because of var_arg
-   ret += ci(kLangCXX, "t1127.cxx", difffile);
-   ret += mkci(kLangCXX, "t1127.cxx", "t1127.h", difffile);  //
+   if (sizeof(void*)<8 || (G__CINTVERSION > 70000000) ) {
+      ret += ci(kLangCXX, "t1127.cxx", difffile);
+      ret += mkci(kLangCXX, "t1127.cxx", "t1127.h", difffile);  //
+   }
 #endif // !G__APPLE
    ret += ci(kLangCXX, "t1128.cxx", difffile);  // looks to me gcc3.2 has a bug
    ret += ci(kLangCXX, "t1129.cxx", difffile);  // g++3.2 fails
