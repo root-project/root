@@ -134,6 +134,7 @@ runtest() {
 
   eval export `grep G__CFG_ARCH Makefile.conf | sed -e 's/ := /=/'`
   cd test
+  echo "Run diff of test output in $PWD with $opt" >> testdiff.log
   echo "diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt" >> testdiff.log
   diff -ub testdiff.${CORE}${G__CFG_ARCH}.ref testdiff.txt >> testdiff.log
   result=$?
