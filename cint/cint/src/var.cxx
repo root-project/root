@@ -4648,7 +4648,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    //
    //  Security, check for unassigned internal pointer.
    //
-   G__CHECK(G__SECURE_POINTER_INIT, !G__def_struct_member && std::isupper(G__var_type) && (G__ASM_FUNC_NOP == G__asm_wholefunction) && var->p[ig15] && (0 == (*((long*) var->p[ig15]))), *((long*) var->p[ig15]) = 0);
+   G__CHECK(G__SECURE_POINTER_INIT, !G__def_struct_member && std::isupper(G__var_type) && (G__ASM_FUNC_NOP == G__asm_wholefunction) && !var->varlabel[ig15][1] && var->p[ig15] && (0 == (*((long*) var->p[ig15]))), *((long*) var->p[ig15]) = 0);
    //
    //  Security, increment reference count on a pointed-at object.
    //
