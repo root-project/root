@@ -1862,6 +1862,8 @@ Atom_t TRootCanvas::HandleDNDPosition(Int_t x, Int_t y, Atom_t action,
    if (pad) {
       pad->cd();
       gROOT->SetSelectedPad(pad);
+      // make sure the pad is highlighted (on Windows)
+      pad->Update();
    }
    return action;
 }
