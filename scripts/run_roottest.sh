@@ -120,6 +120,7 @@ Error: $2
 See full log file at http://www-root.fnal.gov/roottest/summary.shtml
 EOF
     fi
+    ssh -x flxi02 bin/flush_webarea
     exit $1
 }
 

@@ -52,6 +52,7 @@ Error: $2
 See full log file at http://www-root.fnal.gov/roottest/cint_summary.shtml
 EOF
     fi
+    ssh -x flxi02 bin/flush_webarea
     exit $1
 }
 
@@ -213,12 +214,6 @@ runbuild() {
   mainstatus=$success
   echo "CINT's gmake dlls succeeded"
 
-  #if test $result != 0; then 
-  #   echo "CINT's gmake failed!  See log file at $CINTSYSDIR/gmake.log"
-  #   exit $result
-  #fi
-  #echo "CINT's gmake succeeded"
-  
   rm -f test/testdiff.log testall.log
   runtest "-c -O0"
   runtest "-c -O1"
