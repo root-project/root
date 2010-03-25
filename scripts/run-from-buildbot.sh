@@ -27,9 +27,8 @@ cd $STARTPWD
 
 # some more env vars
 # Did Philippe fix it? export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
-export ROOTTEST_HOME=$PWD
 
 # Make clean before making roottest, to not depend on dependencies:
-make clean -j4
+make clean -j4 ROOTTEST_HOME=$PWD
 # Forward arguments to make:
-make "$@"
+make "$@" ROOTTEST_HOME=$PWD
