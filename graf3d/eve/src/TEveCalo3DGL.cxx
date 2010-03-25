@@ -267,9 +267,8 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
    {
       TGLUtil::ColorTransparency(fM->fFrameColor, fM->fFrameTransparency);
 
-      glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
+      glPushAttrib(GL_ENABLE_BIT);
 
-      glDepthMask(GL_FALSE);
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    }
@@ -297,8 +296,6 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
    if (transparent_p)
    {
       glPopAttrib();
-
-      TGLUtil::ColorTransparency(fM->fFrameColor, fM->fMainTransparency);
    }
 }
 
@@ -533,8 +530,6 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
    glEnable(GL_NORMALIZE);
 
-   RenderGrid(rnrCtx);
-
    TEveCaloData::CellData_t cellData;
    Float_t towerH;
    Int_t   tower = 0;
@@ -568,6 +563,9 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    }
 
    if (rnrCtx.SecSelection()) glPopName();
+
+   RenderGrid(rnrCtx);
+
    glPopAttrib();
 }
 
