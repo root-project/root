@@ -120,9 +120,6 @@ runtest() {
   result=$?
   echo The expected time were real=$REALTIME user=$USERTIME | tee -a test.log
 
-  # For now ignore the return code of gmake
-  result=0
-
   echo "Will run CINT test in $PWD with $opt" >> testall.log
   cat test.log >> testall.log
   upload_log testall.log ${CORE}cint_
