@@ -2221,6 +2221,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                }
                hobj->SetMinimum(newmin);
                hobj->SetMaximum(newmax);
+               hobj->SetBit(TH1::kIsZoomed);
             } else {
                first = axis->GetFirst();
                last  = axis->GetLast();
@@ -2289,6 +2290,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                   }
                   hobj->SetMinimum(xmin);
                   hobj->SetMaximum(xmax);
+                  hobj->SetBit(TH1::kIsZoomed);
                } else {
                   axis->SetRange(bin1,bin2);
                }
