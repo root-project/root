@@ -1667,7 +1667,8 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
                if (!line.ReadLine(in)) break;
                out << line << endl;
             }
-         }
+         } else
+            files.push_back(filename.Data());
       } else
          files.push_back(filename.Data());
    }
@@ -1677,11 +1678,6 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
    for (std::list<std::string>::const_iterator iFile = files.begin();
       iFile != files.end(); ++iFile) {
       TString filename(iFile->c_str());
-      if (!filename.EndsWith(".txt", TString::kIgnoreCase)
-         && !filename.EndsWith(".html", TString::kIgnoreCase))
-         continue;
-
-      // Just copy and link this page.
       if (gSystem->AccessPathName(outdir))
          if (gSystem->mkdir(outdir, kTRUE) == -1)
             // bad - but let's still try to create the output
@@ -1689,6 +1685,16 @@ void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir,
 
       TString outfile(gSystem->BaseName(filename));
       gSystem->PrependPathName(outdir, outfile);
+
+      if (!filename.EndsWith(".txt", TString::kIgnoreCase)
+          && !filename.EndsWith(".html", TString::kIgnoreCase)) {
+         // copy to outdir, who know whether it's needed...
+         if (gSystem->CopyFile(filename, outfile, kTRUE) == -1)
+            continue;
+         continue;
+      }
+
+      // Just copy and link this page.
       if (outfile.EndsWith(".txt", TString::kIgnoreCase)) {
          // convert first
          outfile.Remove(outfile.Length()-3, 3);
