@@ -23,7 +23,11 @@ if [ ${progdir##/} != $progdir ] || [ ${progdir##~} != $progdir ]; then
    fullpath=$progdir
 else
    # relative path
-   fullpath=$runningdir/$progdir
+   if [ $progdir != "." ]; then
+      fullpath=$runningdir/$progdir
+   else
+      fullpath=$runningdir
+   fi
 fi
 # work around readlink versions not having -f option
 fullpath1=`readlink $fullpath`
