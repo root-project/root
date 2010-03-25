@@ -304,7 +304,8 @@ TGLSAViewer::~TGLSAViewer()
 
    fGedEditor->DisconnectFromCanvas();
 
-   delete fMenuHidingTimer;
+   DisableMenuBarHiding();
+
    delete fHelpMenu;
    delete fCameraMenu;
    delete fFileSaveMenu;
@@ -546,6 +547,27 @@ void TGLSAViewer::EnableMenuBarHiding()
 
    fMenuHidingTimer = new TTimer;
    fMenuHidingTimer->Connect("Timeout()", "TGLSAViewer", this, "MenuHidingTimeout()");
+}
+
+//______________________________________________________________________________
+void TGLSAViewer::DisableMenuBarHiding()
+{
+   // Disable hiding of menu bar.
+
+   if (!fHideMenuBar)
+      return;
+
+   fHideMenuBar = kFALSE;
+
+   fMenuBar->Disconnect("ProcessedEvent(Event_t*)", this, "HandleMenuBarHiding(Event_t*)");
+   fMenuBut->Disconnect("ProcessedEvent(Event_t*)", this, "HandleMenuBarHiding(Event_t*)");
+
+   fFrame->ShowFrame(fMenuBar);
+   fFrame->HideFrame(fMenuBut);
+   fFrame->Layout();
+
+   delete fMenuHidingTimer;
+   fMenuHidingTimer = 0;
 }
 
 //______________________________________________________________________________

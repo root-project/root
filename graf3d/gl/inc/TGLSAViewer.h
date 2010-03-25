@@ -110,6 +110,7 @@ public:
    void   DeleteMenuBar();
    void   DisableCloseMenuEntries();
    void   EnableMenuBarHiding();
+   void   DisableMenuBarHiding();
    void   MenuHidingTimeout();
 
    void   HandleMenuBarHiding(Event_t* ev);
