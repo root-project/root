@@ -14,6 +14,9 @@
  ************************************************************************/
 
 #include "common.h"
+#ifdef WIN32
+#include <io.h>
+#endif
 
 extern "C" {
 
@@ -156,6 +159,15 @@ int G__errorprompt(const char *nameoferror)
    G__no_exec = 0;
    fflush(G__sout);
    fflush(G__serr);
+#ifdef WIN32
+   if (! isatty(0) ) {
+#else
+   if (! isatty(0) || (getpgrp() != tcgetpgrp(STDOUT_FILENO)) ) {
+#endif
+      // If the input is not a tty or we are in the background, no need to ask the user!
+      G__close_inputfiles();
+      exit(EXIT_FAILURE);
+   }
 #ifdef SIGALRM
    G__fprinterr(G__serr, "\n\nPress return or process will be terminated in %d sec by timeout.\n", G__TIMEOUT);
    fflush(G__serr);
