@@ -2773,7 +2773,8 @@ void TF1::Paint(Option_t *option)
    Double_t minimum   = fHistogram->GetMinimumStored();
    Double_t maximum   = fHistogram->GetMaximumStored();
    if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = -1111; // This can happen when switching from lin to log scale.
-   if (gPad && gPad->GetUymin() < fHistogram->GetMinimum()) minimum = -1111; // This can happen after unzooming a fit.
+   if (gPad && gPad->GetUymin() < fHistogram->GetMinimum() &&
+       !fHistogram->TestBit(TH1::kIsZoomed)) minimum = -1111; // This can happen after unzooming a fit.
    if (minimum == -1111) { // This can happen after unzooming.
       if (fHistogram->TestBit(TH1::kIsZoomed)) {
          minimum = fHistogram->GetYaxis()->GetXmin();
