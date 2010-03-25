@@ -165,14 +165,14 @@ void HybridPlot::Draw(const char* )
 
    // Empty the bins according to the data -2lnQ
    double data_m2lnq= fData_testStat_line->GetX1();
-   for (int i=0;i<fSb_histo->GetNbinsX();++i){
+   for (int i=1;i<=fSb_histo->GetNbinsX();++i){
       if (fSb_histo->GetBinCenter(i)<data_m2lnq){
          fSb_histo_shaded->SetBinContent(i,0);
-         fB_histo_shaded->SetBinContent(i,fB_histo->GetBinContent(i)/fB_histo->GetEntries());
+         fB_histo_shaded->SetBinContent(i,fB_histo->GetBinContent(i)/fB_histo->GetSumOfWeights());
       }
       else{
          fB_histo_shaded->SetBinContent(i,0);
-         fSb_histo_shaded->SetBinContent(i,fSb_histo->GetBinContent(i)/fSb_histo->GetEntries());
+         fSb_histo_shaded->SetBinContent(i,fSb_histo->GetBinContent(i)/fSb_histo->GetSumOfWeights());
       }
    }
 
