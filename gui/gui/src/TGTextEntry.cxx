@@ -335,6 +335,7 @@ void TGTextEntry::Init()
    fEchoMode = kNormal;
    fAlignment= kTextLeft;
    fInsertMode = kInsert;
+   fDefWidth = fDefHeight = 0;
 
    int tw, max_ascent, max_descent;
    tw = gVirtualX->TextWidth(fFontStruct, GetText(), fText->GetTextLength());
@@ -372,8 +373,6 @@ void TGTextEntry::Init()
    SetWindowName();
    fHasOwnFont = kFALSE;
    fEditDisabled = kEditDisableHeight;
-
-   fDefWidth = fDefHeight = 0;
 }
 
 //______________________________________________________________________________
