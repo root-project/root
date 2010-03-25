@@ -364,14 +364,14 @@ bool stressSymPosInversion(int n, bool selftest ) {
    return iret; 
 }
 
-bool testInversion(int n = 100000) { 
+int testInversion(int n = 100000) { 
    bool ok = stressSymPosInversion(n, doSelfTest); 
    std::cerr << "Test inversion of positive defined matrix ....... "; 
    if (ok) std::cerr << "OK \n"; 
    else std::cerr << "FAILED \n"; 
-   return ok;
+   return (ok) ? 0 : -1; 
 }
 
 int main() { 
-   return (testInversion() ) ? 0 : -1; 
+   return testInversion(); 
 }
