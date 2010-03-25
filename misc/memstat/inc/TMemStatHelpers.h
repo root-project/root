@@ -61,5 +61,5 @@ namespace memstat {
       }
    };
 
-};
+}
 #endif
