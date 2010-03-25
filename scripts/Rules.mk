@@ -274,6 +274,8 @@ else
 
 # Non windows default:
 
+export LD_LIBRARY_PATH := ${LD_LIBRARY_PATH}:.
+
 export ROOT_LOC := $(ROOTSYS)
 
 ObjSuf        = o
