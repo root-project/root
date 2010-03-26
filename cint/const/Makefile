@@ -9,7 +9,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 constTest: const.log
-	$(CMDECHO) diff -bw const.log good.output
+	$(CMDECHO) diff -bw good.output const.log
 
 const.log : runConst.C runConst_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q runConst.C  2>&1 | grep -v 'Info in <T.*System::ACLiC>' > const.log  2>&1
