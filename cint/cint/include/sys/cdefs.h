@@ -20,5 +20,13 @@
 /* Using Cint's internal preprocessor which has limitation */
 /* nothing */
 
+#include "platform.h"
+
+#define __BEGIN_DECLS 
+#define __END_DECLS 
+
+#undef __attribute__
+#define __attribute__(X) 
+
 #endif
 

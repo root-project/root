@@ -1742,7 +1742,7 @@ int G__fdumpstream(G__FastAllocString& string, size_t offset, const char *endmar
 }
 
 //______________________________________________________________________________
-int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark)
+int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark, bool ismacro)
 {
    // -- Read source file until specified endmark char appears.
    //
@@ -1764,6 +1764,8 @@ int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark
    //      ' abc );'
    //       -----^    *string="abc"; return(')');
    // 
+   // If is ismacro is true, stop at the end mark even if they are 
+   // within an unbalanced set of '()','[]' or '{}' and also allow
    size_t i = offset;
    short l = 0;
    int c = 0;
@@ -1795,21 +1797,21 @@ int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark
          case '\t':
          case ' ':
             commentflag = 0;
-            if (!single_quote && !double_quote) {
+            if (!ismacro && !single_quote && !double_quote) {
                ignoreflag = 1;
             }
             break;
          case '{':
          case '(':
          case '[':
-            if (!single_quote && !double_quote) {
+            if (!ismacro && !single_quote && !double_quote) {
                nest++;
             }
             break;
          case '}':
          case ')':
          case ']':
-            if (!single_quote && !double_quote) {
+            if (!ismacro && !single_quote && !double_quote) {
                nest--;
                if (nest < 0) {
                   flag = 1;

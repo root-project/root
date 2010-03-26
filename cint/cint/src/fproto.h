@@ -156,7 +156,7 @@ int G__fgetspace_peek(void);
 int G__fgetvarname(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__fgetname(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__getname(const char* source,int* isrc,G__FastAllocString& string,const char *endmark);
-int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark);
+int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark, bool ismacro = false);
 void G__fgetstream_peek(G__FastAllocString& string, int nchars);
 int G__fgetstream_new(G__FastAllocString& string, size_t offset, const char *endmark);
 int G__fdumpstream(G__FastAllocString& string, size_t offset, const char *endmark);

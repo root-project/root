@@ -2314,6 +2314,13 @@ void G__platformMacro()
 #ifdef __s390__ /* IBM S390 */
    G__DEFINE_MACRO_S(__s390__);
 #endif
+   
+   // Avoid any problem with __attribute__
+   G__value (*store__GetSpecialObject) (G__CONST char *name,void **ptr,void** ppdict) = G__GetSpecialObject;
+   G__GetSpecialObject = 0;
+   G__add_macro("__attribute__(X)=");
+   G__GetSpecialObject = store__GetSpecialObject;
+
    if (G__globalcomp != G__NOLINK)
       return;
 
