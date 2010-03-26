@@ -278,24 +278,109 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp    G__null
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg)
-               G__fprinterr(G__serr, "%3x,%d: OP2_OPTIMIZED %c:%d %c:%d" , pc, sp
-                            , G__asm_stack[sp-2].type, G__asm_stack[sp-2].obj.i
-                            , G__asm_stack[sp-1].type, G__asm_stack[sp-1].obj.i);
-#endif
-            p2fop2 = (void(*)G__P((G__value*, G__value*))) G__asm_inst[pc+1];
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: OP2_OPTIMIZED arg1 type: ("
+                  , pc
+                  , sp
+               );
+               if (isprint(G__asm_stack[sp-2].type)) {
+		  G__fprinterr(
+		       G__serr
+		     , "'%c' "
+		     , G__asm_stack[sp-2].type
+                  );
+               }
+	       G__fprinterr(
+		    G__serr
+		  , "%d, %d, %d, %d, %d)"
+		  , G__asm_stack[sp-2].type
+		  , G__asm_stack[sp-2].tagnum
+		  , G__asm_stack[sp-2].typenum
+		  , G__asm_stack[sp-2].obj.reftype.reftype
+		  , G__asm_stack[sp-2].isconst
+	       ); 
+               G__fprinterr(
+                    G__serr
+                  , " val: 0x%08lx,%ld,%g"
+                  , G__int(G__asm_stack[sp-2])
+                  , G__int(G__asm_stack[sp-2])
+                  , G__double(G__asm_stack[sp-2])
+               );
+               G__fprinterr(
+                    G__serr
+                  , " arg2 type: ("
+               );
+               if (isprint(G__asm_stack[sp-1].type)) {
+		  G__fprinterr(
+		       G__serr
+		     , "'%c' "
+		     , G__asm_stack[sp-1].type
+                  );
+               }
+	       G__fprinterr(
+		    G__serr
+		  , "%d, %d, %d, %d, %d)"
+		  , G__asm_stack[sp-1].type
+		  , G__asm_stack[sp-1].tagnum
+		  , G__asm_stack[sp-1].typenum
+		  , G__asm_stack[sp-1].obj.reftype.reftype
+		  , G__asm_stack[sp-1].isconst
+	       );
+               G__fprinterr(
+                    G__serr
+                  , " val: 0x%08lx,%ld,%g  %s:%d\n"
+                  , G__int(G__asm_stack[sp-1])
+                  , G__int(G__asm_stack[sp-1])
+                  , G__double(G__asm_stack[sp-1])
+                  , __FILE__
+                  , __LINE__
+               );
+            }
+#endif // G__ASM_DBG
+            p2fop2 = (void (*)(G__value*, G__value*)) G__asm_inst[pc+1];
             (*p2fop2)(&G__asm_stack[sp-1], &G__asm_stack[sp-2]);
             pc += 2;
             --sp;
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, " -> %c:%d\n", G__asm_stack[sp-1].type
-                                            , G__asm_stack[sp-1].obj.i);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "       : result: type: ("
+               );
+               if (isprint(G__asm_stack[sp-1].type)) {
+		  G__fprinterr(
+		       G__serr
+		     , "'%c' "
+		     , G__asm_stack[sp-1].type
+                  );
+               }
+	       G__fprinterr(
+		    G__serr
+		  , "%d, %d, %d, %d, %d)"
+		  , G__asm_stack[sp-1].type
+		  , G__asm_stack[sp-1].tagnum
+		  , G__asm_stack[sp-1].typenum
+		  , G__asm_stack[sp-1].obj.reftype.reftype
+		  , G__asm_stack[sp-1].isconst
+	       );
+               G__fprinterr(
+                    G__serr
+                  , " val: 0x%08lx,%ld,%g  %s:%d\n"
+                  , G__int(G__asm_stack[sp-1])
+                  , G__int(G__asm_stack[sp-1])
+                  , G__double(G__asm_stack[sp-1])
+                  , __FILE__
+                  , __LINE__
+               );
+            }
+#endif // G__ASM_DBG
 #ifdef G__ASM_DBG
             break;
-#else
+#else // G__ASM_DBG
             goto pcode_parse_start;
-#endif
+#endif // G__ASM_DBG
             // --
 
          case G__OP1_OPTIMIZED:
@@ -413,35 +498,118 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
+	       G__fprinterr(
+		    G__serr
+		  , "%3x,%3x: OP2"
+		  , pc
+		  , sp
+               );
                if (isprint(G__asm_inst[pc+1])) {
-                  G__fprinterr(
-                       G__serr
-                     , "%3x,%3x: OP2 %ld '%c' %d %ld\n"
-                     , pc
-                     , sp
-                     , G__int(G__asm_stack[sp-2])
-                     , G__asm_inst[pc+1]
-                     , G__asm_inst[pc+1]
-                     , G__int(G__asm_stack[sp-1])
+		  G__fprinterr(
+		       G__serr
+                     , " '%c'"
+		     , G__asm_inst[pc+1]
                   );
                }
-               else {
-                  G__fprinterr(
-                       G__serr
-                     , "%3x,%3x: OP2 %ld %d %ld\n"
-                     , pc
-                     , sp
-                     , G__int(G__asm_stack[sp-2])
-                     , G__asm_inst[pc+1]
-                     , G__int(G__asm_stack[sp-1])
+	       G__fprinterr(
+		    G__serr
+		  , " %d  %s:%d\n"
+		  , G__asm_inst[pc+1]
+                  , __FILE__
+                  , __LINE__
+	       );
+	       G__fprinterr(
+		    G__serr
+		  , "       : arg1 type: ("
+               );
+               if (isprint(G__asm_stack[sp-2].type)) {
+		  G__fprinterr(
+		       G__serr
+                     , "'%c' "
+		     , G__asm_stack[sp-2].type
                   );
                }
+	       G__fprinterr(
+		    G__serr
+		  , "%d, %d, %d, %d, %d)"
+		  , G__asm_stack[sp-2].type
+		  , G__asm_stack[sp-2].tagnum
+		  , G__asm_stack[sp-2].typenum
+		  , G__asm_stack[sp-2].obj.reftype.reftype
+		  , G__asm_stack[sp-2].isconst
+	       );
+	       G__fprinterr(
+		    G__serr
+		  , " val: 0x%08lx,%ld,%g  %s:%d\n"
+		  , G__int(G__asm_stack[sp-2])
+		  , G__int(G__asm_stack[sp-2])
+		  , G__double(G__asm_stack[sp-2])
+                  , __FILE__
+                  , __LINE__
+	       );
+	       G__fprinterr(
+		    G__serr
+		  , "       : arg2 type: ("
+               );
+               if (isprint(G__asm_stack[sp-1].type)) {
+		  G__fprinterr(
+		       G__serr
+                     , "'%c' "
+		     , G__asm_stack[sp-1].type
+                  );
+               }
+	       G__fprinterr(
+		    G__serr
+		  , "%d, %d, %d, %d, %d)"
+		  , G__asm_stack[sp-1].type
+		  , G__asm_stack[sp-1].tagnum
+		  , G__asm_stack[sp-1].typenum
+		  , G__asm_stack[sp-1].obj.reftype.reftype
+		  , G__asm_stack[sp-1].isconst
+	       );
+	       G__fprinterr(
+		    G__serr
+		  , " val: 0x%08lx,%ld,%g  %s:%d\n"
+		  , G__int(G__asm_stack[sp-1])
+		  , G__int(G__asm_stack[sp-1])
+		  , G__double(G__asm_stack[sp-1])
+		  , __FILE__
+		  , __LINE__
+	       );
             }
 #endif //  G__ASM_DBG
             G__bstore((char) G__asm_inst[pc+1], G__asm_stack[sp-1], &G__asm_stack[sp-2]);
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, " result=%ld\n", G__int(G__asm_stack[sp-2]));
+               G__fprinterr(
+                    G__serr
+                  , "       : result: type: ("
+               );
+               if (isprint(G__asm_stack[sp-2].type)) {
+		  G__fprinterr(
+		       G__serr
+		     , "'%c' "
+		     , G__asm_stack[sp-2].type
+		  );
+               }
+	       G__fprinterr(
+		    G__serr
+		  , "%d, %d, %d, %d, %d)"
+		  , G__asm_stack[sp-2].type
+		  , G__asm_stack[sp-2].tagnum
+		  , G__asm_stack[sp-2].typenum
+		  , G__asm_stack[sp-2].obj.reftype.reftype
+		  , G__asm_stack[sp-2].isconst
+	       );
+               G__fprinterr(
+                    G__serr
+                  , " val: 0x%08lx,%ld,%g  %s:%d\n"
+                  , G__int(G__asm_stack[sp-2])
+                  , G__int(G__asm_stack[sp-2])
+                  , G__double(G__asm_stack[sp-2])
+                  , __FILE__
+                  , __LINE__
+               );
             }
 #endif //  G__ASM_DBG
             pc += 2;
@@ -570,10 +738,10 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             /***************************************
             * inst
             * 0 G__LD_FUNC
-            * 1 *name
-            * 2 hash
+            * 1 *name, or tagnum (if compiled)
+            * 2 hash, or -type (if compiled)
             * 3 paran
-            * 4 (*func)()
+            * 4 (*pfunc)()
             * 5 this ptr offset for multiple inheritance
             * 6 ifunc         // 30-05-07 (needed for stub-less calls)
             * stack
@@ -586,14 +754,32 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
                if (G__asm_inst[pc+1] < G__MAXSTRUCT) {
-                  G__fprinterr(G__serr, "%3x,%3x: LD_FUNC '%s' paran: %d  %s:%d\n", pc, sp, "compiled", G__asm_inst[pc+3], __FILE__, __LINE__);
+                  G__fprinterr(
+                       G__serr
+                     , "%3x,%3x: LD_FUNC '%s' paran: %d  %s:%d\n"
+                     , pc
+                     , sp
+                     , "compiled"
+                     , G__asm_inst[pc+3]
+                     , __FILE__
+                     , __LINE__
+                  );
                }
                else {
-                  G__fprinterr(G__serr, "%3x,%3x: LD_FUNC '%s' paran: %d  %s:%d\n", pc, sp, (char*) G__asm_inst[pc+1], G__asm_inst[pc+3], __FILE__, __LINE__);
+                  G__fprinterr(
+                       G__serr
+                     , "%3x,%3x: LD_FUNC '%s' paran: %d  %s:%d\n"
+                     , pc
+                     , sp
+                     , (char*) G__asm_inst[pc+1]
+                     , G__asm_inst[pc+3]
+                     , __FILE__
+                     , __LINE__
+                  );
                }
             }
 #endif // G__ASM_DBG
-            funcname = (char *)G__asm_inst[pc+1];
+            funcname = (char*) G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+3];
             pfunc = (G__InterfaceMethod) G__asm_inst[pc+4];
             for (int i = 0; i < fpara.paran; ++i) {
@@ -614,7 +800,14 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
                   G__FastAllocString tmp(G__ONELINE);
-                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+                  G__fprinterr(
+                       G__serr
+                     , "       : para[%d]: %s  %s:%d\n"
+                     , i
+                     , G__valuemonitor(fpara.para[i], tmp)
+                     , __FILE__
+                     , __LINE__
+                  );
                }
 #endif // G__ASM_DBG
                // --
@@ -625,7 +818,7 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             if (G__asm_inst[pc+2] < 0) {
                result->type = -G__asm_inst[pc+2];
                result->tagnum = G__asm_inst[pc+1];
-               result->typenum = -1; // This may have problem with pointer to member function.
+               result->typenum = -1;
             }
             result->ref = 0;
             if (G__stepover) {
@@ -639,34 +832,81 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             //
 #ifdef G__EXCEPTIONWRAPPER
             G__asm_exec = 0;
-
-            if(pfunc){
+            if (pfunc) {
               G__store_struct_offset += G__asm_inst[pc+5];
-              dtorfreeoffset = G__ExceptionWrapper(pfunc,result,funcname,&fpara,G__asm_inst[pc+2]);
+              dtorfreeoffset = G__ExceptionWrapper(pfunc, result, funcname,
+                 &fpara, G__asm_inst[pc+2]);
               G__store_struct_offset -= G__asm_inst[pc+5];
             }
-            else
-              dtorfreeoffset = G__call_cppfunc(result, &fpara, (G__ifunc_table_internal*) G__asm_inst[pc+6], 0); // Bet on ifn=0
-            
-            G__asm_exec=1;
+            else {
+              dtorfreeoffset = G__call_cppfunc(result, &fpara,
+                 (G__ifunc_table_internal*) G__asm_inst[pc+6], 0);
+            }
+            G__asm_exec = 1;
 #else // G__EXCEPTIONWRAPPER
-            if(pfunc){
+            if (pfunc) {
               G__store_struct_offset += G__asm_inst[pc+5];
-              dtorfreeoffset = (*pfunc)(result,funcname,&fpara,G__asm_inst[pc+2]);
+              dtorfreeoffset = (*pfunc)(result, funcname, &fpara,
+                 G__asm_inst[pc+2]);
               G__store_struct_offset -= G__asm_inst[pc+5];
             }
-            else
-              dtorfreeoffset = G__call_cppfunc(result, &fpara, (G__ifunc_table_internal*) G__asm_inst[pc+6], 0); // Bet on ifn=0
+            else {
+              dtorfreeoffset = G__call_cppfunc(result, &fpara,
+                 (G__ifunc_table_internal*) G__asm_inst[pc+6], 0);
+            }
 #endif // G__EXCEPTIONWRAPPER
-
             // restore previous G__store_struct_offset
             //G__store_struct_offset -= G__asm_inst[pc+5];
             if (G__stepover) {
                G__step |= store_step;
             }
-            pc += 7; // 05-06-07 add 1+1
+            pc += 7;
             if (result->type) {
                ++sp;
+#ifdef G__ASM_DBG
+               //if (G__asm_dbg) {
+               //   G__FastAllocString tmp(G__ONELINE);
+               //   G__fprinterr(
+               //        G__serr
+               //      , "       : result: %s  %s:%d\n"
+               //      , G__valuemonitor(*result, tmp)
+               //      , __FILE__
+               //      , __LINE__
+               //   );
+               //}
+               if (G__asm_dbg) {
+                  G__fprinterr(
+                       G__serr
+                     , "       : result: type: ("
+                  );
+                  if (isprint(result->type)) {
+		     G__fprinterr(
+			  G__serr
+			, "'%c' "
+			, result->type
+		     );
+                  }
+		  G__fprinterr(
+		       G__serr
+		     , "%d, %d, %d, %d, %d)"
+		     , result->type
+		     , result->tagnum
+		     , result->typenum
+                     , result->obj.reftype.reftype
+                     , result->isconst
+		  );
+                  G__fprinterr(
+                       G__serr
+                     , " val: 0x%08lx,%ld,%g  %s:%d\n"
+                     , G__int(*result)
+                     , G__int(*result)
+                     , G__double(*result)
+                     , __FILE__
+                     , __LINE__
+                  );
+               }
+#endif // G__ASM_DBG
+               // --
             }
             if (G__return == G__RETURN_TRY) {
                if (G__CATCH != G__dasm(G__serr, 1)) {
@@ -936,9 +1176,23 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_VAR index: %d paran: %d type: '%c' var: '%s' %08lx  %s:%d\n", pc, sp, G__asm_inst[pc+1], G__asm_inst[pc+2], G__asm_inst[pc+3], ((struct G__var_array*) G__asm_inst[pc+4])->varnamebuf[G__asm_inst[pc+1]],(long) G__asm_inst[pc+4], __FILE__, __LINE__);
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: LD_VAR index: %d paran: %d type: '%c' "
+                    "var: '%s' %08lx  %s:%d\n"
+                  , pc
+                  , sp
+                  , G__asm_inst[pc+1]
+                  , G__asm_inst[pc+2]
+                  , G__asm_inst[pc+3]
+                  , ((struct G__var_array*) G__asm_inst[pc+4])->
+                    varnamebuf[G__asm_inst[pc+1]]
+                  , (long) G__asm_inst[pc+4]
+                  , __FILE__
+                  , __LINE__
+               );
             }
-#endif
+#endif // G__ASM_DBG
             G__asm_index = G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+2];
             G__var_type = (char) G__asm_inst[pc+3];
@@ -955,20 +1209,45 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             sp -= fpara.paran;
             {
                int known = 0;
-               G__asm_stack[sp] = G__getvariable(clnull, &known, (struct G__var_array*) G__asm_inst[pc+4], 0);
+               G__asm_stack[sp] = G__getvariable(clnull, &known,
+                  (struct G__var_array*) G__asm_inst[pc+4], 0);
             }
             pc += 5;
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "       : return: 0x%08lx,%d,%g  %s:%d\n", G__int(G__asm_stack[sp]), G__int(G__asm_stack[sp]), G__double(G__asm_stack[sp]), __FILE__, __LINE__);
+               G__fprinterr(
+                    G__serr
+                  , "       : return: type:"
+               );
+               if (isprint(G__asm_stack[sp].type)) {
+		  G__fprinterr(
+		       G__serr
+		     , " '%c'"
+		     , G__asm_stack[sp].type
+		  );
+               }
+	       G__fprinterr(
+		    G__serr
+		  , " %d"
+		  , G__asm_stack[sp].type
+	       );
+               G__fprinterr(
+                    G__serr
+                  , " val: 0x%08lx,%ld,%g  %s:%d\n"
+                  , G__int(G__asm_stack[sp])
+                  , G__int(G__asm_stack[sp])
+                  , G__double(G__asm_stack[sp])
+                  , __FILE__
+                  , __LINE__
+               );
             }
-#endif
+#endif // G__ASM_DBG
             ++sp;
 #ifdef G__ASM_DBG
             break;
-#else
+#else // G__ASM_DBG
             goto pcode_parse_start;
-#endif
+#endif // G__ASM_DBG
             // --
 
          case G__ST_VAR:
@@ -1258,16 +1537,27 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp           <- sp-paran
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: PUSHSTROS 0x%lx strosp=%ld\n", pc, sp, G__store_struct_offset, strosp);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: PUSHSTROS 0x%08lx strosp: %ld  %s:%d\n"
+                  , pc
+                  , sp
+                  , G__store_struct_offset
+                  , strosp
+                  , __FILE__
+                  , __LINE__
+               );
+            }
+#endif // G__ASM_DBG
             struct_offset_stack[strosp] = G__store_struct_offset;
             ++strosp;
             ++pc;
 #ifdef G__ASM_DBG
             break;
-#else
+#else // G__ASM_DBG
             goto pcode_parse_start;
-#endif
+#endif // G__ASM_DBG
             // --
 
          case G__SETSTROS:
@@ -1279,16 +1569,26 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: SETSTROS 0x%lx\n", pc, sp, G__int(G__asm_stack[sp-1]));
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: SETSTROS 0x%08lx  %s:%d\n"
+                  , pc
+                  , sp
+                  , G__int(G__asm_stack[sp-1])
+                  , __FILE__
+                  , __LINE__
+               );
+            }
+#endif // G__ASM_DBG
             G__store_struct_offset = G__int(G__asm_stack[sp-1]);
             --sp;
             ++pc;
 #ifdef G__ASM_DBG
             break;
-#else
+#else // G__ASM_DBG
             goto pcode_parse_start;
-#endif
+#endif // G__ASM_DBG
             // --
 
          case G__POPSTROS:
@@ -1299,16 +1599,27 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp           <- sp-paran
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: POPSTROS 0x%lx strosp=%ld\n", pc, sp, struct_offset_stack[strosp-1], strosp);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: POPSTROS 0x%08lx strosp: %ld  %s:%d\n"
+                  , pc
+                  , sp
+                  , struct_offset_stack[strosp-1]
+                  , strosp
+                  , __FILE__
+                  , __LINE__
+               );
+            }
+#endif // G__ASM_DBG
             G__store_struct_offset = struct_offset_stack[strosp-1];
             --strosp;
             ++pc;
 #ifdef G__ASM_DBG
             break;
-#else
+#else // G__ASM_DBG
             goto pcode_parse_start;
-#endif
+#endif // G__ASM_DBG
             // --
 
          case G__SETTEMP:
@@ -2021,18 +2332,71 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             * sp
             ***************************************/
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%d: TOVALUE\n", pc, sp);
-#endif
+            if (G__asm_dbg) {
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: TOVALUE  %s:%d\n"
+                  , pc
+                  , sp
+                  , __FILE__
+                  , __LINE__
+               );
+            }
+#endif // G__ASM_DBG
             {
                G__p2f_tovalue p2f_tovalue = (G__p2f_tovalue) G__asm_inst[pc+1];
                (*p2f_tovalue)(&G__asm_stack[sp-1]);
                pc += 2;
             }
 #ifdef G__ASM_DBG
+	    //if (G__asm_dbg) {
+	    //   G__FastAllocString tmp(G__ONELINE);
+	    //   G__fprinterr(
+	    //        G__serr
+	    //      , "       : result: %s  %s:%d\n"
+	    //      , G__valuemonitor(G__asm_stack[sp-1], tmp)
+	    //      , __FILE__
+	    //      , __LINE__
+	    //   );
+	    //}
+	    if (G__asm_dbg) {
+	       G__fprinterr(
+		    G__serr
+		  , "       : result: type: ("
+	       );
+	       if (isprint(result->type)) {
+		  G__fprinterr(
+		       G__serr
+		     , "'%c' "
+		     , G__asm_stack[sp-1].type
+		  );
+	       }
+	       G__fprinterr(
+		    G__serr
+		  , "%d, %d, %d, %d, %d)"
+		  , G__asm_stack[sp-1].type
+		  , G__asm_stack[sp-1].tagnum
+		  , G__asm_stack[sp-1].typenum
+		  , G__asm_stack[sp-1].obj.reftype.reftype
+		  , G__asm_stack[sp-1].isconst
+	       );
+	       G__fprinterr(
+		    G__serr
+		  , " val: 0x%08lx,%ld,%g  %s:%d\n"
+		  , G__int(G__asm_stack[sp-1])
+		  , G__int(G__asm_stack[sp-1])
+		  , G__double(G__asm_stack[sp-1])
+		  , __FILE__
+		  , __LINE__
+	       );
+	    }
+#endif // G__ASM_DBG
+	    // --
+#ifdef G__ASM_DBG
             break;
-#else
+#else // G__ASM_DBG
             goto pcode_parse_start;
-#endif
+#endif // G__ASM_DBG
             // --
 
          case G__INIT_REF:
