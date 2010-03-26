@@ -513,41 +513,9 @@ inline void TGLRect::Offset(Int_t dX, Int_t dY)
 }
 
 //______________________________________________________________________________
-inline void TGLRect::Expand(Int_t x, Int_t y)
-{
-   // Expand the rect to encompass point (x,y)
-   Int_t delX = x - fX;
-   Int_t delY = y - fY;
-
-   if (delX>static_cast<Int_t>(fWidth)) {
-      fWidth = delX;
-   }
-   if (delY>static_cast<Int_t>(fHeight)) {
-      fHeight = delY;
-   }
-
-   if (delX<0) {
-      fX = x;
-      fWidth += -delX;
-   }
-   if (delY<0) {
-      fY = y;
-      fHeight += -delY;
-   }
-}
-
-//______________________________________________________________________________
-inline Int_t TGLRect::Diagonal() const
-{
-   const Double_t w = static_cast<Double_t>(fWidth);
-   const Double_t h = static_cast<Double_t>(fHeight);
-   return static_cast<Int_t>(std::sqrt(w*w + h*h));
-}
-
-//______________________________________________________________________________
 inline Int_t TGLRect::Longest() const
 {
-   return fWidth > fHeight ? fWidth:fHeight;
+   return fWidth > fHeight ? fWidth : fHeight;
 }
 
 //______________________________________________________________________________

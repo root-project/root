@@ -241,6 +241,9 @@ public:
    static void         UseDefaultColorSetForNewViewers(Bool_t x);
    static Bool_t       IsUsingDefaultColorSetForNewViewers();
 
+   const TGLRect& RefViewport()      const { return fViewport; }
+   Int_t          ViewportDiagonal() const { return fViewport.Diagonal(); }
+
    Float_t GetPointScale()    const { return fPointScale; }
    Float_t GetLineScale()     const { return fLineScale; }
    void    SetPointScale(Float_t s) { fPointScale = s; }

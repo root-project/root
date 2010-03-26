@@ -270,6 +270,37 @@ TGLRect::~TGLRect()
 }
 
 //______________________________________________________________________________
+void TGLRect::Expand(Int_t x, Int_t y)
+{
+   // Expand the rect to encompass point (x,y)
+   Int_t delX = x - fX;
+   Int_t delY = y - fY;
+
+   if (delX > fWidth) {
+      fWidth = delX;
+   }
+   if (delY > fHeight) {
+      fHeight = delY;
+   }
+
+   if (delX < 0) {
+      fX = x;
+      fWidth += -delX;
+   }
+   if (delY < 0) {
+      fY = y;
+      fHeight += -delY;
+   }
+}
+
+//______________________________________________________________________________
+Int_t TGLRect::Diagonal() const
+{
+   // Return the diagonal of the rectangle.
+   return TMath::Nint((Double_t)fWidth * fWidth + (Double_t)fHeight * fHeight);
+}
+
+//______________________________________________________________________________
 EOverlap TGLRect::Overlap(const TGLRect & other) const
 {
    // Return overlap result (kInside, kOutside, kPartial) of this
