@@ -28,6 +28,11 @@
 
 #include <iterator>
 
+#if __GNUC__ >= 3
+// Prevent -Weffc++ from complaining about the inheritance
+// TObjArrayIter from std::iterator.
+#pragma GCC system_header
+#endif
 
 class TObjArrayIter;
 

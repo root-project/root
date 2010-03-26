@@ -31,6 +31,11 @@
 
 #include <iterator>
 
+#if __GNUC__ >= 3
+// Prevent -Weffc++ from complaining about the inheritance
+// TRefArrayIter from std::iterator.
+#pragma GCC system_header
+#endif
 
 class TSystem;
 class TRefArrayIter;
