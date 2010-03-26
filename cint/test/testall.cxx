@@ -639,7 +639,7 @@ int main(int argc, char** argv)
          }
       }
       else if (!strcmp("-?", argv[i]) || (argv[i][0]=='-')) {
-         if (argv[i][0]=='-') {
+         if (argv[i][1]!='?') {
             fprintf(stderr,"Unknown parameter: %s\n",argv[i]);
          }
          fprintf(stderr,"%s -k <-d [difffile]> <-c [cintoption]> <-m [makecintoption]> <[testcase.cxx]>\n",argv[0]);
