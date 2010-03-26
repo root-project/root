@@ -305,7 +305,19 @@ protected:
    {
    }
    void SplitEdge(TCell<E> & cell, TIsoMesh<V> * mesh, UInt_t i, 
-                  V x, V y, V z, V iso)const;
+                  V x, V y, V z, V iso)const
+{
+   V v[3];
+   const V offset = GetOffset(cell.fVals[eConn[i][0]], 
+                              cell.fVals[eConn[i][1]], 
+                              iso);
+   v[0] = x + (vOff[eConn[i][0]][0] + offset * eDir[i][0]) * this->fStepX;
+   v[1] = y + (vOff[eConn[i][0]][1] + offset * eDir[i][1]) * this->fStepY;
+   v[2] = z + (vOff[eConn[i][0]][2] + offset * eDir[i][2]) * this->fStepZ;
+   cell.fIds[i] = mesh->AddVertex(v);
+}
+
+
 };
 
 /*
