@@ -7,7 +7,12 @@
 
 # PWD on cygwin is garbled, need to adjust \cygwin/home to /home
 if uname -a | grep -i cygwin > /dev/null; then
+    pwd
+    echo Original PWD is $PWD
     PWD=${PWD##\\cygwin}
+    echo Adjusted PWD to $PWD
+    cd $PWD
+    pwd
 fi
 
 STARTPWD=$PWD
