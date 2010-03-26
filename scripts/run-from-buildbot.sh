@@ -5,6 +5,11 @@
 # calculating them here. This script will thus invoke roottest for buildbot.
 # Axel, 2010-03-25
 
+# PWD on cygwin is garbled, need to adjust \cygwin/home to /home
+if uname -a | grep -i cygwin > /dev/null; then
+    PWD=${PWD##\\cygwin}
+fi
+
 STARTPWD=$PWD
 
 # We might be building roottest for roottest-Ubuntu1004-64bit-nightly
