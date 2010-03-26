@@ -5313,9 +5313,18 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             // --
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x: LD_FUNC virtual %s paran=%d\n", G__asm_cp, funcname, libp->paran);
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: LD_FUNC virtual '%s' paran: %d  %s:%d\n"
+                  , G__asm_cp
+                  , G__asm_dt
+                  , funcname
+                  , libp->paran
+                  , __FILE__
+                  , __LINE__
+               );
             }
-#endif
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD_FUNC;
             G__asm_inst[G__asm_cp+1] = p_ifunc->tagnum; // ???
             G__asm_inst[G__asm_cp+2] = (p_ifunc->vtblindex[ifn] & 0xffff) + (p_ifunc->vtblbasetagnum[ifn] * 0x10000);
@@ -5325,7 +5334,6 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             if (p_ifunc && p_ifunc->pentry[ifn]) {
                G__asm_inst[G__asm_cp+5] = p_ifunc->pentry[ifn]->ptradjust;
             }
-            
             G__asm_inst[G__asm_cp+6]=(long)p_ifunc; // 30-05-07 (stub-less calls)
             G__inc_cp_asm(7, 0);
          }
@@ -5333,9 +5341,18 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             // --
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x: LD_FUNC %s paran=%d\n", G__asm_cp, funcname, libp->paran);
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: LD_FUNC '%s' paran: %d  %s:%d\n"
+                  , G__asm_cp
+                  , G__asm_dt
+                  , funcname
+                  , libp->paran
+                  , __FILE__
+                  , __LINE__
+               );
             }
-#endif
+#endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD_FUNC;
             G__asm_inst[G__asm_cp+1] = (long) p_ifunc;
             G__asm_inst[G__asm_cp+2] = ifn;
@@ -5363,9 +5380,18 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
          // --
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x: LD_IFUNC %s paran=%d\n", G__asm_cp, funcname, libp->paran);
+            G__fprinterr(
+                 G__serr
+               , "%3x,%3x: LD_IFUNC '%s' paran: %d  %s:%d\n"
+               , G__asm_cp
+               , G__asm_dt
+               , funcname
+               , libp->paran
+               , __FILE__
+               , __LINE__
+            );
          }
-#endif
+#endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__LD_IFUNC;
          G__asm_inst[G__asm_cp+1] = (long) p_ifunc->funcname[ifn];
          G__asm_inst[G__asm_cp+2] = hash;
@@ -5382,9 +5408,17 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
          // --
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x: ADDSTROS %ld\n", G__asm_cp, -G__store_struct_offset + store_inherit_offset);
+            G__fprinterr(
+                 G__serr
+               , "%3x,%3x: ADDSTROS 0x%08lx  %s:%d\n"
+               , G__asm_cp
+               , G__asm_dt
+               , -G__store_struct_offset + store_inherit_offset
+               , __FILE__
+               , __LINE__
+            );
          }
-#endif
+#endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__ADDSTROS;
          G__asm_inst[G__asm_cp+1] = -G__store_struct_offset + store_inherit_offset;
          G__inc_cp_asm(2, 0);

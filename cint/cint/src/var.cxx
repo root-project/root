@@ -6228,7 +6228,16 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
          // -- We are generating bytecode.
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x,%3x: LD '%c'  %s:%d\n", G__asm_cp, G__asm_dt, G__int(result), __FILE__, __LINE__);
+            G__fprinterr(
+                 G__serr
+               , "%3x,%3x: LD func ptr '%s': 0x%08lx  %s:%d\n"
+               , G__asm_cp
+               , G__asm_dt
+               , varname()
+               , G__int(result)
+               , __FILE__
+               , __LINE__
+            );
          }
 #endif // G__ASM_DBG
          G__asm_inst[G__asm_cp] = G__LD;

@@ -2415,57 +2415,73 @@ int G__call_cppfunc(G__value *result7,G__param *libp,G__ifunc_table_internal *if
 {
   G__InterfaceMethod cppfunc;
   int result;
-
   cppfunc = (G__InterfaceMethod)ifunc->pentry[ifn]->p;
-
-
 #ifdef G__ASM
-  if(G__asm_noverflow) {
-    /****************************************
-     * LD_FUNC (C++ compiled)
-     ****************************************/
-    if(cppfunc==(G__InterfaceMethod)G__DLL_direct_globalfunc) {
+  if (G__asm_noverflow) {
+    if (cppfunc == (G__InterfaceMethod) G__DLL_direct_globalfunc) {
+      // --
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,
-                                  "%3x: LD_FUNC direct global function %s paran=%d\n"
-                                  ,G__asm_cp,ifunc->funcname[ifn],libp->paran);
-#endif
-      G__asm_inst[G__asm_cp]=G__LD_FUNC;
-      G__asm_inst[G__asm_cp+1] = (long)ifunc;
-      G__asm_inst[G__asm_cp+2]= ifn;
-      G__asm_inst[G__asm_cp+3]=libp->paran;
-      G__asm_inst[G__asm_cp+4]=(long)cppfunc;
+      if (G__asm_dbg) {
+         G__fprinterr(
+              G__serr
+            , "%3x,%3x: LD_FUNC direct global function '%s' paran: %d  %s:%d\n"
+            , G__asm_cp
+            , G__asm_dt
+            , ifunc->funcname[ifn]
+            , libp->paran
+            , __FILE__
+            , __LINE__
+         );
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__LD_FUNC;
+      G__asm_inst[G__asm_cp+1] = (long) ifunc;
+      G__asm_inst[G__asm_cp+2] = ifn;
+      G__asm_inst[G__asm_cp+3] = libp->paran;
+      G__asm_inst[G__asm_cp+4] = (long) cppfunc;
       G__asm_inst[G__asm_cp+5] = 0;
-      if (ifunc && ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
-      G__asm_inst[G__asm_cp+6]=(long)ifunc;
-      G__inc_cp_asm(7,0);
+      if (ifunc && ifunc->pentry[ifn]) {
+         G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
+      }
+      G__asm_inst[G__asm_cp+6] = (long) ifunc;
+      G__inc_cp_asm(7, 0);
     }
     else {
+      // --
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,
-                                  "%3x: LD_FUNC C++ compiled %s paran=%d\n"
-                                  ,G__asm_cp,ifunc->funcname[ifn],libp->paran);
-#endif
-      G__asm_inst[G__asm_cp]=G__LD_FUNC;
+      if (G__asm_dbg) {
+         G__fprinterr(
+              G__serr
+            , "%3x,%3x: LD_FUNC C++ compiled '%s' paran: %d  %s:%d\n"
+            , G__asm_cp
+            , G__asm_dt
+            , ifunc->funcname[ifn]
+            , libp->paran
+            , __FILE__
+            , __LINE__
+         );
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__LD_FUNC;
       G__asm_inst[G__asm_cp+1] = ifunc->p_tagtable[ifn];
-      G__asm_inst[G__asm_cp+2]= - ifunc->type[ifn];
-      G__asm_inst[G__asm_cp+3]=libp->paran;
-      G__asm_inst[G__asm_cp+4]=(long)cppfunc;
+      G__asm_inst[G__asm_cp+2] = -(ifunc->type[ifn]);
+      G__asm_inst[G__asm_cp+3] = libp->paran;
+      G__asm_inst[G__asm_cp+4] = (long) cppfunc;
       G__asm_inst[G__asm_cp+5] = 0;
-      if (ifunc && ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
-      G__asm_inst[G__asm_cp+6]=(long)ifunc;
-      G__inc_cp_asm(7,0);
+      if (ifunc && ifunc->pentry[ifn]) {
+         G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
+      }
+      G__asm_inst[G__asm_cp+6] = (long) ifunc;
+      G__inc_cp_asm(7, 0);
     }
   }
-#endif /* of G__ASM */
-
-  /* compact G__cpplink.C */
+#endif // G__ASM
   *result7 = G__null;
   result7->tagnum = ifunc->p_tagtable[ifn];
   result7->typenum = ifunc->p_typetable[ifn];
 #ifndef G__OLDIMPLEMENTATION1259
   result7->isconst = ifunc->isconst[ifn];
-#endif
+#endif // G__OLDIMPLEMENTATION1259
   if(-1!=result7->tagnum&&'e'!=G__struct.type[result7->tagnum]) {
     if(isupper(ifunc->type[ifn])) result7->type='U';
     else                          result7->type='u';

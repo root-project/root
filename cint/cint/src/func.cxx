@@ -302,15 +302,20 @@ static void G__getindexedvalue(G__value *result3, char *cindex)
    size = G__sizeof(result3);
 #ifdef G__ASM
    if (G__asm_noverflow) {
-      /* size arithmetic is done by OP2 in bytecode execution */
+      // -- We are generating bytecode.
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x: OP2  '%c'\n" , G__asm_cp, '+');
-#endif
+      if (G__asm_dbg) {
+	 //G__fprinterr(G__serr, "       : Replace top of data stack by: 0x%x (%d)\n", size * index);
+         G__fprinterr(G__serr, "%3x,%3x: OP2  '%c'\n", G__asm_cp, G__asm_dt, '+');
+      }
+#endif // G__ASM_DBG
+      // Replace index on the data stack by (size * index).
+      //G__letint(&G__asm_stack[G__asm_dt+1], 'i', (long) (size * index));
       G__asm_inst[G__asm_cp] = G__OP2;
-      G__asm_inst[G__asm_cp+1] = (long)('+');
+      G__asm_inst[G__asm_cp+1] = (long) '+';
       G__inc_cp_asm(2, 0);
    }
-#endif
+#endif // G__ASM
    result3->obj.i += (size * index);
    *result3 = G__tovalue(*result3);
 }
