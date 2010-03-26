@@ -31,7 +31,7 @@
 
 #include <iterator>
 
-#if __GNUC__ >= 3
+#if (__GNUC__ >= 3) && !defined(__INTEL_COMPILER)
 // Prevent -Weffc++ from complaining about the inheritance
 // TListIter from std::iterator.
 #pragma GCC system_header
