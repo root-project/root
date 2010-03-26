@@ -61,6 +61,7 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fSceneLOD     (kLODUndef),
    fCombiLOD     (kLODUndef),
    fShapeLOD     (kLODUndef),
+   fShapePixSize (0),
 
    fViewerStyle  (kStyleUndef),
    fSceneStyle   (kStyleUndef),

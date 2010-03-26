@@ -94,8 +94,9 @@ protected:
 
    Short_t         fViewerLOD;
    Short_t         fSceneLOD;
-   Short_t         fCombiLOD; // Combined viewer/scene lod
-   Short_t         fShapeLOD;
+   Short_t         fCombiLOD;     // Combined viewer/scene lod.
+   Short_t         fShapeLOD;     // LOD calculated for current shape.
+   Float_t         fShapePixSize; // Only relevant when not using display lists.
 
    Short_t         fViewerStyle;
    Short_t         fSceneStyle;
@@ -172,6 +173,8 @@ public:
    void    SetCombiLOD(Short_t LOD)    { fCombiLOD = LOD;  }
    Short_t ShapeLOD()    const         { return fShapeLOD; }
    void    SetShapeLOD(Short_t LOD)    { fShapeLOD = LOD;  }
+   Float_t ShapePixSize() const        { return fShapePixSize; }
+   void    SetShapePixSize(Float_t ps) { fShapePixSize = ps; }
 
    Short_t ViewerStyle() const         { return fViewerStyle; }
    void    SetViewerStyle(Short_t sty) { fViewerStyle = sty;  }

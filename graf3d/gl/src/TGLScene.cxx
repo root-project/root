@@ -853,6 +853,7 @@ void TGLScene::RenderElements(TGLRnrCtx&           rnrCtx,
       if (drawNeeded)
       {
          rnrCtx.SetShapeLOD((*i)->fFinalLOD);
+         rnrCtx.SetShapePixSize((*i)->fPixelSize);
          glPushName(drawShape->ID());
          drawShape->Draw(rnrCtx);
          glPopName();

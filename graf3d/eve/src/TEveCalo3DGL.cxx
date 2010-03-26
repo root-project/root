@@ -265,12 +265,13 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
 
    if (transparent_p)
    {
-      TGLUtil::ColorTransparency(fM->fFrameColor, fM->fFrameTransparency);
+      glPushAttrib(GL_ENABLE_BIT | GL_DEPTH_BUFFER_BIT);
 
-      glPushAttrib(GL_ENABLE_BIT);
-
+      glDepthMask(GL_FALSE);
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      TGLUtil::ColorTransparency(fM->fFrameColor, fM->fFrameTransparency);
    }
 
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
