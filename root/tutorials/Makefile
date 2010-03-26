@@ -56,9 +56,8 @@ ifeq ($(findstring roofit,$(shell root-config --features)),)
 TUTORIALSTESTS_VETO += roofit/% roostats/%
 endif
 
-ifneq ($(findstring xml, $(shell root-config --features)),)
-  TUTORIALSTESTS_VETO += xml/DOMParsePerson
-  TUTORIALSTESTS_VETO += xml/SAXHandler
+ifeq ($(findstring xml, $(shell root-config --features)),)
+  TUTORIALSTESTS_VETO += xml/%
 endif
 
 # I believe these fail due to CINT bugs:
