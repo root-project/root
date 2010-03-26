@@ -28,6 +28,15 @@ namespace Rgl {
 namespace Mc {
 
 /*
+Some routines, values and tables for marching cube method.
+*/
+extern const UInt_t  eInt[256];
+extern const Float_t vOff[8][3];
+extern const UChar_t eConn[12][2];
+extern const Float_t eDir[12][3];
+extern const Int_t   conTbl[256][16];
+
+/*
 "T" prefix in class names is only for code-style checker.
 */
 

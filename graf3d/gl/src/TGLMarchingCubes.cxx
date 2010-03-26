@@ -16,8 +16,6 @@ http://local.wasp.uwa.edu.au/~pbourke/geometry/polygonise/
 namespace Rgl {
 namespace Mc {
 
-namespace {
-
 /*
 Some routines, values and tables for marching cube method.
 */
@@ -26,6 +24,8 @@ extern const Float_t vOff[8][3];
 extern const UChar_t eConn[12][2];
 extern const Float_t eDir[12][3];
 extern const Int_t   conTbl[256][16];
+
+namespace {
 
 enum ECubeBitMasks {
    k0  = 0x1,
