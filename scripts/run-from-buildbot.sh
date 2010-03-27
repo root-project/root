@@ -38,6 +38,6 @@ cd $STARTPWD
 # Did Philippe fix it? export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
 
 # Make clean before making roottest, to not depend on dependencies:
-make clean -j4
+make clean "$@"
 # Forward arguments to make:
 make -k "$@"
