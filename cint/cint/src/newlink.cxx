@@ -6131,15 +6131,7 @@ static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table_internal *i
                if (reftype) {
                   fprintf(fp, "(%s&) u[0].lval", typestring);
                } else {
-                  if (G__globalcomp == G__CPPLINK) {
-#if defined(__INTEL_COMPILER)
-                     fprintf(fp, "*(%s*) u[1].lval", typestring);
-#else
-                     fprintf(fp, "*(%s*) u[0].lval", typestring);
-#endif
-                  } else {
-                     fprintf(fp, "(%s*) u[0].lval", typestring);
-                  }
+                  fprintf(fp, "*(%s*) returnValue", typestring);
                }
                break;
             default:
