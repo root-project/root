@@ -9,9 +9,9 @@
 if uname -a | grep -i cygwin > /dev/null; then
     PWD=${PWD##\\cygwin}
     cd $PWD
-    export ROOTTEST_HOME="`cygpath -m $PWD`"
+    export ROOTTEST_HOME="`cygpath -m $PWD`/"
 else
-    export ROOTTEST_HOME="$PWD"
+    export ROOTTEST_HOME="$PWD/"
 fi
 
 STARTPWD=$PWD
