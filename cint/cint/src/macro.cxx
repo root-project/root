@@ -565,7 +565,7 @@ void G__define()
       // Remember position in case it is too hard for us to handle.
       fgetpos(G__ifile.fp, &pos);
       // Grab first part.
-      c = G__fgetstream(initvalue, 0, "\n\r\\/",true);
+      c = G__fgetstream(initvalue, 0, "\n\r\\/");
       // Read and remove comments until done.
       while (c == '/') {
          // -- Possible comment coming next.
