@@ -7,12 +7,11 @@
 
 # PWD on cygwin is garbled, need to adjust \cygwin/home to /home
 if uname -a | grep -i cygwin > /dev/null; then
-    pwd
-    echo Original PWD is $PWD
     PWD=${PWD##\\cygwin}
-    echo Adjusted PWD to $PWD
     cd $PWD
-    pwd
+    export ROOTTEST_HOME="`cygpath -m $PWD`"
+else
+    export ROOTTEST_HOME="$PWD"
 fi
 
 STARTPWD=$PWD
@@ -39,6 +38,6 @@ cd $STARTPWD
 # Did Philippe fix it? export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
 
 # Make clean before making roottest, to not depend on dependencies:
-make clean -j4 ROOTTEST_HOME=$PWD/
+make clean -j4
 # Forward arguments to make:
-make -k "$@" ROOTTEST_HOME=$PWD/
+make -k "$@"
