@@ -1366,7 +1366,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
          }
       }
       while (indexb < eIndexb) {
-         const Int_t icola = (eIndexa > 0) ? pColIndexa[eIndexa-1] : -1;
+         const Int_t icola = (eIndexa > sIndexa && eIndexa > 0) ? pColIndexa[eIndexa-1] : -1;
          if (pColIndexb[indexb++] > icola)
             nc++;
       }
