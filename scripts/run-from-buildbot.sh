@@ -38,6 +38,8 @@ cd $STARTPWD
 NICE="make"
 if [ ${PWD} != ${PWD/-incr/} ]; then
     NICEMAKE="nice make"
+else
+    NICEMAKE=make
 fi
 $NICEMAKE clean "$@"
 # Forward arguments to make:
