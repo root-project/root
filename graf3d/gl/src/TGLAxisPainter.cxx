@@ -104,7 +104,7 @@ void TGLAxisPainter::FormAxisValue(Double_t  val, TString &s) const
    if (s.EndsWith("."))
       s += '0';
 
-   Ssiz_t ld = s.Last('.');
+   Ssiz_t ld = s.Last('.') + 1;
    if (s.Length() - ld > fDecimals)
       s.Remove(ld + fDecimals);
 
