@@ -80,7 +80,7 @@ private:
    mutable vCell2D_t                 fCells2D;
 
    mutable TEveCaloData::RebinData_t fRebinData;
-   mutable Float_t                   fMaxValRebin;
+   mutable Float_t                   fMaxVal;
    mutable Float_t                   fValToPixel; // top logaritmic viewview
    mutable Int_t                     fCurrentPixelsPerBin;
 

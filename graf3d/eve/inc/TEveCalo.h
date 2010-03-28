@@ -82,9 +82,10 @@ public:
 
    TEveCaloData* GetData() const { return fData; }
    void    SetData(TEveCaloData* d);
-   void    DataChanged();   Float_t GetMaxVal() const;
+   void    DataChanged();
+   Float_t GetMaxVal() const;
 
-   void    AssertCellIdCache() const;
+   Bool_t  AssertCellIdCache() const;
    void    InvalidateCellIdCache() { fCellIdCacheOK=kFALSE; ResetBBox(); };
 
    Float_t GetDataSliceThreshold(Int_t slice) const;

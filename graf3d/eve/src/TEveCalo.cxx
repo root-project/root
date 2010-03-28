@@ -150,7 +150,7 @@ void TEveCaloViz::SetPlotEt(Bool_t isEt)
 
    fPlotEt=isEt;
    if (fPalette)
-      fPalette->SetLimits(0, TMath::CeilNint(fData->GetMaxVal(fPlotEt)));
+      fPalette->SetLimits(0, TMath::CeilNint(GetMaxVal()));
 
    InvalidateCellIdCache();
 }
@@ -243,7 +243,7 @@ void TEveCaloViz::DataChanged()
 
    if (fPalette)
    {
-      Int_t hlimit = TMath::CeilNint(fScaleAbs ? fMaxValAbs : fData->GetMaxVal(fPlotEt));
+      Int_t hlimit = TMath::CeilNint(GetMaxVal());
       fPalette->SetLimits(0, hlimit);
       fPalette->SetMin(0);
       fPalette->SetMax(hlimit);
@@ -253,13 +253,18 @@ void TEveCaloViz::DataChanged()
 }
 
 //______________________________________________________________________________
-void TEveCaloViz::AssertCellIdCache() const
+Bool_t TEveCaloViz::AssertCellIdCache() const
 {
    // Assert cell id cache is ok.
+   // Returns true if the cache has been updated.
  
    TEveCaloViz* cv = const_cast<TEveCaloViz*>(this);
-   if (!fCellIdCacheOK)
+   if (!fCellIdCacheOK) {
       cv->BuildCellIdCache();
+      return kTRUE;
+   } else {
+      return kFALSE;
+   }
 }
 
 //______________________________________________________________________________
@@ -341,7 +346,7 @@ TEveRGBAPalette* TEveCaloViz::AssertPalette()
       fPalette = new TEveRGBAPalette;
       fPalette->SetDefaultColor((Color_t)4);
 
-      Int_t hlimit = TMath::CeilNint(fScaleAbs ? fMaxValAbs : fData->GetMaxVal(fPlotEt));
+      Int_t hlimit = TMath::CeilNint(GetMaxVal());
       fPalette->SetLimits(0, hlimit);
       fPalette->SetMin(0);
       fPalette->SetMax(hlimit);
@@ -744,7 +749,7 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    fAutoRebin(kTRUE),
 
    fPixelsPerBin(12),
-   fNormalizeRebin(kTRUE),
+   fNormalizeRebin(kFALSE),
 
    fProjection(kAuto),
    f2DMode(kValSize),
@@ -791,7 +796,7 @@ void TEveCaloLego::ComputeBBox()
 
    BBoxZero();
 
-   Float_t ex = 1.2;
+   Float_t ex = 1.2*fMaxTowerH;
 
    Float_t a = 0.5*ex;
 

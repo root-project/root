@@ -118,6 +118,12 @@ public:
       std::vector<Int_t>   fBinData;
 
       Float_t* GetSliceVals(Int_t bin);
+
+      void Clear()
+      {
+         fSliceData.clear();
+         fBinData.clear();
+      }
    };
 
    /**************************************************************************/
