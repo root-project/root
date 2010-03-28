@@ -36,10 +36,4 @@ cd $STARTPWD
 
 # Make clean before making roottest, to not depend on dependencies:
 make clean "$@"
-
-# Forward arguments to make, and run nice if not incremental:
-if [ ${PWD} != ${PWD/-incr/} ]; then
-    nice make -k FAST=1 "$@"
-else
-    make -k FAST=1 "$@"
-fi
+make -k FAST=1 "$@"
