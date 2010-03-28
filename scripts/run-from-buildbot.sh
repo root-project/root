@@ -35,12 +35,11 @@ echo Set up ROOT in $ROOTSYS
 cd $STARTPWD
 
 # Make clean before making roottest, to not depend on dependencies:
-NICE="make"
+make clean "$@"
+
+# Forward arguments to make, and run nice if not incremental:
 if [ ${PWD} != ${PWD/-incr/} ]; then
-    NICEMAKE="nice make"
+    nice make -k FAST=1 "$@"
 else
-    NICEMAKE=make
+    make -k FAST=1 "$@"
 fi
-$NICEMAKE clean "$@"
-# Forward arguments to make:
-$NICEMAKE -k FAST=1 "$@"
