@@ -34,10 +34,11 @@ echo Set up ROOT in $ROOTSYS
 # cd back to where we started
 cd $STARTPWD
 
-# some more env vars
-# Did Philippe fix it? export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
-
 # Make clean before making roottest, to not depend on dependencies:
-make clean "$@"
+NICE="make"
+if [ ${PWD} != ${PWD/-incr/} ]; then
+    NICEMAKE="nice make"
+fi
+$NICEMAKE clean "$@"
 # Forward arguments to make:
-make -k "$@"
+$NICEMAKE -k FAST=1 "$@"

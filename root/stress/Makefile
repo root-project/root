@@ -69,6 +69,12 @@ STRESSTESTSINTERP_VETO := stressMathCore-itest stressMathMore-itest stressRooFit
   stressLinear-itest stressVector-itest stressGeometry-itest stressIterators-itest stressHistogram-itest stressHistoFit-itest
 STRESSTESTSINTERP := $(filter-out $(STRESSTESTSINTERP_VETO),$(STRESSTESTS:-test=-itest))
 
+ifneq ($(FAST),)
+# Fast means all compiled
+STRESSTESTSINTERP_VETO += $(STRESSTESTSINTERP)
+STRESSTESTSINTERP :=
+endif
+
 # run all compiled except for those that are run interpreted:
 STRESSTESTSCOMP_VETO := $(STRESSTESTSINTERP:-itest=-ctest)
 # ...and those that are known to fail: none!
