@@ -4585,9 +4585,6 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                   SendAsynMessage(TString::Format("%s: kBuildPackage: failure locating %s ...",
                                        noth.Data(), package.Data()));
                   break;
-               } else {
-                  // Package is in the global dirs
-                  break;
                }
             }
          }
