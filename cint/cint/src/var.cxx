@@ -3216,7 +3216,9 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    //
    //  Find the end of the variable chain.
    //
+   int index_of_var = 0;
    while (var->next) {
+      ++index_of_var;
       var = var->next;
    }
    //
@@ -3339,6 +3341,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
       memset(var->next, 0, sizeof(struct G__var_array));
       var->next->tagnum = var->tagnum;
       var = var->next;
+      ++index_of_var;
    }
    int ig15 = var->allvar;
    //
@@ -3794,7 +3797,7 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    //
    var->allvar++;
    //  Pass the handle back to the caller
-   member.Set(var,ig15);
+   member.Set(var,ig15,index_of_var);
    // FIXME: Why?  This is bizzare.
    var->varlabel[var->allvar][0] = var->varlabel[var->allvar-1][0] + 1;
    //--  1

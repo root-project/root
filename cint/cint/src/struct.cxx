@@ -1783,9 +1783,9 @@ int G__search_tagname(const char* tagname, int type)
       // first try a typedef, so we don't trigger autoloading here:
       long envtypenum = G__defined_typename_noerror(atom_tagname, 1);
       if (envtypenum != -1 && G__newtype.type[envtypenum] == 'u')
-	envtagnum = G__newtype.tagnum[envtypenum];
+         envtagnum = G__newtype.tagnum[envtypenum];
       else
-	envtagnum = G__defined_tagname(atom_tagname, 1);
+         envtagnum = G__defined_tagname(atom_tagname, 1);
    }
    else {
       envtagnum = G__get_envtagnum();
@@ -1936,15 +1936,16 @@ int G__search_tagname(const char* tagname, int type)
 #endif // G__OLDIMPLEMENTATION1503
       G__struct.vtable[i] = 0;
       G__struct.alltag++;
+
+      if (G__struct.type[i] != 'a'
+          && G__struct.type[i] != 0
+          && G__UserSpecificUpdateClassInfo) {
+         (*G__UserSpecificUpdateClassInfo)(G__struct.name[i],i);
+      }
    }
    else if (!G__struct.type[i] || (G__struct.type[i] == 'a')) {
       G__struct.type[i] = type;
       ++G__struct.nactives;
-   }
-   if (G__struct.type[i] != 'a'
-       && G__struct.type[i] != 0
-       && G__UserSpecificUpdateClassInfo) {
-      (*G__UserSpecificUpdateClassInfo)(G__struct.name[i],i);
    }
 
    // Return tagnum.

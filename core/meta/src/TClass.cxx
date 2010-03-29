@@ -909,11 +909,10 @@ void TClass::Init(const char *name, Version_t cversion,
    // Advertise ourself as the loading class for this class name
    TClass::AddClass(this);
 
-   Bool_t isStl = kFALSE;
+   Bool_t isStl = TClassEdit::IsSTLCont(fName);
 
    if (!fClassInfo) {
       Bool_t shouldLoad = kFALSE;
-      isStl = TClassEdit::IsSTLCont(fName);
 
       if (gInterpreter->CheckClassInfo(fName)) shouldLoad = kTRUE;
       else if (fImplFileLine>=0) {
@@ -1012,9 +1011,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
    ResetBit(kLoading);
 
-   Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
-
-   if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
+   if ( isStl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
       fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName() );
       if (fCollectionProxy) {
          fSizeof = fCollectionProxy->Sizeof();
@@ -2289,10 +2286,13 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (!gROOT->GetListOfClasses())    return 0;
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+   
+   TClassEdit::TSplitType splitname( name );
 
    if (!cl) {
       // Try the name where we strip out the STL default template arguments
-      std::string resolvedName( TClassEdit::ShortType(name, TClassEdit::kDropStlDefault) );
+      std::string resolvedName;
+      splitname.ShortType(resolvedName, TClassEdit::kDropStlDefault);
       if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
       if (!cl) {
          // Attempt to resolve typedefs
@@ -2308,12 +2308,12 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
 
-      if (TClassEdit::IsSTLCont(name)) {
+      if (splitname.IsSTLCont()) {
 
          const char * itypename = gCint->GetInterpreterTypeName(name);
          if (itypename) {
             std::string altname( TClassEdit::ShortType(itypename, TClassEdit::kDropStlDefault) );
-            if ( altname != name) {
+            if (altname != name) {
 
                // Remove the existing (soon to be invalid) TClass object to
                // avoid an infinite recursion.
@@ -2331,7 +2331,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    } else {
 
-      if (!TClassEdit::IsSTLCont(name)) {
+      if (!splitname.IsSTLCont()) {
 
          // If the name is actually an STL container we prefer the
          // short name rather than the true name (at least) in
@@ -2377,7 +2377,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       || ( strncmp(name,"std::",5)==0 && ((strcmp(name+5,"string")==0)||(strcmp(name+5,full_string_name)==0)))) {
       return TClass::GetClass("string");
    }
-   if (TClassEdit::IsSTLCont(name)) {
+   if (splitname.IsSTLCont()) {
 
       return gROOT->FindSTLClass(name,kTRUE,silent);
 

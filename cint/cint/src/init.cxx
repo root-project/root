@@ -116,7 +116,7 @@ void G__remove_setup_func(const char* libname)
 //______________________________________________________________________________
 int G__call_setup_funcs()
 {
-   if (!G__ifunc.inited) {
+   if (!G__ifunc.inited || !G__init) {
       // Veto any dictionary uploading until at least G__ifunc is initialized
       // (because it's initialization will be wipe out 'some' of the work done.
       return 0;

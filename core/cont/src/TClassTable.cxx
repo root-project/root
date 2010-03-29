@@ -248,7 +248,9 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       new TClassTable;
 
    // Only register the name without the default STL template arguments ...
-   std::string shortName( TClassEdit::ShortType(cname, TClassEdit::kDropStlDefault) );
+   TClassEdit::TSplitType splitname( cname );
+   std::string shortName;
+   splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
 
    // check if already in table, if so return
    TClassRec *r = FindElement(shortName.c_str(), kTRUE);
@@ -259,7 +261,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          // This okay we just keep the old one.
          return;
       }
-      if (TClassEdit::IsSTLCont(cname)==0) {
+      if (splitname.IsSTLCont()==0) {
          // Warn only for class that are not STL containers.
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }

@@ -3420,12 +3420,6 @@ int G__get_linked_tagnum(G__linked_taginfo *p)
   if(!p) return(-1);
   if(-1==p->tagnum) {
      p->tagnum = G__search_tagname(p->tagname,p->tagtype);
-     if (G__UserSpecificUpdateClassInfo) {
-        long varp = G__globalvarpointer;
-        G__globalvarpointer = G__PVOID;
-        (*G__UserSpecificUpdateClassInfo)((char*)p->tagname,p->tagnum);
-        G__globalvarpointer = varp;
-     }
   }
   return(p->tagnum);
 }
