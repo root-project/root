@@ -101,12 +101,13 @@ void TGLAxisPainter::FormAxisValue(Double_t  val, TString &s) const
       return;
    }
 
-   if (s.EndsWith("."))
-      s += '0';
-
    Ssiz_t ld = s.Last('.') + 1;
    if (s.Length() - ld > fDecimals)
       s.Remove(ld + fDecimals);
+
+
+   if (fDecimals == 0 && s.EndsWith("."))
+      s.Remove(s.Length() -1);
 
    TPMERegexp zeroes("[-+]?0\\.0*$");
    zeroes.Substitute(s, "0");
