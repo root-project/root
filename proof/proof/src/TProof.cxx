@@ -6477,10 +6477,13 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
 #ifndef WIN32
                char ctmp[1024];
                if (!R_ISLNK(stpar.fMode) || readlink(tpar.Data(), ctmp, 1024) > 0) {
-#endif
                   // The file exists
                   badPAR = kFALSE;
                }
+#else
+               // The file exists
+               badPAR = kFALSE;
+#endif
             }
             // Cleanup, if bad
             if (badPAR) {
@@ -7180,7 +7183,6 @@ Int_t TProof::UploadPackageOnClient(const char *parpack, EUploadPackageOpt opt, 
                  "could not resolve the symbolik link '%s'", par.Data());
       }
 #endif
-
       // The fPackageDir directory exists (has been created in Init());
       // create symlink to the par file in the fPackageDir (needed by
       // master in case we run on the localhost)
