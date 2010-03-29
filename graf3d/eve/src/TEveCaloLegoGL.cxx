@@ -573,6 +573,8 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
 {
    // Draw XY axis.
 
+   TGLCamera& cam  = rnrCtx.RefCamera();
+
    TAxis ax;
    ax.SetAxisColor(fGridColor);
    ax.SetLabelColor(fFontColor);
@@ -600,6 +602,10 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
                               + (up[1] - dn[1]) * (up[1] - dn[1])
                               + (up[2] - dn[2]) * (up[2] - dn[2]));
 
+   // lock upper limit to of relative font size relative to viewport diagonal
+   Double_t vpLimit = cam.RefViewport().Diagonal()*0.5/TMath::Sqrt2();
+   len = TMath::Min(len, vpLimit);
+
    // eta
    fAxisPainter.SetLabelPixelFontSize(TMath::Nint(len*fM->GetData()->GetEtaBins()->GetLabelSize()));
    fAxisPainter.SetTitlePixelFontSize(TMath::Nint(len*fM->GetData()->GetEtaBins()->GetTitleSize()));
@@ -608,7 +614,9 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    ax.SetTitle(fM->GetData()->GetEtaBins()->GetTitle());
    fAxisPainter.RefTitlePos().Set(fM->GetEtaMax(), -fM->GetPhiRng()*(ax.GetTickLength()+ ax.GetLabelOffset()), 0 );
    fAxisPainter.RefDir().Set(1, 0, 0);
-   fAxisPainter.RefTMOff(0).Set(0,  -fM->GetPhiRng(), 0);
+
+   Float_t tmOffFrustX = cam.FrustumPlane(TGLCamera::kRight).D() + cam.FrustumPlane(TGLCamera::kLeft).D();
+   fAxisPainter.RefTMOff(0).Set(0,  -TMath::Min(fM->GetPhiRng(), tmOffFrustX), 0);
    fAxisPainter.SetLabelAlign(TGLFont::kCenterH, TGLFont::kBottom);
 
    glPushMatrix();
@@ -622,7 +630,8 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    ax.SetTitle(fM->GetData()->GetPhiBins()->GetTitle());
    fAxisPainter.RefTitlePos().Set(-fM->GetEtaRng()*(ax.GetTickLength()+ ax.GetLabelOffset()), fM->GetPhiMax(), 0);
    fAxisPainter.RefDir().Set(0, 1, 0);
-   fAxisPainter.RefTMOff(0).Set(-fM->GetEtaRng(), 0, 0);
+   Float_t tmOffFrustY = cam.FrustumPlane(TGLCamera::kTop).D() + cam.FrustumPlane(TGLCamera::kBottom).D();
+   fAxisPainter.RefTMOff(0).Set(-TMath::Min(fM->GetEtaRng(), tmOffFrustY), 0, 0);
    fAxisPainter.SetLabelAlign(TGLFont::kRight, TGLFont::kCenterV);
 
    glPushMatrix();

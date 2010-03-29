@@ -624,7 +624,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
    TGLCamera& cam = rnrCtx.RefCamera();
-   Bool_t drawOverlayAxis = kFALSE;
+   Bool_t drawOverlayAxis = kTRUE;
 
    if (cam.IsOrthographic())
    {
@@ -678,8 +678,10 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
       }
 
       // draw camera overlay if projected lego bbox to large
-      if ((res.X() > cam.RefViewport().Width()*0.8) && (res.Y() > cam.RefViewport().Height()*0.8))
-         drawOverlayAxis = kTRUE;
+      SetFrustum(cam);
+      if (   fCalo->GetEtaMin() > fFrustum[0] && fCalo->GetEtaMax() < fFrustum[2]
+          && fCalo->GetPhiMin() > fFrustum[1] && fCalo->GetPhiMax() < fFrustum[3])
+            drawOverlayAxis = kFALSE;
    }
 
    if (cam.IsPerspective() && fShowPlane)

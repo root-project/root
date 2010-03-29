@@ -74,13 +74,33 @@ TGLCameraOverlay::~TGLCameraOverlay()
 //______________________________________________________________________________
 TAttAxis* TGLCameraOverlay::GetAttAxis()
 {
+   // Get axis attributes.
+
    return dynamic_cast<TAttAxis*>(fAxis);
+}
+
+//______________________________________________________________________________
+void TGLCameraOverlay::SetFrustum(TGLCamera& cam)
+{
+   // Set frustum values from given camera.
+
+   TGLVector3 absRef(1., 1., 1.); // needed in case if orthographic camera is negative
+   Float_t l = -cam.FrustumPlane(TGLCamera::kLeft).D()  * Dot(cam.GetCamBase().GetBaseVec(2), absRef);
+   Float_t r =  cam.FrustumPlane(TGLCamera::kRight).D() * Dot(cam.GetCamBase().GetBaseVec(2), absRef);
+   Float_t t =  cam.FrustumPlane(TGLCamera::kTop).D();
+   Float_t b = -cam.FrustumPlane(TGLCamera::kBottom).D();
+
+   fFrustum[0] = l;
+   fFrustum[1] = b;
+   fFrustum[2] = r;
+   fFrustum[3] = t;
 }
 
 //______________________________________________________________________________
 void TGLCameraOverlay::RenderPlaneIntersect(TGLRnrCtx& rnrCtx)
 {
-   // Print corss section coordinates in top right corner of screen.
+   // Draw cross section coordinates in top right corner of screen.
+
    TGLCamera &cam = rnrCtx.RefCamera();
    // get eye line
    const TGLMatrix& mx =  cam.GetCamBase() * cam.GetCamTrans();
@@ -450,29 +470,16 @@ void TGLCameraOverlay::Render(TGLRnrCtx& rnrCtx)
       return;
    }
 
-   // Frustum size.
-   TGLCamera &camera = rnrCtx.RefCamera();
-
-   TGLVector3 absRef(1., 1., 1.);
-   Float_t l = -camera.FrustumPlane(TGLCamera::kLeft).D()  * Dot(cam.GetCamBase().GetBaseVec(2), absRef);
-   Float_t r =  camera.FrustumPlane(TGLCamera::kRight).D() * Dot(cam.GetCamBase().GetBaseVec(2), absRef);
-   Float_t t =  camera.FrustumPlane(TGLCamera::kTop).D();
-   Float_t b = -camera.FrustumPlane(TGLCamera::kBottom).D();
-
-   fFrustum[0] = l;
-   fFrustum[1] = b;
-   fFrustum[2] = r;
-   fFrustum[3] = t;
-
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+   TGLUtil::Color(rnrCtx.ColorSet().Markup());
    TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
    Float_t old_depth_range[2];
    glGetFloatv(GL_DEPTH_RANGE, old_depth_range);
 
-   TGLUtil::Color(rnrCtx.ColorSet().Markup());
+   SetFrustum(cam);
 
    if (cam.IsOrthographic())
    {

@@ -31,8 +31,6 @@ private:
    TGLCameraOverlay(const TGLCameraOverlay&);            // Not implemented
    TGLCameraOverlay& operator=(const TGLCameraOverlay&); // Not implemented
 
-   Double_t       fFrustum[4];
-
 protected:
    Bool_t         fShowOrthographic;
    Bool_t         fShowPerspective;
@@ -47,6 +45,9 @@ protected:
 
    TGLPlane       fExternalRefPlane;
    Bool_t         fUseExternalRefPlane;
+
+   Double_t       fFrustum[4];
+
 
    void    RenderPlaneIntersect(TGLRnrCtx& rnrCtx);
    void    RenderAxis(TGLRnrCtx& rnrCtx, Bool_t drawGrid);
@@ -72,6 +73,8 @@ public:
    void     SetShowOrthographic(Bool_t x) {fShowOrthographic =x;}
    Bool_t   GetShowPerspective() const { return fShowPerspective; }
    void     SetShowPerspective(Bool_t x) {fShowPerspective =x;}
+
+   void     SetFrustum(TGLCamera& cam);
 
    TAttAxis* GetAttAxis();
 
