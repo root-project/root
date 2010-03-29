@@ -187,7 +187,7 @@ void TGDragWindow::DoRedraw()
 ClassImp(TGDNDManager)
 
 //______________________________________________________________________________
-TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t *typelist)
+TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t * /*typelist*/)
 {
    // TGDNDManager constructor.
 
@@ -197,7 +197,11 @@ TGDNDManager::TGDNDManager(TGFrame *toplevel, Atom_t *typelist)
    fMain = toplevel;
    fVersion = ROOTDND_PROTOCOL_VERSION;
    fUseVersion = kTRUE;
-   fTypelist = typelist;
+   //fTypelist = typelist;
+   fTypelist = new Atom_t[3];
+   fTypelist[0] = gVirtualX->InternAtom("application/root", kFALSE);
+   fTypelist[1] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+   fTypelist[2] = 0;
 
    if (!fgInit) {
       InitAtoms();
