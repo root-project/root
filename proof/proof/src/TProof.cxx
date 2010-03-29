@@ -6474,8 +6474,10 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
             Bool_t badPAR = kTRUE;
             FileStat_t stpar;
             if (gSystem->GetPathInfo(tpar, stpar) == 0) {
+#ifndef WIN32
                char ctmp[1024];
                if (!R_ISLNK(stpar.fMode) || readlink(tpar.Data(), ctmp, 1024) > 0) {
+#endif
                   // The file exists
                   badPAR = kFALSE;
                }
@@ -7167,6 +7169,7 @@ Int_t TProof::UploadPackageOnClient(const char *parpack, EUploadPackageOpt opt, 
    if (TestBit(TProof::kIsClient)) {
       // Make sure that 'par' is the real path and not a symlink
       TString par(parpack);
+#ifndef WIN32
       char ctmp[4096];
       ssize_t sz = readlink(par.Data(), ctmp, 4096);
       if (sz > 0) {
@@ -7176,6 +7179,7 @@ Int_t TProof::UploadPackageOnClient(const char *parpack, EUploadPackageOpt opt, 
          Warning("UploadPackageOnClient",
                  "could not resolve the symbolik link '%s'", par.Data());
       }
+#endif
 
       // The fPackageDir directory exists (has been created in Init());
       // create symlink to the par file in the fPackageDir (needed by
