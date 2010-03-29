@@ -75,6 +75,7 @@ void Display(XrdCryptoX509 *xp);
 //
 int          Mode     = kM_undef;
 bool         Debug = 0;
+bool         Exists = 0;
 XrdCryptoFactory *gCryptoFactory = 0;
 XrdOucString CryptoMod = "ssl";
 XrdOucString CAdir  = "/etc/grid-security/certificates/";
@@ -88,6 +89,7 @@ XrdOucString PXcert = "";
 XrdOucString Valid  = "12:00";
 int          Bits   = 512;
 int          PathLength = 0;
+int          ClockSkew = 30;
 // For error logging and tracing
 static XrdSysLogger Logger;
 static XrdSysError eDest(0,"proxy_");
@@ -104,10 +106,11 @@ int main( int argc, char **argv )
    XrdCryptoX509ParseFile_t ParseFile = 0;
    int prc = 0;
    int nci = 0;
+   int exitrc = 0;
 
    // Parse arguments
    if (ParseArguments(argc,argv)) {
-      exit(0);
+      exit(1);
    }
 
    //
@@ -185,16 +188,43 @@ int main( int argc, char **argv )
       cPXp = new XrdCryptosslgsiX509Chain();
       nci = (*ParseFile)(PXcert.c_str(), cPXp);
       if (nci < 2) {
-         PRT("proxy files must have at least two certificates"
-               " (found only: "<<nci<<")");
+         if (Exists) {
+            exitrc = 1;
+         } else {
+            PRT("proxy files must have at least two certificates"
+                " (found only: "<<nci<<")");
+         }
          break;
       }
       // The proxy is the first certificate
       xPXp = cPXp->Begin();
       if (xPXp) {
-         Display(xPXp);
+         if (!Exists) {
+            Display(xPXp);
+         } else {
+            // Check time validity
+            secValid = XrdSutParseTime(Valid.c_str(), 1);
+            int tl = xPXp->NotAfter() -(int)time(0);
+            if (Debug)
+               PRT("secValid: " << secValid<< ", tl: "<<tl<<", ClockSkew:"<<ClockSkew);
+            if (secValid > tl + ClockSkew) {
+               exitrc = 1;
+               break;
+            }
+            // Check bit strenght
+            if (Debug)
+               PRT("BitStrength: " << xPXp->BitStrength()<< ", Bits: "<<Bits);
+            if (xPXp->BitStrength() < Bits) {
+               exitrc = 1;
+               break;
+            }
+         }
       } else {
-         PRT( ": proxy certificate not found");
+         if (Exists) {
+            exitrc = 1;
+         } else {
+            PRT( ": proxy certificate not found");
+         }
       }
       break;
    default:
@@ -203,7 +233,7 @@ int main( int argc, char **argv )
       Menu();
    }
 
-   exit(0);
+   exit(exitrc);
 }
 
 int ParseArguments(int argc, char **argv)
@@ -237,6 +267,10 @@ int ParseArguments(int argc, char **argv)
             Mode = kM_help;
          } else if (CheckOption(opt,"debug",ival)) {
             Debug = ival;
+         } else if (CheckOption(opt,"e",ival)) {
+            Exists = 1;
+         } else if (CheckOption(opt,"exists",ival)) {
+            Exists = 1;
          } else if (CheckOption(opt,"f",ival)) {
             --argc;
             ++argv;
@@ -249,6 +283,18 @@ int ParseArguments(int argc, char **argv)
                argc++;
                argv--;
             }
+         } else if (CheckOption(opt,"file",ival)) {
+            --argc;
+            ++argv;
+            if (argc >= 0 && (*argv && *(argv)[0] != '-')) {
+               PXcert = *argv;
+            } else {
+               PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+               PRT("+ Option '-file' requires a proxy file name: ignoring      +");
+               PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+               argc++;
+               argv--;
+            }
          } else if (CheckOption(opt,"out",ival)) {
             --argc;
             ++argv;
@@ -256,7 +302,7 @@ int ParseArguments(int argc, char **argv)
                PXcert = *argv;
             } else {
                PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-               PRT("+ Option '-out' requires a proxy file name: ignoring         +");
+               PRT("+ Option '-out' requires a proxy file name: ignoring        +");
                PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
                argc++;
                argv--;
@@ -348,6 +394,25 @@ int ParseArguments(int argc, char **argv)
                argc++;
                argv--;
             }
+         } else if (CheckOption(opt,"clockskew",ival)) {
+            --argc;
+            ++argv;
+            if (argc >= 0 && (*argv && *(argv)[0] != '-')) {
+               ClockSkew = strtol(*argv, 0, 10);
+               if (ClockSkew < -1 || errno == ERANGE) {
+                  PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                  PRT("+ Option '-clockskew' requires a number >= -1: ignoring    +");
+                  PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                  argc++;
+                  argv--;
+               }
+            } else {
+               PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+               PRT("+ Option '-clockskew' requires a number >= -1: ignoring    +");
+               PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+               argc++;
+               argv--;
+            }
          } else {
             PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
             PRT("+ Ignoring unrecognized option: "<<*argv);
@@ -421,9 +486,11 @@ int ParseArguments(int argc, char **argv)
       } else {
          if (Mode != kM_init) {
             // Path exists but we cannot access it - exit
-            PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-            PRT("+ proxy file: "<<PXcert.c_str()<<" not found");
-            PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            if (!Exists) {
+               PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+               PRT("+ proxy file: "<<PXcert.c_str()<<" not found");
+               PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+            }
             return 1;
          }
       }
@@ -504,8 +571,6 @@ int ParseArguments(int argc, char **argv)
           PRT("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
           return 1;
       }
-      
-
    }
 
    return 0;
@@ -540,7 +605,7 @@ void Menu()
    PRT("    -debug                 Print more information while running this"
                                    " query (use if something goes wrong) ");
    PRT(" ");
-   PRT("    -f (-out) <file>       Non-standard location of proxy file");
+   PRT("    -f,-file,-out <file>   Non-standard location of proxy file");
    PRT(" ");
    PRT("    init mode only:");
    PRT(" ");
@@ -550,10 +615,13 @@ void Menu()
                                    " for which proxies are wanted");
    PRT("    -key      <file>       Non-standard location of the private"
                                    " key to be used to sign the proxy");
-   PRT("    -bits     <bits>       strebgth in bits of the key [512]");
+   PRT("    -bits     <bits>       strength in bits of the key [512]");
    PRT("    -valid    <hh:mm>      Time validity of the proxy certificate [12:00]");
    PRT("    -path-length <len>     max number of descendent levels below"
                                    " this proxy [0] ");
+   PRT("    -e,-exists [options]   returns 0 if valid proxy exists, 1 otherwise;");
+   PRT("                           valid options: '-valid <hh:mm>', -bits <bits>");
+   PRT("    -clockskew <secs>      max clock-skewness allowed when checking time validity [30 secs]");
    PRT(" ");
 }
 
