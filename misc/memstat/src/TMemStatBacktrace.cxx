@@ -14,9 +14,9 @@
 #include <cstdlib>
 
 #ifndef __CINT__
-// TODO: We need MacOSX at least 10.5. Implement version check in Makefile of
-// ROOT when YAMS will be a pat of it.
+#if !defined(__APPLE__) || defined(MAC_OS_X_VERSION_10_5)
 #include <execinfo.h>
+#endif
 #include <cxxabi.h>
 #endif
 
@@ -24,7 +24,7 @@
 // ROOT
 #include "TString.h"
 
-#if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD) || defined(__APPLE__)) && !defined(__alpha__)
+#if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD) || (defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_5))) && !defined(__alpha__)
 #define SUPPORTS_MEMSTAT
 #endif
 
@@ -105,6 +105,7 @@ namespace memstat {
             return 0;
       }
 #else
+      if (_frame) { }
       return 0;
 #endif
    }
@@ -129,14 +130,16 @@ namespace memstat {
       // The builtin version is much faster, but very sensitive and in some conditions could fail to return a proper result.
       // return value =  min(stack deepness, dsize)
 
-      if(_bUseGNUBuiltinBacktrace) {
 #if defined(SUPPORTS_MEMSTAT)
+      if(_bUseGNUBuiltinBacktrace) {
          // Initialize the stack end variable.
          return builtin_return_address(_trace, _size);
-#endif
-         return 0;
       }
       return backtrace(_trace, _size);
+#else
+      if (_trace || _size || _bUseGNUBuiltinBacktrace) { }
+      return 0;
+#endif
    }
 
 //______________________________________________________________________________
@@ -165,7 +168,6 @@ namespace memstat {
          _strLib = info.dli_fname;
 #else
       if(!_pAddr) {
-         _strInfo = "";
          _strLib = "";
          _strSymbol = "";
       }
@@ -173,7 +175,7 @@ namespace memstat {
    }
 
 //______________________________________________________________________________
-   void getSymbolFullInfo(void *_pAddr, TString *_retInfo, const char *const _seporator)
+   void getSymbolFullInfo(void *_pAddr, TString *_retInfo, const char *const _separator)
    {
 
       if(!_retInfo)
@@ -186,11 +188,11 @@ namespace memstat {
       TString strLine;
       getSymbols(_pAddr, strInfo, strLib, strFun, strLine);
       *_retInfo +=
-         strInfo + _seporator +
-         strLib + _seporator +
+         strInfo + _separator +
+         strLib + _separator +
          strFun;
 #else
-
+      if (_pAddr || _separator) { }
 #endif
    }
 
