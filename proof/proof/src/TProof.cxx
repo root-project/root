@@ -6310,7 +6310,10 @@ Int_t TProof::DisablePackageOnClient(const char *package)
       fPackageLock->Lock();
       gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(), package));
       gSystem->Exec(Form("%s %s/%s.par", kRM, fPackageDir.Data(), package));
+      gSystem->Exec(Form("%s %s/%s/%s.par", kRM, fPackageDir.Data(), kPROOF_PackDownloadDir, package));
       fPackageLock->Unlock();
+      if (!gSystem->AccessPathName(Form("%s/%s/%s.par", fPackageDir.Data(), kPROOF_PackDownloadDir, package)))
+         Warning("DisablePackageOnClient", "unable to remove cached package PAR file for %s", package);
       if (!gSystem->AccessPathName(Form("%s/%s.par", fPackageDir.Data(), package)))
          Warning("DisablePackageOnClient", "unable to remove package PAR file for %s", package);
       if (!gSystem->AccessPathName(Form("%s/%s", fPackageDir.Data(), package)))
@@ -6430,7 +6433,7 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
    // case). Keep in sync in case of changes.
 
    TString downloaddir;
-   downloaddir.Form("%s/.download", fPackageDir.Data());
+   downloaddir.Form("%s/%s", fPackageDir.Data(), kPROOF_PackDownloadDir);
 
    if (opt != 0 && !path) {
       Error("BuildPackageOnClient", "for opt=%d != 0 'patyh' must be defined", opt);
@@ -7184,7 +7187,7 @@ Int_t TProof::UploadPackageOnClient(const char *parpack, EUploadPackageOpt opt, 
       // the client has its own version of the package and should not check
       // the master repository anymore for updates
       TString downloadpath;
-      downloadpath.Form("%s/.download/%s", fPackageDir.Data(), gSystem->BaseName(par));
+      downloadpath.Form("%s/%s/%s", fPackageDir.Data(), kPROOF_PackDownloadDir, gSystem->BaseName(par));
       if (!gSystem->AccessPathName(downloadpath, kFileExists) && downloadpath != par) {
          if (gSystem->Unlink(downloadpath) != 0) {
             Warning("UploadPackageOnClient",

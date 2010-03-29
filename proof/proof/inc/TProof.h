@@ -118,7 +118,7 @@ class TMacro;
 // 24 -> 25: Handling of 'data' dir; group information
 // 25 -> 26: Use new TProofProgressInfo class
 // 26 -> 27: Use new file for updating the session status
-// 27 -> 28: Support for multi-datasets, fix global package directories, fix AskStatistics,
+// 27 -> 28: Support for multi-datasets, fix global pack dirs, fix AskStatistics, package download
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 28;            // protocol version number
@@ -128,6 +128,7 @@ const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config
 const char* const kPROOF_WorkDir         = ".proof";      // default working directory
 const char* const kPROOF_CacheDir        = "cache";       // file cache dir, under WorkDir
 const char* const kPROOF_PackDir         = "packages";    // package dir, under WorkDir
+const char* const kPROOF_PackDownloadDir = "downloaded";  // subdir with downloaded PARs, under PackDir
 const char* const kPROOF_QueryDir        = "queries";     // query dir, under WorkDir
 const char* const kPROOF_DataSetDir      = "datasets";    // dataset dir, under WorkDir
 const char* const kPROOF_DataDir         = "data";        // dir for produced data, under WorkDir
