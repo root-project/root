@@ -50,9 +50,12 @@ TGLAxisPainter::TGLAxisPainter():
    fTitlePixelFontSize(14),
 
    fLabelAlignH(TGLFont::kCenterH),
-   fLabelAlignV(TGLFont::kCenterV)
+   fLabelAlignV(TGLFont::kCenterV),
+   fAllZeroesRE(0)
 {
    // Constructor.
+
+   fAllZeroesRE = new TPMERegexp("[-+]?0\\.0*$", "o");
 }
 
 
@@ -61,6 +64,7 @@ TGLAxisPainter::~TGLAxisPainter()
 {
    // Destructor.
 
+   delete fAllZeroesRE;
 }
 
 //______________________________________________________________________________
@@ -109,8 +113,7 @@ void TGLAxisPainter::FormAxisValue(Double_t  val, TString &s) const
    if (fDecimals == 0 && s.EndsWith("."))
       s.Remove(s.Length() -1);
 
-   TPMERegexp zeroes("[-+]?0\\.0*$");
-   zeroes.Substitute(s, "0");
+   fAllZeroesRE->Substitute(s, "0", kFALSE);
 }
 
 //______________________________________________________________________________

@@ -18,6 +18,7 @@
 class TAttAxis;
 class TAxis;
 class TH1;
+class TPMERegexp;
 class TGLRnrCtx;
 
 
@@ -75,7 +76,8 @@ protected:
    // Labels options. Allready exist in TAttAxis, but can't be set.
    TGLFont::ETextAlignH_e fLabelAlignH;
    TGLFont::ETextAlignV_e fLabelAlignV;
-   TGLVector3 fTitlePos;
+   TGLVector3  fTitlePos;
+   TPMERegexp *fAllZeroesRE;
 
 public:
    TGLAxisPainter();
