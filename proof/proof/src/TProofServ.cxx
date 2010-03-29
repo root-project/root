@@ -4589,7 +4589,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             }
          }
 
-         if (IsMaster()) {
+         if (IsMaster() && !fromglobal) {
             // make sure package is available on all slaves, even new ones
             fProof->UploadPackage(pdir + ".par");
          }
