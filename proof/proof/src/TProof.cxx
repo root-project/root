@@ -5306,7 +5306,7 @@ Bool_t TProof::CheckFile(const char *file, TSlave *slave, Long_t modtime, Int_t 
 
    Bool_t sendto = kFALSE;
 
-   // create slave based filename
+   // create worker based filename
    TString sn = slave->GetName();
    sn += ":";
    sn += slave->GetOrdinal();
@@ -6076,13 +6076,58 @@ void TProof::ClearCache(const char *file)
 }
 
 //______________________________________________________________________________
-void TProof::ShowPackages(Bool_t all)
+void TProof::SystemCmd(const char *cmd, Int_t fdout)
+{
+   // Exec system command 'cmd'. If fdout > -1, append the output to fdout.
+
+   if (fdout < 0) {
+      // Exec directly the command
+      gSystem->Exec(cmd);
+   } else {
+      // Exec via a pipe
+      FILE *fin = gSystem->OpenPipe(cmd, "r");
+      if (fin) {
+         // Now we go
+         char line[2048];
+         while (fgets(line, 2048, fin)) {
+            Int_t r = strlen(line);
+            if (r > 0) {
+               if (write(fdout, line, r) < 0) {
+                  ::Warning("TProof::SystemCmd",
+                            "errno %d writing to file descriptor %d",
+                            TSystem::GetErrno(), fdout);
+               }
+            } else {
+               // Done
+               break;
+            }
+         }
+         gSystem->ClosePipe(fin);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TProof::ShowPackages(Bool_t all, Bool_t redirlog)
 {
    // List contents of package directory. If all is true show all package
-   // directries also on slaves. If everything is ok all package directories
-   // should be the same.
+   // directories also on slaves. If everything is ok all package directories
+   // should be the same. If redir is kTRUE the result is redirected to the log
+   // file (option available for internal actions).
 
    if (!IsValid()) return;
+
+   Bool_t oldredir = fRedirLog;
+   if (redirlog) fRedirLog = kTRUE;
+
+   // Active logging unit
+   FILE *fout = (fRedirLog) ? fLogFileW : stdout;
+   if (!fout) {
+      Warning("ShowPackages", "file descriptor for outputs undefined (%p):"
+              " will not log msgs", fout);
+      return;
+   }
+   lseek(fileno(fout), (off_t) 0, SEEK_END);
 
    if (TestBit(TProof::kIsClient)) {
       if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
@@ -6090,21 +6135,25 @@ void TProof::ShowPackages(Bool_t all)
          TIter nxd(fGlobalPackageDirList);
          TNamed *nm = 0;
          while ((nm = (TNamed *)nxd())) {
-            printf("*** Global Package cache %s client:%s ***\n",
-                   nm->GetName(), nm->GetTitle());
-            fflush(stdout);
-            gSystem->Exec(Form("%s %s", kLS, nm->GetTitle()));
-            printf("\n");
-            fflush(stdout);
+            fprintf(fout, "*** Global Package cache %s client:%s ***\n",
+                           nm->GetName(), nm->GetTitle());
+            fflush(fout);
+            SystemCmd(Form("%s %s", kLS, nm->GetTitle()), fileno(fout));
+            fprintf(fout, "\n");
+            fflush(fout);
          }
       }
-      printf("*** Package cache client:%s ***\n", fPackageDir.Data());
-      fflush(stdout);
-      gSystem->Exec(Form("%s %s", kLS, fPackageDir.Data()));
+      fprintf(fout, "*** Package cache client:%s ***\n", fPackageDir.Data());
+      fflush(fout);
+      SystemCmd(Form("%s %s", kLS, fPackageDir.Data()), fileno(fout));
+      fprintf(fout, "\n");
    }
 
    // Nothing more to do if we are a Lite-session
-   if (IsLite()) return;
+   if (IsLite()) {
+      fRedirLog = oldredir;
+      return;
+   }
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kShowPackages) << all;
@@ -6119,6 +6168,8 @@ void TProof::ShowPackages(Bool_t all)
    } else {
       Collect(kUnique, fCollectTimeout);
    }
+   // Restore logging option
+   fRedirLog = oldredir;
 }
 
 //______________________________________________________________________________
@@ -6330,6 +6381,12 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
       buildOnClient = kFALSE;
       opt = kBuildAll;
    }
+   // Prepare the local package
+   TString pdir;
+   Int_t st = 0;
+   if (buildOnClient)
+      if ((st = BuildPackageOnClient(pac, 1, &pdir) != 0))
+         return -1;
 
    if (opt <= kBuildAll && !IsLite()) {
       TMessage mess(kPROOF_CACHE);
@@ -6344,9 +6401,8 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
    if (opt >= kBuildAll) {
       // by first forwarding the build commands to the master and slaves
       // and only then building locally we build in parallel
-      Int_t st = 0;
       if (buildOnClient)
-         st = BuildPackageOnClient(pac);
+         st = BuildPackageOnClient(pac, 2, &pdir);
 
       fStatus = 0;
       if (!IsLite())
@@ -6360,127 +6416,195 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
 }
 
 //______________________________________________________________________________
-Int_t TProof::BuildPackageOnClient(const TString &package)
+Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
 {
    // Build specified package on the client. Executes the PROOF-INF/BUILD.sh
    // script if it exists on the client.
+   // If opt == 0, both the preparation and building phases are run.
+   // If opt == 1, only the preparation phase (asserting and, eventually, downloading
+   //              of the package) is done; '*path' contains the full path to the
+   //              package to be passed in the next call
+   // If opt == 2, only the building phase is run using *path .
    // Returns 0 in case of success and -1 in case of error.
    // The code is equivalent to the one in TProofServ.cxx (TProof::kBuildPackage
    // case). Keep in sync in case of changes.
+
+   TString downloaddir;
+   downloaddir.Form("%s/.download", fPackageDir.Data());
+
+   if (opt != 0 && !path) {
+      Error("BuildPackageOnClient", "for opt=%d != 0 'patyh' must be defined", opt);
+      return -1;
+   }
 
    if (TestBit(TProof::kIsClient)) {
       Int_t status = 0;
       TString pdir, ocwd;
 
-      // Package path
-      pdir = fPackageDir + "/" + package;
-      if (gSystem->AccessPathName(pdir, kReadPermission) ||
-         gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
-         // Is there a global package with this name?
-         if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
-            // Scan the list of global packages dirs
-            TIter nxd(fGlobalPackageDirList);
-            TNamed *nm = 0;
-            while ((nm = (TNamed *)nxd())) {
-               pdir = Form("%s/%s", nm->GetTitle(), package.Data());
-               if (!gSystem->AccessPathName(pdir, kReadPermission) &&
-                   !gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
-                  // Package found, stop searching
-                  break;
+      if (opt == 0 || opt == 1) {
+         // Package path
+         pdir.Form("%s/%s", fPackageDir.Data(), pack);
+         if (gSystem->AccessPathName(pdir, kReadPermission) ||
+            gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
+            pdir = "";
+            // Is there a global package with this name?
+            if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
+               // Scan the list of global packages dirs
+               TIter nxd(fGlobalPackageDirList);
+               TNamed *nm = 0;
+               while ((nm = (TNamed *)nxd())) {
+                  pdir = Form("%s/%s", nm->GetTitle(), pack);
+                  if (!gSystem->AccessPathName(pdir, kReadPermission) &&
+                     !gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
+                     // Package found, stop searching
+                     break;
+                  }
+                  pdir = "";
                }
+            }
+         } else {
+            // Check if the related PAR file still exists (private versions could have gone:
+            // in such a case we should take the reference from the repository, by first cleaning
+            // the existing directory)
+            TString tpar(pdir);
+            if (!tpar.EndsWith(".par")) tpar += ".par";
+            Bool_t badPAR = kTRUE;
+            FileStat_t stpar;
+            if (gSystem->GetPathInfo(tpar, stpar) == 0) {
+               char ctmp[1024];
+               if (!R_ISLNK(stpar.fMode) || readlink(tpar.Data(), ctmp, 1024) > 0) {
+                  // The file exists
+                  badPAR = kFALSE;
+               }
+            }
+            // Cleanup, if bad
+            if (badPAR) {
+               // Remove package directory
+               gSystem->Exec(Form("%s %s", kRM, pdir.Data()));
+               // Remove link or bad file
+               gSystem->Exec(Form("%s %s", kRM, tpar.Data()));
+               // Reset variable
                pdir = "";
             }
-            if (pdir.Length() <= 0) {
-               // Package not found
-               Error("BuildPackageOnClient", "failure locating %s ...", package.Data());
+         }
+         // Check if the package was downloaded from the master
+         Bool_t wasDownloaded = kFALSE;
+         TString dlpar;
+         dlpar.Form("%s/%s", downloaddir.Data(), gSystem->BaseName(pack));
+         if (!dlpar.EndsWith(".par")) dlpar += ".par";
+         if (!pdir.IsNull()) {
+            if (!gSystem->AccessPathName(dlpar, kFileExists))
+               wasDownloaded = kTRUE;
+         }
+         if (pdir.IsNull() || wasDownloaded) {
+            // Try to download it
+            if (DownloadPackage(pack, downloaddir) != 0) {
+               Error("BuildPackageOnClient",
+                     "PAR file '%s.par' not found and could not be downloaded", pack);
                return -1;
             } else {
-               // Package is in the global dirs
-               if (gDebug > 0)
-                  Info("BuildPackageOnClient", "found global package: %s", pdir.Data());
-               return 0;
+               TMD5 *md5 = TMD5::FileChecksum(dlpar);
+               if (UploadPackageOnClient(dlpar, kUntar, md5) == -1) {
+                  Error("BuildPackageOnClient",
+                        "PAR file '%s.par' not found and could not be unpacked locally", pack);
+                  delete md5;
+                  return -1;
+               }
+               delete md5;
+               // The package is now linked from the default package dir
+               pdir.Form("%s/%s", fPackageDir.Data(), pack);
             }
+         } else if (pdir.IsNull()) {
+            Error("BuildPackageOnClient", "PAR file '%s.par' not found", pack);
+            return -1;
+         }
+         PDB(kPackage, 1)
+            Info("BuildPackageOnClient", "package %s exists and has PROOF-INF directory", pack);
+         // We are done if only prepare was requested
+         if (opt == 1) {
+            *path = pdir;
+            return 0;
          }
       }
-      PDB(kPackage, 1)
-         Info("BuildPackageOnCLient",
-              "package %s exists and has PROOF-INF directory", package.Data());
 
-      fPackageLock->Lock();
+      if (opt == 0 || opt == 2) {
+         if (opt == 2) pdir = path->Data();
+         fPackageLock->Lock();
 
-      ocwd = gSystem->WorkingDirectory();
-      gSystem->ChangeDirectory(pdir);
+         ocwd = gSystem->WorkingDirectory();
+         gSystem->ChangeDirectory(pdir);
 
-      // check for BUILD.sh and execute
-      if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
+         // check for BUILD.sh and execute
+         if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
 
-         // read version from file proofvers.txt, and if current version is
-         // not the same do a "BUILD.sh clean"
-         Bool_t savever = kFALSE;
-         Int_t rev = -1;
-         TString v;
-         FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
-         if (f) {
-            TString r;
-            v.Gets(f);
-            r.Gets(f);
-            rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
-            fclose(f);
-         }
-         if (!f || v != gROOT->GetVersion() ||
-            (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision())) {
-            savever = kTRUE;
-            Info("BuildPackageOnCLient",
-                 "%s: version change (current: %s:%d, build: %s:%d): cleaning ... ",
-                 package.Data(), gROOT->GetVersion(), gROOT->GetSvnRevision(), v.Data(), rev);
-            // Hard cleanup: go up the dir tree
-            gSystem->ChangeDirectory(fPackageDir);
-            // remove package directory
-            gSystem->Exec(Form("%s %s", kRM, pdir.Data()));
-            // find gunzip...
-            char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP, kExecutePermission);
-            if (gunzip) {
-               TString par = Form("%s.par", pdir.Data());
-               // untar package
-               TString cmd(Form(kUNTAR3, gunzip, par.Data()));
-               status = gSystem->Exec(cmd);
-               if ((status = gSystem->Exec(cmd))) {
-                  Error("BuildPackageOnCLient", "failure executing: %s", cmd.Data());
-               } else {
-                  // Go down to the package directory
-                  gSystem->ChangeDirectory(pdir);
-               }
-               delete [] gunzip;
-            } else {
-               Error("BuildPackageOnCLient", "%s not found", kGUNZIP);
-               status = -1;
-            }
-         }
-
-         if (gSystem->Exec("PROOF-INF/BUILD.sh")) {
-            Error("BuildPackageOnClient", "building package %s on the client failed", package.Data());
-            status = -1;
-         }
-
-         if (savever && !status) {
-            f = fopen("PROOF-INF/proofvers.txt", "w");
+            // read version from file proofvers.txt, and if current version is
+            // not the same do a "BUILD.sh clean"
+            Bool_t savever = kFALSE;
+            Int_t rev = -1;
+            TString v;
+            FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
             if (f) {
-               fputs(gROOT->GetVersion(), f);
-               fputs(Form("\n%d",gROOT->GetSvnRevision()), f);
+               TString r;
+               v.Gets(f);
+               r.Gets(f);
+               rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
                fclose(f);
             }
+            if (!f || v != gROOT->GetVersion() ||
+               (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision())) {
+               savever = kTRUE;
+               Info("BuildPackageOnClient",
+                  "%s: version change (current: %s:%d, build: %s:%d): cleaning ... ",
+                  pack, gROOT->GetVersion(), gROOT->GetSvnRevision(), v.Data(), rev);
+               // Hard cleanup: go up the dir tree
+               gSystem->ChangeDirectory(fPackageDir);
+               // remove package directory
+               gSystem->Exec(Form("%s %s", kRM, pdir.Data()));
+               // find gunzip...
+               char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP, kExecutePermission);
+               if (gunzip) {
+                  TString par = Form("%s.par", pdir.Data());
+                  // untar package
+                  TString cmd(Form(kUNTAR3, gunzip, par.Data()));
+                  status = gSystem->Exec(cmd);
+                  if ((status = gSystem->Exec(cmd))) {
+                     Error("BuildPackageOnCLient", "failure executing: %s", cmd.Data());
+                  } else {
+                     // Go down to the package directory
+                     gSystem->ChangeDirectory(pdir);
+                  }
+                  delete [] gunzip;
+               } else {
+                  Error("BuildPackageOnClient", "%s not found", kGUNZIP);
+                  status = -1;
+               }
+            }
+
+            if (gSystem->Exec("PROOF-INF/BUILD.sh")) {
+               Error("BuildPackageOnClient", "building package %s on the client failed", pack);
+               status = -1;
+            }
+
+            if (savever && !status) {
+               f = fopen("PROOF-INF/proofvers.txt", "w");
+               if (f) {
+                  fputs(gROOT->GetVersion(), f);
+                  fputs(Form("\n%d",gROOT->GetSvnRevision()), f);
+                  fclose(f);
+               }
+            }
+         } else {
+            PDB(kPackage, 1)
+               Info("BuildPackageOnClient",
+                  "package %s exists but has no PROOF-INF/BUILD.sh script", pack);
          }
-      } else {
-         PDB(kPackage, 1)
-            Info("BuildPackageOnCLient",
-                 "package %s exists but has no PROOF-INF/BUILD.sh script", package.Data());
+
+         gSystem->ChangeDirectory(ocwd);
+
+         fPackageLock->Unlock();
+
+         return status;
       }
-
-      gSystem->ChangeDirectory(ocwd);
-
-      fPackageLock->Unlock();
-
-      return status;
    }
    return 0;
 }
@@ -6519,7 +6643,7 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient)
 }
 
 //______________________________________________________________________________
-Int_t TProof::LoadPackageOnClient(const TString &package)
+Int_t TProof::LoadPackageOnClient(const char *pack)
 {
    // Load specified package in the client. Executes the PROOF-INF/SETUP.C
    // script on the client. Returns 0 in case of success and -1 in case of error.
@@ -6530,14 +6654,13 @@ Int_t TProof::LoadPackageOnClient(const TString &package)
       Int_t status = 0;
       TString pdir, ocwd;
       // If already loaded don't do it again
-      if (fEnabledPackagesOnClient->FindObject(package)) {
-         Info("LoadPackageOnClient",
-              "package %s already loaded", package.Data());
+      if (fEnabledPackagesOnClient->FindObject(pack)) {
+         Info("LoadPackageOnClient", "package %s already loaded", pack);
          return 0;
       }
 
       // always follows BuildPackage so no need to check for PROOF-INF
-      pdir = fPackageDir + "/" + package;
+      pdir.Form("%s/%s", fPackageDir.Data(), pack);
 
       if (gSystem->AccessPathName(pdir, kReadPermission)) {
          // Is there a global package with this name?
@@ -6546,7 +6669,7 @@ Int_t TProof::LoadPackageOnClient(const TString &package)
             TIter nxd(fGlobalPackageDirList);
             TNamed *nm = 0;
             while ((nm = (TNamed *)nxd())) {
-               pdir = Form("%s/%s", nm->GetTitle(), package.Data());
+               pdir = Form("%s/%s", nm->GetTitle(), pack);
                if (!gSystem->AccessPathName(pdir, kReadPermission)) {
                   // Package found, stop searching
                   break;
@@ -6555,7 +6678,7 @@ Int_t TProof::LoadPackageOnClient(const TString &package)
             }
             if (pdir.Length() <= 0) {
                // Package not found
-               Error("LoadPackageOnClient", "failure locating %s ...", package.Data());
+               Error("LoadPackageOnClient", "failure locating %s ...", pack);
                return -1;
             }
          }
@@ -6575,7 +6698,7 @@ Int_t TProof::LoadPackageOnClient(const TString &package)
       } else {
          PDB(kPackage, 1)
             Info("LoadPackageOnCLient",
-                 "package %s exists but has no PROOF-INF/SETUP.C script", package.Data());
+                 "package %s exists but has no PROOF-INF/SETUP.C script", pack);
       }
 
       gSystem->ChangeDirectory(ocwd);
@@ -6586,34 +6709,33 @@ Int_t TProof::LoadPackageOnClient(const TString &package)
          fPackageLock->Lock();
 
          FileStat_t stat;
-         Int_t st = gSystem->GetPathInfo(package, stat);
+         Int_t st = gSystem->GetPathInfo(pack, stat);
          // check if symlink, if so unlink, if not give error
          // NOTE: GetPathnfo() returns 1 in case of symlink that does not point to
          // existing file or to a directory, but if fIsLink is true the symlink exists
          if (stat.fIsLink)
-            gSystem->Unlink(package);
+            gSystem->Unlink(pack);
          else if (st == 0) {
             Error("LoadPackageOnClient", "cannot create symlink %s in %s on client, "
-                  "another item with same name already exists", package.Data(), ocwd.Data());
+                  "another item with same name already exists", pack, ocwd.Data());
             fPackageLock->Unlock();
             return -1;
          }
-         gSystem->Symlink(pdir, package);
+         gSystem->Symlink(pdir, pack);
 
          fPackageLock->Unlock();
 
          // add package to list of include directories to be searched by ACliC
-         gSystem->AddIncludePath(TString("-I") + package);
+         gSystem->AddIncludePath(TString("-I") + pack);
 
          // add package to list of include directories to be searched by CINT
-         gROOT->ProcessLine(TString(".include ") + package);
+         gROOT->ProcessLine(TString(".include ") + pack);
 
-         fEnabledPackagesOnClient->Add(new TObjString(package));
+         fEnabledPackagesOnClient->Add(new TObjString(pack));
          PDB(kPackage, 1)
-            Info("LoadPackageOnClient",
-                 "package %s successfully loaded", package.Data());
+            Info("LoadPackageOnClient", "package %s successfully loaded", pack);
       } else
-         Error("LoadPackageOnClient", "loading package %s on client failed", package.Data());
+         Error("LoadPackageOnClient", "loading package %s on client failed", pack);
 
       return status;
    }
@@ -6753,6 +6875,100 @@ Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient)
 }
 
 //______________________________________________________________________________
+Int_t TProof::DownloadPackage(const char *pack, const char *dstdir)
+{
+   // Download a PROOF archive (PAR file) from the master package repository.
+   // The PAR file is downloaded in the current directory or in the directory
+   // specified by 'dstdir'. If a package with the same name already exists
+   // at destination, a check on the MD5 sum is done and the user warned or
+   // prompted for action, depending is the file is equal or different.
+   // Returns 0 in case of success and -1 in case of error.
+
+   if (!fManager || !(fManager->IsValid())) {
+      Error("DownloadPackage", "the manager is undefined!");
+      return -1;
+   }
+
+   // Create the default source and destination paths
+   TString parname(gSystem->BaseName(pack)), src, dst;
+   if (!parname.EndsWith(".par")) parname += ".par";
+   src.Form("packages/%s", parname.Data());
+   if (!dstdir || strlen(dstdir) <= 0) {
+      dst.Form("./%s", parname.Data());
+   } else {
+      // Check the destination directory
+      FileStat_t st;
+      if (gSystem->GetPathInfo(dstdir, st) != 0) {
+         // Directory does not exit: create it
+         if (gSystem->mkdir(dstdir, kTRUE) != 0) {
+            Error("DownloadPackage",
+                  "could not create the destination directory '%s' (errno: %d)",
+                   dstdir, TSystem::GetErrno());
+            return -1;
+         }
+      } else if (!R_ISDIR(st.fMode) && !R_ISLNK(st.fMode)) {
+         Error("DownloadPackage",
+               "destination path '%s' exist but is not a directory!", dstdir);
+         return -1;
+      }
+      dst.Form("%s/%s", dstdir, parname.Data());
+   }
+
+   // Make sure the source file exists
+   FileStat_t stsrc;
+   RedirectHandle_t rh;
+   if (gSystem->RedirectOutput(fLogFileName, "a", &rh) != 0)
+      Warning("DownloadPackage", "problems redirecting output to '%s'", fLogFileName.Data());
+   Int_t rc = fManager->Stat(src, stsrc);
+   if (gSystem->RedirectOutput(0, 0, &rh) != 0)
+      Warning("DownloadPackage", "problems restoring output");
+   if (rc != 0) {
+      // Check if there is another possible source
+      ShowPackages(kFALSE, kTRUE);
+      TMacro *mp = GetLastLog();
+      if (mp) {
+         // Look for global directories
+         Bool_t isGlobal = kFALSE;
+         TIter nxl(mp->GetListOfLines());
+         TObjString *os = 0;
+         TString globaldir;
+         while ((os = (TObjString *) nxl())) {
+            TString s(os->GetName());
+            if (s.Contains("*** Global Package cache")) {
+               // Get the directory
+               s.Remove(0, s.Last(':') + 1);
+               s.Remove(s.Last(' '));
+               globaldir = s;
+               isGlobal = kTRUE;
+            } else if (s.Contains("*** Package cache")) {
+               isGlobal = kFALSE;
+               globaldir = "";
+            }
+            // Check for the package
+            if (isGlobal && s.Contains(parname)) {
+               src.Form("%s/%s", globaldir.Data(), parname.Data());
+               break;
+            }
+         }
+         // Cleanup
+         delete mp;
+      }
+   }
+
+   // Do it via the manager
+   if (fManager->GetFile(src, dst, "silent") != 0) {
+      Error("DownloadPackage", "problems downloading '%s' (src:%s, dst:%s)",
+                                pack, src.Data(), dst.Data());
+      return -1;
+   } else {
+      Info("DownloadPackage", "'%s' cross-checked against master repository (local path: %s)",
+                                pack, dst.Data());
+   }
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
 Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 {
    // Upload a PROOF archive (PAR file). A PAR file is a compressed
@@ -6768,6 +6984,11 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
    // in the existing dir (opt = kUntar, default) or a remove of the existing
    // directory should be executed (opt = kRemoveOld), so triggering a full
    // re-build. The option if effective only for PROOF protocol > 8 .
+   // The lab 'dirlab' (e.g. 'G0') indicates that the package is to uploaded to
+   // an alternative global directory for global usage. This may require special
+   // privileges.
+   // If download is kTRUE and the package is not found locally, then it is downloaded
+   // from the master repository.
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -6924,9 +7145,9 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, TMD5 *md5)
+Int_t TProof::UploadPackageOnClient(const char *parpack, EUploadPackageOpt opt, TMD5 *md5)
 {
-   // Upload a package on the client in ~/proof/packages.
+   // Upload a package on the client in ~/.proof/packages.
    // The 'opt' allows to specify whether the .PAR should be just unpacked
    // in the existing dir (opt = kUntar, default) or a remove of the existing
    // directory should be executed (opt = kRemoveOld), thereby triggering a full
@@ -6941,13 +7162,39 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
    Int_t status = 0;
 
    if (TestBit(TProof::kIsClient)) {
-      // the fPackageDir directory exists (has been created in Init())
+      // Make sure that 'par' is the real path and not a symlink
+      TString par(parpack);
+      char ctmp[4096];
+      ssize_t sz = readlink(par.Data(), ctmp, 4096);
+      if (sz > 0) {
+         ctmp[sz] = '\0';
+         par = ctmp;
+      } else if (TSystem::GetErrno() != EINVAL) {
+         Warning("UploadPackageOnClient",
+                 "could not resolve the symbolik link '%s'", par.Data());
+      }
 
+      // The fPackageDir directory exists (has been created in Init());
       // create symlink to the par file in the fPackageDir (needed by
       // master in case we run on the localhost)
       fPackageLock->Lock();
 
-      TString lpar = fPackageDir + "/" + gSystem->BaseName(par);
+      // Check if the requested PAR has been downloaded: if not, clean any
+      // existing downloaded file with the same name: this is because now
+      // the client has its own version of the package and should not check
+      // the master repository anymore for updates
+      TString downloadpath;
+      downloadpath.Form("%s/.download/%s", fPackageDir.Data(), gSystem->BaseName(par));
+      if (!gSystem->AccessPathName(downloadpath, kFileExists) && downloadpath != par) {
+         if (gSystem->Unlink(downloadpath) != 0) {
+            Warning("UploadPackageOnClient",
+                    "problems removing downloaded version of '%s' (%s):\n"
+                    "may imply inconsistencies in subsequent updates",
+                    gSystem->BaseName(par), downloadpath.Data());
+         }
+      }
+      TString lpar;
+      lpar.Form("%s/%s", fPackageDir.Data(), gSystem->BaseName(par));
       FileStat_t stat;
       Int_t st = gSystem->GetPathInfo(lpar, stat);
       // check if symlink, if so unlink, if not give error
@@ -8621,7 +8868,7 @@ void TProof::ShowLog(Int_t qry)
    // Save present offset
    off_t nowlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_CUR);
    if (nowlog < 0) {
-      SysError("ShowLogFile", "problem lseeking log file (errno: %d)", TSystem::GetErrno());
+      SysError("ShowLog", "problem lseeking log file (errno: %d)", TSystem::GetErrno());
       return;
    }
 
@@ -8629,7 +8876,7 @@ void TProof::ShowLog(Int_t qry)
    off_t startlog = nowlog;
    off_t endlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_END);
    if (endlog < 0) {
-      SysError("ShowLogFile", "problem lseeking log file (errno: %d)", TSystem::GetErrno());
+      SysError("ShowLog", "problem lseeking log file (errno: %d)", TSystem::GetErrno());
       return;
    }
 
@@ -8697,7 +8944,7 @@ void TProof::ShowLog(Int_t qry)
             while (r) {
                Int_t w = write(fileno(stdout), p, r);
                if (w < 0) {
-                  SysError("ShowLogFile", "error writing to stdout");
+                  SysError("ShowLog", "error writing to stdout");
                   break;
                }
                r -= w;
@@ -8729,7 +8976,7 @@ void TProof::ShowLog(Int_t qry)
    if (!SendingLogToWindow()) {
       // Avoid screwing up the prompt
       if (write(fileno(stdout), "\n", 1) != 1)
-         SysError("ShowLogFile", "error writing to stdout");
+         SysError("ShowLog", "error writing to stdout");
    }
 
    // Restore original pointer

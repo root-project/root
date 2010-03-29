@@ -594,13 +594,13 @@ private:
    void     RecvLogFile(TSocket *s, Int_t size);
    void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
    Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll);
-   Int_t    BuildPackageOnClient(const TString &package);
+   Int_t    BuildPackageOnClient(const char *package, Int_t opt = 0, TString *path = 0);
    Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE);
-   Int_t    LoadPackageOnClient(const TString &package);
+   Int_t    LoadPackageOnClient(const char *package);
    Int_t    UnloadPackage(const char *package);
    Int_t    UnloadPackageOnClient(const char *package);
    Int_t    UnloadPackages();
-   Int_t    UploadPackageOnClient(const TString &package, EUploadPackageOpt opt, TMD5 *md5);
+   Int_t    UploadPackageOnClient(const char *package, EUploadPackageOpt opt, TMD5 *md5);
    Int_t    DisablePackage(const char *package);
    Int_t    DisablePackageOnClient(const char *package);
    Int_t    DisablePackages();
@@ -727,6 +727,9 @@ protected:
    // Parse CINT commands
    static Bool_t GetFileInCmd(const char *cmd, TString &fn);
 
+   // Pipe execution of commands
+   static void SystemCmd(const char *cmd, Int_t fdout);
+
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
           const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0,
@@ -785,10 +788,11 @@ public:
    virtual void ClearCache(const char *file = 0);
    TList      *GetListOfPackages();
    TList      *GetListOfEnabledPackages();
-   void        ShowPackages(Bool_t all = kFALSE);
+   void        ShowPackages(Bool_t all = kFALSE, Bool_t redirlog = kFALSE);
    void        ShowEnabledPackages(Bool_t all = kFALSE);
    Int_t       ClearPackages();
    Int_t       ClearPackage(const char *package);
+   Int_t       DownloadPackage(const char *par, const char *dstdir = 0);
    Int_t       EnablePackage(const char *package, Bool_t notOnClient = kFALSE);
    Int_t       UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
    Int_t       Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE,
