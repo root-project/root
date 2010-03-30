@@ -101,9 +101,9 @@ Double_t TGeoPolygon::Area() const
    Int_t ic,i,j;
    Double_t area = 0;
    // Compute area of the convex part
-   for (ic=0; ic<fNconvex; ic++) {
-      i = fIndc[ic];
-      j = fIndc[(ic+1)%fNconvex];
+   for (ic=0; ic<fNvert; ic++) {
+      i = fInd[ic];
+      j = fInd[(ic+1)%fNvert];
       area += 0.5*(fX[i]*fY[j]-fX[j]*fY[i]);
    }
    return TMath::Abs(area);
