@@ -2049,7 +2049,7 @@ int G__scopeoperator(char* name, int* phash, long* pstruct_offset, int* ptagnum)
    if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if (G__asm_dbg)
-         G__fprinterr(G__serr, "%3x,%3d: ADDSTROS %d  %s:%d\n", G__asm_cp, G__asm_dt, offset_sum, __FILE__, __LINE__);
+         G__fprinterr(G__serr, "%3x,%3x: ADDSTROS %d  %s:%d\n", G__asm_cp, G__asm_dt, offset_sum, __FILE__, __LINE__);
 #endif
       G__asm_inst[G__asm_cp] = G__ADDSTROS;
       G__asm_inst[G__asm_cp+1] = offset_sum;
@@ -2175,15 +2175,35 @@ int G__iosrdstate(G__value* pios)
    G__tagnum = pios->tagnum;
 #ifdef G__ASM
    if (G__asm_noverflow) {
-      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
-      G__asm_inst[G__asm_cp+1] = G__SETSTROS;
-      G__inc_cp_asm(2, 0);
+      // -- We are generating bytecode.
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
-         G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp - 2, __FILE__, __LINE__);
-         G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp - 1, __FILE__, __LINE__);
+         G__fprinterr(
+              G__serr
+            , "%3x,%3x: PUSHSTROS  %s:%d\n"
+            , G__asm_cp
+            , G__asm_dt
+            , __FILE__
+            , __LINE__
+         );
       }
 #endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+      G__inc_cp_asm(1, 0);
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(
+              G__serr
+            , "%3x,%3x: SETSTROS  %s:%d\n"
+            , G__asm_cp
+            , G__asm_dt
+            , __FILE__
+            , __LINE__
+         );
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__SETSTROS;
+      G__inc_cp_asm(1, 0);
    }
 #endif // G__ASM
 
@@ -2215,15 +2235,34 @@ int G__iosrdstate(G__value* pios)
    G__tagnum = store_tagnum;
 
 #ifdef G__ASM
-   if (G__asm_noverflow
-         && rdstateflag
-      ) {
+   if (G__asm_noverflow && rdstateflag) {
+      // -- 
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, __FILE__, __LINE__);
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: OP1 '!'  %s:%d\n", G__asm_cp + 1, __FILE__, __LINE__);
+      if (G__asm_dbg) {
+         G__fprinterr(
+              G__serr
+            , "%3x,%3x: POPSTROS  %s:%d\n"
+            , G__asm_cp
+            , G__asm_dt
+            , __FILE__
+            , __LINE__
+         );
+      }
 #endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1, 0);
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(
+              G__serr
+            , "%3x,%3x: OP1 '!'  %s:%d\n"
+            , G__asm_cp
+            , G__asm_dt
+            , __FILE__
+            , __LINE__
+         );
+      }
+#endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__OP1;
       G__asm_inst[G__asm_cp+1] = '!';
       G__inc_cp_asm(2, 0);
@@ -2385,8 +2424,8 @@ int G__overloadopr(int operatortag, G__value expressionin, G__value* defined)
          G__inc_cp_asm(2, 0);
 #ifdef G__ASM_DBG
          if (G__asm_dbg) {
-            G__fprinterr(G__serr, "%3x: PUSHSTROS\n", G__asm_cp - 2);
-            G__fprinterr(G__serr, "%3x: SETSTROS\n", G__asm_cp - 1);
+            G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp - 2, G__asm_dt, __FILE__, __LINE__);
+            G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp - 1, G__asm_dt, __FILE__, __LINE__);
          }
 #endif // G__ASM_DBG
       }
@@ -2832,8 +2871,8 @@ int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int fl
    if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
-         G__fprinterr(G__serr, "%3x: PUSHSTROS\n", G__asm_cp);
-         G__fprinterr(G__serr, "%3x: SETSTROS\n", G__asm_cp + 1);
+         G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
+         G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp + 1, G__asm_dt, __FILE__, __LINE__);
       }
 #endif
       G__asm_inst[G__asm_cp] = G__PUSHSTROS;
@@ -2858,7 +2897,7 @@ int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int fl
 #ifdef G__ASM
          if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x: POPSTROS\n", G__asm_cp);
+            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
 #endif
             G__asm_inst[G__asm_cp] = G__POPSTROS;
             G__inc_cp_asm(1, 0);
@@ -2878,7 +2917,7 @@ int G__parenthesisovld(G__value* result3, char* funcname, G__param* libp, int fl
 #ifdef G__ASM
    if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x: POPSTROS\n", G__asm_cp);
+      if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
 #endif
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1, 0);
@@ -2955,7 +2994,7 @@ int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25)
 #ifdef G__ASM
    if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x: PUSHSTROS\n", G__asm_cp);
+      if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: PUSHSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
 #endif
       G__asm_inst[G__asm_cp] = G__PUSHSTROS;
       G__inc_cp_asm(1, 0);
@@ -2973,7 +3012,7 @@ int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25)
 #ifdef G__ASM
          if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
-            if (G__asm_dbg) G__fprinterr(G__serr, "%3x: SETSTROS\n", G__asm_cp);
+            if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: SETSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __LINE__, __LINE__);
 #endif
             G__asm_inst[G__asm_cp] = G__SETSTROS;
             G__inc_cp_asm(1, 0);
@@ -3033,7 +3072,7 @@ int G__tryindexopr(G__value* result7, G__value* para, int paran, int ig25)
 #ifdef G__ASM
    if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
-      if (G__asm_dbg) G__fprinterr(G__serr, "%3x: POPSTROS\n", G__asm_cp);
+      if (G__asm_dbg) G__fprinterr(G__serr, "%3x,%3x: POPSTROS  %s:%d\n", G__asm_cp, G__asm_dt, __FILE__, __LINE__);
 #endif
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1, 0);
