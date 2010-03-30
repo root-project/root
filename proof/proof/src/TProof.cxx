@@ -5711,7 +5711,8 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
                if (sl->GetParallel() > 0) {
                   slavenodes = sl->GetParallel();
                } else {
-                  slavenodes = 0;
+                  // Sequential mode: the master acts as a worker
+                  slavenodes = 1;
                }
             } else {
                MarkBad(sl, "collect failed after kPROOF_PARALLEL or kPROOF_LOGFILE request");
