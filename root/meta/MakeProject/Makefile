@@ -7,7 +7,11 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += atlasaod cms310 aliceesd
+TEST_TARGETS += atlasaod aliceesd
+ifeq ($(FAST),)
+# Takes >1GB of RAM when building; disable for quick builds:
+TEST_TARGETS += cms310
+endif
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
