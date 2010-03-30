@@ -51,10 +51,11 @@ void G__cpp_setuplongif();
 struct G__setup_func_struct {
    std::string libname;
    G__incsetup func;
-   int inited;
+   bool inited;
+   bool registered;
 
-   G__setup_func_struct() : libname(), func(), inited(false) {}
-   G__setup_func_struct(const char *name, G__incsetup functions) : libname(name), func(functions), inited(false) {}
+   G__setup_func_struct() : libname(), func(), inited(false), registered(false) {}
+   G__setup_func_struct(const char *name, G__incsetup functions, bool isregistered) : libname(name), func(functions), inited(false), registered(isregistered) {}
    
 };
 
@@ -89,7 +90,7 @@ void G__add_setup_func(const char* libname, G__incsetup func)
          return;
       }
    }   
-   G__setup_func_list->push_back( G__setup_func_struct( libname, func ) );
+   G__setup_func_list->push_back( G__setup_func_struct( libname, func, true ) );
    
    ++G__nlibs;
 
@@ -146,8 +147,9 @@ int G__call_setup_funcs()
       std::list<G__setup_func_struct>::iterator end = G__setup_func_list->end();
       std::list<G__setup_func_struct>::iterator i;
       for (i = begin ; i != end; ++i) {
-         if (i->inited) {
+         if (!i->registered) {
             G__RegisterLibrary(i->func);
+            i->registered = true;
          }
       }
       
@@ -186,7 +188,8 @@ void G__reset_setup_funcs()
       std::list<G__setup_func_struct>::iterator i;
       
       for (i = begin ; i != end; ++i) {
-         i->inited = 0;
+         i->inited = false;
+         i->registered = false;
       }
    }
 }

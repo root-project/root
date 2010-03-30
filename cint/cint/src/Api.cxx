@@ -249,6 +249,14 @@ int G__SourceFileInfo::Next() {
   else return(0);
 }
 ////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
+int G__SourceFileInfo::SerialNumber() {
+   // Return the serial number of the G__srcfile 'state'.
+   // Use this to detect if G__srcfile has changed.
+
+   return G__srcfile_serial;
+}
+////////////////////////////////////////////////////////////////////
 
 /*********************************************************************
 * G__IncludePathInfo

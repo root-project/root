@@ -210,7 +210,7 @@ void* TCint::fgSetOfSpecials = 0;
 ClassImp(TCint)
 
 //______________________________________________________________________________
-TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
+TCint::TCint(const char *name, const char *title) : TInterpreter(name, title), fSharedLibs(""), fSharedLibsSerial(-1)
 {
    // Initialize the CINT interpreter interface.
 
@@ -219,6 +219,9 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    fMapfile   = 0;
    fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
+
+   // Disable the autoloader until it is explicitly enabled.
+   G__set_class_autoloading(0);
 
    G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
@@ -301,6 +304,7 @@ void TCint::EnableAutoLoading()
    R__LOCKGUARD(gCINTMutex);
 
    G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
+   G__set_class_autoloading(1);
    LoadLibraryMap();
 }
 
@@ -1900,9 +1904,13 @@ void TCint::UpdateAllCanvases()
 //______________________________________________________________________________
 const char* TCint::GetSharedLibs()
 {
-   // Refresh the list of shared libraries and return it.
+   // Return the list of shared libraries known to CINT.
 
-   fSharedLibs = "";
+   if (fSharedLibsSerial == G__SourceFileInfo::SerialNumber()) {
+      return fSharedLibs;
+   }
+   fSharedLibsSerial = G__SourceFileInfo::SerialNumber();
+   fSharedLibs.Clear();
 
    G__SourceFileInfo cursor(0);
    while (cursor.IsValid()) {

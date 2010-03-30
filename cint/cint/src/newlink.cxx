@@ -8358,7 +8358,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
          && (-1==G__struct.parent_tagnum[i]||G__nestedclass)
          ) {
         if('e'==G__struct.type[i])
-          fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
+          fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
                   ,G__mark_linked_tagnum(i) ,"int" ,G__globalcomp
 #if  !defined(G__OLDIMPLEMENTATION1545)
                   ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
@@ -8369,7 +8369,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
                   ,buf());
         else if('n'==G__struct.type[i]) {
           mappedtagname = G__map_cpp_name(tagname);
-          fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),0,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
+          fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),0,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
                   ,G__mark_linked_tagnum(i)
                   /* ,G__type2string('u',i,-1,0,0) */
                   ,G__globalcomp
@@ -8384,7 +8384,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
         else if(0==G__struct.name[i][0]) {
           mappedtagname = G__map_cpp_name(tagname);
           if(G__CPPLINK==G__globalcomp) {
-            fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),%s,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
+            fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),%s,%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
                     ,G__mark_linked_tagnum(i)
                     ,"0" /* G__type2string('u',i,-1,0,0) */
                     ,G__globalcomp
@@ -8397,7 +8397,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
                     ,buf() ,mappedtagname(),mappedtagname());
           }
           else {
-            fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),%s,%d,%d,%s,G__setup_memvar%s,NULL);\n"
+            fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),%s,%d,%d,%s,G__setup_memvar%s,NULL);\n"
                     ,G__mark_linked_tagnum(i)
                     ,"0" /* G__type2string('u',i,-1,0,0) */
                     ,G__globalcomp
@@ -8414,7 +8414,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
           mappedtagname = G__map_cpp_name(tagname);
           if(G__CPPLINK==G__globalcomp && '$'!=G__struct.name[i][0]) {
             if(G__ONLYMETHODLINK==G__struct.globalcomp[i])
-              fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,G__setup_memfunc%s);\n"
+              fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),sizeof(%s),%d,%d,%s,NULL,G__setup_memfunc%s);\n"
                       ,G__mark_linked_tagnum(i)
                       ,G__type2string('u',i,-1,0,0)
                       ,G__globalcomp
@@ -8427,7 +8427,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
                       ,buf(),mappedtagname());
             else
             if(G__suppress_methods)
-              fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
+              fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
                       ,G__mark_linked_tagnum(i)
                       ,G__type2string('u',i,-1,0,0)
                       ,G__globalcomp
@@ -8439,7 +8439,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
 #endif
                       ,buf(),mappedtagname());
             else
-              fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
+              fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,G__setup_memfunc%s);\n"
                       ,G__mark_linked_tagnum(i)
                       ,G__type2string('u',i,-1,0,0)
                       ,G__globalcomp
@@ -8453,7 +8453,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
           }
           else if('$'==G__struct.name[i][0]&&
           isupper(G__newtype.type[G__defined_typename(G__struct.name[i]+1)])) {
-            fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
+            fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
                     ,G__mark_linked_tagnum(i)
                     ,G__type2string('u',i,-1,0,0)
                     ,G__globalcomp
@@ -8466,7 +8466,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
                     ,buf());
           }
           else {
-            fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
+            fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
                     ,G__mark_linked_tagnum(i)
                     ,G__type2string('u',i,-1,0,0)
                     ,G__globalcomp
@@ -8482,7 +8482,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
         }
       }
       else {
-        fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),0,%d,%d,%s,NULL,NULL);\n"
+        fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum_fwd(&%s),0,%d,%d,%s,NULL,NULL);\n"
                 ,G__mark_linked_tagnum(i)
                 ,G__globalcomp
 #if  !defined(G__OLDIMPLEMENTATION1545)
