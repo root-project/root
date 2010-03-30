@@ -381,8 +381,8 @@ void Sample::print()
 //*** Printing of statistics of all variables
   for (int i=0; i<the_dim; i++) {
     cout << " " << the_names[i] << " : N = " << the_n;
-    cout << " Sum = " << the_sum[i] << " Mean = " << the_mean[i];
-    cout << " Var = " << the_var[i] << " Sigma = " << the_sigma[i] << endl;
+    cout << " Sum = " << the_sum[i] << " Mean = " << ( fabs(the_mean[i]) < 1e-7 ? 0.0 : the_mean[i] );
+    cout << " Var = " << ( fabs(the_var[i]) < 1e-7 ? 0.0 : the_var[i] ) << " Sigma = " <<  ( fabs(the_sigma[i]) < 1e-7 ? 0.0 : the_sigma[i] ) << endl;
   }
 }
 
@@ -393,10 +393,10 @@ void Sample::print(int i)
    cout << " *Sample::print(i)* Error : Dimension less than " << i << endl;
  }
  else {
-   int oldprecision = cout.precision(4);
+   int oldprecision = cout.precision(3);
    cout << " " << the_names[i-1] << " : N = " << the_n;
-   cout << " Sum = " << the_sum[i-1] << " Mean = " << the_mean[i-1];
-   cout << " Var = " << the_var[i-1] << " Sigma = " << the_sigma[i-1] << endl;
+   cout << " Sum = " << the_sum[i-1] << " Mean = " << ( fabs(the_mean[i-1]) < 1e-7 ? 0.0 : the_mean[i-1] );
+   cout << " Var = " << ( fabs(the_var[i-1]) < 1e-7 ? 0.0 : the_var[i-1] ) << " Sigma = " << ( fabs(the_sigma[i-1])<1e-7 ? 0.0 : the_sigma[i-1] ) << endl;
    cout.precision(oldprecision);
  }
 }
