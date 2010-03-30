@@ -463,10 +463,10 @@ void TGTextEdit::Print(Option_t *) const
 {
    // Send current buffer to printer.
 
-   char msg[512];
+   TString msg;
 
-   sprintf(msg, "%s -P%s\n", gPrintCommand, gPrinter);
-   FILE *p = gSystem->OpenPipe(msg, "w");
+   msg.Form("%s -P%s\n", gPrintCommand, gPrinter);
+   FILE *p = gSystem->OpenPipe(msg.Data(), "w");
    if (p) {
       char   *buf1, *buf2;
       Long_t  len;
@@ -501,14 +501,14 @@ void TGTextEdit::Print(Option_t *) const
       gSystem->ClosePipe(p);
 
       Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
-      sprintf(msg, "Printed: %s\nLines: %ld\nUsing: %s -P%s",
-              untitled ? "Untitled" : fText->GetFileName(),
-              fText->RowCount() - 1, gPrintCommand, gPrinter);
-      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
+      msg.Form("Printed: %s\nLines: %ld\nUsing: %s -P%s",
+               untitled ? "Untitled" : fText->GetFileName(),
+               fText->RowCount() - 1, gPrintCommand, gPrinter);
+      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg.Data(),
                    kMBIconAsterisk, kMBOk, 0);
    } else {
-      sprintf(msg, "Could not execute: %s -P%s\n", gPrintCommand, gPrinter);
-      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
+      msg.Form("Could not execute: %s -P%s\n", gPrintCommand, gPrinter);
+      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg.Data(),
                    kMBIconExclamation, kMBOk, 0);
    }
 }
@@ -638,8 +638,8 @@ Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
          TString msg;
          msg.Form("Couldn't find \"%s\"", string);
          gVirtualX->Bell(20);
-         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "TextEdit", msg.Data(),
-                   kMBIconExclamation, kMBOk, 0);
+         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "TextEdit",
+                      msg.Data(), kMBIconExclamation, kMBOk, 0);
          return kFALSE;
       }
       return kTRUE;
@@ -1572,6 +1572,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Process context menu messages.
 
+   TString msg2;
    TGTextView::ProcessMessage(msg, parm1, parm2);
 
    switch(GET_MSG(msg)) {
@@ -1585,12 +1586,12 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (!IsSaved()) {
                         Int_t retval;
                         Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
-                        char msg2[512];
 
-                        sprintf(msg2, "Save \"%s\"?",
-                                untitled ? "Untitled" : fText->GetFileName());
-                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg2,
-                           kMBIconExclamation, kMBYes|kMBNo|kMBCancel, &retval);
+                        msg2.Form("Save \"%s\"?",
+                                  untitled ? "Untitled" : fText->GetFileName());
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", 
+                                     msg2.Data(), kMBIconExclamation, 
+                                     kMBYes | kMBNo | kMBCancel, &retval);
 
                         if (retval == kMBCancel)
                            return kTRUE;
@@ -1668,10 +1669,9 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      if (!Search(fSearch->fBuffer, fSearch->fDirection,
                                  fSearch->fCaseSensitive)) {
-                        char msg2[256];
-                        sprintf(msg2, "Couldn't find \"%s\"", fSearch->fBuffer);
-                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg2,
-                                     kMBIconExclamation, kMBOk, 0);
+                        msg2.Form("Couldn't find \"%s\"", fSearch->fBuffer);
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", 
+                                     msg2.Data(), kMBIconExclamation, kMBOk, 0);
                      }
                      break;
                   case kM_SEARCH_GOTO:
