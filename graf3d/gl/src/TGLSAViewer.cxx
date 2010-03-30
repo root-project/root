@@ -65,6 +65,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    \tk          --- ZOOM out\n\
    \tArrow Keys --- PAN (TRUCK) across scene\n\
    \tHome       --- reset current camera\n\
+   \tCtrl-Home  --- switch external/automatic camera center\n\
 \n\
    LEFT mouse button -- ROTATE (ORBIT) the scene by holding the mouse button and moving\n\
    the mouse (perspective camera, needs to be enabled in menu for orthograpic cameras).\n\

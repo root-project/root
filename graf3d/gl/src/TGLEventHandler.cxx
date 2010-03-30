@@ -700,7 +700,7 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
    if (fGLViewer->IsLocked()) {
       if (gDebug>3) {
          Info("TGLEventHandler::HandleKey", "ignored - viewer is %s",
-            fGLViewer->LockName(fGLViewer->CurrentLock()));
+              fGLViewer->LockName(fGLViewer->CurrentLock()));
       }
       return kFALSE;
    }
@@ -777,8 +777,14 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
             redraw = fGLViewer->CurrentCamera().Truck(10, 0, mod1, mod2);
             break;
          case kKey_Home:
-            fGLViewer->ResetCurrentCamera();
-            redraw = kTRUE;
+            if (mod1) {
+               TGLCamera &cam = fGLViewer->CurrentCamera();
+               cam.SetExternalCenter(!cam.GetExternalCenter());
+               fGLViewer->RefreshPadEditor(fGLViewer);
+            } else {
+               fGLViewer->ResetCurrentCamera();
+            }
+               redraw = kTRUE;
             break;
 
             // Toggle debugging mode
