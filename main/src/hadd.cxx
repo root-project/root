@@ -131,9 +131,10 @@ int main( int argc, char **argv )
    Target->SetCompressionLevel(newcomp);
   
    // by default hadd can merge Trees in a file that can go up to 100 Gbytes
-   Long64_t maxsize = 100000000; //100GB
-   maxsize *= 100;  //to bypass some compiler limitations with big constants
-   TTree::SetMaxTreeSize(maxsize);
+   // No need to set this, as 100Gb is now the TTree default
+   // Long64_t maxsize = 100000000; //100GB
+   // maxsize *= 1000;  //to bypass some compiler limitations with big constants
+   // TTree::SetMaxTreeSize(maxsize);
   
    fastMethod = kTRUE;
    for ( int i = ffirst; i < argc; i++ ) {
