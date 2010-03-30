@@ -459,6 +459,7 @@ void TGLabel::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TString parGC, parFont;
    parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
    parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
+
    if ((GetDefaultFontStruct() != fFont->GetFontStruct()) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = fClient->GetResourcePool()->GetFontPool()->FindFont(fFont->GetFontStruct());
       if (ufont) {

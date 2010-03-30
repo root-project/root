@@ -1803,21 +1803,21 @@ void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    // font + GC
    option = GetName()+5;         // unique digit id of the name
-   char parGC[50], parFont[50];
-   sprintf(parFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
-   sprintf(parGC,"%s::GetDefaultGC()()",IsA()->GetName());
+   TString parGC, parFont;
+   parFont.Form("%s::GetDefaultFontStruct()",IsA()->GetName());
+   parGC.Form("%s::GetDefaultGC()()",IsA()->GetName());
 
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC.GetGC())) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
-         sprintf(parFont,"ufont->GetFontStruct()");
+         parFont.Form("ufont->GetFontStruct()");
       }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC.GetGC());
       if (userGC) {
          userGC->SavePrimitive(out, option);
-         sprintf(parGC,"uGC->GetGC()");
+         parGC.Form("uGC->GetGC()");
       }
    }
 
@@ -1837,18 +1837,18 @@ void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
                   out << "," << fWidgetId << ");" << endl;
                }
             } else {
-               out << "," << fWidgetId << "," << parGC << ");" << endl;
+               out << "," << fWidgetId << "," << parGC.Data() << ");" << endl;
             }
          } else {
-            out << "," << fWidgetId << "," << parGC << "," << parFont
+            out << "," << fWidgetId << "," << parGC.Data() << "," << parFont.Data()
                 <<");" << endl;
          }
       } else {
-         out << "," << fWidgetId << "," << parGC << "," << parFont
+         out << "," << fWidgetId << "," << parGC.Data() << "," << parFont.Data()
              << "," << GetOptionString() << ");" << endl;
       }
    } else {
-      out << "," << fWidgetId << "," << parGC << "," << parFont
+      out << "," << fWidgetId << "," << parGC.Data() << "," << parFont.Data()
           << "," << GetOptionString() << ",ucolor);" << endl;
    }
 
