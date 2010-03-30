@@ -82,19 +82,19 @@ class THnSparseArrayChunk: public TObject {
    TArray  *fContent;              // bin content
    TArrayD *fSumw2;                // bin errors
 
-   void AddBin(ULong_t idx, const Char_t* idxbuf);
-   void AddBinContent(ULong_t idx, Double_t v = 1.) {
+   void AddBin(Int_t idx, const Char_t* idxbuf);
+   void AddBinContent(Int_t idx, Double_t v = 1.) {
       fContent->SetAt(v + fContent->GetAt(idx), idx);
       if (fSumw2)
          fSumw2->SetAt(v * v+ fSumw2->GetAt(idx), idx);
    }
    void Sumw2();
-   ULong64_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
+   Int_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
    Bool_t Matches(Int_t idx, const Char_t* idxbuf) const {
       // Check whether bin at idx batches idxbuf.
       // If we don't store indexes we trust the caller that it does match,
       // see comment in THnSparseCompactBinCoord::GetHash().
-      return fCoordinatesSize <= 4 ||
+      return fSingleCoordinateSize <= 8 ||
          !memcmp(fCoordinates + idx * fSingleCoordinateSize, idxbuf, fSingleCoordinateSize); }
 
    ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
@@ -109,8 +109,8 @@ class THnSparse: public TNamed {
    Long64_t   fFilledBins;   // number of filled bins
    TObjArray  fAxes;         // axes of the histogram
    TObjArray  fBinContent;   // array of THnSparseArrayChunk
-   TExMap     fBins;         // filled bins
-   TExMap     fBinsContinued;// filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
+   TExMap     fBins;         //! filled bins
+   TExMap     fBinsContinued;//! filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
    Double_t   fEntries;      // number of entries, spread over chunks
    Double_t   fTsumw;        // total sum of weights
    Double_t   fTsumw2;       // total sum of weights squared; -1 if no errors are calculated
@@ -139,9 +139,10 @@ class THnSparse: public TNamed {
       return (THnSparseArrayChunk*) fBinContent[idx]; }
 
    THnSparseArrayChunk* AddChunk();
+   void FillExMap();
    virtual TArray* GenerateArray() const = 0;
-   Long_t GetBinIndexForCurrentBin(Bool_t allocate);
-   Long_t Fill(Long_t bin, Double_t w) {
+   Long64_t GetBinIndexForCurrentBin(Bool_t allocate);
+   Long64_t Fill(Long64_t bin, Double_t w) {
       // Increment the bin content of "bin" by "w",
       // return the bin index.
       fEntries += 1;
@@ -175,7 +176,7 @@ class THnSparse: public TNamed {
    TObjArray* GetListOfAxes() { return &fAxes; }
    TAxis* GetAxis(Int_t dim) const { return (TAxis*)fAxes[dim]; }
 
-   Long_t Fill(const Double_t *x, Double_t w = 1.) {
+   Long64_t Fill(const Double_t *x, Double_t w = 1.) {
       if (GetCalculateErrors()) {
          for (Int_t d = 0; d < fNdimensions; ++d) {
             const Double_t xd = x[d];
@@ -185,7 +186,7 @@ class THnSparse: public TNamed {
       }
       return Fill(GetBin(x), w);
    }
-   Long_t Fill(const char* name[], Double_t w = 1.) {
+   Long64_t Fill(const char* name[], Double_t w = 1.) {
       return Fill(GetBin(name), w);
    }
 
@@ -203,14 +204,17 @@ class THnSparse: public TNamed {
       else fTsumw2 = -1.;
    }
 
-   Long_t GetBin(const Int_t* idx, Bool_t allocate = kTRUE);
-   Long_t GetBin(const Double_t* x, Bool_t allocate = kTRUE);
-   Long_t GetBin(const char* name[], Bool_t allocate = kTRUE);
+   Long64_t GetBin(const Int_t* idx, Bool_t allocate = kTRUE);
+   Long64_t GetBin(const Double_t* x, Bool_t allocate = kTRUE);
+   Long64_t GetBin(const char* name[], Bool_t allocate = kTRUE);
 
    void SetBinEdges(Int_t idim, const Double_t* bins);
    void SetBinContent(const Int_t* x, Double_t v);
+   void SetBinContent(Long64_t bin, Double_t v);
    void SetBinError(const Int_t* x, Double_t e);
+   void SetBinError(Long64_t bin, Double_t e);
    void AddBinContent(const Int_t* x, Double_t v = 1.);
+   void AddBinContent(Long64_t bin, Double_t v = 1.);
    void SetEntries(Double_t entries) { fEntries = entries; }
    void SetTitle(const char *title);
 
@@ -256,7 +260,7 @@ class THnSparse: public TNamed {
 
    //void Draw(Option_t* option = "");
 
-   ClassDef(THnSparse, 1); // Interfaces of sparse n-dimensional histogram
+   ClassDef(THnSparse, 2); // Interfaces of sparse n-dimensional histogram
 };
 
 
