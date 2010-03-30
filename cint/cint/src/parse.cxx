@@ -7634,14 +7634,14 @@ void G__alloc_tempobject(int tagnum, int typenum)
    G__p_tempbuf->obj.typenum = typenum;
    G__p_tempbuf->obj.ref = G__p_tempbuf->obj.obj.i;
 
-#ifdef G__DEBUG
+#ifdef G__ASM_DBG
    if (G__asm_dbg) {
       G__fprinterr(G__serr, "alloc_tempobject(%d,%d)=0x%lx\n", tagnum, typenum,
                    G__p_tempbuf->obj.obj.i);
    }
 #endif
    //
-#ifdef G__DEBUG
+#ifdef G__ASM_DBG
    if (G__asm_dbg) G__display_tempobject("alloctemp");
 #endif
    //
@@ -7793,13 +7793,13 @@ void G__store_tempobject(G__value reg)
    /* copy pointer to created class object */
    G__p_tempbuf->obj = reg;
 
-#ifdef G__DEBUG
+#ifdef G__ASM_DBG
    if (G__asm_dbg) {
       G__fprinterr(G__serr, "store_tempobject(%d)=0x%lx\n", reg.tagnum, reg.obj.i);
    }
 #endif
    //
-#ifdef G__DEBUG
+#ifdef G__ASM_DBG
    if (G__asm_dbg) G__display_tempobject("storetemp");
 #endif
    //
@@ -7814,13 +7814,13 @@ static int G__pop_tempobject_imp(bool delobj)
 
    if (G__xrefflag) return(0);
 
-#ifdef G__DEBUG
+#ifdef G__ASM_DBG
    if (G__asm_dbg) {
       G__fprinterr(G__serr, "pop_tempobject(%d)=0x%lx\n"
                    , G__p_tempbuf->obj.tagnum , G__p_tempbuf->obj.obj.i);
    }
 #endif
-#ifdef G__DEBUG
+#ifdef G__ASM_DBG
    if (G__asm_dbg) G__display_tempobject("poptemp");
 #endif
 

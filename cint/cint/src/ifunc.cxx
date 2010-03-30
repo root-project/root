@@ -5326,7 +5326,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             }
 #endif // G__ASM_DBG
             G__asm_inst[G__asm_cp] = G__LD_FUNC;
-            G__asm_inst[G__asm_cp+1] = p_ifunc->tagnum; // ???
+            G__asm_inst[G__asm_cp+1] = p_ifunc->tagnum;
             G__asm_inst[G__asm_cp+2] = (p_ifunc->vtblindex[ifn] & 0xffff) + (p_ifunc->vtblbasetagnum[ifn] * 0x10000);
             G__asm_inst[G__asm_cp+3] = libp->paran;
             G__asm_inst[G__asm_cp+4] = (long) G__bc_exec_virtual_bytecode;
@@ -5334,8 +5334,9 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             if (p_ifunc && p_ifunc->pentry[ifn]) {
                G__asm_inst[G__asm_cp+5] = p_ifunc->pentry[ifn]->ptradjust;
             }
-            G__asm_inst[G__asm_cp+6]=(long)p_ifunc; // 30-05-07 (stub-less calls)
-            G__inc_cp_asm(7, 0);
+            G__asm_inst[G__asm_cp+6] = (long) p_ifunc;
+            G__asm_inst[G__asm_cp+7] = (long) ifn;
+            G__inc_cp_asm(8, 0);
          }
          else {
             // --
@@ -5357,7 +5358,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             G__asm_inst[G__asm_cp+1] = (long) p_ifunc;
             G__asm_inst[G__asm_cp+2] = ifn;
             G__asm_inst[G__asm_cp+3] = libp->paran;
-            if (-1 != p_ifunc->tagnum && strcmp(funcname, G__struct.name[p_ifunc->tagnum]) == 0) {
+            if ((p_ifunc->tagnum != -1) && strcmp(funcname, G__struct.name[p_ifunc->tagnum]) == 0) {
                //
 #ifndef G__OOLDIMPLEMENTATION2150
                G__bc_Baseclassctor_vbase(p_ifunc->tagnum);
@@ -5372,8 +5373,9 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
                G__asm_inst[G__asm_cp+5] = p_ifunc->pentry[ifn]->ptradjust;
             }
            
-            G__asm_inst[G__asm_cp+6]=(long)p_ifunc; // 30-05-07 (stub-less calls)
-            G__inc_cp_asm(7, 0);
+            G__asm_inst[G__asm_cp+6] = (long) p_ifunc;
+            G__asm_inst[G__asm_cp+7] = (long) ifn;
+            G__inc_cp_asm(8, 0);
          }
       }
       else {
@@ -5400,9 +5402,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
          G__asm_inst[G__asm_cp+5] = (long) funcmatch;
          G__asm_inst[G__asm_cp+6] = (long) memfunc_flag;
          G__asm_inst[G__asm_cp+7] = (long) ifn;
-         G__asm_inst[G__asm_cp+8] = (long) G__NOP; //  Empty field needed in bc_exec_asm.h
-         
-         G__inc_cp_asm(9, 0);
+         G__inc_cp_asm(8, 0);
       }
       if (G__store_struct_offset && (G__store_struct_offset != store_inherit_offset)) {
          // --

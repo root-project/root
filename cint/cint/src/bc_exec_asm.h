@@ -424,7 +424,42 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD %d(%g) from data stack index %x\n", pc, sp, G__int(G__asm_stack[G__asm_inst[pc+1]]), G__double(G__asm_stack[G__asm_inst[pc+1]]), G__asm_inst[pc+1]);
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: LD"
+                  , pc
+                  , sp
+               );
+	       G__fprinterr(
+		    G__serr
+		  , " type: ("
+               );
+               if (isprint(G__asm_stack[G__asm_inst[pc+1]].type)) {
+		  G__fprinterr(
+		       G__serr
+                     , "'%c' "
+		     , G__asm_stack[G__asm_inst[pc+1]].type
+                  );
+               }
+	       G__fprinterr(
+		    G__serr
+		  , "%d, %d, %d, %d, %d)"
+		  , G__asm_stack[G__asm_inst[pc+1]].type
+		  , G__asm_stack[G__asm_inst[pc+1]].tagnum
+		  , G__asm_stack[G__asm_inst[pc+1]].typenum
+		  , G__asm_stack[G__asm_inst[pc+1]].obj.reftype.reftype
+		  , G__asm_stack[G__asm_inst[pc+1]].isconst
+	       );
+	       G__fprinterr(
+		    G__serr
+		  , " val: 0x%08lx,%ld,%g at data stack index 0x%lx %s:%d\n"
+		  , G__int(G__asm_stack[G__asm_inst[pc+1]])
+		  , G__int(G__asm_stack[G__asm_inst[pc+1]])
+		  , G__double(G__asm_stack[G__asm_inst[pc+1]])
+                  , G__asm_inst[pc+1]
+                  , __FILE__
+                  , __LINE__
+	       );
             }
 #endif // G__ASM_DBG
             G__asm_stack[sp] = G__asm_stack[G__asm_inst[pc+1]];
@@ -738,14 +773,18 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             /***************************************
             * inst
             * 0 G__LD_FUNC
-            * 1 *name, or tagnum (if compiled)
-            * 2 hash, or -type (if compiled)
-            * 3 paran
-            * 4 (*pfunc)()
-            * 5 this ptr offset for multiple inheritance
-            * 6 ifunc         // 30-05-07 (needed for stub-less calls)
+            * 1 funcame ptr: if interpreted
+            *   tagnum: if compiled
+            *   bytecode ptr: if pfunc == G__exec_bytecode
+            * 2 hash: if interpreted
+            *   -type: if compiled
+            * 3 paran: num of func args on stack
+            * 4 func ptr: compiled func ptr
+            * 5 ptradjust: this ptr offset for multiple inheritance
+            * 6 ifunc: function page
+            * 7 ifn: index into function page
             * stack
-            * sp-paran+1      <- sp-paran+1
+            * sp-paran+1      <- sp-paran+1, return value
             * sp-2
             * sp-1
             * sp
@@ -815,10 +854,23 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             sp -= fpara.paran;
             result = &G__asm_stack[sp];
             result->type = 0;
-            if (G__asm_inst[pc+2] < 0) {
+            if (
+               (G__asm_inst[pc+2] < 0) && // compiled, and
+               (G__asm_inst[pc+7] != -1) // not a special function
+            ) {
                result->type = -G__asm_inst[pc+2];
                result->tagnum = G__asm_inst[pc+1];
-               result->typenum = -1;
+               result->typenum =
+                  ((G__ifunc_table_internal*) G__asm_inst[pc+6])->
+                     p_typetable[G__asm_inst[pc+7]];
+               if (isupper(result->type)) {
+                  result->obj.reftype.reftype =
+                     ((G__ifunc_table_internal*) G__asm_inst[pc+6])->
+                        reftype[G__asm_inst[pc+7]];
+               }
+               result->isconst =
+                  ((G__ifunc_table_internal*) G__asm_inst[pc+6])->
+                     isconst[G__asm_inst[pc+7]];
             }
             result->ref = 0;
             if (G__stepover) {
@@ -855,12 +907,25 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                  (G__ifunc_table_internal*) G__asm_inst[pc+6], 0);
             }
 #endif // G__EXCEPTIONWRAPPER
+            // The dictionary uses G__letint() which stomps on the
+            // reftype of the result, so we have to reset it here
+            // for compiled functions.
+            if (
+               (G__asm_inst[pc+2] < 0) && // compiled, and
+               (G__asm_inst[pc+7] != -1) // not a special function
+            ) {
+               if (isupper(result->type)) {
+                  result->obj.reftype.reftype =
+                     ((G__ifunc_table_internal*) G__asm_inst[pc+6])->
+                        reftype[G__asm_inst[pc+7]];
+               }
+            }
             // restore previous G__store_struct_offset
             //G__store_struct_offset -= G__asm_inst[pc+5];
             if (G__stepover) {
                G__step |= store_step;
             }
-            pc += 7;
+            pc += 8;
             if (result->type) {
                ++sp;
 #ifdef G__ASM_DBG
@@ -1748,14 +1813,13 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             /***************************************
             * inst
             * 0 G__LD_IFUNC
-            * 1 *name
-            * 2 hash          // unused
-            * 3 paran
-            * 4 p_ifunc
+            * 1 name, funcname ptr
+            * 2 hash, funcname hash
+            * 3 paran, num of func args on stack
+            * 4 p_ifunc, func page ptr
             * 5 funcmatch
             * 6 memfunc_flag
-            * 7 index
-            * 8 empty field.. -1 by default (23-10-07)
+            * 7 ifn, index into func page
             * stack
             * sp-paran+1      <- sp-paran+1
             * sp-2
@@ -1764,12 +1828,24 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ***************************************/
 #ifdef G__ASM_DBG
             if (G__asm_dbg) {
-               G__fprinterr(G__serr, "%3x,%3x: LD_IFUNC '%s' paran: %d  %s:%d\n", pc, sp, (char*) G__asm_inst[pc+1], G__asm_inst[pc+3], __FILE__, __LINE__);
+               G__fprinterr(
+                    G__serr
+                  , "%3x,%3x: LD_IFUNC '%s' paran: %ld  %s:%d\n"
+                  , pc
+                  , sp
+                  , (char*) G__asm_inst[pc+1]
+                  , G__asm_inst[pc+3]
+                  , __FILE__
+                  , __LINE__
+               );
             }
 #endif // G__ASM_DBG
             G__asm_index = G__asm_inst[pc+7];
             ifunc = (struct G__ifunc_table_internal*) G__asm_inst[pc+4];
-            if (G__cintv6 && G__LD_IFUNC_optimize(ifunc, G__asm_index, G__asm_inst, pc)) {
+            if (
+               G__cintv6 &&
+               G__LD_IFUNC_optimize(ifunc, G__asm_index, G__asm_inst, pc)
+            ) {
                goto ld_func;
             }
 #ifdef G__ASM_WHOLEFUNC
@@ -1780,24 +1856,26 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             ) {
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
-                  G__fprinterr(G__serr, "call G__exec_bytecode optimized  %s:%d\n", __FILE__, __LINE__);
+                  G__fprinterr(
+                       G__serr
+                     , "call G__exec_bytecode optimized  %s:%d\n"
+                     , __FILE__
+                     , __LINE__
+                  );
                }
 #endif // G__ASM_DBG
                G__asm_inst[pc] = G__LD_FUNC;
-               G__asm_inst[pc+1] = (long) (ifunc->pentry[G__asm_index]->bytecode);
+               G__asm_inst[pc+1] = (long) ifunc->pentry[G__asm_index]->bytecode;
                G__asm_inst[pc+4] = (long) G__exec_bytecode;
                G__asm_inst[pc+5] = 0;
                if (ifunc && ifunc->pentry[G__asm_index]) {
                   G__asm_inst[pc+5] = ifunc->pentry[G__asm_index]->ptradjust;
                }
-
-               // 06-05-07 (needed for stub-less calls)
-               G__asm_inst[pc+6] = (long)ifunc;
-               G__asm_inst[pc+7] = G__JMP;
-               G__asm_inst[pc+8] = pc+9;
+               G__asm_inst[pc+6] = (long) ifunc;
+               G__asm_inst[pc+7] = G__asm_index;
                goto ld_func;
             }
-#endif
+#endif // G__ASM_WHOLEFUNC
             funcnamebuf = (char*) G__asm_inst[pc+1];
             fpara.paran = G__asm_inst[pc+3];
             pfunc = (G__InterfaceMethod) G__asm_inst[pc+4];
@@ -1806,7 +1884,14 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
 #ifdef G__ASM_DBG
                if (G__asm_dbg) {
                   G__FastAllocString tmp(G__ONELINE);
-                  G__fprinterr(G__serr, "       : para[%d]: %s  %s:%d\n", i, G__valuemonitor(fpara.para[i], tmp), __FILE__, __LINE__);
+                  G__fprinterr(
+                       G__serr
+                     , "       : para[%d]: %s  %s:%d\n"
+                     , i
+                     , G__valuemonitor(fpara.para[i], tmp)
+                     , __FILE__
+                     , __LINE__
+                  );
                }
 #endif // G__ASM_DBG
                // --
@@ -1819,13 +1904,15 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
                // Make sure that we do not try to generate bytecode.
                int store_asm_noverflow = G__asm_noverflow;
                G__asm_noverflow = 0;
-               G__interpret_func(&G__asm_stack[sp], funcnamebuf, &fpara, G__asm_inst[pc+2], ifunc, G__asm_inst[pc+5], G__asm_inst[pc+6]);
+               G__interpret_func(&G__asm_stack[sp], funcnamebuf, &fpara,
+                  G__asm_inst[pc+2], ifunc, G__asm_inst[pc+5],
+                  G__asm_inst[pc+6]);
                G__asm_noverflow = store_asm_noverflow;
             }
             G__memberfunc_tagnum = store_memberfunc_tagnum;
             G__memberfunc_struct_offset = store_memberfunc_struct_offset;
             G__exec_memberfunc = store_exec_memberfunc;
-            pc += 9; // add 1 to include empty field
+            pc += 8;
             if (funcnamebuf[0] != '~') {
                ++sp;
             }
@@ -1848,9 +1935,9 @@ int G__exec_asm(int start, int stack, G__value* presult, long localmem)
             }
 #ifdef G__ASM_DBG
             break;
-#else
+#else // G__ASM_DBG
             goto pcode_parse_start;
-#endif
+#endif // G__ASM_DBG
             // --
 
          case G__NEWALLOC:

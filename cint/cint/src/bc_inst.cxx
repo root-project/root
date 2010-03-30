@@ -24,55 +24,64 @@ int G__bc_compile_function(struct G__ifunc_table *ifunc,int iexist);
 // LD_IFUNC optimization
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
-extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,int ifn
-				   ,long * /*inst*/,int pc) {
-  G__MethodInfo m;
-  m.Init((long)G__get_ifunc_ref(ifunc),ifn,(G__ClassInfo*)NULL);
-
-  if((m.Property()&(G__BIT_ISCOMPILED|G__BIT_ISBYTECODE))==0) {
-    // if this is bare interpreted function, compile as bytecode
-     if (G__bc_compile_function(ifunc,ifn) == G__BYTECODE_FAILURE) {
+extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,
+                                    int ifn, long* /*inst*/, int pc)
+{
+   G__MethodInfo m;
+   m.Init((long) G__get_ifunc_ref(ifunc), ifn, 0);
+   if ((m.Property() & (G__BIT_ISCOMPILED | G__BIT_ISBYTECODE)) == 0) {
+      // if this is bare interpreted function, compile as bytecode
+      if (G__bc_compile_function(ifunc, ifn) == G__BYTECODE_FAILURE) {
+         // --
 #ifdef G__ASM_DBG
-        if(G__asm_dbg) G__fprinterr(G__serr,"failed to byte compile function %s\n", m.Name());
-#endif	
-     }
-  }
-
-  if(m.Property()&G__BIT_ISCOMPILED) {
+         if (G__asm_dbg) {
+            G__fprinterr(
+                 G__serr
+               , "failed to byte compile function %s\n"
+               , m.Name()
+            );
+         }
+#endif // G__ASM_DBG
+         // --
+      }
+   }
+   if (m.Property() & G__BIT_ISCOMPILED) {
+      // --
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"call compiled function\n");
-#endif	
-    G__asm_inst[pc] = G__LD_FUNC;
-    G__asm_inst[pc+1] = (long)m.Name();
-    // preserve hash:2 and paran:3
-    G__asm_inst[pc+4] = (long)m.InterfaceMethod();
-    G__asm_inst[pc+5] = 0;
-    if (ifunc && ifunc->pentry[ifn]) G__asm_inst[pc+5] = ifunc->pentry[ifn]->ptradjust;
-
-    // 30-05-07 (used for the stub-less calls)
-    G__asm_inst[pc+6] = (long)ifunc;
-    G__asm_inst[pc+7] = G__JMP;
-    G__asm_inst[pc+8] = pc+9;
-    return(1);
-  }
-  else if(m.Property()&G__BIT_ISBYTECODE) {
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "call compiled function\n");
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[pc] = G__LD_FUNC;
+      G__asm_inst[pc+1] = (long) m.Name();
+      G__asm_inst[pc+4] = (long) m.InterfaceMethod();
+      G__asm_inst[pc+5] = 0;
+      if(ifunc && ifunc->pentry[ifn]) {
+         G__asm_inst[pc+5] = ifunc->pentry[ifn]->ptradjust;
+      }
+      G__asm_inst[pc+6] = (long) ifunc;
+      G__asm_inst[pc+7] = (long) ifn;
+      return 1;
+   }
+   else if (m.Property() & G__BIT_ISBYTECODE) {
+      // --
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"call G__exec_bytecode optimized\n");
-#endif	
-    G__asm_inst[pc] = G__LD_FUNC;
-    G__asm_inst[pc+1] = (long)m.GetBytecode();
-    // preserve hash:2 and paran:3
-    G__asm_inst[pc+4] = (long)G__exec_bytecode;
-
-    // 30-05-07
-    G__asm_inst[pc+5] = 0;
-    if (ifunc && ifunc->pentry[ifn]) G__asm_inst[pc+5] = ifunc->pentry[ifn]->ptradjust;
-    G__asm_inst[pc+6] = (long)ifunc;
-    G__asm_inst[pc+7] = G__JMP;
-    G__asm_inst[pc+8] = pc+9;
-    return(1);
-  }
-  return(0);
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "call G__exec_bytecode optimized\n");
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[pc] = G__LD_FUNC;
+      G__asm_inst[pc+1] = (long) m.GetBytecode();
+      G__asm_inst[pc+4] = (long) G__exec_bytecode;
+      G__asm_inst[pc+5] = 0;
+      if (ifunc && ifunc->pentry[ifn]) {
+         G__asm_inst[pc+5] = ifunc->pentry[ifn]->ptradjust;
+      }
+      G__asm_inst[pc+6] = (long) ifunc;
+      G__asm_inst[pc+7] = (long) ifn;
+      return 1;
+   }
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -270,95 +279,117 @@ void G__bc_inst::POP() {
 /**************************************************************************
 * LD_FUNC
 **************************************************************************/
-void G__bc_inst::LD_FUNC(const char* funcname,int hash,int paran,void* pfunc, G__ifunc_table_internal* ifunc, int ifn) {
+void G__bc_inst::LD_FUNC(const char* funcname, int hash, int paran,
+                         void* pfunc, G__ifunc_table_internal* ifunc, int ifn)
+{
+   // --
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,
-			      "%3x: LD_FUNC compiled %s paran=%d\n"
-			      ,G__asm_cp,funcname,paran);
-#endif
-  if(!hash) {
-    int len;
-    G__hash(funcname,hash,len);
-  }
-  G__asm_inst[G__asm_cp]=G__LD_FUNC;
-  G__asm_inst[G__asm_cp+1] = (long)(&G__asm_name[G__asm_name_p]);
-  G__asm_inst[G__asm_cp+2]=hash;
-  G__asm_inst[G__asm_cp+3]=paran;
-  G__asm_inst[G__asm_cp+4]=(long)pfunc;
-
-  G__asm_inst[G__asm_cp+5] = 0;
-  if (ifunc && ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
-
-  // 30-05-07
-  // This couldnt be fixed since we dont have the pointer to ifunc
-  // Warning: This could lead to a serious problem if we try to execute
-  // the stub through the ifunc instead of the pfunc (but that shouldn't happen)
-  G__asm_inst[G__asm_cp+6]=(long)0;
-
-  size_t lenfuncname = strlen(funcname);
-  if(G__asm_name_p+lenfuncname+1<G__ASM_FUNCNAMEBUF) {
-    strncpy(G__asm_name+G__asm_name_p,funcname,lenfuncname + 1);
-    G__asm_name_p += lenfuncname+1;
-    inc_cp_asm(7,0);
-  }
-  else {
-    G__abortbytecode();
+   if (G__asm_dbg) {
+      G__fprinterr(
+           G__serr
+         , "%3x: LD_FUNC compiled %s paran=%d\n"
+         , G__asm_cp
+         , funcname
+         , paran
+      );
+   }
+#endif // G__ASM_DBG
+   if (!hash) {
+      int len;
+      G__hash(funcname, hash, len);
+   }
+   G__asm_inst[G__asm_cp] = G__LD_FUNC;
+   G__asm_inst[G__asm_cp+1] = (long) &G__asm_name[G__asm_name_p];
+   G__asm_inst[G__asm_cp+2] = hash;
+   G__asm_inst[G__asm_cp+3] = paran;
+   G__asm_inst[G__asm_cp+4] = (long) pfunc;
+   G__asm_inst[G__asm_cp+5] = 0;
+   if (ifunc && ifunc->pentry[ifn]) {
+      G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
+   }
+   G__asm_inst[G__asm_cp+6] = (long) ifunc;
+   G__asm_inst[G__asm_cp+7] = (long) ifn;
+   size_t lenfuncname = strlen(funcname);
+   if ((G__asm_name_p + lenfuncname + 1) < G__ASM_FUNCNAMEBUF) {
+      strncpy(G__asm_name + G__asm_name_p, funcname, lenfuncname + 1);
+      G__asm_name_p += lenfuncname + 1;
+      inc_cp_asm(8, 0);
+   }
+   else {
+      G__abortbytecode();
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) {
-	G__fprinterr(G__serr,"COMPILE ABORT function name buffer overflow");
-	G__printlinenum();
-    }
-#endif
-  }
+      if (G__asm_dbg) {
+         G__fprinterr(G__serr, "COMPILE ABORT function name buffer overflow");
+         G__printlinenum();
+      }
+#endif // G__ASM_DBG
+      // --
+   }
 }
 
 /**************************************************************************
 * LD_FUNC_BC
 **************************************************************************/
-void G__bc_inst::LD_FUNC_BC(struct G__ifunc_table* iref,int ifn,int paran,void* pfunc) {
- G__ifunc_table_internal* ifunc = G__get_ifunc_internal(iref);
+void G__bc_inst::LD_FUNC_BC(struct G__ifunc_table* iref, int ifn, int paran,
+                            void* pfunc)
+{
+   G__ifunc_table_internal* ifunc = G__get_ifunc_internal(iref);
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,
-			      "%3x: LD_FUNC bytecode %s paran=%d\n"
-			      ,G__asm_cp,"n/a" /* iref->funcname[ifn] */ ,paran);
-#endif
-  G__asm_inst[G__asm_cp]=G__LD_FUNC;
-  G__asm_inst[G__asm_cp+1]=(long)ifunc;
-  G__asm_inst[G__asm_cp+2]= ifn;
-  G__asm_inst[G__asm_cp+3]=paran;
-
-  G__asm_inst[G__asm_cp+4]=(long)pfunc;
-  G__asm_inst[G__asm_cp+5] = 0;
-  if (ifunc && ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
-  
-  // 30-05-07 (stub-less calls)
-  G__asm_inst[G__asm_cp+6]=(long)ifunc;
-  inc_cp_asm(7,0);
+   if (G__asm_dbg) {
+      G__fprinterr(
+           G__serr
+         , "%3x: LD_FUNC bytecode %s paran=%d\n"
+         , G__asm_cp
+         , "n/a" // iref->funcname[ifn]
+         , paran
+      );
+   }
+#endif // G__ASM_DBG
+   G__asm_inst[G__asm_cp] = G__LD_FUNC;
+   G__asm_inst[G__asm_cp+1] = (long) ifunc;
+   G__asm_inst[G__asm_cp+2] = ifn;
+   G__asm_inst[G__asm_cp+3] = paran;
+   G__asm_inst[G__asm_cp+4] = (long) pfunc;
+   G__asm_inst[G__asm_cp+5] = 0;
+   if (ifunc && ifunc->pentry[ifn]) {
+      G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
+   }
+   G__asm_inst[G__asm_cp+6] = (long) ifunc;
+   G__asm_inst[G__asm_cp+7] = (long) ifn;
+   inc_cp_asm(8, 0);
 }
 
 /**************************************************************************
 * LD_FUNC_VIRTUAL
 **************************************************************************/
-void G__bc_inst::LD_FUNC_VIRTUAL(struct G__ifunc_table* iref,int ifn,int paran,void* pfunc) {
-  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(iref);
+void G__bc_inst::LD_FUNC_VIRTUAL(struct G__ifunc_table* iref, int ifn,
+                                 int paran, void* pfunc)
+{
+   G__ifunc_table_internal* ifunc = G__get_ifunc_internal(iref);
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,
-			      "%3x: LD_FUNC virtual %s paran=%d\n"
-			      ,G__asm_cp,ifunc->funcname[ifn],paran);
-#endif
-  G__asm_inst[G__asm_cp]=G__LD_FUNC;
-  G__asm_inst[G__asm_cp+1]=(long)ifunc->tagnum;
-  G__asm_inst[G__asm_cp+2]=(ifunc->vtblindex[ifn]&0xffff)
-                           +(ifunc->vtblbasetagnum[ifn]*0x10000);
-  G__asm_inst[G__asm_cp+3]=paran;
-
-  G__asm_inst[G__asm_cp+4]=(long)pfunc;
-  G__asm_inst[G__asm_cp+5] = 0;
-  if (ifunc->pentry[ifn]) G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
-
-  // 30-05-07 (stub-less calls)
-  G__asm_inst[G__asm_cp+6]=(long)ifunc;
-  inc_cp_asm(7,0); // 30-05-07 add 1
+   if (G__asm_dbg) {
+      G__fprinterr(
+           G__serr
+         , "%3x: LD_FUNC virtual %s paran=%d\n"
+         , G__asm_cp
+         , ifunc->funcname[ifn]
+         , paran
+      );
+   }
+#endif // G__ASM_DBG
+   G__asm_inst[G__asm_cp] = G__LD_FUNC;
+   G__asm_inst[G__asm_cp+1] = (long) ifunc->tagnum;
+   G__asm_inst[G__asm_cp+2] = (ifunc->vtblindex[ifn] & 0xffff) +
+                              (ifunc->vtblbasetagnum[ifn] * 0x10000);
+   G__asm_inst[G__asm_cp+3] = paran;
+   G__asm_inst[G__asm_cp+4] = (long) pfunc;
+   G__asm_inst[G__asm_cp+5] = 0;
+   if (ifunc->pentry[ifn]) {
+      G__asm_inst[G__asm_cp+5] = ifunc->pentry[ifn]->ptradjust;
+   }
+   G__asm_inst[G__asm_cp+6] = (long) ifunc;
+   G__asm_inst[G__asm_cp+7] = (long) ifn;
+   inc_cp_asm(8, 0);
 }
 
 /**************************************************************************
@@ -732,38 +763,47 @@ int G__bc_inst::CND1JMP(int addr) {
 /**************************************************************************
 * LD_IFUNC
 **************************************************************************/
-void G__bc_inst::LD_IFUNC(struct G__ifunc_table *iref,int ifn,int hash
-		   ,int paran,int funcmatch,int memfunc_flag) {
-  G__ifunc_table_internal* p_ifunc = G__get_ifunc_internal(iref);
+void G__bc_inst::LD_IFUNC(struct G__ifunc_table* iref, int ifn, int hash,
+                          int paran, int funcmatch, int memfunc_flag)
+{
+   G__ifunc_table_internal* p_ifunc = G__get_ifunc_internal(iref);
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_IFUNC %s paran=%d\n"
-			      ,G__asm_cp,p_ifunc->funcname[ifn],paran);
-#endif
-  if(!hash) {
-    int len;
-    G__hash(p_ifunc->funcname[ifn],hash,len);
-  }
-  if(0 && p_ifunc->pentry[ifn]->bytecode  && 0==p_ifunc->isvirtual[ifn]  ){
-    // TODO, this causes problem, maybe bytecode pointer is not initialized
-    LD_FUNC((char*)(p_ifunc->pentry[ifn]->bytecode)
-	    ,hash
-	    ,paran
-	    ,(void*)G__exec_bytecode,
-            p_ifunc,
-            ifn);
-  }
-  else {
-    G__asm_inst[G__asm_cp]=G__LD_IFUNC;
-    G__asm_inst[G__asm_cp+1]=(long)p_ifunc->funcname[ifn];
-    G__asm_inst[G__asm_cp+2]=hash;
-    G__asm_inst[G__asm_cp+3]=paran;
-    G__asm_inst[G__asm_cp+4]=(long)p_ifunc;
-    G__asm_inst[G__asm_cp+5]=(long)funcmatch;
-    G__asm_inst[G__asm_cp+6]=(long)memfunc_flag;
-    G__asm_inst[G__asm_cp+7]=(long)ifn;
-    G__asm_inst[G__asm_cp+7]=(long)G__NOP; // Empty field needed in bc_exec_asm.h
-    inc_cp_asm(9,0);
-  }
+   if (G__asm_dbg) {
+      G__fprinterr(
+           G__serr
+         , "%3x: LD_IFUNC %s paran=%d\n"
+         , G__asm_cp
+         , p_ifunc->funcname[ifn]
+         , paran
+      );
+   }
+#endif // G__ASM_DBG
+   if (!hash) {
+      int len;
+      G__hash(p_ifunc->funcname[ifn], hash, len);
+   }
+   if (0 && p_ifunc->pentry[ifn]->bytecode && (p_ifunc->isvirtual[ifn] == 0)) {
+      // TODO, this causes problem, maybe bytecode pointer is not initialized
+      LD_FUNC(
+                (char*) p_ifunc->pentry[ifn]->bytecode
+              , hash
+              , paran
+              , (void*)G__exec_bytecode
+              , p_ifunc
+              , ifn
+      );
+   }
+   else {
+      G__asm_inst[G__asm_cp] = G__LD_IFUNC;
+      G__asm_inst[G__asm_cp+1] = (long) p_ifunc->funcname[ifn];
+      G__asm_inst[G__asm_cp+2] = (long) hash;
+      G__asm_inst[G__asm_cp+3] = (long) paran;
+      G__asm_inst[G__asm_cp+4] = (long) p_ifunc;
+      G__asm_inst[G__asm_cp+5] = (long) funcmatch;
+      G__asm_inst[G__asm_cp+6] = (long) memfunc_flag;
+      G__asm_inst[G__asm_cp+7] = (long) ifn;
+      inc_cp_asm(8, 0);
+   }
 }
 
 /**************************************************************************

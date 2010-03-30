@@ -5136,7 +5136,8 @@ int G__asm_optimize3(int *start)
       * 3 paran
       * 4 (*func)()
       * 5 this ptr offset for multiple inheritance
-      * 6 ifunc         // 30-05-07 (needed for the stub-less calls)
+      * 6 ifunc
+      * 7 ifn
       * stack
       * sp-paran+1      <- sp-paran+1
       * sp-2
@@ -5158,7 +5159,7 @@ int G__asm_optimize3(int *start)
       }
 #endif
       /* no optimization */
-      pc+=7; // 06-06-07 add 1
+      pc += 8;
       break;
 
     case G__RETURN:
@@ -5601,7 +5602,7 @@ int G__asm_optimize3(int *start)
       * 4 p_ifunc
       * 5 funcmatch
       * 6 memfunc_flag
-      * 7 index
+      * 7 ifn
       * stack
       * sp-paran+1      <- sp-paran+1
       * sp-2
@@ -5613,7 +5614,7 @@ int G__asm_optimize3(int *start)
                              ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       /* need optimization, later */
-      pc+=8;
+      pc += 8;
       break;
 
     case G__NEWALLOC:
@@ -6722,7 +6723,8 @@ int G__dasm(FILE *fout,int isthrow)
       * 3 paran
       * 4 (*func)()
       * 5 this ptr offset for multiple inheritance
-      * 6 ifunc         // 30-05-07 (needed for the stub-less calls)
+      * 6 ifunc
+      * 7 ifn
       * stack
       * sp-paran+1      <- sp-paran+1
       * sp-2
@@ -6737,7 +6739,7 @@ int G__dasm(FILE *fout,int isthrow)
           fprintf(fout,"%3x: LD_FUNC %s paran=%ld\n" ,pc
                   ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
       }
-      pc+=7; // 07-06-07 add 1
+      pc += 8;
       break;
 
     case G__RETURN:
@@ -7021,7 +7023,7 @@ int G__dasm(FILE *fout,int isthrow)
       * 4 p_ifunc
       * 5 funcmatch
       * 6 memfunc_flag
-      * 7 index
+      * 7 ifn
       * stack
       * sp-paran+1      <- sp-paran+1
       * sp-2
@@ -7032,7 +7034,7 @@ int G__dasm(FILE *fout,int isthrow)
         fprintf(fout,"%3x: LD_IFUNC %s paran=%ld\n" ,pc
                 ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
       }
-      pc+=8;
+      pc += 8;
       break;
 
     case G__NEWALLOC:

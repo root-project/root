@@ -2070,21 +2070,17 @@ void G__letstruct(G__value* result, int linear_index, G__var_array* var, int ig1
                   if (ig2 && G__asm_noverflow) {
                      G__asm_dt = store_dt;
                      int x;
-                     // 30-05-07
-                     // G__LD_FUNC now has 6 parameters
-                     // 05-06-07 (now 7 with diego's changes)
-                     if (G__LD_FUNC == G__asm_inst[G__asm_cp-7]) {
-                        for (x = 0; x < 7; ++x) {
-                           G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-7+x];
+                     if (G__LD_FUNC == G__asm_inst[G__asm_cp-8]) {
+                        for (x = 0; x < 8; ++x) {
+                           G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-8+x];
                         }
-                        G__asm_cp = store_cp + 7;
+                        G__asm_cp = store_cp + 8;
                      }
-                     // 23-10-12 (stub-less calls)
-                     // We added one more field... should it be until 9?
-                     else if (G__LD_IFUNC == G__asm_inst[G__asm_cp-9]) {
-                        for (x = 0;x < 9;x++)
-                           G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-9+x];
-                        G__asm_cp = store_cp + 9;
+                     else if (G__LD_IFUNC == G__asm_inst[G__asm_cp-8]) {
+                        for (x = 0; x < 8; ++x) {
+                           G__asm_inst[store_cp+x] = G__asm_inst[G__asm_cp-8+x];
+                        }
+                        G__asm_cp = store_cp + 8;
                      }
                   }
                   else if (!ig2 && (result->type == 'U')) {
@@ -4414,7 +4410,8 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
                G__asm_inst[G__asm_cp+4] = (long) G__compiled_func; // pfunc
                G__asm_inst[G__asm_cp+5] = 0; // this ptr adjustment
                G__asm_inst[G__asm_cp+6] = (long) G__p_ifunc; // ifunc, ignored because pfunc is set
-               G__inc_cp_asm(7, 0);
+               G__asm_inst[G__asm_cp+7] = -1; // ifn, for special func
+               G__inc_cp_asm(8, 0);
             }
          }
          break;
