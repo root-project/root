@@ -37,7 +37,7 @@ protected:
    TString  fJobID;  // the job's ID
 
 public:
-   TGridJobStatusList() { }
+   TGridJobStatusList() : fJobID("") { }
    virtual ~TGridJobStatusList() { }
 
    ClassDef(TGridJobStatusList,1)  // ABC defining interface to a list of GRID jobs
