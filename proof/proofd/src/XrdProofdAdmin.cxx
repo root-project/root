@@ -1637,7 +1637,7 @@ int XrdProofdAdmin::CheckPath(bool superuser, const char *sbdir,
    if (!sandbox && !superuser) {
       bool notfound = 1;
       std::list<XrdOucString>::iterator si = fExportPaths.begin();
-      while (si != fExportPaths.begin()) {
+      while (si != fExportPaths.end()) {
          if (path.beginswith((*si).c_str())) {
             notfound = 0;
             break;

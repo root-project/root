@@ -33,6 +33,7 @@
 #include "TProofLog.h"
 #include "TXProofMgr.h"
 #include "TXSocket.h"
+#include "TXSocketHandler.h"
 #include "TROOT.h"
 #include "TStopwatch.h"
 #include "TSysEvtHandler.h"
@@ -1166,8 +1167,10 @@ TObjString *TXProofMgr::Exec(Int_t action,
 Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt)
 {
    // Get file 'remote' into 'local' from the master.
-   // If opt is "force", the file, if it exists remotely, is copied in all cases,
+   // If opt contains "force", the file, if it exists remotely, is copied in all cases,
    // otherwise a check is done on the MD5sum.
+   // If opt contains "silent" standard notificatons are not printed (errors and
+   // warnings and prompts still are).
    // Return 0 on success, -1 on error.
 
    Int_t rc = -1;
@@ -1192,7 +1195,8 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
    // Parse option
    TString oo(opt);
    oo.ToUpper();
-   Bool_t force = (oo == "FORCE") ? kTRUE : kFALSE;
+   Bool_t force = (oo.Contains("FORCE")) ? kTRUE : kFALSE;
+   Bool_t silent = (oo.Contains("SILENT")) ? kTRUE : kFALSE;
 
    // Check local path name
    TString fileloc(local);
@@ -1225,8 +1229,9 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
       if (rcloc == 0) {
          // It exists already. If it is not a regular file we cannot continue
          if (!R_ISREG(stloc.fMode)) {
-            Printf("[GetFile] local file '%s' exists and is not regular: cannot continue",
-                               fileloc.Data());
+            if (!silent)
+               Printf("[GetFile] local file '%s' exists and is not regular: cannot continue",
+                      fileloc.Data());
             return rc;
          }
          // Get our info
@@ -1241,9 +1246,11 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
          delete ugloc;
          if ((owner && !(stloc.fMode & kS_IWUSR)) ||
              (group && !(stloc.fMode & kS_IWGRP)) || (other && !(stloc.fMode & kS_IWOTH))) {
-            Printf("[GetFile] file '%s' exists: no permission to delete or overwrite the file", fileloc.Data());
-            Printf("[GetFile] ownership: owner: %d, group: %d, other: %d", owner, group, other);
-            Printf("[GetFile] mode: %x", stloc.fMode);
+            if (!silent) {
+               Printf("[GetFile] file '%s' exists: no permission to delete or overwrite the file", fileloc.Data());
+               Printf("[GetFile] ownership: owner: %d, group: %d, other: %d", owner, group, other);
+               Printf("[GetFile] mode: %x", stloc.fMode);
+            }
             return rc;
          }
          // In case we open the file, we need to truncate it
@@ -1260,7 +1267,8 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
    // Check the remote file exists and get it check sum
    TString remsum;
    if (Md5sum(filerem, remsum) != 0) {
-      Printf("[GetFile] remote file '%s' does not exists or cannot be read", filerem.Data());
+      if (!silent)
+         Printf("[GetFile] remote file '%s' does not exists or cannot be read", filerem.Data());
       return rc;
    }
 
@@ -1270,9 +1278,11 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
       TMD5 *md5loc = TMD5::FileChecksum(fileloc);
       if (md5loc) {
          if (remsum == md5loc->AsString()) {
-            Printf("[GetFile] local file '%s' and remote file '%s' have the same MD5 check sum",
-                            fileloc.Data(), filerem.Data());
-            Printf("[GetFile] use option 'force' to override");
+            if (!silent) {
+               Printf("[GetFile] local file '%s' and remote file '%s' have the same MD5 check sum",
+                      fileloc.Data(), filerem.Data());
+               Printf("[GetFile] use option 'force' to override");
+            }
             same = 1;
          }
          delete md5loc;
@@ -1296,6 +1306,10 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
 
    // Build the command line
    TString cmd(filerem);
+
+   // Disable TXSocket handling while receiving the file (CpProgress processes
+   // pending events and this could screw-up synchronization in the TXSocket pipe)
+   gSystem->RemoveFileHandler(TXSocketHandler::GetSocketHandler());
 
    // Send the request
    TStopwatch watch;
@@ -1355,6 +1369,9 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
       rc = -1;
    }
 
+   // Restore socket handling while receiving the file
+   gSystem->AddFileHandler(TXSocketHandler::GetSocketHandler());
+
    // Close local file
    close(fdout);
    watch.Stop();
@@ -1364,10 +1381,10 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
       // Check if everything went fine
       TMD5 *md5loc = TMD5::FileChecksum(fileloc);
       if (!md5loc) {
-         Printf("[GetFile] cannot get MD5 checksum of the new local file '%s'", fileloc.Data());
+         Error("GetFile", "cannot get MD5 checksum of the new local file '%s'", fileloc.Data());
          rc = -1;
       } else if (remsum != md5loc->AsString()) {
-         Printf("[GetFile] checksums for the local copy and the remote file differ: {rem:%s,loc:%s}",
+         Error("GetFile", "checksums for the local copy and the remote file differ: {rem:%s,loc:%s}",
                            remsum.Data(), md5loc->AsString());
          rc = -1;
          delete md5loc;
@@ -1508,6 +1525,10 @@ Int_t TXProofMgr::PutFile(const char *local, const char *remote, const char *opt
    cmd.Form("%s %lld", filerem.Data(), stloc.fSize);
    if (force) cmd += " force";
 
+   // Disable TXSocket handling while sending the file (CpProgress processes
+   // pending events and this could screw-up synchronization in the TXSocket pipe)
+   gSystem->RemoveFileHandler(TXSocketHandler::GetSocketHandler());
+
    // Send the request
    TStopwatch watch;
    watch.Start();
@@ -1552,6 +1573,9 @@ Int_t TXProofMgr::PutFile(const char *local, const char *remote, const char *opt
       Error("PutFile", "command could not be executed");
       rc = -1;
    }
+
+   // Restore TXSocket handling
+   gSystem->AddFileHandler(TXSocketHandler::GetSocketHandler());
 
    // Close local file
    close(fd);

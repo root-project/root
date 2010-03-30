@@ -4573,14 +4573,11 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                   SendAsynMessage(TString::Format("%s: kBuildPackage: failure locating %s ...",
                                        noth.Data(), package.Data()));
                   break;
-               } else {
-                  // Package is in the global dirs
-                  break;
                }
             }
          }
 
-         if (IsMaster()) {
+         if (IsMaster() && !fromglobal) {
             // make sure package is available on all slaves, even new ones
             fProof->UploadPackage(pdir + ".par");
          }

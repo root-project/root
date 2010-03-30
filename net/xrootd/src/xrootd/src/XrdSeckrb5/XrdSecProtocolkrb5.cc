@@ -426,7 +426,6 @@ int XrdSecProtocolkrb5::Authenticate(XrdSecCredentials *cred,
        return 0;
       }
    
-   krbContext.UnLock();
    CLDBG("protocol check");
 
 // Increment the step
@@ -839,7 +838,6 @@ char  *XrdSecProtocolkrb5Init(const char     mode,
 //
    if ((mode == 'c') || (serverinitialized))
       {
-       CLPRT("Initializing the client");
        int opts = 0;
        if (getenv("XrdSecDEBUG")) opts |= XrdSecDEBUG;
        if (getenv("XrdSecKRB5INITTKN")) opts |= XrdSecINITTKN;
@@ -851,7 +849,6 @@ char  *XrdSecProtocolkrb5Init(const char     mode,
      serverinitialized = true;
    }
 
-   CLPRT("Initializing the server");
 // Duplicate the parms
 //
    if (parms) strlcpy(parmbuff, parms, sizeof(parmbuff));
