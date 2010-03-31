@@ -11,22 +11,22 @@
 #include "TMemStatChecksum.h"
 
 //______________________________________________________________________________
-static const UInt32 kCRCPoly = 0xEDB88320;
+static const UInt_t kCRCPoly = 0xEDB88320;
 
 //______________________________________________________________________________
-UInt32 CCRC::Table[256];
+UInt_t CCRC::fTable[256];
 
 //______________________________________________________________________________
 void CCRC::InitTable()
 {
-   for(UInt32 i = 0; i < 256; i++) {
-      UInt32 r = i;
+   for(UInt_t i = 0; i < 256; i++) {
+      UInt_t r = i;
       for(int j = 0; j < 8; j++)
          if(r & 1)
             r = (r >> 1) ^ kCRCPoly;
          else
             r >>= 1;
-      CCRC::Table[i] = r;
+      CCRC::fTable[i] = r;
    }
 }
 
@@ -39,38 +39,38 @@ public:
 } g_CRCTableInit;
 
 //______________________________________________________________________________
-void CCRC::UpdateByte(Byte b)
+void CCRC::UpdateUChar(UChar_t b)
 {
-   _value = Table[((Byte)(_value)) ^ b] ^(_value >> 8);
+   fValue = fTable[((UChar_t)(fValue)) ^ b] ^(fValue >> 8);
 }
 
 //______________________________________________________________________________
-void CCRC::UpdateUInt16(UInt16 v)
+void CCRC::UpdateUShort(UShort_t v)
 {
-   UpdateByte(Byte(v));
-   UpdateByte(Byte(v >> 8));
+   UpdateUChar(UChar_t(v));
+   UpdateUChar(UChar_t(v >> 8));
 }
 
 //______________________________________________________________________________
-void CCRC::UpdateUInt32(UInt32 v)
+void CCRC::UpdateUInt(UInt_t v)
 {
    for(int i = 0; i < 4; i++)
-      UpdateByte((Byte)(v >> (8 * i)));
+      UpdateUChar((UChar_t)(v >> (8 * i)));
 }
 
 //______________________________________________________________________________
-void CCRC::UpdateUInt64(UInt64 v)
+void CCRC::UpdateULong64(ULong64_t v)
 {
    for(int i = 0; i < 8; i++)
-      UpdateByte((Byte)(v >> (8 * i)));
+      UpdateUChar((UChar_t)(v >> (8 * i)));
 }
 
 //______________________________________________________________________________
 void CCRC::Update(const void *data, size_t size)
 {
-   UInt32 v = _value;
-   const Byte *p = (const Byte *)data;
+   UInt_t v = fValue;
+   const UChar_t *p = (const UChar_t *)data;
    for(; size > 0 ; size--, p++)
-      v = Table[((Byte)(v)) ^ *p] ^(v >> 8);
-   _value = v;
+      v = fTable[((UChar_t)(v)) ^ *p] ^(v >> 8);
+   fValue = v;
 }

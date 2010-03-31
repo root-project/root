@@ -12,46 +12,34 @@
 #define ROOT_TMemStatChecksum
 
 #include <stdio.h>
+#include "Rtypes.h"
 
-//______________________________________________________________________________
-typedef unsigned char Byte;
-typedef short Int16;
-typedef unsigned short UInt16;
-typedef int Int32;
-typedef unsigned int UInt32;
-#ifdef _MSC_VER
-typedef __int64 Int64;
-typedef unsigned __int64 UInt64;
-#else
-typedef long long int Int64;
-typedef unsigned long long int UInt64;
-#endif
 
 //______________________________________________________________________________
 class CCRC {
-   UInt32 _value;
+   UInt_t fValue;
 public:
-   static UInt32 Table[256];
+   static UInt_t fTable[256];
    static void InitTable();
 
-   CCRC():  _value(0xFFFFFFFF) {};
+   CCRC():  fValue(0xFFFFFFFF) {};
    void Init() {
-      _value = 0xFFFFFFFF;
+      fValue = 0xFFFFFFFF;
    }
-   void UpdateByte(Byte v);
-   void UpdateUInt16(UInt16 v);
-   void UpdateUInt32(UInt32 v);
-   void UpdateUInt64(UInt64 v);
+   void UpdateUChar(UChar_t v);
+   void UpdateUShort(UShort_t v);
+   void UpdateUInt(UInt_t v);
+   void UpdateULong64(ULong64_t v);
    void Update(const void *data, size_t size);
-   UInt32 GetDigest() const {
-      return _value ^ 0xFFFFFFFF;
+   UInt_t GetDigest() const {
+      return fValue ^ 0xFFFFFFFF;
    }
-   static UInt32 CalculateDigest(const void *data, size_t size) {
+   static UInt_t CalculateDigest(const void *data, size_t size) {
       CCRC crc;
       crc.Update(data, size);
       return crc.GetDigest();
    }
-   static bool VerifyDigest(UInt32 digest, const void *data, size_t size) {
+   static bool VerifyDigest(UInt_t digest, const void *data, size_t size) {
       return (CalculateDigest(data, size) == digest);
    }
 };
