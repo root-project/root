@@ -18,6 +18,7 @@ namespace std {} using namespace std;
 //______________________________________________________________________________
 TClassEdit::TSplitType::TSplitType(const char *type2split) : fName(type2split), fNestedLocation(0)
 {
+   // default constructor
    TClassEdit::GetSplit(type2split, fElements, fNestedLocation);
 }
 
