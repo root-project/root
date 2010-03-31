@@ -1831,6 +1831,11 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return kTRUE;
    }
 
+   if ( name == "TChain" ) {
+   // pretend a using
+      return Utility::AddUsingToClass( pyclass, "Process" );
+   }
+
    if ( name == "TStyle" ) {
        MethodProxy* ctor = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gInit );
        ctor->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kIsCreator;
