@@ -36,20 +36,20 @@ TMemStatMng* TMemStatMng::fgInstance = NULL;
 //****************************************************************************//
 
 TMemStatMng::TMemStatMng():
-   TObject(),
-#if !defined(__APPLE__)   
-   fPreviousMallocHook(TMemStatHook::GetMallocHook()),
-   fPreviousFreeHook(TMemStatHook::GetFreeHook()),
+      TObject(),
+#if !defined(__APPLE__)
+      fPreviousMallocHook(TMemStatHook::GetMallocHook()),
+      fPreviousFreeHook(TMemStatHook::GetFreeHook()),
 #endif
-   fDumpTree(NULL),
-   fUseGNUBuiltinBacktrace(kFALSE),
-   fBeginTime(0),
-   fPos(0),
-   fTimems(0),
-   fNBytes(0),
-   fN(0),
-   fBtID(0),
-   fBTCount(0)
+      fDumpTree(NULL),
+      fUseGNUBuiltinBacktrace(kFALSE),
+      fBeginTime(0),
+      fPos(0),
+      fTimems(0),
+      fNBytes(0),
+      fN(0),
+      fBtID(0),
+      fBTCount(0)
 {
    // Default constructor
 }
@@ -57,13 +57,14 @@ TMemStatMng::TMemStatMng():
 //______________________________________________________________________________
 void TMemStatMng::Init()
 {
-   //Initialize MemStat manager - used only for instance
+   //Initialize MemStat manager - used only by instance method
+
    fBeginTime = fTimeStamp.AsDouble();
 
    //fDumpFile = new TFile(Form("yams_%d.root", gSystem->GetPid()), "recreate");
    fDumpFile = new TFile(g_cszFileName, "recreate");
    Int_t opt = 200000;
-   if(!fDumpTree) {
+   if (!fDumpTree) {
       fDumpTree = new TTree("T", "Memory Statistics");
       fDumpTree->Branch("pos",   &fPos,   "pos/l", opt);
       fDumpTree->Branch("time",  &fTimems, "time/I", opt);
@@ -87,9 +88,9 @@ void TMemStatMng::Init()
 TMemStatMng* TMemStatMng::GetInstance()
 {
    // GetInstance - a static function
-   // Only instance catch the alloc and free hook
+   // Initialize a singleton of MemStat manager
 
-   if(!fgInstance) {
+   if (!fgInstance) {
       fgInstance = new TMemStatMng;
       fgInstance->Init();
    }
@@ -100,6 +101,8 @@ TMemStatMng* TMemStatMng::GetInstance()
 void TMemStatMng::Close()
 {
    // Close - a static function
+   // This method stops the manager,
+   // flashes all the buffered data and closes the output tree.
 
    // TODO: This is a temporary solution until we find a properalgorithm for SaveData
    fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
@@ -116,10 +119,9 @@ void TMemStatMng::Close()
 //______________________________________________________________________________
 TMemStatMng::~TMemStatMng()
 {
-   //   Destructor
-   //   if instance is destructed - the hooks are reseted to old hooks
+   // if an instance is destructed - the hooks are reseted to old hooks
 
-   if(this != TMemStatMng::GetInstance())
+   if (this != TMemStatMng::GetInstance())
       return;
 
    cout << ">>> All free/malloc calls count: " << fBTIDCount << endl;
@@ -131,9 +133,9 @@ TMemStatMng::~TMemStatMng()
 //______________________________________________________________________________
 void TMemStatMng::Enable()
 {
-   // Enable hooks
+   // Enable memory hooks
 
-   if(this != GetInstance())
+   if (this != GetInstance())
       return;
 #if defined(__APPLE__)
    TMemStatHook::trackZoneMalloc(MacAllocHook, MacFreeHook);
@@ -147,9 +149,9 @@ void TMemStatMng::Enable()
 //______________________________________________________________________________
 void TMemStatMng::Disable()
 {
-   // disble MemStatManager
+   // Disble memory hooks
 
-   if(this != GetInstance())
+   if (this != GetInstance())
       return;
 #if defined(__APPLE__)
    TMemStatHook::untrackZoneMalloc();
@@ -161,15 +163,18 @@ void TMemStatMng::Disable()
 }
 
 //______________________________________________________________________________
-void TMemStatMng::MacAllocHook(void *ptr, size_t _size)
+void TMemStatMng::MacAllocHook(void *ptr, size_t size)
 {
    // AllocHook - a static function
+   // a special memory hook for Mac OS X memory zones.
+   // Triggered when memory is allocated.
+
    TMemStatMng* instance = TMemStatMng::GetInstance();
    // Restore all old hooks
    instance->Disable();
 
    // Call our routine
-   instance->AddPointer(ptr, Int_t(_size));
+   instance->AddPointer(ptr, Int_t(size));
 
    // Restore our own hooks
    instance->Enable();
@@ -179,6 +184,9 @@ void TMemStatMng::MacAllocHook(void *ptr, size_t _size)
 void TMemStatMng::MacFreeHook(void *ptr)
 {
    // AllocHook - a static function
+   // a special memory hook for Mac OS X memory zones.
+   // Triggered when memory is deallocated.
+
    TMemStatMng* instance = TMemStatMng::GetInstance();
    // Restore all old hooks
    instance->Disable();
@@ -194,6 +202,8 @@ void TMemStatMng::MacFreeHook(void *ptr)
 void *TMemStatMng::AllocHook(size_t size, const void* /*caller*/)
 {
    // AllocHook - a static function
+   // A glibc memory allocation hook.
+
    TMemStatMng* instance = TMemStatMng::GetInstance();
    // Restore all old hooks
    instance->Disable();
@@ -214,6 +224,8 @@ void *TMemStatMng::AllocHook(size_t size, const void* /*caller*/)
 void TMemStatMng::FreeHook(void* ptr, const void* /*caller*/)
 {
    // FreeHook - a static function
+   // A glibc memory deallocation hook.
+
    TMemStatMng* instance = TMemStatMng::GetInstance();
    // Restore all old hooks
    instance->Disable();
@@ -232,6 +244,8 @@ void TMemStatMng::FreeHook(void* ptr, const void* /*caller*/)
 void TMemStatMng::AddPointer(void *ptr, Int_t size)
 {
    // Add pointer to table.
+   // This method is called every time when any of the hooks are triggered.
+   // The memory de-/allocation information will is recorded.
 
    void *stptr[g_BTStackLevel + 1];
    const int stackentries = getBacktrace(stptr, g_BTStackLevel, fUseGNUBuiltinBacktrace);
@@ -244,12 +258,12 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    CRCSet_t::const_iterator found = fBTChecksums.find(crc);
    // TODO: define a proper default value
    Int_t btid = -1;
-   if(fBTChecksums.end() == found) {
+   if (fBTChecksums.end() == found) {
 
       // check the size of the BT array container
       int nbins = fHbtids->GetNbinsX();
       //check that the current allocation in fHbtids is enough, otherwise expend it with
-      if(fBTCount + stackentries + 1 >= nbins) {
+      if (fBTCount + stackentries + 1 >= nbins) {
          fHbtids->SetBins(nbins * 2, 0, 1);
       }
 
@@ -260,15 +274,15 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
 
       // add new BT's CRC value
       pair<CRCSet_t::iterator, bool> res = fBTChecksums.insert(CRCSet_t::value_type(crc, btid));
-      if(!res.second)
+      if (!res.second)
          Error("AddPointer", "Can't added new BTID to the container.");
 
-      for(int i = 0; i < stackentries; ++i) {
+      for (int i = 0; i < stackentries; ++i) {
          pointer_t func_addr = reinterpret_cast<pointer_t>(stptr[i]);
 
 
          // save all functions of this BT
-         if(fFAddrs.find(func_addr) < 0) {
+         if (fFAddrs.find(func_addr) < 0) {
             TString strFuncAddr;
             strFuncAddr += func_addr;
             TString strSymbolInfo;
@@ -282,7 +296,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
          Int_t idx = fFAddrs.find(reinterpret_cast<pointer_t>(stptr[i]));
          //TODO: in the error code prtint the address.
          // Acutally there must not be a case, when we can't find an index
-         if(idx < 0)
+         if (idx < 0)
             Error("AddPointer", "There is no index for a given BT function return address.");
          // even if we have -1 as an index we add it to the container
          btids[fBTCount++] = idx;
@@ -293,7 +307,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
       btid = found->second;
    }
 
-   if(btid < 0)
+   if (btid < 0)
       Error("AddPointer", "negative BT id");
 
    fTimeStamp.Set();

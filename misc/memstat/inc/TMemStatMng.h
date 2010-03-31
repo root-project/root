@@ -26,6 +26,7 @@ class TH1I;
 class TObjArray;
 
 namespace memstat {
+
    class TMemStatFAddrContainer {
       typedef std::map<pointer_t, Int_t> Container_t;
       typedef Container_t::iterator pos_type;
@@ -39,7 +40,7 @@ namespace memstat {
 
       Int_t find(pointer_t addr) {
          pos_type iter = fContainer.find(addr);
-         if(fContainer.end() == iter)
+         if (fContainer.end() == iter)
             return -1;
 
          return iter->second;
@@ -64,20 +65,20 @@ namespace memstat {
 
    public:
       //stack data members
-      void SetUseGNUBuiltinBacktrace(Bool_t _NewVal) {
-         fUseGNUBuiltinBacktrace = _NewVal;
+      void SetUseGNUBuiltinBacktrace(Bool_t newVal) {
+         fUseGNUBuiltinBacktrace = newVal;
       }
 
    protected:
-#if !defined(__APPLE__)      
+#if !defined(__APPLE__)
       TMemStatHook::MallocHookFunc_t fPreviousMallocHook;    //!old malloc function
       TMemStatHook::FreeHookFunc_t fPreviousFreeHook;        //!old free function
-#endif      
+#endif
       void Init();
       void AddPointer(void *ptr, Int_t size);    //add pointer to the table
       static void *AllocHook(size_t size, const void* /*caller*/);
       static void FreeHook(void* ptr, const void* /*caller*/);
-      static void MacAllocHook(void *ptr, size_t _size);
+      static void MacAllocHook(void *ptr, size_t size);
       static void MacFreeHook(void *ptr);
 
 
