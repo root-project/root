@@ -305,7 +305,8 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
                TGListTreeItem *item = fListTree->AddItem(fListLevel, name, obj, pic, pic);
                if ((pic != fFileIcon) && (pic != fCachedPic))
                   fClient->FreePicture(pic);
-               if (item) item->SetDNDSource(kTRUE);
+               if (item && obj && obj->InheritsFrom("TObject"))
+                  item->SetDNDSource(kTRUE);
             }
          }
       }
