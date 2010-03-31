@@ -131,7 +131,7 @@ TGMdiMainFrame::~TGMdiMainFrame()
 
       const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
-      if (main) {
+      if (main && main->InheritsFrom("TGMainFrame")) {
          Int_t keycode = gVirtualX->KeysymToKeycode(kKey_Tab);
          main->RemoveBind(this, keycode, kKeyControlMask);
          main->RemoveBind(this, keycode, kKeyControlMask | kKeyShiftMask);
