@@ -150,7 +150,7 @@ Int_t     gPS2ErrNb[50];
 Bool_t    gOptionR;
 Bool_t    gOptionK;
 TH2F     *gH2;
-TFile    *gFile;
+TFile    *gLocalFile;
 char      gCfile[16];
 char      outfile[16];
 char      gLine[80];
@@ -211,17 +211,17 @@ void stressGraphics(Int_t verbose = 0)
    gROOT->SetBatch();
 
    // Check if $ROOTSYS/tutorials/hsimple.root exists
-   gFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
-   if (gFile->IsZombie()) {
-      delete gFile;
-      gFile = new TFile("hsimple.root");
-      if (gFile->IsZombie()) {
-         delete gFile;
+   gLocalFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
+   if (gLocalFile->IsZombie()) {
+      delete gLocalFile;
+      gLocalFile = new TFile("hsimple.root");
+      if (gLocalFile->IsZombie()) {
+         delete gLocalFile;
          printf("Create $(ROOTSYS)/tutorials/hsimple.root\n");
          gROOT->Macro("$(ROOTSYS)/tutorials/hsimple.C");
-         gFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
-         if (gFile->IsZombie()) {
-            delete gFile;
+         gLocalFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
+         if (gLocalFile->IsZombie()) {
+            delete gLocalFile;
             printf("Could not create $(ROOTSYS)/tutorials/hsimple.root\n");
             return;
          }
@@ -2161,7 +2161,7 @@ void ntuple1()
    pad1->SetGrid();
    pad1->SetLogy();
    pad1->GetFrame()->SetFillColor(15);
-   TNtuple *ntuple = (TNtuple*)gFile->Get("ntuple");
+   TNtuple *ntuple = (TNtuple*)gLocalFile->Get("ntuple");
    ntuple->SetLineColor(1);
    ntuple->SetFillStyle(1001);
    ntuple->SetFillColor(45);
@@ -2374,7 +2374,7 @@ void zoomfit()
 
    TCanvas *C = StartTest(800,800);
 
-   TH1 *hpx = (TH1*)gFile->Get("hpx");
+   TH1 *hpx = (TH1*)gLocalFile->Get("hpx");
    hpx->Fit("gaus","q");
    hpx->GetXaxis()->SetRangeUser(.1,.3);
    gPad->Modified();
@@ -2396,7 +2396,7 @@ void parallelcoord()
 
    TCanvas *C = StartTest(800,700);
 
-   TNtuple *ntuple = (TNtuple*)gFile->Get("ntuple");
+   TNtuple *ntuple = (TNtuple*)gLocalFile->Get("ntuple");
 
    C->Divide(1,2);
 
@@ -2420,7 +2420,7 @@ void clonepad()
 
    TCanvas *C = StartTest(700,500);
 
-   TH1 *hpxpy = (TH1*)gFile->Get("hpxpy");
+   TH1 *hpxpy = (TH1*)gLocalFile->Get("hpxpy");
    hpxpy->Draw();
    TCanvas *C2 = (TCanvas*)C->DrawClone();
 
