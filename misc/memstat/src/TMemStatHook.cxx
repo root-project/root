@@ -44,7 +44,8 @@ using namespace std;
 //______________________________________________________________________________
 TMemStatHook::MallocHookFunc_t TMemStatHook::GetMallocHook()
 {
-   //malloc function getter
+   // GetMallocHook - a static function
+   // malloc function getter
 
 #if defined(SUPPORTS_MEMSTAT)
    return __malloc_hook;
@@ -56,7 +57,8 @@ TMemStatHook::MallocHookFunc_t TMemStatHook::GetMallocHook()
 //______________________________________________________________________________
 TMemStatHook::FreeHookFunc_t TMemStatHook::GetFreeHook()
 {
-   //free function getter
+   // GetFreeHook - a static function
+   // free function getter
 
 #if defined(SUPPORTS_MEMSTAT)
    return __free_hook;
@@ -68,6 +70,7 @@ TMemStatHook::FreeHookFunc_t TMemStatHook::GetFreeHook()
 //______________________________________________________________________________
 void TMemStatHook::SetMallocHook(MallocHookFunc_t p)
 {
+   // SetMallocHook - a static function
    // Set pointer to function replacing alloc function
 
 #if defined(SUPPORTS_MEMSTAT)
@@ -78,6 +81,7 @@ void TMemStatHook::SetMallocHook(MallocHookFunc_t p)
 //______________________________________________________________________________
 void TMemStatHook::SetFreeHook(FreeHookFunc_t p)
 {
+   // SetFreeHook - a static function
    // Set pointer to function replacing free function
 
 #if defined(SUPPORTS_MEMSTAT)
@@ -91,6 +95,7 @@ void TMemStatHook::SetFreeHook(FreeHookFunc_t p)
 void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t pm,
                                    zoneFreeHookFunc_t pf)
 {
+   // tracZoneMalloc - a static function
    // override the defualt Mac OS X memory zone
 
    malloc_zone_t* zone = malloc_default_zone();
@@ -114,6 +119,7 @@ void TMemStatHook::trackZoneMalloc(zoneMallocHookFunc_t pm,
 //______________________________________________________________________________
 void TMemStatHook::untrackZoneMalloc()
 {
+   // untrackZoneMalloc - a static function
    // set the defualt Mac OS X memory zone to original
 
    malloc_zone_t* zone = malloc_default_zone();
