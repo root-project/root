@@ -16,6 +16,8 @@
 #include "common.h"
 #include "value.h"
 
+#include <ios>
+
 extern "C" {
 
 //______________________________________________________________________________
@@ -2161,18 +2163,12 @@ int G__iosrdstate(G__value* pios)
 {
    // -- ios rdstate condition test
    G__value result;
-   int ig2;
    long store_struct_offset;
    int store_tagnum;
    int rdstateflag = 0;
 
    if (-1 != pios->tagnum && 'e' == G__struct.type[pios->tagnum]) return(pios->obj.i);
 
-   /* store member function call environment */
-   store_struct_offset = G__store_struct_offset;
-   store_tagnum = G__tagnum;
-   G__store_struct_offset = pios->obj.i;
-   G__tagnum = pios->tagnum;
 #ifdef G__ASM
    if (G__asm_noverflow) {
       // -- We are generating bytecode.
@@ -2207,35 +2203,42 @@ int G__iosrdstate(G__value* pios)
    }
 #endif // G__ASM
 
-   /* call ios::rdstate() */
-   result = G__getfunction("rdstate()", &ig2, G__TRYMEMFUNC);
-   if (ig2) rdstateflag = 1;
+   // Change member function call environment to passed object.
+   store_tagnum = G__tagnum;
+   G__tagnum = pios->tagnum;
+   store_struct_offset = G__store_struct_offset;
+   G__store_struct_offset = pios->obj.i;
 
-   if (0 == ig2) {
-      result = G__getfunction("operator int()", &ig2, G__TRYMEMFUNC);
-   }
-   if (0 == ig2) {
-      result = G__getfunction("operator bool()", &ig2, G__TRYMEMFUNC);
-   }
-   if (0 == ig2) {
-      result = G__getfunction("operator long()", &ig2, G__TRYMEMFUNC);
-   }
-   if (0 == ig2) {
-      result = G__getfunction("operator short()", &ig2, G__TRYMEMFUNC);
-   }
-   if (0 == ig2) {
-      result = G__getfunction("operator char*()", &ig2, G__TRYMEMFUNC);
-   }
-   if (0 == ig2) {
-      result = G__getfunction("operator const char*()", &ig2, G__TRYMEMFUNC);
+   // Try to call basic_ios::rdstate().
+   // FIXME: We are supposed to use basic_ios::fail() here!
+   int known = 0;
+   result = G__getfunction("rdstate()", &known, G__TRYMEMFUNC);
+   if (known) { // If rdstate() existed, remember that.
+      rdstateflag = 1;
    }
 
-   /* restore environment */
-   G__store_struct_offset = store_struct_offset;
-   G__tagnum = store_tagnum;
+   // If no basic_ios::rdstate(), try other things.
+   if (!known) {
+      result = G__getfunction("operator int()", &known, G__TRYMEMFUNC);
+   }
+   if (!known) {
+      result = G__getfunction("operator bool()", &known, G__TRYMEMFUNC);
+   }
+   if (!known) {
+      result = G__getfunction("operator long()", &known, G__TRYMEMFUNC);
+   }
+   if (!known) {
+      result = G__getfunction("operator short()", &known, G__TRYMEMFUNC);
+   }
+   if (!known) {
+      result = G__getfunction("operator char*()", &known, G__TRYMEMFUNC);
+   }
+   if (!known) {
+      result = G__getfunction("operator const char*()", &known, G__TRYMEMFUNC);
+   }
 
 #ifdef G__ASM
-   if (G__asm_noverflow && rdstateflag) {
+   if (G__asm_noverflow) {
       // -- 
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
@@ -2251,6 +2254,56 @@ int G__iosrdstate(G__value* pios)
 #endif // G__ASM_DBG
       G__asm_inst[G__asm_cp] = G__POPSTROS;
       G__inc_cp_asm(1, 0);
+   }
+#endif // G__ASM
+
+   // Restore member function call environment.
+   G__store_struct_offset = store_struct_offset;
+   G__tagnum = store_tagnum;
+
+   if (!known) {
+      G__genericerror("Limitation: Cint does not support full iostream functionality in this platform");
+      return 0;
+   }
+
+   if (!rdstateflag) {
+      return result.obj.i;
+   }
+
+#ifdef G__ASM
+   if (G__asm_noverflow) {
+      // -- 
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(
+              G__serr
+            , "%3x,%3x: LD std::ios_base::failbit | std::ios_base::badbit  %s:%d\n"
+            , G__asm_cp
+            , G__asm_dt
+            , __FILE__
+            , __LINE__
+         );
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__LD;
+      G__asm_inst[G__asm_cp+1] = G__asm_dt;
+      G__letint(&G__asm_stack[G__asm_dt], 'i', (long) (std::ios_base::failbit | std::ios_base::badbit));
+      G__inc_cp_asm(2, 1);
+#ifdef G__ASM_DBG
+      if (G__asm_dbg) {
+         G__fprinterr(
+              G__serr
+            , "%3x,%3x: OP2 '&'  %s:%d\n"
+            , G__asm_cp
+            , G__asm_dt
+            , __FILE__
+            , __LINE__
+         );
+      }
+#endif // G__ASM_DBG
+      G__asm_inst[G__asm_cp] = G__OP2;
+      G__asm_inst[G__asm_cp+1] = '&';
+      G__inc_cp_asm(2, 0);
 #ifdef G__ASM_DBG
       if (G__asm_dbg) {
          G__fprinterr(
@@ -2269,15 +2322,7 @@ int G__iosrdstate(G__value* pios)
    }
 #endif // G__ASM
 
-   /* test result */
-   if (ig2) {
-      if (rdstateflag) return(!result.obj.i);
-      else            return(result.obj.i);
-   }
-   else {
-      G__genericerror("Limitation: Cint does not support full iostream functionality in this platform");
-      return(0);
-   }
+   return !(result.obj.i & (std::ios_base::failbit | std::ios_base::badbit));
 }
 #endif // G__VIRTUALBASE
 
