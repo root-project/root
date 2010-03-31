@@ -139,7 +139,7 @@ extern "C" void G__cpp_setup_memvarManualBase4() {
 *********************************************************/
 static void G__setup_memfuncTDirectory(void) {
    /* TDirectory */
-   G__tag_memfunc_setup(G__get_linked_tagnum(&G__ManualBase4LN_TDirectory));
+   G__tag_memfunc_setup(G__get_linked_tagnum_fwd(&G__ManualBase4LN_TDirectory));
    G__memfunc_setup("WriteObject",1122,G__ManualBase4_101_0_97, 105, -1, G__defined_typename("Int_t"), 0, 4, 1, 1, 0, 
 "Y - - 10 - obj C - - 10 - name "
 "C - 'Option_t' 10 '\"\"' option i - 'Int_t' 0 '0' bufsize", (char*)NULL, (void*) NULL, 0);
@@ -186,10 +186,10 @@ static void G__cpp_setup_func1() {
 }
 
 static void G__cpp_setup_func2() {
-   G__memfunc_setup("operator>>", 1000, G__ManualBase4__0_211, 117, G__get_linked_tagnum(&G__ManualBase4LN_TBuffer), -1, 1, 2, 1, 1, 0, 
+   G__memfunc_setup("operator>>", 1000, G__ManualBase4__0_211, 117, G__get_linked_tagnum_fwd(&G__ManualBase4LN_TBuffer), -1, 1, 2, 1, 1, 0, 
 "u 'TBuffer' - 1 - buf Y - - 1 - obj", (char*) NULL
 , (void*) NULL, 0);
-   G__memfunc_setup("operator<<", 996, G__ManualBase4__0_212, 117, G__get_linked_tagnum(&G__ManualBase4LN_TBuffer), -1, 1, 2, 1, 1, 0, 
+   G__memfunc_setup("operator<<", 996, G__ManualBase4__0_212, 117, G__get_linked_tagnum_fwd(&G__ManualBase4LN_TBuffer), -1, 1, 2, 1, 1, 0, 
 "u 'TBuffer' - 1 - buf Y - - 10 - obj", (char*) NULL
 , (void*) NULL, 0);
 
@@ -219,8 +219,8 @@ extern "C" void G__cpp_reset_tagtableManualBase4() {
 extern "C" void G__cpp_setup_tagtableManualBase4() {
 
    /* Setting up class,struct,union tag entry */
-   G__get_linked_tagnum(&G__ManualBase4LN_TBuffer);
-   G__tagtable_setup(G__get_linked_tagnum(&G__ManualBase4LN_TDirectory),sizeof(TDirectory),-1,65280,"Describe directory structure in memory",NULL,G__setup_memfuncTDirectory);
+   G__get_linked_tagnum_fwd(&G__ManualBase4LN_TBuffer);
+   G__tagtable_setup(G__get_linked_tagnum_fwd(&G__ManualBase4LN_TDirectory),sizeof(TDirectory),-1,65280,"Describe directory structure in memory",NULL,G__setup_memfuncTDirectory);
 }
 extern "C" void G__cpp_setupManualBase4(void) {
    G__check_setup_version(30051515,"G__cpp_setupManualBase4()");

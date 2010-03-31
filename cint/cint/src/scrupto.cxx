@@ -311,6 +311,7 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
 #ifdef G__SHAREDLIB
    while (nperm) {
       --nperm;
+      ++G__srcfile_serial;  // just in case the re-init of the dictionary triggers some autoloading.
       G__srcfile[G__nfile++] = permanentsl[nperm];
       if (permanentsl[nperm].initsl) {
          G__input_file store_ifile = G__ifile;
