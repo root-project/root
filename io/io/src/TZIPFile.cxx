@@ -163,8 +163,8 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
    UInt_t   dirdisk = Get(buf + kEND_DIR_DISK_OFF,   kEND_DIR_DISK_LEN);
    UInt_t   dhdrs   = Get(buf + kEND_DISK_HDRS_OFF,  kEND_DISK_HDRS_LEN);
    UInt_t   thdrs   = Get(buf + kEND_TOTAL_HDRS_OFF, kEND_TOTAL_HDRS_LEN);
-   Long64_t diroff  = Get(buf + kEND_DIR_OFFSET_OFF, kEND_DIR_OFFSET_LEN);
    Long64_t dirsz   = Get(buf + kEND_DIR_SIZE_OFF,   kEND_DIR_SIZE_LEN);
+   Long64_t diroff  = Get(buf + kEND_DIR_OFFSET_OFF, kEND_DIR_OFFSET_LEN);
    Int_t    commlen = Get(buf + kEND_COMMENTLEN_OFF, kEND_COMMENTLEN_LEN);
 
    if (disk != 0 || dirdisk != 0 || dhdrs != thdrs || diroff + dirsz != pos) {
@@ -241,8 +241,8 @@ Int_t TZIPFile::ReadDirectory()
           disk != 0 ||
           csize < 0 ||
           usize < 0 ||
-          csize > kMaxInt ||
-          usize > kMaxInt) {
+          csize > kMaxUInt ||
+          usize > kMaxUInt) {
          Error("ReadDirectory", "inconsistency in directory data in %s",
                fArchiveName.Data());
          return -1;
