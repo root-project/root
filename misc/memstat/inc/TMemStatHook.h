@@ -20,19 +20,18 @@
 #ifndef __CINT__
 #include <malloc/malloc.h>
 #endif
-typedef void (*zoneMallocHookFunc_t)(void *ptr, size_t _size);
-typedef void (*zoneFreeHookFunc_t)(void* ptr);
+typedef void (*zoneMallocHookFunc_t)(void *ptr, size_t size);
+typedef void (*zoneFreeHookFunc_t)(void *ptr);
 #endif
 
 class TMemStatHook {
 public:
 #if !defined(__APPLE__)
-  //
+   //
    // Memory management HOOK functions
    //
    typedef void*(*MallocHookFunc_t)(size_t size, const void *caller);
-   typedef void (*FreeHookFunc_t)(void* ptr, const void *caller);
-
+   typedef void (*FreeHookFunc_t)(void *ptr, const void *caller);
 
    static MallocHookFunc_t GetMallocHook();         // malloc function getter
    static FreeHookFunc_t   GetFreeHook();           // free function getter
@@ -42,7 +41,7 @@ public:
    //
    // Public methods for Mac OS X
    //
-   static void trackZoneMalloc(zoneMallocHookFunc_t _pm, zoneFreeHookFunc_t _pf);
+   static void trackZoneMalloc(zoneMallocHookFunc_t pm, zoneFreeHookFunc_t pf);
    static void untrackZoneMalloc();
 #endif
 };
