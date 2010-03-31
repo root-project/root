@@ -13,13 +13,13 @@
 
 class TMemStat: public TObject {
 private:
-   Bool_t fIsActive;              // is object attached to MemStat
+   Bool_t fIsActive;    // is object attached to MemStat
 
 public:
    TMemStat(Option_t* option = "read");
    virtual ~TMemStat();
 
-   ClassDef(TMemStat, 0) // a user interface class of yams
+   ClassDef(TMemStat, 0) // a user interface class of MemStat
 };
 
 #endif

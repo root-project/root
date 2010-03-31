@@ -26,13 +26,10 @@ _INIT_TOP_STACK;
 TMemStat::TMemStat(Option_t* option): fIsActive(kFALSE)
 {
    // Supported options:
-   //    "new" - start to collect memory allocations stamps
-   //    "read" - analyze previously collected data
-   //    "gnubuiltin" - if declared, then YAMS will use gcc build-in function,
+   //    "gnubuiltin" - if declared, then MemStat will use gcc build-in function,
    //                      otherwise glibc backtrace will be used
    //
-   // Default: "read"
-   // Note: Currently YAMS uses a hard-coded output file name (for writing) = "memstat.root";
+   // Note: Currently MemStat uses a hard-coded output file name (for writing) = "memstat.root";
 
    // It marks the highest used stack address.
    _GET_CALLER_FRAME_ADDR;
@@ -60,7 +57,7 @@ TMemStat::TMemStat(Option_t* option): fIsActive(kFALSE)
 //______________________________________________________________________________
 TMemStat::~TMemStat()
 {
-   if(fIsActive) {
+   if (fIsActive) {
       TMemStatMng::GetInstance()->Disable();
       TMemStatMng::GetInstance()->Close();
    }
