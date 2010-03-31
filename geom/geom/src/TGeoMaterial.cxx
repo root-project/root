@@ -260,7 +260,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       if (radlen>0) Error("SetRadLen","Invalid material %s: a=%f z=%f -> user values taken: radlen=%f intlen=%f",fA,fZ,radlen,intlen);
    }
    // Compute interaction length using the same formula as in GEANT4
-   if (fA > 0 && fZ > 0 && intlen>=0) {
+   if (fA > 0.1 && fZ > 0.1 && intlen>=0) {
       const Double_t cm = 1.;
       const Double_t g = 6.2415e21; // [gram = 1E-3*joule*s*s/(m*m)]
       const Double_t amu = 1.03642688246781065e-02; // [MeV/c^2]
