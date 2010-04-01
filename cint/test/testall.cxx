@@ -989,6 +989,7 @@ int main(int argc, char** argv)
    ret += ci(kLangCXX, "TException.cxx", difffile);
    ret += mkci(kLangCXX, "enums.cxx", "enums.h", difffile);
    ret += io("classinfo.cxx", "classinfo.ref", difffile);
+   ret += ci(kLangCXX, "iostream_state.cxx", difffile);
 
    printf("Summary==================================================\n");
    cat(stdout, difffile);
