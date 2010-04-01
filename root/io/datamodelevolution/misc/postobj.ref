@@ -1,0 +1,7 @@
+
+Processing runpostobj.C...
+Number of array elements: 4
+OBJ: TNamed	aaa	AAAAAAAA
+OBJ: SomeClass	bbb	Class with a name.
+OBJ: TNamed	ccc	CCCCCCCC
+OBJ: SomeClass	ddd	Class with a name.
