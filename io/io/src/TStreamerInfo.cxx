@@ -3898,7 +3898,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          TStreamerElement *el;
          for (Int_t i = 0; i < nobjects; i++) {
             el = (TStreamerElement*)fElements->UncheckedAt(i);
-            if( el != 0 && (el->IsA() == TStreamerArtificial::Class() || el->TestBit(TStreamerElement::kCache))) {
+            if( el != 0 && (el->IsA() == TStreamerArtificial::Class() || el->TestBit(TStreamerElement::kRepeat))) {
                fElements->RemoveAt( i );
             }
          }
