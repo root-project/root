@@ -25,6 +25,8 @@ class TEveCaloLego;
 
 class TEveCaloLegoGL : public TGLObject
 {
+   friend class TEveCaloLegoOverlay;
+
 private:
    struct Cell2D_t
    {
@@ -86,6 +88,8 @@ private:
 
    mutable SliceDLMap_t              fDLMap;
    mutable Bool_t                    fCells3D;
+
+   mutable Int_t                     fBinStep;
 
    TEveCaloLegoGL(const TEveCaloLegoGL&);            // Stop default
    TEveCaloLegoGL& operator=(const TEveCaloLegoGL&); // Stop default

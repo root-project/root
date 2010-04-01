@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TEveCaloLegoOverlay.h"
+#include "TEveCaloLegoGL.h"
 
 #include "TAxis.h"
 #include "TColor.h"
@@ -20,6 +21,7 @@
 #include "TGLIncludes.h"
 #include "TGLSelectRecord.h"
 #include "TGLUtil.h"
+#include "TGLViewerBase.h"
 #include "TGLCamera.h"
 #include "TGLAxisPainter.h"
 #include "TGLFontManager.h"
@@ -634,11 +636,13 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
       TGLVertex3 p;
       TGLVector3 res = cam.WorldDeltaToViewport(p, rng);
 
-      if (fShowScales)
+      TEveCaloLegoGL* lgl = dynamic_cast<TEveCaloLegoGL*>(rnrCtx.RefViewer().FindLogicalInScenes(fCalo));
+      if (fShowScales && lgl)
       {
+
          // get smallest bin
          Double_t sq = 1e4;
-         if (fCalo->fBinStep == 1)
+         if (lgl->fBinStep == 1)
          {
             TEveCaloData::CellData_t cellData;
             for ( TEveCaloData::vCellId_t::iterator i = fCalo->fCellList.begin(); i != fCalo->fCellList.end(); ++i)
@@ -666,7 +670,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
                if (sq > a->GetBinWidth(i)) sq = a->GetBinWidth(i);
             }
 
-            sq *= fCalo->fBinStep;
+            sq *= lgl->fBinStep;
          }
          fCellX = (res.X()*sq)/(fCalo->GetEtaRng()*1.*cam.RefViewport().Width());
          fCellY = (res.Y()*sq)/(fCalo->GetPhiRng()*1.*cam.RefViewport().Height());

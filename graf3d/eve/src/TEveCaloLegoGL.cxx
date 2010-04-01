@@ -51,7 +51,8 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fZAxis(0),
    fM(0),
    fDLCacheOK(kFALSE),
-   fCells3D(kTRUE)
+   fCells3D(kTRUE),
+   fBinStep(-1)
 {
    // Constructor.
 
@@ -692,12 +693,12 @@ void TEveCaloLegoGL::RebinAxis(TAxis *orig, TAxis *curr) const
    Double_t bc     = orig->GetBinCenter(idx0);
    if (bc > center) --idx0;
 
-   Int_t nbR = TMath::FloorNint(idx0/fM->fBinStep) + TMath::FloorNint((orig->GetNbins() - idx0)/fM->fBinStep);
-   Int_t off = idx0 - TMath::FloorNint(idx0/fM->fBinStep)*fM->fBinStep;
+   Int_t nbR = TMath::FloorNint(idx0/fBinStep) + TMath::FloorNint((orig->GetNbins() - idx0)/fBinStep);
+   Int_t off = idx0 - TMath::FloorNint(idx0/fBinStep)*fBinStep;
    std::vector<Double_t> bins(nbR + 1);
    for (Int_t i = 0; i <= nbR; ++i)
    {
-      bins[i] = orig->GetBinUpEdge(off + i*fM->fBinStep);
+      bins[i] = orig->GetBinUpEdge(off + i*fBinStep);
    }
    curr->Set(nbR, &bins[0]);
 }
@@ -1087,11 +1088,11 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
 
    // prepare rebin for 2D or 3D if necessary
    TEveCaloData::RebinData_t rebinDataSelected;
-   if (fM->fBinStep > 1)
+   if (fBinStep > 1)
    {
       fM->fData->Rebin(fEtaAxis, fPhiAxis, cellsSelected, fM->fPlotEt, rebinDataSelected);
       if (fM->fNormalizeRebin) {
-         Float_t scale = 1.f / (fM->fBinStep * fM->fBinStep);
+         Float_t scale = 1.f / (fBinStep * fBinStep);
          for (std::vector<Float_t>::iterator it = rebinDataSelected.fSliceData.begin(); it != rebinDataSelected.fSliceData.end(); it++)
             (*it) *= scale;
       }
@@ -1102,7 +1103,7 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
       Int_t   prevTower = 0;
       Float_t offset    = 0;
       Int_t   nSlices   = fM->fData->GetNSlices();
-      if (fM->fBinStep == 1)
+      if (fBinStep == 1)
       {
          TEveCaloData::vCellId_i      j = cellsSelected.begin();
          for (TEveCaloData::vCellId_i i = fM->fCellList.begin(); i != fM->fCellList.end(); ++i) {
@@ -1163,7 +1164,7 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
    else
    {
       vCell2D_t cells2DSelected;
-      if (fM->fBinStep == 1)
+      if (fBinStep == 1)
       {
          // could be exact and call
          // PrepareCell2DData( fM->fData->GetCellsSelected(), cells2DSelected);
@@ -1216,16 +1217,16 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    Int_t new_bin_step = GetGridStep(rnrCtx);
 
    // rebin data
-   if (fM->AssertCellIdCache() || fM->fBinStep != new_bin_step)
+   if (fM->AssertCellIdCache() || fBinStep != new_bin_step)
    {
-      fM->fBinStep = new_bin_step;
+      fBinStep = new_bin_step;
       fDLCacheOK   = kFALSE;
       fRebinData.Clear();
 
       RebinAxis(fM->fData->GetEtaBins(), fEtaAxis);
       RebinAxis(fM->fData->GetPhiBins(), fPhiAxis);
 
-      if (fM->fBinStep > 1)
+      if (fBinStep > 1)
       {
          fM->fData->Rebin(fEtaAxis, fPhiAxis, fM->fCellList, fM->fPlotEt, fRebinData);
 
@@ -1242,7 +1243,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 
          if (fM->fNormalizeRebin)
          {
-            Float_t scale = 1.f / (fM->fBinStep * fM->fBinStep);
+            Float_t scale = 1.f / (fBinStep * fBinStep);
             for (std::vector<Float_t>::iterator it = fRebinData.fSliceData.begin(); it != fRebinData.fSliceData.end(); it++)
             {
                (*it) *= scale;
@@ -1304,7 +1305,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       {
          if (fDLCacheOK == kFALSE)
          {
-            if (fM->fBinStep == 1)
+            if (fBinStep == 1)
                Make3DDisplayList(fM->fCellList, fDLMap, kTRUE);
             else
                Make3DDisplayListRebin(fRebinData, fDLMap, kTRUE);
@@ -1319,7 +1320,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          glDisable(GL_LIGHTING);
 
          fCells2D.clear();
-         if (fM->fBinStep == 1)
+         if (fBinStep == 1)
             PrepareCell2DData(fM->fCellList, fCells2D);
          else
             PrepareCell2DDataRebin(fRebinData, fCells2D);
@@ -1370,7 +1371,7 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
       cellID = rec.GetItem(2);
       Int_t slice  = rec.GetItem(1);
 
-      if (fM->fBinStep == 1)
+      if (fBinStep == 1)
       {
          Int_t tower = fM->fCellList[cellID].fTower;
          while (cellID > 0 && tower == fM->fCellList[cellID].fTower)
