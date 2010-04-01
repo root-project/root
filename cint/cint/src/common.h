@@ -990,8 +990,7 @@ struct G__params {
    : fparams(0)
    {
    }
-   ~G__params()
-   {
+   void reset() {
       struct G__paramfunc* params = fparams;
       struct G__paramfunc* next = 0;
       for (; params; params = next) {
@@ -1013,7 +1012,11 @@ struct G__params {
          params->next = 0;
          free(params);
       }
-      fparams = 0;
+      fparams = 0;      
+   }
+   ~G__params()
+   {
+      reset();
    }
    struct G__paramfunc* operator[](int idx)
    {
@@ -1053,8 +1056,14 @@ struct G__ifunc_table {
    }
 #endif
 };
-
 struct G__ifunc_table_internal {
+#ifdef __cplusplus
+   G__ifunc_table_internal() : inited(true) {};
+#endif
+   
+  /* true if the constructor was run */
+  char inited;
+   
   /* number of interpreted function */
   int allifunc;
 

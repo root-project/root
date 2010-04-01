@@ -896,11 +896,10 @@ void TClass::Init(const char *name, Version_t cversion,
    // Advertise ourself as the loading class for this class name
    TClass::AddClass(this);
 
-   Bool_t isStl = kFALSE;
+   Bool_t isStl = TClassEdit::IsSTLCont(name);
 
    if (!fClassInfo) {
       Bool_t shouldLoad = kFALSE;
-      isStl = TClassEdit::IsSTLCont(name);
 
       if (gInterpreter->CheckClassInfo(name)) shouldLoad = kTRUE;
       else if (fImplFileLine>=0) {
@@ -999,9 +998,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
    ResetBit(kLoading);
 
-   Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
-
-   if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
+   if ( isStl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
       fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName() );
       if (fCollectionProxy) {
          fSizeof = fCollectionProxy->Sizeof();
@@ -2079,6 +2076,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
+   TClassEdit::TSplitType splitname( name );
+ 
    if (!cl) {
       TString resolvedName = TClassEdit::ResolveTypedef(name,kTRUE).c_str();
       cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName);
@@ -2091,7 +2090,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
 
-      if (TClassEdit::IsSTLCont(name)) {
+      if (splitname.IsSTLCont()) {
 
          const char *altname = gCint->GetInterpreterTypeName(name);
          if (altname && strcmp(altname,name)!=0) {
@@ -2112,7 +2111,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    } else {
 
-      if (!TClassEdit::IsSTLCont(name)) {
+      if (!splitname.IsSTLCont()) {
 
          // If the name is actually an STL container we prefer the
          // short name rather than the true name (at least) in
@@ -2158,7 +2157,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       || ( strncmp(name,"std::",5)==0 && ((strcmp(name+5,"string")==0)||(strcmp(name+5,full_string_name)==0)))) {
       return TClass::GetClass("string");
    }
-   if (TClassEdit::IsSTLCont(name)) {
+   if (splitname.IsSTLCont()) {
 
       return gROOT->FindSTLClass(name,kTRUE,silent);
 

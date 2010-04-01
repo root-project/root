@@ -179,6 +179,7 @@ static void G__do_not_include()
   G__srcfile[G__nfile].included_from = -1;
 
   ++G__nfile;
+  ++G__srcfile_serial;
 
   return;
 }

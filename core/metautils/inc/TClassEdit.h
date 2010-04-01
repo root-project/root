@@ -55,6 +55,17 @@ namespace TClassEdit {
       kEnd      = 9
    };
 
+   struct TSplitType {
+      
+      const char *fName; // Original spelling of the name.
+      std::vector<std::string> fElements;
+      int fNestedLocation; // Stores the location of the tail (nested names) in nestedLoc (0 indicates no tail).
+
+      TSplitType(const char *type2split);
+
+      int  IsSTLCont(int testAlloc=0) const;
+      void ShortType(std::string &answer, int mode);
+   };
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
    bool        IsDefAlloc(const char *alloc, const char *classname);

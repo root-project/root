@@ -55,18 +55,19 @@ class TEnv;
 class TCint : public TInterpreter {
 
 private:
-   Int_t           fMore;           //1 if more input is required
-   Int_t           fExitCode;       //value passed to exit() in interpreter
-   char            fPrompt[64];     //proposed prompt string
-   G__dictposition fDictPos;        //CINT dictionary context after init
-   G__dictposition fDictPosGlobals; //CINT dictionary context after ResetGlobals()
-   TString         fSharedLibs;     //list of shared libraries loaded by G__loadfile
-   TString         fIncludePath;    //list of CINT include paths
-   TString         fRootmapLoadPath;//dynamic load path used for loading rootmap files
-   TEnv           *fMapfile;        //map of classes and libraries
-   TObjArray      *fRootmapFiles;   //list of non-default rootmap files loaded
-   Bool_t          fLockProcessLine;//true if ProcessLine should lock gCINTMutex
-   static void    *fgSetOfSpecials; //set of TObject*s used in CINT variables
+   Int_t           fMore;            //1 if more input is required
+   Int_t           fExitCode;        //value passed to exit() in interpreter
+   char            fPrompt[64];      //proposed prompt string
+   G__dictposition fDictPos;         //CINT dictionary context after init
+   G__dictposition fDictPosGlobals;  //CINT dictionary context after ResetGlobals()
+   TString         fSharedLibs;      //list of shared libraries loaded by G__loadfile
+   Int_t           fSharedLibsSerial;//Indicator of the last time we set fSharedLibs
+   TString         fIncludePath;     //list of CINT include paths
+   TString         fRootmapLoadPath; //dynamic load path used for loading rootmap files
+   TEnv           *fMapfile;         //map of classes and libraries
+   TObjArray      *fRootmapFiles;    //list of non-default rootmap files loaded
+   Bool_t          fLockProcessLine; //true if ProcessLine should lock gCINTMutex
+   static void    *fgSetOfSpecials;  //set of TObject*s used in CINT variables
 
    TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(),
      fSharedLibs(), fIncludePath(), fRootmapLoadPath(), fMapfile(0),

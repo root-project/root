@@ -59,23 +59,28 @@ namespace Cint {
          return(var);
       }
       
-      void Set(G__var_array* invar, int index) {
+      void Set(G__var_array* invar, int index, int index_of_invar = -1) {
          // Set this member to point to the given variable.
          // This function is used in one of the constructors and must not be virtual
+         // If index_of_invar is given, rather than recalculating we trust this index.
          
          if (!invar) return;
          
          fIndex = index;
          fTagnum = invar->tagnum;
-         G__var_array *var = 0;
-         if (fTagnum >= 0) {
-            var = G__struct.memvar[fTagnum];
+         if (index_of_invar >= 0) {
+            fMemvarNum = index_of_invar;
          } else {
-            var = &G__global;
-         }
-         for(int i = 0 ; var != 0; var = var->next, ++i) {
-            if (var == invar) {
-               fMemvarNum = i;
+            G__var_array *var = 0;
+            if (fTagnum >= 0) {
+               var = G__struct.memvar[fTagnum];
+            } else {
+               var = &G__global;
+            }
+            for(int i = 0 ; var != 0; var = var->next, ++i) {
+               if (var == invar) {
+                  fMemvarNum = i;
+               }
             }
          }
       }

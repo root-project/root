@@ -209,6 +209,8 @@ G__SourceFileInfo {
   long Property();
   int IsValid();
   int Next();
+
+  static int SerialNumber();
  private:
   int filen;
 };

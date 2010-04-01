@@ -1059,6 +1059,7 @@ int G__loadfile_tmpfile(FILE *fp)
   G__srcfile[fentry].slindex = -1;
 
   ++G__nfile;
+  ++G__srcfile_serial;
 
   if(G__debugtrace) {
     G__fprinterr(G__serr,"LOADING tmpfile\n");
@@ -2115,7 +2116,7 @@ int G__loadfile(const char *filenamein)
      ********************************************/
     if(null_entry == -1) {
       fentry = G__nfile;
-      // G__nfile++; after we've stored the dict pos!
+      // ++G__nfile; after we've stored the dict pos!
     }
     else {
       fentry=null_entry;
@@ -2127,7 +2128,8 @@ int G__loadfile(const char *filenamein)
       = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
     G__store_dictposition(G__srcfile[fentry].dictpos);
     if(null_entry == -1) {
-      G__nfile++;
+       ++G__nfile;
+       ++G__srcfile_serial;
     }
 
     /***************************************************
@@ -2430,7 +2432,8 @@ int  G__setfilecontext(const char* filename, G__input_file* ifile)
          = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
       G__store_dictposition(G__srcfile[fentry].dictpos);
       if (null_entry == -1) {
-         G__nfile++;
+         ++G__nfile;
+         ++G__srcfile_serial;
       }
 
 #ifdef G__SECURITY
@@ -3043,6 +3046,7 @@ int G__register_sharedlib(const char *libname)
    } else {
       fentry = G__nfile;
       ++G__nfile;
+      ++G__srcfile_serial;
    }
  
    G__srcfile[fentry].dictpos
@@ -3141,6 +3145,7 @@ int G__unregister_sharedlib(const char *libname)
       while(G__nfile && G__srcfile[G__nfile-1].filename==0) {
          --G__nfile;
       }
+      ++G__srcfile_serial;
    }
    
    G__UnlockCriticalSection(); 

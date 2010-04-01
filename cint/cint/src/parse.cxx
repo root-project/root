@@ -308,6 +308,7 @@ static int G__setline(G__FastAllocString& statement, int c, int* piout)
                      G__srcfile[G__nfile].hasonlyfunc = 0;
                      G__ifile.filenum = G__nfile;
                      ++G__nfile;
+                     ++G__srcfile_serial;
                   }
                }
             }

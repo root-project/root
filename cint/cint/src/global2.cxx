@@ -54,6 +54,7 @@ G__dictgenmode G__dicttype = kCompleteDictionary;
 struct G__filetable G__srcfile[G__MAXFILE];
 #endif
 int G__nfile;
+int G__srcfile_serial;
 int G__nobreak;
 char G__breakline[G__MAXNAME];
 char G__breakfile[G__MAXFILENAME];

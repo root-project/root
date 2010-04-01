@@ -1709,8 +1709,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    static int recCall = 0;
 
    // don't load libraries that have already been loaded
-   TString libs = GetLibraries();
-   TString moduleBasename = BaseName(module);
+   TString libs( GetLibraries() );
+   TString moduleBasename( BaseName(module) );
    TString l(moduleBasename);
 
    Ssiz_t idx = l.Last('.');
@@ -1967,9 +1967,10 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    //   L: list the .dylib rather than the .so (this is intended for linking)
    //      This options is not the default
 
-   fListLibs = "";
-   TString libs = "";
-   TString opt = options;
+   fListLibs.Clear();
+
+   TString libs;
+   TString opt(options);
    Bool_t so2dylib = (opt.First('L') != kNPOS);
    if (so2dylib)
       opt.ReplaceAll("L", "");
@@ -2009,31 +2010,41 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
          libs = slinked;
       } else {
          // We need to add the missing linked library
-         TRegexp separator("[^ \\t\\s]+");
-         Ssiz_t start, index, end;
-         start = index = end = 0;
 
-         while ((start < slinked.Length()) && (index != kNPOS)) {
-            index = slinked.Index(separator,&end,start);
-            if (index >= 0) {
-               TString sub = slinked(index,end);
-               if (sub[0]=='-' && sub[1]=='L') {
-                  libs.Prepend(" ");
-                  libs.Prepend(sub);
-               } else {
-                  if (libs.Index(sub) == kNPOS) {
-                     libs.Prepend(" ");
-                     libs.Prepend(sub);
+         static TString lastLinked;
+         static TString lastAddMissing;
+         if ( lastLinked != slinked ) {
+            // Recalculate only if there was a change.
+            static TRegexp separator("[^ \\t\\s]+");
+            lastLinked = slinked;
+            lastAddMissing.Clear();
+
+            Ssiz_t start, index, end;
+            start = index = end = 0;
+            
+            while ((start < slinked.Length()) && (index != kNPOS)) {
+               index = slinked.Index(separator,&end,start);
+               if (index >= 0) {
+                  TString sub = slinked(index,end);
+                  if (sub[0]=='-' && sub[1]=='L') {
+                     lastAddMissing.Prepend(" ");
+                     lastAddMissing.Prepend(sub);
+                  } else {
+                     if (libs.Index(sub) == kNPOS) {
+                        lastAddMissing.Prepend(" ");
+                        lastAddMissing.Prepend(sub);
+                     }
                   }
                }
+               start += end+1;
             }
-            start += end+1;
          }
+         libs.Prepend(lastAddMissing);
       }
    } else if (libs.Length() != 0) {
       // Let remove the statically linked library
       // from the list.
-      TRegexp separator("[^ \\t\\s]+");
+      static TRegexp separator("[^ \\t\\s]+");
       Ssiz_t start, index, end;
       start = index = end = 0;
 
@@ -2052,7 +2063,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
 
    // Select according to regexp
    if (regexp && *regexp) {
-      TRegexp separator("[^ \\t\\s]+");
+      static TRegexp separator("[^ \\t\\s]+");
       TRegexp user_re(regexp, kTRUE);
       TString s;
       Ssiz_t start, index, end;
@@ -2079,8 +2090,8 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
       TString libs2 = fListLibs;
       TString maclibs;
 
-      TRegexp separator("[^ \\t\\s]+");
-      TRegexp user_so("\\.so$");
+      static TRegexp separator("[^ \\t\\s]+");
+      static TRegexp user_so("\\.so$");
 
       Ssiz_t start, index, end;
       start = index = end = 0;

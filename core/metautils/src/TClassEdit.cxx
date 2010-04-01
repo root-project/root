@@ -20,6 +20,239 @@
 namespace std {} using namespace std;
 
 //______________________________________________________________________________
+TClassEdit::TSplitType::TSplitType(const char *type2split) : fName(type2split), fNestedLocation(0)
+{
+   // Primary constructor.
+
+   TClassEdit::GetSplit(type2split, fElements, fNestedLocation);
+}
+
+//______________________________________________________________________________
+int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
+{
+   //  type     : type name: vector<list<classA,allocator>,allocator>
+   //  testAlloc: if true, we test allocator, if it is not default result is negative
+   //  result:    0          : not stl container
+   //             abs(result): code of container 1=vector,2=list,3=deque,4=map
+   //                           5=multimap,6=set,7=multiset
+   //             positive val: we have a vector or list with default allocator to any depth
+   //                   like vector<list<vector<int>>>
+   //             negative val: STL container other than vector or list, or non default allocator
+   //                           For example: vector<deque<int>> has answer -1
+
+   
+   if (fElements[0].empty()) return 0;
+   int numb = fElements.size();
+   if (!fElements[numb-1].empty() && fElements[numb-1][0]=='*') --numb;
+   
+   if ( fNestedLocation ) {
+      // The type has been defined inside another namespace and/or class
+      // this couldn't possibly be an STL container
+      return 0;
+   }
+   
+   int kind = STLKind(fElements[0].c_str());
+   
+   if (kind==kVector || kind==kList ) {
+      
+      int nargs = STLArgs(kind);
+      if (testAlloc && (numb-1 > nargs) && !IsDefAlloc(fElements[numb-1].c_str(),fElements[1].c_str())) {
+         
+         // We have a non default allocator,
+         // let's return a negative value.
+         
+         kind = -kind;
+         
+      } else {
+         
+         // We has a default allocator, let's continue to
+         // look inside the argument list.
+         int k = TClassEdit::IsSTLCont(fElements[1].c_str(),testAlloc);
+         if (k<0) kind = -kind;
+         
+      }
+   }
+   
+   // We return a negative value for anything which is not a vector or a list.
+   if(kind>2) kind = - kind;
+   return kind;
+}
+
+//______________________________________________________________________________
+void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
+{
+   /////////////////////////////////////////////////////////////////////////////
+   // Return the absolute type of typeDesc into the string answ.
+   
+   // E.g.: typeDesc = "class const volatile TNamed**", returns "TNamed**".
+   // if (mode&1) remove last "*"s                     returns "TNamed"
+   // if (mode&2) remove default allocators from STL containers
+   // if (mode&4) remove all     allocators from STL containers
+   // if (mode&8) return inner class of stl container. list<innerClass>
+   // if (mode&16) return deapest class of stl container. vector<list<deapest>>
+   // if (mode&kDropAllDefault) remove default template arguments
+   /////////////////////////////////////////////////////////////////////////////
+
+   answ.erase(0,999);
+   int narg = fElements.size();
+   int tailLoc = 0;
+   
+   //      fprintf(stderr,"calling ShortType %d for %s with narg %d\n",mode,typeDesc,narg);
+   //      {for (int i=0;i<narg;i++) fprintf(stderr,"calling ShortType %d for %s with %d %s \n",
+   //                                        mode,typeDesc,i,arglist[i].c_str());
+   //      }
+   if (fElements[narg-1].empty() == false && fElements[narg-1][0]=='*') {
+      if ((mode&1)==0) tailLoc = narg-1;
+      narg--;
+   }
+   mode &= (~1);
+   
+   if (fNestedLocation) narg--;
+   
+   //    fprintf(stderr,"calling ShortType %d for %s with narg %d tail %d\n",imode,typeDesc,narg,tailLoc);
+   
+   //kind of stl container
+   int kind = STLKind(fElements[0].c_str());
+   int iall = STLArgs(kind);
+   
+   // Only class is needed
+   if (mode&(8|16)) {
+      while(narg-1>iall) { fElements.pop_back(); narg--;}
+      if (!fElements[0].empty() && tailLoc) {
+         tailLoc = 0;
+      }
+      fElements[0].erase(0,999);
+      mode&=(~8);
+   }
+   
+   if (mode & kDropStlDefault) mode |= kDropDefaultAlloc;
+   
+   if (kind) {
+      bool allocRemoved = false;
+      
+      if ( mode & (kDropDefaultAlloc|kDropAlloc) ) {
+         // remove allocators
+         
+         
+         if (narg-1 == iall+1) {
+            // has an allocator specified
+            bool dropAlloc = false;
+            if (mode & kDropAlloc) {
+               
+               dropAlloc = true;
+               
+            } else if (mode & kDropDefaultAlloc) {
+               switch (kind) {
+                  case kVector:
+                  case kList:
+                  case kDeque:
+                  case kSet:
+                  case kMultiSet:
+                     dropAlloc = IsDefAlloc(fElements[iall+1].c_str(),fElements[1].c_str());
+                     break;
+                  case kMap:
+                  case kMultiMap:
+                     dropAlloc = IsDefAlloc(fElements[iall+1].c_str(),fElements[1].c_str(),fElements[2].c_str());
+                     break;
+                  default:
+                     dropAlloc = false;
+               }
+               
+            }
+            if (dropAlloc) {
+               narg--;
+               allocRemoved = true;
+            }
+         } else {
+            // has no allocator specified (hence it is already removed!)
+            allocRemoved = true;
+         }
+      }
+      
+      if ( allocRemoved && (mode & kDropStlDefault) && narg-1 == iall) { // remove default comparator
+         if ( IsDefComp( fElements[iall].c_str(), fElements[1].c_str() ) ) {
+            narg--;
+         }
+      } else if ( mode & kDropComparator ) {
+         
+         switch (kind) {
+            case kVector:
+            case kList:
+            case kDeque:
+               break;
+            case kSet:
+            case kMultiSet:
+            case kMap:
+            case kMultiMap:
+               if (!allocRemoved && narg-1 == iall+1) {
+                  narg--;
+                  allocRemoved = true;
+               }
+               if (narg-1 == iall) narg--;
+               break;
+            default:
+               break;
+         }
+      }
+   }
+   
+   //   do the same for all inside
+   for (int i=1;i<narg; i++) {
+      if (strchr(fElements[i].c_str(),'<')==0) continue;
+      bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
+      //NOTE: Should we also check the end of the type for 'const'?
+      fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode);
+      if (hasconst) {
+         fElements[i] = "const " + fElements[i];
+      }
+   }
+   
+   if (!fElements[0].empty()) {answ += fElements[0]; answ +="<";}
+   
+   if (mode & kDropAllDefault) {
+      int nargNonDefault = 0;
+      std::string nonDefName = answ;
+      // "superlong" because tLong might turn fName into an even longer name
+      std::string nameSuperLong = fName;
+      G__TypedefInfo td;
+      td.Init(nameSuperLong.c_str());
+      if (td.IsValid())
+         nameSuperLong = td.TrueName();
+      while (++nargNonDefault < narg) {
+         // If T<a> is a "typedef" (aka default template params)
+         // to T<a,b> then we can strip the "b".
+         const char* closeTemplate = " >";
+         if (nonDefName[nonDefName.length() - 1] != '>')
+            ++closeTemplate;
+         td.Init((nonDefName + closeTemplate).c_str());
+         if (td.IsValid() && nameSuperLong == td.TrueName())
+            break;
+         if (nargNonDefault>1) nonDefName += ",";
+         nonDefName += fElements[nargNonDefault];
+      }
+      if (nargNonDefault < narg)
+         narg = nargNonDefault;
+   }
+   
+   
+   { for (int i=1;i<narg-1; i++) { answ += fElements[i]; answ+=",";} }
+   if (narg>1) { answ += fElements[narg-1]; }
+   
+   if (!fElements[0].empty()) {
+      if ( answ.at(answ.size()-1) == '>') {
+         answ += " >";
+      } else {
+         answ += '>';
+      }
+   }
+   if (fNestedLocation) answ += fElements[fNestedLocation];
+   if (tailLoc) answ += fElements[tailLoc];
+   
+}   
+   
+
+
+//______________________________________________________________________________
 int   TClassEdit::STLKind(const char *type)
 {
 //      Converts STL container name to number. vector -> 1, etc..
@@ -52,8 +285,11 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    // return whether or not 'allocname' is the STL default allocator for type
    // 'classname'
 
-   string a = CleanType(allocname);
-   string k = CleanType(classname);
+   string a = allocname;
+   if (strncmp(a.c_str(),"std::",5)==0) {
+      a.erase(0,5);
+   }
+   string k = classname;
    if (a=="alloc")                              return true;
    if (a=="__default_alloc_template<true,0>")   return true;
    if (a=="__malloc_alloc_template<0>")         return true;
@@ -78,9 +314,12 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    if (IsDefAlloc(allocname,keyclassname)) return true;
 
 
-   string a = CleanType(allocname);
-   string k = CleanType(keyclassname);
-   string v = CleanType(valueclassname);
+   string a = allocname;
+   if (strncmp(a.c_str(),"std::",5)==0) {
+      a.erase(0,5);
+   }
+   string k = keyclassname;
+   string v = valueclassname;
 
    string stem("allocator<pair<");
    stem += k;
@@ -157,8 +396,8 @@ bool TClassEdit::IsDefComp(const char *compname, const char *classname)
    // return whether or not 'compare' is the STL default comparator for type
    // 'classname'
 
-   string c = CleanType(compname);
-   string k = CleanType(classname);
+   string c = compname;
+   string k = classname;
 
    // The default compartor is std::less<classname> which is usually stored
    // in CINT as less<classname>
@@ -204,7 +443,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 {
    ///////////////////////////////////////////////////////////////////////////
    //  Stores in output (after emptying it) the splited type.
-   //  Stores the location of the tail (nested names) in tailloc (0 indicates no tail).
+   //  Stores the location of the tail (nested names) in nestedLoc (0 indicates no tail).
    //  Return the number of elements stored.
    //
    //  First in list is the template name or is empty
@@ -212,14 +451,11 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    //   or    "TNamed*" to "" "TNamed" "*"
    ///////////////////////////////////////////////////////////////////////////
 
-   int keepConst = 0;
-   int keepInnerConst = 1;
-
    nestedLoc = 0;
    output.clear();
    if (strlen(type)==0) return 0;
-
-   string full = CleanType(type, keepInnerConst );
+  
+   string full = CleanType(type, 1 /* keepInnerConst */);
    const char *t = full.c_str();
    const char *c = strchr(t,'<');
 
@@ -228,29 +464,47 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    if ( (*starloc)=='*' ) {
       while( (*(starloc-1))=='*' ) { starloc--; }
       stars = starloc;
-      full.replace(strlen(t)-strlen(starloc),strlen(starloc),1,'\0');
+      full.erase(strlen(t)-strlen(starloc),strlen(starloc));
    }
 
    if (c) {
       //we have 'something<'
       output.push_back(string(full,0,c-t));
+
+      const char *cursor;
+      int level = 0;
+      for(cursor = c + 1; *cursor != '\0' && !(level==0 && *cursor == '>'); ++cursor) {
+         switch (*cursor) {
+            case '<': ++level; break;
+            case '>': --level; break; 
+            case ',': 
+               if (level == 0) {
+                  output.push_back(std::string(c+1,cursor));
+                  c = cursor;
+               }
+               break;
+         }
+      }
+      if (*cursor=='>') {
+         if (*(cursor-1) == ' ') {
+            output.push_back(std::string(c+1,cursor-1));
+         } else {
+            output.push_back(std::string(c+1,cursor));            
+         }
+         // See what's next!
+         if (*(cursor+1)==':') {
+            // we have a name specified inside the class/namespace
+            // For now we keep it in one piece
+            nestedLoc = output.size();
+            output.push_back((cursor+1));
+         }
+      }
    } else {
       //empty
-      output.push_back(string()); c=t-1;
+      output.push_back(string());
+      output.push_back(full);
    }
-   do {
-      output.push_back(CleanType(c+1,keepConst,&c));
-   } while(*c!='>' && *c);
 
-   if (*c=='>') {
-      // See what's next!
-      if (*(c+1)==':') {
-         // we have a name specified inside the class/namespace
-         // For now we keep it in one piece
-         nestedLoc = output.size();
-         output.push_back((c+1));
-      }
-   }
    if (stars.length()) output.push_back(stars);
    return output.size();
 }
@@ -275,7 +529,14 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
    ///////////////////////////////////////////////////////////////////////////
 
    static const char* remove[] = {"class","const","volatile",0};
-
+   static bool isinit = false;
+   static std::vector<size_t> lengths;
+   if (!isinit) {
+      for (int k=0; remove[k]; ++k) {
+         lengths.push_back(strlen(remove[k]));
+      }
+      isinit = true;
+   }
 
    string result;
    result.reserve(strlen(typeDesc)*2);
@@ -293,7 +554,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
          // loop on all the keywords we want to remove
          for (int k=0; k<n && remove[k]; k++) {
-            int rlen = strlen(remove[k]);
+            int rlen = lengths[k];
 
             // Do we have a match
             if (strncmp(remove[k],c,rlen)) continue;
@@ -336,174 +597,13 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    // if (mode&kDropAllDefault) remove default template arguments
    /////////////////////////////////////////////////////////////////////////////
 
-   //fprintf(stderr,"calling ShortType with mode %d\n",mode);
-//    int imode = mode;
-
-   string full = CleanType(typeDesc, 1 );
-   string answ;
-   int tailLoc=0;
-   int nestedLoc=0; // location of the tail (if set to >0)
+   string answer;
 
    // get list of all arguments
-   vector<string> arglist;
-   int narg = GetSplit(full.c_str(),arglist,nestedLoc);
-
-   if (narg==0) return typeDesc;
-
-//      fprintf(stderr,"calling ShortType %d for %s with narg %d\n",mode,typeDesc,narg);
-//      {for (int i=0;i<narg;i++) fprintf(stderr,"calling ShortType %d for %s with %d %s \n",
-//                                        mode,typeDesc,i,arglist[i].c_str());
-//      }
-   if (arglist[narg-1].empty() == false && arglist[narg-1][0]=='*') {
-      if ((mode&1)==0) tailLoc = narg-1;
-      narg--;
-   }
-   mode &= (~1);
-
-   if (nestedLoc) narg--;
-
-//    fprintf(stderr,"calling ShortType %d for %s with narg %d tail %d\n",imode,typeDesc,narg,tailLoc);
-
-   //kind of stl container
-   int kind = STLKind(arglist[0].c_str());
-   int iall = STLArgs(kind);
-
-   // Only class is needed
-   if (mode&(8|16)) {
-      while(narg-1>iall) {arglist.pop_back(); narg--;}
-      if (!arglist[0].empty() && tailLoc) {
-         tailLoc = 0;
-      }
-      arglist[0].erase(0,999);
-      mode&=(~8);
-   }
-
-   if (mode & kDropStlDefault) mode |= kDropDefaultAlloc;
-
-   if (kind) {
-      bool allocRemoved = false;
-
-      if ( mode & (kDropDefaultAlloc|kDropAlloc) ) {
-         // remove allocators
-
-
-         if (narg-1 == iall+1) {
-            // has an allocator specified
-            bool dropAlloc = false;
-            if (mode & kDropAlloc) {
-
-               dropAlloc = true;
-
-            } else if (mode & kDropDefaultAlloc) {
-               switch (kind) {
-                  case kVector:
-                  case kList:
-                  case kDeque:
-                  case kSet:
-                  case kMultiSet:
-                     dropAlloc = IsDefAlloc(arglist[iall+1].c_str(),arglist[1].c_str());
-                     break;
-                  case kMap:
-                  case kMultiMap:
-                     dropAlloc = IsDefAlloc(arglist[iall+1].c_str(),arglist[1].c_str(),arglist[2].c_str());
-                     break;
-                  default:
-                     dropAlloc = false;
-               }
-
-            }
-            if (dropAlloc) {
-               narg--;
-               allocRemoved = true;
-            }
-         } else {
-            // has no allocator specified (hence it is already removed!)
-            allocRemoved = true;
-         }
-      }
-
-      if ( allocRemoved && (mode & kDropStlDefault) && narg-1 == iall) { // remove default comparator
-         if ( IsDefComp( arglist[iall].c_str(), arglist[1].c_str() ) ) {
-            narg--;
-         }
-      } else if ( mode & kDropComparator ) {
-
-         switch (kind) {
-            case kVector:
-            case kList:
-            case kDeque:
-               break;
-            case kSet:
-            case kMultiSet:
-            case kMap:
-            case kMultiMap:
-               if (!allocRemoved && narg-1 == iall+1) {
-                  narg--;
-                  allocRemoved = true;
-               }
-               if (narg-1 == iall) narg--;
-               break;
-            default:
-               break;
-         }
-      }
-   }
-
-   //   do the same for all inside
-   for (int i=1;i<narg; i++) {
-      if (strchr(arglist[i].c_str(),'<')==0) continue;
-      bool hasconst = 0==strncmp("const ",arglist[i].c_str(),6);
-      //NOTE: Should we also check the end of the type for 'const'?
-      arglist[i] = ShortType(arglist[i].c_str(),mode);
-      if (hasconst) {
-         arglist[i] = "const " + arglist[i];
-      }
-   }
-
-   if (!arglist[0].empty()) {answ += arglist[0]; answ +="<";}
-
-   if (mode & kDropAllDefault) {
-      int nargNonDefault = 0;
-      std::string nonDefName = answ;
-      // "superlong" because tLong might turn typeDesc into an even longer name
-      std::string nameSuperLong = typeDesc;
-      G__TypedefInfo td;
-      td.Init(nameSuperLong.c_str());
-      if (td.IsValid())
-         nameSuperLong = td.TrueName();
-      while (++nargNonDefault < narg) {
-         // If T<a> is a "typedef" (aka default template params)
-         // to T<a,b> then we can strip the "b".
-         const char* closeTemplate = " >";
-         if (nonDefName[nonDefName.length() - 1] != '>')
-            ++closeTemplate;
-         td.Init((nonDefName + closeTemplate).c_str());
-         if (td.IsValid() && nameSuperLong == td.TrueName())
-            break;
-         if (nargNonDefault>1) nonDefName += ",";
-         nonDefName += arglist[nargNonDefault];
-      }
-      if (nargNonDefault < narg)
-         narg = nargNonDefault;
-   }
+   TSplitType arglist(typeDesc);
+   arglist.ShortType(answer, mode);
    
-   
-   { for (int i=1;i<narg-1; i++) { answ += arglist[i]; answ+=",";} }
-   if (narg>1) { answ += arglist[narg-1]; }
-   
-   if (!arglist[0].empty()) {
-      if ( answ.at(answ.size()-1) == '>') {
-         answ += " >";
-      } else {
-         answ += '>';
-      }
-   }
-   if (nestedLoc) answ += arglist[nestedLoc];
-   if (tailLoc) answ += arglist[tailLoc];
-
-//     fprintf(stderr,"2. mode %d reduce \"%s\" into \"%s\"\n",
-//             imode, typeDesc,answ.c_str());
-   return answ;
+   return answer;
 }
 
 //______________________________________________________________________________
@@ -526,51 +626,14 @@ int TClassEdit::IsSTLCont(const char *type,int testAlloc)
    //                           5=multimap,6=set,7=multiset
    //             positive val: we have a vector or list with default allocator to any depth
    //                   like vector<list<vector<int>>>
-   //             negative val: STL container other than vector or int, or non default allocator
+   //             negative val: STL container other than vector or list, or non default allocator
    //                           For example: vector<deque<int>> has answer -1
    ////////////////////////////////////////////////////////////////////////////////
 
    if (strchr(type,'<')==0) return 0;
 
-   int mode = (testAlloc) ? 2 : 0;
-   string fullname = ShortType(type,mode);
-
-   vector<string> arglist;
-   int nestedLoc=0;
-   int numb = GetSplit(fullname.c_str(),arglist,nestedLoc);
-
-   if ( arglist[0].length()>0 && arglist[numb-1][0]=='*' ) numb--;
-
-   if ( nestedLoc ) {
-      // The type has been defined inside another namespace and/or class
-      // this couldn't possibly be an STL container
-      return 0;
-   }
-
-   int kind = STLKind(arglist[0].c_str());
-
-   if (kind==kVector || kind==kList ) {
-
-      if (testAlloc && (numb-1 > STLArgs(kind)) ) {
-
-         // We have a non default allocator,
-         // let's return a negative value.
-
-         kind = -kind;
-
-      } else {
-
-         // We has a default allocator, let's continue to
-         // look inside the argument list.
-         int k = IsSTLCont(arglist[1].c_str(),testAlloc);
-         if (k<0) kind = -kind;
-
-      }
-   }
-
-   // We return a negative value for anything which is not a vector or a list.
-   if(kind>2) kind = - kind;
-   return kind;
+   TSplitType arglist( type );
+   return arglist.IsSTLCont(testAlloc);
 }
 
 //______________________________________________________________________________
@@ -594,12 +657,10 @@ bool TClassEdit::IsStdClass(const char *classname)
 
 //______________________________________________________________________________
 bool TClassEdit::IsVectorBool(const char *name) {
-   int nestedLoc=0;
-   vector<string> splitName;
-   TClassEdit::GetSplit(name,splitName,nestedLoc);
+   TSplitType splitname( name );
 
-   return ( TClassEdit::STLKind( splitName[0].c_str() ) == TClassEdit::kVector)
-      && ( splitName[1] == "bool" || splitName[1]=="Bool_t");
+   return ( TClassEdit::STLKind( splitname.fElements[0].c_str() ) == TClassEdit::kVector)
+      && ( splitname.fElements[1] == "bool" || splitname.fElements[1]=="Bool_t");
 };
 
 //______________________________________________________________________________

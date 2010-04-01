@@ -51,10 +51,11 @@ void G__cpp_setuplongif();
 struct G__setup_func_struct {
    std::string libname;
    G__incsetup func;
-   int inited;
+   bool inited;
+   bool registered;
 
-   G__setup_func_struct() : libname(), func(), inited(false) {}
-   G__setup_func_struct(const char *name, G__incsetup functions) : libname(name), func(functions), inited(false) {}
+   G__setup_func_struct() : libname(), func(), inited(false), registered(false) {}
+   G__setup_func_struct(const char *name, G__incsetup functions, bool isregistered) : libname(name), func(functions), inited(false), registered(isregistered) {}
    
 };
 
@@ -89,7 +90,7 @@ void G__add_setup_func(const char* libname, G__incsetup func)
          return;
       }
    }   
-   G__setup_func_list->push_back( G__setup_func_struct( libname, func ) );
+   G__setup_func_list->push_back( G__setup_func_struct( libname, func, true ) );
    
    ++G__nlibs;
 
@@ -116,6 +117,11 @@ void G__remove_setup_func(const char* libname)
 //______________________________________________________________________________
 int G__call_setup_funcs()
 {
+   if (!G__ifunc.inited || !G__init) {
+      // Veto any dictionary uploading until at least G__ifunc is initialized
+      // (because it's initialization will be wipe out 'some' of the work done).
+      return 0;
+   }
    int k = 0;
    G__var_array* store_p_local = G__p_local; // changed by setupfuncs
    G__LockCriticalSection();
@@ -141,8 +147,9 @@ int G__call_setup_funcs()
       std::list<G__setup_func_struct>::iterator end = G__setup_func_list->end();
       std::list<G__setup_func_struct>::iterator i;
       for (i = begin ; i != end; ++i) {
-         if (i->inited) {
+         if (!i->registered) {
             G__RegisterLibrary(i->func);
+            i->registered = true;
          }
       }
       
@@ -181,7 +188,8 @@ void G__reset_setup_funcs()
       std::list<G__setup_func_struct>::iterator i;
       
       for (i = begin ; i != end; ++i) {
-         i->inited = 0;
+         i->inited = false;
+         i->registered = false;
       }
    }
 }
@@ -1648,7 +1656,9 @@ int G__init_globals()
    G__globalcomp = G__NOLINK;  /* make compiled func's global table */
    G__store_globalcomp = G__NOLINK;
    G__globalvarpointer = G__PVOID; /* make compiled func's global table */
-   G__nfile = 0;
+   // This is already set to zero by the compiler __and__ it may already have incremented for
+   // some library load:
+   //    G__nfile = 0;
    G__key = 0;              /* user function key on/off */
 
    G__xfile[0] = '\0';
