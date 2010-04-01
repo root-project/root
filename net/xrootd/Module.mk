@@ -279,6 +279,10 @@ else
 		nmake -f Makefile.msc CFG=$(XRDDBG))
 endif
 
+ifeq ($(PLATFORM),win32)
+$(XRDEXECSA): $(XROOTDBUILD)
+endif
+
 ### Rules for xrootd plugins
 $(LPATH)/libXrd%.$(XRDSOEXT):    $(XROOTDDIRL)/libXrd%.$(XRDSOEXT)
 		cp -rp $< $@
