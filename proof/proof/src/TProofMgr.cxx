@@ -79,8 +79,10 @@ TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
    }
 
    // Check and save the host FQDN ...
-   if (strcmp(fUrl.GetHost(), fUrl.GetHostFQDN()))
-      fUrl.SetHost(fUrl.GetHostFQDN());
+   if (strcmp(fUrl.GetHost(), "__lite__")) {
+      if (strcmp(fUrl.GetHost(), fUrl.GetHostFQDN()))
+         fUrl.SetHost(fUrl.GetHostFQDN());
+   }
 
    SetName(fUrl.GetUrl(kTRUE));
    if (alias)
