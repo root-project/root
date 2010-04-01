@@ -23,6 +23,7 @@ class TGLViewerBase;
 class TGLSceneInfo;
 class TGLClip;
 class TGLRnrCtx;
+class TGLLogicalShape;
 class TGLSelectRecord;
 
 // Avoid TObject inheritance due to clash with TObject::Draw as well
@@ -98,6 +99,8 @@ public:
    virtual void RenderSelTransp (TGLRnrCtx & rnrCtx);
    virtual void PostRender(TGLRnrCtx & rnrCtx);
    virtual void PostDraw  (TGLRnrCtx & rnrCtx);
+
+   virtual TGLLogicalShape* FindLogical(TObject*) const { return 0; }
 
    // Selection interface
    virtual Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx);

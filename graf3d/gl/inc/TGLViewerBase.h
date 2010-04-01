@@ -26,6 +26,7 @@ class TGLSceneInfo;
 class TGLCamera;
 class TGLClip;
 class TGLRnrCtx;
+class TGLLogicalShape;
 class TGLSelectRecord;
 class TGLOvlSelectRecord;
 class TGLOverlayElement;
@@ -92,6 +93,8 @@ public:
    void          SceneDestructing(TGLSceneBase* scene);
 
    TGLSceneInfo* GetSceneInfo(TGLSceneBase* scene);
+
+   TGLLogicalShape* FindLogicalInScenes(TObject* id);
 
    virtual void AddOverlayElement(TGLOverlayElement* el);
    virtual void RemoveOverlayElement(TGLOverlayElement* el);

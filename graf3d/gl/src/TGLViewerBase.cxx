@@ -183,6 +183,21 @@ TGLSceneInfo* TGLViewerBase::GetSceneInfo(TGLSceneBase* scene)
       return 0;
 }
 
+//______________________________________________________________________________
+TGLLogicalShape* TGLViewerBase::FindLogicalInScenes(TObject* id)
+{
+   // Find logical-shape representing object id in the list of scenes.
+   // Return 0 if not found.
+
+   for (SceneInfoList_i i=fScenes.begin(); i!=fScenes.end(); ++i)
+   {
+      TGLLogicalShape *lshp = (*i)->GetScene()->FindLogical(id);
+      if (lshp)
+         return lshp;
+   }
+   return 0;
+}
+
 //______________________________________________________________________
 void TGLViewerBase::AddOverlayElement(TGLOverlayElement* el)
 {
