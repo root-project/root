@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += relpath mytest
+TEST_TARGETS += relpath 
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -59,7 +59,7 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-relpath.log: runrelpath.C
+relpath.log: runrelpath.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runrelpath.C 2>&1 | grep -v 'creating shared library' > relpath.log
 
 relpath: relpath.log
