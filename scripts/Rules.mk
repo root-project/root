@@ -103,10 +103,12 @@ ifeq ($(ROOTTEST_LOC),)
 
 ifeq ($(PLATFORM),win32)
    export ROOTTEST_LOC := $(shell cygpath -u '$(ROOTTEST_HOME)')
-    export ROOTTEST_HOME2 := $(shell cygpath -m $(ROOTTEST_HOME))
-    override ROOTTEST_HOME := $(ROOTTEST_HOME2)
+   export ROOTTEST_HOME2 := $(shell cygpath -m $(ROOTTEST_HOME))
+   override ROOTTEST_HOME := $(ROOTTEST_HOME2)
+   export PATH:=${PATH}:${ROOTEST_LOC}
 else
-    export ROOTTEST_LOC := $(ROOTTEST_HOME)
+   export ROOTTEST_LOC := $(ROOTTEST_HOME)
+   export PATH := $(PATH):$(ROOTTEST_HOME)/scripts
 endif
 
 endif
@@ -227,7 +229,7 @@ ifeq ($(HAS_PYTHON),yes)
        endif
    endif
    ifeq ($(PLATFORM),macosx)
-      PYTHONLIB:=$(shell grep ^PYTHONLIB $(ROOTSYS)/config/Makefile.config | sed 's,^.*\:=,,')
+      PYTHONLIB:=$(shell grep ^PYTHONLIB $(ROOTSYS)/config/Makefile.config | sed -e 's,^.*\:=,,'  -e 's,^ *-L,,' | grep -v -e '^ -l' -e '^ *$$' )
       PYTHONFWK:=$(dir $(PYTHONLIB))
       ifneq ($(PYTHONFWK),)
          export PATH:=$(PYTHONFWK)/bin:$(PATH)
@@ -483,26 +485,17 @@ UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) $(ROOTTEST_LOC)scripts/r
 
 $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 ; \
-	if test $$? -ne 0 ; \
+	result = $$? ; if test $result -ne 0 ; then \
 	then \
-	  cat $(ROOTTEST_LOC)scripts/utils_cc.build.log ; \
-	else \
-	  if test -f $@ ; \
-	  then \
-	    touch $@ ; \
-	  fi ; \
+	  cat $(ROOTTEST_LOC)scripts/utils_cc.build.log ; exit $$result; \
+	else if test -f $@ ; then touch $@ ; fi ; \
 	fi
 
 $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/recordtiming.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 ; \
-	if test $$? -ne 0 ; \
-	then \
-	  cat $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log ; \
-	else \
-	  if test -f $@ ; \
-	  then \
-	    touch $@ ; \
-	  fi ; \
+	result = $$? ; if test $result -ne 0 ; then \
+	  cat $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log ; exit $$result; \
+	else if test -f $@ ; then touch $@ ; fi ; \
 	fi
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
@@ -524,7 +517,7 @@ ifeq ($(PLATFORM),win32)
 endif
 
 define handleError
-   tresult=$$? ;if [ $$tresult -ne 0 ] ; then cat $@; echo "make: *** [$@] Error $$tresult" >> $@; exit $$tresult; fi  
+   || handleError.sh $$? $@ -add
 endef
 
 %.o: %.C
@@ -555,31 +548,33 @@ endef
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1
 
 %_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || cat $*_cpp.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || handleError.sh $$? $*_cpp.build.log 
 
 %_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || cat $*_C.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || handleError.sh $$? $*_C.build.log
 
 %_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || cat $*_cxx.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || handleError.sh $$? $*_cxx.build.log
 
 %_cc.$(DllSuf) : %.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || cat $*_cc.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || handleError.sh $$? $*_cc.build.log
 
 %_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || cat $*_h.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || handleError.sh $$? $*_h.build.log
+   
+   #( result=$$? ; cat $*_h.build.log ; exit $$result )
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 ; $(handleError)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh $$? $@ $<
 
 %.elog : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@ ; $(handleError)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@ || handleError.sh $$? $@ $<
 
 assert%.elog : assert%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > assert$*.log 2>$@ ; $(handleError)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > assert$*.log 2>$@ || handleError.sh $$? $@ $<
 
 assert%.eclog : assert%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > assert$*.log 2>$@ ; $(handleError)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > assert$*.log 2>$@ || handleError.sh $$? $@ $<+ 
 
 $(subst .cxx,,$(wildcard assert*.cxx)) : assert%: assert%.eclog assert%.ref 
 	$(TestDiff)
@@ -588,10 +583,10 @@ $(subst .C,,$(wildcard assert*.C)) : assert%: assert%.elog assert%.ref
 	$(TestDiff)
 
 exec%.log : exec%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 ; $(handleError)  
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh $$? $@ $<  
 
 exec%.clog : exec%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > $@ 2>&1 ; $(handleError)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > $@ 2>&1 || handleError.sh $$? $@ $<+
 
 $(subst .cxx,,$(wildcard exec*.cxx)) : %: %.clog %.ref 
 	$(TestDiff)
@@ -609,13 +604,13 @@ endif
 .PRECIOUS: %_C.$(DllSuf) 
 
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1 ; $(handleError)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1 || handleError.sh $$? $@ run$*.C+
 
 %.celog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ ; $(handleError)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh $$? $@ run$*.C+
 
 %.eclog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ ; $(handleError)
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh $$? $@ run$*.C+
 
 %.neutral.clog: %.clog
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
