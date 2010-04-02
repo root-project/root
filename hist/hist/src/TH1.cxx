@@ -2181,6 +2181,9 @@ void TH1::DirectoryAutoAdd(TDirectory *dir)
    Bool_t addStatus = TH1::AddDirectoryStatus();
    if (addStatus) {
       SetDirectory(dir);
+      if (dir) {
+         ResetBit(kCanDelete);
+      }
    }  
 }
 
@@ -5795,7 +5798,6 @@ void TH1::Streamer(TBuffer &b)
       if (R__v > 2) {
          b.ReadClassBuffer(TH1::Class(), this, R__v, R__s, R__c);
 
-         ResetBit(kCanDelete);
          ResetBit(kMustCleanup);
          fXaxis.SetParent(this);
          fYaxis.SetParent(this);
