@@ -1,7 +1,7 @@
 #include "TH1F.h"
 #include "TFile.h"
 #include "TCanvas.h"
-#include "RIostream.h"
+#include "Riostream.h"
 
 class TH1F_inst : public TH1F {
 public:
