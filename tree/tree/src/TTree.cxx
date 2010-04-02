@@ -4539,8 +4539,27 @@ TLeaf* TTree::GetLeaf(const char* aname)
    while ((leaf = (TLeaf*)nextl())) {
       if (strcmp(leaf->GetName(),name)) continue;
       if (slash) {
-         const char* brname = leaf->GetBranch()->GetName();
-         if (strncmp(brname,aname,nbch)) continue;
+         TBranch *br = leaf->GetBranch();
+         const char* brname = br->GetName();
+         TBranch *mother = br->GetMother();
+         if (strncmp(brname,aname,nbch)) {
+            if (mother != br) {
+               const char *mothername = mother->GetName();
+               UInt_t motherlen = strlen(mothername);
+               if (nbch > motherlen && strncmp(mothername,aname,motherlen)==0 && (mothername[motherlen-1]=='.' || aname[motherlen]=='.')) {
+                  // The left part of the requested name match the name of the mother, let's see if the right part match the name of the branch.
+                  if (strncmp(brname,aname+motherlen+1,nbch-motherlen-1)) {
+                     // No it does not
+                     continue;
+                  } // else we have match so we can proceed.
+               } else {
+                  // no match
+                  continue;
+               }
+            } else {
+               continue;
+            }
+         }
          // The start of the branch name is indentical to the content
          // of 'aname' before the first '/'.
          // Let's make sure that it is not longer (we are trying
