@@ -1,6 +1,6 @@
-TEST_TARGETS += autoloadNamespace_test autoload_test
+TEST_TARGETS +=
 
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log autoloadNamespace autoload
+CLEAN_TARGETS += $(ALL_LIBRARIES)
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -15,22 +15,9 @@ ifeq ($(FAIL),)
 endif
 
 
-autoloadNamespace_test : autoloadNamespace
+execautoloadNamespace.log: MyClass_cxx.$(DllSuf)
 
-autoloadNamespace : autoloadNamespace.log
-	$(TestDiff) && touch $@
-
-autoloadNamespace.log : MyClass_cxx.$(DllSuf)
-
-
-autoload_test : autoload
-
-autoload : autoload.log
-	$(TestDiff) && touch $@
-
-autoload.log : autoloadtest_C.$(DllSuf)
-
-autoloadNamespace.log: MyClass_cxx.$(DllSuf)
+execautoload.log : autoloadtest_C.$(DllSuf)
 
 linktest_C.$(DllSuf): linktest.C $(ROOT_LOC)/lib/libPhysics.so
 	$(BuildWithLib)
