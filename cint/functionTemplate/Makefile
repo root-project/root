@@ -1,6 +1,5 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log $(RFLXDICT_LIB) t.exe t_rflx.* *.rootmap
-TEST_TARGETS += cintrun 
-# referenceUse
+TEST_TARGETS += cintrun referenceUse
 
 # Which tests to run depends on availability of cintex / python:
 HAVEGCCXML := $(shell which gccxml 2>/dev/null)
