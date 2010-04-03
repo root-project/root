@@ -62,5 +62,8 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 relpath.log: runrelpath.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runrelpath.C 2>&1 | grep -v 'creating shared library' > relpath.log
 
-relpath: relpath.log
-	$(TestDiff)
+relpath.success: relpath.log
+	$(SuccessTestDiff) && touch $@
+
+relpath: relpath.success
+
