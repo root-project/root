@@ -1,5 +1,6 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log $(RFLXDICT_LIB) t.exe t_rflx.* *.rootmap
-TEST_TARGETS += cintrun referenceUse
+TEST_TARGETS += cintrun 
+# referenceUse
 
 # Which tests to run depends on availability of cintex / python:
 HAVEGCCXML := $(shell which gccxml 2>/dev/null)
@@ -54,7 +55,7 @@ t_rflx.cpp: t.h selection.xml
 
 $(RFLXDICT_LIB): t_rflx.cpp
 
-referenceUse.log: example_C.$(DllSuf)
+referenceUse.log: MyClassReferenceUse_C.$(DllSuf)
 
 referenceUse: referenceUse.log
 	$(TestDiff)
