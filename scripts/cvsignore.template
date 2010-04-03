@@ -12,3 +12,4 @@
 *.dylib
 .gdb_history
 .root_hist
+*.success
