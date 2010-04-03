@@ -56,10 +56,15 @@ endif
 
 SUBDIRS := $(shell $(ROOTTEST_HOME)/scripts/subdirectories .)
 
+ALL_EXEC_CXX   := $(wildcard exec*.cxx)
+ALL_EXEC_C     := $(wildcard exec*.C)
+ALL_ASSERT_CXX := $(wildcard assert*.cxx)
+ALL_ASSERT_C   := $(wildcard assert*.C)
+
 TEST_TARGETS_DIR = $(SUBDIRS:%=%.test)
 TEST_TARGETS += $(TEST_TARGETS_DIR) \
-     $(subst .C,,$(wildcard assert*.C))  $(subst .cxx,,$(wildcard assert*.cxx)) \
-     $(subst .C,,$(wildcard exec*.C))  $(subst .cxx,,$(wildcard exec*.cxx))
+     $(subst .C,,$(ALL_ASSERT_C))  $(subst .cxx,,$(ALL_ASSERT_CXX)) \
+     $(subst .C,,$(ALL_EXEC_C))  $(subst .cxx,,$(ALL_EXEC_CXX))
 
 # allow tests to be disabled by putting their names into a file called !DISABLE
 ifneq ($(MAKECMDGOALS),clean)
@@ -567,23 +572,31 @@ assert%.elog : assert%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 assert%.eclog : assert%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > assert$*.log 2>$@ || handleError.sh $$? $@ $<+ 
 
-$(subst .cxx,,$(wildcard assert*.cxx)) : assert%: assert%.eclog assert%.ref 
-	$(TestDiff)
+$(subst .cxx,.success,$(ALL_ASSERT_CXX)) : assert%.success: assert%.eclog assert%.ref 
+	$(SuccessTestDiff) && touch $@
 
-$(subst .C,,$(wildcard assert*.C)) : assert%: assert%.elog assert%.ref 
-	$(TestDiff)
+$(subst .C,.success,$(ALL_ASSERT_C)) : assert%.success: assert%.elog assert%.ref 
+	$(SuccessTestDiff) && touch $@
+
+$(subst .cxx,,$(ALL_ASSERT_CXX)) : assert%: assert%.success 
+
+$(subst .C,,$(ALL_ASSERT_C)) : assert%: assert%.success 
 
 exec%.log : exec%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh $$? $@ $<  
 
 exec%.clog : exec%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $<+ > $@ 2>&1 || handleError.sh $$? $@ $<+
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b exec$*.cxx+ > $@ 2>&1 || handleError.sh $$? $@ exec$*.cxx+
 
-$(subst .cxx,,$(wildcard exec*.cxx)) : %: %.clog %.ref 
-	$(TestDiff)
+$(subst .cxx,.success,$(ALL_EXEC_CXX)) : %.success: %.clog %.ref 
+	$(SuccessTestDiff) && touch $@
 
-$(subst .C,,$(wildcard exec*.C)) : %: %.log %.ref 
-	$(TestDiff)
+$(subst .C,.success,$(ALL_EXEC_C)) : %.success: %.log %.ref 
+	$(SuccessTestDiff) && touch $@
+
+$(subst .cxx,,$(ALL_EXEC_CXX)) : %: %.success 
+
+$(subst .C,,$(ALL_EXEC_C)) : %: %.success 
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
@@ -608,6 +621,12 @@ endif
 
 %.neutral.log: %.log
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
+
+exec%.ref: exec%.clog
+	$(CMDECHO) echo > $@ ; echo "Processing exec$*.cxx+..." >> $@
+
+exec%.ref: exec%.log
+	$(CMDECHO) echo > $@ ; echo "Processing exec$*.C..." >> $@
 
 %.ref:
 	$(CMDECHO) touch $@
@@ -661,7 +680,7 @@ define TestDiffW
 endef
 
 define SuccessTestDiff
-	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
+	$(CMDECHO) if [ -f $(subst .success,.ref$(ROOTBITS),$@) ]; then \
 	   diff -u -b $(subst .success,.ref$(ROOTBITS),$@) $< ; \
 	else \
 	   diff -u -b $(subst .success,.ref,$@) $< ; \
