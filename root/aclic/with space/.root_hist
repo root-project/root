@@ -1,0 +1,55 @@
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("/Users/pcanal/root_working/roottest/scripts/utils.cc")
+.x /Users/pcanal/root_working/roottest//scripts/build.C("/Users/pcanal/root_working/roottest/scripts/recordtiming.cc")
+.x /Users/pcanal/root_working/roottest//scripts/build.C("runload.C")
+.x runload.C+
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("runload.C")
+.x runload.C+
+.L runload.C+
+.q
+.L runload.C+
+gDebug = 5
+.L runload.C+
+.q
+.L runload.C+
+.q
+.L runload.C+
+.q
+.L runload.C+
+.q
+.L runload.C+
+.q
+.L runload.C++
+.L runload.C+
+.q
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("runload.C")
+.x /Users/pcanal/root_working/roottest//scripts/build.C("/Users/pcanal/root_working/roottest/scripts/utils.cc")
+.x /Users/pcanal/root_working/roottest//scripts/build.C("/Users/pcanal/root_working/roottest/scripts/recordtiming.cc")
+.x runload.C+
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("runload.C")
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("runload.C")
+.x runload.C+
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("runload.C")
+.x runload.C+
+.L runload.C+
+.q
+.L runload.C+
+.q
+.L runload.C+
+.q
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("runload.C")
+.x runload.C+
+gDebug = 7
+.x runload.C+
+.x runload.C++
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x runload.C+
+.x /Users/pcanal/root_working/roottest//scripts/Bits.C
+.x /Users/pcanal/root_working/roottest//scripts/build.C("runload.C")
+.x runload.C+
