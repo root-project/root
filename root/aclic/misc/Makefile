@@ -60,14 +60,10 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 relpath.log: runrelpath.C $(ROOTCORELIBS)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runrelpath.C 2>&1 | grep -v 'creating shared library' > relpath.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runrelpath.C 2>&1 | grep -v -e 'creating shared library' -e '_cint.cxx\W*$$' -e 'Creating library' -e '^script_C_ACLiC_dict.cxx\W*$$' > relpath.log
 
 relpath.success: relpath.log
 	$(SuccessTestDiff) && touch $@
 
-ifeq ($(PLATFORM),win32)
-relpath:
-else
 relpath: relpath.success
-endif
 
