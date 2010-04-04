@@ -168,7 +168,7 @@ cleantest: test
 
 # For now logs.tar.gz is a phony target
 logs.tar.gz:	
-	$(CMDECHO) find . -name '*log' | xargs tar cfz logs.tar.gz  
+	$(CMDECHO) rm -f logs.tar logs.tar.gz ; touch logs.tar ; find . -name '*log' | xargs -I{}  tar -uf logs.tar "{}" ; gzip logs.tar 
 
 ifeq ($(MAKECMDGOALS),cleantest)
   ifeq ($(VERBOSE),) 
