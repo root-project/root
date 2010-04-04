@@ -21,3 +21,8 @@ execautoload.log : autoloadtest_C.$(DllSuf)
 
 linktest_C.$(DllSuf): linktest.C $(ROOT_LOC)/lib/libPhysics.so
 	$(BuildWithLib)
+
+ifeq ($(PLATFORM),win32)
+execlinktest.success:
+	$(CMDECHO) touch $@
+endif

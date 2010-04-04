@@ -65,5 +65,9 @@ relpath.log: runrelpath.C $(ROOTCORELIBS)
 relpath.success: relpath.log
 	$(SuccessTestDiff) && touch $@
 
+ifeq ($(PLATFORM),win32)
+relpath:
+else
 relpath: relpath.success
+endif
 
