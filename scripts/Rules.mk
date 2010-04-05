@@ -110,7 +110,7 @@ ifeq ($(PLATFORM),win32)
    export ROOTTEST_LOC := $(shell cygpath -u '$(ROOTTEST_HOME)')
    export ROOTTEST_HOME2 := $(shell cygpath -m $(ROOTTEST_HOME))
    override ROOTTEST_HOME := $(ROOTTEST_HOME2)
-   export PATH:=${PATH}:${ROOTEST_LOC}
+   export PATH:=${PATH}:${ROOTTEST_LOC}/scripts
 else
    export ROOTTEST_LOC := $(ROOTTEST_HOME)
    export PATH := $(PATH):$(ROOTTEST_HOME)/scripts
