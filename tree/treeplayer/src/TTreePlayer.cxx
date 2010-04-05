@@ -3324,6 +3324,16 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
       res->AddField(i, var[i]->PrintValue(-1));
    }
 
+   //*-*- Create a TreeFormulaManager to coordinate the formulas
+   TTreeFormulaManager *manager=0;
+   if (fFormulaList->LastIndex()>=0) {
+      manager = new TTreeFormulaManager;
+      for(i=0;i<=fFormulaList->LastIndex();i++) {
+         manager->Add((TTreeFormula*)fFormulaList->At(i));
+      }
+      manager->Sync();
+   }
+   
    // loop on all selected entries
    const char *aresult;
    Int_t len;
@@ -3340,28 +3350,53 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
          tnumber = fTree->GetTreeNumber();
          for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
       }
+      
+      Int_t ndata = 1;
+      if (manager && manager->GetMultiplicity()) {
+         ndata = manager->GetNdata();
+      }
+      
       if (select) {
          select->GetNdata();
          if (select->EvalInstance(0) == 0) continue;
       }
 
-      for (i=0;i<ncols;i++) {
-         aresult = var[i]->PrintValue(0);
-         len = strlen(aresult)+1;
-         if (i == 0) {
-            memcpy(arow,aresult,len);
-            fields[i] = len;
-         } else {
-            memcpy(arow+fields[i-1],aresult,len);
-            fields[i] = fields[i-1] + len;
+      Bool_t loaded = kFALSE;
+      for(int inst=0;inst<ndata;inst++) {
+         if (select) {
+            if (select->EvalInstance(inst) == 0) {
+               continue;
+            }
          }
+         
+         if (inst==0) loaded = kTRUE;
+         else if (!loaded) {
+            // EvalInstance(0) always needs to be called so that
+            // the proper branches are loaded.
+            for (i=0;i<ncols;i++) {
+               var[i]->EvalInstance(0);
+            }
+            loaded = kTRUE;
+         }
+         for (i=0;i<ncols;i++) {
+            aresult = var[i]->PrintValue(0,inst);
+            len = strlen(aresult)+1;
+            if (i == 0) {
+               memcpy(arow,aresult,len);
+               fields[i] = len;
+            } else {
+               memcpy(arow+fields[i-1],aresult,len);
+               fields[i] = fields[i-1] + len;
+            }
+            res->AddRow(new TTreeRow(ncols,fields,arow));
+         }
+         fSelectedRows++;
       }
-      res->AddRow(new TTreeRow(ncols,fields,arow));
-      fSelectedRows++;
    }
 
    // delete temporary objects
    fFormulaList->Clear();
+   // The TTreeFormulaManager is deleted by the last TTreeFormula.
    delete [] fields;
    delete [] arow;
    delete [] var;
