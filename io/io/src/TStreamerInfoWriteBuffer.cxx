@@ -156,20 +156,36 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
       b.SetStreamerElementNumber(i);
       TStreamerElement *aElement = (TStreamerElement*)fElem[i];
 
+      Int_t ioffset = eoffset+fOffset[i];
+
       if (R__TestUseCache<T>(aElement)) {
-         if (gDebug > 1) {
-           printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
-                " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
-                fClass->GetName(),aElement->GetName(),i,fType[i],
-                aElement->ClassName(),b.Length(),arr[0], eoffset,((TBufferFile&)b).PeekDataCache()->GetObjectAt(0));
-         }
          if (aElement->TestBit(TStreamerElement::kWrite)) {
-            thisVar->WriteBufferAux(b,*((TBufferFile&)b).PeekDataCache(),i,narr,eoffset, arrayMode);
+            if (((TBufferFile&)b).PeekDataCache()==0) {
+               Warning("WriteBuffer","Skipping %s::%s because the cache is missing.",thisVar->GetName(),aElement->GetName());
+            } else {
+               if (gDebug > 1) {
+                  printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
+                         " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                         fClass->GetName(),aElement->GetName(),i,fType[i],
+                         aElement->ClassName(),b.Length(),arr[0], eoffset,((TBufferFile&)b).PeekDataCache()->GetObjectAt(0));
+               }
+               thisVar->WriteBufferAux(b,*((TBufferFile&)b).PeekDataCache(),i,narr,eoffset, arrayMode);
+            }
+            continue;
+         } else {
+            if (gDebug > 1) {
+               printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d,"
+                      " %s, bufpos=%d, arr=%p, eoffset=%d, not a write rule, skipping.\n",
+                      fClass->GetName(),aElement->GetName(),i,fType[i],
+                      aElement->ClassName(),b.Length(),arr[0], eoffset);
+            }
+            // The rule was a cached element for a read, rule, the real offset is in the
+            // next element (the one for the rule itself).
+            if (aElement->TestBit(TStreamerElement::kRepeat)) continue;
+            ioffset = eoffset+fOffset[i];
          }
-         continue;
       }
 
-      const Int_t ioffset = eoffset+fOffset[i];
 
       if (gDebug > 1) {
          printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, "
