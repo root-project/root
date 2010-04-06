@@ -204,8 +204,9 @@ class selClass :
       for v in lst:
         matchObj = self.ver_re.match( v )
         if not matchObj:
-          print warning, '-', v, 'is not a valid value of version parameter'
-          return False
+          if ( matchObj != "*" ):
+             print warning, '-', v, 'is not a valid value of version parameter'
+             return False
         else:
           rng = matchObj.groups()
           if rng[0] and rng[1]:
