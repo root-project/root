@@ -181,7 +181,8 @@ class selClass :
 
       for chk in lst:
         try:
-          i = int( chk )
+          if ( chk != "*" ):
+             i = int( chk )
         except:
           print warning, chk, 'is not a valid value of checksum parameter - an integer expected'
           return False
