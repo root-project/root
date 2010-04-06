@@ -9,7 +9,7 @@ Contents:
 	3.    Choosing the installation method
 	3.1.  Environment driven build
 	3.2.  Fixed locations build
-	3.2.  Redhat packages
+	3.3.  Redhat packages
 	3.4.  Debian GNU/Linux packages
 	4.    Installation Location
 	5.    Makefile targets
@@ -197,7 +197,7 @@ libraries.
         rehash
         root
 
-3.2. Redhat packages:
+3.3. Redhat packages:
 ---------------------
 Get the sources for a specific release from Subversion or from a tar-ball, as
 outlined above and cd into the source directory. Then just do
