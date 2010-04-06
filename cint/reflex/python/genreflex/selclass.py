@@ -203,18 +203,18 @@ class selClass :
         return False
 
       for v in lst:
-        matchObj = self.ver_re.match( v )
-        if not matchObj:
-          if ( matchObj != "*" ):
+        if ( v != "*" ):
+          matchObj = self.ver_re.match( v )
+          if not matchObj:
              print warning, '-', v, 'is not a valid value of version parameter'
              return False
-        else:
-          rng = matchObj.groups()
-          if rng[0] and rng[1]:
-            b, e = int(rng[0]), int(rng[1])
-            if b >= e:
-              print warning, '-', v, 'is not a valid version range'
-              return False
+          else:
+            rng = matchObj.groups()
+            if rng[0] and rng[1]:
+              b, e = int(rng[0]), int(rng[1])
+              if b >= e:
+                print warning, '-', v, 'is not a valid version range'
+                return False
 
     #------------------------------------------------------------------------------
     # Check if we deal with renameing rule
