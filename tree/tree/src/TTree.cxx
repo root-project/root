@@ -2802,7 +2802,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
       }
       Int_t treenumber = 0;
       for (Long64_t i = 0; i < nentries; i++) {
-         if (tree->GetEntry(i) < 0) {
+         if (tree->GetEntry(i) <= 0) {
             break;
          }
          nbytes += this->Fill();
