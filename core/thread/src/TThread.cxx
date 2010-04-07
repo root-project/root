@@ -211,7 +211,7 @@ TThread::TThread(const char *thname, VoidFunc_t fn, void *arg,
 }
 
 //______________________________________________________________________________
-TThread::TThread(Int_t id)
+TThread::TThread(Long_t id)
 {
    // Create a TThread for a already running thread.
 

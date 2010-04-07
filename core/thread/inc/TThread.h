@@ -125,7 +125,7 @@ public:
    TThread(VoidFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
    TThread(const char *thname, VoidRtnFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
    TThread(const char *thname, VoidFunc_t fn, void *arg = 0, EPriority pri = kNormalPriority);
-   TThread(Int_t id = 0);
+   TThread(Long_t id = 0);
    virtual ~TThread();
 
    Int_t            Kill();
