@@ -2596,73 +2596,15 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    //
 
    if (fastClone && (nentries < 0)) {
-      // Quickly copy the basket without decompression and streaming.
-      nentries = GetEntriesFast();
-      for (Long64_t i = 0; i < nentries; i += this->GetTree()->GetEntries()) {
-         if (LoadTree(i) < 0) {
-            break;
-         }
-         if (newtree->fDirectory) {
-            TFile* file = newtree->fDirectory->GetFile();
-            if (file && (file->GetEND() > fgMaxTreeSize)) {
-               if (newtree->fDirectory == (TDirectory*) file) {
-                  newtree->ChangeFile(file);
-               }
-            }
-         }
-         TTreeCloner cloner(GetTree(), newtree, option, TTreeCloner::kNoWarnings);
-         if (cloner.IsValid()) {
-            newtree->SetEntries(newtree->GetEntries() + GetTree()->GetEntries());
-            cloner.Exec();
-         } else {
-            if (!i) {
-               Error("CloneTree", "Tree has not been cloned\n");
-               delete newtree;
-               newtree = 0;
-               return 0;
-            } else {
-               if (cloner.NeedConversion()) {
-                  TTree *localtree = GetTree();
-                  Long64_t tentries = localtree->GetEntries();
-                  for (Long64_t j = 0; j < tentries; j++) {
-                     if (localtree->GetEntry(j) <= 0) {
-                        break;
-                     }
-                     newtree->Fill();
-                  }
-                  if (newtree->GetTreeIndex()) {
-                     newtree->GetTreeIndex()->Append(GetTree()->GetTreeIndex(), kTRUE);
-                  }
-               } else {
-                  Warning("CloneTree",cloner.GetWarning());
-                  if (GetCurrentFile()) {
-                     Warning("CloneTree", "Skipped file %s\n", GetCurrentFile()->GetName());
-                  } else {
-                     Warning("CloneTree", "Skipped file number %d\n", GetTreeNumber());
-                  }
-               }
-            }
-         }
-      }
+      if ( newtree->CopyEntries( this, -1, option) < 0 ){
+         // There was a problem!
+         Error("Merge", "TTree has not been cloned\n");
+         delete newtree;
+         newtree = 0;
+         return 0;
+      }      
    } else {
-      // Maybe copy some entries.
-      if (nentries < 0) {
-         nentries = fEntries;
-      }
-      if (nentries > fEntries) {
-         nentries = fEntries;
-      }
-      for (Long64_t i = 0; i < nentries; ++i) {
-         // Loop over specified entries and copy.
-         // If we are a chain, we must switch input files as necessary.
-         Long64_t localEntry = LoadTree(i);
-         if (localEntry < 0) {
-            // FIXME: We need an error message here.
-            break;
-         }
-         GetEntry(i);
-         newtree->Fill();
-      }
+      newtree->CopyEntries( this, nentries, option);      
    }
 
    return newtree;
@@ -2765,9 +2707,12 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
 }
 
 //______________________________________________________________________________
-Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */)
+Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t* option /* = "" */)
 {
    // Copy nentries from given tree to this tree.
+   // This routines assumes that the branches that intended to be copied are
+   // already connected.   The typical case is that this tree was created using
+   // tree->CloneTree(0).
    //
    // By default copy all entries.
    //
@@ -2777,20 +2722,100 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */)
    if (!tree) {
       return 0;
    }
+   // Options
+   Bool_t fastClone = kFALSE;
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("fast")) {
+      fastClone = kTRUE;
+   }
+
    Long64_t nbytes = 0;
    Long64_t treeEntries = tree->GetEntriesFast();
    if (nentries < 0) {
       nentries = treeEntries;
-   }
-   if (nentries > treeEntries) {
+   } else if (nentries > treeEntries) {
       nentries = treeEntries;
    }
-   for (Long64_t i = 0; i < nentries; ++i) {
-      if (tree->LoadTree(i) < 0) {
-         break;
+   
+   if (fastClone && (nentries < 0 || nentries == tree->GetEntriesFast())) {
+      // Quickly copy the basket without decompression and streaming.
+      Long64_t totbytes = GetTotBytes(); 
+      for (Long64_t i = 0; i < nentries; i += tree->GetTree()->GetEntries()) {
+         if (tree->LoadTree(i) < 0) {
+            break;
+         }
+         if (this->GetDirectory()) {
+            TFile* file2 = this->GetDirectory()->GetFile();
+            if (file2 && (file2->GetEND() > TTree::GetMaxTreeSize())) {
+               if (this->GetDirectory() == (TDirectory*) file2) {
+                  this->ChangeFile(file2);
+               }
+            }
+         }
+         TTreeCloner cloner(tree->GetTree(), this, option, TTreeCloner::kNoWarnings);
+         if (cloner.IsValid()) {
+            this->SetEntries(this->GetEntries() + tree->GetTree()->GetEntries());
+            cloner.Exec();
+            if ( i!=0 && this->GetTreeIndex()) {
+               this->GetTreeIndex()->Append(tree->GetTree()->GetTreeIndex(),kTRUE);
+            }
+         } else {
+            if (i == 0) {
+               // If the first cloning does not work, something is really wrong
+               // (since apriori the source and target are exactly the same structure!)
+               return -1;
+            } else {
+               if (cloner.NeedConversion()) {
+                  TTree *localtree = tree->GetTree();
+                  Long64_t tentries = localtree->GetEntries();
+                  for (Long64_t ii = 0; ii < tentries; ii++) {
+                     if (localtree->GetEntry(ii) <= 0) {
+                        break;
+                     }
+                     this->Fill();
+                  }
+                  if (this->GetTreeIndex()) {
+                     this->GetTreeIndex()->Append(tree->GetTree()->GetTreeIndex(), kTRUE);
+                  }
+               } else {
+                  Warning("CopyEntries",cloner.GetWarning());
+                  if (tree->GetDirectory() && tree->GetDirectory()->GetFile()) {
+                     Warning("CopyEntries", "Skipped file %s\n", tree->GetDirectory()->GetFile()->GetName());
+                  } else {
+                     Warning("CopyEntries", "Skipped file number %d\n", tree->GetTreeNumber());
+                  }
+               }
+            }
+         }
+         
       }
-      tree->GetEntry(i);
-      nbytes += Fill();
+      if (this->GetTreeIndex()) {
+         this->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
+      }
+      nbytes = GetTotBytes() - totbytes;
+   } else {
+      if (nentries < 0) {
+         nentries = treeEntries;
+      } else if (nentries > treeEntries) {
+         nentries = treeEntries;
+      }
+      Int_t treenumber = 0;
+      for (Long64_t i = 0; i < nentries; i++) {
+         if (tree->GetEntry(i) < 0) {
+            break;
+         }
+         nbytes += this->Fill();
+         if (treenumber != tree->GetTreeNumber()) {
+            if ( i!=0 && this->GetTreeIndex()) {
+               this->GetTreeIndex()->Append(tree->GetTree()->GetTreeIndex(),kTRUE);
+            }
+            treenumber = tree->GetTreeNumber();
+         }
+      }
+      if (this->GetTreeIndex()) {
+         this->GetTreeIndex()->Append(0,kFALSE); // Force the sorting
+      }
    }
    return nbytes;
 }
@@ -4850,6 +4875,7 @@ Long64_t TTree::LoadTree(Long64_t entry)
    }
 
    if ((fReadEntry >= fEntries) && !friendHasEntry) {
+      fReadEntry = -1;
       return -2;
    }
    return fReadEntry;

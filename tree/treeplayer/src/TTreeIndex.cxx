@@ -239,7 +239,6 @@ void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
       delete [] ind;
       delete [] conv;
    }
-
 }
 
 //______________________________________________________________________________

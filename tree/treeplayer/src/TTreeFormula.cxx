@@ -5179,7 +5179,17 @@ Bool_t TTreeFormula::LoadCurrentDim() {
       // fCumulSizes.
 
       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-      if (!leaf) continue;
+      if (!leaf) {
+         switch(fLookupType[i]) {
+            case kDirect: 
+            case kMethod:
+            case kTreeMember:
+            case kDataMember:
+               fNdata[i] = 0;
+               outofbounds = kTRUE;
+         }
+         continue;
+      }
 
       TTree *realtree = fTree->GetTree();
       TTree *tleaf = leaf->GetBranch()->GetTree();
