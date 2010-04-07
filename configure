@@ -1235,6 +1235,19 @@ EOF
 
 ######################################################################
 #
+### echo %%% Store invocation and machine info in config.log
+#
+logmsg "Invoked on `hostname 2>/dev/null`"
+logmsg "   with `uname -a 2>/dev/null`"
+logmsg "   at `date 2>/dev/null`:"
+
+logmsg "   $0"
+for argv in "$@"; do
+    logmsg "     \"${argv}\""
+done
+
+######################################################################
+#
 ### echo %%% See if we got the architecture
 #
 if test $# -lt 1 ; then
@@ -1264,6 +1277,7 @@ if `awk '{ print $1 }' $ARCHS | grep "^$arch$" > /dev/null  2>&1` ; then
    echo "Configuring for $arch"
 else
    echo "Invalid architecture. Try $0 --help"
+   logmsg "Invalid architecture \"$arch\"."
    exit 1
 fi
 
