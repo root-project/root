@@ -1438,9 +1438,10 @@ void TGContainer::Search(Bool_t close)
 {
    // Invokes search dialog. Looks for item with the entered name.
 
+   static TGSearchType *srch = 0;
    Int_t ret = 0;
 
-   TGSearchType *srch = new TGSearchType;
+   if (!srch) srch = new TGSearchType;
    srch->fClose = close;
    srch->fBuffer = 0;
 
@@ -1458,7 +1459,6 @@ void TGContainer::Search(Bool_t close)
          FindFrameByName(srch->fBuffer);
       }
    }
-   delete srch;
 }
 
 //______________________________________________________________________________

@@ -262,7 +262,6 @@ TGTextEdit::~TGTextEdit()
    }
    delete fCurBlink;
    delete fMenu;
-   delete fSearch;
    delete fHistory;
 }
 
@@ -1545,9 +1544,10 @@ void TGTextEdit::Search(Bool_t close)
 {
    // Invokes search dialog.
 
+   static TGSearchType *srch = 0;
    Int_t ret = 0;
-
-   TGSearchType *srch = new TGSearchType;
+   
+   if (!srch) srch = new TGSearchType;
    srch->fClose = close;
 
    if (!close) {
@@ -1564,7 +1564,6 @@ void TGTextEdit::Search(Bool_t close)
          Search(srch->fBuffer);
       }
    }
-   delete srch;
 }
 
 //______________________________________________________________________________
