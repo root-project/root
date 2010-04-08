@@ -155,7 +155,18 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    }
 
    // UNIX path for communication with workers
-   fSockPath       = Form("%s/prooflite-sockpath-%s", gSystem->TempDirectory(), GetName());
+   TString sockpathdir = gEnv->GetValue("ProofLite.SockPathDir", gSystem->TempDirectory());
+   if (sockpathdir.IsNull()) sockpathdir = gSystem->TempDirectory();
+   if (sockpathdir(sockpathdir.Length()-1) == '/') sockpathdir.Remove(sockpathdir.Length()-1);
+   fSockPath.Form("%s/plite-%d", sockpathdir.Data(), gSystem->GetPid());
+   if (fSockPath.Length() > 104) {
+      // Sort of hardcoded limit length for Unix systems
+      Error("Init", "Unix socket path '%s' is too long (%d bytes):",
+                    fSockPath.Data(), fSockPath.Length());
+      Error("Init", "use 'ProofLite.SockPathDir' to create it under a directory different"
+                    " from '%s'", fSockPath.Data(), fSockPath.Length(), sockpathdir.Data());
+      return 0;
+   }
 
    fLogLevel       = loglevel;
    fProtocol       = kPROOF_Protocol;
@@ -326,6 +337,10 @@ Int_t TProofLite::Init(const char *, const char *conffile,
       // Set PROOF to running state
       SetRunStatus(TProof::kRunning);
    }
+   // We register the session as a socket so that cleanup is done properly
+   R__LOCKGUARD2(gROOTMutex);
+   gROOT->GetListOfSockets()->Add(this);
+
    return fActiveSlaves->GetSize();
 }
 //______________________________________________________________________________
@@ -348,6 +363,7 @@ TProofLite::~TProofLite()
       fQueryLock->Unlock();
    }
 
+   // Cleanup the socket
    SafeDelete(fServSock);
    gSystem->Unlink(fSockPath);
 }
@@ -428,7 +444,13 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
    // Start up PROOF workers.
 
    // Create server socket on the assigned UNIX sock path
-   if (!fServSock) fServSock = new TServerSocket(fSockPath);
+   if (!fServSock) {
+      if ((fServSock = new TServerSocket(fSockPath))) {
+         R__LOCKGUARD2(gROOTMutex);
+         // Remove from the list so that cleanup can be done in the correct order
+         gROOT->GetListOfSockets()->Remove(fServSock);
+      }
+   }
    if (!fServSock || !fServSock->IsValid()) {
       Error("SetupWorkers",
             "unable to create server socket for internal communications");
