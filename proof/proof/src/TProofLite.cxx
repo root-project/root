@@ -164,7 +164,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
       Error("Init", "Unix socket path '%s' is too long (%d bytes):",
                     fSockPath.Data(), fSockPath.Length());
       Error("Init", "use 'ProofLite.SockPathDir' to create it under a directory different"
-                    " from '%s'", fSockPath.Data(), fSockPath.Length(), sockpathdir.Data());
+                    " from '%s'", sockpathdir.Data());
       return 0;
    }
 
