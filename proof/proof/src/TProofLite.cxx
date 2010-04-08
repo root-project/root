@@ -156,6 +156,8 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 
    // UNIX path for communication with workers
    TString sockpathdir = gEnv->GetValue("ProofLite.SockPathDir", gSystem->TempDirectory());
+   if (sockpathdir.IsNull()) sockpathdir = gSystem->TempDirectory();
+   if (sockpathdir(sockpathdir.Length()-1) == '/') sockpathdir.Remove(sockpathdir.Length()-1);
    fSockPath.Form("%s/plite-%d", sockpathdir.Data(), gSystem->GetPid());
    if (fSockPath.Length() > 104) {
       // Sort of hardcoded limit length for Unix systems
