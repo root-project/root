@@ -67,7 +67,11 @@ fi
 
 ${pwd}/build/unix/distfilelist.sh $dir > ${TARFILE}.filelist
 rm -f ${TARFILE}
-$TARCMD || exit 1
+if [ "x${TAR}" != "x" ] || [ "x$MSI" = "x1" ]; then
+   $TARCMD || exit 1
+else
+   $TARCMD `cat ${TARFILE}.filelist` || exit 1
+fi
 rm ${TARFILE}.filelist 
 
 if [ "x$DOGZIP" = "xy" ]; then
