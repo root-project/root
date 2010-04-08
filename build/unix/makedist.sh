@@ -11,6 +11,10 @@ if [ "x`bin/root-config --platform`" = "xmacosx" ]; then
    TYPE=$TYPE-`sw_vers -productVersion | cut -d . -f1 -f2`
    TYPE=$TYPE-`uname -p`
 fi
+if [ "x`bin/root-config --platform`" = "xsolaris" ]; then
+   TYPE=$TYPE-`uname -r`
+   TYPE=$TYPE-`uname -p`
+fi
 
 # debug build?
 DEBUG=`grep ROOTBUILD config/Makefile.config | sed 's,^ROOTBUILD.*= \([^[:space:]]*\)$,\1,'`
@@ -63,7 +67,11 @@ fi
 
 ${pwd}/build/unix/distfilelist.sh $dir > ${TARFILE}.filelist
 rm -f ${TARFILE}
-$TARCMD || exit 1
+if [ "x${TAR}" != "x" ] || [ "x$MSI" = "x1" ]; then
+   $TARCMD || exit 1
+else
+   $TARCMD `cat ${TARFILE}.filelist` || exit 1
+fi
 rm ${TARFILE}.filelist 
 
 if [ "x$DOGZIP" = "xy" ]; then
