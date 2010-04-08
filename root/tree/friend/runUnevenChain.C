@@ -47,7 +47,7 @@ void runUnevenChain() {
    cout << firstChain.GetName() << " has " << firstChain.GetEntries() << " entries\n";
    cout << secondChain.GetName() << " has " << secondChain.GetEntries() << " entries\n";
    
-   /* First output the trees to make sure they are correct. */ 
+   /* First output the trees to make sure they are correct. */
    for(Int_t i=0;i<secondChain.GetEntries();i++) {
       firstChain.GetEntry(i);
       secondChain.GetEntry(i);
@@ -57,6 +57,9 @@ void runUnevenChain() {
    /* Now add the friends and test friendship. */
    cout << "Testing Friendship..." << endl;
    firstChain.AddFriend(&secondChain);
+   secondChain.GetStatus()->Delete();
+   first = second = 0;
+   firstChain.SetBranchAddress("value3_2",&second);
    for(Int_t i=0;i<firstChain.GetEntries();i++) {
       firstChain.GetEntry(i);
       if (first%100 != second%100) {
