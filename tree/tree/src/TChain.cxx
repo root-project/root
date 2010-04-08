@@ -1258,9 +1258,40 @@ Long64_t TChain::LoadTree(Long64_t entry)
             }
          }
          if (needUpdate) {
-            // Update list of leaves in all TTreeFormula of the TTreePlayer (if any).
-            if (fPlayer) {
-               fPlayer->UpdateFormulaLeaves();
+	   // Update the branch/leaf addresses and 
+	   // thelist of leaves in all TTreeFormula of the TTreePlayer (if any).
+	   
+	   // Set the branch statuses for the newly opened file.
+	   TChainElement *frelement;
+	   TIter next(fStatus);
+	   while ((frelement = (TChainElement*) next())) {
+	     Int_t status = frelement->GetStatus();
+	     fTree->SetBranchStatus(frelement->GetName(), status);
+	   }
+	   
+	   // Set the branch addresses for the newly opened file.
+	   next.Reset();
+	   while ((frelement = (TChainElement*) next())) {
+	     void* addr = frelement->GetBaddress();
+	     if (addr) {
+	       TBranch* br = fTree->GetBranch(frelement->GetName());
+	       TBranch** pp = frelement->GetBranchPtr();
+	       if (pp) {
+		 // FIXME: What if br is zero here?
+            *pp = br;
+	       }
+	       if (br) {
+		 // FIXME: We may have to tell the branch it should
+		 //        not be an owner of the object pointed at.
+		 br->SetAddress(addr);
+		 if (TestBit(kAutoDelete)) {
+		   br->SetAutoDelete(kTRUE);
+		 }
+	       }
+	     }
+	   }        
+	   if (fPlayer) {
+	     fPlayer->UpdateFormulaLeaves();
             }
             // Notify user if requested.
             if (fNotify) {
