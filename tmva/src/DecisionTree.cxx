@@ -104,8 +104,6 @@ TMVA::DecisionTree::DecisionTree():
    // default constructor using the GiniIndex as separation criterion, 
    // no restrictions on minium number of events in a leave note or the
    // separation gain in the node splitting
-   
-   fLogger->SetSource( "DecisionTree" );
 }
 
 //_______________________________________________________________________
@@ -131,8 +129,6 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize, I
    // number of bins in the grid used in applying the cut for the node
    // splitting.
    
-   fLogger->SetSource( "DecisionTree" );
-
    if (sepType == NULL) { // it is interpreted as a regression tree, where
                           // currently the separation type (simple least square)
                           // cannot be chosen freely)
@@ -172,7 +168,6 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    this->SetRoot( new DecisionTreeNode ( *((DecisionTreeNode*)(d.GetRoot())) ) );
    this->SetParentTreeInNodes();
    fNNodes = d.fNNodes;
-   fLogger->SetSource( "DecisionTree" );
 }
 
 

@@ -44,8 +44,8 @@ namespace TMVA {
       Double_t   *fCoords;                  // [fDim] Coordinates
 
    protected:
-      mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& Log() const { return *fLogger; }
+      static MsgLogger* fgLogger;                     //! message logger, static because there is a huge number of vectors...
+      MsgLogger& Log() const { return *fgLogger; }
 
    public:
       // constructor

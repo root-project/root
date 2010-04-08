@@ -85,7 +85,6 @@ TMVA::BinarySearchTree::BinarySearchTree( void ) :
    fCanNormalize( kFALSE )
 {
    // default constructor
-   fLogger->SetSource( "BinarySearchTree" );
 }
 
 //_______________________________________________________________________
@@ -98,7 +97,6 @@ TMVA::BinarySearchTree::BinarySearchTree( const BinarySearchTree &b)
      fCanNormalize( kFALSE )
 {
    // copy constructor that creates a true copy, i.e. a completely independent tree 
-   fLogger->SetSource( "BinarySearchTree" );
    Log() << kFATAL << " Copy constructor not implemented yet " << Endl;
 }
 

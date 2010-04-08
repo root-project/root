@@ -57,7 +57,7 @@ TMVA::FitterBase::FitterBase( IFitterTarget& target,
      fFitterTarget( target ),
      fRanges( ranges ),
      fNpars( ranges.size() ),
-     fLogger( new MsgLogger(this) ),
+     fLogger( new MsgLogger("FitterBase", kINFO) ),
      fClassName( name )
 {
    // constructor   

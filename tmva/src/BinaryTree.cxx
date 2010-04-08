@@ -47,14 +47,16 @@
 
 ClassImp(TMVA::BinaryTree)
 
+TMVA::MsgLogger* TMVA::BinaryTree::fgLogger = 0;
+
 //_______________________________________________________________________
 TMVA::BinaryTree::BinaryTree( void )
    : fRoot  ( NULL ), 
      fNNodes( 0 ),
-     fDepth ( 0 ),
-     fLogger( new MsgLogger("BinaryTree") )
+     fDepth ( 0 )
 {
    // constructor for a yet "empty" tree. Needs to be filled afterwards
+   if (!fgLogger) fgLogger =  new MsgLogger("BinaryTree");
 }
 
 //_______________________________________________________________________
@@ -62,7 +64,6 @@ TMVA::BinaryTree::~BinaryTree( void )
 {
    //destructor (deletes the nodes and "events" if owned by the tree
    this->DeleteNode( fRoot );
-   delete fLogger;
    fRoot=0;
 }
 

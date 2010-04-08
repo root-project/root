@@ -37,13 +37,16 @@
 
 ClassImp(TMVA::Interval)
 
+TMVA::MsgLogger* TMVA::Interval::fgLogger = 0;
+
 //_______________________________________________________________________
 TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) : 
    fMin(min),
    fMax(max),
-   fNbins(nbins),
-   fLogger( new MsgLogger("Interval") )
+   fNbins(nbins)
 {
+   if (!fgLogger) fgLogger = new MsgLogger("Interval");
+
    // defines minimum and maximum of an interval
    // when nbins == 0, interval describes a discrete distribution (equally distributed in the interval)
    // when nbins > 0, interval describes a continous interval
@@ -62,15 +65,15 @@ TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) :
 TMVA::Interval::Interval( const Interval& other ) :
    fMin  ( other.fMin ),
    fMax  ( other.fMin ),
-   fNbins( other.fNbins ),
-   fLogger( new MsgLogger("Interval") )
-{}
+   fNbins( other.fNbins )
+{
+   if (!fgLogger) fgLogger = new MsgLogger("Interval");
+}
 
 //_______________________________________________________________________
 TMVA::Interval::~Interval()
 {
    // destructor
-   delete fLogger;
 }
 
 //_______________________________________________________________________
