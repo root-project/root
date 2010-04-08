@@ -3962,6 +3962,12 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
    int sock;
    struct sockaddr_un unserver;
    unserver.sun_family = AF_UNIX;
+
+   if (strlen(sockpath) > sizeof(unserver.sun_path)-1) {
+      ::Error("TUnixSystem::UnixUnixConnect", "socket path %s, longer than max allowed length (%d)",
+              sockpath, sizeof(unserver.sun_path)-1);
+      return -1;
+   }
    strcpy(unserver.sun_path, sockpath);
 
    // Open socket
