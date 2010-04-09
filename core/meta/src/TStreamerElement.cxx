@@ -38,6 +38,7 @@ namespace std {} using namespace std;
 const Int_t kMaxLen = 1024;
 static char gIncludeName[kMaxLen];
 
+extern void *gMmallocDesc;
 
 //______________________________________________________________________________
 static TStreamerBasicType *InitCounter(const char *countClass, const char *countName)
@@ -542,9 +543,15 @@ void TStreamerBase::Init(TObject *)
    fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
    if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
+
+   // When called via TMapFile (e.g. Update()) make sure that the dictionary
+   // gets allocated on the heap and not in the mapped file.
+   void *save = gMmallocDesc;
+   gMmallocDesc = 0;
    delete fMethod;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
+   gMmallocDesc = save;
    //fBaseClass = TClass::GetClass(GetName());
 }
 
