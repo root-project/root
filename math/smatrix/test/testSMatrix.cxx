@@ -1386,6 +1386,30 @@ int test23() {
 
 }
 
+int test24() { 
+   // add transpose test
+   // see bug #65531
+   double a[9] = { 1,-2,3,4,-5,6,-7,8,9};
+   double b[9] = { 1,-1,0,0,2,0,-1,0,3};
+
+   SMatrix<double,3> A(a,a+9); 
+   SMatrix<double,3> B(b,b+9); 
+
+   SMatrix<double,3> R = A * B * Transpose(A);
+
+   SMatrix<double,3> temp1 = A * B; 
+   SMatrix<double,3> R1 = temp1 * Transpose(A);
+
+   SMatrix<double,3> temp2 = B * Transpose(A); 
+   SMatrix<double,3> R2 = A * temp2;
+
+   int iret = 0; 
+   iret |= compare(R1 == R2, true);
+   iret |= compare(R == R1,true);
+   return iret; 
+
+}
+
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
   if (test##N() == 0) std::cerr << " Test " << itest << "  OK " << std::endl; \
@@ -1422,6 +1446,7 @@ int testSMatrix() {
   TEST(21);
   TEST(22);
   TEST(23);
+  TEST(24);
 
   return iret;
 }
