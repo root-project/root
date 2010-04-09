@@ -44,3 +44,6 @@ template<typename TT> const char* TEvePathMarkT<TT>::TypeName()
       default:         return "Unknown";
    }
 }
+
+template class TEvePathMarkT<Float_t>;
+template class TEvePathMarkT<Double_t>;

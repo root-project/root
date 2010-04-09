@@ -156,3 +156,6 @@ template<typename TT> void TEveVector2T<TT>::Dump() const
 
    printf("(%f, %f)\n", fX, fY);
 }
+
+template class TEveVector2T<Float_t>;
+template class TEveVector2T<Double_t>;
