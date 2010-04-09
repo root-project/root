@@ -1825,6 +1825,12 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       SetAddress(fAddress);
    }
    SetupAddresses();
+   if (fObject == 0) 
+   {
+      // We have nowhere to copy the data (probably because the data member was
+      // 'dropped' from the current schema) so let's no copy it in a random place.
+      return 0;
+   }
 
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
