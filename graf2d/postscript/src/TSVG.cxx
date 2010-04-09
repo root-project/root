@@ -624,7 +624,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
    // Draw the marker according to the type
    PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29) {
+   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34) {
       PrintStr("<g stroke=");
       SetColor(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
@@ -769,22 +769,22 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
          PrintStr("\"/>");
       // Up triangle
-      } else if (ms == 23) {
+      } else if (ms == 23 || ms == 32) {
          PrintStr("<polygon points=\"");
          WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
          WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
          WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
          PrintStr("\"/>");
       // Diamond
-      } else if (ms == 27) {
+      } else if (ms == 27 || ms == 33) {
          PrintStr("<polygon points=\"");
          WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
          WriteReal(ix+m3); PrintStr(","); WriteReal(iy);
          WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
          WriteReal(ix-m3); PrintStr(","); WriteReal(iy);
          PrintStr("\"/>");
-      // Looks like a box + to me...
-      } else if (ms == 28) {
+      // Cross
+      } else if (ms == 28 || ms == 34) {
          PrintStr("<polygon points=\"");
          WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6);
          WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m2);
@@ -857,7 +857,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    // Draw the marker according to the type
    PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29) {
+   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34) {
       PrintStr("<g stroke=");
       SetColor(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
@@ -1000,22 +1000,22 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
          PrintStr("\"/>");
       // Up triangle
-      } else if (ms == 23) {
+      } else if (ms == 23 || ms == 32) {
          PrintStr("<polygon points=\"");
          WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
          WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
          WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
          PrintStr("\"/>");
       // Diamond
-      } else if (ms == 27) {
+      } else if (ms == 27 || ms == 33) {
          PrintStr("<polygon points=\"");
          WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
          WriteReal(ix+m3); PrintStr(","); WriteReal(iy);
          WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
          WriteReal(ix-m3); PrintStr(","); WriteReal(iy);
          PrintStr("\"/>");
-      // Looks like a box + to me...
-      } else if (ms == 28) {
+      // Cross
+      } else if (ms == 28 || ms == 34) {
          PrintStr("<polygon points=\"");
          WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6);
          WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m2);

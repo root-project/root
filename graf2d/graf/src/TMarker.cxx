@@ -99,8 +99,8 @@ void TMarker::DisplayMarkerTypes()
    text->SetTextSize(0.1);
    char atext[] = "       ";
    Double_t x = 0;
-   Double_t dx = 1/12.0;
-   for (Int_t i=1;i<12;i++) {
+   Double_t dx = 1/16.0;
+   for (Int_t i=1;i<16;i++) {
       x += dx;
       sprintf(atext,"%d",i);
       marker->SetMarkerStyle(i);

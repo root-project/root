@@ -364,11 +364,13 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          break;
       // Down triangle
       case 23:
+      case 32:
          pt[0].fX = Short_t(ix-m2); pt[0].fY = Short_t(iy-m2);
          pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy-m2);
          pt[2].fX = Short_t(ix);    pt[2].fY = Short_t(iy+m2);
          pt[3].fX = Short_t(ix-m2); pt[3].fY = Short_t(iy-m2);
-         fImage->FillPolygon(3, pt, col->AsHexString());
+	 ms == 32 ? fImage->DrawPolyLine(4, pt, col->AsHexString()) :
+                    fImage->FillPolygon(3, pt, col->AsHexString());
          break;
       // Up triangle
       case 22:
@@ -376,29 +378,37 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          pt[0].fX = Short_t(ix);    pt[0].fY = Short_t(iy-m2);
          pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy+m2);
          pt[2].fX = Short_t(ix-m2); pt[2].fY = Short_t(iy+m2);
-         pt[3].fX = Short_t(ix); pt[3].fY = Short_t(iy-m2);
+         pt[3].fX = Short_t(ix);    pt[3].fY = Short_t(iy-m2);
          ms == 26 ? fImage->DrawPolyLine(4, pt, col->AsHexString()) :
                     fImage->FillPolygon(3, pt, col->AsHexString());
          break;
       case 27:
-         fImage->DrawLine(UInt_t(ix), UInt_t(iy-m2), UInt_t(ix+m3), UInt_t(iy), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix+m3), UInt_t(iy), UInt_t(ix), UInt_t(iy+m2), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix), UInt_t(iy+m2), UInt_t(ix-m3), UInt_t(iy), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m3), UInt_t(iy), UInt_t(ix), UInt_t(iy-m2), col->AsHexString());
+      case 33:
+         pt[0].fX = Short_t(ix);    pt[0].fY = Short_t(iy-m2);
+         pt[1].fX = Short_t(ix+m3); pt[1].fY = Short_t(iy);
+         pt[2].fX = Short_t(ix);    pt[2].fY = Short_t(iy+m2);
+         pt[3].fX = Short_t(ix-m3); pt[3].fY = Short_t(iy);
+         pt[4].fX = Short_t(ix);    pt[4].fY = Short_t(iy-m2);
+         ms == 27 ? fImage->DrawPolyLine(5, pt, col->AsHexString()) :
+                    fImage->FillPolygon(4, pt, col->AsHexString());
          break;
       case 28:
-         fImage->DrawLine(UInt_t(ix-m6), UInt_t(iy-m6), UInt_t(ix-m6), UInt_t(iy-m2), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m6), UInt_t(iy-m2), UInt_t(ix+m6), UInt_t(iy-m2), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix+m6), UInt_t(iy-m2), UInt_t(ix+m6), UInt_t(iy-m6), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix+m6), UInt_t(iy-m6), UInt_t(ix+m2), UInt_t(iy-m6), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix+m2), UInt_t(iy-m6), UInt_t(ix+m2), UInt_t(iy+m6), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix+m2), UInt_t(iy+m6), UInt_t(ix+m6), UInt_t(iy+m6), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix+m6), UInt_t(iy+m6), UInt_t(ix+m6), UInt_t(iy+m2), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix+m6), UInt_t(iy+m2), UInt_t(ix-m6), UInt_t(iy+m2), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m6), UInt_t(iy+m2), UInt_t(ix-m6), UInt_t(iy+m6), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m6), UInt_t(iy+m6), UInt_t(ix-m2), UInt_t(iy+m6), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m2), UInt_t(iy+m6), UInt_t(ix-m2), UInt_t(iy-m6), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m2), UInt_t(iy-m6), UInt_t(ix-m6), UInt_t(iy-m6), col->AsHexString());
+      case 34:
+         pt[0].fX = Short_t(ix-m6);  pt[0].fY = Short_t(iy-m6);
+         pt[1].fX = Short_t(ix-m6);  pt[1].fY = Short_t(iy-m2);
+         pt[2].fX = Short_t(ix+m6);  pt[2].fY = Short_t(iy-m2);
+         pt[3].fX = Short_t(ix+m6);  pt[3].fY = Short_t(iy-m6);
+         pt[4].fX = Short_t(ix+m2);  pt[4].fY = Short_t(iy-m6);
+         pt[5].fX = Short_t(ix+m2);  pt[5].fY = Short_t(iy+m6);
+         pt[6].fX = Short_t(ix+m6);  pt[6].fY = Short_t(iy+m6);
+         pt[7].fX = Short_t(ix+m6);  pt[7].fY = Short_t(iy+m2);
+         pt[8].fX = Short_t(ix-m6);  pt[8].fY = Short_t(iy+m2);
+         pt[9].fX = Short_t(ix-m6);  pt[9].fY = Short_t(iy+m6);
+         pt[10].fX = Short_t(ix-m2); pt[10].fY = Short_t(iy+m6);
+         pt[11].fX = Short_t(ix-m2); pt[11].fY = Short_t(iy-m6);
+         pt[12].fX = Short_t(ix-m6); pt[12].fY = Short_t(iy-m6);
+         ms == 28 ? fImage->DrawPolyLine(13, pt, col->AsHexString()) :
+                    fImage->FillPolygon(12, pt, col->AsHexString());
          break;
       case 29:
       case 30:

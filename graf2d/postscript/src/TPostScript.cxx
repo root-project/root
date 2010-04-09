@@ -614,6 +614,12 @@ void TPostScript::DefineMarkers()
    PrintStr("/m31 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d");
    PrintStr(" x w2 sub y w2 add m w w neg d x w2 sub y w2");
    PrintStr(" sub m w w d s} def@");
+   PrintStr("/m32 {mp x y w2 sub m w2 w d w neg 0 d cl s} def@");
+   PrintStr("/m33 {mp x y w2 add m w3 neg w2 neg d w3 w2 neg d w3 w2 d cl f} def@");
+   PrintStr("/m34 {mp x w2 sub y w2 sub w3 add m w3 0 d ");
+   PrintStr(" 0 w3 neg d w3 0 d 0 w3 d w3 0 d ");
+   PrintStr(" 0 w3 d w3 neg 0 d 0 w3 d w3 neg 0 d");
+   PrintStr(" 0 w3 neg d w3 neg 0 d cl f } def@");
    PrintStr("/m2 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d s} def@");
    PrintStr("/m5 {mp x w2 sub y w2 sub m w w d x w2 sub y w2 add m w w neg d s} def@");
 }
@@ -984,8 +990,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    if (markerstyle == 4) strcpy(chtemp, " m24");
    if (markerstyle == 5) strcpy(chtemp, " m5");
    if (markerstyle >= 6 && markerstyle <= 19) strcpy(chtemp, " m20");
-   if (markerstyle >= 20 && markerstyle <= 31 ) sprintf(chtemp, " m%d", markerstyle);
-   if (markerstyle >= 32) strcpy(chtemp, " m20");
+   if (markerstyle >= 20 && markerstyle <= 34 ) sprintf(chtemp, " m%d", markerstyle);
+   if (markerstyle >= 35) strcpy(chtemp, " m20");
 
    // Set the PostScript marker size
    if (markerstyle == 1) {
@@ -1058,8 +1064,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    if (markerstyle == 4) strcpy(chtemp, " m24");
    if (markerstyle == 5) strcpy(chtemp, " m5");
    if (markerstyle >= 6 && markerstyle <= 19) strcpy(chtemp, " m20");
-   if (markerstyle >= 20 && markerstyle <= 31 ) sprintf(chtemp, " m%d", markerstyle);
-   if (markerstyle >= 32) strcpy(chtemp, " m20");
+   if (markerstyle >= 20 && markerstyle <= 34 ) sprintf(chtemp, " m%d", markerstyle);
+   if (markerstyle >= 35) strcpy(chtemp, " m20");
 
    // Set the PostScript marker size
    if (markerstyle == 1) {

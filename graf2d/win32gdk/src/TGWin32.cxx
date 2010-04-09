@@ -3381,7 +3381,7 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
 {
    // Set marker style.
 
-   if ((fMarkerStyle==markerstyle) || (markerstyle >= 31)) return;
+   if ((fMarkerStyle==markerstyle) || (markerstyle >= 35)) return;
    fMarkerStyle = TMath::Abs(markerstyle);
    fMarkerStyleModified = kTRUE;
 }
@@ -3406,7 +3406,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[3].x = 0;
       shape[3].y = im;
       SetMarkerType(4, 4, shape);
-   } else if (fMarkerStyle == 3) {
+   } else if (fMarkerStyle == 3 || fMarkerStyle == 31) {
       // * shaped marker
       shape[0].x = -im;
       shape[0].y = 0;
@@ -3470,8 +3470,8 @@ void TGWin32::UpdateMarkerStyle()
    } else if (fMarkerStyle == 8 || fMarkerStyle == 20) {
       // O shaped marker (filled)
       SetMarkerType(1, im * 2, shape);
-   } else if (fMarkerStyle == 21) {  // here start the old HIGZ symbols
-      // HIGZ full square
+   } else if (fMarkerStyle == 21) {
+      // full square
       shape[0].x = -im;
       shape[0].y = -im;
       shape[1].x = im;
@@ -3484,7 +3484,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[4].y = -im;
       SetMarkerType(3, 5, shape);
    } else if (fMarkerStyle == 22) {
-      // HIGZ full triangle up
+      // full triangle up
       shape[0].x = -im;
       shape[0].y = im;
       shape[1].x = im;
@@ -3495,7 +3495,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[3].y = im;
       SetMarkerType(3, 4, shape);
    } else if (fMarkerStyle == 23) {
-      // HIGZ full triangle down
+      // full triangle down
       shape[0].x = 0;
       shape[0].y = im;
       shape[1].x = im;
@@ -3506,7 +3506,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[3].y = im;
       SetMarkerType(3, 4, shape);
    } else if (fMarkerStyle == 25) {
-      // HIGZ open square
+      // open square
       shape[0].x = -im;
       shape[0].y = -im;
       shape[1].x = im;
@@ -3519,7 +3519,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[4].y = -im;
       SetMarkerType(2, 5, shape);
    } else if (fMarkerStyle == 26) {
-      // HIGZ open triangle up
+      // open triangle up
       shape[0].x = -im;
       shape[0].y = im;
       shape[1].x = im;
@@ -3530,7 +3530,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[3].y = im;
       SetMarkerType(2, 4, shape);
    } else if (fMarkerStyle == 27) {
-      // HIGZ open losange
+      // open losange
       Int_t imx = Int_t(2.66 * fMarkerSize + 0.5);
       shape[0].x = -imx;
       shape[0].y = 0;
@@ -3544,7 +3544,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[4].y = 0;
       SetMarkerType(2, 5, shape);
    } else if (fMarkerStyle == 28) {
-      // HIGZ open cross
+      // open cross
       Int_t imx = Int_t(1.33 * fMarkerSize + 0.5);
       shape[0].x = -im;
       shape[0].y = -imx;
@@ -3574,7 +3574,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[12].y = -imx;
       SetMarkerType(2, 13, shape);
    } else if (fMarkerStyle == 29) {
-      // HIGZ full star pentagone
+      // full star pentagone
       Int_t im1 = Int_t(0.66 * fMarkerSize + 0.5);
       Int_t im2 = Int_t(2.00 * fMarkerSize + 0.5);
       Int_t im3 = Int_t(2.66 * fMarkerSize + 0.5);
@@ -3603,7 +3603,7 @@ void TGWin32::UpdateMarkerStyle()
       shape[10].y = im4;
       SetMarkerType(3, 11, shape);
    } else if (fMarkerStyle == 30) {
-      // HIGZ open star pentagone
+      // open star pentagone
       Int_t im1 = Int_t(0.66 * fMarkerSize + 0.5);
       Int_t im2 = Int_t(2.00 * fMarkerSize + 0.5);
       Int_t im3 = Int_t(2.66 * fMarkerSize + 0.5);
@@ -3631,9 +3631,39 @@ void TGWin32::UpdateMarkerStyle()
       shape[10].x = -im;
       shape[10].y = im4;
       SetMarkerType(2, 11, shape);
-   } else if (fMarkerStyle == 31) {
-      // HIGZ +&&x (kind of star)
-      SetMarkerType(1, im * 2, shape);
+   } else if (fMarkerStyle == 32) {
+      // open triangle down
+      shape[0].x =   0;  shape[0].y = im;
+      shape[1].x =  im;  shape[1].y = -im;
+      shape[2].x = -im;  shape[2].y = -im;
+      shape[3].x =   0;  shape[3].y = im;
+      SetMarkerType(2,4,shape);   
+   } else if (fMarkerStyle == 33) {
+      // full losange
+      Int_t imx = Int_t(2.66*fMarkerSize + 0.5);
+      shape[0].x =-imx;  shape[0].y = 0;  
+      shape[1].x =   0;  shape[1].y = -im;
+      shape[2].x = imx;  shape[2].y = 0;  
+      shape[3].x =   0;  shape[3].y = im; 
+      shape[4].x =-imx;  shape[4].y = 0;  
+      SetMarkerType(3,5,shape);
+   } else if (fMarkerStyle == 34) {
+      // full cross
+      Int_t imx = Int_t(1.33*fMarkerSize + 0.5);
+      shape[0].x = -im;  shape[0].y =-imx;
+      shape[1].x =-imx;  shape[1].y =-imx;
+      shape[2].x =-imx;  shape[2].y = -im;
+      shape[3].x = imx;  shape[3].y = -im;
+      shape[4].x = imx;  shape[4].y =-imx;
+      shape[5].x =  im;  shape[5].y =-imx;
+      shape[6].x =  im;  shape[6].y = imx;
+      shape[7].x = imx;  shape[7].y = imx;
+      shape[8].x = imx;  shape[8].y = im;
+      shape[9].x =-imx;  shape[9].y = im;
+      shape[10].x=-imx;  shape[10].y= imx;
+      shape[11].x= -im;  shape[11].y= imx;
+      shape[12].x= -im;  shape[12].y=-imx;
+      SetMarkerType(3,13,shape);
    } else {
       // single dot
       SetMarkerType(0, 0, shape);

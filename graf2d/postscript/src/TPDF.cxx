@@ -543,7 +543,7 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          WriteReal(ix-m2); WriteReal(iy-m2);
          WriteReal(m)    ; WriteReal(m)    ; PrintFast(3," re");
       // Down triangle
-      } else if (ms == 23) {
+      } else if (ms == 23 || ms == 32) {
          MoveTo(ix   , iy-m2);
          LineTo(ix+m2, iy+m2);
          LineTo(ix-m2, iy+m2);
@@ -554,13 +554,13 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          LineTo(ix+m2, iy-m2);
          LineTo(ix   , iy+m2);
          PrintFast(2," h");
-      } else if (ms == 27) {
+      } else if (ms == 27 || ms == 33) {
          MoveTo(ix   , iy-m2);
          LineTo(ix+m3, iy);
          LineTo(ix   , iy+m2);
          LineTo(ix-m3, iy)   ;
          PrintFast(2," h");
-      } else if (ms == 28) {
+      } else if (ms == 28 || ms == 34) {
          MoveTo(ix-m6, iy-m6);
          LineTo(ix-m6, iy-m2);
          LineTo(ix+m6, iy-m2);
@@ -592,7 +592,7 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       }
    }
 
-   if ((ms > 19 && ms < 24) || ms == 29) {
+   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34) {
       PrintFast(2," f");
    } else {
       PrintFast(2," S");
@@ -684,7 +684,7 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          WriteReal(ix-m2); WriteReal(iy-m2);
          WriteReal(m)    ; WriteReal(m)    ; PrintFast(3," re");
       // Down triangle
-      } else if (ms == 23) {
+      } else if (ms == 23 || ms == 32) {
          MoveTo(ix   , iy-m2);
          LineTo(ix+m2, iy+m2);
          LineTo(ix-m2, iy+m2);
@@ -695,13 +695,13 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          LineTo(ix+m2, iy-m2);
          LineTo(ix   , iy+m2);
          PrintFast(2," h");
-      } else if (ms == 27) {
+      } else if (ms == 27 || ms == 33) {
          MoveTo(ix   , iy-m2);
          LineTo(ix+m3, iy);
          LineTo(ix   , iy+m2);
          LineTo(ix-m3, iy)   ;
          PrintFast(2," h");
-      } else if (ms == 28) {
+      } else if (ms == 28 || ms == 34) {
          MoveTo(ix-m6, iy-m6);
          LineTo(ix-m6, iy-m2);
          LineTo(ix+m6, iy-m2);
@@ -733,7 +733,7 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       }
    }
 
-   if ((ms > 19 && ms < 24) || ms == 29) {
+   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34) {
       PrintFast(2," f");
    } else {
       PrintFast(2," S");
