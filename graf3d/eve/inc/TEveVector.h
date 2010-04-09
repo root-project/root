@@ -28,6 +28,8 @@ public:
    TT fX, fY, fZ; // Components of the vector.
 
    TEveVectorT() : fX(0), fY(0), fZ(0) {}
+   template <typename OO>
+   TEveVectorT(const TEveVectorT<OO>& v) : fX(v.fX), fY(v.fY), fZ(v.fZ) {}
    TEveVectorT(const Float_t*  v) : fX(v[0]), fY(v[1]), fZ(v[2]) {}
    TEveVectorT(const Double_t* v) : fX(v[0]), fY(v[1]), fZ(v[2]) {}
    TEveVectorT(TT x, TT y, TT  z) : fX(x), fY(y), fZ(z) {}
@@ -83,9 +85,12 @@ public:
    TEveVectorT  Orthogonal() const;
    void         OrthoNormBase(TEveVectorT& a, TEveVectorT& b) const;
 
-   ClassDefNV(TEveVectorT, 1); // A three-vector template without TObject inheritance and virtual functions.
+   ClassDefNV(TEveVectorT, 2); // A three-vector template without TObject inheritance and virtual functions.
 };
 
+typedef TEveVectorT<Float_t>  TEveVector;
+typedef TEveVectorT<Float_t>  TEveVectorF;
+typedef TEveVectorT<Double_t> TEveVectorD;
 
 //______________________________________________________________________________
 template<typename TT>
@@ -198,48 +203,6 @@ inline TEveVectorT<TT> operator*(TT b, const TEveVectorT<TT>& a)
 
 
 //==============================================================================
-// TEveVector
-//==============================================================================
-
-class TEveVector : public TEveVectorT<Float_t>
-{
-   typedef TEveVectorT<Float_t> TP;
-
-public:
-   TEveVector() : TP() {}
-   TEveVector(const Float_t*  v) : TP(v) {}
-   TEveVector(const Double_t* v) : TP(v) {}
-   TEveVector(Float_t x, Float_t y, Float_t z) : TP(x, y, z) {}
-   template <typename OO>
-   TEveVector(const TEveVectorT<OO>& v) : TP(v.fX, v.fY, v.fZ) {}
-
-   ClassDefNV(TEveVector, 2); // Single-precision three-vector without TObject inheritance and virtual functions.
-};
-
-typedef TEveVector TEveVectorF;
-
-
-//==============================================================================
-// TEveVectorD
-//==============================================================================
-
-class TEveVectorD : public TEveVectorT<Double_t>
-{
-   typedef TEveVectorT<Double_t> TP;
-
-public:
-   TEveVectorD() : TP() {}
-   TEveVectorD(const Float_t*  v) : TP(v) {}
-   TEveVectorD(const Double_t* v) : TP(v) {}
-   TEveVectorD(Double_t x, Double_t y, Double_t z) : TP(x, y, z) {}
-   template <typename OO>
-   TEveVectorD(const TEveVectorT<OO>& v) : TP(v.fX, v.fY, v.fZ) {}
-
-   ClassDefNV(TEveVectorD, 1); // Double-precision three-vector without TObject inheritance and virtual functions.
-};
-
-
-//==============================================================================
 // TEveVector4T
 //==============================================================================
 
@@ -252,6 +215,10 @@ public:
    TT fT;
 
    TEveVector4T() : TP(),  fT(0) {}
+   template <typename OO>
+   TEveVector4T(const TEveVectorT<OO>& v, Float_t t=0) : TP(v.fX, v.fY, v.fZ), fT(t) {}
+   template <typename OO>
+   TEveVector4T(const TEveVector4T<OO>& v) : TP(v.fX, v.fY, v.fZ), fT(v.fT) {}
    TEveVector4T(const Float_t*  v) : TP(v), fT(v[3]) {}
    TEveVector4T(const Double_t* v) : TP(v), fT(v[3]) {}
    TEveVector4T(TT x, TT y, TT z, TT t=0) : TP(x, y, z), fT(t) {}
@@ -267,6 +234,10 @@ public:
 
    ClassDefNV(TEveVector4T, 1); // A four-vector template without TObject inheritance and virtual functions.
 };
+
+typedef TEveVector4T<Float_t>  TEveVector4;
+typedef TEveVector4T<Float_t>  TEveVector4F;
+typedef TEveVector4T<Double_t> TEveVector4D;
 
 //______________________________________________________________________________
 template<typename TT>
@@ -295,54 +266,6 @@ inline TEveVector4T<TT> operator*(TT b, const TEveVector4T<TT>& a)
 {
    return TEveVector4T<TT>(a.fX*b, a.fY*b, a.fZ*b, a.fT*b);
 }
-
-
-//==============================================================================
-// TEveVector4
-//==============================================================================
-
-class TEveVector4 : public TEveVector4T<Float_t>
-{
-   typedef TEveVector4T<Float_t> TP;
-
-public:
-   TEveVector4() : TP() {}
-   TEveVector4(const Float_t*  v) : TP(v) {}
-   TEveVector4(const Double_t* v) : TP(v) {}
-   TEveVector4(Float_t x, Float_t y, Float_t z, Float_t t=0) : TP(x, y, z, t) {}
-   template <typename OO>
-   TEveVector4(const TEveVectorT<OO>& v, Float_t t=0) : TP(v.fX, v.fY, v.fZ, t) {}
-   template <typename OO>
-   TEveVector4(const TEveVector4T<OO>& v) : TP(v.fX, v.fY, v.fZ, v.fT) {}
-
-   ClassDefNV(TEveVector4, 1); // Single-precision four-vector without TObject inheritance and virtual functions.
-
-};
-
-typedef TEveVector4 TEveVector4F;
-
-
-//==============================================================================
-// TEveVector4D
-//==============================================================================
-
-class TEveVector4D : public TEveVector4T<Double_t>
-{
-   typedef TEveVector4T<Double_t> TP;
-
-public:
-   TEveVector4D() : TP() {}
-   TEveVector4D(const Float_t*  v) : TP(v) {}
-   TEveVector4D(const Double_t* v) : TP(v) {}
-   TEveVector4D(Double_t x, Double_t y, Double_t z, Double_t t=0) : TP(x, y, z, t) {}
-   template <typename OO>
-   TEveVector4D(const TEveVectorT<OO>& v, Double_t t=0) : TP(v.fX, v.fY, v.fZ, t) {}
-   template <typename OO>
-   TEveVector4D(const TEveVector4T<OO>& v) : TP(v.fX, v.fY, v.fZ, v.fT) {}
-
-   ClassDefNV(TEveVector4D, 1); // Double-precision four-vector without TObject inheritance and virtual functions.
-
-};
 
 
 //==============================================================================
@@ -471,34 +394,37 @@ inline Float_t TEvePoint::operator [] (Int_t idx) const
 // TEvePathMark
 //==============================================================================
 
-class TEvePathMark
+template <typename TT>
+class TEvePathMarkT
 {
 public:
-   enum EType_e   { kReference, kDaughter, kDecay, kCluster2D };
+   enum EType_e { kReference, kDaughter, kDecay, kCluster2D };
 
-   EType_e     fType; // Mark-type.
-   TEveVector  fV;    // Vertex.
-   TEveVector  fP;    // Momentum.
-   TEveVector  fE;    // Extra, meaning depends on fType.
-   Float_t     fTime; // Time.
+   EType_e         fType; // Mark-type.
+   TEveVectorT<TT> fV;    // Vertex.
+   TEveVectorT<TT> fP;    // Momentum.
+   TEveVectorT<TT> fE;    // Extra, meaning depends on fType.
+   TT              fTime; // Time.
 
-   TEvePathMark(EType_e type=kReference) :
+   TEvePathMarkT(EType_e type=kReference) :
       fType(type), fV(), fP(), fE(), fTime(0) {}
 
-   TEvePathMark(EType_e type, const TEveVector& v, Float_t time=0) :
+   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, TT time=0) :
       fType(type), fV(v), fP(), fE(), fTime(time) {}
 
-   TEvePathMark(EType_e type, const TEveVector& v, const TEveVector& p, Float_t time=0) :
+   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, const TEveVectorT<TT>& p, TT time=0) :
       fType(type), fV(v), fP(p), fE(), fTime(time) {}
 
-   TEvePathMark(EType_e type, const TEveVector& v, const TEveVector& p, const TEveVector& e, Float_t time=0) :
+   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, const TEveVectorT<TT>& p, const TEveVectorT<TT>& e, TT time=0) :
       fType(type), fV(v), fP(p), fE(e), fTime(time) {}
-
-   ~TEvePathMark() {}
 
    const char* TypeName();
 
-   ClassDefNV(TEvePathMark, 1); // Special-point on track: position/momentum reference, daughter creation or decay (also used in VSD).
+   ClassDefNV(TEvePathMarkT, 1); // Template for a special point on a track: position/momentum reference, daughter creation or decay.
 };
+
+typedef TEvePathMarkT<Float_t>  TEvePathMark;
+typedef TEvePathMarkT<Float_t>  TEvePathMarkF;
+typedef TEvePathMarkT<Double_t> TEvePathMarkD;
 
 #endif

@@ -21,8 +21,8 @@
 // Float three-vector; a inimal Float_t copy of TVector3 used to
 // represent points and momenta (also used in VSD).
 
-ClassImp(TEveVector);
-ClassImp(TEveVectorD);
+ClassImp(TEveVectorT<Float_t>);
+ClassImp(TEveVectorT<Double_t>);
 
 //______________________________________________________________________________
 template<typename TT> void TEveVectorT<TT>::Dump() const
@@ -105,8 +105,8 @@ template class TEveVectorT<Double_t>;
 //
 // Float four-vector.
 
-ClassImp(TEveVector4);
-ClassImp(TEveVector4D);
+ClassImp(TEveVector4T<Float_t>);
+ClassImp(TEveVector4T<Double_t>);
 
 //______________________________________________________________________________
 template<typename TT> void TEveVector4T<TT>::Dump() const
@@ -192,10 +192,11 @@ void TEvePoint::Dump() const
 //               fE - large error direction, must be normalized.
 //               Track is propagated to plane and correction in fE direction is discarded.
 
-ClassImp(TEvePathMark);
+ClassImp(TEvePathMarkT<Float_t>);
+ClassImp(TEvePathMarkT<Double_t>);
 
 //______________________________________________________________________________
-const char* TEvePathMark::TypeName()
+template<typename TT> const char* TEvePathMarkT<TT>::TypeName()
 {
    // Return the name of path-mark type.
 

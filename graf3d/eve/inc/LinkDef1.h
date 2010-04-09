@@ -17,6 +17,32 @@
 // LinkDef1.h - Core EVE objects and services.
 //==============================================================================
 
+// TEveVector
+#pragma link C++ class   TEveVectorT<Float_t>+;
+#pragma link C++ class   TEveVectorT<Double_t>+;
+#pragma link C++ typedef TEveVector;
+#pragma link C++ typedef TEveVectorF;
+#pragma link C++ typedef TEveVectorD;
+
+#pragma link C++ class   TEveVector4T<Float_t>+;
+#pragma link C++ class   TEveVector4T<Double_t>+;
+#pragma link C++ typedef TEveVector4;
+#pragma link C++ typedef TEveVector4F;
+#pragma link C++ typedef TEveVector4D;
+
+#pragma link C++ class   TEvePoint+;
+
+#pragma link C++ class   TEvePathMarkT<Float_t>+;
+#pragma link C++ class   TEvePathMarkT<Double_t>+;
+#pragma link C++ typedef TEvePathMark;
+#pragma link C++ typedef TEvePathMarkF;
+#pragma link C++ typedef TEvePathMarkD;
+
+// TEveTrans
+#pragma link C++ class TEveTrans-;
+#pragma link C++ class TEveTransSubEditor+;
+#pragma link C++ class TEveTransEditor+;
+
 // TEveUtil
 #pragma link C++ class TEveUtil+;
 #pragma link C++ class TEveException+;
@@ -41,27 +67,6 @@
 #pragma link C++ class TEveRecV0+;
 #pragma link C++ class TEveRecCascade+;
 #pragma link C++ class TEveMCRecCrossRef+;
-
-// TEveVector
-#pragma link C++ class TEveVectorT<Float_t>+;
-#pragma link C++ class TEveVectorT<Double_t>+;
-#pragma link C++ class TEveVector+;
-#pragma link C++ class TEveVectorD+;
-#pragma link C++ class TEveVector4T<Float_t>+;
-#pragma link C++ class TEveVector4T<Double_t>+;
-#pragma link C++ class TEveVector4+;
-#pragma link C++ class TEveVector4D+;
-#pragma link C++ class TEvePoint+;
-#pragma link C++ class TEvePathMark+;
-
-#pragma link C++ typedef TEveVectorF;
-#pragma link C++ typedef TEveVector4F;
-
-
-// TEveTrans
-#pragma link C++ class TEveTrans-;
-#pragma link C++ class TEveTransSubEditor+;
-#pragma link C++ class TEveTransEditor+;
 
 // TEveChunkManager
 #pragma link C++ class TEveChunkManager+;

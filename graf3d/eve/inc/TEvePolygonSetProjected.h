@@ -12,12 +12,11 @@
 #ifndef ROOT_TEvePolygonSetProjected
 #define ROOT_TEvePolygonSetProjected
 
+#include "TEveVector.h"
 #include "TEveShape.h"
 #include "TEveProjectionBases.h"
 
 class TBuffer3D;
-
-class TEveVector;
 
 class TEvePolygonSetProjected : public TEveShape,
                                 public TEveProjected
