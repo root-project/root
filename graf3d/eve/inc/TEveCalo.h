@@ -262,8 +262,6 @@ protected:
    Bool_t                  fDrawHPlane;
    Float_t                 fHPlaneVal;
 
-   Int_t                   fBinStep;
-
    Int_t                   fDrawNumberCellPixels;
    Int_t                   fCellPixelFontSize;
 
