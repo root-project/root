@@ -29,11 +29,19 @@ BBARCH=../ROOT-${BBARCH#*-}/build
 # we cd into its build directory and set ROOT up
 cd  $BBARCH || (echo Cannot find directory $BBARCH from `pwd`; exit 1)
 . bin/thisroot.sh || (echo Cannot find ROOT setup script in `pwd`; exit 1)
-echo Set up ROOT in $ROOTSYS
+echo Set up ROOT in $ROOTSYS, SVN revision:
+echo === svninfo.txt ===
+cat $ROOTSYS/etc/svninfo.txt
+echo === svninfo.txt ===
 
 # cd back to where we started
 cd $STARTPWD
 
 # Make clean before making roottest, to not depend on dependencies:
-make clean "$@"
+#make clean "$@"
 make -k FAST=1 "$@"
+ret=$?
+echo === svninfo.txt ===
+cat $ROOTSYS/etc/svninfo.txt
+echo === svninfo.txt ===
+exit $ret
