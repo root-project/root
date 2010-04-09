@@ -43,9 +43,15 @@ DIRECTORIES = $(FILEDIR) $(LIBDIR)
 directories: $(FILEDIR) $(LIBDIR)
 
 FTEST = $(wildcard ?test.C)
+ifneq ($(FAST),)
+FTEST = vtest.C mtest.C
+endif
 FTEST_DLL = $(addprefix $(LIBDIR),$(subst .C,_C.$(DllSuf),$(FTEST)) )
 
 HOLDER = $(wildcard *Holder.C)
+ifneq ($(FAST),)
+HOLDER = vectorHolder.C mapHolder.C
+endif
 HOLDER_DLL = $(addprefix $(LIBDIR),$(subst .C,_C.$(DllSuf),$(HOLDER)))
 
 TEST_DLL = $(LIBDIR)TestHelpers_C.$(DllSuf) $(FTEST_DLL) $(HOLDER_DLL)
@@ -139,11 +145,20 @@ $(LIBDIR)runbase_C.$(DllSuf): runbase.C directories
 #	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | $(CALLROOTEXE) -l -b -n
 
+BRUN:=brun.C
+ifneq ($(FAST),)
+BRUN:=fastbrun.C
+endif
+
 stlIoTest.log: $(DIRECTORIES) $(TEST_DLL)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b brun.C 2>&1 | tee full.log | grep -v -e 'does not support' -e 'did not support' -e 'Testing older file format from:' > stlIoTest.log && ( cat full.log | grep 'not support'; echo )
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $(BRUN) 2>&1 | tee full.log | grep -v -e 'does not support' -e 'did not support' -e 'Testing older file format from:' > stlIoTest.log && ( cat full.log | grep 'not support'; echo )
 
 stlIoTest: stlIoTest.log
+ifneq ($(FAST),)
+	$(CMDECHO) diff -b stlIoTest_fast.ref stlIoTest.log 
+else
 	$(CMDECHO) diff -b stlIoTest.ref stlIoTest.log 
+endif
 
 stlNoLibTest.log: $(FILEDIR)/vector.root readNoLib.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l readNoLib.C\(\"$(FILEDIR)/vector.root\"\) > $@ 2>&1
