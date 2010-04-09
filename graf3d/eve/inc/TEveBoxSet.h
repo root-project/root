@@ -40,15 +40,15 @@ protected:
 
    struct BFreeBox_t       : public DigitBase_t { Float_t fVertices[24]; };
 
-   struct BOrigin_t        : public DigitBase_t { Float_t fA, fB, fC; virtual ~BOrigin_t() {} };
+   struct BOrigin_t        : public DigitBase_t { Float_t fA, fB, fC; };
 
    struct BAABox_t         : public BOrigin_t   { Float_t fW, fH, fD; };
 
-   struct BAABoxFixedDim_t : public BOrigin_t {};
+   struct BAABoxFixedDim_t : public BOrigin_t   {};
 
-   struct BCone_t          : public DigitBase_t { TEveVector fPos, fDir; Float_t fR; virtual ~BCone_t() {} };
+   struct BCone_t          : public DigitBase_t { TEveVector fPos, fDir; Float_t fR; };
 
-   struct BEllipticCone_t  : public BCone_t  { Float_t fR2, fAngle; };
+   struct BEllipticCone_t  : public BCone_t     { Float_t fR2, fAngle; };
 
 protected:
    EBoxType_e        fBoxType;      // Type of rendered box.

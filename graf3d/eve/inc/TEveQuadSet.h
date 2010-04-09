@@ -55,16 +55,13 @@ public:
 
 protected:
 
-   struct QFreeQuad_t     : public DigitBase_t      { Float_t fVertices[12]; };
+   struct QFreeQuad_t     : public DigitBase_t     { Float_t fVertices[12]; };
 
-   struct QOrigin_t       : public DigitBase_t      {
-     virtual ~QOrigin_t() {} ; Float_t fA, fB; };
+   struct QOrigin_t       : public DigitBase_t     { Float_t fA, fB; };
 
-   struct QRectFixDimC_t  : public QOrigin_t       {
-     virtual ~QRectFixDimC_t() {} };
+   struct QRectFixDimC_t  : public QOrigin_t       {};
 
-   struct QRectFixDim_t   : public QRectFixDimC_t  {
-     virtual ~QRectFixDim_t() {} ; Float_t fC; };
+   struct QRectFixDim_t   : public QRectFixDimC_t  { Float_t fC; };
 
    struct QRectFixC_t     : public QRectFixDimC_t  { Float_t fW, fH; };
 

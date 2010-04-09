@@ -23,7 +23,7 @@
 #include "TEveRGBAPalette.h"
 #include "TEveChunkManager.h"
 
-#include "TObject.h"
+class TRefArray;
 
 class TEveDigitSet : public TEveElement,
                      public TNamed, public TQObject,
@@ -45,12 +45,13 @@ protected:
    {
       // Base-class for digit representation classes.
 
-      Int_t fValue; // signal value of a digit (can be direct RGBA color)
-      TRef  fId;    // external object reference
+      Int_t  fValue;    // signal value of a digit (can be direct RGBA color)
+      Long_t fUserData; // user-data for given digit
 
-      DigitBase_t(Int_t v=0) : fValue(v), fId() {}
-      virtual ~DigitBase_t() {}
+      DigitBase_t(Int_t v=0) : fValue(v), fUserData(0) {}
    };
+
+   TRefArray        *fDigitIds;       //  Array holding references to external objects.
 
    Int_t             fDefaultValue;   //  Default signal value.
    Bool_t            fValueIsColor;   //  Interpret signal value as RGBA color.
@@ -59,7 +60,7 @@ protected:
    TEveChunkManager  fPlex;           //  Container of digit data.
    DigitBase_t*      fLastDigit;      //! The last digit added to collection.
 
-   Color_t           fColor;          //  Color used for frame
+   Color_t           fColor;          //  Color used for frame (or all digis with single-color).
    TEveFrameBox*     fFrame;          //  Pointer to frame structure.
    TEveRGBAPalette*  fPalette;        //  Pointer to signal-color palette.
    ERenderMode_e     fRenderMode;     //  Render mode: as-is / line / filled.
@@ -70,7 +71,7 @@ protected:
    Callback_foo      fCallbackFoo;    //! Additional function to call on secondary-select.
 
    DigitBase_t* NewDigit();
-   void       ReleaseIds();
+   void         ReleaseIds();
 
 public:
    TEveDigitSet(const char* n="TEveDigitSet", const char* t="");
@@ -97,13 +98,18 @@ public:
    void DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
    void DigitColor(UChar_t* rgba);
 
-   void DigitId(TObject* id);
-
    Bool_t GetOwnIds() const     { return fOwnIds; }
    void   SetOwnIds(Bool_t o)   { fOwnIds = o; }
 
-   DigitBase_t* GetDigit(Int_t n) { return (DigitBase_t*) fPlex.Atom(n);   }
-   TObject*     GetId(Int_t n)    { return GetDigit(n)->fId.GetObject(); }
+   void   DigitId(TObject* id);
+   void   DigitUserData(Long_t ud);
+
+   void   DigitId(Int_t n, TObject* id);
+   void   DigitUserData(Int_t n, Long_t ud);
+
+   DigitBase_t* GetDigit(Int_t n) const { return (DigitBase_t*) fPlex.Atom(n); }
+   TObject*     GetId(Int_t n) const;
+   Long_t       GetUserData(Int_t n) const;
 
    // --------------------------------
 

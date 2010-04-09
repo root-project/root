@@ -12,7 +12,6 @@
 #include "TEveChunkManager.h"
 
 //______________________________________________________________________________
-// TEveChunkManager
 //
 // Vector-like container with chunked memory allocation.
 //
@@ -22,9 +21,10 @@
 // The structure can be Refit() to occupy a single contiguous array.
 //
 
-ClassImp(TEveChunkManager)
-ClassImp(TEveChunkManager::iterator)
+ClassImp(TEveChunkManager);
+ClassImp(TEveChunkManager::iterator);
 
+//______________________________________________________________________________
 void TEveChunkManager::ReleaseChunks()
 {
    // Release all memory chunks.

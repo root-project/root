@@ -14,6 +14,7 @@
 #include "TEveTrans.h"
 
 #include "TColor.h"
+#include "TRefArray.h"
 
 
 //______________________________________________________________________________
@@ -60,6 +61,7 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    TEveElement     (fColor),
    TNamed          (n, t),
 
+   fDigitIds       (0),
    fDefaultValue   (kMinInt),
    fValueIsColor   (kFALSE),
    fOwnIds         (kFALSE),
@@ -91,6 +93,7 @@ TEveDigitSet::~TEveDigitSet()
    SetPalette(0);
    if (fOwnIds)
       ReleaseIds();
+   delete fDigitIds;
 }
 
 /******************************************************************************/
@@ -110,18 +113,19 @@ void TEveDigitSet::ReleaseIds()
    // Protected method. Release and delete the referenced objects, the
    // ownership is *NOT* checked.
 
-   TEveChunkManager::iterator qi(fPlex);
-   while (qi.next()) {
-      DigitBase_t& q = * (DigitBase_t*) qi();
-      if (q.fId.GetObject()) {
-         delete q.fId.GetObject();
-         q.fId = 0;
-      }
+   if (fDigitIds)
+   {
+      const Int_t N = fDigitIds->GetSize();
+
+      for (Int_t i = 0; i < N; ++i)
+         delete fDigitIds->At(i);
+
+      fDigitIds->Expand(0);
    }
 }
 
-/******************************************************************************/
-/******************************************************************************/
+
+//------------------------------------------------------------------------------
 
 //______________________________________________________________________________
 void TEveDigitSet::UseSingleColor()
@@ -235,7 +239,53 @@ void TEveDigitSet::DigitId(TObject* id)
 {
    // Set external object reference for the last digit added.
 
-   fLastDigit->fId = id;
+   DigitId(fPlex.Size() - 1, id);
+}
+
+//______________________________________________________________________________
+void TEveDigitSet::DigitUserData(Long_t ud)
+{
+   // Set user-data for the last digit added.
+
+   fLastDigit->fUserData = ud;
+}
+
+//______________________________________________________________________________
+void TEveDigitSet::DigitId(Int_t n, TObject* id)
+{
+   // Set external object reference for digit n.
+
+   if (!fDigitIds)
+      fDigitIds = new TRefArray;
+
+   if (fOwnIds && fDigitIds->At(n))
+      delete fDigitIds->At(n);
+
+   fDigitIds->AddAtAndExpand(id, n);
+}
+
+//______________________________________________________________________________
+void TEveDigitSet::DigitUserData(Int_t n, Long_t ud)
+{
+   // Set user-data for digit n.
+
+   GetDigit(n)->fUserData = ud;
+}
+
+//______________________________________________________________________________
+TObject* TEveDigitSet::GetId(Int_t n) const
+{
+   // Return external TObject associated with digit n.
+
+   return fDigitIds ? fDigitIds->At(n) : 0;
+}
+
+//______________________________________________________________________________
+Long_t TEveDigitSet::GetUserData(Int_t n) const
+{
+   // Get user-data associated with digit n.
+
+   return GetDigit(n)->fUserData;
 }
 
 /******************************************************************************/
@@ -255,7 +305,7 @@ void TEveDigitSet::DigitSelected(Int_t idx)
    // Called from renderer when a digit with index idx is selected.
 
    DigitBase_t *qb  = GetDigit(idx);
-   TObject     *obj = qb->fId.GetObject();
+   TObject     *obj = GetId(idx);
 
    if (fCallbackFoo) {
       (fCallbackFoo)(this, idx, obj);
