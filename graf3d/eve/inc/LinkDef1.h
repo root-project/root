@@ -30,7 +30,11 @@
 #pragma link C++ typedef TEveVector4F;
 #pragma link C++ typedef TEveVector4D;
 
-#pragma link C++ class   TEvePoint+;
+#pragma link C++ class   TEveVector2T<Float_t>+;
+#pragma link C++ class   TEveVector2T<Double_t>+;
+#pragma link C++ typedef TEveVector2;
+#pragma link C++ typedef TEveVector2F;
+#pragma link C++ typedef TEveVector2D;
 
 #pragma link C++ class   TEvePathMarkT<Float_t>+;
 #pragma link C++ class   TEvePathMarkT<Double_t>+;

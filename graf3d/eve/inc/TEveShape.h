@@ -30,8 +30,8 @@ private:
    TEveShape& operator=(const TEveShape&); // Not implemented
 
 public:
-   typedef std::vector<TEvePoint>           vPoint_t;
-   typedef std::vector<TEvePoint>::iterator vPoint_i;
+   typedef std::vector<TEveVector2>           vVector2_t;
+   typedef std::vector<TEveVector2>::iterator vVector2_i;
 
 protected:
    Color_t      fFillColor; // fill color of polygons
@@ -81,7 +81,7 @@ public:
 
    // ----------------------------------------------------------------
 
-   static Int_t FindConvexHull(const vPoint_t& pin, vPoint_t& pout, TEveElement* caller=0);
+   static Int_t FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveElement* caller=0);
 
    ClassDef(TEveShape, 0); // Abstract base-class for 2D/3D shapes.
 };

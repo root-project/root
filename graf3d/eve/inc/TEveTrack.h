@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "TEveVector.h"
+#include "TEvePathMark.h"
 #include "TEveElement.h"
 #include "TEveLine.h"
 

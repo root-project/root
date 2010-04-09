@@ -13,6 +13,7 @@
 #define ROOT_TEveTrackPropagator
 
 #include "TEveVector.h"
+#include "TEvePathMark.h"
 #include "TEveUtil.h"
 #include "TEveElement.h"
 #include "TMarker.h"

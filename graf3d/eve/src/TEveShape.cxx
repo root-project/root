@@ -102,7 +102,7 @@ void TEveShape::Paint(Option_t*)
 //==============================================================================
 
 //______________________________________________________________________________
-Int_t TEveShape::FindConvexHull(const vPoint_t& pin, vPoint_t& pout, TEveElement* caller)
+Int_t TEveShape::FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveElement* caller)
 {
    // Determines the convex-hull of points in pin.
    //
@@ -202,7 +202,7 @@ Int_t TEveShape::FindConvexHull(const vPoint_t& pin, vPoint_t& pout, TEveElement
    // Print the hull.
    // for (Int_t i = 0; i < N; ++i)
    // {
-   //    const TEvePoint &p = pin[hull[i]];
+   //    const TEveVector2 &p = pin[hull[i]];
    //    printf("%d [%d] (%5.1f, %5.1f) %f\n", i, hull[i], p.fX, p.fY, angles[hull[i]]);
    // }
 

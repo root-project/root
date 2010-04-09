@@ -63,9 +63,9 @@ private:
    TEveBoxProjected& operator=(const TEveBoxProjected&); // Not implemented
 
 protected:
-   vPoint_t     fPoints;
+   vVector2_t   fPoints;
    Int_t        fBreakIdx;
-   vPoint_t     fDebugPoints;
+   vVector2_t   fDebugPoints;
 
    virtual void SetDepthLocal(Float_t d);
 

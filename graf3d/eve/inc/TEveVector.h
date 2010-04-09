@@ -269,100 +269,109 @@ inline TEveVector4T<TT> operator*(TT b, const TEveVector4T<TT>& a)
 
 
 //==============================================================================
-// TEvePoint
+// TEveVector2T
 //==============================================================================
 
-class TEvePoint
+template <typename TT>
+class TEveVector2T
 {
 public:
-   Float_t fX, fY; // Components of the point.
+   TT fX, fY; // Components of the point.
 
-   TEvePoint() : fX(0), fY(0) {}
-   TEvePoint(const Float_t* v)  : fX(v[0]), fY(v[1]) {}
-   TEvePoint(const Double_t* v) : fX(v[0]), fY(v[1]) {}
-   TEvePoint(Float_t x, Float_t y) : fX(x), fY(y)    {}
-   ~TEvePoint() {}
+   TEveVector2T() : fX(0), fY(0) {}
+   template <typename OO>
+   TEveVector2T(const TEveVector2T<OO>& v) : fX(v.fX), fY(v.fY) {}
+   TEveVector2T(const Float_t* v)  : fX(v[0]), fY(v[1]) {}
+   TEveVector2T(const Double_t* v) : fX(v[0]), fY(v[1]) {}
+   TEveVector2T(TT x, TT y) : fX(x), fY(y)    {}
 
    void Dump() const;
 
-   operator const Float_t*() const { return &fX; }
-   operator       Float_t*()       { return &fX; }
+   operator const TT*() const { return &fX; }
+   operator       TT*()       { return &fX; }
 
-   TEvePoint& operator *=(Float_t s)          { fX *= s;    fY *= s;    return *this; }
-   TEvePoint& operator +=(const TEvePoint& v) { fX += v.fX; fY += v.fY; return *this; }
-   TEvePoint& operator -=(const TEvePoint& v) { fX -= v.fX; fY -= v.fY; return *this; }
+   TEveVector2T& operator*=(TT s)                  { fX *= s;    fY *= s;    return *this; }
+   TEveVector2T& operator+=(const TEveVector2T& v) { fX += v.fX; fY += v.fY; return *this; }
+   TEveVector2T& operator-=(const TEveVector2T& v) { fX -= v.fX; fY -= v.fY; return *this; }
 
-   TEvePoint operator + (const TEvePoint &) const;
-   TEvePoint operator - (const TEvePoint &) const;
-   TEvePoint operator * (Float_t a) const;
+   TT& operator[](Int_t idx)       { return (&fX)[idx]; }
+   TT  operator[](Int_t idx) const { return (&fX)[idx]; }
 
-   Float_t& operator [] (Int_t indx);
-   Float_t  operator [] (Int_t indx) const;
-
-   const Float_t* Arr() const { return &fX; }
-   Float_t* Arr()       { return &fX; }
+   const TT* Arr() const { return &fX; }
+   TT* Arr()             { return &fX; }
 
    void Set(const Float_t*  v) { fX = v[0]; fY = v[1]; }
    void Set(const Double_t* v) { fX = v[0]; fY = v[1]; }
-   void Set(Float_t  x, Float_t  y) { fX = x; fY = y; }
-   void Set(Double_t x, Double_t y) { fX = x; fY = y; }
-   void Set(const TEvePoint& v) { fX = v.fX;  fY = v.fY;  }
+   void Set(TT x, TT y) { fX = x; fY = y; }
+
+   template <typename OO>
+   void Set(const TEveVector2T<OO>& v) { fX = v.fX; fY = v.fY; }
 
    void NegateXY() { fX = - fX; fY = -fY; }
-   void Normalize(Float_t length=1);
+   void Normalize(TT length=1);
 
-   Float_t Phi()  const;
+   TT Phi()  const;
 
-   Float_t Mag()  const { return TMath::Sqrt(fX*fX + fY*fY);}
-   Float_t Mag2() const { return fX*fX + fY*fY;}
+   TT Mag2() const { return fX*fX + fY*fY;}
+   TT Mag()  const { return TMath::Sqrt(Mag2());}
 
-   Float_t Distance(const TEvePoint& v) const;
-   Float_t SquareDistance(const TEvePoint& v) const;
+   TT Distance(const TEveVector2T& v) const;
+   TT SquareDistance(const TEveVector2T& v) const;
 
-   Float_t    Dot(const TEvePoint& a) const;
-   Float_t    Cross(const TEvePoint& a) const;
+   TT Dot(const TEveVector2T& a) const;
+   TT Cross(const TEveVector2T& a) const;
 
-   TEvePoint& Sub(const TEvePoint& p, const TEvePoint& q);
+   TEveVector2T& Sub(const TEveVector2T& p, const TEveVector2T& q);
 
-   TEvePoint& Mult(const TEvePoint& a, Float_t af);
+   TEveVector2T& Mult(const TEveVector2T& a, TT af);
 
-   ClassDefNV(TEvePoint, 1); // Float two-vector.
+   ClassDefNV(TEveVector2T, 1); // // A two-vector template without TObject inheritance and virtual functions.
 };
 
+typedef TEveVector2T<Float_t>  TEveVector2;
+typedef TEveVector2T<Float_t>  TEveVector2F;
+typedef TEveVector2T<Double_t> TEveVector2D;
+
 //______________________________________________________________________________
-inline Float_t TEvePoint::Phi() const
+template<typename TT>
+inline TT TEveVector2T<TT>::Phi() const
 {
    return fX == 0.0 && fY == 0.0 ? 0.0 : TMath::ATan2(fY, fX);
 }
 
 //______________________________________________________________________________
-inline Float_t TEvePoint::Distance( const TEvePoint& b) const
+template<typename TT>
+inline TT TEveVector2T<TT>::Distance( const TEveVector2T<TT>& b) const
 {
    return TMath::Sqrt((fX - b.fX)*(fX - b.fX) +
                       (fY - b.fY)*(fY - b.fY));
 }
 
 //______________________________________________________________________________
-inline Float_t TEvePoint::SquareDistance(const TEvePoint& b) const
+template<typename TT>
+inline TT TEveVector2T<TT>::SquareDistance(const TEveVector2T<TT>& b) const
 {
    return ((fX - b.fX) * (fX - b.fX) +
            (fY - b.fY) * (fY - b.fY));
 }
 
 //______________________________________________________________________________
-inline Float_t TEvePoint::Dot(const TEvePoint& a) const
+template<typename TT>
+inline TT TEveVector2T<TT>::Dot(const TEveVector2T<TT>& a) const
 {
    return a.fX*fX + a.fY*fY;
 }
 
 //______________________________________________________________________________
-inline Float_t TEvePoint::Cross(const TEvePoint& a) const
+template<typename TT>
+inline TT TEveVector2T<TT>::Cross(const TEveVector2T<TT>& a) const
 {
    return fX * a.fY - fY * a.fX;
 }
 
 //______________________________________________________________________________
-inline TEvePoint& TEvePoint::Sub(const TEvePoint& p, const TEvePoint& q)
+template<typename TT>
+inline TEveVector2T<TT>& TEveVector2T<TT>::Sub(const TEveVector2T<TT>& p, const TEveVector2T<TT>& q)
 {
    fX = p.fX - q.fX;
    fY = p.fY - q.fY;
@@ -370,7 +379,8 @@ inline TEvePoint& TEvePoint::Sub(const TEvePoint& p, const TEvePoint& q)
 }
 
 //______________________________________________________________________________
-inline TEvePoint& TEvePoint::Mult(const TEvePoint& a, Float_t af)
+template<typename TT>
+inline TEveVector2T<TT>& TEveVector2T<TT>::Mult(const TEveVector2T<TT>& a, TT af)
 {
    fX = a.fX * af;
    fY = a.fY * af;
@@ -378,53 +388,35 @@ inline TEvePoint& TEvePoint::Mult(const TEvePoint& a, Float_t af)
 }
 
 //______________________________________________________________________________
-inline Float_t& TEvePoint::operator [] (Int_t idx)
+template<typename TT>
+inline TEveVector2T<TT> operator+(const TEveVector2T<TT>& a, const TEveVector2T<TT>& b)
 {
-   return (&fX)[idx];
+   TEveVector2T<TT> r(a);
+   return r += b;
 }
 
 //______________________________________________________________________________
-inline Float_t TEvePoint::operator [] (Int_t idx) const
+template<typename TT>
+inline TEveVector2T<TT> operator-(const TEveVector2T<TT>& a, const TEveVector2T<TT>& b)
 {
-   return (&fX)[idx];
+   TEveVector2T<TT> r(a);
+   return r -= b;
 }
 
-
-//==============================================================================
-// TEvePathMark
-//==============================================================================
-
-template <typename TT>
-class TEvePathMarkT
+//______________________________________________________________________________
+template<typename TT>
+inline TEveVector2T<TT> operator*(const TEveVector2T<TT>& a, TT b)
 {
-public:
-   enum EType_e { kReference, kDaughter, kDecay, kCluster2D };
+   TEveVector2T<TT> r(a);
+   return r *= b;
+}
 
-   EType_e         fType; // Mark-type.
-   TEveVectorT<TT> fV;    // Vertex.
-   TEveVectorT<TT> fP;    // Momentum.
-   TEveVectorT<TT> fE;    // Extra, meaning depends on fType.
-   TT              fTime; // Time.
-
-   TEvePathMarkT(EType_e type=kReference) :
-      fType(type), fV(), fP(), fE(), fTime(0) {}
-
-   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, TT time=0) :
-      fType(type), fV(v), fP(), fE(), fTime(time) {}
-
-   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, const TEveVectorT<TT>& p, TT time=0) :
-      fType(type), fV(v), fP(p), fE(), fTime(time) {}
-
-   TEvePathMarkT(EType_e type, const TEveVectorT<TT>& v, const TEveVectorT<TT>& p, const TEveVectorT<TT>& e, TT time=0) :
-      fType(type), fV(v), fP(p), fE(e), fTime(time) {}
-
-   const char* TypeName();
-
-   ClassDefNV(TEvePathMarkT, 1); // Template for a special point on a track: position/momentum reference, daughter creation or decay.
-};
-
-typedef TEvePathMarkT<Float_t>  TEvePathMark;
-typedef TEvePathMarkT<Float_t>  TEvePathMarkF;
-typedef TEvePathMarkT<Double_t> TEvePathMarkD;
+//______________________________________________________________________________
+template<typename TT>
+inline TEveVector2T<TT> operator*(TT b, const TEveVector2T<TT>& a)
+{
+   TEveVector2T<TT> r(a);
+   return r *= b;
+}
 
 #endif

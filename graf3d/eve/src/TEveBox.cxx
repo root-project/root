@@ -119,7 +119,7 @@ void TEveBoxProjected::ComputeBBox()
    // Compute bounding-box, virtual from TAttBBox.
 
    BBoxInit();
-   for (vPoint_i i = fPoints.begin(); i != fPoints.end(); ++i)
+   for (vVector2_i i = fPoints.begin(); i != fPoints.end(); ++i)
    {
       BBoxCheckPoint(i->fX, i->fY, fDepth);
    }
@@ -159,7 +159,7 @@ void TEveBoxProjected::UpdateProjection()
    fDebugPoints.clear();
 
    // Project points in global CS, remove overlaps.
-   vPoint_t pp[2];
+   vVector2_t pp[2];
    {
       TEveProjection *projection = fManager->GetProjection();
       TEveTrans      *trans      = box->PtrMainTrans(kFALSE);
@@ -168,11 +168,11 @@ void TEveBoxProjected::UpdateProjection()
       for (Int_t i = 0; i < 8; ++i)
       {
          projection->ProjectPointfv(trans, box->GetVertex(i), pbuf, fDepth);
-         vPoint_t& ppv = pp[projection->SubSpaceId(pbuf)];
+         vVector2_t& ppv = pp[projection->SubSpaceId(pbuf)];
 
-         TEvePoint p(pbuf);
-         Bool_t    overlap = kFALSE;
-         for (vPoint_i j = ppv.begin(); j != ppv.end(); ++j)
+         TEveVector2 p(pbuf);
+         Bool_t      overlap = kFALSE;
+         for (vVector2_i j = ppv.begin(); j != ppv.end(); ++j)
          {
             if (p.SquareDistance(*j) < TEveProjection::fgEpsSqr)
             {

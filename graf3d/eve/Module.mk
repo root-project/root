@@ -30,7 +30,7 @@ EVEH1     := TEveBrowser TEveChunkManager TEveCompound \
              TEveGedEditor TEveMacro TEveManager TEvePad TEveParamList \
              TEveProjectionAxes TEveProjectionBases TEveProjectionManager \
              TEveProjections TEveScene TEveSelection TEveTrans TEveTreeTools \
-             TEveUtil TEveVector TEveVSD TEveViewer TEveWindow
+             TEveUtil TEveVector TEvePathMark TEveVSD TEveViewer TEveWindow
 
 EVEH2     := TEveArrow TEveBox TEveCalo \
              TEveDigitSet TEveFrameBox TEveGeo \
