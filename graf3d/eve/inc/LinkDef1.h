@@ -43,10 +43,20 @@
 #pragma link C++ class TEveMCRecCrossRef+;
 
 // TEveVector
+#pragma link C++ class TEveVectorT<Float_t>+;
+#pragma link C++ class TEveVectorT<Double_t>+;
 #pragma link C++ class TEveVector+;
+#pragma link C++ class TEveVectorD+;
+#pragma link C++ class TEveVector4T<Float_t>+;
+#pragma link C++ class TEveVector4T<Double_t>+;
 #pragma link C++ class TEveVector4+;
+#pragma link C++ class TEveVector4D+;
 #pragma link C++ class TEvePoint+;
 #pragma link C++ class TEvePathMark+;
+
+#pragma link C++ typedef TEveVectorF;
+#pragma link C++ typedef TEveVector4F;
+
 
 // TEveTrans
 #pragma link C++ class TEveTrans-;

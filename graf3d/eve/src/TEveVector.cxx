@@ -22,17 +22,10 @@
 // represent points and momenta (also used in VSD).
 
 ClassImp(TEveVector);
+ClassImp(TEveVectorD);
 
 //______________________________________________________________________________
-void TEveVector::Set(const TVector3& v)
-{
-   // Set from TVector3.
-
-   fX = v.x(); fY = v.y(); fZ = v.z();
-}
-
-//______________________________________________________________________________
-void TEveVector::Dump() const
+template<typename TT> void TEveVectorT<TT>::Dump() const
 {
    // Dump to stdout as "(x, y, z)\n".
 
@@ -40,31 +33,41 @@ void TEveVector::Dump() const
 }
 
 //______________________________________________________________________________
-Float_t TEveVector::Eta() const
+template<typename TT> void TEveVectorT<TT>::Set(const TVector3& v)
+{
+   // Set from TVector3.
+
+   fX = v.x(); fY = v.y(); fZ = v.z();
+}
+
+//______________________________________________________________________________
+template<typename TT> TT TEveVectorT<TT>::Eta() const
 {
    // Calculate eta of the point, pretending it's a momentum vector.
 
-   Float_t cosTheta = CosTheta();
+   TT cosTheta = CosTheta();
    if (cosTheta*cosTheta < 1) return -0.5* TMath::Log( (1.0-cosTheta)/(1.0+cosTheta) );
    Warning("Eta","transverse momentum = 0, returning +/- 1e10");
    return (fZ >= 0) ? 1e10 : -1e10;
 }
 
 //______________________________________________________________________________
-void TEveVector::Normalize(Float_t length)
+template<typename TT> TT TEveVectorT<TT>::Normalize(TT length)
 {
    // Normalize the vector to length if current length is non-zero.
+   // Returns the old magnitude.
 
-   Float_t m = Mag();
+   TT m = Mag();
    if (m != 0)
    {
-      m = length / m;
-      fX *= m; fY *= m; fZ *= m;
+      length /= m;
+      fX *= length; fY *= length; fZ *= length;
    }
+   return m;
 }
 
 //______________________________________________________________________________
-TEveVector TEveVector::Orthogonal() const
+template<typename TT> TEveVectorT<TT> TEveVectorT<TT>::Orthogonal() const
 {
    // Returns an orthogonal vector (not normalized).
 
@@ -72,14 +75,14 @@ TEveVector TEveVector::Orthogonal() const
    Float_t yy = fY < 0 ? -fY : fY;
    Float_t zz = fZ < 0 ? -fZ : fZ;
    if (xx < yy) {
-      return xx < zz ? TEveVector(0,fZ,-fY) : TEveVector(fY,-fX,0);
+      return xx < zz ? TEveVectorT<TT>(0,fZ,-fY) : TEveVectorT<TT>(fY,-fX,0);
    } else {
-      return yy < zz ? TEveVector(-fZ,0,fX) : TEveVector(fY,-fX,0);
+      return yy < zz ? TEveVectorT<TT>(-fZ,0,fX) : TEveVectorT<TT>(fY,-fX,0);
    }
 }
 
 //______________________________________________________________________________
-void TEveVector::OrthoNormBase(TEveVector& a, TEveVector& b) const
+template<typename TT> void TEveVectorT<TT>::OrthoNormBase(TEveVectorT<TT>& a, TEveVectorT<TT>& b) const
 {
    // Set vectors a and b to be normal to this and among themselves,
    // both of length 1.
@@ -90,29 +93,8 @@ void TEveVector::OrthoNormBase(TEveVector& a, TEveVector& b) const
    b.Normalize();
 }
 
-//______________________________________________________________________________
-TEveVector TEveVector::operator + (const TEveVector & b) const
-{
-   // Vector addition.
-
-   return TEveVector(fX + b.fX, fY + b.fY, fZ + b.fZ);
-}
-
-//______________________________________________________________________________
-TEveVector TEveVector::operator - (const TEveVector & b) const
-{
-   // Vector subtraction.
-
-   return TEveVector(fX - b.fX, fY - b.fY, fZ - b.fZ);
-}
-
-//______________________________________________________________________________
-TEveVector TEveVector::operator * (Float_t a) const
-{
-   // Multiplication with scalar.
-
-   return TEveVector(a*fX, a*fY, a*fZ);
-}
+template class TEveVectorT<Float_t>;
+template class TEveVectorT<Double_t>;
 
 
 //==============================================================================
@@ -124,14 +106,18 @@ TEveVector TEveVector::operator * (Float_t a) const
 // Float four-vector.
 
 ClassImp(TEveVector4);
+ClassImp(TEveVector4D);
 
 //______________________________________________________________________________
-void TEveVector4::Dump() const
+template<typename TT> void TEveVector4T<TT>::Dump() const
 {
    // Dump to stdout as "(x, y, z; t)\n".
 
-   printf("(%f, %f, %f; %f)\n", fX, fY, fZ, fT);
+   printf("(%f, %f, %f; %f)\n", TP::fX, TP::fY, TP::fZ, fT);
 }
+
+template class TEveVector4T<Float_t>;
+template class TEveVector4T<Double_t>;
 
 
 //==============================================================================
