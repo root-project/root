@@ -1547,7 +1547,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
          if (!dm->IsBasic()) {
             clobj = TClass::GetClass(dm->GetTypeName());
          }
-         if (clobj && clobj->InheritsFrom("TClonesArray")) {
+         if (clobj && clobj->InheritsFrom(TClonesArray::Class())) {
             // We have a pointer to a clones array.
             char* cpointer = (char*) pointer;
             char** ppointer = (char**) cpointer;
@@ -2227,7 +2227,7 @@ TFile* TTree::ChangeFile(TFile* file)
          continue;
       }
       // Tree: must save all trees in the old file, reset them.
-      if (obj->InheritsFrom("TTree")) {
+      if (obj->InheritsFrom(TTree::Class())) {
          TTree* t = (TTree*) obj;
          if (t != this) {
             t->AutoSave();
@@ -2500,7 +2500,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    Int_t nb = branches->GetEntriesFast();
    for (Int_t i = 0; i < nb; ++i) {
       TBranch* br = (TBranch*) branches->UncheckedAt(i);
-      if (br->InheritsFrom("TBranchElement")) {
+      if (br->InheritsFrom(TBranchElement::Class())) {
          ((TBranchElement*) br)->ResetDeleteObject();
       }
    }
@@ -2641,7 +2641,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
          if (br) {
             br->SetAddress(addr);
             // The copy does not own any object allocated by SetAddress().
-            if (br->InheritsFrom("TBranchElement")) {
+            if (br->InheritsFrom(TBranchElement::Class())) {
                ((TBranchElement*) br)->ResetDeleteObject();
             }
          } else {
@@ -2687,7 +2687,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             if (br) {
                // The copy does not own any object allocated by SetAddress().
                // FIXME: We do too much here, br may not be a top-level branch.
-               if (br->InheritsFrom("TBranchElement")) {
+               if (br->InheritsFrom(TBranchElement::Class())) {
                   ((TBranchElement*) br)->ResetDeleteObject();
                }
             } else {
@@ -4529,10 +4529,9 @@ const char* TTree::GetFriendAlias(TTree* tree) const
       if (t == tree) {
          return fe->GetName();
       }
-      if (t->IsA()->InheritsFrom("TChain")) {
-         if (t->GetTree() == tree) {
-            return fe->GetName();
-         }
+      // Case of a chain:
+      if (t->GetTree() == tree) {
+         return fe->GetName();
       }
    }
    // After looking at the first level,

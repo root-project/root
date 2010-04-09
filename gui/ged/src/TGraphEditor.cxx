@@ -40,6 +40,7 @@
 #include "TGLabel.h"
 #include "TGraph.h"
 #include "TVirtualPad.h"
+#include "TGraphErrors.h"
 
 ClassImp(TGraphEditor)
 
@@ -235,7 +236,7 @@ void TGraphEditor::DoShape()
 
    if (fAvoidSignal) return;
    TString opt;
-   if (fGraph->InheritsFrom("TGraphErrors"))
+   if (fGraph->InheritsFrom(TGraphErrors::Class()))
       opt = fGraph->GetDrawOption();
    else
       opt = GetDrawOption();

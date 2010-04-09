@@ -623,7 +623,7 @@ TProof::~TProof()
       // Set previous as default
       TIter pvp(gROOT->GetListOfProofs(), kIterBackward);
       while ((gProof = (TProof *)pvp())) {
-         if (gProof->InheritsFrom("TProof"))
+         if (gProof->InheritsFrom(TProof::Class()))
             break;
       }
    }
@@ -1288,7 +1288,7 @@ Int_t TProof::RemoveWorkers(TList *workerList)
                if (sl->GetName() == worker->GetNodeName())
                   break;
             }
-         } else if (to->InheritsFrom("TSlave")) {
+         } else if (to->InheritsFrom(TSlave::Class())) {
             sl = (TSlave *) to;
          } else {
             Warning("RemoveWorkers","unknown object type: %s - it should be"

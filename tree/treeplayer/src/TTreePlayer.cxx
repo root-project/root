@@ -383,7 +383,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentrie
    Int_t nb = branches->GetEntriesFast();
    for (Int_t i = 0; i < nb; ++i) {
       TBranch* br = (TBranch*) branches->UncheckedAt(i);
-      if (br->InheritsFrom("TBranchElement")) {
+      if (br->InheritsFrom(TBranchElement::Class())) {
          ((TBranchElement*) br)->ResetDeleteObject();
       }
    }
@@ -1383,7 +1383,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    // In the case of a chain, the GetDirectory information usually does
    // pertain to the Chain itself but to the currently loaded tree.
    // So we can not rely on it.
-   Bool_t ischain = fTree->InheritsFrom("TChain");
+   Bool_t ischain = fTree->InheritsFrom(TChain::Class());
    Bool_t isHbook = fTree->InheritsFrom("THbookTree");
    if (isHbook)
       treefile = fTree->GetTitle();
@@ -2161,7 +2161,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
    // In the case of a chain, the GetDirectory information usually does
    // pertain to the Chain itself but to the currently loaded tree.
    // So we can not rely on it.
-   Bool_t ischain = fTree->InheritsFrom("TChain");
+   Bool_t ischain = fTree->InheritsFrom(TChain::Class());
 
 // Print header
    TObjArray *leaves = fTree->GetListOfLeaves();

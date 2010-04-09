@@ -17,7 +17,7 @@ void exec2()
 
    TObject *select = gPad->GetSelected();
    if(!select) return;
-   if (!select->InheritsFrom("TH2")) {gPad->SetUniqueID(0); return;}
+   if (!select->InheritsFrom(TH2::Class())) {gPad->SetUniqueID(0); return;}
    gPad->GetCanvas()->FeedbackMode(kTRUE);
 
    //erase old position and draw a line at current position

@@ -212,7 +212,7 @@ void TProfile3D::Add(const TH1 *h1, Double_t c1)
       Error("Add","Attempt to add a non-existing profile");
       return;
    }
-   if (!h1->InheritsFrom("TProfile3D")) {
+   if (!h1->InheritsFrom(TProfile3D::Class())) {
       Error("Add","Attempt to add a non-profile2D object");
       return;
    }
@@ -233,11 +233,11 @@ void TProfile3D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       Error("Add","Attempt to add a non-existing profile");
       return;
    }
-   if (!h1->InheritsFrom("TProfile3D")) {
+   if (!h1->InheritsFrom(TProfile3D::Class())) {
       Error("Add","Attempt to add a non-profile3D object");
       return;
    }
-   if (!h2->InheritsFrom("TProfile3D")) {
+   if (!h2->InheritsFrom(TProfile3D::Class())) {
       Error("Add","Attempt to add a non-profile3D object");
       return;
    }
@@ -412,7 +412,7 @@ void TProfile3D::Divide(const TH1 *h1)
       Error("Divide","Attempt to divide a non-existing profile2D");
       return;
    }
-   if (!h1->InheritsFrom("TProfile3D")) {
+   if (!h1->InheritsFrom(TProfile3D::Class())) {
       Error("Divide","Attempt to divide a non-profile3D object");
       return;
    }
@@ -507,12 +507,12 @@ void TProfile3D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
       Error("Divide","Attempt to divide a non-existing profile2D");
       return;
    }
-   if (!h1->InheritsFrom("TProfile3D")) {
+   if (!h1->InheritsFrom(TProfile3D::Class())) {
       Error("Divide","Attempt to divide a non-profile2D object");
       return;
    }
    TProfile3D *p1 = (TProfile3D*)h1;
-   if (!h2->InheritsFrom("TProfile3D")) {
+   if (!h2->InheritsFrom(TProfile3D::Class())) {
       Error("Divide","Attempt to divide a non-profile2D object");
       return;
    }

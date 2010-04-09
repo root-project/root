@@ -97,7 +97,7 @@ namespace ROOT {
          TObject *op;
          TH1 *oldhtemp = 0;
          while ((op = np()) && !oldhtemp) {
-            if (op->InheritsFrom("TH1")) oldhtemp = (TH1 *)op;
+            if (op->InheritsFrom(TH1::Class())) oldhtemp = (TH1 *)op;
          }
          if (oldhtemp) {
             nbins = oldhtemp->GetXaxis()->GetNbins();

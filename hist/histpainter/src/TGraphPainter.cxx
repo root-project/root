@@ -22,6 +22,8 @@
 #include "TF1.h"
 #include "TPaveStats.h"
 #include "TGaxis.h"
+#include "TGraphAsymmErrors.h"
+#include "TGraphBentErrors.h"
 #include "TGraphPolargram.h"
 #include "TGraphPolar.h"
 #include "TGraphQQ.h"
@@ -586,7 +588,7 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
 
    Int_t theNpoints = theGraph->GetN();
    Double_t *theX, *theY;
-   if (theGraph->InheritsFrom("TGraphPolar")) {
+   if (theGraph->InheritsFrom(TGraphPolar::Class())) {
       TGraphPolar *theGraphPolar = (TGraphPolar*) theGraph;
       theX   = theGraphPolar->GetXpol();
       theY   = theGraphPolar->GetYpol();
@@ -678,7 +680,7 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
    static Int_t dpx, dpy;
    static Int_t *x=0, *y=0;
 
-   if (!theGraph->IsEditable() || theGraph->InheritsFrom("TGraphPolar")) {
+   if (!theGraph->IsEditable() || theGraph->InheritsFrom(TGraphPolar::Class())) {
       gPad->SetCursor(kHand);
       return;
    }
@@ -899,14 +901,14 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
 
    if (theGraph) {
       SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
-      if (theGraph->InheritsFrom("TGraphBentErrors")) {
+      if (theGraph->InheritsFrom(TGraphBentErrors::Class())) {
          PaintGraphBentErrors(theGraph,option);
-      } else if (theGraph->InheritsFrom("TGraphQQ")) {
+      } else if (theGraph->InheritsFrom(TGraphQQ::Class())) {
          PaintGraphQQ(theGraph,option);
-      } else if (theGraph->InheritsFrom("TGraphAsymmErrors")) {
+      } else if (theGraph->InheritsFrom(TGraphAsymmErrors::Class())) {
          PaintGraphAsymmErrors(theGraph,option);
-      } else if (theGraph->InheritsFrom("TGraphErrors")) {
-         if (theGraph->InheritsFrom("TGraphPolar")) {
+      } else if (theGraph->InheritsFrom(TGraphErrors::Class())) {
+         if (theGraph->InheritsFrom(TGraphPolar::Class())) {
             PaintGraphPolar(theGraph,option);
          } else {
             PaintGraphErrors(theGraph,option);

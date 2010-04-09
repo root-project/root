@@ -384,7 +384,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
             // -- Leaf is a varying length array, we need an offset array.
             fEntryOffsetLen = 1000;
          }
-         if (leaf->InheritsFrom("TLeafC")) {
+         if (leaf->InheritsFrom(TLeafC::Class())) {
             // -- Leaf is a character string, we need an offset array.
             fEntryOffsetLen = 1000;
          }

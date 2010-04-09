@@ -35,7 +35,7 @@ void DynamicExec()
    
    TObject *select = gPad->GetSelected();
    if(!select) return;
-   if (!select->InheritsFrom("TH2")) {gPad->SetUniqueID(0); return;}
+   if (!select->InheritsFrom(TH2::Class())) {gPad->SetUniqueID(0); return;}
    TH2 *h = (TH2*)select;
    gPad->GetCanvas()->FeedbackMode(kTRUE);
 

@@ -669,7 +669,7 @@ void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
    if (shape && shape->GetLogical()) {
       fSelectedObject =  (TStructNode*)(shape->GetLogical()->ID());
       if (fSelectedObject) {
-         if (fSelectedObject->IsA()->InheritsFrom("TPolyLine3D")) {
+         if (fSelectedObject->IsA()->InheritsFrom(TPolyLine3D::Class())) {
             fSelectedObject = NULL;
             return;
          }

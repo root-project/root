@@ -780,7 +780,7 @@ void TMVA::RuleFit::MakeVisHists()
    while ((key = (TKey*)next())) {
       // make sure, that we only look at histograms
       TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1F")) continue;
+      if (!cl->InheritsFrom(TH1F::Class())) continue;
       TH1F *sig = (TH1F*)key->ReadObj();
       TString hname= sig->GetName();
       Log() << kDEBUG << "Got histogram : " << hname << Endl;
@@ -807,7 +807,7 @@ void TMVA::RuleFit::MakeVisHists()
    while ((key = (TKey*)nextCorr())) {
       // make sure, that we only look at histograms
       TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH2F")) continue;
+      if (!cl->InheritsFrom(TH2F::Class())) continue;
       TH2F *sig = (TH2F*)key->ReadObj();
       TString hname= sig->GetName();
 

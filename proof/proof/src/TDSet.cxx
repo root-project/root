@@ -646,7 +646,7 @@ TDSet::TDSet(const char *name,
    // The correct class type
    c = TClass::GetClass(fType);
 
-   fIsTree = (c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
+   fIsTree = (c->InheritsFrom(TTree::Class())) ? kTRUE : kFALSE;
 
    if (objname)
       fObjName = objname;

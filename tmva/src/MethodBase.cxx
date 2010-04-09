@@ -1534,7 +1534,7 @@ TDirectory* TMVA::MethodBase::BaseDir() const
    TString defaultDir = GetMethodName();
 
    TObject* o = methodDir->FindObject(defaultDir);
-   if (o!=0 && o->InheritsFrom("TDirectory")) dir = (TDirectory*)o;
+   if (o!=0 && o->InheritsFrom(TDirectory::Class())) dir = (TDirectory*)o;
 
    if (dir != 0) return dir;
 

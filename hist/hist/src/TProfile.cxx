@@ -268,7 +268,7 @@ void TProfile::Add(const TH1 *h1, Double_t c1)
       Error("Add","Attempt to add a non-existing profile");
       return;
    }
-   if (!h1->InheritsFrom("TProfile")) {
+   if (!h1->InheritsFrom(TProfile::Class())) {
       Error("Add","Attempt to add a non-profile object");
       return;
    }
@@ -292,11 +292,11 @@ void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       Error("Add","Attempt to add a non-existing profile");
       return;
    }
-   if (!h1->InheritsFrom("TProfile")) {
+   if (!h1->InheritsFrom(TProfile::Class())) {
       Error("Add","Attempt to add a non-profile object");
       return;
    }
-   if (!h2->InheritsFrom("TProfile")) {
+   if (!h2->InheritsFrom(TProfile::Class())) {
       Error("Add","Attempt to add a non-profile object");
       return;
    }
@@ -454,7 +454,7 @@ void TProfile::Divide(const TH1 *h1)
       Error("Divide","Attempt to divide a non-existing profile");
       return;
    }
-   if (!h1->InheritsFrom("TH1")) {
+   if (!h1->InheritsFrom(TH1::Class())) {
       Error("Divide","Attempt to divide by a non-profile or non-histogram object");
       return;
    }
@@ -474,7 +474,7 @@ void TProfile::Divide(const TH1 *h1)
    Int_t bin;
    Double_t *cu1=0, *er1=0, *en1=0;
    Double_t e0,e1,c12;
-   if (h1->InheritsFrom("TProfile")) {
+   if (h1->InheritsFrom(TProfile::Class())) {
       cu1 = p1->GetW();
       er1 = p1->GetW2();
       en1 = p1->GetB();
@@ -533,12 +533,12 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
       Error("Divide","Attempt to divide a non-existing profile");
       return;
    }
-   if (!h1->InheritsFrom("TProfile")) {
+   if (!h1->InheritsFrom(TProfile::Class())) {
       Error("Divide","Attempt to divide a non-profile object");
       return;
    }
    TProfile *p1 = (TProfile*)h1;
-   if (!h2->InheritsFrom("TProfile")) {
+   if (!h2->InheritsFrom(TProfile::Class())) {
       Error("Divide","Attempt to divide by a non-profile object");
       return;
    }

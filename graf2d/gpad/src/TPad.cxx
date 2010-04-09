@@ -412,22 +412,22 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    TString mes;
    TObject *o=0;
    while( (o=next()) ) {
-      if((o->InheritsFrom("TAttLine") || o->InheritsFrom("TAttMarker") ||
-         o->InheritsFrom("TAttFill")) &&
-         ( !(o->InheritsFrom("TFrame")) && !(o->InheritsFrom("TPave")) )) {
+      if((o->InheritsFrom(TAttLine::Class()) || o->InheritsFrom(TAttMarker::Class()) ||
+          o->InheritsFrom(TAttFill::Class())) &&
+         ( !(o->InheritsFrom(TFrame::Class())) && !(o->InheritsFrom(TPave::Class())) )) {
             if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
-            if (o->InheritsFrom("TNamed") && strlen(((TNamed *)o)->GetTitle()))
+            if (o->InheritsFrom(TNamed::Class()) && strlen(((TNamed *)o)->GetTitle()))
                mes = ((TNamed *)o)->GetTitle();
             else if (strlen(o->GetName()))
                mes = o->GetName();
             else
                mes = o->ClassName();
             TString opt("");
-            if (o->InheritsFrom("TAttLine"))   opt += "l";
-            if (o->InheritsFrom("TAttMarker")) opt += "p";
-            if (o->InheritsFrom("TAttFill"))   opt += "f";
+            if (o->InheritsFrom(TAttLine::Class()))   opt += "l";
+            if (o->InheritsFrom(TAttMarker::Class())) opt += "p";
+            if (o->InheritsFrom(TAttFill::Class()))   opt += "f";
             leg->AddEntry(o,mes.Data(),opt.Data());
-      } else if ( o->InheritsFrom("TMultiGraph" ) ) {
+      } else if ( o->InheritsFrom(TMultiGraph::Class() ) ) {
          if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
          TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
          TIter nextgraph(grlist);
@@ -440,7 +440,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             else                             mes = gr->ClassName();
             leg->AddEntry( obj, mes.Data(), "lpf" );
          }
-      } else if ( o->InheritsFrom("THStack" ) ) {
+      } else if ( o->InheritsFrom(THStack::Class() ) ) {
          if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
          TList * hlist = ((THStack *)o)->GetHists();
          TIter nexthist(hlist);
@@ -2799,7 +2799,7 @@ void TPad::Paint(Option_t * /*option*/)
       obj = lnk->GetObject();
 
       // Create a pad 3D viewer if none exists and we encounter a 3D shape
-      if (!fViewer3D && obj->InheritsFrom("TAtt3D")) {
+      if (!fViewer3D && obj->InheritsFrom(TAtt3D::Class())) {
          GetViewer3D("pad");
       }
 
@@ -2905,7 +2905,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
       GetPainter()->DrawFillArea(7, frameXs, frameYs);
 
       // If this pad is a button, highlight it
-      if (InheritsFrom("TButton") && fBorderMode == -1) {
+      if (InheritsFrom(TButton::Class()) && fBorderMode == -1) {
          if (TestBit(kFraming)) {  // bit set in TButton::SetFraming
             if (GetFillColor() != 2) GetPainter()->SetLineColor(2);
             else                     GetPainter()->SetLineColor(4);
@@ -3041,7 +3041,7 @@ void TPad::PaintModified()
 
          // Create a pad 3D viewer if none exists and we encounter a
          // 3D shape
-         if (!fViewer3D && obj->InheritsFrom("TAtt3D")) {
+         if (!fViewer3D && obj->InheritsFrom(TAtt3D::Class())) {
             GetViewer3D("pad");
          }
 
@@ -4546,23 +4546,23 @@ void TPad::RedrawAxis(Option_t *option)
    TIter next(fPrimitives);
    TObject *obj;
    while ((obj = next())) {
-      if (obj->InheritsFrom("TH1")) {
+      if (obj->InheritsFrom(TH1::Class())) {
          TH1 *hobj = (TH1*)obj;
          if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
          else                   hobj->DrawCopy("sameaxis");
          return;
       }
-      if (obj->InheritsFrom("TMultiGraph")) {
+      if (obj->InheritsFrom(TMultiGraph::Class())) {
          TMultiGraph *mg = (TMultiGraph*)obj;
          if (mg) mg->GetHistogram()->DrawCopy("sameaxis");
          return;
       }
-      if (obj->InheritsFrom("TGraph")) {
+      if (obj->InheritsFrom(TGraph::Class())) {
          TGraph *g = (TGraph*)obj;
          if (g) g->GetHistogram()->DrawCopy("sameaxis");
          return;
       }
-      if (obj->InheritsFrom("THStack")) {
+      if (obj->InheritsFrom(THStack::Class())) {
          THStack *hs = (THStack*)obj;
          if (hs) hs->GetHistogram()->DrawCopy("sameaxis");
          return;

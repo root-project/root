@@ -1009,7 +1009,7 @@ Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
          TKey *key = 0;
          while ((key = dynamic_cast<TKey*> (keyIter.Next()))) {
 
-            if (!TClass::GetClass(key->GetClassName())->InheritsFrom("TTree")) continue;
+            if (!TClass::GetClass(key->GetClassName())->InheritsFrom(TTree::Class())) continue;
 
             TString keyStr;
             keyStr.Form("/%s", key->GetName());

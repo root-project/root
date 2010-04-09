@@ -35,6 +35,8 @@
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
 #include "TObjectSpy.h"
+#include "TAxis.h"
+#include "TView.h"
 
 class TCanvasInit {
 public:
@@ -1188,7 +1190,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          fSelected->ExecuteEvent(event, px, py);
          gVirtualX->Update();
 
-         if (!fSelected->InheritsFrom("TAxis")) {
+         if (!fSelected->InheritsFrom(TAxis::Class())) {
             Bool_t resize = kFALSE;
             if (fSelected->InheritsFrom(TBox::Class()))
                resize = ((TBox*)fSelected)->IsBeingResized();
@@ -1443,7 +1445,7 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
       Picked(fSelectedPad, fSelected, fEvent);  // emit signal
 
    if ((fEvent == kButton1Down) || (fEvent == kButton2Down) || (fEvent == kButton3Down)) {
-      if (fSelected && !fSelected->InheritsFrom("TView")) {
+      if (fSelected && !fSelected->InheritsFrom(TView::Class())) {
          fClickSelected = fSelected;
          fClickSelectedPad = fSelectedPad;
          Selected(fSelectedPad, fSelected, fEvent);  // emit signal

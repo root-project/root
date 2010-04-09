@@ -26,7 +26,6 @@
 #include "Foption.h"
 #include "TRandom.h"
 #include "TSpline.h"
-#include "TPaveStats.h"
 #include "TVirtualFitter.h"
 #include "TVirtualPad.h"
 #include "TVirtualGraphPainter.h"

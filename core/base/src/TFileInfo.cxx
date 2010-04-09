@@ -297,7 +297,7 @@ TFileInfoMeta *TFileInfo::GetMetaData(const char *meta) const
          m = (TFileInfoMeta *) fMetaDataList->FindObject(meta);
       if (m) {
          TClass *c = m->IsA();
-         return (c && c->InheritsFrom("TFileInfoMeta")) ? m : 0;
+         return (c && c->InheritsFrom(TFileInfoMeta::Class())) ? m : 0;
       }
    }
    return 0;

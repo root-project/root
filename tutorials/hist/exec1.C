@@ -14,7 +14,7 @@ void exec1()
    int px = gPad->GetEventX();
    TObject *select = gPad->GetSelected();
    if (!select) return;
-   if (select->InheritsFrom("TH1")) {
+   if (select->InheritsFrom(TH1::Class())) {
       TH1 *h = (TH1*)select;
       Float_t xx = gPad->AbsPixeltoX(px);
       Float_t x  = gPad->PadtoX(xx);

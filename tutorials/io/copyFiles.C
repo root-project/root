@@ -28,13 +28,13 @@ void CopyDir(TDirectory *source) {
       const char *classname = key->GetClassName();
       TClass *cl = gROOT->GetClass(classname);
       if (!cl) continue;
-      if (cl->InheritsFrom("TDirectory")) {
+      if (cl->InheritsFrom(TDirectory::Class())) {
          source->cd(key->GetName());
          TDirectory *subdir = gDirectory;
          adir->cd();
          CopyDir(subdir);
          adir->cd();
-      } else if (cl->InheritsFrom("TTree")) {
+      } else if (cl->InheritsFrom(TTree::Class())) {
          TTree *T = (TTree*)source->Get(key->GetName());
          adir->cd();
          TTree *newT = T->CloneTree(-1,"fast");

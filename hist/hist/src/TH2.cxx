@@ -1849,7 +1849,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    //check if a profile with identical name exist
    // if compatible reset and re-use previous histogram 
    TObject *h1obj = gROOT->FindObject(pname);
-   if (h1obj && h1obj->InheritsFrom("TH1")) {
+   if (h1obj && h1obj->InheritsFrom(TH1::Class())) {
       if (h1obj->IsA() != TProfile::Class() ) { 
          Error("DoProfile","Histogram with name %s must be a TProfile and is a %s",name,h1obj->ClassName());
          return 0; 
@@ -2136,7 +2136,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    // if compatible reset and re-use previous histogram 
    // (see https://savannah.cern.ch/bugs/?54340)
    TObject *h1obj = gROOT->FindObject(pname);
-   if (h1obj && h1obj->InheritsFrom("TH1")) {
+   if (h1obj && h1obj->InheritsFrom(TH1::Class())) {
       if (h1obj->IsA() != TH1D::Class() ) { 
          Error("DoProjection","Histogram with name %s must be a TH1D and is a %s",name,h1obj->ClassName());
          return 0; 

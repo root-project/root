@@ -71,9 +71,7 @@
 #include "TMethodCall.h"
 #include "TObjArray.h"
 #include "TMutex.h"
-#ifndef R__TH1MERGEFIXED
 #include "TH1.h"
-#endif
 #include "TVirtualMonitoring.h"
 #include "TParameter.h"
 
@@ -2494,7 +2492,7 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
    // Special treatment for histograms in autobin mode
    Bool_t specialH =
       (!fProof || !fProof->TestBit(TProof::kIsClient) || fProof->IsLite()) ? kTRUE : kFALSE;
-   if (specialH && newobj->InheritsFrom("TH1")) {
+   if (specialH && newobj->InheritsFrom(TH1::Class())) {
       if (!HandleHistogram(newobj)) {
          PDB(kOutput,1) Info("Incorporate", "histogram object '%s' added to the"
                              " appropriate list for delayed merging", newobj->GetName());

@@ -228,7 +228,7 @@ void TButton::PaintModified()
    if (!fCanvas) return;
    if (!fPrimitives) fPrimitives = new TList();
    TObject *obj = GetListOfPrimitives()->First();
-   if (obj && obj->InheritsFrom("TText")) {
+   if (obj && obj->InheritsFrom(TText::Class())) {
       TLatex *text = (TLatex*)obj;
       text->SetTitle(GetTitle());
       text->SetTextSize(GetTextSize());

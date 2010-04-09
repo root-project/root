@@ -32,7 +32,7 @@ void TriangleClicked() {
    if (event != 11) return; //may be comment this line 
    TObject *select = gPad->GetSelected();
    if (!select) return;
-   if (select->InheritsFrom("TPolyLine")) {
+   if (select->InheritsFrom(TPolyLine::Class())) {
       TPolyLine *pl = (TPolyLine*)select;
       printf("You have clicked triangle %d, color=%d\n",
               pl->GetUniqueID(),pl->GetFillColor());

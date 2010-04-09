@@ -466,7 +466,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
       // Check that tree with the right name exists in the file.
       // Note: We are not the owner of obj, the file is!
       TObject* obj = file->Get(treename);
-      if (!obj || !obj->InheritsFrom("TTree")) {
+      if (!obj || !obj->InheritsFrom(TTree::Class())) {
          Error("AddFile", "cannot find tree with name %s in file %s", treename, filename);
          delete file;
          file = 0;

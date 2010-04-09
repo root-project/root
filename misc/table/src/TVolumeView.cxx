@@ -338,7 +338,7 @@ TVolumeView::TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionI
    // Find TVolume by path;
    if (topNode) {
       thisNode =  (TVolume *)topNode->Find(thisNodePath);
-      if (!thisNode->InheritsFrom("TVolume")) {
+      if (!thisNode->InheritsFrom(TVolume::Class())) {
          thisNode = 0;
          Error("TVolumeView","wrong node <%s> on path: \"%s\"",thisNode->GetName(),thisNodePath);
       }

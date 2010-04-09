@@ -19,8 +19,10 @@
 #include "TClass.h"
 #include "TSystem.h"
 #include "THistPainter.h"
-#include "TH3.h"
 #include "TH2.h"
+#include "TH3.h"
+#include "TProfile.h"
+#include "THStack.h"
 #include "TF2.h"
 #include "TF3.h"
 #include "TCutG.h"
@@ -3624,8 +3626,8 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
          TObject *obj;
          // Check if the first TH1 of THStack in the pad is drawn with the option HBAR
          while ((obj = next())) {
-            if (!obj->InheritsFrom("TH1") &&
-                !obj->InheritsFrom("THStack")) continue;
+            if (!obj->InheritsFrom(TH1::Class()) &&
+                !obj->InheritsFrom(THStack::Class())) continue;
             TString opt = obj->GetDrawOption();
             opt.ToLower();
             // if drawn with HBAR, the axis should be inverted and the pad set to horizontal
@@ -6513,7 +6515,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       if (print_fval < 2) nlinesf += fit->GetNumberFreeParameters();
       else                nlinesf += fit->GetNpar();
    }
-   if (fH->InheritsFrom("TProfile")) nlinesf += print_mean + print_rms;
+   if (fH->InheritsFrom(TProfile::Class())) nlinesf += print_mean + print_rms;
 
    // Pavetext with statistics
    Bool_t done = kFALSE;
@@ -6572,7 +6574,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
          sprintf(t,textstats,fH->GetMean(1),fH->GetMeanError(1));
       }
       stats->AddText(t);
-      if (fH->InheritsFrom("TProfile")) {
+      if (fH->InheritsFrom(TProfile::Class())) {
          if (print_mean == 1) {
             sprintf(textstats,"%s = %s%s",gStringMeanY.Data(),"%",stats->GetStatFormat());
             sprintf(t,textstats,fH->GetMean(2));
@@ -6594,7 +6596,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
          sprintf(t,textstats,fH->GetRMS(1),fH->GetRMSError(1));
       }
       stats->AddText(t);
-      if(fH->InheritsFrom("TProfile")) {
+      if(fH->InheritsFrom(TProfile::Class())) {
          if (print_rms == 1) {
             sprintf(textstats,"%s = %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat());
             sprintf(t,textstats,fH->GetRMS(2));

@@ -3381,7 +3381,7 @@ void TBranchElement::ResetDeleteObject()
    Int_t nb = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nb; ++i)  {
       TBranch* br = (TBranch*) fBranches[i];
-      if (br->InheritsFrom("TBranchElement")) {
+      if (br->InheritsFrom(TBranchElement::Class())) {
          ((TBranchElement*) br)->ResetDeleteObject();
       }
    }
@@ -4280,7 +4280,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
       if (elem->IsA() == TStreamerBase::Class()) {
          // -- This is a base class of cl.
          TClass* clOfBase = TClass::GetClass(elem->GetName());
-         if ((clOfBase->Property() & kIsAbstract) && cl->InheritsFrom("TCollection")) {
+         if ((clOfBase->Property() & kIsAbstract) && cl->InheritsFrom(TCollection::Class())) {
             // -- Do nothing if we are abstract.
             // FIXME: We should not test for TCollection here.
             return -1;

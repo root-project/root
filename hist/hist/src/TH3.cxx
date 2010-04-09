@@ -1870,7 +1870,7 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
    // Create the histogram, either reseting a preexisting one 
    // in case they have a compatible axis
    TObject *h1obj = gROOT->FindObject(name);
-   if (h1obj && h1obj->InheritsFrom("TH1")) {
+   if (h1obj && h1obj->InheritsFrom(TH1::Class())) {
       if (h1obj->IsA() != TH1D::Class() ) { 
          Error("DoProject1D","Histogram with name %s must be a TH1D and is a %s",name,h1obj->ClassName());
          return 0; 
@@ -2069,7 +2069,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
    // if compatible or creating one from scratch.
    // Does an object with the same name exists?
    TObject *h2obj = gROOT->FindObject(name);
-   if (h2obj && h2obj->InheritsFrom("TH1")) {
+   if (h2obj && h2obj->InheritsFrom(TH1::Class())) {
       if ( h2obj->IsA() != TH2D::Class() ) { 
          Error("DoProject2D","Histogram with name %s must be a TH2D and is a %s",name,h2obj->ClassName());
          return 0; 
@@ -2534,7 +2534,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
    // if compatible or creating one from scratch.
    // Does an object with the same name exists?
    TObject *p2obj = gROOT->FindObject(name);
-   if (p2obj && p2obj->InheritsFrom("TH1")) {
+   if (p2obj && p2obj->InheritsFrom(TH1::Class())) {
       if (p2obj->IsA() != TProfile2D::Class() ) { 
          Error("DoProjectProfile2D","Histogram with name %s must be a TProfile2D and is a %s",name,p2obj->ClassName());
          return 0; 

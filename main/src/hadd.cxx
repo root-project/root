@@ -236,7 +236,7 @@ int MergeRootfile( TDirectory *target, TList *sourcelist)
          TObject *obj = key->ReadObj();
          //printf("keyname=%s, obj=%x\n",key->GetName(),obj);
 
-         if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
+         if ( obj->IsA()->InheritsFrom( TTree::Class() ) ) {
       
             // loop over all source files create a chain of Trees "globChain"
             if (!noTrees) {
@@ -270,7 +270,7 @@ int MergeRootfile( TDirectory *target, TList *sourcelist)
                   nextsource = (TFile*)sourcelist->After( nextsource );
                }
             }
-         } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
+         } else if ( obj->IsA()->InheritsFrom( TDirectory::Class() ) ) {
             // it's a subdirectory
 
             cout << "Found subdirectory " << obj->GetName() << endl;
@@ -344,9 +344,9 @@ int MergeRootfile( TDirectory *target, TList *sourcelist)
             target->cd();
        
             //!!if the object is a tree, it is stored in globChain...
-            if(obj->IsA()->InheritsFrom( "TDirectory" )) {
+            if(obj->IsA()->InheritsFrom( TDirectory::Class() )) {
                //printf("cas d'une directory\n");
-            } else if(obj->IsA()->InheritsFrom( "TTree" )) {
+            } else if(obj->IsA()->InheritsFrom( TTree::Class() )) {
                if (!noTrees) {
                   globChain->ls();
                   if (fastMethod) globChain->Merge(target->GetFile(),0,"keep fast");

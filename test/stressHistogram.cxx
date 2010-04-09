@@ -8048,7 +8048,7 @@ public:
       TIter next(l);
       TObject * obj = 0; 
       while ((obj = next()))
-         if (obj->InheritsFrom("TH1") ) delete obj; 
+         if (obj->InheritsFrom(TH1::Class()) ) delete obj; 
 
    }
    

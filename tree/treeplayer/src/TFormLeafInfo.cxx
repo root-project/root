@@ -555,7 +555,7 @@ void* TFormLeafInfo::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
    // TFormLeafInfo.
 
    char *thisobj = 0;
-   if (leaf->InheritsFrom("TLeafObject") ) {
+   if (leaf->InheritsFrom(TLeafObject::Class()) ) {
       thisobj = (char*)((TLeafObject*)leaf)->GetObject();
    } else {
       thisobj = GetObjectAddress((TLeafElement*)leaf, instance); // instance might be modified
@@ -741,7 +741,7 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
    // Return result of a leafobject method.
 
    char *thisobj = 0;
-   if (leaf->InheritsFrom("TLeafObject") ) {
+   if (leaf->InheritsFrom(TLeafObject::Class()) ) {
       thisobj = (char*)((TLeafObject*)leaf)->GetObject();
    } else {
       thisobj = GetObjectAddress((TLeafElement*)leaf, instance); // instance might be modified
@@ -1120,7 +1120,7 @@ void* TFormLeafInfoClones::GetLocalValuePointer(TLeaf *leaf, Int_t /*instance*/)
 
    TClonesArray * clones;
    if (fTop) {
-      if (leaf->InheritsFrom("TLeafObject") ) {
+      if (leaf->InheritsFrom(TLeafObject::Class()) ) {
          clones = (TClonesArray*)((TLeafObject*)leaf)->GetObject();
       } else {
          clones = (TClonesArray*)((TBranchElement*)leaf->GetBranch())->GetObject();
@@ -1249,7 +1249,7 @@ void* TFormLeafInfoCollectionObject::GetLocalValuePointer(TLeaf *leaf, Int_t /*i
 
    void* collection;
    if (fTop) {
-      if (leaf->InheritsFrom("TLeafObject") ) {
+      if (leaf->InheritsFrom(TLeafObject::Class()) ) {
          collection = ((TLeafObject*)leaf)->GetObject();
       } else {
          collection = ((TBranchElement*)leaf->GetBranch())->GetObject();
@@ -1514,7 +1514,7 @@ void* TFormLeafInfoCollection::GetLocalValuePointer(TLeaf *leaf, Int_t /*instanc
 
    void *collection;
    if (fTop) {
-      if (leaf->InheritsFrom("TLeafObject") ) {
+      if (leaf->InheritsFrom(TLeafObject::Class()) ) {
          collection = ((TLeafObject*)leaf)->GetObject();
       } else {
          collection = ((TBranchElement*)leaf->GetBranch())->GetObject();

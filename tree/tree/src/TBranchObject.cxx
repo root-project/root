@@ -346,7 +346,7 @@ void TBranchObject::SetAddress(void* add)
       cl->BuildRealData(obj);
    }
 
-   if (cl->InheritsFrom("TClonesArray")) {
+   if (cl->InheritsFrom(TClonesArray::Class())) {
       if (ppointer) {
          TClonesArray* clones = (TClonesArray*) *ppointer;
          if (!clones) {
@@ -402,7 +402,7 @@ void TBranchObject::SetAddress(void* add)
          if (!dm->IsBasic()) {
             clobj = TClass::GetClass(dm->GetTypeName());
          }
-         if (clobj && clobj->InheritsFrom("TClonesArray")) {
+         if (clobj && clobj->InheritsFrom(TClonesArray::Class())) {
             if (isDot) {
                sprintf(fullname, "%s%s", bname, &rdname[1]);
             } else {

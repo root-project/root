@@ -118,7 +118,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
       return;
    }
 
-   if (cl->InheritsFrom("TClass")) {
+   if (cl->InheritsFrom(TClass::Class())) {
       return;
    }
 
@@ -275,7 +275,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
                if (!element) {
                   continue;
                }
-               if (clProxy->InheritsFrom("TObject")) {
+               if (clProxy->InheritsFrom(TObject::Class())) {
                   name = ((TObject*) element)->GetName();
                }
                
@@ -298,7 +298,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
    // COLLECTION
    //////////////////////////////////////////////////////////////////////////
    // if our parent node is collection
-   if(cl->InheritsFrom("TCollection")) {
+   if(cl->InheritsFrom(TCollection::Class())) {
       // we change type of node to collection
       parent->SetNodeType(kCollection);
    
@@ -415,7 +415,7 @@ void TStructViewer::Prepare()
    ULong_t size = fPointerClass->Size();
 
    TString name = "Main pointer";
-   if (fPointerClass->InheritsFrom("TObject")) {
+   if (fPointerClass->InheritsFrom(TObject::Class())) {
       name = ((TObject*) fPointer)->GetName();
    }
    fTopNode = new TStructNode(name, fPointerClass->GetName(), fPointer, NULL, size, kClass);

@@ -568,7 +568,7 @@ TH1 *TTable::Draw(const char *varexp00, const char *selection, Option_t *option,
 
    if (oldh1) {
       Int_t mustdelete = 0;
-      if (oldh1->InheritsFrom("TProfile")) profile = kTRUE;
+      if (oldh1->InheritsFrom(TProfile::Class())) profile = kTRUE;
       if (opt.Contains("prof")) {
          if (!profile) mustdelete = 1;
       } else {

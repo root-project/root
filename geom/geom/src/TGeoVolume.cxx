@@ -1753,7 +1753,7 @@ void TGeoVolume::SortNodes()
    // first put ONLY's
    for (id=0; id<nd; id++) {
       node = GetNode(id);
-      if (node->InheritsFrom("TGeoNodeOffset") || node->IsOverlapping()) continue;
+      if (node->InheritsFrom(TGeoNodeOffset::Class()) || node->IsOverlapping()) continue;
       nodes->Add(node);
 //      printf("inode %i ONLY\n", inode);
       inode++;
@@ -1761,7 +1761,7 @@ void TGeoVolume::SortNodes()
    // second put overlapping nodes
    for (id=0; id<nd; id++) {
       node = GetNode(id);
-      if (node->InheritsFrom("TGeoNodeOffset") || (!node->IsOverlapping())) continue;
+      if (node->InheritsFrom(TGeoNodeOffset::Class()) || (!node->IsOverlapping())) continue;
       nodes->Add(node);
 //      printf("inode %i MANY\n", inode);
       inode++;
@@ -1771,7 +1771,7 @@ void TGeoVolume::SortNodes()
       fFinder->SetDivIndex(inode);
       for (id=0; id<nd; id++) {
          node = GetNode(id);
-         if (!node->InheritsFrom("TGeoNodeOffset")) continue;
+         if (!node->InheritsFrom(TGeoNodeOffset::Class())) continue;
          nodes->Add(node);
 //         printf("inode %i DIV\n", inode);
          inode++;

@@ -105,7 +105,7 @@ Int_t TFormLeafInfoReference::GetCounterValue(TLeaf* leaf)  {
    if ( HasCounter() )  {
       char *thisobj = 0;
       Int_t instance = 0;
-      if (leaf->InheritsFrom("TLeafObject") ) {
+      if (leaf->InheritsFrom(TLeafObject::Class()) ) {
          thisobj = (char*)((TLeafObject*)leaf)->GetObject();
       } else {
          thisobj = GetObjectAddress((TLeafElement*)leaf, instance); // instance might be modified
