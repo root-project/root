@@ -81,6 +81,15 @@ using namespace std;
 TVirtualMutex* gCINTMutex = 0;
 
 void *gMmallocDesc = 0; //is used and set in TMapFile
+namespace {
+   class TMmallocDescTemp {
+   private:
+      void *fSave;
+   public:
+      TMmallocDescTemp(void *value = 0) : fSave(gMmallocDesc) { gMmallocDesc = value; }
+      ~TMmallocDescTemp() { gMmallocDesc = fSave; }
+   };
+}
 
 Int_t TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
@@ -1496,6 +1505,10 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       return;
    }
 
+   // When called via TMapFile (e.g. Update()) make sure that the dictionary
+   // gets allocated on the heap and not in the mapped file.
+   TMmallocDescTemp setreset;
+
    // Handle emulated classes and STL containers specially.
    if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName())) {
       // We are an emulated class or an STL container.
@@ -1651,6 +1664,9 @@ void TClass::CalculateStreamerOffset() const
    // Streamer() and ShowMembers().
    R__LOCKGUARD(gCINTMutex);
    if (!fInterStreamer && fClassInfo) {
+      // When called via TMapFile (e.g. Update()) make sure that the dictionary
+      // gets allocated on the heap and not in the mapped file.
+      TMmallocDescTemp setreset;
       CallFunc_t *f  = gCint->CallFunc_Factory();
       gCint->CallFunc_SetFuncProto(f,fClassInfo,"Streamer","TBuffer&",&fOffsetStreamer);
       fInterStreamer = f;
@@ -2784,6 +2800,7 @@ TList *TClass::GetListOfMethods()
       if (!gInterpreter)
          Fatal("GetListOfMethods", "gInterpreter not initialized");
 
+      TMmallocDescTemp setreset;
       gInterpreter->CreateListOfMethods(this);
    } else {
       gInterpreter->UpdateListOfMethods(this);
@@ -3326,6 +3343,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
       version = fClassVersion;
    }
    if (!fStreamerInfo) {
+      TMmallocDescTemp setreset;
       fStreamerInfo = new TObjArray(version + 10, -1);
    } else {
       Int_t ninfos = fStreamerInfo->GetSize();
@@ -3346,6 +3364,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version) const
    }
    if (!sinfo) {
       // We just were not able to find a streamer info, we have to make a new one.
+      TMmallocDescTemp setreset;
       sinfo = TVirtualStreamerInfo::Factory()->NewInfo(const_cast<TClass*>(this));
       fStreamerInfo->AddAtAndExpand(sinfo, fClassVersion);
       if (gDebug > 0) {
@@ -4162,13 +4181,7 @@ TClass *ROOT::CreateClass(const char *cname, Version_t id,
 
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.
-   if (gMmallocDesc) {
-      void *msave  = gMmallocDesc;
-      gMmallocDesc = 0;
-      TClass *cl   = new TClass(cname, id, info, isa, show, dfil, ifil, dl, il);
-      gMmallocDesc = msave;
-      return cl;
-   }
+   TMmallocDescTemp setreset;
    return new TClass(cname, id, info, isa, show, dfil, ifil, dl, il);
 }
 
@@ -4182,13 +4195,7 @@ TClass *ROOT::CreateClass(const char *cname, Version_t id,
 
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.
-   if (gMmallocDesc) {
-      void *msave  = gMmallocDesc;
-      gMmallocDesc = 0;
-      TClass *cl   = new TClass(cname, id, dfil, ifil, dl, il);
-      gMmallocDesc = msave;
-      return cl;
-   }
+   TMmallocDescTemp setreset;
    return new TClass(cname, id, dfil, ifil, dl, il);
 }
 
@@ -4331,6 +4338,10 @@ Long_t TClass::Property() const
    R__LOCKGUARD(gCINTMutex);
 
    if (fProperty!=(-1)) return fProperty;
+
+   // When called via TMapFile (e.g. Update()) make sure that the dictionary
+   // gets allocated on the heap and not in the mapped file.
+   TMmallocDescTemp setreset;
 
    Long_t dummy;
    TClass *kl = const_cast<TClass*>(this);
@@ -4823,6 +4834,9 @@ void TClass::Streamer(void *object, TBuffer &b, const TClass *onfile_class) cons
          CallFunc_t *func = (CallFunc_t*)fInterStreamer;
 
          if (!func)  {
+            // When called via TMapFile (e.g. Update()) make sure that the dictionary
+            // gets allocated on the heap and not in the mapped file.
+            TMmallocDescTemp setreset;
             func  = gCint->CallFunc_Factory();
             gCint->CallFunc_SetFuncProto(func,fClassInfo,"Streamer","TBuffer&",&fOffsetStreamer);
             fInterStreamer = func;
