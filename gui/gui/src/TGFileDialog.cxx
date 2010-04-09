@@ -349,6 +349,8 @@ void TGFileDialog::CloseWindow()
 {
    // Close file dialog.
 
+   if (fFileInfo->fFilename)
+      delete [] fFileInfo->fFilename;
    fFileInfo->fFilename = 0;
    if (fFileInfo->fFileNamesList != 0) {
       fFileInfo->fFileNamesList->Delete();
@@ -397,9 +399,13 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            return kTRUE;
                      }
                      if (fFileInfo->fMultipleSelection) {
+                        if (fFileInfo->fFilename)
+                           delete [] fFileInfo->fFilename;
                         fFileInfo->fFilename = 0;
                      }
                      else {
+                        if (fFileInfo->fFilename)
+                           delete [] fFileInfo->fFilename;
                         if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
                            fFileInfo->fFilename = StrDup(fTbfname->GetString());
                         else
@@ -415,6 +421,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
 
                   case kIDF_CANCEL:
+                     if (fFileInfo->fFilename)
+                        delete [] fFileInfo->fFilename;
                      fFileInfo->fFilename = 0;
                      if (fFc->GetDisplayStat()) 
                         fFc->SetDisplayStat(kFALSE);
@@ -431,6 +439,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      fTreeLB->Update(fFc->GetDirectory());
                      if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
                      fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
+                     if (strcmp(gSystem->WorkingDirectory(),fFc->GetDirectory())) {
+                        gSystem->cd(fFc->GetDirectory());
+                     }
                      break;
 
                   case kIDF_NEW_FOLDER: {
@@ -486,6 +497,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         fTreeLB->Update(fFc->GetDirectory());
                         if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
                         fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
+                        if (strcmp(gSystem->WorkingDirectory(),fFc->GetDirectory())) {
+                           gSystem->cd(fFc->GetDirectory());
+                        }
                      }
                      break;
 
@@ -554,6 +568,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         fTreeLB->Update(fFc->GetDirectory());
                         if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
                         fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
+                        if (strcmp(gSystem->WorkingDirectory(),fFc->GetDirectory())) {
+                           gSystem->cd(fFc->GetDirectory());
+                        }
                      } else {
                         if (!strcmp(fOk->GetTitle(), "Save") &&
                             (!(fCheckB->GetState() == kButtonDown))) {
@@ -567,6 +584,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            if (ret == kMBNo)
                               return kTRUE;
                         }
+                        if (fFileInfo->fFilename)
+                           delete [] fFileInfo->fFilename;
                         if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
                            fFileInfo->fFilename = StrDup(fTbfname->GetString());
                         else
@@ -625,6 +644,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         return kTRUE;
                   }
                }
+               if (fFileInfo->fFilename)
+                  delete [] fFileInfo->fFilename;
                fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                               fTbfname->GetString());
                fFileInfo->fFilename = StrDup(gSystem->UnixPathName(fFileInfo->fFilename));
