@@ -615,12 +615,12 @@ void tmarker()
    int i;
    Double_t x = 0.5;
    Double_t y = 0.1;
-   Double_t dy = 0.05;
+   Double_t dy = 0.04;
    for (i = 1; i<=7; i++) {
       tmarker_draw(x, y, i, dy);
       y = y+dy;
    }
-   for (i = 20; i<=30; i++) {
+   for (i = 20; i<=34; i++) {
       tmarker_draw(x, y, i, dy);
       y = y+dy;
    }
@@ -644,7 +644,7 @@ void tmarker_draw(Double_t x, Double_t y, Int_t mt, Double_t d)
    TLine   *l3 = new TLine(0,y-dy,1,y-dy);
    l2->SetLineStyle(2);
    l3->SetLineStyle(2);
-   m->SetMarkerSize(3.8);
+   m->SetMarkerSize(3.6);
    m->SetMarkerColor(kRed);
    t->SetTextAlign(32);
    t->SetTextSize(0.3);
