@@ -126,12 +126,12 @@ EOF
 
 upload_log() {    
     target_name=$2$1.$host$configname
-    scp $1 $UPLOAD_LOCATION/$target_name > scp.log 2>&1 
+    scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
 }
 
 upload_datafile() {
     target_name=$host$configname.`basename $1`
-    scp $1 $UPLOAD_LOCATION/$target_name > scp.log 2>&1 
+    scp $1 $UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
 }
 
 one_line() {
@@ -144,11 +144,11 @@ one_line() {
    rline="</td>"
 
    if test "x$status" = "x$success"; then
-      line="$sline <a href="$ref">$status</a>           $rline"
+      line="$sline <a href="root-today/$ref">$status</a>           $rline"
    elif test "x$status" = "x$na"; then
-      line="$nline <a href="$ref">$status</a>           $rline"
+      line="$nline <a href="root-today/$ref">$status</a>           $rline"
    else
-      line="$fline <a href="$ref">$status</a>           $rline"
+      line="$fline <a href="root-today/$ref">$status</a>           $rline"
    fi
    echo $line
 }
