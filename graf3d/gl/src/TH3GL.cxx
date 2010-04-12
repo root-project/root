@@ -62,6 +62,10 @@ Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
          SetPainter( new TGLIsoPainter(fM, 0, &fCoord) );
       else if (option.Index("box") != kNPOS)
          SetPainter( new TGLBoxPainter(fM, 0, &fCoord) );
+      else {
+         Warning("SetModel", "Option '%s' not supported, assuming 'box'.", option.Data());
+         SetPainter( new TGLBoxPainter(fM, 0, &fCoord) );
+      }
 
       fPlotPainter->AddOption(option);
       fPlotPainter->InitGeometry();
