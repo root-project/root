@@ -59,7 +59,7 @@ pad in the canvas, or to the \"Base\" folder of the list tree itself...";
 
 //----------------------------------------------------------------------
 
-class MyMainFrame : public TGMainFrame {
+class DNDMainFrame : public TGMainFrame {
 
 protected:
    TRootEmbeddedCanvas  *fEc;          // embedded canvas
@@ -76,8 +76,8 @@ protected:
    TH2F                 *fHist2D;      // 2D histogram
 
 public:
-   MyMainFrame(const TGWindow *p, int w, int h);
-   virtual ~MyMainFrame();
+   DNDMainFrame(const TGWindow *p, int w, int h);
+   virtual ~DNDMainFrame();
 
    void              DoCloseWindow();
    void              HandleMenu(Int_t);
@@ -85,7 +85,7 @@ public:
    void              DataDropped(TGListTreeItem* item, TDNDData* data);
    void              ResetStatus();
 
-   ClassDef(MyMainFrame, 0); // Mainframe for Drag and Drop demo
+   //ClassDef(DNDMainFrame, 0); // Mainframe for Drag and Drop demo
 };
 
 enum EMyMessageTypes {
@@ -97,7 +97,7 @@ enum EMyMessageTypes {
    M_HELP_ABOUT
 };
 
-const char *filetypes[] = {
+const char *dnd_types[] = {
    "ROOT files",    "*.root",
    "ROOT macros",   "*.C",
    "All files",     "*",
@@ -107,7 +107,7 @@ const char *filetypes[] = {
 static Atom_t gRootObj  = kNone;
 
 //______________________________________________________________________________
-MyMainFrame::MyMainFrame(const TGWindow *p, int w, int h) :
+DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
    TGMainFrame(p, w, h), fGraph(0), fHist1D(0), fHist2D(0)
 
 {
@@ -125,11 +125,11 @@ MyMainFrame::MyMainFrame(const TGWindow *p, int w, int h) :
    fMenuFile->AddEntry(" &Close Window\tCtrl+W", M_FILE_CLOSEWIN);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry(" E&xit\tCtrl+Q", M_FILE_EXIT, 0, gClient->GetPicture("bld_exit.png"));
-   fMenuFile->Connect("Activated(Int_t)", "MyMainFrame", this, "HandleMenu(Int_t)");
+   fMenuFile->Connect("Activated(Int_t)", "DNDMainFrame", this, "HandleMenu(Int_t)");
 
    fMenuHelp = new TGPopupMenu(gClient->GetRoot());
    fMenuHelp->AddEntry(" &About...", M_HELP_ABOUT, 0, gClient->GetPicture("about.xpm"));
-   fMenuHelp->Connect("Activated(Int_t)", "MyMainFrame", this, "HandleMenu(Int_t)");
+   fMenuHelp->Connect("Activated(Int_t)", "DNDMainFrame", this, "HandleMenu(Int_t)");
 
    fMenuBar->AddPopup("&File", fMenuFile, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
 
@@ -214,24 +214,24 @@ MyMainFrame::MyMainFrame(const TGWindow *p, int w, int h) :
    fListTree->GetFirstItem()->SetDNDTarget(kTRUE);
 
    // connect the DataDropped signal to be able to handle it
-   fListTree->Connect("DataDropped(TGListTreeItem*, TDNDData*)", "MyMainFrame",
+   fListTree->Connect("DataDropped(TGListTreeItem*, TDNDData*)", "DNDMainFrame",
                       this, "DataDropped(TGListTreeItem*,TDNDData*)");
 
    SetWindowName("ROOT DND Demo Application");
    MapSubwindows();
    Resize(GetDefaultSize());
-   Connect("CloseWindow()", "MyMainFrame", this, "DoCloseWindow()");
+   Connect("CloseWindow()", "DNDMainFrame", this, "DoCloseWindow()");
    DontCallClose(); // to avoid double deletions.
 }
 
 //______________________________________________________________________________
-MyMainFrame::~MyMainFrame()
+DNDMainFrame::~DNDMainFrame()
 {
    // Destructor. Doesnt't do much here.
 }
 
 //______________________________________________________________________________
-void MyMainFrame::DoCloseWindow()
+void DNDMainFrame::DoCloseWindow()
 {
    // Do some cleanup, disconnect signals and then really close the main window.
 
@@ -247,7 +247,7 @@ void MyMainFrame::DoCloseWindow()
 }
 
 //______________________________________________________________________________
-void MyMainFrame::DataDropped(TGListTreeItem *, TDNDData *data)
+void DNDMainFrame::DataDropped(TGListTreeItem *, TDNDData *data)
 {
    // Handle the drop event in the TGListTree. This will just create a new
    // list tree item and copy the received data into it.
@@ -292,11 +292,11 @@ void MyMainFrame::DataDropped(TGListTreeItem *, TDNDData *data)
       if (itm) itm->SetDNDSource(kTRUE);
       fStatus->ChangeText(tmp);
    }
-   TTimer::SingleShot(3000, "MyMainFrame", this, "ResetStatus()");
+   TTimer::SingleShot(3000, "DNDMainFrame", this, "ResetStatus()");
 }
 
 //______________________________________________________________________________
-TObject *MyMainFrame::GetObject(const char *obj)
+TObject *DNDMainFrame::GetObject(const char *obj)
 {
    // Return the object specified in argument. If the object doesn't exist yet,
    // it is firt created.
@@ -340,14 +340,14 @@ TObject *MyMainFrame::GetObject(const char *obj)
 }
 
 //______________________________________________________________________________
-void MyMainFrame::HandleMenu(Int_t menu_id)
+void DNDMainFrame::HandleMenu(Int_t menu_id)
 {
    // Handle menu events.
 
    TRootHelpDialog *hd;
    static TString dir(".");
    TGFileInfo fi;
-   fi.fFileTypes = filetypes;
+   fi.fFileTypes = dnd_types;
    fi.fIniDir    = StrDup(dir);
 
    switch (menu_id) {
@@ -381,7 +381,7 @@ void MyMainFrame::HandleMenu(Int_t menu_id)
 }
 
 //______________________________________________________________________________
-void MyMainFrame::ResetStatus()
+void DNDMainFrame::ResetStatus()
 {
    // Restore the original text of the status label and its original color.
 
@@ -394,7 +394,7 @@ void drag_and_drop()
 {
    // Main function (entry point)
 
-   MyMainFrame *mainWindow = new MyMainFrame(gClient->GetRoot(), 700, 400);
+   DNDMainFrame *mainWindow = new DNDMainFrame(gClient->GetRoot(), 700, 400);
    mainWindow->MapWindow();
 }
 
