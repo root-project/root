@@ -31,8 +31,8 @@ event1.root: Event.new.split0.root
 treeCloneTest.log: hsimple1.root event1.root runEvent.C run.C  $(ROOTCORELIBS) 
 	$(CMDECHO) ( $(CALLROOTEXE) -q -b -l run.C && $(CALLROOTEXE) -q -b -l runEvent.C ) > treeCloneTest.log 2>&1
 
-treeCloneTest: treeCloneTest.log treeCloneTest.good 
-	$(CMDECHO) diff -ub treeCloneTest.good treeCloneTest.log
+treeCloneTest: treeCloneTest.log treeCloneTest.ref
+	$(CMDECHO) diff -ub treeCloneTest.ref treeCloneTest.log
 
 treeCloneTest2.log: runtreeCloneTest2.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l runtreeCloneTest2.C 2>&1 | grep -v Adding > treeCloneTest2.log
