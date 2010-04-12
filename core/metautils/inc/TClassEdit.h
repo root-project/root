@@ -65,6 +65,9 @@ namespace TClassEdit {
 
       int  IsSTLCont(int testAlloc=0) const;
       void ShortType(std::string &answer, int mode);
+
+   private:
+      TSplitType(const TSplitType&); // intentionally not implemented
    };
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
