@@ -1840,12 +1840,6 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       SetAddress(fAddress);
    }
    SetupAddresses();
-   if (fObject == 0) 
-   {
-      // We have nowhere to copy the data (probably because the data member was
-      // 'dropped' from the current schema) so let's no copy it in a random place.
-      return 0;
-   }
 
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
@@ -2858,7 +2852,6 @@ void TBranchElement::ReadLeaves(TBuffer& b)
    // -- Read leaves into i/o buffers for this branch.
 
    ValidateAddress();
-
    R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject);
 
    if (fTree->GetMakeClass()) {
@@ -3090,6 +3083,13 @@ void TBranchElement::ReadLeaves(TBuffer& b)
       }
    }
 
+   if (fObject == 0) 
+   {
+      // We have nowhere to copy the data (probably because the data member was
+      // 'dropped' from the current schema) so let's no copy it in a random place.
+      return;
+   }
+   
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
