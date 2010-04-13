@@ -4829,9 +4829,12 @@ if test ! "x$enable_cling" = "xno"; then
         enable_cling="yes"
         hascling="define"
         result "yes"
+    else
+        enable_cling="no"
+        hascling="undef"
     fi
 else
-    enable_cling=""
+    enable_cling="no"
     hascling="undef"
 fi
 
