@@ -11,7 +11,11 @@ maketar $(FILES_IN_TAR)
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
+ifeq ($(FAST),)
 TEST_TARGETS += readGeo mytest
+else
+TEST_TARGETS += 
+endif
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
