@@ -57,6 +57,7 @@ R__EXTERN TVirtualMutex *gROOTMutex;
 class TROOT : public TDirectory {
 
 friend class TCint;
+friend class TCling;
 
 private:
    Int_t           fLineIsProcessing;     //To synchronize multi-threads

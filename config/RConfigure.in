@@ -22,5 +22,6 @@
 #@hasmathmore@ R__HAS_MATHMORE   /**/
 #@haspthread@ R__HAS_PTHREAD    /**/
 #@hasxft@ R__HAS_XFT    /**/
+#@hascling@ R__HAS_CLING   /**/
 
 #endif

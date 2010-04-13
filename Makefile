@@ -202,7 +202,10 @@ ifeq ($(BUILDUNURAN),yes)
 MODULES      += math/unuran
 endif
 ifeq ($(BUILDCINTEX),yes)
-   MODULES      += cint/cintex
+MODULES      += cint/cintex
+endif
+ifeq ($(BUILDCLING),yes)
+MODULES      += cint/cling
 endif
 ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofit/roofitcore roofit/roofit roofit/roostats
@@ -461,9 +464,9 @@ STATICEXTRALIBS = $(PCRELDFLAGS) $(PCRELIB) \
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(EDITLINEL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
-                $(METAUTILSO) $(EDITLINEO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(SYSTEMDO) $(CLIBDO) \
-                $(METAUTILSDO) $(EDITLINEDO)
+                $(METAUTILSO) $(EDITLINEO) $(CLINGO)
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) \
+                $(CLIBDO) $(METAUTILSDO) $(EDITLINEDO) $(CLINGDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
@@ -563,7 +566,6 @@ skip:
 -include $(patsubst %,%/ModuleVars.mk,$(MODULES))
 include $(patsubst %,%/Module.mk,$(MODULES))
 
--include cint/cling/Module.mk  # irrelevant except for LLVM dev
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \

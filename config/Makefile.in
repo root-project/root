@@ -278,6 +278,8 @@ GSLLIBDIR      := @gsllibdir@
 GSLLIBS        := @gsllibs@
 GSLVERSION     := @gslversion@
 
+BUILDCLING     := @buildcling@
+
 BUILDCINTEX    := @buildcintex@
 
 BUILDREFLEX    := @buildreflex@

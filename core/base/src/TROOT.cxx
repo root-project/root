@@ -104,7 +104,11 @@
 #include "TMap.h"
 #include "TObjString.h"
 #include "TVirtualMutex.h"
-#include "TCint.h"
+#ifdef R__HAS_CLING
+# include "TCling.h"
+#else
+# include "TCint.h"
+#endif
 
 #include <string>
 namespace std {} using namespace std;
