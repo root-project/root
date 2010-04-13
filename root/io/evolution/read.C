@@ -1,15 +1,8 @@
-bool readfiles(int type, bool cont = false) {
-   const char * files[] = { "int.root","float16.root","double32.root","regular.root","char.root","short.root","long.root",
-      "longlong.root","uchar.root","ushort.root","uint.root","ulong.root","ulonglong.root","float.root","double.root",
-      "float16enough.root","float16mantis.root",
-      "double32enough.root","double32mantis.root"};
-
-   const char * failing[] = { "float16tooshort.root","double32tooshort.root" };
-
+bool readfiles(const char** files, const char** failing, int type, bool cont = false) {
    bool result = true;
    
 
-   for( int i = 0; i < sizeof(files)/sizeof(char*); ++i ) {
+   for( int i = 0; files[i]; ++i ) {
       TString filename( Form("%s",files[i] ) );
       if (!readfile(filename)) {
          result = false;
@@ -17,7 +10,7 @@ bool readfiles(int type, bool cont = false) {
       if (!cont && !result) return false;
    }
 
-   for( int i = 0; i < sizeof(failing)/sizeof(char*); ++i ) {
+   for( int i = 0; failing[i]; ++i ) {
       TString filename( Form("%s",failing[i] ) );
       if (!readfile(filename,false)) {
          result = false;
@@ -29,15 +22,13 @@ bool readfiles(int type, bool cont = false) {
 
 }
 
-bool readfiles_stl(bool cont = false) {
-   const char * files[] = { "map.root", "multimap.root", "vector.root", "list.root" };
-
+bool readfiles_stl(const char** files, const char* failing, bool cont = false) {
    //   const char * failing[] = { "" } ; // "float16tooshort.root","double32tooshort.root" };
 
    bool result = true;
    
 
-   for( int i = 0; i < sizeof(files)/sizeof(char*); ++i ) {
+   for( int i = 0; files[i]; ++i ) {
       TString filename( Form("%s",files[i] ) );
       if (!readfile(filename)) {
          result = false;
@@ -57,12 +48,39 @@ bool readfiles_stl(bool cont = false) {
 
 }
 
-bool read(int type, const char *name) 
+void extractfiles(const char* s, char** arr) {
+   int num = 0;
+   size_t len = strlen(s);
+   TString f;
+   while (*s) {
+      if (*s == ' ') {
+         arr[num] = new char[f.Length() + 1];
+         strcpy(arr[num++], f.Data());
+         f = "";
+      } else {
+         f += *s;
+      }
+      ++s;
+   }
+   if (f.Length()) {
+      arr[num] = new char[f.Length() + 1];
+      strcpy(arr[num++], f.Data());
+      f = "";
+   }
+}
+
+bool read(const char* filespass, const char* filesfail, int type, const char *name) 
 {
+   const char * pass[256] = {0};
+   const char * fail[256] = {0};
+
+   extractfiles(filespass, pass);
+   extractfiles(filesfail, fail);
+
    compile(type, name);
    if (type==0) {
-      return !readfiles(true);
+      return !readfiles(pass, fail, true);
    } else {
-      return !readfiles_stl(true);
+      return !readfiles_stl(pass, fail, true);
    }
 }

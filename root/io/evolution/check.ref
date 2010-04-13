@@ -14,10 +14,10 @@ Reading ulong.root
 Reading ulonglong.root
 Reading float.root
 Reading double.root
-Reading float16enough.root
-Reading float16mantis.root
 Reading double32enough.root
 Reading double32mantis.root
-Reading float16tooshort.root
+Reading float16enough.root
+Reading float16mantis.root
 Reading double32tooshort.root
+Reading float16tooshort.root
 (bool)0
