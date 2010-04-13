@@ -12,7 +12,7 @@
 #include "TSystem.h"
 
 // Auxilliary functions
-Int_t getXrootdPid(Int_t port, const char *subdir = "xpd-tutorial");
+Int_t getXrootdPid(Int_t port, const char *subdir = "xpdtut");
 Int_t checkXrootdAt(Int_t port, const char *host = "localhost");
 Int_t checkXproofdAt(Int_t port, const char *host = "localhost");
 Int_t startXrootdAt(Int_t port, const char *exportdirs = 0, Bool_t force = kFALSE);
@@ -35,9 +35,9 @@ typedef struct {
 } srv_HS_t;
 
 // By default we start a cluster on the local machine
-const char *refloc = "proof://localhost:80000";
+const char *refloc = "proof://localhost:40000";
 
-TProof *getProof(const char *url = "proof://localhost:80000", Int_t nwrks = -1, const char *dir = 0,
+TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, const char *dir = 0,
                  const char *opt = "ask", Bool_t dyn = kFALSE, Bool_t tutords = kFALSE)
 {
    // Arguments:
@@ -192,7 +192,7 @@ TProof *getProof(const char *url = "proof://localhost:80000", Int_t nwrks = -1, 
    TString workarea = Form("%s/proof", tutdir.Data());
    TString xpdcf(Form("%s/xpd.cf",tutdir.Data()));
    TString xpdlog(Form("%s/xpd.log",tutdir.Data()));
-   TString xpdlogprt(Form("%s/xpd-tutorial/xpd.log",tutdir.Data()));
+   TString xpdlogprt(Form("%s/xpdtut/xpd.log",tutdir.Data()));
    TString xpdpid(Form("%s/xpd.pid",tutdir.Data()));
    TString proofsessions(Form("%s/sessions",tutdir.Data()));
    TString cmd;
@@ -261,6 +261,10 @@ TProof *getProof(const char *url = "proof://localhost:80000", Int_t nwrks = -1, 
       }
       fprintf(fcf,"### Use admin path at %s/admin to avoid interferences with other users\n", tutdir.Data());
       fprintf(fcf,"xrd.adminpath %s/admin\n", tutdir.Data());
+#if defined(R__MACOSX)
+      fprintf(fcf,"### Use dedicated socket path under /tmp to avoid length problems\n");
+      fprintf(fcf,"xpd.sockpathdir /tmp/xpd-sock\n");
+#endif
       fprintf(fcf,"### Run data serving on port %d\n", lportp+1);
       fprintf(fcf,"xrd.port %d\n", lportp+1);
       fprintf(fcf,"### Load the XrdProofd protocol on port %d\n", lportp);
@@ -291,7 +295,7 @@ TProof *getProof(const char *url = "proof://localhost:80000", Int_t nwrks = -1, 
 
       // Start xrootd in the background
       Printf("getProof: xrootd log file at %s", xpdlogprt.Data());
-      cmd = Form("%s -c %s -b -l %s -n xpd-tutorial -p %d",
+      cmd = Form("%s -c %s -b -l %s -n xpdtut -p %d",
                xrootd, xpdcf.Data(), xpdlog.Data(), lportx);
       Printf("(NB: any error line from XrdClientSock::RecvRaw and XrdClientMessage::ReadRaw should be ignored)");
       if ((rc = gSystem->Exec(cmd)) != 0) {

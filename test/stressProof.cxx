@@ -15,7 +15,7 @@
 // *   -h          show help info                                          * //
 // *   master      entry point of the cluster where to run the test        * //
 // *               in the form '[user@]host.domain[:port]';                * //
-// *               default 'localhost:80000'                               * //
+// *               default 'localhost:40000'                               * //
 // *   -n wrks     number of workers to be started when running on the     * //
 // *               local host; default is the nuber of local cores         * //
 // *   -d level    verbosity level [1]                                     * //
@@ -122,7 +122,7 @@
 
 #include "../tutorials/proof/getProof.C"
 
-static const char *urldef = "proof://localhost:80000";
+static const char *urldef = "proof://localhost:40000";
 static TString gtutdir;
 static TString gsandbox;
 static Int_t gverbose = 1;
@@ -151,7 +151,7 @@ static TString gEventSel("$ROOTSYS/tutorials/proof/ProofEvent.C");
 static TString gSimpleSel("$ROOTSYS/tutorials/proof/ProofSimple.C");
 static TString gTestsSel("$ROOTSYS/tutorials/proof/ProofTests.C");
 
-void stressProof(const char *url = "proof://localhost:80000",
+void stressProof(const char *url = "proof://localhost:40000",
                  Int_t nwrks = -1, Int_t verbose = 1,
                  const char *logfile = 0, Bool_t dyn = kFALSE,
                  Bool_t skipds = kTRUE, Int_t test = -1,
@@ -174,7 +174,7 @@ int main(int argc,const char *argv[])
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
       printf("   master        entry point of the cluster where to run the test\n");
-      printf("                 in the form '[user@]host.domain[:port]'; default 'localhost:80000'\n");
+      printf("                 in the form '[user@]host.domain[:port]'; default 'localhost:40000'\n");
       printf("   -n wrks       number of workers to be started when running on the local host;\n");
       printf("                 default is the nuber of local cores\n");
       printf("   -d level      verbosity level [1]\n");
@@ -727,21 +727,23 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    }
 
    printf("******************************************************************\n");
-   if (gProof) gProof->GetStatistics((verbose > 0));
-   // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
-   // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
-   const double reftime = 21.060;
-   double rootmarks = (gProof->GetCpuTime() > 0) ? 1000 * reftime / gProof->GetCpuTime() : -1;
-   printf(" ROOTMARKS = %.2f ROOT version: %s\t%s@%d\n", rootmarks, gROOT->GetVersion(),
-          gROOT->GetSvnBranch(), gROOT->GetSvnRevision());
-   printf("******************************************************************\n");
+   if (gProof) {
+      gProof->GetStatistics((verbose > 0));
+      // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
+      // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 2 workers.
+      const double reftime = 21.060;
+      double rootmarks = (gProof->GetCpuTime() > 0) ? 1000 * reftime / gProof->GetCpuTime() : -1;
+      printf(" ROOTMARKS = %.2f ROOT version: %s\t%s@%d\n", rootmarks, gROOT->GetVersion(),
+             gROOT->GetSvnBranch(), gROOT->GetSvnRevision());
+      printf("******************************************************************\n");
+   }
 
    // If not PROOF-Lite, stop the daemon used for the test
    if (gProof && !gProof->IsLite()) {
       // Close the instance
       delete gProof;
       // The daemon runs on a port shifted by 1
-      if (killXrootdAt(uu.GetPort()+1, "xpd-tutorial") != 0) {
+      if (killXrootdAt(uu.GetPort()+1, "xpdtut") != 0) {
          printf("+++ Warning: test daemon probably still running!\n");
       }
    }
@@ -939,14 +941,22 @@ Int_t PT_Open(void *args)
    // Temp dir for PROOF tutorials
    PutPoint();
    TString tmpdir(gSystem->TempDirectory()), us;
-   UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
-   if (!ug) {
-      printf("\n >>> Test failure: could not get user info");
-      return -1;
+#if !defined(R__MACOSX) 
+   if (!tmpdir.EndsWith(us.Data())) {
+      UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
+      if (ug) {
+         us.Form("/%s", ug->fUser.Data());
+         tmpdir += us;
+         delete ug;
+      } else {
+         printf("\n >>> Test failure: could not get user info");
+         return -1;
+      }
    }
-   us.Form("/%s", ug->fUser.Data());
-   if (!tmpdir.EndsWith(us.Data())) tmpdir += us;
    gtutdir.Form("%s/.proof-tutorial", tmpdir.Data());
+#else
+   gtutdir.Form("%s/.proof", tmpdir.Data());
+#endif
    if (gSystem->AccessPathName(gtutdir)) {
       if (gSystem->mkdir(gtutdir, kTRUE) != 0) {
          printf("\n >>> Test failure: could not assert/create the temporary directory"
