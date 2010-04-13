@@ -1263,15 +1263,15 @@ Long64_t TChain::LoadTree(Long64_t entry)
 	   
 	   // Set the branch statuses for the newly opened file.
 	   TChainElement *frelement;
-	   TIter next(fStatus);
-	   while ((frelement = (TChainElement*) next())) {
+	   TIter fnext(fStatus);
+	   while ((frelement = (TChainElement*) fnext())) {
 	     Int_t status = frelement->GetStatus();
 	     fTree->SetBranchStatus(frelement->GetName(), status);
 	   }
 	   
 	   // Set the branch addresses for the newly opened file.
-	   next.Reset();
-	   while ((frelement = (TChainElement*) next())) {
+	   fnext.Reset();
+	   while ((frelement = (TChainElement*) fnext())) {
 	     void* addr = frelement->GetBaddress();
 	     if (addr) {
 	       TBranch* br = fTree->GetBranch(frelement->GetName());
