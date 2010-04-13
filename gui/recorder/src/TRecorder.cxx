@@ -216,8 +216,6 @@ TGCursorWindow::~TGCursorWindow()
 {
    // Destructor.
 
-   if (fPic != kNone) gVirtualX->DeletePixmap(fPic);
-   if (fMask != kNone) gVirtualX->DeletePixmap(fMask);
 }
 
 //______________________________________________________________________________
