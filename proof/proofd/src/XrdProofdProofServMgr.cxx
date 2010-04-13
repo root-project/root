@@ -1775,7 +1775,14 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    XrdOucString path, sockpath;
    XPDFORM(path, "%s/%s.%s.%d", fActiAdminPath.c_str(),
                                 p->Client()->User(), p->Client()->Group(), pid);
-   XPDFORM(sockpath, "%s.sock", path.c_str());
+   // Sock path under dedicated directory to avoid problems related to its length
+   XPDFORM(sockpath, "%s/xpd.%d.%d", fMgr->SockPathDir(), fMgr->Port(), pid);
+   if (sockpath.length() > 100) {
+      emsg += ": socket path very long (";
+      emsg += sockpath.length();
+      emsg += "): this may lead to stack corruption!";
+      emsg += " Use xpd.sockpathdir to change it";
+   }
    int pathrc = 0;
    if (!pathrc && !(pathrc = xps->SetAdminPath(path.c_str(), 1))) {
       // Communicate the path to child
