@@ -2875,6 +2875,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
 
             store_tagnum = G__tagnum;
             G__tagnum = i;
+            G__class_autoloading(&G__tagnum); // Autoload if necessary.
             if (G__CPPLINK != G__struct.iscpplink[G__tagnum]) {
                G__alloc_tempobject(G__tagnum, -1);
                G__store_struct_offset = G__p_tempbuf->obj.obj.i;
