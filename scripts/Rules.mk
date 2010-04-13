@@ -622,10 +622,10 @@ endif
 %.neutral.log: %.log
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
 
-exec%.ref: exec%.clog
+exec%.ref:  | exec%.clog
 	$(CMDECHO) echo > $@ ; echo "Processing exec$*.cxx+..." >> $@
 
-exec%.ref: exec%.log
+exec%.ref:  | exec%.log
 	$(CMDECHO) echo > $@ ; echo "Processing exec$*.C..." >> $@
 
 %.ref:
