@@ -243,6 +243,7 @@ void DNDMainFrame::DoCloseWindow()
    fButtonExit->Disconnect("Clicked()" , this, "CloseWindow()");
    fListTree->Disconnect("DataDropped(TGListTreeItem*, TDNDData*)", this,
                          "DataDropped(TGListTreeItem*,TDNDData*)");
+   delete fListTree;
    CloseWindow();
 }
 
