@@ -178,13 +178,13 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
    TH1F *hpx = (TH1F *)GetObject("1D Hist");
    pic = gClient->GetPicture("h1_t.xpm");
    item = fListTree->AddItem(fBaseLTI, hpx->GetName(), hpx, pic, pic);
-   fListTree->SetToolTipItem(item, "1D Hitogram");
+   fListTree->SetToolTipItem(item, "1D Histogram");
    item->SetDNDSource(kTRUE);
 
    TH2F *h2 = (TH2F *)GetObject("2D Hist");
    pic = gClient->GetPicture("h2_t.xpm");
    item = fListTree->AddItem(fBaseLTI, h2->GetName(), h2, pic, pic);
-   fListTree->SetToolTipItem(item, "2D Hitogram");
+   fListTree->SetToolTipItem(item, "2D Histogram");
    item->SetDNDSource(kTRUE);
 
    TString rootsys(gSystem->UnixPathName(gSystem->Getenv("ROOTSYS")));
