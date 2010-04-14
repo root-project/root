@@ -1915,6 +1915,8 @@ class genDictionary(object) :
       if etrans : etrans = etrans.lower()
     if xtrans == 'true' or etrans == 'true' : mod += ' | ::Reflex::TRANSIENT'
     if 'artificial' in attrs : mod += ' | ::Reflex::ARTIFICIAL' 
+    if 'explicit' in attrs : mod += ' | ::Reflex::EXPLICIT'
+    if 'mutable' in attrs : mod += ' | ::Reflex::MUTABLE' 
     return mod
 #----------------------------------------------------------------------------------
   def genMCODecl( self, type, name, attrs, args ) :
