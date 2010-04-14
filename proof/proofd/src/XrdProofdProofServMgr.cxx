@@ -4097,6 +4097,8 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
       if (fgets(line, sizeof(line), fpid)) {
          sscanf(line, "%d", &fStatus);
       }
+      // Done
+      fclose(fpid);
    } else {
       TRACE(DBG,"no session status file for: "<< fs<<"; session was probably terminated");
    }
