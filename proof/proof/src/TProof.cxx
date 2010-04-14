@@ -10698,12 +10698,16 @@ void TProof::LogViewer(const char *url, Int_t idx)
       }
       if (fgLogViewer) {
          // Execute the plug-in
-         fgLogViewer->ExecPlugin(2, url, idx);
+         TString u = (url && strlen(url) <= 0) ? "lite" : url;
+         fgLogViewer->ExecPlugin(2, u.Data(), idx);
       }
    } else {
       if (url && strlen(url) > 0) {
          ::Info("TProof::LogViewer",
                 "batch mode: use TProofLog *pl = TProof::Mgr(\"%s\")->GetSessionLogs(%d)", url, idx);
+      } else if (url && strlen(url) <= 0) {
+         ::Info("TProof::LogViewer",
+                "batch mode: use TProofLog *pl = TProof::Mgr(\"lite\")->GetSessionLogs(%d)", idx);
       } else {
          ::Info("TProof::LogViewer",
                 "batch mode: use TProofLog *pl = TProof::Mgr(\"<master>\")->GetSessionLogs(%d)", idx);
