@@ -111,6 +111,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fHost = "";
    fPort = XPD_DEF_PORT;
    fImage = "";        // image name for these servers
+   fSockPathDir = "";
    fTMPdir = "/tmp";
    fWorkDir = "";
    fSuperMst = 0;
@@ -569,6 +570,17 @@ int XrdProofdManager::Config(bool rcf)
       }
       TRACE(ALL, "admin path set to: "<<fAdminPath);
 
+      // Path for Unix sockets
+      if (fSockPathDir.length() <= 0) {
+         // Use default under the admin path
+         XPDFORM(fSockPathDir, "%s/socks", fAdminPath.c_str());
+      }
+      if (XrdProofdAux::AssertDir(fSockPathDir.c_str(), ui, fChangeOwn) != 0) {
+         XPDERR("unable to assert the admin path: "<<fSockPathDir);
+         return -1;
+      }
+      TRACE(ALL, "unix sockets under: "<<fSockPathDir);
+
       // Create / Update the process ID file under the admin path
       XrdOucString pidfile(fAdminPath);
       pidfile += "/xrootd.pid";
@@ -796,6 +808,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("superusers", new XrdProofdDirective("superusers", (void *)&fSuperUsers, &DoDirectiveString));
    Register("image", new XrdProofdDirective("image", (void *)&fImage, &DoDirectiveString));
    Register("workdir", new XrdProofdDirective("workdir", (void *)&fWorkDir, &DoDirectiveString));
+   Register("sockpathdir", new XrdProofdDirective("sockpathdir", (void *)&fSockPathDir, &DoDirectiveString));
 }
 
 //______________________________________________________________________________

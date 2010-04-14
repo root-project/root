@@ -87,6 +87,7 @@ class XrdProofdManager : public XrdProofdConfig {
    const char       *PoolURL() const { return fPoolURL.c_str(); }
    int               Port() const { return fPort; }
    int               SrvType() const { return fSrvType; }
+   const char       *SockPathDir() const { return fSockPathDir.c_str(); }
    const char       *TMPdir() const { return fTMPdir.c_str(); }
    const char       *WorkDir() const { return fWorkDir.c_str(); }
 
@@ -123,6 +124,7 @@ class XrdProofdManager : public XrdProofdConfig {
    int               fCronFrequency;  // Frequency of cron checks
 
    XrdOucString      fBareLibPath;    // LIBPATH cleaned from ROOT dists
+   XrdOucString      fSockPathDir;    // directory for Unix sockets
    XrdOucString      fTMPdir;         // directory for temporary files
    XrdOucString      fPoolURL;        // Local pool URL
    XrdOucString      fNamespace;      // Local pool namespace
