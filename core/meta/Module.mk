@@ -21,11 +21,11 @@ METADH       := $(METADS:.cxx=.h)
 ifneq ($(BUILDCLING),yes)
 METACL       := $(MODDIRI)/LinkDef_TCint.h
 METACDS      := $(MODDIRS)/G__TCint.cxx
-METACH       := $(MODDIRI)/TCint.h
 else
 METACL       :=
 METACDS      :=
 endif
+METACH       := $(MODDIRI)/TCint.h
 METACDO      := $(METACDS:.cxx=.o)
 METACDH      := $(METACDS:.cxx=.h)
 
@@ -39,7 +39,7 @@ METAO        := $(METAS:.cxx=.o)
 METADEP      := $(METAO:.o=.d) $(METADO:.o=.d) $(METACDO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH))
+ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH) $(METACH))
 
 # include all dependency files
 INCLUDEFILES += $(METADEP)
