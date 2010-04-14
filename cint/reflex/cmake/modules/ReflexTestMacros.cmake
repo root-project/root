@@ -240,13 +240,16 @@ MACRO (REFLEX_ADD_QUICK_TEST _name)
    SET(_abs_name ${CMAKE_CURRENT_SOURCE_DIR}/${_name})
 
    IF (EXISTS ${_abs_name}.xml)
-      SET(_selection_option SELECTION ${_name}.xml)
+      REFLEX_ADD_SINGLE_TEST(${_name}
+                             HEADERS ${_name}.hpp
+                             SELECTION ${_name}.xml
+                             TEST ${_name}Test.cxx)
+   ELSE (EXISTS ${_abs_name}.xml)
+      REFLEX_ADD_SINGLE_TEST(${_name}
+                             HEADERS ${_name}.hpp
+                             TEST ${_name}Test.cxx)
    ENDIF (EXISTS ${_abs_name}.xml)
 
-   REFLEX_ADD_SINGLE_TEST(${_name}
-                          HEADERS ${_name}.hpp
-                          ${_selection_option}
-                          TEST ${_name}Test.cxx)
 
 ENDMACRO (REFLEX_ADD_QUICK_TEST _name)
 
