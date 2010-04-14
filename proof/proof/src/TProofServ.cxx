@@ -2130,8 +2130,15 @@ void TProofServ::Reset(const char *dir)
 {
    // Reset PROOF environment to be ready for execution of next command.
 
-   // First go to new directory.
-   gDirectory->cd(dir);
+   // First go to new directory. Check first that we got a reasonable path;
+   // in PROOF-Lite it may not be the case
+   TString dd(dir);
+   if (!dd.BeginsWith("proofserv")) {
+      Int_t ic = dd.Index(":");
+      if (ic != kNPOS)
+         dd.Replace(0, ic, "proofserv");
+   }
+   gDirectory->cd(dd.Data());
 
    // Clear interpreter environment.
    gROOT->Reset();
