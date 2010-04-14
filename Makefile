@@ -205,6 +205,7 @@ ifeq ($(BUILDCINTEX),yes)
 MODULES      += cint/cintex
 endif
 ifeq ($(BUILDCLING),yes)
+# to be added to the unconditional MODULES list below once cling is in trunk 
 MODULES      += cint/cling
 endif
 ifeq ($(BUILDROOFIT),yes)
@@ -279,7 +280,7 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                tmva io/hdfs cint/cling \
+                tmva io/hdfs \
                 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve net/glite misc/memstat \
