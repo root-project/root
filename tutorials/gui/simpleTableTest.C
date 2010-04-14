@@ -86,7 +86,7 @@ TableTest::TableTest(const TGWindow *p,  UInt_t ndrows, UInt_t ndcols,
    SetWindowName("TGSimpleTable Test") ;
    MapSubwindows() ;
    Layout();
-   Resize() ;
+   Resize(GetDefaultWidth()+20, 600) ;
    MapWindow() ;
    
 } ;
