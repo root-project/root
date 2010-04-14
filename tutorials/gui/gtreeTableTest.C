@@ -87,7 +87,7 @@ TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
    SetWindowName("TGTreeTable Test") ;
    MapSubwindows() ;
    Layout();
-   Resize() ;
+   Resize(GetDefaultWidth()+20, 600) ;
    MapWindow() ;
    
 } ;
