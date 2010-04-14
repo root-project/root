@@ -70,6 +70,10 @@ Reflex::MemberBase::CalculateBaseObject(const Object& obj) const {
    // check if its a dummy object
    Type cl = obj.TypeOf();
 
+   while (cl && cl.IsTypedef()) {
+      cl = cl.ToType();
+   }
+
    // if the object type is not implemented return the Address of the object
    if (!cl) {
       return mem;
