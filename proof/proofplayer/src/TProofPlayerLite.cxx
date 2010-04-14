@@ -374,6 +374,9 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
                                            : (TEntryList *)0;
    TEventList *evl = (!fProof->IsMaster() && !enl) ? dynamic_cast<TEventList *>(set->GetEntryList())
                                            : (TEventList *)0;
+   // Reset the merging progress information
+   fProof->ResetMergePrg();
+
    // Broadcast main message
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
    mesg << set << fn << fInput << opt << num << fst << evl << sync << enl;
