@@ -1403,8 +1403,36 @@ void TEveElement::ProjectChild(TEveElement* el, Bool_t same_depth)
 
          if (same_depth) pmgr->SetCurrentDepth(cd);
       }
+   }
+}
 
-      
+//______________________________________________________________________________
+void TEveElement::ProjectAllChildren(Bool_t same_depth)
+{
+   // If this is a projectable, loop over all projected replicas and
+   // add the projected image of all children there. This is supposed
+   // to be called after you destroy all children and then add new
+   // ones after this element has already been projected.
+   // You might also want to call RecheckImpliedSelections() on this
+   // element.
+   //
+   // If 'same_depth' flag is true, the same depth as for the
+   // projected element is used in every projection. Otherwise current
+   // depth of each relevant projection-manager is used.
+
+   TEveProjectable* pable = dynamic_cast<TEveProjectable*>(this);
+   if (pable)
+   {
+      for (TEveProjectable::ProjList_i i = pable->BeginProjecteds(); i != pable->EndProjecteds(); ++i)
+      {
+         TEveProjectionManager *pmgr = (*i)->GetManager();
+         Float_t cd = pmgr->GetCurrentDepth();
+         if (same_depth) pmgr->SetCurrentDepth((*i)->GetDepth());
+
+         pmgr->SubImportChildren(this, dynamic_cast<TEveElement*>(*i));
+
+         if (same_depth) pmgr->SetCurrentDepth(cd);
+      }
    }
 }
 
