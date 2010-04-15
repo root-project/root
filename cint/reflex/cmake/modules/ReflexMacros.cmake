@@ -115,6 +115,8 @@ ENDMACRO (REFLEX_GENERATE_DICTIONARY infile outfile)
 
 MACRO (REFLEX_GENERATE_DICTIONARIES outfiles)
 
+   SET(${outfiles} "")
+
    # extract the includes and defintions for reuse by genreflex
    _REFLEX_GET_GENREFLEX_INCLUDES(genreflex_includes)
    _REFLEX_GET_GENREFLEX_DEFINITIONS(genreflex_definitions)
