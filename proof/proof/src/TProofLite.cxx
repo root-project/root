@@ -1147,7 +1147,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
       // Save the data set into the TQueryResult (should be done after Process to avoid
       // improper deletion during collection)
-      if (dset && pq->GetInputList()) {
+      if (rv == 0 && dset && pq->GetInputList()) {
          pq->GetInputList()->Add(dset);
          if (dset->GetEntryList())
             pq->GetInputList()->Add(dset->GetEntryList());
