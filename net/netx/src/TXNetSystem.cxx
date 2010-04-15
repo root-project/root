@@ -691,7 +691,7 @@ Int_t TXNetSystem::Locate(const char *path, TString &eurl)
    }
 
    // Not implemented
-   Warning("Locate", "method not implemented!");
+   if (gDebug > 0) Info("Locate", "server not Xrootd: method not implemented!");
    return -1;
 }
 
