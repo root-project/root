@@ -221,6 +221,12 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    if (InitDataSetManager() != 0)
       Warning("Init", "problems initializing the dataset manager");
 
+   // List of dataset server mapping instructions
+   TString srvmaps = gEnv->GetValue("DataSet.SrvMaps","");
+   if (!(srvmaps.IsNull()) && !(fgDataSetSrvMaps = GetDataSetSrvMaps(srvmaps)))
+      Warning("Init", "problems parsing DataSet.SrvMaps input info (%s)"
+                      " - ignoring", srvmaps.Data());
+
    // Status of cluster
    fNotIdle = 0;
 

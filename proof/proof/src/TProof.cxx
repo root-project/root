@@ -87,6 +87,7 @@ TVirtualMutex *gProofMutex = 0;
 char TProofMergePrg::fgCr[4] = {'-', '\\', '|', '/'};
 
 TList   *TProof::fgProofEnvList = 0;  // List of env vars for proofserv
+TList   *TProof::fgDataSetSrvMaps = 0;  // List of TPair(TRegexp, TObjString) for mapping server coordinates
 TPluginHandler *TProof::fgLogViewer = 0;      // Log viewer handler
 
 ClassImp(TProof)
@@ -845,6 +846,14 @@ Int_t TProof::Init(const char *, const char *conffile,
       fEnabledPackagesOnClient->SetOwner();
    }
 
+   if (IsMaster()) {
+      // List of dataset server mapping instructions
+      TString srvmaps = gEnv->GetValue("DataSet.SrvMaps","");
+      if (!(srvmaps.IsNull()) && !(fgDataSetSrvMaps = GetDataSetSrvMaps(srvmaps)))
+         Warning("Init", "problems parsing DataSet.SrvMaps input info (%s)"
+                         " - ignoring", srvmaps.Data());
+   }
+
    // Master may want dynamic startup
    if (fDynamicStartup) {
       if (!IsMaster()) {
@@ -1016,6 +1025,56 @@ void TProof::ParseConfigField(const char *config)
       sconf.ReplaceAll("workers=","");
       TProof::AddEnvVar("PROOF_NWORKERS", sconf);
    }
+}
+
+//_______________________________________________________________________________________
+TList *TProof::GetDataSetSrvMaps(const TString &srvmaps)
+{
+   // Create a server mapping list from the content of 'srvmaps'
+   // Return the list (owned by the caller) or 0 if no valid info could be found)
+
+   TList *srvmapslist = 0;
+   if (srvmaps.IsNull()) {
+      ::Warning("TProof::GetDataSetSrvMaps", "called with an empty string! - nothing to do");
+      return srvmapslist;
+   }
+   TString srvmap, sf, st;
+   Int_t from = 0, from1 = 0;
+   while (srvmaps.Tokenize(srvmap, from, " ")) {
+      sf = ""; st = "";
+      if (srvmap.Contains("|")) {
+         from1 = 0;
+         if (srvmap.Tokenize(sf, from1, "|")) srvmap.Tokenize(st, from1, "|");
+      } else {
+         st = srvmap;
+      }
+      if (st.IsNull()) {
+         ::Warning("TProof::GetDataSetSrvMaps", "parsing DataSet.SrvMaps: target must be defined"
+                                      " (token: %s) - ignoring", srvmap.Data());
+         continue;
+      } else if (!(st.EndsWith("/"))) {
+         st += "/";
+      }
+      // TUrl if wildcards or TObjString
+      TString sp;
+      TUrl *u = 0;
+      if (!(sf.IsNull()) && sf.Contains("*")) {
+         u = new TUrl(sf);
+         if (!(sf.BeginsWith(u->GetProtocol()))) u->SetProtocol("root");
+         sp.Form(":%d", u->GetPort());
+         if (!(sf.Contains(sp))) u->SetPort(1094);
+         if (!TString(u->GetHost()).Contains("*")) SafeDelete(u);
+      }
+      if (!srvmapslist) srvmapslist = new TList;
+      if (u) {
+         srvmapslist->Add(new TPair(u, new TObjString(st)));
+      } else {
+         srvmapslist->Add(new TPair(new TObjString(sf), new TObjString(st)));
+      }
+   }
+   // Done
+   srvmapslist->SetOwner(kTRUE);
+   return srvmapslist;
 }
 
 //______________________________________________________________________________
@@ -10442,6 +10501,24 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       dsTree = dataset->GetDefaultTreeName();
    }
 
+   // Pass dataset server mapping instructions, if any
+   TList *srvmapslist = fgDataSetSrvMaps;
+   TString srvmaps;
+   if (TProof::GetParameter(input, "PROOF_DataSetSrvMaps", srvmaps) == 0) {
+      srvmapslist = TProof::GetDataSetSrvMaps(srvmaps);
+      if (gProofServ) {
+         TString msg;
+         if (fgDataSetSrvMaps && !srvmapslist) {
+            msg.Form("+++ Info: dataset server mapping(s) DISABLED by user");
+         } else if (fgDataSetSrvMaps && srvmapslist && srvmapslist != fgDataSetSrvMaps) {
+            msg.Form("+++ Info: dataset server mapping(s) modified by user");
+         } else if (!fgDataSetSrvMaps && srvmapslist) {
+            msg.Form("+++ Info: dataset server mapping(s) added by user");
+         }
+         gProofServ->SendAsynMessage(msg.Data());
+      }
+   }
+
    // Flag multi-datasets
    if (datasets->GetSize() > 1) dset->SetBit(TDSet::kMultiDSet);
    // Loop over the list of datasets
@@ -10473,6 +10550,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       Bool_t availableOnly = (lookupopt != "all") ? kTRUE : kFALSE;
       if (dset->TestBit(TDSet::kMultiDSet)) {
          TDSet *ds = new TDSet(dataset->GetName(), dset->GetObjName(), dset->GetDirectory());
+         ds->SetSrvMaps(srvmapslist);
          if (!ds->Add(files, dsTree, availableOnly, missingFiles)) {
             emsg.Form("error integrating dataset %s", dataset->GetName());
             continue;
@@ -10482,6 +10560,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
          // Add entry list if any
          if (enl) ds->SetEntryList(enl);
       } else {
+         dset->SetSrvMaps(srvmapslist);
          if (!dset->Add(files, dsTree, availableOnly, missingFiles)) {
             emsg.Form("error integrating dataset %s", dataset->GetName());
             continue;
@@ -10516,6 +10595,12 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    }
    datasets->SetOwner(kTRUE);
    SafeDelete(datasets);
+
+   // Cleanup the server mapping list, if created by the user
+   if (srvmapslist && srvmapslist != fgDataSetSrvMaps) {
+      srvmapslist->SetOwner(kTRUE);
+      SafeDelete(srvmapslist);
+   }
 
    // Set the global entrylist, if required
    if (entrylist) dset->SetEntryList(entrylist);

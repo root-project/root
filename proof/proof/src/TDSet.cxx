@@ -516,7 +516,7 @@ Int_t TDSetElement::Lookup(Bool_t force)
          fName = url.GetUrl();
       } else {
          // Failure
-         Error("Lookup", "couldn't lookup %s\n", name.Data());
+         Error("Lookup", "couldn't lookup %s", name.Data());
          retVal = -1;
       }
    }
@@ -578,6 +578,8 @@ TDSet::TDSet()
    fCurrent   = 0;
    fEntryList = 0;
    fProofChain = 0;
+   fSrvMaps = 0;
+   fSrvMapsIter = 0;
    ResetBit(kWriteV3);
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
@@ -613,6 +615,8 @@ TDSet::TDSet(const char *name,
    fCurrent  = 0;
    fEntryList = 0;
    fProofChain = 0;
+   fSrvMaps = 0;
+   fSrvMapsIter = 0;
    ResetBit(kWriteV3);
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
@@ -678,6 +682,8 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    fCurrent  = 0;
    fEntryList = 0;
    fProofChain = 0;
+   fSrvMaps = 0;
+   fSrvMapsIter = 0;
    ResetBit(kWriteV3);
    ResetBit(kEmpty);
    ResetBit(kValidityChecked);
@@ -760,6 +766,8 @@ TDSet::~TDSet()
    SafeDelete(fElements);
    SafeDelete(fIterator);
    SafeDelete(fProofChain);
+   fSrvMaps = 0;
+   fSrvMapsIter = 0;
 
    gROOT->GetListOfDataSets()->Remove(this);
 }
@@ -987,6 +995,18 @@ Bool_t TDSet::Add(TCollection *filelist, const char *meta, Bool_t availableOnly,
 }
 
 //______________________________________________________________________________
+void TDSet::SetSrvMaps(TList *srvmaps)
+{
+   // Set (or unset) the list for mapping servers coordinate for files.
+   // Reinitialize the related iterator if needed.
+   // Used by TProof.
+
+   fSrvMaps = srvmaps;
+   SafeDelete(fSrvMapsIter);
+   if (fSrvMaps) fSrvMapsIter = new TIter(fSrvMaps);
+}
+
+//______________________________________________________________________________
 Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
 {
    // Add file described by 'fi' to list of files to be analyzed.
@@ -1003,8 +1023,48 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    // Element to be added
    TDSetElement *el = 0;
 
-   // Check if it already exists in the TDSet
+   // Check if a remap of the server coordinates is requested
    const char *file = fi->GetFirstUrl()->GetUrl();
+   Bool_t setLookedUp = kTRUE;
+   TString file1;
+   if (fSrvMaps && fSrvMaps->GetSize() > 0) {
+      if (!fSrvMapsIter)
+         fSrvMapsIter = new TIter(fSrvMaps);
+      else
+         fSrvMapsIter->Reset();
+      TPair *pr = 0;
+      while ((pr = (TPair *) fSrvMapsIter->Next())) {
+         Bool_t replace = kFALSE;
+         // If TUrl apply reg exp on host
+         TUrl *u = dynamic_cast<TUrl *>(pr->Key());
+         if (u) {
+            if (!strcmp(u->GetProtocol(), fi->GetFirstUrl()->GetProtocol())) {
+               if (u->GetPort() == fi->GetFirstUrl()->GetPort()) {
+                  Ssiz_t len;
+                  TRegexp re(u->GetHost(), kTRUE);
+                  if (re.Index(fi->GetFirstUrl()->GetHost(), &len) == 0) replace = kTRUE;
+               }
+            }
+         } else {
+            TObjString *os = dynamic_cast<TObjString *>(pr->Key());
+            if (os) {
+               if (os->GetString().IsNull() ||
+                   !strncmp(file, os->GetName(), os->GetString().Length())) replace = kTRUE;
+            }
+         }
+         if (replace) {
+            TObjString *ost = dynamic_cast<TObjString *>(pr->Value());
+            if (ost) {
+               file1.Form("%s%s", ost->GetName(),
+                                  fi->GetFirstUrl()->GetFileAndOptions());
+               setLookedUp = kFALSE;
+               break;
+            }
+         }
+      }
+      if (!(file1.IsNull())) file = file1.Data();
+   }
+   // Check if it already exists in the TDSet
    if ((el = (TDSetElement *) fElements->FindObject(file))) {
       msg.Form("duplication detected: %40s is already in dataset - ignored", file);
       Warning("Add", msg.Data());
@@ -1062,7 +1122,7 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    el->SetEntries(num);
 
    // Set looked-up bit
-   if (fi->TestBit(TFileInfo::kStaged))
+   if (fi->TestBit(TFileInfo::kStaged) && setLookedUp)
       el->SetBit(TDSetElement::kHasBeenLookedUp);
    if (fi->TestBit(TFileInfo::kCorrupted))
       el->SetBit(TDSetElement::kCorrupted);

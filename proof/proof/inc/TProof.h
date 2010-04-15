@@ -39,6 +39,9 @@
 #ifndef ROOT_TMD5
 #include "TMD5.h"
 #endif
+#ifndef ROOT_TRegexp
+#include "TRegexp.h"
+#endif
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
 #endif
@@ -539,6 +542,9 @@ private:
    Bool_t          fFinalizationRunning;
    Int_t           fRedirectNext;
 
+   static TList   *fgDataSetSrvMaps;    // List of TPair(TRegexp, TObjString) for mapping server coordinates
+                                        // for dataset files (init from DataSet.SrvMap)
+
    static TPluginHandler *fgLogViewer;  // Log dialog box plugin
 
 protected:
@@ -676,6 +682,8 @@ private:
 
    Bool_t   Prompt(const char *p);
    void     ClearDataProgress(Int_t r, Int_t t);
+
+   static TList *GetDataSetSrvMaps(const TString &srvmaps);
 
 protected:
    TProof(); // For derived classes to use
