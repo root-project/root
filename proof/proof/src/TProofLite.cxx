@@ -221,6 +221,12 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    if (InitDataSetManager() != 0)
       Warning("Init", "problems initializing the dataset manager");
 
+   // List of dataset server mapping instructions
+   TString srvmaps = gEnv->GetValue("DataSet.SrvMaps","");
+   if (!(srvmaps.IsNull()) && !(fgDataSetSrvMaps = GetDataSetSrvMaps(srvmaps)))
+      Warning("Init", "problems parsing DataSet.SrvMaps input info (%s)"
+                      " - ignoring", srvmaps.Data());
+
    // Status of cluster
    fNotIdle = 0;
 
@@ -1165,6 +1171,8 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
       // Remove aborted queries from the list
       if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
+         if (fPlayer && fPlayer->GetListOfResults())
+            fPlayer->GetListOfResults()->Remove(pq);
          if (fQMgr) fQMgr->RemoveQuery(pq);
       } else {
          // If the last object, notify the GUI that the result arrived
