@@ -56,8 +56,8 @@ class genreflex:
                <properties prop1="value1" [prop2="value2"]/>
              </class>
              <function [name="funcname"] [pattern="wildname"] />
-             <enum [name="enumname"] [patter="wildname"] />
-             <variable [name="varname"] [patter="wildname"] />
+             <enum [name="enumname"] [pattern="wildname"] />
+             <variable [name="varname"] [pattern="wildname"] />
            [</selection>]
            <exclusion>
              <class [name="classname"] [pattern="wildname"] />
