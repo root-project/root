@@ -623,10 +623,10 @@ endif
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
 
 exec%.ref:  | exec%.clog
-	$(CMDECHO) echo > $@ ; echo "Processing exec$*.cxx+..." >> $@
+	$(CMDECHO) if [ ! -e $@ ] ; then echo > $@ ; echo "Processing exec$*.cxx+..." >> $@ ; fi
 
 exec%.ref:  | exec%.log
-	$(CMDECHO) echo > $@ ; echo "Processing exec$*.C..." >> $@
+	$(CMDECHO)  if [ ! -e $@ ] ; then echo > $@ ; echo "Processing exec$*.C..." >> $@ ; fi
 
 %.ref:
 	$(CMDECHO) touch $@
