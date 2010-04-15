@@ -11,8 +11,6 @@
 #ifndef ROOT_RtypesCint
 #define ROOT_RtypesCint
 
-#ifndef __CLING__
-
 #if !defined(__CINT__) || defined(__MAKECINT)
 #error This header file can only be used in interpreted code.
 #endif
@@ -64,7 +62,5 @@ public: \
 #define ClassImp(X)
 #define ClassImpUnique(name,key)
 #define RootClassVersion(name,VersionNumber)
-
-#endif // __CLING__
 
 #endif

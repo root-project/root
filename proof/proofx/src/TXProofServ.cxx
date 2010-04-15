@@ -318,15 +318,7 @@ Int_t TXProofServ::CreateServer()
 
    // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
-   ProcessLine("#include <_string>",kTRUE); // for std::string iostream.
-
-   // Allow the usage of ClassDef and ClassImp in interpreted macros
-   ProcessLine("#include <RtypesCint.h>", kTRUE);
-
-   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
-   ProcessLine("#define ROOT_Rtypes 0", kTRUE);
-   ProcessLine("#define ROOT_TError 0", kTRUE);
-   ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
+   ProcessLine("#include <string>",kTRUE); // for std::string iostream.
 
    // Load user functions
    const char *logon;

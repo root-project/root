@@ -243,6 +243,24 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title), f
 
    // Make sure that ALL macros are seen as C++.
    G__LockCpp();
+
+   // Initialize for ROOT:
+   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
+   ProcessLine("#define ROOT_Rtypes 0");
+   ProcessLine("#define ROOT_TError 0");
+   ProcessLine("#define ROOT_TGenericClassInfo 0");   
+
+   // Add the root include directory to list searched by default
+#ifndef ROOTINCDIR
+   TString include = gSystem->Getenv("ROOTSYS");
+   include.Append("/include");
+   TCint::AddIncludePath(include);
+#else
+   TCint::AddIncludePath(ROOTINCDIR);
+#endif
+
+   // Allow the usage of ClassDef and ClassImp in interpreted macros
+   ProcessLine("#include <RtypesCint.h>");
 }
 
 //______________________________________________________________________________

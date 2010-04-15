@@ -64,14 +64,6 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
       ProcessLine( "#include <pair>",     kTRUE ); //  core ROOT dicts and CINT won't be able
                                                    //  to properly unload these files
 
-   // allow the usage of ClassDef and ClassImp in interpreted macros
-      ProcessLine( "#include <RtypesCint.h>", kTRUE );
-
-   // disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
-      ProcessLine( "#define ROOT_Rtypes 0", kTRUE );
-      ProcessLine( "#define ROOT_TError 0", kTRUE );
-      ProcessLine( "#define ROOT_TGenericClassInfo 0", kTRUE );
-
    // following RINT, these are now commented out (rely on auto-loading)
    //   // the following libs are also useful to have, make sure they are loaded...
    //      gROOT->LoadClass("TMinuit",     "Minuit");
