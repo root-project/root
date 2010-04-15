@@ -168,7 +168,6 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    if (includes > 0) {
       ProcessLine("#include <iostream>", kTRUE);
       ProcessLine("#include <string>", kTRUE); // for std::string iostream.
-      ProcessLine("#include <RtypesCint.h>", kTRUE);// Allow the usage of ClassDef and ClassImp in interpreted macros
       ProcessLine("#include <DllImport.h>", kTRUE);// Defined R__EXTERN
       if (includes > 1) {
          ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
@@ -176,11 +175,6 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
                                                    // and CINT will not be able to properly unload these files
       }
    }
-
-   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
-   ProcessLine("#define ROOT_Rtypes 0", kTRUE);
-   ProcessLine("#define ROOT_TError 0", kTRUE);
-   ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
 
    // Load user functions
    const char *logon;
