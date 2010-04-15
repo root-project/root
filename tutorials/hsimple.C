@@ -53,7 +53,6 @@ TFile *hsimple(Int_t get=0)
       printf("you must run the script in a directory with write access\n");
       return 0;
    }
-   (TFile*)gROOT->FindObject(filename); if (hfile) hfile->Close();
    hfile = (TFile*)gROOT->FindObject(filename); if (hfile) hfile->Close();
    hfile = new TFile(filename,"RECREATE","Demo ROOT file with histograms");
 
