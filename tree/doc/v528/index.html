@@ -2,3 +2,47 @@
 <hr/>
 <a name="tree"></a> 
 <h3>Tree</h3>
+<ul>
+<li>In TTree and TChain LoadTree fReadEntry is now set to -1 in case of failure to find the proper row.</li>
+<li>In TTree::CloneTree, TChain::Merge and TTree::CopyEntries introduces more flexibility
+in the handling of the case where a TTreeIndex is 'missing' in one or more of the 
+TTree objects being collated.   If the tree or any of the underlying tree of the chain has an index, 
+that index and any index in the subsequent underlying TTree objects will be merged. There are currently three 'options' 
+to control this merging:
+   <ul>
+   <li>NoIndex             : all the TTreeIndex object are dropped.</li>
+   <li>DropIndexOnError    : if any of the underlying TTree object do no have a TTreeIndex,
+                             they are all dropped.</li>
+   <li>AsIsIndexOnError [default]: In case of missing TTreeIndex, the resulting TTree index has gaps.</li>
+   <li>BuildIndexOnError : If any of the underlying TTree object do no have a TTreeIndex,
+                           all TTreeIndex are 'ignored' and the mising piece are rebuilt.</li>
+   </ul>
+   Previously the index were kept only if the first files had an index and if there was any missing index,
+   the resulting index had gaps (the default was similar to AsIsIndexOnError).   The new default is BuildIndexOnError  ; i.e.
+we now attempt by default to build the missing indices.
+</li>
+<li>Update MakeProxy so that the resulting skeleton is useable with Proof.</li>
+<li>Correct and clarify the relationship between AutoFlush and AutoSave:
+   <ul>
+   <li>Both the AutoFlush and AutoSave interval can be specified in
+terms of bytes (a negative value for fAutoFlush or fAutoSave)
+or in terms of the number of entries (positive values).</li>
+   <li>An AutoFlush is always done with an AutoSave.</li>
+   <li>If the interval specified for AutoSave is less than that for
+AutoFlush, the AutoSave interval is used for both.</li>
+   <li>If the AutoFlush interval is less than the AutoSave interval,
+the AutoSave interval is adjusted to the largest integer
+multiple of the AutoFlush interval that is less than or equal
+to the original value of the AutoSave interval.</li>
+   </ul>
+</li>
+<li>Add support for 'array' formula in TTree::Query.</li>
+<li>Set the initial value of fCacheSize to zero to indicate clearly that the TreeCache is disabled.</li>
+<li>In TChain::SetEntryList use only the treename to lookup the (sub)entryList (instead subdir/treename).</li>
+<li>And many other bug fixes, security fixes, thread safety and performance improvements ; see the svn log for details.</li>
+</ul>
+<h4>TTree Scan and Draw</h4>
+<ul>
+<li>Insured that the generated histogram as an integral bin width when plotting a string or integer.</li>
+<li>Improved the output of TTree::Scan by inserting a blank space whenever a value is not available because there is no proper row in a friend.
+(Previously it was re-printing the previous value).  This required changes in </li>
