@@ -2821,14 +2821,14 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
    Bool_t fastClone = opt.Contains("fast");
    Bool_t withIndex = !opt.Contains("noindex");
    EOnIndexError onIndexError;
-   if (opt.Contains("AsIsIndex")) {
+   if (opt.Contains("asisindex")) {
       onIndexError = kKeep;
    } else if (opt.Contains("buildindex")) {
       onIndexError = kBuild;
    } else if (opt.Contains("dropindex")) {
       onIndexError = kDrop;
    } else {
-      onIndexError = kKeep;
+      onIndexError = kBuild;
    }
 
    Long64_t nbytes = 0;
