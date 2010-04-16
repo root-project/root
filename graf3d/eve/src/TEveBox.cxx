@@ -126,10 +126,11 @@ void TEveBoxProjected::ComputeBBox()
 }
 
 //______________________________________________________________________________
-void TEveBoxProjected::SetDepthLocal(Float_t)
+void TEveBoxProjected::SetDepthLocal(Float_t d)
 {
    // This is virtual method from base-class TEveProjected.
-   // Does nothing, must be implemented as it is abstract.
+
+   SetDepthCommon(d, this, fBBox);
 }
 
 //______________________________________________________________________________

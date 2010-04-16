@@ -63,9 +63,6 @@ private:
    TEveCompoundProjected(const TEveCompoundProjected&);            // Not implemented
    TEveCompoundProjected& operator=(const TEveCompoundProjected&); // Not implemented
 
-protected:
-   virtual void SetDepthLocal(Float_t /*d*/) {}
-
 public:
    TEveCompoundProjected();
    virtual ~TEveCompoundProjected() {}

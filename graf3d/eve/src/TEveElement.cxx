@@ -2163,13 +2163,6 @@ TEveElementListProjected::TEveElementListProjected() :
 }
 
 //______________________________________________________________________________
-void TEveElementListProjected::SetDepthLocal(Float_t /*d*/)
-{
-   // This is abstract method from base-class TEveProjected.
-   // No implementation.
-}
-
-//______________________________________________________________________________
 void TEveElementListProjected::UpdateProjection()
 {
    // This is abstract method from base-class TEveProjected.

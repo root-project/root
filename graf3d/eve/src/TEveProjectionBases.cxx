@@ -218,3 +218,11 @@ void TEveProjected::SetDepthCommon(Float_t d, TEveElement* el, Float_t* bbox)
       el->StampTransBBox();
    }
 }
+
+//______________________________________________________________________________
+void TEveProjected::SetDepthLocal(Float_t d)
+{
+   // Base-class implementation -- just sets fDepth.
+
+   fDepth = d;
+}

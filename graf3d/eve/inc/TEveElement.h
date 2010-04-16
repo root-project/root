@@ -486,10 +486,6 @@ private:
    TEveElementListProjected(const TEveElementListProjected&);            // Not implemented
    TEveElementListProjected& operator=(const TEveElementListProjected&); // Not implemented
 
-
-protected:
-   virtual void SetDepthLocal(Float_t d);
-
 public:
    TEveElementListProjected();
    virtual ~TEveElementListProjected() {}

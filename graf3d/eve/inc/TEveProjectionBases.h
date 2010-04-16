@@ -88,7 +88,7 @@ protected:
    Float_t                fDepth;         // z coordinate
 
    void         SetDepthCommon(Float_t d, TEveElement* el, Float_t* bbox);
-   virtual void SetDepthLocal(Float_t d) = 0;
+   virtual void SetDepthLocal(Float_t d);
 
 public:
    TEveProjected();
