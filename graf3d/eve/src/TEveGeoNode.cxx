@@ -412,10 +412,14 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
 
    TEveGeoShapeExtract* gse = new TEveGeoShapeExtract(geon->GetName(), geon->GetTitle());
    gse->SetTrans(trans.Array());
-   Int_t ci = 0;
-   if (tvolume) ci = tvolume->GetLineColor();
+   Int_t  ci = 0;
+   Char_t transp = 0;
+   if (tvolume) {
+      ci = tvolume->GetLineColor();
+      transp = tvolume->GetTransparency();
+   }
    TColor* c = gROOT->GetColor(ci);
-   Float_t rgba[4] = {1, 0, 0, 1};
+   Float_t rgba[4] = {1, 0, 0, 1.0f - transp/100.0f};
    if (c) {
       rgba[0] = c->GetRed();
       rgba[1] = c->GetGreen();
