@@ -3149,6 +3149,50 @@ inline void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var
 static G__value G__allocvariable(G__value result, G__value para[], G__var_array* varglobal, G__var_array* varlocal, int paran, int varhash, char* item, char* varname, int parameter00, G__DataMemberHandle &member)
 {
    // -- Allocate memory for a variable and initialize it.
+   if (!varname) {
+      G__fprinterr(G__serr, "Error: Variable name pointer is null!");
+      G__genericerror(0);
+      return result;
+   }
+   //
+   //  Complain if the variable name has a minus or plus in it.
+   //
+   {
+      char* pp = std::strchr(varname, '-');
+      if (!pp) {
+         pp = std::strchr(varname, '+');
+      }
+      if (pp) {
+         G__fprinterr(G__serr,
+            "Error: Variable name has bad character '%s'", varname);
+         G__genericerror(0);
+         return result;
+      }
+   }
+   //
+   //  Complain if the variable name has a space character in it, but
+   //  allow the special " : <bitfield-size>" syntax in the variable name
+   //  of a bitfield when generating a dictionary (What an awful cludge!).
+   //
+   if (std::strchr(varname, ' ')) {
+      // Ok, there is a space in the variable name, this is bad unless
+      // we are generating a dictionary and the name is "name : size"
+      // which is the special hack for bitfields in dictionaries.
+      if (
+         (G__globalcomp == G__NOLINK) || // Not generating a dictionary, or
+         !std::strstr(varname, " : ") // no special bitfield marker.
+      ) {
+         G__fprinterr(
+              G__serr
+            , "Error: Invalid type '%.*s' in declaration of '%s'"
+            , (std::strchr(varname, ' ') - varname)
+            , varname
+            , std::strchr(varname, ' ') + 1
+         );
+         G__genericerror(0);
+         return result;
+      }
+   }
    //
    //  Figure out which variable chain we will use.
    //
@@ -3724,19 +3768,6 @@ static G__value G__allocvariable(G__value result, G__value para[], G__var_array*
    var->filenum[var->allvar] = G__ifile.filenum;
    var->linenum[var->allvar] = G__ifile.line_number;
 #endif // G__VARIABLEFPOS
-   //
-   //  Complain if the variable name has a minus or plus in it.
-   //
-   {
-      char* pp = std::strchr(varname, '-');
-      if (!pp) {
-         pp = std::strchr(varname, '+');
-      }
-      if (pp) {
-         G__fprinterr(G__serr, "Error: Variable name has bad character '%s'", varname);
-         G__genericerror(0);
-      }
-   }
    //--
    //--
    //--
