@@ -104,8 +104,8 @@ void TEveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
    {
       if ((*i)->GetCompound() == this)
       {
-         impSelSet.insert(*i);
-         (*i)->FillImpliedSelectedSet(impSelSet);
+         if (impSelSet.insert(*i).second)
+            (*i)->FillImpliedSelectedSet(impSelSet);
       }
 
    }

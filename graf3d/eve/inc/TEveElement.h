@@ -290,14 +290,26 @@ public:
    void* GetUserData() const { return fUserData; }
    void  SetUserData(void* ud) { fUserData = ud; }
 
+
    // Selection state and management
    //--------------------------------
+
 protected:
    Bool_t  fPickable;
    Bool_t  fSelected;             //!
    Bool_t  fHighlighted;          //!
    Short_t fImpliedSelected;      //!
    Short_t fImpliedHighlighted;   //!
+
+   enum ESelectionColorBits
+   {
+      kSCBImplySelectAllChildren           = BIT(0),
+      kSCBTakeAnyParentAsMaster            = BIT(1),
+      kSCBApplyMainColorToAllChildren      = BIT(2),
+      kSCBApplyMainColorToMatchingChildren = BIT(3)
+   };
+
+   UChar_t fSelectionColorBits;
 
 public:
    typedef void (TEveElement::* Select_foo)      (Bool_t);
@@ -322,6 +334,17 @@ public:
    virtual UChar_t GetSelectedLevel() const;
 
    void RecheckImpliedSelections();
+
+   void   SetSelectionColorBits(UChar_t f)   { fSelectionColorBits |=  f; }
+   void   ResetSelectionColorBits(UChar_t f) { fSelectionColorBits &= ~f; }
+   Bool_t TestSelectionColorBits(UChar_t f) const { return (fSelectionColorBits & f) != 0; }
+
+   void   ResetAllSelectionColorBits()       { fSelectionColorBits  =  0; }
+   void   ImplySelectAllChildren()           { fSelectionColorBits |= kSCBImplySelectAllChildren; }
+   void   TakeAnyParentAsMaster()            { fSelectionColorBits |= kSCBTakeAnyParentAsMaster;  }
+   void   ApplyMainColorToAllChildren()      { fSelectionColorBits |= kSCBApplyMainColorToAllChildren; }
+   void   ApplyMainColorToMatchingChildren() { fSelectionColorBits |= kSCBApplyMainColorToMatchingChildren; }
+
 
    // Change-stamping and change bits
    //---------------------------------

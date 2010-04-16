@@ -90,6 +90,7 @@ TEveElement::TEveElement() :
    fHighlighted         (kFALSE),
    fImpliedSelected     (0),
    fImpliedHighlighted  (0),
+   fSelectionColorBits  (0),
    fChangeBits          (0),
    fDestructing         (kFALSE)
 {
@@ -121,6 +122,7 @@ TEveElement::TEveElement(Color_t& main_color) :
    fHighlighted         (kFALSE),
    fImpliedSelected     (0),
    fImpliedHighlighted  (0),
+   fSelectionColorBits  (0),
    fChangeBits          (0),
    fDestructing         (kFALSE)
 {
@@ -152,6 +154,7 @@ TEveElement::TEveElement(const TEveElement& e) :
    fHighlighted         (kFALSE),
    fImpliedSelected     (0),
    fImpliedHighlighted  (0),
+   fSelectionColorBits  (e.fSelectionColorBits),
    fChangeBits          (0),
    fDestructing         (kFALSE)
 {
@@ -242,9 +245,6 @@ void TEveElement::CloneChildrenRecurse(TEveElement* dest, Int_t level) const
       dest->AddElement((*i)->CloneElementRecurse(level));
    }
 }
-
-//==============================================================================
-
 
 
 //==============================================================================
@@ -584,14 +584,17 @@ void TEveElement::VizDB_Insert(const char* tag, Bool_t replace, Bool_t update)
 //______________________________________________________________________________
 TEveElement* TEveElement::GetMaster()
 {
-   // Return the master element - that is the upwards compound not
-   // inside another compound.
-   // If this element is not in a compound, this is returned.
-   // For a projected object the projectable->GetMaster() is returned.
+   // Returns the master element - that is:
+   // - master of projectable, if this is a projected;
+   // - master of first parent, if kSCBTakeAnyParentAsMaster bit is set;
+   // - master of compound, if fCompound is set;
+   // If non of the above is true, *this* is returned.
 
    TEveProjected* proj = dynamic_cast<TEveProjected*>(this);
    if (proj)
       return dynamic_cast<TEveElement*>(proj->GetProjectable())->GetMaster();
+   if (TestSelectionColorBits(kSCBTakeAnyParentAsMaster) && HasParents())
+      return fParents.front()->GetMaster();
    if (fCompound)
       return fCompound->GetMaster();
    return this;
@@ -1139,12 +1142,32 @@ void TEveElement::PropagateRnrStateToProjecteds()
 void TEveElement::SetMainColor(Color_t color)
 {
    // Set main color of the element.
+   //
+   // The following SelectionColorBits have further influence:
+   //   kSCBApplyMainColorToAllChildren      - apply color to all children;
+   //   kSCBApplyMainColorToMatchingChildren - apply color to children who have
+   //                                          matching old color.
+   //
    // List-tree-items are updated.
 
    Color_t old_color = GetMainColor();
 
-   if (fMainColorPtr) {
+   if (fMainColorPtr)
+   {
       *fMainColorPtr = color;
+
+      if (TestSelectionColorBits(kSCBApplyMainColorToAllChildren))
+      {
+         for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+            (*i)->SetMainColor(color);
+      }
+      else if (TestSelectionColorBits(kSCBApplyMainColorToMatchingChildren))
+      {
+         for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+            if ((*i)->GetMainColor() == old_color)
+               (*i)->SetMainColor(color);
+      }
+
       StampColorSelection();
    }
 
@@ -1838,17 +1861,29 @@ void TEveElement::FillImpliedSelectedSet(Set_t& impSelSet)
 {
    // Populate set impSelSet with derived / dependant elements.
    //
-   // Here we check if class of this is TEveProjectable and add the projected
-   // replicas to the set. Thus it does not have to be reimplemented for
-   // each sub-class of TEveProjected.
+   // If this is a TEveProjectable, the projected replicas are added
+   // to the set. Thus it does not have to be reimplemented for each
+   // sub-class of TEveProjected.
    //
    // Note that this also takes care of projections of TEveCompound
    // class, which is also a projectable.
+   //
+   // If SelectionColorBit kSCBImplySelectAllChildren is set, then all
+   // children are added to the set.
 
    TEveProjectable* p = dynamic_cast<TEveProjectable*>(this);
    if (p)
    {
       p->AddProjectedsToSet(impSelSet);
+   }
+
+   if (TestSelectionColorBits(kSCBImplySelectAllChildren))
+   {
+      for (List_i i = fChildren.begin(); i != fChildren.end(); ++i)
+      {
+         if (impSelSet.insert(*i).second)
+            (*i)->FillImpliedSelectedSet(impSelSet);
+      }
    }
 }
 
