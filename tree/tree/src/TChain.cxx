@@ -1871,7 +1871,7 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 
    // Copy the entries.
    if (fastClone) {
-      if ( newTree->CopyEntries( this, -1, option) < 0 ) {
+      if ( newTree->CopyEntries( this, -1, option ) < 0 ) {
          // There was a problem!
          Error("Merge", "TTree has not been cloned\n");
       }
