@@ -216,7 +216,9 @@ public:
 
    TEveVector4T() : TP(),  fT(0) {}
    template <typename OO>
-   TEveVector4T(const TEveVectorT<OO>& v, Float_t t=0) : TP(v.fX, v.fY, v.fZ), fT(t) {}
+   TEveVector4T(const TEveVectorT<OO>& v) : TP(v.fX, v.fY, v.fZ), fT(0) {}
+   template <typename OO>
+   TEveVector4T(const TEveVectorT<OO>& v, Float_t t) : TP(v.fX, v.fY, v.fZ), fT(t) {}
    template <typename OO>
    TEveVector4T(const TEveVector4T<OO>& v) : TP(v.fX, v.fY, v.fZ), fT(v.fT) {}
    TEveVector4T(const Float_t*  v) : TP(v), fT(v[3]) {}

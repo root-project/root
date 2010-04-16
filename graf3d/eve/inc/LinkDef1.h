@@ -36,6 +36,34 @@
 #pragma link C++ typedef TEveVector2F;
 #pragma link C++ typedef TEveVector2D;
 
+// Operators for TEveVectorXT<Float_t>
+#pragma link C++ function operator+(const TEveVectorT<Float_t>&, const TEveVectorT<Float_t>&);
+#pragma link C++ function operator-(const TEveVectorT<Float_t>&, const TEveVectorT<Float_t>&);
+#pragma link C++ function operator*(const TEveVectorT<Float_t>&, Float_t);
+#pragma link C++ function operator*(Float_t, const TEveVectorT<Float_t>&);
+#pragma link C++ function operator+(const TEveVector4T<Float_t>&, const TEveVector4T<Float_t>&);
+#pragma link C++ function operator-(const TEveVector4T<Float_t>&, const TEveVector4T<Float_t>&);
+#pragma link C++ function operator*(const TEveVector4T<Float_t>&, Float_t);
+#pragma link C++ function operator*(Float_t, const TEveVector4T<Float_t>&);
+#pragma link C++ function operator+(const TEveVector2T<Float_t>&, const TEveVector2T<Float_t>&);
+#pragma link C++ function operator-(const TEveVector2T<Float_t>&, const TEveVector2T<Float_t>&);
+#pragma link C++ function operator*(const TEveVector2T<Float_t>&, Float_t);
+#pragma link C++ function operator*(Float_t, const TEveVector2T<Float_t>&);
+// Operators for TEveVectorXT<Double_t>
+#pragma link C++ function operator+(const TEveVectorT<Double_t>&, const TEveVectorT<Double_t>&);
+#pragma link C++ function operator-(const TEveVectorT<Double_t>&, const TEveVectorT<Double_t>&);
+#pragma link C++ function operator*(const TEveVectorT<Double_t>&, Double_t);
+#pragma link C++ function operator*(Double_t, const TEveVectorT<Double_t>&);
+#pragma link C++ function operator+(const TEveVector4T<Double_t>&, const TEveVector4T<Double_t>&);
+#pragma link C++ function operator-(const TEveVector4T<Double_t>&, const TEveVector4T<Double_t>&);
+#pragma link C++ function operator*(const TEveVector4T<Double_t>&, Double_t);
+#pragma link C++ function operator*(Double_t, const TEveVector4T<Double_t>&);
+#pragma link C++ function operator+(const TEveVector2T<Double_t>&, const TEveVector2T<Double_t>&);
+#pragma link C++ function operator-(const TEveVector2T<Double_t>&, const TEveVector2T<Double_t>&);
+#pragma link C++ function operator*(const TEveVector2T<Double_t>&, Double_t);
+#pragma link C++ function operator*(Double_t, const TEveVector2T<Double_t>&);
+
+// TEvePathMark
 #pragma link C++ class   TEvePathMarkT<Float_t>+;
 #pragma link C++ class   TEvePathMarkT<Double_t>+;
 #pragma link C++ typedef TEvePathMark;
