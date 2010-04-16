@@ -33,7 +33,7 @@ double myfunc ( double x ) {
 
 double ExactResult() { 
    if (gTestCase == 0) 
-      return sqrt(5); 
+      return std::sqrt(5); 
    if (gTestCase == 1)
 #ifdef R__HAS_MATHMORE  
       return ROOT::Math::gamma_quantile(0.32,16,0.4);
