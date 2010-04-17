@@ -20,25 +20,32 @@ const double ERRORLIMIT = 1E-8;
 const int iterTest = 10000;
 int myfuncCalls = 0;
 
+const double Y0_P2 = 5.0;   // Y0 for test 1 (parabola)
+// these are value which gave problems in 5.26 for gamma_cdf
+const double Y0_GAMMA = 0.32;  // Y0 for test 2 (gamma cdf)
+const double ALPHA_GAMMA = 16.; // alpha of gamma cdf
+const double THETA_GAMMA = 0.4;  // theta of gamma cdf
+ 
 int gTestCase = 0; 
 
 double myfunc ( double x ) {
    myfuncCalls ++;
    if (gTestCase == 0) // polynomial
-      return x*x - 5;   
+      return x*x - Y0_P2;   
    if (gTestCase == 1) // function showing bug in BrentMethod::
-      return ROOT::Math::gamma_cdf(x,16,0.4)-0.32; 
+      return ROOT::Math::gamma_cdf(x,ALPHA_GAMMA,THETA_GAMMA)-Y0_GAMMA; 
    return 0; 
 }
 
 double ExactResult() { 
-   if (gTestCase == 0) 
-      return std::sqrt(5); 
+   if (gTestCase == 0) {
+      return std::sqrt(Y0_P2); 
+   }
    if (gTestCase == 1)
 #ifdef R__HAS_MATHMORE  
-      return ROOT::Math::gamma_quantile(0.32,16,0.4);
+      return ROOT::Math::gamma_quantile(Y0_GAMMA,ALPHA_GAMMA,THETA_GAMMA);
 #else
-      return 5.55680381022934800;
+   return 5.55680381022934800;   //result as before if quantile of gamma is not available
 #endif
 
    return 0; 
