@@ -119,7 +119,7 @@ int runTest(int testcase = 0) {
    std::cout << "Brent RootFinder Stats:" << std::endl;
    status += printStats(timer, root);
 
-#ifdef R__HAS_MATHCORE
+#ifdef R__HAS_MATHMORE
    ROOT::Math::RootFinder grf(ROOT::Math::RootFinder::kGSL_BRENT);
    timer.Reset(); timer.Start(); myfuncCalls = 0;
    for (int i = 0; i < iterTest; ++i)
