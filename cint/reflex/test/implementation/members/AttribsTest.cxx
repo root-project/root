@@ -8,18 +8,12 @@
 
 using namespace Reflex;
 
-int S::si_0 = 0;
-int S::si_1 = 0;
-int S::si_2 = 0;
-
-const int S::sci_0 = 0;
-const int S::sci_1 = 0;
-const int S::sci_2 = 0;
-
 REFLEX_TEST(test001)
 {
 // See e.g. https://savannah.cern.ch/bugs/?65758
-   Type t = Type::ByName("S");
+   Type t = Type::ByName("X<float>");
+   CPPUNIT_ASSERT(t);               
+   CPPUNIT_ASSERT(t.MemberSize() > 12);
 
    for (Member_Iterator iM = t.Member_Begin(),
            eM = t.Member_End(); iM != eM; ++iM) {
@@ -42,7 +36,7 @@ REFLEX_TEST(test001)
          case 'c': CPPUNIT_ASSERT(m.IsConst()); break;
          case 's': CPPUNIT_ASSERT(m.IsStatic()); break;
          case 'm': CPPUNIT_ASSERT(m.IsMutable()); break;
-         case 'S': CPPUNIT_ASSERT(m.IsExplicit()); break;
+         case 'X': CPPUNIT_ASSERT(m.IsExplicit()); break;
          case 't': CPPUNIT_ASSERT(m.IsTransient()); break;
          case '0': CPPUNIT_ASSERT(m.IsPrivate()); break;
          case '1': CPPUNIT_ASSERT(m.IsProtected()); break;

@@ -1,4 +1,5 @@
-class S {
+template <typename T>
+class X {
 private:
    void f_0() {}
    void fc_0() const {}
@@ -47,10 +48,21 @@ public:
    mutable int mi_2;
    int ti_2; //!
 
-   explicit S(int):
+   explicit X(int):
       ci_0(0), ci_1(0), ci_2(0)
    {}
-   S():
+   X():
       ci_0(0), ci_1(0), ci_2(0)
    {}
+
+   virtual ~X(){}
 };
+
+template<typename T> int X<T>::si_0 = 12;
+template<typename T> int X<T>::si_1 = 13;
+template<typename T> int X<T>::si_2 = 14;
+template<typename T> const int X<T>::sci_0 = 22;
+template<typename T> const int X<T>::sci_1 = 23;
+template<typename T> const int X<T>::sci_2 = 24;
+
+template class X<float>;

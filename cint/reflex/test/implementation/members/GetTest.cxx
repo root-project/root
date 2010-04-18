@@ -8,16 +8,14 @@
 
 using namespace Reflex;
 
-int S::A::s = 0;
-
 REFLEX_TEST(test001)
 {
 // See e.g. https://savannah.cern.ch/bugs/?65759
-   Type tT = Type::ByName("S::T");
+   Type tT = Type::ByName("St<int>::T");
    CPPUNIT_ASSERT(tT);
 
-   S::A::s = 43;
-   S::T o;
+   St<int>::A::s = 43;
+   St<int>::T o;
    o.a = 42;
 
    Member mA = tT.DataMemberByName("a");
