@@ -1,6 +1,7 @@
 #include "TF1.h"
 #include "Math/Functor.h"
 #include "TStopwatch.h"
+#include "RConfigure.h"
 
 #include "Math/RootFinder.h"
 #include "Math/DistFunc.h"
@@ -118,6 +119,7 @@ int runTest(int testcase = 0) {
    std::cout << "Brent RootFinder Stats:" << std::endl;
    status += printStats(timer, root);
 
+#ifdef R__HAS_MATHCORE
    ROOT::Math::RootFinder grf(ROOT::Math::RootFinder::kGSL_BRENT);
    timer.Reset(); timer.Start(); myfuncCalls = 0;
    for (int i = 0; i < iterTest; ++i)
@@ -130,6 +132,7 @@ int runTest(int testcase = 0) {
    timer.Stop();
    std::cout << "GSL Brent RootFinder Stats:" << std::endl;
    status += printStats(timer, root);
+#endif
 
    if (status) std::cout << "Test-case " << testcase << "   FAILED" << std::endl;
 
