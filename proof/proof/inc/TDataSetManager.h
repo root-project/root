@@ -37,7 +37,9 @@
 
 
 class TFileCollection;
+class TFileInfo;
 class TMD5;
+class TUrl;
 class TVirtualMonitoringWriter;
 
 
@@ -69,6 +71,9 @@ protected:
    Long_t   fMTimeGroupConfig; // Last modification of the group config file
 
    static TString fgCommonDataSetTag;  // Name for common datasets, default: COMMON
+
+   static TList *fgDataSetSrvMaps; // List of TPair(TRegexp, TObjString) for mapping server coordinates
+                                  // for dataset files (init from DataSet.SrvMap)
 
    virtual TMap *GetGroupUsedMap() { return &fGroupUsed; }
    virtual TMap *GetUserUsedMap() { return &fUserUsed; }
@@ -124,6 +129,14 @@ public:
 
    static TString           CreateUri(const char *dsGroup = 0, const char *dsUser = 0,
                                       const char *dsName = 0, const char *dsTree = 0);
+   static Bool_t            CheckDataSetSrvMaps(TUrl *furl, TString &fn, TList *srvmaplist = 0);
+   static TList            *GetDataSetSrvMaps();
+   static TList            *ParseDataSetSrvMaps(const TString &srvmaps);
+   static Int_t             ScanDataSet(TFileCollection *dataset, Int_t fopenopt, Bool_t notify = kFALSE,
+                                        Int_t scanfopt = 0, TList *flist = 0, Long64_t avgsize = -1,
+                                        const char *mssurl = 0, Int_t filesmax = -1,
+                                        Int_t *touched = 0, Int_t *opened = 0, Int_t *disappeared = 0);
+   static Int_t             ScanFile(TFileInfo *fileinfo, Bool_t notify);
 
    ClassDef(TDataSetManager, 0)  // Abstract data set manager class
 };

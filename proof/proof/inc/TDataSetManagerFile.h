@@ -63,7 +63,6 @@ public:
    TFileCollection *GetDataSet(const char *group, const char *user, const char *dsName,
                                UInt_t option = 0, TMD5 **checksum = 0);
    TMap *GetDataSets(const char *group, const char *user, UInt_t option = 0);
-   Int_t ScanDataSet(TFileCollection *dataset, UInt_t option, Int_t filesmax = -1);
    Int_t WriteDataSet(const char *group, const char *user, const char *dsName,
                       TFileCollection *dataset, UInt_t option = 0, TMD5 *checksum = 0);
 

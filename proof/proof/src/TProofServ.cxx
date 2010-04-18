@@ -5771,6 +5771,12 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
                (*mess) >> uri;
                TProofServLogHandlerGuard hg(fLogFile,  fSocket);
                rc = fDataSetManager->ScanDataSet(uri, TDataSetManager::kReopen | TDataSetManager::kDebug);
+               // TODO: verify in parallel:
+               //  - dataset = GetDataSet(uri)
+               //  - TList flist; TDataSetManager::ScanDataSet(dataset, ..., &flist)
+               //  - fPlayer->Process( ... flist ...) // needs to be developed
+               //  - dataset->Integrate(flist) (perhaps automatic; flist object owned by dataset)
+               //  - RegisterDataSet(uri, dataset, "OT")
             } else {
                Info("HandleDataSets", "dataset verification not allowed");
                return -1;

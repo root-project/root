@@ -690,7 +690,8 @@ Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
    // Verify the dataset if required
    if (opt.Contains("V", TString::kIgnoreCase)) {
       if (TestBit(TDataSetManager::kAllowVerify)) {
-         if (ScanDataSet(dataSet, (UInt_t)(kReopen | kDebug)) < 0) {
+         // Reopen files and notify
+         if (TDataSetManager::ScanDataSet(dataSet, 1, kTRUE ) < 0) {
             Error("RegisterDataSet", "problems verifying the dataset");
             return -1;
          }
@@ -766,7 +767,7 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
 
 //______________________________________________________________________________
 Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
-                                            const char *dsName, UInt_t option)
+                                       const char *dsName, UInt_t option)
 {
    // See documentation of ScanDataSet(TFileCollection *dataset, UInt_t option)
 
@@ -777,8 +778,15 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
    if (!dataset)
       return -1;
 
-   Int_t result = ScanDataSet(dataset, option);
-
+   // Scan controllers
+   Int_t fopenopt = 0;
+   if ((option & kReopen)) fopenopt++;
+   if ((option & kTouch)) fopenopt++;
+   Bool_t notify = ((option & kDebug)) ? kTRUE : kFALSE;
+   // Do the scan
+   Int_t result = TDataSetManager::ScanDataSet(dataset, fopenopt,
+                                   notify, 0, (TList *)0, fAvgFileSize, fMSSUrl.Data(), -1,
+                                   &fNTouchedFiles, &fNOpenedFiles, &fNDisappearedFiles);
    if (result == 2) {
       if (WriteDataSet(group, user, dsName, dataset) == 0) {
          delete dataset;
@@ -786,280 +794,6 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
       }
    }
    delete dataset;
-
-   return result;
-}
-
-//______________________________________________________________________________
-Int_t TDataSetManagerFile::ScanDataSet(TFileCollection *dataset,
-                                            UInt_t option, Int_t filesmax)
-{
-   // Updates the information in a dataset by opening all files that are not yet
-   // marked staged creates metadata for each tree in the opened file
-   //
-   // Available options (to be .or.ed)
-   //   kMaxFiles      process a maximum of 'filesmax' files
-   //   kReopen        opens also files that are marked staged
-   //   kTouch         opens and touches files that are marked staged; implies kReopen
-   //
-   // Return code
-   //   negative in case of error
-   //     -1 dataset not found
-   //     -2 could not write dataset after verification
-   //
-   //   positive in case of success
-   //     1 dataset was not changed
-   //     2 dataset was changed
-   //
-   // The number of opened, touched, disappeared files can be retrieved by
-   // GetNTouchedFiles(), GetNOpenedFiles(), GetNDisapparedFiles()
-
-   if (!TestBit(TDataSetManager::kAllowVerify))
-      return -1;
-
-   // Parse options
-   Bool_t notify = (option & kDebug) ? kTRUE : kFALSE;
-   // Max number of files
-   Int_t maxFiles = ((option & kMaxFiles) && (filesmax > -1)) ? filesmax : -1;
-   if (maxFiles > -1 && gDebug > 0)
-      Info("ScanDataSet", "processing a maximum of %d files", maxFiles);
-   // Reopen
-   Bool_t reopen = ((option & kReopen) || (option & kTouch)) ? kTRUE : kFALSE;
-   // Touch
-   Bool_t touch = ((option & kTouch)) ? kTRUE : kFALSE;
-
-   fNTouchedFiles = 0;
-   fNOpenedFiles = 0;
-   fNDisappearedFiles = 0;
-
-   Bool_t changed = kFALSE;
-
-   TFileStager *stager = (!fMSSUrl.IsNull()) ? TFileStager::Open(fMSSUrl) : 0;
-   Bool_t createStager = (stager) ? kFALSE : kTRUE;
-
-   // Check which files have been staged, this can be replaced by a bulk command,
-   // once it exists in the xrdclient
-   TList newStagedFiles;
-   TIter iter2(dataset->GetList());
-   TFileInfo *fileInfo = 0;
-   while ((fileInfo = dynamic_cast<TFileInfo*> (iter2.Next()))) {
-
-      // For real time monitoring
-      gSystem->DispatchOneEvent(kTRUE);
-
-      fileInfo->ResetUrl();
-      if (!fileInfo->GetCurrentUrl()) {
-         Error("ScanDataSet", "GetCurrentUrl() is 0 for %s",
-                              fileInfo->GetFirstUrl()->GetUrl());
-         continue;
-      }
-
-      if (fileInfo->TestBit(TFileInfo::kStaged)) {
-
-         // Skip files flagged as corrupted
-         if (fileInfo->TestBit(TFileInfo::kCorrupted)) continue;
-
-         // Skip if we are not asked to re-open the staged files
-         if (!reopen) continue;
-
-         // Set the URL removing the anchor (e.g. #AliESDs.root) because IsStaged()
-         // and TFile::Open() with filetype=raw do not accept anchors
-         TUrl url(*(fileInfo->GetCurrentUrl()));
-         url.SetAnchor("");
-
-         // Notify
-         if (notify && (fNTouchedFiles+fNDisappearedFiles) % 100 == 0)
-            Info("ScanDataSet",
-                 "opening %d. file: %s", fNTouchedFiles+fNDisappearedFiles,
-                 fileInfo->GetCurrentUrl()->GetUrl());
-
-         // Check if file is still available, if touch is set actually read from the file
-         TFile *file = TFile::Open(Form("%s?filetype=raw&mxredir=2", url.GetUrl()));
-         if (file) {
-            if (touch) {
-               // Actually access the file
-               char tmpChar = 0;
-               file->ReadBuffer(&tmpChar, 1);
-            }
-            file->Close();
-            delete file;
-            fNTouchedFiles++;
-         } else {
-            // File could not be opened, reset staged bit
-            if (notify)
-               Info("ScanDataSet", "file %s disappeared", url.GetUrl());
-            fileInfo->ResetBit(TFileInfo::kStaged);
-            fNDisappearedFiles++;
-            changed = kTRUE;
-
-            // Remove invalid URL, if other one left...
-            if (fileInfo->GetNUrls() > 1)
-               fileInfo->RemoveUrl(fileInfo->GetCurrentUrl()->GetUrl());
-         }
-         // Go to next
-         continue;
-      }
-
-      // Only open maximum number of 'new' files
-      if (maxFiles > 0 && newStagedFiles.GetEntries() >= maxFiles)
-         continue;
-
-      // Set the URL removing the anchor (e.g. #AliESDs.root) because IsStaged()
-      // and TFile::Open() with filetype=raw do not accept anchors
-      TUrl url(*(fileInfo->GetCurrentUrl()));
-      url.SetAnchor("");
-
-      // Get the stager (either the global one or from the URL)
-      stager = createStager ? TFileStager::Open(url.GetUrl()) : stager;
-
-      Bool_t result = kFALSE;
-      if (stager) {
-         result = stager->IsStaged(url.GetUrl());
-         if (gDebug > 0)
-            Info("ScanDataSet", "IsStaged: %s: %d", url.GetUrl(), result);
-         if (createStager)
-            SafeDelete(stager);
-      } else {
-         Warning("ScanDataSet",
-                 "could not get stager instance for '%s'", url.GetUrl());
-      }
-
-      // Go to next in case of failure
-      if (!result) continue;
-
-      // Register the newly staged file
-      newStagedFiles.Add(fileInfo);
-   }
-   SafeDelete(stager);
-
-   // loop over now staged files
-   if (notify && newStagedFiles.GetEntries() > 0)
-      Info("ScanDataSet", "opening %d files that appear to be newly staged",
-           newStagedFiles.GetEntries());
-
-   // Prevent blocking of TFile::Open, if the file disappeared in the last nanoseconds
-   Bool_t oldStatus = TFile::GetOnlyStaged();
-   TFile::SetOnlyStaged(kTRUE);
-
-   // Notify each 'fqnot' files (min 1, max 100)
-   Int_t fqnot = (newStagedFiles.GetSize() > 10) ? newStagedFiles.GetSize() / 10 : 1;
-   if (fqnot > 100) fqnot = 100;
-   Int_t count = 0;
-   TIter iter3(&newStagedFiles);
-   while ((fileInfo = dynamic_cast<TFileInfo*> (iter3.Next()))) {
-
-      if (notify && (count%fqnot == 0))
-         Info("ScanDataSet", "processing %d.'new' file: %s",
-                             count, fileInfo->GetCurrentUrl()->GetUrl());
-      count++;
-
-      // For real time monitoring
-      gSystem->DispatchOneEvent(kTRUE);
-
-      TUrl *url = fileInfo->GetCurrentUrl();
-
-      TFile *file = 0;
-
-      // To determine the size we have to open the file without the anchor
-      // (otherwise we get the size of the contained file - in case of a zip archive)
-      // We open in raw mode which makes sure that the opening succeeds, even if
-      // the file is corrupted
-      TUrl urlNoAnchor(*url);
-      urlNoAnchor.SetAnchor("");
-      urlNoAnchor.SetOptions("filetype=raw");
-      if (!(file = TFile::Open(urlNoAnchor.GetUrl())))
-         continue;
-
-      // OK, set the relevant flags
-      changed = kTRUE;
-      fileInfo->SetBit(TFileInfo::kStaged);
-
-      // Add url of the disk server in front of the list
-      TUrl eurl(*(file->GetEndpointUrl()));
-      eurl.SetOptions(url->GetOptions());
-      eurl.SetAnchor(url->GetAnchor());
-      fileInfo->AddUrl(eurl.GetUrl(), kTRUE);
-      if (gDebug > 0)
-        Info("ScanDataSet", "added URL %s", eurl.GetUrl());
-
-      if (file->GetSize() > 0)
-          fileInfo->SetSize(file->GetSize());
-      fileInfo->SetUUID(file->GetUUID().AsString());
-
-      file->Close();
-      delete file;
-
-      if (!(file = TFile::Open(url->GetUrl()))) {
-         // If the file could be opened before, but fails now it is corrupt...
-         if (notify)
-            Info("ScanDataSet", "marking %s as corrupt", url->GetUrl());
-         fileInfo->SetBit(TFileInfo::kCorrupted);
-         continue;
-      }
-
-      // disable warnings when reading a tree without loading the corresponding library
-      Int_t oldLevel = gErrorIgnoreLevel;
-      gErrorIgnoreLevel = kError+1;
-
-      // loop over all entries and create/update corresponding metadata
-      // this code only used the objects in the basedir, should be extended to cover directories also
-      // It only processes TTrees
-      if (file->GetListOfKeys()) {
-         TIter keyIter(file->GetListOfKeys());
-         TKey *key = 0;
-         while ((key = dynamic_cast<TKey*> (keyIter.Next()))) {
-
-            if (!TClass::GetClass(key->GetClassName())->InheritsFrom(TTree::Class())) continue;
-
-            TString keyStr;
-            keyStr.Form("/%s", key->GetName());
-
-            TFileInfoMeta *metaData = fileInfo->GetMetaData(keyStr);
-            if (!metaData) {
-               // create it
-               metaData = new TFileInfoMeta(keyStr, key->GetClassName());
-               fileInfo->AddMetaData(metaData);
-
-               if (gDebug > 0)
-                  Info("ScanDataSet", "created meta data for tree %s", keyStr.Data());
-            }
-
-            // fill values
-            // TODO if we cannot read the tree, is the file corrupted also?
-            TTree *tree = dynamic_cast<TTree*> (file->Get(key->GetName()));
-            if (tree) {
-               if (tree->GetEntries() >= 0) {
-                  metaData->SetEntries(tree->GetEntries());
-                  if (tree->GetTotBytes() >= 0)
-                     metaData->SetTotBytes(tree->GetTotBytes());
-                  if (tree->GetZipBytes() >= 0)
-                     metaData->SetZipBytes(tree->GetZipBytes());
-               }
-            }
-         }
-      }
-
-      // set back old warning level
-      gErrorIgnoreLevel = oldLevel;
-
-      file->Close();
-      delete file;
-
-      fNOpenedFiles++;
-   }
-
-   TFile::SetOnlyStaged(oldStatus);
-
-   dataset->RemoveDuplicates();
-   dataset->Update(fAvgFileSize);
-
-   Int_t result = (changed) ? 2 : 1;
-   if (result > 0 && notify)
-      Info("ScanDataSet", "%d files 'new'; %d files touched; %d files disappeared",
-                          GetNOpenedFiles(), GetNTouchedFiles(), GetNDisapparedFiles());
-
-   // For real time monitoring
-   gSystem->DispatchOneEvent(kTRUE);
 
    return result;
 }

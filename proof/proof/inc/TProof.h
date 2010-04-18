@@ -542,9 +542,6 @@ private:
    Bool_t          fFinalizationRunning;
    Int_t           fRedirectNext;
 
-   static TList   *fgDataSetSrvMaps;    // List of TPair(TRegexp, TObjString) for mapping server coordinates
-                                        // for dataset files (init from DataSet.SrvMap)
-
    static TPluginHandler *fgLogViewer;  // Log dialog box plugin
 
 protected:
