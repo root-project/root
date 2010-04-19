@@ -52,19 +52,20 @@ public:
    void ParseInitOpts(const char *opts);
 
    TFileCollection *GetDataSet(const char *uri, const char *srv = 0);
-   TMap *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
-   Bool_t ExistsDataSet(const char *uri);
-   Bool_t RemoveDataSet(const char *uri);
+   TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
+   Bool_t           ExistsDataSet(const char *uri);
+   Bool_t           RemoveDataSet(const char *uri);
 
-   Int_t RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
-   Int_t ScanDataSet(const char *uri, UInt_t option = 0);
+   Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
+   Int_t            ScanDataSet(const char *uri, UInt_t option = 0);
 
    // These should / could be private but they are used directly by the external daemon
    TFileCollection *GetDataSet(const char *group, const char *user, const char *dsName,
                                UInt_t option = 0, TMD5 **checksum = 0);
-   TMap *GetDataSets(const char *group, const char *user, UInt_t option = 0);
-   Int_t WriteDataSet(const char *group, const char *user, const char *dsName,
-                      TFileCollection *dataset, UInt_t option = 0, TMD5 *checksum = 0);
+   TMap            *GetDataSets(const char *group, const char *user, UInt_t option = 0);
+   const char      *GetMSSUrl() const { return fMSSUrl; }
+   Int_t            WriteDataSet(const char *group, const char *user, const char *dsName,
+                                 TFileCollection *dataset, UInt_t option = 0, TMD5 *checksum = 0);
 
    ClassDef(TDataSetManagerFile, 0) // DataSet manager for files
 };

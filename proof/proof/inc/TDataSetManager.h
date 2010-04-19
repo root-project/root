@@ -107,6 +107,7 @@ public:
    TDataSetManager(const char *group = 0, const char *user = 0, const char *options = 0);
    virtual ~TDataSetManager();
 
+   virtual Long64_t         GetAvgFileSize() const { return fAvgFileSize; }
    virtual TFileCollection *GetDataSet(const char *uri, const char *server = 0);
    virtual TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
    virtual TMap            *GetSubDataSets(const char *uri, const char *excludeservers);
@@ -123,6 +124,7 @@ public:
    virtual Bool_t           RemoveDataSet(const char *uri);
    virtual Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
    virtual Int_t            ScanDataSet(const char *uri, UInt_t option = 0);
+   void                     SetScanCounters(Int_t t = -1, Int_t o = -1, Int_t d = -1);
    virtual void             ShowQuota(const char *opt);
 
    virtual void             ShowDataSets(const char *uri = "*", const char *opt = "");

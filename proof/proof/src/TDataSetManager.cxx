@@ -1436,4 +1436,12 @@ Bool_t TDataSetManager::CheckDataSetSrvMaps(TUrl *furl, TString &file1, TList *s
    return replaced;
 }
 
+//_______________________________________________________________________________________
+void TDataSetManager::SetScanCounters(Int_t t, Int_t o, Int_t d)
+{
+   // Update scan counters
 
+   fNTouchedFiles = (t > -1) ? t : fNTouchedFiles;
+   fNOpenedFiles = (o > -1) ? o : fNOpenedFiles;
+   fNDisappearedFiles = (d > -1) ? d : fNDisappearedFiles;
+}
