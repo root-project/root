@@ -183,6 +183,7 @@ public:
    virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}
    virtual void      SetTree(TTree *tree) { fTree = tree;}
    virtual void      UpdateAddress() {;}
+   virtual void      UpdateFile();
 
    static  void      ResetCount();
 

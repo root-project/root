@@ -4448,3 +4448,16 @@ void TBranchElement::ValidateAddress() const
    }
 }
 
+//______________________________________________________________________________
+void TBranchElement::UpdateFile()
+{
+   // Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
+   // with the current value of fTree->GetCurrentFile unless this branch has been
+   // redirected to a different file.  Also update the sub-branches.
+
+   // The BranchCount and BranchCount2 are part of higher level branches' list of
+   // branches.
+   // if (fBranchCount) fBranchCount->UpdateFile();
+   // if (fBranchCount2) fBranchCount2->UpdateFile();
+   TBranch::UpdateFile();
+}

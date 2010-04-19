@@ -1904,14 +1904,14 @@ void TBranch::SetFile(TFile* file)
    if (file == fTree->GetCurrentFile()) fFileName = "";
    else                                 fFileName = file->GetName();
 
-   //apply to all existing baskets
+   // Apply to all existing baskets.
    TIter nextb(GetListOfBaskets());
    TBasket *basket;
    while ((basket = (TBasket*)nextb())) {
       basket->SetParent(file);
    }
 
-   //apply to sub-branches as well
+   // Apply to sub-branches as well.
    TIter next(GetListOfBranches());
    TBranch *branch;
    while ((branch = (TBranch*)next())) {
@@ -1979,8 +1979,7 @@ void TBranch::Streamer(TBuffer& b)
          if (fWriteBasket>=fBaskets.GetSize()) {
             fBaskets.Expand(fWriteBasket+1);
          }
-         fDirectory = gDirectory;
-         if (fFileName.Length() != 0) fDirectory = 0;
+         fDirectory = 0;
          fNleaves = fLeaves.GetEntriesFast();
          for (Int_t i=0;i<fNleaves;i++) {
             TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
@@ -2044,8 +2043,7 @@ void TBranch::Streamer(TBuffer& b)
          }
          fFileName.Streamer(b);
          b.CheckByteCount(R__s, R__c, TBranch::IsA());
-         fDirectory = gDirectory;
-         if (fFileName.Length() != 0) fDirectory = 0;
+         fDirectory = 0;
          fNleaves = fLeaves.GetEntriesFast();
          for (i=0;i<fNleaves;i++) {
             TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
@@ -2127,11 +2125,10 @@ void TBranch::Streamer(TBuffer& b)
             fBasketSeek[n] = Long64_t(aseek);
          }
       }
-      fDirectory = gDirectory;
       if (v > 2) {
          fFileName.Streamer(b);
-         if (fFileName.Length() != 0) fDirectory = 0;
       }
+      fDirectory = 0;
       if (v < 4) SetAutoDelete(kTRUE);
       if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
       gROOT->SetReadingObject(kFALSE);
@@ -2192,4 +2189,31 @@ void TBranch :: SetFirstEntry( Long64_t entry )
       fBasketEntry[0] = entry;
    for( Int_t i = 0; i < fBranches.GetEntriesFast(); ++i )
       ((TBranch*)fBranches[i])->SetFirstEntry( entry );
+}
+
+//______________________________________________________________________________
+void TBranch::UpdateFile()
+{
+   // Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
+   // with the current value of fTree->GetCurrentFile unless this branch has been
+   // redirected to a different file.  Also update the sub-branches.
+
+   TFile *file = fTree->GetCurrentFile();
+   if (fFileName.Length() == 0) {
+      fDirectory = file;
+
+      // Apply to all existing baskets.
+      TIter nextb(GetListOfBaskets());
+      TBasket *basket;
+      while ((basket = (TBasket*)nextb())) {
+         basket->SetParent(file);
+      }
+   }
+
+   // Apply to sub-branches as well.
+   TIter next(GetListOfBranches());
+   TBranch *branch;
+   while ((branch = (TBranch*)next())) {
+      branch->UpdateFile();
+   }
 }

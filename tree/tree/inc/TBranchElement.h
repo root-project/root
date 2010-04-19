@@ -163,6 +163,7 @@ public:
    virtual void             SetTargetClassName(const char *name);
    virtual void             SetupAddresses();
    virtual void             SetType(Int_t btype) { fType = btype; }
+   virtual void             UpdateFile();
 
    ClassDef(TBranchElement,9)  // Branch in case of an object
 };

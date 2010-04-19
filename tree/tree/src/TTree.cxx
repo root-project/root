@@ -2597,7 +2597,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 
    if (nentries != 0) {
       if (fastClone && (nentries < 0)) {
-         if ( newtree->CopyEntries( this, -1, option) < 0 ){
+         if ( newtree->CopyEntries( this, -1, option ) < 0 ) {
             // There was a problem!
             Error("Merge", "TTree has not been cloned\n");
             delete newtree;
@@ -3069,6 +3069,14 @@ void TTree::DirectoryAutoAdd(TDirectory* dir)
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
+   TBranch* b = 0;
+   TIter next(GetListOfBranches());
+   while((b = (TBranch*) next())) {
+      b->UpdateFile();
+   }
+   if (fBranchRef) {
+      fBranchRef->UpdateFile();
+   }
    if (fDirectory) fDirectory->Append(this);
 }
 

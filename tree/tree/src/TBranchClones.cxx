@@ -452,3 +452,13 @@ void TBranchClones::Streamer(TBuffer& b)
    }
 }
 
+//______________________________________________________________________________
+void TBranchClones::UpdateFile()
+{
+   // Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
+   // with the current value of fTree->GetCurrentFile unless this branch has been
+   // redirected to a different file.  Also update the sub-branches.
+
+   fBranchCount->UpdateFile();
+   TBranch::UpdateFile();
+}
