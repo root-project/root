@@ -1268,16 +1268,55 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
       // Check if local source
       if (url.beginswith("file:")) url.replace("file:","");
       if (url.beginswith("/")) {
-	 local = 1;
-	 goodsrc = 0;
-	 // Make sure the directory exists and has mode 0755
-	 XrdProofUI ui;
-	 XrdProofdAux::GetUserInfo(fEffectiveUser.c_str(), ui);
-	 if (XrdProofdAux::AssertDir(url.c_str(), ui, ChangeOwn()) == 0) {
-	    goodsrc = 1;
-	 } else {
-	    TRACE(XERR,"Cannot assert path '"<<url<<"' - ignoring");   
-	 }
+         local = 1;
+         goodsrc = 0;
+         // Make sure the directory exists and has mode 0755
+         XrdProofUI ui;
+         XrdProofdAux::GetUserInfo(fEffectiveUser.c_str(), ui);
+         if (XrdProofdAux::AssertDir(url.c_str(), ui, ChangeOwn()) == 0) {
+            goodsrc = 1;
+         } else {
+            TRACE(XERR,"Cannot assert path '"<<url<<"' - ignoring");   
+         }
+         if (goodsrc) {
+            // Assert the file with dataset summaries
+            XrdOucString fnpath(url.c_str());
+            fnpath += "/dataset.list";
+            if (access(fnpath.c_str(), F_OK) != 0) {
+               FILE *flst = fopen(fnpath.c_str(), "w");
+               if (!flst) {
+                  TRACE(XERR,"Cannot open file '"<<fnpath<<"' for the dataset list; errno: "<<errno);   
+               } else {
+                  if (fclose(flst) != 0)
+                     TRACE(XERR,"Problems closing file '"<<fnpath<<"'; errno: "<< errno);   
+               }
+            }
+            // Make sure that everybody can modify the file for updates
+            if (chmod(fnpath.c_str(), 0666) != 0) {
+               TRACE(XERR,"Problems setting permissions to 0666 on file '"<<fnpath<<"'; errno: "<< errno);
+            }
+            // Assert the file with lock file path
+            fnpath.replace("/dataset.list", "/lock.location");
+            if (access(fnpath.c_str(), F_OK) != 0) {
+               FILE *flck = fopen(fnpath.c_str(), "w");
+               if (!flck) {
+                  TRACE(XERR,"Cannot open file '"<<fnpath<<"' with the lock file path; errno: "<<errno);   
+               } else {
+                  // Write the default lock file path
+                  XrdOucString fnlock(url);
+                  fnlock.replace("/","%");
+                  fnlock.replace(":","%");
+                  fnlock.insert("/tmp/", 0);
+                  fprintf(flck, "%s\n", fnlock.c_str());
+                  if (fclose(flck) != 0)
+                     TRACE(XERR,"Problems closing file '"<<fnpath<<"'; errno: "<< errno);   
+               }
+            }
+            // Make sure that everybody can modify the file for updates
+            if (chmod(fnpath.c_str(), 0644) != 0) {
+               TRACE(XERR,"Problems setting permissions to 0644 on file '"<<fnpath<<"'; errno: "<< errno);
+            }
+         }
       }
    }
 

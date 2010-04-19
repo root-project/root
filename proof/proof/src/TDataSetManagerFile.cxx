@@ -17,10 +17,12 @@
 // files under a specific directory path                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#include <sys/stat.h>
 
 #include "TDataSetManagerFile.h"
 
 #include "Riostream.h"
+#include "TDatime.h"
 #include "TEnv.h"
 #include "TFileCollection.h"
 #include "TFileInfo.h"
@@ -30,6 +32,7 @@
 #include "TMap.h"
 #include "TRegexp.h"
 #include "TMD5.h"
+#include "TMacro.h"
 #include "TMessage.h"
 #include "TSystem.h"
 #include "TError.h"
@@ -40,6 +43,19 @@
 #include "TKey.h"
 #include "TTree.h"
 #include "TParameter.h"
+#include "TStopwatch.h"
+
+struct LsTreeEntry_t {
+   TObjString  *fGrp;      // Group
+   TObjString  *fUsr;      // User
+   TObjString  *fMd5;      // Checksum
+   TObjString  *fLss;      // 'ls' string
+   Long64_t     fMtime;    // modification time
+   LsTreeEntry_t(const char *g, const char *u, const char *cs, const char *ls, Long64_t m) :
+         fMtime(m) { fGrp = new TObjString(g); fUsr = new TObjString(u);
+                     fMd5 = new TObjString(cs); fLss = new TObjString(ls); }
+   ~LsTreeEntry_t() { SafeDelete(fGrp); SafeDelete(fUsr); SafeDelete(fMd5); SafeDelete(fLss);}
+};
 
 ClassImp(TDataSetManagerFile)
 
@@ -77,6 +93,7 @@ void TDataSetManagerFile::Init()
 {
    // Do the real inititialization
 
+   fIsRemote = kFALSE;
    if (!fUser.IsNull() && !fGroup.IsNull() && !fDataSetDir.IsNull()) {
 
       // Make sure that the dataset dir exists
@@ -109,19 +126,137 @@ void TDataSetManagerFile::Init()
       if (!TestBit(TDataSetManager::kIsSandbox))
          fBase.SetUri(TString(Form("/%s/%s/", fGroup.Data(), fUser.Data())));
 
-      // Fill locking path
-      fDataSetLockFile = Form("%s-dataset-lock", fDataSetDir.Data());
-      fDataSetLockFile.ReplaceAll("/","%");
-      fDataSetLockFile.ReplaceAll(":","%");
-      fDataSetLockFile.Insert(0, Form("%s/", gSystem->TempDirectory()));
+      // Local or remote?
+      TString locPath;
+      TFile::EFileType pathType = TFile::GetType(fDataSetDir, "READ", &locPath);
+      if (pathType == TFile::kLocal) {
+         // Remote Url pointing to this machine
+         fDataSetDir = locPath;
+         if (gDebug > 0)
+            Info("Init", "repository '%s' is local", fDataSetDir.Data());
+      } else if (pathType != TFile::kDefault && pathType != TFile::kFile) {
+         fIsRemote = kTRUE;
+         if (gDebug > 0)
+            Info("Init", "repository '%s' is remote", fDataSetDir.Data());
+      }
+
+      // Read locking path from kDataSet_LockLocation
+      TString lockloc = TString::Format("%s/%s", fDataSetDir.Data(), kDataSet_LockLocation);
+      if (!gSystem->AccessPathName(lockloc, kReadPermission)) {
+         fstream infile(lockloc.Data(), std::ios::in);
+         if (infile.is_open()) {
+            fDataSetLockFile.ReadToken(infile);
+            infile.close();
+         }
+      }
+      if (fDataSetLockFile.IsNull()) {
+         fDataSetLockFile.Form("%s-dataset-lock", fDataSetDir.Data());
+         fDataSetLockFile.ReplaceAll("/","%");
+         fDataSetLockFile.ReplaceAll(":","%");
+         fDataSetLockFile.Insert(0, TString::Format("%s/", gSystem->TempDirectory()));
+      }
+      if (!fDataSetLockFile.IsNull() && fIsRemote) {
+         // Add host and port
+         TUrl u(fDataSetDir);
+         TString srv(fDataSetDir);
+         srv.Remove(srv.Index(u.GetFile()));
+         fDataSetLockFile.Insert(0, srv);
+      }
    }
 
    // Limit in seconds after a lock automatically expires
    fLockFileTimeLimit = 120;
 
+   // Default validity of the cache
+   fCacheUpdatePeriod = gEnv->GetValue("ProofDataSet.CacheUpdatePeriod", 600);
+
    // If the MSS url was not given, check if one is defined via env
    if (fMSSUrl.IsNull())
       fMSSUrl = gEnv->GetValue("ProofDataSet.MSSUrl", "");
+
+   // File to check updates and its locking path
+   fListFile.Form("%s/%s", fDataSetDir.Data(), kDataSet_DataSetList);
+
+   // Init the local cache directory if the repository is remote
+   fUseCache = kFALSE;
+   fLocalCacheDir = "";
+   InitLocalCache();
+}
+//______________________________________________________________________________
+void TDataSetManagerFile::InitLocalCache()
+{
+   // Init the local cache if required
+
+   fUseCache = (fIsRemote) ? kTRUE : kFALSE;
+   
+   // Check if the caller has given specific instructions
+   TString useCache;
+   if (TestBit(TDataSetManager::kUseCache)) useCache = "yes";
+   if (TestBit(TDataSetManager::kDoNotUseCache)) useCache = "no";
+   if (useCache.IsNull()) useCache = gEnv->GetValue("DataSet.UseCache", "");
+   if (useCache.IsNull() && gSystem->Getenv("DATASETCACHE"))
+      useCache = gSystem->Getenv("DATASETCACHE");
+   useCache.ToLower();
+   if (!useCache.IsNull())
+      fUseCache = (useCache == "no" || useCache == "0") ? kFALSE : kTRUE;
+      
+   if (fUseCache) {
+      fLocalCacheDir = gSystem->Getenv("DATASETLOCALCACHEDIR");
+      if (fLocalCacheDir.IsNull())
+         fLocalCacheDir = gEnv->GetValue("DataSet.LocalCacheDir", "");
+      if (!fLocalCacheDir.IsNull()) {
+         // Make sure that the non-default local cache directory exists and is writable
+         if (gSystem->AccessPathName(fLocalCacheDir)) {
+            if (gSystem->mkdir(fLocalCacheDir, kTRUE) != 0) {
+               // Switch to default
+               Warning("InitLocalCache",
+                        "non-default local cache directory '%s' could not be created"
+                        " - switching to default", fLocalCacheDir.Data());
+               fLocalCacheDir = "";
+            }
+         }
+         if (!fLocalCacheDir.IsNull() &&
+               gSystem->AccessPathName(fLocalCacheDir, kWritePermission)) {
+            Warning("InitLocalCache",
+                     "non-default local cache directory '%s' is not writable"
+                     " - switching to default",
+                     fDataSetDir.Data());
+            fLocalCacheDir = "";
+         }
+      }
+      // If not defined yet try the (unique) default
+      if (fLocalCacheDir.IsNull()) {
+         // Add something related to fDataSetDir
+         TString uds(fDataSetDir.Data());
+         uds.ReplaceAll("/","%");
+         uds.ReplaceAll(":","%");
+         if (TString(gSystem->TempDirectory()).EndsWith(fUser.Data())) {
+            fLocalCacheDir.Form("%s/%s/%s", gSystem->TempDirectory(),
+                                 kDataSet_LocalCache, uds.Data());
+         } else {
+            fLocalCacheDir.Form("%s/%s/%s/%s", gSystem->TempDirectory(),
+                                 fUser.Data(), kDataSet_LocalCache, uds.Data());
+         }
+         // Make sure that the local cache dir exists and is writable
+         if (gSystem->AccessPathName(fLocalCacheDir) && gSystem->mkdir(fLocalCacheDir, kTRUE) != 0) {
+            // Disable
+            Warning("InitLocalCache",
+                     "local cache directory '%s' could not be created"
+                     " - disabling cache", fLocalCacheDir.Data());
+            fUseCache = kFALSE;
+         }
+         if (!fLocalCacheDir.IsNull() &&
+             gSystem->AccessPathName(fLocalCacheDir, kWritePermission)) {
+            Warning("InitLocalCache",
+                     "local cache directory '%s' is not writable - disabling cache",
+                     fDataSetDir.Data());
+            fUseCache = kFALSE;
+         }
+         if (!fUseCache) fLocalCacheDir = "";
+      }
+   }
+   // Done
+   return;
 }
 
 //______________________________________________________________________________
@@ -159,12 +294,13 @@ void TDataSetManagerFile::ParseInitOpts(const char *ins)
 
 //______________________________________________________________________________
 const char *TDataSetManagerFile::GetDataSetPath(const char *group,
-                                                     const char *user,
-                                                     const char *dsName)
+                                                const char *user,
+                                                const char *dsName,
+                                                TString &md5path, Bool_t local)
 {
-   //
-   // Returns path of the indicated dataset
-   // Contains a static TString for result. Copy result before using twice.
+   // Returns path of the indicated dataset. If 'local' is kTRUE the local cache path
+   // is returned instead.
+   // NB: contains a static TString for result, so copy result before using twice.
 
    if (fgCommonDataSetTag == group)
      group = fCommonGroup;
@@ -172,19 +308,197 @@ const char *TDataSetManagerFile::GetDataSetPath(const char *group,
    if (fgCommonDataSetTag == user)
      user = fCommonUser;
 
+   const char *ext = (!strcmp(dsName, "ls")) ? ".txt" : ".root";
    static TString result;
-   result.Form("%s/%s/%s/%s.root", fDataSetDir.Data(), group, user, dsName);
+   if (local) {
+#ifndef WIN32
+      result.Form("%s/%s\%%%s\%%%s%s", fLocalCacheDir.Data(), group, user, dsName, ext);
+      md5path.Form("%s/%s\%%%s\%%%s.md5sum", fLocalCacheDir.Data(), group, user, dsName);
+#else
+      result.Form("%s/%s-%s-%s%s", fLocalCacheDir.Data(), group, user, dsName, ext);
+      md5path.Form("%s/%s-%s-%s.md5sum", fLocalCacheDir.Data(), group, user, dsName);
+#endif
+   } else {
+      result.Form("%s/%s/%s/%s%s", fDataSetDir.Data(), group, user, dsName, ext);
+      md5path.Form("%s/%s/%s/%s.md5sum", fDataSetDir.Data(), group, user, dsName);
+   }
    if (gDebug > 0)
-      Info("GetDataSetPath","path: %s", result.Data());
+      Info("GetDataSetPath","paths: %s, %s ", result.Data(), md5path.Data());
    return result;
 }
 
 //______________________________________________________________________________
-Bool_t TDataSetManagerFile::BrowseDataSets(const char *group,
-                                                const char *user,
-                                                UInt_t option, TObject *target)
+Int_t TDataSetManagerFile::NotifyUpdate(const char *group, const char *user,
+                                        const char *dsName, Long_t mtime, const char *checksum)
 {
-   // Adds the dataset in the folder of group, user to the list in target
+   // Save into the <datasetdir>/kDataSet_DataSetList file the name of the updated
+   // or created or modified dataset. For still existing datasets, fill the
+   // modification date in seconds anf the checksum.
+   // Returns 0 on success, -1 on error
+
+   // Update / create list for the owner
+   Long_t lsmtime = 0;
+   TString lschecksum;
+   Int_t lsrc = -1;
+   if ((lsrc = CreateLsFile(group, user, lsmtime, lschecksum)) < 0) {
+      Warning("NotifyUpdate", "problems (re-)creating the dataset lists for '/%s/%s'",
+                              group, user);
+   }
+
+   {  TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
+      TString dspath = TString::Format("/%s/%s/%s", group, user, dsName);
+      // Load the info in form of TMacro
+      TMD5 *oldMd5 = 0, *newMd5 = 0;
+      if (!(oldMd5 = TMD5::FileChecksum(fListFile.Data()))) {
+         Error("NotifyUpdate", "problems calculating old checksum of %s", fListFile.Data());
+         return -1;
+      }
+      TMacro mac(fListFile.Data());
+      // Locate the line to change or delete
+      TObjString *os = mac.GetLineWith(dspath);
+      if (os) {
+         // Delete the line if required so
+         if (!strcmp(checksum, "removed")) {
+            mac.GetListOfLines()->Remove(os);
+            SafeDelete(os);
+         } else {
+            // Update the information
+            os->SetString(TString::Format("%ld %s %s", mtime, dspath.Data(), checksum));
+         }
+      } else {
+         if (!strcmp(checksum, "removed")) {
+            Warning("NotifyUpdate", "entry for removed dataset '%s' not found!", dspath.Data());
+         } else {
+            // Add new line
+            mac.AddLine(TString::Format("%ld %s %s", mtime, dspath.Data(), checksum));
+         }
+      }
+      // Locate the ls line now, is needed
+      TString lspath = TString::Format("/%s/%s/ls", group, user);
+      os = mac.GetLineWith(lspath);
+      if (os) {
+         // Delete the line if required so
+         if (lsrc == 1) {
+            mac.GetListOfLines()->Remove(os);
+            SafeDelete(os);
+         } else {
+            // Update the information
+            os->SetString(TString::Format("%ld %s %s", lsmtime, lspath.Data(), lschecksum.Data()));
+         }
+      } else {
+         if (lsrc == 0) {
+            // Add new line
+            mac.AddLine(TString::Format("%ld %s %s", lsmtime, lspath.Data(), lschecksum.Data()));
+         }
+      }
+      // Write off the new content
+      mac.SaveSource(fListFile.Data());
+      if (!(newMd5 = TMD5::FileChecksum(fListFile.Data()))) {
+         Error("NotifyUpdate", "problems calculating new checksum of %s", fListFile.Data());
+         return -1;
+      }
+      if (*newMd5 == *oldMd5)
+         Warning("NotifyUpdate", "checksum for %s did not change!", fListFile.Data());
+   }
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TDataSetManagerFile::CreateLsFile(const char *group, const char *user,
+                                        Long_t &mtime, TString &checksum)
+{
+   // Create or recreate the dataset lists for 'uri'.
+   // The list are saved in text form in 'uri'/ls.txt for fast browsing and in
+   // 'uri'/ls.root in form of TMacro for optimized and portable transfer.
+   // Return 0 on success, 1 if the file was empty, -1 on error
+
+   mtime = 0;
+   checksum = "";
+   // Create temporary file; we cannot lock now because we would (dead-)lock
+   // during ShowDataSets
+   TString tmpfile;
+   tmpfile.Form("%s/%s/%s/ls.tmp.txt", fDataSetDir.Data(), group, user);
+
+   // Redirect output to 'tmpfile'
+   RedirectHandle_t rh;
+   if (gSystem->RedirectOutput(tmpfile.Data(), "w", &rh) != 0) {
+      Error("CreateLsFile", "problems redirecting output to %s (errno: %d)",
+                            tmpfile.Data(), TSystem::GetErrno());
+      return -1;
+   }
+   // Create the list
+   TString uri;
+   uri.Form("/%s/%s", group, user);
+   ShowDataSets(uri, "forcescan:noheader:");
+   // Restore output to standard streams
+   if (gSystem->RedirectOutput(0, 0, &rh) != 0) {
+      Error("CreateLsFile", "problems restoring output to standard streams (errno: %d)",
+                            TSystem::GetErrno());
+      return -1;
+   }
+   // We can lock now
+   TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
+   // Rename the temp file
+   TString lsfile;
+   lsfile.Form("%s/%s/%s/ls.txt", fDataSetDir.Data(), group, user);
+   // Remove the file, if existing
+   if (!gSystem->AccessPathName(lsfile) && gSystem->Unlink(lsfile) != 0) {
+      Error("CreateLsFile", "problems unlinking old file '%s' (errno: %d)",
+                            lsfile.Data(), TSystem::GetErrno());
+      return -1;
+   }
+   // Save the new file only if non empty
+   FileStat_t st;
+   if (gSystem->GetPathInfo(tmpfile, st) == 0 && st.fSize > 0) {
+      if (gSystem->Rename(tmpfile, lsfile) != 0) {
+         Error("CreateLsFile", "problems renaming '%s' to '%s' (errno: %d)",
+                              tmpfile.Data(), lsfile.Data(), TSystem::GetErrno());
+         return -1;
+      }
+#ifndef WIN32
+      // Make sure that the ownership and permissions are those expected
+      FileStat_t udirst;
+      if (!fIsRemote && gSystem->GetPathInfo(gSystem->DirName(tmpfile), udirst) == 0) {
+         if (chown(lsfile.Data(), udirst.fUid, udirst.fGid) != 0) {
+            Warning("CreateLsFile", "problems setting ownership on file '%s' (errno: %d)",
+                                    lsfile.Data(), TSystem::GetErrno());
+         }
+         if (chmod(lsfile.Data(), 0644) != 0) {
+            Warning("CreateLsFile", "problems setting permissions on file '%s' (errno: %d)",
+                                    lsfile.Data(), TSystem::GetErrno());
+         }
+      }
+#endif
+      mtime = st.fMtime;
+      TMD5 *md5 = TMD5::FileChecksum(lsfile);
+      if (!md5) {
+         Error("CreateLsFile", "problems calculating checksum for '%s'", lsfile.Data());
+      } else {
+         checksum = md5->AsString();
+         SafeDelete(md5);
+      }
+   } else {
+      if (!gSystem->AccessPathName(tmpfile) && gSystem->Unlink(tmpfile) != 0) {
+         Error("CreateLsFile", "problems unlinking temp file '%s' (errno: %d)",
+                               tmpfile.Data(), TSystem::GetErrno());
+         return -1;
+      }
+      // No datasets anymore
+      return 1;
+   }
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TDataSetManagerFile::BrowseDataSets(const char *group, const char *user,
+                                           const char *dsName,
+                                           UInt_t option, TObject *target)
+{
+   // Adds the dataset in the folder of group, user to the list in target.
+   // If dsName is defined, only the information about the specified dataset
+   // is processed.
    //
    // The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
    // Available options (to be .or.ed):
@@ -205,6 +519,7 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group,
    Bool_t printing = (option & kPrint) ? kTRUE : kFALSE;
    Bool_t exporting = (option & kExport) ? kTRUE : kFALSE;
    Bool_t updating = (option & kQuotaUpdate) ? kTRUE : kFALSE;
+   Bool_t printout = (printing && (option & kDebug)) ? kTRUE : kFALSE;
 
    // If printing is required add kReadShort to the options
    if (printing || updating)
@@ -224,6 +539,9 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group,
 
    TRegexp rg("^[^./][^/]*.root$");  //check that it is a root file, not starting with "."
 
+   TRegexp *reds = 0;
+   if (dsName && strlen(dsName) > 0) reds = new TRegexp(dsName, kTRUE);
+
    TMap *userMap = 0, *datasetMap = 0;
    // loop over datasets
    const char *dsEnt = 0;
@@ -231,6 +549,9 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group,
       TString datasetFile(dsEnt);
       if (datasetFile.Index(rg) != kNPOS) {
          TString datasetName(datasetFile(0, datasetFile.Length()-5));
+
+         // Check dataset name, if required
+         if (reds && datasetName.Index(*reds) == kNPOS) continue;
 
          if (gDebug > 0)
             Info("GetDataSets", "found dataset %s of user %s in group %s",
@@ -295,6 +616,11 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group,
 
                // Done
                outlist->Add(fileList->ExportInfo(dsNameFormatted));
+               if (printout) {
+                  // Recreating the LS file
+                  TObjString *os = (TObjString *) outlist->Last();
+                  if (os) Printf("%s", os->GetName());
+               }
             }
          } else {
             if (fillmap && datasetMap)
@@ -303,17 +629,20 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group,
       }
    }
    gSystem->FreeDirectory(userDir);
+   SafeDelete(reds);
 
    return kTRUE;
 }
 
 //______________________________________________________________________________
 TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
-                                            UInt_t option)
+                                       const char *dsName, UInt_t option)
 {
    // General purpose call to go through the existing datasets.
    // If <user> is 0 or "*", act on all datasets for the given <group>.
    // If <group> is 0 or "*", act on all datasets.
+   // If <dsName> is defined, only the information about the specified dataset
+   // is processed.
    // Action depends on option; available options:
    //
    //    kExport         Return a TMap object containing all the information about
@@ -327,6 +656,9 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    //                    and the common ones
    //
    //    kPrint          print the dataset content; no output is returned
+   //    kForceScan      Re-open files while processing kPrint (do not use the
+   //                    pre-processed information)
+   //    kNoHeaderPrint  Labelling header is not printed
    //    kQuotaUpdate    update {group, user} quotas; no output is returned
    //
    // NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
@@ -350,12 +682,15 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
       user = 0;
 
    Bool_t printing = (option & kPrint) ? kTRUE : kFALSE;
+   Bool_t forcescan = (option & kForceScan) ? kTRUE : kFALSE;
+   Bool_t printheader = (option & kNoHeaderPrint) ? kFALSE : kTRUE;
    Bool_t exporting = (option & kExport) ? kTRUE : kFALSE;
    Bool_t updating = (option & kQuotaUpdate) ? kTRUE : kFALSE;
+   Bool_t refreshingls = (option & kRefreshLs) ? kTRUE : kFALSE;
 
    // The last three options are mutually exclusive
-   if (((Int_t)printing + (Int_t)exporting + (Int_t)updating) > 1) {
-      Error("GetDataSets", "only one of '?P', '?Q' or '?E' can be specified at once");
+   if (((Int_t)printing + (Int_t)exporting + (Int_t)updating + (Int_t)refreshingls) > 1) {
+      Error("GetDataSets", "only one of '?P', '?Q', '?E' or '?R' can be specified at once");
       return 0;
    }
 
@@ -374,9 +709,18 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    if (gDebug > 0)
       Info("GetDataSets", "opening dir %s", fDataSetDir.Data());
 
+   Long_t m;
+   TString s;
    if (option & kShowDefault) {
-      // add the common ones
-      BrowseDataSets(fCommonGroup, fCommonUser, option, result);
+      // Add the common ones
+      if (refreshingls) {
+         if (CreateLsFile(fCommonGroup, fCommonUser, m, s) != 0)
+            Warning("GetDataSets", "problems recreating 'ls' info for {%s,%s}",
+                                   fCommonGroup.Data(), fCommonUser.Data());
+      } else if (!printing || forcescan || (printing &&
+                 FillLsDataSet(fCommonGroup, fCommonUser, dsName, (TList *)result, option) != 0)) {
+         BrowseDataSets(fCommonGroup, fCommonUser, dsName, option, result);
+      }
       user = 0;
    } else {
       // Fill the information at least once
@@ -386,58 +730,123 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    // Fill the information only once
    if (notCommonUser) {
       // group, user defined, no looping needed
-      if (user && group) {
-         BrowseDataSets(group, user, option, result);
+      if (user && group && strchr(user, '*') && strchr(group, '*')) {
+         if (refreshingls) {
+            if (CreateLsFile(group, user, m, s) != 0)
+               Warning("GetDataSets", "problems recreating 'ls' info for {%s,%s}",
+                                      group, user);
+         } else if (!printing || forcescan || (printing &&
+                    FillLsDataSet(group, user, dsName, (TList *)result, option) != 0)) {
+            BrowseDataSets(group, user, dsName, option, result);
+         }
          if (!printing) return (TMap *)result;
       } else {
-         // loop needed
-         void *dataSetDir = 0;
-         if ((dataSetDir = gSystem->OpenDirectory(fDataSetDir))) {
-            // loop over groups
-            const char *currentGroup = 0;
-            while ((currentGroup = gSystem->GetDirEntry(dataSetDir))) {
-
-               if (strcmp(currentGroup, ".") == 0 || strcmp(currentGroup, "..") == 0)
-                  continue;
-
-               if (group && strcmp(group, currentGroup))
-                  continue;
-
-               TString groupDirPath;
-               groupDirPath.Form("%s/%s", fDataSetDir.Data(), currentGroup);
-
-               void *groupDir = gSystem->OpenDirectory(groupDirPath);
-               if (!groupDir)
-                  continue;
-
-               // loop over users
-               const char *currentUser = 0;
-               while ((currentUser = gSystem->GetDirEntry(groupDir))) {
-
-                  if (strcmp(currentUser, ".") == 0 || strcmp(currentUser, "..") == 0)
-                     continue;
-
-                  if (user && strcmp(user, currentUser))
-                     continue;
-
-                  BrowseDataSets(currentGroup, currentUser, option, result);
+         TRegexp *reg = (group && strlen(group) > 0) ? new TRegexp(group, kTRUE) : 0;
+         TRegexp *reu = (user && strlen(user) > 0) ? new TRegexp(user, kTRUE) : 0;
+         // Loop needed, either on the local cache or on the real thing
+         if (printing && !forcescan &&
+             fUseCache && CheckLocalCache(group, user, 0, option) == 0) {
+            // Loop on the local cache
+            Int_t from = 0;
+            TString locupdate, dsn, grp, usr;
+            locupdate.Form("%s/%s", fLocalCacheDir.Data(), kDataSet_DataSetList);
+            TMacro uptmac(locupdate);
+            TIter nxl(uptmac.GetListOfLines());
+            TObjString *os = 0;
+            while ((os = (TObjString *) nxl())) {
+               if (!(os->GetString().Contains("/ls"))) continue;
+               from = 0;
+               if (!(os->GetString().Tokenize(dsn, from, " "))) continue;
+               if (!(os->GetString().Tokenize(dsn, from, " "))) continue;
+               from = 0;
+               // Get group and apply filter on group
+               if (!(dsn.Tokenize(grp, from, "/")) || (reg && (grp.Index(*reg) == kNPOS))) continue;
+               // Get user and apply filter on user
+               if (!(dsn.Tokenize(usr, from, "/")) || (reu && (usr.Index(*reu) == kNPOS))) continue;
+               // Now get the info
+               if (FillLsDataSet(grp, usr, dsName, (TList *)result, option) != 0) {
+                  // Use the standard way opening all the files
+                  BrowseDataSets(grp, usr, dsName, option, result);
                }
-               gSystem->FreeDirectory(groupDir);
             }
-            gSystem->FreeDirectory(dataSetDir);
+         } else {
+            // Loop needed on the real thing
+            void *dataSetDir = 0;
+            if ((dataSetDir = gSystem->OpenDirectory(fDataSetDir))) {
+               // loop over groups
+               const char *eg = 0;
+               while ((eg = gSystem->GetDirEntry(dataSetDir))) {
+
+                  if (strcmp(eg, ".") == 0 || strcmp(eg, "..") == 0)
+                     continue;
+
+                  if (reg && (TString(eg).Index(*reg) == kNPOS))
+                     continue;
+
+                  TString groupDirPath;
+                  groupDirPath.Form("%s/%s", fDataSetDir.Data(), eg);
+
+                  // Make sure it is a directory
+                  FileStat_t dirSt;
+                  if (gSystem->GetPathInfo(groupDirPath, dirSt) != 0 || !R_ISDIR(dirSt.fMode))
+                     continue;
+
+                  void *groupDir = gSystem->OpenDirectory(groupDirPath);
+                  if (!groupDir)
+                     continue;
+
+                  // loop over users
+                  const char *eu = 0;
+                  while ((eu = gSystem->GetDirEntry(groupDir))) {
+
+                     if (strcmp(eu, ".") == 0 || strcmp(eu, "..") == 0)
+                        continue;
+
+                     if (reu && (TString(eu).Index(*reg) == kNPOS))
+                        continue;
+
+                     // If we have the ls.macro use that
+                     if (refreshingls) {
+                        if (CreateLsFile(eg, eu, m, s) != 0)
+                           Warning("GetDataSets", "problems recreating 'ls' info for {%s,%s}",
+                                                  eg, eu);
+                     } else if (!printing || forcescan || (printing &&
+                                 FillLsDataSet(eg, eu, dsName, (TList *)result, option) != 0)) {
+                        // Use the standard way opening all the files
+                        BrowseDataSets(eg, eu, dsName, option, result);
+                     }
+                  }
+                  gSystem->FreeDirectory(groupDir);
+               }
+               gSystem->FreeDirectory(dataSetDir);
+            }
          }
+         SafeDelete(reg);
+         SafeDelete(reu);
       }
    }
    // Print the result, if required
    if (printing) {
       TList *output = (TList *)result;
       output->Sort();
-      Printf("Dataset repository: %s", fDataSetDir.Data());
-      Printf("Dataset URI                               | # Files | Default tree | # Events |   Disk   | Staged");
+      if (printheader) {
+         Printf("Dataset repository: %s", fDataSetDir.Data());
+         Printf("Dataset URI                               | # Files | Default tree | # Events |   Disk   | Staged");
+      }
       TIter iter4(output);
-      TObjString* formattedLine = 0;
-      while ((formattedLine = dynamic_cast<TObjString*> (iter4())))
-         Printf("%s", formattedLine->String().Data());
+      TObjString *os = 0;
+      while ((os = dynamic_cast<TObjString*> (iter4()))) {
+         if (os->GetString().BeginsWith("file:")) {
+            // Path of the file to be browsed
+            TString path(os->GetString()(5, os->GetString().Length()));
+            RedirectHandle_t rh(path.Data());
+            gSystem->ShowOutput(&rh);
+            fflush(stderr);
+         } else {
+            // Simple line
+            Printf("%s", os->String().Data());
+         }
+      }
       // Cleanup
       SafeDelete(output);
       result = 0;
@@ -447,11 +856,73 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
 }
 
 //______________________________________________________________________________
+Int_t TDataSetManagerFile::FillLsDataSet(const char *group, const char *user,
+                                         const char *dsname, TList *out, UInt_t option)
+{
+   // Check for the 'ls.txt' for 'group' and 'user' and fill the path for the
+   // ls file in 'out'.
+   // If 'dsname' is defined, open the file and extract the relevant line.
+   // Return 0 on success, -1 on failure
+
+   // Check inputs
+   if (!group || strlen(group) <= 0 || !user || strlen(user) <= 0 || !out) {
+      Error("FillLsDataSet", "at least one of the inputs is invalid (%s,%s,%p)", group, user, out);
+      return -1;
+   }
+
+   // File with the TMacro
+   Int_t crc = -1;
+   TString lsfile, lsmd5file;
+   if (!fUseCache || (fUseCache && (crc = CheckLocalCache(group, user, "ls", option)) <= 0)) {
+      Bool_t local = (crc == 0) ? kTRUE : kFALSE;
+      lsfile = GetDataSetPath(group, user, "ls", lsmd5file, local);
+   } else {
+      // The dataset does not exist anymore
+      return 0;
+   }
+
+   if (gSystem->AccessPathName(lsfile, kFileExists)) {
+      if (gDebug > 0)
+         Info("FillLsDataSet", "file '%s' does not exists", lsfile.Data());
+      return -1;
+   }
+   if (gSystem->AccessPathName(lsfile, kReadPermission)) {
+      Warning("FillLsDataSet", "file '%s' exists cannot be read (permission denied)", lsfile.Data());
+      return -1;
+   }
+
+   if (dsname && strlen(dsname) > 0) {
+      // Read the macro
+      TMacro *mac = new TMacro(lsfile.Data());
+      if (!mac) {
+         Error("FillLsDataSet", "could not initialize TMacro from '%s'", lsfile.Data());
+         return -1;
+      }
+      // Prepare the string to search for
+      TString fullname = TString::Format("/%s/%s/%s", group, user, dsname);
+      TObject *o = mac->GetLineWith(fullname.Data());
+      if (o) {
+         out->Add(o->Clone());
+      } else {
+         if (gDebug > 0)
+            Info("FillLsDataSet", "dataset '%s' does not exists", fullname.Data());
+      }
+      // Delete the macro
+      SafeDelete(mac);
+   } else {
+      // Fill in the file information
+      out->Add(new TObjString(TString::Format("file:%s", lsfile.Data())));
+   }
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
 TFileCollection *TDataSetManagerFile::GetDataSet(const char *group,
-                                                      const char *user,
-                                                      const char *dsName,
-                                                      UInt_t option,
-                                                      TMD5 **checksum)
+                                                 const char *user,
+                                                 const char *dsName,
+                                                 UInt_t option,
+                                                 TMD5 **checksum)
 {
    //
    // Returns the dataset <dsName> of user <user> in group <group> .
@@ -460,34 +931,53 @@ TFileCollection *TDataSetManagerFile::GetDataSet(const char *group,
    // If option has the bi kReadShort set, the shortobject is read, that does not
    // contain the list of files. This is much faster.
 
-   TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
-
-   TString path(GetDataSetPath(group, user, dsName));
-
-   if (gSystem->AccessPathName(path) != kFALSE) {
-      Info("GetDataSet", "dataset %s does not exist", path.Data());
-      return 0;
+   TFileCollection *fileList = 0;
+   Bool_t readshort = (option & kReadShort) ? kTRUE : kFALSE;
+   // Check is the file is in the cache
+   Int_t crc = -1;
+   TString path, md5path;
+   if (readshort || !fUseCache ||
+      (!readshort && fUseCache && (crc = CheckLocalCache(group, user, dsName, option)) <= 0)) {
+      Bool_t local = (crc == 0) ? kTRUE : kFALSE;
+      path = GetDataSetPath(group, user, dsName, md5path, local);
+   } else {
+      // The dataset does not exist (anymore?)
+      if (gDebug > 0)
+         Info("GetDataSet", "dataset %s does not exist", path.Data());
+      return fileList;
    }
 
-   TMD5 *retrievedChecksum = 0;
+   // Now we lock because we are going to use the file, if there
+   TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
+
+   // Check if the file can be opened for reading
+   if (gSystem->AccessPathName(path, kFileExists)) {
+      if (gDebug > 0)
+         Info("GetDataSet", "file '%s' does not exists", path.Data());
+      return fileList;
+   }
+   if (gSystem->AccessPathName(path, kReadPermission)) {
+      Warning("GetDataSet", "file '%s' exists cannot be read (permission denied)", path.Data());
+      return fileList;
+   }
+
+   // Get checksum
    if (checksum) {
       // save md5 sum
-      retrievedChecksum = TMD5::FileChecksum(path);
-      if (!retrievedChecksum) {
-          Error("GetDataSet", "could not get checksum of %s", path.Data());
-         return 0;
+      *checksum = TMD5::ReadChecksum(md5path);
+      if (!(*checksum)) {
+         Error("GetDataSet", "could not get checksum of %s from %s", path.Data(), md5path.Data());
+         return fileList;
       }
    }
 
    TFile *f = TFile::Open(path.Data());
    if (!f) {
-      Error("GetDataSet", "Could not open file %s", path.Data());
-      if (retrievedChecksum)
-         delete retrievedChecksum;
-      return 0;
+      Error("GetDataSet", "could not open file %s", path.Data());
+      SafeDelete(*checksum);
+      return fileList;
    }
 
-   TFileCollection *fileList = 0;
    if (option & kReadShort)
      fileList = dynamic_cast<TFileCollection*> (f->Get("dataset_short"));
 
@@ -495,17 +985,319 @@ TFileCollection *TDataSetManagerFile::GetDataSet(const char *group,
      fileList = dynamic_cast<TFileCollection*> (f->Get("dataset"));
 
    f->Close();
-   delete f;
+   SafeDelete(f);
 
-   if (checksum)
-      *checksum = retrievedChecksum;
    return fileList;
 }
 
 //______________________________________________________________________________
+Int_t TDataSetManagerFile::CheckLocalCache(const char *group, const char *user,
+                                           const char *dsName, UInt_t option)
+{
+   // Check if the local cache information for group, user, dsName is up-to-date
+   // If not, make the relevant updates
+   // Return 0 if OK, 1 if the dataset does not exists anymore, -1 on failure
+
+   // Check first if the global update info is uptodate
+   static TMacro *uptmac = 0;
+   Bool_t need_last_update = (option & kNoCacheUpdate) ? kFALSE : kTRUE;
+   TString locupdtim, locupdate, remupdate;
+   locupdtim.Form("%s/%s.update", fLocalCacheDir.Data(), kDataSet_DataSetList);
+   locupdate.Form("%s/%s", fLocalCacheDir.Data(), kDataSet_DataSetList);
+   remupdate.Form("%s/%s", fDataSetDir.Data(), kDataSet_DataSetList);
+   need_last_update = (gSystem->AccessPathName(locupdate)) ? kTRUE : need_last_update;
+   TDatime now;
+   UInt_t tnow = now.Convert();
+   FileStat_t timst, locst, remst;
+   if (need_last_update && !gSystem->AccessPathName(locupdtim)) {
+      if (gSystem->GetPathInfo(locupdtim, timst) == 0) {
+         need_last_update = kFALSE;
+         if ((Int_t)tnow > timst.fMtime + fCacheUpdatePeriod) need_last_update = kTRUE;
+      }
+   }
+   if (need_last_update) {
+      TStopwatch ts;
+      if (gSystem->GetPathInfo(remupdate, remst) != 0) {
+         Error("CheckLocalCache", "cannot get info for remote file '%s' - ignoring", remupdate.Data());
+         return -1;
+      }
+      // Check the time needed to stat the remote file and adjust the update period
+      ts.Stop();
+      if (fCacheUpdatePeriod < ts.RealTime()) fCacheUpdatePeriod = 10 * ts.RealTime();
+      if (gSystem->GetPathInfo(locupdate, locst) == 0) {
+         need_last_update = kFALSE;
+         if (remst.fMtime > locst.fMtime) {
+            need_last_update = kTRUE;
+         } else {
+            if (!gSystem->AccessPathName(locupdtim))
+               if (gSystem->Utime(locupdtim, tnow, 0) != 0)
+                  Warning("CheckLocalCache",
+                          "cannot set modification time on file '%s' (errno: %d)",
+                          locupdtim.Data(), TSystem::GetErrno());
+         }
+      }
+   }
+   // Get the file, if needed
+   if (need_last_update) {
+      if (!TFile::Cp(remupdate, locupdate, kFALSE)) {
+         Error("CheckLocalCache", "cannot get remote file '%s' - ignoring", remupdate.Data());
+         return -1;
+      }
+      // Set the modification time
+      if (gSystem->Utime(locupdate, remst.fMtime, 0) != 0) {
+         Warning("CheckLocalCache", "cannot set modification time on file '%s' (errno: %d)",
+                           locupdate.Data(), TSystem::GetErrno());
+      }
+      // Touch or create the file to control updates
+      if (gSystem->AccessPathName(locupdtim)) {
+         FILE *ftim = fopen(locupdtim.Data(), "w");
+         if (!ftim) {
+            Warning("CheckLocalCache", "problems create file '%s' (errno: %d)",
+                                       locupdtim.Data(), TSystem::GetErrno());
+         } else {
+            if (fclose(ftim) != 0)
+               Warning("CheckLocalCache", "problems close file '%s' (errno: %d)",
+                                          locupdtim.Data(), TSystem::GetErrno());
+            if (gSystem->Utime(locupdtim, now.Convert(), 0) != 0)
+               Warning("CheckLocalCache",
+                       "cannot set modification time on file '%s' (errno: %d)",
+                       locupdtim.Data(), TSystem::GetErrno());
+         }
+      }
+      // Update macro info
+      SafeDelete(uptmac);
+      uptmac = new TMacro(locupdate);
+   } else {
+      // Touch or create the file to control updates
+      if (gSystem->AccessPathName(locupdtim)) {
+         FILE *ftim = fopen(locupdtim.Data(), "w");
+         if (!ftim) {
+            Warning("CheckLocalCache", "problems create file '%s' (errno: %d)",
+                                       locupdtim.Data(), TSystem::GetErrno());
+         } else {
+            if (fclose(ftim) != 0)
+               Warning("CheckLocalCache", "problems close file '%s' (errno: %d)",
+                                          locupdtim.Data(), TSystem::GetErrno());
+            if (gSystem->GetPathInfo(locupdate, locst) == 0) {
+               if (gSystem->Utime(locupdtim, locst.fMtime, 0) != 0)
+                  Warning("CheckLocalCache",
+                          "cannot set modification time on file '%s' (errno: %d)",
+                          locupdtim.Data(), TSystem::GetErrno());
+            } else {
+               Warning("CheckLocalCache", "cannot get info for file '%s'"
+                       " - will not touch '%s'", locupdate.Data(), locupdtim.Data());
+            }
+         }
+      }
+      if (!uptmac) uptmac = new TMacro(locupdate);
+   }
+
+   // If we are just interested in the global dataset list we are done
+   if (!dsName || strlen(dsName) <= 0)
+      return 0;
+
+   // Read the information
+   TString ds, locpath, path, locmd5path, md5path, remmd5s;
+   TMD5 *locmd5 = 0;
+   // The paths ...
+   path = GetDataSetPath(group, user, dsName, md5path);
+   locpath = GetDataSetPath(group, user, dsName, locmd5path, kTRUE);
+   ds.Form("/%s/%s/%s", group, user, dsName);
+   TObjString *os = uptmac->GetLineWith(ds);
+   if (!os) {
+      // DataSet does not exist anymore
+      if (strcmp(dsName, "ls"))
+         Warning("CheckLocalCache", "dataset '%s' does not exists anymore", ds.Data());
+      return 1;
+   }
+   // Extract the relevant information
+   TString s;
+   Int_t from = 0;
+   while (os->GetString().Tokenize(s, from, " ")) {
+      if (!s.IsDigit() && s != ds) {
+         remmd5s = s;
+      }
+   }
+   if (remmd5s == "---") {
+      // DataSet does not exist anymore
+      if (strcmp(dsName, "ls"))
+         Warning("CheckLocalCache", "dataset '%s' does not exists anymore", ds.Data());
+      return 1;
+   }
+   Bool_t need_update = (option & kNoCacheUpdate) ? kFALSE : kTRUE;
+   if (!gSystem->AccessPathName(locpath)) {
+      if (need_update) {
+         need_update = kFALSE;
+         locmd5 = TMD5::ReadChecksum(locmd5path);
+         if (!locmd5 && !(locmd5 = TMD5::FileChecksum(locpath))) {
+            Warning("CheckLocalCache", "cannot get checksum of '%s' - assuming match failed", ds.Data());
+            need_update = kTRUE;
+         } else {
+            if (remmd5s != locmd5->AsString()) need_update = kTRUE;
+         }
+      }
+   } else {
+      need_update = kTRUE;
+   }
+   // Get the file, if needed
+   if (need_update) {
+      if (!TFile::Cp(path, locpath, kFALSE)) {
+         Error("CheckLocalCache", "cannot get remote file '%s' - ignoring", path.Data());
+         return -1;
+      }
+      // Calculate and save the new checksum
+      locmd5 = TMD5::FileChecksum(locpath);
+      if (locmd5) {
+         if (remmd5s != locmd5->AsString())
+            Warning("CheckLocalCache", "checksum for freshly downloaded file '%s' does not match the"
+                               " one posted in '%s'", locpath.Data(), kDataSet_DataSetList);
+         if (TMD5::WriteChecksum(locmd5path, locmd5) != 0)
+            Warning("CheckLocalCache", "problems saving checksum to '%s' (errno: %d)",
+                               locmd5path.Data(), TSystem::GetErrno());
+      } else {
+         Warning("CheckLocalCache", "problems calculating checksum for '%s'", locpath.Data());
+      }
+   }
+   SafeDelete(locmd5);
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TDataSetManagerFile::ClearCache(const char *uri)
+{
+   // Clear cached information matching uri
+
+   // Open the top directory
+   void *dirp = gSystem->OpenDirectory(fLocalCacheDir.Data());
+   if (!dirp) {
+      Error("ClearCache", "cannot open directory '%s' (errno: %d)",
+                          fLocalCacheDir.Data(), TSystem::GetErrno());
+      return -1;
+   }
+   TRegexp *re = 0;
+   if (uri && strlen(uri) > 0) {
+      if (strcmp(uri, "*") && strcmp(uri, "/*") && strcmp(uri, "/*/") &&
+          strcmp(uri, "/*/*") && strcmp(uri, "/*/*/") && strcmp(uri, "/*/*/*")) {
+         TString u(uri);
+         // Remove leading '/'
+         if (u(0) == '/') u.Remove(0,1);
+         // Change '/' to '%'
+         u.ReplaceAll("/", "%");
+         // Init the regular expression
+         re = new TRegexp(u.Data(), u.Contains("*"));
+      }
+   }
+
+   Printf(" Dataset repository: %s", fDataSetDir.Data());
+   Printf(" Local cache directory: %s", fLocalCacheDir.Data());
+
+   Long64_t totsz = 0, nf = 0;
+   FileStat_t st;
+   TString path;
+   const char *e = 0;
+   while ((e = gSystem->GetDirEntry(dirp))) {
+      // Skip basic entries
+      if (!strcmp(e,".") || !strcmp(e,"..")) continue;
+      // Apply regular expression, if requested
+      if (re && TString(e).Index(*re) == kNPOS) continue;
+      // Group directory
+      path.Form("%s/%s", fLocalCacheDir.Data(), e);
+      // Get file information
+      if (gSystem->GetPathInfo(path, st) != 0) {
+         Warning("ShowCache", "problems 'stat'-ing '%s' (errno: %d)",
+                               path.Data(), TSystem::GetErrno());
+         continue;
+      }
+      // Count
+      totsz += st.fSize;
+      nf++;
+      // Remove the file
+      if (gSystem->Unlink(path) != 0) {
+         Warning("ClearCache", "problems unlinking '%s' (errno: %d)",
+                               path.Data(), TSystem::GetErrno());
+      }
+   }
+   gSystem->FreeDirectory(dirp);
+   SafeDelete(re);
+
+   // Notify totals
+   Printf(" %lld bytes (%lld files) have been freed", totsz, nf);
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TDataSetManagerFile::ShowCache(const char *uri)
+{
+   // Show cached information matching uri
+
+   // Open the top directory
+   void *dirp = gSystem->OpenDirectory(fLocalCacheDir.Data());
+   if (!dirp) {
+      Error("ShowCache", "cannot open directory '%s' (errno: %d)",
+                         fLocalCacheDir.Data(), TSystem::GetErrno());
+      return -1;
+   }
+   TRegexp *re = 0;
+   if (uri && strlen(uri) > 0) {
+      if (strcmp(uri, "*") && strcmp(uri, "/*") && strcmp(uri, "/*/") &&
+          strcmp(uri, "/*/*") && strcmp(uri, "/*/*/") && strcmp(uri, "/*/*/*")) {
+         TString u(uri);
+         // Remove leading '/'
+         if (u(0) == '/') u.Remove(0,1);
+         // Change '/' to '%'
+         u.ReplaceAll("/", "%");
+         // Init the regular expression
+         re = new TRegexp(u.Data(), u.Contains("*"));
+      }
+   }
+
+   Printf(" Dataset repository: %s", fDataSetDir.Data());
+   Printf(" Local cache directory: %s", fLocalCacheDir.Data());
+   Printf(" Last modified        Size(bytes)  File");
+
+   Long64_t totsz = 0, nf = 0;
+   FileStat_t st;
+   TString path, sz;
+   const char *e = 0;
+   while ((e = gSystem->GetDirEntry(dirp))) {
+      // Skip basic entries
+      if (!strcmp(e,".") || !strcmp(e,"..")) continue;
+      // Apply regular expression, if requested
+      if (re && TString(e).Index(*re) == kNPOS) continue;
+      // Group directory
+      path.Form("%s/%s", fLocalCacheDir.Data(), e);
+      // Get file information
+      if (gSystem->GetPathInfo(path, st) != 0) {
+         Warning("ShowCache", "problems 'stat'-ing '%s' (errno: %d)",
+                               path.Data(), TSystem::GetErrno());
+         continue;
+      }
+      // Count
+      totsz += st.fSize;
+      nf++;
+      // Get modification time in human readable form
+      TDatime tmod(st.fMtime);
+      sz.Form("%lld", st.fSize);
+      sz.Resize(12);
+      Printf(" %s  %s %s", tmod.AsSQLString(), sz.Data(), e);
+   }
+   gSystem->FreeDirectory(dirp);
+   SafeDelete(re);
+
+   // Notify totals
+   Printf(" %lld files, %lld bytes", nf, totsz);
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
 Int_t TDataSetManagerFile::WriteDataSet(const char *group, const char *user,
-                                         const char *dsName, TFileCollection *dataset,
-                                         UInt_t option, TMD5 *checksum)
+                                        const char *dsName, TFileCollection *dataset,
+                                        UInt_t option, TMD5 *checksum)
 {
    //
    // Writes indicated dataset.
@@ -517,75 +1309,129 @@ Int_t TDataSetManagerFile::WriteDataSet(const char *group, const char *user,
    // implies the bit kFileMustExist set in option).
    // Returns != 0 for success, 0 for error
 
-   TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
+   TString md5path, path, md5sum;
+   Long_t mtime = 0;
+   {  TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
 
-   Bool_t checkIfExists = ((option & kFileMustExist) || checksum) ? kTRUE : kFALSE;
+      Bool_t checkIfExists = ((option & kFileMustExist) || checksum) ? kTRUE : kFALSE;
 
-   TString path(GetDataSetPath(group, user, dsName));
+      path = GetDataSetPath(group, user, dsName, md5path);
 
-   if (checkIfExists) {
-      // check if file still exists, otherwise it was deleted in the meanwhile and is not written here
-      Long_t tmp;
-      if (gSystem->GetPathInfo(path, 0, (Long_t*) 0, 0, &tmp) != 0) {
-         if (gDebug > 0)
-            Info("WriteDataSet", "Dataset disappeared. Discarding update.");
-         return 3;
+      if (checkIfExists) {
+         // check if file still exists, otherwise it was deleted in the meanwhile and is not written here
+         Long_t tmp;
+         if (gSystem->GetPathInfo(path, 0, (Long_t*) 0, 0, &tmp) != 0) {
+            if (gDebug > 0)
+               Info("WriteDataSet", "Dataset disappeared. Discarding update.");
+            return 3;
+         }
       }
-   }
 
-   if (checksum) {
-      // verify md5 sum, otherwise the file was changed in the meanwhile and is not overwritten here
-      TMD5 *checksum2 = TMD5::FileChecksum(path);
-      if (!checksum2) {
-         Error("WriteDataSet", "Could not get checksum of %s", path.Data());
+      if (checksum) {
+         // verify md5 sum, otherwise the file was changed in the meanwhile and is not overwritten here
+         TMD5 *checksum2 = TMD5::FileChecksum(path);
+         if (!checksum2) {
+            Error("WriteDataSet", "Could not get checksum of %s", path.Data());
+            return 0;
+         }
+
+         Bool_t checksumAgrees = (*checksum == *checksum2);
+         delete checksum2;
+
+         if (!checksumAgrees) {
+            if (gDebug > 0)
+               Info("WriteDataSet", "Dataset changed. Discarding update.");
+            return 2;
+         }
+      }
+
+      // write first in ".<file>" then rename to recover from crash during writing
+      TString tempFile(path);
+      Int_t index = -1;
+      while (tempFile.Index("/", index+1) >= 0)
+         index = tempFile.Index("/", index+1);
+
+      tempFile.Insert(index+1, ".");
+
+      TFile *f = TFile::Open(tempFile, "RECREATE");
+      if (!f) {
+         Error("WriteDataSet", "Could not open dataset for writing %s", tempFile.Data());
          return 0;
       }
 
-      Bool_t checksumAgrees = (*checksum == *checksum2);
-      delete checksum2;
+      // write full TFileCollection
+      dataset->Write("dataset", TObject::kSingleKey | TObject::kOverwrite);
 
-      if (!checksumAgrees) {
-         if (gDebug > 0)
-            Info("WriteDataSet", "Dataset changed. Discarding update.");
-         return 2;
+      // write only metadata
+      THashList *list = dataset->GetList();
+      dataset->SetList(0);
+      dataset->Write("dataset_short", TObject::kSingleKey | TObject::kOverwrite);
+
+      f->Close();
+      delete f;
+
+      // Restore full list
+      dataset->SetList(list);
+
+      // file is written, rename to real filename
+      if (gSystem->Rename(tempFile, path) != 0) {
+         Error("WriteDataSet", "renaming %s to %s failed; dataset might be corrupted",
+                              tempFile.Data(), path.Data());
+         // Cleanup any MD5 sum information
+         if (!gSystem->AccessPathName(md5path, kWritePermission) && gSystem->Unlink(md5path) != 0)
+            Error("WriteDataSet", "unlink of %s failed", md5path.Data());
+         return 0;
       }
+      // Save md5 sum, otherwise the file was changed in the meanwhile and is not overwritten here
+      if (ChecksumDataSet(path, md5path, md5sum) != 0) {
+         Error("WriteDataSet", "problems calculating checksum of %s", path.Data());
+         return 0;
+      }
+      FileStat_t st;
+      if (gSystem->GetPathInfo(path, st) != 0) {
+         Error("WriteDataSet", "could not 'stat' the version of '%s'!", path.Data());
+         return 0;
+      }
+      mtime= st.fMtime;
    }
 
-   // write first in ".<file>" then rename to recover from crash during writing
-   TString tempFile(path);
-   Int_t index = -1;
-   while (tempFile.Index("/", index+1) >= 0)
-      index = tempFile.Index("/", index+1);
-
-   tempFile.Insert(index+1, ".");
-
-   TFile *f = TFile::Open(tempFile, "RECREATE");
-   if (!f) {
-      Error("WriteDataSet", "Could not open dataset for writing %s", tempFile.Data());
-      return 0;
-   }
-
-   // write full TFileCollection
-   dataset->Write("dataset", TObject::kSingleKey);
-
-   // write only metadata
-   THashList *list = dataset->GetList();
-   dataset->SetList(0);
-   dataset->Write("dataset_short", TObject::kSingleKey);
-
-   f->Close();
-   delete f;
-
-   dataset->SetList(list);
-
-   // file is written, rename to real filename
-   if (gSystem->Rename(tempFile, path) != 0) {
-      Error("WriteDataSet", "Renaming %s to %s failed. Dataset might be corrupted.",
-                            tempFile.Data(), path.Data());
-      return 0;
-   }
+   // The repository was updated
+   if (NotifyUpdate(group, user, dsName, mtime, md5sum) != 0)
+      Warning("WriteDataSet", "problems notifying update with 'NotifyUpdate'");
 
    return 1;
+}
+
+//______________________________________________________________________________
+Int_t TDataSetManagerFile::ChecksumDataSet(const char *path,
+                                           const char *md5path, TString &checksum)
+{
+   // Calculate the checksum of the indicated dataset at 'path' and save it to the
+   // appropriate file 'md5path'. The MD5 string is returned in 'md5sum'.
+   // Return 0 on success, -1 on error.
+
+   checksum = "";
+   // Check inputs
+   if (!path || strlen(path) <= 0 || !md5path || strlen(md5path) <= 0) {
+      Error("ChecksumDataSet", "one or more inputs are invalid ('%s','%s')",
+             path, md5path);
+      return -1;
+   }
+   // Calculate md5 sum
+   TMD5 *md5sum = TMD5::FileChecksum(path);
+   if (!md5sum) {
+      Error("ChecksumDataSet", "problems calculating checksum of '%s'", path);
+      return -1;
+   }
+   // Save it to a file
+   if (TMD5::WriteChecksum(md5path, md5sum) != 0) {
+      Error("ChecksumDataSet", "problems saving checksum to '%s'", md5path);
+      return -1;
+   }
+   // Fill output
+   checksum = md5sum->AsString();
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -594,11 +1440,30 @@ Bool_t TDataSetManagerFile::RemoveDataSet(const char *group, const char *user,
 {
    // Removes the indicated dataset
 
-   TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
+   TString md5path, path;
+   {  TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
 
-   TString path(GetDataSetPath(group, user, dsName));
+      path = GetDataSetPath(group, user, dsName, md5path);
+      Int_t rc = 0;
+      // Remove the main file
+      if ((rc = gSystem->Unlink(path)) != 0)
+         Warning("RemoveDataSet", "problems removing main file '%s' (errno: %d)",
+                                 path.Data(), TSystem::GetErrno());
+      // Remove the checksum file
+      if (gSystem->Unlink(md5path) != 0)
+         Warning("RemoveDataSet", "problems removing chcksum file '%s' (errno: %d)",
+                                 md5path.Data(), TSystem::GetErrno());
+   }
 
-   return (gSystem->Unlink(path) == 0);
+   // The repository was updated
+   if (gSystem->AccessPathName(path, kFileExists)) {
+      if (NotifyUpdate(group, user, dsName, 0, "removed") != 0)
+         Warning("RemoveDataSet", "problems notifying update with 'NotifyUpdate'");
+      // Success
+      return kTRUE;
+   }
+   // Failure
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -609,7 +1474,7 @@ Bool_t TDataSetManagerFile::ExistsDataSet(const char *group, const char *user,
 
    TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
 
-   TString path(GetDataSetPath(group, user, dsName));
+   TString md5path, path(GetDataSetPath(group, user, dsName, md5path));
 
    return (gSystem->AccessPathName(path) == kFALSE);
 }
@@ -842,13 +1707,13 @@ TMap *TDataSetManagerFile::GetDataSets(const char *uri, UInt_t option)
    // NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
    // NB2: for options "kPrint" and "kQuoatUpdate" return is null.
 
-   TString dsUser, dsGroup;
+   TString dsUser, dsGroup, dsName;
 
    if (((option & kPrint) || (option & kExport)) && strlen(uri) <= 0)
       option |= kShowDefault;
 
-   if (ParseUri(uri, &dsGroup, &dsUser, 0, 0, kFALSE, kTRUE))
-      return GetDataSets(dsGroup, dsUser, option);
+   if (ParseUri(uri, &dsGroup, &dsUser, &dsName, 0, kFALSE, kTRUE))
+      return GetDataSets(dsGroup, dsUser, dsName, option);
    return (TMap *)0;
 }
 
@@ -926,5 +1791,5 @@ void TDataSetManagerFile::UpdateUsedSpace()
    fUserUsed.DeleteAll();
 
    // Scan the existing datasets
-   GetDataSets(0, 0, (UInt_t)kQuotaUpdate);
+   GetDataSets(0, 0, 0, (UInt_t)kQuotaUpdate);
 }

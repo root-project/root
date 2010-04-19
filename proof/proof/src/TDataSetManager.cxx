@@ -134,6 +134,7 @@ void TDataSetManager::ParseInitOpts(const char *opts)
    //    Av:               set kAllowVerify
    //    Ti:               set kTrustInfo
    //    Sb:               set kIsSandbox
+   //    Ca:               set kUseCache or kDoNotUseCache
    // The opts string may also contain additional unrelated info: in such a case
    // the field delimited by the prefix "opt:" is analyzed, e.g. if opts is
    // "/tmp/dataset  opt:Cq:-Ar: root://lxb6046.cern.ch" only the substring
@@ -145,6 +146,8 @@ void TDataSetManager::ParseInitOpts(const char *opts)
    SetBit(TDataSetManager::kAllowVerify);
    SetBit(TDataSetManager::kTrustInfo);
    ResetBit(TDataSetManager::kIsSandbox);
+   ResetBit(TDataSetManager::kUseCache);
+   ResetBit(TDataSetManager::kDoNotUseCache);
 
    if (opts && strlen(opts) > 0) {
       TString opt(opts);
@@ -164,6 +167,10 @@ void TDataSetManager::ParseInitOpts(const char *opts)
          ResetBit(TDataSetManager::kTrustInfo);
       if (opt.Contains("Sb:") && !opt.Contains("-Sb:"))
          SetBit(TDataSetManager::kIsSandbox);
+      if (opt.Contains("Ca:"))
+         SetBit(TDataSetManager::kUseCache);
+      if (opt.Contains("-Ca:"))
+         SetBit(TDataSetManager::kDoNotUseCache);
    }
 
    // Check dependencies
@@ -171,6 +178,9 @@ void TDataSetManager::ParseInitOpts(const char *opts)
       // Dataset verification or requires registration permition
       SetBit(TDataSetManager::kAllowRegister);
    }
+   // UseCache has priority
+   if (TestBit(TDataSetManager::kUseCache) && TestBit(TDataSetManager::kDoNotUseCache))
+      ResetBit(TDataSetManager::kDoNotUseCache);
 }
 
 //______________________________________________________________________________
@@ -656,13 +666,45 @@ void TDataSetManager::UpdateUsedSpace()
 
 //______________________________________________________________________________
 Int_t TDataSetManager::RegisterDataSet(const char *,
-                                            TFileCollection *,
-                                            const char *)
+                                       TFileCollection *, const char *)
 {
    // Register a dataset, perfoming quota checkings, if needed.
    // Returns 0 on success, -1 on failure
 
    AbstractMethod("RegisterDataSet");
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TDataSetManager::NotifyUpdate(const char * /*group*/,
+                                    const char * /*user*/,
+                                    const char * /*dspath*/,
+                                    Long_t /*mtime*/,
+                                    const char * /*checksum*/)
+{
+   // Save into the <datasetdir>/dataset.list file the name of the last updated
+   // or created or modified dataset
+   // Returns 0 on success, -1 on error
+
+   AbstractMethod("NotifyUpdate");
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TDataSetManager::ClearCache(const char * /*uri*/)
+{
+   // Clear cached information matching uri
+
+   AbstractMethod("ClearCache");
+   return -1;
+}
+
+//______________________________________________________________________________
+Int_t TDataSetManager::ShowCache(const char * /*uri*/)
+{
+   // Show cached information matching uri
+
+   AbstractMethod("ShowCache");
    return -1;
 }
 
@@ -714,8 +756,17 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
 
    // Append trailing slash if missing when wildcards are enabled
    TString uristr(uri);
-   if (wildcards && uristr.Length() > 0 && !uristr.EndsWith("/"))
-      uristr += '/';
+   Int_t pc = 0;
+   if (wildcards && uristr.Length() > 0) {
+      pc = uristr.CountChar('/');
+      Bool_t endsl = uristr.EndsWith("/") ? kTRUE : kFALSE;
+      Bool_t beginsl = uristr.BeginsWith("/") ? kTRUE : kFALSE;
+      if (beginsl) {
+         if (pc == 1) uristr += "/*/";
+         if (pc == 2 && endsl) uristr += "*/";
+         if (pc == 2 && !endsl) uristr += "/";
+      }
+   }
 
    // Resolve given URI agains the base
    TUri resolved = TUri::Transform(uristr, fBase);
@@ -724,10 +775,9 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
 
    TString path(resolved.GetPath());
    // Must be in the form /group/user/dsname
-   Int_t pc = path.CountChar('/');
-   if (pc != 3) {
+   if ((pc = path.CountChar('/')) != 3) {
       if (!TestBit(TDataSetManager::kIsSandbox)) {
-         Error ("ParseUri", "illegal dataset path: %s", uri);
+         Error ("ParseUri", "illegal dataset path: '%s'", uri);
          return kFALSE;
       } else if (pc >= 0 && pc < 3) {
          // Add missing slashes
@@ -735,9 +785,9 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
          if (pc == 2) {
             sls = "/";
          } else if (pc == 1) {
-            sls = Form("/%s/", fGroup.Data());
+            sls.Form("/%s/", fGroup.Data());
          } else if (pc == 0) {
-            sls = Form("/%s/%s/", fGroup.Data(), fUser.Data());
+            sls.Form("/%s/%s/", fGroup.Data(), fUser.Data());
          }
          path.Insert(0, sls);
       }
@@ -763,7 +813,7 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
 
    // Check for unwanted use of wildcards
    if ((user == "*" || group == "*") && !wildcards) {
-      Error ("ParseUri", "no wildcards allowed for user/group in this context");
+      Error ("ParseUri", "no wildcards allowed for user/group in this context (uri: '%s')", uri);
       return kFALSE;
    }
 
@@ -774,26 +824,26 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
    }
 
    // Construct regexp whitelist for checking illegal characters in user/group
-   TPRegexp wcExp (wildcards ? "^(?:[A-Za-z0-9-]*|[*])$" : "^[A-Za-z0-9-]*$");
+   TPRegexp wcExp (wildcards ? "^(?:[A-Za-z0-9-*]*|[*])$" : "^[A-Za-z0-9-]*$");
 
    // Check for illegal characters in all components
    if (!wcExp.Match(group)) {
-      Error("ParseUri", "illegal characters in group");
+      Error("ParseUri", "illegal characters in group (uri: '%s', group: '%s')", uri, group.Data());
       return kFALSE;
    }
 
    if (!wcExp.Match(user)) {
-      Error("ParseUri", "illegal characters in user");
+      Error("ParseUri", "illegal characters in user (uri: '%s', user: '%s')", uri, user.Data());
       return kFALSE;
    }
 
    if (name.Contains(TRegexp("[^A-Za-z0-9-._]"))) {
-      Error("ParseUri", "illegal characters in dataset name");
+      Error("ParseUri", "illegal characters in dataset name (uri: '%s', name: '%s')", uri, name.Data());
       return kFALSE;
    }
 
    if (tree.Contains(TRegexp("[^A-Za-z0-9-/_]"))) {
-      Error("ParseUri", "Illegal characters in subdir/object name");
+      Error("ParseUri", "Illegal characters in subdir/object name (uri: '%s', obj: '%s')", uri, tree.Data());
       return kFALSE;
    }
 
@@ -908,7 +958,17 @@ void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
    //
    //   If 'opt' contains 'full:' the list of files in the datasets are also printed.
    //   In case 3. this is enabled only if 'uri' matches a single dataset.
-
+   //
+   //   In case 3, if 'opt' contains
+   //      'full:'      the list of files in the datasets are also printed.
+   //      'forcescan:' the dataset are open to get the information; otherwise the
+   //                   pre-processed information is used.
+   //      'noheader:'  the labelling header is not printed; usefull when to chain
+   //                   several printouts
+   //      'noupdate:'  do not update the cache (which may be slow on very remote
+   //                   servers)
+   //      'refresh:'   refresh the information (requires appropriate credentials;
+   //                   typically it can be done only for owned datasets)
 
    TFileCollection *fc = 0;
    TString o(opt);
@@ -942,17 +1002,38 @@ void TDataSetManager::ShowDataSets(const char *uri, const char *opt)
          delete dsmap;
       }
    } else {
-      TString u(uri);
-      if (!u.IsNull() && !u.Contains("*") && (fc = GetDataSet(uri))) {
-         // Single dataset
-         PrintDataSet(fc, 10 + popt);
-         delete fc;
-      } else {
-         // Support for "*" or "/*"
-         if (u == "*" || u == "/*" || u == "/*/" || u == "/*/*") u = "/*/*/";
-         // Scan the existing datasets and print the content
-         GetDataSets(u.Data(), (UInt_t)TDataSetManager::kPrint);
+      TString u(uri), grp, usr, dsn;
+      // Support for "*" or "/*"
+      if (u == "" || u == "*" || u == "/*" || u == "/*/" || u == "/*/*") u = "/*/*/";
+      if (!ParseUri(u.Data(), &grp, &usr, &dsn, 0, kFALSE, kTRUE))
+         Warning("ShowDataSets", "problems parsing URI '%s'", uri);
+      // Scan the existing datasets and print the content
+      UInt_t xopt = (UInt_t)(TDataSetManager::kPrint);
+      if (o.Contains("forcescan:")) xopt |= (UInt_t)(TDataSetManager::kForceScan);
+      if (o.Contains("noheader:")) xopt |= (UInt_t)(TDataSetManager::kNoHeaderPrint);
+      if (o.Contains("noupdate:")) xopt |= (UInt_t)(TDataSetManager::kNoCacheUpdate);
+      if (o.Contains("refresh:")) xopt |= (UInt_t)(TDataSetManager::kRefreshLs);
+      if (!u.IsNull() && !u.Contains("*") && !grp.IsNull() && !usr.IsNull() && !dsn.IsNull()) {
+         if (ExistsDataSet(uri)) {
+            // Single dataset
+            if (popt == 0) {
+               // Quick listing
+               GetDataSets(u.Data(), xopt);
+            } else if ((fc = GetDataSet(uri))) {
+               // Full print option
+               PrintDataSet(fc, 10 + popt);
+               delete fc;
+            }
+            return;
+         }
+         // Try all the directories
+         TRegexp reg(grp, kTRUE), reu(usr, kTRUE);
+         if (u.Index(reg) == kNPOS) grp = "*";
+         if (u.Index(reu) == kNPOS) usr = "*";
+         // Rebuild the uri
+         u.Form("/%s/%s/%s", grp.Data(), usr.Data(), dsn.Data());
       }
+      GetDataSets(u.Data(), xopt);
    }
 
    return;
