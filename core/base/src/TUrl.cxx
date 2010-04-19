@@ -352,10 +352,15 @@ TUrl &TUrl::operator=(const TUrl &rhs)
 }
 
 //______________________________________________________________________________
-const char *TUrl::GetUrl(Bool_t withDeflt)
+const char *TUrl::GetUrl(Bool_t withDeflt) const
 {
    // Return full URL. If withDflt is kTRUE, explicitly add the port even
    // if it matches the default value for the URL protocol.
+
+   if (((TestBit(kUrlWithDefaultPort) && !withDeflt) ||
+       (!TestBit(kUrlWithDefaultPort) && withDeflt)) &&
+       TestBit(kUrlHasDefaultPort))
+      fUrl = "";
 
    if (IsValid() && fUrl == "") {
       // Handle special protocol cases: file:, rfio:, etc.
@@ -386,8 +391,10 @@ const char *TUrl::GetUrl(Bool_t withDeflt)
           (fProtocol.BeginsWith("root")  && fPort == 1094) ||
           (!fProtocol.CompareTo("ftp")   && fPort == 20)   ||
           (!fProtocol.CompareTo("news")  && fPort == 119)  ||
-           fPort == 0)
+          fPort == 0) {
          deflt = kTRUE;
+         ((TUrl *)this)->SetBit(kUrlHasDefaultPort);
+      }
 
       fUrl = fProtocol + "://";
       if (fUser != "") {
@@ -400,6 +407,11 @@ const char *TUrl::GetUrl(Bool_t withDeflt)
          }
          fUrl += "@";
       }
+      if (withDeflt)
+         ((TUrl*)this)->SetBit(kUrlWithDefaultPort);
+      else
+         ((TUrl*)this)->ResetBit(kUrlWithDefaultPort);
+
       if (!deflt || withDeflt) {
          char p[10];
          sprintf(p, "%d", fPort);
@@ -503,8 +515,7 @@ Int_t TUrl::Compare(const TObject *obj) const
 
    if (this == obj) return 0;
    if (TUrl::Class() != obj->IsA()) return -1;
-   return TString(((TUrl*)this)->GetUrl()).CompareTo(((TUrl*)obj)->GetUrl(),
-                                                     TString::kExact);
+   return TString(GetUrl()).CompareTo(((TUrl*)obj)->GetUrl(), TString::kExact);
 }
 
 //______________________________________________________________________________
@@ -515,7 +526,7 @@ void TUrl::Print(Option_t *) const
    if (fPort == -1)
       Printf("Illegal URL");
 
-   Printf("%s", ((TUrl*)this)->GetUrl());
+   Printf("%s", GetUrl());
 }
 
 //______________________________________________________________________________

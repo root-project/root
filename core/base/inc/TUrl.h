@@ -41,7 +41,7 @@ class TMap;
 class TUrl : public TObject {
 
 private:
-   TString fUrl;            // full URL
+   mutable TString fUrl;    // full URL
    TString fProtocol;       // protocol: http, ftp, news, root, proof, ...
    TString fUser;           // user name
    TString fPasswd;         // password
@@ -59,6 +59,8 @@ private:
 
    void FindFile(char *u, Bool_t stripDoubleSlash = kTRUE);
 
+   enum EStatusBits { kUrlWithDefaultPort = BIT(14), kUrlHasDefaultPort = BIT(15) };
+
 public:
    TUrl() : fUrl(), fProtocol(), fUser(), fPasswd(), fHost(), fFile(),
             fAnchor(), fOptions(), fFileOA(), fHostFQ(), fPort(-1), fOptionsMap(0) { }
@@ -67,7 +69,7 @@ public:
    TUrl &operator=(const TUrl &rhs);
    virtual ~TUrl();
 
-   const char *GetUrl(Bool_t withDeflt = kFALSE);
+   const char *GetUrl(Bool_t withDeflt = kFALSE) const;
    const char *GetProtocol() const { return fProtocol; }
    const char *GetUser() const { return fUser; }
    const char *GetPasswd() const { return fPasswd; }
