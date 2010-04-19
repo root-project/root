@@ -54,6 +54,29 @@ TDataSetManagerFile::TDataSetManagerFile(const char *group,
    // Parse options
    ParseInitOpts(ins);
 
+   // Init the instance
+   Init();
+}
+
+//_____________________________________________________________________________
+TDataSetManagerFile::TDataSetManagerFile(const char *ins)
+                    : TDataSetManager("", "", ins)
+{
+   //
+   // Main constructor
+
+   // Parse options
+   ParseInitOpts(ins);
+
+   // Init the instance
+   Init();
+}
+
+//______________________________________________________________________________
+void TDataSetManagerFile::Init()
+{
+   // Do the real inititialization
+
    if (!fUser.IsNull() && !fGroup.IsNull() && !fDataSetDir.IsNull()) {
 
       // Make sure that the dataset dir exists
@@ -71,10 +94,10 @@ TDataSetManagerFile::TDataSetManagerFile(const char *group,
             ResetBit(TDataSetManager::kTrustInfo);
             dir.Form("%s/%s/%s", fDataSetDir.Data(), fGroup.Data(), fUser.Data());
             if (gSystem->AccessPathName(dir)) {
-               Error("TDataSetManagerFile",
+               Error("Init",
                      "could not attach to a valid the dataset dir; paths tried:");
-               Error("TDataSetManagerFile", "    %s", emsg.Data());
-               Error("TDataSetManagerFile", "    %s", dir.Data());
+               Error("Init", "    %s", emsg.Data());
+               Error("Init", "    %s", dir.Data());
                SetBit(TObject::kInvalidObject);
                return;
             }

@@ -36,6 +36,7 @@ private:
 
 protected:
    const char *GetDataSetPath(const char *group, const char *user, const char *dsName);
+   void   Init();
    Bool_t BrowseDataSets(const char *group, const char *user, UInt_t option, TObject *target);
 
    Bool_t RemoveDataSet(const char *group, const char *user, const char *dsName);
@@ -46,7 +47,9 @@ protected:
    void UpdateUsedSpace();
 
 public:
-   TDataSetManagerFile(const char *group = 0, const char *user = 0, const char *ins = 0);
+   TDataSetManagerFile() : TDataSetManager(0, 0, 0) { }
+   TDataSetManagerFile(const char *group, const char *user, const char *ins);
+   TDataSetManagerFile(const char *ins);
    virtual ~TDataSetManagerFile() { }
 
    void ParseInitOpts(const char *opts);
