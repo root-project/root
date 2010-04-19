@@ -2193,7 +2193,8 @@ void TUnixSystem::StackTrace()
       char *addr2line = Which(Getenv("PATH"), "addr2line", kExecutePermission);
       if (addr2line) {
          // might take some time so tell what we are doing...
-         write(fd, message, strlen(message));
+         if (write(fd, message, strlen(message)) < 0)
+            Warning("StackTrace", "problems writing line numbers (errno: %d)", TSystem::GetErrno());
       }
 
       // open tmp file for demangled stack trace
@@ -2265,7 +2266,8 @@ void TUnixSystem::StackTrace()
          if (demangle)
             file1 << buffer;
          else
-            write(fd, buffer, ::strlen(buffer));
+            if (write(fd, buffer, ::strlen(buffer)) < 0)
+               Warning("StackTrace", "problems writing buffer (errno: %d)", TSystem::GetErrno());
       }
 
       if (demangle) {
@@ -2280,7 +2282,8 @@ void TUnixSystem::StackTrace()
          while (file2) {
             line = "";
             line.ReadString(file2);
-            write(fd, line.Data(), line.Length());
+            if (write(fd, line.Data(), line.Length()) < 0)
+               Warning("StackTrace", "problems writing line (errno: %d)", TSystem::GetErrno());
          }
          file2.close();
          Unlink(tmpf1);
@@ -2510,19 +2513,33 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
 
    if (file) {
       // Save the paths
+      Bool_t outdone = kFALSE;
       if (xh->fStdOutTty.IsNull()) {
          const char *tty = ttyname(STDOUT_FILENO);
-         if (tty)
+         if (tty) {
             xh->fStdOutTty = tty;
-         else
-            xh->fStdOutDup = dup(STDOUT_FILENO);
+         } else {
+            if ((xh->fStdOutDup = dup(STDOUT_FILENO)) < 0) {
+               SysError("RedirectOutput", "could not 'dup' stdout (errno: %d)", TSystem::GetErrno());
+               return -1;
+            }
+            outdone = kTRUE;
+         }
       }
       if (xh->fStdErrTty.IsNull()) {
          const char *tty = ttyname(STDERR_FILENO);
-         if (tty)
+         if (tty) {
             xh->fStdErrTty = tty;
-         else
-            xh->fStdErrDup = dup(STDERR_FILENO);
+         } else {
+            if ((xh->fStdErrDup = dup(STDERR_FILENO)) < 0) {
+               SysError("RedirectOutput", "could not 'dup' stderr (errno: %d)", TSystem::GetErrno());
+               if (outdone && dup2(xh->fStdOutDup, STDOUT_FILENO) < 0) {
+                  Warning("RedirectOutput", "could not restore stdout (back to original redirected"
+                          " file) (errno: %d)", TSystem::GetErrno());
+               }
+               return -1;
+            }
+         }
       }
 
       // Make sure mode makes sense; default "a"
@@ -2540,12 +2557,13 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
 
       // Redirect stdout & stderr
       if (freopen(file, m, stdout) == 0) {
-         SysError("RedirectOutput", "could not freopen stdout");
+         SysError("RedirectOutput", "could not freopen stdout (errno: %d)", TSystem::GetErrno());
          return -1;
       }
       if (freopen(file, m, stderr) == 0) {
-         SysError("RedirectOutput", "could not freopen stderr");
-         freopen(xh->fStdErrTty.Data(), "a", stderr);
+         SysError("RedirectOutput", "could not freopen stderr (errno: %d)", TSystem::GetErrno());
+         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == 0)
+            SysError("RedirectOutput", "could not restore stdout (errno: %d)", TSystem::GetErrno());
          return -1;
       }
    } else {
@@ -2553,26 +2571,28 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
       fflush(stdout);
       if (!(xh->fStdOutTty.IsNull())) {
          if (freopen(xh->fStdOutTty.Data(), "a", stdout) == 0) {
-            SysError("RedirectOutput", "could not restore stdout");
+            SysError("RedirectOutput", "could not restore stdout (errno: %d)", TSystem::GetErrno());
             rc = -1;
          }
          xh->fStdOutTty = "";
       } else {
          if (dup2(xh->fStdOutDup, STDOUT_FILENO) < 0) {
-            SysError("RedirectOutput", "could not restore stdout (back to original redirected file)");
+            SysError("RedirectOutput", "could not restore stdout (back to original redirected"
+                     " file) (errno: %d)", TSystem::GetErrno());
             rc = -1;
          }
       }
       fflush(stderr);
       if (!(xh->fStdErrTty.IsNull())) {
          if (freopen(xh->fStdErrTty.Data(), "a", stderr) == 0) {
-            SysError("RedirectOutput", "could not restore stderr");
+            SysError("RedirectOutput", "could not restore stderr (errno: %d)", TSystem::GetErrno());
             rc = -1;
          }
          xh->fStdErrTty = "";
       } else {
          if (dup2(xh->fStdErrDup, STDERR_FILENO) < 0) {
-            SysError("RedirectOutput", "could not restore stderr (back to original redirected file)");
+            SysError("RedirectOutput", "could not restore stderr (back to original redirected"
+                     " file) (errno: %d)", TSystem::GetErrno());
             rc = -1;
          }
       }
