@@ -802,7 +802,7 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
                      if (strcmp(eu, ".") == 0 || strcmp(eu, "..") == 0)
                         continue;
 
-                     if (reu && (TString(eu).Index(*reg) == kNPOS))
+                     if (reu && (TString(eu).Index(*reu) == kNPOS))
                         continue;
 
                      // If we have the ls.macro use that
