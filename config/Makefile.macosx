@@ -43,7 +43,7 @@ FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 
 # Linker:
 LD            = g++
-LDFLAGS       = $(OPT) -bind_at_load -m32
+LDFLAGS       = $(OPT) -m32 -bind_at_load
 FORCELINK     = yes
 NEEDFINK      = yes
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
@@ -56,30 +56,30 @@ CINTCFLAGS   += -D__DARWIN_UNIX03=1
 endif
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 ifeq ($(USECONFIG),FALSE)
-SOFLAGS       = $(OPT) -dynamiclib -single_module \
+SOFLAGS       = -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name @rpath/
 else
-SOFLAGS       = $(OPT) -dynamiclib -single_module \
+SOFLAGS       = -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 endif
 FORCELINK     = no
 NEEDFINK      = no
 else
 ifeq ($(subst $(MACOSX_MINOR),,123),123)
-SOFLAGS       = $(OPT) -dynamiclib -single_module \
+SOFLAGS       = -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 FORCELINK     = no
 NEEDFINK      = no
 else
 ifeq ($(MACOSX_MINOR),3)
-SOFLAGS       = $(OPT) -dynamiclib -single_module \
+SOFLAGS       = -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 CXXFLAGS     += -Wno-long-double
 CFLAGS       += -Wno-long-double
 CINTCXXFLAGS += -Wno-long-double
 CINTCFLAGS   += -Wno-long-double
 else
-SOFLAGS       = $(OPT) -dynamiclib -single_module \
+SOFLAGS       = -dynamiclib -single_module \
                 -undefined suppress -install_name $(LIBDIR)/
 CXXFLAGS     += -Wno-long-double
 CFLAGS       += -Wno-long-double
