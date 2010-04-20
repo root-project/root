@@ -569,7 +569,7 @@ int testFit(const char* str1, const char* str2, const char* str3,
 //      @listAlgos All the algorithms that should be tested
 //      @fitFunction Parameters of the function used to fill the object
 template <typename T, typename F>
-int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, struct fitFunctions const& fitFunction)
+int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFunctions const& fitFunction)
 {
    // counts the number of parameters wronly calculated
    int status = 0;
