@@ -21,51 +21,52 @@
 //                                                                               //
 //                                                                               //
 // An example of output when all the tests run OK is shown below:                //
-// ****************************************************************************  //
-// *  Starting  stress  H I S T O F I T                                       *  //
-// ****************************************************************************  //
-//                                                                               //
-// Test 1D and 2D objects                                                        //
-//                                                                               //
-// Test For Object 'Histogram 1D Variable' with 'GAUS'..............OK           //
-// Test For Object 'Histogram 1D' with 'GAUS'.......................OK           //
-// Test For Object 'TGraph 1D' with 'GAUS'..........................OK           //
-// Test For Object 'TGraphErrors 1D' with 'GAUS'....................OK           //
-// Test For Object 'THnSparse 1D' with 'GAUS'.......................OK           //
-// Test For Object 'Histogram 1D Variable' with 'Polynomial'........OK           //
-// Test For Object 'Histogram 1D' with 'Polynomial'.................OK           //
-// Test For Object 'TGraph 1D' with 'Polynomial'....................OK           //
-// Test For Object 'TGraphErrors 1D' with 'Polynomial'..............OK           //
-// Test For Object 'THnSparse 1D' with 'Polynomial'.................OK           //
-// Test For Object 'Histogram 2D Variable' with 'gaus2D'............OK           //
-// Test For Object 'Histogram 2D' with 'gaus2D'.....................OK           //
-// Test For Object 'TGraph 2D' with 'gaus2D'........................OK           //
-// Test For Object 'TGraphErrors 2DGE' with 'gaus2D'................OK           //
-// Test For Object 'THnSparse 2D' with 'gaus2D'.....................OK           //
-//                                                                               //
-// Test Linear fits                                                              //
-//                                                                               //
-// Test For Object 'Histogram 1D Variable' with 'Polynomial'........OK           //
-// Test For Object 'Histogram 1D' with 'Polynomial'.................OK           //
-// Test For Object 'TGraph 1D' with 'Polynomial'....................OK           //
-// Test For Object 'TGraphErrors 1D' with 'Polynomial'..............OK           //
-// Test For Object 'THnSparse 1D' with 'Polynomial'.................OK           //
-// Test For Object 'Histogram 2D Variable' with 'Poly2D'............OK           //
-// Test For Object 'Histogram 2D' with 'Poly2D'.....................OK           //
-// Test For Object 'TGraph 2D' with 'Poly2D'........................OK           //
-// Test For Object 'TGraphErrors 2DGE' with 'Poly2D'................OK           //
-// Test For Object 'THnSparse 2D' with 'Poly2D'.....................OK           //
-//                                                                               //
-// Test unbinned fits                                                            //
-//                                                                               //
-// Test For Object 'tree' with 'gausn'..............................OK           //
-// Test For Object 'tree' with 'gaus2Dn'............................OK           //
-// Test For Object 'tree' with 'gausND'.............................OK           //
-//                                                                               //
-// ****************************************************************************  //
-// stressHistoFit: Real Time =  72.19 seconds Cpu Time =  72.19 seconds          //
-//  ROOTMARKS = 381.216 ROOT version: 5.25/03	branches/dev/mathDev@31176       //
-// ****************************************************************************  //
+// ****************************************************************************
+// *  Starting  stress  H I S T O F I T                                       *
+// ****************************************************************************
+
+// Test 1D and 2D objects
+
+// Test   1:  'Histogram 1D Variable' with 'GAUS'...................OK
+// Test   2:  'Histogram 1D' with 'GAUS'............................OK
+// Test   3:  'TGraph 1D' with 'GAUS'...............................OK
+// Test   4:  'TGraphErrors 1D' with 'GAUS'.........................OK
+// Test   5:  'THnSparse 1D' with 'GAUS'............................OK
+// Test   6:  'Histogram 1D Variable' with 'Polynomial'.............OK
+// Test   7:  'Histogram 1D' with 'Polynomial'......................OK
+// Test   8:  'TGraph 1D' with 'Polynomial'.........................OK
+// Test   9:  'TGraphErrors 1D' with 'Polynomial'...................OK
+// Test  10:  'THnSparse 1D' with 'Polynomial'......................OK
+// Test  11:  'Histogram 2D Variable' with 'gaus2D'.................OK
+// Test  12:  'Histogram 2D' with 'gaus2D'..........................OK
+// Test  13:  'TGraph 2D' with 'gaus2D'.............................OK
+// Test  14:  'TGraphErrors 2DGE' with 'gaus2D'.....................OK
+// Test  15:  'THnSparse 2D' with 'gaus2D'..........................OK
+
+// Test Linear fits
+
+// Test  16:  'Histogram 1D Variable' with 'Polynomial'.............OK
+// Test  17:  'Histogram 1D' with 'Polynomial'......................OK
+// Test  18:  'TGraph 1D' with 'Polynomial'.........................OK
+// Test  19:  'TGraphErrors 1D' with 'Polynomial'...................OK
+// Test  20:  'THnSparse 1D' with 'Polynomial'......................OK
+// Test  21:  'Histogram 2D Variable' with 'Poly2D'.................OK
+// Test  22:  'Histogram 2D' with 'Poly2D'..........................OK
+// Test  23:  'TGraph 2D' with 'Poly2D'.............................OK
+// Test  24:  'TGraphErrors 2DGE' with 'Poly2D'.....................OK
+// Test  25:  'THnSparse 2D' with 'Poly2D'..........................OK
+
+// Test unbinned fits
+
+// Test  26:  'tree' with 'gausn'...................................OK
+// Test  27:  'tree' with 'gaus2Dn'.................................OK
+// Test  28:  'tree' with 'gausND'..................................OK
+
+// ****************************************************************************
+// stressHistoFit: Real Time =  37.49 seconds Cpu Time =  37.24 seconds
+//  ROOTMARKS = 2663.8 ROOT version: 5.27/01	trunk@32822
+// ****************************************************************************
+//
 //                                                                               //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 
@@ -445,7 +446,10 @@ template <typename T>
 void printTestName(T* object, TF1* func)
 {
    gTestIndex++;
-   string str = "Test  " + ROOT::Math::Util::ToString(gTestIndex) + ":  '";
+   string str = "Test  ";
+   if (gTestIndex < 10) str += " ";  // add an extra space
+   str += ROOT::Math::Util::ToString(gTestIndex);
+   str += ":  '";
    str += object->GetName();
    str += "' with '";
    str += func->GetName();
