@@ -3,6 +3,10 @@
 #ifndef ROOT_stressIterators
 #define ROOT_stressIterators
 
+#ifdef WIN32
+#pragma warning(disable: 4290)
+#endif
+
 static Int_t gCount = 0;
 
 // Here we have a collection of functors and functions used by the test suit
