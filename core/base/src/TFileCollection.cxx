@@ -606,10 +606,10 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 
    // Define the server reference string
    TUri uri(server);
-   TString srv, scheme("root"), port("1094");
+   TString srv, scheme("root"), port;
    if (uri.GetScheme() != "") scheme = uri.GetScheme();
-   if (uri.GetPort() != "") port= uri.GetPort();
-   srv.Form("%s://%s:%s", scheme.Data(), TUrl(server).GetHostFQDN(), port.Data());
+   if (uri.GetPort() != "") port.Form(":%s", uri.GetPort().Data());
+   srv.Form("%s://%s%s", scheme.Data(), TUrl(server).GetHostFQDN(), port.Data());
    if (gDebug > 0)
       Info("GetFilesOnServer", "searching for files on server: '%s' (input: '%s')", srv.Data(), server);
 
@@ -627,16 +627,15 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
 
    // We look for URL starting with srv
    srv.Insert(0, "^");
-   srv += "*";
 
    // Go through the list
    TIter nxf(fList);
    TFileInfo *fi = 0;
    while ((fi = (TFileInfo *)nxf())) {
       TUrl *xu = 0;
-      if ((xu = fi->FindByUrl(srv.Data(), kTRUE))) {
+      if ((xu = fi->FindByUrl(srv.Data()))) {
          // Create a new TFileInfo object
-         TFileInfo *nfi = new TFileInfo(xu->GetUrl(kTRUE), fi->GetSize(),
+         TFileInfo *nfi = new TFileInfo(xu->GetUrl(), fi->GetSize(),
                                         fi->GetUUID()->AsString(), fi->GetMD5()->AsString());
          if (fi->GetMetaDataList()) {
             TIter nxm(fi->GetMetaDataList());
@@ -648,7 +647,7 @@ TFileCollection *TFileCollection::GetFilesOnServer(const char *server)
          if (fi->TestBit(TFileInfo::kStaged)) nfi->SetBit(TFileInfo::kStaged);
          if (fi->TestBit(TFileInfo::kCorrupted)) nfi->SetBit(TFileInfo::kCorrupted);
          if (gDebug > 1)
-            Info("GetFilesOnServer", "adding: %s", xu->GetUrl(kTRUE));
+            Info("GetFilesOnServer", "adding: %s", xu->GetUrl());
          fc->Add(nfi);
       }
    }
@@ -700,10 +699,10 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude)
       while (srvs.Tokenize(s, from, ",")) {
          uri.SetUri(s.Data());
          scheme = "root";
-         port = "1094";
+         port = "";
          if (uri.GetScheme() != "") scheme = uri.GetScheme();
-         if (uri.GetPort() != "") port= uri.GetPort();
-         srv.Form("%s://%s:%s", scheme.Data(), TUrl(s.Data()).GetHostFQDN(), port.Data());
+         if (uri.GetPort() != "") port.Form(":%s", uri.GetPort().Data());
+         srv.Form("%s://%s%s", scheme.Data(), TUrl(s.Data()).GetHostFQDN(), port.Data());
          // Add
          excl->Add(new TObjString(srv.Data()));
       }
@@ -726,14 +725,14 @@ TMap *TFileCollection::GetFilesPerServer(const char *exclude)
       TUrl *xurl = 0;
       while ((xurl = fi->NextUrl())) {
          // Find the key for this server
-         uri.SetUri(xurl->GetUrl(kTRUE));
-         if (xurl->GetPort() > 0) {
-            key.Form("%s://%s:%d", uri.GetScheme().Data(), xurl->GetHostFQDN(), xurl->GetPort());
-         } else {
-            key.Form("%s://%s", uri.GetScheme().Data(), xurl->GetHostFQDN());
-         }
+         key.Form("%s://%s", xurl->GetProtocol(), xurl->GetHostFQDN());
          // Check if this has to be ignored
          if (excl && excl->FindObject(key.Data())) continue;
+         // Complete the key, if needed, and recheck
+         if (xurl->GetPort() > 0) {
+            key += TString::Format(":%d", xurl->GetPort());
+            if (excl && excl->FindObject(key.Data())) continue;
+         }
          // Get the map entry for this key
          TPair *ent = 0;
          if (!(ent = (TPair *) dsmap->FindObject(key.Data()))) {
