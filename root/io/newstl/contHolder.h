@@ -16,7 +16,6 @@
 #include "TestSetOrVerify.h"
 
 class TEST_CONT_HOLDER : public TObject {
-
 public:   
 
    TEST_CONT_HOLDER() : TObject()

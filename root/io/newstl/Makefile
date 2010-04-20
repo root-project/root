@@ -97,7 +97,7 @@ stllibs: directories $(FTEST_DLL) $(HOLDER_DLL) TestHelpers_C.$(DllSuf)
 #	@touch $@
 
 ifeq ($(PLATFORM),win32)
-$(LIBDIR)dtest_C.$(DllSuf) : $(LIBDIR)dequeHolder_C.$(DllSuf)
+$(LIBDIR)dtest_C.$(DllSuf) : $(LIBDIR)dequeHolder_C.$(DllSuf) 
 $(LIBDIR)ltest_C.$(DllSuf) : $(LIBDIR)listHolder_C.$(DllSuf)
 $(LIBDIR)vtest_C.$(DllSuf) : $(LIBDIR)vectorHolder_C.$(DllSuf)
 $(LIBDIR)ttest_C.$(DllSuf) : $(LIBDIR)multisetHolder_C.$(DllSuf)
@@ -106,13 +106,13 @@ $(LIBDIR)stest_C.$(DllSuf) : $(LIBDIR)setHolder_C.$(DllSuf)
 $(LIBDIR)ntest_C.$(DllSuf) : $(LIBDIR)multimapHolder_C.$(DllSuf)
 endif
 
-$(LIBDIR)dtest_C.$(DllSuf) : test.C dequeHolder.h
-$(LIBDIR)ltest_C.$(DllSuf) : test.C listHolder.h
-$(LIBDIR)vtest_C.$(DllSuf) : test.C vectorHolder.h
-$(LIBDIR)stest_C.$(DllSuf) : test.C setHolder.h
-$(LIBDIR)ttest_C.$(DllSuf) : test.C multisetHolder.h
-$(LIBDIR)mtest_C.$(DllSuf) : test.C mapHolder.h
-$(LIBDIR)ntest_C.$(DllSuf) : test.C multimapHolder.h
+$(LIBDIR)dtest_C.$(DllSuf) : test.C dequeHolder.h $(ROOTCORELIBS)
+$(LIBDIR)ltest_C.$(DllSuf) : test.C listHolder.h  $(ROOTCORELIBS)
+$(LIBDIR)vtest_C.$(DllSuf) : test.C vectorHolder.h  $(ROOTCORELIBS)
+$(LIBDIR)stest_C.$(DllSuf) : test.C setHolder.h  $(ROOTCORELIBS) 
+$(LIBDIR)ttest_C.$(DllSuf) : test.C multisetHolder.h  $(ROOTCORELIBS)
+$(LIBDIR)mtest_C.$(DllSuf) : test.C mapHolder.h  $(ROOTCORELIBS)
+$(LIBDIR)ntest_C.$(DllSuf) : test.C multimapHolder.h  $(ROOTCORELIBS)
 
 $(LIBDIR)dequeHolder_C.$(DllSuf)    : dequeHolder.h dequeHolder.C
 $(LIBDIR)listHolder_C.$(DllSuf)     : listHolder.C listHolder.h
@@ -207,3 +207,4 @@ ComplexTest.log: ComplexTest_h.$(DllSuf)
 ComplexTest: ComplexTest.log
 	$(TestDiff)
 
+# DO NOT DELETE
