@@ -13,6 +13,9 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ifneq ($(MAKECMDGOALS),clean)
+-include $(wildcard *.d)
+endif
 
 ifeq ($(FAIL),)
 referencesTest: 
