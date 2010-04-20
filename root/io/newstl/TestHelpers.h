@@ -15,7 +15,7 @@ bool IsEquiv(float orig, float copy) {
 bool IsEquiv(double orig, double copy) {
    double epsilon = 1e-14;
    double diff = orig-copy;
-//    std::cerr << "epsilon = " << epsilon 
+// std::cerr << "epsilon = " << epsilon 
 //              << " diff = " << diff 
 //              << " div  = " << diff/copy
 //              << " abs = " << TMath::Abs( diff/copy )

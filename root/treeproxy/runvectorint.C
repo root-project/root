@@ -93,6 +93,8 @@ int runvectorint(int mode = 0)
      createsel();
    } else if (mode==5) {
      usesel();
+   } else {
+     return 1;
    }
    return 0;
 }

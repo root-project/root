@@ -32,6 +32,9 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ifneq ($(MAKECMDGOALS),clean)
+-include $(wildcard *.d)
+endif
 
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
@@ -89,10 +92,10 @@ red.h:
 Track_C.$(DllSuf): Track.h
 
 forproxy.root: createvaldim3_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1  || handleError.sh --result=$$? --log=createvaldim3.log --test=$@ --rm=$@
 
 val3dimSel.h: createvaldim3_C.$(DllSuf) forproxy.root
-	$(CMDECHO) rm -f val3dimSel.h; $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1
+	$(CMDECHO) rm -f val3dimSel.h; $(CALLROOTEXE) -q -b -l createvaldim3.C+ > createvaldim3.log 2>&1  || handleError.sh --result=$$? --log=createvaldim3.log --test=$@ --rm=$@
 
 createvaldim3_C.$(DllSuf): createvaldim3.C Track_C.$(DllSuf)
 	$(BuildWithLib)
@@ -115,38 +118,38 @@ valdim3: valdim3.log
 	$(TestDiff)
 
 vec.root: $(CORELIBS) runvectorint_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'runvectorint.C+(3)' > vec.create.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'runvectorint.C+(3)' > vec.create.log 2>&1 || handleError.sh --result=$$? --log=vec.create.log --test=$@ --rm=$@
 
 vectorintSel.h: dude.h dude.C $(CORELIBS) runvectorint_C.$(DllSuf) vec.root
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'runvectorint.C+(4)' > vectorintSel_h.create.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'runvectorint.C+(4)' > vectorintSel_h.create.log 2>&1 || handleError.sh --result=$$? --log=vectorintSel_h.create.log --test=$@ --rm=$@
 
 #vectorintSel_h.$(DllSuf): vectorintSel.h dude.h dude.C vec.root
 	
 vectorint.clog: vectorintSel_h.$(DllSuf) $(CORELIBS) runvectorint_C.$(DllSuf) dude.C vec.root vectorintSel.h
-	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorint.C+(5)' > vectorint.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorint.C+(5)' > vectorint.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@ 
 
 vectorint: vectorint.clog
 	$(TestDiff)
 
 vectorintEmuSel.h: dude.h dude.cxx $(CORELIBS) runvectorintEmu_C.$(DllSuf) vec.root
-	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(4)' > vectorintEmuSel_h.create.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(4)' > vectorintEmuSel_h.create.log 2>&1 || handleError.sh --result=$$? --log=vectorintEmuSel_h.create.log --test=$@ --rm=$@
 	
 #vectorintEmuSel_h.$(DllSuf): dude.h dude.cxx
 	
 vectorintEmu.clog: vectorintEmuSel_h.$(DllSuf) $(CORELIBS) runvectorintEmu_C.$(DllSuf) vec.root dude.cxx vectorintEmuSel.h vectorintEmu.ref
-	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(5)' 2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > vectorintEmu.clog 2>&1
+	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(5)' 2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > vectorintEmu.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@
 
 vectorintEmu: vectorintEmu.clog
 	$(TestDiff)
 
 make_tuple.log: runmake_tuple.C make_tuple.C make_tuple_draw.C  $(CORELIBS) 
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l runmake_tuple.C 2>&1 | $(hideLibraryCreation) > make_tuple.log
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runmake_tuple.C 2>&1 | $(hideLibraryCreation) > make_tuple.log || handleError.sh --result=$$? --log=$@ --test=$@
 
 make_tuple: make_tuple.log
 	$(TestDiff)
 
 friendchain.log: runfriendchain.C vertex.C make_chains.cxx  $(CORELIBS) 
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l runfriendchain.C 2>&1 | $(hideLibraryCreation) > friendchain.log
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l runfriendchain.C 2>&1 | $(hideLibraryCreation) > friendchain.log || handleError.sh --result=$$? --log=$@ --test=$@
 
 friendchain: friendchain.log
 	$(TestDiff)
