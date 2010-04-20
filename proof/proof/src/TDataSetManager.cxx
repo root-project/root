@@ -737,9 +737,9 @@ TString TDataSetManager::CreateUri(const char *dsGroup, const char *dsUser,
 
 //______________________________________________________________________________
 Bool_t TDataSetManager::ParseUri(const char *uri,
-                                      TString *dsGroup, TString *dsUser,
-                                      TString *dsName, TString *dsTree,
-                                      Bool_t onlyCurrent, Bool_t wildcards)
+                                 TString *dsGroup, TString *dsUser,
+                                 TString *dsName, TString *dsTree,
+                                 Bool_t onlyCurrent, Bool_t wildcards)
 {
    // Parses a (relative) URI that describes a DataSet on the cluster.
    // The input 'uri' should be in the form '[[/group/]user/]dsname[#[subdir/]objname]',
@@ -824,7 +824,7 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
    }
 
    // Construct regexp whitelist for checking illegal characters in user/group
-   TPRegexp wcExp (wildcards ? "^(?:[A-Za-z0-9-*]*|[*])$" : "^[A-Za-z0-9-]*$");
+   TPRegexp wcExp (wildcards ? "^(?:[A-Za-z0-9-*_]*|[*])$" : "^[A-Za-z0-9-_]*$");
 
    // Check for illegal characters in all components
    if (!wcExp.Match(group)) {
@@ -837,8 +837,8 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
       return kFALSE;
    }
 
-   if (name.Contains(TRegexp("[^A-Za-z0-9-._]"))) {
-      Error("ParseUri", "illegal characters in dataset name (uri: '%s', name: '%s')", uri, name.Data());
+   if (!wcExp.Match(name)) {
+      Error("ParseUri", "illegal characters in name (uri: '%s', name: '%s')", uri, name.Data());
       return kFALSE;
    }
 
