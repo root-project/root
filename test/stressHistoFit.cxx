@@ -440,10 +440,12 @@ public:
 };
 
 // Print the Name of the test
+int gTestIndex = 0; 
 template <typename T>
 void printTestName(T* object, TF1* func)
 {
-   string str = "Test For Object '";
+   gTestIndex++;
+   string str = "Test  " + ROOT::Math::Util::ToString(gTestIndex) + ":  '";
    str += object->GetName();
    str += "' with '";
    str += func->GetName();
