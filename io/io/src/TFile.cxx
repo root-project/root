@@ -2760,7 +2760,10 @@ void TFile::WriteStreamerInfo()
    if (list.GetSize() == 0) return;
    fClassIndex->fArray[0] = 2; //to prevent adding classes in TStreamerInfo::TagFile
 
-   list.Add(&listOfRules);
+   if (listOfRules.GetEntries()) {
+      // Only the list of rules if we have something to say.
+      list.Add(&listOfRules);
+   }
    
    // always write with compression on
    Int_t compress = fCompress;
