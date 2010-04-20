@@ -2420,10 +2420,10 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
       if ( build_loc.Length() > (len+1) ) {
          builddep += " \"-p";
          if (build_loc[len] == '/') {
-            builddep += ( build_loc.Data() + len + 1 );
+            R__AddPath(builddep, build_loc.Data() + len + 1 );
          } else {
             // Case of dir\\name
-            builddep += ( build_loc.Data() + len + 2 );
+            R__AddPath(builddep, build_loc.Data() + len + 2 );
          }         
          builddep += "/\" ";
       }
@@ -2446,7 +2446,18 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    builddep += " 2>&1 ";
 
    TString adddictdep = "echo ";
-   R__AddPath(adddictdep,library);
+   if (library.BeginsWith(gSystem->WorkingDirectory())) {
+      Int_t len = strlen(gSystem->WorkingDirectory());
+      if ( library.Length() > (len+1) ) {
+         if (library[len] == '/') {
+            R__AddPath(adddictdep,library.Data() + len + 1);
+         } else {
+            R__AddPath(adddictdep,library.Data() + len + 2);            
+         }
+      } else {
+         R__AddPath(adddictdep,library);
+      }
+   }
    adddictdep += ": ";
    {
       char *cintdictversion = gSystem->Which(incPath,"cintdictversion.h");
