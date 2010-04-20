@@ -2390,7 +2390,7 @@ static void R__AddPath(TString &target, const TString &path) {
 #endif
 
 #ifndef WIN32
-static void R__WriteDependencyFile(const TString & /* build_loc */, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
+static void R__WriteDependencyFile(const TString & build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
 #else
 static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
@@ -2415,6 +2415,21 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    TString builddep = "rmkdepend \"-f";
    builddep += depfilename;
    builddep += "\" -o_" + extension + "." + gSystem->GetSoExt() + " ";
+   if (build_loc.BeginsWith(gSystem->WorkingDirectory())) {
+      Int_t len = strlen(gSystem->WorkingDirectory());
+      if ( build_loc.Length() > (len+1) ) {
+         builddep += " \"-p";
+         if (build_loc[len] == '/') {
+            builddep += ( build_loc.Data() + len + 1 );
+         } else {
+            // Case of dir\\name
+            builddep += ( build_loc.Data() + len + 2 );
+         }         
+         builddep += "/\" ";
+      }
+   } else {
+      builddep += " \"-p" + build_loc + "/\" ";
+   }
    builddep += " -Y -- ";
 #ifndef ROOTINCDIR
    TString rootsys = gSystem->Getenv("ROOTSYS");
@@ -2425,7 +2440,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    builddep += includes;
    builddep += defines;
    builddep += " -- \"";
-   builddep += filename;
+   builddep += gSystem->BaseName(filename);
    builddep += "\" > ";
    builddep += stderrfile;
    builddep += " 2>&1 ";
