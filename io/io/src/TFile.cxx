@@ -2430,7 +2430,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (TClassEdit::IsSTLCont(info->GetName())) {
          std::vector<std::string> inside;
          int nestedLoc;
-         TClassEdit::GetSplit( info->GetName(), inside, nestedLoc );
+         TClassEdit::GetSplit( info->GetName(), inside, nestedLoc, TClassEdit::kLong64 );
          Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
          TClass *key = TClass::GetClass(inside[1].c_str());
          if (key) {

@@ -16,10 +16,10 @@
 namespace std {} using namespace std;
 
 //______________________________________________________________________________
-TClassEdit::TSplitType::TSplitType(const char *type2split) : fName(type2split), fNestedLocation(0)
+TClassEdit::TSplitType::TSplitType(const char *type2split, EModType mode) : fName(type2split), fNestedLocation(0)
 {
    // default constructor
-   TClassEdit::GetSplit(type2split, fElements, fNestedLocation);
+   TClassEdit::GetSplit(type2split, fElements, fNestedLocation, mode);
 }
 
 //______________________________________________________________________________
@@ -434,7 +434,7 @@ string TClassEdit::GetLong64_Name(const string& original)
 }
 
 //______________________________________________________________________________
-int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLoc)
+int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLoc, EModType mode)
 {
    ///////////////////////////////////////////////////////////////////////////
    //  Stores in output (after emptying it) the splited type.
@@ -450,7 +450,8 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    output.clear();
    if (strlen(type)==0) return 0;
   
-   string full = CleanType(type, 1 /* keepInnerConst */);
+   string full( mode & kLong64 ? TClassEdit::GetLong64_Name( CleanType(type, 1 /* keepInnerConst */) )
+               : CleanType(type, 1 /* keepInnerConst */) );
    const char *t = full.c_str();
    const char *c = strchr(t,'<');
 
@@ -601,7 +602,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    string answer;
 
    // get list of all arguments
-   TSplitType arglist(typeDesc);
+   TSplitType arglist(typeDesc, (EModType) mode);
    arglist.ShortType(answer, mode);
    
    return answer;

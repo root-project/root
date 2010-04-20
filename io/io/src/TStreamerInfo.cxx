@@ -2288,7 +2288,7 @@ UInt_t TStreamerInfo::GetCheckSum(UInt_t code) const
 
       type = el->GetTypeName();
       if (TClassEdit::IsSTLCont(type)) {
-         type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+         type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault | TClassEdit::kLong64 );
       }
 
       il = type.Length();
@@ -2678,7 +2678,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                      TString enamebasic = TMakeProject::UpdateAssociativeToVector(element->GetTypeNameBasic());
                      std::vector<std::string> inside;
                      int nestedLoc;
-                     TClassEdit::GetSplit(enamebasic, inside, nestedLoc);
+                     TClassEdit::GetSplit(enamebasic, inside, nestedLoc, TClassEdit::kLong64);
                      if (inside[1][inside[1].size()-1]=='*' || inside[2][inside[2].size()-1]=='*') {
                         fprintf(sfp,"   std::for_each( (%s %s).rbegin(), (%s %s).rend(), DeleteObjectFunctor() );\n",prefix,ename,prefix,ename);
                      }
@@ -3853,6 +3853,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b.ClassBegin(TStreamerInfo::Class(), R__v);
          R__b.ClassMember("TNamed");
          TNamed::Streamer(R__b);
+         fName = TClassEdit::GetLong64_Name( fName.Data() ).c_str();
          R__b.ClassMember("fCheckSum","UInt_t");
          R__b >> fCheckSum;
          R__b.ClassMember("fClassVersion","Int_t");
@@ -3867,6 +3868,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       }
       //====process old versions before automatic schema evolution
       TNamed::Streamer(R__b);
+      fName = TClassEdit::GetLong64_Name( fName.Data() ).c_str();
       R__b >> fCheckSum;
       R__b >> fClassVersion;
       fOnFileClassVersion = fClassVersion;

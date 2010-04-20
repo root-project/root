@@ -2303,7 +2303,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
    
-   TClassEdit::TSplitType splitname( name );
+   TClassEdit::TSplitType splitname( name, TClassEdit::kLong64 );
 
    if (!cl) {
       // Try the name where we strip out the STL default template arguments
@@ -2315,6 +2315,11 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          resolvedName = TClassEdit::ResolveTypedef(resolvedName.c_str(),kTRUE);
          if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
       }
+      if (!cl) {
+         // Try with Long64_t
+         resolvedName = TClassEdit::GetLong64_Name(resolvedName);
+         if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+      }         
    }
 
    if (cl) {

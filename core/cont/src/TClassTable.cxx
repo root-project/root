@@ -248,7 +248,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       new TClassTable;
 
    // Only register the name without the default STL template arguments ...
-   TClassEdit::TSplitType splitname( cname );
+   TClassEdit::TSplitType splitname( cname, TClassEdit::kLong64 );
    std::string shortName;
    splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
 
