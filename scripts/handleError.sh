@@ -34,7 +34,7 @@ if [ "x$logfile" != "x" ] ; then
      echo "'root.exe -b -l -q $testname' exited with error code: $result" >> $logfile
   fi
 fi
-if [ "x$toremove" != "x" ] ; then 
+if [ "x$toremove" != "x" -a -e $toremove ] ; then 
   echo handleError.sh: '*** Deleting file' $toremove
   rm $toremove
 fi
