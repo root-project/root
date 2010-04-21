@@ -2273,7 +2273,6 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       delete rules;
       TVirtualStreamerInfo *alternate = (TVirtualStreamerInfo*)list->FindObject(info->GetName());
       if (alternate) {
-         fprintf(stderr,"%p %s %p\n",alternate,alternate->GetName(),alternate->GetClass());
          if ((info->GetClass() && info->GetClassVersion() == info->GetClass()->GetClassVersion())
              || (info->GetClassVersion() > alternate->GetClassVersion()) ) {
             list->AddAfter(alternate, info);
