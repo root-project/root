@@ -156,10 +156,6 @@ the behavior of the principal components (<IMG
 to the user all the means of understanding his data.
 
 <P>
-A short outline of the method of Principal Components is given in
-subsection&nbsp;<A HREF="prin_node1.html#sec:method">1.3</A>.
-
-<P>
 
 <H2><A NAME="SECTION00013000000000000000"></A>
 <A NAME="sec:method"></A>
