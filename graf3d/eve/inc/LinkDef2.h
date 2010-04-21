@@ -60,7 +60,9 @@
 // TEveDigitSet
 #pragma link C++ class TEveDigitSet+;
 #pragma link C++ class TEveDigitSetEditor+;
+#pragma link C++ class TEveDigitSetGL+;
 #pragma link C++ typedef TEveDigitSet::Callback_foo;
+#pragma link C++ typedef TEveDigitSet::TooltipCB_foo;
 
 // TEveQuadSet
 #pragma link C++ class TEveQuadSet+;

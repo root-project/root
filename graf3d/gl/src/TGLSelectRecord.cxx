@@ -14,15 +14,18 @@
 
 #include <string.h>
 
-//______________________________________________________________________
+//==============================================================================
 // TGLSelectRecordBase
+//==============================================================================
+
+//______________________________________________________________________
 //
 // Base class for select records.
 // Supports initialization from a raw GL record (UInt_t*) and
 // copies the name-data into internal array.
 //
 
-ClassImp(TGLSelectRecordBase)
+ClassImp(TGLSelectRecordBase);
 
 //______________________________________________________________________________
 TGLSelectRecordBase::TGLSelectRecordBase() :
@@ -136,18 +139,18 @@ void TGLSelectRecordBase::Reset()
 }
 
 
-/**************************************************************************/
-/**************************************************************************/
+//==============================================================================
+// TGLSelectRecord
+//==============================================================================
 
 //______________________________________________________________________
-// TGLSelectRecord
 //
 // Standard selection record including information about containing
 // scene and details ob out selected object (TGLPhysicalShape*,
 // TObject* or simply a void* for foreign scenes).
 //
 
-ClassImp(TGLSelectRecord)
+ClassImp(TGLSelectRecord);
 
 //______________________________________________________________________________
 TGLSelectRecord::TGLSelectRecord() :
@@ -157,7 +160,8 @@ TGLSelectRecord::TGLSelectRecord() :
    fPhysShape   (0),
    fObject      (0),
    fSpecific    (0),
-   fMultiple    (0),
+   fMultiple    (kFALSE),
+   fHighlight   (kFALSE),
    fSecSelRes   (kNone)
 {
    // Default constructor.
@@ -171,7 +175,8 @@ TGLSelectRecord::TGLSelectRecord(UInt_t* data) :
    fPhysShape   (0),
    fObject      (0),
    fSpecific    (0),
-   fMultiple    (0),
+   fMultiple    (kFALSE),
+   fHighlight   (kFALSE),
    fSecSelRes   (kNone)
 {
    // Constructor from raw GL-select record.
@@ -186,6 +191,7 @@ TGLSelectRecord::TGLSelectRecord(const TGLSelectRecord& rec) :
    fObject      (rec.fObject),
    fSpecific    (rec.fSpecific),
    fMultiple    (rec.fMultiple),
+   fHighlight   (rec.fHighlight),
    fSecSelRes   (kNone)
 {
    // Copy constructor.
@@ -211,6 +217,7 @@ TGLSelectRecord& TGLSelectRecord::operator=(const TGLSelectRecord& rec)
       fObject      = rec.fObject;
       fSpecific    = rec.fSpecific;
       fMultiple    = rec.fMultiple;
+      fHighlight   = rec.fHighlight;
       fSecSelRes   = rec.fSecSelRes;
    }
    return *this;
@@ -228,7 +235,8 @@ void TGLSelectRecord::Set(UInt_t* data)
    fPhysShape   = 0;
    fObject      = 0;
    fSpecific    = 0;
-   fMultiple    = 0;
+   fMultiple    = kFALSE;
+   fHighlight   = kFALSE;
    fSecSelRes   = kNone;
 }
 
@@ -243,7 +251,8 @@ void TGLSelectRecord::Reset()
    fPhysShape   = 0;
    fObject      = 0;
    fSpecific    = 0;
-   fMultiple    = 0;
+   fMultiple    = kFALSE;
+   fHighlight   = kFALSE;
    fSecSelRes   = kNone;
 }
 
@@ -273,16 +282,16 @@ Bool_t TGLSelectRecord::AreSameSelectionWise(const TGLSelectRecord& r1,
 }
 
 
-/**************************************************************************/
-/**************************************************************************/
+//==============================================================================
+// TGLOvlSelectRecord
+//==============================================================================
 
 //______________________________________________________________________
-// TGLOvlSelectRecord
 //
 // Selection record for overlay objects.
 //
 
-ClassImp(TGLOvlSelectRecord)
+ClassImp(TGLOvlSelectRecord);
 
 //______________________________________________________________________________
 TGLOvlSelectRecord::TGLOvlSelectRecord() :

@@ -40,7 +40,7 @@ ClassImp(TGLObject);
 TMap TGLObject::fgGLClassMap;
 
 //______________________________________________________________________________
-Bool_t TGLObject::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
+Bool_t TGLObject::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
    // Decide if display-list should be used for this pass rendering,
    // as determined by rnrCtx.
@@ -48,7 +48,8 @@ Bool_t TGLObject::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
    if (!fDLCache ||
        !fScene   ||
        (rnrCtx.SecSelection() && SupportsSecondarySelect()) ||
-       (fMultiColor && (rnrCtx.HighlightOutline() || rnrCtx.IsDrawPassOutlineLine())))
+       (fMultiColor && (rnrCtx.HighlightOutline() || rnrCtx.IsDrawPassOutlineLine())) ||
+       (AlwaysSecondarySelect() && rnrCtx.Highlight()))
    {
       return kFALSE;
    }

@@ -61,7 +61,10 @@ public:
                       kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY,
                       kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY };
 
-   enum ESecSelType { kOnRequest, kOnKeyMod1 };
+   enum ESecSelType { // When to do secondary-selection:
+      kOnRequest,     // - on request - when Mod1 is pressed or logical-shape requests it;
+      kOnKeyMod1      // - only when Mod1 is pressed.
+   };
 
 private:
    TGLViewer(const TGLViewer &);             // Not implemented
@@ -346,10 +349,15 @@ public:
 
    virtual void PostSceneBuildSetup(Bool_t resetCameras);
 
+   virtual void Activated() { Emit("Activated()"); } // *SIGNAL*
+
    virtual void MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t); // *SIGNAL*
    virtual void MouseOver(TGLPhysicalShape*); // *SIGNAL*
    virtual void MouseOver(TGLPhysicalShape*, UInt_t state); // *SIGNAL*
-   virtual void Activated() { Emit("Activated()"); } // *SIGNAL*
+   virtual void MouseOver(TObject *obj, UInt_t state); // *SIGNAL*
+   virtual void ReMouseOver(TObject *obj, UInt_t state); // *SIGNAL*
+   virtual void UnMouseOver(TObject *obj, UInt_t state); // *SIGNAL*
+
    virtual void Clicked(TObject *obj); //*SIGNAL*
    virtual void Clicked(TObject *obj, UInt_t button, UInt_t state); //*SIGNAL*
    virtual void ReClicked(TObject *obj, UInt_t button, UInt_t state); //*SIGNAL*

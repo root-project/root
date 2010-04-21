@@ -45,7 +45,7 @@ public:
    virtual void   SetBBox();
 
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
-   virtual void   DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* ps) const;
+   virtual void   DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* ps, Int_t lvl=-1) const;
 
    virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }

@@ -116,6 +116,7 @@ public:
 
    virtual const char* GetElementName()  const;
    virtual const char* GetElementTitle() const;
+   virtual TString     GetHighlightTooltip() { return TString(GetElementTitle()); }
    virtual void SetElementName (const char* name);
    virtual void SetElementTitle(const char* title);
    virtual void SetElementNameTitle(const char* name, const char* title);
@@ -324,10 +325,12 @@ public:
    virtual void SelectElement(Bool_t state);
    virtual void IncImpliedSelected();
    virtual void DecImpliedSelected();
+   virtual void UnSelected();
 
    virtual void HighlightElement(Bool_t state);
    virtual void IncImpliedHighlighted();
    virtual void DecImpliedHighlighted();
+   virtual void UnHighlighted();
 
    virtual void FillImpliedSelectedSet(Set_t& impSelSet);
 

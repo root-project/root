@@ -77,13 +77,14 @@ public:
 
 protected:
    // Secondary data (scene dependent) - use
-   // TGLSceneBase::ResolveSelectRecord to fill.
+   // TGLSceneBase::ResolveSelectRecord() to fill.
    Bool_t            fTransparent;
    TGLSceneInfo     *fSceneInfo; // SceneInfo
    TGLPhysicalShape *fPhysShape; // PhysicalShape, if applicable
    TObject          *fObject;    // Master TObject, if applicable
    void             *fSpecific;  // Scene specific, if applicable
-   Bool_t            fMultiple;  // Mutliple selection, requested by event handler
+   Bool_t            fMultiple;  // Mutliple selection requested (set by event-handler).
+   Bool_t            fHighlight; // Requested for highlight (set by event-handler).
 
    ESecSelResult     fSecSelRes; // Result of ProcessSelection;
 
@@ -104,6 +105,7 @@ public:
    TObject          * GetObject()      const { return fObject; }
    void             * GetSpecific()    const { return fSpecific; }
    Bool_t             GetMultiple()    const { return fMultiple; }
+   Bool_t             GetHighlight()   const { return fHighlight; }
 
    ESecSelResult      GetSecSelResult() const { return fSecSelRes; }
 
@@ -113,6 +115,7 @@ public:
    void SetObject     (TObject* obj)           { fObject = obj; }
    void SetSpecific   (void* spec)             { fSpecific = spec; }
    void SetMultiple   (Bool_t multi)           { fMultiple = multi; }
+   void SetHighlight  (Bool_t hlt)             { fHighlight = hlt; }
 
    void SetSecSelResult(ESecSelResult r)       { fSecSelRes = r; }
 

@@ -97,7 +97,7 @@ public:
    virtual void     Draw(TGLRnrCtx& rnrCtx) const;
    virtual void     DirectDraw(TGLRnrCtx& rnrCtx) const = 0; // Actual draw method (non DL cached)
 
-   virtual void     DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp) const;
+   virtual void     DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl=-1) const;
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kFALSE; }
 

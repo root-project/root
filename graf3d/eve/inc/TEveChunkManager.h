@@ -75,19 +75,30 @@ public:
       Int_t             fNextChunk;
       Int_t             fAtomsToGo;
 
-      iterator(TEveChunkManager* p) :
-         fPlex(p), fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
-      iterator(TEveChunkManager& p) :
-         fPlex(&p), fCurrent(0), fAtomIndex(-1), fNextChunk(0), fAtomsToGo(0) {}
-      iterator(const iterator& i) :
-         fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex), fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo) {}
+      const std::set<Int_t>           *fSelection;
+      std::set<Int_t>::const_iterator  fSelectionIterator;
 
-      iterator& operator=(const iterator& i)
-      { fPlex = i.fPlex; fCurrent = i.fCurrent; fAtomIndex = i.fAtomIndex; fNextChunk = i.fNextChunk; fAtomsToGo = i.fAtomsToGo; return *this; }
+      iterator(TEveChunkManager* p) :
+         fPlex(p), fCurrent(0), fAtomIndex(-1),
+         fNextChunk(0), fAtomsToGo(0), fSelection(0) {}
+      iterator(TEveChunkManager& p) :
+         fPlex(&p), fCurrent(0), fAtomIndex(-1),
+         fNextChunk(0), fAtomsToGo(0), fSelection(0) {}
+      iterator(const iterator& i) :
+         fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex),
+         fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo),
+         fSelection(i.fSelection), fSelectionIterator(i.fSelectionIterator) {}
+
+      iterator& operator=(const iterator& i) {
+         fPlex = i.fPlex; fCurrent = i.fCurrent; fAtomIndex = i.fAtomIndex;
+         fNextChunk = i.fNextChunk; fAtomsToGo = i.fAtomsToGo;
+         fSelection = i.fSelection; fSelectionIterator = i.fSelectionIterator;
+         return *this;
+      }
 
       Bool_t  next();
-      void    reset() { fCurrent = 0; fNextChunk = fAtomsToGo = 0; }
-
+      void    reset() { fCurrent = 0; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
+      
       Char_t* operator()() { return fCurrent; }
       Char_t* operator*()  { return fCurrent; }
       Int_t   index()      { return fAtomIndex; }
@@ -97,33 +108,12 @@ public:
 };
 
 
-/******************************************************************************/
-
 //______________________________________________________________________________
 inline Char_t* TEveChunkManager::NewAtom()
 {
    Char_t *a = (fSize >= fCapacity) ? NewChunk() : Atom(fSize);
    ++fSize;
    return a;
-}
-
-//______________________________________________________________________________
-inline Bool_t TEveChunkManager::iterator::next()
-{
-   if (fAtomsToGo <= 0) {
-      if (fNextChunk < fPlex->VecSize()) {
-         fCurrent   = fPlex->Chunk(fNextChunk);
-         fAtomsToGo = fPlex->NAtoms(fNextChunk);
-         ++fNextChunk;
-      } else {
-         return kFALSE;
-      }
-   } else {
-      fCurrent += fPlex->S();
-   }
-   ++fAtomIndex;
-   --fAtomsToGo;
-   return kTRUE;
 }
 
 

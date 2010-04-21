@@ -37,7 +37,7 @@ public:
    TGLObject() : TGLLogicalShape(0), fMultiColor(kFALSE) {}
    virtual ~TGLObject() {}
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx & rnrCtx) const;
+   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
 
    // Kept from TGLLogicalShape
    // virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }

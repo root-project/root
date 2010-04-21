@@ -75,7 +75,8 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    fDisableLigting (kTRUE),
    fHistoButtons   (kTRUE),
    fEmitSignals    (kFALSE),
-   fCallbackFoo    (0)
+   fCallbackFoo    (0),
+   fTooltipCBFoo   (0)
 {
    // Constructor.
 
@@ -103,6 +104,7 @@ TEveDigitSet::DigitBase_t* TEveDigitSet::NewDigit()
 {
    // Protected method called whenever a new digit is added.
 
+   fLastIdx   = fPlex.Size();
    fLastDigit = new (fPlex.NewAtom()) DigitBase_t(fDefaultValue);
    return fLastDigit;
 }
@@ -123,7 +125,6 @@ void TEveDigitSet::ReleaseIds()
       fDigitIds->Expand(0);
    }
 }
-
 
 //------------------------------------------------------------------------------
 
@@ -151,6 +152,55 @@ void TEveDigitSet::SetMainColor(Color_t color)
       fFrame->StampBackPtrElements(kCBColorSelection);
    }
 }
+
+//______________________________________________________________________________
+void TEveDigitSet::UnSelected()
+{
+   // Virtual function called when both fSelected is false and
+   // fImpliedSelected is 0.
+
+   fSelectedSet.clear();
+   TEveElement::UnSelected();
+}
+
+//______________________________________________________________________________
+void TEveDigitSet::UnHighlighted()
+{
+   // Virtual function called when both fHighlighted is false and
+   // fImpliedHighlighted is 0.
+
+   fHighlightedSet.clear();
+   TEveElement::UnHighlighted();
+}
+
+//______________________________________________________________________________
+TString TEveDigitSet::GetHighlightTooltip()
+{
+   // Return tooltip for highlighted element if always-sec-select is set.
+   // Otherwise return the tooltip for this element.
+
+   if (fHighlightedSet.empty()) return "";
+
+   if (GetAlwaysSecSelect())
+   {
+      if (fTooltipCBFoo)
+      {
+         return (fTooltipCBFoo)(this, *fHighlightedSet.begin());
+      }
+      else if (fDigitIds)
+      {
+         TObject *o = GetId(*fHighlightedSet.begin());
+         if (o)
+            return TString(o->GetName());
+      }
+      return TString::Format("%s; idx=%d", GetElementName(), *fHighlightedSet.begin());
+   }
+   else
+   {
+      return TEveElement::GetHighlightTooltip();
+   }
+}
+
 
 /******************************************************************************/
 /******************************************************************************/
@@ -191,6 +241,18 @@ void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
 }
 
 /******************************************************************************/
+
+//______________________________________________________________________________
+void TEveDigitSet::SetCurrentDigit(Int_t idx)
+{
+   // Set current digit -- the one that will receive calls to
+   // DigitValue/Color/Id/UserData() functions.
+   // Note that various AddXyzz() functions set the current digit to the newly
+   // added one.
+
+   fLastIdx   = idx;
+   fLastDigit = GetDigit(idx);
+}
 
 //______________________________________________________________________________
 void TEveDigitSet::DigitValue(Int_t value)
@@ -239,11 +301,11 @@ void TEveDigitSet::DigitId(TObject* id)
 {
    // Set external object reference for the last digit added.
 
-   DigitId(fPlex.Size() - 1, id);
+   DigitId(fLastIdx, id);
 }
 
 //______________________________________________________________________________
-void TEveDigitSet::DigitUserData(Long_t ud)
+void TEveDigitSet::DigitUserData(void* ud)
 {
    // Set user-data for the last digit added.
 
@@ -258,14 +320,14 @@ void TEveDigitSet::DigitId(Int_t n, TObject* id)
    if (!fDigitIds)
       fDigitIds = new TRefArray;
 
-   if (fOwnIds && fDigitIds->At(n))
+   if (fOwnIds && n < fDigitIds->GetSize() && fDigitIds->At(n))
       delete fDigitIds->At(n);
 
    fDigitIds->AddAtAndExpand(id, n);
 }
 
 //______________________________________________________________________________
-void TEveDigitSet::DigitUserData(Int_t n, Long_t ud)
+void TEveDigitSet::DigitUserData(Int_t n, void* ud)
 {
    // Set user-data for digit n.
 
@@ -281,7 +343,7 @@ TObject* TEveDigitSet::GetId(Int_t n) const
 }
 
 //______________________________________________________________________________
-Long_t TEveDigitSet::GetUserData(Int_t n) const
+void* TEveDigitSet::GetUserData(Int_t n) const
 {
    // Get user-data associated with digit n.
 
@@ -303,6 +365,7 @@ void TEveDigitSet::Paint(Option_t*)
 void TEveDigitSet::DigitSelected(Int_t idx)
 {
    // Called from renderer when a digit with index idx is selected.
+   // This is by-passed when always-secondary-select is active.
 
    DigitBase_t *qb  = GetDigit(idx);
    TObject     *obj = GetId(idx);
@@ -324,6 +387,7 @@ void TEveDigitSet::DigitSelected(Int_t idx)
 void TEveDigitSet::SecSelected(TEveDigitSet* qs, Int_t idx)
 {
    // Emit a SecSelected signal.
+   // This is by-passed when always-secondary-select is active.
 
    Long_t args[2];
    args[0] = (Long_t) qs;

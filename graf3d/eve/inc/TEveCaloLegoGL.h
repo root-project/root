@@ -128,7 +128,7 @@ public:
    virtual void   DLCachePurge();
 
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
-   virtual void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps) const;
+   virtual void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps, Int_t lvl=-1) const;
 
    virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    virtual Bool_t AlwaysSecondarySelect()   const { return kTRUE; }

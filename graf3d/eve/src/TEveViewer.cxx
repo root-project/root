@@ -21,8 +21,6 @@
 #include "TGLEmbeddedViewer.h"
 #include "TGLScenePad.h"
 
-#include "TGLPhysicalShape.h" // For handling OnMouseIdle signal
-#include "TGLLogicalShape.h"  // For handling OnMouseIdle signal
 #include "TGLEventHandler.h"
 
 #include "TApplication.h"
@@ -387,8 +385,14 @@ void TEveViewerList::Connect()
 {
    // Connect to TGLViewer class-signals.
 
-   TQObject::Connect("TGLViewer", "MouseOver(TGLPhysicalShape*,UInt_t)",
-                     "TEveViewerList", this, "OnMouseOver(TGLPhysicalShape*,UInt_t)");
+   TQObject::Connect("TGLViewer", "MouseOver(TObject*,UInt_t)",
+                     "TEveViewerList", this, "OnMouseOver(TObject*,UInt_t)");
+
+   TQObject::Connect("TGLViewer", "ReMouseOver(TObject*,UInt_t)",
+                     "TEveViewerList", this, "OnReMouseOver(TObject*,UInt_t)");
+
+   TQObject::Connect("TGLViewer", "UnMouseOver(TObject*,UInt_t)",
+                     "TEveViewerList", this, "OnUnMouseOver(TObject*,UInt_t)");
 
    TQObject::Connect("TGLViewer", "Clicked(TObject*,UInt_t,UInt_t)",
                      "TEveViewerList", this, "OnClicked(TObject*,UInt_t,UInt_t)");
@@ -483,9 +487,31 @@ void TEveViewerList::SceneDestructing(TEveScene* scene)
 // Processing of events from TGLViewers.
 /******************************************************************************/
 
+//______________________________________________________________________________
+void TEveViewerList::HandleTooltip()
+{
+   // Show / hide tooltip for various MouseOver events.
+   // Must be called from slots where sender is TGLEventHandler.
+
+   if (fShowTooltip)
+   {
+      TGLViewer       *glw = dynamic_cast<TGLViewer*>((TQObject*) gTQSender);
+      TGLEventHandler *glh = (TGLEventHandler*) glw->GetEventHandler();
+      if (gEve->GetHighlight()->NumChildren() == 1)
+      {
+         TString title(gEve->GetHighlight()->FirstChild()->GetHighlightTooltip());
+         if ( ! title.IsNull())
+            glh->TriggerTooltip(title);
+      }
+      else
+      {
+         glh->RemoveTooltip();
+      }
+   }
+}
 
 //______________________________________________________________________________
-void TEveViewerList::OnMouseOver(TGLPhysicalShape *pshape, UInt_t state)
+void TEveViewerList::OnMouseOver(TObject *obj, UInt_t /*state*/)
 {
    // Slot for global TGLViewer::MouseOver() signal.
    //
@@ -495,39 +521,53 @@ void TEveViewerList::OnMouseOver(TGLPhysicalShape *pshape, UInt_t state)
    //
    // If TEveElement::IsPickable() returns false, the element is not
    // highlighted.
+   //
+   // Highlight is always in single-selection mode.
 
-   if (state & kKeyShiftMask || state & kKeyMod1Mask)
-      return;
-
-   TObject     *obj = 0;
-   TEveElement *el  = 0;
-
-   if (pshape)
-   {
-      TGLLogicalShape* lshape = const_cast<TGLLogicalShape*>(pshape->GetLogical());
-      obj = lshape->GetExternal();
-      el  = dynamic_cast<TEveElement*>(obj);
-   }
-
+   TEveElement *el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
    gEve->GetHighlight()->UserPickedElement(el, kFALSE);
 
-   if (fShowTooltip)
-   {
-      TGLViewer       *glw = dynamic_cast<TGLViewer*>((TQObject*) gTQSender);
-      TGLEventHandler *glh = (TGLEventHandler*) glw->GetEventHandler();
-      if (gEve->GetHighlight()->NumChildren() == 1)
-      {
-         TString title(gEve->GetHighlight()->FirstChild()->GetElementTitle());
-         if ( ! title.IsNull())
-            glh->TriggerTooltip(title);
-      }
-      else
-      {
-         glh->RemoveTooltip();
-      }
-   }
+   HandleTooltip();
+}
+
+//______________________________________________________________________________
+void TEveViewerList::OnReMouseOver(TObject *obj, UInt_t /*state*/)
+{
+   // Slot for global TGLViewer::ReMouseOver().
+   //
+   // The obj is dyn-casted to the TEveElement and global selection is
+   // updated accordingly.
+   //
+   // If TEveElement::IsPickable() returns false, the element is not
+   // selected.
+
+   TEveElement* el = dynamic_cast<TEveElement*>(obj);
+   if (el && !el->IsPickable())
+      el = 0;
+   gEve->GetHighlight()->UserRePickedElement(el);
+
+   HandleTooltip();
+}
+
+//______________________________________________________________________________
+void TEveViewerList::OnUnMouseOver(TObject *obj, UInt_t /*state*/)
+{
+   // Slot for global TGLViewer::UnMouseOver().
+   //
+   // The obj is dyn-casted to the TEveElement and global selection is
+   // updated accordingly.
+   //
+   // If TEveElement::IsPickable() returns false, the element is not
+   // selected.
+
+   TEveElement* el = dynamic_cast<TEveElement*>(obj);
+   if (el && !el->IsPickable())
+      el = 0;
+   gEve->GetHighlight()->UserUnPickedElement(el);
+
+   HandleTooltip();
 }
 
 //______________________________________________________________________________
@@ -561,7 +601,6 @@ void TEveViewerList::OnReClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
-
    gEve->GetSelection()->UserRePickedElement(el);
 }
 

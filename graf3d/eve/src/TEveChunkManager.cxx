@@ -107,3 +107,53 @@ Char_t* TEveChunkManager::NewChunk()
    fCapacity += fN;
    return fChunks.back()->fArray;
 }
+
+/******************************************************************************/
+
+//______________________________________________________________________________
+Bool_t TEveChunkManager::iterator::next()
+{
+   // Go to next atom.
+
+   if (fSelection == 0)
+   {
+      if (fAtomsToGo <= 0)
+      {
+         if (fNextChunk < fPlex->VecSize())
+         {
+            fCurrent   = fPlex->Chunk(fNextChunk);
+            fAtomsToGo = fPlex->NAtoms(fNextChunk);
+            ++fNextChunk;
+         }
+         else
+         {
+            return kFALSE;
+         }
+      }
+      else
+      {
+         fCurrent += fPlex->S();
+      }
+      ++fAtomIndex;
+      --fAtomsToGo;
+      return kTRUE;
+   }
+   else
+   {
+      if (fAtomIndex == -1)
+         fSelectionIterator = fSelection->begin();
+      else
+         ++fSelectionIterator;
+
+      if (fSelectionIterator != fSelection->end())
+      {
+         fAtomIndex = *fSelectionIterator;
+         fCurrent   =  fPlex->Atom(fAtomIndex);
+         return kTRUE;
+      }
+      else
+      {
+         return kFALSE;
+      }
+   }
+}

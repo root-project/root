@@ -15,7 +15,6 @@
 #include "TEveFrameBoxGL.h"
 
 #include "TGLRnrCtx.h"
-#include "TGLSelectRecord.h"
 #include "TGLIncludes.h"
 
 //==============================================================================
@@ -31,7 +30,7 @@ ClassImp(TEveQuadSetGL);
 /******************************************************************************/
 
 //______________________________________________________________________________
-TEveQuadSetGL::TEveQuadSetGL() : TGLObject(), fM(0)
+TEveQuadSetGL::TEveQuadSetGL() : TEveDigitSetGL(), fM(0)
 {
    // Constructor.
 
@@ -46,43 +45,11 @@ Bool_t TEveQuadSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    // Set model object.
 
-   Bool_t ok = SetModelCheckClass(obj, TEveQuadSet::Class());
-   fM = ok ? dynamic_cast<TEveQuadSet*>(obj) : 0;
-   return ok;
-}
-
-//______________________________________________________________________________
-void TEveQuadSetGL::SetBBox()
-{
-   // Setup bounding box.
-
-   SetAxisAlignedBBox(fM->AssertBBox());
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-inline Bool_t TEveQuadSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
-{
-   // Set color for rendering of the specified quad.
-
-   if (fM->fSingleColor)
-   {
+   if (SetModelCheckClass(obj, TEveQuadSet::Class())) {
+      fM  = dynamic_cast<TEveQuadSet*>(obj);
       return kTRUE;
    }
-   else if (fM->fValueIsColor)
-   {
-      TGLUtil::Color4ubv((UChar_t*) & q.fValue);
-      return kTRUE;
-   }
-   else
-   {
-      UChar_t c[4];
-      Bool_t visible = fM->fPalette->ColorFromValue(q.fValue, fM->fDefaultValue, c);
-      if (visible)
-         TGLUtil::Color3ubv(c);
-      return visible;
-   }
+   return kFALSE;
 }
 
 /******************************************************************************/
@@ -135,14 +102,15 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       glPopAttrib();
    }
 
-   if (mQ.fFrame != 0 && ! rnrCtx.SecSelection())
+   if (mQ.fFrame != 0 && ! rnrCtx.SecSelection() && 
+       ! (rnrCtx.Highlight() && AlwaysSecondarySelect()))
    {
       TEveFrameBoxGL::Render(mQ.fFrame);
    }
 }
 
 //______________________________________________________________________________
-void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
+void TEveQuadSetGL::RenderQuads(TGLRnrCtx& rnrCtx) const
 {
    // GL rendering for free-quads and rectangles.
 
@@ -163,6 +131,8 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx & rnrCtx) const
    }
 
    TEveChunkManager::iterator qi(mQ.fPlex);
+   if (rnrCtx.Highlight() && fHighlightSet)
+      qi.fSelection = fHighlightSet;
 
    if (rnrCtx.SecSelection()) glPushName(0);
 
@@ -428,6 +398,8 @@ void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
    TEveQuadSet& mQ = * fM;
 
    TEveChunkManager::iterator qi(mQ.fPlex);
+   if (rnrCtx.Highlight() && fHighlightSet)
+      qi.fSelection = fHighlightSet;
 
    if (rnrCtx.SecSelection()) glPushName(0);
 
@@ -493,6 +465,8 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
    glNormal3f(0, 0, 1);
 
    TEveChunkManager::iterator qi(mQ.fPlex);
+   if (rnrCtx.Highlight() && fHighlightSet)
+      qi.fSelection = fHighlightSet;
 
    if (rnrCtx.SecSelection()) glPushName(0);
 
@@ -553,17 +527,4 @@ void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
    } // end switch quad-type
 
    if (rnrCtx.SecSelection()) glPopName();
-}
-
-/******************************************************************************/
-
-//______________________________________________________________________________
-void TEveQuadSetGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
-{
-   // Processes secondary selection from TGLViewer.
-   // Calls DigitSelected(Int_t) in the model object with index of
-   // selected point as the argument.
-
-   if (rec.GetN() < 2) return;
-   fM->DigitSelected(rec.GetItem(1));
 }

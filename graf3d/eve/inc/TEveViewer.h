@@ -20,7 +20,6 @@ class TGedEditor;
 class TGLViewer;
 class TGLSAViewer;
 class TGLEmbeddedViewer;
-class TGLPhysicalShape;
 
 class TEveScene;
 
@@ -89,6 +88,8 @@ protected:
    Float_t       fBrightness;
    Bool_t        fUseLightColorSet;
 
+   void HandleTooltip();
+
 public:
    TEveViewerList(const char* n="TEveViewerList", const char* t="");
    virtual ~TEveViewerList() {}
@@ -109,7 +110,9 @@ public:
 
    // --------------------------------
 
-   void OnMouseOver(TGLPhysicalShape* shape, UInt_t state);
+   void OnMouseOver(TObject* obj, UInt_t state);
+   void OnReMouseOver(TObject* obj, UInt_t state);
+   void OnUnMouseOver(TObject* obj, UInt_t state);
    void OnClicked(TObject *obj, UInt_t button, UInt_t state);
    void OnReClicked(TObject *obj, UInt_t button, UInt_t state);
    void OnUnClicked(TObject *obj, UInt_t button, UInt_t state);

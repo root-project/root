@@ -417,14 +417,18 @@ entry_point:
 }
 
 //______________________________________________________________________________
-void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx,const TGLPhysicalShape* pshp) const
+void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
 {
    // Draw the logical shape in highlight mode.
+   // If lvl argument is less than 0 (-1 by default), the index into color-set
+   // is taken from the physical shape itself.
 
    const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
    Int_t inner[4][2] = { { 0,-1}, { 1, 0}, { 0, 1}, {-1, 0} };
    Int_t outer[8][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
                          { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
+
+   if (lvl < 0) lvl = pshp->GetSelected();
 
    rnrCtx.SetHighlightOutline(kTRUE);
    TGLUtil::LockColor();
@@ -432,7 +436,7 @@ void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx,const TGLPhysicalShape* ps
    for (int i = first_outer; i < 8; ++i)
    {
       glViewport(vp.X() + outer[i][0], vp.Y() + outer[i][1], vp.Width(), vp.Height());
-      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
+      glColor4ubv(rnrCtx.ColorSet().Selection(lvl).CArr());
       Draw(rnrCtx);
    }
    TGLUtil::UnlockColor();

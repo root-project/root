@@ -140,6 +140,7 @@
 
 // TEveSelection
 #pragma link C++ class TEveSelection+;
+#pragma link C++ class TEveSecondarySelectable+;
 
 // GL-interface
 #pragma link C++ class TEveScene+;

@@ -571,10 +571,12 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 }
 
 //______________________________________________________________________________
-void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* pshp) const
+void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
 {
    // Draw polygons in highlight mode.
 
+   // XXXX to support highlight AND selection ...
+   if (lvl < 0) lvl = pshp->GetSelected();
 
    if ((pshp->GetSelected() == 2) && fM->fData->GetCellsSelected().size())
    {

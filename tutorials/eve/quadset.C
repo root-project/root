@@ -40,6 +40,10 @@ TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
    co->SetShowOrthographic(kTRUE);
    co->SetOrthographicMode(TGLCameraOverlay::kGridFront);
 
+   // Uncomment these two lines to get internal highlight / selection.
+   // q->SetPickable(1);
+   // q->SetAlwaysSecSelect(1);
+
    if (register)
    {
       gEve->AddElement(q);

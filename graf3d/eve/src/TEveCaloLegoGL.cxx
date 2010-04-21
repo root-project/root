@@ -1049,11 +1049,14 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
 }
 
 //______________________________________________________________________________
-void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp) const
+void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
 {
    // Draw eta-phi range in highlight mode.
 
    if (!fM->fData->GetCellsSelected().size() || pshp->GetSelected() != 2) return;
+
+   // XXXX to support highlight AND selection ...
+   if (lvl < 0) lvl = pshp->GetSelected();
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
    glDisable(GL_LIGHTING);

@@ -1803,6 +1803,8 @@ void TEveElement::SelectElement(Bool_t state)
 
    if (fSelected != state) {
       fSelected = state;
+      if (!fSelected && fImpliedSelected == 0)
+         UnSelected();
       fParentIgnoreCnt += (fSelected) ? 1 : -1;
       StampColorSelection();
    }
@@ -1823,7 +1825,19 @@ void TEveElement::DecImpliedSelected()
    // Decrease element's implied-selection count. Stamp appropriately.
 
    if (--fImpliedSelected == 0)
+   {
+      if (!fSelected)
+         UnSelected();
       StampColorSelection();
+   }
+}
+
+//______________________________________________________________________________
+void TEveElement::UnSelected()
+{
+   // Virtual function called when both fSelected is false and
+   // fImpliedSelected is 0.
+   // Nothing is done in this base-class version
 }
 
 //______________________________________________________________________________
@@ -1833,6 +1847,8 @@ void TEveElement::HighlightElement(Bool_t state)
 
    if (fHighlighted != state) {
       fHighlighted = state;
+      if (!fHighlighted && fImpliedHighlighted == 0)
+         UnHighlighted();
       fParentIgnoreCnt += (fHighlighted) ? 1 : -1;
       StampColorSelection();
    }
@@ -1853,7 +1869,19 @@ void TEveElement::DecImpliedHighlighted()
    // Decrease element's implied-highlight count. Stamp appropriately.
 
    if (--fImpliedHighlighted == 0)
+   {
+      if (!fHighlighted)
+         UnHighlighted();
       StampColorSelection();
+   }
+}
+
+//______________________________________________________________________________
+void TEveElement::UnHighlighted()
+{
+   // Virtual function called when both fHighlighted is false and
+   // fImpliedHighlighted is 0.
+   // Nothing is done in this base-class version
 }
 
 //______________________________________________________________________________

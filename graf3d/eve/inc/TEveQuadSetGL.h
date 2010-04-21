@@ -12,18 +12,16 @@
 #ifndef ROOT_TEveQuadSetGL
 #define ROOT_TEveQuadSetGL
 
-#include "TGLObject.h"
+#include "TEveDigitSetGL.h"
 #include "TEveQuadSet.h"
 
-class TEveQuadSetGL : public TGLObject
+class TEveQuadSetGL : public TEveDigitSetGL
 {
    TEveQuadSetGL(const TEveQuadSetGL&);            // Not implemented
    TEveQuadSetGL& operator=(const TEveQuadSetGL&); // Not implemented
 
 protected:
-   TEveQuadSet* fM;
-
-   Bool_t SetupColor(const TEveDigitSet::DigitBase_t& q) const;
+   TEveQuadSet     *fM;
 
    void   RenderQuads(TGLRnrCtx & rnrCtx) const;
    void   RenderLines(TGLRnrCtx & rnrCtx) const;
@@ -34,13 +32,9 @@ public:
    virtual ~TEveQuadSetGL() {}
 
    virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
 
    virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
-
-   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
    ClassDef(TEveQuadSetGL, 0); // GL-renderer for TEveQuadSet class.
 };

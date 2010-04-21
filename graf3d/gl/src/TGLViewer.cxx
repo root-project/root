@@ -1833,6 +1833,40 @@ void TGLViewer::MouseOver(TGLPhysicalShape *shape, UInt_t state)
 }
 
 //______________________________________________________________________________
+void TGLViewer::MouseOver(TObject *obj, UInt_t state)
+{
+   // Emit MouseOver signal.
+
+   Long_t args[2];
+   args[0] = (Long_t)obj;
+   args[1] = state;
+   Emit("MouseOver(TObject*,UInt_t)", args);
+}
+
+//______________________________________________________________________________
+void TGLViewer::ReMouseOver(TObject *obj, UInt_t state)
+{
+   // Emit MouseOver signal.
+
+   Long_t args[2];
+   args[0] = (Long_t)obj;
+   args[1] = state;
+   Emit("ReMouseOver(TObject*,UInt_t)", args);
+}
+
+
+//______________________________________________________________________________
+void TGLViewer::UnMouseOver(TObject *obj, UInt_t state)
+{
+   // Emit UnMouseOver signal.
+
+   Long_t args[2];
+   args[0] = (Long_t)obj;
+   args[1] = state;
+   Emit("UnMouseOver(TObject*,UInt_t)", args);
+}
+
+//______________________________________________________________________________
 void TGLViewer::Clicked(TObject *obj)
 {
    // Emit Clicked signal.

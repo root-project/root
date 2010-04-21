@@ -31,7 +31,7 @@
 ClassImp(TEveBoxSetGL);
 
 //______________________________________________________________________________
-TEveBoxSetGL::TEveBoxSetGL() : fM(0), fBoxDL(0)
+TEveBoxSetGL::TEveBoxSetGL() : TEveDigitSetGL(), fM(0), fBoxDL(0)
 {
    // Default constructor.
 
@@ -58,30 +58,6 @@ Int_t TEveBoxSetGL::PrimitiveType() const
    // render-mode specified in the model object.
 
    return (fM->fRenderMode != TEveDigitSet::kRM_Line) ? GL_QUADS : GL_LINE_LOOP;
-}
-
-//______________________________________________________________________________
-inline Bool_t TEveBoxSetGL::SetupColor(const TEveDigitSet::DigitBase_t& q) const
-{
-   // Set GL color for given primitive.
-
-   if (fM->fSingleColor)
-   {
-      return kTRUE;
-   }
-   else if (fM->fValueIsColor)
-   {
-      TGLUtil::Color4ubv((UChar_t*) & q.fValue);
-      return kTRUE;
-   }
-   else
-   {
-      UChar_t c[4];
-      Bool_t visible = fM->fPalette->ColorFromValue(q.fValue, fM->fDefaultValue, c);
-      if (visible)
-         TGLUtil::Color4ubv(c);
-      return visible;
-   }
 }
 
 //______________________________________________________________________________
@@ -185,14 +161,14 @@ void TEveBoxSetGL::MakeDisplayList() const
 /******************************************************************************/
 
 //______________________________________________________________________________
-Bool_t TEveBoxSetGL::ShouldDLCache(const TGLRnrCtx & rnrCtx) const
+Bool_t TEveBoxSetGL::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
    // Determines if display-list will be used for rendering.
    // Virtual from TGLLogicalShape.
 
    MakeDisplayList();
 
-   return TGLObject::ShouldDLCache(rnrCtx);
+   return TEveDigitSetGL::ShouldDLCache(rnrCtx);
 }
 
 //______________________________________________________________________________
@@ -228,22 +204,15 @@ Bool_t TEveBoxSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    // Set model object.
    // Virtual from TGLObject.
 
-   Bool_t isok = SetModelCheckClass(obj, TEveBoxSet::Class());
-   fM = isok ? dynamic_cast<TEveBoxSet*>(obj) : 0;
-   return isok;
+   if (SetModelCheckClass(obj, TEveBoxSet::Class())) {
+      fM = dynamic_cast<TEveBoxSet*>(obj);
+      return kTRUE;
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________
-void TEveBoxSetGL::SetBBox()
-{
-   // Fill the bounding-box data of the logical-shape.
-   // Virtual from TGLObject.
-
-   SetAxisAlignedBBox(fM->AssertBBox());
-}
-
-//______________________________________________________________________________
-void TEveBoxSetGL::RenderBoxes(TGLRnrCtx & rnrCtx) const
+void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
 {
    // GL rendering for all box-types.
 
@@ -256,6 +225,8 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx & rnrCtx) const
       boxSkip = 6 - (rnrCtx.ShapeLOD()+1)/10;
 
    TEveChunkManager::iterator bi(fM->fPlex);
+   if (rnrCtx.Highlight() && fHighlightSet)
+      bi.fSelection = fHighlightSet;
 
    switch (fM->fBoxType)
    {
@@ -383,7 +354,7 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx & rnrCtx) const
 }
 
 //______________________________________________________________________________
-void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
+void TEveBoxSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
    // Actual rendering code.
    // Virtual from TGLLogicalShape.
@@ -418,27 +389,15 @@ void TEveBoxSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
       glPopAttrib();
    }
 
-   if (mB.fFrame != 0 && ! rnrCtx.SecSelection())
+   if (mB.fFrame != 0 && ! rnrCtx.SecSelection() &&
+       ! (rnrCtx.Highlight() && AlwaysSecondarySelect()))
    {
       TEveFrameBoxGL::Render(mB.fFrame);
    }
 }
 
-/******************************************************************************/
-
 //______________________________________________________________________________
-void TEveBoxSetGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
-{
-   // Processes secondary selection from TGLViewer.
-   // Calls TPointSet3D::PointSelected(Int_t) with index of selected
-   // point as an argument.
-
-   if (rec.GetN() < 2) return;
-   fM->DigitSelected(rec.GetItem(1));
-}
-
-//______________________________________________________________________________
-void TEveBoxSetGL::Render(TGLRnrCtx & rnrCtx)
+void TEveBoxSetGL::Render(TGLRnrCtx& rnrCtx)
 {
    // Interface for direct rendering from classes that include TEveBoxSet
    // as a member.

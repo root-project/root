@@ -163,9 +163,12 @@ void TEvePolygonSetProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 }
 
 //______________________________________________________________________________
-void TEvePolygonSetProjectedGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp) const
+void TEvePolygonSetProjectedGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
 {
    // Draw polygons in highlight mode.
+
+   // XXXX to support highlight AND selection ...
+   if (lvl < 0) lvl = pshp->GetSelected();
 
    TEvePolygonSetProjected& refPS = * (TEvePolygonSetProjected*) fExternalObj;
 

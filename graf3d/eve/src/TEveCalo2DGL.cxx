@@ -436,11 +436,14 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 }
 
 //______________________________________________________________________________
-void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp) const
+void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
 {
    // Draw towers in highlight mode.
 
    static const TEveException eh("TEveCalo2DGL::DrawHighlight ");
+
+   // XXXX to support highlight AND selection ...
+   if (lvl < 0) lvl = pshp->GetSelected();
 
    if ((pshp->GetSelected() == 2) && fM->fData->GetCellsSelected().size())
    {
