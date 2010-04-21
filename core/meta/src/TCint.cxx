@@ -1352,6 +1352,8 @@ const char *TCint::TypeName(const char *typeDesc)
          strcpy(t, s+1);
       else
          strcpy(t, typeDesc);
+   } else {
+      strcpy(t, typeDesc);
    }
 
    int l = strlen(t);
