@@ -57,6 +57,7 @@ public:
    virtual void     GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle = kFALSE);
    virtual void     GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const;
    virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const;
+   virtual void     GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern=kTRUE) const;
    Double_t         GetY() const  { return fY; }
 
    virtual void     ls(Option_t *option="") const;

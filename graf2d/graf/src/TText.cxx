@@ -462,6 +462,32 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 
 
 //______________________________________________________________________________
+void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
+{
+   // Return text advance for string text
+   // if kern is true (default) kerning is taken into account. If it is false
+   // the kerning is not taken into account.
+
+   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t tsize;
+   if (wh < hh)  tsize = fTextSize*wh;
+   else          tsize = fTextSize*hh;
+
+   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
+      TTF::SetKerning(kern);
+      TTF::SetTextFont(fTextFont);
+      TTF::SetTextSize(tsize);
+      TTF::GetTextAdvance(a, (char*)text);
+   } else {
+      UInt_t h;
+      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->GetTextExtent(a, h, (char*)text);
+   }
+}
+
+
+//______________________________________________________________________________
 void TText::ls(Option_t *) const
 {
    // List this text with its attributes.
