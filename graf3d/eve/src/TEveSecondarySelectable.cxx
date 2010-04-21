@@ -56,7 +56,7 @@ void TEveSecondarySelectable::ProcessGLSelectionInternal(TGLSelectRecord& rec,
 {
    // Process secondary GL selection and populate given set accordingly.
 
-   Int_t id = (rec.GetN() > 1) ? rec.GetItem(1) : -1;
+   Int_t id = (rec.GetN() > 1) ? (Int_t) rec.GetItem(1) : -1;
 
    if (sset.empty())
    {
