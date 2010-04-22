@@ -76,11 +76,13 @@ public:
    virtual void   ClearMouseOver();
    virtual void   Repaint();
 
+   virtual void   PopupContextMenu(TGLPhysicalShape* pshp, Int_t ev_state, Int_t gx, Int_t gy);
+
    virtual void   TriggerTooltip(const char* text);
    virtual void   RemoveTooltip();
 
-   void SetMouseOverSelectDelay(Int_t ms);
-   void SetMouseOverTooltipDelay(Int_t ms);
+   void  SetMouseOverSelectDelay(Int_t ms);
+   void  SetMouseOverTooltipDelay(Int_t ms);
 
    Int_t GetTooltipPixelTolerance()  const { return fTooltipPixelTolerance; }
    void  SetTooltipPixelTolerance(Int_t t) { fTooltipPixelTolerance = t; }

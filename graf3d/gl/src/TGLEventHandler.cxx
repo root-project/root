@@ -559,30 +559,14 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
          }
          else if (event->fCode == kButton3)
          {
-            fGLViewer->RequestSelect(event->fX, event->fY);
-            if (!fGLViewer->fContextMenu) {
-               fGLViewer->fContextMenu = new TContextMenu("glcm", "GL Viewer Context Menu");
-            }
             Int_t    x, y;
             Window_t childdum;
-            gVirtualX->TranslateCoordinates(fGLViewer->fGLWidget->GetId(),
-                                            gClient->GetDefaultRoot()->GetId(),
+            gVirtualX->TranslateCoordinates(fGLViewer->fGLWidget->GetId(), gClient->GetDefaultRoot()->GetId(),
                                             event->fX, event->fY, x, y, childdum);
-            const TGLPhysicalShape * selected = fGLViewer->fSelRec.GetPhysShape();
-            if (selected)
-            {
-               fActiveButtonID = 0;
-               UnGrabMouse();
 
-               selected->InvokeContextMenu(*fGLViewer->fContextMenu, x, y);
-            }
+            fGLViewer->RequestSelect(event->fX, event->fY);
 
-            // This is dangerous ... should have special menu, probably even
-            // tool / context specific.
-            // else 
-            // {
-            //    fGLViewer->fContextMenu->Popup(x, y, fGLViewer);
-            // }
+            PopupContextMenu(fGLViewer->fSelRec.GetPhysShape(), event->fState, x, y);
          }
       }
 
@@ -990,6 +974,33 @@ void TGLEventHandler::Repaint()
       return;
    }
    fGLViewer->fRedrawTimer->RequestDraw(20, TGLRnrCtx::kLODHigh);
+}
+
+//______________________________________________________________________________
+void TGLEventHandler::PopupContextMenu(TGLPhysicalShape* pshp, Int_t /*ev_state*/,
+                                       Int_t gx, Int_t gy)
+{
+   // Popup context menu.
+
+   if (!fGLViewer->fContextMenu)
+   {
+      fGLViewer->fContextMenu = new TContextMenu("glcm", "GL Viewer Context Menu");
+   }
+
+   if (pshp)
+   {
+      fActiveButtonID = 0;
+      UnGrabMouse();
+
+      pshp->InvokeContextMenu(*fGLViewer->fContextMenu, gx, gy);
+   }
+
+   // This is dangerous ... should have special menu, probably even
+   // tool / context specific.
+   // else 
+   // {
+   //    fGLViewer->fContextMenu->Popup(x, y, fGLViewer);
+   // }
 }
 
 //______________________________________________________________________________
