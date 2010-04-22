@@ -56,6 +56,9 @@ protected:
    virtual void   GrabMouse();
    virtual void   UnGrabMouse();
 
+   virtual void   SelectForClicked(Event_t *event);
+   virtual void   SelectForMouseOver();
+
 public:
    TGLEventHandler(TGWindow *w, TObject *obj);
    virtual ~TGLEventHandler();
@@ -76,7 +79,7 @@ public:
    virtual void   ClearMouseOver();
    virtual void   Repaint();
 
-   virtual void   PopupContextMenu(TGLPhysicalShape* pshp, Int_t ev_state, Int_t gx, Int_t gy);
+   virtual void   PopupContextMenu(TGLPhysicalShape* pshp, Event_t *event, Int_t gx, Int_t gy);
 
    virtual void   TriggerTooltip(const char* text);
    virtual void   RemoveTooltip();
