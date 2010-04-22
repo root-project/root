@@ -43,7 +43,6 @@
 #include "TKey.h"
 #include "TTree.h"
 #include "TParameter.h"
-#include "TStopwatch.h"
 
 struct LsTreeEntry_t {
    TObjString  *fGrp;      // Group
@@ -298,8 +297,10 @@ const char *TDataSetManagerFile::GetDataSetPath(const char *group,
                                                 const char *dsName,
                                                 TString &md5path, Bool_t local)
 {
-   // Returns path of the indicated dataset. If 'local' is kTRUE the local cache path
-   // is returned instead.
+   // Returns path of the indicated dataset. The extension is '.root' for all files
+   // except for 'dsName==ls' which have extension '.txt'.
+   // If 'local' is kTRUE the local cache path is returned instead in the form
+   // <cachedir>/<group>.<user>.<dsName>.<ext>.
    // NB: contains a static TString for result, so copy result before using twice.
 
    if (fgCommonDataSetTag == group)
@@ -311,13 +312,8 @@ const char *TDataSetManagerFile::GetDataSetPath(const char *group,
    const char *ext = (!strcmp(dsName, "ls")) ? ".txt" : ".root";
    static TString result;
    if (local) {
-#ifndef WIN32
-      result.Form("%s/%s\%%%s\%%%s%s", fLocalCacheDir.Data(), group, user, dsName, ext);
-      md5path.Form("%s/%s\%%%s\%%%s.md5sum", fLocalCacheDir.Data(), group, user, dsName);
-#else
-      result.Form("%s/%s-%s-%s%s", fLocalCacheDir.Data(), group, user, dsName, ext);
-      md5path.Form("%s/%s-%s-%s.md5sum", fLocalCacheDir.Data(), group, user, dsName);
-#endif
+      result.Form("%s/%s.%s.%s%s", fLocalCacheDir.Data(), group, user, dsName, ext);
+      md5path.Form("%s/%s.%s.%s.md5sum", fLocalCacheDir.Data(), group, user, dsName);
    } else {
       result.Form("%s/%s/%s/%s%s", fDataSetDir.Data(), group, user, dsName, ext);
       md5path.Form("%s/%s/%s/%s.md5sum", fDataSetDir.Data(), group, user, dsName);
@@ -1016,14 +1012,10 @@ Int_t TDataSetManagerFile::CheckLocalCache(const char *group, const char *user,
       }
    }
    if (need_last_update) {
-      TStopwatch ts;
       if (gSystem->GetPathInfo(remupdate, remst) != 0) {
          Error("CheckLocalCache", "cannot get info for remote file '%s' - ignoring", remupdate.Data());
          return -1;
       }
-      // Check the time needed to stat the remote file and adjust the update period
-      ts.Stop();
-      if (fCacheUpdatePeriod < ts.RealTime()) fCacheUpdatePeriod = 10 * ts.RealTime();
       if (gSystem->GetPathInfo(locupdate, locst) == 0) {
          need_last_update = kFALSE;
          if (remst.fMtime > locst.fMtime) {
