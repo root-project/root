@@ -302,15 +302,15 @@ protected:
    Short_t fImpliedSelected;      //!
    Short_t fImpliedHighlighted;   //!
 
-   enum ESelectionColorBits
+   enum ECompoundSelectionColorBits
    {
-      kSCBImplySelectAllChildren           = BIT(0),
-      kSCBTakeAnyParentAsMaster            = BIT(1),
-      kSCBApplyMainColorToAllChildren      = BIT(2),
-      kSCBApplyMainColorToMatchingChildren = BIT(3)
+      kCSCBImplySelectAllChildren           = BIT(0), // compound will select all children
+      kCSCBTakeAnyParentAsMaster            = BIT(1), // element will take any compound parent as master
+      kCSCBApplyMainColorToAllChildren      = BIT(2), // compound will apply color change to all children
+      kCSCBApplyMainColorToMatchingChildren = BIT(3)  // compound will apply color change to all children with matching color
    };
 
-   UChar_t fSelectionColorBits;
+   UChar_t fCSCBits;
 
 public:
    typedef void (TEveElement::* Select_foo)      (Bool_t);
@@ -338,15 +338,15 @@ public:
 
    void RecheckImpliedSelections();
 
-   void   SetSelectionColorBits(UChar_t f)   { fSelectionColorBits |=  f; }
-   void   ResetSelectionColorBits(UChar_t f) { fSelectionColorBits &= ~f; }
-   Bool_t TestSelectionColorBits(UChar_t f) const { return (fSelectionColorBits & f) != 0; }
+   void   SetCSCBits(UChar_t f)   { fCSCBits |=  f; }
+   void   ResetCSCBits(UChar_t f) { fCSCBits &= ~f; }
+   Bool_t TestCSCBits(UChar_t f) const { return (fCSCBits & f) != 0; }
 
-   void   ResetAllSelectionColorBits()       { fSelectionColorBits  =  0; }
-   void   ImplySelectAllChildren()           { fSelectionColorBits |= kSCBImplySelectAllChildren; }
-   void   TakeAnyParentAsMaster()            { fSelectionColorBits |= kSCBTakeAnyParentAsMaster;  }
-   void   ApplyMainColorToAllChildren()      { fSelectionColorBits |= kSCBApplyMainColorToAllChildren; }
-   void   ApplyMainColorToMatchingChildren() { fSelectionColorBits |= kSCBApplyMainColorToMatchingChildren; }
+   void   ResetAllCSCBits()                     { fCSCBits  =  0; }
+   void   CSCImplySelectAllChildren()           { fCSCBits |= kCSCBImplySelectAllChildren; }
+   void   CSCTakeAnyParentAsMaster()            { fCSCBits |= kCSCBTakeAnyParentAsMaster;  }
+   void   CSCApplyMainColorToAllChildren()      { fCSCBits |= kCSCBApplyMainColorToAllChildren; }
+   void   CSCApplyMainColorToMatchingChildren() { fCSCBits |= kCSCBApplyMainColorToMatchingChildren; }
 
 
    // Change-stamping and change bits

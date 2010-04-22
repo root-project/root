@@ -35,17 +35,28 @@ TEveCompound::TEveCompound(const char* n, const char* t, Bool_t doColor) :
 void TEveCompound::SetMainColor(Color_t color)
 {
    // SetMainColor for the compound.
-   // The color is also propagated to children (compouind elements)
-   // whoose current color is the same as the old color.
+   // The color is also propagated to children with compound set to this
+   // whose current color is the same as the old color.
+   //
+   // The following CompoundSelectionColorBits have further influence:
+   //   kCSCBApplyMainColorToAllChildren      - apply color to all children;
+   //   kCSCBApplyMainColorToMatchingChildren - apply color to children who have
+   //                                           matching old color.
 
    Color_t old_color = GetMainColor();
 
    TEveElement::SetMainColor(color);
 
+   Bool_t color_all      = TestCSCBits(kCSCBApplyMainColorToAllChildren);
+   Bool_t color_matching = TestCSCBits(kCSCBApplyMainColorToMatchingChildren);
+
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
-      if ((*i)->GetCompound() == this && (*i)->GetMainColor() == old_color)
+      if (color_all || (color_matching && (*i)->GetMainColor() == old_color) ||
+          ((*i)->GetCompound() == this && (*i)->GetMainColor() == old_color))
+      {
          (*i)->SetMainColor(color);
+      }
    }
 }
 
@@ -96,19 +107,23 @@ void TEveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
 {
    // Recurse on all children that are in this compund and
    // call the base-class version.
+   // If SelectionColorBit kSCBImplySelectAllChildren is set, then all
+   // children are added to the set.
    //
    // Note that projected replicas of the compound will be added to
    // the set in base-class function that handles projectables.
 
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   Bool_t select_all = TestCSCBits(kCSCBImplySelectAllChildren);
+
+   for (List_i i = fChildren.begin(); i != fChildren.end(); ++i)
    {
-      if ((*i)->GetCompound() == this)
+      if (select_all || (*i)->GetCompound() == this)
       {
          if (impSelSet.insert(*i).second)
             (*i)->FillImpliedSelectedSet(impSelSet);
       }
-
    }
+
    TEveElementList::FillImpliedSelectedSet(impSelSet);
 }
 
