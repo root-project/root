@@ -52,7 +52,7 @@ TEveGedEditor::TEveGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
    TGedFrame* nf = CreateNameFrame(fTabContainer, "Style");
    nf->SetGedEditor(this);
    nf->SetModelClass(0);
-   fTabContainer->AddFrame(nf, nf->GetLayoutHints());
+   fTabContainer->AddFrame(nf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
 
    // Fix priority for TAttMarkerEditor.
    TClass* amClass = TClass::GetClass("TAttMarker");
