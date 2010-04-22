@@ -175,6 +175,10 @@ TTreePerfStats::~TTreePerfStats()
    delete fWatch;
    delete fRealTimeAxis;
    delete fHostInfoText;
+
+   if (gPerfStats == this) {
+      gPerfStats = 0;
+   }
 }
 
 
