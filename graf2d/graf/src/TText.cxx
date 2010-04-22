@@ -475,10 +475,12 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
    else          tsize = fTextSize*hh;
 
    if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
+      Bool_t kernsave = TTF::GetKerning();
       TTF::SetKerning(kern);
       TTF::SetTextFont(fTextFont);
       TTF::SetTextSize(tsize);
       TTF::GetTextAdvance(a, (char*)text);
+      TTF::SetKerning(kernsave);
    } else {
       UInt_t h;
       gVirtualX->SetTextSize((int)tsize);
