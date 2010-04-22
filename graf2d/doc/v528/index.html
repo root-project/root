@@ -8,6 +8,22 @@
 <ul>
 <li> The marker size between the screen output and the output file formats
      was not consistant.
+<li> Implement the text kerning. The effect is clearly illustrated with
+     the following script. Without kerning the red X is overlaped by the
+     the rest of the text. 
+     <pre>
+     {
+        TCanvas *c = new TCanvas;
+        TLatex *l = new TLatex(0.5, 0.5, "AVAVAVAVAVAVAVAVAVA#color[2]{X}");
+        l->Draw();
+        c->SaveAs("c1.eps");
+     } 
+     </pre>
+     The original idea came from Oleksandr Grebenyuk. It has been implemented
+     in a such way that the kerning mechanism is activated only when needed. If
+     not needed the old way of text rendering is used. It was done that way because
+     most of the time kerning is not needed and text rendered using the kerning 
+     mechanism takes more space in the PS file.
 </ul>
 
 <h4>TASImage</h4>
