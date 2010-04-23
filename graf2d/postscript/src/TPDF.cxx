@@ -2055,14 +2055,20 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       y -= 0.4*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.4*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
    }
+   TText t;
+   t.SetTextSize(fTextSize);
+   t.SetTextFont(fTextFont);
+
+   UInt_t wa1,wa0;
+   t.GetTextAdvance(wa0, chars, kFALSE);
+   t.GetTextAdvance(wa1, chars);
+   Bool_t kerning;
+   if (wa0-wa1>0) kerning = kTRUE;
+   else           kerning = kFALSE;
+
    if (txalh > 1) {
-      TText t;
-      UInt_t w, h;
-      t.SetTextSize(fTextSize);
-      t.SetTextFont(fTextFont);
-      t.GetTextExtent(w, h, chars);
-      Double_t twx = gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0);
-      Double_t twy = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(w);
+      Double_t twx = gPad->AbsPixeltoX(wa1)-gPad->AbsPixeltoX(0);
+      Double_t twy = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(wa1);
       if(txalh == 2){
          x = x-(twx/2)*TMath::Cos(kDEGRAD*fTextAngle);
          y = y-(twy/2)*TMath::Sin(kDEGRAD*fTextAngle);
@@ -2102,19 +2108,47 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    if (font == 15) PrintStr(" q 1 0 .26794 1 0 0 cm");
 
    // Ouput the text. Escape some characters if needed
-   PrintStr(" (");
+   if (kerning) PrintStr(" [");
+   else         PrintStr(" (");
    Int_t len=strlen(chars);
+
+   Int_t kern=0;
+   char c12[3];
+   UInt_t w1,w2;
+
    for (Int_t i=0; i<len;i++) {
       if (chars[i]!='\n') {
+         if (kerning) PrintStr("(");
          if (chars[i]=='(' || chars[i]==')') {
             sprintf(str,"\\%c",chars[i]);
          } else {
             sprintf(str,"%c",chars[i]);
          }
          PrintStr(str);
+         if (kerning) {
+            PrintStr(")");
+            if (i!=len-1) {
+               c12[0] = chars[i];   c12[1] = chars[i+1]; c12[2] = '\0';
+               t.GetTextAdvance(w1, c12, kFALSE);
+               t.GetTextAdvance(w2, c12);
+               kern = w1-w2;
+               if (kern>0) {
+                  Double_t wwl  = gPad->AbsPixeltoX(kern)-gPad->AbsPixeltoX(0);
+                  Double_t wwll = XtoPDF(wwl)-XtoPDF(0);
+                  // This values were found experimentaly. They are not fully satisfactory.
+                  // The kerning number is expressed in thousandths of unit of text space
+                  // (cf PDF manual p.311). The convertion between PDF dots and unit of text
+                  // space is not (yet) clear. It was measured.
+                  WriteReal((1330/78.4589)*(55.6805/fontsize)*wwll);
+                  PrintStr(" ");
+               }
+            }
+         }
       }
    }
-   PrintStr(") Tj ET Q");
+
+   if (kerning) PrintStr("] TJ ET Q");
+   else         PrintStr(") Tj ET Q");
    if (font == 15) PrintStr(" Q");
    if (!fCompress) PrintStr("@");
 }
