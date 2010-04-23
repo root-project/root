@@ -50,7 +50,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 define RootsysTestDiff
-	$(CMDECHO) [ "x`grep -i fail $<`" = "x" ] || ( grep -i fail $<; false )
+	$(CMDECHO) [ "x`grep -i fail $<`" = "x" ] || ( grep -i fail -C 20 $<; false )
 	$(CMDECHO) ( \
 	  MARKS=`cat $< \
 	  | sed 's,^.*ROOTMARKS[[:space:]:=]*\([[:digit:].]\+\).*$$,\1 ROOTmarks,' \
@@ -128,7 +128,7 @@ CALLSTRESSEXE := $(CALLROOTEXE:root.exe=)
 CALLSTRESSEXE := $(CALLSTRESSEXE:rootc7.exe=)
 $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 	$(CMDECHO) unset DISPLAY; \
-	   $(CALLSTRESSEXE) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1
+	   $(CALLSTRESSEXE) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1 || ( cat $@; false )
 
 # To run an interpreted test we need the source + includes. We don't know
 # the exact dependencies, to we trust the binary: if we have it we have
@@ -139,7 +139,7 @@ $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 # another's feet (e.g. by both interpreted and compiled version
 # opening the same file)
 $(addsuffix .log,$(STRESSTESTSINTERP)): %-itest.log: test/%$(ExeSuf) $(find %-ctest, $(STRESSTESTSCOMP))
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q test/$*.cxx$(STRESSFLAGS) > $@ 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q test/$*.cxx$(STRESSFLAGS) > $@ 2>&1 || ( cat $@; false )
 
 # If we need a file in test/ we just copy all files from $(ROOT_LOC)/test.
 # Once we have them in test/, we run make in there.
