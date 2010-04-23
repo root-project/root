@@ -76,7 +76,7 @@ public:
 
    Int_t  ClearCache(const char *uri = 0);
    TFileCollection *GetDataSet(const char *uri, const char *srv = 0);
-   TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
+   TMap            *GetDataSets(const char *uri, UInt_t option = TDataSetManager::kExport);
    Bool_t           ExistsDataSet(const char *uri);
    Bool_t           RemoveDataSet(const char *uri);
 

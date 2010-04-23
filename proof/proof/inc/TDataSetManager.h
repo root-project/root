@@ -116,7 +116,7 @@ public:
    virtual Int_t            ClearCache(const char *uri);
    virtual Long64_t         GetAvgFileSize() const { return fAvgFileSize; }
    virtual TFileCollection *GetDataSet(const char *uri, const char *server = 0);
-   virtual TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = 0);
+   virtual TMap            *GetDataSets(const char *uri, UInt_t /*option*/ = TDataSetManager::kExport);
    virtual TMap            *GetSubDataSets(const char *uri, const char *excludeservers);
 
    virtual Long64_t         GetGroupQuota(const char *group);

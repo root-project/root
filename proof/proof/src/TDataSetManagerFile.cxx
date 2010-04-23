@@ -142,10 +142,29 @@ void TDataSetManagerFile::Init()
       // Read locking path from kDataSet_LockLocation
       TString lockloc = TString::Format("%s/%s", fDataSetDir.Data(), kDataSet_LockLocation);
       if (!gSystem->AccessPathName(lockloc, kReadPermission)) {
-         fstream infile(lockloc.Data(), std::ios::in);
+         TString lockloctmp;
+         const char *fnloc = 0;
+         if (fIsRemote) {
+            lockloctmp.Form("%s-%s", fDataSetDir.Data() , kDataSet_LockLocation);
+            lockloctmp.ReplaceAll("/","%");
+            lockloctmp.ReplaceAll(":","%");
+            lockloctmp.Insert(0, TString::Format("%s/", gSystem->TempDirectory()));
+            if (!gSystem->AccessPathName(lockloctmp)) gSystem->Unlink(lockloctmp);
+            if (!TFile::Cp(lockloc, lockloctmp, kFALSE)) {
+               Error("Init", "could not retrieve file (%s) with info about the lock path", lockloc.Data());
+               SetBit(TObject::kInvalidObject);
+               return;
+            }
+            fnloc = lockloctmp.Data();
+         } else {
+            fnloc = lockloc.Data();
+         }
+         fstream infile(fnloc, std::ios::in);
          if (infile.is_open()) {
             fDataSetLockFile.ReadToken(infile);
             infile.close();
+         } else {
+            Warning("Init", "could not open remore file '%s' with the lock location", fnloc);
          }
       }
       if (fDataSetLockFile.IsNull()) {
@@ -155,11 +174,14 @@ void TDataSetManagerFile::Init()
          fDataSetLockFile.Insert(0, TString::Format("%s/", gSystem->TempDirectory()));
       }
       if (!fDataSetLockFile.IsNull() && fIsRemote) {
-         // Add host and port
-         TUrl u(fDataSetDir);
-         TString srv(fDataSetDir);
-         srv.Remove(srv.Index(u.GetFile()));
-         fDataSetLockFile.Insert(0, srv);
+         TUrl lu(fDataSetLockFile, kTRUE);
+         if (!strcmp(lu.GetProtocol(), "file")) {
+            // Add host and port
+            TUrl u(fDataSetDir);
+            TString srv(fDataSetDir);
+            srv.Remove(srv.Index(u.GetFile()));
+            fDataSetLockFile.Insert(0, srv);
+         }
       }
    }
 
@@ -896,13 +918,21 @@ Int_t TDataSetManagerFile::FillLsDataSet(const char *group, const char *user,
       }
       // Prepare the string to search for
       TString fullname = TString::Format("/%s/%s/%s", group, user, dsname);
-      TObject *o = mac->GetLineWith(fullname.Data());
-      if (o) {
-         out->Add(o->Clone());
-      } else {
-         if (gDebug > 0)
-            Info("FillLsDataSet", "dataset '%s' does not exists", fullname.Data());
+      Bool_t wc = (fullname.Contains("*")) ? kTRUE : kFALSE;
+      if (wc) fullname.ReplaceAll("*", ".*");
+      TRegexp reds(fullname);
+      TIter nxl(mac->GetListOfLines());
+      TObjString *o;
+      Int_t nf = 0;
+      while ((o = (TObjString *) nxl())) {
+         if (o->GetString().Index(reds) != kNPOS) {
+            out->Add(o->Clone());
+            nf++;
+            if (!wc) break;
+         }
       }
+      if (nf > 0 && gDebug > 0)
+         Info("FillLsDataSet", "no match for dataset uri '/%s/%s/%s'", group, user, dsname);
       // Delete the macro
       SafeDelete(mac);
    } else {
@@ -1716,9 +1746,27 @@ TFileCollection *TDataSetManagerFile::GetDataSet(const char *uri, const char *sr
 
    TString dsUser, dsGroup, dsName;
 
-   if (!ParseUri(uri, &dsGroup, &dsUser, &dsName))
-      return (TFileCollection *)0;
-   TFileCollection *fc = GetDataSet(dsGroup, dsUser, dsName);
+   TFileCollection *fc = 0;
+   if (!strchr(uri, '*')) {
+      if (!ParseUri(uri, &dsGroup, &dsUser, &dsName)) return fc;
+      fc = GetDataSet(dsGroup, dsUser, dsName);
+   } else {
+      TMap *fcs = GetDataSets(uri);
+      if (!fcs) return fc;
+      TIter nxd(fcs);
+      TObject *k = 0;
+      TFileCollection *xfc = 0;
+      while ((k = nxd()) && (xfc = (TFileCollection *) fcs->GetValue(k))) {
+         if (!fc) {
+            // The first one
+            fc = xfc;
+            fcs->Remove(k);
+         } else {
+            // Add
+            fc->Add(xfc);
+         }
+      }
+   }
 
    if (fc && srv && strlen(srv) > 0) {
       // Build up the subset
