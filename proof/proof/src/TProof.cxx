@@ -633,7 +633,7 @@ Int_t TProof::Init(const char *, const char *conffile,
 
    fValid = kFALSE;
 
-   // If in attach mode, options is filled with additiona info
+   // If in attach mode, options is filled with additional info
    Bool_t attach = kFALSE;
    if (strlen(fUrl.GetOptions()) > 0) {
       attach = kTRUE;
@@ -9490,6 +9490,8 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
       if (opts.Length() > 0) {
          if (opts.BeginsWith("N",TString::kIgnoreCase)) {
             create = kTRUE;
+            opts.Remove(0,1);
+            u.SetOptions(opts);
          } else if (opts.IsDigit()) {
             locid = opts.Atoi();
          }
