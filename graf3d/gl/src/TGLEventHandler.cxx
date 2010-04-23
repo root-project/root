@@ -999,7 +999,7 @@ void TGLEventHandler::Repaint()
 }
 
 //______________________________________________________________________________
-void TGLEventHandler::PopupContextMenu(TGLPhysicalShape* pshp, Event_t */*event*/,
+void TGLEventHandler::PopupContextMenu(TGLPhysicalShape* pshp, Event_t * /*event*/,
                                        Int_t gx, Int_t gy)
 {
    // Popup context menu.
