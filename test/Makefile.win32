@@ -51,7 +51,7 @@ OutPutOpt     = -out:
 !include <win32.mak>
 CC            = $(cc)
 CXX           = $(cc)
-CXXFLAGS      = -nologo -EHsc -GR -DWIN32 -W3 -D_WINDOWS \
+CXXFLAGS      = -nologo -EHsc- -GR -DWIN32 -W3 -D_WIN32 -D_WINDOWS \
                 -I$(ROOTSYS)/include -wd4244 \
                 -FIw32pragma.h
 LD            = $(link)
@@ -156,6 +156,11 @@ STRESSL       = stressLinear$(ExeSuf)
 STRESSGO      = stressGraphics.$(ObjSuf)
 STRESSGS      = stressGraphics.$(SrcSuf)
 STRESSG       = stressGraphics$(ExeSuf)
+
+STRESSGUIO    = stressGUI.$(ObjSuf)
+STRESSGUIS    = stressGUI.$(SrcSuf)
+STRESSGUI     = stressGUI$(ExeSuf)
+STRESSGUILIBS = $(ROOTSYS)\lib\libASImage.lib $(ROOTSYS)\lib\libASImageGui.lib $(ROOTSYS)\lib\libRecorder.lib
 
 !if exist("$(ROOTSYS)\lib\libGenVector.lib")
 STRESSVECO   = stressVector.$(ObjSuf)
@@ -288,7 +293,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
                 $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
                 $(STRESSMATHMOREO) $(STRESSITERO) $(STRESSHISTO) \
-                $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
+                $(GUITESTO) $(GUIVIEWERO) $(TETRISO) $(STRESSGUIO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
@@ -298,7 +303,7 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) $(STRESSENTRYLIST) \
                 $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH) \
                 $(STRESSMATHMORE) $(STRESSITER) $(STRESSHIST) \
-                $(GUITEST) $(GUIVIEWER) $(TETRISSO)
+                $(GUITEST) $(GUIVIEWER) $(TETRISSO) $(STRESSGUI)
 
 all:            $(PROGRAMS)
 
@@ -371,6 +376,11 @@ $(STRESSL):     $(STRESSLO)
 
 $(STRESSG):     $(STRESSGO)
                 $(LD) $(LDFLAGS) $(STRESSGO) $(LIBS) $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+
+$(STRESSGUI):   $(STRESSGUIO)
+                $(LD) $(LDFLAGS) $(STRESSGUIO) $(GLIBS) $(STRESSGUILIBS) $(OutPutOpt)$@
                 $(MT_EXE)
                 @echo "$@ done"
 
@@ -554,7 +564,7 @@ guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
 
 stressMathCore.$(ObjSuf): TrackMathCore.h
 TrackMathCoreDict.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
-	@echo "Generating dictionary $@ using rootcint ..."
+   @echo "Generating dictionary $@ using rootcint ..."
    @rootcint -f $@ -c TrackMathCore.h TrackMathCoreLinkDef.h
 
 .$(SrcSuf).$(ObjSuf):

@@ -68,6 +68,16 @@ STRESSGO      = stressGraphics.$(ObjSuf)
 STRESSGS      = stressGraphics.$(SrcSuf)
 STRESSG       = stressGraphics$(ExeSuf)
 
+STRESSGUIO    = stressGUI.$(ObjSuf)
+STRESSGUIS    = stressGUI.$(SrcSuf)
+STRESSGUI     = stressGUI$(ExeSuf)
+ifeq ($(PLATFORM),win32)
+STRESSGUILIBS = '$(ROOTSYS)/lib/libASImage.lib' '$(ROOTSYS)/lib/libASImageGui.lib' \
+                '$(ROOTSYS)/lib/libRecorder.lib' 
+else
+STRESSGUILIBS = -lASImage -lASImageGui -lRecorder
+endif
+
 ifeq ($(shell $(ROOTCONFIG) --has-genvector),yes)
 STRESSVECO   = stressVector.$(ObjSuf)
 STRESSVECS   = stressVector.$(SrcSuf)
@@ -223,7 +233,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
                 $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
                 $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSPROOFO) \
-                $(STRESSMATHMOREO) $(STRESSITERO) $(STRESSHISTO)
+                $(STRESSMATHMOREO) $(STRESSITERO) $(STRESSHISTO) $(STRESSGUIO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
@@ -232,7 +242,7 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) $(STRESSENTRYLIST) \
                 $(STRESSROOFIT) $(STRESSPROOF) $(STRESSMATH)  \
-                $(STRESSMATHMORE) $(STRESSITER) $(STRESSHIST)
+                $(STRESSMATHMORE) $(STRESSITER) $(STRESSHIST) $(STRESSGUI)
 
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -341,6 +351,11 @@ $(STRESSL):     $(STRESSLO)
 
 $(STRESSG):     $(STRESSGO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
+		@echo "$@ done"
+
+$(STRESSGUI):   $(STRESSGUIO)
+		$(LD) $(LDFLAGS) $^ $(GLIBS) $(STRESSGUILIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 
