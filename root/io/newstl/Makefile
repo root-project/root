@@ -16,7 +16,7 @@ FILEDIR := $(VERSION)
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog  result.root $(LIBDIRTOP) emulvector.root \
-   test.root samplerootfile.root
+   test.root samplerootfile.root memberwise.root
 # We intentionally do not delete the output file in $(FILEDIR) so that 
 # we can keep the historic versions.
 
@@ -63,7 +63,8 @@ DEPENDENCY_FILES = $(TEST_DLL:.$(DllSuf)=.d)
 #debug := $(shell echo $(DEPENDENCY_FILES) 1>&2 )
 
 ifneq ($(MAKECMDGOALS),clean)
--include $(DEPENDENCY_FILES)
+#-include $(DEPENDENCY_FILES)
+-include $(wildcard $(LIBDIR)*.d)
 endif
 
 #.PRECIOUS :  $(addprefix $(LIBDIR),$(subst .C,o.$(DllSuf),$(HOLDER) $(FTEST) $(LIBDIR)TestHelpers_C))
@@ -134,13 +135,18 @@ else
 endif
 
 $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1  || handleError.sh --log= $*_C.build.log --res=$$?
 
 $(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C directories
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1  || handleError.sh --log=sample_bx_classes_C.build.log--res=$$?
 
 $(LIBDIR)runbase_C.$(DllSuf): runbase.C directories
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"runbase.C\",\"\",\"\")" > runbase_C.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"runbase.C\",\"\",\"\")" > runbase_C.build.log 2>&1  || handleError.sh --log=runbase_C.build.log --res=$$?
+
+$(LIBDIR)%_cxx.$(DllSuf): %.cxx | directories
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $*_cxx.build.log 2>&1 || handleError.sh --log=$*_cxx.build.log --res=$$?
+
+
 
 #	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | $(CALLROOTEXE) -l -b -n
@@ -206,5 +212,10 @@ ComplexTest.log: ComplexTest_h.$(DllSuf)
 
 ComplexTest: ComplexTest.log
 	$(TestDiff)
+
+memberwise.root: $(LIBDIR)writeMemberWise_cxx.$(DllSuf) $(ROOTCORELIBS)
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q writeMemberWise.cxx+ > memberwise_root.log 2>&1 || handleError.sh --log=memberwise_root.log --res=$$?
+
+execMemberWise.clog: $(LIBDIR)execMemberWise_cxx.$(DllSuf) memberwise.root $(ROOTCORELIBS)
 
 # DO NOT DELETE
