@@ -23,6 +23,7 @@
 
 #include "TVirtualArray.h"
 #include "TBufferFile.h"
+#include "TInterpreter.h"
 
 //==========CPP macros
 
@@ -522,13 +523,17 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             {
                TClass *cl                 = fComp[i].fClass;
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
+               TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
+               TClass* vClass = proxy ? proxy->GetValueClass() : 0;
 
-               if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming) && thisVar->GetStreamMemberWise() && cl->CanSplit()) {
+               if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming) && thisVar->GetStreamMemberWise() && cl->CanSplit()
+                   && !(strspn(aElement->GetTitle(),"||") == 2)
+                   && !(gInterpreter->ClassInfo_RootFlag(vClass->GetClassInfo()) & 1) ) {
                   // Let's save the collection member-wise.
 
                   UInt_t pos = b.WriteVersionMemberWise(thisVar->IsA(),kTRUE);
-                  TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
-                  TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
+                  b.WriteVersion( vClass, kFALSE );
+                  TStreamerInfo *subinfo = (TStreamerInfo*)vClass->GetStreamerInfo();
                   if (subinfo->IsOptimized()) {
                      subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
                      subinfo->Compile();
@@ -567,14 +572,16 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             {
                TClass *cl                 = fComp[i].fClass;
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
-               if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming) && thisVar->GetStreamMemberWise() && cl->CanSplit()) {
+               TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
+               TClass* vClass = proxy ? proxy->GetValueClass() : 0;
+               if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming) && thisVar->GetStreamMemberWise() && cl->CanSplit()
+                   && !(strspn(aElement->GetTitle(),"||") == 2)
+                   && !(gInterpreter->ClassInfo_RootFlag(vClass->GetClassInfo()) & 1) ) {
                   // Let's save the collection in member-wise order.
 
                   UInt_t pos = b.WriteVersionMemberWise(thisVar->IsA(),kTRUE);
-                  TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
-                  TClass* vClass = proxy->GetValueClass();
                   b.WriteVersion( vClass, kFALSE );
-                  TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
+                  TStreamerInfo *subinfo = (TStreamerInfo*)vClass->GetStreamerInfo();
                   if (subinfo->IsOptimized()) {
                      subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
                      subinfo->Compile();

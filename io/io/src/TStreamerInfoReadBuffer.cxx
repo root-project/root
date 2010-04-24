@@ -1054,12 +1054,36 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             {
                UInt_t start,count;
                Version_t vers = b.ReadVersion(&start, &count, cle);
+
                if ( vers & TBufferFile::kStreamedMemberWise ) {
                   // Collection was saved member-wise
 
                   vers &= ~( TBufferFile::kStreamedMemberWise );
-                  TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
-                  TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
+                  
+                  TClass *newClass = aElement->GetNewClass();
+                  TClass *oldClass = aElement->GetClassPointer();
+                  if( vers < 9 && newClass && newClass!=oldClass ) {
+                     Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %d into a %s.",
+                           vers, b.GetParent() ? b.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
+                     continue;
+                  }
+
+                  UInt_t startDummy, countDummy;
+                  Version_t vClVersion = 0; // For vers less than 9, we have to use the current version.
+                  if( vers >= 9 ) {
+                     vClVersion = b.ReadVersion( &startDummy, &countDummy, cle->GetCollectionProxy()->GetValueClass() );
+                  }
+
+                  TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : 0);
+                  TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+                  TStreamerInfo *subinfo = 0;
+                  
+                  if( newProxy ) {
+                     subinfo = (TStreamerInfo*)newProxy->GetValueClass()->GetConversionStreamerInfo( oldProxy->GetValueClass(), vClVersion );
+                  } else {
+                     subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( vClVersion );
+                     newProxy = oldProxy;
+                  }
                   if (subinfo->IsOptimized()) {
                      subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
                      subinfo->Compile();
@@ -1074,16 +1098,16 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                            contp[j] = cle->New();
                            cont = contp[j];
                         }
-                        TVirtualCollectionProxy::TPushPop helper( proxy, cont );
+                        TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
                         Int_t nobjects;
                         b >> nobjects;
-                        env = proxy->Allocate(nobjects,true);
+                        env = newProxy->Allocate(nobjects,true);
                         if (vers<7) {
-                           subinfo->ReadBuffer(b,*proxy,-1,nobjects,0,1);
+                           subinfo->ReadBuffer(b,*newProxy,-1,nobjects,0,1);
                         } else {
-                           subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                           subinfo->ReadBufferSTL(b,newProxy,nobjects,-1,0);
                         }
-                        proxy->Commit(env);
+                        newProxy->Commit(env);
                      }
                   }
                   b.CheckByteCount(start,count,aElement->GetFullName());
@@ -1116,19 +1140,22 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kSTL:                // Container with no virtual table (stl) and no comment
          case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL:     // array of Container with no virtual table (stl) and no comment
             {
-               UInt_t start, count, startDummy, countDummy;
+               UInt_t start, count;
                Version_t vers = b.ReadVersion(&start, &count, cle);
-               TClass *newClass = aElement->GetNewClass();
-               TClass *oldClass = aElement->GetClassPointer();
 
                if ( vers & TBufferFile::kStreamedMemberWise ) {
                   // Collection was saved member-wise
                   vers &= ~( TBufferFile::kStreamedMemberWise );
 
+                  TClass *newClass = aElement->GetNewClass();
+                  TClass *oldClass = aElement->GetClassPointer();
+
                   if( vers < 8 && newClass && newClass!=oldClass ) {
-                     Error( "ReadBuffer", "Due to a bug this fill does not contain information necessary to do Schema Evolution, sorry :(" );
+                     Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %d into a %s.",
+                           vers, b.GetParent() ? b.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
                      continue;
                   }
+                  UInt_t startDummy, countDummy;
                   Version_t vClVersion = 0; // For vers less than 8, we have to use the current version.
                   if( vers >= 8 ) {
                      vClVersion = b.ReadVersion( &startDummy, &countDummy, cle->GetCollectionProxy()->GetValueClass() );
