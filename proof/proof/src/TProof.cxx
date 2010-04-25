@@ -6388,9 +6388,13 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
    // Prepare the local package
    TString pdir;
    Int_t st = 0;
-   if (buildOnClient)
-      if ((st = BuildPackageOnClient(pac, 1, &pdir) != 0))
+   if (buildOnClient) {
+      if (TestBit(TProof::kIsClient) && fPackageLock) fPackageLock->Lock();
+      if ((st = BuildPackageOnClient(pac, 1, &pdir) != 0)) {
+         if (TestBit(TProof::kIsClient) && fPackageLock) fPackageLock->Unlock();
          return -1;
+      }
+   }
 
    if (opt <= kBuildAll && !IsLite()) {
       TMessage mess(kPROOF_CACHE);
@@ -6405,8 +6409,10 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
    if (opt >= kBuildAll) {
       // by first forwarding the build commands to the master and slaves
       // and only then building locally we build in parallel
-      if (buildOnClient)
+      if (buildOnClient) {
          st = BuildPackageOnClient(pac, 2, &pdir);
+         if (TestBit(TProof::kIsClient) && fPackageLock) fPackageLock->Unlock();
+      }
 
       fStatus = 0;
       if (!IsLite())
@@ -6538,7 +6544,6 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
 
       if (opt == 0 || opt == 2) {
          if (opt == 2) pdir = path->Data();
-         fPackageLock->Lock();
 
          ocwd = gSystem->WorkingDirectory();
          gSystem->ChangeDirectory(pdir);
@@ -6609,8 +6614,6 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
          }
 
          gSystem->ChangeDirectory(ocwd);
-
-         fPackageLock->Unlock();
 
          return status;
       }
