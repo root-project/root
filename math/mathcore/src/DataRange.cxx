@@ -14,6 +14,7 @@
 #include "Math/Error.h"
 
 #include <algorithm>
+#include <limits>
 
 namespace ROOT { 
 
@@ -162,7 +163,11 @@ void DataRange::CleanRangeSet(unsigned int icoord, double xmin, double xmax) {
    
 }
 
-
+void DataRange::GetInfRange(double &xmin, double &xmax) { 
+   // get the full range [-inf, +inf] for xmin and xmax 
+   xmin = -std::numeric_limits<double>::infinity(); 
+   xmax = std::numeric_limits<double>::infinity(); 
+}
 
    } // end namespace Fit
 

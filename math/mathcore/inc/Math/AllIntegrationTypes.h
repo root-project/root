@@ -34,13 +34,14 @@ namespace Math {
 	 enumeration specifying the integration types.
 	 <ul>
          <li>kGAUSS: simple Gauss integration method with fixed rule
+         <li>kLEGENDRE: Gauss-Legendre integration
 	 <li>kNONADAPTIVE : to be used for smooth functions
 	 <li>kADAPTIVE : to be used for general functions without singularities.
 	 <li>kADAPTIVESINGULAR: default adaptive integration type which can be used in the case of the presence of singularities.
 	 </ul>
 	 @ingroup Integration
     */
-     enum Type { kGAUSS, kADAPTIVE, kADAPTIVESINGULAR, kNONADAPTIVE};
+     enum Type { kGAUSS, kLEGENDRE, kADAPTIVE, kADAPTIVESINGULAR, kNONADAPTIVE};
 
   }
 

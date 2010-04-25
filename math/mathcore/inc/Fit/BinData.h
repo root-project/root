@@ -484,7 +484,7 @@ public :
        The information is added for the previously inserted point. 
        BinData::Add  must be called before
    */
-   void AddBinUpEdge(const double * binwidth); 
+   void AddBinUpEdge(const double * xup); 
 
    /** 
        retrieve the reference volume used to normalize the data when the option bin volume is set

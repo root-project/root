@@ -96,7 +96,7 @@ private :
 
    
    unsigned int fDim; 
-   mutable Func fFunc; 
+   mutable Func fFunc;  // should here be a reference and pass a non-const ref in ctor 
 
 };
 
@@ -193,7 +193,7 @@ public:
    
    /// constructor from a pointer to the class and a pointer to the function
    MemFunHandler(const PointerToObj& pObj, PointerToMemFn pMemFn) 
-      : fDim(1), fObj(pObj), fMemFn(pMemFn)
+      : fDim(1), fObj(pObj), fMemFn(pMemFn)        // should pass pointer by value ??
    {}
 
    /// constructor from a pointer to the class and a pointer to the function

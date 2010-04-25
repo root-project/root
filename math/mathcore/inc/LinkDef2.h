@@ -117,6 +117,8 @@
 #pragma link C++ class ROOT::Math::BrentRootFinder+;
 #pragma link C++ class ROOT::Math::BrentMinimizer1D+;
 
+#pragma link C++ class ROOT::Math::DistSampler+;
+
 #include "LinkDef_Func.h"
 
 #endif

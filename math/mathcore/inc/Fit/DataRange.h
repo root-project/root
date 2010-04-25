@@ -71,6 +71,17 @@ public:
       return icoord <  fRanges.size() ? fRanges[icoord].size() : 0;
    }
 
+   /**
+      return true if a range has been set in any of  the coordinates 
+      i.e. when  it is not [-inf,+inf] for all coordinates
+      Avoid in case of multi-dim to loop on all the coordinated and ask the size
+    */   
+   bool IsSet() const { 
+      for (unsigned int icoord = 0; icoord < fRanges.size(); ++icoord) 
+         if (fRanges[icoord].size() > 0) return true; 
+      return false; 
+   }
+
    /** 
        return the vector of ranges for the coordinate icoord
    */ 
@@ -88,32 +99,38 @@ public:
    }  
 
    /**
-      get the first range for given coordinate
+      get the first range for given coordinate. If range does not exist
+      return -inf, +inf
     */
    void GetRange(unsigned int icoord, double & xmin, double & xmax) const { 
-      if (Size(icoord) == 0) { 
-         xmin = 0; 
-         xmax = 0; 
-         return;
+      if (Size(icoord) == 0) GetInfRange(xmin,xmax);
+      else { 
+         xmin = fRanges[icoord].front().first; 
+         xmax = fRanges[icoord].front().second; 
       }
-      xmin = fRanges[icoord].front().first; 
-      xmax = fRanges[icoord].front().second; 
    }
    /**
-      get range for the x - coordinate
+      get first range for the x - coordinate
     */
    void GetRange(double & xmin, double & xmax) const {  GetRange(0,xmin,xmax); }
    /**
-      get range for the x and y coordinates
+      get first range for the x and y coordinates
     */
    void GetRange(double & xmin, double & xmax, double & ymin, double & ymax) const {  
       GetRange(0,xmin,xmax); GetRange(1,ymin,ymax); 
    }
    /**
-      get range for the x and y and z coordinates
+      get first range for the x and y and z coordinates
     */
    void GetRange(double & xmin, double & xmax, double & ymin, double & ymax, double & zmin, double & zmax) const {  
       GetRange(0,xmin,xmax); GetRange(1,ymin,ymax); GetRange(2,zmin,zmax); 
+   }
+   /**
+      get first range for coordinates and fill the vector
+    */
+   void GetRange(double * xmin, double * xmax)   const {  
+      for (unsigned int i = 0; i < fRanges.size(); ++i) 
+         GetRange(i,xmin[i],xmax[i]); 
    }
 
    /** 
@@ -185,6 +202,8 @@ protected:
    */
    void CleanRangeSet(unsigned int icoord, double xmin, double xmax); 
 
+   // get the full range (-inf, +inf)
+   static void GetInfRange(double &x1, double &x2);
 
 private: 
 

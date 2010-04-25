@@ -18,8 +18,8 @@
 #include "Math/AllIntegrationTypes.h"
 #endif
 
-#ifndef ROOT_Math_IFunctionfwd
-#include "Math/IFunctionfwd.h"
+#ifndef ROOT_Math_IFunction
+#include "Math/IFunction.h"
 #endif
 
 #ifndef ROOT_Math_VirtualIntegrator
@@ -27,7 +27,7 @@
 #endif
 
 
-
+#include <memory>
 
 
 
@@ -100,7 +100,7 @@ public:
        lower rules are indicated for singular functions while higher for smooth functions to get better accuracies
     */
     explicit
-    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, unsigned int rule = 3) { 
+    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVESINGULAR, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, unsigned int rule = 3) { 
        fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
     }
     
@@ -130,14 +130,13 @@ public:
        @param size maximum number of sub-intervals
        @param rule Gauss-Kronrod integration rule (only for GSL ADAPTIVE type)  
     */
-#ifdef LATER
+
    template<class Function>
    explicit
-   IntegratorOneDim(Function f, IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) { 
+   IntegratorOneDim(Function & f, IntegrationOneDim::Type type = IntegrationOneDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int size = 1000, int rule = 3) { 
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule); 
-       SetFunction(f);
+      SetFunction(f);
    }
-#endif
 
    /// destructor (will delete contained pointer)
    virtual ~IntegratorOneDim() { 
@@ -163,15 +162,19 @@ public:
 
 
    template<class Function>
-   inline void SetFunction(const Function & f); 
+   inline void SetFunction(Function & f); 
 
    /** 
        set one dimensional function for 1D integration
     */
-
-
    void SetFunction  (const IGenFunction &f, bool copy = false) { 
-      if (fIntegrator) fIntegrator->SetFunction(f,copy);
+      if (!fIntegrator) return; 
+      if (copy) { 
+         fFunc = std::auto_ptr<IGenFunction>(f.Clone() ); 
+         fIntegrator->SetFunction(*fFunc);
+         return;
+      }
+      fIntegrator->SetFunction(f);
    }
 
 
@@ -179,10 +182,10 @@ public:
       Set integration function from a multi-dim function type. 
       Can be used in case of having 1D function implementing the generic interface
        @param f      integration function
-       @param icoord index of coordinate on which the intergation is performed 
-       @param x  array of the passed variables values. In case of dim=1 is not required
+       @param icoord index of coordinate on which the integration is performed 
+       @param x  array of the passed variables values. In case of dim=1 a 0 can be passed
    */
-   void SetFunction(const IMultiGenFunction &f, unsigned int icoord = 0, const double * x = 0);
+   void SetFunction(const IMultiGenFunction &f, unsigned int icoord , const double * x );
 
     // integration methods using a function 
 
@@ -193,7 +196,7 @@ public:
        @param b upper value of the integration interval
     */
    template<class Function> 
-   double Integral(const Function & f, double a, double b); 
+   double Integral(Function & f, double a, double b); 
 
 
     /**
@@ -212,8 +215,8 @@ public:
       evaluate the Integral of a function f over the infinite interval (-inf,+inf)
        @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
     */
-   template<class Function> 
-   double Integral(const Function & f); 
+//    template<class Function> 
+//    double Integral(const Function & f); 
 
    /**
       evaluate the Integral of a function f over the infinite interval (-inf,+inf)
@@ -230,8 +233,8 @@ public:
       @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
       @param a lower value of the integration interval
     */
-   template<class Function> 
-   double IntegralUp(const Function & f, double a);
+//    template<class Function> 
+//    double IntegralUp(Function & f, double a);
 
    /**
       evaluate the Integral of a function f over the semi-infinite interval (a,+inf)
@@ -249,8 +252,8 @@ public:
       @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
       @param b upper value of the integration interval
     */
-   template<class Function> 
-   double IntegralLow(const Function & f, double b);
+//    template<class Function> 
+//    double IntegralLow(Function & f, double b);
 
    /**
       evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b)
@@ -269,7 +272,7 @@ public:
 
    */
    template<class Function> 
-   double Integral(const Function & f, const std::vector<double> & pts );
+   double Integral(Function & f, const std::vector<double> & pts );
 
    /**
       evaluate the Integral of a function f with known singular points over the defined Integral (a,b)
@@ -291,7 +294,7 @@ public:
       
    */
    template<class Function>
-   double IntegralCauchy(const Function & f, double a, double b, double c); 
+   double IntegralCauchy(Function & f, double a, double b, double c); 
 
    /**
       evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) with a singularity at c 
@@ -411,6 +414,7 @@ protected:
 private:
 
    VirtualIntegratorOneDim * fIntegrator;   // pointer to integrator interface class
+   std::auto_ptr<IGenFunction> fFunc;       // pointer to owned function
 
 };
 
@@ -430,50 +434,52 @@ private:
 #endif
 
 template<class Function>
-void ROOT::Math::IntegratorOneDim::SetFunction(const Function & f) {
-  ROOT::Math::WrappedFunction<const Function &> wf(f); 
+void ROOT::Math::IntegratorOneDim::SetFunction( Function & f) {
+  ROOT::Math::WrappedFunction<Function &> wf(f); 
   // need to copy the wrapper function, the instance created here will be deleted after SetFunction()
-  if (fIntegrator) fIntegrator->SetFunction(wf, true);
+  SetFunction(wf, true);
 }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::Integral(const Function & f, double a, double b) { 
-   ROOT::Math::WrappedFunction<const Function &> wf(f); 
+double ROOT::Math::IntegratorOneDim::Integral(Function & f, double a, double b) { 
+   ROOT::Math::WrappedFunction< Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return Integral(a,b);
 }
 
-template<class Function> 
-double ROOT::Math::IntegratorOneDim::Integral(const Function & f) { 
-   ROOT::Math::WrappedFunction<const Function &> wf(f); 
-   SetFunction(wf,false); // no copy is needed in this case
-   return Integral();
-}
+// remove because can create ambiguities 
+
+// template<class Function> 
+// double ROOT::Math::IntegratorOneDim::Integral(const  Function & f) { 
+//    ROOT::Math::WrappedFunction<const Function &> wf(f); 
+//    SetFunction(wf,false); // no copy is needed in this case
+//    return Integral();
+// }
+
+// template<class Function> 
+// double ROOT::Math::IntegratorOneDim::IntegralLow(Function  & f, double x) { 
+//    ROOT::Math::WrappedFunction< Function &> wf(f); 
+//    SetFunction(wf,false); // no copy is needed in this case
+//    return IntegralLow(x);
+// }
+
+// template<class Function> 
+// double ROOT::Math::IntegratorOneDim::IntegralUp(Function & f, double x) { 
+//    ROOT::Math::WrappedFunction<Function &> wf(f); 
+//    SetFunction(wf,false); // no copy is needed in this case
+//    return IntegralUp(x);
+// }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::IntegralLow(const Function  & f, double x) { 
-   ROOT::Math::WrappedFunction<const Function &> wf(f); 
-   SetFunction(wf,false); // no copy is needed in this case
-   return IntegralLow(x);
-}
-
-template<class Function> 
-double ROOT::Math::IntegratorOneDim::IntegralUp(const Function & f, double x) { 
-   ROOT::Math::WrappedFunction<const Function &> wf(f); 
-   SetFunction(wf,false); // no copy is needed in this case
-   return IntegralUp(x);
-}
-
-template<class Function> 
-double ROOT::Math::IntegratorOneDim::Integral(const Function & f, const std::vector<double> & pts) { 
-   ROOT::Math::WrappedFunction<const Function &> wf(f); 
+double ROOT::Math::IntegratorOneDim::Integral(Function & f, const std::vector<double> & pts) { 
+   ROOT::Math::WrappedFunction<Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return Integral(pts);
 }
 
 template<class Function> 
-double ROOT::Math::IntegratorOneDim::IntegralCauchy(const Function & f, double a, double b, double c) { 
-   ROOT::Math::WrappedFunction<const Function & > wf(f); 
+double ROOT::Math::IntegratorOneDim::IntegralCauchy(Function & f, double a, double b, double c) { 
+   ROOT::Math::WrappedFunction<Function & > wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return IntegralCauchy(a,b,c);
 }

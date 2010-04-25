@@ -54,6 +54,8 @@ namespace Math {
     <em> double operator( const double *  x)</em>
     and if the derivatives are required: 
     <em> void Gradient( const double *   x, double * g)</em>
+    and 
+    <em> void FdF( const double *   x, double &f, double * g)</em>
     
     This class defines static methods with will be used to fill the 
     \a gsl_multimin_function and 
@@ -95,12 +97,6 @@ public:
          double * g = (h->data)+i*npar;   //pointer to start  of i-th row
          assert ( npar == (funcVec[i]).NDim() );
          (funcVec[i]).Gradient(x->data, g); 
-//          for (unsigned int k = 0; k < npar;  ++k) { 
-//             double grad = funcIter->Derivative(x->data, k); 
-//             gsl_matrix_set(h, i, k, grad  );
-//          }
-         
-//         funcIter++;
       }
       return 0; 
    }
@@ -114,25 +110,13 @@ public:
       if (n == 0) return -1; 
       if (npar == 0) return -2; 
       FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
-//       FuncIterator * pFuncIter = reinterpret_cast< FuncIterator *> (p); 
-//       FuncIterator  & funcIter = *( pFuncIter ); 
-      assert( f->size == n); 
+      assert ( f->size == n); 
       for (unsigned int i = 0; i < n ; ++i) { 
-//         std::cout << i << "typeid of pointed function iterator " << typeid(*funcIter).name() << std::endl;
-         const double * xdata = x->data; 
-         double fval = (funcVec[i])(xdata); 
-         gsl_vector_set(f, i, fval  );
          assert ( npar == (funcVec[i]).NDim() );
-
+         double fval = 0; 
          double * g = (h->data)+i*npar;   //pointer to start  of i-th row
-//         assert ( npar == (funVec[i]).NDim() );
-         (funcVec[i]).Gradient(x->data, g); 
-//          for (unsigned int k = 0; k < npar;  ++k) { 
-//             double grad = funcIter->Derivative(x->data, k); 
-//             gsl_matrix_set(h, i, k, grad  );
-//          }
-         
-//         funcIter++;
+         (funcVec[i]).FdF(x->data, fval, g); 
+         gsl_vector_set(f, i, fval  );
       }
       return 0; 
    }

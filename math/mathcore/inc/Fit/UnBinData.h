@@ -177,8 +177,8 @@ public:
 
    /**
       preallocate a data set given size and dimension
-      if a vector already exists with correct fimension (point size) extend the existing one 
-      keep the previous one
+      if a vector already exists with correct dimension (point size) extend the existing one
+      to a total size of maxpoints (equivalent to a Resize)
     */
    void Initialize(unsigned int maxpoints, unsigned int dim = 1);
 

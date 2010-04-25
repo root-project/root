@@ -104,8 +104,8 @@ public:
    /// evaluate integral 
    virtual double Integral(double a, double b) = 0; 
 
-   /// set integration function (flag control if function must be copied inside)
-   virtual void SetFunction(const IGenFunction &, bool copy =  false) = 0; 
+   /// set integration function 
+   virtual void SetFunction(const IGenFunction &) = 0; 
 
    /// evaluate un-defined  integral (between -inf, + inf)
    virtual double Integral() = 0; 

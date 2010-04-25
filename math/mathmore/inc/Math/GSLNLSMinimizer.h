@@ -113,16 +113,22 @@ public:
    unsigned int NDim() const { return fChi2->NDim(); }
 
    void Gradient( const double * x, double * g) const { 
+      double f0 = 0; 
+      FdF(x,f0,g);
+   }
+
+   void FdF (const double * x, double & f, double * g) const { 
       unsigned int n = NDim(); 
       std::copy(x,x+n,fX2.begin());
       const double kEps = 1.0E-4;
-      double f0 = DoEval(x); 
+      f = DoEval(x); 
       for (unsigned int i = 0; i < n; ++i) { 
          fX2[i] += kEps;
-         g[i] =  ( DoEval(&fX2.front()) - f0 )/kEps;
+         g[i] =  ( DoEval(&fX2.front()) - f )/kEps;
          fX2[i] = x[i];
       }
    } 
+   
 
 private: 
 

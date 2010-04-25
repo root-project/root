@@ -151,6 +151,15 @@ public:
    }
 
    /**
+      Fit using the a generic FCN function as a C++ callable object implementing 
+      double () (const double *) 
+      The function dimension (i.e. the number of parameter) is needed in this case
+      For the other arguments same consideration as in the previous methods
+    */
+   template <class Function>
+   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = 0, unsigned int dataSize = 0);
+
+   /**
       fit using the given FCN function represented by a multi-dimensional function interface 
       (ROOT::Math::IMultiGenFunction). 
       Give optionally initial the parameter values and data size to have the fit Ndf correctly 
@@ -170,14 +179,6 @@ public:
     */
    bool FitFCN(const ROOT::Math::IMultiGradFunction & fcn, const double * params = 0, unsigned int dataSize = 0); 
 
-   /**
-      Fit using the a generic FCN function as a C++ callable object implementing 
-      double () (const double *) 
-      The function dimension (i.e. the number of parameter) is needed in this case
-      For the other arguments same consideration as in the previous methods
-    */
-   template <class Function>
-   bool FitFCN(unsigned int npar, Function  fcn, const double * params = 0, unsigned int dataSize = 0);
       
    /**
       fit using user provided FCN with Minuit-like interface
@@ -325,8 +326,8 @@ private:
 #endif
 
 template<class Function>
-bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function f, const double * par, unsigned int datasize) {
-   ROOT::Math::WrappedMultiFunction<Function> wf(f,npar); 
+bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize) {
+   ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar); 
    return FitFCN(wf,par,datasize);
 }
 

@@ -36,6 +36,8 @@
 
 #endif
 
+#include <memory>
+
 namespace ROOT {
 namespace Math {
 
@@ -83,6 +85,8 @@ public:
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
       SetFunction(f);            
    }
+
+   // remove template constructor since is ambigous
    
     /** Template Constructor of multi dimensional Integrator passing a generic function. By default uses the adaptive integration method 
 
@@ -93,13 +97,12 @@ public:
        @param relTol desired relative Error
        @param ncall  number of function calls (apply only to MC integratioon methods)
     */
-#ifdef LATER
-   template<class Function>
-   IntegratorMultiDim(const Function & f, unsigned int dim, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
-      fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
-      SetFunction(f, dim); 
-   }
-#endif
+// this is ambigous
+//    template<class Function>
+//    IntegratorMultiDim(Function & f, unsigned int dim, IntegrationMultiDim::Type type = IntegrationMultiDim::kADAPTIVE, double absTol = 1.E-9, double relTol = 1E-6, unsigned int ncall = 100000) { 
+//       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall); 
+//       SetFunction(f, dim); 
+//    }
 
    /// destructor
    virtual ~IntegratorMultiDim() { 
@@ -130,8 +133,8 @@ public:
 
    /// evaluate the integral passing a new generic function
    template<class Function>
-   double Integral(Function f, unsigned int dim, const double* xmin, const double * xmax) {
-      SetFunction(f,dim);
+   double Integral(Function & f , unsigned int dim, const double* xmin, const double * xmax) {
+      SetFunction<Function>(f,dim);
       return Integral(xmin, xmax);
    }
 
@@ -141,12 +144,14 @@ public:
        The dimension of the function is in this case required 
    */
    template <class Function> 
-   void SetFunction( const Function  & f, unsigned int dim) { 
-      ROOT::Math::WrappedMultiFunction<Function> wf(f, dim); 
-      SetFunction(wf);
+   void SetFunction(Function & f, unsigned int dim) {
+      fFunc = std::auto_ptr<IMultiGenFunction>(new  WrappedMultiFunction<Function &> (f, dim) ); 
+      fIntegrator->SetFunction(*fFunc);
    }
+
+   // set the function without cloning it
    void SetFunction(const IMultiGenFunction &f) { 
-      if (fIntegrator) fIntegrator->SetFunction(f);
+      if (fIntegrator)  fIntegrator->SetFunction(f);
    }
 
    /// return result of last integration 
@@ -177,6 +182,7 @@ protected:
  private:
 
    VirtualIntegratorMultiDim * fIntegrator;     // pointer to multi-dimensional integrator base class
+   std::auto_ptr<IMultiGenFunction> fFunc;       // pointer to owned function
 
 
 };

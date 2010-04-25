@@ -16,6 +16,7 @@
 #include "Math/AdaptiveIntegratorMultiDim.h"
 
 #include "Math/GaussIntegrator.h"
+#include "Math/GaussLegendreIntegrator.h"
 
 #include "Math/OneDimFunctionAdapter.h"
 
@@ -62,12 +63,16 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
 
 #ifndef R__HAS_MATHMORE   
    // default type is GAUSS when Mathmore is not built
-   type = IntegrationOneDim::kGAUSS; 
+   if (type == IntegrationOneDim::kADAPTIVE ||  
+       type == IntegrationOneDim::kADAPTIVESINGULAR || 
+       tyep == IntegrationOneDim::kNONADAPTIVE )
+      type = IntegrationOneDim::kGAUSS; 
 #endif
-
 
    if (type == IntegrationOneDim::kGAUSS)
       return new GaussIntegrator();
+   if (type == IntegrationOneDim::kLEGENDRE)
+      return new GaussLegendreIntegrator();
 
    VirtualIntegratorOneDim * ig = 0; 
 
@@ -89,8 +94,11 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
          MATH_WARN_MSG("IntegratorOneDim::CreateIntegrator","Error loading one dimensional GSL integrator - use Gauss integrator"); 
          return new GaussIntegrator();
       }
-
-      std::string typeName = "ADAPTIVE";
+      
+      // plugin manager requires a string
+      std::string typeName = "Undefined";
+      if (type == IntegrationOneDim::kADAPTIVE) 
+         typeName = "ADAPTIVE";
       if (type == IntegrationOneDim::kADAPTIVESINGULAR) 
          typeName = "ADAPTIVESINGULAR";
       if (type == IntegrationOneDim::kNONADAPTIVE) 

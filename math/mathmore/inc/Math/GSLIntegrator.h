@@ -181,7 +181,7 @@ namespace Math {
           */
          
          
-      void SetFunction(const IGenFunction &f, bool copyFunc = false); 
+      void SetFunction(const IGenFunction &f);
 
       /**
          Set function from a GSL pointer function type 

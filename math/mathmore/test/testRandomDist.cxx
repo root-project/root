@@ -23,6 +23,7 @@
 #include "CLHEP/Random/RandPoisson.h"
 #include "CLHEP/Random/RandGauss.h"
 #include "CLHEP/Random/RandGaussQ.h"
+#include "CLHEP/Random/RandGaussT.h"
 #include "CLHEP/Random/RandBinomial.h"
 #include "CLHEP/Random/JamesRandom.h"
 #endif
@@ -41,7 +42,7 @@
 //#define TEST_TIME
 
 using namespace ROOT::Math;
-
+using namespace CLHEP;
 
 static bool fillHist = false;
 
@@ -270,8 +271,11 @@ void testGausCLHEP( R & r,double mu,double sigma,TH1D & h) {
   TStopwatch w; 
 
   int n = NEVT;
+  int n1 = 100;
+  int n2 = n/n1;
   w.Start();
-  for (int i = 0; i < n; ++i) { 
+  for (int i = 0; i < n2; ++i) { 
+     for (int j = 0; j < n1; ++j) { 
     double x = r(mu,sigma );
     if (fillHist)
       h.Fill( x );
@@ -726,9 +730,13 @@ int testRandomDist() {
  
   testGaus(ur,mu,sqrt(mu),hg3);
 #ifdef HAVE_CLHEP
-  RandGaussQ crg(eng);
+  RandGauss crg(eng);
   TH1D hg4("hg4","Gauss CLHEP",nch,xmin,xmax);
-  testGausCLHEP(crg,mu,sqrt(mu),hg3);
+  testGausCLHEP(crg,mu,sqrt(mu),hg4);
+  RandGaussQ crgQ(eng);
+  testGausCLHEP(crgQ,mu,sqrt(mu),hg4);
+  RandGaussT crgT(eng);
+  testGausCLHEP(crgT,mu,sqrt(mu),hg4);
 #endif
 
 
