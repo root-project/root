@@ -65,7 +65,7 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
    // default type is GAUSS when Mathmore is not built
    if (type == IntegrationOneDim::kADAPTIVE ||  
        type == IntegrationOneDim::kADAPTIVESINGULAR || 
-       tyep == IntegrationOneDim::kNONADAPTIVE )
+       type == IntegrationOneDim::kNONADAPTIVE )
       type = IntegrationOneDim::kGAUSS; 
 #endif
 
