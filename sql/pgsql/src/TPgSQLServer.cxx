@@ -328,12 +328,15 @@ Bool_t TPgSQLServer::HasStatement() const
 }
 
 //______________________________________________________________________________
+#ifdef PG_VERSION_NUM
 TSQLStatement* TPgSQLServer::Statement(const char *sql, Int_t)
+#else
+TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
+#endif
 {
   // Produce TPgSQLStatement.
 
 #ifdef PG_VERSION_NUM
-
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Statement");
       return 0;
