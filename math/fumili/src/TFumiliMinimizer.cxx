@@ -23,7 +23,15 @@
 #include <functional>
 
 
-
+// setting USE_FUMILI_FUNCTION will use the Derivatives provided by Fumili
+// instead of what proided in FitUtil::EvalChi2Residual
+// t.d.: use still standard Chi2 but replace model function 
+// with a gradient function where gradient is computed by TFumili
+// since TFumili knows the step size can calculate it better 
+// Derivative in FUmili are very fast (1 extra call for each parameter) 
+// + 1 function evaluation
+//
+//#define USE_FUMILI_FUNCTION
 #ifdef USE_FUMILI_FUNCTION
 bool gUseFumiliFunction = true;
 //#include "FumiliFunction.h"
@@ -60,7 +68,10 @@ public:
 
 
    // recalculate data elemet using Fumili stuff
-   double DataElement(const double *par, unsigned int i, double * g) const {
+   double DataElement(const double * /*par */, unsigned int i, double * g) const {
+
+      // parameter values are inside TFumili
+
       // suppose type is bin likelihood
       unsigned int npar = fObjFunc->NDim();
       double  y = 0;
@@ -192,9 +203,9 @@ void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
 
 #ifdef USE_FUMILI_FUNCTION
    if (gUseFumiliFunction) { 
-      if (fcnfunc->GetType() == ROOT::Math::FitMethodFunction::kLogLikelihood)  
+      if (fcnfunc->Type() == ROOT::Math::FitMethodFunction::kLogLikelihood)  
          fgFunc = new FumiliFunction<ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::FitMethodFunction::BaseFunction> >(fFumili,fcnfunc);   
-      else if (fcnfunc->GetType() == ROOT::Math::FitMethodFunction::kLeastSquare)
+      else if (fcnfunc->Type() == ROOT::Math::FitMethodFunction::kLeastSquare)
          fgFunc = new FumiliFunction<ROOT::Fit::Chi2FCN<ROOT::Math::FitMethodFunction::BaseFunction> >(fFumili,fcnfunc);  
    }
 #endif   
@@ -523,6 +534,11 @@ bool TFumiliMinimizer::Minimize() {
 
    arglist[0] = MaxFunctionCalls(); 
    arglist[1] = Tolerance(); 
+
+   if (printlevel > 0) 
+      std::cout << "Minimize using TFumili with tolerance = " << Tolerance() 
+                << " max calls " << MaxFunctionCalls() << std::endl; 
+
    int iret = fFumili->ExecuteCommand("MIGRAD",arglist,2);
    fStatus = iret; 
    //int iret = fgFumili->Minimize(); 
