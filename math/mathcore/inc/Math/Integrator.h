@@ -435,14 +435,14 @@ private:
 
 template<class Function>
 void ROOT::Math::IntegratorOneDim::SetFunction( Function & f) {
-  ROOT::Math::WrappedFunction<Function &> wf(f); 
+  ::ROOT::Math::WrappedFunction<Function &> wf(f); 
   // need to copy the wrapper function, the instance created here will be deleted after SetFunction()
   SetFunction(wf, true);
 }
 
 template<class Function> 
 double ROOT::Math::IntegratorOneDim::Integral(Function & f, double a, double b) { 
-   ROOT::Math::WrappedFunction< Function &> wf(f); 
+   ::ROOT::Math::WrappedFunction< Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return Integral(a,b);
 }
@@ -472,14 +472,14 @@ double ROOT::Math::IntegratorOneDim::Integral(Function & f, double a, double b) 
 
 template<class Function> 
 double ROOT::Math::IntegratorOneDim::Integral(Function & f, const std::vector<double> & pts) { 
-   ROOT::Math::WrappedFunction<Function &> wf(f); 
+   ::ROOT::Math::WrappedFunction<Function &> wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return Integral(pts);
 }
 
 template<class Function> 
 double ROOT::Math::IntegratorOneDim::IntegralCauchy(Function & f, double a, double b, double c) { 
-   ROOT::Math::WrappedFunction<Function & > wf(f); 
+   ::ROOT::Math::WrappedFunction<Function & > wf(f); 
    SetFunction(wf,false); // no copy is needed in this case
    return IntegralCauchy(a,b,c);
 }
