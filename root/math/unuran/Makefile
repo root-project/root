@@ -7,7 +7,11 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
+ifeq ($(findstring unuran,$(shell root-config --features)),)
+TEST_TARGETS += mytest
+else
 TEST_TARGETS += unuranMultiDim unuranMulti2D unuranDiscrete unuranDistr unuranSimple mytest
+endif
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
