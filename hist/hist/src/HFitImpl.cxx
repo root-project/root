@@ -471,7 +471,10 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, const TF1 * f1, const ROOT::F
 
    Int_t ndim = GetDimension(h1);
    double xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0; 
-   range.GetRange(xmin,xmax,ymin,ymax,zmin,zmax); 
+   if (range.Size(0) ) range.GetRange(0,xmin,xmax);
+   if (range.Size(1) ) range.GetRange(1,ymin,ymax);
+   if (range.Size(2) ) range.GetRange(2,zmin,zmax);
+
 
 #ifdef DEBUG
    std::cout <<"draw and store fit function " << f1->GetName() 
