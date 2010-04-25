@@ -66,6 +66,7 @@ double GaussIntegrator::Integral(double a, double b)
    }
 
    h = 0;
+   fUsedOnce = true;
    if (b == a) return h;
    aconst = kCST/std::abs(b-a);
    bb = a;
@@ -107,7 +108,6 @@ CASE2:
       h = s8;  //this is a crude approximation (cernlib function returned 0 !)
    }
 
-   fUsedOnce = true;
    fLastResult = h;
    fLastError = std::abs(s16-c2*s8);
 

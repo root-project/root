@@ -63,6 +63,8 @@ double GaussLegendreIntegrator::Integral(double a, double b)
    if (fNum<=0 || fX == 0 || fW == 0)
       return 0;
 
+   fUsedOnce = true;
+
    const double a0 = (b + a)/2;
    const double b0 = (b - a)/2;
 
