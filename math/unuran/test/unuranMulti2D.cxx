@@ -256,10 +256,10 @@ int unuranMulti2D() {
 #endif
 
 //#ifdef LATER
-   TCanvas * c1 = new TCanvas("c1_unuranMulti","Multidimensional distribution",10,10,900,900); 
+   TCanvas * c1 = new TCanvas("c1_unuran2D","Multidimensional distribution",10,10,900,900); 
    c1->Divide(2,2);
 #ifdef NO_TRUNC
-   TCanvas * c1 = new TCanvas("c1_unuranMulti","Multidimensional distribution",10,10,500,500); 
+   TCanvas * c1 = new TCanvas("c1_unuran2D","Multidimensional distribution",10,10,500,500); 
    c1->Divide(1,2);
 #endif
 
@@ -277,6 +277,11 @@ int unuranMulti2D() {
    h4->Draw("col");
 //#endif
 
+   if (iret != 0) 
+      std::cerr <<"\n\nUnuRan 2D Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
+   else 
+      std::cerr << "\n\nUnuRan 2D Continous Distribution Test:\t OK\n" << std::endl;
+
    return iret; 
 
 }
@@ -293,10 +298,6 @@ int main(int argc, char **argv)
    else 
       iret =  unuranMulti2D();
    
-   if (iret != 0) 
-      std::cerr <<"\n\nUnuRan MultiVariate Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
-   else 
-      std::cout << "\n\nUnuRan  MultiVariate Continous Distribution Test:\t OK\n" << std::endl;
    return iret; 
 }
 #endif

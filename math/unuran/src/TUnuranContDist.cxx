@@ -22,7 +22,7 @@
 
 ClassImp(TUnuranContDist)
 
-TUnuranContDist::TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * deriv, bool isLogPdf  ) : 
+TUnuranContDist::TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * deriv, bool isLogPdf, bool copyFunc  ) : 
    fPdf(&pdf),
    fDPdf(deriv),
    fCdf(0), 
@@ -34,9 +34,14 @@ TUnuranContDist::TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const RO
    fHasDomain(0),
    fHasMode(0),
    fHasArea(0), 
-   fOwnFunc(false)
+   fOwnFunc(copyFunc)
 {
    // Constructor from generic function interfaces
+   // manage the functions and clone them if flag copyFunc is true
+   if (fOwnFunc) { 
+      fPdf = fPdf->Clone(); 
+      if (fDPdf) fDPdf->Clone(); 
+   }
 } 
 
 
@@ -123,7 +128,7 @@ void TUnuranContDist::SetCdf(TF1 *  cdf) {
       if (fDPdf) fDPdf->Clone(); 
    }
    else 
-      if (fCdf) delete fCdf;
+      if (fOwnFunc && fCdf) delete fCdf;
 
    fCdf = (cdf) ? new ROOT::Math::WrappedTF1 ( *cdf) : 0;    
    fOwnFunc = true; 

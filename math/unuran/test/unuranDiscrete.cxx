@@ -442,6 +442,12 @@ int unuranDiscrete() {
    iret |= testPoisson(); 
    iret |= testBinomial(); 
 
+   if (iret != 0) 
+      std::cerr <<"\n\nUnuRan Discrete Distribution Test:\t  Failed !!!!!!!" << std::endl;
+   else 
+      std::cerr << "\n\nUnuRan Discrete Distribution Test:\t OK" << std::endl;
+   return iret; 
+
    return iret;
 }
 
@@ -458,10 +464,5 @@ int main(int argc, char **argv)
    else 
       iret =  unuranDiscrete();
    
-   if (iret != 0) 
-      std::cerr <<"\n\nUnuRan Discrete Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
-   else 
-      std::cout << "\n\nUnuRan Discrete Distribution Test:\t OK\n" << std::endl;
-   return iret; 
 }
 #endif

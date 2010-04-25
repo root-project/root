@@ -61,12 +61,12 @@ public:
       In case an algorithm requires only the Cdf (no Pdf), an empty distribution can be constructed and then the user must 
       set afterwards the Cdf. 
    */ 
-   TUnuranContDist (TF1 * pdf = 0, TF1 * deriv = 0, bool isLogPdf = false );
+   explicit TUnuranContDist (TF1 * pdf = 0, TF1 * deriv = 0, bool isLogPdf = false );
 
    /** 
       Constructor as before but from a generic function object interface for one-dim functions
    */ 
-   TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * dpdf = 0, bool isLogPdf = false); 
+   explicit TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * dpdf = 0, bool isLogPdf = false, bool copyFunc = false); 
 
 
    /** 

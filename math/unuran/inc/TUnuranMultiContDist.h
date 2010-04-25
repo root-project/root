@@ -111,7 +111,7 @@ public:
    /**
       set the mode of the distribution (coordinates of the distribution maximum values)
    */
-   void SetMode(double * x) { 
+   void SetMode(const double * x) { 
       fMode = std::vector<double>(x,x+NDim());
    }
 

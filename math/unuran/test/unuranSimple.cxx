@@ -12,6 +12,8 @@
 #include "TF1.h"
 
 #include "TRandom.h"
+#include "TRandom1.h"
+#include "TRandom2.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -42,6 +44,8 @@
 #include "CLHEP/Random/RanshiEngine.h"
 #include "CLHEP/Random/DualRand.h"
 #include "CLHEP/Random/TripleRand.h"
+
+using namespace CLHEP;
 #endif
 
 
@@ -209,7 +213,23 @@ int unuranSimple( ) {
       gRandom->Rndm(); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using TRandom::Rndm  =\t " <<   time << "\tns/call" << endl;
+   cout << "Time using gRandom::Rndm  =\t " <<   time << "\tns/call" << endl;
+
+   TRandom1 r1;
+   w.Start();
+   for (int i = 0; i < n; ++i) 
+      r1.Rndm(); 
+   w.Stop(); 
+   time = w.CpuTime()*1.E9/n;
+   cout << "Time using TRandom1::Rndm  =\t " <<   time << "\tns/call" << endl;
+
+   TRandom2 r2;
+   w.Start();
+   for (int i = 0; i < n; ++i) 
+      r2.Rndm(); 
+   w.Stop(); 
+   time = w.CpuTime()*1.E9/n;
+   cout << "Time using TRandom2::Rndm  =\t " <<   time << "\tns/call" << endl;
 
 #ifdef HAVE_CLHEP
    RandFlat rf(eng);
@@ -343,10 +363,10 @@ int unuranSimple( ) {
    h1->Draw("E");
 
    if (f->GetProb() < 1.E-4) { 
-      cout << "\nERROR: Test Failed !!!!"; 
+      std::cerr << "\nERROR: UnuranSimple Test:\t Failed !!!!"; 
       return -1; 
    }
-
+   std::cerr << "\nUnuranSimple Test:\t OK !" << std::endl;
 
    return 0; 
 

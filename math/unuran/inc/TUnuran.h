@@ -195,6 +195,22 @@ public:
    int SampleDiscr(); 
 
    /**
+      set the random engine. 
+      Must be called before init to have effect
+    */
+   void SetRandom(TRandom * r) {
+      fRng = r;
+   }
+
+   /**
+      return instance of the random engine used 
+    */
+   TRandom * GetRandom() {
+      return fRng; 
+   }
+
+
+   /**
       set the seed for the random number generator
     */
    void SetSeed(unsigned int seed); 

@@ -356,7 +356,10 @@ int  unuranMultiDim() {
    c2->Update();
 
 
-
+   if (iret != 0) 
+      std::cerr <<"\n\nUnuRan MultiDim Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
+   else 
+      std::cerr << "\n\nUnuRan MultiDim Continous Distribution Test:\t OK\n" << std::endl;
    return iret; 
 
 }
@@ -373,10 +376,6 @@ int main(int argc, char **argv)
    else 
       iret =  unuranMultiDim();
    
-   if (iret != 0) 
-      std::cerr <<"\n\nUnuRan 3D Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
-   else 
-      std::cout << "\n\nUnuRan 3D Continous Distribution Test:\t OK\n" << std::endl;
    return iret; 
 }
 #endif

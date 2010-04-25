@@ -357,6 +357,12 @@ int unuranDistr() {
    h1->Chi2Test(h2,"UUP");
    std::cout << "Chi2 test Uniform histograms  :\t";
    h1u->Chi2Test(h2u,"UUP");
+
+   if (iret != 0) 
+      std::cerr <<"\n\nUnuRan Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
+   else 
+      std::cerr << "\n\nUnuRan  Continous Distribution Test:\t OK\n" << std::endl;
+   return iret; 
    
 
    return iret; 
@@ -375,10 +381,5 @@ int main(int argc, char **argv)
    else 
       iret =  unuranDistr();
    
-   if (iret != 0) 
-      std::cerr <<"\n\nUnuRan Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
-   else 
-      std::cout << "\n\nUnuRan  Continous Distribution Test:\t OK\n" << std::endl;
-   return iret; 
 }
 #endif

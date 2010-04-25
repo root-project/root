@@ -21,6 +21,8 @@
 #pragma link C++ class TUnuranMultiContDist+;
 #pragma link C++ class TUnuranDiscrDist+;
 #pragma link C++ class TUnuranEmpDist+;
+#pragma link C++ class TUnuranSampler+;
+
 
 #pragma link C++ function  TUnuranDiscrDist::TUnuranDiscrDist (double *, double*);
 #pragma link C++ function  TUnuranEmpDist::TUnuranEmpDist (double *, double*,unsigned int);
