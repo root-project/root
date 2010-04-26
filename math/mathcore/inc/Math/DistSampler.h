@@ -71,7 +71,7 @@ public:
    /// set the parent function distribution to use for sampling (generic case)
    template<class Function> 
    void SetFunction(Function & func, unsigned int dim) { 
-      ROOT::Math::WrappedMultiFunction<Function &> wf(func, dim); 
+      WrappedMultiFunction<Function &> wf(func, dim); 
       fData.resize(dim);
       // need to clone to avoid temporary
       DoSetFunction(wf,true);
