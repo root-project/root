@@ -2,3 +2,26 @@
 <hr> 
 <a name="roofit"></a> 
 <h3>RooFit</h3>
+
+<a name="roostats"></a> 
+<h3>RooStats</h3>
+
+<h4>Profile Likelihood </h4>
+<ul>
+  <li>When running <tt>ProfileLikelihoodCalculator::GetHypoTest>/tt>
+  the user does not need anymore to clone the null parameter set. It
+  is done now incide the calculator
+  <li><tt>LikelihoodInterval::LowerLimit</tt>  (and UpperLimit)
+  returns now a boolean flag with the status of the limit search.
+  In case of a failure in finding the upper/lower limit a value of
+  zero is returned instead of the min/max of the variable range
+  <li><tt>LikelihoodIntervalPlot</tt> fix drawing of horizontal green
+  line when limits are outside the variable range 
+
+</ul>
+  
+<h4>HybridCalculator</h4>
+<ul>
+    <li>Apply a fix for test statistic = 3 (profile likelihood)  
+</ul>
+
