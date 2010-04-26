@@ -166,6 +166,8 @@ class XrdProofdManager : public XrdProofdConfig {
    int               DoDirectiveRole(char *, XrdOucStream *, bool);
    int               DoDirectiveTrace(char *, XrdOucStream *, bool);
 
+   bool              ValidateLocalDataSetSrc(XrdOucString &url, bool &local);
+
    // Scheduling service
    XrdProofSched    *LoadScheduler();
 };

@@ -449,7 +449,7 @@ int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui, bool changeown)
 int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
 {
    // Change the ownership of 'path' to the entity described by 'ui'.
-   // If 'path' is a directory, go thorugh the paths inside it recursively.
+   // If 'path' is a directory, go through the paths inside it recursively.
    // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::ChangeOwn")
 
@@ -461,7 +461,7 @@ int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
    struct stat st;
    if (stat(path,&st) != 0) {
       // Failure: stop
-      TRACE(XERR, "unable to stat dir: "<<path<<" (errno: "<<errno<<")");
+      TRACE(XERR, "unable to stat path: "<<path<<" (errno: "<<errno<<")");
       return -1;
    }
 
@@ -518,6 +518,87 @@ int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
       // Set ownership of the path to the client
       if (chown(path, ui.fUid, ui.fGid) == -1) {
          TRACE(XERR, "cannot set user ownership on path (errno: "<<errno<<")");
+         return -1;
+      }
+   }
+
+   // We are done
+   return 0;
+}
+
+//_____________________________________________________________________________
+int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
+{
+   // Change the permission mode of 'path' to 'mode'.
+   // If 'path' is a directory, go through the paths inside it recursively.
+   // Return 0 in case of success, -1 in case of error
+   XPDLOC(AUX, "Aux::ChangeMod")
+
+   TRACE(DBG, path);
+
+   if (!path || strlen(path) <= 0)
+      return -1;
+
+   struct stat st;
+   if (stat(path,&st) != 0) {
+      // Failure: stop
+      TRACE(XERR, "unable to stat path: "<<path<<" (errno: "<<errno<<")");
+      return -1;
+   }
+
+   // If is a directory apply this on it
+   if (S_ISDIR(st.st_mode)) {
+      // Loop over the dir
+      DIR *dir = opendir(path);
+      if (!dir) {
+         TRACE(XERR,"cannot open "<<path<< "- errno: "<< errno);
+         return -1;
+      }
+      XrdOucString proot(path);
+      if (!proot.endswith('/')) proot += "/";
+
+      struct dirent *ent = 0;
+      while ((ent = readdir(dir))) {
+         if (ent->d_name[0] == '.' || !strcmp(ent->d_name, "..")) continue;
+         XrdOucString fn(proot);
+         fn += ent->d_name;
+
+         struct stat xst;
+         if (stat(fn.c_str(),&xst) == 0) {
+            // If is a directory apply this on it
+            if (S_ISDIR(xst.st_mode)) {
+               if (XrdProofdAux::ChangeMod(fn.c_str(), mode) != 0) {
+                  TRACE(XERR, "problems changing recursively permissions of: "<<fn);
+                  return -1;
+               }
+            } else {
+               // Get the privileges, if needed
+               XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+               if (XpdBadPGuard(pGuard, xst.st_uid)) {
+                  TRACE(XERR, "could not get privileges to change ownership");
+                  return -1;
+               }
+               // Set the permission mode of the path
+               if (chmod(fn.c_str(), mode) == -1) {
+                  TRACE(XERR, "cannot change permissions on path (errno: "<<errno<<")");
+                  return -1;
+               }
+            }
+         } else {
+            TRACE(XERR, "unable to stat dir: "<<fn<<" (errno: "<<errno<<")");
+         }
+      }
+
+   } else {
+      // Get the privileges, if needed
+      XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+      if (XpdBadPGuard(pGuard, st.st_uid)) {
+         TRACE(XERR, "could not get privileges to change ownership");
+         return -1;
+      }
+      // Set ownership of the path to the client
+      if (chmod(path, mode) == -1) {
+         TRACE(XERR, "cannot change permissions on path (errno: "<<errno<<")");
          return -1;
       }
    }

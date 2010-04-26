@@ -643,6 +643,29 @@ int XrdProofdManager::Config(bool rcf)
       TRACE(ALL, "user config files are "<<st[fNetMgr->WorkerUsrCfg()]);
    }
 
+   // Validate dataset sources (if not worker)
+   if (fSrvType != kXPD_Worker && fDataSetSrcs.size() > 0) {
+      // If first local, add it in front
+      std::list<XrdProofdDSInfo *>::iterator ii = fDataSetSrcs.begin();
+      bool goodsrc = 0;
+      for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ) {
+         if (!(goodsrc = ValidateLocalDataSetSrc((*ii)->fUrl, (*ii)->fLocal))) {
+            XPDERR("source "<<(*ii)->fUrl<<" could not be validated");
+            ii = fDataSetSrcs.erase(ii);
+         } else {
+            // Check next
+            ii++;
+         }
+      }
+      if (fDataSetSrcs.size() > 0) {
+         TRACE(ALL, fDataSetSrcs.size() << " dataset sources defined");
+      } else {
+         TRACE(ALL, "no dataset sources defined");
+      }
+   } else {
+      TRACE(ALL, "no dataset sources defined");
+   }
+
    // Superusers: add the effective user at startup
    XrdProofUI sui;
    if (XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), sui) == 0) {
@@ -781,6 +804,86 @@ int XrdProofdManager::Config(bool rcf)
 
    // Done
    return 0;
+}
+
+//______________________________________________________________________________
+bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
+{
+   // Validate local dataset src at URL (check the URL and make the relevant
+   // directories).
+   // Return 1 if OK, 0 if any problem arises
+   XPDLOC(ALL, "Manager::ValidateLocalDataSetSrc")
+
+   TRACE(ALL,"validating '"<<url<<"' ...");
+   local = 0;
+   bool goodsrc = 1;
+   if (url.length() > 0) {
+      // Check if local source
+      if (url.beginswith("file:")) url.replace("file:","");
+      if (url.beginswith("/")) {
+         local = 1;
+         goodsrc = 0;
+         // Make sure the directory exists and has mode 0755
+         XrdProofUI ui;
+         XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), ui);
+         if (XrdProofdAux::AssertDir(url.c_str(), ui, ChangeOwn()) == 0) {
+            goodsrc = 1;
+         } else {
+            TRACE(XERR,"Cannot assert path '"<<url<<"' - ignoring");   
+         }
+         if (goodsrc) {
+            // Assert the file with dataset summaries
+            XrdOucString fnpath(url.c_str());
+            fnpath += "/dataset.list";
+            if (access(fnpath.c_str(), F_OK) != 0) {
+               FILE *flst = fopen(fnpath.c_str(), "w");
+               if (!flst) {
+                  TRACE(XERR,"Cannot open file '"<<fnpath<<"' for the dataset list; errno: "<<errno);
+                  goodsrc = 0;
+               } else {
+                  if (fclose(flst) != 0)
+                     TRACE(XERR,"Problems closing file '"<<fnpath<<"'; errno: "<< errno);   
+                  if (XrdProofdAux::ChangeOwn(fnpath.c_str(), ui) != 0) {
+                     TRACE(XERR, "Problems asserting ownership of "<<fnpath);
+                  }
+               }
+            }
+            // Make sure that everybody can modify the file for updates
+            if (goodsrc && chmod(fnpath.c_str(), 0666) != 0) {
+               TRACE(XERR,"Problems setting permissions to 0666 on file '"<<fnpath<<"'; errno: "<< errno);
+               goodsrc = 0;
+            }
+            // Assert the file with lock file path
+            if (goodsrc) {
+               fnpath.replace("/dataset.list", "/lock.location");
+               if (access(fnpath.c_str(), F_OK) != 0) {
+                  FILE *flck = fopen(fnpath.c_str(), "w");
+                  if (!flck) {
+                     TRACE(XERR,"Cannot open file '"<<fnpath<<"' with the lock file path; errno: "<<errno);   
+                  } else {
+                     // Write the default lock file path
+                     XrdOucString fnlock(url);
+                     fnlock.replace("/","%");
+                     fnlock.replace(":","%");
+                     fnlock.insert("/tmp/", 0);
+                     fprintf(flck, "%s\n", fnlock.c_str());
+                     if (fclose(flck) != 0)
+                        TRACE(XERR,"Problems closing file '"<<fnpath<<"'; errno: "<< errno);   
+                     if (XrdProofdAux::ChangeOwn(fnpath.c_str(), ui) != 0) {
+                        TRACE(XERR, "Problems asserting ownership of "<<fnpath);
+                     }
+                  }
+               }
+            }
+            // Make sure that everybody can modify the file for updates
+            if (goodsrc && chmod(fnpath.c_str(), 0644) != 0) {
+               TRACE(XERR,"Problems setting permissions to 0644 on file '"<<fnpath<<"'; errno: "<< errno);
+            }
+         }
+      }
+   }
+   // Done
+   return goodsrc;
 }
 
 //______________________________________________________________________________
@@ -1242,7 +1345,6 @@ int XrdProofdManager::DoDirectiveMultiUser(char *val, XrdOucStream *cfg, bool)
 int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'datasetsrc' directive
-   XPDLOC(ALL, "Manager::DoDirectiveDataSetSrc")
 
    if (!val)
       // undefined inputs
@@ -1253,70 +1355,12 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
    bool rw = 0, local = 0, goodsrc = 1;
    char *nxt = 0;
    while ((nxt = cfg->GetWord())) {
-      XPDPRT("tok: " << nxt);
-      if (!strcmp(nxt, "rw=1")) {
+      if (!strcmp(nxt, "rw=1") || !strcmp(nxt, "rw:1")) {
          rw = 1;
       } else if (!strncmp(nxt, "url:", 4)) {
          url = nxt+4;
       } else if (!strncmp(nxt, "opt:", 4)) {
          opts = nxt+4;
-      }
-   }
-
-   if (url.length() > 0) {
-
-      // Check if local source
-      if (url.beginswith("file:")) url.replace("file:","");
-      if (url.beginswith("/")) {
-         local = 1;
-         goodsrc = 0;
-         // Make sure the directory exists and has mode 0755
-         XrdProofUI ui;
-         XrdProofdAux::GetUserInfo(fEffectiveUser.c_str(), ui);
-         if (XrdProofdAux::AssertDir(url.c_str(), ui, ChangeOwn()) == 0) {
-            goodsrc = 1;
-         } else {
-            TRACE(XERR,"Cannot assert path '"<<url<<"' - ignoring");   
-         }
-         if (goodsrc) {
-            // Assert the file with dataset summaries
-            XrdOucString fnpath(url.c_str());
-            fnpath += "/dataset.list";
-            if (access(fnpath.c_str(), F_OK) != 0) {
-               FILE *flst = fopen(fnpath.c_str(), "w");
-               if (!flst) {
-                  TRACE(XERR,"Cannot open file '"<<fnpath<<"' for the dataset list; errno: "<<errno);   
-               } else {
-                  if (fclose(flst) != 0)
-                     TRACE(XERR,"Problems closing file '"<<fnpath<<"'; errno: "<< errno);   
-               }
-            }
-            // Make sure that everybody can modify the file for updates
-            if (chmod(fnpath.c_str(), 0666) != 0) {
-               TRACE(XERR,"Problems setting permissions to 0666 on file '"<<fnpath<<"'; errno: "<< errno);
-            }
-            // Assert the file with lock file path
-            fnpath.replace("/dataset.list", "/lock.location");
-            if (access(fnpath.c_str(), F_OK) != 0) {
-               FILE *flck = fopen(fnpath.c_str(), "w");
-               if (!flck) {
-                  TRACE(XERR,"Cannot open file '"<<fnpath<<"' with the lock file path; errno: "<<errno);   
-               } else {
-                  // Write the default lock file path
-                  XrdOucString fnlock(url);
-                  fnlock.replace("/","%");
-                  fnlock.replace(":","%");
-                  fnlock.insert("/tmp/", 0);
-                  fprintf(flck, "%s\n", fnlock.c_str());
-                  if (fclose(flck) != 0)
-                     TRACE(XERR,"Problems closing file '"<<fnpath<<"'; errno: "<< errno);   
-               }
-            }
-            // Make sure that everybody can modify the file for updates
-            if (chmod(fnpath.c_str(), 0644) != 0) {
-               TRACE(XERR,"Problems setting permissions to 0644 on file '"<<fnpath<<"'; errno: "<< errno);
-            }
-         }
       }
    }
 
@@ -1326,7 +1370,7 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
       std::list<XrdProofdDSInfo *>::iterator ii = fDataSetSrcs.begin();
       bool haslocal = 0;
       for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ii++) {
-	 if ((*ii)->fLocal) {
+         if ((*ii)->fLocal) {
             haslocal = 1;
             break;
          }
@@ -1336,9 +1380,9 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
          opts = rw ? "Ar:Av:" : "-Ar:-Av:";
       }
       if (haslocal || !local) {
-	 fDataSetSrcs.push_back(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
+         fDataSetSrcs.push_back(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
       } else {
-	 fDataSetSrcs.push_front(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
+         fDataSetSrcs.push_front(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
       }
    }
    return 0;

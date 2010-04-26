@@ -3483,16 +3483,29 @@ int XrdProofdProofServMgr::SetUserOwnerships(XrdProofdProtocol *p)
    // If applicable, make sure that the private dataset dir for this user exists 
    // and has the right permissions
    if (fMgr->DataSetSrcs()->size() > 0) {
+      XrdProofUI ui;
+      XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), ui);
       std::list<XrdProofdDSInfo *>::iterator ii;
       for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ii++) {
          if ((*ii)->fLocal && (*ii)->fRW) {
-            XrdOucString d = (*ii)->fUrl;
-            if (!d.endswith("/")) d += "/";
-            d += p->Client()->UI().fGroup; d += "/";
-            d += p->Client()->UI().fUser;
-            if (XrdProofdAux::AssertDir(d.c_str(), p->Client()->UI(),
-                                                   fMgr->ChangeOwn()) != 0) {
-               TRACE(XERR, "can't assert "<<d);
+            XrdOucString d;
+            XPDFORM(d, "%s/%s", ((*ii)->fUrl).c_str(), p->Client()->UI().fGroup.c_str());
+            if (XrdProofdAux::AssertDir(d.c_str(), ui, fMgr->ChangeOwn()) == 0) {
+               if (XrdProofdAux::ChangeMod(d.c_str(), 0777) == 0) {
+                  XPDFORM(d, "%s/%s/%s", ((*ii)->fUrl).c_str(), p->Client()->UI().fGroup.c_str(),
+                                                                p->Client()->UI().fUser.c_str());
+                  if (XrdProofdAux::AssertDir(d.c_str(), p->Client()->UI(), fMgr->ChangeOwn()) == 0) {
+                     if (XrdProofdAux::ChangeMod(d.c_str(), 0755) != 0) {
+                        TRACE(XERR, "problems setting permissions 0755 on: "<<d);
+                     }
+                  } else {
+                     TRACE(XERR, "problems asserting: "<<d);
+                  }
+               } else {
+                  TRACE(XERR, "problems setting permissions 0777 on: "<<d);
+               }
+            } else {
+               TRACE(XERR, "problems asserting: "<<d);
             }
          }
       }

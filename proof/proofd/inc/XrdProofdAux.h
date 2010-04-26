@@ -248,6 +248,7 @@ public:
 
    static const char *AdminMsgType(int type);
    static int AssertDir(const char *path, XrdProofUI ui, bool changeown);
+   static int ChangeMod(const char *path, unsigned int mode);
    static int ChangeOwn(const char *path, XrdProofUI ui);
    static int ChangeToDir(const char *dir, XrdProofUI ui, bool changeown);
    static int CheckIf(XrdOucStream *s, const char *h);
