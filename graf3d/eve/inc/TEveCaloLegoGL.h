@@ -103,6 +103,9 @@ protected:
    void    DrawAxis2D(TGLRnrCtx &rnrCtx) const;
    void    DrawHistBase(TGLRnrCtx &rnrCtx) const;
 
+   // highlight 
+   void    DrawSelectedCells(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId_t cells) const;
+
    // top view
    void    PrepareCell2DData(TEveCaloData::vCellId_t& cellList, vCell2D_t& cells2D) const;
    void    PrepareCell2DDataRebin(TEveCaloData::RebinData_t& rebinData, vCell2D_t& cells2D) const;

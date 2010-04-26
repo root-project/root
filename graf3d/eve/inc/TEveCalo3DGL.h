@@ -32,6 +32,8 @@ private:
    Float_t RenderBarrelCell(const TEveCaloData::CellGeom_t &cell, Float_t towerH, Float_t offset) const;
    Float_t RenderEndCapCell(const TEveCaloData::CellGeom_t &cell, Float_t towerH, Float_t offset) const;
 
+   void    DrawSelectedCells(TEveCaloData::vCellId_t cells) const;
+
 protected:
    TEveCalo3D     *fM;  // Model object.
 

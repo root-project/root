@@ -36,9 +36,9 @@ protected:
    void      MakeRPhiCell(Float_t phiMin, Float_t phiMax, Float_t towerH, Float_t offset) const;
 
    void      DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t&) const;
-   void      DrawRPhiHighlighted(TGLRnrCtx & rnrCtx) const;
+   void      DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& cellLists) const;
    void      DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t&) const;
-   void      DrawRhoZHighlighted(TGLRnrCtx & rnrCtx) const;
+   void      DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& cellLists) const;
 
    Bool_t    IsRPhi() const;
 

@@ -571,56 +571,70 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 }
 
 //______________________________________________________________________________
-void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
+void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* /*pshp*/, Int_t /*lvl*/) const
 {
    // Draw polygons in highlight mode.
 
-   // XXXX to support highlight AND selection ...
-   if (lvl < 0) lvl = pshp->GetSelected();
-
-   if ((pshp->GetSelected() == 2) && fM->fData->GetCellsSelected().size())
+   if (fM->fData->GetCellsSelected().empty() && fM->fData->GetCellsHighlighted().empty())
    {
-      glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT |GL_POLYGON_BIT );
-      glDisable(GL_LIGHTING);
-      glDisable(GL_CULL_FACE);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      return;
+   }
 
-      TGLUtil::LineWidth(2);
-      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
-      TGLUtil::LockColor();
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
+   glDisable(GL_LIGHTING);
+   glDisable(GL_CULL_FACE);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-      TEveCaloData::CellData_t cellData;
-      Float_t towerH;
-      Int_t nCells =  fM->fCellList.size();
+   TGLUtil::LineWidth(2);
+   TGLUtil::LockColor();
 
-      for (TEveCaloData::vCellId_i i = fM->fData->GetCellsSelected().begin();
-           i != fM->fData->GetCellsSelected().end(); i++)
+   if (!fM->fData->GetCellsHighlighted().empty()) 
+   {
+      glColor4ubv(rnrCtx.ColorSet().Selection(3).CArr());
+      DrawSelectedCells(fM->fData->GetCellsHighlighted());
+   }
+   if (!fM->fData->GetCellsSelected().empty())
+   {
+      Float_t dr[2];
+      glGetFloatv(GL_DEPTH_RANGE,dr);
+      glColor4ubv(rnrCtx.ColorSet().Selection(1).CArr());
+      glDepthRange(dr[0], 0.8*dr[1]);
+      DrawSelectedCells(fM->fData->GetCellsSelected());
+      glDepthRange(dr[0], dr[1]);
+   }
+   TGLUtil::UnlockColor();
+   glPopAttrib();
+}
+
+//______________________________________________________________________________
+void TEveCalo3DGL::DrawSelectedCells(TEveCaloData::vCellId_t cells) const
+{
+   TEveCaloData::CellData_t cellData;
+   Float_t towerH;
+
+   for (TEveCaloData::vCellId_i i = cells.begin(); i != cells.end(); i++)
+   {
+      fM->fData->GetCellData(*i, cellData);
+      fM->SetupColorHeight(cellData.Value(fM->fPlotEt), (*i).fSlice, towerH);
+
+      // find tower with offsets
+      Float_t offset = 0;
+      for (Int_t j = 0; j < (Int_t) fM->fCellList.size(); ++j)
       {
-         fM->fData->GetCellData(*i, cellData);
-         fM->SetupColorHeight(cellData.Value(fM->fPlotEt), (*i).fSlice, towerH);
-
-         // find tower with offsets
-         Float_t offset = 0;
-         for (Int_t j = 0; j < nCells; ++j)
+         if (fM->fCellList[j].fTower == i->fTower && fM->fCellList[j].fSlice == i->fSlice )
          {
-            if (fM->fCellList[j].fTower == i->fTower && fM->fCellList[j].fSlice == i->fSlice )
-            {
-               offset = fOffset[j];
-               break;
-            }
+            offset = fOffset[j];
+            break;
          }
-
-         if (fM->CellInEtaPhiRng(cellData)) 
-         {
-            if (TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta())
-               RenderBarrelCell(cellData, towerH, offset);
-            else
-               RenderEndCapCell(cellData, towerH, offset);
-         }  
       }
 
-      TGLUtil::UnlockColor();
-      glPopAttrib();
+      if (fM->CellInEtaPhiRng(cellData)) 
+      {
+         if (TMath::Abs(cellData.EtaMax()) < fM->GetTransitionEta())
+            RenderBarrelCell(cellData, towerH, offset);
+         else
+            RenderEndCapCell(cellData, towerH, offset);
+      }  
    }
 }
 
@@ -630,14 +644,15 @@ void TEveCalo3DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
    // Processes tower selection.
    // Virtual function from TGLogicalShape. Called from TGLViewer.
 
-   Int_t prev = fM->fData->GetCellsSelected().size();
+   TEveCaloData::vCellId_t& cells = rec.GetHighlight() ? fM->fData->GetCellsHighlighted() : fM->fData->GetCellsSelected() ;
 
-   if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
+   Int_t prev = cells.size();
+   if (!rec.GetMultiple()) cells.clear();
    Int_t cellID = -1;
    if (rec.GetN() > 1)
    {
       cellID = rec.GetItem(1);
-      fM->fData->GetCellsSelected().push_back(fM->fCellList[cellID]);
+      cells.push_back(fM->fCellList[cellID]);
    }
 
    if (prev == 0 && cellID >= 0)

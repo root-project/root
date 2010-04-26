@@ -152,7 +152,6 @@ private:
 
 protected:
    TEveCaloData::vCellId_t fCellList;
-   TEveCaloData::vCellId_t fCellListSelected;
 
    Bool_t    fRnrEndCapFrame;
    Bool_t    fRnrBarrelFrame;
@@ -195,12 +194,13 @@ private:
    TEveCalo2D& operator=(const TEveCalo2D&); // Not implemented
 
    TEveProjection::EPType_e  fOldProjectionType;
+   void CellSelectionChangedInternal(TEveCaloData::vCellId_t& cells, std::vector<TEveCaloData::vCellId_t*>& cellLists);
 
 protected:
    std::vector<TEveCaloData::vCellId_t*>   fCellLists;
 
    std::vector<TEveCaloData::vCellId_t*>   fCellListsSelected;
-   std::vector<Int_t>                      fBinIdsSelected;
+   std::vector<TEveCaloData::vCellId_t*>   fCellListsHighlighted;
 
    Float_t                                 fMaxESumBin;
    Float_t                                 fMaxEtSumBin;

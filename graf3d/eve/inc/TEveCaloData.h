@@ -153,19 +153,25 @@ protected:
    Float_t      fEps;
 
    vCellId_t    fCellsSelected;
+   vCellId_t    fCellsHighlighted;
 
 public:
    TEveCaloData(const char* n="TEveCalData", const char* t="");
    virtual ~TEveCaloData() {}
 
-   virtual void    SelectElement(Bool_t state);
+   virtual void UnSelected();
+   virtual void UnHighlighted();
+
+   virtual TString GetHighlightTooltip();
+
    virtual void    FillImpliedSelectedSet(Set_t& impSelSet);
 
    virtual void    GetCellList(Float_t etaMin, Float_t etaMax,
                                Float_t phi,    Float_t phiRng,
                                vCellId_t &out) const = 0;
 
-   vCellId_t&      GetCellsSelected() { return fCellsSelected; }
+   vCellId_t&      GetCellsSelected()    { return fCellsSelected; }
+   vCellId_t&      GetCellsHighlighted() { return fCellsHighlighted; }
    void            PrintCellsSelected();
 
    virtual void    Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const = 0;

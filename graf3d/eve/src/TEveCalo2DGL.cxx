@@ -151,7 +151,7 @@ void TEveCalo2DGL::DrawRPhi(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
 }
 
 //______________________________________________________________________________
-void TEveCalo2DGL::DrawRPhiHighlighted(TGLRnrCtx & /*rnrCtx*/) const
+void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& cellLists) const
 {
    // Draw selected calorimeter cells in RPhi projection.
 
@@ -167,7 +167,7 @@ void TEveCalo2DGL::DrawRPhiHighlighted(TGLRnrCtx & /*rnrCtx*/) const
 
    for(UInt_t phiBin = 1; phiBin <= nPhiBins; ++phiBin)
    {
-      if (fM->fCellListsSelected[phiBin])
+      if (cellLists[phiBin])
       {
          if (!fM->fCellLists[phiBin])
             throw eh + "selected cell not in cell list cache.";
@@ -175,7 +175,7 @@ void TEveCalo2DGL::DrawRPhiHighlighted(TGLRnrCtx & /*rnrCtx*/) const
          Float_t off = 0;
          // selected eta sum
          for (Int_t s=0; s<nSlices; ++s) sliceVal[s] = 0;
-         TEveCaloData::vCellId_t& cids = *(fM->fCellListsSelected[phiBin]);
+         TEveCaloData::vCellId_t& cids = *(cellLists[phiBin]);
          for (TEveCaloData::vCellId_i i=cids.begin(); i!=cids.end(); i++) {
             data->GetCellData((*i), cellData);
             sliceVal[i->fSlice] += cellData.Value(fM->fPlotEt);
@@ -333,7 +333,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
 }
 
 //______________________________________________________________________________
-void TEveCalo2DGL::DrawRhoZHighlighted(TGLRnrCtx & /*rnrCtx*/) const
+void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& cellLists) const
 {
    // Draw selected calorimeter cells in RhoZ projection.
 
@@ -354,7 +354,7 @@ void TEveCalo2DGL::DrawRhoZHighlighted(TGLRnrCtx & /*rnrCtx*/) const
 
    for (UInt_t etaBin = 1; etaBin <= nEtaBins; ++etaBin)
    {
-      if (fM->fCellListsSelected[etaBin])
+      if (cellLists[etaBin])
       {
          if (!fM->fCellLists[etaBin])
             throw(eh + "selected cell not in cell list cache.");
@@ -364,7 +364,7 @@ void TEveCalo2DGL::DrawRhoZHighlighted(TGLRnrCtx & /*rnrCtx*/) const
          for (Int_t s = 0; s < nSlices; ++s) {
             sliceValsUp[s] = 0; sliceValsLow[s] = 0;
          }
-         TEveCaloData::vCellId_t& cids = *(fM->fCellListsSelected[etaBin]);
+         TEveCaloData::vCellId_t& cids = *(cellLists[etaBin]);
          for (TEveCaloData::vCellId_i i=cids.begin(); i!=cids.end(); i++) {
             data->GetCellData(*i, cellData);
             if (cellData.Phi() > 0)
@@ -436,41 +436,60 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 }
 
 //______________________________________________________________________________
-void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
+void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*pshp*/, Int_t /*lvl*/) const
 {
    // Draw towers in highlight mode.
 
    static const TEveException eh("TEveCalo2DGL::DrawHighlight ");
 
-   // XXXX to support highlight AND selection ...
-   if (lvl < 0) lvl = pshp->GetSelected();
-
-   if ((pshp->GetSelected() == 2) && fM->fData->GetCellsSelected().size())
+   if (fM->fData->GetCellsSelected().empty() && fM->fData->GetCellsHighlighted().empty())
    {
-      glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT  | GL_LINE_BIT );
-      glDisable(GL_CULL_FACE);
-      glDisable(GL_LIGHTING);
-      glEnable(GL_LINE_SMOOTH);
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      TGLUtil::LineWidth(2);
-
-      glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
-      TGLUtil::LockColor();
-
-      try {
-         if (IsRPhi())
-            DrawRPhiHighlighted(rnrCtx);
-         else
-            DrawRhoZHighlighted(rnrCtx);
-      }
-      catch (TEveException& exc)
-      {
-         Warning(eh, exc);
-      }
-      TGLUtil::UnlockColor();
-
-      glPopAttrib();
+      return;
    }
+
+   glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT |GL_POLYGON_BIT );
+   glDisable(GL_LIGHTING);
+   glDisable(GL_CULL_FACE);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+   TGLUtil::LineWidth(2);
+   TGLUtil::LockColor();
+   try {
+   
+      if (!fM->fData->GetCellsHighlighted().empty()) 
+      {
+         glColor4ubv(rnrCtx.ColorSet().Selection(3).CArr());
+
+         if (IsRPhi())
+            DrawRPhiHighlighted(fM->fCellListsHighlighted);
+         else
+            DrawRhoZHighlighted(fM->fCellListsHighlighted);
+
+      }
+      if (!fM->fData->GetCellsSelected().empty())
+      {
+         Float_t dr[2];
+         glGetFloatv(GL_DEPTH_RANGE,dr);
+         glColor4ubv(rnrCtx.ColorSet().Selection(1).CArr());
+         glDepthRange(dr[0], 0.8*dr[1]);
+         if (IsRPhi())
+            DrawRPhiHighlighted(fM->fCellListsSelected);
+         else
+            DrawRhoZHighlighted(fM->fCellListsSelected);
+
+         glDepthRange(dr[0], dr[1]);
+      }
+   }
+   catch (TEveException& exc)
+   {
+      Warning(eh, exc);
+   }
+
+   TGLUtil::UnlockColor();
+   glPopAttrib();
+
+
+  
 }
 
  //______________________________________________________________________________
@@ -479,8 +498,9 @@ void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
    // Processes tower selection in eta bin or phi bin.
    // Virtual function from TGLogicalShape. Called from TGLViewer.
 
-   Int_t prev = fM->fData->GetCellsSelected().size();
-   if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
+   TEveCaloData::vCellId_t& cells = rec.GetHighlight() ? fM->fData->GetCellsHighlighted() : fM->fData->GetCellsSelected() ;
+   Int_t prev = cells.size();
+   if (!rec.GetMultiple()) cells.clear();
 
    Int_t binID = -1;
    if (rec.GetN() > 2)
@@ -498,11 +518,11 @@ void TEveCalo2DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & re
             if (!IsRPhi())
             {
                if ((rec.GetItem(3) && cellData.Phi() > 0) || (rec.GetItem(3) == kFALSE && cellData.Phi() < 0)) {
-                  fM->fData->GetCellsSelected().push_back(*it);
+                  cells.push_back(*it);
                }
             }
             else {
-               fM->fData->GetCellsSelected().push_back(*it);
+               cells.push_back(*it);
             }
          }
       }

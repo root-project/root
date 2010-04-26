@@ -618,10 +618,19 @@ void TEveCalo2D::BuildCellIdCache()
 //______________________________________________________________________________
 void TEveCalo2D::CellSelectionChanged()
 {
+   // Sort slected cells in eta or phi bins for selection and highlight.
+
+   CellSelectionChangedInternal(fData->GetCellsSelected(), fCellListsSelected);
+   CellSelectionChangedInternal(fData->GetCellsHighlighted(), fCellListsHighlighted);
+}
+
+//______________________________________________________________________________
+void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& cells, std::vector<TEveCaloData::vCellId_t*>& cellLists)
+{
    // Sort slected cells in eta or phi bins.
 
    // clear old cache
-   for (vBinCells_i it = fCellListsSelected.begin(); it != fCellListsSelected.end(); it++)
+   for (vBinCells_i it = cellLists.begin(); it != cellLists.end(); it++)
    {
       if (*it)
       {
@@ -629,18 +638,17 @@ void TEveCalo2D::CellSelectionChanged()
          delete *it;
       }
    }
-   fCellListsSelected.clear();
+   cellLists.clear();
 
-   TEveCaloData::vCellId_t&  cells = fData->GetCellsSelected();
    TEveCaloData::CellData_t  cellData;
    if (cells.size())
    {
       Bool_t rPhi  = fManager->GetProjection()->GetType() == TEveProjection::kPT_RPhi;
       UInt_t nBins = rPhi ? fData->GetPhiBins()->GetNbins() : fData->GetEtaBins()->GetNbins();
 
-      fCellListsSelected.resize(nBins+1);
+      cellLists.resize(nBins+1);
       for (UInt_t b = 0; b <= nBins; ++b)
-         fCellListsSelected[b] = 0;
+         cellLists[b] = 0;
 
       Int_t bin;
       for (TEveCaloData::vCellId_i i=cells.begin(); i!=cells.end(); i++)
@@ -655,10 +663,10 @@ void TEveCalo2D::CellSelectionChanged()
             else {
                bin = fData->GetEtaBins()->FindBin(cellData.Eta());
             }
-            if (fCellListsSelected[bin] == 0)
-               fCellListsSelected[bin] = new TEveCaloData::vCellId_t();
+            if (cellLists[bin] == 0)
+               cellLists[bin] = new TEveCaloData::vCellId_t();
 
-            fCellListsSelected[bin]->push_back(*i);
+            cellLists[bin]->push_back(*i);
          }
       }
    }

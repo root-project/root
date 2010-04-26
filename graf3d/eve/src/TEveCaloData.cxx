@@ -119,15 +119,46 @@ TEveCaloData::TEveCaloData(const char* n, const char* t):
 }
 
 //______________________________________________________________________________
-void TEveCaloData::SelectElement(Bool_t s)
+void TEveCaloData::UnSelected()
 {
-   // Virtual method TEveElement::SelectElement.
+   // Virtual method TEveElement::UnSelect.
    // Clear selected towers when deselected.
 
-   if (s == kFALSE)
-      fCellsSelected.clear();
+   fCellsSelected.clear();
+}
 
-   TEveElement::SelectElement(s);
+//______________________________________________________________________________
+void TEveCaloData::UnHighlighted()
+{
+   // Virtual method TEveElement::UnHighlighted.
+
+   fCellsHighlighted.clear();
+}
+
+//______________________________________________________________________________
+TString TEveCaloData::GetHighlightTooltip()
+{
+   if (fCellsHighlighted.empty()) return "";
+
+   CellData_t cellData;
+
+   Bool_t single = fCellsHighlighted.size() == 1;
+   Float_t sum = 0;
+   TString s;
+   for (vCellId_i i = fCellsHighlighted.begin(); i!=fCellsHighlighted.end(); ++i)
+   {
+      GetCellData(*i, cellData);
+      
+      s += TString::Format("%s %.2f (%.3f, %.3f)", 
+                           fSliceInfos[i->fSlice].fName.Data(), cellData.fValue,
+                           cellData.fEtaMin, cellData.fEtaMax, cellData.fPhiMin, cellData.fPhiMax);
+
+      if (single) return s;
+      s += "\n";
+      sum += cellData.fValue;
+   }
+   s += TString::Format("Sum = %.2f", sum);
+   return s;
 }
 
 //______________________________________________________________________________
@@ -237,7 +268,7 @@ void TEveCaloData::CellSelectionChanged()
    {
       calo = dynamic_cast<TEveCaloViz*>(*i);
       calo->CellSelectionChanged();
-      calo->StampObjProps();
+      calo->StampColorSelection();
    }
 }
 

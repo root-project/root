@@ -1049,24 +1049,16 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
 }
 
 //______________________________________________________________________________
-void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
+void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*pshp*/, Int_t /*lvl*/) const
 {
-   // Draw eta-phi range in highlight mode.
+   // Draw highligted cells.
 
-   if (!fM->fData->GetCellsSelected().size() || pshp->GetSelected() != 2) return;
-
-   // XXXX to support highlight AND selection ...
-   if (lvl < 0) lvl = pshp->GetSelected();
+   if (fM->fData->GetCellsSelected().empty() && fM->fData->GetCellsHighlighted().empty())
+   {
+      return;
+   }
 
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT );
-   glDisable(GL_LIGHTING);
-   glDisable(GL_CULL_FACE);
-   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-   TGLUtil::LineWidth(2);
-   glColor4ubv(rnrCtx.ColorSet().Selection(pshp->GetSelected()).CArr());
-   rnrCtx.SetHighlightOutline(kTRUE);
-   TGLUtil::LockColor();
 
    // modelview matrix
    glPushMatrix();
@@ -1079,10 +1071,42 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
    glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetMaxTowerH() / fDataMax);
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
 
+   glDisable(GL_LIGHTING);
+   glDisable(GL_CULL_FACE);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+   TGLUtil::LineWidth(2);
+   TGLUtil::LockColor();
+   if (!fM->fData->GetCellsHighlighted().empty()) 
+   {
+      glColor4ubv(rnrCtx.ColorSet().Selection(3).CArr());
+      DrawSelectedCells(rnrCtx, fM->fData->GetCellsHighlighted());
+   }
+   if (!fM->fData->GetCellsSelected().empty())
+   {
+      Float_t dr[2];
+      glGetFloatv(GL_DEPTH_RANGE,dr);
+      glColor4ubv(rnrCtx.ColorSet().Selection(1).CArr());
+      glDepthRange(dr[0], 0.8*dr[1]);
+      DrawSelectedCells(rnrCtx, fM->fData->GetCellsSelected());
+      glDepthRange(dr[0], dr[1]);
+   }
+
+   TGLUtil::UnlockColor();
+   glPopMatrix();
+   glPopAttrib();
+}
+
+
+//______________________________________________________________________________
+void TEveCaloLegoGL::DrawSelectedCells(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId_t cellsSelectedInput) const
+{
+   // Draw selected cells  in highlight mode.
+
    // check eta&phi range of selected cells
    TEveCaloData::vCellId_t cellsSelected;
    TEveCaloData::CellData_t cellData;
-   for (TEveCaloData::vCellId_i i = fM->fData->GetCellsSelected().begin(); i != fM->fData->GetCellsSelected().end(); i++)
+   for (TEveCaloData::vCellId_i i = cellsSelectedInput.begin(); i != cellsSelectedInput.end(); i++)
    {
       fM->fData->GetCellData((*i), cellData);
       if(fM->CellInEtaPhiRng(cellData))
@@ -1169,11 +1193,9 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
       vCell2D_t cells2DSelected;
       if (fBinStep == 1)
       {
-         // could be exact and call
-         // PrepareCell2DData( fM->fData->GetCellsSelected(), cells2DSelected);
          // but is confusing since top view does no tdraw all slices at same time
-         TEveCaloData::vCellId_i j    = fM->fData->GetCellsSelected().begin();
-         TEveCaloData::vCellId_i jEnd = fM->fData->GetCellsSelected().end();
+         TEveCaloData::vCellId_i j    = cellsSelectedInput.begin();
+         TEveCaloData::vCellId_i jEnd = cellsSelectedInput.end();
          for ( vCell2D_i i = fCells2D.begin(); i != fCells2D.end(); ++i) {
             TEveCaloData::CellId_t cell = fM->fCellList[i->fId];
             if (cell.fTower == j->fTower)
@@ -1192,12 +1214,6 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps
       DrawCells2D(rnrCtx, cells2DSelected);
       fCells2D.clear(); // clear cache
    }
-
-
-   TGLUtil::UnlockColor();
-   rnrCtx.SetHighlightOutline(kFALSE);
-   glPopMatrix();
-   glPopAttrib();
 }
 
 //______________________________________________________________________________
@@ -1364,8 +1380,10 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
 {
    // Processes tower selection from TGLViewer.
 
-   Int_t prev = fM->fData->GetCellsSelected().size();
-   if (!rec.GetMultiple()) fM->fData->GetCellsSelected().clear();
+   TEveCaloData::vCellId_t& cells = rec.GetHighlight() ? fM->fData->GetCellsHighlighted() : fM->fData->GetCellsSelected() ;
+
+   Int_t prev = cells.size();
+   if (!rec.GetMultiple()) cells.clear();
 
    Int_t cellID = -1;
 
@@ -1379,7 +1397,7 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
          Int_t tower = fM->fCellList[cellID].fTower;
          while (cellID > 0 && tower == fM->fCellList[cellID].fTower)
          {
-            fM->fData->GetCellsSelected().push_back(fM->fCellList[cellID]);
+            cells.push_back(fM->fCellList[cellID]);
             if (fCells3D) break;
             --cellID;
          }
@@ -1398,9 +1416,9 @@ void TEveCaloLegoGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & 
             for(TEveCaloData::vCellId_i it = sl.begin(); it != sl.end(); ++it)
             {
                if (fCells3D) {
-                  if ((*it).fSlice == slice )fM->fData->GetCellsSelected().push_back(*it);
+                  if ((*it).fSlice == slice )cells.push_back(*it);
                } else {
-                  if ((*it).fSlice <= slice )fM->fData->GetCellsSelected().push_back(*it);
+                  if ((*it).fSlice <= slice )cells.push_back(*it);
                }
 
             }
