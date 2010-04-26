@@ -2974,9 +2974,10 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
       // since we use Poisson instead of multinomial 
       // add a correction to have ntimes as generated entries 
       Double_t sumgen = GetSumOfWeights(); 
+      Int_t i; 
       if (sumgen < ntimes) { 
          // add missing entries
-         for (Int_t i = Int_t(sumgen+0.5); i < ntimes; ++i) 
+         for (i = Int_t(sumgen+0.5); i < ntimes; ++i) 
          {
             Double_t x = h->GetRandom();
             Fill(x);
@@ -2984,7 +2985,7 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
       }
       else if (sumgen > ntimes) { 
          // remove extra entries
-         Int_t i =  Int_t(sumgen+0.5);
+         i =  Int_t(sumgen+0.5);
          while( i > ntimes) { 
             Double_t x = h->GetRandom();
             Int_t ibin = fXaxis.FindBin(x);
