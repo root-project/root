@@ -1802,6 +1802,28 @@ Int_t TGeoManager::GetVirtualLevel()
 
    return fCurrentNavigator->GetVirtualLevel();
 }
+//_____________________________________________________________________________
+TVirtualGeoTrack *TGeoManager::FindTrackWithId(Int_t id) const
+{
+// Search the track hierarchy to find the track with the
+// given id
+//
+// if 'primsFirst' is true, then:
+// first tries TGeoManager::GetTrackOfId, then does a
+// recursive search if that fails. this would be faster
+// if the track is somehow known to be a primary
+   TVirtualGeoTrack* trk = 0;
+   trk = GetTrackOfId(id);
+   if (trk) return trk;
+   // need recursive search
+   TIter next(fTracks);
+   TVirtualGeoTrack* prim;
+   while ((prim = (TVirtualGeoTrack*)next())) {
+      trk = prim->FindTrackWithId(id);
+      if (trk) return trk;
+   }
+   return NULL;
+}
 
 //_____________________________________________________________________________
 TVirtualGeoTrack *TGeoManager::GetTrackOfId(Int_t id) const

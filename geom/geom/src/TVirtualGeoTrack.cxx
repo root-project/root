@@ -89,6 +89,29 @@ TVirtualGeoTrack::~TVirtualGeoTrack()
 }
 
 //______________________________________________________________________________
+TVirtualGeoTrack *TVirtualGeoTrack::FindTrackWithId(Int_t id) const
+{
+// Recursively search through this track for a daughter
+// particle (at any depth) with the specified id
+   TVirtualGeoTrack* trk=0;
+   if (GetId()==id) {
+      trk = (TVirtualGeoTrack*)this;
+      return trk;
+   }
+   TVirtualGeoTrack* kid=0;
+   Int_t nd = GetNdaughters();
+   for (Int_t i=0; i<nd; i++) if (GetDaughterId(i) == id) return GetDaughter(i);
+   for (Int_t i=0; i<nd; i++) {
+      kid = GetDaughter(i);
+      if (kid!=0) {
+         trk = kid->FindTrackWithId(id);
+         if (trk!=0) break;
+      }
+   }
+   return trk;
+}
+
+//______________________________________________________________________________
 const char *TVirtualGeoTrack::GetName() const
 {
 // Get the PDG name.

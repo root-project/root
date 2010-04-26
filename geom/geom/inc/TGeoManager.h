@@ -359,6 +359,7 @@ public:
    TVirtualGeoTrack      *GetTrack(Int_t index)         {return (index<fNtracks)?(TVirtualGeoTrack*)fTracks->At(index):0;}
    Int_t                  GetTrackIndex(Int_t id) const;
    TVirtualGeoTrack      *GetTrackOfId(Int_t id) const;
+   TVirtualGeoTrack      *FindTrackWithId(Int_t id) const;
    TVirtualGeoTrack      *GetParentTrackOfId(Int_t id) const;
    Int_t                  GetVirtualLevel();
    Bool_t                 GotoSafeLevel();
