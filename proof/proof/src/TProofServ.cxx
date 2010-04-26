@@ -2761,14 +2761,14 @@ Int_t TProofServ::SetupCommon()
                                                           fUser.Data(), dsm.Data()));
             }
          }
-      }
-      if (fDataSetManager && fDataSetManager->TestBit(TObject::kInvalidObject)) {
-         Warning("SetupCommon", "dataset manager plug-in initialization failed");
-         SafeDelete(fDataSetManager);
-      }
-
-      // If no valid dataset manager has been created we instantiate the default one
-      if (!fDataSetManager) {
+         // Check the result of the dataset manager initialization
+         if (fDataSetManager && fDataSetManager->TestBit(TObject::kInvalidObject)) {
+            Warning("SetupCommon", "dataset manager plug-in initialization failed");
+            SendAsynMessage("TXProofServ::SetupCommon: dataset manager plug-in initialization failed");
+            SafeDelete(fDataSetManager);
+         }
+      } else {
+         // Initialize the default dataset manager
          TString opts("Av:");
          TString dsetdir = gEnv->GetValue("ProofServ.DataSetDir", "");
          if (dsetdir.IsNull()) {
@@ -5645,7 +5645,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
 
    // We need a dataset manager
    if (!fDataSetManager) {
-      Error("HandleDataSets", "data manager instance undefined! - Protocol error?");
+      Warning("HandleDataSets", "no data manager is available to fullfil the request");
       return -1;
    }
 
@@ -5818,6 +5818,20 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
             } else {
                Info("HandleDataSets", "kSetDefaultTreeName: modification of dataset info not allowed");
                return -1;
+            }
+         }
+         break;
+      case TProof::kCache:
+         {
+            (*mess) >> uri >> opt;
+            if (opt == "show") {
+               // Show cache content
+               fDataSetManager->ShowCache(uri);
+            } else if (opt == "clear") {
+               // Clear cache content
+               fDataSetManager->ClearCache(uri);
+            } else {
+               Error("HandleDataSets", "kCache: unknown action: %s", opt.Data());
             }
          }
          break;

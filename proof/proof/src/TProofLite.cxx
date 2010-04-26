@@ -1631,6 +1631,27 @@ Int_t TProofLite::VerifyDataSet(const char *uri, const char *)
 }
 
 //______________________________________________________________________________
+void TProofLite::ClearDataSetCache(const char *dataset)
+{
+   // Clear the content of the dataset cache, if any (matching 'dataset', if defined).
+
+   if (fDataSetManager) fDataSetManager->ClearCache(dataset);
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
+void TProofLite::ShowDataSetCache(const char *dataset)
+{
+   // Display the content of the dataset cache, if any (matching 'dataset', if defined).
+
+   // For PROOF-Lite act locally
+   if (fDataSetManager) fDataSetManager->ShowCache(dataset);
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
 void TProofLite::SendInputDataFile()
 {
    // Make sure that the input data objects are available to the workers in a

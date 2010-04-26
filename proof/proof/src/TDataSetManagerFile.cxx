@@ -523,6 +523,7 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group, const char *user,
    //    kPrint          print the dataset content
    //    kQuotaUpdate    update quotas
    //    kExport         use export naming
+   //    kList           get a list of dataset names
    //
    // NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
    // NB2: for options "kPrint" and "kQuotaUpdate" return is null.
@@ -538,21 +539,22 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group, const char *user,
    Bool_t exporting = (option & kExport) ? kTRUE : kFALSE;
    Bool_t updating = (option & kQuotaUpdate) ? kTRUE : kFALSE;
    Bool_t printout = (printing && (option & kDebug)) ? kTRUE : kFALSE;
+   Bool_t listing = (option & kList) ? kTRUE : kFALSE;
 
    // If printing is required add kReadShort to the options
    if (printing || updating)
       option |= kReadShort;
 
    // The last three options are mutually exclusive
-   if (((Int_t)printing + (Int_t)exporting + (Int_t)updating) > 1) {
+   if (((Int_t)printing + (Int_t)exporting + (Int_t)updating + (Int_t)listing) > 1) {
       Error("BrowseDataSets",
-            "only one of kPrint, kQuotaUpdate or kExport can be specified at once");
+            "only one of kPrint, kQuotaUpdate, kExport or kList can be specified at once");
       return kFALSE;
    }
    Bool_t fillmap = (!exporting && !printing && !updating) ? kTRUE : kFALSE;
 
    // Output object
-   TMap *outmap = (fillmap || exporting) ? (TMap *)target : (TMap *)0;
+   TMap *outmap = (fillmap || exporting || listing) ? (TMap *)target : (TMap *)0;
    TList *outlist = (printing) ? (TList *)target : (TList *)0;
 
    TRegexp rg("^[^./][^/]*.root$");  //check that it is a root file, not starting with "."
@@ -594,7 +596,7 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group, const char *user,
          if (fCommonUser == mapUser)
             mapUser = fgCommonDataSetTag.Data();
 
-         if (fillmap && outmap) {
+         if (fillmap && !listing && outmap) {
             if (!(userMap = dynamic_cast<TMap*> (outmap->GetValue(mapGroup)))) {
                userMap = new TMap;
                userMap->SetOwner();
@@ -640,6 +642,13 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group, const char *user,
                   if (os) Printf("%s", os->GetName());
                }
             }
+         } else if (listing) {
+
+            // Just a list of available datasets
+            if (outmap) {
+               outmap->Add(new TObjString(TString::Format("/%s/%s/%s", mapGroup, mapUser, datasetName.Data())),
+                           new TObjString(""));
+            }
          } else {
             if (fillmap && datasetMap)
                datasetMap->Add(new TObjString(datasetName), fileList);
@@ -674,6 +683,7 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    //                    and the common ones
    //
    //    kPrint          print the dataset content; no output is returned
+   //    kList           get a list of available dataset names
    //    kForceScan      Re-open files while processing kPrint (do not use the
    //                    pre-processed information)
    //    kNoHeaderPrint  Labelling header is not printed
@@ -705,10 +715,11 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    Bool_t exporting = (option & kExport) ? kTRUE : kFALSE;
    Bool_t updating = (option & kQuotaUpdate) ? kTRUE : kFALSE;
    Bool_t refreshingls = (option & kRefreshLs) ? kTRUE : kFALSE;
+   Bool_t listing = (option & kList) ? kTRUE : kFALSE;
 
    // The last three options are mutually exclusive
-   if (((Int_t)printing + (Int_t)exporting + (Int_t)updating + (Int_t)refreshingls) > 1) {
-      Error("GetDataSets", "only one of '?P', '?Q', '?E' or '?R' can be specified at once");
+   if (((Int_t)printing + (Int_t)exporting + (Int_t)updating + (Int_t)refreshingls + (Int_t)listing) > 1) {
+      Error("GetDataSets", "only one of '?P', '?Q', '?E', '?R' or '?L' can be specified at once");
       return 0;
    }
 
@@ -718,7 +729,7 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
       TList *ol = new TList();
       ol->SetOwner();
       result = ol;
-   } else if (exporting || !updating) {
+   } else if (exporting || !updating || listing) {
       TMap *om = new TMap;
       om->SetOwner();
       result = om;
@@ -1666,9 +1677,34 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
       }
    } else {
       if (TestBit(TDataSetManager::kAllowVerify)) {
-         if (ParseUri(uri, 0, 0, &dsName, 0, kTRUE)) {
-            if (ScanDataSet(fGroup, fUser, dsName, (UInt_t)(kReopen | kDebug)) > 0)
-               return GetNDisapparedFiles();
+         if (ParseUri(uri, 0, 0, &dsName, 0, kTRUE, kTRUE)) {
+            if (!(dsName.Contains("*"))) {
+               if (ScanDataSet(fGroup, fUser, dsName, (UInt_t)(kReopen | kDebug)) > 0)
+                  return GetNDisapparedFiles();
+            } else {
+               TString luri = TString::Format("/%s/%s/%s", fGroup.Data(), fUser.Data(), dsName.Data());
+               TMap *fcs = GetDataSets(luri, kList);
+               if (!fcs) return -1;
+               fcs->Print();
+               Int_t ndisappeared = 0;
+               TIter nxd(fcs);
+               TObjString *d = 0;
+               while ((d = (TObjString *) nxd())) {
+                  if (!(d->GetString().IsNull())) {
+                     TString dsn(d->GetName());
+                     if (dsn.Contains("/")) dsn.Remove(0, dsn.Last('/') + 1);
+                     if (ScanDataSet(fGroup, fUser, dsn, (UInt_t)(kReopen | kDebug)) > 0) {
+                        ndisappeared += GetNDisapparedFiles();
+                     } else {
+                        Warning("ScanDataSet", "problems processing dataset: %s", d->GetName());
+                     }
+                  } else {
+                     Warning("ScanDataSet", "empty string found in map while processing: %s", uri);
+                  }
+               }
+               SafeDelete(fcs);
+               return ndisappeared;
+            }
          }
       }
    }

@@ -121,7 +121,8 @@ class TMacro;
 // 24 -> 25: Handling of 'data' dir; group information
 // 25 -> 26: Use new TProofProgressInfo class
 // 26 -> 27: Use new file for updating the session status
-// 27 -> 28: Support for multi-datasets, fix global pack dirs, fix AskStatistics, package download
+// 27 -> 28: Support for multi-datasets, fix global pack dirs, fix AskStatistics,
+//           package download, dataset caching
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 28;            // protocol version number
@@ -427,7 +428,8 @@ private:
       kShowDataSets        = 9,  //Shows datasets, returns formatted output
       kGetQuota            = 10, //Get quota info per group
       kShowQuota           = 11, //Show quotas
-      kSetDefaultTreeName  = 12  //Set the default tree name
+      kSetDefaultTreeName  = 12, //Set the default tree name
+      kCache               = 13  //Show/clear cache 
    };
    enum ESendFileOpt {
       kAscii               = 0x0,
@@ -841,6 +843,9 @@ public:
    TList       *FindDataSets(const char *searchString, const char* optStr = "");
 
    virtual Int_t SetDataSetTreeName( const char *dataset, const char *treename);
+
+   virtual void ShowDataSetCache(const char *dataset = 0);
+   virtual void ClearDataSetCache(const char *dataset = 0);
 
    void         ShowData();
    void         ClearData(UInt_t what = kUnregistered, const char *dsname = 0);

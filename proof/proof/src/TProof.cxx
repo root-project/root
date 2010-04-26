@@ -9614,6 +9614,42 @@ Bool_t TProof::ExistsDataSet(const char *dataset)
 }
 
 //______________________________________________________________________________
+void TProof::ClearDataSetCache(const char *dataset)
+{
+   // Clear the content of the dataset cache, if any (matching 'dataset', if defined).
+
+   if (fProtocol < 28) {
+      Info("ClearDataSetCache", "functionality not available on server");
+      return;
+   }
+
+   TMessage msg(kPROOF_DATASETS);
+   msg << Int_t(kCache) << TString(dataset) << TString("clear");
+   Broadcast(msg);
+   Collect(kActive, fCollectTimeout);
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
+void TProof::ShowDataSetCache(const char *dataset)
+{
+   // Display the content of the dataset cache, if any (matching 'dataset', if defined).
+
+   if (fProtocol < 28) {
+      Info("ShowDataSetCache", "functionality not available on server");
+      return;
+   }
+
+   TMessage msg(kPROOF_DATASETS);
+   msg << Int_t(kCache) << TString(dataset) << TString("show");
+   Broadcast(msg);
+   Collect(kActive, fCollectTimeout);
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
 TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
 {
    // Get a list of TFileInfo objects describing the files of the specified

@@ -123,6 +123,8 @@ public:
    Int_t    RemoveDataSet(const char *uri, const char * = 0);
    Int_t    VerifyDataSet(const char *uri, const char * = 0);
    Int_t    SetDataSetTreeName( const char *dataset, const char *treename);
+   void     ShowDataSetCache(const char *dataset = 0);
+   void     ClearDataSetCache(const char *dataset = 0);
 
    // Browsing
    TTree *GetTreeHeader(TDSet *tdset);
