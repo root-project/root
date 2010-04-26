@@ -69,10 +69,12 @@ namespace RooStats {
 
 
       // return the lower bound of the interval on a given parameter 
-      Double_t LowerLimit(const RooRealVar& param) ;
+      Double_t LowerLimit(const RooRealVar& param) { bool ok; return LowerLimit(param,ok); }
+      Double_t LowerLimit(const RooRealVar& param, bool & status) ;
 
       // return the upper bound of the interval on a given parameter 
-      Double_t UpperLimit(const RooRealVar& param) ;
+      Double_t UpperLimit(const RooRealVar& param) { bool ok; return UpperLimit(param,ok); }
+      Double_t UpperLimit(const RooRealVar& param, bool & status) ;
 
       // find both lower and upper interval boundaries for a given parameter
       // retun false if the bounds have not been found

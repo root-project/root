@@ -237,9 +237,16 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    RooAbsPdf * pdf = GetPdf();
    RooAbsData* data = GetData(); 
 
+
    if (!data || !pdf) return 0;
 
    if (fNullParams.getSize() == 0) return 0; 
+
+   // make a clone and ordered list since a vector will be associated to keep parameter values
+   // clone the list since first fit will changes the fNullParams values
+   RooArgList poiList; 
+   poiList.addClone(fNullParams); // make a clone list 
+
 
    // do a global fit 
    if (!fFitResult) DoGlobalFit(); 
@@ -252,11 +259,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    if (!fFitResult) DoGlobalFit(); 
    Double_t NLLatMLE= fFitResult->minNll();
 
-
-
    // set POI to given values, set constant, calculate conditional MLE
-   RooArgList poiList; /// make ordered list since a vector will be associated to keep parameter values
-   poiList.add(fNullParams); 
    std::vector<double> oldValues(poiList.getSize() ); 
    for (unsigned int i = 0; i < oldValues.size(); ++i) { 
       RooRealVar * mytarget = (RooRealVar*) constrainedParams->find(poiList[i].GetName());
