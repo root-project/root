@@ -218,6 +218,10 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
         
   } else {
 
+    if (wgtVar) {
+      wgtVarName = wgtVar->GetName() ;
+    }
+    
     // Create empty datastore 
     RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,wgtVarName) ;
     _dstore = tstore ;
