@@ -1506,7 +1506,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
 
    fsolmap[name] = boolean;
 
-   return node;
+   return child;
 }
 
 //________________________________________________________
