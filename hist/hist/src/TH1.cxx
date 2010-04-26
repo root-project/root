@@ -7722,12 +7722,11 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    TH1 *hout=0;
    if (h_output) hout = h_output;
    else {
-      char name[10];
-      sprintf(name, "out_%s", opt.Data());
+      TString name = TString::Format("out_%s", opt.Data());
       if (fft->GetNdim()==1)
-         hout = new TH1D(name, name,n[0], 0, n[0]);
+         hout = new TH1D(name.Data(), name.Data(),n[0], 0, n[0]);
       else if (fft->GetNdim()==2)
-         hout = new TH2D(name, name, n[0], 0, n[0], n[1], 0, n[1]);
+         hout = new TH2D(name.Data(), name.Data(), n[0], 0, n[0], n[1], 0, n[1]);
    }
    TString type=fft->GetType();
    Int_t ind[2];
@@ -9030,10 +9029,10 @@ TH1 *R__H(Int_t hid)
    //   hid if id >=0
    //   h_id if id <0
 
-   char hname[20];
-   if(hid >= 0) sprintf(hname,"h%d",hid);
-   else         sprintf(hname,"h_%d",hid);
-   return (TH1*)gDirectory->Get(hname);
+   TString hname;
+   if(hid >= 0) hname = TString::Format("h%d",hid);
+   else         hname = TString::Format("h_%d",hid);
+   return (TH1*)gDirectory->Get(hname.Data());
 }
 
 //______________________________________________________________________________
