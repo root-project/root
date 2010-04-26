@@ -170,12 +170,38 @@
 
 <h4>TF1</h4>
 <ul>
-<li> Bug fixed in TF1 zooming on Y axis. To reproduce it do:
+  <li> Bug fixed in TF1 zooming on Y axis. To reproduce it do:
      <pre>
      root [0] TF1 f1( "f1", "-x", 1,3)
      root [1] f1.Draw()
      </pre>
      now selecting some range on the y-axis with the mouse
      jumped to the range (0, 1) instead of chosen range.
+  </li>
+  <li> Add in <tt>TF1::GetX</tt> and <tt>TF1::GetMaximum, TF1::GetMinimum</tt> and
+  <tt>TF1::GetMaximumX, TF1::GetMinimumX</tt> the tolerance and max number
+  of iterations as extra parameters with default values of
+  tolerance=10E-10 and max iterations=100
+  </li>
 </ul>
 
+<h4>TH1</h4>
+<ul>
+  <li>Implement a faster version of <tt>TH1::FillRandom(TH1*,int)</tt>
+  when the passed histogram has the same bins. In this case generate
+  the flactuations bin by bins using Multinomial statistics
+  </li>
+</ul>
+
+<h4>THnSparse</h4>
+<ul>
+  <li>Shrink THnSparse on disk by 70% in an arbitrary example case;
+  also reduce memory usage, especially when not filling.
+  <br>
+  <b>IMPORTANT NOTE</b>: while new THnSparse objects can be read and e.g. projected from in old ROOT versions, filling a new THnSparse object in old ROOT versions does NOT WORK!
+  <li>
+  Add SetBinContent(), AddBinContent(), SetBinError() taking the
+  linear bin index. Use it in Projection() for a considerable
+  speed-up.
+</ul>
+  
