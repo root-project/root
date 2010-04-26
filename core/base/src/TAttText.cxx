@@ -264,103 +264,15 @@ void TAttText::Modify()
       else          tsize = fTextSize*hh;
       if (fTextFont%10 > 2) tsize = fTextSize;
 
-again:
-      if (gVirtualX->HasTTFonts()) {
-         if (gVirtualX->GetTextFont() != fTextFont) {
+      if (gVirtualX->GetTextFont() != fTextFont) {
             gVirtualX->SetTextFont(fTextFont);
-            if (!gVirtualX->HasTTFonts()) goto again;
             gVirtualX->SetTextSize(tsize);
-         }
-         if (gVirtualX->GetTextSize() != tsize)
-            gVirtualX->SetTextSize(tsize);
-
-      } else if (gVirtualX->GetTextFont() != fTextFont ||
-                 gVirtualX->GetTextSize() != tsize) {
-         char     fx11[64];
-         Int_t   fpx11 = fTextFont; if (fpx11 < 0) fpx11 = -fpx11;
-         Int_t  ifpx11 = fpx11/10;
-         Int_t      ih = Int_t(tsize);
-         Float_t rsize = Float_t(ih);
-         if (ih > 37) ih = 37;
-         if (ih <= 0) ih = 1;
-         if (ifpx11 <= 0 || ifpx11 > 13) ifpx11 = 6;
-
-         // Set Font name.
-         switch (ifpx11) {
-            case  1 : strcpy(fx11, "-*-times-medium-i-normal--");     break;
-            case  2 : strcpy(fx11, "-*-times-bold-r-normal--");       break;
-            case  3 : strcpy(fx11, "-*-times-bold-i-normal--");       break;
-            case  4 : strcpy(fx11, "-*-helvetica-medium-r-normal--"); break;
-            case  5 : strcpy(fx11, "-*-helvetica-medium-o-normal--"); break;
-            case  6 : strcpy(fx11, "-*-helvetica-bold-r-normal--");   break;
-            case  7 : strcpy(fx11, "-*-helvetica-bold-o-normal--");   break;
-            case  8 : strcpy(fx11, "-*-courier-medium-r-normal--");   break;
-            case  9 : strcpy(fx11, "-*-courier-medium-o-normal--");   break;
-            case 10 : strcpy(fx11, "-*-courier-bold-r-normal--");     break;
-            case 11 : strcpy(fx11, "-*-courier-bold-o-normal--");     break;
-            case 12 : strcpy(fx11, "-*-symbol-medium-r-normal--");    break;
-            case 13 : strcpy(fx11, "-*-times-medium-r-normal--");     break;
-         };
-         char *buffer;
-         Int_t il = strlen(fx11);
-
-         // Check if closest font has already been computed.
-         static Int_t first = 1;
-         static Int_t fontchecked[13][40];
-         if (first) {
-            for (int ifont=0;ifont<13;ifont++) {
-               for (int isize=0;isize<40;isize++) fontchecked[ifont][isize] = 0;
-            }
-            first = 0;
-         }
-         Int_t ihh = fontchecked[ifpx11-1][ih-1];
-         if (ihh) {
-            buffer = fx11 + il;
-            sprintf(buffer,"%d-*",ihh);
-            gVirtualX->SetTextFont(fx11, TVirtualX::kLoad);
-         } else {
-
-            // Find smallest size available.
-            Int_t isxfnt;
-            for (isxfnt=8; isxfnt<17; isxfnt++) {
-               buffer = fx11 + il;
-               sprintf(buffer,"%d-*",isxfnt);
-               if (!gVirtualX->SetTextFont(fx11, TVirtualX::kCheck) ) break;
-               if (isxfnt == 16) Warning("TAttText::Modify", "cannot find the right size font");
-            }
-
-            // Find the closest size available.
-            ihh = ih;
-            while (1) {
-               if (ihh < isxfnt) ihh = isxfnt;
-               buffer = fx11 + il;
-               sprintf(buffer,"%d-*",ihh);
-               if (!gVirtualX->SetTextFont(fx11, TVirtualX::kLoad) ) {
-                  fontchecked[ifpx11-1][ih-1] = ihh;
-                  break;
-               }
-               if (ihh == isxfnt) {
-                  Warning("TAttText::Modify", "cannot find the right size font");
-                  return;
-               }
-               ihh--;
-            }
-         }
-
-         // Ready to draw text.
-         Float_t mgn = rsize/Float_t(ihh);
-         if (mgn > 100) mgn = 100;
-         if (mgn <0)    mgn = 1;
-         if (fTextFont%10 == 0 || fTextFont%10 > 2) mgn = 1;
-         gVirtualX->SetTextMagnitude(mgn);
-         gVirtualX->DrawText(0,0,0,-1.,0,TVirtualX::kClear);
-         gVirtualX->SetTextFont(fTextFont);
-         gVirtualX->SetTextSize(tsize);
       }
+      if (gVirtualX->GetTextSize() != tsize)
+            gVirtualX->SetTextSize(tsize);
       gVirtualX->SetTextAlign(fTextAlign);
       gVirtualX->SetTextColor(fTextColor);
    }
-
    gPad->SetAttTextPS(fTextAlign,fTextAngle,fTextColor,fTextFont,fTextSize);
 }
 
