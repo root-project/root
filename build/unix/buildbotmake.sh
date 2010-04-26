@@ -1,8 +1,20 @@
 #!/bin/bash
 
-[ -e config/Makefile.config ] || ./configure "$@"
-if [ $? -ne 0 ]; then
-    echo 'ERROR running configure, bailing out before building!' >&2
-    exit $?
+# Run configure if configure hasn't been run or if the configuration
+# switches have changed.
+# Axel, 2010-04-26
+
+if ! test  -f config.status; then
+    ./configure "$@" || exit $?
+else
+    ARGS="$@"
+    while [ "x$1" != "x" ]; do
+        if ! grep -e "$1" config.status > /dev/null 2>&1; then
+            ./configure $ARGS || exit $?
+            break
+        fi
+        shift
+    done
 fi
+
 make -j2
