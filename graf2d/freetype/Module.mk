@@ -132,7 +132,8 @@ else
 		if [ $(ARCH) = "aixgcc" ]; then \
 			FREEZLIB="--without-zlib"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure --with-pic $$FREEZLIB \
+		GNUMAKE=$(MAKE) ./configure --with-pic --disable-shared \
+		 $$FREEZLIB \
 		CC=\'$$FREECC\' CFLAGS=\'$$FREE_CFLAGS -O\'; \
 		$(MAKE))
 endif
