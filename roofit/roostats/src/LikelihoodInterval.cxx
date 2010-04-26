@@ -238,7 +238,7 @@ bool LikelihoodInterval::CreateMinimizer() {
          RooRealVar * fitPar =  (RooRealVar *) (fBestFitParams->find(par.GetName() ) );
          if (fitPar) {
             par.setVal( fitPar->getVal() );
-            par.setError( fitPar->getVal() );
+            par.setError( fitPar->getError() );
          }
       }
    }
