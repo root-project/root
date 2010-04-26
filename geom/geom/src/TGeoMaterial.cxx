@@ -257,7 +257,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
              (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));             
    } else {
-      if (radlen>0) Error("SetRadLen","Invalid material %s: a=%f z=%f -> user values taken: radlen=%f intlen=%f",fA,fZ,radlen,intlen);
+      if (radlen>0) Error("SetRadLen","Invalid material %s: a=%g z=%g -> user values taken: radlen=%g intlen=%g",fName.Data(),fA,fZ,radlen,intlen);
    }
    // Compute interaction length using the same formula as in GEANT4
    if (fA > 0.1 && fZ > 0.1 && intlen>=0) {
@@ -272,7 +272,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       nilinv *= amu/lambda0;
       fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1./nilinv);
    } else {
-      if (intlen>0) Error("SetRadLen","Invalid material %s: a=%f z=%f -> user values taken: radlen=%f intlen=%f",fA,fZ,radlen,intlen);
+      if (intlen>0) Error("SetRadLen","Invalid material %s: a=%g z=%g -> user values taken: radlen=%g intlen=%g",fName.Data(),fA,fZ,radlen,intlen);
    }
 }   
 
