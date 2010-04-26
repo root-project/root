@@ -2969,7 +2969,35 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
          AddBinContent(bin,cont);
          if (fSumw2.fN) fSumw2.fArray[bin] += cont;
       }
-      SetEntries(ntimes);
+
+      // fix for the fluctations in the total number n
+      // since we use Poisson instead of multinomial 
+      // add a correction to have ntimes as generated entries 
+      Double_t sumgen = GetSumOfWeights(); 
+      if (sumgen < ntimes) { 
+         // add missing entries
+         for (Int_t i = Int_t(sumgen+0.5); i < ntimes; ++i) 
+         {
+            Double_t x = h->GetRandom();
+            Fill(x);
+         }
+      }
+      else if (sumgen > ntimes) { 
+         // remove extra entries
+         Int_t i =  Int_t(sumgen+0.5);
+         while( i > ntimes) { 
+            Double_t x = h->GetRandom();
+            Int_t ibin = fXaxis.FindBin(x);
+            Double_t y = GetBinContent(ibin); 
+            // skip in case bin is empty
+            if (y > 0) { 
+               SetBinContent(ibin, y-1.);
+               i--;
+            }
+         }
+      }
+            
+      ResetStats();
       return;
    }
       
