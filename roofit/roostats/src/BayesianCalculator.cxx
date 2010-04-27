@@ -52,7 +52,7 @@ BayesianCalculator::BayesianCalculator() :
   fPdf(0),
   fPriorPOI(0),
   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0), 
-  fInterval(0),
+  fLower(0), fUpper(0), fValidInterval(false),
   fSize(0.05)
 {
    // default constructor. Need to call the Setter methods afterwards
@@ -70,7 +70,7 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
   fPOI(POI),
   fPriorPOI(&priorPOI),
   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
-  fInterval(0),
+  fLower(0), fUpper(0), fValidInterval(false),
   fSize(0.05)
 {
    // constructor from data set, model pdf, set with the parameter of interest 
@@ -87,7 +87,7 @@ BayesianCalculator::BayesianCalculator( RooAbsData& data,
    fPdf(model.GetPdf()),
    fPriorPOI( model.GetPriorPdf()),
    fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
-   fInterval(0),
+   fLower(0), fUpper(0), fValidInterval(false),
    fSize(0.05)
 {
    // Same constructor but from data and a ModelConfig describing the model pdf and the prior, the parameter
@@ -109,13 +109,14 @@ void BayesianCalculator::ClearAll() const {
    if (fLikelihood) delete fLikelihood; 
    if (fIntegratedLikelihood) delete fIntegratedLikelihood; 
    if (fPosteriorPdf) delete fPosteriorPdf;      
-   if (fInterval) delete fInterval; 
    fPosteriorPdf = 0; 
    fProductPdf = 0;
    fLogLike = 0; 
    fLikelihood = 0; 
    fIntegratedLikelihood = 0; 
-   fInterval = 0; 
+   fLower = 0;
+   fUpper = 0;
+   fValidInterval = false;
 }
 
 void BayesianCalculator::SetModel(const ModelConfig & model) {
@@ -192,7 +193,7 @@ RooPlot* BayesianCalculator::GetPosteriorPlot() const
   /// return a RooPlot with the posterior PDF and the credibility region
 
   if (!fPosteriorPdf) GetPosteriorPdf();
-  if (!fInterval) GetInterval();
+  if (!fValidInterval) GetInterval();
 
   RooAbsRealLValue* poi = dynamic_cast<RooAbsRealLValue*>( fPOI.first() );
   assert(poi);
@@ -200,7 +201,7 @@ RooPlot* BayesianCalculator::GetPosteriorPlot() const
    RooPlot* plot = poi->frame();
 
    plot->SetTitle(TString("Posterior probability of parameter \"")+TString(poi->GetName())+TString("\""));  
-   fPosteriorPdf->plotOn(plot,RooFit::Range(fInterval->LowerLimit(),fInterval->UpperLimit(),kFALSE),RooFit::VLines(),RooFit::DrawOption("F"),RooFit::MoveToBack(),RooFit::FillColor(kGray));
+   fPosteriorPdf->plotOn(plot,RooFit::Range(fLower,fUpper,kFALSE),RooFit::VLines(),RooFit::DrawOption("F"),RooFit::MoveToBack(),RooFit::FillColor(kGray));
    fPosteriorPdf->plotOn(plot);
    plot->GetYaxis()->SetTitle("posterior probability");
    
@@ -210,7 +211,7 @@ RooPlot* BayesianCalculator::GetPosteriorPlot() const
 
 SimpleInterval* BayesianCalculator::GetInterval() const
 {
-  /// returns a SimpleInterval with the lower/upper limit on 
+  /// compute and returns a SimpleInterval with the lower/upper limit on 
   /// the scanned variable (the parameter of interest specified in the constructor).
   /// The returned interval is a central interval with the confidence level specified  
   /// previously in SetConfidenceLevel (default is 0.95).
@@ -219,40 +220,44 @@ SimpleInterval* BayesianCalculator::GetInterval() const
   ///        the time needed for performing multi-dimensional numerical integration. 
   ///        In these case using the MCMCCalculator could be more convenient.
 
-  if (fInterval) return fInterval; 
 
-  RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
-  assert(poi);
+   if (fValidInterval) 
+      std::cout << "BayesianCalculator::GetInterval:" 
+                << "Warning : recomputing interval for the same CL and same model" << std::endl;
 
-  if (!fPosteriorPdf) fPosteriorPdf = (RooAbsPdf*) GetPosteriorPdf();
+   RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
+   assert(poi);
 
-  RooAbsReal* cdf = fPosteriorPdf->createCdf(fPOI);
+   if (!fPosteriorPdf) fPosteriorPdf = (RooAbsPdf*) GetPosteriorPdf();
 
-  RooAbsFunc* cdf_bind = cdf->bindVars(fPOI,&fPOI);
-  RooBrentRootFinder brf(*cdf_bind);
-  brf.setTol(0.00005); // precision
+   RooAbsReal* cdf = fPosteriorPdf->createCdf(fPOI);
 
-  double lowerLimit = 0; 
-  double upperLimit = 0; 
+   RooAbsFunc* cdf_bind = cdf->bindVars(fPOI,&fPOI);
+   RooBrentRootFinder brf(*cdf_bind);
+   brf.setTol(0.00005); // precision
 
-  double tmpVal = poi->getVal(); // patch because findRoot changes the value of poi
+   double tmpVal = poi->getVal(); // patch because findRoot changes the value of poi
 
-  double y = fSize/2;
-  brf.findRoot(lowerLimit,poi->getMin(),poi->getMax(),y);
+   double y = fSize/2;
+   brf.findRoot(fLower,poi->getMin(),poi->getMax(),y);
 
-  y=1-fSize/2;
-  brf.findRoot(upperLimit,poi->getMin(),poi->getMax(),y);
+   y=1-fSize/2;
+   bool ret = brf.findRoot(fUpper,poi->getMin(),poi->getMax(),y);
+   if (!ret) std::cout << "BayesianCalculator::GetInterval: Warning:"
+                       << "Error returned from Root finder, estimated interval is not fully correct" 
+                       << std::endl;
 
-  poi->setVal(tmpVal); // patch: restore the original value of poi
+   poi->setVal(tmpVal); // patch: restore the original value of poi
 
-  delete cdf_bind;
-  delete cdf;
+   delete cdf_bind;
+   delete cdf;
+   fValidInterval = true; 
 
-  TString interval_name = TString("BayesianInterval_a") + TString(this->GetName());
-  fInterval = new SimpleInterval(interval_name,*poi,lowerLimit,upperLimit,ConfidenceLevel());
-  fInterval->SetTitle("SimpleInterval from BayesianCalculator");
+   TString interval_name = TString("BayesianInterval_a") + TString(this->GetName());
+   SimpleInterval * interval = new SimpleInterval(interval_name,*poi,fLower,fUpper,ConfidenceLevel());
+   interval->SetTitle("SimpleInterval from BayesianCalculator");
 
-  return fInterval;
+   return interval;
 }
 
 } // end namespace RooStats

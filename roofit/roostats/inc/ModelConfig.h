@@ -89,11 +89,32 @@ public:
       fPOIName=std::string(GetName()) + "_POI";
       DefineSetInWS(fPOIName.c_str(), set);
    }
+   virtual void SetParametersOfInterest(RooArgSet& set) {
+      SetParameters(set); 
+   }
     
    // specify the nuisance parameters (eg. the rest of the parameters)
    virtual void SetNuisanceParameters(RooArgSet& set) {
       fNuisParamsName=std::string(GetName()) + "_NuisParams";
       DefineSetInWS(fNuisParamsName.c_str(), set);
+   }
+
+   // specify the constraint parameters 
+   virtual void SetConstraintParameters(RooArgSet& set) {
+      fConstrParamsName=std::string(GetName()) + "_ConstrainedParams";
+      DefineSetInWS(fConstrParamsName.c_str(), set);
+   }
+
+   // specify the observables
+   virtual void SetObservables(RooArgSet& set) {
+      fObservablesName=std::string(GetName()) + "_Observables";
+      DefineSetInWS(fObservablesName.c_str(), set);
+   }
+
+   // specify the conditional observables
+   virtual void SetConditionalObservables(RooArgSet& set) {
+      fConditionalObsName=std::string(GetName()) + "_ConditionalObservables";
+      DefineSetInWS(fConditionalObsName.c_str(), set);
    }
 
    // set parameter values for the null if using a common PDF
@@ -153,7 +174,7 @@ public:
    const RooArgSet * GetNuisanceParameters() const { return (fWS) ? fWS->set(fNuisParamsName.c_str()) : 0; } 
 
    /// get RooArgSet containing the constraint parameters (return NULL if not existing) 
-   const RooArgSet * GetConstraintParameters() const { return (fWS) ? fWS->set(fConstrainedParamName.c_str()) : 0; } 
+   const RooArgSet * GetConstraintParameters() const { return (fWS) ? fWS->set(fConstrParamsName.c_str()) : 0; } 
 
    /// get parameters prior pdf  (return NULL if not existing) 
    RooAbsPdf * GetPriorPdf() const { return (fWS) ? fWS->pdf(fPriorPdfName.c_str()) : 0; } 
@@ -162,7 +183,7 @@ public:
    const RooArgSet * GetObservables() const { return (fWS) ? fWS->set(fObservablesName.c_str()) : 0; } 
 
    /// get RooArgSet for conditional observales  (return NULL if not existing) 
-   const RooArgSet * GetConditionalObservables() const { return (fWS) ? fWS->set(fConditionalObservablesName.c_str()) : 0; } 
+   const RooArgSet * GetConditionalObservables() const { return (fWS) ? fWS->set(fConditionalObsName.c_str()) : 0; } 
 
    /// get Proto data set (return NULL if not existing) 
    RooAbsData * GetProtoData()  const {  return (fWS) ? fWS->data(fProtoDataName.c_str()) : 0; } 
@@ -192,10 +213,10 @@ protected:
    std::string fPOIName; // name for RooArgSet specifying parameters of interest
     
    std::string fNuisParamsName; // name for RooArgSet specifying nuisance parameters
-   std::string fConstrainedParamName; // name for RooArgSet specifying constrained parameters
+   std::string fConstrParamsName; // name for RooArgSet specifying constrained parameters
    std::string fPriorPdfName; // name for RooAbsPdf specifying a prior on the parameters
     
-   std::string fConditionalObservablesName; // name for RooArgSet specifying conditional observables
+   std::string fConditionalObsName; // name for RooArgSet specifying conditional observables
    std::string fProtoDataName; // name for RooArgSet specifying dataset that should be used as protodata
     
    std::string fSnapshotName; // name for RooArgSet that specifies a particular hypothesis

@@ -61,15 +61,17 @@ namespace RooStats {
 
       virtual SimpleInterval* GetInterval() const ; 
 
-      virtual void SetData( RooAbsData & data ) { fData = &data; }
+      virtual void SetData( RooAbsData & data ) {
+         fData = &data;
+         ClearAll();
+      }
 
       virtual void SetModel( const ModelConfig& model ); 
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize( Double_t size ) {
          fSize = size;
-         if (fInterval) delete fInterval;
-	 fInterval = 0;  
+         fValidInterval = false; 
       }
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel( Double_t cl ) { SetTestSize(1.-cl); }
@@ -102,7 +104,9 @@ namespace RooStats {
       mutable RooAbsReal* fLikelihood; 
       mutable RooAbsReal* fIntegratedLikelihood; 
       mutable RooAbsPdf* fPosteriorPdf; 
-      mutable SimpleInterval* fInterval;  // cached pointer to resulting interval
+      mutable Double_t  fLower; 
+      mutable Double_t  fUpper; 
+      mutable Bool_t    fValidInterval;
 
       double fSize;  // size used for getting the interval
 
