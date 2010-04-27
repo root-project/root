@@ -19,3 +19,4 @@ SelectorCintTest.log: sel01_C.$(DllSuf) $(ROOTCORELIBS)
 SelectorCintTest: SelectorCintTest.log
 	$(TestDiff)
 
+execGetSelector.clog: emptysel_C.$(DllSuf)
