@@ -33,7 +33,7 @@
 using std::cout; 
 using std::endl; 
 
-int n = 100000;
+int n;
 
 double gaus3d(double *x, double *p) { 
 
@@ -72,8 +72,8 @@ double gaus100d(double * x, double *) {
 
 int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiContDist & dist, TH3 * h1, const TH3 * href = 0, const int dim = 3 ) { 
 
-   assert (dim >=3);
 
+   assert (dim >=3);
    // init unuran 
    bool ret =   unr.Init(dist,method); 
    if (!ret) { 
@@ -103,7 +103,9 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
       double ksprob = href->KolmogorovTest(h1);
       std::cout << "\tChi2 Prob = "<< prob << "\tKS Prob = " << ksprob << std::endl;
       // use lower value since hitro is not very precise 
-      if (prob < 1.E-12) { 
+      // use ks for hitro since chi2 gives too big error  
+      if (unr.MethodName() == "hitro") prob = ksprob; 
+      if (prob < 1.E-6 ) { 
          std::cout << "\nChi2 Test failed ! " << std::endl;
          href->Chi2Test(h1,"UUP"); // print all chi2 test info
          return 1;
@@ -160,6 +162,7 @@ int  unuranMultiDim() {
    gSystem->Load("libUnuran");
 
    // simple test of unuran
+   n   = 100000;
 
    
 
@@ -179,8 +182,8 @@ int  unuranMultiDim() {
 
 
    TRandom3 r; 
-   r.SetSeed(0);
-   gRandom->SetSeed(0);
+   //r.SetSeed(0);
+   //gRandom->SetSeed(0);
 
 
    std::cout << "Test using an undefined domain :\n\n";
