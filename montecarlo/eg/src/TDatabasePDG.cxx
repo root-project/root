@@ -568,29 +568,29 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
       if (c[0] != '#') {
          ungetc(c[0],file);
          // read channel number
-         fscanf(file,"%i",&ich);
-         fscanf(file,"%s",name  );
-         fscanf(file,"%i",&kf   );
-         fscanf(file,"%i",&anti );
+         if (fscanf(file,"%i",&ich)) {;}
+         if (fscanf(file,"%s",name  )) {;}
+         if (fscanf(file,"%i",&kf   )) {;}
+         if (fscanf(file,"%i",&anti )) {;}
 
          if (kf < 0) {
             AddAntiParticle(name,kf);
             // nothing more on this line
-            fgets(c,200,file);
+            if (fgets(c,200,file)) {;}
          } else {
-            fscanf(file,"%i",&class_number);
-            fscanf(file,"%s",class_name);
-            fscanf(file,"%i",&charge);
-            fscanf(file,"%le",&mass);
-            fscanf(file,"%le",&width);
-            fscanf(file,"%i",&isospin);
-            fscanf(file,"%i",&i3);
-            fscanf(file,"%i",&spin);
-            fscanf(file,"%i",&flavor);
-            fscanf(file,"%i",&tracking_code);
-            fscanf(file,"%i",&nch);
+            if (fscanf(file,"%i",&class_number)) {;}
+            if (fscanf(file,"%s",class_name)) {;}
+            if (fscanf(file,"%i",&charge)) {;}
+            if (fscanf(file,"%le",&mass)) {;}
+            if (fscanf(file,"%le",&width)) {;}
+            if (fscanf(file,"%i",&isospin)) {;}
+            if (fscanf(file,"%i",&i3)) {;}
+            if (fscanf(file,"%i",&spin)) {;}
+            if (fscanf(file,"%i",&flavor)) {;}
+            if (fscanf(file,"%i",&tracking_code)) {;}
+            if (fscanf(file,"%i",&nch)) {;}
             // nothing more on this line
-            fgets(c,200,file);
+            if (fgets(c,200,file)) {;}
             if (width > 1e-10) stable = 0;
             else               stable = 1;
 
@@ -614,12 +614,12 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
                   if (c[0] != '#') {
                      ungetc(c[0],file);
 
-                     fscanf(file,"%i",&idecay);
-                     fscanf(file,"%i",&decay_type);
-                     fscanf(file,"%le",&branching_ratio);
-                     fscanf(file,"%i",&ndau);
+                     if (fscanf(file,"%i",&idecay)) {;}
+                     if (fscanf(file,"%i",&decay_type)) {;}
+                     if (fscanf(file,"%le",&branching_ratio)) {;}
+                     if (fscanf(file,"%i",&ndau)) {;}
                      for (int idau=0; idau<ndau; idau++) {
-                        fscanf(file,"%i",&dau[idau]);
+                        if (fscanf(file,"%i",&dau[idau])) {;}
                      }
                      // add decay channel
 
@@ -627,13 +627,13 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
                      ich++;
                   }
                   // skip end of line
-                  fgets(c,200,file);
+                  if (fgets(c,200,file)) {;}
                }
             }
          }
       } else {
          // skip end of line
-         fgets(c,200,file);
+         if (fgets(c,200,file)) {;}
       }
    }
    // in the end loop over the antiparticles and
