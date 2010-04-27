@@ -2055,20 +2055,15 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       y -= 0.4*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.4*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
    }
-   TText t;
-   t.SetTextSize(fTextSize);
-   t.SetTextFont(fTextFont);
-
-   UInt_t wa1,wa0;
-   t.GetTextAdvance(wa0, chars, kFALSE);
-   t.GetTextAdvance(wa1, chars);
-   Bool_t kerning;
-   if (wa0-wa1>0) kerning = kTRUE;
-   else           kerning = kFALSE;
 
    if (txalh > 1) {
-      Double_t twx = gPad->AbsPixeltoX(wa1)-gPad->AbsPixeltoX(0);
-      Double_t twy = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(wa1);
+      TText t;
+      UInt_t w, h;
+      t.SetTextSize(fTextSize);
+      t.SetTextFont(fTextFont);
+      t.GetTextExtent(w, h, chars);
+      Double_t twx = gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0);
+      Double_t twy = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(w);
       if(txalh == 2){
          x = x-(twx/2)*TMath::Cos(kDEGRAD*fTextAngle);
          y = y-(twy/2)*TMath::Sin(kDEGRAD*fTextAngle);
@@ -2107,14 +2102,56 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    // Symbol Italic tan(15) = .26794
    if (font == 15) PrintStr(" q 1 0 .26794 1 0 0 cm");
 
+   const Int_t len=strlen(chars);
+
+   // Calculate the individual character placements.
+   // Otherwise, if a string is printed in one line the kerning is not
+   // performed. In order to measure the precise character positions we need to
+   // trick FreeType into rendering high-resolution characters otherwise it will
+   // stick to the screen pixel grid which is far worse than we can achieve on
+   // print.
+   const Float_t scale = 16.0;
+   // Save current text attributes.
+   TText saveAttText;
+   saveAttText.TAttText::operator=(*this);
+   TText t;
+   t.SetTextSize(fTextSize * scale);
+   t.SetTextFont(fTextFont);
+   UInt_t wa1, wa0;
+   t.GetTextAdvance(wa0, chars, kFALSE);
+   t.GetTextAdvance(wa1, chars);
+   t.TAttText::Modify();
+   Bool_t kerning;
+   if (wa0-wa1>0) kerning = kTRUE;
+   else           kerning = kFALSE;
+   Int_t *charDeltas = 0;
+   if (kerning) {
+        charDeltas = new Int_t[len];
+        for (Int_t i = 0;i < len;i++) {
+            UInt_t ww;
+            t.GetTextAdvance(ww, chars + i);
+            charDeltas[i] = wa1 - ww;
+        }
+        for (Int_t i = len - 1;i > 0;i--) {
+            charDeltas[i] -= charDeltas[i-1];
+        }
+        char tmp[2];
+        tmp[1] = 0;
+        for (Int_t i = 1;i < len;i++) {
+            tmp[0] = chars[i-1];
+            UInt_t width, height;
+            t.GetTextExtent(width, height, &tmp[0]);
+            Double_t wwl = gPad->AbsPixeltoX(width - charDeltas[i]) - gPad->AbsPixeltoX(0);
+            wwl -= 0.5*(gPad->AbsPixeltoX(1) - gPad->AbsPixeltoX(0)); // half a pixel ~ rounding error
+            charDeltas[i] = (Int_t)((1000.0/Float_t(fontsize))*(XtoPDF(wwl) - XtoPDF(0))/scale);
+        }
+   }
+   // Restore text attributes.
+   saveAttText.TAttText::Modify();
+
    // Ouput the text. Escape some characters if needed
    if (kerning) PrintStr(" [");
    else         PrintStr(" (");
-   Int_t len=strlen(chars);
-
-   Int_t kern=0;
-   char c12[3];
-   UInt_t w1,w2;
 
    for (Int_t i=0; i<len;i++) {
       if (chars[i]!='\n') {
@@ -2126,22 +2163,9 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
          }
          PrintStr(str);
          if (kerning) {
-            PrintStr(")");
-            if (i!=len-1) {
-               c12[0] = chars[i];   c12[1] = chars[i+1]; c12[2] = '\0';
-               t.GetTextAdvance(w1, c12, kFALSE);
-               t.GetTextAdvance(w2, c12);
-               kern = w1-w2;
-               if (kern>0) {
-                  Double_t wwl  = gPad->AbsPixeltoX(kern)-gPad->AbsPixeltoX(0);
-                  Double_t wwll = XtoPDF(wwl)-XtoPDF(0);
-                  // This values were found experimentaly. They are not fully satisfactory.
-                  // The kerning number is expressed in thousandths of unit of text space
-                  // (cf PDF manual p.311). The convertion between PDF dots and unit of text
-                  // space is not (yet) clear. It was measured.
-                  WriteReal((1330/78.4589)*(55.6805/fontsize)*wwll);
-                  PrintStr(" ");
-               }
+            PrintStr(") ");
+            if (i < len-1) {
+                if (charDeltas[i]>0) WriteInteger(charDeltas[i]);
             }
          }
       }
@@ -2151,6 +2175,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    else         PrintStr(") Tj ET Q");
    if (font == 15) PrintStr(" Q");
    if (!fCompress) PrintStr("@");
+   if (kerning) delete [] charDeltas;
 }
 
 

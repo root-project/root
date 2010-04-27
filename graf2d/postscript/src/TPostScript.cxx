@@ -2365,16 +2365,39 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
 
    UInt_t w,w0;
    Bool_t kerning;
+   // In order to measure the precise character positions we need to trick
+   // FreeType into rendering high-resolution characters otherwise it will
+   // stick to the screen pixel grid, which is far worse than we can achieve
+   // on print.
+   const Float_t scale = 16.0;
+   // Save current text attributes.
+   TText saveAttText;
+   saveAttText.TAttText::operator=(*this);
+   const Int_t len=strlen(chars);
+   Int_t *charWidthsCumul = 0;
    TText t;
-   t.SetTextSize(fTextSize);
+   t.SetTextSize(fTextSize * scale);
    t.SetTextFont(fTextFont);
    t.GetTextAdvance(w, chars);
    t.GetTextAdvance(w0, chars, kFALSE);
+   t.TAttText::Modify();
    if (w0-w>0) kerning = kTRUE;
    else        kerning = kFALSE;
+   if (kerning) {
+      // Calculate the individual character placements.
+      charWidthsCumul = new Int_t[len];
+      for (Int_t i = len - 1;i >= 0;i--) {
+         UInt_t ww;
+         t.GetTextAdvance(ww, chars + i);
+         Double_t wwl = (gPad->AbsPixeltoX(ww)-gPad->AbsPixeltoX(0));
+         charWidthsCumul[i] = (Int_t)((XtoPS(wwl) - XtoPS(0)) / scale);
+      }
+   }
+   // Restore text attributes.
+   saveAttText.TAttText::Modify();
 
    Double_t charsLength = gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0);
-   Int_t psCharsLength = XtoPS(charsLength)-XtoPS(0);
+   Int_t psCharsLength = (Int_t)((XtoPS(charsLength)-XtoPS(0)) / scale);
 
    // Text angle.
    Int_t psangle = Int_t(0.5 + fTextAngle);
@@ -2395,8 +2418,8 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    PrintStr(" C");
 
    // Output text position and angle.
-   WriteInteger(XtoPS(x));
-   WriteInteger(YtoPS(y));
+   WriteReal(((XtoPS(x * scale) - XtoPS(0)) / scale) + XtoPS(0));
+   WriteReal(((YtoPS(y * scale) - YtoPS(0)) / scale) + YtoPS(0));
    PrintStr(Form(" t %d r ", psangle));
    if(txalh == 2) PrintStr(Form(" %d 0 t ", -psCharsLength/2));
    if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
@@ -2407,19 +2430,8 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
      PrintStr(Form(" findfont %g sf 0 0 m ita ",fontsize));
    }
 
-   Int_t len=strlen(chars);
-
    if (kerning) {
-      // Calculate the individual character placements.
       PrintStr("@");
-      Int_t *charWidthsCumul = new Int_t[len];
-      for (Int_t i = len - 1;i >= 0;i--) {
-         UInt_t ww;
-         t.GetTextAdvance(ww, chars + i);
-         Double_t wwl = gPad->AbsPixeltoX(ww)-gPad->AbsPixeltoX(0);
-         charWidthsCumul[i] = XtoPS(wwl) - XtoPS(0);
-      }
-
       // Output individual character placements
       for (Int_t i = len-1; i >= 1; i--) {
          WriteInteger(charWidthsCumul[0] - charWidthsCumul[i]);
