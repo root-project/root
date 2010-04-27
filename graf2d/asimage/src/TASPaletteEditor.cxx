@@ -470,16 +470,16 @@ void TASPaletteEditor::Open()
       FILE *fl = fopen(fi.fFilename, "r");
       if (!fl) return;
       UInt_t numPoints;
-      fscanf(fl, "%u\n", &numPoints);
+      if (fscanf(fl, "%u\n", &numPoints)) {;}
       newPalette = new TImagePalette(numPoints);
       for (Int_t pt = 0; pt < Int_t(numPoints); pt++)
-         fscanf(fl, "%lf %hx %hx %hx %hx\n",
+         if (fscanf(fl, "%lf %hx %hx %hx %hx\n",
                 newPalette->fPoints + pt,
                 newPalette->fColorRed + pt,
                 newPalette->fColorGreen + pt,
                 newPalette->fColorBlue + pt,
-                newPalette->fColorAlpha + pt );
-      fclose(fl);
+                    newPalette->fColorAlpha + pt )) {;}
+             fclose(fl);
    } else {
       // read from a ROOT file
       char fn[512];
