@@ -321,7 +321,8 @@ endif
 
 ifeq ($(ARCH),linuxicc)
 # Linux with Intel icc compiler in 32-bit mode
-CXX = icc
+CC  = icc
+CXX = icpc
 LD  = icpc
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS += -g -wd191 -fPIC 
@@ -333,7 +334,8 @@ endif
 
 ifeq ($(ARCH),linuxx8664icc)
 # Linux with Intel icc compiler in 64-bit mode
-CXX = icc
+CC  = icc
+CXX = icpc
 LD  = icpc
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS += -g -wd191 -fPIC
@@ -418,7 +420,8 @@ ifeq ($(ARCH),macosxicc)
 
 # MacOSX 32/64 bit with Intel icc
 export DYLD_LIBRARY_PATH:=$(ROOTTEST_HOME)/scripts:$(DYLD_LIBRARY_PATH)
-CXX           = icc
+CC            = icc
+CXX           = icpc
 ifeq ($(ROOTBUILD),debug)
 CXXFLAGS      += -g -fPIC -wd191 -wd1476
 else
