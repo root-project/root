@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 # Wrapper around cygpath able to handle multiple arguments
 
