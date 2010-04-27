@@ -987,7 +987,7 @@ void init_rnd()
    int fd;
    unsigned int seed;
    if ((fd = open(randdev, O_RDONLY)) != -1) {
-      read(fd, &seed, sizeof(seed));
+      if (read(fd, &seed, sizeof(seed))) {;}
       close(fd);
    } else {
       seed = (unsigned int)time(0);   //better use times() + win32 equivalent
