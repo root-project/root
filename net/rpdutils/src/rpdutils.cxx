@@ -5605,7 +5605,7 @@ void RpdInitRand()
    if ((fd = open(randdev, O_RDONLY)) != -1) {
       if (gDebug > 2)
          ErrorInfo("RpdInitRand: taking seed from %s", randdev);
-      read(fd, &seed, sizeof(seed));
+      if (read(fd, &seed, sizeof(seed))) {;}
       close(fd);
    } else {
       if (gDebug > 2)
