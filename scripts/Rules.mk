@@ -237,14 +237,14 @@ ifeq ($(HAS_PYTHON),yes)
       PYTHONLIB:=$(shell grep ^PYTHONLIB $(ROOTSYS)/config/Makefile.config | sed -e 's,^.*\:=,,'  -e 's,^ *-L,,' | grep -v -e '^ -l' -e '^ *$$' )
       PYTHONFWK:=$(dir $(PYTHONLIB))
       ifneq ($(PYTHONFWK),)
-         export PATH:=$(PYTHONFWK)/bin:$(PATH)
-         export DYLD_LIBRARY_PATH:=$(PYTHONFWK):$(DYLD_LIBRARY_PATH)
+         export PATH:=$(PYTHONsATH:=$(PYTHONFWK):$(DYLD_LIBRARY_PATH)
       endif
    endif
 endif
 
 ifeq ($(PLATFORM),win32)
 
+SetPathForBuild = roottestpath
 ifeq ($(ROOT_LOC),)
    export ROOT_LOC := $(shell cygpath -u '$(ROOTSYS)')
 endif
@@ -283,6 +283,7 @@ else
 
 export LD_LIBRARY_PATH := ${LD_LIBRARY_PATH}:.
 
+SetPathForBuild = echo
 export ROOT_LOC := $(ROOTSYS)
 
 ObjSuf        = o
@@ -635,13 +636,13 @@ exec%.ref:  | exec%.log
 ifneq ($(PLATFORM),macosx)
 
 define BuildWithLib
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) ) \",\"\")" > $*.build.log 2>&1 || cat $*.build.log 
 endef
 
 else
 
 define BuildWithLib
-        $(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(filter %.$(DllSuf),$^)\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
+        $(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) ) \",\"\")" > $*.build.log 2>&1 || cat $*.build.log
 endef
 
 endif
@@ -689,7 +690,7 @@ endef
 
 define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \
-	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell echo $(filter %.$(DllSuf),$^)|sed 's,/cygdrive/\(.\)/,\1:/,g')\",\"$<\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
+	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) ) \",\"$<\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
 	rm -f dummy$$$$.C dummy$$$$_C.* \
 )
@@ -697,7 +698,7 @@ endef
 
 define BuildFromObjs
 $(CMDECHO) ( touch dummy$$$$.C && \
-	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(filter %.$(DllSuf),$^)\",\"$(filter %.$(ObjSuf),$^)\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
+	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) ) \",\"$(filter %.$(ObjSuf),$^)\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
 	rm dummy$$$$.C \
 )
