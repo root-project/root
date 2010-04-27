@@ -5921,7 +5921,7 @@ void TMinuit::mnpars(TString &crdbuf, Int_t &icondn)
 L120:
 //*-*-                              parameter number integer
    celmnt = crdbuf(istart-1, kapo1-istart);
-   scanf((const char*)celmnt,&fk);
+   if (scanf((const char*)celmnt,&fk)) {;}
    k = Int_t(fk);
    if (k <= 0) goto L210;
    cnamk = "PARAM " + celmnt;
@@ -5955,7 +5955,7 @@ L140:
    goto L170;
 //*-*-         old (fixed-field) format
 L150:
-   scanf((const char*)crdbuf,&xk,stmp,&uk,&wk,&a,&b);
+   if (scanf((const char*)crdbuf,&xk,stmp,&uk,&wk,&a,&b)) {;}
    cnamk = stmp;
    k = Int_t(xk);
    if (k == 0)    goto L210;
