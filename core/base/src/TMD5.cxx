@@ -417,7 +417,7 @@ TMD5 *TMD5::ReadChecksum(const char *file)
 
    char buf[33];
 
-   fgets(buf, 33, fid);
+   if (fgets(buf, 33, fid)) {;}
 
    UChar_t digest[16];
    for (int i = 0; i < 16; i++) {
