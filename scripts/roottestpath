@@ -2,6 +2,6 @@
 
 # Wrapper around cygpath able to handle multiple arguments
 
-if [ $# -gt 1 ] ; then 
+if [ $# -gt 0 ] ; then 
    cygpath -w "$@"
 fi
