@@ -240,7 +240,7 @@ int RemoveLib(const string &solib, bool fullpath, FILE *fp)
          break;
    }
 
-   ftruncate(fileno(fp), 0);
+   if (ftruncate(fileno(fp), 0)) {;}
 
    // write remaining lines back
    if (fptr != fbuf) {
