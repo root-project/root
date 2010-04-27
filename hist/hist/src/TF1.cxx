@@ -242,7 +242,7 @@ Consider the macro myfunc.C below:
       h1->FillRandom("myfunc",20000);
       TF1 *f1=gROOT->GetFunction("myfunc");
       f1->SetParameters(800,1);
-      h1.Fit("myfunc");
+      h1->Fit("myfunc");
    }
 </pre></div><div class="clear" />
 
