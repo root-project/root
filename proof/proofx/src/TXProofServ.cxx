@@ -985,6 +985,10 @@ void TXProofServ::Terminate(Int_t status)
 
    // Notify
    Info("Terminate", "starting session termination operations ...");
+   if (fgLogToSysLog > 0) {
+      TString s = TString::Format("%s -1", (gProofServ ? gProofServ->GetUser() : "undef"));
+      gSystem->Syslog(kLogNotice, s.Data());
+   }
 
    // Notify the memory footprint
    ProcInfo_t pi;

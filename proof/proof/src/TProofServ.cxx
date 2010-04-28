@@ -107,6 +107,10 @@ TProofServ *gProofServ = 0;
 // debug hook
 static volatile Int_t gProofServDebug = 1;
 
+// Syslog control
+Int_t TProofServ::fgLogToSysLog = 0;
+TString TProofServ::fgSysLogService("proof");
+
 // File where to log: default stderr
 FILE *TProofServ::fgErrorHandlerFile = 0;
 
@@ -501,8 +505,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    // Set global to this instance
    gProofServ = this;
 
-   // Log vontrol flags
-   fLogToSysLog     = (gEnv->GetValue("ProofServ.LogToSysLog", 0) != 0) ? kTRUE : kFALSE;
+   // Log control flags
    fSendLogToMaster = kFALSE;
 
    // Abort on higher than kSysError's and set error handler
@@ -591,6 +594,31 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    if (fOrdinal != "-1")
       fPrefix += fOrdinal;
    TProofServLogHandler::SetDefaultPrefix(fPrefix);
+
+   // Syslog control
+   TString slog = gEnv->GetValue("ProofServ.LogToSysLog", "");
+   if (!(slog.IsNull())) {
+      if (slog.IsDigit()) {
+         fgLogToSysLog = slog.Atoi();
+      } else {
+         char c = (slog[0] == 'M' || slog[0] == 'm') ? 'm' : 'a';
+         c = (slog[0] == 'W' || slog[0] == 'w') ? 'w' : c;
+         Bool_t dosyslog = ((c == 'm' && IsMaster()) ||
+                            (c == 'w' && !IsMaster()) || c == 'a') ? kTRUE : kFALSE;
+         if (dosyslog) {
+            slog.Remove(0,1);
+            if (slog.IsDigit()) fgLogToSysLog = slog.Atoi();
+            if (fgLogToSysLog <= 0)
+               Warning("TProofServ", "request for syslog logging ineffective!");
+         }
+      }
+   }
+   // Initialize proper service if required
+   if (fgLogToSysLog > 0) {
+      fgSysLogService = (IsMaster()) ? "proofm" : "proofw";
+      if (fOrdinal != "-1") fgSysLogService += TString::Format("-%s", fOrdinal.Data());
+      gSystem->Openlog(fgSysLogService, kLogPid | kLogCons, kLogLocal5);
+   }
 
    // Enable optimized sending of streamer infos to use embedded backward/forward
    // compatibility support between different ROOT versions and different versions of
@@ -1217,6 +1245,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
    timer.Start();
 
    Int_t rc = 0;
+   TString slb;
+   TString *pslb = (fgLogToSysLog > 0) ? &slb : (TString *)0;
 
    switch (what) {
 
@@ -1239,6 +1269,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             rc = -1;
          }
          SendLogFile();
+         if (pslb) slb = str;
          break;
 
       case kMESS_STRING:
@@ -1360,7 +1391,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          {
             TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS","enter");
-            HandleProcess(mess);
+            HandleProcess(mess, pslb);
             // The log file is send either in HandleProcess or HandleSubmergers.
             // The reason is that the order of various messages depend on the
             // processing mode (sync/async) and/or merging mode
@@ -1377,7 +1408,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
       case kPROOF_REMOVE:
          {
-            HandleRemove(mess);
+            HandleRemove(mess, pslb);
             // Notify
             SendLogFile();
          }
@@ -1385,7 +1416,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
       case kPROOF_RETRIEVE:
          {
-            HandleRetrieve(mess);
+            HandleRetrieve(mess, pslb);
             // Notify
             SendLogFile();
          }
@@ -1393,7 +1424,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
       case kPROOF_ARCHIVE:
          {
-            HandleArchive(mess);
+            HandleArchive(mess, pslb);
             // Notify
             SendLogFile();
          }
@@ -1462,7 +1493,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             rc = 2;
          } else {
             // Handle file checking request
-            HandleCheckFile(mess);
+            HandleCheckFile(mess, pslb);
          }
          break;
 
@@ -1549,7 +1580,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          } else {
             TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_CACHE","enter");
-            Int_t status = HandleCache(mess);
+            Int_t status = HandleCache(mess, pslb);
             // Notify
             SendLogFile(status);
          }
@@ -1696,7 +1727,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
       case kPROOF_DATASETS:
          {  Int_t xrc = -1;
             if (fProtocol > 16) {
-               xrc = HandleDataSets(mess);
+               xrc = HandleDataSets(mess, pslb);
             } else {
                Error("HandleSocketInput", "old client: no or incompatible dataset support");
             }
@@ -1762,7 +1793,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                if (workerList && (ret = fProof->AddWorkers(workerList)) < 0) {
                   Error("HandleSocketInput", "adding a list of worker nodes returned: %d", ret);
                } else {
-                  ProcessNext();
+                  ProcessNext(pslb);
                   // Set idle
                   SetIdle(kTRUE);
                   // Signal the client that we are idle
@@ -1811,6 +1842,12 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
    fRealTime += (Float_t)timer.RealTime();
    fCpuTime  += (Float_t)timer.CpuTime();
+
+   if (fgLogToSysLog > 0) {
+      TString s = TString::Format("%s %d %.3f %.3f %s", (gProofServ ? gProofServ->GetUser() : "undef"),
+                                             what, timer.RealTime(), timer.CpuTime(), slb.Data());
+      gSystem->Syslog(kLogNotice, s.Data());
+   }
 
    // Done
    return rc;
@@ -2890,6 +2927,11 @@ void TProofServ::Terminate(Int_t status)
 {
    // Terminate the proof server.
 
+   if (fgLogToSysLog > 0) {
+      TString s = TString::Format("%s -1", (gProofServ ? gProofServ->GetUser() : "undef"));
+      gSystem->Syslog(kLogNotice, s.Data());
+   }
+
    // Notify the memory footprint
    ProcInfo_t pi;
    if (!gSystem->GetProcInfo(&pi)){
@@ -3068,7 +3110,7 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleArchive(TMessage *mess)
+void TProofServ::HandleArchive(TMessage *mess, TString *slb)
 {
    // Handle archive request.
 
@@ -3078,6 +3120,8 @@ void TProofServ::HandleArchive(TMessage *mess)
    TString queryref;
    TString path;
    (*mess) >> queryref >> path;
+
+   if (slb) slb->Form("%s %s", queryref.Data(), path.Data());
 
    // If this is a set default action just save the default
    if (queryref == "Default") {
@@ -3176,7 +3220,7 @@ void TProofServ::HandleArchive(TMessage *mess)
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleProcess(TMessage *mess)
+void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 {
    // Handle processing request.
 
@@ -3328,7 +3372,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       while (WaitingQueries() > 0 && !enqueued) {
          doprocess = kTRUE;
          //
-         ProcessNext();
+         ProcessNext(slb);
          // avoid processing async queries sent during processing in dyn mode
          if (fProof->UseDynamicStartup())
             enqueued = kTRUE;
@@ -3414,9 +3458,14 @@ void TProofServ::HandleProcess(TMessage *mess)
                                     gPerfStats?gPerfStats->GetBytesRead():0);
          if (status)
             m << status << abort;
+         if (slb)
+            slb->Form("%d %lld %lld", fPlayer->GetExitStatus(),
+                                      status->GetEntries(), status->GetBytesRead());
          SafeDelete(status);
       } else {
          m << fPlayer->GetEventsProcessed() << abort;
+         if (slb)
+            slb->Form("%d %lld -1", fPlayer->GetExitStatus(), fPlayer->GetEventsProcessed());
       }
 
       fSocket->Send(m);
@@ -3683,7 +3732,7 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
 }
 
 //______________________________________________________________________________
-void TProofServ::ProcessNext()
+void TProofServ::ProcessNext(TString *slb)
 {
    // process the next query from the queue of submitted jobs.
    // to be called on the top master only.
@@ -3842,12 +3891,14 @@ void TProofServ::ProcessNext()
       TQueryResult *xpq = (fProtocol > 10) ? pqr : pq;
       if (SendResults(fSocket, fPlayer->GetOutputList(), xpq) != 0)
          Warning("ProcessNext", "problems sending output list");
-
+      if (slb) slb->Form("%d %lld %lld %.3f", fPlayer->GetExitStatus(), pq->GetEntries(),
+                                              pq->GetBytes(), pq->GetUsedCPU());
    } else {
       if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
          Warning("ProcessNext","the output list is empty!");
       if (SendResults(fSocket) != 0)
          Warning("ProcessNext", "problems sending output list");
+      if (slb) slb->Form("%d -1 -1 %.3f", fPlayer->GetExitStatus(), pq->GetUsedCPU());
    }
 
    // Remove aborted queries from the list
@@ -4014,7 +4065,7 @@ void TProofServ::HandleQueryList(TMessage *mess)
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleRemove(TMessage *mess)
+void TProofServ::HandleRemove(TMessage *mess, TString *slb)
 {
    // Handle remove request.
 
@@ -4023,6 +4074,8 @@ void TProofServ::HandleRemove(TMessage *mess)
 
    TString queryref;
    (*mess) >> queryref;
+
+   if (slb) *slb = queryref;
 
    if (queryref == "cleanupqueue") {
       // Remove pending requests
@@ -4076,7 +4129,7 @@ void TProofServ::HandleRemove(TMessage *mess)
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleRetrieve(TMessage *mess)
+void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
 {
    // Handle retrieve request.
 
@@ -4085,6 +4138,8 @@ void TProofServ::HandleRetrieve(TMessage *mess)
 
    TString queryref;
    (*mess) >> queryref;
+
+   if (slb) *slb = queryref;
 
    // Parse reference string
    Int_t qry = -1;
@@ -4277,7 +4332,7 @@ void TProofServ::HandleLibIncPath(TMessage *mess)
 }
 
 //______________________________________________________________________________
-void TProofServ::HandleCheckFile(TMessage *mess)
+void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
 {
    // Handle file checking request.
 
@@ -4291,6 +4346,8 @@ void TProofServ::HandleCheckFile(TMessage *mess)
    (*mess) >> filenam >> md5;
    if ((mess->BufferSize() > mess->Length()) && (fProtocol > 8))
       (*mess) >> opt;
+
+   if (slb) *slb = filenam;
 
    if (filenam.BeginsWith("-")) {
       // install package:
@@ -4458,7 +4515,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::HandleCache(TMessage *mess)
+Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
 {
    // Handle here all cache and package requests.
 
@@ -4492,6 +4549,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          if (IsMaster() && all)
             fProof->ShowCache(all);
          LogToMaster();
+         if (slb) slb->Form("%d %d", type, all);
          break;
       case TProof::kClearCache:
          file = "";
@@ -4505,6 +4563,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          fCacheLock->Unlock();
          if (IsMaster())
             fProof->ClearCache(file);
+         if (slb) slb->Form("%d %s", type, file.Data());
          break;
       case TProof::kShowPackages:
          (*mess) >> all;
@@ -4528,6 +4587,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          if (IsMaster() && all)
             fProof->ShowPackages(all);
          LogToMaster();
+         if (slb) slb->Form("%d %d", type, all);
          break;
       case TProof::kClearPackages:
          status = UnloadPackages();
@@ -4538,6 +4598,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             if (IsMaster())
                status = fProof->ClearPackages();
          }
+         if (slb) slb->Form("%d %d", type, status);
          break;
       case TProof::kClearPackage:
          (*mess) >> package;
@@ -4554,6 +4615,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             if (IsMaster())
                status = fProof->ClearPackage(package);
          }
+         if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kBuildPackage:
          (*mess) >> package;
@@ -4713,6 +4775,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully built", package.Data());
          }
+         if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kLoadPackage:
          (*mess) >> package;
@@ -4790,6 +4853,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully loaded", package.Data());
          }
+         if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kShowEnabledPackages:
          (*mess) >> all;
@@ -4811,44 +4875,52 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          if (IsMaster() && all)
             fProof->ShowEnabledPackages(all);
          LogToMaster();
+         if (slb) slb->Form("%d %d", type, all);
          break;
       case TProof::kShowSubCache:
          (*mess) >> all;
          if (IsMaster() && all)
             fProof->ShowCache(all);
          LogToMaster();
+         if (slb) slb->Form("%d %d", type, all);
          break;
       case TProof::kClearSubCache:
          file = "";
          if ((mess->BufferSize() > mess->Length())) (*mess) >> file;
          if (IsMaster())
             fProof->ClearCache(file);
+         if (slb) slb->Form("%d %s", type, file.Data());
          break;
       case TProof::kShowSubPackages:
          (*mess) >> all;
          if (IsMaster() && all)
             fProof->ShowPackages(all);
          LogToMaster();
+         if (slb) slb->Form("%d %d", type, all);
          break;
       case TProof::kDisableSubPackages:
          if (IsMaster())
             fProof->DisablePackages();
+         if (slb) slb->Form("%d", type);
          break;
       case TProof::kDisableSubPackage:
          (*mess) >> package;
          if (IsMaster())
             fProof->DisablePackage(package);
+         if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kBuildSubPackage:
          (*mess) >> package;
          if (IsMaster())
             fProof->BuildPackage(package);
+         if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kUnloadPackage:
          (*mess) >> package;
          status = UnloadPackage(package);
          if (IsMaster() && status == 0)
             status = fProof->UnloadPackage(package);
+         if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kDisablePackage:
          (*mess) >> package;
@@ -4861,11 +4933,13 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          fPackageLock->Unlock();
          if (IsMaster())
             fProof->DisablePackage(package);
+         if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kUnloadPackages:
          status = UnloadPackages();
          if (IsMaster() && status == 0)
             status = fProof->UnloadPackages();
+         if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kDisablePackages:
          fPackageLock->Lock();
@@ -4873,11 +4947,13 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          fPackageLock->Unlock();
          if (IsMaster())
             fProof->DisablePackages();
+         if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kListEnabledPackages:
          msg.Reset(kPROOF_PACKAGE_LIST);
          msg << type << fEnabledPackages;
          fSocket->Send(msg);
+         if (slb) slb->Form("%d", type);
          break;
       case TProof::kListPackages:
          {
@@ -4898,6 +4974,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             msg << type << pack;
             fSocket->Send(msg);
          }
+         if (slb) slb->Form("%d", type);
          break;
       case TProof::kLoadMacro:
 
@@ -4933,6 +5010,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          // Notify the upper level
          LogToMaster();
 
+         if (slb) slb->Form("%d %s", type, package.Data());
          break;
       default:
          Error("HandleCache", "unknown type %d", type);
@@ -5118,20 +5196,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    if (level >= kError && gProofServ)
       gProofServ->LogToMaster();
 
-   static TString syslogService;
-
-   Bool_t tosyslog = (gProofServ && gProofServ->LogToSysLog()) ? kTRUE : kFALSE;
-
-   if (tosyslog) {
-      if (syslogService.IsNull()) {
-         syslogService = gProofServ != 0 ? gProofServ->GetService() : "proof";
-         gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
-      } else if (gProofServ != 0 && syslogService != gProofServ->GetService()) {
-         // re-initialize if proper service is now know
-         syslogService = gProofServ->GetService();
-         gSystem->Openlog(syslogService, kLogPid | kLogCons, kLogLocal5);
-      }
-   }
+   Bool_t tosyslog = (fgLogToSysLog > 1) ? kTRUE : kFALSE;
 
    const char *type   = 0;
    ELogLevel loglevel = kLogInfo;
@@ -5188,18 +5253,15 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
                                  (gProofServ ? gProofServ->GetPrefix() : "proof"),
                                   type, msg);
       if (tosyslog)
-         buf.Form("%s:%s:%s:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
-                                 (gProofServ ? gProofServ->GetPrefix() : "proof"),
-                                 type, msg);
+         buf.Form("%s: %s:%s", (gProofServ ? gProofServ->GetUser() : "unknown"), type, msg);
    } else {
       fprintf(fgErrorHandlerFile, "%s %5d %s | %s in <%.*s>: %s\n", st(11,8).Data(),
                                   gSystem->GetPid(),
                                  (gProofServ ? gProofServ->GetPrefix() : "proof"),
                                   type, ipos, location, msg);
       if (tosyslog)
-         buf.Form("%s:%s:%s:<%.*s>:%s", (gProofServ ? gProofServ->GetUser() : "unknown"),
-                                        (gProofServ ? gProofServ->GetPrefix() : "proof"),
-                                        type, ipos, location, msg);
+         buf.Form("%s: %s:<%.*s>: %s", (gProofServ ? gProofServ->GetUser() : "unknown"),
+                                      type, ipos, location, msg);
    }
    fflush(fgErrorHandlerFile);
 
@@ -5636,7 +5698,7 @@ void TProofServ::HandleException(Int_t sig)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::HandleDataSets(TMessage *mess)
+Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
 {
    // Handle here requests about datasets.
 
@@ -5663,6 +5725,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          // Check whether this dataset exist
          {
             (*mess) >> uri;
+            if (slb) slb->Form("%d %s", type, uri.Data());
             if (fDataSetManager->ExistsDataSet(uri))
                // Dataset name does exist
                return -1;
@@ -5674,6 +5737,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
             if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
                (*mess) >> uri;
                (*mess) >> opt;
+               if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
                // Extract the list
                TFileCollection *dataSet =
                   dynamic_cast<TFileCollection*> ((mess->ReadObject(TFileCollection::Class())));
@@ -5687,6 +5751,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
                return rc;
             } else {
                Info("HandleDataSets", "dataset registration not allowed");
+               if (slb) slb->Form("%d notallowed", type);
                return -1;
             }
          }
@@ -5695,6 +5760,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kShowDataSets:
          {
             (*mess) >> uri >> opt;
+            if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
             // Show content
             fDataSetManager->ShowDataSets(uri, opt);
          }
@@ -5703,6 +5769,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kGetDataSets:
          {
             (*mess) >> uri >> opt;
+            if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
             // Get the datasets and fill a map
             TMap *returnMap = fDataSetManager->GetDataSets(uri, (UInt_t)TDataSetManager::kExport);
             // If defines, option gives the name of a server for which to extract the information
@@ -5740,6 +5807,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kGetDataSet:
          {
             (*mess) >> uri >> opt;
+            if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
             // Get the list
             TFileCollection *fileList = fDataSetManager->GetDataSet(uri,opt);
             if (fileList) {
@@ -5755,12 +5823,14 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          {
             if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
                (*mess) >> uri;
+               if (slb) slb->Form("%d %s", type, uri.Data());
                if (!fDataSetManager->RemoveDataSet(uri)) {
                   // Failure
                   return -1;
                }
             } else {
                Info("HandleDataSets", "dataset creation / removal not allowed");
+               if (slb) slb->Form("%d notallowed", type);
                return -1;
             }
          }
@@ -5769,6 +5839,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          {
             if (fDataSetManager->TestBit(TDataSetManager::kAllowVerify)) {
                (*mess) >> uri;
+               if (slb) slb->Form("%d %s", type, uri.Data());
                TProofServLogHandlerGuard hg(fLogFile,  fSocket);
                rc = fDataSetManager->ScanDataSet(uri, TDataSetManager::kReopen | TDataSetManager::kDebug);
                // TODO: verify in parallel:
@@ -5786,6 +5857,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kGetQuota:
          {
             if (fDataSetManager->TestBit(TDataSetManager::kCheckQuota)) {
+               if (slb) slb->Form("%d", type);
                TMap *groupQuotaMap = fDataSetManager->GetGroupQuotaMap();
                if (groupQuotaMap) {
                   // Send result
@@ -5795,6 +5867,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
                }
             } else {
                Info("HandleDataSets", "quota control disabled");
+               if (slb) slb->Form("%d disabled", type);
                return -1;
             }
          }
@@ -5802,11 +5875,13 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kShowQuota:
          {
             if (fDataSetManager->TestBit(TDataSetManager::kCheckQuota)) {
+               if (slb) slb->Form("%d", type);
                (*mess) >> opt;
                // Display quota information
                fDataSetManager->ShowQuota(opt);
             } else {
                Info("HandleDataSets", "quota control disabled");
+               if (slb) slb->Form("%d disabled", type);
             }
          }
          break;
@@ -5814,9 +5889,11 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
          {
             if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
                (*mess) >> uri;
+               if (slb) slb->Form("%d %s", type, uri.Data());
                rc = fDataSetManager->ScanDataSet(uri, (UInt_t)TDataSetManager::kSetDefaultTree);
             } else {
                Info("HandleDataSets", "kSetDefaultTreeName: modification of dataset info not allowed");
+               if (slb) slb->Form("%d notallowed", type);
                return -1;
             }
          }
@@ -5824,6 +5901,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess)
       case TProof::kCache:
          {
             (*mess) >> uri >> opt;
+            if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
             if (opt == "show") {
                // Show cache content
                fDataSetManager->ShowCache(uri);

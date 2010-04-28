@@ -148,7 +148,6 @@ private:
 
    TDataSetManager* fDataSetManager; // dataset manager
 
-   Bool_t        fLogToSysLog;     //true if logs should be sent to syslog too
    Bool_t        fSendLogToMaster; // On workers, controls logs sending to master
 
    TServerSocket *fMergingSocket;  // Socket used for merging outputs if submerger
@@ -169,6 +168,10 @@ private:
 
    static FILE  *fgErrorHandlerFile; // File where to log
    static Int_t  fgRecursive;       // Keep track of recursive inputs during processing
+
+   // Control sending information to syslog
+   static Int_t  fgLogToSysLog;      // >0 sent to syslog too
+   static TString fgSysLogService;   // name of the syslog service (eg: proofm-0, proofw-0.67)
 
    void          RedirectOutput(const char *dir = 0, const char *mode = "w");
    Int_t         CatMotd();
@@ -198,20 +201,20 @@ private:
    Int_t         CleanupWaitingQueries(Bool_t del = kTRUE, TList *qls = 0);
 
 protected:
-   virtual void  HandleArchive(TMessage *mess);
-   virtual Int_t HandleCache(TMessage *mess);
-   virtual void  HandleCheckFile(TMessage *mess);
-   virtual Int_t HandleDataSets(TMessage *mess);
+   virtual void  HandleArchive(TMessage *mess, TString *slb = 0);
+   virtual Int_t HandleCache(TMessage *mess, TString *slb = 0);
+   virtual void  HandleCheckFile(TMessage *mess, TString *slb = 0);
+   virtual Int_t HandleDataSets(TMessage *mess, TString *slb = 0);
    virtual void  HandleSubmerger(TMessage *mess);
    virtual void  HandleFork(TMessage *mess);
    virtual void  HandleLibIncPath(TMessage *mess);
-   virtual void  HandleProcess(TMessage *mess);
+   virtual void  HandleProcess(TMessage *mess, TString *slb = 0);
    virtual void  HandleQueryList(TMessage *mess);
-   virtual void  HandleRemove(TMessage *mess);
-   virtual void  HandleRetrieve(TMessage *mess);
+   virtual void  HandleRemove(TMessage *mess, TString *slb = 0);
+   virtual void  HandleRetrieve(TMessage *mess, TString *slb = 0);
    virtual void  HandleWorkerLists(TMessage *mess);
 
-   virtual void  ProcessNext();
+   virtual void  ProcessNext(TString *slb = 0);
    virtual Int_t Setup();
    Int_t         SetupCommon();
    virtual void  MakePlayer();
@@ -307,7 +310,6 @@ public:
    virtual void   Terminate(Int_t status);
 
    // Log control
-   Bool_t         LogToSysLog() { return fLogToSysLog; }
    void           LogToMaster(Bool_t on = kTRUE) { fSendLogToMaster = on; }
 
    static FILE   *SetErrorHandlerFile(FILE *ferr);
