@@ -92,6 +92,7 @@ void     tlatex2        ();
 void     tlatex3        ();
 void     tlatex4        ();
 void     tlatex5        ();
+void     kerning        ();
 void     transpad       ();
 void     statfitparam   ();
 void     tgaxis1        ();
@@ -282,6 +283,7 @@ void stressGraphics(Int_t verbose = 0)
    tlatex3      ();
    tlatex4      ();
    tlatex5      ();
+   kerning      ();
    transpad     ();
    statfitparam ();
    if (!gOptionR) {
@@ -391,9 +393,9 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
          if (!gOptionK) gSystem->Unlink(filename.Data());
       } else {
          cout << gLine;
-	 Int_t ndots = 60;
-	 Int_t w = 3;
-	 if (gTestNum < 10) { ndots++; w--;}
+         Int_t ndots = 60;
+         Int_t w = 3;
+         if (gTestNum < 10) { ndots++; w--;}
          for (Int_t i = nch; i < ndots; i++) cout << ".";
          cout << setw(w) << gTestNum << " FAILED" << endl;
          cout << "         Result    = "  << res << endl;
@@ -1088,6 +1090,31 @@ void tlatex5()
 
 
 //______________________________________________________________________________
+void kerning()
+{
+   // Text kerning.
+
+   TCanvas *C = StartTest(1000, 700);
+
+   for (Int_t i = 0;i < 25;i++) {
+      TLine *ln = new TLine(0, 0.04 * (i - 0.2), 1, 0.04 * (i - 0.2));
+      ln->Draw();
+      Float_t sz = 0.0016 * i;
+      TLatex *l = new TLatex(0.10, 0.04 * i, "AVAVAVAVAVAVAVAVAVAVAVAVAVAVAVAVAVAVA#color[2]{X}");
+      l->SetTextSize(sz);
+      l->Draw();
+      TLatex *l1 = new TLatex(0.05, 0.04 * i, Form("%g", sz));
+      l1->SetTextSize(0.02);
+      l1->Draw();
+   }
+
+   TestReport1(C, "Text kerning");
+   DoCcode(C);
+   TestReport2();
+}
+
+
+//______________________________________________________________________________
 void transpad()
 {
    // Transparent pad.
@@ -1152,8 +1179,8 @@ void statfitparam ()
    TCanvas *C = StartTest(800,500);
 
    C->Divide(3,2);
-   gStyle->SetOptFit(1111);  
-   gStyle->SetOptStat(111111); 
+   gStyle->SetOptFit(1111);
+   gStyle->SetOptStat(111111);
    gStyle->SetStatW(0.43);
    gStyle->SetStatH(0.35);
 
@@ -1179,8 +1206,8 @@ void statfitparam ()
    hsf3->Fit("pol0","Q");
 
    C->cd(4);
-   hsf4->SetBinContent (1, 5); hsf4->SetBinError (1, 3);     
-   hsf4->SetBinContent (2, 5); hsf4->SetBinError (2, 1);     
+   hsf4->SetBinContent (1, 5); hsf4->SetBinError (1, 3);
+   hsf4->SetBinContent (2, 5); hsf4->SetBinError (2, 1);
    hsf4->Fit("pol0","Q");
 
    C->cd(5);
@@ -1641,10 +1668,10 @@ void tgraph3()
    g1->SetLineColor(kBlue);
 
    C->cd(1);
-   g1->Fit("gaus","Q");       
+   g1->Fit("gaus","Q");
    g1->Draw("AP");
-   gPad->SetLogx(); 
-   
+   gPad->SetLogx();
+
    C->cd(2);
    gPad->SetLogx();
    gPad->SetLogy();
