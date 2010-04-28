@@ -128,6 +128,13 @@
      } 
      </pre>
      <center><img src="textoption.gif"></center>
+<li> The following lines generated an empty stats box:
+     <pre>
+     gStyle->SetStatFont(43);
+     gStyle->SetStatFontSize(12);
+     TH2D *h2 = new TH2D("h2","h2",10,0,1,10,0,1);
+     h2->Draw();
+     </pre>
 </ul>
 
 <h4>TGraphPainter</h4>
