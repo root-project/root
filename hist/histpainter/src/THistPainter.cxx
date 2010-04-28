@@ -6794,6 +6794,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       stats->SetTextColor(gStyle->GetStatTextColor());
       stats->SetTextAlign(12);
       stats->SetTextFont(gStyle->GetStatFont());
+      if (gStyle->GetStatFont()%10 > 2)
+         stats->SetTextSize(gStyle->GetStatFontSize());
       stats->SetFitFormat(gStyle->GetFitFormat());
       stats->SetStatFormat(gStyle->GetStatFormat());
       stats->SetBit(kCanDelete);
