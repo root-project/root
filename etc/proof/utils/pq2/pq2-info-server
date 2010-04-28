@@ -1,191 +1,81 @@
 #!/bin/sh
 
-# pq2-info-server
-#
-# Purpose: show info about the datasets on a given server
-#
-# Syntax:
-#         pq2-info-server server [masterurl]
-#
-# server:       Name of the server for which the information is wanted; can be in
-#               URL form
-# masterurl:    URL of the PROOF master (including the user name if needed)"
-#               Can be specified via the env PROOFURL."
-
 #--- Help function -------------
 printhelp()
 {
-   echo "Syntax:"
-   echo "         pq2-info-server server [masterurl]"
-   echo " "
-   echo " server:       Name of the server for which the information is wanted; can be in "
-   echo "               URL form"
-   echo "               quotes, e.g. \"/default/ganis/h1-set5*\""
-   echo " masterurl:    URL of the PROOF master (including the usre name if needed)"
-   echo "               Can be specified via the env PROOFURL."
-   echo " "
+   echo "   "
+   echo "  pq2-info-server"
+   echo "   "
+   echo "  Purpose: show info about the datasets on a given server"
+   echo "   "
+   echo "  Syntax:"
+   echo "           pq2-info-server [-h|--help] [-v] [-k] (-s servers|--server=servers)"
+   echo "                           [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
+   echo "   "
+   echo "   -h | --help   Print this help"
+   echo "   -v            Verbose mode"
+   echo "   -k            Keep temporary files"
+   echo "   servers:      Comma-separated list of servers for which the information is wanted"
+   echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
+   echo "                 for data servers, it must include the directory."
+   echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
+   echo "   tmpdir        Directory for temporary files [/tmp/<user>]."
+   echo "   "
 }
 
-TDIR=""
-filltdir()
-{
-   TDIR=$TEMP
-   if test "x$TDIR" = "x" ; then
-      TDIR=$TEMPDIR
-      if test "x$TDIR" = "x" ; then
-	 TDIR=$TEMP_DIR
-         if test "x$TDIR" = "x" ; then
-	    TDIR=$TMP
-            if test "x$TDIR" = "x" ; then
-	       TDIR=$TMP_DIR
-               if test "x$TDIR" = "x" ; then
-                  TDIR="/tmp"
-		  if test ! -d $TDIR ; then
-		     TDIR="c:\\"
-		     if test ! -d $TDIR ; then
-			TDIR=""
-		     fi
-		  fi
-	       fi
-	    fi
-	 fi
-      fi
+PQ2=`which pq2 2> /dev/null`
+if test "x$PQ2" = "x" ; then
+   echo "Unknown command 'pq2'"
+   exit 1
+fi
+
+DBGOPT=""
+KEEPOPT=""
+SRVURL=""
+SERVER=""
+TDIR=$TMPDIR
+#
+# Parse long options first
+short_opts=
+for i in $@ ; do
+   opt=""
+   case $i in
+      --*) opt=`echo "$i" | sed 's/--//'` ;;
+      *) short_opts="$short_opts $i" ;;
+   esac
+   if test ! "x$opt" = "x" ; then
+      case "$opt" in
+         *=*) oarg=`echo "$opt" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+         *) oarg= ;;
+      esac ;
+      case $opt in
+         help)      printhelp ; exit ;;
+         keep)      KEEPOPT="-k" ;;
+         server=*)  SERVER="-s $oarg" ;;
+         tmp=*)     TDIR="$oarg" ;;
+         url=*)     SRVURL="-u $oarg" ;;
+      esac
    fi
-}
-if test "x$1" = "x-h" || test "x$1" = "x--help" ; then
+done
+
+if test ! "x$short_opts" = "x" ; then
+   while getopts s:t:u:hkv i $short_opts ; do
+      case $i in
+      h) printhelp ; exit ;;
+      k) KEEPOPT="-k" ;;
+      s) SERVER="-s $OPTARG" ;;
+      t) TDIR="$OPTARG" ;;
+      u) SRVURL="-u $OPTARG" ;;
+      v) DBGOPT="-v" ;;
+      \?) printhelp; exit 1 ;;
+   esac
+   done
+fi
+if test "x$SERVER" = "x"; then
+   echo "Some arguments are missing (s:$SERVER)!"
    printhelp
    exit
 fi
 
-if test "x$1" = "x" ; then
-   printhelp
-   exit
-fi
-SERVER=$1
-
-MSTURL="$PROOFURL"
-if test ! "x$2" = "x" ; then
-   MSTURL=$2
-fi
-if test "x$MSTURL" = "x" ; then
-   printhelp
-   exit
-fi
-
-filltdir
-if test ! -d $TDIR ; then
-   echo "no temp directory"
-   exit
-fi
-
-cat > $TDIR/pq2infosrv.C << EOF
-#include "THashList.h"
-#include "TMap.h"
-#include "TObjString.h"
-#include "TProof.h"
-#include "TFileCollection.h"
-#include "TFileInfo.h"
-
-const char *mcn = "pq2infosrv";
-const char *scn = "pq2-info-server";
-
-void printDataSet(TFileCollection *fc, Int_t popt);
-
-Int_t pq2infosrv(const char *tdir, const char *master, const char *server)
-{
-
-   TString flog = Form("%s/%s.log", tdir, mcn);
-   TString ferr = Form("%s/%s.err", tdir, mcn);
-   TString fres = Form("%s/%s.result", tdir, mcn);
-
-   RedirectHandle_t rh;
-   gSystem->RedirectOutput(flog.Data(), "w", &rh);
-
-   // Open a PROOF instance
-   TProof *p = TProof::Open(master,"masteronly");
-   if (!p || !p->IsValid()) {
-      // Notify
-      gSystem->RedirectOutput(0, 0, &rh);
-      gSystem->Rename(flog.Data(), ferr.Data());
-      Printf("%s: ERROR: cannot open a PROOF session at %s", scn, master);
-      return 1;
-   }
-
-   // We need to scan all the datasets to find the matching ones ...
-   TMap *dsmap = p->GetDataSets("/alicecaf/alicecaf", server);
-   if (!dsmap) {
-      // Notify
-      gSystem->RedirectOutput(0, 0, &rh);
-      gSystem->Rename(flog.Data(), ferr.Data());
-      Printf("%s: ERROR: problems retrieving info about datasets for server '%s'", scn, server);
-      return 1;
-   }
-
-   // Restore output
-   gSystem->RedirectOutput(0, 0, &rh);
-
-   gSystem->RedirectOutput(fres.Data(), "w", &rh);
-   Int_t popt = 0;
-   TIter nxk(dsmap);
-   TObject *k = 0;
-   TFileCollection *fc = 0;
-   while ((k = nxk()) && (fc = (TFileCollection *) dsmap->GetValue(k))) {
-      printDataSet(fc, popt);
-   }
-   delete dsmap;
-   gSystem->RedirectOutput(0, 0, &rh);
-
-   // Done
-   return 0;
-}
-
-//______________________________________________________________________________
-void printDataSet(TFileCollection *fc, Int_t popt)
-{
-   // Formatted printout of the content of TFileCollection 'fc'.
-   // Options in the form
-   //           popt = u * 10 + f
-   //     f    0 => header only, 1 => header + files
-   //   when printing files
-   //     u    0 => print file name only, 1 => print full URL
-
-   if (!fc) return;
-
-   Int_t f = popt%10;
-   Int_t u = popt - 10 * f;
-
-   Printf("+++");
-   if (fc->GetTitle() && (strlen(fc->GetTitle()) > 0)) {
-      Printf("+++ Dumping: %s: ", fc->GetTitle());
-   } else {
-      Printf("+++ Dumping: %s: ", fc->GetName());
-   }
-   Printf("%s", fc->ExportInfo("+++ Summary:", 1)->GetName());
-   if (f == 1) {
-      Printf("+++ Files:");
-      Int_t nf = 0;
-      TIter nxfi(fc->GetList());
-      TFileInfo *fi = 0;
-      while ((fi = (TFileInfo *)nxfi())) {
-         if (u == 1)
-            Printf("+++ %5d. %s", ++nf, fi->GetCurrentUrl()->GetUrl());
-         else
-            Printf("+++ %5d. %s", ++nf, fi->GetCurrentUrl()->GetFile());
-      }
-   }
-   Printf("+++");
-}
-
-EOF
-
-# Run the macro
-root -q -l -b $TDIR/pq2infosrv.C\(\"$TDIR\",\"$MSTURL\",\"$SERVER\"\) | grep "pq2-info-server"
-
-if test -f "$TDIR/pq2infosrv.err" ; then
-   cat $TDIR/pq2infosrv.err
-else
-   cat $TDIR/pq2infosrv.result
-fi
-
-# Cleanup
-rm -f $TDIR/pq2infosrv*
+# Run
+export TMPDIR="$TDIR"; $PQ2 info-server $DBGOPT $KEEPOPT $SERVER $SRVURL
