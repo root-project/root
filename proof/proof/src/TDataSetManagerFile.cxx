@@ -1216,9 +1216,10 @@ Int_t TDataSetManagerFile::ClearCache(const char *uri)
          // Remove leading '/'
          if (u(0) == '/') u.Remove(0,1);
          // Change '/' to '%'
-         u.ReplaceAll("/", "%");
+         u.ReplaceAll("/", ".");
          // Init the regular expression
-         re = new TRegexp(u.Data(), u.Contains("*"));
+         u.ReplaceAll("*", ".*");
+         re = new TRegexp(u.Data());
       }
    }
 
@@ -1281,9 +1282,10 @@ Int_t TDataSetManagerFile::ShowCache(const char *uri)
          // Remove leading '/'
          if (u(0) == '/') u.Remove(0,1);
          // Change '/' to '%'
-         u.ReplaceAll("/", "%");
+         u.ReplaceAll("/", ".");
          // Init the regular expression
-         re = new TRegexp(u.Data(), u.Contains("*"));
+         u.ReplaceAll("*", ".*");
+         re = new TRegexp(u.Data());
       }
    }
 

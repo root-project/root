@@ -837,7 +837,9 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
       return kFALSE;
    }
 
-   if (!wcExp.Match(name)) {
+   // Construct regexp whitelist for checking illegal characters in name
+   TPRegexp wcExpN (wildcards ? "^(?:[A-Za-z0-9-*_.]*|[*])$" : "^[A-Za-z0-9-_.]*$");
+   if (!wcExpN.Match(name)) {
       Error("ParseUri", "illegal characters in name (uri: '%s', name: '%s')", uri, name.Data());
       return kFALSE;
    }
