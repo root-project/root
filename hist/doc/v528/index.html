@@ -103,7 +103,31 @@
      </pre>
 <li> The setting <tt>gStyle->SetHistMinimumZero()</tt> now works for horizontal
      plots produced with the option <tt>HBAR</tt>.
-     <img src="hbarmin0.gif">
+     <center><img src="hbarmin0.gif"></center>
+<li> In the case of profile histograms it is possible to print the number
+     of entries instead of the bin content. It is enough to combine the  
+     option "E" (for entries) with the option "TEXT".
+     <pre>
+     {
+        TCanvas *c02 = new TCanvas("c02","c02",700,400);
+        c02->Divide(2,1);
+        TProfile *profile = new TProfile("profile","profile",10,0,10);
+        profile->SetMarkerSize(2.2);
+        profile->Fill(0.5,1);
+        profile->Fill(1.5,2);
+        profile->Fill(2.5,3);
+        profile->Fill(3.5,4);
+        profile->Fill(4.5,5);
+        profile->Fill(5.5,5);
+        profile->Fill(6.5,4);
+        profile->Fill(7.5,3);
+        profile->Fill(8.5,2);
+        profile->Fill(9.5,1);
+        c02->cd(1); profile->Draw("HIST TEXT0");
+        c02->cd(2); profile->Draw("HIST TEXT0E");
+     } 
+     </pre>
+     <center><img src="textoption.gif"></center>
 </ul>
 
 <h4>TGraphPainter</h4>
