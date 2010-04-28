@@ -4,7 +4,9 @@
 #include "TSelector.h"
 #include "TError.h"
 
+#ifndef __CINT__
 #include "emptysel.h"
+#endif
 
 void execGetSelector(string infilename = "Event1.root", int nevents = 10)
 {

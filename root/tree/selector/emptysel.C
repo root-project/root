@@ -21,7 +21,7 @@ void emptysel::SlaveBegin(TTree * /*tree*/)
 
 }
 
-Bool_t emptysel::Process(Long64_t entry)
+Bool_t emptysel::Process(Long64_t /* entry */)
 {
 
    printAddress();
