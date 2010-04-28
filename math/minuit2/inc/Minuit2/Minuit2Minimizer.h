@@ -148,9 +148,8 @@ public:
 
    /// return  pointer to X values at the minimum 
    virtual const double *  X() const { 
-      // need to copy them since MnUserParameterState returns them by value
-      fValues=fState.Params();
-      return &fValues.front(); 
+      fValues = fState.Params(); 
+      return (fValues.size() ) ? &fValues.front() : 0; 
    }
 
    /// return pointer to gradient values at the minimum 
@@ -171,10 +170,7 @@ public:
    virtual bool ProvidesError() const { return true; } 
 
    /// return errors at the minimum 
-   virtual const double * Errors() const { 
-      fErrors = fState.Errors(); 
-      return  &fErrors.front(); 
-   }
+   virtual const double * Errors() const; 
 
    /** 
        return covariance matrices elements 
@@ -245,6 +241,9 @@ public:
 
    /// return reference to the objective function
    ///virtual const ROOT::Math::IGenFunction & Function() const; 
+
+   /// print result of minimization
+   virtual void PrintResults(); 
 
 protected: 
    

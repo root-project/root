@@ -379,55 +379,93 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
          std::cout << std::endl;
       }
    }
-   // print result 
-   if (min.IsValid() ) {
-      if (debugLevel >=1 ) { 
-         std::cout << "Minuit2Minimizer: Minimum Found" << std::endl; 
-         int pr = std::cout.precision(18);
-         std::cout << "FVAL  = " << fState.Fval() << std::endl;
-         std::cout << "Edm   = " << fState.Edm() << std::endl;
-         std::cout.precision(pr);
-         std::cout << "Nfcn  = " << fState.NFcn() << std::endl;
-         std::vector<double> par = fState.Params();
-         std::vector<double> err = fState.Errors();
-         for (unsigned int i = 0; i < fState.MinuitParameters().size(); ++i) 
-            std::cout << fState.Parameter(i).Name() << "\t  = " << par[i] << "\t  +/-  " << err[i] << std::endl; 
-      }
-      fStatus = 0; 
-      return true;
+
+   fStatus = 0;
+   std::string txt;
+   if (min.HasMadePosDefCovar() ) { 
+      txt = "Covar was made pos def";
+      fStatus = 1; 
+   }
+   if (min.HesseFailed() ) { 
+      txt = "Hesse is not valid";
+      fStatus = 2; 
+   }
+   if (min.IsAboveMaxEdm() ) { 
+      txt = "Edm is above max"; 
+      fStatus = 3; 
+   }
+   if (min.HasReachedCallLimit() ) { 
+      txt = "Reached call limit";
+      fStatus = 4;
+   }
+
+   
+   bool validMinimum = min.IsValid();
+   if (validMinimum) { 
+      // print a warning message in case something is not ok
+      if (fStatus != 0)  MN_INFO_MSG2("Minuit2Minimizer::Minimize",txt);
    }
    else { 
-      if (debugLevel >= 1)  {
-         std::cout << "Minuit2Minimizer::Minimization DID not converge !" << std::endl; 
-         std::cout << "FVAL  = " << fState.Fval() << std::endl;
-         std::cout << "Edm   = " << fState.Edm() << std::endl;
-         std::cout << "Nfcn  = " << fState.NFcn() << std::endl;
+      // minimum is not valid when state is not valid and edm is over max or has passed call limits
+      if (fStatus == 0) { 
+         // this should not happen
+         txt = "unknown failure";  
+         fStatus = 5;
       }
-      if (min.HasMadePosDefCovar() ) { 
-         if (debugLevel >= 1) std::cout << "      Covar was made pos def" << std::endl;
-         fStatus = 1; 
-         return false; 
-      }
-      if (min.HesseFailed() ) { 
-         if (debugLevel >= 1) std::cout << "      Hesse is not valid" << std::endl;
-         fStatus = 2; 
-         return false;
-      }
-      if (min.IsAboveMaxEdm() ) { 
-         if (debugLevel >= 1) std::cout << "      Edm is above max" << std::endl;
-         fStatus = 3; 
-         return false; 
-      }
-      if (min.HasReachedCallLimit() ) { 
-         if (debugLevel >= 1) std::cout << "      Reached call limit" << std::endl;
-         fStatus = 4;
-         return false; 
-      }
-      fStatus =  5;
-      return false; 
+      std::string msg = "Minimization did NOT converge, " + txt;
+      MN_INFO_MSG2("Minuit2Minimizer::Minimize",msg);                   
    }
-   return true;
+
+   if (debugLevel >= 1) PrintResults(); 
+   return validMinimum;
 }
+
+
+void Minuit2Minimizer::PrintResults() {
+   // print results of minimization
+   if (!fMinimum) return;
+   if (fMinimum->IsValid() ) {
+      // valid minimum
+      std::cout << "Minuit2Minimizer : Valid minimum - status = " << fStatus  << std::endl; 
+      int pr = std::cout.precision(18);
+      std::cout << "FVAL  = " << fState.Fval() << std::endl;
+      std::cout << "Edm   = " << fState.Edm() << std::endl;
+      std::cout.precision(pr);
+      std::cout << "Nfcn  = " << fState.NFcn() << std::endl;
+      for (unsigned int i = 0; i < fState.MinuitParameters().size(); ++i) {
+         const MinuitParameter & par = fState.Parameter(i); 
+         std::cout << par.Name() << "\t  = " << par.Value() << "\t ";
+         if (par.IsFixed() )      std::cout << "(fixed)" << std::endl;
+         else if (par.IsConst() ) std::cout << "(const)" << std::endl;
+         else if (par.HasLimits() ) 
+            std::cout << "+/-  " << par.Error() << "\t(limited)"<< std::endl; 
+         else 
+            std::cout << "+/-  " << par.Error() << std::endl; 
+      }
+   }
+   else { 
+      std::cout << "Minuit2Minimizer : Invalid Minimum - status = " << fStatus << std::endl; 
+      std::cout << "FVAL  = " << fState.Fval() << std::endl;
+      std::cout << "Edm   = " << fState.Edm() << std::endl;
+      std::cout << "Nfcn  = " << fState.NFcn() << std::endl;
+   }
+}
+
+
+const double * Minuit2Minimizer::Errors() const { 
+   // return error at minimum (set to zero for fixed and constant params)
+   fErrors.resize(fState.MinuitParameters().size() );
+   for (unsigned int i = 0; i < fErrors.size(); ++i) { 
+      const MinuitParameter & par = fState.Parameter(i); 
+      if (par.IsFixed() || par.IsConst() ) 
+         fErrors[i] = 0; 
+      else 
+         fErrors[i] = par.Error();
+   }
+
+   return  (fErrors.size()) ? &fErrors.front() : 0; 
+}
+
 
 double Minuit2Minimizer::CovMatrix(unsigned int i, unsigned int j) const { 
    // get value of covariance matrices (transform from external to internal indices)
@@ -641,7 +679,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
    }
 
    if (!fMinimum->IsValid() ) { 
-      MN_ERROR_MSG2("Minuit2Minimizer::Contour","invalid function minimum");
+      MN_ERROR_MSG2("Minuit2Minimizer::Contour","Invalid function minimum");
       return false;
    }
    assert(fMinuitFCN); 
@@ -756,6 +794,8 @@ int Minuit2Minimizer::CovMatrixStatus() const {
    }
    return 0; 
 }
+
+
    
 } // end namespace Minuit2
 

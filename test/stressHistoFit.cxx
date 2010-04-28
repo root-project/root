@@ -221,7 +221,7 @@ public:
 
 // Different vectors containing the list of algorithms to be used.
 vector<algoType> commonAlgos;
-vector<algoType> treeFail;
+vector<algoType> simplexAlgos;
 vector<algoType> specialAlgos;
 vector<algoType> noGraphAlgos;
 vector<algoType> noGraphErrorAlgos;
@@ -925,7 +925,7 @@ int testUnBinnedFit(int n = 10000)
 
    vector< vector<algoType> > listAlgos(2);
    listAlgos[0] = commonAlgos;
-   listAlgos[1] = treeFail;
+   listAlgos[1] = simplexAlgos;
 
    TreeWrapper tw;
 
@@ -937,7 +937,8 @@ int testUnBinnedFit(int n = 10000)
    printf("%s\n", (status?"FAILED":"OK"));
 
    vector<algoType> noCompareInTree;
-   noCompareInTree.push_back(algoType( "Minuit2",     "Simplex",     "Q0", CompareResult(0)));
+   // exclude Simplex in tree
+   //noCompareInTree.push_back(algoType( "Minuit2",     "Simplex",     "Q0", CompareResult(0)));
 
    vector< vector<algoType> > listAlgosND(2);
    listAlgosND[0] = commonAlgos;
@@ -982,8 +983,9 @@ void init_structures()
    commonAlgos.push_back( algoType( "GSLSimAn",    "",            "Q0", CompareResult()) );
 #endif
 
-   treeFail.push_back( algoType( "Minuit",      "Simplex",     "Q0", CompareResult()) );
-   treeFail.push_back( algoType( "Minuit2",     "Simplex",     "Q0", CompareResult())  );
+// simplex
+   simplexAlgos.push_back( algoType( "Minuit",      "Simplex",     "Q0", CompareResult()) );
+   simplexAlgos.push_back( algoType( "Minuit2",     "Simplex",     "Q0", CompareResult())  );
 
    specialAlgos.push_back( algoType( "Minuit",      "Migrad",      "QE0", CompareResult()) );
    specialAlgos.push_back( algoType( "Minuit",      "Migrad",      "QW0", CompareResult()) );
@@ -1063,30 +1065,28 @@ void init_structures()
    listLinearAlgos.push_back( linearAlgos );
 
    listTH1DAlgos.push_back( commonAlgos );
-   listTH1DAlgos.push_back( treeFail );
+   listTH1DAlgos.push_back( simplexAlgos );
    listTH1DAlgos.push_back( specialAlgos );
    listTH1DAlgos.push_back( noGraphAlgos );
    listTH1DAlgos.push_back( noGraphErrorAlgos );
 
    listAlgosTGraph.push_back( commonAlgos );
-   listAlgosTGraph.push_back( treeFail );
+   listAlgosTGraph.push_back( simplexAlgos );
    listAlgosTGraph.push_back( specialAlgos );
    listAlgosTGraph.push_back( noGraphErrorAlgos );
 
    listAlgosTGraphError.push_back( commonAlgos );
-   listAlgosTGraphError.push_back( treeFail );
+   listAlgosTGraphError.push_back( simplexAlgos );
    listAlgosTGraphError.push_back( specialAlgos );
    listAlgosTGraphError.push_back( graphErrorAlgos );
 
    listTH2DAlgos.push_back( histGaus2D );
    
    listAlgosTGraph2D.push_back( commonAlgos );
-   listAlgosTGraph2D.push_back( treeFail );
    listAlgosTGraph2D.push_back( specialAlgos );
    listAlgosTGraph2D.push_back( noGraphErrorAlgos );
 
    listAlgosTGraph2DError.push_back( commonAlgos );
-   listAlgosTGraph2DError.push_back( treeFail );
    listAlgosTGraph2DError.push_back( specialAlgos );
    listAlgosTGraph2DError.push_back( graphErrorAlgos );
 
