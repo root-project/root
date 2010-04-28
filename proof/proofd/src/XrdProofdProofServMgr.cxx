@@ -3487,6 +3487,8 @@ int XrdProofdProofServMgr::SetUserOwnerships(XrdProofdProtocol *p)
       XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), ui);
       std::list<XrdProofdDSInfo *>::iterator ii;
       for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ii++) {
+         TRACE(ALL, "Checking dataset source: url:"<<(*ii)->fUrl<<", local:"
+                                                   <<(*ii)->fLocal<<", rw:"<<(*ii)->fRW);
          if ((*ii)->fLocal && (*ii)->fRW) {
             XrdOucString d;
             XPDFORM(d, "%s/%s", ((*ii)->fUrl).c_str(), p->Client()->UI().fGroup.c_str());

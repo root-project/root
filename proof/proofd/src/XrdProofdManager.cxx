@@ -659,6 +659,9 @@ int XrdProofdManager::Config(bool rcf)
       }
       if (fDataSetSrcs.size() > 0) {
          TRACE(ALL, fDataSetSrcs.size() << " dataset sources defined");
+         for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ii++) {
+            TRACE(ALL, " url:"<<(*ii)->fUrl<<", local:"<<(*ii)->fLocal<<", rw:"<<(*ii)->fRW);
+         }
       } else {
          TRACE(ALL, "no dataset sources defined");
       }
@@ -828,6 +831,9 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
          XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), ui);
          if (XrdProofdAux::AssertDir(url.c_str(), ui, ChangeOwn()) == 0) {
             goodsrc = 1;
+            if (XrdProofdAux::ChangeMod(url.c_str(), 0777) != 0) {
+               TRACE(XERR,"Problems setting permissions 0777 on path '"<<url<<"'");
+            }
          } else {
             TRACE(XERR,"Cannot assert path '"<<url<<"' - ignoring");   
          }
@@ -849,7 +855,7 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
                }
             }
             // Make sure that everybody can modify the file for updates
-            if (goodsrc && chmod(fnpath.c_str(), 0666) != 0) {
+            if (goodsrc && XrdProofdAux::ChangeMod(fnpath.c_str(), 0666) != 0) {
                TRACE(XERR,"Problems setting permissions to 0666 on file '"<<fnpath<<"'; errno: "<< errno);
                goodsrc = 0;
             }
@@ -876,7 +882,7 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
                }
             }
             // Make sure that everybody can modify the file for updates
-            if (goodsrc && chmod(fnpath.c_str(), 0644) != 0) {
+            if (goodsrc && XrdProofdAux::ChangeMod(fnpath.c_str(), 0644) != 0) {
                TRACE(XERR,"Problems setting permissions to 0644 on file '"<<fnpath<<"'; errno: "<< errno);
             }
          }
