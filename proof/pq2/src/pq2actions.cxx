@@ -492,260 +492,6 @@ void do_verify(const char *dsname)
    return;
 }
 
-#if 0
-//_______________________________________________________________________________________
-void do_anadist(const char *ds, const char *servers,
-                const char *ignsrvs, const char *metrics, const char *fnout)
-{
-   // Execute 'analyze-distribution'
-
-   const char *action = "pq2-analyze-distribution";
-
-   // We need to scan all the datasets to find the matching ones ...
-   TFileCollection *fc = 0;
-   { redirguard rog(flog.Data(), "a", gverbose);
-      fc = GetDataSet(ds);
-   }
-   if (!fc) {
-      // Notify
-      gSystem->Rename(flog.Data(), ferr.Data());
-      Printf("%s: ERROR: problems retrieving info about dataset '%s'", action, ds);
-      return;
-   }
-
-   // Which metrics
-   const char *labMet[] = { "#files", "size" };
-   Int_t optMet = 0;  // # of files
-   if (metrics && !strcmp(metrics, "S")) optMet = 1;  // Size in bytes
-   if (gverbose > 0) 
-      Printf("%s: using metrics: '%s'", action, labMet[optMet]);
-
-   // List of servers to be ignored
-   TString ss(ignsrvs), key;
-   THashList *ignore = new THashList();
-   Int_t from = 0;
-   while (ss.Tokenize(key, from, ",")) {
-      ignore->Add(new TObjString(key));
-   }
-   // List of sub-TFileCollection for each server, so that we automatically count
-   // the sizes and totals
-   THashList *fcsls = new THashList();
-   // List of sub-TFileCollection for target servers: in add mode we complete it during
-   // the first scan
-   THashList *targets = new THashList();
-   ss = servers;
-   Bool_t addmode = kFALSE;
-   if (ss.BeginsWith("+")) {
-      addmode = kTRUE;
-      ss.Remove(0,1);
-   }
-   if (ss.IsNull()) {
-      addmode = kTRUE;
-   } else {
-      from = 0;
-      while (ss.Tokenize(key, from, ",")) {
-         targets->Add(new TFileCollection(key));
-      }
-   }
-
-   // Analyze the file collection content now
-   THashList hpls;
-   Long64_t totsz = 0, totfiles = 0;
-   TFileCollection *fcs = 0;
-   TFileInfo *fi = 0;
-   TIter nxfi(fc->GetList());
-   while ((fi = (TFileInfo *) nxfi())) {
-      TParameter<Int_t> *php = (TParameter<Int_t> *)hpls.FindObject(fi->GetCurrentUrl()->GetProtocol());
-      if (!php) {
-         TUrl u(TString::Format("%s://host//file", fi->GetCurrentUrl()->GetProtocol()));
-         php = new TParameter<Int_t>(fi->GetCurrentUrl()->GetProtocol(), u.GetPort());
-         hpls.Add(php);
-      }
-      if (fi->GetCurrentUrl()->GetPort() != php->GetVal()) {
-         key.Form("%s://%s:%d", fi->GetCurrentUrl()->GetProtocol(),
-                                fi->GetCurrentUrl()->GetHost(),
-                                fi->GetCurrentUrl()->GetPort());
-      } else {
-         key.Form("%s://%s", fi->GetCurrentUrl()->GetProtocol(),
-                             fi->GetCurrentUrl()->GetHost());
-      }
-      // Ignore if requested
-      if (ignore->FindObject(key)) continue;
-      // Get the TFileCollection for this server
-      if (!(fcs = (TFileCollection *) fcsls->FindObject(key))) {
-         if (gverbose > 0)
-            Printf("%s: found server '%s' ... (port: %d)", action, key.Data(), fi->GetCurrentUrl()->GetPort());
-         fcs = new TFileCollection(key);
-         fcsls->Add(fcs);
-      }
-      fcs->Add(fi);
-      // In add mode, add  as target, if needed
-      if (!(fcs = (TFileCollection *) targets->FindObject(key))) {
-         if (addmode) {
-            if (gverbose > 0)
-               Printf("%s: add new target server '%s' ...", action, key.Data());
-            fcs = new TFileCollection(key);
-            targets->Add(fcs);
-         }
-      }
-      if (fcs) fcs->Add(fi);
-      // Count
-      totsz += fi->GetSize();
-      totfiles++;
-   }
-
-   // Nothing to do if no targets
-   if (targets->GetSize() <= 0) {
-      Printf("%s: target servers list is empty!", action);
-      return;
-   } else {
-      Printf("%s: %d target servers found", action, targets->GetSize());
-      targets->Print();
-   }
-
-   // Separate into 'excess' and 'defect' lists
-   TList *excls = new TList;
-   TList *defls = new TList;
-   Double_t avgfiles = (Double_t)totfiles / targets->GetSize();
-   Double_t avgsize = (Double_t)totsz / targets->GetSize() / 1024. / 1024. / 1024.;
-   Printf("%s: %d servers found, %lld files; in average: %.3f files / %.3f GBs per server",
-               action, fcsls->GetSize(), totfiles, avgfiles, avgsize);
-   // Before redistribution
-   if (gverbose > 0) Printf("\n%s: Before redistribution:", action);
-   TIter nxfc(fcsls);
-   while ((fcs = (TFileCollection *) nxfc())) {
-      fcs->Update();
-      Long64_t nfexcess = fcs->GetNFiles() - (Long64_t) avgfiles;
-      Double_t xdf = nfexcess / avgfiles;
-      Double_t fcsz = fcs->GetTotalSize() / 1024. / 1024. / 1024.;
-      Double_t szexcess = fcsz - avgsize;
-      Double_t xdsz = szexcess / avgsize;
-      if (gverbose > 0)
-         Printf("%s:  server %s:  %lld files (diff: %lld, %.3f) - %.3f GBs (diff: %.3f, %.3f)",
-                      action, fcs->GetName(), fcs->GetNFiles(), nfexcess, xdf, fcsz, szexcess, xdsz);
-      // Move to the appropriate list
-      Bool_t isExcess = kFALSE;
-      if (targets->FindObject(fcs->GetName())) {
-         Printf("%s: server: %s : %lld", action, fcs->GetName(), nfexcess);
-         if (optMet == 0) {
-            if (nfexcess > 0.) isExcess = kTRUE;
-         } else if (optMet == 1) {
-            if (szexcess > 0.) isExcess = kTRUE;
-         }
-      } else {
-         // This server needs to be freed
-         isExcess = kTRUE;
-      }
-      if (isExcess) {
-         excls->Add(fcs);
-      } else {
-         defls->Add(fcs);
-      }
-   }
-   fcsls->SetOwner(0);
-   fcsls->Clear();
-
-   Printf("%s: servers in excess: %d", action, excls->GetSize());
-   Printf("%s: servers in defect: %d", action, defls->GetSize());
-
-   // Open output file, if requested
-   FILE *fout = 0;
-   if (fnout && strlen(fnout) > 0) {
-      if (!(fout = fopen(fnout, "w"))) {
-         Printf("%s: problems opening output file '%s' (errno: %d)", action, fnout, errno);
-         return;
-      }
-   }
-
-   // Get the list of files to be moved
-   THashList szls;
-   TIter nxefc(excls);
-   TIter nxdfc(defls);
-   Int_t mvfiles = 0;
-   TFileCollection *fcd = (TFileCollection *) nxdfc();
-   while ((fcs = (TFileCollection *) nxefc())) {
-      Bool_t isTarget = (targets->FindObject(fcs->GetName())) ? kTRUE : kFALSE;
-      Long64_t fcfiles = 0;
-      Double_t fcsz = 0.;
-      TIter nxefi(fcs->GetList());
-      while ((fi = (TFileInfo *) nxefi())) {
-         if (!fcd) {
-            Printf("%s: WARNING: processing list in excess '%s': no more lists in deficit!",
-                        action, fcs->GetName());
-            break;
-         }
-         // Count
-         fcfiles++;
-         fcsz += (fi->GetSize() / 1024. / 1024. / 1024.) ;
-         if (!isTarget ||
-            (((optMet == 0) && (fcfiles > avgfiles)) || ((optMet == 1) && (fcsz > avgsize)))) {
-            // Write record in output file, if requested
-            if (fout) {
-               TUrl u(fi->GetCurrentUrl()->GetUrl());
-               u.SetAnchor("");
-               u.SetOptions("");
-               fprintf(fout,"%s %s/%s\n", u.GetUrl(), fcd->GetName(), u.GetFile());
-            }
-            fcs->GetList()->Remove(fi);
-            fcd->Add(fi);
-            Bool_t getnext = kFALSE;
-            if (optMet == 0 && fcd->GetList()->GetSize() > avgfiles) getnext = kTRUE;
-            if (optMet == 1) {
-               Long64_t fcsz = 0;
-               TParameter<Long64_t> *ptot = (TParameter<Long64_t> *) szls.FindObject(fcd);
-               if (!ptot) {
-                  fcd->Update();
-                  ptot = new TParameter<Long64_t>(fcd->GetName(), fcd->GetTotalSize());
-                  fcsz = ptot->GetVal();
-                  szls.Add(ptot);
-               } else {
-                  fcsz = ptot->GetVal();
-                  fcsz += fi->GetSize();
-               }
-               if ((fcsz / 1024. / 1024. / 1024.) > avgsize) getnext = kTRUE;
-            }
-            if (getnext) fcd = (TFileCollection *) nxdfc();
-            // Count files to be moved
-            mvfiles++;
-         }
-      }
-   }
-   // Close the file
-   if (fout) {
-      if ((fclose(fout)) != 0)
-         Printf("%s: problems closing output file '%s' (errno: %d)", action, fnout, errno);
-   }
-   Printf("%s: %d files should be moved to make the distribution even (metrics: %s)", action, mvfiles, labMet[optMet]);
-
-   // After redistribution
-   if (gverbose > 0) {
-      Printf("\n%s: After redistribution:", action);
-      nxefc.Reset();
-      while ((fcs = (TFileCollection *) nxefc())) {
-         fcs->Update();
-         Long64_t nfexcess = fcs->GetNFiles() - (Long64_t) avgfiles;
-         Double_t xdf = nfexcess / avgfiles;
-         Double_t fcsz = fcs->GetTotalSize() / 1024. / 1024. / 1024.;
-         Double_t szexcess = fcsz - avgsize;
-         Double_t xdsz = szexcess / avgsize;
-         Printf("%s:  Server %s:  %lld files (diff: %lld, %.3f) - %.3f GBs (diff: %.3f, %.3f)",
-                     action, fcs->GetName(), fcs->GetNFiles(), nfexcess, xdf, fcsz, szexcess, xdsz);
-      }
-      nxdfc.Reset();
-      while ((fcs = (TFileCollection *) nxdfc())) {
-         fcs->Update();
-         Long64_t nfexcess = fcs->GetNFiles() - (Long64_t) avgfiles;
-         Double_t xdf = nfexcess / avgfiles;
-         Double_t fcsz = fcs->GetTotalSize() / 1024. / 1024. / 1024.;
-         Double_t szexcess = fcsz - avgsize;
-         Double_t xdsz = szexcess / avgsize;
-         Printf("%s:  server %s:  %lld files (diff: %lld, %.3f) - %.3f GBs (diff: %.3f, %.3f)",
-                     action, fcs->GetName(), fcs->GetNFiles(), nfexcess, xdf, fcsz, szexcess, xdsz);
-      }
-   }
-}
-
-#else
 //_______________________________________________________________________________________
 void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
                 const char *excsrvs, const char *metrics, const char *fnout,
@@ -757,8 +503,6 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
 
    const char *action = "pq2-ana-dist";
 
-   Printf("p:%s i:%s", plot, infile);
-   
    // Running mode
    Bool_t plot_m = (plot && strlen(plot)) ? kTRUE : kFALSE;
    Bool_t plotonly_m = (plot_m && infile && strlen(infile)) ? kTRUE : kFALSE;
@@ -842,7 +586,7 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
    }
 
    // Save histo, if any
-   TString fileplot(plot), filehist, gext;
+   TString fileplot(plot), gext;
    if (!(fileplot.IsNull())) {
       if (fileplot.Contains(".")) {
          gext = fileplot(fileplot.Last('.') + 1, fileplot.Length());
@@ -1240,18 +984,18 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
             Bool_t getnext = kFALSE;
             if (met == 0 && fcd->GetList()->GetSize() > avgfiles) getnext = kTRUE;
             if (met == 1) {
-               Long64_t fcsz = 0;
+               Long64_t xfcsz = 0;
                TParameter<Long64_t> *ptot = (TParameter<Long64_t> *) szls.FindObject(fcd);
                if (!ptot) {
                   fcd->Update();
                   ptot = new TParameter<Long64_t>(fcd->GetName(), fcd->GetTotalSize());
-                  fcsz = ptot->GetVal();
+                  xfcsz = ptot->GetVal();
                   szls.Add(ptot);
                } else {
-                  fcsz = ptot->GetVal();
-                  fcsz += fi->GetSize();
+                  xfcsz = ptot->GetVal();
+                  xfcsz += fi->GetSize();
                }
-               if ((fcsz / 1024. / 1024. / 1024.) > avgsize) getnext = kTRUE;
+               if ((xfcsz / 1024. / 1024. / 1024.) > avgsize) getnext = kTRUE;
             }
             if (getnext) fcd = (TFileCollection *) nxdfc();
             // Count files to be moved
@@ -1356,5 +1100,3 @@ int do_anadist_plot(TH1D *h1d, const char */*fnout*/)
    }
    return -1;
 }
-
-#endif
