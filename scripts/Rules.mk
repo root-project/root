@@ -245,7 +245,7 @@ endif
 
 ifeq ($(PLATFORM),win32)
 
-SetPathForBuild = roottestpath
+SetPathForBuild = $(ROOTTEST_LOC)scripts/roottestpath
 ifeq ($(ROOT_LOC),)
    export ROOT_LOC := $(shell cygpath -u '$(ROOTSYS)')
 endif

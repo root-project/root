@@ -2,6 +2,7 @@
 
 # Wrapper around cygpath able to handle multiple arguments
 
-if [ $# -gt 0 ] ; then 
-   cygpath -m "$@"
+if [ $# -gt 0 ] ; then
+   sedrootsys=`echo $ROOTSYS | sed -e 's:\\\\:\\\\\\\\:g' `
+   cygpath -w "$@" | sed -e "s?$sedrootsys\\\\lib?$sedrootsys\\\\bin?g" | sed -e 's:\\:\\\\\\\\:g' 
 fi
