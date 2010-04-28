@@ -2,9 +2,9 @@
 
 # svn2cl.sh - front end shell script for svn2cl.xsl, calls xsltproc
 #             with the correct parameters
-# 
-# Copyright (C) 2005, 2006, 2007 Arthur de Jong.
-# 
+#
+# Copyright (C) 2005, 2006, 2007, 2008 Arthur de Jong.
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
 # are met:
@@ -17,7 +17,7 @@
 # 3. The name of the author may not be used to endorse or promote
 #    products derived from this software without specific prior
 #    written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 # IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -36,7 +36,7 @@ set -e
 set -u
 
 # svn2cl version
-VERSION="0.9"
+VERSION="0.11"
 
 # set default parameters
 PWD=`pwd`
@@ -47,6 +47,7 @@ INCLUDEREV="no"
 BREAKBEFOREMSG="no"
 REPARAGRAPH="no"
 SEPARATEDAYLOGS="no"
+ACTIONS="no"
 CHANGELOG=""
 OUTSTYLE="cl"
 SVNLOGCMD="svn --verbose --xml log"
@@ -56,6 +57,7 @@ IGNORE_MESSAGE_STARTING=""
 TITLE="ChangeLog"
 REVISION_LINK="#r"
 TMPFILES=""
+AWK="awk"
 
 # do command line checking
 prog=`basename $0`
@@ -90,8 +92,12 @@ do
       INCLUDEREV="yes";
       shift
       ;;
+    -a|--include-actions)
+      ACTIONS="yes"
+      shift
+      ;;
     --break-before-msg|--breaks-before-msg)
-      # FIXME: if next argument is numeric use that as a parameter 
+      # FIXME: if next argument is numeric use that as a parameter
       BREAKBEFOREMSG="yes"
       shift
       ;;
@@ -210,6 +216,7 @@ do
       echo "  --group-by-day       group changelog entries by day"
       echo "  --separate-daylogs   put a blank line between grouped by day entries"
       echo "  -i, --include-rev    include revision numbers"
+      echo "  -a, --include-actions     add [ADD], [DEL] and [CPY] tags to files"
       echo "  --break-before-msg[=NUM]  add a line break (or multiple breaks)"
       echo "                       between the paths and the log message"
       echo "  --reparagraph        rewrap lines inside a paragraph"
@@ -228,12 +235,12 @@ do
       echo "PATH arguments and the following options are passed to the svn log"
       echo "command: -r, --revision, --targets --stop-on-copy, --username,"
       echo "--password, --no-auth-cache, --non-interactive, --config-dir and"
-      echo "--limit (see \`svn help log' for more information)."
+      echo "--limit (see 'svn help log' for more information)."
       exit 0
       ;;
     -*)
       echo "$prog: invalid option -- $1"
-      echo "Try \`$prog --help' for more information."
+      echo "Try '$prog --help' for more information."
       exit 1
       ;;
     *)
@@ -254,6 +261,7 @@ do
 done
 dir=`dirname "$prog"`
 dir=`cd "$dir" && pwd`
+#dir=/etc/svn2cl
 XSL="$dir/svn2${OUTSTYLE}.xsl"
 
 # check if the authors file is formatted as a legacy
@@ -282,13 +290,16 @@ AUTHORSFILE=`echo "$AUTHORSFILE" | sed "/^[^/]/s|^|$pwd/|"`
 if [ -z "$CHANGELOG" ]
 then
   CHANGELOG="ChangeLog"
-  [ "$OUTSTYLE" != "cl" ] && CHANGELOG="$CHANGELOG.$OUTSTYLE"
+  if [ "$OUTSTYLE" != "cl" ]
+  then
+    CHANGELOG="$CHANGELOG.$OUTSTYLE"
+  fi
 fi
 
 # try to determin a prefix to strip from all paths
 if [ "$STRIPPREFIX" = "AUTOMATICALLY-DETERMINED" ]
 then
-  STRIPPREFIX=`LANG=C eval "$SVNINFOCMD" 2> /dev/null | awk '/^URL:/{url=$2} /^Repository Root:/{root=$3} END{if(root){print substr(url,length(root)+2)}else{gsub("^.*/","",url);print url}}'`
+  STRIPPREFIX=`LANG=C eval "$SVNINFOCMD" 2> /dev/null | $AWK '/^URL:/{url=$2} /^Repository Root:/{root=$3} END{if(root){print substr(url,length(root)+2)}else{n=split(url,u,"/");print u[n]}}'`
   STRIPPREFIX=`echo "$STRIPPREFIX" | sed 's/%20/ /g'`
 fi
 
@@ -305,6 +316,7 @@ eval "$SVNLOGCMD" | \
            --stringparam groupbyday "$GROUPBYDAY" \
            --stringparam separate-daylogs "$SEPARATEDAYLOGS" \
            --stringparam include-rev "$INCLUDEREV" \
+           --stringparam include-actions "$ACTIONS" \
            --stringparam breakbeforemsg "$BREAKBEFOREMSG" \
            --stringparam reparagraph "$REPARAGRAPH" \
            --stringparam authorsfile "$AUTHORSFILE" \
