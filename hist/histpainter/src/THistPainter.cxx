@@ -1119,8 +1119,8 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-When the option <tt>"SAME"</tt> is used with the option <tt>"BOX"</tt>, the
-boxes' sizes are computing taking the previous plots into account. The range
+When the option <tt>"SAME"</tt> (or "SAMES") is used with the option <tt>"BOX"</tt>,
+the boxes' sizes are computing taking the previous plots into account. The range
 along the Z axis is imposed by the first plot (the one without option
 <tt>"SAME"</tt>); therefore the order in which the plots are done is relevant.
 
@@ -1241,6 +1241,9 @@ the angle <tt>nn</tt> (<tt>0 < nn < 90</tt>).
 <p>For 2D histograms the text is plotted in the center of each non empty cells.
 For 1D histogram the text is plotted at a y position equal to the bin content.
 
+<p>For 2D histograms when the option "E" (errors) is combined with the option
+text ("TEXTE"), the error for each bin is also printed.
+
 End_Html
 Begin_Macro(source)
 {
@@ -1266,6 +1269,35 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
+<p>In the case of profile histograms it is possible to print the number
+of entries instead of the bin content. It is enough to combine the 
+option "E" (for entries) with the option "TEXT".
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c02 = new TCanvas("c02","c02",700,400);
+   c02->Divide(2,1);
+
+   TProfile *profile = new TProfile("profile","profile",10,0,10);
+   profile->SetMarkerSize(2.2);
+   profile->Fill(0.5,1);
+   profile->Fill(1.5,2);
+   profile->Fill(2.5,3);
+   profile->Fill(3.5,4);
+   profile->Fill(4.5,5);
+   profile->Fill(5.5,5);
+   profile->Fill(6.5,4);
+   profile->Fill(7.5,3);
+   profile->Fill(8.5,2);
+   profile->Fill(9.5,1);
+   c02->cd(1); profile->Draw("HIST TEXT0");
+   c02->cd(2); profile->Draw("HIST TEXT0E");
+
+   return c02;
+} 
+End_Macro
+Begin_Html
 
 <a name="HP16"></a><h3>The CONTour options</h3>
 
@@ -3170,7 +3202,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       } else {
          Hoption.Text = 1;
       }
-      strncpy(l,"    ",4);
+      strncpy(l,"    ", 4);
       Hoption.Scat = 0;
    }
    l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       strncpy(l,"   ",3); }
@@ -3222,6 +3254,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"-"))   Hoption.Plus =-1;
    if (strstr(chopt,"H"))   Hoption.Hist =2;
    if (strstr(chopt,"P0"))  Hoption.Mark =10;
+
    if (strstr(chopt,"E")) {
       if (fH->GetDimension() == 1) {
          Hoption.Error = 1;
@@ -3235,6 +3268,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          if (strstr(chopt,"X0")) {
             if (Hoption.Error == 1)  Hoption.Error += 20;
             Hoption.Error += 10;
+         }
+         if (Hoption.Text && fH->InheritsFrom(TProfile::Class())) {
+            Hoption.Text += 2000;
+            Hoption.Error = 0;
          }
       } else {
          if (Hoption.Error == 0) {
@@ -7583,6 +7620,13 @@ void THistPainter::PaintText(Option_t *)
 
    // 1D histograms
    if (fH->GetDimension() == 1) {
+      Bool_t getentries = kFALSE;
+      Double_t yt;
+      TProfile *hp = (TProfile*)fH;
+      if (Hoption.Text>2000 && fH->InheritsFrom(TProfile::Class())) {
+         Hoption.Text = Hoption.Text-2000;
+         getentries = kTRUE;
+      }
       if (Hoption.Text ==  1) angle = 90;
       text.SetTextAlign(11);
       if (angle == 90) text.SetTextAlign(12);
@@ -7590,9 +7634,11 @@ void THistPainter::PaintText(Option_t *)
       text.TAttText::Modify();
       Double_t dt = 0.02*(gPad->GetY2()-gPad->GetY1());
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
-         x = fH->GetXaxis()->GetBinCenter(i);
-         y = fH->GetBinContent(i);
-         sprintf(value,format,y);
+         x  = fH->GetXaxis()->GetBinCenter(i);
+         y  = fH->GetBinContent(i);
+	 yt = y;
+         if (getentries) yt = hp->GetBinEntries(i);
+         sprintf(value,format,yt);
          if (Hoption.Logx) {
             if (x > 0)  x  = TMath::Log10(x);
             else continue;
