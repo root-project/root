@@ -85,6 +85,7 @@ ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C \
 .PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check logs.tar.gz
 
 include $(ROOTTEST_HOME)/scripts/Common.mk
+-include $(wildcard *.d)
 
 ifeq ($(MAKECMDGOALS),cleantest)
 	TESTGOAL = cleantest
