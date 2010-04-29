@@ -12,13 +12,10 @@
 #ifndef __GNU_CXX_HASH_H
 #define __GNU_CXX_HASH_H
 
-#if defined(__INTEL_COMPILER)
-# include <ext/hash_map>
-# include <ext/hash_set>
-# if (__INTEL_COMPILER <= 800)
+#if defined(__GNUC__)
+# if defined(__INTEL_COMPILER) && (__INTEL_COMPILER <= 800)
 #  define __gnu_cxx std
 # endif
-#elif defined(__GNUC__)
 # if (__GNUC__ < 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ < 3))
 // For gcc, the hash_map and hash_set classes are in the extensions area
 #  include <ext/hash_set>
