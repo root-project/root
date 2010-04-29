@@ -43,7 +43,7 @@ ReflexCMakeTest_Run?=no
 ReflexCMakeConfig:
 	$(CMDECHO)echo Configuring Reflex...
 	$(CMDECHO)mkdir -p cmake-build && cd cmake-build && \
-	CXXFLAGS= cmake -DCMAKE_C_COMPILER=$(notdir $(CC))  -DCMAKE_CXX_COMPILER=$(notdir $(CXX)) -DREFLEX_BUILD_TESTS=ON -DREFLEX_ENABLE_TESTS=ON -DCMAKE_COLOR_MAKEFILE=OFF $(ROOTSYS)/cint/reflex > /dev/null || (echo 'Tests skipped.'; touch ../SKIP-CONFIG-ERROR)
+	CXXFLAGS= LDFLAGS=$(LDFLAGS) cmake -DCMAKE_C_COMPILER=$(notdir $(CC))  -DCMAKE_CXX_COMPILER=$(notdir $(CXX)) -DREFLEX_BUILD_TESTS=ON -DREFLEX_ENABLE_TESTS=ON -DCMAKE_COLOR_MAKEFILE=OFF $(ROOTSYS)/cint/reflex > /dev/null || (echo 'Tests skipped.'; touch ../SKIP-CONFIG-ERROR)
 	$(CMDECHO)echo Done.
 
 # We want to test ROOT's libReflex, so remove the one
