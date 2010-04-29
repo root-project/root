@@ -57,6 +57,7 @@
 #  include "XrdSysToOuc.h"
 #endif
 
+class TFileStager;
 class TSocket;
 class XrdClient;
 class XrdSysRecMutex;
@@ -73,6 +74,7 @@ private:
    // Static members
    static Bool_t  fgInitDone;    // Avoid initializing more than once
    static Bool_t  fgRootdBC;     // Control rootd backward compatibility
+   static TFileStager *fgFileStager; // Stager for IsStaged checks
 
    XrdSysRecMutex    *fInitMtx;     // Protects fInitDone, serializes the
                                    // attempts to Init() for this object only

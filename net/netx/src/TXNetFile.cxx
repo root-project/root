@@ -69,7 +69,7 @@ ClassImp(TXNetFile);
 
 Bool_t TXNetFile::fgInitDone = kFALSE;
 Bool_t TXNetFile::fgRootdBC = kTRUE;
-
+TFileStager *TXNetFile::fgFileStager = 0;
 
 //_____________________________________________________________________________
 TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
@@ -258,12 +258,13 @@ void TXNetFile::CreateXClient(const char *url, Option_t *option, Int_t netopt,
    gSystem->Setenv("XRDCLIENTMAXWAIT", Form("%d",TFile::GetOpenTimeout()));
 
    if (GetOnlyStaged()) {
-      static TFileStager* fFileStager = 0;
-      // check if the file is staged before opening it
-      if (!fFileStager)
-         fFileStager = TFileStager::Open(url);
-      if (fFileStager) {
-         if (!(fFileStager->IsStaged(url))) {
+      // Check if the file is staged before opening it
+      if (!fgFileStager || !(fgFileStager->Matches(url))) {
+         SafeDelete(fgFileStager);
+         fgFileStager = TFileStager::Open(url);
+      }
+      if (fgFileStager) {
+         if (!(fgFileStager->IsStaged(url))) {
             ::Warning("TXNetFile","<%s> is not staged - StageOnly flag is set!",url);
             goto zombie;
          }
