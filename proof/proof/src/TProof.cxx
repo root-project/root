@@ -9077,12 +9077,8 @@ void TProof::Detach(Option_t *opt)
       }
    }
 
-   // Delete this instance
-   if ((!fProgressDialogStarted) && !TestBit(kUsingSessionGui))
-      delete this;
-   else
-      // ~TProgressDialog will delete this
-      fValid = kFALSE;
+   // Invalidate this instance
+   fValid = kFALSE;
 
    return;
 }
