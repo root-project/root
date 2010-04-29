@@ -2381,7 +2381,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    t.GetTextAdvance(w, chars);
    t.GetTextAdvance(w0, chars, kFALSE);
    t.TAttText::Modify();
-   if (w0-w>0) kerning = kTRUE;
+   if (w0-w != 0) kerning = kTRUE;
    else        kerning = kFALSE;
    if (kerning) {
       // Calculate the individual character placements.

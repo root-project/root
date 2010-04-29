@@ -2122,7 +2122,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    t.GetTextAdvance(wa1, chars);
    t.TAttText::Modify();
    Bool_t kerning;
-   if (wa0-wa1>0) kerning = kTRUE;
+   if (wa0-wa1 != 0) kerning = kTRUE;
    else           kerning = kFALSE;
    Int_t *charDeltas = 0;
    if (kerning) {
@@ -2165,7 +2165,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
          if (kerning) {
             PrintStr(") ");
             if (i < len-1) {
-                if (charDeltas[i]>0) WriteInteger(charDeltas[i]);
+               WriteInteger(charDeltas[i+1]);
             }
          }
       }
