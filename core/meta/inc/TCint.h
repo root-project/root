@@ -65,7 +65,7 @@ private:
    static void    *fgSetOfSpecials;  //set of TObject*s used in CINT variables
 
    TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(),
-     fSharedLibs(), fIncludePath(), fRootmapLoadPath(), fMapfile(0),
+     fSharedLibs(), fSharedLibsSerial(0), fIncludePath(), fRootmapLoadPath(), fMapfile(0),
      fRootmapFiles(0), fLockProcessLine(kFALSE) { }  //for Dictionary() only
    TCint(const TCint&);             // not implemented
    TCint &operator=(const TCint&);  // not implemented
@@ -163,8 +163,8 @@ public:
    virtual int    LoadFile(const char *path) const;
    virtual void   LoadText(const char *text) const;
    virtual const char *MapCppName(const char*) const;
-   virtual void   SetAlloclockfunc(void (*)()) const;  
-   virtual void   SetAllocunlockfunc(void (*)()) const;  
+   virtual void   SetAlloclockfunc(void (*)()) const;
+   virtual void   SetAllocunlockfunc(void (*)()) const;
    virtual int    SetClassAutoloading(int) const;
    virtual void   SetErrmsgcallback(void *p) const;
    virtual void   Setgvp(Long_t) const;
@@ -172,8 +172,8 @@ public:
    virtual void   SetRTLD_LAZY() const;
    virtual void   SetTempLevel(int val) const;
    virtual int    UnloadFile(const char *path) const;
-   
-   
+
+
    // G__CallFunc interface
    virtual void   CallFunc_Delete(void *func) const;
    virtual void   CallFunc_Exec(CallFunc_t *func, void *address) const;
@@ -196,8 +196,8 @@ public:
    virtual void   CallFunc_SetFunc(CallFunc_t *func, MethodInfo_t *info) const;
    virtual void   CallFunc_SetFuncProto(CallFunc_t *func, ClassInfo_t *info, const char *method, const char *proto, Long_t *Offset) const;
 
-               
-   // G__ClassInfo interface            
+
+   // G__ClassInfo interface
    virtual Long_t ClassInfo_ClassProperty(ClassInfo_t *info) const;
    virtual void   ClassInfo_Delete(ClassInfo_t *info) const;
    virtual void   ClassInfo_Delete(ClassInfo_t *info, void *arena) const;
@@ -208,15 +208,15 @@ public:
    virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t *cl) const;
    virtual ClassInfo_t  *ClassInfo_Factory(const char *name) const;
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t *info, const char *method,const char *proto) const;
-   virtual bool   ClassInfo_HasDefaultConstructor(ClassInfo_t *info) const;             
-   virtual bool   ClassInfo_HasMethod(ClassInfo_t *info, const char *name) const;             
+   virtual bool   ClassInfo_HasDefaultConstructor(ClassInfo_t *info) const;
+   virtual bool   ClassInfo_HasMethod(ClassInfo_t *info, const char *name) const;
    virtual void   ClassInfo_Init(ClassInfo_t *info, const char *funcname) const;
    virtual void   ClassInfo_Init(ClassInfo_t *info, int tagnum) const;
    virtual bool   ClassInfo_IsBase(ClassInfo_t *info, const char *name) const;
    virtual bool   ClassInfo_IsEnum(const char *name) const;
-   virtual bool   ClassInfo_IsLoaded(ClassInfo_t *info) const;             
-   virtual bool   ClassInfo_IsValid(ClassInfo_t *info) const;             
-   virtual bool   ClassInfo_IsValidMethod(ClassInfo_t *info, const char *method,const char *proto, Long_t *offset) const;             
+   virtual bool   ClassInfo_IsLoaded(ClassInfo_t *info) const;
+   virtual bool   ClassInfo_IsValid(ClassInfo_t *info) const;
+   virtual bool   ClassInfo_IsValidMethod(ClassInfo_t *info, const char *method,const char *proto, Long_t *offset) const;
    virtual int    ClassInfo_Next(ClassInfo_t *info) const;
    virtual void  *ClassInfo_New(ClassInfo_t *info) const;
    virtual void  *ClassInfo_New(ClassInfo_t *info, int n) const;
@@ -231,9 +231,9 @@ public:
    virtual const char *ClassInfo_Name(ClassInfo_t *info) const;
    virtual const char *ClassInfo_Title(ClassInfo_t *info) const;
    virtual const char *ClassInfo_TmpltName(ClassInfo_t *info) const;
-   
-                  
-   // G__BaseClassInfo interface            
+
+
+   // G__BaseClassInfo interface
    virtual void   BaseClassInfo_Delete(BaseClassInfo_t *bcinfo) const;
    virtual BaseClassInfo_t  *BaseClassInfo_Factory(ClassInfo_t *info) const;
    virtual int    BaseClassInfo_Next(BaseClassInfo_t *bcinfo) const;
@@ -244,8 +244,8 @@ public:
    virtual const char *BaseClassInfo_FullName(BaseClassInfo_t *bcinfo) const;
    virtual const char *BaseClassInfo_Name(BaseClassInfo_t *bcinfo) const;
    virtual const char *BaseClassInfo_TmpltName(BaseClassInfo_t *bcinfo) const;
-               
-   // G__DataMemberInfo interface            
+
+   // G__DataMemberInfo interface
    virtual int    DataMemberInfo_ArrayDim(DataMemberInfo_t *dminfo) const;
    virtual void   DataMemberInfo_Delete(DataMemberInfo_t *dminfo) const;
    virtual DataMemberInfo_t  *DataMemberInfo_Factory(ClassInfo_t *clinfo = 0) const;
@@ -262,8 +262,8 @@ public:
    virtual const char *DataMemberInfo_Name(DataMemberInfo_t *dminfo) const;
    virtual const char *DataMemberInfo_Title(DataMemberInfo_t *dminfo) const;
    virtual const char *DataMemberInfo_ValidArrayIndex(DataMemberInfo_t *dminfo) const;
-               
-   // G__MethodInfo interface            
+
+   // G__MethodInfo interface
    virtual void   MethodInfo_CreateSignature(MethodInfo_t *minfo, TString &signature) const;
    virtual void   MethodInfo_Delete(MethodInfo_t *minfo) const;
    virtual MethodInfo_t  *MethodInfo_Factory() const;
@@ -280,8 +280,8 @@ public:
    virtual const char *MethodInfo_Name(MethodInfo_t *minfo) const;
    virtual const char *MethodInfo_TypeName(MethodInfo_t *minfo) const;
    virtual const char *MethodInfo_Title(MethodInfo_t *minfo) const;
-               
-   // G__MethodArgInfo interface            
+
+   // G__MethodArgInfo interface
    virtual void   MethodArgInfo_Delete(MethodArgInfo_t *marginfo) const;
    virtual MethodArgInfo_t  *MethodArgInfo_Factory() const;
    virtual MethodArgInfo_t  *MethodArgInfo_FactoryCopy(MethodArgInfo_t *marginfo) const;
@@ -292,8 +292,8 @@ public:
    virtual const char *MethodArgInfo_Name(MethodArgInfo_t *marginfo) const;
    virtual const char *MethodArgInfo_TypeName(MethodArgInfo_t *marginfo) const;
 
-                  
-   // G__TypeInfo interface            
+
+   // G__TypeInfo interface
    virtual void   TypeInfo_Delete(TypeInfo_t *tinfo) const;
    virtual TypeInfo_t *TypeInfo_Factory() const;
    virtual TypeInfo_t *TypeInfo_Factory(G__value * /* value */) const;
@@ -305,9 +305,9 @@ public:
    virtual int    TypeInfo_RefType(TypeInfo_t * /* tinfo */) const;
    virtual int    TypeInfo_Size(TypeInfo_t *tinfo) const;
    virtual const char *TypeInfo_TrueName(TypeInfo_t *tinfo) const;
-   
-                  
-   // G__TypedefInfo interface            
+
+
+   // G__TypedefInfo interface
    virtual void   TypedefInfo_Delete(TypedefInfo_t *tinfo) const;
    virtual TypedefInfo_t  *TypedefInfo_Factory() const;
    virtual TypedefInfo_t  *TypedefInfo_FactoryCopy(TypedefInfo_t *tinfo) const;
