@@ -127,7 +127,11 @@ enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
+enable_builtin_freetype=no
+enable_builtin_ftgl=no
 enable_builtin_glew=no
+enable_builtin_pcre=no
+enable_builtin_zlib=no
 
 # Remove old log file
 rm -f $logfile
