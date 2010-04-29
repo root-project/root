@@ -70,6 +70,7 @@ namespace TClassEdit {
 
    private:
       TSplitType(const TSplitType&); // intentionally not implemented
+      TSplitType &operator=(const TSplitType &); // intentionally not implemented
    };
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
