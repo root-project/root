@@ -29,6 +29,10 @@ in this Software without prior written authorization from the X Consortium.
 
 #include "def.h"
 
+#ifdef __SUNPRO_C
+extern int lstat();
+#endif
+
 extern struct	inclist	inclist[ MAXFILES ],
 			*inclistp;
 extern char	*includedirs[ ];
