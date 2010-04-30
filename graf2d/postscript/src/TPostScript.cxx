@@ -2442,6 +2442,11 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
 
    // Output text.
    PrintStr("(");
+
+   // Inside a PostScript string, the new line (if needed to break up long lines) must be escaped by a backslash.
+   const char *crsave = fImplicitCREsc;
+   fImplicitCREsc = "\\";
+
    char str[8];
    for (Int_t i=0; i<len;i++) {
       if (chars[i]!='\n') {
@@ -2456,13 +2461,15 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
          }
       }
    }
+   PrintStr(")");
+   fImplicitCREsc = crsave;
 
    if (kerning) {
-      if (font != 15) PrintStr(") K NC");
-      else            PrintStr(") K gr NC");
+      if (font != 15) PrintStr(" K NC");
+      else            PrintStr(" K gr NC");
    } else {
-      if (font != 15) PrintStr(") show NC");
-      else            PrintStr(") show gr NC");
+      if (font != 15) PrintStr(" show NC");
+      else            PrintStr(" show gr NC");
    }
 
    SaveRestore(-1);

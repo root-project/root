@@ -35,6 +35,7 @@ TVirtualPS::TVirtualPS()
    fBuffer    = new char[fSizBuffer+1];
    fLenBuffer = 0;
    fPrinted   = kFALSE;
+   fImplicitCREsc = 0;
 }
 
 
@@ -50,6 +51,7 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
    fBuffer    = new char[fSizBuffer+1];
    fLenBuffer = 0;
    fPrinted   = kFALSE;
+   fImplicitCREsc = 0;
 }
 
 
@@ -68,48 +70,27 @@ void TVirtualPS::PrintStr(const char *str)
    // Output the string str in the output buffer
 
    Int_t len = strlen(str);
-   if (len == 0) return;
-   if( str[0] == '@') {
-      if( fLenBuffer ) {
-         fStream->write(fBuffer, fLenBuffer);
-         fStream->write("\n",1); fNByte++;
-      }
-      if ( len < 2)  {
-         fBuffer[0] = ' ';
+   if (!len || !str) return;
+   while (len) {
+      if (str[0] == '@') {
+         if (fLenBuffer) {
+            fStream->write(fBuffer, fLenBuffer);
+            fNByte += fLenBuffer;
+            fLenBuffer = 0;
+            fStream->write("\n", 1); 
+            fNByte++;
+            fPrinted = kTRUE;
+         }
+         len--;
+         str++;
       } else {
-         strcpy(fBuffer, str+1);
+         Int_t lenText = len;
+         if (str[len-1] == '@') lenText--;
+         PrintFast(lenText, str);
+         len -= lenText;
+         str += lenText;
       }
-      fLenBuffer = len-1;
-      fPrinted = kTRUE;
-      fNByte += len-1;
-      return;
    }
-
-   if( str[len-1] == '@') {
-      if( fLenBuffer ) {
-         fStream->write(fBuffer, fLenBuffer);
-         fStream->write("\n",1); fNByte++;
-      }
-      fStream->write(str, len-1);
-      fStream->write("\n",1);
-      fLenBuffer = 0;
-      fNByte += len;
-      fPrinted = kTRUE;
-      return;
-   }
-
-   if( (len + fLenBuffer ) > kMaxBuffer-1) {
-      fStream->write(fBuffer, fLenBuffer);
-      fStream->write("\n",1); fNByte++;
-      strcpy(fBuffer, str);
-      fLenBuffer = len;
-      fNByte += len;
-   } else {
-      strcpy(fBuffer + fLenBuffer, str);
-      fLenBuffer += len;
-      fNByte += len;
-   }
-   fPrinted = kTRUE;
 }
 
 
@@ -117,19 +98,57 @@ void TVirtualPS::PrintStr(const char *str)
 void TVirtualPS::PrintFast(Int_t len, const char *str)
 {
    // Fast version of Print
-
-   fNByte += len;
-   if( (len + fLenBuffer ) > kMaxBuffer-1) {
-      fStream->write(fBuffer, fLenBuffer);
-      fStream->write("\n",1); fNByte++;
-      while (len > kMaxBuffer-1) {
-         fStream->write(str,kMaxBuffer);
-         len -= kMaxBuffer;
-         str += kMaxBuffer;
+   if (!len || !str) return;
+   while ((len + fLenBuffer) > kMaxBuffer) {
+      Int_t nWrite = kMaxBuffer;
+      if (fImplicitCREsc) {
+         if (fLenBuffer > 0) nWrite = fLenBuffer;
+      } else {
+         if ((len + fLenBuffer) > nWrite) {
+            // Search for the nearest preceeding space to break a line, if there is no instruction to escape the <end-of-line>.
+            while ((nWrite >= fLenBuffer) && (str[nWrite - fLenBuffer] != ' ')) nWrite--;
+            if (nWrite < fLenBuffer) {
+               while ((nWrite >= 0) && (fBuffer[nWrite] != ' ')) nWrite--;
+            }
+            if (nWrite <= 0) {
+               // Cannot find a convenient place to break a line, so we just break at this location.
+               nWrite = kMaxBuffer;
+            }
+         }
       }
-      strcpy(fBuffer, str);
-      fLenBuffer = len;
-   } else {
+      if (nWrite >= fLenBuffer) {
+         if (fLenBuffer > 0) {
+            fStream->write(fBuffer, fLenBuffer);
+            fNByte += fLenBuffer;
+            nWrite -= fLenBuffer;
+            fLenBuffer = 0;
+         }
+         if (nWrite > 0) {
+            fStream->write(str, nWrite);
+            len -= nWrite;
+            str += nWrite;
+            fNByte += nWrite;
+         }
+      } else {
+         if (nWrite > 0) {
+            fStream->write(fBuffer, nWrite);
+            fNByte += nWrite;
+            memmove(fBuffer, fBuffer + nWrite, fLenBuffer - nWrite); // not strcpy because source and destination overlap
+            fBuffer[fLenBuffer - nWrite] = 0; // not sure if this is needed, but just in case
+            fLenBuffer -= nWrite;
+         }
+      }
+      if (fImplicitCREsc) {
+         // Write escape characters (if any) before an end-of-line is enforced.
+         // For example, in PostScript the <new line> character must be escaped inside strings.
+         Int_t crlen = strlen(fImplicitCREsc);
+         fStream->write(fImplicitCREsc, crlen);
+         fNByte += crlen;
+      }
+      fStream->write("\n",1);
+      fNByte++;
+   }
+   if (len > 0) {
       strcpy(fBuffer + fLenBuffer, str);
       fLenBuffer += len;
    }

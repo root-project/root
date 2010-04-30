@@ -178,6 +178,7 @@ void TPDF::Close(Option_t *)
    PrintStr("endobj@");
    NewObject(3*(fNbPage-1)+kObjFirstPage+2);
    WriteInteger(streamLength, 0);
+   PrintStr("@");
    PrintStr("endobj@");
 
    // List of all the pages
@@ -226,6 +227,7 @@ void TPDF::Close(Option_t *)
    PrintStr(">>@");
    PrintStr("startxref@");
    WriteInteger(refInd, 0);
+   PrintStr("@");
    PrintStr("%%EOF@");
 
    // Close file stream
@@ -941,7 +943,7 @@ void TPDF::FontEncode()
          PrintStr("/Encoding /WinAnsiEncoding");
          PrintStr("@");
       }
-      PrintStr(">>");
+      PrintStr(">>@");
       PrintStr("endobj@");
    }
 }
@@ -1095,7 +1097,7 @@ void TPDF::NewPage()
 
    PrintStr("/Contents");
    WriteInteger(3*(fNbPage-1)+kObjFirstPage+1);
-   PrintStr(" 0 R");
+   PrintStr(" 0 R@");
    PrintStr(">>@");
    PrintStr("endobj@");
 
@@ -1398,7 +1400,7 @@ void TPDF::PatternEncode()
    PrintStr(" 0 R");
    PrintStr(" /P25");
    WriteInteger(patternNb++);
-   PrintStr(" 0 R");
+   PrintStr(" 0 R@");
    PrintStr(">>@");
    PrintStr("endobj@");
 

@@ -50,6 +50,7 @@ protected:
    Bool_t       fPrinted;         //True when a page must be printed
    ofstream    *fStream;          //File stream identifier
    char        *fBuffer;          //File buffer
+   const char  *fImplicitCREsc;   //Escape symbol before enforced new line
 
 public:
    TVirtualPS();
