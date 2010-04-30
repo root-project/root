@@ -31,7 +31,7 @@ public:
       Default constructor 
    */ 
    GSLRngWrapper () : 
-      fOwn(1),
+      fOwn(0),
       fRng(0),
       fRngType(0) 
     {
@@ -57,6 +57,20 @@ public:
     {
        fRng = const_cast<gsl_rng *>(r); 
     }
+
+   /** 
+      Copy constructor - pass ownership (need not to be const)
+      Just copy the pointer and do not manage it 
+   */ 
+   GSLRngWrapper(GSLRngWrapper & r) :
+      fOwn(r.fOwn),
+      fRng(r.fRng),
+      fRngType(r.fRngType)
+   { 
+      // in case an rng exists must release it
+      if (fRng && fOwn) r.fOwn = false;  
+   } 
+
 
    /**
       Destructor  (free the rng if not done before)
@@ -99,13 +113,10 @@ public:
 private:
    // usually copying is non trivial, so we make this unaccessible
 
-   /** 
-      Copy constructor
-   */ 
-   GSLRngWrapper(const GSLRngWrapper &) {} 
 
    /** 
       Assignment operator
+      Disable since if don't want to change an already created wrapper
    */ 
    GSLRngWrapper & operator = (const GSLRngWrapper & rhs)  {
       if (this == &rhs) return *this;  // time saving self-test

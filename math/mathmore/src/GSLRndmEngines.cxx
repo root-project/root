@@ -54,28 +54,42 @@ namespace Math {
 
 
 
-  // default constructor 
-  GSLRandomEngine::GSLRandomEngine() : 
-    fCurTime(0)
-  {  
-    fRng = new GSLRngWrapper();
-  } 
+  // default constructor (need to call set type later)
+   GSLRandomEngine::GSLRandomEngine() : 
+      fRng(0 ),
+      fCurTime(0)  
+  { } 
 
+   // constructor from external rng
+   // internal generator will be managed or not depending on 
+   // how the GSLRngWrapper is created
+   GSLRandomEngine::GSLRandomEngine( GSLRngWrapper * rng) : 
+      fRng(new GSLRngWrapper(*rng) ),
+      fCurTime(0)
+   {}
+
+//    // constructor from external rng
+//    GSLRandomEngine( GSLRngWrapper & rng) : 
+//       fRng(new GSLRngWrapper(rng) ),
+//       fCurTime(0)
+//    {}
 
    GSLRandomEngine::~GSLRandomEngine() {
-      // destructor : call terminate
+      // destructor : call terminate if not yet called
       if (fRng) Terminate();
    }
 
+
    void GSLRandomEngine::Initialize() { 
-      //----------------------------------------------------
-      assert(fRng != 0);
+      // initialize the generator by allocating the GSL object
+      // if type was not passed create with default generator
+      if (!fRng) fRng = new GSLRngWrapper(); 
       fRng->Allocate(); 
    }
 
    void GSLRandomEngine::Terminate() { 
-      //----------------------------------------------------
-      assert(fRng != 0);
+      // terminate the generator by freeing the GSL object
+      if (!fRng) return;
       fRng->Free();
       delete fRng; 
       fRng = 0; 
@@ -270,61 +284,72 @@ namespace Math {
    //----------------------------------------------------
 
    //----------------------------------------------------
-   GSLRngMT::GSLRngMT() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_mt19937) )
-   {}
+   GSLRngMT::GSLRngMT() : GSLRandomEngine()
+   {
+      SetType(new GSLRngWrapper(gsl_rng_mt19937));
+   }
 
 
 
-   GSLRngRanLux::GSLRngRanLux() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_ranlux) )
-   {}
+   GSLRngRanLux::GSLRngRanLux() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_ranlux) );
+   }
 
    // second generation of Ranlux (double precision version)
-   GSLRngRanLux2::GSLRngRanLux2() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_ranlxs2) )
-   {}
+   GSLRngRanLux2::GSLRngRanLux2() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_ranlxs2) );
+   }
 
    // 48 bits version
-   GSLRngRanLux48::GSLRngRanLux48() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_ranlxd2) )
-   {}
+   GSLRngRanLux48::GSLRngRanLux48() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_ranlxd2) );
+   }
 
    //----------------------------------------------------
-   GSLRngTaus::GSLRngTaus() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_taus2) )
-   {}
+   GSLRngTaus::GSLRngTaus() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_taus2) );
+   }
 
    //----------------------------------------------------
-   GSLRngGFSR4::GSLRngGFSR4() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_gfsr4) )
-   {}
+   GSLRngGFSR4::GSLRngGFSR4() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_gfsr4) );
+   }
 
    //----------------------------------------------------
-   GSLRngCMRG::GSLRngCMRG() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_cmrg) )
-   {}
+   GSLRngCMRG::GSLRngCMRG() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_cmrg) );
+   }
 
    //----------------------------------------------------
-   GSLRngMRG::GSLRngMRG() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_mrg) )
-   {}
+   GSLRngMRG::GSLRngMRG() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_mrg) );
+   }
 
 
    //----------------------------------------------------
-   GSLRngRand::GSLRngRand() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_rand) )
-   {}
+   GSLRngRand::GSLRngRand() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_rand) );
+   }
 
    //----------------------------------------------------
-   GSLRngRanMar::GSLRngRanMar() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_ranmar) )
-   {}
+   GSLRngRanMar::GSLRngRanMar() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_ranmar) );
+   }
 
    //----------------------------------------------------
-   GSLRngMinStd::GSLRngMinStd() : 
-      GSLRandomEngine(new GSLRngWrapper(gsl_rng_minstd) )
-   {}
+   GSLRngMinStd::GSLRngMinStd() : GSLRandomEngine() 
+   {
+      SetType(new GSLRngWrapper(gsl_rng_minstd) );
+   }
 
 
 

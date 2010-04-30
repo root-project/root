@@ -42,7 +42,9 @@
 //#define TEST_TIME
 
 using namespace ROOT::Math;
+#ifdef HAVE_CLHEP
 using namespace CLHEP;
+#endif
 
 static bool fillHist = false;
 

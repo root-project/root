@@ -37,12 +37,7 @@
 namespace ROOT {
 namespace Math {
 
-  //struct GSLRngType; 
-  //struct GSLRng; 
-  //class  GSLRng; 
-  //class GSLRngType;
-  //typedef gsl_rng GSLRng; 
-  //typedef gsl_rng_type GSLRngType; 
+
    class GSLRngWrapper; 
 
    //_________________________________________________________________
@@ -80,10 +75,7 @@ namespace Math {
           create from an existing rng. 
           User manage the rng pointer which is then deleted olny by calling Terminate()
       */
-      GSLRandomEngine( GSLRngWrapper * rng) : 
-         fRng(rng) , 
-         fCurTime(0)
-      {}
+      GSLRandomEngine( GSLRngWrapper * rng);  
 
       /**
          initialize the generator 
@@ -248,10 +240,16 @@ namespace Math {
 
    protected: 
 
+      /// internal method used by the derived class to set the type of generators 
+      void SetType(GSLRngWrapper * r) { 
+         fRng = r; 
+      }
+
    private: 
 
-      GSLRngWrapper * fRng;               // pointer to GSL generator wrapper
+      GSLRngWrapper * fRng;                // pointer to GSL generator wrapper (managed by the class)
       mutable unsigned int  fCurTime;      // current time used to seed the generator
+      
 
    }; 
    
