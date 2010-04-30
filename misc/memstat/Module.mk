@@ -35,7 +35,7 @@ MEMSTATMAP    := $(MEMSTATLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MEMSTATH))
-ALLLIBS     += $(MEMSTATLIB) $(MEMSTATGUILIB)
+ALLLIBS     += $(MEMSTATLIB)
 ALLMAPS     += $(MEMSTATMAP)
   
 # include all dependency files
@@ -71,6 +71,6 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MEMSTATDEP) $(MEMSTATDS) $(MEMSTATDH) $(MEMSTATLIB) \
-		   $(MEMSTATMAP)
+		   $(MEMSTATMAP) $(LPATH)/libMemStatGui.rootmap
 
 distclean::     distclean-$(MODNAME)
