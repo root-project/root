@@ -71,6 +71,7 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MEMSTATDEP) $(MEMSTATDS) $(MEMSTATDH) $(MEMSTATLIB) \
-		   $(MEMSTATMAP) $(LPATH)/libMemStatGui.rootmap
+		   $(MEMSTATMAP) $(LPATH)/libMemStatGui.$(SOEXT) \
+		   $(LPATH)/libMemStatGui.rootmap
 
 distclean::     distclean-$(MODNAME)
