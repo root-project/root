@@ -153,7 +153,7 @@ get_gif_image_desc( GifFileType *gif, SavedImage *im )
 		{
 			im->ImageDesc.ColorMap = MakeMapObject(gif->Image.ColorMap->ColorCount, NULL);
 			fseek( gif->UserData, start_pos+9, SEEK_SET ); 
-			fread( im->ImageDesc.ColorMap->Colors, 1, gif->Image.ColorMap->ColorCount*3, gif->UserData);
+			if(fread( im->ImageDesc.ColorMap->Colors, 1, gif->Image.ColorMap->ColorCount*3, gif->UserData)){;};
 			fseek( gif->UserData, end_pos, SEEK_SET );
 			gif->Image.ColorMap = NULL ;
  		}
