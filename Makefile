@@ -838,7 +838,7 @@ endif
 	@(find tutorials -name "files" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true)
-	@(find tutorials -name "*.gif" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find tutorials -path '*/doc' -prune -o -name "*.gif" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "so_locations" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "pca.C" -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find tutorials -name "*.so" -exec rm -rf {} \; >/dev/null 2>&1;true)
