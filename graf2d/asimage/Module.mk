@@ -186,7 +186,7 @@ else
 		$$TIFFINCDIR)
 endif
 
-$(ASTEPLIBA):   $(ASTEPMAKE)
+$(ASTEPLIBA):   $(ASTEPMAKE) $(ASTEPDIRS)/*.h $(ASTEPDIRS)/*.c
 ifeq ($(PLATFORM),win32)
 		@(cd $(ASTEPDIRS); \
 		echo "*** Building libAfterImage ..." ; \
