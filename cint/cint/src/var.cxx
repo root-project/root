@@ -5671,6 +5671,38 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
             case 'T':
                result.type = 'C';
                break;
+#ifdef G__ROOT
+            case 'Z':
+               // root special
+               if (G__GetSpecialObject) {
+                  store_var_type = G__var_type;
+                  result = (*G__GetSpecialObject)(var->varnamebuf[ig15], (void**)var->p[ig15], (void**)(var->p[ig15] + G__LONGALLOC));
+                  // G__var_type was stored in store_var_type just before the
+                  // call to G__GetSpecialObject which might have recursive
+                  // calls to G__getvariable() or G__getexpr()
+                  // It is restored at this point.
+                  G__var_type = store_var_type;
+                  if (!result.obj.i) {
+                     *known = 0;
+                  }
+                  else {
+                     var->p_tagtable[ig15] = result.tagnum;
+                  }
+                  switch (G__var_type) {
+                  case 'p':
+                     break;
+                  case 'v':
+                     result.ref = result.obj.i;
+                     result.type = tolower(result.type);
+                     break;
+                  default:
+                     G__reference_error(item);
+                     break;
+                  }
+               }
+               break;
+#endif // G__ROOT
+
             default:
                result.obj.i = 1;
                break;
