@@ -229,7 +229,9 @@ TASImage::TASImage(const char *file, EImageFileTypes) : TImage(file)
    // which is called by this constructor.
 
    SetDefaults();
-   ReadImage(file);
+   TString fname = file;
+   gSystem->ExpandPathName(fname);
+   ReadImage(fname.Data());
 }
 
 
