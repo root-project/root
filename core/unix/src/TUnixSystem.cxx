@@ -127,7 +127,9 @@
 #   include <sys/filio.h>
 #   include <sys/sockio.h>
 #   define HASNOT_INETATON
-#   define INADDR_NONE (UInt_t)-1
+#   ifndef INADDR_NONE
+#      define INADDR_NONE (UInt_t)-1
+#   endif
 #endif
 #if defined(R__HPUX)
 #   include <symlink.h>
