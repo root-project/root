@@ -4658,19 +4658,17 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
            (TestBit(kIsCharacter)) )
       {
          const char * val = 0;
-         if (instance<fNdata[0]) {
-            if (fLookupType[0]==kTreeMember) {
-               val = (char*)GetLeafInfo(0)->GetValuePointer((TLeaf*)0x0,instance);
+         if (fLookupType[0]==kTreeMember) {
+            val = (char*)GetLeafInfo(0)->GetValuePointer((TLeaf*)0x0,instance);
+         } else {
+            TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
+            TBranch *branch = leaf->GetBranch();
+            Long64_t readentry = branch->GetTree()->GetReadEntry();
+            R__LoadBranch(branch,readentry,fQuickLoad);
+            if (fLookupType[0]==kDirect && fNoper==1) {
+               val = (const char*)leaf->GetValuePointer();
             } else {
-               TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
-               TBranch *branch = leaf->GetBranch();
-               Long64_t readentry = branch->GetTree()->GetReadEntry();
-               R__LoadBranch(branch,readentry,fQuickLoad);
-               if (fLookupType[0]==kDirect && fNoper==1) {
-                  val = (const char*)leaf->GetValuePointer();
-               } else {
-                  val = ((TTreeFormula*)this)->EvalStringInstance(instance);
-               }
+               val = ((TTreeFormula*)this)->EvalStringInstance(instance);
             }
          }
          if (val) {
