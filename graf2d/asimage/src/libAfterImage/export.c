@@ -1233,7 +1233,7 @@ Bool
 ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 {
 	TIFF *out;
-	static const ASTiffExportParams defaultsTiff = { ASIT_Tiff, 0, -1, TIFF_COMPRESSION_NONE, 100, 0 };
+	static const ASTiffExportParams defaultsTiff = { ASIT_Tiff, 0, (CARD32)-1, TIFF_COMPRESSION_NONE, 100, 0 };
         ASImageExportParams defaults;
 	uint16 photometric = PHOTOMETRIC_RGB;
 	tsize_t linebytes, scanline;
