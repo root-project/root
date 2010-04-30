@@ -3,15 +3,23 @@
 #
 # Author: Fons Rademakers, 28/11/2005
 
+MODNAME      := pcre
+
 ifneq ($(BUILTINPCRE), yes)
+
 PCRELIBF     := $(shell pcre-config --libs)
 PCREINC      := $(shell pcre-config --cflags)
 PCRELIB      := $(filter -l%,$(PCRELIBF))
 PCRELDFLAGS  := $(filter-out -l%,$(PCRELIBF))
 PCREDEP      :=
+
+.PHONY:         distclean-$(MODNAME)
+distclean-$(MODNAME):
+		@rm -f $(LPATH)/libpcre.lib $(LPATH)/libpcre.a
+distclean::     distclean-$(MODNAME)
+
 else
 
-MODNAME      := pcre
 MODDIR       := core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 
