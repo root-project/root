@@ -1936,7 +1936,9 @@ if test "x$enable_builtin_ftgl" = "x" || \
    test "x$enable_builtin_ftgl" = "xno" ; then
 
    # check if we have pkg-config
+   checking_msg "pkg-config"
    if `$cwhich pkg-config > /dev/null 2>&1` ; then
+      $cwhich pkg-config
 
       message "Checking for libftgl"
       if pkg-config --exists ftgl ; then
@@ -1949,6 +1951,9 @@ if test "x$enable_builtin_ftgl" = "x" || \
           enable_builtin_ftgl=yes
           result "no"
       fi
+   else
+      enable_builtin_ftgl="yes"
+      echo "not found"
    fi
 fi
 message "Checking whether to build included libftgl"
