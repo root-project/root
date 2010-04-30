@@ -1039,10 +1039,9 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, 
    //                                 Double_t *u, Int_t flag);
    //
-   // How errors are used in the chisquare function (see TFitter GraphFitChisquare)
    // 
-   //      Access to the fit result 
-   //      ========================  
+   // Access to the fit result 
+   // ========================  
    //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
    //  By default the TFitResultPtr contains only the status of the fit and it converts
    //  automatically to an integer. If the option "S" is instead used, TFitResultPtr contains
@@ -1057,11 +1056,12 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also 
    //   from the fitted function. 
    //
-   //   In case of a TGraphErrors object, ex, the error along x, is projected
-   //   along the y-direction by calculating the function at the points x-exlow and
-   //   x+exhigh.
    //
-   //   The chisquare is computed as the sum of the quantity below at each point:
+   // TGraphErrors fit: 
+   //
+   //   In case of a TGraphErrors object, when x errors are present, the error along x, 
+   //   is projected along the y-direction by calculating the function at the points x-exlow and
+   //   x+exhigh. The chisquare is then computed as the sum of the quantity below at each point:
    //
    // Begin_Latex
    // #frac{(y-f(x))^{2}}{ey^{2}+(#frac{1}{2}(exl+exh)f'(x))^{2}}
