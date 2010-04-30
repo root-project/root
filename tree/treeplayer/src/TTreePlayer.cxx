@@ -3186,6 +3186,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
 
          } else {
 
+            ndata = 0;
+
             // let's print the max number of column
             for (ui=0;ui<ncols;ui++) {
                if (ndata < var[ui]->GetNdata() ) {
