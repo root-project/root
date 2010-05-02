@@ -25,14 +25,7 @@
 // Direct inclussion of FTGL headers is deprecated in ftgl-2.1.3 while
 // ftgl-2.1.2 shipped with ROOT requires manual inclusion.
 #ifndef BUILTIN_FTGL
-# include <FTGL/FTGL.h>
-# include <FTGL/FTFont.h>
-# include <FTGL/FTGLExtrdFont.h>
-# include <FTGL/FTGLOutlineFont.h>
-# include <FTGL/FTGLPolygonFont.h>
-# include <FTGL/FTGLTextureFont.h>
-# include <FTGL/FTGLPixmapFont.h>
-# include <FTGL/FTGLBitmapFont.h>
+# include <FTGL/ftgl.h>
 #else
 # include "FTFont.h"
 # include "FTGLExtrdFont.h"

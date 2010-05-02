@@ -1942,14 +1942,26 @@ if test "x$enable_builtin_ftgl" = "x" || \
 
       message "Checking for libftgl"
       if pkg-config --exists ftgl ; then
-          result "ok"
-          ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
-          ftgllibs=`pkg-config --libs-only-l ftgl`
-          ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
-          enable_builtin_ftgl=no
+         result "ok"
+         message "Checking for ftgl version > 2.1.2"
+         ftgl_version=`pkg-config --modversion ftgl | \
+         tr '.' ' ' | \
+         awk 'BEGIN { FS = " "; } \
+            { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
+         # Use FTGL/ftgl.h when > 2.1.2
+         if test $ftgl_version -gt 2001002 ; then
+            result "ok"
+            ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
+            ftgllibs=`pkg-config --libs-only-l ftgl`
+            ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
+            enable_builtin_ftgl="no"
+         else
+            enable_builtin_ftgl="yes"
+            result "no (`pkg-config --modversion ftgl`)"
+         fi
       else
-          enable_builtin_ftgl=yes
-          result "no"
+         enable_builtin_ftgl="yes"
+         result "no"
       fi
    else
       enable_builtin_ftgl="yes"
