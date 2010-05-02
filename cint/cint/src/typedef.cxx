@@ -615,17 +615,18 @@ void G__define_type()
       // int tmptypenum;
       if (strlen(type_name) >= 5) {
          // Rewind.
-         long rewindlen = (strlen(type_name) + 1) - strlen("long");
-         fseek(G__ifile.fp, -rewindlen , SEEK_CUR);
+         size_t copylen = strlen(type_name) - strlen("long") + 1;
+         strncpy(type_name,type_name + strlen("long"),copylen);
+      } else {
+         c = G__fgetname(type_name, 0, ";,[");
       }
+      tagname = "";
       if (type == 'l') {
          type = 'n';
       }
       else if (type == 'k') {
          type = 'm';
       }
-      tagname = "";
-      c = G__fgetname(type_name, 0, ";,[");
    }
    if (
       !strncmp(type_name, "double", strlen("double")) &&
@@ -640,17 +641,19 @@ void G__define_type()
          )
       )
    ) {
-      if (strlen(type_name) > strlen("double")) {
+      static const size_t lendouble = strlen("double");
+      if (strlen(type_name) > lendouble) {
          // Rewind.
-         long rewindlen = (strlen(type_name) + 1) - strlen("double");
-         fseek(G__ifile.fp, -rewindlen , SEEK_CUR);
+         size_t copylen = strlen(type_name) - lendouble + 1;
+         strncpy(type_name,type_name + lendouble,copylen);
+      } else {
+         c = G__fgetname(type_name, 0, ";,[");
       }
       if (type == 'l') {
          // int tmptypenum;
          type = 'q';
          tagname = "";
       }
-      c = G__fgetname(type_name, 0, ";,[");
    }
 
    /* in case of
@@ -671,12 +674,14 @@ void G__define_type()
          )
       )
    ) {
-      if (strlen(type_name) >= 4) { // we have at least int& or int*
+      static const size_t lenint = strlen("int");
+      if (strlen(type_name) > lenint) { // we have at least int& or int*
          // Rewind.
-         long rewindlen = (strlen(type_name) + 1) - strlen("int");
-         fseek(G__ifile.fp, -rewindlen , SEEK_CUR);
+         size_t copylen = strlen(type_name) - lenint + 1;
+         strncpy(type_name,type_name + lenint,copylen);
+      } else {
+         c = G__fgetstream(type_name, 0, ";,[");
       }
-      c = G__fgetstream(type_name, 0, ";,[");
    }
    if (!strcmp(type_name, "*")) {
       fpos_t tmppos;
