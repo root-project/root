@@ -1194,7 +1194,7 @@ with options, prefix with --with-, enables corresponding support
   sapdb-incdir       SapDB support, location of sql.h
   sapdb-libdir       SapDB support, location of libsqlod
   rfio-incdir        RFIO support, location of rfio_api.h
-  rfio-libdir        RFIO support, location of librfio or libshift
+  rfio-libdir        RFIO support, location of librfio, libdpm or libshift
   srp                Secure Remote Passwd support, location of SRP distribution
   srp-incdir         SRP support, location header of t_server.h
   srp-libdir         SRP support, location header of libsrp.a
@@ -2558,7 +2558,7 @@ check_explicit "$enable_qt" "$enable_qt_explicit" \
 #
 # (See http://savannah.cern.ch/files/?group=castor)
 #
-# Check for rfio_api.h of CASTOR 2 and librfio or libshift
+# Check for rfio_api.h of CASTOR 2 and librfio, libdpm or libshift
 #
 shiftold=""
 if test ! "x$enable_rfio" = "xno" ; then
@@ -2584,7 +2584,7 @@ if test ! "x$enable_rfio" = "xno" ; then
         fi
     fi
 
-    check_library "librfio libshift shiftmd shift" "$enable_shared" \
+    check_library "librfio libdpm libshift shiftmd shift" "$enable_shared" \
         "$shiftlibdir" \
         $RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
         /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
