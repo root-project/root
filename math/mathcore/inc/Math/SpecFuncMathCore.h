@@ -183,6 +183,55 @@ namespace Math {
 
    double inc_beta( double x, double a, double b); 
 
+
+
+
+  /**
+  
+  Calculates the sine integral.
+
+  \f[ Si(x) = - \int_{0}^{x} \frac{\sin t}{t} dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/SineIntegral.html">
+  Mathworld</A>. The implementation used is that of 
+  <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c336/top.html">
+  CERNLIB</A>,
+  based on Y.L. Luke, The special functions and their approximations, v.II, (Academic Press, New York l969) 325-326. 
+  
+
+  @ingroup SpecFunc
+
+  */
+
+  double sinint(double x);
+
+
+
+
+  /**
+  
+  Calculates the real part of the cosine integral \Re(Ci).
+  
+  For x<0, the imaginary part is \pi i and has to be added by the user,
+  for x>0 the imaginary part of Ci(x) is 0.
+
+  \f[ Ci(x) = - \int_{x}^{\infty} \frac{\cos t}{t} dt = \gamma + \ln x + \int_{0}^{x} \frac{\cos t - 1}{t} dt\f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/CosineIntegral.html">
+  Mathworld</A>. The implementation used is that of 
+  <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c336/top.html">
+  CERNLIB</A>,
+  based on Y.L. Luke, The special functions and their approximations, v.II, (Academic Press, New York l969) 325-326. 
+  
+
+  @ingroup SpecFunc
+
+  */
+
+  double cosint(double x);
+
    
    
 

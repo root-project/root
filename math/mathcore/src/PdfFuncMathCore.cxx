@@ -188,8 +188,9 @@ namespace Math {
          denlan = u*u*(1+(a2[0]+a2[1]*u)*u);
       }
       return denlan/sigma;
-}
-
+      
+   }
+   
       
     
    
@@ -245,7 +246,8 @@ namespace Math {
       
    }
    
-
+   
+   
 
 } // namespace Math
 } // namespace ROOT

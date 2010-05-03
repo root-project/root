@@ -57,19 +57,22 @@ namespace Math {
    *
    *  \f[ D(x) = \int_{x}^{+\infty} p(x') dx' \f]
    *
-   * The implementation used is that of 
-   * <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.
+   *  These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one 
+   *  including all statistical dunctions <em>Math/DistFunc.h<em>
+   *
    *
    * <strong>NOTE:</strong> In the old releases (< 5.14) the <em>_quantile</em> functions were called 
    * <em>_quant_inv</em> and the <em>_quantile_c</em> functions were called 
    * <em>_prob_inv</em>. 
    * These names are currently kept for backward compatibility, but 
    * their usage is deprecated.
+   *
    */
 
    /** @name Quantile Functions from MathCore 
-   * The implementation used is that of 
-   * <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.
+   * The implementation is provided in MathCore and for the majority of the function comes from 
+   * <A HREF="http://www.netlib.org/cephes">Cephes</A>. 
+
    */ 
 
   //@{
@@ -519,6 +522,41 @@ namespace Math {
 
    double uniform_quantile(double z, double a, double b);
 
+
+
+
+   /**
+
+      Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+      function of the lower tail of the Landau distribution
+      (#landau_cdf).
+
+   For detailed description see 
+   K.S. K\"olbig and B. Schorr, A program package for the Landau distribution, 
+   <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
+   <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>. 
+   The same algorithms as in 
+   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   CERNLIB</A> (RANLAN) is used.  
+
+  
+      @ingroup QuantFunc
+
+   */
+
+   double landau_quantile(double z, double sigma = 1);
+
+
+   /**
+
+      Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+      function of the upper tail of the landau distribution
+      (#landau_cdf_c).
+      Implemented using #landau_quantile
+
+   */
+
+   double landau_quantile_c(double z, double sigma = 1);
 
 
 #ifdef HAVE_OLD_STAT_FUNC

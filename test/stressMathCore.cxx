@@ -56,7 +56,6 @@
 #ifndef __CINT__
 
 
-
 #include "Math/DistFuncMathCore.h"
 #ifdef USE_MATHMORE
 #include "Math/DistMathMore.h"
@@ -357,6 +356,7 @@ typedef StatFunction<F2,F1,2>   Dist_gaussian;
 typedef StatFunction<F3,F2,3>   Dist_lognormal; 
 typedef StatFunction<F2,F1,2>   Dist_tdistribution; 
 typedef StatFunction<F2,F1,2>   Dist_exponential; 
+typedef StatFunction<F2,F1,2>   Dist_landau; 
 typedef StatFunction<F3,F2,3>   Dist_uniform; 
 
  
@@ -501,6 +501,21 @@ int testStatFunctions(int nfunc = 100 ) {
       distc.SetParameters( 2);
       distc.ScaleTol2(100);
       iret |= distc.Test(0.,5.,0.,1.,true);
+   }
+   { 
+      PrintTest("Landau distribution"); 
+      CREATE_DIST(landau);
+      dist.SetParameters( 2);
+       // Landau is not very precise (put prec at 10-6)
+      // as indicated in Landau paper (
+      dist.ScaleTol1(10000);  
+      dist.ScaleTol2(10000000000);
+      iret |= dist.Test(-1,10,-10.,1.E10);
+      CREATE_DIST_C(landau);
+      distc.SetParameters( 2);
+      distc.ScaleTol1(10000);  
+      distc.ScaleTol2(10000000000);
+      iret |= distc.Test(-1,10,-10.,1.E10,true);
    }
 
    { 

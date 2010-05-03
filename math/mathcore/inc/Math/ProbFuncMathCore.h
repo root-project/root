@@ -52,6 +52,8 @@ namespace Math {
    * These names are currently kept for backward compatibility, but 
    * their usage is deprecated.
    *
+   *  These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one 
+   *  including all statistical dunctions <em>Math/DistFunc.h<em>
    *
    */
 
@@ -323,15 +325,20 @@ namespace Math {
 
    Cumulative distribution function of the Landau 
    distribution (lower tail).
-
+   
    \f[ D(x) = \int_{-\infty}^{x} p(x) dx  \f]
-   Where p(x) is the Landau probability density function : 
 
-   \f[  p(x) = \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} e^{x s + s \log{s}} ds\f]
-
-   Where s = (x-x0)/sigma. For detailed description see 
+   where \f$p(x)\f$ is the Landau probability density function : 
+  \f[ p(x) = \frac{1}{sigma} \phi (\lambda) \f]
+   with
+   \f[  \phi(\lambda) = \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} e^{\lambda s + s \log{s}} ds\f]
+   with \f$\lambda = (x-x0)/sigma\f$. For a detailed description see 
+   K.S. K\"olbig and B. Schorr, A program package for the Landau distribution, 
+   <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
+   <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>. 
+   The same algorithms as in 
    <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
-   CERNLIB</A>. The same algorithms as in CERNLIB (DISLAN) is used.  
+   CERNLIB</A> (DISLAN) is used.  
 
    @ingroup ProbFunc
  
@@ -647,6 +654,65 @@ namespace Math {
    }
 
 #endif
+
+   /** @defgroup TruncFunc Statistical functions from truncated distributions 
+
+   @ingroup StatFunc
+
+   Statistical functions for the truncated distributions. Examples of such functions are the 
+   first or the second momentum of the truncated distribution. 
+   In the case of the Landau, first and second momentum functions are provided for the Landau 
+   distribution truncated only on the right side. 
+   These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one 
+   including all statistical dunctions <em>Math/StatFunc.h<em>
+
+   */
+
+   /**
+
+   First moment (mean) of the truncated Landau distribution.
+   \f[ \frac{1}{D (x)} int_{-infty}^{x} t p(t) d t \f]
+   where \f$p(x)\f$ is the Landau distribution:
+   and \f$D(x)\f$ its cumulative distribution function.
+   
+   For detailed description see 
+   K.S. K\"olbig and B. Schorr, A program package for the Landau distribution, 
+   <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
+   <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>. 
+   The same algorithms as in 
+   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   CERNLIB</A> (XM1LAN)  is used 
+   
+   @ingroup TruncFunc
+   
+   */
+
+   double landau_xm1(double x, double sigma = 1, double x0 = 0);
+
+
+
+   /**
+
+   Second moment of the truncated Landau distribution.
+   \f[ \frac{1}{D (x)} int_{-infty}^{x} t p(t) d t \f]
+   where \f$p(x)\f$ is the Landau distribution:
+   and \f$D(x)\f$ its cumulative distribution function.
+   
+   For detailed description see 
+   K.S. K\"olbig and B. Schorr, A program package for the Landau distribution, 
+   <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
+   <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>. 
+   The same algorithms as in 
+   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   CERNLIB</A> (XM1LAN)  is used 
+   
+   @ingroup TruncFunc
+   
+   */
+
+   double landau_xm2(double x, double sigma = 1, double x0 = 0);
+
+
 
 } // namespace Math
 } // namespace ROOT

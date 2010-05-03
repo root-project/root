@@ -270,9 +270,9 @@ int StatFunction::TestIntegral(IntegrationOneDim::Type algoType = IntegrationOne
       double scale = std::max( fScaleIg * err / std::numeric_limits<double>::epsilon(), 1.);
       r |= compare("test integral", q1, q2, scale );
       if (r && debug)  { 
-         std::cout << "Failed test for x = " << v1 << " p = "; 
+         std::cout << "Failed test for x = " << v1 << " q1= " << q1 << " q2= " << q2 << " p = "; 
          for (int j = 0; j < NPAR; ++j) std::cout << fParams[j] << "\t"; 
-         std::cout << "ig error is " << err << std::endl;
+         std::cout << "ig error is " << err << " status " << ig.Status() << std::endl;
       } 
       iret |= r;
 
