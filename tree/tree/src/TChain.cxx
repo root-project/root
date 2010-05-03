@@ -91,6 +91,9 @@ TChain::TChain()
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
+
+   // Make sure we are informed if the TFile is deleted.
+   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -159,12 +162,16 @@ TChain::TChain(const char* name, const char* title)
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
+
+   // Make sure we are informed if the TFile is deleted.
+   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
 TChain::~TChain()
 {
    // -- Destructor.
+   gROOT->GetListOfCleanups()->Remove(this);
 
    SafeDelete(fProofChain);
    fStatus->Delete();
@@ -1205,7 +1212,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    fReadEntry = entry;
 
    // If entry belongs to the current tree return entry.
-   if (treenum == fTreeNumber) {
+   if (fTree && treenum == fTreeNumber) {
       // First set the entry the tree on its owns friends
       // (the friends of the chain will be updated in the
       // next loop).
@@ -1354,6 +1361,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    {
       TDirectory::TContext ctxt(0);
       fFile = TFile::Open(element->GetTitle());
+      fFile->SetBit(kMustCleanup);
    }
 
    // ----- Begin of modifications by MvL
@@ -1951,6 +1959,26 @@ Long64_t TChain::Process(TSelector* selector, Option_t* option, Long64_t nentrie
    }
 
    return TTree::Process(selector, option, nentries, firstentry);
+}
+
+//______________________________________________________________________________
+void TChain::RecursiveRemove(TObject *obj)
+{
+   // Make sure that obj (which is being deleted or will soon be) is no
+   // longer referenced by this TTree.
+   
+   if (fFile == obj) {
+      fFile = 0;
+      fDirectory = 0;
+      fTree = 0;
+   }
+   if (fDirectory == obj) {
+      fDirectory = 0;
+      fTree = 0;
+   }
+   if (fTree == obj) {
+      fTree = 0;
+   }
 }
 
 //______________________________________________________________________________
