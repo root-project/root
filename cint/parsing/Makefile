@@ -69,6 +69,16 @@ ptrconst.clog: ptrconst_C.$(DllSuf)
 ptrconst: ptrconst.clog
 	$(TestDiff)
 
+TTestClass_h_DEBUGTARGET:
+ifeq ($(PLATFORM),macosx)
+	vm_stat || true
+	ls -l $(ROOTSYS)/lib/libCint.so || true
+	otool -l $(ROOTSYS)/lib/libCint.so || true
+endif
+	touch $@
+
+TTestClass_h.$(DllSuf): TTestClass_h_DEBUGTARGET
+
 TTestClass.log: TTestClass_h.$(DllSuf)
 
 TTestClass: TTestClass.log
