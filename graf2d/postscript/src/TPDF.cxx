@@ -1019,6 +1019,7 @@ void TPDF::NewPage()
       PrintStr("endobj@");
       NewObject(3*(fNbPage-2)+kObjFirstPage+2);
       WriteInteger(streamLength, 0);
+      PrintStr("@");
       PrintStr("endobj@");
    }
 
@@ -1105,7 +1106,7 @@ void TPDF::NewPage()
    PrintStr("<<@");
    PrintStr("/Length");
    WriteInteger(3*(fNbPage-1)+kObjFirstPage+2);
-   PrintStr(" 0 R");
+   PrintStr(" 0 R@");
    PrintStr("/Filter [/FlateDecode]@");
    PrintStr(">>@");
    PrintStr("stream@");
@@ -1264,7 +1265,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    if (strlen(GetName())<=80) PrintStr(GetName());
    PrintStr(")");
    PrintStr("@");
-   PrintStr("/Keywords (ROOT)");
+   PrintStr("/Keywords (ROOT)@");
    PrintStr(">>@");
    PrintStr("endobj@");
 
