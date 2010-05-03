@@ -149,8 +149,9 @@ void TVirtualPS::PrintFast(Int_t len, const char *str)
       fNByte++;
    }
    if (len > 0) {
-      strcpy(fBuffer + fLenBuffer, str);
+      strncpy(fBuffer + fLenBuffer, str, len);
       fLenBuffer += len;
+      fBuffer[fLenBuffer] = 0;
    }
    fPrinted = kTRUE;
 }
