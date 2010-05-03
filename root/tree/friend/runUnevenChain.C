@@ -59,13 +59,14 @@ void runUnevenChain() {
    firstChain.AddFriend(&secondChain);
    secondChain.GetStatus()->Delete();
    first = second = 0;
-   firstChain.SetBranchAddress("value3_2",&second);
+   Int_t fr_second = 0;
+   firstChain.SetBranchAddress("value3_2",&fr_second);
    for(Int_t i=0;i<firstChain.GetEntries();i++) {
       firstChain.GetEntry(i);
-      if (first%100 != second%100) {
+      if (first%100 != fr_second%100) {
          cout << "Chains not lined up, entry: " << i << endl;
       }
-      cout << first << " " << second << endl;
+      cout << first << " " << fr_second << endl;
    }
    firstChain.Scan("value2_3:value3_2");
    
