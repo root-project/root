@@ -1278,6 +1278,7 @@ Begin_Macro(source)
 {
    TCanvas *c02 = new TCanvas("c02","c02",700,400);
    c02->Divide(2,1);
+   gStyle->SetPaintTextFormat("g");
 
    TProfile *profile = new TProfile("profile","profile",10,0,10);
    profile->SetMarkerSize(2.2);
