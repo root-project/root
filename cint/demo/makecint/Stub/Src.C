@@ -17,11 +17,11 @@ double f2(double din,int iin) {
 
 
 int pain() {
-  printf("result=%g\n",f2(3.14,2)); // f2() is compiled
+  printf("pain result=%g\n",f2(3.14,2)); // f2() is compiled
   StubClass a;
   double y=a.set(2,3.14);
   int x=a.disp();
-  printf("%d %g\n",x,y);
+  printf("pain x,y: %d %g\n",x,y);
 
   StubBase *ary[5];
   ary[0] = new StubClass(3,1.2);

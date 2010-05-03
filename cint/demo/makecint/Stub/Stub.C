@@ -12,11 +12,11 @@
 
 main() {
   pain();
-  printf("result=%g\n",f2(3.14,2)); // f2() is compiled
+  printf("main result=%g\n",f2(3.14,2)); // f2() is compiled
   StubClass a;
   double y=a.set(2,3.14);
   int x=a.disp();
-  printf("%d %g\n",x,y);
+  printf("main x,y: %d %g\n",x,y);
 
   StubBase *ary[5];
   ary[0] = new StubClass(3,1.2);
@@ -24,7 +24,7 @@ main() {
   ary[2] = new StubBase(56);
   ary[3] = new StubClass(-2,2.3);
   ary[4] = new StubBase(-12);
-  for(int i=0;i<5;i++) ary[i]->disp();
+  for(int i=0;i<5;i++) if (i!=0 && i!=3) ary[i]->disp();
 }
 
 double f1(int a,double b) {
@@ -38,6 +38,11 @@ short StubBase::set(short bin) {
 }
 
 int StubBase::disp() {
+#ifdef __CINT__
+//   printf("interpreting StubBase::disp()\n");
+#else
+//   printf("running StubBase::disp()\n");
+#endif
   printf("%d\n",b);
   return(b);
 }
@@ -49,7 +54,7 @@ double StubClass::set(int ain,double din) {
 }
 
 int StubClass::disp() {
-  printf("%d %g\n",a,d);
+  printf("StubClass::disp %d %g\n",a,d);
   return(a);
 }
 
@@ -72,7 +77,7 @@ double StubClass::$set(int ain,double din) {
 }
 
 int StubClass::$disp() {
-  printf("%d %g\n",a,d);
+  printf("StubClass::$disp %d %g\n",a,d);
   return(a);
 }
 
