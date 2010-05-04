@@ -172,6 +172,42 @@ picture.
 }
 </PRE>
 
+<H2>Making several pictures in the same Postscript file: case 3</H2>
+<b>This is the recommended way</b>. If the Postscript file name finishes with
+"(", the file remains opened (it is not closed). If the Postscript file name
+finishes with ")" and the file has been opened with "(", the file is closed.
+<P>Example:
+<PRE>
+{
+   TCanvas c1("c1");
+   h1.Draw();
+   c1.Print("c1.ps(");  // write canvas and keep the ps file open
+   h2.Draw();
+   c1.Print("c1.ps");   // canvas is added to "c1.ps"
+   h3.Draw();
+   c1.Print("c1.ps)");  // canvas is added to "c1.ps" and ps file is closed
+}
+</PRE>
+The <tt>TCanvas::Print("file.ps(")</tt> mechanism is very useful, but it can
+be a little inconvenient to have the action of opening/closing a file being
+atomic with printing a page. Particularly if pages are being generated in some
+loop one needs to detect the special cases of first and last page and then
+munge the argument to Print() accordingly.
+<BR>The "[" and "]" can be used instead of "(" and ")" as shown below.
+<P>Example:
+<PRE>
+   c1.Print("file.ps[");        // No actual print, just open file.ps
+
+   for (int i=0; i<10; ++i) {
+      // fill canvas for context i
+      // ...
+
+      c1.Print("file.ps");      // Actually print canvas to the file
+   }
+
+   c1.Print("file.ps]");        // No actual print, just close the file
+</PRE>
+
 <H2>Color Model</H2>
 TPostScript support two color model RGB and CMYK. CMY and CMYK models are
 subtractive color models unlike RGB which is an additive. They are mainly
