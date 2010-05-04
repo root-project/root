@@ -100,14 +100,16 @@ public:
    };
 
    enum EDataSetWorkOpts { // General (bits 1-8)
-                           kDebug = 1, kShowDefault = 2, kPrint = 4, kExport = 8,
-                           kQuotaUpdate = 16, kSetDefaultTree = 32, kForceScan = 64,
-                           kNoHeaderPrint = 128,
+                           kDebug = 0x1, kShowDefault = 0x2, kPrint = 0x4, kExport = 0x8,
+                           kQuotaUpdate = 0x10, kSetDefaultTree = 0x20, kForceScan = 0x40,
+                           kNoHeaderPrint = 0x80,
                            // File-based specific (bits 9-16)
-                           kReopen = 256, kTouch = 512, kMaxFiles = 1024, kReadShort = 2048,
-                           kFileMustExist = 4096,
+                           kReopen = 0x100, kTouch = 0x200, kMaxFiles = 0x400, kReadShort = 0x800,
+                           kFileMustExist = 0x1000,
+                           kNoAction = 0x2000, kLocateOnly = 0x4000, kStageOnly = 0x8000,
                            // Auxilliary bits (bits 17-)
-                           kNoCacheUpdate = 65536, kRefreshLs = 131072, kList = 262144
+                           kNoCacheUpdate = 0x10000, kRefreshLs = 0x20000, kList = 0x40000,
+                           kAllFiles = 0x80000, kStagedFiles = 0x100000, kCheckStageStatus = 0x200000
                            };
 
    TDataSetManager(const char *group = 0, const char *user = 0, const char *options = 0);
@@ -132,7 +134,8 @@ public:
    virtual void             ParseInitOpts(const char *opts);
    virtual Bool_t           RemoveDataSet(const char *uri);
    virtual Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
-   virtual Int_t            ScanDataSet(const char *uri, UInt_t option = 0);
+   Int_t                    ScanDataSet(const char *uri, const char *opt);
+   virtual Int_t            ScanDataSet(const char *uri, UInt_t option = kReopen | kDebug);
    void                     SetScanCounters(Int_t t = -1, Int_t o = -1, Int_t d = -1);
    virtual Int_t            ShowCache(const char *uri);
    virtual void             ShowQuota(const char *opt);
@@ -144,11 +147,13 @@ public:
    static Bool_t            CheckDataSetSrvMaps(TUrl *furl, TString &fn, TList *srvmaplist = 0);
    static TList            *GetDataSetSrvMaps();
    static TList            *ParseDataSetSrvMaps(const TString &srvmaps);
-   static Int_t             ScanDataSet(TFileCollection *dataset, Int_t fopenopt, Bool_t notify = kFALSE,
-                                        Int_t scanfopt = 0, TList *flist = 0, Long64_t avgsize = -1,
-                                        const char *mssurl = 0, Int_t filesmax = -1,
-                                        Int_t *touched = 0, Int_t *opened = 0, Int_t *disappeared = 0);
+   static Int_t             ScanDataSet(TFileCollection *dataset, Int_t fopt, Int_t sopt = 0, Int_t ropt = 0,
+                                        Bool_t dbg = kFALSE,
+                                        Int_t *touched = 0, Int_t *opened = 0, Int_t *disappeared = 0,
+                                        TList *flist = 0, Long64_t avgsz = -1, const char *mss = 0,
+                                        Int_t maxfiles = -1, const char *stageopts = 0);
    static Int_t             ScanFile(TFileInfo *fileinfo, Bool_t notify);
+   static Int_t             FillMetaData(TFileInfo *fi, TDirectory *d, const char *rdir = "/");
 
    ClassDef(TDataSetManager, 0)  // Abstract data set manager class
 };

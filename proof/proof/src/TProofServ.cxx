@@ -5838,10 +5838,10 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
       case TProof::kVerifyDataSet:
          {
             if (fDataSetManager->TestBit(TDataSetManager::kAllowVerify)) {
-               (*mess) >> uri;
-               if (slb) slb->Form("%d %s", type, uri.Data());
+               (*mess) >> uri >> opt;
+               if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
                TProofServLogHandlerGuard hg(fLogFile,  fSocket);
-               rc = fDataSetManager->ScanDataSet(uri, TDataSetManager::kReopen | TDataSetManager::kDebug);
+               rc = fDataSetManager->ScanDataSet(uri, opt);
                // TODO: verify in parallel:
                //  - dataset = GetDataSet(uri)
                //  - TList flist; TDataSetManager::ScanDataSet(dataset, ..., &flist)

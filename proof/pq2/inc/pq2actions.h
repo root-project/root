@@ -26,7 +26,7 @@ void do_ls_files_server(const char *ds, const char *server);
 void do_info_server(const char *server);
 void do_put(const char *ds, const char *opt);
 void do_rm(const char *ds);
-void do_verify(const char *ds);
+void do_verify(const char *ds, const char *opt = 0, const char *redir = 0);
 void do_anadist(const char *ds, const char *newsrvs = 0, const char *ignsrvs = 0,
                 const char *excsrvs = 0, const char *metrics = "F", const char *fout = 0,
                 const char *plot = 0, const char *outfile = 0, const char *infile = 0);

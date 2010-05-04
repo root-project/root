@@ -281,6 +281,7 @@ void do_put(const char *files, const char *opt)
       base = gSystem->BaseName(files);
       if (base.Contains("*")) {
          isWild = kTRUE;
+         base.ReplaceAll("*", ".*");
          isDir = kTRUE;
          dir = gSystem->DirName(files);
       }
@@ -325,7 +326,7 @@ void do_put(const char *files, const char *opt)
       printerr = 0;
       // Loop over the entries
       TString file;
-      TRegexp reg(base, kTRUE);
+      TRegexp reg(base);
       const char *ent = 0;
       while ((ent = gSystem->GetDirEntry(dirp))) {
          // Skip default entries
@@ -436,7 +437,7 @@ void do_rm(const char *dsname)
 }
 
 //_______________________________________________________________________________________
-void do_verify(const char *dsname)
+void do_verify(const char *dsname, const char *opt, const char *redir)
 {
    // Execute 'verify'
 
@@ -448,7 +449,7 @@ void do_verify(const char *dsname)
    if (!ds.Contains("*")) {
       nd++;
       // Verify the dataset
-      if (VerifyDataSet(dsname) < 0) {
+      if (VerifyDataSet(dsname, opt, redir) < 0) {
          // Notify
          Printf("%s: ERROR: problems verifing dataset '%s'", action, dsname);
          return;
@@ -470,7 +471,7 @@ void do_verify(const char *dsname)
          nd++;
          // Verify the dataset
          Printf("%s: start verification of dataset '%s' ...", action, os->GetName());
-         if (VerifyDataSet(os->GetName()) != 0) {
+         if (VerifyDataSet(os->GetName(), opt, redir) != 0) {
             printerr = 1;
             // Notify
             Printf("%s: ERROR: problems verifying dataset '%s'", action, os->GetName());

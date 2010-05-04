@@ -34,6 +34,7 @@ class TDataSetManagerFile : public TDataSetManager {
 private:
    TString fDataSetDir;        // Location of datasets
    TString fMSSUrl;            // URL for the Mass Storage System
+   TString fStageOpts;         // Option string to be used in issuing staging requests
    TString fDataSetLockFile;   // Dataset lock file
    Int_t   fLockFileTimeLimit; // Limit in seconds after a lock automatically expires
    TString fListFile;          // File to check repository updates
@@ -57,7 +58,7 @@ protected:
    Bool_t RemoveDataSet(const char *group, const char *user, const char *dsName);
    Bool_t ExistsDataSet(const char *group, const char *user, const char *dsName);
 
-   Int_t  ScanDataSet(const char *group, const char *user, const char *dsName, UInt_t option);
+   Int_t  ScanDataSet(const char *group, const char *user, const char *dsName, UInt_t option = kReopen | kDebug);
 
    Int_t  ChecksumDataSet(const char *path, const char *md5path, TString &checksum);
 
@@ -72,19 +73,19 @@ public:
    TDataSetManagerFile(const char *ins);
    virtual ~TDataSetManagerFile() { }
 
-   void ParseInitOpts(const char *opts);
+   void             ParseInitOpts(const char *opts);
 
-   Int_t  ClearCache(const char *uri = 0);
+   Int_t            ClearCache(const char *uri = 0);
    TFileCollection *GetDataSet(const char *uri, const char *srv = 0);
    TMap            *GetDataSets(const char *uri, UInt_t option = TDataSetManager::kExport);
    Bool_t           ExistsDataSet(const char *uri);
    Bool_t           RemoveDataSet(const char *uri);
 
    Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
-   Int_t            ScanDataSet(const char *uri, UInt_t option = 0);
-   Int_t  NotifyUpdate(const char *group, const char *user,
-                       const char *dspath, Long_t mtime, const char *checksum = 0);
-   Int_t  ShowCache(const char *uri = 0);
+   Int_t            ScanDataSet(const char *uri, UInt_t option = kReopen | kDebug);
+   Int_t            NotifyUpdate(const char *group, const char *user,
+                                 const char *dspath, Long_t mtime, const char *checksum = 0);
+   Int_t            ShowCache(const char *uri = 0);
 
    // These should / could be private but they are used directly by the external daemon
    TFileCollection *GetDataSet(const char *group, const char *user, const char *dsName,
@@ -92,6 +93,7 @@ public:
    TMap            *GetDataSets(const char *group, const char *user, const char *dsName = 0,
                                 UInt_t option = 0);
    const char      *GetMSSUrl() const { return fMSSUrl; }
+   const char      *GetStageOpts() const { return fStageOpts; }
    Int_t            WriteDataSet(const char *group, const char *user, const char *dsName,
                                  TFileCollection *dataset, UInt_t option = 0, TMD5 *checksum = 0);
 

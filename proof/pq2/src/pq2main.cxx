@@ -90,6 +90,7 @@ int main(int argc,const char *argv[])
    const char *plot = 0;
    const char *infile = 0;
    const char *outfile = 0;
+   const char *redir = 0;
    Int_t i = 1;
    while (i < argc) {
       if (!strcmp(argv[i],"-h")) {
@@ -149,6 +150,14 @@ int main(int argc,const char *argv[])
             i++;
          } else { 
             fout = argv[i+1];
+            i += 2;
+         }
+      } else if (!strcmp(argv[i],"-r")) {
+         if (i+1 == argc || argv[i+1][0] == '-') {
+            Printf(" -r should be followed by a string: ignoring");
+            i++;
+         } else { 
+            redir = argv[i+1];
             i += 2;
          }
       } else if (!strcmp(argv[i],"-u")) {
@@ -295,7 +304,7 @@ int main(int argc,const char *argv[])
 
    } else if (iact == 6) {
       // verify
-      do_verify(dataset);
+      do_verify(dataset, options, redir);
 
    } else if (iact == 7) {
       // ana-dist

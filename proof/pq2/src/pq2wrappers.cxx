@@ -22,6 +22,7 @@
 #include "redirguard.h"
 
 #include "TDataSetManager.h"
+#include "TEnv.h"
 #include "TFileInfo.h"
 #include "TPluginManager.h"
 #include "TProof.h"
@@ -152,15 +153,27 @@ Int_t RemoveDataSet(const char *dsname)
 }
 
 //_______________________________________________________________________________________
-Int_t VerifyDataSet(const char *dsname)
+Int_t VerifyDataSet(const char *dsname, const char *opt, const char *redir)
 {
    // VerifyDataSet wrapper
 
+   // Honour the 'redir' if required
+   TString srvmaps;
+   if (redir && strlen(redir) > 0) srvmaps.Form("|%s", redir);
    if (gIsProof) {
+      // Honour the 'redir' if required
+      if (!(srvmaps.IsNull())) {
+         TProof::AddEnvVar("DATASETSRVMAPS", srvmaps);
+      }
       if (!gProof && getProof("VerifyDataSet") != 0) return -1;
-      return gProof->VerifyDataSet(dsname);
+      return gProof->VerifyDataSet(dsname, opt);
    } else {
-      Printf("VerifyDataSet: functionality not implemented for generic server: use PROOF");
+      // Honour the 'redir' if required
+      if (!(srvmaps.IsNull())) {
+         gEnv->SetValue("DataSet.SrvMaps", srvmaps);
+      }
+      if (!gDataSetManager && getDSMgr("VerifyDataSet") != 0) return -1;
+      return gDataSetManager->ScanDataSet(dsname, opt);
    }
    // Done
    return -1;

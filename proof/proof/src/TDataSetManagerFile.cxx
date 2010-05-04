@@ -194,6 +194,8 @@ void TDataSetManagerFile::Init()
    // If the MSS url was not given, check if one is defined via env
    if (fMSSUrl.IsNull())
       fMSSUrl = gEnv->GetValue("ProofDataSet.MSSUrl", "");
+   // Default highest priority for xrd-backends
+   fStageOpts = gEnv->GetValue("DataSet.StageOpts", "p=3");
 
    // File to check updates and its locking path
    fListFile.Form("%s/%s", fDataSetDir.Data(), kDataSet_DataSetList);
@@ -1614,7 +1616,7 @@ Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
    if (opt.Contains("V", TString::kIgnoreCase)) {
       if (TestBit(TDataSetManager::kAllowVerify)) {
          // Reopen files and notify
-         if (TDataSetManager::ScanDataSet(dataSet, 1, kTRUE ) < 0) {
+         if (TDataSetManager::ScanDataSet(dataSet, 1, 0, 0, kTRUE ) < 0) {
             Error("RegisterDataSet", "problems verifying the dataset");
             return -1;
          }
@@ -1681,7 +1683,7 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
       if (TestBit(TDataSetManager::kAllowVerify)) {
          if (ParseUri(uri, 0, 0, &dsName, 0, kTRUE, kTRUE)) {
             if (!(dsName.Contains("*"))) {
-               if (ScanDataSet(fGroup, fUser, dsName, (UInt_t)(kReopen | kDebug)) > 0)
+               if (ScanDataSet(fGroup, fUser, dsName, opt) > 0)
                   return GetNDisapparedFiles();
             } else {
                TString luri = TString::Format("/%s/%s/%s", fGroup.Data(), fUser.Data(), dsName.Data());
@@ -1695,7 +1697,7 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
                   if (!(d->GetString().IsNull())) {
                      TString dsn(d->GetName());
                      if (dsn.Contains("/")) dsn.Remove(0, dsn.Last('/') + 1);
-                     if (ScanDataSet(fGroup, fUser, dsn, (UInt_t)(kReopen | kDebug)) > 0) {
+                     if (ScanDataSet(fGroup, fUser, dsn, opt) > 0) {
                         ndisappeared += GetNDisapparedFiles();
                      } else {
                         Warning("ScanDataSet", "problems processing dataset: %s", d->GetName());
@@ -1726,15 +1728,39 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
    if (!dataset)
       return -1;
 
-   // Scan controllers
-   Int_t fopenopt = 0;
-   if ((option & kReopen)) fopenopt++;
-   if ((option & kTouch)) fopenopt++;
-   Bool_t notify = ((option & kDebug)) ? kTRUE : kFALSE;
+   // File selection
+   Int_t fopt = ((option & kAllFiles)) ? -1 : 0;
+   if (fopt >= 0) {
+      if ((option & kStagedFiles)) {
+         fopt = 10;
+      } else {
+         if ((option & kReopen)) fopt++;
+         if ((option & kTouch)) fopt++;
+      }
+      if ((option & kCheckStageStatus)) fopt += 100;
+   } else if ((option & kStagedFiles) || (option & kReopen) || (option & kTouch)) {
+      Warning("ScanDataSet", "kAllFiles mode: ignoring kStagedFiles or kReopen"
+                             " or kTouch or kCheckStageStatus requests");
+   }
+
+   // Type of action
+   Int_t sopt = ((option & kNoAction)) ? -1 : 0;
+   if (sopt >= 0) {
+      if ((option & kLocateOnly) && (option & kStageOnly)) {
+         Error("ScanDataSet", "kLocateOnly and kStageOnly cannot be processed concurrently");
+         return -1;
+      }
+      if ((option & kLocateOnly)) sopt = 1;
+      if ((option & kStageOnly)) sopt = 2;
+   } else if ((option & kLocateOnly) || (option & kStageOnly)) {
+      Warning("ScanDataSet", "kNoAction mode: ignoring kLocateOnly or kStageOnly requests");
+   }
+
+   Bool_t dbg = ((option & kDebug)) ? kTRUE : kFALSE;
    // Do the scan
-   Int_t result = TDataSetManager::ScanDataSet(dataset, fopenopt,
-                                   notify, 0, (TList *)0, fAvgFileSize, fMSSUrl.Data(), -1,
-                                   &fNTouchedFiles, &fNOpenedFiles, &fNDisappearedFiles);
+   Int_t result = TDataSetManager::ScanDataSet(dataset, fopt, sopt, 0, dbg,
+                                   &fNTouchedFiles, &fNOpenedFiles, &fNDisappearedFiles,
+                                   (TList *)0, fAvgFileSize, fMSSUrl.Data(), -1, fStageOpts.Data());
    if (result == 2) {
       if (WriteDataSet(group, user, dsName, dataset) == 0) {
          delete dataset;

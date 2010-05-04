@@ -10,7 +10,8 @@ printhelp()
    echo "  Purpose: verify the content one or more datasets"
    echo "   "
    echo "  Syntax:"
-   echo "           pq2-verify [-h|--help] [-v] [-k] (-d datasetname|--dataset=datasetname)"
+   echo "           pq2-verify [-h|--help] [-v] [-k] (-d datasetname|--dataset=datasetname) [-o options]"
+   echo "                      [-o options] [-r redir|--redir=redir]"
    echo "                      [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
    echo "   "
    echo "   -h | --help   Print this help"
@@ -19,6 +20,23 @@ printhelp()
    echo "   datasetname   Comma-separated list of datasets to be analysed; the '*' wild card in"
    echo "                 the items (in such a case the full string - as shown by pq2-ls - should"
    echo "                 be given in quotes, e.g. \"/default/ganis/h1-set5*\""
+   echo "   options       Options for verifying datasets; a combination of:"
+   echo "                    A               process all files"
+   echo "                    D               process only files marked as staged ('on Disk') (if 'A'"
+   echo "                                    is not specified the default is to process only files marked)"
+   echo "                                    as non-staged)"
+   echo "                    O               open the files marked as staged when processing only files"
+   echo "                                    marked as non-staged"
+   echo "                    T               open and touch the files marked as staged when processing"
+   echo "                                    only files marked as non-staged"
+   echo "                    C               check the actual stage status on selected files"
+   echo "                    N               do nothing on the selected files"
+   echo "                    P               open the selected files and extract the meta information"
+   echo "                    L               only locate the selected files"
+   echo "                    S               issue a stage request for the selected files not yet staged"
+   echo "                    V               notify the actions"
+   echo "                 Some combination are not valid: an error will be printed"
+   echo "   redir:        URL to be used to relocate the file"
    echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
    echo "                 for data servers, it must include the directory."
    echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
@@ -35,6 +53,8 @@ fi
 DBGOPT=""
 DSNAME=""
 KEEPOPT=""
+OPTS=""
+REDIR=""
 SRVURL=""
 TDIR=$TMPDIR
 #
@@ -55,6 +75,7 @@ for i in $@ ; do
          dataset=*) DSNAME="-d $oarg" ;;
          help)      printhelp ; exit ;;
          keep)      KEEPOPT="-k" ;;
+         redir=*)   REDIR="-r $oarg" ;;
          tmp=*)     TDIR="$oarg" ;;
          url=*)     SRVURL="-u $oarg" ;;
       esac
@@ -62,11 +83,13 @@ for i in $@ ; do
 done
 
 if test ! "x$short_opts" = "x" ; then
-   while getopts d:t:u:hkv i $short_opts ; do
+   while getopts d:o:r:t:u:hkv i $short_opts ; do
       case $i in
       d) DSNAME="-d $OPTARG" ;;
       h) printhelp ; exit ;;
       k) KEEPOPT="-k" ;;
+      o) OPTS="-o $OPTARG" ;;
+      r) REDIR="-r $OPTARG" ;;
       t) TDIR="$OPTARG" ;;
       u) SRVURL="-u $OPTARG" ;;
       v) DBGOPT="-v" ;;
@@ -81,5 +104,5 @@ if test "x$DSNAME" = "x"; then
 fi
 
 # Run
-export TMPDIR="$TDIR"; $PQ2 verify $DBGOPT $KEEPOPT $DSNAME $SRVURL
+export TMPDIR="$TDIR"; $PQ2 verify $DBGOPT $KEEPOPT $DSNAME $OPTS $REDIR $SRVURL
 
