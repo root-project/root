@@ -1,0 +1,10 @@
+{
+   // Compile and run the code of math/mathcore/test directory 
+   gROOT->ProcessLine(".L $ROOTSYS/math/mathcore/test/testSpecFuncSiCi.cxx+");
+   int ret = testSpecFuncSiCi();
+   if (ret == 0)
+       std::cout << "testSpecFuncSiCi: OK" << std::endl;
+   else
+       std::cerr << "testSpecFuncSiCi:  FAILED !" << std::endl;
+   return 0;  // need to always return zero if checking log file
+}

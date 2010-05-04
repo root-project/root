@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += testRootFinder mytest
+TEST_TARGETS += testSpecFuncSiCi testRootFinder mytest
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -65,3 +65,8 @@ testRootFinder.elog: $(ROOT_LOC)/math/mathcore/test/testRootFinder_cxx.$(DllSuf)
 
 testRootFinder: testRootFinder.elog
 	$(TestDiff)
+
+testSpecFuncSiCi: testSpecFuncSiCi.elog
+	$(TestDiff)
+
+testSpecFuncSiCi.elog: $(ROOT_LOC)/math/mathcore/test/testSpecFuncSiCi_cxx.$(DllSuf)
