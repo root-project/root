@@ -172,6 +172,7 @@ private:
    // Control sending information to syslog
    static Int_t  fgLogToSysLog;      // >0 sent to syslog too
    static TString fgSysLogService;   // name of the syslog service (eg: proofm-0, proofw-0.67)
+   static TString fgSysLogEntity;   // logging entity (<user>:<group>)
 
    void          RedirectOutput(const char *dir = 0, const char *mode = "w");
    Int_t         CatMotd();

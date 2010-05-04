@@ -987,8 +987,7 @@ void TXProofServ::Terminate(Int_t status)
    Info("Terminate", "starting session termination operations ...");
    if (fgLogToSysLog > 0) {
       TString s;
-      s.Form("%s -1 %.3f %.3f", (fUser.IsNull() ? "undef" : fUser.Data()),
-                                fRealTime, fCpuTime);
+      s.Form("%s -1 %.3f %.3f", fgSysLogEntity.Data(), fRealTime, fCpuTime);
       gSystem->Syslog(kLogNotice, s.Data());
    }
 

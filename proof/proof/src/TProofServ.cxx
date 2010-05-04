@@ -110,6 +110,7 @@ static volatile Int_t gProofServDebug = 1;
 // Syslog control
 Int_t TProofServ::fgLogToSysLog = 0;
 TString TProofServ::fgSysLogService("proof");
+TString TProofServ::fgSysLogEntity("undef:default");
 
 // File where to log: default stderr
 FILE *TProofServ::fgErrorHandlerFile = 0;
@@ -1845,7 +1846,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
    if (!(slb.IsNull()) || fgLogToSysLog > 1) {
       TString s;
-      s.Form("%s %d %.3f %.3f %s", (fUser.IsNull() ? "undef" : fUser.Data()),
+      s.Form("%s %d %.3f %.3f %s", fgSysLogEntity.Data(),
                                    what, timer.RealTime(), timer.CpuTime(), slb.Data());
       gSystem->Syslog(kLogNotice, s.Data());
    }
@@ -2920,10 +2921,17 @@ Int_t TProofServ::SetupCommon()
       Info("SetupCommon", "successfully completed");
 
    if (fgLogToSysLog > 0) {
+      // Set the syslog entity (all the information is available now)
+      if (!(fUser.IsNull()) && !(fGroup.IsNull())) {
+         fgSysLogEntity.Form("%s:%s", fUser.Data(), fGroup.Data());
+      } else if (!(fUser.IsNull()) && fGroup.IsNull()) {
+         fgSysLogEntity.Form("%s:default", fUser.Data());
+      } else if (fUser.IsNull() && !(fGroup.IsNull())) {
+         fgSysLogEntity.Form("undef:%s", fGroup.Data());
+      }
       // Log the beginning of this session
       TString s;
-      s.Form("%s 0 %.3f %.3f", (fUser.IsNull() ? "undef" : fUser.Data()),
-                               fRealTime, fCpuTime);
+      s.Form("%s 0 %.3f %.3f", fgSysLogEntity.Data(), fRealTime, fCpuTime);
       gSystem->Syslog(kLogNotice, s.Data());
    }
 
@@ -2938,8 +2946,7 @@ void TProofServ::Terminate(Int_t status)
 
    if (fgLogToSysLog > 0) {
       TString s;
-      s.Form("%s -1 %.3f %.3f", (fUser.IsNull() ? "undef" : fUser.Data()),
-                                fRealTime, fCpuTime);
+      s.Form("%s -1 %.3f %.3f", fgSysLogEntity.Data(), fRealTime, fCpuTime);
       gSystem->Syslog(kLogNotice, s.Data());
    }
 
@@ -5264,15 +5271,14 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
                                  (gProofServ ? gProofServ->GetPrefix() : "proof"),
                                   type, msg);
       if (tosyslog)
-         buf.Form("%s: %s:%s", (gProofServ ? gProofServ->GetUser() : "unknown"), type, msg);
+         buf.Form("%s: %s:%s", fgSysLogEntity.Data(), type, msg);
    } else {
       fprintf(fgErrorHandlerFile, "%s %5d %s | %s in <%.*s>: %s\n", st(11,8).Data(),
                                   gSystem->GetPid(),
                                  (gProofServ ? gProofServ->GetPrefix() : "proof"),
                                   type, ipos, location, msg);
       if (tosyslog)
-         buf.Form("%s: %s:<%.*s>: %s", (gProofServ ? gProofServ->GetUser() : "unknown"),
-                                      type, ipos, location, msg);
+         buf.Form("%s: %s:<%.*s>: %s", fgSysLogEntity.Data(), type, ipos, location, msg);
    }
    fflush(fgErrorHandlerFile);
 
