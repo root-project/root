@@ -1209,7 +1209,7 @@ void TROOT::InitThreads()
 }
 
 //______________________________________________________________________________
-TClass *TROOT::LoadClass(const char *classname, Bool_t silent) const
+TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 {
    // Helper function used by TClass::GetClass().
    // This function attempts to load the dictionary for 'classname'
@@ -1218,16 +1218,25 @@ TClass *TROOT::LoadClass(const char *classname, Bool_t silent) const
    // (typically used for class that are used only for transient members)
 
    // This function does not (and should not) attempt to check in the
-   // list of load classes or in the typedef.
+   // list of loaded classes or in the typedef.
 
+   
+   // We need to cache the requested name as in some case this function is
+   // called with gROOT->LoadClass(cl->GetName()) and the loading of a library,
+   // for example via the autoloader, can result in our argument becoming invalid.
+   // In addition the call to the dictionary function (dict()) might also have
+   // the same effect (change/delete requestedname).
+   TString classname(requestedname);
+   // const char *classname = requestedname;
+   
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
-
+   
    TString long64name;
    TString resolved;
 
    if (!dict) {
       // Try with Long64_t instead of long long
-      long64name = TClassEdit::GetLong64_Name(classname);
+      long64name = TClassEdit::GetLong64_Name(classname.Data());
       if (long64name != classname) {
          TClass *res = LoadClass(long64name.Data(),silent);
          if (res) return res;
@@ -1262,10 +1271,8 @@ TClass *TROOT::LoadClass(const char *classname, Bool_t silent) const
    }
 
    if (dict) {
-      // The dictionary generation might change/delete classname
-      TString clname(classname);
       (dict)();
-      TClass *ncl = TClass::GetClass(clname, kFALSE, silent);
+      TClass *ncl = TClass::GetClass(classname, kFALSE, silent);
       if (ncl) ncl->PostLoadCheck();
       return ncl;
    }
