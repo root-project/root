@@ -1843,9 +1843,10 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
    fRealTime += (Float_t)timer.RealTime();
    fCpuTime  += (Float_t)timer.CpuTime();
 
-   if (fgLogToSysLog > 0) {
-      TString s = TString::Format("%s %d %.3f %.3f %s", (gProofServ ? gProofServ->GetUser() : "undef"),
-                                             what, timer.RealTime(), timer.CpuTime(), slb.Data());
+   if (!(slb.IsNull()) || fgLogToSysLog > 1) {
+      TString s;
+      s.Form("%s %d %.3f %.3f %s", (fUser.IsNull() ? "undef" : fUser.Data()),
+                                   what, timer.RealTime(), timer.CpuTime(), slb.Data());
       gSystem->Syslog(kLogNotice, s.Data());
    }
 
@@ -2918,6 +2919,14 @@ Int_t TProofServ::SetupCommon()
    if (gProofDebugLevel > 0)
       Info("SetupCommon", "successfully completed");
 
+   if (fgLogToSysLog > 0) {
+      // Log the beginning of this session
+      TString s;
+      s.Form("%s 0 %.3f %.3f", (fUser.IsNull() ? "undef" : fUser.Data()),
+                               fRealTime, fCpuTime);
+      gSystem->Syslog(kLogNotice, s.Data());
+   }
+
    // Done
    return 0;
 }
@@ -2928,7 +2937,9 @@ void TProofServ::Terminate(Int_t status)
    // Terminate the proof server.
 
    if (fgLogToSysLog > 0) {
-      TString s = TString::Format("%s -1", (gProofServ ? gProofServ->GetUser() : "undef"));
+      TString s;
+      s.Form("%s -1 %.3f %.3f", (fUser.IsNull() ? "undef" : fUser.Data()),
+                                fRealTime, fCpuTime);
       gSystem->Syslog(kLogNotice, s.Data());
    }
 
@@ -5196,7 +5207,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    if (level >= kError && gProofServ)
       gProofServ->LogToMaster();
 
-   Bool_t tosyslog = (fgLogToSysLog > 1) ? kTRUE : kFALSE;
+   Bool_t tosyslog = (fgLogToSysLog > 2) ? kTRUE : kFALSE;
 
    const char *type   = 0;
    ELogLevel loglevel = kLogInfo;

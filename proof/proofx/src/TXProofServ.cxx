@@ -986,7 +986,9 @@ void TXProofServ::Terminate(Int_t status)
    // Notify
    Info("Terminate", "starting session termination operations ...");
    if (fgLogToSysLog > 0) {
-      TString s = TString::Format("%s -1", (gProofServ ? gProofServ->GetUser() : "undef"));
+      TString s;
+      s.Form("%s -1 %.3f %.3f", (fUser.IsNull() ? "undef" : fUser.Data()),
+                                fRealTime, fCpuTime);
       gSystem->Syslog(kLogNotice, s.Data());
    }
 
