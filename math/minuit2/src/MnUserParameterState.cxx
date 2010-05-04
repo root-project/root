@@ -11,9 +11,7 @@
 #include "Minuit2/MnCovarianceSqueeze.h"
 #include "Minuit2/MinimumState.h"
 
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
-#endif
 
 
 namespace ROOT {
