@@ -1178,7 +1178,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
       ::Info("TDataSetManager::ScanDataSet", "processing a maximum of %d files", maxfiles);
 
    // File selection, Reopen and Touch options
-   Bool_t allf     = (fopt = -1)                ? kTRUE : kFALSE;
+   Bool_t allf     = (fopt == -1)               ? kTRUE : kFALSE;
    Bool_t checkstg = (fopt >= 100 || fopt < -1) ? kFALSE : kTRUE;
    if (fopt >= 0) fopt %= 100;
    Bool_t nonstgf  = (fopt >= 0 && fopt < 10)   ? kTRUE : kFALSE;
