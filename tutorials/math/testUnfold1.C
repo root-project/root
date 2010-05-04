@@ -1,9 +1,11 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 13, include test of systematoc errors
+// Version 15, with automated L-curve scan
 //
 //  History:
+//    Version 14, with changes in TUnfoldSys.cxx
+//    Version 13, include test of systematic errors
 //    Version 12, catch error when defining the input
 //    Version 11,  print chi**2 and number of degrees of freedom
 //    Version 10,  with bug-fix in TUnfold.cxx
@@ -20,6 +22,7 @@
 //    Version 0, L curve analysis included here
 
 
+#include <TError.h>
 #include <TMath.h>
 #include <TCanvas.h>
 #include <TRandom3.h>
@@ -30,6 +33,8 @@
 #include <TGraph.h>
 
 #include "TUnfoldSys.h"
+
+// #define VERBOSE_LCURVE_SCAN
 
 using namespace std;
 
@@ -49,7 +54,28 @@ using namespace std;
 //      The background level
 //      The shape of the resonance, corrected for detector effects
 //
+//      Systematic errors from the MC shape variation are included
+//      and propagated to the result
+//
 //  (3) fit the unfolded distribution, including the correlation matrix
+//
+//  (4) save six plots to a file testUnfold1.ps
+//        1  2  3
+//        4  5  6
+//      1: 2d-plot of the matrix decsribing the migrations
+//      2: generator-level distributions
+//             blue: unfolded data, total errors
+//             green: unfolded data, statistical errors
+//             red: generated data
+//             black: fit to green data points
+//      3: detector level distributions
+//             blue: unfoldede data, folded back through the matrix
+//             black: Monte Carlo (with wrong peal position)
+//             blue: data
+//      4: global correlation coefficients
+//      5: chi**2 as a function of log(tau)
+//           the star indicates the final choice of tau
+//      6: the L curve
 //
 ///////////////////////////////////////////////////////////////////////
 
@@ -61,16 +87,12 @@ TVirtualFitter *gFitter=0;
 
 void chisquare_corr(Int_t &npar, Double_t * /*gin */, Double_t &f, Double_t *u, Int_t /*flag */) {
   //  Minimization function for H1s using a Chisquare method
-  //  only one-dim ensional histograms are supported
+  //  only one-dimensional histograms are supported
   //  Corelated errors are taken from an external inverse covariance matrix
   //  stored in a 2-dimensional histogram
-
   Double_t x;
-
   TH1 *hfit = (TH1*)gFitter->GetObjectFit();
   TF1 *f1   = (TF1*)gFitter->GetUserFunc();
-
-
    
   f1->InitArgs(&x,u);
   npar = f1->GetNpar();
@@ -157,7 +179,6 @@ Double_t DetectorEvent(Double_t const &mTrue) {
   }
 }
 
-//int main(int argc, char *argv[])
 int testUnfold1()
 {
   // switch on histogram errors
@@ -180,7 +201,7 @@ int testUnfold1()
   Double_t const xmaxDet=10.0;
   Double_t const xminGen=0.0;
   Double_t const xmaxGen=10.0;
-
+  
   //============================================
   // generate MC distribution
   //
@@ -221,13 +242,19 @@ int testUnfold1()
     //  -> the background normalisation will be contained in the underflow bin
     histMdetGenMC->Fill(mDet,mGen,luminosityData/luminosityMC);
   }
+
+  //============================================
+  // generate alternative MC
+  // this will be used to derive a systematic error due to MC
+  // parameter uncertainties
   TH2D *histMdetGenSysMC=new TH2D("MdetgenSysMC",";mass(det);mass(gen)",
                                   nDet,xminDet,xmaxDet,nGen,xminGen,xmaxGen);
   neventMC=rnd->Poisson(luminosityMC*crossSection);
   for(Int_t i=0;i<neventMC;i++) {
-    Double_t mGen=GenerateEvent(0.5, // relative fraction of background
-                                3.6, // peak position in MC with systematic shift
-                                0.15); // peak width in MC
+    Double_t mGen=GenerateEvent
+       (0.5, // relative fraction of background
+        3.6, // peak position in MC with systematic shift
+        0.15); // peak width in MC
     Double_t mDet=DetectorEvent(TMath::Abs(mGen));
     histMdetGenSysMC->Fill(mDet,mGen,luminosityData/luminosityMC);
   }
@@ -240,8 +267,8 @@ int testUnfold1()
   Int_t neventData=rnd->Poisson(luminosityData*crossSection);
   for(Int_t i=0;i<neventData;i++) {
     Double_t mGen=GenerateEvent(0.4, // relative fraction of background
-                                3.8, // peak position
-                                0.15); // peak width
+                                3.8, // peak position in data
+                                0.15); // peak width in data
     Double_t mDet=DetectorEvent(TMath::Abs(mGen));
     // generated data mass for comparison plots
     // for real data, we do not have this histogram
@@ -258,61 +285,43 @@ int testUnfold1()
 
   // define input and bias scame
   // do not use the bias, because MC peak may be at the wrong place
+  // watch out for error codes returned by the SetInput method
+  // errors larger or equal 10000 are fatal:
+  // the data points specified as input are not sufficient to constrain the
+  // unfolding process
   if(unfold.SetInput(histMdetData)>=10000) {
     std::cout<<"Unfolding result may be wrong\n";
   }
 
+  //========================================================================
   // the unfolding is done here
-  //===========================
+  //
   // scan L curve and find best point
   Int_t nScan=30;
-  Double_t tauMin=1.E-12;
-  Double_t tauMax=1.E-2;
+  // use automatic L-curve scan: start with taumin=taumax=0.0
+  Double_t tauMin=0.0;
+  Double_t tauMax=0.0;
   Int_t iBest;
   TSpline *logTauX,*logTauY;
   TGraph *lCurve;
+
+  // if required, report Info messages (for debugging the L-curve scan)
+#ifdef VERBOSE_LCURVE_SCAN
+  Int_t oldinfo=gErrorIgnoreLevel;
+  gErrorIgnoreLevel=kInfo;
+#endif
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the best choice of tau
   iBest=unfold.ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
 
-  // save graphs with one point to visualize best choice of tau
-  Double_t t[1],x[1],y[1];
-  logTauX->GetKnot(iBest,t[0],x[0]);
-  logTauY->GetKnot(iBest,t[0],y[0]);
-  TGraph *bestLcurve=new TGraph(1,x,y);
-  TGraph *bestLogTauLogChi2=new TGraph(1,t,x);
-
-  // set up a bin map, excluding underflow and overflow bins
-  // the bin map maps the output of the unfolding to histogram bins
-  // In this example, the underflow and overflow bin are discarded
-  // This is important for the inverse of the covariance matrix
-  // because that matrix is used for a fit later on
-  Int_t *binMap=new Int_t[nGen+2];
-  for(Int_t i=1;i<=nGen;i++) binMap[i]=i;
-  binMap[0]=-1; // discarde underflow bin (here: the background normalisation)
-  binMap[nGen+1]=-1; // discarde overflow bin
-
-  // get unfolded distribution
-  TH1D *histMunfold=new TH1D("Unfolded",";mass(gen)",nGen,xminGen,xmaxGen);
-  unfold.GetOutput(histMunfold,binMap);
-
-  // get unfolding result, folded back
-  TH1D *histMdetFold=unfold.GetFoldedOutput("FoldedBack","mass(det)",
-                                              xminDet,xmaxDet);
-
-  // get matrix of correlation coefficients
-  //TH2D *histRhoij=new TH2D("rho_ij",";mass(gen);mass(gen)",
-  //                         nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  //unfold.GetRhoIJ(histRhoij,binMap);
-
-  // get error matrix (data errors only)
-  TH2D *histEmatData=new TH2D("EmatData",";mass(gen);mass(gen)",
-                               nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  unfold.GetEmatrix(histEmatData,binMap);
+  // if required, switch to previous log-level
+#ifdef VERBOSE_LCURVE_SCAN
+  gErrorIgnoreLevel=oldinfo;
+#endif
 
   //==========================================================================
-  // define correlated systematic error
-  // for testing, assume there is a 10% correlated error for all reconstructed
+  // define a correlated systematic error
+  // for example, assume there is a 10% correlated error for all reconstructed
   // masses larger than 7
   Double_t SYS_ERROR1_MSTART=6;
   Double_t SYS_ERROR1_SIZE=0.1;
@@ -330,27 +339,80 @@ int testUnfold1()
   unfold.AddSysError(histMdetGenSys1,"SYSERROR1",TUnfold::kHistMapOutputVert,
                      TUnfoldSys::kSysErrModeRelative);
 
+  //==========================================================================
+  // print some results
+  //
   std::cout<<"tau="<<unfold.GetTau()<<"\n";
   std::cout<<"chi**2="<<unfold.GetChi2A()<<"+"<<unfold.GetChi2L()
            <<" / "<<unfold.GetNdf()<<"\n";
   std::cout<<"chi**2(sys)="<<unfold.GetChi2Sys()<<"\n";
 
+
+  //==========================================================================
+  // create graphs with one point to visualize the best choice of tau
+  //
+  Double_t t[1],x[1],y[1];
+  logTauX->GetKnot(iBest,t[0],x[0]);
+  logTauY->GetKnot(iBest,t[0],y[0]);
+  TGraph *bestLcurve=new TGraph(1,x,y);
+  TGraph *bestLogTauLogChi2=new TGraph(1,t,x);
+
+  //==========================================================================
+  // retreive results into histograms, using a bin map
+  //
+  // the binMap maps the output of the unfolding to the final histogram bins
+  //
+  // In this example, the underflow and overflow bin are discarded,
+  // whereas the other bins are just copied.
+  //
+  // This procedure is important for determining the inverse of the
+  // covariance matrix. The covariance matrix is used for a fit later
+  // on. Also, the global
+  // correlation corefficients depend on the proper mapping
+  Int_t *binMap=new Int_t[nGen+2];
+  for(Int_t i=1;i<=nGen;i++) binMap[i]=i;
+  binMap[0]=-1; // discarde underflow bin (here: the background normalisation)
+  binMap[nGen+1]=-1; // discarde overflow bin (here: bins with mass>10)
+
+  // get unfolded distribution using the binMap
+  TH1D *histMunfold=new TH1D("Unfolded",";mass(gen)",nGen,xminGen,xmaxGen);
+  unfold.GetOutput(histMunfold,binMap);
+
+  // get unfolding result, folded back
+  TH1D *histMdetFold=unfold.GetFoldedOutput("FoldedBack",";mass(det)",
+                                              xminDet,xmaxDet);
+
+  // get error matrix (input distribution [stat] errors only)
+  // using the binMap
+  TH2D *histEmatData=new TH2D("EmatData",";mass(gen);mass(gen)",
+                               nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
+  unfold.GetEmatrix(histEmatData,binMap);
+
   // get total error matrix:
   //   migration matrix uncorrelated and colrrelated systematic errors
   //   added inquadrature with the data statistical errors
-  TH2D *histEmatSysSysUncorr=new TH2D("EmatSysSysUncorr",";mass(gen);mass(gen)",
-                                  nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
   TH2D *histEmatTotal=new TH2D("EmatTotal",";mass(gen);mass(gen)",
                                nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  unfold.GetEmatrixSysUncorr(histEmatSysSysUncorr,binMap);
   unfold.GetEmatrixTotal(histEmatTotal,binMap);
 
-  // get global correlation coefficients and inverse of covariance matrix
+  // create data histogram with the total errors
+  TH1D *histTotalError=
+     new TH1D("TotalError",";mass(gen)",nGen,xminGen,xmaxGen);
+  for(Int_t bin=1;bin<=nGen;bin++) {
+    histTotalError->SetBinContent(bin,histMunfold->GetBinContent(bin));
+    histTotalError->SetBinError
+       (bin,TMath::Sqrt(histEmatTotal->GetBinContent(bin,bin)));
+  }
+
+  // get global correlation coefficients and inverse of covariance
+  // matrix.
+  // !!! these quantities do not include the systematic errors !!!
   gHistInvEMatrix=new TH2D("invEmat",";mass(gen);mass(gen)",
                            nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  TH1D *histRhoi=new TH1D("rho_I","mass",nGen,xminGen,xmaxGen);
+  TH1D *histRhoi=new TH1D("rho_I",";mass(gen)",nGen,xminGen,xmaxGen);
   unfold.GetRhoI(histRhoi,gHistInvEMatrix,binMap);
 
+  // remove the binMap, it is not needed anymore
   delete[] binMap;
   binMap=0; // just in case You think it is still defined
 
@@ -358,6 +420,9 @@ int testUnfold1()
   // fit Breit-Wigner shape to unfolded data, using the full error matrix
   // here we use a "user" chi**2 function to take into account
   // the full covariance matrix
+  // !!! Note: the systematic errors are not included in this fit
+  // !!! one would have to invert the matrix histEmatTotal
+  // !!! to include syst. errors in the fit
   gFitter=TVirtualFitter::Fitter(histMunfold);
   gFitter->SetFCN(chisquare_corr);
 
@@ -365,29 +430,13 @@ int testUnfold1()
   bw->SetParameter(0,1000.);
   bw->SetParameter(1,3.8);
   bw->SetParameter(2,0.2);
-  // for (wrong!) fitting without correlations, drop the option "U" 
+  // for (wrong!) fitting without correlations, drop the option "U"
+  // here.
   histMunfold->Fit(bw,"UE");
-
-  // create data histogram with all errors added in quadrature
-  TH1D *histTotalError=new TH1D("TotalError",";mass(gen)",nGen,xminGen,xmaxGen);
-  TH1D *histRelSysError=new TH1D("RelSysError",";mass(gen)",nGen,xminGen,xmaxGen);
-  for(Int_t bin=1;bin<=nGen;bin++) {
-    histTotalError->SetBinContent(bin,histMunfold->GetBinContent(bin));
-    histTotalError->SetBinError
-       (bin,TMath::Sqrt(histEmatTotal->GetBinContent(bin,bin)));
-    Double_t e2_stat=histEmatData->GetBinContent(bin,bin);
-    Double_t e2_astat=histEmatSysSysUncorr->GetBinContent(bin,bin);
-    Double_t e2_total=histEmatTotal->GetBinContent(bin,bin);
-    histRelSysError->SetBinContent
-       (bin,TMath::Sqrt(TMath::Abs(e2_total-e2_stat-e2_astat))/
-        bw->Eval(histMunfold->GetBinCenter(bin)));
-  }
 
   //=====================================================================
   // plot some histograms
   TCanvas output;
-
-  // produce some plots
   output.Divide(3,2);
 
   // Show the matrix which connects input and output
@@ -414,33 +463,25 @@ int testUnfold1()
 
   // show detector level distributions
   //    data (red)
-  //    MC (black)
+  //    MC (black) [with completely wrong peak position and shape]
   //    unfolded data (blue)
   output.cd(3);
   histMdetFold->SetLineColor(kBlue);
   histMdetFold->Draw();
   histMdetMC->Draw("SAME HIST");
-  //histMdetData->SetLineColor(kRed);
-  //histMdetData->Draw("SAME");
-  // test the GetInput() method
   TH1D *histInput=unfold.GetInput("Minput",";mass(det)",xminDet,xmaxDet);
   histInput->SetLineColor(kRed);
   histInput->Draw("SAME");
 
   // show correlation coefficients
-  //     all bins outside the peak are found to be highly correlated
-  //     But they are compatible with zero anyway
-  //     If the peak shape is fitted,
-  //     these correlations have to be taken into account, see example
   output.cd(4);
-  histRhoi->Draw("BOX");
+  histRhoi->Draw();
 
   // show tau as a function of chi**2
   output.cd(5);
-  //logTauX->Draw();
-  //bestLogTauLogChi2->SetMarkerColor(kRed);
-  //bestLogTauLogChi2->Draw("*");
-  histRelSysError->Draw();
+  logTauX->Draw();
+  bestLogTauLogChi2->SetMarkerColor(kRed);
+  bestLogTauLogChi2->Draw("*");
 
   // show the L curve
   output.cd(6);
@@ -448,8 +489,7 @@ int testUnfold1()
   bestLcurve->SetMarkerColor(kRed);
   bestLcurve->Draw("*");
 
-  output.SaveAs("c1.ps");
+  output.SaveAs("testUnfold1.ps");
 
   return 0;
 }
-

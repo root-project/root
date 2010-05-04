@@ -1,9 +1,11 @@
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 13,  with changes to TUnfold.C
+// Version 15, with automatic L-curve scan, simplified example
 //
 //  History:
+//    Version 14, with changes in TUnfoldSys.cxx
+//    Version 13,  with changes to TUnfold.C
 //    Version 12,  with improvements to TUnfold.cxx
 //    Version 11,  print chi**2 and number of degrees of freedom
 //    Version 10, with bug-fix in TUnfold.cxx
@@ -33,7 +35,7 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////////////////
 // 
-//  Test program for the class MyUnfold, derived from TUnfold
+//  Test program as an example for a more complex regularisation scheme
 //
 //  (1) Generate Monte Carlo and Data events
 //      The events consist of
@@ -50,123 +52,11 @@ using namespace std;
 //      The regularisation is done on the curvature, excluding the bins
 //      near the peak.
 //
-//  (3) fit the unfolded distribution, including the correlation matrix
+//  (3) produce some plots
 //
 ///////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////
-// 
-//  Example of a class derived from TUnfold
-//
-///////////////////////////////////////////////////////////////////////
-
-class MyUnfold : public TUnfold {
-public:
-  MyUnfold(TH2 const *hist_A, EHistMap histmap,
-           ERegMode regmode = kRegModeSize);  // constructor, in parallel to original constructor
-  virtual Double_t DoUnfold(Double_t const &tau);  // derived method, to store the result of the unfolding for a given parameter tau
-  using TUnfold::DoUnfold;  // otherwise TUnfold methods will be hidden
-  void TauAnalysis(void); // method for the alternative analysis
-  void ResetUser(Int_t const *binMap);  // reset alternative analysis
-  inline Double_t GetTauUser(void) const { return fTauBest; } // query result of alternative analysis
-protected:
-  Int_t const *fBinMap; // bin mapping to extract the global correlation
-  Double_t fTauBest;    // tau with the smallest correlation
-  Double_t fRhoMin;     // smallest correlation
-  //ClassDef(MyUnfold,0); 
-};
-
-//ClassImp(MyUnfold)
-
-MyUnfold::MyUnfold(TH2 const *hist_A, EHistMap histmap,ERegMode regmode)
-  : TUnfold(hist_A,histmap,regmode) {
-  // The arguments are passed to the parent class constructor
-  // Then the local variables are initialized
-
-  // reset members of this class
-  ResetUser(0);
-};
-
-Double_t MyUnfold::DoUnfold(Double_t const &tau) {
-  // The argument is passed to the corresponding method of the parent class
-  // Then the new analysis code is called
-
-  // this calls the original unfolding
-  Double_t r=TUnfold::DoUnfold(tau);
-  // here do our private analysis to find the best choice of tau
-  TauAnalysis();
-
-  return r;
-};
-
-void  MyUnfold::ResetUser(Int_t const *binMap) {
-  // Reset the local variables
-  // Arguments:
-  //    binMap: the bin mapping for determining the correlation
-  //            See documentation of TUnfold: Bin averaging of the output
-
-  fBinMap=binMap;
-  fTauBest=0;
-  fRhoMin=1.0;
-}
- 
-void MyUnfold::TauAnalysis(void) {
-  // User analysis: extract tau with smallest correlation
-
-  // This is a very simple analysis: the tau value with the smallest
-  // globla correlation is stored
-  if(GetRhoAvg()<fRhoMin) {
-    fRhoMin=GetRhoAvg();
-    fTauBest=fTau;
-  }
-}
-
 
 TRandom *rnd=0;
-
-TH2D *gHistInvEMatrix;
-
-TVirtualFitter *gFitter=0;
-
-void chisquare_corr(Int_t &npar, Double_t * /*gin */, Double_t &f, Double_t *u, Int_t /* flag */) {
-  //  Minimization function for H1s using a Chisquare method
-  //  only one-dim ensional histograms are supported
-  //  Corelated errors are taken from an external inverse covariance matrix
-  //  stored in a 2-dimensional histogram
-
-  Double_t x;
-
-  TH1 *hfit = (TH1*)gFitter->GetObjectFit();
-  TF1 *f1   = (TF1*)gFitter->GetUserFunc();
-   
-  f1->InitArgs(&x,u);
-  npar = f1->GetNpar();
-  f = 0;
-   
-  Int_t npfit = 0;
-  Int_t nPoints=hfit->GetNbinsX();
-  Double_t *df=new Double_t[nPoints];
-  for (Int_t i=0;i<nPoints;i++) {
-    x     = hfit->GetBinCenter(i+1);
-    TF1::RejectPoint(kFALSE);
-    df[i] = f1->EvalPar(&x,u)-hfit->GetBinContent(i+1);
-    if (TF1::RejectedPoint()) df[i]=0.0;
-    else npfit++;
-  }
-  for (Int_t i=0;i<nPoints;i++) {
-    for (Int_t j=0;j<nPoints;j++) {
-      f += df[i]*df[j]*gHistInvEMatrix->GetBinContent(i+1,j+1);
-    }
-  }
-  delete[] df;
-  f1->SetNumberFitPoints(npfit);
-}
-
-Double_t bw_func(Double_t *x,Double_t *par) {
-  Double_t dm=x[0]-par[1];
-  return par[0]/(dm*dm+par[2]*par[2]);
-}
-
 
 // generate an event
 // output:
@@ -224,20 +114,16 @@ Double_t DetectorEvent(Double_t const &mTrue) {
   }
 }
 
-//int main(int argc, char *argv[])
 int testUnfold2() 
 {
   // switch on histogram errors
   TH1::SetDefaultSumw2();
 
-  // show fit result
-  gStyle->SetOptFit(1111);
-
   // random generator
   rnd=new TRandom3();
 
   // data and MC luminosity, cross-section
-  Double_t const luminosityData=10000;
+  Double_t const luminosityData=100000;
   Double_t const luminosityMC=1000000;
   Double_t const crossSection=1.0;
 
@@ -310,18 +196,26 @@ int testUnfold2()
 
   //=========================================================================
   // set up the unfolding
-  MyUnfold unfold(histMdetGenMC,TUnfold::kHistMapOutputVert,
+  TUnfold unfold(histMdetGenMC,TUnfold::kHistMapOutputVert,
                  TUnfold::kRegModeNone);
   // regularisation
   //----------------
-  // exclude the bins near the peak, because the curvature at the peak
-  // is high (and the regularisation will enforce a small curvature everywhere)
+  // the regularisation is done on the curvature (2nd derivative) of
+  // the output distribution
   //
-  // in real life, these parameters will have to be optimized, depending on
-  // the data peak position
+  // One has to exclude the bins near the peak of the Breit-Wigner,
+  // because there the curvature is high
+  // (and the regularisation eventually could enforce a small
+  //  curvature, thus biasing result)
+  //
+  // in real life, the parameters below would have to be optimized,
+  // depending on the data peak position and width
+  // Or maybe one finds a different regularisation scheme... this is
+  // just an example...
   Double_t estimatedPeakPosition=3.8;
   Int_t nPeek=3;
   TUnfold::ERegMode regMode=TUnfold::kRegModeCurvature;
+  // calculate bin number correspoinding to estimated peak position
   Int_t iPeek=(Int_t)(nGen*(estimatedPeakPosition-xminGen)/(xmaxGen-xminGen)
                       // offset 1.5
                       // accounts for start bin 1
@@ -332,12 +226,6 @@ int testUnfold2()
   // regularize output bins iPeek+nPeek..nGen
   unfold.RegularizeBins(iPeek+nPeek,1,nGen-(iPeek+nPeek),regMode);
 
-  // set up bin map, excluding underflow and overflow bins
-  Int_t *binMap=new Int_t[nGen+2];
-  for(Int_t i=1;i<=nGen;i++) binMap[i]=i;
-  binMap[0]=-1;
-  binMap[nGen+1]=-1;
-
   // unfolding
   //-----------
 
@@ -345,67 +233,50 @@ int testUnfold2()
   if(unfold.SetInput(histMdetData,0.0)>=10000) {
     std::cout<<"Unfolding result may be wrong\n";
   }
-  // reset user scan and define bin map
-  unfold.ResetUser(binMap);
 
+  // do the unfolding here
+  Double_t tauMin=0.0;
+  Double_t tauMax=0.0;
   Int_t nScan=30;
-  Double_t tauMin=1.E-8;
-  Double_t tauMax=10.;
   Int_t iBest;
   TSpline *logTauX,*logTauY;
   TGraph *lCurve;
   // this method scans the parameter tau and finds the kink in the L curve
-  // finally, the unfolding is done for the best choice of tau
+  // finally, the unfolding is done for the "best" choice of tau
   iBest=unfold.ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
   std::cout<<"tau="<<unfold.GetTau()<<"\n";  
   std::cout<<"chi**2="<<unfold.GetChi2A()<<"+"<<unfold.GetChi2L()
            <<" / "<<unfold.GetNdf()<<"\n";
+
+  // save point corresponding to the kink in the L curve as TGraph
   Double_t t[1],x[1],y[1];
   logTauX->GetKnot(iBest,t[0],x[0]);
   logTauY->GetKnot(iBest,t[0],y[0]);
   TGraph *bestLcurve=new TGraph(1,x,y);
   TGraph *bestLogTauX=new TGraph(1,t,x);
 
-  // save point with smallest correlation as a graph
-  Double_t logTau=TMath::Log10(unfold.GetTauUser());
-  x[0]=logTauX->Eval(logTau);
-  y[0]=lCurve->Eval(x[0]);
-  TGraph *lCurveUser=new TGraph(1,x,y);
-  TGraph *logTauXuser=new TGraph(1,&logTau,x);
+  //============================================================
+  // extract unfolding results into histograms
+
+  // set up a bin map, excluding underflow and overflow bins
+  // the binMap relates the the output of the unfolding to the final
+  // histogram bins
+  Int_t *binMap=new Int_t[nGen+2];
+  for(Int_t i=1;i<=nGen;i++) binMap[i]=i;
+  binMap[0]=-1;
+  binMap[nGen+1]=-1;
 
   TH1D *histMunfold=new TH1D("Unfolded",";mass(gen)",nGen,xminGen,xmaxGen);
   unfold.GetOutput(histMunfold,binMap);
   TH1D *histMdetFold=unfold.GetFoldedOutput("FoldedBack","mass(det)",
                                               xminDet,xmaxDet);
-  TH2D *histRhoij=new TH2D("rho_ij",";mass(gen);mass(gen)",
-                           nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  unfold.GetRhoIJ(histRhoij,binMap);
 
-  // store global correlation coefficients with underflow/overflow bins removed
-  TH1D *histRhoi=new TH1D("rho_I","mass",nGen,xminGen,xmaxGen);
-  // store inverse of error matrix with underflow/overflow bins removed
-  // this is needed for the fit below
-  gHistInvEMatrix=new TH2D("invEmat",";mass(gen);mass(gen)",
-                           nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  
-  unfold.GetRhoI(histRhoi,gHistInvEMatrix,binMap);
+  // store global correlation coefficients
+  TH1D *histRhoi=new TH1D("rho_I","mass",nGen,xminGen,xmaxGen);  
+  unfold.GetRhoI(histRhoi,0,binMap);
 
   delete[] binMap;
   binMap=0;
-
-  //======================================================================
-  // fit Breit-Wigner shape to unfolded data, using the full error matrix
-  // here we use a "user" chi**2 function to take into account
-  // the full covariance matrix
-  gFitter=TVirtualFitter::Fitter(histMunfold);
-  gFitter->SetFCN(chisquare_corr);
-
-  TF1 *bw=new TF1("bw",bw_func,xminGen,xmaxGen,3);
-  bw->SetParameter(0,1000.);
-  bw->SetParameter(1,3.8);
-  bw->SetParameter(2,0.2);
-  // for (wrong!) fitting without correlations, drop the option "U" 
-  histMunfold->Fit(bw,"UE");
 
   //=====================================================================
   // plot some histograms
@@ -451,23 +322,19 @@ int testUnfold2()
   //     If the peak shape is fitted,
   //     these correlations have to be taken into account, see example
   output.cd(4);
-  histRhoi->Draw("BOX");
+  histRhoi->Draw();
 
   // show rhoi_max(tau) distribution
   output.cd(5);
   logTauX->Draw();
   bestLogTauX->SetMarkerColor(kRed);
   bestLogTauX->Draw("*");
-  logTauXuser->SetMarkerColor(kBlue);
-  logTauXuser->Draw("*");
 
   output.cd(6);
   lCurve->Draw("AL");
   bestLcurve->SetMarkerColor(kRed);
-  lCurveUser->SetMarkerColor(kBlue);
   bestLcurve->Draw("*");
-  lCurveUser->Draw("*");
-
-  output.SaveAs("c1.ps");
+ 
+  output.SaveAs("testUnfold2.ps");
   return 0;
 }
