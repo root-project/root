@@ -496,9 +496,11 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
 
    // Notify/warn about the dynamic startup option, if any
    TUrl uu(url), udef(urldef);
+   Bool_t extcluster = (strcmp(uu.GetHost(), udef.GetHost()) ||
+                       (uu.GetPort() != udef.GetPort())) ? kTRUE : kFALSE;
    if (gDynamicStartup && gverbose > 0) {
       // Check url
-      if (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort())) {
+      if (extcluster) {
          printf("*   WARNING: request to run a test with per-job scheduling on    *\n");
          printf("*            an external cluster: %s .\n", url);
          printf("*            Make sure the dynamic option is set.                *\n");
@@ -514,7 +516,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    if (!skipds) {
       gSkipDataSetTest = kFALSE;
    } else {
-      gSkipDataSetTest = (!strcmp(url, urldef) || !strcmp(url, "lite")) ? kFALSE : kTRUE;
+      gSkipDataSetTest = (!extcluster || !strcmp(url, "lite")) ? kFALSE : kTRUE;
    }
 
    // Log file path
@@ -574,8 +576,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
       }
    }
    if (h1src && strlen(h1src) && gverbose > 0) {
-      if (!strcmp(h1src, "download") &&
-          (strcmp(uu.GetHost(), udef.GetHost()) || (uu.GetPort() != udef.GetPort()))) {
+      if (!strcmp(h1src, "download") && extcluster) {
          printf("*  External clusters: ignoring download request of H1 files\n");
          printf("******************************************************************\n");
       } else if (!gh1src.BeginsWith(h1src)) {
@@ -739,7 +740,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    }
 
    // If not PROOF-Lite, stop the daemon used for the test
-   if (gProof && !gProof->IsLite()) {
+   if (gProof && !gProof->IsLite() && !extcluster) {
       // Close the instance
       delete gProof;
       // The daemon runs on a port shifted by 1
