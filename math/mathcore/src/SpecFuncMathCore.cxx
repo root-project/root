@@ -292,7 +292,7 @@ double cosint(double x) {
             b2 = b1;
             b1 = b0;
          }
-         h = r*((b0-h*b2)*std::sin(x)-r*pp*cos(x));
+         h = r*((b0-h*b2)*std::sin(x)-r*pp*std::cos(x));
       }
       return h;
 }
