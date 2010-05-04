@@ -21,3 +21,6 @@ execautoload.log : autoloadtest_C.$(DllSuf)
 
 linktest_C.$(DllSuf): linktest.C $(ROOT_LOC)/lib/libPhysics.so
 	$(BuildWithLib)
+
+assertReload.elog: ReloadScript.C
+

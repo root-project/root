@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-void reloadScript(const char* name) {
+void ReloadScript(const char* name) {
   TFile f(name, "READ");
   f.Close();
 }
