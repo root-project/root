@@ -27,6 +27,8 @@ namespace PyROOT {
       TSetItemHolder( const T& klass, const M& method );
 
    public:
+      virtual PyCallable* Clone() { return new TSetItemHolder( *this ); }
+
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
 
    protected:

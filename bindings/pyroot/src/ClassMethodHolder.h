@@ -25,6 +25,8 @@ namespace PyROOT {
    public:
       TClassMethodHolder( const T& klass, const M& method );
 
+      virtual PyCallable* Clone() { return new TClassMethodHolder( *this ); }
+
       virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds, Long_t = 0 );
    };
 

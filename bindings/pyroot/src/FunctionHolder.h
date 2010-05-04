@@ -23,6 +23,8 @@ namespace PyROOT {
    public:
       TFunctionHolder( const M& function );
 
+      virtual PyCallable* Clone() { return new TFunctionHolder( *this ); }
+
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
       virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds, Long_t = 0 );
    };

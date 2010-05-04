@@ -59,6 +59,8 @@ namespace PyROOT {
       virtual PyObject* GetArgDefault( Int_t iarg );
       virtual PyObject* GetScope();
 
+      virtual PyCallable* Clone() { return new TMethodHolder( *this ); }
+
    public:
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t = 0 );
 

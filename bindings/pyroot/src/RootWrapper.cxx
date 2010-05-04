@@ -231,46 +231,14 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
          continue;
 
    // translate operators
-      if ( 8 < mtName.size() && mtName.substr( 0, 8 ) == "operator" ) {
-         std::string op = mtName.substr( 8, std::string::npos );
+      mtName = Utility::MapOperatorName( mtName, method.FunctionParameterSize() );
 
-      // stripping ...
-         std::string::size_type start = 0, end = op.size();
-         while ( start < end && isspace( op[ start ] ) ) ++start;
-         while ( start < end && isspace( op[ end-1 ] ) ) --end;
-         op = TClassEdit::ResolveTypedef( op.substr( start, end - start ).c_str(), true );
-
-      // map C++ operator to python equivalent, or made up name if no equivalent exists
-         Utility::TC2POperatorMapping_t::iterator pop = Utility::gC2POperatorMapping.find( op );
-         if ( pop != Utility::gC2POperatorMapping.end() ) {
-            mtName = pop->second;
-         } else if ( op == "[]" || op == "()" ) {        // index or call
-            mtName = op == "()" ? "__call__" : "__getitem__";
-
-         // operator[]/() returning a reference type will be used for __setitem__
-            std::string cpd = Utility::Compound(
-               method.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ) );
-            if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' )
-               setupSetItem = kTRUE;
-         } else if ( op == "*" ) {
-         // dereference v.s. multiplication of two instances
-            mtName = method.FunctionParameterSize() ? "__mul__" : "__deref__";
-         } else if ( op == "+" ) {
-         // unary positive v.s. addition of two instances
-            mtName = method.FunctionParameterSize() ? "__add__" : "__pos__";
-         } else if ( op == "-" ) {
-         // unary negative v.s. subtraction of two instances
-            mtName = method.FunctionParameterSize() ? "__sub__" : "__neg__";
-         } else if ( op == "++" ) {
-         // prefix v.s. postfix increment
-            mtName = method.FunctionParameterSize() ? "__postinc__" : "__preinc__";
-         } else if ( op == "--" ) {
-         // prefix v.s. postfix decrement
-            mtName = method.FunctionParameterSize() ? "__postdec__" : "__predec__";
-         } else {
-            continue;                                    // not handled (new, delete, etc.)
-         }
-
+   // operator[]/() returning a reference type will be used for __setitem__
+      if ( mtName == "__call__" || mtName == "__getitem__" ) {
+         std::string cpd = Utility::Compound(
+            method.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ) );
+         if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' )
+            setupSetItem = kTRUE;
       }
 
    // decide on method type: member or static (which includes globals)

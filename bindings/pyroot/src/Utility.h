@@ -101,8 +101,7 @@ namespace PyROOT {
       };
 
    // data/operator mappings
-      typedef std::map< std::string, std::string > TC2POperatorMapping_t;
-      R__EXTERN TC2POperatorMapping_t gC2POperatorMapping;
+      std::string MapOperatorName( const std::string& name, Bool_t bTakesParames );
 
    // meta information
       EDataType EffectiveType( const std::string& name );

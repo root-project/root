@@ -591,23 +591,31 @@ namespace {
 
 
 //= PyROOT method proxy access to internals =================================
-   PyObject* mp_disp( MethodProxy* pymeth, PyObject* args, PyObject* )
+   PyObject* mp_disp( MethodProxy* pymeth, PyObject* sigarg )
    {
-      PyObject* sigarg = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "S:disp" ), &sigarg ) )
+      if ( ! PyString_Check( sigarg ) ) {
+         PyErr_Format( PyExc_TypeError, "disp() argument 1 must be string, not %.50s",
+                       sigarg == Py_None ? "None" : sigarg->ob_type->tp_name );
          return 0;
+      }
 
-      PyObject* sig1 = PyString_FromFormat( "(%s)", PyString_AS_STRING( sigarg ) );
+      PyObject* sig1 = PyString_FromFormat( "(%s)", PyString_AsString( sigarg ) );
 
       MethodProxy::Methods_t& methods = pymeth->fMethodInfo->fMethods;
       for ( Int_t i = 0; i < (Int_t)methods.size(); ++i ) {
+
          PyObject* sig2 = methods[ i ]->GetSignature();
          if ( PyObject_Compare( sig1, sig2 ) == 0 ) {
             Py_DECREF( sig2 );
 
             MethodProxy* newmeth = mp_new( NULL, NULL, NULL );
-            MethodProxy::Methods_t vec; vec.push_back( methods[ i ] );
+            MethodProxy::Methods_t vec; vec.push_back( methods[ i ]->Clone() );
             newmeth->Set( pymeth->fMethodInfo->fName, vec );
+
+            if ( pymeth->fSelf && ! IsPseudoFunc( pymeth ) ) {
+               Py_INCREF( pymeth->fSelf );
+               newmeth->fSelf = pymeth->fSelf;
+            }
 
             Py_DECREF( sig1 );
             return (PyObject*)newmeth;
@@ -623,7 +631,7 @@ namespace {
 
 //____________________________________________________________________________
    PyMethodDef mp_methods[] = {
-      { (char*)"disp", (PyCFunction)mp_disp, METH_VARARGS, (char*)"select overload for dispatch" },
+      { (char*)"disp", (PyCFunction)mp_disp, METH_O, (char*)"select overload for dispatch" },
       { (char*)NULL, NULL, 0, NULL }
    };
 

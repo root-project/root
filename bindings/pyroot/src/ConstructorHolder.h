@@ -30,6 +30,7 @@ namespace PyROOT {
 
    public:
       virtual PyObject* GetDocString();
+      virtual PyCallable* Clone() { return new TConstructorHolder( *this ); }
 
    public:
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t = 0 );

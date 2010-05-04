@@ -133,14 +133,9 @@ namespace {
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 //____________________________________________________________________________
-   PyObject* buffer_setsize( PyBufferTop_t* self, PyObject* args, PyObject* /* kw */ )
+   PyObject* buffer_setsize( PyBufferTop_t* self, PyObject* pynlen )
    {
-      if ( PyTuple_GET_SIZE( args ) != 1 ) {
-         PyErr_SetString( PyExc_TypeError, "buffer.SetSize takes exactly 1 argument" );
-         return 0;
-      }
-
-      Py_ssize_t nlen = PyInt_AsSsize_t( PyTuple_GET_ITEM( args, 0 ) );
+      Py_ssize_t nlen = PyInt_AsSsize_t( pynlen );
       if ( nlen == -1 && PyErr_Occurred() )
          return 0;
 
@@ -183,7 +178,7 @@ namespace {
 
 //____________________________________________________________________________
    PyMethodDef buffer_methods[] = {
-      { (char*)"SetSize", (PyCFunction)buffer_setsize, METH_VARARGS, NULL },
+      { (char*)"SetSize", (PyCFunction)buffer_setsize, METH_O, NULL },
       { (char*)NULL, NULL, 0, NULL }
    };
 

@@ -43,7 +43,8 @@ PyROOT::Utility::EMemoryPolicy PyROOT::Utility::gMemoryPolicy = PyROOT::Utility:
 // this is just a data holder for linking; actual value is set in RootModule.cxx
 PyROOT::Utility::ESignalPolicy PyROOT::Utility::gSignalPolicy = PyROOT::Utility::kSafe;
 
-PyROOT::Utility::TC2POperatorMapping_t PyROOT::Utility::gC2POperatorMapping;
+typedef std::map< std::string, std::string > TC2POperatorMapping_t;
+static TC2POperatorMapping_t gC2POperatorMapping;
 
 namespace {
 
@@ -52,13 +53,13 @@ namespace {
    struct InitOperatorMapping_t {
    public:
       InitOperatorMapping_t() {
-         // gC2POperatorMapping[ "[]" ]  = "__getitem__";   // depends on return type
-         // gC2POperatorMapping[ "[]" ]  = "__setitem__";   // id.
-         // gC2POperatorMapping[ "()" ]  = "__call__";      // depends on return type
+         // gC2POperatorMapping[ "[]" ]  = "__setitem__";   // depends on return type
          // gC2POperatorMapping[ "+" ]   = "__add__";       // depends on # of args (see __pos__)
          // gC2POperatorMapping[ "-" ]   = "__sub__";       // id. (eq. __neg__)
          // gC2POperatorMapping[ "*" ]   = "__mul__";       // double meaning in C++
 
+         gC2POperatorMapping[ "[]" ]  = "__getitem__";
+         gC2POperatorMapping[ "()" ]  = "__call__";
          gC2POperatorMapping[ "/" ]   = "__div__";
          gC2POperatorMapping[ "%" ]   = "__mod__";
          gC2POperatorMapping[ "**" ]  = "__pow__";
@@ -477,6 +478,52 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
    }
 
    return 0;
+}
+
+//____________________________________________________________________________
+std::string PyROOT::Utility::MapOperatorName( const std::string& name, Bool_t bTakesParams )
+{
+// map the given C++ operator name on the python equivalent
+
+   if ( 8 < name.size() && name.substr( 0, 8 ) == "operator" ) {
+      std::string op = name.substr( 8, std::string::npos );
+
+   // stripping ...
+      std::string::size_type start = 0, end = op.size();
+      while ( start < end && isspace( op[ start ] ) ) ++start;
+      while ( start < end && isspace( op[ end-1 ] ) ) --end;
+      op = TClassEdit::ResolveTypedef( op.substr( start, end - start ).c_str(), true );
+
+   // map C++ operator to python equivalent, or made up name if no equivalent exists
+      TC2POperatorMapping_t::iterator pop = gC2POperatorMapping.find( op );
+      if ( pop != gC2POperatorMapping.end() ) {
+         return pop->second;
+
+      } else if ( op == "*" ) {
+      // dereference v.s. multiplication of two instances
+         return bTakesParams ? "__mul__" : "__deref__";
+
+      } else if ( op == "+" ) {
+      // unary positive v.s. addition of two instances
+         return bTakesParams ? "__add__" : "__pos__";
+
+      } else if ( op == "-" ) {
+      // unary negative v.s. subtraction of two instances
+         return bTakesParams ? "__sub__" : "__neg__";
+
+      } else if ( op == "++" ) {
+      // prefix v.s. postfix increment
+         return bTakesParams ? "__postinc__" : "__preinc__";
+
+      } else if ( op == "--" ) {
+      // prefix v.s. postfix decrement
+         return bTakesParams ? "__postdec__" : "__predec__";
+      }
+
+   }
+
+// might get here, as not all operator methods are handled (new, delete, etc.)
+   return name;
 }
 
 //____________________________________________________________________________

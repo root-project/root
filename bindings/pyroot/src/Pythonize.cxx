@@ -1128,6 +1128,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TTreeBranch( MethodProxy* org ) : TTreeMemberFunction( org ) {}
 
    public:
+      virtual PyCallable* Clone() { return new TTreeBranch( *this ); }
+
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t )
       {
       // acceptable signatures:
@@ -1246,6 +1248,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       {
          return PyString_FromString( "TBranch* TTree::SetBranchAddress( ... )" );
       }
+
+      virtual PyCallable* Clone() { return new TTreeSetBranchAddress( *this ); }
 
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t )
       {
@@ -1441,6 +1445,8 @@ namespace {
             "Double_t xmin, Double_t xmax, Int_t npar = 0)" );
       }
 
+      virtual PyCallable* Clone() { return new TF1InitWithPyFunc( *this ); }
+
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
@@ -1515,6 +1521,8 @@ namespace {
             "Double_t xmin, Double_t xmax, "
             "Double_t ymin, Double_t ymax, Int_t npar = 0)" );
       }
+
+      virtual PyCallable* Clone() { return new TF2InitWithPyFunc( *this ); }
    };
 
 //____________________________________________________________________________
@@ -1531,6 +1539,8 @@ namespace {
             "Double_t ymin, Double_t ymax, "
             "Double_t zmin, Double_t zmax, Int_t npar = 0)" );
       }
+
+      virtual PyCallable* Clone() { return new TF3InitWithPyFunc( *this ); }
    };
 
 
@@ -1552,6 +1562,8 @@ namespace {
          return PyString_FromString(
             "TMinuit::SetFCN(PyObject* callable)" );
       }
+
+      virtual PyCallable* Clone() { return new TMinuitSetFCN( *this ); }
 
       virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
       {

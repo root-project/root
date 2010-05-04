@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 12/14/09
+# Last: 04/30/10
 
 """PyROOT user module.
 
@@ -15,7 +15,7 @@ from __future__ import generators
 
 """
 
-__version__ = '6.0.2'
+__version__ = '6.1.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -336,8 +336,8 @@ class ModuleFacade( types.ModuleType ):
 
       class gROOTWrapper( object ):
          def __init__( self, gROOT, master ):
-            self.__dict__[ '_gROOT' ]  = gROOT
             self.__dict__[ '_master' ] = master
+            self.__dict__[ '_gROOT' ]  = gROOT
 
          def __getattr__( self, name ):
            if name != 'SetBatch' and self._master.__dict__[ 'gROOT' ] != self._gROOT:
@@ -350,6 +350,7 @@ class ModuleFacade( types.ModuleType ):
            return setattr( self._gROOT, name, value )
               
       self.__dict__[ 'gROOT' ] = gROOTWrapper( _root.gROOT, self )
+      del gROOTWrapper
 
     # begin with startup gettattr/setattr
       self.__class__.__getattr__ = self.__class__.__getattr1
@@ -558,7 +559,8 @@ def cleanup():
    del v, k, types
 
  # destroy facade
-   del sys.modules[ __name__ ], facade
+   facade.__dict__.clear()
+   del facade
 
  # run part the gROOT shutdown sequence ... running it here ensures that
  # it is done before any ROOT libraries are off-loaded, with unspecified
@@ -572,8 +574,9 @@ def cleanup():
  # cleanup cached python strings
    sys.modules[ 'libPyROOT' ]._DestroyPyStrings()
 
- # destroy ROOT extension module
+ # destroy ROOT extension module and ROOT module
    del sys.modules[ 'libPyROOT' ]
+   del sys.modules[ 'ROOT' ]
 
 atexit.register( cleanup )
 del cleanup, atexit
