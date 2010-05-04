@@ -509,12 +509,12 @@ int testStatFunctions(int nfunc = 100 ) {
        // Landau is not very precise (put prec at 10-6)
       // as indicated in Landau paper (
       dist.ScaleTol1(10000);  
-      dist.ScaleTol2(10000000000);
+      dist.ScaleTol2(1.E10);
       iret |= dist.Test(-1,10,-10.,1.E10);
       CREATE_DIST_C(landau);
       distc.SetParameters( 2);
       distc.ScaleTol1(10000);  
-      distc.ScaleTol2(10000000000);
+      distc.ScaleTol2(1.0E10);
       iret |= distc.Test(-1,10,-10.,1.E10,true);
    }
 

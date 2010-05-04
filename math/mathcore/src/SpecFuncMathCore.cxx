@@ -211,10 +211,9 @@ double sinint(double x) {
 
 double cosint(double x) {
 
-   static const double z1 = 1, r8 = z1/8, r32 = z1/32;
+   static const double z1 = 1, r32 = z1/32;
 
    static const double ce = 0.57721566490153286;
-   static const double pih = PI/2;
 
    static const double c[16] = {
      +1.94054914648355493, +0.94134091328652134,
