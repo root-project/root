@@ -402,6 +402,7 @@ void TPostScript::Close(Option_t *)
    if( fMode != 3) {
       SaveRestore(-1);
       if( fPrinted ) { PrintStr("showpage@"); SaveRestore(-1);}
+      PrintStr("@");
       PrintStr("%%Trailer@");
       PrintStr("%%Pages: ");
       WriteInteger(fNpages);
@@ -413,6 +414,7 @@ void TPostScript::Close(Option_t *)
       PrintStr("showpage@");
       PrintStr("end@");
    }
+   PrintStr("@");
    PrintStr("%%EOF@");
 
    // Close file stream
@@ -1686,10 +1688,12 @@ void TPostScript::Initialize()
    }
 
    PrintFast(15," .25 .25 scale ");
-   if (fMode != 3) SaveRestore(1);
-
-   if (fMode != 3) PrintStr("%%Page: 1 1@");
-   if (fMode != 3) SaveRestore(1);  //required
+   if (fMode != 3) {
+      SaveRestore(1);
+      PrintStr("@");
+      PrintStr("%%Page: 1 1@");
+      SaveRestore(1);
+   }
 
    //Check is user has defined a special header in the current style
    Int_t nh = strlen(gStyle->GetHeaderPS());
