@@ -173,11 +173,11 @@ public:
    void GetEmatrix(TH2 *ematrix,Int_t const *binMap=0) const; // get error matrix, averaged over bins
    Double_t GetRhoI(TH1 *rhoi,TH2 *ematrixinv=0,Int_t const *binMap=0) const; // get global correlation coefficients and inverse of error matrix, averaged over bins
    void GetRhoIJ(TH2 *rhoij,Int_t const *binMap=0) const; // get correlation coefficients, averaged over bins
-   Double_t const GetTau(void) const;  // regularisation parameter
-   Double_t const &GetRhoMax(void) const;       // maximum global correlation
-   Double_t const &GetRhoAvg(void) const;       // average global correlation
-   Double_t const &GetChi2A(void) const;        // chi**2 contribution from A
-   Double_t const GetChi2L(void) const;        // chi**2 contribution from L
+   Double_t GetTau(void) const;  // regularisation parameter
+   Double_t GetRhoMax(void) const;       // maximum global correlation
+   Double_t GetRhoAvg(void) const;       // average global correlation
+   Double_t GetChi2A(void) const;        // chi**2 contribution from A
+   Double_t GetChi2L(void) const;        // chi**2 contribution from L
    virtual Double_t GetLcurveX(void) const;        // x axis of L curve
    virtual Double_t GetLcurveY(void) const;        // y axis of L curve
    Int_t GetNdf(void) const;   // number of degrees of freedom

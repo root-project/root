@@ -1941,7 +1941,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
 
   Int_t bestChoice=-1;
   XYtau_t curve;
-  Double_t logTau;
+  Double_t logTau = 0;
   if((tauMin<=0)||(tauMax<=0.0)||(tauMin>=tauMax)) {
      // first unfolding, without regularisation
      DoUnfold(0.0);
@@ -2403,32 +2403,32 @@ void TUnfold::SetConstraint(EConstraint constraint) {
    Info("TUnfold::SetConstraint","fConstraint=%d",fConstraint);
 }
 
-Double_t const TUnfold::GetTau(void) const
+Double_t TUnfold::GetTau(void) const
 {
    // return regularisation parameter
    return TMath::Sqrt(fTauSquared);
 }
 
-Double_t const &TUnfold::GetRhoMax(void) const
+Double_t TUnfold::GetRhoMax(void) const
 {
    // return maximum global correlation
    // Note: return value>1.0 means the unfolding has failed
    return fRhoMax;
 }
 
-Double_t const &TUnfold::GetRhoAvg(void) const
+Double_t TUnfold::GetRhoAvg(void) const
 {
    // return average global correlation
    return fRhoAvg;
 }
 
-Double_t const &TUnfold::GetChi2A(void) const
+Double_t TUnfold::GetChi2A(void) const
 {
    // return chi**2 contribution from matrix A
    return fChi2A;
 }
 
-Double_t const TUnfold::GetChi2L(void) const
+Double_t TUnfold::GetChi2L(void) const
 {
    // return chi**2 contribution from regularisation conditions
    return fLXsquared*fTauSquared;
