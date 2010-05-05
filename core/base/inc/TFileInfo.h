@@ -58,6 +58,8 @@ private:
    TMD5            *fMD5;            //-> md5 digest of the file
    TList           *fMetaDataList;   // generic list of file meta data object(s)
 
+   void             ParseInput(const char *in);
+
    TFileInfo& operator=(const TFileInfo&);  // not implemented
 
 public:

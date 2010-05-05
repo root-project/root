@@ -28,32 +28,42 @@ ClassImp(TFileInfo)
 ClassImp(TFileInfoMeta)
 
 //______________________________________________________________________________
-TFileInfo::TFileInfo(const char *url, Long64_t size, const char *uuid,
+TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
                      const char *md5, TObject *meta)
-   : fCurrentUrl(0), fUrlList(0), fSize(size), fUUID(0), fMD5(0),
+   : fCurrentUrl(0), fUrlList(0), fSize(-1), fUUID(0), fMD5(0),
      fMetaDataList(0)
 {
    // Constructor.
 
-   if (uuid)
+   // Get initializations form the input string: this will set at least the
+   // current URL; but it may set more: see TFileInfo::ParseInput().
+   ParseInput(in);
+
+   // Now also honour the input arguments: the size
+   if (size > -1) fSize = size;
+   // The UUID
+   if (uuid) {
+      SafeDelete(fUUID);
       fUUID = new TUUID(uuid);
-   else
+   } else if (!fUUID) {
       fUUID = new TUUID;
-
-   if (md5)
+   }
+   // The MD5
+   if (md5) {
+      SafeDelete(fMD5);
       fMD5 = new TMD5((const UChar_t*)md5);
-   else
+   } else if (!fMD5) {
       fMD5 = new TMD5;
+   }
+   // The meta information
+   if (meta) {
+      RemoveMetaData(meta->GetName());
+      AddMetaData(meta);
+   }
 
-   // Set's the name from the UUID.
+   // Now set the name from the UUID
    SetName(fUUID->AsString());
    SetTitle("TFileInfo");
-
-   if (url)
-      AddUrl(url);
-
-   if (meta)
-      AddMetaData(meta);
 }
 
 //______________________________________________________________________________
@@ -62,7 +72,7 @@ TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
                                             fSize(fi.fSize), fUUID(0), fMD5(0),
                                             fMetaDataList(0)
 {
-   // Copy constructor
+   // Copy constructor.
 
    if (fi.fUrlList) {
       fUrlList = new TList;
@@ -108,6 +118,101 @@ TFileInfo::~TFileInfo()
    SafeDelete(fUUID);
    SafeDelete(fMD5);
    SafeDelete(fUrlList);
+}
+
+//______________________________________________________________________________
+void TFileInfo::ParseInput(const char *in)
+{
+   // Parse the input line to extract init information from 'in'; the input
+   // string is tokenized on ' '; the tokens can be prefixed by the following
+   // keys:
+   //
+   //   url:<url1>,<url2>,...     URLs for the file; stored in the order given
+   //   sz:<size>                 size of the file in bytes
+   //   md5:<md5_ascii>           MD5 sum of the file in ASCII form
+   //   uuid:<uuid>               UUID of the file
+   //
+   //   tree:<name>,<entries>,<first>,<last>
+   //                             meta-information about a tree in the file; the
+   //                             should be in the form <subdir>/tree-name;'entries' is
+   //                             the number of entries in the tree; 'first' and 'last'
+   //                             define the entry range.
+   //
+   //   obj:<name>,<class>,<entries>
+   //                             meta-information about a generic object in the file;
+   //                             the should be in the form <subdir>/obj-name; 'class'
+   //                             is the object class; 'entries' is the number of occurences
+   //                             for this object.
+   // Multiple occurences of 'tree:' or 'obj:' can be specified.
+   // The initializations done via the input string are superseeded by the ones by other
+   // parameters in the constructor, if any.
+   // If no key is given, the token is interpreted as URL(s).
+
+   // Nothing to do if the string is empty
+   if (!in || strlen(in) <= 0) return;
+
+   TString sin(in), t;
+   Int_t f1 = 0;
+   while (sin.Tokenize(t, f1, " ")) {
+      if (t.BeginsWith("sz:")) {
+         // The size
+         t.Replace(0, 3, "");
+         if (t.IsDigit()) sscanf(t.Data(), "%lld", &fSize);
+      } else if (t.BeginsWith("md5:")) {
+         // The MD5
+         t.Replace(0, 4, "");
+         if (t.Length() >= 32) {
+            fMD5 = new TMD5;
+            if (fMD5->SetDigest(t) != 0)
+               SafeDelete(fMD5);
+         }
+      } else if (t.BeginsWith("uuid:")) {
+         // The UUID
+         t.Replace(0, 5, "");
+         if (t.Length() > 0) fUUID = new TUUID(t);
+      } else if (t.BeginsWith("tree:")) {
+         // A tree
+         t.Replace(0, 5, "");
+         TString nm, se, sf, sl;
+         Long64_t ent = -1, fst= -1, lst = -1;
+         Int_t f2 = 0;
+         if (t.Tokenize(nm, f2, ","))
+            if (t.Tokenize(se, f2, ","))
+               if (t.Tokenize(sf, f2, ","))
+                  t.Tokenize(sl, f2, ",");
+         if (!(nm.IsNull())) {
+            if (se.IsDigit()) sscanf(se.Data(), "%lld", &ent);
+            if (sf.IsDigit()) sscanf(sf.Data(), "%lld", &fst);
+            if (sl.IsDigit()) sscanf(sl.Data(), "%lld", &lst);
+            TFileInfoMeta *meta = new TFileInfoMeta(nm, "TTree", ent, fst, lst);
+            RemoveMetaData(meta->GetName());
+            AddMetaData(meta);
+         }
+      } else if (t.BeginsWith("obj:")) {
+         // A generic object
+         t.Replace(0, 4, "");
+         TString nm, cl, se;
+         Long64_t ent = -1;
+         Int_t f2 = 0;
+         if (t.Tokenize(nm, f2, ","))
+            if (t.Tokenize(cl, f2, ","))
+               t.Tokenize(se, f2, ",");
+         if (cl.IsNull()) cl = "TObject";
+         if (!(nm.IsNull())) {
+            if (se.IsDigit()) sscanf(se.Data(), "%lld", &ent);
+            TFileInfoMeta *meta = new TFileInfoMeta(nm, cl, ent);
+            AddMetaData(meta);
+         }
+      } else {
+         // A (set of) URL(s)
+         if (t.BeginsWith("url:")) t.Replace(0, 4, "");
+         TString u;
+         Int_t f2 = 0;
+         while (t.Tokenize(u, f2, ",")) {
+            if (!(u.IsNull())) AddUrl(u);
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
