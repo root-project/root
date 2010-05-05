@@ -123,10 +123,12 @@ boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
 <ul>
    <li>The Dark colors have an index = color_index+100
    <li>The Bright colors have an index = color_index+150
-   <li>Pointers to the dark and bright colors can be retrieved via the TColor static functions:
+   <li>Two static functions return the bright and dark color number
+       corresponding to a color index. If the bright or dark color does not
+       exist, they are created:
    <pre>
-      TColor *dark   = TColor::GetColorDark(color_index);
-      TColor *bright = TColor::GetColorBright(color_index);
+      Int_t dark   = TColor::GetColorDark(color_index);
+      Int_t bright = TColor::GetColorBright(color_index);
    </pre>
 </ul>
 
