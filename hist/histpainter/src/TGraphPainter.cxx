@@ -672,7 +672,7 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
 
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
-   const Int_t kMaxDiff = 10;
+   const Int_t kMaxDiff =  3;
    static Bool_t middle, badcase;
    static Int_t ipoint, pxp, pyp;
    static Int_t px1,px2,py1,py2;
