@@ -22,5 +22,6 @@ execautoload.log : autoloadtest_C.$(DllSuf)
 linktest_C.$(DllSuf): linktest.C $(ROOT_LOC)/lib/libPhysics.so
 	$(BuildWithLib)
 
-assertReload.elog: ReloadScript.C
-
+assertReload.elog: ReloadScript.C assertReload.C
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l assertReload.C 2>assertReload.full.elog > assertReload.log; result=$$? ; \
+	   cat assertReload.full.elog | grep -v _cint.cxx > assertReload.elog ; test $$result -eq 0 || handleError.sh --log=assertReload.elog --result=$$result --test=assertReload.C
