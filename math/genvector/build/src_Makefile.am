@@ -1,0 +1,40 @@
+# @(#)root/mathcore:$Id: src_Makefile.am 21185 2007-12-04 14:56:12Z moneta $
+# Author: L. Moneta    2005  
+#
+## Process this file with automake to produce Makefile.in .
+#
+
+
+# The following is set; otherwise it would follow GNU conventions.
+AUTOMAKE_OPTIONS = foreign
+
+# The convenience library to be built.
+lib_LTLIBRARIES = libGenVector.la
+
+libGenVector_la_SOURCES =		\
+         3DConversions.cxx              \
+         3DDistances.cxx                \
+         AxisAngle.cxx                  \
+         AxisAngleXother.cxx            \
+         BitReproducible.cxx            \
+         Boost.cxx                      \
+         BoostX.cxx                     \
+         BoostY.cxx                     \
+         BoostZ.cxx                     \
+         EulerAngles.cxx                \
+         GenVector_exception.cxx        \
+         LorentzRotation.cxx            \
+	 Plane3D.cxx                    \
+         Quaternion.cxx                 \
+         QuaternionXaxial.cxx           \
+         Rotation3D.cxx                 \
+         Rotation3DxAxial.cxx           \
+         RotationZYX.cxx                \
+         Transform3D.cxx                \
+         Translation3D.cxx              \
+         VectorUtil.cxx        
+
+
+INCLUDES =			        \
+	-I$(top_srcdir)/inc 
+
