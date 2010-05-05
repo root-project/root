@@ -4,6 +4,9 @@
 # switches have changed.
 # Axel, 2010-04-26
 
+# Fix up windows vs unix path style:
+cd $PWD
+
 if ! test  -f config.status; then
     ./configure "$@" || exit $?
 else
