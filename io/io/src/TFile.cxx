@@ -2266,7 +2266,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                      }
                   }
                }
-            }               
+            }
          }
          TMakeProject::GenerateMissingStreamerInfos(&extrainfos, el);
       }
@@ -2435,11 +2435,11 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                   }
                   fprintf(fp,"#pragma %s;\n",strrule.Data());
                }
-               
+
             }
             delete rules;
          }
-         
+
       }
       if (TClassEdit::IsSTLCont(info->GetName())) {
          std::vector<std::string> inside;
@@ -2752,14 +2752,14 @@ void TFile::WriteStreamerInfo()
       if (fClassIndex->fArray[uid]) {
          list.Add(info);
          if (gDebug > 0) printf(" -class: %s info number %d saved\n",info->GetName(),uid);
-         
+
          // Add the IO customization rules to the list to be saved for the underlying
          // class but make sure to add them only once.
          TClass *clinfo = info->GetClass();
          if (clinfo && clinfo->GetSchemaRules()) {
             if ( classSet.find( clinfo ) == classSet.end() ) {
                if (gDebug > 0) printf(" -class: %s stored the I/O customization rules\n",info->GetName());
- 
+
                TObjArrayIter it( clinfo->GetSchemaRules()->GetRules() );
                ROOT::TSchemaRule *rule;
                while( (rule = (ROOT::TSchemaRule*)it.Next()) ) {
@@ -2779,7 +2779,7 @@ void TFile::WriteStreamerInfo()
       // Only the list of rules if we have something to say.
       list.Add(&listOfRules);
    }
-   
+
    // always write with compression on
    Int_t compress = fCompress;
    fCompress = 1;
@@ -2796,7 +2796,7 @@ void TFile::WriteStreamerInfo()
 
    fClassIndex->fArray[0] = 0;
    fCompress = compress;
-   
+
    listOfRules.Delete();
    list.RemoveLast(); // remove the listOfRules.
 }
@@ -2987,7 +2987,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
 }
 
 //______________________________________________________________________________
-TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
+TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
    // Static member function allowing the creation/opening of either a
@@ -3010,6 +3010,13 @@ TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
    // options and other arguments see the constructors of the individual
    // file classes. In case of error returns 0.
    //
+   // For TFile implementations supporting asynchronous file open, see
+   // TFile::AsyncOpen(...), it is possible to request a timeout with the
+   // option:
+   //  TIMEOUT=<secs>   the timeout must be specified in seconds and
+   //                   it will be internally checked with granularity of
+   //                   one millisec.
+   //
    // For remote files there is the option:
    //  CACHEREAD     opens an existing file for reading through the file cache.
    //                The file will be downloaded to the cache and opened from there.
@@ -3021,13 +3028,65 @@ TFile *TFile::Open(const char *url, Option_t *option, const char *ftitle,
    TFile *f = 0;
    EFileType type = kFile;
 
-   if (!option) option = "";
-
    // Check input
    if (!url || strlen(url) <= 0) {
       ::Error("TFile::Open", "no url specified");
       return f;
    }
+
+   // If a timeout has been specified extract the value and try to apply it (it requires
+   // support for asynchronous open, though; the following is completely transparent if
+   // such support if not available for the required protocol)
+   TString opts(options);
+   Int_t ito = opts.Index("TIMEOUT=");
+   if (ito != kNPOS) {
+      TString sto = opts(ito + strlen("TIMEOUT="), opts.Length());
+      while (!(sto.IsDigit()) && !(sto.IsNull())) { sto.Remove(sto.Length()-1,1); }
+      if (!(sto.IsNull())) {
+         // Timeout in millisecs
+         Int_t toms = sto.Atoi() * 1000;
+         if (gDebug > 0) ::Info("TFile::Open", "timeout of %d millisec requested", toms);
+         // Remove from the options field
+         sto.Insert(0, "TIMEOUT=");
+         opts.ReplaceAll(sto, "");
+         // Asynchrounous open
+         TFile *f = 0;
+         TFileOpenHandle *fh = TFile::AsyncOpen(url, opts, ftitle, compress, netopt);
+         // Check the result in steps of 1 millisec
+         TFile::EAsyncOpenStatus aos = TFile::kAOSNotAsync;
+         aos = TFile::GetAsyncOpenStatus(fh);
+         Int_t xtms = toms;
+         while (aos != TFile::kAOSNotAsync && aos == TFile::kAOSInProgress && xtms > 0) {
+            gSystem->Sleep(1);
+            xtms -= 1;
+            aos = TFile::GetAsyncOpenStatus(fh);
+         }
+         if (aos == TFile::kAOSNotAsync || aos == TFile::kAOSSuccess) {
+            // Do open the file now
+            f = TFile::Open(fh);
+            if (gDebug > 0) {
+               if (aos == TFile::kAOSSuccess)
+                  ::Info("TFile::Open", "waited %d millisec for asynchronous open", toms - xtms);
+               else
+                  ::Info("TFile::Open", "timeout option not supported (requires asynchronous"
+                                        " open support)");
+            }
+         } else {
+            if (xtms <= 0)
+               ::Error("TFile::Open", "timeout expired while opening '%s'", url);
+            // Cleanup the request
+            SafeDelete(fh);
+         }
+         // Done
+         return f;
+      } else {
+         ::Warning("TFile::Open", "incomplete 'TIMEOUT=' option specification - ignored");
+         opts.ReplaceAll("TIMEOUT=", "");
+      }
+   }
+
+   // We will use this from now on
+   const char *option = opts;
 
    // Many URLs? Redirect output and print errors in case of global failure
    TString namelist(url);
@@ -4000,7 +4059,7 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
    Int_t result = posix_fadvise64(fD, offset, len, advice);
 #else
    Int_t result = posix_fadvise(fD, offset, len, advice);
-#endif   
+#endif
    if (gPerfStats != 0) {
       gPerfStats->FileReadEvent(this, len, start);
    }
