@@ -3121,10 +3121,14 @@ void G__define_var(int tagnum, int typenum)
                            }
                         }
                         else {
-                           G__FastAllocString tttt(G__ONELINE);
-#define G__OLDIMPLEMENTATION1780 // FIXME: Should this be removed?
-                           G__valuemonitor(reg, tttt);
-                           temp.Format("%s(%s)", G__struct.name[tagnum], tttt());
+                           if (reg.type) {
+                              G__FastAllocString tttt(G__ONELINE);
+                              G__valuemonitor(reg, tttt);
+                              temp.Format("%s(%s)", G__struct.name[tagnum], tttt());
+                           }
+                           else {
+                              temp.Format("%s()", G__struct.name[tagnum]);
+                           }
                         }
 #ifndef G__OLDIMPLEMENTATION1073
                         if (G__asm_wholefunction) {
