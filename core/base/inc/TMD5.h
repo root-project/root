@@ -72,6 +72,8 @@ public:
    void        Print() const;
    const char *AsString() const;
 
+   Int_t       SetDigest(const char *md5ascii);
+
    static TMD5  *ReadChecksum(const char *file);
    static Int_t  WriteChecksum(const char *file, const TMD5 *md5);
 
@@ -84,7 +86,7 @@ public:
 inline TBuffer &operator>>(TBuffer &buf, TMD5 &md5)
 { md5.Streamer(buf); return buf; }
 
-// Not inlined in order to avoid const casted away warning in user code.  
+// Not inlined in order to avoid const casted away warning in user code.
 TBuffer &operator<<(TBuffer &buf, const TMD5 &md5);
 
 inline Bool_t operator!=(const TMD5 &m1, const TMD5 &m2)

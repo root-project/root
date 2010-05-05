@@ -402,6 +402,32 @@ Bool_t operator==(const TMD5 &m1, const TMD5 &m2)
 }
 
 //______________________________________________________________________________
+Int_t TMD5::SetDigest(const char *md5ascii)
+{
+   // Set the digest from the ASCII representation 'md5ascii'. The caller
+   // is responsible to make sure that the 32 chars md5ascii are valid.
+   // Returns -1 if md5ascii is malformed, returns 0 otherwise.
+
+   if (!md5ascii || strlen(md5ascii) < 32) {
+      // Invalid input or ASCII representation
+      return -1;
+   }
+
+   char *buf = (char *) md5ascii;
+   for (int i = 0; i < 16; i++) {
+      UShort_t d;
+      char s = buf[2+2*i];
+      buf[2+2*i] = 0;
+      sscanf(buf+2*i, "%hx", &d);
+      buf[2+2*i] = s;
+      fDigest[i] = (UChar_t) d;
+   }
+   fFinalized = kTRUE;
+
+   return 0;
+}
+
+//______________________________________________________________________________
 TMD5 *TMD5::ReadChecksum(const char *file)
 {
    // Returns checksum stored in ASCII in specified file. Use to read files
@@ -417,21 +443,16 @@ TMD5 *TMD5::ReadChecksum(const char *file)
 
    char buf[33];
 
-   if (fgets(buf, 33, fid)) {;}
-
-   UChar_t digest[16];
-   for (int i = 0; i < 16; i++) {
-      UShort_t d;
-      char s = buf[2+2*i];
-      buf[2+2*i] = 0;
-      sscanf(buf+2*i, "%hx", &d);
-      buf[2+2*i] = s;
-      digest[i] = (UChar_t) d;
+   if (!fgets(buf, 33, fid)) {
+      SysError("TMD5::ReadChecksum", "error reading checksum from %s", file);
+      return 0;
    }
 
    fclose(fid);
 
-   TMD5 *md5 = new TMD5(digest);
+   TMD5 *md5 = new TMD5;
+   md5->SetDigest(buf);
+
    return md5;
 }
 
