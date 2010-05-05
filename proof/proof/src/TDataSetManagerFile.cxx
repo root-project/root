@@ -142,29 +142,29 @@ void TDataSetManagerFile::Init()
       // Read locking path from kDataSet_LockLocation
       TString lockloc = TString::Format("%s/%s", fDataSetDir.Data(), kDataSet_LockLocation);
       if (!gSystem->AccessPathName(lockloc, kReadPermission)) {
-         TString lockloctmp;
-         const char *fnloc = 0;
-         if (fIsRemote) {
-            lockloctmp.Form("%s-%s", fDataSetDir.Data() , kDataSet_LockLocation);
-            lockloctmp.ReplaceAll("/","%");
-            lockloctmp.ReplaceAll(":","%");
-            lockloctmp.Insert(0, TString::Format("%s/", gSystem->TempDirectory()));
-            if (!gSystem->AccessPathName(lockloctmp)) gSystem->Unlink(lockloctmp);
-            if (!TFile::Cp(lockloc, lockloctmp, kFALSE)) {
-               Error("Init", "could not retrieve file (%s) with info about the lock path", lockloc.Data());
-               SetBit(TObject::kInvalidObject);
-               return;
+         // Open the file in RAW mode
+         lockloc += "?filetype=raw";
+         TFile *f = TFile::Open(lockloc);
+         if (f && !(f->IsZombie())) {
+            const Int_t blen = 8192;
+            char buf[blen];
+            Long64_t rest = f->GetSize();
+            while (rest > 0) {
+               Long64_t len = (rest > blen - 1) ? blen - 1 : rest;
+               if (f->ReadBuffer(buf, len)) {
+                  fDataSetLockFile = "";
+                  break;
+               }
+               buf[len] = '\0';
+               fDataSetLockFile += buf;
+               rest -= len;
             }
-            fnloc = lockloctmp.Data();
+            f->Close();
+            SafeDelete(f);
+            fDataSetLockFile.ReplaceAll("\n","");
          } else {
-            fnloc = lockloc.Data();
-         }
-         fstream infile(fnloc, std::ios::in);
-         if (infile.is_open()) {
-            fDataSetLockFile.ReadToken(infile);
-            infile.close();
-         } else {
-            Warning("Init", "could not open remore file '%s' with the lock location", fnloc);
+            lockloc.ReplaceAll("?filetype=raw", "");
+            Warning("Init", "could not open remore file '%s' with the lock location", lockloc.Data());
          }
       }
       if (fDataSetLockFile.IsNull()) {
