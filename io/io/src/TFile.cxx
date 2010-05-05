@@ -3050,7 +3050,6 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          sto.Insert(0, "TIMEOUT=");
          opts.ReplaceAll(sto, "");
          // Asynchrounous open
-         TFile *f = 0;
          TFileOpenHandle *fh = TFile::AsyncOpen(url, opts, ftitle, compress, netopt);
          // Check the result in steps of 1 millisec
          TFile::EAsyncOpenStatus aos = TFile::kAOSNotAsync;
