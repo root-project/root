@@ -9,7 +9,7 @@ printhelp()
    echo "  Purpose: show info about the datasets on a given server"
    echo "   "
    echo "  Syntax:"
-   echo "           pq2-info-server [-h|--help] [-v] [-k] (-s servers|--server=servers)"
+   echo "           pq2-info-server [-h|--help] [-v] [-k] [(-s|--servers=)] servers"
    echo "                           [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
    echo "   "
    echo "   -h | --help   Print this help"
@@ -71,6 +71,15 @@ if test ! "x$short_opts" = "x" ; then
    esac
    done
 fi
+
+# Fill empty fields with any non-prefixed argument
+eval next_arg=\$$OPTIND
+if test ! "x$next_arg" = "x" ; then
+   if test "x$SERVER" = "x" ; then
+      SERVER="-s $next_arg"
+   fi
+fi
+
 if test "x$SERVER" = "x"; then
    echo "Some arguments are missing (s:$SERVER)!"
    printhelp

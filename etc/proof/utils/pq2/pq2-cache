@@ -9,8 +9,7 @@ printhelp()
    echo "  Purpose: display or clear the local cache content"
    echo "   "
    echo "  Syntax:"
-   echo "           pq2-cache -a show|clear [-h|--help] [-v] [-k]"
-   echo "                     [-d datasets|--dataset=datasets]"
+   echo "           pq2-cache -a show|clear [-h|--help] [-v] [-k] [(-d|--dataset=)] datasets"
    echo "                     [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
    echo "   "
    echo "   show          Display cache content"
@@ -75,6 +74,14 @@ if test ! "x$short_opts" = "x" ; then
       \?) printhelp; exit 1 ;;
       esac
    done
+fi
+
+# Fill empty fields with any non-prefixed argument
+eval next_arg=\$$OPTIND
+if test ! "x$next_arg" = "x" ; then
+   if test "x$DSNARG" = "x" ; then
+      DSNARG="-d $next_arg"
+   fi
 fi
 
 # Run

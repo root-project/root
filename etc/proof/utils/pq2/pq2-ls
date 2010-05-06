@@ -9,9 +9,8 @@ printhelp()
    echo "  Purpose: list the available datasets"
    echo "   "
    echo "  Syntax:"
-   echo "           pq2-ls [-h|--help] [-v] [-k] [--forcescan] [--noupdate] [--refresh]"
-   echo "                  [-d datasets|--dataset=datasets] [-t tmpdir|--tmp=tmpdir]"
-   echo "                  [-u serviceurl|--url=serviceurl]"
+   echo "           pq2-ls [-h|--help] [-v] [-k] [--forcescan] [--noupdate] [--refresh] [(-d|--dataset=)] datasets"
+   echo "                  [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
    echo "   "
    echo "   -h | --help   Print this help"
    echo "   -v            Verbose mode"
@@ -83,6 +82,15 @@ if test ! "x$short_opts" = "x" ; then
    esac
    done
 fi
+
+# Fill empty fields with any non-prefixed argument
+eval next_arg=\$$OPTIND
+if test ! "x$next_arg" = "x" ; then
+   if test "x$DSNARG" = "x" ; then
+      DSNARG="-d $next_arg"
+   fi
+fi
+
 if test ! "x$OPTIONS" = "x" ; then
    OPTIONS="-o $OPTIONS"
 fi

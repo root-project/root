@@ -75,7 +75,7 @@ if test ! "x$short_opts" = "x" ; then
    done
 fi
 
-# Fill empty fileds with any non-prefixed argument
+# Fill empty fields with any non-prefixed argument
 eval next_arg=\$$OPTIND
 if test ! "x$next_arg" = "x" ; then
    if test "x$DSNAME" = "x" ; then
