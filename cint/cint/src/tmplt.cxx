@@ -316,7 +316,9 @@ int G__cattemplatearg(G__FastAllocString& tagname,G__Charlist *charlist)
    *   ^ => p */
   while(charlist->next) {
      size_t lenArg = strlen(charlist->string);
+     size_t sofar = p - tagname;
      tagname.Resize(p - tagname + lenArg + 4); // trailing >, maybe space
+     p = tagname + sofar;
      memcpy(p,charlist->string, lenArg + 1);
      p += lenArg;
      charlist=charlist->next;

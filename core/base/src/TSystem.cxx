@@ -2725,14 +2725,16 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // Calculate the -I lines
    TString includes = GetIncludePath();
+   includes.Prepend(' ');
+
    {
       // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
-      TRegexp rel_inc("-I[^\"/\\$%-][^:-]+");
+      TRegexp rel_inc(" -I[^\"/\\$%-][^:-]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
       while( len != 0 ) {
          TString sub = includes(pos,len);
-         sub.Remove(0,2); // Remove -I
+         sub.Remove(0,3); // Remove ' -I'
          AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I");
          includes.Replace(pos,len,sub);
@@ -2741,12 +2743,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    {
        // I need to replace the -I"somerelativepath" by -I"$cwd/ (or -I"$cwd\ on NT)
-      TRegexp rel_inc("-I\"[^/\\$%-][^:-]+");
+      TRegexp rel_inc(" -I\"[^/\\$%-][^:-]+");
       Int_t len,pos;
       pos = rel_inc.Index(includes,&len);
       while( len != 0 ) {
          TString sub = includes(pos,len);
-         sub.Remove(0,3); // Remove -I
+         sub.Remove(0,4); // Remove ' -I"'
          AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I\"");
          includes.Replace(pos,len,sub);

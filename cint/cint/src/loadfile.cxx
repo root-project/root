@@ -1742,6 +1742,27 @@ int G__loadfile(const char *filenamein)
        **********************************************/
       if(G__USERHEADER==G__kindofheader) {
 #ifdef G__VMS
+         sprintf(G__ifile.name,"./%s",filename());
+#else
+         sprintf(G__ifile.name,"./%s%s",filename(),addpost[i2]);
+#endif
+#ifndef G__WIN32
+        G__ifile.fp = fopen(G__ifile.name,"r");
+#else
+        G__ifile.fp = fopen(G__ifile.name,"rb");
+#endif
+      }
+      else {
+        G__ifile.fp=NULL;
+        G__kindofheader = G__USERHEADER;
+      }
+      if(G__ifile.fp) break;
+
+      /**********************************************
+       * try filename
+       **********************************************/
+      if(G__USERHEADER==G__kindofheader) {
+#ifdef G__VMS
          sprintf(G__ifile.name,"%s",filename());
 #else
          sprintf(G__ifile.name,"%s%s",filename(),addpost[i2]);

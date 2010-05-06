@@ -728,7 +728,7 @@ void G__make_ifunctable(char* funcheader)
    G__rename_templatefunc(funcname);
    
    G__hash(funcname, G__p_ifunc->hash[func_now], iin2);
-   G__paramfunc* param = ifunc->param[func_now][0];
+   G__paramfunc* param = G__p_ifunc->param[func_now][0];
    param->name = 0;
    /*************************************************************
     * check if the function is operator()(), if so, regenerate
