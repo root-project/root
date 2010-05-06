@@ -20,6 +20,7 @@
 #include "common.h"
 #include "dllrev.h"
 #include <vector>
+#include <string>
 
 extern "C" {
   void G__set_alloclockfunc(void(*foo)());
@@ -225,92 +226,122 @@ void G__Set_RTLD_LAZY() {
 #endif
 }
 
+extern int (*G__p_class_autoloading)(char*, char*);
+int (*G__store_p_class_autoloading)(char*, char*);
+
+typedef std::vector<std::pair<std::string,std::string> > G__autoload_requests_type;
+static G__autoload_requests_type *G__autoload_requests;
+
+int G__dlopen_class_autoloading_intercept(char* classname, char *libname) 
+{
+   G__autoload_requests->push_back( make_pair( std::string(classname), std::string(libname) ) );
+   return 0;
+}
+
 /***********************************************************************
 * G__dlopen()
 *
 ***********************************************************************/
 G__SHLHANDLE G__dlopen(const char *path)
 {
-  G__SHLHANDLE handle;
+   G__SHLHANDLE handle;
 #ifdef G__SHAREDLIB
-
-
-/****************************************************
-* OSF or SunOS
-****************************************************/
+   
+   // Intercept and delay any potential autoloading.
+   G__autoload_requests_type requests;
+   if (G__store_p_class_autoloading == 0) {
+      G__store_p_class_autoloading = G__p_class_autoloading;
+      G__set_class_autoloading_callback( G__dlopen_class_autoloading_intercept );
+      G__autoload_requests = &requests;
+   }
+   
+   /****************************************************
+    * OSF or SunOS
+    ****************************************************/
 #if defined(G__OSFDLL)
-
-  handle = dlopen(path,G__RTLD_flag);
-  if(!handle) G__fprinterr(G__serr,"dlopen error: %s\n",dlerror());
-
-/****************************************************
-* HP-UX
-****************************************************/
+   
+   handle = dlopen(path,G__RTLD_flag);
+   if(!handle) G__fprinterr(G__serr,"dlopen error: %s\n",dlerror());
+   
+   /****************************************************
+    * HP-UX
+    ****************************************************/
 # elif defined(__hpux) || defined(_HIUX_SOURCE)
 #  if defined(G__HPUXCPPDLL) && !defined(__STDCPP__)
-  handle = cxxshl_load(path,G__RTLD_flag,0L);
+   handle = cxxshl_load(path,G__RTLD_flag,0L);
 #  else
-  handle = shl_load(path,G__RTLD_flag,0L);
+   handle = shl_load(path,G__RTLD_flag,0L);
 #  endif
 #  if defined(__GNUC__)
-  {
-     /* find all _GLOBAL__FI_* functions to initialize global static objects */
-     struct shl_symbol *symbols;
-     int nsym;
-     nsym = shl_getsymbols(handle, TYPE_PROCEDURE, EXPORT_SYMBOLS|NO_VALUES,
-                           (void *(*)())malloc, &symbols);
-     if (nsym != -1) {
-        void (*ctor)();
-        int i;
-        for (i = 0; i < nsym; i++) {
-           if (symbols[i].type == TYPE_PROCEDURE) {
-              if (!strncmp(symbols[i].name, "_GLOBAL__FI_", 12)) {
-                 ctor = (void (*)())G__shl_findsym(&handle, symbols[i].name,
-TYPE_PROCEDURE);
-                 if (ctor) (*ctor)();
-              }
-           }
-        }
-        free(symbols);
-     }
-  }
+   {
+      /* find all _GLOBAL__FI_* functions to initialize global static objects */
+      struct shl_symbol *symbols;
+      int nsym;
+      nsym = shl_getsymbols(handle, TYPE_PROCEDURE, EXPORT_SYMBOLS|NO_VALUES,
+                            (void *(*)())malloc, &symbols);
+      if (nsym != -1) {
+         void (*ctor)();
+         int i;
+         for (i = 0; i < nsym; i++) {
+            if (symbols[i].type == TYPE_PROCEDURE) {
+               if (!strncmp(symbols[i].name, "_GLOBAL__FI_", 12)) {
+                  ctor = (void (*)())G__shl_findsym(&handle, symbols[i].name,
+                                                    TYPE_PROCEDURE);
+                  if (ctor) (*ctor)();
+               }
+            }
+         }
+         free(symbols);
+      }
+   }
 #  endif
-/****************************************************
-* Win32
-****************************************************/
+   /****************************************************
+    * Win32
+    ****************************************************/
 # elif defined(G__WIN32)
-  handle = LoadLibrary(path);
-  if (!handle) {
-     void* msg;
-     DWORD lasterr = ::GetLastError();
-     ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-        FORMAT_MESSAGE_FROM_SYSTEM,
-        NULL,
-        lasterr,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR) &msg,
-        0, NULL );
-     G__fprinterr(G__serr,"%s: %s", path, (char*)msg);
-     ::LocalFree(msg);
-  }
-/****************************************************
-* VMS
-****************************************************/
+   handle = LoadLibrary(path);
+   if (!handle) {
+      void* msg;
+      DWORD lasterr = ::GetLastError();
+      ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                      FORMAT_MESSAGE_FROM_SYSTEM,
+                      NULL,
+                      lasterr,
+                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      (LPTSTR) &msg,
+                      0, NULL );
+      G__fprinterr(G__serr,"%s: %s", path, (char*)msg);
+      ::LocalFree(msg);
+   }
+   /****************************************************
+    * VMS
+    ****************************************************/
 # elif defined(G__VMS)
-  handle = path;
-/****************************************************
-* Non of above
-****************************************************/
+   handle = path;
+   /****************************************************
+    * Non of above
+    ****************************************************/
 # else /* non of above */
-  handle = (G__SHLHANDLE)NULL;
+   handle = (G__SHLHANDLE)NULL;
 # endif
-
-
+   
+   // Replay the delayed autoloading.
+   if ( &requests == G__autoload_requests) {
+      G__set_class_autoloading_callback( G__store_p_class_autoloading );
+      G__store_p_class_autoloading = 0;
+      G__autoload_requests = 0;
+      G__autoload_requests_type::const_iterator end( requests.end() );
+      for(G__autoload_requests_type::const_iterator iter = requests.begin(); iter != end; ++iter )
+      {
+         G__p_class_autoloading( (char*)iter->first.c_str(), (char*)iter->second.c_str() );
+      }
+   }
+      
 #else /* G__SHAREDLIB */
-  handle = (G__SHLHANDLE)NULL;
+   handle = (G__SHLHANDLE)NULL;
 #endif /* G__SHAREDLIB */
 
-  return(handle);
+   return(handle);
 }
 
 /***********************************************************************
