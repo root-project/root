@@ -34,11 +34,13 @@ using namespace std;
 #pragma link C++ class vector<int>;
 #endif
 #pragma link C++ class vector<long>;
+#pragma link C++ class vector<long long>;
 
 #pragma link C++ class vector<unsigned char>;
 #pragma link C++ class vector<unsigned short>;
 #pragma link C++ class vector<unsigned int>;
 #pragma link C++ class vector<unsigned long>;
+#pragma link C++ class vector<unsigned long long>;
 
 #pragma link C++ class vector<float>;
 #pragma link C++ class vector<double>;

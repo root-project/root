@@ -693,6 +693,7 @@ void G__smart_unload(int ifn)
   }
 
   /* disable file entry */
+  ++G__srcfile_serial;
   for(nfile=dictpos->nfile;nfile<hasonlyfunc->nfile;nfile++) {
     G__srcfile[nfile].hash = 0;
     G__srcfile[nfile].filename[0] = 0;

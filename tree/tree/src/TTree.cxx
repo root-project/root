@@ -6381,6 +6381,9 @@ void TTree::SetDirectory(TDirectory* dir)
    if (fDirectory) {
       file = fDirectory->GetFile();
    }
+   if (fBranchRef) {
+      fBranchRef->SetFile(file);
+   }
    TBranch* b = 0;
    TIter next(GetListOfBranches());
    while((b = (TBranch*) next())) {

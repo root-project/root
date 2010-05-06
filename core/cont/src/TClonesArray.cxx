@@ -570,9 +570,14 @@ void TClonesArray::SetClass(const char *classname, Int_t s)
 {
    //see TClonesArray::SetClass(const TClass*)
 
-   SetClass(TClass::GetClass(classname),s);
+   TClass *cl = TClass::GetClass(classname);
+   if (cl) {
+      SetClass(cl,s);
+   } else {
+      MakeZombie();
+      Error("SetClass","Unknown class: %s",classname);    
+   }
 }
-
 
 //______________________________________________________________________________
 void TClonesArray::SetOwner(Bool_t /* enable */)
