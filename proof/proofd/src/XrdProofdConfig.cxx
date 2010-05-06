@@ -151,9 +151,11 @@ int XrdProofdConfig::ParseFile(bool rcf)
       } else if (var[0]) {
          // Check if we are interested in this non-xpd directive
          XrdProofdDirective *d = fDirectives.Find(var);
-         if (d)
+         if (d) {
             // Process it
-            d->DoDirective(0, &cfg, rcf);
+            val = cfg.GetWord();
+            d->DoDirective(val, &cfg, rcf);
+         }
       }
    }
 

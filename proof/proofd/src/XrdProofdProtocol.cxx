@@ -194,6 +194,8 @@ int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Con
       // The default is ostensibly 1093 but can be overidden; which we allow.
 
       XrdProofdProtCfg pcfg(pi->ConfigFN, pi->eDest);
+      // Init some relevant quantities for tracing
+      XrdProofdTrace = new XrdOucTrace(pi->eDest);
       pcfg.Config(0);
 
       // Default XPD_DEF_PORT (1093)
@@ -398,6 +400,7 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
    // Copy out the special info we want to use at top level
    fgLogger = pi->eDest->logger();
    fgEDest.logger(fgLogger);
+   if (XrdProofdTrace) delete XrdProofdTrace; // It could have been initialized in XrdgetProtocolPort
    XrdProofdTrace = new XrdOucTrace(&fgEDest);
    fgBPool        = pi->BPool;
    fgReadWait     = pi->readWait;
