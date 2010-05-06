@@ -63,6 +63,9 @@ extern "C" {
    extern int G__get_security_error();
    extern int G__genericerror(const char* msg);
    void *_ReturnAddress(void);
+#if _MSC_VER < 1400
+   void WINAPI RtlCaptureContext(PCONTEXT);
+#endif
 }
 
 //////////////////// Windows TFdSet ////////////////////////////////////////////////
@@ -1424,59 +1427,46 @@ void TWinNTSystem::StackTrace()
       HANDLE thread = ::OpenThread(THREAD_GET_CONTEXT|THREAD_SUSPEND_RESUME|THREAD_QUERY_INFORMATION,
          FALSE, threadentry.th32ThreadID);
       CONTEXT context;
-      STACKFRAME64 frame;
-      ::ZeroMemory(&frame, sizeof(frame));
-
-      frame.AddrPC.Mode      = AddrModeFlat;
-      frame.AddrFrame.Mode   = AddrModeFlat;
+      memset(&context, 0, sizeof(CONTEXT));
 
       if (threadentry.th32ThreadID != currentThreadID) {
          ::SuspendThread(thread);
-         context.ContextFlags = CONTEXT_CONTROL;
+         context.ContextFlags = CONTEXT_ALL;
          ::GetThreadContext(thread, &context);
          ::ResumeThread(thread);
       } else {
          if (fgXcptContext) {
             context = *fgXcptContext;
          } else {
-            unsigned int tempEIP = 0, tempESP = 0, tempEBP = 0;
-            // fill the context data by using special evil MS code :-(
-            __asm {
-                  call get_eip_label
-
-                  get_eip_label:
-
-                  pop eax
-
-                  // probably only works for _M_IX86...
-                  mov   tempEIP, eax
-                  mov   tempEBP, ebp
-                  mov   tempESP, esp
-            }
-            frame.AddrPC.Offset    = (DWORD64)GetProgramCounter();
-            frame.AddrFrame.Offset = tempEBP;
+            context.ContextFlags = CONTEXT_ALL;
+            RtlCaptureContext(&context);
          }
       }
 
-      if (threadentry.th32ThreadID != currentThreadID || fgXcptContext) {
+      STACKFRAME64 frame;
+      ::ZeroMemory(&frame, sizeof(frame));
+
+      frame.AddrPC.Mode      = AddrModeFlat;
+      frame.AddrFrame.Mode   = AddrModeFlat;
+      frame.AddrStack.Mode   = AddrModeFlat;
 #if defined(_M_IX86)
-         frame.AddrPC.Offset    = context.Eip;
-         frame.AddrFrame.Offset = context.Ebp;
-         frame.AddrStack.Offset = context.Esp;
+      frame.AddrPC.Offset    = context.Eip;
+      frame.AddrFrame.Offset = context.Ebp;
+      frame.AddrStack.Offset = context.Esp;
 #elif defined(_M_X64)
-         frame.AddrPC.Offset    = context.Rip;
-         frame.AddrFrame.Offset = context.Rbp;
-         frame.AddrStack.Offset = context.Rsp;
+      frame.AddrPC.Offset    = context.Rip;
+      frame.AddrFrame.Offset = context.Rsp;
+      frame.AddrStack.Offset = context.Rsp;
 #elif defined(_M_IA64)
-         frame.AddrPC.Offset    = context.StIIP;
-         frame.AddrFrame.Offset    = context.RsBSP;
-         frame.AddrStack.Offset = context.IntSp;
-         frame.AddrBStore.Offset= context.RsBSP;
+      frame.AddrPC.Offset    = context.StIIP;
+      frame.AddrFrame.Offset = context.IntSp;
+      frame.AddrStack.Offset = context.IntSp;
+      frame.AddrBStore.Offset= context.RsBSP;
 #else
-         std::cerr << "Stack traces not supported on your architecture yet." << std::endl;
-         return;
+      std::cerr << "Stack traces not supported on your architecture yet." << std::endl;
+      return;
 #endif
-      }
+
       Bool_t bFirst = kTRUE;
       while (_StackWalk64(machineType, (HANDLE)::GetCurrentProcess(), thread, (LPSTACKFRAME64)&frame,
          (LPVOID)&context, (PREAD_PROCESS_MEMORY_ROUTINE)NULL, (PFUNCTION_TABLE_ACCESS_ROUTINE)_SymFunctionTableAccess64,
