@@ -63,9 +63,6 @@ extern "C" {
    extern int G__get_security_error();
    extern int G__genericerror(const char* msg);
    void *_ReturnAddress(void);
-#if _MSC_VER < 1400
-   void WINAPI RtlCaptureContext(PCONTEXT);
-#endif
 }
 
 //////////////////// Windows TFdSet ////////////////////////////////////////////////
@@ -1438,8 +1435,13 @@ void TWinNTSystem::StackTrace()
          if (fgXcptContext) {
             context = *fgXcptContext;
          } else {
-            context.ContextFlags = CONTEXT_ALL;
-            RtlCaptureContext(&context);
+            typedef void (WINAPI *RTLCCTXT)(PCONTEXT);
+            RTLCCTXT p2RtlCCtxt = (RTLCCTXT) ::GetProcAddress(
+               GetModuleHandle("kernel32.dll"), "RtlCaptureContext");
+            if (p2RtlCCtxt) {
+               context.ContextFlags = CONTEXT_ALL;
+               p2RtlCCtxt(&context);
+            }
          }
       }
 
