@@ -2160,21 +2160,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    // we are now ready to generate the classes
    // loop on all TStreamerInfo
-   TList *list = 0;
-   if (fSeekInfo) {
-      TKey *key = new TKey(this);
-      char *buffer = new char[fNbytesInfo+1];
-      char *buf    = buffer;
-      Seek(fSeekInfo);
-      ReadBuffer(buf,fNbytesInfo);
-      key->ReadKeyBuffer(buf);
-      list = (TList*)key->ReadObj();
-      delete [] buffer;
-      delete key;
-   } else {
-      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
-   }
-   if (list == 0) {
+   TList *filelist = (TList*)GetStreamerInfoCache()->Clone();
+   if (filelist == 0) {
       Error("MakeProject","file %s has no StreamerInfo", GetName());
       delete [] path;
       return;
@@ -2189,11 +2176,13 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    fclose( sfp );
 
    // loop on all TStreamerInfo classes to check for empty classes
-   // and enums listed either as data member or template parameters.
+   // and enums listed either as data member or template parameters,
+   // and filter out 'duplicates' classes/streamerInfos.
    TStreamerInfo *info;
-   TIter next(list);
+   TIter flnext(filelist);
    TList extrainfos;
-   while ((info = (TStreamerInfo*)next())) {
+   TList *list = new TList();
+   while ((info = (TStreamerInfo*)flnext())) {
       if (info->IsA() != TStreamerInfo::Class()) {
          continue;
       }
@@ -2201,21 +2190,34 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (cl) {
          if (cl->GetClassInfo()) continue; // skip known classes
       }
-      TMakeProject::GenerateMissingStreamerInfos(&extrainfos, info->GetName() );
+      TMakeProject::GenerateMissingStreamerInfos( &extrainfos, info->GetName() );
       TIter enext( info->GetElements() );
       TStreamerElement *el;
       while( (el=(TStreamerElement*)enext()) ) {
          TMakeProject::GenerateMissingStreamerInfos(&extrainfos, el);
       }
+      TVirtualStreamerInfo *alternate = (TVirtualStreamerInfo*)list->FindObject(info->GetName());
+      if (alternate) {
+         fprintf(stderr,"%p %s %p\n",alternate,alternate->GetName(),alternate->GetClass());
+         if ((info->GetClass() && info->GetClassVersion() == info->GetClass()->GetClassVersion())
+             || (info->GetClassVersion() > alternate->GetClassVersion()) ) {
+            list->AddAfter(alternate, info);
+            list->Remove(alternate);
+         } // otherwise ingnore this info as not being the official one.
+      } else {
+         list->Add(info);
+      }
    }
-   // Now transfer the new StreamerInfo onto the main list.
+   // Now transfer the new StreamerInfo onto the main list and
+   // to the owning list.
    TIter nextextra(&extrainfos);
    while ((info = (TStreamerInfo*)nextextra())) {
       list->Add(info);
+      filelist->Add(info);
    }
 
    // loop on all TStreamerInfo classes
-   next.Reset();
+   TIter next(list);
    Int_t ngener = 0;
    while ((info = (TStreamerInfo*)next())) {
       if (info->IsA() != TStreamerInfo::Class()) {
@@ -2385,7 +2387,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       }
    }
 
-   list->Delete();
+   extrainfos.Clear("nodelete");
+   delete filelist;
    delete list;
    delete [] path;
 }

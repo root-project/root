@@ -1803,9 +1803,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 #ifdef ROOTLIBDIR
          TString rootlibdir = ROOTLIBDIR;
 #else
-         const char *libdirname = ConcatFileName(gRootDir,"lib");
-         TString rootlibdir = libdirname;
-         delete [] libdirname;
+         TString rootlibdir = "lib";
+         PrependPathName(gRootDir, rootlibdir);
 #endif
          system = R__MatchFilename(rootlibdir,dirname);
 
@@ -1813,9 +1812,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 #ifdef ROOTBINDIR
             TString rootbindir = ROOTBINDIR;
 #else
-            const char *libbinname = ConcatFileName(gRootDir,"bin");
-            TString rootbindir = libbinname;
-            delete [] libbinname;
+            TString rootbindir = "bin";
+            PrependPathName(gRootDir, rootbindir);
 #endif
             system = R__MatchFilename(rootbindir,dirname);
          }
@@ -2378,7 +2376,21 @@ static void R__FixLink(TString &cmd)
 #endif
 
 #ifndef WIN32
-static void R__WriteDependencyFile(const TString & /* build_loc */, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
+static void R__AddPath(TString &target, const TString &path) {
+   target += path;
+}
+#else
+static void R__AddPath(TString &target, const TString &path) {
+   if (path.Length() > 2 && path[1]==':') {
+      target += TString::Format("/cygdrive/%c",path[0]) + path(2,path.Length()-2);
+   } else {
+      target += path;
+   }
+}
+#endif
+
+#ifndef WIN32
+static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath) {
 #else
 static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
@@ -2403,6 +2415,21 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    TString builddep = "rmkdepend \"-f";
    builddep += depfilename;
    builddep += "\" -o_" + extension + "." + gSystem->GetSoExt() + " ";
+   if (build_loc.BeginsWith(gSystem->WorkingDirectory())) {
+      Int_t len = strlen(gSystem->WorkingDirectory());
+      if ( build_loc.Length() > (len+1) ) {
+         builddep += " \"-p";
+         if (build_loc[len] == '/') {
+            R__AddPath(builddep, build_loc.Data() + len + 1 );
+         } else {
+            // Case of dir\\name
+            R__AddPath(builddep, build_loc.Data() + len + 2 );
+         }         
+         builddep += "/\" ";
+      }
+   } else {
+      builddep += " \"-p" + build_loc + "/\" ";
+   }
    builddep += " -Y -- ";
 #ifndef ROOTINCDIR
    TString rootsys = gSystem->Getenv("ROOTSYS");
@@ -2413,32 +2440,43 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    builddep += includes;
    builddep += defines;
    builddep += " -- \"";
-   builddep += filename;
+   builddep += gSystem->BaseName(filename);
    builddep += "\" > ";
    builddep += stderrfile;
    builddep += " 2>&1 ";
 
    TString adddictdep = "echo ";
-   adddictdep += library;
+   if (library.BeginsWith(gSystem->WorkingDirectory())) {
+      Int_t len = strlen(gSystem->WorkingDirectory());
+      if ( library.Length() > (len+1) ) {
+         if (library[len] == '/') {
+            R__AddPath(adddictdep,library.Data() + len + 1);
+         } else {
+            R__AddPath(adddictdep,library.Data() + len + 2);            
+         }
+      } else {
+         R__AddPath(adddictdep,library);
+      }
+   }
    adddictdep += ": ";
    {
       char *cintdictversion = gSystem->Which(incPath,"cintdictversion.h");
       if (cintdictversion) {
-         adddictdep += cintdictversion;
+         R__AddPath(adddictdep,cintdictversion);
          adddictdep += " ";
          delete [] cintdictversion;
       } else {
-         adddictdep += rootsys+"/include/cintdictversion.h ";
+         R__AddPath(adddictdep,rootsys+"/include/cintdictversion.h ");
       }
    }
    {
       char *rootVersion = gSystem->Which(incPath,"RVersion.h");
       if (rootVersion) {
-         adddictdep += rootVersion;
+         R__AddPath(adddictdep,rootVersion);
          adddictdep += " ";
          delete [] rootVersion;
       } else {
-         adddictdep += rootsys+"/include/RVersion.h ";
+         R__AddPath(adddictdep,rootsys+"/include/RVersion.h ");
       }
    }
    adddictdep += " >> \""+depfilename+"\"";
@@ -2820,7 +2858,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
           (gSystem->GetPathInfo( filename, 0, (Long_t*)0, 0, &file_time ) == 0 &&
           (lib_time < file_time))) {
 
-         // the library does not exist and is older than the script.
+         // the library does not exist or is older than the script.
          recompile = kTRUE;
          modified  = kTRUE;
 

@@ -1281,7 +1281,17 @@ const char *TCint::TypeName(const char *typeDesc)
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
 
-   static char t[1024];
+   static char *t = 0;
+   static unsigned int tlen = 0;
+   
+   R__LOCKGUARD(gCINTMutex); // Because of the static array.
+
+   unsigned int dlen = strlen(typeDesc);
+   if (dlen > tlen) {
+      delete [] t;
+      t = new char[dlen+1];
+      tlen = dlen;
+   }
    char *s, *template_start;
    if (!strstr(typeDesc, "(*)(")) {
       s = (char*)strchr(typeDesc, ' ');

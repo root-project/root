@@ -1048,6 +1048,7 @@ struct G__Definetemplatefunc *G__defined_templatememfunc(const char *name)
       G__def_tagnum = store_def_tagnum;
       G__tagdefining = store_tagdefining;
       if(!result) {
+        G__incsetup_memfunc(tagnum); 
         struct G__ifunc_table_internal *ifunc=G__struct.memfunc[tagnum];
         int ifn;
         int len=strlen(p);

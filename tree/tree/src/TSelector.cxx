@@ -153,10 +153,11 @@ TSelector *TSelector::GetSelector(const char *filename)
       ::Error("TSelector::GetSelector","unable to determine the classname for file %s", filename);
       return 0;
    }
-   localname = basename;
-   Bool_t isCompiled = !fromFile || localname.EndsWith("+");
-   if (localname.Index(".") != kNPOS)
-      localname.Remove(localname.Index("."));
+   TString aclicmode,args,io;
+   localname = gSystem->SplitAclicMode(basename,aclicmode,args,io);
+   Bool_t isCompiled = !fromFile || aclicmode.Length()>0;
+   if (localname.Last('.') != kNPOS)
+      localname.Remove(localname.Last('.'));
 
    // if a file was not specified, try to load the class via the interpreter;
    // this returns 0 (== failure) in the case the class is already in memory

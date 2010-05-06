@@ -460,11 +460,15 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    const char *c = strchr(t,'<');
 
    string stars;
-   const char *starloc = t+strlen(t)-1;
-   if ( (*starloc)=='*' ) {
-      while( (*(starloc-1))=='*' ) { starloc--; }
-      stars = starloc;
-      full.erase(strlen(t)-strlen(starloc),strlen(starloc));
+   const unsigned int tlen( full.size() );
+   if ( tlen > 0 ) {
+      const char *starloc = t + tlen - 1;
+      if ( (*starloc)=='*' ) {
+         while( (*(starloc-1))=='*' ) { starloc--; }
+         stars = starloc;
+         const unsigned int starlen = strlen(starloc);
+         full.erase(tlen-starlen,starlen);
+      }
    }
 
    if (c) {
