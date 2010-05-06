@@ -10,7 +10,7 @@ printhelp()
    echo "  Purpose: verify the content one or more datasets"
    echo "   "
    echo "  Syntax:"
-   echo "           pq2-verify [-h|--help] [-v] [-k] (-d datasetname|--dataset=datasetname) [-o options]"
+   echo "           pq2-verify [-h|--help] [-v] [-k] [(-d|--dataset=)] datasetname"
    echo "                      [-o options] [-r redir|--redir=redir]"
    echo "                      [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
    echo "   "
@@ -97,6 +97,15 @@ if test ! "x$short_opts" = "x" ; then
    esac
    done
 fi
+
+# Fill empty fileds with any non-prefixed argument
+eval next_arg=\$$OPTIND
+if test ! "x$next_arg" = "x" ; then
+   if test "x$DSNAME" = "x" ; then
+      DSNAME="-d $next_arg"
+   fi
+fi
+
 if test "x$DSNAME" = "x"; then
    echo "Some arguments are missing (d:$DSNAME)!"
    printhelp

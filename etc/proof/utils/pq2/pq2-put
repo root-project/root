@@ -9,7 +9,8 @@ printhelp()
    echo "  Purpose: register one or more datasets"
    echo "   "
    echo "  Syntax:"
-   echo "           pq2-put [-h|--help] [-v] [-k] (-d datasetfile|--dataset=datasetfile) [-o options]"
+   echo "           pq2-put [-h|--help] [-v] [-k] [-o options] [(-d|--dataset=)] datasetfile"
+   echo "                   [--overwrite] [--update] [--trust]"
    echo "                   [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
    echo "   "
    echo "   -h | --help   Print this help"
@@ -24,7 +25,8 @@ printhelp()
    echo "   options       Options for registering datasets; a combination of:"
    echo "                    O   overwrite existing dataset"
    echo "                    U   add information to existing dataset, if any or create a new one"
-   echo "                    V   verify information in the dataset (can be very slow)"
+   echo "                    T   Trust the information already present in the dataset"
+   echo "                    V   verify information in the dataset (default; can be very slow)"
    echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
    echo "                 for data servers, it must include the directory."
    echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
@@ -62,7 +64,10 @@ for i in $@ ; do
          dataset=*) DSNAME="-d $oarg" ;;
          help)      printhelp ; exit ;;
          keep)      KEEPOPT="-k" ;;
+         overwrite=*) OPTS="O$OPTS" ;;
          tmp=*)     TDIR="$oarg" ;;
+         trust=*)   OPTS="T$OPTS" ;;
+         update=*)  OPTS="U$OPTS" ;;
          url=*)     SRVURL="-u $oarg" ;;
       esac
    fi
@@ -74,7 +79,7 @@ if test ! "x$short_opts" = "x" ; then
       d) DSNAME="-d $OPTARG" ;;
       h) printhelp ; exit ;;
       k) KEEPOPT="-k" ;;
-      o) OPTS="-o $OPTARG" ;;
+      o) OPTS="$OPTS$OPTARG" ;;
       t) TDIR="$OPTARG" ;;
       u) SRVURL="-u $OPTARG" ;;
       v) DBGOPT="-v" ;;
@@ -82,10 +87,24 @@ if test ! "x$short_opts" = "x" ; then
    esac
    done
 fi
+
+# Fill empty fileds with any non-prefixed argument
+eval next_arg=\$$OPTIND
+if test ! "x$next_arg" = "x" ; then
+   if test "x$DSNAME" = "x" ; then
+      DSNAME="-d $next_arg"
+   fi
+fi
+
 if test "x$DSNAME" = "x"; then
    echo "Some arguments are missing (d:$DSNAME)!"
    printhelp
    exit
+fi
+
+# Check the options
+if test ! "x$OPTS" = "x" ; then
+   OPTS="-o $OPTS"
 fi
 
 # Run
