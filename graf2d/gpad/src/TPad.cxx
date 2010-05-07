@@ -4073,17 +4073,19 @@ void TPad::Print(const char *filenam, Option_t *option)
    //               "ps"  - Postscript file is produced (see special cases below)
    //          "Portrait" - Postscript file is produced (Portrait)
    //         "Landscape" - Postscript file is produced (Landscape)
+   //            "Title:" - The character strin after "Title:" becomes a table
+   //                       of content entry.
    //               "eps" - an Encapsulated Postscript file is produced
    //           "Preview" - an Encapsulated Postscript file with preview is produced.
    //               "pdf" - a PDF file is produced
    //               "svg" - a SVG file is produced
    //               "gif" - a GIF file is produced
-   //               "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
+   //            "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
    //               "xpm" - a XPM file is produced
    //               "png" - a PNG file is produced
    //               "jpg" - a JPEG file is produced.
    //                       NOTE: JPEG's lossy compression will make all sharp edges fuzzy.
-   //               "tiff" - a TIFF file is produced
+   //              "tiff" - a TIFF file is produced
    //               "cxx" - a C++ macro file is produced
    //               "xml" - a XML file
    //              "root" - a ROOT binary file
@@ -4348,11 +4350,12 @@ void TPad::Print(const char *filenam, Option_t *option)
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
 
+   char *l;
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
    char *copen=0, *cclose=0, *copenb=0, *ccloseb=0;
    if (!image) {
-      // The parenthesis mechanism is only valid for PS files.
+      // The parenthesis mechanism is only valid for PS and PDF files.
       copen   = (char*)strstr(psname.Data(),"("); if (copen)   *copen   = 0;
       cclose  = (char*)strstr(psname.Data(),")"); if (cclose)  *cclose  = 0;
       copenb  = (char*)strstr(psname.Data(),"["); if (copenb)  *copenb  = 0;
@@ -4384,7 +4387,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    if (!gVirtualPS || mustOpen) {
       // Plugin Postscript driver
       TPluginHandler *h;
-      if (strstr(opt,"pdf")) {
+      if (strstr(opt,"pdf") || strstr(opt,"Title:")) {
          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "pdf"))) {
             if (h->LoadPlugin() == -1) return;
             h->ExecPlugin(0);
@@ -4404,6 +4407,11 @@ void TPad::Print(const char *filenam, Option_t *option)
 
       // Create a new Postscript, PDF or image file
       gVirtualPS->SetName(psname);
+      l = strstr(opt,"Title:");
+      if (l) {
+         gVirtualPS->SetTitle(&opt[6]);
+         strcpy(l,"pdf");
+      }
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
@@ -4426,6 +4434,11 @@ void TPad::Print(const char *filenam, Option_t *option)
       if (!ccloseb) {
          gVirtualPS->NewPage();
          Paint();
+      }
+      l = strstr(opt,"Title:");
+      if (l) {
+         gVirtualPS->SetTitle(&opt[6]);
+         strcpy(l,"pdf");
       }
       Info("Print", "Current canvas added to %s file %s", opt, psname.Data());
       if (mustClose) {

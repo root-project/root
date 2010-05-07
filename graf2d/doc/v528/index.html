@@ -25,6 +25,32 @@
      because most of the time kerning is not needed and text rendered using
      the kerning mechanism takes more space in the PS/PDF files.
 <li> Very long text strings made wrong PS files.
+<li> PDF also allows to define table of contents. Now, this facility can be used
+     in ROOT. The following example shows how to proceed:
+     <pre>
+     {
+        TCanvas* canvas = new TCanvas("canvas");
+        TH1F* histo = new TH1F("histo","test 1",10,0.,10.);
+        histo->SetFillColor(2);
+        histo->Fill(2.);
+        histo->Draw();
+        canvas->Print("plots.pdf(","Title:One bin filled");
+        histo->Fill(4.);
+        histo->Draw();
+        canvas->Print("plots.pdf","Title:Two bins filled");
+        histo->Fill(6.);
+        histo->Draw();
+        canvas->Print("plots.pdf","Title:Three bins filled");
+        histo->Fill(8.);
+        histo->Draw();
+        canvas->Print("plots.pdf","Title:Four bins filled");
+        histo->Fill(8.);
+        histo->Draw();
+        canvas->Print("plots.pdf)","Title:The fourth bin content is 2");
+     }
+     </pre>
+     Each character string following the keyword "Title:" makes a new entry in
+     the table of contents.
 </ul>
 
 <h4>SVG</h4>
