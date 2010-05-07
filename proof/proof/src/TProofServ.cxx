@@ -3777,8 +3777,11 @@ void TProofServ::ProcessNext(TString *slb)
       first    = pq->GetFirst();
       filename = pq->GetSelecImp()->GetName();
       Ssiz_t id = opt.Last('#');
-      if (id != kNPOS && id < opt.Length() - 1)
+      if (id != kNPOS && id < opt.Length() - 1) {
          filename += opt(id + 1, opt.Length());
+         // Remove it from 'opt' so user found on the workers what they specified
+         opt.Remove(id);
+      }
       // Attach to data set and entry- (or event-) list (if any)
       TObject *o = 0;
       if ((o = pq->GetInputObject("TDSet"))) {
