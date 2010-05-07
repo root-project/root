@@ -524,6 +524,9 @@ void TGraph2D::DirectoryAutoAdd(TDirectory *dir)
    Bool_t addStatus = TH1::AddDirectoryStatus();
    if (addStatus) {
       SetDirectory(dir);
+      if (dir) {
+         ResetBit(kCanDelete);
+      }      
    }
 }
 
@@ -1488,7 +1491,6 @@ void TGraph2D::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       b.ReadClassBuffer(TGraph2D::Class(), this, R__v, R__s, R__c);
 
-      ResetBit(kCanDelete);
       ResetBit(kMustCleanup);
    } else {
       b.WriteClassBuffer(TGraph2D::Class(),this);

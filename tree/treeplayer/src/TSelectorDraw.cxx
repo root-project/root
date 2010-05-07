@@ -428,6 +428,7 @@ void TSelectorDraw::Begin(TTree *tree)
                      // Let's set it aside for now ...
                      Error("Begin", "Input and output lists are the same!\n");
                      SetStatus(-1);
+                     delete [] varexp;
                      return;
                   }
                   evlist->Reset();
@@ -1291,8 +1292,8 @@ void TSelectorDraw::TakeAction()
       pm->SetFillStyle(fTree->GetFillStyle());
 
       if (!fDraw && !strstr(fOption.Data(),"goff")) {
-         if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
-         else                                             pm->Draw(fOption.Data());
+         if (fOption.Length() == 0 || strcasecmp(fOption.Data(),"same")==0)  pm->Draw("p");
+         else                                                                pm->Draw(fOption.Data());
       }
       if (!h2->TestBit(kCanDelete)) {
          for (i=0;i<fNfill;i++) h2->Fill(fVal[1][i],fVal[0][i],fW[i]);
@@ -1509,8 +1510,8 @@ void TSelectorDraw::TakeEstimate()
       pm->SetFillColor(fTree->GetFillColor());
       pm->SetFillStyle(fTree->GetFillStyle());
       if (!fDraw && !strstr(fOption.Data(),"goff")) {
-         if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
-         else                                             pm->Draw(fOption.Data());
+         if (fOption.Length() == 0 || strcasecmp(fOption.Data(),"same")==0)  pm->Draw("p");
+         else                                                                pm->Draw(fOption.Data());
       }
       if (!h2->TestBit(kCanDelete)) {
          for (i=0;i<fNfill;i++) h2->Fill(fVal[1][i],fVal[0][i],fW[i]);

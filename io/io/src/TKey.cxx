@@ -1220,6 +1220,23 @@ void TKey::Streamer(TBuffer &b)
       fClassName.Streamer(b);
       fName.Streamer(b);
       fTitle.Streamer(b);
+      if (fKeylen < 0) {
+         Error("Streamer","The value of fKeylen is incorrect (%d) ; trying to recover by setting it to zero",fKeylen);
+         MakeZombie();
+         fKeylen = 0;
+      }
+      if (fObjlen < 0) {
+         Error("Streamer","The value of fObjlen is incorrect (%d) ; trying to recover by setting it to zero",fObjlen);
+         MakeZombie();
+         fObjlen = 0;
+      }
+      if (fNbytes < 0) {
+         Error("Streamer","The value of fNbytes is incorrect (%d) ; trying to recover by setting it to zero",fNbytes);
+         MakeZombie();
+         fNbytes = 0;
+      }
+      
+         
    } else {
       b << fNbytes;
       version = (Version_t)fVersion;

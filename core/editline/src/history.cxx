@@ -596,12 +596,10 @@ history_load(HistoryFcns_t* h, const char* fname) {
    }
 
    std::string line;
-   std::getline(in, line);
    int i = 0;
    for (; in && std::getline(in, line); i++) {
       HENTER(h, &ev, line.c_str());
    }
-
    return i;
 } // history_load
 

@@ -813,7 +813,7 @@ void TStreamerInfo::BuildCheck()
 void TStreamerInfo::BuildEmulated(TFile *file)
 {
    // Create an Emulation TStreamerInfo object.
-   char duName[100];
+   TString duName;
    R__ASSERT(file);
    Int_t fv = file->GetVersion()%100000;
    R__ASSERT(fv < 30000);
@@ -835,8 +835,8 @@ void TStreamerInfo::BuildEmulated(TFile *file)
       if (ty == kLong + kOffsetL)                element->SetType(kInt + kOffsetL);
       if (ty == kULong + kOffsetL)                element->SetType(kUInt + kOffsetL);
       if (ty <= kULong)                         continue;
-      strcpy(duName,element->GetName());
-      strcat(duName,"QWERTY");
+      duName = element->GetName();
+      duName.Append("QWERTY");
       TStreamerBasicType *bt = new TStreamerBasicType(duName, "", 0, kInt,"Int_t");
       {for (int j=ndata-1;j>=i;j--) {elements->AddAtAndExpand(elements->At(j),j+1);}}
       elements->AddAt(bt,i);

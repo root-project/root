@@ -6652,10 +6652,20 @@ void TTree::Show(Long64_t entry, Int_t lenmax)
    // if a leaf is an array, a maximum of lenmax elements is printed.
    //
    if (entry != -1) {
-      Int_t ret = GetEntry(entry);
-      if (ret == -1 || ret == 0) {
-         Error("Show()", "Cannot read entry %lld (%s)",
-               entry, ret == -1 ? "I/O error" : "entry does not exist");
+      Int_t ret = LoadTree(entry);
+      if (ret == -2) {
+         Error("Show()", "Cannot read entry %lld (entry does not exist)", entry);
+         return;
+      } else if (ret == -1) {
+         Error("Show()", "Cannot read entry %lld (I/O error)", entry);
+         return;
+      }
+      ret = GetEntry(entry);
+      if (ret == -1) {
+         Error("Show()", "Cannot read entry %lld (I/O error)", entry);
+         return;
+      } else if (ret == 0) {
+         Error("Show()", "Cannot read entry %lld (no data read)", entry);
          return;
       }
    }
