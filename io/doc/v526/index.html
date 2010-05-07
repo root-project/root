@@ -41,10 +41,6 @@ getter:
 <ul>
    <li>New TFile plugin for the Hadoop Distributed File System (protocol hdfs:)</li>
    <li>Unregister stack objects from their TDirectory when the TList tries to delete them.</li>
-   <li>TH1::Streamer and TGraph2D::Streamer no longer reset the kCanDelete bit directly so that the user can give
-ownership of the object to the canvas they are stored with.  However, if they are saved on their own, the mechanism
-that associates them to the current directory (DirectoryAutoAdd) will now reset the bit to avoid any possible
-ownsership confusion.</li>
    <li>When streaming a base class without StreamerNVirtual() use an external streamer if it was set.</li>
    <li>Many improvement to the I/O run-time performance.</li>
    <li>DCache:

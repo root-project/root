@@ -120,6 +120,10 @@ To make a container of pointers become owner of its content do something like:
 </pre>
 For MakeProject, use file->GetStreamerInfoCache() instead of the TClass GetStreamerInfo.
 </li>
-<ul>
+<li>TH1::Streamer and TGraph2D::Streamer no longer reset the kCanDelete bit directly so that the user can give
+ownership of the object to the canvas they are stored with.  However, if they are saved on their own, the mechanism
+that associates them to the current directory (DirectoryAutoAdd) will now reset the bit to avoid any possible
+ownsership confusion.</li>
+</ul>
 
 
