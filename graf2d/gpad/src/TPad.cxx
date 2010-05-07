@@ -4407,7 +4407,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
       // Create a new Postscript, PDF or image file
       gVirtualPS->SetName(psname);
-      l = strstr(opt,"Title:");
+      l = (char*)strstr(opt,"Title:");
       if (l) {
          gVirtualPS->SetTitle(&opt[6]);
          strcpy(l,"pdf");
@@ -4435,7 +4435,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gVirtualPS->NewPage();
          Paint();
       }
-      l = strstr(opt,"Title:");
+      l = (char*)strstr(opt,"Title:");
       if (l) {
          gVirtualPS->SetTitle(&opt[6]);
          strcpy(l,"pdf");
