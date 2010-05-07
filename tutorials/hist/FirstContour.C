@@ -29,8 +29,12 @@ void FirstContour()
    
    TObjArray *contours = 
       (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours");
+   if (!contours) return;
    TList *lcontour1 = (TList*)contours->At(0);
+   if (!lcontour1) return;
    TGraph *gc1 = (TGraph*)lcontour1->First();
+   if (!gc1) return;
+   if (gc1->GetN() < 10) return;
    gc1->SetMarkerStyle(21);
    gc1->Draw("alp");
    
