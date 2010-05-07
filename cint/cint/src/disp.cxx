@@ -2403,8 +2403,11 @@ int G__system(char *com)
 const char* G__tmpfilenam() {
    G__FastAllocString dirname(MAX_PATH);
    static char filename[MAX_PATH];
-   if (!::GetTempPath(MAX_PATH, dirname)) return 0;
-   if (!::GetTempFileName(dirname, "cint_", 0, filename)) return 0;
+   if (!::GetTempPath(MAX_PATH, dirname)
+       || !::GetTempFileName(dirname, "cint_", 0, filename)) {
+      G__fprinterr(G__serr,"G__tmpfilenam: failed to create temporary file!\n");
+      return 0;
+   }
    return filename;
 }
 FILE* G__tmpfile() {
