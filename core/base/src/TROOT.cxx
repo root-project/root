@@ -1227,7 +1227,6 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    // In addition the call to the dictionary function (dict()) might also have
    // the same effect (change/delete requestedname).
    TString classname(requestedname);
-   // const char *classname = requestedname;
    
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
    
