@@ -354,8 +354,11 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
 {
    // Graph constructor reading input from filename
    // filename is assumed to contain at least two columns of numbers
-   // the string format is by default "%lg %lg"
-
+   // the string format is by default "%lg %lg".
+   // this is a standard c formatting for scanf. If columns of numbers should be skipped, 
+   // a "%*lg" for each column can be added, e.g. "%lg %*lg %lg" would read x-values from 
+   // the first and y-values from the third column.
+   
    Double_t x,y;
    TString fname = filename;
    gSystem->ExpandPathName(fname);
