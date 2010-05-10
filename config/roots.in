@@ -1,6 +1,9 @@
 #!/bin/sh
 
 #
+# $Id$
+#
+#
 # Template for the 'roots.sh' script.
 # In case of problems with 'ssh' not executing the relevant <shell>rc init
 # script, an ad hoc version of this script can be put, for example, under

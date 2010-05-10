@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# $Id:$
+# $Id$
 #
 # Template for the proofserv wrapper script.
 # The proofserv wrapper script can be used to initialize the
