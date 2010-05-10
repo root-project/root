@@ -2264,8 +2264,8 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
         tmp[1] = 0;
         for (Int_t i = 1;i < len;i++) {
             tmp[0] = chars[i-1];
-            UInt_t width, height;
-            t.GetTextExtent(width, height, &tmp[0]);
+            UInt_t width;
+            t.GetTextAdvance(width, &tmp[0], kFALSE);
             Double_t wwl = gPad->AbsPixeltoX(width - charDeltas[i]) - gPad->AbsPixeltoX(0);
             wwl -= 0.5*(gPad->AbsPixeltoX(1) - gPad->AbsPixeltoX(0)); // half a pixel ~ rounding error
             charDeltas[i] = (Int_t)((1000.0/Float_t(fontsize))*(XtoPDF(wwl) - XtoPDF(0))/scale);
