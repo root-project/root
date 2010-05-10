@@ -975,12 +975,18 @@ PROOFDIN=config/proofd.in
 PROOFDOUT=etc/daemons/proofd.rc.d
 PROOFDXINETDIN=config/proofd.xinetd.in
 PROOFDXINETDOUT=etc/daemons/proofd.xinetd
+PROOFSERVIN=config/proofserv.in
+PROOFSERVOUT=main/src/proofserv.sh
 XROOTDIN=config/xrootd.in
 XROOTDOUT=etc/daemons/xrootd.rc.d
+CMSDIN=config/cmsd.in
+CMSDOUT=etc/daemons/cmsd.rc.d
 OLBDIN=config/olbd.in
 OLBDOUT=etc/daemons/olbd.rc.d
 ROOTHELPIN=config/root-help.el.in
 ROOTHELPOUT=build/misc/root-help.el
+ROOTSIN=config/roots.in
+ROOTSOUT=main/src/roots.sh
 HTMLIN=config/html.C.in
 HTMLOUT=macros/html.C
 THISROOTSHIN=config/thisroot.sh
@@ -1572,8 +1578,11 @@ if test "x$noact" = "xno"; then
     cp -f $ROOTDXINETDIN rootd.xinetd.tmp
     cp -f $PROOFDIN proofd.tmp
     cp -f $PROOFDXINETDIN proofd.xinetd.tmp
+    cp -f $PROOFSERVIN proofserv.tmp
+    cp -f $ROOTSIN roots.tmp
     cp -f $XROOTDIN xrootd.tmp
     cp -f $OLBDIN olbd.tmp
+    cp -f $CMSDIN cmsd.tmp
 fi
 
 ######################################################################
@@ -5952,7 +5961,7 @@ result "done"
 # etc/daemons/rootd.rc.d
 #
 message "Writing $ROOTDOUT"
-sed -e "s|@bindir@|$bindir|" \
+sed -e "s|@bindir@|$bindir2|" \
     < rootd.tmp > $ROOTDOUT
 chmod a+x $ROOTDOUT
 rm -f rootd.tmp
@@ -5962,8 +5971,8 @@ result "done"
 # etc/daemons/rootd.xinetd
 #
 message "Writing $ROOTDXINETDOUT"
-sed -e "s|@bindir@|$bindir|" \
-    -e "s|@prefix@|$prefix|" \
+sed -e "s|@bindir@|$bindir2|" \
+    -e "s|@prefix@|$prefix2|" \
     < rootd.xinetd.tmp > $ROOTDXINETDOUT
 rm -f rootd.xinetd.tmp
 result "done"
@@ -5972,7 +5981,7 @@ result "done"
 # etc/daemons/proofd.rc.d
 #
 message "Writing $PROOFDOUT"
-sed -e "s|@bindir@|$bindir|" \
+sed -e "s|@bindir@|$bindir2|" \
     < proofd.tmp > $PROOFDOUT
 chmod a+x $PROOFDOUT
 rm -f proofd.tmp
@@ -5982,17 +5991,37 @@ result "done"
 # etc/daemons/proofd.xinetd
 #
 message "Writing $PROOFDXINETDOUT"
-sed -e "s|@bindir@|$bindir|" \
-    -e "s|@prefix@|$prefix|" \
+sed -e "s|@bindir@|$bindir2|" \
+    -e "s|@prefix@|$prefix2|" \
     < proofd.xinetd.tmp > $PROOFDXINETDOUT
 rm -f proofd.xinetd.tmp
+result "done"
+
+#---------------------------------------------------------------------
+# main/src/proofserv.sh
+#
+message "Writing $PROOFSERVOUT"
+sed -e "s|@bindir@|$bindir2|" \
+    < proofserv.tmp > $PROOFSERVOUT
+chmod a+x $PROOFSERVOUT
+rm -f proofserv.tmp
+result "done"
+
+#---------------------------------------------------------------------
+# main/src/roots.sh
+#
+message "Writing $ROOTSOUT"
+sed -e "s|@bindir@|$bindir2|" \
+    < roots.tmp > $ROOTSOUT
+chmod a+x $ROOTSOUT
+rm -f roots.tmp
 result "done"
 
 #---------------------------------------------------------------------
 # etc/daemons/xrootd.rc.d
 #
 message "Writing $XROOTDOUT"
-sed -e "s|@bindir@|$bindir|" \
+sed -e "s|@bindir@|$bindir2|" \
     < xrootd.tmp > $XROOTDOUT
 chmod a+x $XROOTDOUT
 rm -f xrootd.tmp
@@ -6002,10 +6031,20 @@ result "done"
 # etc/daemons/olbd.rc.d
 #
 message "Writing $OLBDOUT"
-sed -e "s|@bindir@|$bindir|" \
+sed -e "s|@bindir@|$bindir2|" \
     < olbd.tmp > $OLBDOUT
 chmod a+x $OLBDOUT
 rm -f olbd.tmp
+result "done"
+
+#---------------------------------------------------------------------
+# etc/daemons/cmsd.rc.d
+#
+message "Writing $CMSDOUT"
+sed -e "s|@bindir@|$bindir2|" \
+    < cmsd.tmp > $CMSDOUT
+chmod a+x $CMSDOUT
+rm -f cmsd.tmp
 result "done"
 
 #---------------------------------------------------------------------
