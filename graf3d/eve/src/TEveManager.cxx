@@ -940,7 +940,7 @@ void TEveManager::Terminate()
    TEveGedEditor::DestroyEditors();
 
    TEveGListTreeEditorFrame *lf = gEve->fLTEFrame;
-   TEveBrowser              *b  = gEve->GetBrowser();
+   // TEveBrowser              *b  = gEve->GetBrowser();
 
    delete gEve;
 
