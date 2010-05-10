@@ -46,3 +46,5 @@ staticfunc: staticfunc.log
 privateConstructor: privateConstructor.log
 	$(TestDiff)
 
+execrefDefaultParams.log: refFunction_C.$(DllSuf) refClasses_cxx.$(DllSuf)
+
