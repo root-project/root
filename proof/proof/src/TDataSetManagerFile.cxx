@@ -1737,10 +1737,13 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
          if ((option & kReopen)) fopt++;
          if ((option & kTouch)) fopt++;
       }
-      if ((option & kCheckStageStatus)) fopt += 100;
-   } else if ((option & kStagedFiles) || (option & kReopen) || (option & kTouch)) {
-      Warning("ScanDataSet", "kAllFiles mode: ignoring kStagedFiles or kReopen"
-                             " or kTouch or kCheckStageStatus requests");
+      if ((option & kNoStagedCheck)) fopt += 100;
+   } else {
+      if ((option & kStagedFiles) || (option & kReopen) || (option & kTouch)) {
+         Warning("ScanDataSet", "kAllFiles mode: ignoring kStagedFiles or kReopen"
+                                " or kTouch requests");
+      }
+      if ((option & kNoStagedCheck)) fopt -= 100;
    }
 
    // Type of action

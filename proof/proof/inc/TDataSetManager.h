@@ -109,7 +109,7 @@ public:
                            kNoAction = 0x2000, kLocateOnly = 0x4000, kStageOnly = 0x8000,
                            // Auxilliary bits (bits 17-)
                            kNoCacheUpdate = 0x10000, kRefreshLs = 0x20000, kList = 0x40000,
-                           kAllFiles = 0x80000, kStagedFiles = 0x100000, kCheckStageStatus = 0x200000
+                           kAllFiles = 0x80000, kStagedFiles = 0x100000, kNoStagedCheck = 0x200000
                            };
 
    TDataSetManager(const char *group = 0, const char *user = 0, const char *options = 0);

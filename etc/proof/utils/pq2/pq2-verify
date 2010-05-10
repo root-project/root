@@ -29,7 +29,7 @@ printhelp()
    echo "                                    marked as non-staged"
    echo "                    T               open and touch the files marked as staged when processing"
    echo "                                    only files marked as non-staged"
-   echo "                    C               check the actual stage status on selected files"
+   echo "                    I               do not check the actual stage status on selected files"
    echo "                    N               do nothing on the selected files"
    echo "                    P               open the selected files and extract the meta information"
    echo "                    L               only locate the selected files"
