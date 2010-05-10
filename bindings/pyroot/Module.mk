@@ -79,9 +79,9 @@ $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
 		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) $(PYROOTLIBEXTRA) \
 		   $(PYTHONLIBDIR) $(PYTHONLIB)" "$(PYTHONLIBFLAGS)"
 ifeq ($(ARCH),win32)
-	link /dll /nologo /IGNORE:4001 /machine:ix86 /export:initlibPyROOT \
-	lib/libPyROOT.lib /nodefaultlib kernel32.lib msvcrt.lib \
-	/out:$(PYROOTPYD)
+	link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT \
+	lib/libPyROOT.lib -nodefaultlib kernel32.lib msvcrt.lib \
+	-out:$(PYROOTPYD)
 	@(if [ -f $(PYROOTPYD).manifest ]; then \
 		mt -nologo -manifest $(PYROOTPYD).manifest \
 			-outputresource\:$(PYROOTPYD)\;2 ; \
