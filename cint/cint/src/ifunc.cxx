@@ -2203,7 +2203,11 @@ static int G__readansiproto(G__ifunc_table_internal* ifunc, int func_now)
                // -- If binding a reference to default rvalue and the types do not match, do a cast.
                G__FastAllocString tmp(G__ONELINE);
                tmp.Format("%s(%s)", G__type2string(type, tagnum, -1, 0, 0), buf());
+               int store_templevel = G__templevel; 
+               // Ensures that any default value is kept forever.
+               G__templevel = -1;
                *val = G__getexpr(tmp);
+               G__templevel = store_templevel;
                if (val->type == 'u') {
                   val->ref = val->obj.i;
                }
