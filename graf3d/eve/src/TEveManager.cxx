@@ -944,8 +944,13 @@ void TEveManager::Terminate()
 
    delete gEve;
 
+   // We need to wait until all windows are actually closed.
+   gSystem->Sleep(200);
+   gSystem->ProcessEvents();
+
    delete lf;
-   delete b;
+   // Destroying TRootBrowser leads to delayed window destruction errors.
+   // delete b;
 
    gEve = 0;
 }
