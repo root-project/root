@@ -228,7 +228,7 @@ End_Macro
 
 Begin_Html
 <a name="L11"></a><h3>Characters adjustement</h3>
-Thw two commands <tt>#kern</tt> and <tt>#lower</tt> enable a better control
+The two commands <tt>#kern</tt> and <tt>#lower</tt> enable a better control
 over characters placement. The command <tt>#kern[(Float_t)dx]{text}</tt> moves 
 the output string horizontally by the fraction <tt>dx</tt> of its length.
 Similarly, <tt>#lower[(Float_t)dy]{text}</tt> shifts the text up or down by 
