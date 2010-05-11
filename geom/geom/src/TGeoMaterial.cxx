@@ -268,7 +268,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       Double_t nilinv = 0.0;
       TGeoElement *elem = GetElement();
       Double_t nbAtomsPerVolume = TMath::Na()*fDensity/elem->A();
-      nilinv += nbAtomsPerVolume*TMath::Power(elem->N(), 0.6666667);
+      nilinv += nbAtomsPerVolume*TMath::Power(elem->Neff(), 0.6666667);
       nilinv *= amu/lambda0;
       fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1./nilinv);
    } else {
@@ -533,7 +533,7 @@ void TGeoMixture::AverageProperties()
       fA += fWeights[j]*fAmixture[j];
       fZ += fWeights[j]*fZmixture[j];
       nbAtomsPerVolume = TMath::Na()*fDensity*fWeights[j]/GetElement(j)->A();
-      nilinv += nbAtomsPerVolume*TMath::Power(GetElement(j)->N(), 0.6666667);
+      nilinv += nbAtomsPerVolume*TMath::Power(GetElement(j)->Neff(), 0.6666667);
       Double_t zc = fZmixture[j];
       Double_t alz = TMath::Log(zc)/3.;
       Double_t xinv = zc*(zc+TGeoMaterial::ScreenFactor(zc))*

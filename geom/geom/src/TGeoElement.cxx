@@ -128,7 +128,7 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Int_t n, 
 void TGeoElement::Print(Option_t *option) const
 {
 // Print this isotope
-   printf("Element: %s      Z=%d   N=%d   A=%f [g/mole]\n", GetName(), fZ,fN,fA);
+   printf("Element: %s      Z=%d   N=%f   A=%f [g/mole]\n", GetName(), fZ,Neff(),fA);
    if (HasIsotopes()) {
       for (Int_t i=0; i<fNisotopes; i++) {
          TGeoIsotope *iso = GetIsotope(i);
@@ -196,6 +196,7 @@ void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
 Double_t TGeoElement::Neff() const
 {
 // Returns effective number of nucleons.
+   if (!fNisotopes) return fN;
    TGeoIsotope *isocrt;
    Double_t weight = 0.0;
    Double_t neff = 0.0;
