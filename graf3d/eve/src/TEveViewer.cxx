@@ -341,6 +341,15 @@ TEveViewerList::TEveViewerList(const char* n, const char* t) :
    // Constructor.
 
    SetChildClass(TEveViewer::Class());
+   Connect();
+}
+
+//______________________________________________________________________________
+TEveViewerList::~TEveViewerList()
+{
+   // Destructor.
+
+   Disconnect();
 }
 
 //==============================================================================
@@ -402,6 +411,30 @@ void TEveViewerList::Connect()
 
    TQObject::Connect("TGLViewer", "UnClicked(TObject*,UInt_t,UInt_t)",
                      "TEveViewerList", this, "OnUnClicked(TObject*,UInt_t,UInt_t)");
+}
+
+//______________________________________________________________________________
+void TEveViewerList::Disconnect()
+{
+   // Disconnect from TGLViewer class-signals.
+
+   TQObject::Disconnect("TGLViewer", "MouseOver(TObject*,UInt_t)",
+                        this, "OnMouseOver(TObject*,UInt_t)");
+
+   TQObject::Disconnect("TGLViewer", "ReMouseOver(TObject*,UInt_t)",
+                        this, "OnReMouseOver(TObject*,UInt_t)");
+
+   TQObject::Disconnect("TGLViewer", "UnMouseOver(TObject*,UInt_t)",
+                        this, "OnUnMouseOver(TObject*,UInt_t)");
+
+   TQObject::Disconnect("TGLViewer", "Clicked(TObject*,UInt_t,UInt_t)",
+                        this, "OnClicked(TObject*,UInt_t,UInt_t)");
+
+   TQObject::Disconnect("TGLViewer", "ReClicked(TObject*,UInt_t,UInt_t)",
+                        this, "OnReClicked(TObject*,UInt_t,UInt_t)");
+
+   TQObject::Disconnect("TGLViewer", "UnClicked(TObject*,UInt_t,UInt_t)",
+                        this, "OnUnClicked(TObject*,UInt_t,UInt_t)");
 }
 
 /******************************************************************************/

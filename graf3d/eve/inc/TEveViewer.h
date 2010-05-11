@@ -92,7 +92,7 @@ protected:
 
 public:
    TEveViewerList(const char* n="TEveViewerList", const char* t="");
-   virtual ~TEveViewerList() {}
+   virtual ~TEveViewerList();
 
    virtual void AddElement(TEveElement* el);
    virtual void RemoveElementLocal(TEveElement* el);
@@ -101,6 +101,7 @@ public:
    // --------------------------------
 
    virtual void Connect();
+   virtual void Disconnect();
 
    void RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogicals);
    void RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals);
