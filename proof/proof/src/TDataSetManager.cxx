@@ -262,6 +262,8 @@ Bool_t TDataSetManager::ReadGroupConfig(const char *cf)
    while (in.good()) {
       // Read new line
       line.ReadLine(in);
+      // Explicitely skip comment lines
+      if (line[0] == '#') continue;
       // Parse it
       Ssiz_t from = 0;
       TString key;
@@ -353,6 +355,23 @@ Bool_t TDataSetManager::ReadGroupConfig(const char *cf)
                     "problems parsing string: wrong or unsupported suffix? %s",
                     avgsize.Data());
          }
+      } else if (key == "include") {
+
+         // Read file to include
+         TString subfn;
+         if (!line.Tokenize(subfn, from, " ")) {// No token
+            if (gDebug > 0)
+               Info("ReadGroupConfig","incomplete line: '%s'", line.Data());
+            continue;
+         }
+         // The file must be readable
+         if (gSystem->AccessPathName(subfn, kReadPermission)) {
+            Error("ReadGroupConfig", "request to parse file '%s' which is not readable",
+                                     subfn.Data());
+            continue;
+         }
+         if (!ReadGroupConfig(subfn))
+            Error("ReadGroupConfig", "problems parsing include file '%s'", subfn.Data());
       }
    }
    in.close();

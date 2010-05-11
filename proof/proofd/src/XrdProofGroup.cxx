@@ -348,19 +348,8 @@ int XrdProofGroupMgr::Config(const char *fn)
       return -1;
    TRACE(DBG, "enter: time of last modification: " << st.st_mtime);
 
-   // File should be loaded only once
-   if (st.st_mtime <= fCfgFile.fMtime)
-      return 0;
-
    // Save the modification time
    fCfgFile.fMtime = st.st_mtime;
-
-   // Open the defined path.
-   FILE *fin = 0;
-   if (!(fin = fopen(fCfgFile.fName.c_str(), "r"))) {
-      TRACE(XERR, "cannot open file: "<<fCfgFile.fName<<" (errno:"<<errno<<")");
-      return -1;
-   }
 
    // This part must be modified in atomic way
    XrdSysMutexHelper mhp(fMutex);
@@ -370,6 +359,37 @@ int XrdProofGroupMgr::Config(const char *fn)
 
    // Create "default" group
    fGroups.Add("default", new XrdProofGroup("default"));
+
+   // Read now the directives (recursive processing of 'include sub-file'
+   // in here)
+   if (ParseInfoFrom(fCfgFile.fName.c_str()) != -1) {
+      TRACE(XERR, "problems parsing config file "<<fCfgFile.fName);
+   }
+
+   // Return the number of active groups
+   return fGroups.Num();
+}
+
+//__________________________________________________________________________
+int XrdProofGroupMgr::ParseInfoFrom(const char *fn)
+{
+   // Parse config information from the open file 'fin'. Can be called
+   // recursively following 'include sub-file' lines.
+   // Return 0 or -1 in case of error.
+   XPDLOC(GMGR, "GroupMgr::ParseInfoFrom")
+
+   // Check input
+   if (!fn || strlen(fn) <= 0) {
+      TRACE(XERR, "file name undefined!");
+      return -1;
+   }
+
+   // Open the defined path.
+   FILE *fin = 0;
+   if (!(fin = fopen(fn, "r"))) {
+      TRACE(XERR, "cannot open file: "<<fn<<" (errno:"<<errno<<")");
+      return -1;
+   }
 
    // Read now the directives
    char lin[2048];
@@ -399,6 +419,18 @@ int XrdProofGroupMgr::Config(const char *fn)
       if (!gotkey || !gotgrp) {
          // Insufficient info
          TRACE(DBG, "incomplete line: " << lin);
+         continue;
+      }
+
+      if (key == "include") {
+         // File to be included in the parsing
+         XrdOucString subfn = group;
+         // Expand the path
+         XrdProofdAux::Expand(subfn);
+         // Process it
+         if (ParseInfoFrom(subfn.c_str()) != 0) {
+            TRACE(XERR, "problems parsing included file "<<subfn);
+         }
          continue;
       }
 
@@ -455,9 +487,10 @@ int XrdProofGroupMgr::Config(const char *fn)
             g->SetFraction(nom);
       }
    }
-
-   // Return the number of active groups
-   return fGroups.Num();
+   // Close this file
+   fclose(fin);
+   // Done
+   return 0;
 }
 
 //__________________________________________________________________________

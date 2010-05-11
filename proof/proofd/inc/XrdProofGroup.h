@@ -103,6 +103,8 @@ private:
    XrdProofdFile             fCfgFile; // Last used group configuration file
    XrdProofdFile             fPriorityFile; // Last used file with priorities
 
+   int           ParseInfoFrom(const char *fn);
+
 public:
    XrdProofGroupMgr(const char *fn = 0);
    ~XrdProofGroupMgr() { }
