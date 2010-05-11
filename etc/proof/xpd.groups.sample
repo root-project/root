@@ -25,3 +25,6 @@
 ### Example: properties of group 'ecal'
 # property ecal priority 100
 # property ecal diskquota 30
+
+### Include a file with other directives (5.27/04 and higher only)
+# include /path/sub-group.file
