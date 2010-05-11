@@ -87,7 +87,7 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t 
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = z;
-   fN = 0;
+   fN = a;
    fNisotopes = 0;
    fA = a;
    fIsotopes = NULL;
@@ -190,6 +190,22 @@ void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
       fN = (Int_t)neff;
       fA = aeff;
    }   
+}
+
+//______________________________________________________________________________
+Double_t TGeoElement::Neff() const
+{
+// Returns effective number of nucleons.
+   TGeoIsotope *isocrt;
+   Double_t weight = 0.0;
+   Double_t neff = 0.0;
+   for (Int_t i=0; i<fNisotopes; i++) {
+      isocrt = (TGeoIsotope*)fIsotopes->At(i);
+      neff += fAbundances[i]*isocrt->GetN();
+      weight += fAbundances[i];
+   }
+   neff /= weight;
+   return neff;
 }
 
 //______________________________________________________________________________

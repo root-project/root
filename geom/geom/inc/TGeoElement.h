@@ -75,6 +75,7 @@ public:
    virtual Int_t            ENDFCode()    const { return 0;}
    Int_t                    Z() const {return fZ;}
    Int_t                    N() const {return fN;}
+   Double_t                 Neff() const;
    Double_t                 A() const {return fA;}
    void                     AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance);
    Int_t                    GetNisotopes() const {return fNisotopes;}
