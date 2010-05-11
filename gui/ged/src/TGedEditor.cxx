@@ -217,7 +217,7 @@ TGedTabInfo* TGedEditor::GetEditorTabInfo(const char* name)
    TGedFrame* nf = CreateNameFrame(tc, name);
    nf->SetGedEditor(this);
    nf->SetModelClass(0);
-   tc->AddFrame(nf, nf->GetLayoutHints());
+   tc->AddFrame(nf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
 
    // add to list of created tabs
    TGedTabInfo* ti = new TGedTabInfo(te, tc);
@@ -377,7 +377,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
          TGedFrame* gfr;
          TIter ngf(&fGedFrames);
          while ((gfr = (TGedFrame*) ngf()))
-            fTabContainer->AddFrame(gfr, gfr->GetLayoutHints());
+            fTabContainer->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
 
          fExclMap.Clear();
          fGedFrames.Clear();

@@ -38,7 +38,6 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t width,
         fInit(kTRUE),
         fGedEditor(0),
         fModelClass(0),
-        fLayoutHints(0),
         fAvoidSignal(kFALSE),
         fExtraTabs(0),
         fPriority(50)
@@ -65,7 +64,6 @@ TGedFrame::~TGedFrame()
       }
       delete fExtraTabs;
    }
-   delete fLayoutHints;
 
    // Destructor of TGCompositeFrame will do the rest.
 }
@@ -91,18 +89,6 @@ Option_t *TGedFrame::GetDrawOption() const
       if (obj == fGedEditor->GetModel()) return next.GetOption();
    }
    return "";
-}
-
-//______________________________________________________________________________
-TGLayoutHints* TGedFrame::GetLayoutHints()
-{
-   // Get layout hints with which is added to TGedEditor frame.
-
-   if (fLayoutHints == 0){
-      fLayoutHints = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2);
-      fLayoutHints->AddReference();
-   }
-   return fLayoutHints;
 }
 
 //______________________________________________________________________________
@@ -227,7 +213,6 @@ TGedNameFrame::~TGedNameFrame()
 {
    // Destructor.
 
-   fLayoutHints = 0; // will be deleted via deep-cleanup of tab-containers
    delete fTip;
 }
 

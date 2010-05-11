@@ -55,7 +55,6 @@ protected:
    Bool_t          fInit;        // init flag for setting signals/slots
    TGedEditor     *fGedEditor;   // manager of this frame
    TClass         *fModelClass;  // class corresponding to instantiated GedFrame
-   TGLayoutHints  *fLayoutHints; // defines how this frame is added to fGedEditor
    Bool_t          fAvoidSignal; // flag for executing slots
 
    TList          *fExtraTabs;   // addtional tabs in ged editor
@@ -73,8 +72,6 @@ public:
    virtual void      Update();
 
    virtual Option_t *GetDrawOption() const;
-
-   virtual TGLayoutHints* GetLayoutHints();
 
    TClass*           GetModelClass()              { return fModelClass;  }
    Int_t             GetPriority()                { return fPriority;    }
