@@ -1897,9 +1897,9 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"} ;
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"} ;
    Int_t nkWord1 = sizeof(kWord1)/sizeof(kWord1[0]), nkWord2 = sizeof(kWord2)/sizeof(kWord2[0]), nkWord3 = sizeof(kWord3)/sizeof(kWord3[0]);
-   Int_t lkWord1[nkWord1];
-   Int_t lkWord2[nkWord2];
-   Int_t lkWord3[nkWord3];
+   Int_t *lkWord1 = new Int_t[nkWord1];
+   Int_t *lkWord2 = new Int_t[nkWord2];
+   Int_t *lkWord3 = new Int_t[nkWord3];
    for (Int_t i = 0;i < nkWord1;i++) lkWord1[i] = strlen(kWord1[i]);
    for (Int_t i = 0;i < nkWord2;i++) lkWord2[i] = strlen(kWord2[i]);
    for (Int_t i = 0;i < nkWord3;i++) lkWord3[i] = strlen(kWord3[i]);
@@ -2082,6 +2082,9 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    }
 
    ERROR_END:
+   delete [] lkWord1;
+   delete [] lkWord2;
+   delete [] lkWord3;
    return error ;
 }
 
