@@ -87,7 +87,7 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t 
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = z;
-   fN = a;
+   fN = Int_t(a);
    fNisotopes = 0;
    fA = a;
    fIsotopes = NULL;
