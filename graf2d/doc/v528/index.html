@@ -116,7 +116,7 @@
      Pierre Juillot and Benoit Speckel (IPHC Strasbourg)
 </ul>
 
-<h4>New text font: Symbol italic</h4>
+<h4>New markers</h4>
 <ul>
 <li> Three new marker's styles are now available (32, 33, 34). They complement
      the markers' list making sure each marker has a solid and an hollow
@@ -138,6 +138,32 @@
      the order of precedence, and takes the "int" (only!) as its base.
      <br>
      Fix done by: Oleksandr Grebenyuk <tt>&lt;ogrebenyuk@lbl.gov&gt;</tt>.
+<li> Four new commands: <tt>#kern</tt>, <tt>#lower</tt>, <tt>#it</tt> and
+     <tt>#bf</tt>.
+     <br>
+     The two commands <tt>#kern</tt> and <tt>#lower</tt> enable a better control
+     over characters placement. The command <tt>#kern[(Float_t)dx]{text}</tt>
+     moves the output string horizontally by the fraction <tt>dx</tt> of its
+     length. Similarly, <tt>#lower[(Float_t)dy]{text}</tt> shifts the text up
+     or down by the fraction <tt>dy</tt> of its height.
+     <br>
+     Text can be turned italic or boldface using the commands
+     <tt>#it</tt> and <tt>#bf</tt>.
+     <br>
+     Example:
+     <pre>
+     {
+        gStyle->SetTextFont(132);
+        (new TLatex(0.01, 0.9, "Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g} with #^{}kern[0.3]"))->Draw();
+        (new TLatex(0.01, 0.7, "Negative k#kern[-0.3]{e}#kern[-0.3]{r}#kern[-0.3]{n}#kern[-0.3]{i}#kern[-0.3]{n}#kern[-0.3]{g} with #^{}kern[-0.3]"))->Draw();
+        (new TLatex(0.01, 0.5, "Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{t}#lower[-0.4]{m}#lower[-0.2]{e}#lower[0.1]{n}t with #^{}lower[-0.4...+0.4]"))->Draw();
+        (new TLatex(0.01, 0.3, "Font styles: #^{}bf{#bf{bold}}, #^{}it{#it{italic}}, #^{}bf{#^{}it{#bf{#it{bold italic}}}}, #^{}bf{#^{}bf{#bf{#bf{unbold}}}}"))->Draw();
+        (new TLatex(0.01, 0.1, "Font styles: abc#alpha#beta#gamma, #^{}it{#it{abc#alpha#beta#gamma}}, #^{}it{#^{}it{#it{#it{abc#alpha#beta#gamma}}}}"))->Draw();
+     }
+     <center>
+     <img alt="New commands" src="itbf.gif">
+     </center>
+     Done by: Oleksandr Grebenyuk <tt>&lt;ogrebenyuk@lbl.gov&gt;</tt>.
 </ul>
 
 <h4>TText</h4>
