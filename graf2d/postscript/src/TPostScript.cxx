@@ -2490,7 +2490,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    char str[8];
    for (Int_t i=0; i<len;i++) {
       if (chars[i]!='\n') {
-         if (chars[i]=='(' || chars[i]==')') {
+         if (chars[i]=='(' || chars[i]==')' || chars[i]=='\\') {
             sprintf(str,"\\%c",chars[i]);
             PrintStr(str);
          } else if ((chars[i]=='-') && (font != 12)) {
