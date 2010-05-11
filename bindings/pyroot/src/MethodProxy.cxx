@@ -374,6 +374,29 @@ namespace {
       return 0;
    }
 
+//____________________________________________________________________________
+   PyObject* mp_getthreaded( MethodProxy* pymeth, void* )
+   {
+      return PyInt_FromLong(
+         (Bool_t)(pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL) );
+   }
+
+//____________________________________________________________________________
+   int mp_setthreaded( MethodProxy* pymeth, PyObject* value, void* )
+   {
+      Long_t isthreaded = PyLong_AsLong( value );
+      if ( isthreaded == -1 && PyErr_Occurred() ) {
+         PyErr_SetString( PyExc_ValueError, "a boolean 1 or 0 is required for _creates" );
+         return -1;
+      }
+
+      if ( isthreaded )
+         pymeth->fMethodInfo->fFlags |= MethodProxy::MethodInfo_t::kReleaseGIL;
+      else
+         pymeth->fMethodInfo->fFlags &= ~MethodProxy::MethodInfo_t::kReleaseGIL;
+
+      return 0;
+   }
 
 //____________________________________________________________________________
    PyGetSetDef mp_getset[] = {
@@ -399,6 +422,8 @@ namespace {
             (char*)"For ownership rules of result: if true, objects are python-owned", NULL },
       { (char*)"_mempolicy", (getter)mp_getmempolicy, (setter)mp_setmempolicy,
             (char*)"For argument ownership rules: like global, either heuristic or strict", NULL },
+      { (char*)"_threaded", (getter)mp_getthreaded, (setter)mp_setthreaded,
+            (char*)"If true, releases GIL on call into C++", NULL },
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
 
@@ -425,8 +450,17 @@ namespace {
          user = Utility::gMemoryPolicy;
 
    // simple case
-      if ( nMethods == 1 )
-         return HandleReturn( pymeth, (*methods[0])( pymeth->fSelf, args, kwds, user ) );
+      if ( nMethods == 1 ) {
+         PyObject* result = 0;
+         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL ){
+            Py_BEGIN_ALLOW_THREADS
+            result = (*methods[0])( pymeth->fSelf, args, kwds, user );
+            Py_END_ALLOW_THREADS
+         } else
+            result = (*methods[0])( pymeth->fSelf, args, kwds, user );
+
+         return HandleReturn( pymeth, result );
+      }
 
    // otherwise, handle overloading
       Long_t sighash = HashSignature( args );
@@ -435,8 +469,16 @@ namespace {
       MethodProxy::DispatchMap_t::iterator m = dispatchMap.find( sighash );
       if ( m != dispatchMap.end() ) {
          Int_t index = m->second;
-         PyObject* result =
-            HandleReturn( pymeth, (*methods[ index ])( pymeth->fSelf, args, kwds, user ) );
+         PyObject* result = 0;
+
+         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL ){
+            Py_BEGIN_ALLOW_THREADS
+            result = (*methods[ index ])( pymeth->fSelf, args, kwds, user );
+            Py_END_ALLOW_THREADS
+         } else
+            result = (*methods[ index ])( pymeth->fSelf, args, kwds, user );
+
+         result = HandleReturn( pymeth, result );
 
          if ( result != 0 )
             return result;
@@ -453,7 +495,14 @@ namespace {
 
       std::vector< PyError_t > errors;
       for ( Int_t i = 0; i < nMethods; ++i ) {
-         PyObject* result = (*methods[i])( pymeth->fSelf, args, kwds, user );
+         PyObject* result = 0;
+
+         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL ){
+            Py_BEGIN_ALLOW_THREADS
+            result = (*methods[i])( pymeth->fSelf, args, kwds, user );
+            Py_END_ALLOW_THREADS
+         } else
+            result = (*methods[i])( pymeth->fSelf, args, kwds, user );
 
          if ( result == (PyObject*)TPyExceptionMagic ) {
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
