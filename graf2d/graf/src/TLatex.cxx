@@ -46,7 +46,9 @@ It provides several functionalities:
 <li><a href="#L8">  Accents</a></li>
 <li><a href="#L9">  Changing Style</a></li>
 <li><a href="#L10"> Alignment Rules</a></li>
-<li><a href="#L11"> Examples</a></li>
+<li><a href="#L11"> Characters adjustement</a></li>
+<li><a href="#L12"> Italic and boldface</a></li>
+<li><a href="#L13"> Examples</a></li>
 </ul>
 
 When the font precision (see <tt>TAttText</tt>) is low (ie 0), TLatex is
@@ -225,7 +227,37 @@ Begin_Macro(source)
 End_Macro
 
 Begin_Html
-<a name="L11"></a><h3>Examples</h3>
+<a name="L11"></a><h3>Characters adjustement</h3>
+Thw two commands <tt>#kern</tt> and <tt>#lower</tt> enable a better control
+over characters placement. The command <tt>#kern[(Float_t)dx]{text}</tt> moves 
+the output string horizontally by the fraction <tt>dx</tt> of its length.
+Similarly, <tt>#lower[(Float_t)dy]{text}</tt> shifts the text up or down by 
+the fraction <tt>dy</tt> of its height.
+<p>Examples:
+End_Html
+Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g}:
+Begin_Latex Positive k#kern[0.3]{e}#kern[0.3]{r}#kern[0.3]{n}#kern[0.3]{i}#kern[0.3]{n}#kern[0.3]{g} End_Latex
+
+Negative k#kern[-0.3]{e}#kern[-0.3]{r}#kern[-0.3]{n}#kern[-0.3]{i}#kern[-0.3]{n}#kern[-0.3]{g}:
+Begin_Latex Negative k#kern[-0.3]{e}#kern[-0.3]{r}#kern[-0.3]{n}#kern[-0.3]{i}#kern[-0.3]{n}#kern[-0.3]{g} End_Latex
+
+Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{t}#lower[-0.4]{m}#lower[-0.2]{e}#lower[0.1]{n}t:
+Begin_Latex Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{t}#lower[-0.4]{m}#lower[-0.2]{e}#lower[0.1]{n}t End_Latex
+
+Begin_Html
+<a name="L12"></a><h3>Italic and boldface</h3>
+Text can be turned italic or boldface using the commands
+<tt>#it</tt> and <tt>#bf</tt>.
+<p>Examples:
+End_Html
+#bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}}}:
+Begin_Latex #bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}} End_Latex
+
+abc#alpha#beta#gamma, #it{abc#alpha#beta#gamma}:
+Begin_Latex abc#alpha#beta#gamma, #it{abc#alpha#beta#gamma} End_Latex
+
+Begin_Html
+<a name="L13"></a><h3>Examples</h3>
 End_Html
 Begin_Macro(source)
 {
@@ -282,6 +314,7 @@ TLatex::TLatex()
    fPos=fTabMax = 0;
    fOriginSize  = 0.04;
    fTabSize     = 0;
+   fItalic      = kFALSE;
    SetLineWidth(2);
 }
 
@@ -300,6 +333,7 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
    fPos=fTabMax = 0;
    fOriginSize  = 0.04;
    fTabSize     = 0;
+   fItalic      = kFALSE;
    SetLineWidth(2);
 }
 
@@ -335,6 +369,7 @@ TLatex& TLatex::operator=(const TLatex& lt)
       fOriginSize=lt.fOriginSize;
       fTabSize=lt.fTabSize;
       fTabSize=lt.fTabSize;
+      fItalic=lt.fItalic;
    }
    return *this;
 }
@@ -353,6 +388,7 @@ void TLatex::Copy(TObject &obj) const
    ((TLatex&)obj).fOriginSize  = fOriginSize;
    ((TLatex&)obj).fTabMax      = fTabMax;
    ((TLatex&)obj).fPos         = fPos;
+   ((TLatex&)obj).fItalic      = fItalic;
    TText::Copy(obj);
    TAttLine::Copy(((TAttLine&)obj));
 }
@@ -499,6 +535,10 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opHbar          = 0;    // position of #hbar
    Int_t opParallel      = 0;    // position of #parallel
    Int_t opSplitLine     = -1;   // Position of first \splitline
+   Int_t opKern          = -1;   // Position of first #kern
+   Int_t opLower         = -1;   // Position of first #lower
+   Int_t opBf            = -1;   // Position of first #bf
+   Int_t opIt            = -1;   // Position of first #it
    Bool_t opFound = kFALSE;
    Bool_t quote1 = kFALSE, quote2 = kFALSE ;
 
@@ -606,15 +646,16 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          if (length>i+6) {
             Char_t buf[6];
             strncpy(buf,&text[i+1],6);
+            if (strncmp(buf,"lower[",6)==0 || strncmp(buf,"lower{",6)==0) {
+               opLower=i; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue ;
+            }
             if (strncmp(buf,"scale[",6)==0 || strncmp(buf,"scale{",6)==0) {
                opScale=i; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue ;
             }
-         }
-         if (length>i+6) {
-            Char_t buf[6];
-            strncpy(buf,&text[i+1],6);
             if (strncmp(buf,"color[",6)==0 || strncmp(buf,"color{",6)==0) {
                opColor=i; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
@@ -639,6 +680,11 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue;
             }
+            if (strncmp(buf,"kern[",5)==0 || strncmp(buf,"kern{",5)==0) {
+               opKern=i; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue ;
+            }
          }
          if (length>i+4 ) {
             Char_t buf[4];
@@ -660,8 +706,9 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             }
          }
          if (length>i+3) {
-            Char_t buf[3];
+            Char_t buf[4];
             strncpy(buf,&text[i+1],3);
+            buf[3] = 0;
             if (strncmp(buf,"[]{",3)==0) {
                opSquareBracket=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
@@ -686,6 +733,16 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                opBox=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue;
+            }
+            if (strncmp(buf,"bf[",3)==0 || strncmp(buf,"bf{",3)==0) {
+               opBf=i; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue ;
+            }
+            if (strncmp(buf,"it[",3)==0 || strncmp(buf,"it{",3)==0) {
+               opIt=i; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue ;
             }
          }
          for(k=0;k<54;k++) {
@@ -1020,7 +1077,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    }
    else if (opGreek>-1) {
       TextSpec_t newSpec = spec;
-      newSpec.fFont = 122;
+      newSpec.fFont = fItalic ? 152 : 122;
       char letter = 97 + opGreek;
       Double_t yoffset = 0.; // Greek letter too low
       if (opGreek>25) letter -= 58;
@@ -1041,7 +1098,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
 
    else if (opSpec>-1) {
       TextSpec_t newSpec = spec;
-      newSpec.fFont = 122;
+      newSpec.fFont = fItalic ? 152 : 122;
       char letter = '\243' + opSpec;
       if(opSpec == 75 || opSpec == 76) {
          newSpec.fFont = GetTextFont();
@@ -1438,6 +1495,62 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
    }
+   else if (opKern>-1) { // #kern found
+      if (opSquareCurly==-1) {
+         // horizontal shift is not specified
+         fError = "Missing horizontal shift number. Syntax is #kern[dx]{ ... }";
+         return TLatexFormSize(0,0,0);
+      }
+      Char_t *dxc = new Char_t[opSquareCurly-opKern-5];
+      strncpy(dxc,text+opKern+6,opSquareCurly-opKern-6);
+      dxc[opSquareCurly-opKern-6] = 0;
+      Float_t dx = 0;
+      if (sscanf(dxc,"%f",&dx) < 1) {
+         delete[] dxc;
+         // horizontal shift number is invalid
+         fError = "Invalid horizontal shift number. Syntax is #kern[(Float_t)dx]{ ... }";
+         return TLatexFormSize(0,0,0);
+      }
+      delete[] dxc;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
+	 Savefs(&fs1);
+         Double_t ddx = dx * fs1.Width();
+	 result = TLatexFormSize(fs1.Width() + ddx, fs1.Over(), fs1.Under());
+      } else {
+	 fs1 = Readfs();
+         Double_t ddx = dx * fs1.Width();
+         Analyse(x + ddx,y,spec,text+opSquareCurly+1,length-opSquareCurly-1);
+      }
+   }
+   else if (opLower>-1) { // #lower found
+      if (opSquareCurly==-1) {
+         // vertical shift is not specified
+         fError = "Missing vertical shift number. Syntax is #lower[dy]{ ... }";
+         return TLatexFormSize(0,0,0);
+      }
+      Char_t *dyc = new Char_t[opSquareCurly-opLower-6];
+      strncpy(dyc,text+opLower+7,opSquareCurly-opLower-7);
+      dyc[opSquareCurly-opLower-7] = 0;
+      Float_t dy = 0;
+      if (sscanf(dyc,"%f",&dy) < 1) {
+         delete[] dyc;
+         // vertical shift number is invalid
+         fError = "Invalid vertical shift number. Syntax is #lower[(Float_t)dy]{ ... }";
+         return TLatexFormSize(0,0,0);
+      }
+      delete[] dyc;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
+	 Savefs(&fs1);
+         Double_t ddy = dy * (fs1.Over() + fs1.Under());
+	 result = TLatexFormSize(fs1.Width(), fs1.Over() + ddy, fs1.Under() + ddy);
+      } else {
+	 fs1 = Readfs();
+         Double_t ddy = dy * (fs1.Over() + fs1.Under());
+         Analyse(x,y + ddy,spec,text+opSquareCurly+1,length-opSquareCurly-1);
+      }
+   }
    else if (opScale>-1) { // \scale found
       if (opSquareCurly==-1) {
          // scale factor is not specified
@@ -1461,6 +1574,38 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       } else {
          Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
+   }
+   else if (opBf>-1) { // operator #bf{arg}
+      TextSpec_t newSpec = spec;
+      Int_t lut[] = {3, 13, 1, 6, 7, 4, 5, 10, 11, 8, 9, 12, 2, 14, 15};
+      Int_t fontId = (newSpec.fFont/10);
+      if ((fontId >= 1) && (fontId <= (Int_t)(sizeof(lut)/sizeof(lut[0])))) fontId = lut[fontId-1];
+      newSpec.fFont = fontId*10 + newSpec.fFont%10;
+      if (!fShow) {
+         fs1 = Anal1(newSpec,text+3,length-3);
+         Savefs(&fs1);
+      } else {
+         fs1 = Readfs();
+         Analyse(x,y,newSpec,text+3,length-3);
+      }
+      result = fs1;
+   }
+   else if (opIt>-1) { // operator #it{arg}
+      TextSpec_t newSpec = spec;
+      Int_t lut[] = {13, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 15, 1, 14, 12};
+      Int_t fontId = (newSpec.fFont/10);
+      if ((fontId >= 1) && (fontId <= (Int_t)(sizeof(lut)/sizeof(lut[0])))) fontId = lut[fontId-1];
+      newSpec.fFont = fontId*10 + newSpec.fFont%10;
+      fItalic = !fItalic;
+      if (!fShow) {
+         fs1 = Anal1(newSpec,text+3,length-3);
+         Savefs(&fs1);
+      } else {
+         fs1 = Readfs();
+         Analyse(x,y,newSpec,text+3,length-3);
+      }
+      fItalic = !fItalic;
+      result = fs1;
    }
    else { // no operators found, it is a character string
       SetTextSize(spec.fSize);
@@ -1743,21 +1888,21 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    // Check if the Latex syntax is correct
 
    const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#scale{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
-                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{",
+                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{","#bf{","#it{",
                        "\\scale{","\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
-                       "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{"}; // check for }
-   const Char_t *kWord2[] = {"#scale[","#color[","#font[","#sqrt[","\\scale[","\\color[","\\font[","\\sqrt["}; // check for ]{ + }
+                       "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{","\\bf{","\\it{"}; // check for }
+   const Char_t *kWord2[] = {"#scale[","#color[","#font[","#sqrt[","#kern[","#lower[","\\scale[","\\color[","\\font[","\\sqrt[","\\kern[","\\lower["}; // check for ]{ + }
    const Char_t *kWord3[] = {"#frac{","\\frac{","#splitline{","\\splitline{"} ; // check for }{ then }
    const Char_t *kLeft1[] = {"#left[","\\left[","#left{","\\left{","#left|","\\left|","#left(","\\left("} ;
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"} ;
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"} ;
-   Int_t lkWord1[] = {4,4,2,2,7,7,6,6,4,4,4,
-                      5,5,5,5,6,7,7,7,7,7,
-                      7,7,6,6,4,4,4,4,4,
-                      5,5,5,5,6,7,7,7} ;
-   Int_t lkWord2[] = {7,7,6,6,7,7,6,6} ;
-   Int_t lkWord3[] = {6,6,11,11} ;
-   Int_t nkWord1 = 36, nkWord2 = 6, nkWord3 = 4 ;
+   Int_t nkWord1 = sizeof(kWord1)/sizeof(kWord1[0]), nkWord2 = sizeof(kWord2)/sizeof(kWord2[0]), nkWord3 = sizeof(kWord3)/sizeof(kWord3[0]);
+   Int_t lkWord1[nkWord1];
+   Int_t lkWord2[nkWord2];
+   Int_t lkWord3[nkWord3];
+   for (Int_t i = 0;i < nkWord1;i++) lkWord1[i] = strlen(kWord1[i]);
+   for (Int_t i = 0;i < nkWord2;i++) lkWord2[i] = strlen(kWord2[i]);
+   for (Int_t i = 0;i < nkWord3;i++) lkWord3[i] = strlen(kWord3[i]);
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
    Int_t lLeft2 = 4 ;
