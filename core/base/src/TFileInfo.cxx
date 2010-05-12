@@ -419,24 +419,47 @@ Int_t TFileInfo::Compare(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-void TFileInfo::Print(Option_t * /* option */) const
+void TFileInfo::Print(Option_t *option) const
 {
-   // Print information about this object.
+   // Print information about this object. If option contains 'L' a long listing
+   // will be printed (on multiple lines). Otherwise one line is printed with the
+   // following information: current url, default tree name|class|entries, md5;
+   // the default tree name is passed via the option ("T:<default_tree>") by the
+   // owning TFileCollection.
 
    GetMD5()->Final();
-   Printf("UUID: %s\nMD5:  %s\nSize: %lld", GetUUID()->AsString(), GetMD5()->AsString(), GetSize());
+   TString opt(option);
+   if (opt.Contains("L", TString::kIgnoreCase)) {
 
-   TIter next(fUrlList);
-   TUrl *u;
-   Printf(" === URLs ===");
-   while ((u = (TUrl*)next()))
-      Printf(" URL:  %s", u->GetUrl());
+      Printf("UUID: %s\nMD5:  %s\nSize: %lld", GetUUID()->AsString(), GetMD5()->AsString(), GetSize());
 
-   TIter nextm(fMetaDataList);
-   TObject *m = 0;   // can be any TObject not only TFileInfoMeta
-   while ((m = (TObject*) nextm())) {
-      Printf(" === Meta Data Object ===");
-      m->Print();
+      TIter next(fUrlList);
+      TUrl *u;
+      Printf(" === URLs ===");
+      while ((u = (TUrl*)next()))
+         Printf(" URL:  %s", u->GetUrl());
+
+      TIter nextm(fMetaDataList);
+      TObject *m = 0;   // can be any TObject not only TFileInfoMeta
+      while ((m = (TObject*) nextm())) {
+         Printf(" === Meta Data Object ===");
+         m->Print();
+      }
+   } else {
+      TString out("current-url-undef -|-|- md5-undef");
+      if (GetCurrentUrl()) out.ReplaceAll("current-url-undef", GetCurrentUrl()->GetUrl());
+      // Extract the default tree name, if any
+      TString deft;
+      if (opt.Contains("T:")) deft = opt(opt.Index("T:")+2, opt.Length());
+      TFileInfoMeta *meta = 0;
+      if (!deft.IsNull()) meta = (TFileInfoMeta *) fMetaDataList->FindObject(deft);
+      if (!meta) meta = (TFileInfoMeta *) fMetaDataList->First();
+      if (meta)
+         out.ReplaceAll("-|-|-", TString::Format("%s|%s|%lld", meta->GetName(),
+                                                 meta->GetTitle(), meta->GetEntries()));
+      if (GetMD5())
+         out.ReplaceAll("md5-undef", TString::Format("%s", GetMD5()->AsString()));
+      Printf("%s", out.Data());
    }
 }
 

@@ -353,15 +353,21 @@ Int_t TFileCollection::Update(Long64_t avgsize)
 void TFileCollection::Print(Option_t *option) const
 {
    // Prints the contents of the TFileCollection.
-   // If option contains "M": prints meta data entries,
-   // if option contains "F": prints all the files in the collection.
+   // If option contains:
+   //      'M'             print global meta information
+   //      'F'             print all the files in the collection in compact form
+   //                      (current url, default tree name|class|entries, md5)
+   //      'L'             together with 'F', print all the files in the collection
+   //                      in long form (uuid, md5, all URLs, all meta objects; on
+   //                      many lines)
 
    Printf("TFileCollection %s - %s contains: %lld files with a size of"
           " %lld bytes, %.1f %% staged - default tree name: '%s'",
           GetName(), GetTitle(), fNFiles, fTotalSize, GetStagedPercentage(),
           GetDefaultTreeName());
 
-   if (TString(option).Contains("M", TString::kIgnoreCase)) {
+   TString opt(option);
+   if (opt.Contains("M", TString::kIgnoreCase)) {
       Printf("The files contain the following trees:");
 
       TIter metaDataIter(fMetaDataList);
@@ -374,9 +380,11 @@ void TFileCollection::Print(Option_t *option) const
       }
    }
 
-   if (fList && TString(option).Contains("F", TString::kIgnoreCase)) {
+   if (fList && opt.Contains("F", TString::kIgnoreCase)) {
       Printf("The collection contains the following files:");
-      fList->Print();
+      if (!opt.Contains("L") && !fDefaultTree.IsNull())
+         opt += TString::Format(" T:%s", fDefaultTree.Data());
+      fList->Print(opt);
    }
 }
 
