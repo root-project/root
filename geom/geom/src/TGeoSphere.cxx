@@ -1375,7 +1375,7 @@ void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
    fPhi1 = phi1;
    if (phi1<0) fPhi1+=360.;
    fPhi2 = phi2;
-   while (fPhi2<fPhi1) fPhi2+=360.;
+   while (fPhi2<=fPhi1) fPhi2+=360.;
    if (!TGeoShape::IsSameWithinTolerance(TMath::Abs(phi2-phi1),360)) SetShapeBit(kGeoPhiSeg);
 }   
 

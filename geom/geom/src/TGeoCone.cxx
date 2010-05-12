@@ -2190,7 +2190,8 @@ void TGeoConeSeg::SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
    fPhi1 = phi1;
    if (fPhi1<0) fPhi1+=360.;
    fPhi2 = phi2;
-   while (fPhi2<fPhi1) fPhi2+=360.;
+   while (fPhi2<=fPhi1) fPhi2+=360.;
+   if (TGeoShape::IsSameWithinTolerance(fPhi1,fPhi2)) Error("SetConsDimensions", "In shape %s invalid phi1=%g, phi2=%g\n", GetName(), fPhi1, fPhi2);
 }
 
 //_____________________________________________________________________________
