@@ -78,7 +78,7 @@ class TUnfold : public TObject {
       kRegModeSize = 1,         // regularise the size of the output
       kRegModeDerivative = 2,   // regularize the 1st derivative of the output
       kRegModeCurvature = 3,    // regularize the 2nd derivative of the output
-      kRegModeMixed = 4,        // mixed regularisation pattern
+      kRegModeMixed = 4         // mixed regularisation pattern
    };
  protected:
    TMatrixDSparse * fA;         // Input: matrix
