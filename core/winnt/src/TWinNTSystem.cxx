@@ -3854,7 +3854,7 @@ const char *TWinNTSystem::GetLinkedLibraries()
    HANDLE hFile, hMapping;
    void *basepointer;
 
-   if((hFile = CreateFile(exe,GENERIC_READ,0,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) {
+   if((hFile = CreateFile(exe,GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) {
       delete [] exe;
       return 0;
    }
