@@ -99,6 +99,7 @@ When most solids or volumes are added to the geometry they
 #include "TGeoHype.h"
 #include "TGeoEltu.h"
 #include "TGeoXtru.h"
+#include "TGeoScaledShape.h"
 #include "TGeoVolume.h"
 #include "TROOT.h"
 #include "TMath.h"
@@ -233,7 +234,6 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    } else if ((strcmp(name, bboxstr)) == 0){ 
       node = Box(gdml, node, attr);
    } else if ((strcmp(name, ellistr)) == 0){
-      std::cout << "Warning: Ellipsoid is not supported, converting it to a box!" << std::endl; 
       node = Ellipsoid(gdml, node, attr);
    } else if ((strcmp(name, cutTstr)) == 0){ 
       node = CutTube(gdml, node, attr);
@@ -1770,19 +1770,34 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, 
    axline = Form("%s*%s", ax, retunit);
    byline = Form("%s*%s", by, retunit);
    czline = Form("%s*%s", cz, retunit);
+   Double_t radius = Evaluate(czline);
+   Double_t dx = Evaluate(axline);
+   Double_t dy = Evaluate(byline);
+   Double_t sx = dx/radius;
+   Double_t sy = dy/radius;
+   Double_t sz = 1.;
    zcut1line = Form("%s*%s", zcut1, retunit);
    zcut2line = Form("%s*%s", zcut2, retunit);
+   Double_t z1 = Evaluate(zcut1line);
+   Double_t z2 = Evaluate(zcut2line);
 
-   TGeoBBox* box;
-   if(Evaluate(zcut1line)==0.0 && Evaluate(zcut2line)==0.0)
+   TGeoSphere *sph = new TGeoSphere(0,radius);
+   TGeoScale *scl = new TGeoScale("",sx,sy,sz);
+   TGeoScaledShape *shape = new TGeoScaledShape(NameShort(name), sph, scl);
+   if(z1==0.0 && z2==0.0)
    {
-    box = new TGeoBBox(NameShort(name),Evaluate(axline), Evaluate(byline), Evaluate(czline));
+      fsolmap[name] = shape;
    }
    else
    {
-    box = new TGeoBBox(NameShort(name),Evaluate(axline), Evaluate(byline), Evaluate(zcut2line)-Evaluate(zcut1line));
+      Double_t origin[3] = {0.,0.,0.};
+      origin[2] = 0.5*(z1+z2);
+      Double_t dz = 0.5*(z2-z1);
+      TGeoBBox *pCutBox = new TGeoBBox("cutBox", dx, dy, dz, origin);
+      TGeoBoolNode *pBoolNode = new TGeoIntersection(shape,pCutBox,0,0);
+      TGeoCompositeShape *cs = new TGeoCompositeShape(NameShort(name), pBoolNode);
+      fsolmap[name] = cs;
    }
-   fsolmap[name] = box;
    
    return node;
    
@@ -2305,7 +2320,9 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    rmax2line = Form("%s*%s", rmax2, retlunit);
    zline = Form("%s*%s", z, retlunit);
    startphiline = Form("%s*%s", startphi, retaunit);
-   deltaphiline = Form("(%s*%s) + %s", deltaphi, retaunit, startphiline);
+   deltaphiline = Form("%s*%s", deltaphi, retaunit);
+   Double_t sphi = Evaluate(startphiline);
+   Double_t ephi = sphi + Evaluate(deltaphiline);
 
       
    TGeoConeSeg* cone = new TGeoConeSeg(NameShort(name),Evaluate(zline)/2,
@@ -2313,8 +2330,7 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
                            Evaluate(rmax1line),
                            Evaluate(rmin2line),
                            Evaluate(rmax2line),
-                           Evaluate(startphiline),
-                           Evaluate(deltaphiline));
+                           sphi, ephi);
                    
    fsolmap[name] = cone;
    
@@ -3349,7 +3365,7 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
    //converted to type TGeoSphere and stored in fsolmap map using the name 
    //as its key.
 
-   const char* aunit = "deg"; 
+   const char* lunit = "mm"; 
    const char* r = "0"; 
    const char* name = "";
    const char* tempattr; 
@@ -3364,8 +3380,8 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
       else if((strcmp(tempattr, "r")) == 0) { 
          r = gdml->GetAttrValue(attr);
       }
-      else if (strcmp(tempattr, "aunit") == 0){
-         aunit = gdml->GetAttrValue(attr);
+      else if (strcmp(tempattr, "lunit") == 0){
+         lunit = gdml->GetAttrValue(attr);
       }
       
       attr = gdml->GetNextAttr(attr);   
@@ -3378,10 +3394,9 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
    const char* rline = "";
    const char* retunit;
    
-   retunit = GetScale(aunit);
+   retunit = GetScale(lunit);
    
    rline = Form("%s*%s", r, retunit);
-
    
    TGeoSphere* orb = new TGeoSphere(NameShort(name), 0, Evaluate(rline), 0, 180, 0, 360);
 
