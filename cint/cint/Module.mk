@@ -164,7 +164,7 @@ CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
 CINTS2       += $(MODDIRSD)/longif3.cxx
 endif
-ifeq ($(CLANG_MAJOR),1)
+ifeq ($(CLANG_MAJOR),2)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
@@ -204,7 +204,7 @@ MAKECINT     := bin/makecint$(EXEEXT)
 ##### iosenum.h #####
 IOSENUM      := $(MODDIR)/include/iosenum.h
 IOSENUMC     := $(CINTDIRIOSEN)/iosenum.cxx
-ifeq ($(CLANG_MAJOR),1)
+ifeq ($(CLANG_MAJOR),2)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 else
 ifeq ($(GCC_MAJOR),4)
