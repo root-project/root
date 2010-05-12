@@ -1900,9 +1900,10 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    Int_t *lkWord1 = new Int_t[nkWord1];
    Int_t *lkWord2 = new Int_t[nkWord2];
    Int_t *lkWord3 = new Int_t[nkWord3];
-   for (Int_t i = 0;i < nkWord1;i++) lkWord1[i] = strlen(kWord1[i]);
-   for (Int_t i = 0;i < nkWord2;i++) lkWord2[i] = strlen(kWord2[i]);
-   for (Int_t i = 0;i < nkWord3;i++) lkWord3[i] = strlen(kWord3[i]);
+   Int_t i,k ;
+   for (i = 0;i < nkWord1;i++) lkWord1[i] = strlen(kWord1[i]);
+   for (i = 0;i < nkWord2;i++) lkWord2[i] = strlen(kWord2[i]);
+   for (i = 0;i < nkWord3;i++) lkWord3[i] = strlen(kWord3[i]);
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
    Int_t lLeft2 = 4 ;
@@ -1910,7 +1911,6 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    nLeft1  = nRight   = 8 ;
    nOfLeft = nOfRight = 0 ;
 
-   Int_t i,k ;
    Char_t buf[11] ; for (i=0;i<11;i++) buf[i]=0;
    Bool_t opFound ;
    Int_t  opFrac = 0;
