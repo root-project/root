@@ -1229,7 +1229,9 @@ Begin_Html
 For each bin the content is printed. The text attributes are:
 <ul>
 <li> text font = current TStyle font (<tt>gStyle->SetTextFont()</tt>).
-<li> text size = 0.02*padheight*markersize.
+<li> text size = 0.02*padheight*markersize (if <tt>h</tt> is the histogram drawn
+     with the option <tt>"TEXT"</tt> the marker size can be changed with
+     <tt>h->SetMarkerSize(markersize)</tt>). 
 <li> text color = marker color.
 </ul>
 By default the format <tt>"g"</tt> is used. This format can be redefined
