@@ -1383,7 +1383,10 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
       } else {
          listOfMissingFiles = new TList;
       }
-      dset->Lookup(kTRUE, &listOfMissingFiles);
+      // Do the lookup; we only skip it if explicitely requested so.
+      TString lkopt;
+      if (TProof::GetParameter(fInput, "PROOF_LookupOpt", lkopt) != 0 || lkopt != "none")
+         dset->Lookup(kTRUE, &listOfMissingFiles);
 
       if (fProof->GetRunStatus() != TProof::kRunning) {
          // We have been asked to stop
