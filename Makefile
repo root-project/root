@@ -9,8 +9,11 @@
 ##### config/Makefile.config isn't made yet - the package  #####
 ##### scripts want's to make it them selves - so we don't  #####
 
-ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
+ifeq ($(findstring $(MAKECMDGOALS), debian redhat),)
 include config/Makefile.config
+endif
+ifeq ($(MAKECMDGOALS),maintainer-clean)
+-include config/Makefile.config
 endif
 ifeq ($(MAKECMDGOALS),clean)
 include config/Makefile.config
@@ -855,11 +858,7 @@ endif
 	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/lib/posix/mktypes
 	@rm -f README/ChangeLog build/dummy.d
 	@rm -rf README/ReleaseNotes
-	@rm -f etc/daemons/rootd.rc.d etc/daemons/rootd.xinetd
-	@rm -f etc/daemons/proofd.rc.d etc/daemons/proofd.xinetd
-	@rm -f etc/daemons/olbd.rc.d etc/daemons/xrootd.rc.d
-	@rm -f main/src/proofserv.sh main/src/roots.sh
-	@rm -f etc/svninfo.txt macros/html.C
+	@rm -f etc/svninfo.txt
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
 	-@cd test && $(MAKE) distclean
@@ -867,8 +866,12 @@ endif
 maintainer-clean:: distclean
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   config/Makefile.comp $(ROOTRC) etc/system.rootauthrc \
-	   etc/system.rootdaemonrc etc/root.mimes build/misc/root-help.el \
-	   rootd/misc/rootd.rc.d build-arch-stamp build-indep-stamp \
+	   etc/system.rootdaemonrc etc/root.mimes etc/daemons/rootd.rc.d \
+	   etc/daemons/rootd.xinetd etc/daemons/proofd.rc.d \
+	   etc/daemons/proofd.xinetd main/src/proofserv.sh main/src/roots.sh \
+	   etc/daemons/olbd.rc.d etc/daemons/xrootd.rc.d \
+	   etc/daemons/cmsd.rc.d macros/html.C \
+	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 
 version: $(CINTTMP)
