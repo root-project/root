@@ -29,7 +29,6 @@
 #include "TROOT.h"
 
 TDataSetManager *gDataSetManager = 0;
-TString gUser, gGroup;
 
 // Global variables defined by other PQ2 components
 extern TUrl    gUrl;
@@ -234,6 +233,7 @@ Int_t getDSMgr(const char *where)
       // Find the appropriate handler
       TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("TDataSetManager", "file");
       if (h && h->LoadPlugin() != -1) {
+         TString group(getenv("PQ2GROUP")), user(getenv("PQ2USER"));
          TString dsm, opt("opt:-Ar:-Av:");
          const char *o = getenv("PQ2DSMGROPTS");
          if (o) {
@@ -242,8 +242,8 @@ Int_t getDSMgr(const char *where)
          }
          dsm.Form("file dir:%s %s", gUrl.GetUrl(), opt.Data());
          gDataSetManager = reinterpret_cast<TDataSetManager*>(h->ExecPlugin(3,
-                                                               gGroup.Data(),
-                                                               gUser.Data(), dsm.Data()));
+                                                              group.Data(), user.Data(),
+                                                              dsm.Data()));
          if (gDataSetManager) {
             rc = 0;
          } else {
