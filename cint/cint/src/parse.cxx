@@ -2746,6 +2746,12 @@ static G__value G__exec_loop(const char* forinit, char* condition,
    //                ^
    //
    //fprintf(stderr, "G__exec_loop: at begin, G__no_exec_compile: %d\n", G__no_exec_compile);
+   struct TempLevel {
+     TempLevel() { ++G__templevel; }
+     ~TempLevel() { --G__templevel; }
+   };
+   // Make sure all temporaries created in the loop get destroyed.
+   TempLevel raise_temp_level;
 #ifdef G__ASM
    int store_asm_noverflow = 0;
    int store_asm_cp = 0;
