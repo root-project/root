@@ -1311,6 +1311,13 @@ hpuxia64acc)
 solaris64CC5)
    logmsg "Will check Solaris 64bit libraries"
    checksolaris64="yes" ;;
+win32)
+   logmsg "Will use by default builtin versions of libraries on Win32"
+   enable_builtin_freetype="yes"
+   enable_builtin_ftgl="yes"
+   enable_builtin_glew="yes"
+   enable_builtin_pcre="yes"
+   enable_builtin_zlib="yes" ;;
 esac
 
 # check for which
