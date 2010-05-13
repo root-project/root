@@ -99,12 +99,31 @@ options="                    \
    enable_xrootd             \
 "
 
+DEFAULTENABLE="yes"
+for flag in "$@"; do
+    case $flag in
+    --gminimal)
+       DEFAULTENABLE="no"
+       MINIMALENABLE="enable_gui" # to be implemented
+       break ;;
+     --minimal)
+       DEFAULTENABLE="no"
+       MINIMALENABLE=""
+       break ;;
+    esac
+done
+
 #
-# This sets all options to "yes" - we turn off those we don't want
-# on per default explictly afterwards.
+# This sets all options to "yes" unless --minimal is specified.
+# We turn off those we don't want on per default explictly afterwards.
 #
-for c in $options ; do eval ${c}="yes" ; done
-for c in $deprecated_options ; do eval ${c}="yes" ; done
+for c in $options $deprecated_options; do
+    case ${c} in
+        ${MINIMALENABLE}) eval ${c}="yes" ;;
+        enable_shared)    eval ${c}="yes" ;;
+        *)                eval ${c}="${DEFAULTENABLE}" ;;
+    esac
+done
 for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cling=
@@ -1131,6 +1150,10 @@ enable/disable options, prefix with either --enable- or --disable-
   xrootd             Build xrootd file server and its client (if supported)
   xft                Xft support (X11 antialiased fonts)
 
+minimal set of libraries, can be combined with above --enable-... options
+
+  --minimal          Do not automatically search for support libraries
+
 with options, prefix with --with-, enables corresponding support
 
   afs                AFS support, location of AFS distribution
@@ -1380,6 +1403,7 @@ if test $# -gt 0 ; then
       --no-create)             noact="yes"           ;;
       --nohowto)               nohowto="yes"         ;;
       --fail-on-missing)       fail_on_missing="yes" ;;
+      --minimal)               ;;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-afs-incdir=*)     afsincdir=$optarg     ; enable_afs="yes"     ;;
       --with-afs-libdir=*)     afslibdir=$optarg     ; enable_afs="yes"     ;;
@@ -1825,6 +1849,9 @@ if test "x$enable_winrtdebug" = "x" ; then
     else
         enable_winrtdebug=no
     fi
+fi
+if test "x$platform" != "xwin32"; then
+    enable_winrtdebug=no
 fi
 
 ######################################################################
@@ -3620,48 +3647,51 @@ if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
    fi
 
 else
-
-   # Xrootd and its client need thread support
-   if test "x$enable_thread" = "xyes"; then
-       # Ok, now check the architecture
-       case $arch in
-       # xrootd does not build on all platforms yet
-       linux*)
-           if test "x$enable_xrootd" = "x"; then
-               enable_xrootd="yes"
-           fi
-           ;;
-       macos*)
-           if test "x$enable_xrootd" = "x"; then
-               enable_xrootd="yes"
-           fi
-           ;;
-       solaris*)
-           if test "x$enable_xrootd" = "x"; then
-               enable_xrootd="yes"
-           fi
-           ;;
-       win32)
-           if test "x$enable_xrootd" = "x"; then
-               enable_xrootd="yes"
-           fi
-           ;;
-       *)
+   if test "x$enable_xrootd" = "x" && test "x$DEFAULTENABLE" = "xno"; then
+       enable_xrootd="no"
+   else
+       # Xrootd and its client need thread support
+       if test "x$enable_thread" = "xyes"; then
+           # Ok, now check the architecture
+           case $arch in
+           # xrootd does not build on all platforms yet
+           linux*)
+               if test "x$enable_xrootd" = "x"; then
+                   enable_xrootd="yes"
+               fi
+               ;;
+           macos*)
+               if test "x$enable_xrootd" = "x"; then
+                   enable_xrootd="yes"
+               fi
+               ;;
+           solaris*)
+               if test "x$enable_xrootd" = "x"; then
+                   enable_xrootd="yes"
+               fi
+               ;;
+           win32)
+               if test "x$enable_xrootd" = "x"; then
+                   enable_xrootd="yes"
+               fi
+               ;;
+           *)
+               if test "x$enable_xrootd" = "xyes"; then
+                   enable_xrootd="yes"
+                   xrdcomm=", but not officially supported"
+               else
+                   enable_xrootd="no"
+               fi
+               ;;
+           esac
+       else
            if test "x$enable_xrootd" = "xyes"; then
-               enable_xrootd="yes"
-               xrdcomm=", but not officially supported"
+               enable_xrootd="no"
+               xrdcomm=", needs thread support (make sure pthread lib is found)"
            else
                enable_xrootd="no"
            fi
-           ;;
-       esac
-   else
-      if test "x$enable_xrootd" = "xyes"; then
-         enable_xrootd="no"
-         xrdcomm=", needs thread support (make sure pthread lib is found)"
-      else
-         enable_xrootd="no"
-      fi
+       fi
    fi
 
    xrdcomm="$enable_xrootd$xrdcomm"
