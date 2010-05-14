@@ -863,7 +863,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             // Expression executed if condition is true.
             ctemp = chaine(tercond,terelse-tercond-1);
             Analyze(ctemp.Data(),err,offset); if (err) return;
-            actionParam = fNoper;
+            actionParam = fNoper; // We want to skip the next instruction ('else jump'), so we set the param to the current cursor and the next instruction will be skip by the ++i in the eval loop
             SetAction(optloc, actionCode, actionParam);
 
             fExpr[fNoper] = "?: else jump";
@@ -877,7 +877,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             ctemp = chaine(terelse,lchain-terelse);
             Analyze(ctemp.Data(),err,offset); if (err) return;
             // Set jump target.
-            actionParam = fNoper;
+            actionParam = fNoper - 1; // We need to not skip the next instruction, so we compensate for the ++i in the eval loop 
             SetAction(optloc, actionCode, actionParam);
             
             if (IsString(optloc-1) != IsString(fNoper-1)) {
@@ -3042,7 +3042,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
             } else {
                tab[spos-2]=tab[spos-2]+tab[spos-1]+":";
             }
-            ternaryend = GetActionParam(i);
+            ternaryend = GetActionParam(i) + 1;
             spos--;
             continue;
          }
