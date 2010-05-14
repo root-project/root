@@ -1814,6 +1814,10 @@ void TFile::SetCompressionLevel(Int_t level)
 void TFile::SetCacheRead(TFileCacheRead *cache)
 {
    // Set a pointer to the read cache.
+   // NOTE:  This relinquish ownership of the previous cache, so if you do not
+   // already have a pointer to the previous cache (and there was a previous
+   // cache), you ought to retrieve (and delete it if needed) using:
+   //    TFileCacheRead *older = myfile->GetCacheRead();
 
    fCacheRead = cache;
 }
