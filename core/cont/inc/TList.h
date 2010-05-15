@@ -86,6 +86,7 @@ public:
    virtual void      AddBefore(TObjLink *before, TObject *obj);
    virtual TObject  *Remove(TObject *obj);
    virtual TObject  *Remove(TObjLink *lnk);
+   virtual void      RemoveLast();
    virtual void      RecursiveRemove(TObject *obj);
 
    virtual TObject  *At(Int_t idx) const;

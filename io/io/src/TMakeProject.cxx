@@ -75,10 +75,12 @@ void TMakeProject::ChopFileName(TString &name, Int_t limit)
 }
 
 //______________________________________________________________________________
-TString TMakeProject::GetHeaderName(const char *name, Bool_t includeNested)
+TString TMakeProject::GetHeaderName(const char *in_name, Bool_t includeNested)
 {
    //Return the header name containing the description of name
    TString result;
+   std::string strname( TClassEdit::GetLong64_Name( in_name ) );
+   const char *name = strname.c_str();
    Int_t len = strlen(name);
    Int_t nest = 0;
    for (Int_t i = 0; i < len; ++i) {
@@ -336,7 +338,7 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
          case ',':
             if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
                TString incName(clname + last, i - last);
-               incName = TClassEdit::ShortType(incName.Data(), 1);
+               incName = TClassEdit::ShortType(incName.Data(), TClassEdit::kDropTrailStar | TClassEdit::kLong64);
                if (clname[i] == '>' && nest == 1) incName.Append(">");
 
                if (isdigit(incName[0])) {
@@ -348,7 +350,7 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
             }
       }
    }
-   GenerateMissingStreamerInfo(extrainfos,TClassEdit::ShortType(clname, 1).c_str(),kFALSE);
+   GenerateMissingStreamerInfo(extrainfos,TClassEdit::ShortType(clname, TClassEdit::kDropTrailStar | TClassEdit::kLong64).c_str(),kFALSE);
 }
 
 //______________________________________________________________________________
@@ -415,7 +417,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
          case ',':
             if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
                TString incName(clname + last, i - last);
-               incName = TClassEdit::ShortType(incName.Data(), 1);
+               incName = TClassEdit::ShortType(incName.Data(), TClassEdit::kDropTrailStar | TClassEdit::kLong64);
                if (clname[i] == '>' && nest == 1) incName.Append(">");
                Int_t stlType;
                if (isdigit(incName[0])) {
@@ -498,7 +500,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
    if (stlType) {
       std::vector<std::string> inside;
       int nestedLoc;
-      TClassEdit::GetSplit(clname, inside, nestedLoc);
+      TClassEdit::GetSplit( clname, inside, nestedLoc, TClassEdit::kLong64 );
       Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
       TClass *key = TClass::GetClass(inside[1].c_str());
       if (key) {
@@ -536,8 +538,10 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
    if (strchr(name,'<')!=0) {
       std::vector<std::string> inside;
       int nestedLoc;
-      TClassEdit::GetSplit( name, inside, nestedLoc );
-      for(unsigned int i = 1; i<inside.size(); ++i) {
+      unsigned int narg = TClassEdit::GetSplit( name, inside, nestedLoc, TClassEdit::kLong64 );
+      if (nestedLoc) --narg;
+      
+      for(unsigned int i = 1; i<narg; ++i) {
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
       }
       Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0].c_str()));

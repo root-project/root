@@ -103,6 +103,10 @@
 #include "TStopwatch.h"
 #include "compiledata.h"
 #include <cmath>
+#include <set>
+#include "TSchemaRule.h"
+#include "TSchemaRuleSet.h"
+#include "TStreamerElement.h"
 
 TFile *gFile;                 //Pointer to current file
 
@@ -1886,7 +1890,9 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    WriteHeader();                     // Now write file header
    fMustFlush = kTRUE;
 
-   cursav->cd();
+   if (cursav) cursav->cd();
+   else gDirectory = 0;
+
    return nbytes;
 }
 
@@ -2190,15 +2196,38 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (cl) {
          if (cl->GetClassInfo()) continue; // skip known classes
       }
-      TMakeProject::GenerateMissingStreamerInfos( &extrainfos, info->GetName() );
+      // Find and use the proper rules for the TStreamerInfos.
+      TMakeProject::GenerateMissingStreamerInfos(&extrainfos, info->GetName() );
       TIter enext( info->GetElements() );
       TStreamerElement *el;
+      const ROOT::TSchemaMatch* rules = 0;
+      if (cl->GetSchemaRules()) {
+         rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
+      }
       while( (el=(TStreamerElement*)enext()) ) {
+         if (rules) {
+            for(Int_t art = 0; art < rules->GetEntries(); ++art) {
+               ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
+               if( rule->IsRenameRule() || rule->IsAliasRule() )
+                  continue;
+               // Check whether this is an 'attribute' rule.
+               if ( rule->HasTarget( el->GetName()) && rule->GetAttributes()[0] != 0 ) {
+                  TString attr( rule->GetAttributes() );
+                  attr.ToLower();
+                  if (attr.Contains("owner")) {
+                     if (attr.Contains("notowner")) {
+                        el->SetBit(TStreamerElement::kDoNotDelete);
+                     } else {
+                        el->ResetBit(TStreamerElement::kDoNotDelete);
+                     }
+                  }
+               }
+            }               
+         }
          TMakeProject::GenerateMissingStreamerInfos(&extrainfos, el);
       }
       TVirtualStreamerInfo *alternate = (TVirtualStreamerInfo*)list->FindObject(info->GetName());
       if (alternate) {
-         fprintf(stderr,"%p %s %p\n",alternate,alternate->GetName(),alternate->GetClass());
          if ((info->GetClass() && info->GetClassVersion() == info->GetClass()->GetClassVersion())
              || (info->GetClassVersion() > alternate->GetClassVersion()) ) {
             list->AddAfter(alternate, info);
@@ -2301,14 +2330,37 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (info->IsA() != TStreamerInfo::Class()) {
          continue;
       }
+      TClass *cl = TClass::GetClass(info->GetName());
+      if (cl) {
+         if (cl->GetClassInfo()) continue; // skip known classes
+         const ROOT::TSchemaMatch* rules = 0;
+         if (cl->GetSchemaRules()) {
+            rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
+            TString strrule;
+            for(Int_t art = 0; art < rules->GetEntries(); ++art) {
+               ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
+               strrule.Clear();
+               {
+                  rule->AsString(strrule);
+                  if (strncmp(strrule.Data(),"type=",5)==0) {
+                     strrule.Remove(0,5);
+                  }
+                  fprintf(fp,"#pragma %s;\n",strrule.Data());
+               }
+               
+            }
+            delete rules;
+         }
+         
+      }
       if (TClassEdit::IsSTLCont(info->GetName())) {
          std::vector<std::string> inside;
          int nestedLoc;
-         TClassEdit::GetSplit( info->GetName(), inside, nestedLoc );
+         TClassEdit::GetSplit( info->GetName(), inside, nestedLoc, TClassEdit::kLong64 );
          Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
          TClass *key = TClass::GetClass(inside[1].c_str());
          if (key) {
-            std::string what;
+            TString what;
             switch ( stlkind )  {
             case TClassEdit::kMap:
             case TClassEdit::kMultiMap:
@@ -2317,15 +2369,21 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                   what += TMakeProject::UpdateAssociativeToVector( inside[1].c_str() );
                   what += ",";
                   what += TMakeProject::UpdateAssociativeToVector( inside[2].c_str() );
-                  what += " >";
-                  fprintf(fp,"#pragma link C++ class %s+;\n",what.c_str());
+                  if (what[what.Length()-1]=='>') {
+                     what += " >";
+                  } else {
+                     what += ">";
+                  }
+                  {
+                     what.ReplaceAll("std::","");
+                     fprintf(fp,"#pragma link C++ class %s+;\n",what.Data());
+                  }
                   break;
                }
             }
          }
          continue;
       }
-      TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->GetClassInfo()) continue; // skip known classes
       }
@@ -2531,17 +2589,41 @@ void TFile::WriteStreamerInfo()
    TIter next(gROOT->GetListOfStreamerInfo());
    TStreamerInfo *info;
    TList list;
+   TList listOfRules;
+   listOfRules.SetName("listOfRules");
+   std::set<TClass*> classSet;
+
 
    while ((info = (TStreamerInfo*)next())) {
       Int_t uid = info->GetNumber();
       if (fClassIndex->fArray[uid]) {
          list.Add(info);
          if (gDebug > 0) printf(" -class: %s info number %d saved\n",info->GetName(),uid);
+         
+         // Add the IO customization rules to the list to be saved for the underlying
+         // class but make sure to add them only once.
+         TClass *clinfo = info->GetClass();
+         if (clinfo && clinfo->GetSchemaRules()) {
+            if ( classSet.find( clinfo ) == classSet.end() ) {
+               if (gDebug > 0) printf(" -class: %s stored the I/O customization rules\n",info->GetName());
+ 
+               TObjArrayIter it( clinfo->GetSchemaRules()->GetRules() );
+               ROOT::TSchemaRule *rule;
+               while( (rule = (ROOT::TSchemaRule*)it.Next()) ) {
+                  TObjString *obj = new TObjString();
+                  rule->AsString(obj->String());
+                  listOfRules.Add(obj);
+               }
+               classSet.insert(clinfo);
+            }
+         }
       }
    }
    if (list.GetSize() == 0) return;
    fClassIndex->fArray[0] = 2; //to prevent adding classes in TStreamerInfo::TagFile
 
+   list.Add(&listOfRules);
+   
    // always write with compression on
    Int_t compress = fCompress;
    fCompress = 1;
@@ -2558,6 +2640,9 @@ void TFile::WriteStreamerInfo()
 
    fClassIndex->fArray[0] = 0;
    fCompress = compress;
+   
+   listOfRules.Delete();
+   list.RemoveLast(); // remove the listOfRules.
 }
 
 //______________________________________________________________________________

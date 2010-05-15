@@ -60,6 +60,8 @@
 #include "TSchemaRuleSet.h"
 #include "TGenericClassInfo.h"
 #include "TIsAProxy.h"
+#include "TSchemaRule.h"
+#include "TSystem.h"
 
 #include <cstdio>
 #include <cctype>
@@ -858,7 +860,8 @@ void TClass::Init(const char *name, Version_t cversion,
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
 
-   SetName(name);
+   // Always strip the default STL template arguments (from any template argument or the class name)
+   SetName(TClassEdit::ShortType(name, TClassEdit::kDropStlDefault).c_str());
    fClassVersion   = cversion;
    fDeclFileName   = dfil ? dfil : "";
    fImplFileName   = ifil ? ifil : "";
@@ -873,7 +876,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
    ResetInstanceCount();
 
-   TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+   TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(fName.Data());
 
    if (oldcl && oldcl->TestBit(kLoading)) {
       // Do not recreate a class while it is already being created!
@@ -898,6 +901,10 @@ void TClass::Init(const char *name, Version_t cversion,
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
       }
       oldcl->GetStreamerInfos()->Clear();
+      
+      // Move the Schema Rules too.
+      fSchemaRules = oldcl->fSchemaRules;
+      oldcl->fSchemaRules = 0;
 
    }
 
@@ -905,12 +912,13 @@ void TClass::Init(const char *name, Version_t cversion,
    // Advertise ourself as the loading class for this class name
    TClass::AddClass(this);
 
-   Bool_t isStl = TClassEdit::IsSTLCont(name);
+//    Bool_t isStl = TClassEdit::IsSTLCont(name);
+   Bool_t isStl = TClassEdit::IsSTLCont(fName);
 
    if (!fClassInfo) {
       Bool_t shouldLoad = kFALSE;
 
-      if (gInterpreter->CheckClassInfo(name)) shouldLoad = kTRUE;
+      if (gInterpreter->CheckClassInfo(fName)) shouldLoad = kTRUE;
       else if (fImplFileLine>=0) {
          // If the TClass is being generated from a ROOT dictionary,
          // eventhough we do not seem to have a CINT dictionary for
@@ -939,7 +947,7 @@ void TClass::Init(const char *name, Version_t cversion,
       }
    }
    if (!silent && !fClassInfo && !isStl && fName.First('@')==kNPOS)
-      ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
+      ::Warning("TClass::TClass", "no dictionary for class %s is available", fName.Data());
 
    fgClassCount++;
    SetUniqueID(fgClassCount);
@@ -950,6 +958,20 @@ void TClass::Init(const char *name, Version_t cversion,
    // is different from the original name.
    TString resolvedThis;
    if (strchr (name, '<')) {
+      if ( fName != name) {
+         if (!fgClassTypedefHash) {
+            fgClassTypedefHash = new THashTable (100, 5);
+            fgClassTypedefHash->SetOwner (kTRUE);
+         }
+         
+         fgClassTypedefHash->Add (new TNameMapNode (name, fName));
+         SetBit (kHasNameMapNode);         
+
+         TString resolvedShort = TClassEdit::ResolveTypedef(fName, kTRUE);
+         if (resolvedShort != fName) {
+            fgClassShortTypedefHash->Add (new TNameMapNode (resolvedShort, fName));
+         }         
+      }
       resolvedThis = TClassEdit::ResolveTypedef (name, kTRUE);
       if (resolvedThis != name) {
          if (!fgClassTypedefHash) {
@@ -957,24 +979,10 @@ void TClass::Init(const char *name, Version_t cversion,
             fgClassTypedefHash->SetOwner (kTRUE);
          }
 
-         fgClassTypedefHash->Add (new TNameMapNode (resolvedThis, name));
+         fgClassTypedefHash->Add (new TNameMapNode (resolvedThis, fName));
          SetBit (kHasNameMapNode);
       }
 
-      TString resolvedShort =
-       TClassEdit::ResolveTypedef
-         (TClassEdit::ShortType(name,
-                                TClassEdit::kDropStlDefault).c_str(),
-          kTRUE);
-      if (resolvedShort != name) {
-         if (!fgClassShortTypedefHash) {
-            fgClassShortTypedefHash = new THashTable (100, 5);
-            fgClassShortTypedefHash->SetOwner (kTRUE);
-         }
-
-         fgClassShortTypedefHash->Add (new TNameMapNode (resolvedShort, name));
-         SetBit (kHasNameMapNode);
-      }
    }
 
    //In case a class with the same name had been created by TVirtualStreamerInfo
@@ -989,12 +997,12 @@ void TClass::Init(const char *name, Version_t cversion,
 
       // Check for existing equivalent.
 
-      if (resolvedThis != name) {
+      if (resolvedThis != fName) {
          oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedThis);
          if (oldcl && oldcl != this)
             ForceReload (oldcl);
       }
-      TIter next( fgClassTypedefHash->GetListForObject (resolvedThis) );
+      TIter next( fgClassTypedefHash->GetListForObject(resolvedThis) );
       while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
          if (resolvedThis != htmp->String()) continue;
          oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(htmp->fOrigName); // gROOT->GetClass (htmp->fOrigName, kFALSE);
@@ -1175,6 +1183,198 @@ TClass::~TClass()
    delete fIsAMethod;
    delete fSchemaRules;
    delete fConversionStreamerInfo;
+}
+
+//------------------------------------------------------------------------------
+Int_t TClass::ReadRules()
+{
+   // Read the class.rules files from the default locations.
+   // The 3 files possibly read are:
+   //     $ROOTSYS/etc/class.rules (or ROOTETCDIR/class.rules)
+   //     $HOME/class.rules
+   //     ./class.rules 
+   // By setting the shell variable ROOTENV_NO_HOME=1 the reading of
+   // the $HOME/class.rules resource file will be skipped. This might be useful in
+   // case the home directory resides on an automounted remote file system
+   // and one wants to avoid the file system from being mounted.
+   
+   static const char *suffix = "class.rules";
+   TString sname = suffix;
+#ifdef ROOTETCDIR
+   gSystem->PrependPathName(ROOTETCDIR, sname);
+#else
+   TString etc = gRootDir;
+#ifdef WIN32
+   etc += "\\etc";
+#else
+   etc += "/etc";
+#endif
+   gSystem->PrependPathName(etc, sname);
+#endif
+   
+   Int_t count = 0;
+   Int_t res;
+   if (gSystem->AccessPathName(sname) == 0) {
+      res = ReadRules(sname);
+      if (res < 0) {
+         return res;
+      }
+      count += res;
+   }
+   if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
+      sname = suffix;
+      gSystem->PrependPathName(gSystem->HomeDirectory(), sname);
+      if (gSystem->AccessPathName(sname) == 0) {
+         res = ReadRules(sname);
+         if (res < 0) {
+            return res;
+         }
+         count += res;
+      }
+      if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {
+         if (gSystem->AccessPathName(suffix) == 0) {
+            res = ReadRules(suffix);
+            if (res < 0) {
+               return res;
+            }
+            count += res;
+         }
+      }
+   } else {
+      if (gSystem->AccessPathName(suffix) == 0) {
+         res = ReadRules(suffix);
+         if (res < 0) {
+            return res;
+         }
+         count += res;
+      }
+   }
+   return count;
+}
+
+//------------------------------------------------------------------------------
+Int_t TClass::ReadRules( const char *filename )
+{
+   // Read a class.rules file which contains one rule per line with comment
+   // starting with a #
+   // Returns the number of rules loaded.
+   // Returns -1 in case of error.
+   
+   if (!filename || !strlen(filename)) {
+      ::Error("TClass::ReadRules", "no file name specified");
+      return -1;
+   }
+   
+   FILE * f = fopen(filename,"r");
+   if (f == 0) {
+      ::Error("TClass::ReadRules","Failed to open %s\n",filename);
+      return -1;
+   }
+   
+   TString rule(1024);
+   int c, state = 0;
+   Int_t count = 0;
+   
+   while ((c = fgetc(f)) != EOF) {
+      if (c == 13)        // ignore CR
+         continue;
+      if (c == '\n') {
+         if (state != 3) {
+            state = 0;
+            if (rule.Length() > 0) {
+               if (TClass::AddRule(rule)) {
+                  ++count;
+               }
+               rule.Clear();
+            }
+         }
+         continue;
+      }
+      switch (state) {
+         case 0:             // start of line
+            switch (c) {
+               case ' ':
+               case '\t':
+                  break;
+               case '#':
+                  state = 1;
+                  break;
+               default:
+                  state = 2;
+                  break;
+            }
+            break;
+            
+         case 1:             // comment
+            break;
+            
+         case 2:             // rule
+            switch (c) {
+               case '\\':
+                  state = 3; // Continuation request
+               default:
+                  break;
+            }
+            break;            
+      }
+      switch (state) {
+         case 2:
+            rule.Append(c);
+            break;
+      }
+   }
+   fclose(f);
+   return count;
+   
+}
+
+//------------------------------------------------------------------------------
+Bool_t TClass::AddRule( const char *rule )
+{
+   // Add a schema evolution customization rule.
+   // The syntax of the rule can be either the short form:
+   //  [type=Read] classname membername [attributes=... ] [version=[...] ] [checksum=[...] ] [oldtype=...] [code={...}]
+   // or the long form
+   //  [type=Read] sourceClass=classname [targetclass=newClassname] [ source="type membername; [type2 membername2]" ]
+   //      [target="membername3;membername4"] [attributes=... ] [version=...] [checksum=...] [code={...}|functionname]
+   //
+   // For example to set HepMC::GenVertex::m_event to _not_ owned the object it is pointing to:
+   //   HepMC::GenVertex m_event attributes=NotOwner
+   //
+   // Semantic of the tags:
+   //   type : the type of the rule, valid values: Read, ReadRaw, Write, WriteRaw, the default is 'Read'.
+   //   sourceClass : the name of the class as it is on the rule file
+   //   targetClass : the name of the class as it is in the current code ; defaults to the value of sourceClass
+   //   source : the types and names of the data members from the class on file that are needed, the list is separated by semi-colons ';'
+   //   oldtype: in the short form only, indicates the type on disk of the data member.
+   //   target : the names of the data members updated by this rule, the list is separated by semi-colons ';'
+   //   attributes : list of possible qualifiers amongs:
+   //      Owner, NotOwner
+   //   version : list of the version of the class layout that this rule applies to.  The syntax can be [1,4,5] or [2-] or [1-3] or [-3]
+   //   checksum : comma delimited list of the checksums of the class layout that this rule applies to.
+   //   code={...} : code to be executed for the rule or name of the function implementing it.
+ 
+   ROOT::TSchemaRule *ruleobj = new ROOT::TSchemaRule();
+   if (! ruleobj->SetFromRule( rule ) ) {
+      delete ruleobj;
+      return kFALSE;
+   }
+
+   TClass *cl = TClass::GetClass( ruleobj->GetTargetClass() );
+   if (!cl) {
+      // Create an empty emulated class for now.
+      cl = new TClass(ruleobj->GetTargetClass(), 1, 0, 0, -1, -1, kTRUE);
+      cl->SetBit(TClass::kIsEmulation);
+   }
+   ROOT::TSchemaRuleSet* rset = cl->GetSchemaRules( kTRUE );
+      
+   if( !rset->AddRule( ruleobj, ROOT::TSchemaRuleSet::kCheckConflict ) ) {
+      ::Warning( "TClass::AddRule", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because it conflicts with one of the other rules.",
+                ruleobj->GetTargetClass(), ruleobj->GetVersion(), ruleobj->GetTargetString() );
+      delete ruleobj;
+      return kFALSE;
+   }
+   return kTRUE;
 }
 
 //------------------------------------------------------------------------------
@@ -2091,12 +2291,24 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (!gROOT->GetListOfClasses())    return 0;
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+   
+   TClassEdit::TSplitType splitname( name, TClassEdit::kLong64 );
 
-   TClassEdit::TSplitType splitname( name );
- 
    if (!cl) {
-      TString resolvedName = TClassEdit::ResolveTypedef(name,kTRUE).c_str();
-      cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName);
+      // Try the name where we strip out the STL default template arguments
+      std::string resolvedName;
+      splitname.ShortType(resolvedName, TClassEdit::kDropStlDefault);
+      if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+      if (!cl) {
+         // Attempt to resolve typedefs
+         resolvedName = TClassEdit::ResolveTypedef(resolvedName.c_str(),kTRUE);
+         if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+      }
+      if (!cl) {
+         // Try with Long64_t
+         resolvedName = TClassEdit::GetLong64_Name(resolvedName);
+         if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+      }         
    }
 
    if (cl) {
@@ -2108,20 +2320,22 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
       if (splitname.IsSTLCont()) {
 
-         const char *altname = gCint->GetInterpreterTypeName(name);
-         if (altname && strcmp(altname,name)!=0) {
+         const char * itypename = gCint->GetInterpreterTypeName(name);
+         if (itypename) {
+            std::string altname( TClassEdit::ShortType(itypename, TClassEdit::kDropStlDefault) );
+            if (altname != name) {
 
-            // Remove the existing (soon to be invalid) TClass object to
-            // avoid an infinite recursion.
-            gROOT->GetListOfClasses()->Remove(cl);
-            TClass *newcl = GetClass(altname,load);
-
-            // since the name are different but we got a TClass, we assume
-            // we need to replace and delete this class.
-            assert(newcl!=cl);
-            cl->ReplaceWith(newcl);
-            delete cl;
-            return newcl;
+               // Remove the existing (soon to be invalid) TClass object to
+               // avoid an infinite recursion.
+               gROOT->GetListOfClasses()->Remove(cl);
+               TClass *newcl = GetClass(altname.c_str(),load);
+               
+               // since the name are different but we got a TClass, we assume
+               // we need to replace and delete this class.
+               assert(newcl!=cl);
+               newcl->ForceReload(cl);
+               return newcl;
+            }
          }
       }
 
@@ -2221,7 +2435,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
 //______________________________________________________________________________
 THashTable *TClass::GetClassShortTypedefHash() {
-   // Return the class namesmassaged with TClassEdit::ShortType with kDropStlDefault.
+   // Return the class' names massaged with TClassEdit::ShortType with kDropStlDefault.
    return fgClassShortTypedefHash;
 }
 

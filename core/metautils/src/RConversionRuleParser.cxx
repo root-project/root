@@ -18,9 +18,37 @@ namespace ROOT
    SchemaRuleClassMap_t G__ReadRules;
    SchemaRuleClassMap_t G__ReadRawRules;
 
+   static bool ValidateRule( const std::map<std::string, std::string>& rule, string &error_string );
+   
+   static std::string::size_type FindEndSymbol(std::string &command) 
+   {
+      // Find the end of a symbol.
+      
+      if (command.length() == 0) return std::string::npos;
+      std::string::size_type cursor;
+      unsigned int level = 0;
+      for (cursor = 0 ; cursor < command.length(); ++cursor) 
+      {
+         switch( command[cursor] ) {
+            case ' ':
+            case '\t':
+            case '\r':
+            case '=': if (level==0) return cursor; else break;
+            case '<': ++level; break;
+            case '>': --level; break;
+            default: {
+               // nothing to do
+            }
+         };
+      }
+      return cursor;
+   }
+   
+   
    //--------------------------------------------------------------------------
-   static void parse( std::string command,
-                      std::map<std::string, std::string> &result )
+   Bool_t ParseRule( std::string command,
+                     std::map<std::string, std::string> &result,
+                     std::string &error_string )
    {
       // Parse the schema rule as specified in the LinkDef file
 
@@ -32,6 +60,42 @@ namespace ROOT
       //-----------------------------------------------------------------------
       if( command[command.size()-1] == ';' )
          command = command.substr( 0, command.size()-1 );
+      
+      //-----------------------------------------------------------------------
+      // If the first symbol does not end is not followed by equal then it
+      // defaults to being the sourceClass.
+      //-----------------------------------------------------------------------
+      {
+         std::string::size_type endsymbol = FindEndSymbol( command );
+         if ( endsymbol == command.length() || command[endsymbol] == ' ' || command[endsymbol] == '\t' ) {
+//         std::string::size_type space_pos = command.find( ' ' );
+//         std::string::size_type equal_pos = command.find( '=' );
+//         if ( space_pos < equal_pos) {
+            std::string value = TSchemaRuleProcessor::Trim( command.substr( 0, endsymbol ) );
+            result["sourceClass"] = value;
+            result["targetClass"] = value;
+            if (endsymbol < command.length()) {
+               command = TSchemaRuleProcessor::Trim( command.substr( endsymbol+1 ) );
+            } else {
+               command.clear();
+            }
+
+            //-----------------------------------------------------------------------
+            // If the first symbol is the targetClass then the 2nd symbol can be 
+            // the source data member name.
+            //-----------------------------------------------------------------------
+//            space_pos = command.find( ' ' );
+//            equal_pos = command.find( '=' );
+//            if ( space_pos < equal_pos ) {
+            endsymbol = FindEndSymbol( command );
+            if ( endsymbol == command.length() || command[endsymbol] == ' ' || command[endsymbol] == '\t' ) {
+               std::string value = TSchemaRuleProcessor::Trim( command.substr( 0, endsymbol ) );
+               result["source"] = value;
+               result["target"] = value;
+               command = TSchemaRuleProcessor::Trim( command.substr( endsymbol+1 ) );
+            }               
+         }
+      }
 
       //-----------------------------------------------------------------------
       // Process the input until there are no characters left
@@ -47,8 +111,8 @@ namespace ROOT
          // No equality sign found - no keys left
          //--------------------------------------------------------------------
          if( pos == std::string::npos ) {
-            std::cerr << "Parsing error, no key found!" << std::endl;
-            break;
+            error_string = "Parsing error, no key found!";
+            return false;
          }
 
          //--------------------------------------------------------------------
@@ -60,32 +124,27 @@ namespace ROOT
          //--------------------------------------------------------------------
          // Nothing left to be processed
          //--------------------------------------------------------------------
-         if( command.size() < 2 ) {
-            std::cerr << "Parsing error, wrond or no value specified for key: ";
-            std::cerr << key << std::endl;
-            break;
+         if( command.size() < 1 ) {
+            error_string = "Parsing error, wrond or no value specified for key: " + key;
+            return false;
          }
 
-         if( command[0] != '"' ) {
-            std::cerr << "Parsing error while processing key: " << key << std::endl;
-            std::cerr << "Expected \" at the beginning of the value" << std::endl;
-            break;
-         }
+         bool hasquote = command[0] == '"';
 
          //--------------------------------------------------------------------
          // Processing code tag: "{ code }"
          //--------------------------------------------------------------------
          if( key == "code" ) {
             if( command[1] != '{' ) {
-               std::cerr << "Parsing error while processing key: code" << std::endl;
-               std::cerr << "Expected \"{ at the beginning of the value" << std::endl;
-               break;
+               error_string = "Parsing error while processing key: code\n";
+               error_string += "Expected \"{ at the beginning of the value.";
+               return false;
             }
             l = command.find( "}\"" );
             if( l == std::string::npos ) {
-               std::cerr << "Parsing error while processing key: \"" << key << "\"" << std::endl;
-               std::cerr << "Expected }\" at the end of the value" << std::endl;
-               break;
+               error_string = "Parsing error while processing key: \"" + key + "\"\n";
+               error_string += "Expected }\" at the end of the value.";
+               return false;
             }
             result[key] = command.substr( 2, l-2 );
             ++l;
@@ -94,13 +153,20 @@ namespace ROOT
          // Processing normal tag: "value"
          //--------------------------------------------------------------------
          else {
-            l = command.find( '"', 1 );
-            if( l == std::string::npos ) {
-               std::cerr << "Parsing error while processing key: \"" << key << "\"" << std::endl;
-               std::cerr << "Expected \" at the end of the value" << std::endl;
-               break;
-            }
-            result[key] = command.substr( 1, l-1 );
+            
+            if( hasquote) {
+               l = command.find( '"', 1 );
+               if (l == std::string::npos ) {
+                  error_string = "\nParsing error while processing key: \"" + key + "\"\n";
+                  error_string += "Expected \" at the end of the value.";
+                  return false;
+               }
+               result[key] = command.substr( 1, l-1 );
+            } else {
+               l = command.find(' ', 1);
+               if (l == std::string::npos) l = command.size();
+               result[key] = command.substr( 0, l );
+            }               
          }
 
          //--------------------------------------------------------------------
@@ -110,10 +176,23 @@ namespace ROOT
             break;
          command = command.substr( l+1 );
       }
+      std::map<std::string, std::string>::const_iterator it1;
+      it1 = result.find("oldtype");
+      if ( it1 != result.end() ) {
+         std::map<std::string, std::string>::const_iterator it2;
+         it2 = result.find("source");
+         if ( it2 != result.end() ) {
+            result["source"] = it1->second + " " + it2->second;
+         }
+      }
+      if ( result.find("version") == result.end() && result.find("checksum") == result.end() ) {
+         result["version"] = "[1-]";
+      }
+      return ValidateRule( result, error_string);
    }
 
    //--------------------------------------------------------------------------
-   static bool valid( const std::map<std::string, std::string>& rule )
+   static bool ValidateRule( const std::map<std::string, std::string>& rule, string &error_string )
    {
       // Validate if the user specified rules are correct
 
@@ -126,8 +205,8 @@ namespace ROOT
 
       it1 = rule.find( "targetClass" );
       if( it1 == rule.end() ) {
-         std::cout << "WARNING: You always have to specify the targetClass ";
-         std::cout << "when specyfying an IO rule" << std::endl;
+         error_string = "WARNING: You always have to specify the targetClass ";
+         error_string += "when specyfying an IO rule";
          return false;
       }
 
@@ -140,8 +219,7 @@ namespace ROOT
       it1 = rule.find( "sourceClass" );
       if( it1 == rule.end())
       {
-         std::cout << warning << " - sourceClass parameter is missing";
-         std::cout << std::endl;
+         error_string = warning + " - sourceClass parameter is missing";
          return false;
       }
 
@@ -151,8 +229,8 @@ namespace ROOT
       it1 = rule.find( "version" );
       it2 = rule.find( "checksum" );
       if( it1 == rule.end() && it2 == rule.end() ) {
-         std::cout << warning << " - you need to specify either version or ";
-         std::cout << "checksum" << std::endl;
+         error_string = warning + " - you need to specify either version or ";
+         error_string += "checksum";
          return false;
       }
 
@@ -162,9 +240,9 @@ namespace ROOT
       if( it2 != rule.end() ) {
          if( it2->second.size() < 2 || it2->second[0] != '[' ||
              it2->second[it2->second.size()-1] != ']' ) {
-            std::cout << warning << " - a comma separated list of ints ";
-            std::cout << "enclosed in square brackets expected";
-            std::cout << "as a value of checksum parameter" << std::endl;
+            error_string = warning + " - a comma separated list of ints ";
+            error_string += "enclosed in square brackets expected";
+            error_string += "as a value of checksum parameter";
             return false;
          }
 
@@ -177,9 +255,8 @@ namespace ROOT
 
          for( lsIt = lst.begin(); lsIt != lst.end(); ++lsIt )
             if( !TSchemaRuleProcessor::IsANumber( *lsIt ) ) {
-               std::cout << warning << " - " << *lsIt<< " is not a valid value";
-               std::cout << " of checksum parameter - an integer expected";
-               std:: cout << std:: endl;
+               error_string = warning + " - " + *lsIt + " is not a valid value";
+               error_string += " of checksum parameter - an integer expected";
                return false;
             }
       }
@@ -191,23 +268,22 @@ namespace ROOT
       if( it1 != rule.end() ) {
          if( it1->second.size() < 2 || it1->second[0] != '[' ||
              it1->second[it1->second.size()-1] != ']' ) {
-            std::cout << warning << " - a comma separated list of version specifiers ";
-            std::cout << "enclosed in square brackets expected";
-            std::cout << "as a value of version parameter" << std::endl;
+            error_string = warning + " - a comma separated list of version specifiers ";
+            error_string += "enclosed in square brackets expected";
+            error_string += "as a value of version parameter";
             return false;
          }
 
          TSchemaRuleProcessor::SplitList( it1->second.substr( 1, it1->second.size()-2 ),
                                           lst );
          if( lst.empty() ) {
-            std::cout << warning << " - the list of versions is empty";
-            std::cout << std::endl;
+            error_string = warning + " - the list of versions is empty";
          }
 
          for( lsIt = lst.begin(); lsIt != lst.end(); ++lsIt )
             if( !TSchemaRuleProcessor::ProcessVersion( *lsIt, ver ) ) {
-               std::cout << warning << " - " << *lsIt<< " is not a valid value";
-               std::cout << " of version parameter" << std:: endl;
+               error_string = warning + " - " + *lsIt + " is not a valid value";
+               error_string += " of version parameter";
                return false;
             }
       }
@@ -226,8 +302,8 @@ namespace ROOT
       for( int i = 0; i < 2; ++i ) {
          it1 = rule.find( keys[i] );
          if( it1 == rule.end() ) {
-            std::cout << warning << " - required parameter is missing: ";
-            std::cout << keys[i] << std::endl;
+            error_string = warning + " - required parameter is missing: ";
+            error_string += keys[i];
             return false;
          }
       }
@@ -240,8 +316,8 @@ namespace ROOT
       if( it1 != rule.end() ) {
          std::string emValue = TSchemaRuleProcessor::Trim( it1->second );
          if( emValue != "true" && emValue != "false" ) {
-            std::cout << warning << " - true or false expected as a value ";
-            std::cout << "of embed parameter" << std::endl;
+            error_string = warning + " - true or false expected as a value ";
+            error_string += "of embed parameter";
             return false;
          }
       }
@@ -252,7 +328,7 @@ namespace ROOT
       it1 = rule.find( "include" );
       if( it1 != rule.end() ) {
          if( it1->second.empty() ) {
-            std::cout << warning << " - the include list is empty" << std::endl;
+            error_string = warning + " - the include list is empty";
             return false;
          }
       }
@@ -612,6 +688,11 @@ namespace ROOT
             output << "      rule->fInclude     = \"" << (*it)["include"];
             output << "\";" << std::endl;
          }
+
+         if( it->find( "attributes" ) != it->end() ) {
+            output << "      rule->fAttributes   = \"" << (*it)["attributes"];
+            output << "\";" << std::endl;
+         }
       }
    }
 
@@ -664,8 +745,9 @@ namespace ROOT
       // Parse the rule and check it's validity
       //-----------------------------------------------------------------------
       std::map<std::string, std::string> rule;
-      parse( args, rule );
-      if( !valid( rule ) ) {
+      std::string error_string;
+      if( !ParseRule( args, rule, error_string ) ) {
+         std::cout << error_string << '\n';
          std::cout << "The rule has been omited!" << std::endl;
          return;
       }
@@ -694,8 +776,9 @@ namespace ROOT
       // Parse the rule and check it's validity
       //-----------------------------------------------------------------------
       std::map<std::string, std::string> rule;
-      parse( args, rule );
-      if( !valid( rule ) ) {
+      std::string error_string;
+      if( !ParseRule( args, rule, error_string ) ) {
+         std::cout << error_string << '\n';
          std::cout << "The rule has been omited!" << std::endl;
          return;
       }
@@ -714,4 +797,6 @@ namespace ROOT
       else
          it->second.push_back( rule );
    }
+   
+   
 }

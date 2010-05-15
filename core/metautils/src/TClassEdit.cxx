@@ -11,20 +11,15 @@
 #include <set>
 
 // CINT's API.
-#ifndef R__BUILDING_CINT7
 #include "Api.h"
-#else
-#include "cint7/Api.h"
-#endif
 
 namespace std {} using namespace std;
 
 //______________________________________________________________________________
-TClassEdit::TSplitType::TSplitType(const char *type2split) : fName(type2split), fNestedLocation(0)
+TClassEdit::TSplitType::TSplitType(const char *type2split, EModType mode) : fName(type2split), fNestedLocation(0)
 {
-   // Primary constructor.
-
-   TClassEdit::GetSplit(type2split, fElements, fNestedLocation);
+   // default constructor
+   TClassEdit::GetSplit(type2split, fElements, fNestedLocation, mode);
 }
 
 //______________________________________________________________________________
@@ -439,7 +434,7 @@ string TClassEdit::GetLong64_Name(const string& original)
 }
 
 //______________________________________________________________________________
-int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLoc)
+int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLoc, EModType mode)
 {
    ///////////////////////////////////////////////////////////////////////////
    //  Stores in output (after emptying it) the splited type.
@@ -455,7 +450,8 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    output.clear();
    if (strlen(type)==0) return 0;
   
-   string full = CleanType(type, 1 /* keepInnerConst */);
+   string full( mode & kLong64 ? TClassEdit::GetLong64_Name( CleanType(type, 1 /* keepInnerConst */) )
+               : CleanType(type, 1 /* keepInnerConst */) );
    const char *t = full.c_str();
    const char *c = strchr(t,'<');
 
@@ -571,11 +567,13 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
          if (done) continue;
       }
 
-      kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$' && c[0]!='[' && c[0]!=']' && c[0]!='-');
-
+      kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$' && c[0]!='[' && c[0]!=']' && c[0]!='-' && c[0]!='@');
+      // '@' is special character used only the artifical class name used by ROOT to implement the
+      // I/O customization rules that requires caching of the input data.
+      
       if (*c == '<')   lev++;
       if (lev==0 && !isalnum(*c)) {
-         if (!strchr("*:_$ []-",*c)) break;
+         if (!strchr("*:_$ []-@",*c)) break;
       }
       if (c[0]=='>' && result.size() && result[result.size()-1]=='>') result+=" ";
 
@@ -604,7 +602,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    string answer;
 
    // get list of all arguments
-   TSplitType arglist(typeDesc);
+   TSplitType arglist(typeDesc, (EModType) mode);
    arglist.ShortType(answer, mode);
    
    return answer;
@@ -632,7 +630,6 @@ int TClassEdit::IsSTLCont(const char *type,int testAlloc)
    //                   like vector<list<vector<int>>>
    //             negative val: STL container other than vector or list, or non default allocator
    //                           For example: vector<deque<int>> has answer -1
-   ////////////////////////////////////////////////////////////////////////////////
 
    if (strchr(type,'<')==0) return 0;
 

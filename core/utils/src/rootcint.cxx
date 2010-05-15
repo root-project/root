@@ -2659,7 +2659,7 @@ void WriteClassInit(G__ClassInfo &cl)
    //---------------------------------------------------------------------------
    // Pass the schema evolution rules to TGenericClassInfo
    //---------------------------------------------------------------------------
-   if( rulesIt1 != G__ReadRules.end() || rulesIt2 != G__ReadRawRules.end() ) {
+   if( (rulesIt1 != G__ReadRules.end() && rulesIt1->second.size()>0) || (rulesIt2 != G__ReadRawRules.end()  && rulesIt2->second.size()>0) ) {
       (*dictSrcOut) << std::endl << "      ROOT::TSchemaHelper* rule;" << std::endl;
    }
 

@@ -496,6 +496,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    atexit(CleanUpROOTAtExit);
 
    fgRootInit = kTRUE;
+   
+   TClass::ReadRules(); // Read the default customization rules ...
 }
 
 //______________________________________________________________________________
@@ -865,7 +867,7 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
-      cl = new TClass(name, TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion(), 0, 0, -1, -1, silent );
+      cl = new TClass(defaultname.c_str(), TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion(), 0, 0, -1, -1, silent );
       cl->SetBit(TClass::kIsEmulation);
    }
 
@@ -1265,6 +1267,7 @@ void TROOT::InitSystem()
       fgMemCheck = gEnv->GetValue("Root.MemCheck", 0);
 
       TObject::SetObjectStat(gEnv->GetValue("Root.ObjectStat", 0));
+      
    }
 }
 

@@ -32,6 +32,7 @@ namespace std {
 namespace TClassEdit {
 
    enum EModType {
+      kNone             = 0,
       kDropTrailStar    = 1<<0,
       kDropDefaultAlloc = 1<<1,
       kDropAlloc        = 1<<2,
@@ -39,7 +40,8 @@ namespace TClassEdit {
       kInnedMostClass   = 1<<4,
       kDropStlDefault   = 1<<5, /* implies kDropDefaultAlloc */
       kDropComparator   = 1<<6, /* if the class has a comparator, drops BOTH the comparator and the Allocator */
-      kDropAllDefault   = 1<<7  /* Drop default template parameter even in non STL classes */
+      kDropAllDefault   = 1<<7, /* Drop default template parameter even in non STL classes */
+      kLong64           = 1<<8  /* replace all 'long long' with Long64_t. */
    };
 
    enum ESTLType {
@@ -61,10 +63,14 @@ namespace TClassEdit {
       std::vector<std::string> fElements;
       int fNestedLocation; // Stores the location of the tail (nested names) in nestedLoc (0 indicates no tail).
 
-      TSplitType(const char *type2split);
+      TSplitType(const char *type2split, EModType mode = TClassEdit::kNone);
 
       int  IsSTLCont(int testAlloc=0) const;
       void ShortType(std::string &answer, int mode);
+
+   private:
+      TSplitType(const TSplitType&); // intentionally not implemented
+      TSplitType &operator=(const TSplitType &); // intentionally not implemented
    };
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
@@ -76,7 +82,7 @@ namespace TClassEdit {
    bool        IsStdClass(const char *type);
    bool        IsVectorBool(const char *name);
    std::string GetLong64_Name(const std::string& original);
-   int         GetSplit  (const char *type, std::vector<std::string> &output, int &nestedLoc);
+   int         GetSplit  (const char *type, std::vector<std::string> &output, int &nestedLoc, EModType mode = TClassEdit::kNone);
    int         STLKind   (const char *type);    //Kind of stl container
    int         STLArgs   (int kind);            //Min number of arguments without allocator
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);

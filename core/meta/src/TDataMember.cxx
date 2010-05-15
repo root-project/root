@@ -112,7 +112,7 @@
 // TMethodArg, TRootContextMenu, TContextMenu. This list not only specifies
 // the allowed value, but also provides strings naming the options.
 // Options are managed via TList of TOptionListItem objects. This list
-// is also  created automatically: if a data type is an enum type,
+// is also  created automatically: if a data type is an enum tynpe,
 // the list will have items describing every enum value, and named
 // according to enum name. If type is Bool_t, two options "On" and "Off"
 // with values 0 and 1 are created. For other types you need to instruct

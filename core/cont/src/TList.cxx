@@ -694,6 +694,28 @@ TObject *TList::Remove(TObjLink *lnk)
 }
 
 //______________________________________________________________________________
+void TList::RemoveLast()
+{
+   // Remove the last object of the list.
+
+   TObjLink *lnk = fLast;
+   if (!lnk) return;
+   
+   if (lnk == fFirst) {
+      fFirst = 0;
+      fLast = 0;
+   } else {
+      fLast = lnk->Prev();
+      fLast->fNext = 0;
+   }
+   DeleteLink(lnk);
+   
+   fSize--;
+   fCache = 0;
+   Changed();   
+}
+   
+//______________________________________________________________________________
 void TList::Sort(Bool_t order)
 {
    // Sort linked list. Real sorting is done in private function DoSort().

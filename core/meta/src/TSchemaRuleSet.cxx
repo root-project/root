@@ -49,15 +49,22 @@ void TSchemaRuleSet::ls(Option_t *) const
 }
 
 //------------------------------------------------------------------------------
-Bool_t TSchemaRuleSet::AddRules( TSchemaRuleSet* /* rules */, Bool_t /* checkConsistency */ )
+Bool_t TSchemaRuleSet::AddRules( TSchemaRuleSet* /* rules */, EConsistencyCheck /* checkConsistency */ )
 {
    return kFALSE;
 }
 
 //------------------------------------------------------------------------------
-Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, Bool_t checkConsistency )
+Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency )
 {
    // The consistency check always fails if the TClass object was not set!
+   // if checkConsistency is:
+   //   kNoCheck: no check is done, register the rule as is
+   //   kCheckConflict: check only for conflicting rules
+   //   kCheckAll: check for conflict and check for rule about members that are not in the current class layout.
+   // return kTRUE if the layout is accepted, in which case we take ownership of
+   // the rule object.
+   // return kFALSE if the rule failed one of the test, the rule now needs to be deleted by the caller.
 
    //---------------------------------------------------------------------------
    // Cannot verify the consistency if the TClass object is not present
@@ -85,13 +92,21 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, Bool_t checkConsistency )
    // present int the target class
    //---------------------------------------------------------------------------
    TObject* obj;
-   if( rule->GetTarget() ) {
+   // Check only if we have some information about the class, otherwise we have
+   // nothing to check against
+   if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0)) ) {
       TObjArrayIter titer( rule->GetTarget() );
       while( (obj = titer.Next()) ) {
          TObjString* str = (TObjString*)obj;
-         if( !fClass->GetDataMember( str->GetString() ) && !fClass->GetBaseClass( str->GetString() ) )
-            return kFALSE;
- 
+         if( !fClass->GetDataMember( str->GetString() ) && !fClass->GetBaseClass( str->GetString() ) ) {
+            if (checkConsistency == kCheckAll) {
+               return kFALSE;
+            } else {
+               // We ignore the rules that do not apply ...
+               delete rule;
+               return kTRUE;
+            }
+         }
       }
    }
 
@@ -106,6 +121,12 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, Bool_t checkConsistency )
       r = (TSchemaRule *) obj;
       if( rule->Conflicts( r ) ) {
          delete rules;
+         if ( *r == *rule) {
+            // The rules are duplicate from each other,
+            // just ignore the new ones.
+            delete rule;
+            return kTRUE;
+         }
          return kFALSE;
       }
    }
@@ -121,6 +142,19 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, Bool_t checkConsistency )
    fAllRules->Add( rule );
 
    return kTRUE;
+}
+
+//------------------------------------------------------------------------------
+void TSchemaRuleSet::AsString(TString &out) const
+{
+   // Fill the string 'out' with the string representation of the rule.
+   
+   TObjArrayIter it( fAllRules );
+   TSchemaRule *rule;
+   while( (rule = (TSchemaRule*)it.Next()) ) {
+      rule->AsString(out);
+      out += "\n";
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -323,21 +357,68 @@ const TSchemaRule* TSchemaMatch::GetRuleWithTarget( const TString& name ) const
 }
 
 //------------------------------------------------------------------------------
-Bool_t TSchemaMatch::HasRuleWithSource( const TString& name ) const
+Bool_t TSchemaMatch::HasRuleWithSource( const TString& name, Bool_t needingAlloc ) const
 {
+   // Return true if the set of rules has at least one rule that has the data
+   // member named 'name' as a source.
+   // If needingAlloc is true, only the rule that requires the data member to 
+   // be cached will be taken in consideration.
+   
    for( Int_t i = 0; i < GetEntries(); ++i ) {
       TSchemaRule* rule = (ROOT::TSchemaRule*)At(i);
-      if( rule->HasSource( name ) ) return kTRUE;
+      if( rule->HasSource( name ) ) {
+         if (needingAlloc) {
+            const TObjArray *targets = rule->GetTarget();
+            if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
+               return kTRUE;
+            }
+            if ( name != targets->UncheckedAt(0)->GetName() ) {
+               return kTRUE;
+            }
+            // If the rule has the same source and target and does not
+            // have any actions, then it does not need allocation.
+            if (rule->GetReadFunctionPointer() || rule->GetReadRawFunctionPointer()) {
+               return kTRUE;
+            }
+         } else {
+            return kTRUE;
+         }
+      }
    }
    return kFALSE;
 }
 
 //------------------------------------------------------------------------------
-Bool_t TSchemaMatch::HasRuleWithTarget( const TString& name ) const
+Bool_t TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) const
 {
+   // Return true if the set of rules has at least one rule that has the data
+   // member named 'name' as a target.
+   // If willset is true, only the rule that will set the value of the data member.
+   
    for( Int_t i=0; i<GetEntries(); ++i) {
       ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)At(i);
-      if( rule->HasTarget( name ) ) return kTRUE;
+      if( rule->HasTarget( name ) ) {
+         if (willset) {
+            const TObjArray *targets = rule->GetTarget();
+            if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
+               return kTRUE;
+            }
+            const TObjArray *sources = rule->GetSource();
+            if (sources && (sources->GetEntries() > 1 || sources->GetEntries()==0) ) {
+               return kTRUE;
+            }
+            if ( name != sources->UncheckedAt(0)->GetName() ) {
+               return kTRUE;
+            }            
+            // If the rule has the same source and target and does not
+            // have any actions, then it will not directly set the value.
+            if (rule->GetReadFunctionPointer() || rule->GetReadRawFunctionPointer()) {
+               return kTRUE;
+            }
+         } else {
+            return kTRUE;
+         }
+      }
    }
    return kFALSE;
 }
