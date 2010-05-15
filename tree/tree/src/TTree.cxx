@@ -2597,6 +2597,17 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
       } else {
          char* addr = branch->GetAddress();
          if (!addr) {
+            if (branch->IsA() == TBranch::Class()) {
+               // If the branch was created using a leaflist, the branch itself may not have 
+               // an address but the leat might already do.
+               TLeaf *firstleaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+               if (!firstleaf || firstleaf->GetValuePointer()) {
+                  // Either there is no leaf (and thus no point in copying the address)
+                  // or the leaf has an address but we can not copy it via the branche
+                  // this will be copied via the the next loop (over the leaf).
+                  continue;
+               }
+            } 
             // Note: This may cause an object to be allocated.
             branch->SetAddress(0);
             addr = branch->GetAddress();
