@@ -246,7 +246,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
          }
          continue;
       }
-      if (GetAction(i)==kJump && GetActionParam(i)==fNoper) {
+      if (GetAction(i)==kJump && GetActionParam(i)==(fNoper-1)) {
          // We have cond ? string1 : string2
          if (IsString(fNoper-1)) SetBit(kIsCharacter);
       }
