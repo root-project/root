@@ -2318,10 +2318,11 @@ void G__platformMacro()
    G__DEFINE_MACRO_S(__s390__);
 #endif
    
-   // Avoid any problem with __attribute__
+   // Avoid any problem with __attribute__ and __asm
    G__value (*store__GetSpecialObject) (G__CONST char *name,void **ptr,void** ppdict) = G__GetSpecialObject;
    G__GetSpecialObject = 0;
    G__add_macro("__attribute__(X)=");
+   G__add_macro("__asm(X)=");
    G__GetSpecialObject = store__GetSpecialObject;
 
    if (G__globalcomp != G__NOLINK)
@@ -2362,6 +2363,16 @@ void G__platformMacro()
 
    G__search_typename2("ssize_t", size_t_type, -1, 0, -1);
    G__setnewtype(-1, NULL, 0);
+   
+#if  defined(__APPLE__) && defined(__GNUC__)
+   // Apple MacOS X gcc header use directly __builtin_va_list, let's 
+   // make sure that rootcint does not complain about not knowing what it is.
+   G__linked_taginfo G__a_cxx_ACLiC_dictLN_va_list = { "va_list" , 115 , -1 };
+   // G__a_cxx_ACLiC_dictLN_va_list.tagnum = -1 ;
+   G__get_linked_tagnum_fwd(&G__a_cxx_ACLiC_dictLN_va_list);
+   G__search_typename2("__builtin_va_list",117,G__get_linked_tagnum(&G__a_cxx_ACLiC_dictLN_va_list),0,-1);
+   G__setnewtype(-1,NULL,0);
+#endif
 }
 
 //______________________________________________________________________________
