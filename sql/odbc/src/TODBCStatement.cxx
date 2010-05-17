@@ -634,8 +634,8 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
    char* buf = fBuffer[npar].fBstrbuffer;
 
    switch(fBuffer[npar].fBsqlctype) {
-      case SQL_C_SLONG:   snprintf(buf, 100, "%ld", *((SQLINTEGER*) addr)); break;
-      case SQL_C_ULONG:   snprintf(buf, 100, "%lu", *((SQLUINTEGER*) addr)); break;
+      case SQL_C_SLONG:   snprintf(buf, 100, "%d", *((SQLINTEGER*) addr)); break;
+      case SQL_C_ULONG:   snprintf(buf, 100, "%u", *((SQLUINTEGER*) addr)); break;
       case SQL_C_SBIGINT: snprintf(buf, 100, "%lld", *((Long64_t*) addr)); break;
       case SQL_C_UBIGINT: snprintf(buf, 100, "%llu", *((ULong64_t*) addr)); break;
       case SQL_C_SSHORT:  snprintf(buf, 100, "%hd", *((SQLSMALLINT*) addr)); break;
