@@ -105,7 +105,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
       if (dbase!=0)
          if (*dbase=='/') dbase++; //skip leading "/" if appears
 
-      if ((uid==0) || (*uid==0) && (strlen(url.GetUser())>0)) {
+      if (((uid==0) || (*uid==0)) && (strlen(url.GetUser())>0)) {
          uid = url.GetUser();
          pw = url.GetPasswd();
       }
