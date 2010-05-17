@@ -189,7 +189,7 @@ void TDataSetManagerFile::Init()
    fLockFileTimeLimit = 120;
 
    // Default validity of the cache
-   fCacheUpdatePeriod = gEnv->GetValue("ProofDataSet.CacheUpdatePeriod", 600);
+   fCacheUpdatePeriod = gEnv->GetValue("ProofDataSet.CacheUpdatePeriod", 0);
 
    // If the MSS url was not given, check if one is defined via env
    if (fMSSUrl.IsNull())
@@ -720,8 +720,8 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    Bool_t listing = (option & kList) ? kTRUE : kFALSE;
 
    // The last three options are mutually exclusive
-   if (((Int_t)printing + (Int_t)exporting + (Int_t)updating + (Int_t)refreshingls + (Int_t)listing) > 1) {
-      Error("GetDataSets", "only one of '?P', '?Q', '?E', '?R' or '?L' can be specified at once");
+   if (((Int_t)printing + (Int_t)exporting + (Int_t)updating + (Int_t)listing) > 1) {
+      Error("GetDataSets", "only one of '?P', '?Q', '?E' or '?L' can be specified at once");
       return 0;
    }
 
