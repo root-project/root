@@ -60,7 +60,7 @@ commands. These commands can be combined to make complicated subscript and
 superscript expressions. You may adjust the display of subscripts and
 superscripts by using the two functions <tt>SetIndiceSize(Double_t)</tt>,
 which set relative size of subscripts and superscripts, and
-<tt>SetLimitIndiceSize(Int_t)</tt>, which set limit for text resizing of 
+<tt>SetLimitIndiceSize(Int_t)</tt>, which set limit for text resizing of
 subscipts and superscripts.
 <p>Examples:
 End_Html
@@ -73,7 +73,7 @@ The subscripts and superscripts operators apply not only on one character but
 on all the "normal text" preceding them. In the following example the second
 <tt>E</tt> is lower than the first one because the operator <tt>_</tt> is
 applied on <tt>/f</tt> which has a descending part, and not only on <tt>f</tt>
-which as no descending part. 
+which as no descending part.
 End_Html
    f_{E}/f_{E} : Begin_Latex f_{E}/f_{E} End_Latex
 
@@ -229,9 +229,9 @@ End_Macro
 Begin_Html
 <a name="L11"></a><h3>Characters adjustement</h3>
 The two commands <tt>#kern</tt> and <tt>#lower</tt> enable a better control
-over characters placement. The command <tt>#kern[(Float_t)dx]{text}</tt> moves 
+over characters placement. The command <tt>#kern[(Float_t)dx]{text}</tt> moves
 the output string horizontally by the fraction <tt>dx</tt> of its length.
-Similarly, <tt>#lower[(Float_t)dy]{text}</tt> shifts the text up or down by 
+Similarly, <tt>#lower[(Float_t)dy]{text}</tt> shifts the text up or down by
 the fraction <tt>dy</tt> of its height.
 <p>Examples:
 End_Html
@@ -1514,11 +1514,11 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       delete[] dxc;
       if (!fShow) {
          fs1 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
-	 Savefs(&fs1);
+         Savefs(&fs1);
          Double_t ddx = dx * fs1.Width();
-	 result = TLatexFormSize(fs1.Width() + ddx, fs1.Over(), fs1.Under());
+         result = TLatexFormSize(fs1.Width() + ddx, fs1.Over(), fs1.Under());
       } else {
-	 fs1 = Readfs();
+         fs1 = Readfs();
          Double_t ddx = dx * fs1.Width();
          Analyse(x + ddx,y,spec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
@@ -1542,11 +1542,11 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       delete[] dyc;
       if (!fShow) {
          fs1 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
-	 Savefs(&fs1);
+         Savefs(&fs1);
          Double_t ddy = dy * (fs1.Over() + fs1.Under());
-	 result = TLatexFormSize(fs1.Width(), fs1.Over() + ddy, fs1.Under() + ddy);
+         result = TLatexFormSize(fs1.Width(), fs1.Over() + ddy, fs1.Under() + ddy);
       } else {
-	 fs1 = Readfs();
+         fs1 = Readfs();
          Double_t ddy = dy * (fs1.Over() + fs1.Under());
          Analyse(x,y + ddy,spec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
@@ -1892,19 +1892,15 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
                        "\\scale{","\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
                        "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{","\\bf{","\\it{"}; // check for }
    const Char_t *kWord2[] = {"#scale[","#color[","#font[","#sqrt[","#kern[","#lower[","\\scale[","\\color[","\\font[","\\sqrt[","\\kern[","\\lower["}; // check for ]{ + }
-   const Char_t *kWord3[] = {"#frac{","\\frac{","#splitline{","\\splitline{"} ; // check for }{ then }
-   const Char_t *kLeft1[] = {"#left[","\\left[","#left{","\\left{","#left|","\\left|","#left(","\\left("} ;
-   const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"} ;
-   const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"} ;
-
+   const Char_t *kWord3[] = {"#frac{","\\frac{","#splitline{","\\splitline{"}; // check for }{ then }
+   const Char_t *kLeft1[] = {"#left[","\\left[","#left{","\\left{","#left|","\\left|","#left(","\\left("};
+   const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"};
+   const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"};
+   const Int_t lkWord1[]  = {4,4,2,2,7,7,6,6,4,4,4,5,5,5,5,6,7,7,7,7,7,4,4,7,7,6,6,4,4,4,4,4,5,5,5,5,6,7,7,7,4,4};
+   const Int_t lkWord2[]  = {7,7,6,6,6,7,7,7,6,6,6,7} ;
+   const Int_t lkWord3[]  = {6,6,11,11} ;
    Int_t nkWord1 = 42, nkWord2 = 12, nkWord3 = 4;
-   Int_t lkWord1[42];
-   Int_t lkWord2[12];
-   Int_t lkWord3[4];
    Int_t i,k ;
-   for (i = 0;i < nkWord1;i++) lkWord1[i] = strlen(kWord1[i]);
-   for (i = 0;i < nkWord2;i++) lkWord2[i] = strlen(kWord2[i]);
-   for (i = 0;i < nkWord3;i++) lkWord3[i] = strlen(kWord3[i]);
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
    Int_t lLeft2 = 4 ;
