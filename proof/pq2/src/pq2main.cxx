@@ -227,7 +227,7 @@ int main(int argc,const char *argv[])
       }
    }
    if (iact == -1) {
-      Printf("Unknown action: %d", iact);
+      Printf("Unknown action: %d (%s)", iact, action ? action : "");
       gSystem->Exit(1);
    }
 
