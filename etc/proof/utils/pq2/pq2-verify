@@ -96,13 +96,13 @@ if test ! "x$short_opts" = "x" ; then
       \?) printhelp; exit 1 ;;
    esac
    done
-fi
 
-# Fill empty fields with any non-prefixed argument
-eval next_arg=\$$OPTIND
-if test ! "x$next_arg" = "x" ; then
-   if test "x$DSNAME" = "x" ; then
-      DSNAME="-d $next_arg"
+   # Fill empty fields with any non-prefixed argument
+   eval next_arg=\$$OPTIND
+   if test ! "x$next_arg" = "x" ; then
+      if test "x$DSNAME" = "x" ; then
+         DSNAME="-d $next_arg"
+      fi
    fi
 fi
 

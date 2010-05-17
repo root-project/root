@@ -26,7 +26,7 @@ printhelp()
    echo "                    O   overwrite existing dataset"
    echo "                    U   add information to existing dataset, if any or create a new one"
    echo "                    T   Trust the information already present in the dataset"
-   echo "                    V   verify information in the dataset (default; can be very slow)"
+   echo "                    V   verify information in the dataset (can be very slow)"
    echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
    echo "                 for data servers, it must include the directory."
    echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
@@ -86,13 +86,13 @@ if test ! "x$short_opts" = "x" ; then
       \?) printhelp; exit 1 ;;
    esac
    done
-fi
 
-# Fill empty fields with any non-prefixed argument
-eval next_arg=\$$OPTIND
-if test ! "x$next_arg" = "x" ; then
-   if test "x$DSNAME" = "x" ; then
-      DSNAME="-d $next_arg"
+   # Fill empty fields with any non-prefixed argument
+   eval next_arg=\$$OPTIND
+   if test ! "x$next_arg" = "x" ; then
+      if test "x$DSNAME" = "x" ; then
+         DSNAME="-d $next_arg"
+      fi
    fi
 fi
 

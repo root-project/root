@@ -74,15 +74,16 @@ if test ! "x$short_opts" = "x" ; then
       \?) printhelp; exit 1 ;;
       esac
    done
-fi
 
-# Fill empty fields with any non-prefixed argument
-eval next_arg=\$$OPTIND
-if test ! "x$next_arg" = "x" ; then
-   if test "x$DSNARG" = "x" ; then
-      DSNARG="-d $next_arg"
+   # Fill empty fields with any non-prefixed argument
+   eval next_arg=\$$OPTIND
+   if test ! "x$next_arg" = "x" ; then
+      if test "x$DSNARG" = "x" ; then
+         DSNARG="-d $next_arg"
+      fi
    fi
 fi
+
 
 # Run
 export TMPDIR="$TDIR"; $PQ2 cache $ACTION $DBGOPT $KEEPOPT $DSNARG $SRVURL

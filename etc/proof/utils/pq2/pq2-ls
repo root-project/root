@@ -15,14 +15,12 @@ printhelp()
    echo "   -h | --help   Print this help"
    echo "   -v            Verbose mode"
    echo "   -k            Keep temporary files"
-   echo "   --forcescan   the dataset are open to get the information; otherwise the"
+   echo "   --forcescan   the datasets are open to get the information; otherwise the"
    echo "                 pre-processed information is used."
-   echo "   --noupdate    if a cache is used do not update it (which may be slow on very servers)"
+   echo "   --noupdate    if a cache is used do not update it (which may be slow on some servers)"
    echo "   --refresh     refresh the information (requires appropriate credentials; typically"
    echo "                 it can be done only for owned datasets"
-   echo "   datasets      Comma-separated list of datasets to be analysed; the '*' wild card in"
-   echo "                 the items (in such a case the full string - as shown by pq2-ls - should"
-   echo "                 be given in quotes, e.g. \"/default/ganis/h1-set5*\""
+   echo "   datasets      Datasets to be analysed; the '*' wild card can be used"
    echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
    echo "                 for data servers, it must include the directory."
    echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
@@ -81,13 +79,13 @@ if test ! "x$short_opts" = "x" ; then
       \?) printhelp; exit 1 ;;
    esac
    done
-fi
 
-# Fill empty fields with any non-prefixed argument
-eval next_arg=\$$OPTIND
-if test ! "x$next_arg" = "x" ; then
-   if test "x$DSNARG" = "x" ; then
-      DSNARG="-d $next_arg"
+   # Fill empty fields with any non-prefixed argument
+   eval next_arg=\$$OPTIND
+   if test ! "x$next_arg" = "x" ; then
+      if test "x$DSNARG" = "x" ; then
+         DSNARG="-d $next_arg"
+      fi
    fi
 fi
 

@@ -15,7 +15,7 @@ printhelp()
    echo "   -h | --help   Print this help"
    echo "   -v            Verbose mode"
    echo "   -k            Keep temporary files"
-   echo "   servers:      Comma-separated list of servers for which the information is wanted"
+   echo "   server:       Server for which the information is wanted"
    echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
    echo "                 for data servers, it must include the directory."
    echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
@@ -70,14 +70,15 @@ if test ! "x$short_opts" = "x" ; then
       \?) printhelp; exit 1 ;;
    esac
    done
-fi
 
-# Fill empty fields with any non-prefixed argument
-eval next_arg=\$$OPTIND
-if test ! "x$next_arg" = "x" ; then
-   if test "x$SERVER" = "x" ; then
-      SERVER="-s $next_arg"
+   # Fill empty fields with any non-prefixed argument
+   eval next_arg=\$$OPTIND
+   if test ! "x$next_arg" = "x" ; then
+      if test "x$SERVER" = "x" ; then
+         SERVER="-s $next_arg"
+      fi
    fi
+
 fi
 
 if test "x$SERVER" = "x"; then
