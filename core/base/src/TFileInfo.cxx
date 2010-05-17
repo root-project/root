@@ -452,11 +452,10 @@ void TFileInfo::Print(Option_t *option) const
       TString deft;
       if (opt.Contains("T:")) deft = opt(opt.Index("T:")+2, opt.Length());
       TFileInfoMeta *meta = 0;
-      if (!deft.IsNull()) meta = (TFileInfoMeta *) fMetaDataList->FindObject(deft);
-      if (!meta) meta = (TFileInfoMeta *) fMetaDataList->First();
-      if (meta)
-         out.ReplaceAll("-|-|-", TString::Format("%s|%s|%lld", meta->GetName(),
-                                                 meta->GetTitle(), meta->GetEntries()));
+      if (fMetaDataList && !deft.IsNull()) meta = (TFileInfoMeta *) fMetaDataList->FindObject(deft);
+      if (fMetaDataList && !meta) meta = (TFileInfoMeta *) fMetaDataList->First();
+      if (meta) out.ReplaceAll("-|-|-", TString::Format("%s|%s|%lld", meta->GetName(),
+                                        meta->GetTitle(), meta->GetEntries()));
       if (GetMD5())
          out.ReplaceAll("md5-undef", TString::Format("%s", GetMD5()->AsString()));
       Printf("%s", out.Data());
