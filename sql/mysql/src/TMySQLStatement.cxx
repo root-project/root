@@ -399,12 +399,12 @@ long double TMySQLStatement::ConvertToNumeric(Int_t npar)
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_LONG:
-         if (sig) return *((long*) addr); else
-                  return *((unsigned long*) addr);
+         if (sig) return *((int*) addr); else
+                  return *((unsigned int*) addr);
          break;
       case MYSQL_TYPE_LONGLONG:
          if (sig) return *((long long*) addr); else
-                  return *((ULong64_t*) addr);
+                  return *((unsigned long long*) addr);
          break;
       case MYSQL_TYPE_SHORT:
          if (sig) return *((short*) addr); else
@@ -485,7 +485,7 @@ Int_t TMySQLStatement::GetInt(Int_t npar)
    CheckGetField("GetInt", 0);
 
    if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONG) && fBuffer[npar].fSign)
-     return (Int_t) *((long*) fBuffer[npar].fMem);
+     return (Int_t) *((int*) fBuffer[npar].fMem);
 
    return (Int_t) ConvertToNumeric(npar);
 }
@@ -498,7 +498,7 @@ UInt_t TMySQLStatement::GetUInt(Int_t npar)
    CheckGetField("GetUInt", 0);
 
    if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONG) && !fBuffer[npar].fSign)
-     return (UInt_t) *((unsigned long*) fBuffer[npar].fMem);
+     return (UInt_t) *((unsigned int*) fBuffer[npar].fMem);
 
    return (UInt_t) ConvertToNumeric(npar);
 }
@@ -511,7 +511,7 @@ Long_t TMySQLStatement::GetLong(Int_t npar)
    CheckGetField("GetLong", 0);
 
    if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONG) && fBuffer[npar].fSign)
-     return (Long_t) *((long*) fBuffer[npar].fMem);
+     return (Long_t) *((int*) fBuffer[npar].fMem);
 
    return (Long_t) ConvertToNumeric(npar);
 }
@@ -524,7 +524,7 @@ Long64_t TMySQLStatement::GetLong64(Int_t npar)
    CheckGetField("GetLong64", 0);
 
    if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONGLONG) && fBuffer[npar].fSign)
-     return (Long64_t) *((Long64_t*) fBuffer[npar].fMem);
+     return (Long64_t) *((long long*) fBuffer[npar].fMem);
 
    return (Long64_t) ConvertToNumeric(npar);
 }
@@ -537,7 +537,7 @@ ULong64_t TMySQLStatement::GetULong64(Int_t npar)
    CheckGetField("GetULong64", 0);
 
    if ((fBuffer[npar].fSqlType==MYSQL_TYPE_LONGLONG) && !fBuffer[npar].fSign)
-     return (ULong64_t) *((ULong64_t*) fBuffer[npar].fMem);
+     return (ULong64_t) *((unsigned long long*) fBuffer[npar].fMem);
 
    return (ULong64_t) ConvertToNumeric(npar);
 }
@@ -735,7 +735,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, bool sig, unsig
    bool doreset = false;
 
    switch (sqltype) {
-      case MYSQL_TYPE_LONG:     allocsize = sizeof(long);  break;
+      case MYSQL_TYPE_LONG:     allocsize = sizeof(int);  break;
       case MYSQL_TYPE_LONGLONG: allocsize = sizeof(long long); break;
       case MYSQL_TYPE_SHORT:    allocsize = sizeof(short); break;
       case MYSQL_TYPE_TINY:     allocsize = sizeof(char); break;
@@ -823,7 +823,7 @@ Bool_t TMySQLStatement::SetNull(Int_t npar)
    void* addr = BeforeSet("SetNull", npar, MYSQL_TYPE_LONG);
 
    if (addr!=0)
-      *((long*) addr) = 0;
+      *((int*) addr) = 0;
 
    if ((npar>=0) && (npar<fNumBuffers))
       fBuffer[npar].fResNull = true;
@@ -839,7 +839,7 @@ Bool_t TMySQLStatement::SetInt(Int_t npar, Int_t value)
    void* addr = BeforeSet("SetInt", npar, MYSQL_TYPE_LONG);
 
    if (addr!=0)
-      *((long*) addr) = value;
+      *((int*) addr) = value;
 
    return (addr!=0);
 }
@@ -852,7 +852,7 @@ Bool_t TMySQLStatement::SetUInt(Int_t npar, UInt_t value)
    void* addr = BeforeSet("SetUInt", npar, MYSQL_TYPE_LONG, kFALSE);
 
    if (addr!=0)
-      *((unsigned long*) addr) = value;
+      *((unsigned int*) addr) = value;
 
    return (addr!=0);
 }
@@ -865,7 +865,7 @@ Bool_t TMySQLStatement::SetLong(Int_t npar, Long_t value)
    void* addr = BeforeSet("SetLong", npar, MYSQL_TYPE_LONG);
 
    if (addr!=0)
-      *((long*) addr) = value;
+      *((int*) addr) = value;
 
    return (addr!=0);
 }
@@ -878,7 +878,7 @@ Bool_t TMySQLStatement::SetLong64(Int_t npar, Long64_t value)
    void* addr = BeforeSet("SetLong64", npar, MYSQL_TYPE_LONGLONG);
 
    if (addr!=0)
-      *((Long64_t*) addr) = value;
+      *((long long*) addr) = value;
 
    return (addr!=0);
 }
@@ -891,7 +891,7 @@ Bool_t TMySQLStatement::SetULong64(Int_t npar, ULong64_t value)
    void* addr = BeforeSet("SetULong64", npar, MYSQL_TYPE_LONGLONG, kFALSE);
 
    if (addr!=0)
-      *((ULong64_t*) addr) = value;
+      *((unsigned long long*) addr) = value;
 
    return (addr!=0);
 }
