@@ -245,9 +245,26 @@ Int_t pq2register(const char *dsname, const char *files, const char *opt) {
    // Create the file collection
    TFileCollection *fc = new TFileCollection("dum", "dum", files);
 
+   // The option may contain the default tree name and/or the staged status
+   Int_t itb = kNPOS, ite = kNPOS;
+   TString o(opt), deftree;
+   if ((itb = o.Index("tree:")) != kNPOS) {
+      deftree = o(itb + 5, o.Length());
+      if ((ite = deftree.Index('|')) != kNPOS) deftree.Remove(ite);
+      o.ReplaceAll(TString::Format("tree:%s|", deftree.Data()), "");
+      if (!deftree.BeginsWith("/")) deftree.Insert(0, "/");
+      if (!deftree.IsNull()) fc->SetDefaultTreeName(deftree);
+   }
+   if (o.Contains("staged|")) {
+      fc->SetBitAll(TFileInfo::kStaged);
+      o.ReplaceAll("staged|", "");
+   }
+   // Update the collection
+   fc->Update();
+
    // Register the file collection
    Int_t rc =0;
-   if (RegisterDataSet(dsname, fc, opt) == 0) rc = 1;
+   if (RegisterDataSet(dsname, fc, o) == 0) rc = 1;
    // Cleanup
    delete fc;
 
