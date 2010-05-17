@@ -250,17 +250,26 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
 // is taken, otherwise radlen is recomputed using G3 formula.
    fRadLen = TMath::Abs(radlen);
    fIntLen = TMath::Abs(intlen);
+   // Check for vacuum
+   if (fA<0.9 || fZ<0.9) {
+      if (radlen<-1e5 || intlen<-1e-5) {
+         Error("SetRadLen","Material %s: user values taken for vacuum: radlen=%g or intlen=%g - too small", fRadLen, fIntLen);
+         return;
+      }
+      // Ignore positive values and take big numbers
+      if (radlen>=0) fRadLen = 1.E30;   
+      if (intlen>=0) fIntLen = 1.E30;   
+      return;
+   }
    // compute radlen systematically with G3 formula for a valid material
-   if (fA > 0 && fZ > 0 && radlen>=0) {
+   if (radlen>=0) {
       //taken grom Geant3 routine GSMATE
       const Double_t alr2av=1.39621E-03, al183=5.20948;
       fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
              (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));             
-   } else {
-      if (radlen>0) Error("SetRadLen","Invalid material %s: a=%g z=%g -> user values taken: radlen=%g intlen=%g",fName.Data(),fA,fZ,radlen,intlen);
    }
    // Compute interaction length using the same formula as in GEANT4
-   if (fA > 0.1 && fZ > 0.1 && intlen>=0) {
+   if (intlen>=0) {
       const Double_t cm = 1.;
       const Double_t g = 6.2415e21; // [gram = 1E-3*joule*s*s/(m*m)]
       const Double_t amu = 1.03642688246781065e-02; // [MeV/c^2]
@@ -271,8 +280,6 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       nilinv += nbAtomsPerVolume*TMath::Power(elem->Neff(), 0.6666667);
       nilinv *= amu/lambda0;
       fIntLen = (nilinv<=0) ? TGeoShape::Big() : (1./nilinv);
-   } else {
-      if (intlen>0) Error("SetRadLen","Invalid material %s: a=%g z=%g -> user values taken: radlen=%g intlen=%g",fName.Data(),fA,fZ,radlen,intlen);
    }
 }   
 
