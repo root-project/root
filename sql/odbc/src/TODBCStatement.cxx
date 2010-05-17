@@ -41,7 +41,7 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
    TSQLStatement(errout)
 {
    //constructor
-   
+
    fHstmt = stmt;
    fBufferPreferredSize = rowarrsize;
 
@@ -103,7 +103,7 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
 TODBCStatement::~TODBCStatement()
 {
    //destructor
-   
+
    Close();
 }
 
@@ -123,7 +123,7 @@ void TODBCStatement::Close(Option_t *)
 Bool_t TODBCStatement::Process()
 {
    // process statement
-   
+
    ClearError();
 
    SQLRETURN retcode = SQL_SUCCESS;
@@ -271,24 +271,24 @@ Bool_t TODBCStatement::NextResultRow()
       SQLRETURN retcode = SQLFetchScroll(fHstmt, SQL_FETCH_NEXT, 0);
       if (retcode==SQL_NO_DATA) fNumRowsFetched=0; else
          ExtractErrors(retcode,"NextResultRow");
-         
+
       // this is workaround of Oracle Linux ODBC driver
-      // it does not returns number of fetched lines, therefore one should 
+      // it does not returns number of fetched lines, therefore one should
       // calculate it from current row number
       if (!IsError() && (retcode!=SQL_NO_DATA) && (fNumRowsFetched==0)) {
          SQLULEN rownumber = 0;
          SQLRETURN retcode2 = SQLGetStmtAttr(fHstmt, SQL_ATTR_ROW_NUMBER, &rownumber, 0, 0);
          ExtractErrors(retcode2, "NextResultRow");
-      
+
          if (!IsError()) {
             fNumRowsFetched = rownumber - fLastResultRow;
             fLastResultRow = rownumber;
          }
       }
-        
-      if (1.*fNumRowsFetched>fBufferLength) 
+
+      if (1.*fNumRowsFetched>fBufferLength)
          SetError(-1, "Missmatch between buffer length and fetched rows number", "NextResultRow");
-      
+
       if (IsError() || (fNumRowsFetched==0)) {
          fWorkingMode = 0;
          FreeBuffers();
@@ -304,7 +304,7 @@ Bool_t TODBCStatement::NextResultRow()
 Bool_t TODBCStatement::ExtractErrors(SQLRETURN retcode, const char* method)
 {
    // Extract errors, produced by last ODBC function call
-   
+
    if ((retcode== SQL_SUCCESS) || (retcode == SQL_SUCCESS_WITH_INFO)) return kFALSE;
 
    SQLINTEGER i = 0;
@@ -383,7 +383,7 @@ void TODBCStatement::SetNumBuffers(Int_t isize, Int_t ilen)
 void TODBCStatement::FreeBuffers()
 {
    // Free allocated buffers
-   
+
    if (fBuffer==0) return;
    for (Int_t n=0;n<fNumBuffers;n++) {
       if (fBuffer[n].fBbuffer!=0)
@@ -407,7 +407,7 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
    // Bind result column to buffer. Allocate buffer of appropriate type
 
    ClearError();
-   
+
    if ((ncol<0) || (ncol>=fNumBuffers)) {
       SetError(-1,"Internal error. Column number invalid","BindColumn");
       return kFALSE;
@@ -422,8 +422,8 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
    switch (sqltype) {
       case SQL_CHAR:
       case SQL_VARCHAR:   sqlctype = SQL_C_CHAR; break;
-      case SQL_BINARY:   
-      case SQL_LONGVARBINARY: 
+      case SQL_BINARY:
+      case SQL_LONGVARBINARY:
       case SQL_VARBINARY: sqlctype = SQL_C_BINARY; break;
       case SQL_LONGVARCHAR: Info("BindColumn","BIG VARCHAR not supported yet"); return kFALSE; break;
 
@@ -448,16 +448,16 @@ Bool_t TODBCStatement::BindColumn(Int_t ncol, SQLSMALLINT sqltype, SQLUINTEGER s
    int elemsize = 0;
 
    switch (sqlctype) {
-      case SQL_C_ULONG:    elemsize = sizeof(unsigned long int); break;
-      case SQL_C_SLONG:    elemsize = sizeof(long int); break;
-      case SQL_C_UBIGINT:  elemsize = sizeof(ULong64_t); break;
-      case SQL_C_SBIGINT:  elemsize = sizeof(Long64_t); break;
-      case SQL_C_USHORT:   elemsize = sizeof(unsigned short int); break;
-      case SQL_C_SSHORT:   elemsize = sizeof(short int); break;
-      case SQL_C_UTINYINT: elemsize = sizeof(unsigned char); break;
-      case SQL_C_STINYINT: elemsize = sizeof(signed char); break;
-      case SQL_C_FLOAT:    elemsize = sizeof(float); break;
-      case SQL_C_DOUBLE:   elemsize = sizeof(double); break;
+      case SQL_C_ULONG:    elemsize = sizeof(SQLUINTEGER); break;
+      case SQL_C_SLONG:    elemsize = sizeof(SQLINTEGER); break;
+      case SQL_C_UBIGINT:  elemsize = sizeof(ULong64_t); break; // should be SQLUBIGINT, but it is 64-bit structure on some platforms
+      case SQL_C_SBIGINT:  elemsize = sizeof(Long64_t); break; // should be SQLBIGINT, but it is 64-bit structure on some platforms
+      case SQL_C_USHORT:   elemsize = sizeof(SQLUSMALLINT); break;
+      case SQL_C_SSHORT:   elemsize = sizeof(SQLSMALLINT); break;
+      case SQL_C_UTINYINT: elemsize = sizeof(SQLCHAR); break;
+      case SQL_C_STINYINT: elemsize = sizeof(SQLSCHAR); break;
+      case SQL_C_FLOAT:    elemsize = sizeof(SQLREAL); break;
+      case SQL_C_DOUBLE:   elemsize = sizeof(SQLDOUBLE); break;
       case SQL_C_CHAR:     elemsize = size; break;
       case SQL_C_BINARY:   elemsize = size; break;
       case SQL_C_TYPE_DATE: elemsize = sizeof(DATE_STRUCT); break;
@@ -491,7 +491,7 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
    // Bind query parameter with buffer. Creates buffer of appropriate type
 
    ClearError();
-   
+
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
 
    if (fBuffer[npar].fBroottype!=0) {
@@ -503,21 +503,25 @@ Bool_t TODBCStatement::BindParam(Int_t npar, Int_t roottype, Int_t size)
    int elemsize = 0;
 
    switch (roottype) {
-      case kUInt_t:     sqltype = SQL_INTEGER; sqlctype = SQL_C_ULONG;    elemsize = sizeof(unsigned long int); break;
-      case kInt_t:      sqltype = SQL_INTEGER; sqlctype = SQL_C_SLONG;    elemsize = sizeof(long int); break;
-      case kULong_t:    sqltype = SQL_INTEGER; sqlctype = SQL_C_ULONG;    elemsize = sizeof(unsigned long int); break;
-      case kLong_t:     sqltype = SQL_INTEGER; sqlctype = SQL_C_SLONG;    elemsize = sizeof(long int); break;
+      case kUInt_t:     sqltype = SQL_INTEGER; sqlctype = SQL_C_ULONG;    elemsize = sizeof(SQLUINTEGER); break;
+      case kInt_t:      sqltype = SQL_INTEGER; sqlctype = SQL_C_SLONG;    elemsize = sizeof(SQLINTEGER); break;
+      case kULong_t:    sqltype = SQL_INTEGER; sqlctype = SQL_C_ULONG;    elemsize = sizeof(SQLUINTEGER); break;
+      case kLong_t:     sqltype = SQL_INTEGER; sqlctype = SQL_C_SLONG;    elemsize = sizeof(SQLINTEGER); break;
+
+      // here SQLUBIGINT/SQLBIGINT types should be used,
+       // but on 32-bit platforms it is structures, which makes its usage inconvinient
       case kULong64_t:  sqltype = SQL_BIGINT;  sqlctype = SQL_C_UBIGINT;  elemsize = sizeof(ULong64_t); break;
       case kLong64_t:   sqltype = SQL_BIGINT;  sqlctype = SQL_C_SBIGINT;  elemsize = sizeof(Long64_t); break;
-      case kUShort_t:   sqltype = SQL_SMALLINT;sqlctype = SQL_C_USHORT;   elemsize = sizeof(unsigned short int); break;
-      case kShort_t:    sqltype = SQL_SMALLINT;sqlctype = SQL_C_SSHORT;   elemsize = sizeof(short int); break;
-      case kUChar_t:    sqltype = SQL_TINYINT; sqlctype = SQL_C_UTINYINT; elemsize = sizeof(unsigned char); break;
-      case kChar_t:     sqltype = SQL_TINYINT; sqlctype = SQL_C_STINYINT; elemsize = sizeof(signed char); break;
-      case kBool_t:     sqltype = SQL_TINYINT; sqlctype = SQL_C_UTINYINT; elemsize = sizeof(unsigned char); break;
-      case kFloat_t:    sqltype = SQL_FLOAT;   sqlctype = SQL_C_FLOAT;    elemsize = sizeof(float); break;
-      case kFloat16_t:  sqltype = SQL_FLOAT;   sqlctype = SQL_C_FLOAT;    elemsize = sizeof(float); break;
-      case kDouble_t:   sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
-      case kDouble32_t: sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(double); break;
+
+      case kUShort_t:   sqltype = SQL_SMALLINT;sqlctype = SQL_C_USHORT;   elemsize = sizeof(SQLUSMALLINT); break;
+      case kShort_t:    sqltype = SQL_SMALLINT;sqlctype = SQL_C_SSHORT;   elemsize = sizeof(SQLSMALLINT); break;
+      case kUChar_t:    sqltype = SQL_TINYINT; sqlctype = SQL_C_UTINYINT; elemsize = sizeof(SQLCHAR); break;
+      case kChar_t:     sqltype = SQL_TINYINT; sqlctype = SQL_C_STINYINT; elemsize = sizeof(SQLSCHAR); break;
+      case kBool_t:     sqltype = SQL_TINYINT; sqlctype = SQL_C_UTINYINT; elemsize = sizeof(SQLCHAR); break;
+      case kFloat_t:    sqltype = SQL_FLOAT;   sqlctype = SQL_C_FLOAT;    elemsize = sizeof(SQLREAL); break;
+      case kFloat16_t:  sqltype = SQL_FLOAT;   sqlctype = SQL_C_FLOAT;    elemsize = sizeof(SQLREAL); break;
+      case kDouble_t:   sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(SQLDOUBLE); break;
+      case kDouble32_t: sqltype = SQL_DOUBLE;  sqlctype = SQL_C_DOUBLE;   elemsize = sizeof(SQLDOUBLE); break;
       case kCharStar:   sqltype = SQL_CHAR;    sqlctype = SQL_C_CHAR;     elemsize = size; break;
       case kSqlBinary:  sqltype = SQL_BINARY;  sqlctype = SQL_C_BINARY;   elemsize = size; break;
       case kSqlDate:    sqltype = SQL_TYPE_DATE; sqlctype = SQL_C_TYPE_DATE; elemsize = sizeof(DATE_STRUCT); break;
@@ -585,21 +589,21 @@ long double TODBCStatement::ConvertToNumeric(Int_t npar)
    if (addr==0) return 0;
 
    switch (fBuffer[npar].fBsqlctype) {
-      case SQL_C_ULONG:    return *((unsigned long int*) addr); break;
-      case SQL_C_SLONG:    return *((long int*) addr); break;
+      case SQL_C_ULONG:    return *((SQLUINTEGER*) addr); break;
+      case SQL_C_SLONG:    return *((SQLINTEGER*) addr); break;
       case SQL_C_UBIGINT:  return *((ULong64_t*) addr); break;
       case SQL_C_SBIGINT:  return *((Long64_t*) addr); break;
-      case SQL_C_USHORT:   return *((unsigned short int*) addr); break;
-      case SQL_C_SSHORT:   return *((short int*) addr); break;
-      case SQL_C_UTINYINT: return *((unsigned char*) addr); break;
-      case SQL_C_STINYINT: return *((signed char*) addr); break;
-      case SQL_C_FLOAT:    return *((float*) addr); break;
-      case SQL_C_DOUBLE:   return *((double*) addr); break;
+      case SQL_C_USHORT:   return *((SQLUSMALLINT*) addr); break;
+      case SQL_C_SSHORT:   return *((SQLSMALLINT*) addr); break;
+      case SQL_C_UTINYINT: return *((SQLCHAR*) addr); break;
+      case SQL_C_STINYINT: return *((SQLSCHAR*) addr); break;
+      case SQL_C_FLOAT:    return *((SQLREAL*) addr); break;
+      case SQL_C_DOUBLE:   return *((SQLDOUBLE*) addr); break;
       case SQL_C_TYPE_DATE: {
          DATE_STRUCT* dt = (DATE_STRUCT*) addr;
          TDatime rtm(dt->year, dt->month,  dt->day, 0, 0, 0);
          return rtm.GetDate();
-         break;            
+         break;
       }
       case SQL_C_TYPE_TIME: {
          TIME_STRUCT* tm = (TIME_STRUCT*) addr;
@@ -608,8 +612,8 @@ long double TODBCStatement::ConvertToNumeric(Int_t npar)
          break;
       }
       case SQL_C_TYPE_TIMESTAMP: {
-         TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr; 
-         TDatime rtm(tm->year, tm->month,  tm->day, 
+         TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
+         TDatime rtm(tm->year, tm->month,  tm->day,
                      tm->hour, tm->minute, tm->second);
          return rtm.Get();
          break;
@@ -630,19 +634,19 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
    char* buf = fBuffer[npar].fBstrbuffer;
 
    switch(fBuffer[npar].fBsqlctype) {
-      case SQL_C_SLONG:   snprintf(buf, 100, "%ld", *((long*) addr)); break;
-      case SQL_C_ULONG:   snprintf(buf, 100, "%lu", *((unsigned long*) addr)); break;
-      case SQL_C_SBIGINT: snprintf(buf, 100, "%lld", *((long long*) addr)); break;
-      case SQL_C_UBIGINT: snprintf(buf, 100, "%llu", *((unsigned long long*) addr)); break;
-      case SQL_C_SSHORT:  snprintf(buf, 100, "%hd", *((short*) addr)); break;
-      case SQL_C_USHORT:  snprintf(buf, 100, "%hu", *((unsigned short*) addr)); break;
-      case SQL_C_STINYINT:snprintf(buf, 100, "%d", *((char*) addr)); break;
-      case SQL_C_UTINYINT:snprintf(buf, 100, "%u", *((unsigned char*) addr)); break;
-      case SQL_C_FLOAT:   snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((float*) addr)); break;
-      case SQL_C_DOUBLE:  snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((double*) addr)); break;
+      case SQL_C_SLONG:   snprintf(buf, 100, "%ld", *((SQLINTEGER*) addr)); break;
+      case SQL_C_ULONG:   snprintf(buf, 100, "%lu", *((SQLUINTEGER*) addr)); break;
+      case SQL_C_SBIGINT: snprintf(buf, 100, "%lld", *((Long64_t*) addr)); break;
+      case SQL_C_UBIGINT: snprintf(buf, 100, "%llu", *((ULong64_t*) addr)); break;
+      case SQL_C_SSHORT:  snprintf(buf, 100, "%hd", *((SQLSMALLINT*) addr)); break;
+      case SQL_C_USHORT:  snprintf(buf, 100, "%hu", *((SQLUSMALLINT*) addr)); break;
+      case SQL_C_STINYINT:snprintf(buf, 100, "%d", *((SQLSCHAR*) addr)); break;
+      case SQL_C_UTINYINT:snprintf(buf, 100, "%u", *((SQLCHAR*) addr)); break;
+      case SQL_C_FLOAT:   snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((SQLREAL*) addr)); break;
+      case SQL_C_DOUBLE:  snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((SQLDOUBLE*) addr)); break;
       case SQL_C_TYPE_DATE: {
          DATE_STRUCT* dt = (DATE_STRUCT*) addr;
-         snprintf(buf,100,"%4.4d-%2.2d-%2.2d", 
+         snprintf(buf,100,"%4.4d-%2.2d-%2.2d",
                   dt->year, dt->month,  dt->day);
          break;
       }
@@ -653,7 +657,7 @@ const char* TODBCStatement::ConvertToString(Int_t npar)
          break;
       }
       case SQL_C_TYPE_TIMESTAMP: {
-         TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr; 
+         TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
          snprintf(buf,100,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
                   tm->year, tm->month,  tm->day,
                   tm->hour, tm->minute, tm->second);
@@ -672,7 +676,7 @@ Bool_t TODBCStatement::IsNull(Int_t npar)
 
    void* addr = GetParAddr(npar);
    if (addr==0) return kTRUE;
-   
+
    return fBuffer[npar].fBlenarray[fBufferCounter] == SQL_NULL_DATA;
 }
 
@@ -684,7 +688,7 @@ Int_t TODBCStatement::GetInt(Int_t npar)
    if (addr==0) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_SLONG)
-      return (Int_t) *((long int*) addr);
+      return (Int_t) *((SQLINTEGER*) addr);
 
    return (Int_t) ConvertToNumeric(npar);
 }
@@ -697,7 +701,7 @@ UInt_t TODBCStatement::GetUInt(Int_t npar)
    if (addr==0) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_ULONG)
-      return (UInt_t) *((unsigned long int*) addr);
+      return (UInt_t) *((SQLUINTEGER*) addr);
 
    return (UInt_t) ConvertToNumeric(npar);
 }
@@ -710,7 +714,7 @@ Long_t TODBCStatement::GetLong(Int_t npar)
    if (addr==0) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_SLONG)
-     return (Long_t) *((long int*) addr);
+     return (Long_t) *((SQLINTEGER*) addr);
 
    return (Long_t) ConvertToNumeric(npar);
 }
@@ -749,7 +753,7 @@ Double_t TODBCStatement::GetDouble(Int_t npar)
    if (addr==0) return 0;
 
    if (fBuffer[npar].fBsqlctype==SQL_C_DOUBLE)
-     return *((double*) addr);
+     return *((SQLDOUBLE*) addr);
 
    return (Double_t) ConvertToNumeric(npar);
 }
@@ -758,7 +762,7 @@ Double_t TODBCStatement::GetDouble(Int_t npar)
 const char* TODBCStatement::GetString(Int_t npar)
 {
    //get parameter as string
-   
+
    void* addr = GetParAddr(npar);
    if (addr==0) return 0;
 
@@ -796,7 +800,7 @@ const char* TODBCStatement::GetString(Int_t npar)
 //______________________________________________________________________________
 Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   // return parameter as binary data 
+   // return parameter as binary data
 
    mem = 0;
    size = 0;
@@ -804,9 +808,9 @@ Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
    void* addr = GetParAddr(npar);
    if (addr==0) return kFALSE;
 
-   if ((fBuffer[npar].fBsqlctype==SQL_C_BINARY) || 
+   if ((fBuffer[npar].fBsqlctype==SQL_C_BINARY) ||
        (fBuffer[npar].fBsqlctype==SQL_C_CHAR)) {
-           
+
       // first check if data length is null
       int len = fBuffer[npar].fBlenarray[fBufferCounter];
 
@@ -820,7 +824,7 @@ Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
       memcpy(fBuffer[npar].fBstrbuffer, addr, size);
 
       mem = fBuffer[npar].fBstrbuffer;
-      
+
       return kTRUE;
    }
 
@@ -832,16 +836,16 @@ Bool_t TODBCStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 Bool_t TODBCStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
    // return field value as date
-   
+
    void* addr = GetParAddr(npar);
    if (addr==0) return kFALSE;
 
    if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_DATE) return kFALSE;
-   
+
    DATE_STRUCT* dt = (DATE_STRUCT*) addr;
    year = dt->year;
    month = dt->month;
-   day = dt->day; 
+   day = dt->day;
 
    return kTRUE;
 }
@@ -850,16 +854,16 @@ Bool_t TODBCStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day
 Bool_t TODBCStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
    // return field value as time
-   
+
    void* addr = GetParAddr(npar);
    if (addr==0) return kFALSE;
 
    if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIME) return kFALSE;
-     
+
    TIME_STRUCT* tm = (TIME_STRUCT*) addr;
    hour = tm->hour;
    min = tm->minute;
-   sec = tm->second; 
+   sec = tm->second;
 
    return kTRUE;
 }
@@ -868,12 +872,12 @@ Bool_t TODBCStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 Bool_t TODBCStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
    // return field value as date & time
-   
+
    void* addr = GetParAddr(npar);
    if (addr==0) return kFALSE;
 
    if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIMESTAMP) return kFALSE;
-     
+
    TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
 
    year = tm->year;
@@ -894,7 +898,7 @@ Bool_t TODBCStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t
    if (addr==0) return kFALSE;
 
    if (fBuffer[npar].fBsqlctype!=SQL_C_TYPE_TIMESTAMP) return kFALSE;
-     
+
    TIMESTAMP_STRUCT* tm = (TIMESTAMP_STRUCT*) addr;
 
    year = tm->year;
@@ -918,10 +922,10 @@ Bool_t TODBCStatement::SetNull(Int_t npar)
    // code should look like:
    //    stmt->SetDouble(2, 0.);
    //    stmt->SetNull(2);
-   
+
    void* addr = GetParAddr(npar, kInt_t);
-   if (addr!=0) 
-      *((long int*) addr) = 0;
+   if (addr!=0)
+      *((SQLINTEGER*) addr) = 0;
 
    if ((npar>=0) && (npar<fNumBuffers))
       fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NULL_DATA;
@@ -936,7 +940,7 @@ Bool_t TODBCStatement::SetInt(Int_t npar, Int_t value)
    void* addr = GetParAddr(npar, kInt_t);
    if (addr==0) return kFALSE;
 
-   *((long int*) addr) = value;
+   *((SQLINTEGER*) addr) = value;
 
    fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
@@ -950,7 +954,7 @@ Bool_t TODBCStatement::SetUInt(Int_t npar, UInt_t value)
    void* addr = GetParAddr(npar, kUInt_t);
    if (addr==0) return kFALSE;
 
-   *((unsigned long int*) addr) = value;
+   *((SQLUINTEGER*) addr) = value;
 
    fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
@@ -964,7 +968,7 @@ Bool_t TODBCStatement::SetLong(Int_t npar, Long_t value)
    void* addr = GetParAddr(npar, kLong_t);
    if (addr==0) return kFALSE;
 
-   *((long int*) addr) = value;
+   *((SQLINTEGER*) addr) = value;
 
    fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
@@ -989,7 +993,7 @@ Bool_t TODBCStatement::SetLong64(Int_t npar, Long64_t value)
 Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 {
    //set parameter as ULong64_t
-   
+
    void* addr = GetParAddr(npar, kULong64_t);
    if (addr==0) return kFALSE;
 
@@ -1004,11 +1008,11 @@ Bool_t TODBCStatement::SetULong64(Int_t npar, ULong64_t value)
 Bool_t TODBCStatement::SetDouble(Int_t npar, Double_t value)
 {
    //set parameter as Double_t
-   
+
    void* addr = GetParAddr(npar, kDouble_t);
    if (addr==0) return kFALSE;
 
-   *((double*) addr) = value;
+   *((SQLDOUBLE*) addr) = value;
 
    fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
@@ -1040,28 +1044,28 @@ Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 
    return kTRUE;
 }
- 
+
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
 {
    //set parameter value as binary data
-   
+
    void* addr = GetParAddr(npar, kSqlBinary, maxsize);
    if (addr==0) return kFALSE;
 
-   if (size>fBuffer[npar].fBelementsize) 
+   if (size>fBuffer[npar].fBelementsize)
       size = fBuffer[npar].fBelementsize;
-      
+
    memcpy(addr, mem, size);
    fBuffer[npar].fBlenarray[fBufferCounter] = size;
- 
+
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 {
-   // set parameter value as date 
+   // set parameter value as date
 
    void* addr = GetParAddr(npar, kSqlDate);
    if (addr==0) return kFALSE;
@@ -1070,16 +1074,16 @@ Bool_t TODBCStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
    dt->year = year;
    dt->month = month;
    dt->day = day;
- 
+
    fBuffer[npar].fBlenarray[fBufferCounter] = 0;
 
    return kTRUE;
 }
- 
+
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 {
-   // set parameter value as time 
+   // set parameter value as time
 
    void* addr = GetParAddr(npar, kSqlTime);
    if (addr==0) return kFALSE;
@@ -1097,7 +1101,7 @@ Bool_t TODBCStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 //______________________________________________________________________________
 Bool_t TODBCStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
-   // set parameter value as date & time 
+   // set parameter value as date & time
 
    void* addr = GetParAddr(npar, kSqlTimestamp);
    if (addr==0) return kFALSE;
