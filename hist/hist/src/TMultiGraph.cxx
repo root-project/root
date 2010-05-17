@@ -231,10 +231,6 @@ void TMultiGraph::Draw(Option_t *option)
    //  TMultiGraph::Draw. Use GetDrawOption to return the option specified
    //  when drawin the TMultiGraph.
 
-   if (!fGraphs) {
-      Error("Draw", "Cannot draw an empty TMultiGraph");
-      return;
-   }
    AppendPad(option);
 }
 
@@ -761,6 +757,7 @@ void TMultiGraph::Paint(Option_t *option)
 {
    // paint all the graphs of this multigraph
 
+   if (!fGraphs) return;
    if (fGraphs->GetSize() == 0) return;
 
    char *l;
