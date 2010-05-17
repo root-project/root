@@ -30,8 +30,9 @@ endif
 PROOFSERVS   := $(MODDIRS)/pmain.cxx
 PROOFSERVO   := $(PROOFSERVS:.cxx=.o)
 PROOFSERVDEP := $(PROOFSERVO:.o=.d)
-ifeq ($(ARCH),win32gcc)
+ifneq ($(findstring win32,$(ARCH)),)
 PROOFSERVEXE := bin/proofserv_exe.exe
+PROOFSERVSH  := bin/proofserv
 else
 PROOFSERVEXE := bin/proofserv.exe
 PROOFSERVSH  := bin/proofserv
