@@ -2397,19 +2397,41 @@ int G__system(char *com)
 
 }
 
+static void G__PrintLastErrorMsg(const char* text) {
+  char* lpMsgBuf;
+  DWORD dw = GetLastError(); 
+
+  ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                  FORMAT_MESSAGE_FROM_SYSTEM |
+                  FORMAT_MESSAGE_IGNORE_INSERTS,
+                  NULL,
+                  dw,
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  (char*)&lpMsgBuf,
+                  0, NULL );
+
+  G__fprinterr(G__serr,"%s\n%s (error code %d)\n", text, lpMsgBuf, dw);
+  LocalFree(lpMsgBuf);
+}
+
 /**************************************************************************
 * G__tmpfile()
 **************************************************************************/
 const char* G__tmpfilenam() {
    G__FastAllocString dirname(MAX_PATH);
    static char filename[MAX_PATH];
-   if (!::GetTempPath(MAX_PATH, dirname)
-       || !::GetTempFileName(dirname, "cint_", 0, filename)) {
-      G__fprinterr(G__serr,"G__tmpfilenam: failed to create temporary file!\n");
+   
+   if (!::GetTempPath(MAX_PATH, dirname)) {
+      G__PrintLastErrorMsg("G__tmpfilenam: failed to determine temp directory!\n");
+      return 0;
+   }
+   if (!::GetTempFileName(dirname, "cint_", 0, filename)) {
+      G__PrintLastErrorMsg("G__tmpfilenam: failed to create temporary file!\n");
       return 0;
    }
    return filename;
 }
+
 FILE* G__tmpfile() {
    return fopen(G__tmpfilenam(), "w+bTD"); // write and read (but write first), binary, temp, and delete when closed
 }
