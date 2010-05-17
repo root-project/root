@@ -338,19 +338,26 @@ check_lib64() {
 
     # Save arguments in logical names
     chklib64=$1
-    logmsg "Checking if $chklib64 is a 64bit library"
+    logmsg "Checking if $chklib64 is a 64-bit library"
     if [ "x`basename $chklib64 .a`" != "x`basename $chklib64`" ]; then
         # we have an archive .a file
         logmsg " objdump -a $chklib64 | grep 'x86-64'"
-        objdump -a $chklib64 | grep 'x86-64' > /dev/null 2>& 1
-        ret=$?
+        if objdump -a $chklib64 | grep 'x86-64' > /dev/null 2>& 1 ; then
+            ret=1
+        fi
     else
-        logmsg " file -L $chklib64 | grep '64-bit'"
-        file -L $chklib64 | grep '64-bit' > /dev/null 2>& 1
-        ret=$?
+        if file -L $chklib64 | grep 'ASCII' > /dev/null 2>& 1 ; then
+            check_link $chklib64
+            ret=$link_result
+        else
+            logmsg " file -L $chklib64 | grep '64-bit'"
+            if file -L $chklib64 | grep '64-bit' > /dev/null 2>& 1 ; then
+                ret=1
+            fi
+        fi
     fi
     logmsg " result: $ret"
-    if test $ret -eq 0 ; then
+    if test $ret -eq 1 ; then
         is_lib64=1
         logmsg " is a 64bit library"
     fi
@@ -637,6 +644,79 @@ check_header()  {
 }
 
 #_____________________________________________________________________
+check_link() {
+    # This function will try to link a specific library [$1] in an
+    # optional directory [$2] and test, optionally, for a specified
+    # symbol [$3].
+    # The result of the check is stored in link_result, 1 if true,
+    # 0 otherwise, which should be immediately copied, since the variable
+    # will be overwritten at next invocation of this function.
+
+    # Assert that we got enough arguments
+    if test $# -lt 1 ; then
+        echo "check_link: need at least one argument"
+        link_result=0
+        return 1
+    fi
+
+    # save arguments in logical names
+    linklib="$1"; shift
+    linkdir=""
+    if test $# -ge 1 ; then
+        linkdir="$1"; shift
+    fi
+    linksymbol=""
+    if test $# -ge 1 ; then
+        linksymbol="$1"
+    fi
+
+    if test "x$linksymbol" = "x" ; then
+       if test "x$linkdir" = "x" ; then
+          logmsg " trying to link against $linklib"
+       else
+          logmsg " trying to link against $linkdir $linklib"
+       fi
+       cat <<EOF > conftest.mk
+include config/Makefile.${arch}
+conftest: conftest.c
+	\$(CC) \$(CFLAGS) \$(LDFLAGS) $linkdir $linklib \$< -o \$@
+
+conftest.c:
+	echo "int main() { return 0; }" > \$@
+EOF
+    else
+       if test "x$linkdir" = "x" ; then
+           logmsg " trying to resolve symbol $linksymbol in $linklib"
+       else
+           logmsg " trying to resolve symbol $linksymbol in $linkdir $linklib"
+       fi
+       cat <<EOF > conftest.mk
+include config/Makefile.${arch}
+conftest:conftest.c
+	\$(CC) \$(CFLAGS) \$(LDFLAGS) $linkdir $linklib \$< -o \$@
+
+conftest.c:
+	echo "extern int $linksymbol (); " > \$@
+	echo "int main() { $linksymbol (); return 0; }" >> \$@
+EOF
+    fi
+    $gnumake -f conftest.mk >> $logfile 2>&1
+    if test $? -eq 0 ; then
+        link_result=1
+        logmsg " Link OK"
+    else
+        link_result=0
+        logmsg " Failed code was"
+        cat conftest.mk >> $logfile
+    fi
+    rm -rf conftest.c conftest.mk conftest
+
+    unset linklib
+    unset linkdir
+    unset linksymbol
+}
+
+#_____________________________________________________________________
 check_symbol() {
     # This function will try to locate a symbol [$1] in a specific
     # library [$2] and in a given directory [$3].
@@ -658,6 +738,9 @@ check_symbol() {
 
     if test "x$symbollib" = "x" ; then
         found_symbol=0
+        unset symbol
+        unset symbollib
+        unset symboldir
         return 1
     fi
 
@@ -721,6 +804,9 @@ check_symbol() {
     if test "x$symbolfile" = "x" || test ! -r $symbolfile ; then
        found_symbol=0
        logmsg " Symbol not found"
+       unset symbol
+       unset symbollib
+       unset symboldir
        return 1
     fi
 
@@ -732,29 +818,10 @@ check_symbol() {
     else
         nm $symbolfile 2>&1 | grep "no symbols" > /dev/null 2>&1
         if test $? -eq 0 ; then
-            logmsg " $symbolfile is stripped, trying a link"
-            # stripped library - only safe test is to link against the
-            # library!  However, we do not know what compiler to use
-            # so we can not do the test.  Assume the symbol is in
-            cat <<EOF > conftest.mk
-include config/Makefile.${arch}
-conftest:conftest.c $symbolfile
-	\$(CC) \$(CFLAGS) \$(LDFLAGS) $symbolfile \$< -o \$@
-
-conftest.c:
-	echo "extern int $symbol (); " > \$@
-	echo "int main() { $symbol (); return 0; }" >> \$@
-EOF
-            $gnumake -f conftest.mk >> $logfile 2>&1
-            if test $? -eq 0 ; then
-                found_symbol=1
-                logmsg " Link OK"
-            else
-                found_symbol=0
-                logmsg " Failed code was"
-                cat conftest.mk >> $logfile
-            fi
-            rm -rf conftest.c conftest.mk conftest
+            logmsg " $symbolfile is stripped, trying to link"
+            # stripped library - only safe test is to link against the library
+            check_link $symbolfile "" $symbol
+            found_symbol=$link_result
         else
             found_symbol=0
         fi
@@ -764,6 +831,10 @@ EOF
     else
         result "no"
     fi
+
+    unset symbol
+    unset symbollib
+    unset symboldir
 }
 
 #_____________________________________________________________________
@@ -2641,19 +2712,12 @@ if test ! "x$enable_rfio" = "xno" ; then
         case $platform in
            linux)      shiftlib="$shiftlib -lnsl"
                 for i in "" -ladns ; do
-                    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
-                    logmsg " Checking if we can link against $shiflib"
-                    logmsg " gcc conftest.c $shiftlibdir $shiftlib $i -o conftest"
-                    gcc conftest.c $shiftlibdir $shiftlib $i -o conftest >> $logfile 2>&1
-                    if test $? -eq 0 ; then
+                    check_link "$shiftlib $i" $shiftlibdir rfio_fchmod
+                    if test $link_result -eq 1 ; then
                         shiftlib="$shiftlib $i" ;
                         break ;
-                    else
-                        logmsg " Failed program was:"
-                        cat conftest.c >> $logfile
                     fi
                 done
-                rm -f conftest.c conftest
                 ;;
            solaris)    shiftlib="$shiftlib -lposix4" ;;
            win32)      shiftincdir="$shiftincdir $shiftincdir/../win32"
@@ -2730,19 +2794,12 @@ if test ! "x$enable_castor" = "xno" ; then
         case $platform in
            linux)      castorlib="$castorlib -lnsl"
                 for i in "" -ladns ; do
-                    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
-                    logmsg " Checking if we can link against $castorlib"
-                    logmsg " gcc conftest.c $castorlibdir $castorlib $i -o conftest"
-                    gcc conftest.c $castorlibdir $castorlib $i -o conftest >> $logfile 2>&1
-                    if test $? -eq 0 ; then
+                    check_link "$shiftlib $i" $shiftlibdir rfio_fchmod
+                    if test $link_result -eq 1 ; then
                         castorlib="$castorlib $i" ;
                         break ;
-                    else
-                        logmsg " Failed program was:"
-                        cat conftest.c >> $logfile
                     fi
                 done
-                rm -f conftest.c conftest
                 ;;
            solaris)    castorlib="$castorlib -lposix4" ;;
            win32)      castorincdir="$castorincdir $castorincdir/../win32"
@@ -3112,44 +3169,19 @@ if test ! "x$enable_hdfs" = "xno" ; then
         enable_hdfs="no"
     else
         case $platform in
-           linux)
-                hdfslib="$hdfslib"
-                for i in "" -ladns ; do
-                    echo 'extern hdfsConnect(const char *, unsigned short); int main() { hdfsConnect("default", 0); return 0; }' > conftest.c
-                    logmsg " Checking if we can link against $hdfslib"
-                    logmsg " gcc conftest.c $hdfslibdir $hdfslib $i -o conftest"
-                    gcc conftest.c $hdfslibdir $hdfslib $i -o conftest >> $logfile 2>&1
-                    if test $? -eq 0 ; then
-                        hdfslib="$hdfslib $i" ;
-                        break ;
-                    else
-                        logmsg " Failed program was:"
-                        cat conftest.c >> $logfile
-                        enable_hdfs="no"
-                    fi
-                done
-                rm -f conftest.c conftest
+            linux)
+                check_link $hdfslib $hdfslibdir hdfsConnect
+                if test $link_result -eq 0 ; then
+                    enable_hdfs="no"
+                fi
 
-                jvmlib="$jvmlib"
-                for i in "" -ladns ; do
-                    echo '#include "jni.h"' > conftest.c
-                    echo 'int main() { JNI_CreateJavaVM(NULL, NULL, NULL); return 0; }' >> conftest.c
-                    logmsg " Checking if we can link against $jvmlib"
-                    logmsg " gcc conftest.c -I$jniincdir -I$jniincdir/linux $jvmlibdir $jvmlib $i -o conftest"
-                    gcc conftest.c -I$jniincdir -I$jniincdir/linux $jvmlibdir $jvmlib $i -o conftest >> $logfile 2>&1
-                    if test $? -eq 0 ; then
-                        jvmlib="$jvmlib $i" ;
-                        break ;
-                    else
-                        logmsg " Failed program was:"
-                        cat conftest.c >> $logfile
-                        enable_hdfs="no"
-                    fi
-                done
-                rm -f conftest.c conftest
+                check_link $jvmlib $jvmlibdir JNI_CreateJavaVM
+                if test $link_result -eq 0 ; then
+                    enable_hdfs="no"
+                fi
                 ;;
         esac
-        echo "HDFS disabled due to failed compile and link test!"
+        echo "HDFS disabled due to failed compile and link test"
     fi
 fi
 check_explicit "$enable_hdfs" "$enable_hdfs_explicit" \
