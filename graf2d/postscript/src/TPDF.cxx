@@ -13,9 +13,9 @@
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>TPDF: Graphics interface to PDF</h2></center>
-Like PostScript, PDF is a vector graphics output format allowing a very high 
+Like PostScript, PDF is a vector graphics output format allowing a very high
 graphics output quality. The functionnalities provided by this class are very
-similar to those provided by <tt>TPostScript</tt>. 
+similar to those provided by <tt>TPostScript</tt>.
 <p>
 Compare to PostScript output, the PDF files are usually smaller because some
 parts of them can be compressed.
@@ -2141,14 +2141,11 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
 
    // Start the text
    if (!fCompress) PrintStr("@");
-   PrintStr(" BT");
 
    // Font and text size
    Int_t font = abs(fTextFont)/10;
    if( font > kNumberOfFonts || font < 1) font = 1;
 
-   sprintf(str," /F%d",font);
-   PrintStr(str);
    Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Float_t tsize, ftsize;
@@ -2163,8 +2160,6 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    }
    Double_t fontsize = 72*(ftsize)/2.54;
    if( fontsize <= 0) return;
-   WriteReal(fontsize);
-   PrintStr(" Tf");
 
    // Text alignment
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
@@ -2199,6 +2194,24 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       }
    }
 
+   // Symbol Italic tan(15) = .26794
+   if (font == 15) {
+      Float_t tanAlpha = 0.26794;
+      Float_t dx = - tanAlpha * YtoPDF(y);
+      PrintStr(" q 1 0");
+      WriteReal(tanAlpha);
+      PrintStr(" 1");
+      WriteReal(dx);
+      PrintStr(" 0 cm");
+   }
+
+   PrintStr(" BT");
+
+   sprintf(str," /F%d",font);
+   PrintStr(str);
+   WriteReal(fontsize);
+   PrintStr(" Tf");
+
    // Text angle
    if(fTextAngle == 0) {
       WriteReal(XtoPDF(x));
@@ -2223,9 +2236,6 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       WriteReal(YtoPDF(y));
       PrintStr(" Tm");
    }
-
-   // Symbol Italic tan(15) = .26794
-   if (font == 15) PrintStr(" q 1 0 .26794 1 0 0 cm");
 
    const Int_t len=strlen(chars);
 
