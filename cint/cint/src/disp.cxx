@@ -2425,7 +2425,12 @@ const char* G__tmpfilenam() {
       G__PrintLastErrorMsg("G__tmpfilenam: failed to determine temp directory!\n");
       return 0;
    }
-   if (!::GetTempFileName(dirname, "cint_", 0, filename)) {
+   int trynumber = 0;
+   while (trynumber < 50 && !::GetTempFileName(dirname, "cint_", 0, filename)) {
+      if (++trynumber < 50)
+         Sleep(200);
+   }
+   if (trynumber >= 50) {
       G__PrintLastErrorMsg("G__tmpfilenam: failed to create temporary file!\n");
       return 0;
    }
