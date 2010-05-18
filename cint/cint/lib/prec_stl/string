@@ -314,6 +314,8 @@ string operator+(const char *a,const string& b) ;
 typedef string cstring;
 
 void swap(string& lhs,string& rhs);
+istream& operator>>(istream& is, string& st);
+ostream& operator<<(ostream& is, const string& st);
 istream& getline(istream& is,string& st);
 istream& getline(istream& is,string& st,char delim);
 

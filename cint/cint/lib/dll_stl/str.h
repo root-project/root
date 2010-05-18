@@ -89,6 +89,8 @@ using namespace std;
 #pragma link C++ function operator+(const string&,const char*);
 
 #pragma link C++ function swap(string&,string&);
+#pragma link C++ function operator>>(istream&,string&);
+#pragma link C++ function operator<<(ostream&,const string&);
 #pragma link C++ function getline;
 //#endif // G__ROOT
 
