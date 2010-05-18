@@ -3107,13 +3107,20 @@ char *G__gettemplatearg(int n,G__Templatearg *def_para)
 ***********************************************************************/
 int G__istemplatearg(char *paraname,G__Templatearg *def_para)
 {
-  int result=1;
-  while(def_para) {
-    if(strcmp(def_para->string,paraname)==0) return(result);
-    def_para = def_para->next;
-    ++result;
-  }
-  return(0);
+   int result=1;
+   while(def_para) {
+      size_t len = strlen(def_para->string);
+      if (strncmp(def_para->string,paraname,len)==0) {
+         // We have a partial match
+         if (paraname[len]=='\0' || paraname[len]==':') {
+            // We have a full match or a request for a nested type
+            return(result);
+         }
+      }
+      def_para = def_para->next;
+      ++result;
+   }
+   return(0);
 }
 
 
