@@ -144,6 +144,7 @@ struct EditLine_t {
    char* fProg;                       /* the program name		*/
    FILE* fOutFile;                    /* Stdio stuff			*/
    FILE* fErrFile;                    /* Stdio stuff			*/
+   FILE* fIn;                         /* Input file if !tty     */
    int fInFD;                         /* Input file descriptor	*/
    int fFlags;                        /* Various flags.		*/
    ElCoord_t fCursor;                 /* Cursor location		*/

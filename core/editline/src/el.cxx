@@ -76,7 +76,11 @@ el_init(const char* prog, FILE* fin, FILE* fout, FILE* ferr) {
 
    memset(el, 0, sizeof(EditLine_t));
 
+   el->fIn = fin;
    el->fInFD = fileno(fin);
+   if (isatty(el->fInFD))
+      el->fIn = 0;
+
    el->fOutFile = fout;
    el->fErrFile = ferr;
    el->fProg = strdup(prog);
