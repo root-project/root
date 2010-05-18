@@ -3,6 +3,13 @@
 # Uncomment the 'export VAR=...' or 'setenv VAR ...' for bash-like and csh-like shells,
 # respectively.
 #
+# *BEFORE* sourcing this script it is advised to source <root_sys>/bin.thisroot.sh (or
+# .csh, for csh-like shell).
+#
+# This adds the scripts to the execution path
+export PATH=$ROOTSYS/etc/proof/utils/pq2:$PATH
+# setenv PATH $ROOTSYS/etc/proof/utils/pq2:$PATH
+#
 # Path to the repository via server (superseeded by '-u srvurl' or --url=srvurl)
 # It MUST contain the full directory spefication. To test the goodness of the path
 # run gSystem->AccessPathName("<path>", kReadPermissions) in a ROOT shell: this command
@@ -50,3 +57,15 @@
 # The example shows the default settings
 # export PQ2DSSRVACTS="ls:lsfiles:filessrv:infosrv:anadist:cache:"
 # setenv PQ2DSSRVACTS "ls:lsfiles:filessrv:infosrv:anadist:cache:"
+#
+# Group to be used to initialie the dataset manager
+# export PQ2GROUP="<my_group>"
+# setenv PQ2GROUP "<my_group>"
+# User to be used to initialie the dataset manager
+# export PQ2USER="<my_user>"
+# setenv PQ2USER "<my_user>"
+#
+# The temporary directory
+#
+# export TMPDIR="/<another>/<tmp>"
+# setenv TMPDIR "/<another>/<tmp>"
