@@ -114,4 +114,5 @@ fi
 
 # Run
 export TMPDIR="$TDIR"; $PQ2 verify $DBGOPT $KEEPOPT $DSNAME $OPTS $REDIR $SRVURL
+exit $?
 

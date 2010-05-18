@@ -278,6 +278,7 @@ int main(int argc,const char *argv[])
       gSystem->Exit(1);
    }
 
+   Int_t rc = 0;
    if (iact == 0) {
       // ls
       do_ls(dataset, options);
@@ -304,7 +305,7 @@ int main(int argc,const char *argv[])
 
    } else if (iact == 6) {
       // verify
-      do_verify(dataset, options, redir);
+      rc = do_verify(dataset, options, redir);
 
    } else if (iact == 7) {
       // ana-dist
@@ -333,7 +334,7 @@ int main(int argc,const char *argv[])
       if (!gSystem->AccessPathName(fres)) Printf(" -> %s", fres.Data());
    }
 
-   gSystem->Exit(0);
+   gSystem->Exit(rc);
 }
 
 //_______________________________________________________________________________________

@@ -454,22 +454,25 @@ void do_rm(const char *dsname)
 }
 
 //_______________________________________________________________________________________
-void do_verify(const char *dsname, const char *opt, const char *redir)
+int do_verify(const char *dsname, const char *opt, const char *redir)
 {
    // Execute 'verify'
 
    const char *action = "pq2-verify";
 
-   Int_t nd = 0;
+   Int_t nd = 0, rc = -1;
    Int_t printerr = 1;
    TString ds(dsname);
    if (!ds.Contains("*")) {
       nd++;
       // Verify the dataset
-      if (VerifyDataSet(dsname, opt, redir) < 0) {
+      if ((rc = VerifyDataSet(dsname, opt, redir)) < 0) {
          // Notify
          Printf("%s: ERROR: problems verifing dataset '%s'", action, dsname);
-         return;
+         return rc;
+      } else if (rc > 0) {
+         // Notify
+         Printf("%s: WARNING: %s: some files not yet online (staged)", action, dsname);
       }
       printerr = 0;
    } else {
@@ -478,21 +481,30 @@ void do_verify(const char *dsname, const char *opt, const char *redir)
       if (!dss) {
          // Notify
          Printf("%s: ERROR: problems retrieving info about datasets", action);
-         return;
+         return rc;
       }
       printerr = 0;
       // Iterate
+      Int_t xrc = -1;
       TIter nxd(dss);
       TObjString *os = 0;
       while ((os = dynamic_cast<TObjString*>(nxd()))) {
          nd++;
          // Verify the dataset
          Printf("%s: start verification of dataset '%s' ...", action, os->GetName());
-         if (VerifyDataSet(os->GetName(), opt, redir) != 0) {
+         if ((xrc = VerifyDataSet(os->GetName(), opt, redir)) < 0) {
             printerr = 1;
             // Notify
             Printf("%s: ERROR: problems verifying dataset '%s'", action, os->GetName());
             continue;
+         } else if (xrc > 0) {
+            // At least one is not fully available
+            rc = 1;
+            // Notify
+            Printf("%s: WARNING: %s: some files not yet online (staged)", action, os->GetName());
+         } else if (rc < 0) {
+            // At least one is good
+            rc = 0;
          }
       }
    }
@@ -507,7 +519,7 @@ void do_verify(const char *dsname, const char *opt, const char *redir)
       gSystem->Rename(flog.Data(), ferr.Data());
 
    // Done
-   return;
+   return rc;
 }
 
 //_______________________________________________________________________________________

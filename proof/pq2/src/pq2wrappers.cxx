@@ -156,6 +156,7 @@ Int_t VerifyDataSet(const char *dsname, const char *opt, const char *redir)
 {
    // VerifyDataSet wrapper
 
+   Int_t rc = -1;
    // Honour the 'redir' if required
    TString srvmaps;
    if (redir && strlen(redir) > 0) srvmaps.Form("|%s", redir);
@@ -165,17 +166,25 @@ Int_t VerifyDataSet(const char *dsname, const char *opt, const char *redir)
          TProof::AddEnvVar("DATASETSRVMAPS", srvmaps);
       }
       if (!gProof && getProof("VerifyDataSet") != 0) return -1;
-      return gProof->VerifyDataSet(dsname, opt);
+      if ((rc = gProof->VerifyDataSet(dsname, opt)) == 0) {
+         // Success; partial at least. Check if all files are staged
+         TFileCollection *fcs = gProof->GetDataSet(dsname, "S:");
+         if (fcs && fcs->GetStagedPercentage() < 99.99999) rc = 1;
+      }
    } else {
       // Honour the 'redir' if required
       if (!(srvmaps.IsNull())) {
          gEnv->SetValue("DataSet.SrvMaps", srvmaps);
       }
       if (!gDataSetManager && getDSMgr("VerifyDataSet") != 0) return -1;
-      return gDataSetManager->ScanDataSet(dsname, opt);
+      if ((rc = gDataSetManager->ScanDataSet(dsname, opt)) == 0) {
+         // Success; partial at least. Check if all files are staged
+         TFileCollection *fcs = gDataSetManager->GetDataSet(dsname, "S:");
+         if (fcs && fcs->GetStagedPercentage() < 99.99999) rc = 1;
+      }
    }
    // Done
-   return -1;
+   return rc;
 }
 
 //_______________________________________________________________________________________
