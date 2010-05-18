@@ -22,6 +22,10 @@ int main()
   // Skip bytecode arena
   c.Next();
 #endif
+#ifdef __APPLE__
+  // Skip va_list on macos
+  c.Next();
+#endif
   while(c.Next() && strcmp(c.Name(),"bool")!=0 && 
 	strcmp(c.Name(),"type_info")!=0) {
     cout << c.Name() << endl;
