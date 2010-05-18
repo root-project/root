@@ -72,6 +72,12 @@ template< class T, class M >
 PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
 {
+// preliminary check in case keywords are accidently used (they are ignored otherwise)
+   if ( kwds != 0 && PyDict_Size( kwds ) ) {
+      PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
+      return 0;
+   }
+
 // setup as necessary
    if ( ! this->Initialize() )
       return 0;                              // important: 0, not Py_None
