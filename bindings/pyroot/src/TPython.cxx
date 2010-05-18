@@ -300,8 +300,6 @@ const TPyReturn TPython::Eval( const char* expr )
       return TPyReturn();
    }
 
-
-
 // results that require no convserion
    if ( result == Py_None || PyROOT::ObjectProxy_Check( result ) ||
          PyString_Check( result ) ||

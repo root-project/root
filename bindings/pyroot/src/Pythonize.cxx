@@ -1476,7 +1476,7 @@ namespace {
 
       // registration with CINT (note: CINT style signature for free functions)
          Long_t fid = Utility::InstallMethod(
-            0, pyfunc, name, "D - - 0 - - D - - 0 - -", (void*)TFNPyCallback, 2, npar );
+            0, pyfunc, name, 0, "D - - 0 - - D - - 0 - -", (void*)TFNPyCallback, 2, npar );
 
       // get constructor
          MethodProxy* method =
@@ -1589,7 +1589,7 @@ namespace {
          }
 
       // registration with CINT (note: CINT style signature for free functions)
-         Long_t fid = Utility::InstallMethod( 0, pyfunc, name,
+         Long_t fid = Utility::InstallMethod( 0, pyfunc, name, 0,
             "i - - 1 - - D - - 0 - - d - - 1 - - D - - 0 - - i - - 0 - -",
             (void*)TMinuitPyCallback, 5 );
 
