@@ -259,6 +259,7 @@ public:
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID);
    virtual void RemoveAll();
 
+   virtual void       ActivateItem(TGFrameElement *el);
    virtual void       Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void       SetListBox(TGListBox *lb) { fListBox = lb; }
    TGListBox         *GetListBox() const { return fListBox; }

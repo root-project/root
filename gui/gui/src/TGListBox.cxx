@@ -1050,6 +1050,15 @@ void TGLBContainer::OnAutoScroll()
 }
 
 //______________________________________________________________________________
+void TGLBContainer::ActivateItem(TGFrameElement *el)
+{
+   // Activate item.
+
+   TGContainer::ActivateItem(el);
+   fLastActive = (TGLBEntry *)el->fFrame;
+}
+
+//______________________________________________________________________________
 Int_t TGLBContainer::GetPos(Int_t id)
 {
    // Returns the position in the list box of the entry id.
