@@ -8,18 +8,16 @@ printhelp()
    echo "   "
    echo "  pq2-redistribute"
    echo "   "
-   echo "  Purpose: execute the file movements as deterimined by pq2-ana-dist"
+   echo "  Purpose: execute the file movements as determined by pq2-ana-dist"
    echo "   "
    echo "  Syntax:"
-   echo "           pq2-redistribute [-h|--help] [-v] [-k|--keep] --dryrun"
+   echo "           pq2-redistribute [-h|--help] --dryrun"
    echo "                            -b backend (--backend=backend)"
    echo "                            -f filemv (--filemv=filemv)"
    echo "                            -t tmpdir (--tmp=tmpdir)"
    echo "                            -r redirurl (--redir=redirurl)"
    echo "   "
    echo "   -h | --help   Print this help"
-   echo "   -v            Verbose mode"
-   echo "   -k | --keep   Keep temporary files"
    echo "   --dryrun      Only show the action that should be done (don't execute them)"
    echo "   backend       Backend to be used; currently available: $BACKENDS"
    echo "   filemv        File with the file movement directives produced by pq2-ana-dist"
@@ -118,8 +116,6 @@ movefilexrd()
     return 0
 }
 
-DBGOPT=""
-KEEPOPT=""
 REDIRURL=""
 FILEIO=""
 TMPDIR=""
@@ -143,7 +139,6 @@ for i in $@ ; do
          dryrun)     DRYRUN="yes" ;;
          fileio=*)   FILEIO="$oarg" ;;
          help)       printhelp ; exit ;;
-         keep)       KEEPOPT="-k" ;;
          redirurl=*) REDIRURL="$oarg" ;;
          tmp=*)      TMPDIR="$oarg" ;;
       esac
@@ -151,15 +146,13 @@ for i in $@ ; do
 done
 
 if test ! "x$short_opts" = "x" ; then
-   while getopts b:f:r:t:hvk i $short_opts ; do
+   while getopts b:f:r:t:h i $short_opts ; do
       case $i in
       b) BACKEND="$OPTARG" ;;
       f) FILEIO="$OPTARG" ;;
       h) printhelp ; exit ;;
-      k) KEEPOPT="-k" ;;
       r) REDIRURL="$OPTARG" ;;
       t) TMPDIR="$OPTARG" ;;
-      v) DBGOPT="-v" ;;
       \?) printhelp; exit 1 ;;
    esac
    done
