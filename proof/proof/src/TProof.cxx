@@ -86,7 +86,7 @@ TVirtualMutex *gProofMutex = 0;
 // Rotating indicator
 char TProofMergePrg::fgCr[4] = {'-', '\\', '|', '/'};
 
-TList   *TProof::fgProofEnvList = 0;  // List of env vars for proofserv
+TList   *TProof::fgProofEnvList = 0;          // List of env vars for proofserv
 TPluginHandler *TProof::fgLogViewer = 0;      // Log viewer handler
 
 ClassImp(TProof)
@@ -483,6 +483,7 @@ void TProof::InitMembers()
    fIntHandler = 0;
    fProgressDialog = 0;
    fProgressDialogStarted = kFALSE;
+   SetBit(kUseProgressDialog);
    fPlayer = 0;
    fFeedback = 0;
    fChains = 0;
@@ -1406,7 +1407,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
                   return kFALSE;
                }
 
-               if (!gROOT->IsBatch()) {
+               if (!gROOT->IsBatch() && TestBit(kUseProgressDialog)) {
                   if ((fProgressDialog =
                      gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
                      if (fProgressDialog->LoadPlugin() == -1)
@@ -1422,7 +1423,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
             Printf("Starting master: OK                                     ");
             StartupMessage("Master attached", kTRUE, 1, 1);
 
-            if (!gROOT->IsBatch()) {
+            if (!gROOT->IsBatch() && TestBit(kUseProgressDialog)) {
                if ((fProgressDialog =
                   gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
                   if (fProgressDialog->LoadPlugin() == -1)
@@ -3088,7 +3089,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                (*mess) >> selec >> dsz >> first >> nent;
                // Start or reset the progress dialog
                if (!gROOT->IsBatch()) {
-                  if (fProgressDialog && !TestBit(kUsingSessionGui)) {
+                  if (fProgressDialog &&
+                      !TestBit(kUsingSessionGui) && TestBit(kUseProgressDialog)) {
                      if (!fProgressDialogStarted) {
                         fProgressDialog->ExecPlugin(5, this,
                                                    selec.Data(), dsz, first, nent);
@@ -10846,3 +10848,16 @@ void TProof::LogViewer(const char *url, Int_t idx)
    // Done
    return;
 }
+
+//______________________________________________________________________________
+void TProof::SetProgressDialog(Bool_t on)
+{
+   // Enable/Disable the graphic progress dialog.
+   // By default the dialog is enabled
+
+   if (on)
+      SetBit(kUseProgressDialog);
+   else
+      ResetBit(kUseProgressDialog);
+}
+

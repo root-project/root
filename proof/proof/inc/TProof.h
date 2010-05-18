@@ -342,7 +342,8 @@ public:
       kNewInputData        = BIT(15),
       kIsClient            = BIT(16),
       kIsMaster            = BIT(17),
-      kIsTopMaster         = BIT(18)
+      kIsTopMaster         = BIT(18),
+      kUseProgressDialog   = BIT(19)
    };
    enum EQueryMode {
       kSync                = 0,
@@ -987,6 +988,8 @@ public:
    void        SetDataPoolUrl(const char *url) { fDataPoolUrl = url; }
 
    void        SetPrintProgress(PrintProgress_t pp) { fPrintProgress = pp; }
+
+   void        SetProgressDialog(Bool_t on = kTRUE);
 
    // Opening and managing PROOF connections
    static TProof       *Open(const char *url = 0, const char *conffile = 0,

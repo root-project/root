@@ -1061,7 +1061,8 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    // Start or reset the progress dialog
    if (!gROOT->IsBatch()) {
       Int_t dsz = dset->GetListOfElements()->GetSize();
-      if (fProgressDialog && !TestBit(kUsingSessionGui)) {
+      if (fProgressDialog &&
+          !TestBit(kUsingSessionGui) && TestBit(kUseProgressDialog)) {
          if (!fProgressDialogStarted) {
             fProgressDialog->ExecPlugin(5, this, selec.Data(), dsz,
                                            first, nentries);
