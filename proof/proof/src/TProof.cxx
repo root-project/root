@@ -9712,6 +9712,8 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
 {
    // Get a list of TFileInfo objects describing the files of the specified
    // dataset.
+   // To get the short version (containing only the global meta information)
+   // specify optStr = "S:" or optStr = "short:".
    // To get the sub-dataset of files located on a given server(s) specify
    // the list of servers (comma-separated) in the 'optStr' field.
 

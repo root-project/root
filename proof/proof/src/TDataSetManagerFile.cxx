@@ -1807,16 +1807,19 @@ TMap *TDataSetManagerFile::GetDataSets(const char *uri, UInt_t option)
 }
 
 //______________________________________________________________________________
-TFileCollection *TDataSetManagerFile::GetDataSet(const char *uri, const char *srv)
+TFileCollection *TDataSetManagerFile::GetDataSet(const char *uri, const char *opts)
 {
    // Utility function used in various methods for user dataset upload.
 
-   TString dsUser, dsGroup, dsName;
+   TString dsUser, dsGroup, dsName, ss(opts);
 
    TFileCollection *fc = 0;
    if (!strchr(uri, '*')) {
       if (!ParseUri(uri, &dsGroup, &dsUser, &dsName)) return fc;
-      fc = GetDataSet(dsGroup, dsUser, dsName);
+      UInt_t opt = (ss.Contains("S:") || ss.Contains("short:")) ? kReadShort : 0;
+      ss.ReplaceAll("S:","");
+      ss.ReplaceAll("short:","");
+      fc = GetDataSet(dsGroup, dsUser, dsName, opt);
    } else {
       TMap *fcs = GetDataSets(uri);
       if (!fcs) return fc;
@@ -1835,10 +1838,10 @@ TFileCollection *TDataSetManagerFile::GetDataSet(const char *uri, const char *sr
       }
    }
 
-   if (fc && srv && strlen(srv) > 0) {
+   if (fc && !ss.IsNull()) {
       // Build up the subset
       TFileCollection *sfc = 0;
-      TString ss(srv), s;
+      TString s;
       Int_t from = 0;
       while (ss.Tokenize(s, from, ",")) {
          TFileCollection *xfc = fc->GetFilesOnServer(s.Data());
