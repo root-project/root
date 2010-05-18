@@ -178,18 +178,20 @@ read_preread(EditLine_t* el) {
    }
 
 #ifdef FIONREAD
+   if (!el->fIn) {
       (void) ioctl(el->fInFD, FIONREAD, (ioctl_t) &chrs);
 
-   if (chrs > 0) {
-      char buf[EL_BUFSIZ];
-
-      chrs = read(el->fInFD, buf,
-                  (size_t) MIN(chrs, EL_BUFSIZ - 1));
-
       if (chrs > 0) {
-         buf[chrs] = '\0';
-         el->fCharEd.fMacro.fNLine = strdup(buf);
-         el_push(el, el->fCharEd.fMacro.fNLine);
+         char buf[EL_BUFSIZ];
+
+         chrs = read(el->fInFD, buf,
+                     (size_t) MIN(chrs, EL_BUFSIZ - 1));
+
+         if (chrs > 0) {
+            buf[chrs] = '\0';
+            el->fCharEd.fMacro.fNLine = strdup(buf);
+            el_push(el, el->fCharEd.fMacro.fNLine);
+         }
       }
    }
 #endif /* FIONREAD */
@@ -284,13 +286,22 @@ read_char(EditLine_t* el, char* cp) {
    int num_read;
    int tried = 0;
 
-   while ((num_read = read(el->fInFD, cp, 1)) == -1) {
-      if (!tried && read__fixio(el->fInFD, errno) == 0) {
-         tried = 1;
-      } else {
-         *cp = '\0';
-         return -1;
+   if (!el->fIn) {
+      while ((num_read = read(el->fInFD, cp, 1)) == -1) {
+         if (!tried && read__fixio(el->fInFD, errno) == 0) {
+            tried = 1;
+         } else {
+            *cp = '\0';
+            return -1;
+         }
       }
+   } else {
+      if (feof(el->fIn)) {
+         *cp = 0;
+         return 0;
+      }
+      *cp = fgetc(el->fIn);
+      num_read = 1;
    }
    // don't do this - "new" char may be a command char e.g <- or ->
    // set the colour of the newly read in char to null
