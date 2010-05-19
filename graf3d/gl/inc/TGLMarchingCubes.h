@@ -307,6 +307,15 @@ into mesh.
 Default splitter is used by TH3 and KDE.
 */
 
+template<class E, class V>
+V GetOffset(E val1, E val2, V iso)
+{
+   const V delta = val2 - val1;
+   if (!delta)
+      return 0.5f;
+   return (iso - val1) / delta;
+}
+
 template<class H, class E, class V>
 class TDefaultSplitter : protected virtual TGridGeometry<V> {
 protected:

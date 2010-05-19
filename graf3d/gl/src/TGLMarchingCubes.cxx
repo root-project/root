@@ -50,16 +50,6 @@ enum ECubeBitMasks {
    k6_7            = k6 | k7
 };
 
-//_________________________________________________________________
-template<class E, class V>
-V GetOffset(E val1, E val2, V iso)
-{
-   const V delta = val2 - val1;
-   if (!delta)
-      return 0.5f;
-   return (iso - val1) / delta;
-}
-
 //______________________________________________________________________
 template<class E, class V>
 void ConnectTriangles(TCell<E> &cell, TIsoMesh<V> *mesh, V eps)
