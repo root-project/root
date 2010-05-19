@@ -221,7 +221,45 @@ static int G__privateaccess = 0;
       int G__incset_typenum;
       int G__incset_static_alloc;
       int G__incset_access;
+      short G__incset_definemacro;
 
+      void store() {
+         G__incset_tagnum = G__tagnum;
+         G__incset_typenum = G__typenum ;
+         G__incset_p_ifunc = G__p_ifunc;
+         G__incset_func_now = G__func_now;
+         G__incset_func_page = G__func_page;
+         G__incset_p_local = G__p_local;
+         G__incset_globalvarpointer = G__globalvarpointer;
+         G__incset_var_type = G__var_type;
+         G__incset_tagdefining = G__tagdefining;
+         G__incset_static_alloc = G__static_alloc;
+         G__incset_access = G__access;
+         G__incset_definemacro = G__definemacro;
+         G__incset_def_tagnum = G__def_tagnum;
+         G__incset_def_struct_member = G__def_struct_member;
+      }
+
+      void restore() {
+         G__tagnum = G__incset_tagnum;
+         G__typenum = G__incset_typenum;
+         G__p_ifunc = G__incset_p_ifunc;
+         G__func_now = G__incset_func_now;
+         G__func_page = G__incset_func_page;
+         G__p_local = G__incset_p_local;
+         G__globalvarpointer = G__incset_globalvarpointer;
+         G__var_type = G__incset_var_type;
+         G__tagdefining = G__incset_tagdefining;
+         G__static_alloc = G__incset_static_alloc;
+         G__access = G__incset_access;
+         G__definemacro = G__incset_definemacro;
+         G__def_tagnum = G__incset_def_tagnum;
+         G__def_struct_member = G__incset_def_struct_member;
+      }
+
+      static void push();
+
+      static void pop();
   };
 
 /**************************************************************************
@@ -242,6 +280,20 @@ static int G__privateaccess = 0;
 
       return G__stack;
 
+   }
+
+   void G__IncSetupStack::push() {
+      std::stack<G__IncSetupStack> *var_stack = G__stack_instance();
+      G__IncSetupStack incsetup_stack;
+      incsetup_stack.store();
+      var_stack->push(incsetup_stack);
+   }  
+
+   void G__IncSetupStack::pop() {
+      std::stack<G__IncSetupStack> *var_stack = G__stack_instance();
+      G__IncSetupStack *incsetup_stack = &var_stack->top();
+      incsetup_stack->restore();
+      var_stack->pop();
    }
 
   // Supress Stub Functions
@@ -10544,31 +10596,14 @@ int G__inheritance_setup(int tagnum,int basetagnum
 int G__tag_memvar_setup(int tagnum)
 {
 
-#ifndef G__OLDIMPLEMENTATON285
-
    /* Variables stack storing */
-   G__IncSetupStack incsetup_stack;
-   std::stack<G__IncSetupStack> *var_stack = G__stack_instance();
+   G__IncSetupStack::push();
 
-   incsetup_stack.G__incset_tagnum = G__tagnum;
-   incsetup_stack.G__incset_p_local = G__p_local;
-   incsetup_stack.G__incset_def_struct_member = G__def_struct_member;
-   incsetup_stack.G__incset_tagdefining = G__tagdefining;
-   incsetup_stack.G__incset_globalvarpointer = G__globalvarpointer;
-   incsetup_stack.G__incset_var_type = G__var_type ;
-   incsetup_stack.G__incset_typenum = G__typenum ;
-   incsetup_stack.G__incset_static_alloc = G__static_alloc ;
-   incsetup_stack.G__incset_access = G__access ;
-
-#endif
    G__tagnum = tagnum;
    G__p_local=G__struct.memvar[G__tagnum];
    G__def_struct_member = 1;
-   incsetup_stack.G__incset_def_tagnum = G__def_tagnum;
    G__def_tagnum = G__struct.parent_tagnum[G__tagnum];
    G__tagdefining=G__tagnum;
-
-   var_stack->push(incsetup_stack);
 
    return(0);
 }
@@ -10669,23 +10704,7 @@ int G__tag_memvar_reset()
 {
 
  /* Variables stack restoring */
-  std::stack<G__IncSetupStack> *var_stack = G__stack_instance();
-
-  G__IncSetupStack *incsetup_stack = &var_stack->top();
-
-  G__p_local = incsetup_stack->G__incset_p_local ;
-  G__def_struct_member = incsetup_stack->G__incset_def_struct_member ;
-  G__tagdefining = incsetup_stack->G__incset_tagdefining ;
-  G__def_tagnum = incsetup_stack->G__incset_def_tagnum;
-
-  G__globalvarpointer = incsetup_stack->G__incset_globalvarpointer ;
-  G__var_type = incsetup_stack->G__incset_var_type ;
-  G__tagnum = incsetup_stack->G__incset_tagnum ;
-  G__typenum = incsetup_stack->G__incset_typenum ;
-  G__static_alloc = incsetup_stack->G__incset_static_alloc ;
-  G__access = incsetup_stack->G__incset_access ;
-
-  var_stack->pop();
+  G__IncSetupStack::pop();
 
   return(0);
 
@@ -10746,19 +10765,7 @@ int G__usermemfunc_setup2(char *funcname,int hash,char *mangled_name,
 int G__tag_memfunc_setup(int tagnum)
 {
 
-   /* Variables stack storing */
-  G__IncSetupStack incsetup_stack;
-  std::stack<G__IncSetupStack>* var_stack = G__stack_instance();
-
-  incsetup_stack.G__incset_p_ifunc = G__p_ifunc;
-  incsetup_stack.G__incset_tagnum = G__tagnum;
-  incsetup_stack.G__incset_func_now = G__func_now;
-  incsetup_stack.G__incset_func_page = G__func_page;
-  incsetup_stack.G__incset_tagdefining = G__tagdefining;
-  incsetup_stack.G__incset_var_type = G__var_type;
-  incsetup_stack.G__incset_def_tagnum = G__def_tagnum;
-
-  var_stack->push(incsetup_stack);
+  G__IncSetupStack::push();
 
   G__tagdefining = G__struct.parent_tagnum[tagnum];
   G__def_tagnum = G__tagdefining;
@@ -11531,18 +11538,7 @@ int G__memfunc_next()
 int G__tag_memfunc_reset()
 {
  /* Variables stack restoring */
-  std::stack<G__IncSetupStack> *var_stack = G__stack_instance();
-  G__IncSetupStack *incsetup_stack = &var_stack->top();
-
-  G__tagnum = incsetup_stack->G__incset_tagnum;
-  G__p_ifunc = incsetup_stack->G__incset_p_ifunc;
-  G__func_now = incsetup_stack->G__incset_func_now;
-  G__func_page = incsetup_stack->G__incset_func_page;
-  G__var_type = incsetup_stack->G__incset_var_type;
-  G__tagdefining = incsetup_stack->G__incset_tagdefining;
-  G__def_tagnum = incsetup_stack->G__incset_def_tagnum;
-
-  var_stack->pop();
+   G__IncSetupStack::pop();
 
   return(0);
 }
@@ -13165,20 +13161,8 @@ void G__setgvp(long gvp)
 **************************************************************************/
 void G__resetplocal()
 {
-  /* Variables stack storing */
-  G__IncSetupStack incsetup_stack;
-  std::stack<G__IncSetupStack> *var_stack = G__stack_instance();
-
   if(G__def_struct_member && 'n'==G__struct.type[G__tagdefining]) {
-    incsetup_stack.G__incset_tagnum = G__tagnum;
-    incsetup_stack.G__incset_p_local = G__p_local;
-    incsetup_stack.G__incset_def_struct_member = G__def_struct_member;
-    incsetup_stack.G__incset_tagdefining = G__tagdefining;
-    incsetup_stack.G__incset_globalvarpointer = G__globalvarpointer ;
-    incsetup_stack.G__incset_var_type = G__var_type ;
-    incsetup_stack.G__incset_typenum = G__typenum ;
-    incsetup_stack.G__incset_static_alloc = G__static_alloc ;
-    incsetup_stack.G__incset_access = G__access ;
+     G__IncSetupStack::push();
 
     G__tagnum = G__tagdefining;
     G__p_local=G__struct.memvar[G__tagnum];
@@ -13189,11 +13173,11 @@ void G__resetplocal()
   }
   else {
     G__p_local = (struct G__var_array*)NULL;
-    incsetup_stack.G__incset_def_struct_member =0;
+    int store_def_struct_member = G__def_struct_member;
+    G__def_struct_member = 0;
+    G__IncSetupStack::push();
+    G__def_struct_member = store_def_struct_member;
   }
-
-  var_stack->push(incsetup_stack);
-
 }
 
 /**************************************************************************
@@ -13207,17 +13191,7 @@ void G__resetglobalenv()
   G__IncSetupStack *incsetup_stack = &var_stack->top();
 
   if(incsetup_stack->G__incset_def_struct_member && 'n'==G__struct.type[incsetup_stack->G__incset_tagdefining]){
-    G__p_local = incsetup_stack->G__incset_p_local;
-    G__def_struct_member = incsetup_stack->G__incset_def_struct_member ;
-    G__tagdefining = incsetup_stack->G__incset_tagdefining ;
-
-    G__globalvarpointer = incsetup_stack->G__incset_globalvarpointer ;
-    G__var_type = incsetup_stack->G__incset_var_type ;
-    G__tagnum = incsetup_stack->G__incset_tagnum ;
-    G__typenum = incsetup_stack->G__incset_typenum ;
-    G__static_alloc = incsetup_stack->G__incset_static_alloc ;
-    G__access = incsetup_stack->G__incset_access ;
-
+     G__IncSetupStack::pop();
   }
   else {
     G__globalvarpointer = G__PVOID;
@@ -13226,9 +13200,8 @@ void G__resetglobalenv()
     G__typenum = -1;
     G__static_alloc = 0;
     G__access = G__PUBLIC;
+    var_stack->pop();
   }
-
-  var_stack->pop();
 }
 
 /**************************************************************************
@@ -13239,17 +13212,8 @@ void G__lastifuncposition()
 {
 
 /* Variables stack storing */
-  std::stack<G__IncSetupStack> *var_stack = G__stack_instance();
-  G__IncSetupStack incsetup_stack;
-
   if(G__def_struct_member && 'n'==G__struct.type[G__tagdefining]) {
-     incsetup_stack.G__incset_def_struct_member = G__def_struct_member;
-     incsetup_stack.G__incset_tagnum = G__tagnum;
-     incsetup_stack.G__incset_p_ifunc = G__p_ifunc;
-     incsetup_stack.G__incset_func_now = G__func_now;
-     incsetup_stack.G__incset_func_page = G__func_page;
-     incsetup_stack.G__incset_var_type = G__var_type;
-     incsetup_stack.G__incset_tagdefining = G__tagdefining;
+     G__IncSetupStack::push();
      G__tagnum = G__tagdefining;
      G__p_ifunc = G__struct.memfunc[G__tagnum];
      while(G__p_ifunc->next) G__p_ifunc=G__p_ifunc->next;
@@ -13257,11 +13221,11 @@ void G__lastifuncposition()
   else {
      G__p_ifunc = &G__ifunc;
      while(G__p_ifunc->next) G__p_ifunc=G__p_ifunc->next;
-     incsetup_stack.G__incset_def_struct_member = 0;
+     int store_def_struct_member = G__def_struct_member;
+     G__def_struct_member = 0;
+     G__IncSetupStack::push();
+     G__def_struct_member = store_def_struct_member;
   }
-
-  var_stack->push(incsetup_stack);
-
 }
 
 /**************************************************************************
@@ -13276,11 +13240,7 @@ void G__resetifuncposition()
   G__IncSetupStack *incsetup_stack = &var_stack->top();
 
   if(incsetup_stack->G__incset_def_struct_member && 'n'==G__struct.type[incsetup_stack->G__incset_tagdefining]){
-    G__tagnum = incsetup_stack->G__incset_tagnum;
-    G__p_ifunc = incsetup_stack->G__incset_p_ifunc;
-    G__func_now = incsetup_stack->G__incset_func_now;
-    G__func_page = incsetup_stack->G__incset_func_page;
-    G__var_type = incsetup_stack->G__incset_var_type;
+     incsetup_stack->restore();
   }
   else {
     G__tagnum = -1;
