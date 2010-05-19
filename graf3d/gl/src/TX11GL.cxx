@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Id$
+// @(#)root/gl:$Id$
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
