@@ -13,10 +13,10 @@ std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i)
 	{return(std::ends(ostr));}
 std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i) 
 	{return(std::flush(ostr));}
-std::ios_base& operator<<(std::ostream& ostr,std::G__CINT_SCIENTIFIC& i) 
-	{return(std::scientific(ostr));}
-std::ios_base& operator<<(std::ostream& ostr,std::G__CINT_FIXED& i) 
-	{return(std::fixed(ostr));}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_SCIENTIFIC& i) 
+        {std::scientific(ostr); return ostr;}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FIXED& i) 
+        { std::fixed(ostr); return ostr;}
 
 std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i) 
 	{return(std::ws(istr));}
