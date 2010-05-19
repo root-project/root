@@ -35,19 +35,21 @@ if test "x$PQ2" = "x" ; then
 fi
 
 DBGOPT=""
-DSNARG=""
+DSNAME=""
 KEEPOPT=""
 OPTIONS=""
 SRVURL=""
 TDIR=$TMPDIR
 #
 # Parse long options first
+other_args=
 short_opts=
 for i in $@ ; do
    opt=""
    case $i in
       --*) opt=`echo "$i" | sed 's/--//'` ;;
-      *) short_opts="$short_opts $i" ;;
+      -*) short_opts="$short_opts $i" ;;
+      *) other_args="$other_args $i"; short_opts="$short_opts $i" ;;
    esac
    if test ! "x$opt" = "x" ; then
       case "$opt" in
@@ -55,7 +57,7 @@ for i in $@ ; do
          *) oarg= ;;
       esac ;
       case $opt in
-         dataset=*) DSNARG="-d $oarg" ;;
+         dataset=*) DSNAME="-d $oarg" ;;
          forcescan) OPTIONS="forcescan:$OPTIONS" ;;
          help)      printhelp ; exit ;;
          keep)      KEEPOPT="-k" ;;
@@ -70,22 +72,28 @@ done
 if test ! "x$short_opts" = "x" ; then
    while getopts d:t:u:hkv i $short_opts ; do
       case $i in
-      d) DSNARG="-d $OPTARG" ;;
+      d) DSNAME="-d $OPTARG" ;;
       h) printhelp ; exit ;;
       k) KEEPOPT="-k" ;;
       t) TDIR="$OPTARG" ;;
       u) SRVURL="-u $OPTARG" ;;
       v) DBGOPT="-v" ;;
       \?) printhelp; exit 1 ;;
-   esac
+      esac
+      if test ! "x$OPTARG" = "x" ; then
+         noa=
+         for a in $other_args ; do
+            if test ! "x$OPTARG" = "x$a" ; then
+               noa="$noa $a"
+            fi
+         done
+         other_args=$noa
+      fi
    done
 
    # Fill empty fields with any non-prefixed argument
-   eval next_arg=\$$OPTIND
-   if test ! "x$next_arg" = "x" ; then
-      if test "x$DSNARG" = "x" ; then
-         DSNARG="-d $next_arg"
-      fi
+   if test ! "x$other_args" = "x" && test "x$DSNAME" = "x" ; then
+      DSNAME="-d $other_args"
    fi
 fi
 
@@ -94,7 +102,7 @@ if test ! "x$OPTIONS" = "x" ; then
 fi
 
 # Run
-export TMPDIR="$TDIR"; $PQ2 ls $DBGOPT $KEEPOPT $DSNARG $OPTIONS $SRVURL
+export TMPDIR="$TDIR"; $PQ2 ls $DBGOPT $KEEPOPT $DSNAME $OPTIONS $SRVURL
 
 
 

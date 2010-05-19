@@ -17,9 +17,8 @@ printhelp()
    echo "   -h | --help   Print this help"
    echo "   -v            Verbose mode"
    echo "   -k            Keep temporary files"
-   echo "   datasetname   Comma-separated list of datasets to be analysed; the '*' wild card in"
-   echo "                 the items (in such a case the full string - as shown by pq2-ls - should"
-   echo "                 be given in quotes, e.g. \"/default/ganis/h1-set5*\""
+   echo "   datasetname   Datasets to be analysed; the '*' wild card in the items (in such a case"
+   echo "                 the full string - as shown by pq2-ls - should be given, e.g. \"/default/ganis/h1-set5*\""
    echo "   options       Options for verifying datasets; a combination of:"
    echo "                    A               process all files"
    echo "                    D               process only files marked as staged ('on Disk') (if 'A'"
@@ -59,12 +58,14 @@ SRVURL=""
 TDIR=$TMPDIR
 #
 # Parse long options first
+other_args=
 short_opts=
 for i in $@ ; do
    opt=""
    case $i in
       --*) opt=`echo "$i" | sed 's/--//'` ;;
-      *) short_opts="$short_opts $i" ;;
+      -*) short_opts="$short_opts $i" ;;
+      *) other_args="$other_args $i"; short_opts="$short_opts $i" ;;
    esac
    if test ! "x$opt" = "x" ; then
       case "$opt" in
@@ -94,15 +95,21 @@ if test ! "x$short_opts" = "x" ; then
       u) SRVURL="-u $OPTARG" ;;
       v) DBGOPT="-v" ;;
       \?) printhelp; exit 1 ;;
-   esac
+      esac
+      if test ! "x$OPTARG" = "x" ; then
+         noa=
+         for a in $other_args ; do
+            if test ! "x$OPTARG" = "x$a" ; then
+               noa="$noa $a"
+            fi
+         done
+         other_args=$noa
+      fi
    done
 
    # Fill empty fields with any non-prefixed argument
-   eval next_arg=\$$OPTIND
-   if test ! "x$next_arg" = "x" ; then
-      if test "x$DSNAME" = "x" ; then
-         DSNAME="-d $next_arg"
-      fi
+   if test ! "x$other_args" = "x" && test "x$DSNAME" = "x" ; then
+      DSNAME="-d $other_args"
    fi
 fi
 

@@ -11,6 +11,7 @@ printhelp()
    echo "  Syntax:"
    echo "           pq2-put [-h|--help] [-v] [-k] [-o options] [(-d|--dataset=)] datasetfile"
    echo "                   [--overwrite] [--update] [--trust]"
+   echo "                   [--tree deftree] [--staged]"
    echo "                   [-t tmpdir|--tmp=tmpdir] [-u serviceurl|--url=serviceurl]"
    echo "   "
    echo "   -h | --help   Print this help"
@@ -27,6 +28,11 @@ printhelp()
    echo "                    U   add information to existing dataset, if any or create a new one"
    echo "                    T   Trust the information already present in the dataset"
    echo "                    V   verify information in the dataset (can be very slow)"
+   echo "   --overwrite   Equivalent to '-o O'"
+   echo "   --update      Equivalent to '-o U'"
+   echo "   --trust       Equivalent to '-o T'"
+   echo "   deftree       Set the default tree name to 'deftree' (option 'T' or --trust only)"
+   echo "   --staged      Assume all files online or staged (option 'T' or --trust only)"
    echo "   serviceurl:   URL of the PROOF master or data server providing the information;"
    echo "                 for data servers, it must include the directory."
    echo "                 Can be specified via the envs PQ2PROOFURL or PQ2DSSRVURL."
@@ -48,12 +54,14 @@ OPTS=""
 TDIR=$TMPDIR
 #
 # Parse long options first
+other_args=
 short_opts=
 for i in $@ ; do
    opt=""
    case $i in
       --*) opt=`echo "$i" | sed 's/--//'` ;;
-      *) short_opts="$short_opts $i" ;;
+      -*) short_opts="$short_opts $i" ;;
+      *) other_args="$other_args $i"; short_opts="$short_opts $i" ;;
    esac
    if test ! "x$opt" = "x" ; then
       case "$opt" in
@@ -65,7 +73,9 @@ for i in $@ ; do
          help)      printhelp ; exit ;;
          keep)      KEEPOPT="-k" ;;
          overwrite=*) OPTS="O$OPTS" ;;
+         staged)    OPTS="staged|$OPTS" ;;
          tmp=*)     TDIR="$oarg" ;;
+         tree=*)    OPTS="tree:$oarg|$OPTS" ;;
          trust=*)   OPTS="T$OPTS" ;;
          update=*)  OPTS="U$OPTS" ;;
          url=*)     SRVURL="-u $oarg" ;;
@@ -84,15 +94,21 @@ if test ! "x$short_opts" = "x" ; then
       u) SRVURL="-u $OPTARG" ;;
       v) DBGOPT="-v" ;;
       \?) printhelp; exit 1 ;;
-   esac
+      esac
+      if test ! "x$OPTARG" = "x" ; then
+         noa=
+         for a in $other_args ; do
+            if test ! "x$OPTARG" = "x$a" ; then
+               noa="$noa $a"
+            fi
+         done
+         other_args=$noa
+      fi
    done
 
    # Fill empty fields with any non-prefixed argument
-   eval next_arg=\$$OPTIND
-   if test ! "x$next_arg" = "x" ; then
-      if test "x$DSNAME" = "x" ; then
-         DSNAME="-d $next_arg"
-      fi
+   if test ! "x$other_args" = "x" && test "x$DSNAME" = "x" ; then
+      DSNAME="-d $other_args"
    fi
 fi
 
