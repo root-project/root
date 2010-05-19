@@ -1638,7 +1638,6 @@ int G__defined_tagname(const char* tagname, int noerror)
    // Search for old tagname.
    len = strlen(atom_tagname);
    int candidateTag = -1;
-   int failedAutoload = -1;
 try_again:
    NameMap::Range nameRange = G__struct.namerange->Find(atom_tagname);
    if (nameRange) {
@@ -1693,12 +1692,12 @@ try_again:
    }
    if (candidateTag != -1) {
       if (noerror < 2) {
-         if ( G__class_autoloading(&candidateTag) >= 0 ) {
+         if ( G__class_autoloading(&candidateTag) >= 0 || G__struct.type[candidateTag] != 'a') {
             // Either there was nothing to autoload or the autoload succeeded.
             return candidateTag;
          } 
          // The autoloading did not load anything, let's try instantiating.
-         // (by continuing on)./
+         // (by continuing on).
          
       } else {
          if (noerror < 3) {
