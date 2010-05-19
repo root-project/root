@@ -35,6 +35,8 @@ using std::endl;
 
 int n;
 
+bool useRandomSeed = false;   // to use a random seed different every time
+
 double gaus3d(double *x, double *p) { 
 
    double sigma_x = p[0]; 
@@ -157,6 +159,8 @@ int  unuranMultiDim() {
    // switch off printing of  info messages from chi2 test
    gErrorIgnoreLevel = 1001; 
 
+   // check if using a random seed
+   if (useRandomSeed) gRandom->SetSeed(0);
 
    gSystem->Load("libMathCore");
    gSystem->Load("libUnuran");
@@ -180,10 +184,6 @@ int  unuranMultiDim() {
    TF3 * flog = new TF3("logg3d",log_gaus3d,-10,10,-10,10,-10,10,4); 
    flog->SetParameters(par); 
 
-
-   TRandom3 r; 
-   //r.SetSeed(0);
-   //gRandom->SetSeed(0);
 
 
    std::cout << "Test using an undefined domain :\n\n";
@@ -214,7 +214,7 @@ int  unuranMultiDim() {
    TUnuranMultiContDist dist(f); 
 
 
-   TUnuran unr(&r,2);  // 2 is debug level 
+   TUnuran unr(gRandom,2);  // 2 is debug level 
    
    int iret = 0; 
    TH3 * href = new TH3D(*h2); 

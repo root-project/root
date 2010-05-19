@@ -32,6 +32,9 @@ using std::cout;
 using std::endl; 
 
 int n = 5000000;
+
+bool useRandomSeed = false;   // to use a random seed different every time
+
 double par[1] = {1}; // function parameters
 
 double norm(double *x, double *p) { 
@@ -55,7 +58,7 @@ public:
       fHref(0)
    { 
       // generate reference histo for distribution using cdf 
-      gRandom->SetSeed(0);  
+
       // make ref histo (uniform histo between 0,1
       fHref = new TH1D("Href","uniform ref histo",100,0,1);
       for (int i = 0; i < n; ++i) 
@@ -148,6 +151,9 @@ int unuranDistr() {
    // switch off printing of  info messages from chi2 test
    gErrorIgnoreLevel = 1001; 
 
+   // check if using a random seed
+   if (useRandomSeed) gRandom->SetSeed(0);
+
 
    gSystem->Load("libUnuran");
 
@@ -168,17 +174,16 @@ int unuranDistr() {
    TF1 * fc = new TF1("c",cdf,0,1,1); 
    fc->SetParameters(par); 
 
+      
    // tester class
    DistTest t(fc);
 
-   TRandom3 r; 
 
    // create unuran 1D distribution
    TUnuranContDist dist(f); 
 
    // create unuran class 
-   TUnuran unr(&r,2); 
-   unr.SetSeed(0);
+   TUnuran unr(gRandom,2); 
 
    // test all unuran methods
    bool ret = false; 

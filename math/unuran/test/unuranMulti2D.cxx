@@ -27,16 +27,14 @@
 #include <cmath>
 #include <iostream> 
 
-
+//#define DEBUG 
 
 using std::cout; 
 using std::endl; 
 
-
-
 int n = 1000000;
 
-//#define DEBUG 
+bool useRandomSeed = false;   // to use a random seed different every time
 
 double gaus2d(double *x, double *p) { 
 
@@ -136,7 +134,8 @@ int testGetRandom(TF2 * f, TH1 * h1, const TH2 * href = 0) {
 
 int unuranMulti2D() { 
 
-   gRandom->SetSeed(0);
+   // check if using a random seed
+   if (useRandomSeed) gRandom->SetSeed(0);
 
    // switch off printing of  info messages from chi2 test
    gErrorIgnoreLevel = 1001; 
@@ -181,10 +180,7 @@ int unuranMulti2D() {
    //ROOT::Math::Functor f2( *f, 2);
    //TUnuranMultiContDist dist(f2); 
 
-   TRandom3 r; 
- 
-
-   TUnuran unr(&r,2);  // 2 is debug level 
+   TUnuran unr(gRandom,2);  // 2 is debug level 
    
    int iret = 0; 
    TH2 * href = h2; 

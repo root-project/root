@@ -41,6 +41,7 @@ int n = 1000000;
 TCanvas * c1; 
 int icanv = 1;
 
+bool useRandomSeed = false;   // to use a random seed different every time
 
 double poisson_pmf(double * x, double * p) { 
 
@@ -155,10 +156,7 @@ int testProbVector() {
    double sum = h0->GetSumOfWeights();
    std::cout << " prob sum = " << sum << std::endl; 
       
-   TRandom3 r; 
-   r.SetSeed(0);
-
-   TUnuran unr(&r,2); 
+   TUnuran unr(gRandom,2); 
 
    TUnuranDiscrDist dist(p,p+10);
 
@@ -216,11 +214,7 @@ int testPoisson() {
    double tUdari[Nmu];
    double tUdsrou[Nmu];
 
-  TRandom3 r; 
-  r.SetSeed(0);
-
-  TUnuran unr(&r,2); 
-
+  TUnuran unr(gRandom,2); 
 
   for (int imu = 0; imu < Nmu; ++imu) {  
 
@@ -339,10 +333,8 @@ int testBinomial() {
    double tUdari[NBin];
    double tUdsrou[NBin];
 
-  TRandom3 r; 
-  r.SetSeed(0);
 
-  TUnuran unr(&r,2); 
+  TUnuran unr(gRandom,2); 
 
 
   for (int ib = 0; ib < NBin; ++ib) {  
@@ -437,6 +429,9 @@ int unuranDiscrete() {
 
    // switch off printing of  info messages from chi2 test
    gErrorIgnoreLevel = 1001; 
+
+   // check if using a random seed
+   if (useRandomSeed) gRandom->SetSeed(0);
 
    iret |= testProbVector(); 
    iret |= testPoisson(); 
