@@ -2260,6 +2260,7 @@ int G__loadfile(const char *filenamein)
       G__ifile.fp=(FILE*)NULL;
     }
     G__srcfile[fentry].fp=(FILE*)NULL;
+    G__ifile.line_number = -1;
     std::list<G__DLLINIT>* store_initpermanentsl = 0;
     if (G__initpermanentsl && !G__initpermanentsl->empty()) {
        store_initpermanentsl = G__initpermanentsl;
