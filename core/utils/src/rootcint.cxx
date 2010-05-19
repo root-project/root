@@ -675,7 +675,7 @@ int AutoLoadCallbackImpl(char *c, char *)
    if (need.length() && gLibsNeeded.find(need)==string::npos) {
       gLibsNeeded += " " + need;
    }
-   return -1; // We did not actually 'succeed' in loading the definition.
+   return 1;
 }
 
 extern "C" int AutoLoadCallback(char *c, char *l)
