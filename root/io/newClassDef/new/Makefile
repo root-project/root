@@ -1,5 +1,5 @@
 TEST_TARGETS += newTest
-CLEAN_TARGETS += \ ti_files $(DICTS) $(DICTS_H) ii_files \
+CLEAN_TARGETS += $(ALL_LIBRARIES) ti_files $(DICTS) $(DICTS_H) ii_files \
 	*.$(ObjSuf) *.$(DllSuf) *.lib *.def *.root so_locations *~ \
 	*.exp .def *.log *.pdb *.rootmap 
 
