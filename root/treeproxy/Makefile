@@ -2,7 +2,7 @@
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log red.h generatedSel.h val3dimSel.h forproxy.root \
-	vec.root vectorintSel.h vectorintEmuSel.h *.rootmap make_tuple.root make_tuple_sel.h 
+	withfriend.h vec.root vectorintSel.h vectorintEmuSel.h *.rootmap make_tuple.root make_tuple_sel.h 
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
