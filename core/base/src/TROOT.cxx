@@ -1115,33 +1115,38 @@ void TROOT::Idle(UInt_t idleTimeInSec, const char *command)
 //______________________________________________________________________________
 Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
 {
-   // Return true if the given include file correspond to a class that has
+   // Return 1 if the given include file correspond to a class that has
    // been loaded through a compiled dictionnary.
 
-   Int_t result = 0;
+   if (fname == 0) return 0;
 
-   if (fname == 0) return result;
-
-   TString className = gSystem->BaseName(fname);
-
+   TString stem(fname);
    // Remove extension if any, ignore files with extension not being .h*
-   Int_t where = className.Last('.');
+   Int_t where = stem.Last('.');
    if (where != kNPOS) {
-      if (className.EndsWith(".so") || className.EndsWith(".sl") ||
-          className.EndsWith(".dl") || className.EndsWith(".a")  ||
-          className.EndsWith(".dll", TString::kIgnoreCase))
-         return result;
-      className.Remove(where);
+      if (stem.EndsWith(".so") || stem.EndsWith(".sl") ||
+          stem.EndsWith(".dl") || stem.EndsWith(".a")  ||
+          stem.EndsWith(".dll", TString::kIgnoreCase))
+         return 0;
+      stem.Remove(where);
    }
 
+   TString className = gSystem->BaseName(stem);
    TClass *cla = TClass::GetClass(className);
-   if ( cla ) {
-      if (cla->GetDeclFileLine() < 0) return 0; // to a void an error with VisualC++
-      const char *decfile = gSystem->BaseName(cla->GetDeclFileName());
-      if(!decfile) return 0;
-      result = strcmp(decfile,fname) == 0;
+
+   if (!cla) {
+      className = stem;
+      className.ReplaceAll("/", "::");
+      className.ReplaceAll("\\", "::");
+      cla = TClass::GetClass(className);
    }
-   return result;
+   if ( cla ) {
+      if (cla->GetDeclFileLine() <= 0) return 0; // to a void an error with VisualC++
+      TString decfile = gSystem->BaseName(cla->GetDeclFileName());
+      if (decfile == gSystem->BaseName(fname))
+         return 1;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
