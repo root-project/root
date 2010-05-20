@@ -42,7 +42,8 @@ has failed because the script issues the unexpected message
 
 For a given test the expected screen output is in testname.ref (in the above
 example the file name is roottest/cint/template/longlong.ref).  The actual
-is output is located in roottest/cint/template/longlong.log.
+output is located in roottest/cint/template/longlong.log.  See note on
+references files for goadditional details.
 
 There are also .log files containing the output of the compilation of (when
 applicable) of auxiliary files.
@@ -185,6 +186,20 @@ the test
 	make cleantest
 	
 ==============================================================================
+Reference files:
 	
+For a given test the expected screen output is stored in testname.ref;  For
+the test longlong located in roottest/cint/template the file name is 
+roottest/cint/template/longlong.ref).  The actual output is located in 
+roottest/cint/template/longlong.log. 
+
+In case where the output is different when run on a 32bit platform and
+when run on 64bit platform, replace the file testname.ref with 2 files
+with the respective extension ref32 and ref64.  For example the test
+TExMap in roottest/root/collection 2 reference files: 
+   TExMap.ref64 and TExMap.ref32.
+
+
+
 
 
