@@ -80,10 +80,10 @@ public:
 
       iterator(TEveChunkManager* p) :
          fPlex(p), fCurrent(0), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(0) {}
+         fNextChunk(0), fAtomsToGo(0), fSelection(0), fSelectionIterator() {}
       iterator(TEveChunkManager& p) :
          fPlex(&p), fCurrent(0), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(0) {}
+         fNextChunk(0), fAtomsToGo(0), fSelection(0), fSelectionIterator() {}
       iterator(const iterator& i) :
          fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex),
          fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo),

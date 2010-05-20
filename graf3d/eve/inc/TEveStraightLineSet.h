@@ -51,7 +51,7 @@ public:
       TRef           fRef;
 
       Line_t(Float_t x1, Float_t y1, Float_t z1,
-             Float_t x2, Float_t y2, Float_t z2)
+             Float_t x2, Float_t y2, Float_t z2) : fRef()
       {
          fV1[0] = x1, fV1[1] = y1, fV1[2] = z1;
          fV2[0] = x2, fV2[1] = y2, fV2[2] = z2;
@@ -64,7 +64,8 @@ public:
       Float_t      fPos;
       TRef         fRef;
 
-      Marker_t(Int_t lineID, Float_t pos) : fLineID(lineID), fPos(pos) {};
+      Marker_t(Int_t lineID, Float_t pos) :
+         fLineID(lineID), fPos(pos), fRef() {}
    };
 
 protected:
