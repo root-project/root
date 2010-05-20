@@ -678,6 +678,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    Bool_t parenthese;
    TString s,chaine_error,chaine1ST;
    TString s1,s2,s3,ctemp;
+   
    TString chaine = schain;
    TFormula *oldformula;
    Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux,rshift,lshift,tercond,terelse;
@@ -1314,7 +1315,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
                      if (oldformula && strcmp(schain,oldformula->GetTitle())) {
                         Int_t nprior = fNpar;
-                        Analyze(oldformula->GetExpFormula(),err,fNpar); if (err) return; // changes fNpar
+                        Analyze(oldformula->GetExpFormula(),err,fNpar);
+                         
+                        if (err) return; // changes fNpar
                         fNpar = nprior;
                         find=1;
                         if (!err) {
@@ -1331,7 +1334,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*- Note that DefinedVariable can be overloaded
                      ctemp = chaine;
                      ctemp.ReplaceAll(escapedSlash, slash);
-                     Int_t action;
+                     Int_t action;                     
                      k = DefinedVariable(ctemp,action);
                      if (k==-3) {
                         // Error message already issued
@@ -3015,7 +3018,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
 
          //Basic operators (+,-,*,/,==,^,etc)
          if(((optype>0 && optype<6) || optype==20 ||
-             (optype>59 && optype<82)) && spos>=2) {
+             ((optype>59 && optype<69) || (optype >75 && optype<82)) && spos>=2)) {
              // if(optype==-20 && spos>=2){
             if(ismulti[spos-2]){
                tab[spos-2]="("+tab[spos-2]+")";
