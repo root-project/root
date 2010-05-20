@@ -333,8 +333,9 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
    }
 
    const char *file;
-   void *dir = gSystem->OpenDirectory(gSystem->ExpandPathName(directory.Data()));
-
+   const char *epath = gSystem->ExpandPathName(directory.Data());
+   void *dir = gSystem->OpenDirectory(epath);
+   delete [] epath;
    if (dir) {
       //create a TList to store the file names (not yet sorted)
       TList l;
