@@ -277,7 +277,7 @@ Bool_t PyROOT::TUIntConverter::ToMemory( PyObject* value, void* address )
       return kFALSE;
 
    if ( u > (ULong_t)UINT_MAX ) {
-      PyErr_SetString( PyExc_OverflowError, "value to large for unsigned int" );
+      PyErr_SetString( PyExc_OverflowError, "value too large for unsigned int" );
       return kFALSE;
    }
 
