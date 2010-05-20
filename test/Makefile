@@ -73,9 +73,9 @@ STRESSGUIS    = stressGUI.$(SrcSuf)
 STRESSGUI     = stressGUI$(ExeSuf)
 ifeq ($(PLATFORM),win32)
 STRESSGUILIBS = '$(ROOTSYS)/lib/libASImage.lib' '$(ROOTSYS)/lib/libASImageGui.lib' \
-                '$(ROOTSYS)/lib/libRecorder.lib' 
+                '$(ROOTSYS)/lib/libRecorder.lib $(ROOTSYS)/lib/libGuiHtml.lib' 
 else
-STRESSGUILIBS = -lASImage -lASImageGui -lRecorder
+STRESSGUILIBS = -lASImage -lASImageGui -lRecorder -lGuiHtml
 endif
 
 ifeq ($(shell $(ROOTCONFIG) --has-genvector),yes)

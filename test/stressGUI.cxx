@@ -73,6 +73,7 @@
 #include <TGSplitFrame.h>
 #include <TGTextEditor.h>
 #include <TRootHelpDialog.h>
+#include <TGHtmlBrowser.h>
 #include <HelpText.h>
 #include <TSystemDirectory.h>
 #include <TInterpreter.h>
@@ -107,6 +108,7 @@ void     testSplitFrame();
 void     testControlBars();
 void     testHelpDialog();
 void     testPaletteEditor();
+void     testHtmlBrowser();
 
 void     run_tutorials();
 void     guitest_playback();
@@ -261,6 +263,7 @@ void stressGUI()
    testControlBars();
    testHelpDialog();
    testPaletteEditor();
+   testHtmlBrowser();
 
    if (!gOptionRef) {
 
@@ -2260,6 +2263,20 @@ void testPaletteEditor()
    f->CloseWindow();
 
    delete img;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+void testHtmlBrowser()
+{
+   // Test the HTML Browser.
+
+   TGHtmlBrowser *b = new TGHtmlBrowser("http://bellenot.web.cern.ch/bellenot/Public/html_test/html_test.html");
+   ProcessFrame((TGMainFrame*)b, "HTML Browser 1");
+   b->Selected("http://bellenot.web.cern.ch/bellenot/Public/html_test/gallery/");
+   ProcessFrame((TGMainFrame*)b, "HTML Browser 2");
+   b->CloseWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

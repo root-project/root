@@ -160,7 +160,8 @@ STRESSG       = stressGraphics$(ExeSuf)
 STRESSGUIO    = stressGUI.$(ObjSuf)
 STRESSGUIS    = stressGUI.$(SrcSuf)
 STRESSGUI     = stressGUI$(ExeSuf)
-STRESSGUILIBS = $(ROOTSYS)\lib\libASImage.lib $(ROOTSYS)\lib\libASImageGui.lib $(ROOTSYS)\lib\libRecorder.lib
+STRESSGUILIBS = $(ROOTSYS)\lib\libASImage.lib $(ROOTSYS)\lib\libASImageGui.lib \
+                $(ROOTSYS)\lib\libRecorder.lib $(ROOTSYS)\lib\libGuiHtml.lib
 
 !if exist("$(ROOTSYS)\lib\libGenVector.lib")
 STRESSVECO   = stressVector.$(ObjSuf)
