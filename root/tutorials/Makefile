@@ -3,7 +3,9 @@
 
 # Set the list of files to be deleted by clean
 CLEAN_TARGETS += $(ALL_LIBRARIES) $(TUTORIALSLOGS) $(TUTORIALSSTUBS) \
-  *.root *.gif *.png *.pdf *.ps *.svg *.py *.C *.xml *.dtd files htmldoc aliesd
+  *.root *.gif *.png *.pdf *.ps *.svg *.py *.C *.xml *.dtd files htmldoc aliesd \
+  *.root *.tmp xpd-temp xpd-tutorial person.dtd image foam physics graphs proof mlp math tree splot spectrum matrix hist thread g4root fit gui net geom sql graphics xml gl io quadp eve aliesd files fft pythia unuran cont roofit rf*.txt rf*.tex rf*.dot MyPdf*.cxx MyPdf*.h RooGenPdfClass.* \
+  *.rs Roo*.h *.dot roostats Roo*.cxx mc
 
 # Set the list of target to make while testing.
 
