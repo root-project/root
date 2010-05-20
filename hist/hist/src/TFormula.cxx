@@ -3018,7 +3018,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
 
          //Basic operators (+,-,*,/,==,^,etc)
          if(((optype>0 && optype<6) || optype==20 ||
-             ((optype>59 && optype<69) || (optype >75 && optype<82)) && spos>=2)) {
+             (((optype>59 && optype<69) || (optype >75 && optype<82)) && spos>=2))) {
              // if(optype==-20 && spos>=2){
             if(ismulti[spos-2]){
                tab[spos-2]="("+tab[spos-2]+")";
