@@ -2,7 +2,8 @@
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += *.log hsimple1.root hsimple2.root event1.root event2.root merge.root \
-	CopyTree.root Event.h copiedEvent hsimple.out index*.root $(ALL_LIBRARIES) *.clog
+	pion_merged.root merged.root Event.new.split0.root \
+        CopyTree.root Event.h copiedEvent hsimple.out index*.root $(ALL_LIBRARIES) *.clog
 
 
 #Set the list of target to make while testing
