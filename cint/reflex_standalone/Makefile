@@ -3,7 +3,6 @@
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog 
 
-clean: clean-cmake-build
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -33,6 +32,8 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
+
+clean: clean-cmake-build
 
 HAVECTEST?=$(shell which ctest 2>/dev/null)
 ifeq ($(findstring ctest,$(notdir $(HAVECTEST))),ctest)
