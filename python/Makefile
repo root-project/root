@@ -1,3 +1,5 @@
+CLEAN_TARGETS += *.pyc
+
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
