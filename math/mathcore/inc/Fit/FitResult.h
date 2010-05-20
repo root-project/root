@@ -153,11 +153,22 @@ public:
 
    /// parameter value by index
    double Value(unsigned int i) const { return fParams[i]; }
+   /// parameter value by index 
+   double Parameter(unsigned int i) const { return fParams[i]; }
 
-   /// parameter error by index
+   /// parameter error by index 
+   // (NOTE: this due to conflict with TObject::Error cannot used in derived class which 
+   // inherits from TObject. Use instead ParError (or Errors()[i] )
    double Error(unsigned int i) const { 
       return (i < fErrors.size() ) ? fErrors[i] : 0; 
    } 
+   /// parameter error by index 
+   double ParError(unsigned int i) const {
+      return (i < fErrors.size() ) ? fErrors[i] : 0; 
+   }
+
+   /// name of the parameter
+   std::string ParName(unsigned int i) const; 
 
    /// set the Minos errors for parameter i (called by the Fitter class when running Minos)
    void SetMinosError(unsigned int i, double elow, double eup);
@@ -264,11 +275,10 @@ public:
    /// query if a parameter is fixed 
    bool IsParameterFixed(unsigned int ipar) const; 
 
-   /// get name of parameter 
-   std::string GetParameterName(unsigned int ipar) const;
-
-protected: 
-
+   /// get name of parameter (deprecated)
+   std::string GetParameterName(unsigned int ipar) const { 
+      return ParName(ipar);
+   }
 
 
 protected: 
@@ -301,7 +311,7 @@ protected:
    std::vector<double>         fGlobalCC;   // global Correlation coefficient
    std::map<unsigned int, std::pair<double,double> > fMinosErrors;   // map contains the two Minos errors
    std::string fMinimType;              // string indicating type of minimizer
-   std::vector<std::string> fParNames;  // parameter names (only with FCN only fites, when fFitFunc=0)
+   std::vector<std::string> fParNames;  // parameter names (only with FCN only fits, when fFitFunc=0)
 
 }; 
 

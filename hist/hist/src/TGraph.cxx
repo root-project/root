@@ -1051,8 +1051,8 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //  the TFitResult and behaves as a smart pointer to it. For example one can do: 
    //     TFitResult r    = graph->Fit("myFunc","S");
    //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-   //     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0 
-   //     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0 
+   //     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0 
+   //     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0 
    //     r->Print("V");     // print full information of fit including covariance matrix
    //     r->Write();        // store the result in a file
    //

@@ -337,7 +337,8 @@ bool FitResult::IsParameterFixed(unsigned int ipar) const {
    return false; 
 }
 
-std::string FitResult::GetParameterName(unsigned int ipar) const {
+std::string FitResult::ParName(unsigned int ipar) const {
+   // return parameter name
    if (fFitFunc) return fFitFunc->ParameterName(ipar); 
    else if (ipar < fParNames.size() ) return fParNames[ipar];
    return "param_" + ROOT::Math::Util::ToString(ipar);

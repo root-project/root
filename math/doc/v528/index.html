@@ -24,7 +24,7 @@
   <br>
   <li>Integration classes:
   <ul>
-    <li>Fix a bug in the templated method setting  the integrand
+   <li>Fix a bug in the templated method setting  the integrand
     function
     <li>Use now <tt>IntegrationOneDim::kADAPTIVESINGULAR</tt> as default method for the  1D
     integration
@@ -52,7 +52,16 @@
   </li>
   <li>Use in <tt>TRandom::SetSeed(int seed)</tt> a value of
   <tt>seed=0</tt> as default argument. This is the same now in all the
-  derived classes.  
+  derived classes.
+  <li>Add new methods in <tt>ROOT::Fit::FitResult</tt> to have a more
+  consistent and expressive API:<tt>FitResult::Parameter(index)</tt>,
+  <tt>FitResult::ParError(index)</tt> and
+  <tt>FitResult::ParName(index)</tt>.
+  The method <tt>FitResult::ParError</tt> should be used instead of
+  <tt>FitResult::Error</tt> in the derived <tt>TFitResult</tt>
+  class to avoid a conflict with <tt>TObject::Error</tt>
+  (see bug <a href="https://savannah.cern.ch/bugs/index.php?67671">67671</a>). 
+   </li>
 </ul>
 
 <h4>Mathmore</h4>
