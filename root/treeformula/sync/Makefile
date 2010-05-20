@@ -1,7 +1,7 @@
 CLEAN_TARGETS += *.log main *Dict* Event.root *~ copiedEvent$(ExeSuf) \
 	createfile.out readfile.out libEvent.$(DllSuf)\
 	Event.cxx Event.h EventLinkDef.h $(ALL_LIBRARIES) *.manifest \
-        jetclass.root
+        jetclass.root example.root 
 TEST_TARGETS += load Simple alias
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
