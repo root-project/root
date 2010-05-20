@@ -1,3 +1,4 @@
+CLEAN_TARGETS += $(ALL_LIBRARIES)
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(PWD)/
