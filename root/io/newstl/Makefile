@@ -16,7 +16,7 @@ FILEDIR := $(VERSION)
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog  result.root $(LIBDIRTOP) emulvector.root \
-   test.root samplerootfile.root memberwise.root
+   test.root samplerootfile.root memberwise.root *.libs
 # We intentionally do not delete the output file in $(FILEDIR) so that 
 # we can keep the historic versions.
 
