@@ -165,8 +165,12 @@ $(CLEAN_TARGETS_DIR): %.clean:
 clean:  $(CLEAN_TARGETS_DIR)
 	$(CMDECHO) rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)
 
+ifneq ($(MAKECMDGOALS),distclean)
+CLEAN_TARGETS += .root_hist
+endif
+
 distclean: clean
-	$(CMDECHO) rm -rf $(ROOTTEST_LOC)roottiming.root $(ROOTTEST_LOC)runid
+	$(CMDECHO) rm -rf $(ROOTTEST_LOC)roottiming.root $(ROOTTEST_LOC)runid $(ROOTTEST_LOC)root_version $(ROOTTEST_LOC).root_hist
 
 cleantest: test
 
