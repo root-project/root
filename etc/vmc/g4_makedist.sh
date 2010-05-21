@@ -39,19 +39,10 @@ else
 fi  
 TARFILE=geant4_vmc.$VERSION.$TYPE"tar"
 
-TAR=`which gtar`
-dum=`echo $TAR | grep "no gtar"`
-stat=$?
-if [ "$TAR" = '' ] || [ $stat = 0 ]; then
-   TAR="tar cvf"
-   rm -f $TARFILE.gz
-   EXCLUDE=
-else 
-   TAR=$TAR" zcvf"
-   rm -f $TARFILE.gz
-   TARFILE=$TARFILE".gz"
-   EXCLUDE="--exclude .svn"
-fi
+TAR="tar zcvf"
+rm -f $TARFILE.gz
+TARFILE=$TARFILE".gz"
+EXCLUDE="--exclude .svn"
 
 $TAR $TARFILE $EXCLUDE geant4_vmc/README geant4_vmc/LICENSE geant4_vmc/Makefile \
    geant4_vmc/"history" geant4_vmc/Geant4VMC.html geant4_vmc/version_number  \
