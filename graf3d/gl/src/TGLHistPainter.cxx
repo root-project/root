@@ -1,3 +1,14 @@
+// @(#)root/gl:$Id$
+// Author:  Timur Pocheptsov  17/11/2005
+
+/*************************************************************************
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <stdexcept>
 #include <cstring>
 

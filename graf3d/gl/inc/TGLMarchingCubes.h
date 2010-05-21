@@ -1,3 +1,14 @@
+// @(#)root/gl:$Id$
+// Author:  Timur Pocheptsov  06/01/2009
+
+/*************************************************************************
+ * Copyright (C) 1995-2009, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGLMarchingCubes
 #define ROOT_TGLMarchingCubes
 
@@ -15,9 +26,9 @@
 #endif
 
 /*
-Implementation of "marching cubes" algortihm for GL module. Used by 
-TGLTF3Painter and TGLIsoPainter. 
-Good and clear algorithm explanation can be found here: 
+Implementation of "marching cubes" algortihm for GL module. Used by
+TGLTF3Painter and TGLIsoPainter.
+Good and clear algorithm explanation can be found here:
 http://local.wasp.uwa.edu.au/~pbourke/geometry/polygonise/
 */
 
@@ -54,7 +65,7 @@ Vertices numeration:
          / |          / |
         /  |         /  |
        /   |        /   |
-      5____|_______6    | 
+      5____|_______6    |
       |    0_______|____3______ y
       |   /        |   /
       |  /         |  /
@@ -82,7 +93,7 @@ Edges numeration:
          / |          / |
        4/  8         6  11
        /   |        /   |
-      /____|5______/    | 
+      /____|5______/    |
       |    |_____3_|____|______ y
       |   /        |   /
       9  /        10  /
@@ -93,8 +104,8 @@ Edges numeration:
     /x
 
 There are 12 edges, any of them can be intersected by iso-surface
-(not all 12 simultaneously). Edge's intersection is a vertex in 
-iso-mesh's vertices array, cell holds index of this vertex in 
+(not all 12 simultaneously). Edge's intersection is a vertex in
+iso-mesh's vertices array, cell holds index of this vertex in
 fIds array.
 fVals holds "scalar field" or density values in vertices [0, 7].
 
@@ -118,7 +129,7 @@ public:
 };
 
 /*
-TSlice of marching cubes' grid. Has W * H cells. 
+TSlice of marching cubes' grid. Has W * H cells.
 If you have TH3 hist, GetNbinsX() is W and GetNbinsY() is H.
 */
 template<class V>
@@ -140,16 +151,16 @@ private:
 };
 
 /*
-Mesh builder requires generic "data source": it can 
-be a wrapped TH3 object, a wrapped TF3 object or some 
+Mesh builder requires generic "data source": it can
+be a wrapped TH3 object, a wrapped TF3 object or some
 "density estimator" object.
 Mesh builder inherits this data source type.
 
 TH3Adapter is one of such data sources.
-It has _direct_ access to TH3 internal data. 
-GetBinContent(i, j, k) is a virtual function 
-and it calls two other virtual functions - this 
-is very expensive if you call GetBinContent 
+It has _direct_ access to TH3 internal data.
+GetBinContent(i, j, k) is a virtual function
+and it calls two other virtual functions - this
+is very expensive if you call GetBinContent
 several million times as I do in marching cubes.
 
 "H" parameter is one of TH3 classes,
@@ -164,7 +175,7 @@ protected:
 
    typedef E    ElementType_t;
 
-   TH3Adapter() 
+   TH3Adapter()
       : fSrc(0), fW(0), fH(0), fD(0), fSliceSize(0)
    {
    }
@@ -253,7 +264,7 @@ protected:
 };
 
 /*
-TSourceAdapterSelector is aux. class used by TMeshBuilder to 
+TSourceAdapterSelector is aux. class used by TMeshBuilder to
 select "data-source" base depending on data-source type.
 */
 template<class> class TSourceAdapterSelector;
@@ -322,12 +333,12 @@ protected:
    void SetNormalEvaluator(const H * /*source*/)
    {
    }
-   void SplitEdge(TCell<E> & cell, TIsoMesh<V> * mesh, UInt_t i, 
+   void SplitEdge(TCell<E> & cell, TIsoMesh<V> * mesh, UInt_t i,
                   V x, V y, V z, V iso)const
 {
    V v[3];
-   const V offset = GetOffset(cell.fVals[eConn[i][0]], 
-                              cell.fVals[eConn[i][1]], 
+   const V offset = GetOffset(cell.fVals[eConn[i][0]],
+                              cell.fVals[eConn[i][1]],
                               iso);
    v[0] = x + (vOff[eConn[i][0]][0] + offset * eDir[i][0]) * this->fStepX;
    v[1] = y + (vOff[eConn[i][0]][1] + offset * eDir[i][1]) * this->fStepY;
@@ -356,7 +367,7 @@ protected:
 
    void SplitEdge(TCell<Double_t> & cell, TIsoMesh<Double_t> * mesh, UInt_t i,
                   Double_t x, Double_t y, Double_t z, Double_t iso)const;
-   
+
    const TF3 *fTF3;
 };
 
@@ -370,43 +381,43 @@ template<class, class> class TSplitterSelector;
 template<class V>
 class TSplitterSelector<TH3C, V> {
 public:
-   typedef TDefaultSplitter<TH3C, Char_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3C, Char_t, V> Type_t;
 };
 
 template<class V>
 class TSplitterSelector<TH3S, V> {
 public:
-   typedef TDefaultSplitter<TH3S, Short_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3S, Short_t, V> Type_t;
 };
 
 template<class V>
 class TSplitterSelector<TH3I, V> {
 public:
-   typedef TDefaultSplitter<TH3I, Int_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3I, Int_t, V> Type_t;
 };
 
 template<class V>
 class TSplitterSelector<TH3F, V> {
 public:
-   typedef TDefaultSplitter<TH3F, Float_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3F, Float_t, V> Type_t;
 };
 
 template<class V>
 class TSplitterSelector<TH3D, V> {
 public:
-   typedef TDefaultSplitter<TH3D, Double_t, V> Type_t; 
+   typedef TDefaultSplitter<TH3D, Double_t, V> Type_t;
 };
 
 template<class V>
 class TSplitterSelector<TKDEFGT, V> {
 public:
-   typedef TDefaultSplitter<TKDEFGT, Float_t, Float_t> Type_t; 
+   typedef TDefaultSplitter<TKDEFGT, Float_t, Float_t> Type_t;
 };
 
 template<class V>
 class TSplitterSelector<TF3, V> {
 public:
-   typedef TF3EdgeSplitter Type_t; 
+   typedef TF3EdgeSplitter Type_t;
 };
 
 /*
@@ -456,7 +467,7 @@ private:
    ValueType   fIso;
    ValueType   fEpsilon;
 
-   void NextStep(UInt_t depth, const SliceType_t *prevSlice, 
+   void NextStep(UInt_t depth, const SliceType_t *prevSlice,
                  SliceType_t *curr)const;
 
    void BuildFirstCube(SliceType_t *slice)const;
@@ -469,7 +480,7 @@ private:
                  SliceType_t *slice)const;
    void BuildCol(UInt_t depth, const SliceType_t *prevSlice,
                  SliceType_t *slice)const;
-   void BuildSlice(UInt_t depth, const SliceType_t *prevSlice, 
+   void BuildSlice(UInt_t depth, const SliceType_t *prevSlice,
                    SliceType_t *slice)const;
 
    void BuildNormals()const;
