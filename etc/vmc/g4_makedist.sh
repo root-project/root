@@ -8,7 +8,7 @@
 # $ROOTSYS/build/unix/makedist.sh
 # Author: Fons Rademakers, 29/2/2000
 #
-# Usage: makedist.sh [gcc_version] [lib]
+# Usage: g4_makedist.sh [gcc_version] [lib]
 #
 # By I.Hrivnacova, 7/10/2002
 
@@ -53,9 +53,9 @@ else
    EXCLUDE="--exclude .svn"
 fi
 
-$TAR $TARFILE $EXCLUDE geant4_vmc/README geant4_vmc/LICENSE \
+$TAR $TARFILE $EXCLUDE geant4_vmc/README geant4_vmc/LICENSE geant4_vmc/Makefile \
    geant4_vmc/"history" geant4_vmc/Geant4VMC.html geant4_vmc/version_number  \
-   geant4_vmc/"source" geant4_vmc/examples $MAKELIB
+   geant4_vmc/g4root geant4_vmc/"source" geant4_vmc/examples $MAKELIB
 
 cd $CURDIR
 

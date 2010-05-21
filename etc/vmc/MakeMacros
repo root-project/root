@@ -99,3 +99,5 @@ distclean:
 distsrc:
 	@$(MAKEDISTSRC)
 
+install:
+	@$(MAKEINSTALL)
