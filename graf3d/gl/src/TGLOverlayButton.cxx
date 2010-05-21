@@ -81,51 +81,54 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glShadeModel(GL_FLAT);
    glClearColor(0.0, 0.0, 0.0, 0.0);
-   glPushName(0);
-
-   // Text rendering
-   rnrCtx.RegisterFontNoScale(TMath::Nint(fHeight*0.8), "arial",  TGLFont::kPixmap, fFont);
-   fFont.PreRender(kFALSE);
-
-   TColor::Pixel2RGB(fTextColor, r, g, b);
-   (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha):TGLUtil::Color4f(r, g, b, fNormAlpha);
-   glPushMatrix();
-   glTranslatef(fPosX+(fWidth/2.0), offset+fPosY+(fHeight/2.0), 0);
-   Float_t llx, lly, llz, urx, ury, urz;
-   fFont.BBox(fText.Data(), llx, lly, llz, urx, ury, urz);
-   glRasterPos2i(0, 0);
-   glBitmap(0, 0, 0, 0, -urx*0.5f, -ury*0.4f, 0);
-   fFont.Render(fText.Data());
-   fFont.PostRender();
-   glPopMatrix();
 
    // Button rendering
-   glPushMatrix();
-   glTranslatef(fPosX, offset+fPosY, 0);
-   glLoadName(1);
-   // First the border, same color as text
-   TColor::Pixel2RGB(fTextColor, r, g, b);
-   (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha):TGLUtil::Color4f(r, g, b, fNormAlpha);
-   TGLUtil::LineWidth(1);
-   glBegin(GL_LINE_LOOP);
-   glVertex2f(0.0, 0.0);
-   glVertex2f(0.0, fHeight);
-   glVertex2f(fWidth, fHeight);
-   glVertex2f(fWidth, 0.0);
-   glEnd();
-   // then the button itself, with its own color
-   // decrease a bit the highlight, to avoid bad effects...
-   TColor::Pixel2RGB(fBackColor, r, g, b);
-   (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha * 0.8):TGLUtil::Color4f(r, g, b, fNormAlpha);
-   glBegin(GL_QUADS);
-   glVertex2f(0.0, 0.0);
-   glVertex2f(0.0, fHeight);
-   glVertex2f(fWidth, fHeight);
-   glVertex2f(fWidth, 0.0);
-   glEnd();
-   glPopMatrix();
+   {
+      TGLCapabilitySwitch move_to_back(GL_POLYGON_OFFSET_FILL, kTRUE);
+      glPolygonOffset(0.5f, 0.5f);
 
-   glPopName();
+      glPushMatrix();
+      glTranslatef(fPosX, offset+fPosY, 0);
+      // First the border, same color as text
+      TColor::Pixel2RGB(fTextColor, r, g, b);
+      (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha):TGLUtil::Color4f(r, g, b, fNormAlpha);
+      TGLUtil::LineWidth(1);
+      glBegin(GL_LINE_LOOP);
+      glVertex2f(0.0, 0.0);
+      glVertex2f(0.0, fHeight);
+      glVertex2f(fWidth, fHeight);
+      glVertex2f(fWidth, 0.0);
+      glEnd();
+      // then the button itself, with its own color
+      // decrease a bit the highlight, to avoid bad effects...
+      TColor::Pixel2RGB(fBackColor, r, g, b);
+      (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha * 0.8):TGLUtil::Color4f(r, g, b, fNormAlpha);
+      glBegin(GL_QUADS);
+      glVertex2f(0.0, 0.0);
+      glVertex2f(0.0, fHeight);
+      glVertex2f(fWidth, fHeight);
+      glVertex2f(fWidth, 0.0);
+      glEnd();
+      glPopMatrix();
+   }
+
+   // Text rendering
+   {
+      rnrCtx.RegisterFontNoScale(TMath::Nint(fHeight*0.8), "arial",  TGLFont::kPixmap, fFont);
+      fFont.PreRender(kFALSE);
+
+      TColor::Pixel2RGB(fTextColor, r, g, b);
+      (fActiveID == 1) ? TGLUtil::Color4f(r, g, b, fHighAlpha):TGLUtil::Color4f(r, g, b, fNormAlpha);
+      glPushMatrix();
+      glTranslatef(fPosX+(fWidth/2.0), offset+fPosY+(fHeight/2.0), 0);
+      Float_t llx, lly, llz, urx, ury, urz;
+      fFont.BBox(fText.Data(), llx, lly, llz, urx, ury, urz);
+      glRasterPos2i(0, 0);
+      glBitmap(0, 0, 0, 0, -urx*0.5f, -ury*0.4f, 0);
+      fFont.Render(fText.Data());
+      fFont.PostRender();
+      glPopMatrix();
+   }
 
    glMatrixMode(GL_PROJECTION);
    glPopMatrix();
