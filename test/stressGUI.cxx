@@ -188,6 +188,7 @@ void stressGUI()
          printf("Please generate the reference file by executing\n");
          printf("stressGUI with the -ref flag, as shown below:\n");
          printf("   stressGUI -ref\n");
+         gSystem->Unlink(gTmpfilename.Data());
          exit(0);
       }
       char line[160];
