@@ -1139,7 +1139,12 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
       className.ReplaceAll("/", "::");
       className.ReplaceAll("\\", "::");
       if (className.Contains(":::")) {
-         // "C:\dir" becomes "C:::dir"
+         // "C:\dir" becomes "C:::dir".
+         // fname corresponds to whatever is stated after #include and
+         // a full path name usually means that it's not a regular #include
+         // but e.g. a ".L", so we can assume that this is not a header of
+         // a class in a namespace (a global-namespace class would have been
+         // detected already before).
          return 0;
       }
       cla = TClass::GetClass(className);
