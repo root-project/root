@@ -704,13 +704,14 @@ Long_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback,
    G__linked_taginfo pti;
    pti.tagnum = -1;
    pti.tagtype = 'c';
+   std::string tagname;                     // used as a buffer
    if ( rtype ) {
-      pti.tagname = rtype;
+      tagname = rtype;
    } else {
       const char* cname = scope ? scope->Fullname() : 0;
-      const std::string& tname = cname ? std::string( cname ) + "::" + mtName : mtName;
-      pti.tagname = tname.c_str();
+      tagname = cname ? std::string( cname ) + "::" + mtName : mtName;
    }
+   pti.tagname = tagname.c_str();
    int tagnum = G__get_linked_tagnum( &pti );     // creates entry for new names
 
    if ( scope ) {   // add method to existing scope
