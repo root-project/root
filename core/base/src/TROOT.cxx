@@ -1138,6 +1138,10 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
       className = stem;
       className.ReplaceAll("/", "::");
       className.ReplaceAll("\\", "::");
+      if (className.Contains(":::")) {
+         // "C:\dir" becomes "C:::dir"
+         return 0;
+      }
       cla = TClass::GetClass(className);
    }
    if ( cla ) {
