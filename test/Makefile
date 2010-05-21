@@ -73,7 +73,7 @@ STRESSGUIS    = stressGUI.$(SrcSuf)
 STRESSGUI     = stressGUI$(ExeSuf)
 ifeq ($(PLATFORM),win32)
 STRESSGUILIBS = '$(ROOTSYS)/lib/libASImage.lib' '$(ROOTSYS)/lib/libASImageGui.lib' \
-                '$(ROOTSYS)/lib/libRecorder.lib $(ROOTSYS)/lib/libGuiHtml.lib' 
+                '$(ROOTSYS)/lib/libRecorder.lib' '$(ROOTSYS)/lib/libGuiHtml.lib' 
 else
 STRESSGUILIBS = -lASImage -lASImageGui -lRecorder -lGuiHtml
 endif
