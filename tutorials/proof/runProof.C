@@ -2,40 +2,40 @@
 // Macro to run examples of analysis on PROOF, corresponding to the TSelector
 // implementations found under <ROOTSYS>/tutorials/proof .
 // This macro uses an existing PROOF session or starts one at the indicated URL.
-// In the case non existing PROOF session is found and no URL is given, the macro
-// tries to start a local PROOF session.
+// In the case non existing PROOF session is found and no URL is given, the
+// macro tries to start a local PROOF session.
 //
 // To run the macro:
 //
 //   root[] .L proof/runProof.C+
 //   root[] runProof("<analysis>")
 //
-//   Currently available analysis are (to see how all this really works check the
-//   scope for the specified option inside the macro):
+//   Currently available analysis are (to see how all this really works check
+//   the scope for the specified option inside the macro):
 //
 //   1. "simple"
 //
-//      Selector: ProofSimple.h,.C
+//      Selector: ProofSimple.h.C
 //
 //      root[] runProof("simple")
 //
-//      This will create a local PROOF session and run an analysis filling 100 histos
-//      with 100000 gaussian random numbers, and displaying them in a canvas with 100
-//      pads (10x10).
-//      The number of histograms can be passed as 'arguments' to 'simple': e.g. to fill
-//      16 histos with 1000000 entries use
+//      This will create a local PROOF session and run an analysis filling
+//      100 histos with 100000 gaussian random numbers, and displaying them
+//      in a canvas with 100 pads (10x10).
+//      The number of histograms can be passed as 'arguments' to 'simple',
+//      e.g. to fill 16 histos with 1000000 entries use
 //
 //      root[] runProof("simple(nevt=1000000,nhist=16)")
 //
 //   2. "h1"
 //
-//      Selector: tutorials/tree/h1analysis.h,.C
+//      Selector: tutorials/tree/h1analysis.h.C
 //
 //      root[] runProof("h1")
 //
-//      This runs the 'famous' H1 analysis from $ROOTSYS/tree/h1analysis.C,.h .
-//      By default the data are read from the HTTP server at root.cern.ch; the data
-//      source can be changed via the argument 'h1src', e.g.
+//      This runs the 'famous' H1 analysis from $ROOTSYS/tree/h1analysis.C.h.
+//      By default the data are read from the HTTP server at root.cern.ch,
+//      the data source can be changed via the argument 'h1src', e.g.
 //
 //      root[] runProof("h1,h1src=/data/h1")
 //
@@ -47,8 +47,8 @@
 //
 //      root[] runProof("h1,fillList")
 //
-//      To use the list previously created for the events used for the final plots
-//      add the option 'useList':
+//      To use the list previously created for the events used for the 
+//      final plots add the option 'useList':
 //
 //      root[] runProof("h1,useList")
 //
@@ -57,86 +57,91 @@
 //      Selector: ProofEvent.h,.C
 //
 //      This is an example of using PROOF par files.
-//      It runs event generation and simple analysis based on the 'Event' class found
-//      under test.
+//      It runs event generation and simple analysis based on the 'Event'
+//      class found under test.
 //
-//   root[] runProof("event")
+//      root[] runProof("event")
 //
 //  4. "eventproc"
 //
-//      Selector: ProofEventProc.h,.C
+//      Selector: ProofEventProc.h.C
 //
-//      This is an example of using PROOF par files and process 'event' data from the root HTTP
-//      server. It runs the ProofEventProc selector which is derived from the EventTree_Proc
-//      one found under test/ProofBench.
-//      The following specific arguments are available:
-//      - 'readall'  to read the whole event; by default only the braches needed by the analysis
-//                   are read (read 25% more bytes)
-//      - 'datasrc=<dir-with-files>' to read the files from another server; the files must be named
-//                                   'event_<num>.root' where <num>=1,2,...
-//      - 'files=N' to change the number of files to be analysed (default is 10; max is 50 for
-//                  the HTTP server).
+//      This is an example of using PROOF par files and process 'event'
+//      data from the ROOT HTTP server. It runs the ProofEventProc selector
+//      which is derived from the EventTree_Proc one found under
+//      test/ProofBench. The following specific arguments are available:
+//      - 'readall'  to read the whole event, by default only the branches
+//                   needed by the analysis are read (read 25% more bytes)
+//      - 'datasrc=<dir-with-files>' to read the files from another server,
+//                   the files must be named
+//                   'event_<num>.root' where <num>=1,2,...
+//      - 'files=N'  to change the number of files to be analysed (default
+//                   is 10, max is 50 for the HTTP server).
 //
-//   root[] runProof("eventproc")
+//      root[] runProof("eventproc")
 //
 //  5. "pythia8"
 //
-//      Selector: ProofPythia.h,.C
+//      Selector: ProofPythia.h.C
 //
 //      This runs Pythia8 generation based on main03.cc example in Pythia 8.1 
 //
 //      To run this analysis ROOT must be configured with pythia8.
 //
-//      Note that before executing this analysis, the env variable PYTHIA8 must point
-//      to the pythia8100 (or newer) directory; in particular, $PYTHIA8/xmldoc must
-//      contain the file Index.xml; the tutorial assumes that the Pythia8 directory
-//      is the same on all machines, i.e. local and worker ones
+//      Note that before executing this analysis, the env variable PYTHIA8
+//      must point to the pythia8100 (or newer) directory, in particular,
+//      $PYTHIA8/xmldoc must contain the file Index.xml. The tutorial assumes
+//      that the Pythia8 directory is the same on all machines, i.e. local
+//      and worker ones.
 //
-//   root[] runProof("pythia8")
+//      root[] runProof("pythia8")
 //
 //  6. "ntuple"
 //
-//      Selector: ProofNtuple.h,.C
+//      Selector: ProofNtuple.h.C
 //
-//      This is an example of final merging via files created on the workers, using
-//      TProofOutputFile. The final file is called ProofNtuple.root and it is created
-//      in the directory where the tutorial is run. If the PROOF cluster is remote, the
-//      file is received by a local xrootd daemon started for the purpose. Because of
-//      this, this example can be run only on unix clients.
+//      This is an example of final merging via files created on the workers,
+//      using TProofOutputFile. The final file is called ProofNtuple.root
+//      and it is created in the directory where the tutorial is run. If
+//      the PROOF cluster is remote, the file is received by a local xrootd
+//      daemon started for the purpose. Because of this, this example can be
+//      run only on unix clients.
 //
-//   root[] runProof("ntuple")
+//      root[] runProof("ntuple")
 //
 //  7. "dataset"
 //
-//      Selector: ProofNtuple.h,.C
+//      Selector: ProofNtuple.h.C
 //
-//      This is an example of automatic creation of a dataset from files created on the
-//      workers, using TProofOutputFile. The dataset is called testNtuple and it is
-//      automatically registered and verified. The files contain the same ntuple as in
-//      previous example/tutorial 6 (the same selector ProofNTuple is used with a slightly
-//      different configuration). The dataset is then used to produce the same plot
-//      as in 5 but using the DrawSelect methods of PROOF, which also show how to set
-//      style, color and other drawing attributes in PROOF. Depending on the relative
-//      worker perforance, some of the produced files may result in having no entries;
-//      if this happens, the file will be added to the missing (skipped) file list.
-//      Increasing the number of events (via nevt=...) typically solves this issue.
+//      This is an example of automatic creation of a dataset from files
+//      created on the workers, using TProofOutputFile. The dataset is
+//      called testNtuple and it is automatically registered and verified.
+//      The files contain the same ntuple as in previous example/tutorial 6
+//      (the same selector ProofNTuple is used with a slightly different
+//      configuration). The dataset is then used to produce the same plot
+//      as in 5 but using the DrawSelect methods of PROOF, which also show
+//      how to set style, color and other drawing attributes in PROOF.
+//      Depending on the relative worker perforance, some of the produced
+//      files may result in having no entries. If this happens, the file
+//      will be added to the missing (skipped) file list. Increasing the
+//      number of events (via nevt=...) typically solves this issue.
 //
-//   root[] runProof("dataset")
+//      root[] runProof("dataset")
 //
 //   General arguments
 //   -----------------
 //
-//   The following arguments are valid for all examples (the ones specific to each
-//   tutorial have been explained above)
+//   The following arguments are valid for all examples (the ones specific
+//   to each tutorial have been explained above)
 //
 //   0. ACLiC mode
-//      By default all processing is done with ACLiC mode '+', i.e. compile if changed.
-//      However, this may lead to problems if the available selector libs were compiled
-//      in previous sessions with a different set of loaded libraries (this is a
-//      general problem in ROOT). When this happens the best solution is to force
-//      recompilation (ACLiC mode '++'). To do this just add one or more '+' to the name
-//      of the tutorial, e.g.
-//                             runProof("simple+")  // forcing recompilation
+//      By default all processing is done with ACLiC mode '+', i.e. compile
+//      if changed. However, this may lead to problems if the available
+//      selector libs were compiled in previous sessions with a different
+//      set of loaded libraries (this is a general problem in ROOT). When
+//      this happens the best solution is to force recompilation (ACLiC
+//      mode '++'). To do this just add one or more '+' to the name of the
+//      tutorial, e.g. runProof("simple++")
 //
 //   1. nevt=N
 //
@@ -150,9 +155,10 @@
 //
 //   3. nwrk=N
 //
-//      Set the number of active workers to N; usefull to test performance on a remote
-//      cluster where control about the number of workers is not possible.
-//      E.g. runProof("event(nwrk=2)") runs 'event' with 2 workers
+//      Set the number of active workers to N, usefull to test performance
+//      on a remote cluster where control about the number of workers is
+//      not possible, e.g. runProof("event(nwrk=2)") runs 'event' with
+//      2 workers.
 //
 //   4. punzip
 //
@@ -161,31 +167,31 @@
 //
 //   5. cache=<bytes> (or <kbytes>K or <mbytes>M) 
 //
-//      Change the size of the tree cache; 0 or <0 disables the cache; value cane be in
-//      bytes (no suffix), kilobytes (suffix 'K') or megabytes (suffix 'M')
-//      e.g. root[] runProof("eventproc(cache=0)") 
+//      Change the size of the tree cache; 0 or <0 disables the cache,
+//      value cane be in bytes (no suffix), kilobytes (suffix 'K') or
+//      megabytes (suffix 'M'), e.g. root[] runProof("eventproc(cache=0)") 
 //
 //   6. submergers[=S]
 //
-//      Enabling merging via S submergers or the optimal number if S is not specified,
-//      e.g. root[] runProof("simple(hist=1000,submergers)") 
+//      Enabling merging via S submergers or the optimal number if S is
+//      not specified, e.g. root[] runProof("simple(hist=1000,submergers)") 
 //
+//   In all cases, to run on a remote PROOF cluster, the master URL must
+//   be passed as second argument; e.g.
 //
+//      root[] runProof("simple","master.do.main")
 //
-//   In all cases, to run on a remote Proof cluster, the master URL must be passed as
-//   second argument; e.g.
+//   In the case of local running it is possible to specify the number of
+//   workers to start as third argument (the default is the number of cores
+//   of the machine), e.g.
 //
-//   root[] runProof("simple","master.domain")
+//      root[] runProof("simple",0,4)
 //
-//   In the case of local running it is possible to specify the number of workers to
-//   start as third argument (the default is the number of cores of the machine), e.g.
-//
-//   root[] runProof("simple",0,4)
-//
-//   will start 4 workers. Note that the real number of workers is changed only the
-//   first time you call runProof into a ROOT session; following calls can reduce the
-//   number of active workers, but not increase it. For example, in the same session of
-//   the call above starting 4 workers, this
+//   will start 4 workers. Note that the real number of workers is changed
+//   only the first time you call runProof into a ROOT session. Following
+//   calls can reduce the number of active workers, but not increase it.
+//   For example, in the same session of the call above starting 4 workers,
+//   this
 //
 //   root[] runProof("simple",0,8)
 //
