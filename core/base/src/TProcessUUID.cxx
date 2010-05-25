@@ -15,7 +15,7 @@
 //
 // This class is a specialized TProcessID managing the list of UUIDs.
 // In addition to TProcessID, this object has the following members:
-//   - fUUIDs  : a THashlist of TUUIDs in string format (using a TObjString)
+//   - fUUIDs  : a TList of TUUIDs in string format (using a TObjString)
 //   - fActive : a TBits table with one bit per TUUID in the table
 // When a new TUUID is entered into the list fUUIDs, it is assigned
 // the first free slot in the list of bits and the TUUID UUIDNumber
@@ -26,7 +26,7 @@
 // via fObjects->At(I).
 // One can use two mechanisms to find the object corresponding to a TUUID:
 //  1- the input is the TUUID.AsString. One can find the corresponding 
-//     TObjString object objs in fUUIDs via THashList::FindObject(name).
+//     TObjString object objs in fUUIDs via TList::FindObject(name).
 //     The slot number is then objs->GetUniqueID().
 //  2- The input is the UUIDNumber. The slot number is UIUIDNumber
 //
@@ -50,7 +50,8 @@ ClassImp(TProcessUUID)
 TProcessUUID::TProcessUUID() : TProcessID()
 {
    // Default constructor.
-   fUUIDs   = new THashList(100,3);
+
+   fUUIDs   = new TList();
    fActive  = new TBits(100);
    IncrementCount();
 }
@@ -122,10 +123,11 @@ TObjString *TProcessUUID::FindUUID(UInt_t number) const
 {
    //Find the TObjString by slot number
    
-   TIter next(fUUIDs);
-   TObjString *obj;
-   while ((obj = (TObjString*)next())) {
-      if (obj->GetUniqueID() == number) return obj;
+   TObjLink *lnk = fUUIDs->FirstLink();
+   while (lnk) {
+      TObject *obj = lnk->GetObject();
+      if (obj->GetUniqueID() == number) return (TObjString*)obj;
+      lnk = lnk->Next();
    }
    return 0;
 }
@@ -134,14 +136,18 @@ TObjString *TProcessUUID::FindUUID(UInt_t number) const
 void TProcessUUID::RemoveUUID(UInt_t number)
 {
    //Remove entry number in the list of uuids
+   
    if (number > (UInt_t)fObjects->GetSize()) return;
-   TIter next(fUUIDs);
-   TObjString *obj = FindUUID(number);
-   if (obj) {
-      fUUIDs->Remove(obj);
-      delete obj;
-      fActive->ResetBit(number);
-      fObjects->AddAt(0,number);
-      return;
+   TObjLink *lnk = fUUIDs->FirstLink();
+   while (lnk) {
+      TObject *obj = lnk->GetObject();
+      if (obj->GetUniqueID() == number) {
+         fUUIDs->Remove(lnk);
+         delete obj;
+         fActive->ResetBit(number);
+         fObjects->AddAt(0,number);
+         return;
+      }
+      lnk = lnk->Next();
    }
 }   

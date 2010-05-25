@@ -38,7 +38,7 @@ private:
    TProcessUUID &operator=(const TProcessUUID&); // TProcessUUID are not copiable.
 
 protected:
-   THashList   *fUUIDs;        //Global list of TUUIDs
+   TList       *fUUIDs;        //Global list of TUUIDs
    TBits       *fActive;       //Table of active UUIDs
       
 public:
@@ -49,7 +49,7 @@ public:
    UInt_t             AddUUID(const char *uuids);
    TObjString        *FindUUID(UInt_t number) const;
    TBits             *GetActive() const {return fActive;}
-   THashList         *GetUUIDs()  const {return fUUIDs;}
+   TList             *GetUUIDs()  const {return fUUIDs;}
    void               RemoveUUID(UInt_t number);
    
    ClassDef(TProcessUUID,1)  //TProcessID managing UUIDs
