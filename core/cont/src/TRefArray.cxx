@@ -837,19 +837,23 @@ TObject *TRefArrayIter::Next()
    // Return next object in array. Returns 0 when no more objects in array.
 
    if (fDirection == kIterForward) {
-      for ( ; fCursor < fArray->Capacity() && fArray->At(fCursor) == 0;
+      for ( ; fCursor < fArray->Capacity() && fArray->At(fCursor+fArray->LowerBound()) == 0;
               fCursor++) { }
 
       fCurCursor = fCursor;
-      if (fCursor < fArray->Capacity())
-         return fArray->At(fCursor++);
+      if (fCursor < fArray->Capacity()) {
+         fCursor++;
+         return fArray->At(fCurCursor+fArray->LowerBound());
+      }
    } else {
       for ( ; fCursor >= 0 && fArray->At(fCursor) == 0;
               fCursor--) { }
 
       fCurCursor = fCursor;
-      if (fCursor >= 0)
-         return fArray->At(fCursor--);
+      if (fCursor >= 0) {
+         fCursor--;
+         return fArray->At(fCurCursor+fArray->LowerBound());
+      }
    }
    return 0;
 }
