@@ -4,6 +4,7 @@
    //have been installed
    
    TChain chain("h42");
+   chain.SetCacheSize(20*1024*1024);
    chain.Add("$H1/dstarmb.root");
    chain.Add("$H1/dstarp1a.root");
    chain.Add("$H1/dstarp1b.root");
