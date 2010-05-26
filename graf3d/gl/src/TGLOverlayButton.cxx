@@ -81,12 +81,12 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glShadeModel(GL_FLAT);
    glClearColor(0.0, 0.0, 0.0, 0.0);
+   glPushName(1);
 
    // Button rendering
    {
       TGLCapabilitySwitch move_to_back(GL_POLYGON_OFFSET_FILL, kTRUE);
       glPolygonOffset(0.5f, 0.5f);
-
       glPushMatrix();
       glTranslatef(fPosX, offset+fPosY, 0);
       // First the border, same color as text
@@ -124,11 +124,12 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
       Float_t llx, lly, llz, urx, ury, urz;
       fFont.BBox(fText.Data(), llx, lly, llz, urx, ury, urz);
       glRasterPos2i(0, 0);
-      glBitmap(0, 0, 0, 0, -urx*0.5f, -ury*0.4f, 0);
+      glBitmap(0, 0, 0, 0, -urx*0.5f, -ury*0.5f, 0);
       fFont.Render(fText.Data());
       fFont.PostRender();
       glPopMatrix();
    }
+   glPopName();
 
    glMatrixMode(GL_PROJECTION);
    glPopMatrix();
