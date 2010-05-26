@@ -35,7 +35,12 @@ protected:
 
 private:
 
-  //  ClassDef(NuMuToNuE_Oscillation,1) // Your description goes here...
+#if !defined(__CINT__) || defined(__MAKECINT__)
+  ClassDef(NuMuToNuE_Oscillation,1) // Your description goes here...
+#endif
 };
- 
+
+#ifdef __MAKECINT__
+#pragma link C++ class NuMuToNuE_Oscillation+;
+#endif 
 #endif

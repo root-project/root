@@ -51,8 +51,12 @@
 #include <iostream>
 
 // PDF class created for this macro
+#if !defined(__CINT__) || defined(__MAKECINT__)
 #include "NuMuToNuE_Oscillation.h"
 #include "NuMuToNuE_Oscillation.cxx" // so that it can be executed directly
+#else
+#include "NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly
+#endif
 
 // use this order for safety on library loading
 using namespace RooFit ;
