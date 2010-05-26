@@ -4843,6 +4843,14 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"eps");
    else if (psname.EndsWith(".pdf"))
       ((TPad*)this)->Print(psname,"pdf");
+   else if (psname.EndsWith(".pdf["))
+      ((TPad*)this)->Print(psname,"pdf");
+   else if (psname.EndsWith(".pdf]"))
+      ((TPad*)this)->Print(psname,"pdf");
+   else if (psname.EndsWith(".pdf("))
+      ((TPad*)this)->Print(psname,"pdf");
+   else if (psname.EndsWith(".pdf)"))
+      ((TPad*)this)->Print(psname,"pdf");
    else if (psname.EndsWith(".svg"))
       ((TPad*)this)->Print(psname,"svg");
    else if (psname.EndsWith(".xpm"))
