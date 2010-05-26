@@ -187,8 +187,12 @@
      coordinates are. 
 </ul>
 
-<h4>TCanvas</h4>
+<h4>TCanvas and TPad</h4>
 <ul> 
 <li> In case of <tt>Canvas.MoveOpaque = true</tt> in <tt>$ROOTSYS/etc/system.rootrc</tt>
 the rubberband was not visible during the zooming along axis.
+<li><tt>TPad::SaveAs</tt> now takes care of the extensions <tt>.pdf]</tt>,
+    <tt>.pdf[</tt>, <tt>.pad(</tt> and <tt>.pdf)</tt> to avoid the PS and PDF
+    mixing when a multiple pages PDF files is generated. To work around this
+    problem it was enough to specify the option "pdf" in SaveAs.
 </ul>
