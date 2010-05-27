@@ -63,9 +63,8 @@ using namespace RooFit ;
 using namespace RooStats ;
 
 
-void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
+void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = false)
 {
-
   // to time the macro
   TStopwatch t;
   t.Start();
@@ -247,8 +246,8 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
       RooArgList axisList(sinSq2theta, deltaMSq);
       MCMCCalculator mc(*data, model, parameters);
       mc.SetProposalFunction(up);
-      mc.SetNumIters(1000);
-      mc.SetUseKeys(false);
+      mc.SetNumIters(10000);
+      //mc.SetUseKeys(false);
       mc.SetTestSize(.1);
       mc.SetAxes(axisList); // set which is x and y axis in posterior histogram
       mcmcInterval = mc.GetInterval();
