@@ -2661,11 +2661,40 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
    }
 
+   // Get the include directory list in the dir1:dir2:dir3 format
+   // [Used for generating the .d file and to look for header files for
+   // the linkdef file]
+   TString incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
+   incPath.Append(":").Prepend(" ");
+   if (gEnv) {
+      TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
+      incPath.Append(fromConfig);
+   }
+   incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
+   while ( incPath.Index(" :") != -1 ) {
+      incPath.ReplaceAll(" :",":");
+   }
+   incPath.Prepend(":.:");
+   incPath.Prepend(WorkingDirectory());
+   
    // ======= Get the right file names for the dictionnary and the shared library
    TString library = filename;
    ExpandPathName( library );
-   if (! IsAbsoluteFileName(library) ) {
-      AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
+   if (! IsAbsoluteFileName(library) ) 
+   {
+      const char *whichlibrary = Which(incPath,library);
+      if (whichlibrary) {
+         library = whichlibrary;
+         delete [] whichlibrary;
+      } else {
+         ::Error("ACLiC","The file %s can not be found in the include path: %s",filename,incPath.Data());
+         return kFALSE;
+      }
+   } else {
+      if (gSystem->AccessPathName(filename)) {
+         ::Error("ACLiC","The file %s can not be found.",filename);
+         return kFALSE;         
+      }
    }
    { // Remove multiple '/' characters, rootcint treats them as comments.
       Ssiz_t pos = 0;
@@ -2684,6 +2713,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       file_dirname.Prepend(library(0,2));
    }
    TString file_location( file_dirname  ); // Location of the script.
+   incPath.Prepend( file_location + ":" );
 
    Ssiz_t dot_pos = library.Last('.');
    TString extension = library;
@@ -2819,21 +2849,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
       includes.Append(" ").Append(fromConfig).Append(" ");
    }
-
-   // Get the include directory list in the dir1:dir2:dir3 format
-   // [Used for generating the .d file and to look for header files for
-   // the linkdef file]
-   TString incPath = GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
-   incPath.Append(":").Prepend(" ");
-   if (gEnv) {
-      TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
-      incPath.Append(fromConfig);
-   }
-   incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
-   while ( incPath.Index(" :") != -1 ) {
-      incPath.ReplaceAll(" :",":");
-   }
-   incPath.Prepend(file_location+":.:");
 
    // Extract the -D for the dependency generation.
    TString defines = " ";
