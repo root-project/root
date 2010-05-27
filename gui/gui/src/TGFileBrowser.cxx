@@ -142,6 +142,19 @@ void TGFileBrowser::CreateBrowser()
    fTopFrame->AddFrame(new TGLabel(fTopFrame, "Draw Option: "),
                        new TGLayoutHints(kLHintsCenterY | kLHintsRight,
                        2, 2, 2, 2));
+
+   fSortButton = new TGPictureButton(fTopFrame, "bld_sortup.png");
+   fSortButton->SetToolTipText("Sort Alphabetically\n(Current folder only)");
+   fTopFrame->AddFrame(fSortButton, new TGLayoutHints(kLHintsCenterY |
+                       kLHintsLeft, 2, 2, 2, 2));
+   fSortButton->Connect("Clicked()", "TGFileBrowser", this, "ToggleSort()");
+
+   fRefreshButton = new TGPictureButton(fTopFrame, "tb_refresh.xpm");
+   fRefreshButton->SetToolTipText("Refresh Current Folder");
+   fTopFrame->AddFrame(fRefreshButton, new TGLayoutHints(kLHintsCenterY |
+                       kLHintsLeft, 2, 2, 2, 2));
+   fRefreshButton->Connect("Clicked()", "TGFileBrowser", this, "Refresh()");
+
    AddFrame(fTopFrame, new TGLayoutHints(kLHintsLeft | kLHintsTop |
             kLHintsExpandX, 2, 2, 2, 2));
    fCanvas   = new TGCanvas(this, 100, 100);
@@ -559,6 +572,25 @@ void TGFileBrowser::Update()
          }
       }
    }
+   TString actpath = FullPathName(item);
+   flags = id = size = modtime = 0;
+   if (gSystem->GetPathInfo(actpath.Data(), &id, &size, &flags, &modtime) == 0) {
+      Int_t isdir = (Int_t)flags & 2;
+
+      TString savdir = gSystem->WorkingDirectory();
+      if (isdir) {
+         TGListTreeItem *itm = item->GetFirstChild();
+         while (itm) {
+            fListTree->GetPathnameFromItem(itm, path);
+            if (strlen(path) > 1) {
+               TString recpath = FullPathName(itm);
+               if (gSystem->AccessPathName(recpath.Data()))
+                  fListTree->DeleteItem(itm);
+            }
+            itm = itm->GetNextSibling();
+         }
+      }
+   }
    DoubleClicked(item, 1);
 }
 
@@ -759,6 +791,27 @@ void TGFileBrowser::CheckRemote(TGListTreeItem *item)
 }
 
 //______________________________________________________________________________
+Bool_t TGFileBrowser::CheckSorted(TGListTreeItem *item, Bool_t but)
+{
+   // Check if the list tree item children are alphabetically sorted.
+   // If the but argument is true, the "sort" button state is set accordingly.
+
+   Bool_t found = kFALSE;
+   TGListTreeItem *i, *itm = item;
+   if (!itm->GetFirstChild())
+      itm = itm->GetParent();
+   for (sLTI_i p=fSortedItems.begin(); p!=fSortedItems.end(); ++p) {
+      i = (TGListTreeItem *)(*p);
+      if (itm == i) {
+         found = kTRUE;
+         break;
+      }
+   }
+   if (but) fSortButton->SetState(found ? kButtonEngaged : kButtonUp);
+   return found;
+}
+
+//______________________________________________________________________________
 void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
 {
    // Process mouse clicks in TGListTree.
@@ -768,6 +821,7 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    Long_t id = 0, flags = 0, modtime = 0;
    fListLevel = item;
    if (!item) return;
+   CheckSorted(item, kTRUE);
    CheckRemote(item);
    if (item && btn == kButton3) {
       TString fullpath = FullPathName(item);
@@ -934,6 +988,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       fNewBrowser->SetActBrowser(this);
    TCursorSwitcher switcher(this, fListTree);
    fListLevel = item;
+   CheckSorted(item, kTRUE);
    CheckRemote(item);
    TGListTreeItem *pitem = item->GetParent();
    TObject *obj = (TObject *) item->GetUserData();
@@ -1399,5 +1454,48 @@ void TGFileBrowser::Selected(char *)
       fListTree->ClearViewPort();
       fListTree->AdjustPosition(fListLevel);
    }
+}
+
+//______________________________________________________________________________
+void TGFileBrowser::ToggleSort()
+{
+   // Toggle the sort mode and set the "sort button" state accordingly.
+
+   if (!fListLevel) return;
+   char *itemname = 0;
+   TGListTreeItem *item = fListLevel;
+   if (!fListLevel->GetFirstChild()) {
+      item = fListLevel->GetParent();
+      itemname = StrDup(fListLevel->GetText());
+   }
+   if (!item) return;
+   Bool_t is_sorted = CheckSorted(item);
+   if (!is_sorted) {
+      //alphabetical sorting
+      fListTree->SortChildren(item);
+      fSortedItems.push_back(item);
+      fSortButton->SetState(kButtonEngaged);
+   }
+   else {
+      fListTree->DeleteChildren(item);
+      DoubleClicked(item, 1);
+      fSortedItems.remove(item);
+      fSortButton->SetState(kButtonUp);
+      gClient->NeedRedraw(fListTree, kTRUE);
+      gClient->HandleInput();
+      if (itemname) {
+         TGListTreeItem *itm = fListTree->FindChildByName(item, itemname);
+         if (itm) {
+            fListTree->ClearHighlighted();
+            Clicked(itm, 1, 0, 0);
+            itm->SetActive(kTRUE);
+            fListTree->SetSelected(itm);
+            fListTree->HighlightItem(itm, kTRUE, kTRUE);
+         }
+         delete [] itemname;
+      }
+   }
+   fListTree->ClearViewPort();
+   fListTree->AdjustPosition(fListLevel);
 }
 

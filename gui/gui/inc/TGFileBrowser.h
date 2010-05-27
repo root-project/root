@@ -20,6 +20,8 @@
 #include "TBrowserImp.h"
 #endif
 
+#include <list>
+
 class TGCanvas;
 class TGListTree;
 class TGListTreeItem;
@@ -34,6 +36,11 @@ class TSystemFile;
 
 class TGFileBrowser : public TGMainFrame, public TBrowserImp {
 
+public:
+   typedef std::list<TGListTreeItem*> sLTI_t;
+   typedef sLTI_t::iterator           sLTI_i;
+   typedef sLTI_t::reverse_iterator   sLTI_ri;
+
 protected:
    TRootBrowser      *fNewBrowser;        // Pointer back to the Browser
    TGHorizontalFrame *fTopFrame;          // Top horizontal frame
@@ -46,6 +53,8 @@ protected:
    TGComboBox        *fDrawOption;        // Draw options combobox
    TGComboBox        *fFileType;          // File type combobox
    TContextMenu      *fContextMenu;       // pointer to context menu
+   TGPictureButton   *fSortButton;        // "Sort" button 
+   TGPictureButton   *fRefreshButton;     // "Refresh" button 
    const TGPicture   *fRootIcon;          // Root files icon
    const TGPicture   *fFileIcon;          // System files icon
    const TGPicture   *fCachedPic;         // Cached picture
@@ -58,6 +67,8 @@ protected:
    Bool_t             fGrouped;           // kTRUE if Root file content (keys) is grouped
    Bool_t             fShowHidden;        // kTRUE to display hidden files
    Bool_t             fDblClick;          // kTRUE if user double-clicked on a list tree item
+
+   sLTI_t             fSortedItems;       // List of sorted list-tree items.
 
    void CreateBrowser();
 
@@ -82,6 +93,7 @@ public:
    void        Chdir(TGListTreeItem *item);
    void        Checked(TObject *obj, Bool_t check);
    void        CheckRemote(TGListTreeItem *item);
+   Bool_t      CheckSorted(TGListTreeItem *item, Bool_t but = kFALSE);
    void        Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y);
    TString     DirName(TGListTreeItem* item);
    TString     FullPathName(TGListTreeItem* item);
@@ -93,6 +105,7 @@ public:
    void        GotoDir(const char *path);
    void        PadModified();
    void        Selected(char *);
+   void        ToggleSort();
    void        Update();
 
    ClassDef(TGFileBrowser, 0) // File browser.
