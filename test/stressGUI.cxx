@@ -427,7 +427,8 @@ void ProcessFrame(TGFrame *f, const char *title)
    img->WriteImage(outfile);
 
    if (!gOptionRef) {
-      if (!strstr(title, "Pack Frames")) {
+      if (!strstr(title, "Pack Frames") &&
+          !strstr(title, "HTML Browser")) {
          gSystem->RedirectOutput(gTmpfilename.Data(), "w", &gRH);
          ((TGMainFrame *)f)->SaveSource(Form("sgui_%02d.C", gTestNum));
          gSystem->Unlink(Form("sgui_%02d.C", gTestNum));
