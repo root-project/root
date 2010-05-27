@@ -1241,6 +1241,9 @@ void TPDF::NewPage()
    fStartStream = fNByte;
    fCompress = kTRUE;
 
+   // Force the line width definition next time TPDF::SetLineWidth will be called.
+   fLineWidth = -1;
+
    PrintStr("1 0 0 1");
    if (fPageOrientation == 2) {
       ymargin = CMtoPDF(height)-CMtoPDF(fXsize*xup)-xmargin;
