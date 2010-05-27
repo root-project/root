@@ -88,7 +88,7 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
    TEveVector vL = fOrigPnts[idx];
    TEveVector vR = fOrigPnts[idx+1];
    TEveVector vM, vLP, vMP;
-   while ((vL-vR).Mag() > 0.01)
+   while ((vL-vR).Mag2() > 1e-10f)
    {
       vM.Mult(vL+vR, 0.5f);
       vLP.Set(vL); projection->ProjectPoint(vLP.fX, vLP.fY, vLP.fZ, 0);
@@ -103,7 +103,7 @@ void TEveTrackProjected::GetBreakPoint(Int_t idx, Bool_t back,
       }
    }
 
-   if(back) {
+   if (back) {
       x = vL.fX; y = vL.fY; z = vL.fZ;
    } else {
       x = vR.fX; y = vR.fY; z = vR.fZ;
@@ -185,38 +185,57 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
 
    Float_t x, y, z;
    Int_t   bL = 0, bR = GetBreakPointIdx(0);
-   Int_t   sign = 1;
-   Bool_t  break_track = ShouldBreakTrack();
    std::vector<TEveVector> vvec;
    while (kTRUE)
    {
-      for(Int_t i=bL; i<=bR; i++)
+      for (Int_t i=bL; i<=bR; i++)
       {
          GetPoint(i, x, y, z);
-         vvec.push_back(TEveVector(x, sign*y, z));
+         vvec.push_back(TEveVector(x, y, z));
       }
       if (bR == fLastPoint)
          break;
 
-      if (break_track)
-      {
-         GetBreakPoint(bR, kTRUE,  x, y, z); vvec.push_back(TEveVector(x, y, z));
-         fBreakPoints.push_back((Int_t)vvec.size());
-         GetBreakPoint(bR, kFALSE, x, y, z); vvec.push_back(TEveVector(x, y, z));
-      }
-      else
-      {
-         sign = -sign;
-      }
+      GetBreakPoint(bR, kTRUE,  x, y, z); vvec.push_back(TEveVector(x, y, z));
+      fBreakPoints.push_back((Int_t)vvec.size());
+      GetBreakPoint(bR, kFALSE, x, y, z); vvec.push_back(TEveVector(x, y, z));
+
       bL = bR + 1;
       bR = GetBreakPointIdx(bL);
    }
    fBreakPoints.push_back((Int_t)vvec.size()); // Mark the track-end for drawing.
 
+   // Decide if points need to be fixed.
+   // This (and the fixing itself) should really be done in TEveProjection but
+   // for now we do it here as RhoZ is the only one that needs it.
+   Bool_t  fix_y  = kFALSE;
+   Float_t sign_y = 0;
+   if (projection->HasSeveralSubSpaces())
+   {
+      switch (fPropagator->GetProjTrackBreaking())
+      {
+         case TEveTrackPropagator::kPTB_UseFirstPointPos:
+         {
+            fix_y  = kTRUE;
+            sign_y = vvec.front().fY;
+            break;
+         }
+         case TEveTrackPropagator::kPTB_UseLastPointPos:
+         {
+            fix_y  = kTRUE;
+            sign_y = vvec.back().fY;
+            break;
+         }
+      }
+   }
+
    Reset((Int_t)vvec.size());
    for (std::vector<TEveVector>::iterator i=vvec.begin(); i!=vvec.end(); ++i)
    {
-      SetNextPoint((*i).fX, (*i).fY, (*i).fZ);
+      if (fix_y)
+         SetNextPoint((*i).fX, TMath::Sign((*i).fY, sign_y), (*i).fZ);
+      else
+         SetNextPoint((*i).fX, (*i).fY, (*i).fZ);
    }
    delete [] fOrigPnts;
 

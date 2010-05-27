@@ -673,6 +673,15 @@ void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& cells, st
 }
 
 //______________________________________________________________________________
+void TEveCalo2D::SetScaleAbs(Bool_t sa)
+{
+   // Set absolute scale in projected calorimeter.
+   
+   TEveCaloViz::SetScaleAbs(sa);
+   BuildCellIdCache();
+}
+
+//______________________________________________________________________________
 Float_t TEveCalo2D::GetValToHeight() const
 {
    // Virtual function of TEveCaloViz.

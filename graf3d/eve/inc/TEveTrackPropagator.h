@@ -157,6 +157,9 @@ public:
    };
 
    enum EStepper_e    { kHelix, kRungeKutta };
+
+   enum EProjTrackBreaking_e { kPTB_Break, kPTB_UseFirstPointPos, kPTB_UseLastPointPos };
+
 private:
    TEveTrackPropagator(const TEveTrackPropagator&);            // Not implemented
    TEveTrackPropagator& operator=(const TEveTrackPropagator&); // Not implemented
@@ -165,6 +168,7 @@ protected:
    EStepper_e               fStepper;
 
    TEveMagField*            fMagFieldObj;
+   Bool_t                   fOwnMagFiledObj;
 
    // Track extrapolation limits
    Float_t                  fMaxR;          // Max radius for track extrapolation
@@ -186,6 +190,11 @@ protected:
    Bool_t                   fRnrFV;         // Render first vertex.
    TMarker                  fPMAtt;         // Marker attributes for rendering of path-marks.
    TMarker                  fFVAtt;         // Marker attributes for fits vertex.
+
+   // Handling of discontinuities in projections
+   UChar_t                  fProjTrackBreaking; // Handling of projected-track breaking.
+   Bool_t                   fRnrPTBMarkers;     // Render break-points on tracks.
+   TMarker                  fPTBAtt;            // Marker attributes for track break-points.
 
    // ----------------------------------------------------------------
 
@@ -215,7 +224,7 @@ protected:
 
 public:
    TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
-                       TEveMagField* field=0);
+                       TEveMagField* field=0, Bool_t own_field=kTRUE);
    virtual ~TEveTrackPropagator();
 
    virtual void OnZeroRefCount();
@@ -239,7 +248,7 @@ public:
 
    void   SetMagField(Float_t bX, Float_t bY, Float_t bZ);
    void   SetMagField(Float_t b) { SetMagField(0.f, 0.f, b); }
-   void   SetMagFieldObj(TEveMagField * x);
+   void   SetMagFieldObj(TEveMagField* field, Bool_t own_field=kTRUE);
 
    void   SetMaxR(Float_t x);
    void   SetMaxZ(Float_t x);
@@ -258,7 +267,9 @@ public:
    void   SetFitReferences(Bool_t x);
    void   SetFitDecay(Bool_t x);
    void   SetFitCluster2Ds(Bool_t x);
-   void   SetRnrFV(Bool_t x) { fRnrFV = x; }
+   void   SetRnrFV(Bool_t x);
+   void   SetProjTrackBreaking(UChar_t x);
+   void   SetRnrPTBMarkers(Bool_t x);
 
    TEveVector GetMagField(Float_t x, Float_t y, Float_t z) { return fMagFieldObj->GetField(x, y, z); }
    void PrintMagField(Float_t x, Float_t y, Float_t z) const;
@@ -283,9 +294,13 @@ public:
    Bool_t  GetFitDecay()      const { return fFitDecay;      }
    Bool_t  GetFitCluster2Ds() const { return fFitCluster2Ds; }
    Bool_t  GetRnrFV()         const { return fRnrFV;         }
+   UChar_t GetProjTrackBreaking() const { return fProjTrackBreaking; }
+   Bool_t  GetRnrPTBMarkers()     const { return fRnrPTBMarkers; }
 
-   TMarker& RefPMAtt() { return fPMAtt; }
-   TMarker& RefFVAtt() { return fFVAtt; }
+   TMarker& RefPMAtt()  { return fPMAtt; }
+   TMarker& RefFVAtt()  { return fFVAtt; }
+   TMarker& RefPTBAtt() { return fPTBAtt; }
+   
 
    static Bool_t IsOutsideBounds(const TEveVector& point, Float_t maxRsqr, Float_t maxZ);
 

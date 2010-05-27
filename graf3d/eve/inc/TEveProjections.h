@@ -129,9 +129,10 @@ public:
    Float_t  GetMaxTrackStep() const    { return fMaxTrackStep; }
    void     SetMaxTrackStep(Float_t x) { fMaxTrackStep = TMath::Max(x, 1.0f); }
 
-   virtual   Bool_t    AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) const { return kTRUE; }
-   virtual   Int_t     SubSpaceId(const TEveVector&) const { return 0; }
-   virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+   virtual Bool_t      HasSeveralSubSpaces() const { return kFALSE; }
+   virtual Bool_t      AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) const { return kTRUE; }
+   virtual Int_t       SubSpaceId(const TEveVector&) const { return 0; }
+   virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    // utils to draw axis
    virtual Float_t     GetValForScreenPos(Int_t ax, Float_t value);
@@ -166,11 +167,12 @@ public:
    virtual void        SetCenter(TEveVector& center);
    virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.Arr(); }
 
-   virtual   void      UpdateLimit();
+   virtual void        UpdateLimit();
 
-   virtual   Bool_t    AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance) const;
-   virtual   Int_t     SubSpaceId(const TEveVector& v) const;
-   virtual   void      SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+   virtual Bool_t      HasSeveralSubSpaces() const { return kTRUE; }
+   virtual Bool_t      AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance) const;
+   virtual Int_t       SubSpaceId(const TEveVector& v) const;
+   virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    ClassDef(TEveRhoZProjection, 0); // Rho/Z non-linear projection.
 };

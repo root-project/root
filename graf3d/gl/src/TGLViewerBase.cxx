@@ -343,17 +343,18 @@ void TGLViewerBase::PreRender()
       TGLSceneBase *scene = sinfo->GetScene();
       if (sinfo->GetActive())
       {
-         if (fRnrCtx->Selection() && ! scene->GetSelectable())
-            continue;
-         if ( ! sinfo->GetScene()->TakeLock(kDrawLock))
+         if ( ! fRnrCtx->Selection() || scene->GetSelectable())
          {
-            Warning("TGLViewerBase::PreRender", "locking of scene '%s' failed, skipping.",
-                    sinfo->GetScene()->GetName());
-            continue;
+            if ( ! sinfo->GetScene()->TakeLock(kDrawLock))
+            {
+               Warning("TGLViewerBase::PreRender", "locking of scene '%s' failed, skipping.",
+                       sinfo->GetScene()->GetName());
+               continue;
+            }
+            locked_scenes.push_back(sinfo);
          }
          sinfo->SetupTransformsAndBBox(); // !!! transform not done yet
          fOverallBoundingBox.MergeAligned(sinfo->GetTransformedBBox());
-         locked_scenes.push_back(sinfo);
       }
    }
 

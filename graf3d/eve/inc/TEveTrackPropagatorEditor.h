@@ -48,9 +48,9 @@ protected:
    TEveGValuator      *fMaxAng;
    TEveGValuator      *fDelta;
 
-   TGCheckButton      *fRnrFV;
-
+   TGCompositeFrame   *fRefsCont;
    TGCompositeFrame   *fPMFrame;
+
    TGButton           *fFitDaughters;
    TGButton           *fFitReferences;
    TGButton           *fFitDecay;
@@ -59,11 +59,14 @@ protected:
    TGButton           *fRnrReferences;
    TGButton           *fRnrDecay;
    TGButton           *fRnrCluster2Ds;
-
-   TGCompositeFrame   *fRefsCont;
+   TGButton           *fRnrFV;
 
    TAttMarkerEditor   *fPMAtt;
    TAttMarkerEditor   *fFVAtt;
+
+   TGComboBox         *fProjTrackBreaking;
+   TGButton           *fRnrPTBMarkers;
+   TAttMarkerEditor   *fPTBAtt;
 
 public:
    TEveTrackPropagatorSubEditor(const TGWindow* p);
@@ -83,6 +86,9 @@ public:
    void DoRnrPM();
 
    void DoRnrFV();
+
+   void DoModePTB(UChar_t mode);
+   void DoRnrPTB();
 
    void CreateRefsContainer(TGVerticalFrame* p);
 

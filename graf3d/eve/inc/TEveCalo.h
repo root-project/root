@@ -79,6 +79,8 @@ public:
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
    virtual Float_t GetValToHeight() const;
    virtual void    CellSelectionChanged() {}
+   
+   virtual void    SetScaleAbs(Bool_t x) { fScaleAbs = x; }
 
    TEveCaloData* GetData() const { return fData; }
    void    SetData(TEveCaloData* d);
@@ -103,7 +105,6 @@ public:
 
    void    SetMaxTowerH(Float_t x) { fMaxTowerH = x; }
    Float_t GetMaxTowerH() const    { return fMaxTowerH; }
-   void    SetScaleAbs(Bool_t x) { fScaleAbs = x; }
    Bool_t  GetScaleAbs() const { return fScaleAbs; }
    void    SetMaxValAbs(Float_t x) { fMaxValAbs = x; }
    Float_t GetMaxValAbs() const    { return fMaxValAbs; }
@@ -218,6 +219,8 @@ public:
    virtual void ComputeBBox();
 
    virtual void CellSelectionChanged();
+      
+   virtual void    SetScaleAbs(Bool_t);
 
    virtual Float_t GetValToHeight() const;
 

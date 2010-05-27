@@ -88,5 +88,28 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
                                  rnrCtx.Selection());
    }
 
+   // break-points
+   if (fM->fBreakPoints.size() > 1 && fM->fPropagator->GetRnrPTBMarkers())
+   {
+      // Last break-point is last point on track, do not draw it.
+      Int_t  nbp   = fM->fBreakPoints.size() - 1;
+      Bool_t bmb   = fM->fPropagator->GetProjTrackBreaking() == TEveTrackPropagator::kPTB_Break;
+      Int_t  nbptd = bmb ? 2*nbp : nbp;
+      std::vector<Float_t> pnts(3*nbptd);
+      Int_t n = 0;
+      for (Int_t i = 0; i < nbp; ++i, n+=3)
+      {
+         fM->GetPoint(fM->fBreakPoints[i] - 1, pnts[n], pnts[n+1], pnts[n+2]);
+         if (bmb)
+         {
+            n += 3;
+            fM->GetPoint(fM->fBreakPoints[i], pnts[n], pnts[n+1], pnts[n+2]);
+         }
+      }
+      TGLUtil::RenderPolyMarkers(fM->fPropagator->RefPTBAtt(), &pnts[0], nbptd,
+                                 rnrCtx.GetPickRadius(),
+                                 rnrCtx.Selection());
+   }
+
    RenderPathMarksAndFirstVertex(rnrCtx);
 }

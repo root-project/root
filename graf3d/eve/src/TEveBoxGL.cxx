@@ -184,7 +184,10 @@ void TEveBoxGL::Draw(TGLRnrCtx& rnrCtx) const
    // Render with OpenGL.
 
    if (rnrCtx.IsDrawPassOutlineLine())
+   {
+      RenderOutline(fM->fVertices);
       return;
+   }
 
    if (fM->fHighlightFrame && rnrCtx.Highlight())
    {

@@ -24,6 +24,7 @@
 #include "TGButton.h"
 #include "TGNumberEntry.h"
 #include "TGColorSelect.h"
+#include "TGComboBox.h"
 #include "TGDoubleSlider.h"
 #include "TGComboBox.h"
 #include "TAttMarkerEditor.h"
@@ -33,34 +34,23 @@
 //
 // Sub-editor for TEveTrackPropagator class.
 
-ClassImp(TEveTrackPropagatorSubEditor)
+ClassImp(TEveTrackPropagatorSubEditor);
 
 //______________________________________________________________________________
 TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
    TGVerticalFrame(p),
    fM (0),
 
-   fMaxR(0),
-   fMaxZ(0),
-   fMaxOrbits(0),
-   fMaxAng(0),
-   fDelta(0),
+   fMaxR(0),   fMaxZ(0),   fMaxOrbits(0),   fMaxAng(0),   fDelta(0),
 
+   fRefsCont(0),      fPMFrame(0),
+   fFitDaughters(0),  fFitReferences(0),
+   fFitDecay(0),      fFitCluster2Ds(0),
+   fRnrDaughters(0),  fRnrReferences(0),
+   fRnrDecay(0),      fRnrCluster2Ds(0),
    fRnrFV(0),
-
-   fPMFrame(0),
-   fFitDaughters(0),
-   fFitReferences(0),
-   fFitDecay(0),
-   fFitCluster2Ds(0),
-   fRnrDaughters(0),
-   fRnrReferences(0),
-   fRnrDecay(0),
-   fRnrCluster2Ds(0),
-
-   fRefsCont(0),
-   fPMAtt(0),
-   fFVAtt(0)
+   fPMAtt(0), fFVAtt(0),
+   fProjTrackBreaking(0), fRnrPTBMarkers(0), fPTBAtt(0)
 {
    // Constructor.
 
@@ -151,7 +141,7 @@ void TEveTrackPropagatorSubEditor::CreateRefsContainer(TGVerticalFrame* p)
       rnrPM->SetTitlePos(TGGroupFrame::kLeft);
       fPMFrame->AddFrame( rnrPM, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
 
-      TGMatrixLayout *ml = new TGMatrixLayout(rnrPM, 0,1,6);
+      TGMatrixLayout *ml = new TGMatrixLayout(rnrPM, 0, 1, 6);
       rnrPM->SetLayoutManager(ml);
 
       fRnrDaughters  = new TGCheckButton(rnrPM, "Rnr Daughters",   TEvePathMark::kDaughter);
@@ -179,30 +169,70 @@ void TEveTrackPropagatorSubEditor::CreateRefsContainer(TGVerticalFrame* p)
       f->DestroyWindow(); delete f;
       fRefsCont->AddFrame(fPMAtt, new TGLayoutHints(kLHintsTop, 1, 1, 3, 1));
    }
-
    // First vertex.
-   TGCompositeFrame *title1 = new TGCompositeFrame(fRefsCont, 145, 10,
-                                                   kHorizontalFrame |
-                                                   kLHintsExpandX   |
-                                                   kFixedWidth      |
-                                                   kOwnBackground);
-   title1->AddFrame(new TGLabel(title1, "FirstVertex"),
-                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   title1->AddFrame(new TGHorizontal3DLine(title1),
-                    new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 5));
-   fRefsCont->AddFrame(title1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
-
-   fRnrFV = new TGCheckButton(fRefsCont, "Rnr");
-   fRnrFV->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoRnrFV()");
-   fRefsCont->AddFrame(fRnrFV, new TGLayoutHints(kLHintsTop, 5, 1, 2, 0));
    {
-      fFVAtt = new TAttMarkerEditor(fRefsCont);
-      TGFrameElement *el = (TGFrameElement*) fFVAtt->GetList()->First();
-      TGFrame *f = el->fFrame; fFVAtt->RemoveFrame(f);
-      f->DestroyWindow(); delete f;
-      fRefsCont->AddFrame(fFVAtt, new TGLayoutHints(kLHintsTop, 1, 1, 3, 1));
+      TGCompositeFrame *vf = new TGCompositeFrame
+         (fRefsCont, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+      vf->AddFrame(new TGLabel(vf, "FirstVertex"),
+                   new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+      vf->AddFrame(new TGHorizontal3DLine(vf),
+                   new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 5));
+      fRefsCont->AddFrame(vf, new TGLayoutHints(kLHintsTop, 0, 0, 4, 0));
+
+      fRnrFV = new TGCheckButton(fRefsCont, "Rnr");
+      fRnrFV->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoRnrFV()");
+      fRefsCont->AddFrame(fRnrFV, new TGLayoutHints(kLHintsTop, 5, 1, 2, 0));
+      {
+         fFVAtt = new TAttMarkerEditor(fRefsCont);
+         TGFrameElement *el = (TGFrameElement*) fFVAtt->GetList()->First();
+         TGFrame *f = el->fFrame; fFVAtt->RemoveFrame(f);
+         f->DestroyWindow(); delete f;
+         fRefsCont->AddFrame(fFVAtt, new TGLayoutHints(kLHintsTop, 1, 1, 3, 1));
+      }
    }
-   p->AddFrame(fRefsCont,new TGLayoutHints(kLHintsTop| kLHintsExpandX));
+   // Break-points of projected tracks
+   {
+      TGCompositeFrame *vf = new TGCompositeFrame
+         (fRefsCont, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+      vf->AddFrame(new TGLabel(vf, "BreakPoints"),
+                   new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+      vf->AddFrame(new TGHorizontal3DLine(vf),
+                   new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 5));
+      fRefsCont->AddFrame(vf, new TGLayoutHints(kLHintsTop, 0, 0, 4, 0));
+
+      {
+         UInt_t labelW = 40;
+         UInt_t labelH = 20;
+         TGHorizontalFrame* hf = new TGHorizontalFrame(fRefsCont);
+         // label
+         TGCompositeFrame *labfr = new TGHorizontalFrame(hf, labelW, labelH, kFixedSize);
+         TGLabel* label = new TGLabel(labfr, "Mode:");
+         labfr->AddFrame(label, new TGLayoutHints(kLHintsLeft  | kLHintsBottom));
+         hf->AddFrame(labfr, new TGLayoutHints(kLHintsLeft));
+         // combo
+         fProjTrackBreaking = new TGComboBox(hf);
+         fProjTrackBreaking->AddEntry("Break tracks",         TEveTrackPropagator::kPTB_Break);
+         fProjTrackBreaking->AddEntry("First point position", TEveTrackPropagator::kPTB_UseFirstPointPos);
+         fProjTrackBreaking->AddEntry("Last point position",  TEveTrackPropagator::kPTB_UseLastPointPos);
+         fProjTrackBreaking->Connect("Selected(Int_t)", "TEveTrackPropagatorSubEditor", this, "DoModePTB(UChar_t)");
+         fProjTrackBreaking->Resize(140, labelH);
+         hf->AddFrame(fProjTrackBreaking, new TGLayoutHints(kLHintsLeft, 0,0,2,0));
+         fRefsCont->AddFrame(hf, new TGLayoutHints(kLHintsTop, 4, 1, 1, 1));
+      }
+
+      fRnrPTBMarkers = new TGCheckButton(fRefsCont, "Rnr");
+      fRnrPTBMarkers->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoRnrPTB()");
+      fRefsCont->AddFrame(fRnrPTBMarkers, new TGLayoutHints(kLHintsTop, 5, 1, 2, 0));
+      {
+         fPTBAtt = new TAttMarkerEditor(fRefsCont);
+         TGFrameElement *el = (TGFrameElement*) fPTBAtt->GetList()->First();
+         TGFrame *f = el->fFrame; fPTBAtt->RemoveFrame(f);
+         f->DestroyWindow(); delete f;
+         fRefsCont->AddFrame(fPTBAtt, new TGLayoutHints(kLHintsTop, 1, 1, 3, 1));
+      }
+   }
+
+   p->AddFrame(fRefsCont, new TGLayoutHints(kLHintsTop| kLHintsExpandX));
 }
 
 //______________________________________________________________________________
@@ -240,6 +270,10 @@ void TEveTrackPropagatorSubEditor::SetModel(TEveTrackPropagator* m)
 
    fRnrFV->SetState(fM->fRnrFV ? kButtonDown : kButtonUp);
    fFVAtt->SetModel(&fM->fFVAtt);
+
+   fProjTrackBreaking->Select(fM->fProjTrackBreaking, kFALSE);
+   fRnrPTBMarkers->SetState(fM->fRnrPTBMarkers ? kButtonDown : kButtonUp);
+   fPTBAtt->SetModel(&fM->fPTBAtt);
 }
 
 /******************************************************************************/
@@ -367,20 +401,41 @@ void TEveTrackPropagatorSubEditor::DoRnrFV()
    Changed();
 }
 
+//______________________________________________________________________________
+void TEveTrackPropagatorSubEditor::DoModePTB(UChar_t mode)
+{
+   // Slot for PTBMode.
+
+   fM->SetProjTrackBreaking(mode);
+   Changed();
+}
 
 //______________________________________________________________________________
+void TEveTrackPropagatorSubEditor::DoRnrPTB()
+{
+   // Slot for RnrPTBMarkers.
+
+   fM->SetRnrPTBMarkers(fRnrPTBMarkers->IsOn());
+   Changed();
+}
+
+
+//==============================================================================
 // TEveTrackPropagatorEditor
+//==============================================================================
+
+//______________________________________________________________________________
 //
 // GUI editor for TEveTrackPropagator.
 // It's only a wrapper around a TEveTrackPropagatorSubEditor that holds actual
 // widgets.
 
-ClassImp(TEveTrackPropagatorEditor)
+ClassImp(TEveTrackPropagatorEditor);
 
 //______________________________________________________________________________
 TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
-                                                 Int_t width, Int_t height,
-                                                 UInt_t options, Pixel_t back) :
+                                                     Int_t width, Int_t height,
+                                                     UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
    fRSSubEditor(0)
@@ -394,16 +449,15 @@ TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
    AddFrame(fRSSubEditor, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0,0,0));
 
    TGVerticalFrame* refsFrame = CreateEditorTabSubFrame("Refs");
-   TGCompositeFrame *title1 = new TGCompositeFrame(refsFrame, 145, 10,
-                                                   kHorizontalFrame |
-                                                   kLHintsExpandX   |
-                                                   kFixedWidth      |
-                                                   kOwnBackground);
-   title1->AddFrame(new TGLabel(title1, "PathMarks"),
-                    new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   title1->AddFrame(new TGHorizontal3DLine(title1),
-                    new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
-   refsFrame->AddFrame(title1, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
+   {
+      TGCompositeFrame *cf = new TGCompositeFrame
+         (refsFrame, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+      cf->AddFrame(new TGLabel(cf, "PathMarks"),
+                   new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+      cf->AddFrame(new TGHorizontal3DLine(cf),
+                   new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
+      refsFrame->AddFrame(cf, new TGLayoutHints(kLHintsTop, 0, 0, 2, 0));
+   }
 
    // path marks
    fRSSubEditor->CreateRefsContainer(refsFrame);

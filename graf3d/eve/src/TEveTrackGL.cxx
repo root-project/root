@@ -99,10 +99,10 @@ void TEveTrackGL::RenderPathMarksAndFirstVertex(TGLRnrCtx& rnrCtx) const
              (pm.fType == TEvePathMark::kDecay     && rTP.GetRnrDecay())      ||
              (pm.fType == TEvePathMark::kCluster2D && rTP.GetRnrCluster2Ds()))
          {
-            pnts[3*n  ] = pm.fV.fX;
-            pnts[3*n+1] = pm.fV.fY;
-            pnts[3*n+2] = pm.fV.fZ;
-            ++n;
+            pnts[n  ] = pm.fV.fX;
+            pnts[n+1] = pm.fV.fY;
+            pnts[n+2] = pm.fV.fZ;
+            n += 3;
          }
       }
       TGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, n,

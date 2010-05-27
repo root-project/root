@@ -169,6 +169,10 @@ void TEveTrackPropagator::Helix_t::Step(const TEveVector4& v, const TEveVector& 
 //
 // TEveTrackList has Get/Set methods for RnrStlye. TEveTrackEditor and
 // TEveTrackListEditor provide editor access.
+//
+// Specify whether 2D projected tracks get broken into several
+// segments when the projected space consists of separate domains
+// (like Rho-Z). This is true by default.
 
 ClassImp(TEveTrackPropagator);
 
@@ -181,32 +185,26 @@ Float_t             TEveTrackPropagator::fgEditorMaxZ  = 4000;
 
 //______________________________________________________________________________
 TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
-                                         TEveMagField *field) :
+                                         TEveMagField *field, Bool_t own_field) :
    TEveElementList(n, t),
    TEveRefBackPtr(),
 
    fStepper(kHelix),
    fMagFieldObj(field),
-   fMaxR    (350),
-   fMaxZ    (450),
+   fOwnMagFiledObj(own_field),
 
-   fNMax    (4096),
-   fMaxOrbs (0.5),
+   fMaxR    (350),   fMaxZ    (450),
+   fNMax    (4096),  fMaxOrbs (0.5),
 
    fEditPathMarks (kTRUE),
-   fFitDaughters  (kTRUE),
-   fFitReferences (kTRUE),
-   fFitDecay      (kTRUE),
-   fFitCluster2Ds (kTRUE),
-
-   fRnrDaughters  (kFALSE),
-   fRnrReferences (kFALSE),
-   fRnrDecay      (kFALSE),
-   fRnrCluster2Ds (kFALSE),
+   fFitDaughters  (kTRUE),   fFitReferences (kTRUE),
+   fFitDecay      (kTRUE),   fFitCluster2Ds (kTRUE),
+   fRnrDaughters  (kFALSE),  fRnrReferences (kFALSE),
+   fRnrDecay      (kFALSE),  fRnrCluster2Ds (kFALSE),
    fRnrFV         (kFALSE),
+   fPMAtt(), fFVAtt(),
 
-   fPMAtt(),
-   fFVAtt(),
+   fProjTrackBreaking(kPTB_Break), fRnrPTBMarkers(kFALSE), fPTBAtt(),
 
    fV()
 {
@@ -220,9 +218,14 @@ TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
    fFVAtt.SetMarkerStyle(4);
    fFVAtt.SetMarkerSize(1.5);
 
+   fPTBAtt.SetMarkerColor(kBlue);
+   fPTBAtt.SetMarkerStyle(4);
+   fPTBAtt.SetMarkerSize(0.8);
 
-   if (fMagFieldObj == 0)
+   if (fMagFieldObj == 0) {
       fMagFieldObj = new TEveMagFieldConst(0., 0., fgDefMagField);
+      fOwnMagFiledObj = kTRUE;
+   }
 }
 
 //______________________________________________________________________________
@@ -230,7 +233,10 @@ TEveTrackPropagator::~TEveTrackPropagator()
 {
    // Destructor.
 
-   delete fMagFieldObj;
+   if (fOwnMagFiledObj)
+   {
+      delete fMagFieldObj;
+   }
 }
 
 //______________________________________________________________________________
@@ -753,20 +759,19 @@ void TEveTrackPropagator::SetMagField(Float_t bX, Float_t bY, Float_t bZ)
 {
    // Set constant magnetic field and rebuild tracks.
 
-   if (fMagFieldObj) delete fMagFieldObj;
-
-   fMagFieldObj = new TEveMagFieldConst(bX, bY, bZ);
-   RebuildTracks();
+   SetMagFieldObj(new TEveMagFieldConst(bX, bY, bZ));
 }
 
 //______________________________________________________________________________
-void TEveTrackPropagator::SetMagFieldObj(TEveMagField *mff)
+void TEveTrackPropagator::SetMagFieldObj(TEveMagField* field, Bool_t own_field)
 {
    // Set constant magnetic field and rebuild tracks.
 
-   if (fMagFieldObj) delete fMagFieldObj;
+   if (fMagFieldObj && fOwnMagFiledObj) delete fMagFieldObj;
 
-   fMagFieldObj = mff;
+   fMagFieldObj    = field;
+   fOwnMagFiledObj = own_field;
+
    RebuildTracks();
 }
 
@@ -918,6 +923,33 @@ void TEveTrackPropagator::SetRnrReferences(Bool_t rnr)
    // Set track-reference rendering and rebuild tracks.
 
    fRnrReferences = rnr;
+   RebuildTracks();
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::SetRnrFV(Bool_t x)
+{
+   // Set first-vertex rendering and rebuild tracks.
+
+   fRnrFV = x;
+   RebuildTracks();
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::SetProjTrackBreaking(UChar_t x)
+{
+   // Set projection break-point mode and rebuild tracks.
+
+   fProjTrackBreaking = x;
+   RebuildTracks();
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::SetRnrPTBMarkers(Bool_t x)
+{
+   // Set projection break-point rendering and rebuild tracks.
+
+   fRnrPTBMarkers = x;
    RebuildTracks();
 }
 

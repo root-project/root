@@ -336,6 +336,7 @@ ClassImp(TGLClipSet);
 
 //______________________________________________________________________________
 TGLClipSet::TGLClipSet() :
+   TGLOverlayElement(kViewer), 
    fClipPlane   (new TGLClipPlane),
    fClipBox     (new TGLClipBox),
    fCurrentClip (0),
