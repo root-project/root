@@ -27,3 +27,18 @@
    }
 </pre>
 </ul>
+
+<h4>TGFileDialog</h4>
+<ul>
+<li> Properly change directory when navigating in the directory tree.
+</ul>
+
+<h4>TRootBrowser</h4>
+<ul>
+<li> Implemented the alphabetical sorting mechanism in the file browser.
+The sorting is applied only in the current directory and the browser remembers every sorted directory.
+For this purpose, a new picture button has been added to the file browser plug-in (the status of this button reflects the sorting status of each directory)
+<br>Another button has been added to the file browser plug-in, used for refreshing the current directory in the list tree.
+Refreshing now checks also if files still exist in the current directory 
+(for the case where files have been deleted by the user or by another application)
+</ul>
