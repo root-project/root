@@ -430,7 +430,7 @@ private:
       kGetQuota            = 10, //Get quota info per group
       kShowQuota           = 11, //Show quotas
       kSetDefaultTreeName  = 12, //Set the default tree name
-      kCache               = 13  //Show/clear cache 
+      kCache               = 13  //Show/clear cache
    };
    enum ESendFileOpt {
       kAscii               = 0x0,
@@ -586,8 +586,6 @@ private:
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
    Bool_t   CheckFile(const char *file, TSlave *sl, Long_t modtime, Int_t cpopt = (kCp | kCpBin));
-   Int_t    SendFile(const char *file, Int_t opt = (kBinary | kForward | kCp | kCpBin),
-                     const char *rfile = 0, TSlave *sl = 0);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();
    Int_t    SendInitialState();
@@ -722,7 +720,9 @@ protected:
    Int_t AssertPath(const char *path, Bool_t writable);
 
    void PrepareInputDataFile(TString &dataFile);
-   virtual void SendInputDataFile();
+   virtual void  SendInputDataFile();
+   Int_t SendFile(const char *file, Int_t opt = (kBinary | kForward | kCp | kCpBin),
+                  const char *rfile = 0, TSlave *sl = 0);
 
    static void *SlaveStartupThread(void *arg);
 
@@ -793,19 +793,19 @@ public:
    virtual void Print(Option_t *option="") const;
 
    //-- cache and package management
-   virtual void ShowCache(Bool_t all = kFALSE);
-   virtual void ClearCache(const char *file = 0);
-   TList      *GetListOfPackages();
-   TList      *GetListOfEnabledPackages();
-   void        ShowPackages(Bool_t all = kFALSE, Bool_t redirlog = kFALSE);
-   void        ShowEnabledPackages(Bool_t all = kFALSE);
-   Int_t       ClearPackages();
-   Int_t       ClearPackage(const char *package);
-   Int_t       DownloadPackage(const char *par, const char *dstdir = 0);
-   Int_t       EnablePackage(const char *package, Bool_t notOnClient = kFALSE);
-   Int_t       UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
-   Int_t       Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE,
-                    TList *wrks = 0);
+   virtual void  ShowCache(Bool_t all = kFALSE);
+   virtual void  ClearCache(const char *file = 0);
+   TList        *GetListOfPackages();
+   TList        *GetListOfEnabledPackages();
+   void          ShowPackages(Bool_t all = kFALSE, Bool_t redirlog = kFALSE);
+   void          ShowEnabledPackages(Bool_t all = kFALSE);
+   Int_t         ClearPackages();
+   Int_t         ClearPackage(const char *package);
+   Int_t         DownloadPackage(const char *par, const char *dstdir = 0);
+   Int_t         EnablePackage(const char *package, Bool_t notOnClient = kFALSE);
+   Int_t         UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
+   virtual Int_t Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE,
+                      TList *wrks = 0);
 
    Int_t       AddDynamicPath(const char *libpath, Bool_t onClient = kFALSE, TList *wrks = 0);
    Int_t       AddIncludePath(const char *incpath, Bool_t onClient = kFALSE, TList *wrks = 0);
@@ -837,11 +837,11 @@ public:
    void        ShowDataSetQuota(Option_t* opt = 0);
 
    virtual Bool_t ExistsDataSet(const char *dataset);
-   void        ShowDataSet(const char *dataset = "", const char* opt = "M");
-   virtual Int_t RemoveDataSet(const char *dataset, const char* optStr = "");
-   virtual Int_t VerifyDataSet(const char *dataset, const char* optStr = "");
+   void           ShowDataSet(const char *dataset = "", const char* opt = "M");
+   virtual Int_t  RemoveDataSet(const char *dataset, const char* optStr = "");
+   virtual Int_t  VerifyDataSet(const char *dataset, const char* optStr = "");
    virtual TFileCollection *GetDataSet(const char *dataset, const char* optStr = "");
-   TList       *FindDataSets(const char *searchString, const char* optStr = "");
+   TList         *FindDataSets(const char *searchString, const char* optStr = "");
 
    virtual Int_t SetDataSetTreeName( const char *dataset, const char *treename);
 
