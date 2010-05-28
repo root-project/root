@@ -571,7 +571,7 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
                   fSlaves->Add(wrk);
                   if (opt == 1) fActiveSlaves->Add(wrk);
                   fAllMonitor->Add(wrk->GetSocket());
-                  // Recod also in the list for termination
+                  // Record also in the list for termination
                   if (startedWorkers) startedWorkers->Add(wrk);
                   // Notify startup operations
                   NotifyStartUp("Setting up worker servers", ++nWrksDone, nWrksTot);
