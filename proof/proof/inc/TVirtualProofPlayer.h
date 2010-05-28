@@ -107,7 +107,7 @@ public:
                                    Double_t& xmin, Double_t& xmax,
                                    Double_t& ymin, Double_t& ymax,
                                    Double_t& zmin, Double_t& zmax) = 0;
-  
+
    virtual void MergeOutput() = 0;
 
    virtual Bool_t    IsClient() const = 0;
@@ -124,7 +124,8 @@ public:
    virtual Long64_t  GetCacheSize() = 0;
    virtual Int_t     GetLearnEntries() = 0;
 
-   virtual TVirtualPacketizer   *GetPacketizer() const { return 0; }
+   virtual TVirtualPacketizer *GetPacketizer() const { return 0; }
+
    static TVirtualProofPlayer *Create(const char *player, TProof *p, TSocket *s = 0);
 
    ClassDef(TVirtualProofPlayer,0)  // Abstract PROOF player
