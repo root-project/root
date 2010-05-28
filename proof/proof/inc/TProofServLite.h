@@ -33,7 +33,7 @@ class TProofServLite : public TProofServ {
 
 private:
    TProofServLiteInterruptHandler *fInterruptHandler;
-   TString                      fSockPath;
+   TString       fSockPath;   // unix socket path
 
    Bool_t        fTerminated; //true if Terminate() has been already called
 
@@ -48,15 +48,13 @@ public:
 
    void          HandleFork(TMessage *mess);
 
-#if 0
-   void          HandleUrgentData();
-#endif
+   //void          HandleUrgentData();
    void          HandleSigPipe();
    void          HandleTermination();
 
    void          Terminate(Int_t status);
 
-   ClassDef(TProofServLite,0)  //Local worker PROOF Server Application Interface
+   ClassDef(TProofServLite,0)  //PROOF-Lite Server Application Interface
 };
 
 #endif
