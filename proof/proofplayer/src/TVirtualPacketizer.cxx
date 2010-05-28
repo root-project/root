@@ -214,12 +214,12 @@ TDSetElement* TVirtualPacketizer::CreateNewPacket(TDSetElement* base,
    TList *friends = base->GetListOfFriends();
    if (friends) {
       TIter nxf(friends);
-      TPair *p = 0;
-      while ((p = (TPair *) nxf())) {
-         TDSetElement *fe = (TDSetElement *) p->Key();
-         elem->AddFriend(new TDSetElement(fe->GetFileName(), fe->GetObjName(),
-                                          fe->GetDirectory(), first, num),
-                                         ((TObjString *)(p->Value()))->GetName());
+      TDSetElement *fe = 0;
+      while ((fe = (TDSetElement *) nxf())) {
+         TDSetElement *xfe = new TDSetElement(fe->GetFileName(), fe->GetObjName(),
+                                              fe->GetDirectory(), first, num);
+         // The alias, if any, is in the element name options ('friend_alias=<alias>|')
+         elem->AddFriend(xfe, 0);
       }
    }
 

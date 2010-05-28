@@ -319,7 +319,15 @@ void TDSetElement::AddFriend(TDSetElement *friendElement, const char *alias)
       fFriends = new TList();
       fFriends->SetOwner();
    }
-   fFriends->Add(new TPair(new TDSetElement(*friendElement), new TObjString(alias)));
+   // Add alias (if any) as option 'friend_alias=<alias>|'
+   if (alias && strlen(alias) > 0) {
+      TUrl uf(friendElement->GetName());
+      TString uo(uf.GetOptions());
+      uo += TString::Format("friend_alias=%s|", alias);
+      uf.SetOptions(uo);
+      friendElement->SetName(uf.GetUrl());
+   }
+   fFriends->Add(new TDSetElement(*friendElement));
 }
 
 //______________________________________________________________________________
@@ -329,12 +337,7 @@ void TDSetElement::DeleteFriends()
    if (!fFriends)
       return;
 
-   TIter nxf(fFriends);
-   TPair *p = 0;
-   while ((p = (TPair *) nxf())) {
-      delete p->Key();
-      delete p->Value();
-   }
+   fFriends->SetOwner(kTRUE);
    delete fFriends;
    fFriends = 0;
 }
@@ -368,18 +371,21 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
 
    // Take into account possible prefixes
    TFile::EFileType typ = TFile::kDefault;
-   TString fname = gEnv->GetValue("Path.Localroot","");
-   if (!fname.IsNull())
-      typ = TFile::GetType(GetName(), "", &fname);
-   if (typ != TFile::kLocal)
-      fname = GetName();
+   TString fname = gEnv->GetValue("Path.Localroot",""), pfx(fname);
+   // Get the locality (disable warnings or errors in connection attempts)
+   Int_t oldLevel = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kError+1;
+   if ((typ = TFile::GetType(GetName(), "", &fname)) != TFile::kLocal) fname = GetName();
+   gErrorIgnoreLevel = oldLevel;
+   // Open the file
    TFile *file = TFile::Open(fname);
 
    if (gPerfStats)
       gPerfStats->FileOpenEvent(file, GetName(), start);
 
    if (file == 0) {
-      ::SysError("TDSet::GetEntries", "cannot open file %s", GetName());
+      ::SysError("TDSetElement::GetEntries",
+                 "cannot open file %s (type: %d, pfx: %s)", GetName(), typ, pfx.Data());
       return -1;
    }
 
@@ -1209,24 +1215,23 @@ void TDSet::AddFriend(TDSet *friendset, const char* alias)
       Error("AddFriend", "a friend set can only be added to a TTree TDSet");
       return;
    }
-   TList* thisList = GetListOfElements();
-   TList* friendsList = friendset->GetListOfElements();
+   TList *thisList = GetListOfElements();
+   TList *friendsList = friendset->GetListOfElements();
    if (thisList->GetSize() != friendsList->GetSize() && friendsList->GetSize() != 1) {
-      Error("AddFriend", "The friend Set has %d elements while the main one has %d",
+      Error("AddFriend", "the friend dataset has %d elements while the main one has %d",
             thisList->GetSize(), friendsList->GetSize());
       return;
    }
    TIter next(thisList);
    TIter next2(friendsList);
-   TDSetElement* friendElem = 0;
-   TString aliasString(alias);
+   TDSetElement *friendElem = 0;
    if (friendsList->GetSize() == 1)
       friendElem = dynamic_cast<TDSetElement*> (friendsList->First());
    while(TDSetElement* e = dynamic_cast<TDSetElement*> (next())) {
       if (friendElem) // just one elem in the friend TDSet
-         e->AddFriend(friendElem, aliasString);
+         e->AddFriend(friendElem, alias);
       else
-         e->AddFriend(dynamic_cast<TDSetElement*> (next2()), aliasString);
+         e->AddFriend(dynamic_cast<TDSetElement*> (next2()), alias);
    }
 }
 
@@ -1254,18 +1259,21 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
 
    // Take into acoount possible prefixes
    TFile::EFileType typ = TFile::kDefault;
-   TString fname = gEnv->GetValue("Path.Localroot","");
-   if (!fname.IsNull())
-      typ = TFile::GetType(filename, "", &fname);
-   if (typ != TFile::kLocal)
-      fname = filename;
+   TString fname = gEnv->GetValue("Path.Localroot",""), pfx(fname);
+   // Get the locality (disable warnings or errors in connection attempts)
+   Int_t oldLevel = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kError+1;
+   if ((typ = TFile::GetType(filename, "", &fname)) != TFile::kLocal) fname = filename;
+   gErrorIgnoreLevel = oldLevel;
+   // Open the file
    TFile *file = TFile::Open(fname);
 
    if (gPerfStats)
       gPerfStats->FileOpenEvent(file, filename, start);
 
    if (file == 0) {
-      ::SysError("TDSet::GetEntries", "cannot open file %s", filename);
+      ::SysError("TDSet::GetEntries",
+                 "cannot open file %s (type: %d, pfx: %s)", filename, typ, pfx.Data());
       return -1;
    }
 

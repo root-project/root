@@ -21,6 +21,7 @@
 
 #include "TEnv.h"
 #include "TEventIter.h"
+#include "TFriendElement.h"
 #include "TCollection.h"
 #include "TDSet.h"
 #include "TFile.h"
@@ -404,7 +405,7 @@ TEventIterTree::TFileTree::TFileTree(const char *name, TFile *f, Bool_t islocal)
 //______________________________________________________________________________
 TEventIterTree::TFileTree::~TFileTree()
 {
-   // Default cdtor.
+   // Default dtor.
 
    // Avoid destroying the cache; must be placed before deleting the trees
    fFile->SetCacheRead(0);
@@ -510,22 +511,50 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
          // Disable the cache
          main->SetCacheSize(0);
       }
-
-      Bool_t loc = kFALSE;
-      // Also the friends
-      TList *friends = elem->GetListOfFriends();
-      if (friends) {
-         TIter nxf(friends);
-         TPair *p = 0;
-         while ((p = (TPair *) nxf())) {
-            TDSetElement *dse = (TDSetElement *) p->Key();
-            TObjString *str = (TObjString *) p->Value();
-            TTree* friendTree = Load(dse, loc);
-            if (friendTree) {
-               main->AddFriend(friendTree, str->GetName());
-            } else {
-               return 0;
+   }
+   Bool_t loc = kFALSE;
+   // Also the friends
+   TList *friends = elem->GetListOfFriends();
+   if (friends) {
+      TIter nxf(friends);
+      TDSetElement *dse = 0;
+      while ((dse = (TDSetElement *) nxf())) {
+         // The alias, if any, is in the element name options ('friend_alias=<alias>|')
+         TUrl uf(dse->GetName());
+         TString uo(uf.GetOptions()), alias;
+         Int_t from = kNPOS;
+         if ((from = uo.Index("friend_alias=")) != kNPOS) {
+            from += strlen("friend_alias=");
+            if (!uo.Tokenize(alias, from, "|"))
+               Warning("GetTrees", "empty 'friend_alias' found for tree friend");
+            // The options may be used for other things, so remove the internal strings once decoded
+            uo.ReplaceAll(TString::Format("friend_alias=%s|", alias.Data()), "");
+            uf.SetOptions(uo);
+            dse->SetName(uf.GetUrl());
+         }
+         TTree *friendTree = Load(dse, loc);
+         if (friendTree) {
+            // Make sure it has not yet been added
+            Bool_t addfriend = kTRUE;
+            TList *frnds = main->GetListOfFriends();
+            if (frnds) {
+               TIter xnxf(frnds);
+               TFriendElement *fe = 0;
+               while ((fe = (TFriendElement *) xnxf())) {
+                  if (fe->GetTree() == friendTree) {
+                     addfriend = kFALSE;
+                     break;
+                  }
+               }
             }
+            if (addfriend) {
+               if (alias.IsNull())
+                  main->AddFriend(friendTree);
+               else
+                  main->AddFriend(friendTree, alias);
+            }
+         } else {
+            return 0;
          }
       }
    }
@@ -536,6 +565,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
       if (!(ft->fUsed)) {
          fFileTrees->Remove(ft);
          delete ft;
+      } else {
       }
    }
 
@@ -587,7 +617,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
       // Open the file
       f = TFile::Open(fname);
       if (!f) {
-         Error("GetTrees","file '%s' ('%s') could not be open", fn, fname.Data());
+         Error("Load","file '%s' ('%s') could not be open", fn, fname.Data());
          return (TTree *)0;
       }
 
@@ -653,8 +683,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
       return (TTree*)0;
    }
 
-   PDB(kLoop,2)
-      Info("Load", "Reading: %s", tn);
+   PDB(kLoop,2) Info("Load", "Reading: %s", tn);
 
    TTree *tree = dynamic_cast<TTree*> (key->ReadObj());
    dd->cd();
@@ -667,6 +696,8 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
    // Add track in the cache
    ft->fTrees->Add(tree);
    ft->fUsed = kTRUE;
+   PDB(kLoop,2)
+      Info("Load","TFileTree for '%s' flagged as 'in-use' ...", ft->GetName());
 
    // Done
    return tree;
