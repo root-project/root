@@ -193,6 +193,18 @@
 <ul>
 <li>Fix a bug in <tt>TGraph::Eval</tt> when evaluating at the graph point
     values. </li>
+<li> With the following macro the axis title was not displayed:
+    <pre>
+    {
+       TGraph *graph = new TGraph ();
+       graph->SetPoint(0, 0.00100, 30.00);
+       graph->SetPoint(1, 0.00150, 20.00);
+       graph->SetPoint(2, 0.01150, 30.00);
+       graph->Draw("AL*");
+       graph->GetXaxis()->SetTitle("foo") ;
+       gPad->SetLogx(1) ;
+    }
+    </pre>
 </ul>  
 
 <h4>THStack</h4>
