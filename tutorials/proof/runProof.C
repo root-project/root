@@ -126,7 +126,14 @@
 //      will be added to the missing (skipped) file list. Increasing the
 //      number of events (via nevt=...) typically solves this issue.
 //
-//      root[] runProof("dataset")
+//  8. "friends"
+//
+//      Selectors: ProofFriends.h(.C), ProofAux.h(.C)
+//
+//      This is an example of TTree friend processing in PROOF. It also shows
+//      how to use the TPacketizerFile to steer creation of files.
+//
+//      root[] runProof("friends")
 //
 //   General arguments
 //   -----------------
@@ -206,6 +213,7 @@
 #include "TCanvas.h"
 #include "TChain.h"
 #include "TDrawFeedback.h"
+#include "TDSet.h"
 #include "TEnv.h"
 #include "TEntryList.h"
 #include "TFile.h"
@@ -747,9 +755,10 @@ void runProof(const char *what = "simple",
 
    } else if (act == "dataset") {
 
-      // ProofDSet is an example of analysis creating data files on each node which are
+      // This is an example of analysis creating data files on each node which are
       // automatically registered as dataset; the newly created dataset is used to create
       // the final plots. The data are of the same type as for the 'ntuple' example.
+      // Selector used: ProofNtuple
 
       // Set the default number of events, if needed
       nevt = (nevt < 0) ? 1000000 : nevt;
@@ -780,6 +789,81 @@ void runProof(const char *what = "simple",
       // Do not plot the ntuple at this level
       proof->DeleteParameters("PROOF_NTUPLE_DONT_PLOT");
       proof->DeleteParameters("SimpleNtuple.root");
+
+   } else if (act == "friends") {
+
+      // This is an example of analysis creating two data files on each node (the main tree
+      // and its friend) which are then processed as 'friends' to create the final plots.
+      // Selector used: ProofFriends, ProofAux
+
+      // File generation: we use TPacketizerFile in here to create two files per node
+      TList *wrks = proof->GetListOfSlaveInfos();
+      if (!wrks) {
+         Printf("runProof: could not get the list of information about the workers");
+         return;
+      }
+      // Create the map
+      TString fntree;
+      TMap *files = new TMap;
+      files->SetName("PROOF_FilesToProcess");
+      TIter nxwi(wrks);
+      TSlaveInfo *wi = 0;
+      while ((wi = (TSlaveInfo *) nxwi())) {
+         fntree.Form("tree_%s.root", wi->GetOrdinal());
+         TList *wrklist = (TList *) files->GetValue(wi->GetName());
+         if (!wrklist) {
+            wrklist = new TList;
+            wrklist->SetName(wi->GetName());
+            files->Add(new TObjString(wi->GetName()), wrklist);
+         }
+         wrklist->Add(new TObjString(fntree));
+      }
+
+      // Generate the files
+      proof->AddInput(files);
+      proof->SetParameter("ProofAux_Action", "GenerateTrees");
+      // Default 1000 events
+      nevt = (nevt < 0) ? 10000 : nevt;
+      proof->SetParameter("ProofAux_NEvents", (Long64_t)nevt);
+      // Special Packetizer
+      proof->SetParameter("PROOF_Packetizer", "TPacketizerFile");
+      // Now process
+      sel.Form("%s/proof/ProofAux.C%s", tutorials.Data(), aMode.Data());
+      proof->Process(sel.Data(), 1);
+      // Remove the packetizer specifications
+      proof->DeleteParameters("PROOF_Packetizer");
+
+      // Print the lists and create the TDSet objects
+      TDSet *dset = new TDSet("Tmain");
+      TDSet *dsetf = new TDSet("Tfrnd");
+      if (proof->GetOutputList()) {
+         TIter nxo(proof->GetOutputList());
+         TObject *o = 0;
+         TObjString *os = 0;
+         while ((o = nxo())) {
+            TList *l = dynamic_cast<TList *> (o);
+            if (l && !strncmp(l->GetName(), "MainList-", 9)) {
+               TIter nxf(l);
+               while ((os = (TObjString *) nxf()))
+                  dset->Add(os->GetName());
+            }
+         }
+         nxo.Reset();
+         while ((o = nxo())) {
+            TList *l = dynamic_cast<TList *> (o);
+            if (l && !strncmp(l->GetName(), "FriendList-", 11)) {
+               TIter nxf(l);
+               while ((os = (TObjString *) nxf()))
+                  dsetf->Add(os->GetName());
+            }
+         }
+      }
+      // Process with friends
+      dset->AddFriend(dsetf, "friend");
+      sel.Form("%s/proof/ProofFriends.C%s", tutorials.Data(), aMode.Data());
+      dset->Process(sel);
+      // Clear the files created by this run
+      proof->ClearData(TProof::kUnregistered | TProof::kForceClear);
 
    } else {
       // Do not know what to run
