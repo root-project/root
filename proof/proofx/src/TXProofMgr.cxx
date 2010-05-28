@@ -830,8 +830,9 @@ void TXProofMgr::Find(const char *what, const char *how, const char *where)
       return;
    }
    // Server may not support it
-   if (fSocket->GetXrdProofdVersion() < 1007) {
-      Warning("Find", "functionality not supported by server");
+   if (fSocket->GetXrdProofdVersion() < 1006) {
+      Warning("Find", "functionality not supported by server (XrdProofd version: %d)",
+                      fSocket->GetXrdProofdVersion());
       return;
    }
 

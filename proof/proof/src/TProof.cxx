@@ -3239,6 +3239,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                      while ((ourwi = (TSlaveInfo *)nxw())) {
                         if (!strcmp(ourwi->GetOrdinal(), slinfo->GetOrdinal())) {
                            ourwi->SetSysInfo(slinfo->GetSysInfo());
+                           ourwi->fHostName = slinfo->GetName();
                            break;
                         }
                      }
@@ -5646,7 +5647,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
          // All files were removed successfully: remove also the dataset meta info
          RemoveDataSet(dsname);
       }
-   } else if (what &TProof::kUnregistered) {
+   } else if (what & TProof::kUnregistered) {
 
       // Get the existing files
       TString outtmp("ProofClearData_");
@@ -5703,9 +5704,8 @@ void TProof::ClearData(UInt_t what, const char *dsname)
       TMap *fcmap = GetDataSets(sel);
       if (!fcmap || fcmap->GetSize() <= 0) {
          PDB(kDataset,1)
-            Info("ClearData", "no dataset beloning to '%s'", sel.Data());
+         Warning("ClearData", "no dataset beloning to '%s'", sel.Data());
          SafeDelete(fcmap);
-         return;
       }
 
       // Go thorugh and prepare the lists per node
@@ -5753,7 +5753,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
          }
       }
       // Clean up the the received map
-      fcmap->SetOwner(kTRUE);
+      if (fcmap) fcmap->SetOwner(kTRUE);
       SafeDelete(fcmap);
       // List of the files to be removed
       Info("ClearData", "%d unregistered files to be removed:", nfiles);
