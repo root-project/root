@@ -126,6 +126,8 @@
 //      will be added to the missing (skipped) file list. Increasing the
 //      number of events (via nevt=...) typically solves this issue.
 //
+//      root[] runProof("dataset")
+//
 //  8. "friends"
 //
 //      Selectors: ProofFriends.h(.C), ProofAux.h(.C)
