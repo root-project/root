@@ -29,6 +29,7 @@
 #pragma link C++ class TPacketizerUnit+;
 #pragma link C++ class TPacketizerAdaptive+;
 #pragma link C++ class TPacketizerMulti+;
+#pragma link C++ class TPacketizerFile+;
 
 #pragma link C++ class TEventIter+;
 #pragma link C++ class TEventIterUnit+;
