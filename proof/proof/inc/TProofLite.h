@@ -36,6 +36,7 @@ class TProofLockPath;
 class TProofMgr;
 class TProofQueryResult;
 class TServerSocket;
+class TSelector;
 
 class TProofLite : public TProof {
 
@@ -50,16 +51,16 @@ private:
    TServerSocket *fServSock; // Server socket to accept call backs
    Bool_t   fForkStartup; // Startup N-1 workers forking the first worker
 
-   TProofLockPath *fCacheLock; //cache dir locker
+   TProofLockPath *fCacheLock; // Cache dir locker
    TProofLockPath *fQueryLock; // Query dir locker
    TQueryResultManager *fQMgr; // Query-result manager
 
-   TDataSetManager* fDataSetManager; // dataset manager
+   TDataSetManager *fDataSetManager; // Dataset manager
 
    static Int_t fgWrksMax; // Max number of workers
 
    TProofLite(const TProofLite &);        // not implemented
-   void operator=(const TProofLite &);   // idem
+   void operator=(const TProofLite &);    // idem
 
    Int_t CleanupSandbox();
    Int_t CreateSandbox();
@@ -73,7 +74,7 @@ private:
 protected:
    TProofLite() : TProof() { } // For derived classes to use
 
-   Int_t  CreateSymLinks(TList *files);
+   Int_t CreateSymLinks(TList *files);
    Int_t Init(const char *masterurl, const char *conffile,
                const char *confdir, Int_t loglevel,
                const char *alias = 0);
@@ -82,6 +83,8 @@ protected:
                                       const char *selec);
    void SetQueryRunning(TProofQueryResult *pq);
    Int_t SetupWorkers(Int_t opt = 0, TList *wrks = 0);
+   Int_t CopyMacroToCache(const char *macro, Int_t headerRequired = 0,
+                          TSelector **selector = 0, Int_t opt = 0);
 
 public:
    TProofLite(const char *masterurl, const char *conffile = kPROOF_ConfFile,
@@ -107,8 +110,10 @@ public:
                     { return TProof::Process(sel, nent, o); }
 
    // Cache management
-   void ShowCache(Bool_t all = kFALSE);
-   void ClearCache(const char *file = 0);
+   void  ShowCache(Bool_t all = kFALSE);
+   void  ClearCache(const char *file = 0);
+   Int_t Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE,
+              TList *wrks = 0);
 
    // Query management
    TList *GetListOfQueries(Option_t *opt = "");
@@ -131,7 +136,7 @@ public:
 
    static Int_t GetNumberOfWorkers(const char *url = 0);
 
-   ClassDef(TProofLite,0)  //PROOF control class
+   ClassDef(TProofLite,0)  //PROOF-Lite control class
 };
 
 #endif
