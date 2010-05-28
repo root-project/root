@@ -3157,7 +3157,8 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //      The list of fit options is given in parameter option.
 //         option = "W"  Set all weights to 1 for non empty bins; ignore error bars
 //                = "WW" Set all weights to 1 including empty bins; ignore error bars
-//                = "I"  Use integral of function in bin instead of value at bin center
+//                = "I"  Use integral of function in bin, normalized by the bin volume, 
+//                       instead of value at bin center
 //                = "L"  Use Loglikelihood method (default is chisquare method)
 //                = "LL" Use Loglikelihood method and bin contents are not integers)
 //                = "U"  Use a User specified fitting algorithm (via SetFCN)
