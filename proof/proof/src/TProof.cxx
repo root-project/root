@@ -7423,12 +7423,14 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
          TString np(gSystem->DirName(macro));
          if (!np.IsNull()) {
             np += ":";
-            Int_t ip = (mp.BeginsWith(".:")) ? 2 : 0;
-            mp.Insert(ip, np);
+            if (!mp.BeginsWith(np) && !mp.Contains(":"+np)) {
+               Int_t ip = (mp.BeginsWith(".:")) ? 2 : 0;
+               mp.Insert(ip, np);
+               TROOT::SetMacroPath(mp);
+               if (gDebug > 0)
+                  Info("Load", "macro path set to '%s'", TROOT::GetMacroPath());
+            }
          }
-         TROOT::SetMacroPath(mp);
-         if (gDebug > 0)
-            Info("Load", "macro path set to '%s'", TROOT::GetMacroPath());
       }
 
       // Wait for master and workers to be done
@@ -10860,4 +10862,3 @@ void TProof::SetProgressDialog(Bool_t on)
    else
       ResetBit(kUseProgressDialog);
 }
-
