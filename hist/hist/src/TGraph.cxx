@@ -355,14 +355,14 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
    // Graph constructor reading input from filename
    // filename is assumed to contain at least two columns of numbers
    // the string format is by default "%lg %lg".
-   // this is a standard c formatting for scanf. If columns of numbers should be skipped, 
-   // a "%*lg" for each column can be added, e.g. "%lg %*lg %lg" would read x-values from 
+   // this is a standard c formatting for scanf. If columns of numbers should be skipped,
+   // a "%*lg" for each column can be added, e.g. "%lg %*lg %lg" would read x-values from
    // the first and y-values from the third column.
-   
+
    Double_t x,y;
    TString fname = filename;
    gSystem->ExpandPathName(fname);
-   
+
    ifstream infile(fname.Data());
    if(!infile.good()){
       MakeZombie();
@@ -950,12 +950,12 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //             = "Q" Quiet mode (minimum printing)
    //             = "V" Verbose mode (default is between Q and V)
    //             = "E"  Perform better Errors estimation using Minos technique
-   //             = "B"  User defined parameter settings are used for predefined functions 
-   //                    like "gaus", "expo", "poln", "landau".  
+   //             = "B"  User defined parameter settings are used for predefined functions
+   //                    like "gaus", "expo", "poln", "landau".
    //                    Use this option when you want to fix one or more parameters for these functions.
-   //             = "M"  More. Improve fit results. 
-   //                    It uses the IMPROVE command of TMinuit (see TMinuit::mnimpr) 
-   //                    This algorithm attempts to improve the found local minimum by 
+   //             = "M"  More. Improve fit results.
+   //                    It uses the IMPROVE command of TMinuit (see TMinuit::mnimpr)
+   //                    This algorithm attempts to improve the found local minimum by
    //                    searching for a better one.
    //             = "R" Use the Range specified in the function range
    //             = "N" Do not store the graphics function, do not draw
@@ -972,8 +972,8 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //                     the default fraction of good points
    //               "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points
-   //             = "S"  The result of the fit is returned in the TFitResultPtr 
-   //                     (see below Access to the Fit Result) 
+   //             = "S"  The result of the fit is returned in the TFitResultPtr
+   //                     (see below Access to the Fit Result)
    //
    //   When the fit is drawn (by default), the parameter goption may be used
    //   to specify a list of graphics options. See TGraphPainter for a complete
@@ -1002,7 +1002,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   Example: to fit the parameters of "[0]*x + [1]*sin(x)", create a
    //    TF1 *f1=new TF1("f1", "x++sin(x)", xmin, xmax);
    //   For such a TF1 you don't have to set the initial conditions.
-   //   Going via the linear fitter for functions, linear in parameters, gives a 
+   //   Going via the linear fitter for functions, linear in parameters, gives a
    //   considerable advantage in speed.
    //
    // Setting initial conditions:
@@ -1033,36 +1033,36 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    // Changing the fitting function:
    //
    //   By default a chi2 fitting function is used for fitting a TGraph.
-   //   The function is implemented in FitUtil::EvaluateChi2. 
+   //   The function is implemented in FitUtil::EvaluateChi2.
    //   In case of TGraphErrors an effective chi2 is used (see below)
    //   To specify a User defined fitting function, specify option "U" and
    //   call the following functions:
    //     TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
    //   where MyFittingFunction is of type:
-   //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, 
+   //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f,
    //                                 Double_t *u, Int_t flag);
    //
-   // 
-   // Access to the fit result 
-   // ========================  
+   //
+   // Access to the fit result
+   // ========================
    //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
    //  By default the TFitResultPtr contains only the status of the fit and it converts
    //  automatically to an integer. If the option "S" is instead used, TFitResultPtr contains
-   //  the TFitResult and behaves as a smart pointer to it. For example one can do: 
+   //  the TFitResult and behaves as a smart pointer to it. For example one can do:
    //     TFitResult r    = graph->Fit("myFunc","S");
    //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-   //     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0 
-   //     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0 
+   //     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0
+   //     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
    //     r->Print("V");     // print full information of fit including covariance matrix
    //     r->Write();        // store the result in a file
    //
-   //   The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also 
-   //   from the fitted function. 
+   //   The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
+   //   from the fitted function.
    //
    //
-   // TGraphErrors fit: 
+   // TGraphErrors fit:
    //
-   //   In case of a TGraphErrors object, when x errors are present, the error along x, 
+   //   In case of a TGraphErrors object, when x errors are present, the error along x,
    //   is projected along the y-direction by calculating the function at the points x-exlow and
    //   x+exhigh. The chisquare is then computed as the sum of the quantity below at each point:
    //
@@ -1093,10 +1093,10 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   2) The effective variance technique assumes that there is no correlation
    //      between the x and y coordinate.
    //
-   //   3) The standard chi2 (least square) method without error in the coordinates (x) can 
+   //   3) The standard chi2 (least square) method without error in the coordinates (x) can
    //       be forced by using option "EX0"
    //
-   //   4)  The linear fitter doesn't take into account the errors in x. When fitting a 
+   //   4)  The linear fitter doesn't take into account the errors in x. When fitting a
    //       TGraphErrors with a linear functions the errors in x willnot be considere.
    //        If errors in x are important, go through minuit (use option "F" for polynomial fitting).
    //
@@ -1113,8 +1113,8 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   Given a graph gr, one can retrieve an associated function
    //   with:  TF1 *myfunc = gr->GetFunction("myfunc");
    //
-   //   If the graph is made persistent, the list of associated functions is also 
-   //   persistent. Given a pointer (see above) to an associated function myfunc, 
+   //   If the graph is made persistent, the list of associated functions is also
+   //   persistent. Given a pointer (see above) to an associated function myfunc,
    //   one can retrieve the function/fit parameters with calls such as:
    //     Double_t chi2 = myfunc->GetChisquare();
    //     Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
@@ -1139,26 +1139,26 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   Root > st->SetX1NDC(newx1); //new x start position
    //   Root > st->SetX2NDC(newx2); //new x end position
    //
-   //      Access to the fit result 
+   //   Access to the fit result
    //   ========================
    //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
    //  By default the TFitResultPtr contains only the status of the fit which is return by an
    //  automatic conversion of the TFitResultPtr to an integer. One can write in this case
-   //  directly: 
-   //  Int_t fitStatus =  h->Fit(myFunc)  
+   //  directly:
+   //  Int_t fitStatus =  h->Fit(myFunc)
    //
-   //  If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves 
-   //  as a smart pointer to it. For example one can do: 
+   //  If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves
+   //  as a smart pointer to it. For example one can do:
    //  TFitResultPtr r = h->Fit(myFunc,"S");
    //  TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-   //  Double_t chi2   = r->Chi2(); // to retrieve the fit chi2 
-   //  Double_t par0   = r->Value(0); // retrieve the value for the parameter 0 
-   //  Double_t err0   = r->Error(0); // retrieve the error for the parameter 0 
+   //  Double_t chi2   = r->Chi2(); // to retrieve the fit chi2
+   //  Double_t par0   = r->Value(0); // retrieve the value for the parameter 0
+   //  Double_t err0   = r->Error(0); // retrieve the error for the parameter 0
    //  r->Print("V");     // print full information of fit including covariance matrix
    //  r->Write();        // store the result in a file
    //
-   //  The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also 
-   //  from the fitted function. 
+   //  The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
+   //  from the fitted function.
    //  If the histogram is made persistent, the list of
    //  associated functions is also persistent. Given a pointer (see above)
    //  to an associated function myfunc, one can retrieve the function/fit
@@ -1170,23 +1170,23 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //
    //  Access to the fit status
    //  =====================
-   //  The status of the fit can be obtained converting the TFitResultPtr to an integer 
-   //  indipendently if the fit option "S" is used or not: 
+   //  The status of the fit can be obtained converting the TFitResultPtr to an integer
+   //  indipendently if the fit option "S" is used or not:
    //  TFitResultPtr r = h=>Fit(myFunc,opt);
-   //  Int_t fitStatus = r; 
+   //  Int_t fitStatus = r;
    //
-   //  The fitStatus is 0 if the fit is OK (i.e. no error occurred). 
+   //  The fitStatus is 0 if the fit is OK (i.e. no error occurred).
    //  The value of the fit status code is negative in case of an error not connected with the
-   //  minimization procedure, for example when a wrong function is used. 
+   //  minimization procedure, for example when a wrong function is used.
    //  Otherwise the return value is the one returned from the minimization procedure.
    //  When TMinuit (default case) or Minuit2 are used as minimizer the status returned is :
    //  fitStatus =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult.
    //  TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in
    //  case of error (see the documentation of TMinuit::mnexcm). So for example, for an error
-   //  only in Minos but not in Migrad a fitStatus of 40 will be returned. 
+   //  only in Minos but not in Migrad a fitStatus of 40 will be returned.
    //  Minuit2 will return also 0 in case of success and different values in migrad, minos or
-   //  hesse depending on the error.   See in this case the documentation of 
-   //  Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the 
+   //  hesse depending on the error.   See in this case the documentation of
+   //  Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the
    //  minosResult and Minuit2Minimizer::Hesse for the hesseResult.
    //  If other minimizers are used see their specific documentation for the status code
    //  returned. For example in the case of Fumili, for the status returned see TFumili::Minimize.
@@ -1194,9 +1194,9 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
 
    Foption_t fitOption;
    ROOT::Fit::FitOptionsMake(option,fitOption);
-   // create range and minimizer options with default values 
-   ROOT::Fit::DataRange range(rxmin,rxmax); 
-   ROOT::Math::MinimizerOptions minOption; 
+   // create range and minimizer options with default values
+   ROOT::Fit::DataRange range(rxmin,rxmax);
+   ROOT::Math::MinimizerOptions minOption;
    return ROOT::Fit::FitObject(this, f1 , fitOption , minOption, goption, range);
 }
 
@@ -1387,6 +1387,7 @@ TH1F *TGraph::GetHistogram() const
    // therefore they might be too strict and cut some points. In that case the
    // fHistogram limits should be recomputed ie: the existing fHistogram
    // should not be returned.
+   TH1F *historg = 0;
    if (fHistogram) {
       if (gPad && gPad->GetLogx()) {
          if (rwxmin <= 0 || fHistogram->GetXaxis()->GetXmin() != 0) return fHistogram;
@@ -1395,6 +1396,7 @@ TH1F *TGraph::GetHistogram() const
       } else {
          return fHistogram;
       }
+      historg = fHistogram;
    }
 
    if (rwxmin == rwxmax) rwxmax += 1.;
@@ -1441,6 +1443,34 @@ TH1F *TGraph::GetHistogram() const
    fHistogram->SetMaximum(maximum);
    fHistogram->GetYaxis()->SetLimits(minimum,maximum);
    fHistogram->SetDirectory(0);
+   // Restore the axis attributes if needed
+   if (historg) {
+      fHistogram->GetXaxis()->SetTitle(historg->GetXaxis()->GetTitle());
+      fHistogram->GetXaxis()->CenterTitle(historg->GetXaxis()->GetCenterTitle());
+      fHistogram->GetXaxis()->RotateTitle(historg->GetXaxis()->GetRotateTitle());
+      fHistogram->GetXaxis()->SetNoExponent(historg->GetXaxis()->GetNoExponent());
+      fHistogram->GetXaxis()->SetNdivisions(historg->GetXaxis()->GetNdivisions());
+      fHistogram->GetXaxis()->SetLabelFont(historg->GetXaxis()->GetLabelFont());
+      fHistogram->GetXaxis()->SetLabelOffset(historg->GetXaxis()->GetLabelOffset());
+      fHistogram->GetXaxis()->SetLabelSize(historg->GetXaxis()->GetLabelSize());
+      fHistogram->GetXaxis()->SetTitleSize(historg->GetXaxis()->GetTitleSize());
+      fHistogram->GetXaxis()->SetTitleOffset(historg->GetXaxis()->GetTitleOffset());
+      fHistogram->GetXaxis()->SetTitleFont(historg->GetXaxis()->GetTitleFont());
+
+      fHistogram->GetYaxis()->SetTitle(historg->GetYaxis()->GetTitle());
+      fHistogram->GetYaxis()->CenterTitle(historg->GetYaxis()->GetCenterTitle());
+      fHistogram->GetYaxis()->RotateTitle(historg->GetYaxis()->GetRotateTitle());
+      fHistogram->GetYaxis()->SetNoExponent(historg->GetYaxis()->GetNoExponent());
+      fHistogram->GetYaxis()->SetNdivisions(historg->GetYaxis()->GetNdivisions());
+      fHistogram->GetYaxis()->SetLabelFont(historg->GetYaxis()->GetLabelFont());
+      fHistogram->GetYaxis()->SetLabelOffset(historg->GetYaxis()->GetLabelOffset());
+      fHistogram->GetYaxis()->SetLabelSize(historg->GetYaxis()->GetLabelSize());
+      fHistogram->GetYaxis()->SetTitleSize(historg->GetYaxis()->GetTitleSize());
+      fHistogram->GetYaxis()->SetTitleOffset(historg->GetYaxis()->GetTitleOffset());
+      fHistogram->GetYaxis()->SetTitleFont(historg->GetYaxis()->GetTitleFont());
+
+      delete historg;
+   }
    return fHistogram;
 }
 
