@@ -1859,7 +1859,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          MergeOutput();
       }
    }
-   
+
    Long64_t rv = 0;
    if (fProof->IsMaster()) {
       TPerfStats::Stop();
@@ -1950,12 +1950,12 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
       }
    }
    PDB(kGlobal,1) Info("Process","exit");
-   
+
    if (!IsClient()) {
       Info("Finalize", "finalization on %s finished", gProofServ->GetPrefix());
    }
    fProof->FinalizationDone();
-   
+
    return rv;
 }
 
@@ -2074,12 +2074,14 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
    TString np(gSystem->DirName(selec));
    if (!np.IsNull()) {
       np += ":";
-      Int_t ip = (mp.BeginsWith(".:")) ? 2 : 0;
-      mp.Insert(ip, np);
+      if (!mp.BeginsWith(np) && !mp.Contains(":"+np)) {
+         Int_t ip = (mp.BeginsWith(".:")) ? 2 : 0;
+         mp.Insert(ip, np);
+         TROOT::SetMacroPath(mp);
+         if (gDebug > 0)
+            Info("SendSelector", "macro path set to '%s'", TROOT::GetMacroPath());
+      }
    }
-   TROOT::SetMacroPath(mp);
-   if (gDebug > 0)
-      Info("SendSelector", "macro path set to '%s'", TROOT::GetMacroPath());
 
    // Header file
    TString header = selec;
