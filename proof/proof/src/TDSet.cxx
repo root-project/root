@@ -586,14 +586,14 @@ TObject *TDSetElement::GetAssocObj(Long64_t i, Bool_t isentry)
    // returned.
    // This method is used when packet processing consist in processing the objects
    // in the associated object list.
-   
+
    TObject *o = 0;
    if (!fAssocObjList || fAssocObjList->GetSize() <= 0) return o;
-   
+
    TString s;
    Int_t pos = -1;
    if (isentry) {
-      if (i < fFirst) return o; 
+      if (i < fFirst) return o;
       s.Form("%lld", i - fFirst);
    } else {
       if (i < 0) return o;
@@ -931,6 +931,7 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
    if (gProof && gProof->IsLite()) {
       TUrl u(file, kTRUE);
       if (!strcmp(u.GetProtocol(), "file")) {
+         fn = u.GetFile();
          gSystem->ExpandPathName(fn);
          if (!gSystem->IsAbsoluteFileName(fn))
             gSystem->PrependPathName(gSystem->WorkingDirectory(), fn);
