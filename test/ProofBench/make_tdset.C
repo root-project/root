@@ -55,9 +55,14 @@ TDSet *make_tdset(const char *basedir, Int_t files_per_node)
    while ((p = (TPair *) nxu())) {
       si = (TSlaveInfo *) p->Value();
       for (Int_t j = 1; j <= files_per_node ; j++) {
-         TString filestr = "root://";
-         filestr += si->GetName();
-         filestr += "/";
+         TString filestr;
+         if (gProof->IsLite()) {
+            filestr += "file://";
+         } else {
+            filestr += "root://";
+            filestr += si->GetName();
+            filestr += "/";
+         }
          filestr += basedir;
          filestr += "/event_tree_";
          filestr += si->GetName();
