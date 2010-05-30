@@ -35,6 +35,10 @@ ALLMAPS       += $(POSTSCRIPTMAP)
 # include all dependency files
 INCLUDEFILES += $(POSTSCRIPTDEP)
 
+ifneq ($(BUILTINZLIB),yes)
+POSTSCRIPTLIBEXTRA += $(ZLIBLIBDIR) $(ZLIBCLILIB)
+endif
+
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
