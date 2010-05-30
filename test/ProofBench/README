@@ -4,10 +4,6 @@ Setup for a benchmark
 See $ROOTSYS/README/README.PROOF for instructions to install
 and configure PROOF
 
-Create a local libEvent.so
-
-% (cd $ROOTSYS/test; make libEvent.so)
-
 Create the PAR file
 
 % ./make_event_par.sh
@@ -26,20 +22,20 @@ second argument is the number of events in each file.
 The last argument is the number of files on each node.
 (not the number of files per slave!)
 
-root [] .x make_event_trees.C("/data1/tmp", 100000, 4)
+root[] .x make_event_trees.C("/data1/tmp", 100000, 4)
 
 Create the TDSet for these files:
 
-root [] .L make_tdset.C
-root [] TDSet *d = make_tdset("/data1/tmp",4)
-root [] d->Print("a")
+root[] .L make_tdset.C
+root[] TDSet *d = make_tdset("/data1/tmp",4)
+root[] d->Print("a")
 OBJ: TDSet      type TTree      EventTree       in /    elements 2
 TDSetElement file='root://gluon.local//data1/tmp/event_tree_gluon.local_1.root' dir='' obj='' first=0 num=-1
 TDSetElement file='root://gluon.local//data1/tmp/event_tree_gluon.local_3.root' dir='' obj='' first=0 num=-1
 
 Test the system with a simple command
 
-root [] d->Draw("fTemperature","1")
+root[] d->Draw("fTemperature","1")
 
 You are now ready to run the benchmark!
 
@@ -124,6 +120,8 @@ root[] gROOT->Time()
 Running one of the provided selectors is straight forward,
 using the TDSet that was created earlier:
 
+root[] .L make_tdset.C
+root[] TDSet *d = make_tdset("/data1/tmp",4)
 root[] gProof->Load("EventTree_Proc.C+")
 root[] d->Process("EventTree_Proc","")
 
