@@ -1426,13 +1426,14 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
    Bool_t useCacheBinaries = kFALSE;
    TString cachedname = Form("%s/%s", cacheDir.Data(), gSystem->BaseName(name));
    TString cachedhname;
+   if (!hname.IsNull())
+      cachedhname = Form("%s/%s", cacheDir.Data(), gSystem->BaseName(hname));
    if (!gSystem->AccessPathName(cachedname, kReadPermission)) {
       TMD5 *md5 = TMD5::FileChecksum(name);
       TMD5 *md5cache = TMD5::FileChecksum(cachedname);
       if (md5 && md5cache && (*md5 == *md5cache))
          useCacheBinaries = kTRUE;
       if (!hname.IsNull()) {
-         cachedhname = Form("%s/%s", cacheDir.Data(), gSystem->BaseName(hname));
          if (!gSystem->AccessPathName(cachedhname, kReadPermission)) {
             TMD5 *md5h = TMD5::FileChecksum(hname);
             TMD5 *md5hcache = TMD5::FileChecksum(cachedhname);
