@@ -130,6 +130,7 @@ public:
    virtual void    Paint(Option_t *option="");
    void            PrintNodes() const;
    void            PrintVoxels() const; // *MENU*
+   void            ReplayCreation(const TGeoVolume *other);
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
 
    Bool_t          IsActive() const {return TGeoAtt::IsActive();}

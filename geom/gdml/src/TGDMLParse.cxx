@@ -1339,13 +1339,29 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          
          retunit = GetScale(lunit);
          
-         numberline = Form("%s*%s", number, retunit);
+         numberline = Form("%s", number);
          widthline = Form("%s*%s", width, retunit);
          offsetline = Form("%s*%s", offset, retunit);
  
          fVolID = fVolID + 1;
-
-         vol->Divide(NameShort(name), axis, (Int_t)Evaluate(numberline), (Double_t)Evaluate(offsetline), (Double_t)Evaluate(widthline));
+         Double_t xlo, xhi;
+         vol->GetShape()->GetAxisRange(axis, xlo, xhi);
+         Int_t ndiv = (Int_t)Evaluate(numberline);
+         Double_t start = xlo + (Double_t)Evaluate(offsetline);
+         Double_t step = (Double_t)Evaluate(widthline);
+         Int_t numed = 0;
+         TGeoVolume *old = fvolmap[NameShort(reftemp)];
+         if (old) {
+            // We need to recreate the content of the divided volume
+            TGeoVolume *old = fvolmap[NameShort(reftemp)];
+            // medium id
+            numed = old->GetMedium()->GetId();
+         }   
+         TGeoVolume *divvol = vol->Divide(NameShort(reftemp), axis, ndiv, start, step, numed);
+         if (old && old->GetNdaughters()) {
+            divvol->ReplayCreation(old);
+         }
+         fvolmap[NameShort(reftemp)] = divvol;
 
       }//end of Division else if
       
