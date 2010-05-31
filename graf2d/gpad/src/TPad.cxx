@@ -2277,22 +2277,31 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
          if (!strcmp(axis->GetName(),"xaxis")) axisNumber = 1;
          if (!strcmp(axis->GetName(),"yaxis")) axisNumber = 2;
          if (ratio2 - ratio1 > 0.05) {
-            TH1 *hobj = (TH1*)axis->GetParent();
-            bin1 = axis->FindFixBin(xmin);
-            bin2 = axis->FindFixBin(xmax);
-            if (axisNumber == 1) axis->SetRange(bin1,bin2);
-            if (axisNumber == 2 && hobj) {
-               if (hobj->GetDimension() == 1) {
-                  if (hobj->GetNormFactor() != 0) {
-                     Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
-                     xmin *= norm;
-                     xmax *= norm;
+            //update all histograms in the pad
+            TIter next(GetListOfPrimitives());
+            TObject *obj;
+            while ((obj= next())) {
+               if (!obj->InheritsFrom(TH1::Class())) continue;
+               TH1 *hobj = (TH1*)obj;
+               bin1 = hobj->GetXaxis()->FindFixBin(xmin);
+               bin2 = hobj->GetXaxis()->FindFixBin(xmax);
+               if (axisNumber == 1) {
+                  hobj->GetXaxis()->SetRange(bin1,bin2);
+               } else if (axisNumber == 2) {
+                  if (hobj->GetDimension() == 1) {
+                     Double_t xxmin = xmin;
+                     Double_t xxmax = xmax;
+                     if (hobj->GetNormFactor() != 0) {
+                        Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
+                        xxmin *= norm;
+                        xxmax *= norm;
+                     }
+                     hobj->SetMinimum(xxmin);
+                     hobj->SetMaximum(xxmax);
+                     hobj->SetBit(TH1::kIsZoomed);
+                  } else {
+                     hobj->GetXaxis()->SetRange(bin1,bin2);
                   }
-                  hobj->SetMinimum(xmin);
-                  hobj->SetMaximum(xmax);
-                  hobj->SetBit(TH1::kIsZoomed);
-               } else {
-                  axis->SetRange(bin1,bin2);
                }
             }
             Modified(kTRUE);
