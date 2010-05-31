@@ -200,12 +200,12 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    }
    fLogToWindowOnly = kFALSE;
 
-   fCacheLock = new TProofLockPath(Form("%s/%s%s", gSystem->TempDirectory(),
+   fCacheLock = new TProofLockPath(TString::Format("%s/%s%s", gSystem->TempDirectory(),
                                    kPROOF_CacheLockFile,
                                    TString(fCacheDir).ReplaceAll("/","%").Data()));
 
    // Create 'queries' locker instance and lock it
-   fQueryLock = new TProofLockPath(Form("%s/%s%s-%s", gSystem->TempDirectory(),
+   fQueryLock = new TProofLockPath(TString::Format("%s/%s%s-%s", gSystem->TempDirectory(),
                                    kPROOF_QueryLockFile, GetName(),
                                    TString(fQueryDir).ReplaceAll("/","%").Data()));
    fQueryLock->Lock();
@@ -302,9 +302,10 @@ Int_t TProofLite::Init(const char *, const char *conffile,
          }
       }
 
-      UserGroup_t *ug = gSystem->GetUserInfo();
-      fPackageLock = new TProofLockPath(Form("%s%s", kPROOF_PackageLockFile, ug->fUser.Data()));
-      delete ug;
+      TString lockpath(fPackageDir);
+      lockpath.ReplaceAll("/", "%");
+      lockpath.Insert(0, TString::Format("%s/%s", gSystem->TempDirectory(), kPROOF_PackageLockFile));
+      fPackageLock = new TProofLockPath(lockpath.Data());
 
       fEnabledPackagesOnClient = new TList;
       fEnabledPackagesOnClient->SetOwner();
@@ -665,8 +666,9 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
    fprintf(frc,"ProofServ.RootVersionTag: %s\n", gROOT->GetVersion());
 
    // Work dir
-   TString sandbox = gEnv->GetValue("ProofLite.Sandbox", Form("%s/%s",
-                                     gSystem->WorkingDirectory(), kPROOF_WorkDir));
+   TString sandbox = gEnv->GetValue("ProofLite.Sandbox", "");
+   if (sandbox.IsNull())
+      sandbox = gEnv->GetValue("Proof.Sandbox", TString::Format("~/%s", kPROOF_WorkDir));
    fprintf(frc,"# Users sandbox\n");
    fprintf(frc, "ProofServ.Sandbox: %s\n", sandbox.Data());
 
@@ -768,10 +770,9 @@ Int_t TProofLite::CreateSandbox()
    // Create the sandbox for this session
 
    // Make sure the sandbox area exist and is writable
-   TString sandbox = gEnv->GetValue("Proof.Sandbox", "");
-   if (sandbox.IsNull()) {
-      sandbox.Form("~/%s", kPROOF_WorkDir);
-   }
+   TString sandbox = gEnv->GetValue("ProofLite.Sandbox", "");
+   if (sandbox.IsNull())
+      sandbox = gEnv->GetValue("Proof.Sandbox", TString::Format("~/%s", kPROOF_WorkDir));
    gSystem->ExpandPathName(sandbox);
    if (AssertPath(sandbox, kTRUE) != 0) return -1;
 
