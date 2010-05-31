@@ -1036,25 +1036,31 @@ void TAxis::UnZoom()
 
    gPad->SetView();
 
-   SetRange(0,0);
-   if (!strstr(GetName(),"xaxis")) {
-      TH1 *hobj = (TH1*)GetParent();
-      if (!hobj) return;
-      if (hobj->GetDimension() == 2) {
-         if (strstr(GetName(),"zaxis")) {
+   //must unzoom all histograms in the pad
+   TIter next(gPad->GetListOfPrimitives());
+   TObject *obj;
+   while ((obj= next())) {
+      if (!obj->InheritsFrom(TH1::Class())) continue;
+      TH1 *hobj = (TH1*)obj;
+      if (!strstr(GetName(),"xaxis")) {
+         if (hobj->GetDimension() == 2) {
+            if (strstr(GetName(),"zaxis")) {
+               hobj->SetMinimum();
+               hobj->SetMaximum();
+               hobj->ResetBit(TH1::kIsZoomed);
+            }
+            return;
+         }
+         if (strcmp(hobj->GetName(),"hframe") == 0 ) {
+            hobj->SetMinimum(fXmin);
+            hobj->SetMaximum(fXmax);
+         } else {
             hobj->SetMinimum();
             hobj->SetMaximum();
             hobj->ResetBit(TH1::kIsZoomed);
          }
-         return;
-      }
-      if (strcmp(hobj->GetName(),"hframe") == 0 ) {
-         hobj->SetMinimum(fXmin);
-         hobj->SetMaximum(fXmax);
       } else {
-         hobj->SetMinimum();
-         hobj->SetMaximum();
-         hobj->ResetBit(TH1::kIsZoomed);
+         hobj->GetXaxis()->SetRange(0,0);
       }
    }
 }
