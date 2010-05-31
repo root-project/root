@@ -592,6 +592,10 @@ public:
 
    // Return VMC type of the particle specified by pdg.
    virtual TMCParticleType ParticleMCType(Int_t pdg) const = 0;
+   
+   // Activate collecting tracks (working only with TGeant3TGeo)
+   virtual void SetCollectTracks(Bool_t) {}
+   virtual Bool_t IsCollectTracks() const {return kFALSE;}
 
    //
    // ------------------------------------------------
