@@ -64,41 +64,50 @@ void TEveJetConeGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 
    // printf("TEveJetConeGL::DirectDraw LOD %d\n", rnrCtx.CombiLOD());
 
-   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
+   const TEveJetCone::vTEveVector_t &BP = fM->fBasePoints;
+   const Int_t                       NP = BP.size();
 
-   glDisable(GL_CULL_FACE);
-   glEnable(GL_NORMALIZE);
-
-   glBegin(GL_TRIANGLE_FAN);
-   glVertex3fv(fM->fApex);
-   if ( fM->fBasePoints.size() > 2)
+   if (NP > 2)
    {
-      TEveJetCone::vTEveVector_ci prev = fM->fBasePoints.end(); --prev;
-      TEveJetCone::vTEveVector_ci i    = fM->fBasePoints.begin();
-      TEveJetCone::vTEveVector_ci next = i; ++next;
+      glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LIGHTING_BIT);
 
-      TEveVector norm_buf;
-      TEveVector beg_normal = TMath::Cross((*i - fM->fApex).Arr(), (*next - *prev).Arr(), norm_buf.Arr());
+      glDisable(GL_CULL_FACE);
+      glEnable(GL_NORMALIZE);
+      Int_t lmts = 1;
+      glLightModeliv(GL_LIGHT_MODEL_TWO_SIDE, &lmts);
 
-      glNormal3fv(beg_normal);
-      glVertex3fv(fM->fBasePoints.front());
+      Int_t prev = NP - 1;
+      Int_t i    = 0;
+      Int_t next = 1;
 
-      prev = i;  i = next;  ++next;
+      TEveVector curr_normal;
+      TEveVector prev_normal;
+      TMath::Cross((BP[next] - BP[prev]).Arr(), (BP[i] - fM->fApex).Arr(), prev_normal.Arr());
 
-      while (i != fM->fBasePoints.begin())
+      prev = i; i = next; ++next;
+
+      glBegin(GL_TRIANGLES);
+      do
       {
-         glNormal3fv(TMath::Cross((*i - fM->fApex).Arr(), (*next - *prev).Arr(), norm_buf.Arr()));
-         glVertex3fv(*i);
+         TMath::Cross((BP[next] - BP[prev]).Arr(), (BP[i] - fM->fApex).Arr(), curr_normal.Arr());
+
+         glNormal3fv(prev_normal);
+         glVertex3fv(BP[prev]);
+
+         glNormal3fv(prev_normal + curr_normal);
+         glVertex3fv(fM->fApex);
+
+         glNormal3fv(curr_normal);
+         glVertex3fv(BP[i]);
+         
+         prev_normal = curr_normal;
 
          prev = i;
          i    = next;
-         ++next; if (next == fM->fBasePoints.end()) next = fM->fBasePoints.begin();
-      }
+         ++next; if (next >= NP) next = 0;
+      } while (prev != 0);
+      glEnd();
 
-      glNormal3fv(beg_normal);
-      glVertex3fv(fM->fBasePoints.front());
+      glPopAttrib();
    }
-   glEnd();
-
-   glPopAttrib();
 }
