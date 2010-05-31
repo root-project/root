@@ -2277,12 +2277,32 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
          if (!strcmp(axis->GetName(),"xaxis")) axisNumber = 1;
          if (!strcmp(axis->GetName(),"yaxis")) axisNumber = 2;
          if (ratio2 - ratio1 > 0.05) {
+            //update object owning this axis
+            TH1 *hobj1 = (TH1*)axis->GetParent();
+            bin1 = axis->FindFixBin(xmin);
+            bin2 = axis->FindFixBin(xmax);
+            if (axisNumber == 1) axis->SetRange(bin1,bin2);
+            if (axisNumber == 2 && hobj1) {
+               if (hobj1->GetDimension() == 1) {
+                  if (hobj1->GetNormFactor() != 0) {
+                     Double_t norm = hobj1->GetSumOfWeights()/hobj1->GetNormFactor();
+                     xmin *= norm;
+                     xmax *= norm;
+                  }
+                  hobj1->SetMinimum(xmin);
+                  hobj1->SetMaximum(xmax);
+                  hobj1->SetBit(TH1::kIsZoomed);
+               } else {
+                  axis->SetRange(bin1,bin2);
+               }
+            }
             //update all histograms in the pad
             TIter next(GetListOfPrimitives());
             TObject *obj;
             while ((obj= next())) {
                if (!obj->InheritsFrom(TH1::Class())) continue;
                TH1 *hobj = (TH1*)obj;
+               if (hobj == hobj1) continue;
                bin1 = hobj->GetXaxis()->FindFixBin(xmin);
                bin2 = hobj->GetXaxis()->FindFixBin(xmax);
                if (axisNumber == 1) {

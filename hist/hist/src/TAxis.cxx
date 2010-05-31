@@ -1036,12 +1036,35 @@ void TAxis::UnZoom()
 
    gPad->SetView();
 
+   //unzoom object owning this axis
+   SetRange(0,0);
+   TH1 *hobj1 = (TH1*)GetParent();
+   if (!strstr(GetName(),"xaxis")) {
+      if (!hobj1) return;
+      if (hobj1->GetDimension() == 2) {
+         if (strstr(GetName(),"zaxis")) {
+            hobj1->SetMinimum();
+            hobj1->SetMaximum();
+            hobj1->ResetBit(TH1::kIsZoomed);
+         }
+         return;
+      }
+      if (strcmp(hobj1->GetName(),"hframe") == 0 ) {
+         hobj1->SetMinimum(fXmin);
+         hobj1->SetMaximum(fXmax);
+      } else {
+         hobj1->SetMinimum();
+         hobj1->SetMaximum();
+         hobj1->ResetBit(TH1::kIsZoomed);
+      }
+   }
    //must unzoom all histograms in the pad
    TIter next(gPad->GetListOfPrimitives());
    TObject *obj;
    while ((obj= next())) {
       if (!obj->InheritsFrom(TH1::Class())) continue;
       TH1 *hobj = (TH1*)obj;
+      if (hobj == hobj1) continue;
       if (!strstr(GetName(),"xaxis")) {
          if (hobj->GetDimension() == 2) {
             if (strstr(GetName(),"zaxis")) {
