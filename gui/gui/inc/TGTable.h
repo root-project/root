@@ -81,9 +81,10 @@ protected:
    Pixel_t fEvenRowBackground;    // Background color for even numbered rows
    Pixel_t fHeaderBackground;     // Background color for headers
 
-   static const TGGC *fgDefaultSelectGC; // Default select GC
-   static const TGGC *fgDefaultBckgndGC; // Default cell background GC
-   static const Int_t fgDefaultTMode;    // Default text justify mode
+   // Those are neither used nor even initialized: 
+   // static const TGGC *fgDefaultSelectGC; // Default select GC
+   // static const TGGC *fgDefaultBckgndGC; // Default cell background GC
+   // static const Int_t fgDefaultTMode;    // Default text justify mode
 
    // Data members to keep track of LayoutHints that can't be
    // automatically cleaned
