@@ -186,6 +186,7 @@ bool XrdCryptoX509Chain::CheckCA(bool checkselfsigned)
                // Move at top
                p->SetNext(c->Next());
                c->SetNext(begin);
+               if (end == c) end = p;
                begin = c;
             }
             return 1;
@@ -526,16 +527,14 @@ int XrdCryptoX509Chain::Reorder()
 
    // Look for the first one, if needed
    nr = begin;
-   if (statusCA == kUnknown || statusCA == kAbsent) {
+   np = nr;
+   while (nr) {
+      //
+      if (!(nn = FindSubject(nr->Cert()->Issuer(),kExact,&npp)) ||
+            nn == nr)
+         break;
       np = nr;
-      while (nr) {
-         //
-         if (!(nn = FindSubject(nr->Cert()->Issuer(),kExact,&npp)) ||
-               nn == nr)
-            break;
-         np = nr;
-         nr = nr->Next();
-      }
+      nr = nr->Next();
    }
 
    // Move it in first position if not yet there
@@ -548,7 +547,9 @@ int XrdCryptoX509Chain::Reorder()
       // Flag if not CA: we do not check validity here
       if (nr->Cert()->type != XrdCryptoX509::kCA) {
          statusCA = kAbsent;
-      } else {
+      } else if (caname.length() <= 0) {
+         // Set the CA properties only if not done already to avoid overwriting
+         // the result of previous analysis
          caname = nr->Cert()->Subject();
          cahash = nr->Cert()->SubjectHash();
          statusCA = kUnknown;
@@ -671,7 +672,7 @@ int XrdCryptoX509Chain::CheckValidity(bool outatfirst, int when)
 {
    // Check validity at 'when' of certificates in the chain and return
    // the number of invalid certificates.
-   // If 'outatfirst' return after the first invelid has been
+   // If 'outatfirst' return after the first invalid has been
    // found.
    EPNAME("X509Chain::CheckValidity");
    int ninv = 0;
