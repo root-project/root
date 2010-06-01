@@ -4113,6 +4113,9 @@ int XrdSecProtocolgsi::QueryProxy(bool checkcache, XrdSutCache *cache,
                      " (found: "<<nci<<")");
                continue;
             }
+            // Check if any CA was in the file
+            bool checkselfsigned = (CACheck > 1) ? 1 : 0;
+            po->chain->CheckCA(checkselfsigned);
             exportbucket = 1;
          }
       }
