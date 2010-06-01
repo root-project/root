@@ -264,14 +264,14 @@ int G__FastAllocString::FormatArgList(const char *fmt, va_list args)
    return result;
 }
 
-G__FastAllocString& G__FastAllocString::Format(const char *fmt, ...)
+int G__FastAllocString::Format(const char *fmt, ...)
 {
    // sprintf into this string, resizing until it fits.
    va_list args;
    va_start(args, fmt);
-   FormatArgList(fmt, args);
+   int res = FormatArgList(fmt, args);
    va_end(args);
-   return *this;
+   return res;
 }
 
 void G__FastAllocString::ResizeToBucketNoCopy(int newbucket)
