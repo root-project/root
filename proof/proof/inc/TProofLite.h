@@ -44,6 +44,7 @@ friend class TProofPlayerLite;
 
 private:
    Int_t    fNWorkers;    // Number of workers
+   TString  fSandbox;     // PROOF sandbox root dir
    TString  fCacheDir;    // Directory containing cache of user files
    TString  fQueryDir;    // Directory containing query results and status
    TString  fDataSetDir;  // Directory containing info about known data sets

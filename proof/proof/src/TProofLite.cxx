@@ -666,9 +666,8 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
    fprintf(frc,"ProofServ.RootVersionTag: %s\n", gROOT->GetVersion());
 
    // Work dir
-   TString sandbox = gEnv->GetValue("ProofLite.Sandbox", "");
-   if (sandbox.IsNull())
-      sandbox = gEnv->GetValue("Proof.Sandbox", TString::Format("~/%s", kPROOF_WorkDir));
+   TString sandbox = gEnv->GetValue("ProofServ.Sandbox", fSandbox);
+   gSystem->ExpandPathName(sandbox);
    fprintf(frc,"# Users sandbox\n");
    fprintf(frc, "ProofServ.Sandbox: %s\n", sandbox.Data());
 
@@ -770,28 +769,28 @@ Int_t TProofLite::CreateSandbox()
    // Create the sandbox for this session
 
    // Make sure the sandbox area exist and is writable
-   TString sandbox = gEnv->GetValue("ProofLite.Sandbox", "");
-   if (sandbox.IsNull())
-      sandbox = gEnv->GetValue("Proof.Sandbox", TString::Format("~/%s", kPROOF_WorkDir));
-   gSystem->ExpandPathName(sandbox);
-   if (AssertPath(sandbox, kTRUE) != 0) return -1;
+   fSandbox = gEnv->GetValue("ProofLite.Sandbox", "");
+   if (fSandbox.IsNull())
+      fSandbox = gEnv->GetValue("Proof.Sandbox", TString::Format("~/%s", kPROOF_WorkDir));
+   gSystem->ExpandPathName(fSandbox);
+   if (AssertPath(fSandbox, kTRUE) != 0) return -1;
 
    // Package Dir
    fPackageDir = gEnv->GetValue("Proof.PackageDir", "");
    if (fPackageDir.IsNull())
-      fPackageDir.Form("%s/%s", sandbox.Data(), kPROOF_PackDir);
+      fPackageDir.Form("%s/%s", fSandbox.Data(), kPROOF_PackDir);
    if (AssertPath(fPackageDir, kTRUE) != 0) return -1;
 
    // Cache Dir
    fCacheDir = gEnv->GetValue("Proof.CacheDir", "");
    if (fCacheDir.IsNull())
-      fCacheDir.Form("%s/%s", sandbox.Data(), kPROOF_CacheDir);
+      fCacheDir.Form("%s/%s", fSandbox.Data(), kPROOF_CacheDir);
    if (AssertPath(fCacheDir, kTRUE) != 0) return -1;
 
    // Data Set Dir
    fDataSetDir = gEnv->GetValue("Proof.DataSetDir", "");
    if (fDataSetDir.IsNull())
-      fDataSetDir.Form("%s/%s", sandbox.Data(), kPROOF_DataSetDir);
+      fDataSetDir.Form("%s/%s", fSandbox.Data(), kPROOF_DataSetDir);
    if (AssertPath(fDataSetDir, kTRUE) != 0) return -1;
 
    // Session unique tag (name of this TProof instance)
@@ -799,12 +798,12 @@ Int_t TProofLite::CreateSandbox()
    stag.Form("%s-%d-%d", gSystem->HostName(), (int)time(0), gSystem->GetPid());
    SetName(stag.Data());
 
-   // Subpath for this session in the sandbox (<sandbox>/path-to-working-dir)
+   // Subpath for this session in the fSandbox (<sandbox>/path-to-working-dir)
    TString sessdir(gSystem->WorkingDirectory());
    sessdir.ReplaceAll(gSystem->HomeDirectory(),"");
    sessdir.ReplaceAll("/","-");
    sessdir.Replace(0,1,"/",1);
-   sessdir.Insert(0, sandbox.Data());
+   sessdir.Insert(0, fSandbox.Data());
 
    // Session working and queries dir
    fWorkDir.Form("%s/session-%s", sessdir.Data(), stag.Data());
