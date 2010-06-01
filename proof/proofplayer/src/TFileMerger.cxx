@@ -30,6 +30,7 @@
 #include "TUUID.h"
 #include "TSystem.h"
 #include "TH1.h"
+#include "THStack.h"
 #include "TChain.h"
 #include "TKey.h"
 #include "THashList.h"
@@ -355,6 +356,30 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                }
                nextsource = (TFile*)sourcelist->After( nextsource );
             }
+         } else if ( obj->IsA()->InheritsFrom( THStack::Class() ) ) {
+            THStack *hstack1 = (THStack*) obj;
+            TList* l = new TList();
+            
+            // loop over all source files and merge the histos of the
+            // corresponding THStacks with the one pointed to by "hstack1"
+            TFile *nextsource = (TFile*)sourcelist->After( first_source );
+            while ( nextsource ) {
+               // make sure we are at the correct directory level by cd'ing to path
+               TDirectory *ndir = nextsource->GetDirectory(path);
+               if (ndir) {
+                  ndir->cd();
+                  TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(hstack1->GetName());
+                  if (key2) {
+                     THStack *hstack2 = (THStack*) key2->ReadObj();
+                     l->Add(hstack2->GetHists()->Clone());
+                     delete hstack2;
+                  }
+               }
+               
+               nextsource = (TFile*)sourcelist->After( nextsource );
+            }
+            hstack1->GetHists()->Merge(l);
+            l->Delete();
          } else {
             // Object is of no type that we can merge
             Warning("MergeRecursive", "cannot merge object type (n:'%s', t:'%s') - "
