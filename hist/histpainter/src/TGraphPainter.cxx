@@ -1710,8 +1710,6 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                // do not draw the two vertical lines on the edges
                Int_t nbpoints = npt-2;
                Int_t point1  = 1;
-               if (gxwork[0] > gPad->GetUxmin()) { nbpoints++; point1 = 0; }
-               if (gxwork[nbpoints] < gPad->GetUxmax()) nbpoints++;
 
                if (optionOff) {
                   // remove points before the low cutoff
@@ -1731,7 +1729,13 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                      }
                   }
                   nbpoints = point2-point1+1;
+               } else {
+                  // if the 1st or last bin are not on the pad limits the
+                  // the two vertical lines on the edges are added.
+                  if (gxwork[0] > gPad->GetUxmin()) { nbpoints++; point1 = 0; }
+                  if (gxwork[nbpoints] < gPad->GetUxmax()) nbpoints++;
                }
+
                gPad->PaintPolyLine(nbpoints,&gxworkl[point1],&gyworkl[point1],noClip);
                continue;
             }
