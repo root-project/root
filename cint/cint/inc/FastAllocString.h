@@ -77,7 +77,7 @@ public:
    const char* data() const { return fBuf; }
 
    int FormatArgList(const char *fmt, va_list args);
-   int Format(const char *fmt, ...);
+   G__FastAllocString& Format(const char *fmt, ...);
 
    size_t Capacity() const { return fCapacity; }
 
