@@ -171,6 +171,9 @@ namespace {
          flag = 0;
          once = 1;
       }
+      if (flag == MSG_PEEK) {
+         once = 1;
+      }
 
       int nrecv, n;
       char *buf = (char *)buffer;
