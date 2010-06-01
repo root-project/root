@@ -2988,6 +2988,27 @@ void TProofServ::Terminate(Int_t status)
          fQueryLock->Unlock();
    }
 
+   // Cleanup data directory if empty
+   if (!fDataDir.IsNull() && !gSystem->AccessPathName(fDataDir, kWritePermission)) {
+      Bool_t dorm = kTRUE;
+      void *dirp = gSystem->OpenDirectory(fDataDir);
+      if (dirp) {
+         const char *ent = 0;
+         while ((ent = gSystem->GetDirEntry(dirp))) {
+            if (strcmp(ent, ".") && strcmp(ent, "..")) {
+               dorm = kFALSE;
+               break;
+            }
+         }
+      } else {
+         // Cannot open the directory
+         dorm = kFALSE;
+      }
+      // Do remove, if required
+      if (dorm &&gSystem->Unlink(fDataDir) != 0)
+         Warning("Terminate", "data directory '%s' is empty but could not be removed");
+   }
+
    // Remove input handler to avoid spurious signals in socket
    // selection for closing activities executed upon exit()
    TIter next(gSystem->GetListOfFileHandlers());
