@@ -1177,7 +1177,7 @@ void transpad()
    pad2->Draw();
    pad2->cd();
    ht2->SetLineColor(kRed);
-   ht2->Draw("sames");
+   ht2->Draw("][sames");
    pad2->Update();
    TPaveStats *ps2 = (TPaveStats*)ht2->GetListOfFunctions()->FindObject("stats");
    ps2->SetX1NDC(0.65); ps2->SetX2NDC(0.85);
