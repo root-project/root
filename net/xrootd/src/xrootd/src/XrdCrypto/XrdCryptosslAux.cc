@@ -183,9 +183,9 @@ XrdSutBucket *XrdCryptosslX509ExportChain(XrdCryptoX509Chain *chain,
       return bck;
    }
 
-   // Do not export CA cartificates
-   if (chain->Size() == 1 &&
-       chain->Begin()->type == XrdCryptoX509::kCA) {
+   // Do not export CA selfsigned certificates
+   if (chain->Size() == 1 && chain->Begin()->type == XrdCryptoX509::kCA &&
+       !strcmp(chain->Begin()->IssuerHash(),chain->Begin()->SubjectHash())) {
       DEBUG("chain contains only a CA certificate: nothing to export");
       return bck;
    }
@@ -219,13 +219,15 @@ XrdSutBucket *XrdCryptosslX509ExportChain(XrdCryptoX509Chain *chain,
          }
       }
    }
-   // Now write all other certificates
-   while ((c = chain->SearchBySubject(c->Issuer())) && c->type != XrdCryptoX509::kCA) {
-      // Write to bucket
-      if (!PEM_write_bio_X509(bmem, (X509 *)c->Opaque())) {
-         DEBUG("error while writing proxy certificate"); 
-         BIO_free(bmem);
-         return bck;
+   // Now write all other certificates (except selfsigned CAs ...)
+   while ((c = chain->SearchBySubject(c->Issuer()))) {
+      if (strcmp(c->IssuerHash(), c->SubjectHash())) {
+         // Write to bucket
+         if (!PEM_write_bio_X509(bmem, (X509 *)c->Opaque())) {
+            DEBUG("error while writing proxy certificate"); 
+            BIO_free(bmem);
+            return bck;
+         }
       }
    }
 
@@ -454,7 +456,7 @@ int XrdCryptosslX509ParseFile(const char *fname,
 //____________________________________________________________________________
 int XrdCryptosslX509ParseBucket(XrdSutBucket *b, XrdCryptoX509Chain *chain)
 {
-   // Import certificate(s) from bucket b ading them to 'chain'
+   // Import certificate(s) from bucket b adding them to 'chain'
    // (which must be initialized by the caller).
    EPNAME("X509ParseBucket");
    int nci = 0;
