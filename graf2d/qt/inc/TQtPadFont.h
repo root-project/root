@@ -46,6 +46,7 @@ public:
    static const char *SymbolFontFamily();
    static void SetSymbolFontFamily(const char *symbolFnName="Symbol");
 
+   ClassDef(TQtPadFont,0) //< Create Qt QFont object based on ROOT TAttText attributes
 };
 
 #endif

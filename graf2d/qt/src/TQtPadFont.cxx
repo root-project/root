@@ -57,13 +57,12 @@ static float CalibrateFont()
 //  Nimbus Roman returns h = 18
 //  Qt4 XFT              h = 21
 
-#if 0
           qDebug() << " Font metric w = " << w <<" h = "<< h
                    << "points=" << pattern.pointSize()
                    << "pixels=" << pattern.pixelSize()
                    << pattern;
-#endif
-
+// graf2d/graf/src/TTF.cxx:const Float_t kScale = 0.93376068
+          const Float_t kScale = 0.95; //0.93376068;
           float f;
           switch (h) {
              case 12: f = 1.10;  break;// it was  f = 1.13 :-(;
@@ -72,7 +71,7 @@ static float CalibrateFont()
              case 18: f = 0.92;  break;// to be tested yet
              case 20: f = 0.99;  break;// to be tested yet
              case 21: f = 0.90;  break;// to be tested yet
-             default: f = 1.10;  break;
+             default: f = kScale;  break;
           }
           fontCalibFactor = f;
        }
@@ -108,7 +107,7 @@ void  TQtPadFont::SetTextFont(const char *fontname, int italic_, int bold_)
    this->setWeight((long) bold_*10);
    this->setItalic((Bool_t)italic_);
    this->setFamily(fontname);
-#if QT_VERSION >= 0x40000
+
    if (!strcmp(fontname,RomanFontName())) {
       this->setStyleHint(QFont::Serif);
    } else if (!strcmp(fontname,ArialFontName())) {
@@ -124,7 +123,7 @@ void  TQtPadFont::SetTextFont(const char *fontname, int italic_, int bold_)
          << this->substitute (fontname)
          << "ROOT  font number=" << fTextFont;
 #endif
-#endif
+
 #if 0
    qDebug() << "TGQt::SetTextFont font:"    << fontname 
             << " bold="  << bold_
@@ -252,7 +251,7 @@ void  TQtPadFont::SetTextSize(Float_t textsize)
       TAttText::SetTextSize(textsize);
       if (fTextSize > 0) {
          Int_t   tsize =(Int_t)( textsize+0.5);
-         SetTextSizePixels(int(FontMagicFactor(tsize)));
+         this->setPixelSize(static_cast<int>(FontMagicFactor(tsize)));
       }
    }
 }
@@ -260,9 +259,7 @@ void  TQtPadFont::SetTextSize(Float_t textsize)
  void  TQtPadFont::SetTextSizePixels(Int_t npixels)
  {
     // Set the text pixel size
-    TAttText::SetTextSizePixels(npixels);
-    if (npixels <=0) npixels=1;
-    this->setPixelSize(npixels);
+    SetTextSize(static_cast<float>(npixels));
  }
 //______________________________________________________________________________
 const char *TQtPadFont::RomanFontName() 

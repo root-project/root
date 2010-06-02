@@ -39,6 +39,7 @@
 #include "TQtRootSlot.h"
 #include "TROOT.h"
 #include "TApplication.h"
+#include "TInterpreter.h"
 #include <qapplication.h>
 #include <QString>
 
@@ -50,6 +51,14 @@ TQtRootSlot *TQtRootSlot::CintSlot()
    if (!fgTQtRootSlot) fgTQtRootSlot = new TQtRootSlot();
    return fgTQtRootSlot;
 }
+//____________________________________________________
+void TQtRootSlot::EndOfLine()
+{
+   // slot to perform the standard "EndOfLine" ROOT action
+   // it used to update the current gPad
+   if (gInterpreter)  gInterpreter->EndOfLineAction();
+}
+
 //____________________________________________________
 void TQtRootSlot::ProcessLine(const QString &command)
 {

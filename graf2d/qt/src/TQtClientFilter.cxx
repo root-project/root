@@ -751,11 +751,7 @@ void TQtClientFilter::RemoveButtonGrab(QObject *widget)
 { 
    TQtClientWidget *wid = (TQtClientWidget *)widget;
    if ((fgButtonGrabber == wid) && fgGrabber) fgGrabber->DisactivateGrabbing();
-#if (QT_VERSION >= 0x040000)
    fButtonGrabList.removeAll(wid);
-#else
-   fButtonGrabList.remove(wid);
-#endif
 }
 
 //______________________________________________________________________________
@@ -957,8 +953,6 @@ bool TQtPointerGrabber::SelectGrab(Event_t &evt, UInt_t selectEventMask, QMouseE
 
    return pass2Root;
  }
-
 //______________________________________________________________________________
 Bool_t TQtPointerGrabber::IsGrabSelected(UInt_t selectEventMask) const
 {  return  fGrabPointerEventMask & selectEventMask; }
-

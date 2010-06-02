@@ -42,6 +42,8 @@ private:
    QPolygon  fChain;       // array of the n chains to build a shaped marker
    Color_t fCindex;        // Color index of the marker;
    int     fMarkerType;    // Type of the current marker
+   int     fLineWidth;     // The width of the line used to outline the markers
+   int     fLineOption;    // Connect the markers with the segments
 
 public:
 
@@ -54,11 +56,13 @@ public:
 	void  DrawPolyMarker(QPainter &p, int n, TPoint *xy);
 	void  SetMarkerAttributes(const TAttMarker& markerAttributes);
 	void  SetColor(Color_t mcolor);
+   void  SetPenAttributes(int type);
 	Color_t  GetColor() const;
 
    int     GetNumber()  const;
    const   QPolygon &GetNodes() const;
    int     GetType()    const;
+   int     GetWidth()   const;
    void    SetMarker(int n, TPoint *xy, int type);
    ClassDef(TQtMarker,0) //  Convert  ROOT TMarker objects on to QPointArray
 };
@@ -70,11 +74,13 @@ inline TQtMarker &TQtMarker::operator=(const TQtMarker&m)
    fChain    = m.fChain; 
    fCindex   = m.fCindex;
    fMarkerType=m.fMarkerType;
+   fLineWidth =m.fLineWidth;
 	return *this;
 }
 //_________________________________________________________
 inline TQtMarker::TQtMarker(const TQtMarker&m) : fNumNode(m.fNumNode),
-fChain(m.fChain), fCindex(m.fCindex),fMarkerType(m.fMarkerType) {}
+fChain(m.fChain), fCindex(m.fCindex),fMarkerType(m.fMarkerType),fLineWidth(m.fLineWidth) 
+{}
 
 //_________________________________________________________
 inline void  TQtMarker::SetColor(Color_t mcolor) { fCindex = mcolor; }

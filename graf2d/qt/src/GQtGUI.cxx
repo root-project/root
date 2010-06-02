@@ -3220,6 +3220,20 @@ Window_t TGQt::GetCurrentWindow() const
 }
 
 //______________________________________________________________________________
+Int_t TGQt::SupportsExtension(const char *extensionName) const 
+ { 
+    // Returns 1 if window system server supports extension given by the 
+    // argument, returns 0 in case extension is not supported and returns -1 
+    // in case of error (like server not initialized). 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,27,1)
+    return   TVirtualX::SupportsExtension(extensionName);
+#else
+    if (extensionName) {}
+    return -1;
+#endif
+}
+
+//______________________________________________________________________________
 void TGQt::DeleteProperty(Window_t, Atom_t&)
 {
    // Deletes the specified property only if the property was defined on the 

@@ -245,9 +245,11 @@ public:
    virtual void         DeleteImage(Drawable_t img);
 //  The method to support ASImage (by V.Onuchine
    unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
-   Pixmap_t       CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
-   Window_t       GetCurrentWindow() const;
-   
+   virtual  Pixmap_t    CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
+   virtual  Window_t    GetCurrentWindow() const;
+
+   virtual Int_t  SupportsExtension(const char *ext) const;
+
    //---- Drag and Drop -----
    virtual void         DeleteProperty(Window_t, Atom_t&);
    virtual Int_t        GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,

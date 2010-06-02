@@ -112,3 +112,8 @@ isEmpty(ROOTCINTRULEPRI){
 !isEmpty(ROOTCINTRULEPRI){
    include ($$ROOTCINTRULEPRI)
 }
+# ------------------ Mac OS settings -----------------------
+macx|darwin-g++ {
+  QMAKE_MACOSX_DEPLOYMENT_TARGET = $$system(/usr/bin/sw_vers -productVersion | cut -d. -f1-2)
+  message( Configuring Qt for Mac OS $$QMAKE_MACOSX_DEPLOYMENT_TARGET build ! )
+}

@@ -17,26 +17,14 @@
 #include "Rtypes.h"
 
 #ifndef __CINT__
-#  include <qobject.h>
-#  if (QT_VERSION > 0x039999)
-// Added by qt3to4:
-#    include <QEvent>
-#    include <QMouseEvent>
-#    include <QList>
-#  else 
-#    include <qptrqueue.h>
-#    include <qptrlist.h>
-#    include <qintdict.h>
-#  endif  /* QT_VERSION */
-#  include <qapplication.h>
+#  include <QEvent>
+#  include <QMouseEvent>
+#  include <QList>
+#  include <QApplication>
 #else
    class TQtClientWidget;
    class QObject;
-#  if (QT_VERSION > 0x039999)
-     class QList<TQtClientWidget*>;
-#  else /* QT_VERSION */
-     class QPtrList<TQtClientWidget>;
-#  endif /* QT_VERSION */
+   class QList<TQtClientWidget*>;
 #endif  /* CINT */
 
 #include "TQtClientWidget.h"
@@ -64,11 +52,7 @@ protected:
    TQtEventQueue             *fRootEventQueue;
    TQtNextEventMessage       *fNotifyClient;
 #ifndef __CINT__
-#if (QT_VERSION > 0x039999)
    QList<TQtClientWidget*>     fButtonGrabList;
-#else /* QT_VERSION */
-   QPtrList<TQtClientWidget>  fButtonGrabList;
-#endif /* QT_VERSION */
 #endif
    static TQtClientWidget    *fgPointerGrabber;
    static TQtClientWidget    *fgButtonGrabber;
@@ -103,9 +87,7 @@ public slots:
    void AppendButtonGrab (TQtClientWidget *);
    void RemoveButtonGrab (QObject *);
 #ifndef Q_MOC_RUN
-//MOC_SKIP_BEGIN
    ClassDef(TQtClientFilter,0) // Map Qt and ROOT event
-//MOC_SKIP_END
 #endif
 };
 

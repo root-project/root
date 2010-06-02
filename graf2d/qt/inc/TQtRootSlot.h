@@ -52,6 +52,7 @@ public:
 public slots:
    void ProcessLine(const char *);
    void ProcessLine(const QString &);
+   void EndOfLine();
    void Terminate(int status) const;
    void Terminate()           const;
    void TerminateAndQuit()    const;

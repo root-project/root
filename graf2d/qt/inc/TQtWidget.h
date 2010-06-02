@@ -21,23 +21,22 @@
 #include "TCanvas.h"
 
 #ifndef __CINT__
-#  include <qwidget.h>
-#  if (QT_VERSION > 0x039999)
-#     include <QMouseEvent>
-#     include <QCustomEvent>
-#     include <QShowEvent>
-#     include <QFocusEvent>
-#     include <QKeyEvent>
-#     include <QResizeEvent>
-#     include <QEvent>
-#     include <QPaintEvent>
-#     include <QPaintDevice>
-#     include <QSize>
-#     include <QPoint>
-#  endif
-#  include <qpixmap.h>
+#  include <QtGui/QWidget>
+#  include <QtGui/QMouseEvent>
+#  include <QtGui/QShowEvent>
+#  include <QtGui/QFocusEvent>
+#  include <QtGui/QKeyEvent>
+#  include <QtGui/QResizeEvent>
+#  include <QtCore/QEvent>
+#  include <QtGui/QPaintEvent>
+#  include <QtGui/QPaintDevice>
+#  include <QtCore/QSize>
+#  include <QtCore/QPoint>
+#  include <QtCore/QPointer>
+#  include <QtGui/QPixmap>
+#  include "TQtCanvasPainter.h"
 #else
-  // List of the fake classes to the fake RootCint happy.
+  // List of the fake classes to make RootCint happy.
   class QWidget;
   class QPixmap;
   class QMouseEvent;
@@ -55,6 +54,7 @@
   class QContextMenuEvent;
   class QSize;
   class QPoint;
+  class TQtCanvasPainter;
 #endif
   class QTimer;
   class TApplication;
@@ -101,6 +101,7 @@ class  TQtWidget : public QWidget {
  friend class TQtSynchPainting;
 #endif
 private:
+
     TQtWidget(const TQtWidget&);
 	 void operator=(const TQtWidget&);
    //----- Private bits, clients can only test but not change them
@@ -109,6 +110,9 @@ private:
       kBitMask       = 0x00ffffff
    };
    bool fNeedStretch;
+#ifndef __CINT__   
+   QPointer<TQtCanvasPainter> fCanvasDecorator;  //< The object to paint onto the TQtWidget on the top of TCanvas image
+#endif
 protected:
    void Init(); 
    void ResetCanvas() { fCanvas = 0;}
@@ -170,11 +174,7 @@ protected:
 
 
    virtual void enterEvent       ( QEvent *      );
-#if (QT_VERSION > 0x039999)
    virtual void customEvent      ( QEvent *      );
-#else   
-   virtual void customEvent      ( QCustomEvent *);
-#endif   
    virtual void contextMenuEvent ( QContextMenuEvent *);
    virtual void focusInEvent     ( QFocusEvent * );
    virtual void focusOutEvent    ( QFocusEvent * );
@@ -198,6 +198,7 @@ protected:
    // -- A special event handler
    virtual void exitSizeEvent ();
    virtual void stretchWidget(QResizeEvent *e);
+   TQtCanvasPainter *CanvasDecorator();
 public:
    //----- bit manipulation (a'la TObject )
    void     SetBit     (UInt_t f, Bool_t set);
@@ -210,6 +211,7 @@ public:
    void     EmitTestedSignal();
    UInt_t   GetAllBits() const;
    void     SetAllBits(UInt_t f);
+   void SetCanvasDecorator( TQtCanvasPainter *decorator);
    
 public:
    // Static method to immitate ROOT as needed
@@ -305,6 +307,9 @@ inline void   TQtWidget::ResetBit(UInt_t f)       { fBits &= ~(f & kBitMask);   
 inline Bool_t TQtWidget::TestBit(UInt_t f) const  { return (Bool_t) ((fBits & f) != 0); }
 inline Int_t  TQtWidget::TestBits(UInt_t f) const { return (Int_t) (fBits & f);         }
 inline void   TQtWidget::InvertBit(UInt_t f)      { fBits ^= f & kBitMask;              }
+
+inline TQtCanvasPainter *TQtWidget::CanvasDecorator() { return fCanvasDecorator;   }
+inline void   TQtWidget::SetCanvasDecorator( TQtCanvasPainter *decorator) { fCanvasDecorator = decorator;}
    
 inline void   TQtWidget::EnableSignalEvents  (UInt_t f){ SetBit  (f); }
 inline void   TQtWidget::DisableSignalEvents (UInt_t f){ ResetBit(f); }
