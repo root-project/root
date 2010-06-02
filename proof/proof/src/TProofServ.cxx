@@ -100,8 +100,6 @@
 #include "TProofProgressStatus.h"
 #include "TServerSocket.h"
 #include "TMonitor.h"
-#include "TFunction.h"
-#include "TMethodCall.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
@@ -1614,7 +1612,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             } else {
                TMessage answ(kPROOF_GETSLAVEINFO);
                TList *info = new TList;
-               TSlaveInfo *wi = new TSlaveInfo(GetOrdinal(), TUrl(gSystem->HostName()).GetHostFQDN(), 0);
+               TSlaveInfo *wi = new TSlaveInfo(GetOrdinal(), gSystem->HostName(), 0);
                SysInfo_t si;
                gSystem->GetSysInfo(&si);
                wi->SetSysInfo(si);
@@ -4577,7 +4575,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    const char *k = (IsMaster()) ? "Mst" : "Wrk";
    noth.Form("%s-%s", k, fOrdinal.Data());
 
-   TString packagedir(fPackageDir), package, pdir, ocwd, file, opt;
+   TString package, pdir, ocwd, file;
    (*mess) >> type;
    switch (type) {
       case TProof::kShowCache:
@@ -4681,7 +4679,6 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                       !gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
                      // Package found, stop searching
                      fromglobal = kTRUE;
-                     packagedir = nm->GetTitle();
                      break;
                   }
                   pdir = "";
@@ -4734,14 +4731,14 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                }
                if (!f || v != gROOT->GetVersion() ||
                   (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision())) {
-                  if (!fromglobal || !gSystem->AccessPathName(pdir, kWritePermission)) {
+                  if (!fromglobal) {
                      savever = kTRUE;
                      SendAsynMessage(TString::Format("%s: %s: version change (current: %s:%d,"
                                           " build: %s:%d): cleaning ... ",
                                           noth.Data(), package.Data(), gROOT->GetVersion(),
                                           gROOT->GetSvnRevision(), v.Data(), rev));
                      // Hard cleanup: go up the dir tree
-                     gSystem->ChangeDirectory(packagedir);
+                     gSystem->ChangeDirectory(fPackageDir);
                      // remove package directory
                      gSystem->Exec(TString::Format("%s %s", kRM, pdir.Data()));
                      // find gunzip...
@@ -4759,7 +4756,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                         } else {
                            // Store md5 in package/PROOF-INF/md5.txt
                            TMD5 *md5local = TMD5::FileChecksum(par);
-                           TString md5f = packagedir + "/" + package + "/PROOF-INF/md5.txt";
+                           TString md5f = fPackageDir + "/" + package + "/PROOF-INF/md5.txt";
                            TMD5::WriteChecksum(md5f, md5local);
                            // Go down to the package directory
                            gSystem->ChangeDirectory(pdir);
@@ -4861,63 +4858,19 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          ocwd = gSystem->WorkingDirectory();
          gSystem->ChangeDirectory(pdir);
 
-         // Check for SETUP.C and execute
+         // check for SETUP.C and execute
          if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
-            // Load the macro
-            if (gROOT->LoadMacro("PROOF-INF/SETUP.C") != 0) {
-               // Macro could not be loaded
-               SendAsynMessage(TString::Format("%s: error: macro '%s/PROOF-INF/SETUP.C' could not be loaded:"
-                                                " cannot continue",
-                                                noth.Data(), package.Data()));
+            Int_t err = 0;
+            Int_t errm = gROOT->Macro("PROOF-INF/SETUP.C", &err);
+            if (errm < 0)
                status = -1;
-            } else {
-               // Check the signature
-               TFunction *fun = (TFunction *) gROOT->GetListOfGlobalFunctions()->FindObject("SETUP");
-               if (!fun) {
-                  // Notify the upper level
-                  SendAsynMessage(TString::Format("%s: error: function SETUP() not found in macro '%s/PROOF-INF/SETUP.C':"
-                                                   " cannot continue",
-                                                   noth.Data(), package.Data()));
-                  status = -1;
-               } else {
-                  TMethodCall callEnv;
-                  // Check the number of arguments
-                  if (fun->GetNargs() == 0) {
-                     // No arguments (basic signature)
-                     callEnv.InitWithPrototype("SETUP","");
-                     if ((mess->BufferSize() > mess->Length())) {
-                        (*mess) >> opt;
-                        SendAsynMessage(TString::Format("%s: warning: loaded SETUP() does not take any argument:"
-                                                        " option string '%s' will be ignored", noth.Data(), opt.Data()));
-                     }
-                  } else if (fun->GetNargs() == 1) {
-                     callEnv.InitWithPrototype("SETUP","const char *");
-                     callEnv.ResetParam();
-                     if ((mess->BufferSize() > mess->Length())) {
-                        (*mess) >> opt;
-                        callEnv.SetParam((Long_t) opt.Data());
-                     } else {
-                        callEnv.SetParam((Long_t) 0);
-                     }
-                  } else if (fun->GetNargs() > 1) {
-                     // Notify the upper level
-                     SendAsynMessage(TString::Format("%s: error: function SETUP() can have at most a 'const char *' argument:"
-                                                      " cannot continue", noth.Data()));
-                     status = -1;
-                  }
-                  // Execute
-                  Long_t setuprc = (status == 0) ? 0 : -1;
-                  if (status == 0) {
-                     callEnv.Execute(setuprc);
-                     if (setuprc < 0) status = -1;
-                  }
-               }
-            }
+            if (err > TInterpreter::kNoError && err <= TInterpreter::kFatal)
+               status = -1;
          }
 
          gSystem->ChangeDirectory(ocwd);
 
-         if (status < 0) {
+         if (status) {
 
             // Notify the upper level
             SendAsynMessage(TString::Format("%s: failure loading %s ...", noth.Data(), package.Data()));
