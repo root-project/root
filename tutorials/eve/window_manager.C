@@ -69,29 +69,31 @@ void PackTest()
 
 void DetailTest()
 {
-   TEveWindowSlot  *slot  = 0;
-   TEveWindowFrame *frame = 0;
-   TEveViewer *v = 0;
-
-   slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
-   TEveWindowPack* pack1 = slot->MakePack();
+   TEveWindowSlot* slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   pack1 = slot->MakePack();
    pack1->SetShowTitleBar(kFALSE);
    pack1->SetElementName("Detail");
    pack1->SetHorizontal();
 
-   //
+   // left slot
    slot = pack1->NewSlot();
    frame = slot->MakeFrame();
    frame->SetElementName("Latex Frame");
    frame->SetShowTitleBar(kFALSE);
    TGCompositeFrame* cf = frame->GetGUICompositeFrame();
-
-   TGHorizontalFrame* hf = new TGHorizontalFrame(cf);
+   TGCompositeFrame* hf = new TGVerticalFrame(cf);
+   hf->SetCleanup(kLocalCleanup);
    cf->AddFrame(hf, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-
    {
+      TGVerticalFrame* guiFrame = new TGVerticalFrame(hf);
+      hf->AddFrame(guiFrame, new TGLayoutHints(kLHintsExpandX));
+      guiFrame->SetCleanup(kDeepCleanup);
+
+      guiFrame->AddFrame(new TGLabel(guiFrame, "Press Button:"), new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
+      TGTextButton *b = new TGTextButton(guiFrame, "TestButton");
+      guiFrame->AddFrame(b, new TGLayoutHints(kLHintsExpandX));     
       TRootEmbeddedCanvas* ec = new TRootEmbeddedCanvas("Embeddedcanvas", hf, 220);
-      hf->AddFrame(ec, new TGLayoutHints(kLHintsExpandY));
+      hf->AddFrame(ec, new TGLayoutHints(kLHintsExpandY|kLHintsExpandX));
       double fontsize = 0.07;
       double x = 0.02;
       double y = 1 -1*fontsize;
@@ -116,23 +118,18 @@ void DetailTest()
       y -= fontsize;
       latex->DrawLatex(x, y, "#color[5]{#Box} color");
    }
-
-   // viewer
-   TGLEmbeddedViewer* ev = new TGLEmbeddedViewer(hf, 0, 0, 0);
-   TEveViewer *v = new TEveViewer();
-   v->SetGLViewer(ev,ev->GetFrame());
-   gEve->GetViewers()->AddElement(v);
-   v->AddScene(gEve->GetEventScene());
-   hf->AddFrame(ev->GetFrame(), new TGLayoutHints(kLHintsExpandX | kLHintsExpandY|kLHintsTop));
-
-   if (0) {
-      TGTextButton *b = new TGTextButton(hf, "BigButton");
-      hf->AddFrame(b, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-   }
-
+ 
    cf->MapSubwindows();
    cf->Layout();
    cf->MapWindow();
+
+   // viewer slot 
+   TEveWindowSlot* slot2 = pack1->NewSlotWithWeight(3);
+   TEveViewer*  viewer = new TEveViewer("DetailView", "DetailView");
+   TGLEmbeddedViewer*  embeddedViewer =  viewer->SpawnGLEmbeddedViewer();
+   slot2->ReplaceWindow(viewer);
+   gEve->GetViewers()->AddElement(viewer);
+   viewer->AddScene(gEve->GetEventScene());
 }
 
 void TabsTest()
