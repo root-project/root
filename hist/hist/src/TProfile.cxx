@@ -45,9 +45,10 @@ ClassImp(TProfile)
 //      e(J)  =  s(J)/sqrt(L(J))
 //
 //  In the special case where s(J) is zero (eg, case of 1 entry only in one bin)
-//  e(J) is computed from the average of the s(J) for all bins.
+//  e(J) is computed from the average of the s(J) for all bins if the static function
+//  TProfile::Approximate has been called.
 //  This simple/crude approximation was suggested in order to keep the bin
-//  during a fit operation.
+//  during a fit operation. But note that this approximation is not the default behaviour.
 //
 //           Example of a profile histogram with its graphics output
 //{
