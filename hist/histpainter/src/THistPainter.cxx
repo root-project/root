@@ -1231,7 +1231,7 @@ For each bin the content is printed. The text attributes are:
 <li> text font = current TStyle font (<tt>gStyle->SetTextFont()</tt>).
 <li> text size = 0.02*padheight*markersize (if <tt>h</tt> is the histogram drawn
      with the option <tt>"TEXT"</tt> the marker size can be changed with
-     <tt>h->SetMarkerSize(markersize)</tt>). 
+     <tt>h->SetMarkerSize(markersize)</tt>).
 <li> text color = marker color.
 </ul>
 By default the format <tt>"g"</tt> is used. This format can be redefined
@@ -1272,7 +1272,7 @@ End_Macro
 Begin_Html
 
 <p>In the case of profile histograms it is possible to print the number
-of entries instead of the bin content. It is enough to combine the 
+of entries instead of the bin content. It is enough to combine the
 option "E" (for entries) with the option "TEXT".
 
 End_Html
@@ -1298,7 +1298,7 @@ Begin_Macro(source)
    c02->cd(2); profile->Draw("HIST TEXT0E");
 
    return c02;
-} 
+}
 End_Macro
 Begin_Html
 
@@ -1982,7 +1982,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-This option also works for horizontal plots. The example given in the section 
+This option also works for horizontal plots. The example given in the section
 <a href="http://root.cern.ch/root/html/THistPainter.html#HP100">
 "The bar chart option"</a> appears as follow:
 
@@ -5364,7 +5364,10 @@ void THistPainter::PaintHist(Option_t *)
       }
    }
 
-   if (Hoption.Off) strcat(chopth,"][");
+   if (Hoption.Off) {
+      chopth[11] = ']';
+      chopth[12] = '[';
+   }
 
    //         Draw the histogram
 
@@ -7641,7 +7644,7 @@ void THistPainter::PaintText(Option_t *)
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
          x  = fH->GetXaxis()->GetBinCenter(i);
          y  = fH->GetBinContent(i);
-	 yt = y;
+         yt = y;
          if (getentries) yt = hp->GetBinEntries(i);
          sprintf(value,format,yt);
          if (Hoption.Logx) {
