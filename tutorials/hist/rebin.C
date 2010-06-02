@@ -30,7 +30,7 @@ void rebin() {
    hnew->FillRandom("gaus",10*nentries);
    
    //rebin hnew keeping only 50% of the bins
-   Double_t xbins2[500];
+   Double_t xbins2[501];
    Int_t kk=0;
    for (Int_t j=0;j<k;j+=2) {
       xbins2[kk] = xbins[j];
