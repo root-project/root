@@ -3783,6 +3783,10 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
       strcat(chopt, "-");
       gridl = -gridl;
    }
+   if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
+      axis.SetLabelSize(0.);
+      axis.SetTitle("");
+   }
    axis.PaintAxis(axmin, xAxisYPos1,
                   axmax, xAxisYPos1,
                   umin, umax,  ndiv, chopt, gridl, drawGridOnly);
@@ -3865,6 +3869,10 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    if (yAxisPos) {
       strcat(chopt, "+L");
       gridl = -gridl;
+   }
+   if (Hoption.Same && Hoption.Axis) { // Axis repainted (TPad::RedrawAxis)
+      axis.SetLabelSize(0.);
+      axis.SetTitle("");
    }
    axis.PaintAxis(yAxisXPos1, aymin,
                   yAxisXPos1, aymax,
