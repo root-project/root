@@ -135,6 +135,9 @@
      TH2D *h2 = new TH2D("h2","h2",10,0,1,10,0,1);
      h2->Draw();
      </pre>
+<li> PaintAxis does not redraw the axis labels and the axis title in case
+     of axis redrawing. Only the tick marks are redrawn. Redrawing the
+     labels and title made them appear a bit thicker.
 </ul>
 
 <h4>TGraphPainter</h4>
