@@ -154,6 +154,7 @@ void TGTableLayout::FindRowColSizesSinglyAttached()
    TGFrameElement *ptr;
 
    while ((ptr = (TGFrameElement *) next())) {
+      if (ptr->fState == 0) continue;
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
@@ -208,6 +209,7 @@ void TGTableLayout::FindRowColSizesMultiplyAttached()
    TGFrameElement *ptr;
 
    while ((ptr = (TGFrameElement *) next())) {
+      if (ptr->fState == 0) continue;
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
