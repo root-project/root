@@ -8988,8 +8988,8 @@ void G__cpplink_memvar(FILE *fp)
                      (var->type[j] == 'g') || // is bool, or
 #endif // G__UNADDRESSABLEBOOL
                      (
-                        islower(var->type[j]) && // not a pointer, and
-                        var->constvar[j] && // is const, and
+                        var->constvar[j] && // is const, and // TODO: Do we need this check?
+                        islower(var->type[j]) && // not a pointer, and // TODO: Do we need this check?
                         (var->p_tagtable[j] != -1) && // class tag is valid, and
                         (G__struct.type[var->p_tagtable[j]] == 'e') // data member of an enum
                      )
@@ -8997,13 +8997,19 @@ void G__cpplink_memvar(FILE *fp)
                      // Pass G__PVOID as the address to force G__malloc to allocate storage.
                      pvoidflag = 1;
                   }
-                  if (
-                     // Is static const fundamental type.
+                  else if (
+                     // Is static const integral type.
                      (var->statictype[j] == G__LOCALSTATIC) && // static member, and
                      var->constvar[j] && // is const, and
+                     (var->p_tagtable[j] == -1) && // is fundamental type, and
                      islower(var->type[j]) && // not a pointer, and
-                     // TODO: Check for reftype?
+                     (var->reftype[j] == G__PARANORMAL) && // not a ref, and
                      (
+                        // no elements, no dimensions, not an array
+                        !var->varlabel[j][1] /* number of elements */ &&
+                        !var->paran[j]
+                     ) && // and,
+                     ( // of integral type
                         (var->type[j] == 'c') || // char
                         (var->type[j] == 'b') || // unsigned char
                         (var->type[j] == 's') || // short
@@ -9117,9 +9123,15 @@ void G__cpplink_memvar(FILE *fp)
                      if (
                         (var->statictype[j] == G__LOCALSTATIC) && // static member, and
                         var->constvar[j] && // is const, and
+                        (var->p_tagtable[j] == -1) && // is fundamental type, and
                         islower(var->type[j]) && // not a pointer, and
-                        // TODO: Check for reftype?
+                        (var->reftype[j] == G__PARANORMAL) && // not a ref, and
                         (
+                           // no elements, no dimensions, not an array
+                           !var->varlabel[j][1] /* number of elements */ &&
+                           !var->paran[j]
+                        ) && // and,
+                        ( // of integral type
                            (var->type[j] == 'g') || // bool
                            (var->type[j] == 'c') || // char
                            (var->type[j] == 'b') || // unsigned char
@@ -9132,28 +9144,15 @@ void G__cpplink_memvar(FILE *fp)
                            (var->type[j] == 'n') || // long long
                            (var->type[j] == 'm') // unsigned long long
                         ) && // and,
-                        (
-                          (var->p_tagtable[j] == -1) || // class tag is invalid, or
-                          (G__struct.type[var->p_tagtable[j]] != 'e') // not data member of an enum,
-                        ) && // and
                         (G__globalcomp != G__CLINK) // not generating a C dictionary
                      ) {
-                        // Static const fundamental type.
+                        // Static const integral type.
                         fprintf(
                              fp
                            , "G__FastAllocString(%d).Format(\""
                            , G__LONGLINE
                         );
                         fprintf(fp, "%s", var->varnamebuf[j]);
-                        if (var->varlabel[j][1] /* num of elements */ == INT_MAX /* unspecified length array */) {
-                           fprintf(fp, "[]");
-                        }
-                        else if (var->varlabel[j][1] /* num of elements */) {
-                           fprintf(fp, "[%d]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
-                        }
-                        for (int k = 1; k < var->paran[j]; ++k) {
-                           fprintf(fp, "[%d]", var->varlabel[j][k+1]);
-                        }
                         if (var->access[j] != G__PUBLIC) {
                               // Not public, so cannot access the value, force it to zero.
                               fprintf(fp , "=0\").data()");
@@ -9217,15 +9216,6 @@ void G__cpplink_memvar(FILE *fp)
                         // FIXME: CAUTION: This implementation cause error on enum in nested class.
                         // FIXME: This is wrong for G__UNADDRESSABLEBOOL && (var->type[j] == 'g').
                         fprintf(fp, "\"%s", var->varnamebuf[j]);
-                        if (var->varlabel[j][1] /* num of elements */ == INT_MAX /* unspecified length array */) {
-                           fprintf(fp, "[]");
-                        }
-                        else if (var->varlabel[j][1] /* num of elements */) {
-                           fprintf(fp, "[%d]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
-                        }
-                        for (int k = 1; k < var->paran[j]; ++k) {
-                           fprintf(fp, "[%d]", var->varlabel[j][k+1]);
-                        }
                         G__value initializer_value;
                         G__FastAllocString qualified_id(G__MAXNAME*6);
                         qualified_id.Format("%s::%s", G__fulltagname(i, 1), var->varnamebuf[j]);
