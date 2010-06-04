@@ -10569,6 +10569,8 @@ char G__incsetup_exist(std::list<G__incsetup> *incsetuplist, G__incsetup incsetu
 int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,const char *comment
                       ,G__incsetup setup_memvar, G__incsetup setup_memfunc)
 {
+  if (tagnum < 0) return 0;
+   
   char *p;
   G__FastAllocString buf(G__ONELINE);
 
