@@ -360,6 +360,8 @@ private:
    TString      fPfx;    // Prefix to be prepended to messages
 
    static TString fgPfx; // Default prefix to be prepended to messages
+   static Int_t   fgCmdRtn; // Return code of the command execution (available only
+                            // after closing the pipe)
 public:
    enum EStatusBits { kFileIsPipe = BIT(23) };
    TProofServLogHandler(const char *cmd, TSocket *s, const char *pfx = "");
@@ -372,6 +374,7 @@ public:
    Bool_t ReadNotify() { return Notify(); }
 
    static void SetDefaultPrefix(const char *pfx);
+   static Int_t GetCmdRtn();
 };
 
 //--- Guard class: close pipe, deactivatethe related descriptor --------------//

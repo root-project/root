@@ -46,6 +46,7 @@
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
+#include "TFunction.h"
 #include "TFTP.h"
 #include "THashList.h"
 #include "TInterpreter.h"
@@ -53,6 +54,8 @@
 #include "TMap.h"
 #include "TMath.h"
 #include "TMessage.h"
+#include "TMethodArg.h"
+#include "TMethodCall.h"
 #include "TMonitor.h"
 #include "TMutex.h"
 #include "TObjArray.h"
@@ -1212,7 +1215,7 @@ Int_t TProof::AddWorkers(TList *workerList)
          // Upload and Enable methods are intelligent and avoid
          // re-uploading or re-enabling of a package to a node that has it.
          UploadPackage(os->GetName());
-         EnablePackage(os->GetName(), kTRUE);
+         EnablePackage(os->GetName(), (TList *)0, kTRUE);
       }
    }
 
@@ -3314,6 +3317,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
                      while ((ourwi = (TSlaveInfo *)nxw())) {
                         if (!strcmp(ourwi->GetOrdinal(), slinfo->GetOrdinal())) {
                            ourwi->SetSysInfo(slinfo->GetSysInfo());
+                           ourwi->fHostName = slinfo->GetName();
                            break;
                         }
                      }
@@ -6645,7 +6649,7 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
                   TString cmd(Form(kUNTAR3, gunzip, par.Data()));
                   status = gSystem->Exec(cmd);
                   if ((status = gSystem->Exec(cmd))) {
-                     Error("BuildPackageOnCLient", "failure executing: %s", cmd.Data());
+                     Error("BuildPackageOnClient", "failure executing: %s", cmd.Data());
                   } else {
                      // Go down to the package directory
                      gSystem->ChangeDirectory(pdir);
@@ -6685,11 +6689,14 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path)
 }
 
 //______________________________________________________________________________
-Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient)
+Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient, TList *loadopts)
 {
    // Load specified package. Executes the PROOF-INF/SETUP.C script
    // on all active nodes. If notOnClient = true, don't load package
    // on the client. The default is to load the package also on the client.
+   // The argument 'loadopts' specify a list of objects to be passed to the SETUP.
+   // The objects in the list must be streamable; the SETUP macro will be executed
+   // like this: SETUP.C(loadopts).
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -6706,11 +6713,12 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient)
    pac = gSystem->BaseName(pac);
 
    if (!notOnClient)
-      if (LoadPackageOnClient(pac) == -1)
+      if (LoadPackageOnClient(pac, loadopts) == -1)
          return -1;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kLoadPackage) << pac;
+   if (loadopts) mess << loadopts;
    Broadcast(mess);
    Collect();
 
@@ -6718,12 +6726,16 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient)
 }
 
 //______________________________________________________________________________
-Int_t TProof::LoadPackageOnClient(const char *pack)
+Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
 {
    // Load specified package in the client. Executes the PROOF-INF/SETUP.C
    // script on the client. Returns 0 in case of success and -1 in case of error.
    // The code is equivalent to the one in TProofServ.cxx (TProof::kLoadPackage
    // case). Keep in sync in case of changes.
+   // The argument 'loadopts' specify a list of objects to be passed to the SETUP.
+   // The objects in the list must be streamable; the SETUP macro will be executed
+   // like this: SETUP.C(loadopts).
+   // Returns 0 in case of success and -1 in case of error.
 
    if (TestBit(TProof::kIsClient)) {
       Int_t status = 0;
@@ -6764,21 +6776,88 @@ Int_t TProof::LoadPackageOnClient(const char *pack)
 
       // check for SETUP.C and execute
       if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
-         Int_t err = 0;
-         Int_t errm = gROOT->Macro("PROOF-INF/SETUP.C", &err);
-         if (errm < 0)
+         // Load the macro
+         if (gROOT->LoadMacro("PROOF-INF/SETUP.C") != 0) {
+            // Macro could not be loaded
+            Error("LoadPackageOnClient", "macro '%s/PROOF-INF/SETUP.C' could not be loaded:"
+                                         " cannot continue", pack);
             status = -1;
-         if (err > TInterpreter::kNoError && err <= TInterpreter::kFatal)
-            status = -1;
+         } else {
+            // Check the signature
+            TFunction *fun = (TFunction *) gROOT->GetListOfGlobalFunctions()->FindObject("SETUP");
+            if (!fun) {
+               // Notify the upper level
+               Error("LoadPackageOnClient", "function SETUP() not found in macro '%s/PROOF-INF/SETUP.C':"
+                                            " cannot continue", pack);
+               status = -1;
+            } else {
+               TMethodCall callEnv;
+               // Check the number of arguments
+               if (fun->GetNargs() == 0) {
+                  // No arguments (basic signature)
+                  callEnv.InitWithPrototype("SETUP","");
+                  // Warn that the argument (if any) if ignored
+                  if (loadopts)
+                     Warning("LoadPackageOnClient", "loaded SETUP() does not take any argument:"
+                                                    " the specified TList object will be ignored");
+               } else if (fun->GetNargs() == 1) {
+                  TMethodArg *arg = (TMethodArg *) fun->GetListOfMethodArgs()->First();
+                  if (arg) {
+                     // Check argument type
+                     TString argsig(arg->GetTitle());
+                     if (argsig.BeginsWith("TList")) {
+                        callEnv.InitWithPrototype("SETUP","TList *");
+                        callEnv.ResetParam();
+                        callEnv.SetParam((Long_t) loadopts);
+                     } else if (argsig.BeginsWith("const char")) {
+                        callEnv.InitWithPrototype("SETUP","const char *");
+                        callEnv.ResetParam();
+                        TObjString *os = loadopts ? dynamic_cast<TObjString *>(loadopts->First()) : 0;
+                        if (os) {
+                           callEnv.SetParam((Long_t) os->GetName());
+                        } else {
+                           if (loadopts && loadopts->First()) {
+                              Warning("LoadPackageOnClient", "found object argument of type %s:"
+                                                             " SETUP expects 'const char *': ignoring",
+                                                             loadopts->First()->ClassName());
+                           }
+                           callEnv.SetParam((Long_t) 0);
+                        }
+                     } else {
+                        // Notify the upper level
+                        Error("LoadPackageOnClient", "unsupported SETUP signature: SETUP(%s)"
+                                                     " cannot continue", arg->GetTitle());
+                        status = -1;
+                     }
+                  } else {
+                     // Notify the upper level
+                     Error("LoadPackageOnClient", "cannot get information about the SETUP() argument:"
+                                                  " cannot continue");
+                     status = -1;
+                  }
+               } else if (fun->GetNargs() > 1) {
+                  // Notify the upper level
+                  Error("LoadPackageOnClient", "function SETUP() can have at most a 'TList *' argument:"
+                                               " cannot continue");
+                  status = -1;
+               }
+               // Execute
+               Long_t setuprc = (status == 0) ? 0 : -1;
+               if (status == 0) {
+                  callEnv.Execute(setuprc);
+                  if (setuprc < 0) status = -1;
+               }
+            }
+         }
       } else {
          PDB(kPackage, 1)
-            Info("LoadPackageOnCLient",
+            Info("LoadPackageOnClient",
                  "package %s exists but has no PROOF-INF/SETUP.C script", pack);
       }
 
       gSystem->ChangeDirectory(ocwd);
 
-      if (!status) {
+      if (status == 0) {
          // create link to package in working directory
 
          fPackageLock->Lock();
@@ -6922,6 +7001,48 @@ Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient)
    // In case notOnClient = true, don't enable the package on the client.
    // The default is to enable packages also on the client.
    // Returns 0 in case of success and -1 in case of error.
+   // Provided for backward compatibility.
+
+   return EnablePackage(package, (TList *)0, notOnClient);
+}
+
+//______________________________________________________________________________
+Int_t TProof::EnablePackage(const char *package, const char *loadopts,
+                            Bool_t notOnClient)
+{
+   // Enable specified package. Executes the PROOF-INF/BUILD.sh
+   // script if it exists followed by the PROOF-INF/SETUP.C script.
+   // In case notOnClient = true, don't enable the package on the client.
+   // The default is to enable packages also on the client.
+   // It is is possible to specify options for the loading step via 'loadopts';
+   // the string will be passed passed as argument to SETUP.
+   // Returns 0 in case of success and -1 in case of error.
+
+   TList *optls = 0;
+   if (loadopts && strlen(loadopts)) {
+      optls = new TList;
+      optls->Add(new TObjString(loadopts));
+   }
+   // Run
+   Int_t rc = EnablePackage(package, optls, notOnClient);
+   // Clean up
+   optls->SetOwner(kTRUE);
+   SafeDelete(optls);
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
+Int_t TProof::EnablePackage(const char *package, TList *loadopts,
+                            Bool_t notOnClient)
+{
+   // Enable specified package. Executes the PROOF-INF/BUILD.sh
+   // script if it exists followed by the PROOF-INF/SETUP.C script.
+   // In case notOnClient = true, don't enable the package on the client.
+   // The default is to enable packages also on the client.
+   // It is is possible to specify a list of objects to be passed to the SETUP
+   // functions via 'loadopts'; the objects must be streamable.
+   // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
 
@@ -6943,7 +7064,7 @@ Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient)
    if (BuildPackage(pac, opt) == -1)
       return -1;
 
-   if (LoadPackage(pac, notOnClient) == -1)
+   if (LoadPackage(pac, notOnClient, loadopts) == -1)
       return -1;
 
    return 0;
