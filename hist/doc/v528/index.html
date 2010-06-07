@@ -30,6 +30,11 @@
         graph2d->Draw(" triw p0 same");
      }
      </pre>
+<li> The X and Y vectors are normalized in order to compute the triangles.
+     The scale factor used was the same for the X and Y axis.
+     This generated problems (very long triangles instead of the obvious ones)
+     in some cases when the X and Y axis had very different ranges. Having two 
+     scale factors, one for the X axis and one for the Y axis, cures the problem.
 </ul>
 
 <h4>TGraph2D</h4>
