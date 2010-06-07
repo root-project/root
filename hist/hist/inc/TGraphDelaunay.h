@@ -22,8 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed 
-#include "TNamed.h"  
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 class TGraph2D;
@@ -52,7 +52,8 @@ protected:
    Double_t    fYNmax;       //!Maximum value of fYN
    Double_t    fXoffset;     //!
    Double_t    fYoffset;     //!Parameters used to normalize user data
-   Double_t    fScaleFactor; //!
+   Double_t    fXScaleFactor; //!
+   Double_t    fYScaleFactor; //!
    Double_t    fZout;        //!Histogram bin height for points lying outside the convex hull
    Double_t   *fDist;        //!Array used to order mass points by distance
    Int_t       fMaxIter;     //!Maximum number of iterations to find Delaunay triangles
@@ -65,7 +66,7 @@ protected:
    Bool_t      fAllTri;      //!True if FindAllTriangles() has been performed on fGraph2D
    Bool_t      fInit;        //!True if CreateTrianglesDataStructure() and FindHull() have been performed
    TGraph2D   *fGraph2D;     //!2D graph containing the user data
-   
+
    void     CreateTrianglesDataStructure();
    Bool_t   Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const;
    void     FileIt(Int_t P, Int_t N, Int_t M);
