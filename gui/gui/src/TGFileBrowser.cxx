@@ -43,6 +43,10 @@
 #include "TGFileBrowser.h"
 #include "TRootBrowser.h"
 
+#include "TVirtualPadEditor.h"
+#include "TGedEditor.h"
+#include "TBaseClass.h"
+
 #ifdef WIN32
 const char rootdir[] = "\\";
 #else
@@ -237,6 +241,23 @@ TGFileBrowser::~TGFileBrowser()
    Cleanup();
 }
 
+//______________________________________________________________________________
+static Bool_t IsObjectEditable(TClass *cl)
+{
+   // Helper function checking if a class has a graphic properties editor.
+
+   TBaseClass *base;
+   TList* bcl = cl->GetListOfBases();
+   TIter next(bcl);
+   while ((base = (TBaseClass*) next())) {
+      cl = base->GetClassPointer();
+      if (cl && TClass::GetClass(Form("%sEditor", cl->GetName()))) 
+         return kTRUE;
+      if (IsObjectEditable(cl))
+         return kTRUE;
+   }
+   return kFALSE;
+}
 
 /**************************************************************************/
 // TBrowserImp virtuals
@@ -549,6 +570,7 @@ void TGFileBrowser::Update()
    Long_t id = 0, flags = 0, modtime = 0;
    char path[1024];
    TGListTreeItem *item = fCurrentDir;
+   TObject *selected = 0;
    if (!item) item = fRootDir;
    //fListTree->DeleteChildren(item);
    TGListTreeItem *curr = fListTree->GetSelected(); // GetCurrent() ??
@@ -571,6 +593,11 @@ void TGFileBrowser::Update()
             }
          }
       }
+      selected = obj;
+      if (selected && selected->InheritsFrom("TLeaf"))
+         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", selected));
+      if (selected && selected->InheritsFrom("TBranch"))
+         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", selected));
    }
    TString actpath = FullPathName(item);
    flags = id = size = modtime = 0;
@@ -592,6 +619,14 @@ void TGFileBrowser::Update()
       }
    }
    DoubleClicked(item, 1);
+
+   if (selected && gPad && IsObjectEditable(selected->IsA())) {
+      TVirtualPadEditor *ved = TVirtualPadEditor::GetPadEditor(kFALSE);
+      if (ved) {
+         TGedEditor *ged = (TGedEditor *)ved;
+         ged->SetModel(gPad, selected, kButton1Down);
+      }
+   }
 }
 
 /**************************************************************************/
@@ -823,6 +858,7 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    if (!item) return;
    CheckSorted(item, kTRUE);
    CheckRemote(item);
+   TObject *selected = 0;
    if (item && btn == kButton3) {
       TString fullpath = FullPathName(item);
       TObject *obj = (TObject *) item->GetUserData();
@@ -848,6 +884,7 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
             Chdir(item);
          }
          fContextMenu->Popup(x, y, obj, fBrowser);
+         selected = obj;
       }
       else {
          fListTree->GetPathnameFromItem(item, path);
@@ -875,6 +912,7 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
          TObject *obj = (TObject *) item->GetUserData();
          if (obj && obj->InheritsFrom("TKey"))
             Chdir(item);
+         if (obj) selected = obj;
       }
       else {
          fListTree->GetPathnameFromItem(item, path);
@@ -887,6 +925,17 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
                   fCurrentDir = item->GetParent();
             }
          }
+      }
+   }
+   if (selected && selected->InheritsFrom("TLeaf"))
+      selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", selected));
+   if (selected && selected->InheritsFrom("TBranch"))
+      selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", selected));
+   if (selected && gPad && IsObjectEditable(selected->IsA())) {
+      TVirtualPadEditor *ved = TVirtualPadEditor::GetPadEditor(kFALSE);
+      if (ved) {
+         TGedEditor *ged = (TGedEditor *)ved;
+         ged->SetModel(gPad, selected, kButton1Down);
       }
    }
 }
