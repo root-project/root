@@ -56,7 +56,7 @@ TVirtualPadEditor *TVirtualPadEditor::LoadEditor()
    if (h) {
       if (h->LoadPlugin() == -1)
          return 0;
-      return (TVirtualPadEditor*) h->ExecPlugin(1, gPad->GetCanvas());
+      return (TVirtualPadEditor*) h->ExecPlugin(1, gPad ? gPad->GetCanvas() : 0);
    }
 
    return 0;
@@ -99,6 +99,7 @@ void TVirtualPadEditor::ShowEditor()
 
    if (!fgPadEditor) {
       GetPadEditor();
+      if (!fgPadEditor) return;
       fgPadEditor->SetGlobal(kTRUE);
    }
    fgPadEditor->Show();
@@ -131,7 +132,8 @@ void TVirtualPadEditor::UpdateFillAttributes(Int_t color, Int_t style)
 
    ShowEditor();
 
-   fgPadEditor->FillAttributes(color, style);
+   if (fgPadEditor)
+      fgPadEditor->FillAttributes(color, style);
 }
 
 //______________________________________________________________________________
@@ -142,7 +144,8 @@ void TVirtualPadEditor::UpdateTextAttributes(Int_t align, Float_t angle,
 
    ShowEditor();
 
-   fgPadEditor->TextAttributes(align, angle, col, font, tsize);
+   if (fgPadEditor)
+      fgPadEditor->TextAttributes(align, angle, col, font, tsize);
 }
 
 //______________________________________________________________________________
@@ -153,7 +156,8 @@ void TVirtualPadEditor::UpdateLineAttributes(Int_t color, Int_t style,
 
    ShowEditor();
 
-   fgPadEditor->LineAttributes(color, style, width);
+   if (fgPadEditor)
+      fgPadEditor->LineAttributes(color, style, width);
 }
 
 //______________________________________________________________________________
@@ -164,5 +168,6 @@ void TVirtualPadEditor::UpdateMarkerAttributes(Int_t color, Int_t style,
 
    ShowEditor();
 
-   fgPadEditor->MarkerAttributes(color, style, msize);
+   if (fgPadEditor)
+      fgPadEditor->MarkerAttributes(color, style, msize);
 }
