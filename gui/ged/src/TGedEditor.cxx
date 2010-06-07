@@ -421,9 +421,9 @@ void TGedEditor::Show()
    // Show editor.
 
    // gPad is setup properly in calling code for global and canvas editor.
-   SetCanvas(gPad->GetCanvas());
+   if (gPad) SetCanvas(gPad->GetCanvas());
 
-   if (fGlobal) {
+   if (fCanvas && fGlobal) {
       SetModel(fCanvas->GetClickSelectedPad(), fCanvas->GetClickSelected(), kButton1Down);
 
       if (fCanvas->GetShowEditor())
@@ -451,7 +451,7 @@ void TGedEditor::Show()
       }
       MoveResize(gedx, gedy, GetWidth(), ch > 700 ? 700 : ch);
       SetWMPosition(gedx, gedy);
-   } else {
+   } else if (fCanvas) {
       SetModel(fCanvas, fCanvas, kButton1Down);
    }
    MapWindow();
