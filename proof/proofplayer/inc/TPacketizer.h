@@ -82,7 +82,7 @@ private:
    void           RemoveActive(TFileStat *file);
 
    void           Reset();
-   void           ValidateFiles(TDSet *dset, TList *slaves);
+   void           ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent = -1, Bool_t byfile = kFALSE);
 
 public:
    TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,

@@ -706,11 +706,14 @@ void runProof(const char *what = "simple",
       }
       c->SetProof();
 
+      // Only validate the files really needed for the analysis
+      proof->SetParameter("PROOF_ValidateByFile", 1);
+
       // The selector
       sel.Form("%s/proof/ProofEventProc.C%s", tutorials.Data(), aMode.Data());
       // Run it
       Printf("\nrunProof: running \"eventproc\"\n");
-      c->Process(sel.Data(), opt);
+      c->Process(sel.Data(), opt, nevt);
 
    } else if (act == "ntuple") {
 

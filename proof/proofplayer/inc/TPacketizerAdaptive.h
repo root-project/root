@@ -85,7 +85,7 @@ private:
    void           RemoveActive(TFileStat *file);
 
    void           Reset();
-   void           ValidateFiles(TDSet *dset, TList *slaves);
+   void           ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent = -1, Bool_t byfile = kFALSE);
    Int_t          ReassignPacket(TDSetElement *e, TList **listOfMissingFiles);
    void           SplitPerHost(TList *elements, TList **listOfMissingFiles);
 
