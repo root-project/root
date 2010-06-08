@@ -48,6 +48,8 @@
 
 #include "TGSlider.h"
 #include "TGPicture.h"
+#include "TImage.h"
+#include "TEnv.h"
 #include "Riostream.h"
 
 ClassImp(TGSlider)
@@ -62,8 +64,9 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
 {
    // Slider constructor.
 
+   fDisabledPic = 0;
    fWidgetId    = id;
-   fWidgetFlags = kWidgetWantFocus;
+   fWidgetFlags = kWidgetWantFocus | kWidgetIsEnabled;
    fMsgWindow   = p;
 
    fType     = type;
@@ -71,6 +74,44 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fDragging = kFALSE;
    fPos = fRelPos = 0;
    fVmax = fVmin = 0;
+}
+
+//______________________________________________________________________________
+void TGSlider::CreateDisabledPicture()
+{
+   // Creates disabled picture.
+
+   if (!fSliderPic) return;
+
+   TImage *img = TImage::Create();
+   TImage *img2 = TImage::Create();
+
+   TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
+   img2->FillRectangle(back.Data(), 0, 0, fSliderPic->GetWidth(), 
+                       fSliderPic->GetHeight());
+   img->SetImage(fSliderPic->GetPicture(), fSliderPic->GetMask());
+   Pixmap_t mask = img->GetMask();
+   img2->Merge(img, "overlay");
+
+   TString name = "disbl_";
+   name += fSliderPic->GetName();
+   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(),
+                                             img2->GetPixmap(), mask);
+   delete img;
+   delete img2;
+}
+
+//______________________________________________________________________________
+void TGSlider::SetState(Bool_t state)
+{
+   // Set state of widget. If kTRUE=enabled, kFALSE=disabled.
+
+   if (state) {
+      SetFlags(kWidgetIsEnabled);
+   } else {
+      ClearFlags(kWidgetIsEnabled);
+   }
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -87,6 +128,8 @@ TGVSlider::TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
 
    if (!fSliderPic)
       Error("TGVSlider", "slider?h.xpm not found");
+
+   CreateDisabledPicture();
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -108,6 +151,7 @@ TGVSlider::~TGVSlider()
    // Delete vertical slider widget.
 
    if (fSliderPic) fClient->FreePicture(fSliderPic);
+   if (fDisabledPic) fClient->FreePicture(fDisabledPic);
 }
 
 //______________________________________________________________________________
@@ -118,11 +162,13 @@ void TGVSlider::DoRedraw()
    // cleanup the drawable
    gVirtualX->ClearWindow(fId);
 
+   GContext_t drawGC = IsEnabled() ? GetBlackGC()() : GetShadowGC()();
+   
    gVirtualX->DrawLine(fId, GetShadowGC()(), fWidth/2, 8, fWidth/2-1, 8);
    gVirtualX->DrawLine(fId, GetShadowGC()(), fWidth/2-1, 8, fWidth/2-1, fHeight-9);
    gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth/2+1, 8, fWidth/2+1, fHeight-8);
    gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth/2+1, fHeight-8, fWidth/2, fHeight-8);
-   gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2, 9, fWidth/2, fHeight-9);
+   gVirtualX->DrawLine(fId, drawGC, fWidth/2, 9, fWidth/2, fHeight-9);
 
    // check scale
    if (fScale == 1) fScale++;
@@ -133,9 +179,9 @@ void TGVSlider::DoRedraw()
       if (lines < 1) lines = 1;
       for (int i = 0; i <= lines; i++) {
          int y = i * fScale + (i * remain) / lines;
-         gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2+8, y+7, fWidth/2+10, y+7);
+         gVirtualX->DrawLine(fId, drawGC, fWidth/2+8, y+7, fWidth/2+10, y+7);
          if ((fType & kSlider2) && (fType & kScaleBoth))
-            gVirtualX->DrawLine(fId, GetBlackGC()(), fWidth/2-9, y+7, fWidth/2-11, y+7);
+            gVirtualX->DrawLine(fId, drawGC, fWidth/2-9, y+7, fWidth/2-11, y+7);
       }
    }
    if (fPos < fVmin) fPos = fVmin;
@@ -143,7 +189,12 @@ void TGVSlider::DoRedraw()
 
    // calc slider-picture position
    fRelPos = (((int)fHeight-16) * (fPos - fVmin)) / (fVmax - fVmin) + 8;
-   if (fSliderPic) fSliderPic->Draw(fId, GetBckgndGC()(), fWidth/2-7, fRelPos-6);
+   const TGPicture *pic = fSliderPic;
+   if (!IsEnabled()) {
+      if (!fDisabledPic) CreateDisabledPicture();
+      pic = fDisabledPic ? fDisabledPic : fSliderPic;
+   }
+   if (pic) pic->Draw(fId, GetBckgndGC()(), fWidth/2-7, fRelPos-6);
 }
 
 //______________________________________________________________________________
@@ -151,6 +202,7 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
 {
    // Handle mouse button event in vertical slider.
 
+   if (!IsEnabled()) return kTRUE;
    if (event->fType == kButtonPress) {
       // constrain to the slider width
       if (event->fX < (Int_t)fWidth/2-7 || event->fX > (Int_t)fWidth/2+7) {
@@ -253,6 +305,8 @@ TGHSlider::TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
    if (!fSliderPic)
       Error("TGHSlider", "slider?v.xpm not found");
 
+   CreateDisabledPicture();
+
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
                          kPointerMotionMask, kNone, kNone);
@@ -273,6 +327,7 @@ TGHSlider::~TGHSlider()
    // Delete a horizontal slider widget.
 
    if (fSliderPic) fClient->FreePicture(fSliderPic);
+   if (fDisabledPic) fClient->FreePicture(fDisabledPic);
 }
 
 //______________________________________________________________________________
@@ -283,11 +338,13 @@ void TGHSlider::DoRedraw()
    // cleanup drawable
    gVirtualX->ClearWindow(fId);
 
+   GContext_t drawGC = IsEnabled() ? GetBlackGC()() : GetShadowGC()();
+   
    gVirtualX->DrawLine(fId, GetShadowGC()(), 8, fHeight/2, 8, fHeight/2-1);
    gVirtualX->DrawLine(fId, GetShadowGC()(), 8, fHeight/2-1, fWidth-9, fHeight/2-1);
    gVirtualX->DrawLine(fId, GetHilightGC()(), 8, fHeight/2+1, fWidth-8, fHeight/2+1);
    gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-8, fHeight/2+1, fWidth-8, fHeight/2);
-   gVirtualX->DrawLine(fId, GetBlackGC()(), 9, fHeight/2, fWidth-9, fHeight/2);
+   gVirtualX->DrawLine(fId, drawGC, 9, fHeight/2, fWidth-9, fHeight/2);
 
    if (fScale == 1) fScale++;
    if (fScale * 2 > (int)fWidth) fScale = 0;
@@ -297,9 +354,9 @@ void TGHSlider::DoRedraw()
       if (lines < 1) lines = 1;
       for (int i = 0; i <= lines; i++) {
          int x = i * fScale + (i * remain) / lines;
-         gVirtualX->DrawLine(fId, GetBlackGC()(), x+7, fHeight/2+8, x+7, fHeight/2+10);
+         gVirtualX->DrawLine(fId, drawGC, x+7, fHeight/2+8, x+7, fHeight/2+10);
          if ((fType & kSlider2) && (fType & kScaleBoth))
-            gVirtualX->DrawLine(fId, GetBlackGC()(), x+7, fHeight/2-9, x+7, fHeight/2-11);
+            gVirtualX->DrawLine(fId, drawGC, x+7, fHeight/2-9, x+7, fHeight/2-11);
       }
    }
    if (fPos < fVmin) fPos = fVmin;
@@ -307,7 +364,12 @@ void TGHSlider::DoRedraw()
 
    // calc slider-picture position
    fRelPos = (((int)fWidth-16) * (fPos - fVmin)) / (fVmax - fVmin) + 8;
-   if (fSliderPic) fSliderPic->Draw(fId, GetBckgndGC()(), fRelPos-6, fHeight/2-7);
+   const TGPicture *pic = fSliderPic;
+   if (!IsEnabled()) {
+      if (!fDisabledPic) CreateDisabledPicture();
+      pic = fDisabledPic ? fDisabledPic : fSliderPic;
+   }
+   if (pic) pic->Draw(fId, GetBckgndGC()(), fRelPos-6, fHeight/2-7);
 }
 
 //______________________________________________________________________________
@@ -315,6 +377,7 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
 {
    // Handle mouse button event in horizontal slider widget.
 
+   if (!IsEnabled()) return kTRUE;
    if (event->fType == kButtonPress) {
       // constrain to the slider height
       if (event->fY < (Int_t)fHeight/2-7 || event->fY > (Int_t)fHeight/2+7) {
@@ -398,7 +461,6 @@ Bool_t TGHSlider::HandleConfigureNotify(Event_t* event)
    return kTRUE;
 }
 
-
 //______________________________________________________________________________
 TString TGSlider::GetTypeString() const
 {
@@ -461,6 +523,9 @@ void TGHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fScale != 10)
       out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
+
+   if (!IsEnabled())
+      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
 }
 
 //______________________________________________________________________________
@@ -494,4 +559,7 @@ void TGVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fScale != 10)
       out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
+
+   if (!IsEnabled())
+      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
 }
