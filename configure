@@ -4870,15 +4870,17 @@ if test ! "x$enable_mathmore" = "xno"; then
     if test "x$enable_mathmore" = "xyes" && \
        test "x$enable_gsl_shared" = "xno" ; then
         for gslalib in $gsllibs; do
-           if [ "x`basename $gslalib .a`" != "x`basename $gslalib`" ]; then
-               message "Checking whether $gslalib is compiled with -fPIC"
-               check_libpic $gslalib
-               if test $is_libpic -eq 0 ; then
-                   result "no"
-                   enable_mathmore="no"
-               else
-                   result "yes"
-               fi
+            if `basename $gslalib > /dev/null 2>&1`; then
+                if [ "x`basename $gslalib .a`" != "x`basename $gslalib`" ]; then
+                    message "Checking whether $gslalib is compiled with -fPIC"
+                    check_libpic $gslalib
+                    if test $is_libpic -eq 0 ; then
+                        result "no"
+                        enable_mathmore="no"
+                    else
+                        result "yes"
+                    fi
+                fi
            fi
         done
         if `$cwhich gsl-config > /dev/null 2>&1` && \
