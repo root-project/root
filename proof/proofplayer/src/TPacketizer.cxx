@@ -422,6 +422,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
          // adjust its number of entries
          if (num != -1 && (first+num < cur+eNum)) {
             e->SetNum( first + num - cur );
+            eNum = e->GetNum();
             PDB(kPacketizer,2)
                Info("TPacketizer","Processing element: Adjust end %lld", first + num - cur);
          }
@@ -431,6 +432,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
          if (cur < first) {
             e->SetFirst( eFirst + (first - cur) );
             e->SetNum( e->GetNum() - (first - cur) );
+            eNum = e->GetNum();
             PDB(kPacketizer,2)
                Info("TPacketizer","Processing element: Adjust start %lld and end %lld",
                                   eFirst + (first - cur), first + num - cur);

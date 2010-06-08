@@ -589,6 +589,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          // adjust its number of entries
          if (num != -1 && (first+num < cur+eNum)) {
             e->SetNum( first + num - cur );
+            eNum = e->GetNum();
             PDB(kPacketizer,2)
                Info("TPacketizerAdaptive",
                     "processing element: Adjust end %lld", first + num - cur);
@@ -599,6 +600,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          if (cur < first) {
             e->SetFirst( eFirst + (first - cur) );
             e->SetNum( e->GetNum() - (first - cur) );
+            eNum = e->GetNum();
             PDB(kPacketizer,2)
                Info("TPacketizerAdaptive",
                     "processing element: Adjust start %lld and end %lld",
