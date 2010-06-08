@@ -224,7 +224,7 @@ Draw only grid (if the grid is requested).
 
 <tr><th valign=top>"HIST"</th><td>
 When an histogram has errors it is visualized by default with error bars. To
-visualize it without errors use the option HIST together with the required
+visualize it without errors use the option "HIST" together with the required
 option (eg "hist same c").  The "HIST" option can also be used to plot only the
 histogram and not the associated function(s).
 </td></tr>
@@ -2213,12 +2213,14 @@ is a collection of <tt>TH1</tt> (or derived) objects. For painting only the
 <li> The first histogram is paint.
 <li> The the sum of the first and second, etc...
 </ol>
-If option <tt>"NOSTACK"</tt> is specified, histograms are all paint in the
-same pad as if the option <tt>"SAME"</tt> had been specified.
+If the option <tt>"NOSTACK"</tt> is specified, the histograms are all paint in
+the same pad as if the option <tt>"SAME"</tt> had been specified. This allows to
+compute X and Y scales common to all the histograms, like
+<tt>TMultiGraph</tt> does for graphs.
 
-<p>If option <tt>"PADS"</tt> is specified, the current pad/canvas is subdivided
-into a number of pads equal to the number of histograms and each histogram
-is paint into a separate pad.
+<p>If the option <tt>"PADS"</tt> is specified, the current pad/canvas is
+subdivided into a number of pads equal to the number of histograms and each
+histogram is paint into a separate pad.
 
 <p>The following example shows various types of stacks.
 
@@ -2228,6 +2230,38 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
+If at least one of the histograms in the stack has errors, the whole stack is
+visualized by default with error bars. To visualize it without errors the
+option <tt>"HIST"</tt> should be used.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *cst1 = new TCanvas("cst1","cst1",700,400);
+   cst1->Divide(2,1);
+
+   TH1F * hst11 = new TH1F("hst11", "", 20, -10, 10);
+   hst11->Sumw2();
+   hst11->FillRandom("gaus", 1000);
+   hst11->SetFillColor(kViolet);
+   hst11->SetLineColor(kViolet);
+
+   TH1F * hst12 = new TH1F("hst12", "", 20, -10, 10);
+   hst12->FillRandom("gaus", 500);
+   hst12->SetFillColor(kBlue);
+   hst12->SetLineColor(kBlue);
+
+   THStack st1("st1", "st1");
+   st1.Add(hst11);
+   st1.Add(hst12);
+
+   cst1->cd(1); st1.Draw();
+   cst1->cd(2); st1.Draw("hist");
+
+   return cst1;
+}
+End_Macro
+Begin_Html
 
 <a name="HP27"></a><h3>Drawing of 3D implicit functions</h3>
 
