@@ -123,9 +123,10 @@ class TMacro;
 // 26 -> 27: Use new file for updating the session status
 // 27 -> 28: Support for multi-datasets, fix global pack dirs, fix AskStatistics,
 //           package download, dataset caching
+// 28 -> 29: Support for config parameters in EnablePackage
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 28;            // protocol version number
+const Int_t       kPROOF_Protocol        = 29;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir

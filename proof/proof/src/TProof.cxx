@@ -7020,13 +7020,18 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
 
    TList *optls = 0;
    if (loadopts && strlen(loadopts)) {
-      optls = new TList;
-      optls->Add(new TObjString(loadopts));
+      if (fProtocol > 28) {
+         optls = new TList;
+         optls->Add(new TObjString(loadopts));
+         optls->SetOwner(kTRUE);
+      } else {
+         // Notify
+         Warning("EnablePackage", "remote server does not support options: ignoring the option string");
+      }
    }
    // Run
    Int_t rc = EnablePackage(package, optls, notOnClient);
    // Clean up
-   optls->SetOwner(kTRUE);
    SafeDelete(optls);
    // Done
    return rc;
@@ -7064,7 +7069,13 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
    if (BuildPackage(pac, opt) == -1)
       return -1;
 
-   if (LoadPackage(pac, notOnClient, loadopts) == -1)
+   TList *optls = loadopts;
+   if (optls && fProtocol <= 28) {
+      Warning("EnablePackage", "remote server does not support options: ignoring the option list");
+      optls = 0;
+   }
+
+   if (LoadPackage(pac, notOnClient, optls) == -1)
       return -1;
 
    return 0;
