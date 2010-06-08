@@ -39,6 +39,10 @@
 #include <sys/stat.h>
 #endif
 
+#if defined(__GNUC__) && __GNUC__ > 3 && ((__GNUC_MINOR__ > 3 &&__GNUC_PATCHLEVEL__ > 3) || __GNUC_MINOR__ > 4)
+#define G__LOCALS_REFERENCED_FROM_RSP
+#endif
+
 extern "C"
 void G__enable_wrappers(int set) {
    // enable wrappers
@@ -6058,14 +6062,14 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
       fprintf(fp, "  // only an offset into the virtual table and not a function address\n");
       fprintf(fp, "  long faddr;\n");
 
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (lval[0]) : \"%%rax\", \"%%rdx\");\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (lval[0]) : \"%%rax\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq %%rax, %%rdx\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr));\n");
+      fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr) : \"%%rax\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq 8(%%rax), %%rax\");  //multiple inheritance offset\n");
 #if defined(__GNUC__) && __GNUC__ > 3
       fprintf(fp, "  __asm__ __volatile__(\"leaq (%%rdx,%%rax), %%rax\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq (%%rax), %%rdx\");\n");
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (fptr));  //virtual member function offset\n");
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax\"  :: \"m\" (fptr) : \"%%rax\");  //virtual member function offset\n");
       fprintf(fp, "  __asm__ __volatile__(\"leaq (%%rdx,%%rax), %%rax\");\n");
 #else
       fprintf(fp, "  __asm__ __volatile__(\"addq %%rax, %%rdx\");\n");
@@ -6076,6 +6080,14 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
       fprintf(fp, "  __asm__ __volatile__(\"movq (%%rax), %%rax\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rax, %%0\"  : \"=m\" (faddr) :: \"memory\");\n\n");
    }
+
+#ifdef G__LOCALS_REFERENCED_FROM_RSP
+   fprintf(fp, "  long savr15;\n");
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%%%r15, %%0\" : \"=m\" (savr15) :: \"memory\");  // save r15\n");
+   // reference u from r15 and not rsp, as rsp will be decreased to put
+   // the args for the var arg call on the stack
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r15\" :: \"r\" (u) : \"%%r15\");\n");
+#endif
 
    fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm0\"  :: \"m\" (dval[0]) : \"%%xmm0\");\n");
    fprintf(fp, "  __asm__ __volatile__(\"movlpd %%0, %%%%xmm1\"  :: \"m\" (dval[1]) : \"%%xmm1\");\n");
@@ -6089,7 +6101,7 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rdi\" :: \"m\" (lval[0]) : \"%%rdi\");\n");
 #if defined(__GNUC__) && __GNUC__ < 4
    if (tagnum != -1 && ifunc->isvirtual[ifn]) {
-      fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr));\n");
+      fprintf(fp, "  __asm__ __volatile__(\"leaq %%0, %%%%rax\" :: \"m\" (fptr) : \"%%rax\");\n");
       fprintf(fp, "  __asm__ __volatile__(\"movq 8(%%rax), %%rax\");  //multiple inheritance offset\n");
       fprintf(fp, "  __asm__ __volatile__(\"addq %%rax, %%rdi\");\n");
    }
@@ -6099,23 +6111,32 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rcx\" :: \"m\" (lval[3]) : \"%%rcx\");\n");
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r8\"  :: \"m\" (lval[4]) : \"%%r8\");\n");
    fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r9\"  :: \"m\" (lval[5]) : \"%%r9\");\n");
+   if (tagnum != -1 && ifunc->isvirtual[ifn])
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r10\" :: \"m\" (faddr) : \"%%r10\");\n");
+   else
+      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r10\" :: \"m\" (fptr) : \"%%r10\");\n");
 
    int istck = 0;
-   fprintf(fp, "  __asm__ __volatile__(\"subq %%0, %%%%rsp\" :: \"i\" ((umax+2)*8));\n");
+   fprintf(fp, "  // (umax+2)*8 = 176\n");
+   fprintf(fp, "  __asm__ __volatile__(\"subq $176, %%rsp\");\n");
    for (i = 0; i < umax; i++) {
+#ifdef G__LOCALS_REFERENCED_FROM_RSP
+     fprintf(fp, "  __asm__ __volatile__(\"movq %d(%%r15), %%rax \\n\\t\"\n", istck);
+     fprintf(fp, "                       \"movq %%rax, %d(%%rsp)\");\n", istck);
+#else
      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%rax \\n\\t\"\n");
      fprintf(fp, "                       \"movq %%%%rax, %d(%%%%rsp)\" :: \"m\" (u[%d].lval) : \"%%rax\");\n", istck, i);
+#endif
      istck += 8;
    }
-   if (tagnum != -1 && ifunc->isvirtual[ifn])
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r10\"  :: \"m\" (faddr) : \"%%r10\");\n");
-   else
-      fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r10\"  :: \"m\" (fptr) : \"%%r10\");\n");
    fprintf(fp, "  __asm__ __volatile__(\"movl $8, %%eax\");  // number of used xmm registers\n");
    fprintf(fp, "  __asm__ __volatile__(\"call *%%r10\");\n");
+   fprintf(fp, "  __asm__ __volatile__(\"addq $176, %%rsp\");\n");
    fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rax, %%0\" : \"=m\" (u[0].lval) :: \"memory\");  // get return value\n");
    fprintf(fp, "  __asm__ __volatile__(\"movq %%%%rdi, %%0\" : \"=m\" (u[1].lval) :: \"memory\");  // get return value (icc C++ object)\n");
-   fprintf(fp, "  __asm__ __volatile__(\"addq %%0, %%%%rsp\" :: \"i\" ((umax+2)*8));\n");
+#ifdef G__LOCALS_REFERENCED_FROM_RSP
+   fprintf(fp, "  __asm__ __volatile__(\"movq %%0, %%%%r15\" :: \"m\" (savr15) : \"%%r15\");\n");
+#endif
 }
 
 static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table_internal *ifunc)
