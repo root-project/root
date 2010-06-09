@@ -1,0 +1,161 @@
+.\" 
+.\" $Id:$
+.\"
+.TH PQ2-PUT 1 "Version 5" "ROOT" 
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+pq2-put \- Register one or more datasets in a dataset meta-repository based on ROOT files
+.SH SYNOPSIS
+.B pq2-put
+[options] datasetfile
+.SH "DESCRIPTION"
+This manual page documents briefly the
+.BR pq2-put
+program.
+.PP
+.B pq2-put
+is a script invoking the
+.B pq2
+ROOT application to register one or more datasets in a dataset meta-repository based on ROOT files;
+the repository can be accessed via the local file
+system or a remote file server daemon or a PROOF facility.
+.PP
+More details about the underlying 'pq2' application can be found in the man page \fIpq2\fR(1).
+.SH ARGUMENTS
+.TP
+\fIdatasetfile\fR
+Path to the file with the list of files in the dataset or directory with the files containing the
+file lists of the datasets to be registered; in the first case wildcards '*' can be specified in
+the file name, i.e. '<dir>/fil*' is ok but '<dir>/*/file' is not. In all cases the name of the
+dataset is the name of the file finally used. The format of the file is described below.
+.SH OPTIONS
+.TP
+\fB-h\fR, \fB--help\fR
+Display help information.
+.TP 
+\fB-k\fR, \fB--keep\fR
+Keep the temporary files created during the analysis under $TMPDIR
+.TP 
+\fB-v\fR
+Verbose mode
+.TP
+\fB-d\fR <\fIdatasetfile\fR>, \fB--dataset\fR <\fIdatasetfile\fR>
+Alternative way to define path to the file with the list of files.
+.TP
+\fB-o\fR <\fIoptions\fR>
+Options for registering datasets; a combination of:
+.nf
+     O   overwrite existing dataset
+     U   add information to existing dataset, if any or create a new one
+     T   Trust the information already present in the dataset
+     V   verify (scan) information in the dataset (can be very slow)
+.fi
+.TP
+\fB--overwrite\fR
+Alternative to '-o O'.
+.TP
+\fB--update\fR
+Alternative to '-o U'.
+.TP
+\fB--trust\fR
+Alternative to '-o T'.
+.TP
+\fB--tree=\fR <\fIdefault-tree-name\fR
+Set the name of the default tree name to 'default-tree-name' (option 'T' or --trust only); this
+allows to skip the tree name specification during Process when more TTree (or derivative) objects
+are available in the files.
+.TP
+\fB--staged\fR
+Assume all files online or staged (option 'T' or --trust only).
+.TP
+\fB-u\fR <\fIserverurl\fR>, \fB--url\fR=<\fIserverurl\fR>
+URL of the PROOF master or data server providing the information; for data servers, it must include the directory.
+Can also be specified via the environment variables PQ2PROOFURL or PQ2DSSRVURL (see ENVIRONMENT VARIABLES)."
+.TP
+\fB-t\fR <\fIdir\fR>, \fB--tmpdir\fR=<\fIdir\fR>
+Directory for temporary files; defualt is /tmp/<username>.
+.SH "FORMAT OF THE FILES"
+The name of the file defining the dataset is the name of the dataset.
+The files must contain one line per each file in the dataset with the full file URL.
+If available, additional information can be specified on the same line with the following keywords:
+.nf
+
+   sz:<size>                            size of the file in bytes
+   md5:<md5_ascii>                      MD5 sum of the file in ASCII form
+   uuid:<uuid>                          UUID of the file
+   tree:<name>,<entries>,<first>,<last> meta-information about a tree in the file; the should be in the form
+                                        <subdir>/tree-name;'entries' is the number of entries in the tree;
+                                        'first' and 'last' define the entry range.
+   obj:<name>,<class>,<entries>         meta-information about a generic object in the file; the should be in
+                                        the form <subdir>/obj-name; 'class' is the object class; 'entries' is
+                                        the number of occurences for this object.
+.fi
+Multiple occurences of 'tree:' or 'obj:' can be specified.
+.SH "EXAMPLES"
+The following examples show how to register information corresponding to the H1 example of the ROOT
+tutorials.
+.TP
+\fBMinimal information\fR
+In this example the files are read from the ROOT HTTP server. Detailed information about the content of the
+files is not available, so only the URLs are given. If the file is called h1-http, we get
+.nf
+
+   $ cat h1-http
+   http://root.cern.ch/files/h1/dstarmb.root
+   http://root.cern.ch/files/h1/dstarp1a.root
+   http://root.cern.ch/files/h1/dstarp1b.root
+   http://root.cern.ch/files/h1/dstarp2.root
+.fi
+
+The dataset is registered and verification required:
+.nf
+   $ pq2-put -o "V" h1-http
+   pq2-put: 1 dataset(s) registered
+.fi
+.TP
+\fBFull information\fR
+In this example the files are read from the local /data/h1 directory.
+Detailed information about the content of the files is available. If the file is called h1-local, we get
+.nf
+   $ cat h1-local
+   file:/data/h1/dstarmb.root  sz:21330730 md5:0a60055370e16d954f90fb50c2d1a801 tree:h42,21920,0,-1
+   file:/data/h1/dstarp1a.root md5:e2f959b15235214be3c973c3e7a9ff2c sz:71464503 tree:h42,73243
+   file:/data/h1/dstarp1b.root md5:169ea4799661696a25e73257fe8a833d sz:83827959 tree:h42,85597
+   file:/data/h1/dstarp2.root md5:907d10b401a35c0240cfa76bedc31420 sz:100675234 tree:h42,103053
+.fi
+
+The dataset is registered trusting the passed information:
+.nf
+   $ pq2-put -o T --tree=h42 --staged h1-local
+   pq2-put: 1 dataset(s) registered
+.fi
+.SH "ENVIRONMENT VARIABLES"
+See \fIsetup-pq2\fR(1).
+.SH "SEE ALSO"
+\fIpq2\fR(1), \fIsetup-pq2\fR(1), \fIpq2-ls\fR(1), \fIpq2-ls-files\fR(1),
+\fIpq2-ls-files-server\fR(1), \fIpq2-info-server\fR(1),
+\fIpq2-ana-dist\fR(1), \fIpq2-verify\fR(1), \fIpq2-rm\fR(1), \fIpq2-cache\fR(1)
+.PP
+For more information on the \fBROOT\fR system, please refer to 
+.UR http://root.cern.ch/
+.I http://root.cern.ch
+.UE
+.SH "ORIGINAL AUTHORS"
+Gerardo Ganis for the ROOT team.
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was originally written by Gerardo Ganis <gerardo.ganis@cern.ch>, for ROOT version 5.

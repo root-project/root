@@ -1,0 +1,70 @@
+.\" 
+.\" $Id:$
+.\"
+.TH PQ2-REDISTRIBUTE 1 "Version 5" "ROOT" 
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+pq2-redistribute \- Execute the file movements as determined by pq2-ana-dist
+.SH SYNOPSIS
+.B pq2-redistribute
+[-b backend] -f filemv
+.SH "DESCRIPTION"
+This manual page documents briefly the
+.BR pq2-redistribute
+program.
+.PP
+.B pq2-redistribute
+is a script executing the file movements as determined by \fIpq2-ana-dist\fR(1) using the specified backend.
+Currently only the XROOTD backend is supported (tag 'xrd'; default).
+.PP
+More details about the input file can be found in the man page \fIpq2-ana-dist\fR(1).
+.SH OPTIONS
+.TP
+\fB-h\fR, \fB--help\fR
+Display help information.
+.TP 
+\fB--dryrun\fR
+Only show the action that should be done (don't execute them).
+.TP
+\fB-b\fR <\fIbackend\fR>
+Tag identifying the backend to be used. Currently only 'xrd' (for XROOTD) is supported.
+.TP
+\fB-f\fR <\fIfilemv\fR>
+File with the file movement directives produced by pq2-ana-dist .
+.TP
+\fB-r\fR <\fIredirurl\fR>, \fB--redir\fR=<\fIredirurl\fR>
+URL of the redirector from where the files should be copied and deleted.
+.TP
+\fB-t\fR <\fIdir\fR>, \fB--tmpdir\fR=<\fIdir\fR>
+Directory for temporary files; default is /tmp/<username>. Thsi is used to store temporary copies of the
+files during transfers.
+.SH "ENVIRONMENT VARIABLES"
+See \fIsetup-pq2\fR(1).
+.SH "SEE ALSO"
+\fIpq2\fR(1), \fIpq2-ls\fR(1), \fIpq2-ls-files\fR(1), \fIpq2-ls-files-server\fR(1),
+\fIpq2-info-server\fR(1), \fIpq2-ana-dist\fR(1),
+\fIpq2-put\fR(1), \fIpq2-verify\fR(1), \fIpq2-rm\fR(1), \fIpq2-cache\fR(1)
+.PP
+For more information on the \fBROOT\fR system, please refer to 
+.UR http://root.cern.ch/
+.I http://root.cern.ch
+.UE
+.SH "ORIGINAL AUTHORS"
+Gerardo Ganis for the ROOT team.
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR 
+This manual page was originally written by Gerardo Ganis <gerardo.ganis@cern.ch>, for ROOT version 5.
