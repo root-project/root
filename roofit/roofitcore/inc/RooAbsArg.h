@@ -357,6 +357,10 @@ public:
   inline void clearShapeDirty() const { 
     _shapeDirty=kFALSE ; 
   }
+  
+  const char* aggregateCacheUniqueSuffix() const ;
+  virtual const char* cacheUniqueSuffix() const { return 0 ; }
+
  protected:
 
   // Client-Server relatation and Proxy management 

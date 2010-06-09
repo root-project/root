@@ -88,6 +88,8 @@ protected:
   PdfCacheElem* getCache(const RooArgSet* nset, Bool_t recalculate=kTRUE) const ;
   void clearCacheObject(PdfCacheElem& cache) const ;
 
+  virtual const char* payloadUniqueSuffix() const { return 0 ; }
+  
   friend class PdfCacheElem ;
   virtual const char* binningName() const { 
     // Return name of binning to be used for creation of cache histogram

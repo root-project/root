@@ -46,6 +46,8 @@ public:
 
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
 
+  virtual const char* cacheUniqueSuffix() const { return Form("_%x",_dataClone) ; }
+
 protected:
 
   friend class RooAbsReal ;

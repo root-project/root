@@ -50,6 +50,8 @@ protected:
   virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
   virtual void fillCacheObject(FuncCacheElem& cacheFunc) const ;
   virtual Double_t evaluate() const ;
+
+  virtual const char* payloadUniqueSuffix() const { return func.arg().aggregateCacheUniqueSuffix() ; }
   
   RooRealProxy func ; // Proxy to functions whose running integral is calculated
   RooRealProxy x   ; // Intergrated observable

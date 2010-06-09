@@ -306,9 +306,13 @@ TString RooAbsCachedPdf::cacheNameSuffix(const RooArgSet& nset) const
       name.Append(arg->GetName()) ;
     }
     delete iter ;
-  }
+  } 
 
   name.Append("]") ;
+  const char* payloadUS = payloadUniqueSuffix() ;
+  if (payloadUS) {
+    name.Append(payloadUS) ;
+  }
   return name ;
 }
 

@@ -51,6 +51,8 @@ protected:
     // Dummy evaluate, it is never called
     return 0 ; 
   }
+
+  virtual const char* payloadUniqueSuffix() const { return func.arg().aggregateCacheUniqueSuffix() ; }
   
   RooRealProxy func ;           // Proxy to function being cached
   RooSetProxy  _cacheObs ;      // Variables to be cached

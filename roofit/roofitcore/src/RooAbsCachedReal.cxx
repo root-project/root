@@ -246,6 +246,10 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
   }
 
   name.Append("]") ;
+  const char* payloadUS = payloadUniqueSuffix() ;
+  if (payloadUS) {
+    name.Append(payloadUS) ;
+  }
   return name ;
 }
 

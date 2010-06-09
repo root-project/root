@@ -2201,3 +2201,19 @@ Bool_t RooAbsArg::flipAClean()
 
 
 
+//_____________________________________________________________________________
+const char* RooAbsArg::aggregateCacheUniqueSuffix() const 
+{
+  string suffix ;
+
+  RooArgSet branches ;
+  branchNodeServerList(&branches) ;
+  TIterator* iter = branches.createIterator( );
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    const char* tmp = arg->cacheUniqueSuffix() ;
+    if (tmp) suffix += tmp ;
+  }
+  delete iter ;
+  return Form("%s",suffix.c_str()) ;
+}

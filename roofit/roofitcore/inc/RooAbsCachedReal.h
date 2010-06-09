@@ -74,6 +74,8 @@ protected:
   FuncCacheElem* getCache(const RooArgSet* nset) const ;
   void clearCacheObject(FuncCacheElem& cache) const ;
 
+  virtual const char* payloadUniqueSuffix() const { return 0 ; }
+
   friend class FuncCacheElem ;
   virtual const char* binningName() const { 
     // Returns name of binning to be used for cache histogram creation

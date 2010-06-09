@@ -41,6 +41,8 @@ protected:
     // Dummy evaluate, it is never called
     return 0 ; 
   }
+
+  virtual const char* payloadUniqueSuffix() const { return pdf.arg().aggregateCacheUniqueSuffix() ; }
   
   RooRealProxy pdf ;       // Proxy to p.d.f being cached
   RooSetProxy  _cacheObs ; // Observable to be cached
