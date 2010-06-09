@@ -4037,7 +4037,10 @@ copyout:
 }
 
 //______________________________________________________________________________
-#if defined(R__LINUX) && !defined(R__WINGCC)
+//The next statement is not active anymore on Linux.
+//Using posix_fadvise introduces a performance penalty (10 %) on optimized files
+//and in addition it destroys the information of TTreePerfStats
+#if defined(R__neverLINUX) && !defined(R__WINGCC)
 Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
 {
    // Read specified byte range asynchronously. Actually we tell the kernel
