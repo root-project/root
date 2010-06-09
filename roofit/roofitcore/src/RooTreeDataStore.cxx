@@ -1048,6 +1048,10 @@ void RooTreeDataStore::append(RooAbsDataStore& other)
   Int_t nevt = other.numEntries() ;
   for (int i=0 ; i<nevt ; i++) {  
     _vars = *other.get(i) ;
+    if (_wgtVar) {
+      _wgtVar->setVal(other.weight(i)) ;
+    }
+
     fill() ;
   }
 }

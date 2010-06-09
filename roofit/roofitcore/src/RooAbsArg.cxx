@@ -1,4 +1,4 @@
-/*****************************************************************************
+/******************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
  * @(#)root/roofitcore:$Id$
@@ -822,7 +822,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
     // Cyclical dependency, abort
     coutE(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << GetName()
 			 << "): cyclical dependency detected, source = " << source->GetName() << endl ;
-    assert(0) ;
+    //assert(0) ;
     return ;
   }
 
@@ -941,7 +941,9 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
     propValue=origServerValue.FindObject(oldServer)?kTRUE:kFALSE ;
     propShape=origServerShape.FindObject(oldServer)?kTRUE:kFALSE ;
     // cout << "replaceServer with name " << oldServer->GetName() << " old=" << oldServer << " new=" << newServer << endl ;
-    replaceServer(*oldServer,*newServer,propValue,propShape) ;
+    if (newServer != this) {
+      replaceServer(*oldServer,*newServer,propValue,propShape) ;
+    }
   }
 
   delete sIter ;
@@ -949,12 +951,19 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   setValueDirty() ;
   setShapeDirty() ;
 
+  // Take self out of newset disallowing cyclical dependencies
+  RooAbsCollection* newSet2 = (RooAbsCollection*) newSet.clone("newSet2") ;
+  newSet2->remove(*this,kTRUE,kTRUE) ;
+
   // Process the proxies
   Bool_t allReplaced=kTRUE ;
   for (int i=0 ; i<numProxies() ; i++) {
-    Bool_t ret2 = getProxy(i)->changePointer(newSet,nameChange) ;
+    // WVE: Need to make exception here too for newServer != this    
+    Bool_t ret2 = getProxy(i)->changePointer(*newSet2,nameChange) ;
     allReplaced &= ret2 ;
   }
+
+  delete newSet2 ;
 
   if (mustReplaceAll && !allReplaced) {
     coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName()
