@@ -4173,11 +4173,11 @@ void G__add_ipath(const char *path)
 
   /* strip double quotes if exist */
   if('"'==path[0]) {
-    strcpy(temp,path+1);
+    strncpy(temp,path+1, sizeof(temp));
     if('"'==temp[strlen(temp)-1]) temp[strlen(temp)-1]='\0';
   }
   else {
-    strcpy(temp,path);
+    strncpy(temp,path, sizeof(temp));
   }
 
   /* to the end of list */
