@@ -578,6 +578,8 @@ void TGFileBrowser::Update()
       TObject *obj = (TObject *) curr->GetUserData();
       if (obj && !obj->TestBit(kNotDeleted)) {
          fListTree->DeleteItem(curr);
+         curr = 0;
+         obj = 0;
       }
       else if (obj && obj->TestBit(kNotDeleted) &&
                obj->InheritsFrom("TObjString") && curr->GetParent()) {
@@ -588,8 +590,11 @@ void TGFileBrowser::Update()
                                              &flags, &modtime);
             if ((res == 0) && (flags & 2)) {
                TString fullpath = FullPathName(curr);
-               if (gSystem->AccessPathName(fullpath.Data()))
+               if (gSystem->AccessPathName(fullpath.Data())) {
                   fListTree->DeleteItem(curr);
+                  curr = 0;
+                  obj = 0;
+               }
             }
          }
       }
