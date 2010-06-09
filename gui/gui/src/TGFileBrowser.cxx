@@ -859,45 +859,48 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    CheckSorted(item, kTRUE);
    CheckRemote(item);
    TObject *selected = 0;
-   if (item && btn == kButton3) {
-      TString fullpath = FullPathName(item);
-      TObject *obj = (TObject *) item->GetUserData();
-      if (obj && (!obj->InheritsFrom("TObjString") ||
-          gSystem->AccessPathName(fullpath.Data()))) {
-         if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
-            Chdir(item);
-            const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", obj));
-            if (clname) {
-               TClass *cl = TClass::GetClass(clname);
-               TString name = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetName();", obj));
-               name += ";";
-               name += (Short_t)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetCycle();", obj));
-               void *add = gDirectory->FindObjectAny((char *) name.Data());
-               if (add && cl->IsTObject()) {
-                  obj = (TObject*)add;
-                  item->SetUserData(obj);
-               }
+   TString fullpath = FullPathName(item);
+   TObject *obj = (TObject *) item->GetUserData();
+   if (obj && (!obj->InheritsFrom("TObjString") ||
+       gSystem->AccessPathName(fullpath.Data()))) {
+      if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
+         Chdir(item);
+         const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", obj));
+         if (clname) {
+            TClass *cl = TClass::GetClass(clname);
+            TString name = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetName();", obj));
+            name += ";";
+            name += (Short_t)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetCycle();", obj));
+            void *add = gDirectory->FindObjectAny((char *) name.Data());
+            if (add && cl->IsTObject()) {
+               obj = (TObject*)add;
+               item->SetUserData(obj);
             }
          }
-         if (obj->InheritsFrom("TLeaf") ||
-             obj->InheritsFrom("TBranch")) {
-            Chdir(item);
-         }
-         fContextMenu->Popup(x, y, obj, fBrowser);
-         selected = obj;
       }
-      else {
-         fListTree->GetPathnameFromItem(item, path);
-         if (strlen(path) > 3) {
-            if (gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime) == 0) {
-               if (flags & 2) {
-                  fCurrentDir = item;
+      if (obj->InheritsFrom("TLeaf") ||
+          obj->InheritsFrom("TBranch")) {
+         Chdir(item);
+      }
+      if (btn == kButton3)
+        fContextMenu->Popup(x, y, obj, fBrowser);
+      selected = obj;
+   }
+   else {
+      fListTree->GetPathnameFromItem(item, path);
+      if (strlen(path) > 3) {
+         if (gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime) == 0) {
+            if (flags & 2) {
+               fCurrentDir = item;
+               if (btn == kButton3) {
                   if (fDir) delete fDir;
                   fDir = new TSystemDirectory(item->GetText(), fullpath.Data());
                   fContextMenu->Popup(x, y, fDir, fBrowser);
                }
-               else {
-                  fCurrentDir = item->GetParent();
+            }
+            else {
+               fCurrentDir = item->GetParent();
+               if (btn == kButton3) {
                   if (fFile) delete fFile;
                   fFile = new TSystemFile(item->GetText(), fullpath.Data());
                   fContextMenu->Popup(x, y, fFile, fBrowser);
@@ -905,28 +908,8 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
             }
          }
       }
-      fListTree->ClearViewPort();
    }
-   else {
-      if (item->GetUserData()) {
-         TObject *obj = (TObject *) item->GetUserData();
-         if (obj && obj->InheritsFrom("TKey"))
-            Chdir(item);
-         if (obj) selected = obj;
-      }
-      else {
-         fListTree->GetPathnameFromItem(item, path);
-         if (strlen(path) > 1) {
-            TString fullpath = FullPathName(item);
-            if (gSystem->GetPathInfo(fullpath.Data(), &id, &size, &flags, &modtime) == 0) {
-               if (flags & 2)
-                  fCurrentDir = item;
-               else
-                  fCurrentDir = item->GetParent();
-            }
-         }
-      }
-   }
+   fListTree->ClearViewPort();
    if (selected && selected->InheritsFrom("TLeaf"))
       selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", selected));
    if (selected && selected->InheritsFrom("TBranch"))
