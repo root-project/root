@@ -86,6 +86,8 @@ TEveBoxSet.
   <li>Sub-class TEveDigitSet from TEveSecondarySelectable.</li>
   <li>Implement functions needed for internal selection.</li>
   <li>Add common base-class TEveDigitSetGL for quad and box-set GL rendering.</li>
+  <li>Move anti-flickering controls from TEveQuadSet to TEveDigitSet and
+    implement it also in TEveBoxSetGL.</li>
 </ul>
 </li>
 
@@ -95,8 +97,8 @@ TEveBoxSet.
 
 
 <li>TEveElement -- Extensions for configurable selection / highlight /
-  color propagation between compounds and elements. The following
-  options can be activated:
+  color / transparency propagation between compounds and elements. The
+  following options can be activated:
 <ul>
   <li>ImplySelectAllChildren() - to highlight / imply-select all
     children of an compound;</li>
@@ -105,10 +107,16 @@ TEveBoxSet.
     any compound parent;</li>
 
   <li>ApplyMainColorToAllChildren() / ApplyMainColorToMatchingChildren()
-    to request color propagation to all/matching children of a compound.</li>
+    to request color propagation to all / matching children of a compound;</li>
+
+  <li>ApplyMainTransparencyToAllChildren() / ApplyMainTransparencyToMatchingChildren()
+    to request transparency propagation to all / matching children of a compound.</li>
 </ul>
 These flags are stored as bit pattern of CompoundColorSelectionBits enum.
 </li>
+
+<li>TEveElement: propagate transparency to projected replicas. As this
+  is implemented in the base-class, it works for all projectable classes.</li>
 
 <li>
 TEveVector, TEveVector4 and TEveVector2 are now typedefs to float
@@ -146,7 +154,11 @@ TEveElement: by:<pre>
 
 <li>Several improvements in drawing of TEveCalo axes and labels.</li>
 
-<li>Fix some issues with  Runge-Kutta track propagator.</li>
+<li>TEveTrackPropagator. Fix some issues with Runge-Kutta track
+  propagator. Move in controls specifying how to plot tracks that get
+  split in RhoZ projection.</li>
+
+<li>Fix rendering of TEveJetCone: normals at apex were not changing as they should.</li>
 
 <li>Support single-color for TEveDigitSet (call TEveDigitSet::UseSingleColor()).</li>
 
