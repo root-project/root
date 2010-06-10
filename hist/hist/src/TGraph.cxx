@@ -266,6 +266,7 @@ TGraph::TGraph(const TH1 *h)
    if (!h) {
       Error("TGraph", "Pointer to histogram is null");
       fNpoints = 0;
+      return;
    }
    if (h->GetDimension() != 1) {
       Error("TGraph", "Histogram must be 1-D; h %s is %d-D",h->GetName(),h->GetDimension());
