@@ -80,7 +80,7 @@ TGraph::TGraph(): TNamed(), TAttLine(), TAttFill(1,1001), TAttMarker()
    // Graph default constructor.
 
    fNpoints = -1;  //will be reset to 0 in CtorAllocate
-   CtorAllocate();
+   if (!CtorAllocate()) return;
 }
 
 
