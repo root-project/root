@@ -2934,16 +2934,15 @@ int hash;
       return(1);
     }
     G__CHECKTYPE(0,'C','i');
+    G__CHECKNONULL(0,'C');
 #if ((__GNUC__>=3)||(__GNUC__>=2)&&(__GNUC_MINOR__>=96))&&(defined(__linux)||defined(__linux__))
     {
       char *p = (char*)G__int(libp->para[0]);
-      if(p) {
 #ifdef P_tmpdir
-	sprintf(p,"%s/XXXXXX",P_tmpdir);
+      sprintf(p,"%s/XXXXXX",P_tmpdir);
 #else
-	sprintf(p,"/tmp/XXXXXX");
+      sprintf(p,"/tmp/XXXXXX");
 #endif
-      }
       G__letint(result7,'C',(long)mkstemp(p));
     }
 #else
