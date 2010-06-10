@@ -546,6 +546,20 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
       return -1;
    }
 
+   // Change the path first; then do it recursively, if needed
+   {  // Get the privileges, if needed
+      XrdSysPrivGuard pGuard(st.st_uid, st.st_gid);
+      if (XpdBadPGuard(pGuard, st.st_uid)) {
+         TRACE(XERR, "could not get privileges to change ownership");
+         return -1;
+      }
+      // Set ownership of the path to the client
+      if (chmod(path, mode) == -1) {
+         TRACE(XERR, "cannot change permissions on path (errno: "<<errno<<")");
+         return -1;
+      }
+   }
+
    // If is a directory apply this on it
    if (S_ISDIR(st.st_mode)) {
       // Loop over the dir
@@ -565,15 +579,9 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
 
          struct stat xst;
          if (stat(fn.c_str(),&xst) == 0) {
-            // If is a directory apply this on it
-            if (S_ISDIR(xst.st_mode)) {
-               if (XrdProofdAux::ChangeMod(fn.c_str(), mode) != 0) {
-                  TRACE(XERR, "problems changing recursively permissions of: "<<fn);
-                  return -1;
-               }
-            } else {
-               // Get the privileges, if needed
-               XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+            {  // Get the privileges, if needed
+               XPDPRT("getting {"<<xst.st_uid<<", "<< xst.st_gid<<"}");
+               XrdSysPrivGuard pGuard(xst.st_uid, xst.st_gid);
                if (XpdBadPGuard(pGuard, xst.st_uid)) {
                   TRACE(XERR, "could not get privileges to change ownership");
                   return -1;
@@ -584,22 +592,16 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
                   return -1;
                }
             }
+            // If is a directory apply this on it
+            if (S_ISDIR(xst.st_mode)) {
+               if (XrdProofdAux::ChangeMod(fn.c_str(), mode) != 0) {
+                  TRACE(XERR, "problems changing recursively permissions of: "<<fn);
+                  return -1;
+               }
+            }
          } else {
             TRACE(XERR, "unable to stat dir: "<<fn<<" (errno: "<<errno<<")");
          }
-      }
-
-   } else {
-      // Get the privileges, if needed
-      XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-      if (XpdBadPGuard(pGuard, st.st_uid)) {
-         TRACE(XERR, "could not get privileges to change ownership");
-         return -1;
-      }
-      // Set ownership of the path to the client
-      if (chmod(path, mode) == -1) {
-         TRACE(XERR, "cannot change permissions on path (errno: "<<errno<<")");
-         return -1;
       }
    }
 
@@ -624,17 +626,19 @@ int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui, bool changeown)
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
       if (XpdBadPGuard(pGuard, ui.fUid)) {
-         TRACE(XERR, "could not get privileges; uid req:"<< ui.fUid <<
-                     ", euid: " << geteuid() <<". uid:"<<getuid());
+         TRACE(XERR, changeown << ": could not get privileges; uid req:"<< ui.fUid <<
+                     ", euid: " << geteuid() <<", uid:"<<getuid() << "; errno: "<<errno);
          return -1;
       }
       if (chdir(dir) == -1) {
-         TRACE(XERR, "can't change directory to "<< dir);
+         TRACE(XERR, changeown << ": can't change directory to "<< dir << " ui.fUid: " << ui.fUid <<
+                     ", euid: " << geteuid() <<", uid:"<<getuid()<<"; errno: "<<errno);
          return -1;
       }
    } else {
       if (chdir(dir) == -1) {
-         TRACE(XERR, "can't change directory to "<< dir);
+         TRACE(XERR, changeown << ": can't change directory to "<< dir << 
+                     ", euid: " << geteuid() <<", uid:"<<getuid()<<"; errno: "<<errno);
          return -1;
       }
    }
