@@ -202,7 +202,7 @@ public:
 
 class TThreadTimer : public TTimer {
 public:
-   TThreadTimer(Long_t ms = 100);
+   TThreadTimer(Long_t ms = 10);
    Bool_t Notify();
 };
 
