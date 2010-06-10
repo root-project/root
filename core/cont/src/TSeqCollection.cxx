@@ -99,48 +99,53 @@ void TSeqCollection::QSort(TObject **a, Int_t first, Int_t last)
 }
 
 //______________________________________________________________________________
-void TSeqCollection::QSort(TObject **a, TObject **b, Int_t first, Int_t last)
+void TSeqCollection::QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, Int_t last)
 {
    // Sort array a of TObject pointers using a quicksort algorithm.
-   // Array b will be sorted just like a (a determines the sort).
+   // Arrays b will be sorted just like a (a determines the sort).
    // Uses ObjCompare() to compare objects.
 
    R__LOCKGUARD2(gCollectionMutex);
-   static TObject *tmp1, *tmp2;
-   static int i;           // "static" to save stack space
-   int j;
+   static TObject *tmp1, **tmp2;
+   static int i; // "static" to save stack space
+   int j,k;
+
+   static int depth = 0;
+   if(depth == 0 && nBs > 0) tmp2 = new TObject*[nBs];
+   depth++;
 
    while (last - first > 1) {
       i = first;
       j = last;
       for (;;) {
-         while (++i < last && ObjCompare(a[i], a[first]) < 0)
-            ;
-         while (--j > first && ObjCompare(a[j], a[first]) > 0)
-            ;
-         if (i >= j)
-            break;
+         while (++i < last && ObjCompare(a[i], a[first]) < 0);
+         while (--j > first && ObjCompare(a[j], a[first]) > 0);
+         if (i >= j) break;
 
-         tmp1 = a[i]; tmp2 = b[i];
-         a[i] = a[j]; b[i] = b[j];
-         a[j] = tmp1; b[j] = tmp2;
+         tmp1 = a[i]; for(k=0;k<nBs;k++) tmp2[k] = b[k][i];
+         a[i] = a[j]; for(k=0;k<nBs;k++) b[k][i] = b[k][j];
+         a[j] = tmp1; for(k=0;k<nBs;k++) b[k][j] = tmp2[k];
       }
       if (j == first) {
          ++first;
          continue;
       }
-      tmp1 = a[first]; tmp2 = b[first];
-      a[first] = a[j]; b[first] = b[j];
-      a[j] = tmp1;     b[j] = tmp2;
+      tmp1 = a[first]; for(k=0;k<nBs;k++) tmp2[k] = b[k][first];
+      a[first] = a[j]; for(k=0;k<nBs;k++) b[k][first] = b[k][j];
+      a[j] = tmp1; for(k=0;k<nBs;k++) b[k][j] = tmp2[k];
       if (j - first < last - (j + 1)) {
-         QSort(a, b, first, j);
-         first = j + 1;   // QSort(j + 1, last);
+         QSort(a, nBs, b, first, j);
+         first = j + 1; // QSort(j + 1, last);
       } else {
-         QSort(a, b, j + 1, last);
-         last = j;        // QSort(first, j);
+         QSort(a, nBs, b, j + 1, last);
+         last = j; // QSort(first, j);
       }
    }
+   depth--;
+
+   if(depth == 0 && nBs > 0) delete [] tmp2;
 }
+
 
 //______________________________________________________________________________
 Long64_t TSeqCollection::Merge(TCollection *list)

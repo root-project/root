@@ -69,6 +69,8 @@ public:
    void             SetClass(const char *classname,Int_t size=1000);
    void             SetClass(const TClass *cl,Int_t size=1000);
    
+   void             AbsorbObjects(TClonesArray* tc); 
+   void             MultiSort(Int_t nTCs, TClonesArray** tcs, Int_t upto = kMaxInt);
    virtual TObject *RemoveAt(Int_t idx);
    virtual TObject *Remove(TObject *obj);
    virtual void     RemoveRange(Int_t idx1, Int_t idx2);

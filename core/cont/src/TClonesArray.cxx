@@ -570,14 +570,9 @@ void TClonesArray::SetClass(const char *classname, Int_t s)
 {
    //see TClonesArray::SetClass(const TClass*)
 
-   TClass *cl = TClass::GetClass(classname);
-   if (cl) {
-      SetClass(cl,s);
-   } else {
-      MakeZombie();
-      Error("SetClass","Unknown class: %s",classname);    
-   }
+   SetClass(TClass::GetClass(classname),s);
 }
+
 
 //______________________________________________________________________________
 void TClonesArray::SetOwner(Bool_t /* enable */)
@@ -822,3 +817,107 @@ TObject *TClonesArray::New(Int_t idx)
 
    return (TObject *)fClass->New(operator[](idx));
 }
+
+//______________________________________________________________________________
+//
+// The following functions are utilities implemented by Jason Detwiler
+// (jadetwiler@lbl.gov)
+//
+//______________________________________________________________________________
+void TClonesArray::AbsorbObjects(TClonesArray* tc) 
+{
+   // Directly move the object pointers from tc to this without cloning
+   // (copying).
+   // "this" takes over ownership of all of tc's object pointers. tc is left 
+   // empty upon return
+
+   // tests
+   if(tc == NULL || tc == this || tc->GetEntriesFast() == 0) return;
+   if (fClass != tc->fClass) {
+      Error("AbsorbObjects", "cannot absorb objects when classes are different");
+      return;
+   }
+
+   // cache the sorted status
+   bool wasSorted = IsSorted() && tc->IsSorted() && 
+                    (Last() == NULL || Last()->Compare(tc->First()) == -1);
+
+   // expand this
+   Int_t oldSize = GetEntriesFast();
+   Int_t newSize = oldSize + tc->GetEntriesFast();
+   if(newSize > fSize) Expand(newSize);
+
+   // move
+   for(Int_t i = 0; i <= tc->GetEntriesFast(); i++) {
+      fCont[oldSize+i] = tc->fCont[i];
+      (*fKeep)[oldSize+i] = (*(tc->fKeep))[i];
+      tc->fCont[i] = NULL;
+      (*(tc->fKeep))[i] = NULL;
+   }
+
+   // cleanup
+   fLast = newSize-1;
+   tc->fLast = -1;
+   if(!wasSorted) Changed();
+}
+
+
+//______________________________________________________________________________
+void TClonesArray::MultiSort(Int_t nTCs, TClonesArray** tcs, Int_t upto)
+{
+   // Sort multiple TClonesArrays simultaneously with this.
+   // If objects in array are sortable (i.e. IsSortable() returns true
+   // for all objects) then sort array.
+
+   Int_t nentries = GetAbsLast()+1;
+   if (nentries <= 1 || fSorted) return;
+   bool sortedCheck = true;
+   for (Int_t i = 0; i < fSize; i++) {
+      if (fCont[i]) {
+         if (!fCont[i]->IsSortable()) {
+            Error("MultiSort", "objects in array are not sortable");
+            return;
+         }
+      }
+      if(sortedCheck && i > 1) {
+         if(fCont[i]->Compare(fCont[i-1]) < 0) sortedCheck = false;
+      }
+   }
+   if(sortedCheck) {
+      fSorted = true;
+      return;
+   }
+ 
+   for(int i=0; i<nTCs; i++) {
+      if(tcs[i] == this) {
+         Error("MultiSort", "tcs[%d] = \"this\"", i);
+         return;
+      }
+      if(tcs[i]->GetEntriesFast() != GetEntriesFast()) {
+         Error("MultiSort", "tcs[%d] has length %d != length of this (%d)",
+         i, tcs[i]->GetEntriesFast(), this->GetEntriesFast());
+         return;
+      }
+   }
+ 
+   int nBs = nTCs*2+1;
+   TObject*** b = new TObject**[nBs];
+   for(int i=0; i<nTCs; i++) {
+      b[2*i] = tcs[i]->fCont;
+      b[2*i+1] = tcs[i]->fKeep->fCont;
+   }
+   b[nBs-1] = fKeep->fCont;
+   QSort(fCont, nBs, b, 0, TMath::Min(nentries, upto-fLowerBound));
+   delete [] b;
+ 
+   fLast = -2;
+   fSorted = kTRUE;
+} 
+
+
+
+
+
+
+
+

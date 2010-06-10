@@ -60,9 +60,10 @@ public:
    void              UnSort() { fSorted = kFALSE; }
    Long64_t          Merge(TCollection *list);
 
-   static Int_t      ObjCompare(TObject *a, TObject *b);
-   static void       QSort(TObject **a, Int_t first, Int_t last);
-   static void       QSort(TObject **a, TObject **b, Int_t first, Int_t last);
+   static Int_t       ObjCompare(TObject *a, TObject *b);
+   static void        QSort(TObject **a, Int_t first, Int_t last);
+   static inline void QSort(TObject **a, TObject **b, Int_t first, Int_t last) { QSort(a, 1, &b, first, last); }
+   static void        QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, Int_t last);
 
    ClassDef(TSeqCollection,0)  //Sequenceable collection ABC
 };
