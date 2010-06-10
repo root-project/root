@@ -259,6 +259,7 @@ struct random_access_iterator_tag
 template <class T, class Distance> struct input_iterator {};
 struct output_iterator {};
 template <class T, class Distance> struct forward_iterator {};
+
 template <class T, class Distance> struct _Bidit {};
 template <class T, class Distance> struct _Ranit {};
 
@@ -336,6 +337,7 @@ template<class _Category,
 	typedef _Reference reference;
 	};
 
+#if (G__MSC_VER<1600)
 template<class _Ty,
 	class _Diff,
 	class _Pointer,
@@ -361,6 +363,7 @@ struct _Outit
 		void, void>
 	{	// base for output iterators
 	};
+#endif
 
 // TEMPLATE CLASS iterator_traits
 template<class _Iter>
@@ -500,14 +503,16 @@ public:
   reverse_iterator<_RanIt> operator++(int);
   reverse_iterator<_RanIt>& operator--();
   reverse_iterator<_RanIt> operator--(int);
-  bool _Equal(const reverse_iterator<_RanIt>& _Right) const;
   reverse_iterator<_RanIt>& operator+=(difference_type _Off);
   reverse_iterator<_RanIt> operator+(difference_type _Off) const;
   reverse_iterator<_RanIt>& operator-=(difference_type _Off);
   reverse_iterator<_RanIt> operator-(difference_type _Off) const;
   reference operator[](difference_type _Off) const;
+#if (G__MSC_VER<1600)
+  bool _Equal(const reverse_iterator<_RanIt>& _Right) const;
   bool _Less(const reverse_iterator<_RanIt>& _Right) const;
   difference_type _Minus(const reverse_iterator<_RanIt>& _Right) const;
+#endif
 
 protected:
   

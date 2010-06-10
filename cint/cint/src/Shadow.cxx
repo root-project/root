@@ -578,24 +578,31 @@ void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
                   for (; posRef < lenArg; ++posRef) {
                      switch (arg[posRef]) {
                      case '<':
-                        if (arg[posRef + 1] != '<') ++templateLevel;
-                        else ++posRef;
+                        if (posRef + 1 < lenArg && arg[posRef + 1] != '<') {
+                           ++templateLevel;
+                        } else ++posRef;
                         break;
                      case '>':
-                        if (arg[posRef + 1] != '>') ++templateLevel;
-                        else if (posRef > 8) {
+                        if (posRef + 1 < lenArg && arg[posRef + 1] != '>') {
+                           --templateLevel;
+                        } else if (posRef > 8) {
                            std::string::size_type posOp = posRef - 1;
                            while (posOp && isspace(arg[posOp])) --posOp;
                            if (posOp > 8 && !arg.compare(posOp - 8, 8, "operator"))
                               // it's the operator >>
                               ++posRef; 
-                           else ++templateLevel;
-                        } else ++templateLevel;
+                           else {
+                              --templateLevel;
+                           }
+                        } else {
+                           --templateLevel;
+                        }
                         break;
                      case '*':
                      case '&':
                         if (!templateLevel) {
                            arg.erase(posRef, 1);
+                           --lenArg;
                            --posRef;
                         }
                         break;

@@ -110,8 +110,10 @@ class vector {
 	friend class const_iterator;
 
 	class const_iterator
+#if (G__MSC_VER<1600)
 		: public _Ranit<T, difference_type, const_pointer, const_reference>
-		{	// iterator for nonmutable vector
+#endif
+	{	// iterator for nonmutable vector
 	public:
 		typedef random_access_iterator_tag iterator_category;
 		typedef T value_type;
@@ -155,6 +157,7 @@ class vector {
 		//friend const_iterator operator+(difference_type _Off,
 			//const const_iterator& _Right);
 #if (G__MSC_VER>=1310)
+	private:
 		pointer _Myptr;	// offset of element in vector
 #endif
         };

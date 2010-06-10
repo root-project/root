@@ -71,10 +71,12 @@ class set {
 #endif
 
   class iterator
-#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+#if defined(G__VISUAL)
+# if (G__MSC_VER>=1300) && (G__MSC_VER<1600)
 	: public _Bidit<Key, difference_type, const_pointer, const_reference>
-#elif defined(G__VISUAL)
+# elif (G__MSC_VER<1300)
 	: public _Bidit<Key,difference_type>
+# endif
 #elif defined(G__SUNPRO_CC) || defined(G__BORLANDCC5)
 #elif (G__GNUC_VER>=3001)
 #elif defined(G__INTEL_COMPILER)
@@ -120,10 +122,12 @@ class set {
 #endif
 
   class reverse_iterator
-#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+#if defined(G__VISUAL)
+# if (G__MSC_VER>=1300) && (G__MSC_VER<1600)
 	: public _Bidit<Key, difference_type, const_pointer, const_reference>
-#elif defined(G__VISUAL)
+# elif  (G__MSC_VER<1300)
 	: public _Bidit<Key,difference_type>
+#endif
 #elif defined(G__SUNPRO_CC) || defined(G__BORLANDCC5)
 #elif (G__GNUC_VER>=3001)
 #elif defined(G__INTEL_COMPILER)
@@ -251,19 +255,22 @@ class set {
            set::iterator first2,set::iterator last2);
 
 #elif defined(G__VISUAL)
-
-  friend void reverse(set::iterator first,set::iterator last);
-
   friend set::iterator 
     find(set::iterator first,set::iterator last,const Key& value);
   friend set::iterator
     search(set::iterator first1,set::iterator last1,
            set::iterator first2,set::iterator last2);
+
+#if G__MSC_VER < 1600
+  // VC10 has iterator == const_iterator, thus fill,... don't work.
+  friend void reverse(set::iterator first,set::iterator last);
+
   friend set::iterator
     copy(set::iterator first,set::iterator last,
          set::iterator result);
   friend void
     fill(set::iterator first,set::iterator last,const Key& value);
+#endif // G__MSV_VER <= 1600
 
 #endif // G__GNUC || G__BORLAND
 #pragma endif // G__NOALGORITHM

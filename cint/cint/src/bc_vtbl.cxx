@@ -17,6 +17,7 @@
 #include "Api.h"
 #include <cstdio>
 #include <algorithm>
+#include <iterator>
 using namespace std;
 
 /***********************************************************************

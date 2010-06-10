@@ -125,13 +125,17 @@ ifeq ($(PLATFORM),win32)
 CINTS2       += $(MODDIRS)/winnt.cxx
 CINTS2       := $(filter-out $(MODDIRSD)/longif.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/longif3.cxx
-ifeq ($(VC_MAJOR).$(VC_MINOR),13.10)
-  CINTS2       += $(MODDIRSD)/vc7strm.cxx
+ifeq ($(VC_MAJOR),16)
+  CINTS2       += $(MODDIRSD)/vc10strm.cxx
 else
- ifeq ($(find $(VC_MAJOR),13 12 11 10 9 8 7 6 5 4 3 2 1),)
-  CINTS2       += $(MODDIRSD)/vc7strm.cxx
+ ifeq ($(VC_MAJOR).$(VC_MINOR),13.10)
+    CINTS2       += $(MODDIRSD)/vc7strm.cxx
  else
-  CINTS2       += $(MODDIRSD)/iccstrm.cxx
+  ifeq ($(find $(VC_MAJOR),13 12 11 10 9 8 7 6 5 4 3 2 1),)
+    CINTS2       += $(MODDIRSD)/vc7strm.cxx
+  else
+    CINTS2       += $(MODDIRSD)/iccstrm.cxx
+  endif
  endif
 endif
 endif

@@ -96,8 +96,10 @@ class string {
 #elif (defined(G__VISUAL) && G__MSC_VER>=1310)
 	// CLASS const_iterator
 	class const_iterator
+#if (G__MSC_VER<1600)
 		: public _Ranit<value_type, difference_type, 
                                 const_pointer, const_reference>
+#endif
 	{	// iterator for nonmutable string
 	public:
 		typedef random_access_iterator_tag iterator_category;
@@ -134,6 +136,7 @@ class string {
 		bool operator>=(const const_iterator& _Right) const;
 		friend const_iterator operator+(difference_type _Off,
 			const const_iterator& _Right);
+	private:
 		const_pointer _Myptr;	// offset of element in string
 	};
 
