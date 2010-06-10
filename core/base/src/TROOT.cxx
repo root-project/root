@@ -1152,8 +1152,9 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
    if ( cla ) {
       if (cla->GetDeclFileLine() <= 0) return 0; // to a void an error with VisualC++
       TString decfile = gSystem->BaseName(cla->GetDeclFileName());
-      if (decfile == gSystem->BaseName(fname))
+      if (decfile == gSystem->BaseName(fname)) {
          return 1;
+      }
    }
    return 0;
 }
