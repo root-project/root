@@ -883,9 +883,11 @@ Bool_t TGFileBrowser::CheckSorted(TGListTreeItem *item, Bool_t but)
    // If the but argument is true, the "sort" button state is set accordingly.
 
    Bool_t found = kFALSE;
-   TGListTreeItem *i, *itm = item;
-   if (!itm->GetFirstChild())
-      itm = itm->GetParent();
+   TGListTreeItem *i, *itm;
+   if (item->GetFirstChild())
+      itm = item;
+   else
+      itm = item->GetParent();
    for (sLTI_i p=fSortedItems.begin(); p!=fSortedItems.end(); ++p) {
       i = (TGListTreeItem *)(*p);
       if (itm == i) {
