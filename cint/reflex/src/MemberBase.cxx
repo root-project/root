@@ -80,9 +80,13 @@ Reflex::MemberBase::CalculateBaseObject(const Object& obj) const {
    }
 
    if (cl.IsClass()) {
+      const Class* clTB = 0;
       if (DeclaringScope() && (cl.Id() != (dynamic_cast<const Class*>(DeclaringScope().ToScopeBase()))->ThisType().Id())) {
          // now we know that the Member type is an inherited one
-         std::vector<OffsetFunction> basePath = (dynamic_cast<const Class*>(cl.ToTypeBase()))->PathToBase(DeclaringScope());
+         clTB = dynamic_cast<const Class*>(cl.ToTypeBase());
+      }
+      if (clTB) {
+         std::vector<OffsetFunction> basePath = clTB->PathToBase(DeclaringScope());
 
          if (basePath.size()) {
             // there is a path described from the object to the class containing the Member
