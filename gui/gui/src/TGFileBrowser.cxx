@@ -651,15 +651,21 @@ void TGFileBrowser::Update()
 
       TString savdir = gSystem->WorkingDirectory();
       if (isdir) {
-         TGListTreeItem *itm = item->GetFirstChild();
+         TGListTreeItem *del = 0, *itm = item->GetFirstChild();
          while (itm) {
             fListTree->GetPathnameFromItem(itm, path);
             if (strlen(path) > 1) {
                TString recpath = FullPathName(itm);
-               if (gSystem->AccessPathName(recpath.Data()))
-                  fListTree->DeleteItem(itm);
+               if (gSystem->AccessPathName(recpath.Data())) {
+                  del = itm;
+                  itm = itm->GetNextSibling();
+                  fListTree->DeleteItem(del);
+               }
             }
-            itm = itm->GetNextSibling();
+            if (del)
+               del = 0;
+            else 
+               itm = itm->GetNextSibling();
          }
       }
    }
@@ -1545,7 +1551,11 @@ void TGFileBrowser::ToggleSort()
       item = fListLevel->GetParent();
       itemname = StrDup(fListLevel->GetText());
    }
-   if (!item) return;
+   if (!item) {
+      if (itemname) 
+         delete [] itemname;
+      return;
+   }
    Bool_t is_sorted = CheckSorted(item);
    if (!is_sorted) {
       //alphabetical sorting
