@@ -67,6 +67,15 @@
 //   ReadRT    = Zipped MBytes per RT second
 //   ReadCP    = Zipped MBytes per CP second
 //
+//   NOTE1 : The ReadTotal value indicates the effective number of zipped bytes
+//           returned to the application. The physical number of bytes read
+//           from the device (as measured for example with strace) is
+//           ReadTotal +ReadTotal*Readextra/100
+//
+//   NOTE2 : A consequence of NOTE1, the Disk I/O speed corresponds to the effective
+//           number of bytes returned to the application per second.
+//           The Physical disk speed is DiskIO + DiskIO*ReadExtra/100.
+//
 //////////////////////////////////////////////////////////////////////////
 
 
