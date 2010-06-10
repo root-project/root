@@ -39,6 +39,6 @@ Reflex::operator <<(std::ostream& o,
       o << any_cast<const char*>(any);
    } else if (any.TypeInfo() == typeid(std::string)) {
       o << any_cast<std::string>(any);
-   } else { o << "Any object at " << std::hex << &static_cast<Any::Holder<int>*>(any.fContent)->fHeld; }
+   } else { o << "Any object at " << std::hex << &static_cast<Any::Holder<int>*>(any.fContent)->fHeld << std::dec; }
    return o;
 } // <<
