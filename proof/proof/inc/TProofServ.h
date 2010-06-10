@@ -224,6 +224,7 @@ protected:
    virtual Int_t Fork();
    Int_t         GetSessionStatus();
    Bool_t        IsIdle();
+   Bool_t        UnlinkDataDir(const char *path);
 
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);

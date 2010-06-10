@@ -2714,10 +2714,11 @@ Int_t TProofServ::SetupCommon()
                          TString(fPackageDir).ReplaceAll("/","%").Data()));
 
    // Check and make sure "data" directory exists
-   fDataDir = gEnv->GetValue("ProofServ.DataDir",
-                              TString::Format("%s/%s", fWorkDir.Data(), kPROOF_DataDir));
-   if (!fDataDir.Contains("<ord>")) fDataDir += "/<ord>";
-   if (!fDataDir.Contains("<stag>")) fDataDir += "/<stag>";
+   fDataDir = gEnv->GetValue("ProofServ.DataDir","");
+   if (fDataDir.IsNull()) {
+      // Use default
+      fDataDir.Form("%s/%s/<ord>/<stag>", fWorkDir.Data(), kPROOF_DataDir);
+   }
    ResolveKeywords(fDataDir);
    if (gSystem->AccessPathName(fDataDir))
       gSystem->mkdir(fDataDir, kTRUE);
@@ -3012,23 +3013,8 @@ void TProofServ::Terminate(Int_t status)
 
    // Cleanup data directory if empty
    if (!fDataDir.IsNull() && !gSystem->AccessPathName(fDataDir, kWritePermission)) {
-      Bool_t dorm = kTRUE;
-      void *dirp = gSystem->OpenDirectory(fDataDir);
-      if (dirp) {
-         const char *ent = 0;
-         while ((ent = gSystem->GetDirEntry(dirp))) {
-            if (strcmp(ent, ".") && strcmp(ent, "..")) {
-               dorm = kFALSE;
-               break;
-            }
-         }
-      } else {
-         // Cannot open the directory
-         dorm = kFALSE;
-      }
-      // Do remove, if required
-      if (dorm &&gSystem->Unlink(fDataDir) != 0)
-         Warning("Terminate", "data directory '%s' is empty but could not be removed");
+     if (UnlinkDataDir(fDataDir))
+        Info("Terminate", "data directory '%s' has been removed", fDataDir.Data());
    }
 
    // Remove input handler to avoid spurious signals in socket
@@ -3045,6 +3031,41 @@ void TProofServ::Terminate(Int_t status)
    gSystem->ExitLoop();
 
    // Exit() is called in pmain
+}
+
+//______________________________________________________________________________
+Bool_t TProofServ::UnlinkDataDir(const char *path)
+{
+   // Scan recursively the datadir and unlink it if empty
+   // Return kTRUE if it can be unlinked, kFALSE otherwise
+
+   if (!path || strlen(path) <= 0) return kFALSE;
+
+   Bool_t dorm = kTRUE;
+   void *dirp = gSystem->OpenDirectory(path);
+   if (dirp) {
+      TString fpath;
+      const char *ent = 0;
+      while (dorm && (ent = gSystem->GetDirEntry(dirp))) {
+         if (!strcmp(ent, ".") || !strcmp(ent, "..")) continue;
+         fpath.Form("%s/%s", path, ent);
+         FileStat_t st;
+         if (gSystem->GetPathInfo(fpath, st) == 0 && R_ISDIR(st.fMode)) {
+            dorm = UnlinkDataDir(fpath);
+         } else {
+            dorm = kFALSE;
+         }
+      }
+   } else {
+      // Cannot open the directory
+      dorm = kFALSE;
+   }
+
+    // Do remove, if required
+   if (dorm && gSystem->Unlink(path) != 0)
+      Warning("UnlinkDataDir", "data directory '%s' is empty but could not be removed");
+   // done
+   return dorm;
 }
 
 //______________________________________________________________________________

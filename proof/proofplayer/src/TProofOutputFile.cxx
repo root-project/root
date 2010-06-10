@@ -179,6 +179,9 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
          if (!fDir.EndsWith("/")) fDir += "/";
       }
       fDir += Form("%s", dirPath.Data());
+   } else {
+      // Allow for place holders in fFileName (e.g. root://a.ser.ver//data/dir/<group>/<user>/file)
+      TProofServ::ResolveKeywords(fFileName, 0);
    }
    // Notify
    Info("Init", "dir: %s (raw: %s)", fDir.Data(), fRawDir.Data());
@@ -241,7 +244,8 @@ TFile* TProofOutputFile::OpenFile(const char* opt)
    if (fFileName.IsNull()) return 0;
 
    // Create the path
-   TString fileLoc = TString::Format("%s/%s", fRawDir.Data(), fFileName.Data());
+   TString fileLoc;
+   fileLoc.Form("%s/%s%s", fRawDir.Data(), fFileName.Data(), fOptionsAnchor.Data());
 
    // Open the file
    TFile *retFile = TFile::Open(fileLoc, opt);

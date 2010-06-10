@@ -90,6 +90,8 @@ class XrdProofdManager : public XrdProofdConfig {
    const char       *SockPathDir() const { return fSockPathDir.c_str(); }
    const char       *TMPdir() const { return fTMPdir.c_str(); }
    const char       *WorkDir() const { return fWorkDir.c_str(); }
+   const char       *DataDir() const { return fDataDir.c_str(); }
+   const char       *DataDirOpts() const { return fDataDirOpts.c_str(); }
 
    std::list<XrdProofdDSInfo *> *DataSetSrcs() { return &fDataSetSrcs; }
 
@@ -129,6 +131,8 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdOucString      fPoolURL;        // Local pool URL
    XrdOucString      fNamespace;      // Local pool namespace
    XrdOucString      fLocalroot;      // Local root prefix (directive oss.localroot)
+   XrdOucString      fDataDir;        // Directory under which to create the sub-dirs for users data
+   XrdOucString      fDataDirOpts;    // String specifying options for fDataDir handling
 
    // Services
    XrdProofdClientMgr    *fClientMgr;  // Client manager
@@ -158,6 +162,7 @@ class XrdProofdManager : public XrdProofdConfig {
    int               DoDirectiveAllow(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedGroups(char *, XrdOucStream *, bool);
    int               DoDirectiveAllowedUsers(char *, XrdOucStream *, bool);
+   int               DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool);
    int               DoDirectiveDataSetSrc(char *, XrdOucStream *, bool);
    int               DoDirectiveGroupfile(char *, XrdOucStream *, bool);
    int               DoDirectiveMaxOldLogs(char *, XrdOucStream *, bool);

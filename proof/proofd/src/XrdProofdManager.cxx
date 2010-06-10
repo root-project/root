@@ -35,6 +35,7 @@
 #include "XrdNet/XrdNetDNS.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
+#include "XrdSys/XrdSysPriv.hh"
 
 #include "XrdProofdAdmin.h"
 #include "XrdProofdClient.h"
@@ -121,6 +122,11 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fMultiUser = 0;
    fChangeOwn = 0;
    fCronFrequency = 30;
+
+   // Data dir
+   fDataDir = "";      // Default <workdir>/<user>/data
+   fDataDirOpts = "gW";  // Default: user and group can write in it; create directories
+                         //          only for workers (or any type)
 
    // Proof admin path
    fAdminPath = pi->AdmPath;
@@ -611,6 +617,26 @@ int XrdProofdManager::Config(bool rcf)
       XrdProofdSandbox::SetWorkdir(fWorkDir.c_str());
    }
 
+   // Data directory, if specified
+   if (fDataDir.length() > 0) {
+      // Make sure it exists
+      if (XrdProofdAux::AssertDir(fDataDir.c_str(), ui, fChangeOwn) != 0) {
+         XPDERR("unable to assert data dir: "<<fDataDir);
+         return -1;
+      }
+      // Get the right privileges now
+      XrdSysPrivGuard pGuard((uid_t)ui.fUid, (gid_t)ui.fGid);
+      if (XpdBadPGuard(pGuard, ui.fUid)) {
+         TRACE(XERR, "could not get privileges to set/change ownership of "<<fDataDir);
+         return -1;
+      }
+      if (chmod(fDataDir.c_str(), 0777) != 0) {
+         XPDERR("problems setting permissions 0777 data dir: "<<fDataDir);
+         return -1;
+      }
+      TRACE(ALL, "data directories under: "<<fDataDir);
+   }
+
    // Notify allow rules
    if (fSrvType == kXPD_Worker) {
       if (fMastersAllowed.size() > 0) {
@@ -908,6 +934,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("role", new XrdProofdDirective("role", this, &DoDirectiveClass));
    Register("cron", new XrdProofdDirective("cron", this, &DoDirectiveClass));
    Register("port", new XrdProofdDirective("port", this, &DoDirectiveClass));
+   Register("datadir", new XrdProofdDirective("datadir", this, &DoDirectiveClass));
    Register("datasetsrc", new XrdProofdDirective("datasetsrc", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
    // Register config directives for strings
@@ -1017,6 +1044,8 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
       return DoDirectiveMultiUser(val, cfg, rcf);
    } else if (d->fName == "port") {
       return DoDirectivePort(val, cfg, rcf);
+   } else if (d->fName == "datadir") {
+      return DoDirectiveDataDir(val, cfg, rcf);
    } else if (d->fName == "datasetsrc") {
       return DoDirectiveDataSetSrc(val, cfg, rcf);
    } else if (d->fName == "xrd.protocol") {
@@ -1391,6 +1420,28 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
          fDataSetSrcs.push_front(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
       }
    }
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdManager::DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool)
+{
+   // Process 'datadir' directive
+
+   if (!val)
+      // undefined inputs
+      return -1;
+
+   // Data directory and write permissions
+   fDataDir = val;
+   XrdOucString opts;
+   char *nxt = 0;
+   while ((nxt = cfg->GetWord()) && (opts.length() == 0)) {
+      opts = nxt;
+   }
+   if (opts.length() > 0) fDataDirOpts = opts;
+
+   // Done
    return 0;
 }
 
