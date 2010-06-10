@@ -69,7 +69,7 @@ TGraphErrors::TGraphErrors(): TGraph()
 {
    // TGraphErrors default constructor.
 
-   CtorAllocate();
+   if (!CtorAllocate()) return;
 }
 
 
@@ -232,7 +232,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
    //  format = "%lg %lg %lg"     read only 3 first columns into X,Y and EY
    //  format = "%lg %lg %lg %lg" read only 4 first columns into X,Y,EX,EY
 
-   CtorAllocate();
+   if (!CtorAllocate()) return;
    Double_t x,y,ex,ey;
    ifstream infile(filename);
    if(!infile.good()){

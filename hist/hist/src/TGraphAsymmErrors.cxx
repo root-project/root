@@ -258,7 +258,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *pass, const TH1 *total, Option_t
    // Creates a TGraphAsymmErrors by dividing two input TH1 histograms:
    // pass/total. (see TGraphAsymmErrors::BayesDivide)
 
-   CtorAllocate();
+   if (!CtorAllocate()) return;
    BayesDivide(pass, total, option);
 }
 

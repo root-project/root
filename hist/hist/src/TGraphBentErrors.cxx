@@ -66,7 +66,7 @@ TGraphBentErrors::TGraphBentErrors(): TGraph()
 {
    // TGraphBentErrors default constructor.
 
-   CtorAllocate();
+   if (!CtorAllocate()) return;
 }
 
 
