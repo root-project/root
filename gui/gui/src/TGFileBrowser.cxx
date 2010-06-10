@@ -259,6 +259,50 @@ static Bool_t IsObjectEditable(TClass *cl)
    return kFALSE;
 }
 
+//______________________________________________________________________________
+static const char *FormatToolTip(TObject *obj, Int_t maxlen=0)
+{
+   // Format the tooltip information, based on the object passed in argument.
+
+   static TString infos;
+   if (!obj) {
+      infos.Clear();
+      return 0;
+   }
+   infos = obj->GetName();
+   if (obj->GetTitle()) {
+      infos += "\n";
+      infos += obj->GetTitle();
+   }
+   if (maxlen > 0 && infos.Length() > maxlen) {
+      infos.Remove(maxlen - 3);
+      infos += "...";
+   }
+   TString objinfo = obj->GetObjectInfo(1, 1);
+   if (!objinfo.IsNull() && !objinfo.BeginsWith("x=")) {
+      Long64_t bsize, fsize, objsize;
+      objsize = objinfo.Atoll();
+      if (objsize > 0) {
+         infos += "\n";
+         bsize = fsize = objsize;
+         if (fsize > 1024) {
+            fsize /= 1024;
+            if (fsize > 1024) {
+               // 3.7MB is more informative than just 3MB
+               infos += TString::Format("Size: %lld.%lldM", fsize/1024,
+                                        (fsize%1024)/103);
+            } else {
+               infos += TString::Format("Size: %lld.%lldK", bsize/1024,
+                                        (bsize%1024)/103);
+            }
+         } else {
+            infos += TString::Format("Size: %lld bytes", bsize);
+         }
+      }
+   }
+   return infos.Data();
+}
+
 /**************************************************************************/
 // TBrowserImp virtuals
 /**************************************************************************/
@@ -295,12 +339,7 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
             if ((pic != fFileIcon) && (pic != fCachedPic))
                fClient->FreePicture(pic);
             if (item) fListTree->CheckItem(item, (Bool_t)check);
-            TString tip(obj->ClassName());
-            if (obj->GetTitle()) {
-               tip += " ";
-               tip += obj->GetTitle();
-            }
-            fListTree->SetToolTipItem(item, tip.Data());
+            fListTree->SetToolTipItem(item, FormatToolTip(obj, 32));
          }
       }
       else {
@@ -341,6 +380,7 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
                   fClient->FreePicture(pic);
                if (item && obj && obj->InheritsFrom("TObject"))
                   item->SetDNDSource(kTRUE);
+               fListTree->SetToolTipItem(item, FormatToolTip(obj, 32));
             }
          }
       }
@@ -720,7 +760,7 @@ void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
       if (pic && (pic != fFileIcon) && (pic != fCachedPic))
          fClient->FreePicture(pic);
       it->SetDNDSource(kTRUE);
-      it->SetTipText(TString::Format("%s\n%s", obj->GetName(), obj->GetTitle()));
+      it->SetTipText(FormatToolTip(obj, 32));
    }
    fCnt++;
 }
