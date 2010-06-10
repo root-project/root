@@ -10703,17 +10703,17 @@ int G__inheritance_setup(int tagnum,int basetagnum
                          )
 {
 #ifndef G__SMALLOBJECT
-  int basen;
-  G__ASSERT(0<=tagnum && 0<=basetagnum);
-  basen=G__struct.baseclass[tagnum]->basen;
-  //G__herit *herit = G__struct.baseclass[tagnum]->herit;
-  //printf("G__inheritance_setup, tagnum=%d, basetagnum=%d, basen=%d\n",tagnum,basetagnum,basen);
-  //printf("    herit=%x, herit.id=%x\n",herit,herit->id);
-  G__struct.baseclass[tagnum]->herit[basen]->basetagnum = basetagnum;
-  G__struct.baseclass[tagnum]->herit[basen]->baseoffset=baseoffset;
-  G__struct.baseclass[tagnum]->herit[basen]->baseaccess=baseaccess;
-  G__struct.baseclass[tagnum]->herit[basen]->property=property;
-  ++G__struct.baseclass[tagnum]->basen;
+   if (0<=tagnum && 0<=basetagnum) {
+      int basen=G__struct.baseclass[tagnum]->basen;
+      //G__herit *herit = G__struct.baseclass[tagnum]->herit;
+      //printf("G__inheritance_setup, tagnum=%d, basetagnum=%d, basen=%d\n",tagnum,basetagnum,basen);
+      //printf("    herit=%x, herit.id=%x\n",herit,herit->id);
+      G__struct.baseclass[tagnum]->herit[basen]->basetagnum = basetagnum;
+      G__struct.baseclass[tagnum]->herit[basen]->baseoffset=baseoffset;
+      G__struct.baseclass[tagnum]->herit[basen]->baseaccess=baseaccess;
+      G__struct.baseclass[tagnum]->herit[basen]->property=property;
+      ++G__struct.baseclass[tagnum]->basen;
+   }
 #endif
   return(0);
 }
@@ -10730,11 +10730,13 @@ int G__tag_memvar_setup(int tagnum)
    /* Variables stack storing */
    G__IncSetupStack::push();
 
-   G__tagnum = tagnum;
-   G__p_local=G__struct.memvar[G__tagnum];
-   G__def_struct_member = 1;
-   G__def_tagnum = G__struct.parent_tagnum[G__tagnum];
-   G__tagdefining=G__tagnum;
+   if (tagnum >= 0) {
+      G__tagnum = tagnum;
+      G__p_local=G__struct.memvar[G__tagnum];
+      G__def_struct_member = 1;
+      G__def_tagnum = G__struct.parent_tagnum[G__tagnum];
+      G__tagdefining=G__tagnum;
+   }
 
    return(0);
 }
@@ -10895,19 +10897,21 @@ int G__usermemfunc_setup2(char *funcname,int hash,char *mangled_name,
 **************************************************************************/
 int G__tag_memfunc_setup(int tagnum)
 {
-
-  G__IncSetupStack::push();
-
-  G__tagdefining = G__struct.parent_tagnum[tagnum];
-  G__def_tagnum = G__tagdefining;
-  G__tagnum = tagnum;
-  G__p_ifunc = G__struct.memfunc[G__tagnum];
-
-  while(G__p_ifunc->next) G__p_ifunc=G__p_ifunc->next;
-
-  --G__p_ifunc->allifunc;
-  G__memfunc_next();
-  return(0);
+   
+   G__IncSetupStack::push();
+   
+   if (tagnum >= 0) { 
+      G__tagdefining = G__struct.parent_tagnum[tagnum];
+      G__def_tagnum = G__tagdefining;
+      G__tagnum = tagnum;
+      G__p_ifunc = G__struct.memfunc[G__tagnum];
+   
+      while(G__p_ifunc->next) G__p_ifunc=G__p_ifunc->next;
+   
+      --G__p_ifunc->allifunc;
+      G__memfunc_next();
+   }
+   return(0);
 }
 
 /**************************************************************************
@@ -11668,10 +11672,10 @@ int G__memfunc_next()
 **************************************************************************/
 int G__tag_memfunc_reset()
 {
- /* Variables stack restoring */
+   /* Variables stack restoring */
    G__IncSetupStack::pop();
-
-  return(0);
+   
+   return(0);
 }
 #ifdef G__NEVER
 /**************************************************************************
@@ -11682,7 +11686,7 @@ int G__tag_memfunc_reset()
 int G__p2ary_setup(n,...)
 int n)
 {
-  return(0);
+   return(0);
 }
 #endif
 
@@ -13227,7 +13231,11 @@ void G__incsetup_memfunc(int tagnum)
 **************************************************************************/
 int G__getnumbaseclass(int tagnum)
 {
-  return(G__struct.baseclass[tagnum]->basen);
+   if (tagnum >= 0) {
+      return(G__struct.baseclass[tagnum]->basen);
+   } else {
+      return 0;
+   }
 }
 
 /**************************************************************************
@@ -13237,7 +13245,7 @@ int G__getnumbaseclass(int tagnum)
 static int G__setnewtype_typenum = -1;
 void G__setnewtype_settypeum(int typenum)
 {
-  G__setnewtype_typenum=typenum;
+   G__setnewtype_typenum=typenum;
 }
 
 /**************************************************************************
