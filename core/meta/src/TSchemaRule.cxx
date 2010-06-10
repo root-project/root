@@ -803,6 +803,8 @@ Bool_t TSchemaRule::ProcessChecksum( const TString& checksum ) const
    //---------------------------------------------------------------------------
    // Check if we have valid list
    //---------------------------------------------------------------------------
+   if (!checksum[0])
+      return kFALSE;
    std::string chk = (const char*)checksum;
    if( chk[0] != '[' || chk[chk.size()-1] != ']' )
       return kFALSE;
