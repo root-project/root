@@ -17,6 +17,8 @@
 #include "CINTClassBuilder.h"
 #include "CINTTypedefBuilder.h"
 #include "Api.h"
+#include "Typedf.h"
+#include "TError.h"
 
 #include <set>
 
@@ -74,6 +76,15 @@ namespace ROOT {
 		
             int r = ::G__search_typename2( t.Name().c_str(), rtypenum, rtagnum, 0, stagnum);
             ::G__setnewtype(-1,NULL,0);
+
+            static bool alreadyWarnedAboutTooManyTypedefs = false;
+            if (!alreadyWarnedAboutTooManyTypedefs
+                && Cint::G__TypedefInfo::GetNumTypedefs() > 0.9 * G__MAXTYPEDEF) {
+               alreadyWarnedAboutTooManyTypedefs = true;
+               Warning("CINTTypedefBuilder::Setup()",
+                       "%ld out of %ld possible entries are in use!",
+                       (int)Cint::G__TypedefInfo::GetNumTypedefs(), (int)G__MAXTYPEDEF);
+            }
 		
             return r;
          }
@@ -82,11 +93,19 @@ namespace ROOT {
 
       void CINTTypedefBuilder::Set(const char* name, const char* value) {
          // As the function name indicates
+         static bool alreadyWarnedAboutTooManyTypedefs = false;
          G__linked_taginfo taginfo;
          taginfo.tagnum  = -1;   // >> need to be pre-initialized to be understood by CINT
          taginfo.tagtype = 'c';
          taginfo.tagname = value;
          G__search_typename2(name, 117, G__get_linked_tagnum(&taginfo),0,-1);
+         if (!alreadyWarnedAboutTooManyTypedefs
+             && Cint::G__TypedefInfo::GetNumTypedefs() > 0.9 * G__MAXTYPEDEF) {
+            alreadyWarnedAboutTooManyTypedefs = true;
+            Warning("CINTTypedefBuilder::Set()",
+                    "%ld out of %ld possible entries are in use!",
+                    (int)Cint::G__TypedefInfo::GetNumTypedefs(), (int)G__MAXTYPEDEF);
+         }
          G__setnewtype(-1,NULL,0);
       }
    }

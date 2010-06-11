@@ -148,6 +148,7 @@ G__ClassInfo {
  public:
   long ClassProperty();
   unsigned char FuncFlag(); 
+  static int GetNumClasses();
 
 };
 

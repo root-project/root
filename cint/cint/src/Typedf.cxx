@@ -152,3 +152,8 @@ int Cint::G__TypedefInfo::LineNumber() {
 #endif
 }
 ///////////////////////////////////////////////////////////////////////////
+int Cint::G__TypedefInfo::GetNumTypedefs()
+{
+   // Retrieve the number of typedef registered in the system.
+   return G__newtype.alltype;
+}

@@ -1436,4 +1436,8 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
+int Cint::G__ClassInfo::GetNumClasses()
+{
+   // Return the number of classes (autoload entries etc) known to the system
+   return G__struct.alltag;
+}

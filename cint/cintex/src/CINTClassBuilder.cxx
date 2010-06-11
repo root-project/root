@@ -21,6 +21,7 @@
 #include "CINTEnumBuilder.h"
 #include "CINTFunctional.h"
 #include "Api.h"
+#include "TError.h"
 #include <list>
 #include <set>
 #include <iomanip>
@@ -113,6 +114,7 @@ namespace ROOT { namespace Cintex {
 
    void CINTClassBuilder::Setup_tagtable() {
       // Setup scope.
+      static bool alreadyWarnedAboutTooManyClasses = false;
       Scope scope = fClass.DeclaringScope();
       if ( scope ) CINTScopeBuilder::Setup(scope);
       else {
@@ -122,6 +124,13 @@ namespace ROOT { namespace Cintex {
 
       // Setup tag number
       fTaginfo->tagnum = G__get_linked_tagnum(fTaginfo);
+      if (!alreadyWarnedAboutTooManyClasses
+          && Cint::G__ClassInfo::GetNumClasses() > 0.9 * G__MAXSTRUCT) {
+         alreadyWarnedAboutTooManyClasses = true;
+         Warning("CINTClassBuilder::Setup_tagtable()",
+                 "%d out of %d possible entries are in use!",
+                 (int)Cint::G__ClassInfo::GetNumClasses(), (int)G__MAXSTRUCT);
+      }
       std::string comment = fClass.Properties().HasProperty("comment") ? 
          fClass.Properties().PropertyAsString("comment").c_str() :
          "";

@@ -51,6 +51,8 @@ G__TypedefInfo : public G__TypeInfo {
   /* added with G__TYPEDEFFPOS */
   const char *FileName();
   int LineNumber();
+
+  static int GetNumTypedefs();
 };
 
 } // namespace Cint
