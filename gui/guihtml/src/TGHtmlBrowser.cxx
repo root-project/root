@@ -302,7 +302,7 @@ static char *ReadRemote(const char *url)
       return 0;
    if (s.SendRaw(msg.Data(), msg.Length()) == -1)
       return 0;
-   buf = (char *)calloc(size, sizeof(char));
+   buf = (char *)calloc(size+1, sizeof(char));
    if (s.RecvRaw(buf, size) == -1) {
       free(buf);
       return 0;
