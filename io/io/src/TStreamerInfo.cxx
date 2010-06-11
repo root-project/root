@@ -317,7 +317,7 @@ void TStreamerInfo::Build()
             }
             dmCounter = rdCounter->GetDataMember();
             TDataType* dtCounter = dmCounter->GetDataType();
-            Bool_t isInteger = ((dtCounter->GetType() == 3) || (dtCounter->GetType() == 13));
+            Bool_t isInteger = dtCounter && ((dtCounter->GetType() == 3) || (dtCounter->GetType() == 13));
             if (!dtCounter || !isInteger) {
                Error("Build", "%s, discarding: %s %s, illegal [%s] (must be Int_t)\n", GetName(), dmFull, dmName, counterName);
                continue;
@@ -1442,7 +1442,7 @@ void TStreamerInfo::BuildOld()
             if (0 != (oldv = ImportStreamerInfo(oldClass, newClass.GetClass()))) {
                 Warning("BuildOld", "Can not properly load the TStreamerInfo from %s into %s due to a conflict for the class version %d", oldClass->GetName(), newClass->GetName(), oldv);
             } else {
-               element->SetTypeName(dm->GetFullTypeName());
+               element->SetTypeName(newClass->GetName());
                if (gDebug > 0) {
                   Warning("BuildOld", "element: %s::%s %s has new type %s", GetName(), element->GetTypeName(), element->GetName(), newClass->GetName());
                }
@@ -1495,6 +1495,8 @@ void TStreamerInfo::BuildOld()
                         case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL:  // array of containers with no virtual table (stl) and no comment
                            break;
                         }
+                     } else {
+                        delete ms;
                      }
                   }
                   element->Update(oldClass, newClass.GetClass());
@@ -2854,6 +2856,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    FILE *allfp = fopen(filename.Data(),"a");
    if (!allfp) {
       Error("MakeProject","Cannot open output file:%s\n",filename.Data());
+      fclose(fp);
       return 0;
    }
    fprintf(allfp,"#include \"%s.h\"\n", headername.Data());
@@ -4138,12 +4141,16 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
          break;
       }
       case kSTL: {
-         static TClassRef stringClass("string");
-         if (ladd && aElement && aElement->GetClass() == stringClass) {
-            std::string *st = (std::string*)(ladd);
-            printf("%s",st->c_str());
+         if (aElement) {
+            static TClassRef stringClass("string");
+            if (ladd && aElement->GetClass() == stringClass) {
+               std::string *st = (std::string*)(ladd);
+               printf("%s",st->c_str());
+            } else {
+               printf("(%s*)0x%lx",aElement->GetClass()->GetName(),(Long_t)(ladd));
+            }
          } else {
-            printf("(%s*)0x%lx",aElement->GetClass()->GetName(),(Long_t)(ladd));
+            printf("(unknown_type*)0x%lx",(Long_t)(ladd));
          }
          break;
       }   

@@ -252,11 +252,14 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
                      clActual->GetBaseClassOffset(cl) : 0;
       temp -= offset;
       actualStart = temp;
+
+      Build(motherDir, clActual->GetName(), -1);
    } else {
       actualStart = obj;
+
+      Build(motherDir, cl->GetName(), -1);
    }
 
-   Build(motherDir, clActual->GetName(), -1);
 
    fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
    fBufferRef->SetParent(GetFile());
