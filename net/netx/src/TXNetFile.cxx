@@ -1349,15 +1349,17 @@ void TXNetFile::SynchronizeCacheSize()
    // Synchronize the cache size
    // Alternative purging policy
 
+   if (fClient == 0) return;
+
    fClient->UseCache(TRUE);
    Int_t size;
    Long64_t bytessubmitted, byteshit, misscount, readreqcnt;
    Float_t  missrate, bytesusefulness;
    int newbsz = -1;
-   if (fClient && fClient->GetCacheInfo(size, bytessubmitted,
-                                        byteshit, misscount,
-                                        missrate, readreqcnt,
-                                        bytesusefulness) ) {
+   if (fClient->GetCacheInfo(size, bytessubmitted,
+                             byteshit, misscount,
+                             missrate, readreqcnt,
+                             bytesusefulness) ) {
 
       // To allow for some space for outstanding data
       newbsz = GetCacheRead()->GetBufferSize() / 2 * 3;
