@@ -202,8 +202,8 @@ Int_t TXNetFile::ParseOptions(const char *opts,
    Int_t fo = 0;
    TString s(opts);
 
-   Int_t i = 0;
-   for (i = 0; i < 4; i++) {
+   UInt_t i = 0;
+   for (i = 0; i < (sizeof(keys)/sizeof(keys[0])); i++) {
       Int_t j = s.Index(keys[i]);
       if (j != kNPOS) {
          TString val(s(j+strlen(keys[i]), s.Length()));
