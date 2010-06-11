@@ -225,7 +225,7 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fMother(parent ? parent->GetMother() : 0)
 , fParent(parent)
 , fAddress((char*) address)
-, fDirectory(fTree->GetDirectory())
+, fDirectory(fTree ? fTree->GetDirectory() : 0)
 , fFileName("")
 , fEntryBuffer(0)
 , fBrowsables(0)
@@ -365,6 +365,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          }
          if (!leaf) {
             Error("TLeaf", "Illegal data type for %s/%s", name, leaflist);
+            delete[] leaftype;
             delete [] leafname;
             MakeZombie();
             return;
@@ -374,6 +375,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
             leaf = 0;
             Error("TBranch", "Illegal leaf: %s/%s", name, leaflist);
             delete [] leafname;
+            delete[] leaftype;
             MakeZombie();
             return;
          }
@@ -453,7 +455,7 @@ TBranch::~TBranch()
    // Warning. Must use FindObject by name instead of fDirectory->GetFile()
    // because two branches may point to the same file and the file
    // may have already been deleted in the previous branch.
-   if (fDirectory && (fDirectory != fTree->GetDirectory())) {
+   if (fDirectory && (!fTree || fDirectory != fTree->GetDirectory())) {
       TString bFileName( GetRealFileName() );
       
       TFile* file = (TFile*)gROOT->GetListOfFiles()->FindObject(bFileName);     
@@ -1076,7 +1078,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
    //add branch to cache (if any)
-   TFileCacheRead *pf = file ? file->GetCacheRead() : 0;
+   TFileCacheRead *pf = file->GetCacheRead();
    if (pf){
       if (pf->IsLearning()) pf->AddBranch(this);
       if (fSkipZip) pf->SetSkipZip();

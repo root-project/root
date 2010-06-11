@@ -1362,7 +1362,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    {
       TDirectory::TContext ctxt(0);
       fFile = TFile::Open(element->GetTitle());
-      fFile->SetBit(kMustCleanup);
+      if (fFile) fFile->SetBit(kMustCleanup);
    }
 
    // ----- Begin of modifications by MvL

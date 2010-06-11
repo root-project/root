@@ -609,9 +609,10 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 // of class "cl" (and its base classes' members).
 
    // branch has to be unsplit, i.e. without sub-branches
-   if (branch && const_cast<TBranch*>(branch)->GetListOfBranches() 
-      && const_cast<TBranch*>(branch)->GetListOfBranches()->GetEntries()!=0
-      && parent==0) // !(parent && parent->IsA()==TMethodBrowsable::Class()))
+   if (branch==0 || 
+       (const_cast<TBranch*>(branch)->GetListOfBranches() 
+        && const_cast<TBranch*>(branch)->GetListOfBranches()->GetEntries()!=0
+        && parent==0)) // !(parent && parent->IsA()==TMethodBrowsable::Class()))
       return 0;
    // we only expand our own parents
    //if (parent && parent->IsA()!=TNonSplitBrowsable::Class()) return 0;

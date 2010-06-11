@@ -1740,7 +1740,7 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
       TClass* cl = TClass::GetClass(className);
       TVirtualCollectionProxy* proxy = cl->GetCollectionProxy();
       fCollProxy = proxy->Generate();
-      fSTLtype = TClassEdit::IsSTLCont(className);
+      fSTLtype = className ? TClassEdit::IsSTLCont(className) : 0;
       if (fSTLtype < 0) {
         fSTLtype = -fSTLtype;
       }
