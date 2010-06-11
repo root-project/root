@@ -2249,7 +2249,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TIter enext( info->GetElements() );
       TStreamerElement *el;
       const ROOT::TSchemaMatch* rules = 0;
-      if (cl->GetSchemaRules()) {
+      if (cl && cl->GetSchemaRules()) {
          rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
       }
       while( (el=(TStreamerElement*)enext()) ) {
@@ -2376,6 +2376,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       list->Delete();
       delete list;
       delete [] path;
+      fclose(fpMAKE);
       return;
    }
 
@@ -2398,6 +2399,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       list->Delete();
       delete list;
       delete [] path;
+      fclose(fpMAKE);
+      fclose(ifp);
       return;
    }
    if (genreflex) {
@@ -2872,11 +2875,11 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
                      if (key.CompareTo("zip", TString::kIgnoreCase)) {
                         if (optioncount!=0) {
                            newoptions += "&";
-                           newoptions += key;
-                           newoptions += "=";
-                           newoptions += value;
-                           optioncount++;
                         }
+                        newoptions += key;
+                        newoptions += "=";
+                        newoptions += value;
+                        ++optioncount;
                      } else {
                         zipname = value;
                      }
@@ -2919,13 +2922,11 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
 
                   fgCacheFileForce = forcedcache;
 
-                  cachefile->Seek(0);
-                  remotfile->Seek(0);
-
                   if (!cachefile) {
                      need2copy = kTRUE;
                      ::Error("TFile::OpenFromCache",
                              "cannot open the cache file to check cache consistency");
+                     return 0;
                   }
 
                   if (!remotfile) {
@@ -2934,6 +2935,9 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *option, const char *ftit
                      return 0;
                   }
 
+                  cachefile->Seek(0);
+                  remotfile->Seek(0);
+                  
                   if ((!cachefile->ReadBuffer(cacheblock,256)) &&
                       (!remotfile->ReadBuffer(remotblock,256))) {
                      if (memcmp(cacheblock, remotblock, 256)) {
@@ -3558,7 +3562,6 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    // the previous cleanup before the cleanup operation is repeated in
    // the cache directory
 
-   char cmd[4096];
    if (fgCacheFileDir == "") {
       return kFALSE;
    }
@@ -3592,12 +3595,13 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    // the shortest garbage collector in the world - one long line of PERL - unlinks files only,
    // if there is a symbolic link with '.ROOT.cachefile' for safety ;-)
 
+   TString cmd;
 #if defined(R__WIN32)
-   sprintf(cmd, "echo <TFile::ShrinkCacheFileDir>: cleanup to be implemented");
+   cmd = "echo <TFile::ShrinkCacheFileDir>: cleanup to be implemented";
 #elif defined(R__MACOSX)
-   sprintf(cmd, "perl -e 'my $cachepath = \"%s\"; my $cachesize = %lld;my $findcommand=\"find $cachepath -type f -exec stat -f \\\"\\%%a::\\%%N::\\%%z\\\" \\{\\} \\\\\\;\";my $totalsize=0;open FIND, \"$findcommand | sort -k 1 |\";while (<FIND>) { my ($accesstime, $filename, $filesize) = split \"::\",$_; $totalsize += $filesize;if ($totalsize > $cachesize) {if ( ( -e \"${filename}.ROOT.cachefile\" ) && ( -e \"${filename}\" ) ) {unlink \"$filename.ROOT.cachefile\";unlink \"$filename\";}}}close FIND;' ", fgCacheFileDir.Data(),shrinksize);
+   cmd.Format("perl -e 'my $cachepath = \"%s\"; my $cachesize = %lld;my $findcommand=\"find $cachepath -type f -exec stat -f \\\"\\%%a::\\%%N::\\%%z\\\" \\{\\} \\\\\\;\";my $totalsize=0;open FIND, \"$findcommand | sort -k 1 |\";while (<FIND>) { my ($accesstime, $filename, $filesize) = split \"::\",$_; $totalsize += $filesize;if ($totalsize > $cachesize) {if ( ( -e \"${filename}.ROOT.cachefile\" ) && ( -e \"${filename}\" ) ) {unlink \"$filename.ROOT.cachefile\";unlink \"$filename\";}}}close FIND;' ", fgCacheFileDir.Data(),shrinksize);
 #else
-   sprintf(cmd, "perl -e 'my $cachepath = \"%s\"; my $cachesize = %lld;my $findcommand=\"find $cachepath -type f -exec stat -c \\\"\\%%x::\\%%n::\\%%s\\\" \\{\\} \\\\\\;\";my $totalsize=0;open FIND, \"$findcommand | sort -k 1 |\";while (<FIND>) { my ($accesstime, $filename, $filesize) = split \"::\",$_; $totalsize += $filesize;if ($totalsize > $cachesize) {if ( ( -e \"${filename}.ROOT.cachefile\" ) && ( -e \"${filename}\" ) ) {unlink \"$filename.ROOT.cachefile\";unlink \"$filename\";}}}close FIND;' ", fgCacheFileDir.Data(),shrinksize);
+   cmd.Format("perl -e 'my $cachepath = \"%s\"; my $cachesize = %lld;my $findcommand=\"find $cachepath -type f -exec stat -c \\\"\\%%x::\\%%n::\\%%s\\\" \\{\\} \\\\\\;\";my $totalsize=0;open FIND, \"$findcommand | sort -k 1 |\";while (<FIND>) { my ($accesstime, $filename, $filesize) = split \"::\",$_; $totalsize += $filesize;if ($totalsize > $cachesize) {if ( ( -e \"${filename}.ROOT.cachefile\" ) && ( -e \"${filename}\" ) ) {unlink \"$filename.ROOT.cachefile\";unlink \"$filename\";}}}close FIND;' ", fgCacheFileDir.Data(),shrinksize);
 #endif
 
    tagfile->WriteBuffer(cmd, 4096);

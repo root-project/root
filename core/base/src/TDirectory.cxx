@@ -354,9 +354,8 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
       delete [] path; return (TDirectory*)obj;
    }
 
-   char subdir[kMaxLen];
-   strcpy(subdir,path);
-   slash = (char*)strchr(subdir,'/');
+   TString subdir(path);
+   slash = (char*)strchr(subdir.Data(),'/');
    *slash = 0;
    //Get object with path from current directory/file
    if (!strcmp(subdir, "..")) {
@@ -367,13 +366,13 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
    }
    obj = Get(subdir);
    if (!obj) {
-      if (printError) Error(funcname,"Unknown directory %s", subdir);
+      if (printError) Error(funcname,"Unknown directory %s", subdir.Data());
       delete [] path; return 0;
    }
 
    //Check return object is a directory
    if (!obj->InheritsFrom(TDirectory::Class())) {
-      if (printError) Error(funcname,"Object %s is not a directory", subdir);
+      if (printError) Error(funcname,"Object %s is not a directory", subdir.Data());
       delete [] path; return 0;
    }
    result = ((TDirectory*)obj)->GetDirectory(slash+1,printError,funcname);
@@ -537,7 +536,7 @@ void TDirectory::Delete(const char *namecycle)
    if(strcmp(name,"*") == 0)   deleteall = 1;
    if(strcmp(name,"*T") == 0){ deleteall = 1; deletetree = 1;}
    if(strcmp(name,"T*") == 0){ deleteall = 1; deletetree = 1;}
-   if(strlen(namecycle) == 0){ deleteall = 1; deletetree = 1;}
+   if(namecycle==0 || strlen(namecycle) == 0){ deleteall = 1; deletetree = 1;}
    TRegexp re(name,kTRUE);
    TString s;
    Int_t deleteOK = 0;
