@@ -2189,7 +2189,10 @@ TFile* TTree::ChangeFile(TFile* file)
          char* cunder = strrchr(fname, '_');
          if (cunder) {
             sprintf(cunder, "%s%d", uscore, fFileNumber);
-            strcat(fname, strrchr(file->GetName(), '.'));
+            const char* cdot = strrchr(file->GetName(), '.');
+            if (cdot) {
+               strcat(fname, cdot);
+            }
          } else {
             char fcount[10];
             sprintf(fcount, "%s%d", uscore, fFileNumber);
@@ -2301,15 +2304,17 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
          TStreamerElement* element = (TStreamerElement*) branchEl->GetInfo()->GetElems()[branchEl->GetID()];
          if (element) {
             expectedClass = element->GetClassPointer();
-         }
-         if (!expectedClass) {
-            TDataType* data = gROOT->GetType(element->GetTypeNameBasic());
-            if (!data) {
-               Error("CheckBranchAddress", "Did not find the type number for %s", element->GetTypeNameBasic());
-               return kInternalError;
-            } else {
-               expectedType = (EDataType) data->GetType();
+            if (!expectedClass) {
+               TDataType* data = gROOT->GetType(element->GetTypeNameBasic());
+               if (!data) {
+                  Error("CheckBranchAddress", "Did not find the type number for %s", element->GetTypeNameBasic());
+                  return kInternalError;
+               } else {
+                  expectedType = (EDataType) data->GetType();
+               }
             }
+         } else {
+            Error("CheckBranchAddress", "Did not find the type for %s",branchEl->GetName());
          }
       }
       if (ptrClass && (branch->GetMother() == branch)) {
@@ -5824,7 +5829,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
 
    //loop on all lines in the file
    nbranches = fBranches.GetEntries();
-   Int_t status = 1;
+   Bool_t status = kTRUE;
    Long64_t nlines = 0;
    while(1) {
 
@@ -5839,7 +5844,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
             leaf->ReadValue(in);
             if (in.eof()) return nlines;
             status = in.good();
-            if (status <= 0) {
+            if (!status) {
                Warning("ReadFile","Illegal value after line %d\n",nlines);
                in.clear();
                break;

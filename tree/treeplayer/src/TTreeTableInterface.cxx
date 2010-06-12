@@ -50,9 +50,9 @@ ClassImp(TTreeTableInterface)
 TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp, 
    const char *selection, Option_t *option, Long64_t nentries, 
    Long64_t firstentry) 
-   : TVirtualTableInterface(), fTree(tree), fEntry(0), 
-     fNEntries(nentries), fFirstEntry(firstentry), fManager(0), fSelect(0), 
-     fForceDim(kFALSE), fEntries(0)
+   : TVirtualTableInterface(), fTree(tree), fFormulas(0), fEntry(0), 
+     fNEntries(nentries), fFirstEntry(firstentry), fManager(0), fSelect(0), fSelector(0), fInput(0), 
+     fForceDim(kFALSE), fEntries(0), fNRows(0), fNColumns(0)
 {
    // TTreeTableInterface constructor.
 
@@ -245,7 +245,6 @@ void TTreeTableInterface::InitEntries()
                ndata = 0;
          }
       }
-      Bool_t loaded = kFALSE;
       Bool_t skip = kFALSE;
 
       // Loop over the instances of the selection condition
@@ -255,15 +254,6 @@ void TTreeTableInterface::InitEntries()
                skip = kTRUE;
                entry++;
             }
-         }
-         if (inst == 0) loaded = kTRUE;
-         else if (!loaded){
-            // EvalInstance(0) always needs to be called so that
-            // the proper branches are loaded.
-            for (ui = 0; ui <fNColumns; ui++) {
-               ((TTreeFormula*)fFormulas->At(ui))->EvalInstance(0);
-            }
-            loaded = kTRUE;
          }
       }
       if (!skip){

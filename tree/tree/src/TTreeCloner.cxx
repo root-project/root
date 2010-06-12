@@ -63,7 +63,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    fToTree(to),
    fMethod(method),
    fFromBranches( from ? from->GetListOfLeaves()->GetEntries()+1 : 0),
-   fToBranches( to ? from->GetListOfLeaves()->GetEntries()+1 : 0),
+   fToBranches( to ? to->GetListOfLeaves()->GetEntries()+1 : 0),
    fMaxBaskets(CollectBranches()),
    fBasketBranchNum(new UInt_t[fMaxBaskets]),
    fBasketNum(new UInt_t[fMaxBaskets]),
