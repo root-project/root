@@ -1245,19 +1245,8 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
    
-   TString long64name;
    TString resolved;
 
-   if (!dict) {
-      // Try with Long64_t instead of long long
-      long64name = TClassEdit::GetLong64_Name(classname.Data());
-      if (long64name != classname) {
-         TClass *res = LoadClass(long64name.Data(),silent);
-         if (res) return res;
-      } else {
-         long64name.Clear();
-      }
-   }
    if (!dict) {
       // Try to remove the ROOT typedefs
       resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
@@ -1272,11 +1261,6 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
          dict = TClassTable::GetDict(classname);
          if (!dict) {
             // Try the typedefs again.
-
-            if (long64name.Length()) {
-               TClass *res = LoadClass(long64name.Data(),silent);
-               if (res) return res;
-            }
             if (resolved.Length()) {
                dict = TClassTable::GetDict(resolved.Data());
             }

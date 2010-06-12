@@ -60,6 +60,7 @@ private:
 
    TClassTable();
 
+   static TClassRec   *FindElementImpl(const char *cname, Bool_t insert);
    static TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
    static void         SortTable();
 
