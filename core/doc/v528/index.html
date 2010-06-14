@@ -33,5 +33,27 @@ of its emulated base class.
 use this information to detect the TStreamerInfo actually used to create
 the object and hence run the proper emulated destructor.
 
+<h4>Cont</h4>
+<ul>
+<li>New functions for TClonesArray:
+
+AbsorbObjects(TClonesArray* otherTCA):
+Allows one to directly move the object pointers from otherTCA to the calling
+TCA without cloning (copying). The calling TCA takes over ownership of all of
+the moved objects. otherTCA is left empty upon return.
+
+MultiSort(Int_t nTCs, TClonesArray** tcs):
+Sorts multiple TClonesArrays simultaneously using the calling TCA's objects
+as the sorting key.
+</li>
+
+
+<li>New function for TSeqCollection:
+
+QSort(Object **a, Int_t nBs, TObject ***b):
+Sort array a of TObject pointers using a quicksort algorithm. Arrays b will
+be sorted just like a (a determines the sort; nBs is the number of TObject**
+arrays in b). Uses ObjCompare() to compare objects. This function is used by
+the new function TClonesArray::MultiSort().
 </li>
 </ul>
