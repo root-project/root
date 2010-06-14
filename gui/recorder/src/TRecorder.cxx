@@ -1944,7 +1944,6 @@ void TGRecorder::StartStop()
    static const char *gFiletypes[] = {
       "All files", "*", "Text files", "*.txt", "ROOT files", "*.root", 0, 0
    };
-   TGFileDialog *filedialog;
    TGFileInfo fi;
 
    switch(fRecorder->GetState()) {
@@ -1955,9 +1954,9 @@ void TGRecorder::StartStop()
          fi.fFileTypes = gFiletypes;
          fi.fOverwrite = kFALSE;
 
-         filedialog = new TGFileDialog(gClient->GetDefaultRoot(),
-                                       gClient->GetDefaultRoot(),
-                                       kFDSave,&fi);
+         new TGFileDialog(gClient->GetDefaultRoot(), 
+                          gClient->GetDefaultRoot(),
+                          kFDSave,&fi);
 
          if (fi.fFilename && strlen(fi.fFilename)) {
 
@@ -2007,16 +2006,15 @@ void TGRecorder::Replay()
    // according to the current recorder state
 
    TGFileInfo fi;
-   TGFileDialog *filedialog;
 
    switch(fRecorder->GetState()) {
 
       // Starts replaying
       case TRecorder::kInactive:
 
-         filedialog = new TGFileDialog(gClient->GetDefaultRoot(),
-                                       gClient->GetDefaultRoot(),
-                                       kFDOpen, &fi);
+         new TGFileDialog(gClient->GetDefaultRoot(),
+                          gClient->GetDefaultRoot(),
+                          kFDOpen, &fi);
 
          if (fi.fFilename && strlen(fi.fFilename)) {
             if (fRecorder->Replay(fi.fFilename, fCursorCheckBox->IsOn())) {
