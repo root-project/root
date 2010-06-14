@@ -434,7 +434,7 @@ void TGHtmlBrowser::URLChanged()
 
    const char *string = fURL->GetText();
    if (string) {
-      Selected(StrDup(gSystem->UnixPathName(string)));
+      Selected(gSystem->UnixPathName(string));
    }
 }
 

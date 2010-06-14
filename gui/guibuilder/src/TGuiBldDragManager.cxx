@@ -912,11 +912,15 @@ TGuiBldDragManager::TGuiBldDragManager() : TVirtualDragManager() ,
    CreateListOfDialogs();
 
    TString tmpfile = gSystem->TempDirectory();
-   fPasteFileName = gSystem->ConcatFileName(tmpfile.Data(),
-                             TString::Format("RootGuiBldClipboard%d.C", gSystem->GetPid()));
+   char *s = gSystem->ConcatFileName(tmpfile.Data(),
+               TString::Format("RootGuiBldClipboard%d.C", gSystem->GetPid()));
+   fPasteFileName = s;
+   delete [] s;
 
-   fTmpBuildFile = gSystem->ConcatFileName(tmpfile.Data(),
-                             TString::Format("RootGuiBldTmpFile%d.C", gSystem->GetPid()));
+   s = gSystem->ConcatFileName(tmpfile.Data(),
+               TString::Format("RootGuiBldTmpFile%d.C", gSystem->GetPid()));
+   fTmpBuildFile = s;
+   delete [] s;
 
    fName = "Gui Builder Drag Manager";
    SetWindowName(fName.Data());

@@ -545,10 +545,11 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            fFileInfo->fFileNamesList = new TList();
                         }
                         while ((el = (TObjString *) next())) {
+                           char *s = gSystem->ConcatFileName(fFc->GetDirectory(),
+                                                             el->GetString());
                            tmpString += "\"" + el->GetString() + "\" ";
-                           fFileInfo->fFileNamesList->Add(new TObjString(
-                              gSystem->ConcatFileName(fFc->GetDirectory(),
-                                                      el->GetString())));
+                           fFileInfo->fFileNamesList->Add(new TObjString(s));
+                           delete [] s;
                         }
                         fTbfname->Clear();
                         fTbfname->AddText(0, tmpString);
