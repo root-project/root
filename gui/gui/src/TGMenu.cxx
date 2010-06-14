@@ -973,6 +973,7 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud,
    // borrowed from the picture pool and therefore not adopted.
    // If before is not 0, the entry will be added before it.
 
+   if (!s) return;
    TGMenuEntry *nw = new TGMenuEntry;
    Ssiz_t tab = s->Index('\t');
    if (tab > 0) {
@@ -1008,7 +1009,7 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud,
    }
    if (nw->fShortcut) {
       tw += 10;
-      if (s) delete s;
+      delete s;
    }
 
    Int_t max_ascent, max_descent;
