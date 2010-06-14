@@ -114,7 +114,7 @@ Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
                    const char *logbuf, Int_t loglevel, TXHandler *handler)
          : TSocket(), fMode(m), fLogLevel(loglevel),
-           fBuffer(logbuf), fASem(0),
+           fBuffer(logbuf), fASem(0), fAsynProc(1),
            fDontTimeout(kFALSE), fRDInterrupt(kFALSE), fXrdProofdVersion(-1)
 {
    // Constructor
@@ -335,6 +335,10 @@ void TXSocket::Close(Option_t *opt)
    // A session ID can be given using #...# signature, e.g. "#1#".
    // Default is opt = "".
 
+   Int_t to = gEnv->GetValue("XProof.AsynProcSemTimeout", 60);
+   if (fAsynProc.Wait(to*1000) != 0)
+      Warning("Close", "could not hold semaphore for async messages after %d sec: closing anyhow (may give error messages)", to);
+
    // Remove any reference in the global pipe and ready-sock queue
    TXSocket::fgPipe.Flush(this);
 
@@ -342,6 +346,7 @@ void TXSocket::Close(Option_t *opt)
    if (!fConn) {
       if (gDebug > 0)
          Info("Close","no connection: nothing to do");
+      fAsynProc.Post();
       return;
    }
 
@@ -373,6 +378,9 @@ void TXSocket::Close(Option_t *opt)
 
    // Delete the connection module
    SafeDelete(fConn);
+
+   // Post semaphore
+   fAsynProc.Post();
 }
 
 //_____________________________________________________________________________
@@ -386,10 +394,17 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    // responses are asynchronous by nature.
    UnsolRespProcResult rc = kUNSOL_KEEP;
 
+   // If we are closing we will not do anything
+   if (fAsynProc.TryWait()) {
+      Error("ProcessUnsolicitedMsg", "%p: async semaphore taken by Close()! Should not be here!", this);
+      return kUNSOL_CONTINUE;
+   }
+
    if (!m) {
       if (gDebug > 2)
          Info("ProcessUnsolicitedMsg", "%p: got empty message: skipping", this);
       // Some one is perhaps interested in empty messages
+      fAsynProc.Post();
       return kUNSOL_CONTINUE;
    } else {
       if (gDebug > 2)
@@ -418,6 +433,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             Info("ProcessUnsolicitedMsg", "%p: underlying connection timed out", this);
       }
       // Propagate the message to other possible handlers
+      fAsynProc.Post();
       return kUNSOL_CONTINUE;
    }
 
@@ -425,6 +441,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    if (!fConn || !m->MatchStreamid(fConn->fStreamid)) {
       if (gDebug > 1)
          Info("ProcessUnsolicitedMsg", "%p: IDs do not match: {%d, %d}", this, fConn->fStreamid, m->HeaderSID());
+      fAsynProc.Post();
       return kUNSOL_CONTINUE;
    }
 
@@ -432,6 +449,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    if (!m) {
       Error("ProcessUnsolicitedMsg", "undefined message - disabling");
       PostMsg(kPROOF_STOP);
+      fAsynProc.Post();
       return rc;
    }
 
@@ -439,6 +457,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    if ((len = m->DataLen()) < (int)sizeof(kXR_int32)) {
       Error("ProcessUnsolicitedMsg", "empty or bad-formed message - disabling");
       PostMsg(kPROOF_STOP);
+      fAsynProc.Post();
       return rc;
    }
 
@@ -841,6 +860,7 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    }
 
    // We are done
+   fAsynProc.Post();
    return rc;
 }
 

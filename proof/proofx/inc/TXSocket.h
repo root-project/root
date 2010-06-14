@@ -104,6 +104,8 @@ private:
    Int_t               fByteCur;       // current position in the first buffer
    TXSockBuf          *fBufCur;        // current read buffer
 
+   TSemaphore          fAsynProc;      // Control actions while processing async messages
+
    // Interrupts
    TMutex             *fIMtx;          // To protect interrupt queue
    kXR_int32           fILev;          // Highest received interrupt
