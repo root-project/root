@@ -263,7 +263,7 @@ void TEveStraightLineSetProjected::UpdateProjection()
    // Lines
    Int_t num_lines = orig.GetLinePlex().Size();
    if (proj.HasSeveralSubSpaces())
-      num_lines *= 1.1;
+      num_lines += TMath::Max(1, num_lines/10);
    fLinePlex.Reset(sizeof(Line_t), num_lines);
    TEveVector p1, p2;
    TEveChunkManager::iterator li(orig.GetLinePlex());
