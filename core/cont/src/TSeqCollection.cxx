@@ -119,8 +119,8 @@ void TSeqCollection::QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, In
      i = first;
      j = last;
      for (;;) {
-        while (++i < last && ObjCompare(a[i], a[first]) < 0);
-        while (--j > first && ObjCompare(a[j], a[first]) > 0);
+        while (++i < last && ObjCompare(a[i], a[first]) < 0) {}
+        while (--j > first && ObjCompare(a[j], a[first]) > 0) {}
         if (i >= j) break;
 
         tmp1 = a[i]; for(k=0;k<nBs;k++) tmp2[k] = b[k][i];
