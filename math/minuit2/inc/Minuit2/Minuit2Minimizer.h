@@ -262,11 +262,8 @@ protected:
 
 private: 
    
-   // dimension of the function to be minimized 
-   unsigned int fDim; 
-   // error code
-   int fErrorCode; 
-   bool fUseFumili; 
+   unsigned int fDim;       // dimension of the function to be minimized 
+   bool fUseFumili;     
 
    ROOT::Minuit2::MnUserParameterState fState;
    // std::vector<ROOT::Minuit2::MinosError> fMinosErrors;
