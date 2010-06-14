@@ -43,6 +43,7 @@ UInt_t         TGLCamera::fgDollyDeltaSens       = 500;
 //______________________________________________________________________________
 TGLCamera::TGLCamera() :
    fExternalCenter(kFALSE),
+   fFixDefCenter(kFALSE),
    fCenter(&fDefCenter),
    fNearClip(0), fFarClip(0),
    fDollyDefault(1.0), fDollyDistance(1.0),
@@ -64,6 +65,7 @@ TGLCamera::TGLCamera() :
 //______________________________________________________________________________
 TGLCamera::TGLCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis) :
    fExternalCenter(kFALSE),
+   fFixDefCenter(kFALSE),
    fCenter(&fDefCenter),
    fNearClip(0), fFarClip(0),
    fDollyDefault(1.0), fDollyDistance(1.0),

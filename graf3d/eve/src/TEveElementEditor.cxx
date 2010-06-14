@@ -191,6 +191,6 @@ void TEveElementEditor::DoTransparency()
 {
    // Slot for Transparency.
 
-   fRE->SetMainTransparency((UChar_t)(fTransparency->GetNumber()));
+   fRE->SetMainTransparency((Char_t)(fTransparency->GetNumber()));
    Update();
 }

@@ -69,7 +69,6 @@ public:
    Float_t  GetPolygonOffset(Int_t i) const { return fPolygonOffset[i]; }
    void     SetPolygonOffset(Float_t factor, Float_t units);
 
-   virtual Bool_t CanEditMainColor() const { return kTRUE; }
    virtual void   Paint(Option_t* option="");
    virtual void   ComputeBBox();
 

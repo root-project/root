@@ -639,29 +639,15 @@ void TEveCalo3DGL::DrawSelectedCells(TEveCaloData::vCellId_t cells) const
 }
 
 //______________________________________________________________________________
-void TEveCalo3DGL::ProcessSelection(TGLRnrCtx & /*rnrCtx*/, TGLSelectRecord & rec)
+void TEveCalo3DGL::ProcessSelection(TGLRnrCtx& /*rnrCtx*/, TGLSelectRecord& rec)
 {
    // Processes tower selection.
    // Virtual function from TGLogicalShape. Called from TGLViewer.
 
-   TEveCaloData::vCellId_t& cells = rec.GetHighlight() ? fM->fData->GetCellsHighlighted() : fM->fData->GetCellsSelected() ;
-
-   Int_t prev = cells.size();
-   if (!rec.GetMultiple()) cells.clear();
-   Int_t cellID = -1;
+   TEveCaloData::vCellId_t sel;
    if (rec.GetN() > 1)
    {
-      cellID = rec.GetItem(1);
-      cells.push_back(fM->fCellList[cellID]);
+      sel.push_back(fM->fCellList[rec.GetItem(1)]);
    }
-
-   if (prev == 0 && cellID >= 0)
-      rec.SetSecSelResult(TGLSelectRecord::kEnteringSelection);
-   else if (prev  && cellID < 0)
-      rec.SetSecSelResult(TGLSelectRecord::kLeavingSelection);
-   else if (prev  && cellID >= 0)
-      rec.SetSecSelResult(TGLSelectRecord::kModifyingInternalSelection);
-
-
-   fM->fData->CellSelectionChanged();
+   fM->fData->ProcessSelection(sel, rec);
 }

@@ -322,7 +322,7 @@ void TGLViewer::PadPaint(TVirtualPad* pad)
 /**************************************************************************/
 
 //______________________________________________________________________________
-void TGLViewer::UpdateScene()
+void TGLViewer::UpdateScene(Bool_t redraw)
 {
    // Force update of pad-scenes. Eventually this could be generalized
    // to all scene-types via a virtual function in TGLSceneBase.
@@ -340,7 +340,8 @@ void TGLViewer::UpdateScene()
    PostSceneBuildSetup(fResetCamerasOnNextUpdate || fResetCamerasOnUpdate);
    fResetCamerasOnNextUpdate = kFALSE;
 
-   RequestDraw();
+   if (redraw)
+      RequestDraw();
 }
 
 //______________________________________________________________________________
@@ -442,10 +443,9 @@ void TGLViewer::RequestDraw(Short_t LODInput)
    // Request is directed via cross thread gVirtualGL object.
 
    fRedrawTimer->Stop();
-   // Ignore request if GL window or context not yet availible - we
-   // will get redraw later
-   if (!fGLWidget && fGLDevice == -1) {
-      fRedrawTimer->RequestDraw(100, LODInput);
+   // Ignore request if GL window or context not yet availible or shown.
+   if ((!fGLWidget && fGLDevice == -1) || (fGLWidget && !fGLWidget->IsMapped()))
+   {
       return;
    }
 
@@ -1095,7 +1095,7 @@ void TGLViewer::FadeView(Float_t alpha)
       TGLCapabilitySwitch blend(GL_BLEND,    kTRUE);
       TGLCapabilitySwitch light(GL_LIGHTING, kFALSE);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      TGLUtil::Color(fRnrCtx->ColorSet().Background(), alpha);
+      TGLUtil::ColorAlpha(fRnrCtx->ColorSet().Background(), alpha);
       glBegin(GL_QUADS);
       glVertex3f(-1, -1, z);  glVertex3f( 1, -1, z);
       glVertex3f( 1,  1, z);  glVertex3f(-1,  1, z);

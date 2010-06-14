@@ -73,7 +73,7 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
            bpi != fM->fBreakPoints.end(); ++bpi)
       {
          Int_t size = *bpi - start;
-         TGLUtil::RenderPolyLine(*fM, p, size);
+         TGLUtil::RenderPolyLine(*fM, fM->GetMainTransparency(), p, size);
          p     += 3*size;
          start +=   size;
       }
@@ -83,7 +83,8 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    // markers on lines
    if (fM->fRnrPoints)
    {
-      TGLUtil::RenderPolyMarkers(*fM, fM->GetP(), fM->Size(),
+      TGLUtil::RenderPolyMarkers(*fM, 0,
+				 fM->GetP(), fM->Size(),
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
    }
@@ -106,7 +107,8 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
             fM->GetPoint(fM->fBreakPoints[i], pnts[n], pnts[n+1], pnts[n+2]);
          }
       }
-      TGLUtil::RenderPolyMarkers(fM->fPropagator->RefPTBAtt(), &pnts[0], nbptd,
+      TGLUtil::RenderPolyMarkers(fM->fPropagator->RefPTBAtt(), 0,
+				 &pnts[0], nbptd,
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
    }

@@ -37,7 +37,7 @@ protected:
    // 2D scales
    Bool_t         fShowScales;
    Color_t        fScaleColor;
-   UChar_t        fScaleTransparency; //transaprency in %
+   Char_t         fScaleTransparency; //transaprency in %
    Double_t       fScaleCoordX;
    Double_t       fScaleCoordY;
    Double_t       fScaleW;
@@ -46,8 +46,8 @@ protected:
    Double_t       fCellY;
 
    Color_t        fFrameColor;
-   UChar_t        fFrameLineTransp;
-   UChar_t        fFrameBgTransp;
+   Char_t         fFrameLineTransp;
+   Char_t         fFrameBgTransp;
 
    // move of scales
    Int_t             fMouseX, fMouseY; //! last mouse position
@@ -96,10 +96,10 @@ public:
    const char*   GetHeaderTxt() const { return fHeaderTxt; }
 
    void          SetShowScales(Bool_t x) { fShowScales = x;}
-   void          SetScaleColorTransparency(Color_t colIdx, UChar_t transp);
+   void          SetScaleColorTransparency(Color_t colIdx, Char_t transp);
    void          SetScalePosition(Double_t x, Double_t y);
 
-   void          SetFrameAttribs(Color_t frameCol, UChar_t lineTransp, UChar_t bgTransp);
+   void          SetFrameAttribs(Color_t frameCol, Char_t lineTransp, Char_t bgTransp);
 
    ClassDef(TEveCaloLegoOverlay, 0); // GL-overaly control GUI for TEveCaloLego.
 };

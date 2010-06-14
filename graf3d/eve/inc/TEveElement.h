@@ -86,11 +86,13 @@ protected:
    Int_t            fDenyDestroy;          //! Deny-destroy count.
    Bool_t           fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
 
-   Bool_t           fRnrSelf;              //  Render this element.
-   Bool_t           fRnrChildren;          //  Render children of this element.
-   Bool_t           fCanEditMainTrans;     //  Allow editing of main transformation.
+   Bool_t           fRnrSelf;                 //  Render this element.
+   Bool_t           fRnrChildren;             //  Render children of this element.
+   Bool_t           fCanEditMainColor;        //  Allow editing of main color.
+   Bool_t           fCanEditMainTransparency; //  Allow editing of main transparency.
+   Bool_t           fCanEditMainTrans;        //  Allow editing of main transformation.
 
-   UChar_t          fMainTransparency;     //  Main-transparency variable.
+   Char_t           fMainTransparency;     //  Main-transparency variable.
    Color_t         *fMainColorPtr;         //  Pointer to main-color variable.
    TEveTrans       *fMainTrans;            //  Pointer to main transformation matrix.
 
@@ -253,9 +255,10 @@ public:
    virtual Bool_t SetRnrState(Bool_t rnr);
    virtual void   PropagateRnrStateToProjecteds();
 
-   virtual Bool_t CanEditMainColor() const  { return kFALSE; }
-   Color_t* GetMainColorPtr()        const  { return fMainColorPtr; }
-   void     SetMainColorPtr(Color_t* color) { fMainColorPtr = color; }
+   virtual Bool_t CanEditMainColor() const   { return fCanEditMainColor; }
+   void           SetEditMainColor(Bool_t x) { fCanEditMainColor = x; }
+   Color_t* GetMainColorPtr()        const   { return fMainColorPtr; }
+   void     SetMainColorPtr(Color_t* color)  { fMainColorPtr = color; }
 
    virtual Bool_t  HasMainColor() const { return fMainColorPtr != 0; }
    virtual Color_t GetMainColor() const { return fMainColorPtr ? *fMainColorPtr : 0; }
@@ -265,10 +268,12 @@ public:
    void            SetMainColorRGB(Float_t r, Float_t g, Float_t b);
    virtual void    PropagateMainColorToProjecteds(Color_t color, Color_t old_color);
 
-   virtual Bool_t  CanEditMainTransparency() const { return kFALSE; }
-   virtual UChar_t GetMainTransparency()     const { return fMainTransparency; }
-   virtual void    SetMainTransparency(UChar_t t);
+   virtual Bool_t  CanEditMainTransparency() const   { return fCanEditMainTransparency; }
+   void            SetEditMainTransparency(Bool_t x) { fCanEditMainTransparency = x; }
+   virtual Char_t  GetMainTransparency()     const { return fMainTransparency; }
+   virtual void    SetMainTransparency(Char_t t);
    void            SetMainAlpha(Float_t alpha);
+   virtual void    PropagateMainTransparencyToProjecteds(Char_t t, Char_t old_t);
 
    virtual Bool_t     CanEditMainTrans() const { return fCanEditMainTrans; }
    virtual Bool_t     HasMainTrans()     const { return fMainTrans != 0;   }
@@ -307,7 +312,9 @@ protected:
       kCSCBImplySelectAllChildren           = BIT(0), // compound will select all children
       kCSCBTakeAnyParentAsMaster            = BIT(1), // element will take any compound parent as master
       kCSCBApplyMainColorToAllChildren      = BIT(2), // compound will apply color change to all children
-      kCSCBApplyMainColorToMatchingChildren = BIT(3)  // compound will apply color change to all children with matching color
+      kCSCBApplyMainColorToMatchingChildren = BIT(3), // compound will apply color change to all children with matching color
+      kCSCBApplyMainTransparencyToAllChildren      = BIT(4), // compound will apply transparency change to all children
+      kCSCBApplyMainTransparencyToMatchingChildren = BIT(5)  // compound will apply transparency change to all children with matching color
    };
 
    UChar_t fCSCBits;
@@ -336,7 +343,7 @@ public:
 
    virtual UChar_t GetSelectedLevel() const;
 
-   void RecheckImpliedSelections();
+   void   RecheckImpliedSelections();
 
    void   SetCSCBits(UChar_t f)   { fCSCBits |=  f; }
    void   ResetCSCBits(UChar_t f) { fCSCBits &= ~f; }
@@ -347,6 +354,8 @@ public:
    void   CSCTakeAnyParentAsMaster()            { fCSCBits |= kCSCBTakeAnyParentAsMaster;  }
    void   CSCApplyMainColorToAllChildren()      { fCSCBits |= kCSCBApplyMainColorToAllChildren; }
    void   CSCApplyMainColorToMatchingChildren() { fCSCBits |= kCSCBApplyMainColorToMatchingChildren; }
+   void   CSCApplyMainTransparencyToAllChildren()      { fCSCBits |= kCSCBApplyMainTransparencyToAllChildren; }
+   void   CSCApplyMainTransparencyToMatchingChildren() { fCSCBits |= kCSCBApplyMainTransparencyToMatchingChildren; }
 
 
    // Change-stamping and change bits
@@ -441,13 +450,12 @@ private:
    TEveElementList& operator=(const TEveElementList&); // Not implemented
 
 protected:
-   Color_t   fColor;       // Color of the object.
-   Bool_t    fDoColor;     // Should serve fColor as the main color of the object.
-   TClass   *fChildClass;  // Class of acceptable children, others are rejected.
+   Color_t   fColor;          // Color of the object.
+   TClass   *fChildClass;     // Class of acceptable children, others are rejected.
 
 public:
    TEveElementList(const char* n="TEveElementList", const char* t="",
-                   Bool_t doColor=kFALSE);
+                   Bool_t doColor=kFALSE, Bool_t doTransparency=kFALSE);
    TEveElementList(const TEveElementList& e);
    virtual ~TEveElementList() {}
 
@@ -464,8 +472,6 @@ public:
 
    virtual void SetElementNameTitle(const char* name, const char* title)
    { TNamed::SetNameTitle(name, title); NameTitleChanged(); }
-
-   virtual Bool_t CanEditMainColor() const { return fDoColor; }
 
    TClass* GetChildClass() const { return fChildClass; }
    void    SetChildClass(TClass* c) { fChildClass = c; }

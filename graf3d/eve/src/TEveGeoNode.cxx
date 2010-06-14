@@ -76,7 +76,7 @@ TEveGeoNode::TEveGeoNode(TGeoNode* node) :
    // Hack!! Should use cint to retrieve TAttLine::fLineColor offset.
    char* l = (char*) dynamic_cast<TAttLine*>(node->GetVolume());
    SetMainColorPtr((Color_t*)(l + sizeof(void*)));
-   SetMainTransparency((UChar_t) fNode->GetVolume()->GetTransparency());
+   SetMainTransparency(fNode->GetVolume()->GetTransparency());
 
    fRnrSelf = fNode->TGeoAtt::IsVisible();
 }
@@ -203,11 +203,11 @@ Bool_t TEveGeoNode::CanEditMainTransparency() const
 }
 
 //______________________________________________________________________________
-UChar_t TEveGeoNode::GetMainTransparency() const
+Char_t TEveGeoNode::GetMainTransparency() const
 {
    // Get transparency from node, if different propagate to this.
 
-   UChar_t t = (UChar_t) fNode->GetVolume()->GetTransparency();
+   Char_t t = fNode->GetVolume()->GetTransparency();
    if (fMainTransparency != t)
    {
       TEveGeoNode* ncthis = const_cast<TEveGeoNode*>(this);
@@ -217,12 +217,12 @@ UChar_t TEveGeoNode::GetMainTransparency() const
 }
 
 //______________________________________________________________________________
-void TEveGeoNode::SetMainTransparency(UChar_t t)
+void TEveGeoNode::SetMainTransparency(Char_t t)
 {
    // Set transparency, propagate to volume's transparency.
 
    TEveElement::SetMainTransparency(t);
-   fNode->GetVolume()->SetTransparency((Char_t) t);
+   fNode->GetVolume()->SetTransparency(t);
 }
 
 /******************************************************************************/

@@ -65,7 +65,8 @@ TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    fMouseTimerRunning  (kFALSE),
    fTooltipShown       (kFALSE),
    fTooltipPixelTolerance (3),
-   fSecSelType(TGLViewer::kOnRequest)
+   fSecSelType(TGLViewer::kOnRequest),
+   fDoInternalSelection(kTRUE)
 {
    // Constructor.
 
@@ -605,7 +606,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       {
          if (event->fCode == kButton1)
          {
-            if (event->fState & kKeyShiftMask)
+            if (event->fState & kKeyShiftMask && fDoInternalSelection)
             {
                if (fGLViewer->RequestSelect(event->fX, event->fY))
                {
@@ -715,6 +716,9 @@ Bool_t TGLEventHandler::HandleExpose(Event_t * event)
 Bool_t TGLEventHandler::HandleKey(Event_t *event)
 {
    // Handle keyboard 'event'.
+
+  if (fTooltipShown)
+    fTooltip->Hide();
 
    fLastEventState = event->fState;
 

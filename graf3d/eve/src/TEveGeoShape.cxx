@@ -97,6 +97,8 @@ TEveGeoShape::TEveGeoShape(const char* name, const char* title) :
 {
    // Constructor.
 
+   fCanEditMainColor        = kTRUE;
+   fCanEditMainTransparency = kTRUE;
    InitMainTrans();
 }
 

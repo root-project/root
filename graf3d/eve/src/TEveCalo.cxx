@@ -416,6 +416,8 @@ TEveCalo3D::TEveCalo3D(TEveCaloData* d, const char* n, const char* t):
 
    // Constructor.
 
+   fCanEditMainColor        = kTRUE;
+   fCanEditMainTransparency = kTRUE;
    fMainColorPtr = &fFrameColor;
 }
 

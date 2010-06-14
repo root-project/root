@@ -25,7 +25,7 @@
 //  false - MinValue -> MaxValue
 
 
-ClassImp(TEveRGBAPalette)
+ClassImp(TEveRGBAPalette);
 
 //______________________________________________________________________________
 TEveRGBAPalette::TEveRGBAPalette() :

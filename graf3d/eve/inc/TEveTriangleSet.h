@@ -71,7 +71,7 @@ public:
    virtual void ComputeBBox();
    virtual void Paint(Option_t* option="");
 
-   void SetTransparency(UChar_t tr) { SetMainTransparency(tr); } // *MENU*
+   void SetTransparency(Char_t tr) { SetMainTransparency(tr); } // *MENU*
 
    static TEveTriangleSet* ReadTrivialFile(const char* file);
 

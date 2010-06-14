@@ -322,7 +322,7 @@ void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) c
       {
          // Outline also needs grey wireframe but respecting
          // transparency of main diffuse color.
-         TGLUtil::Color(rnrCtx.ColorSet().Outline(), 0.5f*color[3]);
+         TGLUtil::ColorAlpha(rnrCtx.ColorSet().Outline(), 0.5f*color[3]);
          break;
       }
       default:

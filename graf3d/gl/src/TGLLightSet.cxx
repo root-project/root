@@ -108,7 +108,9 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
       glLoadIdentity();
 
       // 0: Front, 1: Top, 2: Bottom, 3: Left, 4: Right
-      TGLVertex3 center = bbox.Center();
+      TGLVertex3 c = bbox.Center();
+      TGLVector3 center(c.X(), c.Y(), c.Z());
+      camera.RefModelViewMatrix().MultiplyIP(center);
       // Float_t pos0[] = { center.X(), center.Y(), frontLightZ, 1.0 };
       Float_t pos0[] = { 0.0,        0.0,                      frontLightZ, 1.0 };
       Float_t pos1[] = { center.X(), center.Y() + lightRadius, sideLightsZ, 1.0 };

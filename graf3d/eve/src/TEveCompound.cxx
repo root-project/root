@@ -24,8 +24,8 @@
 ClassImp(TEveCompound);
 
 //______________________________________________________________________________
-TEveCompound::TEveCompound(const char* n, const char* t, Bool_t doColor) :
-   TEveElementList (n, t, doColor),
+TEveCompound::TEveCompound(const char* n, const char* t, Bool_t doColor, Bool_t doTransparency) :
+   TEveElementList (n, t, doColor, doTransparency),
    fCompoundOpen   (0)
 {
    // Constructor.
@@ -56,6 +56,35 @@ void TEveCompound::SetMainColor(Color_t color)
           ((*i)->GetCompound() == this && (*i)->GetMainColor() == old_color))
       {
          (*i)->SetMainColor(color);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TEveCompound::SetMainTransparency(Char_t t)
+{
+   // SetMainTransparency for the compound.
+   // The transparenct is also propagated to children with compound set to this
+   // whose current transparency is the same as the old transparency.
+   //
+   // The following CompoundSelectionColorBits have further influence:
+   //   kCSCBApplyMainTransparencyToAllChildren      - apply transparency to all children;
+   //   kCSCBApplyMainTransparencyToMatchingChildren - apply transparency to children who have
+   //                                                  matching transparency.
+
+   Char_t old_t = GetMainTransparency();
+
+   TEveElement::SetMainTransparency(t);
+
+   Bool_t chg_all      = TestCSCBits(kCSCBApplyMainTransparencyToAllChildren);
+   Bool_t chg_matching = TestCSCBits(kCSCBApplyMainTransparencyToMatchingChildren);
+
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      if (chg_all || (chg_matching && (*i)->GetMainTransparency() == old_t) ||
+          ((*i)->GetCompound() == this && (*i)->GetMainTransparency() == old_t))
+      {
+         (*i)->SetMainTransparency(t);
       }
    }
 }

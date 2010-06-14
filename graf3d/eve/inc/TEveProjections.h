@@ -132,6 +132,7 @@ public:
    virtual Bool_t      HasSeveralSubSpaces() const { return kFALSE; }
    virtual Bool_t      AcceptSegment(TEveVector&, TEveVector&, Float_t /*tolerance*/) const { return kTRUE; }
    virtual Int_t       SubSpaceId(const TEveVector&) const { return 0; }
+   virtual void        BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t eps_sqr=1e-10f);
    virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
 
    // utils to draw axis

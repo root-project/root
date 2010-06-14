@@ -158,7 +158,7 @@ protected:
    Bool_t    fRnrBarrelFrame;
 
    Color_t   fFrameColor;
-   UChar_t   fFrameTransparency;
+   Char_t    fFrameTransparency;
 
    virtual void BuildCellIdCache();
 
@@ -167,14 +167,11 @@ public:
    virtual ~TEveCalo3D() {}
    virtual void ComputeBBox();
 
-   virtual Bool_t CanEditMainColor()        const { return kTRUE; }
-   virtual Bool_t CanEditMainTransparency() const { return kTRUE; }
-
    void SetRnrFrame(Bool_t e, Bool_t b)         { fRnrEndCapFrame = e; fRnrBarrelFrame = b; }
    void GetRnrFrame(Bool_t &e, Bool_t &b) const { e = fRnrEndCapFrame; b = fRnrBarrelFrame; }
 
-   void    SetFrameTransparency(UChar_t x) { fFrameTransparency = x; }
-   UChar_t GetFrameTransparency() const { return fFrameTransparency; }
+   void   SetFrameTransparency(Char_t x) { fFrameTransparency = x; }
+   Char_t GetFrameTransparency() const { return fFrameTransparency; }
 
    ClassDef(TEveCalo3D, 0); // Class for 3D visualization of calorimeter event data.
 };
@@ -249,7 +246,7 @@ protected:
    Color_t                 fFontColor;
    Color_t                 fGridColor;
    Color_t                 fPlaneColor;
-   UChar_t                 fPlaneTransparency;
+   Char_t                  fPlaneTransparency;
 
    Int_t                   fNZSteps; // Z axis label step in GeV
    Float_t                 fZAxisStep;
@@ -286,8 +283,8 @@ public:
    Color_t  GetPlaneColor() const { return fPlaneColor; }
    void     SetPlaneColor(Color_t ci) { fPlaneColor=ci; }
 
-   UChar_t  GetPlaneTransparency() const { return fPlaneTransparency; }
-   void     SetPlaneTransparency(UChar_t t) { fPlaneTransparency=t; }
+   Char_t   GetPlaneTransparency() const { return fPlaneTransparency; }
+   void     SetPlaneTransparency(Char_t t) { fPlaneTransparency=t; }
 
    Int_t    GetNZSteps() const { return fNZSteps; }
    void     SetNZSteps(Int_t s) { fNZSteps = s;}

@@ -65,11 +65,12 @@ void TEveLineGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    if (q.fRnrLine) {
       TGLCapabilitySwitch sw_smooth(GL_LINE_SMOOTH, q.fSmooth);
       TGLCapabilitySwitch sw_blend(GL_BLEND, q.fSmooth);
-      TGLUtil::RenderPolyLine(q, q.GetP(), q.Size());
+      TGLUtil::RenderPolyLine(q, q.GetMainTransparency(), q.GetP(), q.Size());
    }
    TGLUtil::UnlockColor();
-   if (q.fRnrPoints)
-      TGLUtil::RenderPolyMarkers(q, q.GetP(), q.Size(),
+   if (q.fRnrPoints) {
+      TGLUtil::RenderPolyMarkers(q, 0,q.GetP(), q.Size(),
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
+   }
 }

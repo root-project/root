@@ -63,6 +63,7 @@ public:
    virtual void PropagateVizParams(TEveElement* el=0);
    virtual void PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children);
    virtual void PropagateMainColor(Color_t color, Color_t old_color);
+   virtual void PropagateMainTransparency(Char_t t, Char_t old_t);
 
    ClassDef(TEveProjectable, 0); // Abstract base class for classes that can be transformed with non-linear projections.
 };

@@ -340,7 +340,7 @@ public:
    void         AutoFade(Float_t fade, Float_t time=1, Int_t steps=10);
 
    // Update/camera-reset
-   void   UpdateScene();
+   void   UpdateScene(Bool_t redraw=kTRUE);
    Bool_t GetIgnoreSizesOnUpdate() const        { return fIgnoreSizesOnUpdate; }
    void   SetIgnoreSizesOnUpdate(Bool_t v)      { fIgnoreSizesOnUpdate = v; }
    void   ResetCurrentCamera();

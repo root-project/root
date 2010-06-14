@@ -64,6 +64,8 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    fDigitIds       (0),
    fDefaultValue   (kMinInt),
    fValueIsColor   (kFALSE),
+   fSingleColor    (kFALSE),
+   fAntiFlick      (kTRUE),
    fOwnIds         (kFALSE),
    fPlex           (),
    fLastDigit      (0),
@@ -80,6 +82,8 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
 {
    // Constructor.
 
+   fCanEditMainColor        = kTRUE;
+   fCanEditMainTransparency = kTRUE;
    InitMainTrans();
 }
 
@@ -271,7 +275,7 @@ void TEveDigitSet::DigitColor(Color_t ci)
 }
 
 //______________________________________________________________________________
-void TEveDigitSet::DigitColor(Color_t ci, UChar_t transparency)
+void TEveDigitSet::DigitColor(Color_t ci, Char_t transparency)
 {
    // Set color for the last digit added.
 

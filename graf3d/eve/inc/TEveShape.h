@@ -46,10 +46,7 @@ public:
    virtual ~TEveShape();
 
    // Rendering parameters.
-   virtual Bool_t  CanEditMainColor() const { return kTRUE; }
    virtual void    SetMainColor(Color_t color);
-
-   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
 
    virtual Color_t GetFillColor() const { return fFillColor; }
    virtual Color_t GetLineColor() const { return fLineColor; }

@@ -35,6 +35,8 @@ TEveShape::TEveShape(const char* n, const char* t) :
 {
    // Constructor.
 
+   fCanEditMainColor        = kTRUE;
+   fCanEditMainTransparency = kTRUE;
    SetMainColorPtr(&fFillColor);
 }
 

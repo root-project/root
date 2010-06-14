@@ -33,6 +33,9 @@ TEveArrow::TEveArrow(Float_t xVec, Float_t yVec, Float_t zVec,
    // Constructor.
    // Org - starting point.
    // Vec - vector from start to end of the arrow.
+
+   fCanEditMainColor        = kTRUE;
+   fCanEditMainTransparency = kTRUE;
 }
 
 //______________________________________________________________________________

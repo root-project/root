@@ -60,8 +60,15 @@ void TGLPerspectiveCamera::Setup(const TGLBoundingBox & box, Bool_t reset)
 
    if (fExternalCenter == kFALSE)
    {
-      TGLVertex3 center = box.Center();
-      SetCenterVec(center.X(), center.Y(), center.Z());
+      if (fFixDefCenter)
+      {
+         SetCenterVec(fFDCenter.X(), fFDCenter.Y(), fFDCenter.Z());
+      }
+      else
+      {
+         TGLVertex3 center = box.Center();
+         SetCenterVec(center.X(), center.Y(), center.Z());
+      }
    }
 
    // At default FOV, the dolly should be set so as to encapsulate the scene.

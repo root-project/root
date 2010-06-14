@@ -75,8 +75,10 @@ protected:
    TGLMatrix   fCamBase;         //! tranformation to center and rotation from up to x vector
    TGLMatrix   fCamTrans;        //! transformation relative to fCamTrans
    Bool_t      fExternalCenter;  //! use external center insead of scene center
+   Bool_t      fFixDefCenter;    //! use fixed default center
    TGLVector3  fExtCenter;       //! external camera center
    TGLVector3  fDefCenter;       //! deafult camera center
+   TGLVector3  fFDCenter;        //! fixed deafult camera center
    TGLVector3 *fCenter;          //! current camera center
 
    mutable Double_t fNearClip;   //! last applied near-clip
@@ -148,6 +150,10 @@ public:
    void    SetCenterVec(Double_t x, Double_t y, Double_t z);
    void    SetCenterVecWarp(Double_t x, Double_t y, Double_t z);
    Double_t* GetCenterVec() { return fCenter->Arr(); }
+
+   void    SetFixDefCenter(Bool_t x) { fFixDefCenter = x; } 
+   void    SetFixDefCenterVec(Double_t x, Double_t y, Double_t z) { fFDCenter.Set(x, y, z); }
+   Double_t* GetFixDefCenterVec() { return fFDCenter.Arr(); }
 
    Double_t GetNearClip() const { return fNearClip; }
    Double_t GetFarClip()  const { return fFarClip;  }

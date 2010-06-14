@@ -70,6 +70,8 @@ public:
    TEveTrack(const TEveTrack& t);
    virtual ~TEveTrack();
 
+   virtual void ComputeBBox();
+
    virtual void SetStdTitle();
 
    virtual void SetTrackParams(const TEveTrack& t);

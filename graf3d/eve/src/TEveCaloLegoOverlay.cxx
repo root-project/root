@@ -212,7 +212,7 @@ void TEveCaloLegoOverlay::MouseLeave()
 }
 
 //______________________________________________________________________________
-void TEveCaloLegoOverlay::SetScaleColorTransparency(Color_t colIdx, UChar_t transp)
+void TEveCaloLegoOverlay::SetScaleColorTransparency(Color_t colIdx, Char_t transp)
 {
    // Set color and transparency of scales.
 
@@ -230,7 +230,7 @@ void TEveCaloLegoOverlay::SetScalePosition(Double_t x, Double_t y)
 }
 
 //______________________________________________________________________________
-void TEveCaloLegoOverlay:: SetFrameAttribs(Color_t frameColor, UChar_t lineTransp, UChar_t bgTransp)
+void TEveCaloLegoOverlay:: SetFrameAttribs(Color_t frameColor, Char_t lineTransp, Char_t bgTransp)
 {
    // Set frame attribs.
 

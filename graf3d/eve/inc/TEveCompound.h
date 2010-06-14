@@ -31,7 +31,7 @@ protected:
 
 public:
    TEveCompound(const char* n="TEveCompound", const char* t="",
-                Bool_t doColor=kTRUE);
+                Bool_t doColor=kTRUE, Bool_t doTransparency=kFALSE);
    virtual ~TEveCompound() {}
 
    void   OpenCompound()         { ++fCompoundOpen;  }
@@ -39,6 +39,7 @@ public:
    Bool_t IsCompoundOpen() const { return fCompoundOpen > 0; }
 
    virtual void SetMainColor(Color_t color);
+   virtual void SetMainTransparency(Char_t t);
 
    virtual void AddElement(TEveElement* el);
    virtual void RemoveElementLocal(TEveElement* el);

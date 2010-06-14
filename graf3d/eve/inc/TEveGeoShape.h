@@ -42,9 +42,6 @@ public:
    TEveGeoShape(const char* name="TEveGeoShape", const char* title=0);
    virtual ~TEveGeoShape();
 
-   virtual Bool_t  CanEditMainColor()        const { return kTRUE; }
-   virtual Bool_t  CanEditMainTransparency() const { return kTRUE; }
-
    Color_t     GetColor()      const { return fColor; }
    Int_t       GetNSegments()  const { return fNSegments; }
    void        SetNSegments(Int_t s) { fNSegments = s; }

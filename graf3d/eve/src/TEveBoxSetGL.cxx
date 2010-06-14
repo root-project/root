@@ -211,6 +211,21 @@ Bool_t TEveBoxSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
    return kFALSE;
 }
 
+/******************************************************************************/
+
+namespace
+{
+  inline void AntiFlick(Float_t x, Float_t y, Float_t z)
+  {
+     // Render anti-flickering point.
+     glBegin(GL_POINTS);
+     glVertex3f(x, y, z);
+     glEnd();
+  }
+}
+
+/******************************************************************************/
+
 //______________________________________________________________________________
 void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
 {
@@ -243,6 +258,10 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
                glBegin(primitiveType);
                RenderBox(b.fVertices);
                glEnd();
+               if (fM->fAntiFlick)
+                  AntiFlick(0.5f*(b.fVertices[0] + b.fVertices[18]),
+                            0.5f*(b.fVertices[1] + b.fVertices[19]),
+                            0.5f*(b.fVertices[2] + b.fVertices[20]));
             }
             if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
          }
@@ -262,6 +281,8 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
                glTranslatef(b.fA, b.fB, b.fC);
                glScalef    (b.fW, b.fH, b.fD);
                glCallList(fBoxDL);
+               if (fM->fAntiFlick)
+                  AntiFlick(0.5f, 0.5f, 0.5f);
                glPopMatrix();
             }
             if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
@@ -279,6 +300,8 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
                if (rnrCtx.SecSelection()) glLoadName(bi.index());
                glTranslatef(b.fA, b.fB, b.fC);
                glCallList(fBoxDL);
+               if (fM->fAntiFlick)
+                  AntiFlick(0.5f*fM->fDefWidth, 0.5f*fM->fDefHeight, 0.5f*fM->fDefDepth);
                glTranslatef(-b.fA, -b.fB, -b.fC);
             }
             if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
@@ -307,6 +330,8 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
                glRotatef(90 - theta, 0, 1, 0);
                glScalef (b.fR, b.fR, h);
                glCallList(fBoxDL);
+               if (fM->fAntiFlick)
+                  AntiFlick(0.0f, 0.0f, 0.5f);
                glPopMatrix();
             }
             if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }
@@ -336,6 +361,8 @@ void TEveBoxSetGL::RenderBoxes(TGLRnrCtx& rnrCtx) const
                glRotatef(b.fAngle,   0, 0, 1);
                glScalef (b.fR, b.fR2, h);
                glCallList(fBoxDL);
+               if (fM->fAntiFlick)
+                  AntiFlick(0.0f, 0.0f, 0.5f);
                glPopMatrix();
             }
             if (boxSkip) { Int_t s = boxSkip; while (s--) bi.next(); }

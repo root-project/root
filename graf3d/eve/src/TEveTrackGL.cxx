@@ -90,6 +90,7 @@ void TEveTrackGL::RenderPathMarksAndFirstVertex(TGLRnrCtx& rnrCtx) const
    if ( ! pms.empty())
    {
       Float_t *pnts = new Float_t[3*pms.size()]; // maximum
+      Int_t    cnt  = 0;
       Int_t    n    = 0;
       for (Int_t i = 0; i < fTrack->fLastPMIdx; ++i)
       {
@@ -103,9 +104,10 @@ void TEveTrackGL::RenderPathMarksAndFirstVertex(TGLRnrCtx& rnrCtx) const
             pnts[n+1] = pm.fV.fY;
             pnts[n+2] = pm.fV.fZ;
             n += 3;
+            ++cnt;
          }
       }
-      TGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), pnts, n,
+      TGLUtil::RenderPolyMarkers(rTP.RefPMAtt(), 0, pnts, cnt,
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
       delete [] pnts;
@@ -113,7 +115,7 @@ void TEveTrackGL::RenderPathMarksAndFirstVertex(TGLRnrCtx& rnrCtx) const
 
    // fist vertex
    if (rTP.GetRnrFV() && fTrack->GetLastPoint())
-      TGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), fTrack->GetP(), 1,
+      TGLUtil::RenderPolyMarkers(rTP.RefFVAtt(), 0, fTrack->GetP(), 1,
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
 }

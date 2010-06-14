@@ -53,6 +53,8 @@ TEveText::TEveText(const char* txt) :
    fPolygonOffset[0] = 0;
    fPolygonOffset[1] = 0;
 
+   fCanEditMainColor        = kTRUE;
+   fCanEditMainTransparency = kTRUE;
    InitMainTrans();
    SetFontMode(TGLFont::kPixmap);
 }

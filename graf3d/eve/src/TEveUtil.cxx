@@ -217,7 +217,7 @@ void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], Bool_t alpha)
 }
 
 //______________________________________________________________________________
-void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], UChar_t transparency)
+void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], Char_t transparency)
 {
    // Fill col with RGBA values corresponding to index ci and transparency.
    // ROOT's indexed color palette does not support transparency.

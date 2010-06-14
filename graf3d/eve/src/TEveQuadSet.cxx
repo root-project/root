@@ -47,8 +47,7 @@ TEveQuadSet::TEveQuadSet(const char* n, const char* t) :
    fQuadType  (kQT_Undef),
    fDefWidth  (1),
    fDefHeight (1),
-   fDefCoord  (0),
-   fAntiFlick (kTRUE)
+   fDefCoord  (0)
 {
    // Constructor.
 }
@@ -61,8 +60,7 @@ TEveQuadSet::TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
    fQuadType  (kQT_Undef),
    fDefWidth  (1),
    fDefHeight (1),
-   fDefCoord  (0),
-   fAntiFlick (kTRUE)
+   fDefCoord  (0)
 {
    // Constructor.
 

@@ -86,13 +86,13 @@ TPointSet3D& TPointSet3D::operator=(const TPointSet3D& t)
 void TPointSet3D::ComputeBBox()
 {
    // Compute the bounding box of this points set.
+
    if (Size() > 0) {
+      BBoxInit();
       Int_t    n = Size();
       Float_t* p = fP;
-      BBoxInit();
-      while (n--) {
+      for (Int_t i = 0; i < n; ++i, p += 3) {
          BBoxCheckPoint(p);
-         p += 3;
       }
    } else {
       BBoxZero();

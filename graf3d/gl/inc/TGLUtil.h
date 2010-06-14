@@ -972,9 +972,9 @@ public:
    static Bool_t IsColorLocked();
 
    static void Color(const TGLColor& color);
-   static void Color(const TGLColor& color, UChar_t alpha);
-   static void Color(const TGLColor& color, Float_t alpha);
-   static void Color(Color_t color_index, Float_t alpha=1);
+   static void ColorAlpha(const TGLColor& color, UChar_t alpha);
+   static void ColorAlpha(const TGLColor& color, Float_t alpha);
+   static void ColorAlpha(Color_t color_index, Float_t alpha=1);
    static void ColorTransparency(Color_t color_index, Char_t transparency=0);
    static void Color3ub(UChar_t r, UChar_t g, UChar_t b);
    static void Color4ub(UChar_t r, UChar_t g, UChar_t b, UChar_t a);
@@ -999,18 +999,26 @@ public:
    static void BeginExtendPickRegion(Float_t scale);
    static void EndExtendPickRegion();
 
-   static void RenderPolyMarkers(const TAttMarker& marker, Float_t* p, Int_t n,
+   static void RenderPolyMarkers(const TAttMarker& marker, Char_t transp,
+                                 Float_t* p, Int_t n,
                                  Int_t pick_radius=0, Bool_t selection=kFALSE,
                                  Bool_t sec_selection=kFALSE);
-   static void RenderPoints(const TAttMarker& marker, Float_t* p, Int_t n,
+
+   static void RenderPoints(const TAttMarker& marker,
+                            Float_t* p, Int_t n,
                             Int_t pick_radius=0, Bool_t selection=kFALSE,
                             Bool_t sec_selection=kFALSE);
-   static void RenderCrosses(const TAttMarker& marker, Float_t* p, Int_t n,
+
+   static void RenderCrosses(const TAttMarker& marker,
+                             Float_t* p, Int_t n,
                              Bool_t sec_selection=kFALSE);
-   static void RenderPolyLine(const TAttLine& aline, Float_t* p, Int_t n,
+
+   static void RenderPolyLine(const TAttLine& aline, Char_t transp,
+                              Float_t* p, Int_t n,
                               Int_t pick_radius=0, Bool_t selection=kFALSE);
 
-   static void BeginAttLine(const TAttLine& aline, Int_t pick_radius=0, Bool_t selection=kFALSE);
+   static void BeginAttLine(const TAttLine& aline, Char_t transp,
+                            Int_t pick_radius=0, Bool_t selection=kFALSE);
    static void EndAttLine(Int_t pick_radius=0, Bool_t selection=kFALSE);
 
    // TODO: These draw routines should take LOD hints

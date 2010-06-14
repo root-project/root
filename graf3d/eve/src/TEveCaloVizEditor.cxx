@@ -409,6 +409,6 @@ void TEveCalo3DEditor::DoFrameTransparency()
 {
    // Slot for frame transparency.
 
-   fM->SetFrameTransparency((UChar_t)(fFrameTransparency->GetNumber()));
+   fM->SetFrameTransparency((Char_t)(fFrameTransparency->GetNumber()));
    Update();
 }

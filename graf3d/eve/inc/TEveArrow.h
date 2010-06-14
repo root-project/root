@@ -64,8 +64,6 @@ public:
    virtual void ComputeBBox();
    virtual void Paint(Option_t* option="");
 
-   virtual Bool_t CanEditMainColor() const { return kTRUE; }
-
    ClassDef(TEveArrow, 0); // Class for gl visualisation of arrow.
 };
 

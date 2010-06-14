@@ -78,8 +78,6 @@ protected:
    Float_t           fDefHeight;    // Breadth assigned to second coordinate (B)
    Float_t           fDefCoord;     // Default value for third coordinate    (C)
 
-   Bool_t            fAntiFlick;    // Make extra render pass to avoid flickering when quads are too small.
-
    static Int_t SizeofAtom(EQuadType_e qt);
 
 public:
@@ -93,12 +91,10 @@ public:
    Float_t GetDefWidth()  const { return fDefWidth;  }
    Float_t GetDefHeight() const { return fDefHeight; }
    Float_t GetDefCoord()  const { return fDefCoord;  }
-   Bool_t  GetAntiFlick() const { return fAntiFlick; }
 
    void SetDefWidth(Float_t v)  { fDefWidth  = v; }
    void SetDefHeight(Float_t v) { fDefHeight = v; }
    void SetDefCoord(Float_t v)  { fDefCoord  = v; }
-   void SetAntiFlick(Bool_t f)  { fAntiFlick = f; }
 
    // --------------------------------
 

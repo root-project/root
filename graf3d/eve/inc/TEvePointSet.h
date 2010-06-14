@@ -56,8 +56,6 @@ public:
 
    virtual void ClonePoints(const TEvePointSet& e);
 
-   virtual void ComputeBBox();
-
    void  Reset(Int_t n_points=0, Int_t n_int_ids=0);
    Int_t GrowFor(Int_t n_points);
 

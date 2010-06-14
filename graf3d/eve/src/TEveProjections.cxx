@@ -327,6 +327,26 @@ void TEveProjection::SetPastFixZFac(Float_t x)
 }
 
 //______________________________________________________________________________
+void TEveProjection::BisectBreakPoint(TEveVector& vL, TEveVector& vR, Float_t eps_sqr)
+{
+   // Find break-point on both sides of the discontinuity.
+   // They still need to be projected.
+
+   TEveVector vM, vLP, vMP;
+   while ((vL-vR).Mag2() > eps_sqr)
+   {
+      vM.Mult(vL+vR, 0.5f);
+      vLP.Set(vL); ProjectPoint(vLP.fX, vLP.fY, vLP.fZ, 0);
+      vMP.Set(vM); ProjectPoint(vMP.fX, vMP.fY, vMP.fZ, 0);
+
+      if (AcceptSegment(vLP, vMP, 0.0f))
+         vL.Set(vM);
+      else
+         vR.Set(vM);
+   }
+}
+
+//______________________________________________________________________________
 void TEveProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 {
    // Get vector for axis in a projected space.

@@ -66,8 +66,8 @@ public:
    virtual void   SetMainColor(Color_t color);
 
    virtual Bool_t  CanEditMainTransparency() const;
-   virtual UChar_t GetMainTransparency() const;
-   virtual void    SetMainTransparency(UChar_t t);
+   virtual Char_t  GetMainTransparency() const;
+   virtual void    SetMainTransparency(Char_t t);
 
    void UpdateNode(TGeoNode* node);
    void UpdateVolume(TGeoVolume* volume);

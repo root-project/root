@@ -91,7 +91,6 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 
    TEveStraightLineSet& mL = * fM;
 
-   TGLCapabilitySwitch lights_off(GL_LIGHTING, kFALSE);
    if (mL.GetDepthTest() == kFALSE)
    {
       glPushAttrib(GL_VIEWPORT_BIT);
@@ -102,6 +101,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    if (mL.GetRnrLines() && mL.GetLinePlex().Size() > 0)
    {
       glPushAttrib(GL_LINE_BIT | GL_ENABLE_BIT);
+      glDisable(GL_LIGHTING);
       TGLUtil::LineWidth(mL.GetLineWidth());
       if (mL.GetLineStyle() > 1) {
          Int_t    fac = 1;
@@ -135,7 +135,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          while (li.next())
          {
             TEveStraightLineSet::Line_t& l = * (TEveStraightLineSet::Line_t*) li();
-            glLoadName(name);
+            glLoadName(l.fId);
             {
                glBegin(GL_LINES);
                glVertex3f(l.fV1[0], l.fV1[1], l.fV1[2]);
@@ -172,19 +172,16 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       TEveChunkManager::iterator mi(mL.GetMarkerPlex());
       Float_t* pnts = new Float_t[mL.GetMarkerPlex().Size()*3];
       Float_t* pnt  = pnts;
-      Int_t lidx = -1;
       while (mi.next())
       {
          TEveStraightLineSet::Marker_t& m = * (TEveStraightLineSet::Marker_t*) mi();
-         lidx = m.fLineID;
-         TEveStraightLineSet::Line_t& l = * (TEveStraightLineSet::Line_t*) mL.GetLinePlex().Atom(lidx);
-         pnt[0] = l.fV1[0] + (l.fV2[0] - l.fV1[0])*m.fPos;
-         pnt[1] = l.fV1[1] + (l.fV2[1] - l.fV1[1])*m.fPos;
-         pnt[2] = l.fV1[2] + (l.fV2[2] - l.fV1[2])*m.fPos;
+         pnt[0] = m.fV[0];
+         pnt[1] = m.fV[1];
+         pnt[2] = m.fV[2];
          pnt   += 3;
       }
       if (rnrCtx.SecSelection()) glPushName(2);
-      TGLUtil::RenderPolyMarkers((TAttMarker&)mL,
+      TGLUtil::RenderPolyMarkers((TAttMarker&)mL, mL.GetMainTransparency(),
                                  pnts, mL.GetMarkerPlex().Size(),
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection(),
@@ -213,6 +210,6 @@ void TEveStraightLineSetGL::ProcessSelection(TGLRnrCtx& /*rnrCtx*/,
    else
    {
       TEveStraightLineSet::Marker_t& m = * (TEveStraightLineSet::Marker_t*) fM->GetMarkerPlex().Atom(rec.GetItem(2));
-      printf("Selected point %d on line %d\n", rec.GetItem(2), m.fLineID);
+      printf("Selected point %d on line %d\n", rec.GetItem(2), m.fLineId);
    }
 }

@@ -117,6 +117,20 @@ void TEveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
    }
 }
 
+//______________________________________________________________________________
+void TEveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
+{
+   // Set main transparency of projecteds if their transparecy is the
+   // same as the old one.
+
+   for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
+   {
+      TEveElement* el = dynamic_cast<TEveElement*>(*i);
+      if (el->GetMainTransparency() == old_t)
+         el->SetMainTransparency(t);
+   }
+}
+
 
 //==============================================================================
 //==============================================================================
