@@ -47,6 +47,7 @@
 #include "Riostream.h"
 #include "TGComboBox.h"
 #include "TGListBox.h"
+#include "snprintf.h"
 
 //_____________________________________________________________________________
 //
@@ -1471,7 +1472,7 @@ TGFont *TGHtml::GetFont(int iFont)
       if (iFamily < 4) size += 2;
 #endif
 
-      sprintf(name, familyStr, size);
+      snprintf(name, 200, familyStr, size);
 
       // Get the named font
       fAFont[iFont] = fClient->GetFont(name);\

@@ -1945,7 +1945,7 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
    XLFDAttributes_t xa;
 
    char *str = new char[strlen(string)+1];
-   strcpy(str, string);
+   strncpy(str, string, strlen(string));
 
    if (*str == '-' || *str == '*') {
 
