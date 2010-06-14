@@ -2760,7 +2760,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
          if (strlen(iname) != 0 && strstr(iname,".h")) {
             const char *lastsl = strrchr(iname,'/');
             if (lastsl) iname = lastsl + 1;
-            char *tname = new char[strlen(iname)];
+            char *tname = new char[strlen(iname)+1];
             Int_t i=0;
             while (*iname != '.') {
                tname[i] = *iname;
@@ -3256,7 +3256,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
          if (strlen(iname) != 0 && strstr(iname,".h")) {
             const char *lastsl = strrchr(iname,'/');
             if (lastsl) iname = lastsl + 1;
-            char *tname = new char[strlen(iname)];
+            char *tname = new char[strlen(iname)+1];
             Int_t i=0;
             while (*iname != '.') {
                tname[i] = *iname;
