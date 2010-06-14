@@ -1779,6 +1779,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          switch (GET_SUBMSG(msg)) {
 
             case kCM_BUTTON:
+               // fallthrough
             case kCM_MENU:
 
                switch (parm1) {

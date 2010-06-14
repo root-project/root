@@ -2652,13 +2652,13 @@ void TGListTreeItemStd::SavePrimitive(ostream &out, Option_t *option, Int_t n)
          makeuncheck = kFALSE;
       }
       out << "   item" << s.Data() << "->CheckItem();" << endl;
-      if (oldcheck != fCheckedPic) {
+      if (fCheckedPic && oldcheck != fCheckedPic) {
          oldcheck = fCheckedPic;
          out << "   pcheck = gClient->GetPicture(" << quote
              << gSystem->ExpandPathName(gSystem->UnixPathName(fCheckedPic->GetName()))
              << quote << ");" << endl;
       }
-      if (olduncheck != fUncheckedPic) {
+      if (fUncheckedPic && olduncheck != fUncheckedPic) {
          olduncheck = fUncheckedPic;
          out << "   puncheck = gClient->GetPicture(" << quote
              << gSystem->ExpandPathName(gSystem->UnixPathName(fUncheckedPic->GetName()))
