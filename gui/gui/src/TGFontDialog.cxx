@@ -800,7 +800,8 @@ void TGFontDialog::GetFontName()
 out:
    Int_t oldAlign = fTextAlign;
 
-   fTextAlign = gAlignValues[fTextAligns->GetSelected()];
+   Int_t idx = fTextAligns->GetSelected();
+   fTextAlign = gAlignValues[idx >= 0 ? idx : 6];
 
    if (fSample) {
       if (fTextAlign != oldAlign) {
