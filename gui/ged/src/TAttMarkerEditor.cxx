@@ -95,6 +95,7 @@ void TAttMarkerEditor::SetModel(TObject* obj)
    fAvoidSignal = kTRUE;
 
    fAttMarker = dynamic_cast<TAttMarker *>(obj);
+   if (!fAttMarker) return;
 
    TString str = GetDrawOption();
    str.ToUpper();
