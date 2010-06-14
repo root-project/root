@@ -977,6 +977,8 @@ void TH2Editor::SetModel(TObject* obj)
       fBin->HideFrame(fBinXCont1);
       fBin->ShowFrame(fBinXCont);
       fBin->HideFrame(fBinYCont1);
+      if (n1 < 1) n1 = 1;
+      if (n2 < 1) n2 = 1;
       Int_t* divx = Dividers(n1);
       Int_t* divy = Dividers(n2);
       if (divx[0]-1 <= 1) upx = 2;
@@ -1660,6 +1662,7 @@ void TH2Editor::DoBinMoved()
    Int_t ny = fBinHist->GetYaxis()->GetNbins();
    Int_t numx = fBinXSlider->GetPosition();
    Int_t numy = fBinYSlider->GetPosition();
+   if (nx < 1 || ny < 1) return;
    Int_t* divx = Dividers(nx);
    Int_t* divy = Dividers(ny);
    if (divx[0]==2) {
@@ -1740,6 +1743,7 @@ void TH2Editor::DoBinLabel()
    Int_t ny = 0;
    if (fBinHist) ny = fBinHist->GetYaxis()->GetNbins();
    else ny = fHist->GetYaxis()->GetNbins();
+   if (nx < 1 || ny < 1) return;
    // Get the divider of nx/ny which is closest to numx/numy
    Int_t *divx = Dividers(nx);
    Int_t *divy = Dividers(ny);

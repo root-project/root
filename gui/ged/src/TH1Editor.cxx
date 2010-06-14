@@ -839,6 +839,7 @@ void TH1Editor::SetModel(TObject* obj)
       Int_t n = 0;
       if (fBinHist) n = fBinHist->GetXaxis()->GetNbins();
       else n = nx;
+      if (n < 1) n = 1;
       fBin->HideFrame(fBinCont1);
       fBin->ShowFrame(fBinCont);
       Int_t* div = Dividers(n);
@@ -1884,6 +1885,7 @@ void TH1Editor::DoBinLabel()
    Int_t nx = 0;
    if (fBinHist) nx = fBinHist->GetXaxis()->GetNbins();
    else nx = fHist->GetXaxis()->GetNbins();
+   if (nx < 2) return;
    Int_t *div = Dividers(nx);
    Int_t diff = TMath::Abs(num - div[1]);
    Int_t c = 1;
