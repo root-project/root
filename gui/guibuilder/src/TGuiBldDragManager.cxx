@@ -2952,46 +2952,48 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
    h = y - y0;
 
    if (fLassoDrawn || fromGrab) {
-      TIter next(comp->GetList());
-      TGFrameElement *el;
+      if (comp) {
+         TIter next(comp->GetList());
+         TGFrameElement *el;
 
-      while ((el = (TGFrameElement*)next())) {
-         TGFrame *fr = el->fFrame;
+         while ((el = (TGFrameElement*)next())) {
+            TGFrame *fr = el->fFrame;
 
-         if ((fr->GetX() >= x0) && (fr->GetY() >= y0) &&
-             (fr->GetX() + (Int_t)fr->GetWidth() <= x) &&
-             (fr->GetY() + (Int_t)fr->GetHeight() <= y)) {
-            if (!crop) {
-               DeleteFrame(fr);
+            if ((fr->GetX() >= x0) && (fr->GetY() >= y0) &&
+                (fr->GetX() + (Int_t)fr->GetWidth() <= x) &&
+                (fr->GetY() + (Int_t)fr->GetHeight() <= y)) {
+               if (!crop) {
+                  DeleteFrame(fr);
+               } else {
+                  fr->Move(fr->GetX() - x0, fr->GetY() - y0);
+               }
             } else {
-               fr->Move(fr->GetX() - x0, fr->GetY() - y0);
-            }
-         } else {
-            if (crop) {
-               DeleteFrame(fr);
+               if (crop) {
+                  DeleteFrame(fr);
+               }
             }
          }
-      }
-      if (crop && comp) {
-         gVirtualX->TranslateCoordinates(comp->GetId(), comp->GetParent()->GetId(),
-                                          x0, y0, xx, yy, c);
+         if (crop && comp) {
+            gVirtualX->TranslateCoordinates(comp->GetId(), comp->GetParent()->GetId(),
+                                             x0, y0, xx, yy, c);
 
-         comp->MoveResize(xx, yy, w, h);
+            comp->MoveResize(xx, yy, w, h);
 
-         if (comp->GetParent()->InheritsFrom(TGMdiDecorFrame::Class())) {
-            TGMdiDecorFrame *decor = (TGMdiDecorFrame *)comp->GetParent();
+            if (comp->GetParent()->InheritsFrom(TGMdiDecorFrame::Class())) {
+               TGMdiDecorFrame *decor = (TGMdiDecorFrame *)comp->GetParent();
 
+               gVirtualX->TranslateCoordinates(decor->GetId(), decor->GetParent()->GetId(),
+                                               xx, yy, xx, yy, c);
 
-            gVirtualX->TranslateCoordinates(decor->GetId(), decor->GetParent()->GetId(),
-                                            xx, yy, xx, yy, c);
-
-            Int_t b = 2 * decor->GetBorderWidth();
-            decor->MoveResize(xx, yy, comp->GetWidth() + b,
-                              comp->GetHeight() + b + decor->GetTitleBar()->GetDefaultHeight());
+               Int_t b = 2 * decor->GetBorderWidth();
+               decor->MoveResize(xx, yy, comp->GetWidth() + b,
+                                 comp->GetHeight() + b + decor->GetTitleBar()->GetDefaultHeight());
+            }
          }
       }
    } else { //  no lasso drawn -> delete selected frame
-      DeleteFrame(frame);
+      if (frame)
+         DeleteFrame(frame);
       UngrabFrame();
       ChangeSelected(0);   //update editors
    }
