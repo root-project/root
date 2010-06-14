@@ -176,11 +176,11 @@ void h1analysis::Begin(TTree * /*tree*/)
    // case when one creates/fills the entry list
    if (option.Contains("fillList")) {
       fillList = kTRUE;
-      elist = new TEntryList("elist", "H1 selection from Cut");
       // Add to the input list for processing in PROOF, if needed
       if (fInput) {
          fInput->Add(new TNamed("fillList",""));
-         fInput->Add(elist);
+         // We send a clone to avoid double deletes when importing the result
+         fInput->Add(new TEntryList("elist", "H1 selection from Cut"));
       }
    }
    // case when one uses the entry list generated in a previous call

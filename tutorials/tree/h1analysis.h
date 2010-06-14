@@ -367,6 +367,8 @@ h1analysis::h1analysis(TTree * /*tree*/)
 {
 // Build the chain of Root files
 //
+   hdmd = 0;
+   h2 = 0;
    fChain = 0;
    elist = 0;
    fillList = kFALSE;
