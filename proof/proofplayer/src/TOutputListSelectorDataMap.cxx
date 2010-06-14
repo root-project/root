@@ -101,10 +101,10 @@ void TSetSelDataMembers::Inspect(TClass *cl, const char* parent, const char *nam
    char *pointer = (char*)addr;
    char **ppointer = (char**)(pointer);
    if (*ppointer) {
-      // member points to something - let's cross our fingers that it's initialized.
-      TObject* obj = (TObject*)cldt->DynamicCast(TObject::Class(), *ppointer);
-      fOwner.Warning("SetDataMembers()", "replacing existing data member `%s'!", name);
-      delete obj;
+      // member points to something - replace instead of delete to not crash on deleting uninitialized values.
+      fOwner.Warning("SetDataMembers()", "potential memory leak: replacing data member `%s' != 0. "
+                     "Please initialize %s to 0 in constructor %s::%s()",
+                     name, name, cl->GetName(), cl->GetName());
    }
    *ppointer = (char*)outputObj;
    ++fNumSet;
@@ -142,6 +142,7 @@ void TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const char
    if (p3pointer) {
       // don't add member pointing to NULL
       fMap.Add((Long64_t)p3pointer, (Long64_t)dm);
+      if (name[0] == '*') ++name;
       PDB(kOutput,1) fOwner.Info("Init()", "considering data member `%s'", name);
    }
 }
