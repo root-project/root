@@ -943,6 +943,9 @@ void TGTable::Show()
    UInt_t nrows = GetNTableRows();
    UInt_t ncolumns = GetNTableColumns();
 
+   // save actual formatting flags
+   std::ios_base::fmtflags org_flags = std::cout.flags();
+
    for (j = 0; j < ncolumns + 1; j++) {
       if (j == 0) {
          hdr = fTableHeader;
@@ -970,6 +973,8 @@ void TGTable::Show()
       }
       std::cout << std::endl;
    }
+   // restore original formatting flags
+   std::cout.flags(org_flags);
 }
 
 // //______________________________________________________________________________

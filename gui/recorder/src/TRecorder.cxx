@@ -639,9 +639,13 @@ Bool_t TRecorderReplaying::RemapWindowReferences()
    }
 
    if (gDebug > 0) {
+      // save actual formatting flags
+      ios_base::fmtflags org_flags = cout.flags();
       cout << "fGuiTreeCounter = " << dec << fGuiTreeCounter <<
               " No mapping found for ID " << hex << fGuiEvent->fWindow << endl;
       TRecorderInactive::DumpRootEvent(fGuiEvent,0);
+      // restore original formatting flags
+      cout.flags(org_flags);
    }
 
    // Stopps timer and waits for the appropriate window to be registered
