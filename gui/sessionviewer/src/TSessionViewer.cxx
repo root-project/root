@@ -3953,7 +3953,6 @@ void TSessionViewer::UpdateListOfProofs()
                   }
                }
                if (found) continue;
-               p = d->GetProof();
                newdesc = new TSessionDescription();
                // and fill informations from Proof session
                newdesc->fTag       = d->GetName();
