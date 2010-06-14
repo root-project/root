@@ -738,7 +738,7 @@ void TGTextEditor::CompileMacro()
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gSystem->CompileMacro(tmpfile);
    gSystem->Unlink(tmpfile);
-   delete tmpfile;
+   delete [] tmpfile;
 }
 
 //______________________________________________________________________________

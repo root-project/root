@@ -180,7 +180,7 @@ void TGIcon::Reset()
    char *path = gSystem->ConcatFileName(fPath.Data(), name.Data());
    SetImage(path);
 
-   delete path;
+   delete [] path;
 }
 
 //______________________________________________________________________________

@@ -3056,7 +3056,7 @@ void TRootBrowserLite::ExecMacro()
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gROOT->Macro(tmpfile);
    gSystem->Unlink(tmpfile);
-   delete tmpfile;
+   delete [] tmpfile;
    gROOT->SetExecutingMacro(kFALSE);
 }
 
