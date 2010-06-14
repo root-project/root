@@ -123,6 +123,8 @@ protected:
       ~TCleanup() { fPlayer->StopFeedback(); }
    };
 
+   void MapOutputListToDataMembers() const;
+
 public:
    enum EStatusBits { kDispatchOneEvent = BIT(15), kIsProcessing = BIT(16) };
 
@@ -271,6 +273,7 @@ protected:
    TProof         *GetProof() const { return fProof; }
    void            SetupFeedback();  // specialized setup
    void            StopFeedback();   // specialized teardown
+   void            SetSelectorDataMembersFromOutputList();
 
 public:
    TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),

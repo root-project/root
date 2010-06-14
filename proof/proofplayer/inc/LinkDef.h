@@ -45,4 +45,6 @@
 #pragma link C++ class TFileMerger+;
 #pragma link C++ class TProofOutputFile+;
 
+#pragma link C++ class TOutputListSelectorDataMap+;
+
 #endif

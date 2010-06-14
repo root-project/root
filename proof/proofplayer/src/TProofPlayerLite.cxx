@@ -282,6 +282,8 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
             output->Add(obj);
       }
 
+      SetSelectorDataMembersFromOutputList();
+
       PDB(kLoop,1) Info("Finalize","Call Terminate()");
       fOutput->Clear("nodelete");
       fSelector->Terminate();
