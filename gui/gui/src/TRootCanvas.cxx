@@ -1102,14 +1102,14 @@ again:
                   // Handle Tools menu items...
                   case kClassesTree:
                      {
-                        char cdef[64];
+                        TString cdef;
                         lc = (TList*)gROOT->GetListOfCanvases();
                         if (lc->FindObject("ClassTree")) {
-                           sprintf(cdef,"ClassTree_%d",lc->GetSize()+1);
+                           cdef = TString::Format("ClassTree_%d", lc->GetSize()+1);
                         } else {
-                           sprintf(cdef,"%s","ClassTree");
+                           cdef = "ClassTree";
                         }
-                        new TClassTree(cdef,"TObject");
+                        new TClassTree(cdef.Data(), "TObject");
                         fCanvas->Update();
                      }
                      break;
