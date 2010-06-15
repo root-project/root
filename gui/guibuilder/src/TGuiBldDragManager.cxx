@@ -50,7 +50,7 @@
 #include "TGProgressBar.h"
 #include "TGScrollBar.h"
 #include "TGTextEntry.h"
-
+#include "snprintf.h"
 
 #undef DEBUG_LOCAL
 
@@ -228,28 +228,28 @@ const char *TGuiBldMenuDialog::GetParameters()
 
       // if necessary, replace the selected object by it's address
       if (selfobjpos == nparam-1) {
-         if (params[0]) strcat(params, ",");
+         if (params[0]) strncat(params, ",", 1023-strlen(params));
          sprintf(param, "(TObject*)0x%lx", (Long_t)fObject);
-         strcat(params, param);
+         strncat(params, param, 1023-strlen(params));
       }
 
-      if (params[0]) strcat(params, ",");
+      if (params[0]) strncat(params, ",", 1023-strlen(params));
       if (data) {
          if (!strncmp(type, "char*", 5))
-            sprintf(param, "\"%s\"", data);
+            snprintf(param, 255, "\"%s\"", data);
          else
-            strncpy(param, data, 256);
+            strncpy(param, data, 255);
       } else
          strcpy(param, "0");
 
-      strcat(params, param);
+      strncat(params, param, 1023-strlen(params));
    }
 
    // if selected object is the last argument, have to insert it here
    if (selfobjpos == nparam) {
-      if (params[0]) strcat(params, ",");
+      if (params[0]) strncat(params, ",", 1023-strlen(params));
       sprintf(param, "(TObject*)0x%lx", (Long_t)fObject);
-      strcat(params, param);
+      strncat(params, param, 1023-strlen(params));
    }
 
    return params;
@@ -323,7 +323,7 @@ void TGuiBldMenuDialog::Build()
          char        basictype[32];
 
          if (datatype) {
-            strcpy(basictype, datatype->GetTypeName());
+            strncpy(basictype, datatype->GetTypeName(), 30);
          } else {
             TClass *cl = TClass::GetClass(type);
             if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
