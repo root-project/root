@@ -64,110 +64,112 @@ TGResourcePool::TGResourcePool(TGClient *client)
    fDefaultColormap = gVirtualX->GetColormap();
 
    // Get GUI defaults from [system].rootrc
-   char default_font[256];
-   char menu_font[256];
-   char menu_hi_font[256];
-   char doc_fixed_font[256];
-   char doc_prop_font[256];
-   char icon_font[256];
-   char status_font[256];
-   char backcolor[256];
-   char forecolor[256];
-   char selbackcolor[256];
-   char selforecolor[256];
-   char docbackcolor[256];
-   char docforecolor[256];
-   char tipbackcolor[256];
-   char tipforecolor[256];
-   char framebgpixmap[2048], docbgpixmap[2048];
-   char icon_path[2048], mime_file[256], line[2048];
+   TString default_font;
+   TString menu_font;
+   TString menu_hi_font;
+   TString doc_fixed_font;
+   TString doc_prop_font;
+   TString icon_font;
+   TString status_font;
+   TString backcolor;
+   TString forecolor;
+   TString selbackcolor;
+   TString selforecolor;
+   TString docbackcolor;
+   TString docforecolor;
+   TString tipbackcolor;
+   TString tipforecolor;
+   TString framebgpixmap;
+   TString docbgpixmap;
+   TString icon_path;
+   TString mime_file;
+   TString line;
 
-   strcpy(default_font,   gEnv->GetValue("Gui.DefaultFont",  "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(menu_font,      gEnv->GetValue("Gui.MenuFont",     "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(menu_hi_font,   gEnv->GetValue("Gui.MenuHiFont",   "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(doc_fixed_font, gEnv->GetValue("Gui.DocFixedFont", "-*-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(doc_prop_font,  gEnv->GetValue("Gui.DocPropFont",  "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(icon_font,      gEnv->GetValue("Gui.IconFont",     "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1"));
-   strcpy(status_font,    gEnv->GetValue("Gui.StatusFont",   "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1"));
-   strcpy(backcolor,      gEnv->GetValue("Gui.BackgroundColor",         "#c0c0c0"));
-   strcpy(forecolor,      gEnv->GetValue("Gui.ForegroundColor",         "black"));
-   strcpy(selbackcolor,   gEnv->GetValue("Gui.SelectBackgroundColor",   "#000080"));
-   strcpy(selforecolor,   gEnv->GetValue("Gui.SelectForegroundColor",   "white"));
-   strcpy(docbackcolor,   gEnv->GetValue("Gui.DocumentBackgroundColor", "white"));
-   strcpy(docforecolor,   gEnv->GetValue("Gui.DocumentForegroundColor", "black"));
-   strcpy(tipbackcolor,   gEnv->GetValue("Gui.TooltipBackgroundColor",  "LightYellow"));
-   strcpy(tipforecolor,   gEnv->GetValue("Gui.TooltipForegroundColor",  "black"));
-   strcpy(framebgpixmap,  gEnv->GetValue("Gui.FrameBackgroundPixmap", ""));
-   strcpy(docbgpixmap,    gEnv->GetValue("Gui.DocumentBackgroundPixmap", ""));
+   default_font   = gEnv->GetValue("Gui.DefaultFont",  "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
+   menu_font      = gEnv->GetValue("Gui.MenuFont",     "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
+   menu_hi_font   = gEnv->GetValue("Gui.MenuHiFont",   "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1");
+   doc_fixed_font = gEnv->GetValue("Gui.DocFixedFont", "-*-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
+   doc_prop_font  = gEnv->GetValue("Gui.DocPropFont",  "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
+   icon_font      = gEnv->GetValue("Gui.IconFont",     "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
+   status_font    = gEnv->GetValue("Gui.StatusFont",   "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
+   backcolor      = gEnv->GetValue("Gui.BackgroundColor",         "#c0c0c0");
+   forecolor      = gEnv->GetValue("Gui.ForegroundColor",         "black");
+   selbackcolor   = gEnv->GetValue("Gui.SelectBackgroundColor",   "#000080");
+   selforecolor   = gEnv->GetValue("Gui.SelectForegroundColor",   "white");
+   docbackcolor   = gEnv->GetValue("Gui.DocumentBackgroundColor", "white");
+   docforecolor   = gEnv->GetValue("Gui.DocumentForegroundColor", "black");
+   tipbackcolor   = gEnv->GetValue("Gui.TooltipBackgroundColor",  "LightYellow");
+   tipforecolor   = gEnv->GetValue("Gui.TooltipForegroundColor",  "black");
+   framebgpixmap  = gEnv->GetValue("Gui.FrameBackgroundPixmap", "");
+   docbgpixmap    = gEnv->GetValue("Gui.DocumentBackgroundPixmap", "");
 
 #ifndef R__WIN32
 #ifndef R__VMS
 # ifdef ROOTICONPATH
-   sprintf(icon_path, "%s/icons:%s:.:",
-           gSystem->HomeDirectory(),
-           ROOTICONPATH);
+   icon_path = TString::Format("%s/icons:%s:.:", gSystem->HomeDirectory(),
+                               ROOTICONPATH);
 #  ifdef EXTRAICONPATH
-   strcat(icon_path, gEnv->GetValue("Gui.IconPath", EXTRAICONPATH));
+   icon_path += gEnv->GetValue("Gui.IconPath", EXTRAICONPATH);
 #  else
-   strcat(icon_path, gEnv->GetValue("Gui.IconPath", ""));
+   icon_path += gEnv->GetValue("Gui.IconPath", "");
 #  endif
 # else
-   sprintf(icon_path, "%s/icons:%s/icons:.:", gSystem->HomeDirectory(),
-                                              gSystem->Getenv("ROOTSYS"));
-   strcat(icon_path, gEnv->GetValue("Gui.IconPath", ""));
+   icon_path = TString::Format("%s/icons:%s/icons:.:", gSystem->HomeDirectory(),
+                                                       gSystem->Getenv("ROOTSYS"));
+   icon_path += gEnv->GetValue("Gui.IconPath", "");
 # endif
-   sprintf(line, "%s/.root.mimes", gSystem->HomeDirectory());
+   line = TString::Format("%s/.root.mimes", gSystem->HomeDirectory());
 #else
-   sprintf(line,"[%s.ICONS]",gSystem->Getenv("ROOTSYS"));
-   strcpy(icon_path, gEnv->GetValue("Gui.IconPath",line));
-   sprintf(line,"%sroot.mimes",gSystem->HomeDirectory());
+   line = TString::Format("[%s.ICONS]", gSystem->Getenv("ROOTSYS"));
+   icon_path = gEnv->GetValue("Gui.IconPath", line.Data());
+   line = TString::Format("%sroot.mimes", gSystem->HomeDirectory());
 #endif
 
-   strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
-   char *mf = gSystem->ExpandPathName(mime_file);
+   mime_file = gEnv->GetValue("Gui.MimeTypeFile", line.Data());
+   char *mf = gSystem->ExpandPathName(mime_file.Data());
    if (mf) {
-      strcpy(mime_file, mf);
+      mime_file = mf;
       delete [] mf;
    }
-   if (gSystem->AccessPathName(mime_file, kReadPermission))
+   if (gSystem->AccessPathName(mime_file.Data(), kReadPermission))
 #ifdef R__VMS
-      sprintf(mime_file,"[%s.ETC]root.mimes",gSystem->Getenv("ROOTSYS"));
+      mime_file = TString::Format("[%s.ETC]root.mimes",gSystem->Getenv("ROOTSYS"));
 #else
 # ifdef ROOTETCDIR
-      sprintf(mime_file, "%s/root.mimes", ROOTETCDIR);
+      mime_file = TString::Format("%s/root.mimes", ROOTETCDIR);
 # else
-      sprintf(mime_file, "%s/etc/root.mimes", gSystem->Getenv("ROOTSYS"));
+      mime_file = TString::Format("%s/etc/root.mimes", gSystem->Getenv("ROOTSYS"));
 # endif
 #endif
 #else // R__WIN32
-   sprintf(icon_path, "%s\\icons:.:\\", gSystem->Getenv("ROOTSYS"));
-   strcat(icon_path, gEnv->GetValue("Gui.IconPath", ""));
-   sprintf(line, "%s\\root.mimes", gSystem->HomeDirectory());
-   strcpy(mime_file, gEnv->GetValue("Gui.MimeTypeFile", line));
-   if (gSystem->AccessPathName(mime_file, kReadPermission))
-      sprintf(mime_file, "%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
+   icon_path = TString::Format("%s\\icons:.:\\", gSystem->Getenv("ROOTSYS"));
+   icon_path += gEnv->GetValue("Gui.IconPath", "");
+   line = TString::Format("%s\\root.mimes", gSystem->HomeDirectory());
+   mime_file = gEnv->GetValue("Gui.MimeTypeFile", line.Data());
+   if (gSystem->AccessPathName(mime_file.Data(), kReadPermission))
+      mime_file = TString::Format("%s\\etc\\root.mimes", gSystem->Getenv("ROOTSYS"));
 #endif
 
    // Setup colors...
    fClient->GetColorByName("white", fWhite);  // white and black always exist
    fClient->GetColorByName("black", fBlack);
-   if (!fClient->GetColorByName(backcolor, fBackColor))
+   if (!fClient->GetColorByName(backcolor.Data(), fBackColor))
       fBackColor = fWhite;
-   if (!fClient->GetColorByName(forecolor, fForeColor))
+   if (!fClient->GetColorByName(forecolor.Data(), fForeColor))
       fForeColor = fBlack;
    fHilite = fClient->GetHilite(fBackColor);
    fShadow = fClient->GetShadow(fBackColor);
-   if (!fClient->GetColorByName(selbackcolor, fSelBackColor))
+   if (!fClient->GetColorByName(selbackcolor.Data(), fSelBackColor))
       fSelBackColor = fBlack;
-   if (!fClient->GetColorByName(selforecolor, fSelForeColor))
+   if (!fClient->GetColorByName(selforecolor.Data(), fSelForeColor))
       fSelForeColor = fWhite;
-   if (!fClient->GetColorByName(docbackcolor, fDocBackColor))
+   if (!fClient->GetColorByName(docbackcolor.Data(), fDocBackColor))
       fDocBackColor = fWhite;
-   if (!fClient->GetColorByName(docforecolor, fDocForeColor))
+   if (!fClient->GetColorByName(docforecolor.Data(), fDocForeColor))
       fDocForeColor = fBlack;
-   if (!fClient->GetColorByName(tipbackcolor, fTipBackColor))
+   if (!fClient->GetColorByName(tipbackcolor.Data(), fTipBackColor))
       fTipBackColor = fWhite;
-   if (!fClient->GetColorByName(tipforecolor, fTipForeColor))
+   if (!fClient->GetColorByName(tipforecolor.Data(), fTipForeColor))
       fTipForeColor = fBlack;
 
    // Setup checkered pix/bit-maps...
@@ -184,24 +186,24 @@ TGResourcePool::TGResourcePool(TGClient *client)
    // Create picture pool, GC pool, font pool, mime type list, etc.
 
    // Create picture pool and pre-load some pictures...
-   fPicturePool = new TGPicturePool(fClient, icon_path);
+   fPicturePool = new TGPicturePool(fClient, icon_path.Data());
 
    fDefaultBackPicture    = 0;
    fDefaultDocBackPicture = 0;
-   if (strlen(framebgpixmap))
-      fDefaultBackPicture = fPicturePool->GetPicture(framebgpixmap);
-   if (strlen(docbgpixmap))
-      fDefaultDocBackPicture = fPicturePool->GetPicture(docbgpixmap);
+   if (!framebgpixmap.IsNull())
+      fDefaultBackPicture = fPicturePool->GetPicture(framebgpixmap.Data());
+   if (!docbgpixmap.IsNull())
+      fDefaultDocBackPicture = fPicturePool->GetPicture(docbgpixmap.Data());
 
    // Create font pool and pre-load some fonts...
    fFontPool = new TGFontPool(fClient);
-   fDefaultFont  = fFontPool->GetFont(default_font);
-   fMenuFont     = fFontPool->GetFont(menu_font);
-   fMenuHiFont   = fFontPool->GetFont(menu_hi_font);
-   fDocFixedFont = fFontPool->GetFont(doc_fixed_font);
-   fDocPropFont  = fFontPool->GetFont(doc_prop_font);
-   fIconFont     = fFontPool->GetFont(icon_font);
-   fStatusFont   = fFontPool->GetFont(status_font);
+   fDefaultFont  = fFontPool->GetFont(default_font.Data());
+   fMenuFont     = fFontPool->GetFont(menu_font.Data());
+   fMenuHiFont   = fFontPool->GetFont(menu_hi_font.Data());
+   fDocFixedFont = fFontPool->GetFont(doc_fixed_font.Data());
+   fDocPropFont  = fFontPool->GetFont(doc_prop_font.Data());
+   fIconFont     = fFontPool->GetFont(icon_font.Data());
+   fStatusFont   = fFontPool->GetFont(status_font.Data());
 
    // Create GC pool and pre-load some GCs...
    fGCPool = new TGGCPool(fClient);
@@ -270,7 +272,7 @@ TGResourcePool::TGResourcePool(TGClient *client)
    fWaitCursor    = gVirtualX->CreateCursor(kWatch);
 
    // Read in mime type...
-   fMimeTypeList  = new TGMimeTypes(fClient, mime_file);
+   fMimeTypeList  = new TGMimeTypes(fClient, mime_file.Data());
 
    // Clipboard handle...
 #ifndef R__WIN32
