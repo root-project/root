@@ -71,7 +71,7 @@ void TMVA::Results::Store( TObject* obj, const char* alias )
       // alias exists
       *fLogger << kFATAL << "Alias " << as << " already exists in results storage" << Endl;
    }
-   if( obj->InheritsFrom("TH1") ) {
+   if( obj->InheritsFrom(TH1::Class()) ) {
       ((TH1*)obj)->SetDirectory(0);
    }
    fStorage->Add( obj );
