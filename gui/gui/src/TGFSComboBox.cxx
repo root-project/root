@@ -450,7 +450,8 @@ void TGFSComboBox::Update(const char *path)
                dirname[semi-tailpath] = 0;
                picname = "folder_t.xpm";
             }
-            if (mpath[strlen(mpath)-1] != '/') strcat(mpath, "/");
+            if (mpath[strlen(mpath)-1] != '/') 
+               strncat(mpath, "/", 1024-strlen(mpath));
             strncat(mpath, dirname, 1024-strlen(mpath));
             int indent = 4 + (indent_lvl * 10);
             const TGPicture *pic = fClient->GetPicture(picname);
