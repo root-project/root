@@ -1482,7 +1482,8 @@ void TRootBrowserLite::AddToTree(TObject *obj, const char *name, Int_t check)
                   }
                }
             }
-            it->SetTipText(infos.Data());
+            if (it) 
+               it->SetTipText(infos.Data());
          }
       }
    }
