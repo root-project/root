@@ -2305,7 +2305,8 @@ start:
       s = strchr(p, '/');
 
       if (!s) {
-         strncpy(dirname, p, 1024);
+         strncpy(dirname, p, 1023);
+         dirname[1023] = 0;
       } else {
          strncpy(dirname, p, s-p);
          dirname[s-p] = 0;
