@@ -635,16 +635,16 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    Mask_t fmask = GetMask();
 
    const char *colorname;
-   char valname[50];
+   TString valname;
    char quote ='"';
    ULong_t color;
 
-   sprintf(valname,"val%s",option);
+   valname = TString::Format("val%s", option);
 
    out << "   // graphics context changes" << endl;
    //out << "   TGGC *uGC" << option << ";" << endl;
-   out << "   GCValues_t " << valname << ";" << endl;
-   out << "   " << valname << ".fMask = " << GetMaskString() << ";" << endl;
+   out << "   GCValues_t " << valname.Data() << ";" << endl;
+   out << "   " << valname.Data() << ".fMask = " << GetMaskString() << ";" << endl;
 
    for (Mask_t bit = 1; bit <= fmask; bit <<= 1) {
       switch (bit & fmask) {
@@ -652,7 +652,7 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          case 0:
             continue;
          case kGCFunction:
-            out << "   " << valname << ".fFunction = ";
+            out << "   " << valname.Data() << ".fFunction = ";
             switch (GetFunction()) {
                case kGXclear:
                   out << "kGXclear";
@@ -706,25 +706,25 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << ";" << endl;
             break;
          case kGCPlaneMask:
-            out << "   " << valname << ".fPlaneMask = " << GetPlaneMask() << ";" << endl;
+            out << "   " << valname.Data() << ".fPlaneMask = " << GetPlaneMask() << ";" << endl;
             break;
          case kGCForeground:
             color = GetForeground();
             colorname = TColor::PixelAsHexString(color);
             out << "   gClient->GetColorByName(" << quote << colorname << quote
-                << "," << valname << ".fForeground);" << endl;
+                << "," << valname.Data() << ".fForeground);" << endl;
             break;
          case kGCBackground:
             color = GetBackground();
             colorname = TColor::PixelAsHexString(color);
             out << "   gClient->GetColorByName(" << quote << colorname << quote
-                << "," << valname << ".fBackground);" << endl;
+                << "," << valname.Data() << ".fBackground);" << endl;
             break;
          case kGCLineWidth:
-            out << "   " << valname << ".fLineWidth = " << GetLineWidth() << ";" << endl;
+            out << "   " << valname.Data() << ".fLineWidth = " << GetLineWidth() << ";" << endl;
             break;
          case kGCLineStyle:
-            out << "   " << valname << ".fLineStyle = ";
+            out << "   " << valname.Data() << ".fLineStyle = ";
             switch (GetLineStyle()) {
                case kLineSolid:
                   out << "kLineSolid";
@@ -739,7 +739,7 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << ";" << endl;
             break;
          case kGCCapStyle:
-            out << "   " << valname << ".fCapStyle = ";
+            out << "   " << valname.Data() << ".fCapStyle = ";
             switch (GetCapStyle()) {
                case kCapNotLast:
                   out << "kCapNotLast";
@@ -757,7 +757,7 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << ";" << endl;
             break;
          case kGCJoinStyle:
-            out << "   " << valname << ".fJoinStyle = ";
+            out << "   " << valname.Data() << ".fJoinStyle = ";
             switch (GetJoinStyle()) {
                case kJoinMiter:
                   out << "kJoinMiter";
@@ -772,7 +772,7 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << ";" << endl;
             break;
          case kGCFillStyle:
-            out << "   " << valname << ".fFillStyle = ";
+            out << "   " << valname.Data() << ".fFillStyle = ";
             switch (GetFillStyle()) {
                case kFillSolid:
                   out << "kFillSolid";
@@ -790,7 +790,7 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << ";" << endl;
             break;
          case kGCFillRule:
-            out << "   " << valname << ".fFillRule = ";
+            out << "   " << valname.Data() << ".fFillRule = ";
             switch (GetFillRule()) {
                case kEvenOddRule:
                   out << "kEvenOddRule";
@@ -802,22 +802,22 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << ";" << endl;
             break;
          case kGCTile:
-            out << "   " << valname << ".fTile = " << GetTile() << ";" << endl;
+            out << "   " << valname.Data() << ".fTile = " << GetTile() << ";" << endl;
             break;
          case kGCStipple:
-            out << "   " << valname << ".fStipple = " << GetStipple() << ";" << endl;
+            out << "   " << valname.Data() << ".fStipple = " << GetStipple() << ";" << endl;
             break;
          case kGCTileStipXOrigin:
-            out << "   " << valname << ".fTsXOrigin = " << GetTileStipXOrigin() << ";" << endl;
+            out << "   " << valname.Data() << ".fTsXOrigin = " << GetTileStipXOrigin() << ";" << endl;
             break;
          case kGCTileStipYOrigin:
-            out << "   " << valname << ".fTsYOrigin = " << GetTileStipYOrigin() << ";" << endl;
+            out << "   " << valname.Data() << ".fTsYOrigin = " << GetTileStipYOrigin() << ";" << endl;
             break;
          case kGCFont:
-            out << "   " << valname << ".fFont = ufont->GetFontHandle();" << endl;
+            out << "   " << valname.Data() << ".fFont = ufont->GetFontHandle();" << endl;
             break;
          case kGCSubwindowMode:
-            out << "   " << valname << ".fSubwindowMode = ";
+            out << "   " << valname.Data() << ".fSubwindowMode = ";
             switch (GetSubwindowMode()) {
                case kClipByChildren:
                   out << "kClipByChildren";
@@ -829,7 +829,7 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << ";" << endl;
             break;
          case kGCGraphicsExposures:
-            out << "   " << valname << ".fGraphicsExposures = ";
+            out << "   " << valname.Data() << ".fGraphicsExposures = ";
             if (GetGraphicsExposures())
                out << "kTRUE";
             else
@@ -837,28 +837,28 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << ";" << endl;
             break;
          case kGCClipXOrigin:
-            out << "   " << valname << ".fClipXOrigin = " << GetClipXOrigin() << ";" << endl;
+            out << "   " << valname.Data() << ".fClipXOrigin = " << GetClipXOrigin() << ";" << endl;
             break;
          case kGCClipYOrigin:
-            out << "   " << valname << ".fClipYOrigin = " << GetClipYOrigin() << ";" << endl;
+            out << "   " << valname.Data() << ".fClipYOrigin = " << GetClipYOrigin() << ";" << endl;
             break;
          case kGCClipMask:
-            out << "   " << valname << ".fClipMask = " << GetClipMask() << ";" << endl;
+            out << "   " << valname.Data() << ".fClipMask = " << GetClipMask() << ";" << endl;
             break;
          case kGCDashOffset:
-            out << "   " << valname << ".fDashOffset = " << GetDashOffset() << ";" << endl;
+            out << "   " << valname.Data() << ".fDashOffset = " << GetDashOffset() << ";" << endl;
             break;
          case kGCDashList:
             if (GetDashLen() > (Int_t)sizeof(GetDashes()))
                Warning("TGGC::SavePrimitive", "dash list can have only up to %d elements",
                        sizeof(GetDashes()));
-            out << "   " << valname << ".fDashLen = "
+            out << "   " << valname.Data() << ".fDashLen = "
                 << TMath::Min(GetDashLen(),(Int_t)sizeof(GetDashes())) << ";" << endl;
-            out << "   memcpy(GetDashes()," << valname << ".fDashes,"
-                                            << valname << ".fDashLen);" << endl;
+            out << "   memcpy(GetDashes()," << valname.Data() << ".fDashes,"
+                                            << valname.Data() << ".fDashLen);" << endl;
             break;
          case kGCArcMode:
-            out << "   " << valname << ".fArcMode = ";
+            out << "   " << valname.Data() << ".fArcMode = ";
             switch (GetArcMode()) {
                case kArcChord:
                   out << "kArcChord";
@@ -871,7 +871,7 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             break;
       }
    }
-   out << "   uGC = gClient->GetGC(&" << valname << ", kTRUE);" << endl;
+   out << "   uGC = gClient->GetGC(&" << valname.Data() << ", kTRUE);" << endl;
 }
 
 
