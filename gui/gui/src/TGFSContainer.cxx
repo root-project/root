@@ -39,6 +39,7 @@
 #include "TBufferFile.h"
 #include "Riostream.h"
 #include "TRemoteObject.h"
+#include "snprintf.h"
 #include <time.h>
 
 ClassImp(TGFileItem)
@@ -273,7 +274,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    fSubnames = new TGString* [6];
 
    // file type
-   sprintf(tmp, "%c%c%c%c%c%c%c%c%c%c",
+   snprintf(tmp, 255, "%c%c%c%c%c%c%c%c%c%c",
                 (fIsLink ?
                  'l' :
                  R_ISREG(type) ?
@@ -305,12 +306,12 @@ TGFileItem::TGFileItem(const TGWindow *p,
       fsize /= 1024;
       if (fsize > 1024) {
          // 3.7MB is more informative than just 3MB
-         sprintf(tmp, "%lld.%lldM", fsize/1024, (fsize%1024)/103);
+         snprintf(tmp, 255, "%lld.%lldM", fsize/1024, (fsize%1024)/103);
       } else {
-         sprintf(tmp, "%lld.%lldK", bsize/1024, (bsize%1024)/103);
+         snprintf(tmp, 255, "%lld.%lldK", bsize/1024, (bsize%1024)/103);
       }
    } else {
-      sprintf(tmp, "%lld", bsize);
+      snprintf(tmp, 255, "%lld", bsize);
    }
    fSubnames[1] = new TGString(tmp);
 

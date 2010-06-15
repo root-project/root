@@ -69,7 +69,8 @@ TGTextLine::TGTextLine(const char *string)
    if (string) {
       fLength = strlen(string);
       fString = new char[fLength+1];
-      strcpy(fString, string);
+      strncpy(fString, string, fLength);
+      fString[fLength] = 0;
    } else {
       fLength = 0;
       fString = 0;
