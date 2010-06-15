@@ -155,11 +155,12 @@ void TQRootCanvas::mousePressEvent( QMouseEvent *e )
                   selectedOpt = pickobj->GetOption();
                }
             }
+            pad->cd();
+            fCanvas->SetSelectedPad(pad);
          }
-         pad->cd();
-         fCanvas->SetSelectedPad(pad);
          gROOT->SetSelectedPrimitive(selected);
-         fContextMenu->Popup(selected,gPad->AbsPixeltoX(gPad->GetEventX()),  gPad->AbsPixeltoY(gPad->GetEventY()), e);
+         fContextMenu->Popup(selected, gPad->AbsPixeltoX(gPad->GetEventX()), 
+                             gPad->AbsPixeltoY(gPad->GetEventY()), e);
 
          break;
       case MidButton :

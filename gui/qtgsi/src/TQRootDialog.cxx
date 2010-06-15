@@ -86,20 +86,20 @@ void TQRootDialog::ExecuteMethod()
          }
       }
       else if (  strcmp(fCurMethod->GetName(),"SetCanvasSize") == 0 ) {
-         int value[2];
+         int value[2] = {0,0};
          int l=0;
 #if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-	 for (iter st = fList.begin(); st != fList.end(); ++st) {
-	   QString s = (*st)->text();
-	   value[l++] = atoi ( s );
-	 }
+         for (iter st = fList.begin(); st != fList.end(); ++st) {
+            QString s = (*st)->text();
+            value[l++] = atoi ( s );
+         }
 #else
          for ( QLineEdit* st = fList.first(); st; st = fList.next()) {
             QString s = st->text();
             value[l++] = atoi ( s );
          }
 #endif
-         fParent->resize(value[0],value[1]);
+         fParent->resize(value[0], value[1]);
       }
       else {
          // here call cint call

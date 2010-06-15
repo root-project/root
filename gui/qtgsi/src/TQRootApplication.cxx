@@ -43,12 +43,13 @@ void qMessageOutput( QtMsgType type, const char *msg )
 }
 
 //______________________________________________________________________________
-TQRootApplication::TQRootApplication(int &argc, char **argv, int poll):QApplication(argc,argv)
+TQRootApplication::TQRootApplication(int &argc, char **argv, int poll) : 
+      QApplication(argc,argv), fQTimer(0), fRTimer(0)
 {
    // Connect ROOT via Timer call back.
 
    if (poll == 0) {
-      QTimer *fQTimer= new QTimer( this );
+      fQTimer = new QTimer( this );
       QObject::connect( fQTimer, SIGNAL(timeout()),this, SLOT(Execute()) );
       fQTimer->start( 20, FALSE );
       fRTimer = new TTimer(20);
@@ -56,7 +57,7 @@ TQRootApplication::TQRootApplication(int &argc, char **argv, int poll):QApplicat
    }
 
    // install a msg-handler
-   fgWarning=fgDebug=kFALSE;
+   fgWarning = fgDebug = kFALSE;
    qInstallMsgHandler( qMessageOutput );
 }
 

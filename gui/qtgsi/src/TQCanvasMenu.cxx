@@ -42,11 +42,12 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)
 {
    // ctor, create the popup menu
 
-   fc=canvas;
-   fPopup = new QPopupMenu;
-   fCurrObj=0;
-   fParent= parent;
-   fTabWin=0;
+   fc       = canvas;
+   fPopup   = new QPopupMenu;
+   fCurrObj = 0;
+   fParent  = parent;
+   fTabWin  = 0;
+   fDialog  = 0;
 }
 
 //______________________________________________________________________________
@@ -54,11 +55,12 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas)
 {
    // ctor, create the popup menu
 
-   fc=canvas;
-   fPopup = new QPopupMenu;
-   fParent = parent;
-   fTabWin = tabWin;
-   fCurrObj=0;
+   fc       = canvas;
+   fPopup   = new QPopupMenu;
+   fParent  = parent;
+   fTabWin  = tabWin;
+   fCurrObj = 0;
+   fDialog  = 0;
 }
 
 //______________________________________________________________________________
@@ -92,10 +94,11 @@ char *TQCanvasMenu::CreateArgumentTitle(TMethodArg *argument)
    static Char_t argTitle[128];
    if (argument) {
       snprintf(argTitle, 127, "(%s)  %s", argument->GetTitle(), argument->GetName());
-      if (argument->GetDefault() && *(argument->GetDefault())) {
-         strcat(argTitle, "  [default: ");
-         strcat(argTitle, argument->GetDefault());
-         strcat(argTitle, "]");
+      const char *arg_def = argument->GetDefault();
+      if (arg_def && *arg_def) {
+         strncat(argTitle, "  [default: ", 127 - strlen(argTitle));
+         strncat(argTitle, arg_def, 127 - strlen(argTitle));
+         strncat(argTitle, "]", 127 - strlen(argTitle));
       }
    }
    else
