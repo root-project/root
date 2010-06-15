@@ -28,22 +28,22 @@
 using namespace TMVA;
 
 //_______________________________________________________________________
-TMVA::CCTreeWrapper::CCTreeNode::CCTreeNode( DecisionTreeNode* n ) : fDTNode(n) {
+TMVA::CCTreeWrapper::CCTreeNode::CCTreeNode( DecisionTreeNode* n ) :
+   Node(),
+   fNLeafDaughters(0),
+   fNodeResubstitutionEstimate(-1.0),
+   fResubstitutionEstimate(-1.0),
+   fAlphaC(-1.0),
+   fMinAlphaC(-1.0),
+   fDTNode(n)
+{
    //constructor of the CCTreeNode
-
-   if(((DecisionTreeNode*) n->GetRight()) != NULL &&
-      ((DecisionTreeNode*) n->GetLeft()) != NULL ) {
+   if ( n != NULL && n->GetRight() != NULL && n->GetLeft() != NULL ) {
       SetRight( new CCTreeNode( ((DecisionTreeNode*) n->GetRight()) ) );
       GetRight()->SetParent(this);
       SetLeft( new CCTreeNode( ((DecisionTreeNode*) n->GetLeft()) ) );
       GetLeft()->SetParent(this);
    }
-
-   fNLeafDaughters = 0;
-   fNodeResubstitutionEstimate = -1.0;
-   fResubstitutionEstimate = -1.0;
-   fAlphaC = -1.0;
-   fMinAlphaC = -1.0;
 }
 
 //_______________________________________________________________________
@@ -178,7 +178,7 @@ Double_t TMVA::CCTreeWrapper::TestTreeQuality( const EventList* validationSample
    for (UInt_t ievt=0; ievt < validationSample->size(); ievt++) {
       Bool_t isSignalType = (CheckEvent(*(*validationSample)[ievt]) > fDTParent->GetNodePurityLimit() ) ? 1 : 0;
       
-      if (isSignalType == (*validationSample)[ievt]->IsSignal()) {
+      if (isSignalType == ((*validationSample)[ievt]->GetClass() == 0)) {
          ncorrect += (*validationSample)[ievt]->GetWeight();
       }
       else{
@@ -202,7 +202,7 @@ Double_t TMVA::CCTreeWrapper::TestTreeQuality( const DataSet* validationSample )
 
       Bool_t isSignalType = (CheckEvent(*ev) > fDTParent->GetNodePurityLimit() ) ? 1 : 0;
       
-      if (isSignalType == ev->IsSignal()) {
+      if (isSignalType == (ev->GetClass() == 0)) {
          ncorrect += ev->GetWeight();
       }
       else{

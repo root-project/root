@@ -10,7 +10,7 @@
  * As input data is used a toy-MC sample consisting of four Gaussian-distributed  *
  * and linearly correlated input variables with category (eta) dependent          *
  * properties.                                                                    *
- *                                                                                * 
+ *                                                                                *
  * For this example, only Fisher and Likelihood are used. Run via:                *
  *                                                                                *
  *    root -l TMVAClassificationCategory.C                                        *
@@ -21,7 +21,7 @@
  **********************************************************************************/
 
 #include <cstdlib>
-#include <iostream> 
+#include <iostream>
 #include <map>
 #include <string>
 
@@ -44,7 +44,7 @@
 // two types of category methods are implemented
 Bool_t UseOffsetMethod = kTRUE;
 
-void TMVAClassificationCategory() 
+void TMVAClassificationCategory()
 {
    //---------------------------------------------------------------
 
@@ -61,17 +61,17 @@ void TMVAClassificationCategory()
    // then run the performance analysis for you.
    //
    // The first argument is the base of the name of all the
-   // weightfiles in the directory weight/ 
+   // weightfiles in the directory weight/
    //
    // The second argument is the output file for the training results
-   // All TMVA output can be suppressed by removing the "!" (not) in 
+   // All TMVA output can be suppressed by removing the "!" (not) in
    // front of the "Silent" argument in the option string
    std::string factoryOptions( "!V:!Silent:Transformations=I;D;P;G,D" );
    if (batchMode) factoryOptions += ":!Color:!DrawProgressBar";
 
    TMVA::Factory *factory = new TMVA::Factory( "TMVAClassificationCategory", outputFile, factoryOptions );
 
-   // If you wish to modify default settings 
+   // If you wish to modify default settings
    // (please check "src/Config.h" to see all available global options)
    //    (TMVA::gConfig().GetVariablePlotting()).fTimesRMS = 8.0;
    //    (TMVA::gConfig().GetIONames()).fWeightFileDir = "myWeightDirectory";
@@ -84,21 +84,21 @@ void TMVAClassificationCategory()
    factory->AddVariable( "var3", 'F' );
    factory->AddVariable( "var4", 'F' );
 
-   // You can add so-called "Spectator variables", which are not used in the MVA training, 
-   // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the 
+   // You can add so-called "Spectator variables", which are not used in the MVA training,
+   // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
    // input variables, the response values of all trained MVAs, and the spectator variables
    factory->AddSpectator( "eta" );
 
    // load the signal and background event samples from ROOT trees
    TFile *input(0);
    TString fname( "" );
-   if (UseOffsetMethod) fname = "../execs/data/toy_sigbkg_categ_offset.root";
-   else                 fname = "../execs/data/toy_sigbkg_categ_varoff.root";
+   if (UseOffsetMethod) fname = "data/toy_sigbkg_categ_offset.root";
+   else                 fname = "data/toy_sigbkg_categ_varoff.root";
    if (!gSystem->AccessPathName( fname )) {
       // first we try to find tmva_example.root in the local directory
       std::cout << "--- TMVAClassificationCategory: Accessing " << fname << std::endl;
       input = TFile::Open( fname );
-   } 
+   }
 
    if (!input) {
       std::cout << "ERROR: could not open data file: " << fname << std::endl;
@@ -111,11 +111,11 @@ void TMVAClassificationCategory()
    /// global event weights per tree (see below for setting event-wise weights)
    Double_t signalWeight     = 1.0;
    Double_t backgroundWeight = 1.0;
-   
+
    /// you can add an arbitrary number of signal or background trees
    factory->AddSignalTree    ( signal,     signalWeight     );
    factory->AddBackgroundTree( background, backgroundWeight );
-   
+
    // Apply additional cuts on the signal and background samples (can be different)
    TCut mycuts = ""; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
    TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";
@@ -124,21 +124,21 @@ void TMVAClassificationCategory()
    factory->PrepareTrainingAndTestTree( mycuts, mycutb,
                                         "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
-   // Fisher discriminant   
+   // Fisher discriminant
    factory->BookMethod( TMVA::Types::kFisher, "Fisher", "!H:!V:Fisher" );
 
    // Likelihood
-   factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood", 
+   factory->BookMethod( TMVA::Types::kLikelihood, "Likelihood",
                         "!H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" ); 
 
    // Categorised classifier
    TMVA::MethodCategory* mcat = 0;
-   
+
    // the variable sets
    TString theCat1Vars = "var1:var2:var3:var4";
    TString theCat2Vars = (UseOffsetMethod ? "var1:var2:var3:var4" : "var1:var2:var3");
 
-   // the Fisher 
+   // the Fisher
    TMVA::MethodBase* fiCat = factory->BookMethod( TMVA::Types::kCategory, "FisherCat","" );
    mcat = dynamic_cast<TMVA::MethodCategory*>(fiCat);
    mcat->AddMethod("abs(eta)<=1.3",theCat1Vars, TMVA::Types::kFisher,"Category_Fisher_1","!H:!V:Fisher");
@@ -159,15 +159,15 @@ void TMVAClassificationCategory()
    factory->TestAllMethods();
 
    // ----- Evaluate and compare performance of all configured MVAs
-   factory->EvaluateAllMethods();    
+   factory->EvaluateAllMethods();
 
    // --------------------------------------------------------------
-   
+
    // Save the output
    outputFile->Close();
 
    std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
-   std::cout << "==> TMVAClassificationCategory is done!" << std::endl;      
+   std::cout << "==> TMVAClassificationCategory is done!" << std::endl;
 
    // Clean up
    delete factory;

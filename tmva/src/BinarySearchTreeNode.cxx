@@ -55,7 +55,7 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( const Event* e )
      fEventV  ( std::vector<Float_t>() ),
      fTargets ( std::vector<Float_t>() ),
      fWeight  ( e==0?0:e->GetWeight()  ),
-     fClass   ( e==0?1:(e->IsSignal()?0:1) ), // see BinarySearchTree.h, line Mean() RMS() Min() and Max()
+     fClass   ( e==0?0:e->GetClass() ), // see BinarySearchTree.h, line Mean() RMS() Min() and Max()
      fSelector( -1 )
 {
    // constructor of a node for the search tree
@@ -73,7 +73,7 @@ TMVA::BinarySearchTreeNode::BinarySearchTreeNode( BinarySearchTreeNode* parent, 
    fEventV  ( std::vector<Float_t>() ),
    fTargets ( std::vector<Float_t>() ),
    fWeight  ( 0  ),
-   fClass   ( -1 ),
+   fClass   ( 0 ),
    fSelector( -1 )
 {
    // constructor of a daughter node as a daughter of 'p'
@@ -233,9 +233,11 @@ void TMVA::BinarySearchTreeNode::AddAttributesToNode(void* node) const {
 void TMVA::BinarySearchTreeNode::AddContentToNode( std::stringstream& s ) const 
 {
    // adding attributes to tree node
+   std::ios_base::fmtflags ff = s.flags();
    s.precision( 16 );
-   for (UInt_t i=0; i<fEventV.size();  i++) s << std::scientific << " " << fEventV[i];   
+   for (UInt_t i=0; i<fEventV.size();  i++) s << std::scientific << " " << fEventV[i];
    for (UInt_t i=0; i<fTargets.size(); i++) s << std::scientific << " " << fTargets[i];
+   s.flags(ff);
 }
 //_______________________________________________________________________
 void TMVA::BinarySearchTreeNode::ReadContent( std::stringstream& s ) 

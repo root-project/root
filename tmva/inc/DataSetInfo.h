@@ -1,5 +1,5 @@
 // // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -73,6 +73,7 @@ namespace TMVA {
    class DataSet;
    class VariableTransformBase;
    class MsgLogger;
+   class DataSetManager;
 
    class DataSetInfo : public TObject {
 
@@ -138,6 +139,7 @@ namespace TMVA {
       void               PrintClasses() const;
       UInt_t             GetNClasses() const { return fClasses.size(); }
       Bool_t             IsSignal( const Event* ev ) const;
+      std::vector<Float_t>* GetTargetsForMulticlass( const Event* ev );
 
       // by variable
       Int_t              FindVarIndex( const TString& )      const;
@@ -173,6 +175,15 @@ namespace TMVA {
 
    private:
 
+
+
+      TMVA::DataSetManager*            fDataSetManager; // DSMTEST
+      void                       SetDataSetManager( DataSetManager* dsm ) { fDataSetManager = dsm; } // DSMTEST
+      friend class DataSetManager;  // DSMTEST (datasetmanager test)
+
+
+
+
       DataSetInfo( const DataSetInfo& ) : TObject() {}
 
       void PrintCorrelationMatrix( TTree* theTree );
@@ -197,9 +208,12 @@ namespace TMVA {
       Bool_t                     fVerbose;           //! Verbosity
 
       UInt_t                     fSignalClass;       //! index of the class with the name signal
+
+      std::vector<Float_t>*      fTargetsForMulticlass;       //! all targets 0 except the one with index==classNumber
       
       mutable MsgLogger*         fLogger;            //! message logger
       MsgLogger& Log() const { return *fLogger; }
+
 
    };
 }

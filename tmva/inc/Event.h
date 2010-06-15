@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -13,6 +13,7 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch>  - CERN, Switzerland          *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
@@ -70,14 +71,12 @@ namespace TMVA {
       ~Event();
 
       // accessors
-      Bool_t  IsSignal()          const { return (fClass==fSignalClass); } // deprecated: use <DataSetInfo>.IsSignal( Event* )
       Bool_t  IsDynamic()         const {return fDynamic; }
 
       Float_t GetWeight()         const { return fWeight*fBoostWeight; }
       Float_t GetOriginalWeight() const { return fWeight; }
       Float_t GetBoostWeight()    const { return TMath::Max(Float_t(0.0001),fBoostWeight); }
       UInt_t  GetClass()          const { return fClass; }  
-      Int_t   GetSignalClass()    const { return fSignalClass; } // intermediate solution to keep IsSignal() of Event working
 
       UInt_t  GetNVariables()        const;
       UInt_t  GetNTargets()          const;
@@ -101,7 +100,6 @@ namespace TMVA {
       void    SetClass              ( UInt_t t )  { fClass=t; }
       void    SetVal                ( UInt_t ivar, Float_t val );
       void    SetTarget             ( UInt_t itgt, Float_t value );
-      void    SetSignalClass        ( UInt_t cls ){ fSignalClass = cls; } // intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
       void    SetSpectator          ( UInt_t ivar, Float_t value );
       void    SetVariableArrangement( std::vector<UInt_t>* const m ) const;
 
@@ -122,7 +120,6 @@ namespace TMVA {
       Float_t                        fWeight;          // event weight (product of global and individual weights)
       Float_t                        fBoostWeight;     // internal weight to be set by boosting algorithm
       Bool_t                         fDynamic;         // is set when the dynamic values are taken
-      UInt_t                         fSignalClass;     // intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
       
       static Int_t                   fgCount;          // count instances of Event
    };

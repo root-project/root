@@ -57,6 +57,10 @@
 #include "TVectorDfwd.h"
 #endif
 
+#ifndef ROOT_TVectorDfwd
+#include "TVectorDfwd.h"
+#endif
+
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
@@ -68,6 +72,7 @@ class TH1;
 class TH2;
 class TH2F;
 class TSpline;
+class TXMLEngine;
 
 namespace TMVA {
 
@@ -91,9 +96,11 @@ namespace TMVA {
       static void   DestroyInstance();
 
       // simple statistics operations on tree entries
-      void  ComputeStat( const std::vector<TMVA::Event*>&, std::vector<Float_t>*,
+      void  ComputeStat( const std::vector<TMVA::Event*>&,
+                         std::vector<Float_t>*,
                          Double_t&, Double_t&, Double_t&,
-                         Double_t&, Double_t&, Double_t&, Int_t signalClass, Bool_t norm = kFALSE );
+                         Double_t&, Double_t&, Double_t&, Int_t signalClass,
+                         Bool_t norm = kFALSE );
 
       // compute variance from sums
       inline Double_t ComputeVariance( Double_t sumx2, Double_t sumx, Int_t nx );
@@ -216,17 +223,21 @@ namespace TMVA {
       void        ReadTVectorDFromXML( void* node, const char* name, TVectorD* vec );
       Bool_t      HistoHasEquidistantBins(const TH1& h);
 
+      Bool_t      HasAttr     ( void* node, const char* attrname );
       template<typename T>
-      inline void ReadAttr( void* node, const char* , T& value );
-
-      inline void ReadAttr( void* node, const char* attrname, TString& value );
-
+      inline void ReadAttr    ( void* node, const char* , T& value );
+      void        ReadAttr    ( void* node, const char* attrname, TString& value );
       template<typename T>
       void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
+      void        AddAttr     ( void* node, const char* attrname, const char* value );
       void*       AddChild    ( void* parent, const char* childname, const char* content = 0 );
+      Bool_t      AddRawLine  ( void* node, const char * raw );
+      Bool_t      AddComment  ( void* node, const char* comment );
+
       void*       GetChild    ( void* parent, const char* childname=0 );
       void*       GetNextChild( void* prevchild, const char* childname=0 );
       const char* GetContent  ( void* node );
+      const char* GetName     ( void* node );
 
       TXMLEngine& xmlengine() { return *fXMLEngine; }
       TXMLEngine* fXMLEngine;
@@ -244,31 +255,25 @@ namespace TMVA {
 
 //_______________________________________________________________________
 template<typename T>
-void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value ) 
+void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
 {
-   // add attribute from xml
-   const char* val = xmlengine().GetAttr(node, attrname);
-   std::stringstream s(val);
+   // read attribute from xml
+   TString val;
+   ReadAttr( node, attrname, val );
+   std::stringstream s(val.Data());
    s >> value;
 }
 
-//_______________________________________________________________________
-void TMVA::Tools::ReadAttr( void* node, const char* attrname, TString& value ) 
-{
-   // add attribute from xml
-   const char* val = xmlengine().GetAttr(node, attrname);
-   value = TString(val);
-}
 
 //_______________________________________________________________________
-template<typename T> 
-void TMVA::Tools::AddAttr( void* node, const char* attrname, const T& value, Int_t precision ) 
+template<typename T>
+void TMVA::Tools::AddAttr( void* node, const char* attrname, const T& value, Int_t precision )
 {
    // add attribute to xml
    std::stringstream s;
    s.precision( precision );
    s << std::scientific << value;
-   gTools().xmlengine().NewAttr(node, 0, attrname, s.str().c_str());
+   AddAttr( node, attrname, s.str().c_str() );
 }
 
 //_______________________________________________________________________

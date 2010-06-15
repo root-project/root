@@ -1134,7 +1134,7 @@ void TMVA::PDEFoam::FillFoamCells(const Event* ev, Bool_t NoNegWeights)
    } else if (ft == kDiscr){
       // 0. Element: Number of signal events
       // 1. Element: Number of background events times normalization
-      if (ev->IsSignal())
+      if (ev->GetClass() == 0)
          SetCellElement(cell, 0, GetCellElement(cell, 0) + weight);
       else
          SetCellElement(cell, 1, GetCellElement(cell, 1) + weight);
@@ -2518,7 +2518,7 @@ void TMVA::PDEFoam::PrintStream( ostream & ostr ) const
 void TMVA::PDEFoam::AddXMLTo( void* parent ){
    // write foam variables to xml
 
-   void *variables = gTools().xmlengine().NewChild( parent, 0, "Variables" );
+   void *variables = gTools().AddChild( parent, "Variables" );
    gTools().AddAttr( variables, "LastCe",           fLastCe );
    gTools().AddAttr( variables, "nCells",           fNCells );
    gTools().AddAttr( variables, "Dim",              fDim );
@@ -2526,14 +2526,14 @@ void TMVA::PDEFoam::AddXMLTo( void* parent ){
 
    void *xmin_wrap;
    for (Int_t i=0; i<GetTotDim(); i++){
-      xmin_wrap = gTools().xmlengine().NewChild( variables, 0, "Xmin" );
+      xmin_wrap = gTools().AddChild( variables, "Xmin" );
       gTools().AddAttr( xmin_wrap, "Index", i );
       gTools().AddAttr( xmin_wrap, "Value", fXmin[i] );
    }
 
    void *xmax_wrap;
    for (Int_t i=0; i<GetTotDim(); i++){
-      xmax_wrap = gTools().xmlengine().NewChild( variables, 0, "Xmax" );
+      xmax_wrap = gTools().AddChild( variables, "Xmax" );
       gTools().AddAttr( xmax_wrap, "Index", i );
       gTools().AddAttr( xmax_wrap, "Value", fXmax[i] );
    }
@@ -2541,7 +2541,7 @@ void TMVA::PDEFoam::AddXMLTo( void* parent ){
 
 //_____________________________________________________________________
 void TMVA::PDEFoam::ReadXML( void* parent ) {
-   void *variables = gTools().xmlengine().GetChild( parent );
+   void *variables = gTools().GetChild( parent );
    gTools().ReadAttr( variables, "LastCe",         fLastCe );
    gTools().ReadAttr( variables, "nCells",         fNCells );
    gTools().ReadAttr( variables, "Dim",            fDim );
@@ -2554,14 +2554,14 @@ void TMVA::PDEFoam::ReadXML( void* parent ) {
    fXmin = new Double_t[GetTotDim()];
    fXmax = new Double_t[GetTotDim()];
 
-   void *xmin_wrap = gTools().xmlengine().GetChild( variables );
+   void *xmin_wrap = gTools().GetChild( variables );
    for (Int_t counter=0; counter<fDim; counter++) {
       Int_t i=0;
       gTools().ReadAttr( xmin_wrap , "Index", i );
       if (i >= GetTotDim() || i<0)
          Log() << kFATAL << "dimension index out of range:" << i << Endl;
       gTools().ReadAttr( xmin_wrap , "Value", fXmin[i] );
-      xmin_wrap = gTools().xmlengine().GetNext( xmin_wrap );
+      xmin_wrap = gTools().GetNextChild( xmin_wrap );
    }
 
    void *xmax_wrap = xmin_wrap; //gTools().xmlengine().GetChild( variables );
@@ -2571,6 +2571,6 @@ void TMVA::PDEFoam::ReadXML( void* parent ) {
       if (i >= GetTotDim() || i<0)
          Log() << kFATAL << "dimension index out of range:" << i << Endl;
       gTools().ReadAttr( xmax_wrap , "Value", fXmax[i] );
-      xmax_wrap = gTools().xmlengine().GetNext( xmax_wrap );
+      xmax_wrap = gTools().GetNextChild( xmax_wrap );
    }
 }

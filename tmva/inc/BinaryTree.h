@@ -121,8 +121,8 @@ namespace TMVA {
       UInt_t     fNNodes;           // total number of nodes in the tree (counted)
       UInt_t     fDepth;            // maximal depth in tree reached
 
-      mutable MsgLogger* fLogger;   // message loggera    
-      MsgLogger& Log() const { return *fLogger; }
+      static MsgLogger* fgLogger;   // message logger, static to save resources    
+      MsgLogger& Log() const { return *fgLogger; }
 
       ClassDef(BinaryTree,0) // Base class for BinarySearch and Decision Trees
    };  

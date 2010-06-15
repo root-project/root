@@ -99,19 +99,18 @@ TMVA::DecisionTree::DecisionTree():
    fMyTrandom  (NULL),
    fNNodesMax(999999),
    fMaxDepth(999999),
+   fClass(0),
    fTreeID(0)
 {
    // default constructor using the GiniIndex as separation criterion, 
    // no restrictions on minium number of events in a leave note or the
    // separation gain in the node splitting
-   
-   fLogger->SetSource( "DecisionTree" );
 }
 
 //_______________________________________________________________________
-TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize, Int_t nCuts, 
+TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize, Int_t nCuts, UInt_t cls, 
                                   Bool_t randomisedTree, Int_t useNvars, UInt_t nNodesMax,
-                                  UInt_t nMaxDepth, Int_t iSeed, Float_t purityLimit, Int_t treeID ):
+                                  UInt_t nMaxDepth, Int_t iSeed, Float_t purityLimit, Int_t treeID):
    BinaryTree(),
    fNvars          (0),
    fNCuts          (nCuts),
@@ -124,6 +123,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize, I
    fMyTrandom      (new TRandom3(iSeed)),
    fNNodesMax      (nNodesMax),
    fMaxDepth       (nMaxDepth),
+   fClass          (cls),
    fTreeID         (treeID)
 {
    // constructor specifying the separation type, the min number of
@@ -131,8 +131,6 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize, I
    // number of bins in the grid used in applying the cut for the node
    // splitting.
    
-   fLogger->SetSource( "DecisionTree" );
-
    if (sepType == NULL) { // it is interpreted as a regression tree, where
                           // currently the separation type (simple least square)
                           // cannot be chosen freely)
@@ -140,7 +138,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType,Int_t minSize, I
       fRegType = new RegressionVariance();
       if ( nCuts <=0 ) {
          fNCuts = 200;
-         Log() << kWarning << " You had choosen the training mode using optimal cuts, not\n"
+         Log() << kWARNING << " You had choosen the training mode using optimal cuts, not\n"
                << " based on a grid of " << fNCuts << " by setting the option NCuts < 0\n"
                << " as this doesn't exist yet, I set it to " << fNCuts << " and use the grid"
                << Endl;
@@ -164,15 +162,15 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    fMyTrandom      (new TRandom3(fgRandomSeed)),  // well, that means it's not an identical copy. But I only ever intend to really copy trees that are "outgrown" already. 
    fNNodesMax  (d.fNNodesMax),
    fMaxDepth   (d.fMaxDepth),
+   fClass      (d.fClass),
    fTreeID     (d.fTreeID),
    fAnalysisType(d.fAnalysisType)
 {
-   // copy constructor that creates a true copy, i.e. a completely independent tree 
-   // the node copy will recursively copy all the nodes 
+   // copy constructor that creates a true copy, i.e. a completely independent tree
+   // the node copy will recursively copy all the nodes
    this->SetRoot( new DecisionTreeNode ( *((DecisionTreeNode*)(d.GetRoot())) ) );
    this->SetParentTreeInNodes();
    fNNodes = d.fNNodes;
-   fLogger->SetSource( "DecisionTree" );
 }
 
 
@@ -180,9 +178,9 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
 TMVA::DecisionTree::~DecisionTree()
 {
    // destructor
-  
+
    // desctruction of the tree nodes done in the "base class" BinaryTree
-  
+
    if (fMyTrandom) delete fMyTrandom;
 }
 
@@ -190,24 +188,24 @@ TMVA::DecisionTree::~DecisionTree()
 void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n )
 {
    // descend a tree to find all its leaf nodes, fill max depth reached in the
-   // tree at the same time. 
-  
+   // tree at the same time.
+
    if (n == NULL) { //default, start at the tree top, then descend recursively
       n = (DecisionTreeNode*) this->GetRoot();
       if (n == NULL) {
          Log() << kFATAL << "SetParentTreeNodes: started with undefined ROOT node" <<Endl;
          return ;
       }
-   } 
-  
+   }
+
    if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) != NULL) ) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    }  else if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) == NULL) ) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
-   } 
-   else { 
+   }
+   else {
       if (this->GetLeftDaughter(n) != NULL) {
          this->SetParentTreeInNodes( this->GetLeftDaughter(n) );
       }
@@ -222,9 +220,9 @@ void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n )
 
 //_______________________________________________________________________
 UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
-                                      TMVA::DecisionTreeNode *node ) 
+                                      TMVA::DecisionTreeNode *node)
 {
-   // building the decision tree by recursively calling the splitting of 
+   // building the decision tree by recursively calling the splitting of
    // one (root-) node into two daughter nodes (returns the number of nodes)
 
    Bool_t IsRootNode=kFALSE;
@@ -232,14 +230,14 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
       IsRootNode = kTRUE;
       //start with the root node
       node = new TMVA::DecisionTreeNode();
-      fNNodes = 1;   
+      fNNodes = 1;
       this->SetRoot(node);
       // have to use "s" for start as "r" for "root" would be the same as "r" for "right"
       this->GetRoot()->SetPos('s');
       this->GetRoot()->SetDepth(0);
       this->GetRoot()->SetParentTree(this);
    }
-  
+
    UInt_t nevents = eventSample.size();
 
    if (nevents > 0 ) {
@@ -247,20 +245,20 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
       fVariableImportance.resize(fNvars);
    }
    else Log() << kFATAL << ":<BuildTree> eventsample Size == 0 " << Endl;
-  
+
    Float_t s=0, b=0;
    Float_t suw=0, buw=0;
    Float_t target=0, target2=0;
    const UInt_t cNvars = fNvars;
-   Float_t *xmin = new Float_t[Int_t(cNvars)]; 
-   Float_t *xmax = new Float_t[Int_t(cNvars)]; 
+   Float_t *xmin = new Float_t[Int_t(cNvars)];
+   Float_t *xmax = new Float_t[Int_t(cNvars)];
    for (UInt_t iev=0; iev<eventSample.size(); iev++) {
       const TMVA::Event* evt = eventSample[iev];
       const Float_t weight = evt->GetWeight();
-      if (evt->IsSignal()) {
+      if (evt->GetClass() == fClass) {
          s += weight;
          suw += 1;
-      } 
+      }
       else {
          b += weight;
          buw += 1;
@@ -274,14 +272,14 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
       for (UInt_t ivar=0; ivar<fNvars; ivar++) {
          const Float_t val = evt->GetValue(ivar);
          if (iev==0) xmin[ivar]=xmax[ivar]=val;
-         if (val < xmin[ivar]) xmin[ivar]=val; 
-         if (val > xmax[ivar]) xmax[ivar]=val; 
+         if (val < xmin[ivar]) xmin[ivar]=val;
+         if (val > xmax[ivar]) xmax[ivar]=val;
       }
    }
-  
+
    if (s+b < 0) {
-      Log() << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. " 
-            << "(Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle " 
+      Log() << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. "
+            << "(Nsig="<<s<<" Nbkg="<<b<<" Probaby you use a Monte Carlo with negative weights. That should in principle "
             << "be fine as long as on average you end up with something positive. For this you have to make sure that the "
             << "minimul number of (unweighted) events demanded for a tree node (currently you use: nEventsMin="<<fMinSize
             << ", you can set this via the BDT option string when booking the classifier) is large enough to allow for "
@@ -290,15 +288,15 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
             << "with negative weight in the training." << Endl;
       double nBkg=0.;
       for (UInt_t i=0; i<eventSample.size(); i++) {
-         if (!(eventSample[i]->IsSignal())) {
+         if (eventSample[i]->GetClass() != fClass) {
             nBkg += eventSample[i]->GetWeight();
-            std::cout << "Event "<< i<< " has (original) weight: " <<  eventSample[i]->GetWeight()/eventSample[i]->GetBoostWeight() 
-                      << " boostWeight: " << eventSample[i]->GetBoostWeight() << std::endl;
+            Log() << kINFO << "Event "<< i<< " has (original) weight: " <<  eventSample[i]->GetWeight()/eventSample[i]->GetBoostWeight() 
+		  << " boostWeight: " << eventSample[i]->GetBoostWeight() << Endl;
          }
       }
-      std::cout << " that gives in total: " << nBkg<<std::endl;
-   } 
-  
+      Log() << kINFO << " that gives in total: " << nBkg<<Endl;
+   }
+
    node->SetNSigEvents(s);
    node->SetNBkgEvents(b);
    node->SetNSigEvents_unweighted(suw);
@@ -313,7 +311,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
    }
    delete[] xmin;
    delete[] xmax;
-  
+
    // I now demand the minimum number of events for both daughter nodes. Hence if the number
    // of events in the parent node is not at least two times as big, I don't even need to try
    // splitting
@@ -325,9 +323,9 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
          separationGain = this->TrainNodeFast(eventSample, node);
       else
          separationGain = this->TrainNodeFull(eventSample, node);
-      
-      if (separationGain < std::numeric_limits<double>::epsilon()) { // we could not gain anything, e.g. all events are in one bin, 
-         /// if (separationGain < 0.00000001) { // we could not gain anything, e.g. all events are in one bin, 
+
+      if (separationGain < std::numeric_limits<double>::epsilon()) { // we could not gain anything, e.g. all events are in one bin,
+         /// if (separationGain < 0.00000001) { // we could not gain anything, e.g. all events are in one bin,
          // no cut can actually do anything to improve the node
          // hence, naturally, the current node is a leaf node
          if (DoRegression()) {
@@ -360,7 +358,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
             }
          }
 
-      
+
          // sanity check
          if (leftSample.size() == 0 || rightSample.size() == 0) {
             Log() << kFATAL << "<TrainNode> all events went to the same branch" << Endl
@@ -370,7 +368,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
                   << "--- this should never happen, please write a bug report to Helge.Voss@cern.ch"
                   << Endl;
          }
-      
+
          // continue building daughter nodes for the left and the right eventsample
          TMVA::DecisionTreeNode *rightNode = new TMVA::DecisionTreeNode(node,'r');
          fNNodes++;
@@ -378,14 +376,14 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
          //         rightNode->SetDepth( node->GetDepth() + 1 );
          rightNode->SetNEvents(nRight);
          rightNode->SetNEvents_unweighted(rightSample.size());
-      
+
          TMVA::DecisionTreeNode *leftNode = new TMVA::DecisionTreeNode(node,'l');
          fNNodes++;
          //         leftNode->SetPos('l');
          //         leftNode->SetDepth( node->GetDepth() + 1 );
          leftNode->SetNEvents(nLeft);
          leftNode->SetNEvents_unweighted(leftSample.size());
-      
+
          node->SetNodeType(0);
          node->SetLeft(leftNode);
          node->SetRight(rightNode);
@@ -393,7 +391,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
          this->BuildTree(rightSample, rightNode);
          this->BuildTree(leftSample,  leftNode );
       }
-   } 
+   }
    else{ // it is a leaf node
       if (DoRegression()) {
          node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
@@ -439,13 +437,13 @@ void TMVA::DecisionTree::FillEvent( TMVA::Event & event,
    node->IncrementNEvents( event.GetWeight() );
    node->IncrementNEvents_unweighted( );
   
-   if (event.IsSignal()) {
+   if (event.GetClass() == fClass) {
       node->IncrementNSigEvents( event.GetWeight() );
       node->IncrementNSigEvents_unweighted( );
    } 
    else {
       node->IncrementNBkgEvents( event.GetWeight() );
-      node->IncrementNSigEvents_unweighted( );
+      node->IncrementNBkgEvents_unweighted( );
    }
    node->SetSeparationIndex(fSepType->GetSeparationIndex(node->GetNSigEvents(),
                                                          node->GetNBkgEvents()));
@@ -636,7 +634,7 @@ void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event& e ) const
    }
 
    while(current != NULL) {
-      if(e.IsSignal())
+      if(e.GetClass() == fClass)
          current->SetNSValidation(current->GetNSValidation() + e.GetWeight());
       else
          current->SetNBValidation(current->GetNBValidation() + e.GetWeight());
@@ -906,9 +904,8 @@ Float_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSam
    nTotS=0; nTotB=0;
    nTotS_unWeighted=0; nTotB_unWeighted=0;   
    for (UInt_t iev=0; iev<nevents; iev++) {
-      Bool_t eventType = eventSample[iev]->IsSignal();
       Float_t eventWeight =  eventSample[iev]->GetWeight(); 
-      if (eventType) {
+      if (eventSample[iev]->GetClass() == fClass) {
          nTotS+=eventWeight;
          nTotS_unWeighted++;
       }
@@ -925,7 +922,7 @@ Float_t TMVA::DecisionTree::TrainNodeFast( const vector<TMVA::Event*> & eventSam
             Float_t eventData = eventSample[iev]->GetValue(ivar); 
             // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
             iBin = TMath::Min(Int_t(nBins-1),TMath::Max(0,int (nBins*(eventData-xmin[ivar])/(xmax[ivar]-xmin[ivar]) ) ));
-            if (eventType) {
+            if (eventSample[iev]->GetClass() == fClass) {
                nSelS[ivar][iBin]+=eventWeight;
                nSelS_unWeighted[ivar][iBin]++;
             } 
@@ -1085,7 +1082,7 @@ Float_t TMVA::DecisionTree::TrainNodeFull( const vector<TMVA::Event*> & eventSam
    // Initialize (un)weighted counters for signal & background
    // Construct a list of event wrappers that point to the original data
    for( vector<TMVA::Event*>::const_iterator it = eventSample.begin(); it != eventSample.end(); ++it ) {
-      if( (*it)->IsSignal() ) { // signal or background event
+      if((*it)->GetClass() == fClass) { // signal or background event
          nTotS += (*it)->GetWeight();
          ++nTotS_unWeighted;
       }
@@ -1128,7 +1125,7 @@ Float_t TMVA::DecisionTree::TrainNodeFull( const vector<TMVA::Event*> & eventSam
       Float_t bkgWeightCtr = 0.0, sigWeightCtr = 0.0;
       vector<TMVA::BDTEventWrapper>::iterator it = bdtEventSample.begin(), it_end = bdtEventSample.end();
       for( ; it != it_end; ++it ) {
-         if( (**it)->IsSignal() ) // specify signal or background event
+         if((**it)->GetClass() == fClass ) // specify signal or background event
             sigWeightCtr += (**it)->GetWeight();
          else 
             bkgWeightCtr += (**it)->GetWeight(); 
@@ -1250,8 +1247,8 @@ Float_t  TMVA::DecisionTree::SamplePurity( vector<TMVA::Event*> eventSample )
   
    Float_t sumsig=0, sumbkg=0, sumtot=0;
    for (UInt_t ievt=0; ievt<eventSample.size(); ievt++) {
-      if (!(eventSample[ievt]->IsSignal())) sumbkg+=eventSample[ievt]->GetWeight();
-      if ((eventSample[ievt]->IsSignal())) sumsig+=eventSample[ievt]->GetWeight();
+      if (eventSample[ievt]->GetClass() != fClass) sumbkg+=eventSample[ievt]->GetWeight();
+      else sumsig+=eventSample[ievt]->GetWeight();
       sumtot+=eventSample[ievt]->GetWeight();
    }
    // sanity check

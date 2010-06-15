@@ -381,7 +381,7 @@ void TMVA::MethodLikelihood::Train( void )
                  << ", xmax="<<(*fHistSig)[ivar]->GetXaxis()->GetXmax()
                  << Endl;
          }
-         if (ev->IsSignal()) (*fHistSig)[ivar]->Fill( value, weight );
+         if (DataInfo().IsSignal(ev)) (*fHistSig)[ivar]->Fill( value, weight );
          else                (*fHistBgd)[ivar]->Fill( value, weight );
       }
    }
@@ -536,7 +536,7 @@ void TMVA::MethodLikelihood::WriteOptionsToStream( ostream& o, const TString& pr
 void TMVA::MethodLikelihood::AddWeightsXMLTo( void* parent ) const 
 {
    // write weights to XML
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr(wght, "NVariables", GetNvar());
    gTools().AddAttr(wght, "NClasses", 2);
    void* pdfwrap;
@@ -544,11 +544,11 @@ void TMVA::MethodLikelihood::AddWeightsXMLTo( void* parent ) const
       if ( (*fPDFSig)[ivar]==0 || (*fPDFBgd)[ivar]==0 )
          Log() << kFATAL << "Reference histograms for variable " << ivar 
                << " don't exist, can't write it to weight file" << Endl;
-      pdfwrap = gTools().xmlengine().NewChild(wght, 0, "PDFDescriptor");
+      pdfwrap = gTools().AddChild(wght, "PDFDescriptor");
       gTools().AddAttr(pdfwrap, "VarIndex", ivar);
       gTools().AddAttr(pdfwrap, "ClassIndex", 0);
       (*fPDFSig)[ivar]->AddXMLTo(pdfwrap);
-      pdfwrap = gTools().xmlengine().NewChild(wght, 0, "PDFDescriptor");
+      pdfwrap = gTools().AddChild(wght, "PDFDescriptor");
       gTools().AddAttr(pdfwrap, "VarIndex", ivar);
       gTools().AddAttr(pdfwrap, "ClassIndex", 1);
       (*fPDFBgd)[ivar]->AddXMLTo(pdfwrap);
@@ -584,7 +584,7 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
 
          Double_t lk = this->GetMvaValue();
          Double_t w  = ev->GetWeight();
-         if (ev->IsSignal()) rS->Fill( lk, w );
+         if (DataInfo().IsSignal(ev)) rS->Fill( lk, w );
          else                rB->Fill( lk, w );
       }
 
@@ -601,7 +601,7 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
    }
 
    fDropVariable = -1;
-   
+
    return fRanking;
 }
 
@@ -610,7 +610,7 @@ void  TMVA::MethodLikelihood::WriteWeightsToStream( TFile& ) const
 {
    // write reference PDFs to ROOT file
    TString pname = "PDF_";
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
       (*fPDFSig)[ivar]->Write( pname + GetInputVar( ivar ) + "_S" );
       (*fPDFBgd)[ivar]->Write( pname + GetInputVar( ivar ) + "_B" );
    }
@@ -620,13 +620,13 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
 {
    // read weights from XML
    TString pname = "PDF_";
-
+   Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
    UInt_t nvars=0;
    gTools().ReadAttr(wghtnode, "NVariables",nvars);
-   void* descnode = gTools().xmlengine().GetChild(wghtnode);
+   void* descnode = gTools().GetChild(wghtnode);
    for (UInt_t ivar=0; ivar<nvars; ivar++){
-      void* pdfnode = gTools().xmlengine().GetChild(descnode);
+      void* pdfnode = gTools().GetChild(descnode);
       Log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
@@ -635,12 +635,13 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
       (*fPDFSig)[ivar]->SetReadingVersion( GetTrainingTMVAVersionCode() );
       (*fPDFBgd)[ivar]->SetReadingVersion( GetTrainingTMVAVersionCode() );
       (*(*fPDFSig)[ivar]).ReadXML(pdfnode);
-      descnode = gTools().xmlengine().GetNext(descnode);
-      pdfnode  = gTools().xmlengine().GetChild(descnode);
+      descnode = gTools().GetNextChild(descnode);
+      pdfnode  = gTools().GetChild(descnode);
       (*(*fPDFBgd)[ivar]).ReadXML(pdfnode);
-      descnode = gTools().xmlengine().GetNext(descnode);
+      descnode = gTools().GetNextChild(descnode);
    }
-}  
+   TH1::AddDirectory(addDirStatus);
+}
 //_______________________________________________________________________
 void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream & istr )
 {
@@ -649,7 +650,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream & istr )
    TString pname = "PDF_";
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
       Log() << kINFO << "Reading signal and background PDF for variable: " << GetInputVar( ivar ) << Endl;
       if ((*fPDFSig)[ivar] !=0) delete (*fPDFSig)[ivar];
       if ((*fPDFBgd)[ivar] !=0) delete (*fPDFBgd)[ivar];
@@ -670,7 +671,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
    TString pname = "PDF_";
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){ 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
       (*fPDFSig)[ivar] = (TMVA::PDF*)rf.Get( Form( "PDF_%s_S", GetInputVar( ivar ).Data() ) );
       (*fPDFBgd)[ivar] = (TMVA::PDF*)rf.Get( Form( "PDF_%s_B", GetInputVar( ivar ).Data() ) );
    }
@@ -685,7 +686,7 @@ void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
    Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
    BaseDir()->cd();
 
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) { 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       (*fHistSig)[ivar]->Write();
       (*fHistBgd)[ivar]->Write();
       if ((*fHistSig_smooth)[ivar] != 0) (*fHistSig_smooth)[ivar]->Write();

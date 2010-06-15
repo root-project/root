@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -44,10 +44,11 @@ using std::endl;
 #include "TMVA/MsgLogger.h"
 #endif
 
-TMVA::DataSetManager* TMVA::DataSetManager::fgDSManager = 0;
-TMVA::DataSetManager& TMVA::DataSetManager::Instance() { return *fgDSManager; }      
-void TMVA::DataSetManager::CreateInstance( DataInputHandler& dataInput ) { fgDSManager = new DataSetManager(dataInput); }
-void TMVA::DataSetManager::DestroyInstance() { if (fgDSManager) { delete fgDSManager; fgDSManager=0; } }
+//TMVA::DataSetManager* TMVA::DataSetManager::fgDSManager = 0; // DSMTEST removed
+//TMVA::DataSetManager& TMVA::DataSetManager::Instance() { return *fgDSManager; }      // DSMTEST removed
+// void TMVA::DataSetManager::CreateInstance( DataInputHandler& dataInput ) { fgDSManager = new DataSetManager(dataInput); } // DSMTEST removed
+
+// void TMVA::DataSetManager::DestroyInstance() { if (fgDSManager) { delete fgDSManager; fgDSManager=0; } } // DSMTEST removed
 
 //_______________________________________________________________________
 TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput ) 
@@ -62,10 +63,10 @@ TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
 TMVA::DataSetManager::~DataSetManager() 
 {
    // destructor
-   fDataSetInfoCollection.SetOwner();
+//   fDataSetInfoCollection.SetOwner(); // DSMTEST --> created a segfault because the DataSetInfo-objects got deleted twice
 
-   TMVA::DataSetFactory::destroyInstance();
-
+   TMVA::DataSetFactory::destroyInstance(); 
+   
    delete fLogger;
 }
 
@@ -91,6 +92,9 @@ TMVA::DataSetInfo* TMVA::DataSetManager::GetDataSetInfo(const TString& dsiName)
 TMVA::DataSetInfo& TMVA::DataSetManager::AddDataSetInfo(DataSetInfo& dsi) 
 {
    // stores a copy of the dataset info object
+
+   dsi.SetDataSetManager( this ); // DSMTEST
+
    DataSetInfo * dsiInList = GetDataSetInfo(dsi.GetName());
    if (dsiInList!=0) return *dsiInList;
    fDataSetInfoCollection.Add( const_cast<DataSetInfo*>(&dsi) );

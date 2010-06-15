@@ -144,5 +144,5 @@ void TMVA::ClassifierFactory::Print() const
    std::cout << "Print: ClassifierFactory<> knows about " << fCalls.size() << " objects" << std::endl;  
 
    CallMap::const_iterator it = fCalls.begin();
-   for (; it != fCalls.end(); ++it) std::cout << "Registerted object name " << it -> first << std::endl;
+   for (; it != fCalls.end(); ++it) std::cout << "Registered object name " << it -> first << std::endl;
 }

@@ -98,7 +98,6 @@ End_Html */
 #include "TGraph.h"
 #include "TSpline.h"
 #include "TRandom3.h"
-#include "TXMLEngine.h"
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodCuts.h"
@@ -1231,11 +1230,11 @@ void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
    std::vector<Double_t> cutsMin;
    std::vector<Double_t> cutsMax;
 
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "OptimisationMethod", (Int_t)fEffMethod);
    gTools().AddAttr( wght, "FitMethod",          (Int_t)fFitMethod );
    gTools().AddAttr( wght, "nbins",              fNbins );
-   gTools().xmlengine().AddComment( wght, Form( "Below are the optimised cuts for %i variables: Format: ibin(hist) effS effB cutMin[ivar=0] cutMax[ivar=0] ... cutMin[ivar=n-1] cutMax[ivar=n-1]", GetNvar() ) );
+   gTools().AddComment( wght, Form( "Below are the optimised cuts for %i variables: Format: ibin(hist) effS effB cutMin[ivar=0] cutMax[ivar=0] ... cutMin[ivar=n-1] cutMax[ivar=n-1]", GetNvar() ) );
 
    // NOTE: The signal efficiency written out into 
    //       the weight file does not correspond to the center of the bin within which the 
@@ -1250,11 +1249,11 @@ void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
       Double_t trueEffS = GetCuts( effS, cutsMin, cutsMax );
       if (TMath::Abs(trueEffS) < 1e-10) trueEffS = 0;
       
-      void* binxml = gTools().xmlengine().NewChild( wght, 0, "Bin" );
+      void* binxml = gTools().AddChild( wght, "Bin" );
       gTools().AddAttr( binxml, "ibin", ibin+1   );
       gTools().AddAttr( binxml, "effS", trueEffS );
       gTools().AddAttr( binxml, "effB", fEffBvsSLocal->GetBinContent( ibin + 1 ) );
-      void* cutsxml = gTools().xmlengine().NewChild( binxml, 0, "Cuts" );
+      void* cutsxml = gTools().AddChild( binxml, "Cuts" );
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          gTools().AddAttr( cutsxml, Form( "cutMin_%i", ivar ), cutsMin[ivar] );
          gTools().AddAttr( cutsxml, Form( "cutMax_%i", ivar ), cutsMax[ivar] );
@@ -1319,12 +1318,12 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
    // read efficeincies and cuts
    Int_t   tmpbin;
    Float_t tmpeffS, tmpeffB;
-   void* ch = gTools().xmlengine().GetChild(wghtnode);
+   void* ch = gTools().GetChild(wghtnode,"Bin");
    while (ch) {
-      if (strcmp(gTools().xmlengine().GetNodeName(ch),"Bin") !=0) {
-         ch = gTools().xmlengine().GetNext(ch);
-         continue;
-      }
+//       if (strcmp(gTools().GetName(ch),"Bin") !=0) {
+//          ch = gTools().GetNextChild(ch);
+//          continue;
+//       }
 
       gTools().ReadAttr( ch, "ibin", tmpbin  );
       gTools().ReadAttr( ch, "effS", tmpeffS );
@@ -1336,12 +1335,12 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
       }
 
       fEffBvsSLocal->SetBinContent( tmpbin, tmpeffB );
-      void* ct = gTools().xmlengine().GetChild(ch);
+      void* ct = gTools().GetChild(ch);
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          gTools().ReadAttr( ct, Form( "cutMin_%i", ivar ), fCutMin[ivar][tmpbin-1] );
          gTools().ReadAttr( ct, Form( "cutMax_%i", ivar ), fCutMax[ivar][tmpbin-1] );
       }
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch, "Bin");
    }
 }
 

@@ -32,7 +32,6 @@
 #include "TVectorD.h"
 #include "TMatrixD.h"
 #include "TMatrixDBase.h"
-#include "TXMLEngine.h"
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
@@ -180,7 +179,6 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
    fTransformedEvent->SetWeight     ( ev->GetWeight() );
    fTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
    fTransformedEvent->SetClass      ( ev->GetClass() );
-   fTransformedEvent->SetSignalClass( ev->GetSignalClass() );
    return fTransformedEvent;
 }
 
@@ -386,8 +384,8 @@ void TMVA::VariableDecorrTransform::WriteTransformationToStream( std::ostream& o
 void TMVA::VariableDecorrTransform::AttachXMLTo(void* parent) 
 {
    // node attachment to parent
-   void* trf = gTools().xmlengine().NewChild(parent, 0, "Transform");
-   gTools().xmlengine().NewAttr(trf,0,"Name", "Decorrelation");
+   void* trf = gTools().AddChild(parent, "Transform");
+   gTools().AddAttr(trf,"Name", "Decorrelation");
 
    for (std::vector<TMatrixD*>::const_iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); itm++) {
       TMatrixD* mat = (*itm);
@@ -416,13 +414,13 @@ void TMVA::VariableDecorrTransform::ReadFromXML( void* trfnode )
       if( (*it) != 0 ) delete (*it);
    fDecorrMatrices.clear();
 
-   void* ch = gTools().xmlengine().GetChild(trfnode);
+   void* ch = gTools().GetChild(trfnode);
    while(ch!=0) {
       Int_t nrows, ncols;
       gTools().ReadAttr(ch, "Rows", nrows);
       gTools().ReadAttr(ch, "Columns", ncols);
       TMatrixD* mat = new TMatrixD(nrows,ncols);
-      const char* content = gTools().xmlengine().GetNodeContent(ch);
+      const char* content = gTools().GetContent(ch);
       std::stringstream s(content);
       for (Int_t row = 0; row<nrows; row++) {
          for (Int_t col = 0; col<ncols; col++) {
@@ -430,7 +428,7 @@ void TMVA::VariableDecorrTransform::ReadFromXML( void* trfnode )
          }
       }
       fDecorrMatrices.push_back(mat);
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch);
    }
    SetCreated();
 }

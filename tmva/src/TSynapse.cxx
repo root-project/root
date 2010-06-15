@@ -40,6 +40,8 @@ static const Int_t fgUNINITIALIZED = -1;
 
 ClassImp(TMVA::TSynapse);
 
+TMVA::MsgLogger* TMVA::TSynapse::fgLogger = 0;
+
 //______________________________________________________________________________
 TMVA::TSynapse::TSynapse()
   : fWeight( 0 ),
@@ -48,11 +50,11 @@ TMVA::TSynapse::TSynapse()
     fDEDw( 0 ),
     fCount( 0 ),
     fPreNeuron( NULL ),
-    fPostNeuron( NULL ),
-    fLogger( new MsgLogger("TSynapse") )
+    fPostNeuron( NULL )
 {
    // constructor
    fWeight     = fgUNINITIALIZED;
+   if (!fgLogger) fgLogger = new MsgLogger("TSynapse");
 }
 
 
@@ -60,7 +62,6 @@ TMVA::TSynapse::TSynapse()
 TMVA::TSynapse::~TSynapse()
 {
    // destructor
-   delete fLogger;
 }
 
 //______________________________________________________________________________

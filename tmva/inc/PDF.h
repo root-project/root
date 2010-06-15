@@ -198,8 +198,8 @@ namespace TMVA {
       MsgLogger&               Log() const { return *fLogger; }    
 
       // static pointer to this object
-      static PDF*              fgThisPDF;             // this PDF pointer
-      static PDF*              ThisPDF( void ) { return fgThisPDF; }
+      static PDF*              fgThisPDF;             // this PDF pointer 
+      static PDF*              ThisPDF( void ); 
 
       // external auxiliary functions 
       static Double_t          IGetVal( Double_t*, Double_t* );

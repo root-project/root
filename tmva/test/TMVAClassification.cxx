@@ -151,7 +151,7 @@ int main( int argc, char** argv )
    // The second argument is the output file for the training results
    // All TMVA output can be suppressed by removing the "!" (not) in 
    // front of the "Silent" argument in the option string
-   std::string factoryOptions( "!V:!Silent:Transformations=I;D;P;G,D" );
+   std::string factoryOptions( "!V:!Silent:Transformations=I;D;P;G,D:AnalysisType=Classification" );
    if (batchMode) factoryOptions += ":!Color:!DrawProgressBar";
 
    TMVA::Factory *factory = new TMVA::Factory( "TMVAClassification", outputFile, factoryOptions );

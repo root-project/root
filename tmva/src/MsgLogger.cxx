@@ -31,11 +31,6 @@
 
 #include <cstdlib>
 
-// this is the hardcoded prefix
-#define PREFIX "--- "
-// this is the hardcoded suffix
-#define SUFFIX ": "
-
 // ROOT include(s):
 
 ClassImp(TMVA::MsgLogger)
@@ -43,15 +38,18 @@ ClassImp(TMVA::MsgLogger)
 // this is the hard-coded maximum length of the source names
 UInt_t TMVA::MsgLogger::fgMaxSourceSize = 25;
 Bool_t TMVA::MsgLogger::fgInhibitOutput = kFALSE;
+
+const std::string TMVA::MsgLogger::fgPrefix="--- ";     
+const std::string TMVA::MsgLogger::fgSuffix=": ";
+std::map<TMVA::EMsgType, std::string> TMVA::MsgLogger::fgTypeMap=std::map<TMVA::EMsgType, std::string>();
+std::map<TMVA::EMsgType, std::string> TMVA::MsgLogger::fgColorMap=std::map<TMVA::EMsgType, std::string>();
+
 void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }
 void   TMVA::MsgLogger::EnableOutput()  { fgInhibitOutput = kFALSE; }
-
 //_______________________________________________________________________
 TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
    : fObjSource ( source ), 
      fStrSource ( "" ), 
-     fPrefix    ( PREFIX ), 
-     fSuffix    ( SUFFIX ), 
      fActiveType( kINFO ), 
      fMinType   ( minType )
 {
@@ -63,8 +61,6 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
 TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
    : fObjSource ( 0 ),
      fStrSource ( source ), 
-     fPrefix    ( PREFIX ), 
-     fSuffix    ( SUFFIX ), 
      fActiveType( kINFO ), 
      fMinType   ( minType )
 {
@@ -76,8 +72,6 @@ TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
 TMVA::MsgLogger::MsgLogger( EMsgType minType )
    : fObjSource ( 0 ), 
      fStrSource ( "Unknown" ), 
-     fPrefix    ( PREFIX ), 
-     fSuffix    ( SUFFIX ), 
      fActiveType( kINFO ), 
      fMinType   ( minType )
 {
@@ -89,9 +83,7 @@ TMVA::MsgLogger::MsgLogger( EMsgType minType )
 TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
    : std::basic_ios<MsgLogger::char_type, MsgLogger::traits_type>(),
      std::ostringstream(),
-     TObject(),
-     fPrefix( PREFIX ), 
-     fSuffix( SUFFIX )
+     TObject()
 {
    // copy constructor
    InitMaps();
@@ -142,7 +134,7 @@ std::string TMVA::MsgLogger::GetPrintedSource() const
    if (source_name.size() < fgMaxSourceSize) 
       for (std::string::size_type i=source_name.size(); i<fgMaxSourceSize; i++) source_name.push_back( ' ' );
 
-   return fPrefix + source_name + fSuffix; 
+   return fgPrefix + source_name + fgSuffix; 
 }
 
 //_______________________________________________________________________
@@ -165,7 +157,7 @@ void TMVA::MsgLogger::Send()
       // must call the modifiers like this, otherwise g++ get's confused with the operators...
       message_to_send.setf( std::ios::adjustfield, std::ios::left );
       message_to_send.width( fgMaxSourceSize );
-      message_to_send << source_name << fSuffix << line;
+      message_to_send << source_name << fgSuffix << line;
       this->WriteMsg( fActiveType, message_to_send.str() );
 
       if (current_pos == message.npos) break;
@@ -187,23 +179,23 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
    if (type < fMinType || (fgInhibitOutput && type!=kFATAL)) return; // no output
 
    std::map<EMsgType, std::string>::const_iterator stype;
-   if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
+   if ((stype = fgTypeMap.find( type )) == fgTypeMap.end()) return;
    if (!gConfig().IsSilent() || type==kFATAL) {
       if (gConfig().UseColor()) {
          // no text for INFO or VERBOSE
-         if (type == kINFO || type == kVERBOSE) 
-            std::cout << fPrefix << line << std::endl; // no color for info
-         else               
-            std::cout << fColorMap.find( type )->second << fPrefix << "<" 
+         if (type == kINFO || type == kVERBOSE)
+            std::cout << fgPrefix << line << std::endl; // no color for info
+         else
+            std::cout << fgColorMap.find( type )->second << fgPrefix << "<"
                       << stype->second << "> " << line  << "\033[0m" << std::endl;
-      } 
+      }
       else {
-         if (type == kINFO) std::cout << fPrefix << line << std::endl;
-         else               std::cout << fPrefix << "<" << stype->second << "> " << line << std::endl;
+         if (type == kINFO) std::cout << fgPrefix << line << std::endl;
+         else               std::cout << fgPrefix << "<" << stype->second << "> " << line << std::endl;
       }
    }
    // take decision to stop if fatal error
-   if (type == kFATAL) { 
+   if (type == kFATAL) {
       std::cout << "***> abort program execution" << std::endl;
       std::exit(1);
    }
@@ -220,20 +212,22 @@ TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger )
 //_______________________________________________________________________
 void TMVA::MsgLogger::InitMaps()
 {
-   // fill maps that assign a string and a color to echo message level
-   fTypeMap[kVERBOSE]  = std::string("VERBOSE");
-   fTypeMap[kDEBUG]    = std::string("DEBUG");
-   fTypeMap[kINFO]     = std::string("INFO");
-   fTypeMap[kWARNING]  = std::string("WARNING");
-   fTypeMap[kERROR]    = std::string("ERROR");
-   fTypeMap[kFATAL]    = std::string("FATAL");
-   fTypeMap[kSILENT]   = std::string("SILENT");
+   if (fgTypeMap.size()>0 && fgColorMap.size()>0 ) return;
 
-   fColorMap[kVERBOSE] = std::string("");
-   fColorMap[kDEBUG]   = std::string("\033[34m");
-   fColorMap[kINFO]    = std::string("");
-   fColorMap[kWARNING] = std::string("\033[1;31m");
-   fColorMap[kERROR]   = std::string("\033[31m");
-   fColorMap[kFATAL]   = std::string("\033[37;41;1m");
-   fColorMap[kSILENT]  = std::string("\033[30m");
+   // fill maps that assign a string and a color to echo message level
+   fgTypeMap[kVERBOSE]  = std::string("VERBOSE");
+   fgTypeMap[kDEBUG]    = std::string("DEBUG");
+   fgTypeMap[kINFO]     = std::string("INFO");
+   fgTypeMap[kWARNING]  = std::string("WARNING");
+   fgTypeMap[kERROR]    = std::string("ERROR");
+   fgTypeMap[kFATAL]    = std::string("FATAL");
+   fgTypeMap[kSILENT]   = std::string("SILENT");
+
+   fgColorMap[kVERBOSE] = std::string("");
+   fgColorMap[kDEBUG]   = std::string("\033[34m");
+   fgColorMap[kINFO]    = std::string("");
+   fgColorMap[kWARNING] = std::string("\033[1;31m");
+   fgColorMap[kERROR]   = std::string("\033[31m");
+   fgColorMap[kFATAL]   = std::string("\033[37;41;1m");
+   fgColorMap[kSILENT]  = std::string("\033[30m");
 }

@@ -107,7 +107,7 @@ namespace TMVA {
       Double_t         GetVolumeContentForRoot( Double_t );
 
       // static pointer to this object
-      static MethodPDERS* ThisPDERS( void ) { return fgThisPDERS; }
+      static MethodPDERS* ThisPDERS( void );
 
    protected:
 
@@ -221,7 +221,7 @@ namespace TMVA {
 
       // this carrier
       static MethodPDERS* fgThisPDERS; // this pointer (required by root finder)
-      void UpdateThis() { fgThisPDERS = this; }
+      void UpdateThis();
 
       void Init( void );
 

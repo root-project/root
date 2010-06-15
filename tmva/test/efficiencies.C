@@ -19,7 +19,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
    if (type == 2) {
       Float_t z = y1;
       y1 = 1 - y2;
-      y2 = 1 - z;    
+      y2 = 1 - z;
       //      cout << "--- type==2: plot background rejection versus signal efficiency" << endl;
    }
    else {
@@ -40,12 +40,12 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
       y0H = 1 - y0H + dyH + 0.07;
    }
    TLegend *legend = new TLegend( x0L, y0H-dyH, x0L+dxL, y0H );
-   legend->SetTextSize( 0.05 );
+   //legend->SetTextSize( 0.05 );
    legend->SetHeader( "MVA Method:" );
    legend->SetMargin( 0.4 );
 
    TString xtit = "Signal efficiency";
-   TString ytit = "Background efficiency";  
+   TString ytit = "Background efficiency";
    if (type == 2) ytit = "Background rejection";
    TString ftit = ytit + " versus " + xtit;
 
@@ -61,7 +61,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
    frame->GetYaxis()->SetTitle( ytit );
    TMVAGlob::SetFrameStyle( frame, 1.0 );
 
-   frame->Draw();  
+   frame->Draw();
 
    Int_t color = 1;
    Int_t nmva  = 0;
@@ -90,12 +90,12 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
          TIter nextKey( titDir->GetListOfKeys() );
          while ((hkey = TMVAGlob::NextKey(nextKey,"TH1"))) {
-            TH1 *h = (TH1*)hkey->ReadObj();    
+            TH1 *h = (TH1*)hkey->ReadObj();
             TString hname = h->GetName();
             if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
                h->SetLineWidth(3);
                h->SetLineColor(color);
-               color++; if (color == 5 || color == 10 || color == 11) color++; 
+               color++; if (color == 5 || color == 10 || color == 11) color++;
                h->Draw("csame");
                hists.Add(h);
                nmva++;
@@ -122,8 +122,8 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
       }
       legend->AddEntry(histWithLargestInt,TString(histWithLargestInt->GetTitle()).ReplaceAll("MVA_",""),"l");
       hists.Remove(histWithLargestInt);
-   }   
-   
+   }
+
    // rescale legend box size
    // current box size has been tuned for 3 MVAs + 1 title
    if (type == 1) {
@@ -131,12 +131,12 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
       legend->SetY1( y0H - dyH );
    }
    else {
-      dyH *= (Float_t(nmva - 3.0)/4.0);
+      dyH *= (Float_t(TMath::Min(10,nmva) - 3.0)/4.0);
       legend->SetY2( y0H + dyH);
    }
 
    // redraw axes
-   frame->Draw("sameaxis");  
+   frame->Draw("sameaxis");
    legend->Draw("same");
 
    // ============================================================
@@ -162,12 +162,12 @@ void efficiencies( TString fin = "TMVA.root", Int_t type = 2, Bool_t useTMVAStyl
 {
    // argument: type = 1 --> plot efficiency(B) versus eff(S)
    //           type = 2 --> plot rejection (B) versus efficiency (S)
-  
+
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );
 
    // check if multi-cut MVA or only one set of MVAs
    Bool_t multiMVA=kFALSE;
@@ -177,10 +177,10 @@ void efficiencies( TString fin = "TMVA.root", Int_t type = 2, Bool_t useTMVAStyl
    // one contains the key word 'multicutMVA'
    while ((key = (TKey*)nextDir())) {
       TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TDirectory")) continue;    
-      TDirectory *d = (TDirectory*)key->ReadObj();    
+      if (!cl->InheritsFrom("TDirectory")) continue;
+      TDirectory *d = (TDirectory*)key->ReadObj();
       TString path(d->GetPath());
-      if (path.Contains("multicutMVA")){         
+      if (path.Contains("multicutMVA")){
          multiMVA=kTRUE;
          plot_efficiencies( file, type, d );
       }

@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -35,10 +35,10 @@
 #include "TMath.h"
 
 //_______________________________________________________________________
-TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& title, const TString& unit, 
-                                  Int_t varCounter, 
+TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& title, const TString& unit,
+                                  Int_t varCounter,
                                   char varType, void* external,
-                                  Double_t min, Double_t max, Bool_t normalized ) 
+                                  Double_t min, Double_t max, Bool_t normalized )
    : fExpression  ( expression ),
      fTitle       ( title ),
      fUnit        ( unit ),
@@ -166,17 +166,17 @@ void TMVA::VariableInfo::ReadFromStream( std::istream& istr )
 void TMVA::VariableInfo::AddToXML( void* varnode )
 {
    // write class to XML
-   gTools().xmlengine().NewAttr( varnode, 0, "Expression", GetExpression() );
-   gTools().xmlengine().NewAttr( varnode, 0, "Label",      GetLabel() );
-   gTools().xmlengine().NewAttr( varnode, 0, "Title",      GetTitle() );
-   gTools().xmlengine().NewAttr( varnode, 0, "Unit",       GetUnit() );
-   gTools().xmlengine().NewAttr( varnode, 0, "Internal",   GetInternalName() );
+   gTools().AddAttr( varnode, "Expression", GetExpression() );
+   gTools().AddAttr( varnode, "Label",      GetLabel() );
+   gTools().AddAttr( varnode, "Title",      GetTitle() );
+   gTools().AddAttr( varnode, "Unit",       GetUnit() );
+   gTools().AddAttr( varnode, "Internal",   GetInternalName() );
 
    TString typeStr(" ");
    typeStr[0] = GetVarType();
-   gTools().xmlengine().NewAttr( varnode, 0, "Type", typeStr );
-   gTools().xmlengine().NewAttr( varnode, 0, "Min", gTools().StringFromDouble(GetMin()) );
-   gTools().xmlengine().NewAttr( varnode, 0, "Max", gTools().StringFromDouble(GetMax()) );
+   gTools().AddAttr( varnode, "Type", typeStr );
+   gTools().AddAttr( varnode, "Min", gTools().StringFromDouble(GetMin()) );
+   gTools().AddAttr( varnode, "Max", gTools().StringFromDouble(GetMax()) );
 }
 
 //_______________________________________________________________________

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Eckhard von Toerne
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -96,6 +96,7 @@
 #include "TKey.h"
 #include "TVector.h"
 #include "TXMLEngine.h"
+
 #include <cstdlib>
 
 #include <string>
@@ -110,25 +111,32 @@
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodCuts.h"
+#include "TMVA/DataSetManager.h"
 
 ClassImp(TMVA::Reader)
 
 //_______________________________________________________________________
 TMVA::Reader::Reader( const TString& theOption, Bool_t verbose )
    : Configurable( theOption ),
+     fDataSetManager( NULL ), // DSMTEST
      fDataSetInfo(),
      fVerbose( verbose ),
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
+     fMvaEventError2( -1 ),   //zjh
      fLogger ( 0 )
 {
    // constructor
 
    fLogger = new MsgLogger(this);
 
-   DataSetManager::CreateInstance(fDataInputHandler);
-   DataSetManager::Instance().AddDataSetInfo(fDataSetInfo);
+//    DataSetManager::CreateInstance(fDataInputHandler); // DSMTEST removed
+//    DataSetManager::Instance().AddDataSetInfo(fDataSetInfo); // DSMTEST removed
+   fDataSetManager = new DataSetManager( fDataInputHandler ); // DSMTEST 
+   fDataSetManager->AddDataSetInfo(fDataSetInfo); // DSMTEST
+   
+
 
    SetConfigName( GetName() );
    DeclareOptions();
@@ -145,6 +153,7 @@ TMVA::Reader::Reader( std::vector<TString>& inputVars, const TString& theOption,
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
+     fMvaEventError2( -1 ),   //zjh
      fLogger ( 0 )
 {
    // constructor
@@ -170,6 +179,7 @@ TMVA::Reader::Reader( std::vector<std::string>& inputVars, const TString& theOpt
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
+     fMvaEventError2( -1 ),   //zjh
      fLogger ( 0 )
 {
    // constructor
@@ -195,6 +205,7 @@ TMVA::Reader::Reader( const std::string& varNames, const TString& theOption, Boo
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
+     fMvaEventError2( -1 ),   //zjh
      fLogger ( 0 )
 {
    // constructor
@@ -217,6 +228,7 @@ TMVA::Reader::Reader( const TString& varNames, const TString& theOption, Bool_t 
      fSilent ( kFALSE ),
      fColor  ( kFALSE ),
      fMvaEventError( -1 ),
+     fMvaEventError2( -1 ),   //zjh
      fLogger ( 0 )
 {
    // constructor
@@ -246,6 +258,9 @@ void TMVA::Reader::DeclareOptions()
 TMVA::Reader::~Reader( void )
 {
    // destructor
+
+   delete fDataSetManager; // DSMTEST
+
    delete fLogger;
 }
 
@@ -270,7 +285,9 @@ void TMVA::Reader::AddVariable( const TString& expression, Float_t* datalink )
 //_______________________________________________________________________
 void TMVA::Reader::AddVariable( const TString& expression, Int_t* datalink )
 {
+   Log() << kFATAL << "Reader::AddVariable( const TString& expression, Int_t* datalink ), this function is deprecated, please provide all variables to the reader as floats" << Endl;
    // Add an integer variable or expression to the reader
+   Log() << kFATAL << "Reader::AddVariable( const TString& expression, Int_t* datalink ), this function is deprecated, please provide all variables to the reader as floats" << Endl;
    DataInfo().AddVariable(expression, "", "", 0, 0, 'I', kFALSE, (void*)datalink ); // <= should this be F or rather T?
 }
 
@@ -344,8 +361,10 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
    // books MVA method from weightfile
    IMethod* im = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( methodType )),
                                                       DataInfo(), weightfile );
-   
+
    MethodBase *method = (dynamic_cast<MethodBase*>(im));
+
+   if (method==0) return im;
 
    method->SetupMethod();
 
@@ -365,22 +384,66 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
    return method;
 }
 
+#if ROOT_SVN_REVISION >= 32259
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& /*inputVec*/, const TString& methodTag, Double_t aux )
+TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr )
+{
+   // books MVA method from weightfile
+   IMethod* im = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( methodType )),
+                                                      DataInfo(), "" );
+   
+   MethodBase *method = (dynamic_cast<MethodBase*>(im));
+
+   method->SetupMethod();
+
+   // when reading older weight files, they could include options
+   // that are not supported any longer
+   method->DeclareCompatibilityOptions();
+
+   // read weight file
+   method->ReadStateFromXMLString( xmlstr );
+
+   // check for unused options
+   method->CheckSetup();
+   
+   Log() << kINFO << "Booked classifier \"" << method->GetMethodName()
+         << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
+   
+   return method;
+}
+#endif
+
+//_______________________________________________________________________
+Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const TString& methodTag, Double_t aux )
 {
    // Evaluate a vector<float> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
 
-   return EvaluateMVA( methodTag, aux );
+   // create a temporary event from the vector.
+   Event* tmpEvent=new Event(inputVec, 2); // ToDo resolve magic 2 issue
+   IMethod* imeth = FindMVA( methodTag );
+   MethodBase* meth = dynamic_cast<TMVA::MethodBase*>(imeth); 
+   if (meth->GetMethodType() == TMVA::Types::kCuts)
+      dynamic_cast<TMVA::MethodCuts*>(meth)->SetTestSignalEfficiency( aux );
+   Double_t val = meth->GetMvaValue( tmpEvent, &fMvaEventError);
+   delete tmpEvent;
+   return val;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& /*inputVec*/, const TString& methodTag, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, const TString& methodTag, Double_t aux )
 {
    // Evaluate a vector<double> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
 
-   return EvaluateMVA( methodTag, aux );
+   // performs a copy to float values which are internally used by all methods
+   if(fTmpEvalVec.size() != inputVec.size())
+      fTmpEvalVec.resize(inputVec.size());
+
+   for (UInt_t idx=0; idx!=inputVec.size(); idx++ ) 
+      fTmpEvalVec[idx]=inputVec[idx];
+
+   return EvaluateMVA( fTmpEvalVec, methodTag, aux );
 }
 
 //_______________________________________________________________________
@@ -399,7 +462,12 @@ Double_t TMVA::Reader::EvaluateMVA( const TString& methodTag, Double_t aux )
 
    else method = it->second;
 
-   return this->EvaluateMVA( dynamic_cast<TMVA::MethodBase*>(method), aux );
+   MethodBase * kl = dynamic_cast<TMVA::MethodBase*>(method);
+
+   if(kl==0)
+      Log() << kFATAL << methodTag << " is not a method" << Endl;
+
+   return this->EvaluateMVA( kl, aux );
 }
 
 //_______________________________________________________________________
@@ -410,8 +478,8 @@ Double_t TMVA::Reader::EvaluateMVA( MethodBase* method, Double_t aux )
    // the aux value is only needed for MethodCuts: it sets the required signal efficiency
    if (method->GetMethodType() == TMVA::Types::kCuts)
       dynamic_cast<TMVA::MethodCuts*>(method)->SetTestSignalEfficiency( aux );
-
-   return method->GetMvaValue( &fMvaEventError ); // attributed MVA response and error
+   if (method->GetMethodType() == TMVA::Types::kMLP) return method->GetMvaValues( fMvaEventError, fMvaEventError2 ); //zjh
+   else  return method->GetMvaValue( &fMvaEventError ); // attributed MVA response and error
 }
 
 //_______________________________________________________________________
@@ -427,9 +495,14 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( const TString& m
       for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) Log() << " --> " << it->first << Endl;
       Log() << "Check calling string" << kFATAL << Endl;
    }
-
    else method = it->second;
-   return this->EvaluateRegression( dynamic_cast<TMVA::MethodBase*>(method), aux );
+
+   MethodBase * kl = dynamic_cast<TMVA::MethodBase*>(method);
+
+   if(kl==0)
+      Log() << kFATAL << methodTag << " is not a method" << Endl;
+
+   return this->EvaluateRegression( kl, aux );
 }
 
 //_______________________________________________________________________
@@ -453,6 +526,53 @@ Float_t TMVA::Reader::EvaluateRegression( UInt_t tgtNumber, const TString& metho
    }
 }
 
+
+
+//_______________________________________________________________________
+const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( const TString& methodTag, Double_t aux )
+{
+   // evaluates MVA for given set of input variables
+   IMethod* method = 0;
+
+   std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodTag );
+   if (it == fMethodMap.end()) {
+      Log() << kINFO << "<EvaluateMVA> unknown method in map; "
+              << "you looked for \"" << methodTag << "\" within available methods: " << Endl;
+      for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) Log() << " --> " << it->first << Endl;
+      Log() << "Check calling string" << kFATAL << Endl;
+   }
+   else method = it->second;
+
+   MethodBase * kl = dynamic_cast<TMVA::MethodBase*>(method);
+
+   if(kl==0)
+      Log() << kFATAL << methodTag << " is not a method" << Endl;
+
+   return this->EvaluateMulticlass( kl, aux );
+}
+
+//_______________________________________________________________________
+const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( MethodBase* method, Double_t /*aux*/ )
+{
+   // evaluates the multiclass MVA
+   return method->GetMulticlassValues();
+}
+
+
+//_______________________________________________________________________
+Float_t TMVA::Reader::EvaluateMulticlass( UInt_t clsNumber, const TString& methodTag, Double_t aux )
+{ 
+   // evaluates the multiclass MVA
+   try {
+      return EvaluateMulticlass(methodTag, aux).at(clsNumber); 
+   }
+   catch (std::out_of_range e) {
+      Log() << kWARNING << "Multiclass could not be evaluated for class-number " << clsNumber << Endl;
+      return 0;
+   }
+}
+
+
 //_______________________________________________________________________
 TMVA::IMethod* TMVA::Reader::FindMVA( const TString& methodTag )
 {
@@ -466,7 +586,7 @@ TMVA::IMethod* TMVA::Reader::FindMVA( const TString& methodTag )
 //_______________________________________________________________________
 TMVA::MethodCuts* TMVA::Reader::FindCutsMVA( const TString& methodTag )
 {
-   // special function for Cuts to avoid dynamic_casts in ROOT macros, 
+   // special function for Cuts to avoid dynamic_casts in ROOT macros,
    // which are not properly handled by CINT
    return dynamic_cast<MethodCuts*>(FindMVA(methodTag));
 }
@@ -485,6 +605,8 @@ Double_t TMVA::Reader::GetProba( const TString& methodTag,  Double_t ap_sig, Dou
    else method = it->second;
 
    MethodBase* kl = dynamic_cast<MethodBase*>(method);
+   if(kl==0) return -1;
+
    if (mvaVal == -9999999) mvaVal = kl->GetMvaValue();
 
    return kl->GetProba( mvaVal, ap_sig );
@@ -504,6 +626,8 @@ Double_t TMVA::Reader::GetRarity( const TString& methodTag, Double_t mvaVal )
    else method = it->second;
 
    MethodBase* kl = dynamic_cast<MethodBase*>(method);
+   if(kl==0) return -1;
+
    if (mvaVal == -9999999) mvaVal = kl->GetMvaValue();
 
    return kl->GetRarity( mvaVal );

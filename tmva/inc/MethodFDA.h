@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer
 
 /**********************************************************************************
@@ -19,7 +19,7 @@
  *      Andreas Hoecker  <Andreas.Hocker@cern.ch> - CERN, Switzerland             *
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
- * Copyright (c) 2005-2006:                                                       *
+ * Copyright (c) 2005-2010:                                                       *
  *      CERN, Switzerland                                                         *
  *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
@@ -65,20 +65,20 @@ namespace TMVA {
 
    public:
 
-      MethodFDA( const TString& jobName, 
-                 const TString& methodTitle, 
+      MethodFDA( const TString& jobName,
+                 const TString& methodTitle,
                  DataSetInfo& theData,
                  const TString& theOption = "",
                  TDirectory* theTargetDir = 0 );
-      
-      MethodFDA( DataSetInfo& theData, 
-                 const TString& theWeightFile,  
+
+      MethodFDA( DataSetInfo& theData,
+                 const TString& theWeightFile,
                  TDirectory* theTargetDir = NULL );
-      
+
       virtual ~MethodFDA( void );
 
       Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
-    
+
       // training method
       void Train( void );
 
@@ -92,7 +92,8 @@ namespace TMVA {
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0 );
 
-      std::vector<Float_t>& GetRegressionValues();
+      virtual const std::vector<Float_t>& GetRegressionValues();
+      virtual const std::vector<Float_t>& GetMulticlassValues();
 
       void Init( void );
 
@@ -114,12 +115,16 @@ namespace TMVA {
 
    private:
 
+      // compute multiclass values
+      void CalculateMulticlassValues( const TMVA::Event*& evt, std::vector<Double_t>& parameters, std::vector<Float_t>& values);
+
+
       // create and interpret formula expression and compute estimator
       void     CreateFormula   ();
-      Double_t InterpretFormula( const Event*, std::vector<Double_t>& pars );
+      Double_t InterpretFormula( const Event*, std::vector<Double_t>::iterator begin, std::vector<Double_t>::iterator end );
 
-      // clean up 
-      void ClearAll();      
+      // clean up
+      void ClearAll();
 
       // print fit results
       void PrintResults( const TString&, std::vector<Double_t>&, const Double_t ) const;
@@ -129,12 +134,12 @@ namespace TMVA {
       void ProcessOptions();
 
       TString                fFormulaStringP;     // string with function
-      TString                fParRangeStringP;    // string with ranges of parameters      
+      TString                fParRangeStringP;    // string with ranges of parameters
       TString                fFormulaStringT;     // string with function
-      TString                fParRangeStringT;    // string with ranges of parameters      
+      TString                fParRangeStringT;    // string with ranges of parameters
 
       TFormula*              fFormula;            // the discrimination function
-      Int_t                  fNPars;              // number of parameters
+      UInt_t                 fNPars;              // number of parameters
       std::vector<Interval*> fParRange;           // ranges of parameters
       std::vector<Double_t>  fBestPars;           // the pars that optimise (minimise) the estimator
       TString                fFitMethod;          // estimator optimisation method
@@ -146,7 +151,10 @@ namespace TMVA {
       // sum of weights (this should become centrally available through the dataset)
       Double_t               fSumOfWeightsSig;    // sum of weights (signal)
       Double_t               fSumOfWeightsBkg;    // sum of weights (background)
-      Double_t               fSumOfWeights;       // sum of weights 
+      Double_t               fSumOfWeights;       // sum of weights
+
+      //
+      Int_t                  fOutputDimensions;   // number of output values
 
       ClassDef(MethodFDA,0)  // Function Discriminant Analysis
    };

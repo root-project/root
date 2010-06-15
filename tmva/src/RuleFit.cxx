@@ -209,7 +209,7 @@ void TMVA::RuleFit::MakeForest()
       nsig=0;
       nbkg=0;
       for (UInt_t ie = 0; ie<fNTreeSample; ie++) {
-         if (fTrainingEventsRndm[ie]->IsSignal()) nsig++; // ignore weights here
+         if (fMethodBase->DataInfo().IsSignal(fTrainingEventsRndm[ie])) nsig++; // ignore weights here
          else nbkg++;
       }
       fsig = Double_t(nsig)/Double_t(nsig+nbkg);
@@ -224,7 +224,7 @@ void TMVA::RuleFit::MakeForest()
       while (tryAgain) {
          Double_t frnd = rndGen.Uniform( fMethodRuleFit->GetMinFracNEve(), fMethodRuleFit->GetMaxFracNEve() );
          nminRnd = Int_t(frnd*static_cast<Double_t>(fNTreeSample));
-         dt = new DecisionTree( fMethodRuleFit->GetSeparationBase(), nminRnd, fMethodRuleFit->GetNCuts(), qualitySepType );
+         dt = new DecisionTree( fMethodRuleFit->GetSeparationBase(), nminRnd, fMethodRuleFit->GetNCuts(), 0, qualitySepType );
          BuildTree(dt); // reads fNTreeSample events from fTrainingEventsRndm
          if (dt->GetNNodes()<3) {
             delete dt;
@@ -303,7 +303,7 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
       Double_t w = (*e)->GetWeight();
       sumw += w;
       // 
-      if (isSignalType == (*e)->IsSignal()) { // correctly classified
+      if (isSignalType == fMethodBase->DataInfo().IsSignal(*e)) { // correctly classified
          correctSelected.push_back(kTRUE);
       } 
       else {                                // missclassified
@@ -780,7 +780,7 @@ void TMVA::RuleFit::MakeVisHists()
    while ((key = (TKey*)next())) {
       // make sure, that we only look at histograms
       TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom(TH1F::Class())) continue;
+      if (!cl->InheritsFrom("TH1F")) continue;
       TH1F *sig = (TH1F*)key->ReadObj();
       TString hname= sig->GetName();
       Log() << kDEBUG << "Got histogram : " << hname << Endl;
@@ -807,7 +807,7 @@ void TMVA::RuleFit::MakeVisHists()
    while ((key = (TKey*)nextCorr())) {
       // make sure, that we only look at histograms
       TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom(TH2F::Class())) continue;
+      if (!cl->InheritsFrom("TH2F")) continue;
       TH2F *sig = (TH2F*)key->ReadObj();
       TString hname= sig->GetName();
 

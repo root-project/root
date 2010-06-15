@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -104,6 +104,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsRegression.h"
+#include "TMVA/ResultsMulticlass.h"
 
 ClassImp(TMVA::MethodBase)
 
@@ -132,6 +133,7 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fTmpEvent                  ( 0 ),
    fAnalysisType              ( Types::kNoAnalysisType ),
    fRegressionReturnVal       ( 0 ),
+   fMulticlassReturnVal       ( 0 ),
    fDisableWriting            ( kFALSE ),
    fDataSetInfo               ( dsi ),
    fSignalReferenceCut        ( 0.5 ),
@@ -329,6 +331,7 @@ void TMVA::MethodBase::InitBase()
       fInputVars->push_back(DataInfo().GetVariableInfo(ivar).GetLabel());
    }
    fRegressionReturnVal = 0;
+   fMulticlassReturnVal = 0;
 
    fEventCollections.resize( 2 );
    fEventCollections.at(0) = 0;
@@ -445,7 +448,86 @@ void TMVA::MethodBase::ProcessBaseOptions()
 //_______________________________________________________________________
 void TMVA::MethodBase::CreateVariableTransforms(const TString& trafoDefinition )
 {
-   if (trafoDefinition != "None") {
+   // create variable transformations
+
+   if (trafoDefinition == "None") // no transformations
+      return;
+
+   if( trafoDefinition.Contains("+") || trafoDefinition.Contains("(") ) { // new format
+      TList* trList = gTools().ParseFormatLine( trafoDefinition, "+" );
+      TListIter trIt(trList);
+      while (TObjString* os = (TObjString*)trIt()) {
+	 TString tdef = os->GetString();
+         Int_t idxCls = -1;
+
+	 TString variables = "_V_";
+	 if( tdef.Contains("(") ) { // contains selection of variables
+	    Ssiz_t parStart = tdef.Index( "(" );
+	    Ssiz_t parLen   = tdef.Index( ")", parStart )-parStart+1;
+
+	    variables = tdef(parStart,parLen);
+	    tdef.Remove(parStart,parLen);
+	    variables.Remove(parLen-1,1);
+	    variables.Remove(0,1);
+	 }
+
+         TList* trClsList = gTools().ParseFormatLine( tdef, "_" ); // split entry to get trf-name and class-name
+         TListIter trClsIt(trClsList);
+         const TString& trName = ((TObjString*)trClsList->At(0))->GetString();
+
+         if (trClsList->GetEntries() > 1) {
+            TString trCls = "AllClasses";
+            ClassInfo *ci = NULL;
+            trCls  = ((TObjString*)trClsList->At(1))->GetString();
+            if (trCls != "AllClasses") {
+               ci = DataInfo().GetClassInfo( trCls );
+               if (ci == NULL)
+                  Log() << kFATAL << "Class " << trCls << " not known for variable transformation "
+                        << trName << ", please check." << Endl;
+               else
+                  idxCls = ci->GetNumber();
+            }
+         }
+
+
+	 VariableTransformBase* transformation = NULL;
+         if      (trName == "D" || trName == "Deco" || trName == "Decorrelate"){
+	    if( variables.Length() == 0 )
+	       variables = "_V_";
+	    transformation = new VariableDecorrTransform( DataInfo());
+	 }
+         else if (trName == "P" || trName == "PCA"){
+	    if( variables.Length() == 0 )
+	       variables = "_V_";
+	    transformation = new VariablePCATransform   ( DataInfo());
+	 }
+         else if (trName == "G" || trName == "Gauss"){
+	    if( variables.Length() == 0 )
+	       variables = "_V_,_T_";
+	    transformation = new VariableGaussTransform ( DataInfo());
+	 }
+         else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize")
+	 {
+	    if( variables.Length() == 0 )
+	       variables = "_V_,_T_";
+	    transformation = new VariableNormalizeTransform( DataInfo());
+	 }
+         else
+            Log() << kFATAL << "<ProcessOptions> Variable transform '"
+                  << trName << "' unknown." << Endl;
+
+	 if( transformation ){
+	    transformation->SelectInput( variables );
+	    GetTransformationHandler().AddTransformation(transformation, idxCls);
+	 }
+      }
+      
+
+
+      return;
+   }
+
+   if (trafoDefinition != "None") { // old format
       TList* trList = gTools().ParseFormatLine( trafoDefinition, "," );
       TListIter trIt(trList);
       while (TObjString* os = (TObjString*)trIt()) {
@@ -469,17 +551,27 @@ void TMVA::MethodBase::CreateVariableTransforms(const TString& trafoDefinition )
             }
          }
 
+	 VariableTransformBase* transformation = NULL;
+	 TString variables = "_V_";
          if      (trName == "D" || trName == "Deco" || trName == "Decorrelate")
-            GetTransformationHandler().AddTransformation( new VariableDecorrTransform   ( DataInfo()) , idxCls );
+	    transformation = new VariableDecorrTransform( DataInfo());
          else if (trName == "P" || trName == "PCA")
-            GetTransformationHandler().AddTransformation( new VariablePCATransform      ( DataInfo()), idxCls );
+	    transformation = new VariablePCATransform   ( DataInfo());
          else if (trName == "G" || trName == "Gauss")
-            GetTransformationHandler().AddTransformation( new VariableGaussTransform    ( DataInfo()), idxCls );
-         else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize")
-            GetTransformationHandler().AddTransformation( new VariableNormalizeTransform( DataInfo()), idxCls );
+	    transformation = new VariableGaussTransform ( DataInfo());
+         else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize"){
+	    variables = "_V_,_T_";
+	    transformation = new VariableNormalizeTransform( DataInfo());
+	 }
          else
             Log() << kFATAL << "<ProcessOptions> Variable transform '"
-                  << trName << "' unknown." << Endl;
+                  << trName << "' unknown." << Endl;         
+         Log() << kINFO << " create Transformation " << trName << " with reference class " << DataInfo().GetClassInfo(idxCls)->GetName() << "=("<< idxCls <<")"<<Endl;
+
+	 if( transformation ){
+	    transformation->SelectInput( variables );
+	    GetTransformationHandler().AddTransformation(transformation, idxCls);
+	 }
       }
    }
 }
@@ -602,6 +694,45 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
    TString histNamePrefix(GetTestvarName());
    histNamePrefix += (type==Types::kTraining?"train":"test");
    regRes->CreateDeviationHistograms( histNamePrefix );
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
+{
+   // prepare tree branch with the method's discriminating variable
+
+   Data()->SetCurrentType(type);
+
+   Log() << kINFO << "Create results for " << (type==Types::kTraining?"training":"testing") << Endl;
+
+   ResultsMulticlass* regMulti = (ResultsMulticlass*)Data()->GetResults(GetMethodName(), type, Types::kMulticlass);
+
+   Long64_t nEvents = Data()->GetNEvents();
+
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+
+   Log() << kINFO << "Evaluation of " << GetMethodName() << " on "
+         << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
+
+   regMulti->Resize( nEvents );
+   for (Int_t ievt=0; ievt<nEvents; ievt++) {
+      Data()->SetCurrentEvent(ievt);
+      std::vector< Float_t > vals = GetMulticlassValues();
+      regMulti->SetValue( vals, ievt );
+      timer.DrawProgressBar( ievt );
+   }
+
+   Log() << kINFO << "Elapsed time for evaluation of " << nEvents <<  " events: "
+         << timer.GetElapsedTime() << "       " << Endl;
+
+   // store time used for testing
+   if (type==Types::kTesting)
+      SetTestTime(timer.ElapsedSeconds());
+
+   TString histNamePrefix(GetTestvarName());
+   histNamePrefix += (type==Types::kTraining?"train":"test");
+//   regMulti->CreateDeviationHistograms( histNamePrefix );
 }
 
 //_______________________________________________________________________
@@ -793,6 +924,106 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
    Data()->SetCurrentType(savedType);   
 }
 
+
+//_______________________________________________________________________
+void TMVA::MethodBase::TestMulticlass()
+{
+   // test multiclass classification 
+
+   Types::ETreeType savedType = Data()->GetCurrentType();
+   Data()->SetCurrentType(Types::kTesting);
+
+//    ResultsMulticlass* mvaRes = dynamic_cast<ResultsMulticlass*>
+//       ( Data()->GetResults(GetMethodName(),Types::kTesting, Types::kMulticlass) );
+
+//    bias = 0; biasT = 0; dev = 0; devT = 0; rms = 0; rmsT = 0;
+//    Double_t sumw = 0;
+//    Double_t m1 = 0, m2 = 0, s1 = 0, s2 = 0, s12 = 0; // for correlation
+//    const Int_t nevt = GetNEvents();
+//    Float_t* rV = new Float_t[nevt];
+//    Float_t* tV = new Float_t[nevt];
+//    Float_t* wV = new Float_t[nevt];
+//    Float_t  xmin = 1e30, xmax = -1e30;
+//     for (Long64_t ievt=0; ievt<nevt; ievt++) {
+      
+//       const Event* ev = Data()->GetEvent(ievt); // NOTE: need untransformed event here !
+//       Float_t t = ev->GetTarget(0);
+//       Float_t w = ev->GetWeight();
+//       Float_t r = GetRegressionValues()[0];
+//       Float_t d = (r-t);
+
+//       // find min/max
+//       xmin = TMath::Min(xmin, TMath::Min(t, r));
+//       xmax = TMath::Max(xmax, TMath::Max(t, r));
+
+//       // store for truncated RMS computation
+//       rV[ievt] = r;
+//       tV[ievt] = t;
+//       wV[ievt] = w;
+      
+//       // compute deviation-squared
+//       sumw += w;
+//       bias += w * d;
+//       dev  += w * TMath::Abs(d);
+//       rms  += w * d * d;
+
+//       // compute correlation between target and regression estimate
+//       m1  += t*w; s1 += t*t*w;
+//       m2  += r*w; s2 += r*r*w;
+//       s12 += t*r;
+//    }
+
+//    // standard quantities
+//    bias /= sumw;
+//    dev  /= sumw;
+//    rms  /= sumw;
+//    rms  = TMath::Sqrt(rms - bias*bias);
+
+//    // correlation
+//    m1   /= sumw; 
+//    m2   /= sumw; 
+//    corr  = s12/sumw - m1*m2;
+//    corr /= TMath::Sqrt( (s1/sumw - m1*m1) * (s2/sumw - m2*m2) );
+
+//    // create histogram required for computeation of mutual information
+//    TH2F* hist  = new TH2F( "hist",  "hist",  150, xmin, xmax, 100, xmin, xmax );
+//    TH2F* histT = new TH2F( "histT", "histT", 150, xmin, xmax, 100, xmin, xmax );
+
+//    // compute truncated RMS and fill histogram
+//    Double_t devMax = bias + 2*rms;
+//    Double_t devMin = bias - 2*rms;
+//    sumw = 0;
+//    int ic=0;
+//    for (Long64_t ievt=0; ievt<nevt; ievt++) {
+//       Float_t d = (rV[ievt] - tV[ievt]);
+//       hist->Fill( rV[ievt], tV[ievt], wV[ievt] );
+//       if (d >= devMin && d <= devMax) {
+//          sumw  += wV[ievt];
+//          biasT += wV[ievt] * d;
+//          devT  += wV[ievt] * TMath::Abs(d);
+//          rmsT  += wV[ievt] * d * d;       
+//          histT->Fill( rV[ievt], tV[ievt], wV[ievt] );
+//          ic++;
+//       }
+//    }   
+//    biasT /= sumw;
+//    devT  /= sumw;
+//    rmsT  /= sumw;
+//    rmsT  = TMath::Sqrt(rmsT - biasT*biasT);
+//    mInf  = gTools().GetMutualInformation( *hist );
+//    mInfT = gTools().GetMutualInformation( *histT );
+
+//    delete hist;
+//    delete histT;
+
+//    delete [] rV;
+//    delete [] tV;
+//    delete [] wV;
+
+   Data()->SetCurrentType(savedType);   
+}
+
+
 //_______________________________________________________________________
 void TMVA::MethodBase::TestClassification()
 {
@@ -957,18 +1188,20 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf ) const
 void TMVA::MethodBase::AddInfoItem( void* gi, const TString& name, const TString& value) const 
 {
    // xml writing
-   void* it = gTools().xmlengine().NewChild(gi,0,"Info");
-   gTools().xmlengine().NewAttr(it,0,"name", name);
-   gTools().xmlengine().NewAttr(it,0,"value", value);
+   void* it = gTools().AddChild(gi,"Info");
+   gTools().AddAttr(it,"name", name);
+   gTools().AddAttr(it,"value", value);
 }
 
 //_______________________________________________________________________
 void TMVA::MethodBase::AddOutput( Types::ETreeType type, Types::EAnalysisType analysisType ) {
    if (analysisType == Types::kRegression) {
       AddRegressionOutput( type );
+   } else if (analysisType == Types::kMulticlass ){
+      AddMulticlassOutput( type );
    } else {
       AddClassifierOutput( type );
-      if (HasMVAPdfs()) 
+      if (HasMVAPdfs())
          AddClassifierOutputProb( type );
    }
 }
@@ -978,12 +1211,12 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
 {
    // general method used in writing the header of the weight files where
    // the used variables, variable transformation type etc. is specified
-   
+
    if (!parent) return;
 
    UserGroup_t* userInfo = gSystem->GetUserInfo();
 
-   void* gi = gTools().xmlengine().NewChild(parent, 0, "GeneralInfo");
+   void* gi = gTools().AddChild(parent, "GeneralInfo");
    AddInfoItem( gi, "TMVA Release", GetTrainingTMVAVersionString() + " [" + gTools().StringFromInt(GetTrainingTMVAVersionCode()) + "]" );
    AddInfoItem( gi, "ROOT Release", GetTrainingROOTVersionString() + " [" + gTools().StringFromInt(GetTrainingROOTVersionCode()) + "]");
    AddInfoItem( gi, "Creator", userInfo->fUser);
@@ -993,7 +1226,9 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
    AddInfoItem( gi, "Training events", gTools().StringFromInt(Data()->GetNTrainingEvents()));
    AddInfoItem( gi, "TrainingTime", gTools().StringFromDouble(const_cast<TMVA::MethodBase*>(this)->GetTrainTime()));
 
-   TString analysisType(((const_cast<TMVA::MethodBase*>(this)->GetAnalysisType()==Types::kRegression) ? "Regression" : "Classification"));
+   Types::EAnalysisType aType = const_cast<TMVA::MethodBase*>(this)->GetAnalysisType();
+   TString analysisType((aType==Types::kRegression) ? "Regression" :
+                        (aType==Types::kMulticlass ? "Multiclass" : "Classification"));
    AddInfoItem( gi, "AnalysisType", analysisType );
    delete userInfo;
 
@@ -1010,16 +1245,15 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
    // write target info if in regression mode
    if(DoRegression())
       AddTargetsXMLTo(parent);
-   
 
    // write transformations
    GetTransformationHandler().AddXMLTo( parent );
-   
+
    // write MVA variable distributions
-   void* pdfs = gTools().xmlengine().NewChild(parent, 0, "MVAPdfs");
+   void* pdfs = gTools().AddChild(parent, "MVAPdfs");
    if (fMVAPdfS) fMVAPdfS->AddXMLTo(pdfs);
    if (fMVAPdfB) fMVAPdfB->AddXMLTo(pdfs);
-   
+
    // write weights
    AddWeightsXMLTo( parent );
 }
@@ -1057,9 +1291,9 @@ void TMVA::MethodBase::WriteStateToFile() const
    Log() << kINFO << "Creating weight file in xml format: "
          << gTools().Color("lightblue") << xmlfname << gTools().Color("reset") << Endl;
    void* doc      = gTools().xmlengine().NewDoc();
-   void* rootnode = gTools().xmlengine().NewChild(0,0,"MethodSetup");
+   void* rootnode = gTools().AddChild(0,"MethodSetup");
    gTools().xmlengine().DocSetRootElement(doc,rootnode);
-   gTools().xmlengine().NewAttr(rootnode,0,"Method", GetMethodTypeName() + "::" + GetMethodName());
+   gTools().AddAttr(rootnode,"Method", GetMethodTypeName() + "::" + GetMethodName());
    WriteStateToXML(rootnode);
    gTools().xmlengine().SaveDoc(doc,xmlfname);
 }
@@ -1077,17 +1311,17 @@ void TMVA::MethodBase::ReadStateFromFile()
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
    if (tfname.EndsWith(".xml") ) {
-      void* doc = gTools().xmlengine().ParseFile(tfname); 
+      void* doc = gTools().xmlengine().ParseFile(tfname);
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       ReadStateFromXML(rootnode);
-   } 
+   }
    else {
       filebuf fb;
       fb.open(tfname.Data(),ios::in);
       if (!fb.is_open()) { // file not found --> Error
          Log() << kFATAL << "<ReadStateFromFile> "
                << "Unable to open input weight file: " << tfname << Endl;
-      }      
+      }
       istream fin(&fb);
       ReadStateFromStream(fin);
       fb.close();
@@ -1101,14 +1335,24 @@ void TMVA::MethodBase::ReadStateFromFile()
       ReadStateFromStream( *rfile );
       rfile->Close();
    }
-
-   // update transformation handler
-   if (GetTransformationHandler().GetCallerName() == "") GetTransformationHandler().SetCallerName( GetName() );
-
 }
 
+#if ROOT_SVN_REVISION >= 32259
 //_______________________________________________________________________
-void TMVA::MethodBase::ReadStateFromXML( void* methodNode ) 
+void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
+   // for reading from memory
+   
+   void* doc = gTools().xmlengine().ParseString(xmlstr);
+
+   void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
+
+   return ReadStateFromXML(rootnode);
+
+}
+#endif
+
+//_______________________________________________________________________
+void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
 {
    TString fullMethodName;
    gTools().ReadAttr( methodNode, "Method", fullMethodName );
@@ -1119,21 +1363,21 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
    Log() << kINFO << "Read method \"" << GetMethodName() << "\" of type \"" << GetMethodTypeName() << "\"" << Endl;
 
    TString nodeName("");
-   void* ch = gTools().xmlengine().GetChild(methodNode);
+   void* ch = gTools().GetChild(methodNode);
    while (ch!=0) {
-      nodeName = TString( gTools().xmlengine().GetNodeName(ch) );
+      nodeName = TString( gTools().GetName(ch) );
 
       if (nodeName=="GeneralInfo") {
          // read analysis type
 
          TString name(""),val("");
-         void* antypeNode = gTools().xmlengine().GetChild(ch);
+         void* antypeNode = gTools().GetChild(ch);
          while (antypeNode) {
             gTools().ReadAttr( antypeNode, "name",   name );
-            
-            if (name == "TrainingTime") 
+
+            if (name == "TrainingTime")
                gTools().ReadAttr( antypeNode, "value",  fTrainTime );
-      
+
             if (name == "AnalysisType") {
                gTools().ReadAttr( antypeNode, "value",  val );
                val.ToLower();
@@ -1142,7 +1386,7 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
                else if (val == "multiclass" )     SetAnalysisType( Types::kMulticlass );
                else Log() << kFATAL << "Analysis type " << val << " is not known." << Endl;
             }
-            
+
             if (name == "TMVA Release" || name == "TMVA" ){
                TString s;
                gTools().ReadAttr( antypeNode, "value", s);
@@ -1156,14 +1400,14 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
                fROOTTrainingVersion = TString(s(s.Index("[")+1,s.Index("]")-s.Index("[")-1)).Atoi();
                Log() << kINFO << "MVA method was trained with ROOT Version: " << GetTrainingROOTVersionString() << Endl;
             }
-            antypeNode = gTools().xmlengine().GetNext(antypeNode);
+            antypeNode = gTools().GetNextChild(antypeNode);
          }
-      } 
+      }
       else if (nodeName=="Options") {
          ReadOptionsFromXML(ch);
          ParseOptions();
-         
-      } 
+
+      }
       else if (nodeName=="Variables") {
          ReadVariablesFromXML(ch);
       }
@@ -1181,25 +1425,29 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
          TString pdfname;
          if (fMVAPdfS) delete fMVAPdfS;
          if (fMVAPdfB) delete fMVAPdfB;
-         void* pdfnode = gTools().xmlengine().GetChild(ch);
+         void* pdfnode = gTools().GetChild(ch);
          if (pdfnode) {
             gTools().ReadAttr(pdfnode, "Name", pdfname);
             fMVAPdfS = new PDF(pdfname);
             fMVAPdfS->ReadXML(pdfnode);
-            pdfnode = gTools().xmlengine().GetNext(pdfnode);
+            pdfnode = gTools().GetNextChild(pdfnode);
             gTools().ReadAttr(pdfnode, "Name", pdfname);
             fMVAPdfB = new PDF(pdfname);
             fMVAPdfB->ReadXML(pdfnode);
          }
-      } 
+      }
       else if (nodeName=="Weights") {
          ReadWeightsFromXML(ch);
-      } 
+      }
       else {
          std::cout << "Unparsed: " << nodeName << std::endl;
       }
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch);
+
    }
+
+   // update transformation handler
+   if (GetTransformationHandler().GetCallerName() == "") GetTransformationHandler().SetCallerName( GetName() );
 }
 
 //_______________________________________________________________________
@@ -1310,6 +1558,10 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
    while (!TString(buf).BeginsWith("#WGT")) fin.getline(buf,512);
    fin.getline(buf,512);
    ReadWeightsFromStream( fin );;
+
+   // update transformation handler
+   if (GetTransformationHandler().GetCallerName() == "") GetTransformationHandler().SetCallerName( GetName() );
+
 }
 
 //_______________________________________________________________________
@@ -1367,12 +1619,12 @@ void TMVA::MethodBase::ReadVarsFromStream( std::istream& istr )
 void TMVA::MethodBase::AddVarsXMLTo( void* parent ) const 
 {
    // write variable info to XML 
-   void* vars = gTools().xmlengine().NewChild(parent, 0, "Variables");
-   gTools().xmlengine().NewAttr( vars, 0, "NVar", gTools().StringFromInt(DataInfo().GetNVariables()) );
+   void* vars = gTools().AddChild(parent, "Variables");
+   gTools().AddAttr( vars, "NVar", gTools().StringFromInt(DataInfo().GetNVariables()) );
 
    for (UInt_t idx=0; idx<DataInfo().GetVariableInfos().size(); idx++) {
       VariableInfo& vi = DataInfo().GetVariableInfos()[idx];
-      void* var = gTools().xmlengine().NewChild( vars, 0, "Variable" );
+      void* var = gTools().AddChild( vars, "Variable" );
       gTools().AddAttr( var, "VarIndex", idx );
       vi.AddToXML( var );
    }
@@ -1382,7 +1634,7 @@ void TMVA::MethodBase::AddVarsXMLTo( void* parent ) const
 void TMVA::MethodBase::AddSpectatorsXMLTo( void* parent ) const 
 {
    // write spectator info to XML 
-   void* specs = gTools().xmlengine().NewChild(parent, 0, "Spectators");
+   void* specs = gTools().AddChild(parent, "Spectators");
 
    UInt_t writeIdx=0;
    for (UInt_t idx=0; idx<DataInfo().GetSpectatorInfos().size(); idx++) {
@@ -1398,23 +1650,23 @@ void TMVA::MethodBase::AddSpectatorsXMLTo( void* parent ) const
          if(!vi.GetTitle().BeginsWith(GetMethodName()+":") )
             continue;
       }
-      void* spec = gTools().xmlengine().NewChild( specs, 0, "Spectator" );
+      void* spec = gTools().AddChild( specs, "Spectator" );
       gTools().AddAttr( spec, "SpecIndex", writeIdx++ );
       vi.AddToXML( spec );
    }
-   gTools().xmlengine().NewAttr( specs, 0, "NSpec", gTools().StringFromInt(writeIdx) );
+   gTools().AddAttr( specs, "NSpec", gTools().StringFromInt(writeIdx) );
 }
 
 //_______________________________________________________________________
 void TMVA::MethodBase::AddTargetsXMLTo( void* parent ) const 
 {
    // write target info to XML 
-   void* targets = gTools().xmlengine().NewChild(parent, 0, "Targets");
-   gTools().xmlengine().NewAttr( targets, 0, "NTrgt", gTools().StringFromInt(DataInfo().GetNTargets()) );
+   void* targets = gTools().AddChild(parent, "Targets");
+   gTools().AddAttr( targets, "NTrgt", gTools().StringFromInt(DataInfo().GetNTargets()) );
 
    for (UInt_t idx=0; idx<DataInfo().GetTargetInfos().size(); idx++) {
       VariableInfo& vi = DataInfo().GetTargetInfos()[idx];
-      void* tar = gTools().xmlengine().NewChild( targets, 0, "Target" );
+      void* tar = gTools().AddChild( targets, "Target" );
       gTools().AddAttr( tar, "TargetIndex", idx );
       vi.AddToXML( tar );
    }
@@ -1436,7 +1688,7 @@ void TMVA::MethodBase::ReadVariablesFromXML( void* varnode )
    // we want to make sure all variables are read in the order they are defined
    VariableInfo readVarInfo, existingVarInfo;
    int varIdx = 0;
-   void* ch = gTools().xmlengine().GetChild(varnode);
+   void* ch = gTools().GetChild(varnode);
    while (ch) {
       gTools().ReadAttr( ch, "VarIndex", varIdx);
       existingVarInfo = DataInfo().GetVariableInfos()[varIdx];
@@ -1455,7 +1707,7 @@ void TMVA::MethodBase::ReadVariablesFromXML( void* varnode )
          Log() << kINFO << "   var #" << varIdx <<" declared in file  : " << readVarInfo.GetExpression() << Endl;
          Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
       }
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch);
    }
 }
 
@@ -1475,7 +1727,7 @@ void TMVA::MethodBase::ReadSpectatorsFromXML( void* specnode )
    // we want to make sure all variables are read in the order they are defined
    VariableInfo readSpecInfo, existingSpecInfo;
    int specIdx = 0;
-   void* ch = gTools().xmlengine().GetChild(specnode);
+   void* ch = gTools().GetChild(specnode);
    while (ch) {
       gTools().ReadAttr( ch, "SpecIndex", specIdx);
       existingSpecInfo = DataInfo().GetSpectatorInfos()[specIdx];
@@ -1494,7 +1746,7 @@ void TMVA::MethodBase::ReadSpectatorsFromXML( void* specnode )
          Log() << kINFO << "   var #" << specIdx <<" declared in file  : " << readSpecInfo.GetExpression() << Endl;
          Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
       }
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch);
    }
 }
 
@@ -1507,13 +1759,13 @@ void TMVA::MethodBase::ReadTargetsFromXML( void* tarnode )
 
    int tarIdx = 0;
    TString expression;
-   void* ch = gTools().xmlengine().GetChild(tarnode);
+   void* ch = gTools().GetChild(tarnode);
    while (ch) {
       gTools().ReadAttr( ch, "TargetIndex", tarIdx);
       gTools().ReadAttr( ch, "Expression", expression);
       DataInfo().AddTarget(expression,"","",0,0);
      
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch);
    }
 }
 
@@ -1534,7 +1786,7 @@ TDirectory* TMVA::MethodBase::BaseDir() const
    TString defaultDir = GetMethodName();
 
    TObject* o = methodDir->FindObject(defaultDir);
-   if (o!=0 && o->InheritsFrom(TDirectory::Class())) dir = (TDirectory*)o;
+   if (o!=0 && o->InheritsFrom("TDirectory")) dir = (TDirectory*)o;
 
    if (dir != 0) return dir;
 
@@ -1833,7 +2085,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
       for (UInt_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
 
          // read the tree
-         Bool_t  isSignal  = GetEvent(ievt)->IsSignal();
+         Bool_t  isSignal  = DataInfo().IsSignal(GetEvent(ievt));
          Float_t theWeight = GetEvent(ievt)->GetWeight();
          Float_t theVal    = (*mvaRes)[ievt];
 
@@ -2719,4 +2971,18 @@ TString TMVA::MethodBase::GetTrainingROOTVersionString() const
    UInt_t c = GetTrainingROOTVersionCode() & 0x0000ff;
 
    return TString(Form("%i.%02i/%02i",a,b,c));
+}
+ 
+//_______________________________________________________________________
+TMVA::MethodBase* TMVA::MethodBase::GetThisBase()
+{
+   // return a pointer the base class of this method
+   return fgThisBase; 
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBase::ResetThisBase() 
+{ 
+   // reset required for RootFinder
+   fgThisBase = this; 
 }

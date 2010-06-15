@@ -46,15 +46,14 @@ End_Html */
 #include "TMatrix.h"
 #include "TMath.h"
 #include "TFile.h"
-#include "TKey.h" 
-#include "TXMLEngine.h" 
+#include "TKey.h"
 
 #include "TMVA/Configurable.h"
 #include "TMVA/Config.h"
 #include "TMVA/Tools.h"
 
 // don't change this flag without a good reason ! The FitterBase code won't work anymore !!!
-// #define TMVA_Configurable_SanctionUnknownOption kTRUE 
+// #define TMVA_Configurable_SanctionUnknownOption kTRUE
 
 ClassImp(TMVA::Configurable)
 
@@ -64,17 +63,17 @@ ClassImp(TMVA::Configurable)
 #endif
 
 //_______________________________________________________________________
-TMVA::Configurable::Configurable( const TString& theOption)  
+TMVA::Configurable::Configurable( const TString& theOption)
    : fOptions                    ( theOption ),
      fLooseOptionCheckingEnabled ( kTRUE ),
      fLastDeclaredOption         ( 0 ),
      fConfigName                 ( "Configurable" ), // must be replaced by name of class that uses the configurable
-     fConfigDescription          ( "No description" ), 
+     fConfigDescription          ( "No description" ),
      fReferenceFile              ( "None" ),
      fLogger                     ( new MsgLogger(this) )
 {
    // constructor
-   fListOfOptions.SetOwner();   
+   fListOfOptions.SetOwner();
 
    // check if verbosity "V" set in option
    if (gTools().CheckForVerboseOption( theOption )) Log().SetMinType( kVERBOSE );
@@ -191,7 +190,7 @@ void TMVA::Configurable::ParseOptions()
                   else {
                      // since we don't know what else is comming we just put everthing into a map
                      if (!decOpt->SetValue(optval, idx))
-                        Log() << kFATAL << "Index " << idx << " too large for option " << decOpt->TheName()
+                        Log() << kFATAL << "Index " << idx << " too large (" << optval << ") for option " << decOpt->TheName()
                                 << ", allowed range is [0," << decOpt->GetArraySize()-1 << "]" << Endl;
                   }
                } 
@@ -336,7 +335,7 @@ void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const
 {
    // write options to XML file
    if (!parent) return;
-   void* opts = gTools().xmlengine().NewChild(parent, 0, "Options");
+   void* opts = gTools().AddChild(parent, "Options");
    TListIter optIt( &fListOfOptions );
    while (OptionBase * opt = (OptionBase *) optIt()) {
       void* optnode = 0;
@@ -347,10 +346,10 @@ void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const
             if(i>0) s << " ";
             s << std::scientific << opt->GetValue(i);
          }
-         optnode = gTools().xmlengine().NewChild(opts,0,"Option",s.str().c_str());
-      } 
+         optnode = gTools().AddChild(opts,"Option",s.str().c_str());
+      }
       else {
-         optnode = gTools().xmlengine().NewChild(opts,0,"Option", opt->GetValue());
+         optnode = gTools().AddChild(opts,"Option", opt->GetValue());
       }
       gTools().AddAttr(optnode, "name", opt->TheName());
       if (opt->IsArrayOpt()) {
@@ -361,18 +360,18 @@ void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const
 }
 
 //______________________________________________________________________
-void TMVA::Configurable::ReadOptionsFromXML( void* node ) 
+void TMVA::Configurable::ReadOptionsFromXML( void* node )
 {
-   void* opt = gTools().xmlengine().GetChild(node);
+   void* opt = gTools().GetChild(node);
    TString optName, optValue;
    fOptions="";
    while (opt != 0) {
       if (fOptions.Length()!=0) fOptions += ":";
       gTools().ReadAttr(opt, "name", optName);
-      optValue = TString( gTools().xmlengine().GetNodeContent(opt) );
+      optValue = TString( gTools().GetContent(opt) );
       std::stringstream s("");
       s.precision( 16 );
-      if (gTools().xmlengine().HasAttr(opt, "size")) {
+      if (gTools().HasAttr(opt, "size")) {
          UInt_t size;
          gTools().ReadAttr(opt, "size", size);
          std::vector<TString> values = gTools().SplitString(optValue, ' ');
@@ -380,17 +379,17 @@ void TMVA::Configurable::ReadOptionsFromXML( void* node )
             if(i!=0) s << ":";
             s << std::scientific << optName << "[" << i << "]=" << values[i];
          }
-      } 
+      }
       else {
          s << std::scientific << optName << "=" << optValue;
       }
       fOptions += s.str().c_str();
-      opt = gTools().xmlengine().GetNext(opt);
+      opt = gTools().GetNextChild(opt);
    }
 }
 
 //______________________________________________________________________
-void TMVA::Configurable::WriteOptionsReferenceToFile()  
+void TMVA::Configurable::WriteOptionsReferenceToFile()
 {
    // write complete options to output stream
 

@@ -53,6 +53,10 @@
 
 namespace TMVA {
 
+   class Factory;  // DSMTEST
+   class Reader;   // DSMTEST
+   class DataSetManager;  // DSMTEST
+
    class MethodBoost : public MethodCompositeBase {
 
    public :
@@ -192,6 +196,16 @@ namespace TMVA {
 
       //whether to recalculate the MVA cut at every boosting step
       Bool_t            fRecalculateMVACut;
+
+
+      
+      DataSetManager* fDataSetManager; // DSMTEST
+      friend class Factory; // DSMTEST
+      friend class Reader;  // DSMTEST
+
+
+
+
 
    protected:
 

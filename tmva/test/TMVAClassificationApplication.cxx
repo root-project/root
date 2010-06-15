@@ -106,10 +106,10 @@ int main( int argc, char** argv )
    // create a set of variables and declare them to the reader
    // - the variable names must corresponds in name and type to 
    // those given in the weight file(s) that you use
-   Float_t myvar1, myvar2;
+   Float_t var1, var2;
    Float_t var3, var4;
-   reader->AddVariable( "myvar1 := var1+var2", &myvar1 );
-   reader->AddVariable( "myvar2 := var1-var2", &myvar2 );
+   reader->AddVariable( "myvar1 := var1+var2", &var1 );
+   reader->AddVariable( "myvar2 := var1-var2", &var2 );
    reader->AddVariable( "var3",                &var3 );
    reader->AddVariable( "var4",                &var4 );
    Float_t spec1,spec2;
@@ -246,7 +246,6 @@ int main( int argc, char** argv )
    TTree* theTree = (TTree*)input->Get("TreeS");
    std::cout << "--- Select signal sample" << std::endl;
    Float_t userVar1, userVar2;
-   Float_t var1,var2;
    theTree->SetBranchAddress( "var1", &userVar1 );
    theTree->SetBranchAddress( "var2", &userVar2 );
    theTree->SetBranchAddress( "var3", &var3 );
@@ -255,6 +254,8 @@ int main( int argc, char** argv )
    // efficiency calculator for cut method
    Int_t    nSelCutsGA = 0;
    Double_t effS       = 0.7;
+
+   std::vector<Float_t> vecVar(4); // vector for EvaluateMVA tests
 
    std::cout << "--- Processing: " << theTree->GetEntries() << " events" << std::endl;
    TStopwatch sw;
@@ -277,7 +278,38 @@ int main( int argc, char** argv )
       Category_cat2 = (var3>0)&&(var4<0);
       Category_cat3 = (var3>0)&&(var4>=0);
 
-
+      // test the twodifferent Reader::EvaluateMVA functions 
+      // access via registered variables compared to access via vector<float>
+      vecVar[0]=var1;
+      vecVar[1]=var2;
+      vecVar[2]=var3;
+      vecVar[3]=var4;      
+      for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
+         if (it->second) {
+            TString mName = it->first + " method";
+            Double_t mva1 = reader->EvaluateMVA( mName); 
+            Double_t mva2 = reader->EvaluateMVA( vecVar, mName); 
+            if (mva1 != mva2) {
+               std::cout << "++++++++++++++ ERROR in "<< mName <<", comparing different EvaluateMVA results val1=" << mva1 << " val2="<<mva2<<std::endl;
+            }
+         }
+      }
+      // now test that the inputs do matter
+      TRandom3 rand(0);
+      vecVar[0]=rand.Rndm();
+      vecVar[1]=rand.Rndm();
+      vecVar[2]=rand.Rndm();
+      vecVar[3]=rand.Rndm();
+      for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
+         if (it->second) {
+            TString mName = it->first + " method";
+            Double_t mva1 = reader->EvaluateMVA( mName); 
+            Double_t mva2 = reader->EvaluateMVA( vecVar, mName); 
+            if (mva1 == mva2) {
+               std::cout << "++++++++++++++ ERROR in "<< mName <<", obtaining idnetical output for different inputs" <<std::endl;
+            }
+         }
+      }
       // 
       // return the MVAs and fill to histograms
       // 

@@ -35,7 +35,6 @@
 #include "TH2.h"
 #include "TAxis.h"
 #include "TProfile.h"
-#include "TXMLEngine.h"
 
 #ifndef ROOT_TMVA_Config
 #include "TMVA/Config.h"
@@ -816,7 +815,7 @@ void TMVA::TransformationHandler::AddXMLTo( void* parent ) const
    // XML node describing the transformation
    //   return;
    if(!parent) return;
-   void* trfs = gTools().xmlengine().NewChild(parent, 0, "Transformations");
+   void* trfs = gTools().AddChild(parent, "Transformations");
    gTools().AddAttr( trfs, "NTransformations", fTransformations.GetSize() );
    TListIter trIt(&fTransformations);
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) trf->AttachXMLTo(trfs);
@@ -834,7 +833,7 @@ void TMVA::TransformationHandler::ReadFromStream( std::istream& )
 //_______________________________________________________________________
 void TMVA::TransformationHandler::ReadFromXML( void* trfsnode ) 
 {
-   void* ch = gTools().xmlengine().GetChild( trfsnode );
+   void* ch = gTools().GetChild( trfsnode );
    while(ch) {
       Int_t idxCls = -1;
       TString trfname;
@@ -860,7 +859,7 @@ void TMVA::TransformationHandler::ReadFromXML( void* trfsnode )
       }
       newtrf->ReadFromXML( ch );
       AddTransformation( newtrf, idxCls );
-      ch = gTools().xmlengine().GetNext(ch);      
+      ch = gTools().GetNextChild(ch);      
    }
 }
 

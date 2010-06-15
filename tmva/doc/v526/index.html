@@ -1,5 +1,5 @@
-<br/> 
-<hr/> 
+<br> 
+<hr> 
 <a name="tmva"></a> 
 <h3>TMVA</h3>
 
@@ -22,39 +22,39 @@
       modelling, and hence increases the classification and regression
       performance. Presently, the Category method works for
       classification only, but regression will follow soon. Please
-      contact us if urgently needed.<br/>
+      contact us if urgently needed.<br>
 
       An example scripts and data files illustrating how the new
       Category method is configured and used. Please check the macros
       <tt>test/TMVAClassificationCategory.C</tt> and
       <tt>test/TMVAClassificationCategoryApplication.C</tt> or the
-      corresponding executables.</li>
+      corresponding executables.
 
-      <li> Regression functionality for gradient boosted trees using a Huber loss function.</li>
+      <li> Regression functionality for gradient boosted trees using a Huber loss function.
         
     </ul>
 
     <h4>Comments</h4>
 
     <p>
-      <em>On Input Data:</em><br/> 
+      <em>On Input Data:</em><br> 
 
       New TMVA event vector building. The code for splitting the input
       data into training and test samples for all classes and the
       mixing of those samples to one training and one test sample has
       been rewritten completely. The new code is more performant and
       has a clearer structure. This fixes several bugs which have been
-      reported by the TMVA users.</p>
+      reported by the TMVA users.
 
     <p>
-      <em>On Minimization:</em><br/> 
+      <em>On Minimization:</em><br> 
 
       Variables, targets and spectators are now checked if they are
       constant. (The execution of TMVA is stopped for variables and
-      targets, a warning is given for spectators.)</p>
+      targets, a warning is given for spectators.)
 
     <p>
-      <em>On Regression:</em><br/>
+      <em>On Regression:</em><br>
       
       The analysis type is no longer defined by calling a dedicated
       TestAllMethods-member-function of the Factory, but with the
@@ -62,66 +62,66 @@
       "Auto" where TMVA tries to determine the most suitable analysis
       type from the targets and classes the user has defined. Other
       values are "regression", "classification" and "multiclass" for
-      the forthcoming multiclass classification.<br/></p>
+      the forthcoming multiclass classification.<br>
 
-      <p>Missing regression evaluation plots for training sample were
-      added.</p>
+      Missing regression evaluation plots for training sample were
+      added.
       
     <p>
-      <em>On Cut method:</em><br/>
+      <em>On Cut method:</em><br>
 
-      Removed obsolete option "FVerySmart" from Cuts method.</p>
+      Removed obsolete option "FVerySmart" from Cuts method.
 
     <p>
-      <em>On MLP method:</em><br/>
+      <em>On MLP method:</em><br>
       
-      Display of convergence information in the progress bar for MLP during training.<br/>
+      Display of convergence information in the progress bar for MLP during training.<br>
 
       Creation of animated gifs for MLP convergence monitoring (please
-      contact authors if you want to do this).</p>
+      contact authors if you want to do this).
                 
     <p>
-      <em>On Datasets:</em><br/> 
+      <em>On Datasets:</em><br> 
 
       Checks are performed if events are unvoluntarily cut by using a
       non-filled array entry (e.g. "arr[4]" is used, when the array
       has not always at least 5 entries).  A warning is given in that
-      case.</p>
+      case.
         
 
     <h4>Bug fixes</h4>
 
     <ul>
-      <li>Spectators and Targets could not be used with by-hand assignment of events.</li>
+      <li>Spectators and Targets could not be used with by-hand assignment of events.
 
-      <li>Corrected types (training/testing) for assigning single events.</li>
+      <li>Corrected types (training/testing) for assigning single events.
   
       <li>Changed message from FATAL to WARNING when the user requests more events for 
-      training or testing than available.</li>
+      training or testing than available.
 
       <li>Fixed bug which caused TMVA to crash if the number of input variables exceeded 
-        the allowed maximum for generating scatter plots.</li>
+        the allowed maximum for generating scatter plots.
 
-      <li>Prevent TMVA from crashing when running with an empty TTree or TChain.</li>
+      <li>Prevent TMVA from crashing when running with an empty TTree or TChain.
 
       <li>A variable expression like "Alt$(arr[3],0)" can now be used
       to give a default value for a variable if for some events the
       array don't contain enough elements (e.g. in two jet events,
       sometimes only one jet is found and thus, the array jetPt[] has
-      only one entry in that cases).</li>
+      only one entry in that cases).
         
-      <li>Plot ranges for scatter-plots showing the transformed events are now correct.</li>
+      <li>Plot ranges for scatter-plots showing the transformed events are now correct.
         
-      <li>User defined training/testing-trees are now handled correctly.</li>
+      <li>User defined training/testing-trees are now handled correctly.
         
-      <li>Fix bug in correlation computation for regression.</li>
+      <li>Fix bug in correlation computation for regression.
         
-      <li>Consistent use of variable labels (for the log output) and variable titles (in histograms).</li>
+      <li>Consistent use of variable labels (for the log output) and variable titles (in histograms).
 
-      <li>Drawing of variable labels in network architecture display for regression mode has been added.</li>
+      <li>Drawing of variable labels in network architecture display for regression mode has been added.
 
-      <li>Bug fixes to Cuts which improves performance on datasets with many variables.</li>
+      <li>Bug fixes to Cuts which improves performance on datasets with many variables.
 
-      <li>Bug fix in GaussTransformation which improves handling of gaussian tails.</li>
+      <li>Bug fix in GaussTransformation which improves handling of gaussian tails.
 
     </ul>

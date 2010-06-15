@@ -229,7 +229,7 @@ void TMVA::MethodKNN::Train()
       
       Short_t event_type = 0;
 
-      if (evt_ -> IsSignal()) { // signal type = 1
+      if (DataInfo().IsSignal(evt_)) { // signal type = 1
          fSumOfWeightsS += weight;
          event_type = 1;
       }

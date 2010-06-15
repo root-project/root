@@ -52,6 +52,11 @@
 
 namespace TMVA {
 
+   class Factory;  // DSMTEST
+   class Reader;   // DSMTEST
+   class MethodBoost;   // DSMTEST
+   class DataSetManager;  // DSMTEST
+
    class MethodCategory : public MethodCompositeBase {
 
    public :
@@ -122,6 +127,11 @@ namespace TMVA {
 
       TTree *                    fCatTree; //! needed in conjunction with TTreeFormulas for evaluation category expressions
       std::vector<TTreeFormula*> fCatFormulas;
+
+      DataSetManager* fDataSetManager; // DSMTEST
+      friend class Factory; // DSMTEST
+      friend class Reader;  // DSMTEST
+      friend class MethodBoost;  // DSMTEST
 
       ClassDef(MethodCategory,0)
    };

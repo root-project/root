@@ -349,6 +349,7 @@ void TMVA::MethodRuleFit::InitEventSample( void )
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::Train( void )
 {
+   TMVA::DecisionTreeNode::fgIsTraining=true;
    // training of rules
 
    InitMonitorNtuple();
@@ -363,6 +364,7 @@ void TMVA::MethodRuleFit::Train( void )
       TrainTMVARuleFit();
    }
    fRuleFit.GetRuleEnsemblePtr()->ClearRuleMap();
+   TMVA::DecisionTreeNode::fgIsTraining=false;
 }
 
 //_______________________________________________________________________

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -18,9 +18,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -75,26 +75,26 @@ namespace TMVA {
    class MethodCuts;
    class MethodBoost;
    class DataSetInfo;
-   
+
    class MethodBase : virtual public IMethod, public Configurable {
-      
+
    public:
 
       enum EWeightFileType { kROOT=0, kTEXT };
-      
+
       // default constructur
       MethodBase( const TString& jobName,
                   Types::EMVA methodType,
-                  const TString& methodTitle, 
+                  const TString& methodTitle,
                   DataSetInfo& dsi,
-                  const TString& theOption = "", 
+                  const TString& theOption = "",
                   TDirectory* theBaseDir = 0 );
-      
-      // constructor used for Testing + Application of the MVA, only (no training), 
+
+      // constructor used for Testing + Application of the MVA, only (no training),
       // using given weight file
       MethodBase( Types::EMVA methodType,
                   DataSetInfo& dsi,
-                  const TString& weightFile, 
+                  const TString& weightFile,
                   TDirectory* theBaseDir = 0 );
 
       // default destructur
@@ -126,6 +126,9 @@ namespace TMVA {
       // performs classifier testing
       virtual void     TestClassification();
 
+      // performs multiclass classifier testing
+      virtual void     TestMulticlass();
+
       // performs regression testing
       virtual void     TestRegression( Double_t& bias, Double_t& biasT, 
                                        Double_t& dev,  Double_t& devT, 
@@ -134,19 +137,31 @@ namespace TMVA {
                                        Double_t& corr, 
                                        Types::ETreeType type );
 
-      // classifier response - some methods may return a per-event error estimate (unless: *err = -1)
-      virtual Double_t GetMvaValue( Double_t* err = 0 ) = 0;
-
-      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = 0 );
-
       // options treatment
       virtual void     Init()           = 0;
       virtual void     DeclareOptions() = 0;
       virtual void     ProcessOptions() = 0;
       virtual void     DeclareCompatibilityOptions(); // declaration of past options
 
+      // classifier response - some methods may return a per-event error estimate (unless: *err = -1)
+      virtual Double_t GetMvaValue( Double_t* err = 0 ) = 0;
+
+      //zjh=>
+      virtual Double_t GetMvaValues( Double_t& errUpper, Double_t& errLower)
+		  {Double_t mva=GetMvaValue(&errUpper); errLower=errUpper;return mva;}
+      //<=zjh
+
+      // signal/background classification response
+      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = 0 );
+
       // regression response
       virtual const std::vector<Float_t>& GetRegressionValues() {
+         std::vector<Float_t>* ptr = new std::vector<Float_t>(0);
+         return (*ptr);
+      }
+
+      // multiclass classification response
+      virtual const std::vector<Float_t>& GetMulticlassValues() {
          std::vector<Float_t>* ptr = new std::vector<Float_t>(0);
          return (*ptr);
       }
@@ -156,7 +171,7 @@ namespace TMVA {
 
       // Rarity of classifier response (signal or background (default) is uniform in [0,1])
       virtual Double_t GetRarity( Double_t mvaVal, Types::ESBType reftype = Types::kBackground ) const;
- 
+
       // create ranking
       virtual const Ranking* CreateRanking() = 0;
 
@@ -176,7 +191,7 @@ namespace TMVA {
       void WriteStateToFile     () const;
       void ReadStateFromFile    ();
 
-   protected:      
+   protected:
       // the actual "weights"
       virtual void AddWeightsXMLTo      ( void* parent ) const = 0;
       virtual void ReadWeightsFromXML   ( void* wghtnode ) = 0;
@@ -191,9 +206,16 @@ namespace TMVA {
       void ReadStateFromXML     ( void* parent );
       void WriteStateToStream   ( std::ostream& tf ) const;   // needed for MakeClass
       void WriteVarsToStream    ( std::ostream& tf, const TString& prefix = "" ) const;  // needed for MakeClass
+
+
+   public: // these two need to be public, they are used to read in-memory weight-files
       void ReadStateFromStream  ( std::istream& tf );         // backward compatibility
       void ReadStateFromStream  ( TFile&        rf );         // backward compatibility
+#if ROOT_SVN_REVISION >= 32259
+      void ReadStateFromXMLString( const char* xmlstr );      // for reading from memory
+#endif
 
+   private:
       // the variable information
       void AddVarsXMLTo         ( void* parent  ) const;
       void AddSpectatorsXMLTo   ( void* parent  ) const;
@@ -215,9 +237,9 @@ namespace TMVA {
       // ---------- public evaluation methods --------------------------------------
 
       // individual initialistion for testing of each method
-      // overload this one for individual initialisation of the testing, 
-      // it is then called automatically within the global "TestInit" 
-      
+      // overload this one for individual initialisation of the testing,
+      // it is then called automatically within the global "TestInit"
+
       // variables (and private menber functions) for the Evaluation:
       // get the effiency. It fills a histogram for efficiency/vs/bkg
       // and returns the one value fo the efficiency demanded for 
@@ -321,6 +343,7 @@ namespace TMVA {
       virtual void          SetAnalysisType( Types::EAnalysisType type ) { fAnalysisType = type; }
       Types::EAnalysisType  GetAnalysisType() const { return fAnalysisType; }
       Bool_t                DoRegression() const { return fAnalysisType == Types::kRegression; }
+      Bool_t                DoMulticlass() const { return fAnalysisType == Types::kMulticlass; }
 
       // setter method for suppressing writing to XML and writing of standalone classes
       void                  DisableWriting(Bool_t setter){ fDisableWriting = setter; }
@@ -368,7 +391,7 @@ namespace TMVA {
       virtual void     MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const {}
 
       // static pointer to this object - required for ROOT finder (to be solved differently)
-      static MethodBase* GetThisBase() { return fgThisBase; }
+      static MethodBase* GetThisBase();
 
       // some basic statistical analysis
       void Statistics( Types::ETreeType treeType, const TString& theVarName,
@@ -409,7 +432,7 @@ namespace TMVA {
       // ---------- private acccessors ---------------------------------------------
 
       // reset required for RootFinder
-      void             ResetThisBase() { fgThisBase = this; }
+      void             ResetThisBase();
 
       // ---------- private auxiliary methods --------------------------------------
 
@@ -427,6 +450,7 @@ namespace TMVA {
       virtual void     AddClassifierOutput    ( Types::ETreeType type );
       virtual void     AddClassifierOutputProb( Types::ETreeType type );
       virtual void     AddRegressionOutput    ( Types::ETreeType type );
+      virtual void     AddMulticlassOutput    ( Types::ETreeType type );
 
    private:
 
@@ -448,7 +472,8 @@ namespace TMVA {
 
       Types::EAnalysisType  fAnalysisType;         // method-mode : true --> regression, false --> classification
 
-      std::vector<Float_t>* fRegressionReturnVal;  // holds the return-value for the regression
+      std::vector<Float_t>* fRegressionReturnVal;  // holds the return-values for the regression
+      std::vector<Float_t>* fMulticlassReturnVal;  // holds the return-values for the multiclass classification
 
    private:
 
@@ -559,7 +584,7 @@ namespace TMVA {
       static MethodBase* fgThisBase;         // this pointer
 
 
-      // ===== depriciated options, kept for backward compatibility  =====
+      // ===== depreciated options, kept for backward compatibility  =====
    private:
 
       Bool_t           fNormalise;                   // normalise input variables
@@ -591,6 +616,7 @@ inline const TMVA::Event* TMVA::MethodBase::GetEvent( const TMVA::Event* ev ) co
    return GetTransformationHandler().Transform(ev);
 }
 
+//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetEvent() const 
 {
    if(fTmpEvent)
@@ -599,24 +625,28 @@ inline const TMVA::Event* TMVA::MethodBase::GetEvent() const
       return GetTransformationHandler().Transform(Data()->GetEvent());
 }
 
+//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt ) const 
 {
    assert(fTmpEvent==0);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt));
 }
 
+//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt, Types::ETreeType type ) const 
 {
    assert(fTmpEvent==0);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt, type));
 }
 
+//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetTrainingEvent( Long64_t ievt ) const 
 {
    assert(fTmpEvent==0);
    return GetEvent(ievt, Types::kTraining);
 }
 
+//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetTestingEvent( Long64_t ievt ) const 
 {
    assert(fTmpEvent==0);

@@ -74,7 +74,7 @@ namespace TMVA {
       TDensityCalc fDensityCalc;// method of density calculation
 
    protected:
-      Int_t fSignalClass;      // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
+      UInt_t fSignalClass;      // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
       Int_t fBackgroundClass;  // TODO: intermediate solution to keep IsSignal() of Event working. TODO: remove IsSignal() from Event
 
       mutable MsgLogger* fLogger;                     //! message logger

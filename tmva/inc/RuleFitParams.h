@@ -47,15 +47,13 @@
 #include "TMVA/Event.h"
 #endif
 
-
 class TTree;
 
 namespace TMVA {
 
    class RuleEnsemble;
-   class RuleFit;
    class MsgLogger;
-
+   class RuleFit;
    class RuleFitParams {
 
    public:
@@ -96,7 +94,7 @@ namespace TMVA {
       void SetGDTauPrec( Double_t p )  { fGDTauPrec=p; CalcGDNTau(); fGDTauVec.resize(fGDNTau); }
 
       // return type such that +1 = signal and -1 = background
-      Int_t Type( const Event * e ) const { return (e->IsSignal() ? 1:-1); }
+      Int_t Type( const Event * e ) const; // return (fRuleFit->GetMethodRuleFit()->DataInfo().IsSignal(e) ? 1:-1); }
       //
       UInt_t                            GetPathIdx1() const { return fPathIdx1; }
       UInt_t                            GetPathIdx2() const { return fPathIdx2; }

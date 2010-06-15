@@ -53,6 +53,9 @@ Double_t TMVA::GiniIndex::GetSeparationIndex( const Double_t &s, const Double_t 
    //            c(k) is the number of elements that belong to class k     
    //     for just Signal and Background classes this boils down to:       
    //     Gini(Sample) = 2s*b/(s+b)^2    ( = 2 * purity * (1-purity) )                                     
+   //   
+   // !! what we use here is 2*Gini.. as for the later use the factor
+   //    2 is irrelevant and hence I'd like to save this calculation
 
    if (s+b <= 0)      return 0;
    if (s<=0 || b <=0) return 0;

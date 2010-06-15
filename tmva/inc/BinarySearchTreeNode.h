@@ -113,7 +113,7 @@ namespace TMVA {
 
       Float_t     fWeight;
       // Float_t     fIsSignal;
-      Int_t       fClass;
+      UInt_t       fClass;
 
       Short_t     fSelector;       // index of variable used in node selection (decision tree) 
 

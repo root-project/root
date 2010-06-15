@@ -15,13 +15,13 @@
  *      Dominik Dannheim - CERN, Switzerland                                      *
  *      Alexander Voigt  - CERN, Switzerland                                      *
  *      Peter Speckmayer - CERN, Switzerland                                      *
- *                                                                                * 
+ *                                                                                *
  * Original author of the TFoam implementation:                                   *
  *      S. Jadach - Institute of Nuclear Physics, Cracow, Poland                  *
  *                                                                                *
  * Copyright (c) 2008:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -52,7 +52,7 @@ ClassImp(TMVA::MethodPDEFoam)
 //_______________________________________________________________________
 TMVA::MethodPDEFoam::MethodPDEFoam( const TString& jobName,
                                     const TString& methodTitle,
-                                    DataSetInfo& dsi, 
+                                    DataSetInfo& dsi,
                                     const TString& theOption,
                                     TDirectory* theTargetDir ) :
    MethodBase( jobName, Types::kPDEFoam, methodTitle, dsi, theOption, theTargetDir )
@@ -62,7 +62,7 @@ TMVA::MethodPDEFoam::MethodPDEFoam( const TString& jobName,
 
 //_______________________________________________________________________
 TMVA::MethodPDEFoam::MethodPDEFoam( DataSetInfo& dsi,
-                                    const TString& theWeightFile,  
+                                    const TString& theWeightFile,
                                     TDirectory* theTargetDir ) :
    MethodBase( Types::kPDEFoam, dsi, theWeightFile, theTargetDir )
 {
@@ -94,11 +94,11 @@ void TMVA::MethodPDEFoam::Init( void )
    fnSampl         = 2000;
    fnBin           = 5;
    fEvPerBin       = 10000;
-   fCutNmin        = true; 
+   fCutNmin        = true;
    fNmin           = 100;
    fCutRMSmin      = false;   // default TFoam method
    fRMSmin         = 0.01;
-   
+
    fKernel         = kNone; // default: use no kernel
    fTargetSelection= kMean; // default: use mean for target selection (only multi target regression!)
 
@@ -111,7 +111,7 @@ void TMVA::MethodPDEFoam::Init( void )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::DeclareOptions() 
+void TMVA::MethodPDEFoam::DeclareOptions()
 {
    //
    // Declare MethodPDEFoam options
@@ -126,7 +126,7 @@ void TMVA::MethodPDEFoam::DeclareOptions()
    DeclareOptionRef( fMultiTargetRegression = kFALSE,     "MultiTargetRegression", "Do regression with multiple targets");
    DeclareOptionRef( fCutNmin = true,         "CutNmin",  "Requirement for minimal number of events in cell");
    DeclareOptionRef( fNmin = 100,             "Nmin",     "Number of events in cell required to split cell");
-   
+
    DeclareOptionRef( fKernelStr = "None",     "Kernel",   "Kernel type used");
    AddPreDefVal(TString("None"));
    AddPreDefVal(TString("Gauss"));
@@ -343,7 +343,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
       // insert event to BinarySearchTree
       for (Long64_t k=0; k<GetNEvents(); k++) {
          const Event* ev = GetEvent(k);
-         if ((i==0 && ev->IsSignal()) || (i==1 && !ev->IsSignal()))
+         if ((i==0 && DataInfo().IsSignal(ev)) || (i==1 && !DataInfo().IsSignal(ev)))
             foam[i]->FillBinarySearchTree(ev, IgnoreEventsWithNegWeightsInTraining());
       }
 
@@ -360,7 +360,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
       // loop over all events -> fill foam cells
       for (Long64_t k=0; k<GetNEvents(); k++) {
          const Event* ev = GetEvent(k); 
-         if ((i==0 && ev->IsSignal()) || (i==1 && !ev->IsSignal()))
+         if ((i==0 && DataInfo().IsSignal(ev)) || (i==1 && !DataInfo().IsSignal(ev)))
             foam[i]->FillFoamCells(ev, IgnoreEventsWithNegWeightsInTraining());
       }
 
@@ -689,7 +689,7 @@ void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const
 {
    // create XML output of PDEFoam method variables
 
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "SigBgSeparated",  fSigBgSeparated );
    gTools().AddAttr( wght, "Frac",            fFrac );
    gTools().AddAttr( wght, "DiscrErrCut",     fDiscrErrCut );
@@ -710,13 +710,13 @@ void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const
    // save foam borders Xmin[i], Xmax[i]
    void *xmin_wrap;
    for (UInt_t i=0; i<Xmin.size(); i++){
-      xmin_wrap = gTools().xmlengine().NewChild( wght, 0, "Xmin" );
+      xmin_wrap = gTools().AddChild( wght, "Xmin" );
       gTools().AddAttr( xmin_wrap, "Index", i );
       gTools().AddAttr( xmin_wrap, "Value", Xmin.at(i) );
    }
    void *xmax_wrap;
    for (UInt_t i=0; i<Xmin.size(); i++){
-      xmax_wrap = gTools().xmlengine().NewChild( wght, 0, "Xmax" );
+      xmax_wrap = gTools().AddChild( wght, "Xmax" );
       gTools().AddAttr( xmax_wrap, "Index", i );
       gTools().AddAttr( xmax_wrap, "Value", Xmax.at(i) );
    }
@@ -848,14 +848,14 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
    }
 
    // read foam range
-   void *xmin_wrap = gTools().xmlengine().GetChild( wghtnode );
+   void *xmin_wrap = gTools().GetChild( wghtnode );
    for (UInt_t counter=0; counter<kDim; counter++) {
       UInt_t i=0;
       gTools().ReadAttr( xmin_wrap , "Index", i );
       if (i>=kDim)
          Log() << kFATAL << "dimension index out of range:" << i << Endl;
       gTools().ReadAttr( xmin_wrap , "Value", Xmin.at(i) );
-      xmin_wrap = gTools().xmlengine().GetNext( xmin_wrap );
+      xmin_wrap = gTools().GetNextChild( xmin_wrap );
    }
 
    void *xmax_wrap = xmin_wrap;
@@ -865,7 +865,7 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
       if (i>=kDim)
          Log() << kFATAL << "dimension index out of range:" << i << Endl;
       gTools().ReadAttr( xmax_wrap , "Value", Xmax.at(i) );
-      xmax_wrap = gTools().xmlengine().GetNext( xmax_wrap );
+      xmax_wrap = gTools().GetNextChild( xmax_wrap );
    }
 
    // if foams exist, delete them

@@ -26,8 +26,8 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-// Implementation of Simulated Annealing fitter  
+//
+// Implementation of Simulated Annealing fitter
 //_______________________________________________________________________
 #include "TMVA/SimulatedAnnealing.h"
 
@@ -44,7 +44,8 @@ ClassImp(TMVA::SimulatedAnnealing)
 
 //_______________________________________________________________________
 TMVA::SimulatedAnnealing::SimulatedAnnealing( IFitterTarget& target, const std::vector<Interval*>& ranges )
-   : fFitterTarget          ( target ),
+   : fKernelTemperature     (kIncreasingAdaptive),
+     fFitterTarget          ( target ),
      fRandom                ( new TRandom3(100) ),
      fRanges                ( ranges ),
      fMaxCalls              ( 500000 ),
@@ -52,11 +53,14 @@ TMVA::SimulatedAnnealing::SimulatedAnnealing( IFitterTarget& target, const std::
      fMinTemperature        ( 0 ),
      fEps                   ( 1e-10 ),
      fTemperatureScale      ( 0.06 ),
+     fAdaptiveSpeed         ( 1.0 ),
+     fTemperatureAdaptiveStep( 0.0 ),
      fUseDefaultScale       ( kFALSE ),
-     fLogger( new MsgLogger("SimulatedAnnealing") )
+     fUseDefaultTemperature ( kFALSE ),
+     fLogger( new MsgLogger("SimulatedAnnealing") ),
+     fProgress(0.0)
 {
    // constructor
-   fAdaptiveSpeed = 1.0;
    fKernelTemperature = kIncreasingAdaptive;
 }
 
@@ -315,10 +319,10 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
          currentTemperature = fInitialTemperature;
       FillWithRandomValues( parameters ); 
    }
-   
+
    if (fUseDefaultScale) SetDefaultScale();
 
-   Log() << kINFO 
+   Log() << kINFO
            << "Temperatur scale = "      << fTemperatureScale  
            << ", current temperature = " << currentTemperature  << Endl;
 

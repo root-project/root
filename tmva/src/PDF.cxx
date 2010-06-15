@@ -31,7 +31,6 @@
 #include <cstdlib>
 
 #include "TMath.h"
-#include "TXMLEngine.h"
 #include "TF1.h"
 #include "TH1F.h"
 #include "TVectorD.h"
@@ -495,15 +494,8 @@ void TMVA::PDF::SmoothHistogram()
 //_______________________________________________________________________
 void TMVA::PDF::FillHistToGraph()
 {
+   // Simple conversion
    fGraph=new TGraph(fHist);
-   return;
-   Int_t PointNum = fHist->GetXaxis()->GetNbins();
-   Double_t Factor=PointNum/(fHist->GetBinLowEdge(PointNum)+fHist->GetBinWidth(PointNum)-fHist->GetBinLowEdge(1));
-   fGraph = new TGraph(PointNum+2);
-   fGraph->SetPoint(0,fHist->GetBinLowEdge(1),0);
-   for (Int_t i=0;i<PointNum;i++)
-      fGraph->SetPoint(i+1,fHist->GetBinCenter(i+1), fHist->GetBinContent(i+1) / (fHist->GetBinWidth(i+1) * Factor));
-   fGraph->SetPoint(PointNum+1,fHist->GetBinLowEdge(PointNum)+fHist->GetBinWidth(PointNum),0);
 }
 
 //_______________________________________________________________________
@@ -627,11 +619,11 @@ Double_t TMVA::PDF::GetIntegral() const
 }
 
 //_______________________________________________________________________
-Double_t TMVA::PDF::IGetVal( Double_t* x, Double_t* ) 
-{
-   // static external auxiliary function (integrand)
-   return ThisPDF()->GetVal( x[0] );
-}
+// Double_t TMVA::PDF::IGetVal( Double_t* x, Double_t* ) 
+// {
+//    // static external auxiliary function (integrand)
+//    return ThisPDF()->GetVal( x[0] );
+// }
 
 //_______________________________________________________________________
 Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax ) 
@@ -827,7 +819,7 @@ void TMVA::PDF::ProcessOptions()
 void TMVA::PDF::AddXMLTo( void* parent ) 
 {
    // XML file writing
-   void* pdfxml = gTools().xmlengine().NewChild(parent, 0, "PDF");
+   void* pdfxml = gTools().AddChild(parent, "PDF");
    gTools().AddAttr(pdfxml, "Name",           fPDFName );
    gTools().AddAttr(pdfxml, "MinNSmooth",     fMinNsmooth );
    gTools().AddAttr(pdfxml, "MaxNSmooth",     fMaxNsmooth );
@@ -836,7 +828,7 @@ void TMVA::PDF::AddXMLTo( void* parent )
    gTools().AddAttr(pdfxml, "KDE_iter",       fKDEiter );
    gTools().AddAttr(pdfxml, "KDE_border",     fKDEborder );
    gTools().AddAttr(pdfxml, "KDE_finefactor", fFineFactor );
-   void* pdfhist = gTools().xmlengine().NewChild(pdfxml,0,"Histogram" );
+   void* pdfhist = gTools().AddChild(pdfxml,"Histogram" );
    TH1*  histToWrite = GetOriginalHist();
    Bool_t hasEquidistantBinning = gTools().HistoHasEquidistantBins(*histToWrite);
    gTools().AddAttr(pdfhist, "Name",  histToWrite->GetName() );
@@ -850,17 +842,17 @@ void TMVA::PDF::AddXMLTo( void* parent )
       bincontent += gTools().StringFromDouble(histToWrite->GetBinContent(i+1));
       bincontent += " ";
    }
-   gTools().xmlengine().AddRawLine(pdfhist, bincontent );
+   gTools().AddRawLine(pdfhist, bincontent );
    
    if (!hasEquidistantBinning) {
-      void* pdfhistbins = gTools().xmlengine().NewChild(pdfxml,0,"HistogramBinning" );
+      void* pdfhistbins = gTools().AddChild(pdfxml,"HistogramBinning" );
       gTools().AddAttr(pdfhistbins, "NBins", histToWrite->GetNbinsX() );
       TString binns("");
       for (Int_t i=1; i<=histToWrite->GetNbinsX()+1; i++) {
          binns += gTools().StringFromDouble(histToWrite->GetXaxis()->GetBinLowEdge(i));
          binns += " ";
       }
-      gTools().xmlengine().AddRawLine(pdfhistbins, binns );      
+      gTools().AddRawLine(pdfhistbins, binns );
    }
 }
 
@@ -883,7 +875,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    Double_t xmin, xmax;
    Bool_t hasEquidistantBinning;
 
-   void* histch = gTools().xmlengine().GetChild(pdfnode);
+   void* histch = gTools().GetChild(pdfnode);
    gTools().ReadAttr( histch, "Name",  hname );
    gTools().ReadAttr( histch, "NBins", nbins );
    gTools().ReadAttr( histch, "XMin",  xmin );
@@ -895,7 +887,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    if (hasEquidistantBinning) {
       newhist = new TH1F( hname, hname, nbins, xmin, xmax );
       newhist->SetDirectory(0);
-      const char* content = gTools().xmlengine().GetNodeContent(histch);
+      const char* content = gTools().GetContent(histch);
       std::stringstream s(content);
       Double_t val;
       for (UInt_t i=0; i<nbins; i++) {
@@ -904,7 +896,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
       }
    }
    else{
-      const char* content = gTools().xmlengine().GetNodeContent(histch);
+      const char* content = gTools().GetContent(histch);
       std::stringstream s(content);
       Double_t val;
       void* binch = gTools().GetNextChild(histch);
@@ -914,7 +906,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
       if (nbinning != nbins) {
          Log() << kFATAL << "Number of bins in content and binning array differs"<<Endl;
       } 
-      const char* binString = gTools().xmlengine().GetNodeContent(binch);
+      const char* binString = gTools().GetContent(binch);
       std::stringstream sb(binString);
       for (UInt_t i=0; i<=nbins; i++) sb >> binns[i];
       newhist =  new TH1F( hname, hname, nbins, binns.GetMatrixArray() );
@@ -1031,4 +1023,10 @@ istream& TMVA::operator>> ( istream& istr, PDF& pdf )
    }
 
    return istr;
+}
+
+TMVA::PDF*  TMVA::PDF::ThisPDF( void ) 
+{ 
+   // return global "this" pointer of PDF
+   return fgThisPDF; 
 }

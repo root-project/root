@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer,Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -12,6 +12,7 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch> - CERN, Switzerland           *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
@@ -67,6 +68,10 @@ namespace TMVA {
 
    public:
 
+      typedef std::vector<std::pair<Char_t,UInt_t> > VectorOfCharAndInt;
+      typedef VectorOfCharAndInt::iterator       ItVarTypeIdx;
+      typedef VectorOfCharAndInt::const_iterator ItVarTypeIdxConst;
+
       VariableTransformBase( DataSetInfo& dsi, Types::EVariableTransform tf, const TString& trfName );
       virtual ~VariableTransformBase( void );
 
@@ -82,6 +87,12 @@ namespace TMVA {
       Bool_t IsCreated()    const { return fCreated; }
       Bool_t IsNormalised() const { return fNormalise; }
 
+      // variable selection
+      virtual void           SelectInput( const TString& inputVariables  );
+      virtual void           GetInput ( const Event* event, std::vector<Float_t>& input  ) const;
+      virtual void           SetOutput( Event* event, std::vector<Float_t>& output, const Event* oldEvent = 0 ) const;
+      virtual void           CountVariableTypes( UInt_t& nvars, UInt_t& ntgts, UInt_t& nspcts );
+
       void SetUseSignalTransform( Bool_t e=kTRUE) { fUseSignalTransform = e; }
       Bool_t UseSignalTransform() const { return fUseSignalTransform; }
 
@@ -91,14 +102,14 @@ namespace TMVA {
       virtual void WriteTransformationToStream ( std::ostream& o ) const = 0;
       virtual void ReadTransformationFromStream( std::istream& istr, const TString& classname="" ) = 0;
 
-      virtual void AttachXMLTo(void* parent) = 0;
-      virtual void ReadFromXML( void* trfnode ) = 0;
+      virtual void AttachXMLTo(void* parent);
+      virtual void ReadFromXML( void* trfnode );
 
       Types::EVariableTransform GetVariableTransform() const { return fVariableTransform; }
 
       // writer of function code
       virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part,
-                                 UInt_t trCounter, Int_t cls ) = 0;
+                                 UInt_t trCounter, Int_t cls );
 
       // provides string vector giving explicit transformation
       virtual std::vector<TString>* GetTransformationStrings( Int_t cls ) const;
@@ -119,8 +130,9 @@ namespace TMVA {
       void SetNVariables( UInt_t i )      { fNVars = i; }
       void SetName( const TString& c )    { fTransformName = c; }
 
-      UInt_t GetNVariables() const { return fDsi.GetNVariables(); }
-      UInt_t GetNTargets()   const { return fDsi.GetNTargets(); }
+      UInt_t GetNVariables()  const { return fDsi.GetNVariables();  }
+      UInt_t GetNTargets()    const { return fDsi.GetNTargets();    }
+      UInt_t GetNSpectators() const { return fDsi.GetNSpectators(); }
 
       DataSetInfo& fDsi;
 
@@ -131,6 +143,10 @@ namespace TMVA {
 
       mutable Event*           fTransformedEvent;     // holds the current transformed event
       mutable Event*           fBackTransformedEvent; // holds the current back-transformed event
+
+      // variable selection
+      VectorOfCharAndInt               fGet;           // get variables/targets/spectators
+
 
    private:
 
@@ -146,6 +162,7 @@ namespace TMVA {
       TString                          fTransformName;      // name of transformation
       std::vector<TMVA::VariableInfo>  fVariables;          // event variables [saved to weight file]
       std::vector<TMVA::VariableInfo>  fTargets;            // event targets [saved to weight file --> TODO ]
+
 
    protected:
 

@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$    
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
@@ -17,9 +17,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -28,10 +28,10 @@
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
+//
 // Begin_Html
 /*
-  Interface to Clermond-Ferrand artificial neural network 
+  Interface to Clermond-Ferrand artificial neural network
 
   <p>
   The CFMlpANN belong to the class of Multilayer Perceptrons (MLP), which are 
@@ -214,7 +214,7 @@ void TMVA::MethodCFMlpANN::ProcessOptions()
          const Event * ev = GetEvent(ievt);
 
          // identify signal and background events  
-         (*fClass)[ievt] = ev->IsSignal() ? 1 : 2;
+         (*fClass)[ievt] = DataInfo().IsSignal(ev) ? 1 : 2;
       
          // use normalized input Data
          for (ivar=0; ivar<GetNvar(); ivar++) {
@@ -398,44 +398,44 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
    // number of output classes must be 2
    if (lclass != 2) // wrong file
       Log() << kFATAL << "<ReadWeightsFromFile> mismatch in number of classes" << Endl;
-          
+
    // check that we are not at the end of the file
    if (istr.eof( ))
       Log() << kFATAL << "<ReadWeightsFromStream> reached EOF prematurely " << Endl;
 
    // read extrema of input variables
-   for (UInt_t ivar=0; ivar<GetNvar(); ivar++) 
+   for (UInt_t ivar=0; ivar<GetNvar(); ivar++)
       istr >> fVarn_1.xmax[ivar] >> fVarn_1.xmin[ivar];
-            
+
    // read number of layers (sum of: input + output + hidden)
    istr >> fParam_1.layerm;
-            
+
    if (fYNN != 0) {
       for (Int_t i=0; i<fNlayers; i++) delete[] fYNN[i];
       delete[] fYNN;
       fYNN = 0;
    }
    fYNN = new Double_t*[fParam_1.layerm];
-   for (Int_t layer=0; layer<fParam_1.layerm; layer++) {              
+   for (Int_t layer=0; layer<fParam_1.layerm; layer++) {
       // read number of neurons for each layer
       istr >> fNeur_1.neuron[layer];
       fYNN[layer] = new Double_t[fNeur_1.neuron[layer]];
    }
-            
+
    // to read dummy lines
    const Int_t nchar( 100 );
    char* dumchar = new char[nchar];
-            
+
    // read weights
    for (Int_t layer=1; layer<=fParam_1.layerm-1; layer++) {
-              
+
       Int_t nq = fNeur_1.neuron[layer]/10;
       Int_t nr = fNeur_1.neuron[layer] - nq*10;
-              
+
       Int_t kk(0);
       if (nr==0) kk = nq;
       else       kk = nq+1;
-              
+
       for (Int_t k=1; k<=kk; k++) {
          Int_t jmin = 10*k - 9;
          Int_t jmax = 10*k;
@@ -454,13 +454,13 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
    }
 
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {
-              
+
       // skip 2 empty lines
       istr.getline( dumchar, nchar );
       istr.getline( dumchar, nchar );
-              
+
       istr >> fDel_1.temp[layer];
-   }            
+   }
 
    // sanity check
    if ((Int_t)GetNvar() != fNeur_1.neuron[0]) {
@@ -469,7 +469,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
    }
 
    fNlayers = fParam_1.layerm;
-   delete dumchar;
+   delete[] dumchar;
 }
 
 //_______________________________________________________________________
@@ -510,52 +510,52 @@ void TMVA::MethodCFMlpANN::AddWeightsXMLTo( void* parent ) const
 {
    // write weights to xml file
 
-   void *wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void *wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr(wght,"NVars",fParam_1.nvar);
    gTools().AddAttr(wght,"NClasses",fParam_1.lclass);
    gTools().AddAttr(wght,"NLayers",fParam_1.layerm);
-   void* minmaxnode = gTools().xmlengine().NewChild(wght, 0, "VarMinMax");
+   void* minmaxnode = gTools().AddChild(wght, "VarMinMax");
    stringstream s;
    s.precision( 16 );
    for (Int_t ivar=0; ivar<fParam_1.nvar; ivar++) 
       s << std::scientific << fVarn_1.xmin[ivar] <<  " " << fVarn_1.xmax[ivar] <<  " ";
-   gTools().xmlengine().AddRawLine( minmaxnode, s.str().c_str() );
-   void* neurons = gTools().xmlengine().NewChild(wght, 0, "NNeurons");
+   gTools().AddRawLine( minmaxnode, s.str().c_str() );
+   void* neurons = gTools().AddChild(wght, "NNeurons");
    stringstream n;
    n.precision( 16 );
    for (Int_t layer=0; layer<fParam_1.layerm; layer++)
       n << std::scientific << fNeur_1.neuron[layer] << " ";
-   gTools().xmlengine().AddRawLine( neurons, n.str().c_str() );
+   gTools().AddRawLine( neurons, n.str().c_str() );
    for (Int_t layer=1; layer<fParam_1.layerm; layer++) {
-      void* layernode = gTools().xmlengine().NewChild(wght, 0, "Layer"+gTools().StringFromInt(layer));
+      void* layernode = gTools().AddChild(wght, "Layer"+gTools().StringFromInt(layer));
       gTools().AddAttr(layernode,"NNeurons",fNeur_1.neuron[layer]);
       void* neuronnode=NULL;
       for (Int_t neuron=0; neuron<fNeur_1.neuron[layer]; neuron++) {
-         neuronnode = gTools().xmlengine().NewChild(layernode,0,"Neuron"+gTools().StringFromInt(neuron));
+         neuronnode = gTools().AddChild(layernode,"Neuron"+gTools().StringFromInt(neuron));
          stringstream weights;
          weights.precision( 16 );         
          weights << std::scientific << Ww_ref(fNeur_1.ww, layer+1, neuron+1);
          for (Int_t i=0; i<fNeur_1.neuron[layer-1]; i++) {
             weights << " " << std::scientific << W_ref(fNeur_1.w, layer+1, neuron+1, i+1);
          }
-         gTools().xmlengine().AddRawLine( neuronnode, weights.str().c_str() );
+         gTools().AddRawLine( neuronnode, weights.str().c_str() );
       }
    }
-   void* tempnode = gTools().xmlengine().NewChild(wght, 0, "LayerTemp");
+   void* tempnode = gTools().AddChild(wght, "LayerTemp");
    stringstream temp;
    temp.precision( 16 );
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {         
        temp << std::scientific << fDel_1.temp[layer] << " ";
    }   
-   gTools().xmlengine().AddRawLine(tempnode, temp.str().c_str() );
+   gTools().AddRawLine(tempnode, temp.str().c_str() );
 }
 //_______________________________________________________________________
 void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
 {
    // read weights from xml file
    gTools().ReadAttr( wghtnode, "NLayers",fParam_1.layerm );
-   void* minmaxnode = gTools().xmlengine().GetChild(wghtnode);
-   const char* minmaxcontent = gTools().xmlengine().GetNodeContent(minmaxnode);
+   void* minmaxnode = gTools().GetChild(wghtnode);
+   const char* minmaxcontent = gTools().GetContent(minmaxnode);
    std::stringstream content(minmaxcontent);
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) 
       content >> fVarn_1.xmin[ivar] >> fVarn_1.xmax[ivar];
@@ -565,8 +565,8 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
       fYNN = 0;
    }
    fYNN = new Double_t*[fParam_1.layerm];
-   void *layernode=gTools().xmlengine().GetNext(minmaxnode);
-   const char* neuronscontent = gTools().xmlengine().GetNodeContent(layernode);
+   void *layernode=gTools().GetNextChild(minmaxnode);
+   const char* neuronscontent = gTools().GetContent(layernode);
    stringstream ncontent(neuronscontent);
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {              
       // read number of neurons for each layer;
@@ -574,21 +574,21 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
       fYNN[layer] = new Double_t[fNeur_1.neuron[layer]];
    }
    for (Int_t layer=1; layer<fParam_1.layerm; layer++) {
-      layernode=gTools().xmlengine().GetNext(layernode);
+      layernode=gTools().GetNextChild(layernode);
       void* neuronnode=NULL;
-      neuronnode = gTools().xmlengine().GetChild(layernode);
+      neuronnode = gTools().GetChild(layernode);
       for (Int_t neuron=0; neuron<fNeur_1.neuron[layer]; neuron++) {
-         const char* neuronweights = gTools().xmlengine().GetNodeContent(neuronnode);
+         const char* neuronweights = gTools().GetContent(neuronnode);
          stringstream weights(neuronweights);
          weights >> Ww_ref(fNeur_1.ww, layer+1, neuron+1);
          for (Int_t i=0; i<fNeur_1.neuron[layer-1]; i++) {
             weights >> W_ref(fNeur_1.w, layer+1, neuron+1, i+1);
          }
-         neuronnode=gTools().xmlengine().GetNext(neuronnode);
+         neuronnode=gTools().GetNextChild(neuronnode);
       }
    } 
-   void* tempnode=gTools().xmlengine().GetNext(layernode);
-   const char* temp = gTools().xmlengine().GetNodeContent(tempnode);
+   void* tempnode=gTools().GetNextChild(layernode);
+   const char* temp = gTools().GetContent(tempnode);
    stringstream t(temp);
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {
       t >> fDel_1.temp[layer];
@@ -657,8 +657,12 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
       o << "Del.temp in layer " << layer << " :  " << fDel_1.temp[layer] << endl;
    }      
 }
-
 //_______________________________________________________________________
+TMVA::MethodCFMlpANN* TMVA::MethodCFMlpANN::This( void ) 
+{ 
+// static pointer to this object (required for external functions
+   return fgThis; 
+}  
 void TMVA::MethodCFMlpANN::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write specific classifier response

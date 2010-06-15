@@ -1029,7 +1029,7 @@ Float_t TMVA::MethodPDERS::GetError( Float_t countS, Float_t countB,
 void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const 
 {
    // write weights to xml file
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* wght = gTools().AddChild(parent, "Weights");
    if (fBinaryTree)
       fBinaryTree->AddXMLTo(wght);
    else
@@ -1041,7 +1041,7 @@ void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const
 void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 {
    if (NULL != fBinaryTree) delete fBinaryTree; 
-   void* treenode = gTools().xmlengine().GetChild(wghtnode);
+   void* treenode = gTools().GetChild(wghtnode);
    fBinaryTree = dynamic_cast<BinarySearchTree*>(TMVA::BinaryTree::CreateFromXML(treenode));
    fBinaryTree->SetPeriode( GetNvar() );
    fBinaryTree->CalcStatistics();
@@ -1095,6 +1095,19 @@ void TMVA::MethodPDERS::WriteWeightsToStream( TFile& ) const
 void TMVA::MethodPDERS::ReadWeightsFromStream( TFile& /*rf*/ )
 {
    // read training sample from file
+}
+
+//_______________________________________________________________________
+TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS( void ) 
+{ 
+   // static pointer to this object
+   return fgThisPDERS; 
+}
+//_______________________________________________________________________
+void TMVA::MethodPDERS::UpdateThis( void ) 
+{
+   // update static this pointer
+   fgThisPDERS = this; 
 }
 
 //_______________________________________________________________________

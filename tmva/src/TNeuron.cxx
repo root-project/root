@@ -51,12 +51,13 @@ using std::vector;
 
 ClassImp(TMVA::TNeuron)
 
+TMVA::MsgLogger* TMVA::TNeuron::fgLogger = 0;
+
 //______________________________________________________________________________
 TMVA::TNeuron::TNeuron()
-   : fLogger( 0 )
 {
    // standard constructor
-   fLogger = new MsgLogger(this, kDEBUG);
+   if (!fgLogger) fgLogger = new MsgLogger("TNeuron",kDEBUG);
    InitNeuron();
 }
 
@@ -65,7 +66,6 @@ TMVA::TNeuron::~TNeuron()
    // destructor
    if (fLinksIn != NULL)  delete fLinksIn;
    if (fLinksOut != NULL) delete fLinksOut;
-   delete fLogger;
 }
 
 void TMVA::TNeuron::InitNeuron()

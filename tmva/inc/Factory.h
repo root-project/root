@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -68,6 +68,7 @@ namespace TMVA {
    class MethodBase;
    class DataInputHandler;
    class DataSetInfo;
+   class DataSetManager;
    class VariableTransformBase;
 
    class Factory : public Configurable {
@@ -233,6 +234,9 @@ namespace TMVA {
    private:
 
       // data members
+
+
+      DataSetManager* fDataSetManager; // DSMTEST
 
       static TFile*                             fgTargetFile;     //! ROOT output file
 

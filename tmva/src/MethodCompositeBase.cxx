@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss,Or Cohen 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss,Or Cohen
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -18,9 +18,9 @@
  *      Or Cohen        <orcohenor@gmail.com>    - Weizmann Inst., Israel         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -102,11 +102,11 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const Int_t index ) const
 //_______________________________________________________________________
 void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const 
 {
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NMethods",   fMethods.size()   );
    for (UInt_t i=0; i< fMethods.size(); i++) 
    {
-      void* methxml = gTools().xmlengine().NewChild( wght, 0, "Method" );
+      void* methxml = gTools().AddChild( wght, "Method" );
       MethodBase* method = dynamic_cast<MethodBase*>(fMethods[i]);
       gTools().AddAttr(methxml,"Index",          i ); 
       gTools().AddAttr(methxml,"Weight",         fMethodWeight[i]); 
@@ -142,7 +142,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
    fMethods.clear();
    fMethodWeight.clear();
    gTools().ReadAttr( wghtnode, "NMethods",  nMethods );
-   void* ch = gTools().xmlengine().GetChild(wghtnode);
+   void* ch = gTools().GetChild(wghtnode);
    for (UInt_t i=0; i< nMethods; i++) {
       Double_t methodWeight, methodSigCut;
       gTools().ReadAttr( ch, "Weight",   methodWeight   );
@@ -163,7 +163,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
       fMethodWeight.push_back(methodWeight);
       MethodBase* meth = dynamic_cast<MethodBase*>(fMethods.back());
 
-      void* methXML = gTools().xmlengine().GetChild(ch);
+      void* methXML = gTools().GetChild(ch);
       meth->SetupMethod();
       meth->ReadWeightsFromXML(methXML);
       meth->SetMsgType(kWARNING);
@@ -172,7 +172,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
       meth->CheckSetup();
       meth->SetSignalReferenceCut(methodSigCut);
 
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch);
    }
    //Log() << kINFO << "Reading methods from XML done " << Endl;
 }

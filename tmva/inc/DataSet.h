@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -13,6 +13,7 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch>  - CERN, Switzerland          *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
@@ -70,7 +71,7 @@
 #endif
 
 namespace TMVA {
-   
+
    class Event;
    class DataSetInfo;
    class MsgLogger;
@@ -92,8 +93,8 @@ namespace TMVA {
       Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); }
       Event*    GetTrainingEvent( Long64_t ievt ) const { return GetEvent(ievt, Types::kTraining); }
       Event*    GetTestEvent    ( Long64_t ievt ) const { return GetEvent(ievt, Types::kTesting); }
-      Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const { 
-         fCurrentTreeIdx = TreeIndex(type); fCurrentEventIdx = ievt; return GetEvent(); 
+      Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const {
+         fCurrentTreeIdx = TreeIndex(type); fCurrentEventIdx = ievt; return GetEvent();
       }
 
       UInt_t    GetNVariables() const;
@@ -115,13 +116,13 @@ namespace TMVA {
 
       Bool_t    HasNegativeEventWeights() const { return fHasNegativeEventWeights; }
 
-      Results*  GetResults   ( const TString &, 
+      Results*  GetResults   ( const TString &,
                                Types::ETreeType type,
                                Types::EAnalysisType analysistype );
 
       void      SetVerbose( Bool_t ) {}
 
-      // sets the number of blocks to which the training set is divided, 
+      // sets the number of blocks to which the training set is divided,
       // some of which are given to the Validation sample. As default they belong all to Training set.
       void      DivideTrainingSet( UInt_t blockNum );
 

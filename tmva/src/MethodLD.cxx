@@ -32,7 +32,6 @@
 #include "Riostream.h"
 #include "TMatrix.h"
 #include "TMatrixD.h"
-#include "TXMLEngine.h"
 
 #include "TMVA/VariableTransformBase.h"
 #include "TMVA/MethodLD.h"
@@ -254,7 +253,7 @@ void TMVA::MethodLD::GetSumVal( void )
          Double_t val = weight;
 
          if (!DoRegression())
-            val *= ev->IsSignal();
+            val *= DataInfo().IsSignal(ev);
          else //for regression
             val *= ev->GetTarget( ivar ); 
 
@@ -316,12 +315,12 @@ void TMVA::MethodLD::AddWeightsXMLTo( void* parent ) const
    // create XML description for LD classification and regression 
    // (for arbitrary number of output classes/targets)
 
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NOut",   fNRegOut    );
    gTools().AddAttr( wght, "NCoeff", GetNvar()+1 );
    for (Int_t iout=0; iout<fNRegOut; iout++) {
       for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++) {
-         void* coeffxml = gTools().xmlengine().NewChild( wght, 0, "Coefficient" );
+         void* coeffxml = gTools().AddChild( wght, "Coefficient" );
          gTools().AddAttr( coeffxml, "IndexOut",   iout   );
          gTools().AddAttr( coeffxml, "IndexCoeff", icoeff );
          gTools().AddAttr( coeffxml, "Value",      (*(*fLDCoeff)[iout])[icoeff] );
@@ -350,7 +349,7 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);
    for (Int_t ivar = 0; ivar<fNRegOut; ivar++) (*fLDCoeff)[ivar] = new std::vector<Double_t>( ncoeff );
 
-   void* ch = gTools().xmlengine().GetChild(wghtnode);
+   void* ch = gTools().GetChild(wghtnode);
    Double_t coeff;
    Int_t iout, icoeff;
    while (ch) {
@@ -360,7 +359,7 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
 
       (*(*fLDCoeff)[iout])[icoeff] = coeff;
 
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch);
    }
 }
 

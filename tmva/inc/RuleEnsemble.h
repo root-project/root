@@ -58,8 +58,8 @@ namespace TMVA {
 
    class TBits;
    class MethodBase;
-   class MethodRuleFit;
    class RuleFit;
+   class MethodRuleFit;
    class RuleEnsemble;
    class MsgLogger;
 

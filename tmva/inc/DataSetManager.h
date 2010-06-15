@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -13,6 +13,7 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch>  - CERN, Switzerland          *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
@@ -47,16 +48,24 @@ namespace TMVA {
    class DataSet;
    class DataSetInfo;
    class DataInputHandler;
+   class DataSetFactory; // DSMTEST
    class MsgLogger;
 
    class DataSetManager {
       
    public:
 
+
       // singleton class
-      static DataSetManager& Instance();
-      static void            CreateInstance( DataInputHandler& dataInput );
-      static void            DestroyInstance();
+//      static DataSetManager& Instance();
+//      static void            CreateInstance( DataInputHandler& dataInput );
+//      static void            DestroyInstance();
+
+      // private default constructor
+      DataSetManager(); // DSMTEST
+      DataSetManager( DataInputHandler& dataInput ); //DSMTEST
+      ~DataSetManager(); // DSMTEST
+
 
       // ownership stays with this handler
       DataSet*     CreateDataSet ( const TString& dsiName );
@@ -67,13 +76,15 @@ namespace TMVA {
 
    private:
 
-      ~DataSetManager();
+//      ~DataSetManager(); // DSMTEST moved to public
 
-      static DataSetManager* fgDSManager;
+//      static DataSetManager* fgDSManager; // removed DSMTEST
 
       // private default constructor
-      DataSetManager();
-      DataSetManager( DataInputHandler& dataInput );
+/*       DataSetManager(); */ // DSMTEST
+/*       DataSetManager( DataInputHandler& dataInput ); */ // DSMTEST
+
+// //      TMVA::DataSetFactory* fDatasetFactory; // DSMTEST
 
       // access to input data
       DataInputHandler& DataInput() { return fDataInput; }

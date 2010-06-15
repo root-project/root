@@ -37,7 +37,7 @@ void Boost2(){
       input = TFile::Open( fname );
    }
    else {
-      gROOT->LoadMacro( "../development/createData.C");
+      gROOT->LoadMacro( "./createData.C");
       create_fullcirc(20000);
       cout << " created circledata.root with data and circle arranged in circles"<<endl;
       input = TFile::Open( fname );

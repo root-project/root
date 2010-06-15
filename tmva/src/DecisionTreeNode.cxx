@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$    
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -14,11 +14,13 @@
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
+ *      Eckhard von Toerne <evt@physik.uni-bonn.de>  - U. of Bonn, Germany        *
  *                                                                                *
- * CopyRight (c) 2005:                                                            *
+ * CopyRight (c) 2009:                                                            *
  *      CERN, Switzerland                                                         * 
  *      U. of Victoria, Canada                                                    * 
  *      MPI-K Heidelberg, Germany                                                 * 
+*       U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -48,37 +50,30 @@ using std::string;
 ClassImp(TMVA::DecisionTreeNode)
 
 TMVA::MsgLogger* TMVA::DecisionTreeNode::fgLogger = 0;
-   
+bool     TMVA::DecisionTreeNode::fgIsTraining = false;
+
 //_______________________________________________________________________
 TMVA::DecisionTreeNode::DecisionTreeNode()
    : TMVA::Node(),
      fCutValue(0),
      fCutType ( kTRUE ),
-     fSelector ( -1 ),  
-     fNSigEvents ( 0 ),
-     fNBkgEvents ( 0 ),
-     fNEvents ( -1 ),
-     fNSigEvents_unweighted ( 0 ),
-     fNBkgEvents_unweighted ( 0 ),
-     fNEvents_unweighted ( 0 ),
-     fSeparationIndex (-1 ),
-     fSeparationGain ( -1 ),
+     fSelector ( -1 ),       
      fResponse(-99 ),
      fNodeType (-99 ),
      fSequence ( 0 ),
-     fIsTerminalNode( kFALSE ),
-     fCC(0)
+     fIsTerminalNode( kFALSE )
 {
    // constructor of an essentially "empty" node floating in space
    if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
 
-   fNodeR    = 0;      // node resubstitution estimate, R(t)
-   fSubTreeR = 0;      // R(T) = Sum(R(t) : t in ~T)
-   fAlpha    = 0;      // critical alpha for this node
-   fG        = 0;      // minimum alpha in subtree rooted at this node
-   fNTerminal  = 0;      // number of terminal nodes in subtree rooted at this node
-   fNB  = 0;      // sum of weights of background events from the pruning sample in this node
-   fNS  = 0;      // ditto for the signal events
+   if (fgIsTraining){
+      fTrainInfo = new DTNodeTrainingInfo();
+      //std::cout << "Node constructor with TrainingINFO"<<std::endl;
+   }
+   else {
+      //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
+      fTrainInfo = 0;
+   }
 }
 
 //_______________________________________________________________________
@@ -87,14 +82,6 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
      fCutValue( 0 ),
      fCutType ( kTRUE ),
      fSelector( -1 ),  
-     fNSigEvents ( 0 ),
-     fNBkgEvents ( 0 ),
-     fNEvents ( -1 ),
-     fNSigEvents_unweighted ( 0 ),
-     fNBkgEvents_unweighted ( 0 ),
-     fNEvents_unweighted ( 0 ),
-     fSeparationIndex( -1 ),
-     fSeparationGain ( -1 ),
      fResponse(-99 ),
      fNodeType( -99 ),
      fSequence( 0 ),
@@ -110,13 +97,15 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
    } else {
       fSequence =  ((DecisionTreeNode*)p)->GetSequence();
    }      
-   fNodeR    = 0;      // node resubstitution estimate, R(t)
-   fSubTreeR = 0;      // R(T) = Sum(R(t) : t in ~T)
-   fAlpha    = 0;      // critical alpha for this node
-   fG        = 0;      // minimum alpha in subtree rooted at this node
-   fNTerminal  = 0;      // number of terminal nodes in subtree rooted at this node
-   fNB  = 0;      // sum of weights of background events from the pruning sample in this node
-   fNS  = 0;      // ditto for the signal events
+
+   if (fgIsTraining){
+      fTrainInfo = new DTNodeTrainingInfo();
+      //std::cout << "Node constructor with TrainingINFO"<<std::endl;
+   }
+   else {
+      //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
+      fTrainInfo = 0;
+   }
 }
 
 //_______________________________________________________________________
@@ -126,14 +115,6 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
      fCutValue( n.fCutValue ),
      fCutType ( n.fCutType ),
      fSelector( n.fSelector ),  
-     fNSigEvents ( n.fNSigEvents ),
-     fNBkgEvents ( n.fNBkgEvents ),
-     fNEvents ( n.fNEvents ),
-     fNSigEvents_unweighted ( n.fNSigEvents_unweighted ),
-     fNBkgEvents_unweighted ( n.fNBkgEvents_unweighted ),
-     fNEvents_unweighted ( n.fNEvents_unweighted ),
-     fSeparationIndex( n.fSeparationIndex ),
-     fSeparationGain ( n.fSeparationGain ),
      fResponse( n.fResponse ),
      fNodeType( n.fNodeType ),
      fSequence( n.fSequence ),
@@ -150,13 +131,14 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
    if (n.GetRight() == 0 ) this->SetRight(NULL);
    else this->SetRight( new DecisionTreeNode( *((DecisionTreeNode*)(n.GetRight())),this));
    
-   fNodeR    = n.fNodeR; 
-   fSubTreeR = n.fSubTreeR;
-   fAlpha    = n.fAlpha;   
-   fG        = n.fG;      
-   fNTerminal  = n.fNTerminal;
-   fNB  = n.fNB;
-   fNS  = n.fNS;
+   if (fgIsTraining){
+      fTrainInfo = new DTNodeTrainingInfo(*(n.fTrainInfo));
+      //std::cout << "Node constructor with TrainingINFO"<<std::endl;
+   }
+   else {
+      //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
+      fTrainInfo = 0;
+   }
 }
 
 
@@ -334,14 +316,14 @@ Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is, UInt_t tmva_Version_
 void TMVA::DecisionTreeNode::ClearNodeAndAllDaughters()
 {
    // clear the nodes (their S/N, Nevents etc), just keep the structure of the tree
-   fNSigEvents=0;
-   fNBkgEvents=0;
-   fNEvents = 0;
-   fNSigEvents_unweighted=0;
-   fNBkgEvents_unweighted=0;
-   fNEvents_unweighted = 0;
-   fSeparationIndex=-1;
-   fSeparationGain=-1;
+   SetNSigEvents(0);
+   SetNBkgEvents(0);
+   SetNEvents(0);
+   SetNSigEvents_unweighted(0);
+   SetNBkgEvents_unweighted(0);
+   SetNEvents_unweighted(0);
+   SetSeparationIndex(-1);
+   SetSeparationGain(-1);
 
    if (this->GetLeft()  != NULL) ((DecisionTreeNode*)(this->GetLeft()))->ClearNodeAndAllDaughters();
    if (this->GetRight() != NULL) ((DecisionTreeNode*)(this->GetRight()))->ClearNodeAndAllDaughters();
@@ -367,11 +349,11 @@ void TMVA::DecisionTreeNode::PrintPrune( ostream& os ) const {
    // printout of the node (can be read in with ReadDataRecord)
 
    os << "----------------------" << std::endl 
-      << "|~T_t| " << fNTerminal << std::endl 
-      << "R(t): " << fNodeR << std::endl 
-      << "R(T_t): " << fSubTreeR << std::endl
-      << "g(t): " << fAlpha << std::endl
-      << "G(t): "  << fG << std::endl;
+      << "|~T_t| " << GetNTerminal() << std::endl 
+      << "R(t): " << GetNodeR() << std::endl 
+      << "R(T_t): " << GetSubTreeR() << std::endl
+      << "g(t): " << GetAlpha() << std::endl
+      << "G(t): "  << GetAlphaMinSubtree() << std::endl;
 }
 
 //_______________________________________________________________________
@@ -386,10 +368,17 @@ void TMVA::DecisionTreeNode::PrintRecPrune( ostream& os ) const {
 }
 
 //_______________________________________________________________________
+void TMVA::DecisionTreeNode::SetCC(Double_t cc) 
+{
+   if (fTrainInfo) fTrainInfo->fCC = cc; 
+   else *fgLogger << kFATAL << "call to SetCC without trainingInfo" << Endl;
+}
+
+//_______________________________________________________________________
 Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
    // return the minimum of variable ivar from the training sample 
    // that pass/end up in this node 
-   if (ivar < fSampleMin.size()) return fSampleMin[ivar];
+   if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMin[ivar];
    else *fgLogger << kFATAL << "You asked for Min of the event sample in node for variable " 
                  << ivar << " that is out of range" << Endl;
    return -9999;
@@ -399,7 +388,7 @@ Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
 Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
    // return the maximum of variable ivar from the training sample 
    // that pass/end up in this node 
-   if (ivar < fSampleMin.size()) return fSampleMax[ivar];
+   if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMax[ivar];
    else *fgLogger << kFATAL << "You asked for Max of the event sample in node for variable " 
                  << ivar << " that is out of range" << Endl;
    return 9999;
@@ -409,39 +398,52 @@ Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
 void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
    // set the minimum of variable ivar from the training sample 
    // that pass/end up in this node 
-   if ( ivar >= fSampleMin.size()) fSampleMin.resize(ivar+1);
-   fSampleMin[ivar]=xmin;
+   if ( fTrainInfo && ivar >= fTrainInfo->fSampleMin.size()) fTrainInfo->fSampleMin.resize(ivar+1);
+   fTrainInfo->fSampleMin[ivar]=xmin;
 }
 
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::SetSampleMax(UInt_t ivar, Float_t xmax){
    // set the maximum of variable ivar from the training sample 
    // that pass/end up in this node 
-   if ( ivar >= fSampleMax.size()) fSampleMax.resize(ivar+1);
-   fSampleMax[ivar]=xmax;
+   if ( fTrainInfo && ivar >= fTrainInfo->fSampleMax.size()) fTrainInfo->fSampleMax.resize(ivar+1);
+   fTrainInfo->fSampleMax[ivar]=xmax;
 }
 
 //_______________________________________________________________________
 void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_Code */  ) 
 {   
+   Float_t tempNSigEvents,tempNBkgEvents,tempNEvents,tempNSigEvents_unweighted,  tempNBkgEvents_unweighted,tempNEvents_unweighted, tempSeparationIndex, tempSeparationGain;  
+   Double_t tempCC;
 
    // read attribute from xml
    gTools().ReadAttr(node, "Seq",   fSequence               );
    gTools().ReadAttr(node, "IVar",  fSelector               );
    gTools().ReadAttr(node, "Cut",   fCutValue               );
    gTools().ReadAttr(node, "cType", fCutType                );
-   gTools().ReadAttr(node, "nS",    fNSigEvents             );
-   gTools().ReadAttr(node, "nB",    fNBkgEvents             );
-   gTools().ReadAttr(node, "nEv",   fNEvents                );
-   gTools().ReadAttr(node, "nSuw",  fNSigEvents_unweighted  );
-   gTools().ReadAttr(node, "nBuw",  fNBkgEvents_unweighted  );
-   gTools().ReadAttr(node, "nEvuw", fNEvents_unweighted     );
-   gTools().ReadAttr(node, "sepI",  fSeparationIndex        );
-   gTools().ReadAttr(node, "sepG",  fSeparationGain         );
+   gTools().ReadAttr(node, "nS",    tempNSigEvents             );
+   gTools().ReadAttr(node, "nB",    tempNBkgEvents             );
+   gTools().ReadAttr(node, "nEv",   tempNEvents                );
+   gTools().ReadAttr(node, "nSuw",  tempNSigEvents_unweighted  );
+   gTools().ReadAttr(node, "nBuw",  tempNBkgEvents_unweighted  );
+   gTools().ReadAttr(node, "nEvuw", tempNEvents_unweighted     );
+   gTools().ReadAttr(node, "sepI",  tempSeparationIndex        );
+   gTools().ReadAttr(node, "sepG",  tempSeparationGain         );
    gTools().ReadAttr(node, "res",   fResponse               );
    gTools().ReadAttr(node, "rms",   fRMS                    );
    gTools().ReadAttr(node, "nType", fNodeType               );
-   gTools().ReadAttr(node, "CC",    fCC                     );
+   gTools().ReadAttr(node, "CC",    tempCC                  );
+   if (fTrainInfo){
+      SetNSigEvents(tempNSigEvents);
+      SetNBkgEvents(tempNBkgEvents);
+      SetNEvents(tempNEvents);
+      SetNSigEvents_unweighted(tempNSigEvents_unweighted);
+      SetNBkgEvents_unweighted(tempNBkgEvents_unweighted);
+      SetNEvents_unweighted(tempNEvents_unweighted);
+      SetSeparationIndex(tempSeparationIndex);
+      SetSeparationGain(tempSeparationGain);
+      SetCC(tempCC);  
+   }
 }
 
 

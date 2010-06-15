@@ -241,7 +241,7 @@ int main( int argc, char** argv )
 
    // Neural network (MLP)
    if (Use["MLP"])
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:HiddenLayers=N+20,N+15:TestRate=6:TrainingMethod=BP:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15" );
+      factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15:!UseRegulator" );
 
    // Support Vector Machine
    if (Use["SVM"])
@@ -254,7 +254,7 @@ int main( int argc, char** argv )
 
    if (Use["BDTG"])
      factory->BookMethod( TMVA::Types::kBDT, "BDTG",
-                           "!H:!V:NTrees=200::BoostType=Grad:Shrinkage=1.0:UseBaggedGrad:SeparationType=GiniIndex:nCuts=20:NNodesMax=5" );
+                           "!H:!V:NTrees=1000::BoostType=Grad:Shrinkage=0.3:!UseBaggedGrad:SeparationType=GiniIndex:nCuts=20:NNodesMax=10" );
    // --------------------------------------------------------------------------------------------------
 
    // ---- Now you can tell the factory to train, test, and evaluate the MVAs

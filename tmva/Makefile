@@ -37,7 +37,7 @@ DICTH1       := Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBas
 		MethodANNBase.h MethodTMlpANN.h MethodRuleFit.h MethodCuts.h MethodFisher.h \
 		MethodKNN.h MethodCFMlpANN.h MethodCFMlpANN_Utils.h MethodLikelihood.h \
 		MethodHMatrix.h MethodPDERS.h MethodBDT.h MethodDT.h MethodSVM.h MethodBayesClassifier.h \
-		MethodFDA.h MethodMLP.h MethodCommittee.h MethodSeedDistance.h MethodBoost.h \
+		MethodFDA.h MethodMLP.h MethodCommittee.h MethodBoost.h \
 		MethodPDEFoam.h MethodLD.h MethodCategory.h
 DICTH2       := TSpline2.h TSpline1.h PDF.h BinaryTree.h BinarySearchTreeNode.h BinarySearchTree.h \
 		Timer.h RootFinder.h CrossEntropy.h DecisionTree.h DecisionTreeNode.h MisClassificationError.h \
@@ -45,8 +45,8 @@ DICTH2       := TSpline2.h TSpline1.h PDF.h BinaryTree.h BinarySearchTreeNode.h 
 		GeneticAlgorithm.h GeneticGenes.h GeneticPopulation.h GeneticRange.h GiniIndex.h \
 		GiniIndexWithLaplace.h SimulatedAnnealing.h
 DICTH3       := Config.h KDEKernel.h Interval.h FitterBase.h MCFitter.h GeneticFitter.h SimulatedAnnealingFitter.h \
-		MinuitFitter.h MinuitWrapper.h IFitterTarget.h IMetric.h MetricEuler.h MetricManhattan.h \
-		SeedDistance.h PDEFoam.h PDEFoamDistr.h PDEFoamVect.h PDEFoamCell.h BDTEventWrapper.h CCTreeWrapper.h \
+		MinuitFitter.h MinuitWrapper.h IFitterTarget.h \
+		PDEFoam.h PDEFoamDistr.h PDEFoamVect.h PDEFoamCell.h BDTEventWrapper.h CCTreeWrapper.h \
 		CCPruner.h CostComplexityPruneTool.h SVEvent.h
 DICTH4       := TNeuron.h TSynapse.h TActivationChooser.h TActivation.h TActivationSigmoid.h TActivationIdentity.h \
 		TActivationTanh.h TActivationRadial.h TNeuronInputChooser.h TNeuronInput.h TNeuronInputSum.h \

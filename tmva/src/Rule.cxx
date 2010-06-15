@@ -394,7 +394,7 @@ void* TMVA::Rule::AddXMLTo( void* parent ) const
 void TMVA::Rule::ReadFromXML( void* wghtnode )
 {
    // read rule from XML
-   TString nodeName = TString( gTools().xmlengine().GetNodeName(wghtnode) );
+   TString nodeName = TString( gTools().GetName(wghtnode) );
    if (nodeName != "Rule") Log() << kFATAL << "<ReadFromXML> Unexpected node name: " << nodeName << Endl;
 
    gTools().ReadAttr( wghtnode, "Importance", fImportance    );
@@ -405,22 +405,22 @@ void TMVA::Rule::ReadFromXML( void* wghtnode )
    gTools().ReadAttr( wghtnode, "Norm",       fNorm          );
    gTools().ReadAttr( wghtnode, "SSB",        fSSB           );
    gTools().ReadAttr( wghtnode, "SSBNeve",    fSSBNeve       );
-   
+
    UInt_t nvars;
    gTools().ReadAttr( wghtnode, "Nvars",      nvars          );
    if (fCut) delete fCut;
    fCut = new RuleCut();
    fCut->SetNvars( nvars );
-   
+
    // read Cut
-   void*    ch = gTools().xmlengine().GetChild( wghtnode );
+   void*    ch = gTools().GetChild( wghtnode );
    UInt_t   i = 0;
    UInt_t   ui;
    Double_t d;
    Char_t   c;
    while (ch) {
       gTools().ReadAttr( ch, "Selector", ui );
-      fCut->SetSelector( i, ui ); 
+      fCut->SetSelector( i, ui );
       gTools().ReadAttr( ch, "Min",      d );
       fCut->SetCutMin  ( i, d );
       gTools().ReadAttr( ch, "Max",      d );
@@ -429,10 +429,10 @@ void TMVA::Rule::ReadFromXML( void* wghtnode )
       fCut->SetCutDoMin( i, (c == 'T' ? kTRUE : kFALSE ) );
       gTools().ReadAttr( ch, "DoMax",    c );
       fCut->SetCutDoMax( i, (c == 'T' ? kTRUE : kFALSE ) );
-      
+
       i++;
-      ch = gTools().xmlengine().GetNext(ch);
-   }   
+      ch = gTools().GetNextChild(ch);
+   }
 
    // sanity check
    if (i != nvars) Log() << kFATAL << "<ReadFromXML> Mismatch in number of cuts: " << i << " != " << nvars << Endl;

@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Matt Jachowski, Joerg Stelzer
+// Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Joerg Stelzer
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -18,7 +18,9 @@
  *      Matt Jachowski        <jachowski@stanford.edu> - Stanford University, USA *
  *      Kamil Kraszewski      <kalq@cern.ch>           - IFJ & UJ, Poland         *
  *      Maciej Kruk           <mkruk@cern.ch>          - IFJ & AGH, Poland        *
+ *      Peter Speckmayer      <peter.speckmayer@cern.ch> - CERN, Switzerland      *
  *      Joerg Stelzer         <stelzer@cern.ch>        - DESY, Germany            *
+ *      Jiahang Zhong         <Jiahang.Zhong@cern.ch>  - Academia Sinica, Taipei  *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland                                                         *
@@ -40,6 +42,7 @@
 #include "TFitter.h"
 #include "TMatrixD.h"
 #include "TMath.h"
+#include "TFile.h"
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Interval.h"
@@ -70,6 +73,7 @@ TMVA::MethodMLP::MethodMLP( const TString& jobName,
                             const TString& theOption,
                             TDirectory* theTargetDir ) 
    : MethodANNBase( jobName, Types::kMLP, methodTitle, theData, theOption, theTargetDir ),
+     fPrior			  (0.0),		//zjh
      fSamplingFraction(1.0),
      fSamplingEpoch   (0.0)
 {
@@ -81,6 +85,7 @@ TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
                             const TString& theWeightFile,
                             TDirectory* theTargetDir ) 
    : MethodANNBase( Types::kMLP, theData, theWeightFile, theTargetDir ),
+     fPrior			  (0.0),		//zjh
      fSamplingFraction(1.0),
      fSamplingEpoch(0.0)
 {
@@ -99,7 +104,7 @@ Bool_t TMVA::MethodMLP::HasAnalysisType( Types::EAnalysisType type, UInt_t numbe
 {
    // MLP can handle classification with 2 classes and regression with one regression-target
    if (type == Types::kClassification && numberClasses == 2 ) return kTRUE;
-   //   if (type == Types::kRegression     && numberTargets == 1 ) return kTRUE;
+   if (type == Types::kMulticlass ) return kTRUE;
    if (type == Types::kRegression ) return kTRUE;
 
    return kFALSE;
@@ -112,6 +117,9 @@ void TMVA::MethodMLP::Init()
 
    // the minimum requirement to declare an event signal-like
    SetSignalReferenceCut( 0.5 );
+#ifdef MethodMLP_UseMinuit__
+   fgThis = this;
+#endif
 }
 
 //_______________________________________________________________________
@@ -169,6 +177,10 @@ void TMVA::MethodMLP::DeclareOptions()
    DeclareOptionRef(fSteps=-1, "ConvergenceTests", 
                     "Number of steps (without improvement) required for convergence (<0 means automatic convergence check is turned off)");
 
+   DeclareOptionRef(fUseRegulator=kTRUE, "UseRegulator",
+		    "Use regulator to avoid over-training  (bayesian neural network technique)");   //zjh
+   DeclareOptionRef(fUpdateLimit=10, "UpdateLimit",
+		    "Number of updates for regulator before stop training");   //zjh
 }
 
 //_______________________________________________________________________
@@ -243,7 +255,8 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
    Double_t estimator = 0;
 
    // loop over all training events 
-   Int_t nEvents = GetNEvents();
+   Int_t  nEvents  = GetNEvents();
+   UInt_t nClasses = DataInfo().GetNClasses();
    UInt_t nTgts = DataInfo().GetNTargets();
    for (Int_t i = 0; i < nEvents; i++) {
 
@@ -260,25 +273,43 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
             Double_t dt = v - ev->GetTarget( itgt );
             d += (dt*dt);
          }
-         d = TMath::Sqrt(d);
-      }
-      else {
+//         d = TMath::Sqrt(d);
+//	 estimator += (d*d)*w;
+	 estimator += d*w;
+      } else if (DoMulticlass() ) {
+	 UInt_t cls = ev->GetClass();
+         for (UInt_t icls = 0; icls < nClasses; icls++) {
+            v = GetOutputNeuron( icls )->GetActivationValue();
+            Double_t dt = v - ( icls==cls ? 1.0 : 0.0 );
+            d += (dt*dt);
+         }
+//         d = TMath::Sqrt(d);
+	 estimator += d*w;	//zjh
+      } else {
          Double_t desired = GetDesiredOutput( ev );
          v = GetOutputNeuron()->GetActivationValue();
-         d = v - desired;
+         if (fEstimator==kMSE) d = (desired-v)*(desired-v);                         //zjh
+    	 else if (fEstimator==kCE) d = -2*(desired*TMath::Log(v)+(1-desired)*TMath::Log(1-v));     //zjh
+	 estimator += d*w;	//zjh
       }      
-      estimator += (d*d)*w;
 
       // fill monitoring histograms
-      if (ev->IsSignal() && histS != 0) histS->Fill( float(v), float(w) );
+      if (DataInfo().IsSignal(ev) && histS != 0) histS->Fill( float(v), float(w) );
       else if              (histB != 0) histB->Fill( float(v), float(w) );
    }
 
    if (histS != 0) fEpochMonHistS.push_back( histS );
    if (histB != 0) fEpochMonHistB.push_back( histB );
 
-   if (DoRegression()) estimator = TMath::Sqrt(estimator/Float_t(nEvents));
-   else                estimator = estimator*0.5/Float_t(nEvents);
+   //if      (DoRegression()) estimator = TMath::Sqrt(estimator/Float_t(nEvents));
+   //else if (DoMulticlass()) estimator = TMath::Sqrt(estimator/Float_t(nEvents));
+   //else                     estimator = estimator*0.5/Float_t(nEvents);
+   if      (DoRegression()) estimator = estimator/Float_t(nEvents);
+   else if (DoMulticlass()) estimator = estimator/Float_t(nEvents);
+   else                     estimator = estimator/Float_t(nEvents);
+
+
+   //if (fUseRegulator) estimator+=fPrior/Float_t(nEvents);  //zjh
 
    Data()->SetCurrentType( saveType );
 
@@ -300,6 +331,21 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    Log() << kDEBUG << "reinitalize learning rates" << Endl;
    InitializeLearningRates();
    PrintMessage("Training Network");
+
+   Int_t nEvents=GetNEvents();
+   Int_t nSynapses=fSynapses->GetEntriesFast();
+   if (nSynapses>nEvents) Log()<<kFATAL<<"ANN too complicated: #events="<<nEvents<<"\t#synapses="<<nSynapses<<Endl;
+   //Int_t  nEvents  = GetNEvents();
+   //UInt_t nTgts = DataInfo().GetNTargets();
+   //for (Int_t i = 0; i < nEvents; i++) {
+   //  const Event* ev = GetEvent(i);
+   //  if (i*100%nEvents==0 && DoRegression()) {
+   //    for (UInt_t itgt = 0; itgt < nTgts; itgt++) {
+   //	 Log()<<kINFO<< GetOutputNeuron( itgt )->GetActivationValue()<<"\t"<< ev->GetTarget( itgt ) <<Endl;
+   //    }
+   //  }
+   //}
+
 #ifdef MethodMLP_UseMinuit__  
    if (useMinuit) MinuitMinimize();
 #else
@@ -307,6 +353,16 @@ void TMVA::MethodMLP::Train(Int_t nEpochs)
    else if (fTrainingMethod == kBFGS) BFGSMinimize(nEpochs);
    else                               BackPropagationMinimize(nEpochs);
 #endif
+
+   //zjh
+   float trainE = CalculateEstimator( Types::kTraining, 0 ) ; // estimator for training sample  //zjh
+   float testE  = CalculateEstimator( Types::kTesting,  0 ) ; // estimator for test sample //zjh
+   Log()<<kDEBUG<<"Finalizing...\ttrainE="<<trainE<<"\ttestE="<<testE<<Endl;
+   UpdateRegulators();
+   Int_t numSynapses=fSynapses->GetEntriesFast();
+   fInvHessian.ResizeTo(numSynapses,numSynapses);
+   GetApproxInvHessian( fInvHessian ,false);
+   //zjh
 
 }
 
@@ -339,6 +395,9 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
    TMatrixD Hessian ( nWeights, nWeights );
    TMatrixD Gamma   ( nWeights, 1 );
    TMatrixD Delta   ( nWeights, 1 );
+   Int_t        RegUpdateCD=0;                  //zjh
+   Int_t        RegUpdateTimes=0;               //zjh
+   Double_t     AccuError=0;
 
    Double_t trainE = -1;
    Double_t testE  = -1;
@@ -373,37 +432,67 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
       }
       Data()->SetCurrentType( Types::kTraining );
 
+      //zjh
+      if (fUseRegulator) {
+    	  UpdatePriors();
+    	  RegUpdateCD++;
+      }
+      //zjh
+
       SetGammaDelta( Gamma, Delta, buffer );
 
-      if (i % fResetStep == 0) {
+      if (i % fResetStep == 0 && i<0.5*nEpochs) { //zjh
          SteepestDir( Dir );
          Hessian.UnitMatrix();
+    	 RegUpdateCD=0;    //zjh
       }
       else {
          if (GetHessian( Hessian, Gamma, Delta )) {
             SteepestDir( Dir );
             Hessian.UnitMatrix();
+    	    RegUpdateCD=0;    //zjh
          }
          else SetDir( Hessian, Dir );
       }
 
+      Double_t	dError=0;  //zjh
       if (DerivDir( Dir ) > 0) {
          SteepestDir( Dir );
          Hessian.UnitMatrix();
+    	 RegUpdateCD=0;    //zjh
       }
-      if (LineSearch( Dir, buffer )) {
+      if (LineSearch( Dir, buffer, &dError )) { //zjh
          Hessian.UnitMatrix();
          SteepestDir( Dir );
-         if (LineSearch(Dir, buffer)) {
+    	 RegUpdateCD=0;    //zjh
+         if (LineSearch(Dir, buffer, &dError)) {  //zjh
             i = nEpochs;
             Log() << kFATAL << "Line search failed! Huge troubles somewhere..." << Endl;
          }
       }
 
+      //zjh+
+      if (dError<0) Log()<<kWARNING<<"\nnegative dError=" <<dError<<Endl;
+      AccuError+=dError;
+      if (fabs(dError)>0.0001) RegUpdateCD=0;
+      
+      if ( fUseRegulator && RegUpdateTimes<fUpdateLimit && RegUpdateCD>=((0.4*fResetStep)>50?50:(0.4*fResetStep)) && i<0.8*nEpochs && AccuError>0.01 ) {
+	     Log()<<kDEBUG <<Endl;
+	     Log()<<kDEBUG<<"\nUpdate regulators "<<RegUpdateTimes<<" on epoch "<<i<<"\tdError="<<dError<<Endl;
+	     UpdateRegulators();
+	     Hessian.UnitMatrix();
+	     RegUpdateCD=0;
+	RegUpdateTimes++;
+	AccuError=0;
+    	  }
+      //zjh-
+
       // monitor convergence of training and control sample
       if ((i+1)%fTestRate == 0) {
-         trainE = CalculateEstimator( Types::kTraining, i ); // estimator for training sample
-         testE  = CalculateEstimator( Types::kTesting,  i  );  // estimator for test sample
+	//trainE = CalculateEstimator( Types::kTraining, i ) - fPrior/Float_t(GetNEvents()); // estimator for training sample  //zjh
+	//testE  = CalculateEstimator( Types::kTesting,  i ) - fPrior/Float_t(GetNEvents()); // estimator for test sample //zjh
+         trainE = CalculateEstimator( Types::kTraining, i ) ; // estimator for training sample  //zjh
+         testE  = CalculateEstimator( Types::kTesting,  i ) ; // estimator for test sample //zjh
          fEstimatorHistTrain->Fill( i+1, trainE );
          fEstimatorHistTest ->Fill( i+1, testE );
 
@@ -425,17 +514,22 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
       }
       
       // draw progress
-      TString convText = Form( "<D^2> (train/test): %.4g/%.4g", trainE, testE );
+      TString convText = Form( "<D^2> (Epoch/train/test): %d/%.4g/%.4g", i, trainE, testE ); //zjh
       if (fSteps > 0) {
          Float_t progress = 0;
          if (Float_t(i)/nEpochs < fSamplingEpoch) 
             progress = Progress()*fSamplingEpoch*fSamplingFraction*100;
          else
             progress = 100.0*(fSamplingEpoch*fSamplingFraction+(1.0-fSamplingFraction*fSamplingEpoch)*Progress());
-         
+         Float_t progress2= 100.0*RegUpdateTimes/fUpdateLimit;	//zjh
+         if (progress2>progress) progress=progress2;			//zjh
          timer.DrawProgressBar( Int_t(progress), convText );
       }
-      else timer.DrawProgressBar( i, convText );
+      else {
+    	  Int_t progress=Int_t(nEpochs*RegUpdateTimes/Float_t(fUpdateLimit));	//zjh
+    	  if (progress<i) progress=i;										  	//zjh
+    	  timer.DrawProgressBar( progress, convText );							//zjh
+      }
 
       // some verbose output
       if (fgPRINT_SEQ) {
@@ -493,7 +587,9 @@ void TMVA::MethodMLP::ComputeDEDw()
 
    for (Int_t i=0;i<nSynapses;i++) {
       TSynapse *synapse = (TSynapse*)fSynapses->At(i);
-      synapse->SetDEDw( synapse->GetDEDw() / nEvents );
+      Double_t DEDw=synapse->GetDEDw();     //zjh
+      if (fUseRegulator) DEDw+=fPriorDev[i]; //zjh
+      synapse->SetDEDw( DEDw / nEvents );   //zjh
    }
 }
 
@@ -512,10 +608,19 @@ void TMVA::MethodMLP::SimulateEvent( const Event* ev )
          Double_t error = ( GetOutputNeuron( itgt )->GetActivationValue() - desired )*eventWeight;
          GetOutputNeuron( itgt )->SetError(error);
       }
-   }
-   else {
+   } else if (DoMulticlass()) {
+      UInt_t nClasses = DataInfo().GetNClasses();
+      UInt_t cls      = ev->GetClass();
+      for (UInt_t icls = 0; icls < nClasses; icls++) {
+         Double_t desired  = ( cls==icls ? 1.0 : 0.0 );
+         Double_t error    = ( GetOutputNeuron( icls )->GetActivationValue() - desired )*eventWeight;
+         GetOutputNeuron( icls )->SetError(error);
+      }
+   } else {
       Double_t desired     = GetDesiredOutput( ev );
-      Double_t error = ( GetOutputNeuron()->GetActivationValue() - desired )*eventWeight;
+      Double_t error=-1;				//zjh
+      if (fEstimator==kMSE) error = ( GetOutputNeuron()->GetActivationValue() - desired )*eventWeight;       //zjh
+      else if (fEstimator==kCE) error = -eventWeight/(GetOutputNeuron()->GetActivationValue() -1 + desired);  //zjh
       GetOutputNeuron()->SetError(error);
    }
 
@@ -590,7 +695,7 @@ Double_t TMVA::MethodMLP::DerivDir( TMatrixD &Dir )
 }
 
 //______________________________________________________________________________
-Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer)
+Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer, Double_t* dError)
 {
    Int_t IDX = 0;
    Int_t nSynapses = fSynapses->GetEntriesFast();
@@ -603,6 +708,7 @@ Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer)
    }
 
    Double_t err1 = GetError();
+   Double_t errOrigin=err1;  	//zjh
    Double_t alpha1 = 0.;
    Double_t alpha2 = fLastAlpha;
 
@@ -656,6 +762,7 @@ Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer)
       }
       if (!bingo) {
          SetDirWeights(Origin, Dir, 0.);
+	 Log() << kWARNING << "linesearch, failed even in opposite direction of steepestDIR" << Endl;
          fLastAlpha = 0.05;
          return kTRUE;
       }
@@ -690,6 +797,9 @@ Bool_t TMVA::MethodMLP::LineSearch(TMatrixD &Dir, std::vector<Double_t> &buffer)
       buffer[IDX] = synapse->GetWeight() - Origin[IDX];
       IDX++;
    }
+
+   if (dError) (*dError)=(errOrigin-finalError)/finalError; //zjh
+
    return kFALSE;
 }
 
@@ -704,6 +814,7 @@ void TMVA::MethodMLP::SetDirWeights( std::vector<Double_t> &Origin, TMatrixD &Di
       synapse->SetWeight( Origin[IDX] + Dir[IDX][0] * alpha );
       IDX++;
    }
+   if (fUseRegulator) UpdatePriors();	//zjh
 }
 
 
@@ -722,27 +833,50 @@ Double_t TMVA::MethodMLP::GetError()
       Double_t error = 0.;
       if (DoRegression()) {
          for (UInt_t itgt = 0; itgt < ntgts; itgt++) {
-            error += GetSqrErr( ev, itgt );
+            error += GetMSEErr( ev, itgt );	//zjh
          }
+      } else if ( DoMulticlass() ){
+	 for( UInt_t icls = 0, iclsEnd = DataInfo().GetNClasses(); icls < iclsEnd; icls++ ){
+	    error += GetMSEErr( ev, icls );
+	 }
+      } else {
+	 if (fEstimator==kMSE) error = GetMSEErr( ev );  //zjh
+	 else if (fEstimator==kCE) error= GetCEErr( ev ); //zjh
       }
-      else {
-         error = GetSqrErr( ev );
-      }
-      Result += error * ev->GetWeight();   
+      Result += error * ev->GetWeight();
    }
+   if (fUseRegulator) Result+=fPrior;  //zjh
+   if (Result<0) Log()<<kWARNING<<"\nNegative Error!!! :"<<Result-fPrior<<"+"<<fPrior<<Endl;
    return Result;
 }
 
 //______________________________________________________________________________
-Double_t TMVA::MethodMLP::GetSqrErr( const Event* ev, UInt_t index )
+Double_t TMVA::MethodMLP::GetMSEErr( const Event* ev, UInt_t index )
 {
    Double_t error = 0;
    Double_t output = GetOutputNeuron( index )->GetActivationValue();
    Double_t target = 0;
-   if (DoRegression()) target = ev->GetTarget( index );
-   else                target = GetDesiredOutput( ev );  
+   if      (DoRegression()) target = ev->GetTarget( index );
+   else if (DoMulticlass()) target = (ev->GetClass() == index ? 1.0 : 0.0 );
+   else                     target = GetDesiredOutput( ev );  
 
-   error = (output-target)*(output-target);
+   error = 0.5*(output-target)*(output-target); //zjh
+
+   return error;
+
+}
+
+//______________________________________________________________________________
+Double_t TMVA::MethodMLP::GetCEErr( const Event* ev, UInt_t index )  //zjh
+{
+   Double_t error = 0;
+   Double_t output = GetOutputNeuron( index )->GetActivationValue();
+   Double_t target = 0;
+   if      (DoRegression()) target = ev->GetTarget( index );
+   else if (DoMulticlass()) target = (ev->GetClass() == index ? 1.0 : 0.0 );
+   else                     target = GetDesiredOutput( ev );
+
+   error = -(target*TMath::Log(output)+(1-target)*TMath::Log(1-output));
 
    return error;
 }
@@ -930,8 +1064,8 @@ void TMVA::MethodMLP::TrainOneEventFast(Int_t ievt, Float_t*& branchVar, Int_t& 
    
    // get the desired output of this event
    Double_t desired;
-   if (type == 0) desired = fActivation->GetMin();  // background
-   else           desired = fActivation->GetMax();  // signal
+   if (type == 0) desired = fOutput->GetMin();  // background //zjh
+   else           desired = fOutput->GetMax();  // signal     //zjh
 
    // force the value for each input neuron
    Double_t x;
@@ -964,6 +1098,7 @@ void TMVA::MethodMLP::TrainOneEvent(Int_t ievt)
    ForceNetworkInputs( ev );
    ForceNetworkCalculations();
    if (DoRegression()) UpdateNetwork( ev->GetTargets(),       eventWeight );
+   if (DoMulticlass()) UpdateNetwork( *DataInfo().GetTargetsForMulticlass( ev ), eventWeight );
    else                UpdateNetwork( GetDesiredOutput( ev ), eventWeight );
 }
 
@@ -971,7 +1106,7 @@ void TMVA::MethodMLP::TrainOneEvent(Int_t ievt)
 Double_t TMVA::MethodMLP::GetDesiredOutput( const Event* ev )
 {
    // get the desired output of this event
-   return DataInfo().IsSignal(ev)?fActivation->GetMax():fActivation->GetMin();
+   return DataInfo().IsSignal(ev)?fOutput->GetMax():fOutput->GetMin(); //zjh
 }
 
 
@@ -981,6 +1116,9 @@ void TMVA::MethodMLP::UpdateNetwork(Double_t desired, Double_t eventWeight)
    // update the network based on how closely
    // the output matched the desired output
    Double_t error = GetOutputNeuron()->GetActivationValue() - desired;
+   if (fEstimator==kMSE)  error = GetOutputNeuron()->GetActivationValue() - desired ;  //zjh
+   else if (fEstimator==kCE)  error = -1./(GetOutputNeuron()->GetActivationValue() -1 + desired); //zjh
+   else  Log() << kFATAL << "Estimator type unspecified!!" << Endl;              //zjh
    error *= eventWeight;
    GetOutputNeuron()->SetError(error);
    CalculateNeuronDeltas();
@@ -992,7 +1130,7 @@ void TMVA::MethodMLP::UpdateNetwork(std::vector<Float_t>& desired, Double_t even
 {
    // update the network based on how closely
    // the output matched the desired output
-   for (UInt_t i = 0; i < DataInfo().GetNTargets(); i++) {
+   for (UInt_t i = 0; i < desired.size(); i++) {
       Double_t error = GetOutputNeuron( i )->GetActivationValue() - desired.at(i);
       error *= eventWeight;
       GetOutputNeuron( i )->SetError(error);
@@ -1078,6 +1216,7 @@ Double_t TMVA::MethodMLP::ComputeEstimator( std::vector<Double_t>& parameters)
       synapse = (TSynapse*)fSynapses->At(i);
       synapse->SetWeight(parameters.at(i));
    }
+   if (fUseRegulator) UpdatePriors();	//zjh
 
    Double_t estimator = CalculateEstimator();
 
@@ -1126,6 +1265,147 @@ void TMVA::MethodMLP::AdjustSynapseWeights()
       }
    }
 }
+
+//_______________________________________________________________________
+void TMVA::MethodMLP::UpdatePriors()  //zjh
+{
+	fPrior=0;
+	fPriorDev.clear();
+	Int_t nSynapses = fSynapses->GetEntriesFast();
+	for (Int_t i=0;i<nSynapses;i++) {
+		TSynapse* synapse = (TSynapse*)fSynapses->At(i);
+		fPrior+=0.5*fRegulators[fRegulatorIdx[i]]*(synapse->GetWeight())*(synapse->GetWeight());
+		fPriorDev.push_back(fRegulators[fRegulatorIdx[i]]*(synapse->GetWeight()));
+	}
+}
+
+//_______________________________________________________________________
+void TMVA::MethodMLP::UpdateRegulators()  //zjh
+{
+	TMatrixD InvH(0,0);
+	GetApproxInvHessian(InvH);
+	Int_t numSynapses=fSynapses->GetEntriesFast();
+	Int_t numRegulators=fRegulators.size();
+	Float_t gamma=0,
+	        variance=1.;    // Gaussian noise
+	vector<Int_t> 		nWDP(numRegulators);
+	vector<Double_t> 	trace(numRegulators),weightSum(numRegulators);
+	for (int i=0;i<numSynapses;i++) {
+		TSynapse* synapses = (TSynapse*)fSynapses->At(i);
+		Int_t idx=fRegulatorIdx[i];
+		nWDP[idx]++;
+		trace[idx]+=InvH[i][i];
+		gamma+=1-fRegulators[idx]*InvH[i][i];
+		weightSum[idx]+=(synapses->GetWeight())*(synapses->GetWeight());
+	}
+	if (fEstimator==kMSE) {
+	  if (GetNEvents()>gamma) variance=CalculateEstimator( Types::kTraining, 0 )/(1-(gamma/GetNEvents()));
+	  else variance=CalculateEstimator( Types::kTraining, 0 );
+	}
+
+	//Log() << kDEBUG << Endl;
+	for (int i=0;i<numRegulators;i++)
+	{
+	  //fRegulators[i]=variance*(nWDP[i]-fRegulators[i]*trace[i])/weightSum[i];
+	  fRegulators[i]=variance*nWDP[i]/(weightSum[i]+variance*trace[i]);
+	  if (fRegulators[i]<0) fRegulators[i]=0;
+	  Log()<<kDEBUG<<"R"<<i<<":"<<fRegulators[i]<<"\t";
+	}
+	float trainE = CalculateEstimator( Types::kTraining, 0 ) ; // estimator for training sample  //zjh
+	float testE  = CalculateEstimator( Types::kTesting,  0 ) ; // estimator for test sample //zjh
+
+	Log()<<kDEBUG<<"\n"<<"trainE:"<<trainE<<"\ttestE:"<<testE<<"\tvariance:"<<variance<<"\tgamma:"<<gamma<<Endl;
+
+}
+
+//_______________________________________________________________________
+void TMVA::MethodMLP::GetApproxInvHessian(TMatrixD& InvHessian, bool regulate)  //zjh
+{
+	Int_t numSynapses=fSynapses->GetEntriesFast();
+	InvHessian.ResizeTo( numSynapses, numSynapses );
+	InvHessian=0;
+	TMatrixD sens(numSynapses,1);
+	TMatrixD sensT(1,numSynapses);
+	Int_t nEvents = GetNEvents();
+	for (Int_t i=0;i<nEvents;i++) {
+		GetEvent(i);
+		double outputValue=GetMvaValue();		// force calculation
+		GetOutputNeuron()->SetError(1./fOutput->EvalDerivative(GetOutputNeuron()->GetValue()));
+		CalculateNeuronDeltas();
+		for (Int_t j = 0; j < numSynapses; j++){
+			TSynapse* synapses = (TSynapse*)fSynapses->At(j);
+			synapses->InitDelta();
+			synapses->CalculateDelta();
+			sens[j][0]=sensT[0][j]=synapses->GetDelta();
+		}
+		if (fEstimator==kMSE ) InvHessian+=sens*sensT;
+		else if (fEstimator==kCE) InvHessian+=(outputValue*(1-outputValue))*sens*sensT;
+	}
+
+// 	TVectorD eValue(numSynapses);
+	if (regulate) {
+	  for (Int_t i = 0; i < numSynapses; i++){
+	    InvHessian[i][i]+=fRegulators[fRegulatorIdx[i]];
+	  }
+	}
+	else {
+	  for (Int_t i = 0; i < numSynapses; i++){
+	    InvHessian[i][i]+=1e-6; //to avoid precision problem that will destroy the pos-def
+	  }
+	}
+
+	InvHessian.Invert();
+
+}
+
+// zjh =>_______________________________________________________________________
+Double_t TMVA::MethodMLP::GetMvaValues( Double_t& errUpper, Double_t& errLower ) //zjh
+{
+	Double_t MvaValue,MvaUpper,MvaLower,median,variance;
+	MvaValue=GetMvaValue();// contains back propagation
+	if (fInvHessian.GetNcols()==0) {
+	   Log() << kFATAL << "no inverse hessian matrix available. GetMvaValues( Double_t& errUpper, Double_t& errLower ) cannot be used." << Endl;
+	}
+	Int_t numSynapses=fSynapses->GetEntriesFast();
+	if (fInvHessian.GetNcols()!=numSynapses) {
+		Log() << kWARNING << "inconsistent dimension " << fInvHessian.GetNcols() << " vs " << numSynapses << Endl;
+	}
+	TMatrixD sens(numSynapses,1);
+	TMatrixD sensT(1,numSynapses);
+	GetOutputNeuron()->SetError(1./fOutput->EvalDerivative(GetOutputNeuron()->GetValue()));
+	//GetOutputNeuron()->SetError(1.);
+	CalculateNeuronDeltas();
+	for (Int_t i = 0; i < numSynapses; i++){
+	  TSynapse* synapses = (TSynapse*)fSynapses->At(i);
+	  synapses->InitDelta();
+	  synapses->CalculateDelta();
+	  sensT[0][i]=synapses->GetDelta();
+	}
+	sens.Transpose(sensT);
+	TMatrixD sig=sensT*fInvHessian*sens;
+	variance=sig[0][0];
+	median=GetOutputNeuron()->GetValue();
+	//Log()<<kDEBUG<<"median="<<median<<"\tvariance="<<variance<<Endl;
+
+	//upper
+	MvaUpper=fOutput->Eval(median+variance);
+	errUpper=MvaUpper-MvaValue;
+	//Log()<<kDEBUG<<"MvaUpper="<<MvaUpper<<"\terrUpper="<<errUpper<<Endl;
+
+	//lower
+	MvaLower=fOutput->Eval(median-variance);
+	errLower=MvaValue-MvaLower;
+	//Log()<<kDEBUG<<"MvaLower="<<MvaLower<<"\terrLower="<<errLower<<Endl;
+	//log()<<kDEBUG<<"MvaValue="<<MvaValue<<"\tActmedian="<<fOutput->Eval(median)<<Endl;
+	if (variance<0) {
+	  Log()<<kWARNING<<"median="<<median<<"\tvariance="<<variance
+	       <<"MvaUpper="<<MvaUpper<<"\terrUpper="<<errUpper<<"MvaLower="<<MvaLower<<"\terrLower="<<errLower<<Endl;
+	}
+
+	return MvaValue;
+}
+//<= zjh
+
 
 #ifdef MethodMLP_UseMinuit__
 
@@ -1218,7 +1498,15 @@ void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* 
    Log() << kDEBUG << "***** New estimator: " << f << "  min: " << minf << " --> ncalls: " << nc << Endl;
 }
 
+//_______________________________________________________________________
+TMVA::MethodMLP* TMVA::MethodMLP::GetThisPtr() 
+{ 
+   // global "this" pointer to be used in minuit
+   return fgThis; 
+}
+
 #endif
+
 
 //_______________________________________________________________________
 void TMVA::MethodMLP::MakeClassSpecific( std::ostream& fout, const TString& className ) const

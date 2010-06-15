@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Matt Jachowski
+// Author: Andreas Hoecker, Peter Speckmayer, Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -14,6 +14,7 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker  <Andreas.Hocker@cern.ch> - CERN, Switzerland             *
  *      Matt Jachowski   <jachowski@stanford.edu> - Stanford University, USA      *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch>  - CERN, Switzerland          *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>   - CERN, Switzerland             *
  *                                                                                *
  * Small changes (regression):                                                    *
@@ -122,6 +123,8 @@ namespace TMVA {
       virtual Double_t GetMvaValue( Double_t* err = 0 );
 
       virtual const std::vector<Float_t> &GetRegressionValues();
+
+      virtual const std::vector<Float_t> &GetMulticlassValues();
       
       // write method specific histos to target file
       virtual void WriteMonitoringHistosToFile() const;
@@ -133,8 +136,10 @@ namespace TMVA {
       virtual void DeclareOptions();
       virtual void ProcessOptions();
       
-      Bool_t Debug() const { return fgDEBUG; }
-      
+      Bool_t Debug() const;
+
+      enum EEstimator      { kMSE=0,kCE};        
+
    protected:
 
       virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
@@ -159,9 +164,15 @@ namespace TMVA {
       TObjArray*    fNetwork;         // TObjArray of TObjArrays representing network
       TObjArray*    fSynapses;        // array of pointers to synapses, no structural data
       TActivation*  fActivation;      // activation function to be used for hidden layers
+      TActivation*  fOutput;          // activation function to be used for output layers, depending on estimator
       TActivation*  fIdentity;        // activation for input and output layers
       TRandom3*     frgen;            // random number generator for various uses
       TNeuronInput* fInputCalculator; // input calculator for all neurons
+
+      std::vector<Int_t>        fRegulatorIdx;  //index to different priors from every synapses 
+      std::vector<Double_t>     fRegulators;    //the priors as regulator        
+      EEstimator                fEstimator; 
+      TString                   fEstimatorS;
 
       // monitoring histograms
       TH1F* fEstimatorHistTrain; // monitors convergence of training sample
@@ -172,6 +183,12 @@ namespace TMVA {
       std::vector<TH1*> fEpochMonHistS; // epoch monitoring hitograms for signal
       std::vector<TH1*> fEpochMonHistB; // epoch monitoring hitograms for background
       std::vector<TH1*> fEpochMonHistW; // epoch monitoring hitograms for weights
+
+      
+      // general
+      TMatrixD           fInvHessian;           // zjh
+      bool               fUseRegulator;         // zjh
+
 
    private:
       
@@ -200,11 +217,11 @@ namespace TMVA {
       TObjArray*              fInputLayer;      // cache this for fast access
       std::vector<TNeuron*>   fOutputNeurons;   // cache this for fast access
       TString                 fLayerSpec;       // layout specification option
-      
+      Int_t                   fRandomSeed;      // random seed for initial synapse weights
+
       // some static flags
       static const Bool_t fgDEBUG      = kTRUE;  // debug flag
-      static const Bool_t fgFIXED_SEED = kFALSE;  // fix rand generator seed
-          
+    
       ClassDef(MethodANNBase,0) // Base class for TMVA ANNs
    };
    

@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : Results                                                             *
+ * Class  : ResultsMulticlass                                                     *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -27,71 +27,73 @@
 
 #include <vector>
 
-#include "TH1.h"
-
-#include "TMVA/Results.h"
+#include "TMVA/ResultsMulticlass.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/DataSet.h"
 
 //_______________________________________________________________________
-TMVA::Results::Results( const DataSetInfo* dsi ) 
-   : fTreeType(Types::kTraining),
-     fDsi(dsi),
-     fStorage( new TList() ),
-     fHistAlias( new std::map<TString, TObject*> ),
-     fLogger( new MsgLogger("Results", kINFO) )
+TMVA::ResultsMulticlass::ResultsMulticlass( const DataSetInfo* dsi ) 
+   : Results( dsi ),
+     fLogger( new MsgLogger("ResultsMulticlass", kINFO) )
 {
    // constructor
-   fStorage->SetOwner();
 }
 
 //_______________________________________________________________________
-TMVA::Results::~Results() 
+TMVA::ResultsMulticlass::~ResultsMulticlass() 
 {
    // destructor
-
-   // delete result-histograms
-   delete fStorage;
-   delete fHistAlias;
    delete fLogger;
 }
 
 //_______________________________________________________________________
-void TMVA::Results::Store( TObject* obj, const char* alias )
+void TMVA::ResultsMulticlass::SetValue( std::vector<Float_t>& value, Int_t ievt )
 {
-   TListIter l(fStorage);
-   // check if object is already in list
-   while (void* p = (void*)l()) {
-      if(p==obj)
-         *fLogger << kFATAL << "Histogram pointer " << p << " already exists in results storage" << Endl;
-   }
-
-   TString as(obj->GetName());
-   if (alias!=0) as=TString(alias);
-   if (fHistAlias->find(as) != fHistAlias->end()) {
-      // alias exists
-      *fLogger << kFATAL << "Alias " << as << " already exists in results storage" << Endl;
-   }
-   if( obj->InheritsFrom("TH1") ) {
-      ((TH1*)obj)->SetDirectory(0);
-   }
-   fStorage->Add( obj );
-   fHistAlias->insert(std::pair<TString, TObject*>(as,obj));
+   if (ievt >= (Int_t)fMultiClassValues.size()) fMultiClassValues.resize( ievt+1 );
+   fMultiClassValues[ievt] = value; 
 }
 
-//_______________________________________________________________________
-TObject* TMVA::Results::GetObject(const TString & alias) const 
-{
-   std::map<TString, TObject*>::iterator it = fHistAlias->find(alias);
 
-   if (it != fHistAlias->end()) return it->second;
-
-   // alias does not exist
-   return 0;
-}
 
 
 //_______________________________________________________________________
-TH1* TMVA::Results::GetHist(const TString & alias) const 
+void  TMVA::ResultsMulticlass::MakeHistograms()
 {
-   return (TH1*)GetObject(alias);
+//    DataSet* ds = GetDataSet();
+//    ds->SetCurrentType( GetTreeType() );
+//    const DataSetInfo* dsi = GetDataSetInfo();
+
+//    TString name( Form("tgt_%d",tgtNum) );
+
+//    VariableInfo vinf = dsi->GetTargetInfo(tgtNum);
+//    Float_t xmin=0., xmax=0.;
+//    if (truncate){
+//      xmax = truncvalue;
+//    }
+//    else{
+//      for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
+//        Event* ev = ds->GetEvent(ievt);
+//        std::vector<Float_t> regVal = fMulticlassValues.at(ievt);
+//        Float_t val = regVal.at( tgtNum ) - ev->GetTarget( tgtNum );
+//        val *= val;
+//        xmax = val> xmax? val: xmax;
+//      } 
+//    }
+//    xmax *= 1.1;
+//    Int_t nbins = 500;
+//    TH1F* h = new TH1F( name, name, nbins, xmin, xmax);
+//    h->SetDirectory(0);
+//    h->GetXaxis()->SetTitle("Quadratic Deviation");
+//    h->GetYaxis()->SetTitle("Weighted Entries");
+
+//    for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
+//       Event* ev = ds->GetEvent(ievt);
+//       std::vector<Float_t> regVal = fMulticlassValues.at(ievt);
+//       Float_t val = regVal.at( tgtNum ) - ev->GetTarget( tgtNum );
+//       val *= val;
+//       Float_t weight = ev->GetWeight();
+//       if (!truncate || val<=truncvalue ) h->Fill( val, weight);
+//    } 
+//    return h;
 }
+

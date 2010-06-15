@@ -106,7 +106,6 @@
 
 #include "TMath.h"
 #include "Riostream.h"
-#include "TXMLEngine.h"
 
 #include "TMVA/VariableTransformBase.h"
 #include "TMVA/MethodFisher.h"
@@ -581,11 +580,11 @@ void TMVA::MethodFisher::AddWeightsXMLTo( void* parent ) const
 
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NCoeff", GetNvar()+1 );
-   void* coeffxml = gTools().xmlengine().NewChild(wght, 0, "Coefficient");
+   void* coeffxml = gTools().AddChild(wght, "Coefficient");
    gTools().AddAttr( coeffxml, "Index", 0   );
    gTools().AddAttr( coeffxml, "Value", fF0 );
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      coeffxml = gTools().xmlengine().NewChild( wght, 0, "Coefficient" );
+      coeffxml = gTools().AddChild( wght, "Coefficient" );
       gTools().AddAttr( coeffxml, "Index", ivar+1 );
       gTools().AddAttr( coeffxml, "Value", (*fFisherCoeff)[ivar] );
    }
@@ -599,14 +598,14 @@ void TMVA::MethodFisher::ReadWeightsFromXML( void* wghtnode )
    gTools().ReadAttr( wghtnode, "NCoeff", ncoeff );
    fFisherCoeff->resize(ncoeff-1);
 
-   void* ch = gTools().xmlengine().GetChild(wghtnode);
+   void* ch = gTools().GetChild(wghtnode);
    Double_t coeff;
    while (ch) {
       gTools().ReadAttr( ch, "Index", coeffidx );
       gTools().ReadAttr( ch, "Value", coeff    );
       if (coeffidx==0) fF0 = coeff;
       else             (*fFisherCoeff)[coeffidx-1] = coeff;
-      ch = gTools().xmlengine().GetNext(ch);
+      ch = gTools().GetNextChild(ch);
    }
 }
 

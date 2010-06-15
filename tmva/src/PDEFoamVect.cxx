@@ -32,24 +32,25 @@
 
 #define SW2 std::setprecision(7) << std::setw(12)
 
-ClassImp(TMVA::PDEFoamVect);
+ClassImp(TMVA::PDEFoamVect)
+
+TMVA::MsgLogger* TMVA::PDEFoamVect::fgLogger = 0;
 
 //_____________________________________________________________________
 TMVA::PDEFoamVect::PDEFoamVect()
    : TObject(),
      fDim(0),
-     fCoords(0),
-     fLogger( new MsgLogger("PDEFoamVect") )
+     fCoords(0)
 {
    // Default constructor for streamer
+   if (!fgLogger) fgLogger = new MsgLogger("PDEFoamVect");
 }
 
 //_____________________________________________________________________
 TMVA::PDEFoamVect::PDEFoamVect(Int_t n)
    : TObject(),
      fDim(n),
-     fCoords(0),
-     fLogger( new MsgLogger("PDEFoamVect") )
+     fCoords(0)
 {
    // User constructor creating n-dimensional vector
    // and allocating dynamically array of components
@@ -58,6 +59,9 @@ TMVA::PDEFoamVect::PDEFoamVect(Int_t n)
       fCoords = new Double_t[fDim];
       for (Int_t i=0; i<n; i++) *(fCoords+i)=0.0;
    }
+
+   if (!fgLogger) fgLogger = new MsgLogger("PDEFoamVect");
+
 }
 
 //_____________________________________________________________________
@@ -76,7 +80,6 @@ TMVA::PDEFoamVect::~PDEFoamVect()
    // Destructor
    delete [] fCoords; //  free(fCoords)
    fCoords=0;
-   delete fLogger;
 }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -66,17 +66,3 @@ TMVA::Config::~Config()
    delete fLogger;
 }
 
-//_______________________________________________________________________
-void TMVA::Config::DestroyInstance()
-{
-   // static function: destroy TMVA instance
-   if (fgConfigPtr != 0) { delete fgConfigPtr; fgConfigPtr = 0;}
-}
-
-//_______________________________________________________________________
-TMVA::Config& TMVA::Config::Instance()
-{
-   // static function: returns  TMVA instance
-   return fgConfigPtr ? *fgConfigPtr :*(fgConfigPtr = new Config());
-}
-

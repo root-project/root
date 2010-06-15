@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+// Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -12,6 +12,7 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch> - CERN, Switzerland           *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
@@ -46,8 +47,7 @@ TMVA::Event::Event()
      fClass(1),
      fWeight(1.0),
      fBoostWeight(1.0),
-     fDynamic(kFALSE),
-     fSignalClass( 100 ) // TODO: remove this.. see "IsSignal"
+     fDynamic(kFALSE)
 {
    // copy constructor
    fgCount++; 
@@ -66,8 +66,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fClass(cls),
      fWeight(weight),
      fBoostWeight(boostweight),
-     fDynamic(kFALSE),
-     fSignalClass( 100 ) // TODO: remove this.. see "IsSignal"
+     fDynamic(kFALSE)
 {
    // constructor
    fgCount++;
@@ -87,8 +86,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fClass(cls),
      fWeight(weight),
      fBoostWeight(boostweight),
-     fDynamic(kFALSE),
-     fSignalClass( 100 ) // TODO: remove this.. see "IsSignal"
+     fDynamic(kFALSE)
 {
    // constructor
    fgCount++;
@@ -106,8 +104,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
      fClass(cls),
      fWeight(weight),
      fBoostWeight(boostweight),
-     fDynamic(kFALSE),
-     fSignalClass( 100 ) // TODO: remove this.. see "IsSignal"
+     fDynamic(kFALSE)
 {
    // constructor
    fgCount++;
@@ -122,8 +119,7 @@ TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
      fClass(0),
      fWeight(0),
      fBoostWeight(0),
-     fDynamic(true),
-     fSignalClass( 100 ) // TODO: remove this.. see "IsSignal" ... !!!!!! NOT CLEAR TO ME WHAT VALUE TO SET HERE...
+     fDynamic(true)
 {
    // constructor for single events
    fgValuesDynamic = (std::vector<Float_t*>*) evdyn;
@@ -139,8 +135,7 @@ TMVA::Event::Event( const Event& event )
      fClass(event.fClass),
      fWeight(event.fWeight),
      fBoostWeight(event.fBoostWeight),
-     fDynamic(event.fDynamic),
-     fSignalClass( event.fSignalClass ) // TODO: remove this.. see "IsSignal"
+     fDynamic(event.fDynamic)
 {
    // copy constructor
    fgCount++; 
@@ -182,10 +177,14 @@ void TMVA::Event::CopyVarValues( const Event& other )
 {
    // copies only the variable values
    fValues      = other.fValues;
+   fTargets     = other.fTargets;
+   fSpectators  = other.fSpectators;
+
+   fVariableArrangement = other.fVariableArrangement;
+
    fClass       = other.fClass;
    fWeight      = other.fWeight;
    fBoostWeight = other.fBoostWeight;
-   fSignalClass = other.fSignalClass;      // TODO: remove this.. see "IsSignal"
 }
 
 //____________________________________________________________
@@ -224,10 +223,10 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
       assert(0);
    }
    if (fDynamic) {
-      if (fgValuesDynamic->size()-GetNSpectators() != fValues.size()) {
-         std::cout << "ERROR Event::GetValues() is trying to change the size of the variable vector, exiting ..." << std::endl;
-         assert(0);
-      }
+//       if (fgValuesDynamic->size()-GetNSpectators() != fValues.size()) {
+//          std::cout << "ERROR Event::GetValues() is trying to change the size of the variable vector, exiting ..." << std::endl;
+//          assert(0);
+//       }
       fValues.clear();
       for (std::vector<Float_t*>::const_iterator it = fgValuesDynamic->begin(); 
            it != fgValuesDynamic->end()-GetNSpectators(); it++) { 

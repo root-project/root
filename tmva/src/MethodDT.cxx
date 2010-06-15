@@ -269,8 +269,9 @@ TMVA::MethodDT::~MethodDT( void )
 //_______________________________________________________________________
 void TMVA::MethodDT::Train( void )
 {
+   TMVA::DecisionTreeNode::fgIsTraining=true;
    SeparationBase *qualitySepType = new GiniIndex();
-   fTree = new DecisionTree( fSepType, fNodeMinEvents, fNCuts, qualitySepType,
+   fTree = new DecisionTree( fSepType, fNodeMinEvents, fNCuts, 0, qualitySepType,
                              fRandomisedTrees, fUseNvars, 0 );
    if (fRandomisedTrees) Log()<<kWARNING<<" randomised Trees do not work yet in this framework," 
                                 << " as I do not know how to give each tree a new random seed, now they"
@@ -278,6 +279,7 @@ void TMVA::MethodDT::Train( void )
    fTree->SetAnalysisType( GetAnalysisType() );
 
    fTree->BuildTree(GetEventCollection(Types::kTraining));
+   TMVA::DecisionTreeNode::fgIsTraining=false;
 }
 
 //_______________________________________________________________________
@@ -450,7 +452,7 @@ Double_t TMVA::MethodDT::TestTreeQuality( DecisionTree *dt )
    for (Long64_t ievt=0; ievt<Data()->GetNEvents(); ievt++)
       {
          Event * ev = Data()->GetEvent(ievt);
-         if ((dt->CheckEvent(*ev) > dt->GetNodePurityLimit() ) == ev->IsSignal()) SumCorrect+=ev->GetWeight();
+         if ((dt->CheckEvent(*ev) > dt->GetNodePurityLimit() ) == DataInfo().IsSignal(ev)) SumCorrect+=ev->GetWeight();
          else SumWrong+=ev->GetWeight();
       }
    Data()->SetCurrentType(Types::kTraining);

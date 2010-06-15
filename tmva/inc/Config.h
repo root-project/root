@@ -52,8 +52,8 @@ namespace TMVA {
                
    public:
 
-      static Config& Instance();
-      static void    DestroyInstance();
+      static Config& Instance() { return fgConfigPtr ? *fgConfigPtr : *(fgConfigPtr = new Config()); }
+      static void    DestroyInstance() { if (fgConfigPtr != 0) { delete fgConfigPtr; fgConfigPtr = 0; } }
 
       Bool_t UseColor() const { return fUseColoredConsole; }
       void   SetUseColor( Bool_t uc ) { fUseColoredConsole = uc; }

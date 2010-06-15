@@ -259,7 +259,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::MethodBase* method )
       Bool_t isSignalType = mbase->IsSignalLike();
       
       // to prevent code duplication
-      if (isSignalType == ev->IsSignal())
+      if (isSignalType == DataInfo().IsSignal(ev))
          correctSelected.push_back( kTRUE );
       else {
          sumwfalse += ev->GetBoostWeight();

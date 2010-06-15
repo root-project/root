@@ -60,6 +60,7 @@
 //_______________________________________________________________________
 TMVA::DataSetInfo::DataSetInfo(const TString& name) 
    : TObject(),
+     fDataSetManager(NULL),
      fName(name),
      fDataSet( 0 ),
      fNeedsRebuilding( kTRUE ),
@@ -72,6 +73,7 @@ TMVA::DataSetInfo::DataSetInfo(const TString& name)
      fOwnRootDir(0),
      fVerbose( kFALSE ),
      fSignalClass(0),
+     fTargetsForMulticlass(0),
      fLogger( new MsgLogger("DataSetInfo", kINFO) )
 {
    // constructor
@@ -82,9 +84,13 @@ TMVA::DataSetInfo::DataSetInfo(const TString& name)
 TMVA::DataSetInfo::~DataSetInfo() 
 {
    // destructor
-   if(fDataSet!=0) delete fDataSet;
+   ClearDataSet();
    
-   for(UInt_t i=0; i<fClasses.size(); i++) delete fClasses[i];
+   for(UInt_t i=0, iEnd = fClasses.size(); i<iEnd; ++i) {
+      delete fClasses[i];
+   }
+
+   delete fTargetsForMulticlass;
 
    delete fLogger;
 }
@@ -144,7 +150,17 @@ void TMVA::DataSetInfo::PrintClasses() const
 //_______________________________________________________________________
 Bool_t TMVA::DataSetInfo::IsSignal( const TMVA::Event* ev ) const 
 {
-    return (ev->GetClass()  == fSignalClass); 
+   return (ev->GetClass()  == fSignalClass); 
+}
+
+//_______________________________________________________________________
+std::vector<Float_t>*  TMVA::DataSetInfo::GetTargetsForMulticlass( const TMVA::Event* ev ) 
+{
+   if( !fTargetsForMulticlass ) fTargetsForMulticlass = new std::vector<Float_t>( GetNClasses() );
+//   fTargetsForMulticlass->resize( GetNClasses() );
+   fTargetsForMulticlass->assign( GetNClasses(), 0.0 );
+   fTargetsForMulticlass->at( ev->GetClass() ) = 1.0;
+   return fTargetsForMulticlass; 
 }
 
 
@@ -397,7 +413,13 @@ TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const
    // returns data set
    if (fDataSet==0 || fNeedsRebuilding) {
       if(fDataSet!=0) ClearDataSet();
-      fDataSet = DataSetManager::Instance().CreateDataSet(GetName());
+//      fDataSet = DataSetManager::Instance().CreateDataSet(GetName()); //DSMTEST replaced by following lines
+      if( !fDataSetManager )
+	 Log() << kFATAL << "DataSetManager has not been set in DataSetInfo (GetDataSet() )." << Endl;
+      fDataSet = fDataSetManager->CreateDataSet(GetName());
+
+
+
       fNeedsRebuilding = kFALSE;
    }
    return fDataSet;

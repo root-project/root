@@ -133,7 +133,7 @@ namespace TMVA {
       // set the pointer to the Parent Tree to which the Node belongs 
       void SetParentTree(TMVA::BinaryTree* t) {fParentTree = t;} 
 
-      int GetCount(){return fgCount;}
+      int GetCount();
 
       virtual Bool_t ReadDataRecord( std::istream&, UInt_t tmva_Version_Code = TMVA_VERSION_CODE ) = 0;
       virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE  ) = 0;

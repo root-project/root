@@ -82,6 +82,7 @@ namespace TMVA {
       // the constructur needed for constructing the decision tree via training with events
       DecisionTree( SeparationBase *sepType, Int_t minSize, 
                     Int_t nCuts,
+                    UInt_t cls =0,
                     Bool_t randomisedTree=kFALSE, Int_t useNvars=0, 
                     UInt_t nNodesMax=999999, UInt_t nMaxDepth=9999999, 
                     Int_t iSeed=fgRandomSeed, Float_t purityLimit=0.5,
@@ -99,7 +100,7 @@ namespace TMVA {
       // building of a tree by recursivly splitting the nodes 
 
       UInt_t BuildTree( const EventList & eventSample, 
-                       DecisionTreeNode *node = NULL);
+                        DecisionTreeNode *node = NULL);
       // determine the way how a node is split (which variable, which cut value)
 
       Float_t TrainNode( const EventList & eventSample,  DecisionTreeNode *node ) { return TrainNodeFast( eventSample, node ); }
@@ -219,6 +220,7 @@ namespace TMVA {
 
       UInt_t     fNNodesMax;     // max # of nodes
       UInt_t     fMaxDepth;      // max depth
+      UInt_t     fClass;         // class which is treated as signal when building the tree
 
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
       Int_t     fTreeID;        // just an ID number given to the tree.. makes debugging easier as tree knows who he is.

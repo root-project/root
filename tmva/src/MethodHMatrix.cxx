@@ -199,7 +199,7 @@ void TMVA::MethodHMatrix::ComputeCovariance( Bool_t isSignal, TMatrixD* mat )
       // in case event with neg weights are to be ignored
       if (IgnoreEventsWithNegWeightsInTraining() && weight <= 0) continue;
 
-      if (ev->IsSignal() != isSignal) continue;
+      if (DataInfo().IsSignal(ev) != isSignal) continue;
 
       // event is of good type
       sumOfWeights += weight;
@@ -312,7 +312,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
 
 //_______________________________________________________________________
 void TMVA::MethodHMatrix::AddWeightsXMLTo( void* parent ) const {
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* wght = gTools().AddChild(parent, "Weights");
    gTools().WriteTVectorDToXML(wght,"VecMeanS",fVecMeanS); 
    gTools().WriteTVectorDToXML(wght,"VecMeanB", fVecMeanB);
    gTools().WriteTMatrixDToXML(wght,"InvHMatS",fInvHMatrixS); 
@@ -321,13 +321,13 @@ void TMVA::MethodHMatrix::AddWeightsXMLTo( void* parent ) const {
 }
 
 void TMVA::MethodHMatrix::ReadWeightsFromXML( void* wghtnode ){
-   void* descnode = gTools().xmlengine().GetChild(wghtnode);
+   void* descnode = gTools().GetChild(wghtnode);
    gTools().ReadTVectorDFromXML(descnode,"VecMeanS",fVecMeanS);
-   descnode = gTools().xmlengine().GetNext(descnode);
+   descnode = gTools().GetNextChild(descnode);
    gTools().ReadTVectorDFromXML(descnode,"VecMeanB", fVecMeanB);
-   descnode = gTools().xmlengine().GetNext(descnode);
+   descnode = gTools().GetNextChild(descnode);
    gTools().ReadTMatrixDFromXML(descnode,"InvHMatS",fInvHMatrixS); 
-   descnode = gTools().xmlengine().GetNext(descnode);
+   descnode = gTools().GetNextChild(descnode);
    gTools().ReadTMatrixDFromXML(descnode,"InvHMatB",fInvHMatrixB);
 }
 

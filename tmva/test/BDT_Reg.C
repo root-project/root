@@ -403,10 +403,10 @@ void StatDialogBDT::DrawTree( Int_t itree )
    signalleaf->SetBorderSize(1);
    signalleaf->SetFillStyle(1);
    signalleaf->SetFillColor( kSigColorF );
-   signalleaf->AddText("Signal Leaf Nodes");
+   signalleaf->AddText("Leaf Nodes");
    signalleaf->SetTextColor( kSigColorT );
    signalleaf->Draw();
-
+/*
    ydown = ydown - ystep/2.5 -dy;
    yup   = yup - ystep/2.5 -dy;
    TPaveText *backgroundleaf = new TPaveText(0.02,ydown,0.15,yup, "NDC");
@@ -417,7 +417,7 @@ void StatDialogBDT::DrawTree( Int_t itree )
    backgroundleaf->AddText("Backgr. Leaf Nodes");
    backgroundleaf->SetTextColor( kBkgColorT );
    backgroundleaf->Draw();
-
+*/
    fCanvas->Update();
    TString fname = Form("plots/%s_%i", fMethName.Data(), itree );
    cout << "--- Creating image: " << fname << endl;

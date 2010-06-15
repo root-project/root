@@ -37,7 +37,7 @@
 #include "TMVA/PDEFoamDistr.h"
 #endif
 
-ClassImp(TMVA::PDEFoamDistr);
+ClassImp(TMVA::PDEFoamDistr)
 
 //_____________________________________________________________________
 TMVA::PDEFoamDistr::PDEFoamDistr() 
@@ -72,7 +72,8 @@ TMVA::PDEFoamDistr::PDEFoamDistr(const PDEFoamDistr &distr)
      fBst             (distr.fBst),
      fDensityCalc     (kEVENT_DENSITY), // default: fill event density to BinarySearchTree
      fSignalClass     (distr.fSignalClass),
-     fBackgroundClass (distr.fBackgroundClass)
+     fBackgroundClass (distr.fBackgroundClass),
+     fLogger( new MsgLogger("PDEFoamDistr"))
 {
    // Copy constructor
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
@@ -123,11 +124,10 @@ void TMVA::PDEFoamDistr::FillBinarySearchTree( const Event* ev, EFoamType ft, Bo
       return;
 
    TMVA::Event *event = new TMVA::Event(*ev);
-   event->SetSignalClass( fSignalClass );
-
+ 
    // set event class and normalization
    if (ft==kSeparate || ft==kDiscr){
-      event->SetClass(ev->IsSignal() ? fSignalClass : fBackgroundClass);
+      event->SetClass(ev->GetClass()==fSignalClass ? fSignalClass : fBackgroundClass);
    } else if (ft==kMultiTarget){
       // since in multi target regression targets are handled like
       // variables, remove targets and add them to the event variabels

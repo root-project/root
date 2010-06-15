@@ -26,8 +26,6 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#define ALTERNATIVE_EVENT_VECTOR_BUILDING 1
-
 #ifndef ROOT_TMVA_DataSetFactory
 #define ROOT_TMVA_DataSetFactory
 
@@ -239,30 +237,7 @@ namespace TMVA {
 
       DataSet*  BuildInitialDataSet( DataSetInfo&, TMVA::DataInputHandler& );
       DataSet*  BuildDynamicDataSet( DataSetInfo& );
-
-#ifndef ALTERNATIVE_EVENT_VECTOR_BUILDING
-
-      void      BuildEventVector   ( DataSetInfo& dsi, 
-                                     DataInputHandler& dataInput, 
-                                     std::vector< std::vector< Event* > >& tmpEventVector, 
-                                     std::vector<Double_t>& sumOfWeights, 
-                                     std::vector<Double_t>& nTempEvents, 
-                                     std::vector<Double_t>& renormFactor,
-                                     std::vector< std::vector< std::pair< Long64_t, Types::ETreeType > > >& userDefinedEventTypes );
-      
-      DataSet*  MixEvents          ( DataSetInfo& dsi, 
-                                     std::vector< std::vector< Event* > >& tmpEventVector, 
-                                     std::vector< std::pair< Int_t, Int_t > >& nTrainTestEvents, 
-                                     const TString& splitMode, UInt_t splitSeed, 
-                                     std::vector<Double_t>& renormFactor,
-                                     std::vector< std::vector< std::pair< Long64_t, Types::ETreeType > > >& userDefinedEventTypes );
-
-      void      InitOptions        ( DataSetInfo& dsi, 
-                                     std::vector< std::pair< Int_t, Int_t > >& nTrainTestEvents, 
-                                     TString& normMode, UInt_t& splitSeed, TString& splitMode );
-      
-
-#else
+     
       // ---------- new versions
       void      BuildEventVector    ( DataSetInfo& dsi, 
                                       DataInputHandler& dataInput, 
@@ -275,7 +250,7 @@ namespace TMVA {
                                       const TString& mixMode, 
                                       const TString& normMode, 
                                       UInt_t splitSeed);
-
+      
       void      RenormEvents        ( DataSetInfo& dsi, 
                                       EventVectorOfClassesOfTreeType& tmpEventVector,
                                       const TString& normMode );
@@ -286,7 +261,6 @@ namespace TMVA {
       
 
       // ------------------------
-#endif
 
       // auxiliary functions to compute correlations
       TMatrixD* CalcCorrelationMatrix( DataSet*, const UInt_t classNumber );

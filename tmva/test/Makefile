@@ -18,7 +18,7 @@ PUBLISH = ../www
 
 include nightlyClassifiers.make
 
-all: $(BINS)
+all: $(TMVALIB) $(BINS)
 
 run: TMVA.root 
 
@@ -79,7 +79,7 @@ $(PUBLISH)/uptodate: install TMVApp.root ../test/CompareHistsTrainAndApplied.C
 
 
 
-$(BINS): % : %.cxx $(TMVALIB)
+$(BINS): % : %.cxx ../inc/*.h
 	@echo -n "Building $@ ... "
 	$(CXX) $(CCFLAGS) $< $(INCLUDE) $(LIBS) -g -o $@
 	@echo "Done"

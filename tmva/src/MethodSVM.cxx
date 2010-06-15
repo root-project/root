@@ -207,7 +207,7 @@ void TMVA::MethodSVM::Train()
 void TMVA::MethodSVM::AddWeightsXMLTo( void* parent ) const 
 {
    // write configuration to xml file
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr(wght,"fBparm",fBparm);
    gTools().AddAttr(wght,"fGamma",fGamma);
    gTools().AddAttr(wght,"NSupVec",fSupportVectors->size());
@@ -224,10 +224,10 @@ void TMVA::MethodSVM::AddWeightsXMLTo( void* parent ) const
       gTools().WriteTVectorDToXML(wght,"SupportVector",&temp);
    }
    // write max/min data values
-   void* maxnode = gTools().xmlengine().NewChild(wght, 0, "Maxima");
+   void* maxnode = gTools().AddChild(wght, "Maxima");
    for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
       gTools().AddAttr(maxnode, "Var"+gTools().StringFromInt(ivar), GetXmax(ivar));
-   void* minnode = gTools().xmlengine().NewChild(wght, 0, "Minima");
+   void* minnode = gTools().AddChild(wght, "Minima");
    for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
       gTools().AddAttr(minnode, "Var"+gTools().StringFromInt(ivar), GetXmin(ivar));
 }
@@ -257,7 +257,7 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
       delete fSupportVectors;
    }
    fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
-   void* supportvectornode = gTools().xmlengine().GetChild(wghtnode);
+   void* supportvectornode = gTools().GetChild(wghtnode);
    for (UInt_t ievt = 0; ievt < fNsupv; ievt++) {
       TVectorD temp(GetNvar()+4);
       gTools().ReadTVectorDFromXML(supportvectornode,"SupportVector",&temp);
@@ -269,13 +269,13 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
          (*svector)[ivar]=temp[ivar+4];
          
       fSupportVectors->push_back(new SVEvent(svector,alpha,alpha_p,typeFlag));
-      supportvectornode = gTools().xmlengine().GetNext(supportvectornode);
+      supportvectornode = gTools().GetNextChild(supportvectornode);
    }
    
    void* maxminnode = supportvectornode;
    for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
       gTools().ReadAttr( maxminnode,"Var"+gTools().StringFromInt(ivar),(*fMaxVars)[ivar]);
-   maxminnode = gTools().xmlengine().GetNext(maxminnode);
+   maxminnode = gTools().GetNextChild(maxminnode);
    for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
       gTools().ReadAttr( maxminnode,"Var"+gTools().StringFromInt(ivar),(*fMinVars)[ivar]);
    if (fSVKernelFunction!=0) delete fSVKernelFunction;

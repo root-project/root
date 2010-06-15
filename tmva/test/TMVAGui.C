@@ -54,12 +54,12 @@ void TMVAGui( const char* fName = "TMVA.root" )
 
    TString curMacroPath(gROOT->GetMacroPath());
    // uncomment next line for macros submitted to next root version
-   // gROOT->SetMacroPath(curMacroPath+":$ROOTSYS/tmva/test/:");
+   gROOT->SetMacroPath(curMacroPath+":./:$ROOTSYS/tmva/test/:");
    
    // for the sourceforge version, including $ROOTSYS/tmva/test in the
    // macro path is a mistake, especially if "./" was not part of path
    // add ../macros to the path (comment out next line for the ROOT version of TMVA)
-   gROOT->SetMacroPath(curMacroPath+":../macros:");
+   // gROOT->SetMacroPath(curMacroPath+":../macros:");
    
    cout << "--- Launch TMVA GUI to view input file: " << fName << endl;
 

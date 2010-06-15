@@ -376,7 +376,7 @@ Bool_t TMVA::RuleFitAPI::WriteTrain()
          WriteFloat(fx,&x,1);
          if (ivar==0) {
             w = ev->GetWeight();
-            y = ev->IsSignal() ? 1.0 : -1.0;
+            y = fMethodRuleFit->DataInfo().IsSignal(ev)? 1.0 : -1.0;
             WriteFloat(fy,&y,1);
             WriteFloat(fw,&w,1);
          }
