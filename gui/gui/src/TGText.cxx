@@ -522,11 +522,8 @@ next:
       }
       tbuf = s+1;
    } else {
-      if ((Int_t)strlen(tbuf) >= kMaxLen) {
-         strncpy(buf, tbuf, kMaxLen-1);
-         buf[kMaxLen-1] = 0;
-      } else
-         strcpy(buf, tbuf);
+      strncpy(buf, tbuf, kMaxLen-1);
+      buf[kMaxLen-1] = 0;
       finished = kTRUE;
    }
 
