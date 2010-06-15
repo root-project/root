@@ -2183,14 +2183,14 @@ void TGTextEdit::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    TGText *txt = GetText();
    Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;
-   char fn[kMAXPATHLEN];
+   TString fn;
 
    if (fromfile) {
       const char *filename = txt->GetFileName();
-      sprintf(fn, "%s", gSystem->ExpandPathName(gSystem->UnixPathName(filename)));
+      fn = gSystem->ExpandPathName(gSystem->UnixPathName(filename));
    } else {
-      sprintf(fn, "Txt%s", GetName()+5);
-      txt->Save(fn);
+      fn = TString::Format("Txt%s", GetName()+5);
+      txt->Save(fn.Data());
    }
-   out << "   " << GetName() << "->LoadFile(" << quote << fn << quote << ");" << endl;
+   out << "   " << GetName() << "->LoadFile(" << quote << fn.Data() << quote << ");" << endl;
 }
