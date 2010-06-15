@@ -1573,9 +1573,9 @@ int TGHtml::GetColorByName(const char *zColor)
          if (!isxdigit(zColor[i])) break;
       }
       if (i == n) {
-         sprintf(zAltColor, "#%s", zColor);
+         snprintf(zAltColor, 15, "#%s", zColor);
       } else {
-         strcpy(zAltColor, zColor);
+         strncpy(zAltColor, zColor, 15);
       }
       name = GetUid(zAltColor);
    } else {

@@ -947,6 +947,7 @@ makeMarkupEntry:
                pIsInNoScript = 1;
             case Html_SCRIPT:
                pIsInScript = 1;
+               // fallthrough
             case Html_STYLE:
                fPScript = (TGHtmlScript *) pElem;
                break;
@@ -1432,7 +1433,7 @@ char *TGHtml::GetTokenName(TGHtmlElement *p)
          } else {
             zName = "Unknown";
          }
-         strcpy(zBuf, zName);
+         strncpy(zBuf, zName, 199);
          break;
    }
 

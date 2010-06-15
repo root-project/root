@@ -29,6 +29,7 @@
 #include "Riostream.h"
 #include "TGHtmlBrowser.h"
 #include "TGText.h"
+#include "snprintf.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -354,7 +355,7 @@ void TGHtmlBrowser::Selected(const char *uri)
       // special case: single picture
       fHtml->Clear();
       char imgHtml[1024];
-      sprintf(imgHtml, "<IMG src=\"%s\"> ", surl.Data());
+      snprintf(imgHtml, 1000, "<IMG src=\"%s\"> ", surl.Data());
       fHtml->ParseText(imgHtml);
       fHtml->SetBaseUri(url.GetUrl());
       fURL->SetText(surl.Data());
