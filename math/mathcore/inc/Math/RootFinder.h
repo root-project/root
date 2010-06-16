@@ -139,11 +139,11 @@ namespace ROOT {
          }   
 
          template<class Function, class Derivative> 
-         bool Solve(Function f, Derivative d, double start,
+         bool Solve(Function &f, Derivative &d, double start,
                    int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
          
          template<class Function> 
-         bool Solve(Function f, double min, double max, 
+         bool Solve(Function &f, double min, double max, 
                    int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
 
          /** 
@@ -229,7 +229,7 @@ namespace ROOT {
 #endif
 
 template<class Function, class Derivative> 
-bool ROOT::Math::RootFinder::Solve(Function f, Derivative d, double start,
+bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,
                                   int maxIter, double absTol, double relTol)
 {
    if (!fSolver) return false; 
@@ -240,11 +240,11 @@ bool ROOT::Math::RootFinder::Solve(Function f, Derivative d, double start,
 }
          
 template<class Function> 
-bool ROOT::Math::RootFinder::Solve(Function f, double min, double max, 
+bool ROOT::Math::RootFinder::Solve(Function &f, double min, double max, 
                                   int maxIter, double absTol, double relTol)
 {
    if (!fSolver) return false; 
-   ROOT::Math::WrappedFunction<Function> wf(f); 
+   ROOT::Math::WrappedFunction<Function &> wf(f); 
    bool ret = fSolver->SetFunction(wf, min, max);
    if (!ret) return false;
    return Solve(maxIter, absTol, relTol);
