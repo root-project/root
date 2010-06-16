@@ -147,8 +147,9 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   setValueDirty() ;
   setShapeDirty() ;
 
-  setAttribute(Form("CloneOf(%08x)",&other)) ;
-
+  //setAttribute(Form("CloneOf(%08x)",&other)) ;
+  //cout << "RooAbsArg::cctor(" << this << ") #bools = " << _boolAttrib.size() << " #strings = " << _stringAttrib.size() << endl ;
+  
   RooTrace::create(this) ;
 }
 
