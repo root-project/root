@@ -33,7 +33,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   graphs/graphstruct \
   html/% \
   math/Bessel math/LegendreAssoc math/Legendre math/mathmoreIntegration \
-  math/normalDist math/tStudent math/testUnfold2 \
+  math/normalDist math/tStudent math/testUnfold2 math/pca \
   net/% \
   proof/% \
   pythia/% \
