@@ -37,6 +37,7 @@
 
 #include "TString.h"
 #include <vector>
+#include <cmath>
 #include "TTree.h"
 #include "Riostream.h"
 #include "TFitter.h"
@@ -474,7 +475,7 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
       //zjh+
       if (dError<0) Log()<<kWARNING<<"\nnegative dError=" <<dError<<Endl;
       AccuError+=dError;
-      if (fabs(dError)>0.0001) RegUpdateCD=0;
+      if (std::abs(dError)>0.0001) RegUpdateCD=0;
       
       if ( fUseRegulator && RegUpdateTimes<fUpdateLimit && RegUpdateCD>=((0.4*fResetStep)>50?50:(0.4*fResetStep)) && i<0.8*nEpochs && AccuError>0.01 ) {
 	     Log()<<kDEBUG <<Endl;
