@@ -56,11 +56,11 @@
 #endif
 
 namespace TMVA {
-   
+
    class SeparationBase;
-   
+
    class MethodBDT : public MethodBase {
-      
+
    public:
       // constructor for training and reading
       MethodBDT( const TString& jobName,
@@ -159,7 +159,7 @@ namespace TMVA {
 
       // adaboost adapted to regression
       Double_t AdaBoostR2( std::vector<TMVA::Event*>, DecisionTree *dt );
-      
+
       // binomial likelihood gradient boost for classification
       // (see Friedman: "Greedy Function Approximation: a Gradient Boosting Machine"
       // Technical report, Dept. of Statistics, Stanford University)
@@ -167,9 +167,9 @@ namespace TMVA {
       Double_t GradBoostRegression(std::vector<TMVA::Event*>, DecisionTree *dt );
       void InitGradBoost( std::vector<TMVA::Event*>);
       void UpdateTargets( std::vector<TMVA::Event*>, UInt_t cls = 0);
-      void UpdateTargetsRegression( std::vector<TMVA::Event*>,Bool_t first=kFALSE);    
+      void UpdateTargetsRegression( std::vector<TMVA::Event*>,Bool_t first=kFALSE);
       Double_t GetGradBoostMVA(TMVA::Event& e, UInt_t nTrees);
-      void GetRandomSubSample();  
+      void GetRandomSubSample();
       Double_t GetWeightedQuantile(std::vector<std::pair<Double_t, Double_t> > vec, const Double_t quantile, const Double_t SumOfWeights = 0.0);
 
       std::vector<TMVA::Event*>       fEventSample;     // the training events
@@ -186,7 +186,7 @@ namespace TMVA {
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
       Double_t                        fSampleFraction;  // fraction of events used for bagged grad boost
       Double_t                        fSumOfWeights;    // sum of all event weights
-      std::vector<pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals      
+      std::vector<std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
       std::map< TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
 
       //options for the decision Tree
@@ -199,7 +199,7 @@ namespace TMVA {
       Double_t                        fNodePurityLimit; // purity limit for sig/bkg nodes
       Bool_t                          fUseWeightedTrees;// use average classification from the trees, or have the individual trees trees in the forest weighted (e.g. log(boostweight) from AdaBoost
       UInt_t                          fNNodesMax;       // max # of nodes
-      UInt_t                          fMaxDepth;        // max depth 
+      UInt_t                          fMaxDepth;        // max depth
 
 
       //some histograms for monitoring
@@ -215,7 +215,7 @@ namespace TMVA {
       Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample
       Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
       UInt_t                           fUseNvars;        // the number of variables used in the randomised tree splitting
-      UInt_t                           fUseNTrainEvents; // number of randomly picked training events used in randomised (and bagged) trees 
+      UInt_t                           fUseNTrainEvents; // number of randomly picked training events used in randomised (and bagged) trees
 
       std::vector<Double_t>            fVariableImportance; // the relative importance of the different variables
 
