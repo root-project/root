@@ -543,7 +543,7 @@ void TMVA::MethodFDA::CalculateMulticlassValues( const TMVA::Event*& evt, std::v
 //    char inp;
 //    std::cin >> inp;
 
-   Double_t sum;
+   Double_t sum=0;
    for( Int_t dim = 0; dim < fOutputDimensions; ++dim ){ // check for all other dimensions (=classes)
       Int_t offset = dim*fNPars;
       Double_t value = InterpretFormula( evt, parameters.begin()+offset, parameters.begin()+offset+fNPars );
