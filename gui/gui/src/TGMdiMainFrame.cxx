@@ -517,7 +517,8 @@ void TGMdiMainFrame::UpdateWinListMenu()
 {
    // Update MDI menu entries with current list of MDI child windows.
 
-   char buf[256], scut;
+   TString buf;
+   char scut;
    TGMdiFrameList *travel;
    const TGPicture *pic;
 
@@ -537,12 +538,12 @@ void TGMdiMainFrame::UpdateWinListMenu()
    for (travel = fChildren; travel; travel = travel->GetNext()) {
       scut++;
       if (scut == ('9' + 1)) scut = 'A';
-      sprintf(buf, "&%c. %s", scut, travel->GetDecorFrame()->GetWindowName());
+      buf = TString::Format("&%c. %s", scut, travel->GetDecorFrame()->GetWindowName());
       if (travel->GetDecorFrame()->GetMdiButtons() & kMdiMenu)
          pic = travel->GetDecorFrame()->GetWindowIcon();
       else
          pic = 0;
-      fWinListMenu->AddEntry(new TGHotString(buf), travel->GetDecorFrame()->GetId(), 0, pic);
+      fWinListMenu->AddEntry(new TGHotString(buf.Data()), travel->GetDecorFrame()->GetId(), 0, pic);
    }
 
    if (fCurrent)
