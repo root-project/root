@@ -98,8 +98,8 @@ const char *TRootDialog::GetParameters()
    // Get parameter string (called by contextmenu after OK or Apply has
    // been selected).
 
-   static char params[1024];
-   char param[256];
+   static TString params;
+   TString param;
 
    TObjString   *str;
    TObject      *obj;
@@ -110,7 +110,7 @@ const char *TRootDialog::GetParameters()
    else
       selfobjpos = -1;
 
-   params[0] = 0;
+   params.Clear();
    TIter next(fWidgets);
    Int_t nparam = 0;
 
@@ -131,33 +131,34 @@ const char *TRootDialog::GetParameters()
 
       // if necessary, replace the selected object by it's address
       if (selfobjpos == nparam-1) {
-         if (params[0]) strcat(params, ",");
-         sprintf(param,"(TObject*)0x%lx",
+         if (params.Length()) params += ",";
+         param = TString::Format("(TObject*)0x%lx",
                (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
-         strcat(params,param);
+         params += param;
       }
 
-      if (params[0]) strcat(params, ",");
+      if (params.Length()) params += ",";
       if (data) {
          if (!strncmp(type, "char*", 5))
-            sprintf(param, "\"%s\"", data);
+            param = TString::Format("\"%s\"", data);
          else
-            strcpy(param, data);
+            param = data;
       } else
-         strcpy(param, "0");
+         param = "0";
 
-      strcat(params, param);
+      params += param;
    }
 
    // if selected object is the last argument, have to insert it here
    if (selfobjpos == nparam) {
-      if (params[0]) strcat(params, ",");
-      sprintf(param,"(TObject*)0x%lx",
+      if (params.Length()) params += ",";
+      param = TString::Format("(TObject*)0x%lx",
             (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
-      strcat(params, param);
+      params += param;
    }
 
-   return params;
+   printf("TRootDialog::GetParameters() = %s\n", params.Data());
+   return params.Data();
 }
 
 //______________________________________________________________________________
