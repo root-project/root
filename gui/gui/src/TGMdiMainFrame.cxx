@@ -1116,11 +1116,9 @@ void TGMdiMainFrame::CloseAll()
    // Close all MDI child windows.
 
    TGMdiFrameList *tmp, *travel = fChildren;
-   TGMdiFrame *mdi;
 
    while (travel) {
       tmp = travel->GetNext();
-      mdi = travel->GetDecorFrame()->GetMdiFrame();
       SetCurrent(travel);
       Close(GetCurrent());
       travel = tmp;

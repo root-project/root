@@ -2888,6 +2888,7 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
       fKeyNavigate = kTRUE;
       if (event->fType == kGKeyPress) {
          Event_t ev;
+         ev.fX = ev.fY = 1;
          UInt_t keysym;
          char tmp[2];
          
