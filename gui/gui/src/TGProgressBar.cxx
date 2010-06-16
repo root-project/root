@@ -299,14 +299,14 @@ void TGHProgressBar::DoRedraw()
    }
 
    if (fShowPos) {
-      char buf[256];
+      TString buf;
       if (fPercent)
-         sprintf(buf, "%d%%", Int_t((fPos-fMin)/(fMax-fMin)*100.));
+         buf = TString::Format("%d%%", Int_t((fPos-fMin)/(fMax-fMin)*100.));
       else
-         sprintf(buf, fFormat.Data(), fPos);
+         buf = TString::Format(fFormat.Data(), fPos);
 
       Int_t x, y, max_ascent, max_descent;
-      UInt_t twidth  = gVirtualX->TextWidth(fFontStruct, buf, strlen(buf));
+      UInt_t twidth  = gVirtualX->TextWidth(fFontStruct, buf.Data(), buf.Length());
       gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
       UInt_t theight = max_ascent + max_descent;
 
@@ -318,7 +318,7 @@ void TGHProgressBar::DoRedraw()
                               fWidth - pospix - fBorderWidth,
                               fBarWidth - (fBorderWidth << 1));
 
-      gVirtualX->DrawString(fId, fNormGC, x, y + max_ascent, buf, strlen(buf));
+      gVirtualX->DrawString(fId, fNormGC, x, y + max_ascent, buf.Data(), buf.Length());
    }
 
    fDrawBar = kFALSE;
