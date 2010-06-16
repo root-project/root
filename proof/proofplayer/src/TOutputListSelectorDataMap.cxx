@@ -141,7 +141,7 @@ void TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const char
    char **p3pointer = (char**)(*ppointer);
    if (p3pointer) {
       // don't add member pointing to NULL
-      fMap.Add((Long64_t)p3pointer, (Long64_t)dm);
+      fMap.Add((Long64_t)(ptrdiff_t)p3pointer, (Long64_t)(ptrdiff_t)dm);
       if (name[0] == '*') ++name;
       PDB(kOutput,1) fOwner.Info("Init()", "considering data member `%s'", name);
    }
@@ -204,7 +204,7 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
    TIter iOutput(outList);
    TObject* output;
    while ((output = iOutput())) {
-      TDataMember* dm = (TDataMember*) cdm.GetMemberPointers().GetValue((Long64_t)output);
+      TDataMember* dm = (TDataMember*) (ptrdiff_t)cdm.GetMemberPointers().GetValue((Long64_t)(ptrdiff_t)output);
       if (dm) {
          fMap->Add(new TNamed(dm->GetName(), output->GetName()));
          PDB(kOutput,1) Info("Init()","Data member `%s' corresponds to output `%s'",
