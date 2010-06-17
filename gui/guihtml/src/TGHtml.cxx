@@ -1475,16 +1475,16 @@ TGFont *TGHtml::GetFont(int iFont)
       snprintf(name, 200, familyStr, size);
 
       // Get the named font
-      fAFont[iFont] = fClient->GetFont(name);\
+      fAFont[iFont] = fClient->GetFont(name);
 
       if (fAFont[iFont] == 0) {
          fprintf(stderr, "TGHtml: could not get font \"%s\", trying fixed\n",
-                      name);
+                 name);
          fAFont[iFont] = fClient->GetFont("fixed");
       }
-      if (fAFont[iFont]==0 ){
+      if (fAFont[iFont] == 0 ){
          fprintf(stderr, "TGHtml: could not get font \"fixed\", trying "
-                      "\"helvetica -12\"\n");
+                 "\"helvetica -12\"\n");
          fAFont[iFont] = fClient->GetFont("helvetica -12");
       }
       FontSetValid(iFont);
