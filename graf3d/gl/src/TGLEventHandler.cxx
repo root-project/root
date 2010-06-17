@@ -820,14 +820,13 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
             break;
 
             // Toggle debugging mode
-         case kKey_D:
          case kKey_d:
             fGLViewer->fDebugMode = !fGLViewer->fDebugMode;
             redraw = kTRUE;
             Info("OpenGL viewer debug mode : ", fGLViewer->fDebugMode ? "ON" : "OFF");
             break;
             // Forced rebuild for debugging mode
-         case kKey_Space:
+         case kKey_D:
             if (fGLViewer->fDebugMode) {
                Info("OpenGL viewer FORCED rebuild", "");
                fGLViewer->UpdateScene();
