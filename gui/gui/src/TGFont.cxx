@@ -1678,7 +1678,7 @@ TGFont *TGFontPool::GetFont(const char *family, Int_t ptsize, Int_t weight, Int_
    const char *s;
    TString tmp;
 
-   tmp.Form("%s %d", family, ptsize);
+   tmp = TString::Format("%s %d", family, ptsize);
    s = FindStateString(gWeightMap, weight);
    if (s) {
       tmp += " ";
@@ -2358,12 +2358,12 @@ TGFont *TGFontPool::GetFontFromAttributes(FontAttributes_t *fa, TGFont *fontPtr)
    // Couldn't find exact match. Now fall back to other available physical fonts.
 
    fmt = "-*-%.240s-*-*-*-*-*-*-*-*-*-*-*-*";
-   buf.Form(fmt, family);
+   buf = TString::Format(fmt, family);
    nameList = gVirtualX->ListFonts(buf.Data(), 32768, numNames);
    if (!numNames) {
       // Try getting some system font.
 
-      buf.Format(fmt, "fixed");
+      buf = TString::Format(fmt, "fixed");
       nameList = gVirtualX->ListFonts(buf.Data(), 32768, numNames);
 
       if (!numNames) {
@@ -2492,7 +2492,7 @@ tryscale:
          rest = strchr(rest + 1, '-');
       }
       *str = '\0';
-      buf.Form("%.240s-*-%d-*-*-*-*-*%s", nameList[bestScaleableIdx], pixelsize, rest);
+      buf = TString::Format("%.240s-*-%d-*-*-*-*-*%s", nameList[bestScaleableIdx], pixelsize, rest);
       *str = '-';
       fontStruct = gVirtualX->LoadQueryFont(buf.Data());
       bestScaleableScore = kMaxInt;

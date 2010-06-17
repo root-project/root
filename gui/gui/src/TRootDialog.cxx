@@ -157,7 +157,6 @@ const char *TRootDialog::GetParameters()
       params += param;
    }
 
-   printf("TRootDialog::GetParameters() = %s\n", params.Data());
    return params.Data();
 }
 
