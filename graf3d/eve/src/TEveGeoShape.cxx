@@ -375,7 +375,9 @@ void TEveGeoShapeProjected::SetProjection(TEveProjectionManager* mng,
 
    TEveProjected::SetProjection(mng, model);
 
-   CopyVizParams(dynamic_cast<TEveElement*>(model));
+   TEveGeoShape* gre = dynamic_cast<TEveGeoShape*>(fProjectable);
+   SetMainColor(gre->GetMainColor());
+   CopyVizParams(gre);
 }
 
 //______________________________________________________________________________
