@@ -219,9 +219,7 @@ void TEveStraightLineSetProjected::SetProjection(TEveProjectionManager* mng,
 
    TEveProjected::SetProjection(mng, model);
 
-   // copy line and marker attributes
-   * (TAttMarker*)this = * dynamic_cast<TAttMarker*>(fProjectable);
-   * (TAttLine*)  this = * dynamic_cast<TAttLine*>(fProjectable);
+   CopyVizParams(dynamic_cast<TEveElement*>(model));
 }
 
 //______________________________________________________________________________

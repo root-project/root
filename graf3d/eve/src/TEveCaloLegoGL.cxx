@@ -779,7 +779,7 @@ void TEveCaloLegoGL::DrawCells3D(TGLRnrCtx & rnrCtx) const
    // quads
    {
       for (SliceDLMap_i i = fDLMap.begin(); i != fDLMap.end(); ++i) {
-         TGLUtil::Color(fM->GetDataSliceColor(i->first));
+         TGLUtil::ColorTransparency(fM->GetDataSliceColor(i->first), fM->GetData()->GetSliceTransparency(i->first));
          glLoadName(i->first);
          glPushName(0);
          glCallList(i->second);
@@ -914,6 +914,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          glBegin(GL_POLYGON);
          Float_t val = i->fSumVal;
          fM->fPalette->ColorFromValue(TMath::FloorNint(val), col);
+         col[3] = fM->GetData()->GetSliceTransparency(i->fMaxSlice);
          TGLUtil::Color4ubv(col);
          glVertex3f(i->fX0, i->fY0, val);
          glVertex3f(i->fX1, i->fY0, val);
@@ -964,7 +965,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             glBegin(GL_POINTS);
             for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
             {
-               TGLUtil::Color(fM->fData->GetSliceColor(i->fMaxSlice));
+               TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), fM->fData->GetSliceTransparency(i->fMaxSlice));
                glVertex3f(i->X(), i->Y() , i->fSumVal);
             }
             glEnd();
@@ -973,7 +974,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          glBegin(GL_QUADS);
          for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
          {
-            TGLUtil::Color(fM->fData->GetSliceColor(i->fMaxSlice));
+            TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), fM->fData->GetSliceTransparency(i->fMaxSlice));
             Float_t bw = fValToPixel*TMath::Log10(i->fSumVal+1);
             x = i->X();
             y = i->Y();
@@ -991,7 +992,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             Float_t zOff = fDataMax*0.1 ;
             glBegin(GL_QUADS);
             for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
-               TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), 80);
+               Char_t transp = TMath::Min(100, 80 + fM->fData->GetSliceTransparency(i->fMaxSlice) / 5);
+               TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), transp);
                z = i->fSumVal - zOff;
                glVertex3f(i->fX0, i->fY0, z);
                glVertex3f(i->fX1, i->fY0, z);
@@ -1306,7 +1308,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
    TGLUtil::LineWidth(1);
    glEnable(GL_BLEND);
-
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    if (!fM->fData->Empty())
    {
       glPushName(0);

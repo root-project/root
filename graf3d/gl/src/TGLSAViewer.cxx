@@ -88,6 +88,10 @@ DIRECT SCENE INTERACTIONS\n\n\
      orthographic -- zoom,\n\
      perspective  -- change field-of-view (focal length)\n\
 \n\
+   To invert direction of mouse and key actions from scene-centric\n\
+   to viewer-centric, set in your .rootrc file:\n\
+      OpenGL.EventHandler.ViewerCentricControls: 1\n\
+\n\
    Double clik will show GUI editor of the viewer (if assigned).\n\
 \n\
    RESET the camera via the button in viewer-editor or Home key.\n\

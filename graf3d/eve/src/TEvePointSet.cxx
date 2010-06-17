@@ -780,7 +780,7 @@ void TEvePointSetProjected::SetProjection(TEveProjectionManager* proj,
    // Virtual from TEveProjected.
 
    TEveProjected::SetProjection(proj, model);
-   * (TAttMarker*)this = * dynamic_cast<TAttMarker*>(fProjectable);
+   CopyVizParams(dynamic_cast<TEveElement*>(model));
 }
 
 //______________________________________________________________________________

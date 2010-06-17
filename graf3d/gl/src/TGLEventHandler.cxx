@@ -33,6 +33,7 @@
 #include "TGToolTip.h"
 #include "KeySymbols.h"
 #include "TGLAnnotation.h"
+#include "TEnv.h"
 
 //______________________________________________________________________________
 //
@@ -66,13 +67,15 @@ TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    fTooltipShown       (kFALSE),
    fTooltipPixelTolerance (3),
    fSecSelType(TGLViewer::kOnRequest),
-   fDoInternalSelection(kTRUE)
+   fDoInternalSelection(kTRUE),
+   fViewerCentricControls(kFALSE)
 {
    // Constructor.
 
    fMouseTimer = new TTimer(this, 80);
    fTooltip    = new TGToolTip(0, 0, "", 650);
    fTooltip->Hide();
+   fViewerCentricControls = gEnv->GetValue("OpenGL.EventHandler.ViewerCentricControls", 0) != 0;
 }
 
 //______________________________________________________________________________
@@ -442,14 +445,15 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       {
          Bool_t redraw = kFALSE;
 
+         Int_t zoom = ControlValue(50);
          switch(event->fCode)
          {
             case kButton5: // Zoom out (dolly or adjust camera FOV).
-               redraw = fGLViewer->CurrentCamera().Zoom(50, kFALSE, kFALSE);
+               redraw = fGLViewer->CurrentCamera().Zoom(zoom, kFALSE, kFALSE);
                break;
 
             case kButton4: // Zoom in (dolly or adjust camera FOV).
-               redraw = fGLViewer->CurrentCamera().Zoom(-50, kFALSE, kFALSE);
+               redraw = fGLViewer->CurrentCamera().Zoom(-zoom, kFALSE, kFALSE);
                break;
 
             case kButton6:
@@ -748,8 +752,10 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
    }
    else
    {
-      Bool_t mod1 = event->fState & kKeyControlMask;
-      Bool_t mod2 = event->fState & kKeyShiftMask;
+      const Bool_t mod1 = event->fState & kKeyControlMask;
+      const Bool_t mod2 = event->fState & kKeyShiftMask;
+
+      const Int_t shift = ControlValue(10);
 
       switch (keysym)
       {
@@ -783,24 +789,24 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
          case kKey_Plus:
          case kKey_J:
          case kKey_j:
-            redraw = fGLViewer->CurrentCamera().Dolly(10, mod1, mod2);
+            redraw = fGLViewer->CurrentCamera().Dolly(shift, mod1, mod2);
             break;
          case kKey_Minus:
          case kKey_K:
          case kKey_k:
-            redraw = fGLViewer->CurrentCamera().Dolly(-10, mod1, mod2);
+            redraw = fGLViewer->CurrentCamera().Dolly(-shift, mod1, mod2);
             break;
          case kKey_Up:
-            redraw = fGLViewer->CurrentCamera().Truck(0, 10, mod1, mod2);
+            redraw = fGLViewer->CurrentCamera().Truck(0, shift, mod1, mod2);
             break;
          case kKey_Down:
-            redraw = fGLViewer->CurrentCamera().Truck(0, -10, mod1, mod2);
+            redraw = fGLViewer->CurrentCamera().Truck(0, -shift, mod1, mod2);
             break;
          case kKey_Left:
-            redraw = fGLViewer->CurrentCamera().Truck(-10, 0, mod1, mod2);
+            redraw = fGLViewer->CurrentCamera().Truck(-shift, 0, mod1, mod2);
             break;
          case kKey_Right:
-            redraw = fGLViewer->CurrentCamera().Truck(10, 0, mod1, mod2);
+            redraw = fGLViewer->CurrentCamera().Truck(shift, 0, mod1, mod2);
             break;
          case kKey_Home:
             if (mod1) {
@@ -857,8 +863,8 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
    Short_t lod = TGLRnrCtx::kLODMed;
 
    // Camera interface requires GL coords - Y inverted
-   Int_t  xDelta = event->fX - fLastPos.fX;
-   Int_t  yDelta = event->fY - fLastPos.fY;
+   Int_t  xDelta = ControlValue(event->fX - fLastPos.fX);
+   Int_t  yDelta = ControlValue(event->fY - fLastPos.fY);
    Bool_t mod1   = event->fState & kKeyControlMask;
    Bool_t mod2   = event->fState & kKeyShiftMask;
 
@@ -895,7 +901,7 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
    }
    else if (fGLViewer->fDragAction == TGLViewer::kDragCameraDolly)
    {
-      processed = fGLViewer->CurrentCamera().Dolly(xDelta - yDelta, mod1, mod2);
+      processed = fGLViewer->CurrentCamera().Dolly(yDelta - xDelta, mod1, mod2);
    }
    else if (fGLViewer->fDragAction == TGLViewer::kDragOverlay)
    {

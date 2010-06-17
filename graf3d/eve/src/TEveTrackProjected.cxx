@@ -41,6 +41,7 @@ void TEveTrackProjected::SetProjection(TEveProjectionManager* mng, TEveProjectab
    // This is virtual method from base-class TEveProjected.
 
    TEveProjected::SetProjection(mng, model);
+   CopyVizParams(dynamic_cast<TEveElement*>(model));
 
    TEveTrack* otrack = dynamic_cast<TEveTrack*>(fProjectable);
    SetTrackParams(*otrack);
@@ -313,17 +314,9 @@ void TEveTrackListProjected::SetProjection(TEveProjectionManager* proj, TEveProj
    // This is virtual method from base-class TEveProjected.
 
    TEveProjected::SetProjection(proj, model);
+   CopyVizParams(dynamic_cast<TEveElement*>(model));
 
    TEveTrackList& tl = * dynamic_cast<TEveTrackList*>(model);
-   SetLineColor(tl.GetLineColor());
-   SetLineStyle(tl.GetLineStyle());
-   SetLineWidth(tl.GetLineWidth());
-   SetMarkerColor(tl.GetMarkerColor());
-   SetMarkerStyle(tl.GetMarkerStyle());
-   SetMarkerSize (tl.GetMarkerSize());
-   SetRnrLine  (tl.GetRnrLine());
-   SetRnrPoints(tl.GetRnrPoints());
-
    SetPropagator(tl.GetPropagator());
 }
 

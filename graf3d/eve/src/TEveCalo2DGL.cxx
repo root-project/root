@@ -422,6 +422,10 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    TGLCapabilitySwitch light_off(GL_LIGHTING,  kFALSE);
    TGLCapabilitySwitch cull_off (GL_CULL_FACE, kFALSE);
 
+   glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
    if (fM->fCellIdCacheOK == kFALSE)
       fM->BuildCellIdCache();
 
@@ -433,6 +437,7 @@ void TEveCalo2DGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    else
       DrawRhoZ(rnrCtx, fM->fCellLists);
    if (rnrCtx.SecSelection()) glPopName();
+   glPopAttrib();
 }
 
 //______________________________________________________________________________

@@ -179,16 +179,10 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    if (fLockPoints)
       ClonePoints(t);
 
-   SetMainColor(t.GetMainColor());
-   // TEveLine
-   fRnrLine   = t.fRnrLine;
-   fRnrPoints = t.fRnrPoints;
-   // TLineAttrib
-   fLineColor = t.fLineColor;
-   fLineStyle = t.fLineStyle;
-   fLineWidth = t.fLineWidth;
    SetPathMarks(t);
    SetPropagator (t.fPropagator);
+
+   CopyVizParams(&t);
 }
 
 //______________________________________________________________________________
@@ -266,19 +260,6 @@ void TEveTrack::SetTrackParams(const TEveTrack& t)
 
    fPathMarks.clear();
    SetPropagator(t.fPropagator);
-
-   SetMainColor(t.GetMainColor());
-   // TEveLine
-   fRnrLine   = t.fRnrLine;
-   fRnrPoints = t.fRnrPoints;
-   // TMarkerAttrib
-   fMarkerColor = t.fMarkerColor;
-   fMarkerSize  = t.fMarkerSize;
-   fMarkerStyle = t.fMarkerStyle;
-   // TLineAttrib
-   fLineColor = t.fLineColor;
-   fLineStyle = t.fLineStyle;
-   fLineWidth = t.fLineWidth;
 }
 
 //______________________________________________________________________________

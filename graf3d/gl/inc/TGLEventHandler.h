@@ -51,6 +51,7 @@ protected:
    Int_t             fTooltipPixelTolerance;
    Int_t             fSecSelType; // secondary selection type
    Bool_t            fDoInternalSelection;
+   Bool_t            fViewerCentricControls;
 
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
 
@@ -59,6 +60,8 @@ protected:
 
    virtual void   SelectForClicked(Event_t *event);
    virtual void   SelectForMouseOver();
+
+   Int_t ControlValue(Int_t v) { return fViewerCentricControls ? -v : v; }
 
 public:
    TGLEventHandler(TGWindow *w, TObject *obj);

@@ -30,16 +30,18 @@ public:
       TString  fName;      // Name of the slice, eg. ECAL, HCAL.
       Float_t  fThreshold; // Only display towers with higher energy.
       Color_t  fColor;     // Color used to draw this longitudinal slice.
+      Color_t  fTransparency; // Transparency used to draw this longitudinal slice.
       
-      SliceInfo_t(): fName(""), fThreshold(0), fColor(kRed) {}
+      SliceInfo_t(): fName(""), fThreshold(0), fColor(kRed), fTransparency(0) {}
 
       virtual ~SliceInfo_t() {}
 
-      void Setup(const char* name, Float_t threshold, Color_t col)
+      void Setup(const char* name, Float_t threshold, Color_t col, Char_t transp = 101)
       {
          fName      = name;
          fThreshold = threshold;
          fColor     = col;
+         if (transp <= 100) fTransparency = transp;
       };
 
       ClassDef(SliceInfo_t, 0); // Slice info for histogram stack.
@@ -178,7 +180,6 @@ public:
    vCellId_t&      GetCellsSelected()    { return fCellsSelected; }
    vCellId_t&      GetCellsHighlighted() { return fCellsHighlighted; }
    void            PrintCellsSelected();
-
    void  ProcessSelection(vCellId_t& sel_cells, TGLSelectRecord& rec);
 
    virtual void    Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const = 0;
@@ -196,6 +197,8 @@ public:
    Float_t         GetSliceThreshold(Int_t slice) const;
    void            SetSliceColor(Int_t slice, Color_t col);
    Color_t         GetSliceColor(Int_t slice) const;
+   void            SetSliceTransparency(Int_t slice, Char_t t);
+   Char_t          GetSliceTransparency(Int_t slice) const;
 
    virtual void    GetEtaLimits(Double_t &min, Double_t &max) const = 0;
 

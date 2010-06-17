@@ -182,6 +182,15 @@ void TEveCaloVizEditor::MakeSliceInfo()
          f->AddFrame(color, new TGLayoutHints(kLHintsLeft|kLHintsTop, 3, 1, 0, 1));
          color->Connect("ColorSelected(Pixel_t)", "TEveCaloVizEditor", this, "DoSliceColor(Pixel_t)");
 
+         TGNumberEntry* transparency = new TGNumberEntry(f, 0., 2, i,
+                                           TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
+                                           TGNumberFormat::kNELLimitMinMax, 0, 100);
+         transparency->SetHeight(18);
+         transparency->GetNumberEntry()->SetToolTipText("Transparency: 0 is opaque, 100 fully transparent.");
+         f->AddFrame(transparency, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
+         transparency->Connect("ValueSet(Long_t)", "TEveCaloVizEditor", this, "DoSliceTransparency(Long_t)");
+
+
          fSliceFrame->AddFrame(f, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
       }
       nf = ns;
@@ -196,12 +205,14 @@ void TEveCaloVizEditor::MakeSliceInfo()
       {
          TEveCaloData::SliceInfo_t &si = fM->GetData()->RefSliceInfo(i);
 
-         TEveGValuator *threshold = (TEveGValuator*) ((TGFrameElement*) fr->GetList()->First())->fFrame;
-         TGColorSelect *color     = (TGColorSelect*) ((TGFrameElement*) fr->GetList()->Last() )->fFrame;
+         TEveGValuator *threshold = (TEveGValuator*) ((TGFrameElement*) fr->GetList()->At(0))->fFrame;
+         TGColorSelect *color     = (TGColorSelect*) ((TGFrameElement*) fr->GetList()->At(1) )->fFrame;
+         TGNumberEntry *transp    = (TGNumberEntry*) ((TGFrameElement*) fr->GetList()->At(2))->fFrame;
 
          threshold->GetLabel()->SetText(si.fName);
          threshold->SetValue(si.fThreshold);
          color->SetColor(TColor::Number2Pixel(si.fColor), kFALSE);
+         transp->SetNumber(si.fTransparency);
 
          if (! fr->IsMapped()) {
             fr->MapSubwindows();
@@ -356,6 +367,16 @@ void TEveCaloVizEditor::DoSliceColor(Pixel_t pixel)
 
    TGColorSelect *cs = (TGColorSelect *) gTQSender;
    fM->SetDataSliceColor(cs->WidgetId(), Color_t(TColor::GetColor(pixel)));
+   Update();
+}
+
+//______________________________________________________________________________
+void TEveCaloVizEditor::DoSliceTransparency(Long_t t)
+{
+   // Slot for slice transparency.
+
+   TGNumberEntry *cs = (TGNumberEntry*) gTQSender;
+   fM->GetData()->SetSliceTransparency(cs->WidgetId(), t);
    Update();
 }
 

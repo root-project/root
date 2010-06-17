@@ -336,6 +336,26 @@ Color_t TEveCaloData::GetSliceColor(Int_t slice) const
 }
 
 //______________________________________________________________________________
+void TEveCaloData::SetSliceTransparency(Int_t slice, Char_t t)
+{
+   // Set transparency for given slice.
+
+   fSliceInfos[slice].fTransparency = t;
+   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
+   {
+      (*i)->AddStamp(TEveElement::kCBObjProps);
+   }
+}
+
+//______________________________________________________________________________
+Char_t TEveCaloData::GetSliceTransparency(Int_t slice) const
+{
+   // Get transparency for given slice.
+
+   return fSliceInfos[slice].fTransparency;
+}
+
+//______________________________________________________________________________
 void TEveCaloData::InvalidateUsersCellIdCache()
 {
    // Invalidate cell ids cache on back ptr references.

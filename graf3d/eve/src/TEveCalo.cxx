@@ -384,11 +384,12 @@ void TEveCaloViz::SetupColorHeight(Float_t value, Int_t slice, Float_t& outH) co
       outH = GetValToHeight()*fData->GetMaxVal(fPlotEt);
       UChar_t c[4];
       fPalette->ColorFromValue((Int_t)value, c);
+      c[3] = fData->GetSliceTransparency(slice);
       TGLUtil::Color4ubv(c);
    }
    else
    {
-      TGLUtil::Color(fData->RefSliceInfo(slice).fColor);
+      TGLUtil::ColorTransparency(fData->GetSliceColor(slice), fData->GetSliceTransparency(slice));
       outH = GetValToHeight()*value;
    }
 }

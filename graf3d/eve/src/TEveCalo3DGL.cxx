@@ -526,13 +526,14 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
    if (fM->fCellIdCacheOK == kFALSE)
       fM->BuildCellIdCache();
 
-
-   glEnable(GL_LIGHTING);
    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
+   glEnable(GL_LIGHTING);
    glEnable(GL_NORMALIZE);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    TEveCaloData::CellData_t cellData;
-   Float_t towerH;
+   Float_t towerH = 0;
    Int_t   tower = 0;
    Int_t   prevTower = -1;
    Float_t offset = 0;
@@ -610,12 +611,12 @@ void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* /*p
 void TEveCalo3DGL::DrawSelectedCells(TEveCaloData::vCellId_t cells) const
 {
    TEveCaloData::CellData_t cellData;
-   Float_t towerH;
+   Float_t towerH = 0;
 
    for (TEveCaloData::vCellId_i i = cells.begin(); i != cells.end(); i++)
    {
       fM->fData->GetCellData(*i, cellData);
-      fM->SetupColorHeight(cellData.Value(fM->fPlotEt), (*i).fSlice, towerH);
+      ///  fM->SetupColorHeight(cellData.Value(fM->fPlotEt), (*i).fSlice, towerH);
 
       // find tower with offsets
       Float_t offset = 0;

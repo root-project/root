@@ -69,6 +69,7 @@ public:
 
    void DoSliceThreshold();
    void DoSliceColor(Pixel_t color);
+   void DoSliceTransparency(Long_t transp);
 
    ClassDef(TEveCaloVizEditor, 0); // GUI editor for TEveCaloVizEditor.
 };

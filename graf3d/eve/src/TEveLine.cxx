@@ -329,8 +329,7 @@ void TEveLineProjected::SetProjection(TEveProjectionManager* mng,
    // Virtual from TEveProjected.
 
    TEveProjected::SetProjection(mng, model);
-   * (TAttMarker*)this = * dynamic_cast<TAttMarker*>(fProjectable);
-   * (TAttLine*)  this = * dynamic_cast<TAttLine*>  (fProjectable);
+   CopyVizParams(dynamic_cast<TEveElement*>(model));
 }
 
 //______________________________________________________________________________
