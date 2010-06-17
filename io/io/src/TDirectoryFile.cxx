@@ -249,7 +249,7 @@ void TDirectoryFile::Browse(TBrowser *b)
          }
 
          if (!skip) {
-            name.Format("%s;%d", key->GetName(), key->GetCycle());
+            name = TString::Format("%s;%d", key->GetName(), key->GetCycle());
             b->Add(key, name);
          }
 
