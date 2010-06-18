@@ -404,7 +404,8 @@ int XrdClientPSock::GetSockIdHint(int reqsperstream) {
   // A round robin through the secondary streams. We avoid
   // requesting data through the main one because it can become a bottleneck
   if (fSocketIdRepo.GetSize() > 0) {
-    lastsidhint = ( ( ++lastsidhint % (fSocketIdRepo.GetSize()*reqsperstream) )  );
+     int tmp = lastsidhint+1;
+     lastsidhint = ( ( tmp % (fSocketIdRepo.GetSize()*reqsperstream) )  );
   }
   else lastsidhint = 0;
 
