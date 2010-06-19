@@ -616,7 +616,6 @@ inline const TMVA::Event* TMVA::MethodBase::GetEvent( const TMVA::Event* ev ) co
    return GetTransformationHandler().Transform(ev);
 }
 
-//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetEvent() const 
 {
    if(fTmpEvent)
@@ -625,28 +624,24 @@ inline const TMVA::Event* TMVA::MethodBase::GetEvent() const
       return GetTransformationHandler().Transform(Data()->GetEvent());
 }
 
-//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt ) const 
 {
    assert(fTmpEvent==0);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt));
 }
 
-//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt, Types::ETreeType type ) const 
 {
    assert(fTmpEvent==0);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt, type));
 }
 
-//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetTrainingEvent( Long64_t ievt ) const 
 {
    assert(fTmpEvent==0);
    return GetEvent(ievt, Types::kTraining);
 }
 
-//_______________________________________________________________________
 inline const TMVA::Event* TMVA::MethodBase::GetTestingEvent( Long64_t ievt ) const 
 {
    assert(fTmpEvent==0);

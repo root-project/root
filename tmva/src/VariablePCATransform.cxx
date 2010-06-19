@@ -12,7 +12,6 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Peter Speckmayer <Peter.Speckmayer@cern.ch> - CERN, Switzerland           *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
@@ -80,17 +79,15 @@ Bool_t TMVA::VariablePCATransform::PrepareTransformation( const std::vector<Even
 
    Log() << kINFO << "Preparing the Principle Component (PCA) transformation..." << Endl;
 
-   UInt_t inputSize = fGet.size();
-
-   SetNVariables(inputSize);
+   SetNVariables(events[0]->GetNVariables());
 
    // TPrincipal doesn't support PCA transformation for 1 or less variables
-   if (inputSize <= 1) {
+   if (GetNVariables() <= 1) {
       Log() << kINFO << "Cannot perform PCA transformation for " << GetNVariables() << " variable only" << Endl;
       return kFALSE;
    }
 
-   if (inputSize > 200) { 
+   if (GetNVariables() > 200) { 
       Log() << kINFO << "----------------------------------------------------------------------------" 
             << Endl;
       Log() << kINFO 
@@ -113,40 +110,41 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
    // apply the principal component analysis
    if (!IsCreated()) return 0;
 
-   const Int_t inputSize = fGet.size();
-   const UInt_t nCls = GetNClasses();
-   //UInt_t evCls = ev->GetClass();
-
+   const Int_t nvar = ev->GetNVariables();
    // if we have more than one class, take the last PCA analysis where all classes are combined if 
    // the cls parameter is outside the defined classes
    // If there is only one class, then no extra class for all events of all classes has to be created
-   if (cls < 0 || UInt_t(cls) > nCls) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
+   if (cls < 0 || cls > GetNClasses()) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
    // Perform PCA and put it into PCAed events tree
 
-   if (fTransformedEvent==0 ) {
+   if (fTransformedEvent==0 || fTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
+      if(fTransformedEvent!=0) delete fTransformedEvent;
       fTransformedEvent = new Event();
    }
 
-   std::vector<Float_t> input;
-   std::vector<Float_t> principalComponents;
 
    // set the variable values
    const std::vector<UInt_t>* varArrange = ev->GetVariableArrangement();
+
    if(!varArrange) {
-
-      GetInput( ev, input );
-      X2P( principalComponents, input, cls );
-      SetOutput( fTransformedEvent, principalComponents, ev );
-
+      std::vector<Float_t> rv = X2P( ev->GetValues(), cls );
+      for (Int_t ivar=0; ivar<nvar; ++ivar)
+         fTransformedEvent->SetVal(ivar, rv[ivar]);
    } else {
-      // TODO: check what has to be done here
-      std::vector<Float_t> rv(inputSize);
-      for (Int_t ivar=0; ivar<inputSize; ++ivar)
+      std::vector<Float_t> rv(nvar);
+      for (Int_t ivar=0; ivar<nvar; ++ivar)
          rv[ivar] = ev->GetValue(ivar);
-      X2P( principalComponents, input, cls );
-      for (Int_t ivar=0; ivar<inputSize; ++ivar)
+      rv = X2P( rv, cls );
+      for (Int_t ivar=0; ivar<nvar; ++ivar)
          fTransformedEvent->SetVal(ivar, rv[ivar]);
    }
+   // set the targets
+   for (UInt_t itgt=0; itgt<ev->GetNTargets(); itgt++) 
+      fTransformedEvent->SetTarget( itgt, ev->GetTarget(itgt) );
+   // and the rest
+   fTransformedEvent->SetWeight     ( ev->GetWeight() );
+   fTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
+   fTransformedEvent->SetClass      ( ev->GetClass() );
 
    return fTransformedEvent;
 }
@@ -156,43 +154,28 @@ const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* co
 {
    // apply the principal component analysis
    // TODO: implementation of inverse transformation
-//    Log() << kFATAL << "Inverse transformation for PCA transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
+   Log() << kFATAL << "Inverse transformation for PCA transformation not yet implemented. Hence, this transformation cannot be applied together with regression. Please contact the authors if necessary." << Endl;
 
    if (!IsCreated()) return 0;
-
-
-   const Int_t inputSize = fGet.size();
-   const UInt_t nCls = GetNClasses();
-   //UInt_t evCls = ev->GetClass();
+   const Int_t nvar = ev->GetNVariables();
 
    // if we have more than one class, take the last PCA analysis where all classes are combined if 
    // the cls parameter is outside the defined classes
    // If there is only one class, then no extra class for all events of all classes has to be created
-   if (cls < 0 || UInt_t(cls) > nCls) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
+   if (cls < 0 || cls > GetNClasses()) cls = ( GetNClasses() == 1 ? 0 : 1 );  
+
+
    // Perform PCA and put it into PCAed events tree
+   std::vector<Float_t> rv = X2P( ev->GetValues(), cls );
 
-   if (fBackTransformedEvent==0 ) fBackTransformedEvent = new Event();
-
-   std::vector<Float_t> principalComponents;
-   std::vector<Float_t> output;
-
-   // set the variable values
-   const std::vector<UInt_t>* varArrange = ev->GetVariableArrangement();
-   if(!varArrange) {
-
-      GetInput( ev, principalComponents );
-      P2X( output, principalComponents, cls );
-      SetOutput( fBackTransformedEvent, output, ev );
-
-   } else {
-      // TODO: check what has to be done here
-      std::vector<Float_t> rv(inputSize);
-      for (Int_t ivar=0; ivar<inputSize; ++ivar)
-         rv[ivar] = ev->GetValue(ivar);
-      X2P( principalComponents, output, cls );
-      for (Int_t ivar=0; ivar<inputSize; ++ivar)
-         fBackTransformedEvent->SetVal(ivar, rv[ivar]);
+   if (fBackTransformedEvent==0 || fBackTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
+      if(fBackTransformedEvent!=0) delete fBackTransformedEvent;
+      fBackTransformedEvent = new Event( *ev );
    }
+   for (Int_t ivar=0; ivar<nvar; ivar++) fBackTransformedEvent->SetVal(ivar, rv[ivar]);
+   fBackTransformedEvent->SetClass      ( ev->GetClass() );
+   fBackTransformedEvent->SetWeight     ( ev->GetWeight() );
+   fBackTransformedEvent->SetBoostWeight( ev->GetBoostWeight() );
 
    return fBackTransformedEvent;
 }
@@ -203,45 +186,25 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
    // calculate the principal components for the signal and the background data
    // it uses the MakePrincipal method of ROOT's TPrincipal class
 
-   UInt_t nvars = 0, ntgts = 0, nspcts = 0;
-   CountVariableTypes( nvars, ntgts, nspcts );
-   if( nvars>0  && ntgts>0 )
-      Log() << kFATAL << "Variables and targets cannot be mixed in PCA transformation." << Endl;
-
-   const Int_t inputSize = fGet.size();
+   const Int_t nvar = GetNVariables();
 
    // if we have more than one class, add another PCA analysis which combines all classes
-   const UInt_t nCls = GetNClasses();
-   const UInt_t maxPCA = (nCls<=1) ? nCls : nCls+1;
+   const UInt_t maxPCA = (GetNClasses()<=1) ? GetNClasses() : GetNClasses()+1;
 
    // PCA [signal/background/class x/class y/... /all classes]
    std::vector<TPrincipal*> pca(maxPCA);
-   for (UInt_t i=0; i<maxPCA; i++) pca[i] = new TPrincipal(nvars,"");
+   for (UInt_t i=0; i<maxPCA; i++) pca[i] = new TPrincipal(nvar,"");
 
-   // !! Not normalizing and not storing input data, for performance reasons. Should perhaps restore normalization. 
-   // But this can be done afterwards by adding a normalisation transformation (user defined)
+   // !! Not normalizing and not storing input data, for performance reasons. Should perhaps restore normalization.
 
    Long64_t ievt, entries = events.size();
-   Double_t *dvec = new Double_t[inputSize];
+   Double_t *dvec = new Double_t[nvar];
 
-
-   std::vector<Float_t> input;
    for (ievt=0; ievt<entries; ievt++) {
       Event* ev = events[ievt];
-      UInt_t cls = ev->GetClass();
-
-      GetInput( ev, input );
-
-      UInt_t iinp = 0;
-      for( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp )
-      {
-	 Float_t value = (*itInp);
-	 dvec[iinp] = (Double_t)value;
-	 ++iinp;
-      }
-
-      pca.at(cls)->AddRow( dvec );
-      if (nCls > 1) pca.at(maxPCA-1)->AddRow( dvec );
+      for (Int_t i = 0; i < nvar; i++) dvec[i] = (Double_t) ev->GetValue(i);
+      pca.at(ev->GetClass())->AddRow( dvec );
+      if (GetNClasses() > 1) pca.at(maxPCA-1)->AddRow( dvec );
    }
 
    // delete possible leftovers
@@ -263,39 +226,22 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
 }
 
 //_______________________________________________________________________
-void TMVA::VariablePCATransform::X2P( std::vector<Float_t>& pc, const std::vector<Float_t>& x, Int_t cls ) const
+std::vector<Float_t> TMVA::VariablePCATransform::X2P( const std::vector<Float_t>& x, Int_t cls ) const
 {
    // Calculate the principal components from the original data vector
    // x, and return it in p (function extracted from TPrincipal::X2P)
    // It's the users responsibility to make sure that both x and p are
    // of the right size (i.e., memory must be allocated for p)
-   const Int_t nInput = x.size();
-   pc.assign(nInput,0);
+   const Int_t nvar = x.size();
+   std::vector<Float_t> p(nvar,0);
 
-   for (Int_t i = 0; i < nInput; i++) {
+   for (Int_t i = 0; i < nvar; i++) {
       Double_t pv = 0;
-      for (Int_t j = 0; j < nInput; j++)
+      for (Int_t j = 0; j < nvar; j++)
          pv += (((Double_t)x.at(j)) - (*fMeanValues.at(cls))(j)) * (*fEigenVectors.at(cls))(j,i);
-      pc[i] = pv;
+      p[i] = pv;
    }
-}
-
-//_______________________________________________________________________
-void TMVA::VariablePCATransform::P2X( std::vector<Float_t>& x, const std::vector<Float_t>& pc, Int_t cls ) const
-{
-   // Perform the back-transformation from the principal components
-   // pc, and return x 
-   // It's the users responsibility to make sure that both x and pc are
-   // of the right size (i.e., memory must be allocated for p)
-   const Int_t nInput = pc.size();
-   x.assign(nInput,0);
-
-   for (Int_t i = 0; i < nInput; i++) {
-      Double_t xv = 0;
-      for (Int_t j = 0; j < nInput; j++)
-         xv += (((Double_t)pc.at(j)) * (*fEigenVectors.at(cls))(i,j) ) + (*fMeanValues.at(cls))(j);
-      x[i] = xv;
-   }
+   return p;
 }
 
 //_______________________________________________________________________

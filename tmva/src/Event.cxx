@@ -177,11 +177,6 @@ void TMVA::Event::CopyVarValues( const Event& other )
 {
    // copies only the variable values
    fValues      = other.fValues;
-   fTargets     = other.fTargets;
-   fSpectators  = other.fSpectators;
-
-   fVariableArrangement = other.fVariableArrangement;
-
    fClass       = other.fClass;
    fWeight      = other.fWeight;
    fBoostWeight = other.fBoostWeight;

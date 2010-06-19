@@ -179,7 +179,7 @@ void TMVA::MethodMLP::DeclareOptions()
                     "Number of steps (without improvement) required for convergence (<0 means automatic convergence check is turned off)");
 
    DeclareOptionRef(fUseRegulator=kTRUE, "UseRegulator",
-		    "Use regulator to avoid over-training  (bayesian neural network technique)");   //zjh
+		    "Use regulator to avoid over-training");   //zjh
    DeclareOptionRef(fUpdateLimit=10, "UpdateLimit",
 		    "Number of updates for regulator before stop training");   //zjh
 }

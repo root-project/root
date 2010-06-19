@@ -71,8 +71,7 @@ namespace TMVA {
    private:
 
       void CalculatePrincipalComponents( const std::vector<Event*>& );
-      void X2P( std::vector<Float_t>&, const std::vector<Float_t>&, Int_t cls ) const;
-      void P2X( std::vector<Float_t>&, const std::vector<Float_t>&, Int_t cls ) const;
+      std::vector<Float_t> X2P( const std::vector<Float_t>&, Int_t cls ) const;
 
       //      mutable Event*     fTransformedEvent;
 

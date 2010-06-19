@@ -111,6 +111,7 @@
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/MethodCuts.h"
+#include "TMVA/MethodCategory.h"
 #include "TMVA/DataSetManager.h"
 
 ClassImp(TMVA::Reader)
@@ -351,6 +352,12 @@ TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& w
 
    MethodBase* method = dynamic_cast<MethodBase*>(this->BookMVA( Types::Instance().GetMethodType(methodType),
                                                                  weightfile ) );
+   if( method->GetMethodType() == Types::kCategory ){ 
+      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(method)); 
+      if( !methCat ) 
+	 Log() << kERROR << "Method with type kCategory cannot be casted to MethodCategory. /Reader" << Endl; 
+      methCat->fDataSetManager = fDataSetManager; 
+   }
 
    return fMethodMap[methodTag] = method;
 }
@@ -363,6 +370,13 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
                                                       DataInfo(), weightfile );
 
    MethodBase *method = (dynamic_cast<MethodBase*>(im));
+
+   if( method->GetMethodType() == Types::kCategory ){ 
+      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(method)); 
+      if( !methCat ) 
+         Log() << kERROR << "Method with type kCategory cannot be casted to MethodCategory. /Reader" << Endl; 
+      methCat->fDataSetManager = fDataSetManager; 
+   }
 
    if (method==0) return im;
 
@@ -393,6 +407,13 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* 
                                                       DataInfo(), "" );
    
    MethodBase *method = (dynamic_cast<MethodBase*>(im));
+
+   if( method->GetMethodType() == Types::kCategory ){ 
+      MethodCategory *methCat = (dynamic_cast<MethodCategory*>(method)); 
+      if( !methCat ) 
+         Log() << kERROR << "Method with type kCategory cannot be casted to MethodCategory. /Reader" << Endl; 
+      methCat->fDataSetManager = fDataSetManager; 
+   }
 
    method->SetupMethod();
 

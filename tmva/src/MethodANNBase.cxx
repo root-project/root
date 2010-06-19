@@ -731,7 +731,7 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
    void* xmlLayout = NULL;
    try{
       xmlLayout = gTools().GetChild(wghtnode, "Layout");
-   }catch( std::logic_error& excpt ){
+   } catch( std::logic_error& ) {
       xmlLayout = wghtnode;
    }
    if( !xmlLayout ){
@@ -792,7 +792,7 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
    void* xmlInvHessian = NULL;
    try{
       xmlInvHessian = gTools().GetChild(wghtnode, "InverseHessian");
-   }catch( std::logic_error& excpt ){
+   } catch ( std::logic_error& ){
       // no inverse hessian available
       return;  // ------------------ return from subroutine
    }

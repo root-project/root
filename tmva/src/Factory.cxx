@@ -105,7 +105,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
 
    fgTargetFile = theTargetFile;
 
-//   DataSetManager::CreateInstance(*fDataInputHandler); // DSMTEST removed
+   //   DataSetManager::CreateInstance(*fDataInputHandler); // DSMTEST removed
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST 
 
 
@@ -709,7 +709,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
       MethodBoost* methBoost = dynamic_cast<MethodBoost*>(im); // DSMTEST divided into two lines
       methBoost->SetBoostedMethodName( theMethodName ); // DSMTEST divided into two lines
       if( !methBoost ) // DSMTEST
-	 Log() << kERROR << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
+         Log() << kERROR << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
       methBoost->fDataSetManager = fDataSetManager; // DSMTEST
 
    }
@@ -866,63 +866,26 @@ void TMVA::Factory::WriteDataInformation()
          }
          delete trClsList;
 
-	 TString variables = "_V_";
-
-	 VariableTransformBase* transformation = NULL;
          if (trName=='I') {
-	    transformation = new VariableIdentityTransform ( DefaultDataSetInfo() );
+            trfs.back()->AddTransformation( new VariableIdentityTransform ( DefaultDataSetInfo() ), idxCls );
             identityTrHandler = trfs.back();
-	 } 
-	 else if      (trName == "D" || trName == "Deco" || trName == "Decorrelate"){
-	    if( variables.Length() == 0 )
-	       variables = "_V_";
-	    transformation = new VariableDecorrTransform( DefaultDataSetInfo());
-	 }
-         else if (trName == "P" || trName == "PCA"){
-	    if( variables.Length() == 0 )
-	       variables = "_V_";
-	    transformation = new VariablePCATransform   ( DefaultDataSetInfo());
-	 }
-         else if (trName == "G" || trName == "Gauss"){
-	    if( variables.Length() == 0 )
-	       variables = "_V_,_T_";
-	    transformation = new VariableGaussTransform ( DefaultDataSetInfo());
-	 }
-         else if (trName == "N" || trName == "Norm" || trName == "Normalise" || trName == "Normalize")
-	 {
-	    if( variables.Length() == 0 )
-	       variables = "_V_,_T_";
-	    transformation = new VariableNormalizeTransform( DefaultDataSetInfo());
-	 }
-         else
-            Log() << kFATAL << "<ProcessOptions> Variable transform '"
-                  << trName << "' unknown." << Endl;
-
-	 if( transformation ){
-	    transformation->SelectInput( "_V_" );
-	    trfs.back()->AddTransformation(transformation, idxCls);
-	 }
-
-//          if (trName=='I') {
-//             trfs.back()->AddTransformation( new VariableIdentityTransform ( DefaultDataSetInfo() ), idxCls );
-//             identityTrHandler = trfs.back();
-//          } 
-//          else if (trName=='D') {
-//             trfs.back()->AddTransformation( new VariableDecorrTransform   ( DefaultDataSetInfo() ), idxCls );
-//          } 
-//          else if (trName=='P') {
-//             trfs.back()->AddTransformation( new VariablePCATransform      ( DefaultDataSetInfo() ), idxCls );
-//          } 
-//          else if (trName=='G') {
-//             trfs.back()->AddTransformation( new VariableGaussTransform    ( DefaultDataSetInfo() ), idxCls );
-//          } 
-//          else if (trName=='N') {
-//             trfs.back()->AddTransformation( new VariableNormalizeTransform( DefaultDataSetInfo() ), idxCls );
-//          } 
-//          else {
-//             Log() << kINFO << "The transformation " << *trfsDefIt << " definition is not valid, the \n"
-//                     << "transformation " << trName << " is not known!" << Endl;
-//          }
+         } 
+         else if (trName=='D') {
+            trfs.back()->AddTransformation( new VariableDecorrTransform   ( DefaultDataSetInfo() ), idxCls );
+         } 
+         else if (trName=='P') {
+            trfs.back()->AddTransformation( new VariablePCATransform      ( DefaultDataSetInfo() ), idxCls );
+         } 
+         else if (trName=='G') {
+            trfs.back()->AddTransformation( new VariableGaussTransform    ( DefaultDataSetInfo() ), idxCls );
+         } 
+         else if (trName=='N') {
+            trfs.back()->AddTransformation( new VariableNormalizeTransform( DefaultDataSetInfo() ), idxCls );
+         } 
+         else {
+            Log() << kINFO << "The transformation " << *trfsDefIt << " definition is not valid, the \n"
+                    << "transformation " << trName << " is not known!" << Endl;
+         }
       }
    }
 
@@ -1015,7 +978,10 @@ void TMVA::Factory::TrainAllMethods()
    Log() << Endl;
    if (RECREATE_METHODS) {
 
-      Log() << kINFO << "=== Destroy and recreate all methods via weight files for testing ===" << Endl << Endl;;
+      Log() << kINFO << "=== Destroy and recreate all methods via weight files for testing ===" << Endl << Endl;
+
+      RootBaseDir()->cd();
+
       // iterate through all booked methods
       for (UInt_t i=0; i<fMethods.size(); i++) {
 
@@ -1035,7 +1001,13 @@ void TMVA::Factory::TrainAllMethods()
          m = dynamic_cast<MethodBase*>( ClassifierFactory::Instance()
                                                        .Create( std::string(Types::Instance().GetMethodName(methodType)), 
                                                                 dataSetInfo, weightfile ) );
-        
+         if( m->GetMethodType() == Types::kCategory ){ 
+            MethodCategory *methCat = (dynamic_cast<MethodCategory*>(m));
+            if( !methCat ) Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl; 
+            else methCat->fDataSetManager = fDataSetManager;
+         }
+         //ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
+
          m->SetupMethod();
          m->ReadStateFromFile();
          m->SetTestvarName(testvarName);
@@ -1043,7 +1015,6 @@ void TMVA::Factory::TrainAllMethods()
          // replace trained method by newly created one (from weight file) in methods vector
          fMethods[i] = m;
       }
-
    }
 }
 
@@ -1236,10 +1207,9 @@ void TMVA::Factory::EvaluateAllMethods( void )
          theMethod->WriteEvaluationHistosToFile(Types::kTesting);
          theMethod->WriteEvaluationHistosToFile(Types::kTraining);
       } else if (theMethod->DoMulticlass()) {
-	 doMulticlass = kTRUE;
+         doMulticlass = kTRUE;
          Log() << kINFO << "Evaluate multiclass classification method: " << theMethod->GetMethodName() << Endl;         
-
-	 theMethod->TestMulticlass();
+         theMethod->TestMulticlass();
       } else {
          
          Log() << kINFO << "Evaluate classifier: " << theMethod->GetMethodName() << Endl;

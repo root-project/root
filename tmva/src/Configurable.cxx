@@ -190,7 +190,7 @@ void TMVA::Configurable::ParseOptions()
                   else {
                      // since we don't know what else is comming we just put everthing into a map
                      if (!decOpt->SetValue(optval, idx))
-                        Log() << kFATAL << "Index " << idx << " too large (" << optval << ") for option " << decOpt->TheName()
+                        Log() << kFATAL << "Index " << idx << " too large for option " << decOpt->TheName()
                                 << ", allowed range is [0," << decOpt->GetArraySize()-1 << "]" << Endl;
                   }
                } 

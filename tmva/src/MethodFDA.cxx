@@ -249,6 +249,7 @@ void TMVA::MethodFDA::ProcessOptions()
       if (pmin > pmax) Log() << kFATAL << "<ProcessOptions> max > min in interval for parameter: ["
                                << ipar << "] : [" << pmin  << ", " << pmax << "] " << Endl;
 
+      Log() << kINFO << "Create parameter interval for parameter " << ipar << " : [" << pmin << "," << pmax << "]" << Endl;
       fParRange[ipar] = new Interval( pmin, pmax );
    }
    delete parList;
@@ -264,7 +265,7 @@ void TMVA::MethodFDA::ProcessOptions()
    if( DoMulticlass() )
       fOutputDimensions = DataInfo().GetNClasses();
 
-   for( Int_t dim = 0; dim < fOutputDimensions; ++dim ){
+   for( Int_t dim = 1; dim < fOutputDimensions; ++dim ){
       for( UInt_t par = 0; par < fNPars; ++par ){
          fParRange.push_back( fParRange.at(par) );
       }
@@ -598,7 +599,7 @@ void TMVA::MethodFDA::ReadWeightsFromXML( void* wghtnode )
 
    try {
       gTools().ReadAttr( wghtnode, "NDim" , fOutputDimensions );
-   }catch( std::logic_error& excpt ){
+   } catch ( std::logic_error& ){
       // attribute could not be read, it probably does not exist because the weight file has been written with an older version
       fOutputDimensions = 1;
    }
