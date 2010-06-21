@@ -31,7 +31,7 @@ private:
   ABObj& operator=(const ABObj&) {return *this;}
 
   template<class a, class b, class c>
-  ABObj(const ABObj<a,b,c>& obj) : fObject(M()), fFactor(T(0.)) {}
+  ABObj(const ABObj<a,b,c>&) : fObject(M()), fFactor(T(0.)) {}
 
   template<class a, class b, class c>
   ABObj& operator=(const ABObj<a,b,c>&) {return *this;}
