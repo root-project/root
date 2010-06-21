@@ -1,3 +1,4 @@
+
 /******************************************************************************/
 /*                                                                            */
 /*                 X r d S e c P r o t o c o l s s l . c c                    */
@@ -280,8 +281,17 @@ XrdSecProtocolssl::secClient(int theFD, XrdOucErrInfo      *error) {
 	p=buf;
 	l=session->cipher_id;
 	l2n(l,p);
-
-	DEBUG("Info: ("<<__FUNCTION__<<") Session Id: "<< session_id << " Verify: " << session->verify_result << " (" << X509_verify_cert_error_string(session->verify_result) << ")");
+	if ((session->ssl_version>>8) == SSL3_VERSION_MAJOR)
+	  session->cipher=meth->get_cipher_by_char(&(buf[2]));
+	else
+	  session->cipher=meth->get_cipher_by_char(&(buf[1]));
+	if (session->cipher == NULL) {
+	  SSL_SESSION_free(session);
+	  delete session;
+	  session = NULL;		  
+	} else {
+	  DEBUG("Info: ("<<__FUNCTION__<<") Session Id: "<< session_id << " Cipher: " << session->cipher->name  << " Verify: " << session->verify_result << " (" << X509_verify_cert_error_string(session->verify_result) << ")");
+	}
       } else {
 	DEBUG("info: ("<<__FUNCTION__<<") Session load failed from " << sslsessionfile.c_str());
 	ERR_print_errors_fp(stderr);
@@ -376,8 +386,9 @@ XrdSecProtocolssl::secClient(int theFD, XrdOucErrInfo      *error) {
     return;
   }
 
+  /* I am not sure, if this is actually needed at all */
   if (!session) 
-    session = SSL_get1_session(ssl);
+    session = SSL_get_session(ssl);
   
   /* Get the cipher - opt */
   
@@ -814,6 +825,7 @@ XrdSecProtocolssl::secServer(int theFD, XrdOucErrInfo      *error) {
       struct passwd* pwd;
       struct group*  grp;
       StoreMutex.Lock();
+      //      printf("map: getpwnam %d\n",Entity.name);
       if ( (pwd = getpwnam(Entity.name)) && (grp = getgrgid(pwd->pw_gid))) {
 	Entity.grps   = strdup(grp->gr_name);
 	Entity.role   = strdup(grp->gr_name);
@@ -1124,10 +1136,35 @@ XrdSecProtocolssl::VomsMapGroups(const char* groups, XrdOucString& allgroups, Xr
       }
       ntoken++;
     } else {
-      TRACE(Authen,"No VOMS mapping found for " << XrdOucString(stoken));
-      return false;
+      // scan for a wildcard rule
+      XrdOucString vomsattribute = stoken;
+      int rpos=STR_NPOS;
+      while ((rpos = vomsattribute.rfind("/",rpos))!=STR_NPOS) {
+	rpos--;
+	XrdOucString wildcardattribute = vomsattribute;
+	wildcardattribute.erase(rpos+2);
+	wildcardattribute += "*";
+	if ((vomsmaprole = XrdSecProtocolssl::vomsmapstore.Find(wildcardattribute.c_str()))) {
+	  allgroups += vomsmaprole->c_str();
+	  allgroups += ":";
+	  if (ntoken == 0) {
+	    defaultgroup = vomsmaprole->c_str();
+	  }
+	  ntoken++;
+	  break; // leave the wildcard loop
+	}
+	if ( rpos < 0) {
+	  break;
+	}
+      }
     }
   }
+  
+  if (defaultgroup.length()) {
+    TRACE(Authen,"No VOMS mapping found for " << XrdOucString(stoken));
+    return false;
+  }
+
   return true;
 }
 

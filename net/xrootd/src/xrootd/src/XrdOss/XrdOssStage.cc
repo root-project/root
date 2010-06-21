@@ -46,6 +46,7 @@ const char *XrdOssStageCVSID = "$Id$";
 #include "XrdOuc/XrdOucName2Name.hh"
 #include "XrdOuc/XrdOucProg.hh"
 #include "XrdOuc/XrdOucReqID.hh"
+#include "XrdFrm/XrdFrmProxy.hh"
 
 /******************************************************************************/
 /*            G l o b a l s   a n d   S t a t i c   O b j e c t s             */
@@ -113,14 +114,15 @@ int XrdOssSys::Stage_QT(const char *Tid, const char *fn, XrdOucEnv &env,
    static XrdOucHash<char> PTable;
    static time_t nextScrub = xfrkeep + time(0);
    char *Found, *pdata[XrdOucMsubs::maxElem + 2];
-   int rc, pdlen[XrdOucMsubs::maxElem + 2];
-   time_t tNow = time(0);
+   int pdlen[XrdOucMsubs::maxElem + 2];
+   time_t cTime, mTime, tNow = time(0);
 
 // If there is a fail file and the error occured within the hold time,
 // fail the request. Otherwise, try it again. This avoids tight loops.
 //
-   if ((rc = HasFile(fn, XRDOSS_FAIL_FILE))
-   && xfrhold && (tNow - rc) < xfrhold)  return -XRDOSS_E8009;
+   if ((cTime = HasFile(fn, XRDOSS_FAIL_FILE, &mTime))
+   && xfrhold && (tNow - cTime) < xfrhold)
+      return (mTime != 2 ? -XRDOSS_E8009 : -ENOENT);
 
 // If enough time has gone by between the last scrub, do it now
 //
@@ -140,6 +142,16 @@ int XrdOssSys::Stage_QT(const char *Tid, const char *fn, XrdOucEnv &env,
    Found = PTable.Add(fn, 0, xfrkeep, Hash_data_is_key);
    PTMutex.UnLock();
    if (Found) return CalcTime();
+
+// Check if we should use our built-in frm interface
+//
+   if (StageFrm)
+      {char idbuff[64];
+       ReqID.ID(idbuff, sizeof(idbuff));
+       int n;
+       return (n = StageFrm->Add('+', fn, env.Env(n), Tid, idbuff,
+                   StageEvents, StageAction)) ? n : CalcTime();
+      }
 
 // If a stagemsg template was not defined; use our default template
 //
@@ -207,7 +219,7 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env,
    if ((oldreq = XrdOssStage_Req::StageQ.fullList.Apply(XrdOssFind_Req,(void *)&req)))
       {if (!(oldreq->flags & XRDOSS_REQ_FAIL)) return CalcTime(oldreq);
        if (oldreq->sigtod > time(0) && HasFile(fn, XRDOSS_FAIL_FILE))
-          return -XRDOSS_E8009;
+          return (oldreq->flags & XRDOSS_REQ_ENOF ? -ENOENT : -XRDOSS_E8009);
        delete oldreq;
       }
 
@@ -232,7 +244,7 @@ int XrdOssSys::Stage_RT(const char *Tid, const char *fn, XrdOucEnv &env,
 // Create a new request
 //
    if (!(newreq = new XrdOssStage_Req(req.hash, fn)))
-       return OssEroute.Emsg("XrdOssStage",-ENOMEM,"create req for",fn);
+       return OssEroute.Emsg("Stage",-ENOMEM,"create req for",fn);
 
 // Add this request to the list of requests
 //
@@ -330,7 +342,7 @@ void *XrdOssSys::Stage_In(void *carg)
              delete req;
             }
             else {req->flags &= ~XRDOSS_REQ_ACTV;
-                  req->flags |=  XRDOSS_REQ_FAIL;
+                  req->flags |= (rc == 2 ? XRDOSS_REQ_ENOF : XRDOSS_REQ_FAIL);
                   req->sigtod = xfrhold + time(0);
                   badreqs++;
                  }
@@ -419,7 +431,7 @@ int XrdOssSys::GetFile(XrdOssStage_Req *req)
 //
    if ((retc = StageProg->Run(rfs_fn, lfs_fn)))
       {OssEroute.Emsg("Stage", retc, "stage", req->path);
-       return -XRDOSS_E8009;
+       return (retc == 2 ? -ENOENT : -XRDOSS_E8009);
       }
 
 // All went well
@@ -454,7 +466,7 @@ int XrdOssSys::getID(const char *Tid, XrdOucEnv &Env, char *buff, int bsz)
 /*                               H a s F i l e                                */
 /******************************************************************************/
   
-time_t XrdOssSys::HasFile(const char *fn, const char *fsfx)
+time_t XrdOssSys::HasFile(const char *fn, const char *fsfx, time_t *mTime)
 {
     struct stat statbuff;
     int fnlen;
@@ -474,5 +486,7 @@ time_t XrdOssSys::HasFile(const char *fn, const char *fsfx)
 
 // Now check if the file actually exists
 //
-   return (stat(path, &statbuff) ? 0 : statbuff.st_ctime);
+   if (stat(path, &statbuff)) return 0;
+   if (mTime) *mTime = statbuff.st_mtime;
+   return statbuff.st_ctime;
 }

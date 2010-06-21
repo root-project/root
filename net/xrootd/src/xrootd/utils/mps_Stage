@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# $Id: mps_Stage,v 1.14 2008/10/14 09:24:50 furano Exp $
+# $Id: mps_Stage,v 1.15 2010/02/25 10:41:56 abh Exp $
 
 # (C) 1999 by the Board of Trustees of the Leland Stanford, Jr., University
 #                          All Rights Reserved
@@ -385,7 +385,9 @@ sub CleanUp {my($rc) = @_;
       &Log("Stage rc=$rc lkn=$lktries lkt=$lktime xfr=$xfrtime fn=$trg_fn");
      }
   if ($rc && $ErrLog && $CmdFile && open(CUFD, ">>$CmdFile") )
-     {print(CUFD $ErrLog); close(CUFD); rename($CmdFile, $ErrFile);}
+     {print(CUFD $ErrLog); close(CUFD); rename($CmdFile, $ErrFile);
+      utime(time(), 2, $ErrFile) if $rc == 2;
+     }
   exit($rc);
 }
 

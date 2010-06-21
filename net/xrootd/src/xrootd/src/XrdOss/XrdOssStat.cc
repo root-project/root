@@ -84,7 +84,7 @@ int XrdOssSys::Stat(const char *path, struct stat *buff, int opts)
 // The file may be offline in a mass storage system, check if this is possible
 //
    if (!IsRemote(path) || opts & XRDOSS_resonly) return -errno;
-   if (!MSSgwCmd) return -ENOMSG;
+   if (!RSSCmd) return (popts & XRDEXP_NOCHECK ? -ENOENT : -ENOMSG);
 
 // Generate remote path
 //
@@ -119,14 +119,15 @@ int XrdOssSys::Stat(const char *path, struct stat *buff, int opts)
 
 int XrdOssSys::StatFS(const char *path, char *buff, int &blen)
 {
-   int Opt, sVal, wVal, Util;
+   int sVal, wVal, Util;
    long long fSpace, fSize;
+   unsigned long long Opt;
 
 // Get the values for this file system
 //
    StatFS(path, Opt, fSize, fSpace);
-   sVal = (Opt & XRDEXP_REMOTE ? 1 : 0);
-   wVal = (Opt & XRDEXP_NOTRW  ? 0 : 1);
+   sVal = (Opt & XRDEXP_STAGE ? 1 : 0);
+   wVal = (Opt & XRDEXP_NOTRW ? 0 : 1);
 
 // Size the value to fit in an int
 //
@@ -158,14 +159,17 @@ int XrdOssSys::StatFS(const char *path, char *buff, int &blen)
   Output:   Returns XrdOssOK upon success and -errno upon failure.
 */
 
-int XrdOssSys::StatFS(const char *path, 
-                      int &Opt, long long &fSize, long long &fSpace)
+int XrdOssSys::StatFS(const char *path, unsigned long long &Opt,
+                      long long &fSize, long long &fSpace)
 {
+// Establish the path options
+//
+   Opt = PathOpts(path);
 
 // For in-place paths we just get the free space in that partition, otherwise
 // get the maximum available in any partition.
 //
-   if ((Opt & XRDEXP_REMOTE) || !(Opt & XRDEXP_NOTRW))
+   if ((Opt & XRDEXP_STAGE) || !(Opt & XRDEXP_NOTRW))
       if ((Opt & XRDEXP_INPLACE) || !XrdOssCache_Group::fsgroups)
          {char lcl_path[MAXPATHLEN+1];
           if (lcl_N2N)
@@ -205,7 +209,7 @@ int XrdOssSys::StatLS(XrdOucEnv &env, const char *path, char *buff, int &blen)
 // We provide psuedo support whould be not have a cache
 //
    if (!XrdOssCache_Group::fsgroups)
-      {int Opt;
+      {unsigned long long Opt;
        long long fSpace, fSize;
        StatFS(path, Opt, fSize, fSpace);
        if (fSpace < 0) fSpace = 0;
@@ -458,8 +462,8 @@ int XrdOssSys::getStats(char *buff, int blen)
 //
    while(fsg && blen > 0)
         {n = XrdOssCache_FS::getSpace(CSpace, fsg);
-         flen = snprintf(bp, blen, stag2, spNum, fsg->group, CSpace.Total,
-                         CSpace.Free>>10, CSpace.Maxfree>>10, n, CSpace.Usage);
+         flen = snprintf(bp, blen, stag2, spNum, fsg->group, CSpace.Total>>10,
+                CSpace.Free>>10, CSpace.Maxfree>>10, n, CSpace.Usage>>10);
          bp += flen; blen -= flen; spNum++;
          if (CSpace.Quota >= 0 && blen > stagqsz)
             {flen = sprintf(bp, stagq, CSpace.Quota); bp += flen; blen -= flen;}

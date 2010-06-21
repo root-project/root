@@ -72,7 +72,7 @@ extern "C" {
 
 
 
-#define XRDCLI_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.33 $ - Xrootd version: "XrdVSTRING
+#define XRDCLI_VERSION            "(C) 2004-2010 by the Xrootd group. $Revision: 1.34 $ - Xrootd version: "XrdVSTRING
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -438,10 +438,11 @@ int main(int argc, char**argv) {
 	 if (!parmname || !val) {
 	    cout << "A parameter name and an integer value are needed." << endl << endl;
 	    retval = 1;
-	 }
+	 } else {
 
-	 EnvPutInt(parmname, atoi(val));
-	 DebugSetLevel(EnvGetLong(NAME_DEBUG));
+            EnvPutInt(parmname, atoi(val));
+            DebugSetLevel(EnvGetLong(NAME_DEBUG));
+         }
 
       }
       else
@@ -453,9 +454,11 @@ int main(int argc, char**argv) {
 	 if (!parmname || !val) {
 	    cout << "A parameter name and a string value are needed." << endl << endl;
 	    retval = 1;
-	 }
+	 } else {
 
-	 EnvPutString(parmname, val);
+            EnvPutString(parmname, val);
+
+         }
 
       }
       else
@@ -487,136 +490,141 @@ int main(int argc, char**argv) {
 
 	 }
 
-	 // Init the instance
-	 if (genadmin) delete genadmin;
-	 XrdOucString h(host);
-	 h  = "root://" + h;
-	 h += "//dummy";
+         if (!retval) {
+            // Init the instance
+            if (genadmin) delete genadmin;
+            XrdOucString h(host);
+            h  = "root://" + h;
+            h += "//dummy";
 
-	 genadmin = new XrdClientAdmin(h.c_str());
+            genadmin = new XrdClientAdmin(h.c_str());
 
-	 // Then connect
-	 if (!genadmin->Connect()) {
-	    delete genadmin;
-	    genadmin = 0;
-	 }
+            // Then connect
+            if (!genadmin->Connect()) {
+               delete genadmin;
+               genadmin = 0;
+            }
+         }
 
       }
       else
       // -------------------------- dirlistrec ---------------------------
-      if (!strcmp(cmd, "dirlistrec")) {
-         XrdClientVector<XrdOucString> pathq;
+         if (!strcmp(cmd, "dirlistrec")) {
+            XrdClientVector<XrdOucString> pathq;
 
-	 if (!genadmin) {
-	    cout << "Not connected to any server." << endl;
-	    retval = 1;
-	 }
-
-	 char *dirname = tkzer.GetToken(0, 0);
-	 XrdOucString path;
-
-	 if (dirname) {
-	    if (dirname[0] == '/')
-	       path = dirname;
-	    else {
-               if ((currentpath.length() > 0) && (currentpath[currentpath.length()-1] != '/'))
-                  path = currentpath + "/" + dirname;
-               else
-                  path = currentpath + dirname;
-
-            }
-	 }
-	 else path = currentpath;
-
-	 if (!path.length()) {
-	    cout << "The current path is an empty string. Assuming '/'." << endl;
-	    path = '/';
-	 }
-
-
-         // Initialize the queue with this path
-         pathq.Push_back(path);
-
-
-         while (pathq.GetSize() > 0) {
-            XrdOucString pathtodo = pathq.Pop_back();
-
-            // Now try to issue the request
-            XrdClientVector<XrdClientAdmin::DirListInfo> nfo;
-            if (!genadmin->DirList(pathtodo.c_str(), nfo, true)) {
-               retval = 1;  
-               cout << "Error listing path '" << pathtodo << "' in server " <<
-                  genadmin->GetCurrentUrl().HostWPort <<
-                  " The path does not exist in some servers or there are malformed filenames." << endl;
-            }
-
-            // Now check the answer
-            if (!CheckAnswer(genadmin)) {
+            if (!genadmin) {
+               cout << "Not connected to any server." << endl;
                retval = 1;
-               cout << "Error '" << genadmin->LastServerError()->errmsg <<
-                  "' listing path '" << pathtodo <<
-                  "' in server" << genadmin->GetCurrentUrl().HostWPort <<
-                  " or in some of its child nodes." << endl;
             }
-      
-            for (int i = 0; i < nfo.GetSize(); i++) {
 
-               if ((nfo[i].flags & kXR_isDir) &&
-                   (nfo[i].flags & kXR_readable) &&
-                   (nfo[i].flags & kXR_xset)) {
-                  
+            if (!retval) {
 
-                  // The path has not to be pushed if it's already present
-                  // This may happen if several servers have the same path
-                  bool foundpath = false;
-                  for (int ii = 0; ii < pathq.GetSize(); ii++) {
-                     if (nfo[i].fullpath == pathq[ii]) {
-                        foundpath = true;
-                        break;
-                     }
+               char *dirname = tkzer.GetToken(0, 0);
+               XrdOucString path;
+
+               if (dirname) {
+                  if (dirname[0] == '/')
+                     path = dirname;
+                  else {
+                     if ((currentpath.length() > 0) && (currentpath[currentpath.length()-1] != '/'))
+                        path = currentpath + "/" + dirname;
+                     else
+                        path = currentpath + dirname;
+
                   }
-                  
-                  if (!foundpath)
-                     pathq.Push_back(nfo[i].fullpath);
-                  else 
-                     // If the path is already present in the queue then it was already printed as well.
-                     continue;
+               }
+               else path = currentpath;
 
+               if (!path.length()) {
+                  cout << "The current path is an empty string. Assuming '/'." << endl;
+                  path = '/';
                }
 
-               char ts[256];
-               strcpy(ts, "n/a");
 
-               struct tm *t = gmtime(&nfo[i].modtime);
-               strftime(ts, 255, "%F %T", t);
+               // Initialize the queue with this path
+               pathq.Push_back(path);
 
-               char cflgs[16];
-               memset(cflgs, 0, 16);
 
-               if (nfo[i].flags & kXR_isDir)
-                  strcat(cflgs, "d");
-               else strcat(cflgs, "-");
+               while (pathq.GetSize() > 0) {
+                  XrdOucString pathtodo = pathq.Pop_back();
 
-               if (nfo[i].flags & kXR_readable)
-                  strcat(cflgs, "r");
-               else strcat(cflgs, "-");
+                  // Now try to issue the request
+                  XrdClientVector<XrdClientAdmin::DirListInfo> nfo;
+                  if (!genadmin->DirList(pathtodo.c_str(), nfo, true)) {
+                     retval = 1;  
+                     cout << "Error listing path '" << pathtodo << "' in server " <<
+                        genadmin->GetCurrentUrl().HostWPort <<
+                        " The path does not exist in some servers or there are malformed filenames." << endl;
+                  }
 
-               if (nfo[i].flags & kXR_writable)
-                  strcat(cflgs, "w");
-               else strcat(cflgs, "-");
+                  // Now check the answer
+                  if (!CheckAnswer(genadmin)) {
+                     retval = 1;
+                     cout << "Error '" << genadmin->LastServerError()->errmsg <<
+                        "' listing path '" << pathtodo <<
+                        "' in server" << genadmin->GetCurrentUrl().HostWPort <<
+                        " or in some of its child nodes." << endl;
+                  }
+      
+                  for (int i = 0; i < nfo.GetSize(); i++) {
 
-               if (nfo[i].flags & kXR_xset)
-                  strcat(cflgs, "x");
-               else strcat(cflgs, "-");
+                     if ((nfo[i].flags & kXR_isDir) &&
+                         (nfo[i].flags & kXR_readable) &&
+                         (nfo[i].flags & kXR_xset)) {
+                  
 
-               printf("%s(%03ld) %12lld %s %s\n", cflgs, nfo[i].flags, nfo[i].size, ts, nfo[i].fullpath.c_str());
+                        // The path has not to be pushed if it's already present
+                        // This may happen if several servers have the same path
+                        bool foundpath = false;
+                        for (int ii = 0; ii < pathq.GetSize(); ii++) {
+                           if (nfo[i].fullpath == pathq[ii]) {
+                              foundpath = true;
+                              break;
+                           }
+                        }
+                  
+                        if (!foundpath)
+                           pathq.Push_back(nfo[i].fullpath);
+                        else 
+                           // If the path is already present in the queue then it was already printed as well.
+                           continue;
 
-            }
+                     }
+
+                     char ts[256];
+                     strcpy(ts, "n/a");
+
+                     struct tm *t = gmtime(&nfo[i].modtime);
+                     strftime(ts, 255, "%F %T", t);
+
+                     char cflgs[16];
+                     memset(cflgs, 0, 16);
+
+                     if (nfo[i].flags & kXR_isDir)
+                        strcat(cflgs, "d");
+                     else strcat(cflgs, "-");
+
+                     if (nfo[i].flags & kXR_readable)
+                        strcat(cflgs, "r");
+                     else strcat(cflgs, "-");
+
+                     if (nfo[i].flags & kXR_writable)
+                        strcat(cflgs, "w");
+                     else strcat(cflgs, "-");
+
+                     if (nfo[i].flags & kXR_xset)
+                        strcat(cflgs, "x");
+                     else strcat(cflgs, "-");
+
+                     printf("%s(%03ld) %12lld %s %s\n", cflgs, nfo[i].flags, nfo[i].size, ts, nfo[i].fullpath.c_str());
+
+                  }
             
-            if (nfo.GetSize()) cout << endl;
-         }
+                  if (nfo.GetSize()) cout << endl;
+               }
 
-         if (retval) cout << "Errors during processing. Please check them." << endl;
+               if (retval) cout << "Errors during processing. Please check them." << endl;
+            }
       }
       else
       // -------------------------- dirlist ---------------------------
@@ -627,40 +635,43 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *dirname = tkzer.GetToken(0, 0);
-	 XrdOucString path;
+         if (!retval) {
 
-	 if (dirname) {
-	    if (dirname[0] == '/')
-	       path = dirname;
-	    else {
-               if ((currentpath.length() > 0) && (currentpath[currentpath.length()-1] != '/'))
-                  path = currentpath + "/" + dirname;
-               else
-                  path = currentpath + dirname;
 
+            char *dirname = tkzer.GetToken(0, 0);
+            XrdOucString path;
+
+            if (dirname) {
+               if (dirname[0] == '/')
+                  path = dirname;
+               else {
+                  if ((currentpath.length() > 0) && (currentpath[currentpath.length()-1] != '/'))
+                     path = currentpath + "/" + dirname;
+                  else
+                     path = currentpath + dirname;
+
+               }
             }
-	 }
-	 else path = currentpath;
+            else path = currentpath;
 
-	 if (!path.length()) {
-	    cout << "The current path is an empty string. Assuming '/'." << endl;
-	    path = '/';
-	 }
+            if (!path.length()) {
+               cout << "The current path is an empty string. Assuming '/'." << endl;
+               path = '/';
+            }
 
-	 // Now try to issue the request
-         XrdClientVector<XrdClientAdmin::DirListInfo> nfo;
-	 if (!genadmin->DirList(path.c_str(), nfo, true)) {
-            //nfo.Clear();
-            retval = 1;
+            // Now try to issue the request
+            XrdClientVector<XrdClientAdmin::DirListInfo> nfo;
+            if (!genadmin->DirList(path.c_str(), nfo, true)) {
+               //nfo.Clear();
+               retval = 1;
             
-         }
+            }
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin)) {
-	    retval = 1;
-            //nfo.Clear();
-         }
+            // Now check the answer
+            if (!CheckAnswer(genadmin)) {
+               retval = 1;
+               //nfo.Clear();
+            }
       
 
             for (int i = 0; i < nfo.GetSize(); i++) {
@@ -695,6 +706,7 @@ int main(int argc, char**argv) {
 
             if (retval) cout << "Errors during processing. Please check." << endl;
             cout << endl;
+         }
 
       }
       else
@@ -706,40 +718,44 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
+         if (!retval) {
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else pathname = currentpath;
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else pathname = currentpath;
 
-	 char *writable = tkzer.GetToken(0, 1);
-	 bool wrt = false;
+            char *writable = tkzer.GetToken(0, 1);
+            bool wrt = false;
 
-	 if (writable) {
-	   wrt = true;
-	   if (!strcmp(writable, "false") ||
-	       !strcmp(writable, "0")) wrt = false;
-	   else
-	     cout << "Checking for a writable location." << endl;
-	 }
+            if (writable) {
+               wrt = true;
+               if (!strcmp(writable, "false") ||
+                   !strcmp(writable, "0")) wrt = false;
+               else
+                  cout << "Checking for a writable location." << endl;
+            }
 
-	 // Now try to issue the request
-	 XrdClientLocate_Info loc;
-	 bool r;
-	 r = genadmin->Locate((kXR_char *)pathname.c_str(), loc, wrt);
-	 if (!r)
-	   cout << "No matching files were found." << endl;
+            // Now try to issue the request
+            XrdClientLocate_Info loc;
+            bool r;
+            r = genadmin->Locate((kXR_char *)pathname.c_str(), loc, wrt);
+            if (!r)
+               cout << "No matching files were found." << endl;
 	   
-	 PrintLocateInfo(loc);
+            PrintLocateInfo(loc);
 
 
 
-	 cout << endl;
+            cout << endl;
+         }
+
+
  
       }
       else
@@ -751,30 +767,34 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
+         if (!retval) {
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else pathname = currentpath;
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 // Now try to issue the request
-	 XrdClientVector<XrdClientLocate_Info> loc;
-	 bool r;
-	 r = genadmin->Locate((kXR_char *)pathname.c_str(), loc);
-	 if (!r)
-	   cout << "No matching files were found." << endl;
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else pathname = currentpath;
+
+            // Now try to issue the request
+            XrdClientVector<XrdClientLocate_Info> loc;
+            bool r;
+            r = genadmin->Locate((kXR_char *)pathname.c_str(), loc);
+            if (!r)
+               cout << "No matching files were found." << endl;
 	 
-	 for (int ii = 0; ii < loc.GetSize(); ii++) {
-	   cout << endl << endl << "------------- Location #" << ii+1 << endl;
-	   PrintLocateInfo(loc[ii]);
-	 }
+            for (int ii = 0; ii < loc.GetSize(); ii++) {
+               cout << endl << endl << "------------- Location #" << ii+1 << endl;
+               PrintLocateInfo(loc[ii]);
+            }
 
-	 cout << endl;
+            cout << endl;
+
+         }
 
       }
       else
@@ -786,29 +806,33 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else pathname = currentpath;
+         if (!retval) {
 
-	 // Now try to issue the request
-	 long id, flags, modtime;
-	 long long size;
-	 genadmin->Stat(pathname.c_str(), id, size, flags, modtime);
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else pathname = currentpath;
+
+            // Now try to issue the request
+            long id, flags, modtime;
+            long long size;
+            genadmin->Stat(pathname.c_str(), id, size, flags, modtime);
+
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
       
-	 cout << "Id: " << id << " Size: " << size << " Flags: " << flags << " Modtime: " << modtime << endl;
+            cout << "Id: " << id << " Size: " << size << " Flags: " << flags << " Modtime: " << modtime << endl;
 
-	 cout << endl;
+            cout << endl;
+         }
 
       }
       else
@@ -820,41 +844,46 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
+         if (!retval) {
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else pathname = currentpath;
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 // Now try to issue the request
-	 int rwservers = 0;
-	 long long rwfree = 0;
-	 int rwutil = 0;
-	 int stagingservers = 0;
-	 long long stagingfree = 0;
-	 int stagingutil = 0;
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else pathname = currentpath;
+
+            // Now try to issue the request
+            int rwservers = 0;
+            long long rwfree = 0;
+            int rwutil = 0;
+            int stagingservers = 0;
+            long long stagingfree = 0;
+            int stagingutil = 0;
 
 
-	 genadmin->Stat_vfs(pathname.c_str(), rwservers, rwfree, rwutil,
-			    stagingservers, stagingfree, stagingutil);
+            genadmin->Stat_vfs(pathname.c_str(), rwservers, rwfree, rwutil,
+                               stagingservers, stagingfree, stagingutil);
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
       
-	 cout << "r/w nodes: " << rwservers <<
-	   " r/w free space: " << rwfree <<
-	   " r/w utilization: " << rwutil <<
-	   " staging nodes: " << rwservers <<
-	   " staging free space: " << rwfree <<
-	   " staging utilization: " << rwutil << endl;
+            cout << "r/w nodes: " << rwservers <<
+               " r/w free space: " << rwfree <<
+               " r/w utilization: " << rwutil <<
+               " staging nodes: " << rwservers <<
+               " staging free space: " << rwfree <<
+               " staging utilization: " << rwutil << endl;
 
-	 cout << endl;
+            cout << endl;
+
+         }
+
       }
       else
       // -------------------------- ExistFile ---------------------------
@@ -865,33 +894,38 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else pathname = currentpath;
+         if (!retval) {
 
-	 // Now try to issue the request
-	 vecBool vb;
-	 vecString vs;
-	 vs.Push_back(pathname);
-	 genadmin->ExistFiles(vs, vb);
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else pathname = currentpath;
+
+            // Now try to issue the request
+            vecBool vb;
+            vecString vs;
+            vs.Push_back(pathname);
+            genadmin->ExistFiles(vs, vb);
+
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
       
-	 if (vb[0])
-	    cout << "The file exists." << endl;
-	 else
-	    cout << "File not found." << endl;
+            if (vb[0])
+               cout << "The file exists." << endl;
+            else
+               cout << "File not found." << endl;
 
-	 cout << endl;
+            cout << endl;
+
+         }
 	 
       }
       else
@@ -903,33 +937,38 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else pathname = currentpath;
+         if (!retval) {
 
-	 // Now try to issue the request
-	 vecBool vb;
-	 vecString vs;
-	 vs.Push_back(pathname);
-	 genadmin->ExistDirs(vs, vb);
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else pathname = currentpath;
+
+            // Now try to issue the request
+            vecBool vb;
+            vecString vs;
+            vs.Push_back(pathname);
+            genadmin->ExistDirs(vs, vb);
+
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
       
-	 if (vb[0])
-	    cout << "The directory exists." << endl;
-	 else
-	    cout << "Directory not found." << endl;
+            if (vb[0])
+               cout << "The directory exists." << endl;
+            else
+               cout << "Directory not found." << endl;
 
-	 cout << endl;
+            cout << endl;
+         }
+
 	 
       }
       else
@@ -942,33 +981,37 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 };
+         if (!retval) {
 
-	 // Now try to issue the request
-	 kXR_char *ans;
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 genadmin->GetChecksum((kXR_char *)pathname.c_str(), &ans);
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            };
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now try to issue the request
+            kXR_char *ans;
 
-	 cout << "Checksum: " << ans << endl;
-	 cout << endl;
+            genadmin->GetChecksum((kXR_char *)pathname.c_str(), &ans);
 
-	 free(ans);
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
+
+            cout << "Checksum: " << ans << endl;
+            cout << endl;
+
+            free(ans);
+         }
 
       }
       else
@@ -980,36 +1023,40 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
+         if (!retval) {
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	  else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 // Now try to issue the request
-	 vecBool vb;
-	 vecString vs;
-	 vs.Push_back(pathname);
-	 genadmin->IsFileOnline(vs, vb);
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now try to issue the request
+            vecBool vb;
+            vecString vs;
+            vs.Push_back(pathname);
+            genadmin->IsFileOnline(vs, vb);
+
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
       
-	 if (vb[0])
-	    cout << "The file is online." << endl;
-	 else
-	    cout << "The file is not online." << endl;
+            if (vb[0])
+               cout << "The file is online." << endl;
+            else
+               cout << "The file is not online." << endl;
 
-	 cout << endl;
+            cout << endl;
+
+         }
 
       }
       else
@@ -1021,39 +1068,41 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname1 = tkzer.GetToken(0, 0);
-	 char *fname2 = tkzer.GetToken(0, 0);
-	 XrdOucString pathname1, pathname2;
+         if (!retval) {
+            char *fname1 = tkzer.GetToken(0, 0);
+            char *fname2 = tkzer.GetToken(0, 0);
+            XrdOucString pathname1, pathname2;
 
-	 if (fname1) {
-	    if (fname1[0] == '/')
-	       pathname1 = fname1;
-	    else
-	       pathname1 = currentpath + "/" + fname1;
-	 }
-	 else {
-	    cout << "Two parameters are mandatory." << endl;
-	    retval = 1;
-	 }
-	 if (fname2) {
-	    if (fname2[0] == '/')
-	       pathname2 = fname2;
-	    else
-	       pathname2 = currentpath + "/" + fname2;
-	 }
-	 else {
-	    cout << "Two parameters are mandatory." << endl;
-	    retval = 1;
-	 }
+            if (fname1) {
+               if (fname1[0] == '/')
+                  pathname1 = fname1;
+               else
+                  pathname1 = currentpath + "/" + fname1;
+            }
+            else {
+               cout << "Two parameters are mandatory." << endl;
+               retval = 1;
+            }
+            if (fname2) {
+               if (fname2[0] == '/')
+                  pathname2 = fname2;
+               else
+                  pathname2 = currentpath + "/" + fname2;
+            }
+            else {
+               cout << "Two parameters are mandatory." << endl;
+               retval = 1;
+            }
 
-	 // Now try to issue the request
-	 genadmin->Mv(pathname1.c_str(), pathname2.c_str());
+            // Now try to issue the request
+            genadmin->Mv(pathname1.c_str(), pathname2.c_str());
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
 
-	 cout << endl;
+            cout << endl;
+         }
 	
       }
       else
@@ -1065,38 +1114,40 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname1 = tkzer.GetToken(0, 0);
-	 char *userc = tkzer.GetToken(0, 0);
-	 char *groupc = tkzer.GetToken(0, 0);
-	 char *otherc = tkzer.GetToken(0, 0);
+         if (!retval) {
+            char *fname1 = tkzer.GetToken(0, 0);
+            char *userc = tkzer.GetToken(0, 0);
+            char *groupc = tkzer.GetToken(0, 0);
+            char *otherc = tkzer.GetToken(0, 0);
 
-	 int user = 0, group = 0, other = 0;
-	 if (userc) user = atoi(userc);
-	 if (groupc) group = atoi(groupc);
-	 if (otherc) other = atoi(otherc);
+            int user = 0, group = 0, other = 0;
+            if (userc) user = atoi(userc);
+            if (groupc) group = atoi(groupc);
+            if (otherc) other = atoi(otherc);
 
-	 XrdOucString pathname1;
+            XrdOucString pathname1;
 
-	 if (fname1) {
-	    if (fname1[0] == '/')
-	       pathname1 = fname1;
-	    else
-	       pathname1 = currentpath + "/" + fname1;
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+            if (fname1) {
+               if (fname1[0] == '/')
+                  pathname1 = fname1;
+               else
+                  pathname1 = currentpath + "/" + fname1;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
 
-	 // Now try to issue the request
-	 genadmin->Mkdir(pathname1.c_str(), user, group, other);
+            // Now try to issue the request
+            genadmin->Mkdir(pathname1.c_str(), user, group, other);
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
 
-	 cout << endl;
+            cout << endl;
+         }
 	 
       }
       else
@@ -1108,39 +1159,41 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname1 = tkzer.GetToken(0, 0);
-	 char *userc = tkzer.GetToken(0, 0);
-	 char *groupc = tkzer.GetToken(0, 0);
-	 char *otherc = tkzer.GetToken(0, 0);
+         if (!retval) {
 
-	 int user = 0, group = 0, other = 0;
-	 if (userc) user = atoi(userc);
-	 if (groupc) group = atoi(groupc);
-	 if (otherc) other = atoi(otherc);
+            char *fname1 = tkzer.GetToken(0, 0);
+            char *userc = tkzer.GetToken(0, 0);
+            char *groupc = tkzer.GetToken(0, 0);
+            char *otherc = tkzer.GetToken(0, 0);
 
-	 XrdOucString pathname1;
+            int user = 0, group = 0, other = 0;
+            if (userc) user = atoi(userc);
+            if (groupc) group = atoi(groupc);
+            if (otherc) other = atoi(otherc);
 
-	 if (fname1) {
-	    if (fname1[0] == '/')
-	       pathname1 = fname1;
-	    else
-	       pathname1 = currentpath + "/" + fname1;
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+            XrdOucString pathname1;
+
+            if (fname1) {
+               if (fname1[0] == '/')
+                  pathname1 = fname1;
+               else
+                  pathname1 = currentpath + "/" + fname1;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
 
-	 // Now try to issue the request
-	 genadmin->Chmod(pathname1.c_str(), user, group, other);
+            // Now try to issue the request
+            genadmin->Chmod(pathname1.c_str(), user, group, other);
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
 
-	 cout << endl;
-
+            cout << endl;
+         }
       }
       else
       // -------------------------- truncate ---------------------------
@@ -1151,43 +1204,48 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 char *slen = tkzer.GetToken(0, 0);
+         if (!retval) {
 
-	 long long len = 0;
-	 if (slen) len = atoll(slen);
-         else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+            char *fname = tkzer.GetToken(0, 0);
+            char *slen = tkzer.GetToken(0, 0);
 
-         if (len <= 0) {
-	    cout << "Bad length." << endl;
-	    retval = 1;
-	 }
+            long long len = 0;
+            if (slen) len = atoll(slen);
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
-	 XrdOucString pathname1;
+            if (len <= 0) {
+               cout << "Bad length." << endl;
+               retval = 1;
+            }
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname1 = fname;
-	    else
-	       pathname1 = currentpath + "/" + fname;
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+            XrdOucString pathname1;
+
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname1 = fname;
+               else
+                  pathname1 = currentpath + "/" + fname;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
 
-	 // Now try to issue the request
-	 genadmin->Truncate(pathname1.c_str(), len);
+            // Now try to issue the request
+            genadmin->Truncate(pathname1.c_str(), len);
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
 
-	 cout << endl;
+            cout << endl;
+
+         }
+
 
       }
       else
@@ -1199,29 +1257,31 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
+         if (!retval) {
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 // Now try to issue the request
-	 genadmin->Rm(pathname.c_str());
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now try to issue the request
+            genadmin->Rm(pathname.c_str());
 
-	 cout << endl;
- 
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
+
+            cout << endl;
+         } 
       }
       else
       // -------------------------- rmdir ---------------------------
@@ -1232,28 +1292,31 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname = tkzer.GetToken(0, 0);
-	 XrdOucString pathname;
+         if (!retval) {
 
-	 if (fname) {
-	    if (fname[0] == '/')
-	       pathname = fname;
-	    else
-	       pathname = currentpath + "/" + fname;
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+            char *fname = tkzer.GetToken(0, 0);
+            XrdOucString pathname;
 
-	 // Now try to issue the request
-	 genadmin->Rmdir(pathname.c_str());
+            if (fname) {
+               if (fname[0] == '/')
+                  pathname = fname;
+               else
+                  pathname = currentpath + "/" + fname;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now try to issue the request
+            genadmin->Rmdir(pathname.c_str());
 
-	 cout << endl;
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
+
+            cout << endl;
+         }
 
       }
       else
@@ -1265,37 +1328,42 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname1 = tkzer.GetToken(0, 0);
-	 char *optsc = tkzer.GetToken(0, 0);
-	 char *prioc = tkzer.GetToken(0, 0);
+         if (!retval) {
 
-	 int opts = 0, prio = 0;
-	 if (optsc) opts = atoi(optsc);
-	 if (prioc) prio = atoi(prioc);
+            char *fname1 = tkzer.GetToken(0, 0);
+            char *optsc = tkzer.GetToken(0, 0);
+            char *prioc = tkzer.GetToken(0, 0);
 
-	 XrdOucString pathname1;
+            int opts = 0, prio = 0;
+            if (optsc) opts = atoi(optsc);
+            if (prioc) prio = atoi(prioc);
 
-	 if (fname1) {
-	    if (fname1[0] == '/')
-	       pathname1 = fname1;
-	    else
-	       pathname1 = currentpath + "/" + fname1;
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+            XrdOucString pathname1;
 
-	 // Now try to issue the request
-	 vecString vs;
-	 vs.Push_back(pathname1);
-	 genadmin->Prepare(vs, (kXR_char)opts, (kXR_char)prio);
+            if (fname1) {
+               if (fname1[0] == '/')
+                  pathname1 = fname1;
+               else
+                  pathname1 = currentpath + "/" + fname1;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	    retval = 1;
+            // Now try to issue the request
+            vecString vs;
+            vs.Push_back(pathname1);
+            genadmin->Prepare(vs, (kXR_char)opts, (kXR_char)prio);
 
-	 cout << endl;
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
+
+            cout << endl;
+
+         }
+
 
       }
       else
@@ -1307,54 +1375,58 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname1 = tkzer.GetToken(0, 0);
-	 char *tk;
-	 XrdOucString pars;
+         if (!retval) {
 
-	 while ((tk = tkzer.GetToken(0, 0))) {
-	    pars += " ";
-	    pars += tk;
-	 }
+            char *fname1 = tkzer.GetToken(0, 0);
+            char *tk;
+            XrdOucString pars;
 
-	 XrdOucString pathname1;
+            while ((tk = tkzer.GetToken(0, 0))) {
+               pars += " ";
+               pars += tk;
+            }
 
-	 if (fname1) {
+            XrdOucString pathname1;
 
-	     if ( (strstr(fname1, "root://") == fname1) ||
-		  (strstr(fname1, "xroot://") == fname1) )
-	       pathname1 = fname1;
-	    else
-	       if (fname1[0] == '/') {
-		  pathname1 = "root://" + genadmin->GetCurrentUrl().HostWPort;
-		  pathname1 += "/";
-		  pathname1 += fname1;
-	       }
-	       else {
-		  pathname1 = "root://" + genadmin->GetCurrentUrl().HostWPort;
-		  pathname1 += "/";
-		  pathname1 += currentpath;
-		  pathname1 += "/";
-		  pathname1 += fname1;
-	       }
+            if (fname1) {
 
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+               if ( (strstr(fname1, "root://") == fname1) ||
+                    (strstr(fname1, "xroot://") == fname1) )
+                  pathname1 = fname1;
+               else
+                  if (fname1[0] == '/') {
+                     pathname1 = "root://" + genadmin->GetCurrentUrl().HostWPort;
+                     pathname1 += "/";
+                     pathname1 += fname1;
+                  }
+                  else {
+                     pathname1 = "root://" + genadmin->GetCurrentUrl().HostWPort;
+                     pathname1 += "/";
+                     pathname1 += currentpath;
+                     pathname1 += "/";
+                     pathname1 += fname1;
+                  }
 
-	 XrdOucString cmd;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
-	 cmd = "xrdcp -s ";
-	 cmd += pathname1;
-	 cmd += pars;
-	 cmd += " -";
+            XrdOucString cmd;
 
-	 int rt = system(cmd.c_str());
+            cmd = "xrdcp -s ";
+            cmd += pathname1;
+            cmd += pars;
+            cmd += " -";
 
-	 cout << "cat returned " << rt << endl;
+            int rt = system(cmd.c_str());
 
-	 cout << endl;
+            cout << "cat returned " << rt << endl;
+
+            cout << endl;
+         }
+
 	
       }
       else
@@ -1366,79 +1438,83 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *fname1 = tkzer.GetToken(0, 0);
-	 char *fname2 = tkzer.GetToken(0, 0);
-	 char *tk;
-	 XrdOucString pars;
+         if (!retval) {
 
-	 while ((tk = tkzer.GetToken(0, 0))) {
-	    pars += " ";
-	    pars += tk;
-	 }
+            char *fname1 = tkzer.GetToken(0, 0);
+            char *fname2 = tkzer.GetToken(0, 0);
+            char *tk;
+            XrdOucString pars;
 
-	 XrdOucString pathname1, pathname2;
+            while ((tk = tkzer.GetToken(0, 0))) {
+               pars += " ";
+               pars += tk;
+            }
 
-	 if (fname1) {
+            XrdOucString pathname1, pathname2;
 
-	     if ( (strstr(fname1, "root://") == fname1) ||
-		  (strstr(fname1, "xroot://") == fname1) )
-	       pathname1 = fname1;
-	    else
-	       if (fname1[0] == '/') {
-		  pathname1 = "root://" + genadmin->GetCurrentUrl().HostWPort;
-		  pathname1 += "/";
-		  pathname1 += fname1;
-	       }
-	       else {
-		  pathname1 = "root://" + genadmin->GetCurrentUrl().HostWPort;
-		  pathname1 += "/";
-		  pathname1 += currentpath;
-		  pathname1 += "/";
-		  pathname1 += fname1;
-	       }
+            if (fname1) {
 
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
-	 if (fname2) {
+               if ( (strstr(fname1, "root://") == fname1) ||
+                    (strstr(fname1, "xroot://") == fname1) )
+                  pathname1 = fname1;
+               else
+                  if (fname1[0] == '/') {
+                     pathname1 = "root://" + genadmin->GetCurrentUrl().HostWPort;
+                     pathname1 += "/";
+                     pathname1 += fname1;
+                  }
+                  else {
+                     pathname1 = "root://" + genadmin->GetCurrentUrl().HostWPort;
+                     pathname1 += "/";
+                     pathname1 += currentpath;
+                     pathname1 += "/";
+                     pathname1 += fname1;
+                  }
 
-	     if ( (strstr(fname2, "root://") == fname2) ||
-		  (strstr(fname2, "xroot://") == fname2) )
-	       pathname2 = fname2;
-	    else
-	       if (fname2[0] == '/') {
-		  pathname2 = "root://" + genadmin->GetCurrentUrl().HostWPort;
-		  pathname2 += "/";
-		  pathname2 += fname2;
-	       }
-	       else {
-		  pathname2 = "root://" + genadmin->GetCurrentUrl().HostWPort;
-		  pathname2 += "/";
-		  pathname2 += currentpath;
-		  pathname2 += "/";
-		  pathname2 += fname2;
-	       }
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
+            if (fname2) {
 
-	 }
-	 else {
-	    cout << "Missing parameter." << endl;
-	    retval = 1;
-	 }
+               if ( (strstr(fname2, "root://") == fname2) ||
+                    (strstr(fname2, "xroot://") == fname2) )
+                  pathname2 = fname2;
+               else
+                  if (fname2[0] == '/') {
+                     pathname2 = "root://" + genadmin->GetCurrentUrl().HostWPort;
+                     pathname2 += "/";
+                     pathname2 += fname2;
+                  }
+                  else {
+                     pathname2 = "root://" + genadmin->GetCurrentUrl().HostWPort;
+                     pathname2 += "/";
+                     pathname2 += currentpath;
+                     pathname2 += "/";
+                     pathname2 += fname2;
+                  }
 
-	 XrdOucString cmd;
+            }
+            else {
+               cout << "Missing parameter." << endl;
+               retval = 1;
+            }
 
-	 cmd = "xrdcp ";
-	 cmd += pathname1;
-	 cmd += " ";
-	 cmd += pathname2 + pars;
+            XrdOucString cmd;
 
-	 int rt = system(cmd.c_str());
+            cmd = "xrdcp ";
+            cmd += pathname1;
+            cmd += " ";
+            cmd += pathname2 + pars;
 
-	 cout << "cp returned " << rt << endl;
+            int rt = system(cmd.c_str());
 
-	 cout << endl;
+            cout << "cp returned " << rt << endl;
+
+            cout << endl;
+         }
+
 
       }
       else
@@ -1450,19 +1526,22 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *reqcode = tkzer.GetToken(0, 0);
-         const kXR_char *args = (const kXR_char *)tkzer.GetToken(0, 0);
-         kXR_char Resp[1024];
+         if (!retval) {
 
-	 genadmin->Query(atoi(reqcode), args, Resp, 1024);
+            char *reqcode = tkzer.GetToken(0, 0);
+            const kXR_char *args = (const kXR_char *)tkzer.GetToken(0, 0);
+            kXR_char Resp[1024];
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	   retval = 1;
+            genadmin->Query(atoi(reqcode), args, Resp, 1024);
+
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
       
-	 cout << Resp << endl;
+            cout << Resp << endl;
 
-	 cout << endl;
+            cout << endl;
+         }
 	
       }
       else
@@ -1474,25 +1553,30 @@ int main(int argc, char**argv) {
 	    retval = 1;
 	 }
 
-	 char *ns = tkzer.GetToken(0, 0);
-         long long totspace;
-         long long totfree;
-         long long totused;
-         long long largestchunk;
+         if (!retval) {
 
-	 genadmin->GetSpaceInfo(ns, totspace, totfree, totused, largestchunk);
+            char *ns = tkzer.GetToken(0, 0);
+            long long totspace;
+            long long totfree;
+            long long totused;
+            long long largestchunk;
 
-	 // Now check the answer
-	 if (!CheckAnswer(genadmin))
-	   retval = 1;
+            genadmin->GetSpaceInfo(ns, totspace, totfree, totused, largestchunk);
+
+            // Now check the answer
+            if (!CheckAnswer(genadmin))
+               retval = 1;
       
-	 cout << "Disk space approximations (MB):" << endl <<
-            "Total         : " << totspace/(1024*1024) << endl <<
-            "Free          : " << totfree/(1024*1024) << endl <<
-            "Used          : " << totused/(1024*1024) << endl <<
-            "Largest chunk : " << largestchunk/(1024*1024) << endl;
+            cout << "Disk space approximations (MB):" << endl <<
+               "Total         : " << totspace/(1024*1024) << endl <<
+               "Free          : " << totfree/(1024*1024) << endl <<
+               "Used          : " << totused/(1024*1024) << endl <<
+               "Largest chunk : " << largestchunk/(1024*1024) << endl;
 
-	 cout << endl;
+            cout << endl;
+         }
+
+
 
       }
       else {

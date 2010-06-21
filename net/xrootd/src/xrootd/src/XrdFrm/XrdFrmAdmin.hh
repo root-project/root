@@ -160,7 +160,6 @@ struct {char   All;
         char   ktIdle;
         char   Local;
         char   MPType;
-        char   Notify;
         char   Recurse;
         char  *Args[2];
         uid_t  Uid;

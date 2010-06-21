@@ -347,7 +347,6 @@ int XrdFrmAdmin::Remove()
    static XrdOucArgs Spec(&Say, "frm_admin: ",    "",
                                 "echo",        1, "E",
                                 "force",       1, "F",
-                                "notify",      1, "n",
                                 "recursive",   1, "r",
                           (const char *)0);
 
@@ -514,7 +513,6 @@ int XrdFrmAdmin::Parse(const char *What, XrdOucArgs &Spec, const char **Reqs)
                           break;
                 case 'l': Opt.Local   = 1; break;
                 case 'm': Opt.MPType  ='m';break;
-                case 'n': Opt.Notify  = 1; break;
                 case 'o': if (!ParseOwner(What, Spec.argval)) return 0;
                           break;
                 case 'p': Opt.MPType  ='p';break;
@@ -674,13 +672,11 @@ char XrdFrmAdmin::VerifyMP(const char *func, const char *path)
 // Resolve attributes to the options in effect
 //
         if (Opt.MPType == 'm')
-           {if (!(Popts & XRDEXP_MIG)) msg = " is not migratable";}
+           {if (!(Popts & XRDEXP_MIG))   msg = " is not migratable";}
    else if (Opt.MPType == 'p')
-           {if (!(Popts & XRDEXP_MIG) && (Popts & XRDEXP_NOSTAGE))
-                msg = " is not stageable";
-           }
-   else if (Popts & XRDEXP_MIG) Opt.MPType = 'm';
-   else if (!(Popts & XRDEXP_NOSTAGE)) Opt.MPType = 'p';
+           {if (!(Popts & XRDEXP_STAGE)) msg = " is not stageable"; }
+   else if (Popts & XRDEXP_MIG)   Opt.MPType = 'm';
+   else if (Popts & XRDEXP_STAGE) Opt.MPType = 'p';
 
    if (msg) return XrdFrmUtils::Ask('n', path, msg, "; continue?");
    return 'y';

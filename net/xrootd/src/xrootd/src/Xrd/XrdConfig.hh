@@ -62,7 +62,6 @@ const char         *myInsName;
 char               *myInstance;
 char               *AdminPath;
 char               *ConfigFN;
-char               *PidPath;
 char               *repDest[2];
 XrdConfigProt      *Firstcp;
 XrdConfigProt      *Lastcp;

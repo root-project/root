@@ -417,7 +417,11 @@ int XrdOssCache::Alloc(XrdOssCache::allocInfo &aInfo)
 
 // Find a cache that will fit this allocation request
 //
-   maxfree = fsp->fsdata->frsz; fsp_sel = 0; fspend = fsp = fsp->next;
+   maxfree = fsp->fsdata->frsz;
+   if (size > maxfree || (aInfo.cgPath && (aInfo.cgPlen > fsp->plen
+           ||  strncmp(aInfo.cgPath,fsp->path,aInfo.cgPlen)))) fsp_sel = 0;
+      else fsp_sel = fsp;
+   fspend = fsp; fsp = fsp->next;
    do {
        if (strcmp(aInfo.cgName, fsp->group)
        || (aInfo.cgPath && (aInfo.cgPlen > fsp->plen
@@ -425,7 +429,7 @@ int XrdOssCache::Alloc(XrdOssCache::allocInfo &aInfo)
        curfree = fsp->fsdata->frsz;
        if (size > curfree) continue;
 
-             if (!fsp_sel)      {fsp_sel = fsp; maxfree = curfree;}
+             if (fuzAlloc >= 100) {fsp_sel = fsp; break;}
        else  if (!fuzAlloc) {if (curfree > maxfree)
                                 {fsp_sel = fsp; maxfree = curfree;}}
        else {diffree = (!(curfree + maxfree) ? 0.0
@@ -438,7 +442,7 @@ int XrdOssCache::Alloc(XrdOssCache::allocInfo &aInfo)
 // Check if we can realy fit this file. If so, update current scan pointer
 //
    if (!fsp_sel) return -ENOSPC;
-   cgp->curr = fsp_sel->next;
+   cgp->curr = fsp_sel;
 
 // Construct the target filename
 //
@@ -608,10 +612,15 @@ void *XrdOssCache::Scan(int cscanint)
    EPNAME("CacheScan")
    XrdOssCache_FSData *fsdp;
    XrdOssCache_Group  *fsgp;
-   STATFS_t fsbuff;
    const struct timespec naptime = {cscanint, 0};
-   long long llT; // A dummy temporary
-   int retc;
+   long long frsz, llT; // llT is a dummy temporary
+   int retc, dbgMsg, dbgNoMsg;
+
+// Try to prevent floodingthe log with scan messages
+//
+   if (cscanint > 0 && cscanint < 60) dbgMsg = cscanint/60;
+      else dbgMsg = 1;
+   dbgNoMsg = dbgMsg;
 
 // Loop scanning the cache
 //
@@ -627,18 +636,22 @@ void *XrdOssCache::Scan(int cscanint)
         //
            fsSize =  0;
            fsTotFr=  0;
+           fsFree =  0;
            fsdp = fsdata;
            while(fsdp)
                 {retc = 0;
                  if ((fsdp->stat & XrdOssFSData_REFRESH)
-                 || !(fsdp->stat & XrdOssFSData_ADJUSTED))
-                     {if ((retc = FS_Stat(fsdp->path, &fsbuff)))
-                         OssEroute.Emsg("XrdOssCacheScan", errno ,
+                 || !(fsdp->stat & XrdOssFSData_ADJUSTED) || cscanint <= 0)
+                     {frsz = XrdOssCache_FS::freeSpace(llT,fsdp->path);
+                      if (frsz < 0) OssEroute.Emsg("CacheScan", errno ,
                                     "state file system ",(char *)fsdp->path);
-                         else {fsdp->frsz=XrdOssCache_FS::freeSpace(llT,fsdp->path);
+                         else {fsdp->frsz = frsz;
                                fsdp->stat &= ~(XrdOssFSData_REFRESH |
                                                XrdOssFSData_ADJUSTED);
-                               DEBUG("New free=" <<fsdp->frsz <<" path=" <<fsdp->path);
+                               if (!dbgNoMsg--)
+                                  {DEBUG("New free=" <<fsdp->frsz <<" path=" <<fsdp->path);
+                                   dbgNoMsg = dbgMsg;
+                                  }
                                }
                      } else fsdp->stat |= XrdOssFSData_REFRESH;
                  if (!retc)

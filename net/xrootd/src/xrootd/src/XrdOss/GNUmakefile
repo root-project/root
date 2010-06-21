@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.35 2009/05/22 01:04:23 abh Exp $
+#              $Id: GNUmakefile,v 1.36 2010/05/26 01:25:22 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -54,6 +54,7 @@ TARGETS = $(LIBRARY)
 #                           S e a r c h   P a t h s                            #
 #------------------------------------------------------------------------------#
 
+vpath XrdFrm% ../XrdFrm
 vpath XrdNet% ../XrdNet
 vpath XrdOfs% ../XrdOfs
 vpath XrdOuc% ../XrdOuc
@@ -114,7 +115,7 @@ $(OBJDIR)/XrdOssCache.o: XrdOssCache.hh  XrdOssOpaque.hh\
 $(OBJDIR)/XrdOssConfig.o: XrdOssApi.hh  XrdOssConfig.hh XrdOssError.hh \
                           XrdOssLock.hh XrdOssTrace.hh XrdSysError.hh \
                           XrdOssMio.hh  XrdOssOpaque.hh XrdOssSpace.hh \
-                          XrdOucEnv.hh \
+                          XrdOucEnv.hh  XrdFrmProxy.hh \
                           XrdOucProg.hh XrdOssConfig.cc XrdOuca2x.hh  \
                           XrdOucMsubs.hh XrdOucName2Name.hh XrdSysPlugin.hh \
                           XrdSysHeaders.hh \
@@ -192,7 +193,7 @@ $(OBJDIR)/XrdOssStage.o: XrdOssApi.hh   XrdOssStage.hh  XrdOssError.hh \
                          XrdOuca2x.hh   XrdOucHash.hh   XrdOucHash.icc \
                          XrdSysPthread.hh XrdOucMsubs.hh XrdOucName2Name.hh \
                          XrdOucDLlist.hh  XrdOucProg.hh  XrdOucReqID.hh \
-                         XrdSysPlatform.hh XrdOssStage.cc
+                         XrdSysPlatform.hh XrdFrmProxy.hh XrdOssStage.cc
 	@echo Compiling XrdOssStage.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOssStage.o XrdOssStage.cc
 

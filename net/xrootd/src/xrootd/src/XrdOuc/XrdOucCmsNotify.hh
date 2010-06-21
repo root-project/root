@@ -1,10 +1,10 @@
-#ifndef __CMS_NOTIFY_HH
-#define __CMS_NOTIFY_HH
+#ifndef __OUCCMSNOTIFY_HH
+#define __OUCCMSNOTIFY_HH
 /******************************************************************************/
 /*                                                                            */
-/*                       X r d C m s N o t i f y . h h                        */
+/*                    X r d O u c C m s N o t i f y . h h                     */
 /*                                                                            */
-/* (c) 2009 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
@@ -16,7 +16,7 @@
 class XrdNetMsg;
 class XrdSysError;
 
-class XrdCmsNotify
+class XrdOucCmsNotify
 {
 public:
 
@@ -27,9 +27,9 @@ int  Have(const char *Path, int isPfn=1);
 static const int isServ = 0x0001;
 static const int noPace = 0x0002;
 
-             XrdCmsNotify(XrdSysError *erp, const char *aPath,
-                                            const char *iName, int Opts=0);
-            ~XrdCmsNotify();
+             XrdOucCmsNotify(XrdSysError *erp, const char *aPath,
+                             const char *iName, int Opts=0);
+            ~XrdOucCmsNotify();
 
 private:
 int  Send(const char *Buff, int Blen);

@@ -324,7 +324,7 @@ int XrdOssSys::Mkpath(const char *path, mode_t mode)
 
 int XrdOssSys::Stats(char *buff, int blen)
 {
-   static const char statfmt1[] = "<stats id=\"oss\">";
+   static const char statfmt1[] = "<stats id=\"oss\" v=\"2\">";
    static const char statfmt2[] = "</stats>";
    static const int  statflen = sizeof(statfmt1) + sizeof(statfmt2);
    char *bp = buff;
@@ -419,7 +419,6 @@ int XrdOssDir::Opendir(const char *dir_path)
 {
    EPNAME("Opendir");
    char actual_path[MAXPATHLEN+1], *local_path, *remote_path;
-   unsigned long long isremote;
    int retc;
 
 // Return an error if this object is already open
@@ -428,7 +427,7 @@ int XrdOssDir::Opendir(const char *dir_path)
 
 // Get the processing flags for this directory
 //
-   isremote = XRDEXP_REMOTE & (pflags = XrdOssSS->PathOpts(dir_path));
+   pflags = XrdOssSS->PathOpts(dir_path);
    ateof = 0;
 
 // Generate local path
@@ -441,10 +440,10 @@ int XrdOssDir::Opendir(const char *dir_path)
 
 // If this is a local filesystem request, open locally.
 //
-   if (!isremote || (pflags & XRDEXP_NODREAD))
+   if (!(pflags & XRDEXP_STAGE) || (pflags & XRDEXP_NODREAD))
       {TRACE(Opendir, "lcl path " <<local_path <<" (" <<dir_path <<")");
        if ((lclfd = opendir((char *)local_path))) {isopen = 1; return XrdOssOK;}
-          else if (!isremote) return -errno;
+       return -errno;
       }
 
 // Generate remote path
@@ -457,15 +456,18 @@ int XrdOssDir::Opendir(const char *dir_path)
 
    TRACE(Opendir, "rmt path " << remote_path <<" (" << dir_path <<")");
 
-// If NOCHECK is in effect and we have an mss meta-cmd, just do a stat
+// Originally, if MSS directories were not to be read, we ould simply check
+// if the path was a directory and return an error if not. That was superceeded
+// by making NODREAD mean to read the local directory only (which is not always
+// ideal). So, we keep the code below but comment it out for now.
 //
-   if (!(pflags & XRDEXP_NOCHECK) && XrdOssSS->MSSgwCmd)
-      {struct stat fstat;
-       if ((retc = XrdOssSS->MSS_Stat(remote_path,&fstat))) return retc;
-       if (!(S_ISDIR(fstat.st_mode))) return -ENOTDIR;
-       isopen = 1;
-       return XrdOssOK;
-      }
+// if ((pflags & XRDEXP_NODREAD) && !(pflags & XRDEXP_NOCHECK))
+//    {struct stat fstat;
+//     if ((retc = XrdOssSS->MSS_Stat(remote_path,&fstat))) return retc;
+//     if (!(S_ISDIR(fstat.st_mode))) return -ENOTDIR;
+//     isopen = 1;
+//     return XrdOssOK;
+//    }
 
 // Open the directory at the remote location.
 //
@@ -602,16 +604,16 @@ int XrdOssFile::Open(const char *path, int Oflag, mode_t Mode, XrdOucEnv &Env)
 //
    if ((Oflag & (O_WRONLY | O_RDWR)) && (popts & XRDEXP_NOTRW))
       {if (popts & XRDEXP_FORCERO) Oflag = O_RDONLY;
-          else return OssEroute.Emsg("XrdOssOpen",-XRDOSS_E8005,"open r/w",path);
+          else return OssEroute.Emsg("Open",-XRDOSS_E8005,"open r/w",path);
       }
 
 // If we can open the local copy. If not found, try to stage it in if possible.
 // Note that stage will regenerate the right local and remote paths.
 //
-   if ( (fd = (int)Open_ufs(local_path, Oflag, Mode, popts))
-         == -ENOENT && (popts & XRDEXP_REMOTE))
-      {if (popts & XRDEXP_NOSTAGE)
-          return OssEroute.Emsg("XrdOssOpen",-XRDOSS_E8006,"open",path);
+   if ( (fd = (int)Open_ufs(local_path, Oflag, Mode, popts)) == -ENOENT
+   && (popts & XRDEXP_REMOTE))
+      {if (!(popts & XRDEXP_STAGE))
+          return OssEroute.Emsg("Open",-XRDOSS_E8006,"open",path);
        if ((retc = XrdOssSS->Stage(tident, path, Env, Oflag, Mode, popts)))
           return retc;
        fd = (int)Open_ufs(local_path, Oflag, Mode, popts & ~XRDEXP_REMOTE);
@@ -789,7 +791,7 @@ ssize_t XrdOssFile::Write(const void *buff, off_t offset, size_t blen)
 
      if (fd < 0) return (ssize_t)-XRDOSS_E8004;
 
-     if (XrdOssSS->MaxDBsize && (long long)(offset+blen) > XrdOssSS->MaxDBsize)
+     if (XrdOssSS->MaxSize && (long long)(offset+blen) > XrdOssSS->MaxSize)
         return (ssize_t)-XRDOSS_E8007;
 
      do { retval = pwrite(fd, buff, blen, offset); }
@@ -948,7 +950,7 @@ int XrdOssFile::Open_ufs(const char *path, int Oflag, int Mode,
 
 // Obtain exclusive control over the directory.
 //
-    if ((popts & XRDEXP_REMOTE) 
+    if ((popts & XRDEXP_REMOTE)
     && (retc = ufs_file.Serialize(path, XrdOssDIR|XrdOssEXC)) < 0) return retc;
 
 // Now open the actual data file in the appropriate mode.
@@ -978,7 +980,7 @@ int XrdOssFile::Open_ufs(const char *path, int Oflag, int Mode,
     if (myfd >= 0)
        {if (myfd < XrdOssSS->FDFence)
            {if ((newfd = fcntl(myfd, F_DUPFD, XrdOssSS->FDFence)) < 0)
-               OssEroute.Emsg("XrdOssOpen_ufs",errno,"reloc FD",path);
+               OssEroute.Emsg("Open_ufs",errno,"reloc FD",path);
                else {close(myfd); myfd = newfd;}
            }
         fcntl(myfd, F_SETFD, FD_CLOEXEC);

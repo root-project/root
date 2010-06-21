@@ -18,13 +18,13 @@ const char *XrdFrmAdminUnlinkCVSID = "$Id$";
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "XrdCms/XrdCmsNotify.hh"
 #include "XrdFrm/XrdFrmAdmin.hh"
 #include "XrdFrm/XrdFrmConfig.hh"
 #include "XrdFrm/XrdFrmTrace.hh"
 #include "XrdFrm/XrdFrmUtils.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssPath.hh"
+#include "XrdOuc/XrdOucCmsNotify.hh"
 #include "XrdOuc/XrdOucNSWalk.hh"
 
 using namespace XrdFrm;
@@ -226,7 +226,7 @@ int XrdFrmAdmin::UnlinkFile(const char *lclPath)
       } else {
        if (!(rc = Config.ossFS->Unlink(lclPath, ulOpts)))
           {if (Opt.Echo) Msg("Local file ", lclPath, " removed.");
-           if (Opt.Notify && Config.cmsPath) Config.cmsPath->Gone(lclPath);
+           if (Config.cmsPath) Config.cmsPath->Gone(lclPath);
            numFiles++;
            return 1;
           }

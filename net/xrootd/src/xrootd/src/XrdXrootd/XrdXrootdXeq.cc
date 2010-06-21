@@ -2072,8 +2072,9 @@ int XrdXrootdProtocol::do_Write()
 // Find the file object
 //
    if (!FTab || !(myFile = FTab->Get(fh.handle)))
-      {myLastRC = kXR_FileNotOpen;
-       return do_WriteNone();
+      {if (argp) return do_WriteNone();
+       Response.Send(kXR_FileNotOpen,"write does not refer to an open file");
+       return Link->setEtext("write protcol violation");
       }
 
 // If we are monitoring, insert a write entry
@@ -2202,8 +2203,6 @@ int XrdXrootdProtocol::do_WriteNone()
 
 // Send our the error message and return
 //
-   if (myLastRC == kXR_FileNotOpen)
-      return Response.Send(kXR_FileNotOpen,"write does not refer to an open file");
    return Response.Send(kXR_FSError, myFile->XrdSfsp->error.getErrText());
 }
   

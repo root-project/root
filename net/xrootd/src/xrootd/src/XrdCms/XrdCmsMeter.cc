@@ -351,7 +351,7 @@ void *XrdCmsMeter::RunFS()
          if (noSpace != noNewSpace)
             {SpaceMsg(noNewSpace);
              noSpace = noNewSpace;
-             if (!Config.asSolo()) CmsState.Update(XrdCmsState::Space, noSpace);
+             if (!Config.asSolo()) CmsState.Update(XrdCmsState::Space,!noSpace);
             }
             else if (noSpace && !nowlim) SpaceMsg(noNewSpace);
          nowlim = (nowlim ? nowlim-1 : mlim);

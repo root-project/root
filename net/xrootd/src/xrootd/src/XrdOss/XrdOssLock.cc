@@ -121,7 +121,7 @@ int XrdOssLock::Serialize(const char *fn, int lkwant)
 // Check if this object is already in use
 //
    if (lkfd >= 0) 
-      return OssEroute.Emsg("XrdOssSerialize",-XRDOSS_E8014,"lock",lkbuff);
+      return OssEroute.Emsg("Serialize",-XRDOSS_E8014,"lock",lkbuff);
 
 // Create the lock file name that we will lock as requested.
 //
@@ -133,7 +133,7 @@ int XrdOssLock::Serialize(const char *fn, int lkwant)
         while( lkfd < 0 && errno == EINTR);
     if ( lkfd < 0) 
        {if (ENOENT != (rc = errno))
-           OssEroute.Emsg("XrdOssSerialize",rc,"serially open",lkbuff);
+           OssEroute.Emsg("Serialize",rc,"serially open",lkbuff);
         return -rc;
        }
     fcntl(lkfd, F_SETFD, FD_CLOEXEC);
@@ -149,7 +149,7 @@ int XrdOssLock::Serialize(const char *fn, int lkwant)
            rc = utime(lkbuff, (const struct utimbuf *)&times);
           }
        if (rc) {rc = errno; close(lkfd); lkfd = -1;
-                return OssEroute.Emsg("XrdOssSerialize",rc,"retime",lkbuff);
+                return OssEroute.Emsg("Serialize",rc,"retime",lkbuff);
                }
       }
 
@@ -162,7 +162,7 @@ int XrdOssLock::Serialize(const char *fn, int lkwant)
         if (lkwant & XrdOssRETIME)
            mp = (lkwant&XrdOssSHR ? (char *)"rt shr lk":(char *)"rt exc lk");
            else mp = (lkwant & XrdOssSHR ? (char *)"shr lk":(char *)"exc lk");
-        return OssEroute.Emsg("XrdOssSerialize", rc, mp, lkbuff);
+        return OssEroute.Emsg("Serialize", rc, mp, lkbuff);
         return -XRDOSS_E8015;
        }
     return XrdOssOK;
@@ -189,7 +189,7 @@ int XrdOssLock::NoSerialize(const char *fn, int ftype)
 // Verify that a lock filetype has been specified.
 //
     if (!(ftype & (XrdOssDIR | XrdOssFILE)))
-       return OssEroute.Emsg("XrdOssNoSerialize", -XRDOSS_E8016, 
+       return OssEroute.Emsg("NoSerialize", -XRDOSS_E8016,
                                "unserialize fname", (char *)fn);
 
 // Create the lock file name that we will lock as requested.
@@ -201,7 +201,7 @@ int XrdOssLock::NoSerialize(const char *fn, int ftype)
     if (unlink(lkbuff))
        {rc = errno;
         if (rc != ENOENT) 
-           return OssEroute.Emsg("XrdOssNoSerialize", -rc,
+           return OssEroute.Emsg("NoSerialize", -rc,
                                    "unserialize lkfname", (char *)fn);
        }
     return XrdOssOK;
@@ -237,8 +237,7 @@ int XrdOssLock::ReSerialize(const char *oldname, const char *newname)
 //
    if (rename(Path_Old, Path_New))
       {rc = errno;
-       if (rc != ENOENT) OssEroute.Emsg("XrdOssReSerialize", rc, 
-                                          "reserialize", Path_Old);
+       if (rc != ENOENT) OssEroute.Emsg("ReSerialize",rc,"reserialize",Path_Old);
           else rc = 0;
       }
    return -rc;
@@ -266,7 +265,7 @@ int XrdOssLock::UnSerialize(int opts)
 // Check if we havenything reallly locked
 //
    if (lkfd < 0) 
-      return OssEroute.Emsg("XrdOssUnSerialize",-XRDOSS_E8017,"unserialize lock");
+      return OssEroute.Emsg("UnSerialize",-XRDOSS_E8017,"unserialize lock");
 
 // Release the lock if we need to.
 //
@@ -302,7 +301,7 @@ int XrdOssLock::Build_LKFN(char *buff, int blen, const char *fn, int ftype)
    i = strlen(fn);
    if (i + (ftype & XrdOssFILE ? (int)sizeof(XrdOssLKSUFFIX) 
                                : (int)sizeof(XrdOssLKFNAME)+1) > blen)
-      return OssEroute.Emsg("XrdOssBuild_LKFN", -ENAMETOOLONG,
+      return OssEroute.Emsg("Build_LKFN", -ENAMETOOLONG,
                               "generate lkfname", (char *)fn);
 
 // Create the lock file name that we will lock in exclusive mode.

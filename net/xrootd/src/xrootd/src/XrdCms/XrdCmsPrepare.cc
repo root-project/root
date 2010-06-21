@@ -23,6 +23,7 @@ const char *XrdCmsPrepareCVSID = "$Id$";
 #include "XrdCms/XrdCmsConfig.hh"
 #include "XrdCms/XrdCmsPrepare.hh"
 #include "XrdCms/XrdCmsTrace.hh"
+#include "XrdFrm/XrdFrmProxy.hh"
 #include "XrdNet/XrdNetMsg.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdOuc/XrdOucEnv.hh"
@@ -59,16 +60,17 @@ int XrdCmsScrubScan(const char *key, char *cip, void *xargp)
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
   
-XrdCmsPrepare::XrdCmsPrepare() : XrdJob("File cache scrubber"),
+XrdCmsPrepare::XrdCmsPrepare() : XrdJob("Prep cache scrubber"),
                                  prepSched(&Say)
-{prepif  = 0;
- preppid = 0;
+{prepif   = 0;
+ preppid  = 0;
  resetcnt = scrub2rst = 3;
  scrubtime= 20*60;
  NumFiles = 0;
  lastemsg = time(0);
  Relay    = new XrdNetMsg(&Say);
- isFrm = 0;
+ PrepFrm  = 0;
+ prepOK   = 0;
 }
 
 /******************************************************************************/
@@ -77,8 +79,21 @@ XrdCmsPrepare::XrdCmsPrepare() : XrdJob("File cache scrubber"),
   
 int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
 {
-   char ubuff[256], *pdata[XrdOucMsubs::maxElem+2], prtybuff[8], *pP=prtybuff;
+   char *pdata[XrdOucMsubs::maxElem+2], prtybuff[8], *pP=prtybuff;
    int rc, pdlen[XrdOucMsubs::maxElem + 2];
+
+// Check if we are using the built-in mechanism
+//
+   if (PrepFrm)
+      {rc = PrepFrm->Add('+',pargs.path,  pargs.opaque,pargs.Ident,pargs.reqid,
+                             pargs.notify,pargs.mode,atoi(pargs.prty));
+       if (rc) Say.Emsg("Add", rc, "prepare", pargs.path);
+          else {PTMutex.Lock();
+                if (!PTable.Add(pargs.path, 0, 0, Hash_data_is_key)) NumFiles++;
+                PTMutex.UnLock();
+               }
+       return rc == 0;
+      }
 
 // Restart the scheduler if need be
 //
@@ -89,16 +104,11 @@ int XrdCmsPrepare::Add(XrdCmsPrepArgs &pargs)
        return 0;
       }
 
-// Extract out prty
-//
-   *pP++ = pargs.prty[0]; *pP = '\0';
-
 // Write out the header line
 //
    if (!prepMsg)
-      {if (isFrm)
-      {pdlen[0] = getID(pargs.Ident,ubuff,sizeof(ubuff)); pdata[0] = ubuff;}
-else  {pdata[0] = (char *)"+ ";               pdlen[0] = 2;}
+      {*pP++ = pargs.prty[0]; *pP = '\0';
+       pdata[0] = (char *)"+ ";               pdlen[0] = 2;
        pdata[1] = pargs.reqid;                pdlen[1] = strlen(pargs.reqid);
        pdata[2] = (char *)" ";                pdlen[2] = 1;
        pdata[3] = pargs.notify;               pdlen[3] = strlen(pargs.notify);
@@ -140,6 +150,14 @@ int XrdCmsPrepare::Del(char *reqid)
    char *pdata[4];
    int rc, pdlen[4];
 
+// Use our built-in mechanism if so wanted
+//
+   if (PrepFrm)
+      {if ((rc = PrepFrm->Del('-', reqid)))
+          Say.Emsg("Del", rc, "unprepare", reqid);
+       return rc == 0;
+      }
+
 // Restart the scheduler if need be
 //
    PTMutex.Lock();
@@ -159,9 +177,9 @@ int XrdCmsPrepare::Del(char *reqid)
    pdlen[2] = 1;
    pdata[3] = (char *)0;
    pdlen[3] = 0;
-   rc = prepSched.Put((const char **)pdata, (const int *)pdlen) == 0;
+   rc = prepSched.Put((const char **)pdata, (const int *)pdlen);
    PTMutex.UnLock();
-   return rc;
+   return rc == 0;
 }
  
 /******************************************************************************/
@@ -173,7 +191,7 @@ void XrdCmsPrepare::DoIt()
 // Simply scrub the cache
 //
    Scrub();
-   if (prepif) Sched->Schedule((XrdJob *)this,scrubtime+time(0));
+   Sched->Schedule((XrdJob *)this,scrubtime+time(0));
 }
 
 /******************************************************************************/
@@ -288,6 +306,42 @@ void XrdCmsPrepare::Prepare(XrdCmsPrepArgs *pargs)
 }
 
 /******************************************************************************/
+/*                                 R e s e t                                  */
+/******************************************************************************/
+
+void XrdCmsPrepare::Reset(const char *iName, const char *aPath, int aMode)
+{
+   EPNAME("Reset");
+   char baseAP[1024], *Slash;
+
+// This is a call from the configurator. No need to do anything if we have
+// no interface to initialize.
+//
+   if (!prepif) return;
+
+// If this is a built-in mechanism, then allocate the prepare interface
+// and initialize it. This is a one-time thing and it better work right away.
+// In any case, do a standard reset.
+//
+   if (!*prepif)
+      {PrepFrm = new XrdFrmProxy(Say.logger(), iName);
+       DEBUG("Initializing internal FRM prepare interface.");
+       strcpy(baseAP, aPath); baseAP[strlen(baseAP)-1] = '\0';
+       if ((Slash = rindex(baseAP, '/'))) *Slash = '\0';
+       if (!(prepOK = PrepFrm->Init(XrdFrmProxy::opStg, baseAP, aMode)))
+          {Say.Emsg("Reset", "Built-in prepare init failed; prepare disabled.");
+           return;
+          }
+      }
+
+// Reset the interface and schedule a scrub
+//
+   Reset();
+   if (scrubtime) Sched->Schedule((XrdJob *)this,scrubtime+time(0));
+
+}
+
+/******************************************************************************/
 /*                              s e t P a r m s                               */
 /******************************************************************************/
   
@@ -298,11 +352,12 @@ int XrdCmsPrepare::setParms(int rcnt, int stime, int deco)
  return 0;
 }
 
-int XrdCmsPrepare::setParms(char *ifpgm, char *ifmsg)
+int XrdCmsPrepare::setParms(const char *ifpgm, char *ifmsg)
 {if (ifpgm)
-    {if (prepif) free(prepif);
+    {char *Slash = rindex(ifpgm, '/');
+     if (prepif) free(prepif);
+     if (Slash && !strcmp(Slash+1, "frm_xfragent")) ifpgm = "";
      prepif = strdup(ifpgm);
-     isFrm = !strcmp(ifpgm, "frm_pstga");
     }
  if (ifmsg)
     {if (prepMsg) delete prepMsg;
@@ -316,29 +371,6 @@ int XrdCmsPrepare::setParms(char *ifpgm, char *ifmsg)
 /******************************************************************************/
 /*                       P r i v a t e   M e t h o d s                        */
 /******************************************************************************/
-/******************************************************************************/
-/*                                 g e t I D                                  */
-/******************************************************************************/
-  
-int XrdCmsPrepare::getID(const char *Tid, char *buff, int bsz)
-{
-   char *bP;
-   int n;
-
-// The buffer always starts with a '+'
-//
-   *buff = '+'; bP = buff+1; bsz -= 3;
-
-// Get the trace id
-//
-   if (Tid && (n = strlen(Tid)) <= bsz) {strcpy(bP, Tid); bP += n;}
-
-// Insert space
-//
-   *bP++ = ' '; *bP = '\0';
-   return bP - buff;
-}
-
 /******************************************************************************/
 /*                              i s O n l i n e                               */
 /******************************************************************************/
@@ -362,32 +394,48 @@ int XrdCmsPrepare::isOnline(char *path)
 /*                                 R e s e t                                  */
 /******************************************************************************/
   
-int XrdCmsPrepare::Reset()  // Must be called with PTMutex locked!
+void XrdCmsPrepare::Reset()  // Must be called with PTMutex locked!
 {
-     char *lp,  *pdata[] = {(char *)"?\n", 0};
-     int ok = 0, pdlen[] = {2, 0};
+   char *lp,  *pdata[] = {(char *)"?\n", 0};
+   int         pdlen[] = {2, 0};
 
-     if (!prepif)
-        Say.Emsg("Reset", "Prepare program not specified; prepare disabled.");
-        else {scrub2rst = resetcnt;
-              if (!prepSched.isAlive() && !startIF()) return 0;
-              if (prepSched.Put((const char **)pdata, (const int *)pdlen))
-                 {Say.Emsg("Prepare", prepSched.LastError(),
-                                 "write to", prepif);
-                  prepSched.Drain();
+// Hanlde via built-in mechanism
+//
+   if (PrepFrm)
+      {XrdFrmProxy::Queues State(XrdFrmProxy::opStg);
+       char Buff[1024];
+       if (prepOK)
+          {PTable.Purge(); NumFiles = 0;
+           while(PrepFrm->List(State, Buff, sizeof(Buff)))
+                {PTable.Add(Buff, 0, 0, Hash_data_is_key); NumFiles++;
+                 if (doEcho) Say.Emsg("Reset","Prepare pending for",Buff);
+                }
+          }
+       return;
+      }
+
+// Check if we really have an interface to reset
+//
+   if (!prepif)
+      {Say.Emsg("Reset", "Prepare program not specified; prepare disabled.");
+       return;
+      }
+
+// Do it the slow external way
+//
+   if (!prepSched.isAlive() && !startIF()) return;
+   if (prepSched.Put((const char **)pdata, (const int *)pdlen))
+      {Say.Emsg("Prepare", prepSched.LastError(), "write to", prepif);
+       prepSched.Drain(); prepOK = 0;
+      }
+      else {PTable.Purge(); NumFiles = 0;
+            while((lp = prepSched.GetLine()) && *lp)
+                 {PTable.Add(lp, 0, 0, Hash_data_is_key); NumFiles++;
+                  if (doEcho) Say.Emsg("Reset","Prepare pending for",lp);
                  }
-                 else {PTable.Purge(); ok = 1; NumFiles = 0;
-                       while((lp = prepSched.GetLine()) && *lp)
-                            {PTable.Add(lp, 0, 0, Hash_data_is_key);
-                             NumFiles++;
-                             if (doEcho) 
-                                Say.Emsg("Reset","Prepare pending for",lp);
-                            }
-                      }
-             }
-    return ok;
+           }
 }
-
+  
 /******************************************************************************/
 /*                                 S c r u b                                  */
 /******************************************************************************/
@@ -395,11 +443,14 @@ int XrdCmsPrepare::Reset()  // Must be called with PTMutex locked!
 void XrdCmsPrepare::Scrub()
 {
      PTMutex.Lock();
-     if (scrub2rst <= 0) Reset();
+     if (scrub2rst <= 0)
+        {Reset();
+         scrub2rst = resetcnt;
+        }
         else {PTable.Apply(XrdCmsScrubScan, (void *)0);
               scrub2rst--;
              }
-     if (!prepSched.isAlive()) startIF();
+     if (!PrepFrm && !prepSched.isAlive()) startIF();
      PTMutex.UnLock();
 }
 
@@ -409,22 +460,32 @@ void XrdCmsPrepare::Scrub()
   
 int XrdCmsPrepare::startIF()  // Must be called with PTMutex locked!
 {   
-    EPNAME("startIF")
-    int NoGo = 0;
+   EPNAME("startIF")
 
-    if (!prepif)
-       {Say.Emsg("startIF","Prepare program not specified; prepare disabled.");
-        NoGo = 1;
-       }
-       else {DEBUG("Prepare: Starting " <<prepif);
-             if ((NoGo = prepSched.Exec(prepif, 1)))
-                {time_t eNow = time(0);
-                 if ((eNow - lastemsg) >= 60)
-                    {lastemsg = eNow;
-                     Say.Emsg("Prepare", prepSched.LastError(),
-                                    "start", prepif);
-                    }
-                }
-            }
-    return !NoGo;
+// If we are using a local interface then there is nothing to start.
+//
+   if (PrepFrm) return prepOK;
+
+// Complain if there is no external prepare program
+//
+   if (!prepif)
+      {Say.Emsg("startIF","Prepare program not specified; prepare disabled.");
+       return (prepOK = 0);
+      }
+
+// Setup the external program
+//
+   DEBUG("Prepare: Starting " <<prepif);
+   if (prepSched.Exec(prepif, 1))
+      {time_t eNow = time(0);
+       prepOK = 0;
+       if ((eNow - lastemsg) >= 60)
+          {lastemsg = eNow;
+           Say.Emsg("Prepare", prepSched.LastError(), "start", prepif);
+          }
+      } else prepOK = 1;
+
+// All done
+//
+   return prepOK;
 }

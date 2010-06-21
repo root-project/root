@@ -127,7 +127,7 @@ int XrdOucN2N::pfn2lfn(const char *pfn, char  *buff, int blen)
 
     if (!LocalRoot
     ||  strncmp(pfn, LocalRoot, LocalRootLen) 
-    ||  pfn[LocalRootLen] == '/')
+    ||  pfn[LocalRootLen] != '/')
             tp = (char *)pfn;
        else tp = (char *)(pfn+LocalRootLen);
 

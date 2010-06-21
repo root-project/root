@@ -86,8 +86,9 @@ static const int retAll =  0x000f; // Return everything
 
 static const int retStat=  0x0010; // return stat() information
 static const int retIDLO=  0x0020; // Names returned in decreasing length order
-static const int Recurse=  0x0040; // Recursive traversal, 1 Level per Index()
-static const int noPath =  0x0080; // Do not include the full directory path
+static const int retIILO=  0x0040; // Names returned in increasing length order
+static const int Recurse=  0x0080; // Recursive traversal, 1 Level per Index()
+static const int noPath =  0x0100; // Do not include the full directory path
 static const int skpErrs=  0x8000; // Skip any entry causing an error
 
              XrdOucNSWalk(XrdSysError *erp,  // Error msg object. If 0->silent

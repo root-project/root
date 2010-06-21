@@ -435,7 +435,7 @@ void XrdCmsAdmin::do_RmDid(int isPfn)
 
 // Handle prepare queue removal
 //
-   if (Config.PrepOK)
+   if (PrepQ.isOK())
       {if (!isPfn && Config.lcl_N2N)
           if ((rc = Config.lcl_N2N->lfn2pfn(tp, apath, sizeof(apath))))
              {Say.Emsg(epname, rc, "determine pfn for removed path", tp);

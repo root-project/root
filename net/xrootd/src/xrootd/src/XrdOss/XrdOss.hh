@@ -82,6 +82,7 @@ int     fd;      // The associated file descriptor.
 #define XRDOSS_new    0x02
 #define XRDOSS_Online 0x04
 #define XRDOSS_isPFN  0x08
+#define XRDOSS_isMIG  0x10
 
 // Options that can be passed to Stat()
 //

@@ -1212,7 +1212,7 @@ int XrdLink::Terminate(const XrdLink *owner, int fdnum, unsigned int inst)
 // an arbitrary mutex with a condvar. But since this code is rarely executed
 // the ugliness is sort of tolerable.
 //
-   lp->opMutex.Lock(); KillcvP = 0; lp->opMutex.UnLock();
+   lp->opMutex.Lock(); lp->KillcvP = 0; lp->opMutex.UnLock();
 
 // Do some tracing
 //

@@ -51,7 +51,6 @@
 
 namespace XrdFrm
 {
-extern XrdSysLogger Logger;
 extern XrdSysError  Say;
 extern XrdOucTrace  Trace;
 }

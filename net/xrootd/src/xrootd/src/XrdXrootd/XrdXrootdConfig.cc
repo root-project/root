@@ -110,8 +110,6 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    extern XrdSecService    *XrdXrootdloadSecurity(XrdSysError *, char *, char *);
    extern XrdSfsFileSystem *XrdXrootdloadFileSystem(XrdSysError *, char *, 
                                                     const char *);
-   extern XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *, 
-                                                XrdSysLogger *);
    extern int optind, opterr;
 
    XrdXrootdXPath *xp;
@@ -231,10 +229,7 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    if (FSLib)
       {TRACE(DEBUG, "Loading filesystem library " <<FSLib);
        osFS = XrdXrootdloadFileSystem(&eDest, FSLib, pi->ConfigFN);
-      } else {
-       eDest.Say("Config warning: 'xrootd.fslib' not specified; using native file system.");
-       osFS = XrdSfsGetFileSystem((XrdSfsFileSystem *)0, eDest.logger());
-      }
+      } else osFS = XrdSfsGetFileSystem(0, eDest.logger(), pi->ConfigFN);
    if (!osFS)
       {eDest.Emsg("Config", "Unable to load file system.");
        return 0;
@@ -305,6 +300,10 @@ int XrdXrootdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    if (!(AdminSock = XrdNetSocket::Create(&eDest, adminp, "admin", pi->AdmMode))
    ||  !XrdXrootdAdmin::Init(&eDest, AdminSock)) return 0;
 
+// Setup pid file
+//
+   PidFile();
+
 // Return success
 //
    free(adminp);
@@ -335,6 +334,7 @@ int XrdXrootdProtocol::Config(const char *ConfigFN)
    while((var = Config.GetMyFirstWord()))
         {     if ((ismine = !strncmp("xrootd.", var, 7)) && var[7]) var += 7;
          else if ((ismine = !strcmp("all.export", var)))    var += 4;
+         else if ((ismine = !strcmp("all.pidpath",var)))    var += 4;
          else if ((ismine = !strcmp("all.seclib", var)))    var += 4;
 
          if (ismine)
@@ -344,6 +344,7 @@ int XrdXrootdProtocol::Config(const char *ConfigFN)
              else if TS_Xeq("fslib",         xfsl);
              else if TS_Xeq("log",           xlog);
              else if TS_Xeq("monitor",       xmon);
+             else if TS_Xeq("pidpath",       xpidf);
              else if TS_Xeq("prep",          xprep);
              else if TS_Xeq("redirect",      xred);
              else if TS_Xeq("seclib",        xsecl);
@@ -361,6 +362,32 @@ int XrdXrootdProtocol::Config(const char *ConfigFN)
 /******************************************************************************/
 /*                     P r i v a t e   F u n c t i o n s                      */
 /******************************************************************************/
+/******************************************************************************/
+/*                               P i d F i l e                                */
+/******************************************************************************/
+  
+void XrdXrootdProtocol::PidFile()
+{
+    int rc, xfd;
+    char buff[32], pidFN[1200];
+    char *ppath=XrdOucUtils::genPath(pidPath,getenv("XRDNAME"));
+    const char *xop = 0;
+
+    if ((rc = XrdOucUtils::makePath(ppath,XrdOucUtils::pathMode)))
+       {xop = "create"; errno = rc;}
+       else {snprintf(pidFN, sizeof(pidFN), "%s/xrootd.pid", ppath);
+
+            if ((xfd = open(pidFN, O_WRONLY|O_CREAT|O_TRUNC,0644)) < 0)
+               xop = "open";
+               else {if (write(xfd,buff,snprintf(buff,sizeof(buff),"%d",
+                         static_cast<int>(getpid()))) < 0) xop = "write";
+                     close(xfd);
+                    }
+            }
+
+    if (xop) eDest.Emsg("Config", errno, xop, pidFN);
+}
+
 /******************************************************************************/
 /*                                x a s y n c                                 */
 /******************************************************************************/
@@ -604,7 +631,7 @@ int XrdXrootdProtocol::xexpdo(char *path, int popt)
 
 int XrdXrootdProtocol::xfsl(XrdOucStream &Config)
 {
-    char *val;
+    char *val, *Slash;
 
 // Get the path
 //
@@ -615,10 +642,15 @@ int XrdXrootdProtocol::xfsl(XrdOucStream &Config)
    if (!val || !val[0])
       {eDest.Emsg("Config", "fslib not specified"); return 1;}
 
-// Record the path
+// If this is the "standard" name tell the user that we are ignoring this lib.
+// Otherwise, record the path and return.
 //
-   if (FSLib) free(FSLib);
-   FSLib = strdup(val);
+   if (!(Slash = rindex(val, '/'))) Slash = val;
+   if (!strcmp(Slash, "/libXrdOfs.so"))
+      eDest.Say("Config warning: ignoring fslib; libXrdOfs.so is built-in.");
+      else {if (FSLib) free(FSLib);
+            FSLib = strdup(val);
+           }
    return 0;
 }
 
@@ -763,12 +795,54 @@ int XrdXrootdProtocol::xmon(XrdOucStream &Config)
        free(monDest[1]); monDest[1] = 0;
       }
 
+// Screen out requests that only want to stage
+//
+   if (monDest[0] && monMode[0] == XROOTD_MON_STAGE)
+      {monMode[0] = 0; free(monDest[0]); monDest[0] = 0;}
+   if (monDest[1] && monMode[1] == XROOTD_MON_STAGE)
+      {monMode[1] = 0; free(monDest[1]); monDest[1] = 0;}
+
+// Add files option if I/O is enabled
+//
+   if (monMode[0] & XROOTD_MON_IO) monMode[0] |= XROOTD_MON_FILE;
+   if (monMode[1] & XROOTD_MON_IO) monMode[1] |= XROOTD_MON_FILE;
+
 // Set the monitor defaults
 //
    XrdXrootdMonitor::Defaults(monMBval, monWWval, monFlush);
-   if (monDest[0]) monMode[0] |= (monMode[0] ? XROOTD_MON_FILE|xmode : xmode);
-   if (monDest[1]) monMode[1] |= (monMode[1] ? XROOTD_MON_FILE|xmode : xmode);
+   if (monDest[0]) monMode[0] |= (monMode[0] ? xmode : XROOTD_MON_FILE|xmode);
+   if (monDest[1]) monMode[1] |= (monMode[1] ? xmode : XROOTD_MON_FILE|xmode);
    XrdXrootdMonitor::Defaults(monDest[0],monMode[0],monDest[1],monMode[1]);
+   return 0;
+}
+  
+/******************************************************************************/
+/*                                 x p i d f                                  */
+/******************************************************************************/
+
+/* Function: xpidf
+
+   Purpose:  To parse the directive: pidpath <path>
+
+             <path>    the path where the pid file is to be created.
+
+  Output: 0 upon success or !0 upon failure.
+*/
+
+int XrdXrootdProtocol::xpidf(XrdOucStream &Config)
+{
+    char *val;
+
+// Get the path
+//
+   val = Config.GetWord();
+   if (!val || !val[0])
+      {eDest.Emsg("Config", "pidpath not specified"); return 1;}
+
+// Record the path
+//
+   if (pidPath) free(pidPath);
+   pidPath = strdup(val);
    return 0;
 }
 

@@ -128,6 +128,7 @@ XrdOfs::XrdOfs()
    Balancer      = 0;
    evsObject     = 0;
    myRole        = strdup("server");
+   myPort        = 0;
 
 // Defaults for POSC
 //
@@ -135,10 +136,6 @@ XrdOfs::XrdOfs()
    poscLog = 0;
    poscHold= 10*60;
    poscAuto= 0;
-
-// Obtain port number we will be using
-//
-   myPort = (bp = getenv("XRDPORT")) ? strtol(bp, (char **)NULL, 10) : 0;
 
 // Establish our hostname and IPV4 address
 //
@@ -176,8 +173,6 @@ XrdOfsFile::XrdOfsFile(const char *user) : XrdSfsFile(user)
 /*                         G e t F i l e S y s t e m                          */
 /******************************************************************************/
   
-extern "C"
-{
 XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *native_fs, 
                                       XrdSysLogger     *lp,
                                       const char       *configfn)
@@ -196,7 +191,6 @@ XrdSfsFileSystem *XrdSfsGetFileSystem(XrdSfsFileSystem *native_fs,
 // All done, we can return the callout vector to these routines.
 //
    return &XrdOfsFS;
-}
 }
 
 /******************************************************************************/
@@ -572,6 +566,7 @@ int XrdOfsFile::open(const char          *path,      // In
            return XrdOfsFS.fsError(error, retc);
           }
        if (retc == -ETXTBSY) return XrdOfsFS.Stall(error, -1, path);
+       if (XrdOfsFS.Balancer) XrdOfsFS.Balancer->Removed(path);
        return XrdOfsFS.Emsg(epname, error, retc, "open", path);
       }
 

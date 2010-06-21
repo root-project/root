@@ -87,7 +87,6 @@ int         DiskAsk;      // Seconds between disk space reclaculations
 int         DiskWT;       // Seconds to defer client while waiting for space
 int         DiskSS;       // This is a staging server
 int         DiskOK;       // This configuration has data
-int         PrepOK;       // Prepare processing configured
 
 int         sched_RR;     // 1 -> Simply do round robin scheduling
 int         doWait;       // 1 -> Wait for a data end-point

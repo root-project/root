@@ -26,7 +26,7 @@ XrdCmsAdmin.hh         XrdCmsManTree.hh   XrdCmsReq.hh \
 XrdCmsCache.hh         XrdCmsManager.hh   XrdCmsResp.hh \
 XrdCmsClient.hh        XrdCmsMeter.hh     XrdCmsRouting.hh \
 XrdCmsClientConfig.hh  XrdCmsNash.hh      XrdCmsNode.hh \
-XrdCmsNotify.hh        XrdCmsKey.hh       XrdCmsSecurity.hh \
+XrdCmsKey.hh           XrdCmsSecurity.hh \
 XrdCmsClientMan.hh     XrdCmsPList.hh     XrdCmsSelect.hh \
 XrdCmsClientMsg.hh     XrdCmsParser.hh    XrdCmsState.hh \
 XrdCmsCluster.hh       XrdCmsPrepArgs.hh  XrdCmsSupervisor.hh \
@@ -57,7 +57,6 @@ libXrdCms_la_SOURCES = \
         XrdCmsClientMan.cc   \
         XrdCmsClientMsg.cc   \
         XrdCmsFinder.cc      \
-        XrdCmsNotify.cc      \
         XrdCmsResp.cc
 
 
@@ -97,6 +96,7 @@ cmsd_SOURCES = \
 cmsd_LDADD = libXrdCmsConv.la \
              ../XrdNet/libXrdNet.la \
              ../XrdOss/libXrdOss.la \
+             ../XrdFrm/libXrdFrm.la \
              ../XrdOuc/libXrdOuc.la \
              ../XrdSys/libXrdSys.la \
              ../Xrd/libXrd.la \

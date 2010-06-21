@@ -390,11 +390,12 @@ int XrdCnsSsi::Updt(const char *Host, const char *Path)
 
 // Done with the inventory
 //
+   fstat(iFD, &Stat);
    myIF.Close();
 
 // Now apply each log file against the inventory
 //
-   nsP = nsL; fstat(iFD, &Stat);
+   nsP = nsL;
    while(nsP)
         {if (nsP->Stat.st_ctime <= Stat.st_ctime)
             Say.V("Skipping ",nsP->File,"; too old.");

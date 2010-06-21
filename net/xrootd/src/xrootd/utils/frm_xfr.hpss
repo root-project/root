@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# $Id: frm_xfr.hpss,v 1.7 2009/11/20 04:12:42 abh Exp $
+# $Id: frm_xfr.hpss,v 1.10 2010/05/01 23:51:16 abh Exp $
 
 # (C) 2009 by the Board of Trustees of the Leland Stanford, Jr., University
 #                          All Rights Reserved
@@ -14,15 +14,18 @@
 
 # options:
 
-# [-c <config>] [-d] [-f] [-F {hide|none|oute|outo|<ffdir>}] [-k <keytab>] [-m]
+# [-A [<port>]] [-c <config>] [-d] [-f] [-F {hide|none|oute|outo|<ffdir>}]
 
-# [-n] [-p <mode>] [-P <port>] [-r] [-s <cos>] [-t <tries>] [-x <pftpcmd>]
+# [-k <keytab>] [-m] [-M offs] [-n] [-p <mode>] [-P <port>] [-r] [-s <cos>]
 
-# [-w <maxw>] [-z]
+# [-t <tries>] [-x <pftpcmd>] [-w <maxw>] [-z]
 
 # options (valid only under hpsscp):
 
 # [-C] [-N <ndir>] [-Q <qdir>] [-W <wait41>]
+
+# -A send the output filename via a udp alert to the receiving host:<port>
+#    If port is not specified, the default port is used.
 
 # -c supplies an option configuration file. The options in the file are
 #    added in front of whatever options remain. The file is structured
@@ -48,6 +51,9 @@
 #    <ffdir> Creates the file in the directory as "<ffdir>/<tfn>.fail".
 
 # -m exit with non-zero status if the file exists and has a non-zero length.
+
+# -M specified he offset into the target filename where directories are to
+#    start being created. See notes on auto-path creation.
 
 # -n do not redirect standard error when invoking the copy function
 
@@ -95,17 +101,20 @@
 #             Only one of <srcfn> or <trgfn> may have this designation but
 #             one must have it. If user if omitted, the current user is used.
 
-#             Auto-path creation is supported in two ways. Primarily, if a
+#             Auto-path creation is supported in three ways. Primarily, if a
 #             space appears in the hpss target path, then directories to
 #             left of the space are assumed to exist and directories to the
-#             are created prior to the pput of the file. For hpsscp, the -N
-#             option can be used to provide a reference name space that will
-#             determine which directories will be created.
+#             are created prior to the pput of the file. If you do not want to
+#             use space notation, use the -M option to specify where the space
+#             would have occurred. This location must have a slash ('/').
+#             For hpsscp, the -N option can be used to provide a reference name
+#             space that will determine which directories will be created.
 
 # Upon success, a zero status code is returned. Failure causes a message to
 # be issued to stderr and a non-zero exit status to be returned.
 
 use IPC::Open2;
+use Socket;
 
 # Global variables:
 #
@@ -126,6 +135,8 @@ $ErrFile = '';     # Absolute name of where error data resides
 $newPGRP = 1;      # Set new process group
 $DMode   = 0775;   # Directory create mode
 $doGet   = 1;      # We assume we will be doing gets
+$UDPort  = 0;      # Alert udp port
+$UDPdef  = 8686;   # Alert udp port default
 
 # hpsscp specific items
 #
@@ -138,7 +149,6 @@ $PFOK     = 0;
 # Transfer specific items
 #
 $XfrCmd  = '/opt/xrootd/utils/pftp_client';
-$XfrCmd  = '/u/sf/abh/bin/pftp_client';
 $XfrArgs = '-n -v';
 $XfrOut  = '2>&1'; # The redirection of stderr to stdout
 $XfrHost = '';     # MSS host name
@@ -164,12 +174,16 @@ $XfrTrgFN= '';     # The target file
 $XfrResp = '';     # The transfer response
 $XfrSess = '';     # The transfer session
 $XfrRC   = 0;      # The final return code
+$XfrMoff = 0;
 
 # Get the options
 #
   while (substr($ARGV[0], 0, 1) eq '-') {
      $op = shift(@ARGV);
-        if ($op eq '-c') {$CFile = &GetVal('config file'); AddOpts($CFile);}
+        if ($op eq '-A') {if (&IsNum($ARGV[0])) {$UDPort= &GetVal('port', 'N');}
+                             else {$UDPort = $UDPdef;}
+                         }
+     elsif ($op eq '-c') {$CFile = &GetVal('config file'); AddOpts($CFile);}
      elsif ($op eq '-d') {$Debug    = 1;}
      elsif ($op eq '-k') {$XfrKey =  &GetVal('key file');}
      elsif ($op eq '-f') {$Replace  = 1;}
@@ -178,9 +192,10 @@ $XfrRC   = 0;      # The final return code
                                if !($ErrDisp =~ /^(hide|none|outo|oute|\/.*)$/);
                          }
      elsif ($op eq '-m') {$OKFile  =  0;}
+     elsif ($op eq '-M') {$XfrMoff =  &GetVal('offset', 'N', 0);}
      elsif ($op eq '-n') {$XfrOut = ''}
      elsif ($op eq '-o') {&GetOwners(&GetVal('ownership'));}
-     elsif ($op eq '-P') {$XfrPort =  &GetVal('port', 'N', 1);}
+     elsif ($op eq '-P') {$XfrPort =  &GetVal('port', 'N');}
      elsif ($op eq '-p') {$Mode =  &GetVal('mode');
                              if ($Mode eq 'r') {$Mode = oct('0440');}
                           elsif ($Mode eq 'w') {$Mode = oct('0640');}
@@ -251,7 +266,13 @@ $XfrRC   = 0;      # The final return code
      {if (index($XfrTrgFN, ' ') >= 0)
          {($XfrBase, $XfrApnd) = split(/ /, $XfrTrgFN, 2);
           $XfrTrgFN = $XfrBase.'/'.$XfrApnd;
-         } elsif ($nsDir ne '') {($XfrBase, $XfrApnd) = Get_Base($XfrTrgFN);}
+         } elsif ($XfrMoff)
+                 {&Emsg("-M offset does not refer to a slash.")
+                       if substr($XfrTrgFN, $XfrMoff, 1) ne '/';
+                  $XfrBase = substr($XfrTrgFN, 0, $XfrMoff);
+                  $XfrApnd = substr($XfrTrgFN, $XfrMoff+1);
+                 }
+           elsif ($nsDir ne '') {($XfrBase, $XfrApnd) = Get_Base($XfrTrgFN);}
      }
 
 # Remove double slashes
@@ -382,6 +403,35 @@ sub Get_File {my($cmd, $resp, $GetTries);
 }
  
 #******************************************************************************
+#*                             P u t _ A l e r t                              *
+#******************************************************************************
+ 
+sub Put_Alert {my($ip_addr);
+
+# if there is no need to send an alert, simply return
+#
+  return 0 if !$UDPort;
+
+# Get a udp socket
+#
+  if (!socket(MYSOCK, PF_INET, SOCK_DGRAM, getprotobyname("udp")))
+     {&SayDebug("Unable to get socket for alert; $!", 1); return 0;}
+
+# Convert destination to a sockaddr
+#
+  if (substr($XfrHost,0,1) =~ m/\d/) {$ip_addr = inet_aton($XfrHost);}
+     else {$ip_addr = gethostbyname($XfrHost);}
+  my($ip_dest) = pack_sockaddr_in($UDPort, $ip_addr);
+
+# Send the message
+#
+  &SayDebug("Unable to send alert; $!", 1)
+     if !send(MYSOCK, "$XfrUser $XfrTrgFN\n", 0, $ip_dest);
+
+  return 0;
+}
+  
+#******************************************************************************
 #*                              P u t _ F i l e                               *
 #******************************************************************************
  
@@ -420,10 +470,10 @@ sub Put_File {my($Fsz) = @_; my($cmd, $dir, $resp, $sfx, $PutTries);
        }
     $cmd .= ';quit';
 
-    # Execute the command to get the file (as many times as wanted/needed)
+    # Execute the command to put the file (as many times as wanted/needed)
     #
     $PutTries = 0;
-    do {return 0 if &Transfer($cmd, 1, $Fsz);
+    do {return &Put_Alert() if &Transfer($cmd, 1, $Fsz);
         $PutTries += &TransErr($PutTries+1, 1);
        } while($PutTries < $XfrMaxTR);
     return $XfrRC;
@@ -664,8 +714,8 @@ $CMD .= '.hpss' if !$isCPY;
 print "Usage: $CMD [options] {<[usr@]host>:<sfn> <tfn> | <sfn> <[usr@]host>:<tfn>}\n";
 print "\n";
 print "options: [-c <config>] [-d] [-f] [-F {hide|none|oute|outo|<ffdir>}]\n";
-print "         [-k <keytab>] [-m] [-n] [-p <mode>] [-P <port>] [-r] [-s <cos>]\n";
-print "         [-t <tries>] [-x <pftpcmd>] [-w <maxw>] [-z]\n";
+print "         [-k <keytab>] [-m] [-M offs] [-n] [-p <mode>] [-P <port>] [-r]\n";
+print "         [-s <cos>] [-t <tries>] [-x <pftpcmd>] [-w <maxw>] [-z]\n";
 if ($isCPY) {
 print "         [-C] [-N <nsdir>] [-Q <qdir>] [-W <waitqcmd>]\n";
 }

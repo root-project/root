@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/*                       X r d C m s N o t i f y . c c                        */
+/*                    X r d O u c C m s N o t i f y . c c                     */
 /*                                                                            */
-/* (c) 2009 by the Board of Trustees of the Leland Stanford, Jr., University  */
+/* (c) 2010 by the Board of Trustees of the Leland Stanford, Jr., University  */
 /*                            All Rights Reserved                             */
 /*   Produced by Andrew Hanushevsky for Stanford University under contract    */
 /*              DE-AC02-76-SFO0515 with the Department of Energy              */
@@ -14,21 +14,21 @@
 #include <string.h>
 #include <sys/param.h>
 
-#include "XrdCms/XrdCmsNotify.hh"
 #include "XrdNet/XrdNetMsg.hh"
+#include "XrdOuc/XrdOucCmsNotify.hh"
 #include "XrdOuc/XrdOucUtils.hh"
 #include "XrdSys/XrdSysError.hh"
 #include "XrdSys/XrdSysPthread.hh"
 #include "XrdSys/XrdSysTimer.hh"
 
-const char *XrdCmsNotifyCVSID = "$Id$";
+const char *XrdOucCmsNotifyCVSID = "$Id$";
 
 /******************************************************************************/
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
   
-XrdCmsNotify::XrdCmsNotify(XrdSysError *erp, const char *aPath, 
-                                             const char *iName, int Opts)
+XrdOucCmsNotify::XrdOucCmsNotify(XrdSysError *erp, const char *aPath, 
+                                 const char *iName, int Opts)
 {
    char buff[1024], *p;
 
@@ -39,7 +39,7 @@ XrdCmsNotify::XrdCmsNotify(XrdSysError *erp, const char *aPath,
 // Construct the path for notification
 //
    p = XrdOucUtils::genPath(aPath, iName, ".olb");
-   strcpy(buff, p); strcat(buff, (Opts & isServ ? "olbd.admin":"olbd.nimda"));
+   strcpy(buff, p); strcat(buff, (Opts & isServ ? "olbd.notes":"olbd.seton"));
    destPath = strdup(buff); free(p);
 
 // Construct message object
@@ -56,7 +56,7 @@ XrdCmsNotify::XrdCmsNotify(XrdSysError *erp, const char *aPath,
 /*                            D e s t r u c t o r                             */
 /******************************************************************************/
   
-XrdCmsNotify::~XrdCmsNotify()
+XrdOucCmsNotify::~XrdOucCmsNotify()
 {
    if (destPath) free(destPath);
    if (xMsg) delete xMsg;
@@ -66,7 +66,7 @@ XrdCmsNotify::~XrdCmsNotify()
 /*                                  G o n e                                   */
 /******************************************************************************/
   
-int XrdCmsNotify::Gone(const char *Path, int isPfn)
+int XrdOucCmsNotify::Gone(const char *Path, int isPfn)
 {
    static const int   Cln = 6;
           const char *Cmd = (isPfn ? "gone  " : "rmdid ");
@@ -88,7 +88,7 @@ int XrdCmsNotify::Gone(const char *Path, int isPfn)
 /*                                  H a v e                                   */
 /******************************************************************************/
   
-int XrdCmsNotify::Have(const char *Path, int isPfn)
+int XrdOucCmsNotify::Have(const char *Path, int isPfn)
 {
    static const int   Cln = 6;
           const char *Cmd = (isPfn ? "have  " : "newfn ");
@@ -110,7 +110,7 @@ int XrdCmsNotify::Have(const char *Path, int isPfn)
 /*                                  S e n d                                   */
 /******************************************************************************/
   
-int XrdCmsNotify::Send(const char *theMsg, int theLen)
+int XrdOucCmsNotify::Send(const char *theMsg, int theLen)
 {
    static XrdSysMutex myMutex;
    int rc;

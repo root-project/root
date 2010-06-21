@@ -58,16 +58,19 @@ SMask_t XrdCmsPList_Anchor::Insert(const char *pname, XrdCmsPInfo *pinfo)
    pp = 0;
 
 // Find the proper insertion point. Paths are sorted in decreasin length
-// order but within a length in increasing lexical order.
+// order. We must merge in the incomming mask with all subset paths.
 //
    rc = 1;
    while(p && p->pathlen >= plen)
         {if (p->pathlen == plen && !(rc = strcmp(p->pathname,pname))) break;
+            else if (!strncmp(p->pathname,pname,plen))
+                    {p->pathmask.And(~(pinfo->rovec)); p->pathmask.Or(pinfo);}
          pp = p; 
           p = p->next;
         }
 
-// Merge the path masks
+// Either merge the path masks or insert a new path. For a new path, add to
+// it masks of all superset paths that may follow it in the chain of paths.
 //
    if (!rc) {p->pathmask.And(~(pinfo->rovec)); p->pathmask.Or(pinfo);}
       else { p = new XrdCmsPList(pname, pinfo);
@@ -78,6 +81,12 @@ SMask_t XrdCmsPList_Anchor::Insert(const char *pname, XrdCmsPInfo *pinfo)
                   p->next = next;
                      next = p;
                 }
+             pp = p->next;
+             while(pp) {if (pp->pathlen < plen
+                        &&  !strncmp(pp->pathname,pname,pp->pathlen))
+                           p->pathmask.Or(&(pp->pathmask));
+                        pp = pp->next;
+                       }
            }
 
 // All done

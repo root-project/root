@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.29 2009/08/19 13:51:46 abh Exp $
+#              $Id: GNUmakefile,v 1.30 2010/05/26 01:25:50 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -13,6 +13,7 @@ include ../GNUmake.env
 SOURCES = \
         XrdOuca2x.cc         \
         XrdOucArgs.cc        \
+        XrdOucCmsNotify.cc   \
         XrdOucCRC.cc         \
         XrdOucEnv.cc         \
         XrdSysError.cc       \
@@ -36,6 +37,8 @@ SOURCES = \
 OBJECTS = \
         $(OBJDIR)/XrdOuca2x.o          \
         $(OBJDIR)/XrdOucArgs.o         \
+        $(OBJDIR)/XrdOucCmsNotify.o    \
+        $(OBJDIR)/XrdOucCRC.o          \
         $(OBJDIR)/XrdOucEnv.o          \
         $(OBJDIR)/XrdSysError.o        \
         $(OBJDIR)/XrdOucExport.o       \
@@ -53,8 +56,7 @@ OBJECTS = \
         $(OBJDIR)/XrdOucSxeq.o         \
         $(OBJDIR)/XrdOucTokenizer.o    \
         $(OBJDIR)/XrdOucTrace.o        \
-        $(OBJDIR)/XrdOucUtils.o        \
-        $(OBJDIR)/XrdOucCRC.o
+        $(OBJDIR)/XrdOucUtils.o
 
 LIBRARY = $(LIBDIR)/libXrdOuc.a
 
@@ -103,6 +105,14 @@ $(OBJDIR)/XrdOucArgs.o: XrdOucArgs.cc  XrdOucArgs.hh XrdOucTokenizer.hh \
                         XrdSysError.hh
 	@echo Compiling XrdOucArgs.cc
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) XrdOucArgs.cc -o $(OBJDIR)/XrdOucArgs.o
+
+$(OBJDIR)/XrdOucCmsNotify.o: XrdOucCmsNotify.cc  XrdOucCmsNotify.hh \
+                             XrdNetMsg.hh \
+                             XrdOucUtils.hh \
+                             XrdSysError.hh      XrdSysPthread.hh \
+                             XrdSysTimer.hh
+	@echo Compiling XrdOucCmsNotify.cc 
+	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdOucCmsNotify.o XrdOucCmsNotify.cc
 
 $(OBJDIR)/XrdOucCRC.o: XrdOucCRC.cc XrdOucCRC.hh
 	@echo Compiling XrdOucCRC.cc

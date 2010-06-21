@@ -39,6 +39,8 @@ inline unsigned long long setID(const unsigned char *sid)
                                 return Req.ID;
                                }
 
+inline unsigned char     *Stream() {return Req.ids.Sid;}
+
         XrdXrootdReqID(unsigned long long id) {setID(id);}
         XrdXrootdReqID(const unsigned char *sid, int lid, unsigned int linst)
                       {setID(sid ? (unsigned char *)"\0\0" : sid, lid, linst);}

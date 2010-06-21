@@ -53,6 +53,9 @@ XrdOucMsubs::XrdOucMsubs(XrdSysError *errp)
        vName[vHST]  = "$HOST";
        vName[vRID]  = "$RID";
        vName[vTID]  = "$TID";
+       vName[vMDP]  = "$MDP";
+       vName[vSRC]  = "$SRC";
+       vName[vDST]  = "$DST";
       }
     mText = 0; 
     mData[0] = 0; mDlen[0] = 0;
@@ -170,7 +173,11 @@ char *XrdOucMsubs::getVal(XrdOucMsubsInfo &Info, int vNum)
                   return Info.rfnbuff;
 
       case vLFN2:
-      case vNFY:  if (Info.lfn2) return (char *)Info.lfn2;
+      case vNFY:
+      case vSRC:  if (Info.lfn2) return (char *)Info.lfn2;
+                  break;
+
+      case vDST:  if (Info.pfn2) return (char *)Info.pfn2;
                   break;
 
       case vPFN2: if (!Info.lfn2) break;
@@ -201,6 +208,7 @@ char *XrdOucMsubs::getVal(XrdOucMsubsInfo &Info, int vNum)
                   *op = '\0';
                   return Info.obuff;
 
+      case vMDP:
       case vOPT:  if (Info.misc) return (char *)Info.misc;
                   break;
 

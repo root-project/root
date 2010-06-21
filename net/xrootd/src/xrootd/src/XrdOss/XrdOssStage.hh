@@ -24,7 +24,8 @@
   
 // Flag values
 //
-#define XRDOSS_REQ_FAIL 0x0080
+#define XRDOSS_REQ_FAIL 0x00C0
+#define XRDOSS_REQ_ENOF 0x0040
 #define XRDOSS_REQ_ACTV 0x0001
 
 class XrdOssStage_Req

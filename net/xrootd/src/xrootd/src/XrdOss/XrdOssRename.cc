@@ -56,7 +56,7 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
 {
     EPNAME("Rename")
     static const mode_t pMode = S_IRWXU | S_IRWXG;
-    unsigned long long remotefs_Old, remotefs_New, remotefs, ismig;
+    unsigned long long remotefs_Old, remotefs_New, remotefs, haslf;
     unsigned long long old_popts, new_popts;
     int i, retc2, retc = XrdOssOK;
     XrdOssLock old_file, new_file;
@@ -78,10 +78,10 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
    || ((old_popts & XRDEXP_MIG) ^ (new_popts & XRDEXP_MIG)))
       {char buff[MAXPATHLEN+128];
        snprintf(buff, sizeof(buff), "rename %s to ", oldname);
-       return OssEroute.Emsg("XrdOssRename",-XRDOSS_E8011,buff,(char *)newname);
+       return OssEroute.Emsg("Rename",-XRDOSS_E8011,buff,(char *)newname);
       }
    remotefs = remotefs_Old | remotefs_New;
-   ismig    = remotefs | (XRDEXP_MIG & (old_popts | new_popts));
+   haslf    = (XRDEXP_MAKELF & (old_popts | new_popts));
 
 // Construct the filename that we will be dealing with.
 //
@@ -127,7 +127,7 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
 
 // For migratable space, rename all suffix variations of the base file
 //
-   if (ismig)
+   if (haslf)
       {if ((!retc || retc == -ENOENT))
           {i = strlen(local_path_Old); lpo = &local_path_Old[i];
            i = strlen(local_path_New); lpn = &local_path_New[i];
@@ -143,7 +143,7 @@ int XrdOssSys::Rename(const char *oldname, const char *newname)
 // Do not do this if we really should not use the MSS (but unserialize!).
 //
    if (remotefs)
-      {if (remotefs && (!retc || retc == -ENOENT) && MSSgwCmd)
+      {if (remotefs && (!retc || retc == -ENOENT) && RSSCmd)
           {if ( (retc2 = MSS_Rename(remote_path_Old, remote_path_New))
               != -ENOENT) retc = retc2;
            DEBUG("rmt rc=" <<retc2 <<" op=" <<remote_path_Old <<" np=" <<remote_path_New);
@@ -252,7 +252,7 @@ int XrdOssSys::RenameLink2(int Llen, char *oLnk, char *old_path,
 //
    if (symlink(new_path, nLnk))
       {rc = errno;
-       OssEroute.Emsg("XrdOssRenameLink", rc, "create symlink", nLnk);
+       OssEroute.Emsg("RenameLink", rc, "create symlink", nLnk);
        return -rc;
       }
 
@@ -260,7 +260,7 @@ int XrdOssSys::RenameLink2(int Llen, char *oLnk, char *old_path,
 //
    if (symlink(oLnk, new_path))
       {rc = errno;
-       OssEroute.Emsg("XrdOssRenameLink", rc, "symlink to", oLnk);
+       OssEroute.Emsg("RenameLink", rc, "symlink to", oLnk);
        unlink(nLnk);
        return -rc;
       }
@@ -268,7 +268,7 @@ int XrdOssSys::RenameLink2(int Llen, char *oLnk, char *old_path,
 // Now, unlink the old lfn path
 //
    if (unlink(old_path))
-      OssEroute.Emsg("XrdOssRenameLink", errno, "unlink", old_path);
+      OssEroute.Emsg("RenameLink", errno, "unlink", old_path);
 
 // All done (well, as well as it needs to be at this point)
 //

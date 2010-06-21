@@ -116,8 +116,7 @@ static int     mapError(int rc);
 static
 inline bool    myFD(int fd) {return fd <= highFD && myFiles && myFiles[fd];}
 
-static int     OpenCB(int res, XrdPosixFile *fp, void *cbArg);
-static int     OpenCB(XrdPosixFile *fp=0, int rC=0, int eC=0);
+static void    OpenCB(XrdPosixFile *fp, void *cbArg, int res);
 
 static long long QueryOpaque(const char*, char*, int);
 

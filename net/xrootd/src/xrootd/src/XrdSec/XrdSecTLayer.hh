@@ -81,9 +81,10 @@ virtual void   secClient(int theFD, XrdOucErrInfo *einfo)=0;
 //
 virtual void   secServer(int theFD, XrdOucErrInfo *einfo)=0;
 
-// You must implete the proper delete()
+// You must implete the proper delete(). Normally, do a "delete this" and join
+// the secTid thread: "if (secTid) {XrdSysThread::Join(secTid,NULL);secTid=0;}".
 //
-virtual void    Delete()=0; // Normally does "delete this"
+virtual void    Delete()=0;
 
 // Classes that must be public are only internally used
 //
@@ -98,8 +99,11 @@ virtual XrdSecCredentials *getCredentials(XrdSecParameters   *parm=0,
         void               secXeq();
 
 protected:
+pthread_t      secTid;
 
-virtual       ~XrdSecTLayer() {if (eText) free(eText);}
+virtual       ~XrdSecTLayer() {if (eText)  {free(eText);eText=0;}
+                               if (myFD>0) {close(myFD);myFD=-1;}
+                              }
 
 private:
 
@@ -113,7 +117,6 @@ void           secError(const char *Msg, int rc, int iserrno=1);
 XrdSysSemaphore mySem;
 Initiator       Starter;
 Initiator       Responder;
-pthread_t       secTid;
 int             myFD;
 int             urFD;
 int             Tmax; // Maximum timeslices per interaction

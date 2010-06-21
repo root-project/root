@@ -104,6 +104,7 @@ XrdOucNSWalk::NSEnt *XrdOucNSWalk::Index(int &rc, const char **dPath)
   
 void XrdOucNSWalk::addEnt(XrdOucNSWalk::NSEnt *eP)
 {
+   static const int retIxLO = retIDLO | retIILO;
 
 // Complete the entry
 //
@@ -115,9 +116,12 @@ void XrdOucNSWalk::addEnt(XrdOucNSWalk::NSEnt *eP)
 
 // Chain the entry into the list
 //
-   if (!(Opts & retIDLO)) {eP->Next = DEnts; DEnts = eP;}
+   if (!(Opts & retIxLO)) {eP->Next = DEnts; DEnts = eP;}
       else {NSEnt *pP = 0, *nP = DEnts;
-            while(nP && eP->Plen < nP->Plen) {pP = nP; nP = nP->Next;}
+            if (Opts & retIDLO)
+               while(nP && eP->Plen < nP->Plen) {pP = nP; nP = nP->Next;}
+               else
+               while(nP && eP->Plen > nP->Plen) {pP = nP; nP = nP->Next;}
             if (pP) {eP->Next = nP; pP->Next = eP;}
                else {eP->Next = nP; DEnts    = eP;}
            }
@@ -151,6 +155,8 @@ int XrdOucNSWalk::Build()
 #ifdef HAVE_FSTATAT
    if ((DPfd = open(DPath, O_RDONLY)) < 0) rc = errno;
       else theEnt.F = DPfd;
+#else
+   DPfd = -1;
 #endif
 
 // Open the directory
@@ -207,7 +213,7 @@ int XrdOucNSWalk::Build()
 // Check if we need to do a callback for an empty directory
 //
    if (edCB && xLKF == nEnt && !DEnts)
-      {if (!fstat(DPfd, &dStat)) isEmpty = 1;
+      {if ((DPfd < 0 ? !stat(DPath, &dStat) : !fstat(DPfd, &dStat))) isEmpty=1;
           else eDest->Emsg("Build", errno, "stating directory", DPath);
       }
    return 0;

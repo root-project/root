@@ -29,6 +29,22 @@ const char *XrdOucSxeqCVSID = "$Id$";
 /*                           C o n s t r u c t o r                            */
 /******************************************************************************/
   
+XrdOucSxeq::XrdOucSxeq(int sOpts, const char *path)
+{
+   static const int AMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+   lokFN = strdup(path);
+   lokUL = 0;
+
+// Open the file, creating it
+//
+   if ((lokFD = open(lokFN, O_CREAT|O_RDWR, AMode)) < 0) lokRC = errno;
+      else {lokRC = 0;
+            if (sOpts) Serialize(sOpts);
+           }
+}
+
+/******************************************************************************/
+  
 XrdOucSxeq::XrdOucSxeq(const char *sfx1, const char *sfx2, const char *Dir)
 {
    static const int AMode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;

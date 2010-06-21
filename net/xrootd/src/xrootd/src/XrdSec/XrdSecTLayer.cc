@@ -11,8 +11,6 @@
   
 //       $Id$
 
-const char *XrdSecTLayerCVSID = "$Id$";
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -40,7 +38,7 @@ const char  XrdSecTLayer::TLayerRR::xfrData;
 
 XrdSecTLayer::XrdSecTLayer(const char *pName, Initiator who1st)
              : mySem(0), Starter(who1st), myFD(-1), urFD(-1),
-               Tmax(275), Tcur(0), eCode(0), eText(0)
+               Tmax(275), Tcur(0), eCode(0), eText(0), secTid(0)
 {
 
 // Do the standard stuff
@@ -175,8 +173,10 @@ int XrdSecTLayer::Authenticate  (XrdSecCredentials  *cred,
    memcpy(bP, (char *)&Hdr, hdrSz);
    if (Blen) memcpy(bP+hdrSz, Buff, Blen);
    *parms = new XrdSecParameters(bP, hdrSz+Blen);
+
    return 1;
 }
+
 
 /******************************************************************************/
 /*                       P r i v a t e   M e t h o d s                        */
@@ -211,7 +211,7 @@ int XrdSecTLayer::bootUp(Initiator whoami)
 
 // Start a thread to handle the socket interaction
 //
-   if (XrdSysThread::Run(&secTid,XrdSecTLayerBootUp,(void *)this))
+   if (XrdSysThread::Run(&secTid,XrdSecTLayerBootUp,(void *)this, XRDSYSTHREAD_HOLD))
       {int rc = errno;
        close(myFD); myFD = -1;
        close(urFD); urFD = -1;
@@ -332,7 +332,6 @@ void XrdSecTLayer::secXeq()
 //
    if (Responder == XrdSecTLayer::isClient) secClient(urFD, &einfo);
       else secServer(urFD, &einfo);
-
 // Extract out the completion code
 //
    Msg = einfo.getErrText(eCode);
@@ -341,6 +340,7 @@ void XrdSecTLayer::secXeq()
 
 // Indicate we are done
 //
+   if (urFD>0) close(urFD);
    urFD = -1;
    mySem.Post();
 }

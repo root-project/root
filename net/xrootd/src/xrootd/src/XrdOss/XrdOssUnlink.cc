@@ -88,7 +88,7 @@ int XrdOssSys::Remdir(const char *path, int Opts)
 int XrdOssSys::Unlink(const char *path, int Opts)
 {
     EPNAME("Unlink")
-    unsigned long long ismig, remotefs;
+    unsigned long long haslf, remotefs;
     int i, retc2, doAdjust = 0, retc = XrdOssOK;
     XrdOssLock un_file;
     struct stat statbuff;
@@ -101,12 +101,13 @@ int XrdOssSys::Unlink(const char *path, int Opts)
    if (Opts & XRDOSS_isPFN)
       {strcpy(local_path, path),
        *remote_path = '\0';
-       ismig = remotefs = 0;
+       haslf = Opts & XRDOSS_isMIG;
+       remotefs = 0;
       } else {
-       remotefs = Check_RO(Unlink, ismig, path, "deleting ");
+       remotefs = Check_RO(Unlink, haslf, path, "deleting ");
        if ( (retc = GenLocalPath( path,  local_path))
        ||   (retc = GenRemotePath(path, remote_path)) ) return retc;
-       ismig &= (XRDEXP_REMOTE | XRDEXP_MIG);
+       haslf &= XRDEXP_MAKELF;
       }
 
  // Serialize the directory.
@@ -134,7 +135,7 @@ int XrdOssSys::Unlink(const char *path, int Opts)
           else {i = strlen(local_path); fnp = &local_path[i];
                 if (doAdjust && statbuff.st_size)
                    XrdOssCache::Adjust(statbuff.st_dev, -statbuff.st_size);
-                if (ismig) for (i = 0; i < XrdOssPath::sfxMigL; i++)
+                if (haslf) for (i = 0; i < XrdOssPath::sfxMigL; i++)
                    {strcpy(fnp, XrdOssPath::Sfx[i]);
                     if (unlink(local_path))
                        if (errno == ENOENT) continue;
@@ -149,7 +150,7 @@ int XrdOssSys::Unlink(const char *path, int Opts)
 // If local copy effectively deleted. delete the remote copy if need be
 //
    if (remotefs && !(Opts & XRDOSS_Online) 
-   && (!retc || retc == -ENOENT) && MSSgwCmd)
+   && (!retc || retc == -ENOENT) && RSSCmd)
       {if ((retc2 = MSS_Unlink(remote_path)) != -ENOENT) retc = retc2;
        DEBUG("rmt rc=" <<retc2 <<" path=" <<remote_path);
       }

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.20 2010/01/05 01:16:38 abh Exp $
+#              $Id: GNUmakefile,v 1.21 2010/05/26 01:22:55 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,10 +6,10 @@
   
 include ../GNUmake.env
 
-BINLIBS = -L$(LIBDIR) -lXrdOss -lXrdOuc -lXrdNet -lXrdOuc -lXrd -lXrdSys $(TYPELIBSF)
+BINLIBS = -L$(LIBDIR) -lXrdOss -lXrdFrm -lXrdOuc -lXrdNet -lXrdOuc -lXrd -lXrdSys $(TYPELIBSF)
 
 LIBDEPS = $(LIBDIR)/libXrdOss.a $(LIBDIR)/libXrdOuc.a $(LIBDIR)/libXrdNet.a \
-          $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrd.a
+          $(LIBDIR)/libXrdFrm.a $(LIBDIR)/libXrdSys.a $(LIBDIR)/libXrd.a
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -20,7 +20,6 @@ SRCCLNT = \
         XrdCmsClientMan.cc   \
         XrdCmsClientMsg.cc   \
         XrdCmsFinder.cc      \
-        XrdCmsNotify.cc      \
         XrdCmsResp.cc        \
 
 SRCBOTH = \
@@ -62,7 +61,6 @@ OBJCLNT = \
         $(OBJDIR)/XrdCmsClientMan.o   \
         $(OBJDIR)/XrdCmsClientMsg.o   \
         $(OBJDIR)/XrdCmsFinder.o      \
-        $(OBJDIR)/XrdCmsNotify.o      \
         $(OBJDIR)/XrdCmsResp.o
 
 OBJBOTH = \
@@ -111,6 +109,7 @@ vpath XProtocol% ../XProtocol
 vpath XPtypes%   ../XProtocol
 vpath YProtocol% ../XProtocol
 vpath XrdCms%    ../XrdCms
+vpath XrdFrm%    ../XrdFrm
 vpath XrdNet%    ../XrdNet
 vpath XrdOdc%    ../XrdOdc
 vpath XrdOss%    ../XrdOss
@@ -346,14 +345,6 @@ $(OBJDIR)/XrdCmsNode.o:      XrdCmsNode.cc       XrdCmsNode.hh \
 	@echo Compiling XrdCmsNode.cc 
 	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsNode.o XrdCmsNode.cc
 
-$(OBJDIR)/XrdCmsNotify.o:    XrdCmsNotify.cc       XrdCmsNotify.hh \
-                             XrdNetMsg.hh \
-                             XrdOucUtils.hh \
-                             XrdSysError.hh        XrdSysPthread.hh \
-                             XrdSysTimer.hh
-	@echo Compiling XrdCmsNotify.cc 
-	$(ECHO)$(CC) -c $(CFLAGS) $(INCLUDE) -o $(OBJDIR)/XrdCmsNotify.o XrdCmsNotify.cc
-
 $(OBJDIR)/XrdCmsParser.o:    XrdCmsParser.cc     XrdCmsParser.hh \
                              XrdCmsRRData.hh \
                              XrdOucErrInfo.hh    XrdOucPup.hh \
@@ -380,7 +371,7 @@ $(OBJDIR)/XrdCmsPrepArgs.o:  XrdCmsPrepArgs.cc   XrdCmsPrepArgs.hh \
 $(OBJDIR)/XrdCmsPrepare.o:   XrdCmsPrepare.cc    XrdCmsPrepare.hh \
                              XrdCmsConfig.hh     XrdCmsPrepArgs.hh \
                              XrdCmsTrace.hh      XrdNetMsg.hh \
-                             XrdOss.hh \
+                             XrdFrmProxy.hh      XrdOss.hh \
                              XrdOucEnv.hh        XrdOucHash.hh \
                              XrdOucMsubs.hh      XrdOucStream.hh \
                              XrdOucTList.hh \

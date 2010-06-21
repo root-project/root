@@ -136,8 +136,9 @@ int GRSTx509KnownCriticalExts(X509 *cert)
                                  !X509_supported_extension(ex))
           {
             OBJ_obj2txt(s, sizeof(s), X509_EXTENSION_get_object(ex), 1);
-
-            if (strcmp(s, GRST_PROXYCERTINFO_OID) != 0) return GRST_RET_FAILED;
+            if ( (strcmp(s, GRST_PROXYCERTINFO_OID) != 0) && 
+		 (strcmp(s, GRST_PROXYCERTNEWINFO_OID) != 0) )
+	      return GRST_RET_FAILED;
           }
       }
 

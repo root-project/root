@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.34 2009/07/15 01:56:33 abh Exp $
+#              $Id: GNUmakefile,v 1.35 2010/05/26 01:24:08 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -31,16 +31,9 @@ OBJECTS  = \
 
 OBJFS    = $(OBJDIR)/XrdOfsFS.o
 
-MORELIBS = -L$(LIBDIR) -lXrdAcc -lXrdOss -lXrdCms -lXrdOdc -lXrdNet -lXrdOuc -lXrdSys
-
-LIBDEP   = $(LIBDIR)/libXrdAcc.a $(LIBDIR)/libXrdOss.a \
-           $(LIBDIR)/libXrdCms.a $(LIBDIR)/libXrdOuc.a \
-           $(LIBDIR)/libXrdSys.a
-
 LIBARCH  = $(LIBDIR)/libXrdOfs.a
-LIBRARY  = $(LIBDIR)/libXrdOfs.$(TYPESHLIB)
 
-TARGETS  = $(LIBARCH) $(LIBRARY)
+TARGETS  = $(LIBARCH)
 
 #------------------------------------------------------------------------------#
 #                           S e a r c h   P a t h s                            #
@@ -70,7 +63,7 @@ anything: $(TARGETS)
 #                           D e p e n d e n c i e s                            #
 #------------------------------------------------------------------------------#
 
-$(TARGETS): $(OBJECTS) $(OBJFS) $(LIBDEP)
+$(TARGETS): $(OBJECTS) $(OBJFS)
 	@echo Creating archive $(LIBARCH)
 	$(ECHO)rm -f $(LIBARCH)
 	$(ECHO)if [ "$(TYPE)" = "SunOS" -a "$(CC)" = "CC" ]; then \
@@ -83,8 +76,6 @@ $(TARGETS): $(OBJECTS) $(OBJFS) $(LIBDEP)
 	          ar -rc $(LIBARCH) $(OBJECTS); \
 	          ranlib $(LIBARCH); \
 	       fi
-	@echo Creating shared library $(LIBRARY) 
-	$(ECHO)$(CC) $(CFLAGS) $(OBJECTS) $(OBJFS) $(LDSO) $(MORELIBS) $(LIBS)  -o $(LIBRARY)
 
 $(OBJDIR)/XrdOfs.o:  XrdOfs.cc             XrdOfs.hh \
                      XrdOfsHandle.hh       XrdOfsEvs.hh     XrdOfsStats.hh \

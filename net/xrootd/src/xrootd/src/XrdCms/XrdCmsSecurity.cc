@@ -10,7 +10,7 @@
 
 //          $Id$
 
-const char *XrdXrootdLoadLibCVSID = "$Id$";
+const char *XrdCmsSecurityCVSID = "$Id$";
 
 // Bypass Solaris ELF madness
 //

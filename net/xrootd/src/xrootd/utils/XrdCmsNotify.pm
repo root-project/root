@@ -1,5 +1,5 @@
 #******************************************************************************
-#   $Id: XrdCmsNotify.pm,v 1.2 2008/10/14 09:24:36 furano Exp $
+#   $Id: XrdCmsNotify.pm,v 1.3 2010/05/01 23:51:16 abh Exp $
 #*                                                                            *
 #*                       X r d C m s N o t i f y . p m                        *
 #*                                                                            *
@@ -124,7 +124,7 @@ sub SendMsg {my($iname,$msg) = @_;
 #Output: Previous debug setting.
 
 sub setDebug {my($dbg) = @_; 
-    my($olCMSADDRCMSADDRddbg) = $DEBUG; 
+    my($olddbg) = $DEBUG; 
     $DEBUG = $dbg; 
     return $olddbg;
 }

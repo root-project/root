@@ -43,6 +43,7 @@ char                 *XrdXrootdProtocol::FSLib    = 0;
 XrdXrootdFileLock    *XrdXrootdProtocol::Locker;
 XrdSecService        *XrdXrootdProtocol::CIA      = 0;
 char                 *XrdXrootdProtocol::SecLib   = 0;
+char                 *XrdXrootdProtocol::pidPath  = strdup("/tmp");
 XrdScheduler         *XrdXrootdProtocol::Sched;
 XrdBuffManager       *XrdXrootdProtocol::BPool;
 XrdSysError           XrdXrootdProtocol::eDest(0, "Xrootd");
@@ -614,7 +615,6 @@ void XrdXrootdProtocol::Reset()
    myOffset           = 0;
    myIOLen            = 0;
    myStalls           = 0;
-   myLastRC           = 0;
    myAioReq           = 0;
    numReads           = 0;
    numReadP           = 0;

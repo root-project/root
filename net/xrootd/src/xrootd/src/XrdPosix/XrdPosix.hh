@@ -20,7 +20,7 @@
 
 #define access(a,b)      XrdPosix_Access(a,b)
 
-#define clhdir(a)        XrdPosix_Chdir(a)
+#define chdir(a)         XrdPosix_Chdir(a)
 
 #define close(a)         XrdPosix_Close(a)
 

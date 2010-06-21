@@ -36,11 +36,13 @@ const char      *Tid;       // $TID   or $RID  unless Rid is defined.
 XrdOucEnv       *Env;
 XrdOucName2Name *N2N;
 const char      *lfn;       // $LFN
-const char      *lfn2;      // $LFN2  or $NOTIFY
+const char      *lfn2;      // $LFN2  or $NOTIFY or $SRC
 const char      *pfn;       // $PFN
-const char      *pfn2;      // $PFN2
-const char      *misc;      // $OPTS
+const char      *pfn2;      // $PFN2             or $DST
+const char      *misc;      // $OPTS  or $MDP
 const char      *Rid;       // $RID for real
+const char      *Src;       // $SRC
+const char      *Dst;       // $DST
 char            *pfnbuff;
 char            *rfnbuff;
 char            *pfn2buff;
@@ -85,9 +87,10 @@ char *getVal(XrdOucMsubsInfo &Info, int vNum);
 
 enum vNum {vLFN =  1, vPFN =  2, vRFN =  3, vLFN2 =  4, vPFN2 =  5, vRFN2 =  6,
            vFM  =  7, vOFL =  8, vUSR =  9, vHST  = 10, vTID  = 11,
-           vNFY = 12, vOPT = 13, vPTY = 14, vRID  = 15, vCGI  = 16};
+           vNFY = 12, vOPT = 13, vPTY = 14, vRID  = 15, vCGI  = 16,
+           vMDP = 17, vSRC = 18, vDST = 19};
 
-static const int   vMax = 17;
+static const int   vMax = 20;
 static const char *vName[vMax];
 
 XrdSysError *eDest;

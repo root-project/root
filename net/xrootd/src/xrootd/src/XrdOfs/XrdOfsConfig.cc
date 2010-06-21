@@ -111,6 +111,10 @@ int XrdOfs::Configure(XrdSysError &Eroute) {
    Options            = 0;
    if (getenv("XRDDEBUG")) OfsTrace.What = TRACE_MOST | TRACE_debug;
 
+// Obtain port number we will be using
+//
+   myPort = (var = getenv("XRDPORT")) ? strtol(var, (char **)NULL, 10) : 0;
+
 // If there is no config file, return with the defaults sets.
 //
    if( !ConfigFN || !*ConfigFN)

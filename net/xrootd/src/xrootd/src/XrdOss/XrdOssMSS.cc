@@ -221,6 +221,7 @@ int XrdOssSys::MSS_Create(const char *path, mode_t file_mode, XrdOucEnv &env)
     return MSS_Xeq(0, 0, "create", path, myMode);
 }
 
+
 /******************************************************************************/
 /*                                 s t a t                                    */
 /******************************************************************************/
@@ -251,8 +252,9 @@ int XrdOssSys::MSS_Stat(const char *path, struct stat *buff)
         return -ENAMETOOLONG;
        }
 
-    // issue the command.
+    // Issue the command. This may be an immediate exists a or full statx.
     //
+    if (!buff) return MSS_Xeq(0, ENOENT, (isMSSC ? "statx" : "exists"), path);
     if ((retc = MSS_Xeq(&sfd, ENOENT, "statx", path))) return retc;
 
     // Read in the results.
@@ -375,24 +377,24 @@ int XrdOssSys::MSS_Xeq(XrdOucStream **xfd, int okerr,
 
 // If we have no gateway command, return an error
 //
-   if (!MSSgwProg) return -XRDOSS_E8013;
+   if (!RSSProg) return -XRDOSS_E8013;
 
 // Allocate a stream for this command
 //
    if (!(sp = new XrdOucStream(&OssEroute)))
-      return OssEroute.Emsg("MSS_Xeq",-ENOMEM,"create stream for",MSSgwCmd);
+      return OssEroute.Emsg("MSS_Xeq",-ENOMEM,"create stream for",RSSCmd);
 
 // Run the command
 //
-   DEBUG("Invoking '" <<MSSgwCmd <<' ' <<cmd <<' ' <<(arg1 ? arg1 : "")
+   DEBUG("Invoking '" <<RSSCmd <<' ' <<cmd <<' ' <<(arg1 ? arg1 : "")
                       <<' ' <<(arg2 ? arg2 : ""));
-   if ((retc = MSSgwProg->Run(sp, cmd, arg1, arg2)))
+   if ((retc = RSSProg->Run(sp, cmd, arg1, arg2)))
       {delete sp; return NegVal(retc);}
 
 // Wait for data to appear. We do this to avoid hanging up and chewing through
 // all of the threads while clients retry the requests with a new connection.
 //
-   if ((retc = sp->Wait4Data(MSSgwTMO)))
+   if ((retc = sp->Wait4Data(RSSTout)))
       {if (retc < 0)
           {if (!(0xff & NoResp++))
                OssEroute.Emsg("MSS_Xeq", -ETIMEDOUT, "execute", cmd);

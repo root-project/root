@@ -19,9 +19,9 @@ const char *XrdFrmPurgeCVSID = "$Id$";
 #include <sys/param.h>
 #include <sys/types.h>
 
-#include "XrdCms/XrdCmsNotify.hh"
 #include "XrdOss/XrdOss.hh"
 #include "XrdOss/XrdOssPath.hh"
+#include "XrdOuc/XrdOucCmsNotify.hh"
 #include "XrdOuc/XrdOucNSWalk.hh"
 #include "XrdOuc/XrdOucTList.hh"
 #include "XrdOuc/XrdOucProg.hh"
@@ -157,6 +157,7 @@ XrdFrmPurge::XrdFrmPurge(const char *snp, XrdFrmPurge *spp) : FSTab(1)
    Enabled   = 0;
    Stop      = 0;
    SNlen     = strlen(SName);
+   memset(DeferQ, 0, sizeof(DeferQ));
    Clear();
 }
   
@@ -263,6 +264,7 @@ void XrdFrmPurge::Defer(XrdFrmFileset *sP, time_t xTime)
 
 // Slot the entry into the defer queue vector
 //
+   if (n >= DeferQsz) n = DeferQsz-1;
    if (!DeferQ[n] || aTime < DeferT[n]) DeferT[n] = aTime;
    sP->Next = DeferQ[n];
    DeferQ[n] = sP;
@@ -338,7 +340,7 @@ const char *XrdFrmPurge::Eligible(XrdFrmFileset *sP, time_t &xTime, int hTime)
    xTime = static_cast<int>(nowTime - aTime);
    if (hTime && xTime <= hTime) return "is in hold";
 
-// File is ineligible if ot has a fail file
+// File is ineligible if it has a fail file
 //
    if (sP->failFile()) return "has fail file";
 
@@ -617,8 +619,9 @@ do{psP = First;
 int XrdFrmPurge::PurgeFile()
 {
    EPNAME("PurgeFile");
+   static const int unOpts = XRDOSS_isPFN|XRDOSS_isMIG;
    XrdFrmFileset *fP;
-   const char *fn, *Why = "file in use";
+   const char *fn, *Why;
    time_t xTime;
    int rc, FilePurged = 0;
 
@@ -629,12 +632,13 @@ do{if (!(fP = FSTab.Oldest()) && !(fP = Advance()))
        if (!nextReset || nextScan < nextReset) nextReset = nextScan;
        return 1;
       }
+   Why = "file in use";
    if (fP->Refresh() && !(Why = Eligible(fP, xTime, Hold))
    && (!Ext || !(Why = XPolOK(fP))))
       {fn = fP->basePath();
        if (Config.Test) rc = 0;
-          else if (!(rc = Config.ossFS->Unlink(fn, XRDOSS_isPFN)))
-                  Config.cmsPath->Gone(fn);
+          else if (!(rc = Config.ossFS->Unlink(fn, unOpts))
+               && Config.cmsPath) Config.cmsPath->Gone(fn);
        if (!rc) {prgFiles++; FilePurged = 1;
                  freeSpace += fP->baseFile()->Stat.st_size;
                  purgBytes += fP->baseFile()->Stat.st_size;
@@ -800,13 +804,13 @@ void XrdFrmPurge::Stats(int Final)
              if ((zBytes = xsP->maxFSpace - xsP->freeSpace) > 0)
                 {XrdOucUtils::fmtBytes(zBytes, zBuff, sizeof(zBuff));
                  zWhat = " deficit";
-                } else {*zBuff = '\0'; zWhat = "goal met";}
+                } else {*zBuff = '\0'; zWhat = "need met";}
              nFiles = xsP->prgFiles;  nWhat = "prgd";
             } else {
              xBytes = (xsP->freeSpace < xsP->minFSpace
                     ?  xsP->maxFSpace - xsP->freeSpace : 0);
              nFiles = xsP->FSTab.Count(); 
-             xWhat = "goal"; nWhat = "idle"; *zBuff = '\0'; zWhat = "";
+             xWhat = "needed"; nWhat = "idle"; *zBuff = '\0'; zWhat = "";
            }
          XrdOucUtils::fmtBytes(xBytes, xBuff, sizeof(xBuff));
          sprintf(sBuff, " %sfree %s (%lld%%) %d files %d %s; %s %s %s%s",

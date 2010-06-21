@@ -39,8 +39,9 @@
 #define XRDOSS_E8023 8023
 #define XRDOSS_E8024 8024
 #define XRDOSS_E8025 8025
+#define XRDOSS_E8026 8026
 
-#define XRDOSS_ELAST 8025
+#define XRDOSS_ELAST 8026
   
 #define XRDOSS_T8001 "directory object in use (internal error)"
 #define XRDOSS_T8002 "directory object not open (internal error)"
@@ -60,11 +61,12 @@
 #define XRDOSS_T8016 "unlocking a non-lockable object (internal error)"
 #define XRDOSS_T8017 "unlocking an unlocked object (internal error)"
 #define XRDOSS_T8018 "invalid suggested allocation size"
-#define XRDOSS_T8019 "requested cache group does not exist"
+#define XRDOSS_T8019 "requested space does not exist"
 #define XRDOSS_T8020 "not enough free space to create file"
 #define XRDOSS_T8021 "server-side decompression is disabled"
 #define XRDOSS_T8022 "compressed files may not be open for update"
-#define XRDOSS_T8023 "no response from mass storage system interface"
-#define XRDOSS_T8024 "invalid response from mass storage system interface"
-#define XRDOSS_T8025 "unable to queue stage request to the mass storage system"
+#define XRDOSS_T8023 "no response from remote storage service"
+#define XRDOSS_T8024 "invalid response from remote storage service"
+#define XRDOSS_T8025 "unable to queue stage request to the remote storage service"
+#define XRDOSS_T8026 "file creation is prohibited"
 #endif

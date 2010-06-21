@@ -136,10 +136,10 @@ void XrdStats::Report(char **Dest, int iVal, int Opts)
 const char *XrdStats::Stats(int opts)   // statsMutex must be locked!
 {
    static const char *sgen = "<stats id=\"sgen\">"
-                             "<as>%d</as><et>%lu</et></stats>";
-   static const char *tail = "</statistics toe=\"%ld\">";
+                             "<as>%d</as><et>%lu</et><toe>%ld</toe></stats>";
+   static const char *tail = "</statistics>";
    static const char *snul = "<statistics tod=\"0\" ver=\"" XrdVSTRING "\">"
-                            "</statistics toe=\"0\">";
+                            "</statistics>";
 
    static XrdProtLoad Protocols;
    static const int  ovrhed = 256+strlen(sgen)+strlen(tail);
@@ -208,11 +208,11 @@ const char *XrdStats::Stats(int opts)   // statsMutex must be locked!
    if (opts & XRD_STATS_SGEN)
       {unsigned long totTime = 0;
        myTimer.Report(totTime);
-       sz = snprintf(bp, bl, sgen, do_sync == 0, totTime);
+       sz = snprintf(bp,bl,sgen,do_sync==0,totTime,static_cast<long>(time(0)));
        bp += sz; bl -= sz;
       }
 
-   snprintf(bp, bl, tail, static_cast<long>(time(0)));
+   strlcpy(bp, tail, bl);
    return buff;
 }
  

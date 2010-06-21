@@ -156,6 +156,7 @@ static int   Config(const char *fn);
        int   getBuff(const int isRead, int Quantum);
        int   getData(const char *dtype, char *buff, int blen);
 static int   mapMode(int mode);
+static void  PidFile();
        int   Process2();
        void  Reset();
 static int   rpCheck(char *fn, const char **opaque);
@@ -168,6 +169,7 @@ static int   xcksum(XrdOucStream &Config);
 static int   xexp(XrdOucStream &Config);
 static int   xexpdo(char *path, int popt=0);
 static int   xfsl(XrdOucStream &Config);
+static int   xpidf(XrdOucStream &Config);
 static int   xprep(XrdOucStream &Config);
 static int   xlog(XrdOucStream &Config);
 static int   xmon(XrdOucStream &Config);
@@ -191,6 +193,7 @@ static XrdBuffManager       *BPool;     // Buffer manager
 static XrdSysError           eDest;     // Error message handler
 static const char           *myInst;
 static const char           *TraceID;
+static       char           *pidPath;
 static int                   myPID;
 
 // Admin control area
@@ -276,7 +279,6 @@ XrdXrootdFile             *myFile;
 long long                  myOffset;
 int                        myIOLen;
 int                        myStalls;
-int                        myLastRC;
 
 // Buffer resize control area
 //

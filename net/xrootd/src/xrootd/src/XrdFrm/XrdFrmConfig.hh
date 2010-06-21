@@ -17,13 +17,14 @@
 
 #include "XrdOss/XrdOssSpace.hh"
 
-class XrdCmsNotify;
 class XrdOss;
+class XrdOucCmsNotify;
 class XrdOucMsubs;
 class XrdOucName2Name;
 class XrdOucProg;
 class XrdOucStream;
 class XrdOucTList;
+class XrdSysLogger;
 
 class XrdFrmConfigSE;
 
@@ -34,22 +35,29 @@ public:
 const char         *myProg;
 const char         *myName;
 const char         *myInst;
-const char         *myInsName;
 const char         *myFrmid;
 const char         *myFrmID;
 const char         *lockFN;
 char               *AdminPath;
 char               *myInstance;
-char               *StopFile;
-char               *qPath;
-char               *c2sFN;
+char               *StopPurge;
 char               *MSSCmd;
 XrdOucProg         *MSSProg;
-char               *xfrCmd;
-XrdOucMsubs        *xfrVec;
+
+struct Cmd
+      {const char  *Desc;
+       char        *theCmd;
+       XrdOucMsubs *theVec;
+       int          TLimit;
+       short        hasMDP;
+       short        Stats;
+      }             xfrCmd[4];
+int                 xfrIN;
+int                 xfrOUT;
+
 XrdOucName2Name    *the_N2N;   // -> File mapper object
 XrdOss             *ossFS;
-XrdCmsNotify       *cmsPath;
+XrdOucCmsNotify    *cmsPath;
 uid_t               myUid;
 gid_t               myGid;
 long long           cmdFree;
@@ -57,12 +65,17 @@ int                 cmdHold;
 int                 AdminMode;
 int                 isAgent;
 int                 xfrMax;
-int                 WaitTime;
+int                 FailHold;
+int                 IdleHold;
+int                 WaitQChk;
+int                 WaitPurge;
+int                 WaitMigr;
 int                 monStage;
-int                 sSpec;
+int                 haveCMS;
 int                 isOTO;
 int                 Fix;
 int                 Test;
+int                 TrackDC;
 int                 Verbose;
 char              **vectArg;
 int                 nextArg;
@@ -103,15 +116,20 @@ char            *pProg;
 enum  PPVar {PP_atime=0, PP_ctime, PP_fname, PP_fsize, PP_fspace,
              PP_mtime,   PP_pfn,   PP_sname, PP_tspace, PP_usage};
 
-int   Configure(int argc, char **argv, int (*ppf)());
+int          Configure(int argc, char **argv, int (*ppf)());
 
-int   LocalPath (const char *oldp, char *newp, int newpsz);
+int          LocalPath  (const char *oldp, char *newp, int newpsz);
 
-int   RemotePath(const char *oldp, char *newp, int newpsz);
+int          LogicalPath(const char *oldp, char *newp, int newpsz);
+
+unsigned
+long long    PathOpts(const char *Lfn);
+
+int          RemotePath (const char *oldp, char *newp, int newpsz);
 
 XrdOucTList *Space(const char *Name, const char *Path=0);
 
-enum  SubSys {ssAdmin, ssMigr, ssPstg, ssPurg};
+enum  SubSys {ssAdmin, ssMigr, ssPstg, ssPurg, ssXfr};
 
       XrdFrmConfig(SubSys ss, const char *vopts, const char *uinfo);
      ~XrdFrmConfig() {}
@@ -124,23 +142,28 @@ int          ConfigMP(const char *);
 int          ConfigMss();
 int          ConfigOTO(char *Parms);
 int          ConfigPaths();
+void         ConfigPF(const char *pFN);
 int          ConfigProc();
 int          ConfigXeq(char *var, int mbok);
+int          ConfigXfr();
 int          getTime(const char *, const char *, int *, int mnv=-1, int mxv=-1);
 int          Grab(const char *var, char **Dest, int nosubs);
 XrdOucTList *InsertPL(XrdOucTList *pP, const char *Path, int Plen, int isRW);
 void         InsertXD(const char *Path);
 void         Usage(int rc);
 int          xapath();
-int          xcache(int isPrg=0);
-void         xcacheBuild(char *grp, char *fn, int isxa);
+int          xcopy();
+int          xcopy(int &TLim);
+int          xcmax();
 int          xdpol();
-int          xmaxx();
+int          xitm(const char *What, int &tDest);
 int          xnml();
 int          xmon();
 int          xpol();
 int          xpolprog();
-int          xwtm();
+int          xspace(int isPrg=0, int isXA=1);
+void         xspaceBuild(char *grp, char *fn, int isxa);
+int          xxfr();
 
 char               *ConfigFN;
 char               *ossLib;

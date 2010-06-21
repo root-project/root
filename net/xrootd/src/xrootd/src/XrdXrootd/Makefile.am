@@ -4,8 +4,8 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.9 2007/08/02 15:35:34 dfeich Exp $
-## Checked in by $Author: dfeich $
+## Version info: $Id: Makefile.am,v 1.10 2010/05/26 01:26:14 abh Exp $
+## Checked in by $Author: abh $
 #######################################################################
 
 #       Note: since libXrdOfs needs to resolve symbols from xrootd's binary
@@ -38,10 +38,16 @@ xrootd_SOURCES = \
 
 xrootd_LDADD = -ldl \
                   ../Xrd/libXrd.la \
+                  ../XrdOfs/libXrdOfs.la \
+                  ../XrdAcc/libXrdAcc.la \
+                  ../XrdOss/libXrdOss.la \
+                  ../XrdFrm/libXrdFrm.la \
+                  ../XrdCms/libXrdCms.la \
+                  ../XrdOdc/libXrdOdc.la \
                   ../XrdNet/libXrdNet.la \
                   ../XrdOuc/libXrdOuc.la \
-                  ../XrdSfs/libXrdSfs.la \
                   ../XrdSys/libXrdSys.la 
+
 xrootd_LDFLAGS = -static -export-dynamic
 
 #if IS_GCC
@@ -51,5 +57,3 @@ xrootd_LDFLAGS = -static -export-dynamic
 # -export-dynamic
 #xrootd_LDFLAGS += -static -export-dynamic -fPIC
 #endif
-
-

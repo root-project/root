@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile.in,v 1.37 2010/01/13 11:41:22 ganis Exp $
+#              $Id: GNUmakefile.in,v 1.38 2010/05/26 01:20:51 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -16,7 +16,7 @@ XRDCOMMON  = XrdSys XrdOuc XrdNet XrdSec
 XRDSEC  = @xrdsec@
 
 SERVER  = XrdSfs XrdAcc XrdOdc Xrd \
-          XrdOlb XrdOss XrdBwm XrdCms XrdOfs XrdRootd XrdXrootd XrdFrm
+          XrdOlb XrdOss XrdBwm XrdFrm XrdCms XrdOfs XrdRootd XrdXrootd
 
 XRDCLIENT = XrdClient
 
@@ -85,7 +85,7 @@ clean: FORCE
 	      $(RM) -fr obj$(SUNCACHE);\
 	   fi;\
 	fi
-	$(RM) -f test-comp.*
+	$(ECHO)$(RM) -f test-comp.*
 
 distclean: FORCE
 	@$(MAKE) $(TARGETS) MAKEXEQ=clean XMSG=Cleaning --no-print-directory

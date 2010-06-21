@@ -261,35 +261,33 @@ void XrdScheduler::Run()
 
 // Wait for work then do it (an endless task for a worker thread)
 //
-   do {DispatchMutex.Lock(); idl_Workers++; DispatchMutex.UnLock();
-       do {WorkAvail.Wait();
+   do {do {DispatchMutex.Lock();          idl_Workers++;DispatchMutex.UnLock();
+           WorkAvail.Wait();
+           DispatchMutex.Lock();waiting = --idl_Workers;DispatchMutex.UnLock();
            SchedMutex.Lock();
            if ((jp = WorkFirst))
               {if (!(WorkFirst = jp->NextJob)) WorkLast = 0;
                if (num_JobsinQ) num_JobsinQ--;
                   else XrdLog.Emsg("Scheduler","Job queue count underflow!");
-               DispatchMutex.Lock(); 
-               waiting = --idl_Workers;
-               DispatchMutex.UnLock();
-               if (!waiting)
-                  {if (num_Workers < max_Workers) hireWorker();
-                      else {num_Limited++;
-                            if ((num_Limited & 4095) == 1)
-                               XrdLog.Emsg("Scheduler",
-                                            "Thread limit has been reached!");
-                           }
-                  }
               } else {
                num_JobsinQ = 0;
                if (num_Layoffs > 0)
-                  {num_Layoffs--; num_TDestroy++; num_Workers--; idl_Workers--;
-                   TRACE(SCHED, "terminating thread; workers=" <<num_Workers);
-                   SchedMutex.UnLock();
-                   return;
+                  {num_Layoffs--;
+                   if (waiting)
+                      {num_TDestroy++; num_Workers--;
+                       TRACE(SCHED, "terminating thread; workers=" <<num_Workers);
+                       SchedMutex.UnLock();
+                       return;
+                      }
                   }
               }
            SchedMutex.UnLock();
           } while(!jp);
+
+    // Check if we should hire a new worker (we always want 1 idle thread)
+    // before running this job.
+    //
+       if (!waiting) hireWorker();
        TRACE(SCHED, "running " <<jp->Comment <<" inq=" <<num_JobsinQ);
        jp->DoIt();
       } while(1);
@@ -445,15 +443,10 @@ void XrdScheduler::setParms(int minw, int maxw, int avlw, int maxi, int once)
 /*                                 S t a r t                                  */
 /******************************************************************************/
   
-void XrdScheduler::Start()
+void XrdScheduler::Start() // Serialized one time call!
 {
-    static int isDone = 0;
     int retc, numw;
     pthread_t tid;
-
-// If we did this, just return
-//
-   if (isDone) return;
 
 // Start a time based scheduler
 //
@@ -465,10 +458,6 @@ void XrdScheduler::Start()
 //
    if (max_Workidl > 0) Schedule((XrdJob *)this, (time_t)max_Workidl+time(0));
 
-// Lock the data area
-//
-   SchedMutex.Lock();
-
 // Start 1/3 of the minimum number of threads
 //
    if (!(numw = min_Workers/3)) numw = 2;
@@ -476,7 +465,6 @@ void XrdScheduler::Start()
 
 // Unlock the data area
 //
-   SchedMutex.UnLock();
    TRACE(SCHED, "Starting with " <<num_Workers <<" workers" );
 }
 
@@ -556,24 +544,42 @@ void XrdScheduler::TimeSched()
 /*                           h i r e   W o r k e r                            */
 /******************************************************************************/
   
-void XrdScheduler::hireWorker(int dotrace)  // Called with SchedMutex locked!
+void XrdScheduler::hireWorker(int dotrace)
 {
    pthread_t tid;
    int retc;
 
-// Start a new thread
+// First check if we reached the maximum number of workers
 //
-   if ((retc = XrdSysThread::Run(&tid, XrdStartWorking, (void *)this,
-                                 0, "Worker")))
-      {XrdLog.Emsg("Scheduler", retc, "create worker thread");
-       max_Workers = num_Workers;
-       min_Workers = max_Workers/10;
-       stk_Workers = max_Workers/4*3;
+   SchedMutex.Lock();
+   if (num_Workers >= max_Workers)
+      {num_Limited++;
+       if ((num_Limited & 4095) == 1)
+           XrdLog.Emsg("Scheduler","Thread limit has been reached!");
+       SchedMutex.UnLock();
+       return;
       }
-      else {num_Workers++;
-            num_TCreate++;
-            if (dotrace) TRACE(SCHED, "Now have " <<num_Workers <<" workers" );
-           }
+   num_Workers++;
+   num_TCreate++;
+   SchedMutex.UnLock();
+
+// Start a new thread. We do this without the schedMutex to avoid hang-ups. If
+// we can't start a new thread, we recalculate the maximum number we can.
+//
+   retc = XrdSysThread::Run(&tid, XrdStartWorking, (void *)this, 0, "Worker");
+
+// Now check the results and correct if we couldn't start the thread
+//
+   if (retc)
+      {XrdLog.Emsg("Scheduler", retc, "create worker thread");
+       SchedMutex.Lock();
+       num_Workers--;
+       num_TCreate--;
+       max_Workers = num_Workers;
+       min_Workers = (max_Workers/10 ? max_Workers/10 : 1);
+       stk_Workers = max_Workers/4*3;
+       SchedMutex.UnLock();
+      } else if (dotrace) TRACE(SCHED, "Now have " <<num_Workers <<" workers" );
 }
  
 /******************************************************************************/

@@ -1,4 +1,4 @@
-#              $Id: GNUmakefile,v 1.34 2009/07/31 03:47:49 abh Exp $
+#              $Id: GNUmakefile,v 1.35 2010/05/26 01:26:14 abh Exp $
 
 #------------------------------------------------------------------------------#
 #                       C o m m o n   V a r i a b l e s                        #
@@ -6,8 +6,7 @@
   
 include ../GNUmake.env
 
-BINLIBS = -L$(LIBDIR) -lXrd -lXrdNet -lXrdOuc -lXrdSys $(TYPELIBSF) \
-                      $(OBJDIR)/XrdSfsNative.o
+BINLIBS = -L$(LIBDIR) -lXrdAcc -lXrdCms -lXrdOdc -lXrd -lXrdNet -lXrdOuc -lXrdSys $(TYPELIBSF)
 
 #------------------------------------------------------------------------------#
 #                             C o m p o n e n t s                              #
@@ -49,11 +48,20 @@ OBJECTS = \
         $(OBJDIR)/XrdXrootdXeq.o        \
         $(OBJDIR)/XrdXrootdXeqAio.o
 
+OBJFS   = \
+          $(OBJDIR)/XrdOfsFS.o  \
+          $(LIBDIR)/libXrdOfs.a \
+          $(LIBDIR)/libXrdOss.a \
+          $(LIBDIR)/libXrdFrm.a
+
 OBJDEPS = \
           $(LIBDIR)/libXrd.a \
           $(LIBDIR)/libXrdNet.a \
           $(LIBDIR)/libXrdOuc.a \
-          $(OBJDIR)/XrdSfsNative.o
+          $(LIBDIR)/libXrdAcc.a \
+          $(LIBDIR)/libXrdCms.a \
+          $(LIBDIR)/libXrdOdc.a \
+          $(OBJFS)
 
 TARGETS  = $(BINDIR)/xrootd
 
@@ -85,7 +93,7 @@ anything: $(TARGETS)
 
 $(TARGETS): $(OBJECTS) $(OBJDEPS)
 	@echo Creating executable $(TARGETS) 
-	$(ECHO)$(LD) $(LDOP) $(OBJECTS) $(LIBS) $(BINLIBS) $(TYPELIBMT) -o $(TARGETS)
+	$(ECHO)$(LD) $(LDOP) $(OBJECTS) $(OBJFS) $(LIBS) $(BINLIBS) $(TYPELIBMT) -o $(TARGETS)
 
 $(OBJDIR)/XrdXrootdAdmin.o: XrdXrootdAdmin.hh      XrdXrootdAdmin.cc \
                             XrdXrootdTrace.hh      XrdXrootdProtocol.hh \

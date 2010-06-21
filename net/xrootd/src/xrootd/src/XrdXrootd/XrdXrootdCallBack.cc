@@ -303,7 +303,10 @@ void XrdXrootdCallBack::sendResp(XrdOucErrInfo  *eInfo,
    if (XrdXrootdResponse::Send(ReqID, Status, rspVec, n, dlen) < 0)
       eDest->Emsg("sendResp", eInfo->getErrUser(), Opname, 
                   "async resp aborted; user gone.");
-      else {TRACE(RSP, "sent " <<eInfo->getErrUser() <<" async " <<Opname
-                       <<" status " <<Status);
-           }
+      else if (TRACING(TRACE_RSP))
+              {XrdXrootdResponse theResp;
+               theResp.Set(ReqID.Stream());
+               TRACE(RSP, eInfo->getErrUser() <<" async " <<theResp.ID()
+                          <<' ' <<Opname <<" status " <<Status);
+              }
 }

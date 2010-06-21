@@ -15,12 +15,26 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "XrdFrm/XrdFrmRequest.hh"
+
 class XrdFrmUtils
 {
 public:
 
 static       char  Ask(char dflt, const char *Msg1, const char *Msg2="",
                                   const char *Msg3="");
+
+static       int   chkURL(const char *Url);
+
+static       char *makePath(const char *iName, const char *Path, int Mode);
+
+static       char *makeQDir(const char *Path, int Mode);
+
+static       int   MapM2O(const char *Nop, const char *Pop);
+
+static       int   MapR2Q(char Opc, int *Flags=0);
+
+static       int   Unique(const char *lkfn, const char *myProg);
 
 static       int   Utime(const char *Path, time_t tVal);
 

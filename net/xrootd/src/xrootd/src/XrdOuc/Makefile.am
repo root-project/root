@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.15 2009/08/19 13:51:46 abh Exp $
+## Version info: $Id: Makefile.am,v 1.16 2010/05/26 01:25:50 abh Exp $
 ## Checked in by $Author: abh $
 #######################################################################
 
@@ -22,7 +22,7 @@ xrootdoucinc_HEADERS = \
     XrdOucTable.hh  XrdOucTList.hh      XrdOucTokenizer.hh \
     XrdOucTrace.hh  XrdOucUtils.hh      XrdOucProg.hh \
     XrdOucPup.hh    XrdOucCRC.hh        XrdOucArgs.hh \
-    XrdOucNSWalk.hh XrdOucSxeq.hh
+    XrdOucNSWalk.hh XrdOucSxeq.hh       XrdOucCmsNotify.hh
 
 lib_LTLIBRARIES = libXrdOuc.la
 
@@ -31,6 +31,7 @@ INCLUDES = -I$(top_srcdir)/src
 libXrdOuc_la_SOURCES = \
         XrdOuca2x.cc XrdOuca2x.hh        \
         XrdOucArgs.cc XrdOucArgs.hh        \
+        XrdOucCmsNotify.cc XrdOucCmsNotify.hh        \
         XrdOucEnv.cc XrdOucEnv.hh XrdOucHash.hh       \
         XrdOucName2Name.cc XrdOucName2Name.hh \
         XrdOucHashVal.cc     \

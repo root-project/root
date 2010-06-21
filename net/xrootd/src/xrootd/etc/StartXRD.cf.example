@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: StartXRD.cf.example,v 1.5 2008/01/08 15:23:04 furano Exp $
+#  $Id: StartXRD.cf.example,v 1.6 2010/04/14 02:04:57 abh Exp $
 #
 
 # Set 'time' to be number of seconds to wait for a required file to appear
@@ -64,6 +64,39 @@ CMSHOMEDIR=$XRDBASE/core
 XRDLOGDIR=$XRDBASE/logs
 XRDLOGFN=xrdlog
 CMSLOGFN=cmslog
+
+#-#-#-#-#-#-#-#   F I L E  R E S I D E N C Y  M A N A G E R  #-#-#-#-#-#-#-#-#
+
+# The following sets the start-up command and command line parameters for
+# each daemon. Add as needed (e.g., log file options, instance name, etc)
+
+# The following are common options
+#
+LDLIBPATH=$XRDBASE/lib/$XRDARCH
+
+# Options that need to be set:
+#
+# CONFG_ -> What configuration file to use
+# HFILE_ -> The file who's presence prevents the component's [re]start
+# HOMED_ -> Where the home directory is (where core files will go)
+# LOGFN_ -> Where the log is to be written (full path with filename)
+# START_ -> What program to start
+
+# Set options for purge
+#
+HFILE_PURGE='/var/adm/frm/HOLD_PURGE'
+HOMED_PURGE='/var/adm/frm/core/purg'
+LOGFN_PURGE='/var/adm/frm/logs/purglog'
+START_PURGE="$XRDBASE/bin/$XRDARCH/frm_purged"
+PARMS_PURGE="-c $XRDCFG/$XRDCONFIG -l $LOGFN_PURGE"
+
+# Set options for xfrd
+#
+HFILE_TRANSFER='/var/adm/frm/HOLD_TRANSFER'
+HOMED_TRANSFER='/var/adm/frm/core/xfr'
+LOGFN_TRANSFER='/var/adm/frm/logs/xfrlog'
+START_TRANSFER="$XRDBASE/bin/$XRDARCH/frm_xfrd"
+PARMS_TRANSFER="-c $XRDCFG/$XRDCONFIG -l $LOGFN_TRANSFER"
 
 #-#-#-#-#-#-#-#-#   E N D   O F   C O N F I G U R A T I O N   #-#-#-#-#-#-#-#-#
 

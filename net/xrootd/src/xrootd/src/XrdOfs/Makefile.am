@@ -4,7 +4,7 @@
 ##
 ## Initial version: 1.8.2005
 ##
-## Version info: $Id: Makefile.am,v 1.15 2009/07/15 01:56:34 abh Exp $
+## Version info: $Id: Makefile.am,v 1.16 2010/05/26 01:24:09 abh Exp $
 ## Checked in by $Author: abh $
 #######################################################################
 
@@ -35,11 +35,4 @@ libXrdOfs_la_SOURCES = \
 libXrdOfs_la_LIBTOOLFLAGS = --tag=disable-static
 libXrdOfs_la_LDFLAGS = -module
 
-libXrdOfs_la_LIBADD = ../XrdAcc/libXrdAcc.la \
-                      ../XrdOss/libXrdOss.la \
-                      ../XrdCms/libXrdCms.la \
-                      ../XrdOdc/libXrdOdc.la \
-                      ../XrdNet/libXrdNet.la \
-                      ../XrdOuc/libXrdOuc.la \
-                      ../XrdSys/libXrdSys.la
-
+libXrdOfs_la_LIBADD =

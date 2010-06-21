@@ -80,7 +80,7 @@ XrdClient::XrdClient(const char *url,
    if (!ConnectionManager)
       Info(XrdClientDebug::kUSERDEBUG,
            "Create",
-           "(C) 2004-2010 by the Xrootd group. XrdClient $Revision: 1.154 $ - Xrootd version: " << XrdVSTRING);
+           "(C) 2004-2010 by the Xrootd group. XrdClient $Revision: 1.156 $ - Xrootd version: " << XrdVSTRING);
    
 #ifndef WIN32
    signal(SIGPIPE, SIG_IGN);
@@ -165,10 +165,18 @@ bool XrdClient::IsOpen_wait() {
 
     if (fOpenPars.inprogress) {
 	fOpenProgCnd->Wait();
+
 	if (fOpenerTh) {
+            // To prevent deadlocks in the case of
+            // accesses from the Open() callback
+            fOpenProgCnd->UnLock();
+
             fOpenerTh->Join();
 	    delete fOpenerTh;
 	    fOpenerTh = 0;
+
+            // We need the lock again... sigh
+            fOpenProgCnd->Lock();
 	}
     }
     res = fOpenPars.opened;
@@ -996,7 +1004,10 @@ bool XrdClient::TryOpen(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
 
     // If the open request failed for the error "file not found" proceed, 
     // otherwise return FALSE
-    if (fConnModule->LastServerResp.status != kXR_NotFound) {
+    if ( (fConnModule->LastServerResp.status != kXR_error) ||
+         ((fConnModule->LastServerResp.status == kXR_error) &&
+          (fConnModule->LastServerError.errnum != kXR_NotFound)) ){
+
 	TerminateOpenAttempt();
 
 	return FALSE;
@@ -1009,7 +1020,8 @@ bool XrdClient::TryOpen(kXR_unt16 mode, kXR_unt16 options, bool doitparallel) {
     // from the one we formerly connected, then we resend the request
     // specifyng the supposed failing server as opaque info
     if (fConnModule->GetLBSUrl() &&
-	(fConnModule->GetCurrentUrl().Host != fConnModule->GetLBSUrl()->Host) ) {
+	( (fConnModule->GetCurrentUrl().Host != fConnModule->GetLBSUrl()->Host) ||
+          (fConnModule->GetCurrentUrl().Port != fConnModule->GetLBSUrl()->Port) ) ) {
 	XrdOucString opinfo;
 
 	opinfo = "&tried=" + fConnModule->GetCurrentUrl().Host;

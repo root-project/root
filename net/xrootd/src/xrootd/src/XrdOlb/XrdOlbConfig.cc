@@ -806,7 +806,7 @@ int XrdOlbConfig::MergeP()
    if (DiskSS < 2)
       {while(plp)
             {Opts = plp->Flag();
-             if (!(Opts & XRDEXP_STAGE_X)) plp->Set(Opts | XRDEXP_NOSTAGE);
+             if (!(Opts & XRDEXP_STAGE_X)) plp->Set(Opts & ~XRDEXP_STAGE);
              plp = plp->Next();
             }
        plp = PexpList.First();
@@ -817,7 +817,7 @@ int XrdOlbConfig::MergeP()
    while(plp)
         {Opts = plp->Flag();
          npinfo.rwvec = (Opts & (XRDEXP_GLBLRO | XRDEXP_NOTRW) ? 0 : 1);
-         npinfo.ssvec = (Opts & XRDEXP_NOSTAGE ? 0 : 1);
+         npinfo.ssvec = (Opts & XRDEXP_STAGE ? 1 : 0);
          if (!PathList.Find(plp->Path(), opinfo))
             {if (!(Opts & XRDEXP_LOCAL))
                 {PathList.Insert(plp->Path(), &npinfo);

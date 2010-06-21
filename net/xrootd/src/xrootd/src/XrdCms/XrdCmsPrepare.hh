@@ -20,6 +20,7 @@
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPthread.hh"
 
+class XrdFrmProxy;
 class XrdNetMsg;
 class XrdOucMsubs;
 class XrdOucName2Name;
@@ -40,17 +41,19 @@ void       DoIt();
 
 void       Inform(const char *cmd, XrdCmsPrepArgs *pargs);
 
+int        isOK() {return prepOK;}
+
 int        Pending() {return NumFiles;}
 
 void       Prepare(XrdCmsPrepArgs *pargs);
 
 void       Queue(XrdCmsPrepArgs *parg);
 
-int        Reset();
+void       Reset(const char *iName, const char *aPath, int aMode);
 
 int        setParms(int rcnt, int stime, int deco=0);
 
-int        setParms(char *ifpgm, char *ifmsg=0);
+int        setParms(const char *ifpgm, char *ifmsg=0);
 
 int        setParms(XrdOucName2Name *n2n) {N2N = n2n; return 0;}
 
@@ -59,8 +62,8 @@ int        setParms(XrdOucName2Name *n2n) {N2N = n2n; return 0;}
 
 private:
 
-int        getID(const char *Tid, char *buff, int bsz);
 int        isOnline(char *path);
+void       Reset();
 void       Scrub();
 int        startIF();
 
@@ -70,15 +73,16 @@ XrdOucStream          prepSched;
 XrdOucName2Name      *N2N;
 XrdOucMsubs          *prepMsg;
 XrdNetMsg            *Relay;
+XrdFrmProxy          *PrepFrm;
+char                 *prepif;
 time_t                lastemsg;
 pid_t                 preppid;
+int                   prepOK;
 int                   NumFiles;
 int                   doEcho;
 int                   resetcnt;
 int                   scrub2rst;
 int                   scrubtime;
-int                   isFrm;
-char                 *prepif;
 };
 
 namespace XrdCms

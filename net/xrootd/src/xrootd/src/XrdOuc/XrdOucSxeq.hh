@@ -19,6 +19,7 @@ public:
 static const int noWait = 0x0001;
 static const int Share  = 0x0002;
 static const int Unlink = 0x0004;
+static const int Lock   = 0x0008; // lock in constructor
 
 int    Release();
 
@@ -26,6 +27,7 @@ int    Serialize(int Opts=0);
 
 int    lastError() {return lokRC;}
 
+       XrdOucSxeq(int sOpts, const char *path);
        XrdOucSxeq(const char *sfx, const char *sfx1=0, const char *Dir="/tmp/");
       ~XrdOucSxeq();
 

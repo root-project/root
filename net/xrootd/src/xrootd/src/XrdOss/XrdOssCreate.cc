@@ -88,9 +88,9 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
     XrdOssLock path_dir, new_file;
     struct stat buf;
 
-// Determine whether we can actually create a file on this server.
+// Get options associated with this path and check if it's r/w
 //
-   remotefs = Check_RO(Create, popts, path, "creating ");
+   remotefs = Check_RO(Create, popts, path, "create");
 
 // Generate the actual local path for this file.
 //
@@ -166,7 +166,7 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
                 return retc;
                }
            } else if (!(popts & XRDEXP_NOCHECK))
-                     {if (!(retc = MSS_Stat(remote_path, &buf)))
+                     {if (!(retc = MSS_Stat(remote_path)))
                          {path_dir.UnSerialize(0); return -EEXIST;}
                          else if (retc != -ENOENT)
                                  {path_dir.UnSerialize(0); return retc;}
@@ -181,7 +181,7 @@ int XrdOssSys::Create(const char *tident, const char *path, mode_t access_mode,
 
 // If successful, appropriately manage the locks.
 //
-   if (retc == XrdOssOK && (remotefs || (popts & XRDEXP_MIG)))
+   if (retc == XrdOssOK && (popts & XRDEXP_MAKELF))
       if (new_file.Serialize(local_path,LKFlags) >= 0) new_file.UnSerialize(0);
 
 // All done.

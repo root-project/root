@@ -287,7 +287,9 @@ int XrdCmsConfig::Configure1(int argc, char **argv, char *cfn)
    if (!NoGo)
       {if ((isManager && !isServer) || isPeer)
           {if (PortTCP <= 0)
-              {Say.Emsg("Config", myRole, "port not specified."); NoGo = 1;}
+              {Say.Emsg("Config","port for this", myRole, "not specified.");
+               NoGo = 1;
+              }
           }
           else PortTCP = 0;
       }
@@ -622,7 +624,6 @@ void XrdCmsConfig::ConfigDefaults(void)
    DiskWT   = 0;          // Do not defer when out of space
    DiskSS   = 0;          // Not a staging server
    DiskOK   = 0;          // Does not have any disk
-   PrepOK   = 0;
    myPaths  = (char *)""; // Default is 'r /'
    ConfigFN = 0;
    sched_RR = 0;
@@ -771,6 +772,7 @@ int XrdCmsConfig::ConfigProc(int getrole)
                 ||  !strcmp(var, "all.adminpath")
                 ||  !strcmp(var, "all.export")
                 ||  !strcmp(var, "all.manager")
+                ||  !strcmp(var, "all.pidpath")
                 ||  !strcmp(var, "all.role")
                 ||  !strcmp(var, "all.seclib"))
                    {if (ConfigXeq(var+4, CFile, 0)) {CFile.Echo(); NoGo = 1;}}
@@ -831,29 +833,15 @@ int XrdCmsConfig::MergeP()
    const char *ptype;
    char *pbP;
    unsigned long long Opts;
-   int pbLen = 0, NoGo = 0, dfltSS = 0;
+   int pbLen = 0, NoGo = 0;
    npinfo.rovec = 1;
-
-// First, add nostage to all exported path if nothing was specified and stagecmd
-// was not specified in the oss section (this is really how it works). We will
-// also see if we implicitly defaulted any path to warn the user about it.
-//
-   while(plp)
-        {Opts = plp->Flag();
-         if (!(Opts & XRDEXP_STAGE_X))
-            {if (DiskSS) dfltSS = 1;
-                else plp->Set(Opts | XRDEXP_NOSTAGE);
-            }
-         plp = plp->Next();
-        }
-   plp = PexpList.First();
 
 // For each path in the export list merge it into the path list
 //
    while(plp)
         {Opts = plp->Flag();
          npinfo.rwvec = (Opts & (XRDEXP_GLBLRO | XRDEXP_NOTRW) ? 0 : 1);
-         npinfo.ssvec = (Opts & XRDEXP_NOSTAGE ? 0 : 1);
+         npinfo.ssvec = (Opts & XRDEXP_STAGE ? 1 : 0);
          if (PathList.Find(plp->Path(), opinfo))
             Say.Emsg("Config","Ignoring unexpected duplicate path",plp->Path());
             else if (!(Opts & XRDEXP_LOCAL))
@@ -862,11 +850,6 @@ int XrdCmsConfig::MergeP()
                     }
           plp = plp->Next();
          }
-
-// Issue a reminder if we implcitly defaulted something
-//
-   if (dfltSS) Say.Say("Config notice: stagecmd defaulted 1 or more paths "
-                                       "to staging.");
 
 // Document what we will be declaring as available
 //
@@ -1050,10 +1033,7 @@ int XrdCmsConfig::setupServer()
 
 // If this is a staging server then set up the Prepq object
 //
-   if (DiskSS) 
-      {PrepOK = PrepQ.Reset();
-       Sched->Schedule((XrdJob *)&PrepQ,pendplife+time(0));
-      }
+   if (DiskSS) PrepQ.Reset(myInsName, AdminPath, AdminMode);
 
 // Setup file system metering (skip it for peers)
 //
@@ -1996,8 +1976,9 @@ int XrdCmsConfig::xping(XrdSysError *eDest, XrdOucStream &CFile)
          reset <cnt>   number of scrubs after which a full reset is done.
          scrub <sec>   time (seconds, M, H) between pendq scrubs.
          ifpgm <pgm>   program that adds, deletes, and lists prepare queue
-                       entries. It must be specified as the last option
-                       on the line.
+                       entries. If specified, t must be specified as the last
+                       option on the line. If not specified, then the built-in
+                       frm_xfragent program is used.
 
    Type: Any, non-dynamic. Note that the Manager only need the "batch" option
          while slacves need the remaining options.
@@ -2010,8 +1991,7 @@ int XrdCmsConfig::xprep(XrdSysError *eDest, XrdOucStream &CFile)
 
     if (!isServer) return CFile.noEcho();
 
-    if (!(val = CFile.GetWord()))
-       {eDest->Emsg("Config", "prep options not specified"); return 1;}
+    if (!(val = CFile.GetWord())) {PrepQ.setParms(""); return 0;}
 
     do {     if (!strcmp("echo", val)) doset = echo = 1;
         else if (!strcmp("reset", val))
@@ -2051,7 +2031,7 @@ int XrdCmsConfig::xprep(XrdSysError *eDest, XrdOucStream &CFile)
    if (doset) PrepQ.setParms(reset, scrub, echo);
    if (prepif) {if (!isExec(eDest, "prep", prepif)) return 1;
                    else return PrepQ.setParms(prepif);
-               }
+               } else PrepQ.setParms("");
    return 0;
 }
 

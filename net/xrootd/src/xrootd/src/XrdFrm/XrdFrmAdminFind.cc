@@ -110,7 +110,7 @@ int XrdFrmAdmin::FindUnmi(XrdOucArgs &Spec)
        while((sP = fP->Get(ec)))
             {     if (!(sP->lockFile()))
                      Why = "Unmigrated; no lock file: ";
-             else if (sP->baseFile()->Stat.st_mtime <
+             else if (sP->baseFile()->Stat.st_mtime >
                       sP->lockFile()->Stat.st_mtime)
                      Why="Unmigrated; modified: ";
              else continue;

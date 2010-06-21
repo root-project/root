@@ -276,6 +276,14 @@ void XrdXrootdMonitor::Defaults(char *dest1, int mode1, char *dest2, int mode2)
 {
    int mmode;
 
+// Make sure if we have a dest1 we have mode
+//
+   if (!dest1)
+      {mode1 = (dest1 = dest2) ? mode2 : 0;
+       dest2 = 0; mode2 = 0;
+      } else if (!dest2) mode2 = 0;
+
+
 // Set the default destinations (caller supplied strdup'd strings)
 //
    if (Dest1) free(Dest1);
@@ -384,8 +392,8 @@ int XrdXrootdMonitor::Init(XrdScheduler *sp, XrdSysError *errp)
 // If there is a destination that is only collecting file events, then
 // allocate a global monitor object but don't start the timer just yet.
 //
-   if (((monMode1 & XROOTD_MON_FILE) && !(monMode1 & XROOTD_MON_IO))
-   ||  ((monMode2 & XROOTD_MON_FILE) && !(monMode2 & XROOTD_MON_IO)))
+   if ((monMode1 && !(monMode1 & XROOTD_MON_IO))
+   ||  (monMode2 && !(monMode2 & XROOTD_MON_IO)))
        if (!(altMon = new XrdXrootdMonitor()) || !altMon->monBuff)
           {if (altMon) {delete altMon; altMon = 0;}
            eDest->Emsg("Monitor","allocate monitor; insufficient storage.");

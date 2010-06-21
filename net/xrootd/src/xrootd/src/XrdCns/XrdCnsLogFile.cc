@@ -167,7 +167,7 @@ XrdCnsLogRec *XrdCnsLogFile::getRec()
        bL = XrdCnsLogRec::MinSize; recOffset = logOffset;
 
        if (!Read(bP, bL) || !((bL = Rec.DLen()))) return 0;
-       if (bL > XrdCnsLogRec::MinSize)
+       if (bL < XrdCnsLogRec::FixDLen)
           {MLog.Emsg("getRec", "Invalid record length detected in", logFN);
            return 0;
           }
