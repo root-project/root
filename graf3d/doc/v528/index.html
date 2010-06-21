@@ -46,6 +46,24 @@ bin content </li>
 
 <ul>
 
+<li>Extend configurability of GL event-handler to allow inversion of
+controls from scene-centric to viewer-centric. The following rootrc
+variables control the behaviour:
+<pre>
+   OpenGL.EventHandler.ViewerCentricControls:  1
+   OpenGL.EventHandler.ArrowKeyFactor:        -1.0
+   OpenGL.EventHandler.MouseDragFactor:       -1.0
+   OpenGL.EventHandler.MouseWheelFactor:      -1.0
+</pre>
+</li>
+
+<li>Added new overlay element class TGLCameraGuide that shows the
+orientation of major axes. To use, call this on a TGLViewer object:
+<pre>
+   gl_viewer->AddOverlayElement(new TGLCameraGuide(0.9, 0.1, 0.08));
+<pre>
+</li>
+
 <li>Fix an issue with GL-clip object not being properly updated after
 a scene update.</li>
 
