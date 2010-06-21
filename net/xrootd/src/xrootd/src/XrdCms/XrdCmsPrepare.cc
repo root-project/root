@@ -354,7 +354,7 @@ int XrdCmsPrepare::setParms(int rcnt, int stime, int deco)
 
 int XrdCmsPrepare::setParms(const char *ifpgm, char *ifmsg)
 {if (ifpgm)
-    {char *Slash = rindex(ifpgm, '/');
+    {char *Slash = (char *) rindex(ifpgm, '/');
      if (prepif) free(prepif);
      if (Slash && !strcmp(Slash+1, "frm_xfragent")) ifpgm = "";
      prepif = strdup(ifpgm);
