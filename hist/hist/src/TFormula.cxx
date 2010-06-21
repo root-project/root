@@ -2990,7 +2990,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
 
          //Sign inversion
          if (optype==kSignInv) { // -1) {
-            tab[spos-1]="-"+tab[spos-1];
+            tab[spos-1]="-("+tab[spos-1]+")";
             // i++;
             continue;
          }
