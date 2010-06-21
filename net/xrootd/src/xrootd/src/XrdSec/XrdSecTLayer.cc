@@ -37,8 +37,8 @@ const char  XrdSecTLayer::TLayerRR::xfrData;
 /******************************************************************************/
 
 XrdSecTLayer::XrdSecTLayer(const char *pName, Initiator who1st)
-             : mySem(0), Starter(who1st), myFD(-1), urFD(-1),
-               Tmax(275), Tcur(0), eCode(0), eText(0), secTid(0)
+             : secTid(0), mySem(0), Starter(who1st), myFD(-1), urFD(-1),
+               Tmax(275), Tcur(0), eCode(0), eText(0)
 {
 
 // Do the standard stuff
