@@ -22,7 +22,10 @@ class TGLOvlSelectRecord;
 class TGLOverlayElement
 {
 public:
-   enum ERole { kUser, kViewer, kAnnotation, kAll };
+   enum ERole  { kUser, kViewer, kAnnotation, kAll };
+
+   enum EState { kInvisible = 1, kDisabled = 2, kActive = 4,
+                 kAllVisible = kDisabled | kActive };
 
 private:
    TGLOverlayElement(const TGLOverlayElement&);            // Not implemented
@@ -30,9 +33,13 @@ private:
 
 protected:
    ERole   fRole;
-    
+   EState  fState;
+
+   void ProjectionMatrixPushIdentity();
+
 public:
-   TGLOverlayElement(ERole r = kUser):fRole(r) {}
+   TGLOverlayElement(ERole r=kUser, EState s=kActive) :
+      fRole(r), fState(s) {}
    virtual ~TGLOverlayElement() {}
 
    virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
@@ -43,8 +50,13 @@ public:
 
    virtual void Render(TGLRnrCtx& rnrCtx) = 0;
 
-   ERole   GetRole() const { return fRole; }
+   ERole   GetRole() const  { return fRole; }
    void    SetRole(ERole r) { fRole = r; }
+
+   EState  GetState() const   { return fState; }
+   void    SetState(EState s) { fState = s; }
+
+   void    SetBinaryState(Bool_t s) { SetState(s ? kActive : kInvisible); }
 
    ClassDef(TGLOverlayElement, 0) // Base class for GL overlay elements.
 };

@@ -246,17 +246,8 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    }
 
    // reset matrix
-   glMatrixMode(GL_PROJECTION);
-   glPushMatrix();
-   glLoadIdentity();
-   if (rnrCtx.Selection())
-   {
-      TGLRect rect(*rnrCtx.GetPickRectangle());
-      rnrCtx.GetCamera()->WindowToViewport(rect);
-      gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(),
-                    (Int_t*) rnrCtx.GetCamera()->RefViewport().CArr());
-   }
-   glMatrixMode(GL_MODELVIEW);
+   rnrCtx.ProjectionMatrixPushIdentity();
+
    glPushMatrix();
    // set ortho camera to [0,1] [0.1]
    glLoadIdentity();
@@ -471,10 +462,8 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
       }
    }
 
-   glMatrixMode(GL_PROJECTION);
    glPopMatrix();
-   glMatrixMode(GL_MODELVIEW);
-   glPopMatrix();
+   rnrCtx.ProjectionMatrixPop();
 
    glDepthRange(old_depth_range[0], old_depth_range[1]);
    glPopAttrib();

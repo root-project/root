@@ -260,8 +260,6 @@ void TEveCaloLegoGL::Make3DDisplayListRebin(TEveCaloData::RebinData_t& rebinData
 
       glNewList(dlMap[s], GL_COMPILE);
 
-      if (selection) glLoadName(s);
-      if (selection) glPushName(0);
       for (Int_t i = 1; i <= fEtaAxis->GetNbins(); ++i)
       {
          for (Int_t j = 1; j <= fPhiAxis->GetNbins(); ++j)
@@ -286,7 +284,6 @@ void TEveCaloLegoGL::Make3DDisplayListRebin(TEveCaloData::RebinData_t& rebinData
             }
          }
       }
-      if (selection) glPopName();
       glEndList();
    }
 }

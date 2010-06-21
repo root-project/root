@@ -462,7 +462,7 @@ void TGLViewerBase::RenderSelected()
 }
 
 //______________________________________________________________________
-void TGLViewerBase::RenderOverlay()
+void TGLViewerBase::RenderOverlay(Int_t state, Bool_t selection)
 {
    // Render overlay objects.
 
@@ -470,9 +470,12 @@ void TGLViewerBase::RenderOverlay()
    for (Int_t i = 0; i < nOvl; ++i)
    {
       TGLOverlayElement* el = fOverlay[i];
-      glPushName(i);
-      el->Render(*fRnrCtx);
-      glPopName();
+      if (el->GetState() & state)
+      {
+         if (selection) glPushName(i);
+         el->Render(*fRnrCtx);
+         if (selection) glPopName();
+      }
    }
 }
 

@@ -611,7 +611,7 @@ void TGLViewer::DoDrawMono()
       RenderNonSelected();
       RenderSelected();
       DrawGuides();
-      RenderOverlay();
+      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
 
       glClear(GL_DEPTH_BUFFER_BIT);
       fRnrCtx->SetHighlight(kTRUE);
@@ -684,7 +684,7 @@ void TGLViewer::DoDrawStereo()
       RenderNonSelected();
       RenderSelected();
       DrawGuides();
-      RenderOverlay();
+      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
 
       glClear(GL_DEPTH_BUFFER_BIT);
       fRnrCtx->SetHighlight(kTRUE);
@@ -722,7 +722,7 @@ void TGLViewer::DoDrawStereo()
       RenderNonSelected();
       RenderSelected();
       DrawGuides();
-      RenderOverlay();
+      RenderOverlay(TGLOverlayElement::kAllVisible, kFALSE);
 
       glClear(GL_DEPTH_BUFFER_BIT);
       fRnrCtx->SetHighlight(kTRUE);
@@ -982,7 +982,7 @@ void TGLViewer::DrawGuides()
    {
       glDisable(GL_DEPTH_TEST);
       Float_t radius = fCamera->ViewportDeltaToWorld(TGLVertex3(fCamera->GetCenterVec()), 3, 3).Mag();
-      const Float_t rgba[4] = { 0, 1, 1, 1.0 };
+      const UChar_t rgba[4] = { 0, 255, 255, 255 };
       TGLUtil::DrawSphere(fCamera->GetCenterVec(), radius, rgba);
       disabled = kTRUE;
    }
@@ -1018,11 +1018,9 @@ void TGLViewer::DrawDebugInfo()
       // Scene bounding box center sphere (green) and
       glDisable(GL_DEPTH_TEST);
       Double_t size = fOverallBoundingBox.Extents().Mag() / 200.0;
-      static Float_t white[4] = {1.0, 1.0, 1.0, 1.0};
-      TGLUtil::DrawSphere(TGLVertex3(0.0, 0.0, 0.0), size, white);
-      static Float_t green[4] = {0.0, 1.0, 0.0, 1.0};
+      TGLUtil::DrawSphere(TGLVertex3(0.0, 0.0, 0.0), size, TGLUtil::fgWhite);
       const TGLVertex3 & center = fOverallBoundingBox.Center();
-      TGLUtil::DrawSphere(center, size, green);
+      TGLUtil::DrawSphere(center, size, TGLUtil::fgGreen);
       glEnable(GL_DEPTH_TEST);
 
       glEnable(GL_LIGHTING);
@@ -1343,7 +1341,7 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
    glRenderMode(GL_SELECT);
 
    PreRenderOverlaySelection();
-   RenderOverlay();
+   RenderOverlay(TGLOverlayElement::kActive, kTRUE);
    PostRenderOverlaySelection();
 
    Int_t nHits = glRenderMode(GL_RENDER);

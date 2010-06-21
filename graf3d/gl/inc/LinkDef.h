@@ -63,6 +63,7 @@
 #pragma link C++ class TGLOrthoCamera;
 #pragma link C++ class TGLPerspectiveCamera;
 #pragma link C++ class TGLCameraOverlay;
+#pragma link C++ class TGLCameraGuide;
 #pragma link C++ class TGLPlotCamera+;
 
 #pragma link C++ class TGLSceneBase+;

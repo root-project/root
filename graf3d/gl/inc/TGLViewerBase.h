@@ -130,7 +130,7 @@ public:
    virtual void Render();
    virtual void RenderNonSelected();
    virtual void RenderSelected();
-   virtual void RenderOverlay();
+   virtual void RenderOverlay(Int_t state, Bool_t selection);
    virtual void PostRender();
 
    virtual void PreRenderOverlaySelection();

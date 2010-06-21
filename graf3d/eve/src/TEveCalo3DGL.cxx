@@ -616,7 +616,7 @@ void TEveCalo3DGL::DrawSelectedCells(TEveCaloData::vCellId_t cells) const
    for (TEveCaloData::vCellId_i i = cells.begin(); i != cells.end(); i++)
    {
       fM->fData->GetCellData(*i, cellData);
-      ///  fM->SetupColorHeight(cellData.Value(fM->fPlotEt), (*i).fSlice, towerH);
+      fM->SetupColorHeight(cellData.Value(fM->fPlotEt), (*i).fSlice, towerH);
 
       // find tower with offsets
       Float_t offset = 0;

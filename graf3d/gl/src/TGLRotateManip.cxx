@@ -110,30 +110,27 @@ void TGLRotateManip::Draw(const TGLCamera& camera) const
    // GL name loading for hit testing - 0 reserved for no selection
    if (manip & TGLPhysicalShape::kRotateX) {
       glPushName(1);
-      TGLUtil::DrawRing(box.Center(), box.Axis(0, kTRUE), ringRadius*1.004,
-                        fSelectedWidget == 1 ? fgYellow : fgRed);
+      TGLUtil::DrawRing(box.Center(), box.Axis(0, kTRUE), ringRadius*1.004, ColorFor(1));
       glPopName();
    } else {
-      TGLUtil::DrawRing(box.Center(), box.Axis(0, kTRUE), ringRadius*1.004, fgGrey);
+      TGLUtil::DrawRing(box.Center(), box.Axis(0, kTRUE), ringRadius*1.004, TGLUtil::fgGrey);
    }
    if (manip & TGLPhysicalShape::kRotateY) {
       glPushName(2);
-      TGLUtil::DrawRing(box.Center(), box.Axis(1, kTRUE), ringRadius*1.002,
-                        fSelectedWidget == 2 ? fgYellow : fgGreen);
+      TGLUtil::DrawRing(box.Center(), box.Axis(1, kTRUE), ringRadius*1.002, ColorFor(2));
       glPopName();
    } else {
-      TGLUtil::DrawRing(box.Center(), box.Axis(1, kTRUE), ringRadius*1.002, fgGrey);
+      TGLUtil::DrawRing(box.Center(), box.Axis(1, kTRUE), ringRadius*1.002, TGLUtil::fgGrey);
    }
    if (manip & TGLPhysicalShape::kRotateZ) {
       glPushName(3);
-      TGLUtil::DrawRing(box.Center(), box.Axis(2, kTRUE), ringRadius,
-                        fSelectedWidget == 3 ? fgYellow : fgBlue);
+      TGLUtil::DrawRing(box.Center(), box.Axis(2, kTRUE), ringRadius, ColorFor(3));
       glPopName();
    } else {
-      TGLUtil::DrawRing(box.Center(), box.Axis(2, kTRUE), ringRadius, fgGrey);
+      TGLUtil::DrawRing(box.Center(), box.Axis(2, kTRUE), ringRadius, TGLUtil::fgGrey);
    }
    // Draw white center sphere
-   TGLUtil::DrawSphere(box.Center(), ringRadius/20.0, fgWhite);
+   TGLUtil::DrawSphere(box.Center(), ringRadius/20.0, TGLUtil::fgWhite);
 
    // Indicate we are in ring follow (non-shallow) mode
    // by drawing line from center to dragged ring point
@@ -149,14 +146,14 @@ void TGLRotateManip::Draw(const TGLCamera& camera) const
          eyeOnRing = fActiveRingPlane.NearestOn(eyeOnRing);
          TGLVector3 arrowDir = Cross(fActiveRingPlane.Norm(), eyeOnRing - fActiveRingCenter);
          arrowDir.Normalise();
-         TGLUtil::DrawLine(eyeOnRing, arrowDir*ringRadius*1.3, TGLUtil::kLineHeadArrow, baseScale, fgYellow);
-         TGLUtil::DrawLine(eyeOnRing, -arrowDir*ringRadius*1.3, TGLUtil::kLineHeadArrow, baseScale, fgYellow);
+         TGLUtil::DrawLine(eyeOnRing,  arrowDir*ringRadius*1.3, TGLUtil::kLineHeadArrow, baseScale, TGLUtil::fgYellow);
+         TGLUtil::DrawLine(eyeOnRing, -arrowDir*ringRadius*1.3, TGLUtil::kLineHeadArrow, baseScale, TGLUtil::fgYellow);
       } else {
          TGLVector3 activeVector = fRingLine.Vector();
          activeVector.Normalise();
          activeVector *= ringRadius;
          TGLUtil::DrawLine(fRingLine.Start(), activeVector,
-                           TGLUtil::kLineHeadNone, baseScale, fgYellow);
+                           TGLUtil::kLineHeadNone, baseScale, TGLUtil::fgYellow);
       }
    }
 

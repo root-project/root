@@ -18,6 +18,7 @@
 #include "TGLSelectBuffer.h"
 #include "TGLIncludes.h"
 #include "TGLUtil.h"
+#include "TGLCamera.h"
 #include "TGLFontManager.h"
 #include "TGLContext.h"
 
@@ -397,6 +398,34 @@ void TGLRnrCtx::RegisterFont(Int_t size, const char* name, Int_t mode, TGLFont& 
 
   RegisterFontNoScale(TMath::Nint(size*fRenderScale), name, mode, out);
 }
+
+
+/******************************************************************************/
+// Matrix manipulation helpers
+/******************************************************************************/
+
+void TGLRnrCtx::ProjectionMatrixPushIdentity()
+{
+   glMatrixMode(GL_PROJECTION);
+   glPushMatrix();
+   glLoadIdentity();
+   if (Selection())
+   {
+      TGLRect rect(*GetPickRectangle());
+      GetCamera()->WindowToViewport(rect);
+      gluPickMatrix(rect.X(), rect.Y(), rect.Width(), rect.Height(),
+                    (Int_t*) GetCamera()->RefViewport().CArr());
+   }
+   glMatrixMode(GL_MODELVIEW);
+}
+
+void TGLRnrCtx::ProjectionMatrixPop()
+{
+   glMatrixMode(GL_PROJECTION);
+   glPopMatrix();
+   glMatrixMode(GL_MODELVIEW);
+}
+
 
 /**************************************************************************/
 // Static helpers

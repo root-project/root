@@ -75,32 +75,32 @@ void TGLScaleManip::Draw(const TGLCamera & camera) const
    if (manip & TGLPhysicalShape::kScaleX) {
       glPushName(1);
       TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadBox,
-                        baseScale, fSelectedWidget == 1 ? fgYellow : fgRed);
+                        baseScale, ColorFor(1));
       glPopName();
    } else {
       TGLUtil::DrawLine(box.Center(), axisScale[0], TGLUtil::kLineHeadBox,
-                        baseScale, fgGrey);
+                        baseScale, TGLUtil::fgGrey);
    }
    if (manip & TGLPhysicalShape::kScaleY) {
       glPushName(2);
       TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadBox,
-                        baseScale, fSelectedWidget == 2 ? fgYellow : fgGreen);
+                        baseScale, ColorFor(2));
       glPopName();
    } else {
       TGLUtil::DrawLine(box.Center(), axisScale[1], TGLUtil::kLineHeadBox,
-                        baseScale, fgGrey);
+                        baseScale, TGLUtil::fgGrey);
    }
    if (manip & TGLPhysicalShape::kScaleZ) {
       glPushName(3);
       TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadBox,
-                        baseScale, fSelectedWidget == 3 ? fgYellow : fgBlue);
+                        baseScale, ColorFor(3));
       glPopName();
    } else {
       TGLUtil::DrawLine(box.Center(), axisScale[2], TGLUtil::kLineHeadBox,
-                        baseScale, fgGrey);
+                        baseScale, TGLUtil::fgGrey);
    }
    // Draw white center sphere
-   TGLUtil::DrawSphere(box.Center(), baseScale/2.0, fgWhite);
+   TGLUtil::DrawSphere(box.Center(), baseScale/2.0, TGLUtil::fgWhite);
 
    glEnable(GL_CULL_FACE);
    glDisable(GL_BLEND);

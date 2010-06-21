@@ -44,18 +44,13 @@ protected:
    TPoint             fFirstMouse;        //! first (start) mouse position (in WINDOW coords)
    TPoint             fLastMouse;         //! last (latest) mouse position (in WINDOW coords)
 
-   static Float_t     fgRed[4];
-   static Float_t     fgGreen[4];
-   static Float_t     fgBlue[4];
-   static Float_t     fgYellow[4];
-   static Float_t     fgWhite[4];
-   static Float_t     fgGrey[4];
-
    TGLManip(const TGLManip&);
    TGLManip& operator=(const TGLManip&);
 
    void CalcDrawScale(const TGLBoundingBox& box, const TGLCamera& camera,
                       Double_t& base, TGLVector3 axis[3]) const;
+
+   const UChar_t* ColorFor(UInt_t widget) const; 
 
 public:
    TGLManip();

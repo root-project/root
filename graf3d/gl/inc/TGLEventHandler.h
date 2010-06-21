@@ -52,6 +52,9 @@ protected:
    Int_t             fSecSelType; // secondary selection type
    Bool_t            fDoInternalSelection;
    Bool_t            fViewerCentricControls;
+   Float_t           fArrowKeyFactor;
+   Float_t           fMouseDragFactor;
+   Float_t           fMouseWheelFactor;
 
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
 

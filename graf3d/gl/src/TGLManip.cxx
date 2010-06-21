@@ -31,13 +31,6 @@
 
 ClassImp(TGLManip);
 
-Float_t TGLManip::fgRed[4]    = { 0.8, 0.0, 0.0, 1.0 };
-Float_t TGLManip::fgGreen[4]  = { 0.0, 0.8, 0.0, 1.0 };
-Float_t TGLManip::fgBlue[4]   = { 0.0, 0.0, 0.8, 1.0 };
-Float_t TGLManip::fgYellow[4] = { 0.8, 0.8, 0.0, 1.0 };
-Float_t TGLManip::fgWhite[4]  = { 1.0, 1.0, 1.0, 1.0 };
-Float_t TGLManip::fgGrey[4]   = { 0.5, 0.5, 0.5, 0.4 };
-
 //______________________________________________________________________________
 TGLManip::TGLManip() :
    fShape(0),
@@ -83,14 +76,6 @@ TGLManip& TGLManip::operator=(const TGLManip& gm)
       fActive=gm.fActive;
       fFirstMouse=gm.fFirstMouse;
       fLastMouse=gm.fLastMouse;
-      for(Int_t i=0; i<4; i++) {
-         fgRed[i]=gm.fgRed[i];
-         fgGreen[i]=gm.fgGreen[i];
-         fgBlue[i]=gm.fgBlue[i];
-         fgYellow[i]=gm.fgYellow[i];
-         fgWhite[i]=gm.fgWhite[i];
-         fgGrey[i]=gm.fgGrey[i];
-      }
    }
    return *this;
 }
@@ -99,6 +84,27 @@ TGLManip& TGLManip::operator=(const TGLManip& gm)
 TGLManip::~TGLManip()
 {
    // Destroy manipulator object.
+}
+
+//______________________________________________________________________________
+const UChar_t* TGLManip::ColorFor(UInt_t widget) const
+{
+   // Returns color to be used for given widget.
+
+   if (widget == fSelectedWidget)
+   {
+      return TGLUtil::fgYellow;
+   }
+   else
+   {
+      switch (widget)
+      {
+         case 1:  return TGLUtil::fgRed;
+         case 2:  return TGLUtil::fgGreen;
+         case 3:  return TGLUtil::fgBlue;
+         default: return TGLUtil::fgGrey;
+      }
+   }
 }
 
 //______________________________________________________________________________

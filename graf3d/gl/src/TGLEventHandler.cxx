@@ -34,6 +34,7 @@
 #include "KeySymbols.h"
 #include "TGLAnnotation.h"
 #include "TEnv.h"
+#include "TMath.h"
 
 //______________________________________________________________________________
 //
@@ -46,7 +47,12 @@
 // The signals about object being selected or hovered above are
 // emitted via the TGLViewer itself.
 //
-// This class is still under development.
+// The following rootrc settings influence the behaviour:
+// OpenGL.EventHandler.ViewerCentricControls:  1
+// OpenGL.EventHandler.ArrowKeyFactor:        -1.0
+// OpenGL.EventHandler.MouseDragFactor:       -1.0
+// OpenGL.EventHandler.MouseWheelFactor:      -1.0
+
 
 ClassImp(TGLEventHandler);
 
@@ -76,6 +82,9 @@ TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    fTooltip    = new TGToolTip(0, 0, "", 650);
    fTooltip->Hide();
    fViewerCentricControls = gEnv->GetValue("OpenGL.EventHandler.ViewerCentricControls", 0) != 0;
+   fArrowKeyFactor   = gEnv->GetValue("OpenGL.EventHandler.ArrowKeyFactor",   1.0);
+   fMouseDragFactor  = gEnv->GetValue("OpenGL.EventHandler.MouseDragFactor",  1.0);
+   fMouseWheelFactor = gEnv->GetValue("OpenGL.EventHandler.MouseWheelFactor", 1.0);
 }
 
 //______________________________________________________________________________
@@ -439,13 +448,12 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       // On Win32 only button release events come for mouse wheel.
       // Note: Modifiers (ctrl/shift) disabled as fState doesn't seem to
       // have correct modifier flags with mouse wheel under Windows.
-      // TODO: Put '50' into some static const.
 
       if (event->fType == kButtonRelease)
       {
          Bool_t redraw = kFALSE;
 
-         Int_t zoom = ControlValue(50);
+         Int_t zoom = TMath::Nint(fMouseWheelFactor * ControlValue(50));
          switch(event->fCode)
          {
             case kButton5: // Zoom out (dolly or adjust camera FOV).
@@ -755,7 +763,7 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
       const Bool_t mod1 = event->fState & kKeyControlMask;
       const Bool_t mod2 = event->fState & kKeyShiftMask;
 
-      const Int_t shift = ControlValue(10);
+      const Int_t shift = TMath::Nint(fArrowKeyFactor * ControlValue(10));
 
       switch (keysym)
       {
@@ -862,8 +870,8 @@ Bool_t TGLEventHandler::HandleMotion(Event_t * event)
    Short_t lod = TGLRnrCtx::kLODMed;
 
    // Camera interface requires GL coords - Y inverted
-   Int_t  xDelta = ControlValue(event->fX - fLastPos.fX);
-   Int_t  yDelta = ControlValue(event->fY - fLastPos.fY);
+   Int_t  xDelta = TMath::Nint(fMouseDragFactor * ControlValue(event->fX - fLastPos.fX));
+   Int_t  yDelta = TMath::Nint(fMouseDragFactor * ControlValue(event->fY - fLastPos.fY));
    Bool_t mod1   = event->fState & kKeyControlMask;
    Bool_t mod2   = event->fState & kKeyShiftMask;
 

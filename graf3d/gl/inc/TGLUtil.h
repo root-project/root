@@ -1022,24 +1022,32 @@ public:
    static void EndAttLine(Int_t pick_radius=0, Bool_t selection=kFALSE);
 
    // TODO: These draw routines should take LOD hints
-   static void SetDrawColors(const Float_t rgba[4]);
-   static void DrawSphere(const TGLVertex3 & position, Double_t radius, const Float_t rgba[4]);
-   static void DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size, const Float_t rgba[4]);
+   static void SetDrawColors(const UChar_t rgba[4]);
+   static void DrawSphere(const TGLVertex3 & position, Double_t radius, const UChar_t rgba[4]);
+   static void DrawLine(const TGLLine3 & line, ELineHeadShape head, Double_t size, const UChar_t rgba[4]);
    static void DrawLine(const TGLVertex3 & start, const TGLVector3 & vector, ELineHeadShape head,
-                        Double_t size, const Float_t rgba[4]);
+                        Double_t size, const UChar_t rgba[4]);
    static void DrawRing(const TGLVertex3 & center, const TGLVector3 & normal,
-                        Double_t radius, const Float_t* rgba);
+                        Double_t radius, const UChar_t* rgba);
 
    static void DrawReferenceMarker(const TGLCamera  & camera,
                                    const TGLVertex3 & pos,
                                          Float_t      radius = 3,
-                                   const Float_t    * rgba   = 0);
+                                   const UChar_t    * rgba   = 0);
    static void DrawSimpleAxes(const TGLCamera      & camera,
                               const TGLBoundingBox & bbox,
                                     Int_t            axesType);
    static void DrawNumber(const TString    & num,
                           const TGLVertex3 & pos,
                                 Bool_t       center = kFALSE);
+
+   // Frequently used colors.
+   static const UChar_t fgRed[4];
+   static const UChar_t fgGreen[4];
+   static const UChar_t fgBlue[4];
+   static const UChar_t fgYellow[4];
+   static const UChar_t fgWhite[4];
+   static const UChar_t fgGrey[4];
 
    ClassDef(TGLUtil,0); // Wrapper class for misc GL pieces
 };

@@ -122,8 +122,9 @@ public:
    void   IncTimeStamp()       { fCacheDirty = kTRUE; ++fTimeStamp; }
    UInt_t TimeStamp()    const { return fTimeStamp; }
 
-   void SetViewport(const TGLRect & viewport);
-   TGLRect& RefViewport() { return fViewport; }
+   void           SetViewport(const TGLRect & viewport);
+   TGLRect&       RefViewport()       { return fViewport; }
+   const TGLRect& RefViewport() const { return fViewport; }
 
    // Camera manipulation interface (GL coord - origin bottom left)
    virtual void   Setup(const TGLBoundingBox & box, Bool_t reset=kTRUE) = 0;
@@ -194,8 +195,6 @@ public:
    void WindowToViewport(TPoint & point)             const { point.SetY(fViewport.Height() - point.GetY()); }
    void WindowToViewport(TGLRect & rect)             const { rect.Y() = fViewport.Height() - rect.Y(); }
    void WindowToViewport(TGLVertex3 & vertex)        const { vertex.Y() = fViewport.Height() - vertex.Y(); }
-
-   const TGLRect& RefViewport() const { return fViewport; }
 
    Float_t GetVAxisMinAngle(){return fVAxisMinAngle;}
    void    SetVAxisMinAngle(Float_t x){fVAxisMinAngle = x;}

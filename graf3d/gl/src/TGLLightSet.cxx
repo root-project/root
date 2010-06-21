@@ -151,12 +151,11 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
          {
             // Lighting itself needs to be disable so a single one can show...!
             glDisable(GL_LIGHTING);
-            Float_t yellow[4] = { 1.0, 1.0, 0.0, 1.0 };
             Float_t position[4]; // Only float parameters for lights (no double)....
             glGetLightfv(GLenum(GL_LIGHT0 + light), GL_POSITION, position);
             Double_t size = bbox.Extents().Mag() / 10.0;
             TGLVertex3 dPosition(position[0], position[1], position[2]);
-            TGLUtil::DrawSphere(dPosition, size, yellow);
+            TGLUtil::DrawSphere(dPosition, size, TGLUtil::fgYellow);
             glEnable(GL_LIGHTING);
          }
       }

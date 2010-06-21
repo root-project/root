@@ -265,6 +265,10 @@ public:
    UChar_t* GetGrabbedImage() const { return fGrabbedImage; }
    void     SetGrabbedImage(UChar_t* img) { fGrabbedImage = img; }
 
+   // Matrix manipulation helpers
+   void ProjectionMatrixPushIdentity();
+   void ProjectionMatrixPop();
+
    ClassDef(TGLRnrCtx, 0); // Collection of objects and data passes along all rendering calls.
 };
 
