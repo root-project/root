@@ -211,7 +211,7 @@ namespace TMVA {
    public: // these two need to be public, they are used to read in-memory weight-files
       void ReadStateFromStream  ( std::istream& tf );         // backward compatibility
       void ReadStateFromStream  ( TFile&        rf );         // backward compatibility
-#if ROOT_SVN_REVISION >= 32259
+#if ROOT_SVN_REVISION >= 32259 && (ROOT_VERSION_CODE >= ROOT_VERSION(5,26,0))
       void ReadStateFromXMLString( const char* xmlstr );      // for reading from memory
 #endif
 

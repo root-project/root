@@ -107,6 +107,7 @@ void TMVAClassification( TString myMethodList = "" )
    // ---
    Use["MLP"]             = 1; // this is the recommended ANN
    Use["MLPBFGS"]         = 1; // recommended ANN with optional training method
+   Use["MLPBNN"]          = 1;  // recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 1; // *** missing
    Use["TMlpANN"]         = 1;
    // ---
@@ -401,11 +402,13 @@ void TMVAClassification( TString myMethodList = "" )
 
    // TMVA ANN: MLP (recommended ANN) -- all ANNs in TMVA are Multilayer Perceptrons
    if (Use["MLP"])
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=500:HiddenLayers=N+5:TestRate=10:EpochMonitoring:RandomSeed=1" );
+      factory->BookMethod( TMVA::Types::kMLP, "MLP", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator" );
 
    if (Use["MLPBFGS"])
-      factory->BookMethod( TMVA::Types::kMLP, "MLPBFGS", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=500:HiddenLayers=N+5:TestRate=10:TrainingMethod=BFGS:!EpochMonitoring" );
+      factory->BookMethod( TMVA::Types::kMLP, "MLPBFGS", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:!UseRegulator" );
 
+   if (Use["MLPBNN"])
+      factory->BookMethod( TMVA::Types::kMLP, "MLPBNN", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:TrainingMethod=BFGS:UseRegulator" ); // BFGS training with bayesian regulators
 
    // CF(Clermont-Ferrand)ANN
    if (Use["CFMlpANN"])

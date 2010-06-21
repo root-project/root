@@ -1254,7 +1254,7 @@ void TMVA::MethodBase::ReadStateFromFile()
    }
 }
 
-#if ROOT_SVN_REVISION >= 32259
+#if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= ROOT_VERSION(5,26,0))
 //_______________________________________________________________________
 void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
    // for reading from memory
