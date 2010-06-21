@@ -398,10 +398,11 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TStrin
    return method;
 }
 
-#if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= ROOT_VERSION(5,26,0))
 //_______________________________________________________________________
 TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr )
 {
+#if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= ROOT_VERSION(5,26,0) )
+
    // books MVA method from weightfile
    IMethod* im = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( methodType )),
                                                       DataInfo(), "" );
@@ -431,8 +432,11 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* 
          << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
    
    return method;
-}
+#else
+   Log() << kFATAL << "Method Reader::BookMVA(TMVA::Types::EMVA methodType, const char* xmlstr) is not available for ROOT versions prior to 5.26/00." << Endl;
+   return 0;
 #endif
+}
 
 //_______________________________________________________________________
 Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const TString& methodTag, Double_t aux )

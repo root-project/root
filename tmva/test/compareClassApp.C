@@ -6,7 +6,7 @@ enum HistType { MVAType = 0, ProbaType = 1, RarityType = 2 };
 //TString DerivedPlotName = "Proba";
 TString DerivedPlotName = "Rarity";
 
-void compareClassApp( TString finAn = "TMVA.root", TString finApp = "ClassApp.root", 
+void compareClassApp( TString finAn = "TMVA.root", TString finApp = "TMVApp.root", 
                    HistType htype = MVAType, bool useTMVAStyle=kTRUE )
 {
    cout << "=== Compare histograms of two files ===" << endl;

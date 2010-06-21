@@ -86,10 +86,7 @@ namespace TMVA {
   
       // book MVA method via weight file
       IMethod* BookMVA( const TString& methodTag, const TString& weightfile );
-#if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= ROOT_VERSION(5,26,0))
-
       IMethod* BookMVA( TMVA::Types::EMVA methodType, const char* xmlstr );
-#endif
       IMethod* FindMVA( const TString& methodTag );
       // special function for Cuts to avoid dynamic_casts in ROOT macros, 
       // which are not properly handled by CINT

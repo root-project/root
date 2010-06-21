@@ -72,6 +72,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    // ---
    Use["MLP"]             = 1; // this is the recommended ANN
    Use["MLPBFGS"]         = 0; // recommended ANN with optional training method
+   Use["MLPBNN"]          = 0;  // 
    Use["CFMlpANN"]        = 0; // *** missing
    Use["TMlpANN"]         = 0; 
    // ---
@@ -181,7 +182,7 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    UInt_t nbin = 100;
    TH1F *histLk(0), *histLkD(0), *histLkPCA(0), *histLkKDE(0), *histLkMIX(0), *histPD(0), *histPDD(0);
    TH1F *histPDPCA(0), *histPDEFoam(0), *histPDEFoamErr(0), *histPDEFoamSig(0), *histKNN(0), *histHm(0);
-   TH1F *histFi(0), *histFiG(0), *histFiB(0), *histLD(0), *histNn(0), *histNnC(0), *histNnT(0), *histBdt(0), *histBdtG(0), *histBdtD(0);
+   TH1F *histFi(0), *histFiG(0), *histFiB(0), *histLD(0), *histNn(0),*histNnbfgs(0),*histNnbnn(0), *histNnC(0), *histNnT(0), *histBdt(0), *histBdtG(0), *histBdtD(0);
    TH1F *histRf(0), *histSVMG(0), *histSVMP(0), *histSVML(0), *histFDAMT(0), *histFDAGA(0), *histCat(0), *histPBdt(0);
 
    if (Use["Likelihood"])    histLk      = new TH1F( "MVA_Likelihood",    "MVA_Likelihood",    nbin, -1, 1 );
@@ -199,6 +200,8 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["BoostedFisher"]) histFiB     = new TH1F( "MVA_BoostedFisher", "MVA_BoostedFisher", nbin, -2, 2 );
    if (Use["LD"])            histLD      = new TH1F( "MVA_LD",            "MVA_LD",            nbin, -2, 2 );
    if (Use["MLP"])           histNn      = new TH1F( "MVA_MLP",           "MVA_MLP",           nbin, -1.25, 1.5 );
+   if (Use["MLPBFGS"])       histNnbfgs  = new TH1F( "MVA_MLPBFGS",           "MVA_MLPBFGS",           nbin, -1.25, 1.5 );
+   if (Use["MLPBNN"])        histNnbnn   = new TH1F( "MVA_MLPBNN",           "MVA_MLPBNN",           nbin, -1.25, 1.5 );
    if (Use["CFMlpANN"])      histNnC     = new TH1F( "MVA_CFMlpANN",      "MVA_CFMlpANN",      nbin,  0, 1 );
    if (Use["TMlpANN"])       histNnT     = new TH1F( "MVA_TMlpANN",       "MVA_TMlpANN",       nbin, -1.3, 1.3 );
    if (Use["BDT"])           histBdt     = new TH1F( "MVA_BDT",           "MVA_BDT",           nbin, -0.8, 0.8 );
@@ -338,6 +341,8 @@ void TMVAClassificationApplication( TString myMethodList = "" )
       if (Use["BoostedFisher"])   histFiB    ->Fill( reader->EvaluateMVA( "BoostedFisher method" ) );
       if (Use["LD"           ])   histLD     ->Fill( reader->EvaluateMVA( "LD method"            ) );
       if (Use["MLP"          ])   histNn     ->Fill( reader->EvaluateMVA( "MLP method"           ) );
+      if (Use["MLPBFGS"          ])   histNnbfgs ->Fill( reader->EvaluateMVA( "MLPBFGS method"           ) );
+      if (Use["MLPBNN"          ])   histNnbnn ->Fill( reader->EvaluateMVA( "MLPBNN method"           ) );
       if (Use["CFMlpANN"     ])   histNnC    ->Fill( reader->EvaluateMVA( "CFMlpANN method"      ) );
       if (Use["TMlpANN"      ])   histNnT    ->Fill( reader->EvaluateMVA( "TMlpANN method"       ) );
       if (Use["BDT"          ])   histBdt    ->Fill( reader->EvaluateMVA( "BDT method"           ) );
@@ -418,6 +423,8 @@ void TMVAClassificationApplication( TString myMethodList = "" )
    if (Use["BoostedFisher"])   histFiB    ->Write();
    if (Use["LD"           ])   histLD     ->Write();
    if (Use["MLP"          ])   histNn     ->Write();
+   if (Use["MLPBFGS"      ])   histNnbfgs ->Write();
+   if (Use["MLPBNN"       ])   histNnbnn  ->Write();
    if (Use["CFMlpANN"     ])   histNnC    ->Write();
    if (Use["TMlpANN"      ])   histNnT    ->Write();
    if (Use["BDT"          ])   histBdt    ->Write();

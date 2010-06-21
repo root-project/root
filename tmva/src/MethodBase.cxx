@@ -1253,20 +1253,22 @@ void TMVA::MethodBase::ReadStateFromFile()
       rfile->Close();
    }
 }
-
-#if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= ROOT_VERSION(5,26,0))
 //_______________________________________________________________________
 void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
    // for reading from memory
    
+#if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= 334336) // 5.26/00
    void* doc = gTools().xmlengine().ParseString(xmlstr);
 
    void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
 
    return ReadStateFromXML(rootnode);
+#else
+   Log() << kFATAL << "Method MethodBase::ReadStateFromXMLString( const char* xmlstr ) is not available for ROOT versions prior to 5.26/00." << Endl;
+   return 0;
+#endif
 
 }
-#endif
 
 //_______________________________________________________________________
 void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
