@@ -1060,7 +1060,7 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*
    Double_t unit = ((eM - em) < (pM - pm)) ? (eM - em) : (pM - pm);
    Float_t sx = (eM - em) / fM->GetEtaRng();
    Float_t sy = (pM - pm) / fM->GetPhiRng();
-   glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetMaxTowerH() / fDataMax);
+   glScalef(sx / unit, sy / unit, fM->GetValToHeight());
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
 
    glDisable(GL_LIGHTING);
@@ -1277,7 +1277,7 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glPushMatrix();
    Float_t sx = (eM - em) / fM->GetEtaRng();
    Float_t sy = (pM - pm) / fM->GetPhiRng();
-   glScalef(sx / unit, sy / unit, fM->fData->Empty() ? 1 : fM->GetMaxTowerH() / fDataMax);
+   glScalef(sx / unit, sy / unit, fM->GetValToHeight());
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
 
 
