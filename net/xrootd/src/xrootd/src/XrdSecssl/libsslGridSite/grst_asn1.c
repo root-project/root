@@ -42,7 +42,7 @@ time_t timegm (struct tm *tm) {
 #define SSLARG unsigned char**
 #endif
 
-/// ASN1 time string (in a char *) to time_t
+/* ASN1 time string (in a char *) to time_t */
 /**
  *  (Use ASN1_STRING_data() to convert ASN1_GENERALIZEDTIME to char * if
  *   necessary)
@@ -222,7 +222,7 @@ static int GRSTasn1Parse2(BIO *bp, unsigned char **pp, long length, int offset,
 		           (long)offset+(long)(op - *pp), hl, len, tag);
 
 		    GRSTasn1PrintPrintable(bp, (char*)p,
-//		                   &((*pp)[(long)offset+(long)(op - *pp)+hl]),
+/*		                   &((*pp)[(long)offset+(long)(op - *pp)+hl]), */
 		                           (len > 30) ? 30 : len);
 
 		    BIO_printf(bp, "\n");
@@ -513,8 +513,8 @@ int GRSTasn1GetX509Name(char *x509name, int maxlength, char *coords,
                                   taglist[iobj].headerlength);
 
         n = OBJ_obj2nid(obj);
-// free obj now?
-//	if (obj) free (obj);
+/* free obj now?
+	if (obj) free (obj); */
         shortname = (const unsigned char*) OBJ_nid2sn(n);
         
         if (len + 2 + strlen((char*)shortname) + taglist[istr].length >= maxlength)

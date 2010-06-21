@@ -74,7 +74,9 @@ XRDHDRS    := $(wildcard $(XROOTDDIRI)/Xrd/*.hh) $(wildcard $(XROOTDDIRI)/XrdCli
               $(wildcard $(XROOTDDIRI)/XrdSys/*.hh)
 
 ##### Xrootd headers, sources, config dependences #####
-XROOTDDEPS := $(wildcard $(XROOTDDIRI)/*/*.hh) $(wildcard $(XROOTDDIRI)/*/*.cc)
+XROOTDDEPS := $(wildcard $(XROOTDDIRI)/*/*.hh) $(wildcard $(XROOTDDIRI)/*/*.cc) \
+              $(wildcard $(XROOTDDIRI)/*/*.h) $(wildcard $(XROOTDDIRI)/*/*.c) \
+              $(wildcard $(XROOTDDIRI)/*/*/*.h) $(wildcard $(XROOTDDIRI)/*/*/*.c)
 XROOTDCFGD := $(wildcard $(XROOTDDIRD)/config/*) $(wildcard $(XROOTDDIRD)/config/test/*) \
               $(XROOTDDIRD)/configure.classic
 

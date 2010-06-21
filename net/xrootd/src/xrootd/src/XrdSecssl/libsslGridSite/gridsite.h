@@ -63,23 +63,23 @@
 #define TRUE (!FALSE)
 #endif
 
-// Everything ok (= OpenSSL X509_V_OK)
+/* Everything ok (= OpenSSL X509_V_OK) */
 #define GRST_RET_OK		0
 
-// Failed for unspecified reason
+/* Failed for unspecified reason */
 #define GRST_RET_FAILED		1000
 
-// Failed to find certificate in some cert store / directory
+/* Failed to find certificate in some cert store / directory */
 #define GRST_RET_CERT_NOT_FOUND	1001
 
-// Bad signature
+/* Bad signature */
 #define GRST_RET_BAD_SIGNATURE	1002
 
-// No such file or directory
+/* No such file or directory */
 #define GRST_RET_NO_SUCH_FILE	1003
 
 
-// #define GRSTerrorLog(GRSTerrorLevel, GRSTerrorFmt, ...) if (GRSTerrorLogFunc != NULL) (GRSTerrorLogFunc)(__FILE__, __LINE__, GRSTerrorLevel, GRSTerrorFmt, __VA_ARGS__)
+/* #define GRSTerrorLog(GRSTerrorLevel, GRSTerrorFmt, ...) if (GRSTerrorLogFunc != NULL) (GRSTerrorLogFunc)(__FILE__, __LINE__, GRSTerrorLevel, GRSTerrorFmt, __VA_ARGS__) */
 
 #define GRSTerrorLog(GRSTerrorLevel, ...) if (GRSTerrorLogFunc != NULL) (GRSTerrorLogFunc)(__FILE__, __LINE__, GRSTerrorLevel, __VA_ARGS__)
 
