@@ -332,7 +332,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    struct tm *newtime;
    time_t loctime = (time_t) fModTime;
    newtime = localtime(&loctime);
-   sprintf(tmp, "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
+   snprintf(tmp, 255, "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
            newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
            newtime->tm_min);
    fSubnames[4] = new TGString(tmp);
