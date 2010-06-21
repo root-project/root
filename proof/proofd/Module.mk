@@ -112,6 +112,7 @@ XPCONNO      := $(MODDIRS)/XrdProofConn.o $(MODDIRS)/XrdProofPhyConn.o \
 
 # Extra include paths and libs
 XPROOFDEXELIBS :=
+XPROOFDEXESYSLIBS :=
 XPROOFDEXE     :=
 ifeq ($(BUILDXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
@@ -122,7 +123,7 @@ XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
                   $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
 ifeq ($(PLATFORM),solaris)
-XPROOFDEXELIBS += -lsendfile
+XPROOFDEXESYSLIBS := -lsendfile -lCstd
 endif
 XPROOFDEXE     := bin/xproofd
 endif
@@ -153,7 +154,7 @@ $(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO)
 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(SYSLIBS)
 
 $(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD)
-		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS)
+		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS) $(XPROOFDEXESYSLIBS)
 
 $(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPROOFXD)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
