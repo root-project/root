@@ -322,14 +322,80 @@ Double_t TGeoArb8::GetTwist(Int_t iseg) const
 }   
 
 //_____________________________________________________________________________
+Double_t TGeoArb8::GetClosestEdge(Double_t *point, Double_t *vert, Int_t &isegment) const
+{
+// Get index of the edge of the quadrilater represented by vert closest to point.
+// If [P1,P2] is the closest segment and P is the point, the function returns the fraction of the
+// projection of (P1P) over (P1P2). If projection of P is not in range [P1,P2] return -1.
+   isegment = 0;
+   Int_t isegmin = 0;
+   Int_t i1, i2;
+   Double_t p1[2], p2[2];
+   Double_t lsq, ssq, dx, dy, dpx, dpy, u;
+   Double_t umin = -1.;
+   Double_t safe=1E30;
+   for (i1=0; i1<4; i1++) {
+      if (TGeoShape::IsSameWithinTolerance(safe,0)) {
+         isegment = isegmin;
+         return u;
+      }
+      i2 = (i1+1)%4;      
+      p1[0] = vert[2*i1];
+      p1[1] = vert[2*i1+1];
+      p2[0] = vert[2*i2];
+      p2[1] = vert[2*i2+1];
+      dx = p2[0] - p1[0];
+      dy = p2[1] - p1[1];
+      dpx = point[0] - p1[0];
+      dpy = point[1] - p1[1];      
+      lsq = dx*dx + dy*dy;
+      // Current segment collapsed to a point
+      if (TGeoShape::IsSameWithinTolerance(lsq,0)) {
+         ssq = dpx*dpx + dpy*dpy;
+         if (ssq < safe) {
+            safe = ssq;
+            isegmin = i1;
+            umin = -1;
+         }
+         continue;
+      }
+      // Projection fraction
+      u = (dpx*dx + dpy*dy)/lsq;
+      // If projection of P is outside P1P2 limits, take the distance from P to the closest of P1 and P2
+      if (u>1) {
+         // Outside, closer to P2
+         dpx = point[0]-p2[0];
+         dpy = point[1]-p2[1];
+         u = -1.;
+      } else {
+         if (u>=0) {
+            // Projection inside
+            dpx -= u*dx;
+            dpy -= u*dy;
+         } else {
+            // Outside, closer to P1
+            u = -1.;
+         }   
+      }
+      ssq = dpx*dpx + dpy*dpy;      
+      if (ssq < safe) {
+         safe = ssq;
+         isegmin = i1;
+         umin = u;
+      }
+   }
+   isegment = isegmin;
+//   safe = TMath::Sqrt(safe);
+   return umin;
+}   
+
+//_____________________________________________________________________________
 void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
-   Double_t safe = TGeoShape::Big();
    Double_t safc;
-   Int_t i;          // current facette index
-   Double_t x0, y0, z0, x1, y1, z1, x2, y2;
-   Double_t ax, ay, az, bx, by;
+   Double_t x0, y0, z0, x1, y1, z1, x2, y2, z2;
+   Double_t ax, ay, az, bx, by, bz;
    Double_t fn;
    safc = fDz-TMath::Abs(point[2]);
    if (safc<1E-4) {
@@ -337,40 +403,49 @@ void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
       norm[2] = (dir[2]>0)?1:(-1);
       return;
    }   
-   Double_t vert[8], lnorm[3];
+   Double_t vert[8];
    SetPlaneVertices(point[2], vert);
-   //---> compute safety for lateral planes
-   for (i=0; i<4; i++) {
-      x0 = vert[2*i];
-      y0 = vert[2*i+1];
-      z0 = point[2];
-      x1 = fXY[i+4][0];
-      y1 = fXY[i+4][1];
-      z1 = fDz;
-      ax = x1-x0;
-      ay = y1-y0;
-      az = z1-z0;
-      x2 = vert[2*((i+1)%4)];
-      y2 = vert[2*((i+1)%4)+1];
-      bx = x2-x0;
-      by = y2-y0;
-
-      lnorm[0] = -az*by;
-      lnorm[1] = az*bx;
-      lnorm[2] = ax*by-ay*bx;
-      fn = TMath::Sqrt(lnorm[0]*lnorm[0]+lnorm[1]*lnorm[1]+lnorm[2]*lnorm[2]);
-      if (fn<1E-10) continue;
-      lnorm[0] /= fn;
-      lnorm[1] /= fn;
-      lnorm[2] /= fn;
-      safc = (x0-point[0])*lnorm[0]+(y0-point[1])*lnorm[1]+(z0-point[2])*lnorm[2];
-      safc = TMath::Abs(safc);
-//      printf("plane %i : (%g, %g, %g) safe=%g\n", i, lnorm[0],lnorm[1],lnorm[2],safc);
-      if (safc<safe) {
-         safe = safc;
-         memcpy(norm,lnorm,3*sizeof(Double_t));
-      }      
-   }
+   // Get the closest edge (point should be on this edge within tolerance)
+   Int_t iseg;
+   Double_t frac = GetClosestEdge(point, vert, iseg);
+   if (frac<0) frac = 0.;
+   Int_t jseg = (iseg+1)%4;
+   x0 = vert[2*iseg];
+   y0 = vert[2*iseg+1];
+   z0 = point[2];
+   x2 = vert[2*jseg];
+   y2 = vert[2*jseg+1];
+   z2 = point[2];
+   x0 += frac*(x2-x0);
+   y0 += frac*(y2-y0);
+   x1 = fXY[iseg+4][0];
+   y1 = fXY[iseg+4][1];
+   z1 = fDz;
+   x1 += frac*(fXY[jseg+4][0]-x1);
+   y1 += frac*(fXY[jseg+4][1]-y1);
+   ax = x1-x0;
+   ay = y1-y0;
+   az = z1-z0;
+   bx = x2-x0;
+   by = y2-y0;
+   bz = z2-z0;
+   // Cross product of the vector given by the section segment (that contains the point) at z=point[2]
+   // and the vector connecting the point projection to its correspondent on the top edge (hard to swallow, isn't it?)
+   norm[0] = ay*bz-az*by;
+   norm[1] = az*bx-ax*bz;
+   norm[2] = ax*by-ay*bx;
+   fn = TMath::Sqrt(norm[0]*norm[0]+norm[1]*norm[1]+norm[2]*norm[2]);
+   // If point is on one edge, fn may be very small and the normal does not make sense - avoid divzero
+   if (fn<1E-10) {
+      norm[0] = 1.;
+      norm[1] = 0.;
+      norm[2] = 0.;
+   } else {
+      norm[0] /= fn;
+      norm[1] /= fn;
+      norm[2] /= fn;
+   }  
+   // Make sure the dot product of the normal and the direction is positive. 
    if (dir[0]*norm[0]+dir[1]*norm[1]+dir[2]*norm[2] < 0) {
       norm[0] = -norm[0];
       norm[1] = -norm[1];
