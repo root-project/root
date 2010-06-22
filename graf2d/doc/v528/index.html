@@ -195,4 +195,6 @@ the rubberband was not visible during the zooming along axis.
     <tt>.pdf[</tt>, <tt>.pad(</tt> and <tt>.pdf)</tt> to avoid the PS and PDF
     mixing when a multiple pages PDF files is generated. To work around this
     problem it was enough to specify the option "pdf" in SaveAs.
+<li> <tt>c->BuildLegend()</tt> created the legend in the current pad,
+     not in <tt>c</tt> (as it should). 
 </ul>
