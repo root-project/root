@@ -253,7 +253,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
    splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
 
    // check if already in table, if so return
-   TClassRec *r = FindElement(shortName.c_str(), kTRUE);
+   TClassRec *r = FindElementImpl(shortName.c_str(), kTRUE);
    if (r->fName) {
       if ( strcmp(r->fInfo->name(),typeid(ROOT::TForNamespace).name())==0
            && strcmp(info.name(),typeid(ROOT::TForNamespace).name())==0 ) {
@@ -315,28 +315,26 @@ void TClassTable::Remove(const char *cname)
 }
 
 //______________________________________________________________________________
-TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
+TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 {
    // Find a class by name in the class table (using hash of name). Returns
    // 0 if the class is not in the table. Unless arguments insert is true in
    // which case a new entry is created and returned.
-
-   if (!fgTable) return 0;
-
+   
    int slot = 0;
    const char *p = cname;
-
+   
    while (*p) slot = slot<<1 ^ *p++;
    if (slot < 0) slot = -slot;
    slot %= fgSize;
-
+   
    TClassRec *r;
-
+   
    for (r = fgTable[slot]; r; r = r->fNext)
-      if (!strcmp(r->fName, cname)) return r;
-
+      if (strcmp(cname,r->fName)==0) return r;
+   
    if (!insert) return 0;
-
+   
    r = new TClassRec;
    r->fName = 0;
    r->fId   = 0;
@@ -344,8 +342,25 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
    r->fInfo = 0;
    r->fNext = fgTable[slot];
    fgTable[slot] = r;
-
+   
    return r;
+}
+
+//______________________________________________________________________________
+TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
+{
+   // Find a class by name in the class table (using hash of name). Returns
+   // 0 if the class is not in the table. Unless arguments insert is true in
+   // which case a new entry is created and returned.
+   
+   if (!fgTable) return 0;
+   
+   // Only register the name without the default STL template arguments ...
+   TClassEdit::TSplitType splitname( cname, TClassEdit::kLong64 );
+   std::string shortName;
+   splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
+   
+   return FindElementImpl(shortName.c_str(), insert);
 }
 
 //______________________________________________________________________________
