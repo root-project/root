@@ -32,6 +32,14 @@
 #pragma link C++ function ROOT::Math::sph_bessel(unsigned,double);
 #pragma link C++ function ROOT::Math::sph_legendre(unsigned,unsigned,double);
 #pragma link C++ function ROOT::Math::sph_neumann(unsigned,double);
+#pragma link C++ function ROOT::Math::airy_Ai(double);
+#pragma link C++ function ROOT::Math::airy_Bi(double);
+#pragma link C++ function ROOT::Math::airy_Ai_deriv(double)
+#pragma link C++ function ROOT::Math::airy_Bi_deriv(double);
+#pragma link C++ function ROOT::Math::airy_zero_Ai(unsigned int);
+#pragma link C++ function ROOT::Math::airy_zero_Bi(unsigned int);
+#pragma link C++ function ROOT::Math::airy_zero_Ai_deriv(unsigned int)
+#pragma link C++ function ROOT::Math::airy_zero_Bi_deriv(unsigned int);
 
 // statistical functions: 
 

@@ -25,6 +25,7 @@
 //#include "gsl/gsl_sf_gamma.h"
 #include "gsl/gsl_sf_expint.h"
 #include "gsl/gsl_sf_zeta.h"
+#include "gsl/gsl_sf_airy.h"
 
 
 
@@ -357,6 +358,71 @@ double sph_neumann(unsigned n, double x) {
    return gsl_sf_bessel_yl(n, x);
    
 } 
+
+// Airy function Ai
+
+double airy_Ai(double x) {
+   
+   return gsl_sf_airy_Ai(x, GSL_PREC_DOUBLE);
+   
+} 
+
+// Airy function Bi
+
+double airy_Bi(double x) {
+   
+   return gsl_sf_airy_Bi(x, GSL_PREC_DOUBLE);
+   
+}
+
+// Derivative of the Airy function Ai
+
+double airy_Ai_deriv(double x) {
+   
+   return gsl_sf_airy_Ai_deriv(x, GSL_PREC_DOUBLE);
+   
+}
+
+// Derivative of the Airy function Bi
+
+double airy_Bi_deriv(double x) {
+   
+   return gsl_sf_airy_Bi_deriv(x, GSL_PREC_DOUBLE);
+   
+}
+
+// s-th zero of the Airy function Ai
+
+double airy_zero_Ai(unsigned int s) {
+   
+   return gsl_sf_airy_zero_Ai(s);
+   
+}
+
+// s-th zero of the Airy function Bi
+
+double airy_zero_Bi(unsigned int s) {
+   
+   return gsl_sf_airy_zero_Bi(s);
+   
+}
+
+// s-th zero of the derivative of the Airy function Ai
+
+double airy_zero_Ai_deriv(unsigned int s) {
+   
+   return gsl_sf_airy_zero_Ai_deriv(s);
+   
+}
+
+// s-th zero of the derivative of the Airy function Bi
+
+double airy_zero_Bi_deriv(unsigned int s) {
+   
+   return gsl_sf_airy_zero_Bi_deriv(s);
+   
+}
+
 
 
 } // namespace Math

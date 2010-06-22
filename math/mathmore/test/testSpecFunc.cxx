@@ -191,6 +191,21 @@ int testSpecFunc() {
 
    iret |= compare("sph_neumann(0, 1.0) ", sph_neumann(0, 1.0), -0.54030230586813972);
 
+   iret |= compare("airy_Ai(-0.5) ", airy_Ai(-0.5), 0.475728091610539583);           // wolfram alpha:  0.47572809161053958880
+
+   iret |= compare("airy_Bi(0.5) ", airy_Bi(0.5), 0.854277043103155553);             // wolfram alpha:  0.85427704310315549330
+
+   iret |= compare("airy_Ai_deriv(-2) ", airy_Ai_deriv(-2), 0.618259020741691145);   // wolfram alpha:  0.61825902074169104141
+
+   iret |= compare("airy_Bi_deriv(-3) ", airy_Bi_deriv(-3), -0.675611222685258639);  // wolfram alpha: -0.67561122268525853767
+
+   iret |= compare("airy_zero_Ai(2) ", airy_zero_Ai(2), -4.08794944413097028, 8);    // mathworld: -4.08795
+
+   iret |= compare("airy_zero_Bi(2) ", airy_zero_Bi(2), -3.27109330283635291, 8);    // mathworld: -3.27109
+
+   iret |= compare("airy_zero_Ai_deriv(2) ", airy_zero_Ai_deriv(2), -3.24819758217983656, 8);
+
+   iret |= compare("airy_zero_Bi_deriv(2) ", airy_zero_Bi_deriv(2), -4.07315508907182799, 8);
 
    if (iret != 0) { 
       std::cout << "\n\nError:  Special Functions Test FAILED !!!!!" << std::endl;

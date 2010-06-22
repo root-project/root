@@ -605,6 +605,166 @@ namespace Math {
 
   double sph_neumann(unsigned n, double x);
 
+  /**
+  
+  Calculates the Airy function Ai
+
+  \f[ Ai(x) = \frac{1}{\pi} \int\limits_{0}^{\infty} \cos(xt + t^3/3) dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/AiryFunctions.html">
+  Mathworld</A>
+  and <A HREF="http://www.nrbook.com/abramowitz_and_stegun/page_446.htm">Abramowitz&Stegun, Sect. 10.4</A>. 
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Airy-Functions.html">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+  // Airy function Ai
+
+  double airy_Ai(double x);
+
+  /**
+  
+  Calculates the Airy function Bi
+
+  \f[ Bi(x) = \frac{1}{\pi} \int\limits_{0}^{\infty} [\exp(xt-t^3/3) + \cos(xt + t^3/3)] dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/AiryFunctions.html">
+  Mathworld</A>
+  and <A HREF="http://www.nrbook.com/abramowitz_and_stegun/page_446.htm">Abramowitz&Stegun, Sect. 10.4</A>. 
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Airy-Functions.html">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+  // Airy function Bi
+
+  double airy_Bi(double x);
+
+  /**
+  
+  Calculates the derivative of the Airy function Ai
+
+  \f[ Ai(x) = \frac{1}{\pi} \int\limits_{0}^{\infty} \cos(xt + t^3/3) dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/AiryFunctions.html">
+  Mathworld</A>
+  and <A HREF="http://www.nrbook.com/abramowitz_and_stegun/page_446.htm">Abramowitz&Stegun, Sect. 10.4</A>. 
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Derivatives-of-Airy-Functions.html">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+  // Derivative of the Airy function Ai
+
+  double airy_Ai_deriv(double x);
+
+  /**
+  
+  Calculates the derivative of the Airy function Bi
+
+  \f[ Bi(x) = \frac{1}{\pi} \int\limits_{0}^{\infty} [\exp(xt-t^3/3) + \cos(xt + t^3/3)] dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/AiryFunctions.html">
+  Mathworld</A>
+  and <A HREF="http://www.nrbook.com/abramowitz_and_stegun/page_446.htm">Abramowitz&Stegun, Sect. 10.4</A>. 
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Derivatives-of-Airy-Functions.html">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+  // Derivative of the Airy function Bi
+
+  double airy_Bi_deriv(double x);
+
+  /**
+  
+  Calculates the zeroes of the Airy function Ai
+
+  \f[ Ai(x) = \frac{1}{\pi} \int\limits_{0}^{\infty} \cos(xt + t^3/3) dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/AiryFunctionZeros.html">
+  Mathworld</A>
+  and <A HREF="http://www.nrbook.com/abramowitz_and_stegun/page_446.htm">Abramowitz&Stegun, Sect. 10.4</A>. 
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Zeros-of-Airy-Functions.html">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+  // s-th zero of the Airy function Ai
+
+  double airy_zero_Ai(unsigned int s);
+
+  /**
+  
+  Calculates the zeroes of the Airy function Bi
+
+  \f[ Bi(x) = \frac{1}{\pi} \int\limits_{0}^{\infty} [\exp(xt-t^3/3) + \cos(xt + t^3/3)] dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/AiryFunctionZeros.html">
+  Mathworld</A>
+  and <A HREF="http://www.nrbook.com/abramowitz_and_stegun/page_446.htm">Abramowitz&Stegun, Sect. 10.4</A>. 
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Zeros-of-Airy-Functions.html">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+  // s-th zero of the Airy function Bi
+
+  double airy_zero_Bi(unsigned int s);
+
+  /**
+  
+  Calculates the zeroes of the derivative of the Airy function Ai
+
+  \f[ Ai(x) = \frac{1}{\pi} \int\limits_{0}^{\infty} \cos(xt + t^3/3) dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/AiryFunctionZeros.html">
+  Mathworld</A>
+  and <A HREF="http://www.nrbook.com/abramowitz_and_stegun/page_446.htm">Abramowitz&Stegun, Sect. 10.4</A>. 
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Zeros-of-Derivatives-of-Airy-Functions.html">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+  // s-th zero of the derivative of the Airy function Ai
+
+  double airy_zero_Ai_deriv(unsigned int s);
+
+  /**
+  
+  Calculates the zeroes of the derivative of the Airy function Bi
+
+  \f[ Bi(x) = \frac{1}{\pi} \int\limits_{0}^{\infty} [\exp(xt-t^3/3) + \cos(xt + t^3/3)] dt \f]
+
+  For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/AiryFunctionZeros.html">
+  Mathworld</A>
+  and <A HREF="http://www.nrbook.com/abramowitz_and_stegun/page_446.htm">Abramowitz&Stegun, Sect. 10.4</A>. 
+  The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Zeros-of-Derivatives-of-Airy-Functions.html">GSL</A>.
+
+  @ingroup SpecFunc
+
+  */
+  // s-th zero of the derivative of the Airy function Bi
+
+  double airy_zero_Bi_deriv(unsigned int s);
+
 
 
 } // namespace Math
