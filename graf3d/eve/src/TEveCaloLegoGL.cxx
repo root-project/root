@@ -572,6 +572,9 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
 {
    // Draw XY axis.
 
+   if (fM->GetData()->Empty())
+      fAxisPainter.SetTMNDim(1);
+
    TGLCamera& cam  = rnrCtx.RefCamera();
 
    TAxis ax;
@@ -637,6 +640,8 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    glTranslatef(fM->GetEtaMin(), 0, 0);
    fAxisPainter.PaintAxis(rnrCtx, &ax);
    glPopMatrix();
+
+   fAxisPainter.SetTMNDim(2); 
 }
 
 //______________________________________________________________________________
@@ -900,6 +905,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
    Float_t bws    = -1; //smallest bin
    Float_t logMax = -1;
 
+   Float_t baseOffset = fM->GetFixedHeightValIn2DMode()*fMaxVal;
+
    if (fM->f2DMode == TEveCaloLego::kValColor)
    {
       fM->AssertPalette();
@@ -909,14 +916,14 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
       {
          if (rnrCtx.SecSelection()) glLoadName(i->fId);
          glBegin(GL_POLYGON);
-         Float_t val = i->fSumVal;
-         fM->fPalette->ColorFromValue(TMath::FloorNint(val), col);
+         fM->fPalette->ColorFromValue(TMath::FloorNint(i->fSumVal), col);
          col[3] = fM->GetData()->GetSliceTransparency(i->fMaxSlice);
          TGLUtil::Color4ubv(col);
-         glVertex3f(i->fX0, i->fY0, val);
-         glVertex3f(i->fX1, i->fY0, val);
-         glVertex3f(i->fX1, i->fY1, val);
-         glVertex3f(i->fX0, i->fY1, val);
+         Float_t z = fM->GetHasFixedHeightIn2DMode() ? baseOffset : i->fSumVal;
+         glVertex3f(i->fX0, i->fY0, z);
+         glVertex3f(i->fX1, i->fY0, z);
+         glVertex3f(i->fX1, i->fY1, z);
+         glVertex3f(i->fX0, i->fY1, z);
          glEnd();
       }
    }
@@ -946,10 +953,11 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             glPushName(i->fId);
 
             glBegin(GL_QUADS);
-            glVertex3f(i->fX0, i->fY0,  i->fSumVal);
-            glVertex3f(i->fX1, i->fY0,  i->fSumVal);
-            glVertex3f(i->fX1, i->fY1,  i->fSumVal);
-            glVertex3f(i->fX0, i->fY1,  i->fSumVal);
+            Float_t z = fM->GetHasFixedHeightIn2DMode() ? baseOffset : i->fSumVal;
+            glVertex3f(i->fX0, i->fY0, z);
+            glVertex3f(i->fX1, i->fY0, z);
+            glVertex3f(i->fX1, i->fY1, z);
+            glVertex3f(i->fX0, i->fY1, z);
             glEnd();
 
             glPopName();
@@ -963,7 +971,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             for (vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i)
             {
                TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), fM->fData->GetSliceTransparency(i->fMaxSlice));
-               glVertex3f(i->X(), i->Y() , i->fSumVal);
+               Float_t z = fM->GetHasFixedHeightIn2DMode() ? baseOffset : i->fSumVal;
+               glVertex3f(i->X(), i->Y() , z);
             }
             glEnd();
          }
@@ -975,10 +984,11 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             Float_t bw = fValToPixel*TMath::Log10(i->fSumVal+1);
             x = i->X();
             y = i->Y();
-            glVertex3f(x - bw, y - bw, i->fSumVal);
-            glVertex3f(x + bw, y - bw, i->fSumVal);
-            glVertex3f(x + bw, y + bw, i->fSumVal);
-            glVertex3f(x - bw, y + bw, i->fSumVal);
+            Float_t z = fM->GetHasFixedHeightIn2DMode() ? baseOffset : i->fSumVal;
+            glVertex3f(x - bw, y - bw, z);
+            glVertex3f(x + bw, y - bw, z);
+            glVertex3f(x + bw, y + bw, z);
+            glVertex3f(x - bw, y + bw, z);
          }
          glEnd();
 
@@ -986,12 +996,13 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          { 
             glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
             Float_t z    = 0;
-            Float_t zOff = fDataMax*0.1 ;
+            Float_t zOff = fDataMax*0.001 ; // avoid polygon stpiling
             glBegin(GL_QUADS);
             for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
                Char_t transp = TMath::Min(100, 80 + fM->fData->GetSliceTransparency(i->fMaxSlice) / 5);
                TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), transp);
-               z = i->fSumVal - zOff;
+               z = fM->GetHasFixedHeightIn2DMode() ? baseOffset : i->fSumVal;
+               z -=  zOff;
                glVertex3f(i->fX0, i->fY0, z);
                glVertex3f(i->fX1, i->fY0, z);
                glVertex3f(i->fX1, i->fY1, z);
@@ -1003,7 +1014,8 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
             glBegin(GL_QUADS);
             for ( vCell2D_i i = cells2D.begin(); i != cells2D.end(); ++i) {
                TGLUtil::ColorTransparency(fM->fData->GetSliceColor(i->fMaxSlice), 60);
-               z = i->fSumVal + zOff;
+               z = fM->GetHasFixedHeightIn2DMode() ? baseOffset : i->fSumVal;
+               z +=  zOff;
                glVertex3f(i->fX0, i->fY0, z);
                glVertex3f(i->fX1, i->fY0, z);
                glVertex3f(i->fX1, i->fY1, z);
@@ -1060,7 +1072,8 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*
    Double_t unit = ((eM - em) < (pM - pm)) ? (eM - em) : (pM - pm);
    Float_t sx = (eM - em) / fM->GetEtaRng();
    Float_t sy = (pM - pm) / fM->GetPhiRng();
-   glScalef(sx / unit, sy / unit, fM->GetValToHeight());
+   Float_t sz = (fM->fData->Empty() && (fM->GetScaleAbs() == false)) ? 1 : fM->GetMaxTowerH() / fDataMax;
+   glScalef(sx / unit, sy / unit, sz);
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
 
    glDisable(GL_LIGHTING);
@@ -1277,9 +1290,9 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    glPushMatrix();
    Float_t sx = (eM - em) / fM->GetEtaRng();
    Float_t sy = (pM - pm) / fM->GetPhiRng();
-   glScalef(sx / unit, sy / unit, fM->GetValToHeight());
+   Float_t sz = (fM->fData->Empty() && (fM->GetScaleAbs() == false)) ? 1 : fM->GetMaxTowerH() / fDataMax;
+   glScalef(sx / unit, sy / unit, sz);
    glTranslatef(-fM->GetEta(), -fM->fPhi, 0);
-
 
    fFontColor = fM->fFontColor;
    fGridColor = fM->fGridColor;

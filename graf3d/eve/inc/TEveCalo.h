@@ -262,6 +262,9 @@ protected:
    Bool_t                  fDrawHPlane;
    Float_t                 fHPlaneVal;
 
+   Bool_t                  fHasFixedHeightIn2DMode;
+   Float_t                 fFixedHeightValIn2DMode; // 1% of whole height
+
    Int_t                   fDrawNumberCellPixels;
    Int_t                   fCellPixelFontSize;
 
@@ -298,11 +301,17 @@ public:
    Bool_t   GetNormalizeRebin() const { return fNormalizeRebin; }
    void     SetNormalizeRebin(Bool_t s) { fNormalizeRebin = s; fCellIdCacheOK=kFALSE;}
 
+   EProjection_e  GetProjection() const { return fProjection; }
    void           SetProjection(EProjection_e p) { fProjection = p; }
-   EProjection_e  GetProjection() { return fProjection; }
 
    void       Set2DMode(E2DMode_e p) { f2DMode = p; }
    E2DMode_e  Get2DMode() { return f2DMode; }
+
+   bool       GetHasFixedHeightIn2DMode() const { return fHasFixedHeightIn2DMode; }
+   void       SetHasFixedHeightIn2DMode(bool x) { fHasFixedHeightIn2DMode = x; }
+
+   float      GetFixedHeightValIn2DMode() const  { return fFixedHeightValIn2DMode; }
+   void       SetFixedHeightValIn2DMode(float x) { fFixedHeightValIn2DMode = x; }
 
    void        SetBoxMode(EBoxMode_e p) { fBoxMode = p; }
    EBoxMode_e  GetBoxMode() { return fBoxMode; }

@@ -778,6 +778,9 @@ TEveCaloLego::TEveCaloLego(TEveCaloData* d, const char* n, const char* t):
    fDrawHPlane(kFALSE),
    fHPlaneVal(0),
 
+   fHasFixedHeightIn2DMode(kFALSE),
+   fFixedHeightValIn2DMode(0.f),
+
    fDrawNumberCellPixels(18), // draw numbers on cell above 30 pixels
    fCellPixelFontSize(12) // size of cell fonts in pixels
 {
