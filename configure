@@ -5395,6 +5395,9 @@ fi
 if test -d math/unuran/src/unuran-1.5.1-root ; then
    rm -rf math/unuran/src/unuran-1.5.1-root
 fi
+if test -d math/unuran/src/unuran-1.7.1-root ; then
+   rm -rf math/unuran/src/unuran-1.7.1-root
+fi
 if test -d cint/cint7 ; then
    rm -rf cint/cint7
 fi
