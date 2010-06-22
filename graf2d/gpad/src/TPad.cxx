@@ -455,8 +455,15 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          }
       }
    }
-   if (leg) leg->Draw();
-   else Info("BuildLegend(void)","No object to build a TLegend.");
+   if (leg) {
+      TVirtualPad *gpadsave;
+      gpadsave = gPad;
+      this->cd();
+      leg->Draw();
+      gpadsave->cd();
+   } else {
+      Info("BuildLegend(void)","No object to build a TLegend.");
+   }
    return leg;
 }
 
