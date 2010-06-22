@@ -500,7 +500,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    fNdim       = 1;
 
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
+   gROOT->GetListOfFunctions()->Remove(f1old);
    SetName(name);
 
    if (gStyle) {
@@ -589,7 +589,7 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
    fNdim       = 1;
 
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
+   gROOT->GetListOfFunctions()->Remove(f1old);
    SetName(name);
 
    if (gStyle) {
@@ -678,7 +678,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 
    // Store formula in linked list of formula in ROOT
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
+   gROOT->GetListOfFunctions()->Remove(f1old);
    SetName(name);
    gROOT->GetListOfFunctions()->Add(this);
 
@@ -750,7 +750,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 
    // Store formula in linked list of formula in ROOT
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
+   gROOT->GetListOfFunctions()->Remove(f1old);
    SetName(name);
    gROOT->GetListOfFunctions()->Add(this);
 
@@ -836,7 +836,7 @@ void TF1::CreateFromFunctor(const char *name, Int_t npar)
 
    // Store formula in linked list of formula in ROOT
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
+   gROOT->GetListOfFunctions()->Remove(f1old);
    SetName(name);
    gROOT->GetListOfFunctions()->Add(this);
 
@@ -942,7 +942,7 @@ void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_
    fNdim       = 1;
 
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   if (f1old) delete f1old;
+   gROOT->GetListOfFunctions()->Remove(f1old);
    SetName(name);
 
    if (gStyle) {
