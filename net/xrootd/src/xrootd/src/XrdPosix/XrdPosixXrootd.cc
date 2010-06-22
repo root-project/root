@@ -750,7 +750,7 @@ do{if ((fd = dup(devNull)) < 0) return -1;
 // Open the file
 //
    if (!fp->XClient->Open(XMode, XOflags, (cbP ? 1 : pllOpen))
-   || !cbP && (fp->XClient->LastServerResp()->status != kXR_ok))
+   || (!cbP && (fp->XClient->LastServerResp()->status != kXR_ok)))
       {retc = Fault(fp, 0);
        myMutex.Lock();
        myFiles[fd] = 0;
