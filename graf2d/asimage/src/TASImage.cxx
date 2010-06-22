@@ -1103,8 +1103,8 @@ void TASImage::Draw(Option_t *option)
    if (opt.Contains("n") || !gPad || !gPad->IsEditable()) {
       Int_t w = -64;
       Int_t h = 64;
-      w = (fImage->width > 64) ? fImage->width : w;
-      h = (fImage->height > 64) ? fImage->height : h;
+      w = (fImage->width > 64) ? (Int_t)fImage->width : w;
+      h = (fImage->height > 64) ? (Int_t)fImage->height : h;
 
       Float_t cx = 1./gStyle->GetScreenFactor();
       w = Int_t(w*cx) + 4;
@@ -3638,8 +3638,8 @@ void TASImage::FillRectangleInternal(UInt_t col, Int_t x, Int_t y, UInt_t width,
 
    Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
 
-   x = x > (int)fImage->width ? fImage->width : x;
-   y = y > (int)fImage->height ? fImage->height : y;
+   x = x > (int)fImage->width ? (Int_t)fImage->width : x;
+   y = y > (int)fImage->height ? (Int_t)fImage->height : y;
 
    width = x + width > fImage->width ? fImage->width - x : width;
    height = y + height > fImage->height ? fImage->height - y : height;
