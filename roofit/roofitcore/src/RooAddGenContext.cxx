@@ -215,7 +215,8 @@ void RooAddGenContext::updateThresholds()
   } else {
     RooAddPdf* apdf = (RooAddPdf*) _pdf ;
 
-    RooAddPdf::CacheElem* cache = apdf->getProjCache(_vars) ;
+    //cout << "Now calling getProjCache()" << endl ;
+    RooAddPdf::CacheElem* cache = apdf->getProjCache(_vars,0,"FULL_RANGE_ADDGENCONTEXT") ;
     apdf->updateCoefficients(*cache,_vars) ;
 
     _coefThresh[0] = 0. ;
@@ -223,6 +224,7 @@ void RooAddGenContext::updateThresholds()
     for (i=0 ; i<_nComp ; i++) {
       _coefThresh[i+1] = apdf->_coefCache[i] ;
       _coefThresh[i+1] += _coefThresh[i] ;
+//       cout << "RooAddGenContext::updateThresholds(" << GetName() << ") _coefThresh[" << i+1 << "] = " << _coefThresh[i+1] << endl ;
     }
     
   }

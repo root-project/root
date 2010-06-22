@@ -9,6 +9,7 @@
 #pragma link C++ namespace RooFit ;
 #endif
 #pragma link C++ namespace RooFitShortHand ;
+#pragma link C++ class RooGlobalFunc;
 #pragma link C++ class RooDouble+ ;
 #pragma link C++ class RooEffGenContext+ ;
 #pragma link C++ class RooEllipse+ ;

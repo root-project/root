@@ -24,6 +24,7 @@
 #include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
+#include <vector>
 
 typedef RooArgList* pRooArgList ;
 typedef RooLinkedList* pRooLinkedList ;
@@ -60,7 +61,7 @@ public:
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Bool_t selfNormalized() const { return kTRUE ; }
+  virtual Bool_t selfNormalized() const { return _selfNorm ; }
 
   virtual ExtendMode extendMode() const ;
   virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
@@ -80,8 +81,16 @@ public:
 
   void printMetaArgs(ostream& os) const ;
 
+  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
+  void fixRefRange(const char* rangeName) ;
 
+  void setSelfNormalized(Bool_t flag) { _selfNorm = flag ; }
+  void setDefNormSet(const RooArgSet& nset) { _defNormSet.removeAll() ; _defNormSet.addClone(nset) ; }
+  
 protected:
+
+
+  RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
   virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, Bool_t stripDisconnected) const ;
 
@@ -96,29 +105,42 @@ protected:
                          const RooLinkedList& terms, const RooLinkedList& norms, 
                          const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& cross) const ;
   
-  Double_t calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const ;
 	
 	
   void getPartIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& partList, pRooLinkedList& nsetList, 
                       Int_t& code, const char* isetRangeName=0) const ;
-  RooAbsReal* processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
-                                 const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet, 
-                                 Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
+  
+  std::vector<RooAbsReal*> processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
+					      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet, 
+					      Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
 
 
   // The cache object
   class CacheElem : public RooAbsCacheElement {
   public:
+    CacheElem() : _isRearranged(kFALSE), _rearrangedNum(0), _rearrangedDen(0) {} 
     virtual ~CacheElem() ;
     // Payload
     RooArgList _partList ;
+    RooArgList _numList ;
+    RooArgList _denList ;
     RooArgList _ownedList ;
     RooLinkedList _normList ;    
+    Bool_t _isRearranged ;
+    RooAbsReal* _rearrangedNum ;
+    RooAbsReal* _rearrangedDen ;
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
   } ;
   mutable RooObjCacheManager _cacheMgr ; // The cache manager
+
+  void rearrangeProduct(CacheElem&) const;
+  RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
+  RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
+  Double_t calculate(const RooProdPdf::CacheElem& cache, Bool_t verbose=kFALSE) const ;
+  Double_t calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const ;
+
  
   friend class RooProdGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
@@ -137,10 +159,15 @@ protected:
 
   void useDefaultGen(Bool_t flag=kTRUE) { _useDefaultGen = flag ; }
   Bool_t _useDefaultGen ; // Use default or distributed event generator
+
+  mutable TNamed* _refRangeName ; // Reference range name for interpretation of conditional products
+
+  Bool_t _selfNorm ; // Is self-normalized
+  RooArgSet _defNormSet ; // Default normalization set
   
 private:
 
-  ClassDef(RooProdPdf,1) // PDF representing a product of PDFs
+  ClassDef(RooProdPdf,4) // PDF representing a product of PDFs
 };
 
 

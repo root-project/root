@@ -310,4 +310,6 @@ RooConstVar& C(Double_t value) ;
 
 } // End namespace ShortHand
 
+class RooGlobalFunc {};
+
 #endif

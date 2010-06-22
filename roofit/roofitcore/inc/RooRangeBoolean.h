@@ -13,22 +13,37 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_CINT_UTILS
-#define ROO_CINT_UTILS
+#ifndef ROO_RANGE_BOOLEAN
+#define ROO_RANGE_BOOLEAN
 
-#include "Rtypes.h"
+#include "RooAbsReal.h"
+#include "RooRealProxy.h"
+#include "TString.h"
+
+class RooRealVar;
+class RooArgList ;
 #include <list>
-#include <string>
-namespace RooCintUtils {
-  
-  std::pair<std::list<std::string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArgs=0) ;
-  Bool_t isEnum(const char* typeName) ;
-  Bool_t isValidEnumValue(const char* typeName, const char* value) ;
-  const char* functionName(void* func) ;
-  Bool_t matchFuncPtrArgs(void* func, const char* args) ;
-  Bool_t isTypeDef(const char* trueName, const char* aliasName) ;
-  std::string trueName(const char* typeDefName) ;
-  
+
+class RooRangeBoolean : public RooAbsReal {
+public:
+
+  RooRangeBoolean() ;
+  RooRangeBoolean(const char* name, const char* title, RooAbsRealLValue& x, const char* rangeName) ;
+  RooRangeBoolean(const RooRangeBoolean& other, const char* name = 0);
+  virtual TObject* clone(const char* newname) const { return new RooRangeBoolean(*this, newname); }
+  virtual ~RooRangeBoolean() ;
+
+
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
+
+protected:
+
+  RooRealProxy _x;
+  TString _rangeName ;
+
+  Double_t evaluate() const;
+
+  ClassDef(RooRangeBoolean,1) // Polynomial function
 };
 
 #endif

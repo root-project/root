@@ -96,6 +96,11 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   } else {
     _expectedEvents= 0 ;
   }
+
+  // Save normalization range
+  if (model.normRange()) {
+    _normRange = model.normRange() ;
+  }
 }
 
 
@@ -213,6 +218,12 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents)
 
     // delegate the generation of the rest of this event to our subclass implementation
     generateEvent(*_theEvent, nEvents - _genData->numEntries());
+
+
+    // WVE add check that event is in normRange
+    if (_normRange.Length()>0 && !_theEvent->isInRange(_normRange.Data())) {
+      continue ;
+    }      
 
     _genData->addFast(*_theEvent);
     evt++ ;

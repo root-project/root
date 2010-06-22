@@ -48,7 +48,7 @@ ClassImp(RooAbsNumGenerator)
 
 //_____________________________________________________________________________
 RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose, const RooAbsReal* maxFuncVal) :
-  TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose)
+  TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
 {
   // Initialize an accept-reject generator for the specified distribution function,
   // which must be non-negative but does not need to be normalized over the

@@ -26,6 +26,7 @@
 #include "RooCmdArg.h"
 #include "RooGlobalFunc.h"
 class RooAbsArg ;
+class RooWorkspace ;
 
 // Shortcut definitions 
 #define coutI(a) RooMsgService::instance().log(this,RooFit::INFO,RooFit::a) 
@@ -182,6 +183,10 @@ public:
 
   void saveState() ; 
   void restoreState() ;
+  
+  RooWorkspace* debugWorkspace() ;
+
+  Int_t& debugCode() { return _debugCode ; }
 
 protected:
 
@@ -206,6 +211,10 @@ protected:
   RooMsgService(const RooMsgService&) ;
 
   static RooMsgService* _instance ;
+
+  RooWorkspace* _debugWorkspace ;
+
+  Int_t _debugCode ;
   
   ClassDef(RooMsgService,0) // RooFit Message Service Singleton class
 };

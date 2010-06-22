@@ -50,6 +50,10 @@ public:
   const RooArgSet& numIntRealVars() const { return _intList ; }
   const RooArgSet& anaIntVars() const { return _anaList ; }
 
+  RooArgSet intVars() const { RooArgSet tmp(_sumList) ; tmp.add(_intList) ; tmp.add(_anaList) ; tmp.add(_facList) ; return tmp ; }
+  const char* intRange() { return _rangeName ? _rangeName->GetName() : 0 ; }
+  const RooAbsReal& integrand() const { return _function.arg() ; }
+
   void setCacheNumeric(Bool_t flag) { 
     // If true, value of this interal is cached if it is (partially numeric)
     _cacheNum = flag ;

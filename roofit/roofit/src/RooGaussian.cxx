@@ -73,6 +73,7 @@ Double_t RooGaussian::evaluate() const
 Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;
+  if (matchArgs(allVars,analVars,mean)) return 2 ;
   return 0 ;
 }
 
@@ -81,16 +82,20 @@ Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 //_____________________________________________________________________________
 Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  assert(code==1) ;
-
+  assert(code==1 || code==2) ;
 
   static const Double_t root2 = sqrt(2.) ;
   static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
-  
   Double_t xscale = root2*sigma;
-  Double_t ret = rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
-
-  //cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
+  Double_t ret = 0;
+  if(code==1){  
+    ret = rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
+    //cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
+  } else if(code==2) {
+    ret = rootPiBy2*sigma*(RooMath::erf((mean.max(rangeName)-mean)/xscale)-RooMath::erf((mean.min(rangeName)-mean)/xscale));
+  } else{
+    cout << "Error in RooGaussian::analyticalIntegral" << endl;
+  }
   return ret ;
 
 }
@@ -102,6 +107,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
 Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;  
+  if (matchArgs(directVars,generateVars,mean)) return 2 ;  
   return 0 ;
 }
 
@@ -110,15 +116,28 @@ Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generate
 //_____________________________________________________________________________
 void RooGaussian::generateEvent(Int_t code)
 {
-  assert(code==1) ;
+  assert(code==1 || code==2) ;
   Double_t xgen ;
-  while(1) {    
-    xgen = RooRandom::randomGenerator()->Gaus(mean,sigma);
-    if (xgen<x.max() && xgen>x.min()) {
-      x = xgen ;
-      break;
+  if(code==1){
+    while(1) {    
+      xgen = RooRandom::randomGenerator()->Gaus(mean,sigma);
+      if (xgen<x.max() && xgen>x.min()) {
+	x = xgen ;
+	break;
+      }
     }
+  } else if(code==2){
+    while(1) {    
+      xgen = RooRandom::randomGenerator()->Gaus(x,sigma);
+      if (xgen<mean.max() && xgen>mean.min()) {
+	mean = xgen ;
+	break;
+      }
+    }
+  } else {
+    cout << "error in RooGaussian generateEvent"<< endl;
   }
+
   return;
 }
 

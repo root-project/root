@@ -297,12 +297,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   sIter = function.serverIterator() ;
   while((arg=(RooAbsArg*)sIter->Next())) {
 
-//       cout << "considering server" << arg->GetName() << endl ;
+    //cout << "considering server" << arg->GetName() << endl ;
 
     // Dependent or parameter?
     if (!arg->dependsOnValue(intDepList)) {
 
-//        cout << " server does not depend on observables, adding server as value server to integral" << endl ;
+      //cout << " server does not depend on observables, adding server as value server to integral" << endl ;
 
       if (function.dependsOnValue(*arg)) {
 	addServer(*arg,kTRUE,kFALSE) ;
@@ -316,12 +316,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       RooArgSet argLeafServers ;
       arg->leafNodeServerList(&argLeafServers,0,kFALSE) ;
 
-//       arg->printCompactTree() ;
-//       cout << "leaf nodes of server are " << argLeafServers << " depList = " << depList << endl ;
+      //arg->printCompactTree() ;
+      //cout << "leaf nodes of server are " << argLeafServers << " depList = " << depList << endl ;
 
       // Skip arg if it is neither value or shape server
       if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
-// 	cout << " server is neither value not shape server of function, ignoring" << endl ;
+	//cout << " server is neither value not shape server of function, ignoring" << endl ;
 	continue ;
       }
       
@@ -329,7 +329,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       RooAbsArg* leaf ;
       while((leaf=(RooAbsArg*)lIter->Next())) {
 
-//  	cout << " considering leafnode " << leaf->GetName() << " of server " << arg->GetName() << endl ;
+  	//cout << " considering leafnode " << leaf->GetName() << " of server " << arg->GetName() << endl ;
 
 	if (depList.find(leaf->GetName()) && function.dependsOnValue(*leaf)) {
 
@@ -345,9 +345,14 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 	  }
 	} else if (!depList.find(leaf->GetName())) {
 
-	  oocxcoutD(&function,Integration) << function.GetName() << ": Adding parameter " << leaf->GetName() << " of server " << arg->GetName() << " as value dependent" << endl ;
-	  addServer(*leaf,kTRUE,kFALSE) ;
-	}	
+	  if (function.dependsOnValue(*leaf)) {
+	    oocxcoutD(&function,Integration) << function.GetName() << ": Adding parameter " << leaf->GetName() << " of server " << arg->GetName() << " as value dependent" << endl ;
+	    addServer(*leaf,kTRUE,kFALSE) ;
+	  } else {
+	    oocxcoutD(&function,Integration) << function.GetName() << ": Adding parameter " << leaf->GetName() << " of server " << arg->GetName() << " as shape dependent" << endl ;
+	    addServer(*leaf,kFALSE,kTRUE) ;
+	  }
+	} 	
       }
       delete lIter ;
     }
@@ -363,7 +368,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 //        cout << "realArgLV = " << realArgLV << " intDepList = " << intDepList << endl ;
       if ((realArgLV && intDepList.find(realArgLV->GetName()) && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {	
 
-//  	cout  << " arg " << arg->GetName() << " is derived LValue with valid jacobian" << endl ;
+ 	//cout  << " arg " << arg->GetName() << " is derived LValue with valid jacobian" << endl ;
 
 	// Derived LValue with valid jacobian
 	depOK = kTRUE ;
@@ -377,13 +382,13 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 	  if (arg==otherArg) continue ;
 	  if (otherArg->IsA()==RooConstVar::Class()) continue ;
 	  if (arg->overlaps(*otherArg,kTRUE)) {
-//  	    cout << "arg " << arg->GetName() << " overlaps with " << otherArg->GetName() << endl ;
+ 	    //cout << "arg " << arg->GetName() << " overlaps with " << otherArg->GetName() << endl ;
 	    //overlapOK=kFALSE ;
 	  }
 	}      	
 	if (!overlapOK) depOK=kFALSE ;      
 
-//  	cout << "overlap check returns OK=" << (depOK?"T":"F") << endl ;
+ 	//cout << "overlap check returns OK=" << (depOK?"T":"F") << endl ;
 
 	delete sIter2 ;
       }
@@ -552,6 +557,8 @@ void RooRealIntegral::autoSelectDirtyMode()
   // Set appropriate cache operation mode for integral depending on cache operation
   // mode of server objects
 
+  //cout << "RooRealIntegral::autoSelectDirtyMode(" << GetName() << ")" << endl ;
+
   // If any of our servers are is forcedDirty or a projectedDependent, then we need to be ADirty
   TIterator* siter = serverIterator() ;  
   RooAbsArg* server ;
@@ -562,10 +569,14 @@ void RooRealIntegral::autoSelectDirtyMode()
     RooAbsArg* leaf ;
     while((leaf=(RooAbsArg*)liter->Next())) {
       if (leaf->operMode()==ADirty && leaf->isValueServer(*this)) {      
+	//cout << "RooRealIntegral::autoSelectDirtyMode(" << GetName() << ") selecting ADirty mode because value server leaf " 
+	//     << leaf->GetName() << " is also " << endl ;
 	setOperMode(ADirty) ;
 	break ;
       }
       if (leaf->getAttribute("projectedDependent")) {
+	//cout << "RooRealIntegral::autoSelectDirtyMode(" << GetName() << ") selecting ADirty mode because leaf " 
+	//    << leaf->GetName() << " is projectedDependent " << endl ;
 	setOperMode(ADirty) ;
 	break ;
       }
@@ -708,7 +719,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _numIntegrand(0),
   _rangeName(other._rangeName),
   _params(0),
-  _cacheNum(other._cacheNum)
+  _cacheNum(kFALSE)
 {
   // Copy constructor
 
@@ -740,7 +751,6 @@ RooRealIntegral::~RooRealIntegral()
   delete _facListIter ;
   delete _jacListIter ;
   if (_sumCatIter)  delete _sumCatIter ;
-  if (_params) delete _params ; 
 }
 
 
@@ -758,17 +768,24 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
   isetAll.add(_facList) ;
 
   const RooArgSet* newNormSet(0) ;
+  RooArgSet* tmp(0) ;
   if (nset && !_funcNormSet) {
     newNormSet = nset ;
   } else if (!nset && _funcNormSet) {
     newNormSet = _funcNormSet ;
   } else if (nset && _funcNormSet) {
-    RooArgSet* tmp = new RooArgSet ;
+    tmp = new RooArgSet ;
     tmp->add(*nset) ;
     tmp->add(*_funcNormSet,kTRUE) ;
     newNormSet = tmp ;
   } 
-  return _function.arg().createIntegral(isetAll,newNormSet,cfg,rangeName) ;
+  RooAbsReal* ret =  _function.arg().createIntegral(isetAll,newNormSet,cfg,rangeName) ;
+
+  if (tmp) {
+    delete tmp ;
+  }
+
+  return ret ;
 }
 
 
@@ -836,6 +853,8 @@ Double_t RooRealIntegral::evaluate() const
       cxcoutD(Tracing) << "RooRealIntegral::evaluate_analytic(" << GetName() 
 		       << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
 		       << " raw = " << retVal << " _funcNormSet = " << (_funcNormSet?*_funcNormSet:RooArgSet()) << endl ;
+
+      
       break ;
     }
 
@@ -877,7 +896,6 @@ Double_t RooRealIntegral::evaluate() const
     }
 
     ccxcoutD(Tracing) << "raw*fact = " << retVal << endl ;
-
   }
 
   //   cout << "RooRealIntegral::evaluate(" << GetName() << ") value = " << retVal << endl ;
@@ -953,7 +971,7 @@ Double_t RooRealIntegral::integrate() const
     return ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) ;
   }
   else {
-    return _numIntEngine->calculate() ;
+    return _numIntEngine->calculate()  ;
   }
 }
 
@@ -1011,6 +1029,10 @@ void RooRealIntegral::operModeHook()
 {
   // Dummy
   if (_operMode==ADirty) {    
+//     cout << "RooRealIntegral::operModeHook(" << GetName() << " warning: mode set to ADirty" << endl ;
+//     if (TString(GetName()).Contains("FULL")) {
+//       cout << "blah" << endl ;
+//     }
   }
 }
 
@@ -1031,7 +1053,11 @@ void RooRealIntegral::printMetaArgs(ostream& os) const
   // Customized printing of arguments of a RooRealIntegral to more intuitively reflect the contents of the
   // integration operation
 
-  os << "Int " << _function.arg().GetName() ;
+
+  if (intVars().getSize()!=0) {
+    os << "Int " ;
+  }
+  os << _function.arg().GetName() ;
   if (_funcNormSet) {
     os << "_Norm" ;
     os << *_funcNormSet ;

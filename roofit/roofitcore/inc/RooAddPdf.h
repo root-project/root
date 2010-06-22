@@ -23,6 +23,7 @@
 #include "RooNameSet.h"
 #include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
+#include "RooNameReg.h"
 
 class RooAddPdf : public RooAbsPdf {
 public:
@@ -72,9 +73,12 @@ public:
     return _coefList ; 
   }
 
-  void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
+  void fixCoefNormalization(const RooArgSet& refCoefNorm) ;  
   void fixCoefRange(const char* rangeName) ;
   
+  const RooArgSet& getCoefNormalization() const { return _refCoefNorm ; }
+  const char* getCoefRange() const { return _refCoefRangeName?RooNameReg::str(_refCoefRangeName):"" ; }
+
   virtual void resetErrorCounters(Int_t resetValue=10) ;
 
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 

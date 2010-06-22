@@ -64,7 +64,7 @@ public:
   Bool_t _verboseServer ;
   Bool_t _inlineMode ;
   mutable Bool_t _forceCalc ;
-  mutable Bool_t _remoteEvalErrorLoggingState ;
+  mutable RooAbsReal::ErrorLoggingMode _remoteEvalErrorLoggingState ;
   Int_t  _pid ;            // PID of child process
 
   Int_t _pipeToClient[2] ; // Pipe to client process

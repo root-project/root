@@ -304,10 +304,10 @@ Int_t RooMinuit::migrad()
 
   synchronize(_verbose) ;
   profileStart() ;
-  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("MIGRAD",arglist,2);
-  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -334,10 +334,10 @@ Int_t RooMinuit::hesse()
 
   synchronize(_verbose) ;
   profileStart() ;
-  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("HESSE",arglist,1);
-  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -364,10 +364,10 @@ Int_t RooMinuit::minos()
 
   synchronize(_verbose) ;
   profileStart() ;
-  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1);
-  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -410,10 +410,10 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
 
   synchronize(_verbose) ;
   profileStart() ;
-  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1+nMinosPar);
-  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
 
@@ -442,10 +442,10 @@ Int_t RooMinuit::seek()
 
   synchronize(_verbose) ;
   profileStart() ;
-  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("SEEK",arglist,1);
-  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -473,10 +473,10 @@ Int_t RooMinuit::simplex()
 
   synchronize(_verbose) ;
   profileStart() ;
-  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("SIMPLEX",arglist,2);
-  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -503,10 +503,10 @@ Int_t RooMinuit::improve()
 
   synchronize(_verbose) ;
   profileStart() ;
-  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;  
   _status= _theFitter->ExecuteCommand("IMPROVE",arglist,1);
-  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
   return _status ;
@@ -765,7 +765,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
   if (_optConst) {
     if (constStatChange) {
 
-      RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
 
       coutI(Minimization) << "RooMinuit::synchronize: set of constant parameters changed, rerunning const optimizer" << endl ;
       _func->constOptimizeTestStatistic(RooAbsArg::ConfigChange) ;
@@ -774,7 +774,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
       _func->constOptimizeTestStatistic(RooAbsArg::ValueChange) ;
     }
 
-    RooAbsReal::enableEvalErrorLogging(kFALSE) ;  
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;  
 
   }
 
@@ -790,7 +790,7 @@ void RooMinuit::optimizeConst(Bool_t flag)
   // If flag is true, perform constant term optimization on
   // function being minimized.
 
-  RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
 
   if (_optConst && !flag){ 
     if (_printLevel>-1) coutI(Minimization) << "RooMinuit::optimizeConst: deactivating const optimization" << endl ;
@@ -806,7 +806,7 @@ void RooMinuit::optimizeConst(Bool_t flag)
     if (_printLevel>-1) coutI(Minimization) << "RooMinuit::optimizeConst: const optimization wasn't active" << endl ;
   }
 
-  RooAbsReal::enableEvalErrorLogging(kFALSE) ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
 }
 

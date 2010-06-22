@@ -85,6 +85,7 @@ protected:
   Int_t _nextProtoIndex;        // Next prototype event to load according to LUT
   RooAbsPdf::ExtendMode _extendMode ;  // Extended mode capabilities of p.d.f.
   Int_t* _protoOrder ;          // LUT with traversal order of prototype data
+  TString _normRange ;          // Normalization range of pdf
 
   RooDataSet* _genData ;        //! Data being generated
 

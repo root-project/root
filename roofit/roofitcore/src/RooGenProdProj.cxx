@@ -55,8 +55,8 @@ RooGenProdProj::RooGenProdProj()
 
 
 //_____________________________________________________________________________
-RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, 
-			       const RooArgSet& _intSet, const RooArgSet& _normSet, const char* isetRangeName) :
+RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet, 
+			       const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, Bool_t doFactorize) :
   RooAbsReal(name, title),
   _compSetOwnedN(0), 
   _compSetOwnedD(0),
@@ -72,8 +72,13 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   _compSetOwnedN = new RooArgSet ;
   _compSetOwnedD = new RooArgSet ;
 
-  RooAbsReal* numerator = makeIntegral("numerator",_prodSet,_intSet,*_compSetOwnedN,isetRangeName) ;
-  RooAbsReal* denominator = makeIntegral("denominator",_prodSet,_normSet,*_compSetOwnedD,0) ;
+  RooAbsReal* numerator = makeIntegral("numerator",_prodSet,_intSet,*_compSetOwnedN,isetRangeName,doFactorize) ;
+  RooAbsReal* denominator = makeIntegral("denominator",_prodSet,_normSet,*_compSetOwnedD,normRangeName,doFactorize) ;
+
+//   cout << "RooGenProdPdf::ctor(" << GetName() << ") numerator = " << numerator->GetName() << endl ;
+//   numerator->printComponentTree() ;
+//   cout << "RooGenProdPdf::ctor(" << GetName() << ") denominator = " << denominator->GetName() << endl ;
+//   denominator->printComponentTree() ;
 
   // Copy all components in (non-owning) set proxy
   _compSetN.add(*_compSetOwnedN) ;
@@ -150,7 +155,8 @@ RooGenProdProj::~RooGenProdProj()
 
 
 //_____________________________________________________________________________
-RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, RooArgSet& saveSet, const char* isetRangeName) 
+RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, 
+					 RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize) 
 {
   // Utility function to create integral over observables intSet in range isetRangeName over product of p.d.fs in compSet.
   // The integration is factorized into components as much as possible and done analytically as far as possible.
@@ -181,22 +187,23 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   // Determine which of the factorizable integrals can be done analytically
   RooArgSet prodSet ;
   numIntSet.add(intSet) ;
+  
   compIter->Reset() ;
   while((pdf=(RooAbsPdf*)compIter->Next())) {
-    if (pdf->dependsOn(anaIntSet)) {
+    if (doFactorize && pdf->dependsOn(anaIntSet)) {
       RooArgSet anaSet ;
       Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
       if (code!=0) {
 	// Analytical integral, create integral object
 	RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;
 	pai->setOperMode(_operMode) ;
-
+	
 	// Add to integral to product
 	prodSet.add(*pai) ;
-
+	
 	// Remove analytically integratable observables from numeric integration list
 	numIntSet.remove(anaSet) ;
-
+	
 	// Declare ownership of integral
 	saveSet.addOwned(*pai) ;
       } else {
@@ -209,10 +216,12 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
     }
   }
 
+  //cout << "RooGenProdProj::makeIntegral(" << GetName() << ") prodset = " << prodSet << endl ;
+
   // Create product of (partial) analytical integrals
   TString prodName ;
   if (isetRangeName) {
-    prodName = Form("%s_%s_Range_%s",GetName(),name,isetRangeName) ;
+    prodName = Form("%s_%s_Range[%s]",GetName(),name,isetRangeName) ;
   } else {
     prodName = Form("%s_%s",GetName(),name) ;
   }
@@ -224,6 +233,8 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 
   // Create integral performing remaining numeric integration over (partial) analytic product
   RooAbsReal* ret = prod->createIntegral(numIntSet,isetRangeName) ;
+//   cout << "verbose print of integral object" << endl ;
+//   ret->Print("v") ;
   ret->setOperMode(_operMode) ;
   saveSet.addOwned(*ret) ;
 
@@ -246,6 +257,8 @@ Double_t RooGenProdProj::evaluate() const
   if (!_haveD) return nom ;
 
   Double_t den = ((RooAbsReal*)_intList.at(1))->getVal() ;
+
+  //cout << "RooGenProdProj::eval(" << GetName() << ") nom = " << nom << " den = " << den << endl ;
 
   return nom / den ;
 }

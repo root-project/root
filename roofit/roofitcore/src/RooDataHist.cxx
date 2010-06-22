@@ -844,7 +844,8 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   RooAbsArg* rvarg ;
   while((rvarg=(RooAbsArg*)_iterator->Next())) {
     _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;
-    _lvbins.push_back(dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0)) ;
+    const RooAbsBinning* binning = dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0) ;
+    _lvbins.push_back(binning ? binning->clone() : 0) ;    
   }
 
   ((RooTreeDataStore*)_dstore)->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
@@ -980,6 +981,11 @@ RooDataHist::~RooDataHist()
   if (_binv) delete[] _binv ;
   if (_realIter) delete _realIter ;
   if (_binValid) delete[] _binValid ;
+  list<const RooAbsBinning*>::iterator iter = _lvbins.begin() ;
+  while(iter!=_lvbins.end()) {
+    delete *iter ;
+    iter++ ;
+  }
 
    removeFromDir(this) ;
 }

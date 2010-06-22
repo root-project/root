@@ -979,13 +979,13 @@ void RooSimultaneous::selectNormalization(const RooArgSet* normSet, Bool_t /*for
 
 
 //_____________________________________________________________________________
-void RooSimultaneous::selectNormalizationRange(const char* normRange, Bool_t /*force*/) 
+void RooSimultaneous::selectNormalizationRange(const char* normRange2, Bool_t /*force*/) 
 {
   // Interface function used by test statistics to freeze choice of range
   // for interpretation of fraction coefficients. Needed here because a RooSimultaneous
   // works like a RooAddPdf when plotted
 
-  _plotCoefNormRange = RooNameReg::ptr(normRange) ;
+  _plotCoefNormRange = RooNameReg::ptr(normRange2) ;
 }
 
 

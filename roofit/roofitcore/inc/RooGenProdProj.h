@@ -27,7 +27,8 @@ class RooGenProdProj : public RooAbsReal {
 public:
 
   RooGenProdProj() ;
-  RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet, const RooArgSet& _normSet, const char* isetRangeName) ;
+  RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet, 
+		 const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName=0, Bool_t doFactorize=kTRUE) ;
 
   RooGenProdProj(const RooGenProdProj& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooGenProdProj(*this, newname); }
@@ -35,7 +36,8 @@ public:
 
 protected:
 
-  RooAbsReal* makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, RooArgSet& saveSet, const char* isetRangeName) ;
+  RooAbsReal* makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, 
+			   RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize) ;
 
   virtual void operModeHook() ;
 

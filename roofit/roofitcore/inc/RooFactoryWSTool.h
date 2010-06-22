@@ -155,6 +155,8 @@ public:
 
 protected:
 
+  Bool_t checkSyntax(const char* arg) ;
+
   std::string varTag(std::string& func, std::vector<std::string>& args) ;
 
   std::stack<std::string> _autoNamePrefix ; 

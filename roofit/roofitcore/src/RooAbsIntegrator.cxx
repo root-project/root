@@ -65,7 +65,7 @@ Double_t RooAbsIntegrator::calculate(const Double_t *yvec)
   Double_t ret = integral(yvec) ; 
   integrand()->restoreXVec() ;
   
-  cxcoutD(NumIntegration) << IsA()->GetName() << "::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall() << endl ;
+  cxcoutD(NumIntegration) << IsA()->GetName() << "::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << endl ;
   return ret ;
 }
 

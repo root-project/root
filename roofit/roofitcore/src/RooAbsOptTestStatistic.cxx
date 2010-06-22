@@ -94,8 +94,13 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   // If splitCutRange is true, a different rangeName constructed as rangeName_{catName} will be used
   // as range definition for each index state of a RooSimultaneous
 
+//   cout << "RooAbsOptTestStatistic::ctor(" << GetName() << "," << this << endl ;
+  //FK: Desperate times, desperate measures. How can RooNLLVar call this ctor with dataClone=kFALSE?
+//   cout<<"Setting clonedata to 1"<<endl;
+  cloneInputData=1;
   // Don't do a thing in master mode
   if (operMode()!=Slave) {
+//     cout << "RooAbsOptTestStatistic::ctor not slave mode, do nothing" << endl ;
     _normSet = 0 ;
     return ;
   }
@@ -103,14 +108,16 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   RooArgSet obs(*indata.get()) ;
   obs.remove(projDeps,kTRUE,kTRUE) ;
 
-  // Check that the FUNC is valid for use with this dataset
-  // Check if there are any unprotected multiple occurrences of dependents
-  if (real.recursiveCheckObservables(&obs)) {
-    coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR in FUNC dependents, abort" << endl ;
-    RooErrorHandler::softAbort() ;
-    return ;
-  }
-  
+  // + ALEX
+  //   // Check that the FUNC is valid for use with this dataset
+  //   // Check if there are any unprotected multiple occurrences of dependents
+  //   if (real.recursiveCheckObservables(&obs)) {
+  //     coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR in FUNC dependents, abort" << endl ;
+  //     RooErrorHandler::softAbort() ;
+  //     return ;
+  //   }
+  // - ALEX  
+
 
   // Get list of actual observables of test statistic function
   RooArgSet* realDepSet = real.getObservables(&indata) ;
@@ -164,19 +171,23 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     if (!cloneInputData) {
       coutW(InputArguments) << "RooAbsOptTestStatistic::ctor(" << GetName() 
 			    << ") WARNING: Must clone input data when a range specification is given, ignoring request to use original input dataset" << endl ; 
-    }
+    }    
     _dataClone = ((RooAbsData&)indata).reduce(RooFit::SelectVars(*realDepSet),RooFit::CutRange(rangeName)) ;  
+//     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
     _ownData = kTRUE ;
   } else {
     if (cloneInputData) {
       _dataClone = (RooAbsData*) indata.Clone() ;
       //reduce(RooFit::SelectVars(*indata.get())) ; //  ((RooAbsData&)data).reduce(RooFit::SelectVars(*realDepSet)) ;  
+
       _ownData = kTRUE ;
     } else {
       _dataClone = &indata ;
       _ownData = kFALSE ;
     }
   }
+
+
 
   // Copy any non-shared parameterized range definitions from pdf observables to dataset observables
   iter9 = realDepSet->createIterator() ;
@@ -254,7 +265,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   if (rangeName && strlen(rangeName)) {
 
     // WVE Remove projected dependents from normalization
-    _funcClone->fixAddCoefNormalization(*_dataClone->get()) ;
+    _funcClone->fixAddCoefNormalization(*_dataClone->get(),kFALSE) ;
     
     if (addCoefRangeName && strlen(addCoefRangeName)) {
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() 
@@ -282,7 +293,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     
     RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
-    
+
     // Delete owned projected dependent copy in _normSet
     TIterator* ii = tobedel->createIterator() ;
     RooAbsArg* aa ;
@@ -297,6 +308,9 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     projDataDeps->setAttribAll("projectedDependent") ;
     delete projDataDeps ;
   } 
+
+//   cout << "RAOTS: Now evaluating funcClone with _normSet = " << _normSet << " = " << *_normSet << endl ;
+  _funcClone->getVal(_normSet) ;
 
   // Add parameters as servers
   RooArgSet* params = _funcClone->getParameters(_dataClone) ;
@@ -314,13 +328,20 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
 			<< "Lazy evaluation and associated change tracking will disabled for all nodes that depend on observables" << endl ;
 
 
-  optimizeCaching() ;
 
   delete realDepSet ;  
 
   // Redirect pointers of base class to clone 
   _func = _funcClone ;
   _data = _dataClone ;
+
+//   cout << "RooAbsOptTestStatistic::ctor call getVal()" << endl ;
+  _funcClone->getVal(_normSet) ;
+
+  
+
+//   cout << "RooAbsOptTestStatistic::ctor start caching" << endl ;
+  optimizeCaching() ;
   
 }
 
@@ -330,9 +351,11 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
   RooAbsTestStatistic(other,name)
 {
   // Copy constructor
+//   cout << "RooAbsOptTestStatistic::cctor(" << GetName() << "," << this << endl ;
 
   // Don't do a thing in master mode
   if (operMode()!=Slave) {
+//     cout << "RooAbsOptTestStatistic::cctor not slave mode, do nothing" << endl ;
     _projDeps = 0 ;
     _normSet = other._normSet ? ((RooArgSet*) other._normSet->snapshot()) : 0 ;   
     return ;
@@ -357,12 +380,13 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
     _dataClone = other._dataClone ;
     _ownData = kFALSE ;
     
-        // Revert any AClean nodes imported from original to ADirty as not optimization is applicable to test statistics with borrowed data
+    // Revert any AClean nodes imported from original to ADirty as not optimization is applicable to test statistics with borrowed data
     Bool_t wasOpt(kFALSE) ;
     TIterator* biter = _funcCloneSet->createIterator() ;
     RooAbsArg *branch2 ;
     while((branch2=(RooAbsArg*)biter->Next())){
       if (branch2->operMode()==RooAbsArg::AClean) {
+// 	cout << "RooAbsOptTestStatistic::cctor(" << GetName() << " setting branch " << branch2->GetName() << " to ADirty" << endl ;
 	branch2->setOperMode(RooAbsArg::ADirty) ;
 	wasOpt=kTRUE ;
       }
@@ -389,10 +413,13 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
     _projDeps = 0 ;
   }
 
-  optimizeCaching() ;
-
   _func = _funcClone ;
   _data = _dataClone ;
+
+//   cout << "RooAbsOptTestStatistic::cctor call getVal()" << endl ;
+  _funcClone->getVal(_normSet) ;
+//   cout << "RooAbsOptTestStatistic::cctor start caching" << endl ;
+  optimizeCaching() ;
 }
 
 
@@ -537,6 +564,8 @@ void RooAbsOptTestStatistic::optimizeCaching()
   // On the dataset side, the observables objects are modified to no longer send valueDirty messages
   // to their client 
 
+//   cout << "RooAbsOptTestStatistic::optimizeCaching(" << GetName() << "," << this << ")" << endl ;
+
   // Trigger create of all object caches now in nodes that have deferred object creation
   // so that cache contents can be processed immediately
   _funcClone->getVal(_normSet) ;
@@ -571,6 +600,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate)
     
     // Find all nodes that depend exclusively on constant parameters
     RooArgSet cacheableNodes ;
+
     _funcClone->findConstantNodes(*_dataClone->get(),cacheableNodes) ;
 
     // Cache constant nodes with dataset 
@@ -634,7 +664,6 @@ Bool_t RooAbsOptTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
     _dataClone = &indata ;
     _ownData = kFALSE ;
   }    
-
   // Attach function clone to dataset
   _funcClone->attachDataSet(*_dataClone) ;
 

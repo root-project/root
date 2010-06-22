@@ -346,6 +346,11 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
 
   cxcoutD(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): adding server " << server.GetName()
 			 << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+
+  if (server.operMode()==ADirty && operMode()!=ADirty && valueProp) {
+    setOperMode(ADirty) ;
+  }
+
   
   // Add server link to given server
   _serverList.Add(&server) ;
@@ -1558,7 +1563,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
     optimizedNodes.add(*this,kTRUE) ;
     if (operMode()==AClean) {
     } else {
-      setOperMode(ADirty) ;
+      setOperMode(ADirty,kTRUE) ; // WVE propagate flag recursively to top of tree
     }
   } else {
   }
@@ -1770,13 +1775,14 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
 
 
 //_____________________________________________________________________________
-void RooAbsArg::printComponentTree(const char* indent, const char* namePat)
+void RooAbsArg::printComponentTree(const char* indent, const char* namePat, Int_t nLevel)
 {
   // Print tree structure of expression tree on given ostream, only branch nodes are printed.
   // Lead nodes (variables) will not be shown
   //
   // If namePat is not "*", only nodes with names matching the pattern will be printed.
 
+  if (nLevel==0) return ;
   if (isFundamental()) return ;
   RooResolutionModel* rmodel = dynamic_cast<RooResolutionModel*>(this) ;
   if (rmodel && rmodel->isConvolved()) return ;
@@ -1792,7 +1798,7 @@ void RooAbsArg::printComponentTree(const char* indent, const char* namePat)
   TIterator * iter = serverIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    arg->printComponentTree(indent2.Data(),namePat) ;
+    arg->printComponentTree(indent2.Data(),namePat,nLevel-1) ;
   }
   delete iter ;
 }

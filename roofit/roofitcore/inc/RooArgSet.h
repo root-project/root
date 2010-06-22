@@ -125,6 +125,8 @@ public:
 
   static void cleanup() ;
 
+  Bool_t isInRange(const char* rangeSpec) ;
+
 protected:
 
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;

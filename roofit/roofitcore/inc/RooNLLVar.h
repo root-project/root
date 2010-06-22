@@ -44,7 +44,7 @@ public:
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
 				      const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName=0, 
 				      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE) {
-    return new RooNLLVar(name,title,(RooAbsPdf&)pdf,adata,projDeps,_extended,rangeName, addCoefRangeName, nCPU, interleave,verbose,splitRange) ;
+    return new RooNLLVar(name,title,(RooAbsPdf&)pdf,adata,projDeps,_extended,rangeName, addCoefRangeName, nCPU, interleave,verbose,splitRange,kFALSE) ;
   }
   
   virtual ~RooNLLVar();

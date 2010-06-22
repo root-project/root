@@ -35,6 +35,7 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 #include "RooNumIntFactory.h"
+#include "RooNumGenFactory.h"
 #include "RooNumGenConfig.h"
 #include "RooNameReg.h"
 #include "RooArgSet.h"
@@ -53,6 +54,7 @@ static void CleanUpRooFitAtExit()
   RooNumIntConfig::cleanup() ;
   RooNumGenConfig::cleanup() ;
   RooNumIntFactory::cleanup() ;
+  RooNumGenFactory::cleanup() ;
   RooNameReg::cleanup() ;
   RooArgSet::cleanup() ;
   RooRealConstant::cleanup() ;

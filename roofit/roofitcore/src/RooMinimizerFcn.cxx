@@ -313,7 +313,7 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
   if (optConst) {
     if (constStatChange) {
 
-      RooAbsReal::enableEvalErrorLogging(kTRUE) ;
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
 
       oocoutI(_context,Minimization) << "RooMinimizerFcn::synchronize: set of constant parameters changed, rerunning const optimizer" << endl ;
       _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange) ;
@@ -322,7 +322,7 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
       _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange) ;
     }
     
-    RooAbsReal::enableEvalErrorLogging(kFALSE) ;  
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;  
 
   }
 

@@ -464,7 +464,7 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbos
 
   os << endl 
      << indent << "  RooFitResult: minimized FCN value: " << _minNLL << ", estimated distance to minimum: " << _edm << endl
-     << indent << "                coviarance matrix quality: " ;
+     << indent << "                covariance matrix quality: " ;
   switch(_covQual) {
   case -1 : os << "Unknown, matrix was externally provided" ; break ;
   case 0  : os << "Not calculated at all" ; break ;

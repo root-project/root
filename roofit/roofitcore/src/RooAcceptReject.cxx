@@ -70,7 +70,7 @@ void RooAcceptReject::registerSampler(RooNumGenFactory& fact)
 
 //_____________________________________________________________________________
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose, const RooAbsReal* maxFuncVal) :
-  RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
+  RooAbsNumGenerator(func,genVars,verbose,maxFuncVal), _nextCatVar(0), _nextRealVar(0)
 {
   // Initialize an accept-reject generator for the specified distribution function,
   // which must be non-negative but does not need to be normalized over the

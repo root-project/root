@@ -55,6 +55,7 @@
 #include "RooCmdConfig.h"
 #include "RooGlobalFunc.h"
 #include "RooSentinel.h"
+#include "RooWorkspace.h"
 
 #include "TSystem.h"
 #include "Riostream.h"
@@ -123,6 +124,9 @@ RooMsgService::RooMsgService()
   _instance = this ;
   gMsgService = this ;
 
+  _debugWorkspace = 0 ;
+  _debugCode = 0 ;
+
   // Old-style streams
   addStream(RooFit::PROGRESS) ;
   addStream(RooFit::INFO,Topic(RooFit::Eval|RooFit::Plotting|RooFit::Fitting|RooFit::Minimization|RooFit::Caching|RooFit::ObjectHandling|RooFit::NumIntegration|RooFit::InputArguments|RooFit::DataHandling)) ;
@@ -140,6 +144,10 @@ RooMsgService::~RooMsgService()
     delete iter->second ;
   }
 
+  if (_debugWorkspace) {
+    delete _debugWorkspace ;
+  }
+
   delete _devnull ;
 }
 
@@ -150,6 +158,17 @@ Bool_t RooMsgService::anyDebug()
 { 
   // Returns true if any debug level stream is active
   return instance()._debugCount>0 ; 
+}
+
+
+
+//_____________________________________________________________________________
+RooWorkspace* RooMsgService::debugWorkspace() 
+{
+  if (!_debugWorkspace) {
+    _debugWorkspace = new RooWorkspace("wdebug") ;
+  }
+  return _debugWorkspace ;
 }
 
 

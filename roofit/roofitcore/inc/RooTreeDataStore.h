@@ -113,6 +113,8 @@ public:
     _extSumW2Array = arraySumW2 ;
   }
   
+  const RooArgSet& row() { return _varsww ; }
+
  protected:
 
   RooArgSet varsNoWeight(const RooArgSet& allVars, const char* wgtName=0) ;

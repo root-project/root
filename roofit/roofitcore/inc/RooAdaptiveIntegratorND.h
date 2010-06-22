@@ -20,7 +20,7 @@
 #include "RooNumIntConfig.h"
 #include "TString.h"
 
-namespace ROOT { namespace Math { class AdaptiveIntegratorMultiDim ; } }
+namespace ROOT { namespace Math { class AdaptiveIntegratorMultiDim ; } } ;
 class RooMultiGenFunction ;
 
 class RooAdaptiveIntegratorND : public RooAbsIntegrator {

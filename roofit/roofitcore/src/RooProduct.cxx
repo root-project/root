@@ -376,6 +376,7 @@ Double_t RooProduct::evaluate() const
   while((ccomp=(RooAbsCategory*)_compCIter->Next())) {
     prod *= ccomp->getIndex() ;
   }
+  
   return prod ;
 }
 

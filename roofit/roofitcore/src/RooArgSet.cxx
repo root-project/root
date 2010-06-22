@@ -967,4 +967,40 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
 }
 
 
+Bool_t RooArgSet::isInRange(const char* rangeSpec) 
+{
+  char buf[1024] ;
+  strcpy(buf,rangeSpec) ;
+  char* token = strtok(buf,",") ;
+  
+  TIterator* iter = createIterator() ;
+
+  while(token) {
+
+    Bool_t accept=kTRUE ;
+    iter->Reset() ;
+    RooAbsArg* arg ;
+    while((arg=(RooAbsArg*)iter->Next())) {
+      RooAbsRealLValue* lvarg = dynamic_cast<RooAbsRealLValue*>(arg) ;
+      if (lvarg) {
+	if (!lvarg->inRange(token)) {
+	  accept=kFALSE ;
+	  break ;
+	}
+      }
+      // WVE MUST HANDLE RooAbsCategoryLValue ranges as well
+    }
+    if (accept) {
+      delete iter ;
+      return kTRUE ;
+    }
+
+    token = strtok(0,",") ;
+  }
+
+  delete iter ;
+  return kFALSE ;
+}
+
+
 

@@ -223,6 +223,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     // Only apply global normalization if SimMaster doesn't have MP master
     if (numSets()==1) {
+//       cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") A dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
       ret /= globalNormalization() ;
     }
 
@@ -257,6 +258,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     
     Double_t ret =  evaluatePartition(nFirst,nLast,nStep) ;
     if (numSets()==1) {
+//       cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") B dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
       ret /= globalNormalization() ;
     }
 
@@ -307,7 +309,7 @@ Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServe
     for (i=0 ; i<_nCPU ; i++) {
       if (_mpfeArray[i]) {
 	_mpfeArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
-	cout << "redirecting servers on " << _mpfeArray[i]->GetName() << endl ;
+// 	cout << "redirecting servers on " << _mpfeArray[i]->GetName() << endl ;
       }
     }    
 
