@@ -1265,7 +1265,7 @@ void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
    return ReadStateFromXML(rootnode);
 #else
    Log() << kFATAL << "Method MethodBase::ReadStateFromXMLString( const char* xmlstr ) is not available for ROOT versions prior to 5.26/00." << Endl;
-   return 0;
+   return;
 #endif
 
 }
