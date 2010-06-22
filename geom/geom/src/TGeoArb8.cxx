@@ -337,7 +337,7 @@ Double_t TGeoArb8::GetClosestEdge(Double_t *point, Double_t *vert, Int_t &isegme
    for (i1=0; i1<4; i1++) {
       if (TGeoShape::IsSameWithinTolerance(safe,0)) {
          isegment = isegmin;
-         return u;
+         return umin;
       }
       i2 = (i1+1)%4;      
       p1[0] = vert[2*i1];
