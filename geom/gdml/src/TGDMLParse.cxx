@@ -1353,7 +1353,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          TGeoVolume *old = fvolmap[NameShort(reftemp)];
          if (old) {
             // We need to recreate the content of the divided volume
-            TGeoVolume *old = fvolmap[NameShort(reftemp)];
+            old = fvolmap[NameShort(reftemp)];
             // medium id
             numed = old->GetMedium()->GetId();
          }   
