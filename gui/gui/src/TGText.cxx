@@ -422,12 +422,13 @@ Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
    Bool_t      finished = kFALSE;
    Long_t      count, charcount, i, cnt;
    FILE       *fp;
-   char        buf[kMaxLen], c, *src, *dst, *buffer, *buf2;
+   char       *buf, c, *src, *dst, *buffer, *buf2;
    TGTextLine *travel, *temp;
 
    travel = fFirst;
 
    if (!(fp = fopen(fn, "r"))) return kFALSE;
+   buf = new char[kMaxLen];
    i = 0;
    fseek(fp, startpos, SEEK_SET);
    charcount = 0;
@@ -480,6 +481,7 @@ Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
          break;
    }
    fclose(fp);
+   delete [] buf;
 
    // Remember the number of lines
    fRowCount = i;
@@ -501,7 +503,7 @@ Bool_t TGText::LoadBuffer(const char *txtbuf)
    Bool_t      finished = kFALSE, lastnl = kFALSE;
    Long_t      i, cnt;
    TGTextLine *travel, *temp;
-   char        buf[kMaxLen], c, *src, *dst, *buffer, *buf2, *s;
+   char       *buf, c, *src, *dst, *buffer, *buf2, *s;
    const char *tbuf = txtbuf;
 
    travel = fFirst;
@@ -509,6 +511,7 @@ Bool_t TGText::LoadBuffer(const char *txtbuf)
    if (!tbuf || !strlen(tbuf))
       return kFALSE;
 
+   buf = new char[kMaxLen];
    i = 0;
 next:
    if ((s = (char*)strchr(tbuf, '\n'))) {
@@ -575,6 +578,7 @@ next:
    if (!finished && tbuf && strlen(tbuf))
       goto next;
 
+   delete [] buf;
    // Remember the number of lines
    fRowCount = i;
    if (fRowCount == 0)

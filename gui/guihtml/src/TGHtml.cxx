@@ -2055,11 +2055,11 @@ void TGHtml::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << endl;
    }
 
-   char fn[kMAXPATHLEN];
+   TString fn;
    TGText txt(GetText());
-   sprintf(fn,"Html%s.htm",GetName()+5);
-   txt.Save(fn);
-   out << "   " << "FILE *f = fopen(\"" << fn << "\", \"r\");" << endl;
+   fn.Form("Html%s.htm", GetName()+5);
+   txt.Save(fn.Data());
+   out << "   " << "FILE *f = fopen(\"" << fn.Data() << "\", \"r\");" << endl;
    out << "   " << "if (f) {" << endl;
    out << "      " << GetName() << "->Clear();" << endl;
    out << "      " << GetName() << "->Layout();" << endl;
