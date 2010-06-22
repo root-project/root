@@ -81,6 +81,7 @@ public:
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 100;}
+   Double_t              GetClosestEdge(Double_t *point, Double_t *vert, Int_t &isegment) const;
    virtual Bool_t        GetPointsOnFacet(Int_t /*index*/, Int_t /*npoints*/, Double_t * /*array*/) const;
    Double_t              GetDz() const {return fDz;}
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
