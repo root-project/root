@@ -148,12 +148,12 @@ my_if_errors (ip, cp, expecting)
 
     sprintf (prefix, "\"%s\":%d", filename, lineno);
     prefixlen = strlen(prefix);
-    fprintf (stderr, "%s:  %s", prefix, pd->line);
+    fprintf (stderr, "%s: warning: %s", prefix, pd->line);
     i = cp - pd->line;
     if (i > 0 && pd->line[i-1] != '\n') {
 	putc ('\n', stderr);
     }
-    for (i += prefixlen + 3; i > 0; i--) {
+    for (i += prefixlen + 11; i > 0; i--) {
 	putc (' ', stderr);
     }
     fprintf (stderr, "^--- expecting %s\n", expecting);

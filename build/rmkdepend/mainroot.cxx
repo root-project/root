@@ -61,7 +61,7 @@ void ROOT_flush()
 {
    if (openWildcard) {
       if (fwrite(")\n", 2, 1, stdout) != 1) // closing "$(wildcard"
-         fprintf(stderr, "ROOT_flush: fwrite error\n");
+         fprintf(stderr, "Warning: ROOT_flush: fwrite error\n");
       openWildcard = 0;
    }
    /* now done via "XYZ.d XYZ.o: $(wildcard dependencies)"
@@ -85,7 +85,7 @@ void ROOT_adddep(char* buf, size_t len)
 
    if (!posColon) {
       if (fwrite(buf, len, 1, stdout) != 1)
-         fprintf(stderr, "ROOT_adddep: fwrite error\n");
+         fprintf(stderr, "Warning: ROOT_adddep: fwrite error\n");
       currentDependencies += buf;
       return;
    }
@@ -114,16 +114,16 @@ else
       char s = posColon[4]; // save char that will be overwritten by \0 of "cxx"
       strcat(posColon, "cxx");
       if (fwrite(buf, (posColon - buf)+4, 1, stdout) != 1) // .cxx
-         fprintf(stderr, "ROOT_adddep: fwrite error\n");
+         fprintf(stderr, "Warning: ROOT_adddep: fwrite error\n");
       posColon[4] = s;
    }
 
    posColon[1]='o';
    if (fwrite(buf, (posColon - buf)+2, 1, stdout) != 1) // .o
-      fprintf(stderr, "ROOT_adddep: fwrite error\n");
+      fprintf(stderr, "Warning: ROOT_adddep: fwrite error\n");
    posColon[1]='d';
    if (fwrite(buf, (posColon - buf)+2, 1, stdout) != 1) // .d
-      fprintf(stderr, "ROOT_adddep: fwrite error\n");
+      fprintf(stderr, "Warning: ROOT_adddep: fwrite error\n");
 
    if (!isDict) {
       posColon[1] = 0;
@@ -131,9 +131,9 @@ else
       currentDependencies = posColon + 2;
    }
    if (fwrite(": $(wildcard ", 13, 1, stdout) != 1)
-      fprintf(stderr, "ROOT_adddep: fwrite error\n");
+      fprintf(stderr, "Warning: ROOT_adddep: fwrite error\n");
    if (fwrite(posColon + 4, len - (posColon + 4 - buf), 1, stdout) != 1)
-      fprintf(stderr, "ROOT_adddep: fwrite error\n");
+      fprintf(stderr, "Warning: ROOT_adddep: fwrite error\n");
    openWildcard = 1;
 }
 
