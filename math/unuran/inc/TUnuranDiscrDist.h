@@ -57,7 +57,7 @@ public:
    /** 
       Constructor from a generic function object specifying the pdf
    */ 
-   TUnuranDiscrDist (const ROOT::Math::IGenFunction & func );
+   TUnuranDiscrDist (const ROOT::Math::IGenFunction & func, bool copyFunc = false );
 
    /** 
       Constructor from a TF1 objects specifying the pdf

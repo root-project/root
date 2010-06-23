@@ -20,7 +20,7 @@
 #include <cassert>
 
 
-TUnuranDiscrDist::TUnuranDiscrDist (const ROOT::Math::IGenFunction & func) : 
+TUnuranDiscrDist::TUnuranDiscrDist (const ROOT::Math::IGenFunction & func, bool copyFunc) : 
    fPmf(&func), 
    fCdf(0), 
    fXmin(1), 
@@ -30,9 +30,13 @@ TUnuranDiscrDist::TUnuranDiscrDist (const ROOT::Math::IGenFunction & func) :
    fHasDomain(0),
    fHasMode(0),
    fHasSum(0), 
-   fOwnFunc(false)
+   fOwnFunc(copyFunc)
 {
    //Constructor from a generic function object
+   if (fOwnFunc) { 
+      fPmf = fPmf->Clone(); 
+      //if (fCdf) fCdf->Clone();
+   }
 } 
 
 

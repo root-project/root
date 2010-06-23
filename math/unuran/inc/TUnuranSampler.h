@@ -89,6 +89,22 @@ public:
    */ 
    void SetSeed(unsigned int seed);
 
+   /* 
+      set the mode
+    */
+   void SetMode(double mode) { 
+      fMode = mode; 
+      fHasMode = true; 
+   }
+
+   /*
+     set the area 
+    */
+   void SetArea(double area) { 
+      fArea = area;
+      fHasArea = true; 
+   }
+
    /**
       Get the random engine used by the sampler
     */
@@ -127,6 +143,8 @@ protected:
 
    //initialization for 1D distributions
    bool DoInit1D(const char * algo); 
+   //initialization for 1D discrete distributions
+   bool DoInitDiscrete1D(const char * algo); 
    //initialization for multi-dim distributions
    bool DoInitND(const char * algo); 
    
@@ -135,6 +153,11 @@ private:
 
    // private member
    bool                              fOneDim;      // flag to indicate if the function is 1 dimension
+   bool                              fDiscrete;    // flag to indicate if the function is discrete
+   bool                              fHasMode;     // flag to indicate if a mode is set
+   bool                              fHasArea;     // flag to indicate if a area is set
+   double                            fMode;        // mode of dist
+   double                            fArea;        // area of dist
    const ROOT::Math::IGenFunction *  fFunc1D;      // 1D function pointer
    TUnuran *                         fUnuran;      // unuran engine class
 

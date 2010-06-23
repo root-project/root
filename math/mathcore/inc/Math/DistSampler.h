@@ -129,6 +129,14 @@ public:
    /// set range using DataRange class 
    void SetRange(const ROOT::Fit::DataRange & range); 
 
+   /// set the mode of the distribution (could be useful to some methods)
+   /// implemented by derived classes if needed
+   virtual void SetMode(double  ) {}
+
+   /// set the normalization area of distribution 
+   /// implemented by derived classes if needed
+   virtual void SetArea(double) {}
+
    /// get the parent distribution function (must be called after setting the function) 
    const ROOT::Math::IMultiGenFunction & ParentPdf() const { 
       return *fFunc;
