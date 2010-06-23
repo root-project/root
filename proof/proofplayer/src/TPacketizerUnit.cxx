@@ -449,7 +449,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
          // Fixed number of cycles per worker
          num = fNumPerWorker - slstat->fLastProcessed;
          if (num > 1 && slstat->fSpeed > 0 && num / slstat->fSpeed > fTimeLimit) {
-            num = slstat->fSpeed * fTimeLimit;
+            num = (Long64_t) (slstat->fSpeed * fTimeLimit);
          }
       }
    }
