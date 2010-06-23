@@ -1682,11 +1682,10 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
   // If given object is not of {,,,} form, interpret given string as name of defined set
   if (arg[0]!='{') {
     const RooArgSet* defSet = ws().set(arg) ;
-    if (!defSet) {
-      throw string(Form("No RooArgSet named %s is defined",arg)) ;
+    if (defSet) {
+      s.add(*defSet) ;
+      return s ;
     }
-    s.add(*defSet) ;
-    return s ;
   }
 
   char* save ;
