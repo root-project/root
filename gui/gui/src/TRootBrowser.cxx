@@ -633,6 +633,7 @@ void TRootBrowser::HandleMenu(Int_t id)
          break;
       case kOpenFile:
          {
+            Bool_t newfile = kFALSE;
             static TString dir(".");
             TGFileInfo fi;
             fi.fFileTypes = gOpenFileTypes;
@@ -647,12 +648,14 @@ void TRootBrowser::HandleMenu(Int_t id)
                   gROOT->ProcessLine(Form("new TFile(\"%s\");",
                                      gSystem->UnixPathName(el->GetString())));
                }
+               newfile = kTRUE;
             }
             else if (fi.fFilename) {
                gROOT->ProcessLine(Form("new TFile(\"%s\");",
                                   gSystem->UnixPathName(fi.fFilename)));
+               newfile = kTRUE;
             }
-            if (fActBrowser) {
+            if (fActBrowser && newfile) {
                TGFileBrowser *fb = dynamic_cast<TGFileBrowser *>(fActBrowser);
                if (fb) fb->Selected(0);
             }
