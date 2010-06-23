@@ -2342,6 +2342,7 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 
       // Incorporate the resulting global list in fOutput
       Incorporate(evlist, fOutput, merged);
+      NotifyMemory(evlist);
 
       // Delete the global list if merged
       if (merged)
@@ -2386,17 +2387,8 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 
    // For other objects we just run the incorporation procedure
    Incorporate(obj, fOutput, merged);
-   if (fProof && (!IsClient() || fProof->IsLite())){
-      ProcInfo_t pi;
-      if (!gSystem->GetProcInfo(&pi)){
-         // For PROOF-Lite we redirect this output to a the open log file so that the
-         // memory monitor can pick these messages up
-         RedirectOutput(fProof->IsLite());
-         Info("AddOutputObject|Svc", "Memory %ld virtual %ld resident after merging object %s",
-                                     pi.fMemVirtual, pi.fMemResident, obj->GetName());
-         RedirectOutput(0);
-      }
-   }
+   NotifyMemory(obj);
+
    // We are done
    return (merged ? 1 : 0);
 }
@@ -2443,7 +2435,7 @@ void TProofPlayerRemote::AddOutput(TList *out)
    if (elists) {
 
       // Create a global event list, result of merging the event lists
-      // coresponding to the various data set elements
+      // corresponding to the various data set elements
       TEventList *evlist = new TEventList("PROOF_EventList");
 
       // Iterate the list of event list segments
@@ -2484,6 +2476,7 @@ void TProofPlayerRemote::AddOutput(TList *out)
 
       // Incorporate the resulting global list in fOutput
       Incorporate(evlist, fOutput, merged);
+      NotifyMemory(evlist);
    }
 
    // Iterate on the remaining objects in the received list
@@ -2495,10 +2488,30 @@ void TProofPlayerRemote::AddOutput(TList *out)
       // passes to fOutput
       if (!merged)
          out->Remove(obj);
+      NotifyMemory(obj);
    }
 
    // Done
    return;
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::NotifyMemory(TObject *obj)
+{
+   // Printout the memory record after merging object 'obj'
+   // This record is used by the memory monitor
+
+   if (fProof && (!IsClient() || fProof->IsLite())){
+      ProcInfo_t pi;
+      if (!gSystem->GetProcInfo(&pi)){
+         // For PROOF-Lite we redirect this output to a the open log file so that the
+         // memory monitor can pick these messages up
+         RedirectOutput(fProof->IsLite());
+         Info("NotifyMemory|Svc", "Memory %ld virtual %ld resident after merging object %s",
+                                  pi.fMemVirtual, pi.fMemResident, obj->GetName());
+         RedirectOutput(0);
+      }
+   }
 }
 
 //______________________________________________________________________________

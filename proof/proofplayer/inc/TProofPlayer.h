@@ -269,6 +269,7 @@ protected:
                                   const char *defpackdata);
    TList          *MergeFeedback();
    Bool_t          MergeOutputFiles();
+   void            NotifyMemory(TObject *obj);
    virtual Bool_t  SendSelector(const char *selector_file); //send selector to slaves
    TProof         *GetProof() const { return fProof; }
    void            SetupFeedback();  // specialized setup
