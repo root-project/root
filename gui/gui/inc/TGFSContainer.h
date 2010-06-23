@@ -143,6 +143,7 @@ protected:
    TViewUpdateTimer *fRefresh;        // refresh timer
    ULong_t           fMtime;          // directory modification time
    TString           fDirectory;      // current directory
+   TList            *fCleanups;       // list of pictures to cleanup
    const TGPicture  *fFolder_t;       // small folder icon
    const TGPicture  *fFolder_s;       // big folder icon
    const TGPicture  *fApp_t;          // small application icon

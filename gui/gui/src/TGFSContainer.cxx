@@ -39,6 +39,7 @@
 #include "TBufferFile.h"
 #include "Riostream.h"
 #include "TRemoteObject.h"
+#include "TImage.h"
 #include "snprintf.h"
 #include <time.h>
 
@@ -411,6 +412,7 @@ TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
    gSystem->AddTimer(fRefresh);
    fCachePictures = kTRUE;
    fDisplayStat   = kTRUE;
+   fCleanups  = new TList;
 
    fFolder_s = fClient->GetPicture("folder_s.xpm");
    fFolder_t = fClient->GetPicture("folder_t.xpm");
@@ -444,6 +446,7 @@ TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    gSystem->AddTimer(fRefresh);
    fCachePictures = kTRUE;
    fDisplayStat   = kTRUE;
+   fCleanups  = new TList;
 
    fFolder_s = fClient->GetPicture("folder_s.xpm");
    fFolder_t = fClient->GetPicture("folder_t.xpm");
@@ -478,6 +481,15 @@ TGFileContainer::~TGFileContainer()
    fClient->FreePicture(fDoc_t);
    fClient->FreePicture(fSlink_s);
    fClient->FreePicture(fSlink_t);
+   if (fCleanups) {
+      TGPicture *pic;
+      TIter nextp(fCleanups);
+      while ((pic = (TGPicture *)nextp())) {
+         fClient->GetPicturePool()->FreePicture(pic);
+      }
+      fCleanups->Clear();
+      delete fCleanups;
+   }
 }
 
 //______________________________________________________________________________
@@ -548,7 +560,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
    if (fCachePictures && ext && cached_spic && cached_lpic && (cached_ext == ext)) {
       *pic = cached_spic;
       *lpic = cached_lpic;
-      return;
+      if (!is_link) return;
    }
 
    if (R_ISREG(file_type)) {
@@ -561,7 +573,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
             cached_ext = ext;
             cached_spic = *pic;
             cached_lpic = *lpic;
-            return;
+            if (!is_link) return;
          }
       }
    } else {
@@ -582,8 +594,35 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
       }
    }
    if (is_link) {
-      *pic = fSlink_t;
-      *lpic = fSlink_s;
+      TImage *img1, *img2;
+      if (*pic && *lpic) {
+         img1 = TImage::Create();
+         img1->SetImage(((const TGPicture *)*pic)->GetPicture(),
+                        ((const TGPicture *)*pic)->GetMask());
+         img2 = TImage::Open("slink_t.xpm");
+         if (img2) img1->Merge(img2);
+         TString lnk_name = ((const TGPicture *)*pic)->GetName();
+         lnk_name.Prepend("lnk_");
+         *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(), 
+                              img1->GetPixmap(), img1->GetMask());
+         fCleanups->Add(((TObject *)*pic));
+         if (img2) delete img2; delete img1;
+         img1 = TImage::Create();
+         img1->SetImage(((const TGPicture *)*lpic)->GetPicture(),
+                        ((const TGPicture *)*lpic)->GetMask());
+         img2 = TImage::Open("slink_s.xpm");
+         if (img2) img1->Merge(img2);
+         lnk_name = ((const TGPicture *)*lpic)->GetName();
+         lnk_name.Prepend("lnk_");
+         *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(), 
+                              img1->GetPixmap(), img1->GetMask());
+         fCleanups->Add(((TObject *)*lpic));
+         if (img2) delete img2; delete img1;
+      }
+      else {
+         *pic = fSlink_t;
+         *lpic = fSlink_s;
+      }
    }
 
    cached_lpic = 0;
