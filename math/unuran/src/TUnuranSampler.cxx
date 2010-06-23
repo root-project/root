@@ -117,7 +117,7 @@ bool TUnuranSampler::DoInitDiscrete1D(const char * method) {
       }
       dist->SetDomain(int(xmin+0.1),int(xmax+0.1)); 
    }
-   if (fHasMode) dist->SetMode(fMode);
+   if (fHasMode) dist->SetMode(int(fMode+0.1));
    if (fHasArea) dist->SetProbSum(fArea);
 
    bool ret =  fUnuran->Init(*dist, method);       
