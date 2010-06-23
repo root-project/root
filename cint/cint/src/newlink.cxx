@@ -3820,7 +3820,7 @@ void G__set_globalcomp(const char *mode,const char *linkfilename,const char *dll
       fprintf(fp,"*          FROM HEADER FILES LISTED IN G__setup_cpp_environmentXXX().\n");
       fprintf(fp,"*          CHANGE THOSE HEADER FILES AND REGENERATE THIS FILE.\n");
       fprintf(fp,"********************************************************/\n");
-      fprintf(fp,"#include \"%s\" //newlink 3678 \n",G__CPPLINK_H);
+      fprintf(fp,"#include \"%s\" //newlink 3678 \n",G__CPPLINK_H); // THIS COMMENT IS IMPORTANT - rootcint triggers on it!
 
       fprintf(fp,"\n");
       fprintf(fp,"#ifdef G__MEMTEST\n");

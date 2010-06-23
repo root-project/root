@@ -5395,7 +5395,7 @@ int main(int argc, char **argv)
 
          // during copy put dict include on top and remove later reference
          while (fgets(line, BUFSIZ, fp)) {
-            if (!strncmp(line, "#include", 8) && strstr(line, inclf))
+            if (!strncmp(line, "#include", 8) && strstr(line, "\" //newlink 3678 "))
                continue;
             fprintf(fpd, "%s", line);
 
