@@ -4068,7 +4068,6 @@ static int G__keyword_anytime_5(G__FastAllocString& statement)
       }
       int store_no_exec = G__no_exec;
       G__no_exec = 0;
-      G__static_alloc = 1;
       int brace_level = 0;
       G__exec_statement(&brace_level);
       G__static_alloc = 0;

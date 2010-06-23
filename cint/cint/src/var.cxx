@@ -2981,6 +2981,14 @@ inline void G__alloc_var_ref(int SIZE, CONVFUNC f, char* item, G__var_array* var
             /*memset((char*) var->p[ig15], 0, SIZE);*/
          }
       }
+      if (
+         (G__asm_wholefunction == G__ASM_FUNC_COMPILE) &&
+         (var->type[ig15] == 'i') &&
+         (var->constvar[ig15] & G__CONSTVAR) &&
+         result.type
+      ) {
+         G__abortbytecode();
+      }
       /* Now do initialization. */
       if (
          /* Variable has storage to initialize */
