@@ -52,6 +52,7 @@ public:
    virtual void     Draw(Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Double_t GetDelta() const {return fDelta;}
+   TH1F            *GetHistogram() const {return fHistogram;}
    virtual Int_t    GetNp()    const {return fNp;}
    virtual Int_t    GetNpx()   const {return fNpx;}
    virtual Double_t GetXmin()  const {return fXmin;}
