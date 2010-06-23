@@ -71,6 +71,15 @@ ICC_GE_9      = 11
 ICC_GE_101    = 110
 endif
 
+ifeq ($(ICC_MAJOR),12)
+CXXFLAGS     += -wd1572 -wd873 -wd672 -wd279
+CFLAGS       += -wd1572 -wd279
+CINTCXXFLAGS += -wd1572 -wd873 -wd279
+CINTCFLAGS   += -wd1572 -wd279
+ICC_GE_9      = 12
+ICC_GE_101    = 120
+endif
+
 # OS version
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSX_CPU   := $(shell uname -p)
