@@ -175,8 +175,19 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    fSlaveStats = 0;
    fPackets = 0;
 
-   fTimeLimit = 1;
-   TProof::GetParameter(input, "PROOF_PacketizerTimeLimit", fTimeLimit);
+   Int_t fixednum = -1;
+   if (TProof::GetParameter(input, "PROOF_PacketizerFixedNum", fixednum) != 0 || fixednum <= 0)
+      fixednum = 0;
+   if (fixednum == 1)
+      Info("TPacketizerUnit", "forcing the same cycles on each worker");
+
+   if (TProof::GetParameter(input, "PROOF_PacketizerCalibNum", fCalibNum) != 0 || fCalibNum <= 0)
+      fCalibNum = 5;
+   PDB(kPacketizer,1)
+      Info("TPacketizerUnit", "size of the calibration packets: %lld", fCalibNum);
+
+   if (TProof::GetParameter(input, "PROOF_PacketizerTimeLimit", fTimeLimit) != 0 || fTimeLimit <= 0)
+      fTimeLimit = 1;
    PDB(kPacketizer,1)
       Info("TPacketizerUnit", "time limit is %lf", fTimeLimit);
    fProcessing = 0;
@@ -196,6 +207,13 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
       fSlaveStats->Add(slave, new TSlaveStat(slave, input));
 
    fTotalEntries = num;
+   fNumPerWorker = -1;
+   if (fixednum == 1 && fSlaveStats->GetSize() > 0) {
+      // Approximate number: the exact number is determined in GetNextPacket
+      fNumPerWorker = fTotalEntries / fSlaveStats->GetSize();
+      if (fNumPerWorker == 0) fNumPerWorker = 1;
+      if (fCalibNum >= fNumPerWorker) fCalibNum = 1;
+   }
 
    fStopwatch->Start();
    PDB(kPacketizer,1) Info("TPacketizerUnit", "return");
@@ -320,6 +338,13 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                               latency, proctime, proccpu, bytesRead);
    }
 
+   if (fNumPerWorker > 0 && slstat->GetEntriesProcessed() >= fNumPerWorker) {
+      PDB(kPacketizer,2)
+         Info("GetNextPacket","worker-%s (%s) is done (%lld cycles)",
+                           sl->GetOrdinal(), sl->GetName(), slstat->GetEntriesProcessed());
+      return 0;
+   }
+
    if (fAssigned == fTotalEntries) {
       // Send last timer message
       HandleTimer(0);
@@ -340,83 +365,91 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 
    if (slstat->fCircNtp->GetEntries() <= 0) {
       // The calibration phase
-      PDB(kPacketizer,2) Info("GetNextPacket"," calibration: "
-                              "total entries %lld, workers %d",
-                              fTotalEntries, fSlaveStats->GetSize());
-      Long64_t avg = fTotalEntries/(fSlaveStats->GetSize());
-      num = (avg > 5) ? 5 : avg;
+      PDB(kPacketizer,2)
+         Info("GetNextPacket", "calibration: total entries %lld, workers %d",
+                               fTotalEntries, fSlaveStats->GetSize());
+      Long64_t avg = fTotalEntries / fSlaveStats->GetSize();
+      num = (avg > fCalibNum) ? fCalibNum : avg;
 
       // Create a reference entry
       slstat->UpdatePerformance(0.);
 
    } else {
-      // Schedule tasks for workers based on the currently estimated processing speeds
+      if (fNumPerWorker < 0) {
+         // Schedule tasks for workers based on the currently estimated processing speeds
 
-      // Update performances
-      // slstat->fStatus was updated before;
-      slstat->UpdatePerformance(proctime);
+         // Update performances
+         // slstat->fStatus was updated before;
+         slstat->UpdatePerformance(proctime);
 
-      TMapIter *iter = (TMapIter *)fSlaveStats->MakeIterator();
-      TSlave * tmpSlave;
-      TSlaveStat * tmpStat;
+         TMapIter *iter = (TMapIter *)fSlaveStats->MakeIterator();
+         TSlave * tmpSlave;
+         TSlaveStat * tmpStat;
 
-      Double_t sumSpeed = 0;
-      Double_t sumBusy = 0;
+         Double_t sumSpeed = 0;
+         Double_t sumBusy = 0;
 
-      // The basic idea is to estimate the optimal finishing time for the process, assuming
-      // that the currently measured processing speeds of the slaves remain the same in the future.
-      // The optTime can be calculated as follows.
-      // Let s_i be the speed of worker i. We assume that worker i will be busy in the
-      // next b_i time instant. Therefore we have the following equation:
-      //                 SUM((optTime-b_i)*s_i) = (remaining_entries),
-      // Hence optTime can be calculated easily:
-      //                 optTime = ((remaining_entries) + SUM(b_i*s_i))/SUM(s_i)
+         // The basic idea is to estimate the optimal finishing time for the process, assuming
+         // that the currently measured processing speeds of the slaves remain the same in the future.
+         // The optTime can be calculated as follows.
+         // Let s_i be the speed of worker i. We assume that worker i will be busy in the
+         // next b_i time instant. Therefore we have the following equation:
+         //                 SUM((optTime-b_i)*s_i) = (remaining_entries),
+         // Hence optTime can be calculated easily:
+         //                 optTime = ((remaining_entries) + SUM(b_i*s_i))/SUM(s_i)
 
-      while ((tmpSlave = (TSlave *)iter->Next())) {
-         tmpStat = (TSlaveStat *)fSlaveStats->GetValue(tmpSlave);
-         // If the slave doesn't response for a long time, its service rate will be considered as 0
-         if ((cTime - tmpStat->fTimeInstant) > 4*fTimeLimit)
-            tmpStat->fSpeed = 0;
-         PDB(kPacketizer,2)
-            Info("GetNextPacket",
-                 "worker-%s: speed %lf", tmpSlave->GetOrdinal(), tmpStat->fSpeed);
-         if (tmpStat->fSpeed > 0) {
-            // Calculating the SUM(s_i)
-            sumSpeed += tmpStat->fSpeed;
-            // There is nothing to do if slave_i is not calibrated or slave i is the current slave
-            if ((tmpStat->fTimeInstant) && (cTime - tmpStat->fTimeInstant > 0)) {
-               // Calculating the SUM(b_i*s_i)
-               //      s_i = tmpStat->fSpeed
-               //      b_i = tmpStat->fTimeInstant + tmpStat->fLastProcessed/s_i - cTime)
-               //  b_i*s_i = (tmpStat->fTimeInstant - cTime)*s_i + tmpStat->fLastProcessed
-               Double_t busyspeed =
-                  ((tmpStat->fTimeInstant - cTime)*tmpStat->fSpeed + tmpStat->fLastProcessed);
-               if (busyspeed > 0)
-                  sumBusy += busyspeed;
+         while ((tmpSlave = (TSlave *)iter->Next())) {
+            tmpStat = (TSlaveStat *)fSlaveStats->GetValue(tmpSlave);
+            // If the slave doesn't response for a long time, its service rate will be considered as 0
+            if ((cTime - tmpStat->fTimeInstant) > 4*fTimeLimit)
+               tmpStat->fSpeed = 0;
+            PDB(kPacketizer,2)
+               Info("GetNextPacket",
+                  "worker-%s: speed %lf", tmpSlave->GetOrdinal(), tmpStat->fSpeed);
+            if (tmpStat->fSpeed > 0) {
+               // Calculating the SUM(s_i)
+               sumSpeed += tmpStat->fSpeed;
+               // There is nothing to do if slave_i is not calibrated or slave i is the current slave
+               if ((tmpStat->fTimeInstant) && (cTime - tmpStat->fTimeInstant > 0)) {
+                  // Calculating the SUM(b_i*s_i)
+                  //      s_i = tmpStat->fSpeed
+                  //      b_i = tmpStat->fTimeInstant + tmpStat->fLastProcessed/s_i - cTime)
+                  //  b_i*s_i = (tmpStat->fTimeInstant - cTime)*s_i + tmpStat->fLastProcessed
+                  Double_t busyspeed =
+                     ((tmpStat->fTimeInstant - cTime)*tmpStat->fSpeed + tmpStat->fLastProcessed);
+                  if (busyspeed > 0)
+                     sumBusy += busyspeed;
+               }
             }
          }
-      }
-      PDB(kPacketizer,2)
-         Info("GetNextPacket", "worker-%s: sum speed: %lf, sum busy: %f",
-                               sl->GetOrdinal(), sumSpeed, sumBusy);
-      // firstly the slave will try to get all of the remaining entries
-      if (slstat->fSpeed > 0 &&
-         (fTotalEntries - fAssigned)/(slstat->fSpeed) < fTimeLimit) {
-         num = (fTotalEntries - fAssigned);
-      } else {
-         if (slstat->fSpeed > 0) {
-            // calculating the optTime
-            Double_t optTime = (fTotalEntries - fAssigned + sumBusy)/sumSpeed;
-            // if optTime is greater than the official time limit, then the slave gets a number
-            // of entries that still fit into the time limit, otherwise it uses the optTime as
-            // a time limit
-            num = (optTime > fTimeLimit) ? Nint(fTimeLimit*(slstat->fSpeed))
-                                         : Nint(optTime*(slstat->fSpeed));
-           PDB(kPacketizer,2)
-              Info("GetNextPacket", "opTime %lf num %lld speed %lf", optTime, num, slstat->fSpeed);
+         PDB(kPacketizer,2)
+            Info("GetNextPacket", "worker-%s: sum speed: %lf, sum busy: %f",
+                                 sl->GetOrdinal(), sumSpeed, sumBusy);
+         // firstly the slave will try to get all of the remaining entries
+         if (slstat->fSpeed > 0 &&
+            (fTotalEntries - fAssigned)/(slstat->fSpeed) < fTimeLimit) {
+            num = (fTotalEntries - fAssigned);
          } else {
-            Long64_t avg = fTotalEntries/(fSlaveStats->GetSize());
-            num = (avg > 5) ? 5 : avg;
+            if (slstat->fSpeed > 0) {
+               // calculating the optTime
+               Double_t optTime = (fTotalEntries - fAssigned + sumBusy)/sumSpeed;
+               // if optTime is greater than the official time limit, then the slave gets a number
+               // of entries that still fit into the time limit, otherwise it uses the optTime as
+               // a time limit
+               num = (optTime > fTimeLimit) ? Nint(fTimeLimit*(slstat->fSpeed))
+                                          : Nint(optTime*(slstat->fSpeed));
+            PDB(kPacketizer,2)
+               Info("GetNextPacket", "opTime %lf num %lld speed %lf", optTime, num, slstat->fSpeed);
+            } else {
+               Long64_t avg = fTotalEntries/(fSlaveStats->GetSize());
+               num = (avg > 5) ? 5 : avg;
+            }
+         }
+      } else {
+         // Fixed number of cycles per worker
+         num = fNumPerWorker - slstat->fLastProcessed;
+         if (num > 1 && slstat->fSpeed > 0 && num / slstat->fSpeed > fTimeLimit) {
+            num = slstat->fSpeed * fTimeLimit;
          }
       }
    }

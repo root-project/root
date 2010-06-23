@@ -45,12 +45,15 @@ public:              // public because of Sun CC bug
    class TSlaveStat;
 
 private:
-   TList    *fPackets;           // all processed packets
-   TMap     *fSlaveStats;        // Slave status, keyed by correspondig TSlave
+   TList      *fPackets;         // All processed packets
+   TMap       *fSlaveStats;      // Slave status, keyed by correspondig TSlave
    TStopwatch *fStopwatch;       // For measuring the start time of each packet
    Long64_t    fProcessing;      // Event being processed
-   Long64_t    fAssigned;        // no. entries processed or being processed.
+   Long64_t    fAssigned;        // Entries processed or being processed.
    Double_t    fTimeLimit;       // Packet time limit
+   Long64_t    fCalibNum;        // Size of the calibrating packet
+   Long64_t    fNumPerWorker;    // Number of cycles per worker, if this option
+                                 // is chosen
 
    TPacketizerUnit();
    TPacketizerUnit(const TPacketizerUnit&);     // no implementation, will generate
