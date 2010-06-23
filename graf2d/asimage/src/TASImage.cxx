@@ -479,9 +479,9 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
 
    if (!gIconPaths[0]) {
       init_icon_paths();
-      // suppress the "root : looking for image ..." messages
-      set_output_threshold(0);
    }
+   // suppress the "root : looking for image ..." messages
+   set_output_threshold(0);
 
    static ASImageImportParams iparams;
    iparams.flags = 0;
