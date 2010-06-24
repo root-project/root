@@ -174,11 +174,27 @@ int XrdProofdProofServ::Reset(const char *msg, int type)
 {
    // Reset this instance, broadcasting a message to the clients.
    // return 1 if top master, 0 otherwise
+   XPDLOC(SMGR, "ProofServ::Reset")
 
    int rc = 0;
+   // Read the status file
+   int st = -1;
+   XrdOucString fn;
+   XPDFORM(fn, "%s.status", fAdminPath.c_str());
+   FILE *fpid = fopen(fn.c_str(), "r");
+   if (fpid) {
+      if (fscanf(fpid, "%d", &st) <= 0)
+         TRACE(XERR,"problems reading from file "<<fn);
+      fclose(fpid);
+   }
+   TRACE(DBG,"file: "<<fn<<", st:"<<st);
    XrdSysMutexHelper mhp(fMutex);
    // Broadcast msg
-   Broadcast(msg, type);
+   if (st == 4) {
+      Broadcast("idle-timeout", type);
+   } else {
+      Broadcast(msg, type);
+   }
    // What kind of server is this?
    if (fSrvType == kXPD_TopMaster) rc = 1;
    // Reset instance

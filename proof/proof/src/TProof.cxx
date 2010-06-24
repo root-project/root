@@ -2653,7 +2653,15 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess)
          break;
 
       case kPROOF_FATAL:
-         MarkBad(s, "received kPROOF_FATAL");
+         {  TString msg;
+            if ((mess->BufferSize() > mess->Length()))
+               (*mess) >> msg;
+            if (msg.IsNull()) {
+               MarkBad(s, "received kPROOF_FATAL");
+            } else {
+               MarkBad(s, msg);
+            }
+         }
          if (fProgressDialogStarted) {
             // Finalize the progress dialog
             Emit("StopProcess(Bool_t)", kTRUE);
@@ -3891,7 +3899,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
       }
    }
 
-   if (!reason || strcmp(reason, kPROOF_TerminateWorker)) {
+   if (!reason || (strcmp(reason, kPROOF_TerminateWorker) && strcmp(reason, kPROOF_WorkerIdleTO))) {
       // Message for notification
       const char *mastertype = (gProofServ && gProofServ->IsTopMaster()) ? "top master" : "master";
       TString src = IsMaster() ? Form("%s at %s", mastertype, thisurl.Data()) : "local session";
@@ -3921,7 +3929,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
          Printf("%s", msg.Data());
       }
    } else if (reason) {
-      if (gDebug > 0) {
+      if (gDebug > 0 && strcmp(reason, kPROOF_WorkerIdleTO)) {
          Info("MarkBad", "worker %s at %s:%d asked to terminate",
                          wrk->GetOrdinal(), wrk->GetName(), wrk->GetPort());
       }

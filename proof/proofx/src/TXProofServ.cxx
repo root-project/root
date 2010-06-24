@@ -490,16 +490,14 @@ void TXProofServ::HandleUrgentData()
                      Info("HandleUrgentData", "touching path: %s", fAdminPath.Data());
             } else {
                // Update the status in the file
-               FILE *fs = fopen(fAdminPath.Data(), "w");
-               if (fs) {
-                  Int_t st = GetSessionStatus();
-                  fprintf(fs, "%d", st);
-                  fclose(fs);
-                  PDB(kGlobal, 2)
-                     Info("HandleUrgentData", "status (=%d) update in path: %s", st, fAdminPath.Data());
-               } else {
-                  Error("HandleUrgentData", "problems opening status path: %s (errno: %d)", fAdminPath.Data(), errno);
-               }
+               //     0     idle
+               //     1     running
+               //     2     being terminated  (currently unused)
+               //     3     queued
+               //     4     idle timed-out
+               Int_t uss_rc = UpdateSessionStatus(-1);
+               if (uss_rc != 0)
+                  Error("HandleUrgentData", "problems updating status path: %s (errno: %d)", fAdminPath.Data(), -uss_rc);
             }
          } else {
             Info("HandleUrgentData", "admin path undefined");
@@ -978,6 +976,7 @@ void TXProofServ::EnableTimeout()
 void TXProofServ::Terminate(Int_t status)
 {
    // Terminate the proof server.
+
    if (fTerminated)
       // Avoid doubling the exit operations
       exit(1);

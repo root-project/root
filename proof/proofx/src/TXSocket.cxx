@@ -799,13 +799,20 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       case kXPD_wrkmortem:
          //
          // A worker died
-         Printf(" ");
-         Printf("| %.*s", len, (char *)pdata);
-         // Handle error
-         if (fHandler)
-            fHandler->HandleError();
-         else
-            Error("ProcessUnsolicitedMsg","handler undefined");
+         {  TString what = TString::Format("%.*s", len, (char *)pdata);
+            if (what.BeginsWith("idle-timeout")) {
+               // Notify the idle timeout
+               PostMsg(kPROOF_FATAL, kPROOF_WorkerIdleTO);
+            } else {
+               Printf(" ");
+               Printf("| %s", what.Data());
+               // Handle error
+               if (fHandler)
+                  fHandler->HandleError();
+               else
+                  Error("ProcessUnsolicitedMsg","handler undefined");
+            }
+         }
          break;
 
       case kXPD_touch:
@@ -865,15 +872,20 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
 }
 
 //_______________________________________________________________________
-void TXSocket::PostMsg(Int_t type)
+void TXSocket::PostMsg(Int_t type, const char *msg)
 {
    // Post a message of type 'type' into the read messages queue.
+   // If 'msg' is defined it is also added as TString.
    // This is used, for example, with kPROOF_FATAL to force the main thread
    // to mark this socket as bad, avoiding race condition when a worker
    // dies while in processing state.
 
    // Create the message
    TMessage m(type);
+
+   // Add the string if any
+   if (msg && strlen(msg) > 0)
+      m << TString(msg);
 
    // Write length in first word of buffer
    m.SetLength();

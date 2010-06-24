@@ -368,7 +368,7 @@ TProofServLogHandlerGuard::~TProofServLogHandlerGuard()
    }
 }
 
-//--- Special timer to constrol delayed shutdowns ----------------------------//
+//--- Special timer to control delayed shutdowns ----------------------------//
 //______________________________________________________________________________
 Bool_t TShutdownTimer::Notify()
 {
@@ -464,6 +464,40 @@ Bool_t TReaperTimer::Notify()
    } else {
       // Needed for the next shot
       Reset();
+   }
+   return kTRUE;
+}
+
+//--- Special timer to to terminate idle sessions ----------------------------//
+//______________________________________________________________________________
+Bool_t TIdleTOTimer::Notify()
+{
+   // Handle expiration of the idle timer. The session will just be terminated.
+
+   Info ("Notify", "session idle for more then %d secs: terminating", Long_t(fTime)/1000);
+
+   if (fProofServ) {
+      // Set the status to timed-out
+      Int_t uss_rc = -1;
+      if ((uss_rc = fProofServ->UpdateSessionStatus(4)) != 0)
+         Warning("Notify", "problems updating session status (errno: %d)", -uss_rc);
+      // Send a terminate request
+      TString msg;
+      if (fProofServ->GetProtocol() < 29) {
+         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %d secs\n"
+                  "// Please IGNORE any error message possibly displayed below\n//",
+                  gSystem->HostName(), fProofServ->GetSessionTag(), Long_t(fTime)/1000);
+      } else {
+         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %d secs\n//",
+                  gSystem->HostName(), fProofServ->GetSessionTag(), Long_t(fTime)/1000);
+      }
+      fProofServ->SendAsynMessage(msg.Data());
+      fProofServ->Terminate(0);
+      Reset();
+      Stop();
+   } else {
+      Warning("Notify", "fProofServ undefined!");
+      Start(-1, kTRUE);
    }
    return kTRUE;
 }
@@ -578,6 +612,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    fShutdownTimer   = 0;
    fReaperTimer     = 0;
+   fIdleTOTimer     = 0;
 
    fInflateFactor   = 1000;
 
@@ -1161,6 +1196,9 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
 void TProofServ::HandleSocketInput()
 {
    // Handle input coming from the client or from the master server.
+
+   // The idle timeout guard: stops the timer and restarts when we return from here
+   TIdleTOTimerGuard itg(fIdleTOTimer);
 
    Bool_t all = (fgRecursive > 0) ? kFALSE : kTRUE;
    fgRecursive++;
@@ -2940,9 +2978,6 @@ Int_t TProofServ::SetupCommon()
       }
    }
 
-   if (gProofDebugLevel > 0)
-      Info("SetupCommon", "successfully completed");
-
    if (fgLogToSysLog > 0) {
       // Set the syslog entity (all the information is available now)
       if (!(fUser.IsNull()) && !(fGroup.IsNull())) {
@@ -2958,6 +2993,23 @@ Int_t TProofServ::SetupCommon()
       gSystem->Syslog(kLogNotice, s.Data());
    }
 
+   // Setup the idle timer
+   if (IsMaster() && !fIdleTOTimer) {
+      // Check activity on socket every 5 mins
+      Int_t idle_to = gEnv->GetValue("ProofServ.IdleTimeout", -1);
+      if (idle_to > 0) {
+         fIdleTOTimer = new TIdleTOTimer(this, idle_to * 1000);
+         fIdleTOTimer->Start(-1, kTRUE);
+         if (gProofDebugLevel > 0)
+            Info("SetupCommon", " idle timer started (%d secs)", idle_to);
+      } else if (gProofDebugLevel > 0) {
+         Info("SetupCommon", " idle timer not started (no idle timeout requested)");
+      }
+   }
+
+   if (gProofDebugLevel > 0)
+      Info("SetupCommon", "successfully completed");
+
    // Done
    return 0;
 }
@@ -2969,7 +3021,7 @@ void TProofServ::Terminate(Int_t status)
 
    if (fgLogToSysLog > 0) {
       TString s;
-      s.Form("%s -1 %.3f %.3f", fgSysLogEntity.Data(), fRealTime, fCpuTime);
+      s.Form("%s -1 %.3f %.3f %d", fgSysLogEntity.Data(), fRealTime, fCpuTime, status);
       gSystem->Syslog(kLogNotice, s.Data());
    }
 
@@ -6390,12 +6442,34 @@ Int_t TProofServ::GetSessionStatus()
    //     1     running
    //     2     being terminated  (currently unused)
    //     3     queued
+   //     4     idle timed-out (not set in here but in TIdleTOTimer::Notify)
    // This is typically run in the reader thread, so access needs to be protected
 
    R__LOCKGUARD(fQMtx);
    Int_t st = (fIdle) ? 0 : 1;
    if (fIdle && fWaitingQueries->GetSize() > 0) st = 3;
    return st;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::UpdateSessionStatus(Int_t xst)
+{
+   // Update the session status in the relevant file. The status is taken from
+   // GetSessionStatus() unless xst >= 0, in which case xst is used.
+   // Return 0 on success, -errno if the file could not be opened.
+
+   FILE *fs = fopen(fAdminPath.Data(), "w");
+   if (fs) {
+      Int_t st = (xst < 0) ? GetSessionStatus() : xst;
+      fprintf(fs, "%d", st);
+      fclose(fs);
+      PDB(kGlobal, 2)
+         Info("UpdateSessionStatus", "status (=%d) update in path: %s", st, fAdminPath.Data());
+   } else {
+      return -errno;
+   }
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________

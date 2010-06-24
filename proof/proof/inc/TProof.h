@@ -123,7 +123,7 @@ class TMacro;
 // 26 -> 27: Use new file for updating the session status
 // 27 -> 28: Support for multi-datasets, fix global pack dirs, fix AskStatistics,
 //           package download, dataset caching
-// 28 -> 29: Support for config parameters in EnablePackage
+// 28 -> 29: Support for config parameters in EnablePackage, idle-timeout
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 29;            // protocol version number
@@ -141,6 +141,7 @@ const char* const kPROOF_CacheLockFile   = "proof-cache-lock-";   // cache lock 
 const char* const kPROOF_PackageLockFile = "proof-package-lock-"; // package lock file
 const char* const kPROOF_QueryLockFile   = "proof-query-lock-";   // query lock file
 const char* const kPROOF_TerminateWorker = "+++ terminating +++"; // signal worker termination in MarkBad
+const char* const kPROOF_WorkerIdleTO    = "+++ idle-timeout +++"; // signal worker idle timeout in MarkBad
 const char* const kPROOF_InputDataFile   = "inputdata.root";      // Default input data file name
 
 #ifndef R__WIN32
