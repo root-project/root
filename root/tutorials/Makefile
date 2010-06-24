@@ -39,6 +39,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   pythia/% \
   sql/% \
   tree/hsimpleProxy tree/tree0 tree/tree2a tree/tree4 \
+  roostats/rs401d_FeldmanCousins.C \
   tree/copytree2 tree/copytree3 tree/copytree
 
 TUTORIALSTESTS_NEEDS_MIUNIT2 := fit/fit2dHist fit/fit2dHist \
