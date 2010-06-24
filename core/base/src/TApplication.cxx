@@ -929,7 +929,7 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
       }
       if (!*s || *s == '#' || ifndefc || !strncmp(s, "//", 2)) continue;
 
-      if (!strncmp(s, ".X", 2) || !strncmp(s, ".x", 2)) {
+      if (!comment && (!strncmp(s, ".X", 2) || !strncmp(s, ".x", 2))) {
          retval = ExecuteFile(s+3);
          execute = kTRUE;
          continue;
