@@ -116,7 +116,7 @@ public:
       kChannelMarksStyleDiamond=6,
       kChannelMarksStyleTriangle=7,
       kChannelGridNotDrawn=0,
-      kChannelGridDrawn=1,
+      kChannelGridDrawn=1
   };
 
 protected:
