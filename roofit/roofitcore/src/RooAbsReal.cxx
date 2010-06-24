@@ -4315,6 +4315,26 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
 }
 
 
+//_____________________________________________________________________________
+RooAbsReal::ErrorLoggingMode RooAbsReal::evalErrorLoggingMode() 
+{ 
+  // Return current evaluation error logging mode. 
+  return _evalErrorMode ; 
+}
+
+//_____________________________________________________________________________
+void RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::ErrorLoggingMode m) 
+{ 
+  // Set evaluation error logging mode. Options are
+  //
+  // PrintErrors - Print each error through RooMsgService() as it occurs
+  // CollectErrors - Accumulate errors, but do not print them. A subsequent call
+  //                 to printEvalErrors() will print a summary
+  // CountErrors - Accumulate error count, but do not print them. 
+  //
+
+  _evalErrorMode =  m; 
+}
 
 
 

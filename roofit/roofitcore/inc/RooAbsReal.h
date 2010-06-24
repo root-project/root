@@ -248,8 +248,8 @@ public:
   } ;
 
   enum ErrorLoggingMode { PrintErrors, CollectErrors, CountErrors } ;
-  static ErrorLoggingMode evalErrorLoggingMode() { return _evalErrorMode ; }
-  static void setEvalErrorLoggingMode(ErrorLoggingMode m) { _evalErrorMode =  m; }
+  static ErrorLoggingMode evalErrorLoggingMode() ;
+  static void setEvalErrorLoggingMode(ErrorLoggingMode m) ;
   void logEvalError(const char* message, const char* serverValueString=0) const ;
   static void logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString=0) ;
   static void printEvalErrors(ostream&os=std::cout, Int_t maxPerNode=10000000) ;
