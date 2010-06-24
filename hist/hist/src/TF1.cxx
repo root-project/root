@@ -1620,6 +1620,8 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
    //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
+   //
+   // NOTE: see also TF1::GetMaximumX and TF1::GetX
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
@@ -1648,7 +1650,9 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
    //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
-
+   //
+   // NOTE: see also TF1::GetX
+   
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
    ROOT::Math::BrentMinimizer1D bm;
@@ -1676,6 +1680,8 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
    //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
+   //
+   // NOTE: see also TF1::GetMaximumX and TF1::GetX
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
@@ -1704,6 +1710,8 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
    //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
+   //
+   // NOTE: see also TF1::GetX
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
@@ -1723,6 +1731,8 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
 Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter) const
 {
    // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
+   // in other words it can find the roots of the function when fy=0 and successive calls
+   // by changing the next call to [xmin+eps,xmax] where xmin is the previous root.
    // Method:
    //  First, the grid search is used to bracket the maximum
    //  with the step size = (xmax-xmin)/fNpx. This way, the step size
@@ -1731,6 +1741,8 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, 
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
    //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) and absolute (if |x| < 1     //  and maxiter (default = 100) controls the maximum number of iteration of the Brent algorithm
+   //
+   // NOTE: see also TF1::GetMaximumX, TF1::GetMinimumX
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
    
