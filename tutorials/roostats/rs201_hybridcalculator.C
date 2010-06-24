@@ -12,14 +12,14 @@
 #include "RooGlobalFunc.h"
 #endif
 
-#include "RooStats/HybridCalculator.h"
+#include "RooStats/HybridCalculatorOriginal.h"
 #include "RooStats/HybridResult.h"
 #include "RooStats/HybridPlot.h"
 
-void rs201_hybridcalculator(int ntoys = 3000)
+void rs201_hybridcalculator(int ntoys = 1000)
 {
   //***********************************************************************//
-  // This macro show an example on how to use RooStats/HybridCalculator    //
+  // This macro show an example on how to use RooStats/HybridCalculatorOriginal //
   //***********************************************************************//
   //
   // With this example, you should get: CL_sb = 0.130 and CL_b = 0.946
@@ -37,16 +37,21 @@ void rs201_hybridcalculator(int ntoys = 3000)
   RooArgList observables(x); // variables to be generated
 
   // gaussian signal
-  RooRealVar sig_mean("sig_mean","",0);
-  RooRealVar sig_sigma("sig_sigma","",0.8);
-  RooGaussian sig_pdf("sig_pdf","",x,sig_mean,sig_sigma);
+//  RooRealVar sig_mean("sig_mean","",0);
+//  RooRealVar sig_sigma("sig_sigma","",0.8);
+//  RooGaussian sig_pdf("sig_pdf","",x,sig_mean,sig_sigma);
+  RooGaussian sig_pdf("sig_pdf","",x, RooConst(0.0),RooConst(0.8));
   RooRealVar sig_yield("sig_yield","",20,0,300);
 
   // flat background (extended PDF)
-  RooRealVar bkg_slope("bkg_slope","",0);
-  RooPolynomial bkg_pdf("bkg_pdf","",x,bkg_slope);
+//  RooRealVar bkg_slope("bkg_slope","",0);
+//  RooPolynomial bkg_pdf("bkg_pdf","",x,bkg_slope);
+  RooPolynomial bkg_pdf("bkg_pdf","", x, RooConst(0));
   RooRealVar bkg_yield("bkg_yield","",40,0,300);
   RooExtendPdf bkg_ext_pdf("bkg_ext_pdf","",bkg_pdf,bkg_yield);
+
+//  bkg_yield.setConstant(kTRUE);
+  sig_yield.setConstant(kTRUE);
 
   // total sig+bkg (extended PDF)
   RooAddPdf tot_pdf("tot_pdf","",RooArgList(sig_pdf,bkg_pdf),RooArgList(sig_yield,bkg_yield));
@@ -62,18 +67,19 @@ void rs201_hybridcalculator(int ntoys = 3000)
 
   //***********************************************************************//
 
-  /// run HybridCalculator on those inputs 
+  /// run HybridCalculator on those inputs
 
   // use interface from HypoTest calculator by default
 
-  HybridCalculator myHybridCalc(*data, tot_pdf , bkg_ext_pdf ,
-                                &nuisance_parameters, &bkg_yield_prior); 
+  HybridCalculatorOriginal myHybridCalc(*data, tot_pdf , bkg_ext_pdf ,
+                                   &nuisance_parameters, &bkg_yield_prior);
 
   // here I use the default test statistics: 2*lnQ (optional)
   myHybridCalc.SetTestStatistic(1);
+  //myHybridCalc.SetTestStatistic(3); // profile likelihood ratio
 
   myHybridCalc.SetNumberOfToys(ntoys); 
-  //myHybridCalc.UseNuisance(false);                            
+  myHybridCalc.UseNuisance(true);
 
   // for speed up generation (do binned data) 
   myHybridCalc.SetGenerateBinned(false); 
@@ -107,7 +113,7 @@ void rs201_hybridcalculator(int ntoys = 3000)
   //myHybridResult->Add(myOtherHybridResult);
 
   /// nice plot of the results
-  HybridPlot* myHybridPlot = myHybridResult->GetPlot("myHybridPlot","Plot of results with HybridCalculator",100);
+  HybridPlot* myHybridPlot = myHybridResult->GetPlot("myHybridPlot","Plot of results with HybridCalculatorOriginal",100);
   myHybridPlot->Draw();
 
   /// recover and display the results
@@ -122,7 +128,7 @@ void rs201_hybridcalculator(int ntoys = 3000)
   myHybridResult->SetDataTestStatistics(mean_sb_toys_test_stat);
   double toys_significance = myHybridResult->Significance();
 
-  std::cout << "Completed HybridCalculator example:\n"; 
+  std::cout << "Completed HybridCalculatorOriginal example:\n";
   std::cout << " - -2lnQ = " << min2lnQ_data << endl;
   std::cout << " - CL_sb = " << clsb_data << std::endl;
   std::cout << " - CL_b  = " << clb_data << std::endl;

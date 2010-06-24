@@ -2,7 +2,7 @@
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
 #include "RooWorkspace.h"
-#include "RooStats/HybridCalculator.h"
+#include "RooStats/HybridCalculatorOriginal.h"
 #include "RooStats/HybridResult.h"
 #include "RooStats/HybridPlot.h"
 
@@ -26,7 +26,7 @@ void rs505_HybridCalculator_significance(const char* fname="WS_GaussOverFlat_wit
   //Import the objects needed
   RooAbsPdf* model=my_WS->pdf("model");
   RooAbsData* data=my_WS->data("data");
-  RooAbsPdf* priorNuisance=my_WS->pdf("priorNuisance");
+  RooAbsPdf* nuisanceTerm=my_WS->pdf("nuisanceTerm");
   //const RooArgSet* paramInterestSet=my_WS->set("POI");
   //RooRealVar* paramInterest= (RooRealVar*) paramInterestSet->first();
   RooAbsPdf* modelBkg=my_WS->pdf("modelBkg");
@@ -34,14 +34,14 @@ void rs505_HybridCalculator_significance(const char* fname="WS_GaussOverFlat_wit
   const RooArgSet* nuisanceParam=my_WS->set("parameters");
   
  
-  HybridCalculator * hc=new HybridCalculator(*data,*model,*modelBkg);
+  HybridCalculatorOriginal * hc=new HybridCalculatorOriginal(*data,*model,*modelBkg);
   hc->SetNumberOfToys(ntoys);
-  bool usepriors=false;
+  bool useNuisance=false;
 
-  if(priorNuisance!=0){
+  if(nuisanceTerm!=0){
     hc->UseNuisance(kTRUE);
-    hc->SetNuisancePdf(*priorNuisance);
-    usepriors=true;
+    hc->SetNuisancePdf(*nuisanceTerm);
+    useNuisance=true;
     cout<<"The following nuisance parameters are taken into account:"<<endl;
     nuisanceParam->Print();
     hc->SetNuisanceParameters(*nuisanceParam);

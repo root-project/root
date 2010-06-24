@@ -2,7 +2,7 @@
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
 #include "RooWorkspace.h"
-#include "RooStats/HybridCalculator.h"
+#include "RooStats/HybridCalculatorOriginal.h"
 #include "RooStats/HybridResult.h"
 #include "RooStats/HybridPlot.h"
 
@@ -25,7 +25,7 @@ void rs506_HybridCalculator_averageSignificance(const char* fname="WS_GaussOverF
 
   //Import the objects needed
   RooAbsPdf* model=my_WS->pdf("model");
-  RooAbsPdf* priorNuisance=my_WS->pdf("priorNuisance");
+  RooAbsPdf* nuisanceTerm=my_WS->pdf("nuisanceTerm");
 
   //const RooArgSet* paramInterestSet=my_WS->set("paramInterest");
   //RooRealVar* paramInterest=(RooRealVar*) paramInterestSet->first();
@@ -33,14 +33,14 @@ void rs506_HybridCalculator_averageSignificance(const char* fname="WS_GaussOverF
   const RooArgSet* nuisanceParam=my_WS->set("parameters");
   RooArgList observable(*(my_WS->set("observables") ) );
   
-  HybridCalculator * hc=new HybridCalculator(*model,*modelBkg,observable);
+  HybridCalculatorOriginal * hc=new HybridCalculatorOriginal(*model,*modelBkg,observable);
   hc->SetNumberOfToys(ntoys);
   hc->SetTestStatistic(1);
-  bool usepriors=false;
-  if(priorNuisance!=0){
+  bool useNuisance=false;
+  if(nuisanceTerm!=0){
     hc->UseNuisance(kTRUE);
-    hc->SetNuisancePdf(*priorNuisance);
-    usepriors=true;
+    hc->SetNuisancePdf(*nuisanceTerm);
+    useNuisance=true;
     nuisanceParam->Print();
     hc->SetNuisanceParameters(*nuisanceParam);
   }else{
@@ -48,7 +48,7 @@ void rs506_HybridCalculator_averageSignificance(const char* fname="WS_GaussOverF
   }
   
   RooRandom::randomGenerator()->SetSeed(0);
-  HybridResult* hcresult=hc->Calculate(ntoys,usepriors);
+  HybridResult* hcresult=hc->Calculate(ntoys,useNuisance);
   HybridPlot* hcplot = hcresult->GetPlot("HybridPlot","Toy MC Q ",100);
   double mean_sb_toys_test_stat = hcplot->GetSBmean();
   hcresult->SetDataTestStatistics(mean_sb_toys_test_stat);

@@ -13,15 +13,15 @@
 // .x tutorials/roostats/rs401d_FeldmanCousins.C+
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
 #include "RooGlobalFunc.h"
-#endif
 #include "RooStats/ConfInterval.h"
 #include "RooStats/FeldmanCousins.h"
 #include "RooStats/ProfileLikelihoodCalculator.h"
 #include "RooStats/MCMCCalculator.h"
 #include "RooStats/UniformProposal.h"
 #include "RooStats/LikelihoodIntervalPlot.h"
+#include "RooStats/MCMCIntervalPlot.h"
+#include "RooStats/MCMCInterval.h"
 
 #include "RooDataSet.h"
 #include "RooDataHist.h"
@@ -51,20 +51,17 @@
 #include <iostream>
 
 // PDF class created for this macro
-#if !defined(__CINT__) || defined(__MAKECINT__)
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly
-#else
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly
-#endif
+#include "NuMuToNuE_Oscillation.h"
+#include "NuMuToNuE_Oscillation.cxx" // so that it can be executed directly
 
 // use this order for safety on library loading
 using namespace RooFit ;
 using namespace RooStats ;
 
 
-void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = false)
+void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 {
+
   // to time the macro
   TStopwatch t;
   t.Start();
@@ -166,7 +163,6 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = false)
   // create a toy dataset
   RooDataSet* data = model.generate(RooArgSet(E), nEventsData);
   
-
   /////////////////////////////////////////////
   // make some plots
   TCanvas* dataCanvas = new TCanvas("dataCanvas");
@@ -207,13 +203,17 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = false)
 
   //////////////////////////////////////////////////////////
   //////// show use of Feldman-Cousins utility in RooStats
-  RooStats::FeldmanCousins fc;
   // set the distribution creator, which encodes the test statistic
   RooArgSet parameters(deltaMSq, sinSq2theta);
-  fc.SetPdf(model);
-  fc.SetParameters(parameters);
+  RooWorkspace* w = new RooWorkspace();
+
+  ModelConfig modelConfig;
+  modelConfig.SetWorkspace(*w);
+  modelConfig.SetPdf(model);
+  modelConfig.SetParametersOfInterest(parameters);
+
+  RooStats::FeldmanCousins fc(*data, modelConfig);
   fc.SetTestSize(.1); // set size of test
-  fc.SetData(*data);
   fc.UseAdaptiveSampling(true);
   fc.SetNBins(10); // number of points to test per parameter
 
@@ -225,95 +225,96 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = false)
 
   ///////////////////////////////////////////////////////////////////
   ///////// show use of ProfileLikeihoodCalculator utility in RooStats
-  RooStats::ProfileLikelihoodCalculator plc;
-  plc.SetPdf(model);
-  plc.SetParameters(parameters);
+  RooStats::ProfileLikelihoodCalculator plc(*data, modelConfig);
   plc.SetTestSize(.1);
-  plc.SetData(*data);
   
   ConfInterval* plcInterval = plc.GetInterval();
 
   ///////////////////////////////////////////////////////////////////
   ///////// show use of MCMCCalculator utility in RooStats
-  ConfInterval* mcmcInterval = NULL;
+  MCMCInterval* mcInt = NULL;
 
   if (doMCMC) {
+      // turn some messages back on
+      RooMsgService::instance().setStreamStatus(0,kTRUE);
+      RooMsgService::instance().setStreamStatus(1,kTRUE);
+
       TStopwatch mcmcWatch;
       mcmcWatch.Start();
-      cout << "========================= MCMC =========================" << endl;
-      UniformProposal up;
 
-      RooArgList axisList(sinSq2theta, deltaMSq);
-      MCMCCalculator mc(*data, model, parameters);
-      mc.SetProposalFunction(up);
-      mc.SetNumIters(10000);
-      //mc.SetUseKeys(false);
+      RooArgList axisList(deltaMSq, sinSq2theta);
+      MCMCCalculator mc(*data, modelConfig);
+      mc.SetNumIters(5000);
+      mc.SetNumBurnInSteps(100);
+      mc.SetUseKeys(true);
       mc.SetTestSize(.1);
       mc.SetAxes(axisList); // set which is x and y axis in posterior histogram
-      mcmcInterval = mc.GetInterval();
+      //mc.SetNumBins(50);
+      mcInt = (MCMCInterval*)mc.GetInterval();
 
       mcmcWatch.Stop();
       mcmcWatch.Print();
-      cout << "======================= END MCMC =======================" << endl;
   }
   ////////////////////////////////////////////
   // make plot of resulting interval
 
   dataCanvas->cd(4);
-  LikelihoodIntervalPlot plotInt((LikelihoodInterval*)plcInterval);
-  plotInt.SetTitle("90% Confidence Intervals");
-  plotInt.Draw();
-  dataCanvas->Update();
 
   // first plot a small dot for every point tested
-  RooDataHist* parameterScan = (RooDataHist*) fc.GetPointsToScan();
-  TH2F* hist = (TH2F*) parameterScan->createHistogram("sinSq2theta:deltaMSq",30,30);
-  //  hist->Draw();
-  TH2F* forContour = (TH2F*)hist->Clone();
+  if (doFeldmanCousins) {
+     RooDataHist* parameterScan = (RooDataHist*) fc.GetPointsToScan();
+     TH2F* hist = (TH2F*) parameterScan->createHistogram("sinSq2theta:deltaMSq",30,30);
+     //  hist->Draw();
+     TH2F* forContour = (TH2F*)hist->Clone();
 
-  // now loop through the points and put a marker if it's in the interval
-  RooArgSet* tmpPoint;
-  // loop over points to test
-  for(Int_t i=0; i<parameterScan->numEntries(); ++i){
-     // get a parameter point from the list of points to test.
-    tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
+     // now loop through the points and put a marker if it's in the interval
+     RooArgSet* tmpPoint;
+     // loop over points to test
+     for(Int_t i=0; i<parameterScan->numEntries(); ++i){
+        // get a parameter point from the list of points to test.
+        tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
 
-    if (interval){
-      if (interval->IsInInterval( *tmpPoint ) ) {
-	forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"), 
-						  tmpPoint->getRealValue("deltaMSq")),	 1);
-      }else{
-	forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"), 
-						  tmpPoint->getRealValue("deltaMSq")),	 0);
-      }
-    }
+        if (interval){
+           if (interval->IsInInterval( *tmpPoint ) ) {
+              forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"), 
+                       tmpPoint->getRealValue("deltaMSq")),	 1);
+           }else{
+              forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"), 
+                       tmpPoint->getRealValue("deltaMSq")),	 0);
+           }
+        }
 
 
-    delete tmpPoint;
+        delete tmpPoint;
+     }
+
+     if (interval){
+        Double_t level=0.5;
+        forContour->SetContour(1,&level);
+        forContour->SetLineWidth(2);
+        forContour->SetLineColor(kRed);
+        forContour->Draw("cont2,same");
+     }
   }
 
-  if (interval){
-    Double_t level=0.5;
-    forContour->SetContour(1,&level);
-    forContour->SetLineWidth(2);
-    forContour->SetLineColor(kRed);
-    forContour->Draw("cont2,same");
-  }
-
-
-  if (mcmcInterval){
-    // most of this code is just to switch x/y axes in the histogram
-    TH1* posterior = ((MCMCInterval*)mcmcInterval)->GetPosteriorHist();
-
-    Double_t mcmclevel = ((MCMCInterval*)mcmcInterval)->GetHistCutoff();
-    posterior->SetContour(1,&mcmclevel);
-    posterior->SetLineColor(kMagenta);
-    posterior->SetLineWidth(2);
-    posterior->Draw("cont2,same");
-  
+  MCMCIntervalPlot* mcPlot = NULL;
+  if (mcInt) {
+     cout << "MCMC actual confidence level: "
+        << mcInt->GetActualConfidenceLevel() << endl;
+     mcPlot = new MCMCIntervalPlot(*mcInt);
+     mcPlot->SetLineColor(kMagenta);
+     mcPlot->Draw();
   }
   dataCanvas->Update();
   
+  LikelihoodIntervalPlot plotInt((LikelihoodInterval*)plcInterval);
+  plotInt.SetTitle("90% Confidence Intervals");
+  if (mcInt)
+     plotInt.Draw("same");
+  else
+     plotInt.Draw();
+  dataCanvas->Update();
+
   /// print timing info
   t.Stop();
   t.Print();
