@@ -329,22 +329,26 @@ namespace Math {
    \f[ D(x) = \int_{-\infty}^{x} p(x) dx  \f]
 
    where \f$p(x)\f$ is the Landau probability density function : 
-  \f[ p(x) = \frac{1}{sigma} \phi (\lambda) \f]
+  \f[ p(x) = \frac{1}{\xi} \phi (\lambda) \f]
    with
    \f[  \phi(\lambda) = \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} e^{\lambda s + s \log{s}} ds\f]
-   with \f$\lambda = (x-x0)/sigma\f$. For a detailed description see 
-   K.S. K\"olbig and B. Schorr, A program package for the Landau distribution, 
+   with \f$\lambda = (x-x_0)/\xi\f$. For a detailed description see 
+   K.S. K&ouml;lbig and B. Schorr, A program package for the Landau distribution, 
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>. 
    The same algorithms as in 
    <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
    CERNLIB</A> (DISLAN) is used.  
+   
+   @param x The argument \f$x\f$ 
+   @param xi The width parameter \f$\xi\f$ 
+   @param x0 The location parameter \f$x_0\f$ 
 
    @ingroup ProbFunc
  
    */
 
-   double landau_cdf(double x, double sigma = 1, double x0 = 0);
+   double landau_cdf(double x, double xi = 1, double x0 = 0);
 
   /**
 
@@ -355,9 +359,16 @@ namespace Math {
      
      where p(x) is the Landau probability density function. 
      It is implemented simply as 1. - #landau_cdf
+   
+   @param x The argument \f$x\f$ 
+   @param xi The width parameter \f$\xi\f$ 
+   @param x0 The location parameter \f$x_0\f$ 
+
+    @ingroup ProbFunc
+    
   */
-   inline double landau_cdf_c(double x, double sigma = 1, double x0 = 0) { 
-      return 1. - landau_cdf(x,sigma,x0);
+   inline double landau_cdf_c(double x, double xi = 1, double x0 = 0) { 
+      return 1. - landau_cdf(x,xi,x0);
    }
 
    /**
@@ -671,46 +682,54 @@ namespace Math {
    /**
 
    First moment (mean) of the truncated Landau distribution.
-   \f[ \frac{1}{D (x)} int_{-infty}^{x} t p(t) d t \f]
-   where \f$p(x)\f$ is the Landau distribution:
+   \f[ \frac{1}{D (x)} \int_{-\infty}^{x} t\, p(t) d t \f]
+   where \f$p(x)\f$ is the Landau distribution
    and \f$D(x)\f$ its cumulative distribution function.
    
    For detailed description see 
-   K.S. K\"olbig and B. Schorr, A program package for the Landau distribution, 
+   K.S. K&ouml;lbig and B. Schorr, A program package for the Landau distribution, 
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>. 
    The same algorithms as in 
    <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
    CERNLIB</A> (XM1LAN)  is used 
    
+   @param x The argument \f$x\f$ 
+   @param xi The width parameter \f$\xi\f$ 
+   @param x0 The location parameter \f$x_0\f$ 
+   
    @ingroup TruncFunc
    
    */
 
-   double landau_xm1(double x, double sigma = 1, double x0 = 0);
+   double landau_xm1(double x, double xi = 1, double x0 = 0);
 
 
 
    /**
 
    Second moment of the truncated Landau distribution.
-   \f[ \frac{1}{D (x)} int_{-infty}^{x} t p(t) d t \f]
-   where \f$p(x)\f$ is the Landau distribution:
+   \f[ \frac{1}{D (x)} \int_{-\infty}^{x} t^2\, p(t) d t \f]
+   where \f$p(x)\f$ is the Landau distribution
    and \f$D(x)\f$ its cumulative distribution function.
    
    For detailed description see 
-   K.S. K\"olbig and B. Schorr, A program package for the Landau distribution, 
+   K.S. K&ouml;lbig and B. Schorr, A program package for the Landau distribution, 
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>. 
    The same algorithms as in 
    <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
    CERNLIB</A> (XM1LAN)  is used 
    
+   @param x The argument \f$x\f$ 
+   @param xi The width parameter \f$\xi\f$ 
+   @param x0 The location parameter \f$x_0\f$ 
+   
    @ingroup TruncFunc
    
    */
 
-   double landau_xm2(double x, double sigma = 1, double x0 = 0);
+   double landau_xm2(double x, double xi = 1, double x0 = 0);
 
 
 

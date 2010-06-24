@@ -266,7 +266,7 @@ namespace Math {
    }
 
 
-   double landau_cdf(double x, double sigma, double x0) { 
+   double landau_cdf(double x, double xi, double x0) { 
       // implementation of landau distribution (from DISLAN)
    //The algorithm was taken from the Cernlib function dislan(G110)
    //Reference: K.S.Kolbig and B.Schorr, "A program package for the Landau
@@ -294,7 +294,7 @@ namespace Math {
 
       static double a2[4] = {0,  1.0            ,-0.4227843351e+0,-0.2043403138e+1};
 
-      double v = (x - x0)/sigma; 
+      double v = (x - x0)/xi; 
       double u;
       double lan;
 
@@ -333,7 +333,7 @@ namespace Math {
 
 
    
-   double landau_xm1(double x, double sigma, double x0) {
+   double landau_xm1(double x, double xi, double x0) {
       // implementation of first momentum of Landau distribution
       // translated from Cernlib (XM1LAN function) by Benno List  
 
@@ -376,7 +376,7 @@ namespace Math {
        -0.1958333333E+1, 0.5563368056E+1,-0.2111352961E+2,
         0.1006946266E+3};
 
-      double v = (x-x0)/sigma;
+      double v = (x-x0)/xi;
       double xm1lan;
       if (v < -4.5) {
          double u = std::exp(v+1);
@@ -406,13 +406,13 @@ namespace Math {
        xm1lan = (u+a0[0]+(-u+a0[1]+(a0[2]*u+a0[3]+(a0[4]*u+a0[5])*v)*v)*v)/
                 (1-(1-(a0[2]+a0[4]*v)*v)*v);
       }
-      return xm1lan*sigma + x0;
+      return xm1lan*xi + x0;
       
    }
    
    
    
-   double landau_xm2(double x, double sigma, double x0) {
+   double landau_xm2(double x, double xi, double x0) {
       // implementation of second momentum of Landau distribution
       // translated from Cernlib (XM2LAN function) by Benno List  
 
@@ -459,7 +459,7 @@ namespace Math {
        -1.0            , 0.4458333333E+1,-0.2116753472E+2,
         0.1163674359E+3};
 
-      double v = (x-x0)/sigma;
+      double v = (x-x0)/xi;
       double xm2lan;
       if (v < -4.5) {
          double u = std::exp(v+1);
@@ -492,9 +492,9 @@ namespace Math {
          xm2lan = (1/v+u*u+a0[0]+a0[1]*u+(-u*u+a0[2]*u+a0[3]+
                   (a0[4]*u*u+a0[5]*u+a0[6])*v)*v)/(1-(1-a0[4]*v)*v);
       }
-      if (x0 == 0) return xm2lan*sigma*sigma;
-      double xm1lan = ROOT::Math::landau_xm1(x, sigma, x0);
-      return xm2lan*sigma*sigma + (2*xm1lan-x0)*x0;
+      if (x0 == 0) return xm2lan*xi*xi;
+      double xm1lan = ROOT::Math::landau_xm1(x, xi, x0);
+      return xm2lan*xi*xi + (2*xm1lan-x0)*x0;
    }
 
 } // namespace Math

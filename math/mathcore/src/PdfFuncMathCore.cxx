@@ -125,7 +125,7 @@ namespace Math {
    
    
    
-   double landau_pdf(double x, double sigma, double x0) {
+   double landau_pdf(double x, double xi, double x0) {
       // LANDAU pdf : algorithm from CERNLIB G110 denlan
       // same algorithm is used in GSL 
 
@@ -151,8 +151,8 @@ namespace Math {
 
       static double a2[2] = {-1.845568670,-4.284640743};
 
-      if (sigma <= 0) return 0; 
-      double v = (x - x0)/sigma;
+      if (xi <= 0) return 0; 
+      double v = (x - x0)/xi;
       double u, ue, us, denlan;
       if (v < -5.5) {
          u   = std::exp(v+1.0);
@@ -187,7 +187,7 @@ namespace Math {
          u   = 1/(v-v*std::log(v)/(v+1));
          denlan = u*u*(1+(a2[0]+a2[1]*u)*u);
       }
-      return denlan/sigma;
+      return denlan/xi;
       
    }
    
@@ -247,8 +247,6 @@ namespace Math {
    }
    
    
-   
-
 } // namespace Math
 } // namespace ROOT
 

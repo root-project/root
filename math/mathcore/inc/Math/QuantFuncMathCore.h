@@ -532,19 +532,21 @@ namespace Math {
       (#landau_cdf).
 
    For detailed description see 
-   K.S. K\"olbig and B. Schorr, A program package for the Landau distribution, 
+   K.S. K&ouml;lbig and B. Schorr, A program package for the Landau distribution, 
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>. 
    The same algorithms as in 
    <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
    CERNLIB</A> (RANLAN) is used.  
-
+   
+   @param z The argument \f$z\f$ 
+   @param xi The width parameter \f$\xi\f$ 
   
       @ingroup QuantFunc
 
    */
 
-   double landau_quantile(double z, double sigma = 1);
+   double landau_quantile(double z, double xi = 1);
 
 
    /**
@@ -553,10 +555,15 @@ namespace Math {
       function of the upper tail of the landau distribution
       (#landau_cdf_c).
       Implemented using #landau_quantile
+   
+   @param z The argument \f$z\f$ 
+   @param xi The width parameter \f$\xi\f$ 
+  
+      @ingroup QuantFunc
 
    */
 
-   double landau_quantile_c(double z, double sigma = 1);
+   double landau_quantile_c(double z, double xi = 1);
 
 
 #ifdef HAVE_OLD_STAT_FUNC

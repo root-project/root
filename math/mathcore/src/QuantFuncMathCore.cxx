@@ -188,9 +188,9 @@ namespace Math {
 
    }
 
-   double landau_quantile(double z, double sigma) {
+   double landau_quantile(double z, double xi) {
       // LANDAU quantile : algorithm from CERNLIB G110 ranlan
-      // with scale parameter sigma
+      // with scale parameter xi
       // Converted by Rene Brun from CERNLIB routine ranlan(G110),
       // Moved and adapted to QuantFuncMathCore by B. List 29.4.2010
 
@@ -363,7 +363,7 @@ namespace Math {
          40.157721,41.622399,43.202525,44.912465,46.769077,48.792279,
          51.005773,53.437996,56.123356,59.103894 };
 
-      if (sigma <= 0) return 0;
+      if (xi <= 0) return 0;
       if (z <= 0) return -std::numeric_limits<double>::infinity(); 
       if (z >= 1) return std::numeric_limits<double>::infinity();
       
@@ -392,15 +392,12 @@ namespace Math {
                     ((1         +6.06511919E3*u+6.94021044E5*v)*u);
          }
       }
-      return sigma*ranlan;
+      return xi*ranlan;
     }
 
-   double landau_quantile_c(double z, double sigma) {
-      return landau_quantile(1.-z,sigma);
+   double landau_quantile_c(double z, double xi) {
+      return landau_quantile(1.-z,xi);
    }
-
-
-
-
+   
 } // namespace Math
 } // namespace ROOT
