@@ -173,7 +173,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
       totalMC = (Int_t) (2./fSize); 
     }
     // use control
-    totalMC*=fAdditionalNToysFactor;
+    totalMC = (Int_t) totalMC*fAdditionalNToysFactor;
 
     ToyMCSampler* toyMCSampler = dynamic_cast<ToyMCSampler*>(fTestStatSampler);
     if(fAdaptiveSampling && toyMCSampler) {

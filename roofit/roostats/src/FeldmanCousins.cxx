@@ -124,7 +124,7 @@ void FeldmanCousins::CreateTestStatSampler() const{
   ProfileLikelihoodTestStat* testStatistic = new ProfileLikelihoodTestStat(*fModel.GetPdf());
   
   // create the ToyMC test statistic sampler
-  fTestStatSampler = new ToyMCSampler(*testStatistic,(int)fAdditionalNToysFactor*50./fSize) ;
+  fTestStatSampler = new ToyMCSampler(*testStatistic,int(fAdditionalNToysFactor*50./fSize)) ;
   fTestStatSampler->SetParametersForTestStat(*fModel.GetParametersOfInterest() );
   if(fModel.GetObservables())
     fTestStatSampler->SetObservables(*fModel.GetObservables());
