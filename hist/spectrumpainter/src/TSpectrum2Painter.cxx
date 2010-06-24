@@ -173,7 +173,7 @@ TSpectrum2Painter::~TSpectrum2Painter()
    for (int i=0; i<256; i++) {
       col = gROOT->GetColor(250+i);
       if (col) delete col;
-   }   
+   }
 }
 
 
@@ -1550,6 +1550,12 @@ void VisA() {
    ui1 = (Int_t)(256*pen_col->GetRed());
    ui2 = (Int_t)(256*pen_col->GetGreen());
    ui3 = (Int_t)(256*pen_col->GetBlue());
+
+   if (fBx2>=kMaximumXScreenResolution) {
+      printf("The canvas size exceed the maximum X screen resolution \n");
+      return;
+   }
+
    for (i=fBx1;i<fBx2;i++) {
       fEnvelope[i]        = fBy2;
       fEnvelopeContour[i] = fBy2;
