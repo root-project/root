@@ -62,7 +62,7 @@ END_HTML
 #include "RooProfileLL.h"
 #include "RooNLLVar.h"
 #include "RooGlobalFunc.h"
-#include "RooProdPdf.h"
+//#include "RooProdPdf.h"
 
 ClassImp(RooStats::ProfileLikelihoodCalculator) ;
 
@@ -74,7 +74,7 @@ using namespace RooStats;
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator() : 
    CombinedCalculator(), fFitResult(0)
 {
-   // default dummy constructor 
+   // default constructor
 }
 
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAbsPdf& pdf, const RooArgSet& paramsOfInterest, 
@@ -82,49 +82,38 @@ ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data, RooAb
    CombinedCalculator(data,pdf, paramsOfInterest, size, nullParams ), 
    fFitResult(0)
 {
-   // constructor from the data, a model pdf and the parameter of Interest. 
-   // If nuisance parameters are present they should be specified as part of the model
-   // i.e. the model pdf is a combined pdf for the poi and the nuisance 
-   // The default test size used is 0.05 ( for a 95%  interval) 
-   // A set for the null parameters (it must be a copied set) can be specified which will be used for 
-   // performing the hypothesis test
+   // constructor from pdf and parameters
+   // the pdf must contain eventually the nuisance parameters
 }
 
 ProfileLikelihoodCalculator::ProfileLikelihoodCalculator(RooAbsData& data,  ModelConfig& model, Double_t size) :
    CombinedCalculator(data, model, size), 
    fFitResult(0)
 {
-   // construct from the data and a model configuration (ModelConfig class) 
-   // If the model configuration contains a Prior pdf it will be included in the full model
-   // used by the profile likelihood calculator.
-   // The default test size used is 0.05 ( for a 95%  interval) 
-
+   // construct from a ModelConfig. Assume data model.GetPdf() will provide full description of model including 
+   // constraint term on the nuisances parameters
    assert(model.GetPdf() );
-   if (model.GetPriorPdf() ) { 
-      std::string name = std::string("Costrained_") + (model.GetPdf())->GetName() + std::string("_with_") + (model.GetPriorPdf())->GetName();
-      fPdf = new RooProdPdf(name.c_str(),name.c_str(), *(model.GetPdf()), *(model.GetPriorPdf()) );
-      // set pdf in ModelConfig which will import in WS  and it will manage it 
-      model.SetPdf(*fPdf);
-   }
 }
 
 
 //_______________________________________________________
 ProfileLikelihoodCalculator::~ProfileLikelihoodCalculator(){
-   // destructor (delete the contained result of the fit)
-
+   // destructor
+   // cannot delete prod pdf because it will delete all the composing pdf's
+//    if (fOwnPdf) delete fPdf; 
+//    fPdf = 0; 
    if (fFitResult) delete fFitResult; 
 }
 
 void ProfileLikelihoodCalculator::DoReset() const { 
-   // private method to reset and clear fit results 
+   // reset and clear fit result 
    // to be called when a new model or data are set in the calculator 
    if (fFitResult) delete fFitResult; 
    fFitResult = 0; 
 }
 
 void  ProfileLikelihoodCalculator::DoGlobalFit() const { 
-   // private method to perform a global fit of the likelihood letting with all parameter of interest and 
+   // perform a global fit of the likelihood letting with all parameter of interest and 
    // nuisance parameters 
    // keep the list of fitted parameters 
 
@@ -139,7 +128,7 @@ void  ProfileLikelihoodCalculator::DoGlobalFit() const {
    RemoveConstantParameters(constrainedParams);
 
    // calculate MLE 
-   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(1),Hesse(kTRUE),Save(kTRUE),PrintLevel(-1),Warnings(kFALSE));
+   RooFitResult* fit = pdf->fitTo(*data, Constrain(*constrainedParams),Strategy(1),Hesse(kTRUE),Save(kTRUE),PrintLevel(-1));
   
    // for debug 
    fit->Print();
@@ -199,7 +188,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    //RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
    //  profile->Print();
 
-   TString name = TString("LikelihoodInterval_") + TString(GetName() ); 
+   TString name = TString("LikelihoodInterval_");// + TString(GetName() ); 
 
    // make a list of fPOI with fit result values and pass to LikelihoodInterval class
    // bestPOI is a cloned list of POI only with their best fit values 
@@ -226,11 +215,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    // the first lets the null parameters float, so it's a maximum likelihood estimate
    // the second is to the null (fixing null parameters to their specified values): eg. a conditional maximum likelihood
    // the ratio of the likelihood at the conditional MLE to the MLE is the profile likelihood ratio.
-   // Wilks' theorem is used to get p-values. 
-   //
-   // A RooArgSet contained a copied of the null parameters must be previously specified 
-   // (either in the constructor or by using SetNullParameters )
-
+   // Wilks' theorem is used to get p-values 
 
 //    RooAbsPdf* pdf   = fWS->pdf(fPdfName);
 //    RooAbsData* data = fWS->data(fDataName);
@@ -294,7 +279,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    Double_t NLLatCondMLE = NLLatMLE; 
    if (existVarParams) {
 
-      RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1),Warnings(kFALSE));
+      RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE), Save(kTRUE),PrintLevel(-1));
      
       NLLatCondMLE = fit2->minNll();
       fit2->Print();
@@ -309,7 +294,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    // Use Wilks' theorem to translate -2 log lambda into a signifcance/p-value
    Double_t deltaNLL = std::max( NLLatCondMLE-NLLatMLE, 0.);
 
-   TString name = TString("ProfileLRHypoTestResult_") + TString(GetName() ); 
+   TString name = TString("ProfileLRHypoTestResult_");// + TString(GetName() ); 
    HypoTestResult* htr = 
       new HypoTestResult(name, SignificanceToPValue(sqrt( 2*deltaNLL)), 0 );
 

@@ -81,7 +81,7 @@ namespace RooStats {
          delete fCache;
          fCache = NULL;
          fCachePosition = 0;
-         fLastX = RooArgSet();
+         fLastX.removeAll();
       }
 
       virtual void printMappings()

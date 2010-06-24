@@ -28,6 +28,7 @@
 
 
 #pragma link C++ class RooStats::HypoTestResult+;
+#pragma link C++ class RooStats::HypoTestPlot+;
 #pragma link C++ class RooStats::ConfInterval+; // interface, not concrete
 #pragma link C++ class RooStats::SimpleInterval+;
 #pragma link C++ class RooStats::LikelihoodInterval+;
@@ -49,20 +50,25 @@
 #pragma link C++ class RooStats::ProposalHelper+; 
 #pragma link C++ class RooStats::UniformProposal+; 
 #pragma link C++ class RooStats::PdfProposal+; 
-#pragma link C++ class RooStats::Heavyside+; 
+#pragma link C++ class RooStats::Heaviside+; 
 
 #pragma link C++ class RooStats::HybridCalculator+;
+#pragma link C++ class RooStats::HybridCalculatorOriginal+;
 #pragma link C++ class RooStats::HybridPlot+;
 #pragma link C++ class RooStats::HybridResult+;				 
 
 #pragma link C++ class RooStats::TestStatSampler+; // interface, not concrete
 #pragma link C++ class RooStats::DebuggingSampler+;
 #pragma link C++ class RooStats::ToyMCSampler+;
+#pragma link C++ class RooStats::ToyMCSamplerOld+;
 
 #pragma link C++ class RooStats::TestStatistic+; // interface
 #pragma link C++ class RooStats::DebuggingTestStat+;
 #pragma link C++ class RooStats::ProfileLikelihoodTestStat+;
+#pragma link C++ class RooStats::RatioOfProfiledLikelihoodsTestStat+;
 #pragma link C++ class RooStats::NumEventsTestStat+;
+#pragma link C++ class RooStats::SimpleLikelihoodRatioTestStat+;
+#pragma link C++ class RooStats::MaxLikelihoodEstimateTestStat+;
 
 #pragma link C++ class RooStats::SamplingDistribution+;
 #pragma link C++ class RooStats::NeymanConstruction+;

@@ -21,6 +21,7 @@
 #endif
 
 #include "RooStats/ToyMCSampler.h"
+//#include "RooStats/ToyMCSampler2.h"
 #include "RooStats/ConfidenceBelt.h"
 
 #include "RooAbsData.h"
@@ -34,11 +35,14 @@ namespace RooStats {
 
    class ConfInterval; 
 
-   class FeldmanCousins : public IntervalCalculator, public TNamed {
+   class FeldmanCousins : public IntervalCalculator {
 
    public:
 
-     FeldmanCousins();
+     //     FeldmanCousins();
+
+     // Common constructor
+     FeldmanCousins(RooAbsData& data, ModelConfig& model);
 
      virtual ~FeldmanCousins();
     
@@ -50,15 +54,23 @@ namespace RooStats {
       // Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
       // Set the DataSet
-      virtual void SetData(RooAbsData& data) {  fData = &data; }    
+      virtual void SetData(RooAbsData& /*data*/) {  
+	cout << "DEPRECATED, set data in constructor" << endl;
+      }    
       // Set the Pdf
-      virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }	
+      virtual void SetPdf(RooAbsPdf& /*pdf*/) { 
+	cout << "DEPRECATED, use ModelConfig" << endl;
+      }	
 
       // specify the parameters of interest in the interval
-      virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
+      virtual void SetParameters(const RooArgSet& /*set*/) { 
+	cout << "DEPRECATED, use ModelConfig" << endl;
+      }
 
       // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams.removeAll(); fNuisParams.add(set);}
+      virtual void SetNuisanceParameters(const RooArgSet& /*set*/) {
+	cout << "DEPRECATED, use ModelConfig" << endl;
+      }
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
@@ -75,6 +87,8 @@ namespace RooStats {
       ConfidenceBelt* GetConfidenceBelt() {return fConfBelt;}
 
       void UseAdaptiveSampling(bool flag=true){fAdaptiveSampling=flag;}
+
+      void AdditionalNToysFactor(double fact){fAdditionalNToysFactor = fact;}
 
       void SetNBins(Int_t bins) {fNbins = bins;}
 
@@ -96,19 +110,26 @@ namespace RooStats {
       void CreateTestStatSampler() const;
 
       Double_t fSize; // size of the test (eg. specified rate of Type I error)
+      ModelConfig &fModel;
+      RooAbsData & fData; // data set 
+
+      /*
       RooAbsPdf * fPdf; // common PDF
-      RooAbsData * fData; // data set 
       RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
       RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
+      RooArgSet fObservables;// RooArgSet specifying  nuisance parameters for interval
+      */
+
       mutable ToyMCSampler* fTestStatSampler; // the test statistic sampler
       mutable RooAbsData* fPointsToTest; // points to perform the construction
       mutable ConfidenceBelt* fConfBelt;
-      bool fAdaptiveSampling; // controls use of adaptive sampling algorithm
+      Bool_t fAdaptiveSampling; // controls use of adaptive sampling algorithm
+      Double_t fAdditionalNToysFactor; // give user ability to ask for more toys
       Int_t fNbins; // number of samples per variable
       Bool_t fFluctuateData;  // tell ToyMCSampler to fluctuate number of entries in dataset
       Bool_t fDoProfileConstruction; // instead of full construction over nuisance parametrs, do profile
-      bool fSaveBeltToFile; // controls use if ConfidenceBelt should be saved to a TFile
-      bool fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
+      Bool_t fSaveBeltToFile; // controls use if ConfidenceBelt should be saved to a TFile
+      Bool_t fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
       ClassDef(FeldmanCousins,1)   // Interface for tools setting limits (producing confidence intervals)

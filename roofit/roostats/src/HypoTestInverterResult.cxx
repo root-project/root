@@ -234,5 +234,5 @@ Double_t HypoTestInverterResult::UpperLimitEstimatedError()
    //std::cout << "The HypoTestInverterResult::UpperLimitEstimatedError() function evaluates only a rought error on the upper limit. Be careful when using this estimation\n";
   if (fInterpolateUpperLimit) std::cout << "The upper limit was an interpolated results... in this case the error is even less reliable (the Y-error bars are currently not used in the interpolation)\n";
 
-  return CalculateEstimatedError(1-ConfidenceLevel()/2);
+  return CalculateEstimatedError((1-ConfidenceLevel())/2);
 }

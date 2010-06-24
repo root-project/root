@@ -1,12 +1,6 @@
 // @(#)root/roostats:$Id$
-
+// Author: Kyle Cranmer, Sven Kreiss   23/05/10
 /*************************************************************************
- * Project: RooStats                                                     *
- * Package: RooFit/RooStats                                              *
- * Authors:                                                              *
- *   Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke       *
- * Other author of this class: Danilo Piparo                             *
- *************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
@@ -14,578 +8,175 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//_________________________________________________________________
 /**
-HybridCalculator class: this class is a fresh rewrite in RooStats of
-	RooStatsCms/LimitCalculator developped by D. Piparo and G. Schott
-Authors: D. Piparo, G. Schott - Universitaet Karlsruhe
-
-The class is born from the need to have an implementation of the CLs 
-method that could take advantage from the RooFit Package.
-The basic idea is the following: 
-- Instantiate an object specifying a signal+background model, a background model and a dataset.
-- Perform toy MC experiments to know the distributions of -2lnQ 
-- Calculate the CLsb and CLs values as "integrals" of these distributions.
-
-The class allows the user to input models as RooAbsPdf ( TH1 object could be used 
-by using the RooHistPdf class)
-The pdfs must be "extended": for more information please refer to 
-http://roofit.sourceforge.net). The dataset can be entered as a 
-RooAbsData objects.  
-
-Unlike the TLimit Class a complete MC generation is performed at each step 
-and not a simple Poisson fluctuation of the contents of the bins.
-Another innovation is the treatment of the nuisance parameters. The user 
-can input in the constructor nuisance parameters.
-To include the information that we have about the nuisance parameters a prior
-PDF (RooAbsPdf) should be specified
-
-Different test statistic can be used (likelihood ratio, number of events or 
-profile likelihood ratio. The default is the likelihood ratio. 
-See the method SetTestStatistic.
-
-The number of toys to be generated is controlled by SetNumberOfToys(n).
-
-The result of the calculations is returned as a HybridResult object pointer.
-
-see also the following interesting references:
-- Alex Read, "Presentation of search results: the CLs technique",
-  Journal of Physics G: Nucl. Part. Phys. 28 2693-2704 (2002).
-  see http://www.iop.org/EJ/abstract/0954-3899/28/10/313/
-
-- Alex Read, "Modified Frequentist Analysis of Search Results (The CLs Method)" CERN 2000-005 (30 May 2000)
-
-- V. Bartsch, G.Quast, "Expected signal observability at future experiments" CMS NOTE 2005/004
-
-- http://root.cern.ch/root/html/src/TLimit.html
+Same purpose as HybridCalculatorOld, but different implementation.
 */
 
-
-#include "RooDataHist.h"
-#include "RooDataSet.h"
-#include "RooGlobalFunc.h"
-#include "RooNLLVar.h"
-#include "RooRealVar.h"
-#include "RooAbsData.h"
-#include "RooWorkspace.h"
-
-#include "TH1.h"
-
 #include "RooStats/HybridCalculator.h"
+#include "RooStats/HybridPlot.h"
+
+#include "RooStats/ToyMCSampler.h"
+#include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
 
 ClassImp(RooStats::HybridCalculator)
 
 using namespace RooStats;
 
-///////////////////////////////////////////////////////////////////////////
 
-HybridCalculator::HybridCalculator(const char *name) :
-   TNamed(name,name),
-   fSbModel(0),
-   fBModel(0),
-   fObservables(0),
-   fNuisanceParameters(0),
-   fPriorPdf(0),
-   fData(0),
-   fUsePriorPdf(false)
+//___________________________________
+HybridCalculator::HybridCalculator(
+				     RooAbsData &data,
+				     ModelConfig &altModel,
+				     ModelConfig &nullModel,
+				     TestStatSampler *sampler
+				     ) :
+   fAltModel(altModel),
+   fNullModel(nullModel),
+   fData(data),
+   fPriorNuisanceNull(0),
+   fPriorNuisanceAlt(0),
+   fTestStatSampler(sampler),
+   fDefaultSampler(0),
+   fDefaultTestStat(0)
 {
-   // constructor with name and title
-   // set default parameters
-   SetTestStatistic(1); 
-   SetNumberOfToys(1000); 
+  // Constructor. When test stat sampler is not provided
+  // uses ToyMCSampler and RatioOfProfiledLikelihoodsTestStat
+  // and nToys = 1000.
+  // User can : GetTestStatSampler()->SetNToys( # )
+  if(!sampler){
+    fDefaultTestStat
+      = new RatioOfProfiledLikelihoodsTestStat(*nullModel.GetPdf(), 
+					       *altModel.GetPdf(), 
+					       altModel.GetSnapshot());
+    
+    fDefaultSampler = new ToyMCSampler(*fDefaultTestStat, 1000);
+    fTestStatSampler = fDefaultSampler;
+  }
 }
 
+//_____________________________________________________________
+void HybridCalculator::SetupSampler(ModelConfig& model) const {
+   // common setup for both models
+   fNullModel.LoadSnapshot();
+   fTestStatSampler->SetObservables(*fNullModel.GetObservables());
+   fTestStatSampler->SetParametersForTestStat(*fNullModel.GetParametersOfInterest());
 
-/// constructor without the data - is it needed ???????????
-HybridCalculator::HybridCalculator( RooAbsPdf& sbModel,
-                                    RooAbsPdf& bModel,
-                                    RooArgList& observables,
-                                    const RooArgSet* nuisance_parameters,
-                                    RooAbsPdf* priorPdf ,
-				    bool GenerateBinned,
-                                    int testStatistics, 
-                                    int numToys) :
-   fSbModel(&sbModel),
-   fBModel(&bModel),
-   fNuisanceParameters(nuisance_parameters),
-   fPriorPdf(priorPdf),
-   fData(0),
-   fGenerateBinned(GenerateBinned),
-   fUsePriorPdf(false)
-{
-   /// HybridCalculator constructor without specifying a data set
-   /// the user need to specify the models in the S+B case and B-only case,
-   /// the list of observables of the model(s) (for MC-generation), the list of parameters 
-   /// that are marginalised and the prior distribution of those parameters
+   // for this model
+   model.LoadSnapshot();
+   fTestStatSampler->SetSamplingDistName(model.GetName());
+   fTestStatSampler->SetPdf(*model.GetPdf());
+   fTestStatSampler->SetGlobalObservables(*model.GetGlobalObservables());
+   fTestStatSampler->SetNuisanceParameters(*model.GetNuisanceParameters());
 
-   // observables are managed by the class (they are copied in) 
-  fObservables = new RooArgList(observables);
-  //Try to recover the informations from the pdf's
-  //fObservables=new RooArgList("fObservables");
-  //fNuisanceParameters=new RooArgSet("fNuisanceParameters");
-  // if (priorPdf){
-      
-
-  SetTestStatistic(testStatistics); 
-  SetNumberOfToys(numToys); 
-
-  if (priorPdf) UseNuisance(true); 
-  
-   // this->Print();
-   /* if ( _verbose ) */ //this->PrintMore("v"); /// TO DO: add the verbose mode
-}
-
-
-HybridCalculator::HybridCalculator( RooAbsData & data, 
-                                    RooAbsPdf& sbModel,
-                                    RooAbsPdf& bModel,
-                                    const RooArgSet* nuisance_parameters,
-                                    RooAbsPdf* priorPdf,
-				    bool GenerateBinned,
-                                    int testStatistics, 
-                                    int numToys) :
-   fSbModel(&sbModel),
-   fBModel(&bModel),
-   fObservables(0),
-   fNuisanceParameters(nuisance_parameters),
-   fPriorPdf(priorPdf),
-   fData(&data),
-   fGenerateBinned(GenerateBinned),
-   fUsePriorPdf(false)
-{
-   /// HybridCalculator constructor for performing hypotesis test 
-   /// the user need to specify the data set, the models in the S+B case and B-only case. 
-   /// In case of treatment of nuisance parameter, the user need to specify the  
-   /// the list of parameters  that are marginalised and the prior distribution of those parameters
-
-
-   SetTestStatistic(testStatistics);
-   SetNumberOfToys(numToys); 
-
-   if (priorPdf) UseNuisance(true); 
-}
-
-
-
-HybridCalculator::HybridCalculator( RooAbsData& data, 
-                                    const ModelConfig& sbModel, 
-                                    const ModelConfig& bModel, 
-				    bool GenerateBinned,
-                                    int testStatistics, 
-                                    int numToys) :
-   fSbModel(sbModel.GetPdf()),
-   fBModel(bModel.GetPdf()),
-   fObservables(0),  // no need to set them - can be taken from the data
-   fNuisanceParameters((sbModel.GetNuisanceParameters()) ? sbModel.GetNuisanceParameters()  :  bModel.GetNuisanceParameters()),
-   fPriorPdf((sbModel.GetPriorPdf()) ? sbModel.GetPriorPdf()  :  bModel.GetPriorPdf()),
-   fData(&data),
-   fGenerateBinned(GenerateBinned),
-   fUsePriorPdf(false)
-{
-  /// Constructor with a ModelConfig object representing the signal + background model and 
-  /// another model config representig the background only model
-  /// a Prior pdf for the nuiscane parameter of the signal and background can be specified in 
-  /// the s+b model or the b model. If it is specified in the s+b model, the one of the s+b model will be used 
-
-  if (fPriorPdf) UseNuisance(true);
-
-  SetTestStatistic(testStatistics);
-  SetNumberOfToys(numToys); 
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-HybridCalculator::~HybridCalculator()
-{
-   /// HybridCalculator destructor
-   if (fObservables) delete fObservables; 
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-void HybridCalculator::SetNullModel(const ModelConfig& model)
-{
-   // Set the model describing the null hypothesis
-   fBModel = model.GetPdf();
-   // only if it has not been set before
-   if (!fPriorPdf) fPriorPdf = model.GetPriorPdf(); 
-   if (!fNuisanceParameters) fNuisanceParameters = model.GetNuisanceParameters(); 
-}
-
-void HybridCalculator::SetAlternateModel(const ModelConfig& model)
-{
-   // Set the model describing the alternate hypothesis
-   fSbModel = model.GetPdf();
-   fPriorPdf = model.GetPriorPdf(); 
-   fNuisanceParameters = model.GetNuisanceParameters(); 
-}
-
-void HybridCalculator::SetTestStatistic(int index)
-{
-   /// set the desired test statistics:
-   /// index=1 : likelihood ratio: 2 * log( L_sb / L_b )  (DEFAULT)
-   /// index=2 : number of generated events
-   /// index=3 : profiled likelihood ratio
-   /// if the index is different to any of those values, the default is used
-   fTestStatisticsIdx = index;
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-HybridResult* HybridCalculator::Calculate(TH1& data, unsigned int nToys, bool usePriors) const
-{
-   /// first compute the test statistics for data and then prepare and run the toy-MC experiments
-
-   /// convert data TH1 histogram to a RooDataHist
-   TString dataHistName = GetName(); dataHistName += "_roodatahist";
-   RooDataHist dataHist(dataHistName,"Data distribution as RooDataHist converted from TH1",*fObservables,&data);
-
-   HybridResult* result = Calculate(dataHist,nToys,usePriors);
-
-   return result;
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-HybridResult* HybridCalculator::Calculate(RooAbsData& data, unsigned int nToys, bool usePriors) const
-{
-   /// first compute the test statistics for data and then prepare and run the toy-MC experiments
-
-   double testStatData = 0;
-   if ( fTestStatisticsIdx==2 ) {
-      /// number of events used as test statistics
-      double nEvents = data.sumEntries();
-      testStatData = nEvents;
-   } else if ( fTestStatisticsIdx==3 ) {
-      /// profiled likelihood ratio used as test statistics
-      RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,data,RooFit::Extended());
-      fSbModel->fitTo(data,RooFit::Extended());
-      double sb_nll_val = sb_nll.getVal();
-      RooNLLVar b_nll("b_nll","b_nll",*fBModel,data,RooFit::Extended());
-      fBModel->fitTo(data,RooFit::Extended());
-      double b_nll_val = b_nll.getVal();
-      double m2lnQ = 2*(sb_nll_val-b_nll_val);
-      testStatData = m2lnQ;
-   } else if ( fTestStatisticsIdx==1 ) {
-      /// likelihood ratio used as test statistics (default)
-      RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,data,RooFit::Extended());
-      RooNLLVar b_nll("b_nll","b_nll",*fBModel,data,RooFit::Extended());
-      double m2lnQ = 2*(sb_nll.getVal()-b_nll.getVal());
-      testStatData = m2lnQ;
-   }
-
-   HybridResult* result = Calculate(nToys,usePriors);
-   result->SetDataTestStatistics(testStatData);
-
-   return result;
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-HybridResult* HybridCalculator::Calculate(unsigned int nToys, bool usePriors) const
-{
-   std::vector<double> bVals;
-   bVals.reserve(nToys);
-
-   std::vector<double> sbVals;
-   sbVals.reserve(nToys);
-
-   RunToys(bVals,sbVals,nToys,usePriors);
-
-   HybridResult* result;
-
-   TString name = "HybridResult_" + TString(GetName() );
-
-   if ( fTestStatisticsIdx==2 )
-     result = new HybridResult(name,sbVals,bVals,false);
-   else 
-     result = new HybridResult(name,sbVals,bVals);
-
-   return result;
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-void HybridCalculator::RunToys(std::vector<double>& bVals, std::vector<double>& sbVals, unsigned int nToys, bool usePriors) const
-{
-   /// do the actual run-MC processing
-   std::cout << "HybridCalculator: run " << nToys << " toy-MC experiments\n";
-   std::cout << "with test statistics index: " << fTestStatisticsIdx << "\n";
-   if (usePriors) std::cout << "marginalize nuisance parameters \n";
-
-   assert(nToys > 0);
-   assert(fBModel);
-   assert(fSbModel);
-   if (usePriors)  { 
-      assert(fPriorPdf); 
-      assert(fNuisanceParameters);
-   }
-
-   std::vector<double> parameterValues; /// array to hold the initial parameter values
-   /// backup the initial values of the parameters that are varied by the prior MC-integration
-   int nParameters = (fNuisanceParameters) ? fNuisanceParameters->getSize() : 0;
-   RooArgList parametersList("parametersList");  /// transforms the RooArgSet in a RooArgList (needed for .at())
-   if (usePriors && nParameters>0) {
-      parametersList.add(*fNuisanceParameters);
-      parameterValues.resize(nParameters);
-      for (int iParameter=0; iParameter<nParameters; iParameter++) {
-         RooRealVar* oneParam = (RooRealVar*) parametersList.at(iParameter);
-         parameterValues[iParameter] = oneParam->getVal();
-      }
-   }
-
-   // create a cloned list of all parameters need in case of test statistics 3 where those 
-   // changed by the best fit 
-   RooArgSet  originalSbParams; 
-   RooArgSet  originalBParams; 
-   if (fTestStatisticsIdx == 3) { 
-      RooArgSet * sbparams = fSbModel->getParameters(*fObservables);
-      RooArgSet * bparams = fBModel->getParameters(*fObservables);
-      if (sbparams) originalSbParams.addClone(*sbparams);
-      if (bparams) originalBParams.addClone(*bparams);
-      delete sbparams;
-      delete bparams;
-//       originalSbParams.Print("V");
-//       originalBParams.Print("V");
-   }
-
-
-   for (unsigned int iToy=0; iToy<nToys; iToy++) {
-
-      /// prints a progress report every 500 iterations
-      /// TO DO: add a global verbose flag
-     if ( /*verbose && */ iToy%500==0 ) {
-           std::cout << "....... toy number " << iToy << " / " << nToys << std::endl;
-     }
+   if( (&model == &fNullModel) && fPriorNuisanceNull){
+     // Setup Priors for ad hoc Hybrid
+     fTestStatSampler->SetPriorNuisance(fPriorNuisanceNull);
+   } else if( (&model == &fAltModel) && fPriorNuisanceAlt){
+     // Setup Priors for ad hoc Hybrid
+     fTestStatSampler->SetPriorNuisance(fPriorNuisanceAlt);
+   } else if(model.GetNuisanceParameters()==NULL || 
+	     model.GetNuisanceParameters()->getSize()==0){
+     oocoutI((TObject*)0,InputArguments)  
+       << "No nuisance parameters specified and no prior forced, reduces to simple hypothesis testing with no uncertainty" << endl;
+   } else{
+     // TODO principled case:
+     // must create posterior from Model.PriorPdf and Model.Pdf
      
-
-      /// vary the value of the integrated parameters according to the prior pdf
-      if (usePriors && nParameters>0) {
-         /// generation from the prior pdf (TO DO: RooMCStudy could be used here)
-         RooDataSet* tmpValues = (RooDataSet*) fPriorPdf->generate(*fNuisanceParameters,1);
-         for (int iParameter=0; iParameter<nParameters; iParameter++) {
-            RooRealVar* oneParam = (RooRealVar*) parametersList.at(iParameter);
-            oneParam->setVal(tmpValues->get()->getRealValue(oneParam->GetName()));
-         }
-         delete tmpValues;
-      }
-
-
-      /// generate the dataset in the B-only hypothesis
-      RooAbsData* bData;
-      if (fGenerateBinned)
-	bData = static_cast<RooAbsData*> (fBModel->generateBinned(*fObservables,RooFit::Extended()));	
-      else 
-	bData = static_cast<RooAbsData*> (fBModel->generate(*fObservables,RooFit::Extended()));
-
-      /// work-around in case of an empty dataset (TO DO: need a debug in RooFit?)
-      bool bIsEmpty = false;
-      if (bData==NULL) {
-         bIsEmpty = true;
-         // if ( _verbose ) std::cout << "empty B-only dataset!\n";
-         RooDataSet* bDataDummy=new RooDataSet("bDataDummy","empty dataset",*fObservables);
-         bData = static_cast<RooAbsData*>(new RooDataHist ("bDataEmpty","",*fObservables,*bDataDummy));
-         delete bDataDummy;
-      }
-
-      /// generate the dataset in the S+B hypothesis
-      RooAbsData* sbData;
-      if (fGenerateBinned)    
-	sbData = static_cast<RooAbsData*> (fSbModel->generateBinned(*fObservables,RooFit::Extended()));
-      else
-	sbData = static_cast<RooAbsData*> (fSbModel->generate(*fObservables,RooFit::Extended()));
-
-      /// work-around in case of an empty dataset (TO DO: need a debug in RooFit?)
-      bool sbIsEmpty = false;
-      if (sbData==NULL) {
-         sbIsEmpty = true;
-         // if ( _verbose ) std::cout << "empty S+B dataset!\n";
-         RooDataSet* sbDataDummy=new RooDataSet("sbDataDummy","empty dataset",*fObservables);
-         sbData = static_cast<RooAbsData*>(new RooDataHist ("sbDataEmpty","",*fObservables,*sbDataDummy));
-         delete sbDataDummy;
-      }
-
-      /// restore the parameters to their initial values
-      if (usePriors && nParameters>0) {
-         for (int iParameter=0; iParameter<nParameters; iParameter++) {
-            RooRealVar* oneParam = (RooRealVar*) parametersList.at(iParameter);
-            oneParam->setVal(parameterValues[iParameter]);
-         }
-      }
-
-      /// evaluate the test statistic in the S+B case
-      if ( fTestStatisticsIdx==2 ) {
-         /// number of events used as test statistics
-         double nEvents = 0;
-         if ( !sbIsEmpty ) nEvents = sbData->numEntries();
-         sbVals.push_back(nEvents);
-      } else if ( fTestStatisticsIdx==3 ) {
-         /// profiled likelihood ratio used as test statistics
-         RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,*sbData,RooFit::Extended(),RooFit::CloneData(false));
-         fSbModel->fitTo(*sbData,RooFit::Extended(),RooFit::PrintLevel(-1), RooFit::Hesse(false),RooFit::Strategy(0));
-         double sb_nll_val = sb_nll.getVal();
-//          std::cout << "S+B DATA  n = " << sbData->numEntries() << std::endl;
-//          std::cout << "NLL_SB = " << sb_nll_val << "   S+B Best fit params " << std::endl;
-//          fSbModel->getParameters(*sbData)->Print("V");
-         RooNLLVar b_nll("b_nll","b_nll",*fBModel,*sbData,RooFit::Extended(),RooFit::CloneData(false));
-         fBModel->fitTo(*sbData,RooFit::Extended(),RooFit::PrintLevel(-1), RooFit::Hesse(false),RooFit::Strategy(0));
-         double b_nll_val = b_nll.getVal();
-//          std::cout << "NLL_B = " << b_nll_val << "     B Best fit params " << std::endl;
-//          fBModel->getParameters(*sbData)->Print("V");
-         double m2lnQ = 2*(sb_nll_val-b_nll_val);
-//          std::cout << " 2 * LR = " << m2lnQ << std::endl;
-        
-         sbVals.push_back(m2lnQ);
-      } else if ( fTestStatisticsIdx==1 ) {
-         /// likelihood ratio used as test statistics (default)
-         RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,*sbData,RooFit::Extended(),RooFit::CloneData(false));
-         RooNLLVar b_nll("b_nll","b_nll",*fBModel,*sbData,RooFit::Extended(),RooFit::CloneData(false));
-         double m2lnQ = 2*(sb_nll.getVal()-b_nll.getVal());
-         sbVals.push_back(m2lnQ);
-      }
-
-      /// evaluate the test statistic in the B-only case
-      if ( fTestStatisticsIdx==2 ) {
-         /// number of events used as test statistics
-         double nEvents = 0;
-         if ( !bIsEmpty ) nEvents = bData->numEntries();
-         bVals.push_back(nEvents);
-      } else if ( fTestStatisticsIdx==3 ) {
-         /// profiled likelihood ratio used as test statistics
-         RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,*bData,RooFit::Extended(),RooFit::CloneData(false));
-         fSbModel->fitTo(*bData,RooFit::Extended(),RooFit::PrintLevel(-1), RooFit::Hesse(false),RooFit::Strategy(0));
-         double sb_nll_val = sb_nll.getVal();
-         RooNLLVar b_nll("b_nll","b_nll",*fBModel,*bData,RooFit::Extended(),RooFit::CloneData(false));
-         fBModel->fitTo(*bData,RooFit::Extended(),RooFit::PrintLevel(-1), RooFit::Hesse(false),RooFit::Strategy(0));
-         double b_nll_val = b_nll.getVal();
-         double m2lnQ = 2*(sb_nll_val-b_nll_val);
-         bVals.push_back(m2lnQ);
-      } else if ( fTestStatisticsIdx==1 ) {
-         /// likelihood ratio used as test statistics (default)
-         RooNLLVar sb_nll("sb_nll","sb_nll",*fSbModel,*bData,RooFit::Extended(),RooFit::CloneData(false));
-         RooNLLVar b_nll("b_nll","b_nll",*fBModel,*bData,RooFit::Extended(),RooFit::CloneData(false));
-         double m2lnQ = 2*(sb_nll.getVal()-b_nll.getVal());
-         bVals.push_back(m2lnQ);
-      }
-
-      /// delete the toy-MC datasets
-      delete sbData;
-      delete bData;
-
-      /// restore the parameters to their initial values in case fitting is done
-      if (fTestStatisticsIdx == 3) { 
-         RooArgSet * sbparams = fSbModel->getParameters(*fObservables);
-         if (sbparams) { 
-            assert(originalSbParams.getSize() == sbparams->getSize());
-            *sbparams = originalSbParams; 
-            delete sbparams; 
-         }
-         RooArgSet * bparams = fBModel->getParameters(*fObservables);
-         if (bparams) { 
-            assert(originalBParams.getSize() == bparams->getSize());
-            *bparams = originalBParams; 
-            delete bparams; 
-         }
-      }
-
-
-
-   } /// end of loop over toy-MC experiments
-
-
-   /// restore the parameters to their initial values 
-   if (usePriors && nParameters>0) {
-      for (int iParameter=0; iParameter<nParameters; iParameter++) {
-         RooRealVar* oneParam = (RooRealVar*) parametersList.at(iParameter);
-         oneParam->setVal(parameterValues[iParameter]);
-      }
+     // Note, we do not want to use "prior" for nuisance parameters:
+     // fTestStatSampler->SetPriorNuisance(const_cast<RooAbsPdf*>(model.GetPriorPdf()));
+     
+     oocoutE((TObject*)0,InputArguments)  << "infering posterior from ModelConfig is not yet implemented" << endl;
    }
 
-   return;
+
 }
 
-///////////////////////////////////////////////////////////////////////////
+//____________________________________________________
+HybridCalculator::~HybridCalculator()  {
+  //  if(fPriorNuisanceNull) delete fPriorNuisanceNull;
+  //  if(fPriorNuisanceAlt)  delete fPriorNuisanceAlt;
+  if(fDefaultSampler)    delete fDefaultSampler;
+  if(fDefaultTestStat)   delete fDefaultTestStat;
 
-void HybridCalculator::PrintMore(const char* options) const
-{
-   /// Print out some information about the input models
-
-   if (fSbModel) { 
-      std::cout << "Signal plus background model:\n";
-      fSbModel->Print(options);
-   }
-
-   if (fBModel) { 
-      std::cout << "\nBackground model:\n";
-      fBModel->Print(options);
-   }
-      
-   if (fObservables) {  
-      std::cout << "\nObservables:\n";
-      fObservables->Print(options);
-   }
-
-   if (fNuisanceParameters) { 
-      std::cout << "\nParameters being integrated:\n";
-      fNuisanceParameters->Print(options);
-   }
-
-   if (fPriorPdf) { 
-      std::cout << "\nPrior PDF model for integration:\n";
-      fPriorPdf->Print(options);
-   }
-
-   return;
 }
-///////////////////////////////////////////////////////////////////////////
-// implementation of inherited methods from HypoTestCalculator
+//____________________________________________________
+HypoTestResult* HybridCalculator::GetHypoTest() const {
 
-HybridResult* HybridCalculator::GetHypoTest() const {  
-   // perform the hypothesis test and return result of hypothesis test 
+  // several possibilities:
+  // no prior nuisance given and no nuisance parameters: ok
+  // no prior nuisance given but nuisance parametrs: error
+  // prior nuisance given for some nuisance parameters:
+  //   - nuisance parameters are constant, so they don't float in test statistic
+  //   - nuisance parameters are floating, so they do float in test statistic
 
-   // check first that everything needed is there 
-   if (!DoCheckInputs()) return 0;  
-   RooAbsData * treeData = dynamic_cast<RooAbsData *> (fData); 
-   if (!treeData) { 
-      std::cerr << "Error in HybridCalculator::GetHypoTest - invalid data type - return NULL" << std::endl;
-      return 0; 
+   fNullModel.GuessObsAndNuisance(fData);
+   fAltModel.GuessObsAndNuisance(fData);
+
+   if( (fNullModel.GetNuisanceParameters() 
+	&& fNullModel.GetNuisanceParameters()->getSize()>0 
+	&& !fPriorNuisanceNull)
+     || (fAltModel.GetNuisanceParameters() 
+	 && fAltModel.GetNuisanceParameters()->getSize()>0 
+	 && !fPriorNuisanceAlt) 
+       ){
+     oocoutE((TObject*)0,InputArguments)  << "Must ForceNuisancePdf, infering posterior from ModelConfig is not yet implemented" << endl;
+     return 0;
    }
-   bool usePrior = (fUsePriorPdf && fPriorPdf ); 
-   return Calculate( *treeData, fNToys, usePrior);  
+
+   if(   (!fNullModel.GetNuisanceParameters() && fPriorNuisanceNull)
+      || (!fAltModel.GetNuisanceParameters()  && fPriorNuisanceAlt)
+      || (fNullModel.GetNuisanceParameters()  && fNullModel.GetNuisanceParameters()->getSize()==0 && fPriorNuisanceNull)
+       || (fAltModel.GetNuisanceParameters()  && fAltModel.GetNuisanceParameters()->getSize()>0   && !fPriorNuisanceAlt) 
+       ){
+     oocoutE((TObject*)0,InputArguments)  << "Nuisance PDF specified, but the pdf doesn't know which parameters are the nuisance parameters.  Must set nuisance parameters in the ModelConfig" << endl;
+     return 0;
+   }
+
+
+   // get a big list of all variables for convenient switching
+   RooArgSet *nullParams = fNullModel.GetPdf()->getParameters(fData);
+   RooArgSet *altParams = fAltModel.GetPdf()->getParameters(fData);
+   // save all parameters so we can set them back to what they were
+   RooArgSet *bothParams = fNullModel.GetPdf()->getParameters(fData);
+   bothParams->add(*altParams,false);
+   RooArgSet *saveAll = (RooArgSet*) bothParams->snapshot();
+
+
+   // Generate sampling distribution for null
+   SetupSampler(fNullModel);
+   // KC: shouldn't this be GetSamplingDist(*allParamsNullModel)
+   //   RooArgSet* nullParams = (RooArgSet*)fNullModel.GetParametersOfInterest()->snapshot();
+   SamplingDistribution* samp_null = fTestStatSampler->GetSamplingDistribution(*nullParams);
+
+   // set parameters back
+   *bothParams = *saveAll;
+
+   // Generate sampling dist for alternate
+   SetupSampler(fAltModel);
+   // shouldn't this be GetSamplingDist(*allParamsAltModel)
+   //   SamplingDistribution* samp_alt = fTestStatSampler->GetSamplingDistribution(*nullParams);
+
+   SamplingDistribution* samp_alt = fTestStatSampler->GetSamplingDistribution(*altParams);
+
+   // evaluate test statistic on data
+   double obsTestStat = fTestStatSampler->EvaluateTestStatistic(fData, *nullParams);
+
+   string resultname = "HybridCalculator_result";
+   HypoTestResult* res = new HypoTestResult(resultname.c_str());
+   res->SetPValueIsRightTail(fTestStatSampler->GetTestStatistic()->PValueIsRightTail());
+   res->SetTestStatisticData(obsTestStat);
+   res->SetAltDistribution(samp_alt);
+   res->SetNullDistribution(samp_null);
+
+   *bothParams = *saveAll;
+   delete bothParams;
+   delete saveAll;
+   delete altParams;
+   delete nullParams;
+
+   return res;
 }
 
 
-bool HybridCalculator::DoCheckInputs() const { 
-   if (!fData) { 
-      std::cerr << "Error in HybridCalculator - data have not been set" << std::endl;
-      return false; 
-   }
-
-   // if observable have not been set take them from data 
-   if (!fObservables && fData->get() ) fObservables =  new RooArgList( *fData->get() );
-   if (!fObservables) { 
-      std::cerr << "Error in HybridCalculator - no observables" << std::endl;
-      return false; 
-   }
-
-   if (!fSbModel) { 
-      std::cerr << "Error in HybridCalculator - S+B pdf has not been set " << std::endl;
-      return false; 
-   }
-
-   if (!fBModel) { 
-      std::cerr << "Error in HybridCalculator - B pdf has not been set" << std::endl;
-      return false; 
-   }
-   if (fUsePriorPdf && !fNuisanceParameters) { 
-      std::cerr << "Error in HybridCalculator - nuisance parameters have not been set " << std::endl;
-      return false; 
-   }
-   if (fUsePriorPdf && !fPriorPdf) { 
-      std::cerr << "Error in HybridCalculator - prior pdf has not been set " << std::endl;
-      return false; 
-   }
-   return true; 
-}
 
 

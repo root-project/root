@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id$
+// @(#)root/roostats:$Id: MetropolisHastings.cxx 28978 2009-06-17 14:33:31Z kbelasco $
 // Authors: Kevin Belasco        17/06/2009
 // Authors: Kyle Cranmer         17/06/2009
 /*************************************************************************
@@ -13,25 +13,25 @@
 //_________________________________________________
 /*
 BEGIN_HTML
-Represents the Heavyside function.
+Represents the Heaviside function.
 Evaluates to 1.0 when ((Double_t)x) >= ((Double_t)c), 0.0 otherwise.
 END_HTML
 */
 //_________________________________________________
 
-#ifndef RooStats_Heavyside
-#include "RooStats/Heavyside.h"
+#ifndef RooStats_Heaviside
+#include "RooStats/Heaviside.h"
 #endif
 #ifndef ROO_ABS_REAL
 #include "RooAbsReal.h"
 #endif
 
-ClassImp(RooStats::Heavyside)
+ClassImp(RooStats::Heaviside)
 
 using namespace RooFit;
 using namespace RooStats;
 
-Heavyside::Heavyside(const char *name, const char *title, 
+Heaviside::Heaviside(const char *name, const char *title, 
                        RooAbsReal& _x,
                        RooAbsReal& _c) :
   RooAbsReal(name,title), 
@@ -40,14 +40,14 @@ Heavyside::Heavyside(const char *name, const char *title,
 { 
 } 
 
-Heavyside::Heavyside(const Heavyside& other, const char* name) :  
+Heaviside::Heaviside(const Heaviside& other, const char* name) :  
   RooAbsReal(other,name), 
   x("x",this,other.x),
   c("c",this,other.c)
 { 
 } 
 
-Double_t Heavyside::evaluate() const 
+Double_t Heaviside::evaluate() const 
 { 
   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE 
   if (((Double_t)x) >= ((Double_t)c))

@@ -32,13 +32,11 @@ namespace RooStats {
 
   // returns one-sided significance corresponding to a p-value
   inline Double_t PValueToSignificance(Double_t pvalue){
-    // return sqrt(2.)*TMath::ErfInverse(1 - 2.*pvalue);
-     return TMath::Abs(::ROOT::Math::normal_quantile(pvalue,1) ); 
+     return ::ROOT::Math::normal_quantile_c(pvalue,1); 
   }
 
   // returns p-value corresponding to a 1-sided significance
   inline Double_t SignificanceToPValue(Double_t Z){
-    //    return .5*TMath::Erfc( Z /sqrt(2.));
     return ::ROOT::Math::normal_cdf_c(Z);
   }
 
@@ -58,8 +56,7 @@ namespace RooStats {
     set->remove(constSet);
   }
 
-  // Assuming all values in set are RooRealVars, randomize their values.
-  // Do not 
+  // assuming all values in set are RooRealVars, randomize their values
   inline void RandomizeCollection(RooAbsCollection& set,
                                   Bool_t randomizeConstants = kTRUE)
   {
@@ -69,6 +66,8 @@ namespace RooStats {
     while ((var = (RooRealVar*)it->Next()) != NULL)
       if (!var->isConstant() || randomizeConstants)
          var->randomize();
+
+    delete it;
   }
 
 }

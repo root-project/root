@@ -56,7 +56,7 @@ namespace RooStats {
     Double_t InverseCDF(Double_t pvalue, Double_t sigmaVariaton, Double_t& inverseVariation);
   
     // merge two sampling distributions
-    void Add(SamplingDistribution* other);
+    void Add(const SamplingDistribution* other);
     
     // size of samples
     Int_t GetSize() const{return fSamplingDist.size();}
@@ -68,6 +68,9 @@ namespace RooStats {
 
     const TString GetVarName() const {return fVarName;}
     
+    // numerical integral in these limits
+    Double_t Integral(Double_t low, Double_t high, Bool_t normalize = kTRUE) const;
+
   private:
     std::vector<Double_t> fSamplingDist; // vector of points for the sampling distribution
     std::vector<Double_t> fSampleWeights; // vector of weights for the samples

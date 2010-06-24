@@ -21,6 +21,7 @@
 #endif
 
 #include "RooStats/TestStatSampler.h"
+#include "RooStats/ModelConfig.h"
 #include "RooStats/ConfidenceBelt.h"
 
 #include "RooAbsData.h"
@@ -34,28 +35,21 @@ namespace RooStats {
 
    class ConfInterval; 
 
-   class NeymanConstruction : public IntervalCalculator, public TNamed {
+   class NeymanConstruction : public IntervalCalculator{
 
    public:
 
-     NeymanConstruction();
+     //     NeymanConstruction();
+     NeymanConstruction(RooAbsData& data, ModelConfig& model);
 
      virtual ~NeymanConstruction();
     
       // Main interface to get a ConfInterval (will be a PointSetInterval)
       virtual ConfInterval* GetInterval() const;
-      virtual ConfInterval* GetIntervalUsingList() const;
-
-      // Interface extended with I/O support
-      virtual ConfInterval* GetInterval(const char* asciiFilePat) const;
-
-      // Actually generate teh sampling distribution
-      virtual TList*        GenSamplingDistribution(const char* asciiFilePat = 0) const; 
-      virtual ConfInterval* Run(TList *SamplingList) const;
 
       // in addition to interface we also need:
       // Set the TestStatSampler (eg. ToyMC or FFT, includes choice of TestStatistic)
-      void SetTestStatSampler(TestStatSampler& distCreator) {fTestStatSampler = &distCreator;}
+      void SetTestStatSampler(TestStatSampler& sampler) {fTestStatSampler = &sampler;}
       // fLeftSideTailFraction*fSize defines lower edge of acceptance region.
       // Unified limits use 0, central limits use 0.5, 
       // for upper/lower limits it is 0/1 depends on sign of test statistic w.r.t. parameter
@@ -79,47 +73,67 @@ namespace RooStats {
       // Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
 
-      virtual void SetModel(const ModelConfig &);
+      // Set ModelConfig
+      virtual void SetModel(const ModelConfig &model) {fModel = model;}
 
       // Set the DataSet 
-      virtual void SetData(RooAbsData& data) {      fData = &data; }
+      virtual void SetData(RooAbsData& data) { fData = data; }
 
       // Set the Pdf, add to the the workspace if not already there
-      virtual void SetPdf(RooAbsPdf& pdf) { 	fPdf = &pdf; }  
+      virtual void SetPdf(RooAbsPdf& /*pdf*/) { 
+	cout << "DEPRECATED, use ModelConfig"<<endl;
+      }  
 
       // specify the parameters of interest in the interval
-      virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
+      virtual void SetParameters(const RooArgSet& /*set*/) {
+	cout << "DEPRECATED, use ModelConfig"<<endl;
+      }
 
       // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams.removeAll(); fNuisParams.add(set);}
+      virtual void SetNuisanceParameters(const RooArgSet& /*set*/) {
+	cout << "DEPRECATED, use ModelConfig"<<endl;
+      }
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
       // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
 
+      // get confidence belt
       ConfidenceBelt* GetConfidenceBelt() {return fConfBelt;}
 
+      // adaptive sampling algorithm to speed up interval caculation
       void UseAdaptiveSampling(bool flag=true){fAdaptiveSampling=flag;}
 
+      // give user ability to ask for more toys
+      void AdditionalNToysFactor(double fact){fAdditionalNToysFactor = fact;}
+
+      // save teh confidence belt to a file
       void SaveBeltToFile(bool flag=true){
 	fSaveBeltToFile = flag;
 	if(flag) fCreateBelt = true;
       }
+      // should create confidence belt
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
+
       
    private:
 
       Double_t fSize; // size of the test (eg. specified rate of Type I error)
+      RooAbsData& fData; // data set 
+      ModelConfig &fModel;
+      /*
       RooAbsPdf * fPdf; // common PDF
-      RooAbsData * fData; // data set 
-      RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
+      mutable RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
       RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
+      */
+
       TestStatSampler* fTestStatSampler;
       RooAbsData* fPointsToTest;
       Double_t fLeftSideFraction;
       ConfidenceBelt* fConfBelt;
       bool fAdaptiveSampling; // controls use of adaptive sampling algorithm
+      Double_t fAdditionalNToysFactor; // give user ability to ask for more toys
       bool fSaveBeltToFile; // controls use if ConfidenceBelt should be saved to a TFile
       bool fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
 

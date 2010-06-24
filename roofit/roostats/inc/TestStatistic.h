@@ -28,23 +28,27 @@ END_HTML
 
 namespace RooStats {
 
-  class TestStatistic {
+class TestStatistic {
 
-  public:
-    // TestStatistic();
-    virtual ~TestStatistic() {}
+   public:
+      //TestStatistic();
+      virtual ~TestStatistic() {
+      }
 
-      // Main interface to evaluate the test statistic on a dataset
-    virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) = 0;
+      // Main interface to evaluate the test statistic on a dataset given the
+      // values for the Null Parameters Of Interest.
+      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullPOI) = 0;
 
-    virtual const RooAbsArg* GetTestStatistic()  const = 0;  
+      virtual const TString GetVarName() const = 0;
 
-    virtual const TString GetVarName() const = 0;
+      // Defines the sign convention of the test statistic. Overwrite function if necessary.
+      virtual  bool PValueIsRightTail(void) const { return true; }
 
    protected:
-      ClassDef(TestStatistic,1)   // Interface for tools setting limits (producing confidence intervals)
-   };
-}
+   ClassDef(TestStatistic,1) // Interface for a TestStatistic
+};
+
+} // end namespace RooStats
 
 
 #endif

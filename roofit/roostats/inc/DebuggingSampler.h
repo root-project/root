@@ -68,7 +68,11 @@ namespace RooStats {
      }
 
       // Get the TestStatistic
-      virtual const RooAbsArg* GetTestStatistic()  const {return fTestStatistic;}  
+      virtual TestStatistic* GetTestStatistic()  const {
+         // TODO change to Roo... notifications
+         cout << "GetTestStatistic() IS NOT IMPLEMENTED FOR THIS SAMPLER. Returning NULL." << endl;
+         return NULL; /*fTestStatistic;*/
+      }
     
       // Get the Confidence level for the test
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
@@ -83,7 +87,12 @@ namespace RooStats {
       // specify the parameters of interest in the interval
       virtual void SetParameters(RooArgSet&) {}
       // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(RooArgSet&) {}
+      virtual void SetNuisanceParameters(const RooArgSet&) {}
+      // specify the values of parameters used when evaluating test statistic
+      virtual void SetParametersForTestStat(const RooArgSet& ) {}
+      // specify the conditional observables
+      virtual void SetGlobalObservables(const RooArgSet& ) {}
+
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize(Double_t size) {fSize = size;}
@@ -91,7 +100,10 @@ namespace RooStats {
       virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
 
       // Set the TestStatistic (want the argument to be a function of the data & parameter points
-      virtual void SetTestStatistic(RooAbsArg&)  const {}  
+      virtual void SetTestStatistic(TestStatistic* /*testStatistic*/) {
+         // TODO change to Roo... notifications
+         cout << "SetTestStatistic(...) IS NOT IMPLEMENTED FOR THIS SAMPLER" << endl;
+      }
       
    private:
       Double_t fSize;

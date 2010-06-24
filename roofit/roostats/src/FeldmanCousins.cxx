@@ -52,7 +52,7 @@ END_HTML
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooGlobalFunc.h"
-#include "RooDataHist.h"
+#include "RooMsgService.h"
 #include "TFile.h"
 #include "TTree.h"
 
@@ -62,9 +62,10 @@ using namespace RooFit;
 using namespace RooStats;
 
 
+/*
 //_______________________________________________________
 FeldmanCousins::FeldmanCousins() : 
-   fPdf(0),
+  //  fModel(NULL),
    fData(0),
    fTestStatSampler(0),
    fPointsToTest(0),
@@ -81,6 +82,24 @@ FeldmanCousins::FeldmanCousins() :
 //   fDataName = "";
 //   fPdfName = "";
 }
+*/
+
+//_______________________________________________________
+FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) : 
+  fModel(model),
+  fData(data),
+  fTestStatSampler(0),
+  fPointsToTest(0),
+  fAdaptiveSampling(false), 
+  fAdditionalNToysFactor(1.),
+  fNbins(10), 
+  fFluctuateData(true),
+  fDoProfileConstruction(true),
+  fSaveBeltToFile(false),
+  fCreateBelt(false)
+{
+   // standard constructor
+}
 
 //_______________________________________________________
 FeldmanCousins::~FeldmanCousins() {
@@ -90,51 +109,37 @@ FeldmanCousins::~FeldmanCousins() {
   if(fTestStatSampler) delete fTestStatSampler;
 }
 
+
 //_______________________________________________________
 void FeldmanCousins::SetModel(const ModelConfig & model) { 
    // set the model
-   fPdf = model.GetPdf();
-   fPOI.removeAll();
-   fNuisParams.removeAll();
-   if (model.GetParametersOfInterest() ) fPOI.add(*model.GetParametersOfInterest());
-   if (model.GetNuisanceParameters() )   fNuisParams.add(*model.GetNuisanceParameters());
+  fModel = model;
 }
 
 //_______________________________________________________
 void FeldmanCousins::CreateTestStatSampler() const{
   // specify the Test Statistic and create a ToyMC test statistic sampler
 
-  // get ingredients
-   RooAbsPdf* pdf   = fPdf; //fWS->pdf(fPdfName);
-   RooAbsData* data = fData; //fWS->data(fDataName);
-  if (data && pdf ) {
-
-    // get parameters (params of interest + nuisance)
-    RooArgSet* parameters = pdf->getParameters(data);
-    RemoveConstantParameters(parameters);
-   //RooArgSet* parameters = fPOI;
-
-    // use the profile likelihood ratio as the test statistic
-    ProfileLikelihoodTestStat* testStatistic = new ProfileLikelihoodTestStat(*pdf);
+  // use the profile likelihood ratio as the test statistic
+  ProfileLikelihoodTestStat* testStatistic = new ProfileLikelihoodTestStat(*fModel.GetPdf());
   
-    // create the ToyMC test statistic sampler
-    fTestStatSampler = new ToyMCSampler(*testStatistic) ;
-    fTestStatSampler->SetPdf(*pdf);
-    fTestStatSampler->SetParameters(*parameters);
-    //    fTestStatSampler->SetNuisanceParameters(*parameters);
-    fTestStatSampler->SetNEventsPerToy(data->numEntries());
-    fTestStatSampler->SetNToys((int) (50./fSize)); // adjust nToys so that at least 50 events outside acceptance region
-    fTestStatSampler->SetExtended(fFluctuateData);
-
-    if(!fAdaptiveSampling){
-      cout << "ntoys per point = " << (int) 50./fSize << endl;
-    } else{
-      cout << "ntoys per point: adaptive" << endl;
-    }
-    if(fFluctuateData)
-      cout << "nEvents per toy will fluctuate about  expectation" << endl;
-    else
-      cout << "nEvents per toy will not fluctuate, will always be " << data->numEntries() << endl;
+  // create the ToyMC test statistic sampler
+  fTestStatSampler = new ToyMCSampler(*testStatistic,(int)fAdditionalNToysFactor*50./fSize) ;
+  fTestStatSampler->SetParametersForTestStat(*fModel.GetParametersOfInterest() );
+  if(fModel.GetObservables())
+    fTestStatSampler->SetObservables(*fModel.GetObservables());
+  fTestStatSampler->SetPdf(*fModel.GetPdf());
+  
+  if(!fAdaptiveSampling){
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point = " << (int) fAdditionalNToysFactor*50./fSize << endl;
+  } else{
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point: adaptive" << endl;
+  }
+  if(fFluctuateData){
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: nEvents per toy will fluctuate about  expectation" << endl;
+  } else{
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: nEvents per toy will not fluctuate, will always be " << fData.numEntries() << endl;
+    fTestStatSampler->SetNEventsPerToy(fData.numEntries());
   }
 }
 
@@ -144,78 +149,77 @@ void FeldmanCousins::CreateParameterPoints() const{
   // allow ability to profile on some nuisance paramters
 
   // get ingredients
-  RooAbsPdf* pdf   = fPdf; //fWS->pdf(fPdfName);
-  RooAbsData* data = fData;//fWS->data(fDataName);
-  if (data && pdf ){
+  RooAbsPdf* pdf   = fModel.GetPdf(); 
+  if (!pdf ){
+    ooccoutE(&fModel,Generation) << "FeldmanCousins: ModelConfig has no PDF" << endl;
+    return;
+  }
 
-    // get parameters (params of interest + nuisance)
-    RooArgSet* parameters = pdf->getParameters(data);
-    RemoveConstantParameters(parameters);
+  // get list of all paramters
+  RooArgSet* parameters = new RooArgSet(*fModel.GetParametersOfInterest());
+  if(fModel.GetNuisanceParameters())
+    parameters->add(*fModel.GetNuisanceParameters());
+  
+  
+  if( fModel.GetNuisanceParameters() && ! fModel.GetParametersOfInterest()->equals(*parameters) && fDoProfileConstruction) {
+    // if parameters include nuisance parameters, do profile construction
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: Model has nuisance parameters, will do profile construction" << endl;
     
+    // set nbins for the POI
+    TIter it2 = fModel.GetParametersOfInterest()->createIterator();
+    RooRealVar *myarg2; 
+    while ((myarg2 = dynamic_cast<RooRealVar*>(it2.Next()))) { 
+      if(!myarg2) continue;
+      myarg2->setBins(fNbins);
+    }
+    
+    // get dataset for POI scan
+    RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *fModel.GetParametersOfInterest());
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: # points to test = " << parameterScan->numEntries() << endl;
+    // make profile construction
+    RooFit::MsgLevel previous  = RooMsgService::instance().globalKillBelow();
+    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
+    RooAbsReal* nll = pdf->createNLL(fData,RooFit::CloneData(false));
+    RooAbsReal* profile = nll->createProfile(*fModel.GetParametersOfInterest());
+    
+    RooDataSet* profileConstructionPoints = new RooDataSet("profileConstruction",
+							   "profileConstruction",
+							   *parameters);
+    
+    
+    for(Int_t i=0; i<parameterScan->numEntries(); ++i){
+      // here's where we figure out the profiled value of nuisance parameters
+      *parameters = *parameterScan->get(i);
+      profile->getVal();
+      profileConstructionPoints->add(*parameters);
+    }   
+    RooMsgService::instance().setGlobalKillBelow(previous) ;
+    delete profile; 
+    delete nll;
+    delete parameterScan;
+
+    // done
+    fPointsToTest = profileConstructionPoints;
+
+  } else{
+    // Do full construction
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: Model has no nuisance parameters" << endl;
+
     TIter it = parameters->createIterator();
     RooRealVar *myarg; 
-    while ((myarg = (RooRealVar *)it.Next())) { 
+    while ((myarg = dynamic_cast<RooRealVar*>(it.Next()))) { 
       if(!myarg) continue;
       myarg->setBins(fNbins);
     }
 
-    //    fPointsToTest= new RooDataHist("parameterScan", "", *fPOI);
-
-
-    if( ! fPOI.equals(*parameters) && fDoProfileConstruction ) {
-      // if parameters include nuisance parameters, do profile construction
-      cout << " nuisance parameters, will do profile construction" << endl;
-
-      TIter it2 = fPOI.createIterator();
-      RooRealVar *myarg2; 
-      while ((myarg2 = (RooRealVar *)it2.Next())) { 
-	if(!myarg2) continue;
-	myarg2->setBins(fNbins);
-      }
-
-      RooDataHist* parameterScan = new RooDataHist("parameterScan", "", fPOI);
-      cout << "# points to test = " << parameterScan->numEntries() << endl;
-      // make profile construction
-      RooArgSet* tmpPoint;
-      // loop over points to test
-      RooFit::MsgLevel previous  = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
-      RooAbsReal* nll = pdf->createNLL(*data, Constrain(*parameters));
-      RooAbsReal* profile = nll->createProfile(fPOI);
-      
-      RooDataSet* profileConstructionPoints = new RooDataSet("profileConstruction",
-							     "profileConstruction",
-							     *parameters);
-
-
-      for(Int_t i=0; i<parameterScan->numEntries(); ++i){
-	// get a parameter point from the list of points to test.
-	tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
-	
-	RooStats::SetParameters(tmpPoint, parameters);
-	profile->getVal();
-
-	profileConstructionPoints->add(*parameters);
-	
-	delete tmpPoint;
-      }   
-      RooMsgService::instance().setGlobalKillBelow(previous) ;
-      delete profile; 
-      delete nll;
-      fPointsToTest = profileConstructionPoints;
-      cout << "# points to test = " << fPointsToTest->numEntries() << endl;
-      delete parameterScan;
-    } else{
-      cout << " no nuisance parameters" << endl;
-      RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *parameters);
-      cout << "# points to test = " << parameterScan->numEntries() << endl;
-
-      fPointsToTest = parameterScan;
-    }
-
-    delete parameters;
-
+    RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *parameters);
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: # points to test = " << parameterScan->numEntries() << endl;
+    
+    fPointsToTest = parameterScan;
   }
+  
+  delete parameters;
+  
 }
 
 
@@ -225,28 +229,33 @@ ConfInterval* FeldmanCousins::GetInterval() const {
   // It constructs a RooStats::PointSetInterval.
 
   // local variables
-  RooAbsData* data = fData; //fWS->data(fDataName);
-  if(!data) {
-    cout << "Data is not set, FeldmanCousins not initialized" << endl;
-    return 0;
-  }
+  //  RooAbsData* data = fData; //fWS->data(fDataName);
+
+  // fill in implied variables given data
+  fModel.GuessObsAndNuisance(fData);
   
   // create the test statistic sampler (private data member fTestStatSampler)
   this->CreateTestStatSampler();
+
+  fTestStatSampler->SetObservables(*fModel.GetObservables());
+
+  if(!fFluctuateData)
+    fTestStatSampler->SetNEventsPerToy(fData.numEntries());
 
   // create paramter points to perform construction (private data member fPointsToTest)
   this->CreateParameterPoints();
 
   // Create a Neyman Construction
-  RooStats::NeymanConstruction nc;
+  NeymanConstruction nc(fData,fModel);
   // configure it
-  nc.SetName( GetName() );
   nc.SetTestStatSampler(*fTestStatSampler);
   nc.SetTestSize(fSize); // set size of test
+  //  nc.SetParameters( fModel.GetParametersOfInterest);
   nc.SetParameterPointsToTest( *fPointsToTest );
   nc.SetLeftSideTailFraction(0.); // part of definition of Feldman-Cousins
-  nc.SetData(*data);
+  nc.SetData(fData);
   nc.UseAdaptiveSampling(fAdaptiveSampling);
+  nc.AdditionalNToysFactor(fAdditionalNToysFactor);
   nc.SaveBeltToFile(fSaveBeltToFile);
   nc.CreateConfBelt(fCreateBelt);
   fConfBelt = nc.GetConfidenceBelt();

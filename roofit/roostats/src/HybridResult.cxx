@@ -57,8 +57,8 @@ HybridResult::HybridResult( const char *name) :
 ///////////////////////////////////////////////////////////////////////////
 
 HybridResult::HybridResult( const char *name,
-                            std::vector<double>& testStat_sb_vals,
-                            std::vector<double>& testStat_b_vals,
+                            const std::vector<double>& testStat_sb_vals,
+                            const std::vector<double>& testStat_b_vals,
 			    bool sumLargerValues ) :
    HypoTestResult(name,0,0),
    fTestStat_data(-999.),

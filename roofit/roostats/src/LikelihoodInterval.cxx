@@ -117,16 +117,19 @@ Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
   // This is the main method to satisfy the RooStats::ConfInterval interface.  
   // It returns true if the parameter point is in the interval.
 
-  RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
+   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
   // Method to determine if a parameter point is in the interval
   if( !this->CheckParameters(parameterPoint) ) {
     std::cout << "parameters don't match" << std::endl;
+    RooMsgService::instance().setGlobalKillBelow(msglevel);
     return false; 
   }
 
   // make sure likelihood ratio is set
   if(!fLikelihoodRatio) {
     std::cout << "likelihood ratio not set" << std::endl;
+    RooMsgService::instance().setGlobalKillBelow(msglevel);
     return false;
   }
 
@@ -139,16 +142,19 @@ Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
   // evaluate likelihood ratio, see if it's bigger than threshold
   if (fLikelihoodRatio->getVal()<0){
     std::cout << "The likelihood ratio is < 0, indicates a bad minimum or numerical precision problems.  Will return true" << std::endl;
+    RooMsgService::instance().setGlobalKillBelow(msglevel);
     return true;
   }
 
 
   // here we use Wilks' theorem.
-  if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize()) < (1.-fConfidenceLevel) )
+  if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize()) < (1.-fConfidenceLevel) ){
+    RooMsgService::instance().setGlobalKillBelow(msglevel);
     return false;
+  }
 
 
-  //RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+  RooMsgService::instance().setGlobalKillBelow(msglevel);
 
   return true;
   
@@ -189,7 +195,10 @@ Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
 
    double lower = 0; 
    double upper = 0; 
+   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
    status = FindLimits(param, lower, upper); 
+   RooMsgService::instance().setGlobalKillBelow(msglevel);
    return lower; 
 }
 
@@ -203,7 +212,10 @@ Double_t LikelihoodInterval::UpperLimit(const RooRealVar& param, bool & status)
 
    double lower = 0; 
    double upper = 0; 
+   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
    status = FindLimits(param, lower, upper); 
+   RooMsgService::instance().setGlobalKillBelow(msglevel);
    return upper; 
 }
 

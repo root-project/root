@@ -81,9 +81,11 @@ namespace RooStats {
                            << "ProposalFunction: "
                            << "Object \"" << obj->GetName() << "\" not of type "
                            << "RooRealVar" << endl;
+               delete it;
                return false;
             }
          }
+         delete it;
          // Made it here, so all parameters are RooRealVars
          return true;
       }

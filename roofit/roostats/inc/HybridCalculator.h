@@ -1,11 +1,6 @@
 // @(#)root/roostats:$Id$
-
+// Author: Kyle Cranmer, Sven Kreiss   23/05/10
 /*************************************************************************
- * Project: RooStats                                                     *
- * Package: RooFit/RooStats                                              *
- * Authors:                                                              *
- *   Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke       *
- *************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
@@ -16,153 +11,86 @@
 #ifndef ROOSTATS_HybridCalculator
 #define ROOSTATS_HybridCalculator
 
-#ifndef ROOSTATS_HypoTestCalculator
-#include "RooStats/HypoTestCalculator.h"
+
+#ifndef ROOT_Rtypes
+#include "Rtypes.h" // necessary for TNamed
 #endif
 
-#include <vector>
-
-
-#ifndef ROOSTATS_HybridResult
-#include "RooStats/HybridResult.h"
+#ifndef ROOSTATS_HypoTestCalculator
+#include "RooStats/HypoTestCalculator.h"
 #endif
 
 #ifndef ROOSTATS_ModelConfig
 #include "RooStats/ModelConfig.h"
 #endif
 
-class TH1; 
+#ifndef ROOSTATS_TestStatistic
+#include "RooStats/TestStatistic.h"
+#endif
+
+#ifndef ROOSTATS_TestStatSampler
+#include "RooStats/TestStatSampler.h"
+#endif
+
+#ifndef ROOSTATS_SamplingDistribution
+#include "RooStats/SamplingDistribution.h"
+#endif
+
+#ifndef ROOSTATS_HypoTestResult
+#include "RooStats/HypoTestResult.h"
+#endif
 
 namespace RooStats {
 
-   class HybridResult; 
+   class HybridCalculator: public HypoTestCalculator {
 
-   class HybridCalculator : public HypoTestCalculator , public TNamed {
+   public:
+      HybridCalculator(
+			RooAbsData &data,
+			ModelConfig &altModel,
+			ModelConfig &nullModel,
+			TestStatSampler* sampler=0
+      );
+
+
+      ~HybridCalculator();
+
 
    public:
 
-
-      /// Dummy Constructor with only name 
-      explicit HybridCalculator(const char *name = 0);
-      
-      /// Constructor for HybridCalculator from pdf instances but without a data-set
-      HybridCalculator(RooAbsPdf& sb_model,
-                       RooAbsPdf& b_model,
-                       RooArgList& observables,
-                       const RooArgSet* nuisance_parameters = 0,
-                       RooAbsPdf* prior_pdf = 0,
-                       bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
-
-      /// Constructor for HybridCalculator using  a data set and pdf instances
-      HybridCalculator(RooAbsData& data, 
-                       RooAbsPdf& sb_model,
-                       RooAbsPdf& b_model,
-                       const RooArgSet* nuisance_parameters = 0,
-                       RooAbsPdf* prior_pdf = 0,
-                       bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
-
-
-      /// Constructor passing a ModelConfig for the SBmodel and a ModelConfig for the B Model
-      HybridCalculator(RooAbsData& data, 
-                       const ModelConfig& sb_model, 
-                       const ModelConfig& b_model,
-                       bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
-
-
-   public: 
-
-      /// Destructor of HybridCalculator
-      virtual ~HybridCalculator();
-
       /// inherited methods from HypoTestCalculator interface
-      virtual HybridResult* GetHypoTest() const;
-
-      // inherited setter methods from HypoTestCalculator
-
+      virtual HypoTestResult* GetHypoTest() const;
 
       // set the model for the null hypothesis (only B)
-      virtual void SetNullModel(const ModelConfig & );
+      virtual void SetNullModel(const ModelConfig &nullModel) { fNullModel = nullModel; }
       // set the model for the alternate hypothesis  (S+B)
-      virtual void SetAlternateModel(const ModelConfig & );
-
-
-      // Set a common PDF for both the null and alternate
-      virtual void SetCommonPdf(RooAbsPdf & pdf) { fSbModel = &pdf; }
-      // Set the PDF for the null (only B)
-      virtual void SetNullPdf(RooAbsPdf& pdf) { fBModel = &pdf; }
-      // Set the PDF for the alternate hypothesis ( i.e. S+B)
-      virtual void SetAlternatePdf(RooAbsPdf& pdf) { fSbModel = &pdf;  }
-
+      virtual void SetAlternateModel(const ModelConfig &altModel) { fAltModel = altModel; }
       // Set the DataSet
-      virtual void SetData(RooAbsData& data) { fData = &data; }
+      virtual void SetData(RooAbsData &data) { fData = data; }
 
-      // set parameter values for the null if using a common PDF
-      virtual void SetNullParameters(const RooArgSet& ) { } // not needed
-      // set parameter values for the alternate if using a common PDF
-      virtual void SetAlternateParameters(const RooArgSet&) {}  // not needed
+      // Override the distribution used for marginalizing nuisance parameters that is infered from ModelConfig
+      virtual void ForcePriorNuisanceNull(RooAbsPdf& priorNuisance) { fPriorNuisanceNull = &priorNuisance; }
+      virtual void ForcePriorNuisanceAlt(RooAbsPdf& priorNuisance) { fPriorNuisanceAlt = &priorNuisance; }
 
-      // additional methods specific for HybridCalculator
-      // set a  prior pdf for the nuisance parameters 
-      void SetNuisancePdf(RooAbsPdf & prior_pdf) {          
-         fPriorPdf = &prior_pdf; 
-         fUsePriorPdf = true; // if set by default turn it on
-      } 
-      
-      // set the nuisance parameters to be marginalized
-      void SetNuisanceParameters(const RooArgSet & params) { fNuisanceParameters = &params; }
-
-      // set number of toy MC (Default is 1000)
-      void SetNumberOfToys(unsigned int ntoys) { fNToys = ntoys; }
-      unsigned int GetNumberOfToys() { return fNToys; }
-
-      // return number of toys used
-      unsigned int GetNumberOfToys() const { return fNToys; }
-
-      // control use of the pdf for the nuisance parameter and marginalize them
-      void UseNuisance(bool on = true) { fUsePriorPdf = on; }
-
-      // control to use bin data generation 
-      void SetGenerateBinned(bool on = true) { fGenerateBinned = on; }
-
-      /// set the desired test statistics:
-      /// index=1 : 2 * log( L_sb / L_b )  (DEFAULT)
-      /// index=2 : number of generated events
-      /// index=3 : profiled likelihood ratio
-      /// if the index is different to any of those values, the default is used
-      void SetTestStatistic(int index);
-
-      HybridResult* Calculate(TH1& data, unsigned int nToys, bool usePriors) const;
-      HybridResult* Calculate(RooAbsData& data, unsigned int nToys, bool usePriors) const;
-      HybridResult* Calculate(unsigned int nToys, bool usePriors) const;
-      void PrintMore(const char* options) const;
-
+      // Returns instance of TestStatSampler. Use to change properties of
+      // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      TestStatSampler* GetTestStatSampler(void) { return fTestStatSampler; }
 
    private:
+      ModelConfig &fAltModel;
+      ModelConfig &fNullModel;
+      RooAbsData &fData;
+      RooAbsPdf *fPriorNuisanceNull;
+      RooAbsPdf *fPriorNuisanceAlt;
+      TestStatSampler* fTestStatSampler;
+      TestStatSampler* fDefaultSampler;
+      TestStatistic* fDefaultTestStat;
 
-      void RunToys(std::vector<double>& bVals, std::vector<double>& sbVals, unsigned int nToys, bool usePriors) const;
-
-      // check input parameters before performing the calculation
-      bool DoCheckInputs() const; 
-
-      unsigned int fTestStatisticsIdx; // Index of the test statistics to use
-      unsigned int fNToys;            // number of Toys MC
-      RooAbsPdf* fSbModel; // The pdf of the signal+background model
-      RooAbsPdf* fBModel; // The pdf of the background model
-      mutable RooArgList* fObservables; // Collection of the observables of the model
-      const RooArgSet* fNuisanceParameters;   // Collection of the nuisance parameters in the model
-      RooAbsPdf* fPriorPdf;   // Prior PDF of the nuisance parameters
-      RooAbsData * fData;     // pointer to the data sets 
-      bool fGenerateBinned;   //Flag to control binned generation
-      bool  fUsePriorPdf;               // use a prior for nuisance parameters  
-
-//       TString fSbModelName;   // name of pdf of the signal+background model
-//       TString fBModelName;   // name of pdf of the background model
-//       TString fPriorPdfName;   // name of pdf of the background model
-//       TString fDataName;      // name of the dataset in the workspace
+      void SetupSampler(ModelConfig& model) const;
 
    protected:
-      ClassDef(HybridCalculator,1)  // Hypothesis test calculator using a Bayesian-frequentist hybrid method
-   };
+   ClassDef(HybridCalculator,1)
+};
 }
 
 #endif

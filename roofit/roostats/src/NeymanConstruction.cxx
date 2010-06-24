@@ -59,9 +59,9 @@ END_HTML
 #include "RooStats/ModelConfig.h"
 
 #include "RooMsgService.h"
+#include "RooGlobalFunc.h"
 
 #include "RooDataSet.h"
-#include "RooGlobalFunc.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TMath.h"
@@ -76,28 +76,22 @@ using namespace RooStats;
 
 
 //_______________________________________________________
-NeymanConstruction::NeymanConstruction() : 
-   fPdf(0),
-   fData(0),
+NeymanConstruction::NeymanConstruction(RooAbsData& data, ModelConfig& model):
+   fData(data),
+   fModel(model),
    fLeftSideFraction(0), 
    fConfBelt(0),  // constructed with tree data 
+   fAdaptiveSampling(false),
+   fAdditionalNToysFactor(1.),
    fSaveBeltToFile(false),
    fCreateBelt(false)
+
 {
    // default constructor
 //   fWS = new RooWorkspace();
 //   fOwnsWorkspace = true;
 //   fDataName = "";
 //   fPdfName = "";
-}
-
-void NeymanConstruction::SetModel(const ModelConfig & model) { 
-   // set the model
-   fPdf = model.GetPdf();
-   fPOI.removeAll();
-   fNuisParams.removeAll();
-   if (model.GetParametersOfInterest() ) fPOI.add(*model.GetParametersOfInterest());
-   if (model.GetNuisanceParameters() )   fNuisParams.add(*model.GetNuisanceParameters());
 }
 
 //_______________________________________________________
@@ -119,14 +113,16 @@ ConfInterval* NeymanConstruction::GetInterval() const {
     f = new TFile("SamplingDistributions.root","recreate");
   }
   
-  // local variables
-  RooAbsData* data = fData; //fWS->data(fDataName);
-  if(!data) {
-    coutF(Contents) << "Neyman Construction: data is not set, can't get interval" << endl;
+  if(!&fData) {
+    oocoutF(&fData,Contents) << "Neyman Construction: data is not set, can't get interval" << endl;
     return 0;
   }
   Int_t npass = 0;
   RooArgSet* point; 
+  
+  // strange problems when using snapshots.  
+  //  RooArgSet* fPOI = (RooArgSet*) fModel.GetParametersOfInterest()->snapshot();
+  RooArgSet* fPOI = new RooArgSet(*fModel.GetParametersOfInterest());
 
   RooDataSet* pointsInInterval = new RooDataSet("pointsInInterval", 
 						 "points in interval", 
@@ -135,11 +131,23 @@ ConfInterval* NeymanConstruction::GetInterval() const {
   // loop over points to test
   for(Int_t i=0; i<fPointsToTest->numEntries(); ++i){
      // get a parameter point from the list of points to test.
-    point = (RooArgSet*) fPointsToTest->get(i)->clone("temp");
+    point = (RooArgSet*) fPointsToTest->get(i);//->clone("temp");
+    
+    // set parameters of interest to current point
+    *fPOI = *point;
 
+    // set test stat sampler to use this point
+    fTestStatSampler->SetParametersForTestStat(*fPOI);
 
      // get the value of the test statistic for this data set
-    Double_t thisTestStatistic = fTestStatSampler->EvaluateTestStatistic(*data, *point );
+    Double_t thisTestStatistic = fTestStatSampler->EvaluateTestStatistic(fData, *fPOI );
+    /*
+    cout << "NC CHECK: " << i << endl;
+    point->Print();
+    fPOI->Print("v");
+    fData.Print();
+    cout <<"thisTestStatistic = " << thisTestStatistic << endl;
+    */
 
     // find the lower & upper thresholds on the test statistic that 
     // define the acceptance region in the data
@@ -164,6 +172,8 @@ ConfInterval* NeymanConstruction::GetInterval() const {
     if(fLeftSideFraction==0. || fLeftSideFraction ==1.){
       totalMC = (Int_t) (2./fSize); 
     }
+    // use control
+    totalMC*=fAdditionalNToysFactor;
 
     ToyMCSampler* toyMCSampler = dynamic_cast<ToyMCSampler*>(fTestStatSampler);
     if(fAdaptiveSampling && toyMCSampler) {
@@ -199,7 +209,7 @@ ConfInterval* NeymanConstruction::GetInterval() const {
 	samplingDist->InverseCDF( fLeftSideFraction * fSize , 
 				  sigma, lowerEdgeMinusSigma);
 	
-	ccoutD(Eval) << "NeymanConstruction: "
+	ooccoutD(samplingDist,Eval) << "NeymanConstruction: "
 	     << "total MC = " << totalMC 
 	     << " this test stat = " << thisTestStatistic << endl
 	     << " upper edge -1sigma = " << upperEdgeMinusSigma
@@ -241,14 +251,14 @@ ConfInterval* NeymanConstruction::GetInterval() const {
     // printout some debug info
     TIter      itr = point->createIterator();
     RooRealVar* myarg;
-    ccoutP(Eval) << "NeymanConstruction: Prog: "<< i+1<<"/"<<fPointsToTest->numEntries()
+    ooccoutP(samplingDist,Eval) << "NeymanConstruction: Prog: "<< i+1<<"/"<<fPointsToTest->numEntries()
 		      << " total MC = " << totalMC 
 		      << " this test stat = " << thisTestStatistic << endl;
-    ccoutP(Eval) << " ";
+    ooccoutP(samplingDist,Eval) << " ";
     while ((myarg = (RooRealVar *)itr.Next())) { 
-      ccoutP(Eval) << myarg->GetName() << "=" << myarg->getVal() << " ";
+      ooccoutP(samplingDist,Eval) << myarg->GetName() << "=" << myarg->getVal() << " ";
     }
-    ccoutP(Eval) << "[" << lowerEdgeOfAcceptance << ", " 
+    ooccoutP(samplingDist,Eval) << "[" << lowerEdgeOfAcceptance << ", " 
 		       << upperEdgeOfAcceptance << "] " << " in interval = " <<
       (thisTestStatistic >= lowerEdgeOfAcceptance && thisTestStatistic <= upperEdgeOfAcceptance) 
 	      << endl << endl;
@@ -275,9 +285,9 @@ ConfInterval* NeymanConstruction::GetInterval() const {
     }
 
     delete samplingDist;
-    delete point;
+    //    delete point; // from dataset
   }
-  coutI(Eval) << npass << " points in interval" << endl;
+  oocoutI(pointsInInterval,Eval) << npass << " points in interval" << endl;
 
   // create an interval based pointsInInterval
   PointSetInterval* interval 
@@ -296,158 +306,4 @@ ConfInterval* NeymanConstruction::GetInterval() const {
   return interval;
 }
 
-//_______________________________________________________
-TList* NeymanConstruction::GenSamplingDistribution(const char* asciiFilePat) const {
-  //This method generates the sampling distribution for each point of the study. If a file path
-  //is provided, the distribution is saved in a root file. Returns the list of the distributions
-  //for each point.
-
-  RooArgSet* point; 
-  TList* SamplingList = new TList();
-  TTree *savedTree = new TTree("SamplingDistributions","List of sampling distributions");
-  vector<Double_t> *distrVector = 0;
-
-  if(asciiFilePat && *asciiFilePat){
-    savedTree->Branch("distrVector",&distrVector);
-  }
-  
-  // loop over points to test
-  for(Int_t i=0; i<fPointsToTest->numEntries(); ++i){
-    // get a parameter point from the list of points to test.
-    point = (RooArgSet*) fPointsToTest->get(i)->clone("temp");
-
-    // the next line is where most of the time will be spent generating the sampling dist of the test statistic.
-    SamplingDistribution* samplingDist = fTestStatSampler->GetSamplingDistribution(*point); 
-
-    cout << "dbg: generating point number " << i << " of " << fPointsToTest->numEntries() << " in the interest interval" << endl;
-
-    SamplingList->Add(samplingDist);
-
-    if(asciiFilePat && *asciiFilePat){ 
-      vector<Double_t> dummyVector = samplingDist->GetSamplingDistribution();
-      distrVector = &dummyVector;
-      savedTree->Fill();
-    }
-
-  }
-
-  if(asciiFilePat && *asciiFilePat){
-    TFile fSaveList(asciiFilePat,"RECREATE");
-    fSaveList.cd();
-    savedTree->Write();
-    fSaveList.Close();
-  }
-
-  return SamplingList;
-}
-
-//_______________________________________________________
-ConfInterval* NeymanConstruction::GetIntervalUsingList() const {
-  // Main interface to get a RooStats::ConfInterval.  
-  // It constructs a RooStats::PointSetInterval.
-
-  // local variables
-   RooAbsData* data = fData; // fWS->data(fDataName);
-  if(!data) {
-    cout << "Data is not set, NeymanConstruction not initialized" << endl;
-    return 0;
-  }
-
-  TList *SamplingList = (TList*)GenSamplingDistribution();
-
-  vector<Double_t> dum = ((SamplingDistribution*)SamplingList->At(1))->GetSamplingDistribution();
-
-  assert(SamplingList->GetSize() > 0);
-
-  return Run(SamplingList);
-}
-
-//_______________________________________________________
-ConfInterval* NeymanConstruction::GetInterval(const char* asciiFilePat) const {
-  //This method returns a confidence interval exactly like GetInterval(), but
-  //instead of generating the sampling disribution (long computation) it takes
-  //the distribution from the file provided
-
-  // local variables
-   RooAbsData* data = fData; // fWS->data(fDataName);
-  if(!data) {
-    cout << "Data is not set, NeymanConstruction not initialized" << endl;
-    return 0;
-  }
-
-  TList* SamplingList = new TList();
-  TFile _fileSampling(asciiFilePat);
-  _fileSampling.cd();
-  TTree *savedTree = (TTree*)_fileSampling.Get("SamplingDistributions");
-  vector<Double_t> *distrVector = 0;
-  savedTree->SetBranchAddress("distrVector", &distrVector);
-
-
-  for(Int_t i=0; i<fPointsToTest->numEntries(); ++i){
-    savedTree->GetEntry(i);
-    SamplingDistribution *dummyDist = new SamplingDistribution("TemplatedDistribution","",*distrVector);
-      SamplingList->Add(dummyDist);
-  }
-
-  assert(SamplingList->GetSize() > 0);
-
-  return Run(SamplingList);
-}
-
-//_______________________________________________________
-ConfInterval* NeymanConstruction::Run(TList *SamplingList) const {
-  //Main method to perform the interval calculation
-
-  // local variables
-   RooAbsData* data = fData; // fWS->data(fDataName);
-  if(!data) {
-    cout << "Data is not set, NeymanConstruction not initialized" << endl;
-    return 0;
-  }
-  Int_t npass = 0;
-  RooArgSet* point; 
-
-
-  // loop over points to test
-  for(Int_t i=0; i<fPointsToTest->numEntries(); ++i){
-    // get a parameter point from the list of points to test.
-    point = (RooArgSet*) fPointsToTest->get(i)->clone("temp");
-
-    // the next line is where most of the time will be spent generating the sampling dist of the test statistic.
-    SamplingDistribution* samplingDist = (SamplingDistribution*)SamplingList->At(i);
-
-    // find the lower & upper thresholds on the test statistic that define the acceptance region in the data
-    Double_t lowerEdgeOfAcceptance = samplingDist->InverseCDF( fLeftSideFraction * fSize );
-    Double_t upperEdgeOfAcceptance = samplingDist->InverseCDF( 1. - ((1.-fLeftSideFraction) * fSize) );
-
-    // get the value of the test statistic for this data set
-    Double_t thisTestStatistic = fTestStatSampler->EvaluateTestStatistic(*data, *point );
-
-    TIter      itr = point->createIterator();
-    RooRealVar* myarg;
-    while ((myarg = (RooRealVar *)itr.Next())) { 
-      cout << myarg->GetName() << "=" << myarg->getVal() << " ";
-    }
-    cout << "\tdbg= " << lowerEdgeOfAcceptance << ", " 
-	      << upperEdgeOfAcceptance << ", " << thisTestStatistic <<  " " <<
-      (thisTestStatistic > lowerEdgeOfAcceptance && thisTestStatistic < upperEdgeOfAcceptance) << endl;
-
-    // Check if this data is in the acceptance region
-    if(thisTestStatistic > lowerEdgeOfAcceptance && thisTestStatistic < upperEdgeOfAcceptance) {
-      // if so, set this point to true
-      fPointsToTest->add(*point, 1.); 
-      ++npass;
-    }
-    delete samplingDist;
-    delete point;
-  }
-  cout << npass << " points in interval" << endl;
-
-  // create an interval based fPointsToTest
-  TString name = TString("ClassicalConfidenceInterval_") + TString(GetName() ); 
-  PointSetInterval* interval  = new PointSetInterval(name, *fPointsToTest);
-  
-  //delete data;
-  return interval;
-}
 

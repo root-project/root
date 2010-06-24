@@ -163,6 +163,7 @@ void ProposalHelper::CreatePdf()
                                   *fCovMatrix);
    delete xVec;
    delete muVec;
+   delete it;
 }
 
 void ProposalHelper::CreateCovMatrix(RooArgList& xVec)

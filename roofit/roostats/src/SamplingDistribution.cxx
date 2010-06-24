@@ -91,9 +91,11 @@ SamplingDistribution::~SamplingDistribution()
 
 
 //_______________________________________________________
-void SamplingDistribution::Add(SamplingDistribution* other)
+void SamplingDistribution::Add(const SamplingDistribution* other)
 {
-   // merge SamplingDistributions
+   // merge SamplingDistributions (does nothing if NULL is given)
+
+   if(!other) return;
 
   std::vector<double> newSamplingDist = other->fSamplingDist;
   std::vector<double> newSampleWeights = other->fSampleWeights;
@@ -123,6 +125,32 @@ Double_t SamplingDistribution::InverseCDF(Double_t pvalue)
 }
 
 
+
+//_______________________________________________________
+Double_t SamplingDistribution::Integral(Double_t low, Double_t high, Bool_t normalize) const
+{
+   // Returns the integral (including lower limit and excluding upper limit)
+   // in the given limits. Normalization can be turned off.
+
+   Double_t sum = 0;
+   for(unsigned int i=0; i<fSamplingDist.size(); i++) {
+      double value = fSamplingDist[i];
+      if(value >= low  &&  value < high) sum += fSampleWeights[i];
+      if(fSampleWeights[i] != 1.0) cout << "WARNING" << endl;
+   }
+
+   if(normalize) {
+      Double_t norm = 0;
+      for(unsigned int i=0; i<fSamplingDist.size(); i++) {
+         norm += fSampleWeights[i];
+      }
+      sum /= norm;
+   }
+
+   return sum;
+}
+
+
 //_______________________________________________________
 Double_t SamplingDistribution::InverseCDF(Double_t pvalue, 
 					  Double_t sigmaVariation, 
@@ -147,7 +175,6 @@ Double_t SamplingDistribution::InverseCDF(Double_t pvalue,
   
   // casting will round down, eg. give i
   int nominal = (unsigned int) (pvalue*fSamplingDist.size());
-
 
   if(nominal <= 0) {
     inverseWithVariation = -1.*RooNumber::infinity();

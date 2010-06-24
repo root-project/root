@@ -13,23 +13,24 @@
 /*
 BEGIN_HTML
 <p>
-This class uses the Metropolis-Hastings algorithm to construct a Markov Chain of
-data points using Monte Carlo. In the main algorithm, new points in the parameter space
-are proposed and then visited based on their relative likelihoods.
-This class can use any implementation of the ProposalFunction, including non-symmetric
-proposal functions, to propose parameter points and still maintain detailed balance when
-constructing the chain.
+This class uses the Metropolis-Hastings algorithm to construct a Markov Chain
+of data points using Monte Carlo. In the main algorithm, new points in the
+parameter space are proposed and then visited based on their relative
+likelihoods.  This class can use any implementation of the ProposalFunction,
+including non-symmetric proposal functions, to propose parameter points and
+still maintain detailed balance when constructing the chain.
 </p>
 
 <p>
 The "Likelihood" function that is sampled when deciding what steps to take in
-the chain has been given a very generic implementation.  The user can create any
-RooAbsReal based on the parameters and pass it to a MetropolisHastings object
-with the method SetFunction(RooAbsReal&).  Be sure to tell MetropolisHastings
-whether your RooAbsReal is on a (+/-) regular or log scale, so that it knows what
-logic to use when sampling your RooAbsReal.  For example, a common use is to sample
-from a -log(Likelihood) distribution (NLL), for which the appropriate configuration
-calls are SetType(MetropolisHastings::kLog); SetSign(MetropolisHastings::kNegative);
+the chain has been given a very generic implementation.  The user can create
+any RooAbsReal based on the parameters and pass it to a MetropolisHastings
+object with the method SetFunction(RooAbsReal&).  Be sure to tell
+MetropolisHastings whether your RooAbsReal is on a (+/-) regular or log scale,
+so that it knows what logic to use when sampling your RooAbsReal.  For example,
+a common use is to sample from a -log(Likelihood) distribution (NLL), for which
+the appropriate configuration calls are SetType(MetropolisHastings::kLog);
+SetSign(MetropolisHastings::kNegative);
 If you're using a traditional likelihood function:
 SetType(MetropolisHastings::kRegular);  SetSign(MetropolisHastings::kPositive);
 You must set these type and sign flags or MetropolisHastings will not construct
@@ -125,13 +126,14 @@ MetropolisHastings::MetropolisHastings(RooAbsReal& function, RooArgSet& paramsOf
 MarkovChain* MetropolisHastings::ConstructChain()
 {
    if (!fParameters || !fPropFunc || !fFunction) {
-      coutE(Eval) << "Critical members unintialized: parameters, proposal function,"
-                  << "or function" << endl;
+      coutE(Eval) << "Critical members unintialized: parameters, proposal " <<
+                     " function, or (log) likelihood function" << endl;
          return NULL;
    }
    if (fSign == kSignUnset || fType == kTypeUnset) {
       coutE(Eval) << "Please set type and sign of your function using "
-         << "MetropolisHastings::SetType() and MetropolisHastings::SetSign()" << endl;
+         << "MetropolisHastings::SetType() and MetropolisHastings::SetSign()" <<
+         endl;
       return NULL;
    }
 
@@ -151,9 +153,55 @@ MarkovChain* MetropolisHastings::ConstructChain()
    RooFit::MsgLevel oldMsgLevel = RooMsgService::instance().globalKillBelow();
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
-   Int_t i;
+
+   // We will need to check if log-likelihood evaluation left an error status.
+   // Now using faster eval error logging with CountErrors.
+   if (fType == kLog)
+     fFunction->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+
+   bool hadEvalError = true;
+
+   Int_t i = 0;
+   // get a good starting point for x
+   // for fType == kLog, this means that fFunction->getVal() did not cause
+   // an eval error
+   // for fType == kRegular this means fFunction->getVal() != 0
+   //
+   // kbelasco: i < 1000 is sort of arbitary, but way higher than the number of
+   // steps we should have to take for any reasonable (log) likelihood function
+   while (i < 1000 && hadEvalError) {
+      RandomizeCollection(x);
+      RooStats::SetParameters(&x, fParameters);
+      xL = fFunction->getVal();
+
+      if (fType == kLog) {
+         if (fFunction->numEvalErrors() > 0) {
+            fFunction->clearEvalErrorLog();
+            hadEvalError = true;
+         } else
+            hadEvalError = false;
+      } else if (fType == kRegular) {
+         if (xL == 0.0)
+            hadEvalError = true;
+         else
+            hadEvalError = false;
+      } else
+         // for now the only 2 types are kLog and kRegular (won't get here)
+         hadEvalError = false;
+   }
+
+   if(hadEvalError) {
+      coutE(Eval) << "Problem finding a good starting point in " <<
+                     "MetropolisHastings::ConstructChain() " << endl;
+   }
+
+   // do main loop
    for (i = 0; i < fNumIters; i++) {
-      if (i % 100 == 0) {
+      // reset error handling flag
+      hadEvalError = false;
+
+      if (i % (fNumIters / 100) == 0) {
+         // print a dot every 1% of the chain construction
          fprintf(stdout, ".");
          fflush(NULL);
       }
@@ -162,8 +210,18 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
       RooStats::SetParameters(&xPrime, fParameters);
       xPrimeL = fFunction->getVal();
-      RooStats::SetParameters(&x, fParameters);
-      xL = fFunction->getVal();
+
+      // check if log-likelihood for xprime had an error status
+      if (fFunction->numEvalErrors() > 0 && fType == kLog) {
+         xPrimeL = RooNumber::infinity();
+         fFunction->clearEvalErrorLog();
+         hadEvalError = true;
+      }
+
+      // why evaluate the last point again, can't we cache it?
+      // kbelasco: commenting out lines below to add/test caching support
+      //RooStats::SetParameters(&x, fParameters);
+      //xL = fFunction->getVal();
 
       if (fType == kLog) {
          if (fSign == kPositive)
@@ -173,9 +231,9 @@ MarkovChain* MetropolisHastings::ConstructChain()
       }
       else
          a = xPrimeL / xL;
-         //a = xL / xPrimeL;
+      //a = xL / xPrimeL;
 
-      if (!fPropFunc->IsSymmetric(xPrime, x)) {
+      if (!hadEvalError && !fPropFunc->IsSymmetric(xPrime, x)) {
          Double_t xPrimePD = fPropFunc->GetProposalDensity(xPrime, x);
          Double_t xPD      = fPropFunc->GetProposalDensity(x, xPrime);
          if (fType == kRegular)
@@ -184,7 +242,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
             a += TMath::Log(xPrimePD) - TMath::Log(xPD);
       }
 
-      if (ShouldTakeStep(a)) {
+      if (!hadEvalError && ShouldTakeStep(a)) {
          // go to the proposed point xPrime
 
          // add the current point with the current weight
@@ -194,12 +252,13 @@ MarkovChain* MetropolisHastings::ConstructChain()
          // reset the weight and go to xPrime
          weight = 1;
          RooStats::SetParameters(&xPrime, &x);
+         xL = xPrimeL;
       } else {
          // stay at the current point
          weight++;
       }
    }
-   //delete nllParams;
+
    // make sure to add the last point
    if (weight != 0.0)
       chain->Add(x, CalcNLL(xL), (Double_t)weight);
@@ -233,13 +292,17 @@ Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
       Double_t rand = RooRandom::uniform();
       if (fType == kLog) {
          rand = TMath::Log(rand);
+         // kbelasco: should this be changed to just (-rand > a) for logical
+         // consistency with below test when fType == kRegular?
          if (-1.0 * rand >= a)
             // we chose to go to the new proposed point
             // even though it has a lower likelihood than the current one
             return kTRUE;
       } else {
          // fType must be kRegular
-         if (rand <= a)
+         // kbelasco: ensure that we never visit a point where PDF == 0
+         //if (rand <= a)
+         if (rand < a)
             // we chose to go to the new proposed point
             // even though it has a lower likelihood than the current one
             return kTRUE;

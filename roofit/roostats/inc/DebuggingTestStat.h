@@ -61,10 +61,9 @@ namespace RooStats {
        return fRand->Uniform();
      }
 
-      // Get the TestStatistic
-      virtual const RooAbsArg* GetTestStatistic()  const {return fTestStatistic;}  
-    
-      
+   
+
+     
    private:
 
       RooRealVar* fTestStatistic;
