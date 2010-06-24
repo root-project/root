@@ -49,7 +49,7 @@ void rs500b_PrepareWorkspace_Poisson_withSystematics( TString fileName = "WS_Poi
   // Pdf in observable, 
   myWS.factory("Uniform::sigPdf(x)") ;
   myWS.factory("Uniform::bkgPdf(x)") ;
-  myWS.factory("SUM::model(S[100,0,1500]*sigPdf,B[1000,0,3000]*bkgPdf") ;
+  myWS.factory("SUM::model(S[100,0,1500]*sigPdf,B[1000,0,3000]*bkgPdf)") ;
 
   // Background only pdf
   myWS.factory("ExtendPdf::modelBkg(bkgPdf,B)") ;

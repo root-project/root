@@ -48,7 +48,7 @@ void rs500d_PrepareWorkspace_GaussOverFlat_withSystematics( TString fileName = "
   // Pdf in observable 
   myWS.factory("Gaussian::sigPdf(mass,200,sigSigma[0,100])") ;
   myWS.factory("Uniform::bkgPdf(mass)") ;
-  myWS.factory("SUM::model(S[1000,0,100000]*sigPdf,B[1000,0,100000]*bkgPdf") ;
+  myWS.factory("SUM::model(S[1000,0,100000]*sigPdf,B[1000,0,100000]*bkgPdf)") ;
 
   // Background only pdf
   myWS.factory("ExtendPdf::modelBkg(bkgPdf,B)") ;
