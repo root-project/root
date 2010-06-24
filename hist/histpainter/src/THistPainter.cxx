@@ -3103,7 +3103,20 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"SPEC");
    if (l) {
       Hoption.Scat = 0;
-      Hoption.Spec = 1; strncpy(l,"    ",4);
+      strncpy(l,"    ",4);
+      Int_t bs=0;
+      l = strstr(chopt,"BF(");
+      if (l) {
+         if (sscanf(&l[3],"%d",&bs) > 0) {
+            Int_t i=0;
+            while (l[i]!=')') {
+               l[i] = ' ';
+               i++;
+            }
+            l[i] = ' ';
+         }
+      }
+      Hoption.Spec = TMath::Max(1600,bs);
       return 1;
    }
 
@@ -3429,7 +3442,7 @@ void THistPainter::Paint(Option_t *option)
    if (Hoption.Spec) {
       if (!TableInit()) return;
       if (!TClass::GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
-      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%lx,\"%s\")",fH,option));
+      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%lx,\"%s\",%d)",fH,option,Hoption.Spec));
       return;
    }
 
@@ -5927,6 +5940,9 @@ void THistPainter::PaintH3Iso()
    TView *view = gPad->GetView();
    if (!view) {
       Error("PaintH3Iso", "no TView in current pad");
+      delete [] x;
+      delete [] y;
+      delete [] z;
       return;
    }
    Double_t thedeg =  90 - gPad->GetTheta();

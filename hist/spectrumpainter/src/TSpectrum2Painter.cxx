@@ -45,7 +45,7 @@ ClassImp (TSpectrum2Painter)
 
 
 //______________________________________________________________________________
-TSpectrum2Painter::TSpectrum2Painter(TH2* h2)
+TSpectrum2Painter::TSpectrum2Painter(TH2* h2, Int_t bs)
    : TNamed ("Spectrum Painter2","Miroslav Morhac Painter")
 {
    // TSpectrum2Painter normal constructor
@@ -58,6 +58,8 @@ TSpectrum2Painter::TSpectrum2Painter(TH2* h2)
    fYmin = 0;
    fYmax = h2->GetNbinsY() - 1;
    fZmin = 0, fZmax = 0;
+   fMaximumXScreenResolution = bs;
+
    for (i = 0;i <= fXmax; i++) {
       for (j = 0;j <= fYmax; j++) {
          val = h2->GetBinContent(i + 1,j + 1);
@@ -154,9 +156,9 @@ TSpectrum2Painter::TSpectrum2Painter(TH2* h2)
    fChanlineEnDis   = kChannelGridNotDrawn; // Decides whether the channel lines
                                             // (grid) are shown.
    fChanlineColor   = kRed;                 // Color of channel marks.
-   fEnvelope        = new Short_t [kMaximumXScreenResolution];
-   fEnvelopeContour = new Short_t [kMaximumXScreenResolution];
-   for (i=0;i<kMaximumXScreenResolution;i++) {
+   fEnvelope        = new Short_t [fMaximumXScreenResolution];
+   fEnvelopeContour = new Short_t [fMaximumXScreenResolution];
+   for (i=0;i<fMaximumXScreenResolution;i++) {
       fEnvelope[i]        = fBy2;
       fEnvelopeContour[i] = fBy2;
    }
@@ -1551,8 +1553,9 @@ void VisA() {
    ui2 = (Int_t)(256*pen_col->GetGreen());
    ui3 = (Int_t)(256*pen_col->GetBlue());
 
-   if (fBx2>=kMaximumXScreenResolution) {
-      printf("The canvas size exceed the maximum X screen resolution \n");
+   if (fBx2>=fMaximumXScreenResolution) {
+      printf("The canvas size exceed the maximum X screen resolution.\n");
+      printf("Use the option bf() to increase the buffer size (it should be greater than %d).\n",fBx2);
       return;
    }
 
@@ -7377,7 +7380,7 @@ void TSpectrum2Painter::GetChanGrid(Int_t &enable,Int_t &color)
 
 
 //______________________________________________________________________________
-void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option)
+void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option, Int_t bs)
 {
    // This function allows to set all the possible options available in
    // TSpectrum2Painter and paint "h2".
@@ -7469,6 +7472,17 @@ void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option)
    // pa() is not specified, the histogram "h2" line attributes are used. Note
    // also that operators for SPEC option can be cummulated and specified in
    // any order.
+   //
+   //                               * * *
+   //
+   // The buffer size can be change with bf(size). Example:
+   //
+   //   h2->Draw("SPEC bf(8000)");
+   //
+   // The spectrum painter needs a buffer to paint the spectrum. By default the
+   // buffer size is set to 1600. In most cases this buffer size is enough. But
+   // if the canvas size is very big, for instance 8000x5000 this buffer size is
+   // too small. An error message is issued telling to use the option bf().
    //
    //                               * * *
    //
@@ -7644,7 +7658,7 @@ void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option)
 
    TString opt = option;
 
-   TSpectrum2Painter sp(h2);
+   TSpectrum2Painter sp(h2, bs);
 
    if (gPad->GetLogz()) sp.SetZScale(kZScaleLog);
    sp.SetPenAttr(h2->GetLineColor(), h2->GetLineStyle(), h2->GetLineWidth());
@@ -7770,6 +7784,12 @@ void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option)
          opt.Tokenize(token, from, ","); i2 = token.Atoi();
          opt.Tokenize(token, from, ")"); i3 = token.Atoi();
          sp.SetAngles(i1, i2, i3);
+
+      // Buffer size
+      } else if (token=="bf") {
+         // Nothing to do here, The option "bf" has been handle before.
+         // But it is a valid option.
+         opt.Tokenize(token, from, ")");
 
       // Unknown option
       } else {

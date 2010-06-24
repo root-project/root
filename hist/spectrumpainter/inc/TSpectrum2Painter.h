@@ -1,5 +1,5 @@
 // @(#)root/spectrumpainter:$Id: TSpectrum2Painter.h,v 1.0
-// Author: Miroslav Morhac 29/09/06 
+// Author: Miroslav Morhac 29/09/06
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,11 +29,11 @@ class TColor;
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TSpectrum2Painter: public TNamed { 
+class TSpectrum2Painter: public TNamed {
 
 public:
-   TSpectrum2Painter(TH2* h2);
-   virtual ~TSpectrum2Painter();  
+   TSpectrum2Painter(TH2* h2, Int_t bs);
+   virtual ~TSpectrum2Painter();
 
    void GetAngles(Int_t &alpha,Int_t &beta,Int_t &view);
    void GetBezier(Int_t &bezier);
@@ -49,23 +49,23 @@ public:
    void GetPenAttr(Int_t &color, Int_t &style, Int_t &width);
    void GetShading(Int_t &shading,Int_t &shadow);
    void GetZScale(Int_t &scale);
-   void Paint(Option_t *option);  
+   void Paint(Option_t *option);
    void SetAngles(Int_t alpha,Int_t beta,Int_t view);
    void SetBezier(Int_t bezier);
-   void SetChanGrid(Int_t enable,Int_t color);  
+   void SetChanGrid(Int_t enable,Int_t color);
    void SetChanMarks(Int_t enable,Int_t color,Int_t width,Int_t height,Int_t style);
    void SetColorAlgorithm(Int_t colorAlgorithm);
-   void SetColorIncrements(Double_t r,Double_t g,Double_t b);  
+   void SetColorIncrements(Double_t r,Double_t g,Double_t b);
    void SetContourWidth(Int_t width);
    void SetDisplayMode(Int_t modeGroup,Int_t displayMode);
-   void SetLightHeightWeight(Double_t weight);   
-   void SetLightPosition(Int_t x,Int_t y,Int_t z); 
+   void SetLightHeightWeight(Double_t weight);
+   void SetLightPosition(Int_t x,Int_t y,Int_t z);
    void SetNodes(Int_t nodesx,Int_t nodesy);
    void SetPenAttr(Int_t color,Int_t style,Int_t width);
    void SetShading(Int_t shading,Int_t shadow);
    void SetZScale(Int_t scale);
-  
-   static void PaintSpectrum(TH2* h2, Option_t *option="");
+
+   static void PaintSpectrum(TH2* h2, Option_t *option="",Int_t bs=1600);
 
    enum {
       kModeGroupSimple=0,
@@ -97,7 +97,7 @@ public:
       kColorAlgHvsSmooth=8,
       kColorAlgHvsModulo=9,
       kShadowsNotPainted=0,
-      kShadowsPainted=1,  
+      kShadowsPainted=1,
       kNotShaded=0,
       kShaded=1,
       kNoBezierInterpol=0,
@@ -117,7 +117,6 @@ public:
       kChannelMarksStyleTriangle=7,
       kChannelGridNotDrawn=0,
       kChannelGridDrawn=1,
-      kMaximumXScreenResolution=1600     
   };
 
 protected:
@@ -160,9 +159,9 @@ protected:
    Int_t     fChanmarkStyle; //style of channel marks
    Int_t     fChanmarkWidth; //width of channel marks
    Int_t     fChanmarkHeight;//height of channel marks
-   Int_t     fChanmarkColor; //color of channel marks  
+   Int_t     fChanmarkColor; //color of channel marks
    Int_t     fChanlineEnDis; //decides whether the channel lines (grid) are shown
-   Int_t     fChanlineColor; //color of channel lines (grid)  
+   Int_t     fChanlineColor; //color of channel lines (grid)
 
    //auxiliary variables,transformation coeffitients for internal use only
    Double_t  fKx;
@@ -179,28 +178,29 @@ protected:
    Double_t  fVx;
    Double_t  fVy;
    Double_t  fNuSli;
-  
+
    //auxiliary internal variables, working place
    Double_t  fZ,fZeq,fGbezx,fGbezy,fDxspline,fDyspline,fZPresetValue;
    Int_t     fXt,fYt,fXs,fYs,fXe,fYe,fLine;
-   Short_t  *fEnvelope;        //!
-   Short_t  *fEnvelopeContour; //!
-   TColor   *fNewColor;        //!  
+   Short_t  *fEnvelope;                 //!
+   Short_t  *fEnvelopeContour;          //!
+   TColor   *fNewColor;                 //!
+   Int_t     fMaximumXScreenResolution; //!buffers' size
    Int_t     fNewColorIndex;
    Int_t     fBzX[4];
-   Int_t     fBzY[4];   
+   Int_t     fBzY[4];
 
    Int_t    BezC(Int_t i);
    Double_t BezierBlend(Int_t i,Double_t bezf);
    void     BezierSmoothing(Double_t bezf);
    Double_t ColorCalculation(Double_t dx1,Double_t dy1,Double_t z1,Double_t dx2,Double_t dy2,Double_t z2,Double_t dx3,Double_t dy3,Double_t z3);//calculation of new color
-   void     ColorModel(unsigned ui,unsigned ui1,unsigned ui2,unsigned ui3);//calculation of color according to chosen algorithm   
-   void     CopyEnvelope(Double_t xr,Double_t xs,Double_t yr,Double_t ys);   
-   void     DrawMarker(Int_t x,Int_t y,Int_t w,Int_t h,Int_t type);   
-   void     Envelope(Int_t x1,Int_t y1,Int_t x2,Int_t y2);   
-   void     EnvelopeBars(Int_t x1,Int_t y1,Int_t x2,Int_t y2);   
+   void     ColorModel(unsigned ui,unsigned ui1,unsigned ui2,unsigned ui3);//calculation of color according to chosen algorithm
+   void     CopyEnvelope(Double_t xr,Double_t xs,Double_t yr,Double_t ys);
+   void     DrawMarker(Int_t x,Int_t y,Int_t w,Int_t h,Int_t type);
+   void     Envelope(Int_t x1,Int_t y1,Int_t x2,Int_t y2);
+   void     EnvelopeBars(Int_t x1,Int_t y1,Int_t x2,Int_t y2);
    Double_t ShadowColorCalculation(Double_t xtaz,Double_t ytaz,Double_t ztaz,Double_t shad_noise);//shadow color
-   void     Slice(Double_t xr,Double_t yr,Double_t xs,Double_t ys,TLine *line);   
+   void     Slice(Double_t xr,Double_t yr,Double_t xs,Double_t ys,TLine *line);
    void     Transform(Int_t it,Int_t jt,Int_t zmt);//transform function
 
 public:
