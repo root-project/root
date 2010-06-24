@@ -262,11 +262,11 @@ void SamplingDistPlot::Draw(const Option_t * /*options */) {
 
    if(fLegend) fRooPlot->addObject(fLegend);
 
-   if(gStyle->GetOptLogx() != fLogXaxis) {
+   if(bool(gStyle->GetOptLogx()) != fLogXaxis) {
       if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogx(...)";
       gStyle->SetOptLogx(fLogXaxis);
    }
-   if(gStyle->GetOptLogy() != fLogYaxis) {
+   if(bool(gStyle->GetOptLogy()) != fLogYaxis) {
       if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogy(...)";
       gStyle->SetOptLogy(fLogYaxis);
    }

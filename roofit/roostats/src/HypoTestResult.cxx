@@ -143,8 +143,7 @@ Double_t HypoTestResult::CLbError() const {
    // Returns an estimate of the error on CLb assuming a binomial error on
    // CLb:
    // BEGIN_LATEX
-   // #sigma_{CL_{b}} = #sqrt{CL_{b} #left( 1 - CL_{b} #right) /
-   //   n_{toys}}
+   // #sigma_{CL_{b}} = #sqrt{CL_{b} #left( 1 - CL_{b} #right) / n_{toys}}
    // END_LATEX
 
    if(!fNullDistr) return 0.0;
@@ -157,8 +156,7 @@ Double_t HypoTestResult::CLsplusbError() const {
    // Returns an estimate of the error on CLsplusb assuming a binomial
    // error on CLsplusb:
    // BEGIN_LATEX
-   // #sigma_{CL_{s+b}} = #sqrt{CL_{s+b} #left( 1 - CL_{s+b} #right) /
-   //   n_{toys}}
+   // #sigma_{CL_{s+b}} = #sqrt{CL_{s+b} #left( 1 - CL_{s+b} #right) / n_{toys}}
    // END_LATEX
 
    if(!fAltDistr) return 0.0;
@@ -172,8 +170,7 @@ Double_t HypoTestResult::CLsError() const {
    // errors on CLb and CLsplusb:
    // BEGIN_LATEX
    // #sigma_{CL_s} = CL_s
-   //   #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 +
-   //     #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
+   // #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 + #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
    // END_LATEX
 
    if(!fAltDistr || !fNullDistr) return 0.0;
