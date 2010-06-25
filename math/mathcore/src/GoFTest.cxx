@@ -15,7 +15,9 @@
 #include <map>
 #include <numeric>
 #include <string.h>
+#include <cassert>
 
+#include "Math/Error.h"
 #include "Math/Integrator.h"
 #include "Math/ProbFuncMathCore.h"
 
@@ -27,80 +29,46 @@
 namespace ROOT {
 namespace Math {
   
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-GoFTest::BadSampleArgument::BadSampleArgument(std::string type) : std::invalid_argument(type + " cannot be zero or zero-length!") {}
-
-GoFTest::DegenerateSamples::DegenerateSamples(std::string type) : std::domain_error(type + " Sampling values all identical.") {}
-#else
-#include <cassert>
-#endif
-
    GoFTest::GoFTest(const Double_t* sample1, UInt_t sample1Size, const Double_t* sample2, UInt_t sample2Size)
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-   throw(BadSampleArgument, std::bad_exception) try 
-#endif 
-      : fCDF(0), fSamples(std::vector<std::vector<Double_t> >(2)), fTestSampleFromH0(kFALSE)
-      {
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-         if (sample1 == 0 || sample1Size == 0) {
-            std::string msg = "'sample1";
-            msg += !sample1Size ? "Size'" : "'";
-            throw BadSampleArgument(msg);
-         } else if (sample2 == 0 || sample2Size == 0) {
-            std::string msg = "'sample2";
-            msg += !sample2Size ? "Size'" : "'";
-            throw BadSampleArgument(msg);
-         }  
-#else
-         assert(sample2 != 0 && sample2Size != 0);
-         assert(sample2 != 0 && sample2Size != 0); 
-#endif 
-         std::vector<const Double_t*> samples(2);
-         std::vector<UInt_t> samplesSizes(2);
-         samples[0] = sample1;
-         samples[1] = sample2;
-         samplesSizes[0] = sample1Size;
-         samplesSizes[1] = sample2Size;
-         SetSamples(samples, samplesSizes);
-         SetParameters();
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-      } catch (const BadSampleArgument& bsa) {
-      delete fCDF;
-      throw;
-   } catch (const std::bad_exception& be) {
-      delete fCDF;
-      throw;
-#endif 
+      : fCDF(0), fSamples(std::vector<std::vector<Double_t> >(2)), fTestSampleFromH0(kFALSE) {
+      Bool_t badSampleArg = sample1 == 0 || sample1Size == 0;
+      if (badSampleArg) { 
+         std::string msg = "'sample1";
+         msg += !sample1Size ? "Size' cannot be zero" : "' cannot be zero-length";
+         MATH_ERROR_MSG("GoFTest::GoFTest", msg.c_str());
+         assert(!badSampleArg);
+      }
+      badSampleArg = sample2 == 0 || sample2Size == 0;
+      if (badSampleArg) { 
+         std::string msg = "'sample2";         
+         msg += !sample2Size ? "Size' cannot be zero" : "' cannot be zero-length";
+         MATH_ERROR_MSG("GoFTest::GoFTest", msg.c_str());
+         assert(!badSampleArg);
+      }
+      std::vector<const Double_t*> samples(2);
+      std::vector<UInt_t> samplesSizes(2);
+      samples[0] = sample1;
+      samples[1] = sample2;
+      samplesSizes[0] = sample1Size;
+      samplesSizes[1] = sample2Size;
+      SetSamples(samples, samplesSizes);
+      SetParameters();
    }
 
-   GoFTest::GoFTest(const Double_t* sample, UInt_t sampleSize, EDistribution dist) 
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-   throw(BadSampleArgument, std::bad_exception) try
-#endif  
-      : fCDF(0), fDist(dist), fSamples(std::vector<std::vector<Double_t> >(1)), fTestSampleFromH0(kTRUE)
-      {
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-         if (sample == 0 || sampleSize == 0) {
-            std::string msg = "'sample";
-            msg += !sampleSize ? "Size'" : "'"; 
-            throw BadSampleArgument(msg);
-         }
-#else
-         assert(sample != 0 && sampleSize != 0);
-#endif
-         std::vector<const Double_t*> samples(1, sample);
-         std::vector<UInt_t> samplesSizes(1, sampleSize);
-         SetSamples(samples, samplesSizes);
-         SetParameters();
-         SetCDF();
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-      } catch (const BadSampleArgument& bsa) {
-      delete fCDF;
-      throw;
-   } catch (const std::bad_exception& be) {
-      delete fCDF;
-      throw;
-#endif 
+   GoFTest::GoFTest(const Double_t* sample, UInt_t sampleSize, EDistribution dist)   
+      : fCDF(0), fDist(dist), fSamples(std::vector<std::vector<Double_t> >(1)), fTestSampleFromH0(kTRUE) {
+      Bool_t badSampleArg = sample == 0 || sampleSize == 0;
+      if (badSampleArg) { 
+         std::string msg = "'sample";
+         msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
+         MATH_ERROR_MSG("GoFTest::GoFTest", msg.c_str());
+         assert(!badSampleArg);
+      }
+      std::vector<const Double_t*> samples(1, sample);
+      std::vector<UInt_t> samplesSizes(1, sampleSize);
+      SetSamples(samples, samplesSizes);
+      SetParameters();
+      SetCDF();
    }
 
    GoFTest::~GoFTest() {
@@ -117,17 +85,17 @@ GoFTest::DegenerateSamples::DegenerateSamples(std::string type) : std::domain_er
             fCombinedSamples[combinedSamplesSize + j] = samples[i][j];
          }
          combinedSamplesSize += samplesSizes[i];
-      }   
+      }
       std::sort(fCombinedSamples.begin(), fCombinedSamples.end());
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-      if (*fCombinedSamples.begin() == *(fCombinedSamples.end() - 1)) {
+   
+      Bool_t degenerateSamples = *(fCombinedSamples.begin()) == *(fCombinedSamples.end() - 1);
+      if (degenerateSamples) { 
          std::string msg = "Degenerate sample";
          msg += samplesSizes.size() > 1 ? "s!" : "!";
-         throw DegenerateSamples(msg);
+         msg += " Sampling values all identical.";
+         MATH_ERROR_MSG("GoFTest::SetSamples", msg.c_str());
+         assert(!degenerateSamples);
       }
-#else
-      assert(*fCombinedSamples.begin() != *(--fCombinedSamples.end()));
-#endif
    }
 
    void GoFTest::SetParameters() {
@@ -170,33 +138,19 @@ GoFTest::DegenerateSamples::DegenerateSamples(std::string type) : std::domain_er
       }
    }
 
-   void GoFTest::Instantiate(const Double_t* sample, UInt_t sampleSize)
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-      throw(BadSampleArgument, std::bad_exception) try
-#endif
-   {
-#if ! defined(__CINT__) && !defined(__MAKECINT__)
-      if (sample == 0 || sampleSize == 0) {
+   void GoFTest::Instantiate(const Double_t* sample, UInt_t sampleSize) {
+      Bool_t badSampleArg = sample == 0 || sampleSize == 0;
+      if (badSampleArg) { 
          std::string msg = "'sample";
-         msg += !sampleSize ? "Size'" : "'"; 
-         throw BadSampleArgument(msg);
+         msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
+         MATH_ERROR_MSG("GoFTest::GoFTest", msg.c_str());
+         assert(!badSampleArg);
       }
-#else
-      assert(sample != 0 && sampleSize != 0);
-#endif
       fCDF = 0;
       fDist = kUserDefined;
       fSamples = std::vector<std::vector<Double_t> >(1);
       fTestSampleFromH0 = kTRUE;
       SetSamples(std::vector<const Double_t*>(1, sample), std::vector<UInt_t>(1, sampleSize));
-#if ! defined(__CINT__) && !defined(__MAKECINT__)
-   } catch (const BadSampleArgument& bsa) {
-      delete fCDF;
-      throw;
-   } catch (const std::bad_exception& be) {
-      delete fCDF;
-      throw;
-#endif 
    }
 
    Double_t GoFTest::ComputeIntegral(Double_t* parms) const { 

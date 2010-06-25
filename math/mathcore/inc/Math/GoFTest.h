@@ -11,9 +11,6 @@
 #ifndef ROOT_Math_GoFTest
 #define ROOT_Math_GoFTest
 
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-#include <stdexcept>
-#endif
 
 
 #ifndef ROOT_Math_WrappedFunction
@@ -34,7 +31,7 @@ namespace Math {
 class GoFTest {
 public:
 
-   enum EDistribution { // H0 distributions for using only with 2-samples tests
+   enum EDistribution {  // H0 distributions for using only with 2-samples tests
       kUserDefined = -1, // Internal use only for the class's template constructor
       kGaussian,         // Default value
       kLogNormal,
@@ -42,35 +39,17 @@ public:
    };
   
    enum ETestType { // Goodness of Fit test types for using with the class's unary funtion as a shorthand for the in-built methods
-      kAD,   // Anderson-Darling Test. Default value
+      kAD,    // Anderson-Darling Test. Default value
       kAD2s, // Anderson-Darling 2-Samples Test
       kKS,   // Kolmogorov-Smirnov Test
-      kKS2s // Kolmogorov-Smirnov 2-Samples Test
+      kKS2s  // Kolmogorov-Smirnov 2-Samples Test
    };
-  
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-   struct BadSampleArgument : public std::invalid_argument {
-      BadSampleArgument(std::string type);
-   };
-  
-   struct DegenerateSamples : public std::domain_error {
-      DegenerateSamples(std::string type);
-   };
-#endif
-  
+    
    /* Constructor for using only with 2-samples tests */
-   GoFTest(const Double_t* sample1, UInt_t sample1Size, const Double_t* sample2, UInt_t sample2Size)
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-      throw(BadSampleArgument, std::bad_exception) 
-#endif
-      ;
+   GoFTest(const Double_t* sample1, UInt_t sample1Size, const Double_t* sample2, UInt_t sample2Size);
   
    /* Constructor for using only with 1-sample tests with a specified distribution */
-   GoFTest(const Double_t* sample, UInt_t sampleSize, EDistribution dist = kGaussian)
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-      throw(BadSampleArgument, std::bad_exception)
-#endif  
-      ;
+   GoFTest(const Double_t* sample, UInt_t sampleSize, EDistribution dist = kGaussian);
   
    /* Templated constructor for using only with 1-sample tests with a user specified distribution */
    template<class Dist>
@@ -148,9 +127,6 @@ private:
    void SetCDF(CDF_Ptr cdf = 0);
   
    void Instantiate(const Double_t* sample, UInt_t sampleSize)
-#if !defined(__CINT__) && !defined(__MAKECINT__)
-      throw(BadSampleArgument, std::bad_exception) 
-#endif
       ; 
    Double_t ComputeIntegral(Double_t* parms) const; // Computation of the integral term of the 1-Sample Anderson-Darling test statistic's asymtotic distribution as described in (2)
   
