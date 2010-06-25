@@ -588,7 +588,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
       partInt = ((RooAbsReal*)cache._partList.at(i)) ;
       normSet = ((RooArgSet*)cache._normList.At(i)) ;    
       Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
-//       cout << "partInt " << partInt->GetName() << " is of type " << partInt->IsA()->GetName() << endl ;
+      //cout << "partInt " << partInt->GetName() << " is of type " << partInt->IsA()->GetName() << endl ;
       if (dynamic_cast<RooAbsPdf*>(partInt)) {
 	cxcoutD(Eval) << "product term " << partInt->GetName() << " normalized over " << (normSet?*normSet:RooArgSet())  
 		      << " = " << partInt->getVal() << " / " << ((RooAbsPdf*)partInt)->getNorm(normSet) << " = " << piVal << endl ;
@@ -982,6 +982,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 	}
 	
       }      
+      delete tIter ;
     }
   }
   gIter->Reset() ;
@@ -1023,10 +1024,11 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       if (func[0]) {
 	cache->_partList.add(*func[0]) ;
 	if (isOwned) cache->_ownedList.addOwned(*func[0]) ;
-	cache->_normList.Add(norm->snapshot()) ;
+	
+	cache->_normList.Add(norm->snapshot(kFALSE)) ;
 
-	cache->_numList.add(*func[1]) ;
-	cache->_denList.add(*func[2]) ;
+	cache->_numList.addOwned(*func[1]) ;
+	cache->_denList.addOwned(*func[2]) ;
 // 	cout << "func[0]=" << func[0]->IsA()->GetName() << "::" << func[0]->GetName() << endl ;
 // 	cout << "func[1]=" << func[1]->IsA()->GetName() << "::" << func[1]->GetName() << endl ;
 // 	cout << "func[2]=" << func[2]->IsA()->GetName() << "::" << func[2]->GetName() << endl ;
@@ -1104,11 +1106,13 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       // Product of numerator terms
       string prodname_num = makeRGPPName("SPECPROD_NUM",compTermNum,RooArgSet(),RooArgSet(),0) ;
       RooProduct* prodtmp_num = new RooProduct(prodname_num.c_str(),prodname_num.c_str(),compTermNum) ;
+      prodtmp_num->addOwnedComponents(compTermNum) ;
       cache->_ownedList.addOwned(*prodtmp_num) ;
       
       // Product of denominator terms
       string prodname_den = makeRGPPName("SPECPROD_DEN",compTermDen,RooArgSet(),RooArgSet(),0) ;
       RooProduct* prodtmp_den = new RooProduct(prodname_den.c_str(),prodname_den.c_str(),compTermDen) ;
+      prodtmp_den->addOwnedComponents(compTermDen) ;
       cache->_ownedList.addOwned(*prodtmp_den) ;
 
       // Ratio
@@ -1117,11 +1121,11 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 
       // Integral of ratio
       RooAbsReal* numtmp = ndr->createIntegral(outerIntDeps,isetRangeName) ;      
+      numtmp->addOwnedComponents(*ndr) ;
 
-      cache->_numList.add(*numtmp) ;
-      cache->_denList.add(*(RooAbsArg*)RooFit::RooConst(1).clone("1")) ;          
-
-      cache->_normList.Add(compTermNorm.snapshot()) ;
+      cache->_numList.addOwned(*numtmp) ;
+      cache->_denList.addOwned(*(RooAbsArg*)RooFit::RooConst(1).clone("1")) ;                
+      cache->_normList.Add(compTermNorm.snapshot(kFALSE)) ;
 
       delete tIter ;      
     }
@@ -2077,7 +2081,7 @@ void RooProdPdf::generateEvent(Int_t code)
 RooProdPdf::CacheElem::~CacheElem() 
 {
   // Destructor
-  // _normList.Delete() ; WVE THIS IS AN INTENTIAL LEAK -- MUST FIX LATER
+  //_normList.Delete() ; //WVE THIS IS AN INTENTIAL LEAK -- MUST FIX LATER
   if (_rearrangedNum) delete _rearrangedNum ;
   if (_rearrangedDen) delete _rearrangedDen ;
 //   cout << "RooProdPdf::CacheElem dtor, this = " << this << endl ;

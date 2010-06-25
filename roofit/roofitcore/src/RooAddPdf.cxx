@@ -955,8 +955,8 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
 	
 	value += val*_coefCache[i]/snormVal ;
       }
-      i++ ;
     }    
+    i++ ;
   }
 
   return value ;

@@ -407,11 +407,26 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
   RooArgSet splitCatSet(obc._usedSplitCats) ;
   if (physCat) splitCatSet.add(*physCat) ;
 
+  RooArgSet splitCatSetFund ;
+  TIterator* scsiter = splitCatSet.createIterator() ;
+  RooAbsCategory* scat ;
+  while((scat=(RooAbsCategory*)scsiter->Next())) {
+    if (scat->isFundamental()) {
+      splitCatSetFund.add(*scat) ;
+    } else {
+      RooArgSet* scatvars = scat->getVariables() ;
+      splitCatSetFund.add(*scatvars) ;
+      delete scatvars ;
+    }
+  }
+  delete scsiter ;
+
+
   RooAbsCategoryLValue* masterSplitCat ;
-  if (splitCatSet.getSize()>1) {
-    masterSplitCat = new RooSuperCategory("masterSplitCat","Master splitting category",splitCatSet) ;
+  if (splitCatSetFund.getSize()>1) {
+    masterSplitCat = new RooSuperCategory("masterSplitCat","Master splitting category",splitCatSetFund) ;
   } else {
-    masterSplitCat = (RooAbsCategoryLValue*) splitCatSet.first() ;
+    masterSplitCat = (RooAbsCategoryLValue*) splitCatSetFund.first() ;
   }
   if (verbose) coutI(ObjectHandling) << "RooSimWSTool::executeBuild: list of splitting categories " << splitCatSet << endl ;
 
@@ -503,7 +518,22 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
   // Create fit category from physCat and splitCatList ;
   RooArgSet fitCatList ;
   if (physCat) fitCatList.add(*physCat) ;
-  fitCatList.add(splitCatSet) ;
+
+  // Add observables of splitCatSet members, rather than splitCatSet members directly
+  // as there may be cat->cat functions in here
+  scsiter = splitCatSet.createIterator() ;
+  while((scat=(RooAbsCategory*)scsiter->Next())) {
+    if (scat->isFundamental()) {
+      fitCatList.add(*scat) ;
+    } else {
+      RooArgSet* scatvars = scat->getVariables() ;
+      fitCatList.add(*scatvars) ;
+      delete scatvars ;
+    }
+  }
+  delete scsiter ;
+
+
   TIterator* fclIter = fitCatList.createIterator() ;
   string mcatname = string(simPdfName) + "_index" ;
   RooAbsCategoryLValue* fitCat = 0 ;

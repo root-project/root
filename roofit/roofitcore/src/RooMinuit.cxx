@@ -886,7 +886,10 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
   // Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
   // where 'sigma' is calculated as n*n*errorLevel
 
+
   _theFitter->SetObjectFit(this) ;
+
+  RooArgList* paramSave = (RooArgList*) _floatParamList->snapshot() ;
 
   // Verify that both variables are floating parameters of PDF
   Int_t index1= _floatParamList->index(&var1);
@@ -937,6 +940,11 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
 
   // restore the original ERRDEF
   gMinuit->SetErrorDef(errdef);
+
+  // restore parameter values 
+  *_floatParamList = *paramSave ;
+  delete paramSave ;
+
   
   return frame ;
 }

@@ -112,7 +112,7 @@ RooCmdArg Weight(Double_t wgt) ;
 RooCmdArg Index(RooCategory& icat) ;
 RooCmdArg Import(const char* state, TH1& histo) ;
 RooCmdArg Import(const char* state, RooDataHist& dhist) ;
-RooCmdArg Import(TH1& histo) ;
+RooCmdArg Import(TH1& histo, Bool_t importDensity=kTRUE) ;
 
 // RooDataSet::ctor arguments
 RooCmdArg WeightVar(const char* name) ;

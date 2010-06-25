@@ -194,6 +194,9 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
     _perExptGenParams = kTRUE ;
 
+    coutI(Generation) << "RooMCStudy::RooMCStudy: INFO have pdf with constraints, will generate paramaters from constraint pdf for each experiment" << endl ;
+
+
   } else {
     _constrPdf = 0 ;
     _constrGenContext=0 ;
@@ -1198,7 +1201,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
 
     // Add Gaussian fit if requested
     if (fitGauss) {
-      RooRealVar pullMean("pullMean","Mean of pull",0,-100,100) ;
+      RooRealVar pullMean("pullMean","Mean of pull",0,-10,10) ;
       RooRealVar pullSigma("pullSigma","Width of pull",1,0.1,5) ;
       RooGenericPdf pullGauss("pullGauss","Gaussian of pull",
 			      "exp(-0.5*(@0-@1)*(@0-@1)/(@2*@2))",

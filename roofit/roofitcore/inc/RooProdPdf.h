@@ -132,6 +132,8 @@ protected:
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
+  private:
+    CacheElem(const CacheElem&) ;
   } ;
   mutable RooObjCacheManager _cacheMgr ; // The cache manager
 

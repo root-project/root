@@ -622,6 +622,9 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   // Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
   // where 'sigma' is calculated as n*n*errorLevel
 
+  RooArgList* params = _fcn->GetFloatParamList() ;
+  RooArgList* paramSave = (RooArgList*) params->snapshot() ;
+
   // Verify that both variables are floating parameters of PDF
   Int_t index1= _fcn->GetFloatParamList()->index(&var1);
   if(index1 < 0) {
@@ -690,6 +693,10 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 
   // restore the original ERRDEF
   _theFitter->Config().MinimizerOptions().SetErrorDef(errdef);
+
+  // restore parameter values 
+  *params = *paramSave ;
+  delete paramSave ;
 
   return frame ;
 

@@ -200,7 +200,7 @@ Double_t RooHistPdf::evaluate() const
     }
   }
 
-  Double_t ret =  _dataHist->weight(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;  
+  Double_t ret =  _dataHist->weight(_histObsList,_intOrder,_unitNorm?kFALSE:kTRUE,_cdfBoundaries) ;  
   if (ret<0) {
     ret=0 ;
   }
@@ -319,8 +319,8 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
 
   // WVE needs adaptation for rangeName feature
   // Simplest scenario, integration over all dependents
-  if (code==1000) {
-    return _dataHist->sum(kTRUE) ;
+  if (code==1000) {    
+    return _dataHist->sum(kFALSE) ;
   }
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum

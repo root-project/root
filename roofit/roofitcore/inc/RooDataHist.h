@@ -147,8 +147,8 @@ protected:
   void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
 
   void adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset=0) ;
-  void importTH1(const RooArgList& vars, TH1& histo, Double_t initWgt) ;
-  void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, Double_t initWgt) ;
+  void importTH1(const RooArgList& vars, TH1& histo, Double_t initWgt, Bool_t doDensityCorrection) ;
+  void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, Double_t initWgt, Bool_t doDensityCorrection) ;
   void importDHistSet(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, Double_t initWgt) ;
 
   virtual RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) ;
