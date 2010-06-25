@@ -5660,9 +5660,9 @@ Int_t THistPainter::PaintInit()
    }
 
    // In some cases, mainly because of precision issues, ymin and ymax could almost equal.
-   if(TMath::AreEqualAbs(ymin,ymax,1E-10)) {
-      ymin = ymin-1E-10;
-      ymax = ymax+1E-10;
+   if(TMath::AreEqualRel(ymin,ymax,1E-15)) {
+      ymin = ymin*(1-1E-14);
+      ymax = ymax*(1+1E-14);
    }
 
    //     take into account normalization factor
