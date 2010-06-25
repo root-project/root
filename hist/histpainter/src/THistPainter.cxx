@@ -5620,12 +5620,14 @@ Int_t THistPainter::PaintInit()
       }
    }
 
+
    //     Take into account maximum , minimum
 
    if (Hoption.Logy && ymin <= 0) {
       if (ymax >= 1) ymin = TMath::Max(.005,ymax*1e-10);
       else           ymin = 0.001*ymax;
    }
+
    Double_t xm = ymin;
    if (maximum) ymax = fH->GetMaximumStored();
    if (minimum) xm   = fH->GetMinimumStored();
@@ -5634,6 +5636,7 @@ Int_t THistPainter::PaintInit()
       return 0;
    }
    else ymin = xm;
+
    if (ymin >= ymax && !Hoption.Plus) {
       if (Hoption.Logy) {
          if (ymax > 0) ymin = 0.001*ymax;
@@ -5654,6 +5657,12 @@ Int_t THistPainter::PaintInit()
             ymax = 1;
          }
       }
+   }
+
+   // In some cases, mainly because of precision issues, ymin and ymax could almost equal.
+   if(TMath::AreEqualAbs(ymin,ymax,1E-10)) {
+      ymin = ymin-1E-10;
+      ymax = ymax+1E-10;
    }
 
    //     take into account normalization factor
@@ -5713,6 +5722,7 @@ Int_t THistPainter::PaintInit()
    if (!maximum && !Hoption.Plus) {
       ymax += yMARGIN*(ymax-ymin);
    }
+
    Hparam.ymin = ymin;
    Hparam.ymax = ymax;
    return 1;
