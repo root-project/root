@@ -278,8 +278,11 @@ void FourBin(bool doBayesian=false, bool doFeldmanCousins=false, bool doMCMC=fal
 
   if(doBayesian && wspace->set("poi")->getSize() == 1)   {
     c1->cd(2);
-    //    RooPlot* bplot = bc.GetPosteriorPlot();
-    //    bplot->Draw();// the plot takes a long time
+    // the plot takes a long time and print lots of error
+    // using a scan it is better
+    bc.SetScanOfPosterior(20);
+    RooPlot* bplot = bc.GetPosteriorPlot();
+    bplot->Draw();
   } 
 
   if(doMCMC){
