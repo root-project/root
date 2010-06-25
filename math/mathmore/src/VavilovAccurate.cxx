@@ -152,7 +152,7 @@ void VavilovAccurate::Set(double kappa, double beta2, double epsilonPM, double e
    }
    if (fX0 < 5) fX0 = 5;
    else if (fX0 > MAXTERMS) fX0 = MAXTERMS;
-   int n = fX0+1;
+   int n = int(fX0+1);
    // logKappa=log(kappa)
    double d = rpi*std::exp(kappa*(1+beta2*(eu-logKappa)));
    fA_pdf[n] = rpi*fOmega;
@@ -219,7 +219,7 @@ double VavilovAccurate::Pdf (double x) const {
 
    static const double pi = 3.14159265358979323846;       // pi
 
-   int n = fX0;
+   int n = int(fX0);
    double f;
    if (x < fT0) {
       f = 0;
@@ -258,7 +258,7 @@ double VavilovAccurate::Cdf (double x) const {
 
    static const double pi = 3.14159265358979323846;       // pi
 
-   int n = fX0;
+   int n = int(fX0);
    double f;
    if (x < fT0) {
       f = 0;
@@ -298,7 +298,7 @@ double VavilovAccurate::Cdf_c (double x) const {
 
    static const double pi = 3.14159265358979323846;       // pi
 
-   int n = fX0;
+   int n = int(fX0);
    double f;
    if (x < fT0) {
       f = 1;
