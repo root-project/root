@@ -21,6 +21,8 @@ to control this merging:
    the resulting index had gaps (the default was similar to AsIsIndexOnError).   The new default is BuildIndexOnError  ; i.e.
 we now attempt by default to build the missing indices.
 </li>
+<li>Warning: The TTreeCache is no longer enabled by default in a TChain to align the behavior with a TTree.  You need to call
+TTree::SetCacheSize to enable the TTreeCache.</li> 
 <li>Update MakeProxy so that the resulting skeleton is useable with Proof.</li>
 <li>Correct and clarify the relationship between AutoFlush and AutoSave:
    <ul>
