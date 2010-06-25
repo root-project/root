@@ -27,6 +27,7 @@
 // include header file of this class 
 #include "RooStats/BayesianCalculator.h"
 #include "RooStats/ModelConfig.h"
+#include "RooStats/RooStatsUtils.h"
 
 #include "Math/IFunction.h"
 #include "Math/IntegratorMultiDim.h"
@@ -249,7 +250,8 @@ private:
       }
 
       if (f != 0 && error/f > 0.2 ) 
-         ooccoutW((TObject*)0,NumIntegration) << "PosteriorFunction::DoEval - Error from integration is larger than 20 % " 
+         ooccoutW((TObject*)0,NumIntegration) << "PosteriorFunction::DoEval - Error from integration in " 
+                                              << fXmin.size() <<  " Dim is larger than 20 % " 
                                               << "x = " << x << " p(x) = " << f << " +/- " << error << std::endl;
 
       return f / fNorm;
@@ -402,6 +404,9 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    fProductPdf = new RooProdPdf(prodName,"",RooArgList(*fPdf,*fPriorPOI));
 
    RooArgSet* constrainedParams = fProductPdf->getParameters(*fData);
+   // remove the constant parameters
+   RemoveConstantParameters(constrainedParams);
+   
 
    // use RooFit::Constrain() to make product of likelihood with prior pdf
    fLogLike = fProductPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams) );
@@ -463,6 +468,10 @@ RooPlot* BayesianCalculator::GetPosteriorPlot(bool norm, double precision ) cons
   /// return a RooPlot with the posterior  and the credibility region
 
    if (!fLikelihood) GetPosteriorFunction(); 
+
+   // if a scan is requested approximate the posterior
+   if (fNScanBins > 0) ApproximatePosterior();
+
    RooAbsReal * posterior = fIntegratedLikelihood; 
    if (norm) posterior = fPosteriorPdf; 
    if (!posterior) { 
@@ -479,6 +488,7 @@ RooPlot* BayesianCalculator::GetPosteriorPlot(bool norm, double precision ) cons
 
    RooAbsRealLValue* poi = dynamic_cast<RooAbsRealLValue*>( fPOI.first() );
    assert(poi);
+
 
    RooPlot* plot = poi->frame();
 
@@ -695,6 +705,9 @@ void BayesianCalculator::ApproximatePosterior() const {
 
 
    RooAbsReal * posterior = GetPosteriorFunction();
+
+   // try to reduce some error messages
+   posterior->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
    TF1 * tmp = posterior->asTF(fPOI); 
    assert(tmp != 0);
