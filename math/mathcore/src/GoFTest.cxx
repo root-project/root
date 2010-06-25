@@ -112,15 +112,15 @@ GoFTest::DegenerateSamples::DegenerateSamples(std::string type) : std::domain_er
       UInt_t combinedSamplesSize = 0;
       for (UInt_t i = 0; i < samples.size(); ++i) {
          fSamples[i].assign(samples[i], samples[i] + samplesSizes[i]);
-         sort(fSamples[i].begin(), fSamples[i].end());
+         std::sort(fSamples[i].begin(), fSamples[i].end());
          for (UInt_t j = 0; j < samplesSizes[i]; ++j) {
             fCombinedSamples[combinedSamplesSize + j] = samples[i][j];
          }
          combinedSamplesSize += samplesSizes[i];
       }   
-      sort(fCombinedSamples.begin(), fCombinedSamples.end());
+      std::sort(fCombinedSamples.begin(), fCombinedSamples.end());
 #if !defined(__CINT__) && !defined(__MAKECINT__)
-      if (*fCombinedSamples.begin() == *(--fCombinedSamples.end())) {
+      if (*fCombinedSamples.begin() == *(fCombinedSamples.end() - 1)) {
          std::string msg = "Degenerate sample";
          msg += samplesSizes.size() > 1 ? "s!" : "!";
          throw DegenerateSamples(msg);
@@ -418,8 +418,8 @@ GoFTest::DegenerateSamples::DegenerateSamples(std::string type) : std::domain_er
       const UInt_t nb = fSamples[1].size();
       Double_t* a = new Double_t[na];
       Double_t* b = new Double_t[nb]; 
-      copy(fSamples[0].begin(), fSamples[0].end(), a);
-      copy(fSamples[1].begin(), fSamples[1].end(), b);
+      std::copy(fSamples[0].begin(), fSamples[0].end(), a);
+      std::copy(fSamples[1].begin(), fSamples[1].end(), b);
       Double_t result = TMath::KolmogorovTest(na, a, nb, b, (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0 ? 0 : "M"));
       return result;
    }
