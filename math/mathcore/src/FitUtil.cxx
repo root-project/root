@@ -792,6 +792,7 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
 
    //func.SetParameters(p);
 
+
    const double * x = data.Coords(i);
    double fval = func ( x, p ); 
    double logPdf = ROOT::Math::Util::EvalLog(fval);
@@ -1081,6 +1082,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
 
 
 #ifdef DEBUG
+      int NSAMPLE = 100;
       if (i%NSAMPLE == 0) { 
          std::cout << "evt " << i << " x1 = [ "; 
          for (unsigned int j=0; j < func.NDim(); ++j) std::cout << x[j] << " , ";

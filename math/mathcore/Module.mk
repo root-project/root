@@ -58,6 +58,7 @@ MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/Math/BrentMinimizer1D.h \
                 $(MODDIRI)/Math/BrentRootFinder.h \
                 $(MODDIRI)/Math/DistSampler.h \
+                $(MODDIRI)/Math/GoFTest.h \
                 $(MODDIRI)/Math/SpecFuncMathCore.h \
                 $(MODDIRI)/Math/DistFuncMathCore.h
 MATHCOREDH3  := $(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))

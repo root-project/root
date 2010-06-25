@@ -118,6 +118,7 @@
 #pragma link C++ class ROOT::Math::BrentMinimizer1D+;
 
 #pragma link C++ class ROOT::Math::DistSampler+;
+#pragma link C++ class ROOT::Math::GoFTest+;
 
 #include "LinkDef_Func.h"
 

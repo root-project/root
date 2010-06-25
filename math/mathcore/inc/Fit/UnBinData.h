@@ -194,7 +194,7 @@ public:
       return size of internal data vector (is 0 for external data) 
     */
    unsigned int DataSize() const { 
-      return fDataVector->Size();
+      return (fDataVector) ? fDataVector->Size() : 0;
    }
    
    /**
