@@ -11,7 +11,7 @@
 #ifndef ROOT_Math_GoFTest
 #define ROOT_Math_GoFTest
 
-#if not defined(__CINT__) && not defined(__MAKECINT__)
+#if !defined(__CINT__) && !defined(__MAKECINT__)
 #include <stdexcept>
 #endif
 
@@ -48,7 +48,7 @@ public:
       kKS2s // Kolmogorov-Smirnov 2-Samples Test
    };
   
-#if not defined(__CINT__) && not defined(__MAKECINT__)
+#if !defined(__CINT__) && !defined(__MAKECINT__)
    struct BadSampleArgument : public std::invalid_argument {
       BadSampleArgument(std::string type);
    };
@@ -60,14 +60,14 @@ public:
   
    /* Constructor for using only with 2-samples tests */
    GoFTest(const Double_t* sample1, UInt_t sample1Size, const Double_t* sample2, UInt_t sample2Size)
-#if not defined(__CINT__) && not defined(__MAKECINT__)
+#if !defined(__CINT__) && !defined(__MAKECINT__)
       throw(BadSampleArgument, std::bad_exception) 
 #endif
       ;
   
    /* Constructor for using only with 1-sample tests with a specified distribution */
    GoFTest(const Double_t* sample, UInt_t sampleSize, EDistribution dist = kGaussian)
-#if not defined(__CINT__) && not defined(__MAKECINT__)
+#if !defined(__CINT__) && !defined(__MAKECINT__)
       throw(BadSampleArgument, std::bad_exception)
 #endif  
       ;
@@ -148,7 +148,7 @@ private:
    void SetCDF(CDF_Ptr cdf = 0);
   
    void Instantiate(const Double_t* sample, UInt_t sampleSize)
-#if not defined(__CINT__) && not defined(__MAKECINT__)
+#if !defined(__CINT__) && !defined(__MAKECINT__)
       throw(BadSampleArgument, std::bad_exception) 
 #endif
       ; 
