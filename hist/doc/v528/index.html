@@ -143,6 +143,12 @@
 <li> PaintAxis does not redraw the axis labels and the axis title in case
      of axis redrawing. Only the tick marks are redrawn. Redrawing the
      labels and title made them appear a bit thicker.
+<li> Fix a precision issue in PaintInit. The problem showed up with
+     the following lines:
+     <pre>
+     TF1 *f = new TF1("f","exp(-x)*exp(x-2.)",0.,2.0);
+     f->Draw();
+     </pre>
 </ul>
 
 <h4>TGraphPainter</h4>
