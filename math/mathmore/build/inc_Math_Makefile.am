@@ -39,9 +39,16 @@ math_HEADERS =           	       \
 	 Random.h                      \
          RootFinder.h                  \
          RootFinderAlgorithms.h        \
-         SpecFuncMathMore.h            
-#          WrappedMultiTF1.h             \
-#          WrappedTF1.h                  
+         SpecFuncMathMore.h            \
+         VavilovAccurateCdf.h          \	
+         VavilovAccurate.h             \
+         VavilovAccurate.h             \
+         VavilovAccuratePdf.h          \
+         VavilovAccurateQuantile.h     \
+         VavilovFast.h                 \
+         Vavilov.h                 
+
+
 
 # add mathcore files 
 

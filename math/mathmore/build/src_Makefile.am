@@ -74,7 +74,13 @@ libMathMore_la_SOURCES +=	       \
          SpecFuncCephes.h               \
          SpecFuncCephes.cxx             \
          SpecFuncCephesInv.cxx          \
-         SpecFuncMathCore.cxx           
+         SpecFuncMathCore.cxx           \
+         Vavilov.cxx                    \
+         VavilovAccurate.cxx            \
+         VavilovAccuratePdf.cxx         \
+         VavilovAccurateCdf.cxx         \
+         VavilovAccurateQuantile.cxx    \
+         VavilovFast.cxx                
 
 
 

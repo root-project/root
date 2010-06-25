@@ -95,6 +95,11 @@ TESTFUNCTOROBJ      = testFunctor.$(ObjSuf)
 TESTFUNCTORSRC      = testFunctor.$(SrcSuf)
 TESTFUNCTOR         = testFunctor$(ExeSuf)
 
+TESTVAVILOVOBJ      = testVavilov.$(ObjSuf)
+TESTVAVILOVSRC      = testVavilov.$(SrcSuf)
+TESTVAVILOV         = testVavilov$(ExeSuf)
+
+
 SIMANTSPOBJ      = simanTSP.$(ObjSuf)
 SIMANTSPSRC      = simanTSP.$(SrcSuf)
 SIMANTSP         = simanTSP$(ExeSuf)
@@ -103,11 +108,11 @@ SIMANTSP         = simanTSP$(ExeSuf)
 
 OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(INTEGRATIONMDOBJ) $(ROOTFINDEROBJ) \
                   $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) \
-	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ) $(TESTPERMUTEOBJ) $(SIMANTSPOBJ)
+	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ)  $(TESTPERMUTEOBJ) $(TESTVAVILOVOBJ) $(SIMANTSPOBJ)
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(INTEGRATIONMD) $(ROOTFINDER) \
                   $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)  \
-	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR) $(TESTPERMUTE) $(SIMANTSP)
+	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR) $(TESTPERMUTE) $(TESTVAVILOV) $(SIMANTSP)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -171,6 +176,14 @@ $(TESTFUNCTOR): $(TESTFUNCTOROBJ)
 $(TESTPERMUTE):      $(TESTPERMUTEOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
+
+
+$(TESTVAVILOVOBJ):       VavilovTest.cxx VavilovTest.h
+
+$(TESTVAVILOV): $(TESTVAVILOVOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
 
 $(SIMANTSP):  	$(SIMANTSPOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@

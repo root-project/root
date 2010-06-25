@@ -32,6 +32,12 @@
 #pragma link C++ class ROOT::Math::Chebyshev+;
 #pragma link C++ class ROOT::Math::Derivator+;
 
+#pragma link C++ class ROOT::Math::Vavilov+;
+#pragma link C++ class ROOT::Math::VavilovAccurate+;
+#pragma link C++ class ROOT::Math::VavilovAccuratePdf+;
+#pragma link C++ class ROOT::Math::VavilovAccurateCdf+;
+#pragma link C++ class ROOT::Math::VavilovAccurateQuantile+;
+#pragma link C++ class ROOT::Math::VavilovFast+;
 
 //#pragma extra_include "TF1.h";
 

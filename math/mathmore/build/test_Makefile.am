@@ -4,7 +4,7 @@
 ## Process this file with automake to produce Makefile.in .
 #
 
-check_PROGRAMS =  testRootFinder  testDerivation testIntegration testMinimization1D testSpecFunc testStatFunc
+check_PROGRAMS =  testRootFinder  testDerivation testIntegration testMinimization1D testSpecFunc testStatFunc testVavilov
 
 # skip other tests since they depend on ROOT lib
 #testInterpolation  testDerivation testIntegration
@@ -22,6 +22,8 @@ testMinimization1D_SOURCES =  testMinimization1D.cxx
 testSpecFunc_SOURCES =  testSpecFunc.cxx
 
 testStatFunc_SOURCES =  testStatFunc.cxx
+
+testVavilov_SOURCES =  testVavilov.cxx  VavilovTest.h VavilovTest.cxx
 
 
 
@@ -47,6 +49,9 @@ testSpecFunc_LDFLAGS = @GSL_LDFLAGS@
 
 testStatFunc_LDADD =  $(top_builddir)/src/libMathMore.la
 testStatFunc_LDFLAGS = @GSL_LDFLAGS@
+
+testVavilov_LDADD =  $(top_builddir)/src/libMathMore.la
+testVavilov_LDFLAGS = @GSL_LDFLAGS@
 
 
 
