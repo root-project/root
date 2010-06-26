@@ -61,7 +61,7 @@ VavilovAccurateQuantile::VavilovAccurateQuantile(const double *p) {
 VavilovAccurateQuantile::~VavilovAccurateQuantile ()  
 {}  
 
-const double * VavilovAccurateQuantile::VavilovAccurateQuantile::Parameters() const {
+const double * VavilovAccurateQuantile::Parameters() const {
    return fP;
 }
 
