@@ -2048,6 +2048,10 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
       G__catchexception ^= 1;
       fprintf(G__sout, "G__catchexception=%d\n", G__catchexception);
    }
+   else if (strncmp("preproc", com, 4) == 0) {
+      G__cpp ^= 1;
+      fprintf(G__sout, "G__cpp=%d\n", G__cpp);
+   }
    else if (strncmp("autodict", com, 8) == 0) {
       G__EnableAutoDictionary ^= 1;
       fprintf(G__sout, "Automatic building of dictionaries now %s\n",
@@ -2540,6 +2544,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
 #endif
       G__more(G__sout, "             undo      : undo previous declarations\n");
       G__more(G__sout, "             lang      : local language (EUC,SJIS,EUROPEAN,UNKNOWN)\n");
+      G__more(G__sout, "             preproc   : toggle preprocessing of interpreted files\n");
       G__more(G__sout, "Monitor:     g <[var]> : list global variable\n");
       G__more(G__sout, "             l <[var]> : list local variable\n");
       G__more(G__sout, "             proto <[scope]::>[func] : show function prototype\n");
@@ -2575,6 +2580,7 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
 #endif
       G__more(G__sout, "             dasm      : disassembler\n");
 #endif
+      G__more(G__sout, "             except    : toggle exception catching\n");
       G__more(G__sout, "Quit:        q         : quit cint\n");
       G__more(G__sout, "             qqq       : quit cint - mandatory\n");
       G__more(G__sout, "             qqqqq     : exit process immediately\n");
