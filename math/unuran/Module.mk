@@ -171,6 +171,7 @@ $(UNURANO): CXXFLAGS += $(UNRFLAGS)
 ifeq ($(PLATFORM),win32)
 $(UNRO): CFLAGS := $(filter-out -FIsehmap.h,$(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/src/ -I$(UNRDIRS)/src/utils -DHAVE_CONFIG_H))
 else
+$(UNRO): CFLAGS := $(filter-out -Wshadow,$(CFLAGS))
 $(UNRO): CFLAGS := $(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/src/ -I$(UNRDIRS)/src/utils -DHAVE_CONFIG_H)
 endif
 ifeq ($(CC),icc)
