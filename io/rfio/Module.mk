@@ -67,6 +67,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+$(RFIOO) $(RFIODO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
+
 ifeq ($(PLATFORM),win32)
 $(RFIOO): CXXFLAGS += $(SHIFTCFLAGS) $(SHIFTINCDIR:%=-I%) -DNOGDI -D__INSIDE_CYGWIN__
 else

@@ -67,4 +67,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+$(sort $(QTROOTO)) $(QTROOTDO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 $(sort $(QTROOTO)) $(QTROOTDO): CXXFLAGS += $(GQTCXXFLAGS)
