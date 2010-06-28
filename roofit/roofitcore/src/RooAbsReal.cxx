@@ -3897,7 +3897,9 @@ Double_t RooAbsReal::findRoot(RooRealVar& x, Double_t xmin, Double_t xmax, Doubl
   // Return value of x (in range xmin,xmax) at which function equals yval.
   // (Calculation is performed with Brent root finding algorithm)
   
-  return RooBrentRootFinder(RooRealBinding(*this,x)).findRoot(xmin,xmax,yval) ;
+  Double_t result(0) ;
+  RooBrentRootFinder(RooRealBinding(*this,x)).findRoot(result,xmin,xmax,yval) ;
+  return result ;
 }
 
 
