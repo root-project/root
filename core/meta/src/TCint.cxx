@@ -250,17 +250,24 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title), f
    ProcessLine("#define ROOT_TError 0");
    ProcessLine("#define ROOT_TGenericClassInfo 0");   
 
+   TString include;
    // Add the root include directory to list searched by default
 #ifndef ROOTINCDIR
-   TString include = gSystem->Getenv("ROOTSYS");
+   include = gSystem->Getenv("ROOTSYS");
    include.Append("/include");
-   TCint::AddIncludePath(include);
 #else
-   TCint::AddIncludePath(ROOTINCDIR);
+   include = ROOTINCDIR;
 #endif
+  TCint::AddIncludePath(include);
 
    // Allow the usage of ClassDef and ClassImp in interpreted macros
-   ProcessLine("#include <RtypesCint.h>");
+   // if RtypesCint.h can be found (think of static executable without include/)
+  char* whichTypesCint = gSystem->Which(include, "RtypesCint.h");
+  if (whichTypesCint) {
+      ProcessLine("#include <RtypesCint.h>");
+      delete[] whichTypesCint;
+  }
+
 }
 
 //______________________________________________________________________________
