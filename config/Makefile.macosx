@@ -20,9 +20,9 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -m32 -pipe -W -Wall -Woverloaded-virtual \
+CXXFLAGS      = -m32 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
-CFLAGS        = -m32 -pipe -W -Wall -fsigned-char -fno-common \
+CFLAGS        = -m32 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 CINTCXXFLAGS  = -m32 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
