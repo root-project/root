@@ -37,4 +37,6 @@
   it, which the dictionary must do.</p></li>
 
   <li>Add support for building with Microsoft Visual Studio 2010, including dictionaries for its new STL.</li>
+
+  <li>Implement new prompt interface <tt>.preproc</tt> to toggle the external preprocessing of scripts. This does not work for any file #including e.g. TObject, as it disables ROOT's ignore-include mechanism for include files (see TROOT::IgnoreInclude()).</li>
 </ul>
