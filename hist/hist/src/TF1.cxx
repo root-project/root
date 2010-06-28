@@ -1863,7 +1863,10 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    //     f2->GetQuantiles(nprob,gr->GetY());
    //     gr->Draw("alp");
 
-   const Int_t npx     = TMath::Min(250,TMath::Max(50,2*nprobSum));
+   // LM: change to use fNpx 
+   // should we change code to use a root finder ? 
+   // It should be more precise and more efficient
+   const Int_t npx     = TMath::Max(fNpx, 2*nprobSum);
    const Double_t xMin = GetXmin();
    const Double_t xMax = GetXmax();
    const Double_t dx   = (xMax-xMin)/npx;
@@ -1910,9 +1913,10 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    // is monotone increasing
    for (i = 0; i < nprobSum; i++) {
       const Double_t r = probSum[i];
-      Int_t bin  = TMath::Max(TMath::BinarySearch(npx+1,integral.GetArray(),r)-1,(Long64_t)0);
-      while (bin < npx-1 && integral[bin+1] == r) {
-         if (integral[bin+2] == r) bin++;
+      Int_t bin  = TMath::Max(TMath::BinarySearch(npx+1,integral.GetArray(),r),(Long64_t)0);
+      // LM use a tolerance 1.E-12 (integral precision)
+      while (bin < npx-1 && TMath::AreEqualRel(integral[bin+1], r, 1E-12) ) {
+         if (TMath::AreEqualRel(integral[bin+2], r, 1E-12) ) bin++;
          else break;
       }
 
