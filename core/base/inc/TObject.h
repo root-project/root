@@ -173,31 +173,11 @@ public:
    void     InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
 
    //---- error handling
-   virtual void     Info(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
-#endif
-   ;
-   virtual void     Warning(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
-#endif
-   ;
-   virtual void     Error(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
-#endif
-   ;
-   virtual void     SysError(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
-#endif
-   ;
-   virtual void     Fatal(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
-#endif
-   ;
+   virtual void     Info(const char *method, const char *msgfmt, ...) const;
+   virtual void     Warning(const char *method, const char *msgfmt, ...) const;
+   virtual void     Error(const char *method, const char *msgfmt, ...) const;
+   virtual void     SysError(const char *method, const char *msgfmt, ...) const;
+   virtual void     Fatal(const char *method, const char *msgfmt, ...) const;
 
    void     AbstractMethod(const char *method) const;
    void     MayNotUse(const char *method) const;
