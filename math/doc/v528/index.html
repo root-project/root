@@ -18,10 +18,25 @@
     <li>Derived classes
   implementing this interface are not provided by MathCore but by
   other libraries and they can be instantiated using the plugin
-  manager. Currently only one impelmentation based on Unuran exists.
+  manager. Currently only one implementation based on Unuran exists.
   </ul>
   </li>
   <br>
+  <li>New class <tt>ROOT::Math::GoFTest</tt> for goodness of fit
+  tests. The class implements the Kolmogorov-Smmirnov and
+  Anderson-Darling tests for two samples (data vs data ) and
+  one sample (data vs distribution)
+  </li>
+
+  <li>New statistical functions <tt>ROOT::Math::landau_quantile</tt> (inverse of landau cumulative distribution) 
+   translated from RANLAN and
+   <tt>ROOT::Math::landau_quantile_c</tt>.
+  </li>
+  <li>New special functions: sine and cosine integral, translated by
+   B. List from CERNLIB:
+  <tt>ROOT::Math::sinint</tt> and <tt>ROOT::Math::cosint</tt>
+  </li>
+  
   <li>Integration classes:
   <ul>
    <li>Fix a bug in the templated method setting  the integrand
@@ -62,19 +77,43 @@
   class to avoid a conflict with <tt>TObject::Error</tt>
   (see bug <a href="https://savannah.cern.ch/bugs/index.php?67671">67671</a>). 
    </li>
+   
 </ul>
 
 <h4>Mathmore</h4>
 <ul>
   <li>Fix a bug in <tt>ROOT::Math::Random::Multinomial</tt>. </li>
   <li>Fix some bugs in  <tt>GSLInterpolator</tt>
+  <li>New Airy functions in the <tt>ROOT::Math</tt> namespace
+  implmeneted using GSL:
+  <pre>
+   double airy_Ai(double x);
+   double airy_Bi(double x);
+   double airy_Ai_deriv(double x);
+   double airy_Bi_deriv(double x);
+   double airy_zero_Ai(unsigned int s);
+   double airy_zero_Bi(unsigned int s);
+   double airy_zero_Ai_deriv(unsigned int s);
+   double airy_zero_Bi_deriv(unsigned int s);
+</pre>
+    <li>New classes <tt>VavilovAccurate</tt> and <tt>VavilovFast</tt>,
+ derived from the abstract base class <tt>Vavilov</tt>,
+ provide pdf, cdf and quantile functions for the Vavilov distribution,
+ based on the algorithms of CERNLIB (G116 and G115, respectively).
+ The classes <tt>VavilovAccuratePdf</tt>,
+ <tt>VavilovAccurateCdf</tt> and <tt>VavilovAccurateQuantile</tt>
+ implement the <tt>IParametricFunctionOneDim</tt> interface
+ for easier use in fit problems. </li>
+
+ 
 </ul>
 
 <h4>Unuran</h4>
 <ul>
-  <li> Use new version 1.7.1 </tt> 
+  <li> Use new version 1.7.2 </tt> 
 <li>Add new class TUnuranSampler implementing the
-  <tt>ROOT::Math::DistSampler</tt> interface.
+  <tt>ROOT::Math::DistSampler</tt> interface for one dimensional
+  continous and discrete distributions and for mult-dimensional ones
   </li>
 </ul>
 
