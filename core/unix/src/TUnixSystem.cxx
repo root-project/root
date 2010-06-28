@@ -2069,7 +2069,7 @@ void TUnixSystem::StackTrace()
 
    if (fd && message) { }  // remove unused warning (remove later)
 
-   if (!strcmp(gApplication->GetName(), "TRint"))
+   if (gApplication && !strcmp(gApplication->GetName(), "TRint"))
       Getlinem(kCleanUp, 0);
 
 #if defined(USE_GDB_STACK_TRACE)
