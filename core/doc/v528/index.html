@@ -18,20 +18,19 @@ Or use '-' in the option of CompileMacro
 <h4>Meta</h4>
 <ul>
 <li>Implement polymorphism for Emulated object (still not supporting polymorphism
-of Emulated Object inheriting from compiled class).</p>
+of Emulated Object inheriting from compiled class).
 This avoids memory leaks when the user data model relies on polymorphism
 and does not the shared library defining the classes theand avoid splicing if the data is copied.
-
-</p>
+<br/>
 <tt>TStreamerInfo::New</tt> inserts the address of the creating <tt>TStreamerInfo</tt> into
 the object.  This address is inserted in each emulated that does not inherit
 from an emulated class and is positioned after all the base classes (which
 are compiled classes).   A derived class will set this value inside each
-of its emulated base class.
-</p>
+of its emulated base class.<br/>
 <tt>TStreamerInfo::Destruct</tt> and the new method <tt>TStreamerInfo::GetActualClass</tt>
 use this information to detect the TStreamerInfo actually used to create
-the object and hence run the proper emulated destructor.
+the object and hence run the proper emulated destructor.</li>
+</ul>
 
 <h4>Cont</h4>
 <ul>
