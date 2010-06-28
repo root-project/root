@@ -20,9 +20,9 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -m64 -Wall -W -Woverloaded-virtual \
+CXXFLAGS      = -pipe -m64 -Wshadow -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -m64 -Wall -W -fPIC $(EXTRA_CFLAGS)
+CFLAGS        = -pipe -m64 -Wshadow -Wall -W -fPIC $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -pipe -m64 -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
