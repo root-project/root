@@ -56,12 +56,12 @@ $(HTMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HTMLL)
 
 all-$(MODNAME): $(HTMLLIB) $(HTMLMAP)
 
-clean-$MODNAME):
+clean-$(MODNAME):
 		@rm -f $(HTMLO) $(HTMLDO)
 
-clean::         clean-$MODNAME)
+clean::         clean-$(MODNAME)
 
-distclean-$MODNAME): clean-$MODNAME)
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(HTMLDEP) $(HTMLDS) $(HTMLDH) $(HTMLLIB) $(HTMLMAP)
 
-distclean::     distclean-$MODNAME)
+distclean::     distclean-$(MODNAME)
