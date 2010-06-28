@@ -1,6 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html><head>
-</head>
+<html><head></head>
 <body>
 <br>
 <hr>
@@ -49,7 +48,19 @@ TDataSetManagerFile. This is mainly used to improve the speed of
 TDataSetManager::ShowDataSets, which is run very often by users and may
 be very slow if the number of dataset is large. The cache is also used
 to cache frequently received dataset objects.</li><li>Add the possibility to audit the activity on the nodes via syslog. See <a href="http://root.cern.ch/drupal/content/enabling-query-monitoring">http://root.cern.ch/drupal/content/enabling-query-monitoring</a>
-.</li>
+.</li><li>New
+packetizer TPacketizerFile generating packets which contain a single
+file path to be used in processing single files. Used, for example, in
+tasks generating files. The files are specified into a TMap - named
+'PROOF_FilesToProcess' - containing the list of files to be generated
+per host (the key is the host name, the value the TList of TObjString
+with the files names). Workers are first assigned files belonging to
+the list with host name matching the worker name. The map is
+distributed to the master via the input list.</li><li>Add support for
+automatic setting of pointer data members to the relevant object in the
+output list. The use of fOutputList-&gt;FindObject("name") in
+TSelector::Terminate is not needed anymore for pointer data members,
+e.g. histrograms.<br></li>
 </ul>
 </li>
 <li>Improvements</li>
@@ -79,7 +90,18 @@ from ScanDataSets (option kList; the result is a TMap of {TObjString,
 TObjString} with the second TObjString empty).</li><li>Improved version of the PQ2 scripts; the scripts now invoke a dedicated ROOT application (named <span style="font-style: italic;">pq2</span>) available under $ROOTSYS/bin .</li><li>Add
 support for recursive reading of group config files via the 'include
 sub-file' directive. This allows to have a common part and, for
-example, customize differently the quotas.</li>
+example, customize differently the quotas.</li><li>Fix an issue with TTreeFriends. New tutorial showing how to use&nbsp;friends in PROOF.</li><li>Package
+management: add support for arguments in the SETUP function: it is
+possible now to pass a string or a list of objects. The
+TProof::EnablePackage interface has been extended to support this.</li><li>Optimize
+the validation step in the case not all the entries are required. The
+validation step is stopped as soon as the requested number of events is
+reached. If the parameter "PROOF_ValidateByFile" is set to 1, the
+number of files is exactly what needed; otherwise the number of files
+may exceed the number of files needed by (Number_Of_Workers - 1) .</li><li>New directive '<a href="http://root.cern.ch/drupal/content/configuration-reference-guide#datadir">xpd.datadir</a>' to better control the user data directories and their permission settings.&nbsp;</li><li>In TPacketizerUnit, add the possibility to exactly share the number of cycles between the workers. See the parameter <a href="http://root.cern.ch/drupal/content/list-input-parameters-used-proof#FixedNum">PROOF_PacketizerFixedNum</a>.</li><li>Implement
+a timer to terminate idle sessions. The timeout value is controlled by
+the variable ProofServ.IdleTimeout (value in seconds). This variable
+can be set for all sessions in the xproofd config file via the&nbsp;'<a href="http://root.cern.ch/drupal/content/configuration-reference-guide#putrc">xpd.putrc</a>' directive.</li>
 </ul>
 <li>Fixes</li>
 <ul>
@@ -118,7 +140,10 @@ issuing TProof::SetParallel().</li>
 sending' in PROOF-Lite .</li>
 <li>Fix locking issue while building packages locally.</li>
 <li>Fix issue setting permission and ownership of the dataset
-user directories.</li>
+user directories.</li><li>Fix
+a subtle bug affecting the (possibly rare) case when not all entries
+are required and # entries does not correspond to an complete subset of
+files (e.g. # entries = 1001000 with files of 100000 entries each). The effect was uncomplete processing (skipped events, magenta bar) or a session freeze.</li>
 <li></li>
 </ul>
 </ul>
