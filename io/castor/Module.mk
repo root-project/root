@@ -71,5 +71,6 @@ distclean::     distclean-$(MODNAME)
 ifeq ($(PLATFORM),win32)
 $(CASTORO): CXXFLAGS += $(CASTORCFLAGS) $(CASTORINCDIR:%=-I%) -DNOGDI -D__INSIDE_CYGWIN__
 else
+$(CASTORO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 $(CASTORO): CXXFLAGS += $(CASTORCFLAGS) $(CASTORINCDIR:%=-I%)
 endif
