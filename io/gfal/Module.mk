@@ -67,4 +67,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+$(GFALO) $(GFALDO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 $(GFALO): CXXFLAGS += $(GFALINCDIR:%=-I%)
