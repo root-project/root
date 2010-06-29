@@ -1,10 +1,10 @@
-<br> 
-<hr> 
+<br/> 
+<hr/> 
 <a name="roofit"></a> 
 <h3>RooFit</h3>
 
 <ul>
-<li>Assorted small bug fixes have been applied. No major new features have been introduced since 5.26
+<li>Assorted small bug fixes have been applied. No major new features have been introduced since 5.26</li>
 </ul>
 
 <a name="roostats"></a> 
@@ -14,13 +14,13 @@
 <ul>
   <li>When running <tt>ProfileLikelihoodCalculator::GetHypoTest</tt>
   the user does not need anymore to clone the null parameter set. It
-  is done now inside the calculator
+  is done now inside the calculator</li>
   <li><tt>LikelihoodInterval::LowerLimit</tt>  (and UpperLimit)
   returns now a boolean flag with the status of the limit search.
   In case of a failure in finding the upper/lower limit a value of
-  zero is returned instead of the min/max of the variable range
+  zero is returned instead of the min/max of the variable range</li>
   <li><tt>LikelihoodIntervalPlot</tt> fix drawing of horizontal green
-  line when limits are outside the variable range 
+  line when limits are outside the variable range </li>
 
 </ul>
 
@@ -28,58 +28,57 @@
 <ul>
    <li>New re-written class based on the <tt>TestStatSampler</tt> and
   <tt>TestStatistic</tt> interface. The old class remains, but with a
-  new name: <tt>HybridCalculatorOriginal</tt>.  
+  new name: <tt>HybridCalculatorOriginal</tt>.  </li>
   <li>The interface of the new HybridCalculator class is very different from the old
   one. Users wishing to run their old macro should just change the
   name of the class from <tt>HybridCalculatorOriginal</tt> to
-  <tt>HybridCalculatorOriginal</tt>
-  <br>
+  <tt>HybridCalculatorOriginal</tt></li>
   <li>The tutorial <tt>rs201b_hybridcalculator</tt> shows the usage of
-  the new class.
+  the new class.</li>
   <li>Note that the new class can be constructed only from a
-  <tt>ModelConfig</tt>
+  <tt>ModelConfig</tt></li>
   <li>Note also that with the new class no <tt>HybridResult</tt> is
   returned but directly the base class <tt>HypoTestResult</tt> which
-  has been improved for this release.
+  has been improved for this release.</li>
   <li>The plot class, <tt>HybridPlot</tt> is not returned, but
   the user can  create an <tt>HypoTestPlot</tt> object from the
-  <tt>HypoTestResult</tt>.
+  <tt>HypoTestResult</tt>.</li>
   <li> The classes <tt>HybridResult</tt> and <tt>HybridPlot</tt> work only
   with the <tt>HybridCalculatorOriginal</tt> and remain for maintaining
-  a backward compatibility. 
+  a backward compatibility. </li>
 
 </ul>  
   
 
 <h4>HybridCalculatorOriginal</h4>
 <ul>
-    <li>Apply a fix for test statistic = 3 (profile likelihood)
-  <li>Apply a fix for using non-extended pdf
+    <li>Apply a fix for test statistic = 3 (profile likelihood)</li>
+  <li>Apply a fix for using non-extended pdf</li>
 </ul>
 
 <h4>TestStatSampler and TestStatistics</h4>
 
 <ul>
   <li>New version of <tt>ToyMCSampler</tt> which can smear the nuisance
-  parameters according to their distributions
+  parameters according to their distributions</li>
   <li>New test statistic classes:
   <ul>
-    <li><tt>SimpleLikelihoodRatioTestStat</tt>
-    <li><tt>RatioOfProfiledLikelihoodsTestStat</tt>
-  </ul>
+    <li><tt>SimpleLikelihoodRatioTestStat</tt></li>
+    <li><tt>RatioOfProfiledLikelihoodsTestStat</tt></li>
+  </ul></li>
 </ul>
 
 <h4>BayesianCalculator</h4>
 <ul>
   <li>Improve the way the class performs the numerical integration to
-  find the interval and/or the posterior function.
+  find the interval and/or the posterior function.</li>
    <li>In case of complex
   numerical calculation add the method <tt>SetScanOfPosterior(nbins)</tt> for
-  scanning the posterior function in a givn number of nbins
+  scanning the posterior function in a givn number of nbins</li>
   <li>Add possibility to compute lower/upper limits using the method
-  <tt>SetLeftSideTailFraction(fraction)</tt>
+  <tt>SetLeftSideTailFraction(fraction)</tt></li>
   <li>Add possibility to compute shortest interval using
-  <tt>SetShortestInterval</tt>
+  <tt>SetShortestInterval</tt></li>
 
 </ul>
 
@@ -88,13 +87,13 @@
 <ul>
   <li>Various improvements including possibility to compute
   lower/central/upper limits using
-  <tt>SetLeftSideTailFraction(fraction)</tt>
+  <tt>SetLeftSideTailFraction(fraction)</tt></li>
 </ul>
 
 <h4>ModelConfig</h4>
 <ul>
   <li>Various fixes by and improvements to make it usable with all
-  the existing calculator.
+  the existing calculator.</li>
   <li><tt>ModelConfig</tt> contains now always a reference to an
   external workspace who manages all the objects being part of the model (pdf's and parameter sets). The user needs then to
   set always a workspace pointer before setting the various objects.
@@ -106,9 +105,9 @@
 <h4>Tutorials</h4>
 
 <ul>
-<li>New tutorial <tt>roostats/FourBins.C</tt> as an example of the generalization of the on/off problem 
-<li>New tutorial <tt>roostats/Zbi_Zgamma.C</tt> 
+<li>New tutorial <tt>roostats/FourBins.C</tt> as an example of the generalization of the on/off problem </li>
+<li>New tutorial <tt>roostats/Zbi_Zgamma.C</tt> </li>
 <li>New tutorial <tt>rs201b_hybridcalculator</tt> showing the usage of
-  the new HybridCalculator class.
+  the new HybridCalculator class.</li>
 </ul>  
   

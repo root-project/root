@@ -8,7 +8,7 @@
   To not break old dictionaries, the latter is now implemented with the following syntax:
   <tt>#pragma link C++ class A::*</tt> will select all classes defined in <tt>A</tt>; CINT does not complain if no nested class is found.
   The selection pragma supports ROOT's flags (trailing '+' etc).
-  This feature is now used by the automatic dictionary generator of ROOT, to not only request <tt>vector&lt;T&gt</tt> but also vector&lt;T&gt;::iterator etc.</li>
+  This feature is now used by the automatic dictionary generator of ROOT, to not only request <tt>vector&lt;T&gt;</tt> but also vector&lt;T&gt;::iterator etc.</li>
   <li>Change the dictionary code generated for static const class data members
   of integral type so that we access these data members only by value and
   never attempt to take their address.

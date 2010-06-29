@@ -1,5 +1,5 @@
-<br> 
-<hr> 
+<br/> 
+<hr/>
 <a name="math"></a> 
 <h3>Math Libraries</h3>
 
@@ -12,16 +12,15 @@
   <tt>DistSampler::Sample()</tt>or a data sets
   <tt>DistSampler::Generate(n, data)</tt>. The data set
   generation  can  be unbinned or binned in the
-  given range (only equidistant bins are currently supported)
+  given range (only equidistant bins are currently supported)</li>
     <li>Sampling of 1D or multi-dim distributions is supported via
-    the same interface
+    the same interface</li>
     <li>Derived classes
   implementing this interface are not provided by MathCore but by
   other libraries and they can be instantiated using the plugin
-  manager. Currently only one implementation based on Unuran exists.
+  manager. Currently only one implementation based on Unuran exists.</li>
   </ul>
   </li>
-  <br>
   <li>New class <tt>ROOT::Math::GoFTest</tt> for goodness of fit
   tests. The class implements the Kolmogorov-Smmirnov and
   Anderson-Darling tests for two samples (data vs data ) and
@@ -40,14 +39,13 @@
   <li>Integration classes:
   <ul>
    <li>Fix a bug in the templated method setting  the integrand
-    function
+    function</li>
     <li>Use now <tt>IntegrationOneDim::kADAPTIVESINGULAR</tt> as default method for the  1D
-    integration
+    integration</li>
     <li>Add the method <tt>IntegrationOneDim::kLEGENDRE</tt> based on
-    the <tt>GaussLegendreIntegrator</tt> class. 
+    the <tt>GaussLegendreIntegrator</tt> class. </li>
   </ul>
 </li>
-  <br>
     <li>Improve the root finder and 1D minimization classes (<tt>BrentRootFinder</tt>
   and <tt>BrentMinimizer1D</tt>) by fixing a bug in the Brent method (see rev. 32544)
   and adding possibility to pass the tolerance and max number of
@@ -67,7 +65,7 @@
   </li>
   <li>Use in <tt>TRandom::SetSeed(int seed)</tt> a value of
   <tt>seed=0</tt> as default argument. This is the same now in all the
-  derived classes.
+  derived classes.</li>
   <li>Add new methods in <tt>ROOT::Fit::FitResult</tt> to have a more
   consistent and expressive API:<tt>FitResult::Parameter(index)</tt>,
   <tt>FitResult::ParError(index)</tt> and
@@ -83,7 +81,7 @@
 <h4>Mathmore</h4>
 <ul>
   <li>Fix a bug in <tt>ROOT::Math::Random::Multinomial</tt>. </li>
-  <li>Fix some bugs in  <tt>GSLInterpolator</tt>
+  <li>Fix some bugs in  <tt>GSLInterpolator</tt></li>
   <li>New Airy functions in the <tt>ROOT::Math</tt> namespace
   implmeneted using GSL:
   <pre>
@@ -95,7 +93,7 @@
    double airy_zero_Bi(unsigned int s);
    double airy_zero_Ai_deriv(unsigned int s);
    double airy_zero_Bi_deriv(unsigned int s);
-</pre>
+</pre></li>
     <li>New classes <tt>VavilovAccurate</tt> and <tt>VavilovFast</tt>,
  derived from the abstract base class <tt>Vavilov</tt>,
  provide pdf, cdf and quantile functions for the Vavilov distribution,
@@ -110,7 +108,7 @@
 
 <h4>Unuran</h4>
 <ul>
-  <li> Use new version 1.7.2 </tt> 
+  <li> Use new version 1.7.2 </tt> </li>
 <li>Add new class TUnuranSampler implementing the
   <tt>ROOT::Math::DistSampler</tt> interface for one dimensional
   continous and discrete distributions and for mult-dimensional ones

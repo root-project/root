@@ -30,11 +30,12 @@
         graph2d->Draw(" triw p0 same");
      }
      </pre>
+</li>
 <li> The X and Y vectors are normalized in order to compute the triangles.
      The scale factor used was the same for the X and Y axis.
      This generated problems (very long triangles instead of the obvious ones)
      in some cases when the X and Y axis had very different ranges. Having two 
-     scale factors, one for the X axis and one for the Y axis, cures the problem.
+     scale factors, one for the X axis and one for the Y axis, cures the problem.</li>
 </ul>
 
 <h4>TGraph2D</h4>
@@ -57,31 +58,33 @@
         g->Draw("LINE");   
      }
      </pre>
+</li>
 </ul>
 
 <h4>TGraph2DPainter</h4>
 <ul>
 <li> When a <tt>TGraph2D</tt> was painted with the option <tt>TRI1</tt> the 
-     color distribution in case of log scale along the Z axis was wrong.
+     color distribution in case of log scale along the Z axis was wrong.</li>
 </ul>
 
 <h4>THistPainter</h4>
 <ul>
 <li> After executing the following macro, zooming the X axis interactively
      generated the error message:
-     <br>
-     <tt>Error in <TGraphPainter::PaintGraphHist>: X must have N+1 values with option N </tt>
+     <br/>
+     <tt>Error in &lt;TGraphPainter::PaintGraphHist&gt;: X must have N+1 values with option N </tt>
      <pre>
      {
         int n = 70;
         TH1F h("h","test",n,0.,30.);
         TRandom3 rndm_engine;
-        for (int i=0; i<10000; ++i) h->Fill(rndm_engine->Gaus(15.,4.));
+        for (int i=0; i&lt;10000; ++i) h->Fill(rndm_engine->Gaus(15.,4.));
         TF1 f("f","gaus");
         h->Fit("f");
         gPad->SetLogx();
      }
      </pre>
+</li>
 <li> The following macro didn't draw any box. Because of a precision
      problem the filled bin was not drawn.
      <pre>
@@ -93,6 +96,7 @@
         h->Draw("box");           
      }
      </pre>
+</li>
 <li> The following macro displayed the histogram out of the frame
      (option "bar"):
      <pre>
@@ -102,13 +106,15 @@
         h->SetBarWidth(0.7);
         h->SetBarOffset(0.2);
         h->SetFillColor(kGreen);
-        for (int i=0;i<44; i++ ) h->Fill(i, -i-60);
+        for (int i=0;i&lt;44; i++ ) h->Fill(i, -i-60);
         h->DrawCopy("bar1");
      } 
      </pre>
+</li>
 <li> The setting <tt>gStyle->SetHistMinimumZero()</tt> now works for horizontal
      plots produced with the option <tt>HBAR</tt>.
-     <center><img src="hbarmin0.gif"></center>
+     <center><img src="hbarmin0.gif" alt="HBAR option"/></center>
+</li>
 <li> In the case of profile histograms it is possible to print the number
      of entries instead of the bin content. It is enough to combine the  
      option "E" (for entries) with the option "TEXT".
@@ -132,7 +138,8 @@
         c02->cd(2); profile->Draw("HIST TEXT0E");
      } 
      </pre>
-     <center><img src="textoption.gif"></center>
+     <center><img src="textoption.gif" alt="TEXT option"/></center>
+</li>
 <li> The following lines generated an empty stats box:
      <pre>
      gStyle->SetStatFont(43);
@@ -140,15 +147,18 @@
      TH2D *h2 = new TH2D("h2","h2",10,0,1,10,0,1);
      h2->Draw();
      </pre>
+</li>
 <li> PaintAxis does not redraw the axis labels and the axis title in case
      of axis redrawing. Only the tick marks are redrawn. Redrawing the
      labels and title made them appear a bit thicker.
+</li>
 <li> Fix a precision issue in PaintInit. The problem showed up with
      the following lines:
      <pre>
      TF1 *f = new TF1("f","exp(-x)*exp(x-2.)",0.,2.0);
      f->Draw();
      </pre>
+</li>
 </ul>
 
 <h4>TGraphPainter</h4>
@@ -185,7 +195,8 @@
         gr3->Draw("2");  
      }
      </pre>
-<li> In PaintGraphBentErrors the fill style was not set for the boxes.
+</li>
+<li> In PaintGraphBentErrors the fill style was not set for the boxes.</li>
 <li> The following macro displayed the histogram out of the frame
      (option "b"):
      <pre>
@@ -195,13 +206,14 @@
         h->SetBarWidth(0.7);
         h->SetBarOffset(0.2);
         h->SetFillColor(kGreen);
-        for (int i=0;i<44; i++ ) h->Fill(i, -i-60);
+        for (int i=0;i&lt;44; i++ ) h->Fill(i, -i-60);
         h->DrawCopy("b");
      } 
      </pre>
+</li>
 <li> It was not possible to interactively move a graph with many points
-     close to each other. It was only possible to move the points one by one.
-<li> PaintGrapHist: improvements with the option "][".
+     close to each other. It was only possible to move the points one by one.</li>
+<li> PaintGrapHist: improvements with the option "][".</li>
 </ul>
 
 <h4>TGraph</h4>
@@ -220,6 +232,7 @@
        gPad->SetLogx(1) ;
     }
     </pre>
+</li>
 </ul>  
 
 <h4>THStack</h4>
@@ -257,17 +270,17 @@
 <ul>
   <li>Shrink THnSparse on disk by 70% in an arbitrary example case;
   also reduce memory usage, especially when not filling.
-  <br>
-  <b>IMPORTANT NOTE</b>: while new THnSparse objects can be read and e.g. projected from in old ROOT versions, filling a new THnSparse object in old ROOT versions does NOT WORK!
+  <br/>
+  <b>IMPORTANT NOTE</b>: while new THnSparse objects can be read and e.g. projected from in old ROOT versions, filling a new THnSparse object in old ROOT versions does NOT WORK!</li>
   <li>
   Add SetBinContent(), AddBinContent(), SetBinError() taking the
   linear bin index. Use it in Projection() for a considerable
-  speed-up.
+  speed-up.</li>
 </ul>
   
 <h4>TSpectrum2Painter</h4>
 <ul>
 <li> New parameter bf() in the SPEC option to define the buffer size
   used by TSpectrum2Painter. It is needed in case of very
-  large canvases like 8000x5000.
+  large canvases like 8000x5000.</li>
 </ul>

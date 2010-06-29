@@ -30,47 +30,48 @@ and 30% higher for non-split files.
 So the improvement is significant enough to warrant switch the default from objectwise to memberwise.
 <p/>
 
-<table border="1" CELLPADDING=4>
-<CAPTION><EM>Split files</EM></CAPTION>
+<table border="1" cellpadding="4">
+<caption><em>Split files</em></caption>
 <tr>
 <th>Filename</th><th>Memberwise</th><th>Size</th><th>Cpu Time To read</th>
 </tr>
-<tr><td align=center>  cms1.root </td><td align=center>   N   </td><td align=center>  17.5 Gb  </td><td align=center>  10.55s +/- 0.15 (2200 entries) </td></tr>
-<tr><td align=center>  cms1.root </td><td align=center>   Y   </td><td align=center>  16.8 Gb  </td><td align=center>  9.12s +/- 0.08 (2200 entries)   </td></tr>
+<tr><td align="center">  cms1.root </td><td align="center">   N   </td><td align="center">  17.5 Gb  </td><td align="center">  10.55s +/- 0.15 (2200 entries) </td></tr>
+<tr><td align="center">  cms1.root </td><td align="center">   Y   </td><td align="center">  16.8 Gb  </td><td align="center">  9.12s +/- 0.08 (2200 entries)   </td></tr>
 
-<tr><td align=center>  cms4.root </td><td align=center>   N   </td><td align=center>  1.47 Gb  </td><td align=center>  10.18s +/- 0.19 (2500 entries)  </td></tr>
-<tr><td align=center>  cms4.root </td><td align=center>   Y   </td><td align=center>  1.43 Gb  </td><td align=center>  9.24s +/- 0.06 (2500 entries)  </td></tr>
+<tr><td align="center">  cms4.root </td><td align="center">   N   </td><td align="center">  1.47 Gb  </td><td align="center">  10.18s +/- 0.19 (2500 entries)  </td></tr>
+<tr><td align="center">  cms4.root </td><td align="center">   Y   </td><td align="center">  1.43 Gb  </td><td align="center">  9.24s +/- 0.06 (2500 entries)  </td></tr>
 </table>
-<p>
 
-<table border="1" CELLPADDING=4>
-<CAPTION><EM>Non Split files</EM></CAPTION>
+<p/>
+
+<table border="1" cellpadding="4">
+<caption><em>Non Split files</em></caption>
 <tr>
 <th>Filename</th><th>Memberwise</th><th>Size</th><th>Cpu Time To read</th>
 </tr>
-<tr><td align=center>cms2.root</td><td align=center>    N   </td><td align=center>  1.65 Gb  </td><td align=center>  10.95s +/- 0.05 (1000 entries)  </td></tr>
-<tr><td align=center>cms2.root</td><td align=center>    Y   </td><td align=center>  1.53 Gb  </td><td align=center>   8.20s +/- 0.05 (1000 entries)  </td></tr>
+<tr><td align="center">cms2.root</td><td align="center">    N   </td><td align="center">  1.65 Gb  </td><td align="center">  10.95s +/- 0.05 (1000 entries)  </td></tr>
+<tr><td align="center">cms2.root</td><td align="center">    Y   </td><td align="center">  1.53 Gb  </td><td align="center">   8.20s +/- 0.05 (1000 entries)  </td></tr>
 
-<tr><td align=center>cms3.root</td><td align=center>    N   </td><td align=center>  0.780 Gb </td><td align=center> 10.59s +/- 0.05 (700 entries)  </td></tr>
-<tr><td align=center>cms3.root</td><td align=center>    Y   </td><td align=center>  0.717 Gb </td><td align=center>   8.29s +/- 0.08 (700 entries)  </td></tr>
+<tr><td align="center">cms3.root</td><td align="center">    N   </td><td align="center">  0.780 Gb </td><td align="center"> 10.59s +/- 0.05 (700 entries)  </td></tr>
+<tr><td align="center">cms3.root</td><td align="center">    Y   </td><td align="center">  0.717 Gb </td><td align="center">   8.29s +/- 0.08 (700 entries)  </td></tr>
 
-<tr><td align=center>cms5.root</td><td align=center>    N   </td><td align=center>  1.55 Gb  </td><td align=center>  10.20s +/- 0.17 (700 entries)  </td></tr>
-<tr><td align=center>cms5.root</td><td align=center>    Y   </td><td align=center>  1.40 Gb  </td><td align=center>   8.09s +/- 0.08 (700 entries) </td></tr>
+<tr><td align="center">cms5.root</td><td align="center">    N   </td><td align="center">  1.55 Gb  </td><td align="center">  10.20s +/- 0.17 (700 entries)  </td></tr>
+<tr><td align="center">cms5.root</td><td align="center">    Y   </td><td align="center">  1.40 Gb  </td><td align="center">   8.09s +/- 0.08 (700 entries) </td></tr>
 </table>
 
 </li><li>In the case of a data member which is a pointer to a STL container, eg:
-<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   std::container<Data> *fDataObjects;</pre>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   std::container&lt;Data&gt; *fDataObjects;</pre>
 and which is stored member-wise, add support for the schema evolution of the class 'Data'.
-</p>
+<br/>
 This requires a change in the on file format used to store this type
 of data members (i.e. by adding inline the version number of the class
 'Data').
-</p>
+<br/>
 To read file containing this construct and written with this revision
 using an older version of ROOT you will need the following patches:
-   <ul><li>For v5.22/00, you will need the <a href="http://root.cern.ch/viewvc?view=rev&revision=33174">patch r33174</a>
+   <ul><li>For v5.22/00, you will need the <a href="http://root.cern.ch/viewvc?view=rev&amp;revision=33174">patch r33174</a>
      or v5.22/00k</li>
-   <li>For v5.26/00, you will need <a href="http://root.cern.ch/viewvc?view=rev&revision=33176">patch r33176</a>
+   <li>For v5.26/00, you will need <a href="http://root.cern.ch/viewvc?view=rev&amp;revision=33176">patch r33176</a>
      or v5.26/00c</li>
    </ul>
 Additionally, we no longer allow the member wise streaming of a class which
@@ -116,7 +117,7 @@ of memory leaks), the container of pointers are <em>still</em> not owning their 
 object).<p/>
 To make a container of pointers become owner of its content do something like:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-      TClass::AddRule("ObjectVector<LHCb::MCRichDigitSummary> m_vector options=Owner");
+      TClass::AddRule("ObjectVector&lt;LHCb::MCRichDigitSummary&gt; m_vector options=Owner");
 </pre>
 For MakeProject, use file->GetStreamerInfoCache() instead of the TClass GetStreamerInfo.
 </li>
