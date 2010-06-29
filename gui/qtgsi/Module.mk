@@ -78,7 +78,7 @@ test-$(MODNAME): $(QTGSILIB)
 		cd $(QTGSIDIR)/test; $(MAKE) $(QTTESTOPTS)
 
 clean-$(MODNAME):
-		@rm -f $(QTGSIO) $(QTGSIMOCO)
+		@rm -f $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO)
 		-@cd $(QTGSIDIR)/test; $(MAKE) ROOTCONFIG=../../../bin/root-config clean
 
 clean::         clean-$(MODNAME)
