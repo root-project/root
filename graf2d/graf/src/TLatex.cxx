@@ -1,5 +1,5 @@
 // @(#)root/graf:$Id$
-// Author: Nicolas Brun   07/08/98
+// Author: Nicolas Brun, Olivier Couet, Oleksandr Grebenyuk
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
