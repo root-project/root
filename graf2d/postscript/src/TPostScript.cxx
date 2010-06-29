@@ -1,5 +1,5 @@
 // @(#)root/postscript:$Id$
-// Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
+// Author: Rene Brun, Olivier Couet, Pierre Juillot, Oleksandr Grebenyuk
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
