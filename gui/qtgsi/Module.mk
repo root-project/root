@@ -91,7 +91,7 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(sort $(QTGSIMOCO) $(QTGSIO)): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
-$(QTGSIDO)): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
+$(QTGSIDO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 
 $(sort $(QTGSIMOCO) $(QTGSIO)): CXXFLAGS += $(QTGSICXXFLAGS)
 $(QTGSIDO): CXXFLAGS += $(QTGSICXXFLAGS)
