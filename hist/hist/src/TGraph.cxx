@@ -1656,12 +1656,16 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
    if (first >= last) return 0;
    Int_t np = last-first+1;
    Double_t sum = 0.0;
+   //for(Int_t i=first;i<=last;i++) {
+   //   Int_t j = first + (i-first+1)%np;
+   //   sum += TMath::Abs(fX[i]*fY[j]);
+   //   sum -= TMath::Abs(fY[i]*fX[j]);
+   //}
    for(Int_t i=first;i<=last;i++) {
       Int_t j = first + (i-first+1)%np;
-      sum += TMath::Abs(fX[i]*fY[j]);
-      sum -= TMath::Abs(fY[i]*fX[j]);
+      sum += (fY[i]+fY[j])*(fX[j]-fX[i]);
    }
-   return 0.5*sum;
+   return 0.5*TMath::Abs(sum);
 }
 
 
