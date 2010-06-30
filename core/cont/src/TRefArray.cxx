@@ -276,7 +276,7 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
 
    if (!obj) return;
    if (idx < fLowerBound) {
-      Error("AddAt", "out of bounds at %d in %lx", idx, this);
+      Error("AddAt", "out of bounds at %d in %lx", idx, (Long_t)this);
       return;
    }
    if (idx-fLowerBound >= fSize)
@@ -645,7 +645,7 @@ Bool_t TRefArray::OutOfBoundsError(const char *where, Int_t i) const
 {
    // Generate an out-of-bounds error. Always returns false.
 
-   Error(where, "index %d out of bounds (size: %d, this: 0x%08x)", i, fSize, this);
+   Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fSize, (Long_t)this);
    return kFALSE;
 }
 

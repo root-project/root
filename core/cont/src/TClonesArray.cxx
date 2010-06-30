@@ -766,7 +766,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
    // the clones array use Remove() or RemoveAt().
 
    if (idx < 0) {
-      Error("operator[]", "out of bounds at %d in %lx", idx, this);
+      Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
       return fCont[0];
    }
    if (!fClass) {
@@ -793,7 +793,7 @@ TObject *TClonesArray::operator[](Int_t idx) const
    // Return the object at position idx. Returns 0 if idx is out of bounds.
 
    if (idx < 0 || idx >= fSize) {
-      Error("operator[]", "out of bounds at %d in %lx", idx, this);
+      Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
       return 0;
    }
 
@@ -807,7 +807,7 @@ TObject *TClonesArray::New(Int_t idx)
    // index. Returns 0 in case of error.
 
    if (idx < 0) {
-      Error("New", "out of bounds at %d in %lx", idx, this);
+      Error("New", "out of bounds at %d in %lx", idx, (Long_t)this);
       return 0;
    }
    if (!fClass) {

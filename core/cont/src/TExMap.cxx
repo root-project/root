@@ -99,7 +99,7 @@ void TExMap::Add(ULong64_t hash, Long64_t key, Long64_t value)
       if (HighWaterMark())
          Expand(2 * fSize);
    } else
-      Error("Add", "key %ld is not unique", key);
+      Error("Add", "key %lld is not unique", key);
 }
 
 //______________________________________________________________________________
@@ -220,7 +220,7 @@ void TExMap::Remove(ULong64_t hash, Long64_t key)
 
    Int_t i = FindElement(hash, key);
    if (!fTable[i].InUse()) {
-      Error("Remove", "key %ld not found at %d", key, i);
+      Error("Remove", "key %lld not found at %d", key, i);
       return;
    }
 
