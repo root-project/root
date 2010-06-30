@@ -173,7 +173,7 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p, const char * className , co
                Error("ROOT::Math::FunctorCintHandler","No function found in class %s with the signature %s(double ) ",className,derivMethodName);
          }
       } else {
-         Error("ROOT::Math::FunctorCintHandler","can not find any class with name %s at the address 0x%lx",className,fPtr);
+         Error("ROOT::Math::FunctorCintHandler","can not find any class with name %s at the address 0x%lx",className,(Long_t)fPtr);
       }
    }
 }
@@ -199,7 +199,7 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p1, void * p2 ) :    fDim(1) {
       fMethodCall2->InitWithPrototype(funcname2,"double");
 
    if (! fMethodCall->IsValid() ) {
-      Error("ROOT::Math::FunctorCintHandler","No function %s found with the signature double () ( double ) at the address 0x%lx",funcname,fPtr);
+      Error("ROOT::Math::FunctorCintHandler","No function %s found with the signature double () ( double ) at the address 0x%lx",funcname,(Long_t)fPtr);
    }
    if (! fMethodCall2->IsValid() ) {
       Error("ROOT::Math::FunctorCintHandler","No free function %s found with the signature double () ( double )",funcname2);
@@ -248,7 +248,7 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p, unsigned int ndim, const ch
                Error("ROOT::Math::FunctorCintHandler","No function found in class %s with the signature %s(const double *, unsigned int ) ",className,derivMethodName);
          }
       } else {
-         Error("ROOT::Math::FunctorCintHandler","can not find any class with name %s at the address 0x%lx",className,fPtr);
+         Error("ROOT::Math::FunctorCintHandler","can not find any class with name %s at the address 0x%lx",className,(Long_t)fPtr);
       }
    }
 }

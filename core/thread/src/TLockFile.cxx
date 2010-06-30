@@ -69,7 +69,7 @@ Bool_t TLockFile::Lock(const char *path, Int_t timeLimit)
    if (gSystem->GetPathInfo(path, 0, (Long_t*) 0, 0, &modTime) == 0) {
       if (timeLimit > 0) {
          if (gDebug > 0)
-            Info("Lock", "%s modification time %ld, %d seconds ago", path, modTime, time(0) - modTime);
+            Info("Lock", "%s modification time %ld, %ld seconds ago", path, modTime, time(0) - modTime);
          if (time(0) - modTime > timeLimit){
             gSystem->Unlink(path);
             if (gDebug > 0)

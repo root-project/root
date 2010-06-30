@@ -217,7 +217,7 @@ TGenericTable::TGenericTable(const char *structName, const char *name,Int_t n) :
       SetDescriptorPointer(dsc);
       fSize = dsc->Sizeof();
    }
-   if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format dsc=0x%lx, size=%d",dsc,fSize);
+   if ( !dsc || !fSize) Warning("TGenericTable","Wrong table format dsc=0x%lx, size=%ld",(Long_t)dsc,fSize);
    if (n > 0) Set(n);
    SetGenericType();
 }
