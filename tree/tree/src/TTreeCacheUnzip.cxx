@@ -630,7 +630,7 @@ void TTreeCacheUnzip::ResetCache()
    R__LOCKGUARD(fMutexList);
 
    if (gDebug > 0)
-      Info("ResetCache", "Thread: %d -- Resetting the cache. fNseek:%ld fNSeekMax:%ld fTotalUnzipBytes:%ld", TThread::SelfId(), fNseek, fNseekMax, fTotalUnzipBytes);
+      Info("ResetCache", "Thread: %ld -- Resetting the cache. fNseek:%d fNSeekMax:%d fTotalUnzipBytes:%lld", TThread::SelfId(), fNseek, fNseekMax, fTotalUnzipBytes);
    
    // Reset all the lists and wipe all the chunks
    fCycle++;
@@ -1115,7 +1115,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
 
    if (idxtounzip < 0) {
       if (gDebug > 0)
-         Info("UnzipCache", "Nothing to do... startindex:%ld fTotalUnzipBytes:%ld fUnzipBufferSize:%ld fNseek:%d",
+         Info("UnzipCache", "Nothing to do... startindex:%d fTotalUnzipBytes:%lld fUnzipBufferSize:%lld fNseek:%d",
               startindex, fTotalUnzipBytes, fUnzipBufferSize, fNseek );
       return 1;
    }
@@ -1177,7 +1177,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
          fUnzipChunks[idxtounzip] = 0;
          fUnzipLen[idxtounzip] = 0;
          if (gDebug > 0)
-            Info("UnzipCache", "Block %d not done. rdoffs=%d rdlen=%d readbuf=%d", idxtounzip, rdoffs, rdlen, readbuf);
+            Info("UnzipCache", "Block %d not done. rdoffs=%lld rdlen=%d readbuf=%d", idxtounzip, rdoffs, rdlen, readbuf);
          return -1;
       }
 
@@ -1236,7 +1236,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
       fActiveBlks.push(idxtounzip);
 
       if (gDebug > 0)
-         Info("UnzipCache", "reqi:%d, rdoffs:%d, rdlen: %d, loclen:%d",
+         Info("UnzipCache", "reqi:%d, rdoffs:%lld, rdlen: %d, loclen:%d",
               idxtounzip, rdoffs, rdlen, loclen);
       
       fNUnzip++;

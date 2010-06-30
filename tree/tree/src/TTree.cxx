@@ -2896,7 +2896,7 @@ Long64_t TTree::CopyEntries(TTree* tree, Long64_t nentries /* = -1 */, Option_t*
                      this->GetTreeIndex()->Append(tree->GetTree()->GetTreeIndex(), kTRUE);
                   }
                } else {
-                  Warning("CopyEntries",cloner.GetWarning());
+                  Warning("CopyEntries","%s",cloner.GetWarning());
                   if (tree->GetDirectory() && tree->GetDirectory()->GetFile()) {
                      Warning("CopyEntries", "Skipped file %s\n", tree->GetDirectory()->GetFile()->GetName());
                   } else {
