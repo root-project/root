@@ -365,7 +365,7 @@ void TGuiBldMenuDialog::Build()
 
             TList *opt;
             if ((opt = m->GetOptions())) {
-               Warning("Dialog", "option menu not yet implemented", opt);
+               Warning("Dialog", "option menu not yet implemented");
 
             } else {
                // we haven't got options - textfield ...
