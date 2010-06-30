@@ -546,11 +546,11 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
    Env_t e;
    if ( iter_size > sizeof(e.fIterator) ) {
       Fatal("TGenCollectionProxy",
-            "%s %s are too large:%ld bytes. Maximum is:%d bytes",
+            "%s %s are too large:%ld bytes. Maximum is:%ld bytes",
             "Iterators for collection",
             fClass->GetName(),
             (Long_t)iter_size,
-            sizeof(e.fIterator));
+            (Long_t)sizeof(e.fIterator));
    }
 }
 
@@ -587,11 +587,11 @@ TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info,
    Env_t e;
    if ( info.fIterSize > sizeof(e.fIterator) ) {
       Fatal("TGenCollectionProxy",
-            "%s %s are too large:%ld bytes. Maximum is:%d bytes",
+            "%s %s are too large:%ld bytes. Maximum is:%ld bytes",
             "Iterators for collection",
             fClass->GetName(),
             (Long_t)info.fIterSize,
-            sizeof(e.fIterator));
+            (Long_t)sizeof(e.fIterator));
    }
 }
 
