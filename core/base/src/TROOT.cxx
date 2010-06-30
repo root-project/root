@@ -1390,7 +1390,7 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
       TString fname = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
 
       if (arguments.Length()) {
-         Warning("LoadMacro", "argument(s) \"%s\" ignored", arguments.Data(), GetMacroPath());
+         Warning("LoadMacro", "argument(%s) ignored in %s", arguments.Data(), GetMacroPath());
       }
       char *mac = gSystem->Which(GetMacroPath(), fname, kReadPermission);
       if (!mac) {
