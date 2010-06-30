@@ -764,7 +764,7 @@ void TGLScene::RenderAllPasses(TGLRnrCtx&           rnrCtx,
          if (gDebug > 3)
          {
             Info("TGLScene::RenderAllPasses()",
-                 "%d active clip planes", planeSet.size());
+                 "%ld active clip planes", (Long_t)planeSet.size());
          }
          // Limit to smaller of plane set size or GL implementation plane support
          Int_t maxGLPlanes;

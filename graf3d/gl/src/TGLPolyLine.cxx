@@ -49,7 +49,7 @@ void TGLPolyLine::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLPolyLine::DirectDraw", "this %d (class %s) LOD %d", this, IsA()->GetName(), rnrCtx.ShapeLOD());
+      Info("TGLPolyLine::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)

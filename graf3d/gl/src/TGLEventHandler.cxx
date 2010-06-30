@@ -836,7 +836,7 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
             // Forced rebuild for debugging mode
          case kKey_D:
             if (fGLViewer->fDebugMode) {
-               Info("OpenGL viewer FORCED rebuild", "");
+               Info("OpenGL viewer FORCED rebuild", " ");
                fGLViewer->UpdateScene();
             }
          default:;

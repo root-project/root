@@ -1234,7 +1234,7 @@ Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
       if (gDebug > 0)
          Info("TGLViewer::SecondarySelect", "Skipping secondary selection "
               "(sinfo=0x%lx, pshape=0x%lx).\n",
-              fSelRec.GetSceneInfo(), fSelRec.GetPhysShape());
+              (Long_t)fSelRec.GetSceneInfo(), (Long_t)fSelRec.GetPhysShape());
       fSecSelRec.Reset();
       return kFALSE;
    }

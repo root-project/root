@@ -618,8 +618,8 @@ void TGLCylinder::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    // Debug tracing
    if (gDebug > 4) {
-      Info("TGLCylinder::DirectDraw", "this %d (class %s) LOD %d",
-           this, IsA()->GetName(), rnrCtx.ShapeLOD());
+      Info("TGLCylinder::DirectDraw", "this %ld (class %s) LOD %d",
+           (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    // As we are now support display list caching we can create, draw and
