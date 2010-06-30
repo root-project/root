@@ -247,8 +247,8 @@ TGeoIsotope::TGeoIsotope(const char *name, Int_t z, Int_t n, Double_t a)
              fA(a)
 {
 // Constructor
-   if (z<1) Fatal("ctor", "Not allowed Z=%d (<1) for isotope: %s", name, z);
-   if (n<z) Fatal("ctor", "Not allowed Z=%d < N=%d for isotope: %s", name, z,n);
+   if (z<1) Fatal("ctor", "Not allowed Z=%d (<1) for isotope: %s", z,name);
+   if (n<z) Fatal("ctor", "Not allowed Z=%d < N=%d for isotope: %s", z,n,name);
    TGeoElement::GetElementTable()->AddIsotope(this);
 }
 
