@@ -129,7 +129,7 @@ class VavilovAccurateQuantile: public IParametricFunctionOneDim {
       /**
          Return a clone of the object
        */
-      virtual VavilovAccurateQuantile * Clone() const;
+      virtual IBaseFunctionOneDim  * Clone() const;
       
    private:
      double fP[5];    

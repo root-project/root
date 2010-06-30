@@ -98,7 +98,7 @@ double VavilovAccuratePdf::DoEvalPar(double x, const double * p) const {
    return p[0]/p[2]*v.Pdf ((x-p[1])/p[2]);
 }
 
-VavilovAccuratePdf * VavilovAccuratePdf::Clone() const {
+IBaseFunctionOneDim  * VavilovAccuratePdf::Clone() const {
    return new VavilovAccuratePdf (*this);
 }
 

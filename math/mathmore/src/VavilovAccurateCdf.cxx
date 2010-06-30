@@ -98,7 +98,7 @@ double VavilovAccurateCdf::DoEvalPar(double x, const double * p) const {
    return p[0]*v.Cdf ((x-p[1])/p[2]);
 }
 
-VavilovAccurateCdf * VavilovAccurateCdf::Clone() const {
+IBaseFunctionOneDim * VavilovAccurateCdf::Clone() const {
    return new VavilovAccurateCdf (*this);
 }
 

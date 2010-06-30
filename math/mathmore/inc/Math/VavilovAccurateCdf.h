@@ -131,7 +131,7 @@ class VavilovAccurateCdf: public IParametricFunctionOneDim {
       /**
          Return a clone of the object
        */
-      virtual VavilovAccurateCdf * Clone() const;
+      virtual IBaseFunctionOneDim  * Clone() const;
 
    private:
      double fP[5];    

@@ -127,7 +127,7 @@ class VavilovAccuratePdf: public IParametricFunctionOneDim {
       /**
          Return a clone of the object
        */
-      virtual VavilovAccuratePdf * Clone() const;
+      virtual IBaseFunctionOneDim  * Clone() const;
    
    private:
       double fP[5];    

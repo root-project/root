@@ -98,7 +98,7 @@ double VavilovAccurateQuantile::DoEvalPar(double x, const double * p) const {
    return p[1]+p[2]*v.Quantile (x/p[0]);
 }
 
-VavilovAccurateQuantile * VavilovAccurateQuantile::Clone() const {
+IBaseFunctionOneDim  * VavilovAccurateQuantile::Clone() const {
   return new VavilovAccurateQuantile (*this);
 }
 
