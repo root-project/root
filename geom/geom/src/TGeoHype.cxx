@@ -128,7 +128,7 @@ void TGeoHype::ComputeBBox()
 {
 // Compute bounding box of the hyperboloid
    if (fRmin<0.) {
-      Warning("ComputeBBox", "Shape %s has invalid rmin=%g ! SET TO 0.", fRmin);
+      Warning("ComputeBBox", "Shape %s has invalid rmin=%g ! SET TO 0.", GetName(),fRmin);
       fRmin = 0.;
    }
    if ((fRmin>fRmax) || (fRmin*fRmin+fTinsq*fDz*fDz > fRmax*fRmax+fToutsq*fDz*fDz)) {
