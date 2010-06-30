@@ -253,7 +253,7 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
    // Check for vacuum
    if (fA<0.9 || fZ<0.9) {
       if (radlen<-1e5 || intlen<-1e-5) {
-         Error("SetRadLen","Material %s: user values taken for vacuum: radlen=%g or intlen=%g - too small", fRadLen, fIntLen);
+         Error("SetRadLen","Material %s: user values taken for vacuum: radlen=%g or intlen=%g - too small", GetName(),fRadLen, fIntLen);
          return;
       }
       // Ignore positive values and take big numbers
