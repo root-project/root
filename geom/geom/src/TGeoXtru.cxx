@@ -655,7 +655,7 @@ Double_t TGeoXtru::GetZ(Int_t ipl) const
 {
 // Return the Z coordinate for segment ipl.
    if (ipl<0 || ipl>(fNz-1)) {
-      Error("GetZ","In shape %s, ipl=%i out of range (0,%i)",GetName(),ipl,0,fNz-1);
+      Error("GetZ","In shape %s, ipl=%i out of range (0,%i)",GetName(),ipl,fNz-1);
       return 0.;
    }
    return fZ[ipl];
