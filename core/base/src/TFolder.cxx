@@ -163,7 +163,7 @@ TFolder *TFolder::AddFolder(const char *name, const char *title, TCollection *co
    // Note that the folder name cannot contain slashes.
 
    if (strchr(name,'/')) {
-      ::Error("TFolder::TFolder","folder name cannot contain a slash", name);
+      ::Error("TFolder::TFolder","folder name cannot contain a slash: %s", name);
       return 0;
    }
    if (strlen(GetName()) == 0) {
