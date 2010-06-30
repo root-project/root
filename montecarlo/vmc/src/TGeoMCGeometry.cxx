@@ -620,7 +620,7 @@ const char*  TGeoMCGeometry::VolDaughterName(const char* volName, Int_t i) const
 
    // Check index
    if (i<0 || i>=volume->GetNdaughters()) {
-      Error("VolDaughterName", "Index out of limits", volName);
+      Error("VolDaughterName", "Volume %s Index out of limits", volName);
       return "";
    }
 
@@ -645,7 +645,7 @@ Int_t TGeoMCGeometry::VolDaughterCopyNo(const char* volName, Int_t i) const
 
    // Check index
    if (i<0 || i>=volume->GetNdaughters()) {
-      Error("VolDaughterName", "Index out of limits", volName);
+      Error("VolDaughterName", "Volume %s Index out of limits", volName);
       return 0;
    }
 
