@@ -115,6 +115,8 @@ std::ostream& operator<<(std::ostream&, const ContoursError&);
 #include "TError.h"
 #include "Math/Util.h"
 
+// this first two should be used only with string literals to 
+// avoid warning produced by the format in TError
 #define  MN_INFO_MSG(str) \
    ::Info("Minuit2",str);
 #define  MN_ERROR_MSG(str) \

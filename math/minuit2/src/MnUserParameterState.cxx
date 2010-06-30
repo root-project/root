@@ -176,7 +176,7 @@ void MnUserParameterState::Add(const std::string & name, double val, double err)
       SetValue(i,val);
       if (Parameter(i).IsConst() ) { 
          std::string msg = "Cannot modify status of constant parameter " + name; 
-         MN_INFO_MSG(msg.c_str());
+         MN_INFO_MSG2("MnUserParameterState::Add",msg.c_str());
          return;
       }
       SetError(i,err);
@@ -199,7 +199,7 @@ void MnUserParameterState::Add(const std::string & name, double val, double err,
       SetValue(i,val);
       if (Parameter(i).IsConst() ) { 
          std::string msg = "Cannot modify status of constant parameter " + name; 
-         MN_INFO_MSG(msg.c_str());
+         MN_INFO_MSG2("MnUserParameterState::Add",msg.c_str());
          return;
       }
       SetError(i,err);

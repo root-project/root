@@ -305,7 +305,7 @@ bool TBackCompFitter::ValidParameterIndex(int ipar) const  {
    int nps  = fFitter->Config().ParamsSettings().size(); 
    if (ipar  < 0 || ipar >= nps ) { 
       std::string msg = ROOT::Math::Util::ToString(ipar) + " is an invalid Parameter index";
-      Error("ValidParameterIndex",msg.c_str());
+      Error("ValidParameterIndex","%s",msg.c_str());
       return false;
    } 
    return true; 
