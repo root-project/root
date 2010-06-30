@@ -556,7 +556,7 @@ void TBranch::AddLastBasket(Long64_t startEntry)
    if (where && startEntry < fBasketEntry[where-1]) {
       // Need to find the right location and move the possible baskets
 
-      Fatal("AddBasket","The last basket must have the highest entry number (%s/%d/%d).",GetName(),startEntry,fWriteBasket);
+      Fatal("AddBasket","The last basket must have the highest entry number (%s/%lld/%d).",GetName(),startEntry,fWriteBasket);
 
    }
    fBasketEntry[where] = startEntry;
@@ -1101,7 +1101,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
             return 0;
          }
       }
-      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%d, badread=%d, nerrors=%d, basketnumber=%d",file?file->GetName():"no file",basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors,basketnumber);
+      Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%lld, badread=%d, nerrors=%d, basketnumber=%d",file?file->GetName():"no file",basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors,basketnumber);
       return 0;
    }
 
