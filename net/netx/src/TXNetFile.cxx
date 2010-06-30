@@ -777,7 +777,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    Long64_t nr = fClient->ReadV(buf, pos, len, nbuf);
 
    if (gDebug > 1)
-      Info("ReadBuffers", "response from ReadV(%d) nr: %d", nbuf, nr);
+      Info("ReadBuffers", "response from ReadV(%d) nr: %lld", nbuf, nr);
 
    if (nr > 0) {
 
@@ -786,7 +786,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
               nr, nbuf);
 
       if (GetCacheRead()->GetBufferSize() < nr)
-         Info("ReadBuffers", "%lld bytes of data read with a smaller (%ld) TFileCacheRead buffer size?",
+         Info("ReadBuffers", "%lld bytes of data read with a smaller (%d) TFileCacheRead buffer size?",
               nr, GetCacheRead()->GetBufferSize());
 
       // Where should we leave the offset ?

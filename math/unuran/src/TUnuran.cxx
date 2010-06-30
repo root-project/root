@@ -323,14 +323,14 @@ bool  TUnuran::SetDiscreteDistribution(const TUnuranDiscrDist & dist)
    if (dist.GetDomain(xmin,xmax) ) { 
       ret = unur_distr_discr_set_domain(fUdistr,xmin,xmax);  
       if (ret != 0)  { 
-         Error("SetDiscrDistribution","invalid domain xmin = %g xmax = %g ",xmin,xmax);
+         Error("SetDiscrDistribution","invalid domain xmin = %d xmax = %d ",xmin,xmax);
          return false; 
       }
    }
    if (dist.HasMode() ) { 
       ret = unur_distr_discr_set_mode(fUdistr, dist.Mode());  
       if (ret != 0)  { 
-         Error("SetContDistribution","invalid mode given,  mode = %g ",dist.Mode());
+         Error("SetContDistribution","invalid mode given,  mode = %d ",dist.Mode());
          return false; 
       }
    }
