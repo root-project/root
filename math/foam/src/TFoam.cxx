@@ -1394,22 +1394,22 @@ void TFoam::CheckAll(Int_t level)
       if( ((cell->GetDau0()==0) && (cell->GetDau1()!=0) ) ||
          ((cell->GetDau1()==0) && (cell->GetDau0()!=0) ) ) {
          errors++;
-         if (level==1) Error("CheckAll","ERROR: Cell's no %d has only one daughter \n",iCell);
+         if (level==1) Error("CheckAll","ERROR: Cell's no %ld has only one daughter \n",iCell);
       }
       if( (cell->GetDau0()==0) && (cell->GetDau1()==0) && (cell->GetStat()==0) ) {
          errors++;
-         if (level==1) Error("CheckAll","ERROR: Cell's no %d  has no daughter and is inactive \n",iCell);
+         if (level==1) Error("CheckAll","ERROR: Cell's no %ld  has no daughter and is inactive \n",iCell);
       }
       if( (cell->GetDau0()!=0) && (cell->GetDau1()!=0) && (cell->GetStat()==1) ) {
          errors++;
-         if (level==1) Error("CheckAll","ERROR: Cell's no %d has two daughters and is active \n",iCell);
+         if (level==1) Error("CheckAll","ERROR: Cell's no %ld has two daughters and is active \n",iCell);
       }
 
       // checking parents
       if( (cell->GetPare())!=fCells[0] ) { // not child of the root
          if ( (cell != cell->GetPare()->GetDau0()) && (cell != cell->GetPare()->GetDau1()) ) {
             errors++;
-            if (level==1) Error("CheckAll","ERROR: Cell's no %d parent not pointing to this cell\n ",iCell);
+            if (level==1) Error("CheckAll","ERROR: Cell's no %ld parent not pointing to this cell\n ",iCell);
          }
       }
 
@@ -1417,13 +1417,13 @@ void TFoam::CheckAll(Int_t level)
       if(cell->GetDau0()!=0) {
          if(cell != (cell->GetDau0())->GetPare()) {
             errors++;
-            if (level==1)  Error("CheckAll","ERROR: Cell's no %d daughter 0 not pointing to this cell \n",iCell);
+            if (level==1)  Error("CheckAll","ERROR: Cell's no %ld daughter 0 not pointing to this cell \n",iCell);
          }
       }
       if(cell->GetDau1()!=0) {
          if(cell != (cell->GetDau1())->GetPare()) {
             errors++;
-            if (level==1) Error("CheckAll","ERROR: Cell's no %d daughter 1 not pointing to this cell \n",iCell);
+            if (level==1) Error("CheckAll","ERROR: Cell's no %ld daughter 1 not pointing to this cell \n",iCell);
          }
       }
    }// loop after cells;
@@ -1433,7 +1433,7 @@ void TFoam::CheckAll(Int_t level)
       cell = fCells[iCell];
       if( (cell->GetStat()==1) && (cell->GetDriv()==0) ) {
          warnings++;
-         if(level==1) Warning("CheckAll", "Warning: Cell no. %d is active but empty \n", iCell);
+         if(level==1) Warning("CheckAll", "Warning: Cell no. %ld is active but empty \n", iCell);
       }
    }
    // summary

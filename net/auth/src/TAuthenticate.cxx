@@ -3817,7 +3817,7 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
 
    if (gDebug > 2)
       ::Info("TAuthenticate::DecodeRSAPublic",
-             "enter: string length: %d bytes", strlen(rsaPubExport));
+             "enter: string length: %ld bytes", (Long_t)strlen(rsaPubExport));
 
    char str[kMAXPATHLEN] = { 0 };
    Int_t klen = strlen(rsaPubExport);
@@ -3853,7 +3853,7 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
             rsa_n_exp[l1] = 0;
             if (gDebug > 2)
                ::Info("TAuthenticate::DecodeRSAPublic",
-                      "got %d bytes for rsa_n_exp", strlen(rsa_n_exp));
+                      "got %ld bytes for rsa_n_exp", (Long_t)strlen(rsa_n_exp));
             // Now <hex_d>
             int l2 = (int) (pd3 - pd2 - 1);
             char *rsa_d_exp = new char[l2 + 1];
@@ -3861,7 +3861,7 @@ Int_t TAuthenticate::DecodeRSAPublic(const char *rsaPubExport, rsa_NUMBER &rsa_n
             rsa_d_exp[l2] = 0;
             if (gDebug > 2)
                ::Info("TAuthenticate::DecodeRSAPublic",
-                      "got %d bytes for rsa_d_exp", strlen(rsa_d_exp));
+                      "got %ld bytes for rsa_d_exp", (Long_t)strlen(rsa_d_exp));
 
             TRSA_fun::RSA_num_sget()(&rsa_n, rsa_n_exp);
             TRSA_fun::RSA_num_sget()(&rsa_d, rsa_d_exp);
@@ -3920,7 +3920,7 @@ Int_t TAuthenticate::SetRSAPublic(const char *rsaPubExport, Int_t klen)
 
    if (gDebug > 2)
       ::Info("TAuthenticate::SetRSAPublic",
-             "enter: string length %d bytes", strlen(rsaPubExport));
+             "enter: string length %ld bytes", (Long_t)strlen(rsaPubExport));
 
    Int_t rsakey = -1;
    if (!rsaPubExport)
@@ -4003,7 +4003,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
       return nr;
    if (gDebug > 3)
       ::Info("TAuthenticate::SendRSAPublicKey",
-             "received key from server %d bytes", strlen(serverPubKey));
+             "received key from server %ld bytes", (Long_t)strlen(serverPubKey));
 
    // Decode it
    rsa_NUMBER rsa_n, rsa_d;
