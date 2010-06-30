@@ -41,7 +41,7 @@ TGGC::TGGC(GCValues_t *values, Bool_t)
       fContext = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), values);
       if (values->fMask & kGCDashList) {
          if (values->fDashLen > (Int_t)sizeof(fValues.fDashes))
-            Warning("TGGC", "dash list can have only up to %d elements",
+            Warning("TGGC", "dash list can have only up to %ld elements",
                     sizeof(fValues.fDashes));
          fValues.fDashLen = TMath::Min(values->fDashLen, (Int_t)sizeof(fValues.fDashes));
          gVirtualX->SetDashes(fContext, fValues.fDashOffset, fValues.fDashes,
@@ -215,7 +215,7 @@ void TGGC::UpdateValues(GCValues_t *values)
             break;
          case kGCDashList:
             if (values->fDashLen > (Int_t)sizeof(fValues.fDashes))
-               Warning("UpdateValues", "dash list can have only up to %d elements",
+               Warning("UpdateValues", "dash list can have only up to %ld elements",
                        sizeof(fValues.fDashes));
             fValues.fDashLen = TMath::Min(values->fDashLen, (Int_t)sizeof(fValues.fDashes));
             memcpy(fValues.fDashes, values->fDashes, fValues.fDashLen);
@@ -487,7 +487,7 @@ void TGGC::SetDashList(const char v[], Int_t len)
 
    GCValues_t values;
    if (len > (Int_t)sizeof(values.fDashes))
-      Warning("SetDashList", "dash list can have only up to %d elements",
+      Warning("SetDashList", "dash list can have only up to %ld elements",
               sizeof(values.fDashes));
    values.fDashLen = TMath::Min(len, (Int_t)sizeof(values.fDashes));
    memcpy(values.fDashes, v, values.fDashLen);
@@ -850,7 +850,7 @@ void TGGC::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             break;
          case kGCDashList:
             if (GetDashLen() > (Int_t)sizeof(GetDashes()))
-               Warning("TGGC::SavePrimitive", "dash list can have only up to %d elements",
+               Warning("TGGC::SavePrimitive", "dash list can have only up to %ld elements",
                        sizeof(GetDashes()));
             out << "   " << valname.Data() << ".fDashLen = "
                 << TMath::Min(GetDashLen(),(Int_t)sizeof(GetDashes())) << ";" << endl;
@@ -904,7 +904,7 @@ void TGGCPool::ForceFreeGC(const TGGC *gct)
 
    if (gc) {
       if (gc->References() > 1)
-         Error("ForceFreeGC", "removed a shared graphics context\n",
+         Error("ForceFreeGC", "removed a shared graphics context\n"
                "best to use graphics contexts via the TGGCPool()");
       fList->Remove(gc);
    }

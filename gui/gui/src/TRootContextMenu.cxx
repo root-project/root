@@ -483,7 +483,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 
             TList *opt;
             if ((opt = m->GetOptions())) {
-               Warning("Dialog", "option menu not yet implemented", opt);
+               Warning("Dialog", "option menu not yet implemented");
 #if 0
                TMotifOptionMenu *o= new TMotifOptionMenu(argname);
                TIter nextopt(opt);

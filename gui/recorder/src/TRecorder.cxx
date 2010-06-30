@@ -2110,7 +2110,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
                else {
                   if (gDebug > 0)
                      Error("TRecGuiEvent::ReplayEvent",
-                           "kConfigureNotify: Unknown value: fUser[4] = %d ",
+                           "kConfigureNotify: Unknown value: fUser[4] = %ld ",
                            e->fUser[4]);
                }
             }
@@ -2120,7 +2120,7 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
          // w = 0
          if (gDebug > 0)
             Error("TRecGuiEvent::ReplayEvent",
-                  "kConfigureNotify: Window %x does not exist anymore ");
+                  "kConfigureNotify: Window does not exist anymore ");
       }
       delete e;
       return;
