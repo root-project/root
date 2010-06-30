@@ -239,7 +239,7 @@ Bool_t TSelectorCint::ProcessCut(Long64_t entry)
    // Invoke the ProcessCut function via the interpreter.
 
    if (gDebug > 3)
-      Info("ProcessCut","Call ProcessCut entry = %d", entry);
+      Info("ProcessCut","Call ProcessCut entry = %lld", entry);
 
    if(gCint->CallFunc_IsValid(fFuncCut)) {
       gCint->CallFunc_ResetArg(fFuncCut);
@@ -258,7 +258,7 @@ void TSelectorCint::ProcessFill(Long64_t entry)
    // Invoke the ProcessFill function via the interpreter.
 
    if (gDebug > 3)
-      Info("ProcessFill","Call ProcessFill entry = %d", entry);
+      Info("ProcessFill","Call ProcessFill entry = %lld", entry);
 
    if(gCint->CallFunc_IsValid(fFuncFill)) {
       gCint->CallFunc_ResetArg(fFuncFill);
@@ -275,7 +275,7 @@ Bool_t TSelectorCint::Process(Long64_t entry)
    // Invoke the ProcessCut function via the interpreter.
 
    if (gDebug > 3)
-      Info("Process","Call Process entry = %d", entry);
+      Info("Process","Call Process entry = %lld", entry);
 
    if(gCint->CallFunc_IsValid(fFuncProc)) {
       gCint->CallFunc_ResetArg(fFuncProc);
