@@ -1063,7 +1063,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   TClass *newClass = aElement->GetNewClass();
                   TClass *oldClass = aElement->GetClassPointer();
                   if( vers < 9 && newClass && newClass!=oldClass ) {
-                     Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %d into a %s.",
+                     Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
                            vers, b.GetParent() ? b.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
                      continue;
                   }
@@ -1151,7 +1151,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   TClass *oldClass = aElement->GetClassPointer();
 
                   if( vers < 8 && newClass && newClass!=oldClass ) {
-                     Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %d into a %s.",
+                     Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
                            vers, b.GetParent() ? b.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
                      continue;
                   }

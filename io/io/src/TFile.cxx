@@ -483,7 +483,7 @@ TFile::~TFile()
    gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
    if (gDebug)
-      Info("~TFile", "dtor called for %s [%d]", GetName(),this);
+      Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);
 }
 
 //______________________________________________________________________________
@@ -1340,8 +1340,8 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
          return kTRUE;
       }
       if (siz != len) {
-         Error("ReadBuffer", "error reading all requested bytes from file %s, got %d of %d",
-               GetName(), siz, len);
+         Error("ReadBuffer", "error reading all requested bytes from file %s, got %ld of %d",
+               GetName(), (Long_t)siz, len);
          return kTRUE;
       }
       fBytesRead  += siz;
@@ -1900,7 +1900,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
       if (!GetTitle() || strlen(GetTitle()) == 0)
          Info("Write", "writing name = %s", GetName());
       else
-         Info("Write", "writing name = s title = %s", GetName(), GetTitle());
+         Info("Write", "writing name = %s title = %s", GetName(), GetTitle());
    }
 
    fMustFlush = kFALSE;
@@ -1950,13 +1950,13 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
       if (siz < 0) {
          // Write the system error only once for this file
          SetBit(kWriteError); SetWritable(kFALSE);
-         SysError("WriteBuffer", "error writing to file %s (%d)", GetName(), siz);
+         SysError("WriteBuffer", "error writing to file %s (%ld)", GetName(), (Long_t)siz);
          return kTRUE;
       }
       if (siz != len) {
          SetBit(kWriteError);
-         Error("WriteBuffer", "error writing all requested bytes to file %s, wrote %d of %d",
-               GetName(), siz, len);
+         Error("WriteBuffer", "error writing all requested bytes to file %s, wrote %ld of %d",
+               GetName(), (Long_t)siz, len);
          return kTRUE;
       }
       fBytesWrite  += siz;
@@ -4010,7 +4010,7 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
       writeop = dfile->WriteBuffer(copybuffer, (Int_t)read);
       written = dfile->GetBytesWritten() - w0;
       if ((written != read) || writeop) {
-         ::Error("TFile::Cp", "cannot write %d bytes to destination file %s", read, dst);
+         ::Error("TFile::Cp", "cannot write %lld bytes to destination file %s", read, dst);
          goto copyout;
       }
       totalread += read;
