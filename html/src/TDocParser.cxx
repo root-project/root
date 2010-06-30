@@ -1077,7 +1077,7 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
       if (!directive) directive = (TDocDirective*) fDirectiveHandlers.Last();
 
       if (!directive) {
-         Warning("HandleDirective", "Cannot find directive handler object!", 
+         Warning("HandleDirective", "Cannot find directive handler object %s !", 
             fLineRaw.Data());
          return kFALSE;
       }
