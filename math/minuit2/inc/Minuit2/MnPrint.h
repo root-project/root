@@ -121,24 +121,24 @@ std::ostream& operator<<(std::ostream&, const ContoursError&);
    ::Error("Minuit2",str);
 # define MN_INFO_VAL(x) \
    {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Info("Minuit2",str.c_str() );} 
+      ::Info("Minuit2","%s",str.c_str() );} 
 # define MN_ERROR_VAL(x) \
    {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Error("Minuit2",str.c_str() );} 
+   ::Error("Minuit2","%s",str.c_str() );} 
 
 # define MN_INFO_MSG2(loc,txt) \
    {std::string str = std::string(loc) + std::string(" : ") + std::string(txt); \
-   ::Info("Minuit2",str.c_str() );} 
+   ::Info("Minuit2","%s",str.c_str() );} 
 # define MN_ERROR_MSG2(loc,txt) \
    {std::string str = std::string(loc) + std::string(" : ") + std::string(txt); \
-   ::Error("Minuit2",str.c_str() );} 
+   ::Error("Minuit2","%s",str.c_str() );} 
 
 # define MN_INFO_VAL2(loc,x) \
    {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Info("Minuit2",str.c_str() );} 
+   ::Info("Minuit2","%s",str.c_str() );} 
 # define MN_ERROR_VAL2(loc,x) \
    {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Error("Minuit2",str.c_str() );} 
+   ::Error("Minuit2","%s",str.c_str() );} 
 
 
 
