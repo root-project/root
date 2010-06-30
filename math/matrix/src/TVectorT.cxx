@@ -263,7 +263,7 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Element va_(iv1), ...)
 // TVectorT foo(1,3,0.0,1.0,1.5,"END");
 
    if (upb < lwb) {
-      Error("TVectorT(Int_t, Int_t, ...)","upb(%d) < lwb(%d)");
+      Error("TVectorT(Int_t, Int_t, ...)","upb(%d) < lwb(%d)",upb,lwb);
       return;
    }
 
@@ -347,7 +347,7 @@ TVectorT<Element> &TVectorT<Element>::Use(Int_t lwb,Int_t upb,Element *data)
 // Use the array data to fill the vector lwb..upb]
 
    if (upb < lwb) {
-      Error("Use","upb(%d) < lwb(%d)");
+      Error("Use","upb(%d) < lwb(%d)",upb,lwb);
       return *this;
    }
 
@@ -506,7 +506,7 @@ TVectorT<Element> &TVectorT<Element>::Sqrt()
       if (*ep >= 0)
          *ep = TMath::Sqrt(*ep);
       else
-         Error("Sqrt()","v(%d) = %g < 0",ep-this->GetMatrixArray(),*ep);
+         Error("Sqrt()","v(%ld) = %g < 0",Long_t(ep-this->GetMatrixArray()),*ep);
       ep++;
    }
 
@@ -528,7 +528,7 @@ TVectorT<Element> &TVectorT<Element>::Invert()
       if (*ep != 0.0)
          *ep = 1./ *ep;
       else
-         Error("Invert()","v(%d) = %g",ep-this->GetMatrixArray(),*ep);
+         Error("Invert()","v(%ld) = %g",Long_t(ep-this->GetMatrixArray()),*ep);
       ep++;
    }
 

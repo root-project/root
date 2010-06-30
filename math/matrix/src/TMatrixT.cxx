@@ -1661,7 +1661,7 @@ TMatrixT<Element> &TMatrixT<Element>::NormByColumn(const TVectorT<Element> &v,Op
             if (*pv != 0.0)
                *mp++ /= *pv;
             else {
-               Error("NormbyColumn","vector element %d is zero",pv-v.GetMatrixArray());
+               Error("NormbyColumn","vector element %ld is zero",Long_t(pv-v.GetMatrixArray()));
                mp++;
             }
          }
@@ -1708,7 +1708,7 @@ TMatrixT<Element> &TMatrixT<Element>::NormByRow(const TVectorT<Element> &v,Optio
             if (*pv != 0.0)
                *mp++ /= *pv++;
             else {
-               Error("NormbyRow","vector element %d is zero",pv-pv0);
+               Error("NormbyRow","vector element %ld is zero",Long_t(pv-pv0));
                mp++;
             }
          }
