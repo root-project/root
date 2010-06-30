@@ -2864,7 +2864,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
                n[0] = 0;
                b.SetBufferOffset(b.Length() - sizeof(n));
             } else {
-               Error("ReadLeaves", "Incorrect size read for the container in %s\nThe size read is %d when the maximum is %d\nThe size is reset to 0 for this entry (%d)", GetName(), n, fMaximum, GetReadEntry());
+               Error("ReadLeaves", "Incorrect size read for the container in %s\nThe size read is %d when the maximum is %d\nThe size is reset to 0 for this entry (%lld)", GetName(), n[0], fMaximum, GetReadEntry());
                n[0] = 0;
             }
          }
@@ -3115,7 +3115,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
             n = 0;
             b.SetBufferOffset(b.Length()-sizeof(n));
          } else {
-            Error("ReadLeaves", "Incorrect size read for the container in %s\n\tThe size read is %d while the maximum is %d\n\tThe size is reset to 0 for this entry (%d)", GetName(), n, fMaximum, GetReadEntry());
+            Error("ReadLeaves", "Incorrect size read for the container in %s\n\tThe size read is %d while the maximum is %d\n\tThe size is reset to 0 for this entry (%lld)", GetName(), n, fMaximum, GetReadEntry());
             n = 0;
          }
       }
@@ -3208,7 +3208,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
             n = 0;
             b.SetBufferOffset(b.Length()-sizeof(n));
          } else {
-            Error("ReadLeaves", "Incorrect size read for the container in %s\n\tThe size read is %d while the maximum is %d\n\tThe size is reset to 0 for this entry (%d)", GetName(), n, fMaximum, GetReadEntry());
+            Error("ReadLeaves", "Incorrect size read for the container in %s\n\tThe size read is %d while the maximum is %d\n\tThe size is reset to 0 for this entry (%lld)", GetName(), n, fMaximum, GetReadEntry());
             n = 0;
          }
       }
