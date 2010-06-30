@@ -792,8 +792,8 @@ Int_t TSpline3::FindX(Double_t x) const
       // This could be removed, sanity check
       if(!(fPoly[klow].X()<=x && x<=fPoly[klow+1].X()))
          Error("Eval",
-               "Binary search failed x(%d) = %f < %f < x(%d) = %f\n",
-               klow,fPoly[klow].X(),x,fPoly[klow+1].X());
+               "Binary search failed x(%d) = %f < x(%d) = %f\n",
+               klow,fPoly[klow].X(),klow+1,fPoly[klow+1].X());
    }
    return klow;
 }
@@ -1581,8 +1581,8 @@ Int_t TSpline5::FindX(Double_t x) const
       // This could be removed, sanity check
       if(!(fPoly[klow].X()<=x && x<=fPoly[klow+1].X()))
          Error("Eval",
-               "Binary search failed x(%d) = %f < %f < x(%d) = %f\n",
-                klow,fPoly[klow].X(),x,fPoly[klow+1].X());
+               "Binary search failed x(%d) = %f < x(%d) = %f\n",
+                klow,fPoly[klow].X(),klow=1,fPoly[klow+1].X());
    }
    return klow;
 }
