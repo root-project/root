@@ -406,7 +406,7 @@ VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
    // (uses hash of type_info::name()).
 
    if (gDebug > 9) {
-      ::Info("GetDict", "searches for %s at 0x%lx", info.name(), &info);
+      ::Info("GetDict", "searches for %s at 0x%lx", info.name(), (Long_t)&info);
       fgIdMap->Print();
    }
 
