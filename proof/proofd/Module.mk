@@ -123,7 +123,7 @@ XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
                   $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdOuc.a \
                   $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
 ifeq ($(PLATFORM),solaris)
-XPROOFDEXESYSLIBS := -lsendfile -lCstd
+XPROOFDEXESYSLIBS := -lsendfile
 endif
 XPROOFDEXE     := bin/xproofd
 endif
