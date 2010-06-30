@@ -82,7 +82,7 @@ namespace ROOT {
                 && Cint::G__TypedefInfo::GetNumTypedefs() > 0.9 * G__MAXTYPEDEF) {
                alreadyWarnedAboutTooManyTypedefs = true;
                Warning("CINTTypedefBuilder::Setup()",
-                       "%ld out of %ld possible entries are in use!",
+                       "%d out of %d possible entries are in use!",
                        (int)Cint::G__TypedefInfo::GetNumTypedefs(), (int)G__MAXTYPEDEF);
             }
 		
@@ -103,7 +103,7 @@ namespace ROOT {
              && Cint::G__TypedefInfo::GetNumTypedefs() > 0.9 * G__MAXTYPEDEF) {
             alreadyWarnedAboutTooManyTypedefs = true;
             Warning("CINTTypedefBuilder::Set()",
-                    "%ld out of %ld possible entries are in use!",
+                    "%d out of %d possible entries are in use!",
                     (int)Cint::G__TypedefInfo::GetNumTypedefs(), (int)G__MAXTYPEDEF);
          }
          G__setnewtype(-1,NULL,0);
