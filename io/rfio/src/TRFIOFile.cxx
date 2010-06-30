@@ -230,8 +230,8 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
       if (gDebug > 1)
          Info("TRFIOFile", "allocating iovec64 with size %d", iovsize);
       if (!iov) {
-         Error("TRFIOFile", "error allocating preseek vector of size %d",
-               sizeof(struct iovec64) * iovsize);
+         Error("TRFIOFile", "error allocating preseek vector of size %ld",
+               (Long_t)sizeof(struct iovec64) * iovsize);
          return kTRUE;
       }
    } else {
@@ -241,8 +241,8 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
          if (gDebug > 1)
             Info("TRFIOFile", "re-allocating iovec64 with size %d", iovsize);
          if (!iov) {
-            Error("TRFIOFile", "error reallocating preseek vector of size %d",
-                  sizeof(struct iovec64) * iovsize);
+            Error("TRFIOFile", "error reallocating preseek vector of size %ld",
+                  (Long_t)sizeof(struct iovec64) * iovsize);
             return kTRUE;
          }
       }
