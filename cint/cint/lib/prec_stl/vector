@@ -668,7 +668,7 @@ class vector {
 //////////////////////////////////////////////////////////////////////////
 // vector<bool,allocator<bool> > specialization
 //////////////////////////////////////////////////////////////////////////
-template <class Allocator> class vector<bool, Allocator> {
+template <class Allocator = allocator<bool> > class vector<bool, Allocator> {
  public:
   // types:
   typedef bool                                  const_reference;
@@ -780,7 +780,6 @@ template <class Allocator> class vector<bool, Allocator> {
   bool      empty() const;
   void      reserve(size_type n);
   // element access:
-#ifndef __CINT__
   reference       operator[](size_type n);
   const_reference operator[](size_type n) const;
   const_reference at(size_type n) const;
@@ -789,7 +788,6 @@ template <class Allocator> class vector<bool, Allocator> {
   const_reference front() const;
   reference       back();
   const_reference back() const;
-#endif
   
   // modifiers:
   void push_back(const bool& x);
