@@ -878,7 +878,7 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
    }
    catch (std::runtime_error& exc)
    {
-      Error(eh, exc.what());
+      Error(eh, "%s",exc.what());
       return kFALSE;
    }
 

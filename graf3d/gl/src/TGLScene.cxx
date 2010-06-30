@@ -236,7 +236,7 @@ void TGLScene::TSceneInfo::DumpDrawStats()
             it++;
          }
       }
-      Info("TGLScene::DumpDrawStats()", out.Data());
+      Info("TGLScene::DumpDrawStats()", "%s",out.Data());
    }
 }
 
@@ -565,7 +565,7 @@ void TGLScene::PreDraw(TGLRnrCtx& rnrCtx)
    TSceneInfo* sinfo = dynamic_cast<TSceneInfo*>(rnrCtx.GetSceneInfo());
    if (sinfo == 0 || sinfo->GetScene() != this) {
       TGLSceneInfo* si = rnrCtx.GetSceneInfo();
-      Error("TGLScene::PreDraw", Form("SceneInfo mismatch (0x%lx, '%s').",
+      Error("TGLScene::PreDraw", "%s", Form("SceneInfo mismatch (0x%lx, '%s').",
                                       si, si ? si->IsA()->GetName() : "<>"));
       return;
    }
