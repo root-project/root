@@ -361,7 +361,7 @@ Bool_t ROOT::TBranchProxy::Setup()
             fMemberOffset = fClass->GetDataMemberOffset(member);
 
             if (fMemberOffset<0) {
-               Error("Setup",Form("Negative offset %d for %s in %s",
+               Error("Setup","%s",Form("Negative offset %d for %s in %s",
                                   fMemberOffset,fBranch->GetName(),
                                   bcount?bcount->GetName():"unknown"));
             }
@@ -386,7 +386,7 @@ Bool_t ROOT::TBranchProxy::Setup()
             }
 
          } else if (fBranch->IsA() != TBranch::Class()) {
-            Error("Setup",Form("Missing TClass object for %s\n",fClassName.Data()));
+            Error("Setup","%s",Form("Missing TClass object for %s\n",fClassName.Data()));
          }
 
          if ( fBranch->IsA()==TBranchElement::Class()
