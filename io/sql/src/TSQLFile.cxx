@@ -991,7 +991,7 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
             TKeySQL* key = FindSQLKey(dir, keyid);
 
             if (key==0) {
-               Error("StreamKeysForDirectory","Key with id %d not exist in list", keyid);
+               Error("StreamKeysForDirectory","Key with id %lld not exist in list", keyid);
                nkeys = -1; // this will finish execution
             } else
             if (key->IsKeyModified(keyname, keytitle, keydatime, cycle, classname))
@@ -2616,7 +2616,7 @@ Int_t TSQLFile::DirReadKeys(TDirectory* dir)
    dir->GetListOfKeys()->Delete();
 
    if (gDebug>2)
-      Info("DirReadKeys","dir = %s id = %d", dir->GetName(), dir->GetSeekDir());
+      Info("DirReadKeys","dir = %s id = %lld", dir->GetName(), dir->GetSeekDir());
 
    return StreamKeysForDirectory(dir, kFALSE);
 }
