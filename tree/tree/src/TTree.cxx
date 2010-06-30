@@ -854,7 +854,7 @@ TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
    TTree* t = fe->GetTree();
    if (t) {
       if (!t->GetTreeIndex() && (t->GetEntries() < fEntries)) {
-         Warning("AddFriend", "FriendElement %s in file %s has less entries %g than its parent Tree: %g", treename, filename, t->GetEntries(), fEntries);
+         Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent Tree: %lld", treename, filename, t->GetEntries(), fEntries);
       }
    } else {
       Warning("AddFriend", "Cannot add FriendElement %s in file %s", treename, filename);
@@ -882,7 +882,7 @@ TFriendElement* TTree::AddFriend(const char* treename, TFile* file)
    TTree *t = fe->GetTree();
    if (t) {
       if (!t->GetTreeIndex() && (t->GetEntries() < fEntries)) {
-         Warning("AddFriend", "FriendElement %s in file %s has less entries %g than its parent tree: %g", treename, file->GetName(), t->GetEntries(), fEntries);
+         Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent tree: %lld", treename, file->GetName(), t->GetEntries(), fEntries);
       }
    } else {
       Warning("AddFriend", "unknown tree '%s' in file '%s'", treename, file->GetName());
@@ -909,7 +909,7 @@ TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
    fFriends->Add(fe);
    TTree* t = fe->GetTree();
    if (warn && (t->GetEntries() < fEntries)) {
-      Warning("AddFriend", "FriendElement '%s' in file '%s' has less entries %g than its parent tree: %g", tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(), fEntries);
+      Warning("AddFriend", "FriendElement '%s' in file '%s' has less entries %lld than its parent tree: %lld", tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(), fEntries);
    }
    return fe;
 }
@@ -5845,7 +5845,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
             if (in.eof()) return nlines;
             status = in.good();
             if (!status) {
-               Warning("ReadFile","Illegal value after line %d\n",nlines);
+               Warning("ReadFile","Illegal value after line %lld\n",nlines);
                in.clear();
                break;
             }
