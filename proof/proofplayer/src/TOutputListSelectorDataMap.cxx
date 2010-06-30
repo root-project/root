@@ -45,11 +45,11 @@ namespace {
    public:
       TSetSelDataMembers(const TOutputListSelectorDataMap& owner, TCollection* dmInfo, TList* output);
       void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
-      size_t GetNumSet() const { return fNumSet; }
+      Ssiz_t GetNumSet() const { return fNumSet; }
    private:
       TCollection* fDMInfo; // output list object name / member name pairs for output list entries
       TList* fOutputList; // merged output list
-      size_t fNumSet; // number of initialized data members
+      Ssiz_t fNumSet; // number of initialized data members
       const TOutputListSelectorDataMap& fOwner; // owner, used for messaging
    };
 }

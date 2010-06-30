@@ -1327,7 +1327,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
       // Get list of workers
       if (gProofServ->GetWorkers(workerList, pc) == TProofServ::kQueryStop) {
          TString emsg("no resource currently available for this session: please retry later");
-         if (gDebug > 0) Info("StartSlaves", emsg.Data());
+         if (gDebug > 0) Info("StartSlaves", "%s", emsg.Data());
          gProofServ->SendAsynMessage(emsg.Data());
          return kFALSE;
       }
@@ -3522,7 +3522,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
             while ((o = nxo())) {
                AskForOutput((TSlave *)o);
             }
-            PDB(kSubmerger, 2) Info("HandleSubmerger", "kMergerDown: exit", merger_id);
+            PDB(kSubmerger, 2) Info("HandleSubmerger", "kMergerDown:%d: exit", merger_id);
          }
          break;
 

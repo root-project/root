@@ -630,13 +630,13 @@ Bool_t TQueryResultManager::FinalizeQuery(TProofQueryResult *pq,
    case TVirtualProofPlayer::kStopped:
       PDB(kGlobal, 1)
          Info("FinalizeQuery",
-              "query %d has been STOPPED: %d events processed", qn, np);
+              "query %d has been STOPPED: %lld events processed", qn, np);
       st = TQueryResult::kStopped;
       break;
    case TVirtualProofPlayer::kFinished:
       PDB(kGlobal, 1)
          Info("FinalizeQuery",
-              "query %d has been completed: %d events processed", qn, np);
+              "query %d has been completed: %lld events processed", qn, np);
       st = TQueryResult::kCompleted;
       break;
    default:
@@ -704,7 +704,7 @@ void TQueryResultManager::SaveQuery(TProofQueryResult *pq, Int_t mxq)
          if (gProofServ) {
             gProofServ->SendAsynMessage(emsg.Data());
          } else {
-            Warning("SaveQuery", emsg.Data());
+            Warning("SaveQuery", "%s", emsg.Data());
          }
       }
    } else {

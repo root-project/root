@@ -580,7 +580,7 @@ Bool_t TXSlave::HandleError(const void *in)
          if (gProofServ)
             gProofServ->GetSocket()->Send(m);
          else
-            Warning("HandleError", "%p: global reference to TProofServ missing");
+            Warning("HandleError", "%p: global reference to TProofServ missing", this);
       }
    } else {
       Warning("HandleError", "%p: reference to PROOF missing", this);

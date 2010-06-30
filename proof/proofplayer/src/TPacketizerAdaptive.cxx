@@ -459,7 +459,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
       if (packetAsAFraction > 0) {
          fgPacketAsAFraction = packetAsAFraction;
          Info("TPacketizerAdaptive",
-              "using alternate fraction of query time as a packet size: %ld",
+              "using alternate fraction of query time as a packet size: %d",
               packetAsAFraction);
       } else
          Info("TPacketizerAdaptive", "packetAsAFraction parameter must be higher than 0");
@@ -966,8 +966,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
                   if (!elem->GetEntryList()) {
                      if (elem->GetFirst() > entries) {
                         Error("ValidateFiles",
-                              "first (%d) higher then number of entries (%d) in %d",
-                              elem->GetFirst(), entries, elem->GetFileName() );
+                              "first (%lld) higher then number of entries (%lld) in %s",
+                               elem->GetFirst(), entries, elem->GetFileName());
                         // disable element
                         slstat->fCurFile->SetDone();
                         elem->Invalidate();
@@ -976,7 +976,7 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
                      if (elem->GetNum() == -1) {
                         elem->SetNum(entries - elem->GetFirst());
                      } else if (elem->GetFirst() + elem->GetNum() > entries) {
-                        Warning("ValidateFiles", "Num (%lld) + First (%lld) larger then number of"
+                        Warning("ValidateFiles", "num (%lld) + first (%lld) larger then number of"
                                  " keys/entries (%lld) in %s", elem->GetNum(), elem->GetFirst(),
                                  entries, elem->GetFileName());
                         elem->SetNum(entries - elem->GetFirst());
@@ -1107,8 +1107,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
          if (!e->GetEntryList()) {
             if (e->GetFirst() > entries) {
                Error("ValidateFiles",
-                     "first (%d) higher then number of entries (%lld) in %s",
-                     e->GetFirst(), entries, e->GetFileName() );
+                     "first (%lld) higher then number of entries (%lld) in %s",
+                      e->GetFirst(), entries, e->GetFileName());
 
                // Invalidate the element
                slavestat->fCurFile->SetDone();
@@ -1120,8 +1120,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
                e->SetNum(entries - e->GetFirst());
             } else if (e->GetFirst() + e->GetNum() > entries) {
                Error("ValidateFiles",
-                     "Num (%d) + First (%d) larger then number of keys/entries (%lld) in %s",
-                     e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
+                     "num (%lld) + first (%lld) larger then number of keys/entries (%lld) in %s",
+                      e->GetNum(), e->GetFirst(), entries, e->GetFileName());
                e->SetNum(entries - e->GetFirst());
             }
          }
@@ -1514,8 +1514,8 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
          fNEventsOnRemLoc -= file->GetElement()->GetNum();
          if (fNEventsOnRemLoc < 0) {
             Error("GetNextPacket",
-                  "inconsistent value for fNEventsOnRemLoc (%d): stop delivering packets!",
-                  fNEventsOnRemLoc);
+                  "inconsistent value for fNEventsOnRemLoc (%lld): stop delivering packets!",
+                   fNEventsOnRemLoc);
             return 0;
          }
       }

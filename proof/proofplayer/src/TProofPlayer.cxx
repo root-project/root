@@ -905,14 +905,14 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                // Record the memory information
                ProcInfo_t pi;
                if (!gSystem->GetProcInfo(&pi)){
-                  Info("Process|Svc", "Memory %ld virtual %ld resident event %d",
+                  Info("Process|Svc", "Memory %ld virtual %ld resident event %lld",
                                       pi.fMemVirtual, pi.fMemResident, GetEventsProcessed());
                   // Apply limit, if any: warn if above 80%, stop if above 95% of the HWM
                   TString wmsg;
                   if (memlim > 0) {
                      if (pi.fMemVirtual > 0.95 * memlim) {
                         wmsg.Form("using more than 95% of allowed memory (%ld kB) - STOP processing", pi.fMemVirtual);
-                        Error("Process", wmsg.Data());
+                        Error("Process", "%s", wmsg.Data());
                         wmsg.Insert(0, "ERROR: ");
                         if (gProofServ) gProofServ->SendAsynMessage(wmsg.Data());
                         fExitStatus = kStopped;
@@ -922,7 +922,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                         // Refine monitoring
                         memlogfreq = 1;
                         wmsg.Form("using more than 80% of allowed memory (%ld kB)", pi.fMemVirtual);
-                        Warning("Process", wmsg.Data());
+                        Warning("Process", "%s", wmsg.Data());
                         wmsg.Insert(0, "WARNING: ");
                         if (gProofServ) gProofServ->SendAsynMessage(wmsg.Data());
                      }
@@ -2716,8 +2716,8 @@ void TProofPlayerRemote::StoreOutput(TList *out)
                break;
          }
          if (!elem) {
-            Error("StoreOutput",Form("Found the EventList for %s, but no object with that name "
-                                 "in the TDSet", aList->GetName()));
+            Error("StoreOutput", "found the EventList for %s, but no object with that name "
+                                 "in the TDSet", aList->GetName());
             continue;
          }
          Long64_t offset = elem->GetTDSetOffset();
@@ -2736,11 +2736,11 @@ void TProofPlayerRemote::StoreOutput(TList *out)
 
    TObject *obj;
    while( (obj = next()) ) {
-      PDB(kOutput,2) Info("StoreOutput","Find '%s'", obj->GetName() );
+      PDB(kOutput,2) Info("StoreOutput","find list for '%s'", obj->GetName() );
 
       TList *list = (TList *) fOutputLists->FindObject( obj->GetName() );
       if ( list == 0 ) {
-         PDB(kOutput,2) Info("StoreOutput","List not Found (creating)", obj->GetName() );
+         PDB(kOutput,2) Info("StoreOutput", "list for '%s' not found (creating)", obj->GetName());
          list = new TList;
          list->SetName( obj->GetName() );
          list->SetOwner();
@@ -2750,7 +2750,7 @@ void TProofPlayerRemote::StoreOutput(TList *out)
    }
 
    delete out;
-   PDB(kOutput,1) Info("StoreOutput","Leave");
+   PDB(kOutput,1) Info("StoreOutput", "leave");
 }
 
 //______________________________________________________________________________
@@ -2900,7 +2900,7 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
       if ( map == 0 ) {
          PDB(kFeedback,2)
-            Info("StoreFeedback","%s: Map not Found (creating)", ord, obj->GetName() );
+            Info("StoreFeedback", "%s: map for '%s' not found (creating)", ord, obj->GetName());
          // Map must not be owner (ownership is with regards to the keys (only))
          map = new TMap;
          map->SetName(obj->GetName());

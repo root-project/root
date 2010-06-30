@@ -220,14 +220,14 @@ void TDSetElement::Validate(Bool_t isTree)
          if (fNum <= entries - fFirst) {
             fValid = kTRUE;
          } else {
-            Error("Validate", "TDSetElement has only %d entries starting"
-                  " with entry %d, while %d were requested",
-                  entries - fFirst, fFirst, fNum);
+            Error("Validate", "TDSetElement has only %lld entries starting"
+                              " with entry %lld, while %lld were requested",
+                              entries - fFirst, fFirst, fNum);
          }
       }
    } else {
-      Error("Validate", "TDSetElement has only %d entries with"
-            " first entry requested as %d", entries, fFirst);
+      Error("Validate", "TDSetElement has only %lld entries with"
+            " first entry requested as %lld", entries, fFirst);
    }
 }
 
@@ -266,14 +266,14 @@ void TDSetElement::Validate(TDSetElement *elem)
             if (fNum <= entries - fFirst) {
                fValid = kTRUE;
             } else {
-               Error("Validate", "TDSetElement requests %d entries starting"
-                     " with entry %d, while TDSetElement to validate against"
-                     " has only %d entries", fNum, fFirst, entries);
+               Error("Validate", "TDSetElement requests %lld entries starting"
+                                 " with entry %lld, while TDSetElement to validate against"
+                                 " has only %lld entries", fNum, fFirst, entries);
             }
          }
       } else {
-         Error("Validate", "TDSetElement to validate against has only %d"
-               " entries, but this TDSetElement requested %d as its first"
+         Error("Validate", "TDSetElement to validate against has only %lld"
+               " entries, but this TDSetElement requested %lld as its first"
                " entry", entries, fFirst);
       }
    } else {
@@ -949,7 +949,7 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
    } else {
       TString msg;
       msg.Form("duplication detected: %40s is already in dataset - ignored", fn.Data());
-      Warning("Add", msg.Data());
+      Warning("Add", "%s", msg.Data());
       if (gProofServ) {
          msg.Insert(0, "WARNING: ");
          gProofServ->SendAsynMessage(msg);
@@ -1075,7 +1075,7 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
    // Check if it already exists in the TDSet
    if ((el = (TDSetElement *) fElements->FindObject(file))) {
       msg.Form("duplication detected: %40s is already in dataset - ignored", file);
-      Warning("Add", msg.Data());
+      Warning("Add", "%s", msg.Data());
       if (gProofServ) {
          msg.Insert(0, "WARNING: ");
          gProofServ->SendAsynMessage(msg);
@@ -1102,7 +1102,7 @@ Bool_t TDSet::Add(TFileInfo *fi, const char *meta)
          if (gProofServ)
             gProofServ->SendAsynMessage(msg);
          else
-            Warning("Add", msg.Data());
+            Warning("Add", "%s", msg.Data());
          return kFALSE;
       }
    }

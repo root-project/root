@@ -219,7 +219,7 @@ Bool_t TProofDraw::Process(Long64_t entry)
 {
    // Executed for each entry.
 
-   PDB(kDraw,3) Info("Process","Enter entry = %d", entry);
+   PDB(kDraw,3) Info("Process", "enter entry = %lld", entry);
 
    fTree->LoadTree(entry);
    Int_t ndata = fManager->GetNdata();

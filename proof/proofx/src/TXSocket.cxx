@@ -951,7 +951,7 @@ Int_t TXSocket::GetInterrupt(Bool_t &forward)
    // propagated to lower stages forward will be kTRUE after the call
 
    if (gDebug > 2)
-      Info("GetInterrupt","%p: waiting to lock mutex %p", fIMtx);
+      Info("GetInterrupt","%p: waiting to lock mutex %p", this, fIMtx);
 
    R__LOCKGUARD(fIMtx);
 
@@ -961,7 +961,7 @@ Int_t TXSocket::GetInterrupt(Bool_t &forward)
 
    // Check if filled
    if (fILev == -1)
-      Error("GetInterrupt","value is unset (%d) - protocol error",fILev);
+      Error("GetInterrupt", "value is unset (%d) - protocol error",fILev);
 
    // Fill output
    ilev = fILev;
@@ -1330,7 +1330,7 @@ void TXSocket::RemoteTouch()
       return;
    }
    if (fConn->LowWrite(&Request, 0, 0) != kOK)
-      Error("Touch", "%p: %s: problems sending touch request to server", this);
+      Error("Touch", "%p: problems sending touch request to server", this);
 
    // Done
    return;
@@ -1367,7 +1367,7 @@ void TXSocket::CtrlC()
       return;
    }
    if (fConn->LowWrite(&Request, 0, 0) != kOK)
-      Error("CtrlC", "%p: %s: problems sending ctrl-c request to server", this);
+      Error("CtrlC", "%p: problems sending ctrl-c request to server", this);
 
    // Done
    return;
@@ -1473,7 +1473,7 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
             buf = *i;
             if (gDebug > 2)
                Info("PopUpSpare","asked: %d, spare: %d/%d, REUSE buf %p, sz: %d",
-                                 size, fgSQue.size(), nBuf, buf, buf->fSiz);
+                                 size, (int) fgSQue.size(), nBuf, buf, buf->fSiz);
             // Drop from this list
             fgSQue.erase(i);
             return buf;
@@ -1484,7 +1484,7 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
       buf->Resize(size);
       if (gDebug > 2)
          Info("PopUpSpare","asked: %d, spare: %d/%d, maxsz: %d, RESIZE buf %p, sz: %d",
-                           size, fgSQue.size(), nBuf, maxsz, buf, buf->fSiz);
+                           size, (int) fgSQue.size(), nBuf, maxsz, buf, buf->fSiz);
       // Drop from this list
       fgSQue.pop_front();
       return buf;
@@ -1497,7 +1497,7 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
    nBuf++;
    if (gDebug > 2)
       Info("PopUpSpare","asked: %d, spare: %d/%d, maxsz: %d, NEW buf %p, sz: %d",
-                        size, fgSQue.size(), nBuf, maxsz, buf, buf->fSiz);
+                        size, (int) fgSQue.size(), nBuf, maxsz, buf, buf->fSiz);
 
    // We are done
    return buf;

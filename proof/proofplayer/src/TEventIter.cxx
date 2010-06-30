@@ -352,8 +352,8 @@ Long64_t TEventIterObj::GetNextEvent()
       Long64_t num = fKeys->GetSize();
 
       if ( fElemFirst > num ) {
-         Error("GetNextEvent","First (%d) higher then number of keys (%d) in %d",
-            fElemFirst, num, fElem->GetName() );
+         Error("GetNextEvent","First (%lld) higher then number of keys (%lld) in %s",
+               fElemFirst, num, fElem->GetName());
          fNum = 0;
          return -1;
       }
@@ -361,8 +361,8 @@ Long64_t TEventIterObj::GetNextEvent()
       if ( fElemNum == -1 ) {
          fElemNum = num - fElemFirst;
       } else if ( fElemFirst+fElemNum  > num ) {
-         Error("GetNextEvent","Num (%d) + First (%d) larger then number of keys (%d) in %s",
-            fElemNum, fElemFirst, num, fElem->GetDirectory() );
+         Error("GetNextEvent","Num (%lld) + First (%lld) larger then number of keys (%lld) in %s",
+            fElemNum, fElemFirst, num, fElem->GetDirectory());
          fElemNum = num - fElemFirst;
       }
 
@@ -775,16 +775,16 @@ Long64_t TEventIterTree::GetNextEvent()
 
       if (!fEntryList && !fEventList) {
          if ( fElemFirst > num ) {
-            Error("GetNextEvent","First (%d) higher then number of entries (%d) in %s",
-               fElemFirst, num, fElem->GetObjName() );
+            Error("GetNextEvent", "first (%lld) higher then number of entries (%lld) in %s",
+                                  fElemFirst, num, fElem->GetObjName());
             fNum = 0;
             return -1;
          }
          if ( fElemNum == -1 ) {
             fElemNum = num - fElemFirst;
          } else if ( fElemFirst+fElemNum  > num ) {
-            Error("GetNextEvent","Num (%d) + First (%d) larger then number of entries (%d) in %s",
-               fElemNum, fElemFirst, num, fElem->GetName() );
+            Error("GetNextEvent", "num (%lld) + first (%lld) larger then number of entries (%lld) in %s",
+                                  fElemNum, fElemFirst, num, fElem->GetName());
             fElemNum = num - fElemFirst;
          }
 

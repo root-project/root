@@ -426,7 +426,7 @@ void TProofPlayerLite::StoreFeedback(TObject *slave, TList *out)
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
       if ( map == 0 ) {
          PDB(kFeedback,2)
-            Info("StoreFeedback","Map not Found (creating)", obj->GetName() );
+            Info("StoreFeedback", "map for '%s' not found (creating)", obj->GetName());
          // map must not be owner (ownership is with regards to the keys (only))
          map = new TMap;
          map->SetName(obj->GetName());
