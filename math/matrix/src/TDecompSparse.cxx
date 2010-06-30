@@ -305,7 +305,7 @@ Bool_t TDecompSparse::Decompose()
             break;
          case 3 :
             if (fVerbose)
-               Info("Decompose()","rank deficient matrix detected; apparent rank = ",this->IError());
+               Info("Decompose()","rank deficient matrix detected; apparent rank = %d",this->IError());
             done = 1;
             break;
          default:
