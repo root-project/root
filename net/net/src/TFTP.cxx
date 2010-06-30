@@ -181,7 +181,7 @@ void TFTP::PrintError(const char *where, Int_t err) const
 {
    // Print error string depending on error code.
 
-   Error(where, gRootdErrStr[err]);
+   Error(where, "at 0x%lx", (Long_t)gRootdErrStr[err]);
 }
 
 //______________________________________________________________________________
