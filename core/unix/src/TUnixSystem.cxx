@@ -1104,7 +1104,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
    case kSigSegmentationViolation:
    case kSigIllegalInstruction:
    case kSigFloatingException:
-      Break("TUnixSystem::DispatchSignals", UnixSigname(sig));
+      Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
       StackTrace();
       if (gApplication)
          gApplication->HandleException(sig);
@@ -1113,7 +1113,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       break;
    case kSigSystem:
    case kSigPipe:
-      Break("TUnixSystem::DispatchSignals", UnixSigname(sig));
+      Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
       break;
    case kSigWindowChanged:
       Gl_windowchanged();
@@ -3986,8 +3986,8 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
    unserver.sun_family = AF_UNIX;
 
    if (strlen(sockpath) > sizeof(unserver.sun_path)-1) {
-      ::Error("TUnixSystem::UnixUnixConnect", "socket path %s, longer than max allowed length (%d)",
-              sockpath, sizeof(unserver.sun_path)-1);
+      ::Error("TUnixSystem::UnixUnixConnect", "socket path %s, longer than max allowed length (%u)",
+              sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
    strcpy(unserver.sun_path, sockpath);
