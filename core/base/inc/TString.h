@@ -311,7 +311,11 @@ public:
    Bool_t       EndsWith(const char *pat,    ECaseCompare cmp = kExact) const;
    Ssiz_t       First(char c) const          { return Pref()->First(c); }
    Ssiz_t       First(const char *cs) const  { return Pref()->First(cs); }
-   void         Form(const char *fmt, ...);
+   void         Form(const char *fmt, ...)
+#if defined(__GNUC__) && !defined(__CINT__)
+   __attribute__((format(printf, 2, 3)))   /* 1 is the this pointer */
+#endif
+   ;
    UInt_t       Hash(ECaseCompare cmp = kExact) const;
    Ssiz_t       Index(const char *pat, Ssiz_t i = 0,
                       ECaseCompare cmp = kExact) const;
@@ -379,7 +383,11 @@ public:
    static Ssiz_t  GetInitialCapacity();
    static Ssiz_t  GetResizeIncrement();
    static Ssiz_t  GetMaxWaste();
-   static TString Format(const char *fmt, ...);
+   static TString Format(const char *fmt, ...)
+#if defined(__GNUC__) && !defined(__CINT__)
+   __attribute__((format(printf, 1, 2)))
+#endif
+   ;
 
    ClassDef(TString,1)  //Basic string class
 };
@@ -399,8 +407,16 @@ inline UInt_t Hash(const TString &s) { return s.Hash(); }
 inline UInt_t Hash(const TString *s) { return s->Hash(); }
        UInt_t Hash(const char *s);
 
-extern char *Form(const char *fmt, ...);     // format in circular buffer
-extern void  Printf(const char *fmt, ...);   // format and print
+extern char *Form(const char *fmt, ...)      // format in circular buffer
+#if defined(__GNUC__) && !defined(__CINT__)
+__attribute__((format(printf, 1, 2)))
+#endif
+;
+extern void  Printf(const char *fmt, ...)    // format and print
+#if defined(__GNUC__) && !defined(__CINT__)
+__attribute__((format(printf, 1, 2)))
+#endif
+;
 extern char *Strip(const char *str, char c = ' '); // strip c off str, free with delete []
 extern char *StrDup(const char *str);        // duplicate str, free with delete []
 extern char *Compress(const char *str);      // remove blanks from string, free with delele []
@@ -574,7 +590,7 @@ inline char TString::operator()(Ssiz_t i) const
 { return fData[i]; }
 
 inline const char *TSubString::Data() const
-{ 
+{
    // Return a pointer to the beginning of the substring. Note that the
    // terminating null is in the same place as for the original
    // TString, so this method is not appropriate for converting the
@@ -588,8 +604,8 @@ inline const char *TSubString::Data() const
    //   root [3] TString substr(sub)
    //   root [4] substr
    //   (class TString)"hello"
-   
-   return fStr.Data() + fBegin; 
+
+   return fStr.Data() + fBegin;
 }
 
 // Access to elements of sub-string with bounds checking
