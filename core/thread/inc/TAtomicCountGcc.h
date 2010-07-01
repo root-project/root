@@ -58,7 +58,9 @@ public:
    void Set(Long_t v) {
       fCnt = v;
 #ifdef _GLIBCXX_WRITE_MEM_BARRIER
+#if !(defined(__INTEL_COMPILER) && defined(__ia64__)) //ICC doesn't support inline asm on IA-64
       _GLIBCXX_WRITE_MEM_BARRIER;
+#endif
 #endif
    }
    Long_t Get() const { return __exchange_and_add(&fCnt, 0); }
