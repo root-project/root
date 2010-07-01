@@ -281,7 +281,7 @@ void TNetFile::PrintError(const char *where, Int_t err)
    // Print error string depending on error code.
 
    fErrorCode = err;
-   Error(where, gRootdErrStr[err]);
+   Error(where, "%s", gRootdErrStr[err]);
 }
 
 //______________________________________________________________________________
