@@ -261,7 +261,7 @@ TSQLObjectData* TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo* sqlinf
       if ((pool==0) && (fLastObjId>=fFirstObjId)) {
          if (gDebug>4) Info("SqlObjectData","Before request to %s",sqlinfo->GetClassTableName());
          TSQLResult *alldata = fSQL->GetNormalClassDataAll(fFirstObjId, fLastObjId, sqlinfo);
-         if (gDebug>4) Info("SqlObjectData","After request res = %x",alldata);
+         if (gDebug>4) Info("SqlObjectData","After request res = 0x%lx",(Long_t)alldata);
          if (alldata==0) {
             Error("SqlObjectData","Cannot get data from table %s",sqlinfo->GetClassTableName());
             return 0;
@@ -490,7 +490,7 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, T
    } else {
       TSQLObjectData* objdata = SqlObjectData(objid, sqlinfo);
       if ((objdata==0) || !objdata->PrepareForRawData()) {
-         Error("SqlReadObjectDirect","No found raw data for obj %d in class %s version %d table", objid, clname.Data(), version);
+         Error("SqlReadObjectDirect","No found raw data for obj %lld in class %s version %d table", objid, clname.Data(), version);
          fErrorFlag = 1;
          return obj;
       }
