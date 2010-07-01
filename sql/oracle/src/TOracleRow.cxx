@@ -24,9 +24,9 @@ TOracleRow::TOracleRow(ResultSet *rs, vector<MetaData> *fieldMetaData)
    fResult      = rs;
    fFieldInfo   = fieldMetaData;
    fFieldCount  = fFieldInfo->size();
-   
+
    fFieldsBuffer = 0;
-   
+
    GetRowData();
 }
 
@@ -46,7 +46,7 @@ void TOracleRow::Close(Option_t *)
    if (fFieldsBuffer!=0) {
       for (int n=0;n<fFieldCount;n++)
         if (fFieldsBuffer[n]) delete[] fFieldsBuffer[n];
-      delete[] fFieldsBuffer;  
+      delete[] fFieldsBuffer;
    }
 
    fFieldInfo   = 0;
@@ -90,7 +90,7 @@ const char* TOracleRow::GetField(Int_t field)
       Error("TOracleRow","GetField(): out-of-range or No RowData/ResultSet/MetaData");
       return 0;
    }
-   
+
    return fFieldsBuffer ? fFieldsBuffer[field] : 0;
 }
 
@@ -98,23 +98,23 @@ const char* TOracleRow::GetField(Int_t field)
 void TOracleRow::GetRowData()
 {
    if (!fResult || !fFieldInfo || (fFieldCount<=0)) return;
-   
+
    fFieldsBuffer = new char* [fFieldCount];
    for (int n=0;n<fFieldCount;n++)
      fFieldsBuffer[n] = 0;
 
    std::string res;
-   
+
    char str_number[200];
 
    int fPrecision, fScale, fDataType;
-   double double_val; 
+   double double_val;
 
    try {
-   
+
    for (int field=0;field<fFieldCount;field++) {
       if (fResult->isNull(field+1)) continue;
-   
+
       fDataType = (*fFieldInfo)[field].getInt(MetaData::ATTR_DATA_TYPE);
 
       switch (fDataType) {
@@ -125,12 +125,12 @@ void TOracleRow::GetRowData()
            if ((fScale == 0) || (fPrecision == 0)) {
               res = fResult->getString(field+1);
            } else {
-              double_val = fResult->getDouble(field+1);  
+              double_val = fResult->getDouble(field+1);
               snprintf(str_number, sizeof(str_number), TSQLServer::GetFloatFormat(), double_val);
               res = str_number;
            }
            break;
-        
+
         case SQLT_CHR:  // character string
         case SQLT_VCS:  // variable character string
         case SQLT_AFC: // ansi fixed char
@@ -146,18 +146,18 @@ void TOracleRow::GetRowData()
            res = (fResult->getTimestamp(field+1)).toText(TOracleServer::GetDatimeFormat(), 0);
            break;
         default:
-           Error("GetRowData()","Oracle type %d not supported.", fDataType);
+           Error("GetRowData","Oracle type %d not supported.", fDataType);
            continue;
       }
-      
+
       int len = res.length();
       if (len>0) {
          fFieldsBuffer[field] = new char[len+1];
-         strcpy(fFieldsBuffer[field], res.c_str()); 
+         strcpy(fFieldsBuffer[field], res.c_str());
       }
    }
 
    } catch (SQLException &oraex) {
-      Error("GetRowData()", (oraex.getMessage()).c_str());
+      Error("GetRowData", "%s", (oraex.getMessage()).c_str());
    }
 }

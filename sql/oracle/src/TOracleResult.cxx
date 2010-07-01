@@ -24,7 +24,7 @@ void TOracleResult::initResultSet(Statement *stmt)
    // Oracle query result.
 
    if (!stmt) {
-      Error("initResultSet()", "construction: empty statement");
+      Error("initResultSet", "construction: empty statement");
    } else {
       try {
          fStmt = stmt;
@@ -41,7 +41,7 @@ void TOracleResult::initResultSet(Statement *stmt)
             fUpdateCount = stmt->getUpdateCount();
          }
       } catch (SQLException &oraex) {
-         Error("initResultSet()", (oraex.getMessage()).c_str());
+         Error("initResultSet", "%s", (oraex.getMessage()).c_str());
          MakeZombie();
       }
    }
@@ -58,9 +58,9 @@ TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
    fFieldInfo   = 0;
    fResultType  = 0;
    fUpdateCount = 0;
-   
+
    initResultSet(stmt);
-   
+
    if (fResult) ProducePool();
 }
 
@@ -77,7 +77,7 @@ TOracleResult::TOracleResult(Connection *conn, const char *tableName)
    fFieldInfo   = 0;
    fResultType  = 0;
    fUpdateCount = 0;
-   
+
    if (!tableName || !conn) {
       Error("TOracleResult", "construction: empty input parameter");
    } else {
@@ -105,17 +105,17 @@ void TOracleResult::Close(Option_t *)
       if (fResult) fStmt->closeResultSet(fResult);
       fConn->terminateStatement(fStmt);
    }
-   
+
    if (fPool) {
       fPool->Delete();
-      delete fPool;   
+      delete fPool;
    }
 
    if (fFieldInfo)
       delete fFieldInfo;
 
    fResultType = 0;
-   
+
    fStmt = 0;
    fResult = 0;
    fFieldInfo = 0;
@@ -160,7 +160,7 @@ TSQLRow *TOracleResult::Next()
    // deleted by the user.
 
    if (!fResult || (fResultType!=1)) return 0;
-   
+
    if (fPool!=0) {
       TSQLRow* row = (TSQLRow*) fPool->First();
       if (row!=0) fPool->Remove(row);
@@ -170,12 +170,12 @@ TSQLRow *TOracleResult::Next()
    // if select query,
    try {
       if (fResult->next()) {
-         fRowCount++; 
+         fRowCount++;
          return new TOracleRow(fResult, fFieldInfo);
       } else
          return 0;
    } catch (SQLException &oraex) {
-      Error("Next()", (oraex.getMessage()).c_str());
+      Error("Next", "%s", (oraex.getMessage()).c_str());
       MakeZombie();
    }
    return 0;
@@ -185,22 +185,22 @@ TSQLRow *TOracleResult::Next()
 Int_t TOracleResult::GetRowCount() const
 {
    if (!fResult) return 0;
-   
+
    if (fPool==0) ((TOracleResult*) this)->ProducePool();
-   
-   return fRowCount; 
+
+   return fRowCount;
 }
 
 //______________________________________________________________________________
 void TOracleResult::ProducePool()
 {
    if (fPool!=0) return;
-   
+
    TList* pool = new TList;
    TSQLRow* res = 0;
    while ((res = Next()) !=0) {
       pool->Add(res);
-   } 
-       
+   }
+
    fPool = pool;
 }

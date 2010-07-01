@@ -55,7 +55,7 @@ TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
 }
 
 //______________________________________________________________________________
-TLDAPServer::TLDAPServer(const TLDAPServer& lds) : 
+TLDAPServer::TLDAPServer(const TLDAPServer& lds) :
    TObject(lds),
    fLd(lds.fLd),
    fBinddn(lds.fBinddn),
@@ -66,7 +66,7 @@ TLDAPServer::TLDAPServer(const TLDAPServer& lds) :
 }
 
 //______________________________________________________________________________
-TLDAPServer& TLDAPServer::operator=(const TLDAPServer& lds) 
+TLDAPServer& TLDAPServer::operator=(const TLDAPServer& lds)
 {
    // Equal operator
    if(this!=&lds) {
@@ -105,7 +105,7 @@ Int_t TLDAPServer::Bind()
                Error("Bind", "entry has no password to check");
                break;
             default :
-               Error("Bind", ldap_err2string(result));
+               Error("Bind", "%s", ldap_err2string(result));
                break;
          }
       } else {
@@ -271,12 +271,12 @@ TLDAPResult *TLDAPServer::Search(const char *base, Int_t scope,
          result = new TLDAPResult(fLd, searchresult);
       } else {
          ldap_msgfree(searchresult);
-         Error("Search", ldap_err2string(errcode));
+         Error("Search", "%s", ldap_err2string(errcode));
       }
 
    } else {
       errcode = LDAP_SERVER_DOWN;
-      Error("Search", "server is not connected");
+      Error("Search", "%s", "server is not connected");
    }
 
    return result;
@@ -297,7 +297,7 @@ Int_t TLDAPServer::AddEntry(TLDAPEntry &entry)
       errcode = ldap_add_s(fLd, entry.GetDn(), ms);
       TLDAPServer::DeleteMods(ms);
       if (errcode != LDAP_SUCCESS)
-         Error("AddEntry", ldap_err2string(errcode));
+         Error("AddEntry", "%s", ldap_err2string(errcode));
    } else {
       errcode = LDAP_SERVER_DOWN;
       Error("AddEntry", "server is not connected");
@@ -328,7 +328,7 @@ Int_t TLDAPServer::ModifyEntry(TLDAPEntry &entry, Int_t mode)
       errcode = ldap_modify_s(fLd, entry.GetDn(), ms);
       TLDAPServer::DeleteMods(ms);
       if (errcode != LDAP_SUCCESS)
-         Error("ModifyEntry", ldap_err2string(errcode));
+         Error("ModifyEntry", "%s", ldap_err2string(errcode));
    } else {
       errcode = LDAP_SERVER_DOWN;
       Error("ModifyEntry", "server is not connected");
@@ -349,7 +349,7 @@ Int_t TLDAPServer::DeleteEntry(const char *dn)
    if (IsConnected()) {
       errcode = ldap_delete_s(fLd, dn);
       if (errcode != LDAP_SUCCESS)
-         Error("DeleteEntry", ldap_err2string(errcode));
+         Error("DeleteEntry", "%s", ldap_err2string(errcode));
    } else {
       errcode = LDAP_SERVER_DOWN;
       Error("DeleteEntry", "server is not connected");
@@ -376,7 +376,7 @@ Int_t TLDAPServer::RenameEntry(const char *dn, const char *newrdn, Bool_t remove
    if (IsConnected()) {
       errcode = ldap_modrdn2_s(fLd, dn, newrdn, removeattr);
       if (errcode != LDAP_SUCCESS)
-         Error( "RenameEntry", ldap_err2string(errcode));
+         Error( "RenameEntry", "%s", ldap_err2string(errcode));
    } else {
       errcode = LDAP_SERVER_DOWN;
       Error("RenameEntry", "server is not connected");
