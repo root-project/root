@@ -117,7 +117,7 @@ Long64_t TZIPFile::FindEndHeader()
 
       fFile->Seek(pos);
       if (fFile->ReadBuffer(buf, n)) {
-         Error("FindEndHeader", "error reading %d bytes at %ldd", n, pos);
+         Error("FindEndHeader", "error reading %d bytes at %lld", n, pos);
          return 0;
       }
 
