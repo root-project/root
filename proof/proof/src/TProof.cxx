@@ -6784,15 +6784,32 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
 
       // check for SETUP.C and execute
       if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
+
+         // We need to change the name of the function to avoid problems when we load more packages
+         TString setup, setupfn;
+         setup.Form("%s_SETUP", pack);
+         setupfn.Form("%s/%s.C", gSystem->TempDirectory(), setup.Data());
+         TMacro setupmc("PROOF-INF/SETUP.C");
+         TObjString *setupline = setupmc.GetLineWith("SETUP(");
+         if (setupline) {
+            TString setupstring(setupline->GetString());
+            setupstring.ReplaceAll("SETUP(", TString::Format("%s(", setup.Data()));
+            setupline->SetString(setupstring);
+         } else {
+            // Macro does not contain SETUP()
+            Warning("LoadPackageOnClient", "macro '%s/PROOF-INF/SETUP.C' does not contain a SETUP()"
+                                           " function", pack);
+         }
+         setupmc.SaveSource(setupfn.Data());
          // Load the macro
-         if (gROOT->LoadMacro("PROOF-INF/SETUP.C") != 0) {
+         if (gROOT->LoadMacro(setupfn.Data()) != 0) {
             // Macro could not be loaded
             Error("LoadPackageOnClient", "macro '%s/PROOF-INF/SETUP.C' could not be loaded:"
                                          " cannot continue", pack);
             status = -1;
          } else {
             // Check the signature
-            TFunction *fun = (TFunction *) gROOT->GetListOfGlobalFunctions()->FindObject("SETUP");
+            TFunction *fun = (TFunction *) gROOT->GetListOfGlobalFunctions()->FindObject(setup);
             if (!fun) {
                // Notify the upper level
                Error("LoadPackageOnClient", "function SETUP() not found in macro '%s/PROOF-INF/SETUP.C':"
@@ -6803,7 +6820,7 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
                // Check the number of arguments
                if (fun->GetNargs() == 0) {
                   // No arguments (basic signature)
-                  callEnv.InitWithPrototype("SETUP","");
+                  callEnv.InitWithPrototype(setup,"");
                   // Warn that the argument (if any) if ignored
                   if (loadopts)
                      Warning("LoadPackageOnClient", "loaded SETUP() does not take any argument:"
@@ -6814,11 +6831,11 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
                      // Check argument type
                      TString argsig(arg->GetTitle());
                      if (argsig.BeginsWith("TList")) {
-                        callEnv.InitWithPrototype("SETUP","TList *");
+                        callEnv.InitWithPrototype(setup,"TList *");
                         callEnv.ResetParam();
                         callEnv.SetParam((Long_t) loadopts);
                      } else if (argsig.BeginsWith("const char")) {
-                        callEnv.InitWithPrototype("SETUP","const char *");
+                        callEnv.InitWithPrototype(setup,"const char *");
                         callEnv.ResetParam();
                         TObjString *os = loadopts ? dynamic_cast<TObjString *>(loadopts->First()) : 0;
                         if (os) {
@@ -6857,6 +6874,8 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
                }
             }
          }
+         // Remove the temporary macro file
+         if (!gSystem->AccessPathName(setupfn.Data())) gSystem->Unlink(setupfn.Data());
       } else {
          PDB(kPackage, 1)
             Info("LoadPackageOnClient",

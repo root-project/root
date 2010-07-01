@@ -4959,8 +4959,24 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
 
          // Check for SETUP.C and execute
          if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
+            // We need to change the name of the function to avoid problems when we load more packages
+            TString setup, setupfn;
+            setup.Form("%s_SETUP", package.Data());
+            setupfn.Form("%s/%s.C", gSystem->TempDirectory(), setup.Data());
+            TMacro setupmc("PROOF-INF/SETUP.C");
+            TObjString *setupline = setupmc.GetLineWith("SETUP(");
+            if (setupline) {
+               TString setupstring(setupline->GetString());
+               setupstring.ReplaceAll("SETUP(", TString::Format("%s(", setup.Data()));
+               setupline->SetString(setupstring);
+            } else {
+               // Macro does not contain SETUP()
+               SendAsynMessage(TString::Format("%s: warning: macro '%s/PROOF-INF/SETUP.C' does not contain a SETUP()"
+                                               " function", noth.Data(), package.Data()));
+            }
+            setupmc.SaveSource(setupfn.Data());
             // Load the macro
-            if (gROOT->LoadMacro("PROOF-INF/SETUP.C") != 0) {
+            if (gROOT->LoadMacro(setupfn.Data()) != 0) {
                // Macro could not be loaded
                SendAsynMessage(TString::Format("%s: error: macro '%s/PROOF-INF/SETUP.C' could not be loaded:"
                                                 " cannot continue",
@@ -4968,7 +4984,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                status = -1;
             } else {
                // Check the signature
-               TFunction *fun = (TFunction *) gROOT->GetListOfGlobalFunctions()->FindObject("SETUP");
+               TFunction *fun = (TFunction *) gROOT->GetListOfGlobalFunctions()->FindObject(setup);
                if (!fun) {
                   // Notify the upper level
                   SendAsynMessage(TString::Format("%s: error: function SETUP() not found in macro '%s/PROOF-INF/SETUP.C':"
@@ -4980,7 +4996,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                   // Check the number of arguments
                   if (fun->GetNargs() == 0) {
                      // No arguments (basic signature)
-                     callEnv.InitWithPrototype("SETUP","");
+                     callEnv.InitWithPrototype(setup.Data(),"");
                      if ((mess->BufferSize() > mess->Length())) {
                         (*mess) >> optls;
                         SendAsynMessage(TString::Format("%s: warning: loaded SETUP() does not take any argument:"
@@ -4994,11 +5010,11 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                         // Check argument type
                         TString argsig(arg->GetTitle());
                         if (argsig.BeginsWith("TList")) {
-                           callEnv.InitWithPrototype("SETUP","TList *");
+                           callEnv.InitWithPrototype(setup.Data(),"TList *");
                            callEnv.ResetParam();
                            callEnv.SetParam((Long_t) optls);
                         } else if (argsig.BeginsWith("const char")) {
-                           callEnv.InitWithPrototype("SETUP","const char *");
+                           callEnv.InitWithPrototype(setup.Data(),"const char *");
                            callEnv.ResetParam();
                            TObjString *os = optls ? dynamic_cast<TObjString *>(optls->First()) : 0;
                            if (os) {
@@ -5037,6 +5053,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                   }
                }
             }
+            if (!gSystem->AccessPathName(setupfn.Data())) gSystem->Unlink(setupfn.Data());
          }
 
          gSystem->ChangeDirectory(ocwd);
