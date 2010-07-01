@@ -647,10 +647,16 @@ G__value G__letvalue(G__value *p,G__value result)
     *(int *)(p->obj.i)=(int)G__int(result);
     break;
   case 'K':
-    *(unsigned long *)(p->obj.i)=(unsigned long)G__int(result);
+    *(unsigned long *)(p->obj.i)=(unsigned long)G__uint(result);
     break;
   case 'L':
     *(long *)(p->obj.i)=(long)G__int(result);
+    break;
+  case 'M':
+    *(G__uint64 *)(p->obj.i)=G__ULonglong(result);
+    break;
+  case 'N':
+    *(G__int64 *)(p->obj.i)=G__Longlong(result);
     break;
   case 'F':
     *(float *)(p->obj.i)=(float)G__double(result);
