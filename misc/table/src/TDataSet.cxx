@@ -150,7 +150,7 @@ TDataSet::TDataSet(const Char_t *name, TDataSet *parent, Bool_t arrayFlag)
 {
   //  cout << "ctor for " << GetName() << " - " << GetTitle() << endl;
    if (name && strchr(name,'/')) {
-      Error("TDataSet::TDataSet","dataset name cannot contain a slash", name);
+      Error("TDataSet::TDataSet","dataset name (%s) cannot contain a slash", name);
       return;
    }
    fList =0; fParent=0;

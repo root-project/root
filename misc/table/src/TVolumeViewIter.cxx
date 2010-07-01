@@ -64,7 +64,7 @@ TVolumePosition *TVolumeViewIter::operator[](Int_t level)
    const TVolumePosition *pos = GetPosition(level);
    if (pos) return new TVolumePosition(*pos);
    else {
-      Error("operator[]"," GetPosition: %d %d %x", level,fDepth, fPositions);
+      Error("operator[]"," GetPosition: %d %d 0x%lx", level,fDepth, (Long_t)fPositions);
       return 0;
    }
 }
