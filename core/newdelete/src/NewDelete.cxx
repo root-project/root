@@ -111,10 +111,10 @@ static TReAllocInit gReallocInit;
 #   define TestMagic(p, sz) (*((unsigned char*)(p)+sz) != MEM_MAGIC)
 #   define CheckMagic(p, s, where) \
       if (TestMagic(p, s))    \
-         Fatal(where, "storage area overwritten");
+         Fatal(where, "%s", "storage area overwritten");
 #   define CheckFreeSize(p, where) \
       if (storage_size((p)) > TStorage::GetMaxBlockSize()) \
-         Fatal(where, "unreasonable size (%ld)", storage_size(p));
+         Fatal(where, "unreasonable size (%ld)", (Long_t)storage_size(p));
 #   define RemoveStatMagic(p, where) \
       CheckFreeSize(p, where); \
       RemoveStat(p); \
