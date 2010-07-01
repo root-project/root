@@ -496,7 +496,7 @@ void TDirectoryFile::Close(Option_t *)
 {
    // -- Delete all objects from memory and directory structure itself.
 
-   if (!fList) {
+   if (!fList || !fSeekDir) {
       return;
    }
 
