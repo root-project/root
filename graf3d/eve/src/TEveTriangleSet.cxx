@@ -159,7 +159,7 @@ TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
 
    FILE* f = fopen(file, "r");
    if (f == 0) {
-      ::Error(kEH, Form("file '%s' not found.", file));
+      ::Error(kEH, "file '%s' not found.", file);
       return 0;
    }
 
@@ -185,4 +185,3 @@ TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
 
    return ts;
 }
-

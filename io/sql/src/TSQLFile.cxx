@@ -1435,7 +1435,7 @@ TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag, Bool_t* ok)
 
    if (fSQL==0) return 0;
 
-   if (gDebug>2) Info("SQLQuery",cmd);
+   if (gDebug>2) Info("SQLQuery", "%s", cmd);
 
    fQuerisCounter++;
 
@@ -1479,7 +1479,7 @@ TSQLStatement* TSQLFile::SQLStatement(const char* cmd, Int_t bufsize)
    if (!fSQL->HasStatement()) return 0;
 
    if (gDebug>1)
-      Info("SQLStatement",cmd);
+      Info("SQLStatement", "%s", cmd);
 
    fStmtCounter++;
    fQuerisCounter++; // one statement counts as one query
@@ -1526,7 +1526,7 @@ Bool_t TSQLFile::SQLTestTable(const char* tablename)
    if (fSQL==0) return kFALSE;
 
    if (fSQL->HasTable(tablename)) return kTRUE;
-   
+
    TString buf(tablename);
    buf.ToLower();
    if (fSQL->HasTable(buf.Data())) return kTRUE;
@@ -2176,7 +2176,7 @@ Bool_t TSQLFile::CreateRawTable(TSQLClassInfo* sqlinfo)
    const char* quote = SQLIdentifierQuote();
 
    if (gDebug>2)
-      Info("CreateRawTable", sqlinfo->GetName());
+      Info("CreateRawTable", "%s", sqlinfo->GetName());
 
    TString sqlcmd;
 
@@ -2412,7 +2412,7 @@ TObjArray* TSQLFile::SQLObjectsInfo(Long64_t keyid)
 
    if (fLogFile!=0)
       *fLogFile << sqlcmd << endl;
-   if (gDebug>2) Info("SQLObjectsInfo",sqlcmd);
+   if (gDebug>2) Info("SQLObjectsInfo", "%s", sqlcmd.Data());
    fQuerisCounter++;
 
    TSQLStatement* stmt = SQLStatement(sqlcmd.Data(), 1000);
@@ -2517,7 +2517,7 @@ TSQLStatement* TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo* sql
 
    if (fLogFile!=0)
       *fLogFile << sqlcmd << endl;
-   if (gDebug>2) Info("BuildStatement",sqlcmd);
+   if (gDebug>2) Info("BuildStatement", "%s", sqlcmd.Data());
    fQuerisCounter++;
 
    TSQLStatement* stmt = SQLStatement(sqlcmd.Data(), 1000);

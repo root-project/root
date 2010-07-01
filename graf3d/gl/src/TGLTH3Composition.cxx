@@ -77,7 +77,7 @@ void TGLTH3Composition::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 char *TGLTH3Composition::GetObjectInfo(Int_t /*px*/, Int_t /*py*/) const
 {
-   //I cannot show bin content in a status bar - 
+   //I cannot show bin content in a status bar -
    //since there can be several bins in one.
    static char message[] = "TH3 composition";
    return message;
@@ -104,7 +104,7 @@ void TGLTH3Composition::Paint(Option_t * /*option*/)
 ClassImp(TGLTH3CompositionPainter)
 
 //______________________________________________________________________________
-TGLTH3CompositionPainter::TGLTH3CompositionPainter(TGLTH3Composition *data, TGLPlotCamera *cam, 
+TGLTH3CompositionPainter::TGLTH3CompositionPainter(TGLTH3Composition *data, TGLPlotCamera *cam,
                                                    TGLPlotCoordinates *coord)
                              : TGLPlotPainter(data, cam, coord, kFALSE, kFALSE, kFALSE),
                                fData(data)
@@ -145,7 +145,7 @@ Bool_t TGLTH3CompositionPainter::InitGeometry()
                                          fCoord->GetFirstYBin(),
                                          fCoord->GetFirstZBin());
    fMinMaxVal.first = fMinMaxVal.second;
-   
+
    for (UInt_t hNum = 0, lastH = fData->fHists.size(); hNum < lastH; ++hNum) {
       h = fData->fHists[hNum].first;
       for (Int_t ir = fCoord->GetFirstXBin(); ir <= fCoord->GetLastXBin(); ++ir) {
@@ -184,7 +184,7 @@ void TGLTH3CompositionPainter::Pan(Int_t px, Int_t py)
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
-      
+
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
@@ -197,15 +197,15 @@ void TGLTH3CompositionPainter::Pan(Int_t px, Int_t py)
       py = fCamera->GetHeight() - py;
       SaveModelviewMatrix();
       SaveProjectionMatrix();
-      
+
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
-      
+
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
             fBoxCut.MoveBox(px, py, fSelectedPart);
       }
-      
+
       RestoreProjectionMatrix();
       RestoreModelviewMatrix();
    }
@@ -403,7 +403,7 @@ namespace {
 //______________________________________________________________________________
 void AxisError(const TString & errorMsg)
 {
-   Error("TGLTH3Composition::AddTH3", errorMsg.Data());
+   Error("TGLTH3Composition::AddTH3", "%s", errorMsg.Data());
    throw std::runtime_error(errorMsg.Data());
 }
 
@@ -413,7 +413,7 @@ void CompareAxes(const TAxis *a1, const TAxis *a2, const TString &axisName)
    //Check number of bins.
    if (a1->GetNbins() != a2->GetNbins())
       AxisError("New hist has different number of bins along " + axisName);
-   
+
    //Check bin ranges.
    const Int_t firstBin1 = a1->GetFirst(), lastBin1 = a1->GetLast();
    const Int_t firstBin2 = a2->GetFirst(), lastBin2 = a2->GetLast();

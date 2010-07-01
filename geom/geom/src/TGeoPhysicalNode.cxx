@@ -12,34 +12,34 @@
 //_____________________________________________________________________________
 // TGeoPhysicalNode, TGeoPNEntry
 //
-// Physical nodes are the actual 'touchable' objects in the geometry, representing 
-// a path of positioned volumes starting with the top node: 
+// Physical nodes are the actual 'touchable' objects in the geometry, representing
+// a path of positioned volumes starting with the top node:
 //    path=/TOP/A_1/B_4/C_3 , where A, B, C represent names of volumes.
-// The number of physical nodes is given by the total number of possible of 
-// branches in the geometry hierarchy. In case of detector geometries and 
-// specially for calorimeters this number can be of the order 1e6-1e9, therefore 
-// it is impossible to create all physical nodes as objects in memory. In TGeo, 
-// physical nodes are represented by the class TGeoPhysicalNode and can be created 
+// The number of physical nodes is given by the total number of possible of
+// branches in the geometry hierarchy. In case of detector geometries and
+// specially for calorimeters this number can be of the order 1e6-1e9, therefore
+// it is impossible to create all physical nodes as objects in memory. In TGeo,
+// physical nodes are represented by the class TGeoPhysicalNode and can be created
 // on demand for alignment purposes:
 //
 //    TGeoPhysicalNode *pn = new TGeoPhysicalNode("path_to_object")
 //
-// Once created, a physical node can be misaligned, meaning that its position 
+// Once created, a physical node can be misaligned, meaning that its position
 // or even shape can be changed:
 //
 //    pn->Align(TGeoMatrix* newmat, TGeoShape* newshape, Bool_t check=kFALSE)
 //
-// The knowledge of the path to the objects that need to be misaligned is 
-// essential since there is no other way of identifying them. One can however 
+// The knowledge of the path to the objects that need to be misaligned is
+// essential since there is no other way of identifying them. One can however
 // create 'symbolic links' to any complex path to make it more representable
 // for the object it designates:
 //
 //    TGeoPNEntry *pne = new TGeoPNEntry("TPC_SECTOR_2", "path_to_tpc_sect2");
 //    pne->SetPhysicalNode(pn)
 //
-// Such a symbolic link hides the complexity of the path to the align object and 
+// Such a symbolic link hides the complexity of the path to the align object and
 // replaces it with a more meaningful name. In addition, TGeoPNEntry objects are
-// faster to search by name and they may optionally store an additional user 
+// faster to search by name and they may optionally store an additional user
 // matrix.
 //
 // For more details please read the misalignment section in the Users Guide.
@@ -86,7 +86,7 @@ TGeoPhysicalNode::TGeoPhysicalNode(const char *path) : TNamed(path,"")
    fMatrices = new TObjArray(30);
    fNodes    = new TObjArray(30);
    fMatrixOrig   = 0;
-   SetPath(path);   
+   SetPath(path);
    SetVisibility(kTRUE);
    SetVisibleFull(kFALSE);
    SetIsVolAtt(kTRUE);
@@ -101,7 +101,7 @@ TGeoPhysicalNode::TGeoPhysicalNode(const TGeoPhysicalNode& gpn) :
   fMatrices(gpn.fMatrices),
   fNodes(gpn.fNodes),
   fMatrixOrig(gpn.fMatrixOrig)
-{ 
+{
    //copy constructor
 }
 
@@ -116,7 +116,7 @@ TGeoPhysicalNode& TGeoPhysicalNode::operator=(const TGeoPhysicalNode& gpn)
       fMatrices=gpn.fMatrices;
       fNodes=gpn.fNodes;
       fMatrixOrig=gpn.fMatrixOrig;
-   } 
+   }
    return *this;
 }
 
@@ -127,7 +127,7 @@ TGeoPhysicalNode::~TGeoPhysicalNode()
    if (fMatrices) {
       fMatrices->Delete();
       delete fMatrices;
-   }   
+   }
    if (fNodes) delete fNodes;
    if (fMatrixOrig) delete fMatrixOrig;
 }
@@ -153,10 +153,10 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    if (node->IsOffset()) {
       Error("Align", "Cannot align division nodes: %s\n",node->GetName());
       return;
-   }   
+   }
    TGeoNode *nnode = 0;
    TGeoVolume *vm = GetVolume(0);
-   TGeoVolume *vd = 0;   
+   TGeoVolume *vd = 0;
    Int_t i;
    if (!IsAligned()) {
       Int_t *id = new Int_t[fLevel];
@@ -170,7 +170,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
             delete [] id;
             return;
          }
-      }            
+      }
       for (i=0; i<fLevel; i++) {
          // Get daughter node and its id inside vm
          node = GetNode(i+1);
@@ -191,14 +191,14 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
       delete [] id;
    } else {
       nnode = GetNode();
-   }         
+   }
    // Now nnode is a cloned node of the one that need to be aligned
    TGeoNodeMatrix *aligned = (TGeoNodeMatrix*)nnode;
    vm = nnode->GetMotherVolume();
    vd = nnode->GetVolume();
    if (newmat) {
       // Register matrix and make it the active one
-      if (!newmat->IsRegistered()) newmat->RegisterYourself();    
+      if (!newmat->IsRegistered()) newmat->RegisterYourself();
       aligned->SetMatrix(newmat);
       // Update the global matrix for the aligned node
       TGeoHMatrix *global = GetMatrix();
@@ -216,7 +216,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
       vd->GetShape()->ComputeBBox();
       if (vd->GetVoxels()) vd->GetVoxels()->SetNeedRebuild();
    }
-      
+
    // Now we have to re-voxelize the mother volume
    TGeoVoxelFinder *voxels = vm->GetVoxels();
    if (voxels) voxels->SetNeedRebuild();
@@ -225,32 +225,32 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
       if (voxels) {
          voxels->Voxelize();
          vm->FindOverlaps();
-      }   
+      }
       // Set aligned node to be checked
       i = fLevel;
       node = GetNode(i);
       if (node->IsOverlapping()) {
-         Info("Align", "The check for overlaps for node: \n%s\n cannot be performed since the node is declared possibly overlapping", 
+         Info("Align", "The check for overlaps for node: \n%s\n cannot be performed since the node is declared possibly overlapping",
               GetName());
-      } else {        
+      } else {
          gGeoManager->SetCheckedNode(node);
          // Check overlaps for the first non-assembly parent node
          while ((node=GetNode(--i))) {
             if (!node->GetVolume()->IsAssembly()) break;
-         }   
+         }
          if (node && node->IsOverlapping()) {
             Info("Align", "The check for overlaps for assembly node: \n%s\n cannot be performed since the parent %s is declared possibly overlapping",
                  GetName(), node->GetName());
             node = 0;
-         }      
+         }
          if (node) node->CheckOverlaps(ovlp);
          gGeoManager->SetCheckedNode(0);
       }
-   }      
+   }
    // Clean current matrices from cache
    gGeoManager->CdTop();
    SetAligned(kTRUE);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoPhysicalNode::cd() const
@@ -271,7 +271,7 @@ TGeoNode *TGeoPhysicalNode::GetMother(Int_t levup) const
    Int_t ind = fLevel-levup;
    if (ind<0) return 0;
    return (TGeoNode*)fNodes->UncheckedAt(ind);
-}   
+}
 
 //_____________________________________________________________________________
 TGeoHMatrix *TGeoPhysicalNode::GetMatrix(Int_t level) const
@@ -289,7 +289,7 @@ TGeoNode *TGeoPhysicalNode::GetNode(Int_t level) const
    if (level<0) return (TGeoNode*)fNodes->UncheckedAt(fLevel);
    if (level>fLevel) return 0;
    return (TGeoNode*)fNodes->UncheckedAt(level);
-}   
+}
 
 //_____________________________________________________________________________
 TGeoVolume *TGeoPhysicalNode::GetVolume(Int_t level) const
@@ -307,7 +307,7 @@ TGeoShape *TGeoPhysicalNode::GetShape(Int_t level) const
    TGeoVolume *vol = GetVolume(level);
    if (vol) return vol->GetShape();
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoPhysicalNode::Paint(Option_t * /*option*/)
@@ -331,12 +331,12 @@ void TGeoPhysicalNode::Print(Option_t * /*option*/) const
       printf(" global matrix:\n");
       if (GetMatrix(i)->IsIdentity()) printf("   IDENTITY\n");
       else GetMatrix(i)->Print();
-   }   
+   }
    if (IsAligned() && fMatrixOrig) {
       printf(" original local matrix:\n");
       fMatrixOrig->Print();
    }
-}      
+}
 
 //_____________________________________________________________________________
 void TGeoPhysicalNode::Refresh()
@@ -344,7 +344,7 @@ void TGeoPhysicalNode::Refresh()
 // Refresh this physical node. Called for all registered physical nodes
 // after an Align() call.
    SetPath(fName.Data());
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoPhysicalNode::SetBranchAsState()
@@ -358,7 +358,7 @@ void TGeoPhysicalNode::SetBranchAsState()
    if (!cache->IsDummy()) {
       Error("SetBranchAsState", "not implemented for full cache");
       return;
-   }      
+   }
    if (!fNodes)    fNodes = new TObjArray(30);
    if (!fMatrices) fMatrices = new TObjArray(30);
    TGeoHMatrix **matrices = (TGeoHMatrix **) cache->GetMatrices();
@@ -374,11 +374,11 @@ void TGeoPhysicalNode::SetBranchAsState()
       }
       return;
    }
-   fLevel = gGeoManager->GetLevel();   
+   fLevel = gGeoManager->GetLevel();
    for (Int_t i=0; i<=fLevel; i++) {
       fNodes->AddAtAndExpand(branch[i],i);
       fMatrices->AddAtAndExpand(new TGeoHMatrix(*matrices[i]),i);
-   }   
+   }
    TGeoNode *node = (TGeoNode*)fNodes->UncheckedAt(fLevel);
    if (!fMatrixOrig) fMatrixOrig = new TGeoHMatrix();
    *fMatrixOrig = node->GetMatrix();
@@ -392,7 +392,7 @@ void TGeoPhysicalNode::SetMatrixOrig(const TGeoMatrix *local)
    if (!fMatrixOrig) fMatrixOrig = new TGeoHMatrix();
    if (!local) fMatrixOrig->Clear();
    *fMatrixOrig = local;
-}   
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoPhysicalNode::SetPath(const char *path)
@@ -424,10 +424,10 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
 // Default constructor
    if (!gGeoManager || !gGeoManager->IsClosed() || !gGeoManager->CheckPath(path)) {
       TString errmsg("Cannot define a physical node link without a closed geometry and a valid path !");
-      Error("ctor", errmsg.Data());
+      Error("ctor", "%s", errmsg.Data());
       throw errmsg;
       return;
-   }   
+   }
    gGeoManager->PushPath();
    gGeoManager->cd(path);
    fGlobalOrig = new TGeoHMatrix();
@@ -444,7 +444,7 @@ TGeoPNEntry::~TGeoPNEntry()
    if (fMatrix && !fMatrix->IsRegistered()) delete fMatrix;
    delete fGlobalOrig;
 }
-   
+
 //_____________________________________________________________________________
 void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
 {
@@ -453,9 +453,9 @@ void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
       Warning("SetPhysicalNode", "Physical node changed for entry %s", GetName());
       Warning("SetPhysicalNode", "=== New path: %s", node->GetName());
    }
-   fNode = node;   
+   fNode = node;
 }
-   
+
 //_____________________________________________________________________________
 void TGeoPNEntry::SetMatrix(const TGeoHMatrix *mat)
 {
@@ -463,4 +463,3 @@ void TGeoPNEntry::SetMatrix(const TGeoHMatrix *mat)
 // by this class unless registered by the user to gGeoManager
    fMatrix = mat;
 }
-

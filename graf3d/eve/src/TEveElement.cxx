@@ -664,7 +664,7 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
       if (gEve->GetUseOrphanage())
       {
          if (gDebug > 0)
-            Info(eh, Form("moving to orphanage '%s' on zero reference count.", GetElementName()));
+            Info(eh, "moving to orphanage '%s' on zero reference count.", GetElementName());
 
          PreDeleteElement();
          gEve->GetOrphanage()->AddElement(this);
@@ -672,7 +672,7 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
       else
       {
          if (gDebug > 0)
-            Info(eh, Form("auto-destructing '%s' on zero reference count.", GetElementName()));
+            Info(eh, "auto-destructing '%s' on zero reference count.", GetElementName());
 
          PreDeleteElement();
          delete this;
@@ -1659,7 +1659,7 @@ void TEveElement::DestroyOrWarn()
    }
    catch (TEveException& exc)
    {
-      Warning(eh, exc);
+      Warning(eh, "%s", exc.Data());
    }
 }
 
@@ -1678,15 +1678,14 @@ void TEveElement::DestroyElements()
             c->Destroy();
          }
          catch (TEveException exc) {
-            Warning(eh, Form("element destruction failed: '%s'.", exc.Data()));
+            Warning(eh, "element destruction failed: '%s'.", exc.Data());
             RemoveElement(c);
          }
       }
       else
       {
          if (gDebug > 0)
-            Info(eh, Form("element '%s' is protected agains destruction, removing locally.",
-			  c->GetElementName()));
+            Info(eh, "element '%s' is protected agains destruction, removing locally.", c->GetElementName());
          RemoveElement(c);
       }
    }

@@ -14,13 +14,13 @@
 // TGeoCompositeShape - class handling Boolean composition of shapes
 //
 //   Composite shapes are Boolean combination of two or more shape
-// components. The supported boolean operations are union (+), intersection (*) 
-// and subtraction. Composite shapes derive from the base TGeoShape class, 
-// therefore providing all shape features : computation of bounding box, finding 
+// components. The supported boolean operations are union (+), intersection (*)
+// and subtraction. Composite shapes derive from the base TGeoShape class,
+// therefore providing all shape features : computation of bounding box, finding
 // if a given point is inside or outside the combination, as well as computing the
 // distance to entering/exiting. It can be directly used for creating volumes or
-// used in the definition of other composite shapes. 
-//   Composite shapes are provided in order to complement and extend the set of 
+// used in the definition of other composite shapes.
+//   Composite shapes are provided in order to complement and extend the set of
 // basic shape primitives. They have a binary tree internal structure, therefore
 // all shape-related geometry queries are signals propagated from top level down
 // to the final leaves, while the provided answers are assembled and interpreted
@@ -34,7 +34,7 @@
 // between only two shape components. All information identifying these two
 // components as well as their positions with respect to the frame of the composite
 // is represented by an object called Boolean node. A composite shape just have
-// a pointer to such a Boolean node. Since the shape components may also be 
+// a pointer to such a Boolean node. Since the shape components may also be
 // composites, they will also contain binary Boolean nodes branching other two
 // shapes in the hierarcy. Any such branch ends-up when the final leaves are no
 // longer composite shapes, but basic primitives.
@@ -48,9 +48,9 @@
 //   Suppose that A, B, C and D represent basic shapes, we will illustrate
 // how the internal representation of few combinations look like. We do this
 // only for the sake of understanding how to create them in a proper way, since
-// the user interface for this purpose is in fact very simple. We will ignore 
+// the user interface for this purpose is in fact very simple. We will ignore
 // for the time being the positioning of components. The definition of a composite
-// shape takes an expression where the identifiers are shape names. The 
+// shape takes an expression where the identifiers are shape names. The
 // expression is parsed and decomposed in 2 sub-expressions and the top-level
 // Boolean operator.
 //
@@ -94,22 +94,22 @@
 //                       [A+B] = (+)
 //                      |           |
 //   [(A+B)\(C+D)] = (\)           C B
-//                      |         |  
+//                      |         |
 //                       [C+D]=(+)
 //                                |
 //                                 D
 //
 //      TGeoCompositeShape *cs2 = new TGeoCompositeShape("CS2", "(A+B)\(C+D)");
-//   
+//
 //   Building composite shapes as in the 2 examples above is not always quite
 // usefull since we were using unpositioned shapes. When suplying just shape
 // names as identifiers, the created boolean nodes will assume that the shapes
 // are positioned with an identity transformation with respect to the frame of
 // the created composite. In order to provide some positioning of the combination
-// components, we have to attach after each shape identifier the name of an 
-// existing transformation, separated by a colon. Obviously all transformations 
-// created for this purpose have to be objects with unique names in order to be 
-// properly substituted during parsing. 
+// components, we have to attach after each shape identifier the name of an
+// existing transformation, separated by a colon. Obviously all transformations
+// created for this purpose have to be objects with unique names in order to be
+// properly substituted during parsing.
 //   Let's look at the code implementing the second example :
 //
 //      TGeoTranslation *t1 = new TGeoTranslation("T1",0,0,-20);
@@ -121,10 +121,10 @@
 //      TGeoTube *b = new TGeoTube(0, 20,20);
 //      b->SetName("B");
 //      TGeoBBox *c = new TGeoBBox(10,10,50);
-//      c->SetName("C");              
+//      c->SetName("C");
 //      TGeoBBox *d = new TGeoBBox(50,10,10);
 //      d->SetName("D");
-//      
+//
 //      TGeoCompositeShape *cs;
 //      cs = new TGeoCompositeShape("CS", "(A:t1+B:t2)\(C+D:r1)");
 //
@@ -166,7 +166,7 @@ TGeoCompositeShape::TGeoCompositeShape()
 // Default constructor
    SetShapeBit(TGeoShape::kGeoComb);
    fNode  = 0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
@@ -182,7 +182,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
       return;
    }
    ComputeBBox();
-}  
+}
 
 //_____________________________________________________________________________
 TGeoCompositeShape::TGeoCompositeShape(const char *expression)
@@ -195,11 +195,11 @@ TGeoCompositeShape::TGeoCompositeShape(const char *expression)
    if (!fNode) {
       char message[256];
       sprintf(message, "Composite (no name) could not parse expression %s", expression);
-      Error("ctor", message);
+      Error("ctor", "%s", message);
       return;
    }
    ComputeBBox();
-}  
+}
 
 //_____________________________________________________________________________
 TGeoCompositeShape::TGeoCompositeShape(const char *name, TGeoBoolNode *node)
@@ -237,17 +237,17 @@ Double_t TGeoCompositeShape::Capacity() const
       pt[2] = fOrigin[2]-fDZ+2*fDZ*gRandom->Rndm();
       igen++;
       if (Contains(pt)) iin++;
-   }      
+   }
    Double_t capacity = iin*vbox/igen;
    return capacity;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoCompositeShape::ComputeBBox()
 {
 // compute bounding box of the sphere
    if(fNode) fNode->ComputeBBox(fDX, fDY, fDZ, fOrigin);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoCompositeShape::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
@@ -282,7 +282,7 @@ Double_t TGeoCompositeShape::DistFromOutside(Double_t *point, Double_t *dir, Int
    if (sdist>=step) return TGeoShape::Big();
    if (fNode) return fNode->DistFromOutside(point, dir, iact, step, safe);
    return TGeoShape::Big();
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoCompositeShape::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
@@ -291,16 +291,16 @@ Double_t TGeoCompositeShape::DistFromInside(Double_t *point, Double_t *dir, Int_
 // Compute distance from inside point to outside of this composite shape.
    if (fNode) return fNode->DistFromInside(point, dir, iact, step, safe);
    return TGeoShape::Big();
-}   
+}
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume  * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, 
-                                       Int_t /*ndiv*/, Double_t /*start*/, Double_t /*step*/) 
+TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume  * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/,
+                                       Int_t /*ndiv*/, Double_t /*start*/, Double_t /*step*/)
 {
-// Divide all range of iaxis in range/step cells 
+// Divide all range of iaxis in range/step cells
    Error("Divide", "Composite shapes cannot be divided");
    return 0;
-}      
+}
 
 //_____________________________________________________________________________
 void TGeoCompositeShape::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
@@ -336,13 +336,13 @@ void TGeoCompositeShape::MakeNode(const char *expression)
       // fail
       Error("MakeNode", "parser error");
       return;
-   }   
+   }
    if (smat.Length())
       Warning("MakeNode", "no geometrical transformation allowed at this level");
    switch (boolop) {
-      case 0: 
+      case 0:
          Error("MakeNode", "Expression has no boolean operation");
-         return;    
+         return;
       case 1:
          fNode = new TGeoUnion(sleft.Data(), sright.Data());
          return;
@@ -352,7 +352,7 @@ void TGeoCompositeShape::MakeNode(const char *expression)
       case 3:
          fNode = new TGeoIntersection(sleft.Data(), sright.Data());
    }
-}               
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
@@ -377,16 +377,16 @@ Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
                    preferLocal);
 
       Bool_t paintComponents = kTRUE;
-      
+
       // Start a composite shape, identified by this buffer
-      if (!TBuffer3D::GetCSLevel()) 
+      if (!TBuffer3D::GetCSLevel())
          paintComponents = viewer->OpenComposite(buffer, &addChildren);
 
       TBuffer3D::IncCSLevel();
 
       // Paint the boolean node - will add more buffers to viewer
       TGeoHMatrix *matrix = (TGeoHMatrix*)TGeoShape::GetTransform();
-      TGeoHMatrix backup(*matrix); 
+      TGeoHMatrix backup(*matrix);
       if (preferLocal) matrix->Clear();
       if (paintComponents) fNode->Paint(option);
       if (preferLocal) *matrix = backup;
@@ -426,7 +426,7 @@ void TGeoCompositeShape::RegisterYourself()
          } else {
             gGeoManager->AddShape(shape);
          }
-      }   
+      }
       shape = fNode->GetRightShape();
       if (!gGeoManager->GetListOfShapes()->FindObject(shape)) {
          if (shape->IsComposite()) {
@@ -435,7 +435,7 @@ void TGeoCompositeShape::RegisterYourself()
          } else {
             gGeoManager->AddShape(shape);
          }
-      }   
+      }
    }
 }
 
@@ -454,7 +454,7 @@ void TGeoCompositeShape::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    if (fNode) fNode->SavePrimitive(out,option);
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;   
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
    out << "   TGeoShape *" << GetPointerName() << " = new TGeoCompositeShape(\"" << GetName() << "\", pBoolNode);" << endl;
    if (strlen(GetTitle())) out << "   " << GetPointerName() << "->SetTitle(\"" << GetTitle() << "\");" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
@@ -487,5 +487,4 @@ Int_t TGeoCompositeShape::GetNmeshVertices() const
 // Return number of vertices of the mesh representation
    if (!fNode) return 0;
    return fNode->GetNpoints();
-}      
-
+}

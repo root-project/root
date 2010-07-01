@@ -459,7 +459,7 @@ void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*ps
    TGLUtil::LockColor();
    try
    {
-      if (!fM->fData->GetCellsHighlighted().empty()) 
+      if (!fM->fData->GetCellsHighlighted().empty())
       {
          glColor4ubv(rnrCtx.ColorSet().Selection(3).CArr());
 
@@ -484,7 +484,7 @@ void TEveCalo2DGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*ps
    }
    catch (TEveException& exc)
    {
-      Warning(eh, exc);
+      Warning(eh, "%s", exc.what());
    }
 
    TGLUtil::UnlockColor();

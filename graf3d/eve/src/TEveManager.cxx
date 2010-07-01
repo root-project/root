@@ -229,7 +229,7 @@ TEveManager::~TEveManager()
 
    fBrowser->Disconnect("CloseWindow()", this, "CloseEveWindow()");
    fBrowser->GetMainFrame()->DontCallClose();
-   fBrowser->GetMainFrame()->CloseWindow(); 
+   fBrowser->GetMainFrame()->CloseWindow();
 }
 
 //______________________________________________________________________________
@@ -967,7 +967,7 @@ TEveManager::TExceptionHandler::Handle(std::exception& exc)
 
    TEveException* ex = dynamic_cast<TEveException*>(&exc);
    if (ex) {
-      Info("Handle", ex->Data());
+      Info("Handle", "%s", ex->Data());
       gEve->SetStatusLine(ex->Data());
       gSystem->Beep();
       return kSEHandled;

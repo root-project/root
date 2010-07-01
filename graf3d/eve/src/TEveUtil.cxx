@@ -224,7 +224,7 @@ void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], Char_t transparency)
 
    UChar_t alpha = (255*(100 - transparency))/100;
 
-   TColor* c = gROOT->GetColor(ci);   
+   TColor* c = gROOT->GetColor(ci);
    if (c)
    {
       col[0] = (UChar_t)(255*c->GetRed());
@@ -609,8 +609,8 @@ void TEveRefBackPtr::DecRefCount(TEveElement* re)
       fBackRefs.erase(i);
       TEveRefCnt::DecRefCount();
    } else {
-      Warning(eh, Form("render element '%s' not found in back-refs.",
-                       re->GetObject(eh)->GetName()));
+      Warning(eh, "render element '%s' not found in back-refs.",
+                  re->GetObject(eh)->GetName());
    }
 }
 
