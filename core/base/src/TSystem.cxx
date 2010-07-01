@@ -2019,7 +2019,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
 
             Ssiz_t start, index, end;
             start = index = end = 0;
-            
+
             while ((start < slinked.Length()) && (index != kNPOS)) {
                index = slinked.Index(separator,&end,start);
                if (index >= 0) {
@@ -2424,7 +2424,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
          } else {
             // Case of dir\\name
             R__AddPath(builddep, build_loc.Data() + len + 2 );
-         }         
+         }
          builddep += "/\" ";
       }
    } else {
@@ -2452,7 +2452,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
          if (library[len] == '/') {
             R__AddPath(adddictdep,library.Data() + len + 1);
          } else {
-            R__AddPath(adddictdep,library.Data() + len + 2);            
+            R__AddPath(adddictdep,library.Data() + len + 2);
          }
       } else {
          R__AddPath(adddictdep,library);
@@ -2485,9 +2485,9 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    addversiondep += libname + version_var_prefix + " \"" + ROOT_RELEASE + "\" >> \""+depfilename+"\"";
 
    if (gDebug > 4)  {
-      ::Info("ACLiC",touch.Data());
-      ::Info("ACLiC",builddep.Data());
-      ::Info("ACLiC",adddictdep.Data());
+      ::Info("ACLiC", "%s", touch.Data());
+      ::Info("ACLiC", "%s", builddep.Data());
+      ::Info("ACLiC", "%s", adddictdep.Data());
    }
 
    Int_t depbuilt = !gSystem->Exec(touch);
@@ -2521,7 +2521,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    //     g : compile with debug symbol
    //     O : optimized the code (ignore if 'g' is specified)
    //     c : compile only, do not attempt to load the library.
-   //     - : if buildir is set, use a flat structure (see buildir below) 
+   //     - : if buildir is set, use a flat structure (see buildir below)
    //
    // If library_specified is specified, CompileMacro generates the file
    // "library_specified".soext where soext is the shared library extension for
@@ -2529,7 +2529,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    //
    // If build_dir is specified, it is used as an alternative 'root' for the
    // generation of the shared library.  The library is stored in a sub-directories
-   // of 'build_dir' including the full pathname of the script unless a flat 
+   // of 'build_dir' including the full pathname of the script unless a flat
    // directory structure is requested ('-' option).  With the '-' option the libraries
    // are created directly in the directory 'build_dir'; in particular this means that
    // 2 scripts with the same name in different source directory will over-write each
@@ -2676,11 +2676,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    incPath.Prepend(":.:");
    incPath.Prepend(WorkingDirectory());
-   
+
    // ======= Get the right file names for the dictionnary and the shared library
    TString library = filename;
    ExpandPathName( library );
-   if (! IsAbsoluteFileName(library) ) 
+   if (! IsAbsoluteFileName(library) )
    {
       const char *whichlibrary = Which(incPath,library);
       if (whichlibrary) {
@@ -2693,7 +2693,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    } else {
       if (gSystem->AccessPathName(filename)) {
          ::Error("ACLiC","The file %s can not be found.",filename);
-         return kFALSE;         
+         return kFALSE;
       }
    }
    { // Remove multiple '/' characters, rootcint treats them as comments.
@@ -2775,13 +2775,13 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       } else {
          AssignAndDelete( library, ConcatFileName( build_loc, library) );
       }
-      
+
       Bool_t canWriteBuild_loc = !gSystem->AccessPathName(build_loc,kWritePermission);
       TString build_loc_store( build_loc );
       if (!flatBuildDir) {
          AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
       }
-      
+
       if (gSystem->AccessPathName(build_loc,kFileExists)) {
          mkdirFailed = (0 != mkdir(build_loc, true));
          if (mkdirFailed && !canWriteBuild_loc) {
@@ -3266,7 +3266,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Run rootcint
    if (gDebug>3) {
       ::Info("ACLiC","creating the dictionary files");
-      if (gDebug>4)  ::Info("ACLiC",rcint.Data());
+      if (gDebug>4)  ::Info("ACLiC", "%s", rcint.Data());
    }
 
    Int_t dictResult = gSystem->Exec(rcint);
@@ -3414,7 +3414,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    if (result) {
       if (gDebug>3) {
          ::Info("ACLiC","compiling the dictionary and script files");
-         if (gDebug>4)  ::Info("ACLiC",cmd.Data());
+         if (gDebug>4)  ::Info("ACLiC", "%s", cmd.Data());
       }
       Int_t compilationResult = gSystem->Exec( cmd );
       if (compilationResult) {
@@ -3486,7 +3486,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (mode==kDebug) comp.ReplaceAll("$Opt",fFlagsDebug);
          else comp.ReplaceAll("$Opt",fFlagsOpt);
 
-         if (gDebug>4)  ::Info("ACLiC",comp.Data());
+         if (gDebug>4)  ::Info("ACLiC", "%s", comp.Data());
 
          Int_t compilationResult = gSystem->Exec( comp );
 
@@ -3533,7 +3533,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if ( !result ) {
          if (gDebug>3) {
             ::Info("ACLiC","testing for missing symbols:");
-            if (gDebug>4)  ::Info("ACLiC",testcmd.Data());
+            if (gDebug>4)  ::Info("ACLiC", "%s", testcmd.Data());
          }
          gSystem->Exec(testcmd);
          gSystem->Unlink( exec );
@@ -3568,7 +3568,7 @@ Int_t TSystem::GetAclicProperties() const
 {
    // Return the ACLiC properties field.   See EAclicProperties for details
    // on the semantic of each bit.
-   
+
    return fAclicProperties;
 }
 
@@ -3707,7 +3707,7 @@ void TSystem::SetBuildDir(const char* build_dir, Bool_t isflat)
    // the library will be located at 'build_dir+/full/path/name/macro_C.so'
    // If 'isflat' is true, then no subdirectory is created and the library
    // is created directly in the directory 'build_dir'.  Note that in this
-   // mode there is a risk than 2 script of the same in different source 
+   // mode there is a risk than 2 script of the same in different source
    // directory will over-write each other.
 
    fBuildDir = build_dir;
