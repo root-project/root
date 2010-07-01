@@ -966,15 +966,15 @@ Int_t TApplicationServer::BrowseFile(const char *fname)
       if (fh) {
          fh->cd();
          TRemoteObject dir(fh->GetName(), fh->GetTitle(), "TFile");
-         TList *keylist = (TList *)gROOT->ProcessLine(Form("((TFile *)0x%lx)->GetListOfKeys();", fh));
+         TList *keylist = (TList *)gROOT->ProcessLine(Form("((TFile *)0x%lx)->GetListOfKeys();", (ULong_t)fh));
          TIter nextk(keylist);
          TNamed *key = 0;
          TRemoteObject *robj;
          while ((key = (TNamed *)nextk())) {
             robj = new TRemoteObject(key->GetName(), key->GetTitle(), "TKey");
-            const char *classname = (const char *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->GetClassName();", key));
+            const char *classname = (const char *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->GetClassName();", (ULong_t)key));
             robj->SetKeyClassName(classname);
-            Bool_t isFolder = (Bool_t)gROOT->ProcessLine(Form("((TKey *)0x%lx)->IsFolder();", key));
+            Bool_t isFolder = (Bool_t)gROOT->ProcessLine(Form("((TKey *)0x%lx)->IsFolder();", (ULong_t)key));
             robj->SetFolder(isFolder);
             robj->SetRemoteAddress((Long_t) key);
             list->Add(robj);

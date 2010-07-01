@@ -47,7 +47,7 @@ class RooCFunction4Map {
  public:
   RooCFunction4Map() {} ;
 
-  void add(const char* name, VO (*ptr)(VI1,VI2,VI3,VI4), const char* arg1name="x", const char* arg2name="y", 
+  void add(const char* name, VO (*ptr)(VI1,VI2,VI3,VI4), const char* arg1name="x", const char* arg2name="y",
            	                                         const char* arg3name="z", const char* arg4name="w") {
     // Register function with given name and argument name
     _ptrmap[name] = ptr ;
@@ -57,13 +57,13 @@ class RooCFunction4Map {
     _argnamemap[ptr].push_back(arg3name) ;
     _argnamemap[ptr].push_back(arg4name) ;
   }
-  
+
 
   const char* lookupName(VO (*ptr)(VI1,VI2,VI3,VI4)) {
     // Return name of function given by pointer
     return _namemap[ptr].c_str() ;
   }
-    
+
   VO (*lookupPtr(const char* name))(VI1,VI2,VI3,VI4) {
     // Return pointer of function given by name
     return _ptrmap[name] ;
@@ -83,7 +83,7 @@ class RooCFunction4Map {
     }
     return "v" ;
   }
-  
+
  private:
 
 #ifndef __CINT__
@@ -115,13 +115,13 @@ class RooCFunction4Ref : public TObject {
     const char* result = fmap().lookupName(_ptr) ;
     if (result && strlen(result)) {
       return result ;
-    } 
+    }
     return Form("(0x%08x)",_ptr) ;
   }
 
   const char* argName(Int_t iarg) {
     // Return suggested name for i-th argument
-    return fmap().lookupArgName(_ptr,iarg) ;    
+    return fmap().lookupArgName(_ptr,iarg) ;
   }
 
   static RooCFunction4Map<VO,VI1,VI2,VI3,VI4>& fmap() {
@@ -167,11 +167,11 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
 
      UInt_t R__s, R__c;
-     R__b.ReadVersion(&R__s, &R__c);      
+     R__b.ReadVersion(&R__s, &R__c);
 
      // Read name from file
      TString tmpName ;
-     tmpName.Streamer(R__b) ;       
+     tmpName.Streamer(R__b) ;
 
      if (tmpName=="UNKNOWN") {
 
@@ -179,12 +179,12 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
        _ptr = dummyFunction ;
 
      } else {
-     
+
        // Lookup pointer to C function wih given name
        _ptr = fmap().lookupPtr(tmpName.Data()) ;
 
        if (_ptr==0) {
-	 coutW(ObjectHandling) << "ERROR: Objected embeds pointer to function named " << tmpName 
+	 coutW(ObjectHandling) << "ERROR: Objected embeds pointer to function named " << tmpName
 			       << " but no such function is registered, object will not be functional" << endl ;
        }
      }
@@ -193,23 +193,23 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
 
    } else {
-     
+
      UInt_t R__c;
-     R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);    
+     R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
 
      // Lookup name of reference C function
      TString tmpName = fmap().lookupName(_ptr) ;
      if (tmpName.Length()==0) {
-       coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("0x%08x",_ptr) 
+       coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("0x%lx",(ULong_t)_ptr)
 			     << " written object will not be functional when read back" <<  endl ;
        tmpName="UNKNOWN" ;
-     } 
-     
+     }
+
      // Persist the name
-     tmpName.Streamer(R__b) ;            
+     tmpName.Streamer(R__b) ;
 
      R__b.SetByteCount(R__c, kTRUE);
-     
+
    }
 }
 
@@ -220,7 +220,7 @@ class RooCFunction4Binding : public RooAbsReal {
 public:
   RooCFunction4Binding() {
     // Default constructor
-  } ; 
+  } ;
   RooCFunction4Binding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w);
   RooCFunction4Binding(const RooCFunction4Binding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooCFunction4Binding(*this,newname); }
@@ -228,15 +228,15 @@ public:
 
   void printArgs(ostream& os) const {
     // Print object arguments and name/address of function pointer
-    os << "[ function=" << func.name() << " " ;    
+    os << "[ function=" << func.name() << " " ;
     for (Int_t i=0 ; i<numProxies() ; i++) {
       RooAbsProxy* p = getProxy(i) ;
       if (!TString(p->name()).BeginsWith("!")) {
 	p->print(os) ;
 	os << " " ;
       }
-    }    
-    os << "]" ;  
+    }
+    os << "]" ;
   }
 
 protected:
@@ -246,7 +246,7 @@ protected:
   RooRealProxy y ;              // Argument reference
   RooRealProxy z ;              // Argument reference
   RooRealProxy w ;              // Argument reference
-  
+
   Double_t evaluate() const {
     // Return value of embedded function using value of referenced variable x
     return func(x,y,z,w) ;
@@ -259,33 +259,33 @@ private:
 
 
 template<class VO,class VI1, class VI2, class VI3, class VI4>
-RooCFunction4Binding<VO,VI1,VI2,VI3,VI4>::RooCFunction4Binding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4), 
+RooCFunction4Binding<VO,VI1,VI2,VI3,VI4>::RooCFunction4Binding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4),
 						       RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w) :
-  RooAbsReal(name,title), 
+  RooAbsReal(name,title),
   func(_func),
   x(func.argName(0),func.argName(0),this,_x),
   y(func.argName(1),func.argName(1),this,_y),
   z(func.argName(2),func.argName(2),this,_z),
   w(func.argName(3),func.argName(3),this,_w)
-{ 
+{
   // Constructor of C function binding object given a pointer to a function and a RooRealVar to which the function
   // argument should be bound. This object is fully functional as a RooFit function object. The only restriction is
   // if the referenced function is _not_ a standard ROOT TMath or MathCore function it can not be persisted in a
   // a RooWorkspace
-} 
+}
 
 
 template<class VO,class VI1, class VI2, class VI3, class VI4>
-RooCFunction4Binding<VO,VI1,VI2,VI3,VI4>::RooCFunction4Binding(const RooCFunction4Binding& other, const char* name) :  
-  RooAbsReal(other,name), 
+RooCFunction4Binding<VO,VI1,VI2,VI3,VI4>::RooCFunction4Binding(const RooCFunction4Binding& other, const char* name) :
+  RooAbsReal(other,name),
   func(other.func),
   x("x",this,other.x),
   y("y",this,other.y),
   z("z",this,other.z),
   w("w",this,other.w)
-{ 
+{
   // Copy constructor
-} 
+}
 
 
 template<class VO,class VI1, class VI2, class VI3, class VI4>
@@ -293,7 +293,7 @@ class RooCFunction4PdfBinding : public RooAbsPdf {
 public:
   RooCFunction4PdfBinding() {
     // Default constructor
-  } ; 
+  } ;
   RooCFunction4PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w);
   RooCFunction4PdfBinding(const RooCFunction4PdfBinding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooCFunction4PdfBinding(*this,newname); }
@@ -301,15 +301,15 @@ public:
 
   void printArgs(ostream& os) const {
     // Print object arguments and name/address of function pointer
-    os << "[ function=" << func.name() << " " ;    
+    os << "[ function=" << func.name() << " " ;
     for (Int_t i=0 ; i<numProxies() ; i++) {
       RooAbsProxy* p = getProxy(i) ;
       if (!TString(p->name()).BeginsWith("!")) {
 	p->print(os) ;
 	os << " " ;
       }
-    }    
-    os << "]" ;  
+    }
+    os << "]" ;
   }
 
 protected:
@@ -319,7 +319,7 @@ protected:
   RooRealProxy y ;              // Argument reference
   RooRealProxy z ;              // Argument reference
   RooRealProxy w ;              // Argument reference
-  
+
   Double_t evaluate() const {
     // Return value of embedded function using value of referenced variable x
     return func(x,y,z,w) ;
@@ -332,33 +332,33 @@ private:
 
 
 template<class VO,class VI1, class VI2, class VI3, class VI4>
-RooCFunction4PdfBinding<VO,VI1,VI2,VI3,VI4>::RooCFunction4PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4), 
+RooCFunction4PdfBinding<VO,VI1,VI2,VI3,VI4>::RooCFunction4PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4),
 						       RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w) :
-  RooAbsPdf(name,title), 
+  RooAbsPdf(name,title),
   func(_func),
   x(func.argName(0),func.argName(0),this,_x),
   y(func.argName(1),func.argName(1),this,_y),
   z(func.argName(2),func.argName(2),this,_z),
   w(func.argName(3),func.argName(3),this,_w)
-{ 
+{
   // Constructor of C function binding object given a pointer to a function and a RooRealVar to which the function
   // argument should be bound. This object is fully functional as a RooFit function object. The only restriction is
   // if the referenced function is _not_ a standard ROOT TMath or MathCore function it can not be persisted in a
   // a RooWorkspace
-} 
+}
 
 
 template<class VO,class VI1, class VI2, class VI3, class VI4>
-RooCFunction4PdfBinding<VO,VI1,VI2,VI3,VI4>::RooCFunction4PdfBinding(const RooCFunction4PdfBinding& other, const char* name) :  
-  RooAbsPdf(other,name), 
+RooCFunction4PdfBinding<VO,VI1,VI2,VI3,VI4>::RooCFunction4PdfBinding(const RooCFunction4PdfBinding& other, const char* name) :
+  RooAbsPdf(other,name),
   func(other.func),
   x("x",this,other.x),
   y("y",this,other.y),
   z("z",this,other.z),
   w("w",this,other.w)
-{ 
+{
   // Copy constructor
-} 
+}
 
 
 
@@ -375,5 +375,5 @@ template <>    void RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Boo
 template <> void RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Bool_t>::ShowMembers(TMemberInspector &R__insp, char *R__parent) ;
 
 
- 
+
 #endif

@@ -803,7 +803,7 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 
       if (gPerfStats) {
          fOffset = pos[0];
-         gPerfStats->FileReadEvent(this, pos[nbuf-1]+len[nbuf-1]-pos[0], start);         
+         gPerfStats->FileReadEvent(this, pos[nbuf-1]+len[nbuf-1]-pos[0], start);
       }
 
       if (gMonitoringWriter)
@@ -1412,11 +1412,11 @@ void TXNetFile::Print(Option_t *option) const
                                         byteshit, misscount,
                                         missrate, readreqcnt,
                                         bytesusefulness)) {
-      Printf(" Max size:                  %ld", size);
+      Printf(" Max size:                  %d",   size);
       Printf(" Bytes submitted:           %lld", bytessubmitted);
       Printf(" Bytes hit (estimation):    %lld", byteshit);
       Printf(" Miss count:                %lld", misscount);
-      Printf(" Miss rate:                 %f", missrate);
+      Printf(" Miss rate:                 %f",   missrate);
       Printf(" Read requests count:       %lld", readreqcnt);
       Printf(" Bytes usefulness:          %f\n", bytesusefulness);
    } else

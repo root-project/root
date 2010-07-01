@@ -173,7 +173,7 @@ void TMacro::Browse(TBrowser * /*b*/)
       return;
    }
    if (opt.Contains(".C")) {
-      const char *cmd = Form(".x %s((TMacro*)0x%lx)",opt.Data(),this);
+      const char *cmd = Form(".x %s((TMacro*)0x%lx)",opt.Data(),(ULong_t)this);
       gROOT->ProcessLine(cmd);
       return;
    }

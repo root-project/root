@@ -31,7 +31,7 @@ public:
   // Constructors, assignment etc
   RooAbsOptTestStatistic() ;
   RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
+			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0,
 			 Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE,
 			 Bool_t cloneInputData=kTRUE) ;
   RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
@@ -46,7 +46,7 @@ public:
 
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
 
-  virtual const char* cacheUniqueSuffix() const { return Form("_%x",_dataClone) ; }
+  virtual const char* cacheUniqueSuffix() const { return Form("_%lx", (ULong_t)_dataClone) ; }
 
 protected:
 
@@ -54,14 +54,14 @@ protected:
 
   virtual Bool_t allowFunctionCache() { return kTRUE ;  }
   void constOptimizeTestStatistic(ConstOpCode opcode) ;
-  
+
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
   virtual RooArgSet requiredExtraObservables() const { return RooArgSet() ; }
   void optimizeCaching() ;
   void optimizeConstantTerms(Bool_t) ;
 
-  RooArgSet*  _normSet ; // Pointer to set with observables used for normalization 
+  RooArgSet*  _normSet ; // Pointer to set with observables used for normalization
   RooArgSet*  _funcCloneSet ; // Set owning all components of internal clone of input function
   RooAbsData* _dataClone ; // Pointer to internal clone if input data
   RooAbsReal* _funcClone ; // Pointer to internal clone of input function

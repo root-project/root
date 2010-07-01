@@ -89,7 +89,7 @@ void TRemoteObject::Browse(TBrowser *b)
       TObject *obj = (TObject *)gROOT->ProcessLine(Form("((TApplicationServer *)gApplication)->BrowseKey(\"%s\");", GetName()));
       if (b && obj) {
          if (obj->IsA()->GetMethodWithPrototype("SetDirectory", "TDirectory*"))
-            gROOT->ProcessLine(Form("((%s *)0x%lx)->SetDirectory(0);", obj->ClassName(), obj));
+            gROOT->ProcessLine(Form("((%s *)0x%lx)->SetDirectory(0);", obj->ClassName(), (ULong_t)obj));
          obj->Browse(b);
          b->SetRefreshFlag(kTRUE);
       }
@@ -150,7 +150,7 @@ TList *TRemoteObject::Browse()
       TIter next(files);
       TSystemFile *file;
       TString fname;
-      // directories first 
+      // directories first
       while ((file=(TSystemFile*)next())) {
          fname = file->GetName();
          if (file->IsDirectory()) {
@@ -171,7 +171,7 @@ TList *TRemoteObject::Browse()
             level--;
          }
       }
-      // then files... 
+      // then files...
       TIter nextf(files);
       while ((file=(TSystemFile*)nextf())) {
          fname = file->GetName();
@@ -238,4 +238,3 @@ void TRemoteObject::Streamer(TBuffer &b)
    }
    TNamed::Streamer(b);
 }
-

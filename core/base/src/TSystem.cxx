@@ -1914,7 +1914,7 @@ void TSystem::ListLibraries(const char *regexp)
    Ssiz_t start = 0, index = 0, end = 0;
    int i = 0;
 
-   Printf("");
+   Printf(" ");
    Printf("Loaded shared libraries");
    Printf("=======================");
 

@@ -188,8 +188,7 @@ void TClassTable::Print(Option_t *option) const
    int nch = strlen(option);
    TRegexp re(option, kTRUE);
 
-   Printf("");
-   Printf("Defined classes");
+   Printf("\nDefined classes");
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
    for (int i = 0; i < fgTally; i++) {
@@ -208,9 +207,7 @@ void TClassTable::Print(Option_t *option) const
    }
    Printf("----------------------------------------------------------------");
    Printf("Listed Classes: %4d  Total classes: %4d   initialized: %4d",nl, n, ninit);
-   Printf("================================================================");
-
-   Printf("");
+   Printf("================================================================\n");
 }
 
 //---- static members --------------------------------------------------------
@@ -320,21 +317,21 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    // Find a class by name in the class table (using hash of name). Returns
    // 0 if the class is not in the table. Unless arguments insert is true in
    // which case a new entry is created and returned.
-   
+
    int slot = 0;
    const char *p = cname;
-   
+
    while (*p) slot = slot<<1 ^ *p++;
    if (slot < 0) slot = -slot;
    slot %= fgSize;
-   
+
    TClassRec *r;
-   
+
    for (r = fgTable[slot]; r; r = r->fNext)
       if (strcmp(cname,r->fName)==0) return r;
-   
+
    if (!insert) return 0;
-   
+
    r = new TClassRec;
    r->fName = 0;
    r->fId   = 0;
@@ -342,7 +339,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    r->fInfo = 0;
    r->fNext = fgTable[slot];
    fgTable[slot] = r;
-   
+
    return r;
 }
 
@@ -352,14 +349,14 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
    // Find a class by name in the class table (using hash of name). Returns
    // 0 if the class is not in the table. Unless arguments insert is true in
    // which case a new entry is created and returned.
-   
+
    if (!fgTable) return 0;
-   
+
    // Only register the name without the default STL template arguments ...
    TClassEdit::TSplitType splitname( cname, TClassEdit::kLong64 );
    std::string shortName;
    splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
-   
+
    return FindElementImpl(shortName.c_str(), insert);
 }
 
@@ -453,8 +450,7 @@ void TClassTable::PrintTable()
 
    int n = 0, ninit = 0;
 
-   Printf("");
-   Printf("Defined classes");
+   Printf("\nDefined classes");
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
    for (int i = 0; i < fgTally; i++) {
@@ -470,9 +466,7 @@ void TClassTable::PrintTable()
    }
    Printf("----------------------------------------------------------------");
    Printf("Total classes: %4d   initialized: %4d", n, ninit);
-   Printf("================================================================");
-
-   Printf("");
+   Printf("================================================================\n");
 }
 
 //______________________________________________________________________________
@@ -551,7 +545,7 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
    if (cl) {
       if (cl->fVersionUsed) {
          // Problem, the reset is called after the first usage!
-         if (cname!=(void*)-1) 
+         if (cname!=(void*)-1)
             Error("ResetClassVersion","Version number of %s can not be changed after first usage!",
                   cl->GetName());
       } else {
@@ -616,4 +610,3 @@ TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
       return (TNamed*)table.FindObject(classname);
    }
 }
-

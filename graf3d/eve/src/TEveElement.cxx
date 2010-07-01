@@ -960,7 +960,7 @@ void TEveElement::ExportToCINT(char* var_name)
    // Export render-element to CINT with variable name var_name.
 
    const char* cname = IsA()->GetName();
-   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, this));
+   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)this));
 }
 
 /******************************************************************************/
@@ -1008,7 +1008,7 @@ void TEveElement::ExportSourceObjectToCINT(char* var_name) const
       throw eh + "source-object not set.";
 
    const char* cname = so->IsA()->GetName();
-   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, so));
+   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)so));
 }
 
 /******************************************************************************/
@@ -1639,7 +1639,7 @@ void TEveElement::Destroy()
 
    if (fDenyDestroy > 0)
       throw eh + TString::Format("element '%s' (%s*) 0x%lx is protected against destruction.",
-                                 GetElementName(), IsA()->GetName(), this);
+                                 GetElementName(), IsA()->GetName(), (ULong_t)this);
 
    PreDeleteElement();
    delete this;
@@ -2091,7 +2091,7 @@ void TEveElementObjectPtr::ExportToCINT(char* var_name)
 
    TObject* obj = GetObject(eh);
    const char* cname = obj->IsA()->GetName();
-   gROOT->ProcessLine(Form("%s* %s = (%s*)0x%lx;", cname, var_name, cname, obj));
+   gROOT->ProcessLine(Form("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)obj));
 }
 
 //______________________________________________________________________________

@@ -387,7 +387,7 @@ void TGLLegoPainter::Pan(Int_t px, Int_t py)
    if (fSelectedPart >= fSelectionBase || fSelectedPart == 1) {
       SaveModelviewMatrix();
       SaveProjectionMatrix();
-      
+
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
@@ -400,10 +400,10 @@ void TGLLegoPainter::Pan(Int_t px, Int_t py)
 
       SaveModelviewMatrix();
       SaveProjectionMatrix();
-      
+
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
-      
+
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
             fBoxCut.MoveBox(px, py, fSelectedPart);
@@ -411,7 +411,7 @@ void TGLLegoPainter::Pan(Int_t px, Int_t py)
             MoveSection(px, py);
       } else
          MoveSection(px, py);
-         
+
       RestoreProjectionMatrix();
       RestoreModelviewMatrix();
    }
@@ -484,7 +484,7 @@ void TGLLegoPainter::DrawPlot()const
 
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
-   
+
    switch (fCoord->GetCoordType()) {
    case kGLCartesian:
       return DrawLegoCartesian();
@@ -509,7 +509,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
    }
 
    //const TGLDisableGuard depthTest(GL_DEPTH_TEST); //[0-0]
-   
+
    if (!fSelectionPass) {
       glEnable(GL_POLYGON_OFFSET_FILL);//[0
       glPolygonOffset(1.f, 1.f);
@@ -1058,7 +1058,7 @@ void TGLLegoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
          fBoxCut.TurnOnOff();
       //gGLManager->PaintSingleObject(this);
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
       else
          Paint();
    } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {

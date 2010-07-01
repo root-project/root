@@ -423,7 +423,7 @@ void TStorage::PrintStatistics()
             Printf("block %d of size %d not freed", i, gMemSize);
    }
    Printf("================================================");
-   Printf("");
+   Printf(" ");
 #endif
 }
 

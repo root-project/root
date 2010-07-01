@@ -45,8 +45,8 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
 
    // Name and unique title
    SetName(Form("q%d", fSeqNum));
-   SetTitle(Form("session-localhost-%d-%d",
-                 TTimeStamp().GetSec(),gSystem->GetPid()));
+   SetTitle(Form("session-localhost-%ld-%d",
+                 (Long_t)TTimeStamp().GetSec(), gSystem->GetPid()));
 
    // Start time
    fStart.Set();

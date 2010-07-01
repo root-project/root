@@ -221,10 +221,10 @@ void TGLScene::TSceneInfo::DumpDrawStats()
       out += Form("Drew scene (%s / %i LOD) - %i (Op %i Trans %i) %i pixel\n",
                   TGLRnrCtx::StyleName(LastStyle()), LastLOD(),
                   fOpaqueCnt + fTranspCnt, fOpaqueCnt, fTranspCnt, fAsPixelCnt);
-      out += Form("\tInner phys nums: physicals=%d, of_interest=%d, visible=%d, op=%d, trans=%d",
+      out += Form("\tInner phys nums: physicals=%d, of_interest=%lu, visible=%lu, op=%lu, trans=%lu",
                   ((TGLScene*)fScene)->GetMaxPhysicalID(),
-                  fShapesOfInterest.size(), fVisibleElements.size(),
-                  fOpaqueElements.size(), fTranspElements.size());
+                  (ULong_t)fShapesOfInterest.size(), (ULong_t)fVisibleElements.size(),
+                  (ULong_t)fOpaqueElements.size(), (ULong_t)fTranspElements.size());
 
       // By shape type counts
       if (gDebug>3)
@@ -566,7 +566,7 @@ void TGLScene::PreDraw(TGLRnrCtx& rnrCtx)
    if (sinfo == 0 || sinfo->GetScene() != this) {
       TGLSceneInfo* si = rnrCtx.GetSceneInfo();
       Error("TGLScene::PreDraw", "%s", Form("SceneInfo mismatch (0x%lx, '%s').",
-                                      si, si ? si->IsA()->GetName() : "<>"));
+                                      (ULong_t)si, si ? si->IsA()->GetName() : "<>"));
       return;
    }
 
@@ -1125,7 +1125,7 @@ Int_t TGLScene::DestroyPhysicals()
    }
 
    // Loop over logicals -- it is much more efficient that way.
-   
+
    UInt_t count = 0;
 
    LogicalShapeMapIt_t lit = fLogicalShapes.begin();

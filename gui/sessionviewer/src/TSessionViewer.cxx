@@ -469,7 +469,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
 
    TProofDesc *desc;
    fViewer->GetActDesc()->fProofMgr = TProofMgr::Create(url);
-   if (!fViewer->GetActDesc()->fProofMgr || 
+   if (!fViewer->GetActDesc()->fProofMgr ||
        !fViewer->GetActDesc()->fProofMgr->IsValid()) {
       // hide connection progress bar from status bar
       fViewer->GetStatusBar()->GetBarPart(0)->HideFrame(fViewer->GetConnectProg());
@@ -2816,7 +2816,7 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
          stm = TString::Format("%d min %d sec", mm, ss);
       else
          stm = TString::Format("%d sec", ss);
-      buf.Form(" Processed : %ld events in %s", 
+      buf.Form(" Processed : %ld events in %s",
                (Long_t)processed, stm.Data());
       buf += cproc;
       fTotal->SetText(buf.Data());
@@ -3370,7 +3370,7 @@ void TSessionQueryFrame::UpdateInfos()
                            result->GetStartTime().Convert());
    buffer += TString::Format(" Started   : %s\n",
                              result->GetStartTime().AsString());
-   buffer += TString::Format(" Real time : %d sec (CPU time: %.1f sec)\n", 
+   buffer += TString::Format(" Real time : %d sec (CPU time: %.1f sec)\n",
                              elapsed, result->GetUsedCPU());
 
    // Number of events processed, rate, size
@@ -3384,7 +3384,7 @@ void TSessionQueryFrame::UpdateInfos()
 
    // Package information
    if (strlen(result->GetParList()) > 1) {
-      buffer += TString::Format("%s Packages  :  %s\n", result->GetParList());
+      buffer += TString::Format(" Packages  :  %s\n", result->GetParList());
    }
 
    // Result information
@@ -3727,7 +3727,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
       item->SetUserData(litedesc);
       fSessions->Add((TObject *)litedesc);
       fActDesc = litedesc;
-   }   
+   }
    TIter next(fViewerEnv->GetTable());
    TEnvRec *er;
    while ((er = (TEnvRec*) next())) {
@@ -4232,9 +4232,9 @@ void TSessionViewer::WriteConfiguration(const char *filename)
          querystring += ";";
          querystring += TString::Format("%d",query->fNbFiles);
          querystring += ";";
-         querystring += TString::Format("%d",query->fNoEntries);
+         querystring += TString::Format("%lld",query->fNoEntries);
          querystring += ";";
-         querystring += TString::Format("%d",query->fFirstEntry);
+         querystring += TString::Format("%lld",query->fFirstEntry);
          fViewerEnv->SetValue(Form("QueryDescription.%d",qcnt), querystring);
          qcnt++;
       }
@@ -5783,4 +5783,3 @@ Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
    return kTRUE;
 }
-

@@ -274,17 +274,17 @@ Int_t TQueryResultManager::ApplyMaxQueries(Int_t mxq)
          }
 
          // Add the entry in the sorted list
-         sl->Add(new TObjString(Form("%d",st.fMtime)));
-         hl->Add(new TNamed((const char *)Form("%d",st.fMtime),fn.Data()));
+         sl->Add(new TObjString(TString::Format("%ld", st.fMtime)));
+         hl->Add(new TNamed((const char*)TString::Format("%ld",st.fMtime), fn.Data()));
          nq++;
       }
       gSystem->FreeDirectory(dirq);
 
       if (nq > 0)
-         dl->Add(new TParameter<Int_t>(Form("%s/%s", dir.Data(), sess), nq));
+         dl->Add(new TParameter<Int_t>(TString::Format("%s/%s", dir.Data(), sess), nq));
       else
          // Remove it
-         gSystem->Exec(Form("%s -fr %s/%s", kRM, dir.Data(), sess));
+         gSystem->Exec(TString::Format("%s -fr %s/%s", kRM, dir.Data(), sess));
    }
    gSystem->FreeDirectory(dirs);
 

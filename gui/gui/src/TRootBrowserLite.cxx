@@ -1482,7 +1482,7 @@ void TRootBrowserLite::AddToTree(TObject *obj, const char *name, Int_t check)
                   }
                }
             }
-            if (it) 
+            if (it)
                it->SetTipText(infos.Data());
          }
       }
@@ -2383,7 +2383,7 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
             if (!gApplication->GetAppRemote()) {
                gROOT->ProcessLine(Form(".R %s", item->GetText()));
                if (gApplication->GetAppRemote()) {
-                  Getlinem(kInit, TString::Format("\n%s:root [0]", 
+                  Getlinem(kInit, TString::Format("\n%s:root [0]",
                            gApplication->GetAppRemote()->ApplicationName()));
                }
             }
@@ -2415,7 +2415,7 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
             if (!gApplication->GetAppRemote()) {
                gROOT->ProcessLine(Form(".R %s", item->GetParent()->GetText()));
                if (gApplication->GetAppRemote()) {
-                  Getlinem(kInit, TString::Format("\n%s:root [0]", 
+                  Getlinem(kInit, TString::Format("\n%s:root [0]",
                            gApplication->GetAppRemote()->ApplicationName()));
                }
             }
@@ -2426,7 +2426,7 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
             }
          }
          else {
-            // check if the listtree item is from a local session or 
+            // check if the listtree item is from a local session or
             // from a remote session, then switch to the session it belongs to
             TGListTreeItem *top = item;
             while (top->GetParent()) {
@@ -2439,7 +2439,7 @@ void TRootBrowserLite::ListTreeHighlight(TGListTreeItem *item)
                   // switch to remote session if not already in
                   gROOT->ProcessLine(Form(".R %s", top->GetText()));
                   if (gApplication->GetAppRemote()) {
-                     Getlinem(kInit, TString::Format("\n%s:root [0]", 
+                     Getlinem(kInit, TString::Format("\n%s:root [0]",
                               gApplication->GetAppRemote()->ApplicationName()));
                   }
                }
@@ -2550,15 +2550,15 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
          browsable = kTRUE;
 
       if (obj->InheritsFrom("TLeaf")) {
-         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetBranch()->GetDirectory();", 
-                                                      obj->ClassName(), obj));
+         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetBranch()->GetDirectory();",
+                                                      obj->ClassName(), (ULong_t)obj));
          if (!dir) {
             browsable = kFALSE;
          }
       }
       if (obj->InheritsFrom("TBranchElement")) {
-         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetDirectory();", 
-                                                      obj->ClassName(), obj));
+         TObject *dir = (TObject *)gROOT->ProcessLine(Form("((%s *)0x%lx)->GetDirectory();",
+                                                      obj->ClassName(), (ULong_t)obj));
          if (!dir) {
             browsable = kFALSE;
          }
@@ -3099,7 +3099,7 @@ void TRootBrowserLite::ShowMacroButtons(Bool_t show)
 }
 
 //______________________________________________________________________________
-void TRootBrowserLite::SetStatusText(const char *txt, Int_t col) 
+void TRootBrowserLite::SetStatusText(const char *txt, Int_t col)
 {
    // Set text in column col in status bar.
 
@@ -3111,8 +3111,8 @@ void TRootBrowserLite::SetStatusText(const char *txt, Int_t col)
 }
 
 //______________________________________________________________________________
-TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, 
-                                      UInt_t width, UInt_t height, 
+TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title,
+                                      UInt_t width, UInt_t height,
                                       Option_t * /*opt*/)
 {
    // Interface method to the old browser.
@@ -3122,8 +3122,8 @@ TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title,
 }
 
 //______________________________________________________________________________
-TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, Int_t x, 
-                                      Int_t y, UInt_t width, UInt_t height, 
+TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, Int_t x,
+                                      Int_t y, UInt_t width, UInt_t height,
                                       Option_t * /*opt*/)
 {
    // Interface method to the old browser.
@@ -3131,4 +3131,3 @@ TBrowserImp *TRootBrowserLite::NewBrowser(TBrowser *b, const char *title, Int_t 
    TRootBrowserLite *browser = new TRootBrowserLite(b, title, x, y, width, height);
    return (TBrowserImp *)browser;
 }
-

@@ -397,8 +397,8 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentrie
                              // UpdateFormulaLeaves ourselves.
    if (strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
-      if (!select || !select->GetNdim()) { 
-         delete select; 
+      if (!select || !select->GetNdim()) {
+         delete select;
          delete tree;
          return 0;
       }
@@ -793,10 +793,10 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  MaxIf$(formula,condition): return the minimum (maximum) (within one TTree entry)
 //                    of the value of the elements of the formula given as a parameter
 //                    if they match the condition. If not element match the condition, the result is zero.  To avoid the
-//                    the result is zero.  To avoid the consequent peak a zero, use the 
-//                    pattern: 
+//                    the result is zero.  To avoid the consequent peak a zero, use the
+//                    pattern:
 //    tree->Draw("MinIf$(formula,condition)","condition");
-//                    which will avoid calculation MinIf$ for the entries that have no match 
+//                    which will avoid calculation MinIf$ for the entries that have no match
 //                    for the condition.
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
@@ -1068,7 +1068,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          gROOT->ProcessLineFast("new TCanvas();");
       }
    }
-         
+
 
    // Do not process more than fMaxEntryLoop entries
    if (nentries > fTree->GetMaxEntryLoop()) nentries = fTree->GetMaxEntryLoop();
@@ -1160,11 +1160,12 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
          TObject* para = fSelector->GetObject();
          TObject *enlist = gDirectory->FindObject("enlist");
          fTree->Draw(">>enlist",selection,"entrylist",nentries,firstentry);
-         gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)0x%lx,(TEntryList*)0x%lx)",para,enlist));
+         gROOT->ProcessLineFast(Form("TParallelCoord::SetEntryList((TParallelCoord*)0x%lx,(TEntryList*)0x%lx)",
+                                     (ULong_t)para, (ULong_t)enlist));
       }
    //*-*- 5d with gl
    } else if (optgl5d) {
-      gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%lx))->Draw(\"%s\");", fTree, opt.Data()));
+      gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%lx))->Draw(\"%s\");", (ULong_t)fTree, opt.Data()));
       gStyle->SetCanvasPreferGL(pgl);
    }
 
@@ -2149,7 +2150,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
       tfile.Form("%s.C", fTree->GetName());
    FILE *fp = fopen(tfile, "w");
    if (!fp) {
-      Printf("MakeCode","cannot open output file %s", tfile.Data());
+      Error("MakeCode","cannot open output file %s", tfile.Data());
       return 3;
    }
    TString treefile;
@@ -3075,7 +3076,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       }
 //*-*- otherwise select only the specified columns
    } else {
-      
+
       ncols = fSelector->SplitNames(varexp, cnames);
 
    }
@@ -3333,7 +3334,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
       }
       manager->Sync();
    }
-   
+
    // loop on all selected entries
    const char *aresult;
    Int_t len;
@@ -3350,12 +3351,12 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
          tnumber = fTree->GetTreeNumber();
          for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
       }
-      
+
       Int_t ndata = 1;
       if (manager && manager->GetMultiplicity()) {
          ndata = manager->GetNdata();
       }
-      
+
       if (select) {
          select->GetNdata();
          if (select->EvalInstance(0) == 0) continue;
@@ -3368,7 +3369,7 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
                continue;
             }
          }
-         
+
          if (inst==0) loaded = kTRUE;
          else if (!loaded) {
             // EvalInstance(0) always needs to be called so that
@@ -3533,7 +3534,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 //   If the number of selected entries is null the function returns -1
 
 
-// new implementation using new Fitter classes 
+// new implementation using new Fitter classes
 
    gTree = fTree; // not sure if this is still needed
 
@@ -3566,11 +3567,11 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    if (!fitOption.Nograph) drawOpt = "";
    Long64_t nsel = DrawSelect(varexp, selection,drawOpt, nentries, firstentry);
 
-   if (!fitOption.Nograph  && GetSelectedRows() <= 0 && GetDimension() > 4) { 
+   if (!fitOption.Nograph  && GetSelectedRows() <= 0 && GetDimension() > 4) {
       Info("UnbinnedFit","Ignore option D with more than 4 variables");
       nsel = DrawSelect(varexp, selection,"goff para", nentries, firstentry);
    }
-   
+
    //if no selected entries return
    Long64_t nrows = GetSelectedRows();
 
@@ -3581,22 +3582,22 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 
    // Check that function has same dimension as number of variables
    Int_t ndim = GetDimension();
-   // do not check with TF1::GetNdim() since it returns 1 for TF1 classes created with 
+   // do not check with TF1::GetNdim() since it returns 1 for TF1 classes created with
    // a C function with larger dimension
-   
+
 
    // use pointer stored in the tree (not copy the data in)
-   std::vector<double *> vlist(ndim); 
-   for (int i = 0; i < ndim; ++i) 
-      vlist[i] = fSelector->GetVal(i); 
+   std::vector<double *> vlist(ndim);
+   for (int i = 0; i < ndim; ++i)
+      vlist[i] = fSelector->GetVal(i);
 
-   // fill the data 
+   // fill the data
    ROOT::Fit::UnBinData * fitdata = new ROOT::Fit::UnBinData(nrows, ndim, vlist.begin());
 
-   
+
 
    ROOT::Math::MinimizerOptions minOption;
-   TFitResultPtr ret = ROOT::Fit::UnBinFit(fitdata,fitfunc, fitOption, minOption); 
+   TFitResultPtr ret = ROOT::Fit::UnBinFit(fitdata,fitfunc, fitOption, minOption);
 
    //reset estimate
    fTree->SetEstimate(oldEstimate);
@@ -3664,4 +3665,3 @@ void TTreePlayer::UpdateFormulaLeaves()
       }
    }
 }
-

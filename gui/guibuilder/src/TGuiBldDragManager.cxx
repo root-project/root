@@ -5020,7 +5020,7 @@ void TGuiBldDragManager::HandleUpdateSelected(TGFrame *f)
    }
 
    TGCompositeFrame *parent = 0;
-   if (f->GetParent() && 
+   if (f->GetParent() &&
        f->GetParent()->InheritsFrom(TGCompositeFrame::Class())) {
       parent = (TGCompositeFrame*)f->GetParent();
    }
@@ -5487,8 +5487,8 @@ void TGuiBldDragManager::DoClassMenu(Int_t id)
 
       if (str.Contains("*DIALOG")) {
          TString str2;
-         str2.Form("((TGuiBldDragManager*)0x%lx)->%s((%s*)0x%lx)", this, method->GetName(),
-                  fPimpl->fMenuObject->ClassName(), fPimpl->fMenuObject);
+         str2.Form("((TGuiBldDragManager*)0x%lx)->%s((%s*)0x%lx)", (ULong_t)this, method->GetName(),
+                  fPimpl->fMenuObject->ClassName(), (ULong_t)fPimpl->fMenuObject);
          gCint->Calc((char *)str2.Data());
          //delete fFrameMenu;  // suicide (BB)?
          //fFrameMenu = 0;

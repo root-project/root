@@ -501,7 +501,7 @@ void TPerfStats::WriteQueryLog()
    if (sqlserv != "" && sqluser != "" && sqlpass != "" && gProofServ) {
       TString sql;
       sql.Form("INSERT INTO proofquerylog VALUES (0, '%s', '%s', "
-               "'%s', '%s', %d, %.2f, %lld, %lld, %d)",
+               "'%s', '%s', %ld, %.2f, %lld, %lld, %d)",
                gProofServ->GetUser(), gProofServ->GetGroup(),
                fTzero.AsString("s"), stop.AsString("s"),
                stop.GetSec()-fTzero.GetSec(), fTotCpuTime,

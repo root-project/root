@@ -47,11 +47,11 @@ ClassImp(TTreeTableInterface)
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp, 
-   const char *selection, Option_t *option, Long64_t nentries, 
-   Long64_t firstentry) 
-   : TVirtualTableInterface(), fTree(tree), fFormulas(0), fEntry(0), 
-     fNEntries(nentries), fFirstEntry(firstentry), fManager(0), fSelect(0), fSelector(0), fInput(0), 
+TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp,
+   const char *selection, Option_t *option, Long64_t nentries,
+   Long64_t firstentry)
+   : TVirtualTableInterface(), fTree(tree), fFormulas(0), fEntry(0),
+     fNEntries(nentries), fFirstEntry(firstentry), fManager(0), fSelect(0), fSelector(0), fInput(0),
      fForceDim(kFALSE), fEntries(0), fNRows(0), fNColumns(0)
 {
    // TTreeTableInterface constructor.
@@ -77,7 +77,7 @@ TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp,
            " available in the tree");
    }
 
-   // Do stuff with opt.Contains() and options 
+   // Do stuff with opt.Contains() and options
    SetVariablesExpression(varexp);
    SetSelection(selection);
 
@@ -91,14 +91,14 @@ TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp,
 
 //______________________________________________________________________________
 TTreeTableInterface::~TTreeTableInterface()
-{ 
+{
    // TTreeTableInterface destructor.
 
    fFormulas->Delete();
    delete fFormulas;
    delete fInput;
    delete fSelector;
-   
+
    if (fTree) fTree->SetEntryList(0);
    delete fEntries;
 }
@@ -118,7 +118,7 @@ void TTreeTableInterface::SetVariablesExpression(const char *varexp)
       // if varexp is empty, take all available leaves as a column
       allvar = kTRUE;
    }
-   
+
    if (allvar) {
       TObjArray *leaves = fTree->GetListOfLeaves();
       UInt_t nleaves = leaves->GetEntries();
@@ -146,7 +146,7 @@ void TTreeTableInterface::SetVariablesExpression(const char *varexp)
 //______________________________________________________________________________
 void TTreeTableInterface::SetSelection(const char *selection)
 {
-   // Set the selection expression. 
+   // Set the selection expression.
 
    // FIXME verify functionality
    if (fSelect) {
@@ -165,7 +165,7 @@ void TTreeTableInterface::SetSelection(const char *selection)
       }
    }
 
-   // SyncFormulas() will update the formula manager if needed 
+   // SyncFormulas() will update the formula manager if needed
    SyncFormulas();
    InitEntries();
 }
@@ -271,7 +271,7 @@ Double_t TTreeTableInterface::GetValue(UInt_t row, UInt_t column)
 {
    // Return the value of row,column. If the position does not exist
    // or does not contain a number, 0 is returned.
-   
+
    static UInt_t prow = 0;
 
    if (row < fNRows) {
@@ -342,7 +342,7 @@ const char *TTreeTableInterface::GetRowHeader(UInt_t row)
    // Return a string to use as a label for rowheader at column.
 
    if (row < fNRows) {
-      return Form("%d", fEntries->GetEntry(row));
+      return Form("%lld", fEntries->GetEntry(row));
    } else {
       Error("TTreeTableInterface", "Row requested does not exist");
       return "";
@@ -436,8 +436,8 @@ void TTreeTableInterface::RemoveColumn(UInt_t position)
    } else if (fNColumns == 1) {
       Error("TTreeTableInterface::RemoveColumn", "Can't remove last column");
       return;
-   }   
-   
+   }
+
    TTreeFormula *formula = (TTreeFormula *)fFormulas->RemoveAt(position);
    if (fManager) {
       fManager->Remove(formula);
@@ -468,7 +468,7 @@ void TTreeTableInterface::SetFormula(TTreeFormula *formula, UInt_t position)
       fManager->Add(formula);
       fManager->Sync();
    }
-   
+
 }
 
 //______________________________________________________________________________

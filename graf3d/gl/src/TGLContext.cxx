@@ -58,7 +58,7 @@ TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
 
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
-                                  this, wid, shareList));
+                                  (ULong_t)this, (ULong_t)wid, (ULong_t)shareList));
    } else {
       SetContext(wid, shareList);
    }

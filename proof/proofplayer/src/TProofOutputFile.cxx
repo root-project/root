@@ -428,7 +428,7 @@ void TProofOutputFile::NotifyError(const char *msg)
       if (gProofServ)
          gProofServ->SendAsynMessage(msg);
       else
-         Printf(msg);
+         Printf("%s", msg);
    } else {
       Info("NotifyError","called with empty message");
    }

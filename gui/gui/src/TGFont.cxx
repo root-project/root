@@ -298,7 +298,7 @@ void TGFont::Print(Option_t *option) const
    TString opt = option;
 
    if ((opt == "full") && fNamedHash) {
-      Printf("TGFont: %s, %s, %s, ref cnt = %u",
+      Printf("TGFont: %s, %s, ref cnt = %u",
               fNamedHash->GetName(),
               fFM.fFixed ? "fixed" : "prop", References());
    } else {
@@ -2611,7 +2611,7 @@ TGFont *TGFontPool::MakeFont(TGFont *font, FontStruct_t fontStruct,
    lastChar = 0xff; //fontStruct->max_char_or_byte2;
 
    for (i = 0; i < 256; i++) {
-      if ((i == 160) || (i == 173) || (i == 177) || 
+      if ((i == 160) || (i == 173) || (i == 177) ||
           (i < firstChar) || (i > lastChar)) {
          newFont->fTypes[i] = kCharReplace;
       } else {

@@ -388,15 +388,15 @@ void TGLParametricPlot::Pan(Int_t px, Int_t py)
    if (fSelectedPart) {
       SaveModelviewMatrix();
       SaveProjectionMatrix();
-      
+
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
-   
+
       if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
          fBoxCut.MoveBox(px, fCamera->GetHeight() - py, fSelectedPart);
       else
          fCamera->Pan(px, py);
-         
+
       RestoreProjectionMatrix();
       RestoreModelviewMatrix();
    }
@@ -427,7 +427,7 @@ void TGLParametricPlot::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    if (event == kButton1Double && fBoxCut.IsActive()) {
       fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
       else
          Paint();
    } else if (event == kKeyPress) {

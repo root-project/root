@@ -511,7 +511,7 @@ void TGGC::Print(Option_t *) const
 {
    // Print graphics contexts info.
 
-   Printf("TGGC: mask = %lx, handle = %lx, ref cnt = %u", fValues.fMask,
+   Printf("TGGC: mask = %x, handle = %lx, ref cnt = %u", fValues.fMask,
           fContext, References());
 }
 
@@ -1160,4 +1160,3 @@ void TGGCPool::Print(Option_t *) const
 
    fList->Print();
 }
-

@@ -484,11 +484,11 @@ Bool_t TIdleTOTimer::Notify()
       // Send a terminate request
       TString msg;
       if (fProofServ->GetProtocol() < 29) {
-         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %d secs\n"
+         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %ld secs\n"
                   "// Please IGNORE any error message possibly displayed below\n//",
                   gSystem->HostName(), fProofServ->GetSessionTag(), Long_t(fTime)/1000);
       } else {
-         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %d secs\n//",
+         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %ld secs\n//",
                   gSystem->HostName(), fProofServ->GetSessionTag(), Long_t(fTime)/1000);
       }
       fProofServ->SendAsynMessage(msg.Data());
@@ -1234,9 +1234,9 @@ void TProofServ::HandleSocketInput()
          if (rc == -1) {
             emsg.Form("HandleSocketInput: command %d cannot be executed while processing", what);
          } else if (rc == -3) {
-            emsg.Form("HandleSocketInput: message undefined ! Protocol error?", what);
+            emsg.Form("HandleSocketInput: message %d undefined! Protocol error?", what);
          } else {
-            emsg.Form("HandleSocketInput: unknown command %d ! Protocol error?", what);
+            emsg.Form("HandleSocketInput: unknown command %d! Protocol error?", what);
          }
          SendAsynMessage(emsg.Data());
       } else if (rc == 2) {
@@ -2638,8 +2638,8 @@ Int_t TProofServ::Setup()
       host.Remove(host.Index("."));
 
    // Session tag
-   fSessionTag.Form("%s-%s-%d-%d", fOrdinal.Data(), host.Data(),
-                    TTimeStamp().GetSec(),gSystem->GetPid());
+   fSessionTag.Form("%s-%s-%ld-%d", fOrdinal.Data(), host.Data(),
+                    (Long_t)TTimeStamp().GetSec(),gSystem->GetPid());
    fTopSessionTag = fSessionTag;
 
    // create session directory and make it the working directory
@@ -6185,7 +6185,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                Int_t merger_id = -1;
                (*mess) >> merger_id >> name >> port;
                PDB(kSubmerger, 1)
-                  Info("HandleSubmerger","worker %s redirected to merger #%d %s:%d", fOrdinal.Data(), merger_id, name.Data(), port); 
+                  Info("HandleSubmerger","worker %s redirected to merger #%d %s:%d", fOrdinal.Data(), merger_id, name.Data(), port);
 
                TSocket *t = 0;
                if (name.Length() > 0 && port > 0 && (t = new TSocket(name, port)) && t->IsValid()) {

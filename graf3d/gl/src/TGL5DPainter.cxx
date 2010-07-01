@@ -46,8 +46,8 @@ TGL5DPainter::TGL5DPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoo
 }
 
 //______________________________________________________________________________
-TGL5DPainter::SurfIter_t TGL5DPainter::AddSurface(Double_t v4, Color_t ci, 
-                                                  Double_t iso, Double_t sigma, 
+TGL5DPainter::SurfIter_t TGL5DPainter::AddSurface(Double_t v4, Color_t ci,
+                                                  Double_t iso, Double_t sigma,
                                                   Double_t range, Int_t lownps)
 {
    //Try to add new iso-surface.
@@ -66,9 +66,9 @@ TGL5DPainter::SurfIter_t TGL5DPainter::AddSurface(Double_t v4, Color_t ci,
 
    Info("TGL5DPainter::AddSurface", "Building the mesh ...");
    //Prepare grid parameters.
-   Rgl::Mc::TGridGeometry<Float_t> geom(fXAxis, fYAxis, fZAxis, 
+   Rgl::Mc::TGridGeometry<Float_t> geom(fXAxis, fYAxis, fZAxis,
                                         fCoord->GetXScale(),
-                                        fCoord->GetYScale(), 
+                                        fCoord->GetYScale(),
                                         fCoord->GetZScale());
    Mesh_t mesh;
    fMeshBuilder.SetGeometry(fData);
@@ -76,19 +76,19 @@ TGL5DPainter::SurfIter_t TGL5DPainter::AddSurface(Double_t v4, Color_t ci,
    fMeshBuilder.BuildMesh(&fKDE, geom, &mesh, iso);
 
    Info("TGL5DPainter::AddSurface", "Mesh has %d vertices", Int_t(mesh.fVerts.size() / 3));
-   
+
    if (!mesh.fVerts.size())//I do not need an empty mesh.
       return fIsos.end();
    //Add surface with empty mesh and swap meshes.
    fIsos.push_front(fDummy);
-   
+
    fIsos.front().fMesh.Swap(mesh);
    fIsos.front().f4D = v4;
    fIsos.front().fRange = range;
    fIsos.front().fShowCloud = kFALSE;
    fIsos.front().fHide = kFALSE;
    fIsos.front().fColor = ci;
-   
+
    //Predictions for the 5-th variable.
    //Not-implemented yet.
    return fIsos.begin();
@@ -101,7 +101,7 @@ void TGL5DPainter::AddSurface(Double_t v4)
    const Rgl::Range_t &v4R = fData->fV4MinMax;
    const Bool_t isString   = fData->fV4IsString;
    const Double_t rms  = TMath::RMS(fData->fNP, fData->fV4);  //RMS of the N points.
-   const Double_t d    = isString ? (v4R.second - v4R.first) / (fNContours - 1) 
+   const Double_t d    = isString ? (v4R.second - v4R.first) / (fNContours - 1)
                                   : 6 * rms / fNContours;
    //alpha is in [0.1, 0.5], 1e-3 -s good for strings.
    const Double_t range = isString ? 1e-3 : fAlpha * d;
@@ -159,23 +159,23 @@ Bool_t TGL5DPainter::InitGeometry()
    const Double_t mean = TMath::Mean(fData->fNP, fData->fV4); //mean value of the NP points.
    const Double_t rms  = TMath::RMS(fData->fNP, fData->fV4);  //RMS of the N points.
    const Double_t min  = isString ? v4R.first : mean - 3 * rms; //take a range +- 3*xrms
-   const Double_t d    = isString ? (v4R.second - v4R.first) / (fNContours - 1) 
+   const Double_t d    = isString ? (v4R.second - v4R.first) / (fNContours - 1)
                                   : 6 * rms / fNContours;
    //alpha is in [0.1, 0.5], 1e-3 -s good for strings.
    const Double_t range = isString ? 1e-3 : fAlpha * d;
 
    Info("InitGeometry", "min = %g, mean = %g, rms = %g, dx = %g", min, mean, rms, d);
-   
+
    for (Int_t j = 0; j < fNContours; ++j) {
       const Double_t isoLevel = min + j * d;
       Info("TGL5DPainter::InitGeometry", "Iso-level %g, range is %g ...", isoLevel, range);
       const Color_t color = j * 6 + 1;
       AddSurface(isoLevel, color, 0.125, 0.05, range);
    }
-   
+
    if (fIsos.size())
       fBoxCut.TurnOnOff();
-   
+
    return fInit = kTRUE;
 }
 
@@ -196,7 +196,7 @@ void TGL5DPainter::Pan(Int_t px, Int_t py)
    if (fSelectedPart >= fSelectionBase) {//Pan camera.
       SaveModelviewMatrix();
       SaveProjectionMatrix();
-      
+
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
@@ -209,16 +209,16 @@ void TGL5DPainter::Pan(Int_t px, Int_t py)
 
       SaveModelviewMatrix();
       SaveProjectionMatrix();
-      
+
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
-      
+
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis)) {
             fBoxCut.MoveBox(px, py, fSelectedPart);
          }
       }
-      
+
       RestoreProjectionMatrix();
       RestoreModelviewMatrix();
    }
@@ -251,7 +251,7 @@ void TGL5DPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
       else
          Paint();
    }
@@ -266,7 +266,7 @@ void TGL5DPainter::SetAlpha(Double_t newVal)
       fInit = kFALSE;
       InitGeometry();
    }
-   
+
    if (fData->fV4IsString)
       Warning("SetAlpha", "Alpha is not required for string data (your 4-th dimension is string).");
 }
@@ -280,7 +280,7 @@ void TGL5DPainter::SetNContours(Int_t n)
       Warning("SetNContours", "Bad number of contours: %d", n);
       return;
    }
-      
+
    fNContours = n;
    fInit = kFALSE;
    InitGeometry();
@@ -306,9 +306,9 @@ void TGL5DPainter::ResetGeometryRanges()
       fKDE.BuildModel(fData, 0.05);//0.05 is sigma, will be controlled via GUI.
       Info("TGL5DPainter::ResetGeometryRanges", "Building the mesh ...");
       //Prepare grid parameters.
-      Rgl::Mc::TGridGeometry<Float_t> geom(fXAxis, fYAxis, fZAxis, 
+      Rgl::Mc::TGridGeometry<Float_t> geom(fXAxis, fYAxis, fZAxis,
                                            fCoord->GetXScale(),
-                                           fCoord->GetYScale(), 
+                                           fCoord->GetYScale(),
                                            fCoord->GetZScale());
       fMeshBuilder.SetGeometry(fData);
       Mesh_t &mesh = surf->fMesh;
@@ -354,7 +354,7 @@ void TGL5DPainter::DeInitGL()const
 {
    //Return some gl states to original values.
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
-   glDisable(GL_CULL_FACE);   
+   glDisable(GL_CULL_FACE);
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_LIGHT0);
    glDisable(GL_LIGHTING);
@@ -367,7 +367,7 @@ void TGL5DPainter::DrawPlot() const
 
    //Shift plot to point of origin.
    const Rgl::PlotTranslation trGuard(this);
-   
+
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    //
    if (!fIsos.size())
@@ -424,7 +424,7 @@ void TGL5DPainter::DrawPlot() const
          glDepthMask(GL_TRUE);
       }
    }
-   
+
    if (fBoxCut.IsActive())
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 }
@@ -449,21 +449,21 @@ void TGL5DPainter::DrawCloud()const
    //Draw full cloud of points.
    const TGLDisableGuard light(GL_LIGHTING);
    const TGLDisableGuard depth(GL_DEPTH_TEST);
-   
+
    glColor3d(0.4, 0., 1.);
    glPointSize(3.f);
-   
+
    glBegin(GL_POINTS);
-   
+
    const Double_t xs = fCoord->GetXScale();
    const Double_t ys = fCoord->GetYScale();
    const Double_t zs = fCoord->GetZScale();
-   
+
    for (Int_t i = 0; i < fData->fNP; ++i)
       glVertex3d(fData->fV1[i] * xs, fData->fV2[i] * ys, fData->fV3[i] * zs);
-   
+
    glEnd();
-   
+
    glPointSize(1.f);
 }
 
@@ -472,25 +472,25 @@ void TGL5DPainter::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
 {
    //Draw cloud for selected iso-surface.
    const TGLDisableGuard light(GL_LIGHTING);
-   
+
    Float_t rgb[3] = {};
    Rgl::Pad::ExtractRGB(ci, rgb);
-   
+
    glColor3fv(rgb);
    glPointSize(3.f);
-   
+
    glBegin(GL_POINTS);
-   
+
    const Double_t xs = fCoord->GetXScale();
    const Double_t ys = fCoord->GetYScale();
    const Double_t zs = fCoord->GetZScale();
-   
+
    for (Int_t i = 0; i < fData->fNP; ++i)
       if (TMath::Abs(fData->fV4[i] - v4) < range)
          glVertex3d(fData->fV1[i] * xs, fData->fV2[i] * ys, fData->fV3[i] * zs);
-   
+
    glEnd();
-   
+
    glPointSize(1.f);
 }
 
@@ -500,7 +500,7 @@ void TGL5DPainter::DrawMesh(ConstSurfIter_t surf)const
    //Draw one iso-surface.
 
    const Mesh_t &m = surf->fMesh;
-      
+
    if (!fBoxCut.IsActive()) {
       if (!fSelectionPass)
          Rgl::DrawMesh(m.fVerts, m.fNorms, m.fTris);

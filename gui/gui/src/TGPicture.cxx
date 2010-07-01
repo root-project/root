@@ -53,12 +53,12 @@ TGPicturePool::TGPicturePool(const TGPicturePool& pp) :
   fClient(pp.fClient),
   fPath(pp.fPath),
   fPicList(pp.fPicList)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TGPicturePool& TGPicturePool::operator=(const TGPicturePool& pp) 
+TGPicturePool& TGPicturePool::operator=(const TGPicturePool& pp)
 {
    //assignment operator
    if(this!=&pp) {
@@ -66,7 +66,7 @@ TGPicturePool& TGPicturePool::operator=(const TGPicturePool& pp)
       fClient=pp.fClient;
       fPath=pp.fPath;
       fPicList=pp.fPicList;
-   } 
+   }
    return *this;
 }
 
@@ -379,7 +379,7 @@ void TGPicture::Print(Option_t *) const
 {
    // Print picture info.
 
-   Printf("TGPicture: %s,%sref cnt = %u %d", GetName(),
+   Printf("TGPicture: %s,%sref cnt = %u %lx", GetName(),
           fScaled ? " scaled, " : " ", References(), fPic);
 }
 
@@ -431,7 +431,7 @@ TGSelectedPicture::~TGSelectedPicture()
 TGGC &TGSelectedPicture::GetSelectedGC()
 {
    // Return selection graphics context in use.
-   
+
    if (!fgSelectedGC) {
       fgSelectedGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgSelectedGC->SetForeground(gClient->GetResourcePool()->GetSelectedBgndColor());

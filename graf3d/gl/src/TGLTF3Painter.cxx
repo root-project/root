@@ -34,7 +34,7 @@
 ClassImp(TGLTF3Painter)
 
 //______________________________________________________________________________
-TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord) 
+TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, camera, coord, kFALSE, kFALSE, kFALSE),
                     fStyle(kDefault),
                     fF3(fun),
@@ -111,20 +111,20 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
-      
+
       RestoreProjectionMatrix();
       RestoreModelviewMatrix();
    } else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       //Possibly, move box here
       py = fCamera->GetHeight() - py;
-      
+
       SaveModelviewMatrix();
       SaveProjectionMatrix();
 
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
-      
+
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis)) {
             fBoxCut.MoveBox(px, py, fSelectedPart);
@@ -134,7 +134,7 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
       } else {
          //MoveSection(px, py);
       }
-      
+
       RestoreProjectionMatrix();
       RestoreModelviewMatrix();
    }
@@ -173,7 +173,7 @@ void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fXOYSectionPos = frame[0].Z();
 
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
       else
          Paint();
    }
@@ -292,7 +292,7 @@ void TGLTF3Painter::DrawPlot() const
 
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    DrawSections();
-   
+
    if (fSelectionPass) {
       DrawToSelectionBuffer();
    } else if (fStyle == kDefault) {
@@ -327,7 +327,7 @@ void TGLTF3Painter::SetSurfaceColor() const
 Bool_t TGLTF3Painter::HasSections() const
 {
    //Any section exists.
-   return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || 
+   return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() ||
           fYOZSectionPos > fBackBox.Get3DBox()[0].X() ||
           fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
 }
@@ -499,20 +499,20 @@ void TGLIsoPainter::Pan(Int_t px, Int_t py)
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
       fCamera->Pan(px, py);
-      
+
       RestoreProjectionMatrix();
       RestoreModelviewMatrix();
    } else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       //Possibly, move box here
       py = fCamera->GetHeight() - py;
-      
+
       SaveModelviewMatrix();
       SaveProjectionMatrix();
 
       fCamera->SetCamera();
       fCamera->Apply(fPadPhi, fPadTheta);
-      
+
       if (!fHighColor) {
          if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis)) {
             fBoxCut.MoveBox(px, py, fSelectedPart);
@@ -522,7 +522,7 @@ void TGLIsoPainter::Pan(Int_t px, Int_t py)
       } else {
          //MoveSection(px, py);
       }
-      
+
       RestoreProjectionMatrix();
       RestoreModelviewMatrix();
 
@@ -560,7 +560,7 @@ void TGLIsoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       fXOYSectionPos = frame[0].Z();
 
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
       else
          Paint();
    }
@@ -599,7 +599,7 @@ void TGLIsoPainter::DrawPlot() const
 
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    DrawSections();
-   
+
    if (fIsos.size() != fColorLevels.size()) {
       Error("TGLIsoPainter::DrawPlot", "Non-equal number of levels and isos");
       return;

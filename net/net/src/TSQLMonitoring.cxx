@@ -80,7 +80,7 @@ Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *)
          cols += Form("%c'%s'", c, ((TNamed *)o)->GetName());
          vals += Form("%c'%s'", c, ((TNamed *)o)->GetTitle());
       } else if (!strcmp(o->ClassName(), "TParameter<Long64_t>")) {
-         cols += Form(",'%s'", c, ((TParameter<Long64_t> *)o)->GetName());
+         cols += Form("%c'%s'", c, ((TParameter<Long64_t> *)o)->GetName());
          vals += Form("%c%lld", c, ((TParameter<Long64_t> *)o)->GetVal());
       } else if (!strcmp(o->ClassName(), "TParameter<double>")) {
          cols += Form("%c'%s'", c, ((TParameter<double> *)o)->GetName());

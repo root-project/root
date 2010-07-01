@@ -447,7 +447,7 @@ void TASPaletteEditor::Save()
       else
          strcpy(fn, fi.fFilename);
 
-      gROOT->ProcessLine(Form("gROOT->SaveObjectAs((TASPaletteEditor*)0x%lx,\"%s\",\"%s\");",this,fn,"q"));
+      gROOT->ProcessLine(Form("gROOT->SaveObjectAs((TASPaletteEditor*)0x%lx,\"%s\",\"%s\");",(ULong_t)this,fn,"q"));
    }
 }
 

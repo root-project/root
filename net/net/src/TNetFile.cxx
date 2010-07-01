@@ -266,13 +266,13 @@ void TNetFile::Print(Option_t *) const
    // Print some info about the net file.
 
    const char *fname = fUrl.GetFile();
-   Printf("URL:           %s", ((TUrl*)&fUrl)->GetUrl());
-   Printf("Remote file:   %s", &fname[1]);
-   Printf("Remote user:   %s", fUser.Data());
-   Printf("Title:         %s", fTitle.Data());
-   Printf("Option:        %s", fOption.Data());
-   Printf("Bytes written: %g", fBytesWrite);
-   Printf("Bytes read:    %g", fBytesRead);
+   Printf("URL:           %s",   ((TUrl*)&fUrl)->GetUrl());
+   Printf("Remote file:   %s",   &fname[1]);
+   Printf("Remote user:   %s",   fUser.Data());
+   Printf("Title:         %s",   fTitle.Data());
+   Printf("Option:        %s",   fOption.Data());
+   Printf("Bytes written: %lld", fBytesWrite);
+   Printf("Bytes read:    %lld", fBytesRead);
 }
 
 //______________________________________________________________________________

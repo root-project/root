@@ -2,7 +2,7 @@
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
-//         FUMILI  
+//         FUMILI
 //  Based on ideas, proposed by I.N. Silin
 //    [See NIM A440, 2000 (p431)]
 // converted from FORTRAN to C  by
@@ -49,8 +49,8 @@ case:
 <p>$$
 {\partial^2\chi^2\over\partial\theta_i\partial\theta_k}=
 \sum^n_{j=1}{1\over\sigma^2_j}{\partial f_j\over\theta_i}
-{\partial f_j\over\theta_k} + 
-\sum^n_{j=1}{(f_j - F_j)\over\sigma^2_j}\cdot 
+{\partial f_j\over\theta_k} +
+\sum^n_{j=1}{(f_j - F_j)\over\sigma^2_j}\cdot
 {\partial^2f_j\over\partial\theta_i\partial\theta_k}\eqno(4)
 $$
 
@@ -70,7 +70,7 @@ $$
 
 <p>Then the equations for parameter increments are
 <p>$$\left(\partial\chi^2\over\partial\theta_i\right)_{\vec\theta={\vec\theta}^0}
-+\sum_k Z_{ik}\cdot(\theta_k-\theta^0_k) = 0, 
++\sum_k Z_{ik}\cdot(\theta_k-\theta^0_k) = 0,
 \qquad i=1\ldots m\eqno(6)
 $$
 
@@ -80,14 +80,14 @@ parallelepiped $P_0$ is built with the center at ${\vec\theta}^0$ and
 axes parallel to coordinate axes $\theta_i$. The lengths of
 parallelepiped sides along i-th axis is $2b_i$, where $b_i$ is such a
 value that the functions $f_j(\vec\theta)$ are quasi-linear all over
-the parallelepiped. 
+the parallelepiped.
 
 <p>FUMILI takes into account simple linear inequalities in the form:
 $$
 \theta_i^{\rm min}\le\theta_i\le\theta^{\rm max}_i\eqno(7)
 $$
 
-<p>They form parallelepiped $P$ ($P_0$ may be deformed by $P$). 
+<p>They form parallelepiped $P$ ($P_0$ may be deformed by $P$).
 Very similar step formulae are used in FUMILI for negative logarithm
 of the likelihood function with the same idea - linearization of
 function argument.
@@ -123,7 +123,7 @@ static const Double_t gMINDOUBLE=-1e300;
 
 
 //______________________________________________________________________________
-TFumili::TFumili(Int_t maxpar) 
+TFumili::TFumili(Int_t maxpar)
 {//----------- FUMILI constructor ---------
    // maxpar is the maximum number of parameters used with TFumili object
    //
@@ -131,7 +131,7 @@ TFumili::TFumili(Int_t maxpar)
    if (fMaxParam>200) fMaxParam=200;
    fMaxParam2 *= fMaxParam;
    BuildArrays();
-  
+
    fNumericDerivatives = true;
    fLogLike = false;
    fNpar    = fMaxParam;
@@ -154,7 +154,7 @@ TFumili::TFumili(Int_t maxpar)
    fNmaxIter= 150;
    fNstepDec= 3;
    fLastFixed = -1;
-  
+
    SetName("Fumili");
    gFumili = this;
    gROOT->GetListOfSpecials()->Add(gFumili);
@@ -175,9 +175,9 @@ void TFumili::BuildArrays(){
    fAMN        = new Double_t[fMaxParam];
    fR          = new Double_t[fMaxParam];
    fDF         = new Double_t[fMaxParam];
-   fGr         = new Double_t[fMaxParam]; 
+   fGr         = new Double_t[fMaxParam];
    fANames     = new TString[fMaxParam];
-  
+
    //   fX = new Double_t[10];
 
    Int_t zSize = fMaxParam*(fMaxParam+1)/2;
@@ -199,19 +199,19 @@ void TFumili::BuildArrays(){
 
 //______________________________________________________________________________
 TFumili::~TFumili() {
-   // 
+   //
    // TFumili destructor
    //
    DeleteArrays();
    gROOT->GetListOfSpecials()->Remove(this);
-   if (gFumili == this) gFumili = 0; 
+   if (gFumili == this) gFumili = 0;
 }
 
 //______________________________________________________________________________
 Double_t TFumili::Chisquare(Int_t npar, Double_t *params) const
 {
    // return a chisquare equivalent
-   
+
    Double_t amin = 0;
    H1FitChisquareFumili(npar,params,amin,params,1);
    return 2*amin;
@@ -223,10 +223,10 @@ void TFumili::Clear(Option_t *)
 {
    //
    // Resets all parameter names, values and errors to zero
-   // 
+   //
    // Argument opt is ignored
    //
-   // NB: this procedure doesn't reset parameter limits 
+   // NB: this procedure doesn't reset parameter limits
    //
    fNpar = fMaxParam;
    fNfcn = 0;
@@ -268,7 +268,7 @@ void TFumili::DeleteArrays(){
 
 //______________________________________________________________________________
 void TFumili::Derivatives(Double_t *df,Double_t *fX){
-   //  
+   //
    // Calculates partial derivatives of theoretical function
    //
    // Input:
@@ -276,7 +276,7 @@ void TFumili::Derivatives(Double_t *df,Double_t *fX){
    // Output:
    //    DF - array of derivatives
    //
-   // ARITHM.F 
+   // ARITHM.F
    // Converted from CERNLIB
    //
    Double_t ff,ai,hi,y,pi;
@@ -285,11 +285,11 @@ void TFumili::Derivatives(Double_t *df,Double_t *fX){
       df[i]=0;
       if(fPL0[i]>0.) {
          ai = fA[i]; // save current parameter value
-         hi = 0.01*fPL0[i]; // diff step 
+         hi = 0.01*fPL0[i]; // diff step
          pi = fRP*TMath::Abs(ai);
          if (hi<pi) hi = pi; // if diff step is less than precision
          fA[i] = ai+hi;
-   
+
          if (fA[i]>fAMX[i]) { // if param is out of limits
             fA[i] = ai-hi;
             hi = -hi;
@@ -313,7 +313,7 @@ void TFumili::Derivatives(Double_t *df,Double_t *fX){
 
 //______________________________________________________________________________
 Int_t TFumili::Eval(Int_t& npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag)
-{  
+{
    // Evaluate the minimisation function
    //  Input parameters:
    //    npar:    number of currently variable parameters
@@ -321,24 +321,24 @@ Int_t TFumili::Eval(Int_t& npar, Double_t *grad, Double_t &fval, Double_t *par, 
    //    flag:    Indicates what is to be calculated
    //    grad:    array of gradients
    //  Output parameters:
-   //    fval:    The calculated function value. 
+   //    fval:    The calculated function value.
    //    grad:    The vector of first derivatives.
-   // 
-   // The meaning of the parameters par is of course defined by the user, 
-   // who uses the values of those parameters to calculate his function value. 
+   //
+   // The meaning of the parameters par is of course defined by the user,
+   // who uses the values of those parameters to calculate his function value.
    // The starting values must be specified by the user.
    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   // Inside FCN user has to define Z-matrix by means TFumili::GetZ 
+   // Inside FCN user has to define Z-matrix by means TFumili::GetZ
    //  and TFumili::Derivatives,
-   // set theoretical function by means of TFumili::SetUserFunc, 
+   // set theoretical function by means of TFumili::SetUserFunc,
    // but first - pass number of parameters by TFumili::SetParNumber
    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   // Later values are determined by Fumili as it searches for the minimum 
+   // Later values are determined by Fumili as it searches for the minimum
    // or performs whatever analysis is requested by the user.
    //
    // The default function calls the function specified in SetFCN
    //
-   
+
    if (fFCN) (*fFCN)(npar,grad,fval,par,flag);
    return npar;
 }
@@ -350,9 +350,9 @@ Double_t TFumili::EvalTFN(Double_t * /*df*/, Double_t *X)
    // Evaluate theoretical function
    // df: array of partial derivatives
    // X:  vector of theoretical function argument
-   
+
    // for the time being disable possibility to compute derivatives
-   //if(fTFN) 
+   //if(fTFN)
    //  return (*fTFN)(df,X,fA);
    //else if(fTFNF1) {
 
@@ -364,15 +364,15 @@ Double_t TFumili::EvalTFN(Double_t * /*df*/, Double_t *X)
 
 //______________________________________________________________________________
 Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
-   // 
+   //
    //  Execute MINUIT commands. MINImize, SIMplex, MIGrad and FUMili all
    //  will call TFumili::Minimize method.
-   // 
-   //  For full command list see 
+   //
+   //  For full command list see
    //  MINUIT. Reference Manual. CERN Program Library Long Writeup D506.
    //
    //  Improvement and errors calculation are not yet implemented as well
-   //  as Monte-Carlo seeking and minimization. 
+   //  as Monte-Carlo seeking and minimization.
    //  Contour commands are also unsupported.
    //
    //  command   : command string
@@ -385,14 +385,14 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
    const Int_t nntot = 40;
    const char *cname[nntot] = {
       "MINImize  ",    //  0    checked
-      "SEEk      ",    //  1    none 
+      "SEEk      ",    //  1    none
       "SIMplex   ",    //  2    checked same as 0
       "MIGrad    ",    //  3    checked  same as 0
-      "MINOs     ",    //  4    none 
+      "MINOs     ",    //  4    none
       "SET xxx   ",    //  5 lot of stuff
       "SHOw xxx  ",    //  6 -----------
       "TOP of pag",    //  7 .
-      "fiX       ",   //   8 . 
+      "fiX       ",   //   8 .
       "REStore   ",   //   9 .
       "RELease   ",   //   10 .
       "SCAn      ",   //   11  not yet implemented
@@ -400,7 +400,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
       "HESse     ",   //   13  not yet implemented
       "SAVe      ",   //   14  obsolete
       "IMProve   ",   //   15  not yet implemented
-      "CALl fcn  ",   //   16 .  
+      "CALl fcn  ",   //   16 .
       "STAndard  ",   //   17 .
       "END       ",   //   18 .
       "EXIt      ",   //   19 .
@@ -410,8 +410,8 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
       "MNContour ",   //   23 not yet implemented
       "STOp      ",   //   24 .
       "JUMp      ",   //   25 not yet implemented
-      "          ",   //   
-      "          ",   // 
+      "          ",   //
+      "          ",   //
       "FUMili    ",   //    28 checked same as 0
       "          ",   //
       "          ",  //
@@ -425,7 +425,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
       "LIMITS    ",  // 38
       "PUNCH     "}; // 39
 
-  
+
    fCword = comand;
    fCword.ToUpper();
    if (nargs<=0) fCmPar[0] = 0;
@@ -451,10 +451,10 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
    switch (ind) {
       case 0:  case 3: case 2: case 28:
          // MINImize [maxcalls] [tolerance]
-         // also SIMplex, MIGrad  and  FUMili 
+         // also SIMplex, MIGrad  and  FUMili
          if(nargs>=1)
          fNmaxIter=TMath::Max(Int_t(fCmPar[0]),fNmaxIter); // fiXME!!
-         if(nargs==2) 
+         if(nargs==2)
             fEPS=fCmPar[1];
          return Minimize();
       case 1:
@@ -479,7 +479,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
          return 0;
       case 9: // REStore <code>
          if (nargs<1) return 0;
-         if(fCmPar[0]==0.) 
+         if(fCmPar[0]==0.)
             for (i=0;i<fNpar;i++)
                ReleaseParameter(i);
          else
@@ -497,9 +497,9 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
          return 0;
       case 11: // SCAn not implemented
          return -10;
-      case 12: // CONt not implemented 
+      case 12: // CONt not implemented
          return -10;
-  
+
       case 13: // HESSe not implemented
          return -10;
       case 14: // SAVe
@@ -529,9 +529,9 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
       case 23: //MNContour not implemented
       case 25: // JUMp not implemented
          return -10;
-      case 26:   case 27:  case 29:  case 30:  case 31:  case 32: 
+      case 26:   case 27:  case 29:  case 30:  case 31:  case 32:
          return 0; // blank commands
-      case 33:   case 34:   case 35:  case 36:   case 37:  case 38: 
+      case 33:   case 34:   case 35:  case 36:   case 37:  case 38:
       case 39:
          Printf("Obsolete command. Use corresponding SET command instead");
          return -10;
@@ -546,7 +546,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
 //______________________________________________________________________________
 Int_t TFumili::ExecuteSetCommand(Int_t nargs){
    //
-   // Called from TFumili::ExecuteCommand in case 
+   // Called from TFumili::ExecuteCommand in case
    // of "SET xxx" and "SHOW xxx".
    //
    static Int_t nntot = 30;
@@ -560,7 +560,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
       "NOGradient", // 6 .
       "GRAdient  ", // 7 .
       "ERRor def ", // 8 not sure how to implement - by time being ignored
-      "INPut file", // 9 not implemented 
+      "INPut file", // 9 not implemented
       "WIDth page", // 10 not implemented yet
       "LINes page", // 11 not implemented yet
       "NOWarnings", // 12 .
@@ -568,7 +568,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
       "RANdom gen", // 14 not implemented
       "TITle     ", // 15 ignored
       "STRategy  ", // 16 ignored
-      "EIGenvalue", // 17 not implemented yet 
+      "EIGenvalue", // 17 not implemented yet
       "PAGe throw", // 18 ignored
       "MINos errs", // 19 not implemented yet
       "EPSmachine", // 20 .
@@ -594,15 +594,15 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
    ctemp2 = fCword(0,3);
    if(ctemp2.Contains("SET")) setCommand=true;
    if(ctemp2.Contains("HEL") || ctemp2.Contains("SHO")) setCommand=false;
-  
+
    if (ind>=nntot) return -3;
 
    switch(ind) {
       case 0: // SET FCN value illegial // SHOw only
          if(!setCommand) Printf("FCN=%f",fS);
          return 0;
-      case 1: // PARameter <parno> <value> 
-         {  
+      case 1: // PARameter <parno> <value>
+         {
          if (nargs<2 && setCommand) return -1;
          Int_t parnum;
          Double_t val;
@@ -619,7 +619,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
             } else
                for (i=0;i<fNpar;i++)
                Printf("Parameter %s = %E",fANames[i].Data(),fA[i]);
-        
+
          }
          return 0;
          }
@@ -628,11 +628,11 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
          Int_t parnum;
          Double_t lolim,uplim;
          if (nargs<1) {
-            for(i=0;i<fNpar;i++) 
+            for(i=0;i<fNpar;i++)
                if(setCommand) {
                   fAMN[i] = gMINDOUBLE;
                   fAMX[i] = gMAXDOUBLE;
-               } else 
+               } else
                   Printf("Limits for param %s: Low=%E, High=%E",
                          fANames[i].Data(),fAMN[i],fAMX[i]);
          } else {
@@ -654,11 +654,11 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
                }
                fAMN[parnum] = lolim;
                fAMX[parnum] = uplim;
-            } else 
+            } else
                Printf("Limits for param %s Low=%E, High=%E",
                     fANames[parnum].Data(),fAMN[parnum],fAMX[parnum]);
             }
-            return 0;   
+            return 0;
          }
       case 3:
          {
@@ -669,7 +669,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
          for (i=0;i<nn;i++) {
             for(;fPL0[nnn]<=0.;nnn++) { }
             printf("%5s: ",fANames[nnn++].Data());
-            for (Int_t j=0;j<=i;j++) 
+            for (Int_t j=0;j<=i;j++)
                printf("%11.2E",fZ[l++]);
             cout<<endl;
          }
@@ -707,14 +707,14 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
          if(!setCommand) return 0;
          fWARN = false;
          return 0;
-      case 13: // WARnings 
+      case 13: // WARnings
          if(!setCommand) return 0;
          fWARN = true;
          return 0;
       case 14: // RANdomgenerator - not implemented
          return -10;
       case 15: // TITle - ignored
-         return 0; 
+         return 0;
       case 16: // STRategy - ignored
          return 0;
       case 17: // EIGenvalues - not implemented
@@ -726,7 +726,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
       case 20: //EPSmachine
          if(!setCommand) {
             Printf("Relative floating point presicion RP=%E",fRP);
-         } else 
+         } else
             if (nargs>0) {
                Double_t pres=fCmPar[0];
                if (pres<1e-5 && pres>1e-34) fRP=pres;
@@ -762,11 +762,11 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
 }
 
 //______________________________________________________________________________
-void TFumili::FixParameter(Int_t ipar) { 
+void TFumili::FixParameter(Int_t ipar) {
    // Fixes parameter number ipar
 
    if(ipar>=0 && ipar<fNpar && fPL0[ipar]>0.) {
-      fPL0[ipar] = -fPL0[ipar]; 
+      fPL0[ipar] = -fPL0[ipar];
       fLastFixed = ipar;
    }
 }
@@ -837,7 +837,7 @@ Double_t TFumili::GetParameter(Int_t ipar) const
 Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
 {
    // Get various ipar parameter attributs:
-   // 
+   //
    // cname:    parameter name
    // value:    parameter value
    // verr:     parameter error
@@ -864,7 +864,7 @@ Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &ver
 const char *TFumili::GetParName(Int_t ipar) const
 {
    // return name of parameter ipar
-   
+
    if (ipar < 0 || ipar > fNpar) return "";
    return fANames[ipar].Data();
 }
@@ -875,7 +875,7 @@ Int_t TFumili::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
    // Return errors after MINOs
    // not implemented
    eparab = 0;
-   globcc = 0;  
+   globcc = 0;
    if (ipar<0 || ipar>=fNpar) {
       eplus  = 0;
       eminus = 0;
@@ -896,13 +896,13 @@ Int_t TFumili::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &
    //   nvpar    : number of variable parameters
    //   nparx    : total number of parameters
    amin   = 2*fS;
-   edm    = fGT; // 
+   edm    = fGT; //
    errdef = 0; // ??
    nparx  = fNpar;
    nvpar  = 0;
    for(Int_t ii=0; ii<fNpar; ii++) {
       if(fPL0[ii]>0.) nvpar++;
-   }  
+   }
    return 0;
 }
 
@@ -935,7 +935,7 @@ Double_t TFumili::GetSumLog(Int_t n)
 void TFumili::InvertZ(Int_t n)
 {
    // Inverts packed diagonal matrix Z by square-root method.
-   //  Matrix elements corresponding to 
+   //  Matrix elements corresponding to
    // fix parameters are removed.
    //
    // n: number of variable parameters
@@ -1057,7 +1057,7 @@ void TFumili::InvertZ(Int_t n)
 Bool_t TFumili::IsFixed(Int_t ipar) const
 {
    //return kTRUE if parameter ipar is fixed, kFALSE othersise)
-   
+
    if(ipar < 0 || ipar >= fNpar) {
       Warning("IsFixed","Illegal parameter number :%d",ipar);
       return kFALSE;
@@ -1071,7 +1071,7 @@ Bool_t TFumili::IsFixed(Int_t ipar) const
 Int_t TFumili::Minimize()
 {// Main minimization procedure
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
-   //         FUMILI  
+   //         FUMILI
    //  Based on ideas, proposed by I.N. Silin
    //    [See NIM A440, 2000 (p431)]
    // converted from FORTRAN to C  by
@@ -1079,7 +1079,7 @@ Int_t TFumili::Minimize()
    //
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
    //
-   // This function is called after setting theoretical function 
+   // This function is called after setting theoretical function
    // by means of TFumili::SetUserFunc and initializing parameters.
    // Optionally one can set FCN function (see TFumili::SetFCN and TFumili::Eval)
    // If FCN is undefined then user has to provide data arrays by calling
@@ -1114,7 +1114,7 @@ Int_t TFumili::Minimize()
    Double_t afix, sigi, akap;
    Double_t alambd, al, bm, abi, abm;
    Int_t l1, k, ifix;
-  
+
    nn2=0;
 
    // Number of parameters;
@@ -1129,7 +1129,7 @@ Int_t TFumili::Minimize()
    ifix1=-1;
    fi=0;
    nn3=0;
-  
+
    // Initialize param.step limits
    for( i=0; i < n; i++) {
       fR[i]=0.;
@@ -1138,12 +1138,12 @@ Int_t TFumili::Minimize()
    }
 
 L3: // Start Iteration
- 
+
    nn1 = 1;
    t1 = 1.;
- 
+
 L4: // New iteration
- 
+
    // fS - objective function value - zero first
    fS = 0.;
    // n0 - number of variable parameters in fit
@@ -1151,13 +1151,13 @@ L4: // New iteration
    for( i = 0; i < n; i++) {
       fGr[i]=0.; // zero gradients
       if (fPL0[i] > .0) {
-         n0=n0+1; 
+         n0=n0+1;
          // new iteration - new parallelepiped
          if (fPL[i] > .0) fPL0[i]=fPL[i];
       }
    }
    Int_t nn0;
-   // Calculate number of fZ-matrix elements as nn0=1+2+..+n0 
+   // Calculate number of fZ-matrix elements as nn0=1+2+..+n0
    nn0 = n0*(n0+1)/2;
    // if (nn0 >= 1) ????
    // fZ-matrix is initialized
@@ -1173,7 +1173,7 @@ L4: // New iteration
       fNfcn++;
    } else
       ijkl = SGZ();
-   if(!ijkl) return 10; 
+   if(!ijkl) return 10;
    if (ijkl == -1) fINDFLG[0]=1;
 
    // sp - scaled on fS machine precision
@@ -1206,16 +1206,16 @@ L4: // New iteration
          goto L4;
       }
    }
- 
+
 L19:
- 
+
    if(fINDFLG[0] != 0) {
       fENDFLG=-4;
       printf("trying to execute an illegal junp at L85\n");
       //goto L85;
-   } 
+   }
 
- 
+
    Int_t k1, k2, i1, j, l;
    k1 = 1;
    k2 = 1;
@@ -1223,7 +1223,7 @@ L19:
    // In this cycle we removed from fZ contributions from fixed parameters
    // We'll get fixed parameters after boudary check
    for( i = 0; i < n; i++) {
-      if (fPL0[i] > .0) { 
+      if (fPL0[i] > .0) {
          // if parameter was fixed - release it
          if (fPL[i] == 0.) fPL[i]=fPL0[i];
          if (fPL[i] > .0) { // ??? it is already non-zero
@@ -1238,17 +1238,17 @@ L19:
             } else {
                for( j=0; j <= i; j++) {// cycle on columns of fZ-matrix
                   if (fPL0[j] > .0) {
-                     // if parameter is not fixed then fZ = fZ0 
+                     // if parameter is not fixed then fZ = fZ0
                      // Now matrix fZ of other dimension
                      if (fPL[j] > .0) {
                         fZ[k2 -1] = fZ0[k1 -1];
                         k2=k2+1;
-                     }  
+                     }
                      k1=k1+1;
                   }
                }
-            }  
-         }  
+            }
+         }
          else k1 = k1 + i1; // In case of negative fPL[i] - after mconvd
          i1=i1+1;  // Next row of fZ0
       }
@@ -1306,13 +1306,13 @@ L19:
    l = i1;
    for( i = 0; i < n; i++)
       if (fPL[i] > .0) {
-         sigi = TMath::Sqrt(TMath::Abs(fZ[l - 1])); // calculate \sqrt{Z^{-1}_{ii}} 
+         sigi = TMath::Sqrt(TMath::Abs(fZ[l - 1])); // calculate \sqrt{Z^{-1}_{ii}}
          fR[i] = fR[i]*fZ[l - 1];      // Z_ii * Z^-1_ii
          if (fEPS > .0) fParamError[i]=sigi;
          if ((fA[i] >= fAMX[i] && fDA[i] > 0.) || (fA[i] <= fAMN[i]
                                                && fDA[i] < .0)) {
             // if parameter out of bounds and if step is making things worse
-      
+
             akap = TMath::Abs(fDA[i]/sigi);
             // let's found maximum of dA/sigi - the worst of parameter steps
             if (akap > afix) {
@@ -1344,7 +1344,7 @@ L19:
 
    for( i = 0; i < n; i++) {
       if (fPL[i] > .0) {
-         bm = fAMX[i] - fA[i];  
+         bm = fAMX[i] - fA[i];
          abi = fA[i] + fPL[i]; // upper  parameter limit
          abm = fAMX[i];
          if (fDA[i] <= .0) {
@@ -1370,7 +1370,7 @@ L19:
             }
          }
          // fAKAPPA - parameter will be <fEPS if fit is converged
-         akap = TMath::Abs(fDA[i]/fParamError[i]); 
+         akap = TMath::Abs(fDA[i]/fParamError[i]);
          if (akap > fAKAPPA) fAKAPPA=akap;
       }
    }
@@ -1397,11 +1397,11 @@ L19:
    //.. CHECK IF MINIMUM ATTAINED AND SET EXIT MODE
    // if expected fGT smaller than precision
    // and other stuff
-   if (-fGT <= sp && t1 < 1. && alambd < 1.)fENDFLG = -1; // function is not decreasing 
+   if (-fGT <= sp && t1 < 1. && alambd < 1.)fENDFLG = -1; // function is not decreasing
 
    if (fENDFLG >= 0) {
       if (fAKAPPA < TMath::Abs(fEPS)) { // fit is converging
-         if (fixFLG == 0) 
+         if (fixFLG == 0)
             fENDFLG=1; // successful fit
          else {// we have fixed parameters
             if (fENDFLG == 0) {
@@ -1445,10 +1445,10 @@ L19:
 // L85:
    // iteration number limit is exceeded
    if(fENDFLG == 0 && nn3 >= fNmaxIter) fENDFLG=-3;
-  
+
    // fit errors are infinite;
    if(fENDFLG > 0 && fINDFLG[1] > 0) fENDFLG=-2;
-  
+
    //MONITO (fS,fNpar,nn3,IT,fEPS,fGT,fAKAPPA,alambd);
    if (fENDFLG == 0) { // make step
       for ( i = 0; i < n; i++) fA[i] = fA[i] + fDA[i];
@@ -1456,12 +1456,12 @@ L19:
       olds=fS;
       nn2=nn2+1;
       nn3=nn3+1;
-   } else { 
+   } else {
       // fill covariant matrix VL
       // fill parameter error matrix up
       Int_t il;
       il = 0;
-      for( Int_t ip = 0; ip < fNpar; ip++) { 
+      for( Int_t ip = 0; ip < fNpar; ip++) {
          if( fPL0[ip] > .0) {
             for( Int_t jp = 0; jp <= ip; jp++) {
                if(fPL0[jp] > .0) {
@@ -1479,8 +1479,8 @@ L19:
 //______________________________________________________________________________
 void TFumili::PrintResults(Int_t ikode,Double_t p) const
 {
-   // Prints fit results. 
-   //  
+   // Prints fit results.
+   //
    // ikode is the type of printing parameters
    // p is function value
    //
@@ -1549,7 +1549,7 @@ void TFumili::PrintResults(Int_t ikode,Double_t p) const
       colhdl[1] = "   NEGATIVE   ";
       colhdl[2] = "   POSITIVE   ";
    }
-   if(fENDFLG<1)Printf((const char*)xsexpl.Data());
+   if(fENDFLG<1)Printf("%s", xsexpl.Data());
    Printf(" FCN=%g FROM FUMILI  STATUS=%-10s %9d CALLS OF FCN",
          p,exitStatus.Data(),fNfcn);
    Printf(" EDM=%g ",-fGT);
@@ -1562,8 +1562,8 @@ void TFumili::PrintResults(Int_t ikode,Double_t p) const
          ,(const char*)colhdl[1].Data()
          ,(const char*)colhdl[2].Data());
 
-   for (Int_t i=0;i<fNpar;i++) { 
-      if (ikode==3) { 
+   for (Int_t i=0;i<fNpar;i++) {
+      if (ikode==3) {
          cx2 = Form("%14.5e",fDA[i]);
          cx3 = Form("%14.5e",fGr[i]);
 
@@ -1593,7 +1593,7 @@ void TFumili::ReleaseParameter(Int_t ipar) {
    // Releases parameter number ipar
 
    if(ipar>=0 && ipar<fNpar && fPL0[ipar]<=0.) {
-      fPL0[ipar] = -fPL0[ipar]; 
+      fPL0[ipar] = -fPL0[ipar];
       if (fPL0[ipar] == 0. || fPL0[ipar]>=1.) fPL0[ipar]=.1;
    }
 }
@@ -1601,17 +1601,17 @@ void TFumili::ReleaseParameter(Int_t ipar) {
 
 //______________________________________________________________________________
 void TFumili::SetData(Double_t *exdata,Int_t numpoints,Int_t vecsize){
-   // Sets pointer to data array provided by user. 
+   // Sets pointer to data array provided by user.
    // Necessary if SetFCN is not called.
-   // 
+   //
    // numpoints:    number of experimental points
-   // vecsize:      size of data point vector + 2 
+   // vecsize:      size of data point vector + 2
    //               (for N-dimensional fit vecsize=N+2)
    // exdata:       data array with following format
    //
    //   exdata[0] = ExpValue_0     - experimental data value number 0
    //   exdata[1] = ExpSigma_0     - error of value number 0
-   //   exdata[2] = X_0[0]        
+   //   exdata[2] = X_0[0]
    //   exdata[3] = X_0[1]
    //       .........
    //   exdata[vecsize-1] = X_0[vecsize-3]
@@ -1623,7 +1623,7 @@ void TFumili::SetData(Double_t *exdata,Int_t numpoints,Int_t vecsize){
    //       .........
    //   exdata[vecsize*numpoints-1] = X_(numpoints-1)[vecsize-3]
    //
-  
+
    if(exdata){
       fNED1 = numpoints;
       fNED2 = vecsize;
@@ -1636,7 +1636,7 @@ void TFumili::SetData(Double_t *exdata,Int_t numpoints,Int_t vecsize){
 void TFumili::SetFitMethod(const char *name)
 {
    // ret fit method (chisquare or loglikelihood)
-   
+
    if (!strcmp(name,"H1FitChisquare"))    SetFCN(H1FitChisquareFumili);
    if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihoodFumili);
    if (!strcmp(name,"GraphFitChisquare")) SetFCN(GraphFitChisquareFumili);
@@ -1645,14 +1645,14 @@ void TFumili::SetFitMethod(const char *name)
 
 //______________________________________________________________________________
 Int_t TFumili::SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) {
-   // Sets for prameter number ipar initial parameter value, 
+   // Sets for prameter number ipar initial parameter value,
    // name parname, initial error verr and limits vlow and vhigh
    // If vlow = vhigh but not equil to zero, parameter will be fixed.
    // If vlow = vhigh = 0, parameter is released and its limits are discarded
    //
    if (ipar<0 || ipar>=fNpar) return -1;
    fANames[ipar] = parname;
-   fA[ipar] = value; 
+   fA[ipar] = value;
    fParamError[ipar] = verr;
    if(vlow<vhigh) {
       fAMN[ipar] = vlow;
@@ -1677,7 +1677,7 @@ Int_t TFumili::SetParameter(Int_t ipar,const char *parname,Double_t value,Double
 //______________________________________________________________________________
 Int_t TFumili::SGZ()
 {
-   //  Evaluates objective function ( chi-square ), gradients and   
+   //  Evaluates objective function ( chi-square ), gradients and
    //  Z-matrix using data provided by user via TFumili::SetData
    //
    fS = 0.;
@@ -1692,7 +1692,7 @@ Int_t TFumili::SGZ()
          nx  = fNED2;
          k1 -= 2;
       }
-  
+
       for (i=0;i<nx;i++){
          ki  += 1+i;
          x[i] = fEXDA[ki];
@@ -1706,7 +1706,7 @@ Int_t TFumili::SGZ()
             fS = fS - log(y);
             y  = -y;
             sig= y;
-         } else { // 
+         } else { //
             delete [] x;
             delete [] df;
             fS = 1e10;
@@ -1727,11 +1727,11 @@ Int_t TFumili::SGZ()
       }
       l = 0;
       for (i=0;i<n;i++)
-         for (j=0;j<=i;j++) 
+         for (j=0;j<=i;j++)
             fZ[l++] += df[i]*df[j];
       k2 += fNED2;
    }
- 
+
    delete[] df;
    delete[] x;
    return 1;
@@ -1762,7 +1762,7 @@ void TFumili::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
    TF1 *f1   = (TF1*)GetUserFunc();
    Int_t nd  = hfit->GetDimension();
    Int_t j;
-   
+
    npar = f1->GetNpar();
    SetParNumber(npar);
    if(flag == 9) return;
@@ -1772,7 +1772,7 @@ void TFumili::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
    Double_t *df = new Double_t[npar];
    f1->InitArgs(x,u);
    f = 0;
-   
+
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
@@ -1790,7 +1790,7 @@ void TFumili::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
       if (flag!=1) {
          for (j=0;j<npar;j++) {
             if (pl0[j]>0) {
-               df[n] = df[j]/eu; 
+               df[n] = df[j]/eu;
                // left only non-fixed param derivatives / by Sigma
                gin[j] += df[n]*fsum;
                n++;
@@ -1798,7 +1798,7 @@ void TFumili::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
          }
          Int_t l = 0;
          for (j=0;j<n;j++)
-            for (Int_t k=0;k<=j;k++) 
+            for (Int_t k=0;k<=j;k++)
                zik[l++] += df[j]*df[k];
       }
       f += .5*fsum*fsum;
@@ -1829,7 +1829,7 @@ void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    TF1 *f1   = (TF1*)GetUserFunc();
    Int_t nd  = hfit->GetDimension();
    Int_t j;
-   
+
    f1->InitArgs(x,u);
    npar = f1->GetNpar();
    SetParNumber(npar);
@@ -1839,7 +1839,7 @@ void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
 
    Double_t *df=new Double_t[npar];
    f = 0;
-   
+
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
@@ -1861,7 +1861,7 @@ void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
       if (flag!=1) {
          for (j=0;j<npar;j++) {
             if (pl0[j]>0){
-               df[n] = df[j]/eu; 
+               df[n] = df[j]/eu;
                // left only non-fixed param derivatives / by Sigma
                gin[j] += df[n]*fsum;
                n++;
@@ -1869,7 +1869,7 @@ void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
          }
          Int_t l = 0;
          for (j=0;j<n;j++)
-            for (Int_t k=0;k<=j;k++) 
+            for (Int_t k=0;k<=j;k++)
                zik[l++] += df[j]*df[k];
       }
       f += .5*fsum*fsum;
@@ -1919,7 +1919,7 @@ void TFumili::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
    f1->InitArgs(x,u);
    f = 0;
-   
+
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
@@ -1944,21 +1944,21 @@ void TFumili::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
       Derivatives(df,x);
       int n=0;
       // Here we need gradients of Log likelihood function
-      // 
+      //
       for (j=0;j<npar;j++) {
          if (pl0[j]>0){
-            df[n]   = df[j]*(icu/fu-1); 
+            df[n]   = df[j]*(icu/fu-1);
             gin[j] -= df[n];
             n++;
          }
       }
       Int_t l = 0;
-      // Z-matrix here - production of first derivatives  
+      // Z-matrix here - production of first derivatives
       //  of log-likelihood function
       for (j=0;j<n;j++)
-         for (Int_t k=0;k<=j;k++) 
+         for (Int_t k=0;k<=j;k++)
             zik[l++] += df[j]*df[k];
-            
+
       f -= fsub;
       npfit++;
       cache += fPointSize;
@@ -2003,7 +2003,7 @@ void TFumili::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
    if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
    f1->InitArgs(x,u);
    f = 0;
-   
+
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
@@ -2034,21 +2034,21 @@ void TFumili::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
       Derivatives(df,x);
       int n=0;
       // Here we need gradients of Log likelihood function
-      // 
+      //
       for (j=0;j<npar;j++) {
          if (pl0[j]>0){
-            df[n]   = df[j]*(icu/fu-1); 
+            df[n]   = df[j]*(icu/fu-1);
             gin[j] -= df[n];
             n++;
          }
       }
       Int_t l = 0;
-      // Z-matrix here - production of first derivatives  
+      // Z-matrix here - production of first derivatives
       //  of log-likelihood function
       for (j=0;j<n;j++)
-         for (Int_t k=0;k<=j;k++) 
+         for (Int_t k=0;k<=j;k++)
             zik[l++] += df[j]*df[k];
-            
+
       f -= fsub;
       npfit++;
       cache += fPointSize;
@@ -2117,13 +2117,13 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
 // This method to approximate the uncertainty in y because of the errors in x, is called
 // "effective variance" method.
 // The improvement, compared to the previously used  method (f(x+ exhigh) - f(x-exlow))/2
-// is of (error of x)**2 order. 
+// is of (error of x)**2 order.
 //  NOTE:
 //  1) By using the "effective variance" method a simple linear regression
 //      becomes a non-linear case , which takes several iterations
 //      instead of 0 as in the linear case .
 //
-//  2) The effective variance technique assumes that there is no correlation 
+//  2) The effective variance technique assumes that there is no correlation
 //      between the x and y coordinate .
 //
 // In case the function lies below (above) the data point, ey is ey_low (ey_high).
@@ -2136,7 +2136,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
    Foption_t fitOption = grFitter->GetFitOption();
-   
+
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
@@ -2184,7 +2184,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
       fsum = (fu-cu)/eusq;
       for (i=0;i<npar;i++) {
          if (pl0[i]>0){
-            df[n] = df[i]/eusq; 
+            df[n] = df[i]/eusq;
             // left only non-fixed param derivatives / by Sigma
             gin[i] += df[n]*fsum;
             n++;
@@ -2192,7 +2192,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
       }
       Int_t l = 0;
       for (i=0;i<n;i++)
-         for (Int_t j=0;j<=i;j++) 
+         for (Int_t j=0;j<=i;j++)
             zik[l++] += df[i]*df[j];
       f += .5*fsum*fsum;
 
@@ -2200,5 +2200,4 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
    delete [] df;
    f1->SetNumberFitPoints(npfits);
 }
-
 

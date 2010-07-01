@@ -353,8 +353,8 @@ Int_t TProofServLite::Setup()
 
    // Get Session tags
    fTopSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1");
-   fSessionTag = Form("%s-%s-%d-%d", fOrdinal.Data(), gSystem->HostName(),
-                                     TTimeStamp().GetSec(), gSystem->GetPid());
+   fSessionTag = Form("%s-%s-%ld-%d", fOrdinal.Data(), gSystem->HostName(),
+                                     (Long_t)TTimeStamp().GetSec(), gSystem->GetPid());
    if (gProofDebugLevel > 0)
       Info("Setup", "session tag is %s", fSessionTag.Data());
    if (fTopSessionTag.IsNull()) fTopSessionTag = fSessionTag;

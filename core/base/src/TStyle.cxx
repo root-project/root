@@ -809,7 +809,8 @@ void TStyle::Paint(Option_t *option)
    // Show the options from the current style
    // if (TClass::GetClass("TStyleManager")) gSystem->Load("libGed");
 
-   gROOT->ProcessLine(Form("TStyleManager::PaintStyle((TStyle*)0x%lx,\"%s\")",this,option));
+   gROOT->ProcessLine(Form("TStyleManager::PaintStyle((TStyle*)0x%lx,\"%s\")",
+                           (ULong_t)this,option));
 }
 
 

@@ -120,8 +120,7 @@ void TObjectTable::Print(Option_t *option) const
    if (opt.Contains("all")) {
       TObject *obj;
       int i, num = 0;
-      Printf("");
-      Printf("List of all objects");
+      Printf("\nList of all objects");
       Printf("object   address            class                    name");
       Printf("================================================================================");
       for (i = 0; i < fSize; i++) {
@@ -131,8 +130,7 @@ void TObjectTable::Print(Option_t *option) const
          printf("%-8d 0x%-16lx %-24s %s\n", num, (Long_t)obj, obj->ClassName(),
                 obj->GetName());
       }
-      Printf("================================================================================");
-      Printf("");
+      Printf("================================================================================\n");
    }
 
    //print the number of instances per class
@@ -343,8 +341,7 @@ void TObjectTable::InstanceStatistics() const
 
    UpdateInstCount();
 
-   Printf("");
-   Printf("Object statistics");
+   Printf("\nObject statistics");
    Printf("class                         cnt    on heap     size    total size    heap size");
    Printf("================================================================================");
    TIter next(gROOT->GetListOfClasses());
@@ -364,8 +361,7 @@ void TObjectTable::InstanceStatistics() const
    }
    Printf("--------------------------------------------------------------------------------");
    Printf("Total:                   %8d%11d%9d%14d%13d", ncum, hcum, scum, tcum, thcum);
-   Printf("================================================================================");
-   Printf("");
+   Printf("================================================================================\n");
 }
 
 //______________________________________________________________________________

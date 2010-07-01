@@ -1350,7 +1350,8 @@ void TVectorT<Element>::Draw(Option_t *option)
 // Draw this vector
 // The histogram is named "TVectorT" by default and no title
 
-   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%lx,\"%s\");",this,option));
+   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%lx,\"%s\");",
+                           (ULong_t)this, option));
 }
 
 //______________________________________________________________________________
@@ -1511,7 +1512,7 @@ TMatrixT<Element1>
 
          Element1 *       mp      = target.GetMatrixArray();
    const Element1 * const m_last  = mp + target.GetNoElements();
-  
+
    const Element2 *       v1p     = v1.GetMatrixArray();
    const Element2 * const v1_last = v1p + v1.GetNrows();
 
@@ -1573,7 +1574,7 @@ Element1 Mult(const TVectorT<Element1> &v1,const TMatrixT<Element2> &m,
    }
 
    R__ASSERT(v1p == v1_last && mp == m_last && v2p == v2_last);
-  
+
    return sum;
 }
 
@@ -2163,13 +2164,13 @@ Bool_t AreCompatible(const TMatrixT<Element1> &m,const TVectorT<Element2> &v,Int
          ::Error("AreCompatible", "vector not valid");
       return kFALSE;
    }
-  
+
    if (m.GetNcols() != v.GetNrows() ) {
       if (verbose)
          ::Error("AreCompatible", "matrix and vector not compatible");
       return kFALSE;
    }
-  
+
    return kTRUE;
 }
 

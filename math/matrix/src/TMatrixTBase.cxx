@@ -801,7 +801,8 @@ void TMatrixTBase<Element>::Draw(Option_t *option)
 // Draw this matrix
 // The histogram is named "TMatrixT" by default and no title
 
-   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%lx,\"%s\");",this,option));
+   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%lx,\"%s\");",
+                           (ULong_t)this, option));
 }
 
 //______________________________________________________________________________

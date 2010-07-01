@@ -15,7 +15,7 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
+//
 // BEGIN_HTML
 // RooAbsArg is the common abstract base class for objects that
 // represent a value (of arbitrary type) and "shape" that in general
@@ -83,7 +83,7 @@ RooAbsArg::RooAbsArg() :
   _prohibitServerRedirect(kFALSE),
   _eocache(0)
 {
-  // Default constructor 
+  // Default constructor
 
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
@@ -149,7 +149,7 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
 
   //setAttribute(Form("CloneOf(%08x)",&other)) ;
   //cout << "RooAbsArg::cctor(" << this << ") #bools = " << _boolAttrib.size() << " #strings = " << _stringAttrib.size() << endl ;
-  
+
   RooTrace::create(this) ;
 }
 
@@ -175,7 +175,7 @@ RooAbsArg::~RooAbsArg()
     client->setAttribute("ServerDied") ;
     TString attr("ServerDied:");
     attr.Append(GetName());
-    attr.Append(Form("(%lx)",this)) ;
+    attr.Append(Form("(%lx)",(ULong_t)this)) ;
     client->setAttribute(attr.Data());
     client->removeServer(*this,kTRUE);
 
@@ -233,8 +233,8 @@ Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 {
   // Check if this object was created as a clone of 'other'
 
-  return (getAttribute(Form("CloneOf(%08x)",&other)) ||
-	  other.getAttribute(Form("CloneOf(%08x)",this))) ;
+  return (getAttribute(Form("CloneOf(%lx)",(ULong_t)&other)) ||
+	  other.getAttribute(Form("CloneOf(%lx)",(ULong_t)this))) ;
 }
 
 
@@ -338,7 +338,7 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
   // we can declare dependence on the server's value and/or shape.
 
   if (_prohibitServerRedirect) {
-    cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() 
+    cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName()
 			   << "): PROHIBITED SERVER ADDITION REQUESTED: adding server " << server.GetName()
 			   << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
     assert(0) ;
@@ -351,7 +351,7 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp)
     setOperMode(ADirty) ;
   }
 
-  
+
   // Add server link to given server
   _serverList.Add(&server) ;
 
@@ -477,7 +477,7 @@ void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* ar
 
   treeNodeServerList(list,arg,kTRUE,kFALSE,kFALSE,recurseNonDerived) ;
 }
- 
+
 
 //_____________________________________________________________________________
 void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t valueOnly, Bool_t recurseFundamental) const
@@ -533,7 +533,7 @@ RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, Bool_t stripDisconnec
 //_____________________________________________________________________________
 void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t stripDisconnected) const
 {
-  // INTERNAL helper function for getParameters() 
+  // INTERNAL helper function for getParameters()
 
   RooArgSet parList("parameters") ;
 
@@ -547,7 +547,7 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
       if (server->isFundamental()) {
 	if (!nset || !server->dependsOn(*nset)) {
 	  nodeParamServers.add(*server) ;
-	}       
+	}
       } else {
 	nodeBranchServers.add(*server) ;
       }
@@ -622,7 +622,7 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
-  treeNodeServerList(&leafList,0,kFALSE,kTRUE,valueOnly) ; 
+  treeNodeServerList(&leafList,0,kFALSE,kTRUE,valueOnly) ;
   //leafNodeServerList(&leafList) ;
   TIterator *sIter = leafList.createIterator() ;
 
@@ -839,14 +839,14 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
   }
 
   _valueDirty = kTRUE ;
-  
+
   _clientValueIter->Reset() ;
   RooAbsArg* client ;
   while ((client=(RooAbsArg*)_clientValueIter->Next())) {
     client->setValueDirty(source) ;
   }
 
-  
+
 }
 
 
@@ -964,7 +964,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
   // Process the proxies
   Bool_t allReplaced=kTRUE ;
   for (int i=0 ; i<numProxies() ; i++) {
-    // WVE: Need to make exception here too for newServer != this    
+    // WVE: Need to make exception here too for newServer != this
     Bool_t ret2 = getProxy(i)->changePointer(*newSet2,nameChange) ;
     allReplaced &= ret2 ;
   }
@@ -987,7 +987,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSet, Bool_t mustRep
 }
 
 //_____________________________________________________________________________
-RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const 
+RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const
 {
   // Find the new server in the specified set that matches the old server.
   // Allow a name change if nameChange is kTRUE, in which case the new
@@ -1031,15 +1031,15 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 
 Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t recurseInNewSet)
 {
-  // Recursively redirect all servers with new server in collection 'newSet'. 
+  // Recursively redirect all servers with new server in collection 'newSet'.
   // Substitute our servers with those listed in newSet. If nameChange is false, servers and
   // and substitutes are matched by name. If nameChange is true, servers are matched to args
   // in newSet that have the 'ORIGNAME:<servername>' attribute set. If mustReplaceAll is set,
   // a warning is printed and error status is returned if not all servers could be sucessfully
   // substituted. If recurseInNewSet is true, the recursion algorithm also recursion into
   // expression trees under the arguments in the new servers (i.e. those in newset)
-  
-  
+
+
   // Cyclic recursion protection
   static RooLinkedList callStack ;
   if (callStack.FindObject(this)) {
@@ -1049,17 +1049,17 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
   }
 
   // Do not recurse into newset if not so specified
-//   if (!recurseInNewSet && newSet.contains(*this)) {    
+//   if (!recurseInNewSet && newSet.contains(*this)) {
 //     return kFALSE ;
 //   }
-  
+
 
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
   Bool_t ret(kFALSE) ;
 
-  cxcoutD(LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << this << "," << GetName() << ") newSet = " << newSet << " mustReplaceAll = " 
+  cxcoutD(LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << this << "," << GetName() << ") newSet = " << newSet << " mustReplaceAll = "
 			 << (mustReplaceAll?"T":"F") << " nameChange = " << (nameChange?"T":"F") << " recurseInNewSet = " << (recurseInNewSet?"T":"F") << endl ;
-  
+
   // Do redirect on self (identify operation as recursion step)
   ret |= redirectServers(newSet,mustReplaceAll,nameChange,kTRUE) ;
 
@@ -1084,7 +1084,7 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
   // proxies upon creation. After registration, this arg wil forward pointer
   // changes from serverRedirects and updates in cached normalization sets
   // to the proxies immediately after they occur. The proxied argument is
-  // also added as value and/or shape server                                       
+  // also added as value and/or shape server
 
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
@@ -1257,7 +1257,7 @@ void RooAbsArg::copyList(TList& dest, const TList& source)
 
 
 //_____________________________________________________________________________
-void RooAbsArg::printName(ostream& os) const 
+void RooAbsArg::printName(ostream& os) const
 {
   // Print object name
 
@@ -1267,7 +1267,7 @@ void RooAbsArg::printName(ostream& os) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::printTitle(ostream& os) const 
+void RooAbsArg::printTitle(ostream& os) const
 {
   // Print object title
   os << GetTitle() ;
@@ -1276,14 +1276,14 @@ void RooAbsArg::printTitle(ostream& os) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::printClassName(ostream& os) const 
+void RooAbsArg::printClassName(ostream& os) const
 {
   // Print object class name
   os << IsA()->GetName() ;
 }
 
 
-void RooAbsArg::printAddress(ostream& os) const 
+void RooAbsArg::printAddress(ostream& os) const
 {
   // Print addrss of this RooAbsArg
   os << this ;
@@ -1292,29 +1292,29 @@ void RooAbsArg::printAddress(ostream& os) const
 
 
 //_____________________________________________________________________________
-void RooAbsArg::printArgs(ostream& os) const 
+void RooAbsArg::printArgs(ostream& os) const
 {
-  // Print object arguments, ie its proxies 
+  // Print object arguments, ie its proxies
 
   // Print nothing if there are no dependencies
   if (numProxies()==0) return ;
 
-  os << "[ " ;    
+  os << "[ " ;
   for (Int_t i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
     if (!TString(p->name()).BeginsWith("!")) {
       p->print(os) ;
       os << " " ;
     }
-  }    
+  }
   printMetaArgs(os) ;
-  os << "]" ;  
+  os << "]" ;
 }
 
 
 
 //_____________________________________________________________________________
-Int_t RooAbsArg::defaultPrintContents(Option_t* /*opt*/) const 
+Int_t RooAbsArg::defaultPrintContents(Option_t* /*opt*/) const
 {
   // Define default contents to print
   return kName|kClassName|kValue|kArgs ;
@@ -1355,7 +1355,7 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
     client->printStream(os,kClassName|kTitle|kName,kSingleLine);
   }
   delete clientIter;
-  
+
   // server list
   os << indent << "  Servers: " << endl;
   TIterator *serverIter= _serverList.MakeIterator();
@@ -1368,12 +1368,12 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
     server->printStream(os,kClassName|kName|kTitle,kSingleLine);
   }
   delete serverIter;
-  
+
   // proxy list
   os << indent << "  Proxies: " << endl ;
   for (int i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* proxy=getProxy(i) ;
-    
+
     if (proxy->IsA()->InheritsFrom(RooArgProxy::Class())) {
       os << indent << "    " << proxy->name() << " -> " ;
       RooAbsArg* parg = ((RooArgProxy*)proxy)->absArg() ;
@@ -1671,7 +1671,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
 void RooAbsArg::constOptimizeTestStatistic(ConstOpCode opcode)
 {
   // Interface function signaling a request to perform constant term
-  // optimization. This default implementation takes no action other than to 
+  // optimization. This default implementation takes no action other than to
   // forward the calls to all servers
 
   TIterator* sIter = serverIterator() ;
@@ -2017,15 +2017,15 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
     string nodeTitle = node->GetTitle();
     string nodeLabel = (useTitle && !nodeTitle.empty()) ? nodeTitle : nodeName;
 
-    // if using latex, replace ROOT's # with normal latex backslash 
+    // if using latex, replace ROOT's # with normal latex backslash
     while(useLatex && nodeLabel.find("#")!=nodeLabel.npos){
       nodeLabel.replace(nodeLabel.find("#"), 1, "\\");
     }
-    
+
     string typeFormat = "\\texttt{";
     string nodeType = (useLatex) ? typeFormat+node->IsA()->GetName()+"}" : node->IsA()->GetName();
 
-    os << "\"" << nodeName << "\" [ color=" << (node->isFundamental()?"blue":"red") 
+    os << "\"" << nodeName << "\" [ color=" << (node->isFundamental()?"blue":"red")
        << ", label=\"" << nodeType << delimiter << nodeLabel << "\"];" << endl ;
 
   }
@@ -2065,7 +2065,7 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 
 
 // //_____________________________________________________________________________
-// TGraphStruct* RooAbsArg::graph(Bool_t useFactoryTag, Double_t textSize) 
+// TGraphStruct* RooAbsArg::graph(Bool_t useFactoryTag, Double_t textSize)
 // {
 //   // Return a TGraphStruct object filled with the tree structure of the pdf object
 
@@ -2083,7 +2083,7 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 
 //     // Skip node that represent numeric constants
 //     if (node->IsA()->InheritsFrom(RooConstVar::Class())) continue ;
-    
+
 //     string nodeName ;
 //     if (useFactoryTag && node->getStringAttribute("factory_tag")) {
 //       nodeName  = node->getStringAttribute("factory_tag") ;
@@ -2125,7 +2125,7 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 //       edge->SetLineWidth(2) ;
 //     }
 //   }
-  
+
 //   return theGraph ;
 // }
 
@@ -2142,14 +2142,14 @@ Bool_t RooAbsArg::inhibitDirty()
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsArg::addOwnedComponents(const RooArgSet& comps) 
-{ 
+Bool_t RooAbsArg::addOwnedComponents(const RooArgSet& comps)
+{
   // Take ownership of the contents of 'comps'
 
   if (!_ownedComponents) {
     _ownedComponents = new RooArgSet("owned components") ;
   }
-  return _ownedComponents->addOwned(comps) ; 
+  return _ownedComponents->addOwned(comps) ;
 }
 
 
@@ -2173,7 +2173,7 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
   // Add the set as owned component of the head
   head->addOwnedComponents(*clonedNodes) ;
 
-  // Delete intermediate container   
+  // Delete intermediate container
   clonedNodes->releaseOwnership() ;
   delete clonedNodes ;
 
@@ -2183,25 +2183,25 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
   }
 
   // Return the head
-  return head ;  
+  return head ;
 }
 
 
 
 //_____________________________________________________________________________
-RooExpensiveObjectCache& RooAbsArg::expensiveObjectCache() const 
+RooExpensiveObjectCache& RooAbsArg::expensiveObjectCache() const
 {
   if (_eocache) {
     return *_eocache ;
   } else {
     return RooExpensiveObjectCache::instance() ;
-  }  
+  }
 }
 
 
 
 //_____________________________________________________________________________
-Bool_t RooAbsArg::flipAClean() 
+Bool_t RooAbsArg::flipAClean()
 {
   return _flipAClean ;
 }
@@ -2209,7 +2209,7 @@ Bool_t RooAbsArg::flipAClean()
 
 
 //_____________________________________________________________________________
-const char* RooAbsArg::aggregateCacheUniqueSuffix() const 
+const char* RooAbsArg::aggregateCacheUniqueSuffix() const
 {
   string suffix ;
 

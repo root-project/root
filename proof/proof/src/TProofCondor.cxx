@@ -175,7 +175,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
       }
 
       // create slave
-      TSlave *slave = CreateSlave(Form("%s:d",c->fHostname.Data(), c->fPort), c->fOrdinal,
+      TSlave *slave = CreateSlave(Form("%s:%d",c->fHostname.Data(), c->fPort), c->fOrdinal,
                                     c->fPerfIdx, c->fImage, c->fWorkDir);
 
       // add slave to appropriate list

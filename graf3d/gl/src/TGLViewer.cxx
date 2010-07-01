@@ -462,7 +462,7 @@ void TGLViewer::RequestDraw(Short_t LODInput)
    fLOD = LODInput;
 
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", this));
+      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", (ULong_t)this));
    else
       DoDraw();
 }
@@ -820,7 +820,7 @@ Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
    fLOD = TGLRnrCtx::kLODHigh;
 
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", this));
+      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", (ULong_t)this));
    else
       DoDraw();
 
@@ -899,7 +899,7 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
    fbo->Bind();
 
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", this));
+      gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoDraw()", (ULong_t)this));
    else
       DoDraw();
 
@@ -1144,7 +1144,7 @@ Bool_t TGLViewer::RequestSelect(Int_t x, Int_t y)
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSelect(%d, %d, %s)", this, x, y)));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSelect(%d, %d)", (ULong_t)this, x, y)));
    else
       return DoSelect(x, y);
 }
@@ -1211,7 +1211,7 @@ Bool_t TGLViewer::RequestSecondarySelect(Int_t x, Int_t y)
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSecondarySelect(%d, %d, %s)", this, x, y)));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoSecondarySelect(%d, %d)", (ULong_t)this, x, y)));
    else
       return DoSecondarySelect(x, y);
 }
@@ -1317,7 +1317,7 @@ Bool_t TGLViewer::RequestOverlaySelect(Int_t x, Int_t y)
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoOverlaySelect(%d, %d)", this, x, y)));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLViewer *)0x%lx)->DoOverlaySelect(%d, %d)", (ULong_t)this, x, y)));
    else
       return DoOverlaySelect(x, y);
 }

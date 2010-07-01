@@ -327,7 +327,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
 
             TList listH;
             TString listHargs;
-            listHargs.Form("((TCollection*)0x%lx)",&listH);
+            listHargs.Form("((TCollection*)0x%lx)", (ULong_t)&listH);
 
             // Loop over all source files and merge same-name object
             TFile *nextsource = (TFile*)sourcelist->After( first_source );
@@ -359,7 +359,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
          } else if ( obj->IsA()->InheritsFrom( THStack::Class() ) ) {
             THStack *hstack1 = (THStack*) obj;
             TList* l = new TList();
-            
+
             // loop over all source files and merge the histos of the
             // corresponding THStacks with the one pointed to by "hstack1"
             TFile *nextsource = (TFile*)sourcelist->After( first_source );
@@ -375,7 +375,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist)
                      delete hstack2;
                   }
                }
-               
+
                nextsource = (TFile*)sourcelist->After( nextsource );
             }
             hstack1->GetHists()->Merge(l);

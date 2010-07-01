@@ -911,7 +911,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                   TString wmsg;
                   if (memlim > 0) {
                      if (pi.fMemVirtual > 0.95 * memlim) {
-                        wmsg.Form("using more than 95% of allowed memory (%ld kB) - STOP processing", pi.fMemVirtual);
+                        wmsg.Form("using more than 95%% of allowed memory (%ld kB) - STOP processing", pi.fMemVirtual);
                         Error("Process", "%s", wmsg.Data());
                         wmsg.Insert(0, "ERROR: ");
                         if (gProofServ) gProofServ->SendAsynMessage(wmsg.Data());
@@ -921,7 +921,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                      } else if (pi.fMemVirtual > 0.80 * memlim) {
                         // Refine monitoring
                         memlogfreq = 1;
-                        wmsg.Form("using more than 80% of allowed memory (%ld kB)", pi.fMemVirtual);
+                        wmsg.Form("using more than 80%% of allowed memory (%ld kB)", pi.fMemVirtual);
                         Warning("Process", "%s", wmsg.Data());
                         wmsg.Insert(0, "WARNING: ");
                         if (gProofServ) gProofServ->SendAsynMessage(wmsg.Data());

@@ -1396,7 +1396,7 @@ void TSelectorDraw::TakeAction()
       // Using CINT to avoid a dependency in TParallelCoord
       if (!fOption.Contains("goff"))
          gROOT->ProcessLineFast(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%lx,0x%lx",
-                                this, candle));
+                                (ULong_t)this, (ULong_t)candle));
    } else if (fAction == 8) {
       //gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%1x))->Draw(\"%s\");", fTree, fOption.Data()));
    }

@@ -73,7 +73,7 @@
 char* operator+( streampos&, char* );
 #endif
 
-ClassImp(RooMinuit) 
+ClassImp(RooMinuit)
 ;
 
 TVirtualFitter *RooMinuit::_theFitter = 0 ;
@@ -127,7 +127,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   RooArgList paramList(*paramSet) ;
   delete paramSet ;
 
-  _floatParamList = (RooArgList*) paramList.selectByAttrib("Constant",kFALSE) ; 
+  _floatParamList = (RooArgList*) paramList.selectByAttrib("Constant",kFALSE) ;
   if (_floatParamList->getSize()>1) {
     _floatParamList->sort() ;
   }
@@ -144,12 +144,12 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)pIter->Next())) {
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-      coutW(Minimization) << "RooMinuit::RooMinuit: removing parameter " << arg->GetName() 
+      coutW(Minimization) << "RooMinuit::RooMinuit: removing parameter " << arg->GetName()
 			  << " from list because it is not of type RooRealVar" << endl ;
       _floatParamList->remove(*arg) ;
     }
   }
-  _nPar      = _floatParamList->getSize() ;  
+  _nPar      = _floatParamList->getSize() ;
   delete pIter ;
 
   // Save snapshot of initial lists
@@ -165,7 +165,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   // Shut up for now
   setPrintLevel(-1) ;
   _theFitter->Clear();
-  
+
   // Tell MINUIT to use our global glue function
   _theFitter->SetFCN(RooMinuitGlue);
 
@@ -192,7 +192,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
 
 
 //_____________________________________________________________________________
-RooMinuit::~RooMinuit() 
+RooMinuit::~RooMinuit()
 {
   // Destructor
 
@@ -208,7 +208,7 @@ RooMinuit::~RooMinuit()
 
 
 //_____________________________________________________________________________
-void RooMinuit::setStrategy(Int_t istrat) 
+void RooMinuit::setStrategy(Int_t istrat)
 {
   // Change MINUIT strategy to istrat. Accepted codes
   // are 0,1,2 and represent MINUIT strategies for dealing
@@ -236,8 +236,8 @@ void RooMinuit::setErrorLevel(Double_t level)
 //_____________________________________________________________________________
 void RooMinuit::setEps(Double_t eps)
 {
-  // Change MINUIT epsilon 
-  _theFitter->ExecuteCommand("SET EPS",&eps,1) ;  
+  // Change MINUIT epsilon
+  _theFitter->ExecuteCommand("SET EPS",&eps,1) ;
 }
 
 
@@ -246,7 +246,7 @@ void RooMinuit::setEps(Double_t eps)
 RooFitResult* RooMinuit::fit(const char* options)
 {
   // Parse traditional RooAbsPdf::fitTo driver options
-  // 
+  //
   //  s - Run Hesse first to estimate initial step size
   //  m - Run Migrad only
   //  h - Run Hesse to estimate errors
@@ -264,7 +264,7 @@ RooFitResult* RooMinuit::fit(const char* options)
 
   TString opts(options) ;
   opts.ToLower() ;
-  
+
   // Initial configuration
   if (opts.Contains("v")) setVerbose(1) ;
   if (opts.Contains("t")) setProfile(1) ;
@@ -278,14 +278,14 @@ RooFitResult* RooMinuit::fit(const char* options)
   if (opts.Contains("0")) setStrategy(1) ;
   if (opts.Contains("h")||!opts.Contains("m")) hesse() ;
   if (!opts.Contains("m")) minos() ;
-  
-  return (opts.Contains("r")) ? save() : 0 ; 
+
+  return (opts.Contains("r")) ? save() : 0 ;
 }
 
 
 
 //_____________________________________________________________________________
-Int_t RooMinuit::migrad() 
+Int_t RooMinuit::migrad()
 {
   // Execute MIGRAD. Changes in parameter values
   // and calculated errors are automatically
@@ -305,7 +305,7 @@ Int_t RooMinuit::migrad()
   synchronize(_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  RooAbsReal::clearEvalErrorLog() ;  
+  RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("MIGRAD",arglist,2);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
@@ -316,7 +316,7 @@ Int_t RooMinuit::migrad()
 
 
 //_____________________________________________________________________________
-Int_t RooMinuit::hesse() 
+Int_t RooMinuit::hesse()
 {
   // Execute HESSE. Changes in parameter values
   // and calculated errors are automatically
@@ -335,7 +335,7 @@ Int_t RooMinuit::hesse()
   synchronize(_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  RooAbsReal::clearEvalErrorLog() ;  
+  RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("HESSE",arglist,1);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
@@ -346,7 +346,7 @@ Int_t RooMinuit::hesse()
 
 
 //_____________________________________________________________________________
-Int_t RooMinuit::minos() 
+Int_t RooMinuit::minos()
 {
   // Execute MINOS. Changes in parameter values
   // and calculated errors are automatically
@@ -365,7 +365,7 @@ Int_t RooMinuit::minos()
   synchronize(_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  RooAbsReal::clearEvalErrorLog() ;  
+  RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
@@ -374,10 +374,10 @@ Int_t RooMinuit::minos()
 }
 
 
-// added FMV, 08/18/03 
+// added FMV, 08/18/03
 
 //_____________________________________________________________________________
-Int_t RooMinuit::minos(const RooArgSet& minosParamList) 
+Int_t RooMinuit::minos(const RooArgSet& minosParamList)
 {
   // Execute MINOS for given list of parameters. Changes in parameter values
   // and calculated errors are automatically
@@ -411,7 +411,7 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   synchronize(_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  RooAbsReal::clearEvalErrorLog() ;  
+  RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1+nMinosPar);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
@@ -424,7 +424,7 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
 
 
 //_____________________________________________________________________________
-Int_t RooMinuit::seek() 
+Int_t RooMinuit::seek()
 {
   // Execute SEEK. Changes in parameter values
   // and calculated errors are automatically
@@ -443,7 +443,7 @@ Int_t RooMinuit::seek()
   synchronize(_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  RooAbsReal::clearEvalErrorLog() ;  
+  RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("SEEK",arglist,1);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
@@ -454,7 +454,7 @@ Int_t RooMinuit::seek()
 
 
 //_____________________________________________________________________________
-Int_t RooMinuit::simplex() 
+Int_t RooMinuit::simplex()
 {
   // Execute SIMPLEX. Changes in parameter values
   // and calculated errors are automatically
@@ -474,7 +474,7 @@ Int_t RooMinuit::simplex()
   synchronize(_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  RooAbsReal::clearEvalErrorLog() ;  
+  RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("SIMPLEX",arglist,2);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
@@ -504,7 +504,7 @@ Int_t RooMinuit::improve()
   synchronize(_verbose) ;
   profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  RooAbsReal::clearEvalErrorLog() ;  
+  RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("IMPROVE",arglist,1);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
@@ -515,7 +515,7 @@ Int_t RooMinuit::improve()
 
 
 //_____________________________________________________________________________
-Int_t RooMinuit::setPrintLevel(Int_t newLevel) 
+Int_t RooMinuit::setPrintLevel(Int_t newLevel)
 {
   // Change the MINUIT internal printing level
   Int_t ret = _printLevel ;
@@ -528,7 +528,7 @@ Int_t RooMinuit::setPrintLevel(Int_t newLevel)
 
 
 //_____________________________________________________________________________
-void RooMinuit::setNoWarn() 
+void RooMinuit::setNoWarn()
 {
   // Instruct MINUIT to suppress warnings
 
@@ -540,7 +540,7 @@ void RooMinuit::setNoWarn()
 
 
 //_____________________________________________________________________________
-Int_t RooMinuit::setWarnLevel(Int_t newLevel) 
+Int_t RooMinuit::setWarnLevel(Int_t newLevel)
 {
   // Set MINUIT warning level to given level
 
@@ -555,13 +555,13 @@ Int_t RooMinuit::setWarnLevel(Int_t newLevel)
     _theFitter->ExecuteCommand("SET WARNINGS",&arg,1);
   } else {
     Double_t arg2(0) ;
-    _theFitter->ExecuteCommand("SET NOWARNINGS",&arg2,1);    
+    _theFitter->ExecuteCommand("SET NOWARNINGS",&arg2,1);
   }
   _warnLevel = newLevel ;
-  
+
   return ret ;
 }
-      
+
 
 
 //_____________________________________________________________________________
@@ -569,9 +569,9 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 {
   // Internal function to synchronize TMinuit with current
   // information in RooAbsReal function parameters
-  
+
   Int_t oldPrint = setPrintLevel(-1) ;
-  gMinuit->fNwrmes[0] = 0;  // to clear buffer 
+  gMinuit->fNwrmes[0] = 0;  // to clear buffer
   Int_t oldWarn = setWarnLevel(-1) ;
 
   Bool_t constValChange(kFALSE) ;
@@ -579,7 +579,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
   Int_t index(0) ;
 
-  // Handle eventual migrations from constParamList -> floatParamList 
+  // Handle eventual migrations from constParamList -> floatParamList
   for(index= 0; index < _constParamList->getSize() ; index++) {
     RooRealVar *par= dynamic_cast<RooRealVar*>(_constParamList->at(index)) ;
     if (!par) continue ;
@@ -588,11 +588,11 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
     // Test if constness changed
     if (!par->isConstant()) {
-      
+
       // Remove from constList, add to floatList
       _constParamList->remove(*par) ;
       _floatParamList->add(*par) ;
-      _initFloatParamList->addClone(*oldpar) ;      
+      _initFloatParamList->addClone(*oldpar) ;
       _initConstParamList->remove(*oldpar) ;
       constStatChange=kTRUE ;
       _nPar++ ;
@@ -600,16 +600,16 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
       if (verbose) {
 	coutI(Minimization) << "RooMinuit::synchronize: parameter " << par->GetName() << " is now floating." << endl ;
       }
-    } 
+    }
 
     // Test if value changed
     if (par->getVal()!= oldpar->getVal()) {
-      constValChange=kTRUE ;      
+      constValChange=kTRUE ;
       if (verbose) {
-	coutI(Minimization) << "RooMinuit::synchronize: value of constant parameter " << par->GetName() 
+	coutI(Minimization) << "RooMinuit::synchronize: value of constant parameter " << par->GetName()
 			    << " changed from " << oldpar->getVal() << " to " << par->getVal() << endl ;
-      }      
-    }    
+      }
+    }
 
   }
 
@@ -627,9 +627,9 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
     if(!par->isConstant()) {
 
-      // Verify that floating parameter is indeed of type RooRealVar 
+      // Verify that floating parameter is indeed of type RooRealVar
       if (!par->IsA()->InheritsFrom(RooRealVar::Class())) {
-	coutW(Minimization) << "RooMinuit::fit: Error, non-constant parameter " << par->GetName() 
+	coutW(Minimization) << "RooMinuit::fit: Error, non-constant parameter " << par->GetName()
 			    << " is not of type RooRealVar, skipping" << endl ;
 	continue ;
       }
@@ -639,7 +639,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 	pmin = par->getMin();
 	pmax = par->getMax();
       }
-      
+
       // Calculate step size
       pstep= par->getError();
       if(pstep <= 0) {
@@ -651,8 +651,8 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 	  if (pmax - par->getVal() < 2*pstep) {
 	    pstep = (pmax - par->getVal())/2 ;
 	  } else if (par->getVal() - pmin < 2*pstep) {
-	    pstep = (par->getVal() - pmin )/2 ;	    
-	  }	  
+	    pstep = (par->getVal() - pmin )/2 ;
+	  }
 
 	  // If trimming results in zero error, restore default
 	  if (pstep==0) {
@@ -661,15 +661,15 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
 	} else {
 	  pstep=1 ;
-	}						  
+	}
 	if(_verbose) {
 	  coutW(Minimization) << "RooMinuit::synchronize: WARNING: no initial error estimate available for "
 			      << par->GetName() << ": using " << pstep << endl;
 	}
-      }       
+      }
     } else {
       pmin = par->getVal() ;
-      pmax = par->getVal() ;      
+      pmax = par->getVal() ;
     }
 
     // Extract previous information
@@ -686,7 +686,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
         if (gMinuit->fIpfix[ix-1] == index+1) oldFixed=kTRUE ;
       }
     }
-    
+
     if (par->isConstant() && !oldFixed) {
 
       // Parameter changes floating -> constant : update only value if necessary
@@ -707,7 +707,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
       }
 
     } else if (par->isConstant() && oldFixed) {
-      
+
       // Parameter changes constant -> constant : update only value if necessary
       if (oldVar!=par->getVal()) {
 	Double_t arglist[2] ;
@@ -722,15 +722,15 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
       }
 
     } else {
-      
+
       if (!par->isConstant() && oldFixed) {
 	_theFitter->ReleaseParameter(index) ;
 	constStatChange=kTRUE ;
-	
+
 	if (verbose) {
 	  coutI(Minimization) << "RooMinuit::synchronize: parameter " << par->GetName() << " is now floating." << endl ;
 	}
-      } 
+      }
 
       // Parameter changes constant -> floating : update all if necessary
       if (oldVar!=par->getVal() || oldVlo!=pmin || oldVhi != pmax || oldVerr!=pstep) {
@@ -745,7 +745,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 	  coutI(Minimization) << "RooMinuit::synchronize: value of parameter " << par->GetName() << " changed from " << oldVar << " to " << par->getVal() << endl ;
 	}
 	if (oldVlo!=pmin || oldVhi!=pmax) {
-	  coutI(Minimization) << "RooMinuit::synchronize: limits of parameter " << par->GetName() << " changed from [" << oldVlo << "," << oldVhi 
+	  coutI(Minimization) << "RooMinuit::synchronize: limits of parameter " << par->GetName() << " changed from [" << oldVlo << "," << oldVhi
 	       << "] to [" << pmin << "," << pmax << "]" << endl ;
 	}
 
@@ -753,12 +753,12 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 	if (oldVerr!=pstep && oldVerr!=0) {
 	coutI(Minimization) << "RooMinuit::synchronize: error/step size of parameter " << par->GetName() << " changed from " << oldVerr << " to " << pstep << endl ;
 	}
-      }      
+      }
     }
   }
 
 
-  gMinuit->fNwrmes[0] = 0;  // to clear buffer 
+  gMinuit->fNwrmes[0] = 0;  // to clear buffer
   oldWarn = setWarnLevel(oldWarn) ;
   oldPrint = setPrintLevel(oldPrint) ;
 
@@ -774,25 +774,25 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
       _func->constOptimizeTestStatistic(RooAbsArg::ValueChange) ;
     }
 
-    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;  
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
   }
 
-  return 0 ;  
+  return 0 ;
 }
-	
+
 
 
 
 //_____________________________________________________________________________
-void RooMinuit::optimizeConst(Bool_t flag) 
+void RooMinuit::optimizeConst(Bool_t flag)
 {
   // If flag is true, perform constant term optimization on
   // function being minimized.
 
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
 
-  if (_optConst && !flag){ 
+  if (_optConst && !flag){
     if (_printLevel>-1) coutI(Minimization) << "RooMinuit::optimizeConst: deactivating const optimization" << endl ;
     _func->constOptimizeTestStatistic(RooAbsArg::DeActivate) ;
     _optConst = flag ;
@@ -813,7 +813,7 @@ void RooMinuit::optimizeConst(Bool_t flag)
 
 
 //_____________________________________________________________________________
-RooFitResult* RooMinuit::save(const char* userName, const char* userTitle) 
+RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
 {
   // Save and return a RooFitResult snaphot of current minimizer status.
   // This snapshot contains the values of all constant parameters,
@@ -823,8 +823,8 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
   // function value and the full correlation matrix
 
   TString name,title ;
-  name = userName ? userName : Form(_func->GetName()) ;
-  title = userTitle ? userTitle : Form(_func->GetTitle()) ;  
+  name = userName ? userName : Form("%s", _func->GetName()) ;
+  title = userTitle ? userTitle : Form("%s", _func->GetTitle()) ;
 
   if (_floatParamList->getSize()==0) {
     RooFitResult* fitRes = new RooFitResult(name,title) ;
@@ -835,7 +835,7 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
     fitRes->setCovQual(-999) ;
     fitRes->setMinNLL(_func->getVal()) ;
     fitRes->setNumInvalidNLL(0) ;
-    fitRes->setEDM(-999) ;    
+    fitRes->setEDM(-999) ;
     return fitRes ;
   }
 
@@ -855,10 +855,10 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
     }
   }
   saveConstList.sort() ;
-  
+
   fitRes->setConstParList(saveConstList) ;
   fitRes->setInitParList(saveFloatInitList) ;
-  
+
   Double_t edm, errdef, minVal;
   Int_t nvpar, nparx;
   Int_t icode = _theFitter->GetStats(minVal, edm, errdef, nvpar, nparx);
@@ -866,7 +866,7 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
   fitRes->setCovQual(icode) ;
   fitRes->setMinNLL(minVal) ;
   fitRes->setNumInvalidNLL(_numBadNLL) ;
-  fitRes->setEDM(edm) ;    
+  fitRes->setEDM(edm) ;
   fitRes->setFinalParList(saveFloatFinalList) ;
   if (!_extV) {
     fitRes->fillCorrMatrix() ;
@@ -881,7 +881,7 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
 
 
 //_____________________________________________________________________________
-RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3, Double_t n4, Double_t n5, Double_t n6) 
+RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Double_t n2, Double_t n3, Double_t n4, Double_t n5, Double_t n6)
 {
   // Create and draw a TH2 with the error contours in parameters var1 and v2 at up to 6 'sigma' settings
   // where 'sigma' is calculated as n*n*errorLevel
@@ -894,18 +894,18 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
   // Verify that both variables are floating parameters of PDF
   Int_t index1= _floatParamList->index(&var1);
   if(index1 < 0) {
-    coutE(Minimization) << "RooMinuit::contour(" << GetName() 
+    coutE(Minimization) << "RooMinuit::contour(" << GetName()
 			<< ") ERROR: " << var1.GetName() << " is not a floating parameter of " << _func->GetName() << endl ;
     return 0;
   }
 
   Int_t index2= _floatParamList->index(&var2);
   if(index2 < 0) {
-    coutE(Minimization) << "RooMinuit::contour(" << GetName() 
+    coutE(Minimization) << "RooMinuit::contour(" << GetName()
 			<< ") ERROR: " << var2.GetName() << " is not a floating parameter of PDF " << _func->GetName() << endl ;
     return 0;
   }
-  
+
   // create and draw a frame
   RooPlot* frame = new RooPlot(var1,var2) ;
 
@@ -918,7 +918,7 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
 
   Double_t n[6] ;
   n[0] = n1 ; n[1] = n2 ; n[2] = n3 ; n[3] = n4 ; n[4] = n5 ; n[5] = n6 ;
-  
+
 
   for (Int_t ic = 0 ; ic<6 ; ic++) {
     if(n[ic] > 0) {
@@ -941,18 +941,18 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
   // restore the original ERRDEF
   gMinuit->SetErrorDef(errdef);
 
-  // restore parameter values 
+  // restore parameter values
   *_floatParamList = *paramSave ;
   delete paramSave ;
 
-  
+
   return frame ;
 }
 
 
 
 //_____________________________________________________________________________
-Bool_t RooMinuit::setLogFile(const char* inLogfile) 
+Bool_t RooMinuit::setLogFile(const char* inLogfile)
 {
   // Change the file name for logging of a RooMinuit of all MINUIT steppings
   // through the parameter space. If inLogfile is null, the current log file
@@ -970,7 +970,7 @@ Bool_t RooMinuit::setLogFile(const char* inLogfile)
     _logfile->close() ;
     delete _logfile ;
     _logfile= 0;
-  }  
+  }
   return kFALSE ;
 }
 
@@ -991,7 +991,7 @@ Double_t RooMinuit::getPdfParamErr(Int_t index)
 {
   // Access PDF parameter error by ordinal index (needed by MINUIT)
 
-  return ((RooRealVar*)_floatParamList->at(index))->getError() ;  
+  return ((RooRealVar*)_floatParamList->at(index))->getError() ;
 }
 
 
@@ -1005,7 +1005,7 @@ Bool_t RooMinuit::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 
   if (par->getVal()!=value) {
     if (verbose) cout << par->GetName() << "=" << value << ", " ;
-    par->setVal(value) ;  
+    par->setVal(value) ;
     return kTRUE ;
   }
 
@@ -1019,32 +1019,32 @@ void RooMinuit::setPdfParamErr(Int_t index, Double_t value)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->setError(value) ;    
+  ((RooRealVar*)_floatParamList->at(index))->setError(value) ;
 }
 
 
 
 //_____________________________________________________________________________
-void RooMinuit::clearPdfParamAsymErr(Int_t index) 
+void RooMinuit::clearPdfParamAsymErr(Int_t index)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->removeAsymError() ;      
+  ((RooRealVar*)_floatParamList->at(index))->removeAsymError() ;
 }
 
 
 //_____________________________________________________________________________
-void RooMinuit::setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) 
+void RooMinuit::setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->setAsymError(loVal,hiVal) ;    
+  ((RooRealVar*)_floatParamList->at(index))->setAsymError(loVal,hiVal) ;
 }
 
 
 
 //_____________________________________________________________________________
-void RooMinuit::profileStart() 
+void RooMinuit::profileStart()
 {
   // Start profiling timer
   if (_profile) {
@@ -1057,7 +1057,7 @@ void RooMinuit::profileStart()
 
 
 //_____________________________________________________________________________
-void RooMinuit::profileStop() 
+void RooMinuit::profileStop()
 {
   // Stop profiling timer and report results of last session
   if (_profile) {
@@ -1073,7 +1073,7 @@ void RooMinuit::profileStop()
 
 
 //_____________________________________________________________________________
-void RooMinuit::backProp() 
+void RooMinuit::backProp()
 {
   // Transfer MINUIT fit results back into RooFit objects
 
@@ -1102,7 +1102,7 @@ void RooMinuit::backProp()
 
 
 //_____________________________________________________________________________
-void RooMinuit::applyCovarianceMatrix(TMatrixDSym& V) 
+void RooMinuit::applyCovarianceMatrix(TMatrixDSym& V)
 {
   // Apply results of given external covariance matrix. i.e. propagate its errors
   // to all RRV parameter representations and give this matrix instead of the
@@ -1115,7 +1115,7 @@ void RooMinuit::applyCovarianceMatrix(TMatrixDSym& V)
     if (_floatParamList->at(i)->isConstant()) {
       continue ;
     }
-    setPdfParamErr(i, sqrt((*_extV)(i,i))) ;		  
+    setPdfParamErr(i, sqrt((*_extV)(i,i))) ;
   }
 
 }
@@ -1148,12 +1148,12 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
     if (context->_printEvalErrors>=0) {
 
       if (context->_doEvalErrorWall) {
-	oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status." << endl 
-				      << "Returning maximum FCN so far (" << maxFCN 
+	oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status." << endl
+				      << "Returning maximum FCN so far (" << maxFCN
 				      << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
       } else {
 	oocoutW(context,Minimization) << "RooFitGlue: Minimized function has error status but is ignored" << endl ;
-      }	
+      }
 
       TIterator* iter = context->_floatParamList->createIterator() ;
       RooRealVar* var ;
@@ -1165,10 +1165,10 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
       }
       delete iter ;
       ooccoutW(context,Minimization) << endl ;
-      
+
       RooAbsReal::printEvalErrors(ooccoutW(context,Minimization),context->_printEvalErrors) ;
       ooccoutW(context,Minimization) << endl ;
-    } 
+    }
 
     if (context->_doEvalErrorWall) {
       f = maxFCN ;
@@ -1188,4 +1188,3 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
     cout.flush() ;
   }
 }
-

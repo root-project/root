@@ -1533,8 +1533,7 @@ void TAttParticle::Print(Option_t *) const
 //  Print the entire information of this kind of particle
 //
 
-   Printf("");
-   Printf("Particle: %-15s  ",
+   Printf("\nParticle: %-15s  ",
           this->GetName());
    if (!fPDGStable) {
       Printf("Mass: %8f     DecayWidth: %8f  Charge : %8f",
@@ -1544,7 +1543,7 @@ void TAttParticle::Print(Option_t *) const
       Printf("Mass: %8f     DecayWidth: Stable  Charge : %8f",
               fPDGMass, fPDGCharge);
    }
-   Printf("");
+   Printf(" ");
 }
 
 //______________________________________________________________________________

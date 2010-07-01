@@ -85,13 +85,13 @@
 static const char *gOpenFileTypes[] = {
    "ROOT files",   "*.root",
    "All files",    "*",
-   0,              0 
+   0,              0
 };
 
 static const char *gPluginFileTypes[] = {
    "ROOT files",   "*.C",
    "All files",    "*",
-   0,              0 
+   0,              0
 };
 
 enum ENewBrowserMessages {
@@ -126,8 +126,8 @@ enum ENewBrowserMessages {
 ClassImp(TRootBrowser)
 
 //______________________________________________________________________________
-TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width, 
-                           UInt_t height, Option_t *opt, Bool_t initshow) : 
+TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width,
+                           UInt_t height, Option_t *opt, Bool_t initshow) :
    TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
    // Create browser with a specified width and height.
@@ -145,8 +145,8 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width,
 
 //______________________________________________________________________________
 TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
-                           UInt_t width, UInt_t height, Option_t *opt, 
-                           Bool_t initshow) : 
+                           UInt_t width, UInt_t height, Option_t *opt,
+                           Bool_t initshow) :
    TGMainFrame(gClient->GetDefaultRoot(), width, height), TBrowserImp(b)
 {
    // Create browser with a specified width and height and at position x, y.
@@ -190,7 +190,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fMenuFile->AddEntry("&Browse...\tCtrl+B", kBrowse);
    fMenuFile->AddEntry("&Open...\tCtrl+O", kOpenFile);
    fMenuFile->AddSeparator();
-   
+
    fMenuHelp = new TGPopupMenu(fClient->GetRoot());
    fMenuHelp->AddEntry("&About ROOT...",        kHelpAbout);
    fMenuHelp->AddSeparator();
@@ -202,7 +202,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fMenuHelp->AddEntry("Help On PostScript...", kHelpOnPS);
    fMenuHelp->AddEntry("Help On Remote Session...", kHelpOnRemote);
    fMenuFile->AddPopup("Browser Help...", fMenuHelp);
-   
+
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("&Clone\tCtrl+N", kClone);
    fMenuFile->AddSeparator();
@@ -232,7 +232,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fActMenuBar = fMenuBar;
 
    // Toolbar Frame
-   fToolbarFrame = new TGHorizontalFrame(fVf, 100, 20, kHorizontalFrame | 
+   fToolbarFrame = new TGHorizontalFrame(fVf, 100, 20, kHorizontalFrame |
                                          kRaisedFrame);
    fVf->AddFrame(fToolbarFrame, fLH3);
 
@@ -249,7 +249,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fTabLeft->Resize(fTabLeft->GetDefaultSize());
    fV1->AddFrame(fTabLeft, fLH4);
 
-   // Vertical splitter   
+   // Vertical splitter
    fVSplitter = new TGVSplitter(fHf, 4, 4);
    fVSplitter->SetFrame(fV1, kTRUE);
    fHf->AddFrame(fV1, fLH7);
@@ -263,7 +263,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fTabRight->Connect("Selected(Int_t)", "TRootBrowser", this, "DoTab(Int_t)");
    fTabRight->Connect("CloseTab(Int_t)", "TRootBrowser", this, "CloseTab(Int_t)");
    fV2->AddFrame(fH1, fLH4);
-   
+
    // Horizontal splitter
    fHSplitter = new TGHSplitter(fV2, 4, 4);
    fV2->AddFrame(fHSplitter, fLH3);
@@ -273,7 +273,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    //fTabBottom->AddTab("Tab 1");
    fH2->AddFrame(fTabBottom, fLH4);
    fV2->AddFrame(fH2, fLH3);
-   
+
    fHSplitter->SetFrame(fH2, kFALSE);
    fHf->AddFrame(fV2, fLH5);
    fVf->AddFrame(fHf, fLH5);
@@ -292,12 +292,12 @@ void TRootBrowser::CreateBrowser(const char *name)
    fEditSubPos= -1;
    fNbTab[0]  = fNbTab[1] = fNbTab[2] = 0;
    fCrTab[0]  = fCrTab[1] = fCrTab[2] = -1;
-   
-   // Set a name to the main frame   
+
+   // Set a name to the main frame
    SetWindowName(name);
    SetIconName(name);
    SetClassHints("Browser", "Browser");
-   
+
    if (!strcmp(gROOT->GetDefCanvasName(), "c1"))
       gROOT->SetDefCanvasName("Canvas 1");
 
@@ -307,7 +307,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    AddInput(kKeyPressMask | kKeyReleaseMask);
 
    fVf->HideFrame(fToolbarFrame);
-}  
+}
 
 //______________________________________________________________________________
 TRootBrowser::~TRootBrowser()
@@ -373,7 +373,7 @@ void TRootBrowser::BrowseObj(TObject *obj)
 //______________________________________________________________________________
 void TRootBrowser::CloneBrowser()
 {
-   // Clone the browser. A new Browser will be created, with the same 
+   // Clone the browser. A new Browser will be created, with the same
    // plugins executed in the current one.
 
    Int_t loop = 1;
@@ -382,7 +382,7 @@ void TRootBrowser::CloneBrowser()
    TIter next(&fPlugins);
    while ((plugin = (TBrowserPlugin *)next())) {
       if (loop > fNbInitPlugins)
-         b->ExecPlugin(plugin->GetName(), "", plugin->fCommand.Data(), plugin->fTab, 
+         b->ExecPlugin(plugin->GetName(), "", plugin->fCommand.Data(), plugin->fTab,
                        plugin->fSubTab);
       ++loop;
    }
@@ -492,14 +492,14 @@ void TRootBrowser::DoTab(Int_t id)
 }
 
 //______________________________________________________________________________
-Long_t TRootBrowser::ExecPlugin(const char *name, const char *fname, 
+Long_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
                                 const char *cmd, Int_t pos, Int_t subpos)
 {
-   // Execute a macro and embed the created frame in the tab "pos" 
+   // Execute a macro and embed the created frame in the tab "pos"
    // and tab element "subpos".
 
    Long_t retval = 0;
-   TBrowserPlugin *p; 
+   TBrowserPlugin *p;
    TString command, pname;
    StartEmbedding(pos, subpos);
    if (cmd && strlen(cmd)) {
@@ -798,7 +798,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 
    // File Browser plugin
    if (strchr(opt, 'F')) {
-      cmd.Form("new TGFileBrowser(gClient->GetRoot(), (TBrowser *)0x%lx, 200, 500);", fBrowser);
+      cmd.Form("new TGFileBrowser(gClient->GetRoot(), (TBrowser *)0x%lx, 200, 500);", (ULong_t)fBrowser);
       ExecPlugin("Files", 0, cmd.Data(), 0);
       ++fNbInitPlugins;
    }
@@ -817,14 +817,14 @@ void TRootBrowser::InitPlugins(Option_t *opt)
       // HTML plugin...
       if (opt[i] == 'H') {
          if (gSystem->Load("libGuiHtml") >= 0) {
-            cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot());", 
+            cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot());",
                      gEnv->GetValue("Browser.StartUrl",
                      "http://root.cern.ch/root/html/ClassIndex.html"));
             ExecPlugin("HTML", 0, cmd.Data(), 1);
             ++fNbInitPlugins;
          }
       }
-   
+
       // Canvas plugin...
       if (opt[i] == 'C') {
          cmd.Form("new TCanvas();");
@@ -994,7 +994,7 @@ void TRootBrowser::SetTabTitle(const char *title, Int_t pos, Int_t subpos)
 }
 
 //______________________________________________________________________________
-void TRootBrowser::SetStatusText(const char* txt, Int_t col) 
+void TRootBrowser::SetStatusText(const char* txt, Int_t col)
 {
    // Set text in culumn col in status bar.
 
@@ -1007,7 +1007,7 @@ void TRootBrowser::ShowMenu(TGCompositeFrame *menu)
    // Show the selected frame's menu and hide previous one.
 
    TGFrameElement *el = 0;
-   // temporary solution until I find a proper way to handle 
+   // temporary solution until I find a proper way to handle
    // these bloody menus...
    fBindList->Delete();
    TIter nextm(fMenuBar->GetList());
@@ -1067,7 +1067,7 @@ void TRootBrowser::StartEmbedding(Int_t pos, Int_t subpos)
 void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
 {
    // Stop embedding external frame in the current editable frame.
-   
+
    if (fEditFrame != 0) {
       fEditFrame->SetEditable(kFALSE);
       if (layout) {
@@ -1089,7 +1089,7 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
 //______________________________________________________________________________
 void TRootBrowser::SwitchMenus(TGCompositeFrame  *from)
 {
-   // Move the menu from original frame to our TGMenuFrame, or display the 
+   // Move the menu from original frame to our TGMenuFrame, or display the
    // menu associated to the current tab.
 
    if (from == 0)
@@ -1164,7 +1164,7 @@ void TRootBrowser::DoubleClicked(TObject *obj)
 void TRootBrowser::Checked(TObject *obj, Bool_t checked)
 {
    // Emits signal when double clicking on icon.
-   
+
    Long_t args[2];
 
    args[0] = (Long_t)obj;
@@ -1183,11 +1183,11 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 
 
 //______________________________________________________________________________
-TBrowserImp *TRootBrowser::NewBrowser(TBrowser *b, const char *title, 
-                                      UInt_t width, UInt_t height, 
+TBrowserImp *TRootBrowser::NewBrowser(TBrowser *b, const char *title,
+                                      UInt_t width, UInt_t height,
                                       Option_t *opt)
 {
-   // static contructor returning TBrowserImp, 
+   // static contructor returning TBrowserImp,
    // as needed by the plugin mechanism.
 
    TRootBrowser *browser = new TRootBrowser(b, title, width, height, opt);
@@ -1195,14 +1195,13 @@ TBrowserImp *TRootBrowser::NewBrowser(TBrowser *b, const char *title,
 }
 
 //______________________________________________________________________________
-TBrowserImp *TRootBrowser::NewBrowser(TBrowser *b, const char *title, Int_t x, 
-                                      Int_t y, UInt_t width, UInt_t height, 
+TBrowserImp *TRootBrowser::NewBrowser(TBrowser *b, const char *title, Int_t x,
+                                      Int_t y, UInt_t width, UInt_t height,
                                       Option_t *opt)
 {
-   // static contructor returning TBrowserImp, 
+   // static contructor returning TBrowserImp,
    // as needed by the plugin mechanism.
 
    TRootBrowser *browser = new TRootBrowser(b, title, x, y, width, height, opt);
    return (TBrowserImp *)browser;
 }
-

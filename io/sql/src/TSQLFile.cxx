@@ -2664,7 +2664,7 @@ void TSQLFile::DirWriteHeader(TDirectory* dir)
       col3name+=sqlio::StrSuffix;
    }
 
-   sqlcmd.Form("UPDATE %s%s%s SET %s%s%s=%s, %s%s%s=%s, %s%s%s=%s WHERE %s%s%s=%d",
+   sqlcmd.Form("UPDATE %s%s%s SET %s%s%s=%s, %s%s%s=%s, %s%s%s=%s WHERE %s%s%s=%lld",
                 quote, sqlinfo->GetClassTableName(), quote,
                 quote, col1name.Data(), quote, timeC.Data(),
                 quote, col2name.Data(), quote, timeM.Data(),

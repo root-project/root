@@ -27,7 +27,7 @@
 
 //______________________________________________________________________________
    //"Delegating" part of TGLPadPainter. Line/fill/etc. attributes can be
-   //set inside TPad, but not only there: 
+   //set inside TPad, but not only there:
    //many of them are set by base sub-objects of 2d primitives
    //(2d primitives usually inherit TAttLine or TAttFill etc.).  And these sub-objects
    //call gVirtualX->SetLineWidth ... etc. So, if I save some attributes in my painter,
@@ -255,17 +255,17 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
 
    if (TPad *pad = dynamic_cast<TPad *>(gPad)) {
       Int_t px = 0, py = 0;
-      
+
       pad->XYtoAbsPixel(pad->GetX1(), pad->GetY1(), px, py);
-      
+
       py = gPad->GetWh() - py;
       //
       glViewport(px, py, GLsizei(gPad->GetWw() * pad->GetAbsWNDC()), GLsizei(gPad->GetWh() * pad->GetAbsHNDC()));
-      
+
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
       glOrtho(pad->GetX1(), pad->GetX2(), pad->GetY1(), pad->GetY2(), -10., 10.);
-      
+
       glMatrixMode(GL_MODELVIEW);
       glLoadIdentity();
       glTranslated(0., 0., -1.);
@@ -279,7 +279,7 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
 void TGLPadPainter::InitPainter()
 {
    //Init gl-pad painter:
-   //1. 2D painter does not use depth test, should not modify 
+   //1. 2D painter does not use depth test, should not modify
    //   depth-buffer content (except initial cleanup).
    //2. Disable cull face.
    //3. Disable lighting.
@@ -289,24 +289,24 @@ void TGLPadPainter::InitPainter()
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_CULL_FACE);
    glDisable(GL_LIGHTING);
-   
+
    //Clear the buffer
    glViewport(0, 0, GLsizei(gPad->GetWw()), GLsizei(gPad->GetWh()));
-   
+
    glDepthMask(GL_TRUE);
    glClearColor(1.,1.,1.,1.);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glDepthMask(GL_FALSE);
-   
+
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   
+
    glOrtho(gPad->GetX1(), gPad->GetX2(), gPad->GetY1(), gPad->GetY2(), -10., 10.);
 
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
    glTranslated(0., 0., -1.);
-   
+
    fLocked = kFALSE;
 }
 
@@ -320,9 +320,9 @@ void TGLPadPainter::InvalidateCS()
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   
+
    glOrtho(gPad->GetX1(), gPad->GetX2(), gPad->GetY1(), gPad->GetY2(), -10., 10.);
-   
+
    glMatrixMode(GL_MODELVIEW);
 }
 
@@ -334,7 +334,7 @@ void TGLPadPainter::LockPainter()
    //can be executed.
    if (fLocked)
       return;
-      
+
    glFinish();
    fLocked = kTRUE;
 }
@@ -356,7 +356,7 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       //that TView3D wants to draw itself in a XOR mode, via
       //gVirtualX.
       if (gVirtualX->GetDrawMode() == TVirtualX::kInvert) {
-         gVirtualX->DrawLine(gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1), 
+         gVirtualX->DrawLine(gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
                              gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2));
       }
 
@@ -369,7 +369,7 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    glVertex2d(x1, y1);
    glVertex2d(x2, y2);
    glEnd();
-   
+
    if (gVirtualX->GetLineWidth() > lineWidthTS) {
       Double_t pointSize = gVirtualX->GetLineWidth();
       if (pointSize > fLimits.GetMaxPointSize())
@@ -382,7 +382,7 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       glVertex2d(x1, y1);
       glVertex2d(x2, y2);
 
-      glEnd(); 
+      glEnd();
       glPointSize(1.f);
    }
 
@@ -394,7 +394,7 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
    //Draw line segment in NDC coordinates.
    if (fLocked)
       return;
-      
+
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
    const Double_t yRange = gPad->GetY2() - gPad->GetY1();
@@ -402,7 +402,7 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
    glBegin(GL_LINES);
    glVertex2d(gPad->GetX1() + u1 * xRange, gPad->GetY1() + v1 * yRange);
    glVertex2d(gPad->GetX1() + u2 * xRange, gPad->GetY1() + v2 * yRange);
-   glEnd();   
+   glEnd();
 }
 
 //______________________________________________________________________________
@@ -438,7 +438,7 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
    }
 
    fVs.resize(n * 3);
-   
+
    for (Int_t i = 0; i < n; ++i) {
       fVs[i * 3]     = x[i];
       fVs[i * 3 + 1] = y[i];
@@ -454,7 +454,7 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
    for (Int_t i = 0; i < n; ++i)
       gluTessVertex(t, &fVs[i * 3], &fVs[i * 3]);
 
-      
+
    gluEndPolygon(t);
 }
 
@@ -472,7 +472,7 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
    }
 
    fVs.resize(n * 3);
-   
+
    for (Int_t i = 0; i < n; ++i) {
       fVs[i * 3]     = x[i];
       fVs[i * 3 + 1] = y[i];
@@ -487,7 +487,7 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
    for (Int_t i = 0; i < n; ++i)
       gluTessVertex(t, &fVs[i * 3], &fVs[i * 3]);
 
-      
+
    gluEndPolygon(t);
 }
 
@@ -510,7 +510,7 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
       fIsHollowArea = kFALSE;
    }
    glEnd();
-   
+
    if (gVirtualX->GetLineWidth() > lineWidthTS) {
       Double_t pointSize = gVirtualX->GetLineWidth();
       if (pointSize > fLimits.GetMaxPointSize())
@@ -523,7 +523,7 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
       for (Int_t i = 0; i < n; ++i)
          glVertex2d(x[i], y[i]);
 
-      glEnd(); 
+      glEnd();
       glPointSize(1.f);
    }
 }
@@ -533,8 +533,8 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 {
    //Never called?
    if (fLocked)
-      return;   
-   
+      return;
+
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
 
    glBegin(GL_LINE_STRIP);
@@ -546,7 +546,7 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
       glVertex2f(x[0], y[0]);
       fIsHollowArea = kFALSE;
    }
-      
+
    glEnd();
 }
 
@@ -561,7 +561,7 @@ void TGLPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
    const Double_t yRange = gPad->GetY2() - gPad->GetY1();
    const Double_t x1 = gPad->GetX1(), y1 = gPad->GetY1();
-   
+
    glBegin(GL_LINE_STRIP);
 
    for (Int_t i = 0; i < n; ++i)
@@ -617,7 +617,7 @@ void TGLPadPainter::DrawPolyMarker()
    Float_t rgba[3] = {};
    Rgl::Pad::ExtractRGB(gVirtualX->GetMarkerColor(), rgba);
    glColor3fv(rgba);
-   
+
    const TPoint *xy = &fPoly[0];
    const Style_t markerStyle = gVirtualX->GetMarkerStyle();
    const UInt_t n = UInt_t(fPoly.size());
@@ -679,7 +679,7 @@ void TGLPadPainter::DrawPolyMarker()
    case kOpenStar:
       fMarker.DrawOpenStar(n, xy);
    }
-   
+
    RestoreProjectionMatrix();
    glMatrixMode(GL_MODELVIEW);
 }
@@ -688,7 +688,7 @@ void TGLPadPainter::DrawPolyMarker()
 void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode /*mode*/)
 {
    //Draw text. This operation is especially
-   //dangerous if in locked state - 
+   //dangerous if in locked state -
    //ftgl will assert on zero texture size
    //(which is result of bad GL context).
    if (fLocked)
@@ -705,7 +705,7 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
    Rgl::Pad::ExtractRGB(gVirtualX->GetTextColor(), rgba);
    glColor3fv(rgba);
 
-   fFM.RegisterFont(Int_t(gVirtualX->GetTextSize()) - 1, 
+   fFM.RegisterFont(Int_t(gVirtualX->GetTextSize()) - 1,
                     TGLFontManager::GetFontNameFromId(gVirtualX->GetTextFont()),
                     TGLFont::kTexture, fF);
    fF.PreRender();
@@ -722,7 +722,7 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
 void TGLPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode)
 {
    //Draw text in NDC. This operation is especially
-   //dangerous if in locked state - 
+   //dangerous if in locked state -
    //ftgl will assert on zero texture size
    //(which is result of bad GL context).
    if (fLocked)
@@ -752,7 +752,7 @@ void TGLPadPainter::RestoreProjectionMatrix()const
    glMatrixMode(GL_PROJECTION);
    glPopMatrix();
 }
-   
+
 //______________________________________________________________________________
 void TGLPadPainter::SaveModelviewMatrix()const
 {
@@ -794,7 +794,7 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
 
    TVirtualPad *canvas = (TVirtualPad *)pad->GetCanvas();
    if (!canvas) return;
-   gROOT->ProcessLine(Form("((TCanvas *)0x%lx)->Flush();", canvas));
+   gROOT->ProcessLine(Form("((TCanvas *)0x%lx)->Flush();", (ULong_t)canvas));
 
    std::vector<unsigned> buff(canvas->GetWw() * canvas->GetWh());
    glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -818,17 +818,17 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
    }
 
    const Int_t nLines  = canvas->GetWh();
-   const Int_t nPixels = canvas->GetWw(); 
+   const Int_t nPixels = canvas->GetWw();
 
    for (Int_t i = 0; i < nLines; ++i) {
      Int_t base = (nLines - 1 - i) * nPixels;
      for (Int_t j = 0; j < nPixels; ++j, ++base) {
         //Uncomment/comment if you don't have GL_BGRA.
-        
+
         const UInt_t pix  = buff[base];
         const UInt_t bgra = ((pix & 0xff) << 16) | (pix & 0xff00) |
                             ((pix & 0xff0000) >> 16) | (pix & 0xff000000);
-        
+
         //argb[i * nPixels + j] = buff[base];
         argb[i * nPixels + j] = bgra;
      }
@@ -845,12 +845,12 @@ template<class ValueType>
 void ConvertMarkerPoints(Int_t n, const ValueType *x, const ValueType *y, std::vector<TPoint> & dst)
 {
    const UInt_t padH = UInt_t(gPad->GetAbsHNDC() * gPad->GetWh());
-   
+
    dst.resize(n);
    for (Int_t i = 0; i < n; ++i) {
       dst[i].fX = gPad->XtoPixel(x[i]);
       dst[i].fY = padH - gPad->YtoPixel(y[i]);
-   }   
+   }
 }
 
 }

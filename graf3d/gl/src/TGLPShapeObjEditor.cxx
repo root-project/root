@@ -516,7 +516,7 @@ void TGLPShapeObjEditor::DrawSphere()const
    // Draw local sphere reflecting current color options.
 
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", this));
+      gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", (ULong_t)this));
       return;
    }
 

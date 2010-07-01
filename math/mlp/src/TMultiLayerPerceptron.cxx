@@ -31,14 +31,14 @@
 // This implementation, written by C. Delaere, is *inspired* from
 // the mlpfit package from J.Schwindling et al. with some extensions:
 //   * the algorithms are globally the same
-//   * in TMultilayerPerceptron, there is no limitation on the number of 
+//   * in TMultilayerPerceptron, there is no limitation on the number of
 //     layers/neurons, while MLPFIT was limited to 2 hidden layers
-//   * TMultilayerPerceptron allows you to save the network in a root file, and 
+//   * TMultilayerPerceptron allows you to save the network in a root file, and
 //     provides more export functionalities
-//   * TMultilayerPerceptron gives more flexibility regarding the normalization of 
+//   * TMultilayerPerceptron gives more flexibility regarding the normalization of
 //     inputs/outputs
-//   * TMultilayerPerceptron provides, thanks to Andrea Bocci, the possibility to 
-//     use cross-entropy errors, which allows to train a network for pattern 
+//   * TMultilayerPerceptron provides, thanks to Andrea Bocci, the possibility to
+//     use cross-entropy errors, which allows to train a network for pattern
 //     classification based on Bayesian posterior probability.
 //
 ///////////////////////////////////////////////////////////////////////////
@@ -424,9 +424,9 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fData = data;
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
-   fTraining = new TEventList(Form("fTrainingList_%i",this));
+   fTraining = new TEventList(Form("fTrainingList_%lu",(ULong_t)this));
    fTrainingOwner = true;
-   fTest = new TEventList(Form("fTestList_%i",this));
+   fTest = new TEventList(Form("fTestList_%lu",(ULong_t)this));
    fTestOwner = true;
    fWeight = "1";
    TString testcut = test;
@@ -437,8 +437,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fextD = extD;
    if (data) {
       BuildNetwork();
-      data->Draw(Form(">>fTrainingList_%i",this),training,"goff");
-      data->Draw(Form(">>fTestList_%i",this),(const char *)testcut,"goff");
+      data->Draw(Form(">>fTrainingList_%lu",(ULong_t)this),training,"goff");
+      data->Draw(Form(">>fTestList_%lu",(ULong_t)this),(const char *)testcut,"goff");
       AttachData();
    }
    else {
@@ -488,9 +488,9 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fStructure = layout;
    fData = data;
    fCurrentTree = -1;
-   fTraining = new TEventList(Form("fTrainingList_%i",this));
+   fTraining = new TEventList(Form("fTrainingList_%lu",(ULong_t)this));
    fTrainingOwner = true;
-   fTest = new TEventList(Form("fTestList_%i",this));
+   fTest = new TEventList(Form("fTestList_%lu",(ULong_t)this));
    fTestOwner = true;
    fWeight = weight;
    TString testcut = test;
@@ -501,8 +501,8 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    fextD = extD;
    if (data) {
       BuildNetwork();
-      data->Draw(Form(">>fTrainingList_%i",this),training,"goff");
-      data->Draw(Form(">>fTestList_%i",this),(const char *)testcut,"goff");
+      data->Draw(Form(">>fTrainingList_%lu",(ULong_t)this),training,"goff");
+      data->Draw(Form(">>fTestList_%lu",(ULong_t)this),(const char *)testcut,"goff");
       AttachData();
    }
    else {
@@ -582,10 +582,10 @@ void TMultiLayerPerceptron::SetTrainingDataSet(const char * train)
    // Those events will be used for the minimization.
    // Note that the tree must be already defined.
    if(fTraining && fTrainingOwner) delete fTraining;
-   fTraining = new TEventList(Form("fTrainingList_%i",this));
+   fTraining = new TEventList(Form("fTrainingList_%lu",(ULong_t)this));
    fTrainingOwner = true;
    if (fData) {
-      fData->Draw(Form(">>fTrainingList_%i",this),train,"goff");
+      fData->Draw(Form(">>fTrainingList_%lu",(ULong_t)this),train,"goff");
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
@@ -599,11 +599,11 @@ void TMultiLayerPerceptron::SetTestDataSet(const char * test)
    // Those events will not be used for the minimization but for control.
    // Note that the tree must be already defined.
    if(fTest && fTestOwner) {delete fTest; fTest=0;}
-   if(fTest) if(strncmp(fTest->GetName(),Form("fTestList_%i",this),10)) delete fTest;
-   fTest = new TEventList(Form("fTestList_%i",this));
+   if(fTest) if(strncmp(fTest->GetName(),Form("fTestList_%lu",(ULong_t)this),10)) delete fTest;
+   fTest = new TEventList(Form("fTestList_%lu",(ULong_t)this));
    fTestOwner = true;
    if (fData) {
-      fData->Draw(Form(">>fTestList_%i",this),test,"goff");
+      fData->Draw(Form(">>fTestList_%lu",(ULong_t)this),test,"goff");
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
