@@ -621,7 +621,7 @@ void TBufferSQL2::ClassBegin(const TClass* cl, Version_t classversion)
    
    PushStack()->SetCustomClass(cl, classversion);
 
-   if (gDebug>2) Info("ClassBegin", cl->GetName());
+   if (gDebug>2) Info("ClassBegin", "%s", cl->GetName());
    
    WorkWithClass(cl->GetName(), classversion);
 }
@@ -641,7 +641,7 @@ void TBufferSQL2::ClassEnd(const TClass* cl)
 
    fExpectedChain = kFALSE;
 
-   if (gDebug>2) Info("ClassEnd",cl->GetName());
+   if (gDebug>2) Info("ClassEnd","%s",cl->GetName());
 }
 
 //______________________________________________________________________________
