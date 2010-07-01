@@ -1,3 +1,4 @@
+// @(#)root/mathcore:$Id$
 // Authors: Marian Ivanov and Alexandru Bercuci 04/03/2005
 
 /*************************************************************************
@@ -39,32 +40,32 @@ templateClassImp(TKDTree)
 //
 // 1. What is kdtree ? ( http://en.wikipedia.org/wiki/Kd-tree )
 //
-// In computer science, a kd-tree (short for k-dimensional tree) is a space-partitioning data structure 
-// for organizing points in a k-dimensional space. kd-trees are a useful data structure for several 
-// applications, such as searches involving a multidimensional search key (e.g. range searches and 
+// In computer science, a kd-tree (short for k-dimensional tree) is a space-partitioning data structure
+// for organizing points in a k-dimensional space. kd-trees are a useful data structure for several
+// applications, such as searches involving a multidimensional search key (e.g. range searches and
 // nearest neighbour searches). kd-trees are a special case of BSP trees.
 //
-// A kd-tree uses only splitting planes that are perpendicular to one of the coordinate system axes. 
-// This differs from BSP trees, in which arbitrary splitting planes can be used. 
+// A kd-tree uses only splitting planes that are perpendicular to one of the coordinate system axes.
+// This differs from BSP trees, in which arbitrary splitting planes can be used.
 // In addition, in the typical definition every node of a kd-tree, from the root to the leaves, stores a point.
-// This differs from BSP trees, in which leaves are typically the only nodes that contain points 
+// This differs from BSP trees, in which leaves are typically the only nodes that contain points
 // (or other geometric primitives). As a consequence, each splitting plane must go through one of
-// the points in the kd-tree. kd-trees are a variant that store data only in leaf nodes. 
+// the points in the kd-tree. kd-trees are a variant that store data only in leaf nodes.
 //
 // 2. Constructing a classical kd-tree ( Pseudo code)
 //
-// Since there are many possible ways to choose axis-aligned splitting planes, there are many different ways 
+// Since there are many possible ways to choose axis-aligned splitting planes, there are many different ways
 // to construct kd-trees. The canonical method of kd-tree construction has the following constraints:
 //
-//     * As one moves down the tree, one cycles through the axes used to select the splitting planes. 
-//      (For example, the root would have an x-aligned plane, the root's children would both have y-aligned 
+//     * As one moves down the tree, one cycles through the axes used to select the splitting planes.
+//      (For example, the root would have an x-aligned plane, the root's children would both have y-aligned
 //       planes, the root's grandchildren would all have z-aligned planes, and so on.)
-//     * At each step, the point selected to create the splitting plane is the median of the points being 
+//     * At each step, the point selected to create the splitting plane is the median of the points being
 //       put into the kd-tree, with respect to their coordinates in the axis being used. (Note the assumption
 //       that we feed the entire set of points into the algorithm up-front.)
 //
 // This method leads to a balanced kd-tree, in which each leaf node is about the same distance from the root.
-// However, balanced trees are not necessarily optimal for all applications. 
+// However, balanced trees are not necessarily optimal for all applications.
 // The following pseudo-code illustrates this canonical construction procedure (NOTE, that the procedure used
 // by the TKDTree class is a bit different, the following pseudo-code is given as a simple illustration of the
 // concept):
@@ -90,10 +91,10 @@ templateClassImp(TKDTree)
 //     }
 // }
 
-// Our construction method is optimized to save memory, and differs a bit from the constraints above. 
+// Our construction method is optimized to save memory, and differs a bit from the constraints above.
 // In particular, the division axis is chosen as the one with the biggest spread, and the point to create the
-// splitting plane is chosen so, that one of the two subtrees contains exactly 2^k terminal nodes and is a 
-// perfectly balanced binary tree, and, while at the same time, trying to keep the number of terminal nodes 
+// splitting plane is chosen so, that one of the two subtrees contains exactly 2^k terminal nodes and is a
+// perfectly balanced binary tree, and, while at the same time, trying to keep the number of terminal nodes
 // in the 2 subtrees as close as possible. The following section gives more details about our implementation.
 //
 // 3. Using TKDTree
@@ -113,7 +114,7 @@ templateClassImp(TKDTree)
 //     kdtree->Build();
 //     }
 //     NOTE, that this implementation of kd-tree doesn't support adding new points after the tree has been built
-//     Of course, it's not necessary to use TTree::Draw(). What is important, is to have data columnwise. 
+//     Of course, it's not necessary to use TTree::Draw(). What is important, is to have data columnwise.
 //     An example with regular arrays:
 //     {
 //     Int_t npoints = 100000;
@@ -137,8 +138,8 @@ templateClassImp(TKDTree)
 //     kdtree->Build();
 //     }
 //
-//     By default, the kd-tree doesn't own the data and doesn't delete it with itself. If you want the 
-//     data to be deleted together with the kd-tree, call TKDTree::SetOwner(kTRUE). 
+//     By default, the kd-tree doesn't own the data and doesn't delete it with itself. If you want the
+//     data to be deleted together with the kd-tree, call TKDTree::SetOwner(kTRUE).
 //
 //     Most functions of the kd-tree don't require the original data to be present after the tree
 //     has been built. Check the functions documentation for more details.
@@ -147,53 +148,53 @@ templateClassImp(TKDTree)
 //
 //     Nodes of the tree are indexed top to bottom, left to right. The root node has index 0. Functions
 //     TKDTree::GetLeft(Index inode), TKDTree::GetRight(Index inode) and TKDTree::GetParent(Index inode)
-//     allow to find the children and the parent of a given node.   
+//     allow to find the children and the parent of a given node.
 //
-//     For a given node, one can find the indexes of the original points, contained in this node, 
+//     For a given node, one can find the indexes of the original points, contained in this node,
 //     by calling the GetNodePointsIndexes(Index inode) function. Additionally, for terminal nodes,
 //     there is a function GetPointsIndexes(Index inode) that returns a pointer to the relevant
-//     part of the index array. To find the number of point in the node 
+//     part of the index array. To find the number of point in the node
 //     (not only terminal), call TKDTree::GetNpointsNode(Index inode).
-//     
-// 4.  TKDtree implementation details - internal information, not needed to use the kd-tree. 
+//
+// 4.  TKDtree implementation details - internal information, not needed to use the kd-tree.
 //     4a. Order of nodes in the node information arrays:
 //
 // TKDtree is optimized to minimize memory consumption.
 // Nodes of the TKDTree do not store pointers to the left and right children or to the parent node,
-// but instead there are several 1-d arrays of size fNNodes with information about the nodes. 
+// but instead there are several 1-d arrays of size fNNodes with information about the nodes.
 // The order of the nodes information in the arrays is described below. It's important to understand
 // it, if one's class needs to store some kind of additional information on the per node basis, for
-// example, the fit function parameters.  
+// example, the fit function parameters.
 //
-// Drawback:   Insertion to the TKDtree is not supported.  
+// Drawback:   Insertion to the TKDtree is not supported.
 // Advantage:  Random access is supported
 //
-// As noted above, the construction of the kd-tree involves choosing the axis and the point on 
+// As noted above, the construction of the kd-tree involves choosing the axis and the point on
 // that axis to divide the remaining points approximately in half. The exact algorithm for choosing
 // the division point is described in the next section. The sequence of divisions is
 // recorded in the following arrays:
 // fAxix[fNNodes]  - Division axis (0,1,2,3 ...)
-// fValue[fNNodes] - Division value 
+// fValue[fNNodes] - Division value
 //
-// Given the index of a node in those arrays, it's easy to find the indices, corresponding to 
+// Given the index of a node in those arrays, it's easy to find the indices, corresponding to
 // children nodes or the parent node:
 // Suppose, the parent node is stored under the index inode. Then:
 // Left child index  = inode*2+1
-// Right child index =  (inode+1)*2  
+// Right child index =  (inode+1)*2
 // Suppose, that the child node is stored under the index inode. Then:
 // Parent index = inode/2
-// 
+//
 // Number of division nodes and number of terminals :
 // fNNodes = (fNPoints/fBucketSize)
-// 
+//
 // The nodes are filled always from left side to the right side:
-// Let inode be the index of a node, and irow - the index of a row 
+// Let inode be the index of a node, and irow - the index of a row
 // The TKDTree looks the following way:
 // Ideal case:
 // Number of _terminal_ nodes = 2^N,  N=3
 //
 //            INode
-// irow 0     0                                                                   -  1 inode 
+// irow 0     0                                                                   -  1 inode
 // irow 1     1                              2                                    -  2 inodes
 // irow 2     3              4               5               6                    -  4 inodes
 // irow 3     7       8      9      10       11     12       13      14           -  8 inodes
@@ -207,15 +208,15 @@ templateClassImp(TKDTree)
 // irow 1     1                              2                                    - 2 inodes
 // irow 2     3              4               5               6                    - 3 inodes
 // irow 3     7       8      9      10       11     12       13      14           - 8 inodes
-// irow 4     15  16                                                              - 2 inodes 
+// irow 4     15  16                                                              - 2 inodes
 //
 //
 // 3b. The division algorithm:
-// 
+//
 // As described above, the kd-tree is built by repeatingly dividing the given set of points into
 // 2 smaller sets. The cut is made on the axis with the biggest spread, and the value on the axis,
-// on which the cut is performed, is chosen based on the following formula: 
-// Suppose, we want to divide n nodes into 2 groups, left and right. Then the left and right 
+// on which the cut is performed, is chosen based on the following formula:
+// Suppose, we want to divide n nodes into 2 groups, left and right. Then the left and right
 // will have the following number of nodes:
 //
 // n=2^k+rest
@@ -223,17 +224,17 @@ templateClassImp(TKDTree)
 // Left  = 2^k-1 +  ((rest>2^k-2) ?  2^k-2      : rest)
 // Right = 2^k-1 +  ((rest>2^k-2) ?  rest-2^k-2 : 0)
 //
-// For example, let n_nodes=67. Then, the closest 2^k=64, 2^k-1=32, 2^k-2=16. 
+// For example, let n_nodes=67. Then, the closest 2^k=64, 2^k-1=32, 2^k-2=16.
 // Left node gets 32+3=35 sub-nodes, and the right node gets 32 sub-nodes
 //
-// The division process continues until all the nodes contain not more than a predefined number 
+// The division process continues until all the nodes contain not more than a predefined number
 // of points.
 //
 // 3c. The order of nodes in boundary-related arrays
-// 
+//
 // Some kd-tree based algorithms need to know the boundaries of each node. This information can
 // be computed by calling the TKDTree::MakeBoundaries() function. It fills the following arrays:
-//  
+//
 // fRange : array containing the boundaries of the domain:
 // | 1st dimension (min + max) | 2nd dimension (min + max) | ...
 // fBoundaries : nodes boundaries
@@ -285,7 +286,7 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize) :
    ,fOffset(0)
 {
 // Create the kd-tree of npoints from ndim-dimensional space. Parameter bsize stands for the
-// maximal number of points in the terminal nodes (buckets). 
+// maximal number of points in the terminal nodes (buckets).
 // Proceed by calling one of the SetData() functions and then the Build() function
 // Note, that updating the tree with new data after the Build() function has been called is
 // not possible!
@@ -312,9 +313,9 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **
    ,fCrossNode(0)
    ,fOffset(0)
 {
-   // Create a kd-tree from the provided data array. This function only sets the data, 
+   // Create a kd-tree from the provided data array. This function only sets the data,
    // call Build() to build the tree!!!
-   // Parameteres: 
+   // Parameteres:
    // - npoints - total number of points. Adding points after the tree is built is not supported
    // - ndim    - number of dimensions
    // - bsize   - maximal number of points in the terminal nodes
@@ -333,9 +334,9 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **
    //
    // By default, the kd-tree doesn't own the data. If you want the kd-tree to delete the data array, call
    // kdtree->SetOwner(kTRUE).
-   // 
+   //
 
-   
+
    //Build();
 }
 
@@ -346,7 +347,7 @@ TKDTree<Index, Value>::~TKDTree()
    // Destructor
    // By default, the original data is not owned by kd-tree and is not deleted with it.
    // If you want to delete the data along with the kd-tree, call SetOwner(kTRUE).
-   
+
    if (fAxis) delete [] fAxis;
    if (fValue) delete [] fValue;
    if (fIndPoints) delete [] fIndPoints;
@@ -380,11 +381,11 @@ void TKDTree<Index, Value>::Build()
    // 2. calculate first terminal row
    // 3. initialize index array
    // 4. non recursive building of the binary tree
-   //  
+   //
    //
    // The tree is divided recursively. See class description, section 4b for the details
    // of the division alogrithm
-   
+
    //1.
    fNNodes = fNPoints/fBucketSize-1;
    if (fNPoints%fBucketSize) fNNodes++;
@@ -400,7 +401,7 @@ void TKDTree<Index, Value>::Build()
    //         6 = 2**2 + 2
    //         7 = 2**2 + 3
    //         8 = 2**2 + 4
-   
+
    //3.
    // allocate space for boundaries
    fRange = new Value[2*fNDim];
@@ -449,7 +450,7 @@ void TKDTree<Index, Value>::Build()
       }
       Int_t crow     = rowStack[currentIndex];
       Int_t cpos     = posStack[currentIndex];
-      Int_t cnode    = nodeStack[currentIndex];		
+      Int_t cnode    = nodeStack[currentIndex];
       //printf("currentIndex %d npoints %d node %d\n", currentIndex, npoints, cnode);
       //
       // divide points
@@ -469,7 +470,7 @@ void TKDTree<Index, Value>::Build()
          nright = nfull*fBucketSize/2;
          nleft  = npoints-nright;
       }
-      
+
       //
       //find the axis with biggest spread
       Value maxspread=0;
@@ -507,11 +508,11 @@ void TKDTree<Index, Value>::Build()
       //
       if (0){
          // consistency check
-         Info("Build()", Form("points %d left %d right %d", npoints, nleft, nright));
+         Info("Build()", "%s", Form("points %d left %d right %d", npoints, nleft, nright));
          if (nleft<nright) Warning("Build", "Problem Left-Right");
          if (nleft<0 || nright<0) Warning("Build()", "Problem Negative number");
       }
-   }    
+   }
 }
 
 //_________________________________________________________________
@@ -533,7 +534,7 @@ void TKDTree<Index, Value>::FindNearestNeighbors(const Value *point, const Int_t
    }
    MakeBoundariesExact();
    UpdateNearestNeighbors(0, point, kNN, ind, dist);
-   
+
 }
 
 //_________________________________________________________________
@@ -599,13 +600,13 @@ Double_t TKDTree<Index, Value>::Distance(const Value *point, Index ind, Int_t ty
       for (Int_t idim=0; idim<fNDim; idim++){
          dist+=TMath::Abs(point[idim]-fData[idim][ind]);
       }
-      
+
       return dist;
    }
    return -1;
-   
+
 }
- 
+
 //_________________________________________________________________
 template <typename Index, typename Value>
 void TKDTree<Index, Value>::DistanceToNode(const Value *point, Index inode, Value &min, Value &max, Int_t type)
@@ -627,7 +628,7 @@ void TKDTree<Index, Value>::DistanceToNode(const Value *point, Index inode, Valu
          if (point[idim/2]<bound[idim] || point[idim/2]>bound[idim+1])
             min+= (dist1>dist2)? dist2 : dist1;
          // max+=TMath::Max(dist1, dist2);
-         max+= (dist1>dist2)? dist1 : dist2;         
+         max+= (dist1>dist2)? dist1 : dist2;
       }
       min = TMath::Sqrt(min);
       max = TMath::Sqrt(max);
@@ -638,7 +639,7 @@ void TKDTree<Index, Value>::DistanceToNode(const Value *point, Index inode, Valu
          //min+=TMath::Min(dist1, dist2);
          min+= (dist1>dist2)? dist2 : dist1;
          // max+=TMath::Max(dist1, dist2);
-         max+= (dist1>dist2)? dist1 : dist2;         
+         max+= (dist1>dist2)? dist1 : dist2;
       }
    }
 }
@@ -657,7 +658,7 @@ Index TKDTree<Index, Value>::FindNode(const Value * point) const
    while (currentIndex>=0){
       inode    = stackNode[currentIndex];
       if (IsTerminal(inode)) return inode;
-      
+
       currentIndex--;
       if (point[fAxis[inode]]<=fValue[inode]){
          currentIndex++;
@@ -668,7 +669,7 @@ Index TKDTree<Index, Value>::FindNode(const Value * point) const
          stackNode[currentIndex]=(inode+1)<<1; //GetRight()
       }
    }
-   
+
    return -1;
 }
 
@@ -680,7 +681,7 @@ void TKDTree<Index, Value>::FindPoint(Value * point, Index &index, Int_t &iter){
   //
   // find the index of point
   // works only if we keep fData pointers
-  
+
   Int_t stackNode[128];
   Int_t currentIndex =0;
   stackNode[0] = 0;
@@ -705,7 +706,7 @@ void TKDTree<Index, Value>::FindPoint(Value * point, Index &index, Int_t &iter){
       }
       continue;
     }
-    
+
     if (point[fAxis[inode]]<=fValue[inode]){
       currentIndex++;
       stackNode[currentIndex]=(inode*2)+1;
@@ -724,7 +725,7 @@ template <typename  Index, typename Value>
 void TKDTree<Index, Value>::FindInRange(Value * point, Value range, std::vector<Index> &res)
 {
 //Find all points in the sphere of a given radius "range" around the given point
-//1st argument - the point 
+//1st argument - the point
 //2nd argument - radius of the shere
 //3rd argument - a vector, in which the results will be returned
 
@@ -746,7 +747,7 @@ void TKDTree<Index, Value>::UpdateRange(Index inode, Value* point, Value range, 
    }
    if (max<range && max>0) {
       //all points of this node are inside the range
-      
+
       Index f1, l1, f2, l2;
       GetNodePointsIndexes(inode, f1, l1, f2, l2);
 
@@ -785,7 +786,7 @@ void TKDTree<Index, Value>::UpdateRange(Index inode, Value* point, Value range, 
 
 //_________________________________________________________________
 template <typename Index, typename Value>
-Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const 
+Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
 {
    //return the indices of the points in that terminal node
    //for all the nodes except last, the size is fBucketSize
@@ -801,7 +802,7 @@ Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
 
 //_________________________________________________________________
 template <typename Index, typename Value>
-void  TKDTree<Index, Value>::GetNodePointsIndexes(Int_t node, Int_t &first1, Int_t &last1, Int_t &first2, Int_t &last2) const 
+void  TKDTree<Index, Value>::GetNodePointsIndexes(Int_t node, Int_t &first1, Int_t &last1, Int_t &first2, Int_t &last2) const
 {
    //Return the indices of points in that node
    //Indices are returned as the first and last value of the part of indices array, that belong to this node
@@ -868,14 +869,14 @@ void  TKDTree<Index, Value>::GetNodePointsIndexes(Int_t node, Int_t &first1, Int
 
 //_________________________________________________________________
 template <typename Index, typename Value>
-Index TKDTree<Index, Value>::GetNPointsNode(Int_t inode) const 
+Index TKDTree<Index, Value>::GetNPointsNode(Int_t inode) const
 {
    //Get number of points in this node
    //for all the terminal nodes except last, the size is fBucketSize
    //for the last node it's fOffset%fBucketSize, or if fOffset%fBucketSize==0, it's also fBucketSize
 
    if (IsTerminal(inode)){
-      
+
       if (inode!=fTotalNodes-1) return fBucketSize;
       else {
          if (fOffset%fBucketSize==0) return fBucketSize;
@@ -898,18 +899,18 @@ void TKDTree<Index, Value>::SetData(Index npoints, Index ndim, UInt_t bsize, Val
 // Set the data array. See the constructor function comments for details
 
 // TO DO
-// 
+//
 // Check reconstruction/reallocation of memory of data. Maybe it is not
 // necessary to delete and realocate space but only to use the same space
-   
+
    Clear();
-   
+
    //Columnwise!!!!
    fData = data;
    fNPoints = npoints;
    fNDim = ndim;
    fBucketSize = bsize;
-   
+
    Build();
 }
 
@@ -941,7 +942,7 @@ template <typename  Index, typename Value>
 void TKDTree<Index, Value>::Spread(Index ntotal, Value *a, Index *index, Value &min, Value &max) const
 {
    //Calculate spread of the array a
-   
+
    Index i;
    min = a[index[0]];
    max = a[index[0]];
@@ -958,11 +959,11 @@ Value TKDTree<Index, Value>::KOrdStat(Index ntotal, Value *a, Index k, Index *in
 {
    //
    //copy of the TMath::KOrdStat because I need an Index work array
-   
+
    Index i, ir, j, l, mid;
    Index arr;
    Index temp;
-   
+
    Index rk = k;
    l=0;
    ir = ntotal-1;
@@ -977,13 +978,13 @@ Value TKDTree<Index, Value>::KOrdStat(Index ntotal, Value *a, Index k, Index *in
          {temp = index[mid]; index[mid]=index[l+1]; index[l+1]=temp;}//elements as partitioning element arr.
           if (a[index[l]]>a[index[ir]])  //also rearrange so that a[l]<=a[l+1]
           {temp = index[l]; index[l]=index[ir]; index[ir]=temp;}
-          
+
           if (a[index[l+1]]>a[index[ir]])
           {temp=index[l+1]; index[l+1]=index[ir]; index[ir]=temp;}
-          
+
           if (a[index[l]]>a[index[l+1]])
           {temp = index[l]; index[l]=index[l+1]; index[l+1]=temp;}
-          
+
           i=l+1;        //initialize pointers for partitioning
           j=ir;
           arr = index[l+1];
@@ -1012,28 +1013,28 @@ void TKDTree<Index, Value>::MakeBoundaries(Value *range)
 // Boundaries can be retrieved by calling GetBoundary(inode) function that would
 // return an array of boundaries for the specified node, or GetBoundaries() function
 // that would return the complete array.
-   
-   
+
+
    if(range) memcpy(fRange, range, fNDimm*sizeof(Value));
    // total number of nodes including terminal nodes
    Int_t totNodes = fNNodes + fNPoints/fBucketSize + ((fNPoints%fBucketSize)?1:0);
    fBoundaries = new Value[totNodes*fNDimm];
    //Info("MakeBoundaries(Value*)", Form("Allocate boundaries for %d nodes", totNodes));
-   
-   
+
+
    // loop
    Value *tbounds = 0x0, *cbounds = 0x0;
    Int_t cn;
    for(int inode=fNNodes-1; inode>=0; inode--){
       tbounds = &fBoundaries[inode*fNDimm];
       memcpy(tbounds, fRange, fNDimm*sizeof(Value));
-      
+
       // check left child node
       cn = (inode<<1)+1;
       if(IsTerminal(cn)) CookBoundaries(inode, kTRUE);
       cbounds = &fBoundaries[fNDimm*cn];
       for(int idim=0; idim<fNDim; idim++) tbounds[idim<<1] = cbounds[idim<<1];
-      
+
       // check right child node
       cn = (inode+1)<<1;
       if(IsTerminal(cn)) CookBoundaries(inode, kFALSE);
@@ -1049,14 +1050,14 @@ void TKDTree<Index, Value>::CookBoundaries(const Int_t node, Bool_t LEFT)
    // define index of this terminal node
    Int_t index = (node<<1) + (LEFT ? 1 : 2);
    //Info("CookBoundaries()", Form("Node %d", index));
-   
+
    // build and initialize boundaries for this node
    Value *tbounds = &fBoundaries[fNDimm*index];
    memcpy(tbounds, fRange, fNDimm*sizeof(Value));
-   Bool_t flag[256];  // cope with up to 128 dimensions 
+   Bool_t flag[256];  // cope with up to 128 dimensions
    memset(flag, kFALSE, fNDimm);
    Int_t nvals = 0;
-   
+
    // recurse parent nodes
    Int_t pn = node;
    while(pn >= 0 && nvals < fNDimm){
@@ -1091,7 +1092,7 @@ void TKDTree<Index, Value>::MakeBoundariesExact()
 // Boundaries can be retrieved by calling GetBoundaryExact(inode) function that would
 // return an array of boundaries for the specified node, or GetBoundaries() function
 // that would return the complete array.
-      
+
 
    // total number of nodes including terminal nodes
    //Int_t totNodes = fNNodes + fNPoints/fBucketSize + ((fNPoints%fBucketSize)?1:0);
@@ -1145,7 +1146,7 @@ template <typename  Index, typename Value>
    //
    // find the smallest node covering the full range - start
    //
-   inode =0; 
+   inode =0;
    for (;inode<fNNodes;){
       if (TMath::Abs(point[fAxis[inode]] - fValue[inode])<delta[fAxis[inode]]) break;
       inode = (point[fAxis[inode]] < fValue[inode]) ? (inode*2)+1: (inode*2)+2;
@@ -1191,9 +1192,9 @@ Value* TKDTree<Index, Value>::GetBoundaryExact(const Int_t node)
 
 
 //______________________________________________________________________
-TKDTreeIF *TKDTreeTestBuild(const Int_t npoints, const Int_t bsize){  
+TKDTreeIF *TKDTreeTestBuild(const Int_t npoints, const Int_t bsize){
    //
-   // Example function to  
+   // Example function to
    //
    Float_t *data0 =  new Float_t[npoints*2];
    Float_t *data[2];
@@ -1204,11 +1205,10 @@ TKDTreeIF *TKDTreeTestBuild(const Int_t npoints, const Int_t bsize){
       data[0][i]= gRandom->Rndm();
    }
    TKDTree<Int_t, Float_t> *kdtree = new TKDTreeIF(npoints, 2, bsize, data);
-   return kdtree;	
+   return kdtree;
 }
 
 
 
 template class TKDTree<Int_t, Float_t>;
 template class TKDTree<Int_t, Double_t>;
-
