@@ -50,8 +50,8 @@ TIsAProxy::TIsAProxy(const std::type_info& typ, void* ctxt)
    ::new(fSubTypes) ClassMap_t();
    if ( sizeof(ClassMap_t) > sizeof(fSubTypes) ) {
       Fatal("TIsAProxy::TIsAProxy",
-         "Classmap size is badly adjusted: it needs %d instead of %d bytes.",
-         sizeof(ClassMap_t), sizeof(fSubTypes));
+         "Classmap size is badly adjusted: it needs %u instead of %u bytes.",
+         (UInt_t)sizeof(ClassMap_t), (UInt_t)sizeof(fSubTypes));
    }
 }
 
@@ -84,7 +84,7 @@ TIsAProxy& TIsAProxy::operator=(const TIsAProxy& iap)
       fVirtual=iap.fVirtual;
       fContext=iap.fContext;
       fInit=iap.fInit;
-   } 
+   }
    return *this;
 }
 
