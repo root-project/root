@@ -502,7 +502,7 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
    }
    selname.Append(aclicMode);
 
-   Info("DrawScript",Form("Will process tree/chain using %s",selname.Data()));
+   Info("DrawScript","%s",Form("Will process tree/chain using %s",selname.Data()));
    Long64_t result = fTree->Process(selname,option,nentries,firstentry);
    fTree->SetNotify(0);
 
