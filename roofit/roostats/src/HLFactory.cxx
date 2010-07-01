@@ -14,8 +14,8 @@
 /*
 BEGIN_HTML
 <p>
-HLFactory is an High Level model Factory allows you to 
-describe your models in a configuration file 
+HLFactory is an High Level model Factory allows you to
+describe your models in a configuration file
 (<i>datacards</i>) acting as an interface with the RooFactoryWSTool.
 Moreover it provides tools for the combination of models and datasets.
 </p>
@@ -53,8 +53,8 @@ HLFactory::HLFactory(const char *name,
     fVerbose(isVerbose),
     fInclusionLevel(0),
     fOwnWs(true){
-    // Constructor with the name of the config file to interpret and the 
-    // verbosity flag. The extension for the config files is assumed to 
+    // Constructor with the name of the config file to interpret and the
+    // verbosity flag. The extension for the config files is assumed to
     // be ".rs".
 
     TString wsName(name);
@@ -137,7 +137,7 @@ int HLFactory::AddChannel(const char* label,
     //  - A signal plus background pdf
     //  - A background only pdf
     //  - A dataset
-    // Once the combination of the pdfs is done, no more channels should be 
+    // Once the combination of the pdfs is done, no more channels should be
     // added.
 
     if (fCombinationDone){
@@ -355,34 +355,34 @@ int HLFactory::ProcessCard(const char* filename){
 
 //_______________________________________________________
 int HLFactory::fReadFile(const char*fileName, bool is_included){
-    // Parses the configuration file. The objects can be specified following 
+    // Parses the configuration file. The objects can be specified following
     // the rules of the RooFactoryWSTool, plus some more flexibility.
     //
     // The official format for the datacards is ".rs".
     //
     // All the instructions end with a ";" (like in C++).
     //
-    // Carriage returns and white lines are irrelevant but adviced since they 
+    // Carriage returns and white lines are irrelevant but adviced since they
     // improve readability (like in C++).
     //
     // The (Roo)ClassName::objname(description) can be replaced with the more
     // "pythonic" objname = (Roo)ClassName(description).
     //
-    // The comments can be specified with a "//" if on a single line or with 
+    // The comments can be specified with a "//" if on a single line or with
     // /* */ if on multiple lines (like in C++).
     //
-    // The "#include path/to/file.rs" statement triggers the inclusion of a 
+    // The "#include path/to/file.rs" statement triggers the inclusion of a
     // configuration fragment.
     //
-    // The "import myobject:myworkspace:myrootfile" will add to the Workspace 
+    // The "import myobject:myworkspace:myrootfile" will add to the Workspace
     // the object myobject located in myworkspace recorded in myrootfile.
-    // Alternatively, one could choose the "import myobject:myrootfile" in case 
+    // Alternatively, one could choose the "import myobject:myrootfile" in case
     // no Workspace is present.
     //
     // The "echo" statement prompts a message on screen.
 
     // Check the deepness of the inclusion
-    if (is_included) 
+    if (is_included)
         fInclusionLevel+=1;
     else
         fInclusionLevel=0;
@@ -392,7 +392,7 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         TString warning("The inclusion stack is deeper than ");
         warning+=maxDeepness;
         warning+=". Is this a recursive inclusion?";
-        Warning("fReadFile", warning);
+        Warning("fReadFile", "%s", warning.Data());
         }
 
 
@@ -403,7 +403,7 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         TString error("File ");
         error+=fileName;
         error+=" could not be opened.";
-        Error("fReadFile", error);
+        Error("fReadFile", "%s", error.Data());
         return -1;
         }
 
@@ -411,7 +411,7 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
     ifileContent.ReadFile(ifile);
     ifile.close();
 
-    // Tokenise the file using the "\n" char and parse it line by line to strip 
+    // Tokenise the file using the "\n" char and parse it line by line to strip
     // the comments.
     TString ifileContentStripped("");
 
@@ -430,13 +430,13 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
             if (line.EndsWith("*/")){
                 in_comment=false;
                 if (fVerbose) Info("fReadFile","Out of multiline comment ...");
-                                   
+
                 continue;
                 }
 
         // Was line a single line comment?
 
-        if ((line.BeginsWith("/*") && line.EndsWith("*/")) || 
+        if ((line.BeginsWith("/*") && line.EndsWith("*/")) ||
             line.BeginsWith("//")){
             if (fVerbose) Info("fReadFile","In single line comment ...");
             continue;
@@ -477,9 +477,9 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         // Do we have an echo statement? "A la RooFit"
         if (line.BeginsWith("echo")){
             line = line(5,line.Length()-1);
-            if (fVerbose) 
+            if (fVerbose)
               std::cout << "Echoing line " << line.Data() << std::endl;
-            std::cout << "[" << GetName() << "] echo: " 
+            std::cout << "[" << GetName() << "] echo: "
                       << line.Data() << std::endl;
             continue;
             }
@@ -489,11 +489,11 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
             line.ReplaceAll(neutrals[i],"");
 
 
-        if (fVerbose) Info("fReadFile","Reading -->" + line + "<--");
+        if (fVerbose) Info("fReadFile","Reading --> %s <--", line.Data());
 
         // Was line a white space?
         if (line == ""){
-            if (fVerbose) Info("fReadFile","Empty line: skipping ...");
+            if (fVerbose) Info("fReadFile", "%s", "Empty line: skipping ...");
             continue;
             }
 
@@ -508,7 +508,7 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
 
         // We parse the line
         if (fVerbose) Info("fReadFile","Parsing the line...");
-        fParseLine(line); 
+        fParseLine(line);
         }
 
     delete lineIt;
@@ -521,7 +521,7 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
 //_______________________________________________________
 void HLFactory::fCreateCategory(){
     // Builds the category necessary for the mutidimensional models. Its name
-    // will be <HLFactory name>_category and the types are specified by the 
+    // will be <HLFactory name>_category and the types are specified by the
     // model labels.
 
     fCombinationDone=true;
@@ -546,7 +546,7 @@ void HLFactory::fCreateCategory(){
 
 //_______________________________________________________
 bool HLFactory::fNamesListsConsistent(){
-    // Check the number of entries in each list. If not the same and the list 
+    // Check the number of entries in each list. If not the same and the list
     // is not empty prompt an error.
 
     if ((fSigBkgPdfNames.GetEntries()==fBkgPdfNames.GetEntries() || fBkgPdfNames.GetEntries()==0) &&
@@ -554,7 +554,7 @@ bool HLFactory::fNamesListsConsistent(){
         (fSigBkgPdfNames.GetEntries()==fLabelsNames.GetEntries() || fLabelsNames.GetEntries()==0))
         return true;
     else{
-        std::cerr << "The number of datasets and models added as channels " 
+        std::cerr << "The number of datasets and models added as channels "
                   << " is not the same!\n";
         return false;
         }
@@ -564,7 +564,7 @@ bool HLFactory::fNamesListsConsistent(){
 int HLFactory::fParseLine(TString& line){
     // Parse a single line and puts the content in the RooWorkSpace
 
-    if (fVerbose) Info("fParseLine","Parsing line: "+line);
+    if (fVerbose) Info("fParseLine", "Parsing line: %s", line.Data());
 
     TString new_line("");
 
@@ -576,17 +576,17 @@ int HLFactory::fParseLine(TString& line){
         nequals==0 || //it is a RooRealVar or cat with 0,1,2,3.. indexes
         (line.Contains("[") &&
          line.Contains("]") &&
-         nequals>0 &&    // It is a cat like "tag[B0=1,B0bar=-1]" 
+         nequals>0 &&    // It is a cat like "tag[B0=1,B0bar=-1]"
          ! line.Contains("(") &&
-         ! line.Contains(")"))) { 
+         ! line.Contains(")"))) {
       fWs->factory(line);
       return 0;
       }
 
     // Transform the line o_name = o_class(o_descr) in o_class::o_name(o_descr)
-    if (nequals==1 || 
+    if (nequals==1 ||
         (nequals > 1 &&  line.Contains("SIMUL"))){
-        
+
         // Divide the line in 3 components: o_name,o_class and o_descr
         // assuming that o_name=o_class(o_descr)
         const int equal_index=line.First('=');
@@ -595,11 +595,10 @@ int HLFactory::fParseLine(TString& line){
         TString o_class(line(equal_index+1,par_index-equal_index-1));
         TString o_descr(line(par_index+1,line.Length()-par_index-2));
 
-        if (fVerbose) Info("fParseLine","o_name="+o_name+
-                                        " o_class="+o_class+
-                                        " o_descr="+o_descr);
+        if (fVerbose) Info("fParseLine", "o_name=%s o_class=%s o_descr=%s",
+                           o_name.Data(), o_class.Data(), o_descr.Data());
 
-        // Now two cases either we wanna produce an object or import something 
+        // Now two cases either we wanna produce an object or import something
         // under a new name.
         if (o_class =="import"){// import a generic TObject into the WS
         // Now see if we have a workspace or not, according to the number of
@@ -608,9 +607,9 @@ int HLFactory::fParseLine(TString& line){
         TObjArray* descr_array = o_descr.Tokenize(",");
 
         const int n_descr_parts=descr_array->GetEntries();
-    
-        if (n_descr_parts<2 || n_descr_parts>3) 
-          Error("fParseLine","Import wrong syntax: cannot process "+o_descr);
+
+        if (n_descr_parts<2 || n_descr_parts>3)
+          Error("fParseLine","Import wrong syntax: cannot process %s", o_descr.Data());
 
         TString obj_name (static_cast<TObjString*>(descr_array->At(n_descr_parts-1))->GetString());
         TString ws_name("");
@@ -626,8 +625,8 @@ int HLFactory::fParseLine(TString& line){
           }
         else if(n_descr_parts==2){ // in presence of an object in rootfile
           if (fVerbose)
-            Info("fParseLine","Importing "+obj_name+" from "+rootfile_name+
-                 " under the name of "+o_name);
+            Info("fParseLine","Importing %s from %s under the name of %s",
+                 obj_name.Data(), rootfile_name.Data(), o_name.Data());
           TObject* the_obj=ifile->Get(obj_name);
           fWs->import(*the_obj,o_name);
           }
@@ -654,8 +653,6 @@ int HLFactory::fParseLine(TString& line){
     return 0;
 
 }
-
-
 
 
 
