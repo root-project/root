@@ -157,7 +157,7 @@ void *TStorage::Alloc(size_t size)
    void *vp = ::operator new(size);
 #endif
    if (vp == 0)
-      Fatal(where, gSpaceErr);
+      Fatal(where, "%s", gSpaceErr);
 
    return vp;
 }
@@ -193,7 +193,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
    void *vp = ::operator new(size);
 #endif
    if (vp == 0)
-      Fatal(where, gSpaceErr);
+      Fatal(where, "%s", gSpaceErr);
 
    if (ovp == 0)
       return vp;
@@ -230,7 +230,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    void *vp = ::operator new(size);
 #endif
    if (vp == 0)
-      Fatal(where, gSpaceErr);
+      Fatal(where, "%s", gSpaceErr);
 
    if (ovp == 0)
       return vp;
@@ -263,7 +263,7 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    if (ovp == 0) {
       vp = new char[size];
       if (vp == 0)
-         Fatal(where, gSpaceErr);
+         Fatal(where, "%s", gSpaceErr);
       return vp;
    }
    if (oldsize == size)
@@ -271,7 +271,7 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
 
    vp = new char[size];
    if (vp == 0)
-      Fatal(where, gSpaceErr);
+      Fatal(where, "%s", gSpaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize);
       memset((char*)vp+oldsize, 0, size-oldsize);
@@ -296,7 +296,7 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    if (ovp == 0) {
       vp = new Int_t[size];
       if (vp == 0)
-         Fatal(where, gSpaceErr);
+         Fatal(where, "%s", gSpaceErr);
       return vp;
    }
    if (oldsize == size)
@@ -304,7 +304,7 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
 
    vp = new Int_t[size];
    if (vp == 0)
-      Fatal(where, gSpaceErr);
+      Fatal(where, "%s", gSpaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize*sizeof(Int_t));
       memset((Int_t*)vp+oldsize, 0, (size-oldsize)*sizeof(Int_t));
