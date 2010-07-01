@@ -35,25 +35,28 @@
 
 #include <algorithm>
 
+//______________________________________________________________________________
 bool TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
 {
    if (fObject->fBasketSeek[i1] ==  fObject->fBasketSeek[i2]) {
       if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
-         return i1 < i2;         
+         return i1 < i2;
       }
       return  fObject->fBasketEntry[i1] <  fObject->fBasketEntry[i2];
    }
    return fObject->fBasketSeek[i1] <  fObject->fBasketSeek[i2];
 }
 
+//______________________________________________________________________________
 bool TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
 {
    if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
-      return i1 < i2;         
+      return i1 < i2;
    }
    return  fObject->fBasketEntry[i1] <  fObject->fBasketEntry[i2];
 }
 
+//______________________________________________________________________________
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options) :
    fWarningMsg(),
    fIsValid(kTRUE),
@@ -127,6 +130,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    if (fToTree) fToStartEntries = fToTree->GetEntries();
 }
 
+//______________________________________________________________________________
 Bool_t TTreeCloner::Exec()
 {
    // Execute the cloning.
@@ -142,6 +146,7 @@ Bool_t TTreeCloner::Exec()
    return kTRUE;
 }
 
+//______________________________________________________________________________
 TTreeCloner::~TTreeCloner()
 {
    // TTreeCloner destructor
@@ -153,6 +158,7 @@ TTreeCloner::~TTreeCloner()
    delete [] fBasketIndex;
 }
 
+//______________________________________________________________________________
 void TTreeCloner::CloseOutWriteBaskets()
 {
    // Before we can start adding new basket, we need to flush to
@@ -164,6 +170,7 @@ void TTreeCloner::CloseOutWriteBaskets()
    }
 }
 
+//______________________________________________________________________________
 UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
    // Fill the array of branches, adding the branch 'from' and 'to',
    // and matching the sub-branches of the 'from' and 'to' branches.
@@ -187,7 +194,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
          fWarningMsg.Form("The export branch and the import branch do not have the same split level. (The branch name is %s.)",
                           from->GetName());
          if (!(fOptions & kNoWarnings)) {
-            Warning("TTreeCloner::CollectBranches", fWarningMsg.Data());
+            Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
          }
          fNeedConversion = kTRUE;
          fIsValid = kFALSE;
@@ -197,7 +204,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
          fWarningMsg.Form("The export branch and the import branch do not have the same streamer type. (The branch name is %s.)",
                           from->GetName());
          if (!(fOptions & kNoWarnings)) {
-            Warning("TTreeCloner::CollectBranches",fWarningMsg.Data());
+            Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
          }
          fIsValid = kFALSE;
          return 0;
@@ -213,7 +220,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
          fWarningMsg.Form("The export branch and the import branch (%s) do not have the same number of leaves (%d vs %d)",
                           from->GetName(), fnb, nb);
          if (!(fOptions & kNoWarnings)) {
-            Error("TTreeCloner::CollectBranches",fWarningMsg.Data());
+            Error("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
          }
          fIsValid = kFALSE;
          return 0;
@@ -227,7 +234,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
             fWarningMsg.Form("The export leaf and the import leaf (%s.%s) do not have the data type (%s vs %s)",
                               from->GetName(),fromleaf_gen->GetName(),fromleaf_gen->GetTypeName(),toleaf_gen->GetTypeName());
             if (! (fOptions & kNoWarnings) ) {
-               Warning("TTreeCloner::CollectBranches",fWarningMsg.Data());
+               Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
             }
             fIsValid = kFALSE;
             fNeedConversion = kTRUE;
@@ -268,6 +275,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
    return numBaskets;
 }
 
+//______________________________________________________________________________
 UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
 {
    // Fill the array of branches, matching the branches of the 'from' and 'to' arrays.
@@ -311,8 +319,8 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
          fWarningMsg.Form("One of the export branches (%s) is not present in the import TTree.",
                           tb->GetName());
          if (!(fOptions & kNoWarnings)) {
-            Error("TTreeCloner::CollectBranches",fWarningMsg.Data());
-         }         
+            Error("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
+         }
          fIsValid = kFALSE;
       }
       ++ti;
@@ -320,7 +328,7 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
    return numBasket;
 }
 
-
+//______________________________________________________________________________
 UInt_t TTreeCloner::CollectBranches()
 {
    // Fill the array of branches, matching the branches of the 'from' and 'to' TTrees
@@ -341,6 +349,7 @@ UInt_t TTreeCloner::CollectBranches()
    return numBasket;
 }
 
+//______________________________________________________________________________
 void TTreeCloner::CollectBaskets()
 {
    // Collect the information about the on-file basket that need
@@ -361,6 +370,7 @@ void TTreeCloner::CollectBaskets()
    }
 }
 
+//______________________________________________________________________________
 void TTreeCloner::CopyStreamerInfos()
 {
    // Make sure that all the needed TStreamerInfo are
@@ -403,6 +413,7 @@ void TTreeCloner::CopyStreamerInfos()
    delete l;
 }
 
+//______________________________________________________________________________
 void TTreeCloner::CopyMemoryBaskets()
 {
    // Transfer the basket from the input file to the output file
@@ -428,6 +439,7 @@ void TTreeCloner::CopyMemoryBaskets()
    }
 }
 
+//______________________________________________________________________________
 void TTreeCloner::CopyProcessIds()
 {
    // Make sure that all the needed TStreamerInfo are
@@ -480,6 +492,7 @@ void TTreeCloner::CopyProcessIds()
    }
 }
 
+//______________________________________________________________________________
 void TTreeCloner::SortBaskets()
 {
    // Sort the basket according to the user request.
@@ -505,6 +518,7 @@ void TTreeCloner::SortBaskets()
    }
 }
 
+//______________________________________________________________________________
 void TTreeCloner::WriteBaskets()
 {
    // Transfer the basket from the input file to the output file

@@ -116,7 +116,7 @@ void TSelector::Abort(const char *why, EAbort what)
    else if (fAbort == kAbortFile)
       mess = "AbortFile";
 
-   Info(mess, why);
+   Info(mess, "%s", why);
 }
 
 //______________________________________________________________________________

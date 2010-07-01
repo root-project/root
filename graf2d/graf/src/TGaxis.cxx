@@ -209,7 +209,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 
    fFunction = (TF1*)gROOT->GetFunction(funcname);
    if (!fFunction) {
-      Error("TGaxis, calling constructor with an unknown function:%s",funcname);
+      Error("TGaxis", "calling constructor with an unknown function: %s", funcname);
       fWmin = 0;
       fWmax = 1;
    } else {
@@ -2043,7 +2043,7 @@ void TGaxis::SetFunction(const char *funcname)
    }
    fFunction = (TF1*)gROOT->GetFunction(funcname);
    if (!fFunction) {
-      Error("SetFunction, Unknown function:%s",funcname);
+      Error("SetFunction", "unknown function: %s", funcname);
    } else {
       fWmin = fFunction->GetXmin();
       fWmax = fFunction->GetXmax();

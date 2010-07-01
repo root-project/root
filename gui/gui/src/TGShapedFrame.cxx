@@ -20,8 +20,8 @@
 ClassImp(TGShapedFrame)
 
 //______________________________________________________________________________
-TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w, 
-                             UInt_t h, UInt_t options) : 
+TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
+                             UInt_t h, UInt_t options) :
       TGCompositeFrame(p, w, h, options), fBgnd(0), fImage(0)
 {
    // Shaped window default constructor
@@ -42,8 +42,7 @@ TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
       picName = "Default.png";
    fImage = TImage::Open(picName.Data());
    if (!fImage || !fImage->IsValid())
-      Error("TGShapedFrame::TGShapedFrame", TString::Format("%s not found", 
-            picName.Data()));
+      Error("TGShapedFrame", "%s not found", picName.Data());
    fBgnd = fClient->GetPicturePool()->GetPicture(picName.Data(),
            fImage->GetPixmap(), fImage->GetMask());
    // shape the window with the picture mask
@@ -57,7 +56,7 @@ TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
 }
 
 //______________________________________________________________________________
-TGShapedFrame::~TGShapedFrame() 
+TGShapedFrame::~TGShapedFrame()
 {
    // Destructor.
 
@@ -75,7 +74,7 @@ void TGShapedFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << endl << "   // shaped frame" << endl;
    out << "   TGShapedFrame *";
    out << GetName() << " = new TGShapedFrame(" << fImage->GetName()
-       << "," << fParent->GetName() << "," << GetWidth() << "," 
+       << "," << fParent->GetName() << "," << GetWidth() << ","
        << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
@@ -104,4 +103,3 @@ void TGShapedFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    SavePrimitiveSubframes(out, option);
 }
-

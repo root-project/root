@@ -678,7 +678,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    Bool_t parenthese;
    TString s,chaine_error,chaine1ST;
    TString s1,s2,s3,ctemp;
-   
+
    TString chaine = schain;
    TFormula *oldformula;
    Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux,rshift,lshift,tercond,terelse;
@@ -833,12 +833,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             puiss10=0; divi=j;
          }
          if (chaine(j-1)=='^' && compt4==0 && compt3==0 && puiss==0) {puiss10=0; puiss=j;}
-         if (chaine(i-1)=='?' && compt == 0 && compt2 == 0 && tercond == 0) {puiss10=0; tercond=i;} 
+         if (chaine(i-1)=='?' && compt == 0 && compt2 == 0 && tercond == 0) {puiss10=0; tercond=i;}
          if (chaine(i-1)==':' && tercond && compt == 0 && compt2 == 0 && terelse == 0) {
             if (i>2 && chaine(i-2)!=':' && chaine(i)!=':') {
                puiss10=0; terelse=i;
             }
-         } 
+         }
 
          j--;
       }
@@ -862,7 +862,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             actionParam = 0;
             SetAction(fNoper,actionCode, actionParam);
             Int_t optloc = fNoper++;
-            
+
             // Expression executed if condition is true.
             ctemp = chaine(tercond,terelse-tercond-1);
             Analyze(ctemp.Data(),err,offset); if (err) return;
@@ -880,9 +880,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             ctemp = chaine(terelse,lchain-terelse);
             Analyze(ctemp.Data(),err,offset); if (err) return;
             // Set jump target.
-            actionParam = fNoper - 1; // We need to not skip the next instruction, so we compensate for the ++i in the eval loop 
+            actionParam = fNoper - 1; // We need to not skip the next instruction, so we compensate for the ++i in the eval loop
             SetAction(optloc, actionCode, actionParam);
-            
+
             if (IsString(optloc-1) != IsString(fNoper-1)) {
                err = 45;
                chaine_error = "?:";
@@ -1050,7 +1050,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             ctemp = chaine(0,egal-1);
             Analyze(ctemp.Data(),err,offset); if (err) return;
             Int_t optloc = fNoper-1;
-            
+
             ctemp = chaine(egal+1,lchain-egal-1);
             Analyze(ctemp.Data(),err,offset); if (err) return;
             fExpr[fNoper] = "==";
@@ -1062,8 +1062,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                chaine_error = "==";
             } else if (isstring) {
                actionCode = kStringEqual;
-               SetBit(kIsCharacter);               
-            } 
+               SetBit(kIsCharacter);
+            }
             SetAction(fNoper,actionCode,actionParam);
             fNoper++;
          }
@@ -1088,8 +1088,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                chaine_error = "!=";
             } else if (isstring) {
                actionCode = kStringNotEqual;
-               SetBit(kIsCharacter);               
-            } 
+               SetBit(kIsCharacter);
+            }
             SetAction(fNoper,actionCode,actionParam);
             fNoper++;
          }
@@ -1316,7 +1316,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      if (oldformula && strcmp(schain,oldformula->GetTitle())) {
                         Int_t nprior = fNpar;
                         Analyze(oldformula->GetExpFormula(),err,fNpar);
-                         
+
                         if (err) return; // changes fNpar
                         fNpar = nprior;
                         find=1;
@@ -1334,7 +1334,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*- Note that DefinedVariable can be overloaded
                      ctemp = chaine;
                      ctemp.ReplaceAll(escapedSlash, slash);
-                     Int_t action;                     
+                     Int_t action;
                      k = DefinedVariable(ctemp,action);
                      if (k==-3) {
                         // Error message already issued
@@ -2119,7 +2119,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          case 46 : er = "Both operands of the operator " + chaine_error + " have to be either numbers or strings."; break;
          case 47 : er = chaine_error + " requires 2 string arguments"; break;
       }
-      Error("Compile",er.Data());
+      Error("Compile", "%s", er.Data());
       err=1;
    }
 
@@ -2129,7 +2129,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 Bool_t TFormula::CheckOperands(Int_t oper, Int_t &err)
 {
    // Check whether the operand at 'oper-1' is compatible with the operation at 'oper'.
-   
+
    if ( IsString(oper-1) && !StringToNumber(oper-1) ) {
       Error("Compile","\"%s\" requires a numerical operand.",fExpr[oper].Data());
       err = 45;
@@ -2162,7 +2162,7 @@ Bool_t TFormula::StringToNumber(Int_t /* code */)
 {
    // Try to 'demote' a string into an array bytes.  If this is not possible,
    // return false.
-   
+
    // In TFormula proper, we can not handle array of bytes ...
    return kFALSE;
 }
@@ -2337,9 +2337,9 @@ Int_t TFormula::Compile(const char *expression)
       if (fNdim <= 0) fNdim = 1;
       if (chaine.Length() > 4)
       {
-         if ( GetNumber() != 400 && 
+         if ( GetNumber() != 400 &&
               GetNumber() != 410 &&
-              GetNumber() != 110 ) 
+              GetNumber() != 110 )
             SetNumber(0);
          else if ( GetNumber() == 110 && chaine.Length() > 6 )
             SetNumber(0);
@@ -2765,7 +2765,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 
          case kJump   : i = (oper & kTFOperMask); continue;
          case kJumpIf : pos--; if (!tab[pos]) i = (oper & kTFOperMask); continue;
-                        
+
          case kBoolOptimize: {
             // boolean operation optimizer
 
@@ -2982,12 +2982,12 @@ TString TFormula::GetExpFormula(Option_t *option) const
                tab[spos-2]=tab[spos-2]+"("+tab[spos-1]+")";
             } else {
                tab[spos-2]=tab[spos-2]+tab[spos-1];
-            }            
+            }
             spos--;
             // Do not call continue since we need to
             // do the rest of the loop.
          }
-         
+
          // Boolean optimization breakpoint
          if (optype==kBoolOptimize) { // -3) {
             continue;
@@ -3112,10 +3112,10 @@ TString TFormula::GetExpFormula(Option_t *option) const
             tab[spos-2]=tab[spos-2]+"("+tab[spos-1]+")";
          } else {
             tab[spos-2]=tab[spos-2]+tab[spos-1];
-         }            
+         }
          spos--;
       }
-      
+
       TString ret = "";
       if (spos > 0) ret = tab[spos-1];
       delete[] tab;
@@ -3992,7 +3992,7 @@ void TFormula::Optimize()
          Int_t newpos = oldpos==fNoper ? fNOperOptimized : map0[oldpos];
          fOperOffset[i].fToJump = newpos;   // new position to jump
          SetActionOptimized(i,optaction,newpos);
-      } 
+      }
    }
 
 
@@ -4219,10 +4219,10 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
          case kBitOr  : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
          case kLeftShift : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) <<((Int_t) tab[pos]); continue;
          case kRightShift: pos--; tab[pos-1]= ((Int_t) tab[pos-1]) >>((Int_t) tab[pos]); continue;
-            
+
          case kJump   : i = (oper & kTFOperMask); continue;
          case kJumpIf : pos--; if (!tab[pos]) i = (oper & kTFOperMask); continue;
-            
+
          case kBoolOptimize: {
             // boolean operation optimizer
 
@@ -4248,7 +4248,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
                tab[pos-1] = 1;
 
             }
-            
+
             continue;
          }
 

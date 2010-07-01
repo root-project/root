@@ -929,7 +929,7 @@ void TGLVContainer::LineLeft(Bool_t select)
    TGFrameElement *old = fLastActiveEl;
 
    if (fViewMode == kLVSmallIcons && fe == old) return;
-   
+
    if (old) DeActivateItem(old);   //
    else fLastActiveEl = fe;
 
@@ -1240,7 +1240,7 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
    // alignmode for the item text.
 
    if (idx < 0 || idx >= fNColumns-1) {
-      Error("SetHeader", TString::Format("header index must be [0 - %d>", fNColumns-1));
+      Error("SetHeader", "header index must be [0 - %d>", fNColumns-1);
       return;
    }
    delete fColHeader[idx];
@@ -1367,7 +1367,7 @@ void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
 //______________________________________________________________________________
 void TGListView::ResizeColumns()
 {
-   // Resize column headers to show whole item names. 
+   // Resize column headers to show whole item names.
 
    for (int i = 0; i < fNColumns; ++i) {
       TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
@@ -1447,13 +1447,13 @@ void TGListView::Layout()
 
    lm->SetDefaultWidth(xl);
    TGCanvas::Layout();
- 
+
    if (fViewMode == kLVDetails) {
       container->Resize(container->GetWidth(), container->GetHeight()+h);
-      fVScrollbar->SetRange((Int_t)container->GetHeight(), 
+      fVScrollbar->SetRange((Int_t)container->GetHeight(),
                             (Int_t)fVport->GetHeight());
       if (fJustChanged) {
-         fVport->MoveResize(fBorderWidth, fBorderWidth, fVport->GetWidth(), 
+         fVport->MoveResize(fBorderWidth, fBorderWidth, fVport->GetWidth(),
                             fVport->GetHeight());
          container->Move(0, h);
       } else {
@@ -1462,7 +1462,7 @@ void TGListView::Layout()
       fColHeader[i]->MoveResize(xl, 0, fVport->GetWidth()-xl, h);
       fColHeader[i]->MapWindow();
    } else {
-      fVport->MoveResize(fBorderWidth, fBorderWidth, fVport->GetWidth(), 
+      fVport->MoveResize(fBorderWidth, fBorderWidth, fVport->GetWidth(),
                          fVport->GetHeight());
       container->Move(0, 0);
    }
@@ -1738,4 +1738,3 @@ void TGLVContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out << "," << GetOptionString() << ",ucolor);" << endl;
    }
 }
-
