@@ -34,7 +34,7 @@ void TMakeProject::AddUniqueStatement(FILE *fp, const char *statement, char *inc
 
    if (!strstr(inclist, statement)) {
       if (strlen(inclist)+strlen(statement) >= 50000) {
-         Fatal("AddUniqueStatement","inclist too short need %d instead of 500000\n",strlen(inclist)+strlen(statement));
+         Fatal("AddUniqueStatement","inclist too short need %u instead of 500000",UInt_t(strlen(inclist)+strlen(statement)));
       }
       strcat(inclist, statement);
       fprintf(fp, "%s", statement);
@@ -60,7 +60,7 @@ void TMakeProject::ChopFileName(TString &name, Int_t limit)
 {
    // Chop the name by replacing the ending (before a potential extension) with
    // a md5 summary of the name.
-   
+
    if (name.Length() >= limit) {
       bool has_extension = (strcmp(name.Data() + name.Length() - 2, ".h") == 0);
       if (has_extension) {
@@ -245,7 +245,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          }
          protoname.Remove(pos);
       }
-      
+
       // Forward declaration of template.
       fprintf(fp, "template <");
       for (UInt_t p = 0; p < nparam; ++p) {
@@ -301,7 +301,7 @@ void TMakeProject::GenerateMissingStreamerInfo(TList *extrainfos, const char *cl
    // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
 
    if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == 0) {
-      
+
       TStreamerInfo *info = (TStreamerInfo*)extrainfos->FindObject(clname);
       if (!info) {
          // The class does not exist, let's create it
@@ -344,12 +344,12 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
    // Generate an empty StreamerInfo for types that are used in templates parameters
    // but are not known in the list of class.   If the type itself is a template,
    // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
-   
+
    UInt_t len = strlen(clname);
    UInt_t nest = 0;
    UInt_t last = 0;
    Bool_t istemplate = kFALSE; // mark whether the current right most entity is a class template.
-   
+
    for (UInt_t i = 0; i < len; ++i) {
       switch (clname[i]) {
          case ':':
@@ -389,7 +389,7 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, TStreamerElem
    // Generate an empty StreamerInfo for types that are used in templates parameters
    // but are not known in the list of class.   If the type itself is a template,
    // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
-   
+
    if (element->IsBase()) {
       GenerateMissingStreamerInfos(extrainfos,element->GetClassPointer()->GetName());
    } else {
@@ -572,14 +572,14 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
    // The 'name' is modified to return the change in the name,
    // if any.
    TString newname( name );
-   
+
    if (strchr(name,'<')!=0) {
       std::vector<std::string> inside;
       int nestedLoc;
       unsigned int narg = TClassEdit::GetSplit( name, inside, nestedLoc, TClassEdit::kLong64 );
       if (nestedLoc) --narg;
       Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0].c_str()));
-      
+
       for(unsigned int i = 1; i<narg; ++i) {
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
       }
@@ -599,11 +599,11 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
             if (narg>4 && strncmp(inside[4].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
                --narg;
             }
-            break;            
-      }            
+            break;
+      }
       if (stlkind!=0) {
          TClass *key = TClass::GetClass(inside[1].c_str());
-      
+
          if (key) {
             // We only need to translate to a vector is the key is a class
             // (for which we do not know the sorting).
@@ -659,6 +659,6 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       if (nestedLoc) newname.Append(inside[nestedLoc]);
    } else if ( newname == "string" ) {
       newname = "std::string";
-   } 
+   }
    return newname;
 }
