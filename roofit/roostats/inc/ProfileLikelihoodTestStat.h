@@ -34,6 +34,8 @@ END_HTML
 
 #include <vector>
 
+#include "RooStats/RooStatsUtils.h"
+
 //#include "RooStats/DistributionCreator.h"
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/TestStatistic.h"
