@@ -699,10 +699,10 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve,bool normalize) const
   // Copy all non-content properties from hist1
   RooHist* hist = new RooHist(_nominalBinWidth) ;
   if (normalize) {
-    hist->SetName(Form("pull_%s_s",GetName(),curve.GetName())) ;
+    hist->SetName(Form("pull_%s_%s",GetName(),curve.GetName())) ;
     hist->SetTitle(Form("Pull of %s and %s",GetTitle(),curve.GetTitle())) ;  
   } else {
-    hist->SetName(Form("resid_%s_s",GetName(),curve.GetName())) ;
+    hist->SetName(Form("resid_%s_%s",GetName(),curve.GetName())) ;
     hist->SetTitle(Form("Residual of %s and %s",GetTitle(),curve.GetTitle())) ;  
   }
 
