@@ -206,7 +206,7 @@ void RooCFunction3Ref<VO,VI1,VI2,VI3>::Streamer(TBuffer &R__b)
      // Lookup name of reference C function
      TString tmpName = fmap().lookupName(_ptr) ;
      if (tmpName.Length()==0) {
-       coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("0x%08x",_ptr) 
+       coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("%p",_ptr) 
 			     << " written object will not be functional when read back" <<  endl ;
        tmpName="UNKNOWN" ;
      } 
