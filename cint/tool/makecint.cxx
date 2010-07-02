@@ -8,7 +8,7 @@
  *  This tool creates Makefile for encapsurating arbitrary C/C++ object
  * into Cint as Dynamic Link Library or archived library
  ************************************************************************
- * Copyright(c) 1995~2007  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~2010  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * For the licensing terms see the file COPYING
  *
@@ -143,7 +143,7 @@ void G__printtitle()
 #else
   printf("# makecint : interpreter-compiler for cint (UNIX version)\n");
 #endif
-  printf("# Copyright(c) 1995~2007 Masaharu Goto. Mailing list: cint@pcroot.cern.ch\n");
+  printf("# Copyright(c) 1995~2010 Masaharu Goto. Mailing list: cint@pcroot.cern.ch\n");
   printf("##########################################################################\n");
 }
 
