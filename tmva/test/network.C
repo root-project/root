@@ -45,7 +45,7 @@ void draw_network( TFile* f, TDirectory* d, const TString& hName = "weights_hist
    if (MovieMode) ixc = iyc = 0;
    TCanvas* c = new TCanvas( Form( "c%i", icanvas ), Form("Neural Network Layout for: %s", d->GetName()), 
                              ixc, 0 + (icanvas+1)*20, 1000, 650  );
-
+   icanvas++;
    TIter next = d->GetListOfKeys();
    TKey *key( 0 );
    Int_t numHists = 0;
@@ -80,7 +80,7 @@ void draw_network( TFile* f, TDirectory* d, const TString& hName = "weights_hist
    }
    if (numHists == 0) {
       cout << "Error: could not find histograms" << endl;
-      exit(1);
+      //exit(1);
    }
 
    // draw network
@@ -398,26 +398,33 @@ void network( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 
    // checks if file with name "fin" is already open, and if not opens one
    TFile* file = TMVAGlob::OpenFile( fin );  
+   TIter next(file->GetListOfKeys());
+   TKey *key(0);
+   while( (key = (TKey*)next()) ) {      
+      if (!TString(key->GetName()).BeginsWith("Method_MLP")) continue;
+      if( ! gROOT->GetClass(key->GetClassName())->InheritsFrom("TDirectory") ) continue;
 
-   TKey* mkey = TMVAGlob::FindMethod("MLP"); 
-   if (mkey==0) {
-      cout << "Could not locate directory MLP in file " << fin << endl;
-      return;
+      cout << "--- Found directory: " << ((TDirectory*)key->ReadObj())->GetName() << endl;
+
+      TDirectory* mDir = (TDirectory*)key->ReadObj();
+
+      TIter keyIt(mDir->GetListOfKeys());
+      TKey *titkey;
+      while((titkey = (TKey*)keyIt())) {
+        if( ! gROOT->GetClass(titkey->GetClassName())->InheritsFrom("TDirectory") ) continue;
+
+        TDirectory* dir = (TDirectory *)titkey->ReadObj();
+        dir->cd();  
+        TList titles;
+        UInt_t ni = TMVAGlob::GetListOfTitles( dir, titles );
+        if (ni==0) {
+           cout << "No titles found for Method_MLP" << endl;
+           return;
+        }
+        draw_network( file, dir );
+      }
    }
-   TDirectory *dir = (TDirectory *)mkey->ReadObj();
-   dir->cd();  
-   TList titles;
-   UInt_t ni = TMVAGlob::GetListOfTitles( dir, titles );
-   if (ni==0) {
-      cout << "No titles found for Method_MLP" << endl;
-      return;
-   }
-   TIter nextTitle(&titles);
-   TKey *titkey;
-   TDirectory *titDir;
-   while ((titkey = TMVAGlob::NextKey(nextTitle,"TDirectory"))) {
-      titDir = (TDirectory *)titkey->ReadObj();
-      draw_network( file, titDir );
-   }
+
+   return;
 }
 

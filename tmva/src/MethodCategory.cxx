@@ -165,7 +165,7 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    UInt_t newSpectatorIndex = primaryDSI.GetSpectatorInfos().size();
    fCategorySpecIdx.push_back(newSpectatorIndex);
    
-   primaryDSI.AddSpectator( Form("%s_cat%i:=%s", GetName(),fMethods.size(),theCut.GetTitle()),
+   primaryDSI.AddSpectator( Form("%s_cat%i:=%s", GetName(),(int)fMethods.size(),theCut.GetTitle()),
                             Form("%s:%s",GetName(),method->GetName()),
                             "pass", 0, 0, 'C' );
 
@@ -474,7 +474,7 @@ void TMVA::MethodCategory::ReadWeightsFromXML( void* wghtnode )
       // find the spectator index
       std::vector<VariableInfo>& spectators=primaryDSI.GetSpectatorInfos();
       std::vector<VariableInfo>::iterator itrVarInfo;
-      TString specName= Form("%s_cat%i", GetName(),fCategorySpecIdx.size()+1);
+      TString specName= Form("%s_cat%i", GetName(),(int)fCategorySpecIdx.size()+1);
 
       for (itrVarInfo = spectators.begin(); itrVarInfo != spectators.end(); ++itrVarInfo, ++counter) {
          if((specName==itrVarInfo->GetLabel()) || (specName==itrVarInfo->GetExpression())) {

@@ -707,9 +707,9 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
                                                  DefaultDataSetInfo(),
                                                  theOption );
       MethodBoost* methBoost = dynamic_cast<MethodBoost*>(im); // DSMTEST divided into two lines
-      methBoost->SetBoostedMethodName( theMethodName ); // DSMTEST divided into two lines
       if( !methBoost ) // DSMTEST
-         Log() << kERROR << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
+         Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
+      methBoost->SetBoostedMethodName( theMethodName ); // DSMTEST divided into two lines
       methBoost->fDataSetManager = fDataSetManager; // DSMTEST
 
    }
@@ -1555,7 +1555,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
             if (k == 1) mname[k][i].ReplaceAll( "Variable_", "" );
             if (sep[k][i] < 0 || sig[k][i] < 0) {
                // cannot compute separation/significance -> no MVA (usually for Cuts)
-               Log() << kINFO << Form("%-15s: %#1.3f(%#02i)  %#1.3f(%#02i)  %#1.3f(%#02i)    %#1.3f    | --       --",
+               Log() << kINFO << Form("%-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f    | --       --",
                                       (const char*)mname[k][i], 
                                       eff01[k][i], Int_t(1000*eff01err[k][i]), 
                                       eff10[k][i], Int_t(1000*eff10err[k][i]), 
@@ -1563,7 +1563,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
                                       effArea[k][i]) << Endl;
             }
             else {
-               Log() << kINFO << Form("%-15s: %#1.3f(%#02i)  %#1.3f(%#02i)  %#1.3f(%#02i)    %#1.3f    | %#1.3f    %#1.3f",
+               Log() << kINFO << Form("%-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f    | %#1.3f    %#1.3f",
                                       (const char*)mname[k][i], 
                                       eff01[k][i], Int_t(1000*eff01err[k][i]), 
                                       eff10[k][i], Int_t(1000*eff10err[k][i]), 

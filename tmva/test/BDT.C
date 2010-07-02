@@ -52,6 +52,7 @@ class StatDialogBDT {
    StatDialogBDT( const TGWindow* p, TString wfile = "weights/TMVAClassification_BDT.weights.txt", 
                   TString methName = "BDT", Int_t itree = 0 );
    virtual ~StatDialogBDT() {
+      TMVA::DecisionTreeNode::fgIsTraining=false;
       fThis = 0;
       fMain->CloseWindow();
       fMain->Cleanup();
@@ -137,6 +138,8 @@ StatDialogBDT::StatDialogBDT( const TGWindow* p, TString wfile, TString methName
    UInt_t totalHeight = 200;
 
    fThis = this;
+
+   TMVA::DecisionTreeNode::fgIsTraining=true;
 
    // read number of decision trees from weight file
    GetNtrees();

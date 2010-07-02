@@ -28,16 +28,18 @@
 
 #include "TMVA/Option.h"
 
+TMVA::MsgLogger* TMVA::OptionBase::fgLogger = 0;
+
 //______________________________________________________________________
 TMVA::OptionBase::OptionBase( const TString& name, const TString& desc ) 
    : TObject(), 
      fName        ( name ), 
      fNameAllLower( name ), 
      fDescription ( desc ), 
-     fIsSet       ( kFALSE ), 
-     fLogger      ("OptionBase") 
+     fIsSet       ( kFALSE )
 {
    // constructor
+   if (!fgLogger) fgLogger = new MsgLogger("Option",kDEBUG);
    fNameAllLower.ToLower();
 }
 

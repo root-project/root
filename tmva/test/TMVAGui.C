@@ -60,7 +60,13 @@ void TMVAGui( const char* fName = "TMVA.root" )
    // macro path is a mistake, especially if "./" was not part of path
    // add ../macros to the path (comment out next line for the ROOT version of TMVA)
    // gROOT->SetMacroPath(curMacroPath+":../macros:");
-   
+
+   TString curIncludePath=gSystem->GetIncludePath();
+   //std::cout <<"inc path="<<curIncludePath<<std::endl;
+   TString newIncludePath=TString("-I../ ")+curIncludePath;
+   gSystem->SetIncludePath(newIncludePath);
+   std::cout <<"new include path="<<gSystem->GetIncludePath()<<std::endl;
+  
    cout << "--- Launch TMVA GUI to view input file: " << fName << endl;
 
    // init
