@@ -362,7 +362,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 	cintExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;	
       } else if (RooCintUtils::isEnum(ti->c_str())) {	  	  
 	string qualvalue ;
-	if (_args[i].find(Form("::",className)) != string::npos) {		    
+	if (_args[i].find(Form("%s::",className)) != string::npos) {		    
 	  qualvalue = _args[i].c_str() ;
 	} else {	
 	  qualvalue =  Form("%s::%s",className,_args[i].c_str()) ;	    

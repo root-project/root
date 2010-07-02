@@ -118,7 +118,7 @@ class RooCFunction2Ref : public TObject {
     if (result && strlen(result)) {
       return result ;
     }
-    return Form("(0x%lx)",(ULong_t)_ptr) ;
+    return Form("(%p)",_ptr) ;
   }
 
   const char* argName(Int_t iarg) {

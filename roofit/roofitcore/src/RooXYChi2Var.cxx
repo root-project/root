@@ -134,7 +134,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
   //                                 are the Double_t values that correspond to the Y and its error
   //
   if (!extPdf.canBeExtended()) {
-    throw(string(Form("RooXYChi2Var::ctor(%s) ERROR: Input p.d.f. must be an extendible"))) ;
+    throw(string(Form("RooXYChi2Var::ctor(%s) ERROR: Input p.d.f. must be an extendible",GetName()))) ;
   }
   _yvar = 0 ;
   initialize() ;
@@ -167,7 +167,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
   //                                 are the Double_t values that correspond to the Y and its error
   //
   if (!extPdf.canBeExtended()) {
-    throw(string(Form("RooXYChi2Var::ctor(%s) ERROR: Input p.d.f. must be an extendible"))) ;
+    throw(string(Form("RooXYChi2Var::ctor(%s) ERROR: Input p.d.f. must be an extendible",GetName()))) ;
   }
   _yvar = (RooRealVar*) _dataClone->get()->find(yvar.GetName()) ;
   initialize() ;

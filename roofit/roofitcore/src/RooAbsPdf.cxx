@@ -2293,7 +2293,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 	  ccoutI(Plotting) << endl ;
 	}
 
-	nameSuffix.Append(Form("_Range[%d_%d]",rangeLo,rangeHi)) ;
+	nameSuffix.Append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
 
       } else if (pc.hasProcessed("RangeWithName")) {    
 
