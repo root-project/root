@@ -750,7 +750,8 @@ std::string RooClassFactory::ClassFacIFace::create(RooFactoryWSTool& ft, const c
   if (tn=="CEXPR" || tn=="cexpr") {
 
     if (args.size()<2) {
-      throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: CEXPR requires at least 2 arguments (expr,var,...), but only %u args found",args.size())) ;      	
+      throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: CEXPR requires at least 2 arguments (expr,var,...), but only %u args found",
+			(UInt_t)args.size())) ;
     }
 
     RooAbsArg* ret ;
