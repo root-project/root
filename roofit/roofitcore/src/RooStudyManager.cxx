@@ -102,16 +102,16 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost)
 
   // Propagate workspace to proof nodes
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") sending work package to PROOF servers" << endl ;
-  gROOT->ProcessLineFast(Form("((TProof*)0x%x)->AddInput((TObject*)0x%x) ;",p,(void*)_pkg) ) ;
+  gROOT->ProcessLineFast(Form("((TProof*)%p)->AddInput((TObject*)%p) ;",p,(void*)_pkg) ) ;
 
   // Run selector in parallel
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") starting PROOF processing of " << nExperiments << " experiments" << endl ;
 			 
-  gROOT->ProcessLineFast(Form("((TProof*)0x%x)->Process(\"RooProofDriverSelector\",%d) ;",p,nExperiments)) ;
+  gROOT->ProcessLineFast(Form("((TProof*)%p)->Process(\"RooProofDriverSelector\",%d) ;",p,nExperiments)) ;
 
   // Aggregate results data
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") aggregating results data" << endl ;
-  TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)0x%x)->GetOutputList()",p)) ;
+  TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)%p)->GetOutputList()",p)) ;
   aggregateData(olist) ;
 }
 
