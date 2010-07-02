@@ -4961,7 +4961,8 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
             // We need to change the name of the function to avoid problems when we load more packages
             TString setup, setupfn;
-            setup.Form("%s_SETUP", package.Data());
+            setup.Form("SETUP_%x", package.Hash());
+            // Remove special characters
             setupfn.Form("%s/%s.C", gSystem->TempDirectory(), setup.Data());
             TMacro setupmc("PROOF-INF/SETUP.C");
             TObjString *setupline = setupmc.GetLineWith("SETUP(");
