@@ -234,7 +234,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
          // Cleaning up existing daemon
          cmd = Form("kill -9 %d", pid);
          if ((rc = gSystem->Exec(cmd)) != 0)
-            Printf("getProof: problems stopping xrootd process %p (%d)", pid, rc);
+            Printf("getProof: problems stopping xrootd process %d (%d)", pid, rc);
          // Wait for all previous connections being cleaned
          Printf("getProof: wait 5 secs so that previous connections are cleaned ...");
          gSystem->Sleep(5000);
@@ -545,7 +545,7 @@ Int_t startXrootdAt(Int_t port, const char *exportdirs, Bool_t force)
          // Cleanimg up existing daemon
          TString cmd = Form("kill -9 %d", pid);
          if ((rc = gSystem->Exec(cmd)) != 0)
-            Printf("startXrootdAt: problems stopping xrootd process %p (%d)", pid, rc);
+            Printf("startXrootdAt: problems stopping xrootd process %d (%d)", pid, rc);
       }
    }
 
@@ -607,7 +607,7 @@ Int_t killXrootdAt(Int_t port, const char *id)
       // Cleanimg up existing daemon
       TString cmd = Form("kill -9 %d", pid);
       if ((rc = gSystem->Exec(cmd)) != 0)
-         Printf("killXrootdAt: problems stopping xrootd process %p (%d)", pid, rc);
+         Printf("killXrootdAt: problems stopping xrootd process %d (%d)", pid, rc);
    }
 
    // Done
