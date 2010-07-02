@@ -1499,6 +1499,9 @@ void TASImage::Paint(Option_t *option)
       } else if (gVirtualPS->InheritsFrom("TPDF")) {
          Warning("Paint", "PDF not implemeted yet");
          return;
+      } else if (gVirtualPS->InheritsFrom("TSVG")) {
+         Warning("Paint", "SVG not implemeted yet");
+         return;
       }
 
       // get special color cell to be reused during image printing
