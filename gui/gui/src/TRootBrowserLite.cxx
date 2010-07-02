@@ -1763,6 +1763,8 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
    TRootHelpDialog *hd;
    TRootBrowserCursorSwitcher *cursorSwitcher = 0;
+   TDirectory *tdir = 0;
+   TString cmd;
 
    if (GET_SUBMSG(msg) != kCT_SELCHANGED) {
       cursorSwitcher = new TRootBrowserCursorSwitcher(fIconBox, fLt);
@@ -2056,7 +2058,21 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      Int_t x = (Int_t)(parm2 & 0xffff);
                      Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
                      obj2 = (TObject *) item2->GetUserData();
-                     if (obj2) fBrowser->GetContextMenu()->Popup(x, y, obj2, fBrowser);
+                     if (obj2) {
+                        if (obj2->InheritsFrom("TTree")) {
+                           // if a tree not attached to any directory (e.g. in a TFolder)
+                           // then attach it to the current directory (gDirectory)
+                           cmd = TString::Format("((TTree *)0x%lx)->GetDirectory();",
+                                                 (ULong_t)obj2);
+                           tdir = (TDirectory *)gROOT->ProcessLine(cmd.Data());
+                           if (!tdir) {
+                              cmd = TString::Format("((TTree *)0x%lx)->SetDirectory(gDirectory);",
+                                                    (ULong_t)obj2);
+                              gROOT->ProcessLine(cmd.Data());
+                           }
+                        }
+                        fBrowser->GetContextMenu()->Popup(x, y, obj2, fBrowser);
+                     }
                   }
                   fClient->NeedRedraw(fLt);
                   fListView->LayoutHeader(0);
@@ -2151,7 +2167,19 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                  break;
                               }
                            }
-                           if (obj2) fBrowser->GetContextMenu()->Popup(x, y, obj2, fBrowser);
+                           if (obj2->InheritsFrom("TTree")) {
+                              // if a tree not attached to any directory (e.g. in a TFolder)
+                              // then attach it to the current directory (gDirectory)
+                              cmd = TString::Format("((TTree *)0x%lx)->GetDirectory();",
+                                                    (ULong_t)obj2);
+                              tdir = (TDirectory *)gROOT->ProcessLine(cmd.Data());
+                              if (!tdir) {
+                                 cmd = TString::Format("((TTree *)0x%lx)->SetDirectory(gDirectory);",
+                                                       (ULong_t)obj2);
+                                 gROOT->ProcessLine(cmd.Data());
+                              }
+                           }
+                           fBrowser->GetContextMenu()->Popup(x, y, obj2, fBrowser);
                         }
                      }
                   }

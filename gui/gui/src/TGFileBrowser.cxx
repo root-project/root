@@ -967,6 +967,14 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
       selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", (ULong_t)selected));
    if (selected && selected->InheritsFrom("TBranch"))
       selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", (ULong_t)selected));
+   if (selected && selected->InheritsFrom("TTree")) {
+      // if a tree not attached to any directory (e.g. in a TFolder)
+      // then attach it to the current directory (gDirectory)
+      TDirectory *tdir = (TDirectory *)gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->GetDirectory();", (ULong_t)selected));
+      if (!tdir) {
+         gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->SetDirectory(gDirectory);", (ULong_t)selected));
+      }
+   }
    if (selected && gPad && IsObjectEditable(selected->IsA())) {
       TVirtualPadEditor *ved = TVirtualPadEditor::GetPadEditor(kFALSE);
       if (ved) {
