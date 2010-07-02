@@ -655,7 +655,7 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
     RooAbsArg* orig = ft.ws().arg(buf) ;
     RooAbsArg* subst = ft.ws().arg(sep+1) ;
     if (!orig) {
-      throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",orig)) ;
+      throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",buf)) ;
     }
     if (!subst) {
       throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",sep+1)) ;
