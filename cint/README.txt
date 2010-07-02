@@ -1,11 +1,11 @@
-cint 7.3.00         (CINT is pronounced "C-int")
+cint 5.18.00         (CINT is pronounced "C-int")
      | |  |
      | |  +- Patch level (changed almost weekly at each release)
      | +- Minor version  (changed at DLL binary incompatibility)
      +- Major version    (major architecture change)
 
  Author                 Masaharu Goto
- Copyright(c) 1995~2008 Masaharu Goto (gotom@hanno.jp)
+ Copyright(c) 1995~2010 Masaharu Goto (gotom@hanno.jp)
  Mailing list           cint@root.cern.ch
 
 
@@ -209,7 +209,7 @@ The Author ===============================================================
  Masaharu Goto
 
   Please contact the author for bugs and requests by sending an e-mail to
- cint@pcroot.cern.ch. You can also send message to 'rootdev@pcroot.cern.ch' 
- or 'roottalk@pcroot.cern.ch' for generic questions.
+ cint@root.cern.ch. You can also send message to 'rootdev@root.cern.ch' 
+ or 'roottalk@root.cern.ch' for generic questions.
 
   Bugs are tend to be fixed very quickly. (Normally 1-2 days.) 

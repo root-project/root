@@ -679,3 +679,39 @@ Recent changes ************************************************************
  
 * 7.3.00 Dec 21, 2008
 * First release of CINT7 using Reflex as reflection database.
+
+* 5.18.00 July 2, 2010
+* 6.03.00 July 2, 2010
+* - CINT7 has been discontinued, see <http://old.nabble.com/Cint7-Status-tt26503422.html#a26503422> and <http://indico.cern.ch/materialDisplay.py?contribId=3&materialId=slides&confId=71078>
+* - Replace fixed-size buffers by a very fast dynamic buffer pool (G__FastAllocString), fixing many possible buffer overflows and removing most buffer size limitations
+* - Commands ".Lk" load (or execute ".xk") files _keeping_ already loaded files, i.e. not unloading them.
+* - Implement prompt interface ".preproc" for toggling the external preprocessing of scripts
+* - Many fixes to issues reported by Coverity
+* - Many bytecode improvements
+* - Add G__x86_64__ and G__amd64 macros if available
+* - Port up to GCC <= 4.5, MSVC <=10, ICC <= 11, OpenSolaris CC with -library=stlport4; add support for building with clang >= 2
+* - KCC not supported anymore
+* - Improve integer operators' behavior wrt overflows
+* - Fix parsing of templated operators
+* - Improvements in the handling of static and const variables, especially regarding initialization
+* - Accelerate the dictionary initialization, most notably for large dictionaries (from n^2 to nlogn) and reduce the load (registration) time of libraries
+* - New link pragma to simply the generation of the dictionary for 'operators' in a rootcint dictionary:
+*      #pragma link [C++|off] operators classname;
+* - Implement new pragma link syntax for contained classes:
+       #pragma link C++ class A::*;
+    will create dictionaries for all classes defined within A. ROOT I/O flags (trailing "+" etc) are supported, too.
+* - Fix functions taking vararg and returning objects on AMD64
+* - Improvements regarding (unsigned) long long, e.g. as template arguments
+* - Clean up more temp files on Windows
+* - Fix dictionary for vector<bool>
+* - Accelerate G__store_dictposition
+* - Remove support for stubless dictionaries
+
+* - New Reflex CMake user macros (thanks to Hady Zalek, Murex)
+* - Introduce ScopedType to factor out the common code from Class, Enum, Union.
+* - Reimplement UpdateMembers() and PathToBase() in a backward compatible way. Add selection enum for inherited / non-inherited member getters.
+* - Modify the behavior of Reflex dictionary (namely ClassBuilder). Rather than unconditionally erasing existing information,  a 2nd ClassBuilder will either add new information or check that it is compatible with the existing information (and
+throwing an exception in case of problems). To be able to over-ride an existing definition, unload the class before calling ClassBuilder.
+* - Improve shutdown handling of the Reflex database
+* - Implement delayed, on-demand initialization of data and function members in Reflex dictionaries
+* - The dictionary now tells Reflex that a const char* does not need to be copied onto the heap, but is a string literal that can be stored as is. This reduces the amount of allocated strings for the Reflex dictionary of Reflex by 80% (!) without any backward incompatibilities. The names stay valid on library unload; to not force all literals to be allocated on the heap on dlclose, Reflex::Instance::Shutdown() needs to be called at the end of the process.
