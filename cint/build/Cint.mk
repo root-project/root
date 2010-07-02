@@ -42,7 +42,7 @@ dlls: $(ALLDLLS)
 ipc.cintdll posix.cintdll: $(G__CFG_COREVERSION)/include/sys/types.h
 
 $(ALLDLLS): %.cintdll: $(MAKECINT) $(CINTLIBSTATIC) $(CINT)
-	(cd $(G__CFG_COREVERSION)/lib/$*; $(BUILDDLL))
+	+(cd $(G__CFG_COREVERSION)/lib/$*; $(BUILDDLL))
 
 $(G__CFG_COREVERSION)/include/systypes.h: $(MKTYPES)
 	cd $(dir $(MKTYPES)) \
