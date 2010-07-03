@@ -911,13 +911,13 @@ std::string RooSimWSTool::SimWSIFace::create(RooFactoryWSTool& ft, const char* t
       if (args[i].find("$SplitParam(")==0) {
 	vector<string> subargs = ft.splitFunctionArgs(args[i].c_str()) ;
 	if (subargs.size()!=2) {
-	  throw string(Form("Incorrect number of arguments in $SplitParam, have %d, expect 2",subargs.size())) ;
+	  throw string(Form("Incorrect number of arguments in $SplitParam, have %d, expect 2",(Int_t)subargs.size())) ;
 	}
 	sr.splitParameter(subargs[0].c_str(),subargs[1].c_str()) ;
       } else if (args[i].find("$SplitParamConstrained(")==0) {
 	vector<string> subargs = ft.splitFunctionArgs(args[i].c_str()) ;
 	if (subargs.size()!=3) {
-	  throw string(Form("Incorrect number of arguments in $SplitParamConstrained, have %d, expect 3",subargs.size())) ;
+	  throw string(Form("Incorrect number of arguments in $SplitParamConstrained, have %d, expect 3",(Int_t)subargs.size())) ;
 	}
 	sr.splitParameterConstrained(subargs[0].c_str(), subargs[1].c_str(), subargs[2].c_str()) ;	
       } 
@@ -929,7 +929,7 @@ std::string RooSimWSTool::SimWSIFace::create(RooFactoryWSTool& ft, const char* t
       if (args[i].find("$Restrict(")==0) {
 	vector<string> subargs = ft.splitFunctionArgs(args[i].c_str()) ;
 	if (subargs.size()!=2) {
-	  throw string(Form("Incorrect number of arguments in $Restrict, have %d, expect 2",subargs.size())) ;
+	  throw string(Form("Incorrect number of arguments in $Restrict, have %d, expect 2",(Int_t)subargs.size())) ;
 	}
 	bc.restrictBuild(subargs[0].c_str(),subargs[1].c_str()) ;
       }
@@ -972,13 +972,13 @@ std::string RooSimWSTool::SimWSIFace::create(RooFactoryWSTool& ft, const char* t
 	  if (subargs[j].find("$SplitParam(")==0) {
 	    vector<string> subsubargs = ft.splitFunctionArgs(subargs[j].c_str()) ;
 	    if (subsubargs.size()!=2) {
-	      throw string(Form("Incorrect number of arguments in $SplitParam, have %d, expect 2",subsubargs.size())) ;
+	      throw string(Form("Incorrect number of arguments in $SplitParam, have %d, expect 2",(Int_t)subsubargs.size())) ;
 	    }
 	    sr.splitParameter(subsubargs[0].c_str(),subsubargs[1].c_str()) ;
 	  } else if (subargs[j].find("$SplitParamConstrained(")==0) {
 	    vector<string> subsubargs = ft.splitFunctionArgs(subargs[j].c_str()) ;
 	    if (subsubargs.size()!=3) {
-	      throw string(Form("Incorrect number of arguments in $SplitParamConstrained, have %d, expect 3",subsubargs.size())) ;
+	      throw string(Form("Incorrect number of arguments in $SplitParamConstrained, have %d, expect 3",(Int_t)subsubargs.size())) ;
 	    }
 	    sr.splitParameterConstrained(subsubargs[0].c_str(), subsubargs[1].c_str(), subsubargs[2].c_str()) ;	
 	  } 
@@ -990,7 +990,7 @@ std::string RooSimWSTool::SimWSIFace::create(RooFactoryWSTool& ft, const char* t
 	// Process a restrict operation 	
 	vector<string> subargs = ft.splitFunctionArgs(args[i].c_str()) ;
 	if (subargs.size()!=2) {
-	  throw string(Form("Incorrect number of arguments in $Restrict, have %d, expect 2",subargs.size())) ;
+	  throw string(Form("Incorrect number of arguments in $Restrict, have %d, expect 2",(Int_t)subargs.size())) ;
 	}
 	mbc.restrictBuild(subargs[0].c_str(),subargs[1].c_str()) ;
 	
