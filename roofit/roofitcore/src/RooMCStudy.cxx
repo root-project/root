@@ -157,8 +157,13 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   _randProto = pc.getInt("randProtoData") ;
 
   // Process constraints specifications
-  const RooArgSet* cPars = pc.getSet("cPars") ;
+  const RooArgSet* cParsTmp = pc.getSet("cPars") ;
   const RooArgSet* extCons = pc.getSet("extCons") ;
+
+  RooArgSet* cPars = new RooArgSet ;
+  if (cParsTmp) {
+    cPars->add(*cParsTmp) ;
+  }
   
   // If constraints are specified, add to fit options
   if (cPars) {
@@ -173,8 +178,10 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   RooArgSet consPars ;
   if (cPars) {
     RooArgSet* constraints = model.getConstraints(observables,*cPars,kTRUE) ;
-    allConstraints.add(*constraints) ;
-    delete constraints ;
+    if (constraints) {
+      allConstraints.add(*constraints) ;
+      delete constraints ;
+    }
   }
   
   // Construct constraint p.d.f

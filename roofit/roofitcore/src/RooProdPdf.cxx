@@ -2172,7 +2172,7 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf& pdf) const
 
 
 //_____________________________________________________________________________
-RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams, Bool_t stripDisconnected) const
+RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, Bool_t stripDisconnected) const
 {
   // Return all parameter constraint p.d.f.s on parameters listed in constrainedParams
   // The observables set is required to distinguish unambiguously p.d.f in terms 
@@ -2210,9 +2210,13 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, const RooArg
     }
   }
   delete citer ;
-  
   delete piter ;
   
+  // Now remove from constrainedParams all parameters that occur exclusively in constraint term and not in regular pdf term
+  RooArgSet cexl(constrainedParams) ;
+  cexl.remove(pdfParams,kTRUE,kTRUE) ;
+  constrainedParams.remove(cexl,kTRUE,kTRUE) ;
+
   return finalConstraints ;
 }
 

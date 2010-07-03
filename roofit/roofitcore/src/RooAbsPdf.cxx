@@ -822,6 +822,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     RooArgSet* constraints = getAllConstraints(*data.get(),*cPars,doStripDisconnected) ;
     allConstraints.add(*constraints) ;
     delete constraints ;
+    
   }
   if (extCons) {
     allConstraints.add(*extCons) ;
@@ -2919,7 +2920,7 @@ RooAbsReal* RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nse
 
 
 //_____________________________________________________________________________
-RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, const RooArgSet& constrainedParams, Bool_t stripDisconnected) const 
+RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, Bool_t stripDisconnected) const 
 {
   // This helper function finds and collects all constraints terms of all coponent p.d.f.s
   // and returns a RooArgSet with all those terms
