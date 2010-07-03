@@ -542,7 +542,7 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
       {
       case Qt::LeftButton:  rootButton = kButton1Down; break;
       case Qt::RightButton: {
-//          rootButton = kButton3Down; 
+          rootButton = kButton3Down; 
          // respect the QWidget::contextMenuPolicy
          // treat this event as QContextMenuEvent
           if (contextMenuPolicy()) {
