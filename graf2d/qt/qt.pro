@@ -146,8 +146,7 @@ HEADERS += $$GQTDIRI/TGQt.h \
            $$GQTDIRI/TQtLockGuard.h         \
            $$GQTDIRI/TQtPadFont.h           \
            $$GQTDIRI/TQtPen.h               \
-           $$GQTDIRI/TQtRootSlot.h          \
-           $$GQTDIRI/TQtPadFont.h
+           $$GQTDIRI/TQtRootSlot.h          
            
 SOURCES += $$GQTDIRS/GQtGUI.cxx             \
            $$GQTDIRS/TGQt.cxx               \
@@ -167,8 +166,7 @@ SOURCES += $$GQTDIRS/GQtGUI.cxx             \
            $$GQTDIRS/TQtWidget.cxx          \
            $$GQTDIRS/TQtPadFont.cxx         \
            $$GQTDIRS/TQtPen.cxx             \
-           $$GQTDIRS/TQtRootSlot.cxx        \
-           $$GQTDIRS/TQtPadFont.cxx
+           $$GQTDIRS/TQtRootSlot.cxx        
            
 DISTFILES += LICENSE.QPL  Module.mk  Module.mk.unix  Module.mk.win32
 
