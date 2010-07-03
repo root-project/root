@@ -100,7 +100,7 @@ TSQLResult *TPgSQLServer::Query(const char *sql)
 
    if ((PQresultStatus(res) != PGRES_COMMAND_OK) &&
        (PQresultStatus(res) != PGRES_TUPLES_OK)) {
-      Error("Query", PQresultErrorMessage(res));
+      Error("Query", "%s",PQresultErrorMessage(res));
       PQclear(res);
       return 0;
    }
@@ -140,7 +140,7 @@ Int_t TPgSQLServer::SelectDataBase(const char *dbname)
          fDB=dbname;
          fPort=port.Atoi();
       } else {
-         Error("SelectDataBase", PQerrorMessage(fPgSQL));
+         Error("SelectDataBase", "%s",PQerrorMessage(fPgSQL));
          return -1;
       }
    }
