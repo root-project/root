@@ -4316,9 +4316,9 @@ void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
                   qsz /= 1000.;
                   ilb++;
                }
-               SendAsynMessage(TString::Format("%s: sending result of %s:%s (%'.1f %s)",
-                                    fPrefix.Data(), pqr->GetTitle(), pqr->GetName(),
-                                    qsz, clb[ilb]));
+               SendAsynMessage(TString::Format("%s: sending result of %s:%s (%.1f %s)",
+                                               fPrefix.Data(), pqr->GetTitle(), pqr->GetName(),
+                                               qsz, clb[ilb]));
                fSocket->SendObject(pqr, kPROOF_RETRIEVE);
             } else {
                Info("HandleRetrieve",
