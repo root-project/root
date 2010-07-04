@@ -2180,7 +2180,7 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
   // of parameters only, which can serve as constraints p.d.f.s
 
   RooArgSet constraints ;
-  RooArgSet pdfParams ;
+  RooArgSet pdfParams, conParams ;
 
   // Loop over p.d.f. components
   TIterator* piter = _pdfList.createIterator() ;
@@ -2190,6 +2190,9 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
     // but does depends on any of the parameters that should be constrained
     if (!pdf->dependsOnValue(observables) && pdf->dependsOnValue(constrainedParams)) {
       constraints.add(*pdf) ;
+      RooArgSet* tmp = pdf->getParameters(observables) ;
+      conParams.add(*tmp,kTRUE) ;
+      delete tmp ;      
     } else {
       RooArgSet* tmp = pdf->getParameters(observables) ;
       pdfParams.add(*tmp,kTRUE) ;
@@ -2213,9 +2216,11 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
   delete piter ;
   
   // Now remove from constrainedParams all parameters that occur exclusively in constraint term and not in regular pdf term
-  RooArgSet cexl(constrainedParams) ;
-  cexl.remove(pdfParams,kTRUE,kTRUE) ;
-  constrainedParams.remove(cexl,kTRUE,kTRUE) ;
+
+  RooArgSet* cexl = (RooArgSet*) conParams.selectCommon(constrainedParams) ;
+  cexl->remove(pdfParams,kTRUE,kTRUE) ;
+  constrainedParams.remove(*cexl,kTRUE,kTRUE) ;
+  delete cexl ;
 
   return finalConstraints ;
 }
