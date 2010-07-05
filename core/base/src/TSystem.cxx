@@ -2678,8 +2678,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    incPath.Prepend(WorkingDirectory());
 
    // ======= Get the right file names for the dictionnary and the shared library
-   TString library = filename;
-   ExpandPathName( library );
+   TString expFileName(filename);
+   ExpandPathName( expFileName );
+   TString library = expFileName;
    if (! IsAbsoluteFileName(library) )
    {
       const char *whichlibrary = Which(incPath,library);
@@ -2691,7 +2692,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          return kFALSE;
       }
    } else {
-      if (gSystem->AccessPathName(filename)) {
+      if (gSystem->AccessPathName(library)) {
          ::Error("ACLiC","The file %s can not be found.",filename);
          return kFALSE;
       }
@@ -2796,14 +2797,14 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 
    // ======= Check if the library need to loaded or compiled
-   if ( gInterpreter->IsLoaded(filename) ) {
+   if ( gInterpreter->IsLoaded(expFileName) ) {
       // the script has already been loaded in interpreted mode
       // Let's warn the user and unload it.
 
       ::Info("ACLiC","script has already been loaded in interpreted mode");
       ::Info("ACLiC","unloading %s and compiling it", filename);
 
-      if ( gInterpreter->UnloadFile( filename ) != 0 ) {
+      if ( gInterpreter->UnloadFile( expFileName ) != 0 ) {
          // We can not unload it.
          return kFALSE;
       }
@@ -2891,7 +2892,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       Long_t lib_time, file_time;
 
       if ((gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0) ||
-          (gSystem->GetPathInfo( filename, 0, (Long_t*)0, 0, &file_time ) == 0 &&
+          (gSystem->GetPathInfo( expFileName, 0, (Long_t*)0, 0, &file_time ) == 0 &&
           (lib_time < file_time))) {
 
          // the library does not exist or is older than the script.
@@ -2906,7 +2907,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
                depfilename += "_" + extension + ".d";
             }
-            R__WriteDependencyFile(build_loc, depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
+            R__WriteDependencyFile(build_loc, depfilename, expFileName, library, libname, extension, version_var_prefix, includes, defines, incPath);
          }
       }
 
@@ -3104,12 +3105,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
       ::Warning("ACLiC","Output will be written to %s",
                 emergency_loc.Data());
-      return CompileMacro(filename, opt, library_specified, emergency_loc, dirmode);
+      return CompileMacro(expFileName, opt, library_specified, emergency_loc, dirmode);
    }
 
    Info("ACLiC","creating shared library %s",library.Data());
 
-   R__WriteDependencyFile(build_loc, depfilename, filename, library, libname, extension, version_var_prefix, includes, defines, incPath);
+   R__WriteDependencyFile(build_loc, depfilename, expFileName, library, libname, extension, version_var_prefix, includes, defines, incPath);
 
    // ======= Select the dictionary name
    TString dict = libname + "_ACLiC_dict";
@@ -3459,8 +3460,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          // if filename is a header compiler won't compile it
          // instead, create temp source file which is a copy of the header
          Bool_t compileHeader=kFALSE;
-         size_t lenFilename=strlen(filename);
-         const char* endOfFilename=filename+lenFilename;
+         size_t lenFilename=expFileName.Length();
+         const char* endOfFilename=expFileName.Data()+lenFilename;
          // check all known header extensions
          for (Int_t iExt=0; !compileHeader && iExt<6; iExt++) {
             size_t lenExt=strlen(extensions[iExt]);
@@ -3468,12 +3469,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                && !strcmp(extensions[iExt], endOfFilename-lenExt);
          }
 
-         TString filenameForCompiler(filename);
+         TString filenameForCompiler(expFileName);
          if (compileHeader) {
             // create temp source file
             filenameForCompiler= libname + "_ACLiC";
             filenameForCompiler+=".check.cxx";
-            gSystem->Link(filename, filenameForCompiler);
+            gSystem->Link(expFileName, filenameForCompiler);
          }
 
          comp.ReplaceAll("$SourceFiles",filenameForCompiler);
@@ -3490,7 +3491,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          Int_t compilationResult = gSystem->Exec( comp );
 
-         if (filenameForCompiler.CompareTo(filename))
+         if (filenameForCompiler.CompareTo(expFileName))
             // remove temporary file
             gSystem->Unlink(filenameForCompiler);
 
@@ -3498,7 +3499,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             ::Info("ACLiC","The compiler has not found any problem with your macro.\n"
             "\tProbably your macro uses something rootcint can't parse.\n"
             "\tCheck http://root.cern.ch/root/Cint.phtml?limitations for Cint's limitations.");
-            TString objfile=filename;
+            TString objfile=expFileName;
             Ssiz_t len=objfile.Length();
             objfile.Replace(len-extension.Length(), len, GetObjExt());
             gSystem->Unlink(objfile);
