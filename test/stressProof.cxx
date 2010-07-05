@@ -60,13 +60,14 @@
 // *   Test  6 : H1: file collection processing ................... OK *   * //
 // *   Test  7 : H1: file collection, TPacketizer ................. OK *   * //
 // *   Test  8 : H1: by-name processing ........................... OK *   * //
-// *   Test  9 : H1: multi dataset and entry list ................. OK *   * //
-// *   Test 10 : Package management with 'event' .................. OK *   * //
-// *   Test 11 : Simple 'event' generation ........................ OK *   * //
-// *   Test 12 : Input data propagation ........................... OK *   * //
-// *   Test 13 : H1, Simple: async mode :.......................... OK *   * //
-// *   Test 14 : Admin functionality .............................. OK *   * //
-// *   Test 15 : Dynamic sub-mergers functionality ................ OK *   * //
+// *   Test  9 : H1: multi dataset processing ..................... OK *   * //
+// *   Test 10 : H1: multi dataset and entry list ................. OK *   * //
+// *   Test 11 : Package management with 'event' .................. OK *   * //
+// *   Test 12 : Simple 'event' generation ........................ OK *   * //
+// *   Test 13 : Input data propagation ........................... OK *   * //
+// *   Test 14 : H1, Simple: async mode :.......................... OK *   * //
+// *   Test 15 : Admin functionality .............................. OK *   * //
+// *   Test 16 : Dynamic sub-mergers functionality ................ OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -458,6 +459,7 @@ Int_t PT_Simple(void *smg = 0);
 Int_t PT_H1Http(void *);
 Int_t PT_H1FileCollection(void *);
 Int_t PT_H1DataSet(void *);
+Int_t PT_H1MultiDataSet(void *);
 Int_t PT_H1MultiDSetEntryList(void *);
 Int_t PT_DataSets(void *);
 Int_t PT_Packages(void *);
@@ -554,7 +556,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    }
 
    if (gSkipDataSetTest && gverbose > 0) {
-      printf("*  Test for dataset handling (#4, #8, #9) skipped               **\n");
+      printf("*  Test for dataset handling (#4, #8-10) skipped                **\n");
       printf("******************************************************************\n");
    }
    if (gUseParallelUnzip && gverbose > 0) {
@@ -611,21 +613,23 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    testList->Add(new ProofTest("H1: file collection, TPacketizer", 7, &PT_H1FileCollection, (void *)&gStd_Old, "1", "h1analysis"));
    // H1 analysis over HTTP by dataset name
    testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, 0, "1,4", "h1analysis"));
+   // H1 analysis over HTTP by dataset name splitted in two
+   testList->Add(new ProofTest("H1: multi dataset processing", 9, &PT_H1MultiDataSet, 0, "1,4", "h1analysis"));
    // H1 analysis over HTTP by dataset name
-   testList->Add(new ProofTest("H1: multi dataset and entry list", 9, &PT_H1MultiDSetEntryList, 0, "1,4", "h1analysis"));
+   testList->Add(new ProofTest("H1: multi dataset and entry list", 10, &PT_H1MultiDSetEntryList, 0, "1,4", "h1analysis"));
    // Test of data set handling with the H1 http files
-   testList->Add(new ProofTest("Package management with 'event'", 10, &PT_Packages, 0, "1"));
+   testList->Add(new ProofTest("Package management with 'event'", 11, &PT_Packages, 0, "1"));
    // Simple event analysis
-   testList->Add(new ProofTest("Simple 'event' generation", 11, &PT_Event, 0, "1", "ProofEvent"));
+   testList->Add(new ProofTest("Simple 'event' generation", 12, &PT_Event, 0, "1", "ProofEvent"));
    // Test input data propagation (it only works in the static startup mode)
-   testList->Add(new ProofTest("Input data propagation", 12, &PT_InputData, 0, "1", "ProofTests"));
+   testList->Add(new ProofTest("Input data propagation", 13, &PT_InputData, 0, "1", "ProofTests"));
    // Test asynchronous running
-   testList->Add(new ProofTest("H1, Simple: async mode", 13, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple"));
+   testList->Add(new ProofTest("H1, Simple: async mode", 14, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple"));
    // Test admin functionality
-   testList->Add(new ProofTest("Admin functionality", 14, &PT_AdminFunc, 0, "1"));
+   testList->Add(new ProofTest("Admin functionality", 15, &PT_AdminFunc, 0, "1"));
    // Test merging via submergers
    Bool_t useMergers = kTRUE;
-   testList->Add(new ProofTest("Dynamic sub-mergers functionality", 15, &PT_Simple, (void *)&useMergers, "1", "ProofSimple"));
+   testList->Add(new ProofTest("Dynamic sub-mergers functionality", 16, &PT_Simple, (void *)&useMergers, "1", "ProofSimple"));
 
    // The selectors
    gSystem->ExpandPathName(gH1Sel);
@@ -1239,6 +1243,48 @@ Int_t PT_H1DataSet(void *)
 
    // Name for the target dataset
    const char *dsname = "h1dset";
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Process the dataset by name
+   PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
+   gTimer.Start();
+   gProof->Process(dsname, gH1Sel.Data());
+   gTimer.Stop();
+   gProof->SetPrintProgress(0);
+
+   // Count
+   gH1Cnt++;
+   gH1Time += gTimer.RealTime();
+
+   // Check the results
+   PutPoint();
+   return PT_CheckH1(gProof->GetQueryResult());
+}
+
+//_____________________________________________________________________________
+Int_t PT_H1MultiDataSet(void *)
+{
+   // Test run for the H1 analysis as a named dataset reading the data from HTTP
+
+   // Checking arguments
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+   // Not yet supported for PROOF-Lite
+   if (gSkipDataSetTest) {
+      return 1;
+   }
+   PutPoint();
+
+   // Set/unset the parallel unzip flag
+   AssertParallelUnzip();
+
+   // Name for the target dataset
+   const char *dsname = "h1dseta h1dsetb";
 
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
