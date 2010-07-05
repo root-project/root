@@ -36,7 +36,8 @@ void TestSPlot()
    //Read the data and initialize a TSPlot object
    TTree *datatree = new TTree("datatree", "datatree");
    datatree->ReadFile(dataFile, 
-      "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:dESignal/D:dEBackground/D:FSignal/D:FBackground/D");
+      "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:"
+      "dESignal/D:dEBackground/D:FSignal/D:FBackground/D");
 
    TSPlot *splot = new TSPlot(0, 3, 5420, 2, datatree);
 
@@ -47,7 +48,8 @@ void TestSPlot()
    //functions for the first species(signal) and then their pdfs for the 
    //second species(background)
    splot->SetTreeSelection(
-      "Mes:dE:F:MesSignal:dESignal:FSignal:MesBackground:dEBackground:FBackground");
+      "Mes:dE:F:MesSignal:dESignal:FSignal:MesBackground:"
+      "dEBackground:FBackground");
 
    //Set the initial estimates of the number of events in each species 
    //- used as initial parameter values for the Minuit likelihood fit
@@ -83,7 +85,8 @@ void TestSPlot()
    pt->SetTextFont(20);
    pt->SetTextColor(4);
    pt->AddText("sPlots of Mes and F signal and background,");
-   pt->AddText("obtained by the tutorial TestSPlot.C on BABAR MC data (sPlot_toyMC.fit)");
+   pt->AddText("obtained by the tutorial TestSPlot.C on BABAR MC "
+               "data (sPlot_toyMC.fit)");
    TText *t3=pt->AddText(
       "M. Pivk and F. R. Le Diberder, Nucl.Inst.Meth.A, physics/0402083");
    t3->SetTextColor(1);
