@@ -42,6 +42,7 @@ namespace ROOT {
       fRawSymbol.ReplaceAll(":","_");
       fRawSymbol.ReplaceAll("<","_");
       fRawSymbol.ReplaceAll(">","_");
+      fRawSymbol.ReplaceAll(",","Cm");
       fRawSymbol.ReplaceAll(" ","");
       fRawSymbol.ReplaceAll("*","st");
       fRawSymbol.ReplaceAll("&","rf");

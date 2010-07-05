@@ -384,15 +384,22 @@ namespace ROOT {
          switch(stlType)  {
             case TClassEdit::kVector:   what = "vector"; break;
             case TClassEdit::kList:     what = "list"; break;
+            case -TClassEdit::kDeque: // same as positive
             case TClassEdit::kDeque:    what = "deque"; break;
+            case -TClassEdit::kMap: // same as positive
             case TClassEdit::kMap:      what = "map"; break;
+            case -TClassEdit::kMultiMap: // same as positive
             case TClassEdit::kMultiMap: what = "map"; break;
+            case -TClassEdit::kSet:  // same as positive
             case TClassEdit::kSet:      what = "set"; break;
+            case -TClassEdit::kMultiSet: // same as positive
             case TClassEdit::kMultiSet: what = "set"; break;
          }
-         directive = "#include <";
-         directive.Append(what);
-         directive.Append(">\n");
+         if (what[0]) {
+            directive = "#include <";
+            directive.Append(what);
+            directive.Append(">\n");
+         }
       } else if (cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ) {
          // Actually we probably should look for the file ..
          const char *filename = cl->GetDeclFileName();
@@ -425,6 +432,15 @@ namespace ROOT {
             }
          }
          directive = Form("#include \"%s\"\n",filename);
+      } else if (!strncmp(cl->GetName(), "pair<", 5)
+                 || !strncmp(cl->GetName(), "std::pair<", 10)) {
+         TClassEdit::TSplitType split(cl->GetName());
+         if (split.fElements.size() == 3) {
+            for (int arg = 1; arg < 3; ++arg) {
+               TClass* clArg = TClass::GetClass(split.fElements[arg].c_str());
+               if (clArg) AddHeader(clArg);
+            }
+         }
       }
       if (directive.Length()) {
          TIter i( &fListOfHeaders );
