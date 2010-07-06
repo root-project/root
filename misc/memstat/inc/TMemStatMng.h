@@ -103,6 +103,7 @@ namespace memstat {
       TH1I *fHbtids;
       CRCSet_t fBTChecksums;
       Int_t fBTCount;
+      // for Debug. A counter of all (de)allacations.
       UInt_t  fBTIDCount;
 
       ClassDef(TMemStatMng, 0)   // a manager of memstat sessions.

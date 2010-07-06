@@ -124,8 +124,8 @@ TMemStatMng::~TMemStatMng()
    if(this != TMemStatMng::GetInstance())
       return;
 
-   cout << ">>> All free/malloc calls count: " << fBTIDCount << endl;
-   cout << ">>> Unique BTIDs count: " << fBTChecksums.size() << endl;
+   Info("~TMemStatMng", ">>> All free/malloc calls count: %d", fBTIDCount);
+   Info("~TMemStatMng", ">>> Unique BTIDs count: %lu", fBTChecksums.size());
 
    Disable();
 }
@@ -256,6 +256,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    md5.Final();
    string crc_digest(md5.AsString());
 
+   // for Debug. A counter of all (de)allacations.
    ++fBTIDCount;
 
    CRCSet_t::const_iterator found = fBTChecksums.find(crc_digest);
@@ -264,7 +265,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    if(fBTChecksums.end() == found) {
 
       // check the size of the BT array container
-      int nbins = fHbtids->GetNbinsX();
+      const int nbins = fHbtids->GetNbinsX();
       //check that the current allocation in fHbtids is enough, otherwise expend it with
       if(fBTCount + stackentries + 1 >= nbins) {
          fHbtids->SetBins(nbins * 2, 0, 1);
@@ -274,15 +275,18 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
       // A first value is a number of entries in a given stack
       btids[fBTCount++] = stackentries;
       btid = fBTCount;
+      if(stackentries <= 0) {
+         Warning("AddPointer",
+                 "A number of stack entries is equal or less than zero. For btid %d", btid);
+      }
 
       // add new BT's CRC value
       pair<CRCSet_t::iterator, bool> res = fBTChecksums.insert(CRCSet_t::value_type(crc_digest, btid));
       if(!res.second)
-         Error("AddPointer", "Can't added new BTID to the container.");
+         Error("AddPointer", "Can't added a new BTID to the container.");
 
       for(int i = 0; i < stackentries; ++i) {
          pointer_t func_addr = reinterpret_cast<pointer_t>(stptr[i]);
-
 
          // save all functions of this BT
          if(fFAddrs.find(func_addr) < 0) {
@@ -306,12 +310,12 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
       }
 
    } else {
-      // reuse existing BT
+      // reuse an existing BT
       btid = found->second;
    }
 
-   if(btid < 0)
-      Error("AddPointer", "negative BT id");
+   if(btid <= 0)
+      Error("AddPointer", "bad BT id");
 
    fTimeStamp.Set();
    Double_t CurTime = fTimeStamp.AsDouble();
@@ -321,5 +325,4 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    fN      = 0;
    fBtID   = btid;
    fDumpTree->Fill();
-   //SaveToTree();
 }
