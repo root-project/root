@@ -81,7 +81,7 @@ void TMemStatMng::Init()
 
    fHbtids  = new TH1I("btids", "table of btids", 10000, 0, 1);   //where fHbtids is a member of the manager class
    fHbtids->SetDirectory(0);
-    // save the histogram to a tree header
+   // save the histogram to a tree header
    fDumpTree->GetUserInfo()->Add(fHbtids);
 }
 
@@ -306,10 +306,6 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
                Error("AddPointer", "Can't add a function return address to the container");
          }
 
-         //TODO: in the error code prtint the address.
-         // Acutally there must not be a case, when we can't find an index
-         if(idx < 0)
-            Error("AddPointer", "There is no index for a given BT function return address.");
          // even if we have -1 as an index we add it to the container
          btids[fBTCount++] = idx;
       }
