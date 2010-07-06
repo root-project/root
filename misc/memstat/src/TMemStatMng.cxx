@@ -125,7 +125,7 @@ TMemStatMng::~TMemStatMng()
       return;
 
    Info("~TMemStatMng", ">>> All free/malloc calls count: %d", fBTIDCount);
-   Info("~TMemStatMng", ">>> Unique BTIDs count: %lu", fBTChecksums.size());
+   Info("~TMemStatMng", ">>> Unique BTIDs count: %Zu", fBTChecksums.size());
 
    Disable();
 }
