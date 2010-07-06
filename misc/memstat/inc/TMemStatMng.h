@@ -40,7 +40,7 @@ namespace memstat {
 
       Int_t find(pointer_t addr) {
          pos_type iter = fContainer.find(addr);
-         if (fContainer.end() == iter)
+         if(fContainer.end() == iter)
             return -1;
 
          return iter->second;
@@ -51,7 +51,7 @@ namespace memstat {
    };
 
    class TMemStatMng: public TObject {
-      typedef std::map<unsigned long, Int_t> CRCSet_t;
+      typedef std::map<std::string, Int_t> CRCSet_t;
 
    private:
       TMemStatMng();

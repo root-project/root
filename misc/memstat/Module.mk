@@ -20,12 +20,12 @@ MEMSTATDH     := $(MEMSTATDS:.cxx=.h)
 
 MEMSTATH      := $(MODDIRI)/TMemStatHelpers.h \
                  $(MODDIRI)/TMemStat.h $(MODDIRI)/TMemStatBacktrace.h \
-                 $(MODDIRI)/TMemStatChecksum.h $(MODDIRI)/TMemStatDef.h \
-		             $(MODDIRI)/TMemStatMng.h $(MODDIRI)/TMemStatHook.h
+                 $(MODDIRI)/TMemStatDef.h \
+		 $(MODDIRI)/TMemStatMng.h $(MODDIRI)/TMemStatHook.h
 
 MEMSTATS      := $(MODDIRS)/TMemStat.cxx $(MODDIRS)/TMemStatMng.cxx \
-		             $(MODDIRS)/TMemStatBacktrace.cxx $(MODDIRS)/TMemStatChecksum.cxx \
-		             $(MODDIRS)/TMemStatHelpers.cxx $(MODDIRS)/TMemStatHook.cxx
+		 $(MODDIRS)/TMemStatBacktrace.cxx \
+		 $(MODDIRS)/TMemStatHelpers.cxx $(MODDIRS)/TMemStatHook.cxx
 MEMSTATO      := $(MEMSTATS:.cxx=.o)
 
 MEMSTATDEP    := $(MEMSTATO:.o=.d) $(MEMSTATDO:.o=.d)
