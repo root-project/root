@@ -125,7 +125,7 @@ TMemStatMng::~TMemStatMng()
       return;
 
    Info("~TMemStatMng", ">>> All free/malloc calls count: %d", fBTIDCount);
-   Info("~TMemStatMng", ">>> Unique BTIDs count: %Zu", fBTChecksums.size());
+   Info("~TMemStatMng", ">>> Unique BTIDs count: %zu", fBTChecksums.size());
 
    Disable();
 }
@@ -294,6 +294,9 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
             strFuncAddr += func_addr;
             TString strSymbolInfo;
             getSymbolFullInfo(stptr[i], &strSymbolInfo);
+            //if( strSymbolInfo.Length() <= 0 )
+            //    Error("AddPointer", "Can't get symbol\'s information");
+             
             TNamed *nm = new TNamed(strFuncAddr, strSymbolInfo);
             fFAddrsList->Add(nm);
             fFAddrs.add(func_addr, fFAddrsList->GetSize() - 1);
