@@ -135,10 +135,9 @@ TGLWidget::TGLWidget(Window_t glw, const TGWindow* p, Bool_t selectInput)
    {
       gVirtualX->GrabButton(GetId(), kAnyButton, kAnyModifier,
                             kButtonPressMask | kButtonReleaseMask, kNone, kNone);
-      gVirtualX->SelectInput(GetId(),
-                             kKeyPressMask | kExposureMask | kPointerMotionMask
-                             | kStructureNotifyMask | kFocusChangeMask
-                             | kEnterWindowMask | kLeaveWindowMask);
+      gVirtualX->SelectInput(GetId(), kKeyPressMask | kKeyReleaseMask | kExposureMask |
+                             kPointerMotionMask | kStructureNotifyMask | kFocusChangeMask |
+                             kEnterWindowMask | kLeaveWindowMask);
       gVirtualX->SetInputFocus(GetId());
    }
 }

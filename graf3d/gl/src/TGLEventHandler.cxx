@@ -729,8 +729,12 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
 {
    // Handle keyboard 'event'.
 
-  if (fTooltipShown)
-    fTooltip->Hide();
+   // We only handle key-press events.
+   if (event->fType == kKeyRelease)
+      return kTRUE;
+
+   if (fTooltipShown)
+      fTooltip->Hide();
 
    fLastEventState = event->fState;
 
@@ -824,7 +828,7 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
             } else {
                fGLViewer->ResetCurrentCamera();
             }
-               redraw = kTRUE;
+            redraw = kTRUE;
             break;
 
             // Toggle debugging mode
