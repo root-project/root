@@ -81,6 +81,7 @@ void TMemStatMng::Init()
 
    fHbtids  = new TH1I("btids", "table of btids", 10000, 0, 1);   //where fHbtids is a member of the manager class
    fHbtids->SetDirectory(0);
+    // save the histogram to a tree header
    fDumpTree->GetUserInfo()->Add(fHbtids);
 }
 
@@ -285,25 +286,26 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
       if(!res.second)
          Error("AddPointer", "Can't added a new BTID to the container.");
 
+      // save all symbols of this BT
       for(int i = 0; i < stackentries; ++i) {
          pointer_t func_addr = reinterpret_cast<pointer_t>(stptr[i]);
 
-         // save all functions of this BT
-         if(fFAddrs.find(func_addr) < 0) {
+         Int_t idx = fFAddrs.find(func_addr);
+         // check, whether it's a new symbol
+         if(idx < 0) {
             TString strFuncAddr;
             strFuncAddr += func_addr;
             TString strSymbolInfo;
             getSymbolFullInfo(stptr[i], &strSymbolInfo);
-            //if( strSymbolInfo.Length() <= 0 )
-            //    Error("AddPointer", "Can't get symbol\'s information");
-             
+
             TNamed *nm = new TNamed(strFuncAddr, strSymbolInfo);
             fFAddrsList->Add(nm);
-            fFAddrs.add(func_addr, fFAddrsList->GetSize() - 1);
+            idx = fFAddrsList->GetSize() - 1;
+            // TODO: more detailed error message...
+            if(!fFAddrs.add(func_addr, idx))
+               Error("AddPointer", "Can't add a function return address to the container");
          }
 
-         // add BT to the container
-         Int_t idx = fFAddrs.find(reinterpret_cast<pointer_t>(stptr[i]));
          //TODO: in the error code prtint the address.
          // Acutally there must not be a case, when we can't find an index
          if(idx < 0)
@@ -329,3 +331,4 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    fBtID   = btid;
    fDumpTree->Fill();
 }
+
