@@ -264,7 +264,6 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    // TODO: define a proper default value
    Int_t btid = -1;
    if(fBTChecksums.end() == found) {
-
       // check the size of the BT array container
       const int nbins = fHbtids->GetNbinsX();
       //check that the current allocation in fHbtids is enough, otherwise expend it with
@@ -289,7 +288,6 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
       // save all symbols of this BT
       for(int i = 0; i < stackentries; ++i) {
          pointer_t func_addr = reinterpret_cast<pointer_t>(stptr[i]);
-
          Int_t idx = fFAddrs.find(func_addr);
          // check, whether it's a new symbol
          if(idx < 0) {
@@ -300,7 +298,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
 
             TNamed *nm = new TNamed(strFuncAddr, strSymbolInfo);
             fFAddrsList->Add(nm);
-            idx = fFAddrsList->GetSize() - 1;
+            idx = fFAddrsList->GetEntriesFast() - 1;
             // TODO: more detailed error message...
             if(!fFAddrs.add(func_addr, idx))
                Error("AddPointer", "Can't add a function return address to the container");
