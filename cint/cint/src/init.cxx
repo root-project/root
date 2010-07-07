@@ -465,7 +465,7 @@ G__parse_hook_t* G__set_beforeparse_hook(G__parse_hook_t* hook)
 void G__display_note()
 {
    G__more(G__sout, "\n");
-   G__more(G__sout, "Note1: Cint is not aimed to be a 100%% ANSI/ISO compliant C/C++ language\n");
+   G__more(G__sout, "Note1: Cint is not aimed to be a 100% ANSI/ISO compliant C/C++ language\n");
    G__more(G__sout, " processor. It rather is a portable script language environment which\n");
    G__more(G__sout, " is close enough to the standard C++.\n");
    G__more(G__sout, "\n");
