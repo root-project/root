@@ -287,8 +287,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
 
       // save all symbols of this BT
       for(int i = 0; i < stackentries; ++i) {
-         //Long64_t func_addr = reinterpret_cast<Long64_t>(stptr[i]);
-         ULong64_t func_addr = (ULong64_t)(stptr[i]);
+         ULong_t func_addr = (ULong_t)(stptr[i]);
          Int_t idx = fFAddrs.find(func_addr);
          // check, whether it's a new symbol
          if(idx < 0) {
@@ -320,8 +319,8 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    fTimeStamp.Set();
    Double_t CurTime = fTimeStamp.AsDouble();
    fTimems = Int_t(10000.*(CurTime - fBeginTime));
-   //fPos    =  reinterpret_cast<Long64_t>(ptr);
-   fPos    =  (ULong64_t)(ptr);
+   ULong_t ul = (ULong_t)(ptr);
+   fPos    =  (ULong64_t)(ul);
    fNBytes = size;
    fN      = 0;
    fBtID   = btid;
