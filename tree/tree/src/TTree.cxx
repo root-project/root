@@ -3769,7 +3769,7 @@ Int_t TTree::Fill()
       	    if (gDebug > 0) printf("TTree::Fill:  First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
       } else if (fEntries > 1 && fEntries%fAutoFlush == 0) {
-         if (fEntries%fAutoSave == 0) {
+         if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
        	    //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
       	    AutoSave("flushbaskets");
       	    if (gDebug > 0) printf("AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,fZipBytes,fSavedBytes);
