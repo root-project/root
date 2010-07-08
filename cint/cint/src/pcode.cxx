@@ -1715,7 +1715,7 @@ void G__OP2_modulus(G__value *bufm1,G__value *bufm2)
   else
 #ifdef G__TUNEUP_W_SECURITY
   if(0==bufm1->obj.i) {
-    G__genericerror("Error: operator '%%' divided by zero");
+    G__genericerror("Error: operator '%' divided by zero");
     return;
   }
 #endif
@@ -2144,7 +2144,7 @@ void G__OP2_modassign(G__value *bufm1,G__value *bufm2)
   else
 #ifdef G__TUNEUP_W_SECURITY
   if(0==bufm1->obj.i) {
-    G__genericerror("Error: operator '%%' divided by zero");
+    G__genericerror("Error: operator '%' divided by zero");
     return;
   }
 #endif

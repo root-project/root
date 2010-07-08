@@ -513,7 +513,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
          case '%': /* modulus */
             if (fexpression == 0.0) {
                if (G__no_exec_compile) G__letdouble(defined, 'd', 0.0);
-               else G__genericerror("Error: operator '%%' divided by zero");
+               else G__genericerror("Error: operator '%' divided by zero");
                return;
             }
             G__letint(defined, 'i', (long)fdefined % (long)fexpression);
@@ -991,7 +991,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
             case '%': /* modulus */
                if (ullexpression == 0) {
                   if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
-                  else G__genericerror("Error: operator '%%' divided by zero");
+                  else G__genericerror("Error: operator '%' divided by zero");
                   return;
                }
                G__letULonglong(defined, 'm', ulldefined % ullexpression);
@@ -1222,7 +1222,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
             case '%': /* modulus */
                if (llexpression == 0) {
                   if (G__no_exec_compile) G__letdouble(defined, 'i', 0);
-                  else G__genericerror("Error: operator '%%' divided by zero");
+                  else G__genericerror("Error: operator '%' divided by zero");
                   return;
                }
                G__letLonglong(defined, 'n', lldefined % llexpression);
@@ -1477,7 +1477,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
             case '%': /* modulus */
                if (uexpression == 0) {
                   if (G__no_exec_compile) G__letdouble(defined, resultTypeChar, 0);
-                  else G__genericerror("Error: operator '%%' divided by zero");
+                  else G__genericerror("Error: operator '%' divided by zero");
                   return;
                }
                G__letint(defined, resultTypeChar, udefined % uexpression);
@@ -1732,7 +1732,7 @@ void G__bstore(int operatortag, G__value expressionin, G__value* defined)
             case '%': /* modulus */
                if (lexpression == 0) {
                   if (G__no_exec_compile) G__letdouble(defined, resultTypeChar, 0);
-                  else G__genericerror("Error: operator '%%' divided by zero");
+                  else G__genericerror("Error: operator '%' divided by zero");
                   return;
                }
                G__letint(defined, resultTypeChar, ldefined % lexpression);
