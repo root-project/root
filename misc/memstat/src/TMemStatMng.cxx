@@ -49,7 +49,8 @@ TMemStatMng::TMemStatMng():
    fNBytes(0),
    fN(0),
    fBtID(0),
-   fBTCount(0)
+   fBTCount(0),
+   fSysInfo(NULL)
 {
    // Default constructor
 }
@@ -82,6 +83,17 @@ void TMemStatMng::Init()
    fHbtids->SetDirectory(0);
    // save the histogram to a tree header
    fDumpTree->GetUserInfo()->Add(fHbtids);
+   // save the system info to a tree header
+   string sSysInfo(gSystem->GetBuildNode());
+   sSysInfo += " | ";
+   sSysInfo += gSystem->GetBuildCompilerVersion();
+   sSysInfo += " | ";
+   sSysInfo += gSystem->GetFlagsDebug();
+   sSysInfo += " ";
+   sSysInfo += gSystem->GetFlagsOpt();
+   fSysInfo = new TNamed("SysInfo", sSysInfo.c_str());
+
+   fDumpTree->GetUserInfo()->Add(fSysInfo);
 }
 
 //______________________________________________________________________________
@@ -111,6 +123,7 @@ void TMemStatMng::Close()
    fgInstance->fDumpTree->AutoSave();
 
    delete fgInstance->fFAddrsList;
+   delete fgInstance->fSysInfo;
 
    delete fgInstance;
    fgInstance = NULL;
