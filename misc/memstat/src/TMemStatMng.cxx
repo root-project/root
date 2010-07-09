@@ -61,8 +61,7 @@ void TMemStatMng::Init()
 
    fBeginTime = fTimeStamp.AsDouble();
 
-   //fDumpFile = new TFile(Form("yams_%d.root", gSystem->GetPid()), "recreate");
-   fDumpFile = new TFile(g_cszFileName, "recreate");
+   fDumpFile = new TFile(Form("memstat_%d.root", gSystem->GetPid()), "recreate");
    Int_t opt = 200000;
    if(!fDumpTree) {
       fDumpTree = new TTree("T", "Memory Statistics");
@@ -320,7 +319,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    Double_t CurTime = fTimeStamp.AsDouble();
    fTimems = Int_t(10000.*(CurTime - fBeginTime));
    ULong_t ul = (ULong_t)(ptr);
-   fPos    =  (ULong64_t)(ul);
+   fPos    = (ULong64_t)(ul);
    fNBytes = size;
    fN      = 0;
    fBtID   = btid;
