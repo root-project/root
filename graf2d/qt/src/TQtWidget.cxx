@@ -535,6 +535,7 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
    //    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3,
 
    EEventType rootButton = kNoEvent;
+   Qt::ContextMenuPolicy currentPolicy = contextMenuPolicy();
    fOldMousePos = e->pos();
    TCanvas *c = Canvas();
    if (c && !fWrapper ){
@@ -542,22 +543,30 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
       {
       case Qt::LeftButton:  rootButton = kButton1Down; break;
       case Qt::RightButton: {
-          rootButton = kButton3Down; 
          // respect the QWidget::contextMenuPolicy
          // treat this event as QContextMenuEvent
-          if (contextMenuPolicy()) {
-             e->accept(); 
-             QContextMenuEvent evt(QContextMenuEvent::Other, e->pos() );
-             QApplication::sendEvent(this, &evt);
-          }
-          break;
-       }
+         if ( currentPolicy == Qt::DefaultContextMenu) {
+            e->accept();
+            QContextMenuEvent evt(QContextMenuEvent::Other, e->pos() );
+            QApplication::sendEvent(this, &evt);
+         } else {
+            rootButton = kButton3Down;
+         }
+         break;
+      }
       case Qt::MidButton:   rootButton = kButton2Down; break;
       default: break;
       };
       if (rootButton != kNoEvent) {
-         e->accept(); 
-         c->HandleInput(rootButton, e->x(), e->y());
+         e->accept();
+	 if (rootButton == kButton3Down) {
+           bool lastvalue = c->TestBit(kNoContextMenu);
+           c->SetBit(kNoContextMenu);
+	   c->HandleInput(rootButton, e->x(), e->y());
+           c->SetBit(kNoContextMenu, lastvalue);
+         } else {
+	   c->HandleInput(rootButton, e->x(), e->y());
+         }
          EmitSignal(kMousePressEvent);
          return;
       }
