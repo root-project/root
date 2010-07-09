@@ -13,5 +13,10 @@ while in the documentation is was indicated in nanoseconds.
 <h4>pdg_table.txt</h4>
 Particles with a width greater than 1e-10 have now the stable flag set to 1.
 
+<h4>TVirtualMC</h4>
+New functions added in the interface for activation of collecting TGeo tracks:
+<pre>virtual void SetCollectTracks(Bool_t collectTracks);
+virtual Bool_t IsCollectTracks() const;
+</pre>
 
 
