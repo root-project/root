@@ -151,6 +151,7 @@ void memstat(double update=0.1, const char* fname="memstat.root") {
 	 h->AddBinContent(bin,-100*dbin/dv);
 	 //fill bytes free in full following pages
 	 nb = Int_t((nbytes-dbin)/dv);
+	 if (bin+nb >nbins) nb = nbins-bin;
          for (j=1;j<=nb;j++) h->AddBinContent(bin+j,-100);
 	 //fill the bytes free in  in last page
 	 rest = nbytes-nb*dv-dbin;
