@@ -35,6 +35,7 @@ deprecated_options="         \
 options="                    \
    enable_afs                \
    enable_alien              \
+   enable_alloc              \
    enable_asimage            \
    enable_astiff             \
    enable_bonjour            \
@@ -128,6 +129,7 @@ for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cling=
 enable_afs=no
+enable_alloc=no
 enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
@@ -1233,6 +1235,8 @@ with options, prefix with --with-, enables corresponding support
   afs-shared         AFS support, controls usage of shared linkage AFS libraries {yes/no}
   alien-incdir       AliEn support, location of gapiUI.h
   alien-libdir       AliEn support, location of libapiUI
+  alloc-libdir       Alternative memory allocator support, location of allocator lib
+  alloc-lib          Alternative memory allocator support, allocator lib
   castor-incdir      CASTOR support, location of stager_api.h
   castor-libdir      CASTOR support, location of libshift
   chirp-incdir       Chirp support, location of chirp_client.h
@@ -1481,6 +1485,8 @@ if test $# -gt 0 ; then
       --with-afs-shared=*)     afsshared=$optarg     ; enable_afs="yes"     ;;
       --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
+      --with-alloc-libdir=*)   alloclibdir=$optarg   ; enable_alloc="yes"   ;;
+      --with-alloc-lib=*)      alloclib=$optarg      ; enable_alloc="yes"   ;;
       --with-afterimage-incdir=*) afterimageincdir=$optarg; enable_builtin_afterimage=no ;;
       --with-afterimage-libdir=*) afterimagelibdir=$optarg; enable_builtin_afterimage=no ;;
       --with-castor-incdir=*)  castorincdir=$optarg  ; enable_castor="yes"  ;;
@@ -1547,9 +1553,6 @@ if test $# -gt 0 ; then
       --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-rfio-incdir=*)    shiftincdir=$optarg   ; enable_rfio="yes"    ;;
       --with-rfio-libdir=*)    shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
-      # leave --with-shift-* for backward compatibility, use --with-rfio-* instead
-      --with-shift-incdir=*)   shiftincdir=$optarg   ; enable_rfio="yes"    ;;
-      --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
@@ -2275,6 +2278,25 @@ if test "x$platform" = "xwin32"; then
    glewlibdir=
    glewlibs=lib/libGLEW.lib
 fi
+
+######################################################################
+#
+### echo %%% Alternative Memory Allocator Support - Third party libraries
+#
+if test ! "x$enable_alloc" = "xno"; then
+    # Check for alternative memory allocator
+    check_library "$alloclib" "$enable_shared" "$alloclibdir" \
+        /usr/lib /usr/local/lib
+    alloclib=$found_lib
+    alloclibdir=$found_dir
+
+    if test "x$alloclib" = "x"; then
+        alloclibdir=""
+        enable_alloc="no"
+    fi
+fi
+check_explicit "$enable_alloc" "$enable_alloc_explicit" \
+     "Explicitly required allocator dependencies not fulfilled"
 
 ######################################################################
 #
@@ -5571,13 +5593,15 @@ fi
 message "Writing $MAKEOUT"
 sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@afslib@|$afslib|"                    \
-    -e "s|@afslibdir@|$afslibdirs|"              \
+    -e "s|@afslibdir@|$afslibdirs|"             \
     -e "s|@afsincdir@|$afsincdir|"              \
     -e "s|@afsextracflags@|$afsextracflags|"    \
     -e "s|@afsshared@|$afsshared|"              \
     -e "s|@alienincdir@|$alienincdir|"          \
     -e "s|@alienlib@|$alienlib|"                \
     -e "s|@alienlibdir@|$alienlibdir|"          \
+    -e "s|@alloclibdir@|$alloclibdir|"          \
+    -e "s|@alloclib@|$alloclib|"                \
     -e "s|@architecture@|$arch|"                \
     -e "s|@asextralib@|$asextralib|"            \
     -e "s|@asextralibdir@|$asextralibdir|"      \
@@ -5972,6 +5996,8 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@dicttype@|$dicttype|"           \
     -e "s|@zliblib@|$zliblib|"             \
     -e "s|@pythonvers@|$pythonvers|"       \
+    -e "s|@alloclibdir@|$alloclibdir|"     \
+    -e "s|@alloclib@|$alloclib|"           \
     -e "s|@altcc@|$altcc|"                 \
     -e "s|@altcxx@|$altcxx|"               \
     -e "s|@altf77@|$altf772|"              \

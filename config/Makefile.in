@@ -236,6 +236,9 @@ AFSINCDIR      := @afsincdir@
 AFSEXTRACFLAGS := @afsextracflags@
 AFSSHARED      := @afsshared@
 
+ALLOCLIB       := @alloclib@
+ALLOCLIBDIR    := @alloclibdir@
+
 BUILDKRB5      := @buildkrb5@
 KRB5LIB        := @krb5lib@
 KRB5LIBDIR     := @krb5libdir@

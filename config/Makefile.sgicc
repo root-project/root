@@ -31,7 +31,8 @@ SOFLAGS       = -n32 -shared
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -lPW -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB)
+SYSLIBS       = -lm -lPW -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) \
+                $(ALLOCLIBDIR) $(ALLOCLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm -ltermcap -lbsd -lgen -ldl
 

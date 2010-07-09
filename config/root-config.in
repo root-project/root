@@ -463,6 +463,13 @@ win32)
    ;;
 esac
 
+# allocator must be last in auxlibs
+for f in $features ; do
+   if test "x$f" = "xalloc" ; then
+      auxlibs="$auxlibs @alloclibdir@ @alloclib@"
+   fi
+done
+
 ### end of machine and compiler dependent settings ###
 
 prefix=@prefix@

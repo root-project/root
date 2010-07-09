@@ -53,7 +53,7 @@ SOFLAGS       = -G $(CCPTR)
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -ldl -lnsl -lsocket -lposix4
+SYSLIBS       = -lm -ldl -lnsl -lsocket -lposix4 $(ALLOCLIBDIR) $(ALLOCLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm -ltermcap -ldl
 

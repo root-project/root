@@ -36,7 +36,8 @@ SOFLAGS       =
 SOEXT         = a
 
 # System libraries:
-SYSLIBS       = -lm -lld $(OSTHREADLIBDIR) $(OSTHREADLIB)
+SYSLIBS       = -lm -lld $(OSTHREADLIBDIR) $(OSTHREADLIB) \
+                $(ALLOCLIBDIR) $(ALLOCLIB)
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm -lld
 
