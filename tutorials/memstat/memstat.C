@@ -20,7 +20,7 @@
 // The script can be executed simply as
 //   root > .x memstat.C   (or via ACLIC  .x memstat.C+ )
 // or specifying arguments
-//   root > .x memstat.C+(1000,"mydir/mymemstat.root");
+//   root > .x memstat.C+(0.01,"mydir/mymemstat.root");
 //
 //Author: Rene Brun 7 July 2010
       
@@ -31,11 +31,17 @@
 #include "TStyle.h"
 #include "TH1.h"
 #include "TPaveText.h"
+#include "TPaveLabel.h"
 #include "TSystem.h"
 
-void memstat(int update=10000, const char* fname="memstat.root") {
-   //open the memstat data file, then call TTree::Draw to precompute
-   //the arrays of positions and nbytes per entry
+void memstat(double update=0.1, const char* fname="memstat.root") {
+   // Open the memstat data file, then call TTree::Draw to precompute
+   // the arrays of positions and nbytes per entry.
+   // update is the time interval in the data file  in seconds after which
+   // the display is updated. For example is the job producing the memstat.root file
+   // took 100s to execute, an update of 0.1s will generate 1000 time views of
+   // the memory use.
+   
    TFile *f = TFile::Open(fname);
    if (!f) {
       printf("Cannot open file %s\n",fname);
@@ -46,21 +52,22 @@ void memstat(int update=10000, const char* fname="memstat.root") {
       printf("cannot find the TMemStat TTree named T in file %s\n",fname);
       return;
    }
-   if (update < 1) {
-      printf("Illegal update value %d, changed to 1000\n",update);
-      update = 1000;
+   if (update <= 0) {
+      printf("Illegal update value %g, changed to 0.01\n",update);
+      update = 0.01;
    }
-   if (update < 100) printf("Warning update parameter is very small, processing may be slow\n");
+   if (update < 0.001) printf("Warning update parameter is very small, processing may be slow\n");
    
    Long64_t nentries = T->GetEntries();
    T->SetEstimate(nentries+10);
-   Long64_t nsel = T->Draw("pos:nbytes","","goff");
+   Long64_t nsel = T->Draw("pos:nbytes:time","","goff");
    
    //now we compute the best binning for the histogram
    Int_t nbytes;
    Double_t pos;
    Double_t *V1 = T->GetV1();
    Double_t *V2 = T->GetV2();
+   Double_t *V3 = T->GetV3();
    Long64_t imean = (Long64_t)TMath::Mean(nsel,V1);
    Long64_t irms = (Long64_t)TMath::RMS(nsel,V1);
    Long64_t bw = 10000;
@@ -69,7 +76,22 @@ void memstat(int update=10000, const char* fname="memstat.root") {
    Int_t nbins = Int_t(4*irms/bw);
    Double_t vmin = imean -bw*nbins/2;
    Double_t vmax = vmin+bw*nbins;
-   Long64_t nvm = vmax-vmin+1;
+   if (vmax > 2e9 && vmin <2e9) {
+      //the data set has been likely generated on a 32 bits machine
+      //we are mostly interested by the small allocations, so we select
+      //only values below 2 GBytes
+      printf("memory locations above 2GBytes will be ignored\n");
+      nsel = T->Draw("pos:nbytes:time","pos <2e9","goff");
+      imean = (Long64_t)TMath::Mean(nsel,V1);
+      irms = (Long64_t)TMath::RMS(nsel,V1);
+      bw = 10000;
+      imean = imean - imean%bw;
+      irms = irms -irms%bw;
+      nbins = Int_t(4*irms/bw);
+      vmin = imean -bw*nbins/2;
+      vmax = vmin+bw*nbins;
+   }  
+   Long64_t nvm = Long64_t(vmax-vmin+1);
    Long64_t *nbold = new Long64_t[nvm];
    memset(nbold,0,nvm*8);
    Double_t dv = (vmax-vmin)/nbins;
@@ -88,15 +110,21 @@ void memstat(int update=10000, const char* fname="memstat.root") {
    //create a TPaveText to show the summary results
    TPaveText *pvt = new TPaveText(.5,.9,.75,.99,"brNDC");
    pvt->Draw();
+   //create a TPaveLabel to show the time
+   TPaveLabel *ptime = new TPaveLabel(.905,.7,.995,.76,"time","brNDC");
+   ptime->SetFillColor(kYellow-3);
+   ptime->Draw();
 
    //start loop on selected rows
    Int_t bin,nb,j;
    Long64_t ipos;
-   Double_t dbin,rest;
+   Double_t dbin,rest,time;
+   Double_t updateLast = 0;
    for (Int_t i=0;i<nsel;i++) {
       pos    = V1[i];
       ipos = (Long64_t)(pos-vmin);
       nbytes = (Int_t)V2[i];
+      time = 0.0001*V3[i];
       bin = axis->FindBin(pos);
       if (bin<1 || bin>nbins) continue;
       dbin = axis->GetBinUpEdge(bin)-pos;
@@ -105,7 +133,7 @@ void memstat(int update=10000, const char* fname="memstat.root") {
          //fill bytes in the first page
          h->AddBinContent(bin,100*dbin/dv);
 	 //fill bytes in full following pages
-         nb = (nbytes-dbin)/dv;
+         nb = Int_t((nbytes-dbin)/dv);
 	 if (bin+nb >nbins) nb = nbins-bin;
          for (j=1;j<=nb;j++) h->AddBinContent(bin+j,100);
 	 //fill the bytes remaining in last page
@@ -122,16 +150,17 @@ void memstat(int update=10000, const char* fname="memstat.root") {
          if (dbin > nbytes) dbin = nbytes;
 	 h->AddBinContent(bin,-100*dbin/dv);
 	 //fill bytes free in full following pages
-	 nb = (nbytes-dbin)/dv;
+	 nb = Int_t((nbytes-dbin)/dv);
          for (j=1;j<=nb;j++) h->AddBinContent(bin+j,-100);
 	 //fill the bytes free in  in last page
 	 rest = nbytes-nb*dv-dbin;
 	 if (rest > 0) h->AddBinContent(bin+nb+1,-100*rest/dv);
 
       }
-      if (i%update == 0) {
+      if (time -updateLast > update) {
          //update canvas at regular intervals
-	 h->SetEntries(i);
+	 updateLast = time;
+         h->SetEntries(i);
 	 c1->Modified();
          pvt->GetListOfLines()->Delete();
          Double_t mbytes = 0;
@@ -148,6 +177,8 @@ void memstat(int update=10000, const char* fname="memstat.root") {
          pvt->AddText(Form("memory used = %g Mbytes",mbytes*1e-6));
          pvt->AddText(Form("page occupancy = %f per cent",occupancy));
          pvt->AddText("(for non empty pages only)");
+         ptime->SetLabel(Form("%g sec",time));
+         
 	 c1->Update();
          gSystem->ProcessEvents();
       }
