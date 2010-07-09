@@ -17,7 +17,7 @@
 //
 #include "Rtypes.h"
 
-const Int_t kMaxMCProcess = 45;
+const Int_t kMaxMCProcess = 47;
 
 enum TMCProcess
 {
@@ -53,6 +53,7 @@ enum TMCProcess
   kPMuonNuclear,        // muon nuclear interaction
   kPElectronNuclear,    // electron nuclear interaction
   kPPositronNuclear,    // positron nuclear interaction
+  kPPhotoNuclear,       // photo nuclear interaction
 
   kPTOFlimit,           // exceeded time of flight cut
   kPPhotoFission,       // nuclear photofission
@@ -77,6 +78,7 @@ enum TMCProcess
   kPScintillation,      // scintillation
 
   kPTransportation,     // Transportation
+  kPUserDefined,        // User defined process
 
   kPNoProcess           // unknown process
 };
@@ -110,6 +112,7 @@ static const char * const TMCProcessName[kMaxMCProcess] = {
   "Muon nuclear interaction",
   "Electron nuclear interaction",
   "Positron nuclear interaction",
+  "Photo nuclear interaction",
   "Time of flight limit",
   "Nuclear photofission",
   "Rayleigh effect",
@@ -126,6 +129,7 @@ static const char * const TMCProcessName[kMaxMCProcess] = {
   "Synchrotron radiation",
   "Scintillation",
   "Transportation",
+  "User defined process",
   "Unknown process"
 };
 

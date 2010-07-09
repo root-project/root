@@ -426,7 +426,7 @@ public:
    // (DEEMAX, STMIN, STEMAX), which are, be default, ignored.
    // In Geant4 case, only STEMAX is taken into account.
    // In FLUKA, all tracking media parameters are ignored.
-   virtual void SetUserParameters(Bool_t isUserParameters);
+   virtual void SetUserParameters(Bool_t isUserParameters) = 0;
 
    //
    // get methods
@@ -592,11 +592,6 @@ public:
 
    // Return VMC type of the particle specified by pdg.
    virtual TMCParticleType ParticleMCType(Int_t pdg) const = 0;
-   
-   // Activate collecting tracks (working only with TGeant3TGeo)
-   virtual void SetCollectTracks(Bool_t) {}
-   virtual Bool_t IsCollectTracks() const {return kFALSE;}
-
    //
    // ------------------------------------------------
    // methods for step management
@@ -856,9 +851,15 @@ public:
 
    // Set switches for lego transport
    virtual void InitLego() = 0;
+   
+   // (In)Activate collecting TGeo tracks 
+   virtual void SetCollectTracks(Bool_t collectTracks);
+
+   // Return the info if collecting tracks is activated
+   virtual Bool_t IsCollectTracks() const;
 
    //
-    // ------------------------------------------------
+   // ------------------------------------------------
    // Set methods
    // ------------------------------------------------
    //
@@ -893,7 +894,6 @@ public:
     // Return the magnetic field
     virtual TVirtualMagField*  GetMagField() const  { return fMagField; }
 
-
 protected:
    TVirtualMCApplication* fApplication; //! User MC application
 
@@ -913,12 +913,16 @@ private:
 
 // new functions
 
-inline void TVirtualMC::SetUserParameters(Bool_t /*isUserParameters*/) {
-   // Activate the parameters defined in tracking media
-   // (DEEMAX, STMIN, STEMAX), which are, be default, ignored.
-   // In Geant4 case, only STEMAX is taken into account.
-   // In FLUKA, all tracking media parameters are ignored.
-   Warning("SetUserParameters", "New function - not yet implemented.");
+inline void TVirtualMC::SetCollectTracks(Bool_t /*collectTracks*/) {   
+   // Activate collecting tracks 
+   // Currently working only with TGeant3TGeo
+   Warning("SetCollectTracks", "New function - not yet implemented.");
+}
+
+inline Bool_t TVirtualMC::IsCollectTracks() const {
+    // Return the info if collecting tracks is activated
+   Warning("IsCollectTracks", "New function - not yet implemented.");
+   return kFALSE;
 }
 
 R__EXTERN TVirtualMC *gMC;
