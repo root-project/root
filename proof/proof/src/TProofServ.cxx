@@ -3981,6 +3981,13 @@ void TProofServ::ProcessNext(TString *slb)
    // Remove the list of the missing files from the original list, if any
    if ((o = input->FindObject("MissingFiles"))) input->Remove(o);
 
+   // Check whether we have to enforce the use of submergers, respecting the will
+   // of the user
+   if (gEnv->Lookup("Proof.SubMergers") && !input->FindObject("PROOF_UseMergers")) {
+      Int_t smg = gEnv->GetValue("Proof.SubMergers",-1);
+      input->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
+   }
+
    // Process
    PDB(kGlobal, 1) Info("ProcessNext", "calling %s::Process()", fPlayer->IsA()->GetName());
    fPlayer->Process(dset, filename, opt, nentries, first);

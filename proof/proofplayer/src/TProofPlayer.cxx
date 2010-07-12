@@ -1618,6 +1618,12 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    } else {
 
+      // Check whether we have to enforce the use of submergers
+      if (gEnv->Lookup("Proof.SubMergers") && !fInput->FindObject("PROOF_UseMergers")) {
+         Int_t smg = gEnv->GetValue("Proof.SubMergers",-1);
+         fInput->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
+      }
+
       // For a new query clients should make sure that the temporary
       // output list is empty
       if (fOutputLists) {
