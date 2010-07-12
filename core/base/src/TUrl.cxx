@@ -28,9 +28,13 @@
 #include "TEnv.h"
 #include "TSystem.h"
 #include "TMap.h"
+#include "TVirtualMutex.h"
 
 TObjArray *TUrl::fgSpecialProtocols = 0;
 THashList *TUrl::fgHostFQDNs = 0;
+
+TVirtualMutex *gURLMutex = 0; // local mutex
+
 
 ClassImp(TUrl)
 
@@ -447,11 +451,12 @@ const char *TUrl::GetHostFQDN() const
             fHostFQ = adr.GetHostName();
          } else
             fHostFQ = "-";
+         R__LOCKGUARD2(gURLMutex);
          if (!fgHostFQDNs) {
             fgHostFQDNs = new THashList;
             fgHostFQDNs->SetOwner();
          }
-         if (fgHostFQDNs)
+         if (fgHostFQDNs && !fgHostFQDNs->FindObject(fHost))
             fgHostFQDNs->Add(new TNamed(fHost,fHostFQ));
       } else {
          fHostFQ = fqdn->GetTitle();
@@ -539,19 +544,24 @@ TObjArray *TUrl::GetSpecialProtocols()
 
    static Bool_t usedEnv = kFALSE;
 
-   if (!fgSpecialProtocols)
-      fgSpecialProtocols = new TObjArray;
-
    if (!gEnv) {
+      R__LOCKGUARD2(gURLMutex);
+      if (!fgSpecialProtocols)
+         fgSpecialProtocols = new TObjArray;
       if (fgSpecialProtocols->GetEntriesFast() == 0)
          fgSpecialProtocols->Add(new TObjString("file:"));
       return fgSpecialProtocols;
    }
 
-   if (fgSpecialProtocols->GetEntriesFast() > 0 && usedEnv)
+   if (usedEnv)
       return fgSpecialProtocols;
 
-   fgSpecialProtocols->Delete();
+   R__LOCKGUARD2(gURLMutex);
+   if (fgSpecialProtocols)
+      fgSpecialProtocols->Delete();
+
+   if (!fgSpecialProtocols)
+      fgSpecialProtocols = new TObjArray;
 
    const char *protos = gEnv->GetValue("Url.Special", "file: rfio: hpss: castor: dcache: dcap:");
    usedEnv = kTRUE;
