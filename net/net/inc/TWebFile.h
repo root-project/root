@@ -53,6 +53,7 @@ private:
    TString           fMsgReadBuffers;   // cache ReadBuffers() msg
    TString           fMsgReadBuffers10; // cache ReadBuffers10() msg
    TString           fMsgGetHead;       // cache GetHead() msg
+   TString           fBasicUrl;         // basic url without authentication and options
 
    static TUrl       fgProxy;           // globally set proxy URL
 

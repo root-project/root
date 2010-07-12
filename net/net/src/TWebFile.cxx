@@ -51,6 +51,7 @@ public:
    void ReOpen();
 };
 
+//______________________________________________________________________________
 TWebSocket::TWebSocket(TWebFile *f)
 {
    // Open web file socket.
@@ -60,6 +61,7 @@ TWebSocket::TWebSocket(TWebFile *f)
       ReOpen();
 }
 
+//______________________________________________________________________________
 TWebSocket::~TWebSocket()
 {
    // Close socket in case not HTTP/1.1 protocol.
@@ -70,6 +72,7 @@ TWebSocket::~TWebSocket()
    }
 }
 
+//______________________________________________________________________________
 void TWebSocket::ReOpen()
 {
    // Re-open web file socket.
@@ -182,6 +185,14 @@ void TWebFile::Init(Bool_t readHeadOnly)
 
    fSocket = 0;
 
+   fBasicUrl += fUrl.GetProtocol();
+   fBasicUrl += "://";
+   fBasicUrl += fUrl.GetHost();
+   fBasicUrl += ":";
+   fBasicUrl += fUrl.GetPort();
+   fBasicUrl += "/";
+   fBasicUrl += fUrl.GetFile();
+
    if ((err = GetHead()) < 0) {
       if (readHeadOnly) {
          fD = -1;
@@ -189,7 +200,7 @@ void TWebFile::Init(Bool_t readHeadOnly)
          return;
       }
       if (err == -2)
-         Error("TWebFile", "%s does not exist", fUrl.GetUrl());
+         Error("TWebFile", "%s does not exist", fBasicUrl.Data());
       MakeZombie();
       gDirectory = gROOT;
       return;
@@ -208,7 +219,7 @@ void TWebFile::Init(Bool_t readHeadOnly)
       }
 
       if (strncmp(buf, "root", 4) && strncmp(buf, "PK", 2)) {  // PK is zip file
-         Error("TWebFile", "%s is not a ROOT file", fUrl.GetUrl());
+         Error("TWebFile", "%s is not a ROOT file", fBasicUrl.Data());
          MakeZombie();
          gDirectory = gROOT;
          return;
@@ -296,13 +307,7 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
    if (fMsgReadBuffer == "") {
       fMsgReadBuffer = "GET ";
-      fMsgReadBuffer += fUrl.GetProtocol();
-      fMsgReadBuffer += "://";
-      fMsgReadBuffer += fUrl.GetHost();
-      fMsgReadBuffer += ":";
-      fMsgReadBuffer += fUrl.GetPort();
-      fMsgReadBuffer += "/";
-      fMsgReadBuffer += fUrl.GetFile();
+      fMsgReadBuffer += fBasicUrl;
       fMsgReadBuffer += "?";
    }
    TString msg = fMsgReadBuffer;
@@ -329,13 +334,7 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
    // Give full URL so Apache's virtual hosts solution works.
    if (fMsgReadBuffer10 == "") {
       fMsgReadBuffer10 = "GET ";
-      fMsgReadBuffer10 += fUrl.GetProtocol();
-      fMsgReadBuffer10 += "://";
-      fMsgReadBuffer10 += fUrl.GetHost();
-      fMsgReadBuffer10 += ":";
-      fMsgReadBuffer10 += fUrl.GetPort();
-      fMsgReadBuffer10 += "/";
-      fMsgReadBuffer10 += fUrl.GetFile();
+      fMsgReadBuffer10 += fBasicUrl;
       if (fHTTP11)
          fMsgReadBuffer10 += " HTTP/1.1";
       else
@@ -368,7 +367,7 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
+Bool_t TWebFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    // Read specified byte ranges from remote file via HTTP daemon.
    // Reads the nbuf blocks described in arrays pos and len,
@@ -384,13 +383,7 @@ Bool_t TWebFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
    if (fMsgReadBuffers == "") {
       fMsgReadBuffers = "GET ";
-      fMsgReadBuffers += fUrl.GetProtocol();
-      fMsgReadBuffers += "://";
-      fMsgReadBuffers += fUrl.GetHost();
-      fMsgReadBuffers += ":";
-      fMsgReadBuffers += fUrl.GetPort();
-      fMsgReadBuffers += "/";
-      fMsgReadBuffers += fUrl.GetFile();
+      fMsgReadBuffers += fBasicUrl;
       fMsgReadBuffers += "?";
    }
    TString msg = fMsgReadBuffers;
@@ -433,13 +426,7 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
    // Give full URL so Apache's virtual hosts solution works.
    if (fMsgReadBuffers10 == "") {
       fMsgReadBuffers10 = "GET ";
-      fMsgReadBuffers10 += fUrl.GetProtocol();
-      fMsgReadBuffers10 += "://";
-      fMsgReadBuffers10 += fUrl.GetHost();
-      fMsgReadBuffers10 += ":";
-      fMsgReadBuffers10 += fUrl.GetPort();
-      fMsgReadBuffers10 += "/";
-      fMsgReadBuffers10 += fUrl.GetFile();
+      fMsgReadBuffers10 += fBasicUrl;
       if (fHTTP11)
          fMsgReadBuffers10 += " HTTP/1.1";
       else
@@ -608,7 +595,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
          if (code != 206) {
             ret = -1;
             TString mess = res(13, 1000);
-            Error("GetFromWeb10", "%s: %s (%d)", fUrl.GetUrl(), mess.Data(), code);
+            Error("GetFromWeb10", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
          }
       } else if (res.BeginsWith("Content-Type: multipart")) {
          boundary = "--" + res(res.Index("boundary=")+9, 1000);
@@ -691,13 +678,7 @@ Long64_t TWebFile::GetSize() const
    char     asize[64];
 
    TString msg = "GET ";
-   msg += fUrl.GetProtocol();
-   msg += "://";
-   msg += fUrl.GetHost();
-   msg += ":";
-   msg += fUrl.GetPort();
-   msg += "/";
-   msg += fUrl.GetFile();
+   msg += fBasicUrl;
    msg += "?";
    msg += -1;
    msg += "\r\n";
@@ -731,13 +712,7 @@ Int_t TWebFile::GetHead()
    // Give full URL so Apache's virtual hosts solution works.
    if (fMsgGetHead == "") {
       fMsgGetHead = "HEAD ";
-      fMsgGetHead += fUrl.GetProtocol();
-      fMsgGetHead += "://";
-      fMsgGetHead += fUrl.GetHost();
-      fMsgGetHead += ":";
-      fMsgGetHead += fUrl.GetPort();
-      fMsgGetHead += "/";
-      fMsgGetHead += fUrl.GetFile();
+      fMsgGetHead += fBasicUrl;
       fMsgGetHead += " HTTP/1.0";
       fMsgGetHead += "\r\n";
       fMsgGetHead += BasicAuthentication();
@@ -778,7 +753,7 @@ Int_t TWebFile::GetHead()
    }
 
    char line[1024];
-   Int_t n, ret = 0;
+   Int_t n, ret = 0, redirect = 0;
 
    while ((n = GetLine(s, line, 1024)) >= 0) {
       if (n == 0) {
@@ -797,21 +772,56 @@ Int_t TWebFile::GetHead()
             fHTTP11 = kTRUE;
          TString scode = res(9, 3);
          Int_t code = scode.Atoi();
-         if (code == 500)
-            fHasModRoot = kTRUE;
-         else if (code == 404)
-            ret = -2;   // file does not exist
-         else if (code > 200) {
+         if (code >= 500) {
+            if (code == 500)
+               fHasModRoot = kTRUE;
+            else {
+               ret = -1;
+               TString mess = res(13, 1000);
+               Error("GetHead", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
+            }
+         } else if (code >= 400) {
+            if (code == 404)
+               ret = -2;   // file does not exist
+            else {
+               ret = -1;
+               TString mess = res(13, 1000);
+               Error("GetHead", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
+            }
+         } else if (code >= 300) {
+            if (code == 301 || code == 302 || code == 303)
+               redirect = 1;
+            else {
+               ret = -1;
+               TString mess = res(13, 1000);
+               Error("GetHead", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
+            }
+         } else if (code > 200) {
             ret = -1;
             TString mess = res(13, 1000);
-            Error("GetHead", "%s: %s (%d)", fUrl.GetUrl(), mess.Data(), code);
+            Error("GetHead", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
          }
       } else if (res.BeginsWith("Content-Length:")) {
          TString slen = res(16, 1000);
          fSize = slen.Atoll();
+      } else if (res.BeginsWith("Location:") && redirect == 1) {
+         TString redir = res(10, 1000);
+         fUrl.SetUrl(redir);
+         fBasicUrl = fUrl.GetProtocol();
+         fBasicUrl += "://";
+         fBasicUrl += fUrl.GetHost();
+         fBasicUrl += ":";
+         fBasicUrl += fUrl.GetPort();
+         fBasicUrl += "/";
+         fBasicUrl += fUrl.GetFile();
+         fMsgGetHead = "";
+         redirect = 2;
       }
    }
    delete s;
+
+   if (redirect == 2)
+      return GetHead();
 
    return ret;
 }
