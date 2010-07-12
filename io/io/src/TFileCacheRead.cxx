@@ -308,7 +308,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
       if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
          if (buf) {
             memcpy(buf,&fBuffer[fSeekPos[loc]],len);
-            fFile->Seek(pos+len);
+            //fFile->Seek(pos+len); //not required (see <http://savannah.cern.ch/bugs/?69845>)
          }
          return 1;
       }
