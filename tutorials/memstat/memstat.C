@@ -114,6 +114,12 @@ void memstat(double update=0.1, const char* fname="memstat.root") {
    TPaveLabel *ptime = new TPaveLabel(.905,.7,.995,.76,"time","brNDC");
    ptime->SetFillColor(kYellow-3);
    ptime->Draw();
+   //draw producer identifier
+   TNamed *named = (TNamed*)T->GetUserInfo()->FindObject("SysInfo");
+   TText tmachine;
+   tmachine.SetTextSize(0.02);
+   tmachine.SetNDC();
+   tmachine.DrawText(0.01,0.01,named->GetTitle());
 
    //start loop on selected rows
    Int_t bin,nb,j;
