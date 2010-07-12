@@ -4912,7 +4912,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          } else {
             // collect built results from slaves
             if (IsMaster())
-               fProof->BuildPackage(package, TProof::kCollectBuildResults);
+               status = fProof->BuildPackage(package, TProof::kCollectBuildResults);
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully built", package.Data());
          }
@@ -4956,6 +4956,9 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
 
          ocwd = gSystem->WorkingDirectory();
          gSystem->ChangeDirectory(pdir);
+
+         // We have to be atomic here
+         fPackageLock->Lock();
 
          // Check for SETUP.C and execute
          if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
@@ -5057,6 +5060,9 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             if (!gSystem->AccessPathName(setupfn.Data())) gSystem->Unlink(setupfn.Data());
          }
 
+         // End of atomicity
+         fPackageLock->Unlock();
+
          gSystem->ChangeDirectory(ocwd);
 
          if (status < 0) {
@@ -5079,7 +5085,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             // if successful add to list and propagate to slaves
             fEnabledPackages->Add(new TObjString(package));
             if (IsMaster())
-               fProof->LoadPackage(package);
+               status = fProof->LoadPackage(package);
 
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully loaded", package.Data());
