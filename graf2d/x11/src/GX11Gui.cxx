@@ -1428,6 +1428,12 @@ void TGX11::MapModifierState(UInt_t &state, UInt_t &xstate, Bool_t tox)
          xstate |= Mod1Mask;
       if ((state & kKeyMod2Mask))
          xstate |= Mod2Mask;
+      if ((state & kKeyMod3Mask))
+         xstate |= Mod3Mask;
+      if ((state & kKeyMod4Mask))
+         xstate |= Mod4Mask;
+      if ((state & kKeyMod5Mask))
+         xstate |= Mod5Mask;
       if ((state & kButton1Mask))
          xstate |= Button1Mask;
       if ((state & kButton2Mask))
@@ -1448,6 +1454,12 @@ void TGX11::MapModifierState(UInt_t &state, UInt_t &xstate, Bool_t tox)
          state |= kKeyMod1Mask;
       if ((xstate & Mod2Mask))
          state |= kKeyMod2Mask;
+      if ((xstate & Mod3Mask))
+         state |= kKeyMod3Mask;
+      if ((xstate & Mod4Mask))
+         state |= kKeyMod4Mask;
+      if ((xstate & Mod5Mask))
+         state |= kKeyMod5Mask;
       if ((xstate & Button1Mask))
          state |= kButton1Mask;
       if ((xstate & Button2Mask))
