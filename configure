@@ -5994,7 +5994,6 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@winrtdebug@|$enable_winrtdebug|"\
     -e "s|@configargs@|$configargs|"       \
     -e "s|@dicttype@|$dicttype|"           \
-    -e "s|@zliblib@|$zliblib|"             \
     -e "s|@pythonvers@|$pythonvers|"       \
     -e "s|@alloclibdir@|$alloclibdir|"     \
     -e "s|@alloclib@|$alloclib|"           \

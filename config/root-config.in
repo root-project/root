@@ -49,7 +49,6 @@ altcxx="@altcxx@"
 altf77="@altf77@"
 altld="@altld@"
 dicttype=@dicttype@
-zliblib=@zliblib@
 
 if test "$platform" = "win32"; then
    if [ "x$ROOTSYS" != "x" ]; then
@@ -68,7 +67,7 @@ fi
 newlib="-lNew"
 rootglibs="-lGui"
 rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
--lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread $zliblib"
+-lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
 if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
     rootlibs="$rootlibs -lReflex"
 fi
