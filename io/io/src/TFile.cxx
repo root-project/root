@@ -1443,7 +1443,7 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
       else if (st == 1) {
          // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
          // (however the following call seems not necessary)
-         // Seek(off + len);
+         Seek(off + len);
          return 1;
       }
       // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
