@@ -266,7 +266,7 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    Int_t k = 0;
 
    for (n = 0; n < nbuf; n++) {
-      if (rfio_lseek64(fD, (off_t) iov[n].iov_base, SEEK_SET) < 0) {
+      if (rfio_lseek64(fD, iov[n].iov_base, SEEK_SET) < 0) {
          Error("TRFIOFile", "error doing rfio_lseek");
          return kTRUE;
       }
