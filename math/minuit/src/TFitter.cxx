@@ -1117,6 +1117,7 @@ void F2Fit(Int_t &/*npar*/, Double_t * /*gin*/, Double_t &f,Double_t *u, Int_t /
 {
    TVirtualFitter *fitter = TVirtualFitter::GetFitter();
    TF2 *f2 = (TF2*)fitter->GetObjectFit();
+   f2->InitArgs(u, f2->GetParameters() );
    f = f2->EvalPar(u);
 }
 
@@ -1125,5 +1126,6 @@ void F3Fit(Int_t &/*npar*/, Double_t * /*gin*/, Double_t &f,Double_t *u, Int_t /
 {
    TVirtualFitter *fitter = TVirtualFitter::GetFitter();
    TF3 *f3 = (TF3*)fitter->GetObjectFit();
+   f3->InitArgs(u, f3->GetParameters() );
    f = f3->EvalPar(u);
 }
