@@ -130,15 +130,13 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
          }
       }
 
-      fCWinId = gGLManager->InitGLWindow((ULong_t)GetViewPort()->GetId());
+      if (gGLManager)
+         fCWinId = gGLManager->InitGLWindow((ULong_t)GetViewPort()->GetId());
+      //Context creation deferred till TCanvas creation (since there is no way to pass it to TCanvas).
 
       if (!gGLManager || fCWinId == -1)
          gStyle->SetCanvasPreferGL(kFALSE);//TCanvas should not use gl.
-      else
-         fCWinId = gGLManager->InitGLWindow((ULong_t)GetViewPort()->GetId());
-         //Context creation deferred till TCanvas creation (since there is no way to pass it to TCanvas).
    }
-
    if (fCWinId == -1)
       fCWinId = gVirtualX->InitWindow((ULong_t)GetViewPort()->GetId());
 
