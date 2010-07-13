@@ -3970,6 +3970,14 @@ void TProofServ::ProcessNext(TString *slb)
    fQuerySeqNum = pq->GetSeqNum();
    input->Add(new TParameter<Int_t>("PROOF_QuerySeqNum", fQuerySeqNum));
 
+   // Check whether we have to enforce the use of submergers, but only if the user did
+   // not express itself on the subject
+   if (gEnv->Lookup("Proof.UseMergers") && !input->FindObject("PROOF_UseMergers")) {
+      Int_t smg = gEnv->GetValue("Proof.UseMergers",-1);
+      input->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
+      PDB(kSubmerger, 2) Info("ProcessNext", "PROOF_UseMergers set to %d", smg);
+   }
+
    // Set input
    TIter next(input);
    TObject *o = 0;
@@ -3980,13 +3988,6 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Remove the list of the missing files from the original list, if any
    if ((o = input->FindObject("MissingFiles"))) input->Remove(o);
-
-   // Check whether we have to enforce the use of submergers, respecting the will
-   // of the user
-   if (gEnv->Lookup("Proof.SubMergers") && !input->FindObject("PROOF_UseMergers")) {
-      Int_t smg = gEnv->GetValue("Proof.SubMergers",-1);
-      input->Add(new TParameter<Int_t>("PROOF_UseMergers", smg));
-   }
 
    // Process
    PDB(kGlobal, 1) Info("ProcessNext", "calling %s::Process()", fPlayer->IsA()->GetName());
