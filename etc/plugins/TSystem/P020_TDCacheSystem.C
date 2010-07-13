@@ -4,4 +4,6 @@ void P020_TDCacheSystem()
       "DCache", "TDCacheSystem()");
    gPluginMgr->AddHandler("TSystem", "^dcap:", "TDCacheSystem",
       "DCache", "TDCacheSystem()");
+   gPluginMgr->AddHandler("TSystem", "^gsidcap:", "TDCacheSystem",
+      "DCache", "TDCacheSystem()");
 }
