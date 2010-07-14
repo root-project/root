@@ -419,6 +419,11 @@ void convert_directory(const char *dir)
 #else
       uhtoc(ihdir[0],ncw,chdir,16,nch);
 #endif
+      //do not process directory names containing a slash
+      if (strchr(chdir,'/')) {
+         printf("Sorry cannot convert directory name %s because it contains a slash\n",chdir);
+         continue;
+      }   
       strcpy(hbookdir,chdir);
       for (i=16;i>0;i--) {
          if (chdir[i] == 0) continue;
