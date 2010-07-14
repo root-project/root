@@ -139,6 +139,8 @@ public:
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
    TFileInfo       *GetFileInfo(const char *type = "TTree");
 
+   Int_t            MergeElement(TDSetElement *elem);
+
    ClassDef(TDSetElement,8)  // A TDSet element
 };
 

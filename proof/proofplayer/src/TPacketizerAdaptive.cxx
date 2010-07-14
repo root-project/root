@@ -147,6 +147,42 @@ public:
    const char *GetName() const { return fNodeName.Data(); }
    Long64_t    GetNEvents() const { return fEvents; }
 
+   void Print(Option_t * = 0) const
+   {
+      TFileStat *fs = 0;
+      TDSetElement *e = 0;
+      Int_t nn = 0;
+      Printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+      Printf("+++ TFileNode: %s +++", fNodeName.Data());
+      Printf("+++ Evts: %lld (total: %lld) ", fProcessed, fEvents);
+      Printf("+++ Worker count: int:%d, ext: %d, tot:%d ", fMySlaveCnt, fExtSlaveCnt, fRunSlaveCnt);
+      Printf("+++ Files: %d ", fFiles ? fFiles->GetSize() : 0);
+      if (fFiles && fFiles->GetSize() > 0) {
+         TIter nxf(fFiles);
+         while ((fs = (TFileStat *) nxf())) {
+            if ((e = fs->GetElement())) {
+               Printf("+++  #%d: %s  %lld - %lld (%lld) - next: %lld ", ++nn, e->GetName(),
+                     e->GetFirst(), e->GetFirst() + e->GetNum() - 1, e->GetNum(), fs->GetNextEntry());
+            } else {
+               Printf("+++  #%d: no element! ", ++nn);
+            }
+         }
+      }
+      Printf("+++ Active files: %d ", fActFiles ? fActFiles->GetSize() : 0);
+      if (fActFiles && fActFiles->GetSize() > 0) {
+         TIter nxaf(fActFiles);
+         while ((fs = (TFileStat *) nxaf())) {
+            if ((e = fs->GetElement())) {
+               Printf("+++  #%d: %s  %lld - %lld (%lld) - next: %lld", ++nn, e->GetName(),
+                      e->GetFirst(), e->GetFirst() + e->GetNum() - 1, e->GetNum(), fs->GetNextEntry());
+            } else {
+               Printf("+++  #%d: no element! ", ++nn);
+            }
+         }
+      }
+      Printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+   }
+
    void Add(TDSetElement *elem)
    {
       TFileStat *f = new TFileStat(this, elem);
@@ -229,13 +265,6 @@ public:
             return 0;
          }
       }
-   }
-
-   void Print(Option_t *) const
-   {
-      cout << "OBJ: " << IsA()->GetName() << "\t" << fNodeName
-           << "\tMySlaveCount " << fMySlaveCnt
-           << "\tSlaveCount " << fExtSlaveCnt << endl;
    }
 
    void Reset()
@@ -1545,23 +1574,23 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       // delete file from active list (unalloc list is single pass, no delete needed)
       RemoveActive(file);
 
-   } else {
-      file->MoveNextEntry(num);
    }
+
+   // Update NextEntry in the file object
+   file->MoveNextEntry(num);
 
    slstat->fCurElem = CreateNewPacket(base, first, num);
    if (base->GetEntryList())
       slstat->fCurElem->SetEntryList(base->GetEntryList(), first, num);
 
    // Flag the first packet of a new run (dataset)
-//   if (slstat->GetProcessedSubSet()->GetSize() <= 0)
    if (firstPacket)
       slstat->fCurElem->SetBit(TDSetElement::kNewRun);
    else
       slstat->fCurElem->ResetBit(TDSetElement::kNewRun);
 
    PDB(kPacketizer,2)
-      Info("GetNextPacket","%s: %s %lld %lld", sl->GetOrdinal(), base->GetFileName(), first, num);
+      Info("GetNextPacket","%s: %s %lld %lld (%lld)", sl->GetOrdinal(), base->GetFileName(), first, first + num - 1, num);
 
    return slstat->fCurElem;
 }
@@ -1698,6 +1727,11 @@ void TPacketizerAdaptive::MarkBad(TSlave *s, TProofProgressStatus *status,
       Error("MarkBad", "Worker does not exist");
       return;
    }
+   // Update worker counters
+   if (slaveStat->fCurFile && slaveStat->fCurFile->GetNode()) {
+      slaveStat->fCurFile->GetNode()->DecExtSlaveCnt(slaveStat->GetName());
+      slaveStat->fCurFile->GetNode()->DecRunSlaveCnt();
+   }
 
    // If status is defined, the remaining part of the last packet is
    // reassigned in AddProcessed called from handling kPROOF_STOPPROCESS
@@ -1709,6 +1743,22 @@ void TPacketizerAdaptive::MarkBad(TSlave *s, TProofProgressStatus *status,
          if (slaveStat->fCurElem) {
             subSet->Add(slaveStat->fCurElem);
          }
+         // Merge overlapping or subsequent elements
+         Int_t nmg = 0, ntries = 100;
+         TDSetElement *e = 0, *enxt = 0;
+         do {
+            nmg = 0;
+            e = (TDSetElement *) subSet->First();
+            while ((enxt = (TDSetElement *) subSet->After(e))) {
+               if (e->MergeElement(enxt) >= 0) {
+                  nmg++;
+                  subSet->Remove(enxt);
+                  delete enxt;
+               } else {
+                  e = enxt;
+               }
+            }
+         } while (nmg > 0 && --ntries > 0);
          // reassign the packets assigned to the bad slave and save the size;
          SplitPerHost(subSet, listOfMissingFiles);
          // the elements were reassigned so should not be deleted
@@ -1790,7 +1840,7 @@ void TPacketizerAdaptive::SplitPerHost(TList *elements,
       if (ReassignPacket(e, listOfMissingFiles) == -1) {
          // remove from the list in order to delete it.
          if (elements->Remove(e))
-            Error("ReassignPacket", "Error removing a missing file");
+            Error("SplitPerHost", "Error removing a missing file");
          delete e;
       }
 

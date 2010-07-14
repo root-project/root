@@ -167,6 +167,60 @@ TDSetElement::~TDSetElement()
 }
 
 //______________________________________________________________________________
+Int_t TDSetElement::MergeElement(TDSetElement *elem)
+{
+   // Check if 'elem' is overlapping or subsequent and, if the case, return
+   // a merged element.
+   // Returns:
+   //     1    if the elements are overlapping
+   //     0    if the elements are subsequent
+   //    -1    if the elements are neither overlapping nor subsequent
+
+   // The element must be defined
+   if (!elem) return -1;
+
+   // The file names and object names must be the same
+   if (strcmp(GetName(), elem->GetName()) || strcmp(GetTitle(), elem->GetTitle()))
+      return -1;
+
+   Int_t rc = -1;
+   // Check the overlap or subsequency
+   if (fFirst == 0 && fNum == -1) {
+      // Overlap, since we cover already the full range
+      rc = 1;
+   } else if (elem->GetFirst() == 0 && elem->GetNum() == -1) {
+      // Overlap, since 'elem' cover already the full range
+      fFirst = 0;
+      fNum = -1;
+      fEntries = elem->GetEntries();
+      rc = 1;
+   } else if (fFirst >= 0 && fNum > 0 && elem->GetFirst() >= 0 && elem->GetNum() > 0) {
+      Long64_t last = fFirst + fNum - 1, lastref = 0;
+      Long64_t lastelem = elem->GetFirst() + elem->GetNum() - 1;
+      if (elem->GetFirst() == last + 1) {
+         lastref = lastelem;
+         rc = 0;
+      } else if (fFirst == lastelem + 1) {
+         fFirst += elem->GetFirst();
+         lastref = last;
+         rc = 0;
+      } else if (elem->GetFirst() < last + 1 && elem->GetFirst() >= fFirst) {
+         lastref = (lastelem > last) ? lastelem : last;
+         rc = 1;
+      } else if (fFirst < lastelem + 1 && fFirst >= elem->GetFirst()) {
+         fFirst += elem->GetFirst();
+         lastref = (lastelem > last) ? lastelem : last;
+         rc = 1;
+      }
+      fNum = lastref - fFirst + 1;
+   }
+   if (rc >= 0 && fEntries < 0 && elem->GetEntries() > 0) fEntries = elem->GetEntries();
+
+   // Done
+   return rc;
+}
+
+//______________________________________________________________________________
 TFileInfo *TDSetElement::GetFileInfo(const char *type)
 {
    // Return the content of this element in the form of a TFileInfo
