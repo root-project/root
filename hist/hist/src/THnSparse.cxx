@@ -154,7 +154,7 @@ ULong64_t THnSparseCoordCompression::SetBufferFromCoord(const Int_t* coord_in,
    if (fCoordBufferSize <= 8) {
       ULong64_t l64buf = 0;
       for (Int_t i = 0; i < fNdimensions; ++i) {
-         l64buf += coord_in[i] << fBitOffsets[i];
+         l64buf += ((ULong64_t)((UInt_t)coord_in[i])) << fBitOffsets[i];
       }
       memcpy(buf_out, &l64buf, sizeof(Long64_t));
       return l64buf;
