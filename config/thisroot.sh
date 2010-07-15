@@ -57,7 +57,7 @@ else
 fi
 
 if [ -z "${MANPATH}" ]; then
-   MANPATH=`dirname @mandir@`; export MANPATH
+   MANPATH=`dirname @mandir@`:`man -w`; export MANPATH
 else
    MANPATH=`dirname @mandir@`:$MANPATH; export MANPATH
 fi

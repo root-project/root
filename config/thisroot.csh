@@ -47,5 +47,5 @@ endif
 if ($?MANPATH) then
    setenv MANPATH `dirname @mandir@`:$MANPATH
 else
-   setenv MANPATH `dirname @mandir@`
+   setenv MANPATH `dirname @mandir@`:`man -w`
 endif
