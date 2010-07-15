@@ -63,11 +63,12 @@
 // *   Test  9 : H1: multi dataset processing ..................... OK *   * //
 // *   Test 10 : H1: multi dataset and entry list ................. OK *   * //
 // *   Test 11 : Package management with 'event' .................. OK *   * //
-// *   Test 12 : Simple 'event' generation ........................ OK *   * //
-// *   Test 13 : Input data propagation ........................... OK *   * //
-// *   Test 14 : H1, Simple: async mode :.......................... OK *   * //
-// *   Test 15 : Admin functionality .............................. OK *   * //
-// *   Test 16 : Dynamic sub-mergers functionality ................ OK *   * //
+// *   Test 12 : Package argument passing ......................... OK *   * //
+// *   Test 13 : Simple 'event' generation ........................ OK *   * //
+// *   Test 14 : Input data propagation ........................... OK *   * //
+// *   Test 15 : H1, Simple: async mode :.......................... OK *   * //
+// *   Test 16 : Admin functionality .............................. OK *   * //
+// *   Test 17 : Dynamic sub-mergers functionality ................ OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -467,6 +468,7 @@ Int_t PT_Event(void *);
 Int_t PT_InputData(void *);
 Int_t PT_H1SimpleAsync(void *arg);
 Int_t PT_AdminFunc(void *arg);
+Int_t PT_PackageArguments(void *);
 
 // Arguments structures
 typedef struct {            // Open
@@ -617,19 +619,21 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    testList->Add(new ProofTest("H1: multi dataset processing", 9, &PT_H1MultiDataSet, 0, "1,4", "h1analysis"));
    // H1 analysis over HTTP by dataset name
    testList->Add(new ProofTest("H1: multi dataset and entry list", 10, &PT_H1MultiDSetEntryList, 0, "1,4", "h1analysis"));
-   // Test of data set handling with the H1 http files
+   // Test package management with 'event'
    testList->Add(new ProofTest("Package management with 'event'", 11, &PT_Packages, 0, "1"));
+   // Test package argument passing
+   testList->Add(new ProofTest("Package argument passing", 12, &PT_PackageArguments, 0, "1", "ProofTests"));
    // Simple event analysis
-   testList->Add(new ProofTest("Simple 'event' generation", 12, &PT_Event, 0, "1", "ProofEvent"));
+   testList->Add(new ProofTest("Simple 'event' generation", 13, &PT_Event, 0, "1", "ProofEvent"));
    // Test input data propagation (it only works in the static startup mode)
-   testList->Add(new ProofTest("Input data propagation", 13, &PT_InputData, 0, "1", "ProofTests"));
+   testList->Add(new ProofTest("Input data propagation", 14, &PT_InputData, 0, "1", "ProofTests"));
    // Test asynchronous running
-   testList->Add(new ProofTest("H1, Simple: async mode", 14, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple"));
+   testList->Add(new ProofTest("H1, Simple: async mode", 15, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple"));
    // Test admin functionality
-   testList->Add(new ProofTest("Admin functionality", 15, &PT_AdminFunc, 0, "1"));
+   testList->Add(new ProofTest("Admin functionality", 16, &PT_AdminFunc, 0, "1"));
    // Test merging via submergers
    Bool_t useMergers = kTRUE;
-   testList->Add(new ProofTest("Dynamic sub-mergers functionality", 16, &PT_Simple, (void *)&useMergers, "1", "ProofSimple"));
+   testList->Add(new ProofTest("Dynamic sub-mergers functionality", 17, &PT_Simple, (void *)&useMergers, "1", "ProofSimple"));
 
    // The selectors
    gSystem->ExpandPathName(gH1Sel);
@@ -746,6 +750,7 @@ void stressProof(const char *url, Int_t nwrks, Int_t verbose, const char *logfil
    // If not PROOF-Lite, stop the daemon used for the test
    if (gProof && !gProof->IsLite() && !extcluster) {
       // Close the instance
+      gProof->Close("S");
       delete gProof;
       // The daemon runs on a port shifted by 1
       if (killXrootdAt(uu.GetPort()+1, "xpdtut") != 0) {
@@ -1719,7 +1724,7 @@ Int_t PT_InputData(void *)
    gProof->AddInput(new TNamed("InputObject", glogfile.Data()));
 
    // Type of test
-   gProof->AddInput(new TNamed("ProofTests_type", "InputData"));
+   gProof->AddInput(new TNamed("ProofTests_Type", "InputData"));
 
    // Define the number of events
    Long64_t nevt = 1;
@@ -1779,6 +1784,186 @@ Int_t PT_InputData(void *)
    }
    if (TMath::Abs(stat->GetBinContent(4) - nw) > .1) {
       printf("\n >>> Test failure: test input object not correctly received on all workers (%.0f/%d)\n",
+             stat->GetBinContent(4), nw);
+      return -1;
+   }
+
+   // Done
+   PutPoint();
+   return 0;
+}
+
+//_____________________________________________________________________________
+Int_t PT_PackageArguments(void *)
+{
+   // Testing passing arguments to packages
+
+   // Checking arguments
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+   PutPoint();
+
+   // Passing a 'const char *': upload packtest1
+   const char *pack1 = "packtest1";
+   TString pack1path("$ROOTSYS/tutorials/proof/packtest1.par");
+   gSystem->ExpandPathName(pack1path);
+   PutPoint();
+   gProof->UploadPackage(pack1path);
+   // Check the result
+   TList *packs = gProof->GetListOfPackages();
+   if (!packs || !packs->FindObject(pack1)) {
+      printf("\n >>> Test failure: could not upload '%s'!\n", pack1path.Data());
+      return -1;
+   }
+   // Enable the package now passing a 'const char *' argument
+   TString arg("ProofTest.ConstChar");
+   if (gProof->EnablePackage(pack1, arg) != 0) {
+      printf("\n >>> Test failure: could not enable '%s' with argument: '%s'!\n", pack1path.Data(), arg.Data());
+      return -1;
+   }
+
+   // Type of test
+   gProof->SetParameter("ProofTests_Type", "PackTest1");
+
+   // Define the number of events
+   Long64_t nevt = 1;
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Variable to check
+   gProof->SetParameter("testenv", arg.Data());
+
+   // Process
+   PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
+   gProof->Process(gTestsSel.Data(), nevt);
+   gProof->SetPrintProgress(0);
+
+   // Some cleanup
+   gProof->ClearPackage(pack1);
+   gProof->DeleteParameters("ProofTests_Type");
+   gProof->DeleteParameters("testenv");
+
+   // Make sure the query result is there
+   PutPoint();
+   TQueryResult *qr = 0;
+   if (!(qr = gProof->GetQueryResult())) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the output list is there
+   PutPoint();
+   if (!(gProof->GetOutputList())) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Check the 'histo's
+   PutPoint();
+   TH1I *stat = dynamic_cast<TH1I*>(gProof->GetOutputList()->FindObject("TestStat"));
+   if (!stat) {
+      printf("\n >>> Test failure: 'TestStat' histo not found\n");
+      return -1;
+   }
+
+   // Test how many workers got everything successfully
+   Int_t nw = (Int_t) stat->GetBinContent(1);
+   PutPoint();
+
+   if (TMath::Abs(stat->GetBinContent(2) - nw) > .1) {
+      printf("\n >>> Test failure: var '%s' not correctly set on all workers (%.0f/%d)\n",
+             arg.Data(), stat->GetBinContent(2), nw);
+      return -1;
+   }
+
+   // Passing a 'TList *': upload packtest2
+   const char *pack2 = "packtest2";
+   TString pack2path("$ROOTSYS/tutorials/proof/packtest2.par");
+   gSystem->ExpandPathName(pack2path);
+   PutPoint();
+   gProof->UploadPackage(pack2path);
+   // Check the result
+   packs = gProof->GetListOfPackages();
+   if (!packs || !packs->FindObject(pack2)) {
+      printf("\n >>> Test failure: could not upload '%s'!\n", pack2path.Data());
+      return -1;
+   }
+   // Create the argument list
+   TList *argls = new TList;
+   argls->Add(new TNamed("ProofTest.ArgOne", "2."));
+   argls->Add(new TNamed("ProofTest.ArgTwo", "3."));
+   argls->Add(new TNamed("ProofTest.ArgThree", "4."));
+   // Enable the package now passing the 'TList *' argument
+   if (gProof->EnablePackage(pack2, argls) != 0) {
+      printf("\n >>> Test failure: could not enable '%s' with argument: '%s'!\n", pack2path.Data(), arg.Data());
+      return -1;
+   }
+
+   // Type of test
+   gProof->SetParameter("ProofTests_Type", "PackTest2");
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Variable to check
+   TString envs("ProofTest.ArgOne,ProofTest.ArgTwo,ProofTest.ArgThree");
+   gProof->SetParameter("testenv", envs.Data());
+
+   // Process
+   PutPoint();
+   gProof->SetPrintProgress(&PrintStressProgress);
+   gProof->Process(gTestsSel.Data(), nevt);
+   gProof->SetPrintProgress(0);
+
+   // Some cleanup
+   gProof->ClearPackage(pack2);
+   gProof->DeleteParameters("ProofTests_Type");
+   gProof->DeleteParameters("testenv");
+
+   // Make sure the query result is there
+   PutPoint();
+   qr = 0;
+   if (!(qr = gProof->GetQueryResult())) {
+      printf("\n >>> Test failure: query result not found\n");
+      return -1;
+   }
+
+   // Make sure the output list is there
+   PutPoint();
+   if (!(gProof->GetOutputList())) {
+      printf("\n >>> Test failure: output list not found\n");
+      return -1;
+   }
+
+   // Check the 'histo's
+   PutPoint();
+   if (!(stat = dynamic_cast<TH1I*>(gProof->GetOutputList()->FindObject("TestStat")))) {
+      printf("\n >>> Test failure: 'TestStat' histo not found\n");
+      return -1;
+   }
+
+   // Test how many workers got everything successfully
+   nw = (Int_t) stat->GetBinContent(1);
+   PutPoint();
+
+   if (TMath::Abs(stat->GetBinContent(2) - nw) > .1) {
+      printf("\n >>> Test failure: var 'ProofTest.ArgOne' not correctly set on all workers (%.0f/%d)\n",
+             stat->GetBinContent(2), nw);
+      return -1;
+   }
+
+   if (TMath::Abs(stat->GetBinContent(3) - nw) > .1) {
+      printf("\n >>> Test failure: var 'ProofTest.ArgTwo' not correctly set on all workers (%.0f/%d)\n",
+             stat->GetBinContent(3), nw);
+      return -1;
+   }
+
+   if (TMath::Abs(stat->GetBinContent(4) - nw) > .1) {
+      printf("\n >>> Test failure: var 'ProofTest.ArgThree' not correctly set on all workers (%.0f/%d)\n",
              stat->GetBinContent(4), nw);
       return -1;
    }

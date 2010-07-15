@@ -5092,8 +5092,15 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
 
             // if successful add to list and propagate to slaves
             fEnabledPackages->Add(new TObjString(package));
-            if (IsMaster())
-               status = fProof->LoadPackage(package);
+            if (IsMaster()) {
+               if (optls && optls->GetSize() > 0) {
+                  // List argument
+                  status = fProof->LoadPackage(package, kFALSE, optls);
+               } else {
+                  // No argument
+                  status = fProof->LoadPackage(package);
+               }
+            }
 
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully loaded", package.Data());

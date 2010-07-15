@@ -7,6 +7,7 @@
 //////////////////////////////////////////////////////////
 
 #include "ProofTests.h"
+#include <TEnv.h>
 #include <TH1F.h>
 #include <TH1I.h>
 #include <TMath.h>
@@ -31,23 +32,36 @@ ProofTests::~ProofTests()
 }
 
 //_____________________________________________________________________________
-void ProofTests::Begin(TTree * /*tree*/)
+void ProofTests::ParseInput()
 {
-   // The Begin() function is called at the start of the query.
-   // When running with PROOF Begin() is only called on the client.
-   // The tree argument is deprecated (on PROOF 0 is passed).
-
-   TString option = GetOption();
+   // This function sets some control member variables based on the input list
+   // content. Called by Begin and SlaveBegin.
 
    // Determine the test type
    TNamed *ntype = dynamic_cast<TNamed*>(fInput->FindObject("ProofTests_Type"));
    if (ntype) {
       if (!strcmp(ntype->GetTitle(), "InputData")) {
          fTestType = 0;
+      } else if (!strcmp(ntype->GetTitle(), "PackTest1")) {
+         fTestType = 1;
+      } else if (!strcmp(ntype->GetTitle(), "PackTest2")) {
+         fTestType = 2;
       } else {
-         Info("Begin", "unknown type: '%s'", ntype->GetTitle());
+         Warning("ParseInput", "unknown type: '%s'", ntype->GetTitle());
       }
    }
+   Info("ParseInput", "test type: %d (from '%s')", fTestType, ntype ? ntype->GetTitle() : "undef");
+}
+
+//_____________________________________________________________________________
+void ProofTests::Begin(TTree * /*tree*/)
+{
+   // The Begin() function is called at the start of the query.
+   // When running with PROOF Begin() is only called on the client.
+   // The tree argument is deprecated (on PROOF 0 is passed).
+
+   // Fill relevant members
+   ParseInput();
 }
 
 //_____________________________________________________________________________
@@ -58,6 +72,9 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
    // The tree argument is deprecated (on PROOF 0 is passed).
 
    TString option = GetOption();
+
+   // Fill relevant members
+   ParseInput();
 
    // Output histo
    fStat = new TH1I("TestStat", "Test results", 20, .5, 20.5);
@@ -84,13 +101,13 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
                   }
                }
             } else {
-               Info("BeginSlave", "info 'h1avg' or 'h1rms' not found!");
+               Info("SlaveBegin", "%d: info 'h1avg' or 'h1rms' not found!", fTestType);
             }
          } else {
-            Info("BeginSlave", "input histo 'h1data' not found!");
+            Info("SlaveBegin", "%d: input histo 'h1data' not found!", fTestType);
          }
       } else {
-         Info("BeginSlave", "input list 'h1list' not found!");
+         Info("SlaveBegin", "%d: input list 'h1list' not found!", fTestType);
       }
       // H2
       TList *h2list = dynamic_cast<TList*>(fInput->FindObject("h2list"));
@@ -107,20 +124,45 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
                   }
                }
             } else {
-               Info("BeginSlave", "info 'h2avg' or 'h2rms' not found!");
+               Info("SlaveBegin", "%d: info 'h2avg' or 'h2rms' not found!", fTestType);
             }
          } else {
-            Info("BeginSlave", "input histo 'h2data' not found!");
+            Info("SlaveBegin", "%d: input histo 'h2data' not found!", fTestType);
          }
       } else {
-         Info("BeginSlave", "input list 'h2list' not found!");
+         Info("SlaveBegin", "%d: input list 'h2list' not found!", fTestType);
       }
 
       TNamed *iob = dynamic_cast<TNamed*>(fInput->FindObject("InputObject"));
       if (iob) {
          fStat->Fill(4.);
       } else {
-         Info("BeginSlave", "input histo 'InputObject' not found!");
+         Info("SlaveBegin", "%d: input histo 'InputObject' not found!", fTestType);
+      }
+   } else if (fTestType == 1) {
+      // We should find in the input list the name of a test variable which should exist
+      // at this point in the gEnv table
+      TNamed *nm = dynamic_cast<TNamed*>(fInput->FindObject("testenv"));
+      if (nm) {
+         if (gEnv->Lookup(nm->GetTitle())) fStat->Fill(2.);
+      } else {
+         Info("SlaveBegin", "%d: TNamed with the test env info not found!", fTestType);
+      }
+   } else if (fTestType == 2) {
+      // We should find in the input list the list of names of test variables which should exist
+      // at this point in the gEnv table
+      TNamed *nm = dynamic_cast<TNamed*>(fInput->FindObject("testenv"));
+      if (nm) {
+         TString nms(nm->GetTitle()), nam;
+         Int_t from = 0;
+         while (nms.Tokenize(nam, from, ",")) {
+            if (gEnv->Lookup(nam)) {
+               Double_t xx = gEnv->GetValue(nam, -1.);
+               if (xx > 1.) fStat->Fill(xx);
+            }
+         }
+      } else {
+         Info("SlaveBegin", "%d: TNamed with the test env info not found!", fTestType);
       }
    }
 }

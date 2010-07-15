@@ -12,6 +12,8 @@
 class TH1I;
 
 class ProofTests : public TSelector {
+private:
+   void            ParseInput();
 public :
 
    // Specific members
