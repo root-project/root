@@ -7,6 +7,7 @@ MODDIR       := build
 
 RMKDEPDIR    := $(MODDIR)/rmkdepend
 BINDEXPDIR   := $(MODDIR)/win/bindexplib
+DROPDIR      := $(MODDIR)/unix/drop_from_path
 
 ##### rmkdepend #####
 RMKDEPH      := $(wildcard $(RMKDEPDIR)/*.h)
@@ -23,6 +24,14 @@ else
 RMKDEPCFLAGS := -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
 endif
 
+##### drop_from_path #####
+ifneq ($(PLATFORM),win32)
+DROPH      := $(wildcard $(DROPDIR)/*.h)
+DROPS      := $(wildcard $(DROPDIR)/*.c)
+DROPO      := $(DROPS:.c=.o)
+DROP       := bin/drop_from_path$(EXEEXT)
+endif
+
 ##### bindexplib #####
 ifeq ($(PLATFORM),win32)
 BINDEXPS     := $(wildcard $(BINDEXPDIR)/*.cxx)
@@ -37,6 +46,9 @@ endif
 $(RMKDEP):      $(RMKDEPO)
 		$(LD) $(LDFLAGS) -o $@ $(RMKDEPO)
 
+$(DROP):        $(DROPO)
+		$(LD) $(LDFLAGS) -o $@ $(DROPO)
+
 ifeq ($(PLATFORM),win32)
 include/%.h:    build/win/%.h
 		cp $< $@
@@ -46,16 +58,17 @@ $(BINDEXP):     $(BINDEXPO)
 
 all-build:      $(RMKDEP) $(BINDEXP)
 else
-all-build:      $(RMKDEP)
+all-build:      $(RMKDEP) $(DROP)
+all:            $(DROP)
 endif
 
 clean-build:
-		@rm -f $(RMKDEPO) $(BINDEXPO)
+		@rm -f $(RMKDEPO) $(BINDEXPO) $(DROPO)
 
 clean::         clean-build
 
 distclean-build: clean-build
-		@rm -f $(RMKDEP) $(BINDEXP)
+		@rm -f $(RMKDEP) $(BINDEXP) $(DROPO)
 
 distclean::     distclean-build
 

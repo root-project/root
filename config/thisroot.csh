@@ -7,6 +7,28 @@
 #
 # Author: Fons Rademakers, 18/8/2006
 
+if ($?ROOTSYS) then
+   setenv PATH `$ROOTSYS/bin/drop_from_path -e "$ROOTSYS/bin"`
+   if ($?LD_LIBRARY_PATH) then
+      setenv LD_LIBRARY_PATH `@bindir@/drop_from_path -D -e -p "$LD_LIBRARY_PATH" "@libdir@"`
+   endif
+   if ($?DYLD_LIBRARY_PATH) then
+      setenv DYLD_LIBRARY_PATH `@bindir@/drop_from_path -D -e -p "$DYLD_LIBRARY_PATH" "@libdir@"`
+   endif
+   if ($?SHLIB_PATH) then
+      setenv SHLIB_PATH `@bindir@/drop_from_path -D -e -p "$SHLIB_PATH" "@libdir@"`
+   endif
+   if ($?LIBPATH) then
+      setenv LIBPATH `@bindir@/drop_from_path -D -e -p "$LIBPATH" "@libdir@"`
+   endif
+   if ($?PYTHONPATH) then
+      setenv PYTHONPATH `@bindir@/drop_from_path -D -e -p "$PYTHONPATH" "@libdir@"`
+   endif
+   if ($?MANPATH) then
+      setenv MANPATH `@bindir@/drop_from_path -D -e -p "$MANPATH" "@mandir@"`
+   endif
+endif
+
 # $_ should be source .../thisroot.csh
 set ARGS=($_)
 set THIS="`dirname ${ARGS[2]}`"

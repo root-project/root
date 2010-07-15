@@ -7,6 +7,10 @@
 #
 # Author: Fons Rademakers, 18/8/2006
 
+if [ -n "${ROOTSYS}" ] ; then
+   OLD_ROOTSYS=${ROOTSYS}
+fi
+
 if [ "x${BASH_ARGV[0]}" = "x" ]; then
     if [ ! -f bin/thisroot.sh ]; then
         echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of bash!
@@ -18,6 +22,30 @@ else
     # get param to "."
     THIS=$(dirname ${BASH_ARGV[0]})
     ROOTSYS=$(cd ${THIS}/..;pwd); export ROOTSYS
+fi
+
+if [ -n "${OLD_ROOTSYS}" ] ; then
+   if [ -n "${PATH}" ]; then
+      PATH=`@bindir@/drop_from_path -e "${OLD_ROOTSYS}/bin"`
+   fi
+   if [ -n "${LD_LIBRARY_PATH}" ]; then
+      LD_LIBRARY_PATH=`@bindir@/drop_from_path -D -e -p "${LD_LIBRARY_PATH}" "@libdir@"`
+   fi
+   if [ -n "${DYLD_LIBRARY_PATH}" ]; then
+      DYLD_LIBRARY_PATH=`@bindir@/drop_from_path -D -e -p "${DYLD_LIBRARY_PATH}" "@libdir@"`
+   fi
+   if [ -n "${SHLIB_PATH}" ]; then
+      SHLIB_PATH=`@bindir@/drop_from_path -D -e -p "${SHLIB_PATH}" "@libdir@"`
+   fi
+   if [ -n "${LIBPATH}" ]; then
+      LIBPATH=`@bindir@/drop_from_path -D -e -p "${LIBPATH}" "@libdir@"`
+   fi
+   if [ -n "${PYTHONPATH}" ]; then
+      PYTHONPATH=`@bindir@/drop_from_path -D -e -p "${PYTHONPATH}" "@libdir@"`
+   fi
+   if [ -n "${MANPATH}" ]; then
+      MANPATH=`@bindir@/drop_from_path -D -e -p "${MANPATH}" "@mandir@"`
+   fi
 fi
 
 # Grab the default man path before set the path
@@ -63,7 +91,6 @@ if [ -z "${PYTHONPATH}" ]; then
 else
    PYTHONPATH=@libdir@:$PYTHONPATH; export PYTHONPATH
 fi
-
 
 if [ -z "${MANPATH}" ]; then
    MANPATH=`dirname @mandir@`:${default_manpath}; export MANPATH
