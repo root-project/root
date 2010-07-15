@@ -20,6 +20,14 @@ else
     ROOTSYS=$(cd ${THIS}/..;pwd); export ROOTSYS
 fi
 
+# Grab the default man path before set the path
+# to avoid duplicates 
+if `which manpath > /dev/null 2>&1` ; then
+   default_manpath=`manpath`
+else
+   default_manpath=`man -w`
+fi
+
 if [ -z "${PATH}" ]; then
    PATH=@bindir@; export PATH
 else
@@ -56,8 +64,9 @@ else
    PYTHONPATH=@libdir@:$PYTHONPATH; export PYTHONPATH
 fi
 
+
 if [ -z "${MANPATH}" ]; then
-   MANPATH=`dirname @mandir@`:`man -w`; export MANPATH
+   MANPATH=`dirname @mandir@`:${default_manpath}; export MANPATH
 else
    MANPATH=`dirname @mandir@`:$MANPATH; export MANPATH
 fi

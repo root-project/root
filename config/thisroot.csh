@@ -12,6 +12,14 @@ set ARGS=($_)
 set THIS="`dirname ${ARGS[2]}`"
 setenv ROOTSYS "`(cd ${THIS}/..;pwd)`"
 
+# Grab the default man path before set the path
+# to avoid duplicates 
+if `which manpath > /dev/null` then
+   set default_manpath = `manpath`
+else
+   set default_manpath = `man -w`
+endif
+
 set path = (@bindir@ $path)
 
 if ($?LD_LIBRARY_PATH) then
@@ -47,5 +55,5 @@ endif
 if ($?MANPATH) then
    setenv MANPATH `dirname @mandir@`:$MANPATH
 else
-   setenv MANPATH `dirname @mandir@`:`man -w`
+   setenv MANPATH `dirname @mandir@`:$default_manpath
 endif
