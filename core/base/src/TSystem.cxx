@@ -2440,7 +2440,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    builddep += includes;
    builddep += defines;
    builddep += " -- \"";
-   builddep += gSystem->BaseName(filename);
+   builddep += filename;
    builddep += "\" > ";
    builddep += stderrfile;
    builddep += " 2>&1 ";
