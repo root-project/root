@@ -4828,7 +4828,6 @@ end_of_function:
          G__display_func(G__serr, p_ifunc, *pifn);
          G__display_ambiguous(scopetagnum, funcname, libp, funclist, bestmatch);
          G__funclist_delete(funclist);
-         return p_ifunc;
          *pifn = -1;
          return((struct G__ifunc_table_internal*)NULL);
       }
