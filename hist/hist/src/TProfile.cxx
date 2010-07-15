@@ -1327,9 +1327,12 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 //
 //  -case 2  xbins!=0
 //   a new profile is created (you should specify newname).
-//   The parameter is the number of variable size bins in the created profile
+//   The parameter ngroup is the number of variable size bins in the created profile
 //   The array xbins must contain ngroup+1 elements that represent the low-edge
 //   of the bins.
+//   The data of the old bins are added to the new bin which contains the bin center
+//   of the old bins. It is possible that information from the old binning are attached
+//   to the under-/overflow bins of the new binning.
 //
 //   examples: if hp is an existing TProfile with 100 bins
 //     Double_t xbins[25] = {...} array of low-edges (xbins[25] is the upper edge of last bin
@@ -1411,11 +1414,18 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    // merge bin contents ignoring now underflow/overflows
    if (fBinSumw2.fN) hnew->Sumw2();
 
+   // Start merging only once the new lowest edge is reached
+   Int_t startbin = 1;
+   const Double_t newxmin = hnew->GetXaxis()->GetBinLowEdge(1);
+   while( fXaxis.GetBinCenter(startbin) < newxmin && startbin <= nbins ) {
+      startbin++;
+   }
+   
    Double_t *cu2 = hnew->GetW();
    Double_t *er2 = hnew->GetW2();
    Double_t *en2 = hnew->GetB();
    Double_t *ew2 = hnew->GetB2();
-   Int_t oldbin = 1;
+   Int_t oldbin = startbin;
    Double_t binContent, binCount, binError, binSumw2;
    for (bin = 1;bin<=newbins;bin++) {
       binContent = 0;
@@ -1423,39 +1433,62 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       binError   = 0;
       binSumw2   = 0;
 
+      //for xbins != 0: ngroup == nbins
       Int_t imax = ngroup;
       Double_t xbinmax = hnew->GetXaxis()->GetBinUpEdge(bin);
-      // in case of variables bins ngroup = nbins (number of old bins)
       for (i=0;i<ngroup;i++) {
+	 if((hnew == this && (oldbin+i > nbins)) ||
+	    (hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)))
+	 {
+	    imax = i;
+	    break;
+	 }
 
-         if( (hnew == this && (oldbin+i > nbins)) || 
-             (hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)) ) {
-            imax = i;
-            break;
-         }
-
-         binContent += oldBins[oldbin+i];
-         binCount   += oldCount[oldbin+i];
-         binError   += oldErrors[oldbin+i];
-         if (fBinSumw2.fN) binSumw2 += oldBinw2[oldbin+i];
+	 binContent += oldBins[oldbin+i];
+	 binCount   += oldCount[oldbin+i];
+	 binError   += oldErrors[oldbin+i];
+	 if (fBinSumw2.fN) binSumw2 += oldBinw2[oldbin+i];
       }
+   
       cu2[bin] = binContent;
       er2[bin] = binError;
       en2[bin] = binCount;
       if (fBinSumw2.fN) ew2[bin] = binSumw2;
       oldbin += imax;
    }
-   // set bin statistics for underflow/overflow bins by copying intact from original histogram
-   hnew->fArray[0] = oldBins[0];
-   hnew->fArray[newbins+1] = oldBins[nbins+1];
-   hnew->fBinEntries[0] = oldCount[0];
-   hnew->fBinEntries[newbins+1] = oldCount[nbins+1];
-   hnew->fSumw2[0] = oldErrors[0];
-   hnew->fSumw2[newbins+1] = oldErrors[nbins+1];
-   if ( fBinSumw2.fN ) {
-      hnew->fBinSumw2[0] = oldBinw2[0];
-      hnew->fBinSumw2[newbins+1] = oldBinw2[nbins+1];
+   // set bin statistics for underflow bin
+   binContent = 0;
+   binCount   = 0;
+   binError   = 0;
+   binSumw2   = 0;
+   for(i=0;i<startbin;i++)
+   {
+      binContent += oldBins[i];
+      binCount   += oldCount[i];
+      binError   += oldErrors[i];
+      if (fBinSumw2.fN) binSumw2 += oldBinw2[i];
    }
+   hnew->fArray[0] = binContent;
+   hnew->fBinEntries[0] = binCount;
+   hnew->fSumw2[0] = binError;
+   if ( fBinSumw2.fN ) hnew->fBinSumw2[0] = binSumw2;
+
+   // set bin statistics for overflow bin
+   binContent = 0;
+   binCount   = 0;
+   binError   = 0;
+   binSumw2   = 0;
+   for(i=oldbin;i<=nbins+1;i++)
+   {
+      binContent += oldBins[i];
+      binCount   += oldCount[i];
+      binError   += oldErrors[i];
+      if (fBinSumw2.fN) binSumw2 += oldBinw2[i];
+   }
+   hnew->fArray[newbins+1] = binContent;
+   hnew->fBinEntries[newbins+1] = binCount;   
+   hnew->fSumw2[newbins+1] = binError;
+   if ( fBinSumw2.fN ) hnew->fBinSumw2[newbins+1] = binSumw2;
 
 
    delete [] oldBins;
