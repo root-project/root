@@ -334,9 +334,8 @@ void EventInfo(Int_t event, Int_t px, Int_t , TObject *selected)
    }
    
    if (selected) {
-      const char *form1 = TString::Format("  Leak number=%d, leaking %d bytes at entry=%d    time=%gseconds\n\n",bin,nbytes,entry,time);
-      const char *form2 = ttip.Data();
-      gTip->SetText(TString::Format("%s%s",form1,form2));
+      TString form1 = TString::Format("  Leak number=%d, leaking %d bytes at entry=%d    time=%gseconds\n\n",bin,nbytes,entry,time);
+      gTip->SetText(TString::Format("%s%s",form1.Data(),ttip.Data() ));
       gTip->SetPosition(px+15, 100);
       gTip->Reset();
    }
