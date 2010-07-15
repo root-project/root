@@ -121,9 +121,10 @@ void TMemStatMng::Close()
 
    // to be documented
    fgInstance->fDumpTree->AutoSave();
+   fgInstance->fDumpTree->GetUserInfo()->Delete();
 
    delete fgInstance->fFAddrsList;
-   delete fgInstance->fSysInfo;
+   //delete fgInstance->fSysInfo;
 
    delete fgInstance;
    fgInstance = NULL;
