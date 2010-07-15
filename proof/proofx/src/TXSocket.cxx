@@ -395,7 +395,8 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    UnsolRespProcResult rc = kUNSOL_KEEP;
 
    // If we are closing we will not do anything
-   if (fAsynProc.TryWait()) {
+   TXSemaphoreGuard semg(&fAsynProc);
+   if (!semg.IsValid()) {
       Error("ProcessUnsolicitedMsg", "%p: async semaphore taken by Close()! Should not be here!", this);
       return kUNSOL_CONTINUE;
    }
@@ -404,7 +405,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
       if (gDebug > 2)
          Info("ProcessUnsolicitedMsg", "%p: got empty message: skipping", this);
       // Some one is perhaps interested in empty messages
-      fAsynProc.Post();
       return kUNSOL_CONTINUE;
    } else {
       if (gDebug > 2)
@@ -433,7 +433,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             Info("ProcessUnsolicitedMsg", "%p: underlying connection timed out", this);
       }
       // Propagate the message to other possible handlers
-      fAsynProc.Post();
       return kUNSOL_CONTINUE;
    }
 
@@ -441,7 +440,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    if (!fConn || !m->MatchStreamid(fConn->fStreamid)) {
       if (gDebug > 1)
          Info("ProcessUnsolicitedMsg", "%p: IDs do not match: {%d, %d}", this, fConn->fStreamid, m->HeaderSID());
-      fAsynProc.Post();
       return kUNSOL_CONTINUE;
    }
 
@@ -449,7 +447,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    if (!m) {
       Error("ProcessUnsolicitedMsg", "undefined message - disabling");
       PostMsg(kPROOF_STOP);
-      fAsynProc.Post();
       return rc;
    }
 
@@ -457,7 +454,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    if ((len = m->DataLen()) < (int)sizeof(kXR_int32)) {
       Error("ProcessUnsolicitedMsg", "empty or bad-formed message - disabling");
       PostMsg(kPROOF_STOP);
-      fAsynProc.Post();
       return rc;
    }
 
@@ -867,7 +863,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    }
 
    // We are done
-   fAsynProc.Post();
    return rc;
 }
 

@@ -294,4 +294,20 @@ private:
    TList        fReadySock;    // List of sockets ready to be read
 };
 
+//
+// Guard for a semaphore
+//
+class TXSemaphoreGuard {
+public:
+
+   TXSemaphoreGuard(TSemaphore *sem) : fSem(sem), fValid(kTRUE) { if (!fSem || fSem->TryWait()) fValid = kFALSE; }
+   virtual ~TXSemaphoreGuard() { if (fValid && fSem) fSem->Post(); }
+
+   Bool_t       IsValid() const { return fValid; }
+
+private:
+   TSemaphore  *fSem;
+   Bool_t       fValid;
+};
+
 #endif
