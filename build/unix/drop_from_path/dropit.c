@@ -4,7 +4,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -142,10 +144,10 @@ int main(int argc,char **argv)
    extern char *getenv();
    int (*compare)() = 0;
    void (*insert)() = 0;
-   char *path;
-   char *odel;
-   char *null;
-   char idel;
+   const char *path = "";
+   const char *odel = "";
+   const char *null = "";
+   char idel = 0;
    char **cpp;
    // char *temp;
    extern int getopt();
