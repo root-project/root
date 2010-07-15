@@ -78,11 +78,13 @@ void TMemStatMng::Init()
 
    fFAddrsList = new TObjArray();
    fFAddrsList->SetOwner(kTRUE);
+   fFAddrsList->SetName("FAddrsList");
 
    fHbtids  = new TH1I("btids", "table of btids", 10000, 0, 1);   //where fHbtids is a member of the manager class
    fHbtids->SetDirectory(0);
-   // save the histogram to a tree header
+   // save the histogram and the TObjArray to the tree header
    fDumpTree->GetUserInfo()->Add(fHbtids);
+   fDumpTree->GetUserInfo()->Add(fFAddrsList);
    // save the system info to a tree header
    string sSysInfo(gSystem->GetBuildNode());
    sSysInfo += " | ";
@@ -94,6 +96,7 @@ void TMemStatMng::Init()
    fSysInfo = new TNamed("SysInfo", sSysInfo.c_str());
 
    fDumpTree->GetUserInfo()->Add(fSysInfo);
+   fDumpTree->SetAutoSave(10000000);
 }
 
 //______________________________________________________________________________
@@ -117,13 +120,14 @@ void TMemStatMng::Close()
    // flashes all the buffered data and closes the output tree.
 
    // TODO: This is a temporary solution until we find a properalgorithm for SaveData
-   fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
+   //fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
 
    // to be documented
+   printf("TMemStatMng::Close called\n");
    fgInstance->fDumpTree->AutoSave();
    fgInstance->fDumpTree->GetUserInfo()->Delete();
 
-   delete fgInstance->fFAddrsList;
+   //delete fgInstance->fFAddrsList;
    //delete fgInstance->fSysInfo;
 
    delete fgInstance;

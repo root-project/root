@@ -69,7 +69,7 @@ void memstat(double update=0.1, const char* fname="*") {
    // if fname=="*" (default), the most recent file memstat*.root will be taken.
    
    TString s;
-   if (strstr(fname,"*")) {
+   if (!fname || strlen(fname) <5 || strstr(fname,"*")) {
       //take the most recent file memstat*.root
       s = gSystem->GetFromPipe("ls -lrt memstat*.root");
       Int_t ns = s.Length();
@@ -298,7 +298,7 @@ void memstat(double update=0.1, const char* fname="*") {
 //______________________________________________________________________
 void EventInfo(Int_t event, Int_t px, Int_t , TObject *selected)
 {
-   
+   //draw the tooltip showing the backtrace for the bin at px
    if (!gTip) return;
    gTip->Hide();
    if (event == kMouseLeave)
@@ -312,7 +312,8 @@ void EventInfo(Int_t event, Int_t px, Int_t , TObject *selected)
    Double_t  time = 0.0001*V3[entry];
    TH1I *hbtids = (TH1I*)T->GetUserInfo()->FindObject("btids");
    if (!hbtids) return;
-   if (!btidlist) btidlist = (TObjArray*)f->Get("FAddrsList");
+   if (!btidlist) btidlist = (TObjArray*)T->GetUserInfo()->FindObject("FAddrsList");
+   if (!btidlist) btidlist = (TObjArray*)f->Get("FAddrsList"); //old memstat files
    if (!btidlist) return;
    Int_t nbt = (Int_t)hbtids->GetBinContent(btid-1);
    TString ttip;
@@ -333,9 +334,9 @@ void EventInfo(Int_t event, Int_t px, Int_t , TObject *selected)
    }
    
    if (selected) {
-      const char *form1 = TString::Format("Leak number=%d, leaking %d bytes at entry=%d    time=%gseconds\n",bin,nbytes,entry,time);
+      const char *form1 = TString::Format("  Leak number=%d, leaking %d bytes at entry=%d    time=%gseconds\n\n",bin,nbytes,entry,time);
       const char *form2 = ttip.Data();
-      gTip->SetText(TString::Format("%s\n%s",form1,form2));
+      gTip->SetText(TString::Format("%s%s",form1,form2));
       gTip->SetPosition(px+15, 100);
       gTip->Reset();
    }
