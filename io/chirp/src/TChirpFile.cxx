@@ -124,15 +124,32 @@ Bool_t TChirpFile::ReadBuffer(char *buf, Int_t len)
 {
    // Read specified byte range from remote file via Chirp daemon.
    // Returns kTRUE in case of error.
-
+   
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
       if (st == 2)
          return kTRUE;
       return kFALSE;
    }
-
+   
    return TFile::ReadBuffer(buf, len);
+}
+
+//______________________________________________________________________________
+Bool_t TChirpFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+{
+   // Read specified byte range from remote file via Chirp daemon.
+   // Returns kTRUE in case of error.
+   
+   SetOffset(pos);
+   Int_t st;
+   if ((st = ReadBufferViaCache(buf, len))) {
+      if (st == 2)
+         return kTRUE;
+      return kFALSE;
+   }
+   
+   return TFile::ReadBuffer(buf, pos, len);
 }
 
 //______________________________________________________________________________

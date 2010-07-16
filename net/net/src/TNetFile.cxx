@@ -378,6 +378,16 @@ end:
 }
 
 //______________________________________________________________________________
+Bool_t TNetFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+{
+   // Read specified byte range from remote file via rootd daemon.
+   // Returns kTRUE in case of error.
+
+   SetOffset(pos);
+   return ReadBuffer(buf, len);
+}   
+
+//______________________________________________________________________________
 Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    // Read a list of buffers given in pos[] and len[] and return it in a single
@@ -562,20 +572,7 @@ void TNetFile::Seek(Long64_t offset, ERelativeTo pos)
 {
    // Set position from where to start reading.
 
-   switch (pos) {
-      case kBeg:
-         fOffset = offset + fArchiveOffset;
-         break;
-      case kCur:
-         fOffset += offset;
-         break;
-      case kEnd:
-         // this option is not used currently in the ROOT code
-         if (fArchiveOffset)
-            Error("Seek", "seeking from end in archive is not (yet) supported");
-         fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
-      break;
-   }
+   SetOffset(offset, pos);
 }
 
 //______________________________________________________________________________

@@ -122,6 +122,7 @@ public:
 
    virtual void     Print(Option_t *option="") const;
    virtual Bool_t   ReadBuffer(char *buf, Int_t len);
+   virtual Bool_t   ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual Bool_t   ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual Int_t    ReOpen(const Option_t *mode);
    virtual Bool_t   WriteBuffer(const char *buffer, Int_t BufferLength);

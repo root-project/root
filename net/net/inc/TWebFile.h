@@ -79,6 +79,7 @@ public:
    Bool_t      IsOpen() const;
    Int_t       ReOpen(Option_t *mode);
    Bool_t      ReadBuffer(char *buf, Int_t len);
+   Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
    Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
    void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
 

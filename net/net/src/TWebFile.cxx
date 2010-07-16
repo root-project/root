@@ -325,6 +325,17 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 }
 
 //______________________________________________________________________________
+Bool_t TWebFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+{
+   // Read specified byte range from remote file via HTTP daemon. This
+   // routine connects to the remote host, sends the request and returns
+   // the buffer. Returns kTRUE in case of error.
+
+   SetOffset(pos);
+   return ReadBuffer(buf,len);
+}
+
+//______________________________________________________________________________
 Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
 {
    // Read specified byte range from remote file via HTTP 1.0 daemon (without

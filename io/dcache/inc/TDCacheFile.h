@@ -63,6 +63,7 @@ public:
    ~TDCacheFile();
 
    Bool_t  ReadBuffer(char *buf, Int_t len);
+   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len);
    Bool_t  WriteBuffer(const char *buf, Int_t len);
 
    Bool_t  ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);

@@ -259,7 +259,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
    // if this buffer is in the write cache (not yet written to the file)
    if (TFileCacheWrite *cachew = fFile->GetCacheWrite()) {
       if (cachew->ReadBuffer(buf,pos,len) == 0) {
-         fFile->Seek(pos+len);
+         fFile->SetOffset(pos+len);
          return 1;
       }
    }
@@ -280,13 +280,12 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
          // Block found, the caller will get it
          
          if (buf) {
-            fFile->Seek(pos);
             // disable cache to avoid infinite recursion
             fFile->SetCacheRead(0);
-            if (fFile->ReadBuffer(buf, len)) {
+            if (fFile->ReadBuffer(buf, pos, len)) {
                return -1;
             }
-            fFile->Seek(pos+len);
+            fFile->SetOffset(pos+len);
             fFile->SetCacheRead(this);
          }
          
@@ -308,7 +307,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
       if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
          if (buf) {
             memcpy(buf,&fBuffer[fSeekPos[loc]],len);
-            //fFile->Seek(pos+len); //not required (see <http://savannah.cern.ch/bugs/?69845>)
+            fFile->SetOffset(pos+len);
          }
          return 1;
       }

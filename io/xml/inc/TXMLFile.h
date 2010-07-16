@@ -87,6 +87,7 @@ public:
    virtual void      Paint(Option_t* ="") {}
    virtual void      Print(Option_t* ="") const {}
    virtual Bool_t    ReadBuffer(char*, Int_t) { return kFALSE; }
+   virtual Bool_t    ReadBuffer(char*, Long64_t, Int_t) { return kFALSE; }
    virtual void      ReadFree() {}
    virtual Int_t     Recover() { return 0; }
    virtual Int_t     ReOpen(Option_t *mode);

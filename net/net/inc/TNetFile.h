@@ -81,6 +81,7 @@ public:
    Bool_t  Matches(const char *url);
    Int_t   ReOpen(Option_t *mode);
    Bool_t  ReadBuffer(char *buf, Int_t len);
+   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len);
    Bool_t  ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf);
    Bool_t  WriteBuffer(const char *buf, Int_t len);
    void    Seek(Long64_t offset, ERelativeTo pos = kBeg);

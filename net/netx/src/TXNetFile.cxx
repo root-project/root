@@ -665,6 +665,15 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t bufferLength)
    return result;
 }
 
+//_____________________________________________________________________________
+Bool_t TXNetFile::ReadBuffer(char *buffer, Long64_t pos, Int_t bufferLength)
+{
+   // Pass through to TNetFile implementation which will call back eventually
+   // to our ReadBuffer with 2 arguments to deal with xrootd errors.
+
+   return TNetFile::ReadBuffer(buffer, pos, bufferLength);
+}
+
 //______________________________________________________________________________
 Bool_t TXNetFile::ReadBufferAsync(Long64_t offs, Int_t bufferLength)
 {

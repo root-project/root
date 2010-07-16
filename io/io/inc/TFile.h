@@ -210,6 +210,7 @@ public:
    virtual void        Print(Option_t *option="") const;
    virtual Bool_t      ReadBufferAsync(Long64_t offs, Int_t len);
    virtual Bool_t      ReadBuffer(char *buf, Int_t len);
+   virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual void        ReadFree();
    virtual TProcessID *ReadProcessID(UShort_t pidf);
@@ -221,6 +222,7 @@ public:
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
    virtual void        SetCompressionLevel(Int_t level=1);
    virtual void        SetEND(Long64_t last) { fEND = last; }
+   virtual void        SetOffset(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetOption(Option_t *option=">") { fOption = option; }
    virtual void        SetReadCalls(Int_t readcalls = 0) { fReadCalls = readcalls; }
    virtual void        ShowStreamerInfo();

@@ -1313,6 +1313,59 @@ void TFile::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
+Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+{
+   // Read a buffer from the file at the offset 'pos' in the file.
+   // Returns kTRUE in case of failure.
+   // Compared to ReadBuffer(char*, Int_t), this routine does _not_
+   // change the cursor on the physical file representation (fD)
+   // if the data is in this TFile's cache.
+   
+   if (IsOpen()) {
+      
+      SetOffset(pos);
+      
+      Int_t st;
+      if ((st = ReadBufferViaCache(buf, len))) {
+         if (st == 2)
+            return kTRUE;
+         return kFALSE;
+      }
+      
+      Seek(pos);
+      
+      ssize_t siz;
+      Double_t start = 0;
+      if (gPerfStats != 0) start = TTimeStamp();
+      
+      while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
+         ResetErrno();
+      
+      if (siz < 0) {
+         SysError("ReadBuffer", "error reading from file %s", GetName());
+         return kTRUE;
+      }
+      if (siz != len) {
+         Error("ReadBuffer", "error reading all requested bytes from file %s, got %ld of %d",
+               GetName(), (Long_t)siz, len);
+         return kTRUE;
+      }
+      fBytesRead  += siz;
+      fgBytesRead += siz;
+      fReadCalls++;
+      fgReadCalls++;
+      
+      if (gMonitoringWriter)
+         gMonitoringWriter->SendFileReadProgress(this);
+      if (gPerfStats != 0) {
+         gPerfStats->FileReadEvent(this, len, start);
+      }
+      return kFALSE;
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 {
    // Read a buffer from the file. This is the basic low level read operation.
@@ -1442,8 +1495,7 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
          return 2;  // failure reading
       else if (st == 1) {
          // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
-         // (however the following call seems not necessary)
-         Seek(off + len);
+         SetOffset(off + len);
          return 1;
       }
       // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
@@ -1452,11 +1504,11 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
       // if write cache is active check if data still in write cache
       if (fWritable && fCacheWrite) {
          if (fCacheWrite->ReadBuffer(buf, off, len) == 0) {
-            Seek(off + len);
+            SetOffset(off + len);
             return 1;
          }
          // fOffset might have been changed via TFileCacheWrite::ReadBuffer(), reset it
-         Seek(off);
+         SetOffset(off);
       }
    }
 
@@ -1758,6 +1810,27 @@ Int_t TFile::ReOpen(Option_t *mode)
    }
 
    return 0;
+}
+
+//______________________________________________________________________________
+void TFile::SetOffset(Long64_t offset, ERelativeTo pos)
+{
+   // Set position from where to start reading.
+   
+   switch (pos) {
+      case kBeg:
+         fOffset = offset + fArchiveOffset;
+         break;
+      case kCur:
+         fOffset += offset;
+         break;
+      case kEnd:
+         // this option is not used currently in the ROOT code
+         if (fArchiveOffset)
+            Error("SetOffset", "seeking from end in archive is not (yet) supported");
+         fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
+         break;
+   }
 }
 
 //______________________________________________________________________________
