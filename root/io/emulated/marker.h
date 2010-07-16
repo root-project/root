@@ -24,6 +24,6 @@ public:
 
 #ifdef __MAKECINT__
 #pragma link C++ class Marker+;
-#endif;
+#endif
 
 Int_t Marker::fgDebug = 1;
