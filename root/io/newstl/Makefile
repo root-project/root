@@ -135,7 +135,7 @@ else
 endif
 
 $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1  || handleError.sh --log= $*_C.build.log --res=$$?
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1  || handleError.sh --log=$*_C.build.log --res=$$?
 
 $(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C directories
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1  || handleError.sh --log=sample_bx_classes_C.build.log--res=$$?
@@ -215,6 +215,10 @@ ComplexTest: ComplexTest.log
 
 memberwise.root: $(LIBDIR)writeMemberWise_cxx.$(DllSuf) $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q writeMemberWise.cxx+ > memberwise_root.log 2>&1 || handleError.sh --log=memberwise_root.log --res=$$?
+
+# Cancel default rule
+execMemberWise_cxx.$(DllSuf):
+	$(CMDECHO) echo 'do nothing' > /dev/null
 
 execMemberWise.clog: $(LIBDIR)execMemberWise_cxx.$(DllSuf) memberwise.root $(ROOTCORELIBS)
 
