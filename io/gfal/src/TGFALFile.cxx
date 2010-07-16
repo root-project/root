@@ -308,7 +308,7 @@ Bool_t TGFALFile::ReadBuffer(char *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Bool_t TGFALFile::ReadBuffer(char *buf, Int_t len)
+Bool_t TGFALFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read specified byte range from remote file via GFAL.
    // Returns kTRUE in case of error.
