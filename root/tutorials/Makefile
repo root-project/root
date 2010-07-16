@@ -124,7 +124,7 @@ TUTORIALSLOGS_CC  := $(addsuffix .clog,$(TUTORIALSTESTS_CC))
 
 $(TUTORIALSSTUBS): %_call.C:
 	$(CMDECHO) mkdir -p $(dir $@)
-	$(CMDECHO) echo 'int $(notdir $*)_call(){ int err; gSystem->AddIncludePath("-I$(TUTDIR)/$(dir $@)"); TROOT::SetMacroPath(".:$(TUTDIR)/$(dir $@)"); gROOT->ProcessLine(".x $(TUTDIR)/$*.C", &err); return err; }' > $@
+	$(CMDECHO) echo 'int $(notdir $*)_call(){ int err; gSystem->SetBuildDir("$(dir $@)",kTRUE); gSystem->AddIncludePath("-I$(TUTDIR)/$(dir $@)"); TROOT::SetMacroPath(".:$(TUTDIR)/$(dir $@)"); gROOT->ProcessLine(".x $(TUTDIR)/$*.C", &err); return err; }' > $@
 
 
 $(TUTORIALSLOGS): %.log: %_call.C $(TUTDIR)/%.C
@@ -133,7 +133,7 @@ $(TUTORIALSLOGS): %.log: %_call.C $(TUTDIR)/%.C
 ifneq (,$(TUTORIALSSTUBS_CC))
 $(TUTORIALSSTUBS_CC): %_call.CC:
 	$(CMDECHO) mkdir -p $(dir $@)
-	$(CMDECHO) echo 'int $(notdir $*)_call(){ int err;  gSystem->AddIncludePath("-I$(TUTDIR)/$(dir $@)"); TROOT::SetMacroPath(".:$(TUTDIR)/$(dir $@)"); gROOT->ProcessLine(".x $(TUTDIR)/$*.C+", &err); return err; }' > $@
+	$(CMDECHO) echo 'int $(notdir $*)_call(){ int err; gSystem->SetBuildDir("$(dir $@)",kTRUE); gSystem->AddIncludePath("-I$(TUTDIR)/$(dir $@)"); TROOT::SetMacroPath(".:$(TUTDIR)/$(dir $@)"); gROOT->ProcessLine(".x $(TUTDIR)/$*.C+", &err); return err; }' > $@
 
 
 $(TUTORIALSLOGS_CC): %.clog: %_call.CC $(TUTDIR)/%.C
