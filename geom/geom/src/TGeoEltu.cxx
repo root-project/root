@@ -345,7 +345,7 @@ void TGeoEltu::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoEltu::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoEltu::Safety(Double_t *point, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -354,6 +354,14 @@ Double_t TGeoEltu::Safety(Double_t *point, Bool_t in) const
    Double_t x1, y1, dx, dy;
    Double_t safr, safz;
    safr = safz = TGeoShape::Big();
+   Double_t onepls = 1.+TGeoShape::Tolerance();
+   Double_t onemin = 1.-TGeoShape::Tolerance();
+   Double_t sqdist = x0*x0/(fRmin*fRmin)+y0*y0/(fRmax*fRmax);
+   Bool_t in = kTRUE;
+   if (sqdist>onepls) in = kFALSE;
+   else if (sqdist<onemin) in = kTRUE;
+   else return 0.;
+   
    if (in) {
       x1 = fRmin*TMath::Sqrt(1.-(y0*y0)/(fRmax*fRmax));
       y1 = fRmax*TMath::Sqrt(1.-(x0*x0)/(fRmin*fRmin));
