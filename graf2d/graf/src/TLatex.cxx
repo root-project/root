@@ -33,7 +33,7 @@ ClassImp(TLatex)
 <center><h2>TLatex : to draw Mathematical Formula</h2></center>
 
 TLatex's purpose is to write mathematical equations.
-The syntax is very similar to the Latex one.
+The syntax is very similar to Latex's.
 It provides several functionalities:
 <ul>
 <li><a href="#L1">  Subscripts and Superscripts</a></li>
@@ -46,12 +46,12 @@ It provides several functionalities:
 <li><a href="#L8">  Accents</a></li>
 <li><a href="#L9">  Changing Style</a></li>
 <li><a href="#L10"> Alignment Rules</a></li>
-<li><a href="#L11"> Characters adjustement</a></li>
-<li><a href="#L12"> Italic and boldface</a></li>
+<li><a href="#L11"> Character Adjustement</a></li>
+<li><a href="#L12"> Italic and Boldface</a></li>
 <li><a href="#L13"> Examples</a></li>
 </ul>
 
-When the font precision (see <tt>TAttText</tt>) is low (ie 0), TLatex is
+When the font precision (see <tt>TAttText</tt>) is low (0 or 1), TLatex is
 painted as a normal TText, the control characters are not interpreted.
 
 <a name="L1"></a><h3>Subscripts and Superscripts</h3>
@@ -60,7 +60,7 @@ commands. These commands can be combined to make complicated subscript and
 superscript expressions. You may adjust the display of subscripts and
 superscripts by using the two functions <tt>SetIndiceSize(Double_t)</tt>,
 which set relative size of subscripts and superscripts, and
-<tt>SetLimitIndiceSize(Int_t)</tt>, which set limit for text resizing of
+<tt>SetLimitIndiceSize(Int_t)</tt>, which set limits for text resizing of
 subscipts and superscripts.
 <p>Examples:
 End_Html
@@ -95,7 +95,7 @@ End_Html
 
 Begin_Html
 <a name="L3"></a><h3>Splitting Lines</h3>
-A text can be split in two lines via the command <tt>#splitline</tt>.
+Text can be split in two lines via the command <tt>#splitline</tt>.
 <p>Examples:
 End_Html
    #splitline{21 April 2003}{14:02:30} : Begin_Latex #splitline{21 April 2003}{14:02:30} End_Latex
@@ -125,14 +125,14 @@ TLatex provides 4 kinds of proportional delimiters:
 <pre>
    #[]{....} or "a la" Latex #left[.....#right] : big square brackets
    #{}{....} or              #left{.....#right} : big curly brackets
-   #||{....} or              #left|.....#right| : big absolute value symbol
-   #(){....} or              #left(.....#right) : big parenthesis
+   #||{....} or              #left|.....#right| : big absolute value symbols
+   #(){....} or              #left(.....#right) : big parentheses
 </pre>
 
 <a name="L7"></a><h3>Greek Letters</h3>
 The command to produce a lowercase Greek letter is obtained by adding a
 <tt>#</tt> to the name of the letter. For an uppercase Greek letter, just
-capitalize the first letter of the command name. Some letter have two
+capitalize the first letter of the command name. Some letters have two
 representations. The name of the second one (the "variation") starts with "var".
 The following table gives the complete list:
 End_Html
@@ -227,9 +227,9 @@ Begin_Macro(source)
 End_Macro
 
 Begin_Html
-<a name="L11"></a><h3>Characters adjustement</h3>
+<a name="L11"></a><h3>Character Adjustement</h3>
 The two commands <tt>#kern</tt> and <tt>#lower</tt> enable a better control
-over characters placement. The command <tt>#kern[(Float_t)dx]{text}</tt> moves
+over character placement. The command <tt>#kern[(Float_t)dx]{text}</tt> moves
 the output string horizontally by the fraction <tt>dx</tt> of its length.
 Similarly, <tt>#lower[(Float_t)dy]{text}</tt> shifts the text up or down by
 the fraction <tt>dy</tt> of its height.
@@ -245,7 +245,7 @@ Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{
 Begin_Latex Vertical a#lower[0.2]{d}#lower[0.4]{j}#lower[0.1]{u}#lower[-0.1]{s}#lower[-0.3]{t}#lower[-0.4]{m}#lower[-0.2]{e}#lower[0.1]{n}t End_Latex
 
 Begin_Html
-<a name="L12"></a><h3>Italic and boldface</h3>
+<a name="L12"></a><h3>Italic and Boldface</h3>
 Text can be turned italic or boldface using the commands
 <tt>#it</tt> and <tt>#bf</tt>.
 <p>Examples:
