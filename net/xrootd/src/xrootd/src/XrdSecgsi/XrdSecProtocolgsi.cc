@@ -1588,7 +1588,7 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
 
       if (GMAPOpt > 0) {
          // Get name from gridmap
-         String name; 
+         String name;
          QueryGMAP(hs->Chain->EECname(), hs->TimeStamp, name);
          DEBUG("username(s) associated with this DN: "<<name);
          if (name.length() <= 0) {
@@ -1623,13 +1623,16 @@ int XrdSecProtocolgsi::Authenticate(XrdSecCredentials *cred,
                   name = u;
                   DEBUG("grid map: requested user is authorized: name is '"<<name<<"'");
                } else {
-                  // It was required, so we fail
-                  kS_rc = kgST_error;
-                  PRINT("ERROR: grid map lookup ok, but the requested user is not"
-                        " authorized ("<<name<<")");
+                  // The requested username is not in the list; we warn and default to the first
+                  // found (to be Globus compliant)
+                  if (name.find(',') != STR_NPOS) name.erase(name.find(','));
+                  PRINT("WARNING: grid map lookup ok, but the requested user is not"
+                        " authorized ("<<user<<"). Instead, mapped as " << name << ".");
                   break;
                }
             } else {
+               // No username requested: we default to the first found (to be Globus compliant)
+               if (name.find(',') != STR_NPOS) name.erase(name.find(','));
                DEBUG("grid map lookup successful: name is '"<<name<<"'");
             }
             Entity.name = strdup(name.c_str());
