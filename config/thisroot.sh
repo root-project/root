@@ -29,27 +29,26 @@ if [ -n "${OLD_ROOTSYS}" ] ; then
       PATH=`@bindir@/drop_from_path -e "${OLD_ROOTSYS}/bin"`
    fi
    if [ -n "${LD_LIBRARY_PATH}" ]; then
-      LD_LIBRARY_PATH=`@bindir@/drop_from_path -D -e -p "${LD_LIBRARY_PATH}" "@libdir@"`
+      LD_LIBRARY_PATH=`@bindir@/drop_from_path -D -e -p "${LD_LIBRARY_PATH}" "${OLD_ROOTSYS}/lib"`
    fi
    if [ -n "${DYLD_LIBRARY_PATH}" ]; then
-      DYLD_LIBRARY_PATH=`@bindir@/drop_from_path -D -e -p "${DYLD_LIBRARY_PATH}" "@libdir@"`
+      DYLD_LIBRARY_PATH=`@bindir@/drop_from_path -D -e -p "${DYLD_LIBRARY_PATH}" "${OLD_ROOTSYS}/lib"`
    fi
    if [ -n "${SHLIB_PATH}" ]; then
-      SHLIB_PATH=`@bindir@/drop_from_path -D -e -p "${SHLIB_PATH}" "@libdir@"`
+      SHLIB_PATH=`@bindir@/drop_from_path -D -e -p "${SHLIB_PATH}" "${OLD_ROOTSYS}/lib"`
    fi
    if [ -n "${LIBPATH}" ]; then
-      LIBPATH=`@bindir@/drop_from_path -D -e -p "${LIBPATH}" "@libdir@"`
+      LIBPATH=`@bindir@/drop_from_path -D -e -p "${LIBPATH}" "${OLD_ROOTSYS}/lib"`
    fi
    if [ -n "${PYTHONPATH}" ]; then
-      PYTHONPATH=`@bindir@/drop_from_path -D -e -p "${PYTHONPATH}" "@libdir@"`
+      PYTHONPATH=`@bindir@/drop_from_path -D -e -p "${PYTHONPATH}" "${OLD_ROOTSYS}/lib"`
    fi
    if [ -n "${MANPATH}" ]; then
-      MANPATH=`@bindir@/drop_from_path -D -e -p "${MANPATH}" "@mandir@"`
+      MANPATH=`@bindir@/drop_from_path -D -e -p "${MANPATH}" "${OLD_ROOTSYS}/man"`
    fi
 fi
 
-# Grab the default man path before set the path
-# to avoid duplicates 
+# Grab the default man path before set the path to avoid duplicates 
 if `which manpath > /dev/null 2>&1` ; then
    default_manpath=`manpath`
 else
