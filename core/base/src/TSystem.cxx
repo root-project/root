@@ -2907,7 +2907,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
                depfilename += "_" + extension + ".d";
             }
-            R__WriteDependencyFile(build_loc, depfilename, expFileName, library, libname, extension, version_var_prefix, includes, defines, incPath);
+            R__WriteDependencyFile(build_loc, depfilename, filename_fullpath, library, libname, extension, version_var_prefix, includes, defines, incPath);
          }
       }
 
@@ -3110,7 +3110,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    Info("ACLiC","creating shared library %s",library.Data());
 
-   R__WriteDependencyFile(build_loc, depfilename, expFileName, library, libname, extension, version_var_prefix, includes, defines, incPath);
+   R__WriteDependencyFile(build_loc, depfilename, filename_fullpath, library, libname, extension, version_var_prefix, includes, defines, incPath);
 
    // ======= Select the dictionary name
    TString dict = libname + "_ACLiC_dict";
