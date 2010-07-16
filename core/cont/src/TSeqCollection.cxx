@@ -200,6 +200,7 @@ Long64_t TSeqCollection::Merge(TCollection *list)
       // Current object mergeable - get corresponding objects in input lists
       templist = (TSeqCollection*)IsA()->New();
       nextlist.Reset();
+      Int_t indcoll = 0;
       while ((collcrt = nextlist())) {      // loop input lists
          if (!collcrt->InheritsFrom(TSeqCollection::Class())) {
             Error("Merge", "some objects in the input list are not collections - merging aborted");
@@ -209,12 +210,19 @@ Long64_t TSeqCollection::Merge(TCollection *list)
          // The next object to be merged with is a collection
          // the iterator skips the 'holes' the collections, we also need to do so.
          objtomerge = ((TSeqCollection*)collcrt)->At(indobj);
+         if (!objtomerge) {
+            Warning("Merge", "Object of type %s (position %d in list) not found in list %d. Continuing...", object->ClassName(), indobj, indcoll);
+            continue;
+         }
+/* 
+         // Dangerous - may try to merge non-corresponding histograms (A.G)
          while (objtomerge == 0
                 && indobj < ((TSeqCollection*)collcrt)->LastIndex() 
                ) {
             ++indobj;
             objtomerge = ((TSeqCollection*)collcrt)->At(indobj);
          }
+*/
          if (object->IsA() != objtomerge->IsA()) {
             Error("Merge", "object of type %s at index %d not matching object of type %s in input list",
                   object->ClassName(), indobj, objtomerge->ClassName());
