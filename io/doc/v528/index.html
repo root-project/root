@@ -125,5 +125,7 @@ For MakeProject, use file->GetStreamerInfoCache() instead of the TClass GetStrea
 ownership of the object to the canvas they are stored with.  However, if they are saved on their own, the mechanism
 that associates them to the current directory (DirectoryAutoAdd) will now reset the bit to avoid any possible
 ownsership confusion.</li>
+<li>Added <tt>TFile::SetOffset</tt> and <tt>TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len);</tt> to drastically reduce
+    the number of fseek done on the physical file when using the TTreeCache.</li>
 </ul>
 
