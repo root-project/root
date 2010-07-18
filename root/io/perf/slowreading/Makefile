@@ -60,7 +60,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 NuEvent_DST.mark: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_61_cxx.$(DllSuf) NuEvent_62_cxx.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx", "rootfiles/DST_60.root", 1)' > NuEvent_DST.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx", "rootfiles/DST_60.root", 1)' > NuEvent_DST.log 2>&1 || handleError.sh --log=NuEvent_DST.log --result=$$?
 
 readDST.00.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_DST.mark
 	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_60_cxx" "rootfiles/DST_60.root" readDST.00.log
