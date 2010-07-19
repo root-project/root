@@ -1066,7 +1066,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*-              (with alphanumeric labels for horizontal axis).
 
    charheight = GetLabelSize();
-   if (optionText) charheight *= 0.66666;
+   if (optionText && GetLabelFont()%10 != 3) charheight *= 0.66666;
    textaxis->SetTextFont(GetLabelFont());
    if ((GetLabelFont()%10 < 2) && optionLog) // force TLatex mode in PaintLatex
       textaxis->SetTextFont((Int_t)(GetLabelFont()/10)*10+2);
