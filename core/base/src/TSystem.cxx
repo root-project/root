@@ -2657,7 +2657,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = ExpandFileName(GetBuildDir());
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
-   if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
+   if (build_loc == ".") {
+      build_loc = WorkingDirectory();
+   } else if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
       AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
    }
 
