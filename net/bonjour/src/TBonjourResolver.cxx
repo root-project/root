@@ -118,8 +118,9 @@ void TBonjourResolver::BonjourSocketReadyRead()
 void TBonjourResolver::BonjourResolveReply(DNSServiceRef,
                                            DNSServiceFlags, UInt_t,
                                            DNSServiceErrorType errorCode, const char *,
-                                           const char *hostTarget, UShort_t port, UShort_t,
-                                           const unsigned char *, void *context)
+                                           const char *hostTarget, UShort_t port,
+                                           UShort_t, const char *txtRecord,
+                                           void *context)
 {
    // Static Bonjour resolver callback function.
 
@@ -130,6 +131,7 @@ void TBonjourResolver::BonjourResolveReply(DNSServiceRef,
    } else {
       resolver->fPort = ntohs(port);
       resolver->fHostAddress = gSystem->GetHostByName(hostTarget);
+      resolver->fTXTRecord = txtRecord;
       resolver->RecordResolved(&resolver->fHostAddress, resolver->fPort);
    }
 }

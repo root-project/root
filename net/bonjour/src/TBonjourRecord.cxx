@@ -24,10 +24,32 @@
 ClassImp(TBonjourRecord)
 
 //______________________________________________________________________________
+void TBonjourRecord::AddTXTRecord(const char * record)
+{
+   TString rec(record);
+   AddTXTRecord(rec);
+}
+
+//______________________________________________________________________________
+void TBonjourRecord::AddTXTRecord(const TString &record)
+{
+   // This methods adds the length before the data for compliance with the
+   // mDNS records standard.
+
+   fTXTRecords.Append((char)record.Length());
+   fTXTRecords.Append(record);
+}
+
+//______________________________________________________________________________
 void TBonjourRecord::Print(Option_t *) const
 {
    // Print TBonjourRecord.
 
-   cout << "TBonjourRecord:" << "\t" << GetServiceName()
-        << "\t" << GetRegisteredType() << "\t" << GetReplyDomain() << endl;
+   cout << "TBonjourRecord:"
+        << "\n\tService name: #" << GetServiceName() << "#"
+        << "\n\tRegistered type: #" << GetRegisteredType() << "#"
+        << "\n\tDomain: #" << GetReplyDomain() << "#"
+        << "\n\tTXT Records (length): #" << GetTXTRecords()
+                                  << "# (" << GetTXTRecordsLength() << ")"
+        << endl;
 }

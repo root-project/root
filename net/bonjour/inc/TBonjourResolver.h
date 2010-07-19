@@ -55,6 +55,7 @@ private:
    TFileHandler    *fBonjourSocketHandler;
    TInetAddress     fHostAddress;
    Int_t            fPort;
+   TString          fTXTRecord;
 
    void *GetSender() { return this; }  // used to get gTQSender
 
@@ -62,17 +63,21 @@ private:
    static void DNSSD_API BonjourResolveReply(DNSServiceRef, DNSServiceFlags, UInt_t,
                                              DNSServiceErrorType,
                                              const char *, const char *,
-                                             UShort_t, UShort_t, const unsigned char *, void *);
+                                             UShort_t, UShort_t, const char *, void *);
 #else
    static void BonjourResolveReply(DNSServiceRef, DNSServiceFlags, UInt_t,
                                    DNSServiceErrorType,
                                    const char *, const char *,
-                                   UShort_t, UShort_t, const unsigned char *, void *);
+                                   UShort_t, UShort_t, const char *, void *);
 #endif
 
 public:
    TBonjourResolver();
    virtual ~TBonjourResolver();
+
+   TInetAddress GetInetAddress() const { return fHostAddress; }
+   Int_t GetPort() const { return fPort; }
+   const char * GetTXTRecord() const { return fTXTRecord; }
 
    Int_t ResolveBonjourRecord(const TBonjourRecord &record);
 

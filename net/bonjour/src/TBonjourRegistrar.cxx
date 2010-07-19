@@ -77,11 +77,16 @@ Int_t TBonjourRegistrar::RegisterService(const TBonjourRecord &record, UShort_t 
 
    // register our service and callback
    DNSServiceErrorType err = DNSServiceRegister(&fDNSRef, 0, kDNSServiceInterfaceIndexAny,
-                                                record.GetServiceName(),
+                                                !strlen(record.GetServiceName()) ? 0
+                                                : record.GetServiceName(),
                                                 record.GetRegisteredType(),
                                                 !strlen(record.GetReplyDomain()) ? 0
                                                 : record.GetReplyDomain(),
-                                                0, sport, 0, 0, BonjourRegisterService,
+                                                0, sport,
+                                                record.GetTXTRecordsLength(),
+                                                !strlen(record.GetTXTRecords()) ? 0
+                                                : record.GetTXTRecords(),
+                                                (DNSServiceRegisterReply)BonjourRegisterService,
                                                 this);
    if (err != kDNSServiceErr_NoError) {
       Error("RegisterService", "error in DNSServiceRegister (%d)", err);

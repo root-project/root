@@ -26,7 +26,7 @@
 //    avahi                                                             //
 //    avahi-compat-libdns_sd-devel                                      //
 //    nss-mdns                                                          //
-// packages. After installation make sure the avahi-daemon is started.  //      
+// packages. After installation make sure the avahi-daemon is started.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +74,8 @@ Int_t TBonjourBrowser::BrowseForServiceType(const char *serviceType)
 
    DNSServiceErrorType err = DNSServiceBrowse(&fDNSRef, 0,
                                               0, serviceType, 0,
-                                              BonjourBrowseReply, this);
+                                              (DNSServiceBrowseReply)BonjourBrowseReply,
+                                              this);
    if (err != kDNSServiceErr_NoError) {
       Error("BrowseForServiceType", "error in DNSServiceBrowse (%d)", err);
       return -1;
