@@ -323,10 +323,17 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
    std::string lcname = PyString_AS_STRING( pyname );
    Py_DECREF( pyname ); pyname = 0;
 
-// note that pyclass has not been decref-ed: it will be used again to install
-// the operator, if found
+   Bool_t result = AddBinaryOperator( pyclass, lcname, rcname, op, label );
 
-// find a global function with a matching signature
+   Py_DECREF( pyclass );
+   return result;
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string& lcname,
+   const std::string& rcname, const char* op, const char* label )
+{
+// find a global function with a matching signature and install the result on pyclass
    TCollection* funcs = gROOT->GetListOfGlobalFunctions( kFALSE );
    TIter ifunc( funcs );
 
@@ -340,22 +347,19 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
 
       if ( func->GetName() == opname ) {
          if ( ( lcname == TClassEdit::ResolveTypedef(
-                            ((TMethodArg*)func->GetListOfMethodArgs()->At(0))->GetTypeName(), true ) ) &&
+                           ((TMethodArg*)func->GetListOfMethodArgs()->At(0))->GetTypeName(), true ) ) &&
               ( rcname == TClassEdit::ResolveTypedef(
-                            ((TMethodArg*)func->GetListOfMethodArgs()->At(1))->GetTypeName(), true ) ) ) {
+                           ((TMethodArg*)func->GetListOfMethodArgs()->At(1))->GetTypeName(), true ) ) ) {
          // found a matching overload; add to class
             PyCallable* pyfunc = new TFunctionHolder< TScopeAdapter, TMemberAdapter >( func );
             Utility::AddToClass( pyclass, label ? label : gC2POperatorMapping[ op ].c_str(), pyfunc );
 
          // done; break out loop
-            Py_DECREF( pyclass );
             return kTRUE;
          }
 
       }
    }
-
-   Py_DECREF( pyclass );
 
    return kFALSE;
 }

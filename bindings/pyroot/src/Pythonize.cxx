@@ -62,6 +62,15 @@ namespace {
    }
 
 //____________________________________________________________________________
+   Bool_t HasAttrOnThisClass( PyObject* pyclass, PyObject* pyname, Bool_t mustBePyROOT = kFALSE ) {
+   // only check whether a function exists in this particular class
+      PyObject* attr = PyDict_GetItem( ((PyTypeObject*)pyclass)->tp_dict, pyname );
+      if ( attr != 0 && ( ! mustBePyROOT || MethodProxy_Check( attr ) ) )
+         return kTRUE;
+      return kFALSE;
+   }
+
+//____________________________________________________________________________
    inline Bool_t IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
       const int nsize = (int)name.size();
       const int ksize = (int)klass.size();
@@ -956,6 +965,64 @@ namespace {
       return next;
    }
 
+//____________________________________________________________________________
+   PyObject* StlIterIsEqual( ObjectProxy* self, ObjectProxy* other )
+   {
+   // Used if operator== not available (e.g. if a global overload as under gcc),
+   // and works by assuming that the iterator object is at least sizeof(long*),
+   // that those first sizeof(long*) bytest are good enough for the comparison.
+
+      if ( ! ObjectProxy_Check( self ) || ! ObjectProxy_Check( other ) ) {
+         Py_INCREF( Py_False );
+         return Py_False;
+      }
+
+   // mismatch of types, so can't be equal
+      if ( self->ob_type != other->ob_type ) {
+         Py_INCREF( Py_False );
+         return Py_False;
+      }
+
+      long** lself  = (long**)self->GetObject();
+      long** lother = (long**)other->GetObject();
+
+   // both pointing nowhere makes them equal (since types match, as per above)
+      if ( ! lself && ! lother ) {
+         Py_INCREF( Py_True );
+         return Py_True;
+      }
+
+   // one of them non-zero makes a non-match
+      if ( ! lself || ! lother ) {
+         Py_INCREF( Py_False );
+         return Py_False;
+      }
+
+   // work on the above assumption and compare the first sizeof(long*)
+      if ( *lself == *lother ) {
+         Py_INCREF( Py_True );
+         return Py_True;
+      }
+
+      Py_INCREF( Py_False );
+      return Py_False;
+   }
+
+//____________________________________________________________________________
+   PyObject* StlIterIsNotEqual( ObjectProxy* self, ObjectProxy* other )
+   {
+      PyObject* result = StlIterIsEqual( self, other );
+      if ( result == Py_True ) {
+         Py_INCREF( Py_False );
+         Py_DECREF( result );
+         return Py_False;
+      } else {
+         Py_INCREF( Py_True );
+         Py_DECREF( result );
+         return Py_True;
+      }
+   }
+
 
 //- TDirectory member templates ----------------------------------------------
    PyObject* TDirectoryGetObject( ObjectProxy* self, PyObject* args )
@@ -1776,6 +1843,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name.find( "iterator" ) != std::string::npos ) {
       Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext, METH_NOARGS );
+
+   // special case, if operator== is a global overload (and hence not filled)
+      if ( ! HasAttrOnThisClass( pyclass, PyStrings::gEq ) )
+         Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlIterIsEqual, METH_O );
+      if ( ! HasAttrOnThisClass( pyclass, PyStrings::gNe ) )
+         Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) StlIterIsNotEqual, METH_O );
 
       return kTRUE;
    }
