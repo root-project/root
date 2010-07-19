@@ -785,7 +785,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t nrows,Int_t ncols,In
       R__ASSERT(this->IsValid());
 
       Element *elements_new = GetMatrixArray();
-      // new memory should be initialized but be careful ot to wipe out the stack
+      // new memory should be initialized but be careful not to wipe out the stack
       // storage. Initialize all when old or new storage was on the heap
       if (this->fNelems > this->kSizeMax || nelems_old > this->kSizeMax)
          memset(elements_new,0,this->fNelems*sizeof(Element));
@@ -798,9 +798,12 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t nrows,Int_t ncols,In
 
       const Int_t nelems_new = this->fNelems;
       if (ncols_old < this->fNcols) {
-         for (Int_t i = nrows_copy-1; i >= 0; i--)
-           Memcpy_m(elements_new+i*this->fNcols,elements_old+i*ncols_old,ncols_copy,
-                    nelems_new,nelems_old);
+         for (Int_t i = nrows_copy-1; i >= 0; i--) {
+            Memcpy_m(elements_new+i*this->fNcols,elements_old+i*ncols_old,ncols_copy,
+                     nelems_new,nelems_old);
+            if (this->fNelems <= this->kSizeMax && nelems_old <= this->kSizeMax)
+               memset(elements_new+i*this->fNcols+ncols_copy,0,(this->fNcols-ncols_copy)*sizeof(Element));
+         }
       } else {
          for (Int_t i = 0; i < nrows_copy; i++)
             Memcpy_m(elements_new+i*this->fNcols,elements_old+i*ncols_old,ncols_copy,
@@ -866,7 +869,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
 
       Element *elements_new = GetMatrixArray();
       // new memory should be initialized but be careful ot to wipe out the stack
-      // storage. Initialize all when old or new storag ewas on the heap
+      // storage. Initialize all when old or new storage was on the heap
       if (this->fNelems > this->kSizeMax || nelems_old > this->kSizeMax)
          memset(elements_new,0,this->fNelems*sizeof(Element));
       else if (this->fNelems > nelems_old)
@@ -890,6 +893,9 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
                const Int_t iRowNew = rowLwb_copy+i-this->fRowLwb;
                Memcpy_m(elements_new+iRowNew*this->fNcols+colNewOff,
                         elements_old+iRowOld*ncols_old+colOldOff,ncols_copy,this->fNelems,nelems_old);
+               if (this->fNelems <= this->kSizeMax && nelems_old <= this->kSizeMax)
+                  memset(elements_new+iRowNew*this->fNcols+colNewOff+ncols_copy,0,
+                         (this->fNcols-ncols_copy)*sizeof(Element));
             }
          } else {
              for (Int_t i = 0; i < nrows_copy; i++) {
