@@ -3,7 +3,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := build
+MODNAME      := build
+MODDIR       := $(MODNAME)
 
 RMKDEPDIR    := $(MODDIR)/rmkdepend
 BINDEXPDIR   := $(MODDIR)/win/bindexplib
@@ -42,7 +43,11 @@ W32PRAGMA    := build/win/w32pragma.h
 ALLHDRS      += include/w32pragma.h
 endif
 
+POSTBIN      += $(DROP)
+
 ##### local rules #####
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
 $(RMKDEP):      $(RMKDEPO)
 		$(LD) $(LDFLAGS) -o $@ $(RMKDEPO)
 
@@ -56,21 +61,20 @@ include/%.h:    build/win/%.h
 $(BINDEXP):     $(BINDEXPO)
 		$(LD) $(LDFLAGS) -o $@ $(BINDEXPO)
 
-all-build:      $(RMKDEP) $(BINDEXP)
+all-$(MODNAME): $(RMKDEP) $(BINDEXP)
 else
-all-build:      $(RMKDEP) $(DROP)
-all:            $(DROP)
+all-$(MODNAME): $(RMKDEP) $(DROP)
 endif
 
-clean-build:
+clean-$(MODNAME):
 		@rm -f $(RMKDEPO) $(BINDEXPO) $(DROPO)
 
-clean::         clean-build
+clean::         clean-$(MODNAME)
 
-distclean-build: clean-build
+distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(RMKDEP) $(BINDEXP) $(DROPO)
 
-distclean::     distclean-build
+distclean::     distclean-$(MODNAME)
 
 
 ##### dependencies #####
