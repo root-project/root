@@ -1798,6 +1798,9 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       return;
    }
 
+   TString newText = text1;
+   if( newText.Length() == 0) return;
+
    Double_t saveSize = size;
    Int_t saveFont = fTextFont;
    if (fTextFont%10 > 2) {
@@ -1812,10 +1815,6 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       SetTextFont(10*(saveFont/10) + 2);
    }
    if (gVirtualPS) gVirtualPS->SetBit(kLatex);
-
-   TString newText = text1;
-
-   if( newText.Length() == 0) return;
 
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
