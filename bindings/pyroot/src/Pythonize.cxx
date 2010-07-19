@@ -1679,9 +1679,13 @@ namespace {
    };
 
 
-//- TVector behavior -----------------------------------------------------------
+//- simplistic len() functions -------------------------------------------------
    PyObject* ReturnThree( ObjectProxy*, PyObject* ) {
       return PyInt_FromLong( 3 );
+   }
+
+   PyObject* ReturnTwo( ObjectProxy*, PyObject* ) {
+      return PyInt_FromLong( 2 );
    }
 
 } // unnamed namespace
@@ -1837,6 +1841,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( IsTemplatedSTLClass( name, "pair" ) ) {
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) PairUnpack, METH_O );
+      Utility::AddToClass( pyclass, "__len__", (PyCFunction) ReturnTwo, METH_NOARGS );
 
       return kTRUE;
    }
