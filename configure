@@ -455,7 +455,7 @@ check_library() {
                 continue
             fi
             for j in ${libs} ; do
-                logmsg "  Checking for library $j in directory $i"
+                logmsg "  Checking for library $j in directory $l"
                 # if we found the file (it's readable by user), we set the
                 # logical variables and are on our way, otherwise we continue
                 liblist=`echo $l/$j`    # expands wildcard in $l/$j
@@ -1418,11 +1418,14 @@ win32)
    enable_builtin_zlib="yes" ;;
 esac
 
-# check for which
-case $platform in
-macosx) cwhich="type -path" ;;
-*)      cwhich="which"      ;;
-esac
+# check for which, avoid using which, as it may be a buggy csh script.
+if type whence >/dev/null 2>&1 ; then
+   cwhich="whence"
+else
+   # XXX Should do something better...
+   # ... possibly using type inside a sh function whence() { ... }
+   cwhich="which"
+fi
 
 # check for Fink on MacOS X
 # and for sanity of source e.g. pcre-*.tar.gz must exist
@@ -3613,7 +3616,6 @@ if test ! "x$enable_xml" = "xno" ; then
           esac
           case $platform in
              linux)     xmllib="$xmllib -lpthread"            ;;
-             solaris)   xmllib="$xmllib -liconv"              ;;
              win32)     xmlincdir="$xmlincdir $iconvincdir"
                         xmllib="$xmllib $iconvlib Ws2_32.lib" ;;
           esac
