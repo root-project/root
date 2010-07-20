@@ -145,7 +145,7 @@ namespace TMath {
           Double_t ATanH(Double_t);
           Double_t Hypot(Double_t x, Double_t y);
 
-   
+
    /* ************************ */
    /* * Elementary Functions * */
    /* ************************ */
@@ -182,7 +182,7 @@ namespace TMath {
    /* ******************** */
    /* * Array Algorithms * */
    /* ******************** */
-   
+
    // Min, Max of an array
    template <typename T> T MinElement(Long64_t n, const T *a);
    template <typename T> T MaxElement(Long64_t n, const T *a);
@@ -218,20 +218,20 @@ namespace TMath {
    /* ************************* */
 
    //Sample quantiles
-   void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob, 
+   void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob,
                        Bool_t isSorted=kTRUE, Int_t *index = 0, Int_t type=7);
 
    // IsInside
    template <typename T> Bool_t IsInside(T xp, T yp, Int_t np, T *x, T *y);
 
    // Calculate the Cross Product of two vectors
-   template <typename T> T *Cross(const T v1[3],const T v2[3], T out[3]); 
+   template <typename T> T *Cross(const T v1[3],const T v2[3], T out[3]);
 
    Float_t   Normalize(Float_t v[3]);  // Normalize a vector
    Double_t  Normalize(Double_t v[3]); // Normalize a vector
 
    //Calculate the Normalized Cross Product of two vectors
-   template <typename T> inline T NormCross(const T v1[3],const T v2[3],T out[3]); 
+   template <typename T> inline T NormCross(const T v1[3],const T v2[3],T out[3]);
 
    // Calculate a normal vector of a plane
    template <typename T> T *Normal2Plane(const T v1[3],const T v2[3],const T v3[3], T normal[3]);
@@ -239,7 +239,7 @@ namespace TMath {
    /* ************************ */
    /* * Polynomial Functions * */
    /* ************************ */
-   
+
    Bool_t    RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
 
    /* *********************** */
@@ -318,7 +318,7 @@ namespace TMath {
    Double_t StruveH1(Double_t x);         // Struve functions of order 1
    Double_t StruveL0(Double_t x);         // Modified Struve functions of order 0
    Double_t StruveL1(Double_t x);         // Modified Struve functions of order 1
-   
+
    Double_t DiLog(Double_t x);
    Double_t Erf(Double_t x);
    Double_t ErfInverse(Double_t x);
@@ -337,9 +337,9 @@ namespace TMath {
 #include <float.h>
 
 #if defined(R__WIN32) && !defined(__CINT__)
-#   ifndef finite
-#      define finite _finite
-#      define isnan  _isnan
+#   ifndef isfinite
+#      define isfinite _finite
+#      define isnan    _isnan
 #   endif
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
@@ -347,15 +347,12 @@ namespace TMath {
     (defined(R__MACOSX) && defined(__INTEL_COMPILER))
 // math functions are defined inline so we have to include them here
 #   include <math.h>
-#   ifdef R__SOLARIS_CC50
-       extern "C" { int finite(double); }
-#   endif
 #   if defined(R__GLIBC) && defined(__STRICT_ANSI__)
-#      ifndef finite
-#         define finite __finite
+#      ifndef isfinite
+#         define isfinite __finite
 #      endif
 #      ifndef isnan
-#         define isnan  __isnan
+#         define isnan    __isnan
 #      endif
 #   endif
 #else
@@ -377,10 +374,10 @@ extern "C" {
    extern double log(double);
    extern double log10(double);
 #ifndef R__WIN32
-#   if !defined(finite)
-       extern int finite(double);
+#   ifndef isfinite
+       extern int isfinite(double);
 #   endif
-#   if !defined(isnan)
+#   ifndef isnan
        extern int isnan(double);
 #   endif
    extern double ldexp(double, int);
@@ -465,11 +462,7 @@ inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
 
 inline Int_t TMath::Finite(Double_t x)
-#ifdef R__HPUX11
    { return isfinite(x); }
-#else
-   { return finite(x); }
-#endif
 
 inline Int_t TMath::IsNaN(Double_t x)
    { return isnan(x); }
@@ -482,7 +475,7 @@ template <typename T> inline T TMath::NormCross(const T v1[3],const T v2[3],T ou
    return Normalize(Cross(v1,v2,out));
 }
 
-template <typename T> 
+template <typename T>
 T TMath::MinElement(Long64_t n, const T *a) {
    // Return minimum of array a of length n.
 
@@ -490,10 +483,10 @@ T TMath::MinElement(Long64_t n, const T *a) {
 }
 
 template <typename T>
-T TMath::MaxElement(Long64_t n, const T *a) { 
+T TMath::MaxElement(Long64_t n, const T *a) {
    // Return maximum of array a of length n.
 
-   return *std::max_element(a,a+n); 
+   return *std::max_element(a,a+n);
 }
 
 template <typename T>
@@ -501,10 +494,10 @@ Long64_t TMath::LocMin(Long64_t n, const T *a) {
    // Return index of array with the minimum element.
    // If more than one element is minimum returns first found.
 
-   // Implement here since this one is found to be faster (mainly on 64 bit machines) 
-   // than stl generic implementation. 
+   // Implement here since this one is found to be faster (mainly on 64 bit machines)
+   // than stl generic implementation.
    // When performing the comparison,  the STL implementation needs to de-reference both the array iterator
-   // and the iterator pointing to the resulting minimum location 
+   // and the iterator pointing to the resulting minimum location
 
    if  (n <= 0 || !a) return -1;
    T xmin = a[0];
@@ -530,7 +523,7 @@ Long64_t TMath::LocMax(Long64_t n, const T *a) {
    // Return index of array with the maximum element.
    // If more than one element is maximum returns first found.
 
-   // Implement here since it is faster (see comment in LocMin function) 
+   // Implement here since it is faster (see comment in LocMin function)
 
    if  (n <= 0 || !a) return -1;
    T xmax = a[0];
@@ -544,7 +537,7 @@ Long64_t TMath::LocMax(Long64_t n, const T *a) {
    return loc;
 }
 
-template <typename Iterator> 
+template <typename Iterator>
 Iterator TMath::LocMax(Iterator first, Iterator last)
 {
    // Return index of array with the maximum element.
@@ -553,33 +546,33 @@ Iterator TMath::LocMax(Iterator first, Iterator last)
    return std::max_element(first, last);
 }
 
-template<typename T> 
-struct CompareDesc { 
+template<typename T>
+struct CompareDesc {
 
    CompareDesc(T d) : fData(d) {}
 
    template<typename Index>
-   bool operator()(Index i1, Index i2) { 
+   bool operator()(Index i1, Index i2) {
       return *(fData + i1) > *(fData + i2);
    }
 
    T fData;
 };
 
-template<typename T> 
-struct CompareAsc { 
+template<typename T>
+struct CompareAsc {
 
    CompareAsc(T d) : fData(d) {}
 
    template<typename Index>
-   bool operator()(Index i1, Index i2) { 
+   bool operator()(Index i1, Index i2) {
       return *(fData + i1) < *(fData + i2);
    }
 
-   T fData; 
+   T fData;
 };
 
-template <typename Iterator> 
+template <typename Iterator>
 Double_t TMath::Mean(Iterator first, Iterator last)
 {
    // Return the weighted mean of an array defined by the iterators.
@@ -596,7 +589,7 @@ Double_t TMath::Mean(Iterator first, Iterator last)
    return sum/sumw;
 }
 
-template <typename Iterator, typename WeightIterator> 
+template <typename Iterator, typename WeightIterator>
 Double_t TMath::Mean(Iterator first, Iterator last, WeightIterator w)
 {
    // Return the weighted mean of an array defined by the first and
@@ -622,10 +615,10 @@ Double_t TMath::Mean(Iterator first, Iterator last, WeightIterator w)
       return 0;
    }
 
-   return sum/sumw;  
+   return sum/sumw;
 }
 
-template <typename T> 
+template <typename T>
 Double_t TMath::Mean(Long64_t n, const T *a, const Double_t *w)
 {
    // Return the weighted mean of an array a with length n.
@@ -637,7 +630,7 @@ Double_t TMath::Mean(Long64_t n, const T *a, const Double_t *w)
    }
 }
 
-template <typename Iterator> 
+template <typename Iterator>
 Double_t TMath::GeomMean(Iterator first, Iterator last)
 {
    // Return the geometric mean of an array defined by the iterators.
@@ -656,7 +649,7 @@ Double_t TMath::GeomMean(Iterator first, Iterator last)
    return TMath::Exp(logsum/n);
 }
 
-template <typename T> 
+template <typename T>
 Double_t TMath::GeomMean(Long64_t n, const T *a)
 {
    // Return the geometric mean of an array a of size n.
@@ -665,7 +658,7 @@ Double_t TMath::GeomMean(Long64_t n, const T *a)
    return TMath::GeomMean(a, a+n);
 }
 
-template <typename Iterator> 
+template <typename Iterator>
 Double_t TMath::RMS(Iterator first, Iterator last)
 {
    // Return the Standard Deviation of an array defined by the iterators.
@@ -687,7 +680,7 @@ Double_t TMath::RMS(Iterator first, Iterator last)
    return rms;
 }
 
-template <typename T> 
+template <typename T>
 Double_t TMath::RMS(Long64_t n, const T *a)
 {
    // Return the Standard Deviation of an array a with length n.
@@ -712,7 +705,7 @@ Iterator TMath::BinarySearch(Iterator first, Iterator last, Element value)
    if ( (pind != last) && (*pind == value) )
       return pind;
    else
-      return ( pind - 1);   
+      return ( pind - 1);
 }
 
 
@@ -767,11 +760,11 @@ void TMath::SortItr(Iterator first, Iterator last, IndexIterator index, Bool_t d
       *cindex = i++;
       ++cindex;
    }
-   
+
    if ( down )
       std::sort(index, cindex, CompareDesc<Iterator>(first) );
    else
-       std::sort(index, cindex, CompareAsc<Iterator>(first) );
+      std::sort(index, cindex, CompareAsc<Iterator>(first) );
 }
 
 template <typename Element, typename Index> void TMath::Sort(Index n, const Element* a, Index* index, Bool_t down)
@@ -828,7 +821,7 @@ template <typename T> T * TMath::Normal2Plane(const T p1[3],const T p2[3],const 
    return normal;
 }
 
-template <typename T> Bool_t TMath::IsInside(T xp, T yp, Int_t np, T *x, T *y) 
+template <typename T> Bool_t TMath::IsInside(T xp, T yp, Int_t np, T *x, T *y)
 {
    // Function which returns kTRUE if point xp,yp lies inside the
    // polygon defined by the np points in arrays x and y, kFALSE otherwise
