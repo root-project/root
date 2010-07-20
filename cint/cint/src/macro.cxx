@@ -359,6 +359,7 @@ static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro
    // read definition and substitute
    fgetpos(G__mfp, &backup_pos);
    semicolumn = 0;
+   bool quote = false;
    while (1) {
       G__disp_mask = 10000; // FIXME: Crazy!
       c = G__fgetstream(symbol, 0,  punctuation);
@@ -366,7 +367,12 @@ static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro
          if (!double_quote && !single_quote) {
             G__argsubstitute(symbol, callpara, defpara);
          }
-         fprintf(G__mfp, "%s", symbol());
+         if (quote) {
+            fprintf(G__mfp, "\"%s\"", symbol());
+            quote = false;
+         } else {
+            fprintf(G__mfp, "%s", symbol());
+         }
          fgetpos(G__mfp, &backup_pos);
          semicolumn = 0;
       }
@@ -400,6 +406,8 @@ static int G__replacefuncmacro(const char* item, G__Callfuncmacro* callfuncmacro
             }
             else {
                fseek(G__ifile.fp, -1, SEEK_CUR);
+               quote = true;
+               continue;
             }
          }
       }
