@@ -936,6 +936,11 @@ namespace {
    // and works by assuming that the iterator object is at least sizeof(long*),
    // that those first sizeof(long*) bytest are good enough for the comparison.
 
+      PyErr_Warn( PyExc_DeprecationWarning,
+         "\n        Two iterators are being compared w/o an operator!=/=="
+         "in the dictionary."
+         "\n        A hack is deployed, but this will stop working next release." );
+
       if ( ! ObjectProxy_Check( self ) || ! ObjectProxy_Check( other ) ) {
          Py_INCREF( Py_False );
          return Py_False;
