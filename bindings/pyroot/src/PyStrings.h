@@ -16,6 +16,8 @@ namespace PyROOT {
       R__EXTERN PyObject* gBases;
       R__EXTERN PyObject* gBase;
       R__EXTERN PyObject* gClass;
+      R__EXTERN PyObject* gCppEq;
+      R__EXTERN PyObject* gCppNe;
       R__EXTERN PyObject* gDeref;
       R__EXTERN PyObject* gDict;
       R__EXTERN PyObject* gEmptyString;

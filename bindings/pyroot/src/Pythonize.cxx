@@ -62,15 +62,6 @@ namespace {
    }
 
 //____________________________________________________________________________
-   Bool_t HasAttrOnThisClass( PyObject* pyclass, PyObject* pyname, Bool_t mustBePyROOT = kFALSE ) {
-   // only check whether a function exists in this particular class
-      PyObject* attr = PyDict_GetItem( ((PyTypeObject*)pyclass)->tp_dict, pyname );
-      if ( attr != 0 && ( ! mustBePyROOT || MethodProxy_Check( attr ) ) )
-         return kTRUE;
-      return kFALSE;
-   }
-
-//____________________________________________________________________________
    inline Bool_t IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
       const int nsize = (int)name.size();
       const int ksize = (int)klass.size();
@@ -1739,13 +1730,16 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    Utility::AddBinaryOperator( pyclass, name, name, "==", "__eq__" ); 
    Utility::AddBinaryOperator( pyclass, name, name, "!=", "__ne__" );
 
-// map operator==() through GenObjectIsEqual to allow comparison to None
+// map operator==() through GenObjectIsEqual to allow comparison to None (kTRUE is to
+// require that the located method is a MethodProxy; this prevents circular calls as
+// GenObjectIsEqual is no MethodProxy)
    if ( HasAttrDirect( pyclass, PyStrings::gEq, kTRUE ) ) {
       Utility::AddToClass( pyclass, "__cpp_eq__",  "__eq__" );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) GenObjectIsEqual, METH_O );
    }
 
-// map operator!=() through GenObjectIsNotEqual to allow comparison to None
+// map operator!=() through GenObjectIsNotEqual to allow comparison to None (see note
+// on kTRUE above for __eq__)
    if ( HasAttrDirect( pyclass, PyStrings::gNe, kTRUE ) ) {
       Utility::AddToClass( pyclass, "__cpp_ne__",  "__ne__" );
       Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) GenObjectIsNotEqual, METH_O );
@@ -1855,10 +1849,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name.find( "iterator" ) != std::string::npos ) {
       Utility::AddToClass( pyclass, "next", (PyCFunction) StlIterNext, METH_NOARGS );
 
-   // special case, if operator== is a global overload (and hence not filled)
-      if ( ! HasAttrOnThisClass( pyclass, PyStrings::gEq ) )
+   // special case, if operator== is a global overload and included in the dictionary
+      if ( ! HasAttrDirect( pyclass, PyStrings::gCppEq, kTRUE ) )
          Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlIterIsEqual, METH_O );
-      if ( ! HasAttrOnThisClass( pyclass, PyStrings::gNe ) )
+      if ( ! HasAttrDirect( pyclass, PyStrings::gCppNe, kTRUE ) )
          Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) StlIterIsNotEqual, METH_O );
 
       return kTRUE;
