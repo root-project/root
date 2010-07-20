@@ -13,21 +13,22 @@
 
 static Bool_t gEvo = kFALSE;
 
-void ConnectToServer(const TInetAddress *host, Int_t port)
+void ConnectToServer(const TInetAddress *hostb, Int_t port)
 {
    // Called by the Bonjour resolver with the host and port to which
    // we can connect.
 
    // Connect only once...
    TBonjourResolver *resolver = (TBonjourResolver*) gTQSender;
-   resolver->Disconnect("RecordResolved(TInetAddress*,Int_t)");
+   TInetAddress host = *hostb; 
+   delete resolver;
 
-   printf("ConnectToServer: host = %s, port = %d\n", host->GetHostName(), port);
+   printf("ConnectToServer: host = %s, port = %d\n", host.GetHostName(), port);
 
    //--- Here starts original hclient.C code ---
 
    // Open connection to server
-   TSocket *sock = new TSocket(host->GetHostName(), port);
+   TSocket *sock = new TSocket(host.GetHostName(), port);
 
    // Wait till we get the start message
    char str[32];
