@@ -34,10 +34,21 @@
 
 #pragma link C++ class ROOT::Math::Vavilov+;
 #pragma link C++ class ROOT::Math::VavilovAccurate+;
+#pragma link C++ class ROOT::Math::VavilovFast+;
+
+#ifndef _WIN32  
+// virtual inheritance gives problem when making dictionary on Windows 
+#pragma link C++ class ROOT::Math::Polynomial+;
 #pragma link C++ class ROOT::Math::VavilovAccuratePdf+;
 #pragma link C++ class ROOT::Math::VavilovAccurateCdf+;
 #pragma link C++ class ROOT::Math::VavilovAccurateQuantile+;
-#pragma link C++ class ROOT::Math::VavilovFast+;
+#else 
+#pragma link C++ class ROOT::Math::Polynomial-;
+#pragma link C++ class ROOT::Math::VavilovAccuratePdf-;
+#pragma link C++ class ROOT::Math::VavilovAccurateCdf-;
+#pragma link C++ class ROOT::Math::VavilovAccurateQuantile-;
+#endif
+
 
 //#pragma extra_include "TF1.h";
 
