@@ -337,9 +337,9 @@ namespace TMath {
 #include <float.h>
 
 #if defined(R__WIN32) && !defined(__CINT__)
-#   ifndef isfinite
-#      define isfinite _finite
-#      define isnan    _isnan
+#   ifndef finite
+#      define finite _finite
+#      define isnan  _isnan
 #   endif
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
@@ -347,12 +347,15 @@ namespace TMath {
     (defined(R__MACOSX) && defined(__INTEL_COMPILER))
 // math functions are defined inline so we have to include them here
 #   include <math.h>
+#   ifdef R__SOLARIS_CC50
+       extern "C" { int finite(double); }
+#   endif
 #   if defined(R__GLIBC) && defined(__STRICT_ANSI__)
-#      ifndef isfinite
-#         define isfinite __finite
+#      ifndef finite
+#         define finite __finite
 #      endif
 #      ifndef isnan
-#         define isnan    __isnan
+#         define isnan  __isnan
 #      endif
 #   endif
 #else
@@ -374,10 +377,10 @@ extern "C" {
    extern double log(double);
    extern double log10(double);
 #ifndef R__WIN32
-#   ifndef isfinite
-       extern int isfinite(double);
+#   if !defined(finite)
+       extern int finite(double);
 #   endif
-#   ifndef isnan
+#   if !defined(isnan)
        extern int isnan(double);
 #   endif
    extern double ldexp(double, int);
@@ -462,7 +465,11 @@ inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
 
 inline Int_t TMath::Finite(Double_t x)
+#ifdef R__HPUX11
    { return isfinite(x); }
+#else
+   { return finite(x); }
+#endif
 
 inline Int_t TMath::IsNaN(Double_t x)
    { return isnan(x); }
