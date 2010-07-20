@@ -41,6 +41,7 @@
 #include "TDSet.h"
 
 #include "Riostream.h"
+#include "TChain.h"
 #include "TClass.h"
 #include "TClassTable.h"
 #include "TCut.h"
@@ -813,7 +814,9 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
          // Not an MSD option
          msd = "";
       }
-      if (Add(file, tree, dir, 0, -1, ((msd.IsNull()) ? 0 : msd.Data()))) {
+      Long64_t nent = (elem->GetEntries() > 0 &&
+                       elem->GetEntries() != TChain::kBigNumber) ? elem->GetEntries() : -1;
+      if (Add(file, tree, dir, 0, nent, ((msd.IsNull()) ? 0 : msd.Data()))) {
          if (elem->HasBeenLookedUp()) {
             // Save lookup information, if any
             TDSetElement *dse = (TDSetElement *) fElements->Last();
