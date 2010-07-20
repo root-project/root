@@ -341,19 +341,19 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
    TGRectangle rect(x, y, x+fWidth, y+fHeight);
    if (rect.Contains(mx, my)) {
       if (move == 1) { // left
-         if (fWidth+15 < mx)
+         if (fWidth+15 < (UInt_t)mx)
             x = mx - fWidth - 15;
          else if (my + fHeight+15 < screenH)
             y = my + 15;
-         else if (fHeight+15 < my)
+         else if (fHeight+15 < (UInt_t)my)
             y = my - fHeight - 15;
       }
       else if (move == 2) { // up
          if (mx + fWidth+15 < screenW)
             x = mx + 15;
-         else if (fHeight+15 < my)
+         else if (fHeight+15 < (UInt_t)my)
             y = my - fHeight - 15;
-         else if (fWidth+15 < mx)
+         else if (fWidth+15 < (UInt_t)mx)
             x = mx - fWidth - 15;
       }
       else { // up & left, right, down, ...
@@ -361,9 +361,9 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
             y = my + 15;
          else if (mx + fWidth+15 < screenW)
             x = mx + 15;
-         else if (fWidth+15 < mx)
+         else if (fWidth+15 < (UInt_t)mx)
             x = mx - fWidth - 15;
-         else if (fHeight+15 < my)
+         else if (fHeight+15 < (UInt_t)my)
             y = my - fHeight - 15;
       }
    }
