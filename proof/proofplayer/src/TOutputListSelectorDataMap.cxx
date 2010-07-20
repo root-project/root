@@ -29,6 +29,7 @@
 #include "TMemberInspector.h"
 #include "TProofDebug.h"
 #include "TSelector.h"
+#include "TSelectorCint.h"
 
 
 namespace {
@@ -191,7 +192,15 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
    char parent[1024];
    parent[0] = 0;
    TCollectDataMembers cdm(*this);
-   if (!sel->IsA()->CallShowMembers(sel, cdm, parent)) {
+   TClass* cl = sel->IsA();
+   if (cl->InheritsFrom(TSelectorCint::Class())) {
+      // we don't want to set TSelectorCint's data members, but
+      // the data members that it represents!
+      TSelectorCint* selCINT = dynamic_cast<TSelectorCint*>(sel);
+      cl = selCINT->GetInterpretedClass();
+      sel = selCINT->GetInterpretedSelector();
+   }
+   if (!cl->CallShowMembers(sel, cdm, parent)) {
       // failed to map
       PDB(kOutput,1) Warning("Init","Failed to determine mapping!");
       return kFALSE;
@@ -226,7 +235,15 @@ Bool_t TOutputListSelectorDataMap::SetDataMembers(TSelector* sel) const
    char parent[1024];
    parent[0] = 0;
    TSetSelDataMembers ssdm(*this, fMap, output);
-   Bool_t res = sel->IsA()->CallShowMembers(sel, ssdm, parent);
+   TClass* cl = sel->IsA();
+   if (cl->InheritsFrom(TSelectorCint::Class())) {
+      // we don't want to set TSelectorCint's data members, but
+      // the data members that it represents!
+      TSelectorCint* selCINT = dynamic_cast<TSelectorCint*>(sel);
+      cl = selCINT->GetInterpretedClass();
+      sel = selCINT->GetInterpretedSelector();
+   }
+   Bool_t res = cl->CallShowMembers(sel, ssdm, parent);
    PDB(kOutput,1) Info("SetDataMembers()","%s, set %d data members.",
                        (res ? "success" : "failure"), ssdm.GetNumSet());
    return res;
