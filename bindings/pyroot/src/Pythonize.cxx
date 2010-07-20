@@ -1733,6 +1733,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       }
    }
 
+// search for global comparator overloads (may fail; not sure whether it isn't better to
+// do this lazily just as is done for math operators, but this interplays nicely with the
+// generic versions)
+   Utility::AddBinaryOperator( pyclass, name, name, "==", "__eq__" ); 
+   Utility::AddBinaryOperator( pyclass, name, name, "!=", "__ne__" );
+
 // map operator==() through GenObjectIsEqual to allow comparison to None
    if ( HasAttrDirect( pyclass, PyStrings::gEq, kTRUE ) ) {
       Utility::AddToClass( pyclass, "__cpp_eq__",  "__eq__" );

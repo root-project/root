@@ -297,11 +297,6 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    if ( ! isNamespace && ! hasConstructor )
       cache[ "__init__" ].push_back( new TConstructorHolder< T, M >( klass ) );
 
-// search for global comparator overloads (may fail; not sure whether it isn't better to
-// do this lazily just as is done for math operators)
-   Utility::AddBinaryOperator( pyclass, clName, clName, "==", "__eq__" ); 
-   Utility::AddBinaryOperator( pyclass, clName, clName, "!=", "__ne__" );
-
 // add the methods to the class dictionary
    for ( CallableCache_t::iterator imd = cache.begin(); imd != cache.end(); ++imd ) {
    // in order to prevent removing templated editions of this method (which were set earlier,
