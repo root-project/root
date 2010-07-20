@@ -314,11 +314,11 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
    }
 
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
-   Py_DECREF( pyclass ); pyclass = 0;
    std::string rcname = PyString_AS_STRING( pyname );
    Py_DECREF( pyname ); pyname = 0;
+   Py_DECREF( pyclass ); pyclass = 0;
 
-   pyclass = PyObject_GetAttr( right, PyStrings::gClass );
+   pyclass = PyObject_GetAttr( left, PyStrings::gClass );
    pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
    std::string lcname = PyString_AS_STRING( pyname );
    Py_DECREF( pyname ); pyname = 0;
@@ -334,7 +334,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    const std::string& rcname, const char* op, const char* label )
 {
 // find a global function with a matching signature and install the result on pyclass
-   TCollection* funcs = gROOT->GetListOfGlobalFunctions( kFALSE );
+   TCollection* funcs = gROOT->GetListOfGlobalFunctions( kTRUE );
    TIter ifunc( funcs );
 
    std::string opname = "operator";
