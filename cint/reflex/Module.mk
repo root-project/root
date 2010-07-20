@@ -92,12 +92,11 @@ INCLUDEFILES += $(RFLX_GENMAPDEP)
 
 ALLEXECS += $(RFLX_GENMAPX)
 
+POSTBIN  += $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
                 clean-check-$(MODNAME) check-$(MODNAME) clean-genreflex
-
-POSTBIN += $(RFLX_GRFLXPYC) $(RFLX_GRFLXPY)
 
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 		@(if [ ! -d "include/Reflex" ]; then          \
