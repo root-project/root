@@ -21,12 +21,13 @@
 private: \
    static TClass *fgIsA; \
 public: \
-   static TClass *Class(); \
-   static const char *Class_Name(); \
+ static TClass *Class() { return fgIsA ? fgIsA : (fgIsA = TClass::GetClass(#name)); } \
+   static const char *Class_Name() { return #name; }       \
    static Version_t Class_Version() { return id; } \
    static void Dictionary(); \
    virtual TClass *IsA() const { return name::Class(); } \
-   virtual void ShowMembers(TMemberInspector &insp, char *parent); \
+   virtual void ShowMembers(TMemberInspector &insp, char *parent) { \
+      Class()->InterpretedShowMembers(this, insp, parent); }        \
    virtual void Streamer(TBuffer &b); \
    void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
    static const char *DeclFileName() { return __FILE__; } \
@@ -34,22 +35,7 @@ public: \
    static int ImplFileLine(); \
    static int DeclFileLine() { return __LINE__; }
 
-#define ClassDefT(name,id) \
-private: \
-   static TClass *fgIsA; \
-public: \
-   static TClass *Class(); \
-   static const char *Class_Name(); \
-   static Version_t Class_Version() { return id; } \
-   static void Dictionary(); \
-   virtual TClass *IsA() const { return name::Class(); } \
-   virtual void ShowMembers(TMemberInspector &insp, char *parent); \
-   virtual void Streamer(TBuffer &b); \
-   void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
-   static const char *DeclFileName() { return __FILE__; } \
-   static const char *ImplFileName(); \
-   static int ImplFileLine(); \
-   static int DeclFileLine() { return __LINE__; }
+#define ClassDefT(name,id) ClassDef(name,id)
 
 // Obsolete macros
 #define ClassDefT2(name,Tmpl)

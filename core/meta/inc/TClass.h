@@ -286,6 +286,7 @@ public:
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
    Bool_t             InheritsFrom(const TClass *cl) const;
+   void               InterpretedShowMembers(void* obj, TMemberInspector &insp, char *parent);
    Bool_t             IsFolder() const { return kTRUE; }
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;
