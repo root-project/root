@@ -76,6 +76,8 @@ public:
    virtual void        Terminate();
    virtual EAbort      GetAbort() const;
    virtual Long64_t    GetStatus() const;
+   virtual TClass     *GetInterpretedClass() const;
+   virtual TSelector  *GetInterpretedSelector() const { return fIntSelector; }
 
    ClassDef(TSelectorCint,0)  //A utility class for tree and object processing (interpreted version)
 };

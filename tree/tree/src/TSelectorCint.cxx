@@ -394,3 +394,12 @@ Long64_t TSelectorCint::GetStatus() const
       return 0; // emulate for old version
    }
 }
+
+//______________________________________________________________________________
+TClass *TSelectorCint::GetInterpretedClass() const
+{
+   // Retrieve the TClass object for the interpreted class.
+
+   if (!fClass) return 0;
+   return TClass::GetClass(gCint->ClassInfo_FullName(fClass), kTRUE);
+}
