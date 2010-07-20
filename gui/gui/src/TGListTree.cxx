@@ -887,7 +887,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
       if (item->GetTipTextLength() > 0) {
 
          SetToolTipText(item->GetTipText(), item->fXtext,
-                        item->fY - pos.fY + item->fHeight - 4, 1000);
+                        item->fY - pos.fY + item->fHeight, 1000);
 
       } else if (fAutoTips && item->GetUserData()) {
          // must derive from TObject (in principle user can put pointer
@@ -895,7 +895,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
          TObject *obj = (TObject *)item->GetUserData();
          if (obj->InheritsFrom(TObject::Class())) {
             SetToolTipText(obj->GetTitle(), item->fXtext,
-                           item->fY - pos.fY + item->fHeight - 4, 1000);
+                           item->fY - pos.fY + item->fHeight, 1000);
          }
       }
       fTipItem = item;

@@ -307,17 +307,65 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
       y = fY;
    }
 
+   Int_t move = 0;
+   Window_t dum1, dum2;
+   UInt_t mask = 0;
+   Int_t mx, my;
    UInt_t screenW = fClient->GetDisplayWidth();
    UInt_t screenH = fClient->GetDisplayHeight();
 
-   if (x + fWidth > screenW)
+   gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(), 
+                           dum1, dum2, mx, my, mx, my, mask);
+
+   fLabel->SetWrapLength(-1);
+   Resize(GetDefaultSize());
+
+   // don't allow tooltip text lines longer than half the screen size
+   if (fWidth > (screenW/2))
+      fLabel->SetWrapLength((screenW/2)-15);
+   Resize(GetDefaultSize());
+
+   if (x + fWidth > screenW) {
       x = screenW - fWidth;
+      move += 1;
+   }
 
    if (y+4 + GetHeight() > screenH) {
-      if (fWindow)
-         y -= GetHeight() + fWindow->GetHeight() + 2*4;
-      else
-         y -= GetHeight() + py1-py2 + 2*4;
+      y = screenH - (fHeight + 25);
+      move += 2;
+   }
+
+   // check if the mouse is inside the tooltip (may happen after 
+   // adjusting the position when out of screen) and place the tooltip 
+   // on the other side of the mouse pointer
+   TGRectangle rect(x, y, x+fWidth, y+fHeight);
+   if (rect.Contains(mx, my)) {
+      if (move == 1) { // left
+         if (fWidth+15 < mx)
+            x = mx - fWidth - 15;
+         else if (my + fHeight+15 < screenH)
+            y = my + 15;
+         else if (fHeight+15 < my)
+            y = my - fHeight - 15;
+      }
+      else if (move == 2) { // up
+         if (mx + fWidth+15 < screenW)
+            x = mx + 15;
+         else if (fHeight+15 < my)
+            y = my - fHeight - 15;
+         else if (fWidth+15 < mx)
+            x = mx - fWidth - 15;
+      }
+      else { // up & left, right, down, ...
+         if (my + fHeight+15 < screenH)
+            y = my + 15;
+         else if (mx + fWidth+15 < screenW)
+            x = mx + 15;
+         else if (fWidth+15 < mx)
+            x = mx - fWidth - 15;
+         else if (fHeight+15 < my)
+            y = my - fHeight - 15;
+      }
    }
 
    Show(x, y+4);
