@@ -39,12 +39,16 @@ if ($?OLD_ROOTSYS) then
 endif
 
 
-# Grab the default man path before set the path
-# to avoid duplicates 
-if `which manpath > /dev/null` then
-   set default_manpath = `manpath`
+if ($?MANPATH) then
+# Nothing to do
 else
-   set default_manpath = `man -w`
+   # Grab the default man path before set the path
+   # to avoid duplicates 
+   if `which manpath > /dev/null` then
+      set default_manpath = `manpath`
+   else
+      set default_manpath = `man -w`
+   endif
 endif
 
 set path = (@bindir@ $path)
