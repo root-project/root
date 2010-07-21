@@ -1438,7 +1438,8 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       Double_t binContent, binCount, binError, binSumw2;
       //connection between x and y bin number and linear global bin number:
       //global bin = xbin + (nxbins+2) * ybin
-      Int_t oldybin,oldxbin = 1;
+      Int_t oldxbin = 1;
+      Int_t oldybin = 1;
       //global bin number
       Int_t bin;
       for(Int_t xbin = 1; xbin <= newxbins; xbin++){
