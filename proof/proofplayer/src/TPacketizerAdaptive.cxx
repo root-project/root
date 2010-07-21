@@ -103,10 +103,12 @@ public:
       // and 1 if elem.entries < obj.elem.entries.
       const TFileStat *fst = dynamic_cast<const TFileStat*>(obj);
       if (fst && GetElement() && fst->GetElement()) {
-         if (GetElement()->GetEntries() > 0 && fst->GetElement()->GetEntries() > 0) {
-            if (GetElement()->GetEntries() > fst->GetElement()->GetEntries()) {
+         Long64_t ent = GetElement()->GetEntries(kTRUE, kFALSE);
+         Long64_t entfst = fst->GetElement()->GetEntries(kTRUE, kFALSE);
+         if (ent > 0 && entfst > 0) {
+            if (ent > entfst) {
                return 1;
-            } else if (GetElement()->GetEntries() < fst->GetElement()->GetEntries()) {
+            } else if (ent < entfst) {
                return -1;
             } else {
                return 0;
@@ -119,7 +121,7 @@ public:
    void Print(Option_t * = 0) const
    {  // Notify file name and entries
       Printf("TFileStat: %s %lld", fElement ? fElement->GetName() : "---",
-                                   fElement ? fElement->GetEntries() : -1);
+                                   fElement ? fElement->GetEntries(kTRUE, kFALSE) : -1);
    }
 
    static TSortedList *GetFilesToProcess();
@@ -1318,7 +1320,7 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
                Long64_t maxEntries = -1;
                if (TFileStat::GetFilesToProcess()->First()) {
                   TDSetElement *elem = (TDSetElement *) ((TFileStat *) TFileStat::GetFilesToProcess()->First())->GetElement();
-                  if (elem) maxEntries = elem->GetEntries();
+                  if (elem) maxEntries = elem->GetEntries(kTRUE, kFALSE);
                }
                if (maxEntries > remEntries / fSlaveStats->GetSize() * fMaxEntriesRatio) {
                   PDB(kPacketizer,3) {
