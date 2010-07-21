@@ -77,6 +77,8 @@
 //                   'event_<num>.root' where <num>=1,2,...
 //      - 'files=N'  to change the number of files to be analysed (default
 //                   is 10, max is 50 for the HTTP server).
+//      - 'uneven'   to process uneven entries from files following the scheme
+//                   {50000,5000,5000,5000,5000} and so on
 //
 //      root[] runProof("eventproc")
 //
@@ -528,7 +530,7 @@ void runProof(const char *what = "simple",
          }
       }
       Int_t nhist = (aNhist.IsNull()) ? 100 : aNhist.Atoi();
-      Printf("\nrunProof: running \"simple\" with nhist= %d and nevt= %d\n", nhist, nevt);
+      Printf("\nrunProof: running \"simple\" with nhist= %d and nevt= %lld\n", nhist, nevt);
 
       // The number of histograms is added as parameter in the input list
       proof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
@@ -622,7 +624,7 @@ void runProof(const char *what = "simple",
       }
       // Setting the default number of events, if needed
       nevt = (nevt < 0) ? 100 : nevt;
-      Printf("\nrunProof: running \"Pythia01\" nevt= %d\n", nevt);
+      Printf("\nrunProof: running \"Pythia01\" nevt= %lld\n", nevt);
       // The selector string
       sel.Form("%s/proof/ProofPythia.C%s", tutorials.Data(), aMode.Data());
       // Run it for nevt times
@@ -643,7 +645,7 @@ void runProof(const char *what = "simple",
 
       // Setting the default number of events, if needed
       nevt = (nevt < 0) ? 100 : nevt;
-      Printf("\nrunProof: running \"event\" nevt= %d\n", nevt);
+      Printf("\nrunProof: running \"event\" nevt= %lld\n", nevt);
       // The selector string
       sel.Form("%s/proof/ProofEvent.C%s", tutorials.Data(), aMode.Data());
       // Run it for nevt times
@@ -664,7 +666,8 @@ void runProof(const char *what = "simple",
       proof->ShowEnabledPackages(); 
 
       // Extract the number of files to process, data source and
-      // other parameters controlling the run ... 
+      // other parameters controlling the run ...
+      Bool_t uneven = kFALSE;
       TString aFiles, aDataSrc("http://root.cern.ch/files/data");
       proof->SetParameter("ProofEventProc_Read", "optimized");
       while (args.Tokenize(tok, from, " ")) {
@@ -687,6 +690,8 @@ void runProof(const char *what = "simple",
          } else if (tok == "readall") {
             proof->SetParameter("ProofEventProc_Read", "readall");
             Printf("runProof: eventproc: reading the full event");
+         } else if (tok == "uneven") {
+            uneven = kTRUE;
          }
       }
       Int_t nFiles = (aFiles.IsNull()) ? 10 : aFiles.Atoi();
@@ -702,7 +707,14 @@ void runProof(const char *what = "simple",
       TString fn;
       for (i = 1; i <= nFiles; i++) {
          fn.Form("%s/event_%d.root", aDataSrc.Data(), i);
-         c->AddFile(fn.Data());
+         if (uneven) {
+            if ((i - 1)%5 == 0)
+               c->AddFile(fn.Data(), 50000);
+            else
+               c->AddFile(fn.Data(), 5000);
+         } else {
+            c->AddFile(fn.Data());
+         }
       }
       c->SetProof();
 
@@ -722,7 +734,7 @@ void runProof(const char *what = "simple",
 
       // Set the default number of events, if needed
       nevt = (nevt < 0) ? 1000 : nevt;
-      Printf("\nrunProof: running \"ntuple\" with nevt= %d\n", nevt);
+      Printf("\nrunProof: running \"ntuple\" with nevt= %lld\n", nevt);
 
       // Output file
       TString fout = TString::Format("%s/ProofNtuple.root", gSystem->WorkingDirectory());
@@ -767,7 +779,7 @@ void runProof(const char *what = "simple",
 
       // Set the default number of events, if needed
       nevt = (nevt < 0) ? 1000000 : nevt;
-      Printf("\nrunProof: running \"dataset\" with nevt= %d\n", nevt);
+      Printf("\nrunProof: running \"dataset\" with nevt= %lld\n", nevt);
 
       // Ask for registration of the dataset (the default is the the TFileCollection is return
       // without registration; the name of the TFileCollection is the name of the dataset

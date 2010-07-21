@@ -103,8 +103,8 @@ public:
       // and 1 if elem.entries < obj.elem.entries.
       const TFileStat *fst = dynamic_cast<const TFileStat*>(obj);
       if (fst && GetElement() && fst->GetElement()) {
-         Long64_t ent = GetElement()->GetEntries(kTRUE, kFALSE);
-         Long64_t entfst = fst->GetElement()->GetEntries(kTRUE, kFALSE);
+         Long64_t ent = GetElement()->GetNum();
+         Long64_t entfst = fst->GetElement()->GetNum();
          if (ent > 0 && entfst > 0) {
             if (ent > entfst) {
                return 1;
@@ -121,7 +121,7 @@ public:
    void Print(Option_t * = 0) const
    {  // Notify file name and entries
       Printf("TFileStat: %s %lld", fElement ? fElement->GetName() : "---",
-                                   fElement ? fElement->GetEntries(kTRUE, kFALSE) : -1);
+                                   fElement ? fElement->GetNum() : -1);
    }
 
    static TSortedList *GetFilesToProcess();
@@ -1318,15 +1318,15 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
             if (TFileStat::GetFilesToProcess() && TFileStat::GetFilesToProcess()->GetSize() <= fSlaveStats->GetSize()) {
                Long64_t remEntries = fTotalEntries - GetEntriesProcessed();
                Long64_t maxEntries = -1;
-               if (TFileStat::GetFilesToProcess()->First()) {
-                  TDSetElement *elem = (TDSetElement *) ((TFileStat *) TFileStat::GetFilesToProcess()->First())->GetElement();
-                  if (elem) maxEntries = elem->GetEntries(kTRUE, kFALSE);
+               if (TFileStat::GetFilesToProcess()->Last()) {
+                  TDSetElement *elem = (TDSetElement *) ((TFileStat *) TFileStat::GetFilesToProcess()->Last())->GetElement();
+                  if (elem) maxEntries = elem->GetNum();
                }
                if (maxEntries > remEntries / fSlaveStats->GetSize() * fMaxEntriesRatio) {
                   PDB(kPacketizer,3) {
-                     Info("CalculatePacketSize", "switching off synchronization of packet and cache sizes:");
-                     Info("CalculatePacketSize", " few files (%d) remaining of very different sizes (max/avg = %.2f > %.2f)",
-                                                 TFileStat::GetFilesToProcess()->GetSize(),
+                     Info("CalculatePacketSize", "%s: switching off synchronization of packet and cache sizes:", slstat->GetOrdinal());
+                     Info("CalculatePacketSize", "%s: few files (%d) remaining of very different sizes (max/avg = %.2f > %.2f)",
+                                                 slstat->GetOrdinal(), TFileStat::GetFilesToProcess()->GetSize(),
                                                 (Double_t)maxEntries / remEntries * fSlaveStats->GetSize(), fMaxEntriesRatio);
                   }
                   cpsync = kFALSE;
