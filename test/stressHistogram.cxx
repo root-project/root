@@ -109,7 +109,7 @@ enum compareOptions {
 };
 
 const int defaultEqualOptions = 0; //cmpOptPrint;
-// int defaultEqualOptions = cmpOptPrint;
+//int defaultEqualOptions = cmpOptPrint;
 
 const double defaultErrorLimit = 1.E-10;
 
@@ -7045,24 +7045,26 @@ bool testArrayRebin()
    for ( Int_t i = 0; i < nEvents; ++i )
       h1->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
-   // Create vector 
+   // Create vector - generate bin edges ( nbins is always > 2)
+   // ignore fact that array may contains bins with zero size 
    Double_t * rebinArray = new Double_t[rebin];
    r.RndmArray(rebin, rebinArray);
    std::sort(rebinArray, rebinArray + rebin);
    for ( Int_t i = 0; i < rebin; ++i ) {
       rebinArray[i] = TMath::Nint( rebinArray[i] * ( h1->GetNbinsX() - 2 ) + 2 );
-      rebinArray[i] = h1->GetBinLowEdge( h1->GetXaxis()->FindBin( rebinArray[i] ) );
+      rebinArray[i] = h1->GetBinLowEdge( rebinArray[i] );
    }
    
 
-   rebinArray[0] = minRange;
-   rebinArray[rebin-1] = maxRange;
+//    rebinArray[0] = minRange;
+//    rebinArray[rebin-1] = maxRange;
 
-   #ifdef __DEBUG__
+#ifdef __DEBUG__
+   std::cout << "min range = " << minRange << " max range " << maxRange << std::endl;
    for ( Int_t i = 0; i < rebin; ++i ) 
       cout << rebinArray[i] << endl;
    cout << "rebin: " << rebin << endl;
-   #endif
+#endif
 
    TH1D* h2 = static_cast<TH1D*>( h1->Rebin(rebin - 1, "testArrayRebin", rebinArray) );
 
@@ -7093,17 +7095,18 @@ bool testArrayRebinProfile()
       p1->Fill( x, y );
    }
 
-   // Create vector 
+   // Create vector - generate bin edges ( nbins is always > 2)
+   // ignore fact that array may contains bins with zero size 
    Double_t * rebinArray = new Double_t[rebin];
    r.RndmArray(rebin, rebinArray);
    std::sort(rebinArray, rebinArray + rebin);
    for ( Int_t i = 0; i < rebin; ++i ) {
       rebinArray[i] = TMath::Nint( rebinArray[i] * ( p1->GetNbinsX() - 2 ) + 2 );
-      rebinArray[i] = p1->GetBinLowEdge( p1->GetXaxis()->FindBin( rebinArray[i] ) );
+      rebinArray[i] = p1->GetBinLowEdge( rebinArray[i] );
    }
 
-   rebinArray[0] = minRange;
-   rebinArray[rebin-1] = maxRange;
+//    rebinArray[0] = minRange;
+//    rebinArray[rebin-1] = maxRange;
 
    #ifdef __DEBUG__
    for ( Int_t i = 0; i < rebin; ++i ) 
@@ -7131,10 +7134,11 @@ bool testArrayRebinProfile()
 
 bool test2DRebin()
 {
-   // Tests rebin method for 1D Histogram
+   // Tests rebin method for 2D Histogram
 
    Int_t xrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
    Int_t yrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
+   // make the bins of the orginal histo not an exact divider to leave an extra bin
    TH2D* h2d = new TH2D("h2d","Original Histogram", 
                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
                        yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
@@ -7142,18 +7146,49 @@ bool test2DRebin()
    UInt_t seed = r.GetSeed();
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
-      h2d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ) );
+      h2d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ));
 
-   TH2D* h2d2 = (TH2D*) h2d->Rebin2D(xrebin,yrebin, "h2d2");
+   TH2D* h2d2 = (TH2D*) h2d->Rebin2D(xrebin,yrebin, "p2d2");
 
+   // range of rebinned histogram may be different than original one
    TH2D* h3 = new TH2D("test2DRebin", "test2DRebin", 
-                       h2d->GetNbinsX() / xrebin, minRange, maxRange,
-                       h2d->GetNbinsY() / yrebin, minRange, maxRange );
+                       h2d->GetNbinsX() / xrebin, h2d2->GetXaxis()->GetXmin(), h2d2->GetXaxis()->GetXmax(),
+                       h2d->GetNbinsY() / yrebin, h2d2->GetYaxis()->GetXmin(), h2d2->GetYaxis()->GetXmax() );
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
-   bool ret = equals("TestIntRebin2D", h2d2, h3, cmpOptStats);
+   bool ret = equals("TestIntRebin2D", h2d2, h3, cmpOptStats); // | cmpOptDebug);
+   delete h2d;
+   delete h2d2;
+   return ret;
+}
+
+bool test2DRebinProfile()
+{
+   // Tests rebin method for 2D Profile Histogram
+
+   Int_t xrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
+   Int_t yrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
+   TProfile2D* h2d = new TProfile2D("p2d","Original Profile Histogram", 
+                       xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
+                       yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
+
+   UInt_t seed = r.GetSeed();
+   r.SetSeed(seed);
+   for ( Int_t i = 0; i < nEvents; ++i )
+      h2d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform(0,10) );
+
+   TProfile2D* h2d2 = (TProfile2D*) h2d->Rebin2D(xrebin,yrebin, "p2d2");
+
+   TProfile2D* h3 = new TProfile2D("test2DRebinProfile", "test2DRebin", 
+                                   h2d->GetNbinsX() / xrebin, h2d2->GetXaxis()->GetXmin(), h2d2->GetXaxis()->GetXmax(), 
+                                   h2d->GetNbinsY() / yrebin, h2d2->GetYaxis()->GetXmin(), h2d2->GetYaxis()->GetXmax() );
+   r.SetSeed(seed);
+   for ( Int_t i = 0; i < nEvents; ++i )
+      h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform(0,10) );
+
+   bool ret = equals("TestIntRebin2DProfile", h2d2, h3, cmpOptStats);
    delete h2d;
    delete h2d2;
    return ret;
@@ -8645,11 +8680,11 @@ int stressHistogram()
                                         rangeTestPointer };
 
   // Test 4
-   const unsigned int numberOfRebin = 8;
+   const unsigned int numberOfRebin = 9;
    pointer2Test rebinTestPointer[numberOfRebin] = { testIntegerRebin,       testIntegerRebinProfile,
                                                     testIntegerRebinNoName, testIntegerRebinNoNameProfile,
                                                     testArrayRebin,         testArrayRebinProfile,
-                                                    test2DRebin,
+                                                    test2DRebin, test2DRebinProfile,
                                                     testSparseRebin1};
    struct TTestSuite rebinTestSuite = { numberOfRebin, 
                                         "Histogram Rebinning..............................................",
