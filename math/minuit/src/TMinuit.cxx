@@ -587,6 +587,8 @@ Int_t TMinuit::Command(const char *command)
 //     Equivalent to MNEXCM except that the command is given as a
 //     character string.
 // See TMinuit::mnhelp for the full list of available commands
+// See also http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html for 
+//  a complete documentation of all the available commands 
 //
 // Returns the status of the execution:
 //   = 0: command executed normally
@@ -2654,6 +2656,10 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
 //*-*             10: END command
 //*-*             11: EXIT or STOP command
 //*-*             12: RETURN command
+//*-*
+//*-*     see also http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html for the possible list 
+//*-*     of all Minuit commands 
+//*-*     
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    /* Initialized data */
