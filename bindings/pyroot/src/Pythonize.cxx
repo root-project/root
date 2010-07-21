@@ -957,61 +957,23 @@ namespace {
    }
 
 //____________________________________________________________________________
-   PyObject* StlIterIsEqual( ObjectProxy* self, ObjectProxy* other )
+   PyObject* StlIterIsEqual( PyObject* self, PyObject* other )
    {
-   // Used if operator== not available (e.g. if a global overload as under gcc),
-   // and works by assuming that the iterator object is at least sizeof(long*),
-   // that those first sizeof(long*) bytest are good enough for the comparison.
-
-      if ( ! ObjectProxy_Check( self ) || ! ObjectProxy_Check( other ) ) {
-         Py_INCREF( Py_False );
-         return Py_False;
-      }
-
-   // mismatch of types, so can't be equal
-      if ( self->ob_type != other->ob_type ) {
-         Py_INCREF( Py_False );
-         return Py_False;
-      }
-
-      long** lself  = (long**)self->GetObject();
-      long** lother = (long**)other->GetObject();
-
-   // both pointing nowhere makes them equal (since types match, as per above)
-      if ( ! lself && ! lother ) {
-         Py_INCREF( Py_True );
-         return Py_True;
-      }
-
-   // one of them non-zero makes a non-match
-      if ( ! lself || ! lother ) {
-         Py_INCREF( Py_False );
-         return Py_False;
-      }
-
-   // work on the above assumption and compare the first sizeof(long*)
-      if ( *lself == *lother ) {
-         Py_INCREF( Py_True );
-         return Py_True;
-      }
-
-      Py_INCREF( Py_False );
-      return Py_False;
+   // Called if operator== not available (e.g. if a global overload as under gcc).
+   // An exception is raised as the user should fix the dictionary.
+      return PyErr_Format( PyExc_LookupError, 
+         "No operator==(const %s&, const %s&) available in the dictionary!",
+         Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
    }
 
 //____________________________________________________________________________
-   PyObject* StlIterIsNotEqual( ObjectProxy* self, ObjectProxy* other )
+   PyObject* StlIterIsNotEqual( PyObject* self, PyObject* other )
    {
-      PyObject* result = StlIterIsEqual( self, other );
-      if ( result == Py_True ) {
-         Py_INCREF( Py_False );
-         Py_DECREF( result );
-         return Py_False;
-      } else {
-         Py_INCREF( Py_True );
-         Py_DECREF( result );
-         return Py_True;
-      }
+   // Called if operator== not available (e.g. if a global overload as under gcc).
+   // An exception is raised as the user should fix the dictionary.
+      return PyErr_Format( PyExc_LookupError,
+         "No operator!=(const %s&, const %s&) available in the dictionary!", 
+         Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
    }
 
 

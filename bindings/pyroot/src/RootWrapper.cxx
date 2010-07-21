@@ -653,23 +653,16 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
       }
    }
 
-// still here ... try functions (first ROOT, then CINT: sync is too slow)
-   TFunction* func =
-      (TFunction*)gROOT->GetListOfGlobalFunctions( kFALSE )->FindObject( name.c_str() );
-   if ( func )
-      return (PyObject*)MethodProxy_New( name,
-                new TFunctionHolder< TScopeAdapter, TMemberAdapter >( func ) );
-
+// still here ... try functions (sync has been fixed, so is okay)
    std::vector< PyCallable* > overloads;
-   G__MethodInfo mt;
-   while ( mt.Next() ) {
-      if ( mt.IsValid() && mt.Name() == name ) {
-      // add to list of globals (same as synchronization would do for all funcs)
-         TFunction* f = new TFunction( new G__MethodInfo( mt ) );
-         gROOT->GetListOfGlobalFunctions()->Add( f );
 
-         overloads.push_back( new TFunctionHolder< TScopeAdapter, TMemberAdapter >( f ) );
-      }
+   TCollection* funcs = gROOT->GetListOfGlobalFunctions( kTRUE );
+   TIter ifunc( funcs );
+
+   TFunction* func = 0;
+   while ( (func = (TFunction*)ifunc.Next()) ) {
+      if ( func->GetName() == name )
+         overloads.push_back( new TFunctionHolder< TScopeAdapter, TMemberAdapter >( func ) );
    }
 
    if ( ! overloads.empty() )

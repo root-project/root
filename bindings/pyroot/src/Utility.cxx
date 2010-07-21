@@ -307,21 +307,9 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
       return kFALSE;
 
 // retrieve the class names to match the signature of any found global functions
-   PyObject* pyclass = PyObject_GetAttr( right, PyStrings::gClass );
-   if ( ! pyclass ) {
-      PyErr_Clear();
-      return kFALSE;
-   }
-
-   PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
-   std::string rcname = PyString_AS_STRING( pyname );
-   Py_DECREF( pyname ); pyname = 0;
-   Py_DECREF( pyclass ); pyclass = 0;
-
-   pyclass = PyObject_GetAttr( left, PyStrings::gClass );
-   pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
-   std::string lcname = PyString_AS_STRING( pyname );
-   Py_DECREF( pyname ); pyname = 0;
+   std::string rcname = ClassName( right );
+   std::string lcname = ClassName( left );
+   PyObject* pyclass = PyObject_GetAttr( left, PyStrings::gClass );
 
    Bool_t result = AddBinaryOperator( pyclass, lcname, rcname, op, label );
 
@@ -595,6 +583,27 @@ const std::string PyROOT::Utility::Compound( const std::string& name )
    }
 
    return compound;
+}
+
+//____________________________________________________________________________
+const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
+{
+   std::string clname = "<unknown>";
+   PyObject* pyclass = PyObject_GetAttr( pyobj, PyStrings::gClass );
+   if ( pyclass != 0 ) {
+      PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
+
+      if ( pyname != 0 ) {
+         clname = PyString_AS_STRING( pyname );
+         Py_DECREF( pyname );
+      } else
+         PyErr_Clear();
+
+      Py_DECREF( pyclass );
+   } else
+      PyErr_Clear();
+
+   return clname;
 }
 
 //____________________________________________________________________________
