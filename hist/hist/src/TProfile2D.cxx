@@ -1389,11 +1389,11 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       Double_t *er1 = GetW2();
       Double_t *en1 = GetB();
       Double_t *ew1 = GetB2();
-      for(Int_t bin=0; bin < (nxbins+2)*(nybins+2); bin++){
-	 oldBins[bin]   = cu1[bin];
-	 oldCount[bin]  = en1[bin];
-	 oldErrors[bin] = er1[bin];
-	 if (ew1 && fBinSumw2.fN) oldBinw2[bin]  = ew1[bin];
+      for(Int_t ibin=0; ibin < (nxbins+2)*(nybins+2); ibin++){
+	 oldBins[ibin]   = cu1[ibin];
+	 oldCount[ibin]  = en1[ibin];
+	 oldErrors[ibin] = er1[ibin];
+	 if (ew1 && fBinSumw2.fN) oldBinw2[ibin]  = ew1[ibin];
       }
 
       // create a clone of the old profile if newname is specified
