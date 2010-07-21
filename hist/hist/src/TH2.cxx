@@ -1567,9 +1567,9 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    //   histograms has new errors correctly calculated.
    //
    //   examples: if hpxpy is an existing TH2 histogram with 40 x 40 bins
-   //     hpxpy->Rebin();  // merges two bins along the xaxis and yaxis in one in hpxpy
-   //                      // Carefull: previous contents of hpxpy are lost
-   //     hpxpy->RebinX(5); //merges five bins along the xaxis in one in hpxpy
+   //     hpxpy->Rebin2D();  // merges two bins along the xaxis and yaxis in one in hpxpy
+   //                        // Carefull: previous contents of hpxpy are lost
+   //     hpxpy->RebinX(5);  //merges five bins along the xaxis in one in hpxpy
    //     TH2 *hnew = hpxpy->RebinY(5,"hnew"); // creates a new histogram hnew
    //                                          // merging 5 bins of h1 along the yaxis in one bin
    //
@@ -1604,7 +1604,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    Double_t *oldBins = new Double_t[(nxbins+2)*(nybins+2)];
    for (xbin = 0; xbin < nxbins+2; xbin++) {
       for (ybin = 0; ybin < nybins+2; ybin++) {
-         oldBins[xbin*(nybins+2)+ybin] = GetBinContent(xbin, ybin);
+         oldBins[ybin*(nxbins+2)+xbin] = GetBinContent(xbin, ybin);
       }
    }
    Double_t *oldErrors = 0;
@@ -1612,7 +1612,8 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       oldErrors = new Double_t[(nxbins+2)*(nybins+2)];
       for (xbin = 0; xbin < nxbins+2; xbin++) {
          for (ybin = 0; ybin < nybins+2; ybin++) {
-            oldErrors[xbin*(nybins+2)+ybin] = GetBinError(xbin, ybin);
+	    //conventions are the same as in TH1::GetBin(xbin,ybin)
+            oldErrors[ybin*(nxbins+2)+xbin] = GetBinError(xbin, ybin);
          }
       }
    }
@@ -1683,8 +1684,10 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 
       Double_t binContent, binError;
       Int_t oldxbin = 1;
+      Int_t oldybin = 1;
+      Int_t bin;
       for (xbin = 1; xbin <= newxbins; xbin++) {
-         Int_t oldybin = 1;
+         oldybin = 1;
          for (ybin = 1; ybin <= newybins; ybin++) {
             binContent = 0;
             binError   = 0;
@@ -1692,8 +1695,10 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
                if (oldxbin+i > nxbins) break;
                for (j =0; j < nygroup; j++) {
                   if (oldybin+j > nybins) break;
-                  binContent += oldBins[oldybin+j + (oldxbin+i)*(nybins+2)];
-                  if (oldErrors) binError += oldErrors[oldybin+ j + (oldxbin+i)*(nybins+2)]*oldErrors[oldybin + j + (oldxbin+i)*(nybins+2)];
+		  //get global bin (same conventions as in TH1::GetBin(xbin,ybin)
+		  bin = oldxbin + i + (oldybin + j)*(nxbins + 2);
+                  binContent += oldBins[bin];
+                  if (oldErrors) binError += oldErrors[bin]*oldErrors[bin];
                }
             }
             hnew->SetBinContent(xbin,ybin, binContent);
@@ -1704,34 +1709,65 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       }
 
       // Recompute correct underflows and overflows.
-      hnew->SetBinContent(newxbins+1,newybins+1,oldBins[(nxbins+1)*(nybins+2)+(nybins+1)]);
-      hnew->SetBinContent(0,0,oldBins[0]);
-      hnew->SetBinContent(0,newybins+1,oldBins[nybins+1]);
-      hnew->SetBinContent(newxbins+1,0,oldBins[(nxbins+1)*(nybins+2)]);
-      if (oldErrors) {
-         hnew->SetBinError(newxbins+1,newybins+1,oldErrors[(nxbins+1)*(nybins+2)+(nybins+1)]);
-         hnew->SetBinError(0,0,oldErrors[0]);
-         hnew->SetBinError(0,newybins+1,oldErrors[nybins+1]);
-         hnew->SetBinError(newxbins+1,0,oldErrors[(nxbins+1)*(nybins+2)]);
+
+      //copy old underflow bin in x and y (0,0)
+      hnew->SetBinContent(0,0,oldBins[0]);      
+      if (oldErrors) hnew->SetBinError(0,0,oldErrors[0]);         
+      
+      //calculate new overflow bin in x and y (newxbins+1,newybins+1)
+      binContent = 0;
+      binError = 0;
+      for(xbin = oldxbin; xbin <= nxbins+1; xbin++)
+	 for(ybin = oldybin; ybin <= nybins+1; ybin++){
+	    bin = xbin + (nxbins+2)*ybin;
+	    binContent += oldBins[bin];
+	    if(oldErrors) binError += oldErrors[bin]*oldErrors[bin];
+	 }
+      hnew->SetBinContent(newxbins+1,newybins+1,binContent);
+      if(oldErrors) hnew->SetBinError(newxbins+1,newybins+1,TMath::Sqrt(binError));
+      
+      //calculate new underflow bin in x and overflow in y (0,newybins+1)
+      binContent = 0;
+      binError = 0;
+      for(ybin = oldybin; ybin <= nybins+1; ybin++){
+	 bin = ybin*(nxbins+2);
+	 binContent += oldBins[bin];
+	 if(oldErrors) binError += oldErrors[bin] * oldErrors[bin];
       }
+      hnew->SetBinContent(0,newybins+1,binContent);
+      if(oldErrors) hnew->SetBinError(0,newybins+1,TMath::Sqrt(binError));
+      
+      //calculate new overflow bin in x and underflow in y (newxbins+1,0)
+      binContent = 0;
+      binError = 0;
+      for(xbin = oldxbin; xbin <= nxbins+1; xbin++){
+	 bin = xbin;
+	 binContent += oldBins[bin];
+	 if(oldErrors) binError += oldErrors[bin] * oldErrors[bin];
+      }
+      hnew->SetBinContent(newxbins+1,0,binContent);
+      if(oldErrors) hnew->SetBinError(newxbins+1,0,TMath::Sqrt(binError));
 
       //  recompute under/overflow contents in y for the new  x bins
       Double_t binContent0, binContent2;
       Double_t binError0, binError2;
-      oldxbin = 1;
+      Int_t oldxbin2, oldybin2;
+      Int_t ufbin, ofbin;
+      oldxbin2 = 1;
       for (xbin = 1; xbin<=newxbins; xbin++) {
          binContent0 = binContent2 = 0;
          binError0 = binError2 = 0;
          for (i=0; i<nxgroup; i++) {
-            if (oldxbin+i > nxbins) break;
-            //N.B  convention used for index is opposite than TH1::GetBin(ix,iy)
-            Int_t ufbin = (oldxbin+i)*(nybins+2);   // index for y underflow bins
-            Int_t ofbin = (oldxbin+i)*(nybins+2) + (nybins+1);   // index for y overflow bins
-            binContent0 += oldBins[ufbin];
-            binContent2 += oldBins[ofbin];
-            if (oldErrors)  {
-               binError0 += oldErrors[ufbin] * oldErrors[ufbin];
-               binError2 += oldErrors[ofbin] * oldErrors[ofbin];
+            if (oldxbin2+i > nxbins) break;
+	    //old underflow bin (in y)
+	    ufbin = oldxbin2 + i;
+	    binContent0 += oldBins[ufbin];
+	    if(oldErrors) binError0 += oldErrors[ufbin] * oldErrors[ufbin];
+	    for(ybin = oldybin; ybin <= nybins + 1; ybin++){
+	       //old overflow bin (in y)
+	       ofbin = ufbin + ybin*(nxbins+2);
+	       binContent2 += oldBins[ofbin];
+	       if(oldErrors) binError2 += oldErrors[ofbin] * oldErrors[ofbin];
             }
          }
          hnew->SetBinContent(xbin,0,binContent0);
@@ -1740,23 +1776,24 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
             hnew->SetBinError(xbin,0,TMath::Sqrt(binError0));
             hnew->SetBinError(xbin,newybins+1,TMath::Sqrt(binError2) );
          }
-         oldxbin += nxgroup;
+         oldxbin2 += nxgroup;
       }
 
       //  recompute under/overflow contents in x for the new y bins
-      Int_t oldybin = 1;
-      for (ybin = 1; ybin<=newybins; ybin++) {
+      oldybin2 = 1;
+      for (ybin = 1; ybin<=newybins; ybin++){
          binContent0 = binContent2 = 0;
          binError0 = binError2 = 0;
          for (i=0; i<nygroup; i++) {
-            if (oldybin+i > nybins) break;
-            Int_t ufbin = (oldybin+i);   // global index for x underflow bins
-            Int_t ofbin = (nxbins+1)*(nybins+2) + (oldybin+i);   // global index for x overflow bins
+            if (oldybin2+i > nybins) break;
+	    //old underflow bin (in x)
+	    ufbin = (oldybin2 + i)*(nxbins+2);
             binContent0 += oldBins[ufbin];
-            binContent2 += oldBins[ofbin];
-            if (oldErrors)  {
-               binError0 += oldErrors[ufbin] * oldErrors[ufbin];
-               binError2 += oldErrors[ofbin] * oldErrors[ofbin];
+	    if(oldErrors) binError0 += oldErrors[ufbin] * oldErrors[ufbin];
+	    for(xbin = oldxbin; xbin <= nxbins+1; xbin++){
+	       ofbin = ufbin + xbin;
+	       binContent2 += oldBins[ofbin];
+	       if(oldErrors) binError2 += oldErrors[ofbin] * oldErrors[ofbin];
             }
          }
          hnew->SetBinContent(0,ybin,binContent0);
@@ -1765,7 +1802,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
             hnew->SetBinError(0,ybin, TMath::Sqrt(binError0));
             hnew->SetBinError(newxbins+1, ybin, TMath::Sqrt(binError2));
          }
-         oldybin += nygroup;
+         oldybin2 += nygroup;
       }
    }
 

@@ -118,7 +118,9 @@ public:
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
    virtual void      RebinAxis(Double_t x, TAxis *axis);
-   virtual TProfile2D *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");     
+   virtual TProfile2D *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");
+   virtual TProfile2D *RebinX(Int_t ngroup=2, const char *newname="");
+   virtual TProfile2D *RebinY(Int_t ngroup=2, const char *newname="");     
    virtual void      SavePrimitive(ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1, Option_t *option="");
    virtual void      SetBinEntries(Int_t bin, Double_t w);

@@ -1326,11 +1326,325 @@ void TProfile2D::RebinAxis(Double_t x, TAxis *axis)
 }
 
 //______________________________________________________________________________
-TProfile2D * TProfile2D::Rebin2D(Int_t , Int_t, const char * ) {
-   // Rebin2D is not implemented for TProfile2D
-   // dummy function to flag an error and to avoid to call TH2D::Rebin2D
-   Error("TProfile2D","Rebin2D is not implemented for TProfile2D");
-   return this;
+TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newname ) {
+   //   -*-*-*Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together*-*-*-*-
+   //         =================================================================================
+   //   if newname is not blank a new profile hnew is created.
+   //   else the current histogram is modified (default)
+   //   The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this
+   //   have to be merged into one bin of hnew
+   //   If the original profile has errors stored (via Sumw2), the resulting
+   //   profile has new errors correctly calculated.
+   //
+   //   examples: if hpxpy is an existing TProfile2D profile with 40 x 40 bins
+   //     hpxpy->Rebin2D();  // merges two bins along the xaxis and yaxis in one
+   //                        // Carefull: previous contents of hpxpy are lost
+   //     hpxpy->Rebin2D(3,5);  // merges 3 bins along the xaxis and 5 bins along the yaxis in one
+   //                           // Carefull: previous contents of hpxpy are lost
+   //     hpxpy->RebinX(5); //merges five bins along the xaxis in one in hpxpy
+   //     TProfile2D *hnew = hpxpy->RebinY(5,"hnew"); // creates a new profile hnew
+   //                                                 // merging 5 bins of hpxpy along the yaxis in one bin
+   //
+   //   NOTE : If nxgroup/nygroup is not an exact divider of the number of bins,
+   //          along the xaxis/yaxis the top limit(s) of the rebinned profile
+   //          is changed to the upper edge of the xbin=newxbins*nxgroup resp.
+   //          ybin=newybins*nygroup and the remaining bins are added to
+   //          the overflow bin.
+   //          Statistics will be recomputed from the new bin contents.
+
+   //something to do?
+   if((nxgroup != 1) || (nygroup != 1)){
+      Int_t nxbins  = fXaxis.GetNbins();
+      Int_t nybins  = fYaxis.GetNbins();
+      Double_t xmin  = fXaxis.GetXmin();
+      Double_t xmax  = fXaxis.GetXmax();
+      Double_t ymin  = fYaxis.GetXmin();
+      Double_t ymax  = fYaxis.GetXmax();
+      if ((nxgroup <= 0) || (nxgroup > nxbins)) {
+	 Error("Rebin", "Illegal value of nxgroup=%d",nxgroup);
+	 return 0;
+      }
+      if ((nygroup <= 0) || (nygroup > nybins)) {
+	 Error("Rebin", "Illegal value of nygroup=%d",nygroup);
+	 return 0;
+      }
+
+      Int_t newxbins = nxbins/nxgroup;
+      Int_t newybins = nybins/nygroup;
+
+      //warning if bins are added to the overflow bin
+      if(newxbins*nxgroup != nxbins) {
+	 Warning("Rebin", "nxgroup=%d should be an exact divider of nxbins=%d",nxgroup,nxbins);
+      }
+      if(newybins*nygroup != nybins) {
+	 Warning("Rebin", "nygroup=%d should be an exact divider of nybins=%d",nygroup,nybins);
+      }
+
+      //save old bin contents in new arrays
+      Double_t *oldBins   = new Double_t[(nxbins+2)*(nybins+2)];
+      Double_t *oldCount  = new Double_t[(nxbins+2)*(nybins+2)];
+      Double_t *oldErrors = new Double_t[(nxbins+2)*(nybins+2)];
+      Double_t *oldBinw2  = (fBinSumw2.fN ? new Double_t[(nxbins+2)*(nybins)] : 0  );
+      Double_t *cu1 = GetW();
+      Double_t *er1 = GetW2();
+      Double_t *en1 = GetB();
+      Double_t *ew1 = GetB2();
+      for(Int_t bin=0; bin < (nxbins+2)*(nybins+2); bin++){
+	 oldBins[bin]   = cu1[bin];
+	 oldCount[bin]  = en1[bin];
+	 oldErrors[bin] = er1[bin];
+	 if (ew1 && fBinSumw2.fN) oldBinw2[bin]  = ew1[bin];
+      }
+
+      // create a clone of the old profile if newname is specified
+      TProfile2D *hnew = this;
+      if(newname && strlen(newname) > 0) {
+	 hnew = (TProfile2D*)Clone(newname);
+      }
+
+      // in case of nxgroup/nygroup not an exact divider of nxbins/nybins, 
+      // top limit is changed (see NOTE in method comment) 
+      if(newxbins*nxgroup != nxbins) {
+	 xmax = fXaxis.GetBinUpEdge(newxbins*nxgroup);
+	 hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+      }
+      if(newybins*nygroup != nybins) {
+	 ymax = fYaxis.GetBinUpEdge(newybins*nygroup);
+	 hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+      }
+
+      //rebin the axis
+      if((fXaxis.GetXbins()->GetSize() > 0) || (fYaxis.GetXbins()->GetSize() > 0)){
+	 Double_t* xbins = new Double_t[newxbins+1];
+	 Double_t* ybins = new Double_t[newybins+1];
+	 for(Int_t i=0; i < newxbins+1; i++)
+	    xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
+	 for(Int_t j=0; j < newybins+1; j++)
+	    ybins[j] = fYaxis.GetBinLowEdge(1+j*nygroup);
+	 hnew->SetBins(newxbins,xbins,newybins,ybins);
+	 delete [] xbins;
+	 delete [] ybins;
+      }
+      //fixed bin size
+      else{
+	 hnew->SetBins(newxbins,xmin,xmax,newybins,ymin,ymax);
+      }
+
+      //merge bins
+      Double_t *cu2 = hnew->GetW();
+      Double_t *er2 = hnew->GetW2();
+      Double_t *en2 = hnew->GetB();
+      Double_t *ew2 = hnew->GetB2();
+      Double_t binContent, binCount, binError, binSumw2;
+      //connection between x and y bin number and linear global bin number:
+      //global bin = xbin + (nxbins+2) * ybin
+      Int_t oldybin,oldxbin = 1;
+      //global bin number
+      Int_t bin;
+      for(Int_t xbin = 1; xbin <= newxbins; xbin++){
+	 oldybin = 1;
+	 for(Int_t ybin = 1; ybin <= newybins; ybin++){
+	    binContent = 0;
+	    binCount   = 0;
+	    binError   = 0;
+	    binSumw2   = 0;
+	    for(Int_t i=0; i < nxgroup; i++){
+	       if(oldxbin + i > nxbins) break;
+	       for(Int_t j=0; j < nygroup; j++){
+		  if(oldybin + j > nybins) break;
+		  bin = oldxbin + i + (nxbins+2)*(oldybin+j);
+		  binContent += oldBins[bin];
+		  binCount += oldCount[bin];
+		  binError += oldErrors[bin];
+		  if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
+	       }
+	    }
+	    bin = xbin + (newxbins + 2)*ybin;
+	    cu2[bin] = binContent;
+	    er2[bin] = binError;
+	    en2[bin] = binCount;
+	    if(fBinSumw2.fN) ew2[bin] = binSumw2;
+	    oldybin += nygroup;
+	 }
+	 oldxbin += nxgroup;
+      }
+
+      //copy the underflow bin in x and y (0,0)
+      cu2[0] = oldBins[0];
+      er2[0] = oldErrors[0];
+      en2[0] = oldCount[0];
+      if(fBinSumw2.fN) ew2[0] = oldBinw2[0];
+      //calculate overflow bin in x and y (newxbins+1,newybins+1)
+      //therefore the oldxbin and oldybin from above are needed!
+      binContent = 0;
+      binCount   = 0;
+      binError   = 0;
+      binSumw2   = 0;
+      for(Int_t i=oldxbin; i <= nxbins+1; i++){
+	 for(Int_t j=oldybin; j <= nybins+1; j++){
+	    //global bin number
+	    bin = i + (nxbins+2)*j;
+	    binContent += oldBins[bin];
+	    binCount += oldCount[bin];
+	    binError += oldErrors[bin];
+	    if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
+	 }
+      }
+      bin = (newxbins+2)*(newybins+2)-1;
+      cu2[bin] = binContent;
+      er2[bin] = binError;
+      en2[bin] = binCount;
+      if(fBinSumw2.fN) ew2[bin] = binSumw2;
+      //calculate overflow bin in x and underflow bin in y (newxbins+1,0)
+      binContent = 0;
+      binCount   = 0;
+      binError   = 0;
+      binSumw2   = 0;
+      for(Int_t i=oldxbin; i <= nxbins+1; i++){
+	 bin = i;
+	 binContent += oldBins[bin];
+	 binCount += oldCount[bin];
+	 binError += oldErrors[bin];
+	 if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
+      }
+      bin = newxbins + 1;
+      cu2[bin] = binContent;
+      er2[bin] = binError;
+      en2[bin] = binCount;
+      if(fBinSumw2.fN) ew2[bin] = binSumw2;
+      //calculate underflow bin in x and overflow bin in y (0,newybins+1)
+      binContent = 0;
+      binCount   = 0;
+      binError   = 0;
+      binSumw2   = 0;
+      for(Int_t i=oldybin; i <= nybins+1; i++){
+	 bin = i*(nxbins + 2);
+	 binContent += oldBins[bin];
+	 binCount += oldCount[bin];
+	 binError += oldErrors[bin];
+	 if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
+      }
+      bin = (newxbins + 2)*(newybins + 1);
+      cu2[bin] = binContent;
+      er2[bin] = binError;
+      en2[bin] = binCount;
+      if(fBinSumw2.fN) ew2[bin] = binSumw2;
+      //calculate under/overflow contents in y for the new x bins
+      Double_t binContentuf, binCountuf, binErroruf, binSumw2uf;
+      Double_t binContentof, binCountof, binErrorof, binSumw2of;
+      Int_t ufbin, ofbin;
+      Int_t oldxbin2 = 1;
+      for(Int_t xbin = 1; xbin <= newxbins; xbin++){
+	 binContentuf = 0;
+	 binCountuf   = 0;
+	 binErroruf   = 0;
+	 binSumw2uf   = 0;
+	 binContentof = 0;
+	 binCountof   = 0;
+	 binErrorof   = 0;
+	 binSumw2of   = 0;
+	 for(Int_t i = 0; i < nxgroup; i++){
+	    //index of under/overflow bin for y in old binning
+	    ufbin = (oldxbin2 + i);
+	    binContentuf += oldBins[ufbin];
+	    binCountuf   += oldCount[ufbin];
+	    binErroruf   += oldErrors[ufbin];
+	    if(fBinSumw2.fN) binSumw2uf   += oldBinw2[ufbin];
+	    for(Int_t j = oldybin; j <= nybins+1; j++)
+	    {
+	       ofbin = ufbin + j*(nxbins + 2);
+	       binContentof += oldBins[ofbin];
+	       binCountof   += oldCount[ofbin];
+	       binErrorof   += oldErrors[ofbin];
+	       if(fBinSumw2.fN) binSumw2of   += oldBinw2[ofbin];
+	    }
+	 }
+	 //index of under/overflow bin for y in new binning
+	 ufbin = xbin;
+	 ofbin = ufbin + (newybins + 1)*(newxbins + 2);
+	 cu2[ufbin] = binContentuf;
+	 er2[ufbin] = binErroruf;
+	 en2[ufbin] = binCountuf;
+	 if(fBinSumw2.fN) ew2[ufbin] = binSumw2uf;
+	 cu2[ofbin] = binContentof;
+	 er2[ofbin] = binErrorof;
+	 en2[ofbin] = binCountof;
+	 if(fBinSumw2.fN) ew2[ofbin] = binSumw2of;
+	 
+	 oldxbin2 += nxgroup;
+      }
+      //calculate under/overflow contents in x for the new y bins
+      Int_t oldybin2 = 1;
+      for(Int_t ybin = 1; ybin <= newybins; ybin++){
+	 binContentuf = 0;
+	 binCountuf   = 0;
+	 binErroruf   = 0;
+	 binSumw2uf   = 0;
+	 binContentof = 0;
+	 binCountof   = 0;
+	 binErrorof   = 0;
+	 binSumw2of   = 0;
+	 for(Int_t i = 0; i < nygroup; i++){
+	    //index of under/overflow bin for x in old binning
+	    ufbin = (oldybin2 + i)*(nxbins+2);
+	    binContentuf += oldBins[ufbin];
+	    binCountuf   += oldCount[ufbin];
+	    binErroruf   += oldErrors[ufbin];
+	    if(fBinSumw2.fN) binSumw2uf   += oldBinw2[ufbin];
+	    for(Int_t j = oldxbin; j <= nxbins+1; j++)
+	    {
+	       ofbin = j + ufbin;
+	       binContentof += oldBins[ofbin];
+	       binCountof   += oldCount[ofbin];
+	       binErrorof   += oldErrors[ofbin];
+	       if(fBinSumw2.fN) binSumw2of   += oldBinw2[ofbin];
+	    }
+	 }
+	 //index of under/overflow bin for x in new binning
+	 ufbin = ybin * (newxbins + 2);
+	 ofbin = newxbins + 1 + ufbin;
+	 cu2[ufbin] = binContentuf;
+	 er2[ufbin] = binErroruf;
+	 en2[ufbin] = binCountuf;
+	 if(fBinSumw2.fN) ew2[ufbin] = binSumw2uf;
+	 cu2[ofbin] = binContentof;
+	 er2[ofbin] = binErrorof;
+	 en2[ofbin] = binCountof;
+	 if(fBinSumw2.fN) ew2[ofbin] = binSumw2of;
+
+	 oldybin2 += nygroup;
+	 }
+
+      delete [] oldBins;
+      delete [] oldCount;
+      delete [] oldErrors;
+      if (oldBinw2) delete [] oldBinw2;
+
+      return hnew;
+   }
+   //nxgroup == nygroup == 1
+   else{
+      if((newname) && (strlen(newname) > 0))
+	 return (TProfile2D*)Clone(newname);
+      else
+	 return this;
+   }   
+}
+
+//______________________________________________________________________________
+TProfile2D * TProfile2D::RebinX(Int_t ngroup,const char * newname ) {
+// Rebin only the X axis
+// see Rebin2D
+
+   return Rebin2D(ngroup,1,newname);
+}
+
+//______________________________________________________________________________
+TProfile2D * TProfile2D::RebinY(Int_t ngroup,const char * newname ) {
+// Rebin only the Y axis
+// see Rebin2D
+
+   return Rebin2D(1,ngroup,newname);
 }
 
 //______________________________________________________________________________
