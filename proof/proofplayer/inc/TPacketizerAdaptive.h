@@ -61,13 +61,15 @@ private:
    TList         *fActive;       // nodes with unfinished files
    Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
 
-   Float_t        fFractionOfRemoteFiles; // fraction of TDSetElements
-                                          // that are on non slaves
+   Bool_t         fCachePacketSync; // control synchronization of cache and packet sizes
+   Double_t       fMaxEntriesRatio; // max file entries to avg allowed ratio for cache-to-packet sync
+
+   Float_t        fFractionOfRemoteFiles; // fraction of TDSetElements that are on non-workers
    Long64_t       fNEventsOnRemLoc;       // number of events in currently
                                           // unalloc files on non-worker loc.
-   Float_t        fBaseLocalPreference;   // indicates how much more likely
-   // the nodes will be to open their local files (1 means indifferent)
-   Bool_t         fForceLocal;    // if 1 - eliminate the remote processing
+   Float_t        fBaseLocalPreference;   // indicates how much more likely the nodes will be
+                                          // to open their local files (1 means indifferent)
+   Bool_t         fForceLocal;            // if 1 - eliminate the remote processing
 
    TPacketizerAdaptive();
    TPacketizerAdaptive(const TPacketizerAdaptive&);    // no implementation, will generate

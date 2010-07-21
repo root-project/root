@@ -52,6 +52,7 @@
 #include "TProofServ.h"
 #include "TSlave.h"
 #include "TSocket.h"
+#include "TSortedList.h"
 #include "TTimer.h"
 #include "TUrl.h"
 #include "TClass.h"
@@ -82,21 +83,60 @@ private:
    TDSetElement  *fElement;      // location of the file and its range
    Long64_t       fNextEntry;    // cursor in the range, -1 when done // needs changing
 
+   static TSortedList fgFilesToProcess; // Global list of files (TFileStat) to be processed
+
 public:
    TFileStat(TFileNode *node, TDSetElement *elem);
 
    Bool_t         IsDone() const {return fIsDone;}
+   Bool_t         IsSortable() const { return kTRUE; }
    void           SetDone() {fIsDone = kTRUE;}
    TFileNode     *GetNode() const {return fNode;}
    TDSetElement  *GetElement() const {return fElement;}
    Long64_t       GetNextEntry() const {return fNextEntry;}
    void           MoveNextEntry(Long64_t step) {fNextEntry += step;}
-};
 
+   // This method is used to keep a sorted list of remaining files to be processed
+   Int_t          Compare(const TObject* obj) const
+   {
+      // Return -1 if elem.entries < obj.elem.entries, 0 if elem.entries equal
+      // and 1 if elem.entries < obj.elem.entries.
+      const TFileStat *fst = dynamic_cast<const TFileStat*>(obj);
+      if (fst && GetElement() && fst->GetElement()) {
+         if (GetElement()->GetEntries() > 0 && fst->GetElement()->GetEntries() > 0) {
+            if (GetElement()->GetEntries() > fst->GetElement()->GetEntries()) {
+               return 1;
+            } else if (GetElement()->GetEntries() < fst->GetElement()->GetEntries()) {
+               return -1;
+            } else {
+               return 0;
+            }
+         }
+      }
+      // No info: assume equal (no change in order)
+      return 0;
+   }
+   void Print(Option_t * = 0) const
+   {  // Notify file name and entries
+      Printf("TFileStat: %s %lld", fElement ? fElement->GetName() : "---",
+                                   fElement ? fElement->GetEntries() : -1);
+   }
+
+   static TSortedList *GetFilesToProcess();
+};
+TSortedList TPacketizerAdaptive::TFileStat::fgFilesToProcess;
 
 TPacketizerAdaptive::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
    : fIsDone(kFALSE), fNode(node), fElement(elem), fNextEntry(elem->GetFirst())
 {
+   // Constructor: add to the global list
+   fgFilesToProcess.Add(this);
+}
+
+TSortedList *TPacketizerAdaptive::TFileStat::GetFilesToProcess()
+{
+   // Access the global list of files to be processed
+   return &fgFilesToProcess;
 }
 
 //------------------------------------------------------------------------------
@@ -221,6 +261,7 @@ public:
    {
       if (fActFileNext == file) fActFileNext = fActFiles->After(file);
       fActFiles->Remove(file);
+      TFileStat::GetFilesToProcess()->Remove(file);
       if (fActFileNext == 0) fActFileNext = fActFiles->First();
    }
 
@@ -414,10 +455,27 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    fActive = 0;
    fFileNodes = 0;
    fMaxPerfIdx = 1;
+   fCachePacketSync = kTRUE;
+   fMaxEntriesRatio = 2.;
 
    if (!fProgressStatus) {
       Error("TPacketizerAdaptive", "No progress status");
       return;
+   }
+
+   // Attempt to synchronize the packet size with the tree cache size
+   Int_t cpsync = -1;
+   if (TProof::GetParameter(input, "PROOF_PacketizerCachePacketSync", cpsync) != 0) {
+      // Check if there is a global cache-packet sync setting
+      cpsync = gEnv->GetValue("Packetizer.CachePacketSync", 1);
+   }
+   if (cpsync >= 0) fCachePacketSync = (cpsync > 0) ? kTRUE : kFALSE;
+
+   // Max file entries to avg allowed ratio for cache-to-packet synchronization
+   // (applies only if fCachePacketSync is true; -1. disables the bound)
+   if (TProof::GetParameter(input, "PROOF_PacketizerMaxEntriesRatio", fMaxEntriesRatio) != 0) {
+      // Check if there is a global ratio setting
+      fMaxEntriesRatio = gEnv->GetValue("Packetizer.MaxEntriesRatio", 2.);
    }
 
    // The possibility to change packetizer strategy to the basic TPacketizer's
@@ -918,7 +976,8 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
    TIter    si(slaves);
    TSlave   *slm;
    while ((slm = (TSlave*)si.Next()) != 0) {
-      PDB(kPacketizer,3) Info("ValidateFiles","socket added to monitor: %p (%s)",
+      PDB(kPacketizer,3)
+      Info("ValidateFiles","socket added to monitor: %p (%s)",
           slm->GetSocket(), slm->GetName());
       mon.Add(slm->GetSocket());
       slaves_by_sock.Add(slm->GetSocket(), slm);
@@ -1015,6 +1074,9 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
                              "found elem '%s' with %lld entries", elem->GetFileName(), entries);
                   }
                }
+               // Count
+               totent += entries;
+               nopenf++;
                // Notify the client
                n++;
                gProof->SendDataSetStatus(msg, n, tot, st);
@@ -1033,7 +1095,7 @@ void TPacketizerAdaptive::ValidateFiles(TDSet *dset, TList *slaves,
             if (nrestf <= 0 && maxent > totent) nrestf = 1;
             if (nrestf > 0) {
                PDB(kPacketizer,3)
-                  Info("ValidateFiles", "{%lld, %lld, %lld): needs to validate %lld more files",
+                  Info("ValidateFiles", "{%lld, %lld, %lld}: needs to validate %lld more files",
                                          maxent, totent, nopenf, nrestf);
                si.Reset();
                while ((slm = (TSlave *) si.Next()) && nrestf--) {
@@ -1241,37 +1303,60 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
          // Global average rate
          Float_t avgProcRate = (GetEntriesProcessed()/(GetCumProcTime() / fSlaveStats->GetSize()));
          Float_t packetTime = ((fTotalEntries - GetEntriesProcessed())/avgProcRate)/fgPacketAsAFraction;
-         // Apply min-max, if required
-         if (fgMaxPacketTime > 0. && packetTime > fgMaxPacketTime) packetTime = fgMaxPacketTime;
-         if (fgMinPacketTime > 0. && packetTime < fgMinPacketTime) packetTime = fgMinPacketTime;
-
-#if 0  // This test should be done on the compatibility of the currente and average rate
-       // We need a small stat class to measure the RMS; nut in any case, if smaller, the
-       // last value should be used, not a new, fake average
-         // In case the worker has suddenly slowed down
-         if (rate < 0.25 * slstat->GetAvgRate())
-            rate = (rate + slstat->GetAvgRate()) / 2;
-#endif
-         num = (Long64_t)(rate * packetTime);
 
          // Bytes-to-Event conversion
          Float_t bevt = GetBytesRead() / GetEntriesProcessed();
-         // Make sure it is not smaller then the cache, if the info is available
-         if (cachesz > 0) {
-            if (num * bevt < cachesz) {
-               num = (Long64_t) (cachesz / bevt);
-               packetTime = num / rate;
+
+         // Make sure it is not smaller then the cache, if the info is available and the size
+         // synchronization is required. But apply the cache-packet size synchronization only if there
+         // are enough left files to process and the files are all of similar sizes. Otherwise we risk
+         // to not exploit optimally all potentially active workers.
+         Bool_t cpsync = fCachePacketSync;
+         if (fMaxEntriesRatio > 0. && cpsync) {
+            if (TFileStat::GetFilesToProcess() && TFileStat::GetFilesToProcess()->GetSize() <= fSlaveStats->GetSize()) {
+               Long64_t remEntries = fTotalEntries - GetEntriesProcessed();
+               Long64_t maxEntries = -1;
+               if (TFileStat::GetFilesToProcess()->First()) {
+                  TDSetElement *elem = (TDSetElement *) ((TFileStat *) TFileStat::GetFilesToProcess()->First())->GetElement();
+                  if (elem) maxEntries = elem->GetEntries();
+               }
+               if (maxEntries > remEntries / fSlaveStats->GetSize() * fMaxEntriesRatio) {
+                  PDB(kPacketizer,3) {
+                     Info("CalculatePacketSize", "switching off synchronization of packet and cache sizes:");
+                     Info("CalculatePacketSize", " few files (%d) remaining of very different sizes (max/avg = %.2f > %.2f)",
+                                                 TFileStat::GetFilesToProcess()->GetSize(),
+                                                (Double_t)maxEntries / remEntries * fSlaveStats->GetSize(), fMaxEntriesRatio);
+                  }
+                  cpsync = kFALSE;
+               }
             }
          }
+         if (cachesz > 0 && cpsync) {
+            if ((Long64_t)(rate * packetTime * bevt) < cachesz)
+               packetTime = cachesz / bevt / rate;
+         }
+
+         // Apply min-max again, if required
+         if (fgMaxPacketTime > 0. && packetTime > fgMaxPacketTime) packetTime = fgMaxPacketTime;
+         if (fgMinPacketTime > 0. && packetTime < fgMinPacketTime) packetTime = fgMinPacketTime;
+
+         // Translate the packet length in number of entries
+         num = (Long64_t)(rate * packetTime);
+
+         // Notify
          PDB(kPacketizer,2)
-            Info("CalculatePacketSize","%s: avgr: %f, rate: %f, left: %lld, pacT: %f, sz: %f, num: %lld",
-                 slstat->GetName(), avgProcRate, rate, fTotalEntries - GetEntriesProcessed(),
-                 packetTime, num*bevt/1048576., num);
-      } else { //first packet for this slave in this query
+            Info("CalculatePacketSize","%s: avgr: %f, rate: %f, left: %lld, pacT: %f, sz: %f (csz: %f), num: %lld",
+                 slstat->GetOrdinal(), avgProcRate, rate, fTotalEntries - GetEntriesProcessed(),
+                 packetTime, num*bevt/1048576., cachesz/1048576., num);
+
+      } else {
+         // First packet for this worker in this query
          // Twice the learning phase
          num = (learnent > 0) ? 5 * learnent : 1000;
+
+         // Notify
          PDB(kPacketizer,2)
-            Info("CalculatePacketSize","%s: num: %lld", slstat->GetName(),  num);
+            Info("CalculatePacketSize","%s: num: %lld", slstat->GetOrdinal(),  num);
       }
    }
    if (num < 1) num = 1;
@@ -1535,6 +1620,8 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
       }
 
       if ( file == 0 ) return 0;
+
+      PDB(kPacketizer,3) TFileStat::GetFilesToProcess()->Print();
 
       slstat->fCurFile = file;
       // if remote and unallocated file
