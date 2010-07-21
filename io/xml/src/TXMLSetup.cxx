@@ -215,13 +215,14 @@ void TXMLSetup::PrintSetup()
 //______________________________________________________________________________
 const char* TXMLSetup::XmlConvertClassName(const char* clname)
 {
-   // convert class name to exclude any special symbols like '<' '>' ',' and spaces
+   // convert class name to exclude any special symbols like ':', '<' '>' ',' and spaces
     
    fStrBuf = clname;
    fStrBuf.ReplaceAll("<","_");
    fStrBuf.ReplaceAll(">","_");
    fStrBuf.ReplaceAll(",","_");
    fStrBuf.ReplaceAll(" ","_");
+   fStrBuf.ReplaceAll(":","_");
    return fStrBuf.Data();
 }
 
