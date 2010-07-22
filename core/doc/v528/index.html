@@ -2,6 +2,19 @@
 <hr/>
 <a name="core"></a> 
 <h3>Core</h3>
+<h4>Base</h4>
+<ul>
+<li>Change TTime data member from Long_t to Long64_t. On 32-bit systems the
+Long_t is 32-bits and too small to keep the time in milliseconds since the ROOT EPOCH (1-1-1995). Added new operators:
+<pre>
+operator long long()
+operator unsigned long long()
+</pre>
+The existing operators long and unsigned long on 32-bit machines return
+an error in case the stored time is larger then 32-bit and truncation
+occurs (like was always the case till now, but silently).
+</li>
+</ul>
 <h4>ACLiC</h4>
 <ul>
 <li>Allow ACLiC to use a flat directory structure when a build directory is specified.
