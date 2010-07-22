@@ -42,8 +42,7 @@ endif
 if ($?MANPATH) then
 # Nothing to do
 else
-   # Grab the default man path before set the path
-   # to avoid duplicates 
+   # Grab the default man path before setting the path to avoid duplicates 
    if `which manpath > /dev/null` then
       set default_manpath = `manpath`
    else

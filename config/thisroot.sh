@@ -49,7 +49,7 @@ if [ -n "${OLD_ROOTSYS}" ] ; then
 fi
 
 if [ -z "${MANPATH}" ]; then
-   # Grab the default man path before set the path to avoid duplicates 
+   # Grab the default man path before setting the path to avoid duplicates 
    if `which manpath > /dev/null 2>&1` ; then
       default_manpath=`manpath`
    else
