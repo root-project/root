@@ -649,7 +649,7 @@ void TGraph::Draw(Option_t *option)
    /* Begin_Html
    Draw this graph with its current attributes.
    <p>
-   The ptions to draw a graph are described in
+   The options to draw a graph are described in
    <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
    class.
    End_Html */
