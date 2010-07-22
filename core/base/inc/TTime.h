@@ -29,11 +29,11 @@
 class TTime {
 
 private:
-   Long_t   fMilliSec;
+   Long64_t   fMilliSec;   // time with millisecond precision
 
 public:
    TTime(): fMilliSec(0) { }
-   TTime(Long_t msec): fMilliSec(msec) { }
+   TTime(Long64_t msec): fMilliSec(msec) { }
    TTime(const TTime &t): fMilliSec(t.fMilliSec) { }
    virtual ~TTime() { }
 
@@ -58,9 +58,11 @@ public:
 
    operator long() const;
    operator unsigned long() const;
+   operator long long() const;
+   operator unsigned long long() const;
    const char *AsString() const;
 
-   ClassDef(TTime,1)  //Basic time type with milli second precision
+   ClassDef(TTime,2)  //Basic time type with milli second precision
 };
 
 inline TTime& TTime::operator= (const TTime &t)
@@ -73,10 +75,10 @@ inline TTime TTime::operator*=(const TTime &t)
    { fMilliSec *= t.fMilliSec; return *this; }
 inline TTime TTime::operator/=(const TTime &t)
    { fMilliSec /= t.fMilliSec; return *this; }
-inline TTime::operator long() const
+inline TTime::operator long long() const
    { return fMilliSec; }
-inline TTime::operator unsigned long() const
-   { return (ULong_t) fMilliSec; }
+inline TTime::operator unsigned long long() const
+   { return (ULong64_t) fMilliSec; }
 
 inline TTime operator+(const TTime &t1, const TTime &t2)
    { return TTime(t1.fMilliSec + t2.fMilliSec); }

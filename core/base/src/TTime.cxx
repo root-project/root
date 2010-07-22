@@ -19,6 +19,7 @@
 
 #include "TTime.h"
 #include "TString.h"
+#include "TError.h"
 
 
 ClassImp(TTime)
@@ -28,5 +29,25 @@ const char *TTime::AsString() const
 {
    // Return the time as a string.
 
-   return Form("%lu", (ULong_t)fMilliSec);
+   return Form("%lld", fMilliSec);
+}
+
+//______________________________________________________________________________
+TTime::operator long() const
+{
+#ifndef R__B64
+   if (fMilliSec > (Long64_t)kMaxInt)
+      Error("TTime::operator long()", "time truncated, use operator long long");
+#endif
+   return (Long_t) fMilliSec;
+}
+
+//______________________________________________________________________________
+TTime::operator unsigned long() const
+{
+#ifndef R__B64
+   if (fMilliSec > (Long64_t)kMaxUInt)
+      Error("TTime::operator unsigned long()", "time truncated, use operator unsigned long long");
+#endif
+   return (ULong_t) fMilliSec;
 }
