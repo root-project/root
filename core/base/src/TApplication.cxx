@@ -552,13 +552,17 @@ void TApplication::LoadGraphicsLibs()
       guiFactory = nativeg;
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", guiBackend))) {
-      if (h->LoadPlugin() == -1)
+      if (h->LoadPlugin() == -1) {
+         gROOT->SetBatch(kTRUE);
          return;
+      }
       gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
    }
    if ((h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory))) {
-      if (h->LoadPlugin() == -1)
+      if (h->LoadPlugin() == -1) {
+         gROOT->SetBatch(kTRUE);
          return;
+      }
       gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
    }
 }
