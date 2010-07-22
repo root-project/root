@@ -169,8 +169,8 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
          TPair *p = dynamic_cast<TPair*>(claims.At(idx));
          TTimer *t = dynamic_cast<TTimer*>(p->Value());
          // wait remaining time
-         Long_t wait = (Long_t) (t->GetAbsTime()-gSystem->Now());
-         if (wait>0) gSystem->Sleep(wait);
+         Long64_t wait = t->GetAbsTime()-gSystem->Now();
+         if (wait > 0) gSystem->Sleep((UInt_t)wait);
          c = dynamic_cast<TCondorSlave*>(p->Key());
       }
 
@@ -271,8 +271,8 @@ void TProofCondor::SetActive(Bool_t active)
    } else {
 return; // don't suspend for the moment
       Int_t delay = 60000; // milli seconds
-      PDB(kCondor,1) Info("SetActive","-- Delayed Condor Suspend (%d msec / to %ld) --",
-                          delay, delay + long(gSystem->Now()));
+      PDB(kCondor,1) Info("SetActive","-- Delayed Condor Suspend (%d msec / to %lld) --",
+                          delay, delay + Long64_t(gSystem->Now()));
       fTimer->Connect("Timeout()", "TCondor", fCondor, "Suspend()");
       fTimer->Start(10000, kTRUE); // single shot
    }

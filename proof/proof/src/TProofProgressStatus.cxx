@@ -108,7 +108,7 @@ void TProofProgressStatus::SetLastUpdate(Double_t updtTime)
       fLastUpdate = updtTime;
    } else {
       TTime tnow = gSystem->Now();
-      fLastUpdate = (Double_t) (Long_t(tnow)) / (Double_t)1000.;
+      fLastUpdate = (Double_t) (Long64_t(tnow)) / (Double_t)1000.;
    }
 }
 

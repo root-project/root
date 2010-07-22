@@ -42,6 +42,9 @@
 #ifndef ROOT_TProofProgressStatus
 #include "TProofProgressStatus.h"
 #endif
+#ifndef ROOT_TTime
+#include "TTime.h"
+#endif
 
 
 class TDSet;
@@ -75,7 +78,7 @@ protected:
    TList    *fFailedPackets;// a list of packets that failed while processing
 
    // Members for progress info
-   Long_t    fStartTime;    // time offset
+   TTime     fStartTime;    // time offset
    Float_t   fInitTime;     // time before processing
    Float_t   fProcTime;     // time since start of processing
    Float_t   fTimeUpdt;     // time between updates

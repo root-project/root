@@ -77,8 +77,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fSlaveStats = 0;
 
    // Performance monitoring
-   TTime tnow = gSystem->Now();
-   fStartTime = Long_t(tnow);
+   fStartTime = gSystem->Now();
    SetBit(TVirtualPacketizer::kIsInitializing);
    ResetBit(TVirtualPacketizer::kIsDone);
    fInitTime = 0;
@@ -240,7 +239,7 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
 
    // Prepare progress info
    TTime tnow = gSystem->Now();
-   Float_t now = (Float_t) (Long_t(tnow) - fStartTime) / (Double_t)1000.;
+   Float_t now = Long64_t(tnow - fStartTime) / (Float_t)1000.;
    Long64_t estent = GetEntriesProcessed();
    Long64_t estmb = GetBytesRead();
    Long64_t estrc = GetReadCalls();
@@ -332,7 +331,7 @@ void TVirtualPacketizer::SetInitTime()
    // Set the initialization time
 
    if (TestBit(TVirtualPacketizer::kIsInitializing)) {
-      fInitTime = (Float_t) (Long_t(gSystem->Now()) - fStartTime) / (Double_t)1000.;
+      fInitTime = Long64_t(gSystem->Now() - fStartTime) / (Float_t)1000.;
       ResetBit(TVirtualPacketizer::kIsInitializing);
       PDB(kPacketizer,2)
          Info("SetInitTime","fInitTime set to %f s", fInitTime);

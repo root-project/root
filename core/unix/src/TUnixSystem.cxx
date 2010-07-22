@@ -2785,7 +2785,7 @@ const char *TUnixSystem::GetLinkedLibraries()
 //______________________________________________________________________________
 TTime TUnixSystem::Now()
 {
-   // Return current time.
+   // Get current time in milliseconds since 0:00 Jan 1 1995.
 
    return UnixNow();
 }
@@ -2806,7 +2806,7 @@ Bool_t TUnixSystem::DispatchTimers(Bool_t mode)
 
    while ((t = (TTimer *) it.Next())) {
       // NB: the timer resolution is added in TTimer::CheckTimer()
-      Long_t now = UnixNow();
+      Long64_t now = UnixNow();
       if (mode && t->IsSync()) {
          if (t->CheckTimer(now))
             timedout = kTRUE;
@@ -3605,7 +3605,7 @@ void TUnixSystem::UnixResetSignals()
 //---- time --------------------------------------------------------------------
 
 //______________________________________________________________________________
-Long_t TUnixSystem::UnixNow()
+Long64_t TUnixSystem::UnixNow()
 {
    // Get current time in milliseconds since 0:00 Jan 1 1995.
 
@@ -3629,7 +3629,7 @@ Long_t TUnixSystem::UnixNow()
 
    struct timeval t;
    gettimeofday(&t, 0);
-   return (t.tv_sec-(Long_t)jan95)*1000 + t.tv_usec/1000;
+   return Long64_t(t.tv_sec-(Long_t)jan95)*1000 + t.tv_usec/1000;
 }
 
 //______________________________________________________________________________

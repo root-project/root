@@ -341,7 +341,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
 
    // Set dialog title
    if (fProof) {
-      if (strlen(fProof->GetUser()) > 0) 
+      if (strlen(fProof->GetUser()) > 0)
          fDialog->SetWindowName(Form("PROOF Query Progress: %s@%s",
                                      fProof->GetUser(), fProof->GetMaster()));
       else
@@ -545,10 +545,10 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
    TTime tdiff = fEndTime - fStartTime;
    Float_t eta = 0;
    if (evproc > 0)
-      eta = ((Float_t)((Long_t)tdiff)*total/Float_t(evproc) - Long_t(tdiff))/1000.;
+      eta = ((Float_t)((Long64_t)tdiff)*total/Float_t(evproc) - Long64_t(tdiff))/1000.;
 
    if (processed >= 0 && processed >= total) {
-      tt = (Long_t(tdiff)/1000);
+      tt = (Long_t)Long64_t(tdiff)/1000;
       if (tt > 0) {
          hh = (UInt_t)(tt / 3600);
          mm = (UInt_t)((tt % 3600) / 60);
@@ -614,8 +614,8 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
          buf += TString::Format(" - %s", cproc[fStatus]);
       }
       fTotal->SetText(buf);
-      
-      buf.Form("%.1f events/sec\n", Float_t(evproc)/Long_t(tdiff)*1000.);
+
+      buf.Form("%.1f events/sec\n", Float_t(evproc)/Long64_t(tdiff)*1000.);
       fRate->SetText(buf);
 
       if (processed < 0) {
@@ -713,7 +713,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       fSpeedo->SetOdoValue((Int_t)(fInitTime * 1000.0));
    else if (fRightInfo == 1)
       fSpeedo->SetOdoValue((Int_t)(fProcTime * 1000.0));
-      
+
    if (over || (processed >= 0 && processed >= total)) {
 
       // A negative value for process indicates that we are finished,
@@ -785,7 +785,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       fStop->SetState(kButtonDisabled);
       fAbort->SetState(kButtonDisabled);
       fClose->SetState(kButtonUp);
-      
+
       if (fSmoothSpeedo->GetState() == kButtonDown)
          fSpeedo->SetScaleValue(0.0, 0);
       else

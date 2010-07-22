@@ -923,8 +923,8 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
 
    int xf0, yf0, xff, yff;
 
-   static Long_t was = gSystem->Now();
-   Long_t now = (long)gSystem->Now();
+   static Long64_t was = gSystem->Now();
+   Long64_t now = gSystem->Now();
 
    if ((now-was) < 50) return kFALSE;
    was = now;

@@ -191,7 +191,7 @@ static Int_t gDecorWidth  = 0;
 static Int_t gDecorHeight = 0;
 
 //______________________________________________________________________________
-TGCursorWindow::TGCursorWindow() : 
+TGCursorWindow::TGCursorWindow() :
       TGFrame(gClient->GetDefaultRoot(), 32, 32, kTempFrame)
 {
    // TGCursorWindow constructor.
@@ -931,11 +931,8 @@ void TRecorderReplaying::ReplayRealtime()
       // It will be replayed with the same time difference to the previous
       // one as when recording.
       // After given time, timer will call this method again
-      if (fNextEvent) {
-         ULong_t difference = (ULong_t) (fNextEvent->GetTime() -
-                              fPreviousEventTime);
-         fTimer->Start(difference);
-      }
+      if (fNextEvent)
+         fTimer->Start(Long_t(fNextEvent->GetTime() - fPreviousEventTime));
    }
 }
 
@@ -964,7 +961,7 @@ void TRecorderReplaying::Continue()
    // Continues previously paused replaying
 
    if (fNextEvent)
-      fTimer->Start((ULong_t) (fNextEvent->GetTime() - fPreviousEventTime));
+      fTimer->Start(Long_t(fNextEvent->GetTime() - fPreviousEventTime));
 }
 
 //______________________________________________________________________________
@@ -1052,7 +1049,7 @@ void TRecorderInactive::ListCmd(const char *filename)
    for (Int_t i = 0; i < entries; ++i) {
       t1->GetEntry(i);
       cout << "[" << i << "] " << "fTime=" <<
-             (ULong_t) fCmdEvent->GetTime() << " fText=" <<
+             (ULong64_t) fCmdEvent->GetTime() << " fText=" <<
              fCmdEvent->GetText() << endl;
    }
    cout << endl;
@@ -1532,8 +1529,8 @@ void TRecorderRecording::RecordPave(const TObject *obj)
 {
    // Records TPaveLabel object created in TCreatePrimitives::Pave()
 
-   ULong_t extratime = fBeginPave;
-   ULong_t interval = (unsigned long)fTimer->GetAbsTime() - fBeginPave;
+   Long64_t extratime = fBeginPave;
+   Long64_t interval = (Long64_t)fTimer->GetAbsTime() - fBeginPave;
    TPaveLabel *pavel = (TPaveLabel *) obj;
    const char *label;
    label = pavel->GetLabel();
@@ -1549,7 +1546,7 @@ void TRecorderRecording::RecordPave(const TObject *obj)
    cad += pavel->GetY2();
    cad += ",\"\"); p->Draw(); gPad->Modified(); gPad->Update();";
    Int_t i, len = (Int_t)strlen(label);
-   interval /= (ULong_t)(len + 2);
+   interval /= (len + 2);
    RecordExtraEvent(cad, extratime);
    for (i=0; i < len; ++i) {
       cad = "p->SetLabel(\"";
@@ -1576,8 +1573,8 @@ void TRecorderRecording::RecordText(const TObject *obj)
 {
    // Records TLatex object created in TCreatePrimitives::Text()
 
-   ULong_t extratime = fBeginPave;
-   ULong_t interval = (unsigned long)fTimer->GetAbsTime() - fBeginPave;
+   Long64_t extratime = fBeginPave;
+   Long64_t interval = (Long64_t)fTimer->GetAbsTime() - fBeginPave;
    TLatex *texto = (TLatex *) obj;
    const char *label;
    label = texto->GetTitle();
@@ -1589,7 +1586,7 @@ void TRecorderRecording::RecordText(const TObject *obj)
    cad += texto->GetY();
    cad += ",\"\"); l->Draw(); gPad->Modified(); gPad->Update();";
    Int_t i, len = (Int_t)strlen(label);
-   interval /= (ULong_t)(len + 2);
+   interval /= (len + 2);
    RecordExtraEvent(cad, extratime);
    for (i=0; i < len; ++i) {
       cad = "l->SetTitle(\"";
@@ -1626,16 +1623,16 @@ void TRecorderRecording::StartEditing()
 {
    // Memorize the starting time of editinga TLatex or a TPaveLabel
 
-   fBeginPave = (long)fTimer->GetAbsTime();
+   fBeginPave = fTimer->GetAbsTime();
 }
 
 //______________________________________________________________________________
-void TRecorderRecording::RecordExtraEvent(TString line, ULong_t ExtTime)
+void TRecorderRecording::RecordExtraEvent(TString line, TTime extTime)
 {
    // Records TLatex or TPaveLabel object created in TCreatePrimitives,
    // ExtTime is needed for the correct replay of these events.
 
-   fExtraEvent->SetTime(TTime(ExtTime));
+   fExtraEvent->SetTime(extTime);
    fExtraEvent->SetText(line);
    fExtraTree->Fill();
 }
@@ -1954,7 +1951,7 @@ void TGRecorder::StartStop()
          fi.fFileTypes = gFiletypes;
          fi.fOverwrite = kFALSE;
 
-         new TGFileDialog(gClient->GetDefaultRoot(), 
+         new TGFileDialog(gClient->GetDefaultRoot(),
                           gClient->GetDefaultRoot(),
                           kFDSave,&fi);
 
@@ -2222,4 +2219,3 @@ Event_t *TRecGuiEvent::CreateEvent(TRecGuiEvent *ge)
 }
 
 ClassImp(TRecWinPair)
-

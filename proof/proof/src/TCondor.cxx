@@ -280,8 +280,8 @@ Bool_t TCondor::SetState(EState state)
 {
    // Set the state of workers
 
-   PDB(kCondor,1) Info("SetState","state: %s (%ld)",
-                       state == kSuspended ? "kSuspended" : "kActive", long(gSystem->Now()));
+   PDB(kCondor,1) Info("SetState","state: %s (%lld)",
+                       state == kSuspended ? "kSuspended" : "kActive", Long64_t(gSystem->Now()));
    TIter next(fClaims);
    TCondorSlave *claim;
    while((claim = (TCondorSlave*) next()) != 0) {

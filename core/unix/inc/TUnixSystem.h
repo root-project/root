@@ -45,7 +45,7 @@ protected:
    static void        *UnixOpendir(const char *name);
    static const char  *UnixGetdirentry(void *dir);
    static const char  *UnixHomedirectory(const char *user = 0);
-   static Long_t       UnixNow();
+   static Long64_t     UnixNow();
    static int          UnixWaitchild();
    static int          UnixSetitimer(Long_t ms);
    static int          UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,

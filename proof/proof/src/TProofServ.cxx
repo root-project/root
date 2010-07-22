@@ -474,7 +474,7 @@ Bool_t TIdleTOTimer::Notify()
 {
    // Handle expiration of the idle timer. The session will just be terminated.
 
-   Info ("Notify", "session idle for more then %ld secs: terminating", Long_t(fTime)/1000);
+   Info ("Notify", "session idle for more then %lld secs: terminating", Long64_t(fTime)/1000);
 
    if (fProofServ) {
       // Set the status to timed-out
@@ -484,12 +484,12 @@ Bool_t TIdleTOTimer::Notify()
       // Send a terminate request
       TString msg;
       if (fProofServ->GetProtocol() < 29) {
-         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %ld secs\n"
+         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %lld secs\n"
                   "// Please IGNORE any error message possibly displayed below\n//",
-                  gSystem->HostName(), fProofServ->GetSessionTag(), Long_t(fTime)/1000);
+                  gSystem->HostName(), fProofServ->GetSessionTag(), Long64_t(fTime)/1000);
       } else {
-         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %ld secs\n//",
-                  gSystem->HostName(), fProofServ->GetSessionTag(), Long_t(fTime)/1000);
+         msg.Form("\n//\n// PROOF session at %s (%s) terminated because idle for more than %lld secs\n//",
+                  gSystem->HostName(), fProofServ->GetSessionTag(), Long64_t(fTime)/1000);
       }
       fProofServ->SendAsynMessage(msg.Data());
       fProofServ->Terminate(0);

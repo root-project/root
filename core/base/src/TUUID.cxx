@@ -138,7 +138,7 @@ TUUID::TUUID()
    if (firstTime) {
       if (gSystem) {
          // try to get a unique seed per process
-         UInt_t seed = (UInt_t) (long(gSystem->Now()) + gSystem->GetPid());
+         UInt_t seed = (UInt_t) (Long64_t(gSystem->Now()) + gSystem->GetPid());
 #ifdef R__WIN32
          srand(seed);
 #else
@@ -659,12 +659,12 @@ void TUUID::SetUUID(const char *uuid)
 }
 
 //______________________________________________________________________________
-TBuffer &operator<<(TBuffer &buf, const TUUID &uuid) 
+TBuffer &operator<<(TBuffer &buf, const TUUID &uuid)
 {
    // Input operator.  Delegate to Streamer.
 
    R__ASSERT( buf.IsWriting() );
 
-   const_cast<TUUID&>(uuid).Streamer(buf); 
-   return buf; 
+   const_cast<TUUID&>(uuid).Streamer(buf);
+   return buf;
 }

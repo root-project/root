@@ -449,7 +449,7 @@ Int_t TSystem::Select(TFileHandler *, Long_t)
 //______________________________________________________________________________
 TTime TSystem::Now()
 {
-   // Return current time.
+   // Get current time in milliseconds since 0:00 Jan 1 1995.
 
    return TTime(0);
 }
@@ -486,18 +486,19 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 
    TOrdCollectionIter it((TOrdCollection*)fTimers);
    TTimer *t, *to = 0;
-   Long_t  tt, timeout = -1, tnow = Now();
+   Long64_t tt, tnow = Now();
+   Long_t   timeout = -1;
 
    while ((t = (TTimer *) it.Next())) {
       if (t->IsSync() == mode) {
-         tt = (long)t->GetAbsTime() - tnow;
+         tt = (Long64_t)t->GetAbsTime() - tnow;
          if (tt < 0) tt = 0;
          if (timeout == -1) {
-            timeout = tt;
+            timeout = (Long_t)tt;
             to = t;
          }
          if (tt < timeout) {
-            timeout = tt;
+            timeout = (Long_t)tt;
             to = t;
          }
       }

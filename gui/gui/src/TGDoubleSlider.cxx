@@ -123,7 +123,7 @@ TString TGDoubleSlider::GetSString() const
 
    if (fScaleType) {
       if (fScaleType & kDoubleScaleNo)  {
-         if (stype.Length() == 0) 
+         if (stype.Length() == 0)
             stype  = "kDoubleScaleNo";
          else
             stype += " | kDoubleScaleNo";
@@ -135,7 +135,7 @@ TString TGDoubleSlider::GetSString() const
             stype += " | kDoubleScaleDownRight";
       }
       if (fScaleType & kDoubleScaleBoth) {
-         if (stype.Length() == 0) 
+         if (stype.Length() == 0)
             stype  = "kDoubleScaleBoth";
          else
             stype += " | kDoubleScaleBoth";
@@ -179,7 +179,7 @@ void TGDoubleSlider::ChangeCursor(Event_t *event)
       maxCur = rightCur;
    }
    else return;
-   
+
    Int_t relMin = (Int_t)((wh-16) * (fSmin - fVmin) / (fVmax - fVmin)) + 1;
    Int_t relMax = (Int_t)((wh-16) * (fSmax - fVmin) / (fVmax - fVmin) + 15);
    // constrain to the slider width
@@ -190,17 +190,17 @@ void TGDoubleSlider::ChangeCursor(Event_t *event)
       if ((yx <= (relMax - relMin) / 4 + relMin) &&
           (yx >= relMin) && (fMove != 2))
          gVirtualX->SetCursor(fId, minCur);
-      // if the mouse pointer is in the bottom resizing zone, 
-      // and we are not already moving the the top side, 
+      // if the mouse pointer is in the bottom resizing zone,
+      // and we are not already moving the the top side,
       // set the cursor shape as BottomSide
-      else if ((yx >= (relMax - relMin) / 4 * 3 + relMin) && 
+      else if ((yx >= (relMax - relMin) / 4 * 3 + relMin) &&
                (yx <= relMax) && (fMove != 1))
          gVirtualX->SetCursor(fId, maxCur);
       // if we are not moving any side, restore the cursor
       else if ((fMove < 1) || (fMove > 2))
          gVirtualX->SetCursor(fId, kNone);
    }
-   // if we are not inside the slider, and not moving any side, 
+   // if we are not inside the slider, and not moving any side,
    // restore the cursor
    else if ((fMove < 1) || (fMove > 2))
       gVirtualX->SetCursor(fId, kNone);
@@ -354,8 +354,8 @@ Bool_t TGDoubleVSlider::HandleMotion(Event_t *event)
    ChangeCursor(event);
    if (fMove == 0) return kTRUE;
 
-   static Long_t was = gSystem->Now();
-   Long_t now = (long)gSystem->Now();
+   static Long64_t was = gSystem->Now();
+   Long64_t now = gSystem->Now();
 
    if ((now-was) < 50) return kTRUE;
    was = now;
@@ -521,7 +521,7 @@ Bool_t TGDoubleHSlider::HandleButton(Event_t *event)
 
       // last argument kFALSE forces all specified events to this window
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                             kPointerMotionMask, kNone, kNone, 
+                             kPointerMotionMask, kNone, kNone,
                              kTRUE, kFALSE);
    } else if (event->fType == kButtonRelease && event->fCode == kButton1) {
       SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_RELEASE), fWidgetId, 0);
@@ -544,8 +544,8 @@ Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
    ChangeCursor(event);
    if (fMove == 0) return kTRUE;
 
-   static Long_t was = gSystem->Now();
-   Long_t now = (long)gSystem->Now();
+   static Long64_t was = gSystem->Now();
+   Long64_t now = gSystem->Now();
 
    if ((now-was) < 50) return kTRUE;
    was = now;
@@ -629,7 +629,7 @@ void TGDoubleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 void TGDoubleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
-   
+
    SaveUserColor(out, option);
 
    out<<"   TGDoubleVSlider *";

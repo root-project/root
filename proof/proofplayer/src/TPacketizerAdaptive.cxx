@@ -1748,7 +1748,7 @@ Int_t TPacketizerAdaptive::GetEstEntriesProcessed(Float_t t, Long64_t &ent,
    Bool_t current = (fUseEstOpt == kEstCurrent) ? kTRUE : kFALSE;
 
    TTime tnow = gSystem->Now();
-   Double_t now = (t > 0) ? (Double_t)t : (Double_t) (Long_t(tnow)) / (Double_t)1000.;
+   Double_t now = (t > 0) ? (Double_t)t : Long64_t(tnow) / (Double_t)1000.;
    Double_t dt = -1;
 
    // Loop over the workers

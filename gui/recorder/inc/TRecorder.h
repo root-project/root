@@ -607,7 +607,7 @@ private:
    TRecEvent  *fNextEvent;          // The next event that is going to be replayed (GUI event or commandline)
 
    TTime       fPreviousEventTime;  // Execution time of the previously replayed event.
-                                          // It is used for computing time difference between two events.
+                                    // It is used for computing time difference between two events.
 
    Bool_t      fWaitingForWindow;   // Signalizes that we wait for a window to be registered in order
                                     // to replay the next event fNextEvent.
@@ -668,7 +668,7 @@ private:
    TFile              *fFile;             // ROOT file to store recorded events in
    TTimer             *fTimer;            // Timer used for recording
    TTimer             *fMouseTimer;       // Timer used for recording mouse position
-   ULong_t             fBeginPave;        // TLatex/TPaveLabel edition starting time
+   Long64_t            fBeginPave;        // TLatex/TPaveLabel edition starting time
 
    TTree              *fWinTree;          // TTree with registered windows
    TTree              *fGuiTree;          // TTree with recorded GUI events
@@ -714,7 +714,7 @@ public:
    void  FilterEventPave();                        //SLOT
    void  StartEditing();                           //SLOT
 
-   void  RecordExtraEvent(TString line, ULong_t ExtTime);
+   void  RecordExtraEvent(TString line, TTime extTime);
 
    ClassDef(TRecorderRecording, 0) // Represents state of TRecorder when recording events
 };
@@ -827,4 +827,3 @@ public:
 };
 
 #endif // ROOT_TRecorder
-

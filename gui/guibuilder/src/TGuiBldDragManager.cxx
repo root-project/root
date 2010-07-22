@@ -1477,10 +1477,10 @@ Bool_t TGuiBldDragManager::IsSelectedVisible()
       return kTRUE;
    }
 
-   static Long_t was = gSystem->Now();
+   static Long64_t was = gSystem->Now();
    static Bool_t visible = kFALSE;
 
-   Long_t now = (long)gSystem->Now();
+   Long64_t now = gSystem->Now();
 
    if (now-was < 100) {
       return visible;
@@ -1954,9 +1954,9 @@ Bool_t TGuiBldDragManager::HandleExpose(Event_t *event)
       return kFALSE;
    }
 
-   static Long_t was = gSystem->Now();
+   static Long64_t was = gSystem->Now();
    static Window_t win = 0;
-   Long_t now = (long)gSystem->Now();
+   Long64_t now = gSystem->Now();
 
    if (event->fCount || (win == event->fWindow) || (now-was < 50) || fDragging) {
       if (fDragging) {
@@ -3886,11 +3886,11 @@ Bool_t TGuiBldDragManager::HandleMotion(Event_t *event)
       return kFALSE;
    }
 
-   static Long_t was = gSystem->Now();
+   static Long64_t was = gSystem->Now();
    static Int_t gy = event->fYRoot;
    static Int_t gx = event->fXRoot;
 
-   Long_t now = (long)gSystem->Now();
+   Long64_t now = gSystem->Now();
 
    if ((now-was < 100) || !(event->fState & kButton1Mask) ||
        ((event->fYRoot == gy) && (event->fXRoot == gx))) {

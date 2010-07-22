@@ -195,8 +195,8 @@ Bool_t TGTripleVSlider::HandleMotion(Event_t *event)
          ChangeCursor(event);
    }
    static int oldDiff = 0;
-   static Long_t was = gSystem->Now();
-   Long_t now = (long)gSystem->Now();
+   static Long64_t was = gSystem->Now();
+   Long64_t now = gSystem->Now();
 
    if (fMove == 0)  return kTRUE;
    if ((now-was) < 50) return kTRUE;
@@ -256,16 +256,16 @@ Bool_t TGTripleVSlider::HandleMotion(Event_t *event)
 }
 
 //________________________________________________________________________________
-void TGTripleVSlider::SetConstrained(Bool_t on) 
+void TGTripleVSlider::SetConstrained(Bool_t on)
 {
    // Set pointer position constrained in the slider range.
 
    fConstrained = on;
 
    if (fConstrained) {
-      if (GetPointerPosition() <= GetMinPosition()) 
+      if (GetPointerPosition() <= GetMinPosition())
          SetPointerPos((Int_t)GetMinPosition(), 3);
-      else if (GetPointerPosition() >= GetMaxPosition()) 
+      else if (GetPointerPosition() >= GetMaxPosition())
          SetPointerPos((Int_t)GetMaxPosition(), 3);
    }
 }
@@ -274,8 +274,8 @@ void TGTripleVSlider::SetConstrained(Bool_t on)
 void TGTripleVSlider::SetPointerPos(Int_t z, Int_t opt)
 {
    // Set slider pointer position in pixel value.
-   
-   static Long_t was = gSystem->Now();
+
+   static Long64_t was = gSystem->Now();
    Bool_t lcheck = (opt == 1);
    Int_t oldPos = fCz;
 
@@ -319,7 +319,7 @@ void TGTripleVSlider::SetPointerPos(Int_t z, Int_t opt)
    DrawPointer();
    fClient->NeedRedraw(this);
    if (fCz != oldPos) {
-      Long_t now = (long)gSystem->Now();
+      Long64_t now = gSystem->Now();
       if ((fMove != 4) && ((now-was) < 150)) return;
       was = now;
       SendMessage(fMsgWindow, MK_MSG(kC_VSLIDER, kSL_POINTER), fWidgetId, 0);
@@ -456,11 +456,11 @@ Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
    // Handle mouse motion event in horizontal slide widget.
 
    if (fMove < 3) {
-      // if the mouse pointer is on the cursor, 
-      // and we are not moving anything, 
+      // if the mouse pointer is on the cursor,
+      // and we are not moving anything,
       // set the cursor shape as Pointer
       if (event->fX > (fCz - 5) && event->fX < (fCz + 5) &&
-          event->fY > ((Int_t)fHeight / 2) - 7 && 
+          event->fY > ((Int_t)fHeight / 2) - 7 &&
           event->fY < ((Int_t)fHeight / 2) + 5 &&
           fMove == 0)
          gVirtualX->SetCursor(fId, kNone);
@@ -468,8 +468,8 @@ Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
          ChangeCursor(event);
    }
    static int oldDiff = 0;
-   static Long_t was = gSystem->Now();
-   Long_t now = (long)gSystem->Now();
+   static Long64_t was = gSystem->Now();
+   Long64_t now = gSystem->Now();
 
    if (fMove == 0)  return kTRUE;
    if ((now-was) < 50) return kTRUE;
@@ -529,16 +529,16 @@ Bool_t TGTripleHSlider::HandleMotion(Event_t *event)
 }
 
 //________________________________________________________________________________
-void TGTripleHSlider::SetConstrained(Bool_t on) 
+void TGTripleHSlider::SetConstrained(Bool_t on)
 {
    // Set pointer position constrained in the slider range.
 
    fConstrained = on;
 
    if (fConstrained) {
-      if (GetPointerPosition() <= GetMinPosition()) 
+      if (GetPointerPosition() <= GetMinPosition())
          SetPointerPos((Int_t)GetMinPosition(), 3);
-      else if (GetPointerPosition() >= GetMaxPosition()) 
+      else if (GetPointerPosition() >= GetMaxPosition())
          SetPointerPos((Int_t)GetMaxPosition(), 3);
    }
 }
@@ -548,7 +548,7 @@ void TGTripleHSlider::SetPointerPos(Int_t z, Int_t opt)
 {
    // Set slider pointer position in pixel value.
 
-   static Long_t was = gSystem->Now();
+   static Long64_t was = gSystem->Now();
    Bool_t lcheck = (opt == 1);
    Int_t oldPos = fCz;
 
@@ -592,7 +592,7 @@ void TGTripleHSlider::SetPointerPos(Int_t z, Int_t opt)
    DrawPointer();
    fClient->NeedRedraw(this);
    if (fCz != oldPos) {
-      Long_t now = (long)gSystem->Now();
+      Long64_t now = gSystem->Now();
       if ((fMove != 4) && ((now-was) < 150)) return;
       was = now;
       SendMessage(fMsgWindow, MK_MSG(kC_HSLIDER, kSL_POINTER), fWidgetId, 0);
@@ -603,7 +603,7 @@ void TGTripleHSlider::SetPointerPos(Int_t z, Int_t opt)
 }
 
 //________________________________________________________________________________
-void TGTripleHSlider::SetPointerPosition(Float_t pos) 
+void TGTripleHSlider::SetPointerPosition(Float_t pos)
 {
    // Set pointer position in scaled (real) value
 
@@ -670,7 +670,7 @@ void TGTripleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 void TGTripleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
-   
+
    SaveUserColor(out, option);
 
    out<<"   TGTripleVSlider *";

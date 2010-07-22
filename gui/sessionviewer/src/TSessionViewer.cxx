@@ -2639,8 +2639,8 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
                  fViewer->GetActDesc()->fActQuery->fStartTime;
    Float_t eta = 0;
    if (processed)
-      eta = ((Float_t)((Long_t)tdiff)*total/Float_t(processed) -
-            Long_t(tdiff))/1000.;
+      eta = ((Float_t)((Long64_t)tdiff)*total/Float_t(processed) -
+            Long64_t(tdiff))/1000.;
 
    tt = (Long_t)eta;
    if (tt > 0) {
@@ -2656,7 +2656,7 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
       stm.Form("%d sec", ss);
    if (processed == total) {
       // finished
-      tt = (Long_t(tdiff)/1000);
+      tt = (Long_t) Long64_t(tdiff)/1000;
       if (tt > 0) {
          hh = (UInt_t)(tt / 3600);
          mm = (UInt_t)((tt % 3600) / 60);
@@ -2676,9 +2676,9 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
                stm.Data(), processed, total);
       fTotal->SetText(buf.Data());
    }
-   if (processed > 0 && (Long_t)tdiff > 0) {
+   if (processed > 0 && (Long64_t)tdiff > 0) {
       buf.Form(" Processing Rate : %.1f events/sec   ",
-               (Float_t)processed/(Long_t)tdiff*1000.);
+               (Float_t)processed/(Long64_t)tdiff*1000.);
       fRate->SetText(buf);
    }
    fPrevProcessed = processed;
@@ -2783,8 +2783,8 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
                  fViewer->GetActDesc()->fActQuery->fStartTime;
    Float_t eta = 0;
    if (processed)
-      eta = ((Float_t)((Long_t)tdiff)*total/(Float_t)(processed) -
-            (Long_t)(tdiff))/1000.;
+      eta = ((Float_t)((Long64_t)tdiff)*total/(Float_t)(processed) -
+            (Long64_t)(tdiff))/1000.;
 
    tt = (Long_t)eta;
    if (tt > 0) {
@@ -2804,7 +2804,7 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
                stm.Data(), processed, total);
       fTotal->SetText(buf);
    } else {
-      tt = (Long_t(tdiff)/1000);
+      tt = (Long_t) Long64_t(tdiff)/1000;
       if (tt > 0) {
          hh = (UInt_t)(tt / 3600);
          mm = (UInt_t)((tt % 3600) / 60);
@@ -2821,9 +2821,9 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
       buf += cproc;
       fTotal->SetText(buf.Data());
    }
-   if (processed > 0 && (Long_t)tdiff > 0) {
+   if (processed > 0 && (Long64_t)tdiff > 0) {
       buf.Form(" Processing Rate : %.1f events/sec   ",
-               (Float_t)processed/(Long_t)tdiff*1000.);
+               (Float_t)processed/(Long64_t)tdiff*1000.);
       fRate->SetText(buf.Data());
    }
    fPrevProcessed = processed;
