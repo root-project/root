@@ -1384,7 +1384,7 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       Double_t *oldBins   = new Double_t[(nxbins+2)*(nybins+2)];
       Double_t *oldCount  = new Double_t[(nxbins+2)*(nybins+2)];
       Double_t *oldErrors = new Double_t[(nxbins+2)*(nybins+2)];
-      Double_t *oldBinw2  = (fBinSumw2.fN ? new Double_t[(nxbins+2)*(nybins)] : 0  );
+      Double_t *oldBinw2  = (fBinSumw2.fN ? new Double_t[(nxbins+2)*(nybins+2)] : 0  );
       Double_t *cu1 = GetW();
       Double_t *er1 = GetW2();
       Double_t *en1 = GetB();
