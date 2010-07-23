@@ -2420,7 +2420,8 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
       Int_t len = strlen(gSystem->WorkingDirectory());
       if ( build_loc.Length() > (len+1) ) {
          builddep += " \"-p";
-         if (build_loc[len] == '/') {
+         if (build_loc[len] == '/' || build_loc[len+1] != '\\' ) {
+            // Since the path is now ran through TSystem::ExpandPathName the single \ is also possible.
             R__AddPath(builddep, build_loc.Data() + len + 1 );
          } else {
             // Case of dir\\name
@@ -2429,7 +2430,9 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
          builddep += "/\" ";
       }
    } else {
-      builddep += " \"-p" + build_loc + "/\" ";
+      builddep += " \"-p";
+      R__AddPath(builddep, build_loc);
+      builddep += "/\" ";
    }
    builddep += " -Y -- ";
 #ifndef ROOTINCDIR
@@ -2442,23 +2445,31 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    builddep += defines;
    builddep += " -- \"";
    builddep += filename;
+   builddep += "\" ";
+   TString targetname;
+   if (library.BeginsWith(gSystem->WorkingDirectory())) {
+      Int_t len = strlen(gSystem->WorkingDirectory());
+      if ( library.Length() > (len+1) ) {
+         if (library[len] == '/' || build_loc[len+1] != '\\' ) {
+            targetname = library.Data() + len + 1;
+         } else {
+            targetname = library.Data() + len + 2;
+         }
+      } else {
+         targetname = library;
+      }
+   } else {
+      targetname = library;
+   }
+   builddep += " \"";
+   builddep += "-t";
+   R__AddPath(builddep, targetname);
    builddep += "\" > ";
    builddep += stderrfile;
    builddep += " 2>&1 ";
 
    TString adddictdep = "echo ";
-   if (library.BeginsWith(gSystem->WorkingDirectory())) {
-      Int_t len = strlen(gSystem->WorkingDirectory());
-      if ( library.Length() > (len+1) ) {
-         if (library[len] == '/') {
-            R__AddPath(adddictdep,library.Data() + len + 1);
-         } else {
-            R__AddPath(adddictdep,library.Data() + len + 2);
-         }
-      } else {
-         R__AddPath(adddictdep,library);
-      }
-   }
+   R__AddPath(adddictdep,targetname);
    adddictdep += ": ";
    {
       char *cintdictversion = gSystem->Which(incPath,"cintdictversion.h");

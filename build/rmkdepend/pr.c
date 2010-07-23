@@ -86,9 +86,9 @@ add_include(filep, file, file_red, include, dot, failOK)
 }
 
 void
-pr(ip, file, base)
+pr(ip, file, base, dep)
 	register struct inclist  *ip;
-	char	*file, *base;
+	char	*file, *base, *dep;
 {
 	static char	*lastfile;
 	static int	current_len;
@@ -118,10 +118,15 @@ pr(ip, file, base)
 
 	if (current_len + len > width || file != lastfile) {
 		lastfile = file;
-                if (rootBuild)
-                   ROOT_newFile();
-		sprintf(buf, "\n%s%s%s: %s", objprefix, base, objsuffix,
-			ipifile);
+      if (rootBuild)
+          ROOT_newFile();
+      if (dep==0) {
+          sprintf(buf, "\n%s%s%s: %s", objprefix, base, objsuffix,
+			         ipifile);
+      } else {
+          sprintf(buf, "\n%s: %s", dep,
+			         ipifile);
+      }
 		len = current_len = strlen(buf);
 	}
 	else {
@@ -151,9 +156,10 @@ pr(ip, file, base)
 }
 
 void
-recursive_pr_include(head, file, base)
+recursive_pr_include(head, file, base, dep)
 	register struct inclist	*head;
 	register char	*file, *base;
+   register char  *dep;
 {
 	register int	i;
 
@@ -161,7 +167,7 @@ recursive_pr_include(head, file, base)
 		return;
 	head->i_flags |= MARKED;
 	if (head->i_file != file)
-		pr(head, file, base);
+		pr(head, file, base, dep);
 	for (i=0; i<head->i_listlen; i++)
-		recursive_pr_include(head->i_list[ i ], file, base);
+		recursive_pr_include(head->i_list[ i ], file, base, dep);
 }
