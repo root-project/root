@@ -845,10 +845,20 @@ namespace {
       return PyInt_FromLong( result );                                        \
    }                                                                          \
                                                                               \
-   PyObject* name##StringIsequal( PyObject* self, PyObject* obj )             \
+   PyObject* name##StringIsEqual( PyObject* self, PyObject* obj )             \
    {                                                                          \
       PyObject* data = CallPyObjMethod( self, #func );                        \
       PyObject* result = PyObject_RichCompare( data, obj, Py_EQ );            \
+      Py_DECREF( data );                                                      \
+      if ( ! result )                                                         \
+         return 0;                                                            \
+      return result;                                                          \
+   }                                                                          \
+                                                                              \
+   PyObject* name##StringIsNotEqual( PyObject* self, PyObject* obj )          \
+   {                                                                          \
+      PyObject* data = CallPyObjMethod( self, #func );                        \
+      PyObject* result = PyObject_RichCompare( data, obj, Py_NE );            \
       Py_DECREF( data );                                                      \
       if ( ! result )                                                         \
          return 0;                                                            \
@@ -1803,7 +1813,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__repr__", (PyCFunction) StlStringRepr, METH_NOARGS );
       Utility::AddToClass( pyclass, "__str__", "c_str" );
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) StlStringCompare, METH_O );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlStringIsequal, METH_O );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlStringIsEqual, METH_O );
+      Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) StlStringIsNotEqual, METH_O );
 
       return kTRUE;
    }
@@ -1814,7 +1825,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__len__", "Length" );
 
       Utility::AddToClass( pyclass, "__cmp__", "CompareTo" );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TStringIsequal, METH_O );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TStringIsEqual, METH_O );
+      Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) TStringIsNotEqual, METH_O );
 
       return kTRUE;
    }
@@ -1825,7 +1837,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__len__",  (PyCFunction) TObjStringLength, METH_NOARGS );
 
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjStringCompare, METH_O );
-      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjStringIsequal, METH_O );
+      Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjStringIsEqual, METH_O );
+      Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) TObjStringIsNotEqual, METH_O );
 
       return kTRUE;
    }
