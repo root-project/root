@@ -2450,7 +2450,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    if (library.BeginsWith(gSystem->WorkingDirectory())) {
       Int_t len = strlen(gSystem->WorkingDirectory());
       if ( library.Length() > (len+1) ) {
-         if (library[len] == '/' || build_loc[len+1] != '\\' ) {
+         if (library[len] == '/' || library[len+1] != '\\' ) {
             targetname = library.Data() + len + 1;
          } else {
             targetname = library.Data() + len + 2;
