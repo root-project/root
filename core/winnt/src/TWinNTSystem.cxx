@@ -4166,11 +4166,29 @@ Double_t TWinNTSystem::GetCPUTime()
 //______________________________________________________________________________
 TTime TWinNTSystem::Now()
 {
-   // Return current time.
+   // Get current time in milliseconds since 0:00 Jan 1 1995.
+
+   static time_t jan95 = 0;
+   if (!jan95) {
+      struct tm tp;
+      tp.tm_year  = 95;
+      tp.tm_mon   = 0;
+      tp.tm_mday  = 1;
+      tp.tm_hour  = 0;
+      tp.tm_min   = 0;
+      tp.tm_sec   = 0;
+      tp.tm_isdst = -1;
+
+      jan95 = mktime(&tp);
+      if ((int)jan95 == -1) {
+         ::SysError("TWinNTSystem::Now", "error converting 950001 0:00 to time_t");
+         return 0;
+      }
+   }
 
    _timeb now;
    _ftime(&now);
-   return (TTime)(now.time*1000+now.millitm);
+   return TTime((now.time-(Long_t)jan95)*1000 + now.millitm);
 }
 
 //______________________________________________________________________________
