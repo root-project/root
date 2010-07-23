@@ -49,7 +49,7 @@
 // Test 17: Reference File Read for Histograms and Profiles..................OK  //
 // ****************************************************************************  //
 // stressHistogram: Real Time =  64.01 seconds Cpu Time =  63.89 seconds         //
-//  ROOTMARKS = 430.74 ROOT version: 5.25/01	branches/dev/mathDev@29787       //
+//  ROOTMARKS = 430.74 ROOT version: 5.25/01 branches/dev/mathDev@29787       //
 // ****************************************************************************  //
 //                                                                               //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
@@ -7052,7 +7052,7 @@ bool testArrayRebin()
    std::sort(rebinArray, rebinArray + rebin);
    for ( Int_t i = 0; i < rebin; ++i ) {
       rebinArray[i] = TMath::Nint( rebinArray[i] * ( h1->GetNbinsX() - 2 ) + 2 );
-      rebinArray[i] = h1->GetBinLowEdge( rebinArray[i] );
+      rebinArray[i] = h1->GetBinLowEdge( (Int_t) rebinArray[i] );
    }
    
 
@@ -7102,7 +7102,7 @@ bool testArrayRebinProfile()
    std::sort(rebinArray, rebinArray + rebin);
    for ( Int_t i = 0; i < rebin; ++i ) {
       rebinArray[i] = TMath::Nint( rebinArray[i] * ( p1->GetNbinsX() - 2 ) + 2 );
-      rebinArray[i] = p1->GetBinLowEdge( rebinArray[i] );
+      rebinArray[i] = p1->GetBinLowEdge( (Int_t) rebinArray[i] );
    }
 
 //    rebinArray[0] = minRange;
