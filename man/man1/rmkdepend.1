@@ -58,7 +58,10 @@ rmkdepend \- create dependencies in makefiles (ROOT Version)
 .I otheroptions
 \-\^\-
 ]
-.I sourcefile
+.I sourcefile 
+[
+.BI \-t targetfilename
+]
 \&.\|.\|.
 .br
 .SH DESCRIPTION
@@ -278,6 +281,22 @@ All options that
 .B rmkdepend
 recognizes and appear between the pair of double hyphens
 are processed normally.
+.TP 5
+.B \-t\fItargetfilename\fP
+Filename.
+This allows you to specify an alternate target filename to be use for the preceding file.  For example if you call 
+.sp
+     rmkdepend -sobj -pbuild file.cxx -tlibrary.so
+.sp
+rather than inserting the line
+.sp
+     build/file.obj: .\|.\|.
+.sp
+.B rmkdepend
+will insert:
+.sp
+     library.so: .\|.\|.
+.sp
 .SH ALGORITHM
 The approach used in this program enables it to run an order of magnitude
 faster than any other ``dependency generator'' I have ever seen.
