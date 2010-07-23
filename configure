@@ -95,6 +95,7 @@ options="                    \
    enable_tmva               \
    enable_unuran             \
    enable_winrtdebug         \
+   enable_x11                \
    enable_xft                \
    enable_xml                \
    enable_xrootd             \
@@ -105,7 +106,7 @@ for flag in "$@"; do
     case $flag in
     --gminimal)
        DEFAULTENABLE="no"
-       MINIMALENABLE="enable_gui" # to be implemented
+       MINIMALENABLE="enable_x11"
        break ;;
      --minimal)
        DEFAULTENABLE="no"
@@ -1219,6 +1220,7 @@ enable/disable options, prefix with either --enable- or --disable-
   tmva               Build TMVA multi variate analysis library
   unuran             UNURAN - package for generating non-uniform random numbers
   winrtdebug         Link against the Windows debug runtime library
+  x11                X11 support
   xml                XML parser interface
   xrootd             Build xrootd file server and its client (if supported)
   xft                Xft support (X11 antialiased fonts)
@@ -1226,6 +1228,7 @@ enable/disable options, prefix with either --enable- or --disable-
 minimal set of libraries, can be combined with above --enable-... options
 
   --minimal          Do not automatically search for support libraries
+  --gminimal         Do not automatically search for support libraries, but include X11
 
 with options, prefix with --with-, enables corresponding support
 
@@ -1419,7 +1422,9 @@ win32)
 esac
 
 # check for which, avoid using which, as it may be a buggy csh script.
-if type whence >/dev/null 2>&1 ; then
+if type -path type >/dev/null 2>&1 ; then
+   cwhich="type -path"
+elif type whence >/dev/null 2>&1 ; then
    cwhich="whence"
 else
    # XXX Should do something better...
@@ -1482,6 +1487,7 @@ if test $# -gt 0 ; then
       --nohowto)               nohowto="yes"         ;;
       --fail-on-missing)       fail_on_missing="yes" ;;
       --minimal)               ;;
+      --gminimal)              ;;
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-afs-incdir=*)     afsincdir=$optarg     ; enable_afs="yes"     ;;
       --with-afs-libdir=*)     afslibdir=$optarg     ; enable_afs="yes"     ;;
@@ -1715,6 +1721,15 @@ fi
 #
 if test "x$platform" = "xwin32"; then
     enable_shared="no"
+    enable_x11="no"
+fi
+
+######################################################################
+#
+### echo %%% On iOS always disable X11
+#
+if test "x$platform" = "xios"; then
+    enable_x11="no"
 fi
 
 ######################################################################
@@ -1798,7 +1813,7 @@ fi
 # Mandatory test, must succeed
 # Check for X11 and Xpm library (for X11 use always shared lib)
 #
-if test ! "x$platform" = "xwin32"; then
+if test ! "x$enable_x11" = "xno" ; then
     check_library "libX11" "yes" "$x11libdir" \
         /usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
         /usr/local/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
@@ -1895,7 +1910,7 @@ fi
 #
 ### echo %%%Xft support (X11 antialiased fonts)
 #
-if test "x$platform" = "xwin32"; then
+if test "x$enable_x11" = "xno"; then
    enable_xft="no"
 fi
 hasxft="undef"
@@ -2036,60 +2051,6 @@ if test "x$enable_builtin_freetype" = "x" || \
 fi
 message "Checking whether to build included libfreetype6"
 result "$enable_builtin_freetype"
-
-######################################################################
-#
-### echo %%% libftgl (builtin or system) - Mandatory lib
-#
-# Mandatory test, must succeed
-# (see http://homepages.paradise.net.nz/henryj/code/index.html#FTGL)
-#
-ftglincdir=include
-if test "x$platform" = "xwin32"; then
-   ftgllibdir=
-   ftgllibs=lib/libFTGL.lib
-else
-   ftgllibdir=-Llib
-   ftgllibs=-lFTGL
-fi
-if test "x$enable_builtin_ftgl" = "x" || \
-   test "x$enable_builtin_ftgl" = "xno" ; then
-
-   # check if we have pkg-config
-   checking_msg "pkg-config"
-   if `$cwhich pkg-config > /dev/null 2>&1` ; then
-      $cwhich pkg-config
-
-      message "Checking for libftgl"
-      if pkg-config --exists ftgl ; then
-         result "ok"
-         message "Checking for ftgl version > 2.1.2"
-         ftgl_version=`pkg-config --modversion ftgl | \
-         tr '.' ' ' | \
-         awk 'BEGIN { FS = " "; } \
-            { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
-         # Use FTGL/ftgl.h when > 2.1.2
-         if test $ftgl_version -gt 2001002 ; then
-            result "ok"
-            ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
-            ftgllibs=`pkg-config --libs-only-l ftgl`
-            ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
-            enable_builtin_ftgl="no"
-         else
-            enable_builtin_ftgl="yes"
-            result "no (`pkg-config --modversion ftgl`)"
-         fi
-      else
-         enable_builtin_ftgl="yes"
-         result "no"
-      fi
-   else
-      enable_builtin_ftgl="yes"
-      echo "not found"
-   fi
-fi
-message "Checking whether to build included libftgl"
-result "$enable_builtin_ftgl"
 
 ######################################################################
 #
@@ -2265,6 +2226,62 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
 fi
 check_explicit "$enable_opengl" "$enable_opengl_explicit" \
      "Explicitly required OpenGL dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% libftgl (builtin or system) - Needed if OpenGL enabled
+#
+# Mandatory test, must succeed
+# (see http://homepages.paradise.net.nz/henryj/code/index.html#FTGL)
+#
+if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
+   ftglincdir=include
+   if test "x$platform" = "xwin32"; then
+      ftgllibdir=
+      ftgllibs=lib/libFTGL.lib
+   else
+      ftgllibdir=-Llib
+      ftgllibs=-lFTGL
+   fi
+   if test "x$enable_builtin_ftgl" = "x" || \
+      test "x$enable_builtin_ftgl" = "xno" ; then
+
+      # check if we have pkg-config
+      checking_msg "pkg-config"
+      if `$cwhich pkg-config > /dev/null 2>&1` ; then
+         $cwhich pkg-config
+
+         message "Checking for libftgl"
+         if pkg-config --exists ftgl ; then
+            result "ok"
+            message "Checking for ftgl version > 2.1.2"
+            ftgl_version=`pkg-config --modversion ftgl | \
+            tr '.' ' ' | \
+            awk 'BEGIN { FS = " "; } \
+               { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
+            # Use FTGL/ftgl.h when > 2.1.2
+            if test $ftgl_version -gt 2001002 ; then
+               result "ok"
+               ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
+               ftgllibs=`pkg-config --libs-only-l ftgl`
+               ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
+               enable_builtin_ftgl="no"
+            else
+               enable_builtin_ftgl="yes"
+               result "no (`pkg-config --modversion ftgl`)"
+            fi
+         else
+            enable_builtin_ftgl="yes"
+            result "no"
+         fi
+      else
+         enable_builtin_ftgl="yes"
+         echo "not found"
+      fi
+   fi
+   message "Checking whether to build included libftgl"
+   result "$enable_builtin_ftgl"
+fi
 
 ######################################################################
 #
@@ -5795,6 +5812,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@xmlincdir@|$xmlincdir|"              \
     -e "s|@xmllib@|$xmllib|"                    \
     -e "s|@xmllibdir@|$xmllibdir|"              \
+    -e "s|@buildx11@|$enable_x11|"              \
     -e "s|@x11libdir@|$x11libdir|"              \
     -e "s|@xpmlib@|$xpmlib|"                    \
     -e "s|@xpmlibdir@|$xpmlibdir|"              \

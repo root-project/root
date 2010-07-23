@@ -96,16 +96,19 @@ SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gcc)
-MODULES      += core/unix graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
+MODULES      += core/unix
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
-MODULES      += core/unix graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
+MODULES      += core/unix
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 endif
+endif
+ifeq ($(BUILDX11),yes)
+MODULES      += graf2d/x11 graf2d/x11ttf graf3d/x3d rootx
 endif
 ifeq ($(BUILDGL),yes)
 ifeq ($(BUILDFTGL),yes)
