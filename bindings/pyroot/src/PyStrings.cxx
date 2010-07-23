@@ -8,6 +8,8 @@
 //- data _____________________________________________________________________
 PyObject* PyROOT::PyStrings::gBases = 0;
 PyObject* PyROOT::PyStrings::gClass = 0;
+PyObject* PyROOT::PyStrings::gCppEq = 0;
+PyObject* PyROOT::PyStrings::gCppNe = 0;
 PyObject* PyROOT::PyStrings::gDeref = 0;
 PyObject* PyROOT::PyStrings::gDict = 0;
 PyObject* PyROOT::PyStrings::gEmptyString = 0;
@@ -47,6 +49,8 @@ PyObject* PyROOT::PyStrings::gTClassDynCast = 0;
 Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gBases, __bases__ );
    PYROOT_INITIALIZE_STRING( gClass, __class__ );
+   PYROOT_INITIALIZE_STRING( gCppEq, __cpp_eq__ );
+   PYROOT_INITIALIZE_STRING( gCppNe, __cpp_ne__ );
    PYROOT_INITIALIZE_STRING( gDeref, __deref__ );
    PYROOT_INITIALIZE_STRING( gDict, __dict__ );
    if ( ! ( PyStrings::gEmptyString = PyString_FromString( (char*)"" ) ) )
@@ -85,6 +89,8 @@ Bool_t PyROOT::CreatePyStrings() {
 PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gBases ); PyStrings::gBases = 0;
    Py_DECREF( PyStrings::gClass ); PyStrings::gClass = 0;
+   Py_DECREF( PyStrings::gCppEq ); PyStrings::gCppEq = 0;
+   Py_DECREF( PyStrings::gCppNe ); PyStrings::gCppNe = 0;
    Py_DECREF( PyStrings::gDeref ); PyStrings::gDeref = 0;
    Py_DECREF( PyStrings::gDict ); PyStrings::gDict = 0;
    Py_DECREF( PyStrings::gEmptyString ); PyStrings::gEmptyString = 0;

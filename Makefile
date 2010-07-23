@@ -985,11 +985,13 @@ install: all
 	   $(INSTALLDATA) cint/cint/include     $(DESTDIR)$(CINTINCDIR)/cint; \
 	   $(INSTALLDATA) cint/cint/lib         $(DESTDIR)$(CINTINCDIR)/cint; \
 	   $(INSTALLDATA) cint/cint/stl         $(DESTDIR)$(CINTINCDIR)/cint; \
-	   echo "Installing cint/cint7/include cint/cint7/lib and cint/cint7/stl in $(DESTDIR)$(CINTINCDIR)"; \
-	   $(INSTALLDIR)                        $(DESTDIR)$(CINTINCDIR)/cint7; \
-	   $(INSTALLDATA) cint/cint7/include    $(DESTDIR)$(CINTINCDIR)/cint7; \
-	   $(INSTALLDATA) cint/cint7/lib        $(DESTDIR)$(CINTINCDIR)/cint7; \
-	   $(INSTALLDATA) cint/cint7/stl        $(DESTDIR)$(CINTINCDIR)/cint7; \
+	   if [ "x$(BUILDCINT7)" = "xyes" ]; then \
+	      echo "Installing cint/cint7/include cint/cint7/lib and cint/cint7/stl in $(DESTDIR)$(CINTINCDIR)"; \
+	      $(INSTALLDIR)                     $(DESTDIR)$(CINTINCDIR)/cint7; \
+	      $(INSTALLDATA) cint/cint7/include $(DESTDIR)$(CINTINCDIR)/cint7; \
+	      $(INSTALLDATA) cint/cint7/lib     $(DESTDIR)$(CINTINCDIR)/cint7; \
+	      $(INSTALLDATA) cint/cint7/stl     $(DESTDIR)$(CINTINCDIR)/cint7; \
+	   fi; \
 	   find $(DESTDIR)$(CINTINCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   find $(DESTDIR)$(CINTINCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \

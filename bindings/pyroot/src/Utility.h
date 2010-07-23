@@ -47,6 +47,11 @@ namespace PyROOT {
       Bool_t AddToClass( PyObject* pyclass, const char* label, const char* func );
       Bool_t AddToClass( PyObject* pyclass, const char* label, PyCallable* pyfunc );
 
+   // helpers for dynamically constructing binary operators
+      Bool_t AddBinaryOperator( PyObject* left, PyObject* right, const char* op, const char* label = "" );
+      Bool_t AddBinaryOperator( PyObject* pyclass, const std::string& lcname, const std::string& rcname,
+                                const char* op, const char* label = "" );
+
    // helper for template classes and methods
       Bool_t BuildTemplateName( PyObject*& pyname, PyObject* args, int argoff );
 
