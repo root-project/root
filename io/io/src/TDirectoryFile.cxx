@@ -395,11 +395,11 @@ TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
 
 //______________________________________________________________________________
 TDirectory *TDirectoryFile::GetDirectory(const char *apath,
-                                     Bool_t printError, const char *funcname)
+                                         Bool_t printError, const char *funcname)
 {
-   // Find a directory using apath.
+   // Find a directory named "apath".
    // It apath is null or empty, returns "this" directory.
-   // Otherwie use apath to find a directory.
+   // Otherwise use the name "apath" to find a directory.
    // The absolute path syntax is:
    //    file.root:/dir1/dir2
    // where file.root is the file and /dir1/dir2 the desired subdirectory
