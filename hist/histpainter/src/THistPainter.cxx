@@ -1241,6 +1241,7 @@ by calling <tt>gStyle->SetPaintTextFormat()</tt>.
 the angle <tt>nn</tt> (<tt>0 < nn < 90</tt>).
 
 <p>For 2D histograms the text is plotted in the center of each non empty cells.
+It is possible to plot empty cells by calling gStyle->SetHistMinimumZero().
 For 1D histogram the text is plotted at a y position equal to the bin content.
 
 <p>For 2D histograms when the option "E" (errors) is combined with the option
@@ -7751,7 +7752,7 @@ void THistPainter::PaintText(Option_t *)
             }
             if (!IsInside(x,y)) continue;
             z = fH->GetBinContent(bin);
-            if (z < Hparam.zmin || z == 0) continue;
+            if (z < Hparam.zmin || (z == 0 && !gStyle->GetHistMinimumZero()) ) continue;
             if (Hoption.Text>2000) {
                e = fH->GetBinError(bin);
                sprintf(format,"#splitline{%s%s}{#pm %s%s}",
