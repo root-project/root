@@ -2236,13 +2236,8 @@ check_explicit "$enable_opengl" "$enable_opengl_explicit" \
 #
 if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
    ftglincdir=include
-   if test "x$platform" = "xwin32"; then
-      ftgllibdir=
-      ftgllibs=lib/libFTGL.lib
-   else
-      ftgllibdir=-Llib
-      ftgllibs=-lFTGL
-   fi
+   ftgllibdir=-Llib
+   ftgllibs=-lFTGL
    if test "x$enable_builtin_ftgl" = "x" || \
       test "x$enable_builtin_ftgl" = "xno" ; then
 
@@ -2287,7 +2282,7 @@ fi
 #
 ### echo %%% OpenGL support on Windoze
 #
-# On win32 we always have OpenGL available (is this true?)
+# On win32 we always have OpenGL available
 #
 if test "x$platform" = "xwin32"; then
    enable_opengl="yes"
@@ -2297,6 +2292,11 @@ if test "x$platform" = "xwin32"; then
    glewincdir=include
    glewlibdir=
    glewlibs=lib/libGLEW.lib
+
+   enable_builtin_ftgl="yes"
+   ftglincdir=include
+   ftgllibdir=
+   ftgllibs=lib/libFTGL.lib
 fi
 
 ######################################################################
