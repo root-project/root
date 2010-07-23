@@ -15,6 +15,12 @@ an error in case the stored time is larger then 32-bit and truncation
 occurs (like was always the case till now, but silently).
 </li>
 </ul>
+<h4>Build</h4>
+<ul>
+<li>New option '-t' for rmkdepend to allow the caller to fully specify the name to be used as a target
+This supersedes the name calculated from the input file name and the -p and -o option.
+</li>
+</ul>
 <h4>ACLiC</h4>
 <ul>
 <li>Allow ACLiC to use a flat directory structure when a build directory is specified.
