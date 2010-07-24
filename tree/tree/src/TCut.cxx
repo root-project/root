@@ -69,6 +69,38 @@ TCut::~TCut()
 }
 
 //______________________________________________________________________________
+Bool_t TCut::operator==(const char *rhs) const
+{
+   // Comparison.
+   
+   return fTitle == rhs;
+}
+
+//______________________________________________________________________________
+Bool_t TCut::operator==(const TCut &rhs) const
+{
+   // Comparison.
+   
+   return fTitle == rhs.fTitle;
+}
+
+//______________________________________________________________________________
+Bool_t TCut::operator!=(const char *rhs) const
+{
+   // Comparison.
+   
+   return fTitle != rhs;
+}
+
+//______________________________________________________________________________
+Bool_t TCut::operator!=(const TCut &rhs) const
+{
+   // Comparison.
+   
+   return fTitle != rhs.fTitle;
+}
+
+//______________________________________________________________________________
 TCut& TCut::operator=(const char *rhs)
 {
    // Assignment.
@@ -90,7 +122,7 @@ TCut& TCut::operator=(const TCut& rhs)
 TCut& TCut::operator+=(const char *rhs)
 {
    // Addition.
-
+   
    if (!rhs || strlen(rhs) == 0) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
@@ -103,7 +135,7 @@ TCut& TCut::operator+=(const char *rhs)
 TCut& TCut::operator+=(const TCut& rhs)
 {
    // Addition.
-
+   
    if (rhs.fTitle.Length() == 0) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
@@ -141,24 +173,24 @@ TCut& TCut::operator*=(const TCut& rhs)
 //______________________________________________________________________________
 TCut operator+(const TCut& lhs, const char *rhs)
 {
-   // Multiplication.
-
+   // Addition.
+   
    return TCut(lhs) += rhs;
 }
 
 //______________________________________________________________________________
 TCut operator+(const char *lhs, const TCut& rhs)
 {
-   // Multiplication.
-
+   // Addition.
+   
    return TCut(lhs) += rhs;
 }
 
 //______________________________________________________________________________
 TCut operator+(const TCut& lhs, const TCut& rhs)
 {
-   // Multiplication.
-
+   // Addition.
+   
    return TCut(lhs) += rhs;
 }
 

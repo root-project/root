@@ -25,7 +25,13 @@
 #endif
 
 class TCut : public TNamed {
-
+private:
+   // Prevent meaningless operator (which otherwise can be reached via
+   // the conversion to 'const char*'
+   Bool_t operator<(const TCut &rhs); // Intentional left unimplemented
+   Bool_t operator<=(const TCut &rhs); // Intentional left unimplemented
+   Bool_t operator>(const TCut &rhs); // Intentional left unimplemented
+   Bool_t operator>=(const TCut &rhs); // Intentional left unimplemented
 public:
    TCut();
    TCut(const char *title);
@@ -40,7 +46,13 @@ public:
    TCut&    operator+=(const TCut &rhs);
    TCut&    operator*=(const char *rhs);
    TCut&    operator*=(const TCut &rhs);
-
+   
+   // Comparison
+   Bool_t   operator==(const char *rhs) const;
+   Bool_t   operator==(const TCut &rhs) const;
+   Bool_t   operator!=(const char *rhs) const;
+   Bool_t   operator!=(const TCut &rhs) const;
+   
    friend TCut operator+(const TCut &lhs, const char *rhs);
    friend TCut operator+(const char *lhs, const TCut &rhs);
    friend TCut operator+(const TCut &lhs, const TCut &rhs);
