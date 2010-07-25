@@ -3355,21 +3355,27 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                   local_index = 0;
                   Int_t virt_accum = 0;
                   Int_t maxloop = fManager->fCumulUsedVarDims->GetSize();
-                  do {
-                     virt_accum += fManager->fCumulUsedVarDims->GetArray()[local_index];
-                     local_index++;
-                  } while( instance >= virt_accum && local_index<maxloop);
-                  if (local_index==maxloop && (instance >= virt_accum)) {
+                  if (maxloop == 0) {
                      local_index--;
                      instance = fNdata[0]+1; // out of bounds.
                      if (check) return fNdata[0]+1;
                   } else {
-                     local_index--;
-                     if (fManager->fCumulUsedVarDims->At(local_index)) {
-                        instance -= (virt_accum - fManager->fCumulUsedVarDims->At(local_index));
-                     } else {
+                     do {
+                        virt_accum += fManager->fCumulUsedVarDims->GetArray()[local_index];
+                        local_index++;
+                     } while( instance >= virt_accum && local_index<maxloop);
+                     if (local_index==maxloop && (instance >= virt_accum)) {
+                        local_index--;
                         instance = fNdata[0]+1; // out of bounds.
                         if (check) return fNdata[0]+1;
+                     } else {
+                        local_index--;
+                        if (fManager->fCumulUsedVarDims->At(local_index)) {
+                           instance -= (virt_accum - fManager->fCumulUsedVarDims->At(local_index));
+                        } else {
+                           instance = fNdata[0]+1; // out of bounds.
+                           if (check) return fNdata[0]+1;
+                        }
                      }
                   }
                   virt_dim ++;
