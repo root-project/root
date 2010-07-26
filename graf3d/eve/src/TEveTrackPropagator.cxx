@@ -518,8 +518,9 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
    {
       TEveVector d1 = v;
       d1 -= currV;
+      Float_t d1_mag = d1.Mag();
 
-      if (d1.Mag() > kStepEps)
+      if (d1_mag > kStepEps)
       {
          Float_t step_frac = prod0 / (prod0 - prod1);
          if (step_frac > 0)
@@ -527,7 +528,7 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVector& v, TEveVector& p)
             // Step for fraction of previous step size.
             // We pass 'enforce_max_step' flag to Update().
             Float_t orig_max_step = fH.fMaxStep;
-            fH.fMaxStep *= step_frac;
+            fH.fMaxStep = d1_mag * step_frac;
             Update(currV, p, kTRUE, kTRUE);
             Step(currV, p, forwV, forwP);
             p     = forwP;
@@ -996,9 +997,9 @@ void TEveTrackPropagator::StepRungeKutta(Double_t step,
   Double_t yt;
   Double_t zt;
 
-  // Double_t maxit = 1992;
-  Double_t maxit = 10;
-  Double_t maxcut = 11;
+  // const Int_t maxit = 1992;
+  const Int_t maxit  = 500;
+  const Int_t maxcut = 11;
 
   const Double_t hmin   = 1e-4; // !!! MT ADD,  should be member
   const Double_t kdlt   = 1e-3; // !!! MT CHANGE from 1e-4, should be member

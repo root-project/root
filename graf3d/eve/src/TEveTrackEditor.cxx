@@ -177,10 +177,10 @@ void TEveTrackListEditor::SetModel(TObject* obj)
 
    Float_t llim;
    fPtRange->SetValues(fTC->fMinPt, fTC->fMaxPt);
-   llim = TMath::Log10(fTC->fLimPt);
+   llim = fTC->fLimPt > 1 ? TMath::Log10(fTC->fLimPt) : 0;
    fPtRange->SetLimits(0, fTC->fLimPt, llim < 2 ? TGNumberFormat::kNESRealTwo : (llim < 3 ? TGNumberFormat::kNESRealOne : TGNumberFormat::kNESInteger));
    fPRange ->SetValues(fTC->fMinP, fTC->fMaxP);
-   llim = TMath::Log10(fTC->fLimP);
+   llim = fTC->fLimP > 1 ? TMath::Log10(fTC->fLimP) : 0;
    fPRange ->SetLimits(0, fTC->fLimP, llim < 2 ? TGNumberFormat::kNESRealTwo : (llim < 3 ? TGNumberFormat::kNESRealOne : TGNumberFormat::kNESInteger));
 
    fRSSubEditor->SetModel(fTC->GetPropagator());
