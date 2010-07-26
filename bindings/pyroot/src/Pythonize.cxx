@@ -135,6 +135,20 @@ namespace {
       return result;
    }
 
+//____________________________________________________________________________
+   inline PyObject* BoolNot( PyObject* value )
+   {
+      if ( value == Py_True ) {
+         Py_INCREF( Py_False );
+         Py_DECREF( value );
+         return Py_False;
+      } else {
+         Py_INCREF( Py_True );
+         Py_DECREF( value );
+         return Py_True;
+      }
+   }
+
 //- "smart pointer" behavior ---------------------------------------------------
    PyObject* DeRefGetAttr( PyObject* self, PyObject* name )
    {
@@ -206,6 +220,15 @@ namespace {
          return ObjectProxy_Type.tp_richcompare( self, obj, Py_EQ );
 
       return CallPyObjMethod( self, "IsEqual", obj );
+   }
+
+//____________________________________________________________________________
+   PyObject* TObjectIsNotEqual( PyObject* self, PyObject* obj )
+   {
+      if ( ! ObjectProxy_Check( obj ) || ! ((ObjectProxy*)obj)->fObject )
+         return ObjectProxy_Type.tp_richcompare( self, obj, Py_NE );
+
+      return BoolNot( CallPyObjMethod( self, "IsEqual", obj ) );
    }
 
 //____________________________________________________________________________
@@ -990,16 +1013,7 @@ namespace {
 //____________________________________________________________________________
    PyObject* StlIterIsNotEqual( ObjectProxy* self, ObjectProxy* other )
    {
-      PyObject* result = StlIterIsEqual( self, other );
-      if ( result == Py_True ) {
-         Py_INCREF( Py_False );
-         Py_DECREF( result );
-         return Py_False;
-      } else {
-         Py_INCREF( Py_True );
-         Py_DECREF( result );
-         return Py_True;
-      }
+      return BoolNot( StlIterIsEqual( self, other ) );
    }
 
 
@@ -1707,6 +1721,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // comparing for lists
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) TObjectCompare, METH_O );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) TObjectIsEqual, METH_O );
+      Utility::AddToClass( pyclass, "__ne__",  (PyCFunction) TObjectIsNotEqual, METH_O );
 
       return kTRUE;
    }
