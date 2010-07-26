@@ -10,7 +10,9 @@ void FITS_tutorial1()
    printf("The object you will see is a snapshot of the NGC7662 nebula,\n");
    printf("which was taken by the author on November 2009 in Barcelona (CATALONIA).\n\n");
       
-   printf("Press ENTER to start..."); getchar();
+   if (!gROOT->IsBatch()) {
+      printf("Press ENTER to start..."); getchar();
+   }
    
    // Open primary HDU from file
    TFITSHDU *hdu = new TFITSHDU("sample1.fits");

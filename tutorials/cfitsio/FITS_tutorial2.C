@@ -12,7 +12,9 @@ void FITS_tutorial2()
    printf("the flux data, whereas the second row the wavelengths.\n");
    printf("Data copyright: NASA\n\n");
    
-   printf("Press ENTER to start..."); getchar();
+   if (!gROOT->IsBatch()) {
+      printf("Press ENTER to start..."); getchar();
+   }
 
    // Open primary HDU from file
    TFITSHDU *hdu = new TFITSHDU("sample2.fits");

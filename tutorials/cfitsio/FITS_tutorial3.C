@@ -9,7 +9,9 @@ void FITS_tutorial3()
    printf("extensions. The primary HDU contains no data.\n");
    printf("Data copyright: NASA\n\n");
    
-   printf("Press ENTER to start..."); getchar();
+   if (!gROOT->IsBatch()) {
+      printf("Press ENTER to start..."); getchar();
+   }
    
    // Open extensions 1 to 5 from file
    printf("Press ENTER to see a canvas with all images within the file:"); getchar();
