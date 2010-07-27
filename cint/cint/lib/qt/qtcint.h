@@ -27,6 +27,7 @@ typedef unsigned int uint;
 static const int white = 0xff;
 static const int black = 0x0;
 typedef void* QTSFUNC;
+class RestrictedBool;
 class QPoint;
 class QCursor {public:  const QPoint& pos(); };
 typedef int Tag;
