@@ -88,7 +88,18 @@ namespace ROOT
                      else if (elem[i]=='>') { --level; }
                      else if (level == 0 && isspace(elem[i])) {
                         type = elem.substr( 0, i );
-                        elem = Trim( elem.substr(i+1, elem.size()-i+1) );
+                        // At the first iteration we know we have a space.
+                        while( elem[i]=='*' || elem[i]=='&' || isspace(elem[i]) ) {
+                           ++i;
+                           if (strcmp("const",elem.c_str()+i)==0 && (i+5)>elem.size()
+                               && ( elem[i+5]=='*' || elem[i+5]=='&' || isspace(elem[i+5])) ) {
+                              i += 5;
+                              type += "const ";
+                           } else if (elem[i]=='*' || elem[i]=='&') {
+                              type += elem[i];
+                           }
+                        }
+                        elem = Trim( elem.substr(i, elem.size()-i) );
                         break;
                      }
                   }

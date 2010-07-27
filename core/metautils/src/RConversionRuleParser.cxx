@@ -33,7 +33,19 @@ namespace ROOT
             case ' ':
             case '\t':
             case '\r':
-            case '=': if (level==0) return cursor; else break;
+            case '=': if (level==0) {
+               std::string::size_type sub_cursor = cursor;
+               while( isspace(command[sub_cursor]) ) {
+                  ++sub_cursor;
+               }
+               if ( command[sub_cursor] == '=' ) {
+                  return sub_cursor;
+               } else {
+                  return cursor;
+               }
+            } else {
+               break;
+            }
             case '<': ++level; break;
             case '>': --level; break;
             default: {
@@ -68,6 +80,7 @@ namespace ROOT
       {
          std::string::size_type endsymbol = FindEndSymbol( command );
          if ( endsymbol == command.length() || command[endsymbol] == ' ' || command[endsymbol] == '\t' ) {
+            
 //         std::string::size_type space_pos = command.find( ' ' );
 //         std::string::size_type equal_pos = command.find( '=' );
 //         if ( space_pos < equal_pos) {
