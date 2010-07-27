@@ -964,6 +964,10 @@ void G__make_ifunctable(char* funcheader)
          G__p_ifunc->ansi[func_now] = 1;
          isvoid = 0;
       }
+      else if (!strcmp(paraname, "...")) {
+         G__p_ifunc->ansi[func_now] = 1;
+         isvoid = 0;
+      }
       else {
          if (G__def_struct_member) G__genericerror("Syntax error");
          if (G__globalcomp < G__NOLINK && !G__nonansi_func
