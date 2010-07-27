@@ -10,8 +10,8 @@
   <function name="function3"/>
   <function name="function5"/>
   <function pattern="Functions::*"/>
-  <operator name="+"/>
-  <operator name="<<"/>
+  <operator name="operator +"/>
+  <operator name="operator <<"/>
 
   <class name="testclasses::WithTransientMember">
     <field name="m_transient" transient="TRUE"/>
