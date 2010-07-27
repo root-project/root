@@ -14,18 +14,23 @@ protected:
    char c;     //  It is x+y
    TObjArray *persist; // Only the objects that need to be saved.
    TObjArray *all;     //! All objects (owner of the objects).
+   int  fN;      // Size of fArray
+   int *fArray;  //[fN] An array of int that will become an array of char.
 
  public:
-   ACache(int xin = 2, int yin = 3) : x(xin),y(yin),zcalc(false),z(-1),c(x+y),persist(new TObjArray),all(new TObjArray)
+   ACache(int xin = 2, int yin = 3) : x(xin),y(yin),zcalc(false),z(-1),c(x+y),persist(new TObjArray),all(new TObjArray),fN(xin),fArray(0)
    {
       persist->SetName("persist");
       all->SetName("all");
       all->SetOwner(kTRUE);
+      fArray = new int[fN];
+      for(int i = 0; i < fN; ++i) { fArray[i] = 10+i; }
    }
    
    ~ACache() {
       delete persist;
       delete all;
+      delete [] fArray;
    }
    
    void CreateObjs()
@@ -57,6 +62,10 @@ protected:
       cout << "ACache::c     " << (short)c << endl;
       persist->Print();
       all->Print();
+      cout << "ACache::fN    " << fN << endl;
+      if (fArray) for(int i = 0; i < fN; ++i) { 
+         cout << "ACache::fArray["<<i<<"] "<< fArray[i] << endl;
+      }
    }
 };
 

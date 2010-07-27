@@ -9,9 +9,12 @@ class Axis {
 protected:
    int   z; // It is 1000*x + 10*y
    float c; // It is x+y
+   int   fN; // Size of fArray
+   char *fArray; //[fN] Array that used to be an array of int
 
  public:
-   Axis() : z(-1) {}
+   Axis() : z(-1),c(-1),fN(0),fArray(0) {}
+   ~Axis() { delete [] fArray; }
 
    int GetX() { return z/1000; }
    int GetY() { return (z%1000)/10; }
@@ -25,6 +28,10 @@ protected:
       cout << "Axis::y " << GetY() << endl;
       cout << "Axis::z " << GetZ() << endl;
       cout << "Axis::c " << c << endl;
+      cout << "Axis::fN    " << fN << endl;
+      if (fArray) for(int i = 0; i < fN; ++i) { 
+         cout << "Axis::fArray["<<i<<"] "<< (Short_t)fArray[i] << endl;
+      }
    }
 };
 
