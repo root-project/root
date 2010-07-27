@@ -195,6 +195,13 @@
 //      Enabling merging via S submergers or the optimal number if S is
 //      not specified, e.g. root[] runProof("simple(hist=1000,submergers)") 
 //
+//   8. rateest=average
+//
+//      Enable processed entries estimation for constant progress reporting based on
+//      the measured average. This may screw up the progress bar in some cases, which
+//      is the reason why it is not on by default .
+//      e.g. root[] runProof("eventproc(rateest=average)")
+//
 //   In all cases, to run on a remote PROOF cluster, the master URL must
 //   be passed as second argument; e.g.
 //
@@ -380,9 +387,6 @@ void runProof(const char *what = "simple",
       proof->AddFeedback("PROOF_EventsHist");
    }
 
-   // Have constant progress reporting based on estimated info
-   proof->SetParameter("PROOF_RateEstimation", "average");
-
    // Parse 'what'; it is in the form 'analysis(arg1,arg2,...)'
    TString args(what);
    args.ReplaceAll("("," "); 
@@ -404,7 +408,8 @@ void runProof(const char *what = "simple",
    Printf("runProof: %s: ACLiC mode: '%s'", act.Data(), aMode.Data());
 
    // Parse out number of events and  'asyn' option, used almost by every test
-   TString aNevt, aNwrk, opt, sel, punzip("off"), aCache, aH1Src("http://root.cern.ch/files/h1"), aDebug, aDebugEnum;
+   TString aNevt, aNwrk, opt, sel, punzip("off"), aCache, aH1Src("http://root.cern.ch/files/h1"),
+           aDebug, aDebugEnum, aRateEst;
    Long64_t suf = 1;
    Int_t aSubMg = -1;
    Bool_t fillList = kFALSE, useList = kFALSE;
@@ -483,6 +488,12 @@ void runProof(const char *what = "simple",
          if (!(tok.IsNull())) aH1Src = tok;
          Printf("runProof: %s: reading data files from '%s'", act.Data(), aH1Src.Data());
       }
+      // Rate estimation technique
+      if (tok.BeginsWith("rateest=")) {
+         tok.ReplaceAll("rateest=","");
+         if (!(tok.IsNull())) aRateEst = tok;
+         Printf("runProof: %s: progress-bar rate estimation option: '%s'", act.Data(), aRateEst.Data());
+      }
    }
    Long64_t nevt = (aNevt.IsNull()) ? -1 : aNevt.Atoi();
    Long64_t nwrk = (aNwrk.IsNull()) ? -1 : aNwrk.Atoi();
@@ -505,6 +516,11 @@ void runProof(const char *what = "simple",
       proof->SetLogLevel(dbg, scope);
       Printf("runProof: %s: verbose mode for '%s'; level: %d", act.Data(), aDebugEnum.Data(), dbg);
    }
+
+   // Have constant progress reporting based on estimated info
+   // (NB: may screw up the progress bar in some cases)
+   if (aRateEst == "average")
+      proof->SetParameter("PROOF_RateEstimation", aRateEst);
 
    // Parallel unzip
    if (punzip == "on") {
