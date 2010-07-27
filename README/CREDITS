@@ -15,7 +15,7 @@ N: Roel Aaij
 E: raaij@nikhef.nl
 D: contribution to GUI classes
 
-N: Mohammad AL-Turany
+N: Mohammad Al-Turany
 E: m.al-turany@gsi.de
 D: QTGSI classes
 
@@ -39,6 +39,10 @@ D: Contribution to THnSparse
 N: Khamit Ardashev
 E: ardashev@legsux5.phy.bnl.gov
 D: Improvements in h2root/hntvar2 to support small integers as shorts
+
+N: Claudi Astres
+E: claudi@astres.cat
+D: provided the fitsio module
 
 N: Elias Athanasopoulos
 E: elathan@ics.forth.gr
