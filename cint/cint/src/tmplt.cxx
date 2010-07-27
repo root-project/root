@@ -1543,7 +1543,9 @@ void G__declare_template()
         c='<';
         if(p!=temp2) {
           p=strchr(temp2,'<');
-          *p='\0';  /* non constructor/destructor member function */
+          if (p) {
+             *p='\0';  /* non constructor/destructor member function */
+          }
           temp = temp2;
         }
       }
