@@ -119,6 +119,14 @@ class genDictionary(object) :
     elif name in ('Variable',) :
       self.variables.append(attrs)
     elif name in ('OperatorFunction',) :
+      if 'name' in attrs:
+        if attrs['name'][0:8] == 'operator':
+          if attrs['name'][8] == ' ':
+            if not attrs['name'][9].isalpha() :
+              attrs['name']= 'operator' + attrs['name'][9:]
+        else :
+          if attrs['name'][0].isalpha(): attrs['name'] = 'operator ' + attrs['name']
+          else                         : attrs['name'] = 'operator' + attrs['name']
       self.patchTemplateName(attrs, name)
       attrs['operator'] = 'true'
       self.addTemplateToName(attrs)
@@ -446,12 +454,14 @@ class genDictionary(object) :
         id = f['id']
         funcname = self.genTypeName(id)
         attrs = self.xref[id]['attrs']
-        context = self.genTypeName(attrs['context'])
         demangled = attrs.get('demangled')
+        returns = ''
+        if 'returns' in attrs: returns = self.genTypeName(attrs['returns'])
+        lenreturns = len(returns)
         if demangled and len(demangled) :
-          lencontext = len(context)
-          if lencontext > 2:
-            demangled = demangled[lencontext + 2:]
+          if lenreturns and demangled[0:lenreturns] == returns:
+            demangled = demangled[lenreturns:]
+            while demangled[0] == ' ': demangled = demangled[1:]
         else :
           demangled = ""
         if self.selector.selfunction( funcname, demangled ) and not self.selector.excfunction( funcname, demangled ) :
@@ -1650,7 +1660,6 @@ class genDictionary(object) :
     for f in selfunctions :
       id   = f['id']
       name = self.genTypeName(id)
-      if 'operator' in f : name = 'operator '+name
       self.genTypeID(id)
       args = self.xref[id]['subelems']
       returns  = self.genTypeName(f['returns'], enum=True, const=True)
