@@ -55,6 +55,7 @@ options="                    \
    enable_exceptions         \
    enable_explicitlink       \
    enable_fftw3              \
+   enable_fitsio             \
    enable_gviz               \
    enable_gdml               \
    enable_genvector          \
@@ -177,6 +178,7 @@ HDFS             \
 PYTHIA6          \
 PYTHIA8          \
 FFTW3            \
+CFITSIO          \
 GVIZ             \
 PYTHONDIR        \
 DCACHE           \
@@ -1180,12 +1182,13 @@ enable/disable options, prefix with either --enable- or --disable-
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
   fftw3              Fast Fourier Transform support, requires libfftw3
+  fitsio             Read images and data from FITS files, requires cfitsio
   gviz               Graphs visualization support, requires graphviz
   gdml               GDML writer and reader
   gfal               GFAL support, requires libgfal
   globus             Globus authentication support, requires Globus toolkit
   glite              gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
-  gsl-shared         enable linking against shared libraries for GSL (default no)
+  gsl-shared         Enable linking against shared libraries for GSL (default no)
   hdfs               HDFS support; requires libhdfs from HDFS >= 0.19.1
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
@@ -1256,6 +1259,8 @@ with options, prefix with --with-, enables corresponding support
   ftgl-libdir        FTGL support, location of libftgl
   fftw3-incdir       FFTW3 support, location of fftw3.h
   fftw3-libdir       FFTW3 support, location of libfftw3 (libfftw3-3 for windows)
+  cfitsio-incdir     FITS support, location of fitsio2.h
+  cfitsio-libdir     FITS support, location of libcfitsio
   gviz-incdir        Graphviz support, location of gvc.h
   gviz-libdir        Graphviz support, location of libgvplugin_core
   gfal-incdir        GFAL support, location of gfal_api.h
@@ -1515,8 +1520,10 @@ if test $# -gt 0 ; then
       --with-ftgl-libdir=*)    ftgllibdir=$optarg    ; enable_builtin_ftgl=no;;
       --with-fftw3-incdir=*)   fftw3incdir=$optarg   ; enable_fftw3="yes"   ;;
       --with-fftw3-libdir=*)   fftw3libdir=$optarg   ; enable_fftw3="yes"   ;;
-      --with-gviz-incdir=*)    gvizincdir=$optarg    ; enable_gviz="yes"   ;;
-      --with-gviz-libdir=*)    gvizlibdir=$optarg    ; enable_gviz="yes"   ;;
+      --with-cfitsio-incdir=*) cfitsioincdir=$optarg ; enable_fitsio="yes"  ;;
+      --with-cfitsio-libdir=*) cfitsiolibdir=$optarg ; enable_fitsio="yes"  ;;
+      --with-gviz-incdir=*)    gvizincdir=$optarg    ; enable_gviz="yes"    ;;
+      --with-gviz-libdir=*)    gvizlibdir=$optarg    ; enable_gviz="yes"    ;;
       --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
       --with-gfal-libdir=*)    gfallibdir=$optarg    ; enable_gfal="yes"    ;;
       --with-glew-incdir=*)    glewincdir=$optarg    ; enable_builtin_glew=no;;
@@ -2943,6 +2950,38 @@ if test ! "x$enable_fftw3" = "xno"; then
 fi
 check_explicit "$enable_fftw3" "$enable_fftw3_explicit" \
      "Explicitly required FFT in the West dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% FITSIO Support - Third party libraries
+#
+# (See http://heasarc.gsfc.nasa.gov/fitsio/)
+#
+# If the user has set the flags "--disable-fitsio", we don't check for
+# FITSIO at all.
+#
+if test ! "x$enable_fitsio" = "xno"; then
+    # Check for cfitsio include and library
+    check_header "fitsio2.h" "$cfitsioincdir" $CFITSIO $CFITSIO/include \
+        /usr/local/include /usr/include /opt/cfitsio/include \
+        $finkdir/include
+    cfitsioinc=$found_hdr
+    cfitsioincdir=$found_dir
+
+    # At this time, libcfitsio.a should always be prefered over .so,
+    # to avoid forcing users to install cfitsio.
+    check_library "libcfitsio" "no" "$cfitsiolibdir" \
+        $CFITSIO $CFITSIO/lib $CFITSIO/.libs /usr/local/lib /usr/lib \
+        /opt/cfitsio/lib $finkdir/lib
+    cfitsiolib=$found_lib
+    cfitsiolibdir=$found_dir
+
+    if test "x$cfitsioincdir" = "x" || test "x$cfitsiolib" = "x"; then
+        enable_fitsio="no"
+    fi
+fi
+check_explicit "$enable_fitsio" "$enable_fitsio_explicit" \
+     "Explicitly required cfitsio dependencies not fulfilled"
 
 ######################################################################
 #
@@ -5260,6 +5299,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_hdfs"     = "xyes" && pl="$pl root-plugin-io-hdfs"
     test "x$enable_rfio"     = "xyes" && pl="$pl root-plugin-io-rfio"
     test "x$enable_fftw3"    = "xyes" && pl="$pl root-plugin-math-fftw3"
+    test "x$enable_fitsio"   = "xyes" && pl="$pl root-plugin-graf2d-fitsio"
     test "x$enable_gviz"     = "xyes" && pl="$pl root-plugin-graf2d-gviz"
     test "x$enable_minuit2"  = "xyes" && pl="$pl root-plugin-math-minuit2"
     test "x$enable_pythia6"  = "xyes" && pl="$pl root-plugin-montecarlo-pythia6"
@@ -5823,6 +5863,10 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@curseshdr@|$curseshdr|"              \
     -e "s|@curseslib@|$curseslib|"              \
     -e "s|@curseslibdir@|$curseslibdir|"        \
+    -e "s|@cfitsioincdir@|$cfitsioincdir|"      \
+    -e "s|@cfitsiolib@|$cfitsiolib|"            \
+    -e "s|@cfitsiolibdir@|$cfitsiolibdir|"      \
+    -e "s|@buildfitsio@|$enable_fitsio|"        \
     -e "s|@buildgl@|$enable_opengl|"            \
     -e "s|@buildldap@|$enable_ldap|"            \
     -e "s|@buildmysql@|$enable_mysql|"          \

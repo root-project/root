@@ -117,7 +117,7 @@ endif
 ifeq ($(BUILDGLEW),yes)
 MODULES      += graf3d/glew
 endif
-MODULES      += graf3d/gl graf3d/eve graf3d/gviz3d 
+MODULES      += graf3d/gl graf3d/eve graf3d/gviz3d
 endif
 ifeq ($(BUILDMYSQL),yes)
 MODULES      += sql/mysql
@@ -173,6 +173,9 @@ endif
 ifeq ($(BUILDFFTW3),yes)
 MODULES      += math/fftw
 endif
+ifeq ($(BUILDFITSIO),yes)
+MODULES      += graf2d/fitsio
+endif
 ifeq ($(BUILDGVIZ),yes)
 MODULES      += graf2d/gviz
 endif
@@ -211,7 +214,7 @@ ifeq ($(BUILDCINTEX),yes)
 MODULES      += cint/cintex
 endif
 ifeq ($(BUILDCLING),yes)
-# to be added to the unconditional MODULES list below once cling is in trunk 
+# to be added to the unconditional MODULES list above once cling is in trunk
 MODULES      += cint/cling
 endif
 ifeq ($(BUILDROOFIT),yes)
@@ -286,7 +289,7 @@ MODULES      += core/unix core/winnt core/editline graf2d/x11 graf2d/x11ttf \
                 graf2d/qt gui/qtroot gui/qtgsi net/xrootd net/netx net/alien \
                 proof/proofd proof/proofx proof/clarens proof/peac proof/pq2 \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
-                tmva io/hdfs \
+                tmva io/hdfs graf2d/fitsio \
                 roofit/roofitcore roofit/roofit roofit/roostats \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/gdml graf3d/eve net/glite misc/memstat \
