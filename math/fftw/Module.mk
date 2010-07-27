@@ -30,7 +30,7 @@ FFTWMAP      := $(FFTWLIB:.$(SOEXT)=.rootmap)
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FFTWH))
 ALLLIBS      += $(FFTWLIB)
-ALLMAPS      += $(FFTWLIB)
+ALLMAPS      += $(FFTWMAP)
 
 # include all dependency files
 INCLUDEFILES += $(FFTWDEP)
