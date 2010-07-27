@@ -54,7 +54,6 @@ private:
    Int_t       fTally;
 
    Bool_t      HighWaterMark() { return (Bool_t) (fTally >= ((3*fSize)/4)); }
-   void        Expand(Int_t newsize);
    Int_t       FindElement(ULong64_t hash, Long64_t key);
    void        FixCollisions(Int_t index);
 
@@ -70,6 +69,7 @@ public:
    void      AddAt(UInt_t slot, ULong64_t hash, Long64_t key, Long64_t value);
    void      Delete(Option_t *opt = "");
    Int_t     Capacity() const { return fSize; }
+   void      Expand(Int_t newsize);
    Int_t     GetSize() const { return fTally; }
    Long64_t  GetValue(ULong64_t hash, Long64_t key);
    Long64_t  GetValue(Long64_t key) { return GetValue(key, key); }
