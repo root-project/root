@@ -6,27 +6,27 @@ ACache::y 7
 ACache::z 6070
 ACache::c 13
 ACache::fN    6
-ACache::fArray[0] 10
-ACache::fArray[1] 11
-ACache::fArray[2] 12
-ACache::fArray[3] 13
-ACache::fArray[4] 14
-ACache::fArray[5] 15
+ACache::fArray[0] 20
+ACache::fArray[1] 21
+ACache::fArray[2] 22
+ACache::fArray[3] 23
+ACache::fArray[4] 24
+ACache::fArray[5] 25
 Stream out embedded object
 ACache::x 9
 ACache::y 10
 ACache::z 9100
 ACache::c 19
 ACache::fN    9
-ACache::fArray[0] 10
-ACache::fArray[1] 11
-ACache::fArray[2] 12
-ACache::fArray[3] 13
-ACache::fArray[4] 14
-ACache::fArray[5] 15
-ACache::fArray[6] 16
-ACache::fArray[7] 17
-ACache::fArray[8] 18
+ACache::fArray[0] 20
+ACache::fArray[1] 21
+ACache::fArray[2] 22
+ACache::fArray[3] 23
+ACache::fArray[4] 24
+ACache::fArray[5] 25
+ACache::fArray[6] 26
+ACache::fArray[7] 27
+ACache::fArray[8] 28
 ***********************************************************************************************
 *    Row   * Instance *     obj.x *     obj.y *     obj.c * obj.persi *    obj.fN * obj.fArra *
 ***********************************************************************************************
@@ -42,9 +42,9 @@ ACache::y 7
 ACache::z 6070
 ACache::c 13
 ACache::fN    6
-ACache::fArray[0] 10
-ACache::fArray[1] 11
-ACache::fArray[2] 12
-ACache::fArray[3] 13
-ACache::fArray[4] 14
-ACache::fArray[5] 15
+ACache::fArray[0] 20
+ACache::fArray[1] 21
+ACache::fArray[2] 22
+ACache::fArray[3] 23
+ACache::fArray[4] 24
+ACache::fArray[5] 25

@@ -32,6 +32,7 @@ protected:
       cout << "ACache::z " << GetZ() << endl;
       cout << "ACache::c " << c << endl;
       cout << "ACache::fN    " << fN << endl;
+      //cout << "ACache::fArray" << (void*)fArray << endl;
       if (fArray) for(int i = 0; i < fN; ++i) { 
          cout << "ACache::fArray["<<i<<"] "<< (short)fArray[i] << endl;
       }
@@ -47,6 +48,10 @@ public:
 #pragma link C++ options=version(9) class ACache+;
 #pragma read sourceClass="ACache" targetClass="ACache" source="int x; int y; char c"  version="[8]" target="z" include="TMath.h,math.h" \
    code="{ z = onfile.x*1000 + onfile.y*10; }"
+#pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
+   source      = "Int_t *fArray; Int_t fN;" \
+   target      = "fArray" \
+   code        = "{ fArray = new Char_t[onfile.fN]; Char_t* gtc=fArray; Int_t* gti=onfile.fArray; for(Int_t i=0; i<onfile.fN; i++) *(gtc+i) = *(gti+i)+10; }"
 #pragma link C++ options=version(2) class Container+;
 #endif
 
