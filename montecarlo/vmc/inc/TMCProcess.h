@@ -17,13 +17,14 @@
 //
 #include "Rtypes.h"
 
-const Int_t kMaxMCProcess = 47;
+const Int_t kMaxMCProcess = 48;
 
 enum TMCProcess
 {
   kPPrimary,            // Primary interaction
 
   kPMultipleScattering, // multiple scattering
+  kPCoulombScattering,  // single Coulomb scattering
   kPEnergyLoss,         // continuous energy loss
   kPMagneticFieldL,     // bending in mag. field
   kPDecay,              // particle decay
@@ -86,6 +87,7 @@ enum TMCProcess
 static const char * const TMCProcessName[kMaxMCProcess] = {
   "Primary particle emission",
   "Multiple scattering",
+  "Coulomb scattering",
   "Energy loss",
   "Bending in magnetic field",
   "Decay",
