@@ -2963,8 +2963,8 @@ check_explicit "$enable_fftw3" "$enable_fftw3_explicit" \
 if test ! "x$enable_fitsio" = "xno"; then
     # Check for cfitsio include and library
     check_header "fitsio2.h" "$cfitsioincdir" $CFITSIO $CFITSIO/include \
-        /usr/local/include /usr/include /opt/cfitsio/include \
-        $finkdir/include
+        /usr/local/include /usr/include /usr/include/cfitsio \
+        /opt/cfitsio/include $finkdir/include
     cfitsioinc=$found_hdr
     cfitsioincdir=$found_dir
 
