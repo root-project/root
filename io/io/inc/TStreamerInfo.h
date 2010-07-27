@@ -179,6 +179,7 @@ public:
    virtual Bool_t      BuildFor( const TClass *cl );
    void                CallShowMembers(void* obj, TMemberInspector &insp, char *parent) const;
    void                Clear(Option_t *);
+   TObject            *Clone(const char *newname = "") const;
    Bool_t              CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete);
    void                Compile();
    void                ComputeSize();

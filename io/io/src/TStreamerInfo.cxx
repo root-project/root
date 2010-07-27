@@ -1337,7 +1337,7 @@ void TStreamerInfo::BuildOld()
 
          // We are in the emulated case
          streamer = 0;
-         element->Init(fClass);
+         element->Init(this);
       } else {
          // The class is loaded.
 
@@ -1348,7 +1348,7 @@ void TStreamerInfo::BuildOld()
             streamer = 0;
             offset = GetDataMemberOffset(dm, streamer);
             element->SetOffset(offset);
-            element->Init(fClass);
+            element->Init(this);
             element->SetStreamer(streamer);
             int narr = element->GetArrayLength();
             if (!narr) {
@@ -1361,7 +1361,7 @@ void TStreamerInfo::BuildOld()
             TRealData* rd = fClass->GetRealData(element->GetName());
             if (rd && rd->GetDataMember()) {
                element->SetOffset(rd->GetThisOffset());
-               element->Init(fClass);
+               element->Init(this);
                dm = rd->GetDataMember();
                int narr = element->GetArrayLength();
                if (!narr) {
@@ -1780,6 +1780,36 @@ void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp, char *par
          }
       } // If is a abse
    } // Loop over elements
+}
+
+//______________________________________________________________________________
+TObject *TStreamerInfo::Clone(const char *newname) const
+{
+   // Make a clone of an object using the Streamer facility.
+   // If newname is specified, this will be the name of the new object.
+
+   TStreamerInfo *newinfo = (TStreamerInfo*)TNamed::Clone(newname);
+   if (newname && newname[0] && fName != newname) {
+      TObjArray *newelems = newinfo->GetElements(); 
+      Int_t ndata = newelems->GetEntries();
+      for(Int_t i = 0; i < ndata; ++i) {
+         TObject *element = newelems->UncheckedAt(i);
+         if (element->IsA() == TStreamerLoop::Class()) {
+            TStreamerLoop *eloop = (TStreamerLoop*)element;
+            if (fName == eloop->GetCountClass()) {
+               eloop->SetCountClass(newname);
+               eloop->Init();
+            }
+         } else if (element->IsA() == TStreamerBasicPointer::Class()) {
+            TStreamerBasicPointer *eptr = (TStreamerBasicPointer*)element;
+            if (fName == eptr->GetCountClass()) {
+               eptr->SetCountClass(newname);
+               eptr->Init();
+            }
+         }
+      }
+   }
+   return newinfo;
 }
 
 //______________________________________________________________________________

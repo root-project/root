@@ -43,24 +43,36 @@ static char gIncludeName[kMaxLen];
 extern void *gMmallocDesc;
 
 //______________________________________________________________________________
-static TStreamerBasicType *InitCounter(const char *countClass, const char *countName)
+static TStreamerBasicType *InitCounter(const char *countClass, const char *countName, TObject *directive)
 {
    // Helper function to initialize the 'index/counter' value of
-   // the Pointer streamerElements.
-
-   TClass *cl = TClass::GetClass(countClass);
-
-   if (cl==0) return 0;
-
-   TStreamerBasicType *counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
-
-   //at this point the counter is may be declared to skip
+   // the Pointer streamerElements.  If directive is a StreamerInfo and it correspond to the 
+   // same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
+   // for 'countClass'.
+   
+   TStreamerBasicType *counter = 0;
+   
+   if (directive && directive->InheritsFrom(TVirtualStreamerInfo::Class()) && strcmp(directive->GetName(),countClass)==0) {
+      
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)directive;
+      TStreamerElement *element = (TStreamerElement *)info->GetElements()->FindObject(countName);
+      if (!element) return 0;
+      if (element->IsA() != TStreamerBasicType::Class()) return 0;
+      counter = (TStreamerBasicType*)element;
+      
+   } else {
+   
+      TClass *cl = TClass::GetClass(countClass);
+      if (cl==0) return 0;
+      counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
+   }
+       
+   //at this point the counter may be declared to skip
    if (counter) {
       if (counter->GetType() < TVirtualStreamerInfo::kCounter) counter->SetType(TVirtualStreamerInfo::kCounter);
    }
    return counter;
 }
-
 
 //______________________________________________________________________________
 static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Double_t &factor)
@@ -785,11 +797,14 @@ Int_t TStreamerBasicPointer::GetSize() const
 }
 
 //______________________________________________________________________________
-void TStreamerBasicPointer::Init(TObject *)
+void TStreamerBasicPointer::Init(TObject *directive)
 {
    // Setup the element.
-
-   fCounter = InitCounter( fCountClass, fCountName );
+   // If directive is a StreamerInfo and it correspond to the 
+   // same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
+   // for 'countClass'.
+   
+   fCounter = InitCounter( fCountClass, fCountName, directive );
 }
 
 //______________________________________________________________________________
@@ -889,11 +904,14 @@ Int_t TStreamerLoop::GetSize() const
 }
 
 //______________________________________________________________________________
-void TStreamerLoop::Init(TObject *)
+void TStreamerLoop::Init(TObject *directive)
 {
    // Setup the element.
+   // If directive is a StreamerInfo and it correspond to the 
+   // same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
+   // for 'countClass'.
 
-   fCounter = InitCounter( fCountClass, fCountName );
+   fCounter = InitCounter( fCountClass, fCountName, directive );
 }
 
 //______________________________________________________________________________
