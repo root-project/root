@@ -612,7 +612,8 @@ namespace ROOT
       // Replace all accurances of given string with other string
       std::string::size_type it = 0;
       std::string::size_type s  = pat.size();
-
+      std::string::size_type tr_len= tr.size();
+      
       if( s == 0 ) return;
 
       while( 1 ) {
@@ -621,7 +622,7 @@ namespace ROOT
             break;
 
          proc.replace( it, s, tr );
-         ++it;
+         it += tr_len;
       }
    }
 
@@ -662,6 +663,7 @@ namespace ROOT
          if( it->find( "funcname" ) != it->end() ) {
             std::string code = (*it)["code"];
             StrReplace( code, "\n", "\\n" );
+            StrReplace( code, "\"", "\\\"");
 
             output << "      rule->fFunctionPtr = (void *)G__func2void( ";
             output << (*it)["funcname"] << ");" << std::endl;
