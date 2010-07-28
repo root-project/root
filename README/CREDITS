@@ -40,10 +40,6 @@ N: Khamit Ardashev
 E: ardashev@legsux5.phy.bnl.gov
 D: Improvements in h2root/hntvar2 to support small integers as shorts
 
-N: Claudi Astres
-E: claudi@astres.cat
-D: provided the fitsio module
-
 N: Elias Athanasopoulos
 E: elathan@ics.forth.gr
 D: Ruby interpreter interface
@@ -494,6 +490,10 @@ D: Fundamental CINT call wrapper improvements
 N: John Marraffino
 E: marafino@fnal.gov
 D: improvements in TUnixSystem::StackTrace()
+
+N: Claudi Martinez
+E: claudi@astres.cat
+D: provided the fitsio module
 
 N: Andy Mastbaum
 E: mastbaum@lanl.gov
