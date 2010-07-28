@@ -64,5 +64,28 @@ trigger(INTTYPEDEF s) {
    return s;
 }
 
+struct OP {
+   operator double() { return 0.; }
+   operator ClassAAA() { return ClassAAA(); }
+   operator MYINT() { return 0; }
+   struct OPS{};
+};
+
+namespace FUNCS {
+   class C {
+   public:
+      C() {}
+      ~C() {}
+      C(const C&) {}
+      C& operator=(C) {}
+      operator ClassAAA() { return ClassAAA(); }
+      operator MYINT() { return 0; }
+      operator OP::OPS() { return OP::OPS(); }
+      void f() {}
+   };
+   C operator +(const ClassAAA&, const ClassBBB&) { return C(); }
+   FUNCS::C operator -(const ClassAAA&, const ClassBBB&) { return C(); }
+   ::ClassAAA operator*(const ClassAAA&, const ClassBBB&) { return ClassAAA(); }
+}
 
 #endif // DICT2_FUNCTIONS_H

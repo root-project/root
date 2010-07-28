@@ -1101,6 +1101,34 @@ ReflexSimple2Test::testOperators() {
    CPPUNIT_ASSERT(t7);
    CPPUNIT_ASSERT_EQUAL(2, countNewOperators(t7));
 
+   Scope sOP = Scope::ByName("OP");
+   CPPUNIT_ASSERT_EQUAL((size_t)8, sOP.MemberSize());
+   CPPUNIT_ASSERT(sOP.FunctionMemberByName("operator MYINT"));
+   Type tMYINT = Type::ByName("MYINT");
+   CPPUNIT_ASSERT_EQUAL(tMYINT.Name(SCOPED), sOP.MemberByName("operator MYINT").TypeOf().ReturnType().Name(SCOPED));
+
+   Scope sFUNCS = Scope::ByName("FUNCS");
+   CPPUNIT_ASSERT(sFUNCS);
+   CPPUNIT_ASSERT_EQUAL((size_t)2, sFUNCS.FunctionMemberSize());
+   CPPUNIT_ASSERT(sFUNCS.FunctionMemberByName("operator-"));
+
+   Type tFUNCSC = Type::ByName("FUNCS::C");
+   CPPUNIT_ASSERT(tFUNCSC);
+   CPPUNIT_ASSERT_EQUAL((size_t)9, tFUNCSC.FunctionMemberSize());
+
+   Type tOpRet = sFUNCS.FunctionMemberByName("operator-").TypeOf().ReturnType();
+   CPPUNIT_ASSERT(tOpRet);
+   CPPUNIT_ASSERT_EQUAL(tFUNCSC.Name(SCOPED), tOpRet.Name(SCOPED));
+
+   CPPUNIT_ASSERT(tFUNCSC.MemberByName("operator MYINT"));
+   CPPUNIT_ASSERT_EQUAL(tMYINT.Name(SCOPED), tFUNCSC.MemberByName("operator MYINT").TypeOf().ReturnType().Name(SCOPED));
+
+   CPPUNIT_ASSERT(tFUNCSC.MemberByName("operator OP::OPS"));
+   Type tOP_OPS = sOP.SubTypeByName("OPS");
+   CPPUNIT_ASSERT(tOP_OPS);
+   
+   CPPUNIT_ASSERT_EQUAL(tOP_OPS.Name(SCOPED), tFUNCSC.MemberByName("operator OP::OPS").TypeOf().ReturnType().Name(SCOPED));
+
 } // testOperators
 
 

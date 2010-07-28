@@ -12,6 +12,10 @@
   <function pattern="Functions::*"/>
   <operator name="+"/>
   <operator name="<<"/>
+  <class pattern="OP*"/>
+  <class name="FUNCS::C"/>
+  <function name="FUNCS::operator-"/>
+  <function name="FUNCS::operator*"/>
 
   <class name="testclasses::WithTransientMember">
     <field name="m_transient" transient="TRUE"/>
