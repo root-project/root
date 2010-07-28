@@ -73,8 +73,11 @@
 //      - 'readall'  to read the whole event, by default only the branches
 //                   needed by the analysis are read (read 25% more bytes)
 //      - 'datasrc=<dir-with-files>' to read the files from another server,
-//                   the files must be named
-//                   'event_<num>.root' where <num>=1,2,...
+//                   the files must be named 'event_<num>.root' where <num>=1,2,...
+//        or
+//      - 'datasrc=<file-with-files>' to take the file content from a text file,
+//                   specified one file per line; usefull when testing differences
+//                   between several sources and distributions
 //      - 'files=N'  to change the number of files to be analysed (default
 //                   is 10, max is 50 for the HTTP server).
 //      - 'uneven'   to process uneven entries from files following the scheme
@@ -759,32 +762,46 @@ void runProof(const char *what = "simple",
          nFiles = 50;
       }
 
-      // Tokenize the source: if more than 1 we rotate the assignment. More sources can be specified
-      // separating them by a '|'
-      TObjArray *dsrcs = aDataSrc.Tokenize("|");
-      Int_t nds = dsrcs->GetEntries();
-
-      // Create the chain
+      // We create the chain now
       TChain *c = new TChain("EventTree");
-      Int_t i = 1, k = 0;
-      TString fn;
-      for (i = 1; i <= nFiles; i++) {
-         k = (i - 1) % nds;
-         TObjString *os = (TObjString *) (*dsrcs)[k];
-         if (os) {
-            fn.Form("%s/event_%d.root", os->GetName(), i);
-            if (uneven) {
-               if ((i - 1)%5 == 0)
-                  c->AddFile(fn.Data(), 50000);
-               else
-                  c->AddFile(fn.Data(), 5000);
-            } else {
-               c->AddFile(fn.Data());
+
+      FileStat_t fst;
+      if (gSystem->GetPathInfo(aDataSrc, fst) == 0 && R_ISREG(fst.fMode) &&
+         !gSystem->AccessPathName(aDataSrc, kReadPermission)) {
+         // It is a local file, we get the TFileCollection and we inject it into the chain
+         TFileCollection *fc = new TFileCollection("", "", aDataSrc, nFiles);
+         c->AddFileInfoList(fc->GetList());
+         delete fc;
+
+      } else {
+
+         // Tokenize the source: if more than 1 we rotate the assignment. More sources can be specified
+         // separating them by a '|'
+         TObjArray *dsrcs = aDataSrc.Tokenize("|");
+         Int_t nds = dsrcs->GetEntries();
+
+         // Fill the chain
+         Int_t i = 1, k = 0;
+         TString fn;
+         for (i = 1; i <= nFiles; i++) {
+            k = (i - 1) % nds;
+            TObjString *os = (TObjString *) (*dsrcs)[k];
+            if (os) {
+               fn.Form("%s/event_%d.root", os->GetName(), i);
+               if (uneven) {
+                  if ((i - 1)%5 == 0)
+                     c->AddFile(fn.Data(), 50000);
+                  else
+                     c->AddFile(fn.Data(), 5000);
+               } else {
+                  c->AddFile(fn.Data());
+               }
             }
          }
+         dsrcs->SetOwner();
+         delete dsrcs;
       }
-      dsrcs->SetOwner();
-      delete dsrcs;
+      // Show the chain
       c->ls();
       c->SetProof();
 
