@@ -7,10 +7,10 @@ Manual Data Model Evolution Capabilities - the user documentation
 to read back the serialized data object in the situation when the definition of
 the classes those objects represent changed slightly (some of the data members were
 removed or some new ones added). It is also possible to manually specify the rules
-for more sophisticated data transformations done while reading to load the serialize
-objects to the data structures that changed quite significantly.
+for more sophisticated data transformations done while reading to load the serialized
+objects into data structures that changed quite significantly.
 
-   ROOT provides two interface enabling users to fpecify the conversion rules. The
+   ROOT provides two interface enabling users to specify the conversion rules. The
 first way is to define a rule in the dictionary file and the second way is to insert
 it to the TClass object using the C++ API.
 
@@ -39,9 +39,8 @@ The syntax of the rules is the following:
     checksum="[12345,123456]"                             \
     targetClass="ClassB"                                  \
     target="m_x"                                          \
-    targetType="int"                                      \
     embed="true"                                          \
-    include="iostream;cstdlib"                            \
+    include="iostream,cstdlib"                            \
     code="{m_x = onfile.m_a * onfile.m_b * onfile.m_c; }" \
 
 
@@ -68,9 +67,8 @@ fXbins.Set( xbins ); \
         checksum="[12345,123456]"
         targetClass="ClassB"
         target="m_x"
-        targetType="int"
         embed="true"
-        include="iostream;cstdlib">
+        include="iostream,cstdlib">
 <![CDATA[
    m x = onfile.m a * onfile .m b * onfile .m c;
 ]] >
@@ -114,12 +112,10 @@ fXbins.Set( xbins ); \
                   this rule can be applied to.
   * target      - A semicolon-separated list of target class data member names that this rule
                   is capable of calculating.
-  * targetType  - This property is meant to define the target type if used without dictio-
-                  naries (when the rule was serialized to a file), it is ignored otherwise.
   * embed       - This property tells the system if the rule should be written in the output
                   file is some objects of this class are serialized.
   * include     - A list of header files that should be included in order to provide the func-
-                  tionality used in the code snippet.
+                  tionality used in the code snippet; the list is comma delimited.
   * code        - An user specified code snippet
 
    The user can assume that in the provided code snippet the following variables
