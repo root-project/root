@@ -74,9 +74,17 @@ class selClass :
     if name in ('class','struct'):
       self.classes.append({'attrs':attrs, 'fields':[], 'methods':[]})
       if 'name' in attrs : attrs['n_name'] = self.genNName(attrs['name'])
-    elif name in ('function','operator'):
+    elif name in ('function'):
       self.functions.append({'attrs':attrs})
       if 'name' in attrs :  attrs['name'] = attrs['name'].replace(' ','')
+    elif name in ('operator'):
+      self.functions.append({'attrs':attrs})
+      if 'name' in attrs :
+        attrs['name'] = attrs['name'].replace(' ','')
+        if attrs['name'][0].isalpha():
+          attrs['name'] = 'operator ' + attrs['name']
+        else :
+          attrs['name'] = 'operator' + attrs['name']
     elif name in ('enum',):
       self.enums.append({'attrs':attrs})
     elif name in ('variable',):
