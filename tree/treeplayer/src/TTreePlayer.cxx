@@ -3065,8 +3065,10 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
                   continue;
                }
             }
-            cnames[ncols].Append('.');
-            cnames[ncols].Append( lf->GetBranch()->GetName() );
+            if (!strchr(lf->GetBranch()->GetName() ,'[') ) {
+               cnames[ncols].Append('.');
+               cnames[ncols].Append( lf->GetBranch()->GetName() );
+            }
          }
          if (strcmp( lf->GetBranch()->GetName(), lf->GetName() ) != 0 ) {
             cnames[ncols].Append('.');
