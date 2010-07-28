@@ -4,6 +4,9 @@
 #ifndef ROOT_TSchemaRuleProcessor
 #define ROOT_TSchemaRuleProcessor
 
+#if !defined(__CINT__)
+// Do no clutter the dictionary (in particular with STL containers)
+
 #include <stdlib.h>
 #include <string>
 #include <list>
@@ -12,8 +15,9 @@
 #include <iostream>
 #include "Rtypes.h"
 
-#if !defined(__CINT__)
-// Do no clutter the dictionary (in particular with STL containers)
+#ifndef R__TSCHEMATYPE_H
+#include "TSchemaType.h"
+#endif
 
 namespace ROOT
 {
@@ -52,7 +56,7 @@ namespace ROOT
          }
 
          static void SplitDeclaration( const std::string& source,
-                                       std::list<std::pair<std::string,std::string> >& result)
+                                       std::list<std::pair<ROOT::TSchemaType,std::string> >& result)
          {
             // Split a declaration string producing a list of substrings
             // Typically we have:
@@ -63,6 +67,7 @@ namespace ROOT
             std::string::size_type size;
             std::string            elem;
             std::string            type;
+            std::string            dims;
 
             result.clear();
 
@@ -99,11 +104,18 @@ namespace ROOT
                               type += elem[i];
                            }
                         }
-                        elem = Trim( elem.substr(i, elem.size()-i) );
+                        std::string::size_type endvar = i;
+                        while( endvar!=elem.size() && elem[endvar] != '[' ) {
+                           ++endvar;
+                        }
+                        if (endvar != elem.size() ) {
+                           dims = Trim( elem.substr(endvar, elem.size()-endvar) );
+                        }
+                        elem = Trim( elem.substr(i, endvar-i) );
                         break;
                      }
                   }
-                  result.push_back( make_pair(type,elem) );
+                  result.push_back( make_pair(ROOT::TSchemaType(type,dims),elem) );
                }
                last = curr+1;
             }

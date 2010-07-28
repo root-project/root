@@ -9,6 +9,7 @@ class TVirtualObject;
 class TObjArray;
 
 #include "TObject.h"
+#include "TNamed.h"
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -21,6 +22,16 @@ namespace ROOT {
    {
       public:
 
+         class TSources : public TNamed {
+         private:
+            TString fDimensions;
+         public:
+            TSources(const char *name = 0, const char *title = 0, const char *dims = 0) : TNamed(name,title),fDimensions(dims) {}
+            const char *GetDimensions() { return fDimensions; }
+
+            ClassDef(TSources,2);
+         };
+      
          typedef enum
          {
             kReadRule    = 0,

@@ -4,6 +4,9 @@
 #ifndef R__R_CONVERSION_RULE_PARSER_H
 #define R__R_CONVERSION_RULE_PARSER_H
 
+#if !defined(__CINT__)
+// Avoid clutering the dictionary (in particular with the STL declaration)
+
 #include <list>
 #include <map>
 #include <string>
@@ -17,8 +20,9 @@
 class G__ClassInfo;
 #endif
 
-#if !defined(__CINT__)
-// Avoid clutering the dictionary (in particular with the STL declaration)
+#ifndef R__TSCHEMATYPE_H
+#include "TSchemaType.h"
+#endif
 
 namespace ROOT
 {
@@ -30,24 +34,25 @@ namespace ROOT
    extern SchemaRuleClassMap_t G__ReadRules;
    extern SchemaRuleClassMap_t G__ReadRawRules;
 
+   typedef std::map<std::string, ROOT::TSchemaType> MembersTypeMap_t;
    typedef std::map<std::string, std::string> MembersMap_t;
 
    //---------------------------------------------------------------------------
    // Create the data member name-type map
    //---------------------------------------------------------------------------
-   void CreateNameTypeMap( G__ClassInfo &cl, MembersMap_t& members );
+   void CreateNameTypeMap( G__ClassInfo &cl, MembersTypeMap_t& members );
 
    //---------------------------------------------------------------------------
    // Check if given rule contains references to valid data members
    //---------------------------------------------------------------------------
-   bool HasValidDataMembers( SchemaRuleMap_t& rule, MembersMap_t& members );
+   bool HasValidDataMembers( SchemaRuleMap_t& rule, MembersTypeMap_t& members );
 
    //---------------------------------------------------------------------------
    // Write the conversion function for Read rule
    //---------------------------------------------------------------------------
    void WriteReadRuleFunc( SchemaRuleMap_t& rule, int index,
                            std::string& mappedName,
-                           MembersMap_t& members, std::ostream& output );
+                           MembersTypeMap_t& members, std::ostream& output );
 
 
    //---------------------------------------------------------------------------
@@ -55,7 +60,7 @@ namespace ROOT
    //---------------------------------------------------------------------------
    void WriteReadRawRuleFunc( SchemaRuleMap_t& rule, int index,
                               std::string& mappedName,
-                              MembersMap_t& members, std::ostream& output );
+                              MembersTypeMap_t& members, std::ostream& output );
 
    //---------------------------------------------------------------------------
    // Write schema rules

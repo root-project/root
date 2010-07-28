@@ -100,7 +100,20 @@ to never delete the object.  For example:
 MakeProject now implements a move constructor for each classes.   For the implementation, we 'use' the 'copy constructor' until the C++ compilers properly support the official move constructor notation.   Implementing a move constructor avoid having to delete and reconstruct resource during a std::vector resize and avoid the double delete induced by using the default copy constructor.
 
 <h4>Misc.</h4>
-<ul><li>To make sure that the class emulation layer of ROOT does not double delete an object,
+<ul>
+<li>Enable the use of the I/O customization rules on data members that are either a variable size array or a fixed size array.  For example:
+<pre lang="cxx">
+#pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
+   source      = "Int_t *fArray; Int_t fN;" \
+   target      = "fArray" \
+   code        = "{ fArray = new Char_t[onfile.fN]; Char_t* gtc=fArray; Int_t* gti=onfile.fArray; for(Int_t i=0; i<onfile.fN; i++) *(gtc+i) = *(gti+i)+10; }"
+#pragma read sourceClass = "ACache" targetClass = "ACache" version     = "[8]" \
+   source      = "float fValues[3]" \
+   target      = "fValues" \
+   code        = "{ for(Int_t i=0; i<3; i++) fValues[i] = 1+onfile.fValues[i]; }"
+</pre>
+</li>
+<li>To make sure that the class emulation layer of ROOT does not double delete an object,
 tell the StreamerElement representing one of the pointers pointing to the object
 to never delete the object.  For example:
 

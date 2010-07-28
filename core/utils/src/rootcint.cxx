@@ -2428,7 +2428,7 @@ void WriteClassInit(G__ClassInfo &cl)
    SchemaRuleClassMap_t::iterator rulesIt1 = G__ReadRules.find( cl.Fullname() );
    SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( cl.Fullname() );
 
-   MembersMap_t nameTypeMap;
+   MembersTypeMap_t nameTypeMap;
    CreateNameTypeMap( cl, nameTypeMap );
 
    //--------------------------------------------------------------------------

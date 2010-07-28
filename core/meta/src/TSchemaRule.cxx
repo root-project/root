@@ -255,14 +255,14 @@ Bool_t TSchemaRule::SetFromRule( const char *rule )
    //-----------------------------------------------------------------------
    // Parse the rule and check it's validity
    //-----------------------------------------------------------------------
-   std::map<std::string, std::string> rule_values;
+   ROOT::MembersMap_t rule_values;
    
    std::string error_string;
    if( !ParseRule( rule, rule_values, error_string) ) {
       Error("SetFromRule","The rule (%s) is invalid: %s",rule,error_string.c_str());
       return kFALSE;
    }
-   std::map<std::string, std::string>::const_iterator it1;
+   ROOT::MembersMap_t ::const_iterator it1;
    
    it1 = rule_values.find( "type" );
    if( it1 != rule_values.end() ) {
@@ -616,7 +616,7 @@ Bool_t TSchemaRule::HasSource( const TString& source ) const
    TObject*      obj;
    TObjArrayIter it( fSourceVect );
    while( (obj = it.Next()) ) {
-      TNamed* var = (TNamed*)obj;
+      TSources* var = (TSources*)obj;
       if( var->GetName() == source )
          return kTRUE;
    }
@@ -863,8 +863,8 @@ void TSchemaRule::ProcessDeclaration( TObjArray* array, const TString& list )
 {
    // Split the list as a declaration into as a TObjArray of TNamed(name,type).
 
-   std::list<std::pair<std::string,std::string> >           elems;
-   std::list<std::pair<std::string,std::string> >::iterator it;
+   std::list<std::pair<ROOT::TSchemaType,std::string> >           elems;
+   std::list<std::pair<ROOT::TSchemaType,std::string> >::iterator it;
    ROOT::TSchemaRuleProcessor::SplitDeclaration( (const char*)list, elems );
 
    array->Clear();
@@ -873,7 +873,7 @@ void TSchemaRule::ProcessDeclaration( TObjArray* array, const TString& list )
       return;
 
    for( it = elems.begin(); it != elems.end(); ++it ) {
-      TNamed *type = new TNamed( it->second.c_str(), it->first.c_str() ) ;
+      TSources *type = new TSources( it->second.c_str(), it->first.fType.c_str(), it->first.fDimensions.c_str() ) ;
       array->Add( type );
    }
 }
