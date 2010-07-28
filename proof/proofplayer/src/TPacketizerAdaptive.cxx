@@ -582,7 +582,17 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
    // Resolve end-point urls to optmize distribution
    // dset->Lookup(); // moved to TProofPlayerRemote::Process
 
-   // Split into per host entries
+   // Read list of mounted disks
+   TObjArray *partitions = 0;
+   TString partitionsStr;
+   if (TProof::GetParameter(input, "PROOF_PacketizerPartitions", partitionsStr) != 0)
+      partitionsStr = gEnv->GetValue("Packetizer.Partitions", "");
+   if (!partitionsStr.IsNull()) {
+      Info("TPacketizerAdaptive", "Partitions: %s", partitionsStr.Data());
+      partitions = partitionsStr.Tokenize(",");
+   }
+
+   // Split into per host and disk entries
    dset->Reset();
    TDSetElement *e;
    while ((e = (TDSetElement*)dset->Next())) {
@@ -605,14 +615,38 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          host = url.GetHost();
       }
 
-      TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
+      // Find on which disk is the file, if any
+      TString disk;
+      if (partitions) {
+         TIter iString(partitions);
+         TObjString* os = 0;
+         while ((os = (TObjString *)iString())) {
+            // Compare begining of the url with disk mountpoint
+            if (strncmp(url.GetFile(), os->GetName(), os->GetString().Length()) == 0) {
+               disk = os->GetName();
+               break;
+            }
+         }
+      }
+      // Node's url
+      TString nodeStr;
+      if (disk.IsNull())
+         nodeStr.Form("%s://%s", url.GetProtocol(), host.Data());
+      else
+         nodeStr.Form("%s://%s/%s", url.GetProtocol(), host.Data(), disk.Data());
+      TFileNode *node = (TFileNode *) fFileNodes->FindObject(nodeStr);
 
       if (node == 0) {
-         node = new TFileNode(host);
+         node = new TFileNode(nodeStr);
          fFileNodes->Add(node);
+         PDB(kPacketizer,2)
+            Info("TPacketizerAdaptive", "creating new node '%s' or the element", nodeStr.Data());
+      } else {
+         PDB(kPacketizer,2)
+            Info("TPacketizerAdaptive", "adding element to existing node '%s'", nodeStr.Data());
       }
 
-      node->Add( e );
+      node->Add(e);
    }
 
    fSlaveStats = new TMap;
@@ -731,11 +765,36 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
          host = url.GetHostFQDN();
       }
 
-      TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
+      // Find, on which disk is the file
+      TString disk;
+      if (partitions) {
+         TIter iString(partitions);
+         TObjString* os = 0;
+         while ((os = (TObjString *)iString())) {
+            // Compare begining of the url with disk mountpoint
+            if (strncmp(url.GetFile(), os->GetName(), os->GetString().Length()) == 0) {
+               disk = os->GetName();
+               break;
+            }
+         }
+      }
+      // Node's url
+      TString nodeStr;
+      if (disk.IsNull())
+         nodeStr.Form("%s://%s", url.GetProtocol(), host.Data());
+      else
+         nodeStr.Form("%s://%s/%s", url.GetProtocol(), host.Data(), disk.Data());
+      TFileNode *node = (TFileNode*) fFileNodes->FindObject(nodeStr);
+
 
       if ( node == 0 ) {
-         node = new TFileNode( host );
+         node = new TFileNode( nodeStr );
          fFileNodes->Add( node );
+         PDB(kPacketizer, 2)
+            Info("TPacketizerAdaptive", "creating new node '%s' for element", nodeStr.Data());
+      } else {
+         PDB(kPacketizer, 2)
+            Info("TPacketizerAdaptive", "adding element to exiting node '%s'", nodeStr.Data());
       }
 
       ++files;
@@ -815,7 +874,7 @@ void TPacketizerAdaptive::InitStats()
 }
 
 //______________________________________________________________________________
-TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *node)
+TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *node, const char *nodeHostName)
 {
    // Get next unallocated file from 'node' or other nodes:
    // First try 'node'. If there is no more files, keep trying to
@@ -824,12 +883,55 @@ TPacketizerAdaptive::TFileStat *TPacketizerAdaptive::GetNextUnAlloc(TFileNode *n
    TFileStat *file = 0;
 
    if (node != 0) {
+      PDB(kPacketizer, 2)
+         Info("GetNextUnAlloc", "looking for file on node %s", node->GetName());
       file = node->GetNextUnAlloc();
       if (file == 0) RemoveUnAllocNode(node);
    } else {
-      while (file == 0 && ((node = NextNode()) != 0)) {
-         file = node->GetNextUnAlloc();
-         if (file == 0) RemoveUnAllocNode(node);
+      if (nodeHostName && strlen(nodeHostName) > 0) {
+
+         TFileNode *fn;
+         // Make sure that they are in the corrected order
+         fUnAllocated->Sort();
+         PDB(kPacketizer,2) fUnAllocated->Print();
+
+         // Loop over unallocated fileNode list
+         for (int i = 0; i < fUnAllocated->GetSize(); i++) {
+
+            if ((fn = (TFileNode *) fUnAllocated->At(i))) {
+               TUrl uu(fn->GetName());
+               PDB(kPacketizer, 2)
+                  Info("GetNextUnAlloc", "comparing %s with %s...", nodeHostName, uu.GetHost());
+
+               // Check, whether node's hostname is matching with current fileNode (fn)
+               if (!strcmp(nodeHostName, uu.GetHost())) {
+                  PDB(kPacketizer, 2)
+                     Info("GetNextUnAlloc", "found! (host: %s)", uu.GetHost());
+                  node = fn;
+
+                  // Fetch next unallocated file from this node
+                  if ((file = node->GetNextUnAlloc()) == 0) RemoveUnAllocNode(node);
+                  break;
+               }
+            } else {
+               Warning("GetNextUnAlloc", "unallocate entry %d is empty!", i);
+            }
+         }
+
+         if (node != 0 && fgMaxSlaveCnt > 0 && node->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
+            // Unlike in TPacketizer we look at the number of ext slaves only.
+            PDB(kPacketizer,1)
+               Info("GetNextUnAlloc", "reached Workers-per-Node Limit (%ld)", fgMaxSlaveCnt);
+            node = 0;
+         }
+      }
+
+      if (node == 0) {
+         while (file == 0 && ((node = NextNode()) != 0)) {
+            PDB(kPacketizer, 2)
+               Info("GetNextUnAlloc", "looking for file on node %s", node->GetName());
+            if ((file = node->GetNextUnAlloc()) == 0) RemoveUnAllocNode(node);
+         }
       }
    }
 
@@ -857,8 +959,8 @@ TPacketizerAdaptive::TFileNode *TPacketizerAdaptive::NextNode()
    TFileNode *fn = (TFileNode*) fUnAllocated->First();
    if (fn != 0 && fgMaxSlaveCnt > 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
       // unlike in TPacketizer we look at the number of ext slaves only.
-      PDB(kPacketizer,1) Info("NextNode",
-                              "Reached Slaves per Node Limit (%ld)", fgMaxSlaveCnt);
+      PDB(kPacketizer,1)
+         Info("NextNode", "reached Workers-per-Node Limit (%ld)", fgMaxSlaveCnt);
       fn = 0;
    }
 
@@ -1531,6 +1633,13 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
    }
 
    TFileStat *file = slstat->fCurFile;
+   TString nodeName;
+   if (file != 0) nodeName = file->GetNode()->GetName();
+   TString nodeHostName(slstat->GetName());
+
+   PDB(kPacketizer,3)
+      Info("GetNextPacket", "%s: looking for a packet from node '%s'", sl->GetOrdinal(), nodeName.Data());
+
    // if current file is just finished
    if ( file != 0 && file->IsDone() ) {
       file->GetNode()->DecExtSlaveCnt(slstat->GetName());
@@ -1613,7 +1722,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
 
       // try to find an unused filenode first
       if(file == 0 && !fForceLocal) {
-         file = GetNextUnAlloc();
+         file = GetNextUnAlloc(0, nodeHostName);
       }
 
       // then look at the active filenodes

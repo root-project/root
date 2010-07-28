@@ -60,6 +60,7 @@ private:
    TList         *fUnAllocated;  // nodes with unallocated files
    TList         *fActive;       // nodes with unfinished files
    Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
+   TList         *fPartitions;   // list of partitions on nodes
 
    Bool_t         fCachePacketSync; // control synchronization of cache and packet sizes
    Double_t       fMaxEntriesRatio; // max file entries to avg allowed ratio for cache-to-packet sync
@@ -82,7 +83,7 @@ private:
    TFileNode     *NextActiveNode();
    void           RemoveActiveNode(TFileNode *);
 
-   TFileStat     *GetNextUnAlloc(TFileNode *node = 0);
+   TFileStat     *GetNextUnAlloc(TFileNode *node = 0, const char *nodeHostName = 0);
    TFileStat     *GetNextActive();
    void           RemoveActive(TFileStat *file);
 
