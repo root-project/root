@@ -67,7 +67,7 @@ ifeq ($(findstring xml, $(shell root-config --features)),)
 endif
 
 ifeq ($(findstring fitsio, $(shell root-config --features)),)
-  TUTORIALSTESTS_VETO += cfitsio/%
+  TUTORIALSTESTS_VETO += fitsio/%
 endif
 
 # I believe these fail due to CINT bugs:
