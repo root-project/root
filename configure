@@ -1741,6 +1741,15 @@ fi
 
 ######################################################################
 #
+### echo %%% If no X11 then also no OpenGL and ASImage on non Win32 platforms
+#
+if test "x$enable_x11" = "xno" && test ! "x$platform" = "xwin32"; then
+   enable_opengl="no"
+   enable_asimage="no"
+fi
+
+######################################################################
+#
 ### echo %%% On MacOS X >=10.5 always enable_rpath in case of non-prefix install
 #
 if test ! "x$macosx105" = "x"; then
@@ -3446,6 +3455,9 @@ if test ! "x$enable_asimage" = "xno" ; then
    fi
    message "Checking whether to build included libAfterImage"
    result "$enable_builtin_afterimage"
+else
+   enable_astiff="no"
+   enable_builtin_afterimage="no"
 fi
 check_explicit "$enable_asimage" "$enable_asimage_explicit" \
      "Explicitly required AfterImage dependencies not fulfilled"

@@ -163,6 +163,9 @@ MODULES      += misc/memstat
 endif
 ifeq ($(BUILDASIMAGE),yes)
 MODULES      += graf2d/asimage
+ifeq ($(BUILDFITSIO),yes)
+MODULES      += graf2d/fitsio
+endif
 endif
 ifeq ($(BUILDFPYTHIA6),yes)
 MODULES      += montecarlo/pythia6
@@ -172,9 +175,6 @@ MODULES      += montecarlo/pythia8
 endif
 ifeq ($(BUILDFFTW3),yes)
 MODULES      += math/fftw
-endif
-ifeq ($(BUILDFITSIO),yes)
-MODULES      += graf2d/fitsio
 endif
 ifeq ($(BUILDGVIZ),yes)
 MODULES      += graf2d/gviz
