@@ -11,6 +11,7 @@ protected:
    float c; // It is x+y
    int   fN; // Size of fArray
    char *fArray; //[fN] Array that used to be an array of int
+   double fValues[3];  // An array of double that used to be array of float.
 
  public:
    Axis() : z(-1),c(-1),fN(0),fArray(0) {}
@@ -31,6 +32,10 @@ protected:
       cout << "Axis::fN    " << fN << endl;
       if (fArray) for(int i = 0; i < fN; ++i) { 
          cout << "Axis::fArray["<<i<<"] "<< (Short_t)fArray[i] << endl;
+      }
+      for(unsigned int j = 0; j < sizeof(fValues) / sizeof(fValues[0]); ++j) { 
+         cout << "ACache::fValues["<<j<<"] "<< fValues[j] << endl;
+         
       }
    }
 };

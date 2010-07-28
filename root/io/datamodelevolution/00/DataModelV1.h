@@ -16,6 +16,7 @@ protected:
    TObjArray *all;     //! All objects (owner of the objects).
    int  fN;      // Size of fArray
    int *fArray;  //[fN] An array of int that will become an array of char.
+   float fValues[3];  // An array of float that will become array of double.
 
  public:
    ACache(int xin = 2, int yin = 3) : x(xin),y(yin),zcalc(false),z(-1),c(x+y),persist(new TObjArray),all(new TObjArray),fN(xin),fArray(0)
@@ -25,6 +26,7 @@ protected:
       all->SetOwner(kTRUE);
       fArray = new int[fN];
       for(int i = 0; i < fN; ++i) { fArray[i] = 10+i; }
+      for(unsigned int j = 0; j < sizeof(fValues) / sizeof(fValues[0]); ++j) { fValues[j] = j / 100.0; };
    }
    
    ~ACache() {
@@ -65,6 +67,10 @@ protected:
       cout << "ACache::fN    " << fN << endl;
       if (fArray) for(int i = 0; i < fN; ++i) { 
          cout << "ACache::fArray["<<i<<"] "<< fArray[i] << endl;
+      }
+      for(unsigned int j = 0; j < sizeof(fValues) / sizeof(fValues[0]); ++j) { 
+         cout << "ACache::fValues["<<j<<"] "<< fValues[j] << endl;
+
       }
    }
 };
