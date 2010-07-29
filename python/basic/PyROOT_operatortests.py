@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_operatortests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 01/07/08
+# Last: 05/20/10
 
 """C++ operators interface unit tests for PyROOT package."""
 
@@ -9,7 +9,8 @@ import os, sys, unittest
 from ROOT import *
 
 __all__ = [
-   'Cpp1OperatorsTestCase'
+   'Cpp1OperatorsTestCase',
+   'Cpp2ConverterOperatorsTestCase'
 ]
 
 gROOT.LoadMacro( "Operators.C+" )
@@ -21,9 +22,15 @@ class Cpp1OperatorsTestCase( unittest.TestCase ):
       """Test overloading of math operators"""
 
       self.failUnlessEqual( Number(20) + Number(10), Number(30) )
+      self.failUnlessEqual( Number(20) + 10        , Number(30) )
       self.failUnlessEqual( Number(20) - Number(10), Number(10) )
+      self.failUnlessEqual( Number(20) - 10        , Number(10) )
       self.failUnlessEqual( Number(20) / Number(10), Number(2) )
+      self.failUnlessEqual( Number(20) / 10        , Number(2) )
       self.failUnlessEqual( Number(20) * Number(10), Number(200) )
+      self.failUnlessEqual( Number(20) * 10        , Number(200) )
+      self.failUnlessEqual( Number(20) % 10        , Number(0) )
+      self.failUnlessEqual( Number(20) % Number(10), Number(0) )
       self.failUnlessEqual( Number(5)  & Number(14), Number(4) )
       self.failUnlessEqual( Number(5)  | Number(14), Number(15) )
       self.failUnlessEqual( Number(5)  ^ Number(14), Number(11) )
@@ -61,6 +68,51 @@ class Cpp1OperatorsTestCase( unittest.TestCase ):
 
       n = Number( 0 )
       self.assert_( not n )
+
+
+### Instance to builtin type converters test cases ===========================
+class Cpp2ConverterOperatorsTestCase( unittest.TestCase ):
+   def test1ExactTypes( self ):
+      """Test converter operators of exact types"""
+
+      o = OperatorCharStar()
+      self.assertEqual( o.m_str, 'OperatorCharStar' )
+      self.assertEqual( str(o),  'OperatorCharStar' )
+
+      o = OperatorConstCharStar()
+      self.assertEqual( o.m_str, 'OperatorConstCharStar' )
+      self.assertEqual( str(o),  'OperatorConstCharStar' )
+
+      o = OperatorInt(); o.m_int = -13
+      self.assertEqual( o.m_int,   -13 )
+      self.assertEqual( int( o ),  -13 )
+
+      o = OperatorLong(); o.m_long = 42
+      self.assertEqual( o.m_long,    42 )
+      self.assertEqual( long( o ),   42 )
+
+      o = OperatorDouble(); o.m_double = 3.1415
+      self.assertEqual( o.m_double,      3.1415 )
+      self.assertEqual( float( o ),      3.1415 )
+
+   def test2ApproximateTypes( self ):
+      """Test converter operators of approximate types"""
+
+      o = OperatorShort(); o.m_short = 256
+      self.assertEqual( o.m_short,     256 )
+      self.assertEqual( int( o ),      256 )
+
+      o = OperatorUnsignedInt(); o.m_uint = 2147483647 + 32
+      self.assertEqual( o.m_uint,           2147483647 + 32 )
+      self.assertEqual( long( o ),          2147483647 + 32 )
+
+      o = OperatorUnsignedLong(); o.m_ulong = sys.maxint + 128
+      self.assertEqual( o.m_ulong,            sys.maxint + 128 )
+      self.assertEqual( long( o ),            sys.maxint + 128 )
+
+      o = OperatorFloat(); o.m_float =      3.14
+      self.assertEqual( round( o.m_float  - 3.14, 5 ), 0. )
+      self.assertEqual( round( float( o ) - 3.14, 5 ), 0. )
 
 
 ## actual test run
