@@ -357,10 +357,20 @@ namespace ROOT
       G__DataMemberInfo member( cl );
       std::string dims;
       while( member.Next() ) {
+         if (((member.Type()->Property() & G__BIT_ISCONSTANT)
+              && (member.Type()->Property() & G__BIT_ISENUM))  // an enum const
+             || (member.Property() & G__BIT_ISSTATIC)) // a static member
+            continue;
+         if (strcmp("G__virtualinfo", member.Name()) == 0) continue;
+         
          dims.clear();
          for (int dim = 0; dim < member.ArrayDim(); dim++) {
-            char cdim[8];
-            sprintf(cdim,"[%d]",member.MaxIndex(dim));
+            char cdim[24];
+            static const int maxsize = sizeof(cdim)/sizeof(cdim[0]);
+            int result = snprintf(cdim,maxsize,"[%d]",member.MaxIndex(dim));
+            if (result > maxsize) {
+               std::cout << "Error: array size is to large, the size '" << member.MaxIndex(dim) << "' does not fit in " << maxsize << " characters.\n";
+            }
             dims += cdim;
          }         
          nameType[member.Name()] = TSchemaType(member.Type()->Name(),dims.c_str());
