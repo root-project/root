@@ -361,7 +361,24 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
          countname.Form("%s[%s]",name.Data(),bp->GetCountName());
          SetTitle(countname);
 
+      } else if (element->IsA() == TStreamerLoop::Class()) {
+         // -- Fixup title with counter if we are a varying length array data member.
+         TStreamerLoop *bp = (TStreamerLoop *)element;
+         TString countname;
+         countname = bname;
+         Ssiz_t dot = countname.Last('.');
+         if (dot>=0) {
+            countname.Remove(dot+1);
+         } else {
+            countname = "";
+         }
+         countname += bp->GetCountName();
+         brOfCounter = (TBranchElement *)fTree->GetBranch(countname);
+         countname.Form("%s[%s]",name.Data(),bp->GetCountName());
+         SetTitle(countname);
+         
       }
+      
       if (splitlevel > 0) {
          // -- Create sub branches if requested by splitlevel.
          const char* elem_type = element->GetTypeName();
