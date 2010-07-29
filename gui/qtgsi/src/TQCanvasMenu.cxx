@@ -48,6 +48,7 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)
    fParent  = parent;
    fTabWin  = 0;
    fDialog  = 0;
+   fMousePosX = fMousePosY = 0;
 }
 
 //______________________________________________________________________________
@@ -61,6 +62,7 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas)
    fTabWin  = tabWin;
    fCurrObj = 0;
    fDialog  = 0;
+   fMousePosX = fMousePosY = 0;
 }
 
 //______________________________________________________________________________
