@@ -740,6 +740,7 @@ void TGFontDialog::GetFontName()
    fSize = atoi(size);
 
    sel = fFontStyles->GetSelected();
+   if (sel < 0) sel = 0;
 
    switch(sel) {
       case 0:

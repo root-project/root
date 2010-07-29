@@ -1589,9 +1589,10 @@ void TGFileBrowser::ToggleSort()
             fListTree->SetSelected(itm);
             fListTree->HighlightItem(itm, kTRUE, kTRUE);
          }
-         delete [] itemname;
       }
    }
+   if (itemname)
+      delete [] itemname;
    fListTree->ClearViewPort();
    fListTree->AdjustPosition(fListLevel);
 }
