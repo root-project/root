@@ -1190,10 +1190,10 @@ void G__make_ifunctable(char* funcheader)
       if (G__tagdefining >= 0) ++G__struct.isabstract[G__tagdefining];
       if ('~' == G__p_ifunc->funcname[func_now][0]) {
          if (G__dispmsg >= G__DISPWARN) {
+            G__printlinenum();
             G__fprinterr(G__serr, "Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'"
                          , G__p_ifunc->funcname[func_now]
                         );
-            G__printlinenum();
          }
       }
       if (0 == strncmp(paraname, "const", 5))
