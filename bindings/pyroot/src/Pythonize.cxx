@@ -138,13 +138,13 @@ namespace {
 //____________________________________________________________________________
    inline PyObject* BoolNot( PyObject* value )
    {
-      if ( value == Py_True ) {
+      if ( PyObject_IsTrue( value ) == 1 ) {
          Py_INCREF( Py_False );
          Py_DECREF( value );
          return Py_False;
       } else {
          Py_INCREF( Py_True );
-         Py_DECREF( value );
+         Py_XDECREF( value );
          return Py_True;
       }
    }

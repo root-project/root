@@ -212,8 +212,11 @@ Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyCall
    // not adding to existing MethodProxy; add callable directly to the class
       if ( PyErr_Occurred() )
          PyErr_Clear();
-      return PyObject_SetAttrString( pyclass,
-         const_cast< char* >( label ), (PyObject*)MethodProxy_New( label, pyfunc ) ) == 0;
+      Py_XDECREF( (PyObject*)method );
+      method = MethodProxy_New( label, pyfunc );
+      Bool_t isOk = PyObject_SetAttrString( pyclass, const_cast< char* >( label ), (PyObject*)method ) == 0;
+      Py_DECREF( method );
+      return isOk;
    }
 
    method->AddMethod( pyfunc );
