@@ -6,7 +6,6 @@
  ************************************************************************/
 // qtcint.h
 
-#define  __attribute__(x)
 // Lie to CINT to make it go!
 #ifdef __CINT__
 
@@ -52,10 +51,24 @@ template <typename T> class QVector;
 // originally it's not templated but hey who cares
  template <typename T> uint qHash(T);
 
+#define QMATRIX4X4_H
+class QMatrix4x4;
+
 #define QSTYLEOPTION_H
 class QStyleOption;
 class QStyleOptionViewItem;
 class QStyleOptionComboBox;
+
+// QSettings::ReadFunc
+/*typedef QSettings::ReadFunc ReadFunc;
+typedef QSettings::WriteFunc WriteFunc;
+typedef QSettings::Format Format;*/
+
+#define QMETATYPE_H
+#define Q_DECLARE_METATYPE(A) 
+#define Q_DECLARE_BUILTIN_METATYPE(TYPE, NAME)
+class QMetaType;
+template <typename T> int qRegisterMetaType(const char*, T* = 0);
 
 // const bool FALSE=false;
 // const bool TRUE=true;
