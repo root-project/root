@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 04/16/08
+# Last: 07/26/10
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -10,22 +10,25 @@ import commands
 from ROOT import *
 
 __all__ = [
-   'Regression1TwiceImportStarTestCase',
-   'Regression2PyExceptionTestcase',
-   'Regression3UserDefinedNewOperatorTestCase',
-   'Regression4ThreadingTestCase',
-   'Regression5LoKiNamespaceTestCase',
-   'Regression6Int64ConversionTestCase',
-   'Regression7MatchConstWithProperReturn',
-   'Regression8UseNamespaceProperlyInPythonize',
-   'Regression9BreakSmartPtrCircularLoop'
+   'Regression01TwiceImportStarTestCase',
+   'Regression02PyExceptionTestcase',
+   'Regression03UserDefinedNewOperatorTestCase',
+   'Regression04ThreadingTestCase',
+   'Regression05LoKiNamespaceTestCase',
+   'Regression06Int64ConversionTestCase',
+   'Regression07MatchConstWithProperReturn',
+   'Regression08UseNamespaceProperlyInPythonize',
+   'Regression09CheckEnumExactMatch',
+   'Regression10BreakSmartPtrCircularLoop',
+   'Regression10TVector3Pythonize',
+   'Regression11CoralAttributeListIterators'
 ]
 
 
 ### "from ROOT import *" done in import-*-ed module ==========================
 from Amir import *
 
-class Regression1TwiceImportStarTestCase( unittest.TestCase ):
+class Regression01TwiceImportStarTestCase( unittest.TestCase ):
    def test1FromROOTImportStarInModule( self ):
       """Test handling of twice 'from ROOT import*'"""
 
@@ -33,7 +36,7 @@ class Regression1TwiceImportStarTestCase( unittest.TestCase ):
 
 
 ### TPyException thrown from C++ code ========================================
-class Regression2PyExceptionTestcase( unittest.TestCase ):
+class Regression02PyExceptionTestcase( unittest.TestCase ):
    def test1RaiseAndTrapPyException( self ):
       """Test thrown TPyException object processing"""
 
@@ -55,7 +58,7 @@ class Regression2PyExceptionTestcase( unittest.TestCase ):
 
 
 ### By-value return for class that defines operator new ======================
-class Regression3UserDefinedNewOperatorTestCase( unittest.TestCase ):
+class Regression03UserDefinedNewOperatorTestCase( unittest.TestCase ):
    def test1CreateTemporary( self ):
       """Test handling of a temporary for user defined operator new"""
 
@@ -66,7 +69,7 @@ class Regression3UserDefinedNewOperatorTestCase( unittest.TestCase ):
 
 
 ### Test the condition under which to (not) start the GUI thread =============
-class Regression4ThreadingTestCase( unittest.TestCase ):
+class Regression04ThreadingTestCase( unittest.TestCase ):
 
    hasThread = gROOT.IsBatch() and 5 or 6   # can't test if no display ...
    noThread  = 5
@@ -145,7 +148,7 @@ class Regression4ThreadingTestCase( unittest.TestCase ):
 
 
 ### Test the proper resolution of a template with namespaced parameter =======
-class Regression5LoKiNamespaceTestCase( unittest.TestCase ):
+class Regression05LoKiNamespaceTestCase( unittest.TestCase ):
    def test1TemplateWithNamespaceParameter( self ):
       """Test name resolution of template with namespace parameter"""
 
@@ -158,7 +161,7 @@ class Regression5LoKiNamespaceTestCase( unittest.TestCase ):
          LoKi.BooleanConstant( rcp ).__name__, 'LoKi::BooleanConstant<%s>' % rcp )
 
 ### Test conversion of int64 objects to ULong64_t and ULong_t ================
-class Regression6Int64ConversionTestCase( unittest.TestCase ):
+class Regression06Int64ConversionTestCase( unittest.TestCase ):
    limit1  = 4294967295
    limit1L = 4294967295L
 
@@ -182,7 +185,7 @@ class Regression6Int64ConversionTestCase( unittest.TestCase ):
 
 
 ### Proper match-up of return type and overloaded function ===================
-class Regression7MatchConstWithProperReturn( unittest.TestCase ):
+class Regression07MatchConstWithProperReturn( unittest.TestCase ):
    def test1OverloadOrderWithProperReturn( self ):
       """Test return type against proper overload w/ const and covariance"""
 
@@ -193,7 +196,7 @@ class Regression7MatchConstWithProperReturn( unittest.TestCase ):
 
 
 ### Don't forget namespace when looking up a class in Pythonize! =============
-class Regression8UseNamespaceProperlyInPythonize( unittest.TestCase ):
+class Regression08UseNamespaceProperlyInPythonize( unittest.TestCase ):
    def test1UseNamespaceInIteratorPythonization( self ):
       """Do not crash on classes with iterators in a namespace"""
 
@@ -202,7 +205,7 @@ class Regression8UseNamespaceProperlyInPythonize( unittest.TestCase ):
 
 
 ### enum type conversions (used to fail exact match in CINT) =================
-class Regression9CheckEnumExactMatch( unittest.TestCase ):
+class Regression09CheckEnumExactMatch( unittest.TestCase ):
    def test1CheckEnumCalls( self ):
       """Be able to pass enums as function arguments"""
 
@@ -212,8 +215,9 @@ class Regression9CheckEnumExactMatch( unittest.TestCase ):
       self.assertEqual( cow,  a.testEnum2( cow ) )
       self.assertEqual( bird, a.testEnum3( bird ) )
 
+
 ### "smart" classes that return themselves on dereference cause a loop =======
-class Regression9BreakSmartPtrCircularLoop( unittest.TestCase ):
+class Regression10BreakSmartPtrCircularLoop( unittest.TestCase ):
    def test1VerifyNoLoopt( self ):
       """Smart class that returns itself on dereference should not loop"""
 
@@ -222,6 +226,39 @@ class Regression9BreakSmartPtrCircularLoop( unittest.TestCase ):
       self.assertRaises( AttributeError, getattr, a, 'DoesNotExist' )
 
 
+### test pythonization of TVector3 ===========================================
+class Regression10TVector3Pythonize( unittest.TestCase ):
+   def test1TVector3( self ):
+      """Verify TVector3 pythonization"""
+
+      v = TVector3( 1., 2., 3.)
+      self.assertEqual( list(v), [1., 2., 3. ] )
+
+
+### test pythonization coral::AttributeList iterators ========================
+class Regression11CoralAttributeListIterators( unittest.TestCase ):
+   def test1IterateWithBaseIterator( self ):
+      """Verify that the correct base class iterators is picked up"""
+
+      gROOT.LoadMacro( "CoralAttributeList.C+" )
+
+      a = coral_pyroot_regression.AttributeList()
+
+      a.extend( "i", "int" )
+      self.assertEqual( a.size(), 1 )
+      self.assertEqual( a.begin(), a.begin() )
+      self.assertNotEqual( a.begin(), a.end() )
+
+      b = a.begin()
+      e = a.end()
+      self.assertNotEqual( a, e )
+
+      b.__preinc__()
+      self.assertEqual( b, e )
+      self.assertNotEqual( b, a.begin() )
+      
+
+Regression11CoralAttributeListIterators
 ## actual test run
 if __name__ == '__main__':
    

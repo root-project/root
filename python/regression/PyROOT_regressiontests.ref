@@ -9,8 +9,10 @@ Test conversion of Int(64) limit values to unsigned long ... ok
 Test conversion of Int(64) limit values to unsigned long long ... ok
 Test return type against proper overload w/ const and covariance ... ok
 Do not crash on classes with iterators in a namespace ... ok
-Smart class that returns itself on dereference should not loop ... ok
 Be able to pass enums as function arguments ... ok
+Smart class that returns itself on dereference should not loop ... ok
+Verify TVector3 pythonization ... ok
+Verify that the correct base class iterators is picked up ... ok
 
 ----------------------------------------------------------------------
 

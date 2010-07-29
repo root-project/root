@@ -34,7 +34,7 @@ endif
 LoKiNamespace_C.clean.log: LoKiNamespace_C.$(DllSuf)
 	$(CMDECHO) rm -f LoKiNamespace_C.rootmap > LoKiNamespace_C.clean.log
 
-PyROOT_regressiontests.log: LoKiNamespace_C.clean.log Marco_C.$(DllSuf) MuonTileID_C.$(DllSuf) Scott3_C.$(DllSuf) Scott2_C.$(DllSuf) Scott_C.$(DllSuf) ULongLong_C.$(DllSuf) Till_C.$(DllSuf)
+PyROOT_regressiontests.log: LoKiNamespace_C.clean.log Marco_C.$(DllSuf) MuonTileID_C.$(DllSuf) Scott3_C.$(DllSuf) Scott2_C.$(DllSuf) Scott_C.$(DllSuf) ULongLong_C.$(DllSuf) Till_C.$(DllSuf) CoralAttributeList_C.$(DllSuf)
 
 ifeq ($(shell root-config --arch),win32)
 # don't run the python file; it doesn't work on Windows:
