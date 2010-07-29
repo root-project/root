@@ -767,19 +767,25 @@ Int_t TSpline3::FindX(Double_t x) const
 {
    // Find X
 
-   Int_t klow=0;
+   Int_t klow=0, khig=fNp-1;
    //
    // If out of boundaries, extrapolate
    // It may be badly wrong
    if(x<=fXmin) klow=0;
-   else if(x>=fXmax) klow=fNp-1;
+   else if(x>=fXmax) klow=khig;
    else {
       if(fKstep) {
          //
          // Equidistant knots, use histogramming
-         klow = TMath::Min(Int_t((x-fXmin)/fDelta),fNp-1);
+         klow = TMath::FloorNint((x-fXmin)/fDelta);
+         // Correction for rounding errors
+         if (x < fPoly[klow].X())
+            klow = TMath::Max(klow-1,0);
+         else if (klow < khig) {
+            if (x > fPoly[klow+1].X()) ++klow;
+         }
       } else {
-         Int_t khig=fNp-1, khalf;
+         Int_t khalf;
          //
          // Non equidistant knots, binary search
          while(khig-klow>1)
@@ -787,13 +793,13 @@ Int_t TSpline3::FindX(Double_t x) const
                klow=khalf;
             else
                khig=khalf;
+         //
+         // This could be removed, sanity check
+         if(!(fPoly[klow].X()<=x && x<=fPoly[klow+1].X()))
+            Error("Eval",
+                  "Binary search failed x(%d) = %f < x= %f < x(%d) = %f\n",
+                  klow,fPoly[klow].X(),x,klow+1,fPoly[klow+1].X());
       }
-      //
-      // This could be removed, sanity check
-      if(!(fPoly[klow].X()<=x && x<=fPoly[klow+1].X()))
-         Error("Eval",
-               "Binary search failed x(%d) = %f < x(%d) = %f\n",
-               klow,fPoly[klow].X(),klow+1,fPoly[klow+1].X());
    }
    return klow;
 }
