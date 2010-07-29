@@ -2426,7 +2426,7 @@ void G__define_var(int tagnum, int typenum)
             if (!bitfieldwarn) {
                if (G__dispmsg >= G__DISPNOTE) {
                   G__printlinenum();
-                  G__fprinterr(G__serr, "Note: Bit-field not accessible from interpreter");
+                  G__fprinterr(G__serr, "Note: Bit-field not accessible from interpreter\n");
                }
                bitfieldwarn = 1;
             }

@@ -1191,7 +1191,7 @@ void G__make_ifunctable(char* funcheader)
       if ('~' == G__p_ifunc->funcname[func_now][0]) {
          if (G__dispmsg >= G__DISPWARN) {
             G__printlinenum();
-            G__fprinterr(G__serr, "Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'"
+            G__fprinterr(G__serr, "Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'\n"
                          , G__p_ifunc->funcname[func_now]
                         );
          }
