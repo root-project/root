@@ -261,6 +261,17 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
 }
 
 //____________________________________________________________________________
+Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const char* op, const char* label )
+{
+// install binary operator op in pyclass, working on two instances of pyclass
+   PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
+   std::string cname = TClassEdit::ResolveTypedef( PyString_AS_STRING( pyname ) );
+   Py_DECREF( pyname ); pyname = 0;
+
+   return AddBinaryOperator( pyclass, cname, cname, op, label );
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string& lcname,
    const std::string& rcname, const char* op, const char* label )
 {

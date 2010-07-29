@@ -1693,8 +1693,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
 // search for global comparator overloads (replaces above generic ones)
-   Utility::AddBinaryOperator( pyclass, name, name, "==", "__eq__" ); 
-   Utility::AddBinaryOperator( pyclass, name, name, "!=", "__ne__" );
+   Utility::AddBinaryOperator( pyclass, "==", "__eq__" ); 
+   Utility::AddBinaryOperator( pyclass, "!=", "__ne__" );
 
 // map operator==() through GenObjectIsEqual to allow comparison to None (kTRUE is to
 // require that the located method is a MethodProxy; this prevents circular calls as

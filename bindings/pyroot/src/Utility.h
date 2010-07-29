@@ -49,6 +49,7 @@ namespace PyROOT {
 
    // helpers for dynamically constructing binary operators
       Bool_t AddBinaryOperator( PyObject* left, PyObject* right, const char* op, const char* label = "" );
+      Bool_t AddBinaryOperator( PyObject* pyclass, const char* op, const char* label = "" );
       Bool_t AddBinaryOperator( PyObject* pyclass, const std::string& lcname, const std::string& rcname,
                                 const char* op, const char* label = "" );
 
