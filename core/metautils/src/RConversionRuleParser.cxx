@@ -367,8 +367,12 @@ namespace ROOT
          for (int dim = 0; dim < member.ArrayDim(); dim++) {
             char cdim[24];
             static const int maxsize = sizeof(cdim)/sizeof(cdim[0]);
-            int result = snprintf(cdim,maxsize,"[%d]",member.MaxIndex(dim));
-            if (result > maxsize) {
+#ifdef _MSC_VER
+           int result = _snprintf(cdim,maxsize,"[%d]",member.MaxIndex(dim));
+#else
+           int result = snprintf(cdim,maxsize,"[%d]",member.MaxIndex(dim));
+#endif
+           if (result > maxsize) {
                std::cout << "Error: array size is to large, the size '" << member.MaxIndex(dim) << "' does not fit in " << maxsize << " characters.\n";
             }
             dims += cdim;
