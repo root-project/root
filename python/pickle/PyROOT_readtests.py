@@ -58,7 +58,6 @@ class PickleReadingSimpleObjectsTestCase( unittest.TestCase ):
       v = cPickle.load( self.in2 )
       __dovtest( self, v )
 
-
    def test3ReadSomeDataObject( self ):
       """Test reading of a user-defined object from a pickle file"""
 
