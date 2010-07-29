@@ -221,9 +221,11 @@ static PyObject* im_call( PyObject* meth, PyObject* args, PyObject* kw )
    PyCFunctionObject* func = (PyCFunctionObject*)PyMethod_GET_FUNCTION( meth );
 
 // the function is globally shared, so set and reset its "self" (ok, b/c of GIL)
+   Py_INCREF( self );
    func->m_self = self;
    PyObject* result = PyCFunction_Call( (PyObject*)func, args, kw );
    func->m_self = 0;
+   Py_DECREF( self );
    Py_DECREF( args );
    return result;
 }
