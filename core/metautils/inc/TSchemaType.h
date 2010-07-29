@@ -20,3 +20,4 @@ namespace ROOT
 }
 #endif // __CINT__
 #endif // R__TSCHEMATYPE_H
+
