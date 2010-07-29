@@ -75,4 +75,4 @@ if [ "x$WRAPPER" != "x" ]; then
    echo "$NOW: $1: executing $WRAPPER $ROOTSYS/bin/proofserv.exe $@" >> $LOGFILE
 fi
 
-exec $WRAPPER $ROOTSYS/bin/proofserv.exe "$@"
+exec $WRAPPER @bindir@/proofserv.exe "$@"

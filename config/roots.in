@@ -31,4 +31,4 @@ cd
 
 echo "Using ROOT at $ROOTSYS"
 
-exec $ROOTSYS/bin/roots.exe "$@"
+exec @bindir@/roots.exe "$@"
