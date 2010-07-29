@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 11/07/08
+# Last: 07/19/10
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -13,7 +13,9 @@ __all__ = [
    'Cpp2TemplateLookupTestCase',
    'Cpp3PassByNonConstRefTestCase',
    'Cpp4HandlingAbstractClassesTestCase',
-   'Cpp5AssignToRefArbitraryClassTestCase'
+   'Cpp5AssignToRefArbitraryClassTestCase',
+   'Cpp6MathConvertersTestCase',
+   'Cpp7GloballyOverloadedComparatorTestCase'
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -217,6 +219,13 @@ class Cpp3PassByNonConstRefTestCase( unittest.TestCase ):
       SetIntThroughRef( i, 13 )
       self.assertEqual( i, 13 )
 
+   def test3PassBuiltinsByNonConstRef( self ):
+      """Test parameter passing of builtins through const reference"""
+
+      self.assertEqual( PassLongThroughConstRef( 42 ), 42 )
+      self.assertEqual( PassDoubleThroughConstRef( 3.1415 ), 3.1415 )
+      self.assertEqual( PassIntThroughConstRef( 42 ), 42 )
+
 
 ### C++ abstract classes should behave normally, but be non-instatiatable ====
 class Cpp4HandlingAbstractClassesTestCase( unittest.TestCase ):
@@ -249,6 +258,42 @@ class Cpp5AssignToRefArbitraryClassTestCase( unittest.TestCase ):
       a[0] = RefTester( 33 )
       self.assertEqual( len(a), 1 )
       self.assertEqual( a[0].m_i, 33 )
+
+
+### Check availability of math conversions ===================================
+class Cpp6MathConvertersTestCase( unittest.TestCase ):
+   def test1MathConverters( self ):
+      """Test operator int/long/double incl. typedef"""
+
+      a = Convertible()
+      a.m_i = 1234
+      a.m_d = 4321.
+
+      self.assertEqual( int(a), 1234 )
+      self.assertEqual( int(a), a.m_i )
+      self.assertEqual( long(a), a.m_i )
+
+      self.assertEqual( float(a), 4321. )
+      self.assertEqual( float(a), a.m_d )
+
+
+### Check global operator== overload =========================================
+class Cpp7GloballyOverloadedComparatorTestCase( unittest.TestCase ):
+   def test1Comparator( self ):
+      """Check that the global operator!=/== is picked up"""
+
+      a, b = Comparable(), Comparable()
+
+      self.assertEqual( a, b )
+      self.assertEqual( b, a )
+      self.assert_( a.__eq__( b ) )
+      self.assert_( b.__eq__( a ) )
+      self.assert_( a.__ne__( a ) )
+      self.assert_( b.__ne__( b ) )
+      self.assertEqual( a.__eq__( b ), True )
+      self.assertEqual( b.__eq__( a ), True )
+      self.assertEqual( a.__eq__( a ), False )
+      self.assertEqual( b.__eq__( b ), False )
 
 
 ## actual test run

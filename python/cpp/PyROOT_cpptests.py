@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/03/05
-# Last: 07/03/07
+# Last: 07/26/10
 
 """C++ language interface unit tests for PyROOT package."""
 
@@ -160,6 +160,40 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       self.assert_( s == ROOT.BindObject( co, "TString" ) )
       self.assert_( s == ROOT.BindObject( ad, s.__class__ ) )
       self.assert_( s == ROOT.BindObject( ad, "TString" ) )
+
+   def test11ObjectAndPointerComparisons( self ):
+      """Verify object and pointer comparisons"""
+
+      c1 = MakeNullPointer( TCanvas )
+      self.assertEqual( c1, None )
+      self.assertEqual( None, c1 )
+
+      c2 = MakeNullPointer( TCanvas )
+      self.assertEqual( c1, c2 )
+      self.assertEqual( c2, c1 )
+
+    # TLorentzVector overrides operator==
+      l1 = MakeNullPointer( TLorentzVector )
+      self.assertEqual( l1, None )
+      self.assertEqual( None, l1 )
+
+      self.assertNotEqual( c1, l1 )
+      self.assertNotEqual( l1, c1 )
+
+      l2 = MakeNullPointer( TLorentzVector )
+      self.assertEqual( l1, l2 )
+      self.assertEqual( l2, l1 )
+
+      l3 = TLorentzVector( 1, 2, 3, 4 )
+      l4 = TLorentzVector( 1, 2, 3, 4 )
+      l5 = TLorentzVector( 4, 3, 2, 1 )
+      self.assertEqual( l3, l4 )
+      self.assertEqual( l4, l3 )
+
+      self.assert_( l3 != None )        # like this to ensure __ne__ is called
+      self.assert_( None != l3 )        # id.
+      self.assertNotEqual( l3, l5 )
+      self.assertNotEqual( l5, l3 )
 
 
 ## actual test run

@@ -17,10 +17,11 @@ template< class T >
 T MyTemplatedFunction( T t ) { return t; }
 
 #ifdef __CINT__
-#pragma link C++ class MyTemplatedClass< std::vector< float > >;
+#pragma link C++ class MyTemplatedClass< vector< float > >;
 #pragma link C++ function MyTemplatedFunction< int >( int );
 #pragma link C++ function MyTemplatedFunction< double >( double );
 #else
+template class MyTemplatedClass< vector< float > >;
 template int MyTemplatedFunction< int >( int );
 template double MyTemplatedFunction< double >( double );
 #endif

@@ -2,7 +2,7 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 06/27/08
+  Last: 07/19/10
 */
 
 #include <vector>
@@ -76,8 +76,11 @@ namespace {
 
 // helpers for checking pass-by-ref
 void SetIntThroughRef( Int_t& i, Int_t val ) { i = val; }
+Int_t PassIntThroughConstRef( const Int_t& i ) { return i; }
 void SetLongThroughRef( Long_t& l, Long_t val ) { l = val; }
+Long_t PassLongThroughConstRef( const Long_t& l ) { return l; }
 void SetDoubleThroughRef( Double_t& d, Double_t val ) { d = val; }
+Double_t PassDoubleThroughConstRef( const Double_t& d ) { return d; }
 
 // abstract class should not be instantiatable
 class MyAbstractClass {
@@ -112,3 +115,39 @@ public:
 #endif
 
 template class std::vector< RefTester >;
+
+
+// helper for math conversionts
+class Convertible {
+public:
+   Convertible() : m_i( -99 ), m_d( -99. ) {}
+
+   operator Int_t() { return m_i; }
+   operator long() { return m_i; }
+   operator double() { return m_d; }
+
+public:
+   int m_i;
+   double m_d;
+};
+
+
+class Comparable {
+};
+
+bool operator==( const Comparable& c1, const Comparable& c2 )
+{
+// does the opposite of a (default PyROOT) pointer comparison
+   return &c1 != &c2;
+}
+
+bool operator!=( const Comparable& c1, const Comparable& c2 )
+{
+// does the opposite of a (default PyROOT) pointer comparison
+   return &c1 == &c2;
+}
+
+#ifdef __CINT__
+#pragma link C++ function operator==( const Comparable&, const Comparable& );
+#pragma link C++ function operator!=( const Comparable&, const Comparable& );
+#endif
