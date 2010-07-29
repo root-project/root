@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 06/27/08
+# Last: 07/29/10
 
 """STL unit tests for PyROOT package."""
 
@@ -13,7 +13,8 @@ __all__ = [
    'STL2ListTestCase',
    'STL3MapTestCase',
    'STL4STLLikeClassTestCase',
-   'STL5StringHandlingTestCase'
+   'STL5StringHandlingTestCase',
+   'STL6IteratorTestCase'
 ]
 
 gROOT.LoadMacro( "StlTypes.C+" )
@@ -246,6 +247,53 @@ class STL5StringHandlingTestCase( unittest.TestCase ):
       c.m_string = "another test"
       self.assertEqual( c.m_string, "another test" )
       self.assertEqual( c.GetString1(), "another test" )
+
+
+### Iterator comparison ======================================================
+class STL6IteratorComparisonTestCase( unittest.TestCase ):
+   def test1BuiltinVectorIterators( self ):
+      """Test iterator comparison with operator== reflected"""
+
+      v = std.vector( int )()
+      v.resize( 1 )
+
+      b1, e1 = v.begin(), v.end()
+      b2, e2 = v.begin(), v.end()
+
+      self.assert_( b1.__eq__( b2 ) )
+      self.assert_( not b1.__ne__( b2 ) )
+      self.assertEqual( cmp( b1, b2 ), 0 )
+
+      self.assert_( e1.__eq__( e2 ) )
+      self.assert_( not e1.__ne__( e2 ) )
+      self.assertEqual( cmp( e1, e2 ), 0 )
+
+      self.assert_( not b1.__eq__( e1 ) )
+      self.assert_( b1.__ne__( e1 ) )
+      self.assertNotEqual( cmp( b1, e1 ), 0 )
+
+      b1.__preinc__()
+      self.assert_( not b1.__eq__( b2 ) )
+      self.assert_( b1.__eq__( e2 ) )
+      self.assertNotEqual( cmp( b1, b2 ), 0 )
+      self.assertEqual( cmp( b1, e1 ), 0 )
+      self.assertNotEqual( b1, b2 )
+      self.assertEqual( b1, e2 )
+
+   def test2CustomVectorIterators( self ):
+      """Test iterator comparison with operator== NOT reflected"""
+
+      v = std.vector( JustAClass )()
+      v.resize( 1 )
+
+      b1 = v.begin()
+      b2 = v.begin()
+
+      if not 'win32' in sys.platform:
+       # out-of-line operator==/!= are a gcc feature ...
+         self.assertRaises( LookupError, b1.__eq__, b2 )
+         self.assertRaises( LookupError, b1.__ne__, b2 )
+         self.assertRaises( LookupError, cmp, b1, b2 )
 
 
 ## actual test run

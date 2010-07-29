@@ -13,6 +13,8 @@ Test overloading of operator[] in STL like class ... ok
 Test the iterator protocol mapping for an STL like class ... ok
 Test mapping of python strings and std::string ... ok
 Test access to std::string object data members ... ok
+Test iterator comparison with operator== reflected ... ok
+Test iterator comparison with operator== NOT reflected ... ok
 
 ----------------------------------------------------------------------
 
