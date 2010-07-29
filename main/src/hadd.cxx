@@ -77,6 +77,7 @@ TList *FileList;
 TFile *Target, *Source;
 Bool_t noTrees;
 Bool_t fastMethod;
+Bool_t reoptimize;
 
 int AddFile(TList* sourcelist, std::string entry, int newcomp) ;
 int MergeRootfile( TDirectory *target, TList *sourcelist);
@@ -86,12 +87,13 @@ int main( int argc, char **argv )
 {
 
    if ( argc < 3 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
-      cout << "Usage: " << argv[0] << " [-f] [-T] targetfile source1 [source2 source3 ...]" << endl;
+      cout << "Usage: " << argv[0] << " [-f[0-9]] [-T] [-O] targetfile source1 [source2 source3 ...]" << endl;
       cout << "This program will add histograms from a list of root files and write them" << endl;
       cout << "to a target root file. The target file is newly created and must not " << endl;
       cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << endl;
       cout << "Supply at least two source files for this to make sense... ;-)" << endl;
-      cout << "If the first argument is -T, Trees are not merged" <<endl;
+      cout << "If the option -T is used, Trees are not merged" <<endl;
+      cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<endl;
       cout << "When -the -f option is specified, one can also specify the compression" <<endl;
       cout << "level of the target file. By default the compression level is 1, but" <<endl;
       cout << "if \"-f0\" is specified, the target file will not be compressed." <<endl;
@@ -102,24 +104,36 @@ int main( int argc, char **argv )
    }
    FileList = new TList();
 
-   Bool_t force = (!strcmp(argv[1],"-f") || !strcmp(argv[2],"-f"));
-   noTrees = (!strcmp(argv[1],"-T") || !strcmp(argv[2],"-T"));
+   Bool_t force = kFALSE;
+   reoptimize = kFALSE;
+   
+   int ffirst = 2;
    Int_t newcomp = 1;
-   char ft[4];
-   for (int j=0;j<=9;j++) {
-      sprintf(ft,"-f%d",j);
-      if (!strcmp(argv[1],ft) || !strcmp(argv[2],ft)) {
+   for( int a = 1; a < argc; ++a ) {
+      if ( strcmp(argv[a],"-T") == 0 ) {
+         noTrees = kTRUE;
+         ++ffirst;
+      } else if ( strcmp(argv[a],"-f") == 0 ) {
          force = kTRUE;
-         newcomp = j;
-         break;
+         ++ffirst;
+      } else if ( strcmp(argv[a],"-O") == 0 ) {
+         reoptimize = kTRUE;
+         ++ffirst;
+      } else if ( argv[a][0] == '-' ) {
+         char ft[4];
+         for( int j=0; j<=9; ++j ) {
+            sprintf(ft,"-f%d",j);
+            if (!strcmp(argv[a],ft)) {
+               force = kTRUE;
+               newcomp = j;
+               ++ffirst;
+               break;
+            }
+         }
       }
    }
 
    gSystem->Load("libTreePlayer");
-
-   int ffirst = 2;
-   if (force) ffirst++;
-   if (noTrees) ffirst++;
 
    cout << "Target file: " << argv[ffirst-1] << endl;
 
@@ -141,7 +155,8 @@ int main( int argc, char **argv )
    for ( int i = ffirst; i < argc; i++ ) {
       if( AddFile(FileList, argv[i], newcomp) !=0 ) return 1;
    }
-   if (!fastMethod) {
+   if (!fastMethod && !reoptimize) {
+      // Don't warn if the user any request re-optimization.
       cout <<"Sources and Target have different compression levels"<<endl;
       cout <<"Merging will be slower"<<endl;
    }
@@ -183,7 +198,7 @@ int AddFile(TList* sourcelist, std::string entry, int newcomp)
       return 1;
    }
    sourcelist->Add(source);
-   if (newcomp != source->GetCompressionLevel())  fastMethod = kFALSE;
+   if (newcomp != source->GetCompressionLevel()) fastMethod = kFALSE;
    return 0;
 }
 
@@ -374,8 +389,8 @@ int MergeRootfile( TDirectory *target, TList *sourcelist)
             } else if(obj->IsA()->InheritsFrom( TTree::Class() )) {
                if (!noTrees) {
                   globChain->ls();
-                  if (fastMethod) globChain->Merge(target->GetFile(),0,"keep fast");
-                  else            globChain->Merge(target->GetFile(),0,"keep");
+                  if (fastMethod && !reoptimize) globChain->Merge(target->GetFile(),0,"keep fast");
+                  else                           globChain->Merge(target->GetFile(),0,"keep");
                   delete globChain;
                }
             } else {

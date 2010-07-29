@@ -113,6 +113,8 @@ MakeProject now implements a move constructor for each classes.   For the implem
    code        = "{ for(Int_t i=0; i<3; i++) fValues[i] = 1+onfile.fValues[i]; }"
 </pre>
 </li>
+<li>New option to hadd, -O requesting the (re)optimization of the basket size (by avoid the fast merge technique).  The equivalent in TFileMerger is to call
+merger->SetFastMethod(kFALSE)</li>
 <li>To make sure that the class emulation layer of ROOT does not double delete an object,
 tell the StreamerElement representing one of the pointers pointing to the object
 to never delete the object.  For example:
