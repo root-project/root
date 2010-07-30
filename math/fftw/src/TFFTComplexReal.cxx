@@ -54,6 +54,7 @@ TFFTComplexReal::TFFTComplexReal()
    fOut  = 0;
    fPlan = 0;
    fN    = 0;
+   fTotalSize = 0;
 }
 
 //_____________________________________________________________________________
@@ -74,7 +75,7 @@ TFFTComplexReal::TFFTComplexReal(Int_t n, Bool_t inPlace)
    fN = new Int_t[1];
    fN[0] = n;
    fPlan = 0;
-
+   fTotalSize = n;
 }
 
 //_____________________________________________________________________________
