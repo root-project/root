@@ -781,6 +781,10 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 // determine type and cast as appropriate
    TClass* klass = TClass::GetClass( gbl->GetTypeName() );
    if ( klass != 0 ) {
+   // special cases where there should be no casting:
+      if ( klass->InheritsFrom( "ios_base" ) )
+         return BindRootObjectNoCast( (void*)gbl->GetAddress(), klass );
+
       if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
          return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
 
