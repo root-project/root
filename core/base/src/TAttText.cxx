@@ -47,7 +47,7 @@ Text attributes are:
 
 <a name="T1"></a><h3>Text Alignment</h3>
 The text alignment is an integer number (<tt>align</tt>) allowing to control
-the horizontal and vertical position of the text string with respect 
+the horizontal and vertical position of the text string with respect
 to the text position.
 The text alignment of any class inheriting from <tt>TAttText</tt> can
 be changed using the method <tt>SetTextAlign</tt> and retrieved using the
@@ -63,7 +63,7 @@ For vertical alignment the following convention applies:
 <pre>
    1=bottom adjusted, 2=centered, 3=top adjusted
 </pre>
-For example: 
+For example:
 <pre>
    align = 11 = left adjusted and bottom adjusted
    align = 32 = right adjusted and vertically centered
@@ -104,20 +104,33 @@ End_Macro
 
 Begin_Html
 <a name="T4"></a><h3>Text Size</h3>
-If the text precision (see next paragraph) is smaller than 3, the text 
-size is expressed in percentage of the current pad height.
-The textsize in pixels (say charheight) will be:
+If the text precision (see next paragraph) is smaller than 3, the text
+size (<tt>textsize</tt>) is a fraction of the current pad size. Therefore the
+same <tt>textsize</tt> value can generate text outputs with different absolute
+sizes in two different pads.
+The text size in pixels (<tt>charheight</tt>) is computed the following way:
+<p>
 <pre>
-   charheight = textsize*canvas_height   if current pad is horizontal.
-   charheight = textsize*canvas_width    if current pad is vertical.
+   pad_width  = gPad->XtoPixel(gPad->GetX2());
+   pad_height = gPad->YtoPixel(gPad->GetY1());
+   if (pad_width < pad_height)  charheight = textsize*pad_width;
+   else                         charheight = textsize*pad_height;
 </pre>
-If the text precision is equal to 3, the character size is given in pixels: 
+<p>
+If the text precision is equal to 3, the text size doesn't depend on the pad's
+dimensions. A given <tt>textsize</tt> value always generates the same absolute
+size. The text size (<tt>charheight</tt>) is given in pixels:
 <pre>
-   charheight = number of pixels
+   charheight = textsize;
 </pre>
+<p>
+Note that to scale fonts to the same size as the old True Type package a
+scale factor of <tt>0.93376068</tt> is apply to the text size before drawing.
+<p>
 The text size of any class inheriting from <tt>TAttText</tt> can
 be changed using the method <tt>SetTextSize</tt> and retrieved using the
 method <tt>GetTextSize</tt>.
+
 
 <a name="T5"></a><h3>Text Font and Precision</h3>
 The text font code is combination of the font number and the precision.
