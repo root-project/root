@@ -273,13 +273,11 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // There is a lot of code duplication but it was necesary to assure
    // the expected behavior when there is no cache.
 
-   Int_t badread= 0;
-   TDirectory *cursav = gDirectory;
-   TDirectory *brdir = fBranch->GetDirectory();
-   if(!brdir) {
+
+   if(!fBranch->GetDirectory()) {
       return -1;
    }
-   brdir->cd();
+   Int_t badread= 0;
 
    if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
 
@@ -405,7 +403,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       }
    }
  AfterBuffer:
-   cursav->cd();
 
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
