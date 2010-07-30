@@ -760,6 +760,8 @@ void THnSparse::FillExMap()
    THnSparseArrayChunk* chunk = 0;
    THnSparseCoordCompression compactCoord(*GetCompactCoord());
    Long64_t idx = 0;
+   if (2 * GetNbins() > fBins.Capacity())
+      fBins.Expand(3 * GetNbins());
    while ((chunk = (THnSparseArrayChunk*) iChunk())) {
       const Int_t chunkSize = chunk->GetEntries();
       Char_t* buf = chunk->fCoordinates;
@@ -979,13 +981,16 @@ Long64_t THnSparse::GetBinIndexForCurrentBin(Bool_t allocate)
 
    // store translation between hash and bin
    newidx += (fBinContent.GetEntriesFast() - 1) * fChunkSize;
-   if (!linidx)
+   if (!linidx) {
       // fBins didn't find it
+      if (2 * GetNbins() > fBins.Capacity())
+         fBins.Expand(3 * GetNbins());
       fBins.Add(hash, newidx + 1);
-   else
+   } else {
       // fBins contains one, but it's the wrong one;
       // add entry to fBinsContinued.
       fBinsContinued.Add(linidx, newidx + 1);
+   }
    return newidx;
 }
 
@@ -1059,7 +1064,6 @@ Double_t THnSparse::GetSparseFractionMem() const {
    // non-sparse n-dimensional histogram. The value is approximate.
 
    Int_t arrayElementSize = 0;
-   Double_t size = 0.;
    if (fFilledBins) {
       TClass* clArray = GetChunk(0)->fContent->IsA();
       TDataMember* dm = clArray ? clArray->GetDataMember("fArray") : 0;
@@ -1070,9 +1074,13 @@ Double_t THnSparse::GetSparseFractionMem() const {
       return -1.;
    }
 
-   size += fFilledBins * (GetCompactCoord()->GetBufferSize() + arrayElementSize + 2 * sizeof(Long_t) /* TExMap */);
+   Double_t sizePerChunkElement = arrayElementSize + GetCompactCoord()->GetBufferSize();
    if (fFilledBins && GetChunk(0)->fSumw2)
-      size += fFilledBins * sizeof(Float_t); /* fSumw2 */
+      sizePerChunkElement += sizeof(Double_t); /* fSumw2 */
+
+   Double_t size = 0.;
+   size += fBinContent.GetEntries() * (GetChunkSize() * sizePerChunkElement + sizeof(THnSparseArrayChunk));
+   size += + 3 * sizeof(Long64_t) * fBins.GetSize() /* TExMap */;
 
    Double_t nbinsTotal = 1.;
    for (Int_t d = 0; d < fNdimensions; ++d)
@@ -1379,6 +1387,16 @@ void THnSparse::RebinnedAdd(const THnSparse* h, Double_t c)
    Int_t* coord = new Int_t[fNdimensions];
    memset(coord, 0, sizeof(Int_t) * fNdimensions);
 
+   if (!fBins.GetSize() && fBinContent.GetSize()) {
+      FillExMap();
+   }
+
+   // Expand the exmap if needed, to reduce collisions
+   Long64_t numTargetBins = GetNbins() + h->GetNbins();
+   if (2 * numTargetBins > fBins.Capacity()) {
+      fBins.Expand(3 * numTargetBins);
+   }
+
    // Add to this whatever is found inside the other histogram
    for (Long64_t i = 0; i < h->GetNbins(); ++i) {
       // Get the content of the bin from the second histogram
@@ -1408,8 +1426,23 @@ Long64_t THnSparse::Merge(TCollection* list)
    if (!list) return 0;
    if (list->IsEmpty()) return (Long64_t)GetEntries();
 
+   Long64_t sumNbins = GetNbins();
    TIter iter(list);
    const TObject* addMeObj = 0;
+   while ((addMeObj = iter())) {
+      const THnSparse* addMe = dynamic_cast<const THnSparse*>(addMeObj);
+      if (addMe) {
+         sumNbins += addMe->GetNbins();
+      }
+   }
+   if (!fBins.GetSize() && fBinContent.GetSize()) {
+      FillExMap();
+   }
+   if (2 * sumNbins > fBins.Capacity()) {
+      fBins.Expand(3 * sumNbins);
+   }
+
+   iter.Reset();
    while ((addMeObj = iter())) {
       const THnSparse* addMe = dynamic_cast<const THnSparse*>(addMeObj);
       if (!addMe)
