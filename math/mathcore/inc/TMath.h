@@ -176,7 +176,7 @@ namespace TMath {
    }
    inline Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
       //return kTRUE if relative difference between af and bf is less than relPrec
-      return TMath::Abs(af-bf) < 0.5*relPrec*(TMath::Abs(af)+TMath::Abs(bf));
+      return TMath::Abs(af-bf) <= 0.5*relPrec*(TMath::Abs(af)+TMath::Abs(bf));
    }
 
    /* ******************** */
