@@ -230,7 +230,7 @@ TThread::TThread(Long_t id)
 }
 
 //______________________________________________________________________________
-Bool_t TThread::IsInited()
+Bool_t TThread::IsInitialized()
 {
    // Return true, if the TThread objects have been initialize.   If false,
    // the process is (from ROOT's point of view) single threaded.

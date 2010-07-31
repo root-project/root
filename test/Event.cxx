@@ -95,7 +95,7 @@ Event::Event() : fIsValid(kFALSE)
    // When the constructor is invoked for the first time, the class static
    // variable fgTracks is 0 and the TClonesArray fgTracks is created.
 
-   if (TThread::IsInited() && TThread::Self()) {
+   if (TThread::IsInitialized() && TThread::Self()) {
       // If thread have been enabled and we are not in the main thread
       // let's not share the TClonesArray!
       fTracks = new TClonesArray("Track", 1000);
@@ -228,7 +228,7 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
 {
    fNtrack = 0;
    fEvtHdr.Set(i, run, date);
-   if (TThread::IsInited() && TThread::Self()) {
+   if (TThread::IsInitialized() && TThread::Self()) {
       // If thread have been enabled and we are not in the main thread
       // let's not share the histogram!
       fH = new TH1F("hstat","Event Histogram",100,0,1);
