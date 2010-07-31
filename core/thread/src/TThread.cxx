@@ -230,6 +230,16 @@ TThread::TThread(Long_t id)
 }
 
 //______________________________________________________________________________
+Bool_t TThread::IsInited()
+{
+   // Return true, if the TThread objects have been initialize.   If false,
+   // the process is (from ROOT's point of view) single threaded.
+
+   if (fgThreadImp) return kTRUE;
+   else return kFALSE;
+}
+
+//______________________________________________________________________________
 void TThread::Init()
 {
    // Initialize global state and variables once.
