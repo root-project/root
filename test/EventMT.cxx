@@ -70,10 +70,9 @@
 //   of histograms can be filled. The creation and handling of the
 //   histograms is taken care of by the HistogramManager class.
 //
-//   Note:  This version of the class Event (see EventMT.h and EventMT.cxx
-//   for an alternative) uses static variable to improve performance (by
-//   reducing memory allocation) and thus you can only one instance per
-//   process (a 2nd instance would shared the array of Tracks).
+// This version of the Event class is a simplified version suitable to
+// use in multiple thread as each Event objects are independent for
+// each other.                                                         
 //
 ////////////////////////////////////////////////////////////////////////
 
@@ -89,18 +88,12 @@ ClassImp(Event)
 ClassImp(Track)
 ClassImp(HistogramManager)
 
-TClonesArray *Event::fgTracks = 0;
-TH1F *Event::fgHist = 0;
-
 //______________________________________________________________________________
 Event::Event() : fIsValid(kFALSE)
 {
    // Create an Event object.
-   // When the constructor is invoked for the first time, the class static
-   // variable fgTracks is 0 and the TClonesArray fgTracks is created.
 
-   if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
-   fTracks = fgTracks;
+   fTracks = new TClonesArray("Track", 1000);
    fHighPt = new TRefArray;
    fMuons  = new TRefArray;
    fNtrack = 0;
@@ -122,7 +115,6 @@ Event::Event() : fIsValid(kFALSE)
 Event::~Event()
 {
    Clear();
-   if (fH == fgHist) fgHist = 0;
    delete fH; fH = 0;
    delete fHighPt; fHighPt = 0;
    delete fMuons;  fMuons = 0;
@@ -211,23 +203,12 @@ void Event::Clear(Option_t * /*option*/)
    fTriggerBits.Clear();
 }
 
-//______________________________________________________________________________
-void Event::Reset(Option_t * /*option*/)
-{
-// Static function to reset all static objects for this event
-//   fgTracks->Delete(option);
-
-   delete fgTracks; fgTracks = 0;
-   fgHist   = 0;
-}
-
-//______________________________________________________________________________
+///______________________________________________________________________________
 void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
 {
    fNtrack = 0;
    fEvtHdr.Set(i, run, date);
-   if (!fgHist) fgHist = new TH1F("hstat","Event Histogram",100,0,1);
-   fH = fgHist;
+   fH = new TH1F("hstat","Event Histogram",100,0,1);
    fH->Fill(random);
 }
 
