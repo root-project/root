@@ -50,7 +50,6 @@
 #include "TRealData.h"
 #include "TStreamer.h"
 #include "TStreamerElement.h"
-#include "TThread.h"
 #include "TVirtualStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualIsAProxy.h"
@@ -2295,7 +2294,6 @@ namespace {
       TClassStreamer          *fStreamer;
 
       static TClassLocalStorage *GetStorage(const TClass *cl) {
-         if (!gThreadTsd) return 0;
          void **thread_ptr = (*gThreadTsd)(0,1);
          if (thread_ptr) {
             if (*thread_ptr==0) *thread_ptr = new TExMap();
@@ -2320,7 +2318,7 @@ TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 {
    // Return the proxy describinb the collection (if any).
 
-   if (TThread::IsInitialized() && fCollectionProxy) {
+   if (gThreadTsd && fCollectionProxy) {
       TClassLocalStorage *local = TClassLocalStorage::GetStorage(this);
       if (local == 0) return fCollectionProxy;
       if (local->fCollectionProxy==0) local->fCollectionProxy = fCollectionProxy->Generate();
@@ -2334,7 +2332,7 @@ TClassStreamer *TClass::GetStreamer() const
 {
    // Return the proxy describinb the collection (if any).
 
-   if (TThread::IsInitialized() &&  fStreamer) {
+   if (gThreadTsd && fStreamer) {
       TClassLocalStorage *local = TClassLocalStorage::GetStorage(this);
       if (local==0) return fStreamer;
       if (local->fStreamer==0) {
