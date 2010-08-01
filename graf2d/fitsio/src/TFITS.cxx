@@ -349,11 +349,11 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
       char colname[80];     
       int colnum;
       
-      fits_get_colname(fp, CASEINSEN, "*", colname, &colnum, &status);
+      fits_get_colname(fp, CASEINSEN, (char*) "*", colname, &colnum, &status);
       while (status == COL_NOT_UNIQUE)
       {
          fColumnsInfo[colnum-1].fName = colname;
-         fits_get_colname(fp, CASEINSEN, "*", colname, &colnum, &status);
+         fits_get_colname(fp, CASEINSEN, (char*) "*", colname, &colnum, &status);
       }
       if (status != COL_NOT_FOUND) goto ERR;
       status = 0;  
@@ -385,7 +385,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                if (status) goto ERR;
                
                
-               char *nulval = "";
+               char *nulval = (char*) "";
                int anynul=0;
                char **array;
                
@@ -819,7 +819,7 @@ void TFITSHDU::Draw(Option_t *)
       TString cname, ctitle;
       cname.Form("%sHDU", this->GetName());
       ctitle.Form("%d x %d", width, height);
-      TCanvas *c = new TCanvas(cname, ctitle, width, height);
+      new TCanvas(cname, ctitle, width, height);
       im->Draw();
    }
 }
