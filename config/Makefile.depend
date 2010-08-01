@@ -117,7 +117,7 @@ GVIZ3DLIBDEPM          = $(GUILIB) $(GEDLIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) \
 MEMSTATLIBDEPM         = $(TREELIB) $(GPADLIB) $(GRAFLIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
 RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
-FITSIOLIBDEPM          = $(HISTLIB) $(GRAFLIB) $(ASIMAGELIB) $(MATRIXLIB)
+FITSIOLIBDEPM          = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(MATRIXLIB)
 
 ifeq ($(EXPLICITLINK),yes)
 
@@ -361,7 +361,7 @@ MEMSTATLIBEXTRA         = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib
 MEMSTATGUILIBEXTRA      = lib/libMemStat.lib lib/libTree.lib lib/libGui.lib
 RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
                           lib/libThread.lib
-FITSIOLIBEXTRA          = lib/libHist.lib lib/libGraf.lib lib/libASImage.lib \
+FITSIOLIBEXTRA          = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libMatrix.lib
 
 else
@@ -473,7 +473,7 @@ GVIZ3DLIBEXTRA          = -Llib -lGui -lGed -lGpad -lGraf3d -lGraf -lGeom -lRGL
 MEMSTATLIBEXTRA         = -Llib -lTree -lGpad -lGraf
 MEMSTATGUILIBEXTRA      = -Llib -lMemStat -lTree -lGui
 RECLIBEXTRA             = -Llib -lGui -lRIO -lTree -lThread
-FITSIOLIBEXTRA          = -Llib -lHist -lGraf -lASImage -lMatrix
+FITSIOLIBEXTRA          = -Llib -lHist -lGpad -lGraf -lMatrix
 
 endif
 
