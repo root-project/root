@@ -1259,7 +1259,7 @@ with options, prefix with --with-, enables corresponding support
   ftgl-libdir        FTGL support, location of libftgl
   fftw3-incdir       FFTW3 support, location of fftw3.h
   fftw3-libdir       FFTW3 support, location of libfftw3 (libfftw3-3 for windows)
-  cfitsio-incdir     FITS support, location of fitsio2.h
+  cfitsio-incdir     FITS support, location of fitsio.h
   cfitsio-libdir     FITS support, location of libcfitsio
   gviz-incdir        Graphviz support, location of gvc.h
   gviz-libdir        Graphviz support, location of libgvplugin_core
@@ -2971,7 +2971,7 @@ check_explicit "$enable_fftw3" "$enable_fftw3_explicit" \
 #
 if test ! "x$enable_fitsio" = "xno"; then
     # Check for cfitsio include and library
-    check_header "fitsio2.h" "$cfitsioincdir" $CFITSIO $CFITSIO/include \
+    check_header "fitsio.h" "$cfitsioincdir" $CFITSIO $CFITSIO/include \
         /usr/local/include /usr/include /usr/include/cfitsio \
         /opt/cfitsio/include $finkdir/include
     cfitsioinc=$found_hdr
@@ -2979,7 +2979,7 @@ if test ! "x$enable_fitsio" = "xno"; then
 
     # At this time, libcfitsio.a should always be prefered over .so,
     # to avoid forcing users to install cfitsio.
-    check_library "libcfitsio" "no" "$cfitsiolibdir" \
+    check_library "libcfitsio cfitsio" "no" "$cfitsiolibdir" \
         $CFITSIO $CFITSIO/lib $CFITSIO/.libs /usr/local/lib /usr/lib \
         /opt/cfitsio/lib $finkdir/lib
     cfitsiolib=$found_lib

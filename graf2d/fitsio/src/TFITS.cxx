@@ -76,7 +76,7 @@ End_Html */
 #include "TObjString.h"
 #include "TCanvas.h"
 
-#include "fitsio2.h"
+#include "fitsio.h"
 #include <stdlib.h>
 
 
