@@ -995,6 +995,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   See the discussion below on error calulation.
    //
    // Linear fitting:
+   // ===============
    //
    //   When the fitting function is linear (contains the "++" sign) or the fitting
    //   function is a polynomial, a linear fitter is initialised.
@@ -1007,6 +1008,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   considerable advantage in speed.
    //
    // Setting initial conditions:
+   // ===========================
    //
    //   Parameters must be initialized before invoking the Fit function.
    //   The setting of the parameter initial values is automatic for the
@@ -1025,6 +1027,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   Parameter 5 is fixed to 100.
    //
    // Fit range:
+   // ==========
    //
    //   The fit range can be specified in two ways:
    //     - specify rxmax > rxmin (default is rxmin=rxmax=0)
@@ -1032,10 +1035,11 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //       instead of the full graph range.
    //
    // Changing the fitting function:
+   // ==============================
    //
    //   By default a chi2 fitting function is used for fitting a TGraph.
    //   The function is implemented in FitUtil::EvaluateChi2.
-   //   In case of TGraphErrors an effective chi2 is used (see below)
+   //   In case of TGraphErrors an effective chi2 is used (see below TGraphErrors fit)
    //   To specify a User defined fitting function, specify option "U" and
    //   call the following functions:
    //     TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
@@ -1043,25 +1047,9 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f,
    //                                 Double_t *u, Int_t flag);
    //
-   //
-   // Access to the fit result
-   // ========================
-   //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-   //  By default the TFitResultPtr contains only the status of the fit and it converts
-   //  automatically to an integer. If the option "S" is instead used, TFitResultPtr contains
-   //  the TFitResult and behaves as a smart pointer to it. For example one can do:
-   //     TFitResult r    = graph->Fit("myFunc","S");
-   //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-   //     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0
-   //     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
-   //     r->Print("V");     // print full information of fit including covariance matrix
-   //     r->Write();        // store the result in a file
-   //
-   //   The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
-   //   from the fitted function.
-   //
-   //
+   //   
    // TGraphErrors fit:
+   // =================
    //
    //   In case of a TGraphErrors object, when x errors are present, the error along x,
    //   is projected along the y-direction by calculating the function at the points x-exlow and
@@ -1105,40 +1093,6 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //   a correction is applied to the errors on the parameters with the following
    //   formula:
    //      errorp *= sqrt(chisquare/(ndf-1))
-   //
-   // Associated functions:
-   //
-   //   One or more object (typically a TF1*) can be added to the list
-   //   of functions (fFunctions) associated with each graph.
-   //   When TGraph::Fit is invoked, the fitted function is added to this list.
-   //   Given a graph gr, one can retrieve an associated function
-   //   with:  TF1 *myfunc = gr->GetFunction("myfunc");
-   //
-   //   If the graph is made persistent, the list of associated functions is also
-   //   persistent. Given a pointer (see above) to an associated function myfunc,
-   //   one can retrieve the function/fit parameters with calls such as:
-   //     Double_t chi2 = myfunc->GetChisquare();
-   //     Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
-   //     Double_t err0 = myfunc->GetParError(0);  //error on first parameter
-   //
-   // Fit Statistics
-   //
-   //   You can change the statistics box to display the fit parameters with
-   //   the TStyle::SetOptFit(mode) method. This mode has four digits.
-   //   mode = pcev  (default = 0111)
-   //     v = 1;  print name/values of parameters
-   //     e = 1;  print errors (if e=1, v must be 1)
-   //     c = 1;  print Chisquare/Number of degress of freedom
-   //     p = 1;  print Probability
-   //
-   //   For example: gStyle->SetOptFit(1011);
-   //   prints the fit probability, parameter names/values, and errors.
-   //   You can change the position of the statistics box with these lines
-   //   (where g is a pointer to the TGraph):
-   //
-   //   Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
-   //   Root > st->SetX1NDC(newx1); //new x start position
-   //   Root > st->SetX2NDC(newx2); //new x end position
    //
    //   Access to the fit result
    //   ========================
@@ -1191,6 +1145,42 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //  minosResult and Minuit2Minimizer::Hesse for the hesseResult.
    //  If other minimizers are used see their specific documentation for the status code
    //  returned. For example in the case of Fumili, for the status returned see TFumili::Minimize.
+   //   
+   // Associated functions:
+   // =====================
+   //
+   //   One or more object (typically a TF1*) can be added to the list
+   //   of functions (fFunctions) associated with each graph.
+   //   When TGraph::Fit is invoked, the fitted function is added to this list.
+   //   Given a graph gr, one can retrieve an associated function
+   //   with:  TF1 *myfunc = gr->GetFunction("myfunc");
+   //
+   //   If the graph is made persistent, the list of associated functions is also
+   //   persistent. Given a pointer (see above) to an associated function myfunc,
+   //   one can retrieve the function/fit parameters with calls such as:
+   //     Double_t chi2 = myfunc->GetChisquare();
+   //     Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
+   //     Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+   //
+   // Fit Statistics
+   // ==============
+   //
+   //   You can change the statistics box to display the fit parameters with
+   //   the TStyle::SetOptFit(mode) method. This mode has four digits.
+   //   mode = pcev  (default = 0111)
+   //     v = 1;  print name/values of parameters
+   //     e = 1;  print errors (if e=1, v must be 1)
+   //     c = 1;  print Chisquare/Number of degress of freedom
+   //     p = 1;  print Probability
+   //
+   //   For example: gStyle->SetOptFit(1011);
+   //   prints the fit probability, parameter names/values, and errors.
+   //   You can change the position of the statistics box with these lines
+   //   (where g is a pointer to the TGraph):
+   //
+   //   Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
+   //   Root > st->SetX1NDC(newx1); //new x start position
+   //   Root > st->SetX2NDC(newx2); //new x end position
    //
 
    Foption_t fitOption;

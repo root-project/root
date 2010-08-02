@@ -702,12 +702,16 @@ TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //
    //  Changing the fitting function
    //  =============================
-   //  By default the fitting function Graph2DFitChisquare is used.
-   //  To specify a User defined fitting function, specify option "U" and
-   //  call the following functions:
-   //    TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
-   //  where MyFittingFunction is of type:
-   //  extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   //   By default a chi2 fitting function is used for fitting a TGraph.
+   //   The function is implemented in FitUtil::EvaluateChi2.
+   //   In case of TGraph2DErrors an effective chi2 is used 
+   //   (see TGraphErrors fit in TGraph::Fit) and is implemented in 
+   //   FitUtil::EvaluateChi2Effective
+   //   To specify a User defined fitting function, specify option "U" and
+   //   call the following functions:
+   //   TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
+   //   where MyFittingFunction is of type:
+   //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    //
    //  Associated functions
    //  ====================
@@ -723,7 +727,7 @@ TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //  By default the TFitResultPtr contains only the status of the fit and it converts automatically to an
    //  integer. If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart
    //  pointer to it. For example one can do:
-   //     TFitResult r    = graph->Fit("myFunc","S");
+   //     TFitResultPtr r = graph->Fit("myFunc","S");
    //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
    //     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0
    //     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0

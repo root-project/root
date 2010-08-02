@@ -332,39 +332,35 @@ TFitResultPtr TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axi
    //    - specify the option "R". In this case, the function will be taken
    //      instead of the full graph range.
    //
-   //   Changing the fitting function
-   //   =============================
-   //  By default the fitting function GraphFitChisquare is used.
-   //  To specify a User defined fitting function, specify option "U" and
-   //  call the following functions:
-   //    TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
-   //  where MyFittingFunction is of type:
-   //  extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   //  Changing the fitting function
+   //  =============================
+   //   By default a chi2 fitting function is used for fitting the TGraphs's.
+   //   The function is implemented in FitUtil::EvaluateChi2.
+   //   In case of TGraphErrors an effective chi2 is used 
+   //   (see TGraphErrors fit in TGraph::Fit) and is implemented in 
+   //   FitUtil::EvaluateChi2Effective
+   //   To specify a User defined fitting function, specify option "U" and
+   //   call the following functions:
+   //     TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
+   //   where MyFittingFunction is of type:
+   //   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    //
-   //  How errors are used in the chisquare function (see TFitter GraphFitChisquare)//   Access to the fit results
-   //   ============================================
-   // In case of a TGraphErrors object, ex, the error along x,  is projected
-   // along the y-direction by calculating the function at the points x-exlow and
-   // x+exhigh.
+   //  Access to the fit result
+   //  ========================
+   //  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
+   //  By default the TFitResultPtr contains only the status of the fit and it converts
+   //  automatically to an integer. If the option "S" is instead used, TFitResultPtr contains
+   //  the TFitResult and behaves as a smart pointer to it. For example one can do:
+   //     TFitResultPtr r = graph->Fit("myFunc","S");
+   //     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
+   //     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0
+   //     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
+   //     r->Print("V");     // print full information of fit including covariance matrix
+   //     r->Write();        // store the result in a file
    //
-   // The chisquare is computed as the sum of the quantity below at each point:
+   //   The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
+   //   from the fitted function.
    //
-   //                     (y - f(x))**2
-   //         -----------------------------------
-   //         ey**2 + ((f(x+exhigh) - f(x-exlow))/2)**2
-   //
-   // where x and y are the point coordinates.
-   //
-   // In case the function lies below (above) the data point, ey is ey_low (ey_high).
-   //
-   //  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphasymmerrors
-   //            University of Washington
-   //
-   // a little different approach to approximating the uncertainty in y because of the
-   // errors in x, is to make it equal the error in x times the slope of the line.
-   // The improvement, compared to the first method (f(x+ exhigh) - f(x-exlow))/2
-   // is of (error of x)**2 order. This approach is called "effective variance method".
-   // This improvement has been made in version 4.00/08 by Anna Kreshuk.
    //
    //   Associated functions
    //   ====================
