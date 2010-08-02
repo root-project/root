@@ -95,7 +95,7 @@ namespace coral_pyroot_regression {
 
 // Inline methods
 void
-coral_pyroot_regression::AttributeList::extend( const std::string& name, const std::string& typeName )
+coral_pyroot_regression::AttributeList::extend( const std::string& name, const std::string& /* typeName */ )
 {
   m_data.push_back( new std::string(name) );
 }
