@@ -27,7 +27,7 @@ EVENTMTSO       = libEventMT.$(DllSuf)
 ifeq ($(PLATFORM),win32)
 EVENTLIB      = libEventMT.lib
 else
-EVENTLIB      = $(shell pwd)/$(EVENTSMTO)
+EVENTLIB      = $(shell pwd)/$(EVENTMTSO)
 endif
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
