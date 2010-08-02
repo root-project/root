@@ -219,7 +219,14 @@ namespace Math {
    
    double poisson_pdf(unsigned int n, double mu) {
       
-      return std::exp (n*std::log(mu) - ROOT::Math::lgamma(n+1) - mu);
+      if (n >  0) 
+         return std::exp (n*std::log(mu) - ROOT::Math::lgamma(n+1) - mu);
+      else  {
+         //  when  n = 0 and mu = 0,  1 is returned 
+         if (mu >= 0) return std::exp(-mu);
+         // return a nan for mu < 0 since it does not make sense
+         return std::log(mu);
+      }
       
    }
    
