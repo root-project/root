@@ -70,9 +70,9 @@
 //   of histograms can be filled. The creation and handling of the
 //   histograms is taken care of by the HistogramManager class.
 //
-// This version of the Event class is a simplified version suitable to
-// use in multiple thread as each Event objects are independent for
-// each other.                                                         
+//   This version of the Event class is a simplified version suitable for
+//   use in a multi-threads environment as all Event objects are
+//   independent from each other.
 //
 ////////////////////////////////////////////////////////////////////////
 

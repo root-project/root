@@ -71,9 +71,10 @@
 //   histograms is taken care of by the HistogramManager class.
 //
 //   Note:  This version of the class Event (see EventMT.h and EventMT.cxx
-//   for an alternative) uses static variable to improve performance (by
-//   reducing memory allocation) and thus you can only one instance per
-//   process (a 2nd instance would shared the array of Tracks).
+//   for an alternative) uses static variables to improve performance (by
+//   reducing the number of memory allocations).  Consequently, only one
+//   instance of the class Event should be in use at a time (a 2nd instance 
+//   would share the array of Tracks with the first instance).
 //
 ////////////////////////////////////////////////////////////////////////
 

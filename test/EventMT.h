@@ -6,9 +6,9 @@
 // Event                                                                //
 //                                                                      //
 // Description of the event and track parameters                        //
-// This version of the Event class is a simplified version suitable to  //
-// use in multiple thread as each Event objects are independent for     //
-// each other.                                                          //
+// This version of the Event class is a simplified version suitable for //
+// use in a multi-threads environment as all Event objects are          //
+// independent from each other.                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
