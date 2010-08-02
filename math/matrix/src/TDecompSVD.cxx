@@ -245,11 +245,11 @@ Bool_t TDecompSVD::Bidiagonalize(TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVector
 
    // copy diagonal of transformed matrix v to sDiag and upper parallel v to oDiag
    if (nCol_v > 1) {
-      sDiag = TMatrixDDiag(v);
       for (Int_t i = 1; i < nCol_v; i++)
          oDiag(i) = v(i-1,i);
    }
    oDiag(0) = 0.;
+   sDiag = TMatrixDDiag(v);
 
    // construct product matrix h = h(1)*h(2)*...*h(nCol_v-1), h(nCol_v-1) = I
 
