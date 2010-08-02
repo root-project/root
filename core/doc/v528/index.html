@@ -49,6 +49,13 @@ of its emulated base class.<br/>
 <tt>TStreamerInfo::Destruct</tt> and the new method <tt>TStreamerInfo::GetActualClass</tt>
 use this information to detect the TStreamerInfo actually used to create
 the object and hence run the proper emulated destructor.</li>
+<br>
+<li>Add a new function GenerateDictionary to TInterpreter which allows for the quick and easy creation of a dictionary
+given a class name and the name of its headers names.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   gInterpreter->GenerateDictionary("vector<vector<float> >;list<vector<float> >","list;vector");
+   gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
+</pre>This replaces the recommandation of creating a small 'loader.C' script to create the dictionaries.
 </ul>
 
 <h4>Cont</h4>

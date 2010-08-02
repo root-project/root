@@ -76,15 +76,21 @@ extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, v
    return TCint::FindSpecialObject(c, ci, p1, p2);
 }
 
-int TCint_GenerateDictionary(const std::string &className,
+int TCint_GenerateDictionary(const std::vector<std::string> &classes,
                              const std::vector<std::string> &headers )
 {
    //This function automatically creates the "LinkDef.h" file for templated
    //classes then executes CompileMacro on it.
    //The name of the file depends on the class name, and it's not generated again
    //if the file exist.
-
-
+   
+   
+   if (classes.empty()) {
+      return 0;
+   }
+   // Use the name of the first class as the main name.
+   
+   const std::string &className = classes[0];
    //(0) prepare file name
    TString fileName = "AutoDict_";
    std::string::const_iterator sIt;
@@ -96,6 +102,16 @@ int TCint_GenerateDictionary(const std::string &className,
          fileName += '_';
       else
          fileName += *sIt;
+   }
+   if (classes.size() > 1) {
+      Int_t chk = 0;
+      std::vector<std::string>::const_iterator it = classes.begin();
+      while( (++it) != classes.end() ) {
+         for( UInt_t cursor = 0; cursor != it->length(); ++cursor ) {
+            chk = chk*3 + it->at(cursor);
+         }
+      }
+      fileName += TString::Format("_%u",chk);
    }
    fileName += ".cxx";
 
@@ -123,52 +139,54 @@ int TCint_GenerateDictionary(const std::string &className,
          sSTLTypes.insert("iterator");
       }
 
-      std::string n(className);
-      size_t posTemplate = n.find('<');
-      std::set<std::string>::const_iterator iSTLType = sSTLTypes.end();
-      if (posTemplate != std::string::npos) {
-         n.erase(posTemplate, std::string::npos);
-         if (n.compare(0, 5, "std::") == 0) {
-            n.erase(0, 5);
-         }
-         iSTLType = sSTLTypes.find(n);
-      }
-
       std::vector<std::string>::const_iterator it;
       std::string fileContent ("");
 
-      for( it = headers.begin(); it < headers.end(); it++ )
+      for( it = headers.begin(); it != headers.end(); ++it )
          fileContent += "#include \"" + *it + "\"\n";
 
       fileContent += "#ifdef __CINT__ \n";
       fileContent += "#pragma link C++ nestedclasses;\n";
       fileContent += "#pragma link C++ nestedtypedefs;\n";
-      fileContent += "#pragma link C++ class ";
-      fileContent +=    className + "+;\n" ;
-      fileContent += "#pragma link C++ class ";
-      if (iSTLType != sSTLTypes.end()) {
-         // STL class; we cannot (and don't need to) store iterators;
-         // their shadow and the compiler's version don't agree. So
-         // don't ask for the '+'
-         fileContent +=    className + "::*;\n" ;
-      } else {
-         // Not an STL class; we need to allow the I/O of contained
-         // classes (now that we have a dictionary for them).
-         fileContent +=    className + "::*+;\n" ;
-      }
-      std::string oprLink("#pragma link C++ operators ");
-      oprLink += className;
-      // Don't! Requests e.g. op<(const vector<T>&, const vector<T>&):
-      // fileContent += oprLink + ";\n";
-      if (iSTLType != sSTLTypes.end()) {
-         if (n == "vector") {
-            fileContent += "#ifdef G__VECTOR_HAS_CLASS_ITERATOR\n";
+
+      for( it = classes.begin(); it != classes.end(); ++it ) { 
+         std::string n(*it);
+         size_t posTemplate = n.find('<');
+         std::set<std::string>::const_iterator iSTLType = sSTLTypes.end();
+         if (posTemplate != std::string::npos) {
+            n.erase(posTemplate, std::string::npos);
+            if (n.compare(0, 5, "std::") == 0) {
+               n.erase(0, 5);
+            }
+            iSTLType = sSTLTypes.find(n);
          }
-         fileContent += oprLink + "::iterator;\n";
-         fileContent += oprLink + "::const_iterator;\n";
-         fileContent += oprLink + "::reverse_iterator;\n";
-         if (n == "vector") {
-            fileContent += "#endif\n";
+         fileContent += "#pragma link C++ class ";
+         fileContent +=    *it + "+;\n" ;
+         fileContent += "#pragma link C++ class ";
+         if (iSTLType != sSTLTypes.end()) {
+            // STL class; we cannot (and don't need to) store iterators;
+            // their shadow and the compiler's version don't agree. So
+            // don't ask for the '+'
+            fileContent +=    *it + "::*;\n" ;
+         } else {
+            // Not an STL class; we need to allow the I/O of contained
+            // classes (now that we have a dictionary for them).
+            fileContent +=    *it + "::*+;\n" ;
+         }
+         std::string oprLink("#pragma link C++ operators ");
+         oprLink += *it;
+         // Don't! Requests e.g. op<(const vector<T>&, const vector<T>&):
+         // fileContent += oprLink + ";\n";
+         if (iSTLType != sSTLTypes.end()) {
+            if (n == "vector") {
+               fileContent += "#ifdef G__VECTOR_HAS_CLASS_ITERATOR\n";
+            }
+            fileContent += oprLink + "::iterator;\n";
+            fileContent += oprLink + "::const_iterator;\n";
+            fileContent += oprLink + "::reverse_iterator;\n";
+            if (n == "vector") {
+               fileContent += "#endif\n";
+            }
          }
       }
       fileContent += "#endif\n";
@@ -199,6 +217,19 @@ int TCint_GenerateDictionary(const std::string &className,
       return 2;
    //end(3)
    return 0;
+}
+
+int TCint_GenerateDictionary(const std::string &className,
+                             const std::vector<std::string> &headers )
+{
+   //This function automatically creates the "LinkDef.h" file for templated
+   //classes then executes CompileMacro on it.
+   //The name of the file depends on the class name, and it's not generated again
+   //if the file exist.
+   
+   std::vector<std::string> classes;
+   classes.push_back(className);
+   return TCint_GenerateDictionary(classes, headers);
 }
 
 // It is a "fantom" method to synchronize user keyboard input
@@ -1058,6 +1089,47 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
       }
    }
 }
+
+//______________________________________________________________________________
+Int_t TCint::GenerateDictionary(const char *classes, const char *includes /* = 0 */, const char * /* options  = 0 */)
+{
+   // Generate the dictionary for the C++ classes listed in the first
+   // argmument (in a semi-colon separated list).
+   // 'includes' contains a semi-colon separated list of file to 
+   // #include in the dictionary.  
+   // For example:
+   //    gInterpreter->GenerateDictionary("vector<vector<float> >;list<vector<float> >","list;vector");
+   // or
+   //    gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
+   
+   if (classes == 0 || classes[0] == 0) return 0;
+   
+   // Split the input list
+   std::vector<std::string> listClasses;
+   for(const char *current = classes, *prev = classes; *current != 0; ++current) {
+      if (*current == ';') {
+         listClasses.push_back( std::string(prev,current-prev) );
+         prev = current+1;
+      } else if (*(current+1) == 0) {
+         listClasses.push_back( std::string(prev,current+1-prev) );
+         prev = current+1;
+      }
+   }
+   std::vector<std::string> listIncludes;
+   for(const char *current = includes, *prev = includes; *current != 0; ++current) {
+      if (*current == ';') {
+         listIncludes.push_back( std::string(prev,current-prev) );
+         prev = current+1;
+      } else if (*(current+1) == 0) {
+         listIncludes.push_back( std::string(prev,current+1-prev) );
+         prev = current+1;
+      }
+   }
+   
+   // Generate the temporary dictionary file
+   return TCint_GenerateDictionary(listClasses,listIncludes);
+}
+
 
 //______________________________________________________________________________
 TString TCint::GetMangledName(TClass *cl, const char *method,
