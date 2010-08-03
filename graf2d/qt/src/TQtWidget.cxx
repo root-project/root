@@ -198,7 +198,7 @@ TQtWidget::TQtWidget(QWidget* mother, Qt::WFlags f,bool embedded) :
      ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0)
      ,fPixmapScreen(0),fPaint(TRUE),fSizeChanged(FALSE)
      ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
-     ,fInsidePaintEvent(false),fOldMousePos(-1,-1),fRefreshTimer(0)
+     ,fInsidePaintEvent(false),fOldMousePos(-1,-1),fIgnoreLeaveEnter(0),fRefreshTimer(0) 
 { setObjectName("tqtwidget"); Init() ;}
 
 //_____________________________________________________________________________
