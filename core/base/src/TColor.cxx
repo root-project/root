@@ -43,7 +43,7 @@ TArrayI TColor::fgPalette(0);
 <a name="C00"></a><h3>Introduction</h3>
 
 Colors are defined by their Red, Green and blue components, simply called the
-RGB components. The colors are also known by the Hue, Light and saturation 
+RGB components. The colors are also known by the Hue, Light and saturation
 components also known as the HLS components. When a new color is created the
 components of both color systems are computed.
 <p>
@@ -159,11 +159,11 @@ This "current palette" is set using:
 <p>
 <pre>
 gStyle->SetPalette(...);
-</pre> 
+</pre>
 <p>
 This function has two parameters: the number of colors in the palette and an
 array of containing the indices of colors in the pallette. The following small
-example demonstrates how to define and use the color palette: 
+example demonstrates how to define and use the color palette:
 
 End_Html
 Begin_Macro(source)
@@ -210,7 +210,7 @@ Begin_Html
 a call to </tt>gStyle->SetPalette()</tt>. So there is not need to add one.
 <p>
 After a call to <tt>TColor::CreateGradientColorTable()</tt> it is sometimes
-useful to store the newly create palette for further use. In particular, it is 
+useful to store the newly create palette for further use. In particular, it is
 recomended to do if one wants to switch between several user define palettes.
 To store a palette in an array it is enough to do:
 <br>
@@ -230,7 +230,7 @@ Later on to reuse the palette <tt>MyPalette</tt> it will be enough to do
    gStyle->SetPalette(100, MyPalette);
 </pre>
 <p>
-As only one palette is active, one need to use <tt>TExec</tt> to be able to 
+As only one palette is active, one need to use <tt>TExec</tt> to be able to
 display plots using differents palettes on the same pad.
 The following macro illustrate this feature.
 End_Html
@@ -1370,9 +1370,18 @@ void TColor::SaveColor(ostream &out, Int_t ci)
    End_html */
 
    char quote = '"';
+   Float_t r,g,b;
+   Int_t ri, gi, bi;
+   TString cname;
 
-   ULong_t pixel = Number2Pixel(ci);
-   const char *cname = TColor::PixelAsHexString(pixel);
+   TColor *c = gROOT->GetColor(ci);
+   if (c) c->GetRGB(r, g, b);
+   else return;
+
+   ri = (Int_t)(255*r);
+   gi = (Int_t)(255*g);
+   bi = (Int_t)(255*b);
+   cname.Form("#%02x%02x%02x", ri, gi, bi);
 
    if (gROOT->ClassSaved(TColor::Class())) {
       out << endl;
@@ -1381,7 +1390,7 @@ void TColor::SaveColor(ostream &out, Int_t ci)
       out << "   Int_t ci;   // for color index setting" << endl;
    }
 
-   out<<"   ci = TColor::GetColor("<<quote<<cname<<quote<<");"<<endl;
+   out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<endl;
 }
 
 
@@ -1424,7 +1433,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
 {
    /* Begin_html
    Static function creating a color table with several connected linear gradients.
-   <ul>   
+   <ul>
    <li>Number: The number of end point colors that will form the gradients.
                Must be at least 2.
    <li>Stops: Where in the whole table the end point colors should lie.
@@ -1433,23 +1442,23 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
    <li>Red, Green, Blue: The end point color values.
                          Each entry must be on [0, 1]
    <li>NColors: Total number of colors in the table. Must be at least 1.
-   </ul>   
-  
+   </ul>
+
    Returns a positive value on sucess and -1 on error.
-   <p> 
-   The table is constructed by tracing lines between the given points in 
-   RGB space.  Each color value may have a value between 0 and 1.  The 
-   difference between consecutive "Stops" values gives the fraction of 
-   space in the whole table that should be used for the interval between 
+   <p>
+   The table is constructed by tracing lines between the given points in
+   RGB space.  Each color value may have a value between 0 and 1.  The
+   difference between consecutive "Stops" values gives the fraction of
+   space in the whole table that should be used for the interval between
    the corresponding color values.
-   <p> 
+   <p>
    Normally the first element of Stops should be 0 and the last should be 1.
    If this is not true, fewer than NColors will be used in proportion with
    the total interval between the first and last elements of Stops.
-   <p> 
+   <p>
    This definition is similar to the povray-definition of gradient
    color tables.
-   <p> 
+   <p>
    For instance:
    <pre>
    UInt_t Number = 3;
@@ -1462,11 +1471,11 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
    RGB = {0, 0, 1}, {1, 0, 0}, and {1, 1, 1} = blue, red, white
    The first 40% of the table is used to go linearly from blue to red.
    The remaining 60% of the table is used to go linearly from red to white.
-   <p> 
+   <p>
    If you define a very short interval such that less than one color fits
    in it, no colors at all will be allocated.  If this occurs for all
    intervals, ROOT will revert to the default palette.
-   <p> 
+   <p>
    Original code by Andreas Zoglauer (zog@mpe.mpg.de)
    End_html */
 
@@ -1558,20 +1567,20 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
    if the cell content is N, the color CI used will be the color number
    in colors[N],etc. If the maximum cell content is > ncolors, all
    cell contents are scaled to ncolors.
-   <p> 
+   <p>
    <tt>if ncolors <= 0</tt> a default palette (see below) of 50 colors is
    defined. The colors defined in this palette are OK for coloring pads, labels.
-   <p> 
+   <p>
    <tt>if ncolors == 1 && colors == 0</tt>, then a Pretty Palette with a
    Spectrum Violet->Red is created. It is recommended to use this Pretty
    palette when drawing legos, surfaces or contours.
-   <p> 
+   <p>
    if ncolors > 50 and colors=0, the DeepSea palette is used.
    (see TStyle::CreateGradientColorTable for more details)
-   <p> 
+   <p>
    <tt>if ncolors > 0 and colors = 0</tt>, the default palette is used
    with a maximum of ncolors.
-   <p> 
+   <p>
    The default palette defines:
    <pre>
    index 0->9   : grey colors from light to dark grey
@@ -1579,7 +1588,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
    index 20->29 : "blueish" colors
    index 30->39 : "redish" colors
    index 40->49 : basic colors
-   </pre> 
+   </pre>
    The color numbers specified in the palette can be viewed by selecting
    the item "colors" in the "VIEW" menu of the canvas toolbar.
    The color parameters can be changed via TColor::SetRGB.
