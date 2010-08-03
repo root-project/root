@@ -50,10 +50,10 @@ private:
    Bool_t            fNoProxy;          // don't use proxy
    TString           fMsgReadBuffer;    // cache ReadBuffer() msg
    TString           fMsgReadBuffer10;  // cache ReadBuffer10() msg
-   TString           fMsgReadBuffers;   // cache ReadBuffers() msg
-   TString           fMsgReadBuffers10; // cache ReadBuffers10() msg
    TString           fMsgGetHead;       // cache GetHead() msg
    TString           fBasicUrl;         // basic url without authentication and options
+   TUrl              fUrlOrg;           // save original url in case of temp redirection
+   TString           fBasicUrlOrg;      // save original url in case of temp redirection
 
    static TUrl       fgProxy;           // globally set proxy URL
 
@@ -69,6 +69,7 @@ private:
    Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg);
    Bool_t      ReadBuffer10(char *buf, Int_t len);
    Bool_t      ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
+   void        SetMsgReadBuffer10(const char *redirectLocation = 0, Bool_t tempRedirect = kFALSE);
 
 public:
    TWebFile(const char *url, Option_t *opt="");
@@ -86,7 +87,7 @@ public:
    static void        SetProxy(const char *url);
    static const char *GetProxy();
 
-   ClassDef(TWebFile,1)  //A ROOT file that reads via a http server
+   ClassDef(TWebFile,2)  //A ROOT file that reads via a http server
 };
 
 
