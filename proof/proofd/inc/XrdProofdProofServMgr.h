@@ -105,8 +105,8 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    XrdSysLogger      *fLogger;    // Error logger
    int                fInternalWait;   // Timeout on replies from proofsrv
    XrdOucString       fProofPlugin;    // String identifying the plug-in to be loaded, e.g. "condor:"
-   XrdOucString       fProofServEnvs;  // Additional envs to be exported before proofserv
-   XrdOucString       fProofServRCs;   // Additional rcs to be passed to proofserv
+   std::list<XrdOucString> fProofServEnvs;  // Additional envs to be exported before proofserv
+   std::list<XrdOucString> fProofServRCs;   // Additional rcs to be passed to proofserv
 
    int                fShutdownOpt;    // What to do when a client disconnects
    int                fShutdownDelay;  // Delay shutdown by this (if enabled)

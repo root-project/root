@@ -367,7 +367,11 @@ int XrdProofdProofServMgr::Config(bool rcf)
    }
    XPDPRT("terminated sessions admin path set to "<<fTermAdminPath);
 
-   TRACE(DBG, "RC settings: "<< fProofServRCs);
+   TRACE(DBG, "RC settings: "<< fProofServRCs.size());
+   if (TRACING(DBG) && fProofServRCs.size() > 0) {
+      std::list<XrdOucString>::iterator ircs = fProofServRCs.begin();
+      for ( ; ircs != fProofServRCs.end(); ircs++) { TRACE(DBG, "  "<< *ircs); }
+   }
 
    if (!rcf) {
       // Try to recover active session previously started
@@ -1226,9 +1230,7 @@ int XrdProofdProofServMgr::DoDirectivePutEnv(char *val, XrdOucStream *, bool)
       return -1;
 
    // Env variable to exported to 'proofserv'
-   if (fProofServEnvs.length() > 0)
-      fProofServEnvs += ',';
-   fProofServEnvs += val;
+   fProofServEnvs.push_back(XrdOucString(val));
 
    return 0;
 }
@@ -1243,13 +1245,12 @@ int XrdProofdProofServMgr::DoDirectivePutRc(char *val, XrdOucStream *cfg, bool)
       return -1;
 
    // rootrc variable to be passed to 'proofserv':
-   if (fProofServRCs.length() > 0)
-      fProofServRCs += ',';
-   fProofServRCs += val;
+   XrdOucString rcval(val);
    while ((val = cfg->GetWord()) && val[0]) {
-      fProofServRCs += ' ';
-      fProofServRCs += val;
+      rcval += ' ';
+      rcval += val;
    }
+   fProofServRCs.push_back(rcval);
 
    return 0;
 }
@@ -2455,11 +2456,11 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
    xps->SetFileout(in->fLogFile.c_str());
 
    // Additional envs (xpd.putenv directive)
-   if (fProofServEnvs.length() > 0) {
+   if (fProofServEnvs.size() > 0) {
       // Go through the list
-      XrdOucString env;
-      int from = 0;
-      while ((from = fProofServEnvs.tokenize(env, from, ',')) != -1) {
+      std::list<XrdOucString>::iterator ienv = fProofServEnvs.begin();
+      for ( ; ienv != fProofServEnvs.end(); ienv++) {
+         XrdOucString env = *ienv;
          if (env.length() > 0) {
             // Resolve keywords
             fMgr->ResolveKeywords(env, p->Client());
@@ -2829,12 +2830,12 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    }
 
    // Additional rootrcs (xpd.putrc directive)
-   if (fProofServRCs.length() > 0) {
+   if (fProofServRCs.size() > 0) {
       fprintf(frc, "# Additional rootrcs (xpd.putrc directives)\n");
       // Go through the list
-      XrdOucString rc;
-      int from = 0;
-      while ((from = fProofServRCs.tokenize(rc, from, ',')) != -1) {
+      std::list<XrdOucString>::iterator ircs = fProofServRCs.begin();
+      for ( ; ircs != fProofServRCs.end(); ircs++) {
+         XrdOucString rc = *ircs;
          if (rc.length() > 0) {
             if (rc.find("Proof.DataSetManager") != STR_NPOS) {
                TRACE(ALL,"Proof.DataSetManager ignored: use xpd.datasetsrc to define dataset managers");
@@ -2993,11 +2994,11 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
    }
 
    // Additional envs (xpd.putenv directive)
-   if (fProofServEnvs.length() > 0) {
+   if (fProofServEnvs.size() > 0) {
       // Go through the list
-      XrdOucString env;
-      int from = 0;
-      while ((from = fProofServEnvs.tokenize(env, from, ',')) != -1) {
+      std::list<XrdOucString>::iterator ienv = fProofServEnvs.begin();
+      for ( ; ienv != fProofServEnvs.end(); ienv++) {
+         XrdOucString env = *ienv;
          if (env.length() > 0) {
             // Resolve keywords
             fMgr->ResolveKeywords(env, p->Client());
