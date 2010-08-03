@@ -1139,87 +1139,117 @@ int test19() {
 int test20() { 
 // test operator += , -= 
   int iret =0;
+  //std::cout.precision(18); 
+
 
   double d1[6]={1,2,3,4,5,6};
   double d2[6]={1,2,5,3,4,6};
 
-  SMatrix<double,2>    m1(d1,4);
-  SMatrix<double,2 >   m2(d2,4);
+  SMatrix<double,2>    m1_0(d1,4);
+  SMatrix<double,2 >   m2_0(d2,4);
+  SMatrix<double,2>    m1 = m1_0;
+  SMatrix<double,2 >   m2 = m2_0;
   SMatrix<double,2>    m3;
-  
+ 
 
   m3 = m1+m2; 
   m1+= m2; 
-  //std::cout << "m1+= m2" << m1  << std::endl;
+ 
+  if (iret) std::cout << "m1+= m2" << m1  << std::endl;
 
   iret |= compare(m1==m3,true); 
 
   m3 = m1 + 3;
   m1+= 3;
   iret |= compare(m1==m3,true); 
-  //std::cout << "m1 + 3" << m1 << "  " << m3  << std::endl;
+  if (iret)std::cout << "m1 + 3\n" << m1 << " \n  " << m3  << std::endl;
 
   m3 = m1 - m2; 
   m1-= m2; 
   iret |= compare(m1==m3,true); 
+  if (iret) std::cout << "m1-= m2\n" << m1 << " \n  " << m3  << std::endl;
   
   m3 = m1 - 3; 
   m1-= 3; 
   iret |= compare(m1==m3,true); 
+  if (iret) std::cout << "m1-= 3\n" << m1 << " \n " << m3  << std::endl;
 
 
   m3 = m1*2;
   m1*= 2; 
   iret |= compare(m1==m3,true); 
+  if (iret) std::cout << "m1*= 2\n" << m1 << "\n" << m3  << std::endl;
 
   // matrix multiplication (*= works only for squared matrix mult.) 
   m3 = m1*m2; 
   m1*= m2; 
   iret |= compare(m1==m3,true); 
+  if (iret) std::cout << "m1*= m2\n" << m1 << " \n " << m3  << std::endl;
 
   m3 = m1/2;
   m1/= 2; 
   iret |= compare(m1==m3,true); 
+  if (iret) std::cout << "m1/=2\n" << m1 << " \n " << m3  << std::endl;
 
   // test mixed with a scalar 
   double a = 2; 
   m3 = m2 + a*m1; 
   m2 += a*m1; 
   iret |= compare(m2==m3,true); 
+  if (iret) std::cout << "m2 += a*m1\n" << m2 << "\n  " << m3  << std::endl;
 
 
   // more complex op (passing expressions)
 
+  m1 = m1_0;
+  m2 = m2_0;
+
+
   m3 = m1 + (m1 * m2);
   m1 += m1 * m2;
   iret |= compare(m1==m3,true); 
+  if (iret) std::cout << "m1 += m1*m2\n" << m1 << "\n  " << m3  << std::endl;
 
   m3 = m1 - (m1 * m2);
   m1 -= m1 * m2;
   iret |= compare(m1==m3,true); 
+  if (iret) std::cout << "m1 -= m1*m2\n" << m1 << " \n " << m3  << std::endl;
 
   m3 = m1 * (m1 * m2);
   m1 *= m1 * m2;
   iret |= compare(m1==m3,true); 
+  if (iret) std::cout << "m1 *= m1*m2\n" << m1 << "\n  " << m3  << std::endl;
 
   // test operation involving 2 expressions
   // (check bug 35076)
+
+  // reset initial matrices to avoid numerical problems
+  m1 = m1_0;
+  m2 = m2_0;
+
+  m3 = m1+m2;
   SMatrix<double,2>    m4;
   SMatrix<double,2>    m5;
   m4 = (m1*m2) + (m1*m3);
   m5 = m1*m2;
   m5 += m1*m3;
   iret |= compare(m4==m5,true); 
+  if (iret) std::cout << "m5 = m1*m3\n" << m4 << "\n  " << m5  << std::endl;
+
 
   m4 = (m1*m2) - (m1*m3);
   m5 = m1*m2;
   m5 -= m1*m3;
   iret |= compare(m4==m5,true); 
+  if (iret) std::cout << "m5 -= m1*m3\n" << m4 << "\n  " << m5  << std::endl;
+
 
   m4 = (m1+m2) * (m1-m3);
   m5 = m1+m2;
   m5 = m5 * (m1-m3);
   iret |= compare(m4==m5,true); 
+
+  if (iret) std::cout << "m5= m5*(m1-m3) \n"  << m4 << " \n " << m5  << std::endl;
 
 
   // test with vectors 
