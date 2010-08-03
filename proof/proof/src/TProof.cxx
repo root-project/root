@@ -546,6 +546,30 @@ void TProof::InitMembers()
    fWorkersToMerge = 0;
    fFinalizationRunning = kFALSE;
 
+   // Check if the user defined a list of environment variables to send over:
+   // include them into the dedicated list
+   if (gSystem->Getenv("PROOF_ENVVARS")) {
+      TString envs(gSystem->Getenv("PROOF_ENVVARS")), env, envsfound;
+      Int_t from = 0;
+      while (envs.Tokenize(env, from, ",")) {
+         if (!env.IsNull()) {
+            if (!gSystem->Getenv(env)) {
+               Warning("Init", "request for sending over undefined environemnt variable '%s' - ignoring", env.Data());
+            } else {
+               if (!envsfound.IsNull()) envsfound += ",";
+               envsfound += env;
+               TProof::DelEnvVar(env);
+               TProof::AddEnvVar(env, gSystem->Getenv(env));
+            }
+         }
+      }
+      if (envsfound.IsNull()) {
+         Warning("Init", "none of the requested env variables were found: '%s'", envs.Data());
+      } else {
+         Info("Init", "the following environment variables have been added to the list to be sent to the nodes: '%s'", envsfound.Data());
+      }
+   }
+
    // Done
    return;
 }
