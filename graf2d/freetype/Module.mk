@@ -5,7 +5,7 @@
 
 MODNAME      := freetype
 
-ifneq ($(BUILTINFREETYPE), yes)
+ifneq ($(BUILTINFREETYPE),yes)
 
 FREETYPELIBF    := $(shell freetype-config --libs)
 FREETYPEINC     := $(shell freetype-config --cflags)
