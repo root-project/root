@@ -26,6 +26,7 @@
 #   include <io.h>
 #   include "snprintf.h"
 #endif
+#include "RConfigure.h"
 #include "TDSet.h"
 #include "TEnv.h"
 #include "TError.h"
@@ -380,7 +381,7 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
       // Find the max number of workers, if any
       TString sysname = "system.rootrc";
 #ifdef ROOTETCDIR
-      char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
+      char *s = gSystem->ConcatFileName(ROOTETCDIR, sysname);
 #else
       TString etc = gRootDir;
 #ifdef WIN32
@@ -702,9 +703,17 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
       return -1;
    }
    // ROOTSYS
+#if R__HAVE_CONFIG
+   fprintf(fenv, "export ROOTSYS=%s\n", ROOTPREFIX);
+#else
    fprintf(fenv, "export ROOTSYS=%s\n", gSystem->Getenv("ROOTSYS"));
+#endif
    // Conf dir
+#if R__HAVE_CONFIG
+   fprintf(fenv, "export ROOTCONFDIR=%s\n", ROOTETCDIR);
+#else
    fprintf(fenv, "export ROOTCONFDIR=%s\n", gSystem->Getenv("ROOTSYS"));
+#endif
    // TMPDIR
    fprintf(fenv, "export TMPDIR=%s\n", gSystem->TempDirectory());
    // Log file in the log dir
