@@ -24,6 +24,7 @@ namespace coral_pyroot_regression {
 
     class iterator_base {
     protected:
+      iterator_base() {}
       iterator_base( std::vector< Attribute* >::const_iterator theIterator ) : m_iterator( theIterator ) {}
       iterator_base( const iterator_base& rhs ): m_iterator( rhs.m_iterator ) {}
       iterator_base& operator=( const iterator_base& rhs ) { m_iterator = rhs.m_iterator; return *this; }
