@@ -3316,6 +3316,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                   all_libtoload.Append(" ").Append(libtoload);
                   depLibraries.Append(" ");
                   depLibraries.Append(GetLibraries(libtoload,"DSL",kFALSE));
+                  depLibraries = depLibraries.Strip(); // Remove any trailing spaces.
                }
             } else {
                gROOT->LoadClass("", libtoload);

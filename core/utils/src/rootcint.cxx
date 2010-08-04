@@ -5449,7 +5449,8 @@ int main(int argc, char **argv)
          Error(0,"%s: Unable to open output lib file %s\n",
                argv[0], liblist_filename.c_str());
       } else {
-         outputfile << gLibsNeeded << endl;
+         const size_t endStr = gLibsNeeded.find_last_not_of(" \t");
+         outputfile << gLibsNeeded.substr(0, endStr+1) << endl;
          G__ClassInfo clFile;
          clFile.Init();
          while (clFile.Next()) {
