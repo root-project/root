@@ -707,6 +707,31 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
 }
 
 //____________________________________________________________________________
+inline static Long_t GetObjectOffset( TClass* klass, TClass* clActual, void* address ) {
+// root/meta base class offset fails in the case of virtual inheritance
+   Long_t offset = 0;
+
+   if ( klass != clActual ) {
+      G__ClassInfo* ciKlass  = (G__ClassInfo*)klass->GetClassInfo();
+      G__ClassInfo* ciActual = (G__ClassInfo*)clActual->GetClassInfo();
+      if ( ciKlass && ciActual ) {
+#ifdef WIN32
+      // Windows cannot cast-to-derived for virtual inheritance
+      // with CINT's (or Reflex's) interfaces.
+         long baseprop = ciActual->IsBase( *ciKlass );
+         if ( !baseprop || (baseprop & G__BIT_ISVIRTUALBASE) ) 
+            offset = clActual->GetBaseClassOffset( klass );
+         else
+#endif
+            offset = G__isanybase( ciKlass->Tagnum(), ciActual->Tagnum(), (Long_t)address );
+      } else {
+         offset = clActual->GetBaseClassOffset( klass ); 
+      }
+   }
+
+   return offset;
+}
+
 PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 {
 // if the object is a null pointer, return a typed one (as needed for overloading)
@@ -719,41 +744,25 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
       return 0;
    }
 
-// upgrade to real class for object returns
-   if ( ! isRef ) {
-      TClass* clActual = klass->GetActualClass( address );
-      if ( clActual && klass != clActual ) {
-      // root/meta base class offset fails in the case of virtual inheritance
-         Long_t offset;
-         G__ClassInfo* ciKlass  = (G__ClassInfo*)klass->GetClassInfo();
-         G__ClassInfo* ciActual = (G__ClassInfo*)clActual->GetClassInfo();
-         if ( ciKlass && ciActual ) {
-#ifdef WIN32
-         // Windows cannot cast-to-derived for virtual inheritance
-         // with CINT's (or Reflex's) interfaces.
-            long baseprop = ciActual->IsBase( *ciKlass );
-            if ( !baseprop || (baseprop & G__BIT_ISVIRTUALBASE) ) 
-               offset = clActual->GetBaseClassOffset( klass );
-            else
-#endif
-               offset = G__isanybase( ciKlass->Tagnum(), ciActual->Tagnum(), (Long_t)address );
-         } else {
-            offset = clActual->GetBaseClassOffset( klass ); 
-         }
-         address = (void*)((Long_t)address - offset);
-         klass = clActual;
-      }
-   }
-
-// obtain pointer to TObject base class (if possible) for memory mgmt
-   TObject* object = klass->IsTObject() ? ((TObject*)( isRef ? *((void**)address) : address )) : 0;
-   if ( ! isRef && object ) {
-      object = (TObject*)klass->DynamicCast( TObject::Class(), object );
+// obtain pointer to TObject base class (if possible) for memory mgmt; this is
+// done before downcasting, as upcasting from the current class may be easier and
+// downcasting is unnecessary if the python side object gets recycled by the
+// memory regulator
+   TObject* object = 0;
+   if ( ! isRef && klass->IsTObject() ) {
+      object = (TObject*)((Long_t)address - GetObjectOffset( klass, TObject::Class(), address ) );
 
    // use the old reference if the object already exists
       PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object );
       if ( oldPyObject )
          return oldPyObject;
+   }
+                       
+// upgrade to real class for object returns
+   if ( ! isRef ) {
+      TClass* clActual = klass->GetActualClass( address );
+      address = (void*)((Long_t)address - GetObjectOffset( klass, clActual, address ) );
+      klass = clActual;
    }
 
 // actual binding
