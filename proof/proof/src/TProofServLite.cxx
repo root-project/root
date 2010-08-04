@@ -210,7 +210,7 @@ Int_t TProofServLite::CreateServer()
    }
    TString entity = gEnv->GetValue("ProofServ.Entity", "");
    if (entity.Length() > 0)
-      fSockPath.Insert(0,Form("%s/", entity.Data()));
+      fSockPath.Insert(0,TString::Format("%s/", entity.Data()));
 
    // Call back the client
    fSocket = new TSocket(fSockPath);
@@ -270,7 +270,7 @@ Int_t TProofServLite::CreateServer()
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
-         ProcessLine(Form(".L %s", logon), kTRUE);
+         ProcessLine(TString::Format(".L %s", logon), kTRUE);
       delete [] mac;
    }
 
@@ -349,12 +349,13 @@ Int_t TProofServLite::Setup()
    }
 
    // Work dir and ...
-   fWorkDir = gEnv->GetValue("ProofServ.Sandbox", Form("~/%s", kPROOF_WorkDir));
+   fWorkDir = gEnv->GetValue("ProofServ.Sandbox", TString::Format("~/%s", kPROOF_WorkDir));
+   Info("Setup", "fWorkDir: %s", fWorkDir.Data());
 
    // Get Session tags
    fTopSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1");
-   fSessionTag = Form("%s-%s-%ld-%d", fOrdinal.Data(), gSystem->HostName(),
-                                     (Long_t)TTimeStamp().GetSec(), gSystem->GetPid());
+   fSessionTag.Form("%s-%s-%ld-%d", fOrdinal.Data(), gSystem->HostName(),
+                                    (Long_t)TTimeStamp().GetSec(), gSystem->GetPid());
    if (gProofDebugLevel > 0)
       Info("Setup", "session tag is %s", fSessionTag.Data());
    if (fTopSessionTag.IsNull()) fTopSessionTag = fSessionTag;
@@ -373,9 +374,9 @@ Int_t TProofServLite::Setup()
    // Link the session tag to the log file
    if (gSystem->Getenv("ROOTPROOFLOGFILE")) {
       TString logfile = gSystem->Getenv("ROOTPROOFLOGFILE");
-      Int_t iord = logfile.Index(Form("-%s", fOrdinal.Data()));
+      Int_t iord = logfile.Index(TString::Format("-%s", fOrdinal.Data()));
       if (iord != kNPOS) logfile.Remove(iord);
-      logfile += Form("-%s.log", fSessionTag.Data());
+      logfile += TString::Format("-%s.log", fSessionTag.Data());
       gSystem->Symlink(gSystem->Getenv("ROOTPROOFLOGFILE"), logfile);
    }
 
@@ -426,7 +427,7 @@ void TProofServLite::Terminate(Int_t status)
       gSystem->ChangeDirectory("/");
       // needed in case fSessionDir is on NFS ?!
       gSystem->MakeDirectory(fSessionDir+"/.delete");
-      gSystem->Exec(Form("%s %s", kRM, fSessionDir.Data()));
+      gSystem->Exec(TString::Format("%s %s", kRM, fSessionDir.Data()));
    }
 
    // Cleanup data directory if empty
@@ -541,7 +542,7 @@ Int_t TProofServLite::SetupOnFork(const char *ord)
    gSystem->Setenv("ROOTPROOFLOGFILE", logfile);
    Int_t iord = logfile.Index(sord.Data());
    if (iord != kNPOS) logfile.Remove(iord + sord.Length());
-   logfile += Form("-%s.log", fSessionTag.Data());
+   logfile += TString::Format("-%s.log", fSessionTag.Data());
    gSystem->Symlink(gSystem->Getenv("ROOTPROOFLOGFILE"), logfile);
 
    // Get socket to be used to call back our xpd
@@ -552,7 +553,7 @@ Int_t TProofServLite::SetupOnFork(const char *ord)
    }
    TString entity = gEnv->GetValue("ProofServ.Entity", "");
    if (entity.Length() > 0)
-      fSockPath.Insert(0,Form("%s/", entity.Data()));
+      fSockPath.Insert(0, TString::Format("%s/", entity.Data()));
 
    // Call back the client
    fSocket = new TSocket(fSockPath);
