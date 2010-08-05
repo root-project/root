@@ -54,8 +54,11 @@ double igamc( double a, double x )
    double ans, ax, c, yc, r, t, y, z;
    double pk, pkm1, pkm2, qk, qkm1, qkm2;
 
-   if( (x <= 0) || ( a <= 0) )
-      return( 1.0 );
+   // LM: for negative values returns 0.0
+   // This is correct if a is a negative integer since Gamma(-n) = +/- inf
+   if (a <= 0)  return 0.0;  
+
+   if (x <= 0) return 1.0;
 
    if( (x < 1.0) || (x < a) )
       return( 1.0 - igam(a,x) );
@@ -125,8 +128,11 @@ double igam( double a, double x )
 {
    double ans, ax, c, r;
 
-   if( (x <= 0) || ( a <= 0) )
-      return( 0.0 );
+   // LM: for negative values returns 1.0 instead of zero
+   // This is correct if a is a negative integer since Gamma(-n) = +/- inf
+   if (a <= 0)  return 1.0;  
+
+   if (x <= 0)  return 0.0;
 
    if( (x > 1.0) && (x > a ) )
       return( 1.0 - igamc(a,x) );

@@ -128,6 +128,9 @@ namespace Math {
       <A HREF="http://mathworld.wolfram.com/RegularizedGammaFunction.html">
       Mathworld</A>. 
       The implementation used is that of  <A HREF="http://www.netlib.org/cephes">Cephes</A> from S. Moshier.
+      In this implementation both a and x must be positive. If a is negative 1.0 is returned for every x. 
+      This is correct only if a is negative integer. 
+      For a>0 and x<0  0 is returned (this is correct only for a>0 and x=0).
    
       @ingroup SpecFunc
    */
@@ -143,6 +146,9 @@ namespace Math {
       <A HREF="http://mathworld.wolfram.com/RegularizedGammaFunction.html">
       Mathworld</A>. 
       The implementation used is that of  <A HREF="http://www.netlib.org/cephes">Cephes</A> from S. Moshier.
+      In this implementation both a and x must be positive. If a is negative, 0 is returned for every x. 
+      This is correct only if a is negative integer. 
+      For a>0 and x<0  1 is returned (this is correct only for a>0 and x=0).
    
       @ingroup SpecFunc
    */
